@@ -443,16 +443,14 @@ error_invalid_framerate:
 static void
 set_context_info (GstVaapiEncoder * encoder)
 {
-  GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
   GstVaapiContextInfo *const cip = &encoder->context_info;
 
-  cip->profile = GST_VAAPI_PROFILE_UNKNOWN;
+  cip->profile = encoder->profile;
   cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
   cip->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
   cip->width = GST_VAAPI_ENCODER_WIDTH (encoder);
   cip->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
-  cip->ref_frames = 0;
-  klass->set_context_info (encoder);
+  cip->ref_frames = encoder->num_ref_frames;
 }
 
 /* Ensures the underlying VA context for encoding is created */
@@ -827,7 +825,6 @@ gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
   CHECK_VTABLE_HOOK (encode);
   CHECK_VTABLE_HOOK (reordering);
   CHECK_VTABLE_HOOK (flush);
-  CHECK_VTABLE_HOOK (set_context_info);
 
 #undef CHECK_VTABLE_HOOK
 

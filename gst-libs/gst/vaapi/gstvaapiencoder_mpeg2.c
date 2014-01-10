@@ -103,34 +103,35 @@ ensure_sampling_desity (GstVaapiEncoderMpeg2 * encoder)
 }
 
 static gboolean
-ensure_public_attributes (GstVaapiEncoderMpeg2 * encoder)
+ensure_profile_and_level (GstVaapiEncoderMpeg2 * encoder)
 {
-  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-
-  if (encoder->ip_period > encoder->intra_period) {
-    encoder->ip_period = encoder->intra_period - 1;
-  }
-
   if (encoder->profile == GST_ENCODER_MPEG2_PROFILE_SIMPLE) {
     /* no  b frames */
     encoder->ip_period = 0;
     /* only main level is defined in mpeg2 */
     encoder->level = GST_VAAPI_ENCODER_MPEG2_LEVEL_MAIN;
   }
+  return TRUE;
+}
 
-  if (!ensure_sampling_desity (encoder))
-    return FALSE;
+static gboolean
+ensure_bitrate (GstVaapiEncoderMpeg2 * encoder)
+{
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
 
-  /* default compress ratio 1: (4*8*1.5) */
-  if (GST_VAAPI_RATECONTROL_CBR == GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
-    if (!base_encoder->bitrate)
-      base_encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
-          GST_VAAPI_ENCODER_HEIGHT (encoder) *
-          GST_VAAPI_ENCODER_FPS_N (encoder) /
-          GST_VAAPI_ENCODER_FPS_D (encoder) / 4 / 1024;
-  } else
-    base_encoder->bitrate = 0;
-
+  /* Default compression: 64 bits per macroblock */
+  switch (GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
+    case GST_VAAPI_RATECONTROL_CBR:
+      if (!base_encoder->bitrate)
+        base_encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
+            GST_VAAPI_ENCODER_HEIGHT (encoder) *
+            GST_VAAPI_ENCODER_FPS_N (encoder) /
+            GST_VAAPI_ENCODER_FPS_D (encoder) / 4 / 1024;
+      break;
+    default:
+      base_encoder->bitrate = 0;
+      break;
+  }
   return TRUE;
 }
 
@@ -636,10 +637,10 @@ to_vaapi_profile (guint32 profile)
 }
 
 static void
-gst_vaapi_encoder_mpeg2_set_context_info (GstVaapiEncoder * base_encoder)
+set_context_info (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderMpeg2 *const encoder = GST_VAAPI_ENCODER_MPEG2 (base_encoder);
-  GstVaapiContextInfo *const cip = &base_encoder->context_info;
+  GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
 
   /* Maximum sizes for common headers (in bytes) */
   enum
@@ -652,13 +653,13 @@ gst_vaapi_encoder_mpeg2_set_context_info (GstVaapiEncoder * base_encoder)
     MAX_SLICE_HDR_SIZE = 8,
   };
 
-  cip->profile = to_vaapi_profile (encoder->profile);
-  cip->ref_frames = 2;
+  base_encoder->profile = to_vaapi_profile (encoder->profile);
+  base_encoder->num_ref_frames = 2;
 
   /* Only YUV 4:2:0 formats are supported for now. This means that we
      have a limit of 4608 bits per macroblock. */
-  base_encoder->codedbuf_size = (GST_ROUND_UP_16 (cip->width) *
-      GST_ROUND_UP_16 (cip->height) / 256) * 576;
+  base_encoder->codedbuf_size = (GST_ROUND_UP_16 (vip->width) *
+      GST_ROUND_UP_16 (vip->height) / 256) * 576;
 
   /* Account for Sequence, GOP, and Picture headers */
   /* XXX: exclude unused Sequence Display Extension, Sequence Scalable
@@ -669,7 +670,7 @@ gst_vaapi_encoder_mpeg2_set_context_info (GstVaapiEncoder * base_encoder)
       MAX_GOP_SIZE + MAX_PIC_HDR_SIZE + MAX_PIC_EXT_SIZE;
 
   /* Account for Slice headers. We use one slice per line of macroblock */
-  base_encoder->codedbuf_size += (GST_ROUND_UP_16 (cip->height) / 16) *
+  base_encoder->codedbuf_size += (GST_ROUND_UP_16 (vip->height) / 16) *
       MAX_SLICE_HDR_SIZE;
 }
 
@@ -679,10 +680,18 @@ gst_vaapi_encoder_mpeg2_reconfigure (GstVaapiEncoder * base_encoder)
   GstVaapiEncoderMpeg2 *const encoder =
       GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
 
-  if (!ensure_public_attributes (encoder)) {
-    GST_WARNING ("encoder ensure public attributes failed ");
-    goto error;
+  if (encoder->ip_period > encoder->intra_period) {
+    encoder->ip_period = encoder->intra_period - 1;
   }
+
+  if (!ensure_profile_and_level (encoder))
+    goto error;
+  if (!ensure_bitrate (encoder))
+    goto error;
+  if (!ensure_sampling_desity (encoder))
+    goto error;
+
+  set_context_info (base_encoder);
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
 error:

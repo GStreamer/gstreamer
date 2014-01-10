@@ -1248,16 +1248,43 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
   return TRUE;
 }
 
-gboolean
-init_encoder_public_attributes (GstVaapiEncoderH264 * encoder)
+static gboolean
+ensure_profile_and_level (GstVaapiEncoderH264 * encoder)
 {
-  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-  guint width_mbs, height_mbs, total_mbs;
-
   if (!encoder->profile)
     encoder->profile = GST_VAAPI_ENCODER_H264_DEFAULT_PROFILE;
 
   _set_level (encoder);
+  return TRUE;
+}
+
+static gboolean
+ensure_bitrate (GstVaapiEncoderH264 * encoder)
+{
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
+
+  /* Default compression: 64 bits per macroblock */
+  switch (GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
+    case GST_VAAPI_RATECONTROL_CBR:
+    case GST_VAAPI_RATECONTROL_VBR:
+    case GST_VAAPI_RATECONTROL_VBR_CONSTRAINED:
+      if (!base_encoder->bitrate)
+        base_encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
+            GST_VAAPI_ENCODER_HEIGHT (encoder) *
+            GST_VAAPI_ENCODER_FPS_N (encoder) /
+            GST_VAAPI_ENCODER_FPS_D (encoder) / 4 / 1024;
+      break;
+    default:
+      base_encoder->bitrate = 0;
+      break;
+  }
+  return TRUE;
+}
+
+static void
+reset_properties (GstVaapiEncoderH264 * encoder)
+{
+  guint width_mbs, height_mbs, total_mbs;
 
   if (encoder->intra_period > GST_VAAPI_ENCODER_H264_MAX_INTRA_PERIOD)
     encoder->intra_period = GST_VAAPI_ENCODER_H264_MAX_INTRA_PERIOD;
@@ -1271,19 +1298,6 @@ init_encoder_public_attributes (GstVaapiEncoderH264 * encoder)
       (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP &&
           encoder->min_qp < encoder->init_qp))
     encoder->min_qp = encoder->init_qp;
-
-  /* default compress ratio 1: (4*8*1.5) */
-  if (GST_VAAPI_RATECONTROL_CBR == GST_VAAPI_ENCODER_RATE_CONTROL (encoder) ||
-      GST_VAAPI_RATECONTROL_VBR == GST_VAAPI_ENCODER_RATE_CONTROL (encoder) ||
-      GST_VAAPI_RATECONTROL_VBR_CONSTRAINED ==
-      GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
-    if (!base_encoder->bitrate)
-      base_encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
-          GST_VAAPI_ENCODER_HEIGHT (encoder) *
-          GST_VAAPI_ENCODER_FPS_N (encoder) /
-          GST_VAAPI_ENCODER_FPS_D (encoder) / 4 / 1024;
-  } else
-    base_encoder->bitrate = 0;
 
   width_mbs = (GST_VAAPI_ENCODER_WIDTH (encoder) + 15) / 16;
   height_mbs = (GST_VAAPI_ENCODER_HEIGHT (encoder) + 15) / 16;
@@ -1299,12 +1313,6 @@ init_encoder_public_attributes (GstVaapiEncoderH264 * encoder)
   if (encoder->b_frame_num > 50)
     encoder->b_frame_num = 50;
 
-  return TRUE;
-}
-
-static gboolean
-init_encoder_private_attributes (GstVaapiEncoderH264 * encoder)
-{
   if (encoder->b_frame_num)
     encoder->cts_offset = GST_SECOND * GST_VAAPI_ENCODER_FPS_D (encoder) /
         GST_VAAPI_ENCODER_FPS_N (encoder);
@@ -1327,7 +1335,6 @@ init_encoder_private_attributes (GstVaapiEncoderH264 * encoder)
     encoder->max_reflist1_count = 0;
   encoder->max_ref_num =
       encoder->max_reflist0_count + encoder->max_reflist1_count;
-  return TRUE;
 }
 
 
@@ -1572,10 +1579,10 @@ end:
 }
 
 static void
-gst_vaapi_encoder_h264_set_context_info (GstVaapiEncoder * base_encoder)
+set_context_info (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
-  GstVaapiContextInfo *const cip = &base_encoder->context_info;
+  GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   const guint DEFAULT_SURFACES_COUNT = 3;
 
   /* Maximum sizes for common headers (in bits) */
@@ -1588,14 +1595,15 @@ gst_vaapi_encoder_h264_set_context_info (GstVaapiEncoder * base_encoder)
     MAX_SLICE_HDR_SIZE = 397 + 2572 + 6670 + 2402,
   };
 
-  cip->profile = encoder->profile;
-  cip->ref_frames = (encoder->b_frame_num ? 2 : 1) + DEFAULT_SURFACES_COUNT;
+  base_encoder->profile = encoder->profile;
+  base_encoder->num_ref_frames =
+      (encoder->b_frame_num ? 2 : 1) + DEFAULT_SURFACES_COUNT;
 
   /* Only YUV 4:2:0 formats are supported for now. This means that we
      have a limit of 3200 bits per macroblock. */
   /* XXX: check profile and compute RawMbBits */
-  base_encoder->codedbuf_size = (GST_ROUND_UP_16 (cip->width) *
-      GST_ROUND_UP_16 (cip->height) / 256) * 400;
+  base_encoder->codedbuf_size = (GST_ROUND_UP_16 (vip->width) *
+      GST_ROUND_UP_16 (vip->height) / 256) * 400;
 
   /* Account for SPS header */
   /* XXX: exclude scaling lists, MVC/SVC extensions */
@@ -1617,15 +1625,13 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264_CAST (base_encoder);
 
-  if (!init_encoder_public_attributes (encoder)) {
-    GST_WARNING ("encoder ensure public attributes failed ");
+  if (!ensure_profile_and_level (encoder))
     goto error;
-  }
+  if (!ensure_bitrate (encoder))
+    goto error;
 
-  if (!init_encoder_private_attributes (encoder)) {
-    GST_WARNING ("prepare encoding failed ");
-    goto error;
-  }
+  reset_properties (encoder);
+  set_context_info (base_encoder);
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
 error:

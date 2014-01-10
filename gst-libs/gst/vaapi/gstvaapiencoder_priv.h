@@ -165,6 +165,8 @@ struct _GstVaapiEncoder
   VADisplay va_display;
   VAContextID va_context;
   GstVideoInfo video_info;
+  GstVaapiProfile profile;
+  guint num_ref_frames;
   GstVaapiRateControl rate_control;
   guint32 rate_control_mask;
   guint bitrate; /* kbps */
@@ -204,8 +206,6 @@ struct _GstVaapiEncoderClass
   gboolean              (*init)         (GstVaapiEncoder * encoder);
   void                  (*finalize)     (GstVaapiEncoder * encoder);
 
-  void                  (*set_context_info) (GstVaapiEncoder * encoder);
-
   GstVaapiEncoderStatus (*reconfigure)  (GstVaapiEncoder * encoder);
 
   GPtrArray *           (*get_default_properties) (void);
@@ -243,7 +243,6 @@ struct _GstVaapiEncoderClass
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, finalize),             \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, reconfigure),          \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, get_default_properties), \
-    GST_VAAPI_ENCODER_CLASS_HOOK (codec, set_context_info),     \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, reordering),           \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, encode),               \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, flush)
