@@ -176,8 +176,8 @@ class XunitReporter(Reporter):
             '<testcase classname=%(cls)s name=%(name)s time="%(taken).3f">'
             '<failure type=%(errtype)s message=%(message)s>'
             '</failure>%(systemout)s</testcase>' %
-            {'cls': self._quoteattr(test.classname),
-             'name': self._quoteattr(test.classname.split('.')[-1]),
+            {'cls': self._quoteattr(test.get_classname()),
+             'name': self._quoteattr(test.get_name()),
              'taken': test.time_taken,
              'errtype': self._quoteattr(test.result),
              'message': self._quoteattr(test.message),
@@ -191,8 +191,8 @@ class XunitReporter(Reporter):
         self.errorlist.append(
             '<testcase classname=%(cls)s name=%(name)s '
             'time="%(taken).3f">%(systemout)s</testcase>' %
-            {'cls': self._quoteattr(test.classname),
-             'name': self._quoteattr(test.classname.split('.')[-1]),
+            {'cls': self._quoteattr(test.get_classname()),
+             'name': self._quoteattr(test.get_name()),
              'taken': test.time_taken,
              'systemout': self._get_captured(),
              })

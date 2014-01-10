@@ -63,6 +63,15 @@ class Test(Loggable):
 
         return string
 
+    def get_classname(self):
+        name = self.classname.split('.')[-1]
+        classname = self.classname.replace('.%s' % name, '')
+
+        return classname
+
+    def get_name(self):
+        return self.classname.split('.')[-1]
+
     def add_arguments(self, *args):
         for arg in args:
             self.command += " " + arg
