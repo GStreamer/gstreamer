@@ -115,7 +115,6 @@ void video_convert_orc_convert_AYUV_BGRA (guint8 * ORC_RESTRICT d1, int d1_strid
 void video_convert_orc_convert_AYUV_ABGR (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
 void video_convert_orc_convert_AYUV_RGBA (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
 void video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
-void video_convert_orc_convert_I420_BGRA_avg (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, const guint8 * ORC_RESTRICT s5, int n);
 void video_convert_orc_getline_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
 void video_convert_orc_getline_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
 void video_convert_orc_getline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
