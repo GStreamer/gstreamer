@@ -71,67 +71,6 @@ typedef enum
   GST_VAAPI_LEVEL_H264_L5_2,
 } GstVaapiLevelH264;
 
-/**
- * GstVaapiH264LevelLimits:
- * @level: the #GstVaapiLevelH264
- * @level_idc: the H.264 level_idc value
- * @MaxMBPS: the maximum macroblock processing rate (MB/sec)
- * @MaxFS: the maximum frame size (MBs)
- * @MaxDpbMbs: the maxium decoded picture buffer size (MBs)
- * @MaxBR: the maximum video bit rate (kbps)
- *
- * The data structure that describes the limits of an H.264 level.
- */
-typedef struct
-{
-  GstVaapiLevelH264 level;
-  guint8 level_idc;
-  guint32 MaxMBPS;
-  guint32 MaxFS;
-  guint32 MaxDpbMbs;
-  guint32 MaxBR;
-} GstVaapiH264LevelLimits;
-
-/* Returns GstVaapiProfile from H.264 profile_idc value */
-G_GNUC_INTERNAL
-GstVaapiProfile
-gst_vaapi_utils_h264_get_profile (guint8 profile_idc);
-
-/* Returns H.264 profile_idc value from GstVaapiProfile */
-G_GNUC_INTERNAL
-guint8
-gst_vaapi_utils_h264_get_profile_idc (GstVaapiProfile profile);
-
-/* Returns GstVaapiLevelH264 from H.264 level_idc value */
-G_GNUC_INTERNAL
-GstVaapiLevelH264
-gst_vaapi_utils_h264_get_level (guint8 level_idc);
-
-/* Returns H.264 level_idc value from GstVaapiLevelH264 */
-G_GNUC_INTERNAL
-guint8
-gst_vaapi_utils_h264_get_level_idc (GstVaapiLevelH264 level);
-
-/* Returns level limits as specified in Table A-1 of the H.264 standard */
-G_GNUC_INTERNAL
-const GstVaapiH264LevelLimits *
-gst_vaapi_utils_h264_get_level_limits (GstVaapiLevelH264 level);
-
-/* Returns the Table A-1 specification */
-G_GNUC_INTERNAL
-const GstVaapiH264LevelLimits *
-gst_vaapi_utils_h264_get_level_limits_table (guint *out_length_ptr);
-
-/* Returns GstVaapiChromaType from H.264 chroma_format_idc value */
-G_GNUC_INTERNAL
-GstVaapiChromaType
-gst_vaapi_utils_h264_get_chroma_type (guint chroma_format_idc);
-
-/* Returns H.264 chroma_format_idc value from GstVaapiChromaType */
-G_GNUC_INTERNAL
-guint
-gst_vaapi_utils_h264_get_chroma_format_idc (GstVaapiChromaType chroma_type);
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_UTILS_H264_H */

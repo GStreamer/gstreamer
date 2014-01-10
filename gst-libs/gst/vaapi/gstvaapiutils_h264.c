@@ -22,7 +22,7 @@
 
 #include "sysdeps.h"
 #include <gst/codecparsers/gsth264parser.h>
-#include "gstvaapiutils_h264.h"
+#include "gstvaapiutils_h264_priv.h"
 
 /* Table A-1 - Level limits */
 /* *INDENT-OFF* */
