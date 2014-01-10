@@ -2126,6 +2126,27 @@ sort_by_frame_size (GstStructure * s1, GstStructure * s2)
 }
 #endif
 
+static void
+gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
+    guint32 format, GstCaps * caps, GstStructure * s)
+{
+  /* Encoded stream on output buffer need to be parsed */
+  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT ||
+      v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+    gint i = 0;
+
+    for (; i < GST_V4L2_FORMAT_COUNT; i++) {
+      if (format == gst_v4l2_formats[i].format &&
+          gst_v4l2_formats[i].flags == GST_V4L2_CODEC) {
+        gst_structure_set (s, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+        break;
+      }
+    }
+  }
+
+  gst_caps_append_structure (caps, s);
+}
+
 static GstCaps *
 gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
     guint32 pixelformat, const GstStructure * template)
@@ -2233,7 +2254,7 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
           NULL);
 
       /* no point using the results list here, since there's only one struct */
-      gst_caps_append_structure (ret, tmp);
+      gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp);
     }
   } else {
     goto unknown_type;
@@ -2246,7 +2267,8 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
    * resolution last, since order in caps matters for things like fixation. */
   results = g_list_sort (results, (GCompareFunc) sort_by_frame_size);
   while (results != NULL) {
-    gst_caps_append_structure (ret, GST_STRUCTURE (results->data));
+    gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret,
+        results->data);
     results = g_list_delete_link (results, results);
   }
 
@@ -2348,8 +2370,7 @@ default_frame_sizes:
           (interlaced ? "mixed" : "progressive"), NULL);
     gst_v4l2_object_add_aspect_ratio (v4l2object, tmp);
 
-    gst_caps_append_structure (ret, tmp);
-
+    gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp);
     return ret;
   }
 }
