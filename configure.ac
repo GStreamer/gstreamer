@@ -2064,10 +2064,10 @@ dnl *** dvb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVB, true)
 AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
   AC_MSG_CHECKING([Checking for up to date dvb installation])
-  AC_CHECK_HEADER(linux/dvb/frontend.h, [
+  AC_CHECK_HEADER(linux/dvb/version.h, [
     AC_MSG_CHECKING([for up-to-date dvb API])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <linux/dvb/frontend.h>]], [[
-        #ifndef SYS_DVBC_ANNEX_AC
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <linux/dvb/version.h>]], [[
+        #if DVB_API_VERSION < 5
         #error "Incompatible dvb API"
         #endif
     ]])], [ AC_MSG_RESULT(yes)
