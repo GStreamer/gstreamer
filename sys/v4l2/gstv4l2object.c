@@ -2139,8 +2139,10 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
   GList *results = NULL;
   guint32 w, h;
 
-  if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
-    return gst_caps_new_empty_simple ("video/mpegts");
+  if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G')) {
+    gst_caps_append_structure (ret, gst_structure_copy (template));
+    return ret;
+  }
 
   memset (&size, 0, sizeof (struct v4l2_frmsizeenum));
   size.index = 0;
