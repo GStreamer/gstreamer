@@ -26,6 +26,7 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiencoder_h264.h"
 #include "gstvaapiencoder_h264_priv.h"
+#include "gstvaapiutils_h264_priv.h"
 #include "gstvaapicodedbufferproxy_priv.h"
 #include "gstvaapisurface.h"
 
@@ -130,22 +131,6 @@ h264_get_log2_max_frame_num (guint num)
   return ret;
 }
 
-static inline guint
-_profile_to_value (GstVaapiProfile profile)
-{
-  switch (profile) {
-    case GST_VAAPI_PROFILE_H264_BASELINE:
-      return 66;
-    case GST_VAAPI_PROFILE_H264_MAIN:
-      return 77;
-    case GST_VAAPI_PROFILE_H264_HIGH:
-      return 100;
-    default:
-      break;
-  }
-  return 0;
-}
-
 static inline void
 _check_sps_pps_status (GstVaapiEncoderH264 * encoder,
     const guint8 * nal, guint32 size)
@@ -173,6 +158,61 @@ _check_sps_pps_status (GstVaapiEncoderH264 * encoder,
     default:
       break;
   }
+}
+
+/* Derives the profile supported by the underlying hardware */
+static gboolean
+ensure_hw_profile (GstVaapiEncoderH264 * encoder)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
+  GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  GstVaapiProfile profile, profiles[4];
+  guint i, num_profiles = 0;
+
+  profiles[num_profiles++] = encoder->profile;
+  switch (encoder->profile) {
+    case GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE:
+      profiles[num_profiles++] = GST_VAAPI_PROFILE_H264_BASELINE;
+      profiles[num_profiles++] = GST_VAAPI_PROFILE_H264_MAIN;
+      // fall-through
+    case GST_VAAPI_PROFILE_H264_MAIN:
+      profiles[num_profiles++] = GST_VAAPI_PROFILE_H264_HIGH;
+      break;
+    default:
+      break;
+  }
+
+  profile = GST_VAAPI_PROFILE_UNKNOWN;
+  for (i = 0; i < num_profiles; i++) {
+    if (gst_vaapi_display_has_encoder (display, profiles[i], entrypoint)) {
+      profile = profiles[i];
+      break;
+    }
+  }
+  if (profile == GST_VAAPI_PROFILE_UNKNOWN)
+    goto error_unsupported_profile;
+
+  GST_VAAPI_ENCODER_CAST (encoder)->profile = profile;
+  return TRUE;
+
+  /* ERRORS */
+error_unsupported_profile:
+  {
+    GST_ERROR ("unsupported HW profile (0x%08x)", encoder->profile);
+    return FALSE;
+  }
+}
+
+/* Derives the minimum profile from the active coding tools */
+static gboolean
+ensure_profile (GstVaapiEncoderH264 * encoder)
+{
+  GstVaapiProfile profile;
+
+  profile = GST_VAAPI_PROFILE_H264_BASELINE;
+
+  encoder->profile = profile;
+  return TRUE;
 }
 
 static void
@@ -377,6 +417,7 @@ static gboolean
 gst_bit_writer_write_sps (GstBitWriter * bitwriter,
     const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile)
 {
+  guint8 profile_idc;
   guint32 constraint_set0_flag, constraint_set1_flag;
   guint32 constraint_set2_flag, constraint_set3_flag;
   guint32 gaps_in_frame_num_value_allowed_flag = 0;     // ??
@@ -391,13 +432,18 @@ gst_bit_writer_write_sps (GstBitWriter * bitwriter,
       !seq_param->seq_fields.bits.frame_mbs_only_flag;
   guint32 i = 0;
 
-  constraint_set0_flag = profile == GST_VAAPI_PROFILE_H264_BASELINE;
-  constraint_set1_flag = profile <= GST_VAAPI_PROFILE_H264_MAIN;
+  profile_idc = gst_vaapi_utils_h264_get_profile_idc (profile);
+  constraint_set0_flag =        /* A.2.1 (baseline profile constraints) */
+      profile == GST_VAAPI_PROFILE_H264_BASELINE ||
+      profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
+  constraint_set1_flag =        /* A.2.2 (main profile constraints) */
+      profile == GST_VAAPI_PROFILE_H264_MAIN ||
+      profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
   constraint_set2_flag = 0;
   constraint_set3_flag = 0;
 
   /* profile_idc */
-  gst_bit_writer_put_bits_uint32 (bitwriter, _profile_to_value (profile), 8);
+  gst_bit_writer_put_bits_uint32 (bitwriter, profile_idc, 8);
   /* constraint_set0_flag */
   gst_bit_writer_put_bits_uint32 (bitwriter, constraint_set0_flag, 1);
   /* constraint_set1_flag */
@@ -1234,8 +1280,8 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 static gboolean
 ensure_profile_and_level (GstVaapiEncoderH264 * encoder)
 {
-  if (!encoder->profile)
-    encoder->profile = GST_VAAPI_ENCODER_H264_DEFAULT_PROFILE;
+  if (!ensure_profile (encoder))
+    return FALSE;
 
   _set_level (encoder);
   return TRUE;
@@ -1551,7 +1597,7 @@ end:
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
-static void
+static GstVaapiEncoderStatus
 set_context_info (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderH264 *const encoder =
@@ -1569,7 +1615,9 @@ set_context_info (GstVaapiEncoder * base_encoder)
     MAX_SLICE_HDR_SIZE = 397 + 2572 + 6670 + 2402,
   };
 
-  base_encoder->profile = encoder->profile;
+  if (!ensure_hw_profile (encoder))
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+
   base_encoder->num_ref_frames =
       (encoder->num_bframes ? 2 : 1) + DEFAULT_SURFACES_COUNT;
 
@@ -1591,6 +1639,8 @@ set_context_info (GstVaapiEncoder * base_encoder)
   /* Account for slice header. At most 200 slices are supported */
   base_encoder->codedbuf_size += 200 * (4 +
       GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE) / 8);
+
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
 static GstVaapiEncoderStatus
@@ -1608,8 +1658,7 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
     goto error;
 
   reset_properties (encoder);
-  set_context_info (base_encoder);
-  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+  return set_context_info (base_encoder);
 
 error:
   return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
