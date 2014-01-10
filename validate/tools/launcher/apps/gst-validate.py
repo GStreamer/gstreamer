@@ -39,8 +39,6 @@ SEEKING_REQUIERED_SCENARIO = ["seek_forward", "seek_backward", "scrub_forward_se
 SPECIAL_PROTOCOLS = [("application/x-hls", "hls")]
 
 PLAYBACK_TESTS = ["playbin uri=__uri__ audio_sink=autoaudiosink video_sink=autovideosink"]
-SCENARIOS = ["none", "seek_forward", "seek_backward", "scrub_forward_seeking"]
-
 COMBINATIONS = [
     MediaFormatCombination("ogg", "vorbis", "theora"),
     MediaFormatCombination("webm", "vorbis", "vp8"),
@@ -127,6 +125,10 @@ class GstValidateManager(TestsManager, Loggable):
                          % DISCOVERER_COMMAND[0])
 
     def list_tests(self):
+        SCENARIOS = ["none", "simple_backward",
+                     "fast_forward", "seek_forward",
+                     "seek_backward", "scrub_forward_seeking"]
+
         for test_pipeline in PLAYBACK_TESTS:
             name = "validate.playback"
             for scenario in SCENARIOS:

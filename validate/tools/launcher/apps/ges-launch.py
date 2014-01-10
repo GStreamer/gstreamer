@@ -36,9 +36,6 @@ COMBINATIONS = [
     utils.MediaFormatCombination("mkv", "vorbis", "h264")]
 
 
-SCENARIOS = ["none", "seek_forward", "seek_backward", "scrub_forward_seeking"]
-
-
 def quote_uri(uri):
     """
     Encode a URI/path according to RFC 2396, without touching the file:/// part.
@@ -210,6 +207,7 @@ class GESTestsManager(TestsManager):
                 else:
                     projects.append(utils.path2url(proj))
 
+        SCENARIOS = ["none", "seek_forward", "seek_backward", "scrub_forward_seeking"]
         for proj in projects:
             # First playback casses
             for scenario in SCENARIOS:
