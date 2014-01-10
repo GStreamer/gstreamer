@@ -228,11 +228,7 @@ def get_current_position(test, max_passed_stop=0.5):
     position, duration = _get_position(test)
 
     if position > duration + max_passed_stop:
-        test.set_result(Result.FAILED,
-                        "The position is reported as > than the"
-                        " duration (position: %d > duration: %d)"
-                        % (position, duration))
-        return Result.FAILED
+        return 0
 
     return position
 
