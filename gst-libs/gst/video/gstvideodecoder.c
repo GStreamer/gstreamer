@@ -2461,6 +2461,11 @@ gst_video_decoder_release_frame (GstVideoDecoder * dec,
     gst_video_codec_frame_unref (frame);
     dec->priv->frames = g_list_delete_link (dec->priv->frames, link);
   }
+  if (frame->events) {
+    dec->priv->pending_events =
+        g_list_concat (dec->priv->pending_events, frame->events);
+    frame->events = NULL;
+  }
   GST_VIDEO_DECODER_STREAM_UNLOCK (dec);
 
   /* unref because this function takes ownership */
