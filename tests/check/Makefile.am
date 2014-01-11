@@ -88,6 +88,7 @@ REGISTRY_CHECKS =				\
 	elements/queue                          \
 	elements/queue2                         \
 	elements/valve                          \
+	libs/baseparse				\
 	libs/basesrc				\
 	libs/basesink				\
 	libs/controller				\

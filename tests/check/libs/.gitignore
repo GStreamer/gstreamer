@@ -1,5 +1,6 @@
 .dirstamp
 adapter
+baseparse
 basesink
 basesrc
 bitreader
