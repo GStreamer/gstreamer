@@ -111,7 +111,8 @@ gst_video_decoder_tester_handle_frame (GstVideoDecoder * dec,
 
   input_num = *((guint64 *) map.data);
 
-  if (input_num == dectester->last_buf_num + 1
+  if ((input_num == dectester->last_buf_num + 1
+          && dectester->last_buf_num != -1)
       || !GST_BUFFER_FLAG_IS_SET (frame->input_buffer,
           GST_BUFFER_FLAG_DELTA_UNIT)) {
 
@@ -134,6 +135,7 @@ gst_video_decoder_tester_handle_frame (GstVideoDecoder * dec,
 
   if (frame->output_buffer)
     return gst_video_decoder_finish_frame (dec, frame);
+  gst_video_codec_frame_unref (frame);
   return GST_FLOW_OK;
 }
 
@@ -420,6 +422,65 @@ GST_START_TEST (videodecoder_playback_with_events)
 GST_END_TEST;
 
 
+/* Check https://bugzilla.gnome.org/show_bug.cgi?id=721835 */
+GST_START_TEST (videodecoder_playback_first_frames_not_decoded)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint64 i = 0;
+
+  setup_videodecodertester ();
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push a buffer, to have the segment attached to it.
+   * unfortunatelly this buffer can't be decoded as it isn't a keyframe */
+  buffer = create_test_buffer (i++);
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* now be evil and ask this frame to be released
+   * this frame has the segment event attached to it, and the
+   * segment shouldn't disappear with it */
+  {
+    GList *l, *ol;
+
+    ol = l = gst_video_decoder_get_frames (GST_VIDEO_DECODER (dec));
+    fail_unless (g_list_length (l) == 1);
+    while (l) {
+      GstVideoCodecFrame *tmp = l->data;
+
+      gst_video_decoder_release_frame (GST_VIDEO_DECODER (dec), tmp);
+
+      l = g_list_next (l);
+    }
+    g_list_free (ol);
+  }
+
+  buffer = create_test_buffer (i++);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless (g_list_length (buffers) == 1);
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  cleanup_videodecodertest ();
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (videodecoder_backwards_playback)
 {
   GstSegment segment;
@@ -510,6 +571,7 @@ gst_videodecoder_suite (void)
   suite_add_tcase (s, tc);
   tcase_add_test (tc, videodecoder_playback);
   tcase_add_test (tc, videodecoder_playback_with_events);
+  tcase_add_test (tc, videodecoder_playback_first_frames_not_decoded);
 
   tcase_add_test (tc, videodecoder_backwards_playback);
 
