@@ -127,6 +127,16 @@ map_lookup_name (const struct map *m, const gchar * name)
   return NULL;
 }
 
+/** Returns a relative score for the supplied GstVaapiProfile */
+guint
+gst_vaapi_utils_h264_get_profile_score (GstVaapiProfile profile)
+{
+  const struct map *const m =
+      map_lookup_value (gst_vaapi_h264_profile_map, profile);
+
+  return m ? 1 + (m - gst_vaapi_h264_profile_map) : 0;
+}
+
 /** Returns GstVaapiProfile from H.264 profile_idc value */
 GstVaapiProfile
 gst_vaapi_utils_h264_get_profile (guint8 profile_idc)

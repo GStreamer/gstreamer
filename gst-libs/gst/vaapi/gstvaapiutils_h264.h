@@ -71,6 +71,10 @@ typedef enum
   GST_VAAPI_LEVEL_H264_L5_2,
 } GstVaapiLevelH264;
 
+/* Returns a relative score for the supplied GstVaapiProfile */
+guint
+gst_vaapi_utils_h264_get_profile_score (GstVaapiProfile profile);
+
 /* Returns GstVaapiProfile from a string representation */
 GstVaapiProfile
 gst_vaapi_utils_h264_get_profile_from_string (const gchar * str);

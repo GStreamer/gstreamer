@@ -154,6 +154,37 @@ _check_sps_pps_status (GstVaapiEncoderH264 * encoder,
   }
 }
 
+/* Determines the largest supported profile by the underlying hardware */
+static gboolean
+ensure_hw_profile_limits (GstVaapiEncoderH264 * encoder)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
+  GArray *profiles;
+  guint i, profile_idc, max_profile_idc;
+
+  if (encoder->hw_max_profile_idc)
+    return TRUE;
+
+  profiles = gst_vaapi_display_get_encode_profiles (display);
+  if (!profiles)
+    return FALSE;
+
+  max_profile_idc = 0;
+  for (i = 0; i < profiles->len; i++) {
+    const GstVaapiProfile profile =
+        g_array_index (profiles, GstVaapiProfile, i);
+    profile_idc = gst_vaapi_utils_h264_get_profile_idc (profile);
+    if (!profile_idc)
+      continue;
+    if (max_profile_idc < profile_idc)
+      max_profile_idc = profile_idc;
+  }
+  g_array_unref (profiles);
+
+  encoder->hw_max_profile_idc = max_profile_idc;
+  return TRUE;
+}
+
 /* Derives the profile supported by the underlying hardware */
 static gboolean
 ensure_hw_profile (GstVaapiEncoderH264 * encoder)
@@ -195,6 +226,36 @@ error_unsupported_profile:
     GST_ERROR ("unsupported HW profile (0x%08x)", encoder->profile);
     return FALSE;
   }
+}
+
+/* Check target decoder constraints */
+static gboolean
+ensure_profile_limits (GstVaapiEncoderH264 * encoder)
+{
+  GstVaapiProfile profile;
+
+  if (!encoder->max_profile_idc
+      || encoder->profile_idc <= encoder->max_profile_idc)
+    return TRUE;
+
+  GST_WARNING ("lowering coding tools to meet target decoder constraints");
+
+  /* Try Main profile coding tools */
+  if (encoder->max_profile_idc < 100) {
+    encoder->use_dct8x8 = FALSE;
+    profile = GST_VAAPI_PROFILE_H264_MAIN;
+  }
+
+  /* Try Constrained Baseline profile coding tools */
+  if (encoder->max_profile_idc < 77) {
+    encoder->num_bframes = 0;
+    encoder->use_cabac = FALSE;
+    profile = GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
+  }
+
+  encoder->profile = profile;
+  encoder->profile_idc = encoder->max_profile_idc;
+  return TRUE;
 }
 
 /* Derives the minimum profile from the active coding tools */
@@ -1230,14 +1291,21 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
   return TRUE;
 }
 
-static gboolean
+static GstVaapiEncoderStatus
 ensure_profile_and_level (GstVaapiEncoderH264 * encoder)
 {
-  if (!ensure_profile (encoder))
-    return FALSE;
+  if (!ensure_profile (encoder) || !ensure_profile_limits (encoder))
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+
   if (!ensure_level (encoder))
-    return FALSE;
-  return TRUE;
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+
+  /* Check HW constraints */
+  if (!ensure_hw_profile_limits (encoder))
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+  if (encoder->profile_idc > encoder->hw_max_profile_idc)
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
 static gboolean
@@ -1601,12 +1669,15 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiEncoderStatus status;
 
   encoder->mb_width = (GST_VAAPI_ENCODER_WIDTH (encoder) + 15) / 16;
   encoder->mb_height = (GST_VAAPI_ENCODER_HEIGHT (encoder) + 15) / 16;
 
-  if (!ensure_profile_and_level (encoder))
-    goto error;
+  status = ensure_profile_and_level (encoder);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return status;
+
   if (!ensure_bitrate (encoder))
     goto error;
 
@@ -1817,6 +1888,40 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
+}
+
+/**
+ * gst_vaapi_encoder_h264_set_max_profile:
+ * @encoder: a #GstVaapiEncoderH264
+ * @profile: an H.264 #GstVaapiProfile
+ *
+ * Notifies the @encoder to use coding tools from the supplied
+ * @profile at most.
+ *
+ * This means that if the minimal profile derived to
+ * support the specified coding tools is greater than this @profile,
+ * then an error is returned when the @encoder is configured.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_encoder_h264_set_max_profile (GstVaapiEncoderH264 * encoder,
+    GstVaapiProfile profile)
+{
+  guint8 profile_idc;
+
+  g_return_val_if_fail (encoder != NULL, FALSE);
+  g_return_val_if_fail (profile != GST_VAAPI_PROFILE_UNKNOWN, FALSE);
+
+  if (gst_vaapi_profile_get_codec (profile) != GST_VAAPI_CODEC_H264)
+    return FALSE;
+
+  profile_idc = gst_vaapi_utils_h264_get_profile_idc (profile);
+  if (!profile_idc)
+    return FALSE;
+
+  encoder->max_profile_idc = profile_idc;
+  return TRUE;
 }
 
 /**

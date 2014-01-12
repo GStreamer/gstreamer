@@ -61,6 +61,10 @@ GPtrArray *
 gst_vaapi_encoder_h264_get_default_properties (void);
 
 gboolean
+gst_vaapi_encoder_h264_set_max_profile (GstVaapiEncoderH264 * encoder,
+    GstVaapiProfile profile);
+
+gboolean
 gst_vaapi_encoder_h264_get_profile_and_level (GstVaapiEncoderH264 * encoder,
     GstVaapiProfile * out_profile_ptr, GstVaapiLevelH264 * out_level_ptr);
 

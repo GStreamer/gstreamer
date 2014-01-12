@@ -22,6 +22,7 @@
 #include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiencoder_h264.h>
+#include <gst/vaapi/gstvaapiutils_h264.h>
 #include "gstvaapiencode_h264.h"
 #include "gstvaapipluginutil.h"
 #if GST_CHECK_VERSION(1,0,0)
@@ -59,7 +60,8 @@ static const char gst_vaapiencode_h264_sink_caps_str[] =
 
 /* *INDENT-OFF* */
 static const char gst_vaapiencode_h264_src_caps_str[] =
-  GST_CODEC_CAPS;
+  GST_CODEC_CAPS ", "
+  "profile = (string) { constrained-baseline, baseline, main, high }";
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
@@ -121,6 +123,87 @@ gst_vaapiencode_h264_get_property (GObject * object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+typedef struct
+{
+  GstVaapiProfile best_profile;
+  guint best_score;
+} FindBestProfileData;
+
+static void
+find_best_profile_value (FindBestProfileData * data, const GValue * value)
+{
+  const gchar *str;
+  GstVaapiProfile profile;
+  guint score;
+
+  if (!value || !G_VALUE_HOLDS_STRING (value))
+    return;
+
+  str = g_value_get_string (value);
+  if (!str)
+    return;
+  profile = gst_vaapi_utils_h264_get_profile_from_string (str);
+  if (!profile)
+    return;
+  score = gst_vaapi_utils_h264_get_profile_score (profile);
+  if (score < data->best_score)
+    return;
+  data->best_profile = profile;
+  data->best_score = score;
+}
+
+static GstVaapiProfile
+find_best_profile (GstCaps * caps)
+{
+  FindBestProfileData data;
+  guint i, j, num_structures, num_values;
+
+  data.best_profile = GST_VAAPI_PROFILE_UNKNOWN;
+  data.best_score = 0;
+
+  num_structures = gst_caps_get_size (caps);
+  for (i = 0; i < num_structures; i++) {
+    GstStructure *const structure = gst_caps_get_structure (caps, i);
+    const GValue *const value = gst_structure_get_value (structure, "profile");
+
+    if (!value)
+      continue;
+    if (G_VALUE_HOLDS_STRING (value))
+      find_best_profile_value (&data, value);
+    else if (GST_VALUE_HOLDS_LIST (value)) {
+      num_values = gst_value_list_get_size (value);
+      for (j = 0; j < num_values; j++)
+        find_best_profile_value (&data, gst_value_list_get_value (value, j));
+    }
+  }
+  return data.best_profile;
+}
+
+static gboolean
+gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
+{
+  GstVaapiEncoderH264 *const encoder =
+      GST_VAAPI_ENCODER_H264 (base_encode->encoder);
+  GstCaps *allowed_caps;
+  GstVaapiProfile profile;
+
+  /* Check for the largest profile that is supported */
+  allowed_caps =
+      gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (base_encode));
+  if (!allowed_caps)
+    return TRUE;
+
+  profile = find_best_profile (allowed_caps);
+  gst_caps_unref (allowed_caps);
+  if (profile) {
+    GST_INFO ("using %s profile as target decoder constraints",
+        gst_vaapi_utils_h264_get_profile_string (profile));
+    if (!gst_vaapi_encoder_h264_set_max_profile (encoder, profile))
+      return FALSE;
+  }
+  return TRUE;
 }
 
 static GstCaps *
@@ -305,6 +388,7 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
   object_class->get_property = gst_vaapiencode_h264_get_property;
 
   encode_class->get_properties = gst_vaapi_encoder_h264_get_default_properties;
+  encode_class->set_config = gst_vaapiencode_h264_set_config;
   encode_class->get_caps = gst_vaapiencode_h264_get_caps;
   encode_class->alloc_encoder = gst_vaapiencode_h264_alloc_encoder;
   encode_class->alloc_buffer = gst_vaapiencode_h264_alloc_buffer;

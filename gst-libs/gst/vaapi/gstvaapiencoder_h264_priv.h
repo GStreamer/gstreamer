@@ -39,6 +39,8 @@ struct _GstVaapiEncoderH264
   GstVaapiProfile profile;
   GstVaapiLevelH264 level;
   guint8 profile_idc;
+  guint8 max_profile_idc;
+  guint8 hw_max_profile_idc;
   guint8 level_idc;
   guint32 idr_period;
   guint32 init_qp;
