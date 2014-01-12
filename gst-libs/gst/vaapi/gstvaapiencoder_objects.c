@@ -32,8 +32,8 @@
 #include "gstvaapidebug.h"
 
 #define GET_ENCODER(obj)    GST_VAAPI_ENCODER_CAST((obj)->parent_instance.codec)
-#define GET_VA_DISPLAY(obj) GST_VAAPI_ENCODER_VA_DISPLAY(GET_ENCODER(obj))
-#define GET_VA_CONTEXT(obj) GST_VAAPI_ENCODER_VA_CONTEXT(GET_ENCODER(obj))
+#define GET_VA_DISPLAY(obj) GET_ENCODER(obj)->va_display
+#define GET_VA_CONTEXT(obj) GET_ENCODER(obj)->va_context
 
 /* ------------------------------------------------------------------------- */
 /* --- Encoder Packed Header                                             --- */

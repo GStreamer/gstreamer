@@ -27,10 +27,10 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstVaapiEncoder GstVaapiEncoder;
+#define GST_VAAPI_ENCODER(encoder) \
+    ((GstVaapiEncoder *) (encoder))
 
-#define GST_VAAPI_ENCODER(encoder)  \
-    ((GstVaapiEncoder *)(encoder))
+typedef struct _GstVaapiEncoder GstVaapiEncoder;
 
 /**
  * GstVaapiEncoderStatus:

@@ -40,21 +40,27 @@ G_BEGIN_DECLS
 #define GST_VAAPI_ENCODER_GET_CLASS(obj) \
     GST_VAAPI_ENCODER_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
 
-/* Get GstVaapiDisplay* */
+/**
+ * GST_VAAPI_ENCODER_DISPLAY:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the #GstVaapiDisplay of @encoder.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_DISPLAY
 #define GST_VAAPI_ENCODER_DISPLAY(encoder) \
-    (GST_VAAPI_ENCODER_CAST(encoder)->display)
+    GST_VAAPI_ENCODER_CAST(encoder)->display
 
-/* Get VADisplay */
-#define GST_VAAPI_ENCODER_VA_DISPLAY(encoder) \
-    (GST_VAAPI_ENCODER_CAST(encoder)->va_display)
-
-/* Get GstVaapiContext* */
+/**
+ * GST_VAAPI_ENCODER_CONTEXT:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the #GstVaapiContext of @encoder.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_CONTEXT
 #define GST_VAAPI_ENCODER_CONTEXT(encoder) \
-    (GST_VAAPI_ENCODER_CAST(encoder)->context)
-
-/* Get VAContext */
-#define GST_VAAPI_ENCODER_VA_CONTEXT(encoder) \
-    (GST_VAAPI_ENCODER_CAST(encoder)->va_context)
+    GST_VAAPI_ENCODER_CAST(encoder)->context
 
 /**
  * GST_VAAPI_ENCODER_VIDEO_INFO:
@@ -132,13 +138,6 @@ G_BEGIN_DECLS
 #undef  GST_VAAPI_ENCODER_KEYFRAME_PERIOD
 #define GST_VAAPI_ENCODER_KEYFRAME_PERIOD(encoder) \
   (GST_VAAPI_ENCODER_CAST (encoder)->keyframe_period)
-
-#define GST_VAAPI_ENCODER_CHECK_STATUS(exp, err_num, err_reason, ...)   \
-  if (!(exp)) {                                                         \
-    ret = err_num;                                                      \
-    GST_VAAPI_ENCODER_LOG_ERROR(err_reason, ## __VA_ARGS__);            \
-    goto end;                                                           \
-  }
 
 typedef struct _GstVaapiEncoderClass GstVaapiEncoderClass;
 typedef struct _GstVaapiEncoderClassData GstVaapiEncoderClassData;
