@@ -564,9 +564,9 @@ gst_bit_writer_write_sps (GstBitWriter * bitwriter,
 
       for (i = 0; i < 1; ++i) {
         /* bit_rate_value_minus1[0] */
-        gst_bit_writer_put_ue (bitwriter, seq->bits_per_second / 1024 - 1);
+        gst_bit_writer_put_ue (bitwriter, seq->bits_per_second / 1000 - 1);
         /* cpb_size_value_minus1[0] */
-        gst_bit_writer_put_ue (bitwriter, seq->bits_per_second / 1024 * 8 - 1);
+        gst_bit_writer_put_ue (bitwriter, seq->bits_per_second / 1000 * 8 - 1);
         /* cbr_flag[0] */
         gst_bit_writer_put_bits_uint32 (bitwriter, 1, 1);
       }
@@ -857,7 +857,7 @@ fill_va_sequence_param (GstVaapiEncoderH264 * encoder,
   seq->intra_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
   seq->ip_period = 0;           // ?
   if (base_encoder->bitrate > 0)
-    seq->bits_per_second = base_encoder->bitrate * 1024;
+    seq->bits_per_second = base_encoder->bitrate * 1000;
   else
     seq->bits_per_second = 0;
 
@@ -1215,8 +1215,8 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
   gst_vaapi_enc_picture_add_misc_buffer (picture, misc);
   hrd = misc->impl;
   if (base_encoder->bitrate > 0) {
-    hrd->initial_buffer_fullness = base_encoder->bitrate * 1024 * 4;
-    hrd->buffer_size = base_encoder->bitrate * 1024 * 8;
+    hrd->initial_buffer_fullness = base_encoder->bitrate * 1000 * 4;
+    hrd->buffer_size = base_encoder->bitrate * 1000 * 8;
   } else {
     hrd->initial_buffer_fullness = 0;
     hrd->buffer_size = 0;
@@ -1234,7 +1234,7 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     rate_control = misc->impl;
     memset (rate_control, 0, sizeof (VAEncMiscParameterRateControl));
     if (base_encoder->bitrate)
-      rate_control->bits_per_second = base_encoder->bitrate * 1024;
+      rate_control->bits_per_second = base_encoder->bitrate * 1000;
     else
       rate_control->bits_per_second = 0;
     rate_control->target_percentage = 70;
@@ -1272,7 +1272,7 @@ ensure_bitrate (GstVaapiEncoderH264 * encoder)
         base_encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
             GST_VAAPI_ENCODER_HEIGHT (encoder) *
             GST_VAAPI_ENCODER_FPS_N (encoder) /
-            GST_VAAPI_ENCODER_FPS_D (encoder) / 4 / 1024;
+            GST_VAAPI_ENCODER_FPS_D (encoder) / 4 / 1000;
       break;
     default:
       base_encoder->bitrate = 0;
