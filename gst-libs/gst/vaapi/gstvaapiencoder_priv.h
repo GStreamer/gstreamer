@@ -27,6 +27,7 @@
 #include <gst/vaapi/gstvaapicontext.h>
 #include <gst/vaapi/gstvaapivideopool.h>
 #include <gst/video/gstvideoutils.h>
+#include <gst/vaapi/gstvaapivalue.h>
 
 G_BEGIN_DECLS
 
@@ -197,13 +198,21 @@ struct _GstVaapiEncoderClassData
   /*< private >*/
   GstVaapiCodec codec;
 
+  GType (*rate_control_get_type)(void);
   GstVaapiRateControl default_rate_control;
   guint32 rate_control_mask;
 };
 
 #define GST_VAAPI_ENCODER_DEFINE_CLASS_DATA(CODEC)                      \
+  GST_VAAPI_TYPE_DEFINE_ENUM_SUBSET_FROM_MASK(                          \
+      G_PASTE (GstVaapiRateControl, CODEC),                             \
+      G_PASTE (gst_vaapi_rate_control_, CODEC),                         \
+      GST_VAAPI_TYPE_RATE_CONTROL, SUPPORTED_RATECONTROLS);             \
+                                                                        \
   static const GstVaapiEncoderClassData g_class_data = {                \
     .codec = G_PASTE (GST_VAAPI_CODEC_, CODEC),                         \
+    .rate_control_get_type =                                            \
+        G_PASTE (G_PASTE (gst_vaapi_rate_control_, CODEC), _get_type),  \
     .default_rate_control = DEFAULT_RATECONTROL,                        \
     .rate_control_mask = SUPPORTED_RATECONTROLS,                        \
   }

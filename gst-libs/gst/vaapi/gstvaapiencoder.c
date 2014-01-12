@@ -115,6 +115,8 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
   const GstVaapiEncoderClassData *const cdata = klass->class_data;
   GPtrArray *props = NULL;
 
+  g_assert (cdata->rate_control_get_type != NULL);
+
   /**
    * GstVaapiEncoder:rate-control:
    *
@@ -124,7 +126,7 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
       GST_VAAPI_ENCODER_PROP_RATECONTROL,
       g_param_spec_enum ("rate-control",
           "Rate Control", "Rate control mode",
-          GST_VAAPI_TYPE_RATE_CONTROL, cdata->default_rate_control,
+          cdata->rate_control_get_type (), cdata->default_rate_control,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
