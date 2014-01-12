@@ -1589,8 +1589,8 @@ set_context_info (GstVaapiEncoder * base_encoder)
   /* XXX: exclude slice groups, scaling lists, MVC/SVC extensions */
   base_encoder->codedbuf_size += 4 + GST_ROUND_UP_8 (MAX_PPS_HDR_SIZE) / 8;
 
-  /* Account for slice header. At most 200 slices are supported */
-  base_encoder->codedbuf_size += 200 * (4 +
+  /* Account for slice header */
+  base_encoder->codedbuf_size += encoder->num_slices * (4 +
       GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE) / 8);
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
