@@ -240,10 +240,12 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "If this media pipeline can be reused after an unprepare",
           DEFAULT_REUSABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+#ifdef GST_TYPE_RTSP_PROFILE
   g_object_class_install_property (gobject_class, PROP_PROFILES,
       g_param_spec_flags ("profiles", "Profiles",
           "Allowed transfer profiles", GST_TYPE_RTSP_PROFILE,
           DEFAULT_PROFILES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
       g_param_spec_flags ("protocols", "Protocols",
