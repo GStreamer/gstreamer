@@ -26,6 +26,9 @@
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_ENCODER_MPEG2(encoder) \
+  ((GstVaapiEncoderMpeg2 *) (encoder))
+
 typedef struct _GstVaapiEncoderMpeg2 GstVaapiEncoderMpeg2;
 
 /**

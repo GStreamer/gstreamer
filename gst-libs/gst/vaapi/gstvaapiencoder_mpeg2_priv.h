@@ -22,16 +22,13 @@
 #ifndef GST_VAAPI_ENCODER_MPEG2_PRIV_H
 #define GST_VAAPI_ENCODER_MPEG2_PRIV_H
 
-#include <glib.h>
-#include <gst/vaapi/gstvaapiencoder.h>
-#include <gst/vaapi/gstvaapiencoder_priv.h>
+#include "gstvaapiencoder_priv.h"
+#include "gstvaapiutils_mpeg2.h"
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_ENCODER_MPEG2(encoder)  \
-        ((GstVaapiEncoderMpeg2 *)(encoder))
 #define GST_VAAPI_ENCODER_MPEG2_CAST(encoder) \
-        ((GstVaapiEncoderMpeg2 *)(encoder))
+  ((GstVaapiEncoderMpeg2 *) (encoder))
 
 typedef enum
 {
@@ -46,18 +43,6 @@ typedef enum
   GST_VAAPI_ENCODER_MPEG2_LEVEL_HIGH
 } GstVaapiEncoderMpeg2Level;
 
-#define GST_VAAPI_ENCODER_MPEG2_DEFAULT_PROFILE      GST_ENCODER_MPEG2_PROFILE_MAIN
-#define GST_VAAPI_ENCODER_MPEG2_DEFAULT_LEVEL        GST_VAAPI_ENCODER_MPEG2_LEVEL_HIGH
-
-#define GST_VAAPI_ENCODER_MPEG2_MIN_CQP                 2
-#define GST_VAAPI_ENCODER_MPEG2_MAX_CQP                 62
-#define GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP             8
-
-#define GST_VAAPI_ENCODER_MPEG2_MAX_MAX_BFRAMES         16
-#define GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES     2
-
-#define GST_VAAPI_ENCODER_MPEG2_MAX_BITRATE             100*1024
-
 #define START_CODE_PICUTRE      0x00000100
 #define START_CODE_SLICE        0x00000101
 #define START_CODE_USER         0x000001B2
@@ -65,19 +50,13 @@ typedef enum
 #define START_CODE_EXT          0x000001B5
 #define START_CODE_GOP          0x000001B8
 
-#define CHROMA_FORMAT_RESERVED  0
-#define CHROMA_FORMAT_420       1
-#define CHROMA_FORMAT_422       2
-#define CHROMA_FORMAT_444       3
-
 struct _GstVaapiEncoderMpeg2
 {
-  GstVaapiEncoder parent;
+  GstVaapiEncoder parent_instance;
 
-  /* public */
   guint32 profile;
   guint32 level;
-  guint32 cqp;
+  guint32 cqp; /* quantizer value for CQP mode */
   guint32 ip_period;
 
   /* re-ordering */

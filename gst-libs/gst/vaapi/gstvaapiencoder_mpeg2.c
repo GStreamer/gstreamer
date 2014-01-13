@@ -1,7 +1,7 @@
 /*
  *  gstvaapiencoder_mpeg2.c - MPEG-2 encoder
  *
- *  Copyright (C) 2012 -2013 Intel Corporation
+ *  Copyright (C) 2012-2013 Intel Corporation
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
@@ -20,15 +20,14 @@
  */
 
 #include "sysdeps.h"
+#include <va/va.h>
+#include <va/va_enc_mpeg2.h>
 #include <gst/base/gstbitwriter.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiencoder_mpeg2.h"
 #include "gstvaapiencoder_mpeg2_priv.h"
-#include "gstvaapiencoder_priv.h"
+#include "gstvaapiutils_mpeg2_priv.h"
 #include "gstvaapicodedbufferproxy_priv.h"
-
-#include <va/va.h>
-#include <va/va_enc_mpeg2.h>
 
 #include "gstvaapicontext.h"
 #include "gstvaapisurface.h"
@@ -52,12 +51,11 @@
 
 static gboolean
 gst_bit_writer_write_sps (GstBitWriter * bitwriter,
-    VAEncSequenceParameterBufferMPEG2 * seq, GstVaapiEncoderMpeg2 * encoder);
+    const VAEncSequenceParameterBufferMPEG2 * seq_param);
 
 static gboolean
 gst_bit_writer_write_pps (GstBitWriter * bitwriter,
-    VAEncPictureParameterBufferMPEG2 * pic);
-
+    const VAEncPictureParameterBufferMPEG2 * pic_param);
 
 static void clear_references (GstVaapiEncoderMpeg2 * encoder);
 
@@ -177,40 +175,42 @@ static gboolean
 fill_sequence (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncSequence * sequence)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-  VAEncSequenceParameterBufferMPEG2 *seq = sequence->param;
+  VAEncSequenceParameterBufferMPEG2 *const seq_param = sequence->param;
 
-  memset (seq, 0, sizeof (VAEncSequenceParameterBufferMPEG2));
+  memset (seq_param, 0, sizeof (VAEncSequenceParameterBufferMPEG2));
 
-  seq->intra_period = base_encoder->keyframe_period;
-  seq->ip_period = encoder->ip_period;
-  seq->picture_width = GST_VAAPI_ENCODER_WIDTH (encoder);
-  seq->picture_height = GST_VAAPI_ENCODER_HEIGHT (encoder);
+  seq_param->intra_period = base_encoder->keyframe_period;
+  seq_param->ip_period = encoder->ip_period;
+  seq_param->picture_width = GST_VAAPI_ENCODER_WIDTH (encoder);
+  seq_param->picture_height = GST_VAAPI_ENCODER_HEIGHT (encoder);
 
   if (base_encoder->bitrate > 0)
-    seq->bits_per_second = base_encoder->bitrate * 1000;
+    seq_param->bits_per_second = base_encoder->bitrate * 1000;
   else
-    seq->bits_per_second = 0;
+    seq_param->bits_per_second = 0;
 
   if (GST_VAAPI_ENCODER_FPS_D (encoder))
-    seq->frame_rate =
+    seq_param->frame_rate =
         GST_VAAPI_ENCODER_FPS_N (encoder) / GST_VAAPI_ENCODER_FPS_D (encoder);
   else
-    seq->frame_rate = 0;
+    seq_param->frame_rate = 0;
 
-  seq->aspect_ratio_information = 1;
-  seq->vbv_buffer_size = 3;     /* B = 16 * 1024 * vbv_buffer_size */
+  seq_param->aspect_ratio_information = 1;
+  seq_param->vbv_buffer_size = 3;       /* B = 16 * 1024 * vbv_buffer_size */
 
-  seq->sequence_extension.bits.profile_and_level_indication =
+  seq_param->sequence_extension.bits.profile_and_level_indication =
       make_profile_and_level_indication (encoder->profile, encoder->level);
-  seq->sequence_extension.bits.progressive_sequence = 1;        /* progressive frame-pictures */
-  seq->sequence_extension.bits.chroma_format = CHROMA_FORMAT_420;       /* 4:2:0 */
-  seq->sequence_extension.bits.low_delay = 0;   /* FIXME */
-  seq->sequence_extension.bits.frame_rate_extension_n = 0;      /*FIXME */
-  seq->sequence_extension.bits.frame_rate_extension_d = 0;
+  seq_param->sequence_extension.bits.progressive_sequence = 1;  /* progressive frame-pictures */
+  seq_param->sequence_extension.bits.chroma_format =
+      gst_vaapi_utils_mpeg2_get_chroma_format_idc
+      (GST_VAAPI_CHROMA_TYPE_YUV420);
+  seq_param->sequence_extension.bits.low_delay = 0;     /* FIXME */
+  seq_param->sequence_extension.bits.frame_rate_extension_n = 0;        /* FIXME */
+  seq_param->sequence_extension.bits.frame_rate_extension_d = 0;
 
-  seq->gop_header.bits.time_code = (1 << 12);   /* bit12: marker_bit */
-  seq->gop_header.bits.closed_gop = 0;
-  seq->gop_header.bits.broken_link = 0;
+  seq_param->gop_header.bits.time_code = (1 << 12);     /* bit12: marker_bit */
+  seq_param->gop_header.bits.closed_gop = 0;
+  seq_param->gop_header.bits.broken_link = 0;
 
   return TRUE;
 }
@@ -236,20 +236,21 @@ fill_picture (GstVaapiEncoderMpeg2 * encoder,
     GstVaapiEncPicture * picture,
     GstVaapiCodedBuffer * codedbuf, GstVaapiSurfaceProxy * surface)
 {
-  VAEncPictureParameterBufferMPEG2 *pic = picture->param;
+  VAEncPictureParameterBufferMPEG2 *const pic_param = picture->param;
   guint8 f_code_x, f_code_y;
 
-  memset (pic, 0, sizeof (VAEncPictureParameterBufferMPEG2));
+  memset (pic_param, 0, sizeof (VAEncPictureParameterBufferMPEG2));
 
-  pic->reconstructed_picture = GST_VAAPI_SURFACE_PROXY_SURFACE_ID (surface);
-  pic->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
-  pic->picture_type = get_va_enc_picture_type (picture->type);
-  pic->temporal_reference = picture->frame_num & (1024 - 1);
-  pic->vbv_delay = 0xFFFF;
+  pic_param->reconstructed_picture =
+      GST_VAAPI_SURFACE_PROXY_SURFACE_ID (surface);
+  pic_param->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
+  pic_param->picture_type = get_va_enc_picture_type (picture->type);
+  pic_param->temporal_reference = picture->frame_num & (1024 - 1);
+  pic_param->vbv_delay = 0xFFFF;
 
   f_code_x = 0xf;
   f_code_y = 0xf;
-  if (pic->picture_type != VAEncPictureTypeIntra) {
+  if (pic_param->picture_type != VAEncPictureTypeIntra) {
     if (encoder->level == GST_VAAPI_ENCODER_MPEG2_LEVEL_LOW) {
       f_code_x = 7;
       f_code_y = 4;
@@ -262,45 +263,45 @@ fill_picture (GstVaapiEncoderMpeg2 * encoder,
     }
   }
 
-  if (pic->picture_type == VAEncPictureTypeIntra) {
-    pic->f_code[0][0] = 0xf;
-    pic->f_code[0][1] = 0xf;
-    pic->f_code[1][0] = 0xf;
-    pic->f_code[1][1] = 0xf;
-    pic->forward_reference_picture = VA_INVALID_SURFACE;
-    pic->backward_reference_picture = VA_INVALID_SURFACE;
-  } else if (pic->picture_type == VAEncPictureTypePredictive) {
-    pic->f_code[0][0] = f_code_x;
-    pic->f_code[0][1] = f_code_y;
-    pic->f_code[1][0] = 0xf;
-    pic->f_code[1][1] = 0xf;
-    pic->forward_reference_picture =
+  if (pic_param->picture_type == VAEncPictureTypeIntra) {
+    pic_param->f_code[0][0] = 0xf;
+    pic_param->f_code[0][1] = 0xf;
+    pic_param->f_code[1][0] = 0xf;
+    pic_param->f_code[1][1] = 0xf;
+    pic_param->forward_reference_picture = VA_INVALID_SURFACE;
+    pic_param->backward_reference_picture = VA_INVALID_SURFACE;
+  } else if (pic_param->picture_type == VAEncPictureTypePredictive) {
+    pic_param->f_code[0][0] = f_code_x;
+    pic_param->f_code[0][1] = f_code_y;
+    pic_param->f_code[1][0] = 0xf;
+    pic_param->f_code[1][1] = 0xf;
+    pic_param->forward_reference_picture =
         GST_VAAPI_SURFACE_PROXY_SURFACE_ID (encoder->forward);
-    pic->backward_reference_picture = VA_INVALID_SURFACE;
-  } else if (pic->picture_type == VAEncPictureTypeBidirectional) {
-    pic->f_code[0][0] = f_code_x;
-    pic->f_code[0][1] = f_code_y;
-    pic->f_code[1][0] = f_code_x;
-    pic->f_code[1][1] = f_code_y;
-    pic->forward_reference_picture =
-        GST_VAAPI_SURFACE_PROXY_SURFACE_ID (encoder->forward);;
-    pic->backward_reference_picture =
-        GST_VAAPI_SURFACE_PROXY_SURFACE_ID (encoder->backward);;
+    pic_param->backward_reference_picture = VA_INVALID_SURFACE;
+  } else if (pic_param->picture_type == VAEncPictureTypeBidirectional) {
+    pic_param->f_code[0][0] = f_code_x;
+    pic_param->f_code[0][1] = f_code_y;
+    pic_param->f_code[1][0] = f_code_x;
+    pic_param->f_code[1][1] = f_code_y;
+    pic_param->forward_reference_picture =
+        GST_VAAPI_SURFACE_PROXY_SURFACE_ID (encoder->forward);
+    pic_param->backward_reference_picture =
+        GST_VAAPI_SURFACE_PROXY_SURFACE_ID (encoder->backward);
   } else {
     g_assert (0);
   }
 
-  pic->picture_coding_extension.bits.intra_dc_precision = 0;    /* 8bits */
-  pic->picture_coding_extension.bits.picture_structure = 3;     /* frame picture */
-  pic->picture_coding_extension.bits.top_field_first = 0;
-  pic->picture_coding_extension.bits.frame_pred_frame_dct = 1;  /* FIXME */
-  pic->picture_coding_extension.bits.concealment_motion_vectors = 0;
-  pic->picture_coding_extension.bits.q_scale_type = 0;
-  pic->picture_coding_extension.bits.intra_vlc_format = 0;
-  pic->picture_coding_extension.bits.alternate_scan = 0;
-  pic->picture_coding_extension.bits.repeat_first_field = 0;
-  pic->picture_coding_extension.bits.progressive_frame = 1;
-  pic->picture_coding_extension.bits.composite_display_flag = 0;
+  pic_param->picture_coding_extension.bits.intra_dc_precision = 0;      /* 8bits */
+  pic_param->picture_coding_extension.bits.picture_structure = 3;       /* frame picture */
+  pic_param->picture_coding_extension.bits.top_field_first = 0;
+  pic_param->picture_coding_extension.bits.frame_pred_frame_dct = 1;    /* FIXME */
+  pic_param->picture_coding_extension.bits.concealment_motion_vectors = 0;
+  pic_param->picture_coding_extension.bits.q_scale_type = 0;
+  pic_param->picture_coding_extension.bits.intra_vlc_format = 0;
+  pic_param->picture_coding_extension.bits.alternate_scan = 0;
+  pic_param->picture_coding_extension.bits.repeat_first_field = 0;
+  pic_param->picture_coding_extension.bits.progressive_frame = 1;
+  pic_param->picture_coding_extension.bits.composite_display_flag = 0;
 
   return TRUE;
 }
@@ -312,12 +313,13 @@ set_sequence_packed_header (GstVaapiEncoderMpeg2 * encoder,
   GstVaapiEncPackedHeader *packed_seq;
   GstBitWriter writer;
   VAEncPackedHeaderParameterBuffer packed_header_param_buffer = { 0 };
-  VAEncSequenceParameterBufferMPEG2 *seq = sequence->param;
+  const VAEncSequenceParameterBufferMPEG2 *const seq_param = sequence->param;
   guint32 data_bit_size;
   guint8 *data;
 
   gst_bit_writer_init (&writer, 128 * 8);
-  gst_bit_writer_write_sps (&writer, seq, encoder);
+  if (encoder->new_gop)
+    gst_bit_writer_write_sps (&writer, seq_param);
   g_assert (GST_BIT_WRITER_BIT_SIZE (&writer) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&writer);
   data = GST_BIT_WRITER_DATA (&writer);
@@ -332,7 +334,7 @@ set_sequence_packed_header (GstVaapiEncoderMpeg2 * encoder,
   g_assert (packed_seq);
 
   gst_vaapi_enc_picture_add_packed_header (picture, packed_seq);
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & packed_seq, NULL);
+  gst_vaapi_codec_object_replace (&packed_seq, NULL);
   gst_bit_writer_clear (&writer, TRUE);
 
   return TRUE;
@@ -345,12 +347,12 @@ set_picture_packed_header (GstVaapiEncoderMpeg2 * encoder,
   GstVaapiEncPackedHeader *packed_pic;
   GstBitWriter writer;
   VAEncPackedHeaderParameterBuffer packed_header_param_buffer = { 0 };
-  VAEncPictureParameterBufferMPEG2 *pic = picture->param;
+  const VAEncPictureParameterBufferMPEG2 *const pic_param = picture->param;
   guint32 data_bit_size;
   guint8 *data;
 
   gst_bit_writer_init (&writer, 128 * 8);
-  gst_bit_writer_write_pps (&writer, pic);
+  gst_bit_writer_write_pps (&writer, pic_param);
   g_assert (GST_BIT_WRITER_BIT_SIZE (&writer) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&writer);
   data = GST_BIT_WRITER_DATA (&writer);
@@ -365,7 +367,7 @@ set_picture_packed_header (GstVaapiEncoderMpeg2 * encoder,
   g_assert (packed_pic);
 
   gst_vaapi_enc_picture_add_packed_header (picture, packed_pic);
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & packed_pic, NULL);
+  gst_vaapi_codec_object_replace (&packed_pic, NULL);
   gst_bit_writer_clear (&writer, TRUE);
 
   return TRUE;
@@ -389,11 +391,11 @@ ensure_sequence (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncPicture * picture)
       !set_sequence_packed_header (encoder, picture, sequence))
     goto error;
   gst_vaapi_enc_picture_set_sequence (picture, sequence);
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) (&sequence), NULL);
+  gst_vaapi_codec_object_replace (&sequence, NULL);
   return TRUE;
 
 error:
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) (&sequence), NULL);
+  gst_vaapi_codec_object_replace (&sequence, NULL);
   return FALSE;
 }
 
@@ -411,7 +413,6 @@ ensure_picture (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncPicture * picture,
     GST_ERROR ("set picture packed header failed");
     return FALSE;
   }
-
   return TRUE;
 }
 
@@ -438,7 +439,7 @@ set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
     hrd->initial_buffer_fullness = 0;
     hrd->buffer_size = 0;
   }
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & misc, NULL);
+  gst_vaapi_codec_object_replace (&misc, NULL);
 
   /* add ratecontrol */
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR) {
@@ -458,11 +459,9 @@ set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
     rate_control->initial_qp = encoder->cqp;
     rate_control->min_qp = 0;
     rate_control->basic_unit_size = 0;
-    gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & misc, NULL);
+    gst_vaapi_codec_object_replace (&misc, NULL);
   }
-
   return TRUE;
-
 }
 
 static gboolean
@@ -491,10 +490,8 @@ fill_slices (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncPicture * picture)
     slice_param->quantiser_scale_code = encoder->cqp / 2;
 
     gst_vaapi_enc_picture_add_slice (picture, slice);
-    gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & slice, NULL);
-
+    gst_vaapi_codec_object_replace (&slice, NULL);
   }
-
   return TRUE;
 }
 
@@ -510,14 +507,15 @@ ensure_slices (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncPicture * picture)
 }
 
 static GstVaapiEncoderStatus
-gst_vaapi_encoder_mpeg2_encode (GstVaapiEncoder * base,
+gst_vaapi_encoder_mpeg2_encode (GstVaapiEncoder * base_encoder,
     GstVaapiEncPicture * picture, GstVaapiCodedBufferProxy * codedbuf)
 {
-  GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2_CAST (base);
+  GstVaapiEncoderMpeg2 *const encoder =
+      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
   GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
   GstVaapiSurfaceProxy *reconstruct = NULL;
 
-  reconstruct = gst_vaapi_encoder_create_surface (base);
+  reconstruct = gst_vaapi_encoder_create_surface (base_encoder);
 
   g_assert (GST_VAAPI_SURFACE_PROXY_SURFACE (reconstruct));
 
@@ -548,13 +546,14 @@ error:
 }
 
 static GstVaapiEncoderStatus
-gst_vaapi_encoder_mpeg2_flush (GstVaapiEncoder * base)
+gst_vaapi_encoder_mpeg2_flush (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2_CAST (base);
+  GstVaapiEncoderMpeg2 *const encoder =
+      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
   GstVaapiEncPicture *pic;
 
   while (!g_queue_is_empty (&encoder->b_frames)) {
-    pic = (GstVaapiEncPicture *) g_queue_pop_head (&encoder->b_frames);
+    pic = g_queue_pop_head (&encoder->b_frames);
     gst_vaapi_enc_picture_unref (pic);
   }
   g_queue_clear (&encoder->b_frames);
@@ -563,13 +562,13 @@ gst_vaapi_encoder_mpeg2_flush (GstVaapiEncoder * base)
 }
 
 static GstVaapiEncoderStatus
-gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base,
+gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base_encoder,
     GstVideoCodecFrame * frame, GstVaapiEncPicture ** output)
 {
-  GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2 (base);
+  GstVaapiEncoderMpeg2 *const encoder =
+      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
   GstVaapiEncPicture *picture = NULL;
   GstVaapiEncoderStatus status = GST_VAAPI_ENCODER_STATUS_SUCCESS;
-
 
   if (!frame) {
     if (g_queue_is_empty (&encoder->b_frames) && encoder->dump_frames) {
@@ -591,7 +590,7 @@ gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base,
     return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
   }
 
-  if (encoder->frame_num >= base->keyframe_period) {
+  if (encoder->frame_num >= base_encoder->keyframe_period) {
     encoder->frame_num = 0;
     clear_references (encoder);
   }
@@ -602,7 +601,7 @@ gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base,
   } else {
     encoder->new_gop = FALSE;
     if ((encoder->frame_num % (encoder->ip_period + 1)) == 0 ||
-        encoder->frame_num == base->keyframe_period - 1) {
+        encoder->frame_num == base_encoder->keyframe_period - 1) {
       picture->type = GST_VAAPI_PICTURE_TYPE_P;
       encoder->dump_frames = TRUE;
     } else {
@@ -643,7 +642,8 @@ to_vaapi_profile (guint32 profile)
 static void
 set_context_info (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderMpeg2 *const encoder = GST_VAAPI_ENCODER_MPEG2 (base_encoder);
+  GstVaapiEncoderMpeg2 *const encoder =
+      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
 
   /* Maximum sizes for common headers (in bytes) */
@@ -703,18 +703,13 @@ error:
 }
 
 static gboolean
-gst_vaapi_encoder_mpeg2_init (GstVaapiEncoder * base)
+gst_vaapi_encoder_mpeg2_init (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2 (base);
+  GstVaapiEncoderMpeg2 *const encoder =
+      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
 
   /* re-ordering */
   g_queue_init (&encoder->b_frames);
-  encoder->dump_frames = FALSE;
-
-  encoder->forward = NULL;
-  encoder->backward = NULL;
-
-  encoder->frame_num = 0;
 
   return TRUE;
 }
@@ -750,16 +745,17 @@ push_reference (GstVaapiEncoderMpeg2 * encoder, GstVaapiSurfaceProxy * ref)
 }
 
 static void
-gst_vaapi_encoder_mpeg2_finalize (GstVaapiEncoder * base)
+gst_vaapi_encoder_mpeg2_finalize (GstVaapiEncoder * base_encoder)
 {
-  /*free private buffers */
-  GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2 (base);
+  /* free private buffers */
+  GstVaapiEncoderMpeg2 *const encoder =
+      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
   GstVaapiEncPicture *pic;
 
   clear_references (encoder);
 
   while (!g_queue_is_empty (&encoder->b_frames)) {
-    pic = (GstVaapiEncPicture *) g_queue_pop_head (&encoder->b_frames);
+    pic = g_queue_pop_head (&encoder->b_frames);
     gst_vaapi_enc_picture_unref (pic);
   }
   g_queue_clear (&encoder->b_frames);
@@ -769,7 +765,8 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_mpeg2_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
 {
-  GstVaapiEncoderMpeg2 *const encoder = GST_VAAPI_ENCODER_MPEG2 (base_encoder);
+  GstVaapiEncoderMpeg2 *const encoder =
+      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
 
   switch (prop_id) {
     case GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER:
@@ -796,6 +793,14 @@ gst_vaapi_encoder_mpeg2_class (void)
   return &GstVaapiEncoderMpeg2Class;
 }
 
+/**
+ * gst_vaapi_encoder_mpeg2_new:
+ * @display: a #GstVaapiDisplay
+ *
+ * Creates a new #GstVaapiEncoder for MPEG-2 encoding.
+ *
+ * Return value: the newly allocated #GstVaapiEncoder object
+ */
 GstVaapiEncoder *
 gst_vaapi_encoder_mpeg2_new (GstVaapiDisplay * display)
 {
@@ -828,17 +833,13 @@ gst_vaapi_encoder_mpeg2_get_default_properties (void)
       g_param_spec_uint ("quantizer",
           "Constant Quantizer",
           "Constant quantizer (if rate-control mode is CQP)",
-          GST_VAAPI_ENCODER_MPEG2_MIN_CQP, GST_VAAPI_ENCODER_MPEG2_MAX_CQP,
-          GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          2, 62, 8, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
       GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES,
       g_param_spec_uint ("max-bframes", "Max B-Frames",
-          "Number of B-frames between I and P", 0,
-          GST_VAAPI_ENCODER_MPEG2_MAX_MAX_BFRAMES,
-          GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Number of B-frames between I and P",
+          0, 16, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }
@@ -881,80 +882,79 @@ find_frame_rate_code (const VAEncSequenceParameterBufferMPEG2 * seq_param)
 
 static gboolean
 gst_bit_writer_write_sps (GstBitWriter * bitwriter,
-    VAEncSequenceParameterBufferMPEG2 * seq, GstVaapiEncoderMpeg2 * encoder)
+    const VAEncSequenceParameterBufferMPEG2 * seq_param)
 {
-  int frame_rate_code = find_frame_rate_code (seq);
+  gst_bit_writer_put_bits_uint32 (bitwriter, START_CODE_SEQ, 32);
+  gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->picture_width, 12);
+  gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->picture_height, 12);
+  gst_bit_writer_put_bits_uint32 (bitwriter,
+      seq_param->aspect_ratio_information, 4);
+  gst_bit_writer_put_bits_uint32 (bitwriter, find_frame_rate_code (seq_param), 4);      /* frame_rate_code */
+  gst_bit_writer_put_bits_uint32 (bitwriter, (seq_param->bits_per_second + 399) / 400, 18);     /* the low 18 bits of bit_rate */
+  gst_bit_writer_put_bits_uint32 (bitwriter, 1, 1);     /* marker_bit */
+  gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->vbv_buffer_size, 10);
+  gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);     /* constraint_parameter_flag, always 0 for MPEG-2 */
+  gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);     /* load_intra_quantiser_matrix */
+  gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);     /* load_non_intra_quantiser_matrix */
 
-  if (encoder->new_gop) {
-    gst_bit_writer_put_bits_uint32 (bitwriter, START_CODE_SEQ, 32);
-    gst_bit_writer_put_bits_uint32 (bitwriter, seq->picture_width, 12);
-    gst_bit_writer_put_bits_uint32 (bitwriter, seq->picture_height, 12);
-    gst_bit_writer_put_bits_uint32 (bitwriter, seq->aspect_ratio_information,
-        4);
-    gst_bit_writer_put_bits_uint32 (bitwriter, frame_rate_code, 4);     /* frame_rate_code */
-    gst_bit_writer_put_bits_uint32 (bitwriter, (seq->bits_per_second + 399) / 400, 18); /* the low 18 bits of bit_rate */
-    gst_bit_writer_put_bits_uint32 (bitwriter, 1, 1);   /* marker_bit */
-    gst_bit_writer_put_bits_uint32 (bitwriter, seq->vbv_buffer_size, 10);
-    gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);   /* constraint_parameter_flag, always 0 for MPEG-2 */
-    gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);   /* load_intra_quantiser_matrix */
-    gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);   /* load_non_intra_quantiser_matrix */
+  gst_bit_writer_align_bytes (bitwriter, 0);
 
-    gst_bit_writer_align_bytes (bitwriter, 0);
+  gst_bit_writer_put_bits_uint32 (bitwriter, START_CODE_EXT, 32);
+  gst_bit_writer_put_bits_uint32 (bitwriter, 1, 4);     /* sequence_extension id */
+  gst_bit_writer_put_bits_uint32 (bitwriter,
+      seq_param->sequence_extension.bits.profile_and_level_indication, 8);
+  gst_bit_writer_put_bits_uint32 (bitwriter,
+      seq_param->sequence_extension.bits.progressive_sequence, 1);
+  gst_bit_writer_put_bits_uint32 (bitwriter,
+      seq_param->sequence_extension.bits.chroma_format, 2);
+  gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->picture_width >> 12, 2);
+  gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->picture_height >> 12,
+      2);
+  gst_bit_writer_put_bits_uint32 (bitwriter, ((seq_param->bits_per_second + 399) / 400) >> 18, 12);     /* bit_rate_extension */
+  gst_bit_writer_put_bits_uint32 (bitwriter, 1, 1);     /* marker_bit */
+  gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->vbv_buffer_size >> 10,
+      8);
+  gst_bit_writer_put_bits_uint32 (bitwriter,
+      seq_param->sequence_extension.bits.low_delay, 1);
+  gst_bit_writer_put_bits_uint32 (bitwriter,
+      seq_param->sequence_extension.bits.frame_rate_extension_n, 2);
+  gst_bit_writer_put_bits_uint32 (bitwriter,
+      seq_param->sequence_extension.bits.frame_rate_extension_d, 5);
 
-    gst_bit_writer_put_bits_uint32 (bitwriter, START_CODE_EXT, 32);
-    gst_bit_writer_put_bits_uint32 (bitwriter, 1, 4);   /* sequence_extension id */
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        seq->sequence_extension.bits.profile_and_level_indication, 8);
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        seq->sequence_extension.bits.progressive_sequence, 1);
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        seq->sequence_extension.bits.chroma_format, 2);
-    gst_bit_writer_put_bits_uint32 (bitwriter, seq->picture_width >> 12, 2);
-    gst_bit_writer_put_bits_uint32 (bitwriter, seq->picture_height >> 12, 2);
-    gst_bit_writer_put_bits_uint32 (bitwriter, ((seq->bits_per_second + 399) / 400) >> 18, 12); /* bit_rate_extension */
-    gst_bit_writer_put_bits_uint32 (bitwriter, 1, 1);   /* marker_bit */
-    gst_bit_writer_put_bits_uint32 (bitwriter, seq->vbv_buffer_size >> 10, 8);
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        seq->sequence_extension.bits.low_delay, 1);
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        seq->sequence_extension.bits.frame_rate_extension_n, 2);
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        seq->sequence_extension.bits.frame_rate_extension_d, 5);
+  gst_bit_writer_align_bytes (bitwriter, 0);
 
-    gst_bit_writer_align_bytes (bitwriter, 0);
+  /* gop header */
+  gst_bit_writer_put_bits_uint32 (bitwriter, START_CODE_GOP, 32);
+  gst_bit_writer_put_bits_uint32 (bitwriter,
+      seq_param->gop_header.bits.time_code, 25);
+  gst_bit_writer_put_bits_uint32 (bitwriter,
+      seq_param->gop_header.bits.closed_gop, 1);
+  gst_bit_writer_put_bits_uint32 (bitwriter,
+      seq_param->gop_header.bits.broken_link, 1);
 
-    /* gop header */
-    gst_bit_writer_put_bits_uint32 (bitwriter, START_CODE_GOP, 32);
-    gst_bit_writer_put_bits_uint32 (bitwriter, seq->gop_header.bits.time_code,
-        25);
-    gst_bit_writer_put_bits_uint32 (bitwriter, seq->gop_header.bits.closed_gop,
-        1);
-    gst_bit_writer_put_bits_uint32 (bitwriter, seq->gop_header.bits.broken_link,
-        1);
+  gst_bit_writer_align_bytes (bitwriter, 0);
 
-    gst_bit_writer_align_bytes (bitwriter, 0);
-  }
   return TRUE;
 }
 
 static gboolean
 gst_bit_writer_write_pps (GstBitWriter * bitwriter,
-    VAEncPictureParameterBufferMPEG2 * pic)
+    const VAEncPictureParameterBufferMPEG2 * pic_param)
 {
   gst_bit_writer_put_bits_uint32 (bitwriter, START_CODE_PICUTRE, 32);
-  gst_bit_writer_put_bits_uint32 (bitwriter, pic->temporal_reference, 10);
+  gst_bit_writer_put_bits_uint32 (bitwriter, pic_param->temporal_reference, 10);
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_type == VAEncPictureTypeIntra ? 1 :
-      pic->picture_type == VAEncPictureTypePredictive ? 2 : 3, 3);
-  gst_bit_writer_put_bits_uint32 (bitwriter, pic->vbv_delay, 16);
+      pic_param->picture_type == VAEncPictureTypeIntra ? 1 :
+      pic_param->picture_type == VAEncPictureTypePredictive ? 2 : 3, 3);
+  gst_bit_writer_put_bits_uint32 (bitwriter, pic_param->vbv_delay, 16);
 
-  if (pic->picture_type == VAEncPictureTypePredictive ||
-      pic->picture_type == VAEncPictureTypeBidirectional) {
+  if (pic_param->picture_type == VAEncPictureTypePredictive ||
+      pic_param->picture_type == VAEncPictureTypeBidirectional) {
     gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);   /* full_pel_forward_vector, always 0 for MPEG-2 */
     gst_bit_writer_put_bits_uint32 (bitwriter, 7, 3);   /* forward_f_code, always 7 for MPEG-2 */
   }
 
-  if (pic->picture_type == VAEncPictureTypeBidirectional) {
+  if (pic_param->picture_type == VAEncPictureTypeBidirectional) {
     gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);   /* full_pel_backward_vector, always 0 for MPEG-2 */
     gst_bit_writer_put_bits_uint32 (bitwriter, 7, 3);   /* backward_f_code, always 7 for MPEG-2 */
   }
@@ -965,34 +965,34 @@ gst_bit_writer_write_pps (GstBitWriter * bitwriter,
 
   gst_bit_writer_put_bits_uint32 (bitwriter, START_CODE_EXT, 32);
   gst_bit_writer_put_bits_uint32 (bitwriter, 8, 4);     /* Picture Coding Extension ID: 8 */
-  gst_bit_writer_put_bits_uint32 (bitwriter, pic->f_code[0][0], 4);
-  gst_bit_writer_put_bits_uint32 (bitwriter, pic->f_code[0][1], 4);
-  gst_bit_writer_put_bits_uint32 (bitwriter, pic->f_code[1][0], 4);
-  gst_bit_writer_put_bits_uint32 (bitwriter, pic->f_code[1][1], 4);
+  gst_bit_writer_put_bits_uint32 (bitwriter, pic_param->f_code[0][0], 4);
+  gst_bit_writer_put_bits_uint32 (bitwriter, pic_param->f_code[0][1], 4);
+  gst_bit_writer_put_bits_uint32 (bitwriter, pic_param->f_code[1][0], 4);
+  gst_bit_writer_put_bits_uint32 (bitwriter, pic_param->f_code[1][1], 4);
 
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.intra_dc_precision, 2);
+      pic_param->picture_coding_extension.bits.intra_dc_precision, 2);
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.picture_structure, 2);
+      pic_param->picture_coding_extension.bits.picture_structure, 2);
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.top_field_first, 1);
+      pic_param->picture_coding_extension.bits.top_field_first, 1);
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.frame_pred_frame_dct, 1);
+      pic_param->picture_coding_extension.bits.frame_pred_frame_dct, 1);
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.concealment_motion_vectors, 1);
+      pic_param->picture_coding_extension.bits.concealment_motion_vectors, 1);
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.q_scale_type, 1);
+      pic_param->picture_coding_extension.bits.q_scale_type, 1);
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.intra_vlc_format, 1);
+      pic_param->picture_coding_extension.bits.intra_vlc_format, 1);
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.alternate_scan, 1);
+      pic_param->picture_coding_extension.bits.alternate_scan, 1);
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.repeat_first_field, 1);
+      pic_param->picture_coding_extension.bits.repeat_first_field, 1);
   gst_bit_writer_put_bits_uint32 (bitwriter, 1, 1);     /* always chroma 420 */
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.progressive_frame, 1);
+      pic_param->picture_coding_extension.bits.progressive_frame, 1);
   gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic->picture_coding_extension.bits.composite_display_flag, 1);
+      pic_param->picture_coding_extension.bits.composite_display_flag, 1);
 
   gst_bit_writer_align_bytes (bitwriter, 0);
 
