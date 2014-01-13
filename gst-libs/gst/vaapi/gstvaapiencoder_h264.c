@@ -1360,16 +1360,28 @@ ensure_bitrate (GstVaapiEncoderH264 * encoder)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
 
-  /* Default compression: 64 bits per macroblock */
+  /* Default compression: 48 bits per macroblock in "high-compression" mode */
   switch (GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
     case GST_VAAPI_RATECONTROL_CBR:
     case GST_VAAPI_RATECONTROL_VBR:
     case GST_VAAPI_RATECONTROL_VBR_CONSTRAINED:
-      if (!base_encoder->bitrate)
-        base_encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
-            GST_VAAPI_ENCODER_HEIGHT (encoder) *
+      if (!base_encoder->bitrate) {
+        /* According to the literature and testing, CABAC entropy coding
+           mode could provide for +10% to +18% improvement in general,
+           thus estimating +15% here ; and using adaptive 8x8 transforms
+           in I-frames could bring up to +10% improvement. */
+        guint bits_per_mb = 48;
+        if (!encoder->use_cabac)
+          bits_per_mb += (bits_per_mb * 15) / 100;
+        if (!encoder->use_dct8x8)
+          bits_per_mb += (bits_per_mb * 10) / 100;
+
+        base_encoder->bitrate =
+            encoder->mb_width * encoder->mb_height * bits_per_mb *
             GST_VAAPI_ENCODER_FPS_N (encoder) /
-            GST_VAAPI_ENCODER_FPS_D (encoder) / 4 / 1000;
+            GST_VAAPI_ENCODER_FPS_D (encoder) / 1000;
+        GST_INFO ("target bitrate computed to %u kbps", base_encoder->bitrate);
+      }
       break;
     default:
       base_encoder->bitrate = 0;
