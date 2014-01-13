@@ -70,6 +70,7 @@ libgstvaapi_source_c =				\
 	gstvaapisurfaceproxy.c			\
 	gstvaapiutils.c				\
 	gstvaapiutils_h264.c			\
+	gstvaapiutils_mpeg2.c			\
 	gstvaapivalue.c				\
 	gstvaapivideopool.c			\
 	gstvaapiwindow.c			\
@@ -95,6 +96,7 @@ libgstvaapi_source_h =				\
 	gstvaapisurfaceproxy.h			\
 	gstvaapitypes.h				\
 	gstvaapiutils_h264.h			\
+	gstvaapiutils_mpeg2.h			\
 	gstvaapivalue.h				\
 	gstvaapivideopool.h			\
 	gstvaapiwindow.h			\
@@ -123,6 +125,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapisurfaceproxy_priv.h		\
 	gstvaapiutils.h				\
 	gstvaapiutils_h264_priv.h		\
+	gstvaapiutils_mpeg2_priv.h		\
 	gstvaapiversion.h			\
 	gstvaapivideopool_priv.h		\
 	gstvaapiwindow_priv.h			\
