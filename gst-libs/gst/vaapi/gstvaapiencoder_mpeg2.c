@@ -62,58 +62,73 @@ static void clear_references (GstVaapiEncoderMpeg2 * encoder);
 static void push_reference (GstVaapiEncoderMpeg2 * encoder,
     GstVaapiSurfaceProxy * ref);
 
-static struct
-{
-  int samplers_per_line;
-  int line_per_frame;
-  int frame_per_sec;
-} mpeg2_upper_samplings[2][3] = {
-  /* *INDENT-OFF* */
-  { { 0, 0, 0},
-    { 720, 576, 30 },
-    { 0, 0, 0 },
-  },
-  { { 352, 288, 30 },
-    { 720, 576, 30 },
-    { 1920, 1152, 60 },
-  }
-  /* *INDENT-ON* */
-};
-
+/* Derives the minimum profile from the active coding tools */
 static gboolean
-ensure_sampling_desity (GstVaapiEncoderMpeg2 * encoder)
+ensure_profile (GstVaapiEncoderMpeg2 * encoder)
 {
-  guint p, l;
-  float fps;
+  GstVaapiProfile profile;
 
-  p = encoder->profile;
-  l = encoder->level;
-  fps = GST_VAAPI_ENCODER_FPS_N (encoder) / GST_VAAPI_ENCODER_FPS_D (encoder);
-  if (mpeg2_upper_samplings[p][l].samplers_per_line <
-      GST_VAAPI_ENCODER_WIDTH (encoder)
-      || mpeg2_upper_samplings[p][l].line_per_frame <
-      GST_VAAPI_ENCODER_HEIGHT (encoder)
-      || mpeg2_upper_samplings[p][l].frame_per_sec < fps) {
-    GST_ERROR
-        ("acording to slected profile(%d) and level(%d) the max resolution is %dx%d@%d",
-        p, l, mpeg2_upper_samplings[p][l].samplers_per_line,
-        mpeg2_upper_samplings[p][l].line_per_frame,
-        mpeg2_upper_samplings[p][l].frame_per_sec);
-    return FALSE;
-  }
+  /* Always start from "simple" profile for maximum compatibility */
+  profile = GST_VAAPI_PROFILE_MPEG2_SIMPLE;
+
+  /* Main profile coding tools */
+  if (encoder->ip_period > 0)
+    profile = GST_VAAPI_PROFILE_MPEG2_MAIN;
+
+  encoder->profile = profile;
+  encoder->profile_idc = gst_vaapi_utils_mpeg2_get_profile_idc (profile);
   return TRUE;
 }
 
+/* Derives the minimum level from the current configuration */
 static gboolean
+ensure_level (GstVaapiEncoderMpeg2 * encoder)
+{
+  const GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
+  const guint fps = (vip->fps_n + vip->fps_d - 1) / vip->fps_d;
+  const guint bitrate = GST_VAAPI_ENCODER_CAST (encoder)->bitrate;
+  const GstVaapiMPEG2LevelLimits *limits_table;
+  guint i, num_limits, num_samples;
+
+  num_samples = gst_util_uint64_scale_int_ceil (vip->width * vip->height,
+      vip->fps_n, vip->fps_d);
+
+  limits_table = gst_vaapi_utils_mpeg2_get_level_limits_table (&num_limits);
+  for (i = 0; i < num_limits; i++) {
+    const GstVaapiMPEG2LevelLimits *const limits = &limits_table[i];
+    if (vip->width <= limits->horizontal_size_value &&
+        vip->height <= limits->vertical_size_value &&
+        fps <= limits->frame_rate_value &&
+        num_samples <= limits->sample_rate &&
+        (!bitrate || bitrate <= limits->bit_rate))
+      break;
+  }
+  if (i == num_limits)
+    goto error_unsupported_level;
+
+  encoder->level = limits_table[i].level;
+  encoder->level_idc = limits_table[i].level_idc;
+  return TRUE;
+
+  /* ERRORS */
+error_unsupported_level:
+  {
+    GST_ERROR ("failed to find a suitable level matching codec config");
+    return FALSE;
+  }
+}
+
+/* Derives the profile and level that suits best to the configuration */
+static GstVaapiEncoderStatus
 ensure_profile_and_level (GstVaapiEncoderMpeg2 * encoder)
 {
-  if (encoder->profile == GST_ENCODER_MPEG2_PROFILE_SIMPLE) {
-    /* no  b frames */
-    encoder->ip_period = 0;
-    /* only main level is defined in mpeg2 */
-    encoder->level = GST_VAAPI_ENCODER_MPEG2_LEVEL_MAIN;
-  }
-  return TRUE;
+  if (!ensure_profile (encoder))
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+
+  if (!ensure_level (encoder))
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
 static gboolean
@@ -135,40 +150,6 @@ ensure_bitrate (GstVaapiEncoderMpeg2 * encoder)
       break;
   }
   return TRUE;
-}
-
-static unsigned char
-make_profile_and_level_indication (guint32 profile, guint32 level)
-{
-  guint32 p = 4, l = 8;
-
-  switch (profile) {
-    case GST_ENCODER_MPEG2_PROFILE_SIMPLE:
-      p = 5;
-      break;
-    case GST_ENCODER_MPEG2_PROFILE_MAIN:
-      p = 4;
-      break;
-    default:
-      g_assert (0);
-      break;
-  }
-
-  switch (level) {
-    case GST_VAAPI_ENCODER_MPEG2_LEVEL_LOW:
-      l = 10;
-      break;
-    case GST_VAAPI_ENCODER_MPEG2_LEVEL_MAIN:
-      l = 8;
-      break;
-    case GST_VAAPI_ENCODER_MPEG2_LEVEL_HIGH:
-      l = 4;
-      break;
-    default:
-      g_assert (0);
-      break;
-  }
-  return p << 4 | l;
 }
 
 static gboolean
@@ -199,7 +180,7 @@ fill_sequence (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncSequence * sequence)
   seq_param->vbv_buffer_size = 3;       /* B = 16 * 1024 * vbv_buffer_size */
 
   seq_param->sequence_extension.bits.profile_and_level_indication =
-      make_profile_and_level_indication (encoder->profile, encoder->level);
+      (encoder->profile_idc << 4) | encoder->level_idc;
   seq_param->sequence_extension.bits.progressive_sequence = 1;  /* progressive frame-pictures */
   seq_param->sequence_extension.bits.chroma_format =
       gst_vaapi_utils_mpeg2_get_chroma_format_idc
@@ -251,15 +232,19 @@ fill_picture (GstVaapiEncoderMpeg2 * encoder,
   f_code_x = 0xf;
   f_code_y = 0xf;
   if (pic_param->picture_type != VAEncPictureTypeIntra) {
-    if (encoder->level == GST_VAAPI_ENCODER_MPEG2_LEVEL_LOW) {
-      f_code_x = 7;
-      f_code_y = 4;
-    } else if (encoder->level == GST_VAAPI_ENCODER_MPEG2_LEVEL_MAIN) {
-      f_code_x = 8;
-      f_code_y = 5;
-    } else {
-      f_code_x = 9;
-      f_code_y = 5;
+    switch (encoder->level) {
+      case GST_VAAPI_LEVEL_MPEG2_LOW:
+        f_code_x = 7;
+        f_code_y = 4;
+        break;
+      case GST_VAAPI_LEVEL_MPEG2_MAIN:
+        f_code_x = 8;
+        f_code_y = 5;
+        break;
+      default:                 /* High-1440 and High levels */
+        f_code_x = 9;
+        f_code_y = 5;
+        break;
     }
   }
 
@@ -621,24 +606,6 @@ end:
   return status;
 }
 
-static GstVaapiProfile
-to_vaapi_profile (guint32 profile)
-{
-  GstVaapiProfile p;
-
-  switch (profile) {
-    case GST_ENCODER_MPEG2_PROFILE_SIMPLE:
-      p = GST_VAAPI_PROFILE_MPEG2_SIMPLE;
-      break;
-    case GST_ENCODER_MPEG2_PROFILE_MAIN:
-      p = GST_VAAPI_PROFILE_MPEG2_MAIN;
-      break;
-    default:
-      g_assert (0);
-  }
-  return p;
-}
-
 static void
 set_context_info (GstVaapiEncoder * base_encoder)
 {
@@ -657,7 +624,7 @@ set_context_info (GstVaapiEncoder * base_encoder)
     MAX_SLICE_HDR_SIZE = 8,
   };
 
-  base_encoder->profile = to_vaapi_profile (encoder->profile);
+  base_encoder->profile = encoder->profile;
   base_encoder->num_ref_frames = 2;
 
   /* Only YUV 4:2:0 formats are supported for now. This means that we
@@ -683,16 +650,17 @@ gst_vaapi_encoder_mpeg2_reconfigure (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderMpeg2 *const encoder =
       GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
+  GstVaapiEncoderStatus status;
 
   if (encoder->ip_period > base_encoder->keyframe_period) {
     encoder->ip_period = base_encoder->keyframe_period - 1;
   }
 
-  if (!ensure_profile_and_level (encoder))
-    goto error;
+  status = ensure_profile_and_level (encoder);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return status;
+
   if (!ensure_bitrate (encoder))
-    goto error;
-  if (!ensure_sampling_desity (encoder))
     goto error;
 
   set_context_info (base_encoder);

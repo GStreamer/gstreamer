@@ -30,19 +30,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_ENCODER_MPEG2_CAST(encoder) \
   ((GstVaapiEncoderMpeg2 *) (encoder))
 
-typedef enum
-{
-  GST_ENCODER_MPEG2_PROFILE_SIMPLE,
-  GST_ENCODER_MPEG2_PROFILE_MAIN,
-} GstEncoderMpeg2Level;
-
-typedef enum
-{
-  GST_VAAPI_ENCODER_MPEG2_LEVEL_LOW,
-  GST_VAAPI_ENCODER_MPEG2_LEVEL_MAIN,
-  GST_VAAPI_ENCODER_MPEG2_LEVEL_HIGH
-} GstVaapiEncoderMpeg2Level;
-
 #define START_CODE_PICUTRE      0x00000100
 #define START_CODE_SLICE        0x00000101
 #define START_CODE_USER         0x000001B2
@@ -54,8 +41,10 @@ struct _GstVaapiEncoderMpeg2
 {
   GstVaapiEncoder parent_instance;
 
-  guint32 profile;
-  guint32 level;
+  GstVaapiProfile profile;
+  GstVaapiLevelMPEG2 level;
+  guint8 profile_idc;
+  guint8 level_idc;
   guint32 cqp; /* quantizer value for CQP mode */
   guint32 ip_period;
 
