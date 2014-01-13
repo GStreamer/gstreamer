@@ -587,6 +587,13 @@ gst_vaapiencode_finish (GstVideoEncoder * venc)
   GstVaapiEncoderStatus status;
   GstFlowReturn ret = GST_FLOW_OK;
 
+  /* Don't try to destroy encoder if none was created in the first place.
+     Return "not-negotiated" error since this means we did not even reach
+     GstVideoEncoder::set_format() state, where the encoder could have
+     been created */
+  if (!encode->encoder)
+    return GST_FLOW_NOT_NEGOTIATED;
+
   status = gst_vaapi_encoder_flush (encode->encoder);
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
