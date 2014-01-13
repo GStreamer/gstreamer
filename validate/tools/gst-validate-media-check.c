@@ -223,6 +223,7 @@ main (int argc, gchar ** argv)
     GstValidateMediaInfo *expected_mi;
     GError *err = NULL;
 
+    ret = TRUE;
     if (!g_path_is_absolute (expected_file)) {
       gchar *cdir = g_get_current_dir ();
       gchar *absolute = g_build_filename (cdir, expected_file, NULL);
@@ -234,7 +235,10 @@ main (int argc, gchar ** argv)
     }
 
     expected_mi = gst_validate_media_info_load (expected_file, &err);
-    if (expected_mi) {
+    if (err) {
+        g_print ("Error loading %s: %s", expected_file, err->message);
+        ret = FALSE;
+    } else if (expected_mi) {
       if (!gst_validate_media_info_compare (expected_mi, &mi)) {
         g_print ("Expected results didn't match\n");
         ret = FALSE;
