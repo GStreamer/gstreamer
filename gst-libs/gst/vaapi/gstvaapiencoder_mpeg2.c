@@ -62,6 +62,45 @@ static void clear_references (GstVaapiEncoderMpeg2 * encoder);
 static void push_reference (GstVaapiEncoderMpeg2 * encoder,
     GstVaapiSurfaceProxy * ref);
 
+/* Derives the profile supported by the underlying hardware */
+static gboolean
+ensure_hw_profile (GstVaapiEncoderMpeg2 * encoder)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
+  GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  GstVaapiProfile profile, profiles[2];
+  guint i, num_profiles = 0;
+
+  profiles[num_profiles++] = encoder->profile;
+  switch (encoder->profile) {
+    case GST_VAAPI_PROFILE_MPEG2_SIMPLE:
+      profiles[num_profiles++] = GST_VAAPI_PROFILE_MPEG2_MAIN;
+      break;
+    default:
+      break;
+  }
+
+  profile = GST_VAAPI_PROFILE_UNKNOWN;
+  for (i = 0; i < num_profiles; i++) {
+    if (gst_vaapi_display_has_encoder (display, profiles[i], entrypoint)) {
+      profile = profiles[i];
+      break;
+    }
+  }
+  if (profile == GST_VAAPI_PROFILE_UNKNOWN)
+    goto error_unsupported_profile;
+
+  GST_VAAPI_ENCODER_CAST (encoder)->profile = profile;
+  return TRUE;
+
+  /* ERRORS */
+error_unsupported_profile:
+  {
+    GST_ERROR ("unsupported HW profile (0x%08x)", encoder->profile);
+    return FALSE;
+  }
+}
+
 /* Derives the minimum profile from the active coding tools */
 static gboolean
 ensure_profile (GstVaapiEncoderMpeg2 * encoder)
@@ -606,7 +645,7 @@ end:
   return status;
 }
 
-static void
+static GstVaapiEncoderStatus
 set_context_info (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderMpeg2 *const encoder =
@@ -624,7 +663,9 @@ set_context_info (GstVaapiEncoder * base_encoder)
     MAX_SLICE_HDR_SIZE = 8,
   };
 
-  base_encoder->profile = encoder->profile;
+  if (!ensure_hw_profile (encoder))
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+
   base_encoder->num_ref_frames = 2;
 
   /* Only YUV 4:2:0 formats are supported for now. This means that we
@@ -643,6 +684,8 @@ set_context_info (GstVaapiEncoder * base_encoder)
   /* Account for Slice headers. We use one slice per line of macroblock */
   base_encoder->codedbuf_size += (GST_ROUND_UP_16 (vip->height) / 16) *
       MAX_SLICE_HDR_SIZE;
+
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
 static GstVaapiEncoderStatus
@@ -662,9 +705,7 @@ gst_vaapi_encoder_mpeg2_reconfigure (GstVaapiEncoder * base_encoder)
 
   if (!ensure_bitrate (encoder))
     goto error;
-
-  set_context_info (base_encoder);
-  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+  return set_context_info (base_encoder);
 
 error:
   return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
