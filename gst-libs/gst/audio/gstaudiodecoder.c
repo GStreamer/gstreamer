@@ -1981,9 +1981,6 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
 
     case GST_EVENT_CAPS:
     {
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
       ret = TRUE;
       dec->priv->do_caps = TRUE;
       gst_event_unref (event);
