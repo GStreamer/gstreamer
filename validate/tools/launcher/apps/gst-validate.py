@@ -22,7 +22,7 @@ import subprocess
 import ConfigParser
 from loggable import Loggable
 
-from baseclasses import GstValidateTest, TestsManager
+from baseclasses import GstValidateTest, TestsManager, Test
 from utils import MediaFormatCombination, get_profile,\
     path2url, get_current_position, get_current_size, \
     DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
@@ -46,6 +46,13 @@ COMBINATIONS = [
     MediaFormatCombination("mkv", "vorbis", "h264")]
 
 
+class NamedDic(object):
+
+    def __init__(self, props):
+        for name, value in props.iteritems():
+            setattr(self, name, value)
+
+
 class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
                  timeout=DEFAULT_TIMEOUT, scenario=None, file_infos=None):
@@ -61,6 +68,19 @@ class GstValidateLaunchTest(GstValidateTest):
 
     def get_current_value(self):
         return get_current_position(self)
+
+
+class GstValidateMediaCheckTest(Test):
+    def __init__(self, classname, options, reporter, media_info_path, uri):
+        super(GstValidateMediaCheckTest, self).__init__(DISCOVERER_COMMAND[0], classname,
+                                              options, reporter,
+                                              timeout=30)
+        self._uri = uri
+        self._media_info_path = urlparse.urlparse(media_info_path).path
+
+    def build_arguments(self):
+        self.add_arguments(self._uri, "--expected-results",
+                           self._media_info_path)
 
 
 class GstValidateTranscodingTest(GstValidateTest):
@@ -118,12 +138,6 @@ class GstValidateManager(TestsManager, Loggable):
 
         return False
 
-    def add_options(self, group):
-        group.add_option("-c", "--check-discovering", dest="check_discovering",
-                         default=False, action="store_true",
-                         help="Whether to check discovering results using %s"
-                         % DISCOVERER_COMMAND[0])
-
     def list_tests(self):
         SCENARIOS = ["none", "simple_backward",
                      "fast_forward", "seek_forward",
@@ -134,8 +148,16 @@ class GstValidateManager(TestsManager, Loggable):
             for scenario in SCENARIOS:
                 self._add_playback_test(name, scenario, test_pipeline)
 
-        for uri, config in self._list_uris():
-            if config.getboolean("media-info", "is-image") is True:
+        for uri, mediainfo in self._list_uris():
+            classname = "validate.media_check.%s" % (os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
+            self.tests.append(GstValidateMediaCheckTest(classname,
+                                                        self.options,
+                                                        self.reporter,
+                                                        mediainfo.path,
+                                                        uri))
+
+        for uri, mediainfo in self._list_uris():
+            if mediainfo.config.getboolean("media-info", "is-image") is True:
                 continue
             for comb in COMBINATIONS:
                 classname = "validate.transcode.to_%s.%s" % (str(comb).replace(' ', '_'),
@@ -144,7 +166,7 @@ class GstValidateManager(TestsManager, Loggable):
                                                              self.options,
                                                              self.reporter,
                                                              comb, uri,
-                                                             config))
+                                                             mediainfo.config))
 
     def _check_discovering_info(self, media_info, uri=None):
         self.debug("Checking %s", media_info)
@@ -163,7 +185,9 @@ class GstValidateManager(TestsManager, Loggable):
                 if caps2 == caps:
                     config.set("file-info", "protocol", prot)
                     break
-            self._uris.append((uri, config))
+            self._uris.append((uri,
+                               NamedDic({"path": media_info,
+                                         "config": config})))
         except ConfigParser.NoOptionError as e:
             self.debug("Exception: %s for %s", e, media_info)
             pass
@@ -175,11 +199,11 @@ class GstValidateManager(TestsManager, Loggable):
             args = list(DISCOVERER_COMMAND)
             args.append(uri)
             if os.path.isfile(media_info):
-                if self.options.check_discovering is False:
-                    self._check_discovering_info(media_info, uri)
-                    return True
-                else:
-                    args.extend(["--expected-results", media_info])
+                self._check_discovering_info(media_info, uri)
+                return True
+            elif fpath.endswith(STREAM_INFO):
+                self._check_discovering_info(fpath)
+                return True
             elif self.options.generate_info:
                 args.extend(["--output-file", media_info])
             else:
@@ -208,8 +232,6 @@ class GstValidateManager(TestsManager, Loggable):
                         fpath = os.path.join(path, root, f)
                         if os.path.isdir(fpath) or fpath.endswith(MEDIA_INFO_EXT):
                             continue
-                        elif fpath.endswith(STREAM_INFO):
-                            self._check_discovering_info(fpath)
                         else:
                             self._discover_file(path2url(fpath), fpath)
 
@@ -234,10 +256,10 @@ class GstValidateManager(TestsManager, Loggable):
                 pipe = pipe.replace("autoaudiosink", "fakesink")
 
         if "__uri__" in pipe:
-            for uri, config in self._list_uris():
+            for uri, minfo in self._list_uris():
                 npipe = pipe
                 if scenario != "none":
-                    if config.getboolean("media-info", "seekable") is False:
+                    if minfo.config.getboolean("media-info", "seekable") is False:
                         self.debug("Do not run %s as %s does not support seeking",
                                    scenario, uri)
                         continue
@@ -248,7 +270,7 @@ class GstValidateManager(TestsManager, Loggable):
                         npipe = pipe.replace("fakesink", "'fakesink sync=true'")
 
                 fname = "%s.%s" % (self._get_fname(name, scenario,
-                                   config.get("file-info", "protocol")),
+                                   minfo.config.get("file-info", "protocol")),
                                    os.path.basename(uri).replace(".", "_"))
                 self.debug("Adding: %s", fname)
 
@@ -257,7 +279,7 @@ class GstValidateManager(TestsManager, Loggable):
                                                   self.reporter,
                                                   npipe.replace("__uri__", uri),
                                                   scenario=scenario,
-                                                  file_infos=config)
+                                                  file_infos=minfo.config)
                                  )
         else:
             self.debug("Adding: %s", name)
