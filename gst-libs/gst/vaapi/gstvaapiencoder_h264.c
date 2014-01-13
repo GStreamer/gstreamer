@@ -45,8 +45,9 @@
    GST_VAAPI_RATECONTROL_MASK (VBR_CONSTRAINED))
 
 /* Supported set of tuning options, within this implementation */
-#define SUPPORTED_TUNE_OPTIONS \
-  (GST_VAAPI_ENCODER_TUNE_MASK (NONE))
+#define SUPPORTED_TUNE_OPTIONS                          \
+  (GST_VAAPI_ENCODER_TUNE_MASK (NONE) |                 \
+   GST_VAAPI_ENCODER_TUNE_MASK (HIGH_COMPRESSION))
 
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_NONE        0
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_LOW         1
@@ -314,6 +315,50 @@ error_unsupported_level:
     GST_ERROR ("failed to find a suitable level matching codec config");
     return FALSE;
   }
+}
+
+/* Enable "high-compression" tuning options */
+static gboolean
+ensure_tuning_high_compression (GstVaapiEncoderH264 * encoder)
+{
+  guint8 profile_idc;
+
+  if (!ensure_hw_profile_limits (encoder))
+    return FALSE;
+
+  profile_idc = encoder->hw_max_profile_idc;
+  if (encoder->max_profile_idc && encoder->max_profile_idc < profile_idc)
+    profile_idc = encoder->max_profile_idc;
+
+  /* Tuning options to enable Main profile */
+  if (profile_idc >= 77) {
+    encoder->use_cabac = TRUE;
+    if (!encoder->num_bframes)
+      encoder->num_bframes = 1;
+  }
+
+  /* Tuning options to enable High profile */
+  if (profile_idc >= 100) {
+    encoder->use_dct8x8 = TRUE;
+  }
+  return TRUE;
+}
+
+/* Ensure tuning options */
+static gboolean
+ensure_tuning (GstVaapiEncoderH264 * encoder)
+{
+  gboolean success;
+
+  switch (GST_VAAPI_ENCODER_TUNE (encoder)) {
+    case GST_VAAPI_ENCODER_TUNE_HIGH_COMPRESSION:
+      success = ensure_tuning_high_compression (encoder);
+      break;
+    default:
+      success = TRUE;
+      break;
+  }
+  return success;
 }
 
 static inline void
@@ -1294,6 +1339,8 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 static GstVaapiEncoderStatus
 ensure_profile_and_level (GstVaapiEncoderH264 * encoder)
 {
+  ensure_tuning (encoder);
+
   if (!ensure_profile (encoder) || !ensure_profile_limits (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
 
