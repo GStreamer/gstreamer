@@ -104,6 +104,7 @@ check_PROGRAMS = \
 	libs/libsabi \
 	libs/audio \
 	libs/audiocdsrc \
+	libs/audiodecoder \
 	libs/discoverer \
 	libs/fft \
 	libs/navigation \
@@ -195,6 +196,16 @@ libs_audio_CFLAGS = \
 	$(AM_CFLAGS)
 
 libs_audio_LDADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
+
+libs_audiodecoder_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+libs_audiodecoder_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)

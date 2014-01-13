@@ -1,6 +1,7 @@
 .dirstamp
 audio
 audiocdsrc
+audiodecoder
 discoverer
 fft
 gstlibscpp
