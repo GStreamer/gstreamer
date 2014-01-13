@@ -963,6 +963,23 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   else
     out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
+  switch (context->chroma_sample_location) {
+    case 1:
+      out_info->chroma_site = GST_VIDEO_CHROMA_SITE_MPEG2;
+      break;
+    case 2:
+      out_info->chroma_site = GST_VIDEO_CHROMA_SITE_JPEG;
+      break;
+    case 3:
+      out_info->chroma_site = GST_VIDEO_CHROMA_SITE_DV;
+      break;
+    case 4:
+      out_info->chroma_site = GST_VIDEO_CHROMA_SITE_V_COSITED;
+      break;
+    default:
+      break;
+  }
+
   /* try to find a good framerate */
   if ((in_info->fps_d && in_info->fps_n) ||
       GST_VIDEO_INFO_FLAG_IS_SET (in_info, GST_VIDEO_FLAG_VARIABLE_FPS)) {
