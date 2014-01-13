@@ -76,9 +76,6 @@ print_position (void)
       " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
       rate);
 
-  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-      GST_DEBUG_GRAPH_SHOW_ALL, "position");
-
   return TRUE;
 }
 
