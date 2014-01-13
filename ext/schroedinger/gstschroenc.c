@@ -690,6 +690,10 @@ gst_schro_enc_pre_push (GstVideoEncoder * base_video_encoder,
   }
 #endif
 
+  GST_BUFFER_OFFSET (buf) = gst_util_uint64_scale (schro_enc->last_granulepos,
+      GST_SECOND * schro_enc->video_format->frame_rate_denominator,
+      schro_enc->video_format->frame_rate_numerator);
+
   return GST_FLOW_OK;
 }
 
