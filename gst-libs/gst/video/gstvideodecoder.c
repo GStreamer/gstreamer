@@ -732,9 +732,10 @@ _new_output_state (GstVideoFormat fmt, guint width, guint height,
     /* Copy over extra fields from reference state */
     tgt->interlace_mode = ref->interlace_mode;
     tgt->flags = ref->flags;
-    tgt->chroma_site = ref->chroma_site;
     /* only copy values that are not unknown so that we don't override the
      * defaults. subclasses should really fill these in when they know. */
+    if (ref->chroma_site)
+      tgt->chroma_site = ref->chroma_site;
     if (ref->colorimetry.range)
       tgt->colorimetry.range = ref->colorimetry.range;
     if (ref->colorimetry.matrix)
