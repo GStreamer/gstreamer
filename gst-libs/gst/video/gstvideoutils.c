@@ -107,6 +107,8 @@ gst_video_codec_frame_ref (GstVideoCodecFrame * frame)
 {
   g_return_val_if_fail (frame != NULL, NULL);
 
+  GST_TRACE ("%p ref %d->%d", frame, frame->ref_count, frame->ref_count + 1);
+
   g_atomic_int_inc (&frame->ref_count);
 
   return frame;
@@ -124,6 +126,8 @@ gst_video_codec_frame_unref (GstVideoCodecFrame * frame)
 {
   g_return_if_fail (frame != NULL);
   g_return_if_fail (frame->ref_count > 0);
+
+  GST_TRACE ("%p unref %d->%d", frame, frame->ref_count, frame->ref_count - 1);
 
   if (g_atomic_int_dec_and_test (&frame->ref_count)) {
     _gst_video_codec_frame_free (frame);
@@ -144,6 +148,8 @@ gst_video_codec_state_ref (GstVideoCodecState * state)
 {
   g_return_val_if_fail (state != NULL, NULL);
 
+  GST_TRACE ("%p ref %d->%d", state, state->ref_count, state->ref_count + 1);
+
   g_atomic_int_inc (&state->ref_count);
 
   return state;
@@ -152,6 +158,8 @@ gst_video_codec_state_ref (GstVideoCodecState * state)
 static void
 _gst_video_codec_state_free (GstVideoCodecState * state)
 {
+  GST_DEBUG ("free state %p", state);
+
   if (state->caps)
     gst_caps_unref (state->caps);
   if (state->codec_data)
@@ -171,6 +179,8 @@ gst_video_codec_state_unref (GstVideoCodecState * state)
 {
   g_return_if_fail (state != NULL);
   g_return_if_fail (state->ref_count > 0);
+
+  GST_TRACE ("%p unref %d->%d", state, state->ref_count, state->ref_count - 1);
 
   if (g_atomic_int_dec_and_test (&state->ref_count)) {
     _gst_video_codec_state_free (state);
