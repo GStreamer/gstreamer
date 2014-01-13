@@ -69,11 +69,33 @@ typedef enum
 } GstVaapiEncoderStatus;
 
 /**
+ * GstVaapiEncoderTune:
+ * @GST_VAAPI_ENCODER_TUNE_NONE: No tuning option set.
+ * @GST_VAAPI_ENCODER_TUNE_HIGH_COMPRESSION: Tune for higher compression
+ *   ratios, at the expense of lower compatibility at decoding time.
+ * @GST_VAAPI_ENCODER_TUNE_LOW_LATENCY: Tune for low latency decoding.
+ * @GST_VAAPI_ENCODER_TUNE_LOW_POWER: Tune encoder for low power /
+ *   resources conditions. This can affect compression ratio or visual
+ *   quality to match low power conditions.
+ *
+ * The set of tuning options for a #GstVaapiEncoder. By default,
+ * maximum compatibility for decoding is preferred, so the lowest
+ * coding tools are enabled.
+ */
+typedef enum {
+  GST_VAAPI_ENCODER_TUNE_NONE = 0,
+  GST_VAAPI_ENCODER_TUNE_HIGH_COMPRESSION,
+  GST_VAAPI_ENCODER_TUNE_LOW_LATENCY,
+  GST_VAAPI_ENCODER_TUNE_LOW_POWER,
+} GstVaapiEncoderTune;
+
+/**
  * GstVaapiEncoderProp:
  * @GST_VAAPI_ENCODER_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
  * @GST_VAAPI_ENCODER_PROP_BITRATE: Bitrate expressed in kbps (uint).
  * @GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD: The maximal distance
  *   between two keyframes (uint).
+ * @GST_VAAPI_ENCODER_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
  *
  * The set of configurable properties for the encoder.
  */
@@ -81,6 +103,7 @@ typedef enum {
   GST_VAAPI_ENCODER_PROP_RATECONTROL = 1,
   GST_VAAPI_ENCODER_PROP_BITRATE,
   GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD,
+  GST_VAAPI_ENCODER_PROP_TUNE,
 } GstVaapiEncoderProp;
 
 /**
@@ -94,6 +117,9 @@ typedef struct {
   const gint prop;
   GParamSpec *const pspec;
 } GstVaapiEncoderPropInfo;
+
+GType
+gst_vaapi_encoder_tune_get_type (void) G_GNUC_CONST;
 
 GstVaapiEncoder *
 gst_vaapi_encoder_ref (GstVaapiEncoder * encoder);
@@ -131,6 +157,10 @@ gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
 GstVaapiEncoderStatus
 gst_vaapi_encoder_set_keyframe_period (GstVaapiEncoder * encoder,
     guint keyframe_period);
+
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_tuning (GstVaapiEncoder * encoder,
+    GstVaapiEncoderTune tuning);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_get_buffer_with_timeout (GstVaapiEncoder * encoder,

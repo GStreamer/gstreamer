@@ -46,6 +46,10 @@
    GST_VAAPI_RATECONTROL_MASK (CQP)  |          \
    GST_VAAPI_RATECONTROL_MASK (CBR))
 
+/* Supported set of tuning options, within this implementation */
+#define SUPPORTED_TUNE_OPTIONS \
+  (GST_VAAPI_ENCODER_TUNE_MASK (NONE))
+
 static gboolean
 gst_bit_writer_write_sps (GstBitWriter * bitwriter,
     VAEncSequenceParameterBufferMPEG2 * seq, GstVaapiEncoderMpeg2 * encoder);

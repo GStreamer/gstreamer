@@ -153,6 +153,19 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
           "Maximal distance between two keyframes (0: auto-calculate)", 1, 300,
           30, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVaapiEncoder:tune:
+   *
+   * The desired encoder tuning option.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_PROP_TUNE,
+      g_param_spec_enum ("tune",
+          "Encoder Tuning",
+          "Encoder tuning option",
+          cdata->encoder_tune_get_type (), cdata->default_encoder_tune,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   return props;
 }
 
@@ -626,6 +639,9 @@ set_property (GstVaapiEncoder * encoder, gint prop_id, const GValue * value)
       status = gst_vaapi_encoder_set_keyframe_period (encoder,
           g_value_get_uint (value));
       break;
+    case GST_VAAPI_ENCODER_PROP_TUNE:
+      status = gst_vaapi_encoder_set_tuning (encoder, g_value_get_enum (value));
+      break;
   }
   return status;
 
@@ -841,6 +857,41 @@ error_operation_failed:
   }
 }
 
+/**
+ * gst_vaapi_encoder_set_tuning:
+ * @encoder: a #GstVaapiEncoder
+ * @tuning: the #GstVaapiEncoderTune option
+ *
+ * Notifies the @encoder to use the supplied @tuning option.
+ *
+ * Note: currently, the tuning option can only be specified before the
+ * last call to gst_vaapi_encoder_set_codec_state(), which shall occur
+ * before the first frame is encoded. Afterwards, any change to this
+ * parameter causes gst_vaapi_encoder_set_tuning() to return
+ * @GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_tuning (GstVaapiEncoder * encoder,
+    GstVaapiEncoderTune tuning)
+{
+  g_return_val_if_fail (encoder != NULL, 0);
+
+  if (encoder->tune != tuning && encoder->num_codedbuf_queued > 0)
+    goto error_operation_failed;
+
+  encoder->tune = tuning;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
+error_operation_failed:
+  {
+    GST_ERROR ("could not change tuning options after encoding started");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
+}
+
 /* Initialize default values for configurable properties */
 static gboolean
 gst_vaapi_encoder_init_properties (GstVaapiEncoder * encoder)
@@ -962,4 +1013,32 @@ gst_vaapi_encoder_new (const GstVaapiEncoderClass * klass,
 error:
   gst_vaapi_encoder_unref (encoder);
   return NULL;
+}
+
+/** Returns a GType for the #GstVaapiEncoderTune set */
+GType
+gst_vaapi_encoder_tune_get_type (void)
+{
+  static volatile gsize g_type = 0;
+
+  static const GEnumValue encoder_tune_values[] = {
+    /* *INDENT-OFF* */
+    { GST_VAAPI_ENCODER_TUNE_NONE,
+      "None", "none" },
+    { GST_VAAPI_ENCODER_TUNE_HIGH_COMPRESSION,
+      "High compression", "high-compression" },
+    { GST_VAAPI_ENCODER_TUNE_LOW_LATENCY,
+      "Low latency", "low-latency" },
+    { GST_VAAPI_ENCODER_TUNE_LOW_POWER,
+      "Low power mode", "low-power" },
+    { 0, NULL, NULL },
+    /* *INDENT-ON* */
+  };
+
+  if (g_once_init_enter (&g_type)) {
+    GType type =
+        g_enum_register_static ("GstVaapiEncoderTune", encoder_tune_values);
+    g_once_init_leave (&g_type, type);
+  }
+  return g_type;
 }

@@ -139,6 +139,24 @@ G_BEGIN_DECLS
 #define GST_VAAPI_ENCODER_KEYFRAME_PERIOD(encoder) \
   (GST_VAAPI_ENCODER_CAST (encoder)->keyframe_period)
 
+/**
+ * GST_VAAPI_ENCODER_TUNE:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the tuning option.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_TUNE
+#define GST_VAAPI_ENCODER_TUNE(encoder) \
+  (GST_VAAPI_ENCODER_CAST (encoder)->tune)
+
+/* Generate a mask for the supplied tuning option (internal) */
+#define GST_VAAPI_ENCODER_TUNE_MASK(TUNE) \
+  (1U << G_PASTE (GST_VAAPI_ENCODER_TUNE_, TUNE))
+
+#define GST_VAAPI_TYPE_ENCODER_TUNE \
+  (gst_vaapi_encoder_tune_get_type ())
+
 typedef struct _GstVaapiEncoderClass GstVaapiEncoderClass;
 typedef struct _GstVaapiEncoderClassData GstVaapiEncoderClassData;
 
@@ -172,6 +190,7 @@ struct _GstVaapiEncoder
   GstVaapiDisplay *display;
   GstVaapiContext *context;
   GstVaapiContextInfo context_info;
+  GstVaapiEncoderTune tune;
 
   VADisplay va_display;
   VAContextID va_context;
@@ -200,6 +219,10 @@ struct _GstVaapiEncoderClassData
   GType (*rate_control_get_type)(void);
   GstVaapiRateControl default_rate_control;
   guint32 rate_control_mask;
+
+  GType (*encoder_tune_get_type)(void);
+  GstVaapiEncoderTune default_encoder_tune;
+  guint32 encoder_tune_mask;
 };
 
 #define GST_VAAPI_ENCODER_DEFINE_CLASS_DATA(CODEC)                      \
@@ -208,12 +231,21 @@ struct _GstVaapiEncoderClassData
       G_PASTE (gst_vaapi_rate_control_, CODEC),                         \
       GST_VAAPI_TYPE_RATE_CONTROL, SUPPORTED_RATECONTROLS);             \
                                                                         \
+  GST_VAAPI_TYPE_DEFINE_ENUM_SUBSET_FROM_MASK(                          \
+      G_PASTE (GstVaapiEncoderTune, CODEC),                             \
+      G_PASTE (gst_vaapi_encoder_tune_, CODEC),                         \
+      GST_VAAPI_TYPE_ENCODER_TUNE, SUPPORTED_TUNE_OPTIONS);             \
+                                                                        \
   static const GstVaapiEncoderClassData g_class_data = {                \
     .codec = G_PASTE (GST_VAAPI_CODEC_, CODEC),                         \
     .rate_control_get_type =                                            \
         G_PASTE (G_PASTE (gst_vaapi_rate_control_, CODEC), _get_type),  \
     .default_rate_control = DEFAULT_RATECONTROL,                        \
     .rate_control_mask = SUPPORTED_RATECONTROLS,                        \
+    .encoder_tune_get_type =                                            \
+        G_PASTE (G_PASTE (gst_vaapi_encoder_tune_, CODEC), _get_type),  \
+    .default_encoder_tune = GST_VAAPI_ENCODER_TUNE_NONE,                \
+    .encoder_tune_mask = SUPPORTED_TUNE_OPTIONS,                        \
   }
 
 struct _GstVaapiEncoderClass

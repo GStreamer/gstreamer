@@ -47,6 +47,10 @@
    GST_VAAPI_RATECONTROL_MASK (VBR)  |                  \
    GST_VAAPI_RATECONTROL_MASK (VBR_CONSTRAINED))
 
+/* Supported set of tuning options, within this implementation */
+#define SUPPORTED_TUNE_OPTIONS \
+  (GST_VAAPI_ENCODER_TUNE_MASK (NONE))
+
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_NONE        0
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_LOW         1
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_MEDIUM      2
