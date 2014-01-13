@@ -213,4 +213,7 @@ EXPORTS
 	gst_video_region_of_interest_meta_get_info
 	gst_video_sink_center_rect
 	gst_video_sink_get_type
+	gst_video_tile_get_index
+	gst_video_tile_mode_get_type
+	gst_video_tile_type_get_type
 	gst_video_transfer_function_get_type
