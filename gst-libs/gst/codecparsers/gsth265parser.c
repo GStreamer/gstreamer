@@ -1173,7 +1173,7 @@ gst_h265_slice_parse_pred_weight_table (GstH265SliceHdr * slice, NalReader * nr)
   READ_UE_ALLOWED (nr, p->luma_log2_weight_denom, 0, 7);
 
   /* set default values */
-  for (i = 0; i <= G_N_ELEMENTS (p->chroma_weight_l0_flag); i++) {
+  for (i = 0; i < G_N_ELEMENTS (p->chroma_weight_l0_flag); i++) {
     p->chroma_weight_l0_flag[i] = 0;
     p->luma_offset_l0[i] = 0;
   }
