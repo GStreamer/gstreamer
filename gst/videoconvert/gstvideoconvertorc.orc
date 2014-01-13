@@ -698,10 +698,10 @@ x4 addb argb, x, c128
 
 subb r, y, c128
 splatbw wy, r
-loadupib r, u
+loadupdb r, u
 subb r, r, c128
 splatbw wu, r
-loadupib r, v
+loadupdb r, v
 subb r, r, c128
 splatbw wv, r
 

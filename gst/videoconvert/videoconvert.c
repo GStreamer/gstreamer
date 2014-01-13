@@ -1470,8 +1470,6 @@ videoconvert_convert_lookup_fastpath (VideoConvert * convert)
   in_matrix = convert->in_info.colorimetry.matrix;
   out_matrix = convert->out_info.colorimetry.matrix;
 
-//  return FALSE;
-
   interlaced = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info);
   interlaced |= GST_VIDEO_INFO_IS_INTERLACED (&convert->out_info);
 
