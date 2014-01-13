@@ -35,7 +35,6 @@ DISCOVERER_COMMAND = ["gst-validate-media-check-1.0"]
 MEDIA_INFO_EXT = "media_info"
 STREAM_INFO = "stream_info"
 
-SEEKING_REQUIERED_SCENARIO = ["seek_forward", "seek_backward", "scrub_forward_seeking"]
 SPECIAL_PROTOCOLS = [("application/x-hls", "hls")]
 
 PLAYBACK_TESTS = ["playbin uri=__uri__ audio_sink=autoaudiosink video_sink=autovideosink"]
@@ -190,7 +189,6 @@ class GstValidateManager(TestsManager, Loggable):
                                          "config": config})))
         except ConfigParser.NoOptionError as e:
             self.debug("Exception: %s for %s", e, media_info)
-            pass
         f.close()
 
     def _discover_file(self, uri, fpath):
