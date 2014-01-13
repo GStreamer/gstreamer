@@ -9,6 +9,7 @@
 #include <gst/gst.h>
 
 gst_bin_get_type
+gst_buffer_pool_get_type
 gst_bus_get_type
 gst_child_proxy_get_type
 gst_clock_get_type

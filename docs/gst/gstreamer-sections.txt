@@ -329,15 +329,16 @@ gst_buffer_pool_release_buffer
 <SUBSECTION Standard>
 GST_BUFFER_POOL_CLASS
 GST_BUFFER_POOL_CAST
-GstBufferPoolPrivate
 GST_BUFFER_POOL
 GST_IS_BUFFER_POOL
 GST_TYPE_BUFFER_POOL
-gst_buffer_pool_get_type
 GST_TYPE_BUFFER_POOL_ACQUIRE_FLAGS
 gst_buffer_pool_acquire_flags_get_type
 GST_IS_BUFFER_POOL_CLASS
 GST_BUFFER_POOL_GET_CLASS
+<SUBSECTION Private>
+gst_buffer_pool_get_type
+GstBufferPoolPrivate
 </SECTION>
 
 <SECTION>
