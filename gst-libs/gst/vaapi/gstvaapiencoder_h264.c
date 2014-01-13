@@ -991,14 +991,17 @@ fill_va_sequence_param (GstVaapiEncoderH264 * encoder,
         sizeof (seq_param->offset_for_ref_frame));
   }
 
-  if (encoder->mb_height * 16 - GST_VAAPI_ENCODER_HEIGHT (encoder)) {
+  /* frame_cropping_flag */
+  if ((GST_VAAPI_ENCODER_WIDTH (encoder) & 15) ||
+      (GST_VAAPI_ENCODER_HEIGHT (encoder) & 15)) {
     seq_param->frame_cropping_flag = 1;
     seq_param->frame_crop_left_offset = 0;
-    seq_param->frame_crop_right_offset = 0;
+    seq_param->frame_crop_right_offset =
+        16 * encoder->mb_width - GST_VAAPI_ENCODER_WIDTH (encoder);
     seq_param->frame_crop_top_offset = 0;
     seq_param->frame_crop_bottom_offset =
-        ((encoder->mb_height * 16 - GST_VAAPI_ENCODER_HEIGHT (encoder)) /
-        (2 * (!seq_param->seq_fields.bits.frame_mbs_only_flag + 1)));
+        (16 * encoder->mb_height - GST_VAAPI_ENCODER_HEIGHT (encoder)) /
+        (2 - seq_param->seq_fields.bits.frame_mbs_only_flag);
   }
 
   /* vui not set */
