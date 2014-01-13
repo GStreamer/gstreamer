@@ -9,6 +9,8 @@ launcher_PYTHON = \
 	loggable.py  \
 	reporters.py  \
 	main.py  \
+	httpserver.py  \
+	RangeHTTPServer.py  \
 	utils.py
 
 clean-local:

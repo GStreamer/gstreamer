@@ -22,6 +22,7 @@ import urlparse
 import loggable
 from optparse import OptionParser
 
+from httpserver import HTTPServer
 from baseclasses import _TestsLauncher
 from utils import printc, path2url, DEFAULT_GST_QA_ASSETS, launch_command
 
@@ -74,6 +75,12 @@ def main():
     parser.add_option("-g", "--generate-media-info", dest="generate_info",
                      action="store_true", default=False,
                      help="Set it in order to generate the missing .media_infos files")
+    parser.add_option("-s", "--folder-for-http-server", dest="http_server_dir",
+                      default=os.path.join(DEFAULT_GST_QA_ASSETS, "medias"),
+                      help="Folder in which to create an http server on localhost")
+    parser.add_option("", "--http-server-port", dest="http_server_port",
+                      default=8079,
+                      help="Port on which to run the http server on localhost")
 
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 
@@ -91,7 +98,6 @@ def main():
     if options.no_color:
         utils.desactivate_colors()
 
-
     tests_launcher.set_settings(options, args)
 
     if options.paths == [os.path.join(DEFAULT_GST_QA_ASSETS, "medias")]:
@@ -102,12 +108,24 @@ def main():
 
     tests_launcher.list_tests()
 
-    if options.list_tests:
-        for test in tests_launcher.tests:
-            printc(test)
-        return 0
+    httpsrv = HTTPServer(options)
+    if tests_launcher.needs_http_server():
+        httpsrv.start()
 
-    tests_launcher.run_tests()
-    tests_launcher.final_report()
+    e = None
+    try:
+        if options.list_tests:
+            for test in tests_launcher.tests:
+                printc(test)
+            return 0
+
+        tests_launcher.run_tests()
+        tests_launcher.final_report()
+    except Exception as e:
+        pass
+    finally:
+        httpsrv.stop()
+        if e is not None:
+            raise
 
     return 0

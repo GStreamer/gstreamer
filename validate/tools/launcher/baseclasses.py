@@ -178,6 +178,8 @@ class Test(Loggable):
                                 "=================\n\n"
                                 % (self.classname, self.command))
 
+        return self.result
+
 
 class GstValidateTest(Test):
 
@@ -299,6 +301,9 @@ class TestsManager(Loggable):
                 test.run()
                 self.reporter.after_test()
 
+    def needs_http_server(self):
+        return False
+
 
 class _TestsLauncher(Loggable):
     def __init__(self):
@@ -375,3 +380,8 @@ class _TestsLauncher(Loggable):
 
     def final_report(self):
         self.reporter.final_report()
+
+    def needs_http_server(self):
+        for tester in self.testers:
+            if tester.needs_http_server():
+                return True

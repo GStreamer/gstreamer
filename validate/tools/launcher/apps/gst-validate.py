@@ -286,3 +286,9 @@ class GstValidateManager(TestsManager, Loggable):
                                               self.reporter,
                                               pipe,
                                               scenario=scenario))
+
+    def needs_http_server(self):
+        for uri, mediainfo in self._list_uris():
+            if urlparse.urlparse(uri).scheme == "http" and \
+                    "127.0.0.1:%s" % (self.options.http_server_port) in uri:
+                return True
