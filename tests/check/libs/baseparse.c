@@ -184,14 +184,12 @@ send_startup_events (void)
 }
 
 static void
-run_parser_playback_test (GList * input, gint expected_output)
+run_parser_playback_test (GList * input, gint expected_output, gdouble rate)
 {
   GstBuffer *buffer;
   guint64 i;
   GList *iter;
   GstSegment segment;
-
-  setup_parsertester ();
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (parsetest, GST_STATE_PLAYING);
@@ -201,6 +199,7 @@ run_parser_playback_test (GList * input, gint expected_output)
 
   /* push a new segment */
   gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.rate = rate;
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   /* push buffers, the data is actually a number so we can track them */
@@ -249,16 +248,45 @@ GST_START_TEST (parser_playback)
   gint i;
   GstBuffer *buffer;
 
+  setup_parsertester ();
+
   /* push buffers, the data is actually a number so we can track them */
   for (i = 0; i < 3; i++) {
     buffer = create_test_buffer (i);
     input = g_list_append (input, buffer);
   }
 
-  run_parser_playback_test (input, 3);
+  run_parser_playback_test (input, 3, 1.0);
 }
 
 GST_END_TEST;
+
+
+/* Check https://bugzilla.gnome.org/show_bug.cgi?id=721941 */
+GST_START_TEST (parser_reverse_playback_on_passthrough)
+{
+  GList *input = NULL;
+  gint i;
+  GstBuffer *buffer;
+
+  setup_parsertester ();
+
+  gst_base_parse_set_passthrough (GST_BASE_PARSE (parsetest), TRUE);
+
+  /* push buffers, the data is actually a number so we can track them */
+  for (i = 0; i < 6; i++) {
+    buffer = create_test_buffer (i);
+    if (i > 0)
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+    input = g_list_append (input, buffer);
+  }
+  GST_BUFFER_FLAG_SET (g_list_nth (input, 3)->data, GST_BUFFER_FLAG_DISCONT);
+
+  run_parser_playback_test (input, 6, -1.0);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_baseparse_suite (void)
@@ -268,6 +296,7 @@ gst_baseparse_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, parser_playback);
+  tcase_add_test (tc, parser_reverse_playback_on_passthrough);
 
   return s;
 }
