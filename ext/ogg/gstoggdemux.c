@@ -2070,6 +2070,8 @@ gst_ogg_demux_init (GstOggDemux * ogg)
   ogg->stats_bisection_max_steps[1] = 0;
 
   ogg->newsegment = NULL;
+
+  ogg->chunk_size = CHUNKSIZE;
 }
 
 static void
@@ -2110,6 +2112,8 @@ gst_ogg_demux_reset_streams (GstOggDemux * ogg)
   GST_DEBUG_OBJECT (ogg, "Resetting current chain");
   ogg->current_chain = NULL;
   ogg->resync = TRUE;
+
+  ogg->chunk_size = CHUNKSIZE;
 }
 
 static gboolean
@@ -2285,15 +2289,17 @@ gst_ogg_demux_get_data (GstOggDemux * ogg, gint64 end_offset)
   if (ogg->read_offset == ogg->length)
     goto eos;
 
-  oggbuffer = ogg_sync_buffer (&ogg->sync, CHUNKSIZE);
+  oggbuffer = ogg_sync_buffer (&ogg->sync, ogg->chunk_size);
   if (G_UNLIKELY (oggbuffer == NULL))
     goto no_buffer;
 
   buffer =
-      gst_buffer_new_wrapped_full (0, oggbuffer, CHUNKSIZE, 0, CHUNKSIZE, NULL,
-      NULL);
+      gst_buffer_new_wrapped_full (0, oggbuffer, ogg->chunk_size, 0,
+      ogg->chunk_size, NULL, NULL);
 
-  ret = gst_pad_pull_range (ogg->sinkpad, ogg->read_offset, CHUNKSIZE, &buffer);
+  ret =
+      gst_pad_pull_range (ogg->sinkpad, ogg->read_offset, ogg->chunk_size,
+      &buffer);
   if (ret != GST_FLOW_OK)
     goto error;
 
@@ -2440,11 +2446,12 @@ gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og, gint64 * offset)
   GST_LOG_OBJECT (ogg, "getting page before %" G_GINT64_FORMAT, begin);
 
   while (cur_offset == -1) {
-    begin -= CHUNKSIZE;
+    begin -= ogg->chunk_size;
     if (begin < 0)
       begin = 0;
 
-    /* seek CHUNKSIZE back */
+    /* seek ogg->chunk_size back */
+    GST_LOG_OBJECT (ogg, "seeking back to %" G_GINT64_FORMAT, begin);
     gst_ogg_demux_seek (ogg, begin);
 
     /* now continue reading until we run out of data, if we find a page
@@ -2769,13 +2776,14 @@ do_binary_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
   while (begin < end) {
     gint64 bisect;
 
-    if ((end - begin < CHUNKSIZE) || (endtime == begintime)) {
+    if ((end - begin < ogg->chunk_size) || (endtime == begintime)) {
       bisect = begin;
     } else {
       /* take a (pretty decent) guess, avoiding overflow */
       gint64 rate = (end - begin) * GST_MSECOND / (endtime - begintime);
 
-      bisect = (target - begintime) / GST_MSECOND * rate + begin - CHUNKSIZE;
+      bisect =
+          (target - begintime) / GST_MSECOND * rate + begin - ogg->chunk_size;
 
       if (bisect <= begin)
         bisect = begin;
@@ -2802,7 +2810,7 @@ do_binary_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
           if (bisect == 0)
             goto seek_error;
 
-          bisect -= CHUNKSIZE;
+          bisect -= ogg->chunk_size;
           if (bisect <= begin)
             bisect = begin + 1;
 
@@ -2861,7 +2869,7 @@ do_binary_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
           } else {
             if (end == ogg->offset) {   /* we're pretty close - we'd be stuck in */
               end = result;
-              bisect -= CHUNKSIZE;      /* an endless loop otherwise. */
+              bisect -= ogg->chunk_size;        /* an endless loop otherwise. */
               if (bisect <= begin)
                 bisect = begin + 1;
               gst_ogg_demux_seek (ogg, bisect);
@@ -3517,7 +3525,7 @@ gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
 
   /* offset by typical page length, and ensure our best guess is within
      reasonable bounds */
-  best -= CHUNKSIZE;
+  best -= ogg->chunk_size;
   if (best < 0)
     best = 0;
   if (ogg->push_byte_length > 0 && best >= ogg->push_byte_length)
@@ -3618,7 +3626,7 @@ gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
   while (searched < endsearched) {
     gint64 bisect;
 
-    if (endsearched - searched < CHUNKSIZE) {
+    if (endsearched - searched < ogg->chunk_size) {
       bisect = searched;
     } else {
       bisect = (searched + endsearched) / 2;
@@ -3843,7 +3851,7 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
   gint i;
 
   while (!done) {
-    begin -= CHUNKSIZE;
+    begin -= ogg->chunk_size;
     if (begin < 0)
       begin = 0;
 
@@ -4079,6 +4087,17 @@ no_last_page:
   }
 }
 
+static void
+gst_ogg_demux_update_chunk_size (GstOggDemux * ogg, ogg_page * page)
+{
+  long size = page->header_len + page->body_len;
+  long chunk_size = size * 2;
+  if (chunk_size > ogg->chunk_size) {
+    GST_LOG_OBJECT (ogg, "Updating chunk size to %ld", chunk_size);
+    ogg->chunk_size = chunk_size;
+  }
+}
+
 static GstFlowReturn
 gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
 {
@@ -4089,6 +4108,8 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
 
   serialno = ogg_page_serialno (page);
   granule = ogg_page_granulepos (page);
+
+  gst_ogg_demux_update_chunk_size (ogg, page);
 
   GST_LOG_OBJECT (ogg,
       "processing ogg page (serial %08x, "
@@ -4340,7 +4361,8 @@ gst_ogg_demux_loop_forward (GstOggDemux * ogg)
   }
 
   GST_LOG_OBJECT (ogg, "pull data %" G_GINT64_FORMAT, ogg->offset);
-  ret = gst_pad_pull_range (ogg->sinkpad, ogg->offset, CHUNKSIZE, &buffer);
+  ret =
+      gst_pad_pull_range (ogg->sinkpad, ogg->offset, ogg->chunk_size, &buffer);
   if (ret != GST_FLOW_OK) {
     GST_LOG_OBJECT (ogg, "Failed pull_range");
     goto done;

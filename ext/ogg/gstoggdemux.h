@@ -197,6 +197,7 @@ struct _GstOggDemux
 
   /* ogg stuff */
   ogg_sync_state sync;
+  long chunk_size;
 };
 
 struct _GstOggDemuxClass
