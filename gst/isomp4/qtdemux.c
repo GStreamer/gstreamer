@@ -367,8 +367,6 @@ struct _QtDemuxStream
   guint32 def_sample_flags;
 
   gboolean disabled;
-
-  GstClockTime elst_offset;     /* sample offset from edit list */
 };
 
 enum QtDemuxState
@@ -725,7 +723,7 @@ gst_qtdemux_get_duration (GstQTDemux * qtdemux, gint64 * duration)
   if (qtdemux->duration != 0) {
     if (qtdemux->duration != G_MAXINT64 && qtdemux->timescale != 0) {
       *duration = gst_util_uint64_scale (qtdemux->duration,
-          GST_SECOND, qtdemux->timescale) - qtdemux->min_elst_offset;
+          GST_SECOND, qtdemux->timescale);
     }
   }
   return res;
@@ -2438,7 +2436,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     guint32 d_sample_flags, gint64 moof_offset, gint64 moof_length,
     gint64 * base_offset, gint64 * running_offset)
 {
-  guint64 timestamp, elst_timestamp;
+  guint64 timestamp;
   gint32 data_offset = 0;
   guint32 flags = 0, first_flags = 0, samples_count = 0;
   gint i;
@@ -2572,8 +2570,6 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     }
   }
   sample = stream->samples + stream->n_samples;
-  elst_timestamp = gst_util_uint64_scale (stream->elst_offset,
-      stream->timescale, GST_SECOND);
   for (i = 0; i < samples_count; i++) {
     guint32 dur, size, sflags, ct;
 
@@ -2610,7 +2606,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     sample->offset = *running_offset;
     sample->pts_offset = ct;
     sample->size = size;
-    sample->timestamp = timestamp + elst_timestamp;
+    sample->timestamp = timestamp;
     sample->duration = dur;
     /* sample-is-difference-sample */
     /* ismv seems to use 0x40 for keyframe, 0xc0 for non-keyframe,
@@ -6490,11 +6486,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
     last_chunk = stream->last_chunk;
 
     if (stream->chunks_are_samples) {
-      guint64 elst_timestamp;
-
       cur = &samples[stream->stsc_chunk_index];
-      elst_timestamp = gst_util_uint64_scale (stream->elst_offset,
-          stream->timescale, GST_SECOND);
 
       for (j = stream->stsc_chunk_index; j < last_chunk; j++) {
         if (j > n) {
@@ -6523,7 +6515,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
             j, GST_TIME_ARGS (gst_util_uint64_scale (stream->stco_sample_index,
                     GST_SECOND, stream->timescale)), cur->size);
 
-        cur->timestamp = stream->stco_sample_index + elst_timestamp;
+        cur->timestamp = stream->stco_sample_index;
         cur->duration = stream->samples_per_chunk;
         cur->keyframe = TRUE;
         cur++;
@@ -6573,13 +6565,9 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
 done2:
   {
     guint32 n_sample_times;
-    gint64 elst_offset;
 
     n_sample_times = stream->n_sample_times;
     cur = first;
-    elst_offset =
-        gst_util_uint64_scale (stream->elst_offset, stream->timescale,
-        GST_SECOND);
 
     for (i = stream->stts_index; i < n_sample_times; i++) {
       guint32 stts_samples;
@@ -6611,7 +6599,7 @@ done2:
             GST_TIME_ARGS (gst_util_uint64_scale (stts_time, GST_SECOND,
                     stream->timescale)));
 
-        cur->timestamp = stts_time + elst_offset;
+        cur->timestamp = stts_time;
         cur->duration = stts_duration;
 
         /* avoid 32-bit wrap-around,
@@ -6640,7 +6628,7 @@ done2:
           (guint) (cur - samples),
           GST_TIME_ARGS (gst_util_uint64_scale (stream->stts_time, GST_SECOND,
                   stream->timescale)));
-      cur->timestamp = stream->stts_time + elst_offset;
+      cur->timestamp = stream->stts_time;
       cur->duration = -1;
     }
   }
@@ -10040,7 +10028,6 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   guint64 creation_time;
   GstDateTime *datetime = NULL;
   gint version;
-  int i;
 
   /* make sure we have a usable taglist */
   if (!qtdemux->tag_list) {
@@ -10127,23 +10114,6 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     qtdemux_parse_trak (qtdemux, trak);
     /* iterate all siblings */
     trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak);
-  }
-
-  /* make sure we don't offset samples more than we have to */
-  qtdemux->min_elst_offset = GST_CLOCK_TIME_NONE;
-  for (i = 0; i < qtdemux->n_streams; ++i) {
-    QtDemuxStream *stream = qtdemux->streams[i];
-    if (!GST_CLOCK_TIME_IS_VALID (qtdemux->min_elst_offset)
-        || stream->elst_offset < qtdemux->min_elst_offset) {
-      qtdemux->min_elst_offset = stream->elst_offset;
-    }
-  }
-  if (!GST_CLOCK_TIME_IS_VALID (qtdemux->min_elst_offset)) {
-    qtdemux->min_elst_offset = 0;
-  }
-  for (i = 0; i < qtdemux->n_streams; ++i) {
-    QtDemuxStream *stream = qtdemux->streams[i];
-    stream->elst_offset -= qtdemux->min_elst_offset;
   }
 
   /* set duration in the segment info */
