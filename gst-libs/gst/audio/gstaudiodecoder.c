@@ -1000,6 +1000,31 @@ send_pending_events (GstAudioDecoder * dec)
   g_list_free (pending_events);
 }
 
+static GstFlowReturn
+check_pending_reconfigure (GstAudioDecoder * dec)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstAudioDecoderContext *ctx;
+  gboolean needs_reconfigure;
+
+  ctx = &dec->priv->ctx;
+
+  needs_reconfigure = gst_pad_check_reconfigure (dec->srcpad);
+  if (G_UNLIKELY (ctx->output_format_changed ||
+          (GST_AUDIO_INFO_IS_VALID (&ctx->info)
+              && needs_reconfigure))) {
+    if (!gst_audio_decoder_negotiate_unlocked (dec)) {
+      gst_pad_mark_reconfigure (dec->srcpad);
+      if (GST_PAD_IS_FLUSHING (dec->srcpad))
+        ret = GST_FLOW_FLUSHING;
+      else
+        ret = GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
+  return ret;
+}
+
+
 /**
  * gst_audio_decoder_finish_frame:
  * @dec: a #GstAudioDecoder
@@ -1029,7 +1054,6 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   GstClockTime ts, next_ts;
   gsize size;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean needs_reconfigure = FALSE;
 
   /* subclass should not hand us no data */
   g_return_val_if_fail (buf == NULL || gst_buffer_get_size (buf) > 0,
@@ -1052,22 +1076,13 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
-  needs_reconfigure = gst_pad_check_reconfigure (dec->srcpad);
-  if (buf && G_UNLIKELY (ctx->output_format_changed ||
-          (GST_AUDIO_INFO_IS_VALID (&ctx->info)
-              && needs_reconfigure))) {
-    if (!gst_audio_decoder_negotiate_unlocked (dec)) {
-      gst_pad_mark_reconfigure (dec->srcpad);
-      if (GST_PAD_IS_FLUSHING (dec->srcpad))
-        ret = GST_FLOW_FLUSHING;
-      else
-        ret = GST_FLOW_NOT_NEGOTIATED;
+  if (buf) {
+    ret = check_pending_reconfigure (dec);
+    if (ret == GST_FLOW_FLUSHING || ret == GST_FLOW_NOT_NEGOTIATED)
       goto exit;
-    }
-  }
 
-  if (buf && priv->pending_events) {
-    send_pending_events (dec);
+    if (priv->pending_events)
+      send_pending_events (dec);
   }
 
   /* output shoud be whole number of sample frames */
@@ -1642,6 +1657,21 @@ gst_audio_decoder_chain_reverse (GstAudioDecoder * dec, GstBuffer * buf)
   return result;
 }
 
+static gboolean
+gst_audio_decoder_do_caps (GstAudioDecoder * dec)
+{
+  GstCaps *caps = gst_pad_get_current_caps (dec->sinkpad);
+  if (caps) {
+    if (!gst_audio_decoder_sink_setcaps (dec, caps)) {
+      gst_caps_unref (caps);
+      return FALSE;
+    }
+    gst_caps_unref (caps);
+  }
+  dec->priv->do_caps = FALSE;
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
@@ -1651,15 +1681,9 @@ gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   dec = GST_AUDIO_DECODER (parent);
 
   if (G_UNLIKELY (dec->priv->do_caps)) {
-    GstCaps *caps = gst_pad_get_current_caps (dec->sinkpad);
-    if (caps) {
-      if (!gst_audio_decoder_sink_setcaps (dec, caps)) {
-        gst_caps_unref (caps);
-        goto not_negotiated;
-      }
-      gst_caps_unref (caps);
+    if (!gst_audio_decoder_do_caps (dec)) {
+      goto not_negotiated;
     }
-    dec->priv->do_caps = FALSE;
   }
 
   if (G_UNLIKELY (!gst_pad_has_current_caps (pad) && dec->priv->needs_format))
@@ -1760,6 +1784,13 @@ gst_audio_decoder_handle_gap (GstAudioDecoder * dec, GstEvent * event)
   gboolean ret;
   GstClockTime timestamp, duration;
 
+  /* Check if there is a caps pending to be pushed */
+  if (G_UNLIKELY (dec->priv->do_caps)) {
+    if (!gst_audio_decoder_do_caps (dec)) {
+      goto not_negotiated;
+    }
+  }
+
   /* Ensure we have caps first */
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
   if (!GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info)) {
@@ -1795,12 +1826,27 @@ gst_audio_decoder_handle_gap (GstAudioDecoder * dec, GstEvent * event)
     ret = TRUE;
     gst_event_unref (event);
   } else {
+    GstFlowReturn flowret;
+
     /* sub-class doesn't know how to handle empty buffers,
      * so just try sending GAP downstream */
-    send_pending_events (dec);
-    ret = gst_audio_decoder_push_event (dec, event);
+    flowret = check_pending_reconfigure (dec);
+    if (flowret == GST_FLOW_OK) {
+      send_pending_events (dec);
+      ret = gst_audio_decoder_push_event (dec, event);
+    } else {
+      ret = FALSE;
+    }
   }
   return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (dec, CORE, NEGOTIATION, (NULL),
+        ("decoder not initialized"));
+    return FALSE;
+  }
 }
 
 static gboolean
