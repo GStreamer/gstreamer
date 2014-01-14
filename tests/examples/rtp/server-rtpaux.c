@@ -173,7 +173,7 @@ request_aux_sender (GstElement * rtpbin, guint sessid, SessionData * session)
   bin = gst_bin_new (NULL);
   rtx = gst_element_factory_make ("rtprtxsend", NULL);
   pt_map = gst_structure_new ("application/x-rtp-pt-map",
-      "96", G_TYPE_UINT, 99, NULL);
+      "8", G_TYPE_UINT, 98, "96", G_TYPE_UINT, 99, NULL);
   g_object_set (rtx, "payload-type-map", pt_map, NULL);
   gst_structure_free (pt_map);
   gst_bin_add (GST_BIN (bin), rtx);
