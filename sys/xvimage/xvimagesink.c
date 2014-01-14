@@ -1728,17 +1728,20 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_xvimagesink_open (GstXvImageSink * xvimagesink)
 {
-  GstXvContext *context;
   GError *error = NULL;
 
-  /* Initializing the XvContext */
-  if (!(context = gst_xvcontext_new (&xvimagesink->config, &error)))
-    goto no_context;
+  /* Initializing the XvContext unless already done through GstVideoOverlay */
+  if (!xvimagesink->context) {
+    GstXvContext *context;
+    if (!(context = gst_xvcontext_new (&xvimagesink->config, &error)))
+      goto no_context;
 
-  GST_OBJECT_LOCK (xvimagesink);
-  xvimagesink->context = context;
+    GST_OBJECT_LOCK (xvimagesink);
+    xvimagesink->context = context;
+  } else
+    GST_OBJECT_LOCK (xvimagesink);
   /* make an allocator for this context */
-  xvimagesink->allocator = gst_xvimage_allocator_new (context);
+  xvimagesink->allocator = gst_xvimage_allocator_new (xvimagesink->context);
   GST_OBJECT_UNLOCK (xvimagesink);
 
   /* update object's par with calculated one if not set yet */
