@@ -338,11 +338,6 @@ gst_rtp_rtx_buffer_new (GstRtpRtxSend * rtx, GstBuffer * buffer)
   /* gst_rtp_buffer_map does not map the payload so do it now */
   gst_rtp_buffer_get_payload (&rtp);
 
-  /* If payload type is not set through SDP/property then
-   * just bump the value */
-  if (fmtp < 96)
-    fmtp = gst_rtp_buffer_get_payload_type (&rtp) + 1;
-
   /* copy fixed header */
   mem = gst_memory_copy (rtp.map[0].memory, 0, rtp.size[0]);
   gst_buffer_append_memory (new_buffer, mem);
