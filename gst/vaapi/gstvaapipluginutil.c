@@ -475,6 +475,98 @@ gst_vaapi_video_format_new_template_caps_from_list (GArray * formats)
   return caps;
 }
 
+GstCaps *
+gst_vaapi_video_format_new_template_caps_with_features (GstVideoFormat format,
+    const gchar * features_string)
+{
+  GstCaps *caps;
+
+  caps = gst_vaapi_video_format_new_template_caps (format);
+  if (!caps)
+    return NULL;
+
+#if GST_CHECK_VERSION(1,1,0)
+  GstCapsFeatures *const features =
+      gst_caps_features_new (features_string, NULL);
+  if (!features) {
+    gst_caps_unref (caps);
+    return NULL;
+  }
+  gst_caps_set_features (caps, 0, features);
+#endif
+  return caps;
+}
+
+GstVaapiCapsFeature
+gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format)
+{
+  GstVaapiCapsFeature feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;
+#if GST_CHECK_VERSION(1,1,0)
+  guint i, num_structures;
+  GstCaps *caps = NULL;
+  GstCaps *gl_texture_upload_caps = NULL;
+  GstCaps *sysmem_caps = NULL;
+  GstCaps *vaapi_caps = NULL;
+  GstCaps *out_caps;
+
+  out_caps = gst_pad_peer_query_caps (pad, NULL);
+  if (!out_caps)
+    goto cleanup;
+
+  gl_texture_upload_caps =
+      gst_vaapi_video_format_new_template_caps_with_features
+      (GST_VIDEO_FORMAT_RGBA,
+      GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
+  if (!gl_texture_upload_caps)
+    goto cleanup;
+
+  if (format == GST_VIDEO_FORMAT_ENCODED)
+    format = GST_VIDEO_FORMAT_NV12;
+
+  vaapi_caps =
+      gst_vaapi_video_format_new_template_caps_with_features (format,
+      GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE);
+  if (!vaapi_caps)
+    goto cleanup;
+
+  sysmem_caps =
+      gst_vaapi_video_format_new_template_caps_with_features (format,
+      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+  if (!sysmem_caps)
+    goto cleanup;
+
+  num_structures = gst_caps_get_size (out_caps);
+  for (i = 0; i < num_structures; i++) {
+    GstCapsFeatures *const features = gst_caps_get_features (out_caps, i);
+    GstStructure *const structure = gst_caps_get_structure (out_caps, i);
+
+    caps = gst_caps_new_full (gst_structure_copy (structure), NULL);
+    if (!caps)
+      continue;
+    gst_caps_set_features (caps, 0, gst_caps_features_copy (features));
+
+    if (gst_caps_can_intersect (caps, vaapi_caps) &&
+        feature < GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE)
+      feature = GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE;
+    else if (gst_caps_can_intersect (caps, gl_texture_upload_caps) &&
+        feature < GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META)
+      feature = GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META;
+    else if (gst_caps_can_intersect (caps, sysmem_caps) &&
+        feature < GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
+      feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;
+    gst_caps_replace (&caps, NULL);
+  }
+
+cleanup:
+  gst_caps_replace (&gl_texture_upload_caps, NULL);
+  gst_caps_replace (&sysmem_caps, NULL);
+  gst_caps_replace (&vaapi_caps, NULL);
+  gst_caps_replace (&caps, NULL);
+  gst_caps_replace (&out_caps, NULL);
+#endif
+  return feature;
+}
+
 gboolean
 gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip)
 {

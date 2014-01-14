@@ -27,6 +27,9 @@
 
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
+#if GST_CHECK_VERSION(1,0,0)
+#include "gstvaapivideomemory.h"
+#endif
 
 G_GNUC_INTERNAL
 gboolean
@@ -65,6 +68,13 @@ gboolean
 gst_vaapi_value_set_format_list (GValue * value, GArray * formats);
 
 /* Helpers to build video caps */
+typedef enum
+{
+  GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY = 1,
+  GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META,
+  GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE,
+} GstVaapiCapsFeature;
+
 G_GNUC_INTERNAL
 GstCaps *
 gst_vaapi_video_format_new_template_caps (GstVideoFormat format);
@@ -72,6 +82,15 @@ gst_vaapi_video_format_new_template_caps (GstVideoFormat format);
 G_GNUC_INTERNAL
 GstCaps *
 gst_vaapi_video_format_new_template_caps_from_list (GArray * formats);
+
+G_GNUC_INTERNAL
+GstCaps *
+gst_vaapi_video_format_new_template_caps_with_features (GstVideoFormat format,
+    const gchar * features_string);
+
+G_GNUC_INTERNAL
+GstVaapiCapsFeature
+gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format);
 
 /* Helpers to handle interlaced contents */
 #if GST_CHECK_VERSION(1,0,0)
