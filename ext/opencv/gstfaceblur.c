@@ -280,7 +280,7 @@ gst_face_blur_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
         filter->cvStorage, 1.1, 2, 0, cvSize (30, 30)
 #if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
-        , cvSize (32, 32)
+        , cvSize (0, 0)
 #endif
         );
 
