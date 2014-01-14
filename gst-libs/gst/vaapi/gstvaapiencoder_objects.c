@@ -423,10 +423,6 @@ gst_vaapi_enc_picture_encode (GstVaapiEncPicture * picture)
           &sequence->param_id, &sequence->param))
     return FALSE;
 
-  /* Submit Picture parameter */
-  if (!do_encode (va_display, va_context, &picture->param_id, &picture->param))
-    return FALSE;
-
   /* Submit Packed Headers */
   for (i = 0; i < picture->packed_headers->len; i++) {
     GstVaapiEncPackedHeader *const header =
@@ -444,6 +440,10 @@ gst_vaapi_enc_picture_encode (GstVaapiEncPicture * picture)
     if (!do_encode (va_display, va_context, &misc->param_id, &misc->param))
       return FALSE;
   }
+
+  /* Submit Picture parameter */
+  if (!do_encode (va_display, va_context, &picture->param_id, &picture->param))
+    return FALSE;
 
   /* Submit Slice parameters */
   for (i = 0; i < picture->slices->len; i++) {
