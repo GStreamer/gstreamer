@@ -216,13 +216,13 @@ gst_rtp_rtx_receive_class_init (GstRtpRtxReceiveClass * klass)
 static void
 gst_rtp_rtx_receive_reset (GstRtpRtxReceive * rtx)
 {
-  g_mutex_lock (&rtx->lock);
+  GST_OBJECT_LOCK (rtx);
   g_hash_table_remove_all (rtx->ssrc2_ssrc1_map);
   g_hash_table_remove_all (rtx->seqnum_ssrc1_map);
   rtx->num_rtx_requests = 0;
   rtx->num_rtx_packets = 0;
   rtx->num_rtx_assoc_packets = 0;
-  g_mutex_unlock (&rtx->lock);
+  GST_OBJECT_UNLOCK (rtx);
 }
 
 static void
@@ -245,8 +245,6 @@ gst_rtp_rtx_receive_finalize (GObject * object)
   g_hash_table_unref (rtx->rtx_pt_map);
   if (rtx->pending_rtx_pt_map)
     gst_structure_free (rtx->pending_rtx_pt_map);
-
-  g_mutex_clear (&rtx->lock);
 
   G_OBJECT_CLASS (gst_rtp_rtx_receive_parent_class)->finalize (object);
 }
@@ -279,8 +277,6 @@ gst_rtp_rtx_receive_init (GstRtpRtxReceive * rtx)
 
   rtx->rtx_pt_map = g_hash_table_new (g_direct_hash, g_direct_equal);
   rtx->rtx_pt_map_changed = FALSE;
-
-  g_mutex_init (&rtx->lock);
 }
 
 static gboolean
@@ -315,7 +311,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
             "request seqnum: %" G_GUINT16_FORMAT ", ssrc: %" G_GUINT32_FORMAT,
             seqnum, ssrc);
 
-        g_mutex_lock (&rtx->lock);
+        GST_OBJECT_LOCK (rtx);
 
         /* increase number of seen requests for our statistics */
         ++rtx->num_rtx_requests;
@@ -361,7 +357,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
                   GUINT_TO_POINTER (seqnum));
 
               /* do not forward the event as we are rejecting this request */
-              g_mutex_unlock (&rtx->lock);
+              GST_OBJECT_UNLOCK (rtx);
               gst_event_unref (event);
               return res;
             }
@@ -376,7 +372,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
           }
         }
 
-        g_mutex_unlock (&rtx->lock);
+        GST_OBJECT_UNLOCK (rtx);
       }
       /* Transfer event upstream so that the request can acutally by translated
        * through gstrtpsession through the network */
@@ -491,7 +487,7 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   payload_type = gst_rtp_buffer_get_payload_type (&rtp);
 
   /* check if we have a retransmission packet (this information comes from SDP) */
-  g_mutex_lock (&rtx->lock);
+  GST_OBJECT_LOCK (rtx);
 
   /* transfer payload type while holding the lock */
   if (rtx->rtx_pt_map_changed) {
@@ -505,7 +501,7 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       g_hash_table_lookup_extended (rtx->rtx_pt_map,
       GUINT_TO_POINTER (payload_type), NULL, NULL);
 
-  g_mutex_unlock (&rtx->lock);
+  GST_OBJECT_UNLOCK (rtx);
 
   if (is_rtx) {
     /* read OSN in the rtx payload */
@@ -515,7 +511,7 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
             GUINT_TO_POINTER (payload_type)));
   }
 
-  g_mutex_lock (&rtx->lock);
+  GST_OBJECT_LOCK (rtx);
 
   /* if the current packet is from a retransmission stream */
   if (is_rtx) {
@@ -578,7 +574,7 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (is_rtx && !drop)
     ++rtx->num_rtx_assoc_packets;
 
-  g_mutex_unlock (&rtx->lock);
+  GST_OBJECT_UNLOCK (rtx);
 
   /* just drop the packet if the association could not have been made */
   if (drop) {
@@ -619,24 +615,24 @@ gst_rtp_rtx_receive_get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_PAYLOAD_TYPE_MAP:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       g_value_set_boxed (value, rtx->pending_rtx_pt_map);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_NUM_RTX_REQUESTS:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       g_value_set_uint (value, rtx->num_rtx_requests);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_NUM_RTX_PACKETS:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       g_value_set_uint (value, rtx->num_rtx_packets);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_NUM_RTX_ASSOC_PACKETS:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       g_value_set_uint (value, rtx->num_rtx_assoc_packets);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -652,12 +648,12 @@ gst_rtp_rtx_receive_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_PAYLOAD_TYPE_MAP:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       if (rtx->pending_rtx_pt_map)
         gst_structure_free (rtx->pending_rtx_pt_map);
       rtx->pending_rtx_pt_map = g_value_dup_boxed (value);
       rtx->rtx_pt_map_changed = TRUE;
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

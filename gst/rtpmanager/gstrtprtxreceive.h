@@ -45,8 +45,6 @@ struct _GstRtpRtxReceive
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  GMutex lock;
-
   /* retrieve associated master stream from rtx stream
    * it also works to retrieve rtx stream from master stream
    * as we make sure all ssrc are unique */
