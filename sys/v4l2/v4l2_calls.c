@@ -294,6 +294,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         if (n < V4L2_CID_PRIVATE_BASE) {
           GST_DEBUG_OBJECT (e, "skipping control %08x", n);
           /* continue so that we also check private controls */
+          n = V4L2_CID_PRIVATE_BASE - 1;
           continue;
         } else {
           GST_DEBUG_OBJECT (e, "controls finished");
