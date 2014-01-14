@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <gmodule.h>
 #include <gst/gst.h>
@@ -2491,6 +2492,7 @@ rsn_dvdsrc_post_title_info (GstElement * element)
     } else {
       g_value_set_uint64 (&item, gst_util_uint64_scale (duration, GST_SECOND,
               90000));
+      free (times);
     }
     gst_value_array_append_value (&array, &item);
     g_value_unset (&item);
