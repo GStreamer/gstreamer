@@ -2981,11 +2981,40 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
           &best, FALSE, 0))
     goto seek_error;
 
-  /* second step: find pages for all streams, we use the keyframe_granule to keep
-   * track of which ones we saw. If we have seen a page for each stream we can
-   * calculate the positions of each keyframe. */
-  GST_DEBUG_OBJECT (ogg, "find keyframes");
+  /* second step: find pages for all relevant streams. We use the
+   * keyframe_granule to keep track of which ones we saw. If we have
+   * seen a page for each stream we can calculate the positions of
+   * each keyframe.
+   * Relevant streams are defined as those streams which are not
+   * Skeleton (which only has header pages). Discontinuous streams
+   * such as Kate and CMML are currently excluded, as they could
+   * cause performance issues if there are few pages in the area.
+   * TODO: We might want to include them on a flag, if we want to
+   * not miss a subtitle (Kate has repeat packets for this purpose,
+   * but a stream does not have to use them). */
   pending = chain->streams->len;
+  for (i = 0; i < chain->streams->len; i++) {
+    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+    if (!pad) {
+      GST_WARNING_OBJECT (ogg, "No pad for serialno %08x", pad->map.serialno);
+      pending--;
+      continue;
+    }
+    if (pad->map.is_skeleton) {
+      GST_DEBUG_OBJECT (ogg, "Not finding pages for Skeleton stream %08x",
+          pad->map.serialno);
+      pending--;
+      continue;
+    }
+    if (pad->map.is_sparse) {
+      GST_DEBUG_OBJECT (ogg, "Not finding pages for sparse stream %08x (%s)",
+          pad->map.serialno, gst_ogg_stream_get_media_type (&pad->map));
+      pending--;
+      continue;
+    }
+  }
+  GST_DEBUG_OBJECT (ogg, "find keyframes for %d/%d streams", pending,
+      chain->streams->len);
 
   /* figure out where the keyframes are */
   keytarget = target;
@@ -3010,7 +3039,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
     if (pad == NULL)
       continue;
 
-    if (pad->map.is_skeleton || pad->map.is_cmml)
+    if (pad->map.is_skeleton || pad->map.is_sparse)
       goto next;
 
     granulepos = ogg_page_granulepos (&og);
