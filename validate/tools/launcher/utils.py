@@ -20,6 +20,7 @@
 
 import os
 import urllib
+import loggable
 import urlparse
 import subprocess
 
@@ -204,7 +205,7 @@ def _parse_position(p):
 
 
 def _get_position(test):
-    position = duration = 0
+    position = duration = -1
 
     test.reporter.out.seek(0)
     m = None
@@ -215,6 +216,7 @@ def _get_position(test):
             break
 
     if m is None:
+        loggable.debug("utils", "Could not fine any positionning info")
         return position, duration
 
     for j in m.split("\r"):
@@ -228,7 +230,8 @@ def get_current_position(test, max_passed_stop=0.5):
     position, duration = _get_position(test)
 
     if position > duration + max_passed_stop:
-        return 0
+        loggable.warning("utils", "Position > duration -> Returning -1")
+        return -1
 
     return position
 
@@ -236,13 +239,17 @@ def get_current_position(test, max_passed_stop=0.5):
 def get_current_size(test):
     position = get_current_position(test)
 
-    if position is Result.FAILED:
-        return position
+    if position is -1:
+        return -1
 
-    return os.stat(urlparse.urlparse(test.dest_file).path).st_size
+    size = os.stat(urlparse.urlparse(test.dest_file).path).st_size
+    loggable.debug("utils", "Size: %s" % size)
+    return size
+
 
 def get_duration(media_file):
     duration = 0
+
     def parse_gsttimeargs(time):
         stime = time.split(":")
         sns = stime[2].split(".")
@@ -261,6 +268,7 @@ def get_duration(media_file):
             break
 
     return duration
+
 
 def compare_rendered_with_original(orig_duration, dest_file, tolerance=DURATION_TOLERANCE):
         duration = get_duration(dest_file)
