@@ -63,10 +63,10 @@ G_GNUC_INTERNAL  void	__gst_parse_chain_free (chain_t *data);
 #else /* __GST_PARSE_TRACE */
 #  define gst_parse_strdup g_strdup
 #  define gst_parse_strfree g_free
-#  define gst_parse_link_new() g_new0 (link_t, 1)
-#  define gst_parse_link_free g_free
-#  define gst_parse_chain_new() g_new0 (chain_t, 1)
-#  define gst_parse_chain_free g_free
+#  define gst_parse_link_new() g_slice_new0 (link_t)
+#  define gst_parse_link_free(l) g_slice_free (link_t, l)
+#  define gst_parse_chain_new() g_slice_new0 (chain_t)
+#  define gst_parse_chain_free(c) g_slice_free (chain_t, c)
 #endif /* __GST_PARSE_TRACE */
 
 static inline void
