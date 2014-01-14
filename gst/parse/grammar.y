@@ -84,13 +84,13 @@ __gst_parse_chain_new (void)
   chain_t *ret;
   __chains++;
   ret = g_slice_new0 (chain_t);
-  //g_print ("@%p: ALLOCATED CHAIN (%3u):\n", ret, __chains);
+  /* g_print ("@%p: ALLOCATED CHAIN (%3u):\n", ret, __chains); */
   return ret;
 }
 void
 __gst_parse_chain_free (chain_t *data)
 {
-  //g_print ("@%p: FREEING CHAIN   (%3u):\n", data, __chains - 1);
+  /* g_print ("@%p: FREEING CHAIN   (%3u):\n", data, __chains - 1); */
   g_slice_free (chain_t, data);
   g_return_if_fail (__chains > 0);
   __chains--;
@@ -700,7 +700,7 @@ element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL);
 **************************************************************/
 elementary:
 	element				      { $$ = gst_parse_chain_new ();
-						//g_print ("@%p: CHAINing elementary\n", $$);
+						/* g_print ("@%p: CHAINing elementary\n", $$); */
 						$$->first.element = $1? gst_object_ref($1) : NULL;
 						$$->last.element = $1? gst_object_ref($1) : NULL;
 						$$->first.name = $$->last.name = NULL;
@@ -758,7 +758,7 @@ chain:	openchain			      { $$=$1;
 openchain:
 	elementary pads			      { $$=$1;
 						$$->last.pads = g_slist_concat ($$->last.pads, $2);
-						//g_print ("@%p@%p: FKI elementary pads\n", $1, $$->last.pads);
+						/* g_print ("@%p@%p: FKI elementary pads\n", $1, $$->last.pads); */
 					      }
 	| openchain link pads elementary pads
 					      {
@@ -836,7 +836,7 @@ openchain:
 						    _("no source element for URI \"%s\""), $1);
 						}
 						$$ = gst_parse_chain_new ();
-						//g_print ("@%p: CHAINing srcURL\n", $$);
+						/* g_print ("@%p: CHAINing srcURL\n", $$); */
 						$$->first.element = NULL;
 						$$->first.name = NULL;
 						$$->first.pads = NULL;
@@ -1029,7 +1029,7 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
   __strings = __chains = __links = 0;
 #endif /* __GST_PARSE_TRACE */
 
-  //g_print("Now scanning: %s\n", str);
+  /* g_print("Now scanning: %s\n", str); */
 
   dstr = g_strdup (str);
   priv_gst_parse_yylex_init (&scanner);
