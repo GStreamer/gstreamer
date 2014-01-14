@@ -99,18 +99,22 @@
  * <title>Two basic usage scenarios</title>
  * <para>
  * There are two basic usage scenarios: in the simplest case, the application
- * knows exactly what particular element is used for video output, which is
- * usually the case when the application creates the videosink to use
- * (e.g. #xvimagesink, #ximagesink, etc.) itself; in this case, the application
- * can just create the videosink element, create and realize the window to
- * render the video on and then call gst_video_overlay_set_window_handle() directly
- * with the XID or native window handle, before starting up the pipeline.
+ * uses #playbin or #plasink or knows exactly what particular element is used
+ * for video output, which is usually the case when the application creates
+ * the videosink to use (e.g. #xvimagesink, #ximagesink, etc.) itself; in this
+ * case, the application can just create the videosink element, create and
+ * realize the window to render the video on and then
+ * call gst_video_overlay_set_window_handle() directly with the XID or native
+ * window handle, before starting up the pipeline.
+ * As #playbin and #playsink implement the video overlay interface and proxy
+ * it transparently to the actual video sink even if it is created later, this
+ * case also applies when using these elements.
  * </para>
  * <para>
  * In the other and more common case, the application does not know in advance
  * what GStreamer video sink element will be used for video output. This is
- * usually the case when an element such as #autovideosink or #gconfvideosink
- * is used. In this case, the video sink element itself is created
+ * usually the case when an element such as #autovideosink is used.
+ * In this case, the video sink element itself is created
  * asynchronously from a GStreamer streaming thread some time after the
  * pipeline has been started up. When that happens, however, the video sink
  * will need to know right then whether to render onto an already existing
