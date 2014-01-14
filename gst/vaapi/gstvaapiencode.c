@@ -317,7 +317,7 @@ error_allocate_buffer:
   }
 error_output_state:
   {
-    GST_ERROR ("failed to negotiate output state", status);
+    GST_ERROR ("failed to negotiate output state (status %d)", status);
     GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
     gst_video_codec_frame_unref (out_frame);
     return GST_FLOW_NOT_NEGOTIATED;
