@@ -68,7 +68,9 @@ struct _GstTee {
   /*< private >*/
   GstPad         *sinkpad;
   GstPad         *allocpad;
-  guint           pad_counter;
+
+  GHashTable     *pad_indexes;
+  guint           next_pad_index;
 
   gboolean        has_chain;
   gboolean        silent;
