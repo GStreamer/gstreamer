@@ -21,8 +21,6 @@ typedef struct {
   GSList *elements;
   reference_t first;
   reference_t last;
-  //link_t *front;
-  //link_t *back;
 } chain_t;
 
 typedef struct _graph_t graph_t;
@@ -40,10 +38,14 @@ struct _graph_t {
  * doesn't really work.
  * This is not safe from reentrance issues, but that doesn't matter as long as
  * we lock a mutex before parsing anyway.
+ *
+ * FIXME: Disable this for now for the above reasons
  */
-//#ifdef GST_DEBUG_ENABLED
+#if 0
+#ifdef GST_DEBUG_ENABLED
 #  define __GST_PARSE_TRACE
-//#endif
+#endif
+#endif
 
 #ifdef __GST_PARSE_TRACE
 G_GNUC_INTERNAL  gchar  *__gst_parse_strdup (gchar *org);
