@@ -59,8 +59,7 @@ struct _GstRtpRtxSend
   /* orig pt (uint) -> rtx pt (uint) */
   GHashTable *rtx_pt_map;
   /* orig pt (string) -> rtx pt (uint) */
-  GstStructure *pending_rtx_pt_map;
-  gboolean rtx_pt_map_changed;
+  GstStructure *rtx_pt_map_structure;
 
   /* buffering control properties */
   guint max_size_time;
