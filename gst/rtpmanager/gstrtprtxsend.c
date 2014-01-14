@@ -215,8 +215,6 @@ gst_rtp_rtx_send_finalize (GObject * object)
 {
   GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (object);
 
-  gst_rtp_rtx_send_reset (rtx);
-
   g_hash_table_unref (rtx->ssrc_data);
   g_hash_table_unref (rtx->rtx_ssrcs);
   if (rtx->external_ssrc_map)
@@ -224,7 +222,7 @@ gst_rtp_rtx_send_finalize (GObject * object)
   g_hash_table_unref (rtx->rtx_pt_map);
   if (rtx->rtx_pt_map_structure)
     gst_structure_free (rtx->rtx_pt_map_structure);
-  g_queue_free (rtx->pending);
+  g_queue_free_full (rtx->pending, (GDestroyNotify) gst_buffer_unref);
 
   G_OBJECT_CLASS (gst_rtp_rtx_send_parent_class)->finalize (object);
 }
