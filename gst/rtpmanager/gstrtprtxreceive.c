@@ -466,22 +466,16 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       g_hash_table_lookup_extended (rtx->rtx_pt_map,
       GUINT_TO_POINTER (payload_type), NULL, NULL);
 
-  GST_OBJECT_UNLOCK (rtx);
-
+  /* if the current packet is from a retransmission stream */
   if (is_rtx) {
+    /* increase our statistic */
+    ++rtx->num_rtx_packets;
+
     /* read OSN in the rtx payload */
     orign_seqnum = GST_READ_UINT16_BE (gst_rtp_buffer_get_payload (&rtp));
     origin_payload_type =
         GPOINTER_TO_UINT (g_hash_table_lookup (rtx->rtx_pt_map,
             GUINT_TO_POINTER (payload_type)));
-  }
-
-  GST_OBJECT_LOCK (rtx);
-
-  /* if the current packet is from a retransmission stream */
-  if (is_rtx) {
-    /* increase our statistic */
-    ++rtx->num_rtx_packets;
 
     /* first we check if we already have associated this retransmission stream
      * to a master stream */
