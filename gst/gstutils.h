@@ -822,6 +822,15 @@ GST_WRITE_DOUBLE_BE(guint8 *data, gdouble num)
  * Since: 1.4
  */
 #define GST_ROUND_UP_128(num) (((num)+127)&~127)
+/**
+ * GST_ROUND_UP_N:
+ * @num: integrer value to round up
+ * @align: a power of two to round up to
+ *
+ * Rounds an integer value up to the next multiple of @align. @align MUST be a
+ * power of two.
+ */
+#define GST_ROUND_UP_N(num,align) ((((num) + ((align) - 1)) & ~((align) - 1)))
 
 
 /**
@@ -874,6 +883,16 @@ GST_WRITE_DOUBLE_BE(guint8 *data, gdouble num)
  * Since: 1.4
  */
 #define GST_ROUND_DOWN_128(num) ((num)&(~127))
+/**
+ * GST_ROUND_DOWN_N:
+ * @num: integrer value to round down
+ * @align: a power of two to round down to
+ *
+ * Rounds an integer value down to the next multiple of @align. @align MUST be a
+ * power of two.
+ */
+#define GST_ROUND_DOWN_N(num,align) (((num) & ~((align) - 1)))
+
 
 void                    gst_object_default_error        (GstObject    * source,
                                                          const GError * error,
