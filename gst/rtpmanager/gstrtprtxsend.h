@@ -45,8 +45,6 @@ struct _GstRtpRtxSend
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  GMutex lock;
-
   /* rtp packets that will be pushed upon next buffer */
   GQueue *pending;
 

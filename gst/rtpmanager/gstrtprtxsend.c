@@ -200,14 +200,14 @@ gst_rtp_rtx_send_class_init (GstRtpRtxSendClass * klass)
 static void
 gst_rtp_rtx_send_reset (GstRtpRtxSend * rtx, gboolean full)
 {
-  g_mutex_lock (&rtx->lock);
+  GST_OBJECT_LOCK (rtx);
   g_queue_foreach (rtx->pending, (GFunc) gst_buffer_unref, NULL);
   g_queue_clear (rtx->pending);
   g_hash_table_remove_all (rtx->ssrc_data);
   g_hash_table_remove_all (rtx->rtx_ssrcs);
   rtx->num_rtx_requests = 0;
   rtx->num_rtx_packets = 0;
-  g_mutex_unlock (&rtx->lock);
+  GST_OBJECT_UNLOCK (rtx);
 }
 
 static void
@@ -225,7 +225,6 @@ gst_rtp_rtx_send_finalize (GObject * object)
   if (rtx->pending_rtx_pt_map)
     gst_structure_free (rtx->pending_rtx_pt_map);
   g_queue_free (rtx->pending);
-  g_mutex_clear (&rtx->lock);
 
   G_OBJECT_CLASS (gst_rtp_rtx_send_parent_class)->finalize (object);
 }
@@ -255,7 +254,6 @@ gst_rtp_rtx_send_init (GstRtpRtxSend * rtx)
       GST_DEBUG_FUNCPTR (gst_rtp_rtx_send_chain));
   gst_element_add_pad (GST_ELEMENT (rtx), rtx->sinkpad);
 
-  g_mutex_init (&rtx->lock);
   rtx->pending = g_queue_new ();
   rtx->ssrc_data = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) ssrc_rtx_data_free);
@@ -347,7 +345,7 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             "request seqnum: %" G_GUINT32_FORMAT ", ssrc: %" G_GUINT32_FORMAT,
             seqnum, ssrc);
 
-        g_mutex_lock (&rtx->lock);
+        GST_OBJECT_LOCK (rtx);
         /* check if request is for us */
         if (g_hash_table_contains (rtx->ssrc_data, GUINT_TO_POINTER (ssrc))) {
           SSRCRtxData *data;
@@ -368,7 +366,7 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             g_queue_push_tail (rtx->pending, gst_buffer_ref (item->buffer));
           }
         }
-        g_mutex_unlock (&rtx->lock);
+        GST_OBJECT_UNLOCK (rtx);
 
         gst_event_unref (event);
         res = TRUE;
@@ -382,7 +380,7 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         GST_DEBUG_OBJECT (rtx, "collision ssrc: %" G_GUINT32_FORMAT, ssrc);
 
-        g_mutex_lock (&rtx->lock);
+        GST_OBJECT_LOCK (rtx);
 
         /* choose another ssrc for our retransmited stream */
         if (g_hash_table_contains (rtx->rtx_ssrcs, GUINT_TO_POINTER (ssrc))) {
@@ -400,7 +398,7 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
               GUINT_TO_POINTER (data->rtx_ssrc),
               GUINT_TO_POINTER (master_ssrc));
 
-          g_mutex_unlock (&rtx->lock);
+          GST_OBJECT_UNLOCK (rtx);
 
           /* no need to forward to payloader because we make sure to have
            * a different ssrc
@@ -418,7 +416,7 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             g_hash_table_remove (rtx->ssrc_data, GUINT_TO_POINTER (ssrc));
           }
 
-          g_mutex_unlock (&rtx->lock);
+          GST_OBJECT_UNLOCK (rtx);
 
           /* forward event to payloader in case collided ssrc is
            * master stream */
@@ -618,7 +616,7 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
-  g_mutex_lock (&rtx->lock);
+  GST_OBJECT_LOCK (rtx);
 
   /* transfer payload type while holding the lock */
   if (rtx->rtx_pt_map_changed) {
@@ -660,7 +658,7 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   /* no need to hold the lock to push rtx packets */
-  g_mutex_unlock (&rtx->lock);
+  GST_OBJECT_UNLOCK (rtx);
 
   /* retransmit requested packets */
   if (pending) {
@@ -686,29 +684,29 @@ gst_rtp_rtx_send_get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_PAYLOAD_TYPE_MAP:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       g_value_set_boxed (value, rtx->pending_rtx_pt_map);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_MAX_SIZE_TIME:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       g_value_set_uint (value, rtx->max_size_time);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_MAX_SIZE_PACKETS:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       g_value_set_uint (value, rtx->max_size_packets);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_NUM_RTX_REQUESTS:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       g_value_set_uint (value, rtx->num_rtx_requests);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_NUM_RTX_PACKETS:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       g_value_set_uint (value, rtx->num_rtx_packets);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -724,29 +722,29 @@ gst_rtp_rtx_send_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_SSRC_MAP:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       if (rtx->external_ssrc_map)
         gst_structure_free (rtx->external_ssrc_map);
       rtx->external_ssrc_map = g_value_dup_boxed (value);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_PAYLOAD_TYPE_MAP:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       if (rtx->pending_rtx_pt_map)
         gst_structure_free (rtx->pending_rtx_pt_map);
       rtx->pending_rtx_pt_map = g_value_dup_boxed (value);
       rtx->rtx_pt_map_changed = TRUE;
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_MAX_SIZE_TIME:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       rtx->max_size_time = g_value_get_uint (value);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_MAX_SIZE_PACKETS:
-      g_mutex_lock (&rtx->lock);
+      GST_OBJECT_LOCK (rtx);
       rtx->max_size_packets = g_value_get_uint (value);
-      g_mutex_unlock (&rtx->lock);
+      GST_OBJECT_UNLOCK (rtx);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
