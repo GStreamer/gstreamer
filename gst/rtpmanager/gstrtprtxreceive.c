@@ -313,7 +313,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
         if (g_hash_table_lookup_extended (rtx->ssrc2_ssrc1_map,
                 GUINT_TO_POINTER (ssrc), NULL, &ssrc2)
             && GPOINTER_TO_UINT (ssrc2) != GPOINTER_TO_UINT (ssrc)) {
-          GST_DEBUG ("Retransmited stream %" G_GUINT32_FORMAT
+          GST_DEBUG_OBJECT (rtx, "Retransmited stream %" G_GUINT32_FORMAT
               " already associated to its master", GPOINTER_TO_UINT (ssrc2));
         } else {
           /* not already associated but also we have to check that we have not
@@ -328,8 +328,8 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
                * It does not mean we reject the event, we still want to forward
                * the request to the gstrtpsession to be translater into a FB NACK
                */
-              GST_DEBUG ("Duplicated request seqnum: %" G_GUINT32_FORMAT
-                  ", ssrc1: %" G_GUINT32_FORMAT, seqnum, ssrc);
+              GST_DEBUG_OBJECT (rtx, "Duplicated request seqnum: %"
+                  G_GUINT32_FORMAT ", ssrc1: %" G_GUINT32_FORMAT, seqnum, ssrc);
             } else {
               /* From RFC 4588:
                * the receiver MUST NOT have two outstanding requests for the
@@ -337,7 +337,8 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
                * before the association is resolved. Otherwise it's impossible
                * to associate a rtx stream and its master stream
                */
-              GST_DEBUG ("reject request for seqnum %" G_GUINT32_FORMAT
+              GST_DEBUG_OBJECT (rtx,
+                  "reject request for seqnum %" G_GUINT32_FORMAT
                   "of master stream %" G_GUINT32_FORMAT, seqnum, ssrc);
               res = TRUE;
 
@@ -353,8 +354,8 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
           } else {
             /* the request has not been already considered
              * insert it for the first time */
-            GST_DEBUG
-                ("packet number %" G_GUINT32_FORMAT " of master stream %"
+            GST_DEBUG_OBJECT (rtx,
+                "packet number %" G_GUINT32_FORMAT " of master stream %"
                 G_GUINT32_FORMAT " needs to be retransmited", seqnum, ssrc);
             g_hash_table_insert (rtx->seqnum_ssrc1_map,
                 GUINT_TO_POINTER (seqnum), GUINT_TO_POINTER (ssrc));
@@ -486,8 +487,8 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
      * to a master stream */
     if (g_hash_table_lookup_extended (rtx->ssrc2_ssrc1_map,
             GUINT_TO_POINTER (ssrc), NULL, &ssrc1)) {
-      GST_DEBUG
-          ("packet is from retransmission stream %" G_GUINT32_FORMAT
+      GST_DEBUG_OBJECT (rtx,
+          "packet is from retransmission stream %" G_GUINT32_FORMAT
           " already associated to master stream %" G_GUINT32_FORMAT, ssrc,
           GPOINTER_TO_UINT (ssrc1));
       ssrc2 = ssrc;
@@ -497,8 +498,8 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
        * history */
       if (g_hash_table_lookup_extended (rtx->seqnum_ssrc1_map,
               GUINT_TO_POINTER (orign_seqnum), NULL, &ssrc1)) {
-        GST_DEBUG
-            ("associate retransmisted stream %" G_GUINT32_FORMAT
+        GST_DEBUG_OBJECT (rtx,
+            "associate retransmisted stream %" G_GUINT32_FORMAT
             " to master stream %" G_GUINT32_FORMAT " thanks to packet %"
             G_GUINT16_FORMAT "", ssrc, GPOINTER_TO_UINT (ssrc1), orign_seqnum);
         ssrc2 = ssrc;
@@ -514,9 +515,8 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
         /* just put a guard */
         if (GPOINTER_TO_UINT (ssrc1) == ssrc2)
-          g_warning
-              ("RTX receiver ssrc2_ssrc1_map bad state, ssrc %" G_GUINT32_FORMAT
-              " are the same\n", ssrc);
+          GST_WARNING_OBJECT (rtx, "RTX receiver ssrc2_ssrc1_map bad state, "
+              "ssrc %" G_GUINT32_FORMAT " are the same\n", ssrc);
 
         /* also do the association between master stream and rtx stream
          * every ssrc are unique so we can use the same hash table
@@ -526,8 +526,8 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
             GUINT_TO_POINTER (ssrc2));
       } else {
         /* we are not able to associate this rtx packet with a master stream */
-        GST_DEBUG
-            ("drop rtx packet because its orign_seqnum %" G_GUINT16_FORMAT
+        GST_DEBUG_OBJECT (rtx,
+            "drop rtx packet because its orign_seqnum %" G_GUINT16_FORMAT
             " is not in pending retransmission requests", orign_seqnum);
         drop = TRUE;
       }
