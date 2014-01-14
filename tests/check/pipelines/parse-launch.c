@@ -226,7 +226,7 @@ GST_START_TEST (test_launch_lines2)
    * - test if escaping strings works
    */
   cur = setup_pipeline (PIPELINE6);
-  /*** <-- valgrind finds element later*/
+  /* FIXME: valgrind finds element later */
   fail_unless (GST_IS_PIPELINE (cur), "Parse did not produce a pipeline");
   g_object_get (G_OBJECT (cur), "name", &s, NULL);
   fail_if (s == NULL, "name was NULL");
@@ -288,11 +288,6 @@ GST_START_TEST (test_launch_lines2)
   cur = setup_pipeline (PIPELINE13);
   gst_object_unref (cur);
 
-  /* Checks handling of a assignment followed by error inside a bin. 
-   * This should warn, but ignore the error and carry on */
-  //cur = setup_pipeline ("( filesrc blocksize=4 location=/dev/null @ )");
-  //gst_object_unref (cur);
-
   /**
    * Checks if characters inside quotes are not escaped.
   */
@@ -338,6 +333,12 @@ static const gchar *expected_failures[] = {
   "bin.( )",
   /* bin with non-existent element counts as empty, and not allowed */
   "bin.( non_existent_element )",
+  /* bin with an element, assignments and then a syntax error */
+  "( filesrc blocksize=4 location=/dev/null @ )",
+  /* bin linking with the ! inside the bin and no ! outside */
+  "( fakesrc num-buffers=\"4\" ! ) identity silent=true ! fakesink silent=true",
+  /* bins with linking without ! */
+  "pipeline.(name=\"john\" fakesrc num-buffers=4 ( bin. ( ! queue ! identity silent=true !( queue ! fakesink silent=true )) ))",
   /* END: */
   NULL
 };
@@ -464,12 +465,12 @@ GST_START_TEST (delayed_link)
   run_delayed_test
       ("parsetestelement name=src ! fakesink silent=true name=sink", "sink",
       TRUE);
-  /*** <-- valgrind finds one element ***/
+  /* FIXME: valgrind finds one element */
 
   /* Test, but this time specifying both pad names */
   run_delayed_test ("parsetestelement name=src .src ! "
       ".sink fakesink silent=true name=sink", "sink", TRUE);
-  /*** <-- valgrind finds one element ***/
+  /* FIXME: valgrind finds one element */
 
   /* Now try with a caps filter, but not testing that
    * the peerpad == sinkpad, because the peer will actually
