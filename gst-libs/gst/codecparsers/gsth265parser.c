@@ -1714,12 +1714,12 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
         G_MAXUINT32 - 1);
   }
   /* setting default values if vps->sub_layer_ordering_info_present_flag is zero */
-  if (!vps->sub_layer_ordering_info_present_flag) {
+  if (!vps->sub_layer_ordering_info_present_flag && vps->max_sub_layers_minus1) {
     for (i = 0; i <= (vps->max_sub_layers_minus1 - 1); i++) {
       vps->max_dec_pic_buffering_minus1[i] =
           vps->max_dec_pic_buffering_minus1[vps->max_sub_layers_minus1];
-      vps->max_dec_pic_buffering_minus1[i] =
-          vps->max_dec_pic_buffering_minus1[vps->max_sub_layers_minus1];
+      vps->max_num_reorder_pics[i] =
+          vps->max_num_reorder_pics[vps->max_sub_layers_minus1];
       vps->max_latency_increase_plus1[i] =
           vps->max_latency_increase_plus1[vps->max_sub_layers_minus1];
     }
@@ -1881,12 +1881,12 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
         G_MAXUINT32 - 1);
   }
   /* setting default values if sps->sub_layer_ordering_info_present_flag is zero */
-  if (!sps->sub_layer_ordering_info_present_flag) {
+  if (!sps->sub_layer_ordering_info_present_flag && sps->max_sub_layers_minus1) {
     for (i = 0; i <= (sps->max_sub_layers_minus1 - 1); i++) {
       sps->max_dec_pic_buffering_minus1[i] =
           sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1];
-      sps->max_dec_pic_buffering_minus1[i] =
-          sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1];
+      sps->max_num_reorder_pics[i] =
+          sps->max_num_reorder_pics[sps->max_sub_layers_minus1];
       sps->max_latency_increase_plus1[i] =
           sps->max_latency_increase_plus1[sps->max_sub_layers_minus1];
     }

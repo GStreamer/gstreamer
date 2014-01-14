@@ -32,6 +32,7 @@
 
 G_BEGIN_DECLS
 
+#define GST_H265_MAX_SUB_LAYERS   8
 #define GST_H265_MAX_VPS_COUNT   16
 #define GST_H265_MAX_SPS_COUNT   16
 #define GST_H265_MAX_PPS_COUNT   64
@@ -463,9 +464,9 @@ struct _GstH265VPS {
   GstH265ProfileTierLevel profile_tier_level;
 
   guint8 sub_layer_ordering_info_present_flag;
-  guint8 max_dec_pic_buffering_minus1[7];
-  guint8 max_num_reorder_pics[7];
-  guint32 max_latency_increase_plus1[7];
+  guint8 max_dec_pic_buffering_minus1[GST_H265_MAX_SUB_LAYERS];
+  guint8 max_num_reorder_pics[GST_H265_MAX_SUB_LAYERS];
+  guint32 max_latency_increase_plus1[GST_H265_MAX_SUB_LAYERS];
 
   guint8 max_layer_id;
   guint16 num_layer_sets_minus1;
@@ -703,9 +704,9 @@ struct _GstH265SPS
   guint8 log2_max_pic_order_cnt_lsb_minus4;
 
   guint8 sub_layer_ordering_info_present_flag;
-  guint8 max_dec_pic_buffering_minus1[7];
-  guint8 max_num_reorder_pics[7];
-  guint8 max_latency_increase_plus1[7];
+  guint8 max_dec_pic_buffering_minus1[GST_H265_MAX_SUB_LAYERS];
+  guint8 max_num_reorder_pics[GST_H265_MAX_SUB_LAYERS];
+  guint8 max_latency_increase_plus1[GST_H265_MAX_SUB_LAYERS];
 
   guint8 log2_min_luma_coding_block_size_minus3;
   guint8 log2_diff_max_min_luma_coding_block_size;
