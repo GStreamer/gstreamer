@@ -729,7 +729,8 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
 
-  g_source_remove (priv->get_pos_id);
+  if (priv->get_pos_id)
+      g_source_remove (priv->get_pos_id);
   priv->pipeline = NULL;
 
   GST_DEBUG_OBJECT (scenario, "pipeline was freed");
