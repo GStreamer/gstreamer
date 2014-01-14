@@ -198,6 +198,7 @@ gst_rtp_g726_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
         "encoding-name = (string) AAL2-%s", encoding_name, encoding_name);
     filter = gst_caps_from_string (capsstr);
     g_free (capsstr);
+    g_free (encoding_name);
 
     /* intersect to filter */
     intersect = gst_caps_intersect (peercaps, filter);
