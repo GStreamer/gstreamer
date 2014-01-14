@@ -77,7 +77,8 @@ gst_gl_display_init (GstGLDisplay * display)
 {
   display->priv = GST_GL_DISPLAY_GET_PRIVATE (display);
 
-  display->gl_api = GST_GL_API_NONE;
+  display->gl_api = GST_GL_API_ANY;
+  display->type = GST_GL_DISPLAY_TYPE_ANY;
 
   GST_TRACE ("init %p", display);
 
@@ -99,6 +100,11 @@ gst_gl_display_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
 }
 
+/**
+ * gst_gl_display_new:
+ *
+ * Returns: (transfer full): a new #GstGLDisplay
+ */
 GstGLDisplay *
 gst_gl_display_new (void)
 {
@@ -109,9 +115,8 @@ GstGLAPI
 gst_gl_display_get_gl_api (GstGLDisplay * display)
 {
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), GST_GL_API_NONE);
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (display->context), GST_GL_API_NONE);
 
-  return gst_gl_context_get_gl_api (display->context);
+  return display->gl_api;
 }
 
 /**

@@ -38,6 +38,20 @@ GType gst_gl_display_get_type (void);
 #define GST_IS_GL_DISPLAY(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_DISPLAY))
 #define GST_IS_GL_DISPLAY_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_GL_DISPLAY))
 #define GST_GL_DISPLAY_CAST(obj)        ((GstGLDisplay*)(obj))
+#define GST_GL_DISPLAY_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_DISPLAY, GstGLDisplayClass))
+
+typedef enum
+{
+  GST_GL_DISPLAY_TYPE_NONE = 0,
+  GST_GL_DISPLAY_TYPE_X11 = (1 << 0),
+  GST_GL_DISPLAY_TYPE_WAYLAND = (1 << 1),
+  GST_GL_DISPLAY_TYPE_COCOA = (1 << 2),
+  GST_GL_DISPLAY_TYPE_WIN32 = (1 << 3),
+  GST_GL_DISPLAY_TYPE_ANDROID = (1 << 4),
+  GST_GL_DISPLAY_TYPE_DISPMANX = (1 << 5),
+
+  GST_GL_DISPLAY_TYPE_ANY = G_MAXUINT32
+} GstGLDisplayType;
 
 /**
  * GstGLDisplay:
@@ -49,6 +63,8 @@ struct _GstGLDisplay
 {
   /* <private> */
   GstObject             object;
+
+  GstGLDisplayType      type;
 
   GstGLContext         *context;
   GstGLAPI              gl_api;
