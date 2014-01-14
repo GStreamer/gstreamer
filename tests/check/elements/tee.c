@@ -597,6 +597,34 @@ GST_START_TEST (test_flow_aggregation)
 
 GST_END_TEST;
 
+GST_START_TEST (test_request_pads)
+{
+  GstElement *tee;
+  GstPad *srcpad1, *srcpad2, *srcpad3, *srcpad4;
+
+  tee = gst_check_setup_element ("tee");
+
+  srcpad1 = gst_element_get_request_pad (tee, "src_%u");
+  fail_unless (srcpad1 != NULL);
+  fail_unless_equals_string (GST_OBJECT_NAME (srcpad1), "src_0");
+  srcpad2 = gst_element_get_request_pad (tee, "src_100");
+  fail_unless (srcpad2 != NULL);
+  fail_unless_equals_string (GST_OBJECT_NAME (srcpad2), "src_100");
+  srcpad3 = gst_element_get_request_pad (tee, "src_10");
+  fail_unless (srcpad3 != NULL);
+  fail_unless_equals_string (GST_OBJECT_NAME (srcpad3), "src_10");
+  srcpad4 = gst_element_get_request_pad (tee, "src_%u");
+  fail_unless (srcpad4 != NULL);
+
+  gst_object_unref (srcpad1);
+  gst_object_unref (srcpad2);
+  gst_object_unref (srcpad3);
+  gst_object_unref (srcpad4);
+  gst_object_unref (tee);
+}
+
+GST_END_TEST;
+
 static Suite *
 tee_suite (void)
 {
@@ -613,6 +641,7 @@ tee_suite (void)
   tcase_add_test (tc_chain, test_release_while_second_buffer_alloc);
   tcase_add_test (tc_chain, test_internal_links);
   tcase_add_test (tc_chain, test_flow_aggregation);
+  tcase_add_test (tc_chain, test_request_pads);
 
   return s;
 }
