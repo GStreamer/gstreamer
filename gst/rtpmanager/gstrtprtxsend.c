@@ -449,12 +449,14 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       s = gst_caps_get_structure (caps, 0);
       gst_structure_get_uint (s, "ssrc", &ssrc);
+
+      GST_OBJECT_LOCK (rtx);
       data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
       gst_structure_get_int (s, "clock-rate", &data->clock_rate);
 
       GST_DEBUG_OBJECT (rtx, "got clock-rate from caps: %d for ssrc: %u",
           data->clock_rate, ssrc);
-
+      GST_OBJECT_UNLOCK (rtx);
       break;
     }
     default:
