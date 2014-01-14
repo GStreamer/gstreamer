@@ -198,7 +198,7 @@ gst_rtp_rtx_send_class_init (GstRtpRtxSendClass * klass)
 }
 
 static void
-gst_rtp_rtx_send_reset (GstRtpRtxSend * rtx, gboolean full)
+gst_rtp_rtx_send_reset (GstRtpRtxSend * rtx)
 {
   GST_OBJECT_LOCK (rtx);
   g_queue_foreach (rtx->pending, (GFunc) gst_buffer_unref, NULL);
@@ -215,7 +215,7 @@ gst_rtp_rtx_send_finalize (GObject * object)
 {
   GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (object);
 
-  gst_rtp_rtx_send_reset (rtx, TRUE);
+  gst_rtp_rtx_send_reset (rtx);
 
   g_hash_table_unref (rtx->ssrc_data);
   g_hash_table_unref (rtx->rtx_ssrcs);
@@ -764,7 +764,7 @@ gst_rtp_rtx_send_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_rtp_rtx_send_reset (rtx, TRUE);
+      gst_rtp_rtx_send_reset (rtx);
       break;
     default:
       break;
