@@ -297,7 +297,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
           ssrc = -1;
 
         GST_DEBUG_OBJECT (rtx,
-            "request seqnum: %" G_GUINT16_FORMAT ", ssrc: %" G_GUINT32_FORMAT,
+            "request seqnum: %" G_GUINT32_FORMAT ", ssrc: %" G_GUINT32_FORMAT,
             seqnum, ssrc);
 
         GST_OBJECT_LOCK (rtx);
@@ -328,7 +328,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
                * It does not mean we reject the event, we still want to forward
                * the request to the gstrtpsession to be translater into a FB NACK
                */
-              GST_DEBUG ("Duplicated request seqnum: %" G_GUINT16_FORMAT
+              GST_DEBUG ("Duplicated request seqnum: %" G_GUINT32_FORMAT
                   ", ssrc1: %" G_GUINT32_FORMAT, seqnum, ssrc);
             } else {
               /* From RFC 4588:
@@ -337,7 +337,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
                * before the association is resolved. Otherwise it's impossible
                * to associate a rtx stream and its master stream
                */
-              GST_DEBUG ("reject request for seqnum %" G_GUINT16_FORMAT
+              GST_DEBUG ("reject request for seqnum %" G_GUINT32_FORMAT
                   "of master stream %" G_GUINT32_FORMAT, seqnum, ssrc);
               res = TRUE;
 
@@ -354,7 +354,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
             /* the request has not been already considered
              * insert it for the first time */
             GST_DEBUG
-                ("packet number %" G_GUINT16_FORMAT " of master stream %"
+                ("packet number %" G_GUINT32_FORMAT " of master stream %"
                 G_GUINT32_FORMAT " needs to be retransmited", seqnum, ssrc);
             g_hash_table_insert (rtx->seqnum_ssrc1_map,
                 GUINT_TO_POINTER (seqnum), GUINT_TO_POINTER (ssrc));
