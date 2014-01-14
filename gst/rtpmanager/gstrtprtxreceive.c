@@ -233,8 +233,8 @@ gst_rtp_rtx_receive_finalize (GObject * object)
   g_hash_table_unref (rtx->ssrc2_ssrc1_map);
   g_hash_table_unref (rtx->seqnum_ssrc1_map);
   g_hash_table_unref (rtx->rtx_pt_map);
-  if (rtx->pending_rtx_pt_map)
-    gst_structure_free (rtx->pending_rtx_pt_map);
+  if (rtx->rtx_pt_map_structure)
+    gst_structure_free (rtx->rtx_pt_map_structure);
 
   G_OBJECT_CLASS (gst_rtp_rtx_receive_parent_class)->finalize (object);
 }
@@ -266,7 +266,6 @@ gst_rtp_rtx_receive_init (GstRtpRtxReceive * rtx)
   rtx->seqnum_ssrc1_map = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   rtx->rtx_pt_map = g_hash_table_new (g_direct_hash, g_direct_equal);
-  rtx->rtx_pt_map_changed = FALSE;
 }
 
 static gboolean
@@ -376,23 +375,6 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
   return res;
 }
 
-static gboolean
-structure_to_hash_table_inv (GQuark field_id, const GValue * value,
-    gpointer hash)
-{
-  const gchar *field_str;
-  guint field_uint;
-  guint value_uint;
-
-  field_str = g_quark_to_string (field_id);
-  field_uint = atoi (field_str);
-  value_uint = g_value_get_uint (value);
-  g_hash_table_insert ((GHashTable *) hash, GUINT_TO_POINTER (value_uint),
-      GUINT_TO_POINTER (field_uint));
-
-  return TRUE;
-}
-
 /* Copy fixed header and extension. Replace current ssrc by ssrc1,
  * remove OSN and replace current seq num by OSN.
  * Copy memory to avoid to manually copy each rtp buffer field.
@@ -478,14 +460,6 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   /* check if we have a retransmission packet (this information comes from SDP) */
   GST_OBJECT_LOCK (rtx);
-
-  /* transfer payload type while holding the lock */
-  if (rtx->rtx_pt_map_changed) {
-    g_hash_table_remove_all (rtx->rtx_pt_map);
-    gst_structure_foreach (rtx->pending_rtx_pt_map, structure_to_hash_table_inv,
-        rtx->rtx_pt_map);
-    rtx->rtx_pt_map_changed = FALSE;
-  }
 
   is_rtx =
       g_hash_table_lookup_extended (rtx->rtx_pt_map,
@@ -606,7 +580,7 @@ gst_rtp_rtx_receive_get_property (GObject * object,
   switch (prop_id) {
     case PROP_PAYLOAD_TYPE_MAP:
       GST_OBJECT_LOCK (rtx);
-      g_value_set_boxed (value, rtx->pending_rtx_pt_map);
+      g_value_set_boxed (value, rtx->rtx_pt_map_structure);
       GST_OBJECT_UNLOCK (rtx);
       break;
     case PROP_NUM_RTX_REQUESTS:
@@ -630,6 +604,23 @@ gst_rtp_rtx_receive_get_property (GObject * object,
   }
 }
 
+static gboolean
+structure_to_hash_table_inv (GQuark field_id, const GValue * value,
+    gpointer hash)
+{
+  const gchar *field_str;
+  guint field_uint;
+  guint value_uint;
+
+  field_str = g_quark_to_string (field_id);
+  field_uint = atoi (field_str);
+  value_uint = g_value_get_uint (value);
+  g_hash_table_insert ((GHashTable *) hash, GUINT_TO_POINTER (value_uint),
+      GUINT_TO_POINTER (field_uint));
+
+  return TRUE;
+}
+
 static void
 gst_rtp_rtx_receive_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
@@ -639,10 +630,12 @@ gst_rtp_rtx_receive_set_property (GObject * object,
   switch (prop_id) {
     case PROP_PAYLOAD_TYPE_MAP:
       GST_OBJECT_LOCK (rtx);
-      if (rtx->pending_rtx_pt_map)
-        gst_structure_free (rtx->pending_rtx_pt_map);
-      rtx->pending_rtx_pt_map = g_value_dup_boxed (value);
-      rtx->rtx_pt_map_changed = TRUE;
+      if (rtx->rtx_pt_map_structure)
+        gst_structure_free (rtx->rtx_pt_map_structure);
+      rtx->rtx_pt_map_structure = g_value_dup_boxed (value);
+      g_hash_table_remove_all (rtx->rtx_pt_map);
+      gst_structure_foreach (rtx->rtx_pt_map_structure,
+          structure_to_hash_table_inv, rtx->rtx_pt_map);
       GST_OBJECT_UNLOCK (rtx);
       break;
     default:

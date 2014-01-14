@@ -57,8 +57,7 @@ struct _GstRtpRtxReceive
   /* rtx pt (uint) -> origin pt (uint) */
   GHashTable *rtx_pt_map;
   /* origin pt (string) -> rtx pt (uint) */
-  GstStructure *pending_rtx_pt_map;
-  gboolean rtx_pt_map_changed;
+  GstStructure *rtx_pt_map_structure;
 
   /* statistics */
   guint num_rtx_requests;
