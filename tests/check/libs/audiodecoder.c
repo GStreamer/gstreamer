@@ -42,6 +42,8 @@ typedef struct _GstAudioDecoderTesterClass GstAudioDecoderTesterClass;
 struct _GstAudioDecoderTester
 {
   GstAudioDecoder parent;
+
+  gboolean setoutputformat_on_decoding;
 };
 
 struct _GstAudioDecoderTesterClass
@@ -72,17 +74,19 @@ gst_audio_decoder_tester_flush (GstAudioDecoder * dec, gboolean hard)
 static gboolean
 gst_audio_decoder_tester_set_format (GstAudioDecoder * dec, GstCaps * caps)
 {
+  GstAudioDecoderTester *tester = (GstAudioDecoderTester *) dec;
   GstAudioInfo info;
   gst_caps_unref (caps);
 
-  caps = gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, "S16LE",
-      "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 44100,
-      "layout", G_TYPE_STRING, "interleaved", NULL);
-  gst_audio_info_from_caps (&info, caps);
-  gst_caps_unref (caps);
+  if (!tester->setoutputformat_on_decoding) {
+    caps = gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, "S16LE",
+        "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 44100,
+        "layout", G_TYPE_STRING, "interleaved", NULL);
+    gst_audio_info_from_caps (&info, caps);
+    gst_caps_unref (caps);
 
-  gst_audio_decoder_set_output_format (dec, &info);
-
+    gst_audio_decoder_set_output_format (dec, &info);
+  }
   return TRUE;
 }
 
@@ -90,6 +94,7 @@ static GstFlowReturn
 gst_audio_decoder_tester_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer)
 {
+  GstAudioDecoderTester *tester = (GstAudioDecoderTester *) dec;
   guint8 *data;
   gint size;
   GstMapInfo map;
@@ -98,6 +103,19 @@ gst_audio_decoder_tester_handle_frame (GstAudioDecoder * dec,
 
   if (buffer == NULL)
     return GST_FLOW_OK;
+
+  if (tester->setoutputformat_on_decoding) {
+    GstCaps *caps;
+    GstAudioInfo info;
+
+    caps = gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, "S16LE",
+        "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 44100,
+        "layout", G_TYPE_STRING, "interleaved", NULL);
+    gst_audio_info_from_caps (&info, caps);
+    gst_caps_unref (caps);
+
+    gst_audio_decoder_set_output_format (dec, &info);
+  }
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
@@ -370,6 +388,37 @@ GST_START_TEST (audiodecoder_negotiation_with_gap_event)
 GST_END_TEST;
 
 
+GST_START_TEST (audiodecoder_delayed_negotiation_with_gap_event)
+{
+  GstSegment segment;
+
+  setup_audiodecodertester ();
+
+  ((GstAudioDecoderTester *) dec)->setoutputformat_on_decoding = TRUE;
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push a gap event to force audiodecoder to push a caps event */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_gap (0,
+              GST_SECOND)));
+  fail_unless (buffers == NULL);
+
+  check_audiodecoder_negotiation ();
+
+  cleanup_audiodecodertest ();
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_audiodecoder_suite (void)
 {
@@ -380,6 +429,7 @@ gst_audiodecoder_suite (void)
   tcase_add_test (tc, audiodecoder_playback);
   tcase_add_test (tc, audiodecoder_negotiation_with_buffer);
   tcase_add_test (tc, audiodecoder_negotiation_with_gap_event);
+  tcase_add_test (tc, audiodecoder_delayed_negotiation_with_gap_event);
 
   return s;
 }
