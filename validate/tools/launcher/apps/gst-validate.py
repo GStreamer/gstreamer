@@ -32,6 +32,7 @@ from utils import MediaFormatCombination, get_profile,\
 DEFAULT_GST_VALIDATE = "gst-validate-1.0"
 DEFAULT_GST_VALIDATE_TRANSCODING = "gst-validate-transcoding-1.0"
 DISCOVERER_COMMAND = ["gst-validate-media-check-1.0"]
+
 MEDIA_INFO_EXT = "media_info"
 STREAM_INFO = "stream_info"
 
@@ -138,14 +139,13 @@ class GstValidateManager(TestsManager, Loggable):
         return False
 
     def list_tests(self):
-        SCENARIOS = ["none", "simple_backward",
+        SCENARIOS = ["play_15s", "simple_backward",
                      "fast_forward", "seek_forward",
                      "seek_backward", "scrub_forward_seeking"]
 
         for test_pipeline in PLAYBACK_TESTS:
-            name = "validate.playback"
             for scenario in SCENARIOS:
-                self._add_playback_test(name, scenario, test_pipeline)
+                self._add_playback_test(scenario, test_pipeline)
 
         for uri, mediainfo in self._list_uris():
             classname = "validate.media_check.%s" % (os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
@@ -159,8 +159,9 @@ class GstValidateManager(TestsManager, Loggable):
             if mediainfo.config.getboolean("media-info", "is-image") is True:
                 continue
             for comb in COMBINATIONS:
-                classname = "validate.transcode.to_%s.%s" % (str(comb).replace(' ', '_'),
-                                                             os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
+                classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.config.get("file-info", "protocol"),
+                                                                str(comb).replace(' ', '_'),
+                                                                os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
                 self.tests.append(GstValidateTranscodingTest(classname,
                                                              self.options,
                                                              self.reporter,
@@ -237,16 +238,13 @@ class GstValidateManager(TestsManager, Loggable):
 
         return self._uris
 
-    def _get_fname(self, name, scenario, protocol=None):
-        if protocol is not None:
-            name = "%s.%s" % (name, protocol)
-
+    def _get_fname(self, scenario, protocol=None):
         if scenario is not None and scenario.lower() != "none":
-            return "%s.%s" % (name, scenario)
+            return "%s.%s.%s.%s" % ("validate", protocol, "playback", scenario)
 
-        return name
+        return "%s.%s.%s" % ("validate", protocol, "playback")
 
-    def _add_playback_test(self, name, scenario, pipe):
+    def _add_playback_test(self, scenario, pipe):
         if self.options.mute:
             if "autovideosink" in pipe:
                 pipe = pipe.replace("autovideosink", "fakesink")
@@ -267,7 +265,7 @@ class GstValidateManager(TestsManager, Loggable):
                         # is run sync, otherwize some tests will fail
                         npipe = pipe.replace("fakesink", "'fakesink sync=true'")
 
-                fname = "%s.%s" % (self._get_fname(name, scenario,
+                fname = "%s.%s" % (self._get_fname(scenario,
                                    minfo.config.get("file-info", "protocol")),
                                    os.path.basename(uri).replace(".", "_"))
                 self.debug("Adding: %s", fname)
@@ -280,8 +278,7 @@ class GstValidateManager(TestsManager, Loggable):
                                                   file_infos=minfo.config)
                                  )
         else:
-            self.debug("Adding: %s", name)
-            self.tests.append(GstValidateLaunchTest(self._get_fname(fname, scenario),
+            self.tests.append(GstValidateLaunchTest(self._get_fname(scenario, "testing"),
                                               self.options,
                                               self.reporter,
                                               pipe,

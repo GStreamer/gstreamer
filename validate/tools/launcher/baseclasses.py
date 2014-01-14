@@ -210,7 +210,6 @@ class GstValidateTest(Test):
                 if ret != "[":
                     ret += ", "
                 error = l.split("critical : ")[1].replace("\n", '')
-                print "%s -- %s" % (error, errors)
                 if error not in errors:
                     ret += error
                     errors.append(error)
