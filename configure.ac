@@ -2067,7 +2067,7 @@ AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
   AC_CHECK_HEADER(linux/dvb/version.h, [
     AC_MSG_CHECKING([for up-to-date dvb API])
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <linux/dvb/version.h>]], [[
-        #if DVB_API_VERSION < 5
+        #if DVB_API_VERSION < 5 || (DVB_API_VERSION == 5 && DVB_API_VERSION_MINOR <= 4)
         #error "Incompatible dvb API"
         #endif
     ]])], [ AC_MSG_RESULT(yes)
