@@ -230,18 +230,8 @@ gst_rtp_rtx_receive_finalize (GObject * object)
 {
   GstRtpRtxReceive *rtx = GST_RTP_RTX_RECEIVE (object);
 
-  gst_rtp_rtx_receive_reset (rtx);
-
-  if (rtx->ssrc2_ssrc1_map) {
-    g_hash_table_destroy (rtx->ssrc2_ssrc1_map);
-    rtx->ssrc2_ssrc1_map = NULL;
-  }
-
-  if (rtx->seqnum_ssrc1_map) {
-    g_hash_table_destroy (rtx->seqnum_ssrc1_map);
-    rtx->seqnum_ssrc1_map = NULL;
-  }
-
+  g_hash_table_unref (rtx->ssrc2_ssrc1_map);
+  g_hash_table_unref (rtx->seqnum_ssrc1_map);
   g_hash_table_unref (rtx->rtx_pt_map);
   if (rtx->pending_rtx_pt_map)
     gst_structure_free (rtx->pending_rtx_pt_map);
