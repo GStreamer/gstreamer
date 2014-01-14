@@ -100,6 +100,8 @@ flush_observations (MpegTSPacketizer2 * packetizer)
   gint i;
 
   for (i = 0; i < packetizer->lastobsid; i++) {
+    if (packetizer->observations[i]->current)
+      g_slice_free (PCROffsetCurrent, packetizer->observations[i]->current);
     g_free (packetizer->observations[i]);
     packetizer->observations[i] = NULL;
   }
