@@ -204,6 +204,7 @@ gboolean                  gst_discoverer_info_get_seekable(const GstDiscovererIn
 const GstStructure*       gst_discoverer_info_get_misc(const GstDiscovererInfo* info);
 const GstTagList*         gst_discoverer_info_get_tags(const GstDiscovererInfo* info); 
 const GstToc*             gst_discoverer_info_get_toc(const GstDiscovererInfo* info);
+const gchar**             gst_discoverer_info_get_missing_elements_installer_details(const GstDiscovererInfo* info);
 
 GList *                   gst_discoverer_info_get_streams (GstDiscovererInfo *info,
 							   GType streamtype);

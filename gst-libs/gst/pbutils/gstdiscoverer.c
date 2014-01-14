@@ -1383,9 +1383,13 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
         GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
             "Setting result to MISSING_PLUGINS");
         dc->priv->current_info->result = GST_DISCOVERER_MISSING_PLUGINS;
+        /* FIXME 2.0 Remove completely the ->misc
+         * Keep the old behaviour for now.
+         */
         if (dc->priv->current_info->misc)
           gst_structure_free (dc->priv->current_info->misc);
-        dc->priv->current_info->misc = gst_structure_copy (structure);
+        g_ptr_array_add (dc->priv->current_info->missing_elements_details,
+            gst_missing_plugin_message_get_installer_detail (msg));
       } else if (sttype == _STREAM_TOPOLOGY_QUARK) {
         if (dc->priv->current_topology)
           gst_structure_free (dc->priv->current_topology);

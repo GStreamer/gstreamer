@@ -409,10 +409,15 @@ print_info (GstDiscovererInfo * info, GError * err)
     {
       g_print ("Missing plugins\n");
       if (verbose) {
-        gchar *tmp =
-            gst_structure_to_string (gst_discoverer_info_get_misc (info));
-        g_print (" (%s)\n", tmp);
-        g_free (tmp);
+        gint i = 0;
+        const gchar **installer_details =
+            gst_discoverer_info_get_missing_elements_installer_details (info);
+
+        while (installer_details[i]) {
+          g_print (" (%s)\n", installer_details[i]);
+
+          i++;
+        }
       }
       break;
     }

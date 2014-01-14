@@ -100,6 +100,7 @@ struct _GstDiscovererInfo {
   GstTagList *tags;
   GstToc *toc;
   gboolean seekable;
+  GPtrArray *missing_elements_details;
 
   gpointer _gst_reserved[GST_PADDING];
 };
