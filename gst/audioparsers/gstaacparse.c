@@ -806,7 +806,7 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
     gst_aac_parse_parse_adts_header (aacparse, data, &rate, &channels,
         &aacparse->object_type, &aacparse->mpegversion);
 
-    if (!framesize) {
+    if (!channels || !framesize) {
       GST_DEBUG_OBJECT (aacparse, "impossible ADTS configuration");
       return FALSE;
     }
