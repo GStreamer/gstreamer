@@ -411,6 +411,7 @@ gst_oss_helper_get_card_name (const gchar * mixer_name)
     GST_INFO ("Unknown card name");
   }
 
+  close (fd);
   return name;
 
   /* ERRORS */
