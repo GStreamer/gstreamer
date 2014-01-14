@@ -223,7 +223,7 @@ static void  add_missing_element(graph_t *graph,gchar *name){
 	(l)->src.element); \
      gst_parse_free_link (l); \
    }else{ \
-     graph->links = g_slist_prepend (graph->links, l ); \
+     graph->links = g_slist_append (graph->links, l ); \
    }   \
 } G_STMT_END
 
