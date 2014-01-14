@@ -514,7 +514,7 @@ gst_face_detect_run_detector (GstFaceDetect * filter,
       filter->cvStorage, filter->scale_factor, filter->min_neighbors,
       filter->flags, cvSize (min_size_width, min_size_height)
 #if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
-      , cvSize (min_size_width + 2, min_size_height + 2)
+      , cvSize (0, 0)
 #endif
       );
 }
