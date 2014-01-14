@@ -276,6 +276,69 @@ struct _GstAudioDecoderPrivate
   GList *pending_events;
 };
 
+//* Default channel layouts taken from audioconvert */
+static const GstAudioChannelPosition default_positions[8][8] = {
+  /* 1 channel */
+  {
+        GST_AUDIO_CHANNEL_POSITION_MONO,
+      },
+  /* 2 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      },
+  /* 3 channels (2.1) */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
+      },
+  /* 4 channels (4.0) */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  /* 5 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      },
+  /* 6 channels (5.1) */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
+      },
+  /* 7 channels (6.1) */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
+        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+      },
+  /* 8 channels (7.1) */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+      }
+};
 
 static void gst_audio_decoder_finalize (GObject * object);
 static void gst_audio_decoder_set_property (GObject * object,
@@ -1752,6 +1815,12 @@ static gboolean
 gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
 {
   GstCaps *caps;
+  gint i;
+  gint channels = 0;
+  gint rate;
+  guint64 channel_mask = 0;
+  gint caps_size;
+  GstStructure *structure;
 
   caps = gst_pad_get_current_caps (dec->srcpad);
   if (caps && !gst_audio_info_from_caps (&dec->priv->ctx.info, caps))
@@ -1761,7 +1830,62 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
   if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
     return FALSE;
 
+  /* before fixating, try to use whatever upstream provided */
+  caps_size = gst_caps_get_size (caps);
+  if (dec->priv->ctx.input_caps) {
+    GstCaps *sinkcaps = dec->priv->ctx.input_caps;
+    GstStructure *structure = gst_caps_get_structure (sinkcaps, 0);
+
+    if (gst_structure_get_int (structure, "rate", &rate)) {
+      for (i = 0; i < caps_size; i++) {
+        gst_structure_set (gst_caps_get_structure (caps, i), "rate",
+            G_TYPE_INT, rate, NULL);
+      }
+    }
+
+    if (gst_structure_get_int (structure, "channels", &channels)) {
+      for (i = 0; i < caps_size; i++) {
+        gst_structure_set (gst_caps_get_structure (caps, i), "channels",
+            G_TYPE_INT, channels, NULL);
+      }
+    }
+
+    if (gst_structure_get (structure, "channel-mask", GST_TYPE_BITMASK,
+            &channel_mask, NULL)) {
+      for (i = 0; i < caps_size; i++) {
+        gst_structure_set (gst_caps_get_structure (caps, i), "channel-mask",
+            GST_TYPE_BITMASK, channel_mask, NULL);
+      }
+    }
+  }
+
+  for (i = 0; i < caps_size; i++) {
+    structure = gst_caps_get_structure (caps, i);
+    gst_structure_fixate_field_nearest_int (structure,
+        "channels", GST_AUDIO_DEF_CHANNELS);
+    gst_structure_fixate_field_nearest_int (structure,
+        "rate", GST_AUDIO_DEF_RATE);
+  }
   caps = gst_caps_fixate (caps);
+  structure = gst_caps_get_structure (caps, 0);
+
+  /* Need to add a channel-mask if channels > 2 */
+  gst_structure_get_int (structure, "channels", &channels);
+  if (channels > 2 && !gst_structure_has_field (structure, "channel-mask")) {
+    if (channels <= 8) {
+      channel_mask = 0;
+      for (i = 0; i < channels; i++)
+        channel_mask |=
+            G_GUINT64_CONSTANT (1) << default_positions[channels - 1][i];
+
+      gst_structure_set (structure, "channel-mask",
+          GST_TYPE_BITMASK, channel_mask, NULL);
+    } else {
+      GST_WARNING_OBJECT (dec, "No default channel-mask for %d channels",
+          channels);
+    }
+  }
+
   if (!caps || !gst_audio_info_from_caps (&dec->priv->ctx.info, caps))
     return FALSE;
 
