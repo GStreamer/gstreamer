@@ -454,8 +454,8 @@ set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
   g_assert (misc);
   if (!misc)
     return FALSE;
-  gst_vaapi_enc_picture_add_misc_buffer (picture, misc);
-  hrd = misc->impl;
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  hrd = misc->data;
   if (base_encoder->bitrate > 0) {
     hrd->initial_buffer_fullness = base_encoder->bitrate * 1000 * 4;
     hrd->buffer_size = base_encoder->bitrate * 1000 * 8;
@@ -471,8 +471,8 @@ set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
     g_assert (misc);
     if (!misc)
       return FALSE;
-    gst_vaapi_enc_picture_add_misc_buffer (picture, misc);
-    rate_control = misc->impl;
+    gst_vaapi_enc_picture_add_misc_param (picture, misc);
+    rate_control = misc->data;
     memset (rate_control, 0, sizeof (VAEncMiscParameterRateControl));
     if (base_encoder->bitrate)
       rate_control->bits_per_second = base_encoder->bitrate * 1000;

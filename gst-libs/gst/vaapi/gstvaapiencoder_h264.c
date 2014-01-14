@@ -393,8 +393,9 @@ _set_i_frame (GstVaapiEncPicture * pic, GstVaapiEncoderH264 * encoder)
   g_return_if_fail (pic->type == GST_VAAPI_PICTURE_TYPE_NONE);
   pic->type = GST_VAAPI_PICTURE_TYPE_I;
   pic->frame_num = (encoder->cur_frame_num % encoder->max_frame_num);
-  g_assert (GST_VAAPI_ENC_PICTURE_GET_FRAME (pic));
-  GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (GST_VAAPI_ENC_PICTURE_GET_FRAME (pic));
+
+  g_assert (pic->frame);
+  GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (pic->frame);
 }
 
 static inline void
@@ -406,8 +407,8 @@ _set_idr_frame (GstVaapiEncPicture * pic, GstVaapiEncoderH264 * encoder)
   pic->poc = 0;
   GST_VAAPI_ENC_PICTURE_FLAG_SET (pic, GST_VAAPI_ENC_PICTURE_FLAG_IDR);
 
-  g_assert (GST_VAAPI_ENC_PICTURE_GET_FRAME (pic));
-  GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (GST_VAAPI_ENC_PICTURE_GET_FRAME (pic));
+  g_assert (pic->frame);
+  GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (pic->frame);
 }
 
 static inline void
@@ -1303,8 +1304,8 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
   g_assert (misc);
   if (!misc)
     return FALSE;
-  gst_vaapi_enc_picture_add_misc_buffer (picture, misc);
-  hrd = misc->impl;
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  hrd = misc->data;
   if (base_encoder->bitrate > 0) {
     hrd->initial_buffer_fullness = base_encoder->bitrate * 1000 * 4;
     hrd->buffer_size = base_encoder->bitrate * 1000 * 8;
@@ -1321,8 +1322,8 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     g_assert (misc);
     if (!misc)
       return FALSE;
-    gst_vaapi_enc_picture_add_misc_buffer (picture, misc);
-    rate_control = misc->impl;
+    gst_vaapi_enc_picture_add_misc_param (picture, misc);
+    rate_control = misc->data;
     memset (rate_control, 0, sizeof (VAEncMiscParameterRateControl));
     if (base_encoder->bitrate)
       rate_control->bits_per_second = base_encoder->bitrate * 1000;
@@ -1672,7 +1673,7 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
 
 end:
   g_assert (picture);
-  frame = GST_VAAPI_ENC_PICTURE_GET_FRAME (picture);
+  frame = picture->frame;
   if (GST_CLOCK_TIME_IS_VALID (frame->pts))
     frame->pts += encoder->cts_offset;
   *output = picture;

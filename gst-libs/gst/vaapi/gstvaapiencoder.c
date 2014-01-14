@@ -318,7 +318,7 @@ gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
       goto error_encode;
 
     gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
-        picture, (GDestroyNotify) gst_vaapi_enc_picture_unref);
+        picture, (GDestroyNotify) gst_vaapi_mini_object_unref);
     g_async_queue_push (encoder->codedbuf_queue, codedbuf_proxy);
     encoder->num_codedbuf_queued++;
 

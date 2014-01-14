@@ -39,27 +39,21 @@ typedef struct _GstVaapiEncPackedHeader GstVaapiEncPackedHeader;
 /* --- Encoder Packed Header                                             --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_ENC_PACKED_HEADER_CAST(obj) \
-    ((GstVaapiEncPackedHeader *)(obj))
-
-#define GST_VAAPI_ENC_PACKED_HEADER(obj)      \
-    GST_VAAPI_ENC_PACKED_HEADER_CAST(obj)
-
-#define GST_VAAPI_IS_ENC_PACKED_HEADER(obj)   \
-    (GST_VAAPI_ENC_PACKED_HEADER(obj) != NULL)
+#define GST_VAAPI_ENC_PACKED_HEADER(obj) \
+  ((GstVaapiEncPackedHeader *) (obj))
 
 /**
  * GstVaapiEncPackedHeader:
  *
- * A #GstVaapiCodecObject holding a encoder packed header
- * parameter/data parameter.
+ * A #GstVaapiCodecObject holding a packed header (param/data) for the
+ * encoder.
  */
 struct _GstVaapiEncPackedHeader
 {
-  /*< private > */
+  /*< private >*/
   GstVaapiCodecObject parent_instance;
 
-  /*< public > */
+  /*< public >*/
   VABufferID param_id;
   gpointer param;
   VABufferID data_id;
@@ -73,33 +67,27 @@ gst_vaapi_enc_packed_header_new (GstVaapiEncoder * encoder,
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_enc_packed_header_set_data (GstVaapiEncPackedHeader * packed_header,
+gst_vaapi_enc_packed_header_set_data (GstVaapiEncPackedHeader * header,
     gconstpointer data, guint data_size);
 
 /* ------------------------------------------------------------------------- */
 /* --- Encoder Sequence                                                  --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_ENC_SEQUENCE_CAST(obj) \
-    ((GstVaapiEncSequence *)(obj))
-
-#define GST_VAAPI_ENC_SEQUENCE(obj)      \
-    GST_VAAPI_ENC_SEQUENCE_CAST(obj)
-
-#define GST_VAAPI_IS_ENC_SEQUENCE(obj)   \
-    (GST_VAAPI_ENC_SEQUENCE(obj) != NULL)
+#define GST_VAAPI_ENC_SEQUENCE(obj) \
+  ((GstVaapiEncSequence *) (obj))
 
 /**
  * GstVaapiEncSequence:
  *
- * A #GstVaapiCodecObject holding a encoder sequence parameter.
+ * A #GstVaapiCodecObject holding a sequence parameter for encoding.
  */
 struct _GstVaapiEncSequence
 {
-  /*< private > */
+  /*< private >*/
   GstVaapiCodecObject parent_instance;
 
-  /*< public > */
+  /*< public >*/
   VABufferID param_id;
   gpointer param;
 };
@@ -113,38 +101,23 @@ gst_vaapi_enc_sequence_new (GstVaapiEncoder * encoder,
 /* --- Encoder Slice                                                     --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_ENC_SLICE_CAST(obj) \
-    ((GstVaapiEncSlice *)(obj))
-
-#define GST_VAAPI_ENC_SLICE(obj)      \
-    GST_VAAPI_ENC_SLICE_CAST(obj)
-
-#define GST_VAAPI_IS_ENC_SLICE(obj)   \
-    (GST_VAAPI_ENC_SLICE(obj) != NULL)
+#define GST_VAAPI_ENC_SLICE(obj) \
+  ((GstVaapiEncSlice *) (obj))
 
 /**
  * GstVaapiEncSlice:
  *
- * A #GstVaapiCodecObject holding a encoder slice parameter.
+ * A #GstVaapiCodecObject holding a slice parameter used for encoding.
  */
 struct _GstVaapiEncSlice
 {
-  /*< private > */
+  /*< private >*/
   GstVaapiCodecObject parent_instance;
 
-  /*< public > */
+  /*< public >*/
   VABufferID param_id;
   gpointer param;
 };
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_enc_slice_destroy (GstVaapiEncSlice * slice);
-
-G_GNUC_INTERNAL
-gboolean
-gst_vaapi_enc_slice_create (GstVaapiEncSlice * slice,
-    const GstVaapiCodecObjectConstructorArgs * args);
 
 G_GNUC_INTERNAL
 GstVaapiEncSlice *
@@ -155,48 +128,37 @@ gst_vaapi_enc_slice_new (GstVaapiEncoder * encoder,
 /* --- Encoder Misc Parameter Buffer                                     --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_ENC_MISC_PARAM_CAST(obj) \
-    ((GstVaapiEncMiscParam *)(obj))
-
-#define GST_VAAPI_ENC_MISC_PARAM(obj)      \
-    GST_VAAPI_ENC_MISC_PARAM_CAST(obj)
-
-#define GST_VAAPI_IS_ENC_MISC_PARAM(obj)   \
-    (GST_VAAPI_ENC_MISC_PARAM(obj) != NULL)
+#define GST_VAAPI_ENC_MISC_PARAM(obj) \
+  ((GstVaapiEncMiscParam *) (obj))
 
 /**
  * GstVaapiEncMiscParam:
  *
- * A #GstVaapiCodecObject holding a encoder misc parameter.
+ * A #GstVaapiCodecObject holding a misc parameter and associated data
+ * used for controlling the encoder dynamically.
  */
 struct _GstVaapiEncMiscParam
 {
-  /*< private > */
+  /*< private >*/
   GstVaapiCodecObject parent_instance;
   gpointer param;
 
-  /*< public > */
+  /*< public >*/
   VABufferID param_id;
-  gpointer impl;
+  gpointer data;
 };
 
 G_GNUC_INTERNAL
 GstVaapiEncMiscParam *
 gst_vaapi_enc_misc_param_new (GstVaapiEncoder * encoder,
-    VAEncMiscParameterType type, guint total_size);
+    VAEncMiscParameterType type, guint data_size);
 
 /* ------------------------------------------------------------------------- */
 /* --- Encoder Picture                                                   --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_ENC_PICTURE_CAST(obj) \
-    ((GstVaapiEncPicture *)(obj))
-
 #define GST_VAAPI_ENC_PICTURE(obj) \
-    GST_VAAPI_ENC_PICTURE_CAST(obj)
-
-#define GST_VAAPI_IS_ENC_PICTURE(obj) \
-    (GST_VAAPI_ENC_PICTURE(obj) != NULL)
+  ((GstVaapiEncPicture *) (obj))
 
 typedef enum
 {
@@ -212,46 +174,35 @@ typedef enum
 #define GST_VAAPI_ENC_PICTURE_IS_IDR(picture) \
     GST_VAAPI_ENC_PICTURE_FLAG_IS_SET(picture, GST_VAAPI_ENC_PICTURE_FLAG_IDR)
 
-#define GST_VAAPI_ENC_PICTURE_GET_FRAME(picture) \
-    (picture)->frame
-
 /**
  * GstVaapiEncPicture:
  *
- * A #GstVaapiCodecObject holding a picture parameter.
+ * A #GstVaapiCodecObject holding a picture parameter for encoding.
  */
 struct _GstVaapiEncPicture
 {
-  /*< private > */
+  /*< private >*/
   GstVaapiCodecObject parent_instance;
   GstVideoCodecFrame *frame;
   GstVaapiSurfaceProxy *proxy;
   GstVaapiSurface *surface;
-  GstVaapiEncSequence *sequence;
-  /*< private >, picture packed header */
-  GPtrArray *packed_headers;
-  GPtrArray *misc_buffers;
-  GPtrArray *slices;
   VABufferID param_id;
   guint param_size;
 
-  /*< public > */
+  /* Additional data to pass down */
+  GstVaapiEncSequence *sequence;
+  GPtrArray *packed_headers;
+  GPtrArray *misc_params;
+
+  /*< public >*/
   GstVaapiPictureType type;
   VASurfaceID surface_id;
   gpointer param;
+  GPtrArray *slices;
   GstClockTime pts;
   guint frame_num;
   guint poc;
 };
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_enc_picture_destroy (GstVaapiEncPicture * picture);
-
-G_GNUC_INTERNAL
-gboolean
-gst_vaapi_enc_picture_create (GstVaapiEncPicture * picture,
-    const GstVaapiCodecObjectConstructorArgs * args);
 
 G_GNUC_INTERNAL
 GstVaapiEncPicture *
@@ -270,7 +221,7 @@ gst_vaapi_enc_picture_add_packed_header (GstVaapiEncPicture * picture,
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_enc_picture_add_misc_buffer (GstVaapiEncPicture * picture,
+gst_vaapi_enc_picture_add_misc_param (GstVaapiEncPicture * picture,
     GstVaapiEncMiscParam * misc);
 
 G_GNUC_INTERNAL
@@ -282,47 +233,37 @@ G_GNUC_INTERNAL
 gboolean
 gst_vaapi_enc_picture_encode (GstVaapiEncPicture * picture);
 
-static inline gpointer
-gst_vaapi_enc_picture_ref (gpointer ptr)
-{
-  return gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (ptr));
-}
+#define gst_vaapi_enc_picture_ref(picture) \
+  gst_vaapi_codec_object_ref (picture)
+#define gst_vaapi_enc_picture_unref(picture) \
+  gst_vaapi_codec_object_unref (picture)
+#define gst_vaapi_enc_picture_replace(old_picture_ptr, new_picture) \
+  gst_vaapi_codec_object_replace (old_picture_ptr, new_picture)
 
-static inline void
-gst_vaapi_enc_picture_unref (gpointer ptr)
-{
-  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (ptr));
-}
+/* ------------------------------------------------------------------------- */
+/* --- Helpers to create codec-dependent objects                         --- */
+/* ------------------------------------------------------------------------- */
 
-#define gst_vaapi_enc_picture_replace(old_picture_p, new_picture)       \
-    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)(old_picture_p), \
-        (GstVaapiMiniObject *)(new_picture))
-
-/* GST_VAAPI_CODED_BUFFER_NEW  */
-#define GST_VAAPI_CODED_BUFFER_NEW(encoder, size)                       \
-        gst_vaapi_coded_buffer_new(GST_VAAPI_ENCODER_CAST(encoder),     \
-                                NULL, size)
-
-/* GST_VAAPI_ENC_SEQUENCE_NEW */
+/* GstVaapiEncSequence */
 #define GST_VAAPI_ENC_SEQUENCE_NEW(codec, encoder)                      \
-        gst_vaapi_enc_sequence_new(GST_VAAPI_ENCODER_CAST(encoder),     \
-                  NULL, sizeof(VAEncSequenceParameterBuffer##codec))
+  gst_vaapi_enc_sequence_new (GST_VAAPI_ENCODER_CAST (encoder),         \
+      NULL, sizeof (G_PASTE (VAEncSequenceParameterBuffer, codec)))
 
-/* GST_VAAPI_ENC_SLICE_NEW */
-#define GST_VAAPI_ENC_SLICE_NEW(codec, encoder)                         \
-        gst_vaapi_enc_slice_new(GST_VAAPI_ENCODER_CAST(encoder),        \
-                   NULL, sizeof(VAEncSliceParameterBuffer##codec))
-
-/* GST_VAAPI_ENC_MISC_PARAM_NEW */
+/* GstVaapiEncMiscParam */
 #define GST_VAAPI_ENC_MISC_PARAM_NEW(type, encoder)                     \
-        gst_vaapi_enc_misc_param_new(GST_VAAPI_ENCODER_CAST(encoder),   \
-           VAEncMiscParameterType##type,                                \
-         (sizeof(VAEncMiscParameterBuffer) + sizeof(VAEncMiscParameter##type)))
+  gst_vaapi_enc_misc_param_new (GST_VAAPI_ENCODER_CAST (encoder),       \
+      G_PASTE (VAEncMiscParameterType, type),                           \
+      sizeof (G_PASTE (VAEncMiscParameter, type)))
 
-/* GST_VAAPI_ENC_PICTURE_NEW  */
+/* GstVaapiEncPicture  */
 #define GST_VAAPI_ENC_PICTURE_NEW(codec, encoder, frame)                \
-        gst_vaapi_enc_picture_new(GST_VAAPI_ENCODER_CAST(encoder),      \
-            NULL, sizeof(VAEncPictureParameterBuffer##codec), frame)
+  gst_vaapi_enc_picture_new (GST_VAAPI_ENCODER_CAST (encoder),          \
+      NULL, sizeof (G_PASTE (VAEncPictureParameterBuffer, codec)), frame)
+
+/* GstVaapiEncSlice */
+#define GST_VAAPI_ENC_SLICE_NEW(codec, encoder)                         \
+  gst_vaapi_enc_slice_new (GST_VAAPI_ENCODER_CAST (encoder),            \
+      NULL, sizeof(G_PASTE (VAEncSliceParameterBuffer, codec)))
 
 G_END_DECLS
 
