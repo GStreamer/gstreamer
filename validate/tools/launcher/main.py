@@ -36,9 +36,9 @@ def main():
                       #action="store_true",
                       #default=False,
                       #help="Run applications into gdb")
-    #parser.add_option("-f", "--forever", dest="forever",
-                      #action="store_true", default=False,
-                      #help="Keep running tests until one fails")
+    parser.add_option("-f", "--forever", dest="forever",
+                      action="store_true", default=False,
+                      help="Keep running tests until one fails")
     #parser.add_option("-F", "--fatal-error", dest="fatal_error",
                       #action="store_true", default=False,
                       #help="Stop on first fail")

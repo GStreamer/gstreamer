@@ -121,6 +121,7 @@ class Test(Loggable):
 
             val = self.get_current_value()
 
+            self.debug("Got value: %s" % val)
             if val is Result.NOT_RUN:
                 # The get_current_value logic is not implemented... dumb timeout
                 if time.time() - last_change_ts > self.timeout:
@@ -297,8 +298,12 @@ class TestsManager(Loggable):
         for test in self.tests:
             if self._is_test_wanted(test):
                 self.reporter.before_test(test)
-                test.run()
+                if test.run() != Result.PASSED and\
+                        self.options.forever:
+                    return test.result
                 self.reporter.after_test()
+
+        return Result.PASSED
 
     def needs_http_server(self):
         return False
@@ -309,6 +314,7 @@ class _TestsLauncher(Loggable):
 
         Loggable.__init__(self)
 
+        self.options = None
         self.testers = []
         self.tests = []
         self.reporter = None
@@ -353,6 +359,7 @@ class _TestsLauncher(Loggable):
         self.reporter = reporters.XunitReporter(options)
         mkdir(options.logsdir)
 
+        self.options = options
         wanted_testers = None
         for tester in self.testers:
             if tester.name in args:
@@ -373,9 +380,22 @@ class _TestsLauncher(Loggable):
             tester.list_tests()
             self.tests.extend(tester.tests)
 
-    def run_tests(self):
+    def _run_tests(self):
         for tester in self.testers:
-            tester.run_tests()
+            res = tester.run_tests()
+            if self.options.forever and res != Result.PASSED:
+                return False
+
+        return True
+
+    def run_tests(self):
+        if self.options.forever:
+            while self._run_tests():
+                continue
+
+            return False
+        else:
+            return self._run_tests()
 
     def final_report(self):
         self.reporter.final_report()
