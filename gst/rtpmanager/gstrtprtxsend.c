@@ -106,7 +106,7 @@ static void
 buffer_queue_item_free (BufferQueueItem * item)
 {
   gst_buffer_unref (item->buffer);
-  g_free (item);
+  g_slice_free (BufferQueueItem, item);
 }
 
 typedef struct
@@ -122,7 +122,7 @@ typedef struct
 static SSRCRtxData *
 ssrc_rtx_data_new (guint32 rtx_ssrc)
 {
-  SSRCRtxData *data = g_new0 (SSRCRtxData, 1);
+  SSRCRtxData *data = g_slice_new0 (SSRCRtxData);
 
   data->rtx_ssrc = rtx_ssrc;
   data->next_seqnum = g_random_int_range (0, G_MAXUINT16);
@@ -135,7 +135,7 @@ static void
 ssrc_rtx_data_free (SSRCRtxData * data)
 {
   g_sequence_free (data->queue);
-  g_free (data);
+  g_slice_free (SSRCRtxData, data);
 }
 
 static void
@@ -606,7 +606,7 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
 
     /* add current rtp buffer to queue history */
-    item = g_new0 (BufferQueueItem, 1);
+    item = g_slice_new0 (BufferQueueItem);
     item->seqnum = seqnum;
     item->timestamp = rtptime;
     item->buffer = gst_buffer_ref (buffer);
