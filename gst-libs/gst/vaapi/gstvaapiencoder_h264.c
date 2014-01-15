@@ -995,14 +995,23 @@ fill_va_sequence_param (GstVaapiEncoderH264 * encoder,
   /* frame_cropping_flag */
   if ((GST_VAAPI_ENCODER_WIDTH (encoder) & 15) ||
       (GST_VAAPI_ENCODER_HEIGHT (encoder) & 15)) {
+    static const guint SubWidthC[] = { 1, 2, 2, 1 };
+    static const guint SubHeightC[] = { 1, 2, 1, 1 };
+    const guint CropUnitX =
+        SubWidthC[seq_param->seq_fields.bits.chroma_format_idc];
+    const guint CropUnitY =
+        SubHeightC[seq_param->seq_fields.bits.chroma_format_idc] *
+        (2 - seq_param->seq_fields.bits.frame_mbs_only_flag);
+
     seq_param->frame_cropping_flag = 1;
     seq_param->frame_crop_left_offset = 0;
     seq_param->frame_crop_right_offset =
-        16 * encoder->mb_width - GST_VAAPI_ENCODER_WIDTH (encoder);
+        (16 * encoder->mb_width -
+        GST_VAAPI_ENCODER_WIDTH (encoder)) / CropUnitX;
     seq_param->frame_crop_top_offset = 0;
     seq_param->frame_crop_bottom_offset =
-        (16 * encoder->mb_height - GST_VAAPI_ENCODER_HEIGHT (encoder)) /
-        (2 - seq_param->seq_fields.bits.frame_mbs_only_flag);
+        (16 * encoder->mb_height -
+        GST_VAAPI_ENCODER_HEIGHT (encoder)) / CropUnitY;
   }
 
   /* vui not set */
