@@ -129,6 +129,23 @@ gst_vaapidecode_update_sink_caps(GstVaapiDecode *decode, GstCaps *caps)
     return TRUE;
 }
 
+static void
+gst_vaapidecode_video_info_change_format(GstVideoInfo *info,
+    GstVideoFormat format, guint width, guint height)
+{
+    GstVideoInfo vi = *info;
+
+    gst_video_info_set_format (info, format, width, height);
+
+    info->interlace_mode = vi.interlace_mode;
+    info->flags = vi.flags;
+    info->views = vi.views;
+    info->par_n = vi.par_n;
+    info->par_d = vi.par_d;
+    info->fps_n = vi.fps_n;
+    info->fps_d = vi.fps_d;
+}
+
 static gboolean
 gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     const GstVideoCodecState *ref_state)
@@ -165,7 +182,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     vis = *vi;
     switch (feature) {
     case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
-        gst_video_info_set_format(&vis, GST_VIDEO_FORMAT_RGBA,
+        gst_vaapidecode_video_info_change_format(&vis, GST_VIDEO_FORMAT_RGBA,
             GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
         features = gst_caps_features_new(
             GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
@@ -176,7 +193,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
             format=ENCODED + memory:VASurface caps feature are provided.
             Meanwhile, providing a random format here works but this is
             a terribly wrong thing per se. */
-            gst_video_info_set_format(&vis, GST_VIDEO_FORMAT_NV12,
+            gst_vaapidecode_video_info_change_format(&vis, GST_VIDEO_FORMAT_NV12,
                 GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
 #if GST_CHECK_VERSION(1,3,0)
             if (feature == GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE)
