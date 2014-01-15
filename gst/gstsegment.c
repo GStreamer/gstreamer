@@ -722,7 +722,7 @@ gst_segment_set_running_time (GstSegment * segment, GstFormat format,
  * Adjust the values in @segment so that @offset is applied to all
  * future running-time calculations.
  *
- * Since: 1.4
+ * Since: 1.2.3
  *
  * Returns: %TRUE if the segment could be updated successfully. If %FALSE is
  * returned, @offset is not in @segment.
