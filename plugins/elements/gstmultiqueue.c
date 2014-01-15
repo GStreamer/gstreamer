@@ -508,8 +508,11 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
         gst_data_queue_get_level (q->queue, &size);
 
         /* do not reduce max size below current level if the single queue has grown because of empty queue */
-        if (new_size >= size.visible && size.visible <= mq->max_size.visible)
+        if (new_size == 0) {
           q->max_size.visible = new_size;
+        } else {
+          q->max_size.visible = MAX (new_size, size.visible);
+        }
         tmp = g_list_next (tmp);
       };
 
