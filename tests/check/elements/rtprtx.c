@@ -212,20 +212,21 @@ GST_START_TEST (test_push_forward_seq)
     GstEvent *event = NULL;
     GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
     GstBuffer *buffer = (GstBuffer *) node->data;
-    fail_unless (gst_pad_push (srcpad, buffer) == GST_FLOW_OK);
+
+    gst_buffer_ref (buffer);
+    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
 
     if (i < 3) {
       gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
-
       event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
           gst_structure_new ("GstRTPRetransmissionRequest",
               "seqnum", G_TYPE_UINT, (guint) gst_rtp_buffer_get_seq (&rtp),
               "ssrc", G_TYPE_UINT, (guint) gst_rtp_buffer_get_ssrc (&rtp),
               "payload-type", G_TYPE_UINT,
               (guint) gst_rtp_buffer_get_payload_type (&rtp), NULL));
+      gst_rtp_buffer_unmap (&rtp);
 
       fail_unless (gst_pad_push_event (sinkpad, event));
-      gst_rtp_buffer_unmap (&rtp);
     }
     gst_buffer_unref (buffer);
     ++i;
