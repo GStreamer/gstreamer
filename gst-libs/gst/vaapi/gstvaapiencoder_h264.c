@@ -1014,14 +1014,12 @@ fill_va_sequence_param (GstVaapiEncoderH264 * encoder,
         GST_VAAPI_ENCODER_HEIGHT (encoder)) / CropUnitY;
   }
 
-  /* vui not set */
-  seq_param->vui_parameters_present_flag =
-      (base_encoder->bitrate > 0 ? TRUE : FALSE);
+  /* VUI parameters are always set, at least for timing_info (framerate) */
+  seq_param->vui_parameters_present_flag = TRUE;
   if (seq_param->vui_parameters_present_flag) {
     seq_param->vui_fields.bits.aspect_ratio_info_present_flag = FALSE;
     seq_param->vui_fields.bits.bitstream_restriction_flag = FALSE;
-    seq_param->vui_fields.bits.timing_info_present_flag =
-        (base_encoder->bitrate > 0 ? TRUE : FALSE);
+    seq_param->vui_fields.bits.timing_info_present_flag = TRUE;
     if (seq_param->vui_fields.bits.timing_info_present_flag) {
       seq_param->num_units_in_tick = GST_VAAPI_ENCODER_FPS_D (encoder);
       seq_param->time_scale = GST_VAAPI_ENCODER_FPS_N (encoder) * 2;
