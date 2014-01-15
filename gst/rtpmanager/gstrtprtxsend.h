@@ -26,6 +26,7 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/base/gstdataqueue.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_RTP_RTX_SEND (gst_rtp_rtx_send_get_type())
@@ -45,8 +46,8 @@ struct _GstRtpRtxSend
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  /* rtp packets that will be pushed upon next buffer */
-  GQueue *pending;
+  /* rtp packets that will be pushed out */
+  GstDataQueue *queue;
 
   /* ssrc -> SSRCRtxData */
   GHashTable *ssrc_data;
