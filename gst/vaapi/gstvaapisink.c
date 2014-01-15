@@ -139,6 +139,9 @@ enum {
 #define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_ANY
 #define DEFAULT_ROTATION                GST_VAAPI_ROTATION_0
 
+static inline gboolean
+gst_vaapisink_ensure_display(GstVaapiSink *sink);
+
 /* GstVideoOverlay interface */
 
 #if USE_X11
@@ -154,7 +157,11 @@ gst_vaapisink_video_overlay_set_window_handle(GstVideoOverlay *overlay,
     guintptr window)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
-    GstVaapiDisplayType display_type = GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink);
+    GstVaapiDisplayType display_type;
+
+    if (!gst_vaapisink_ensure_display(sink))
+        return;
+    display_type = GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink);
 
     /* Disable GLX rendering when vaapisink is using a foreign X
        window. It's pretty much useless */
