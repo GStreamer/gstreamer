@@ -28,7 +28,6 @@ from utils import printc, path2url, DEFAULT_GST_QA_ASSETS, launch_command
 
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
 
-
 def main():
     parser = OptionParser()
     # FIXME:

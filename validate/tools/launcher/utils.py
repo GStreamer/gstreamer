@@ -82,6 +82,19 @@ def which(name):
     return result
 
 
+def get_color_for_result(result):
+    if result is Result.FAILED:
+        color = Colors.FAIL
+    elif result is Result.TIMEOUT:
+        color = Colors.WARNING
+    elif result is Result.PASSED:
+        color = Colors.OKGREEN
+    else:
+        color = Colors.OKBLUE
+
+    return color
+
+
 def printc(message, color="", title=False):
     if title:
         length = 0
@@ -93,14 +106,7 @@ def printc(message, color="", title=False):
         message = length * '=' + "\n" + str(message) + "\n" + length * '='
 
     if hasattr(message, "result") and color == '':
-        if message.result == Result.FAILED:
-            color = Colors.FAIL
-        elif message.result == Result.TIMEOUT:
-            color = Colors.WARNING
-        elif message.result == Result.PASSED:
-            color = Colors.OKGREEN
-        else:
-            color = Colors.OKBLUE
+        color = get_color_for_result(message.result)
 
     print color + str(message) + Colors.ENDC
 

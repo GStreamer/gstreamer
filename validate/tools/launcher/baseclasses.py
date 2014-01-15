@@ -22,6 +22,7 @@
 import os
 import re
 import time
+import utils
 import subprocess
 import reporters
 from loggable import Loggable
@@ -152,7 +153,7 @@ class Test(Loggable):
         self.build_arguments()
         printc("Launching: %s%s\n"
                "           logs are in %s\n"
-               "           Command: '%s'\n"
+               "           Command: '%s'"
                % (Colors.ENDC, self.classname,
                   self.logfile, self.command), Colors.OKBLUE)
         try:
@@ -178,6 +179,9 @@ class Test(Loggable):
                                 "Command: '%s'\n"
                                 "=================\n\n"
                                 % (self.classname, self.command))
+        printc("Result: %s%s\n" % (self.result,
+               " (" + self.message + ")" if self.message else ""),
+               color=utils.get_color_for_result(self.result))
 
         return self.result
 
