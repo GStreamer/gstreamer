@@ -173,7 +173,6 @@ struct _GstSelectorPad
   gboolean always_ok;
   GstTagList *tags;             /* last tags received on the pad */
 
-  GstClockTime position;        /* the current position in the segment */
   GstSegment segment;           /* the current segment on the pad */
   guint32 segment_seqnum;       /* sequence number of the current segment */
 
@@ -334,10 +333,11 @@ gst_selector_pad_get_running_time (GstSelectorPad * pad)
 
   GST_OBJECT_LOCK (pad);
   if (pad->active) {
-    guint64 position = pad->position;
     GstFormat format = pad->segment.format;
 
-    ret = gst_segment_to_running_time (&pad->segment, format, position);
+    ret =
+        gst_segment_to_running_time (&pad->segment, format,
+        pad->segment.position);
   }
   GST_OBJECT_UNLOCK (pad);
 
@@ -359,7 +359,6 @@ gst_selector_pad_reset (GstSelectorPad * pad)
   pad->events_pending = FALSE;
   pad->discont = FALSE;
   pad->flushing = FALSE;
-  pad->position = GST_CLOCK_TIME_NONE;
   gst_segment_init (&pad->segment, GST_FORMAT_UNDEFINED);
   pad->sending_cached_buffers = FALSE;
   gst_selector_pad_free_cached_buffers (pad);
@@ -497,21 +496,6 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_copy_segment (event, &selpad->segment);
       selpad->segment_seqnum = gst_event_get_seqnum (event);
 
-      /* Update the position */
-      if (selpad->position == GST_CLOCK_TIME_NONE
-          || selpad->segment.position > selpad->position) {
-        selpad->position = selpad->segment.position;
-      } else if (selpad->position != GST_CLOCK_TIME_NONE
-          && selpad->position > selpad->segment.position) {
-        selpad->segment.position = selpad->position;
-
-        if (forward) {
-          gst_event_unref (event);
-          event = gst_event_new_segment (&selpad->segment);
-          gst_event_set_seqnum (event, selpad->segment_seqnum);
-        }
-      }
-
       GST_DEBUG_OBJECT (pad, "configured SEGMENT %" GST_SEGMENT_FORMAT,
           &selpad->segment);
       break;
@@ -565,7 +549,6 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         /* update the segment position */
         GST_OBJECT_LOCK (pad);
-        selpad->position = ts;
         selpad->segment.position = ts;
         GST_OBJECT_UNLOCK (pad);
         if (sel->sync_streams && active_sinkpad == pad)
@@ -1056,7 +1039,6 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
           GST_TIME_ARGS (start_time + GST_BUFFER_DURATION (buf)));
 
     GST_OBJECT_LOCK (pad);
-    selpad->position = start_time;
     selpad->segment.position = start_time;
     GST_OBJECT_UNLOCK (pad);
   }
