@@ -1256,12 +1256,26 @@ test_rtxsender_packet_retention (gboolean test_with_time)
 
     /* retransmit all the previous ones */
     for (j = 1; j < i; j++) {
-      res = gst_pad_push_event (sinkpad,
-          create_rtx_event (j, ssrc, payload_type));
-      fail_unless_equals_int (res, TRUE);
+      /* synchronize with the chain() function of the "sinkpad"
+       * to make sure that rtxsend has pushed the rtx buffer out
+       * before continuing */
+      GList *last_out_buffer = g_list_last (buffers);
+      g_mutex_lock (&check_mutex);
+      fail_unless_equals_int (gst_pad_push_event (sinkpad,
+              create_rtx_event (j, ssrc, payload_type)), TRUE);
+      /* wait for the rtx packet only if we expect the element
+       * to actually retransmit something */
+      if (j >= MAX (i - half_buffers, 1)) {
+        guint64 end_time = g_get_monotonic_time () + G_TIME_SPAN_SECOND;
+        do
+          res = g_cond_wait_until (&check_cond, &check_mutex, end_time);
+        while (res == TRUE && last_out_buffer == g_list_last (buffers));
+        fail_unless_equals_int (res, TRUE);
+      }
+      g_mutex_unlock (&check_mutex);
     }
 
-    /* push this one, triggering the retransmit in rtxsend's chain() function */
+    /* push this one */
     gst_pad_push (srcpad, gst_buffer_ref (buffer));
     node = g_list_next (node);
   }
