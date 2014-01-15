@@ -827,8 +827,10 @@ gst_ffmpeg_cfg_install_property (GstFFMpegVidEncClass * klass, guint base)
     }
   }
 
-  if (ctx)
+  if (ctx) {
+    gst_ffmpeg_avcodec_close (ctx);
     av_free (ctx);
+  }
 }
 
 /* returns TRUE if it is a known property for this config system,

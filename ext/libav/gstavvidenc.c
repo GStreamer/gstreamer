@@ -263,6 +263,7 @@ gst_ffmpegvidenc_finalize (GObject * object)
   gst_ffmpeg_cfg_finalize (ffmpegenc);
 
   /* clean up remaining allocated data */
+  gst_ffmpeg_avcodec_close (ffmpegenc->context);
   av_free (ffmpegenc->context);
   avcodec_free_frame (&ffmpegenc->picture);
 
@@ -794,6 +795,7 @@ gst_ffmpegvidenc_start (GstVideoEncoder * encoder)
       (GstFFMpegVidEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
 
   /* close old session */
+  gst_ffmpeg_avcodec_close (ffmpegenc->context);
   if (avcodec_get_context_defaults3 (ffmpegenc->context, oclass->in_plugin) < 0) {
     GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
     return FALSE;
