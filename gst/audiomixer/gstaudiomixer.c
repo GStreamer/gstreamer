@@ -1424,11 +1424,9 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
   else
     out_start = 0;
 
-  if (audiomixer->offset + audiomixer->blocksize + adata->position / bpf <
-      adata->output_offset + adata->size / bpf + out_start)
+  overlap = adata->size / bpf - adata->position / bpf;
+  if (overlap > audiomixer->blocksize - out_start)
     overlap = audiomixer->blocksize - out_start;
-  else
-    overlap = adata->size / bpf - adata->position / bpf;
 
   inbuf = gst_collect_pads_peek (pads, collect_data);
   g_assert (inbuf != NULL && inbuf == adata->buffer);
@@ -1441,6 +1439,8 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
     adata->output_offset += adata->size / bpf;
     if (adata->position >= adata->size) {
       /* Buffer done, drop it */
+      adata->position = 0;
+      adata->size = 0;
       gst_buffer_replace (&adata->buffer, NULL);
       gst_buffer_unref (gst_collect_pads_pop (pads, collect_data));
     }
