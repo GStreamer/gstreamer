@@ -243,7 +243,12 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
     gst_event_replace (&priv->last_seek, seek);
   } else {
     GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
-        "Could not seek to position %" GST_TIME_FORMAT, GST_TIME_ARGS (start));
+        "Could not execute seek: '(position %" GST_TIME_FORMAT
+        "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
+        " stop: %" GST_TIME_FORMAT " Rate %lf'",
+        GST_TIME_ARGS (action->playback_time), action->name,
+        action->action_number, action->repeat, GST_TIME_ARGS (start),
+        GST_TIME_ARGS (stop), rate);
     ret = FALSE;
   }
   gst_event_unref (seek);
