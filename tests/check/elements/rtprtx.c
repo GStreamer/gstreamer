@@ -212,6 +212,9 @@ GST_START_TEST (test_push_forward_seq)
     GstEvent *event = NULL;
     GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
     GstBuffer *buffer = (GstBuffer *) node->data;
+    GList *last_out_buffer;
+    guint64 end_time;
+    gboolean res;
 
     gst_buffer_ref (buffer);
     fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
@@ -226,7 +229,17 @@ GST_START_TEST (test_push_forward_seq)
               (guint) gst_rtp_buffer_get_payload_type (&rtp), NULL));
       gst_rtp_buffer_unmap (&rtp);
 
+      /* synchronize with the chain() function of the "sinkpad"
+       * to make sure that rtxsend has pushed the rtx buffer out
+       * before continuing */
+      last_out_buffer = g_list_last (buffers);
+      g_mutex_lock (&check_mutex);
       fail_unless (gst_pad_push_event (sinkpad, event));
+      end_time = g_get_monotonic_time () + G_TIME_SPAN_SECOND;
+      do
+        res = g_cond_wait_until (&check_cond, &check_mutex, end_time);
+      while (res == TRUE && last_out_buffer == g_list_last (buffers));
+      g_mutex_unlock (&check_mutex);
     }
     gst_buffer_unref (buffer);
     ++i;
