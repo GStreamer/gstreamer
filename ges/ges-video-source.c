@@ -23,6 +23,8 @@
  * @short_description: Base Class for video sources
  */
 
+#include <gst/pbutils/missing-plugins.h>
+
 #include "ges-internal.h"
 #include "ges/ges-meta-container.h"
 #include "ges-track-element.h"
@@ -74,6 +76,15 @@ layer_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
       10000 - ges_layer_get_priority (self->priv->layer), NULL);
 }
 
+static void
+post_missing_element_message (GstElement * element, const gchar * name)
+{
+  GstMessage *msg;
+
+  msg = gst_missing_element_message_new (element, name);
+  gst_element_post_message (element, msg);
+}
+
 static GstElement *
 ges_video_source_create_element (GESTrackElement * trksrc)
 {
@@ -81,7 +92,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   GstElement *sub_element;
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
   GESVideoSource *self;
-  GstElement *positionner, *videoscale, *videorate, *capsfilter;
+  GstElement *positionner, *videoscale, *videorate, *capsfilter, *videoconvert,
+      *deinterlace;
   const gchar *props[] = { "alpha", "posx", "posy", "width", "height", NULL };
   GESTimelineElement *parent;
 
@@ -98,7 +110,13 @@ ges_video_source_create_element (GESTrackElement * trksrc)
 
   videoscale =
       gst_element_factory_make ("videoscale", "track-element-videoscale");
+  videoconvert =
+      gst_element_factory_make ("videoconvert", "track-element-videoconvert");
   videorate = gst_element_factory_make ("videorate", "track-element-videorate");
+  deinterlace = gst_element_factory_make ("deinterlace", "deinterlace");
+  if (deinterlace == NULL) {
+    deinterlace = gst_element_factory_make ("avdeinterlace", "deinterlace");
+  }
   capsfilter =
       gst_element_factory_make ("capsfilter", "track-element-capsfilter");
 
@@ -106,9 +124,22 @@ ges_video_source_create_element (GESTrackElement * trksrc)
       (positionner), trksrc, capsfilter);
 
   ges_track_element_add_children_props (trksrc, positionner, NULL, NULL, props);
-  topbin =
-      ges_source_create_topbin ("videosrcbin", sub_element, positionner,
-      videoscale, videorate, capsfilter, NULL);
+
+  if (deinterlace == NULL) {
+    post_missing_element_message (sub_element, "deinterlace");
+
+    GST_ELEMENT_WARNING (sub_element, CORE, MISSING_PLUGIN,
+        ("Missing element '%s' - check your GStreamer installation.",
+            "deinterlace"), ("deinterlacing won't work"));
+    topbin =
+        ges_source_create_topbin ("videosrcbin", sub_element, videoconvert,
+        positionner, videoscale, videorate, capsfilter, NULL);
+  } else {
+    topbin =
+        ges_source_create_topbin ("videosrcbin", sub_element, videoconvert,
+        deinterlace, positionner, videoscale, videorate, capsfilter, NULL);
+  }
+
   parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
   if (parent) {
     self->priv->positionner = GST_FRAME_POSITIONNER (positionner);
