@@ -209,6 +209,7 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
   ctx->pix_fmt = PIX_FMT_NB;
   gst_ffmpeg_caps_with_codectype (AVMEDIA_TYPE_VIDEO, caps, ctx);
   if (ctx->pix_fmt == PIX_FMT_NB) {
+    gst_ffmpeg_avcodec_close (ctx);
     av_free (ctx);
     return FALSE;
   }

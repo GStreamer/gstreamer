@@ -150,9 +150,11 @@ gst_ffmpegauddec_finalize (GObject * object)
 {
   GstFFMpegAudDec *ffmpegdec = (GstFFMpegAudDec *) object;
 
-  if (ffmpegdec->context != NULL)
+  if (ffmpegdec->context != NULL) {
+    gst_ffmpeg_avcodec_close (ffmpegdec->context);
     av_free (ffmpegdec->context);
-  ffmpegdec->context = NULL;
+    ffmpegdec->context = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -199,6 +201,7 @@ gst_ffmpegauddec_start (GstAudioDecoder * decoder)
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   GST_OBJECT_LOCK (ffmpegdec);
+  gst_ffmpeg_avcodec_close (ffmpegdec->context);
   if (avcodec_get_context_defaults3 (ffmpegdec->context, oclass->in_plugin) < 0) {
     GST_DEBUG_OBJECT (ffmpegdec, "Failed to set context defaults");
     GST_OBJECT_UNLOCK (ffmpegdec);

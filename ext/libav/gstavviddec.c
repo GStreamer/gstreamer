@@ -266,6 +266,7 @@ gst_ffmpegviddec_finalize (GObject * object)
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) object;
 
   if (ffmpegdec->context != NULL) {
+    gst_ffmpeg_avcodec_close (ffmpegdec->context);
     av_free (ffmpegdec->context);
     ffmpegdec->context = NULL;
   }
@@ -1548,6 +1549,7 @@ gst_ffmpegviddec_start (GstVideoDecoder * decoder)
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   GST_OBJECT_LOCK (ffmpegdec);
+  gst_ffmpeg_avcodec_close (ffmpegdec->context);
   if (avcodec_get_context_defaults3 (ffmpegdec->context, oclass->in_plugin) < 0) {
     GST_DEBUG_OBJECT (ffmpegdec, "Failed to set context defaults");
     GST_OBJECT_UNLOCK (ffmpegdec);
