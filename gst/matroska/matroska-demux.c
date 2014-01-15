@@ -3522,13 +3522,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       }
     }
 
-    if (delta_unit && stream->set_discont) {
-      /* When doing seeks or such, we need to restart on key frames or
-       * decoders might choke. */
-      GST_DEBUG_OBJECT (demux, "skipping delta unit");
-      goto done;
-    }
-
     for (n = 0; n < laces; n++) {
       GstBuffer *sub;
 
