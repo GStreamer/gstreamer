@@ -1447,12 +1447,31 @@ GST_START_TEST (test_rtxreceive_data_reconstruction)
   gst_check_setup_events (srcpad, rtxsend, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
-  /* push buffer and retransmission request */
+  /* push buffer */
   buffer = gst_buffer_ref (GST_BUFFER (in_buffers->data));
   fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_ref (buffer)),
       GST_FLOW_OK);
-  fail_unless_equals_int (gst_pad_push_event (sinkpad,
-          create_rtx_event (1, ssrc, payload_type)), TRUE);
+
+  /* push retransmission request */
+  {
+    GList *last_out_buffer;
+    guint64 end_time;
+    gboolean res;
+
+    /* synchronize with the chain() function of the "sinkpad"
+     * to make sure that rtxsend has pushed the rtx buffer out
+     * before continuing */
+    last_out_buffer = g_list_last (buffers);
+    g_mutex_lock (&check_mutex);
+    fail_unless_equals_int (gst_pad_push_event (sinkpad,
+            create_rtx_event (1, ssrc, payload_type)), TRUE);
+    end_time = g_get_monotonic_time () + G_TIME_SPAN_SECOND;
+    do
+      res = g_cond_wait_until (&check_cond, &check_mutex, end_time);
+    while (res == TRUE && last_out_buffer == g_list_last (buffers));
+    fail_unless_equals_int (res, TRUE);
+    g_mutex_unlock (&check_mutex);
+  }
 
   /* push with the next seqnum to trigger retransmission in rtxsend */
   buffer = gst_buffer_make_writable (buffer);
