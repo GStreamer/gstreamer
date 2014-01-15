@@ -674,6 +674,26 @@ gst_vaapisink_get_caps(GstBaseSink *base_sink, GstCaps *filter)
 #define gst_vaapisink_get_caps gst_vaapisink_get_caps_impl
 #endif
 
+static void
+update_colorimetry(GstVaapiSink *sink, GstVideoColorimetry *cinfo)
+{
+#if GST_CHECK_VERSION(1,0,0)
+    if (gst_video_colorimetry_matches(cinfo,
+            GST_VIDEO_COLORIMETRY_BT601))
+        sink->color_standard = GST_VAAPI_COLOR_STANDARD_ITUR_BT_601;
+    else if (gst_video_colorimetry_matches(cinfo,
+            GST_VIDEO_COLORIMETRY_BT709))
+        sink->color_standard = GST_VAAPI_COLOR_STANDARD_ITUR_BT_709;
+    else if (gst_video_colorimetry_matches(cinfo,
+            GST_VIDEO_COLORIMETRY_SMPTE240M))
+        sink->color_standard = GST_VAAPI_COLOR_STANDARD_SMPTE_240M;
+    else
+        sink->color_standard = 0;
+
+    GST_DEBUG("colorimetry %s", gst_video_colorimetry_to_string(cinfo));
+#endif
+}
+
 static gboolean
 gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
@@ -702,6 +722,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     GST_DEBUG("video pixel-aspect-ratio %d/%d",
               sink->video_par_n, sink->video_par_d);
 
+    update_colorimetry(sink, &vip->colorimetry);
     gst_caps_replace(&sink->caps, caps);
 
     gst_vaapisink_ensure_rotation(sink, FALSE);
@@ -1005,6 +1026,11 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
                   surface_rect->width, surface_rect->height);
 
     flags = gst_vaapi_video_meta_get_render_flags(meta);
+
+    /* Append default color standard obtained from caps if none was
+       available on a per-buffer basis */
+    if (!(flags & GST_VAAPI_COLOR_STANDARD_MASK))
+        flags |= sink->color_standard;
 
     if (!gst_vaapi_apply_composition(surface, src_buffer))
         GST_WARNING("could not update subtitles");
