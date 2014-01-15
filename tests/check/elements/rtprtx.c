@@ -1409,7 +1409,6 @@ GST_START_TEST (test_rtxreceive_data_reconstruction)
   GstElement *rtxsend, *rtxrecv;
   GstPad *srcpad, *sinkpad;
   GstCaps *caps;
-  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   GstBuffer *buffer;
   GstStructure *pt_map;
 
@@ -1449,8 +1448,7 @@ GST_START_TEST (test_rtxreceive_data_reconstruction)
 
   /* push buffer */
   buffer = gst_buffer_ref (GST_BUFFER (in_buffers->data));
-  fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_ref (buffer)),
-      GST_FLOW_OK);
+  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
 
   /* push retransmission request */
   {
@@ -1473,21 +1471,12 @@ GST_START_TEST (test_rtxreceive_data_reconstruction)
     g_mutex_unlock (&check_mutex);
   }
 
-  /* push with the next seqnum to trigger retransmission in rtxsend */
-  buffer = gst_buffer_make_writable (buffer);
-  gst_rtp_buffer_map (buffer, GST_MAP_WRITE, &rtp);
-  gst_rtp_buffer_set_seq (&rtp, 2);
-  gst_rtp_buffer_unmap (&rtp);
-  fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_ref (buffer)),
-      GST_FLOW_OK);
-
   /* verify */
-  fail_unless_equals_int (g_list_length (buffers), 3);
+  fail_unless_equals_int (g_list_length (buffers), 2);
   compare_rtp_packets (GST_BUFFER (buffers->data),
       GST_BUFFER (buffers->next->data));
 
   /* cleanup */
-  gst_buffer_unref (buffer);
   g_list_free_full (in_buffers, (GDestroyNotify) gst_buffer_unref);
   gst_check_drop_buffers ();
 
