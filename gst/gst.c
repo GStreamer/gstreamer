@@ -471,6 +471,7 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
 
 #ifndef GST_DISABLE_GST_DEBUG
   _priv_gst_debug_init ();
+  priv_gst_dump_dot_dir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");
 #endif
 
 #ifdef ENABLE_NLS
@@ -478,25 +479,6 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
-#ifndef GST_DISABLE_GST_DEBUG
-  {
-    const gchar *debug_list;
-    const gchar *color_mode;
-
-    if (g_getenv ("GST_DEBUG_NO_COLOR") != NULL)
-      gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
-    color_mode = g_getenv ("GST_DEBUG_COLOR_MODE");
-    if (color_mode)
-      gst_debug_set_color_mode_from_string (color_mode);
-
-    debug_list = g_getenv ("GST_DEBUG");
-    if (debug_list) {
-      gst_debug_set_threshold_from_string (debug_list, FALSE);
-    }
-  }
-
-  priv_gst_dump_dot_dir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");
-#endif
   /* This is the earliest we can make stuff show up in the logs.
    * So give some useful info about GStreamer here */
   GST_INFO ("Initializing GStreamer Core Library version %s", VERSION);

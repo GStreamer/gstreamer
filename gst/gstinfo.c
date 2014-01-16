@@ -409,6 +409,17 @@ _priv_gst_debug_init (void)
     else if (strstr (env, "pretty_tags") || strstr (env, "pretty-tags"))
       pretty_tags = TRUE;
   }
+
+  if (g_getenv ("GST_DEBUG_NO_COLOR") != NULL)
+    gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
+  env = g_getenv ("GST_DEBUG_COLOR_MODE");
+  if (env)
+    gst_debug_set_color_mode_from_string (env);
+
+  env = g_getenv ("GST_DEBUG");
+  if (env) {
+    gst_debug_set_threshold_from_string (env, FALSE);
+  }
 }
 
 /* we can't do this further above, because we initialize the GST_CAT_DEFAULT struct */
