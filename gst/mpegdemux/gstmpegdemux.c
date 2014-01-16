@@ -46,10 +46,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <string.h>
 
 #include <gst/tag/tag.h>
@@ -58,8 +54,6 @@
 #include "gstmpegdefs.h"
 #include "gstmpegdemux.h"
 
-#define MAX_DVD_AUDIO_STREAMS       8
-#define MAX_DVD_SUBPICTURE_STREAMS  32
 #define BLOCK_SZ                    32768
 #define SCAN_SCR_SZ                 12
 #define SCAN_PTS_SZ                 80
@@ -473,7 +467,10 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   gst_pad_use_fixed_caps (stream->pad);
 
   /* needed for set_caps to work */
-  gst_pad_set_active (stream->pad, TRUE);
+  if (!gst_pad_set_active (stream->pad, TRUE)) {
+    GST_WARNING_OBJECT (demux, "Failed to activate pad %" GST_PTR_FORMAT,
+        stream->pad);
+  }
 
   stream_id =
       gst_pad_create_stream_id_printf (stream->pad, GST_ELEMENT_CAST (demux),
@@ -504,8 +501,8 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   gst_pb_utils_add_codec_description_to_tag_list (stream->pending_tags, NULL,
       caps);
 
-  gst_caps_unref (caps);
   GST_DEBUG_OBJECT (demux, "create pad %s, caps %" GST_PTR_FORMAT, name, caps);
+  gst_caps_unref (caps);
   g_free (name);
 
   return stream;
@@ -650,7 +647,8 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   /* Set the buffer discont flag, and clear discont state on the stream */
   if (stream->discont) {
     GST_DEBUG_OBJECT (demux, "discont buffer to pad %" GST_PTR_FORMAT
-        " with TS %" GST_TIME_FORMAT, stream->pad, GST_TIME_ARGS (dts));
+        " with PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT,
+        stream->pad, GST_TIME_ARGS (pts), GST_TIME_ARGS (dts));
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
 
     stream->discont = FALSE;
@@ -760,6 +758,9 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
         case 0x0:
           /* AC3 */
           stream_id += 0x80;
+          GST_DEBUG_OBJECT (demux,
+              "Audio stream %d format %d ID 0x%02x - AC3", i,
+              stream_format, stream_id);
           temp = gst_flups_demux_get_stream (demux, stream_id, ST_PS_AUDIO_AC3);
           break;
         case 0x2:
@@ -767,17 +768,26 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
           /* MPEG audio without and with extension stream are
            * treated the same */
           stream_id += 0xC0;
+          GST_DEBUG_OBJECT (demux,
+              "Audio stream %d format %d ID 0x%02x - MPEG audio", i,
+              stream_format, stream_id);
           temp = gst_flups_demux_get_stream (demux, stream_id, ST_AUDIO_MPEG1);
           break;
         case 0x4:
           /* LPCM */
           stream_id += 0xA0;
+          GST_DEBUG_OBJECT (demux,
+              "Audio stream %d format %d ID 0x%02x - DVD LPCM", i,
+              stream_format, stream_id);
           temp =
               gst_flups_demux_get_stream (demux, stream_id, ST_PS_AUDIO_LPCM);
           break;
         case 0x6:
           /* DTS */
           stream_id += 0x88;
+          GST_DEBUG_OBJECT (demux,
+              "Audio stream %d format %d ID 0x%02x - DTS", i,
+              stream_format, stream_id);
           temp = gst_flups_demux_get_stream (demux, stream_id, ST_PS_AUDIO_DTS);
           break;
         case 0x7:
@@ -789,7 +799,6 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
               stream_format);
           temp = NULL;
           continue;
-          break;
       }
 
       g_snprintf (cur_stream_name, 32, "audio-%d-language", i);

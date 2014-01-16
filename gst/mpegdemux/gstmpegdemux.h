@@ -66,6 +66,9 @@ typedef struct _GstFluPSDemuxClass GstFluPSDemuxClass;
 #define GST_FLUPS_DEMUX_MAX_STREAMS	256
 #define GST_FLUPS_DEMUX_MAX_PSM		256
 
+#define MAX_DVD_AUDIO_STREAMS       8
+#define MAX_DVD_SUBPICTURE_STREAMS  32
+
 typedef enum
 {
   GST_FLUPS_DEMUX_SYNC_AUTO = 0,
