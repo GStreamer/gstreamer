@@ -61,6 +61,9 @@ typedef struct _GstMatroskaReadCommon {
   /* state */
   GstMatroskaReadState     state;
 
+  /* stream type */
+  gboolean                 is_webm;
+  gboolean                 has_video;
 
   /* did we parse cues/tracks/segmentinfo already? */
   gboolean                 index_parsed;

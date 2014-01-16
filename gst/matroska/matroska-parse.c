@@ -135,6 +135,8 @@ static GstIndex *gst_matroska_parse_get_index (GstElement * element);
 static void gst_matroska_parse_reset (GstElement * element);
 static gboolean perform_seek_to_offset (GstMatroskaParse * parse,
     guint64 offset);
+static GstCaps *gst_matroska_parse_forge_caps (gboolean is_webm,
+    gboolean has_video);
 
 GType gst_matroska_parse_get_type (void);
 #define parent_class gst_matroska_parse_parent_class
@@ -305,6 +307,10 @@ gst_matroska_parse_reset (GstElement * element)
   parse->common.writing_app = NULL;
   g_free (parse->common.muxing_app);
   parse->common.muxing_app = NULL;
+
+  /* reset stream type */
+  parse->common.is_webm = FALSE;
+  parse->common.has_video = FALSE;
 
   /* reset indexes */
   if (parse->common.index) {
@@ -493,6 +499,7 @@ gst_matroska_parse_add_stream (GstMatroskaParse * parse, GstEbmlRead * ebml)
         switch (track_type) {
           case GST_MATROSKA_TRACK_TYPE_VIDEO:
             gst_matroska_track_init_video_context (&context);
+            parse->common.has_video = TRUE;
             break;
           case GST_MATROSKA_TRACK_TYPE_AUDIO:
             gst_matroska_track_init_audio_context (&context);
@@ -2526,10 +2533,10 @@ gst_matroska_parse_output (GstMatroskaParse * parse, GstBuffer * buffer,
     GstBuffer *buf;
 
     caps = gst_pad_get_current_caps (parse->common.sinkpad);
-    /* FIXME: could run typefinding over header and pick better default */
-    if (caps == NULL)
-      caps = gst_caps_new_empty_simple ("video/x-matroska");
-    else
+    if (caps == NULL) {
+      caps = gst_matroska_parse_forge_caps (parse->common.is_webm,
+          parse->common.has_video);
+    } else
       caps = gst_caps_make_writable (caps);
 
     s = gst_caps_get_structure (caps, 0);
@@ -3035,6 +3042,31 @@ perform_seek_to_offset (GstMatroskaParse * parse, guint64 offset)
 
   /* newsegment event will update offset */
   return res;
+}
+
+/*
+ * Forge empty default caps when all we know is the stream's EBML
+ * type and whether it has video or not.
+ *
+ * FIXME: Do something with video/x-matroska-3d if possible
+ */
+static GstCaps *
+gst_matroska_parse_forge_caps (gboolean is_webm, gboolean has_video)
+{
+  GstCaps *caps;
+
+  if (is_webm) {
+    if (has_video)
+      caps = gst_caps_new_empty_simple ("video/webm");
+    else
+      caps = gst_caps_new_empty_simple ("audio/webm");
+  } else {
+    if (has_video)
+      caps = gst_caps_new_empty_simple ("video/x-matroska");
+    else
+      caps = gst_caps_new_empty_simple ("audio/x-matroska");
+  }
+  return caps;
 }
 
 static GstFlowReturn

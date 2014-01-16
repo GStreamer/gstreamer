@@ -407,6 +407,10 @@ gst_matroska_demux_reset (GstElement * element)
   g_free (demux->common.muxing_app);
   demux->common.muxing_app = NULL;
 
+  /* reset stream type */
+  demux->common.is_webm = FALSE;
+  demux->common.has_video = FALSE;
+
   /* reset indexes */
   if (demux->common.index) {
     g_array_free (demux->common.index, TRUE);

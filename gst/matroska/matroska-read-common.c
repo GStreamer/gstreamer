@@ -1302,6 +1302,8 @@ exit:
     if (version <= 2) {
       if (doctype) {
         GST_INFO_OBJECT (common, "Input is %s version %d", doctype, version);
+        if (!strcmp (doctype, GST_MATROSKA_DOCTYPE_WEBM))
+          common->is_webm = TRUE;
       } else {
         GST_WARNING_OBJECT (common, "Input is EBML without doctype, assuming "
             "matroska (version %d)", version);
