@@ -202,7 +202,7 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           -1, G_MAXINT64, DEFAULT_MAX_PTIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRTPBaseAudioPayload:min-ptime:
+   * GstRTPBasePayload:min-ptime:
    *
    * Minimum duration of the packet data in ns (can't go above MTU)
    **/
@@ -222,7 +222,7 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           0, G_MAXUINT16, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTPBaseAudioPayload:perfect-rtptime:
+   * GstRTPBasePayload:perfect-rtptime:
    *
    * Try to use the offset fields to generate perfect RTP timestamps. when this
    * option is disabled, RTP timestamps are generated from the GStreamer
@@ -234,7 +234,7 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           "Generate perfect RTP timestamps when possible",
           DEFAULT_PERFECT_RTPTIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRTPBaseAudioPayload:ptime-multiple:
+   * GstRTPBasePayload:ptime-multiple:
    *
    * Force buffers to be multiples of this duration in ns (0 disables)
    **/
