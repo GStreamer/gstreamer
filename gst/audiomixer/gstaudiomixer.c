@@ -1435,12 +1435,10 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
   if (pad->mute || pad->volume < G_MINDOUBLE) {
     GST_DEBUG_OBJECT (pad, "Skipping muted pad");
     gst_buffer_unref (inbuf);
-    adata->position += adata->size;
-    adata->output_offset += adata->size / bpf;
+    adata->position += overlap * bpf;
+    adata->output_offset += overlap;
     if (adata->position >= adata->size) {
       /* Buffer done, drop it */
-      adata->position = 0;
-      adata->size = 0;
       gst_buffer_replace (&adata->buffer, NULL);
       gst_buffer_unref (gst_collect_pads_pop (pads, collect_data));
     }
@@ -1452,7 +1450,6 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
     /* skip gap buffer */
     GST_LOG_OBJECT (pad, "skipping GAP buffer");
     gst_buffer_unref (inbuf);
-    adata->position += adata->size;
     adata->output_offset += adata->size / bpf;
     /* Buffer done, drop it */
     gst_buffer_replace (&adata->buffer, NULL);
