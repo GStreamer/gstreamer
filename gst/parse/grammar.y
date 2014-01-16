@@ -629,6 +629,9 @@ static int yyerror (void *scanner, graph_t *graph, const char *s);
     graph_t *gg;
 }
 
+/* No grammar ambiguities expected, FAIL otherwise */
+%expect 0
+
 %token <ss> PARSE_URL
 %token <ss> IDENTIFIER
 %left  <ss> REF PADREF BINREF 
@@ -644,7 +647,8 @@ static int yyerror (void *scanner, graph_t *graph, const char *s);
 %type <pp> morepads pads assignments
 
 %destructor {	gst_parse_strfree ($$);		} <ss>
-%destructor {	gst_parse_free_chain($$);	} <cc>
+%destructor {	if($$)
+		  gst_parse_free_chain($$);	} <cc>
 %destructor {	gst_parse_free_link ($$);	} <ll>
 %destructor {	gst_parse_free_reference(&($$));} <rr>
 %destructor {	gst_object_unref ($$);		} <ee>
@@ -934,7 +938,7 @@ chainlist: /* NOP */			      { $$ = NULL; }
 
 
 assignments:	/* NOP */		      { $$ = NULL; }
-	|	assignments ASSIGNMENT	      { $$ = g_slist_prepend ($1, $2); }
+	|	ASSIGNMENT assignments 	      { $$ = g_slist_prepend ($2, $1); }
 	;
 
 binopener:	'('			      { $$ = gst_parse_strdup(_("bin")); }
@@ -1144,9 +1148,8 @@ out:
 
 error1:
   if (g.chain) {
-    g_slist_foreach (g.chain->elements, (GFunc)gst_object_unref, NULL);
-    g_slist_free (g.chain->elements);
     gst_parse_free_chain (g.chain);
+    g.chain=NULL;
   }
 
   g_slist_foreach (g.links, (GFunc)gst_parse_free_link, NULL);
