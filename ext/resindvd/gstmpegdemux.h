@@ -65,98 +65,102 @@ typedef struct _GstFluPSDemuxClass GstFluPSDemuxClass;
 
 #define GST_FLUPS_DEMUX_MAX_STREAMS	256
 #define GST_FLUPS_DEMUX_MAX_PSM		256
+
 #define MAX_DVD_AUDIO_STREAMS 8
 #define MAX_DVD_SUBPICTURE_STREAMS 32
 
-typedef enum {
+typedef enum
+{
   STATE_FLUPS_DEMUX_NEED_SYNC,
   STATE_FLUPS_DEMUX_SYNCED,
   STATE_FLUPS_DEMUX_NEED_MORE_DATA,
 } GstFluPSDemuxState;
 
 /* Information associated with a single FluPS stream. */
-struct _GstFluPSStream {
-  GstPad         * pad;
+struct _GstFluPSStream
+{
+  GstPad *pad;
 
-  gint           id;
-  gint           type;
-  gint           size_bound;
+  gint id;
+  gint type;
 
-  gboolean       discont;
-  gboolean       notlinked;
-  gboolean       need_segment;
- 
-  GstClockTime   last_seg_start;
-  GstClockTime   last_ts;
-  GstClockTime   segment_thresh;
+  GstClockTime segment_thresh;
+  GstClockTime last_ts;
+  GstFlowReturn last_flow;
+
+  gboolean discont;
+  gboolean notlinked;
+  gboolean need_segment;
+
+  GstTagList *pending_tags;
 };
 
-struct _GstFluPSDemux {
-  GstElement     parent;
+struct _GstFluPSDemux
+{
+  GstElement parent;
 
-  GstPad         * sinkpad;
+  GstPad *sinkpad;
   gboolean random_access;       /* If we operate in pull mode */
-  gboolean flushing;
   gboolean in_still;
 
   gboolean have_group_id;
   guint group_id;
 
-  GstAdapter     * adapter;
-  GstAdapter     * rev_adapter;
-  guint64        adapter_offset;
-  guint32        last_sync_code;
-  GstPESFilter   filter;
+  GstAdapter *adapter;
+  GstAdapter *rev_adapter;
+  guint64 adapter_offset;
+  guint32 last_sync_code;
+  GstPESFilter filter;
 
-  gint64         mux_rate;
-  guint64	     first_scr;
-  guint64	     first_dts;
-  guint64	     base_time;
-  guint64        current_scr;
-  guint64        next_scr;
-  guint64        bytes_since_scr;
-  gint64         scr_adjust;
-  guint64        scr_rate_n;
-  guint64        scr_rate_d;
-  guint64        first_scr_offset;
-  guint64        cur_scr_offset;
+  gint64 mux_rate;
+  guint64 first_scr;
+  guint64 first_dts;
+  guint64 base_time;
+  guint64 current_scr;
+  guint64 next_scr;
+  guint64 bytes_since_scr;
+  gint64 scr_adjust;
+  guint64 scr_rate_n;
+  guint64 scr_rate_d;
+  guint64 first_scr_offset;
+  guint64 cur_scr_offset;
 
-  gint16         psm[GST_FLUPS_DEMUX_MAX_PSM];
+  gint16 psm[GST_FLUPS_DEMUX_MAX_PSM];
 
-  GstSegment     sink_segment;
-  GstSegment     src_segment;
+  GstSegment sink_segment;
+  GstSegment src_segment;
 
   /* stream output */
-  GstFluPSStream * current_stream;
-  guint64        next_pts;
-  guint64        next_dts;
-  GstFluPSStream ** streams;
-  gboolean       need_no_more_pads;
+  GstFluPSStream *current_stream;
+  guint64 next_pts;
+  guint64 next_dts;
+  GstFluPSStream **streams;
+  GstFluPSStream **streams_found;
+  gint found_count;
+  gboolean need_no_more_pads;
 
   /* Indicates an MPEG-2 stream */
   gboolean is_mpeg2_pack;
-  gboolean disable_stream_creation;
 
-  /* Language codes event is stored when a dvd-lang-codes
-   * custom event arrives from upstream */
-  GstEvent * lang_codes;
-  gint       audio_stream_types[MAX_DVD_AUDIO_STREAMS];
+  /* DVD-specific stream handling */
+  gboolean disable_stream_creation;
+  gint audio_stream_map[MAX_DVD_AUDIO_STREAMS];
 };
 
-struct _GstFluPSDemuxClass {
+struct _GstFluPSDemuxClass
+{
   GstElementClass parent_class;
 
   GstPadTemplate *sink_template;
   GstPadTemplate *video_template;
   GstPadTemplate *audio_template;
-  GstPadTemplate *private_template;
   GstPadTemplate *subpicture_template;
+  GstPadTemplate *private_template;
 };
 
-GType		gst_flups_demux_get_type	(void);
+GType gst_flups_demux_get_type (void);
 
-gboolean	gst_flups_demux_plugin_init	(GstPlugin *plugin);
+gboolean gst_flups_demux_plugin_init (GstPlugin *plugin);
 
 G_END_DECLS
-
 #endif /* __GST_FLUPS_DEMUX_H__ */
