@@ -310,6 +310,11 @@ GST_START_TEST (rtp_base_test)
   GMainLoop *mainloop;
   GstBus *bus;
   GstCaps *caps;
+  GstStructure *stats;
+  guint clock_rate;
+  guint seqnum;
+  guint timestamp;
+  GObjectClass *klass;
 
   pipeline = gst_pipeline_new (NULL);
   fail_unless (GST_IS_PIPELINE (pipeline));
@@ -329,6 +334,8 @@ GST_START_TEST (rtp_base_test)
   g_object_set (src, "do-timestamp", TRUE, "caps", caps, "format",
       GST_FORMAT_TIME, NULL);
   gst_caps_unref (caps);
+
+  g_object_set (pay, "seqnum-offset", 0, "timestamp-offset", 0, NULL);
 
   g_object_set (sink, "sync", FALSE, "emit-signals", TRUE, NULL);
 
@@ -356,6 +363,23 @@ GST_START_TEST (rtp_base_test)
 
   push_buffer (src, 1 * GST_SECOND);
   await_buffer (sink, 1 * GST_SECOND);
+
+  klass = G_OBJECT_GET_CLASS (pay);
+  fail_unless (g_object_class_find_property (klass, "stats") != NULL);
+
+  g_object_get (pay, "stats", &stats, NULL);
+
+  fail_unless (gst_structure_has_field (stats, "clock-rate"));
+  fail_unless (gst_structure_has_field (stats, "seqnum"));
+  fail_unless (gst_structure_has_field (stats, "timestamp"));
+
+  fail_unless (gst_structure_get_uint (stats, "clock-rate", &clock_rate));
+  fail_unless (gst_structure_get_uint (stats, "seqnum", &seqnum));
+  fail_unless (gst_structure_get_uint (stats, "timestamp", &timestamp));
+
+  fail_unless_equals_int (clock_rate, 42);
+  fail_unless_equals_int (seqnum, 1);
+  fail_unless_equals_int (timestamp, 42);
 
   push_eos (src);
   await_eos (sink);

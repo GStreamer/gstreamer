@@ -93,6 +93,7 @@ enum
   PROP_SEQNUM,
   PROP_PERFECT_RTPTIME,
   PROP_PTIME_MULTIPLE,
+  PROP_STATS,
   PROP_LAST
 };
 
@@ -242,6 +243,37 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           "Force buffers to be multiples of this duration in ns (0 disables)",
           0, G_MAXINT64, DEFAULT_PTIME_MULTIPLE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTPBasePayload:stats:
+   *
+   * Various payloader statistics retrieved atomically (and are therefore
+   * synchroized with each other), these can be used e.g. to generate an
+   * RTP-Info header. This property return a GstStructure named
+   * application/x-rtp-payload-stats containing the following fields relating to
+   * the last processed buffer and current state of the stream being payloaded:
+   *
+   * <variablelist>
+   *   <varlistentry>
+   *     <term>clock-rate</term>
+   *     <listitem><para>#G_TYPE_UINT, clock-rate of the
+   *     stream</para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>seqnum</term>
+   *     <listitem><para>#G_TYPE_UINT, sequence number, same as
+   *     #GstRTPBasePayload:seqnum</para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>timestamp</term>
+   *     <listitem><para>#G_TYPE_UINT, RTP timestamp, same as
+   *     #GstRTPBasePayload:timestamp</para></listitem>
+   *   </varlistentry>
+   * </variablelist>
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_STATS,
+      g_param_spec_boxed ("stats", "Statistics", "Various statistics",
+          GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_rtp_base_payload_change_state;
 
@@ -1051,6 +1083,20 @@ gst_rtp_base_payload_push (GstRTPBasePayload * payload, GstBuffer * buffer)
   return res;
 }
 
+static GstStructure *
+gst_rtp_base_payload_create_stats (GstRTPBasePayload *rtpbasepayload)
+{
+  GstStructure *s;
+
+  s = gst_structure_new ("application/x-rtp-payload-stats",
+    "clock-rate", G_TYPE_UINT, rtpbasepayload->clock_rate,
+    "seqnum", G_TYPE_UINT, rtpbasepayload->seqnum,
+    "timestamp", G_TYPE_UINT, rtpbasepayload->timestamp,
+    NULL);
+
+  return s;
+}
+
 static void
 gst_rtp_base_payload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1157,6 +1203,10 @@ gst_rtp_base_payload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PTIME_MULTIPLE:
       g_value_set_int64 (value, rtpbasepayload->ptime_multiple);
+      break;
+    case PROP_STATS:
+      g_value_take_boxed (value,
+          gst_rtp_base_payload_create_stats (rtpbasepayload));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
