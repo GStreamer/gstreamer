@@ -582,6 +582,10 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
           ffmpegdec->info.channels, ffmpegdec->ffmpeg_layout,
           ffmpegdec->info.position);
     }
+
+    /* Mark corrupted frames as corrupted */
+    if (frame.flags & AV_FRAME_FLAG_CORRUPT)
+      GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_CORRUPTED);
   } else {
     *outbuf = NULL;
   }
