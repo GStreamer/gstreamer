@@ -128,7 +128,8 @@ static gboolean
 _request_id_update (GESAsset * self, gchar ** proposed_new_id, GError * error)
 {
   if (error->domain == GST_RESOURCE_ERROR &&
-      error->code == GST_RESOURCE_ERROR_NOT_FOUND) {
+      (error->code == GST_RESOURCE_ERROR_NOT_FOUND ||
+          error->code == GST_RESOURCE_ERROR_OPEN_READ)) {
     const gchar *uri = ges_asset_get_id (self);
     GFile *parent, *file = g_file_new_for_uri (uri);
 

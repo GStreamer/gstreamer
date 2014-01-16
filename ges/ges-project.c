@@ -461,8 +461,9 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
   id = ges_asset_get_id (asset);
   GST_DEBUG_OBJECT (project, "Try to proxy %s", id);
   if (ges_asset_request_id_update (asset, &new_id, error) == FALSE) {
-    GST_DEBUG_OBJECT (project, "Type: %s can not be proxied for id: %s",
-        g_type_name (G_OBJECT_TYPE (asset)), id);
+    GST_DEBUG_OBJECT (project, "Type: %s can not be proxied for id: %s "
+        "and error: %s", g_type_name (G_OBJECT_TYPE (asset)), id,
+        error->message);
     _send_error_loading_asset (project, asset, error);
 
     return NULL;
