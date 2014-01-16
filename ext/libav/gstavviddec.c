@@ -1291,6 +1291,8 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       ffmpegdec->picture->repeat_pict);
   GST_DEBUG_OBJECT (ffmpegdec, "interlaced_frame:%d (current:%d)",
       ffmpegdec->picture->interlaced_frame, ffmpegdec->ctx_interlaced);
+  GST_DEBUG_OBJECT (ffmpegdec, "corrupted frame: %d",
+      ! !(ffmpegdec->picture->flags & AV_FRAME_FLAG_CORRUPT));
 
   if (G_UNLIKELY (ffmpegdec->picture->interlaced_frame !=
           ffmpegdec->ctx_interlaced)) {
@@ -1306,6 +1308,10 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   if (G_UNLIKELY (*ret != GST_FLOW_OK))
     goto no_output;
+
+  /* Mark corrupted frames as corrupted */
+  if (ffmpegdec->picture->flags & AV_FRAME_FLAG_CORRUPT)
+    GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_BUFFER_FLAG_CORRUPTED);
 
   if (ffmpegdec->ctx_interlaced) {
     /* set interlaced flags */
