@@ -2472,8 +2472,10 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
     self->field_duration = 0;
   }
 
-  gst_deinterlace_set_method (self, self->method_id);
-  gst_deinterlace_method_setup (self->method, &self->vinfo);
+  if (!self->passthrough) {
+    gst_deinterlace_set_method (self, self->method_id);
+    gst_deinterlace_method_setup (self->method, &self->vinfo);
+  }
 
   GST_DEBUG_OBJECT (pad, "Sink caps: %" GST_PTR_FORMAT, caps);
   GST_DEBUG_OBJECT (pad, "Src  caps: %" GST_PTR_FORMAT, srccaps);
