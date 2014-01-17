@@ -210,6 +210,12 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       }
       break;
     }
+    case GST_MESSAGE_CLOCK_LOST:{
+      g_print (_("Clock lost, selecting a new one\n"));
+      gst_element_set_state (play->playbin, GST_STATE_PAUSED);
+      gst_element_set_state (play->playbin, GST_STATE_PLAYING);
+      break;
+    }
     case GST_MESSAGE_LATENCY:
       g_print ("Redistribute latency...\n");
       gst_bin_recalculate_latency (GST_BIN (play->playbin));
