@@ -2082,13 +2082,30 @@ gst_video_decoder_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      gboolean stopped = TRUE;
+
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       gst_video_decoder_reset (decoder, TRUE, TRUE);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-      if (decoder_class->stop && !decoder_class->stop (decoder))
+
+      if (decoder_class->stop) {
+        stopped = decoder_class->stop (decoder);
+
+        /* the subclass might have released frames and events from freed frames
+         * are stored in the pending_events list */
+        GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+        g_list_free_full (decoder->priv->pending_events, (GDestroyNotify)
+            gst_event_unref);
+        decoder->priv->pending_events = NULL;
+        GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      }
+
+      if (!stopped)
         goto stop_failed;
+
       break;
+    }
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* close device/library if needed */
       if (decoder_class->close && !decoder_class->close (decoder))
