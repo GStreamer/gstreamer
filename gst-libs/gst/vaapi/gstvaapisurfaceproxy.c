@@ -239,8 +239,8 @@ gst_vaapi_surface_proxy_get_flags(GstVaapiSurfaceProxy *proxy)
 GstVaapiID
 gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy)
 {
-    g_return_val_if_fail(proxy != NULL, 0);
-    g_return_val_if_fail(proxy->surface != NULL, 0);
+    g_return_val_if_fail(proxy != NULL, VA_INVALID_ID);
+    g_return_val_if_fail(proxy->surface != NULL, VA_INVALID_ID);
 
     return GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy);
 }

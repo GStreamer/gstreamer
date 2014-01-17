@@ -394,7 +394,7 @@ pop_frame(GstVaapiDecoder *decoder, guint64 timeout)
 
     proxy = frame->user_data;
     GST_DEBUG("dequeue decoded surface %" GST_VAAPI_ID_FORMAT,
-              GST_VAAPI_ID_ARGS(GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy)));
+              GST_VAAPI_ID_ARGS(gst_vaapi_surface_proxy_get_surface_id(proxy)));
 
     return frame;
 }
