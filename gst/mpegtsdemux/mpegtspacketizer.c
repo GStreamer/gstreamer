@@ -95,11 +95,20 @@ get_pcr_table (MpegTSPacketizer2 * packetizer, guint16 pid)
 }
 
 static void
+pcr_offset_group_free (PCROffsetGroup * group)
+{
+  g_free (group->values);
+  g_slice_free (PCROffsetGroup, group);
+}
+
+static void
 flush_observations (MpegTSPacketizer2 * packetizer)
 {
   gint i;
 
   for (i = 0; i < packetizer->lastobsid; i++) {
+    g_list_free_full (packetizer->observations[i]->groups,
+        (GDestroyNotify) pcr_offset_group_free);
     if (packetizer->observations[i]->current)
       g_slice_free (PCROffsetCurrent, packetizer->observations[i]->current);
     g_free (packetizer->observations[i]);
