@@ -143,6 +143,31 @@ static const char *frag_REORDER_opengl = {
       "}"
 };
 
+/** GRAY16 to RGB conversion 
+ *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
+ *  high byte weight as : 255*256/65535 
+ *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
+ *  low byte weight as : 255/65535 (similar)
+ * */
+#define COMPOSE_WEIGHT \
+    "const vec2 compose_weight = vec2(0.996109, 0.003891);\n"
+
+/* Compose LUMINANCE/ALPHA as 8bit-8bit value */
+static const char *frag_COMPOSE_opengl = {
+      "uniform sampler2D tex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      COMPOSE_WEIGHT
+      "void main(void)\n"
+      "{\n"
+      " vec4 t = texture2D(tex, gl_TexCoord[0].xy);\n"
+      " float value = dot(t.%c%c, compose_weight);"
+      " gl_FragColor = vec4(value, value, value, 1.0);\n"
+      "}"
+
+};
+
 /* Direct fragments copy with stride-scaling */
 static const char *frag_COPY_opengl = {
       "uniform sampler2D tex;\n"
@@ -196,6 +221,28 @@ static const char *frag_REORDER_gles2 = {
       "}"
 };
 
+/** GRAY16 to RGB conversion 
+ *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
+ *  high byte weight as : 255*256/65535 
+ *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
+ *  low byte weight as : 255/65535 (similar)
+ * */
+static const char *frag_COMPOSE_gles2 = {
+      "precision mediump float;\n"
+      "varying vec2 v_texcoord;\n"
+      "uniform sampler2D tex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      COMPOSE_WEIGHT
+      "void main(void)\n"
+      "{\n"
+      " vec4 t = texture2D(tex, v_texcoord);\n"
+      " float value = dot(t.%c%c, compose_weight);"
+      " gl_FragColor = vec4(value, value, value, 1.0);\n"
+      "}"
+
+};
 static const char *frag_AYUV_gles2 = {
       "precision mediump float;\n"
       "varying vec2 v_texcoord;\n"
@@ -322,6 +369,7 @@ struct _GstGLUploadPrivate
   const gchar *NV12_NV21;
   const gchar *REORDER;
   const gchar *COPY;
+  const gchar *COMPOSE;
   const gchar *vert_shader;
 
     gboolean (*draw) (GstGLContext * context, GstGLUpload * download);
@@ -398,6 +446,7 @@ gst_gl_upload_new (GstGLContext * context)
     priv->PLANAR_YUV = frag_PLANAR_YUV_opengl;
     priv->AYUV = frag_AYUV_opengl;
     priv->REORDER = frag_REORDER_opengl;
+    priv->COMPOSE = frag_COMPOSE_opengl;
     priv->COPY = frag_COPY_opengl;
     priv->NV12_NV21 = frag_NV12_NV21_opengl;
     priv->vert_shader = text_vertex_shader_opengl;
@@ -410,6 +459,7 @@ gst_gl_upload_new (GstGLContext * context)
     priv->PLANAR_YUV = frag_PLANAR_YUV_gles2;
     priv->AYUV = frag_AYUV_gles2;
     priv->REORDER = frag_REORDER_gles2;
+    priv->COMPOSE = frag_COMPOSE_gles2;
     priv->COPY = frag_COPY_gles2;
     priv->NV12_NV21 = frag_NV12_NV21_gles2;
     priv->vert_shader = text_vertex_shader_gles2;
@@ -1017,6 +1067,17 @@ _init_upload (GstGLContext * context, GstGLUpload * upload)
       free_frag_prog = TRUE;
       upload->priv->n_textures = 1;
       break;
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+      frag_prog = g_strdup_printf (upload->priv->COMPOSE, 'r', 'a');
+      free_frag_prog = TRUE;
+      upload->priv->n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+      frag_prog = g_strdup_printf (upload->priv->COMPOSE, 'a', 'r');
+      free_frag_prog = TRUE;
+      upload->priv->n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_RGBA:
@@ -1230,6 +1291,21 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
       tex[0].width = in_width;
       tex[0].height = in_height;
       break;
+    case GST_VIDEO_FORMAT_GRAY8:
+      tex[0].internal_format = GL_LUMINANCE;
+      tex[0].format = GL_LUMINANCE;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      break;
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+      tex[0].internal_format = GL_LUMINANCE_ALPHA;
+      tex[0].format = GL_LUMINANCE_ALPHA;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      break;
     case GST_VIDEO_FORMAT_YUY2:
       tex[0].internal_format = GL_LUMINANCE_ALPHA;
       tex[0].format = GL_LUMINANCE_ALPHA;
@@ -1372,6 +1448,15 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
   gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[0]);
 
   switch (v_format) {
+    case GST_VIDEO_FORMAT_GRAY8:
+      gl->TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
+      break;
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+      gl->TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
+          GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
+      break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
@@ -1570,6 +1655,9 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
   gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   switch (v_format) {
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_xRGB:
@@ -1717,6 +1805,9 @@ _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
   gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   switch (v_format) {
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_xRGB:
