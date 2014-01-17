@@ -63,6 +63,7 @@ struct _GstFFMpegVidDec
   gboolean direct_rendering;
   gboolean debug_mv;
   int max_threads;
+  gboolean output_corrupt;
 
   gboolean is_realvideo;
 

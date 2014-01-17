@@ -46,6 +46,7 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define DEFAULT_DIRECT_RENDERING	TRUE
 #define DEFAULT_DEBUG_MV		FALSE
 #define DEFAULT_MAX_THREADS		0
+#define DEFAULT_OUTPUT_CORRUPT		TRUE
 
 enum
 {
@@ -55,6 +56,7 @@ enum
   PROP_DIRECT_RENDERING,
   PROP_DEBUG_MV,
   PROP_MAX_THREADS,
+  PROP_OUTPUT_CORRUPT,
   PROP_LAST
 };
 
@@ -223,6 +225,10 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
       g_param_spec_boolean ("debug-mv", "Debug motion vectors",
           "Whether libav should print motion vectors on top of the image",
           DEFAULT_DEBUG_MV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_OUTPUT_CORRUPT,
+      g_param_spec_boolean ("output-corrupt", "Output corrupt buffers",
+          "Whether libav should output frames even if corrupted",
+          DEFAULT_OUTPUT_CORRUPT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   caps = klass->in_plugin->capabilities;
   if (caps & (CODEC_CAP_FRAME_THREADS | CODEC_CAP_SLICE_THREADS)) {
@@ -258,6 +264,7 @@ gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
   ffmpegdec->max_threads = DEFAULT_MAX_THREADS;
+  ffmpegdec->output_corrupt = DEFAULT_OUTPUT_CORRUPT;
 
   gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (ffmpegdec), TRUE);
 }
@@ -278,6 +285,17 @@ gst_ffmpegviddec_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_ffmpegviddec_context_set_flags (AVCodecContext * context, guint flags,
+    gboolean enable)
+{
+  g_return_if_fail (context != NULL);
+
+  if (enable)
+    context->flags |= flags;
+  else
+    context->flags &= ~flags;
+}
 
 /* with LOCK */
 static gboolean
@@ -348,6 +366,9 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
       GST_LOG_OBJECT (ffmpegdec, "Parser deactivated for format");
       break;
   }
+
+  gst_ffmpegviddec_context_set_flags (ffmpegdec->context,
+      CODEC_FLAG_OUTPUT_CORRUPT, ffmpegdec->output_corrupt);
 
   return TRUE;
 
@@ -1825,6 +1846,9 @@ gst_ffmpegviddec_set_property (GObject * object,
     case PROP_MAX_THREADS:
       ffmpegdec->max_threads = g_value_get_int (value);
       break;
+    case PROP_OUTPUT_CORRUPT:
+      ffmpegdec->output_corrupt = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1852,6 +1876,9 @@ gst_ffmpegviddec_get_property (GObject * object,
       break;
     case PROP_MAX_THREADS:
       g_value_set_int (value, ffmpegdec->max_threads);
+      break;
+    case PROP_OUTPUT_CORRUPT:
+      g_value_set_boolean (value, ffmpegdec->output_corrupt);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
