@@ -470,11 +470,13 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
 
   if (obj->mode == GST_V4L2_IO_DMABUF)
     allocator = gst_dmabuf_allocator_new ();
+  else if (allocator)
+    gst_object_ref (allocator);
 
   if (pool->allocator)
     gst_object_unref (pool->allocator);
-  if ((pool->allocator = allocator))
-    gst_object_ref (allocator);
+  pool->allocator = allocator;
+
   pool->params = params;
 
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
