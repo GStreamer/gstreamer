@@ -153,7 +153,7 @@ gst_sf_dec_class_init (GstSFDecClass * klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_sf_dec_change_state);
 
   gst_element_class_set_static_metadata (gstelement_class, "Sndfile decoder",
-      "Demuxer/Audio",
+      "Decoder/Audio",
       "Read audio streams using libsndfile",
       "Stefan Sauer <ensonic@user.sf.net>");
 
