@@ -190,32 +190,38 @@ gst_openexr_dec_parse (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos)
 {
   guint8 data[8];
-  gsize size;
+  gsize size, parsed_size;
   guint32 magic, flags;
   gssize offset;
 
   size = gst_adapter_available (adapter);
 
+  parsed_size = gst_video_decoder_get_pending_frame_size (decoder);
+
   GST_DEBUG_OBJECT (decoder, "Parsing OpenEXR image data %" G_GSIZE_FORMAT,
       size);
 
-  if (size < 8)
+  if (parsed_size == 0 && size < 8)
     goto need_more_data;
 
-  gst_adapter_copy (adapter, data, 0, 8);
+  /* If we did not parse anything yet, check if the frame starts with the header */
+  if (parsed_size == 0) {
+    gst_adapter_copy (adapter, data, 0, 8);
 
-  magic = GST_READ_UINT32_LE (data);
-  flags = GST_READ_UINT32_LE (data + 4);
-  if (magic != 0x01312f76 || ((flags & 0xff) != 1 && (flags & 0xff) != 2) || ((flags & 0x200) && (flags & 0x1800))) {
-    offset = gst_adapter_masked_scan_uint32_peek (adapter, 0xffffffff, 0x762f3101, 0, size, NULL);
-    if (offset == -1) {
-      gst_adapter_flush (adapter, size - 4);
+    magic = GST_READ_UINT32_LE (data);
+    flags = GST_READ_UINT32_LE (data + 4);
+    if (magic != 0x01312f76 || ((flags & 0xff) != 1 && (flags & 0xff) != 2) || ((flags & 0x200) && (flags & 0x1800))) {
+      offset = gst_adapter_masked_scan_uint32_peek (adapter, 0xffffffff, 0x762f3101, 0, size, NULL);
+      if (offset == -1) {
+        gst_adapter_flush (adapter, size - 4);
+        goto need_more_data;
+      }
+
+      /* come back into this function after flushing some data */
+      gst_adapter_flush (adapter, offset);
       goto need_more_data;
     }
-
-    /* come back into this function after flushing some data */
-    gst_adapter_flush (adapter, offset);
-    goto need_more_data;
+  } else {
   }
 
   /* valid header, now let's try to find the next one unless we're EOS */
@@ -224,8 +230,10 @@ gst_openexr_dec_parse (GstVideoDecoder * decoder,
 
     while (!found) {
       offset = gst_adapter_masked_scan_uint32_peek (adapter, 0xffffffff, 0x762f3101, 8, size - 8 - 4, NULL);
-      if (offset == -1)
+      if (offset == -1) {        
+        gst_video_decoder_add_to_frame (decoder, size - 7);
         goto need_more_data;
+      }
 
       gst_adapter_copy (adapter, data, offset, 8);
       magic = GST_READ_UINT32_LE (data);
@@ -236,7 +244,7 @@ gst_openexr_dec_parse (GstVideoDecoder * decoder,
     size = offset;
   }
 
-  GST_DEBUG_OBJECT (decoder, "Have complete image of size %" G_GSSIZE_FORMAT, size);
+  GST_DEBUG_OBJECT (decoder, "Have complete image of size %" G_GSSIZE_FORMAT, size + parsed_size);
 
   gst_video_decoder_add_to_frame (decoder, size);
 
