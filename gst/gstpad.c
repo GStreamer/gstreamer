@@ -544,6 +544,7 @@ restart:
     if (G_UNLIKELY (ev->event != ev_ret.event)) {
       if (G_UNLIKELY (ev_ret.event == NULL)) {
         /* function unreffed and set the event to NULL, remove it */
+        gst_event_unref (ev->event);
         g_array_remove_index (events, i);
         len--;
         cookie = ++pad->priv->events_cookie;
