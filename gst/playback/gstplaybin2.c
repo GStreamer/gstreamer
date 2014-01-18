@@ -2687,7 +2687,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
     /* Ignore async state changes from the uridecodebin children,
      * see bug #602000. */
     group = playbin->curr_group;
-    if (src && (group = playbin->curr_group) &&
+    if (src && group &&
         ((group->uridecodebin && src == GST_OBJECT_CAST (group->uridecodebin))
             || (group->suburidecodebin
                 && src == GST_OBJECT_CAST (group->suburidecodebin)))) {
