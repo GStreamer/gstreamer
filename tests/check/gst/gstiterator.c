@@ -210,6 +210,218 @@ GST_START_TEST (test_single)
 
 GST_END_TEST;
 
+static gint
+filter2_cb (gconstpointer a, gconstpointer b)
+{
+  const GValue *va = a;
+  gint ia;
+
+  ia = GPOINTER_TO_INT (g_value_get_pointer (va));
+
+  return ia % 2;
+}
+
+GST_START_TEST (test_filter)
+{
+  GList *l;
+  guint32 cookie = 0;
+  GMutex m;
+  GstIterator *iter, *filter;
+  GstIteratorResult res;
+  GValue item = { 0, };
+  gint expected = 0, value;
+
+  l = make_list_of_ints (NUM_ELEMENTS);
+  g_mutex_init (&m);
+  iter = gst_iterator_new_list (G_TYPE_POINTER, &m, &cookie, &l, NULL, NULL);
+  fail_unless (iter != NULL);
+
+  filter = gst_iterator_filter (iter, filter2_cb, NULL);
+
+  while (1) {
+    res = gst_iterator_next (filter, &item);
+    if (res == GST_ITERATOR_DONE)
+      break;
+    fail_unless (res == GST_ITERATOR_OK);
+    value = GPOINTER_TO_INT (g_value_get_pointer (&item));
+    fail_unless_equals_int (value, expected);
+    expected += 2;
+  }
+
+  /* clean up */
+  g_value_unset (&item);
+  gst_iterator_free (filter);
+  g_mutex_clear (&m);
+  g_list_free (l);
+}
+
+GST_END_TEST;
+
+static gint
+filter2_lock_cb (gconstpointer a, gconstpointer b)
+{
+  const GValue *va = a;
+  const GValue *vb = b;
+  gint ia;
+  GMutex *m;
+
+  ia = GPOINTER_TO_INT (g_value_get_pointer (va));
+
+  m = g_value_get_pointer (vb);
+  g_mutex_lock (m);
+  g_mutex_unlock (m);
+
+  return ia % 2;
+}
+
+GST_START_TEST (test_filter_locking)
+{
+  GList *l;
+  guint32 cookie = 0;
+  GMutex m;
+  GstIterator *iter, *filter;
+  GstIteratorResult res;
+  GValue item = { 0, };
+  GValue user_data = { 0, };
+  gint expected = 0, value;
+
+  l = make_list_of_ints (NUM_ELEMENTS);
+  g_mutex_init (&m);
+  iter = gst_iterator_new_list (G_TYPE_POINTER, &m, &cookie, &l, NULL, NULL);
+  fail_unless (iter != NULL);
+
+  g_value_init (&user_data, G_TYPE_POINTER);
+  g_value_set_pointer (&user_data, &m);
+
+  filter = gst_iterator_filter (iter, filter2_lock_cb, &user_data);
+
+  while (1) {
+    res = gst_iterator_next (filter, &item);
+    if (res == GST_ITERATOR_DONE)
+      break;
+    fail_unless (res == GST_ITERATOR_OK);
+    value = GPOINTER_TO_INT (g_value_get_pointer (&item));
+    fail_unless_equals_int (value, expected);
+    expected += 2;
+  }
+
+  /* clean up */
+  g_value_unset (&item);
+  g_value_unset (&user_data);
+  gst_iterator_free (filter);
+  g_mutex_clear (&m);
+  g_list_free (l);
+}
+
+GST_END_TEST;
+
+static gint
+filter4_cb (gconstpointer a, gconstpointer b)
+{
+  const GValue *va = a;
+  gint ia;
+
+  ia = GPOINTER_TO_INT (g_value_get_pointer (va));
+
+  return ia % 4;
+}
+
+GST_START_TEST (test_filter_of_filter)
+{
+  GList *l;
+  guint32 cookie = 0;
+  GMutex m;
+  GstIterator *iter, *filter, *filter2;
+  GstIteratorResult res;
+  GValue item = { 0, };
+  gint expected = 0, value;
+
+  l = make_list_of_ints (NUM_ELEMENTS);
+  g_mutex_init (&m);
+  iter = gst_iterator_new_list (G_TYPE_POINTER, &m, &cookie, &l, NULL, NULL);
+  fail_unless (iter != NULL);
+
+  filter = gst_iterator_filter (iter, filter2_cb, NULL);
+  filter2 = gst_iterator_filter (filter, filter4_cb, NULL);
+
+  while (1) {
+    res = gst_iterator_next (filter2, &item);
+    if (res == GST_ITERATOR_DONE)
+      break;
+    fail_unless (res == GST_ITERATOR_OK);
+    value = GPOINTER_TO_INT (g_value_get_pointer (&item));
+    fail_unless_equals_int (value, expected);
+    expected += 4;
+  }
+
+  /* clean up */
+  g_value_unset (&item);
+  gst_iterator_free (filter2);
+  g_mutex_clear (&m);
+  g_list_free (l);
+}
+
+GST_END_TEST;
+
+static gint
+filter4_lock_cb (gconstpointer a, gconstpointer b)
+{
+  const GValue *va = a;
+  const GValue *vb = b;
+  gint ia;
+  GMutex *m;
+
+  ia = GPOINTER_TO_INT (g_value_get_pointer (va));
+
+  m = g_value_get_pointer (vb);
+  g_mutex_lock (m);
+  g_mutex_unlock (m);
+
+  return ia % 4;
+}
+
+GST_START_TEST (test_filter_of_filter_locking)
+{
+  GList *l;
+  guint32 cookie = 0;
+  GMutex m;
+  GstIterator *iter, *filter, *filter2;
+  GstIteratorResult res;
+  GValue item = { 0, };
+  GValue user_data = { 0, };
+  gint expected = 0, value;
+
+  l = make_list_of_ints (NUM_ELEMENTS);
+  g_mutex_init (&m);
+  iter = gst_iterator_new_list (G_TYPE_POINTER, &m, &cookie, &l, NULL, NULL);
+  fail_unless (iter != NULL);
+
+  g_value_init (&user_data, G_TYPE_POINTER);
+  g_value_set_pointer (&user_data, &m);
+
+  filter = gst_iterator_filter (iter, filter2_lock_cb, &user_data);
+  filter2 = gst_iterator_filter (filter, filter4_lock_cb, &user_data);
+
+  while (1) {
+    res = gst_iterator_next (filter2, &item);
+    if (res == GST_ITERATOR_DONE)
+      break;
+    fail_unless (res == GST_ITERATOR_OK);
+    value = GPOINTER_TO_INT (g_value_get_pointer (&item));
+    fail_unless_equals_int (value, expected);
+    expected += 4;
+  }
+
+  /* clean up */
+  g_value_unset (&item);
+  g_value_unset (&user_data);
+  gst_iterator_free (filter2);
+  g_mutex_clear (&m);
+  g_list_free (l);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_iterator_suite (void)
 {
@@ -223,6 +435,10 @@ gst_iterator_suite (void)
   tcase_add_test (tc_chain, test_resync);
   tcase_add_test (tc_chain, test_fold);
   tcase_add_test (tc_chain, test_single);
+  tcase_add_test (tc_chain, test_filter);
+  tcase_add_test (tc_chain, test_filter_locking);
+  tcase_add_test (tc_chain, test_filter_of_filter);
+  tcase_add_test (tc_chain, test_filter_of_filter_locking);
   return s;
 }
 
