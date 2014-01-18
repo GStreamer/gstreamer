@@ -2766,6 +2766,33 @@ gst_video_decoder_add_to_frame (GstVideoDecoder * decoder, int n_bytes)
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 }
 
+/**
+ * gst_video_decoder_get_pending_frame_size:
+ * @decoder: a #GstVideoDecoder
+ *
+ * Returns the number of bytes previously added to the current frame
+ * by calling gst_video_decoder_add_to_frame().
+ *
+ * Returns: The number of bytes pending for the current frame
+ *
+ * Since: 1.4
+ */
+gsize
+gst_video_decoder_get_pending_frame_size (GstVideoDecoder * decoder)
+{
+  GstVideoDecoderPrivate *priv = decoder->priv;
+  gsize ret;
+
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+  ret = gst_adapter_available (priv->output_adapter);
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+  GST_LOG_OBJECT (decoder, "Current pending frame has %" G_GSIZE_FORMAT "bytes",
+      ret);
+
+  return ret;
+}
+
 static guint64
 gst_video_decoder_get_frame_duration (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)

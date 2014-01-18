@@ -363,6 +363,7 @@ GList *             gst_video_decoder_get_frames       (GstVideoDecoder *decoder
 void           gst_video_decoder_add_to_frame     (GstVideoDecoder *decoder,
 						   int n_bytes);
 GstFlowReturn  gst_video_decoder_have_frame       (GstVideoDecoder *decoder);
+gsize          gst_video_decoder_get_pending_frame_size (GstVideoDecoder *decoder);
 
 GstBuffer     *gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder);
 
