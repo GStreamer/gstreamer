@@ -3833,8 +3833,10 @@ create_decoders_list (GList * factory_list, GSequence * avelements)
     GstElementFactory *factory = (GstElementFactory *) tmp->data;
 
     /* if there are parsers or sink elements, add them first */
-    if (!gst_element_factory_list_is_type (factory,
-            GST_ELEMENT_FACTORY_TYPE_DECODER)) {
+    if (gst_element_factory_list_is_type (factory,
+            GST_ELEMENT_FACTORY_TYPE_PARSER) ||
+        gst_element_factory_list_is_type (factory,
+            GST_ELEMENT_FACTORY_TYPE_SINK)) {
       dec_list = g_list_prepend (dec_list, factory);
     } else {
       GSequenceIter *seq_iter;
