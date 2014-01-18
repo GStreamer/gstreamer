@@ -30,10 +30,12 @@
  * The blocking mode just requires calling gst_discoverer_discover_uri()
  * with the URI one wishes to discover.
  *
- * The non-blocking mode requires a running #GMainLoop in the default
+ * The non-blocking mode requires a running #GMainLoop iterating a
  * #GMainContext, where one connects to the various signals, appends the
  * URIs to be processed (through gst_discoverer_discover_uri_async()) and then
  * asks for the discovery to begin (through gst_discoverer_start()).
+ * By default this will use the GLib default main context unless you have
+ * set a custom context using g_main_context_push_thread_default().
  *
  * All the information is returned in a #GstDiscovererInfo structure.
  */
