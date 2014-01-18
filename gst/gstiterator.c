@@ -503,6 +503,8 @@ static void
 filter_copy (const GstIteratorFilter * it, GstIteratorFilter * copy)
 {
   copy->slave = gst_iterator_copy (it->slave);
+  copy->master_lock = copy->slave->lock ? copy->slave->lock : it->master_lock;
+  copy->slave->lock = NULL;
 
   if (it->have_user_data) {
     memset (&copy->user_data, 0, sizeof (copy->user_data));
