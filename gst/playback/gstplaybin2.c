@@ -3839,6 +3839,7 @@ create_decoders_list (GList * factory_list, GSequence * avelements)
 {
   GList *dec_list = NULL, *tmp;
   GList *ave_list = NULL;
+  GList *ave_free_list = NULL;
   GstAVElement *ave, *best_ave;
 
   g_return_val_if_fail (factory_list != NULL, NULL);
@@ -3867,7 +3868,10 @@ create_decoders_list (GList * factory_list, GSequence * avelements)
         /* There's at least raw */
         ave->n_comm_cf = 1;
 
-        dec_list = g_list_prepend (dec_list, factory);
+        ave_list = g_list_prepend (ave_list, ave);
+
+        /* We need to free these later */
+        ave_free_list = g_list_prepend (ave_free_list, ave);
         continue;
       }
 
@@ -3904,6 +3908,10 @@ create_decoders_list (GList * factory_list, GSequence * avelements)
     dec_list = g_list_prepend (dec_list, ave->dec);
   }
   g_list_free (ave_list);
+
+  for (tmp = ave_free_list; tmp; tmp = tmp->next)
+    g_slice_free (GstAVElement, tmp->data);
+  g_list_free (ave_free_list);
 
   dec_list = g_list_reverse (dec_list);
 
