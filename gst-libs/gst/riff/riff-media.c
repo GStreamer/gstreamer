@@ -1395,10 +1395,31 @@ gst_riff_create_audio_caps (guint16 codec_id,
       rate_min = 8000;
       rate_max = 8000;
       channels_max = 1;
-      caps = gst_caps_new_simple ("audio/x-adpcm",
-          "layout", G_TYPE_STRING, "g726", NULL);
+      if (strf != NULL) {
+        gint bitrate;
+        bitrate = 0;
+        if (strf->av_bps == 2000 || strf->av_bps == 3000 || strf->av_bps == 4000
+            || strf->av_bps == 5000) {
+          strf->blockalign = strf->av_bps / 1000;
+          bitrate = strf->av_bps * 8;
+        } else if (strf->blockalign >= 2 && strf->blockalign <= 5) {
+          bitrate = strf->blockalign * 8000;
+        }
+        if (bitrate > 0) {
+          caps = gst_caps_new_simple ("audio/x-adpcm",
+              "layout", G_TYPE_STRING, "g726", "bitrate", G_TYPE_INT, bitrate,
+              NULL);
+        } else {
+          caps = gst_caps_new_simple ("audio/x-adpcm",
+              "layout", G_TYPE_STRING, "g726", NULL);
+        }
+      } else {
+        caps = gst_caps_new_simple ("audio/x-adpcm",
+            "layout", G_TYPE_STRING, "g726", NULL);
+      }
       if (codec_name)
         *codec_name = g_strdup ("G726 ADPCM audio");
+      block_align = TRUE;
       break;
 
     case GST_RIFF_WAVE_FORMAT_DSP_TRUESPEECH:
