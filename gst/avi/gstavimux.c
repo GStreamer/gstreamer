@@ -310,6 +310,10 @@ gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free)
     }
 
     memset (&(audpad->auds), 0, sizeof (gst_riff_strf_auds));
+
+    audpad->audio_size = 0;
+    audpad->audio_time = 0;
+    audpad->max_audio_chunk = 0;
   }
 }
 
