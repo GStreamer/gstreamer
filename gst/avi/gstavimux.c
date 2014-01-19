@@ -712,8 +712,9 @@ gst_avi_mux_audsink_set_fields (GstAviMux * avimux, GstAviAudioPad * avipad)
     /* vbr case: fixed duration per frame/chunk */
     avipad->parent.hdr.rate = avipad->auds.rate;
     avipad->parent.hdr.samplesize = 0;
-    /* FIXME ?? some rumours say this should be largest audio chunk size */
-    avipad->auds.blockalign = avipad->parent.hdr.scale;
+    /* this triggers determining largest audio chunk size to write at end */
+    avipad->max_audio_chunk = avipad->auds.blockalign =
+        avipad->parent.hdr.scale;
   } else {
     /* by spec, hdr.rate is av_bps related, is calculated that way in stop_file,
      * and reduces to sample rate in PCM like cases */
@@ -1811,6 +1812,9 @@ gst_avi_mux_stop_file (GstAviMux * avimux)
           audpad->auds.av_bps = 0;
         }
       }
+      /* housekeeping for vbr case */
+      if (audpad->max_audio_chunk)
+        audpad->auds.blockalign = audpad->max_audio_chunk;
       gst_avi_mux_audsink_set_fields (avimux, audpad);
       avimux->avi_hdr.max_bps += audpad->auds.av_bps;
       avipad->hdr.length = gst_util_uint64_scale (audpad->audio_time,
@@ -2089,6 +2093,8 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
     flags = 0;
     audpad->audio_size += datasize;
     audpad->audio_time += GST_BUFFER_DURATION (data);
+    if (audpad->max_audio_chunk && datasize > audpad->max_audio_chunk)
+      audpad->max_audio_chunk = datasize;
   }
 
   gst_avi_mux_add_index (avimux, avipad, flags, datasize);
