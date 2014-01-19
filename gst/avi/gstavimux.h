@@ -117,6 +117,8 @@ typedef struct _GstAviAudioPad {
   /* audio info for bps calculation */
   guint32 audio_size;
   guint64 audio_time;
+  /* max audio chunk size for vbr */
+  guint32 max_audio_chunk;
 
   /* counts the number of samples to put in indx chunk
    * useful for raw audio where usually there are more than
