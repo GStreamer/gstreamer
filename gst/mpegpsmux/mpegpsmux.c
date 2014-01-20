@@ -452,6 +452,7 @@ mpegpsmux_choose_best_stream (MpegPsMux * mux)
 
         buf = mpegpsmux_queue_buffer_for_stream (mux, ps_data);
         if (buf == NULL) {
+          GST_DEBUG_OBJECT (mux, "we have EOS");
           ps_data->eos = TRUE;
           continue;
         }
@@ -578,10 +579,12 @@ mpegpsmux_collected (GstCollectPads * pads, MpegPsMux * mux)
     if (mux->gop_list != NULL)
       mpegpsmux_push_gop_list (mux);
 
-    if (psmux_write_end_code (mux->psmux)) {
+    if (!psmux_write_end_code (mux->psmux)) {
       GST_WARNING_OBJECT (mux, "Writing MPEG PS Program end code failed.");
     }
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
+
+    ret = GST_FLOW_EOS;
   }
 
 done:
