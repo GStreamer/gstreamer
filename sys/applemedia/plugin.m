@@ -30,9 +30,11 @@
 #ifdef HAVE_AVFOUNDATION
 #include "avfvideosrc.h"
 #endif
+#ifndef HAVE_IOS
 #include "vth264decbin.h"
 #include "vth264encbin.h"
 #include "vtdec.h"
+#endif
 #include "atdec.h"
 
 #ifndef HAVE_IOS
