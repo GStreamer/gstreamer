@@ -1749,12 +1749,14 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
     READ_UE_ALLOWED (&nr, vps->num_hrd_parameters, 0, 1024);
     CHECK_ALLOWED (vps->num_hrd_parameters, 0, 1);
 
-    READ_UE_ALLOWED (&nr, vps->hrd_layer_set_idx, 0, 1023);
-    CHECK_ALLOWED (vps->hrd_layer_set_idx, 0, 0);
+    if (vps->num_hrd_parameters) {
+      READ_UE_ALLOWED (&nr, vps->hrd_layer_set_idx, 0, 1023);
+      CHECK_ALLOWED (vps->hrd_layer_set_idx, 0, 0);
 
-    if (!gst_h265_parse_hrd_parameters (&vps->hrd_params, &nr,
-            vps->cprms_present_flag, vps->max_sub_layers_minus1))
-      goto error;
+      if (!gst_h265_parse_hrd_parameters (&vps->hrd_params, &nr,
+              vps->cprms_present_flag, vps->max_sub_layers_minus1))
+        goto error;
+    }
   }
   READ_UINT8 (&nr, vps->vps_extension, 1);
   vps->valid = TRUE;
