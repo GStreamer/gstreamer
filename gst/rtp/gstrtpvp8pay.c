@@ -483,6 +483,8 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
           ++self->picture_id >= 0x8000))
     self->picture_id = 0;
 
+  gst_buffer_unref (buffer);
+
   return ret;
 }
 
