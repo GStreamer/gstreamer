@@ -296,7 +296,11 @@ parse_deinterlace(const gchar *str, GstVaapiDeinterlaceMethod *deinterlace_ptr)
 {
     g_return_val_if_fail(deinterlace_ptr != NULL, FALSE);
 
-    return str && parse_enum(str, GST_VAAPI_TYPE_DEINTERLACE_METHOD,
+    if (!str) {
+        *deinterlace_ptr = GST_VAAPI_DEINTERLACE_METHOD_NONE;
+        return TRUE;
+    }
+    return parse_enum(str, GST_VAAPI_TYPE_DEINTERLACE_METHOD,
         GST_VAAPI_DEINTERLACE_METHOD_NONE, (gint *)deinterlace_ptr);
 }
 
