@@ -77,13 +77,13 @@
 #define EXPORT G_GNUC_INTERNAL
 
 #ifdef _USE_SSE
-#ifndef HAVE_XMMINTRIN_H
+#if !defined(__SSE__) || !defined(HAVE_XMMINTRIN_H)
 #undef _USE_SSE
 #endif
 #endif
 
 #ifdef _USE_SSE2
-#ifndef HAVE_EMMINTRIN_H
+#if !defined(__SSE2__) || !defined(HAVE_XMMINTRIN_H)
 #undef _USE_SSE2
 #endif
 #endif
