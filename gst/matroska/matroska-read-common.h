@@ -144,6 +144,11 @@ GstFlowReturn gst_matroska_read_common_read_track_encodings (
     GstMatroskaTrackContext * context);
 void gst_matroska_read_common_reset_streams (GstMatroskaReadCommon * common,
     GstClockTime time, gboolean full);
+void gst_matroska_read_common_free_parsed_el (gpointer mem, gpointer user_data);
+void gst_matroska_read_common_init (GstMatroskaReadCommon * ctx);
+void gst_matroska_read_common_finalize (GstMatroskaReadCommon * ctx);
+void gst_matroska_read_common_reset (GstElement * element,
+    GstMatroskaReadCommon * ctx);
 gboolean gst_matroska_read_common_tracknumber_unique (GstMatroskaReadCommon *
     common, guint64 num);
 

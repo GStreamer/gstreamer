@@ -44,6 +44,7 @@
 
 #include "ebml-read.h"
 #include "matroska-read-common.h"
+#include "matroska-ids.h"
 
 GST_DEBUG_CATEGORY (matroskareadcommon_debug);
 #define GST_CAT_DEFAULT matroskareadcommon_debug
@@ -2821,6 +2822,123 @@ gst_matroska_read_common_read_track_encodings (GstMatroskaReadCommon * common,
       (GCompareFunc) gst_matroska_read_common_encoding_cmp);
 
   return gst_matroska_decode_content_encodings (context->encodings);
+}
+
+void
+gst_matroska_read_common_free_parsed_el (gpointer mem, gpointer user_data)
+{
+  g_slice_free (guint64, mem);
+}
+
+void
+gst_matroska_read_common_init (GstMatroskaReadCommon * ctx)
+{
+  ctx->src = NULL;
+  ctx->writing_app = NULL;
+  ctx->muxing_app = NULL;
+  ctx->index = NULL;
+  ctx->global_tags = NULL;
+  ctx->adapter = gst_adapter_new ();
+}
+
+void
+gst_matroska_read_common_finalize (GstMatroskaReadCommon * ctx)
+{
+  if (ctx->src) {
+    g_ptr_array_free (ctx->src, TRUE);
+    ctx->src = NULL;
+  }
+
+  if (ctx->global_tags) {
+    gst_tag_list_unref (ctx->global_tags);
+    ctx->global_tags = NULL;
+  }
+
+  g_object_unref (ctx->adapter);
+}
+
+void
+gst_matroska_read_common_reset (GstElement * element,
+    GstMatroskaReadCommon * ctx)
+{
+  guint i;
+
+  GST_LOG_OBJECT (ctx, "resetting read context");
+
+  /* reset input */
+  ctx->state = GST_MATROSKA_READ_STATE_START;
+
+  /* clean up existing streams if any */
+  if (ctx->src) {
+    g_assert (ctx->src->len == ctx->num_streams);
+    for (i = 0; i < ctx->src->len; i++) {
+      GstMatroskaTrackContext *context = g_ptr_array_index (ctx->src, i);
+
+      if (context->pad != NULL)
+        gst_element_remove_pad (element, context->pad);
+
+      gst_caps_replace (&context->caps, NULL);
+      gst_matroska_track_free (context);
+    }
+    g_ptr_array_free (ctx->src, TRUE);
+  }
+  ctx->src = g_ptr_array_new ();
+  ctx->num_streams = 0;
+
+  /* reset media info */
+  g_free (ctx->writing_app);
+  ctx->writing_app = NULL;
+  g_free (ctx->muxing_app);
+  ctx->muxing_app = NULL;
+
+  /* reset stream type */
+  ctx->is_webm = FALSE;
+  ctx->has_video = FALSE;
+
+  /* reset indexes */
+  if (ctx->index) {
+    g_array_free (ctx->index, TRUE);
+    ctx->index = NULL;
+  }
+
+  /* reset timers */
+  ctx->time_scale = 1000000;
+  ctx->created = G_MININT64;
+
+  /* cues/tracks/segmentinfo */
+  ctx->index_parsed = FALSE;
+  ctx->segmentinfo_parsed = FALSE;
+  ctx->attachments_parsed = FALSE;
+  ctx->chapters_parsed = FALSE;
+
+  /* tags */
+  g_list_foreach (ctx->tags_parsed,
+      (GFunc) gst_matroska_read_common_free_parsed_el, NULL);
+  g_list_free (ctx->tags_parsed);
+  ctx->tags_parsed = NULL;
+  if (ctx->global_tags) {
+    gst_tag_list_unref (ctx->global_tags);
+  }
+  ctx->global_tags = gst_tag_list_new_empty ();
+  gst_tag_list_set_scope (ctx->global_tags, GST_TAG_SCOPE_GLOBAL);
+
+  gst_segment_init (&ctx->segment, GST_FORMAT_TIME);
+  ctx->offset = 0;
+
+  if (ctx->cached_buffer) {
+    if (ctx->cached_data) {
+      gst_buffer_unmap (ctx->cached_buffer, &ctx->cached_map);
+      ctx->cached_data = NULL;
+    }
+    gst_buffer_unref (ctx->cached_buffer);
+    ctx->cached_buffer = NULL;
+  }
+
+  /* free chapters TOC if any */
+  if (ctx->toc) {
+    gst_toc_unref (ctx->toc);
+    ctx->toc = NULL;
+  }
 }
 
 /* call with object lock held */

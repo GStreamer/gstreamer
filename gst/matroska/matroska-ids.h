@@ -642,5 +642,6 @@ GstBufferList * gst_matroska_parse_speex_stream_headers (gpointer codec_data,
 
 GstBufferList * gst_matroska_parse_flac_stream_headers  (gpointer codec_data,
                                                          gsize codec_data_size);
+void gst_matroska_track_free (GstMatroskaTrackContext * track);
 
 #endif /* __GST_MATROSKA_IDS_H__ */

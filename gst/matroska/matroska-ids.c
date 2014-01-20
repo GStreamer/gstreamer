@@ -266,3 +266,38 @@ gst_matroska_parse_flac_stream_headers (gpointer codec_data,
   }
   return list;
 }
+
+void
+gst_matroska_track_free (GstMatroskaTrackContext * track)
+{
+  g_free (track->codec_id);
+  g_free (track->codec_name);
+  g_free (track->name);
+  g_free (track->language);
+  g_free (track->codec_priv);
+  g_free (track->codec_state);
+
+  if (track->encodings != NULL) {
+    int i;
+
+    for (i = 0; i < track->encodings->len; ++i) {
+      GstMatroskaTrackEncoding *enc = &g_array_index (track->encodings,
+          GstMatroskaTrackEncoding,
+          i);
+
+      g_free (enc->comp_settings);
+    }
+    g_array_free (track->encodings, TRUE);
+  }
+
+  if (track->pending_tags)
+    gst_tag_list_unref (track->pending_tags);
+
+  if (track->index_table)
+    g_array_free (track->index_table, TRUE);
+
+  if (track->stream_headers)
+    gst_buffer_list_unref (track->stream_headers);
+
+  g_free (track);
+}

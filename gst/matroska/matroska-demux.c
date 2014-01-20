@@ -189,18 +189,7 @@ gst_matroska_demux_finalize (GObject * object)
 {
   GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (object);
 
-  if (demux->common.src) {
-    g_ptr_array_free (demux->common.src, TRUE);
-    demux->common.src = NULL;
-  }
-
-  if (demux->common.global_tags) {
-    gst_tag_list_unref (demux->common.global_tags);
-    demux->common.global_tags = NULL;
-  }
-
-  g_object_unref (demux->common.adapter);
-
+  gst_matroska_read_common_finalize (&demux->common);
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -267,15 +256,8 @@ gst_matroska_demux_init (GstMatroskaDemux * demux)
       GST_DEBUG_FUNCPTR (gst_matroska_demux_handle_sink_event));
   gst_element_add_pad (GST_ELEMENT (demux), demux->common.sinkpad);
 
-  /* initial stream no. */
-  demux->common.src = NULL;
-
-  demux->common.writing_app = NULL;
-  demux->common.muxing_app = NULL;
-  demux->common.index = NULL;
-  demux->common.global_tags = NULL;
-
-  demux->common.adapter = gst_adapter_new ();
+  /* init defaults for common read context */
+  gst_matroska_read_common_init (&demux->common);
 
   /* property defaults */
   demux->max_gap_time = DEFAULT_MAX_GAP_TIME;
@@ -284,41 +266,6 @@ gst_matroska_demux_init (GstMatroskaDemux * demux)
 
   /* finish off */
   gst_matroska_demux_reset (GST_ELEMENT (demux));
-}
-
-static void
-gst_matroska_track_free (GstMatroskaTrackContext * track)
-{
-  g_free (track->codec_id);
-  g_free (track->codec_name);
-  g_free (track->name);
-  g_free (track->language);
-  g_free (track->codec_priv);
-  g_free (track->codec_state);
-
-  if (track->encodings != NULL) {
-    int i;
-
-    for (i = 0; i < track->encodings->len; ++i) {
-      GstMatroskaTrackEncoding *enc = &g_array_index (track->encodings,
-          GstMatroskaTrackEncoding,
-          i);
-
-      g_free (enc->comp_settings);
-    }
-    g_array_free (track->encodings, TRUE);
-  }
-
-  if (track->pending_tags)
-    gst_tag_list_unref (track->pending_tags);
-
-  if (track->index_table)
-    g_array_free (track->index_table, TRUE);
-
-  if (track->stream_headers)
-    gst_buffer_list_unref (track->stream_headers);
-
-  g_free (track);
 }
 
 /*
@@ -360,40 +307,14 @@ done:
 }
 
 static void
-gst_matroska_demux_free_parsed_el (gpointer mem, gpointer user_data)
-{
-  g_slice_free (guint64, mem);
-}
-
-static void
 gst_matroska_demux_reset (GstElement * element)
 {
   GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
-  guint i;
 
   GST_DEBUG_OBJECT (demux, "Resetting state");
 
-  /* reset input */
-  demux->common.state = GST_MATROSKA_READ_STATE_START;
+  gst_matroska_read_common_reset (GST_ELEMENT (demux), &demux->common);
 
-  /* clean up existing streams */
-  if (demux->common.src) {
-    g_assert (demux->common.src->len == demux->common.num_streams);
-    for (i = 0; i < demux->common.src->len; i++) {
-      GstMatroskaTrackContext *context = g_ptr_array_index (demux->common.src,
-          i);
-
-      if (context->pad != NULL)
-        gst_element_remove_pad (GST_ELEMENT (demux), context->pad);
-
-      gst_caps_replace (&context->caps, NULL);
-      gst_matroska_track_free (context);
-    }
-    g_ptr_array_free (demux->common.src, TRUE);
-  }
-  demux->common.src = g_ptr_array_new ();
-
-  demux->common.num_streams = 0;
   demux->num_a_streams = 0;
   demux->num_t_streams = 0;
   demux->num_v_streams = 0;
@@ -401,55 +322,23 @@ gst_matroska_demux_reset (GstElement * element)
   demux->have_group_id = FALSE;
   demux->group_id = G_MAXUINT;
 
-  /* reset media info */
-  g_free (demux->common.writing_app);
-  demux->common.writing_app = NULL;
-  g_free (demux->common.muxing_app);
-  demux->common.muxing_app = NULL;
-
-  /* reset stream type */
-  demux->common.is_webm = FALSE;
-  demux->common.has_video = FALSE;
-
-  /* reset indexes */
-  if (demux->common.index) {
-    g_array_free (demux->common.index, TRUE);
-    demux->common.index = NULL;
-  }
+  demux->clock = NULL;
+  demux->tracks_parsed = FALSE;
 
   if (demux->clusters) {
     g_array_free (demux->clusters, TRUE);
     demux->clusters = NULL;
   }
 
-  /* reset timers */
-  demux->clock = NULL;
-  demux->common.time_scale = 1000000;
-  demux->common.created = G_MININT64;
-
-  demux->common.index_parsed = FALSE;
-  demux->tracks_parsed = FALSE;
-  demux->common.segmentinfo_parsed = FALSE;
-  demux->common.attachments_parsed = FALSE;
-  demux->common.chapters_parsed = FALSE;
-
-  g_list_foreach (demux->common.tags_parsed,
-      (GFunc) gst_matroska_demux_free_parsed_el, NULL);
-  g_list_free (demux->common.tags_parsed);
-  demux->common.tags_parsed = NULL;
-
   g_list_foreach (demux->seek_parsed,
-      (GFunc) gst_matroska_demux_free_parsed_el, NULL);
+      (GFunc) gst_matroska_read_common_free_parsed_el, NULL);
   g_list_free (demux->seek_parsed);
   demux->seek_parsed = NULL;
 
-  gst_segment_init (&demux->common.segment, GST_FORMAT_TIME);
   demux->last_stop_end = GST_CLOCK_TIME_NONE;
   demux->seek_block = 0;
   demux->stream_start_time = GST_CLOCK_TIME_NONE;
   demux->to_time = GST_CLOCK_TIME_NONE;
-
-  demux->common.offset = 0;
   demux->cluster_time = GST_CLOCK_TIME_NONE;
   demux->cluster_offset = 0;
   demux->next_cluster_offset = 0;
@@ -471,34 +360,6 @@ gst_matroska_demux_reset (GstElement * element)
   if (demux->new_segment) {
     gst_event_unref (demux->new_segment);
     demux->new_segment = NULL;
-  }
-#if 0
-  if (demux->common.element_index) {
-    gst_object_unref (demux->common.element_index);
-    demux->common.element_index = NULL;
-  }
-  demux->common.element_index_writer_id = -1;
-#endif
-
-  if (demux->common.global_tags) {
-    gst_tag_list_unref (demux->common.global_tags);
-  }
-  demux->common.global_tags = gst_tag_list_new_empty ();
-  gst_tag_list_set_scope (demux->common.global_tags, GST_TAG_SCOPE_GLOBAL);
-
-  if (demux->common.cached_buffer) {
-    if (demux->common.cached_data) {
-      gst_buffer_unmap (demux->common.cached_buffer, &demux->common.cached_map);
-      demux->common.cached_data = NULL;
-    }
-    gst_buffer_unref (demux->common.cached_buffer);
-    demux->common.cached_buffer = NULL;
-  }
-
-  /* free chapters TOC if any */
-  if (demux->common.toc) {
-    gst_toc_unref (demux->common.toc);
-    demux->common.toc = NULL;
   }
 
   demux->invalid_duration = FALSE;
