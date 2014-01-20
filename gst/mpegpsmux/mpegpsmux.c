@@ -456,21 +456,14 @@ mpegpsmux_choose_best_stream (MpegPsMux * mux)
           ps_data->eos = TRUE;
           continue;
         }
-
-        /* Choose a stream we've never seen a timestamp for to ensure
-         * we push enough buffers from it to reach a timestamp */
-        if (ps_data->last_ts == GST_CLOCK_TIME_NONE) {
-          best = ps_data;
-          c_best = c_data;
-        }
       }
 
       /* If we don't yet have a best pad, take this one, otherwise take
        * whichever has the oldest timestamp */
       if (best != NULL) {
-        if (ps_data->last_ts != GST_CLOCK_TIME_NONE &&
-            best->last_ts != GST_CLOCK_TIME_NONE &&
-            ps_data->last_ts < best->last_ts) {
+        if (ps_data->last_ts == GST_CLOCK_TIME_NONE ||
+            (best->last_ts != GST_CLOCK_TIME_NONE &&
+                ps_data->last_ts < best->last_ts)) {
           best = ps_data;
           c_best = c_data;
         }
