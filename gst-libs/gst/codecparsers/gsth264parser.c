@@ -1298,7 +1298,10 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
     return GST_H264_PARSER_NO_NAL_END;
   }
 
-  if (off2 > 0 && data[nalu->offset + off2 - 1] == 00)
+  /* Mini performance improvement:
+   * We could have a way to store how many 0s were skipped to avoid
+   * parsing them again on the next NAL */
+  while (off2 > 0 && data[nalu->offset + off2 - 1] == 00)
     off2--;
 
   nalu->size = off2;
