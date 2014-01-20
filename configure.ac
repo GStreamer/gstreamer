@@ -274,6 +274,8 @@ AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_X11, test "x$HAVE_GTK_X11" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_QUARTZ, test "x$HAVE_GTK_QUARTZ" = "xyes")
 
+HAVE_QT=no
+HAVE_QT_MOC=no
 dnl QT is optional and only used in examples
 PKG_CHECK_MODULES(QT, Qt5Gui Qt5Widgets, [
   HAVE_QT=yes
