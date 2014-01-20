@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 {
   gst_init (&argc, &argv);
   QApplication app(argc, argv);
-  app.connect(&app, SIGNAL(lastWindowClosed()), &app, SLOT(quit ()));
+  app.setQuitOnLastWindowClosed(true);
 
   /* prepare the pipeline */
 

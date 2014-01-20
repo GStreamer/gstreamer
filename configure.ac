@@ -275,21 +275,44 @@ AM_CONDITIONAL(HAVE_GTK_X11, test "x$HAVE_GTK_X11" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_QUARTZ, test "x$HAVE_GTK_QUARTZ" = "xyes")
 
 dnl QT is optional and only used in examples
-PKG_CHECK_MODULES(QT, QtGui >= 4.6, [
-  HAVE_QT_GV=yes
+PKG_CHECK_MODULES(QT, Qt5Gui Qt5Widgets, [
   HAVE_QT=yes
 ], [
-  HAVE_QT_GV=no
-  PKG_CHECK_MODULES(QT, QtGui >= 4.0, HAVE_QT=yes, HAVE_QT=no)
+  HAVE_QT=no
 ])
 if test "x$HAVE_QT" = "xyes"; then
-  AC_MSG_CHECKING([Qt moc])
-  QT4_MOC=`$PKG_CONFIG --variable=moc_location QtGui`
-  AC_MSG_RESULT($QT4_MOC)
-  AC_SUBST(QT4_MOC)
+  AC_CHECK_TOOL(QT_MOC, moc)
+  AC_MSG_CHECKING([for Qt5 moc])
+  mocversion=`$QT_MOC -v 2>&1`
+  mocversiongrep=`echo $mocversion | grep "Qt 5\|moc 5"`
+  if test x"$mocversiongrep" != x"$mocversion"; then
+    AC_MSG_RESULT([no])
+    # moc was not the qt5 one, try with moc-qt5
+    AC_CHECK_TOOL(QT_MOC, moc-qt5)
+    AC_MSG_CHECKING([for Qt5 moc-qt5])
+    mocversion=`$QT_MOC -v 2>&1`
+    mocversiongrep=`echo $mocversion | grep "Qt 5\|moc 5"`
+    if test x"$mocversiongrep" != x"$mocversion"; then
+      AC_CHECK_TOOL(QTCHOOSER, qtchooser)
+      AC_MSG_CHECKING([for qtchooser])
+      qt5tooldir=`QT_SELECT=qt5 qtchooser -print-env | grep QTTOOLDIR | cut -d '=' -f 2 | cut -d \" -f 2`
+      mocversion=`$qt5tooldir/moc -v 2>&1`
+      mocversiongrep=`echo $mocversion | grep "Qt 5\|moc 5"`
+      if test x"$mocversiongrep" != x"$mocversion"; then
+        # no valid moc found
+        QT_MOC="no"
+      else
+        QT_MOC=$qt5tooldir/moc
+      fi
+    else
+      QT_MOC=$QT_MOC
+    fi
+  fi
+  AC_SUBST(QT_MOC)
+  AC_MSG_RESULT([$QT_MOC])
 fi
 AM_CONDITIONAL(HAVE_QT, test "x$HAVE_QT" = "xyes")
-AM_CONDITIONAL(HAVE_QT_GV, test "x$HAVE_QT_GV" = "xyes")
+AM_CONDITIONAL(HAVE_QT_MOC, test "x$HAVE_QT_MOC" != "xno")
 
 dnl chck for linux headers needed by the joystick seek example
 AC_COMPILE_IFELSE(
