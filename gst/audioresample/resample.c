@@ -83,7 +83,7 @@
 #endif
 
 #ifdef _USE_SSE2
-#if !defined(__SSE2__) || !defined(HAVE_XMMINTRIN_H)
+#if !defined(__SSE2__) || !defined(HAVE_EMMINTRIN_H)
 #undef _USE_SSE2
 #endif
 #endif
