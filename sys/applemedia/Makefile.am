@@ -89,9 +89,7 @@ else
 libgstapplemedia_la_SOURCES +=			\
 	qtkitvideosrc.m				\
 	vtenc.c 				\
-	vtdec.c                                 \
-	vth264decbin.c				\
-	vth264encbin.c
+	vtdec.c
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,Cocoa		\
