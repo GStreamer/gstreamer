@@ -103,8 +103,15 @@ static const gchar *test_lines[] = {
   "fakesrc !   video/raw,  format=(string)YUY2; video/raw, format=(string)YV12 ! fakesink silent=true",
   "fakesrc ! audio/x-raw, width=[16,  32], depth={16, 24, 32}, signed=TRUE ! fakesink silent=true",
   "fakesrc ! identity silent=true ! identity silent=true ! identity silent=true ! fakesink silent=true",
-  "fakesrc name=100 fakesink name=101 silent=true 100. ! 101.",
-  "fakesrc ! 1dentity ! fakesink silent=true",
+  "fakesrc name=100 fakesink name=101 silent=true 100. ! 101.", /* linking with named reference on both sides */
+  "fakesrc ! 1__dentity ! fakesink silent=true",        /* using a freshly registered element type */
+  "fakesrc ! tee name=t  t.src_12 ! queue ! fakesink  t.src_3 ! queue ! fakesink",
+  "fakesrc name=foo name=fin  fin. ! fakesink", /* testing assignments are executed in correct order (left-to-right) */
+  "( fakesrc ) ! fakesink",     /* ghostPad creation on-the-fly, infix notation link */
+  "( fakesrc name=dasrc ) dasrc. ! fakesink",   /* ghostPad creation on-the-fly, named link */
+/*  "(name=mabin fakesrc) mabin. ! fakesink", FIXME: linking to named bin does not work yet */
+/*  "(name=mabin name=yoyo fakesrc) yoyo. ! fakesink", FIXME: linking to named bin does not work yet  */
+  "deepsrc. ! fakesink fakesrc  ! ( identity ! ( identity ! (  identity name=deepsrc ) ) )",    /* deep name resolution, multilevel ghostpad creation */
   NULL
 };
 
@@ -123,7 +130,7 @@ GST_START_TEST (test_launch_lines)
   type = gst_element_factory_get_element_type (efac);
   fail_unless (type != 0);
   g_object_unref (efac);
-  fail_unless (gst_element_register (NULL, "1dentity", GST_RANK_NONE, type));
+  fail_unless (gst_element_register (NULL, "1__dentity", GST_RANK_NONE, type));
 
   for (s = test_lines; *s != NULL; s++) {
     pipeline = setup_pipeline (*s);
@@ -338,7 +345,30 @@ static const gchar *expected_failures[] = {
   /* bin linking with the ! inside the bin and no ! outside */
   "( fakesrc num-buffers=\"4\" ! ) identity silent=true ! fakesink silent=true",
   /* bins with linking without ! */
+  /* FIXME: one element leaks as reported by valgrind */
   "pipeline.(name=\"john\" fakesrc num-buffers=4 ( bin. ( ! queue ! identity silent=true !( queue ! fakesink silent=true )) ))",
+  /* non-existent bin-type containing already created elements */
+  "coffeebin.( fakesrc ! identity ! fakesink )",
+  /* non-existent bin-type in pipeline */
+  "fakesrc ! coffeebin.( identity ) ! fakesink",
+  /* unexpected pad references Part I */
+  "fakesrc ! .ch0 .ch1 fakesink",
+  /* unexpected pad references Part II */
+  "fakesrc .ch0 .ch1 !  fakesink",
+  /* unexpected pad references Part III */
+  "(fakesrc .ch1) !  fakesink",
+  /* unexpected full reference, I */
+  "(fakesrc name=s  s.ch1) !  fakesink",
+  /* unexpected full reference, II */
+  "s.ch1 fakesrc ! fakesink",
+  /* unexpected full reference, III */
+  "fakesrc ! fakesink s.ch1",
+  /* unlinked src/sink URI */
+  "http://eff.org fakesrc ! fakesink",
+  /* catch assignments evaluated in wrong order */
+  "fakesrc name=ss name=st  ss. ! fakesink",
+  /* unbalanced brackets */
+  "(", ")", ")  (",
   /* END: */
   NULL
 };
