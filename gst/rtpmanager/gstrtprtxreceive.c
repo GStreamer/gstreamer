@@ -433,6 +433,9 @@ _gst_rtp_buffer_new_from_rtx (GstRTPBuffer * rtp, guint32 ssrc1,
   gst_rtp_buffer_set_payload_type (&new_rtp, origin_payload_type);
   gst_rtp_buffer_unmap (&new_rtp);
 
+  gst_buffer_copy_into (new_buffer, rtp->buffer,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
   return new_buffer;
 }
 
