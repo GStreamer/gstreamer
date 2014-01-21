@@ -124,6 +124,387 @@ h264_get_log2_max_frame_num (guint num)
 }
 
 /* ------------------------------------------------------------------------- */
+/* --- H.264 Bitstream Writer                                            --- */
+/* ------------------------------------------------------------------------- */
+
+#define WRITE_UINT32(bs, val, nbits) do {                       \
+    if (!gst_bit_writer_put_bits_uint32 (bs, val, nbits)) {     \
+      GST_WARNING ("failed to write uint32, nbits: %d", nbits); \
+      goto bs_error;                                            \
+    }                                                           \
+  } while (0)
+
+#define WRITE_UE(bs, val) do {                  \
+    if (!bs_write_ue (bs, val)) {               \
+      GST_WARNING ("failed to write ue(v)");    \
+      goto bs_error;                            \
+    }                                           \
+  } while (0)
+
+#define WRITE_SE(bs, val) do {                  \
+    if (!bs_write_se (bs, val)) {               \
+      GST_WARNING ("failed to write se(v)");    \
+      goto bs_error;                            \
+    }                                           \
+  } while (0)
+
+/* Write an unsigned integer Exp-Golomb-coded syntax element. i.e. ue(v) */
+static gboolean
+bs_write_ue (GstBitWriter * bs, guint32 value)
+{
+  guint32 size_in_bits = 0;
+  guint32 tmp_value = ++value;
+
+  while (tmp_value) {
+    ++size_in_bits;
+    tmp_value >>= 1;
+  }
+  if (size_in_bits > 1
+      && !gst_bit_writer_put_bits_uint32 (bs, 0, size_in_bits - 1))
+    return FALSE;
+  if (!gst_bit_writer_put_bits_uint32 (bs, value, size_in_bits))
+    return FALSE;
+  return TRUE;
+}
+
+/* Write a signed integer Exp-Golomb-coded syntax element. i.e. se(v) */
+static gboolean
+bs_write_se (GstBitWriter * bs, gint32 value)
+{
+  guint32 new_val;
+
+  if (value <= 0)
+    new_val = -(value << 1);
+  else
+    new_val = (value << 1) - 1;
+
+  if (!bs_write_ue (bs, new_val))
+    return FALSE;
+  return TRUE;
+}
+
+/* Write the NAL unit header */
+static gboolean
+bs_write_nal_header (GstBitWriter * bs, guint32 nal_ref_idc,
+    guint32 nal_unit_type)
+{
+  WRITE_UINT32 (bs, 0, 1);
+  WRITE_UINT32 (bs, nal_ref_idc, 2);
+  WRITE_UINT32 (bs, nal_unit_type, 5);
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write NAL unit header");
+    return FALSE;
+  }
+}
+
+/* Write the NAL unit trailing bits */
+static gboolean
+bs_write_trailing_bits (GstBitWriter * bs)
+{
+  if (!gst_bit_writer_put_bits_uint32 (bs, 1, 1))
+    goto bs_error;
+  gst_bit_writer_align_bytes_unchecked (bs, 0);
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write NAL unit trailing bits");
+    return FALSE;
+  }
+}
+
+/* Write an SPS NAL unit */
+static gboolean
+bs_write_sps (GstBitWriter * bs,
+    const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile)
+{
+  guint8 profile_idc;
+  guint32 constraint_set0_flag, constraint_set1_flag;
+  guint32 constraint_set2_flag, constraint_set3_flag;
+  guint32 gaps_in_frame_num_value_allowed_flag = 0;     // ??
+  gboolean nal_hrd_parameters_present_flag;
+
+  guint32 b_qpprime_y_zero_transform_bypass = 0;
+  guint32 residual_color_transform_flag = 0;
+  guint32 pic_height_in_map_units =
+      (seq_param->seq_fields.bits.frame_mbs_only_flag ?
+      seq_param->picture_height_in_mbs : seq_param->picture_height_in_mbs / 2);
+  guint32 mb_adaptive_frame_field =
+      !seq_param->seq_fields.bits.frame_mbs_only_flag;
+  guint32 i = 0;
+
+  profile_idc = gst_vaapi_utils_h264_get_profile_idc (profile);
+  constraint_set0_flag =        /* A.2.1 (baseline profile constraints) */
+      profile == GST_VAAPI_PROFILE_H264_BASELINE ||
+      profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
+  constraint_set1_flag =        /* A.2.2 (main profile constraints) */
+      profile == GST_VAAPI_PROFILE_H264_MAIN ||
+      profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
+  constraint_set2_flag = 0;
+  constraint_set3_flag = 0;
+
+  /* profile_idc */
+  WRITE_UINT32 (bs, profile_idc, 8);
+  /* constraint_set0_flag */
+  WRITE_UINT32 (bs, constraint_set0_flag, 1);
+  /* constraint_set1_flag */
+  WRITE_UINT32 (bs, constraint_set1_flag, 1);
+  /* constraint_set2_flag */
+  WRITE_UINT32 (bs, constraint_set2_flag, 1);
+  /* constraint_set3_flag */
+  WRITE_UINT32 (bs, constraint_set3_flag, 1);
+  /* reserved_zero_4bits */
+  WRITE_UINT32 (bs, 0, 4);
+  /* level_idc */
+  WRITE_UINT32 (bs, seq_param->level_idc, 8);
+  /* seq_parameter_set_id */
+  WRITE_UE (bs, seq_param->seq_parameter_set_id);
+
+  if (profile == GST_VAAPI_PROFILE_H264_HIGH) {
+    /* for high profile */
+    /* chroma_format_idc  = 1, 4:2:0 */
+    WRITE_UE (bs, seq_param->seq_fields.bits.chroma_format_idc);
+    if (3 == seq_param->seq_fields.bits.chroma_format_idc) {
+      WRITE_UINT32 (bs, residual_color_transform_flag, 1);
+    }
+    /* bit_depth_luma_minus8 */
+    WRITE_UE (bs, seq_param->bit_depth_luma_minus8);
+    /* bit_depth_chroma_minus8 */
+    WRITE_UE (bs, seq_param->bit_depth_chroma_minus8);
+    /* b_qpprime_y_zero_transform_bypass */
+    WRITE_UINT32 (bs, b_qpprime_y_zero_transform_bypass, 1);
+    g_assert (seq_param->seq_fields.bits.seq_scaling_matrix_present_flag == 0);
+    /* seq_scaling_matrix_present_flag  */
+    WRITE_UINT32 (bs,
+        seq_param->seq_fields.bits.seq_scaling_matrix_present_flag, 1);
+
+#if 0
+    if (seq_param->seq_fields.bits.seq_scaling_matrix_present_flag) {
+      for (i = 0;
+          i < (seq_param->seq_fields.bits.chroma_format_idc != 3 ? 8 : 12);
+          i++) {
+        gst_bit_writer_put_bits_uint8 (bs,
+            seq_param->seq_fields.bits.seq_scaling_list_present_flag, 1);
+        if (seq_param->seq_fields.bits.seq_scaling_list_present_flag) {
+          g_assert (0);
+          /* FIXME, need write scaling list if seq_scaling_matrix_present_flag ==1 */
+        }
+      }
+    }
+#endif
+  }
+
+  /* log2_max_frame_num_minus4 */
+  WRITE_UE (bs, seq_param->seq_fields.bits.log2_max_frame_num_minus4);
+  /* pic_order_cnt_type */
+  WRITE_UE (bs, seq_param->seq_fields.bits.pic_order_cnt_type);
+
+  if (seq_param->seq_fields.bits.pic_order_cnt_type == 0) {
+    /* log2_max_pic_order_cnt_lsb_minus4 */
+    WRITE_UE (bs, seq_param->seq_fields.bits.log2_max_pic_order_cnt_lsb_minus4);
+  } else if (seq_param->seq_fields.bits.pic_order_cnt_type == 1) {
+    g_assert (0);
+    WRITE_UINT32 (bs,
+        seq_param->seq_fields.bits.delta_pic_order_always_zero_flag, 1);
+    WRITE_SE (bs, seq_param->offset_for_non_ref_pic);
+    WRITE_SE (bs, seq_param->offset_for_top_to_bottom_field);
+    WRITE_UE (bs, seq_param->num_ref_frames_in_pic_order_cnt_cycle);
+    for (i = 0; i < seq_param->num_ref_frames_in_pic_order_cnt_cycle; i++) {
+      WRITE_SE (bs, seq_param->offset_for_ref_frame[i]);
+    }
+  }
+
+  /* num_ref_frames */
+  WRITE_UE (bs, seq_param->max_num_ref_frames);
+  /* gaps_in_frame_num_value_allowed_flag */
+  WRITE_UINT32 (bs, gaps_in_frame_num_value_allowed_flag, 1);
+
+  /* pic_width_in_mbs_minus1 */
+  WRITE_UE (bs, seq_param->picture_width_in_mbs - 1);
+  /* pic_height_in_map_units_minus1 */
+  WRITE_UE (bs, pic_height_in_map_units - 1);
+  /* frame_mbs_only_flag */
+  WRITE_UINT32 (bs, seq_param->seq_fields.bits.frame_mbs_only_flag, 1);
+
+  if (!seq_param->seq_fields.bits.frame_mbs_only_flag) {        //ONLY mbs
+    g_assert (0);
+    WRITE_UINT32 (bs, mb_adaptive_frame_field, 1);
+  }
+
+  /* direct_8x8_inference_flag */
+  WRITE_UINT32 (bs, 0, 1);
+  /* frame_cropping_flag */
+  WRITE_UINT32 (bs, seq_param->frame_cropping_flag, 1);
+
+  if (seq_param->frame_cropping_flag) {
+    /* frame_crop_left_offset */
+    WRITE_UE (bs, seq_param->frame_crop_left_offset);
+    /* frame_crop_right_offset */
+    WRITE_UE (bs, seq_param->frame_crop_right_offset);
+    /* frame_crop_top_offset */
+    WRITE_UE (bs, seq_param->frame_crop_top_offset);
+    /* frame_crop_bottom_offset */
+    WRITE_UE (bs, seq_param->frame_crop_bottom_offset);
+  }
+
+  /* vui_parameters_present_flag */
+  WRITE_UINT32 (bs, seq_param->vui_parameters_present_flag, 1);
+  if (seq_param->vui_parameters_present_flag) {
+    /* aspect_ratio_info_present_flag */
+    WRITE_UINT32 (bs,
+        seq_param->vui_fields.bits.aspect_ratio_info_present_flag, 1);
+    if (seq_param->vui_fields.bits.aspect_ratio_info_present_flag) {
+      WRITE_UINT32 (bs, seq_param->aspect_ratio_idc, 8);
+      if (seq_param->aspect_ratio_idc == 0xFF) {
+        WRITE_UINT32 (bs, seq_param->sar_width, 16);
+        WRITE_UINT32 (bs, seq_param->sar_height, 16);
+      }
+    }
+
+    /* overscan_info_present_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* video_signal_type_present_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* chroma_loc_info_present_flag */
+    WRITE_UINT32 (bs, 0, 1);
+
+    /* timing_info_present_flag */
+    WRITE_UINT32 (bs, seq_param->vui_fields.bits.timing_info_present_flag, 1);
+    if (seq_param->vui_fields.bits.timing_info_present_flag) {
+      WRITE_UINT32 (bs, seq_param->num_units_in_tick, 32);
+      WRITE_UINT32 (bs, seq_param->time_scale, 32);
+      WRITE_UINT32 (bs, 1, 1);  /* fixed_frame_rate_flag */
+    }
+
+    nal_hrd_parameters_present_flag =
+        (seq_param->bits_per_second > 0 ? TRUE : FALSE);
+    /* nal_hrd_parameters_present_flag */
+    WRITE_UINT32 (bs, nal_hrd_parameters_present_flag, 1);
+    if (nal_hrd_parameters_present_flag) {
+      /* hrd_parameters */
+      /* cpb_cnt_minus1 */
+      WRITE_UE (bs, 0);
+      WRITE_UINT32 (bs, 4, 4);  /* bit_rate_scale */
+      WRITE_UINT32 (bs, 6, 4);  /* cpb_size_scale */
+
+      for (i = 0; i < 1; ++i) {
+        /* bit_rate_value_minus1[0] */
+        WRITE_UE (bs, seq_param->bits_per_second / 1000 - 1);
+        /* cpb_size_value_minus1[0] */
+        WRITE_UE (bs, seq_param->bits_per_second / 1000 * 8 - 1);
+        /* cbr_flag[0] */
+        WRITE_UINT32 (bs, 1, 1);
+      }
+      /* initial_cpb_removal_delay_length_minus1 */
+      WRITE_UINT32 (bs, 23, 5);
+      /* cpb_removal_delay_length_minus1 */
+      WRITE_UINT32 (bs, 23, 5);
+      /* dpb_output_delay_length_minus1 */
+      WRITE_UINT32 (bs, 23, 5);
+      /* time_offset_length  */
+      WRITE_UINT32 (bs, 23, 5);
+    }
+    /* vcl_hrd_parameters_present_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    if (nal_hrd_parameters_present_flag
+        || 0 /*vcl_hrd_parameters_present_flag */ ) {
+      /* low_delay_hrd_flag */
+      WRITE_UINT32 (bs, 0, 1);
+    }
+    /* pic_struct_present_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* bs_restriction_flag */
+    WRITE_UINT32 (bs, 0, 1);
+  }
+
+  /* rbsp_trailing_bits */
+  bs_write_trailing_bits (bs);
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write SPS NAL unit");
+    return FALSE;
+  }
+}
+
+/* Write a PPS NAL unit */
+static gboolean
+bs_write_pps (GstBitWriter * bs,
+    const VAEncPictureParameterBufferH264 * pic_param, GstVaapiProfile profile)
+{
+  guint32 num_slice_groups_minus1 = 0;
+  guint32 pic_init_qs_minus26 = 0;
+  guint32 redundant_pic_cnt_present_flag = 0;
+
+  /* pic_parameter_set_id */
+  WRITE_UE (bs, pic_param->pic_parameter_set_id);
+  /* seq_parameter_set_id */
+  WRITE_UE (bs, pic_param->seq_parameter_set_id);
+  /* entropy_coding_mode_flag */
+  WRITE_UINT32 (bs, pic_param->pic_fields.bits.entropy_coding_mode_flag, 1);
+  /* pic_order_present_flag */
+  WRITE_UINT32 (bs, pic_param->pic_fields.bits.pic_order_present_flag, 1);
+  /* slice_groups-1 */
+  WRITE_UE (bs, num_slice_groups_minus1);
+
+  if (num_slice_groups_minus1 > 0) {
+     /*FIXME*/ g_assert (0);
+  }
+  WRITE_UE (bs, pic_param->num_ref_idx_l0_active_minus1);
+  WRITE_UE (bs, pic_param->num_ref_idx_l1_active_minus1);
+  WRITE_UINT32 (bs, pic_param->pic_fields.bits.weighted_pred_flag, 1);
+  WRITE_UINT32 (bs, pic_param->pic_fields.bits.weighted_bipred_idc, 2);
+  /* pic_init_qp_minus26 */
+  WRITE_SE (bs, pic_param->pic_init_qp - 26);
+  /* pic_init_qs_minus26 */
+  WRITE_SE (bs, pic_init_qs_minus26);
+  /* chroma_qp_index_offset */
+  WRITE_SE (bs, pic_param->chroma_qp_index_offset);
+
+  WRITE_UINT32 (bs,
+      pic_param->pic_fields.bits.deblocking_filter_control_present_flag, 1);
+  WRITE_UINT32 (bs, pic_param->pic_fields.bits.constrained_intra_pred_flag, 1);
+  WRITE_UINT32 (bs, redundant_pic_cnt_present_flag, 1);
+
+  /* more_rbsp_data */
+  if (profile == GST_VAAPI_PROFILE_H264_HIGH) {
+    WRITE_UINT32 (bs, pic_param->pic_fields.bits.transform_8x8_mode_flag, 1);
+    WRITE_UINT32 (bs,
+        pic_param->pic_fields.bits.pic_scaling_matrix_present_flag, 1);
+    if (pic_param->pic_fields.bits.pic_scaling_matrix_present_flag) {
+      g_assert (0 && "unsupported scaling lists");
+      /* FIXME */
+      /*
+         for (i = 0; i <
+         (6+(-( (chroma_format_idc ! = 3) ? 2 : 6) * -pic_param->pic_fields.bits.transform_8x8_mode_flag));
+         i++) {
+         gst_bit_writer_put_bits_uint8(bs, pic_param->pic_fields.bits.pic_scaling_list_present_flag, 1);
+         }
+       */
+    }
+    WRITE_SE (bs, pic_param->second_chroma_qp_index_offset);
+  }
+
+  /* rbsp_trailing_bits */
+  bs_write_trailing_bits (bs);
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write PPS NAL unit");
+    return FALSE;
+  }
+}
+
+/* ------------------------------------------------------------------------- */
 /* --- H.264 Encoder                                                     --- */
 /* ------------------------------------------------------------------------- */
 
@@ -472,370 +853,25 @@ _set_key_frame (GstVaapiEncPicture * picture,
     _set_i_frame (picture, encoder);
 }
 
-gboolean
-gst_bit_writer_put_ue (GstBitWriter * bitwriter, guint32 value)
-{
-  guint32 size_in_bits = 0;
-  guint32 tmp_value = ++value;
-
-  while (tmp_value) {
-    ++size_in_bits;
-    tmp_value >>= 1;
-  }
-  if (size_in_bits > 1
-      && !gst_bit_writer_put_bits_uint32 (bitwriter, 0, size_in_bits - 1))
-    return FALSE;
-  if (!gst_bit_writer_put_bits_uint32 (bitwriter, value, size_in_bits))
-    return FALSE;
-  return TRUE;
-}
-
-gboolean
-gst_bit_writer_put_se (GstBitWriter * bitwriter, gint32 value)
-{
-  guint32 new_val;
-
-  if (value <= 0)
-    new_val = -(value << 1);
-  else
-    new_val = (value << 1) - 1;
-
-  if (!gst_bit_writer_put_ue (bitwriter, new_val))
-    return FALSE;
-  return TRUE;
-}
-
-
-static gboolean
-gst_bit_writer_write_nal_header (GstBitWriter * bitwriter,
-    guint32 nal_ref_idc, guint32 nal_unit_type)
-{
-  gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);
-  gst_bit_writer_put_bits_uint32 (bitwriter, nal_ref_idc, 2);
-  gst_bit_writer_put_bits_uint32 (bitwriter, nal_unit_type, 5);
-  return TRUE;
-}
-
-static gboolean
-gst_bit_writer_write_trailing_bits (GstBitWriter * bitwriter)
-{
-  gst_bit_writer_put_bits_uint32 (bitwriter, 1, 1);
-  gst_bit_writer_align_bytes_unchecked (bitwriter, 0);
-  return TRUE;
-}
-
-static gboolean
-gst_bit_writer_write_sps (GstBitWriter * bitwriter,
-    const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile)
-{
-  guint8 profile_idc;
-  guint32 constraint_set0_flag, constraint_set1_flag;
-  guint32 constraint_set2_flag, constraint_set3_flag;
-  guint32 gaps_in_frame_num_value_allowed_flag = 0;     // ??
-  gboolean nal_hrd_parameters_present_flag;
-
-  guint32 b_qpprime_y_zero_transform_bypass = 0;
-  guint32 residual_color_transform_flag = 0;
-  guint32 pic_height_in_map_units =
-      (seq_param->seq_fields.bits.frame_mbs_only_flag ?
-      seq_param->picture_height_in_mbs : seq_param->picture_height_in_mbs / 2);
-  guint32 mb_adaptive_frame_field =
-      !seq_param->seq_fields.bits.frame_mbs_only_flag;
-  guint32 i = 0;
-
-  profile_idc = gst_vaapi_utils_h264_get_profile_idc (profile);
-  constraint_set0_flag =        /* A.2.1 (baseline profile constraints) */
-      profile == GST_VAAPI_PROFILE_H264_BASELINE ||
-      profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
-  constraint_set1_flag =        /* A.2.2 (main profile constraints) */
-      profile == GST_VAAPI_PROFILE_H264_MAIN ||
-      profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
-  constraint_set2_flag = 0;
-  constraint_set3_flag = 0;
-
-  /* profile_idc */
-  gst_bit_writer_put_bits_uint32 (bitwriter, profile_idc, 8);
-  /* constraint_set0_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter, constraint_set0_flag, 1);
-  /* constraint_set1_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter, constraint_set1_flag, 1);
-  /* constraint_set2_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter, constraint_set2_flag, 1);
-  /* constraint_set3_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter, constraint_set3_flag, 1);
-  /* reserved_zero_4bits */
-  gst_bit_writer_put_bits_uint32 (bitwriter, 0, 4);
-  /* level_idc */
-  gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->level_idc, 8);
-  /* seq_parameter_set_id */
-  gst_bit_writer_put_ue (bitwriter, seq_param->seq_parameter_set_id);
-
-  if (profile == GST_VAAPI_PROFILE_H264_HIGH) {
-    /* for high profile */
-    /* chroma_format_idc  = 1, 4:2:0 */
-    gst_bit_writer_put_ue (bitwriter,
-        seq_param->seq_fields.bits.chroma_format_idc);
-    if (3 == seq_param->seq_fields.bits.chroma_format_idc) {
-      gst_bit_writer_put_bits_uint32 (bitwriter, residual_color_transform_flag,
-          1);
-    }
-    /* bit_depth_luma_minus8 */
-    gst_bit_writer_put_ue (bitwriter, seq_param->bit_depth_luma_minus8);
-    /* bit_depth_chroma_minus8 */
-    gst_bit_writer_put_ue (bitwriter, seq_param->bit_depth_chroma_minus8);
-    /* b_qpprime_y_zero_transform_bypass */
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        b_qpprime_y_zero_transform_bypass, 1);
-    g_assert (seq_param->seq_fields.bits.seq_scaling_matrix_present_flag == 0);
-    /* seq_scaling_matrix_present_flag  */
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        seq_param->seq_fields.bits.seq_scaling_matrix_present_flag, 1);
-
-#if 0
-    if (seq_param->seq_fields.bits.seq_scaling_matrix_present_flag) {
-      for (i = 0;
-          i < (seq_param->seq_fields.bits.chroma_format_idc != 3 ? 8 : 12);
-          i++) {
-        gst_bit_writer_put_bits_uint8 (bitwriter,
-            seq_param->seq_fields.bits.seq_scaling_list_present_flag, 1);
-        if (seq_param->seq_fields.bits.seq_scaling_list_present_flag) {
-          g_assert (0);
-          /* FIXME, need write scaling list if seq_scaling_matrix_present_flag ==1 */
-        }
-      }
-    }
-#endif
-  }
-
-  /* log2_max_frame_num_minus4 */
-  gst_bit_writer_put_ue (bitwriter,
-      seq_param->seq_fields.bits.log2_max_frame_num_minus4);
-  /* pic_order_cnt_type */
-  gst_bit_writer_put_ue (bitwriter,
-      seq_param->seq_fields.bits.pic_order_cnt_type);
-
-  if (seq_param->seq_fields.bits.pic_order_cnt_type == 0) {
-    /* log2_max_pic_order_cnt_lsb_minus4 */
-    gst_bit_writer_put_ue (bitwriter,
-        seq_param->seq_fields.bits.log2_max_pic_order_cnt_lsb_minus4);
-  } else if (seq_param->seq_fields.bits.pic_order_cnt_type == 1) {
-    g_assert (0);
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        seq_param->seq_fields.bits.delta_pic_order_always_zero_flag, 1);
-    gst_bit_writer_put_se (bitwriter, seq_param->offset_for_non_ref_pic);
-    gst_bit_writer_put_se (bitwriter,
-        seq_param->offset_for_top_to_bottom_field);
-    gst_bit_writer_put_ue (bitwriter,
-        seq_param->num_ref_frames_in_pic_order_cnt_cycle);
-    for (i = 0; i < seq_param->num_ref_frames_in_pic_order_cnt_cycle; i++) {
-      gst_bit_writer_put_se (bitwriter, seq_param->offset_for_ref_frame[i]);
-    }
-  }
-
-  /* num_ref_frames */
-  gst_bit_writer_put_ue (bitwriter, seq_param->max_num_ref_frames);
-  /* gaps_in_frame_num_value_allowed_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter,
-      gaps_in_frame_num_value_allowed_flag, 1);
-
-  /* pic_width_in_mbs_minus1 */
-  gst_bit_writer_put_ue (bitwriter, seq_param->picture_width_in_mbs - 1);
-  /* pic_height_in_map_units_minus1 */
-  gst_bit_writer_put_ue (bitwriter, pic_height_in_map_units - 1);
-  /* frame_mbs_only_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter,
-      seq_param->seq_fields.bits.frame_mbs_only_flag, 1);
-
-  if (!seq_param->seq_fields.bits.frame_mbs_only_flag) {        //ONLY mbs
-    g_assert (0);
-    gst_bit_writer_put_bits_uint32 (bitwriter, mb_adaptive_frame_field, 1);
-  }
-
-  /* direct_8x8_inference_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);
-  /* frame_cropping_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->frame_cropping_flag, 1);
-
-  if (seq_param->frame_cropping_flag) {
-    /* frame_crop_left_offset */
-    gst_bit_writer_put_ue (bitwriter, seq_param->frame_crop_left_offset);
-    /* frame_crop_right_offset */
-    gst_bit_writer_put_ue (bitwriter, seq_param->frame_crop_right_offset);
-    /* frame_crop_top_offset */
-    gst_bit_writer_put_ue (bitwriter, seq_param->frame_crop_top_offset);
-    /* frame_crop_bottom_offset */
-    gst_bit_writer_put_ue (bitwriter, seq_param->frame_crop_bottom_offset);
-  }
-
-  /* vui_parameters_present_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter,
-      seq_param->vui_parameters_present_flag, 1);
-  if (seq_param->vui_parameters_present_flag) {
-    /* aspect_ratio_info_present_flag */
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        seq_param->vui_fields.bits.aspect_ratio_info_present_flag, 1);
-    if (seq_param->vui_fields.bits.aspect_ratio_info_present_flag) {
-      gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->aspect_ratio_idc,
-          8);
-      if (seq_param->aspect_ratio_idc == 0xFF) {
-        gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->sar_width, 16);
-        gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->sar_height, 16);
-      }
-    }
-
-    /* overscan_info_present_flag */
-    gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);
-    /* video_signal_type_present_flag */
-    gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);
-    /* chroma_loc_info_present_flag */
-    gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);
-
-    /* timing_info_present_flag */
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        seq_param->vui_fields.bits.timing_info_present_flag, 1);
-    if (seq_param->vui_fields.bits.timing_info_present_flag) {
-      gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->num_units_in_tick,
-          32);
-      gst_bit_writer_put_bits_uint32 (bitwriter, seq_param->time_scale, 32);
-      gst_bit_writer_put_bits_uint32 (bitwriter, 1, 1); /* fixed_frame_rate_flag */
-    }
-
-    nal_hrd_parameters_present_flag =
-        (seq_param->bits_per_second > 0 ? TRUE : FALSE);
-    /* nal_hrd_parameters_present_flag */
-    gst_bit_writer_put_bits_uint32 (bitwriter, nal_hrd_parameters_present_flag,
-        1);
-    if (nal_hrd_parameters_present_flag) {
-      /* hrd_parameters */
-      /* cpb_cnt_minus1 */
-      gst_bit_writer_put_ue (bitwriter, 0);
-      gst_bit_writer_put_bits_uint32 (bitwriter, 4, 4); /* bit_rate_scale */
-      gst_bit_writer_put_bits_uint32 (bitwriter, 6, 4); /* cpb_size_scale */
-
-      for (i = 0; i < 1; ++i) {
-        /* bit_rate_value_minus1[0] */
-        gst_bit_writer_put_ue (bitwriter,
-            seq_param->bits_per_second / 1000 - 1);
-        /* cpb_size_value_minus1[0] */
-        gst_bit_writer_put_ue (bitwriter,
-            seq_param->bits_per_second / 1000 * 8 - 1);
-        /* cbr_flag[0] */
-        gst_bit_writer_put_bits_uint32 (bitwriter, 1, 1);
-      }
-      /* initial_cpb_removal_delay_length_minus1 */
-      gst_bit_writer_put_bits_uint32 (bitwriter, 23, 5);
-      /* cpb_removal_delay_length_minus1 */
-      gst_bit_writer_put_bits_uint32 (bitwriter, 23, 5);
-      /* dpb_output_delay_length_minus1 */
-      gst_bit_writer_put_bits_uint32 (bitwriter, 23, 5);
-      /* time_offset_length  */
-      gst_bit_writer_put_bits_uint32 (bitwriter, 23, 5);
-    }
-    /* vcl_hrd_parameters_present_flag */
-    gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);
-    if (nal_hrd_parameters_present_flag
-        || 0 /*vcl_hrd_parameters_present_flag */ ) {
-      /* low_delay_hrd_flag */
-      gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);
-    }
-    /* pic_struct_present_flag */
-    gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);
-    /* bitwriter_restriction_flag */
-    gst_bit_writer_put_bits_uint32 (bitwriter, 0, 1);
-  }
-
-  /* rbsp_trailing_bits */
-  gst_bit_writer_write_trailing_bits (bitwriter);
-  return TRUE;
-}
-
-static gboolean
-gst_bit_writer_write_pps (GstBitWriter * bitwriter,
-    const VAEncPictureParameterBufferH264 * pic_param, GstVaapiProfile profile)
-{
-  guint32 num_slice_groups_minus1 = 0;
-  guint32 pic_init_qs_minus26 = 0;
-  guint32 redundant_pic_cnt_present_flag = 0;
-
-  /* pic_parameter_set_id */
-  gst_bit_writer_put_ue (bitwriter, pic_param->pic_parameter_set_id);
-  /* seq_parameter_set_id */
-  gst_bit_writer_put_ue (bitwriter, pic_param->seq_parameter_set_id);
-  /* entropy_coding_mode_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic_param->pic_fields.bits.entropy_coding_mode_flag, 1);
-  /* pic_order_present_flag */
-  gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic_param->pic_fields.bits.pic_order_present_flag, 1);
-  /* slice_groups-1 */
-  gst_bit_writer_put_ue (bitwriter, num_slice_groups_minus1);
-
-  if (num_slice_groups_minus1 > 0) {
-     /*FIXME*/ g_assert (0);
-  }
-  gst_bit_writer_put_ue (bitwriter, pic_param->num_ref_idx_l0_active_minus1);
-  gst_bit_writer_put_ue (bitwriter, pic_param->num_ref_idx_l1_active_minus1);
-  gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic_param->pic_fields.bits.weighted_pred_flag, 1);
-  gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic_param->pic_fields.bits.weighted_bipred_idc, 2);
-  /* pic_init_qp_minus26 */
-  gst_bit_writer_put_se (bitwriter, pic_param->pic_init_qp - 26);
-  /* pic_init_qs_minus26 */
-  gst_bit_writer_put_se (bitwriter, pic_init_qs_minus26);
-  /* chroma_qp_index_offset */
-  gst_bit_writer_put_se (bitwriter, pic_param->chroma_qp_index_offset);
-
-  gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic_param->pic_fields.bits.deblocking_filter_control_present_flag, 1);
-  gst_bit_writer_put_bits_uint32 (bitwriter,
-      pic_param->pic_fields.bits.constrained_intra_pred_flag, 1);
-  gst_bit_writer_put_bits_uint32 (bitwriter, redundant_pic_cnt_present_flag, 1);
-
-  /* more_rbsp_data */
-  if (profile == GST_VAAPI_PROFILE_H264_HIGH) {
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        pic_param->pic_fields.bits.transform_8x8_mode_flag, 1);
-    gst_bit_writer_put_bits_uint32 (bitwriter,
-        pic_param->pic_fields.bits.pic_scaling_matrix_present_flag, 1);
-    if (pic_param->pic_fields.bits.pic_scaling_matrix_present_flag) {
-      g_assert (0 && "unsupported scaling lists");
-      /* FIXME */
-      /*
-         for (i = 0; i <
-         (6+(-( (chroma_format_idc ! = 3) ? 2 : 6) * -pic_param->pic_fields.bits.transform_8x8_mode_flag));
-         i++) {
-         gst_bit_writer_put_bits_uint8(bitwriter, pic_param->pic_fields.bits.pic_scaling_list_present_flag, 1);
-         }
-       */
-    }
-    gst_bit_writer_put_se (bitwriter, pic_param->second_chroma_qp_index_offset);
-  }
-
-  /* rbsp_trailing_bits */
-  gst_bit_writer_write_trailing_bits (bitwriter);
-  return TRUE;
-}
-
 static gboolean
 add_sequence_packed_header (GstVaapiEncoderH264 * encoder,
     GstVaapiEncPicture * picture, GstVaapiEncSequence * sequence)
 {
   GstVaapiEncPackedHeader *packed_seq;
-  GstBitWriter writer;
+  GstBitWriter bs;
   VAEncPackedHeaderParameterBuffer packed_header_param_buffer = { 0 };
   const VAEncSequenceParameterBufferH264 *const seq_param = sequence->param;
   guint32 data_bit_size;
   guint8 *data;
 
-  gst_bit_writer_init (&writer, 128 * 8);
-  gst_bit_writer_put_bits_uint32 (&writer, 0x00000001, 32);     /* start code */
-  gst_bit_writer_write_nal_header (&writer,
+  gst_bit_writer_init (&bs, 128 * 8);
+  WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
+  bs_write_nal_header (&bs,
       GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH, GST_VAAPI_ENCODER_H264_NAL_SPS);
-  gst_bit_writer_write_sps (&writer, seq_param, encoder->profile);
-  g_assert (GST_BIT_WRITER_BIT_SIZE (&writer) % 8 == 0);
-  data_bit_size = GST_BIT_WRITER_BIT_SIZE (&writer);
-  data = GST_BIT_WRITER_DATA (&writer);
+  bs_write_sps (&bs, seq_param, encoder->profile);
+  g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
+  data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
+  data = GST_BIT_WRITER_DATA (&bs);
 
   packed_header_param_buffer.type = VAEncPackedHeaderSequence;
   packed_header_param_buffer.bit_length = data_bit_size;
@@ -851,9 +887,16 @@ add_sequence_packed_header (GstVaapiEncoderH264 * encoder,
 
   /* store sps data */
   _check_sps_pps_status (encoder, data + 4, data_bit_size / 8 - 4);
-  gst_bit_writer_clear (&writer, TRUE);
-
+  gst_bit_writer_clear (&bs, TRUE);
   return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write SPS NAL unit");
+    gst_bit_writer_clear (&bs, TRUE);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -861,20 +904,20 @@ add_picture_packed_header (GstVaapiEncoderH264 * encoder,
     GstVaapiEncPicture * picture)
 {
   GstVaapiEncPackedHeader *packed_pic;
-  GstBitWriter writer;
+  GstBitWriter bs;
   VAEncPackedHeaderParameterBuffer packed_header_param_buffer = { 0 };
   const VAEncPictureParameterBufferH264 *const pic_param = picture->param;
   guint32 data_bit_size;
   guint8 *data;
 
-  gst_bit_writer_init (&writer, 128 * 8);
-  gst_bit_writer_put_bits_uint32 (&writer, 0x00000001, 32);     /* start code */
-  gst_bit_writer_write_nal_header (&writer,
+  gst_bit_writer_init (&bs, 128 * 8);
+  WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
+  bs_write_nal_header (&bs,
       GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH, GST_VAAPI_ENCODER_H264_NAL_PPS);
-  gst_bit_writer_write_pps (&writer, pic_param, encoder->profile);
-  g_assert (GST_BIT_WRITER_BIT_SIZE (&writer) % 8 == 0);
-  data_bit_size = GST_BIT_WRITER_BIT_SIZE (&writer);
-  data = GST_BIT_WRITER_DATA (&writer);
+  bs_write_pps (&bs, pic_param, encoder->profile);
+  g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
+  data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
+  data = GST_BIT_WRITER_DATA (&bs);
 
   packed_header_param_buffer.type = VAEncPackedHeaderPicture;
   packed_header_param_buffer.bit_length = data_bit_size;
@@ -890,9 +933,16 @@ add_picture_packed_header (GstVaapiEncoderH264 * encoder,
 
   /* store pps data */
   _check_sps_pps_status (encoder, data + 4, data_bit_size / 8 - 4);
-  gst_bit_writer_clear (&writer, TRUE);
-
+  gst_bit_writer_clear (&bs, TRUE);
   return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write PPS NAL unit");
+    gst_bit_writer_clear (&bs, TRUE);
+    return FALSE;
+  }
 }
 
 /*  reference picture management */
@@ -1567,7 +1617,7 @@ gst_vaapi_encoder_h264_get_codec_data (GstVaapiEncoder * base_encoder,
   const guint32 nal_length_size = 4;
   guint8 profile_idc, profile_comp, level_idc;
   GstMapInfo sps_info, pps_info;
-  GstBitWriter writer;
+  GstBitWriter bs;
   GstBuffer *buffer;
 
   if (!encoder->sps_data || !encoder->pps_data)
@@ -1587,39 +1637,47 @@ gst_vaapi_encoder_h264_get_codec_data (GstVaapiEncoder * base_encoder,
   level_idc = sps_info.data[3];
 
   /* Header */
-  gst_bit_writer_init (&writer, (sps_info.size + pps_info.size + 64) * 8);
-  gst_bit_writer_put_bits_uint32 (&writer, configuration_version, 8);
-  gst_bit_writer_put_bits_uint32 (&writer, profile_idc, 8);
-  gst_bit_writer_put_bits_uint32 (&writer, profile_comp, 8);
-  gst_bit_writer_put_bits_uint32 (&writer, level_idc, 8);
-  gst_bit_writer_put_bits_uint32 (&writer, 0x3f, 6);    /* 111111 */
-  gst_bit_writer_put_bits_uint32 (&writer, nal_length_size - 1, 2);
-  gst_bit_writer_put_bits_uint32 (&writer, 0x07, 3);    /* 111 */
+  gst_bit_writer_init (&bs, (sps_info.size + pps_info.size + 64) * 8);
+  WRITE_UINT32 (&bs, configuration_version, 8);
+  WRITE_UINT32 (&bs, profile_idc, 8);
+  WRITE_UINT32 (&bs, profile_comp, 8);
+  WRITE_UINT32 (&bs, level_idc, 8);
+  WRITE_UINT32 (&bs, 0x3f, 6);  /* 111111 */
+  WRITE_UINT32 (&bs, nal_length_size - 1, 2);
+  WRITE_UINT32 (&bs, 0x07, 3);  /* 111 */
 
   /* Write SPS */
-  gst_bit_writer_put_bits_uint32 (&writer, 1, 5);       /* SPS count = 1 */
-  g_assert (GST_BIT_WRITER_BIT_SIZE (&writer) % 8 == 0);
-  gst_bit_writer_put_bits_uint32 (&writer, sps_info.size, 16);
-  gst_bit_writer_put_bytes (&writer, sps_info.data, sps_info.size);
+  WRITE_UINT32 (&bs, 1, 5);     /* SPS count = 1 */
+  g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
+  WRITE_UINT32 (&bs, sps_info.size, 16);
+  gst_bit_writer_put_bytes (&bs, sps_info.data, sps_info.size);
 
   /* Write PPS */
-  gst_bit_writer_put_bits_uint32 (&writer, 1, 8);       /* PPS count = 1 */
-  gst_bit_writer_put_bits_uint32 (&writer, pps_info.size, 16);
-  gst_bit_writer_put_bytes (&writer, pps_info.data, pps_info.size);
+  WRITE_UINT32 (&bs, 1, 8);     /* PPS count = 1 */
+  WRITE_UINT32 (&bs, pps_info.size, 16);
+  gst_bit_writer_put_bytes (&bs, pps_info.data, pps_info.size);
 
   gst_buffer_unmap (encoder->pps_data, &pps_info);
   gst_buffer_unmap (encoder->sps_data, &sps_info);
 
-  buffer = gst_buffer_new_wrapped (GST_BIT_WRITER_DATA (&writer),
-      GST_BIT_WRITER_BIT_SIZE (&writer) / 8);
+  buffer = gst_buffer_new_wrapped (GST_BIT_WRITER_DATA (&bs),
+      GST_BIT_WRITER_BIT_SIZE (&bs) / 8);
   if (!buffer)
     goto error_alloc_buffer;
   *out_buffer_ptr = buffer;
 
-  gst_bit_writer_clear (&writer, FALSE);
+  gst_bit_writer_clear (&bs, FALSE);
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
   /* ERRORS */
+bs_error:
+  {
+    GST_ERROR ("failed to write codec-data");
+    gst_buffer_unmap (encoder->sps_data, &sps_info);
+    gst_buffer_unmap (encoder->pps_data, &pps_info);
+    gst_bit_writer_clear (&bs, TRUE);
+    return FALSE;
+  }
 error_map_sps_buffer:
   {
     GST_ERROR ("failed to map SPS packed header");
@@ -1634,7 +1692,7 @@ error_map_pps_buffer:
 error_alloc_buffer:
   {
     GST_ERROR ("failed to allocate codec-data buffer");
-    gst_bit_writer_clear (&writer, TRUE);
+    gst_bit_writer_clear (&bs, TRUE);
     return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
   }
 }
