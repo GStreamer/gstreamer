@@ -254,6 +254,10 @@ gst_ffmpegmux_base_init (gpointer g_class)
     const gint rates[] = { 44100, 22050, 11025 };
 
     gst_ffmpeg_mux_simple_caps_set_int_list (audiosinkcaps, "rate", 3, rates);
+  } else if (strcmp (in_plugin->name, "dv") == 0) {
+    gst_caps_set_simple (audiosinkcaps,
+        "rate", G_TYPE_INT, 48000, "channels", G_TYPE_INT, 2, NULL);
+
   } else if (strcmp (in_plugin->name, "gif") == 0) {
     if (videosinkcaps)
       gst_caps_unref (videosinkcaps);
