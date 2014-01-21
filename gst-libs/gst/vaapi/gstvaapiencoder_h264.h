@@ -42,6 +42,8 @@ typedef struct _GstVaapiEncoderH264 GstVaapiEncoderH264;
  * @GST_VAAPI_ENCODER_H264_PROP_CABAC: Enable CABAC entropy coding mode (bool).
  * @GST_VAAPI_ENCODER_H264_PROP_DCT8X8: Enable adaptive use of 8x8
  *   transforms in I-frames (bool).
+ * @GST_VAAPI_ENCODER_H264_PROP_CPB_LENGTH: Length of the CPB buffer
+ *   in milliseconds (uint).
  *
  * The set of H.264 encoder specific configurable properties.
  */
@@ -52,6 +54,7 @@ typedef enum {
   GST_VAAPI_ENCODER_H264_PROP_NUM_SLICES = -4,
   GST_VAAPI_ENCODER_H264_PROP_CABAC = -5,
   GST_VAAPI_ENCODER_H264_PROP_DCT8X8 = -6,
+  GST_VAAPI_ENCODER_H264_PROP_CPB_LENGTH = -7,
 } GstVaapiEncoderH264Prop;
 
 GstVaapiEncoder *

@@ -37,6 +37,12 @@
 /* Define the maximum IDR period */
 #define MAX_IDR_PERIOD 512
 
+/* Default CPB length (in milliseconds) */
+#define DEFAULT_CPB_LENGTH 1500
+
+/* Scale factor for CPB size (HRD cpb_size_scale: min = 4) */
+#define SX_CPB_SIZE 4
+
 /* Scale factor for bitrate (HRD bit_rate_scale: min = 6) */
 #define SX_BITRATE 6
 
@@ -249,7 +255,8 @@ bs_error:
 /* Write an SPS NAL unit */
 static gboolean
 bs_write_sps (GstBitWriter * bs,
-    const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile)
+    const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile,
+    const VAEncMiscParameterHRD * hrd_params)
 {
   guint8 profile_idc;
   guint32 constraint_set0_flag, constraint_set1_flag;
@@ -419,13 +426,13 @@ bs_write_sps (GstBitWriter * bs,
       /* cpb_cnt_minus1 */
       WRITE_UE (bs, 0);
       WRITE_UINT32 (bs, SX_BITRATE - 6, 4);     /* bit_rate_scale */
-      WRITE_UINT32 (bs, 6, 4);  /* cpb_size_scale */
+      WRITE_UINT32 (bs, SX_CPB_SIZE - 4, 4);    /* cpb_size_scale */
 
       for (i = 0; i < 1; ++i) {
         /* bit_rate_value_minus1[0] */
         WRITE_UE (bs, (seq_param->bits_per_second >> SX_BITRATE) - 1);
         /* cpb_size_value_minus1[0] */
-        WRITE_UE (bs, seq_param->bits_per_second / 1000 * 8 - 1);
+        WRITE_UE (bs, (hrd_params->buffer_size >> SX_CPB_SIZE) - 1);
         /* cbr_flag[0] */
         WRITE_UINT32 (bs, 1, 1);
       }
@@ -586,6 +593,8 @@ struct _GstVaapiEncoderH264
   GstBuffer *pps_data;
 
   guint bitrate_bits;           // bitrate (bits)
+  guint cpb_length;             // length of CPB buffer (ms)
+  guint cpb_length_bits;        // length of CPB buffer (bits)
 };
 
 static inline void
@@ -763,7 +772,9 @@ ensure_level (GstVaapiEncoderH264 * encoder)
     if (PicSizeMbs <= limits->MaxFS &&
         MaxDpbMbs <= limits->MaxDpbMbs &&
         MaxMBPS <= limits->MaxMBPS && (!encoder->bitrate_bits
-            || encoder->bitrate_bits <= (limits->MaxBR * cpb_factor)))
+            || encoder->bitrate_bits <= (limits->MaxBR * cpb_factor)) &&
+        (!encoder->cpb_length_bits ||
+            encoder->cpb_length_bits <= (limits->MaxCPB * cpb_factor)))
       break;
   }
   if (i == num_limits)
@@ -897,7 +908,7 @@ static void
 fill_hrd_params (GstVaapiEncoderH264 * encoder, VAEncMiscParameterHRD * hrd)
 {
   if (encoder->bitrate_bits > 0) {
-    hrd->buffer_size = encoder->bitrate_bits * 8;
+    hrd->buffer_size = encoder->cpb_length_bits;
     hrd->initial_buffer_fullness = hrd->buffer_size / 2;
   } else {
     hrd->buffer_size = 0;
@@ -915,14 +926,17 @@ add_packed_sequence_header (GstVaapiEncoderH264 * encoder,
   GstBitWriter bs;
   VAEncPackedHeaderParameterBuffer packed_seq_param = { 0 };
   const VAEncSequenceParameterBufferH264 *const seq_param = sequence->param;
+  VAEncMiscParameterHRD hrd_params;
   guint32 data_bit_size;
   guint8 *data;
+
+  fill_hrd_params (encoder, &hrd_params);
 
   gst_bit_writer_init (&bs, 128 * 8);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs,
       GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH, GST_VAAPI_ENCODER_H264_NAL_SPS);
-  bs_write_sps (&bs, seq_param, encoder->profile);
+  bs_write_sps (&bs, seq_param, encoder->profile, &hrd_params);
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
   data = GST_BIT_WRITER_DATA (&bs);
@@ -1439,7 +1453,7 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     memset (rate_control, 0, sizeof (VAEncMiscParameterRateControl));
     rate_control->bits_per_second = encoder->bitrate_bits;
     rate_control->target_percentage = 70;
-    rate_control->window_size = 500;
+    rate_control->window_size = encoder->cpb_length;
     rate_control->initial_qp = encoder->init_qp;
     rate_control->min_qp = encoder->min_qp;
     rate_control->basic_unit_size = 0;
@@ -1504,7 +1518,7 @@ static void
 ensure_bitrate_hrd (GstVaapiEncoderH264 * encoder)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-  guint bitrate;
+  guint bitrate, cpb_size;
 
   if (!base_encoder->bitrate) {
     encoder->bitrate_bits = 0;
@@ -1516,6 +1530,13 @@ ensure_bitrate_hrd (GstVaapiEncoderH264 * encoder)
   bitrate = (base_encoder->bitrate * 1000) & ~((1U << SX_BITRATE) - 1);
   GST_DEBUG ("HRD bitrate: %u bits/sec", bitrate);
   encoder->bitrate_bits = bitrate;
+
+  /* Round up CPB size. This is an HRD compliance detail */
+  g_assert (SX_CPB_SIZE >= 4);
+  cpb_size = gst_util_uint64_scale (bitrate, encoder->cpb_length, 1000) &
+      ~((1U << SX_CPB_SIZE) - 1);
+  GST_DEBUG ("HRD CPB size: %u bits", cpb_size);
+  encoder->cpb_length_bits = cpb_size;
 }
 
 /* Estimates a good enough bitrate if none was supplied */
@@ -2003,6 +2024,9 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_DCT8X8:
       encoder->use_dct8x8 = g_value_get_boolean (value);
       break;
+    case GST_VAAPI_ENCODER_H264_PROP_CPB_LENGTH:
+      encoder->cpb_length = g_value_get_uint (value);
+      break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -2130,6 +2154,18 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           "Enable 8x8 DCT",
           "Enable adaptive use of 8x8 transforms in I-frames",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:cpb-length:
+   *
+   * The size of the CPB buffer in milliseconds.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_CPB_LENGTH,
+      g_param_spec_uint ("cpb-length",
+          "CPB Length", "Length of the CPB buffer in milliseconds",
+          1, 10000, DEFAULT_CPB_LENGTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }
