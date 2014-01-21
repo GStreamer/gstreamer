@@ -157,6 +157,7 @@ enum
   SIGNAL_REMOVED_STREAM,
   SIGNAL_PREPARED,
   SIGNAL_UNPREPARED,
+  SIGNAL_TARGET_STATE,
   SIGNAL_NEW_STATE,
   SIGNAL_LAST
 };
@@ -292,6 +293,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       g_signal_new ("unprepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, unprepared), NULL, NULL,
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+  gst_rtsp_media_signals[SIGNAL_TARGET_STATE] =
+      g_signal_new ("target-state", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaClass, new_state), NULL,
+      NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   gst_rtsp_media_signals[SIGNAL_NEW_STATE] =
       g_signal_new ("new-state", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -1939,8 +1945,10 @@ start_preroll (GstRTSPMedia * media)
 
   GST_INFO ("setting pipeline to PAUSED for media %p", media);
   /* first go to PAUSED */
-  ret = gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
   priv->target_state = GST_STATE_PAUSED;
+  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
+      priv->target_state, NULL);
+  ret = gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
 
   switch (ret) {
     case GST_STATE_CHANGE_SUCCESS:
@@ -2320,6 +2328,8 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
 
   GST_INFO ("unprepare media %p", media);
   priv->target_state = GST_STATE_NULL;
+  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
+      priv->target_state, NULL);
   success = TRUE;
 
   if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED) {
@@ -2559,6 +2569,8 @@ gst_rtsp_media_suspend (GstRTSPMedia * media)
     case GST_RTSP_SUSPEND_MODE_PAUSE:
       GST_DEBUG ("media %p suspend to PAUSED", media);
       priv->target_state = GST_STATE_PAUSED;
+      g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
+          priv->target_state, NULL);
       ret = gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
@@ -2566,6 +2578,8 @@ gst_rtsp_media_suspend (GstRTSPMedia * media)
     case GST_RTSP_SUSPEND_MODE_RESET:
       GST_DEBUG ("media %p suspend to NULL", media);
       priv->target_state = GST_STATE_NULL;
+      g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
+          priv->target_state, NULL);
       ret = gst_element_set_state (priv->pipeline, GST_STATE_NULL);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
@@ -2670,6 +2684,8 @@ media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
   } else {
     GST_INFO ("state %s media %p", gst_element_state_get_name (state), media);
     priv->target_state = state;
+    g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
+        priv->target_state, NULL);
     /* when we are buffering, don't update the state yet, this will be done
      * when buffering finishes */
     if (priv->buffering) {

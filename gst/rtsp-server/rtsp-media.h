@@ -134,6 +134,7 @@ struct _GstRTSPMediaClass {
   void            (*prepared)        (GstRTSPMedia *media);
   void            (*unprepared)      (GstRTSPMedia *media);
 
+  void            (*target_state)    (GstRTSPMedia *media, GstState state);
   void            (*new_state)       (GstRTSPMedia *media, GstState state);
 
   /*< private >*/
