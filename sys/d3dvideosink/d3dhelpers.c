@@ -684,7 +684,8 @@ fallback:
 }
 
 static void
-gst_d3dsurface_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+gst_d3dsurface_buffer_pool_release_buffer (GstBufferPool * bpool,
+    GstBuffer * buffer)
 {
   GstMemory *mem = NULL;
 
@@ -2590,12 +2591,12 @@ d3d_hidden_window_thread (GstD3DVideoSinkClass * klass)
 error:
   if (!ret)
     klass->d3d.error_exit = TRUE;
-  if (reged)
-    UnregisterClass (WndClass.lpszClassName, WndClass.hInstance);
   if (hWnd) {
     DestroyWindow (hWnd);
     klass->d3d.hidden_window = 0;
   }
+  if (reged)
+    UnregisterClass (WndClass.lpszClassName, WndClass.hInstance);
   d3d_class_display_device_destroy (klass);
 
   return ret;
