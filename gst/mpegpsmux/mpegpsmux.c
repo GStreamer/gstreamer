@@ -421,6 +421,9 @@ mpegpsmux_queue_buffer_for_stream (MpegPsMux * mux, MpegPsPadData * ps_data)
     ps_data->queued.ts = GST_CLOCK_TIME_NONE;
   }
 
+  if (ps_data->queued.ts != GST_CLOCK_TIME_NONE)
+    ps_data->last_ts = ps_data->queued.ts;
+
   GST_DEBUG_OBJECT (mux, "Queued buffer with ts %" GST_TIME_FORMAT ": "
       "uncorrected pts %" GST_TIME_FORMAT " dts %" GST_TIME_FORMAT ", "
       "buffer pts %" GST_TIME_FORMAT " dts %" GST_TIME_FORMAT " for PID 0x%04x",
