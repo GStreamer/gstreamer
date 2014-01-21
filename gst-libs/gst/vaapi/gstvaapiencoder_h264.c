@@ -1511,14 +1511,16 @@ ensure_profile_and_level (GstVaapiEncoderH264 * encoder)
   if (!ensure_profile (encoder) || !ensure_profile_limits (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
 
-  if (!ensure_level (encoder))
-    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
-
   /* Check HW constraints */
   if (!ensure_hw_profile_limits (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
   if (encoder->profile_idc > encoder->hw_max_profile_idc)
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+
+  /* Ensure bitrate if not set already and derive the right level to use */
+  ensure_bitrate (encoder);
+  if (!ensure_level (encoder))
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
@@ -1873,8 +1875,6 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
   status = ensure_profile_and_level (encoder);
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return status;
-
-  ensure_bitrate (encoder);
 
   reset_properties (encoder);
   return set_context_info (base_encoder);
