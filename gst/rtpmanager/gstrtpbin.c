@@ -1675,6 +1675,22 @@ _gst_element_accumulator (GSignalInvocationHint * ihint,
   return (element == NULL);
 }
 
+static gboolean
+_gst_caps_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  GstCaps *caps;
+
+  caps = g_value_get_boxed (handler_return);
+  GST_DEBUG ("got caps %" GST_PTR_FORMAT, caps);
+
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boxed (return_accu, caps);
+
+  /* stop emission if we have a caps */
+  return (caps == NULL);
+}
+
 static void
 gst_rtp_bin_class_init (GstRtpBinClass * klass)
 {
@@ -1716,8 +1732,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, request_pt_map),
-      NULL, NULL, g_cclosure_marshal_generic, GST_TYPE_CAPS, 2, G_TYPE_UINT,
-      G_TYPE_UINT);
+      _gst_caps_accumulator, NULL, g_cclosure_marshal_generic, GST_TYPE_CAPS,
+      2, G_TYPE_UINT, G_TYPE_UINT);
 
     /**
    * GstRtpBin::payload-type-change:
