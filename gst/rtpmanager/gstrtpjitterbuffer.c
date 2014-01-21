@@ -1841,7 +1841,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
       /* calculate the delay between retransmission request and receiving this
        * packet, start with when we scheduled this timeout last */
       rtx_last = timer->rtx_last;
-      if (dts > rtx_last) {
+      if (dts != GST_CLOCK_TIME_NONE && dts > rtx_last) {
         /* we have a valid delay if this packet arrived after we scheduled the
          * request */
         delay = dts - rtx_last;
