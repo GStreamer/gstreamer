@@ -515,30 +515,36 @@ done:
 }
 
 
+/* we call this function without holding the lock on sink for performance
+ * reasons. Try hard to not deal with and invalid ringbuffer and rate. */
 static GstClockTime
 gst_audio_base_sink_get_time (GstClock * clock, GstAudioBaseSink * sink)
 {
   guint64 raw, samples;
   guint delay;
   GstClockTime result;
+  GstAudioRingBuffer *ringbuffer;
+  gint rate;
 
-  if (sink->ringbuffer == NULL || sink->ringbuffer->spec.info.rate == 0)
+  if ((ringbuffer = sink->ringbuffer) == NULL)
+    return GST_CLOCK_TIME_NONE;
+
+  if ((rate = ringbuffer->spec.info.rate) == 0)
     return GST_CLOCK_TIME_NONE;
 
   /* our processed samples are always increasing */
-  raw = samples = gst_audio_ring_buffer_samples_done (sink->ringbuffer);
+  raw = samples = gst_audio_ring_buffer_samples_done (ringbuffer);
 
   /* the number of samples not yet processed, this is still queued in the
    * device (not played for playback). */
-  delay = gst_audio_ring_buffer_delay (sink->ringbuffer);
+  delay = gst_audio_ring_buffer_delay (ringbuffer);
 
   if (G_LIKELY (samples >= delay))
     samples -= delay;
   else
     samples = 0;
 
-  result = gst_util_uint64_scale_int (samples, GST_SECOND,
-      sink->ringbuffer->spec.info.rate);
+  result = gst_util_uint64_scale_int (samples, GST_SECOND, rate);
 
   GST_DEBUG_OBJECT (sink,
       "processed samples: raw %" G_GUINT64_FORMAT ", delay %u, real %"
