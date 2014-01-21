@@ -1706,6 +1706,8 @@ reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     timer->rtx_delay = delay;
     timer->rtx_retry = 0;
   }
+  if (seqchange)
+    timer->num_rtx_retry = 0;
 
   if (priv->clock_id) {
     /* we changed the seqnum and there is a timer currently waiting with this
@@ -1801,31 +1803,10 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     }
   }
 
-  if (priv->packet_spacing > 0 && do_next_seqnum && priv->do_retransmission) {
-    GstClockTime expected, delay;
+  do_next_seqnum = do_next_seqnum && priv->packet_spacing > 0
+      && priv->do_retransmission;
 
-    /* calculate expected arrival time of the next seqnum */
-    expected = dts + priv->packet_spacing;
-
-    if (priv->rtx_delay == -1) {
-      if (priv->avg_jitter == 0)
-        delay = DEFAULT_AUTO_RTX_DELAY;
-      else
-        /* jitter is in nanoseconds, 2x jitter is a good margin */
-        delay = priv->avg_jitter * 2;
-    } else {
-      delay = priv->rtx_delay * GST_MSECOND;
-    }
-
-    /* and update/install timer for next seqnum */
-    if (timer)
-      reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected,
-          delay, TRUE);
-    else
-      add_timer (jitterbuffer, TIMER_TYPE_EXPECTED, priv->next_in_seqnum, 0,
-          expected, delay, priv->packet_spacing);
-  } else if (timer && timer->type != TIMER_TYPE_DEADLINE) {
-
+  if (timer && timer->type != TIMER_TYPE_DEADLINE) {
     if (timer->num_rtx_retry > 0) {
       GstClockTime rtx_last, delay;
 
@@ -1859,13 +1840,44 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
           priv->num_rtx_success, priv->num_rtx_failed, priv->num_rtx_requests,
           priv->num_duplicates, priv->avg_rtx_num, GST_TIME_ARGS (delay),
           GST_TIME_ARGS (priv->avg_rtx_rtt));
+
+      /* don't try to estimate the next seqnum because this is a retransmitted
+       * packet and it probably did not arrive with the expected packet
+       * spacing. */
+      do_next_seqnum = FALSE;
     }
-    /* if we had a timer, remove it, we don't know when to expect the next
-     * packet. */
-    remove_timer (jitterbuffer, timer);
     /* we signal the _loop function because this new packet could be the one
      * it was waiting for */
     JBUF_SIGNAL_EVENT (priv);
+  }
+
+  if (do_next_seqnum) {
+    GstClockTime expected, delay;
+
+    /* calculate expected arrival time of the next seqnum */
+    expected = dts + priv->packet_spacing;
+
+    if (priv->rtx_delay == -1) {
+      if (priv->avg_jitter == 0)
+        delay = DEFAULT_AUTO_RTX_DELAY;
+      else
+        /* jitter is in nanoseconds, 2x jitter is a good margin */
+        delay = priv->avg_jitter * 2;
+    } else {
+      delay = priv->rtx_delay * GST_MSECOND;
+    }
+
+    /* and update/install timer for next seqnum */
+    if (timer)
+      reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected,
+          delay, TRUE);
+    else
+      add_timer (jitterbuffer, TIMER_TYPE_EXPECTED, priv->next_in_seqnum, 0,
+          expected, delay, priv->packet_spacing);
+  } else if (timer && timer->type != TIMER_TYPE_DEADLINE) {
+    /* if we had a timer, remove it, we don't know when to expect the next
+     * packet. */
+    remove_timer (jitterbuffer, timer);
   }
 }
 
