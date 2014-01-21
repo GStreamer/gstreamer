@@ -1356,26 +1356,35 @@ ensure_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 {
   GstVaapiEncSequence *sequence;
 
-  g_assert (picture);
+  // Submit an SPS header before every new I-frame
+  if (picture->type != GST_VAAPI_PICTURE_TYPE_I)
+    return TRUE;
+
   sequence = GST_VAAPI_ENC_SEQUENCE_NEW (H264, encoder);
-  g_assert (sequence);
-  if (!sequence)
-    goto error;
+  if (!sequence || !fill_sequence (encoder, sequence))
+    goto error_create_seq_param;
 
-  if (!fill_sequence (encoder, sequence))
-    goto error;
-
-  if (picture->type == GST_VAAPI_PICTURE_TYPE_I &&
-      (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderH264_SPS)
+  if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderH264_SPS)
       && !add_packed_sequence_header (encoder, picture, sequence))
-    goto error;
+    goto error_create_packed_seq_hdr;
+
   gst_vaapi_enc_picture_set_sequence (picture, sequence);
   gst_vaapi_codec_object_replace (&sequence, NULL);
   return TRUE;
 
-error:
-  gst_vaapi_codec_object_replace (&sequence, NULL);
-  return FALSE;
+  /* ERRORS */
+error_create_seq_param:
+  {
+    GST_ERROR ("failed to create sequence parameter buffer (SPS)");
+    gst_vaapi_codec_object_replace (&sequence, NULL);
+    return FALSE;
+  }
+error_create_packed_seq_hdr:
+  {
+    GST_ERROR ("failed to create packed sequence header buffer");
+    gst_vaapi_codec_object_replace (&sequence, NULL);
+    return FALSE;
+  }
 }
 
 /* Generates additional control parameters */
