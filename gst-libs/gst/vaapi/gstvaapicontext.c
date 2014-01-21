@@ -1005,3 +1005,43 @@ error:
     gst_vaapi_context_clear_overlay(context);
     return FALSE;
 }
+
+
+/**
+ * gst_vaapi_context_get_attribute:
+ * @context: a #GstVaapiContext
+ * @type: a VA config attribute type
+ * @out_value_ptr: return location for the config attribute value
+ *
+ * Determines the value for the VA config attribute @type.
+ *
+ * Note: this function only returns success if the VA driver does
+ * actually know about this config attribute type and that it returned
+ * a valid value for it.
+ *
+ * Return value: %TRUE if the VA driver knows about the requested
+ *   config attribute and returned a valid value, %FALSE otherwise
+ */
+gboolean
+gst_vaapi_context_get_attribute(GstVaapiContext *context,
+    VAConfigAttribType type, guint *out_value_ptr)
+{
+    VAConfigAttrib attrib;
+    VAStatus status;
+
+    g_return_val_if_fail(context != NULL, FALSE);
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(context);
+    attrib.type = type;
+    status = vaGetConfigAttributes(GST_VAAPI_OBJECT_VADISPLAY(context),
+        gst_vaapi_profile_get_va_profile(context->info.profile),
+        gst_vaapi_entrypoint_get_va_entrypoint(context->info.entrypoint),
+        &attrib, 1);
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(context);
+    if (!vaapi_check_status(status, "vaGetConfiAttributes()"))
+        return FALSE;
+
+    if (out_value_ptr)
+        *out_value_ptr = attrib.value;
+    return TRUE;
+}

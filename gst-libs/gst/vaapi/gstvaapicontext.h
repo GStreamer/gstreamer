@@ -127,6 +127,11 @@ gst_vaapi_context_apply_composition(
     GstVideoOverlayComposition *composition
 );
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_context_get_attribute(GstVaapiContext *context,
+    VAConfigAttribType type, guint *out_value_ptr);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_CONTEXT_H */

@@ -466,6 +466,16 @@ error_invalid_framerate:
   }
 }
 
+/* Determines the set of required packed headers */
+static void
+ensure_packed_headers (GstVaapiEncoder * encoder)
+{
+  if (!gst_vaapi_context_get_attribute (encoder->context,
+          VAConfigAttribEncPackedHeaders, &encoder->packed_headers))
+    encoder->packed_headers = 0;
+  GST_INFO ("packed headers mask: 0x%08x", encoder->packed_headers);
+}
+
 /* Updates video context */
 static void
 set_context_info (GstVaapiEncoder * encoder)
@@ -520,6 +530,7 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
 
   if (!gst_vaapi_encoder_ensure_context (encoder))
     goto error_reset_context;
+  ensure_packed_headers (encoder);
 
   codedbuf_size = encoder->codedbuf_pool ?
       gst_vaapi_coded_buffer_pool_get_buffer_size (GST_VAAPI_CODED_BUFFER_POOL

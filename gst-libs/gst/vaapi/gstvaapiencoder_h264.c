@@ -1366,7 +1366,8 @@ ensure_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     goto error;
 
   if (picture->type == GST_VAAPI_PICTURE_TYPE_I &&
-      !add_packed_sequence_header (encoder, picture, sequence))
+      (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderH264_SPS)
+      && !add_packed_sequence_header (encoder, picture, sequence))
     goto error;
   gst_vaapi_enc_picture_set_sequence (picture, sequence);
   gst_vaapi_codec_object_replace (&sequence, NULL);
@@ -1430,7 +1431,8 @@ ensure_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     return FALSE;
 
   if (picture->type == GST_VAAPI_PICTURE_TYPE_I &&
-      !add_packed_picture_header (encoder, picture)) {
+      (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderH264_PPS)
+      && !add_packed_picture_header (encoder, picture)) {
     GST_ERROR ("set picture packed header failed");
     return FALSE;
   }

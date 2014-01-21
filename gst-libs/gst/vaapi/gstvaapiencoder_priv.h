@@ -41,6 +41,18 @@ G_BEGIN_DECLS
     GST_VAAPI_ENCODER_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
 
 /**
+ * GST_VAAPI_ENCODER_PACKED_HEADERS:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the required set of VA packed headers that
+ * need to be submitted along with the corresponding param buffers.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_PACKED_HEADERS
+#define GST_VAAPI_ENCODER_PACKED_HEADERS(encoder) \
+    GST_VAAPI_ENCODER_CAST(encoder)->packed_headers
+
+/**
  * GST_VAAPI_ENCODER_DISPLAY:
  * @encoder: a #GstVaapiEncoder
  *
@@ -191,6 +203,7 @@ struct _GstVaapiEncoder
   GstVaapiContext *context;
   GstVaapiContextInfo context_info;
   GstVaapiEncoderTune tune;
+  guint packed_headers;
 
   VADisplay va_display;
   VAContextID va_context;
