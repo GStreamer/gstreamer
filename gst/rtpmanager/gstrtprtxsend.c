@@ -577,6 +577,10 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_pad_start_task (rtx->srcpad,
           (GstTaskFunction) gst_rtp_rtx_send_src_loop, rtx, NULL);
       return TRUE;
+    case GST_EVENT_EOS:
+      GST_INFO_OBJECT (rtx, "Got EOS - enqueueing it");
+      gst_rtp_rtx_send_push_out (rtx, event);
+      return TRUE;
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
@@ -698,11 +702,23 @@ gst_rtp_rtx_send_src_loop (GstRtpRtxSend * rtx)
   if (gst_data_queue_pop (rtx->queue, &data)) {
     GST_LOG_OBJECT (rtx, "pushing rtx buffer %p", data->object);
 
-    gst_pad_push (rtx->srcpad, GST_BUFFER (data->object));
+    if (G_LIKELY (GST_IS_BUFFER (data->object))) {
+      gst_pad_push (rtx->srcpad, GST_BUFFER (data->object));
 
-    GST_OBJECT_LOCK (rtx);
-    rtx->num_rtx_packets++;
-    GST_OBJECT_UNLOCK (rtx);
+      GST_OBJECT_LOCK (rtx);
+      rtx->num_rtx_packets++;
+      GST_OBJECT_UNLOCK (rtx);
+    } else if (GST_IS_EVENT (data->object)) {
+      gst_pad_push_event (rtx->srcpad, GST_EVENT (data->object));
+
+      /* after EOS, we should not send any more buffers,
+       * even if there are more requests coming in */
+      if (GST_EVENT_TYPE (data->object) == GST_EVENT_EOS) {
+        gst_rtp_rtx_send_set_flushing (rtx, TRUE);
+      }
+    } else {
+      g_assert_not_reached ();
+    }
 
     data->object = NULL;        /* we no longer own that object */
     data->destroy (data);
