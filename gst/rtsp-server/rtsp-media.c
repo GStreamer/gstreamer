@@ -1663,6 +1663,40 @@ media_streams_blocking (GstRTSPMedia * media)
   return blocking;
 }
 
+static GstStateChangeReturn
+set_state (GstRTSPMedia * media, GstState state)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  GstStateChangeReturn ret;
+
+  GST_INFO ("set state to %s for media %p", gst_element_state_get_name (state),
+      media);
+  ret = gst_element_set_state (priv->pipeline, state);
+
+  return ret;
+}
+
+static GstStateChangeReturn
+set_target_state (GstRTSPMedia * media, GstState state, gboolean do_state)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  GstStateChangeReturn ret;
+
+  GST_INFO ("set target state to %s for media %p",
+      gst_element_state_get_name (state), media);
+  priv->target_state = state;
+
+  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
+      priv->target_state, NULL);
+
+  if (do_state)
+    ret = set_state (media, state);
+  else
+    ret = GST_STATE_CHANGE_SUCCESS;
+
+  return ret;
+}
+
 /* called with state-lock */
 static gboolean
 default_handle_message (GstRTSPMedia * media, GstMessage * message)
@@ -1691,7 +1725,7 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
         /* if the desired state is playing, go back */
         if (priv->target_state == GST_STATE_PLAYING) {
           GST_INFO ("Buffering done, setting pipeline to PLAYING");
-          gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
+          set_state (media, GST_STATE_PLAYING);
         } else {
           GST_INFO ("Buffering done");
         }
@@ -1701,7 +1735,7 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
           if (priv->target_state == GST_STATE_PLAYING) {
             /* we were not buffering but PLAYING, PAUSE  the pipeline. */
             GST_INFO ("Buffering, setting pipeline to PAUSED ...");
-            gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
+            set_state (media, GST_STATE_PAUSED);
           } else {
             GST_INFO ("Buffering ...");
           }
@@ -1945,10 +1979,7 @@ start_preroll (GstRTSPMedia * media)
 
   GST_INFO ("setting pipeline to PAUSED for media %p", media);
   /* first go to PAUSED */
-  priv->target_state = GST_STATE_PAUSED;
-  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
-      priv->target_state, NULL);
-  ret = gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
+  ret = set_target_state (media, GST_STATE_PAUSED, TRUE);
 
   switch (ret) {
     case GST_STATE_CHANGE_SUCCESS:
@@ -1968,7 +1999,7 @@ start_preroll (GstRTSPMedia * media)
       priv->is_live = TRUE;
       /* start blocked  to make sure nothing goes to the sink */
       media_streams_set_blocked (media, TRUE);
-      ret = gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
+      ret = set_state (media, GST_STATE_PLAYING);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
       break;
@@ -2221,7 +2252,7 @@ finish_unprepare (GstRTSPMedia * media)
 
   GST_DEBUG ("shutting down");
 
-  gst_element_set_state (priv->pipeline, GST_STATE_NULL);
+  set_state (media, GST_STATE_NULL);
   remove_fakesink (priv);
 
   for (i = 0; i < priv->streams->len; i++) {
@@ -2290,7 +2321,7 @@ default_unprepare (GstRTSPMedia * media)
     gst_element_send_event (priv->pipeline, gst_event_new_eos ());
     /* we need to go to playing again for the EOS to propagate, normally in this
      * state, nothing is receiving data from us anymore so this is ok. */
-    gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
+    set_state (media, GST_STATE_PLAYING);
     priv->status = GST_RTSP_MEDIA_STATUS_UNPREPARING;
   } else {
     finish_unprepare (media);
@@ -2327,9 +2358,7 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
     goto is_busy;
 
   GST_INFO ("unprepare media %p", media);
-  priv->target_state = GST_STATE_NULL;
-  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
-      priv->target_state, NULL);
+  set_target_state (media, GST_STATE_NULL, FALSE);
   success = TRUE;
 
   if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED) {
@@ -2568,19 +2597,13 @@ gst_rtsp_media_suspend (GstRTSPMedia * media)
       break;
     case GST_RTSP_SUSPEND_MODE_PAUSE:
       GST_DEBUG ("media %p suspend to PAUSED", media);
-      priv->target_state = GST_STATE_PAUSED;
-      g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
-          priv->target_state, NULL);
-      ret = gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
+      ret = set_target_state (media, GST_STATE_PAUSED, TRUE);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
       break;
     case GST_RTSP_SUSPEND_MODE_RESET:
       GST_DEBUG ("media %p suspend to NULL", media);
-      priv->target_state = GST_STATE_NULL;
-      g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
-          priv->target_state, NULL);
-      ret = gst_element_set_state (priv->pipeline, GST_STATE_NULL);
+      ret = set_target_state (media, GST_STATE_NULL, TRUE);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
       break;
@@ -2683,9 +2706,7 @@ media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
     gst_rtsp_media_unprepare (media);
   } else {
     GST_INFO ("state %s media %p", gst_element_state_get_name (state), media);
-    priv->target_state = state;
-    g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_TARGET_STATE], 0,
-        priv->target_state, NULL);
+    set_target_state (media, state, FALSE);
     /* when we are buffering, don't update the state yet, this will be done
      * when buffering finishes */
     if (priv->buffering) {
@@ -2695,7 +2716,7 @@ media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
         /* make sure pads are not blocking anymore when going to PLAYING */
         media_streams_set_blocked (media, FALSE);
 
-      gst_element_set_state (priv->pipeline, state);
+      set_state (media, state);
 
       /* and suspend after pause */
       if (state == GST_STATE_PAUSED)
