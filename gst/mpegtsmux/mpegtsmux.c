@@ -809,10 +809,9 @@ mpegtsmux_sink_event (GstCollectPads * pads, GstCollectData * data,
 
       gst_video_event_parse_downstream_force_key_unit (event,
           &timestamp, &stream_time, &running_time, &all_headers, &count);
-      GST_INFO_OBJECT (mux, "have downstream force-key-unit event on pad %s, "
+      GST_INFO_OBJECT (pad, "have downstream force-key-unit event, "
           "seqnum %d, running-time %" GST_TIME_FORMAT " count %d",
-          gst_pad_get_name (pad), gst_event_get_seqnum (event),
-          GST_TIME_ARGS (running_time), count);
+          gst_event_get_seqnum (event), GST_TIME_ARGS (running_time), count);
 
       if (mux->force_key_unit_event != NULL) {
         GST_INFO_OBJECT (mux, "skipping downstream force key unit event "
@@ -914,8 +913,7 @@ mpegtsmux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             done = TRUE;
             break;
           case GST_ITERATOR_OK:
-            GST_INFO_OBJECT (mux, "forwarding to %s",
-                gst_pad_get_name (sinkpad));
+            GST_INFO_OBJECT (pad, "forwarding");
             tmp = gst_pad_push_event (sinkpad, gst_event_ref (event));
             GST_INFO_OBJECT (mux, "result %d", tmp);
             /* succeed if at least one pad succeeds */
