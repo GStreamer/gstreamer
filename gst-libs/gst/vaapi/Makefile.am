@@ -162,7 +162,6 @@ libgstvaapi_enc_source_h =			\
 libgstvaapi_enc_source_priv_h =			\
 	gstvaapicodedbuffer_priv.h		\
 	gstvaapicodedbufferproxy_priv.h		\
-	gstvaapiencoder_h264_priv.h		\
 	gstvaapiencoder_mpeg2_priv.h		\
 	gstvaapiencoder_objects.h		\
 	gstvaapiencoder_priv.h			\

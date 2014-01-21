@@ -24,14 +24,18 @@
 #include <va/va_enc_h264.h>
 #include <gst/base/gstbitwriter.h>
 #include "gstvaapicompat.h"
+#include "gstvaapiencoder_priv.h"
 #include "gstvaapiencoder_h264.h"
-#include "gstvaapiencoder_h264_priv.h"
+#include "gstvaapiutils_h264.h"
 #include "gstvaapiutils_h264_priv.h"
 #include "gstvaapicodedbufferproxy_priv.h"
 #include "gstvaapisurface.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
+
+/* Define the maximum IDR period */
+#define MAX_IDR_PERIOD 512
 
 /* Define default rate control mode ("constant-qp") */
 #define DEFAULT_RATECONTROL GST_VAAPI_RATECONTROL_CQP
@@ -63,13 +67,6 @@ typedef enum
   GST_VAAPI_ENCODER_H264_NAL_SPS = 7,
   GST_VAAPI_ENCODER_H264_NAL_PPS = 8
 } GstVaapiEncoderH264NalType;
-
-typedef enum
-{
-  SLICE_TYPE_P = 0,
-  SLICE_TYPE_B = 1,
-  SLICE_TYPE_I = 2
-} H264_SLICE_TYPE;
 
 typedef struct
 {
@@ -125,6 +122,59 @@ h264_get_log2_max_frame_num (guint num)
   /* must greater than 4 */
   return ret;
 }
+
+/* ------------------------------------------------------------------------- */
+/* --- H.264 Encoder                                                     --- */
+/* ------------------------------------------------------------------------- */
+
+#define GST_VAAPI_ENCODER_H264_CAST(encoder) \
+    ((GstVaapiEncoderH264 *)(encoder))
+
+struct _GstVaapiEncoderH264
+{
+  GstVaapiEncoder parent_instance;
+
+  GstVaapiProfile profile;
+  GstVaapiLevelH264 level;
+  guint8 profile_idc;
+  guint8 max_profile_idc;
+  guint8 hw_max_profile_idc;
+  guint8 level_idc;
+  guint32 idr_period;
+  guint32 init_qp;
+  guint32 min_qp;
+  guint32 num_slices;
+  guint32 num_bframes;
+  guint32 mb_width;
+  guint32 mb_height;
+  gboolean use_cabac;
+  gboolean use_dct8x8;
+
+  /* re-ordering */
+  GQueue reorder_frame_list;
+  guint reorder_state;
+  guint frame_index;
+  guint cur_frame_num;
+  guint cur_present_index;
+  GstClockTime cts_offset;
+
+  /* reference list */
+  GQueue ref_list;
+  guint max_ref_frames;
+  /* max reflist count */
+  guint max_reflist0_count;
+  guint max_reflist1_count;
+
+  /* frame, poc */
+  guint32 max_frame_num;
+  guint32 log2_max_frame_num;
+  guint32 max_pic_order_cnt;
+  guint32 log2_max_pic_order_cnt;
+  guint32 idr_num;
+
+  GstBuffer *sps_data;
+  GstBuffer *pps_data;
+};
 
 static inline void
 _check_sps_pps_status (GstVaapiEncoderH264 * encoder,
@@ -752,12 +802,12 @@ gst_bit_writer_write_pps (GstBitWriter * bitwriter,
       g_assert (0 && "unsupported scaling lists");
       /* FIXME */
       /*
-        for (i = 0; i <
-        (6+(-( (chroma_format_idc ! = 3) ? 2 : 6) * -pic_param->pic_fields.bits.transform_8x8_mode_flag));
-        i++) {
-        gst_bit_writer_put_bits_uint8(bitwriter, pic_param->pic_fields.bits.pic_scaling_list_present_flag, 1);
-        }
-      */
+         for (i = 0; i <
+         (6+(-( (chroma_format_idc ! = 3) ? 2 : 6) * -pic_param->pic_fields.bits.transform_8x8_mode_flag));
+         i++) {
+         gst_bit_writer_put_bits_uint8(bitwriter, pic_param->pic_fields.bits.pic_scaling_list_present_flag, 1);
+         }
+       */
     }
     gst_bit_writer_put_se (bitwriter, pic_param->second_chroma_qp_index_offset);
   }
@@ -1411,8 +1461,8 @@ reset_properties (GstVaapiEncoderH264 * encoder)
 
   if (encoder->idr_period < base_encoder->keyframe_period)
     encoder->idr_period = base_encoder->keyframe_period;
-  if (encoder->idr_period > GST_VAAPI_ENCODER_H264_MAX_IDR_PERIOD)
-    encoder->idr_period = GST_VAAPI_ENCODER_H264_MAX_IDR_PERIOD;
+  if (encoder->idr_period > MAX_IDR_PERIOD)
+    encoder->idr_period = MAX_IDR_PERIOD;
 
   if (encoder->min_qp > encoder->init_qp ||
       (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP &&
