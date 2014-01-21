@@ -2251,6 +2251,7 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
   slice->loop_filter_across_slices_enabled_flag =
       pps->loop_filter_across_slices_enabled_flag;
   slice->num_entry_point_offsets = 0;
+  slice->entry_point_offset_minus1 = NULL;
 
   if (!slice->first_slice_segment_in_pic_flag) {
     const guint n = ceil_log2 (PicSizeInCtbsY);
