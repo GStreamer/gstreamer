@@ -116,7 +116,8 @@ gst_validate_report_valist (GstValidateReporter * reporter,
       return;
     }
 
-    g_hash_table_insert (priv->reports, (gpointer) issue_id, report);
+    g_hash_table_insert (priv->reports, (gpointer) issue_id,
+            gst_validate_report_ref (report));
   }
 
   combo =
@@ -140,9 +141,6 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   combo = g_strdup_printf ("Received error report %" GST_VALIDATE_ISSUE_FORMAT
       " : %s", GST_VALIDATE_ISSUE_ARGS (issue), format);
 
-  G_VA_COPY (vacopy, var_args);
-  gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_DEBUG, __FILE__,
-      GST_FUNCTION, __LINE__, NULL, combo, vacopy);
   gst_validate_report_check_abort (report);
 
   if (priv->runner) {

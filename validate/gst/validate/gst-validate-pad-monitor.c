@@ -164,9 +164,12 @@ _check_field_type (GstValidatePadMonitor * monitor, GstStructure * structure,
   gint rejected_types_index = 0;
 
   if (!gst_structure_has_field (structure, field)) {
+    gchar *str = gst_structure_to_string (structure);
+
     GST_VALIDATE_REPORT (monitor, CAPS_IS_MISSING_FIELD,
         "Field '%s' is missing from structure: %" GST_PTR_FORMAT, field,
-        structure);
+        str);
+    g_free(str);
     return;
   }
 
