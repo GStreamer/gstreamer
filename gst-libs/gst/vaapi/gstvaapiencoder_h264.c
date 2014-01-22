@@ -123,6 +123,31 @@ h264_get_log2_max_frame_num (guint num)
   return ret;
 }
 
+/* Determines the cpbBrNalFactor based on the supplied profile */
+static guint
+h264_get_cpb_nal_factor (GstVaapiProfile profile)
+{
+  guint f;
+
+  /* Table A-2 */
+  switch (profile) {
+    case GST_VAAPI_PROFILE_H264_HIGH:
+      f = 1500;
+      break;
+    case GST_VAAPI_PROFILE_H264_HIGH10:
+      f = 3600;
+      break;
+    case GST_VAAPI_PROFILE_H264_HIGH_422:
+    case GST_VAAPI_PROFILE_H264_HIGH_444:
+      f = 4800;
+      break;
+    default:
+      f = 1200;
+      break;
+  }
+  return f;
+}
+
 /* ------------------------------------------------------------------------- */
 /* --- H.264 Bitstream Writer                                            --- */
 /* ------------------------------------------------------------------------- */
@@ -718,7 +743,8 @@ ensure_profile (GstVaapiEncoderH264 * encoder)
 static gboolean
 ensure_level (GstVaapiEncoderH264 * encoder)
 {
-  const guint bitrate = GST_VAAPI_ENCODER_CAST (encoder)->bitrate;
+  const guint cpb_factor = h264_get_cpb_nal_factor (encoder->profile);
+  const guint bitrate = GST_VAAPI_ENCODER_CAST (encoder)->bitrate * 1000;
   const GstVaapiH264LevelLimits *limits_table;
   guint i, num_limits, PicSizeMbs, MaxDpbMbs, MaxMBPS;
 
@@ -732,7 +758,8 @@ ensure_level (GstVaapiEncoderH264 * encoder)
     const GstVaapiH264LevelLimits *const limits = &limits_table[i];
     if (PicSizeMbs <= limits->MaxFS &&
         MaxDpbMbs <= limits->MaxDpbMbs &&
-        MaxMBPS <= limits->MaxMBPS && (!bitrate || bitrate <= limits->MaxBR))
+        MaxMBPS <= limits->MaxMBPS && (!bitrate
+            || bitrate <= (limits->MaxBR * cpb_factor)))
       break;
   }
   if (i == num_limits)
