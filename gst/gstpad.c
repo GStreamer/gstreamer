@@ -3635,7 +3635,7 @@ gst_pad_peer_query (GstPad * pad, GstQuery * query)
   if (GST_PAD_IS_SRC (pad) && serialized) {
     /* all serialized queries on the srcpad trigger push of
      * sticky events */
-    if (!check_sticky (pad, NULL) == GST_FLOW_OK)
+    if (check_sticky (pad, NULL) != GST_FLOW_OK)
       goto sticky_failed;
   }
 
