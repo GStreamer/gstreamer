@@ -10,11 +10,11 @@ m4_append([gst_vaapi_version], gst_vaapi_pre_version, [.pre])
 ])
 
 # gstreamer-vaapi library (libtool) version number
-m4_define([gst_vaapi_lt_current],       [4])
+m4_define([gst_vaapi_lt_current],       [5])
 m4_define([gst0_vaapi_lt_current_bias], [0])
 m4_define([gst1_vaapi_lt_current_bias], [2])
 m4_define([gst2_vaapi_lt_current_bias], [4])
-m4_define([gst4_vaapi_lt_current_bias], [4])
+m4_define([gst4_vaapi_lt_current_bias], [5])
 m4_define([gst_vaapi_lt_revision],      [0])
 m4_define([gst_vaapi_lt_age],           [0])
 
