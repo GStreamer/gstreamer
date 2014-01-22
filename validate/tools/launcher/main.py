@@ -17,6 +17,7 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import os
+import sys
 import utils
 import urlparse
 import loggable
@@ -26,7 +27,13 @@ from httpserver import HTTPServer
 from baseclasses import _TestsLauncher
 from utils import printc, path2url, DEFAULT_GST_QA_ASSETS, launch_command
 
+
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
+BLACKLISTED_TESTS = ["validate.hls.playback.simple_backward",  # bug 698155
+                     "validate.hls.playback.fast_forward",  # bug 698155
+                     "validate.*.simple_backward.*webm$",  # bug 679250
+                     ]
+
 
 def main():
     parser = OptionParser()
@@ -47,8 +54,14 @@ def main():
                       help=("Path to xml file to store the xunit report in. "
                       "Default is xunit.xml the logs-dir directory"))
     parser.add_option("-t", "--wanted-tests", dest="wanted_tests",
-                      default=None,
+                      default=[],
+                      action="append",
                       help="Define the tests to execute, it can be a regex")
+    parser.add_option("-b", "--blacklisted-tests", dest="blacklisted_tests",
+                      default=[],
+                      action="append",
+                      help="Define the tests not to execute, it can be a regex."
+                      " Currently blacklisted tests are: %s" % BLACKLISTED_TESTS)
     parser.add_option("-L", "--list-tests",
                       dest="list_tests",
                       action="store_true",
@@ -85,6 +98,10 @@ def main():
 
     tests_launcher = _TestsLauncher()
     tests_launcher.add_options(parser)
+
+    for p in BLACKLISTED_TESTS:
+        sys.argv.extend(["-b", p])
+
     (options, args) = parser.parse_args()
     if options.xunit_file is None:
         options.xunit_file = os.path.join(options.logsdir, "xunit.xml")

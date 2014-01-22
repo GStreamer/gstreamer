@@ -149,11 +149,11 @@ class GstValidateManager(TestsManager, Loggable):
 
         for uri, mediainfo in self._list_uris():
             classname = "validate.media_check.%s" % (os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
-            self.tests.append(GstValidateMediaCheckTest(classname,
-                                                        self.options,
-                                                        self.reporter,
-                                                        mediainfo.path,
-                                                        uri))
+            self.add_test(GstValidateMediaCheckTest(classname,
+                                                    self.options,
+                                                    self.reporter,
+                                                    mediainfo.path,
+                                                    uri))
 
         for uri, mediainfo in self._list_uris():
             if mediainfo.config.getboolean("media-info", "is-image") is True:
@@ -162,11 +162,11 @@ class GstValidateManager(TestsManager, Loggable):
                 classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.config.get("file-info", "protocol"),
                                                                 str(comb).replace(' ', '_'),
                                                                 os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
-                self.tests.append(GstValidateTranscodingTest(classname,
-                                                             self.options,
-                                                             self.reporter,
-                                                             comb, uri,
-                                                             mediainfo.config))
+                self.add_test(GstValidateTranscodingTest(classname,
+                                                         self.options,
+                                                         self.reporter,
+                                                         comb, uri,
+                                                         mediainfo.config))
 
     def _check_discovering_info(self, media_info, uri=None):
         self.debug("Checking %s", media_info)
@@ -254,6 +254,8 @@ class GstValidateManager(TestsManager, Loggable):
         if "__uri__" in pipe:
             for uri, minfo in self._list_uris():
                 npipe = pipe
+                protocol = minfo.config.get("file-info", "protocol")
+
                 if scenario != "none":
                     if minfo.config.getboolean("media-info", "seekable") is False:
                         self.debug("Do not run %s as %s does not support seeking",
@@ -266,23 +268,23 @@ class GstValidateManager(TestsManager, Loggable):
                         npipe = pipe.replace("fakesink", "'fakesink sync=true'")
 
                 fname = "%s.%s" % (self._get_fname(scenario,
-                                   minfo.config.get("file-info", "protocol")),
+                                   protocol),
                                    os.path.basename(uri).replace(".", "_"))
                 self.debug("Adding: %s", fname)
 
-                self.tests.append(GstValidateLaunchTest(fname,
-                                                  self.options,
-                                                  self.reporter,
-                                                  npipe.replace("__uri__", uri),
-                                                  scenario=scenario,
-                                                  file_infos=minfo.config)
+                self.add_test(GstValidateLaunchTest(fname,
+                                                    self.options,
+                                                    self.reporter,
+                                                    npipe.replace("__uri__", uri),
+                                                    scenario=scenario,
+                                                    file_infos=minfo.config)
                                  )
         else:
-            self.tests.append(GstValidateLaunchTest(self._get_fname(scenario, "testing"),
-                                              self.options,
-                                              self.reporter,
-                                              pipe,
-                                              scenario=scenario))
+            self.add_test(GstValidateLaunchTest(self._get_fname(scenario, "testing"),
+                                                self.options,
+                                                self.reporter,
+                                                pipe,
+                                                scenario=scenario))
 
     def needs_http_server(self):
         for uri, mediainfo in self._list_uris():

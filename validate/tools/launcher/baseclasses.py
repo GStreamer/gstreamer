@@ -47,7 +47,7 @@ class Test(Loggable):
         self.process = None
 
         self.message = ""
-        self.error = ""
+        self.error_str = ""
         self.time_taken = 0.0
         self._starting_time = None
         self.result = Result.NOT_RUN
@@ -83,7 +83,7 @@ class Test(Loggable):
     def set_result(self, result, message="", error=""):
         self.result = result
         self.message = message
-        self.error = error
+        self.error_str = error
 
     def check_results(self):
         if self.result is Result.FAILED:
@@ -197,14 +197,14 @@ class GstValidateTest(Test):
         super(GstValidateTest, self).__init__(application_name, classname, options,
                                               reporter, timeout=DEFAULT_TIMEOUT)
 
-        if scenario is None or scenario.lower() == "none":
+        if scenario is None or scenario.name.lower() == "none":
             self.scenario = None
         else:
             self.scenario = scenario
 
     def build_arguments(self):
         if self.scenario is not None:
-            self.add_arguments("--set-scenario", self.scenario)
+            self.add_arguments("--set-scenario", self.scenario.name)
 
     def get_validate_criticals_errors(self):
         self.reporter.out.seek(0)
@@ -258,17 +258,25 @@ class TestsManager(Loggable):
 
         Loggable.__init__(self)
 
-        self.tests = []
+        self.tests = set([])
+        self.unwanted_tests = set([])
         self.options = None
         self.args = None
         self.reporter = None
         self.wanted_tests_patterns = []
+        self.blacklisted_tests_patterns = []
 
     def init(self):
         return False
 
     def list_tests(self):
         pass
+
+    def add_test(self, test):
+        if self._is_test_wanted(test):
+            self.tests.add(test)
+        else:
+            self.unwanted_tests.add(test)
 
     def get_tests(self):
         return self.tests
@@ -284,11 +292,26 @@ class TestsManager(Loggable):
         self.reporter = reporter
 
         if options.wanted_tests:
-            for pattern in options.wanted_tests.split(','):
-                self.wanted_tests_patterns.append(re.compile(pattern))
+            for patterns in options.wanted_tests:
+                for pattern in patterns.split(","):
+                    self.wanted_tests_patterns.append(re.compile(pattern))
 
+        if options.blacklisted_tests:
+            for patterns in options.blacklisted_tests:
+                for pattern in patterns.split(","):
+                    self.blacklisted_tests_patterns.append(re.compile(pattern))
+
+    def _check_blacklisted(self, test):
+        for pattern in self.blacklisted_tests_patterns:
+            if pattern.findall(test.classname):
+                return True
+
+        return False
 
     def _is_test_wanted(self, test):
+        if self._check_blacklisted(test):
+            return False
+
         if not self.wanted_tests_patterns:
             return True
 
@@ -342,10 +365,12 @@ class _TestsLauncher(Loggable):
         for f in os.listdir(os.path.join(d, "apps")):
             if f.endswith(".py"):
                 execfile(os.path.join(d, "apps", f), env)
+                print f
 
         testers = [i() for i in get_subclasses(TestsManager, env)]
         for tester in testers:
             if tester.init() is True:
+                print tester
                 self.testers.append(tester)
             else:
                 self.warning("Can not init tester: %s -- PATH is %s"

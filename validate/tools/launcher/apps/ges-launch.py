@@ -212,18 +212,18 @@ class GESTestsManager(TestsManager):
             # First playback casses
             for scenario in SCENARIOS:
                 classname = "ges.playback.%s.%s" % (scenario, os.path.basename(proj).replace(".xges", ""))
-                self.tests.append(GESPlaybackTest(classname,
-                                                  self.options,
-                                                  self.reporter,
-                                                  proj,
-                                                  scenario=scenario)
+                self.add_test(GESPlaybackTest(classname,
+                                              self.options,
+                                              self.reporter,
+                                              proj,
+                                              scenario=scenario)
                                   )
 
             # And now rendering casses
             for comb in COMBINATIONS:
                 classname = "ges.render.%s.%s" % (str(comb).replace(' ', '_'),
                                                   os.path.splitext(os.path.basename(proj))[0])
-                self.tests.append(GESRenderTest(classname, self.options,
-                                                self.reporter, proj,
-                                                combination=comb)
+                self.add_test(GESRenderTest(classname, self.options,
+                                            self.reporter, proj,
+                                            combination=comb)
                                   )
