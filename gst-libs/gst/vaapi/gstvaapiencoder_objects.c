@@ -1,7 +1,7 @@
 /*
  *  gstvaapiencoder_objects.c - VA encoder objects abstraction
  *
- *  Copyright (C) 2013 Intel Corporation
+ *  Copyright (C) 2013-2014 Intel Corporation
  *    Author: Wind Yuan <feng.yuan@intel.com>
  *
  *  This library is free software; you can redistribute it and/or

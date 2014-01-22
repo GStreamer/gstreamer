@@ -1,7 +1,7 @@
 /*
  *  gstvaapiencoder_mpeg2.c - MPEG-2 encoder
  *
- *  Copyright (C) 2012-2013 Intel Corporation
+ *  Copyright (C) 2012-2014 Intel Corporation
  *    Author: Guangxin Xu <guangxin.xu@intel.com>
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *

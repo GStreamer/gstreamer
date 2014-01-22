@@ -1,7 +1,7 @@
 /*
  *  gstvaapiencoder_h264.h - H.264 encoder
  *
- *  Copyright (C) 2011-2013 Intel Corporation
+ *  Copyright (C) 2011-2014 Intel Corporation
  *    Author: Wind Yuan <feng.yuan@intel.com>
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *

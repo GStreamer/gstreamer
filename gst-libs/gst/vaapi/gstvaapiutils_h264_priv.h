@@ -1,7 +1,7 @@
 /*
  *  gstvaapiutils_h264_priv.h - H.264 related utilities
  *
- *  Copyright (C) 2011-2013 Intel Corporation
+ *  Copyright (C) 2011-2014 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or

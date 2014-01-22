@@ -1,7 +1,7 @@
 /*
  *  gstvaapiencoder_mpeg2_priv.h - MPEG-2 encoder (private definitions)
  *
- *  Copyright (C) 2013 Intel Corporation
+ *  Copyright (C) 2013-2014 Intel Corporation
  *    Author: Guangxin Xu <guangxin.xu@intel.com>
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
