@@ -54,6 +54,7 @@ _free_priv (GstValidateReporterPrivate * priv)
 {
   g_hash_table_unref (priv->reports);
   g_free (priv->name);
+  g_slice_free (GstValidateReporterPrivate, priv);
 }
 
 static GstValidateReporterPrivate *
