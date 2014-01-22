@@ -224,10 +224,21 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
   /**
    * GstRTPBasePayload:perfect-rtptime:
    *
-   * Try to use the offset fields to generate perfect RTP timestamps. when this
-   * option is disabled, RTP timestamps are generated from the GStreamer
-   * timestamps, which could result in RTP timestamps that don't increment with
-   * the amount of data in the packet.
+   * Try to use the offset fields to generate perfect RTP timestamps. When this
+   * option is disabled, RTP timestamps are generated from GST_BUFFER_PTS of
+   * each payloaded buffer. The PTSes of buffers may not necessarily increment
+   * with the amount of data in each input buffer, consider e.g. the case where
+   * the buffer arrives from a network which means that the PTS is unrelated to
+   * the amount of data. Because the RTP timestamps are generated from
+   * GST_BUFFER_PTS this can result in RTP timestamps that also don't increment
+   * with the amount of data in the payloaded packet. To circumvent this it is
+   * possible to set the perfect rtptime option enabled. When this option is
+   * enabled the payloader will increment the RTP timestamps based on
+   * GST_BUFFER_OFFSET which relates to the amount of data in each packet
+   * rather than the GST_BUFFER_PTS of each buffer and therefore the RTP
+   * timestamps will more closely correlate with the amount of data in each
+   * buffer. Currently GstRTPBasePayload is limited to handling perfect RTP
+   * timestamps for audio streams.
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PERFECT_RTPTIME,
       g_param_spec_boolean ("perfect-rtptime", "Perfect RTP Time",
