@@ -67,10 +67,8 @@ gst_vaapi_object_class_init(GstVaapiObjectClass *klass, guint size)
  * @klass: The object class
  * @display: The #GstVaapiDisplay
  *
- * Creates a new #GstVaapiObject. If @klass is NULL, then the size of
- * the allocated object is the same as sizeof(GstVaapiObject).
- * If @klass is not NULL, typically when a sub-class is implemented,
- * that pointer shall reference a statically allocated descriptor.
+ * Creates a new #GstVaapiObject. The @klass argument shall not be
+ * %NULL, and it must reference a statically allocated descriptor.
  *
  * This function zero-initializes the derived object data. Also note
  * that this is an internal function that shall not be used outside of
@@ -86,6 +84,7 @@ gst_vaapi_object_new(const GstVaapiObjectClass *klass, GstVaapiDisplay *display)
     GstVaapiObject *object;
     guint sub_size;
 
+    g_return_val_if_fail(klass != NULL, NULL);
     g_return_val_if_fail(display != NULL, NULL);
 
     object = (GstVaapiObject *)gst_vaapi_mini_object_new(object_class);
