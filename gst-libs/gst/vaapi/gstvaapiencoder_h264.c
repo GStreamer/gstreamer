@@ -37,6 +37,9 @@
 /* Define the maximum IDR period */
 #define MAX_IDR_PERIOD 512
 
+/* Scale factor for bitrate (HRD bit_rate_scale: min = 6) */
+#define SX_BITRATE 6
+
 /* Define default rate control mode ("constant-qp") */
 #define DEFAULT_RATECONTROL GST_VAAPI_RATECONTROL_CQP
 
@@ -415,12 +418,12 @@ bs_write_sps (GstBitWriter * bs,
       /* hrd_parameters */
       /* cpb_cnt_minus1 */
       WRITE_UE (bs, 0);
-      WRITE_UINT32 (bs, 4, 4);  /* bit_rate_scale */
+      WRITE_UINT32 (bs, SX_BITRATE - 6, 4);     /* bit_rate_scale */
       WRITE_UINT32 (bs, 6, 4);  /* cpb_size_scale */
 
       for (i = 0; i < 1; ++i) {
         /* bit_rate_value_minus1[0] */
-        WRITE_UE (bs, seq_param->bits_per_second / 1000 - 1);
+        WRITE_UE (bs, (seq_param->bits_per_second >> SX_BITRATE) - 1);
         /* cpb_size_value_minus1[0] */
         WRITE_UE (bs, seq_param->bits_per_second / 1000 * 8 - 1);
         /* cbr_flag[0] */
@@ -581,6 +584,8 @@ struct _GstVaapiEncoderH264
 
   GstBuffer *sps_data;
   GstBuffer *pps_data;
+
+  guint bitrate_bits;           // bitrate (bits)
 };
 
 static inline void
@@ -744,7 +749,6 @@ static gboolean
 ensure_level (GstVaapiEncoderH264 * encoder)
 {
   const guint cpb_factor = h264_get_cpb_nal_factor (encoder->profile);
-  const guint bitrate = GST_VAAPI_ENCODER_CAST (encoder)->bitrate * 1000;
   const GstVaapiH264LevelLimits *limits_table;
   guint i, num_limits, PicSizeMbs, MaxDpbMbs, MaxMBPS;
 
@@ -758,8 +762,8 @@ ensure_level (GstVaapiEncoderH264 * encoder)
     const GstVaapiH264LevelLimits *const limits = &limits_table[i];
     if (PicSizeMbs <= limits->MaxFS &&
         MaxDpbMbs <= limits->MaxDpbMbs &&
-        MaxMBPS <= limits->MaxMBPS && (!bitrate
-            || bitrate <= (limits->MaxBR * cpb_factor)))
+        MaxMBPS <= limits->MaxMBPS && (!encoder->bitrate_bits
+            || encoder->bitrate_bits <= (limits->MaxBR * cpb_factor)))
       break;
   }
   if (i == num_limits)
@@ -892,10 +896,8 @@ set_key_frame (GstVaapiEncPicture * picture,
 static void
 fill_hrd_params (GstVaapiEncoderH264 * encoder, VAEncMiscParameterHRD * hrd)
 {
-  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-
-  if (base_encoder->bitrate > 0) {
-    hrd->buffer_size = base_encoder->bitrate * 1000 * 8;
+  if (encoder->bitrate_bits > 0) {
+    hrd->buffer_size = encoder->bitrate_bits * 8;
     hrd->initial_buffer_fullness = hrd->buffer_size / 2;
   } else {
     hrd->buffer_size = 0;
@@ -1100,7 +1102,6 @@ reference_list_init (GstVaapiEncoderH264 * encoder,
 static gboolean
 fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
 {
-  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   VAEncSequenceParameterBufferH264 *const seq_param = sequence->param;
 
   memset (seq_param, 0, sizeof (VAEncSequenceParameterBufferH264));
@@ -1108,10 +1109,7 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
   seq_param->level_idc = encoder->level_idc;
   seq_param->intra_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
   seq_param->ip_period = 1 + encoder->num_bframes;
-  if (base_encoder->bitrate > 0)
-    seq_param->bits_per_second = base_encoder->bitrate * 1000;
-  else
-    seq_param->bits_per_second = 0;
+  seq_param->bits_per_second = encoder->bitrate_bits;
 
   seq_param->max_num_ref_frames = encoder->max_ref_frames;
   seq_param->picture_width_in_mbs = encoder->mb_width;
@@ -1418,7 +1416,6 @@ error_create_packed_seq_hdr:
 static gboolean
 ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 {
-  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   GstVaapiEncMiscParam *misc = NULL;
   VAEncMiscParameterRateControl *rate_control;
 
@@ -1440,10 +1437,7 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
       return FALSE;
     rate_control = misc->data;
     memset (rate_control, 0, sizeof (VAEncMiscParameterRateControl));
-    if (base_encoder->bitrate)
-      rate_control->bits_per_second = base_encoder->bitrate * 1000;
-    else
-      rate_control->bits_per_second = 0;
+    rate_control->bits_per_second = encoder->bitrate_bits;
     rate_control->target_percentage = 70;
     rate_control->window_size = 500;
     rate_control->initial_qp = encoder->init_qp;
@@ -1505,6 +1499,25 @@ ensure_slices (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
   return TRUE;
 }
 
+/* Normalizes bitrate (and CPB size) for HRD conformance */
+static void
+ensure_bitrate_hrd (GstVaapiEncoderH264 * encoder)
+{
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
+  guint bitrate;
+
+  if (!base_encoder->bitrate) {
+    encoder->bitrate_bits = 0;
+    return;
+  }
+
+  /* Round down bitrate. This is a hard limit mandated by the user */
+  g_assert (SX_BITRATE >= 6);
+  bitrate = (base_encoder->bitrate * 1000) & ~((1U << SX_BITRATE) - 1);
+  GST_DEBUG ("HRD bitrate: %u bits/sec", bitrate);
+  encoder->bitrate_bits = bitrate;
+}
+
 /* Estimates a good enough bitrate if none was supplied */
 static void
 ensure_bitrate (GstVaapiEncoderH264 * encoder)
@@ -1538,6 +1551,7 @@ ensure_bitrate (GstVaapiEncoderH264 * encoder)
       base_encoder->bitrate = 0;
       break;
   }
+  ensure_bitrate_hrd (encoder);
 }
 
 /* Constructs profile and level information based on user-defined limits */
