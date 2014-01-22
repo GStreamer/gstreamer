@@ -1879,33 +1879,31 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
     GstClockTime * running_time)
 {
   GstRTSPStreamPrivate *priv;
-  GObjectClass *payobjclass;
+  GstStructure *stats;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
 
   priv = stream->priv;
 
-  payobjclass = G_OBJECT_GET_CLASS (priv->payloader);
-
   g_mutex_lock (&priv->lock);
-  if (seq && g_object_class_find_property (payobjclass, "seqnum"))
-    g_object_get (priv->payloader, "seqnum", seq, NULL);
 
-  if (rtptime && g_object_class_find_property (payobjclass, "timestamp"))
-    g_object_get (priv->payloader, "timestamp", rtptime, NULL);
+  g_object_get (priv->payloader, "stats", &stats, NULL);
 
-  if (running_time
-      && g_object_class_find_property (payobjclass, "running-time"))
-    g_object_get (priv->payloader, "running-time", running_time, NULL);
+  if (seq)
+    gst_structure_get_uint (stats, "seqnum", seq);
 
-  if (clock_rate && priv->caps) {
-    GstStructure *s;
+  if (rtptime)
+    gst_structure_get_uint (stats, "timestamp", rtptime);
 
-    s = gst_caps_get_structure (priv->caps, 0);
-    if (!gst_structure_get_int (s, "clock-rate", (gint *) clock_rate))
-      if (running_time)
-        *running_time = GST_CLOCK_TIME_NONE;
+  if (running_time)
+    gst_structure_get_clock_time (stats, "running-time", running_time);
+
+  if (clock_rate) {
+    gst_structure_get_uint (stats, "clock-rate", clock_rate);
+    if (*clock_rate == 0 && running_time)
+      *running_time = GST_CLOCK_TIME_NONE;
   }
+
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
