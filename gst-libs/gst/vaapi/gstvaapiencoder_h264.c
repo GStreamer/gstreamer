@@ -417,9 +417,9 @@ bs_write_sps (GstBitWriter * bs,
       WRITE_UINT32 (bs, 1, 1);  /* fixed_frame_rate_flag */
     }
 
-    nal_hrd_parameters_present_flag =
-        (seq_param->bits_per_second > 0 ? TRUE : FALSE);
     /* nal_hrd_parameters_present_flag */
+    nal_hrd_parameters_present_flag = seq_param->bits_per_second > 0;
+    nal_hrd_parameters_present_flag = FALSE;    /* XXX: disabled for now */
     WRITE_UINT32 (bs, nal_hrd_parameters_present_flag, 1);
     if (nal_hrd_parameters_present_flag) {
       /* hrd_parameters */
@@ -445,8 +445,10 @@ bs_write_sps (GstBitWriter * bs,
       /* time_offset_length  */
       WRITE_UINT32 (bs, 23, 5);
     }
+
     /* vcl_hrd_parameters_present_flag */
     WRITE_UINT32 (bs, 0, 1);
+
     if (nal_hrd_parameters_present_flag
         || 0 /*vcl_hrd_parameters_present_flag */ ) {
       /* low_delay_hrd_flag */
