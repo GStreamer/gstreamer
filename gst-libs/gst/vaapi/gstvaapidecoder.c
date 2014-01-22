@@ -315,6 +315,7 @@ decode_step(GstVaapiDecoder *decoder)
             if (!ps->current_frame)
                 return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
             ps->current_frame->ref_count = 1;
+            ps->current_frame->system_frame_number = ps->current_frame_number++;
         }
 
         status = do_parse(decoder, ps->current_frame, ps->input_adapter,
@@ -373,8 +374,8 @@ push_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
 {
     GstVaapiSurfaceProxy * const proxy = frame->user_data;
 
-    GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
-              GST_VAAPI_ID_ARGS(GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy)));
+    GST_DEBUG("push frame %d (surface 0x%08x)", frame->system_frame_number,
+        GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy));
 
     g_async_queue_push(decoder->frames, gst_video_codec_frame_ref(frame));
 }
@@ -393,8 +394,8 @@ pop_frame(GstVaapiDecoder *decoder, guint64 timeout)
         return NULL;
 
     proxy = frame->user_data;
-    GST_DEBUG("dequeue decoded surface %" GST_VAAPI_ID_FORMAT,
-              GST_VAAPI_ID_ARGS(gst_vaapi_surface_proxy_get_surface_id(proxy)));
+    GST_DEBUG("pop frame %d (surface 0x%08x)", frame->system_frame_number,
+        proxy ? GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy) : VA_INVALID_ID);
 
     return frame;
 }

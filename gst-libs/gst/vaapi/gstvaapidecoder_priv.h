@@ -168,6 +168,7 @@ typedef enum {
 typedef struct _GstVaapiParserState GstVaapiParserState;
 struct _GstVaapiParserState {
     GstVideoCodecFrame *current_frame;
+    guint32             current_frame_number;
     GstAdapter         *current_adapter;
     GstAdapter         *input_adapter;
     gint                input_offset1;
