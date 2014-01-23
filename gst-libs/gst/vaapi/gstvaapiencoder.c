@@ -468,6 +468,72 @@ error_invalid_framerate:
   }
 }
 
+/* Gets a compatible profile for the active codec */
+static GstVaapiProfile
+get_compatible_profile (GstVaapiEncoder * encoder)
+{
+  const GstVaapiEncoderClassData *const cdata =
+      GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
+  GstVaapiProfile profile;
+  GArray *profiles;
+  guint i;
+
+  profiles = gst_vaapi_display_get_encode_profiles (encoder->display);
+  if (!profiles)
+    return GST_VAAPI_PROFILE_UNKNOWN;
+
+  // Pick a profile matching the class codec
+  for (i = 0; i < profiles->len; i++) {
+    profile = g_array_index (profiles, GstVaapiProfile, i);
+    if (gst_vaapi_profile_get_codec (profile) == cdata->codec)
+      break;
+  }
+  if (i == profiles->len)
+    profile = GST_VAAPI_PROFILE_UNKNOWN;
+
+  g_array_unref (profiles);
+  return profile;
+}
+
+/* Gets a supported profile for the active codec */
+static GstVaapiProfile
+get_profile (GstVaapiEncoder * encoder)
+{
+  if (!encoder->profile)
+    encoder->profile = get_compatible_profile (encoder);
+  return encoder->profile;
+}
+
+/* Gets config attribute for the supplied profile */
+static gboolean
+get_config_attribute (GstVaapiEncoder * encoder, VAConfigAttribType type,
+    guint32 * out_value_ptr)
+{
+  GstVaapiProfile profile;
+  VAConfigAttrib attrib;
+  VAStatus status;
+
+  profile = get_profile (encoder);
+  if (!profile)
+    return FALSE;
+
+  GST_VAAPI_DISPLAY_LOCK (encoder->display);
+  attrib.type = type;
+  status =
+      vaGetConfigAttributes (GST_VAAPI_DISPLAY_VADISPLAY (encoder->display),
+      gst_vaapi_profile_get_va_profile (profile), VAEntrypointEncSlice,
+      &attrib, 1);
+  GST_VAAPI_DISPLAY_UNLOCK (encoder->display);
+  if (!vaapi_check_status (status, "vaGetConfigAttributes()"))
+    return FALSE;
+  if (attrib.value == VA_ATTRIB_NOT_SUPPORTED)
+    return FALSE;
+
+  if (out_value_ptr)
+    *out_value_ptr = attrib.value;
+  return TRUE;
+}
+
 /* Determines the set of required packed headers */
 static void
 ensure_packed_headers (GstVaapiEncoder * encoder)
@@ -705,52 +771,26 @@ error_invalid_property:
 }
 
 /* Determine the supported rate control modes */
-static gboolean
+static guint32
 get_rate_control_mask (GstVaapiEncoder * encoder)
 {
   const GstVaapiEncoderClassData *const cdata =
       GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
-  GstVaapiProfile profile;
-  GArray *profiles;
-  guint i, rate_control_mask = 0;
+  guint i, value, rate_control_mask = 0;
 
-  if (encoder->rate_control_mask)
+  if (encoder->got_rate_control_mask)
     return encoder->rate_control_mask;
 
-  profiles = gst_vaapi_display_get_encode_profiles (encoder->display);
-  if (!profiles)
-    goto cleanup;
-
-  // Pick a profile matching the class codec
-  for (i = 0; i < profiles->len; i++) {
-    profile = g_array_index (profiles, GstVaapiProfile, i);
-    if (gst_vaapi_profile_get_codec (profile) == cdata->codec)
-      break;
-  }
-
-  if (i != profiles->len) {
-    VAConfigAttrib attrib;
-    VAStatus status;
-
-    attrib.type = VAConfigAttribRateControl;
-    GST_VAAPI_DISPLAY_LOCK (encoder->display);
-    status =
-        vaGetConfigAttributes (GST_VAAPI_DISPLAY_VADISPLAY (encoder->display),
-        gst_vaapi_profile_get_va_profile (profile), VAEntrypointEncSlice,
-        &attrib, 1);
-    GST_VAAPI_DISPLAY_UNLOCK (encoder->display);
-    if (vaapi_check_status (status, "vaGetConfigAttributes()")) {
-      for (i = 0; i < 32; i++) {
-        if (!(attrib.value & (1 << i)))
-          continue;
-        rate_control_mask |= 1 << to_GstVaapiRateControl (1 << i);
-      }
+  if (get_config_attribute (encoder, VAConfigAttribRateControl, &value)) {
+    for (i = 0; i < 32; i++) {
+      if (!(value & (1U << i)))
+        continue;
+      rate_control_mask |= 1 << to_GstVaapiRateControl (1 << i);
     }
   }
-  g_array_unref (profiles);
   GST_INFO ("supported rate controls: 0x%08x", rate_control_mask);
 
-cleanup:
+  encoder->got_rate_control_mask = TRUE;
   encoder->rate_control_mask = cdata->rate_control_mask & rate_control_mask;
   return encoder->rate_control_mask;
 }

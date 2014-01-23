@@ -224,6 +224,8 @@ struct _GstVaapiEncoder
   GstVaapiVideoPool *codedbuf_pool;
   GAsyncQueue *codedbuf_queue;
   guint32 num_codedbuf_queued;
+
+  guint got_rate_control_mask:1;
 };
 
 struct _GstVaapiEncoderClassData

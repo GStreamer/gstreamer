@@ -53,8 +53,7 @@
 
 /* Supported set of VA rate controls, within this implementation */
 #define SUPPORTED_RATECONTROLS                          \
-  (GST_VAAPI_RATECONTROL_MASK (NONE) |                  \
-   GST_VAAPI_RATECONTROL_MASK (CQP)  |                  \
+  (GST_VAAPI_RATECONTROL_MASK (CQP)  |                  \
    GST_VAAPI_RATECONTROL_MASK (CBR)  |                  \
    GST_VAAPI_RATECONTROL_MASK (VBR)  |                  \
    GST_VAAPI_RATECONTROL_MASK (VBR_CONSTRAINED))
