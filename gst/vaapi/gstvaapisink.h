@@ -98,6 +98,11 @@ struct _GstVaapiSink
   gint32 view_id;
   GThread *event_thread;
   volatile gboolean event_thread_cancel;
+
+  /* Color balance values */
+  guint cb_changed;
+  GValue cb_values[4];
+
   guint handle_events : 1;
   guint foreign_window : 1;
   guint fullscreen : 1;

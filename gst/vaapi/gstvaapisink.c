@@ -117,6 +117,10 @@ enum
   PROP_ROTATION,
   PROP_FORCE_ASPECT_RATIO,
   PROP_VIEW_ID,
+  PROP_HUE,
+  PROP_SATURATION,
+  PROP_BRIGHTNESS,
+  PROP_CONTRAST,
 
   N_PROPERTIES
 };
@@ -498,6 +502,110 @@ gst_vaapisink_video_overlay_iface_init (GstVideoOverlayInterface * iface)
   iface->handle_events = gst_vaapisink_video_overlay_set_event_handling;
 }
 
+enum
+{
+  CB_HUE = 1,
+  CB_SATURATION,
+  CB_BRIGHTNESS,
+  CB_CONTRAST
+};
+
+typedef struct
+{
+  guint cb_id;
+  const gchar *prop_name;
+} ColorBalanceMap;
+
+static const ColorBalanceMap cb_map[4] = {
+  {CB_HUE, GST_VAAPI_DISPLAY_PROP_HUE},
+  {CB_SATURATION, GST_VAAPI_DISPLAY_PROP_SATURATION},
+  {CB_BRIGHTNESS, GST_VAAPI_DISPLAY_PROP_BRIGHTNESS},
+  {CB_CONTRAST, GST_VAAPI_DISPLAY_PROP_CONTRAST}
+};
+
+static inline GValue *
+cb_get_gvalue (GstVaapiSink * sink, guint id)
+{
+  g_return_val_if_fail ((guint) (id - CB_HUE) < G_N_ELEMENTS (sink->cb_values),
+      NULL);
+
+  return &sink->cb_values[id - CB_HUE];
+}
+
+static gboolean
+cb_set_gvalue (GstVaapiSink * sink, guint id, const GValue * value)
+{
+  GValue *const v_value = cb_get_gvalue (sink, id);
+
+  if (!v_value)
+    return FALSE;
+
+  g_value_set_float (v_value, g_value_get_float (value));
+  sink->cb_changed |= (1U << id);
+  return TRUE;
+}
+
+static inline gfloat
+cb_get_value (GstVaapiSink * sink, guint id)
+{
+  const GValue *const v_value = cb_get_gvalue (sink, id);
+
+  return v_value ? g_value_get_float (v_value) : 0.0;
+}
+
+static gboolean
+cb_set_value (GstVaapiSink * sink, guint id, gfloat value)
+{
+  GValue v_value = G_VALUE_INIT;
+  gboolean success;
+
+  g_value_init (&v_value, G_TYPE_FLOAT);
+  g_value_set_float (&v_value, value);
+  success = cb_set_gvalue (sink, id, &v_value);
+  g_value_unset (&v_value);
+  return success;
+}
+
+static gboolean
+cb_sync_values_from_display (GstVaapiSink * sink, GstVaapiDisplay * display)
+{
+  GValue v_value = G_VALUE_INIT;
+  guint i, failures = 0;
+
+  for (i = 0; i < G_N_ELEMENTS (sink->cb_values); i++) {
+    const guint cb_id = CB_HUE + i;
+    if (!gst_vaapi_display_has_property (display, cb_map[i].prop_name))
+      continue;
+
+    if (G_IS_VALUE (&v_value))
+      g_value_unset (&v_value);
+    if (gst_vaapi_display_get_property (display, cb_map[i].prop_name, &v_value))
+      cb_set_gvalue (sink, cb_id, &v_value);
+    else
+      failures++;
+  }
+  sink->cb_changed = 0;
+  return failures == 0;
+}
+
+static gboolean
+cb_sync_values_to_display (GstVaapiSink * sink, GstVaapiDisplay * display)
+{
+  guint i, failures = 0;
+
+  for (i = 0; i < G_N_ELEMENTS (sink->cb_values); i++) {
+    const guint cb_id = CB_HUE + i;
+    if (!(sink->cb_changed & (1U << cb_id)))
+      continue;
+
+    if (!gst_vaapi_display_set_property (display, cb_map[i].prop_name,
+            cb_get_gvalue (sink, cb_id)))
+      failures++;
+  }
+  sink->cb_changed = 0;
+  return failures == 0;
+}
+
 /* ------------------------------------------------------------------------ */
 /* --- Common implementation                                            --- */
 /* ------------------------------------------------------------------------ */
@@ -730,6 +838,12 @@ gst_vaapisink_ensure_window_size (GstVaapiSink * sink, guint * width_ptr,
   *height_ptr = out_rect.h;
 }
 
+static inline gboolean
+gst_vaapisink_ensure_colorbalance (GstVaapiSink * sink)
+{
+  return cb_sync_values_to_display (sink, GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
+}
+
 static gboolean
 gst_vaapisink_ensure_rotation (GstVaapiSink * sink,
     gboolean recalc_display_rect)
@@ -798,6 +912,10 @@ gst_vaapisink_display_changed (GstVaapiPluginBase * plugin)
       render_mode == GST_VAAPI_RENDER_MODE_OVERLAY;
   GST_DEBUG ("use %s rendering mode",
       sink->use_overlay ? "overlay" : "texture");
+
+  /* Keep our own colorbalance values, should we have any change pending */
+  if (!sink->cb_changed)
+    cb_sync_values_from_display (sink, plugin->display);
 
   sink->use_rotation = gst_vaapi_display_has_property (plugin->display,
       GST_VAAPI_DISPLAY_PROP_ROTATION);
@@ -914,6 +1032,7 @@ gst_vaapisink_set_caps (GstBaseSink * base_sink, GstCaps * caps)
   update_colorimetry (sink, &vip->colorimetry);
   gst_caps_replace (&sink->caps, caps);
 
+  gst_vaapisink_ensure_colorbalance (sink);
   gst_vaapisink_ensure_rotation (sink, FALSE);
 
   gst_vaapisink_ensure_window_size (sink, &win_width, &win_height);
@@ -993,6 +1112,7 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
     return GST_FLOW_OK;
   }
 
+  gst_vaapisink_ensure_colorbalance (sink);
   gst_vaapisink_ensure_rotation (sink, TRUE);
 
   GST_DEBUG ("render surface %" GST_VAAPI_ID_FORMAT,
@@ -1130,6 +1250,12 @@ gst_vaapisink_set_property (GObject * object,
     case PROP_FORCE_ASPECT_RATIO:
       sink->keep_aspect = g_value_get_boolean (value);
       break;
+    case PROP_HUE:
+    case PROP_SATURATION:
+    case PROP_BRIGHTNESS:
+    case PROP_CONTRAST:
+      cb_set_gvalue (sink, (prop_id - PROP_HUE) + CB_HUE, value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1160,6 +1286,13 @@ gst_vaapisink_get_property (GObject * object,
       break;
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, sink->keep_aspect);
+      break;
+    case PROP_HUE:
+    case PROP_SATURATION:
+    case PROP_BRIGHTNESS:
+    case PROP_CONTRAST:
+      g_value_set_float (value, cb_get_value (sink,
+              (prop_id - PROP_HUE) + CB_HUE));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1293,6 +1426,53 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
       "ID of the view component of interest to display",
       -1, G_MAXINT32, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  /**
+   * GstVaapiSink:hue:
+   *
+   * The VA display hue, expressed as a float value. Range is -180.0
+   * to 180.0. Default value is 0.0 and represents no modification.
+   */
+  g_properties[PROP_HUE] =
+      g_param_spec_float (GST_VAAPI_DISPLAY_PROP_HUE,
+      "hue", "The display hue value", -180.0, 180.0, 0.0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * GstVaapiSink:saturation:
+   *
+   * The VA display saturation, expressed as a float value. Range is
+   * 0.0 to 2.0. Default value is 1.0 and represents no modification.
+   */
+  g_properties[PROP_SATURATION] =
+      g_param_spec_float (GST_VAAPI_DISPLAY_PROP_SATURATION,
+      "saturation",
+      "The display saturation value", 0.0, 2.0, 1.0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * GstVaapiSink:brightness:
+   *
+   * The VA display brightness, expressed as a float value. Range is
+   * -1.0 to 1.0. Default value is 0.0 and represents no modification.
+   */
+  g_properties[PROP_BRIGHTNESS] =
+      g_param_spec_float (GST_VAAPI_DISPLAY_PROP_BRIGHTNESS,
+      "brightness",
+      "The display brightness value", -1.0, 1.0, 0.0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * GstVaapiSink:contrast:
+   *
+   * The VA display contrast, expressed as a float value. Range is 0.0
+   * to 2.0. Default value is 1.0 and represents no modification.
+   */
+  g_properties[PROP_CONTRAST] =
+      g_param_spec_float (GST_VAAPI_DISPLAY_PROP_CONTRAST,
+      "contrast",
+      "The display contrast value", 0.0, 2.0, 1.0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
   g_object_class_install_properties (object_class, N_PROPERTIES, g_properties);
 }
 
@@ -1300,6 +1480,7 @@ static void
 gst_vaapisink_init (GstVaapiSink * sink)
 {
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (sink);
+  guint i;
 
   gst_vaapi_plugin_base_init (plugin, GST_CAT_DEFAULT);
   gst_vaapi_plugin_base_set_display_type (plugin, DEFAULT_DISPLAY_TYPE);
@@ -1312,4 +1493,7 @@ gst_vaapisink_init (GstVaapiSink * sink)
   sink->rotation_req = DEFAULT_ROTATION;
   sink->keep_aspect = TRUE;
   gst_video_info_init (&sink->video_info);
+
+  for (i = 0; i < G_N_ELEMENTS (sink->cb_values); i++)
+    g_value_init (&sink->cb_values[i], G_TYPE_FLOAT);
 }
