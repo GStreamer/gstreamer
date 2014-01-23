@@ -142,11 +142,6 @@ G_GNUC_INTERNAL
 guint
 gst_vaapi_context_get_surface_count (GstVaapiContext * context);
 
-G_GNUC_INTERNAL
-gboolean
-gst_vaapi_context_get_attribute (GstVaapiContext * context,
-    VAConfigAttribType type, guint * out_value_ptr);
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_CONTEXT_H */

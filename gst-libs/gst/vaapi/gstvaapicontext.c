@@ -39,6 +39,7 @@
 #include "gstvaapisurfaceproxy.h"
 #include "gstvaapivideopool_priv.h"
 #include "gstvaapiutils.h"
+#include "gstvaapiutils_core.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -48,6 +49,14 @@ unref_surface_cb (GstVaapiSurface * surface)
 {
   gst_vaapi_surface_set_parent_context (surface, NULL);
   gst_vaapi_object_unref (surface);
+}
+
+static inline gboolean
+context_get_attribute (GstVaapiContext * context, VAConfigAttribType type,
+    guint * out_value_ptr)
+{
+  return gst_vaapi_get_config_attribute (GST_VAAPI_OBJECT_DISPLAY (context),
+      context->va_profile, context->va_entrypoint, type, out_value_ptr);
 }
 
 static void
@@ -179,7 +188,7 @@ context_create (GstVaapiContext * context)
 
   /* Validate VA surface format */
   attrib->type = VAConfigAttribRTFormat;
-  if (!gst_vaapi_context_get_attribute (context, attrib->type, &value))
+  if (!context_get_attribute (context, attrib->type, &value))
     goto cleanup;
   if (!(value & VA_RT_FORMAT_YUV420))
     goto cleanup;
@@ -193,7 +202,7 @@ context_create (GstVaapiContext * context)
 
       /* Rate control */
       attrib->type = VAConfigAttribRateControl;
-      if (!gst_vaapi_context_get_attribute (context, attrib->type, &value))
+      if (!context_get_attribute (context, attrib->type, &value))
         goto cleanup;
 
       va_rate_control = from_GstVaapiRateControl (config->rc_mode);
@@ -208,7 +217,7 @@ context_create (GstVaapiContext * context)
       /* Packed headers */
       if (config->packed_headers) {
         attrib->type = VAConfigAttribEncPackedHeaders;
-        if (!gst_vaapi_context_get_attribute (context, attrib->type, &value))
+        if (!context_get_attribute (context, attrib->type, &value))
           goto cleanup;
 
         if ((value & config->packed_headers) != config->packed_headers) {
@@ -435,43 +444,4 @@ gst_vaapi_context_get_surface_count (GstVaapiContext * context)
   g_return_val_if_fail (context != NULL, 0);
 
   return gst_vaapi_video_pool_get_size (context->surfaces_pool);
-}
-
-/**
- * gst_vaapi_context_get_attribute:
- * @context: a #GstVaapiContext
- * @type: a VA config attribute type
- * @out_value_ptr: return location for the config attribute value
- *
- * Determines the value for the VA config attribute @type.
- *
- * Note: this function only returns success if the VA driver does
- * actually know about this config attribute type and that it returned
- * a valid value for it.
- *
- * Return value: %TRUE if the VA driver knows about the requested
- *   config attribute and returned a valid value, %FALSE otherwise
- */
-gboolean
-gst_vaapi_context_get_attribute (GstVaapiContext * context,
-    VAConfigAttribType type, guint * out_value_ptr)
-{
-  VAConfigAttrib attrib;
-  VAStatus status;
-
-  g_return_val_if_fail (context != NULL, FALSE);
-
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (context);
-  attrib.type = type;
-  status = vaGetConfigAttributes (GST_VAAPI_OBJECT_VADISPLAY (context),
-      context->va_profile, context->va_entrypoint, &attrib, 1);
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (context);
-  if (!vaapi_check_status (status, "vaGetConfigAttributes()"))
-    return FALSE;
-  if (attrib.value == VA_ATTRIB_NOT_SUPPORTED)
-    return FALSE;
-
-  if (out_value_ptr)
-    *out_value_ptr = attrib.value;
-  return TRUE;
 }

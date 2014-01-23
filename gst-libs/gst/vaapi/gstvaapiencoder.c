@@ -28,6 +28,7 @@
 #include "gstvaapicontext.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiutils.h"
+#include "gstvaapiutils_core.h"
 #include "gstvaapivalue.h"
 
 #define DEBUG 1
@@ -507,31 +508,18 @@ get_profile (GstVaapiEncoder * encoder)
 /* Gets config attribute for the supplied profile */
 static gboolean
 get_config_attribute (GstVaapiEncoder * encoder, VAConfigAttribType type,
-    guint32 * out_value_ptr)
+    guint * out_value_ptr)
 {
   GstVaapiProfile profile;
-  VAConfigAttrib attrib;
-  VAStatus status;
+  VAProfile va_profile;
 
   profile = get_profile (encoder);
   if (!profile)
     return FALSE;
 
-  GST_VAAPI_DISPLAY_LOCK (encoder->display);
-  attrib.type = type;
-  status =
-      vaGetConfigAttributes (GST_VAAPI_DISPLAY_VADISPLAY (encoder->display),
-      gst_vaapi_profile_get_va_profile (profile), VAEntrypointEncSlice,
-      &attrib, 1);
-  GST_VAAPI_DISPLAY_UNLOCK (encoder->display);
-  if (!vaapi_check_status (status, "vaGetConfigAttributes()"))
-    return FALSE;
-  if (attrib.value == VA_ATTRIB_NOT_SUPPORTED)
-    return FALSE;
-
-  if (out_value_ptr)
-    *out_value_ptr = attrib.value;
-  return TRUE;
+  va_profile = gst_vaapi_profile_get_va_profile (profile);
+  return gst_vaapi_get_config_attribute (encoder->display, va_profile,
+      VAEntrypointEncSlice, type, out_value_ptr);
 }
 
 /* Determines the set of supported packed headers */
@@ -781,7 +769,7 @@ error_invalid_property:
 }
 
 /* Determine the supported rate control modes */
-static guint32
+static guint
 get_rate_control_mask (GstVaapiEncoder * encoder)
 {
   const GstVaapiEncoderClassData *const cdata =
