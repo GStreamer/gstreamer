@@ -375,7 +375,7 @@ push_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
     GstVaapiSurfaceProxy * const proxy = frame->user_data;
 
     GST_DEBUG("push frame %d (surface 0x%08x)", frame->system_frame_number,
-        GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy));
+        (guint32) GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy));
 
     g_async_queue_push(decoder->frames, gst_video_codec_frame_ref(frame));
 }
@@ -395,7 +395,8 @@ pop_frame(GstVaapiDecoder *decoder, guint64 timeout)
 
     proxy = frame->user_data;
     GST_DEBUG("pop frame %d (surface 0x%08x)", frame->system_frame_number,
-        proxy ? GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy) : VA_INVALID_ID);
+        (proxy ? (guint32) GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy) :
+         VA_INVALID_ID));
 
     return frame;
 }
