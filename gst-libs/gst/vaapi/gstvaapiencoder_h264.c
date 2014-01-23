@@ -63,6 +63,11 @@
   (GST_VAAPI_ENCODER_TUNE_MASK (NONE) |                 \
    GST_VAAPI_ENCODER_TUNE_MASK (HIGH_COMPRESSION))
 
+/* Supported set of VA packed headers, within this implementation */
+#define SUPPORTED_PACKED_HEADERS                \
+  (VA_ENC_PACKED_HEADER_SEQUENCE |              \
+   VA_ENC_PACKED_HEADER_PICTURE)
+
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_NONE        0
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_LOW         1
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_MEDIUM      2

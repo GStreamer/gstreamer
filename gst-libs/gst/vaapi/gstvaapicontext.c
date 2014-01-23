@@ -144,7 +144,7 @@ context_create (GstVaapiContext * context)
   const GstVaapiContextInfo *const cip = &context->info;
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
   guint va_rate_control;
-  VAConfigAttrib attribs[2], *attrib = attribs;
+  VAConfigAttrib attribs[3], *attrib = attribs;
   VAContextID context_id;
   VASurfaceID surface_id;
   VAStatus status;
@@ -204,6 +204,21 @@ context_create (GstVaapiContext * context)
       }
       attrib->value = va_rate_control;
       attrib++;
+
+      /* Packed headers */
+      if (config->packed_headers) {
+        attrib->type = VAConfigAttribEncPackedHeaders;
+        if (!gst_vaapi_context_get_attribute (context, attrib->type, &value))
+          goto cleanup;
+
+        if ((value & config->packed_headers) != config->packed_headers) {
+          GST_ERROR ("unsupported packed headers 0x%08x",
+              config->packed_headers & ~(value & config->packed_headers));
+          goto cleanup;
+        }
+        attrib->value = config->packed_headers;
+        attrib++;
+      }
       break;
     }
     default:
@@ -248,6 +263,11 @@ context_update_config_encoder (GstVaapiContext * context,
 
   if (config->rc_mode != new_config->rc_mode) {
     config->rc_mode = new_config->rc_mode;
+    config_changed = TRUE;
+  }
+
+  if (config->packed_headers != new_config->packed_headers) {
+    config->packed_headers = new_config->packed_headers;
     config_changed = TRUE;
   }
   return config_changed;

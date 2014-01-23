@@ -534,14 +534,24 @@ get_config_attribute (GstVaapiEncoder * encoder, VAConfigAttribType type,
   return TRUE;
 }
 
-/* Determines the set of required packed headers */
-static void
-ensure_packed_headers (GstVaapiEncoder * encoder)
+/* Determines the set of supported packed headers */
+static guint
+get_packed_headers (GstVaapiEncoder * encoder)
 {
-  if (!gst_vaapi_context_get_attribute (encoder->context,
-          VAConfigAttribEncPackedHeaders, &encoder->packed_headers))
-    encoder->packed_headers = 0;
-  GST_INFO ("packed headers mask: 0x%08x", encoder->packed_headers);
+  const GstVaapiEncoderClassData *const cdata =
+      GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
+  guint value;
+
+  if (encoder->got_packed_headers)
+    return encoder->packed_headers;
+
+  if (!get_config_attribute (encoder, VAConfigAttribEncPackedHeaders, &value))
+    value = 0;
+  GST_INFO ("supported packed headers: 0x%08x", value);
+
+  encoder->got_packed_headers = TRUE;
+  encoder->packed_headers = cdata->packed_headers & value;
+  return encoder->packed_headers;
 }
 
 /* Updates video context */
@@ -560,6 +570,7 @@ set_context_info (GstVaapiEncoder * encoder)
 
   memset (config, 0, sizeof (*config));
   config->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
+  config->packed_headers = get_packed_headers (encoder);
 }
 
 /* Ensures the underlying VA context for encoding is created */
@@ -602,7 +613,6 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
 
   if (!gst_vaapi_encoder_ensure_context (encoder))
     goto error_reset_context;
-  ensure_packed_headers (encoder);
 
   codedbuf_size = encoder->codedbuf_pool ?
       gst_vaapi_coded_buffer_pool_get_buffer_size (GST_VAAPI_CODED_BUFFER_POOL

@@ -59,12 +59,14 @@ typedef enum {
 /**
  * GstVaapiConfigInfoEncoder:
  * @rc_mode: rate-control mode (#GstVaapiRateControl).
+ * @packed_headers: notify encoder that packed headers are submitted (mask).
  *
  * Extra configuration for encoding.
  */
 struct _GstVaapiConfigInfoEncoder
 {
   GstVaapiRateControl rc_mode;
+  guint packed_headers;
 };
 
 /**

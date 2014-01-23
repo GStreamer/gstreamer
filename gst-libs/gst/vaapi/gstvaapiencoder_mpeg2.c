@@ -50,6 +50,11 @@
 #define SUPPORTED_TUNE_OPTIONS \
   (GST_VAAPI_ENCODER_TUNE_MASK (NONE))
 
+/* Supported set of VA packed headers, within this implementation */
+#define SUPPORTED_PACKED_HEADERS                \
+  (VA_ENC_PACKED_HEADER_SEQUENCE |              \
+   VA_ENC_PACKED_HEADER_PICTURE)
+
 static gboolean
 gst_bit_writer_write_sps (GstBitWriter * bitwriter,
     const VAEncSequenceParameterBufferMPEG2 * seq_param);

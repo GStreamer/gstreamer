@@ -225,6 +225,7 @@ struct _GstVaapiEncoder
   GAsyncQueue *codedbuf_queue;
   guint32 num_codedbuf_queued;
 
+  guint got_packed_headers:1;
   guint got_rate_control_mask:1;
 };
 
@@ -232,6 +233,7 @@ struct _GstVaapiEncoderClassData
 {
   /*< private >*/
   GstVaapiCodec codec;
+  guint32 packed_headers;
 
   GType (*rate_control_get_type)(void);
   GstVaapiRateControl default_rate_control;
@@ -255,6 +257,7 @@ struct _GstVaapiEncoderClassData
                                                                         \
   static const GstVaapiEncoderClassData g_class_data = {                \
     .codec = G_PASTE (GST_VAAPI_CODEC_, CODEC),                         \
+    .packed_headers = SUPPORTED_PACKED_HEADERS,                         \
     .rate_control_get_type =                                            \
         G_PASTE (G_PASTE (gst_vaapi_rate_control_, CODEC), _get_type),  \
     .default_rate_control = DEFAULT_RATECONTROL,                        \
