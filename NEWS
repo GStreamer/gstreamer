@@ -1,7 +1,21 @@
-gst-vaapi NEWS -- summary of changes.  2013-11-21
+gst-vaapi NEWS -- summary of changes.  2014-01-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.5.8 - DD.Jan.2014
+* Add H.264 video encoding (+Feng Yuan)
+* Add MPEG-2 video encoding (+Guangxin Xu)
+* Add initial support for GStreamer 1.3 (Matthieu Bouron)
+* Add support for H.264 Constrained Baseline profile (Feng Yuan)
+* Add support for colorbalance adjustment in vaapipostproc (Halley Zhao)
+* Add color space conversion in vaapisink (Holger Kaelberer) [#722255]
+* Fix OpenGL interop with clutter-gst and glimagesink elements (Matthieu Bouron)
+* Fix decoding of H.264 quantization matrices (+Cong Zhong) [#706406]
+* Fix robustness of H.264 decoder when packets are missing
+* Fix hang in vaapidecode on SIGINT [<Ctrl>+C] (Fen Yuan) [#720584]
+* Fix vaapisink initialization with foreign window (Holger Kaelberer) [#722244]
+* Fix Sharpening filter in vaapipostproc (Halley Zhao) [#720375]
 
 Version 0.5.7 - 21.Nov.2013
 * Add support for GStreamer 1.2 (+Victor Jaquez, Sreerenj Balachandran)
