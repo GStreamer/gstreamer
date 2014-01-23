@@ -501,10 +501,10 @@ gst_vaapi_encoder_ensure_context (GstVaapiEncoder * encoder)
   set_context_info (encoder);
 
   if (encoder->context) {
-    if (!gst_vaapi_context_reset_full (encoder->context, cip))
+    if (!gst_vaapi_context_reset (encoder->context, cip))
       return FALSE;
   } else {
-    encoder->context = gst_vaapi_context_new_full (encoder->display, cip);
+    encoder->context = gst_vaapi_context_new (encoder->display, cip);
     if (!encoder->context)
       return FALSE;
   }

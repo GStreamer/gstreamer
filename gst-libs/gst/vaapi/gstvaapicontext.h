@@ -1,5 +1,5 @@
 /*
- *  gstvaapicontext.h - VA context abstraction
+ *  gstvaapicontext.h - VA context abstraction (private)
  *
  *  Copyright (C) 2010-2011 Splitted-Desktop Systems
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@splitted-desktop.com>
@@ -25,19 +25,22 @@
 #ifndef GST_VAAPI_CONTEXT_H
 #define GST_VAAPI_CONTEXT_H
 
-#include <gst/vaapi/gstvaapiobject.h>
-#include <gst/vaapi/gstvaapiprofile.h>
-#include <gst/vaapi/gstvaapidisplay.h>
-#include <gst/vaapi/gstvaapisurface.h>
 #include <gst/video/video-overlay-composition.h>
+#include "gstvaapiobject.h"
+#include "gstvaapiobject_priv.h"
+#include "gstvaapiprofile.h"
+#include "gstvaapidisplay.h"
+#include "gstvaapisurface.h"
+#include "gstvaapivideopool.h"
 
 G_BEGIN_DECLS
 
 #define GST_VAAPI_CONTEXT(obj) \
   ((GstVaapiContext *) (obj))
 
-typedef struct _GstVaapiContext GstVaapiContext;
 typedef struct _GstVaapiContextInfo GstVaapiContextInfo;
+typedef struct _GstVaapiContext GstVaapiContext;
+typedef struct _GstVaapiContextClass GstVaapiContextClass;
 
 /**
  * GstVaapiContextInfo:
@@ -59,47 +62,50 @@ struct _GstVaapiContextInfo
   guint ref_frames;
 };
 
-G_GNUC_INTERNAL
-GstVaapiContext *
-gst_vaapi_context_new (GstVaapiDisplay * display, GstVaapiProfile profile,
-    GstVaapiEntrypoint entrypoint, guint width, guint height);
+/**
+ * GstVaapiContext:
+ *
+ * A VA context wrapper.
+ */
+struct _GstVaapiContext
+{
+  /*< private >*/
+  GstVaapiObject parent_instance;
+
+  GstVaapiContextInfo info;
+  VAProfile va_profile;
+  VAEntrypoint va_entrypoint;
+  VAConfigID va_config;
+  GPtrArray *surfaces;
+  GstVaapiVideoPool *surfaces_pool;
+  GPtrArray *overlays[2];
+  guint overlay_id;
+};
+
+/**
+ * GstVaapiContextClass:
+ *
+ * A VA context wrapper class.
+ */
+struct _GstVaapiContextClass
+{
+  /*< private >*/
+  GstVaapiObjectClass parent_class;
+};
 
 G_GNUC_INTERNAL
 GstVaapiContext *
-gst_vaapi_context_new_full (GstVaapiDisplay * display,
+gst_vaapi_context_new (GstVaapiDisplay * display,
     const GstVaapiContextInfo * cip);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_context_reset (GstVaapiContext * context, GstVaapiProfile profile,
-    GstVaapiEntrypoint entrypoint, guint width, guint height);
-
-G_GNUC_INTERNAL
-gboolean
-gst_vaapi_context_reset_full (GstVaapiContext * context,
+gst_vaapi_context_reset (GstVaapiContext * context,
     const GstVaapiContextInfo * new_cip);
 
 G_GNUC_INTERNAL
 GstVaapiID
 gst_vaapi_context_get_id (GstVaapiContext * context);
-
-G_GNUC_INTERNAL
-GstVaapiProfile
-gst_vaapi_context_get_profile (GstVaapiContext * context);
-
-G_GNUC_INTERNAL
-gboolean
-gst_vaapi_context_set_profile (GstVaapiContext * context,
-    GstVaapiProfile profile);
-
-G_GNUC_INTERNAL
-GstVaapiEntrypoint
-gst_vaapi_context_get_entrypoint (GstVaapiContext * context);
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_context_get_size (GstVaapiContext * context,
-    guint * pwidth, guint * pheight);
 
 G_GNUC_INTERNAL
 GstVaapiSurfaceProxy *

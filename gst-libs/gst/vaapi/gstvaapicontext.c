@@ -28,9 +28,9 @@
  */
 
 #include "sysdeps.h"
-#include <assert.h>
 #include "gstvaapicompat.h"
 #include "gstvaapicontext.h"
+#include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
 #include "gstvaapisurface.h"
 #include "gstvaapisurface_priv.h"
@@ -44,37 +44,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-typedef struct _GstVaapiContextClass GstVaapiContextClass;
-
-/**
- * GstVaapiContext:
- *
- * A VA context wrapper.
- */
-struct _GstVaapiContext
-{
-  /*< private >*/
-  GstVaapiObject parent_instance;
-
-  GstVaapiContextInfo info;
-  VAConfigID config_id;
-  GPtrArray *surfaces;
-  GstVaapiVideoPool *surfaces_pool;
-  GPtrArray *overlays[2];
-  guint overlay_id;
-};
-
-/**
- * GstVaapiContextClass:
- *
- * A VA context wrapper class.
- */
-struct _GstVaapiContextClass
-{
-  /*< private >*/
-  GstVaapiObjectClass parent_class;
-};
-
 typedef struct _GstVaapiOverlayRectangle GstVaapiOverlayRectangle;
 struct _GstVaapiOverlayRectangle
 {
@@ -87,25 +56,6 @@ struct _GstVaapiOverlayRectangle
   GstVideoOverlayRectangle *rect;
   guint is_associated:1;
 };
-
-static guint
-get_max_ref_frames (GstVaapiProfile profile)
-{
-  guint ref_frames;
-
-  switch (gst_vaapi_profile_get_codec (profile)) {
-    case GST_VAAPI_CODEC_H264:
-      ref_frames = 16;
-      break;
-    case GST_VAAPI_CODEC_JPEG:
-      ref_frames = 0;
-      break;
-    default:
-      ref_frames = 2;
-      break;
-  }
-  return ref_frames;
-}
 
 static inline void
 gst_video_overlay_rectangle_replace (GstVideoOverlayRectangle ** old_rect_ptr,
@@ -392,7 +342,7 @@ overlay_reassociate (GPtrArray * overlays)
 }
 
 static void
-gst_vaapi_context_clear_overlay (GstVaapiContext * context)
+context_clear_overlay (GstVaapiContext * context)
 {
   overlay_clear (context->overlays[0]);
   overlay_clear (context->overlays[1]);
@@ -400,42 +350,39 @@ gst_vaapi_context_clear_overlay (GstVaapiContext * context)
 }
 
 static inline void
-gst_vaapi_context_destroy_overlay (GstVaapiContext * context)
+context_destroy_overlay (GstVaapiContext * context)
 {
-  gst_vaapi_context_clear_overlay (context);
+  context_clear_overlay (context);
 }
 
 static void
-unref_surface_cb (gpointer data, gpointer user_data)
+unref_surface_cb (GstVaapiSurface * surface)
 {
-  GstVaapiSurface *const surface = GST_VAAPI_SURFACE (data);
-
   gst_vaapi_surface_set_parent_context (surface, NULL);
   gst_vaapi_object_unref (surface);
 }
 
 static void
-gst_vaapi_context_destroy_surfaces (GstVaapiContext * context)
+context_destroy_surfaces (GstVaapiContext * context)
 {
-  gst_vaapi_context_destroy_overlay (context);
+  context_destroy_overlay (context);
 
   if (context->surfaces) {
-    g_ptr_array_foreach (context->surfaces, unref_surface_cb, NULL);
-    g_ptr_array_free (context->surfaces, TRUE);
+    g_ptr_array_unref (context->surfaces);
     context->surfaces = NULL;
   }
   gst_vaapi_video_pool_replace (&context->surfaces_pool, NULL);
 }
 
 static void
-gst_vaapi_context_destroy (GstVaapiContext * context)
+context_destroy (GstVaapiContext * context)
 {
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
   VAContextID context_id;
   VAStatus status;
 
   context_id = GST_VAAPI_OBJECT_ID (context);
-  GST_DEBUG ("context %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (context_id));
+  GST_DEBUG ("context 0x%08x", context_id);
 
   if (context_id != VA_INVALID_ID) {
     GST_VAAPI_DISPLAY_LOCK (display);
@@ -443,35 +390,33 @@ gst_vaapi_context_destroy (GstVaapiContext * context)
         context_id);
     GST_VAAPI_DISPLAY_UNLOCK (display);
     if (!vaapi_check_status (status, "vaDestroyContext()"))
-      g_warning ("failed to destroy context %" GST_VAAPI_ID_FORMAT,
-          GST_VAAPI_ID_ARGS (context_id));
+      GST_WARNING ("failed to destroy context 0x%08x", context_id);
     GST_VAAPI_OBJECT_ID (context) = VA_INVALID_ID;
   }
 
-  if (context->config_id != VA_INVALID_ID) {
+  if (context->va_config != VA_INVALID_ID) {
     GST_VAAPI_DISPLAY_LOCK (display);
     status = vaDestroyConfig (GST_VAAPI_DISPLAY_VADISPLAY (display),
-        context->config_id);
+        context->va_config);
     GST_VAAPI_DISPLAY_UNLOCK (display);
     if (!vaapi_check_status (status, "vaDestroyConfig()"))
-      g_warning ("failed to destroy config %" GST_VAAPI_ID_FORMAT,
-          GST_VAAPI_ID_ARGS (context->config_id));
-    context->config_id = VA_INVALID_ID;
+      GST_WARNING ("failed to destroy config 0x%08x", context->va_config);
+    context->va_config = VA_INVALID_ID;
   }
 }
 
 static gboolean
-gst_vaapi_context_create_overlay (GstVaapiContext * context)
+context_create_overlay (GstVaapiContext * context)
 {
   if (!context->overlays[0] || !context->overlays[1])
     return FALSE;
 
-  gst_vaapi_context_clear_overlay (context);
+  context_clear_overlay (context);
   return TRUE;
 }
 
 static gboolean
-gst_vaapi_context_create_surfaces (GstVaapiContext * context)
+context_create_surfaces (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
   GstVideoInfo vi;
@@ -481,11 +426,13 @@ gst_vaapi_context_create_surfaces (GstVaapiContext * context)
   /* Number of scratch surfaces beyond those used as reference */
   const guint SCRATCH_SURFACES_COUNT = 4;
 
-  if (!gst_vaapi_context_create_overlay (context))
+  if (!context_create_overlay (context))
     return FALSE;
 
+  num_surfaces = cip->ref_frames + SCRATCH_SURFACES_COUNT;
   if (!context->surfaces) {
-    context->surfaces = g_ptr_array_new ();
+    context->surfaces = g_ptr_array_new_full (num_surfaces,
+        (GDestroyNotify) unref_surface_cb);
     if (!context->surfaces)
       return FALSE;
   }
@@ -498,8 +445,6 @@ gst_vaapi_context_create_surfaces (GstVaapiContext * context)
     if (!context->surfaces_pool)
       return FALSE;
   }
-
-  num_surfaces = cip->ref_frames + SCRATCH_SURFACES_COUNT;
   gst_vaapi_video_pool_set_capacity (context->surfaces_pool, num_surfaces);
 
   for (i = context->surfaces->len; i < num_surfaces; i++) {
@@ -516,12 +461,10 @@ gst_vaapi_context_create_surfaces (GstVaapiContext * context)
 }
 
 static gboolean
-gst_vaapi_context_create (GstVaapiContext * context)
+context_create (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
-  VAProfile va_profile;
-  VAEntrypoint va_entrypoint;
   guint va_rate_control;
   VAConfigAttrib attribs[2];
   guint num_attribs;
@@ -532,27 +475,28 @@ gst_vaapi_context_create (GstVaapiContext * context)
   gboolean success = FALSE;
   guint i;
 
-  if (!context->surfaces && !gst_vaapi_context_create_surfaces (context))
-    goto end;
+  if (!context->surfaces && !context_create_surfaces (context))
+    goto cleanup;
 
   surfaces = g_array_sized_new (FALSE,
       FALSE, sizeof (VASurfaceID), context->surfaces->len);
   if (!surfaces)
-    goto end;
+    goto cleanup;
 
   for (i = 0; i < context->surfaces->len; i++) {
     GstVaapiSurface *const surface = g_ptr_array_index (context->surfaces, i);
     if (!surface)
-      goto end;
+      goto cleanup;
     surface_id = GST_VAAPI_OBJECT_ID (surface);
     g_array_append_val (surfaces, surface_id);
   }
-  assert (surfaces->len == context->surfaces->len);
+  g_assert (surfaces->len == context->surfaces->len);
 
   if (!cip->profile || !cip->entrypoint)
-    goto end;
-  va_profile = gst_vaapi_profile_get_va_profile (cip->profile);
-  va_entrypoint = gst_vaapi_entrypoint_get_va_entrypoint (cip->entrypoint);
+    goto cleanup;
+  context->va_profile = gst_vaapi_profile_get_va_profile (cip->profile);
+  context->va_entrypoint =
+      gst_vaapi_entrypoint_get_va_entrypoint (cip->entrypoint);
 
   num_attribs = 0;
   attribs[num_attribs++].type = VAConfigAttribRTFormat;
@@ -561,12 +505,12 @@ gst_vaapi_context_create (GstVaapiContext * context)
 
   GST_VAAPI_DISPLAY_LOCK (display);
   status = vaGetConfigAttributes (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      va_profile, va_entrypoint, attribs, num_attribs);
+      context->va_profile, context->va_entrypoint, attribs, num_attribs);
   GST_VAAPI_DISPLAY_UNLOCK (display);
   if (!vaapi_check_status (status, "vaGetConfigAttributes()"))
-    goto end;
+    goto cleanup;
   if (!(attribs[0].value & VA_RT_FORMAT_YUV420))
-    goto end;
+    goto cleanup;
 
   if (cip->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE) {
     va_rate_control = from_GstVaapiRateControl (cip->rc_mode);
@@ -575,32 +519,32 @@ gst_vaapi_context_create (GstVaapiContext * context)
     if ((attribs[1].value & va_rate_control) != va_rate_control) {
       GST_ERROR ("unsupported %s rate control",
           string_of_VARateControl (va_rate_control));
-      goto end;
+      goto cleanup;
     }
     attribs[1].value = va_rate_control;
   }
 
   GST_VAAPI_DISPLAY_LOCK (display);
   status = vaCreateConfig (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      va_profile, va_entrypoint, attribs, num_attribs, &context->config_id);
+      context->va_profile, context->va_entrypoint, attribs, num_attribs,
+      &context->va_config);
   GST_VAAPI_DISPLAY_UNLOCK (display);
   if (!vaapi_check_status (status, "vaCreateConfig()"))
-    goto end;
+    goto cleanup;
 
   GST_VAAPI_DISPLAY_LOCK (display);
   status = vaCreateContext (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      context->config_id,
-      cip->width, cip->height,
-      VA_PROGRESSIVE,
+      context->va_config, cip->width, cip->height, VA_PROGRESSIVE,
       (VASurfaceID *) surfaces->data, surfaces->len, &context_id);
   GST_VAAPI_DISPLAY_UNLOCK (display);
   if (!vaapi_check_status (status, "vaCreateContext()"))
-    goto end;
+    goto cleanup;
 
-  GST_DEBUG ("context %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (context_id));
+  GST_DEBUG ("context 0x%08x", context_id);
   GST_VAAPI_OBJECT_ID (context) = context_id;
   success = TRUE;
-end:
+
+cleanup:
   if (surfaces)
     g_array_free (surfaces, TRUE);
   return success;
@@ -611,7 +555,7 @@ gst_vaapi_context_init (GstVaapiContext * context,
     const GstVaapiContextInfo * cip)
 {
   context->info = *cip;
-  context->config_id = VA_INVALID_ID;
+  context->va_config = VA_INVALID_ID;
   context->overlays[0] = overlay_new ();
   context->overlays[1] = overlay_new ();
 }
@@ -621,42 +565,14 @@ gst_vaapi_context_finalize (GstVaapiContext * context)
 {
   overlay_destroy (&context->overlays[0]);
   overlay_destroy (&context->overlays[1]);
-  gst_vaapi_context_destroy (context);
-  gst_vaapi_context_destroy_surfaces (context);
+  context_destroy (context);
+  context_destroy_surfaces (context);
 }
 
-GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiContext, gst_vaapi_context)
+GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiContext, gst_vaapi_context);
 
 /**
  * gst_vaapi_context_new:
- * @display: a #GstVaapiDisplay
- * @profile: a #GstVaapiProfile
- * @entrypoint: a #GstVaapiEntrypoint
- * @width: coded width from the bitstream
- * @height: coded height from the bitstream
- *
- * Creates a new #GstVaapiContext with the specified codec @profile
- * and @entrypoint.
- *
- * Return value: the newly allocated #GstVaapiContext object
- */
-     GstVaapiContext *gst_vaapi_context_new (GstVaapiDisplay * display,
-    GstVaapiProfile profile,
-    GstVaapiEntrypoint entrypoint, guint width, guint height)
-{
-  GstVaapiContextInfo info;
-
-  info.profile = profile;
-  info.entrypoint = entrypoint;
-  info.rc_mode = GST_VAAPI_RATECONTROL_NONE;
-  info.width = width;
-  info.height = height;
-  info.ref_frames = get_max_ref_frames (profile);
-  return gst_vaapi_context_new_full (display, &info);
-}
-
-/**
- * gst_vaapi_context_new_full:
  * @display: a #GstVaapiDisplay
  * @cip: a pointer to the #GstVaapiContextInfo
  *
@@ -667,7 +583,7 @@ GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiContext, gst_vaapi_context)
  * Return value: the newly allocated #GstVaapiContext object
  */
 GstVaapiContext *
-gst_vaapi_context_new_full (GstVaapiDisplay * display,
+gst_vaapi_context_new (GstVaapiDisplay * display,
     const GstVaapiContextInfo * cip)
 {
   GstVaapiContext *context;
@@ -682,7 +598,7 @@ gst_vaapi_context_new_full (GstVaapiDisplay * display,
     return NULL;
 
   gst_vaapi_context_init (context, cip);
-  if (!gst_vaapi_context_create (context))
+  if (!context_create (context))
     goto error;
   return context;
 
@@ -694,36 +610,6 @@ error:
 /**
  * gst_vaapi_context_reset:
  * @context: a #GstVaapiContext
- * @profile: a #GstVaapiProfile
- * @entrypoint: a #GstVaapiEntrypoint
- * @width: coded width from the bitstream
- * @height: coded height from the bitstream
- *
- * Resets @context to the specified codec @profile and @entrypoint.
- * The surfaces will be reallocated if the coded size changed.
- *
- * Return value: %TRUE on success
- */
-gboolean
-gst_vaapi_context_reset (GstVaapiContext * context,
-    GstVaapiProfile profile,
-    GstVaapiEntrypoint entrypoint, unsigned int width, unsigned int height)
-{
-  GstVaapiContextInfo info;
-
-  info.profile = profile;
-  info.entrypoint = entrypoint;
-  info.rc_mode = GST_VAAPI_RATECONTROL_NONE;
-  info.width = width;
-  info.height = height;
-  info.ref_frames = context->info.ref_frames;
-
-  return gst_vaapi_context_reset_full (context, &info);
-}
-
-/**
- * gst_vaapi_context_reset_full:
- * @context: a #GstVaapiContext
  * @new_cip: a pointer to the new #GstVaapiContextInfo details
  *
  * Resets @context to the configuration specified by @new_cip, thus
@@ -733,41 +619,45 @@ gst_vaapi_context_reset (GstVaapiContext * context,
  * Return value: %TRUE on success
  */
 gboolean
-gst_vaapi_context_reset_full (GstVaapiContext * context,
+gst_vaapi_context_reset (GstVaapiContext * context,
     const GstVaapiContextInfo * new_cip)
 {
   GstVaapiContextInfo *const cip = &context->info;
-  gboolean size_changed, codec_changed, rc_mode_changed;
+  gboolean size_changed, config_changed;
 
   size_changed = cip->width != new_cip->width || cip->height != new_cip->height;
   if (size_changed) {
-    gst_vaapi_context_destroy_surfaces (context);
     cip->width = new_cip->width;
     cip->height = new_cip->height;
   }
 
-  codec_changed = cip->profile != new_cip->profile ||
+  config_changed = cip->profile != new_cip->profile ||
       cip->entrypoint != new_cip->entrypoint;
-  if (codec_changed) {
-    gst_vaapi_context_destroy (context);
+  if (config_changed) {
     cip->profile = new_cip->profile;
     cip->entrypoint = new_cip->entrypoint;
   }
 
-  if (new_cip->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE) {
-    rc_mode_changed = cip->rc_mode != cip->rc_mode;
-    if (rc_mode_changed) {
-      gst_vaapi_context_destroy (context);
-      cip->rc_mode = new_cip->rc_mode;
-    }
+  switch (new_cip->entrypoint) {
+    case GST_VAAPI_ENTRYPOINT_SLICE_ENCODE:
+      if (cip->rc_mode != new_cip->rc_mode) {
+        cip->rc_mode = new_cip->rc_mode;
+        config_changed = TRUE;
+      }
+      break;
+    default:
+      break;
   }
 
-  if (size_changed && !gst_vaapi_context_create_surfaces (context))
-    return FALSE;
+  if (size_changed)
+    context_destroy_surfaces (context);
+  if (config_changed)
+    context_destroy (context);
 
-  if (codec_changed && !gst_vaapi_context_create (context))
+  if (size_changed && !context_create_surfaces (context))
     return FALSE;
-
+  if (config_changed && !context_create (context))
+    return FALSE;
   return TRUE;
 }
 
@@ -785,83 +675,6 @@ gst_vaapi_context_get_id (GstVaapiContext * context)
   g_return_val_if_fail (context != NULL, VA_INVALID_ID);
 
   return GST_VAAPI_OBJECT_ID (context);
-}
-
-/**
- * gst_vaapi_context_get_profile:
- * @context: a #GstVaapiContext
- *
- * Returns the VA profile used by the @context.
- *
- * Return value: the VA profile used by the @context
- */
-GstVaapiProfile
-gst_vaapi_context_get_profile (GstVaapiContext * context)
-{
-  g_return_val_if_fail (context != NULL, 0);
-
-  return context->info.profile;
-}
-
-/**
- * gst_vaapi_context_set_profile:
- * @context: a #GstVaapiContext
- * @profile: the new #GstVaapiProfile to use
- *
- * Sets the new @profile to use with the @context. If @profile matches
- * the previous profile, this call has no effect. Otherwise, the
- * underlying VA context is recreated, while keeping the previously
- * allocated surfaces.
- *
- * Return value: %TRUE on success
- */
-gboolean
-gst_vaapi_context_set_profile (GstVaapiContext * context,
-    GstVaapiProfile profile)
-{
-  g_return_val_if_fail (context != NULL, FALSE);
-  g_return_val_if_fail (profile, FALSE);
-
-  return gst_vaapi_context_reset (context,
-      profile,
-      context->info.entrypoint, context->info.width, context->info.height);
-}
-
-/**
- * gst_vaapi_context_get_entrypoint:
- * @context: a #GstVaapiContext
- *
- * Returns the VA entrypoint used by the @context
- *
- * Return value: the VA entrypoint used by the @context
- */
-GstVaapiEntrypoint
-gst_vaapi_context_get_entrypoint (GstVaapiContext * context)
-{
-  g_return_val_if_fail (context != NULL, 0);
-
-  return context->info.entrypoint;
-}
-
-/**
- * gst_vaapi_context_get_size:
- * @context: a #GstVaapiContext
- * @pwidth: return location for the width, or %NULL
- * @pheight: return location for the height, or %NULL
- *
- * Retrieves the size of the surfaces attached to @context.
- */
-void
-gst_vaapi_context_get_size (GstVaapiContext * context,
-    guint * pwidth, guint * pheight)
-{
-  g_return_if_fail (context != NULL);
-
-  if (pwidth)
-    *pwidth = context->info.width;
-
-  if (pheight)
-    *pheight = context->info.height;
 }
 
 /**
@@ -885,8 +698,8 @@ gst_vaapi_context_get_surface_proxy (GstVaapiContext * context)
   g_return_val_if_fail (context != NULL, NULL);
 
   return
-      gst_vaapi_surface_proxy_new_from_pool (GST_VAAPI_SURFACE_POOL (context->
-          surfaces_pool));
+      gst_vaapi_surface_proxy_new_from_pool (GST_VAAPI_SURFACE_POOL
+      (context->surfaces_pool));
 }
 
 /**
@@ -932,7 +745,7 @@ gst_vaapi_context_apply_composition (GstVaapiContext * context,
     return FALSE;
 
   if (!composition) {
-    gst_vaapi_context_clear_overlay (context);
+    context_clear_overlay (context);
     return TRUE;
   }
 
@@ -970,10 +783,9 @@ gst_vaapi_context_apply_composition (GstVaapiContext * context,
   return TRUE;
 
 error:
-  gst_vaapi_context_clear_overlay (context);
+  context_clear_overlay (context);
   return FALSE;
 }
-
 
 /**
  * gst_vaapi_context_get_attribute:
@@ -1002,11 +814,9 @@ gst_vaapi_context_get_attribute (GstVaapiContext * context,
   GST_VAAPI_OBJECT_LOCK_DISPLAY (context);
   attrib.type = type;
   status = vaGetConfigAttributes (GST_VAAPI_OBJECT_VADISPLAY (context),
-      gst_vaapi_profile_get_va_profile (context->info.profile),
-      gst_vaapi_entrypoint_get_va_entrypoint (context->info.entrypoint),
-      &attrib, 1);
+      context->va_profile, context->va_entrypoint, &attrib, 1);
   GST_VAAPI_OBJECT_UNLOCK_DISPLAY (context);
-  if (!vaapi_check_status (status, "vaGetConfiAttributes()"))
+  if (!vaapi_check_status (status, "vaGetConfigAttributes()"))
     return FALSE;
 
   if (out_value_ptr)

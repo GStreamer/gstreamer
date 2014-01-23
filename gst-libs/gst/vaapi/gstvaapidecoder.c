@@ -953,11 +953,11 @@ gst_vaapi_decoder_ensure_context(
     gst_vaapi_decoder_set_picture_size(decoder, cip->width, cip->height);
 
     if (decoder->context) {
-        if (!gst_vaapi_context_reset_full(decoder->context, cip))
+        if (!gst_vaapi_context_reset(decoder->context, cip))
             return FALSE;
     }
     else {
-        decoder->context = gst_vaapi_context_new_full(decoder->display, cip);
+        decoder->context = gst_vaapi_context_new(decoder->display, cip);
         if (!decoder->context)
             return FALSE;
     }
