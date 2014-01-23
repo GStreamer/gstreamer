@@ -150,7 +150,8 @@ libgstvaapi_la_CFLAGS =	\
 	$(GST_VIDEO_CFLAGS)	\
 	$(GST_INTERFACES_CFLAGS) \
 	$(GST_BASEVIDEO_CFLAGS)	\
-	$(GST_PLUGINS_BASE_CFLAGS)
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_ALLOCATORS_CFLAGS)
 
 libgstvaapi_la_LIBADD =	\
 	$(libgstvaapi_LIBS)	\
@@ -160,6 +161,7 @@ libgstvaapi_la_LIBADD =	\
 	$(GST_INTERFACES_LIBS)	\
 	$(GST_BASEVIDEO_LIBS)	\
 	$(GST_PLUGINS_BASE_LIBS) \
+	$(GST_ALLOCATORS_LIBS) \
 	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la
 
 libgstvaapi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

@@ -305,6 +305,10 @@ PKG_CHECK_MODULES([GST_INTERFACES],
     [gstreamer-interfaces-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
 fi
 
+dnl ... gst_dmabuf_memory_get_fd (gstreamer-allocators)
+PKG_CHECK_MODULES([GST_ALLOCATORS],
+    [gstreamer-allocators-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+
 dnl ... GstVideoOverlayComposition (gstreamer-video)
 PKG_CHECK_MODULES([GST_VIDEO],
     [gstreamer-video-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])

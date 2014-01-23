@@ -23,12 +23,16 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
+#include <gst/vaapi/gstvaapisurface_drm.h>
 #include "gstvaapipluginbase.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideocontext.h"
 #include "gstvaapivideometa.h"
 #if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
+#endif
+#if GST_CHECK_VERSION(1,1,0)
+#include <gst/allocators/allocators.h>
 #endif
 
 /* Default debug category is from the subclass */
@@ -126,6 +130,98 @@ static void
 default_display_changed (GstVaapiPluginBase * plugin)
 {
 }
+
+static gboolean
+plugin_update_sinkpad_info_from_buffer (GstVaapiPluginBase * plugin,
+    GstBuffer * buf)
+{
+  GstVideoInfo *const vip = &plugin->sinkpad_info;
+  GstVideoMeta *vmeta;
+  guint i;
+
+  vmeta = gst_buffer_get_video_meta (buf);
+  if (!vmeta)
+    return TRUE;
+
+  if (GST_VIDEO_INFO_FORMAT (vip) != vmeta->format ||
+      GST_VIDEO_INFO_WIDTH (vip) != vmeta->width ||
+      GST_VIDEO_INFO_HEIGHT (vip) != vmeta->height ||
+      GST_VIDEO_INFO_N_PLANES (vip) != vmeta->n_planes)
+    return FALSE;
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (vip); ++i) {
+    GST_VIDEO_INFO_PLANE_OFFSET (vip, i) = vmeta->offset[i];
+    GST_VIDEO_INFO_PLANE_STRIDE (vip, i) = vmeta->stride[i];
+  }
+  GST_VIDEO_INFO_SIZE (vip) = gst_buffer_get_size (buf);
+  return TRUE;
+}
+
+#if GST_CHECK_VERSION(1,1,0)
+static gboolean
+is_dma_buffer (GstBuffer * buf)
+{
+  GstMemory *mem;
+
+  if (gst_buffer_n_memory (buf) < 1)
+    return FALSE;
+
+  mem = gst_buffer_peek_memory (buf, 0);
+  if (!mem || !gst_is_dmabuf_memory (mem))
+    return FALSE;
+  return TRUE;
+}
+
+static gboolean
+plugin_bind_dma_to_vaapi_buffer (GstVaapiPluginBase * plugin,
+    GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  GstVideoInfo *const vip = &plugin->sinkpad_info;
+  GstVaapiVideoMeta *meta;
+  GstVaapiSurface *surface;
+  GstVaapiSurfaceProxy *proxy;
+  gint fd;
+
+  fd = gst_dmabuf_memory_get_fd (gst_buffer_peek_memory (inbuf, 0));
+  if (fd < 0)
+    return FALSE;
+
+  if (!plugin_update_sinkpad_info_from_buffer (plugin, inbuf))
+    goto error_update_sinkpad_info;
+
+  meta = gst_buffer_get_vaapi_video_meta (outbuf);
+  g_return_val_if_fail (meta != NULL, FALSE);
+
+  surface = gst_vaapi_surface_new_with_dma_buf_handle (plugin->display, fd,
+      GST_VIDEO_INFO_SIZE (vip), GST_VIDEO_INFO_FORMAT (vip),
+      GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip),
+      vip->offset, vip->stride);
+  if (!surface)
+    goto error_create_surface;
+
+  proxy = gst_vaapi_surface_proxy_new (surface);
+  gst_vaapi_object_unref (surface);
+  if (!proxy)
+    goto error_create_proxy;
+
+  gst_vaapi_surface_proxy_set_destroy_notify (proxy,
+      (GDestroyNotify) gst_buffer_unref, (gpointer) gst_buffer_ref (inbuf));
+  gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
+  gst_vaapi_surface_proxy_unref (proxy);
+  return TRUE;
+
+  /* ERRORS */
+error_update_sinkpad_info:
+  GST_ERROR ("failed to update sink pad video info from video meta");
+  return FALSE;
+error_create_surface:
+  GST_ERROR ("failed to create VA surface from dma_buf handle");
+  return FALSE;
+error_create_proxy:
+  GST_ERROR ("failed to create VA surface proxy from wrapped VA surface");
+  return FALSE;
+}
+#endif
 
 void
 gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
@@ -686,6 +782,14 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
           &outbuf, NULL) != GST_FLOW_OK)
     goto error_create_buffer;
 
+#if GST_CHECK_VERSION(1,1,0)
+  if (is_dma_buffer (inbuf)) {
+    if (!plugin_bind_dma_to_vaapi_buffer (plugin, inbuf, outbuf))
+      goto error_bind_dma_buffer;
+    goto done;
+  }
+#endif
+
   if (!gst_video_frame_map (&src_frame, &plugin->sinkpad_info, inbuf,
           GST_MAP_READ))
     goto error_map_src_buffer;
@@ -700,6 +804,7 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
   if (!success)
     goto error_copy_buffer;
 
+done:
   gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_FLAGS |
       GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
   *outbuf_ptr = outbuf;
@@ -756,6 +861,12 @@ error_invalid_buffer:
 error_create_buffer:
   {
     GST_ERROR ("failed to create buffer");
+    return GST_FLOW_ERROR;
+  }
+error_bind_dma_buffer:
+  {
+    GST_ERROR ("failed to bind dma_buf to VA surface buffer");
+    gst_buffer_unref (outbuf);
     return GST_FLOW_ERROR;
   }
 error_copy_buffer:
