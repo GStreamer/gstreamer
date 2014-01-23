@@ -425,6 +425,8 @@ gst_vaapi_context_get_attribute (GstVaapiContext * context,
   GST_VAAPI_OBJECT_UNLOCK_DISPLAY (context);
   if (!vaapi_check_status (status, "vaGetConfigAttributes()"))
     return FALSE;
+  if (attrib.value == VA_ATTRIB_NOT_SUPPORTED)
+    return FALSE;
 
   if (out_value_ptr)
     *out_value_ptr = attrib.value;
