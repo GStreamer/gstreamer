@@ -101,6 +101,8 @@ typedef enum {
   GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA = 2
 } GstVideoOverlayFormatFlags;
 
+#define GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION "meta:GstVideoOverlayComposition"
+
 /**
   * GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB:
   *
