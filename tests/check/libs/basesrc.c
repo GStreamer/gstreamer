@@ -56,6 +56,8 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
   GstPad *srcpad;
   guint probe, num_eos = 0;
   GstStreamConsistency *consistency;
+  GstEvent *eos_event;
+  guint32 eos_event_seqnum;
 
   pipe = gst_pipeline_new ("pipeline");
   sink = gst_element_factory_make ("fakesink", "sink");
@@ -95,7 +97,9 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
   g_usleep (GST_USECOND * 1);
 
   /* shut down pipeline (should send EOS message) ... */
-  gst_element_send_event (pipe, gst_event_new_eos ());
+  eos_event = gst_event_new_eos ();
+  eos_event_seqnum = gst_event_get_seqnum (eos_event);
+  gst_element_send_event (pipe, eos_event);
 
   /* ... and wait for the EOS message from the sink */
   msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
@@ -105,6 +109,7 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
 
   /* should be exactly one EOS event */
   fail_unless (num_eos == 1);
+  fail_unless (gst_message_get_seqnum (msg) == eos_event_seqnum);
 
   gst_element_set_state (pipe, GST_STATE_NULL);
   gst_element_get_state (pipe, NULL, NULL, -1);
