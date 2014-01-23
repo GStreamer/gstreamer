@@ -38,8 +38,7 @@ G_BEGIN_DECLS
  *
  * The set of all levels for #GstVaapiLevelMPEG2.
  */
-typedef enum
-{
+typedef enum {
   GST_VAAPI_LEVEL_MPEG2_LOW = 1,
   GST_VAAPI_LEVEL_MPEG2_MAIN,
   GST_VAAPI_LEVEL_MPEG2_HIGH_1440,

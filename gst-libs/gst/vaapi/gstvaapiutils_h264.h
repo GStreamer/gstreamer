@@ -50,8 +50,7 @@ G_BEGIN_DECLS
  *
  * The set of all levels for #GstVaapiLevelH264.
  */
-typedef enum
-{
+typedef enum {
   GST_VAAPI_LEVEL_H264_L1 = 1,
   GST_VAAPI_LEVEL_H264_L1b,
   GST_VAAPI_LEVEL_H264_L1_1,

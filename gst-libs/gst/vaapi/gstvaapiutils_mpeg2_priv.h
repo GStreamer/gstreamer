@@ -41,8 +41,7 @@ G_BEGIN_DECLS
  *
  * The data structure that describes the limits of an MPEG-2 level.
  */
-typedef struct
-{
+typedef struct {
   GstVaapiLevelMPEG2 level;
   guint8 level_idc;
   guint16 horizontal_size_value;

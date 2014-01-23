@@ -33,103 +33,98 @@
 /** Check VA status for success or print out an error */
 G_GNUC_INTERNAL
 gboolean
-vaapi_check_status(VAStatus status, const char *msg);
+vaapi_check_status (VAStatus status, const gchar *msg);
 
 /** Maps VA buffer */
 G_GNUC_INTERNAL
-void *
-vaapi_map_buffer(VADisplay dpy, VABufferID buf_id);
+gpointer
+vaapi_map_buffer (VADisplay dpy, VABufferID buf_id);
 
 /** Unmaps VA buffer */
 G_GNUC_INTERNAL
 void
-vaapi_unmap_buffer(VADisplay dpy, VABufferID buf_id, void **pbuf);
+vaapi_unmap_buffer (VADisplay dpy, VABufferID buf_id, void **pbuf);
 
 /** Creates and maps VA buffer */
 G_GNUC_INTERNAL
 gboolean
-vaapi_create_buffer(
-    VADisplay     dpy,
-    VAContextID   ctx,
-    int           type,
-    unsigned int  size,
-    gconstpointer data,
-    VABufferID   *buf_id,
-    gpointer     *mapped_data
-);
+vaapi_create_buffer (VADisplay dpy, VAContextID ctx, int type, guint size,
+    gconstpointer data, VABufferID * buf_id, gpointer * mapped_data);
 
 /** Destroy VA buffer */
 G_GNUC_INTERNAL
 void
-vaapi_destroy_buffer(VADisplay dpy, VABufferID *buf_id);
+vaapi_destroy_buffer (VADisplay dpy, VABufferID * buf_id);
 
 /** Return a string representation of a VAProfile */
 G_GNUC_INTERNAL
-const char *string_of_VAProfile(VAProfile profile);
+const gchar *
+string_of_VAProfile (VAProfile profile);
 
 /** Return a string representation of a VAEntrypoint */
 G_GNUC_INTERNAL
-const char *string_of_VAEntrypoint(VAEntrypoint entrypoint);
+const gchar *
+string_of_VAEntrypoint (VAEntrypoint entrypoint);
 
 /* Return a string representation of a VADisplayAttributeType */
 G_GNUC_INTERNAL
-const char *
-string_of_VADisplayAttributeType(VADisplayAttribType attribute_type);
+const gchar *
+string_of_VADisplayAttributeType (VADisplayAttribType attribute_type);
 
 G_GNUC_INTERNAL
-const char *
-string_of_VARateControl(guint rate_control);
-
-G_GNUC_INTERNAL
-guint
-from_GstVaapiChromaType(guint chroma_type);
+const gchar *
+string_of_VARateControl (guint rate_control);
 
 G_GNUC_INTERNAL
 guint
-from_GstVaapiSubpictureFlags(guint flags);
+from_GstVaapiChromaType (guint chroma_type);
 
 G_GNUC_INTERNAL
 guint
-to_GstVaapiSubpictureFlags(guint va_flags);
+from_GstVaapiSubpictureFlags (guint flags);
 
 G_GNUC_INTERNAL
 guint
-from_GstVideoOverlayFormatFlags(guint ovl_flags);
+to_GstVaapiSubpictureFlags (guint va_flags);
 
 G_GNUC_INTERNAL
 guint
-to_GstVideoOverlayFormatFlags(guint flags);
+from_GstVideoOverlayFormatFlags (guint ovl_flags);
 
 G_GNUC_INTERNAL
 guint
-from_GstVaapiSurfaceRenderFlags(guint flags);
+to_GstVideoOverlayFormatFlags (guint flags);
 
 G_GNUC_INTERNAL
 guint
-to_GstVaapiSurfaceStatus(guint va_flags);
+from_GstVaapiSurfaceRenderFlags (guint flags);
 
 G_GNUC_INTERNAL
 guint
-from_GstVaapiRotation(guint value);
+to_GstVaapiSurfaceStatus (guint va_flags);
 
 G_GNUC_INTERNAL
 guint
-to_GstVaapiRotation(guint value);
+from_GstVaapiRotation (guint value);
 
 G_GNUC_INTERNAL
 guint
-from_GstVaapiRateControl(guint value);
+to_GstVaapiRotation (guint value);
 
 G_GNUC_INTERNAL
 guint
-to_GstVaapiRateControl(guint value);
+from_GstVaapiRateControl (guint value);
 
 G_GNUC_INTERNAL
 guint
-from_GstVaapiDeinterlaceMethod(guint value);
+to_GstVaapiRateControl (guint value);
 
 G_GNUC_INTERNAL
 guint
-from_GstVaapiDeinterlaceFlags(guint flags);
+from_GstVaapiDeinterlaceMethod (guint value);
+
+G_GNUC_INTERNAL
+guint
+from_GstVaapiDeinterlaceFlags (guint flags);
 
 #endif /* GST_VAAPI_UTILS_H */

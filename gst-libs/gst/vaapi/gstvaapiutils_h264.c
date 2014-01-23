@@ -276,7 +276,7 @@ guint8
 gst_vaapi_utils_h264_get_level_idc (GstVaapiLevelH264 level)
 {
   const GstVaapiH264LevelLimits *const llp =
-     gst_vaapi_utils_h264_get_level_limits (level);
+      gst_vaapi_utils_h264_get_level_limits (level);
 
   return llp ? llp->level_idc : 0;
 }

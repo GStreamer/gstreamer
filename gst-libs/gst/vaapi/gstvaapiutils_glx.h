@@ -34,15 +34,17 @@
 #include <glib.h>
 
 #if GLX_GLXEXT_VERSION < 18
-typedef void (*PFNGLXBINDTEXIMAGEEXTPROC)(Display *, GLXDrawable, int, const int *);
-typedef void (*PFNGLXRELEASETEXIMAGEEXTPROC)(Display *, GLXDrawable, int);
+typedef void (*PFNGLXBINDTEXIMAGEEXTPROC) (Display *, GLXDrawable, int,
+    const int *);
+typedef void (*PFNGLXRELEASETEXIMAGEEXTPROC) (Display *, GLXDrawable, int);
 #endif
 
 #if GLX_GLXEXT_VERSION < 27
 /* XXX: this is not exactly that version but this is the only means to
    make sure we have the correct <GL/glx.h> with those signatures */
-typedef GLXPixmap (*PFNGLXCREATEPIXMAPPROC)(Display *, GLXFBConfig, Pixmap, const int *);
-typedef void (*PFNGLXDESTROYPIXMAPPROC)(Display *, GLXPixmap);
+typedef GLXPixmap (*PFNGLXCREATEPIXMAPPROC) (Display *, GLXFBConfig, Pixmap,
+    const int *);
+typedef void (*PFNGLXDESTROYPIXMAPPROC) (Display *, GLXPixmap);
 #endif
 
 #ifndef GL_FRAMEBUFFER_BINDING
@@ -50,163 +52,164 @@ typedef void (*PFNGLXDESTROYPIXMAPPROC)(Display *, GLXPixmap);
 #endif
 
 G_GNUC_INTERNAL
-const char *
-gl_get_error_string(GLenum error);
+const gchar *
+gl_get_error_string (GLenum error);
 
 G_GNUC_INTERNAL
 void
-gl_purge_errors(void);
+gl_purge_errors (void);
 
 G_GNUC_INTERNAL
 gboolean
-gl_check_error(void);
+gl_check_error (void);
 
 G_GNUC_INTERNAL
 gboolean
-gl_get_param(GLenum param, guint *pval);
+gl_get_param (GLenum param, guint * pval);
 
 G_GNUC_INTERNAL
 gboolean
-gl_get_texture_param(GLenum target, GLenum param, guint *pval);
+gl_get_texture_param (GLenum target, GLenum param, guint * pval);
 
 G_GNUC_INTERNAL
 void
-gl_set_bgcolor(guint32 color);
+gl_set_bgcolor (guint32 color);
 
 G_GNUC_INTERNAL
 void
-gl_resize(guint width, guint height);
+gl_resize (guint width, guint height);
 
 typedef struct _GLContextState GLContextState;
-struct _GLContextState {
-    Display     *display;
-    Window       window;
-    XVisualInfo *visual;
-    GLXContext   context;
-    guint        swapped_buffers : 1;
+struct _GLContextState
+{
+  Display *display;
+  Window window;
+  XVisualInfo *visual;
+  GLXContext context;
+  guint swapped_buffers:1;
 };
 
 G_GNUC_INTERNAL
 GLContextState *
-gl_create_context(Display *dpy, int screen, GLContextState *parent);
+gl_create_context (Display * dpy, int screen, GLContextState * parent);
 
 G_GNUC_INTERNAL
 void
-gl_destroy_context(GLContextState *cs);
+gl_destroy_context (GLContextState * cs);
 
 G_GNUC_INTERNAL
 void
-gl_get_current_context(GLContextState *cs);
+gl_get_current_context (GLContextState * cs);
 
 G_GNUC_INTERNAL
 gboolean
-gl_set_current_context(GLContextState *new_cs, GLContextState *old_cs);
+gl_set_current_context (GLContextState * new_cs, GLContextState * old_cs);
 
 G_GNUC_INTERNAL
 void
-gl_swap_buffers(GLContextState *cs);
+gl_swap_buffers (GLContextState * cs);
 
 typedef struct _GLTextureState GLTextureState;
-struct _GLTextureState {
-    GLenum      target;
-    GLuint      old_texture;
-    guint       was_enabled     : 1;
-    guint       was_bound       : 1;
+struct _GLTextureState
+{
+  GLenum target;
+  GLuint old_texture;
+  guint was_enabled:1;
+  guint was_bound:1;
 };
 
 G_GNUC_INTERNAL
 gboolean
-gl_bind_texture(GLTextureState *ts, GLenum target, GLuint texture);
+gl_bind_texture (GLTextureState * ts, GLenum target, GLuint texture);
 
 G_GNUC_INTERNAL
 void
-gl_unbind_texture(GLTextureState *ts);
+gl_unbind_texture (GLTextureState * ts);
 
 G_GNUC_INTERNAL
 GLuint
-gl_create_texture(GLenum target, GLenum format, guint width, guint height);
+gl_create_texture (GLenum target, GLenum format, guint width, guint height);
 
 typedef struct _GLVTable GLVTable;
-struct _GLVTable {
-    PFNGLXCREATEPIXMAPPROC              glx_create_pixmap;
-    PFNGLXDESTROYPIXMAPPROC             glx_destroy_pixmap;
-    PFNGLXBINDTEXIMAGEEXTPROC           glx_bind_tex_image;
-    PFNGLXRELEASETEXIMAGEEXTPROC        glx_release_tex_image;
-    PFNGLGENFRAMEBUFFERSEXTPROC         gl_gen_framebuffers;
-    PFNGLDELETEFRAMEBUFFERSEXTPROC      gl_delete_framebuffers;
-    PFNGLBINDFRAMEBUFFEREXTPROC         gl_bind_framebuffer;
-    PFNGLGENRENDERBUFFERSEXTPROC        gl_gen_renderbuffers;
-    PFNGLDELETERENDERBUFFERSEXTPROC     gl_delete_renderbuffers;
-    PFNGLBINDRENDERBUFFEREXTPROC        gl_bind_renderbuffer;
-    PFNGLRENDERBUFFERSTORAGEEXTPROC     gl_renderbuffer_storage;
-    PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC gl_framebuffer_renderbuffer;
-    PFNGLFRAMEBUFFERTEXTURE2DEXTPROC    gl_framebuffer_texture_2d;
-    PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC  gl_check_framebuffer_status;
-    guint                               has_texture_from_pixmap : 1;
-    guint                               has_framebuffer_object  : 1;
+struct _GLVTable
+{
+  PFNGLXCREATEPIXMAPPROC glx_create_pixmap;
+  PFNGLXDESTROYPIXMAPPROC glx_destroy_pixmap;
+  PFNGLXBINDTEXIMAGEEXTPROC glx_bind_tex_image;
+  PFNGLXRELEASETEXIMAGEEXTPROC glx_release_tex_image;
+  PFNGLGENFRAMEBUFFERSEXTPROC gl_gen_framebuffers;
+  PFNGLDELETEFRAMEBUFFERSEXTPROC gl_delete_framebuffers;
+  PFNGLBINDFRAMEBUFFEREXTPROC gl_bind_framebuffer;
+  PFNGLGENRENDERBUFFERSEXTPROC gl_gen_renderbuffers;
+  PFNGLDELETERENDERBUFFERSEXTPROC gl_delete_renderbuffers;
+  PFNGLBINDRENDERBUFFEREXTPROC gl_bind_renderbuffer;
+  PFNGLRENDERBUFFERSTORAGEEXTPROC gl_renderbuffer_storage;
+  PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC gl_framebuffer_renderbuffer;
+  PFNGLFRAMEBUFFERTEXTURE2DEXTPROC gl_framebuffer_texture_2d;
+  PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC gl_check_framebuffer_status;
+  guint has_texture_from_pixmap:1;
+  guint has_framebuffer_object:1;
 };
 
 G_GNUC_INTERNAL
 GLVTable *
-gl_get_vtable(void);
+gl_get_vtable (void);
 
 typedef struct _GLPixmapObject GLPixmapObject;
-struct _GLPixmapObject {
-    Display        *dpy;
-    GLenum          target;
-    GLuint          texture;
-    GLTextureState  old_texture;
-    guint           width;
-    guint           height;
-    Pixmap          pixmap;
-    GLXPixmap       glx_pixmap;
-    guint           is_bound    : 1;
+struct _GLPixmapObject
+{
+  Display *dpy;
+  GLenum target;
+  GLuint texture;
+  GLTextureState old_texture;
+  guint width;
+  guint height;
+  Pixmap pixmap;
+  GLXPixmap glx_pixmap;
+  guint is_bound:1;
 };
 
 G_GNUC_INTERNAL
 GLPixmapObject *
-gl_create_pixmap_object(Display *dpy, guint width, guint height);
+gl_create_pixmap_object (Display * dpy, guint width, guint height);
 
 G_GNUC_INTERNAL
 void
-gl_destroy_pixmap_object(GLPixmapObject *pixo);
+gl_destroy_pixmap_object (GLPixmapObject * pixo);
 
 G_GNUC_INTERNAL
 gboolean
-gl_bind_pixmap_object(GLPixmapObject *pixo);
+gl_bind_pixmap_object (GLPixmapObject * pixo);
 
 G_GNUC_INTERNAL
 gboolean
-gl_unbind_pixmap_object(GLPixmapObject *pixo);
+gl_unbind_pixmap_object (GLPixmapObject * pixo);
 
 typedef struct _GLFramebufferObject GLFramebufferObject;
-struct _GLFramebufferObject {
-    guint           width;
-    guint           height;
-    GLuint          fbo;
-    GLuint          old_fbo;
-    guint           is_bound    : 1;
+struct _GLFramebufferObject
+{
+  guint width;
+  guint height;
+  GLuint fbo;
+  GLuint old_fbo;
+  guint is_bound:1;
 };
 
 G_GNUC_INTERNAL
 GLFramebufferObject *
-gl_create_framebuffer_object(
-    GLenum target,
-    GLuint texture,
-    guint  width,
-    guint  height
-);
+gl_create_framebuffer_object (GLenum target,
+    GLuint texture, guint width, guint height);
 
 G_GNUC_INTERNAL
 void
-gl_destroy_framebuffer_object(GLFramebufferObject *fbo);
+gl_destroy_framebuffer_object (GLFramebufferObject * fbo);
 
 G_GNUC_INTERNAL
 gboolean
-gl_bind_framebuffer_object(GLFramebufferObject *fbo);
+gl_bind_framebuffer_object (GLFramebufferObject * fbo);
 
 G_GNUC_INTERNAL
 gboolean
-gl_unbind_framebuffer_object(GLFramebufferObject *fbo);
+gl_unbind_framebuffer_object (GLFramebufferObject * fbo);
 
 #endif /* GST_VAAPI_UTILS_GLX_H */

@@ -40,8 +40,7 @@ G_BEGIN_DECLS
  *
  * The data structure that describes the limits of an H.264 level.
  */
-typedef struct
-{
+typedef struct {
   GstVaapiLevelH264 level;
   guint8 level_idc;
   guint32 MaxMBPS;
@@ -79,7 +78,7 @@ gst_vaapi_utils_h264_get_level_limits (GstVaapiLevelH264 level);
 /* Returns the Table A-1 specification */
 G_GNUC_INTERNAL
 const GstVaapiH264LevelLimits *
-gst_vaapi_utils_h264_get_level_limits_table (guint *out_length_ptr);
+gst_vaapi_utils_h264_get_level_limits_table (guint * out_length_ptr);
 
 /* Returns GstVaapiChromaType from H.264 chroma_format_idc value */
 G_GNUC_INTERNAL

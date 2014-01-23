@@ -29,35 +29,39 @@
 
 // X error trap
 static int x11_error_code = 0;
-static int (*old_error_handler)(Display *, XErrorEvent *);
+static int (*old_error_handler) (Display *, XErrorEvent *);
 
-static int error_handler(Display *dpy, XErrorEvent *error)
+static int
+error_handler (Display * dpy, XErrorEvent * error)
 {
-    x11_error_code = error->error_code;
-    return 0;
+  x11_error_code = error->error_code;
+  return 0;
 }
 
-void x11_trap_errors(void)
+void
+x11_trap_errors (void)
 {
-    x11_error_code    = 0;
-    old_error_handler = XSetErrorHandler(error_handler);
+  x11_error_code = 0;
+  old_error_handler = XSetErrorHandler (error_handler);
 }
 
-int x11_untrap_errors(void)
+int
+x11_untrap_errors (void)
 {
-    XSetErrorHandler(old_error_handler);
-    return x11_error_code;
+  XSetErrorHandler (old_error_handler);
+  return x11_error_code;
 }
 
 // X window management
-static const int x11_event_mask = (KeyPressMask |
-                                   KeyReleaseMask |
-                                   ButtonPressMask |
-                                   ButtonReleaseMask |
-                                   PointerMotionMask |
-                                   EnterWindowMask |
-                                   ExposureMask |
-                                   StructureNotifyMask);
+static const int x11_event_mask =
+  (KeyPressMask         |
+   KeyReleaseMask       |
+   ButtonPressMask      |
+   ButtonReleaseMask    |
+   PointerMotionMask    |
+   EnterWindowMask      |
+   ExposureMask         |
+   StructureNotifyMask);
 
 /**
  * x11_create_window:
@@ -75,84 +79,68 @@ static const int x11_event_mask = (KeyPressMask |
  * Return value: the newly created X #Window.
  */
 Window
-x11_create_window(Display *dpy, guint w, guint h, Visual *vis, Colormap cmap)
+x11_create_window (Display * dpy, guint w, guint h, Visual * vis, Colormap cmap)
 {
-    Window rootwin, win;
-    int screen, depth;
-    XSetWindowAttributes xswa;
-    unsigned long xswa_mask;
-    XWindowAttributes wattr;
-    unsigned long black_pixel;
+  Window rootwin, win;
+  int screen, depth;
+  XSetWindowAttributes xswa;
+  unsigned long xswa_mask;
+  XWindowAttributes wattr;
+  unsigned long black_pixel;
 
-    screen      = DefaultScreen(dpy);
-    rootwin     = RootWindow(dpy, screen);
-    black_pixel = BlackPixel(dpy, screen);
+  screen = DefaultScreen (dpy);
+  rootwin = RootWindow (dpy, screen);
+  black_pixel = BlackPixel (dpy, screen);
 
-    if (!vis)
-        vis = DefaultVisual(dpy, screen);
+  if (!vis)
+    vis = DefaultVisual (dpy, screen);
 
-    XGetWindowAttributes(dpy, rootwin, &wattr);
-    depth = wattr.depth;
-    if (depth != 15 && depth != 16 && depth != 24 && depth != 32)
-        depth = 24;
+  XGetWindowAttributes (dpy, rootwin, &wattr);
+  depth = wattr.depth;
+  if (depth != 15 && depth != 16 && depth != 24 && depth != 32)
+    depth = 24;
 
-    xswa_mask             = CWBorderPixel | CWBackPixel;
-    xswa.border_pixel     = black_pixel;
-    xswa.background_pixel = black_pixel;
+  xswa_mask = CWBorderPixel | CWBackPixel;
+  xswa.border_pixel = black_pixel;
+  xswa.background_pixel = black_pixel;
 
-    if (cmap) {
-        xswa_mask        |= CWColormap;
-        xswa.colormap     = cmap;
-    }
+  if (cmap) {
+    xswa_mask |= CWColormap;
+    xswa.colormap = cmap;
+  }
 
-    win = XCreateWindow(
-        dpy,
-        rootwin,
-        0, 0, w, h,
-        0,
-        depth,
-        InputOutput,
-        vis,
-        xswa_mask, &xswa
-    );
-    if (!win)
-        return None;
+  win = XCreateWindow (dpy, rootwin, 0, 0, w, h, 0, depth, InputOutput, vis,
+      xswa_mask, &xswa);
+  if (!win)
+    return None;
 
-    XSelectInput(dpy, win, x11_event_mask);
-    return win;
+  XSelectInput (dpy, win, x11_event_mask);
+  return win;
 }
 
 gboolean
-x11_get_geometry(
-    Display    *dpy,
-    Drawable    drawable,
-    gint       *px,
-    gint       *py,
-    guint      *pwidth,
-    guint      *pheight,
-    guint      *pdepth
-)
+x11_get_geometry (Display * dpy, Drawable drawable, gint * px, gint * py,
+    guint * pwidth, guint * pheight, guint * pdepth)
 {
-    Window rootwin;
-    int x, y;
-    guint width, height, border_width, depth;
+  Window rootwin;
+  int x, y;
+  guint width, height, border_width, depth;
 
-    x11_trap_errors();
-    XGetGeometry(
-        dpy,
-        drawable,
-        &rootwin,
-        &x, &y, &width, &height,
-        &border_width,
-        &depth
-    );
-    if (x11_untrap_errors())
-        return FALSE;
+  x11_trap_errors ();
+  XGetGeometry (dpy, drawable, &rootwin, &x, &y, &width, &height,
+      &border_width, &depth);
+  if (x11_untrap_errors ())
+    return FALSE;
 
-    if (px)      *px      = x;
-    if (py)      *py      = y;
-    if (pwidth)  *pwidth  = width;
-    if (pheight) *pheight = height;
-    if (pdepth)  *pdepth  = depth;
-    return TRUE;
+  if (px)
+    *px = x;
+  if (py)
+    *py = y;
+  if (pwidth)
+    *pwidth = width;
+  if (pheight)
+    *pheight = height;
+  if (pdepth)
+    *pdepth = depth;
+  return TRUE;
 }
