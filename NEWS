@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2014-01-DD
+gst-vaapi NEWS -- summary of changes.  2014-01-23
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.5.8 - DD.Jan.2014
+Version 0.5.8 - 23.Jan.2014
 * Add H.264 video encoding (+Feng Yuan)
 * Add MPEG-2 video encoding (+Guangxin Xu)
 * Add initial support for GStreamer 1.3 (Matthieu Bouron)
