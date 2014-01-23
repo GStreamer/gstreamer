@@ -24,9 +24,11 @@ Suggests: gstreamer@GST_API_VERSION@-vaapi-doc
 Description: VA-API plugins for GStreamer
  This package contains GStreamer plugins for VA-API support:
  - `vaapidecode': decode bitstreams using VA-API
- - `vaapiupload': converts from YUV pixels to VA surfaces 
- - `vaapidownload': convert from VA surfaces to YUV pixels
- - `vaapipostproc': postprocess VA surfaces, e.g. deinterlacing
+@USE_ENCODERS_TRUE@ - `vaapiencode_mpeg2': encode bitstreams using VA-API (MPEG-2 codec)
+@USE_ENCODERS_TRUE@ - `vaapiencode_h264': encode bitstreams using VA-API (H.264 codec)
+@USE_GST_API_0_10_TRUE@ - `vaapiupload': convert from YUV pixels to VA surfaces 
+@USE_GST_API_0_10_TRUE@ - `vaapidownload': convert from VA surfaces to YUV pixels
+ - `vaapipostproc': postprocess VA surfaces, e.g. for deinterlacing
  - `vaapisink': a VA-API based video sink
 
 Package: gstreamer@GST_API_VERSION@-vaapi-doc
