@@ -152,7 +152,6 @@ context_create (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
-  guint va_rate_control;
   VAConfigAttrib attribs[3], *attrib = attribs;
   VAContextID context_id;
   VASurfaceID surface_id;
@@ -196,9 +195,11 @@ context_create (GstVaapiContext * context)
   attrib++;
 
   switch (cip->usage) {
+#if USE_ENCODERS
     case GST_VAAPI_CONTEXT_USAGE_ENCODE:
     {
       const GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
+      guint va_rate_control;
 
       /* Rate control */
       attrib->type = VAConfigAttribRateControl;
@@ -230,6 +231,7 @@ context_create (GstVaapiContext * context)
       }
       break;
     }
+#endif
     default:
       break;
   }
