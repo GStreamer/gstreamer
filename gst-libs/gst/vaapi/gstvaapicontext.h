@@ -42,6 +42,20 @@ typedef struct _GstVaapiContext GstVaapiContext;
 typedef struct _GstVaapiContextClass GstVaapiContextClass;
 
 /**
+ * GstVaapiContextUsage:
+ * @GST_VAAPI_CONTEXT_MODE_DECODE: context used for decoding.
+ * @GST_VAAPI_CONTEXT_MODE_ENCODE: context used for encoding.
+ * @GST_VAAPI_CONTEXT_MODE_VPP: context used for video processing.
+ *
+ * The set of supported VA context usages.
+ */
+typedef enum {
+  GST_VAAPI_CONTEXT_USAGE_DECODE = 1,
+  GST_VAAPI_CONTEXT_USAGE_ENCODE,
+  GST_VAAPI_CONTEXT_USAGE_VPP,
+} GstVaapiContextUsage;
+
+/**
  * GstVaapiContextInfo:
  *
  * Structure holding VA context info like encoded size, decoder
@@ -53,6 +67,7 @@ typedef struct _GstVaapiContextClass GstVaapiContextClass;
  */
 struct _GstVaapiContextInfo
 {
+  GstVaapiContextUsage usage;
   GstVaapiProfile profile;
   GstVaapiEntrypoint entrypoint;
   GstVaapiRateControl rc_mode;

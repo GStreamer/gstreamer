@@ -484,6 +484,7 @@ set_context_info (GstVaapiEncoder * encoder)
 {
   GstVaapiContextInfo *const cip = &encoder->context_info;
 
+  cip->usage = GST_VAAPI_CONTEXT_USAGE_ENCODE;
   cip->profile = encoder->profile;
   cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
   cip->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);

@@ -144,18 +144,18 @@ context_create (GstVaapiContext * context)
   const GstVaapiContextInfo *const cip = &context->info;
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
   guint va_rate_control;
-  VAConfigAttrib attribs[2];
-  guint num_attribs;
+  VAConfigAttrib attribs[2], *attrib = attribs;
   VAContextID context_id;
   VASurfaceID surface_id;
   VAStatus status;
   GArray *surfaces = NULL;
   gboolean success = FALSE;
-  guint i;
+  guint i, value;
 
   if (!context->surfaces && !context_create_surfaces (context))
     goto cleanup;
 
+  /* Create VA surfaces list for vaCreateContext() */
   surfaces = g_array_sized_new (FALSE,
       FALSE, sizeof (VASurfaceID), context->surfaces->len);
   if (!surfaces)
@@ -170,41 +170,47 @@ context_create (GstVaapiContext * context)
   }
   g_assert (surfaces->len == context->surfaces->len);
 
+  /* Reset profile and entrypoint */
   if (!cip->profile || !cip->entrypoint)
     goto cleanup;
   context->va_profile = gst_vaapi_profile_get_va_profile (cip->profile);
   context->va_entrypoint =
       gst_vaapi_entrypoint_get_va_entrypoint (cip->entrypoint);
 
-  num_attribs = 0;
-  attribs[num_attribs++].type = VAConfigAttribRTFormat;
-  if (cip->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE)
-    attribs[num_attribs++].type = VAConfigAttribRateControl;
-
-  GST_VAAPI_DISPLAY_LOCK (display);
-  status = vaGetConfigAttributes (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      context->va_profile, context->va_entrypoint, attribs, num_attribs);
-  GST_VAAPI_DISPLAY_UNLOCK (display);
-  if (!vaapi_check_status (status, "vaGetConfigAttributes()"))
+  /* Validate VA surface format */
+  attrib->type = VAConfigAttribRTFormat;
+  if (!gst_vaapi_context_get_attribute (context, attrib->type, &value))
     goto cleanup;
-  if (!(attribs[0].value & VA_RT_FORMAT_YUV420))
+  if (!(value & VA_RT_FORMAT_YUV420))
     goto cleanup;
+  attrib->value = VA_RT_FORMAT_YUV420;
+  attrib++;
 
-  if (cip->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE) {
-    va_rate_control = from_GstVaapiRateControl (cip->rc_mode);
-    if (va_rate_control == VA_RC_NONE)
-      attribs[1].value = VA_RC_NONE;
-    if ((attribs[1].value & va_rate_control) != va_rate_control) {
-      GST_ERROR ("unsupported %s rate control",
-          string_of_VARateControl (va_rate_control));
-      goto cleanup;
+  switch (cip->usage) {
+    case GST_VAAPI_CONTEXT_USAGE_ENCODE:
+    {
+      /* Rate control */
+      attrib->type = VAConfigAttribRateControl;
+      if (!gst_vaapi_context_get_attribute (context, attrib->type, &value))
+        goto cleanup;
+
+      va_rate_control = from_GstVaapiRateControl (cip->rc_mode);
+      if ((value & va_rate_control) != va_rate_control) {
+        GST_ERROR ("unsupported %s rate control",
+            string_of_VARateControl (va_rate_control));
+        goto cleanup;
+      }
+      attrib->value = va_rate_control;
+      attrib++;
+      break;
     }
-    attribs[1].value = va_rate_control;
+    default:
+      break;
   }
 
   GST_VAAPI_DISPLAY_LOCK (display);
   status = vaCreateConfig (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      context->va_profile, context->va_entrypoint, attribs, num_attribs,
+      context->va_profile, context->va_entrypoint, attribs, attrib - attribs,
       &context->va_config);
   GST_VAAPI_DISPLAY_UNLOCK (display);
   if (!vaapi_check_status (status, "vaCreateConfig()"))
@@ -314,15 +320,14 @@ gst_vaapi_context_reset (GstVaapiContext * context,
     cip->entrypoint = new_cip->entrypoint;
   }
 
-  switch (new_cip->entrypoint) {
-    case GST_VAAPI_ENTRYPOINT_SLICE_ENCODE:
-      if (cip->rc_mode != new_cip->rc_mode) {
-        cip->rc_mode = new_cip->rc_mode;
-        config_changed = TRUE;
-      }
-      break;
-    default:
-      break;
+  if (cip->usage != new_cip->usage) {
+    cip->usage = new_cip->usage;
+    config_changed = TRUE;
+  } else if (new_cip->usage == GST_VAAPI_CONTEXT_USAGE_ENCODE) {
+    if (cip->rc_mode != new_cip->rc_mode) {
+      cip->rc_mode = new_cip->rc_mode;
+      config_changed = TRUE;
+    }
   }
 
   if (size_changed)
