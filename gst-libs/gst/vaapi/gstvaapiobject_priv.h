@@ -219,7 +219,7 @@ gst_vaapi_object_new(const GstVaapiObjectClass *klass,
     GstVaapiDisplay *display);
 
 /* Inline reference counting for core libgstvaapi library */
-#ifdef GST_VAAPI_CORE
+#ifdef IN_LIBGSTVAAPI_CORE
 static inline gpointer
 gst_vaapi_object_ref_internal(gpointer object)
 {

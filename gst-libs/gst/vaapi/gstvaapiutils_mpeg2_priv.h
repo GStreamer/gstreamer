@@ -24,6 +24,7 @@
 #define GST_VAAPI_UTILS_MPEG2_PRIV_H
 
 #include "gstvaapiutils_mpeg2.h"
+#include "libgstvaapi_priv_check.h"
 
 G_BEGIN_DECLS
 

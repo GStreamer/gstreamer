@@ -23,6 +23,7 @@
 #ifndef GSTVAAPIDISPLAYCACHE_H
 #define GSTVAAPIDISPLAYCACHE_H
 
+#include "libgstvaapi_priv_check.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 
 typedef struct _GstVaapiDisplayCache            GstVaapiDisplayCache;

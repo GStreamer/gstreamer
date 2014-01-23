@@ -23,6 +23,8 @@
 #ifndef GST_VAAPI_DECODER_UNIT_H
 #define GST_VAAPI_DECODER_UNIT_H
 
+#include "libgstvaapi_priv_check.h"
+
 G_BEGIN_DECLS
 
 typedef struct _GstVaapiDecoderUnit             GstVaapiDecoderUnit;

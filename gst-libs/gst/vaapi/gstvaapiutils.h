@@ -26,6 +26,7 @@
 #define GST_VAAPI_UTILS_H
 
 #include "config.h"
+#include "libgstvaapi_priv_check.h"
 #include <glib.h>
 #include <va/va.h>
 

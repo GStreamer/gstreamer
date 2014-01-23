@@ -20,7 +20,8 @@ libgstvaapi_includedir = \
 	$(includedir)/gstreamer-$(GST_API_VERSION)/gst/vaapi
 
 libgstvaapi_cflags =				\
-	-DGST_VAAPI_CORE			\
+	-DIN_LIBGSTVAAPI			\
+	-DIN_LIBGSTVAAPI_CORE			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	-I$(top_builddir)/gst-libs		\
@@ -130,6 +131,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapivideopool_priv.h		\
 	gstvaapiwindow_priv.h			\
 	gstvaapiworkarounds.h			\
+	libgstvaapi_priv_check.h		\
 	sysdeps.h				\
 	$(NULL)
 
@@ -291,6 +293,7 @@ libgstvaapi_drm_@GST_API_VERSION@includedir =	\
 	$(libgstvaapi_includedir)
 
 libgstvaapi_drm_@GST_API_VERSION@_la_CFLAGS =	\
+	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
@@ -327,6 +330,7 @@ libgstvaapi_x11_@GST_API_VERSION@includedir =	\
 	$(libgstvaapi_includedir)
 
 libgstvaapi_x11_@GST_API_VERSION@_la_CFLAGS =	\
+	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
@@ -365,6 +369,7 @@ libgstvaapi_glx_@GST_API_VERSION@includedir =	\
 	$(libgstvaapi_includedir)
 
 libgstvaapi_glx_@GST_API_VERSION@_la_CFLAGS =	\
+	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
@@ -402,6 +407,7 @@ libgstvaapi_wayland_@GST_API_VERSION@includedir = \
 	$(libgstvaapi_includedir)
 
 libgstvaapi_wayland_@GST_API_VERSION@_la_CFLAGS = \
+	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\

@@ -227,7 +227,7 @@ gst_vaapi_display_get_display_types (GstVaapiDisplay * display)
 }
 
 /* Inline reference counting for core libgstvaapi library */
-#ifdef GST_VAAPI_CORE
+#ifdef IN_LIBGSTVAAPI_CORE
 #define gst_vaapi_display_ref_internal(display) \
     ((gpointer)gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(display)))
 
