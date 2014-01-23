@@ -189,12 +189,14 @@ context_create (GstVaapiContext * context)
   switch (cip->usage) {
     case GST_VAAPI_CONTEXT_USAGE_ENCODE:
     {
+      const GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
+
       /* Rate control */
       attrib->type = VAConfigAttribRateControl;
       if (!gst_vaapi_context_get_attribute (context, attrib->type, &value))
         goto cleanup;
 
-      va_rate_control = from_GstVaapiRateControl (cip->rc_mode);
+      va_rate_control = from_GstVaapiRateControl (config->rc_mode);
       if ((value & va_rate_control) != va_rate_control) {
         GST_ERROR ("unsupported %s rate control",
             string_of_VARateControl (va_rate_control));
@@ -232,6 +234,23 @@ cleanup:
   if (surfaces)
     g_array_free (surfaces, TRUE);
   return success;
+}
+
+/** Updates config for encoding. Returns %TRUE if config changed */
+static gboolean
+context_update_config_encoder (GstVaapiContext * context,
+    const GstVaapiConfigInfoEncoder * new_config)
+{
+  GstVaapiConfigInfoEncoder *const config = &context->info.config.encoder;
+  gboolean config_changed = FALSE;
+
+  g_assert (context->info.usage == GST_VAAPI_CONTEXT_USAGE_ENCODE);
+
+  if (config->rc_mode != new_config->rc_mode) {
+    config->rc_mode = new_config->rc_mode;
+    config_changed = TRUE;
+  }
+  return config_changed;
 }
 
 static inline void
@@ -323,11 +342,10 @@ gst_vaapi_context_reset (GstVaapiContext * context,
   if (cip->usage != new_cip->usage) {
     cip->usage = new_cip->usage;
     config_changed = TRUE;
+    memcpy (&cip->config, &new_cip->config, sizeof (cip->config));
   } else if (new_cip->usage == GST_VAAPI_CONTEXT_USAGE_ENCODE) {
-    if (cip->rc_mode != new_cip->rc_mode) {
-      cip->rc_mode = new_cip->rc_mode;
+    if (context_update_config_encoder (context, &new_cip->config.encoder))
       config_changed = TRUE;
-    }
   }
 
   if (size_changed)

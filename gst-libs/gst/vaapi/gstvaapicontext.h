@@ -37,6 +37,7 @@ G_BEGIN_DECLS
 #define GST_VAAPI_CONTEXT(obj) \
   ((GstVaapiContext *) (obj))
 
+typedef struct _GstVaapiConfigInfoEncoder GstVaapiConfigInfoEncoder;
 typedef struct _GstVaapiContextInfo GstVaapiContextInfo;
 typedef struct _GstVaapiContext GstVaapiContext;
 typedef struct _GstVaapiContextClass GstVaapiContextClass;
@@ -56,24 +57,34 @@ typedef enum {
 } GstVaapiContextUsage;
 
 /**
+ * GstVaapiConfigInfoEncoder:
+ * @rc_mode: rate-control mode (#GstVaapiRateControl).
+ *
+ * Extra configuration for encoding.
+ */
+struct _GstVaapiConfigInfoEncoder
+{
+  GstVaapiRateControl rc_mode;
+};
+
+/**
  * GstVaapiContextInfo:
  *
  * Structure holding VA context info like encoded size, decoder
  * profile and entry-point to use, and maximum number of reference
  * frames reported by the bitstream.
- *
- * Note: @rc_mode is only valid for VA context used for encoding,
- * i.e. if @entrypoint is set to @GST_VAAPI_ENTRYPOINT_SLICE_ENCODE.
  */
 struct _GstVaapiContextInfo
 {
   GstVaapiContextUsage usage;
   GstVaapiProfile profile;
   GstVaapiEntrypoint entrypoint;
-  GstVaapiRateControl rc_mode;
   guint width;
   guint height;
   guint ref_frames;
+  union _GstVaapiConfigInfo {
+    GstVaapiConfigInfoEncoder encoder;
+  } config;
 };
 
 /**

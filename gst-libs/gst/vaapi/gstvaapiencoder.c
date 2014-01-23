@@ -483,14 +483,17 @@ static void
 set_context_info (GstVaapiEncoder * encoder)
 {
   GstVaapiContextInfo *const cip = &encoder->context_info;
+  GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
 
   cip->usage = GST_VAAPI_CONTEXT_USAGE_ENCODE;
   cip->profile = encoder->profile;
   cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
-  cip->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
   cip->width = GST_VAAPI_ENCODER_WIDTH (encoder);
   cip->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
   cip->ref_frames = encoder->num_ref_frames;
+
+  memset (config, 0, sizeof (*config));
+  config->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
 }
 
 /* Ensures the underlying VA context for encoding is created */
