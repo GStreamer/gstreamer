@@ -40,8 +40,10 @@
 /* Supported interfaces */
 #if GST_CHECK_VERSION(1,0,0)
 # include <gst/video/videooverlay.h>
+# include <gst/video/colorbalance.h>
 #else
 # include <gst/interfaces/xoverlay.h>
+# include <gst/interfaces/colorbalance.h>
 
 # define GST_TYPE_VIDEO_OVERLAY         GST_TYPE_X_OVERLAY
 # define GST_VIDEO_OVERLAY              GST_X_OVERLAY
@@ -52,6 +54,8 @@
     gst_x_overlay_prepare_xwindow_id(sink)
 # define gst_video_overlay_got_window_handle(sink, window_handle) \
     gst_x_overlay_got_window_handle(sink, window_handle)
+
+# define GstColorBalanceInterface       GstColorBalanceClass
 #endif
 
 #include "gstvaapisink.h"
@@ -94,18 +98,23 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 static gboolean
 gst_vaapisink_has_interface (GstVaapiPluginBase * plugin, GType type)
 {
-  return type == GST_TYPE_VIDEO_OVERLAY;
+  return type == GST_TYPE_VIDEO_OVERLAY || type == GST_TYPE_COLOR_BALANCE;
 }
 
 static void
 gst_vaapisink_video_overlay_iface_init (GstVideoOverlayInterface * iface);
+
+static void
+gst_vaapisink_color_balance_iface_init (GstColorBalanceInterface * iface);
 
 G_DEFINE_TYPE_WITH_CODE (GstVaapiSink,
     gst_vaapisink,
     GST_TYPE_VIDEO_SINK,
     GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
-        gst_vaapisink_video_overlay_iface_init));
+        gst_vaapisink_video_overlay_iface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_vaapisink_color_balance_iface_init));
 
 enum
 {
@@ -502,6 +511,10 @@ gst_vaapisink_video_overlay_iface_init (GstVideoOverlayInterface * iface)
   iface->handle_events = gst_vaapisink_video_overlay_set_event_handling;
 }
 
+/* ------------------------------------------------------------------------ */
+/* --- GstColorBalance interface                                        --- */
+/* ------------------------------------------------------------------------ */
+
 enum
 {
   CB_HUE = 1,
@@ -514,14 +527,29 @@ typedef struct
 {
   guint cb_id;
   const gchar *prop_name;
+  const gchar *channel_name;
 } ColorBalanceMap;
 
 static const ColorBalanceMap cb_map[4] = {
-  {CB_HUE, GST_VAAPI_DISPLAY_PROP_HUE},
-  {CB_SATURATION, GST_VAAPI_DISPLAY_PROP_SATURATION},
-  {CB_BRIGHTNESS, GST_VAAPI_DISPLAY_PROP_BRIGHTNESS},
-  {CB_CONTRAST, GST_VAAPI_DISPLAY_PROP_CONTRAST}
+  {CB_HUE, GST_VAAPI_DISPLAY_PROP_HUE, "VA_HUE"},
+  {CB_SATURATION, GST_VAAPI_DISPLAY_PROP_SATURATION, "VA_SATURATION"},
+  {CB_BRIGHTNESS, GST_VAAPI_DISPLAY_PROP_BRIGHTNESS, "VA_BRIGHTNESS"},
+  {CB_CONTRAST, GST_VAAPI_DISPLAY_PROP_CONTRAST, "VA_CONTRAST"}
 };
+
+static guint
+cb_get_id_from_channel_name (GstVaapiSink * sink, const gchar * name)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (sink->cb_values); i++) {
+    if (g_ascii_strcasecmp (cb_map[i].channel_name, name) == 0)
+      return cb_map[i].cb_id;
+  }
+
+  GST_WARNING ("got an unknown channel %s", name);
+  return 0;
+}
 
 static inline GValue *
 cb_get_gvalue (GstVaapiSink * sink, guint id)
@@ -604,6 +632,115 @@ cb_sync_values_to_display (GstVaapiSink * sink, GstVaapiDisplay * display)
   }
   sink->cb_changed = 0;
   return failures == 0;
+}
+
+#define CB_CHANNEL_FACTOR (1000.0)
+
+static void
+cb_channels_init (GstVaapiSink * sink)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_PLUGIN_BASE_DISPLAY (sink);
+  GstColorBalanceChannel *channel;
+  GParamSpecFloat *pspec;
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (sink->cb_values); i++) {
+    if (!gst_vaapi_display_has_property (display, cb_map[i].prop_name))
+      continue;
+
+    pspec = G_PARAM_SPEC_FLOAT (g_properties[PROP_HUE + i]);
+    if (!pspec)
+      continue;
+
+    channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
+    channel->label = g_strdup (cb_map[i].channel_name);
+    channel->min_value = pspec->minimum * CB_CHANNEL_FACTOR;
+    channel->max_value = pspec->maximum * CB_CHANNEL_FACTOR;
+
+    sink->cb_channels = g_list_prepend (sink->cb_channels, channel);
+  }
+
+  if (sink->cb_channels)
+    sink->cb_channels = g_list_reverse (sink->cb_channels);
+}
+
+static void
+cb_channels_finalize (GstVaapiSink * sink)
+{
+  if (sink->cb_channels) {
+    g_list_free_full (sink->cb_channels, g_object_unref);
+    sink->cb_channels = NULL;
+  }
+}
+
+static const GList *
+gst_vaapisink_color_balance_list_channels (GstColorBalance * cb)
+{
+  GstVaapiSink *const sink = GST_VAAPISINK (cb);
+
+  if (!gst_vaapisink_ensure_display (sink))
+    return NULL;
+
+  if (!sink->cb_channels)
+    cb_channels_init (sink);
+  return sink->cb_channels;
+}
+
+static void
+gst_vaapisink_color_balance_set_value (GstColorBalance * cb,
+    GstColorBalanceChannel * channel, gint value)
+{
+  GstVaapiSink *const sink = GST_VAAPISINK (cb);
+  guint cb_id;
+
+  g_return_if_fail (channel->label != NULL);
+
+  if (!gst_vaapisink_ensure_display (sink))
+    return;
+
+  cb_id = cb_get_id_from_channel_name (sink, channel->label);
+  if (!cb_id)
+    return;
+
+  cb_set_value (sink, cb_id, value / CB_CHANNEL_FACTOR);
+}
+
+static gint
+gst_vaapisink_color_balance_get_value (GstColorBalance * cb,
+    GstColorBalanceChannel * channel)
+{
+  GstVaapiSink *const sink = GST_VAAPISINK (cb);
+  guint cb_id;
+
+  g_return_val_if_fail (channel->label != NULL, 0);
+
+  if (!gst_vaapisink_ensure_display (sink))
+    return 0;
+
+  cb_id = cb_get_id_from_channel_name (sink, channel->label);
+  if (!cb_id)
+    return 0;
+
+  return cb_get_value (sink, cb_id) * CB_CHANNEL_FACTOR;
+}
+
+static GstColorBalanceType
+gst_vaapisink_color_balance_get_type (GstColorBalance * cb)
+{
+  return GST_COLOR_BALANCE_HARDWARE;
+}
+
+static void
+gst_vaapisink_color_balance_iface_init (GstColorBalanceInterface * iface)
+{
+  iface->list_channels = gst_vaapisink_color_balance_list_channels;
+  iface->set_value = gst_vaapisink_color_balance_set_value;
+  iface->get_value = gst_vaapisink_color_balance_get_value;
+#if GST_CHECK_VERSION(1,0,0)
+  iface->get_balance_type = gst_vaapisink_color_balance_get_type;
+#else
+  iface->balance_type = gst_vaapisink_color_balance_get_type (NULL);
+#endif
 }
 
 /* ------------------------------------------------------------------------ */
@@ -1210,6 +1347,7 @@ gst_vaapisink_destroy (GstVaapiSink * sink)
 {
   gst_vaapisink_set_event_handling (sink, FALSE);
 
+  cb_channels_finalize (sink);
   gst_buffer_replace (&sink->video_buffer, NULL);
   gst_caps_replace (&sink->caps, NULL);
 }

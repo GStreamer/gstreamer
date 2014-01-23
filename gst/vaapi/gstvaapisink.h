@@ -102,6 +102,7 @@ struct _GstVaapiSink
   /* Color balance values */
   guint cb_changed;
   GValue cb_values[4];
+  GList *cb_channels;
 
   guint handle_events : 1;
   guint foreign_window : 1;
