@@ -149,18 +149,26 @@ enum
 
 #define VIDEO_FORMATS GST_VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS
 
+#define BASE_TEXT_OVERLAY_CAPS GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS)
+
+#define BASE_TEXT_OVERLAY_ALL_CAPS BASE_TEXT_OVERLAY_CAPS ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ALL)
+
+static GstStaticCaps sw_template_caps =
+GST_STATIC_CAPS (BASE_TEXT_OVERLAY_CAPS);
+
 static GstStaticPadTemplate src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
+    GST_STATIC_CAPS (BASE_TEXT_OVERLAY_ALL_CAPS)
     );
 
 static GstStaticPadTemplate video_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
+    GST_STATIC_CAPS (BASE_TEXT_OVERLAY_ALL_CAPS)
     );
 
 #define GST_TYPE_BASE_TEXT_OVERLAY_VALIGN (gst_base_text_overlay_valign_get_type())
@@ -265,7 +273,9 @@ static void gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
 static GstStateChangeReturn gst_base_text_overlay_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstCaps *gst_base_text_overlay_getcaps (GstPad * pad,
+static GstCaps *gst_base_text_overlay_get_videosink_caps (GstPad * pad,
+    GstBaseTextOverlay * overlay, GstCaps * filter);
+static GstCaps *gst_base_text_overlay_get_src_caps (GstPad * pad,
     GstBaseTextOverlay * overlay, GstCaps * filter);
 static gboolean gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay,
     GstCaps * caps);
@@ -632,6 +642,7 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
 
   overlay->text_buffer = NULL;
   overlay->text_linked = FALSE;
+
   g_mutex_init (&overlay->lock);
   g_cond_init (&overlay->cond);
   gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
@@ -742,6 +753,20 @@ no_format:
 }
 
 static gboolean
+gst_base_text_overlay_can_handle_caps (GstCaps * incaps)
+{
+  gboolean ret;
+  GstCaps *caps;
+  GstStaticCaps static_caps = GST_STATIC_CAPS (BASE_TEXT_OVERLAY_CAPS);
+
+  caps = gst_static_caps_get (&static_caps);
+  ret = gst_caps_is_subset (incaps, caps);
+  gst_caps_unref (caps);
+
+  return ret;
+}
+
+static gboolean
 gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
 {
   GstVideoInfo info;
@@ -761,6 +786,13 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
     GST_BASE_TEXT_OVERLAY_LOCK (overlay);
     g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
     gst_base_text_overlay_negotiate (overlay);
+
+    if (!overlay->attach_compo_to_buffer &&
+        !gst_base_text_overlay_can_handle_caps (caps)) {
+      GST_DEBUG_OBJECT (overlay, "unsupported caps %" GST_PTR_FORMAT, caps);
+      ret = FALSE;
+    }
+
     gst_base_text_overlay_update_wrap_mode (overlay);
     g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
     GST_BASE_TEXT_OVERLAY_UNLOCK (overlay);
@@ -967,7 +999,7 @@ gst_base_text_overlay_src_query (GstPad * pad, GstObject * parent,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_base_text_overlay_getcaps (pad, overlay, filter);
+      caps = gst_base_text_overlay_get_src_caps (pad, overlay, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
@@ -1042,37 +1074,209 @@ beach:
   return ret;
 }
 
+/**
+ * gst_base_text_overlay_add_feature_and_intersect:
+ *
+ * Creates a new #GstCaps containing the (given caps +
+ * given caps feature) + (given caps intersected by the
+ * given filter).
+ *
+ * Returns: the new #GstCaps
+ */
 static GstCaps *
-gst_base_text_overlay_getcaps (GstPad * pad, GstBaseTextOverlay * overlay,
-    GstCaps * filter)
+gst_base_text_overlay_add_feature_and_intersect (GstCaps * caps,
+    const gchar * feature, GstCaps * filter)
 {
-  GstPad *otherpad;
-  GstCaps *caps;
+  int i, caps_size;
+  GstCaps *new_caps;
+
+  new_caps = gst_caps_copy (caps);
+
+  caps_size = gst_caps_get_size (new_caps);
+  for (i = 0; i < caps_size; i++) {
+    GstCapsFeatures *features = gst_caps_get_features (new_caps, i);
+    gst_caps_features_add (features, feature);
+  }
+
+  gst_caps_append (new_caps, gst_caps_intersect_full (caps,
+          filter, GST_CAPS_INTERSECT_FIRST));
+
+  return new_caps;
+}
+
+/**
+ * gst_base_text_overlay_intersect_by_feature:
+ *
+ * Creates a new #GstCaps based on the following filtering rule.
+ *
+ * For each individual caps contained in given caps, if the
+ * caps uses the given caps feature, keep a version of the caps
+ * with the feature and an another one without. Otherwise, intersect
+ * the caps with the given filter.
+ *
+ * Returns: the new #GstCaps
+ */
+static GstCaps *
+gst_base_text_overlay_intersect_by_feature (GstCaps * caps,
+    const gchar * feature, GstCaps * filter)
+{
+  int i, caps_size;
+  GstCaps *new_caps;
+
+  new_caps = gst_caps_new_empty ();
+
+  caps_size = gst_caps_get_size (caps);
+  for (i = 0; i < caps_size; i++) {
+    GstStructure *caps_structure = gst_caps_get_structure (caps, i);
+    GstCapsFeatures *caps_features =
+        gst_caps_features_copy (gst_caps_get_features (caps, i));
+    GstCaps *filtered_caps;
+    GstCaps *simple_caps =
+        gst_caps_new_full (gst_structure_copy (caps_structure), NULL);
+    gst_caps_set_features (simple_caps, 0, caps_features);
+
+    if (gst_caps_features_contains (caps_features, feature)) {
+      gst_caps_append (new_caps, gst_caps_copy (simple_caps));
+
+      gst_caps_features_remove (caps_features, feature);
+      filtered_caps = gst_caps_ref (simple_caps);
+    } else {
+      filtered_caps = gst_caps_intersect_full (simple_caps, filter,
+          GST_CAPS_INTERSECT_FIRST);
+    }
+
+    gst_caps_unref (simple_caps);
+    gst_caps_append (new_caps, filtered_caps);
+  }
+
+  return new_caps;
+}
+
+static GstCaps *
+gst_base_text_overlay_get_videosink_caps (GstPad * pad,
+    GstBaseTextOverlay * overlay, GstCaps * filter)
+{
+  GstPad *srcpad = overlay->srcpad;
+  GstCaps *peer_caps = NULL, *caps = NULL, *overlay_filter = NULL;
 
   if (G_UNLIKELY (!overlay))
     return gst_pad_get_pad_template_caps (pad);
 
-  if (pad == overlay->srcpad)
-    otherpad = overlay->video_sinkpad;
-  else
-    otherpad = overlay->srcpad;
+  if (filter) {
+    /* filter caps + composition feature + filter caps
+     * filtered by the software caps. */
+    GstCaps *sw_caps = gst_static_caps_get (&sw_template_caps);
+    overlay_filter = gst_base_text_overlay_add_feature_and_intersect (filter,
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, sw_caps);
+    gst_caps_unref (sw_caps);
 
-  /* we can do what the peer can */
-  caps = gst_pad_peer_query_caps (otherpad, filter);
-  if (caps) {
-    GstCaps *temp, *templ;
+    GST_DEBUG_OBJECT (overlay, "overlay filter %" GST_PTR_FORMAT,
+        overlay_filter);
+  }
 
-    GST_DEBUG_OBJECT (pad, "peer caps  %" GST_PTR_FORMAT, caps);
+  peer_caps = gst_pad_peer_query_caps (srcpad, overlay_filter);
 
-    /* filtered against our padtemplate */
-    templ = gst_pad_get_pad_template_caps (otherpad);
-    GST_DEBUG_OBJECT (pad, "our template  %" GST_PTR_FORMAT, templ);
-    temp = gst_caps_intersect_full (caps, templ, GST_CAPS_INTERSECT_FIRST);
-    GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
-    gst_caps_unref (caps);
-    gst_caps_unref (templ);
-    /* this is what we can do */
-    caps = temp;
+  if (overlay_filter)
+    gst_caps_unref (overlay_filter);
+
+  if (peer_caps) {
+
+    GST_DEBUG_OBJECT (pad, "peer caps  %" GST_PTR_FORMAT, peer_caps);
+
+    if (gst_caps_is_any (peer_caps)) {
+
+      /* if peer returns ANY caps, return filtered src pad template caps */
+      caps = gst_caps_copy (gst_pad_get_pad_template_caps (srcpad));
+      if (filter) {
+        GstCaps *intersection = gst_caps_intersect_full (filter, caps,
+            GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (caps);
+        caps = intersection;
+      }
+
+    } else {
+
+      /* duplicate caps which contains the composition into one version with
+       * the meta and one without. Filter the other caps by the software caps */
+      GstCaps *sw_caps = gst_static_caps_get (&sw_template_caps);
+      caps = gst_base_text_overlay_intersect_by_feature (peer_caps,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, sw_caps);
+      gst_caps_unref (sw_caps);
+    }
+
+    gst_caps_unref (peer_caps);
+
+  } else {
+    /* no peer, our padtemplate is enough then */
+    caps = gst_pad_get_pad_template_caps (pad);
+    if (filter) {
+      GstCaps *intersection;
+
+      intersection =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = intersection;
+    }
+  }
+
+  GST_DEBUG_OBJECT (overlay, "returning  %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
+
+static GstCaps *
+gst_base_text_overlay_get_src_caps (GstPad * pad, GstBaseTextOverlay * overlay,
+    GstCaps * filter)
+{
+  GstPad *sinkpad = overlay->video_sinkpad;
+  GstCaps *peer_caps = NULL, *caps = NULL, *overlay_filter = NULL;
+
+  if (G_UNLIKELY (!overlay))
+    return gst_pad_get_pad_template_caps (pad);
+
+  if (filter) {
+    /* duplicate filter caps which contains the composition into one version
+     * with the meta and one without. Filter the other caps by the software
+     * caps */
+    GstCaps *sw_caps = gst_static_caps_get (&sw_template_caps);
+    overlay_filter =
+        gst_base_text_overlay_intersect_by_feature (filter,
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, sw_caps);
+    gst_caps_unref (sw_caps);
+  }
+
+  peer_caps = gst_pad_peer_query_caps (sinkpad, overlay_filter);
+
+  if (overlay_filter)
+    gst_caps_unref (overlay_filter);
+
+  if (peer_caps) {
+
+    GST_DEBUG_OBJECT (pad, "peer caps  %" GST_PTR_FORMAT, peer_caps);
+
+    if (gst_caps_is_any (peer_caps)) {
+
+      /* if peer returns ANY caps, return filtered sink pad template caps */
+      caps = gst_caps_copy (gst_pad_get_pad_template_caps (sinkpad));
+      if (filter) {
+        GstCaps *intersection = gst_caps_intersect_full (filter, caps,
+            GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (caps);
+        caps = intersection;
+      }
+
+    } else {
+
+      /* return upstream caps + composition feature + upstream caps
+       * filtered by the software caps. */
+      GstCaps *sw_caps = gst_static_caps_get (&sw_template_caps);
+      caps = gst_base_text_overlay_add_feature_and_intersect (peer_caps,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, sw_caps);
+      gst_caps_unref (sw_caps);
+    }
+
+    gst_caps_unref (peer_caps);
+
   } else {
     /* no peer, our padtemplate is enough then */
     caps = gst_pad_get_pad_template_caps (pad);
@@ -1928,7 +2132,7 @@ gst_base_text_overlay_video_query (GstPad * pad, GstObject * parent,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_base_text_overlay_getcaps (pad, overlay, filter);
+      caps = gst_base_text_overlay_get_videosink_caps (pad, overlay, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
