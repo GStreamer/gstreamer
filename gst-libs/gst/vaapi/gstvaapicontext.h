@@ -25,7 +25,6 @@
 #ifndef GST_VAAPI_CONTEXT_H
 #define GST_VAAPI_CONTEXT_H
 
-#include <gst/video/video-overlay-composition.h>
 #include "gstvaapiobject.h"
 #include "gstvaapiobject_priv.h"
 #include "gstvaapiprofile.h"
@@ -114,11 +113,6 @@ gst_vaapi_context_get_surface_proxy (GstVaapiContext * context);
 G_GNUC_INTERNAL
 guint
 gst_vaapi_context_get_surface_count (GstVaapiContext * context);
-
-G_GNUC_INTERNAL
-gboolean
-gst_vaapi_context_apply_composition (GstVaapiContext * context,
-    GstVideoOverlayComposition * composition);
 
 G_GNUC_INTERNAL
 gboolean

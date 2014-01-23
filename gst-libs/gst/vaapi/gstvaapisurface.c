@@ -35,6 +35,7 @@
 #include "gstvaapicontext.h"
 #include "gstvaapiimage.h"
 #include "gstvaapiimage_priv.h"
+#include "gstvaapicontext_overlay.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"

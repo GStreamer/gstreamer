@@ -47,6 +47,7 @@ libgstvaapi_libs =				\
 libgstvaapi_source_c =				\
 	gstvaapicodec_objects.c			\
 	gstvaapicontext.c			\
+	gstvaapicontext_overlay.c		\
 	gstvaapidecoder.c			\
 	gstvaapidecoder_dpb.c			\
 	gstvaapidecoder_h264.c			\
@@ -110,6 +111,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapicodec_objects.h			\
 	gstvaapicompat.h			\
 	gstvaapicontext.h			\
+	gstvaapicontext_overlay.h		\
 	gstvaapidebug.h				\
 	gstvaapidecoder_dpb.h			\
 	gstvaapidecoder_objects.h		\
