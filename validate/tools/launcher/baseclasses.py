@@ -335,10 +335,11 @@ class TestsManager(Loggable):
         for test in self.tests:
             if self._is_test_wanted(test):
                 self.reporter.before_test(test)
-                if test.run() != Result.PASSED and\
-                        self.options.forever:
-                    return test.result
+                res = test.run()
                 self.reporter.after_test()
+                if res != Result.PASSED and (self.options.forever or
+                                             self.options.fatal_error):
+                    return test.result
 
         return Result.PASSED
 
@@ -375,12 +376,10 @@ class _TestsLauncher(Loggable):
         for f in os.listdir(os.path.join(d, "apps")):
             if f.endswith(".py"):
                 execfile(os.path.join(d, "apps", f), env)
-                print f
 
         testers = [i() for i in get_subclasses(TestsManager, env)]
         for tester in testers:
             if tester.init() is True:
-                print tester
                 self.testers.append(tester)
             else:
                 self.warning("Can not init tester: %s -- PATH is %s"
@@ -422,7 +421,8 @@ class _TestsLauncher(Loggable):
     def _run_tests(self):
         for tester in self.testers:
             res = tester.run_tests()
-            if self.options.forever and res != Result.PASSED:
+            if res != Result.PASSED and (self.options.forever or
+                    self.options.fatal_error):
                 return False
 
         return True
