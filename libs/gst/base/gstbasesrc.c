@@ -1742,6 +1742,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       if (g_atomic_int_get (&src->priv->has_pending_eos)) {
         GST_OBJECT_LOCK (src);
         CLEAR_PENDING_EOS (src);
+        src->priv->forced_eos = FALSE;
         GST_OBJECT_UNLOCK (src);
       }
       if (bclass->unlock_stop)
@@ -2893,6 +2894,7 @@ pause:
       }
 
       gst_pad_push_event (pad, event);
+      src->priv->forced_eos = FALSE;
 
     } else if (ret == GST_FLOW_NOT_LINKED || ret <= GST_FLOW_EOS) {
       event = gst_event_new_eos ();
@@ -3234,6 +3236,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   basesrc->running = FALSE;
   basesrc->priv->segment_pending = FALSE;
   basesrc->priv->segment_seqnum = gst_util_seqnum_next ();
+  basesrc->priv->forced_eos = FALSE;
   GST_LIVE_UNLOCK (basesrc);
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
@@ -3521,6 +3524,7 @@ gst_base_src_set_flushing (GstBaseSrc * basesrc,
     if (g_atomic_int_get (&basesrc->priv->has_pending_eos)) {
       GST_OBJECT_LOCK (basesrc);
       CLEAR_PENDING_EOS (basesrc);
+      basesrc->priv->forced_eos = FALSE;
       GST_OBJECT_UNLOCK (basesrc);
     }
 
