@@ -143,17 +143,49 @@ gst_video_convert_caps_remove_format_info (GstCaps * caps)
   return res;
 }
 
-#define SCORE_PALETTE_LOSS        1
-#define SCORE_COLOR_LOSS          2
-#define SCORE_ALPHA_LOSS          4
-#define SCORE_CHROMA_W_LOSS       8
-#define SCORE_CHROMA_H_LOSS      16
-#define SCORE_DEPTH_LOSS         32
+/*
+ * This is an incomplete matrix of in formats and a score for the prefered output
+ * format.
+ *
+ *         out: RGB24   RGB16  ARGB  AYUV  YUV444  YUV422 YUV420 YUV411 YUV410  PAL  GRAY
+ *  in
+ * RGB24          0      2       1     2     2       3      4      5      6      7    8
+ * RGB16          1      0       1     2     2       3      4      5      6      7    8
+ * ARGB           2      3       0     1     4       5      6      7      8      9    10
+ * AYUV           3      4       1     0     2       5      6      7      8      9    10
+ * YUV444         2      4       3     1     0       5      6      7      8      9    10
+ * YUV422         3      5       4     2     1       0      6      7      8      9    10
+ * YUV420         4      6       5     3     2       1      0      7      8      9    10
+ * YUV411         4      6       5     3     2       1      7      0      8      9    10
+ * YUV410         6      8       7     5     4       3      2      1      0      9    10
+ * PAL            1      3       2     6     4       6      7      8      9      0    10
+ * GRAY           1      4       3     2     1       5      6      7      8      9    0
+ *
+ * PAL or GRAY are never prefered, if we can we would convert to PAL instead
+ * of GRAY, though
+ * less subsampling is prefered and if any, preferably horizontal
+ * We would like to keep the alpha, even if we would need to to colorspace conversion
+ * or lose depth.
+ */
+#define SCORE_FORMAT_CHANGE       1
+#define SCORE_DEPTH_CHANGE        1
+#define SCORE_ALPHA_CHANGE        1
+#define SCORE_CHROMA_W_CHANGE     1
+#define SCORE_CHROMA_H_CHANGE     1
+#define SCORE_PALETTE_CHANGE      1
 
-#define COLOR_MASK   (GST_VIDEO_FORMAT_FLAG_YUV | \
-                      GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_GRAY)
-#define ALPHA_MASK   (GST_VIDEO_FORMAT_FLAG_ALPHA)
-#define PALETTE_MASK (GST_VIDEO_FORMAT_FLAG_PALETTE)
+#define SCORE_COLORSPACE_LOSS     2     /* RGB <-> YUV */
+#define SCORE_DEPTH_LOSS          4     /* change bit depth */
+#define SCORE_ALPHA_LOSS          8     /* lose the alpha channel */
+#define SCORE_CHROMA_W_LOSS      16     /* vertical subsample */
+#define SCORE_CHROMA_H_LOSS      32     /* horizontal subsample */
+#define SCORE_PALETTE_LOSS       64     /* convert to palette format */
+#define SCORE_COLOR_LOSS        128     /* convert to GRAY */
+
+#define COLORSPACE_MASK (GST_VIDEO_FORMAT_FLAG_YUV | \
+                         GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_GRAY)
+#define ALPHA_MASK      (GST_VIDEO_FORMAT_FLAG_ALPHA)
+#define PALETTE_MASK    (GST_VIDEO_FORMAT_FLAG_PALETTE)
 
 /* calculate how much loss a conversion would be */
 static void
@@ -177,7 +209,7 @@ score_value (GstBaseTransform * base, const GstVideoFormatInfo * in_info,
     return;
   }
 
-  loss = 1;
+  loss = SCORE_FORMAT_CHANGE;
 
   in_flags = GST_VIDEO_FORMAT_INFO_FLAGS (in_info);
   in_flags &= ~GST_VIDEO_FORMAT_FLAG_LE;
@@ -189,22 +221,40 @@ score_value (GstBaseTransform * base, const GstVideoFormatInfo * in_info,
   t_flags &= ~GST_VIDEO_FORMAT_FLAG_COMPLEX;
   t_flags &= ~GST_VIDEO_FORMAT_FLAG_UNPACK;
 
-  if ((t_flags & PALETTE_MASK) != (in_flags & PALETTE_MASK))
-    loss += SCORE_PALETTE_LOSS;
+  if ((t_flags & PALETTE_MASK) != (in_flags & PALETTE_MASK)) {
+    loss += SCORE_PALETTE_CHANGE;
+    if (t_flags & PALETTE_MASK)
+      loss += SCORE_PALETTE_LOSS;
+  }
 
-  if ((t_flags & COLOR_MASK) != (in_flags & COLOR_MASK))
-    loss += SCORE_COLOR_LOSS;
+  if ((t_flags & COLORSPACE_MASK) != (in_flags & COLORSPACE_MASK)) {
+    loss += SCORE_COLORSPACE_LOSS;
+    if (t_flags & GST_VIDEO_FORMAT_FLAG_GRAY)
+      loss += SCORE_COLOR_LOSS;
+  }
 
-  if ((t_flags & ALPHA_MASK) != (in_flags & ALPHA_MASK))
-    loss += SCORE_ALPHA_LOSS;
+  if ((t_flags & ALPHA_MASK) != (in_flags & ALPHA_MASK)) {
+    loss += SCORE_ALPHA_CHANGE;
+    if (in_flags & ALPHA_MASK)
+      loss += SCORE_ALPHA_LOSS;
+  }
 
-  if ((in_info->h_sub[1]) < (t_info->h_sub[1]))
-    loss += SCORE_CHROMA_H_LOSS;
-  if ((in_info->w_sub[1]) < (t_info->w_sub[1]))
-    loss += SCORE_CHROMA_W_LOSS;
+  if ((in_info->h_sub[1]) != (t_info->h_sub[1])) {
+    loss += SCORE_CHROMA_H_CHANGE;
+    if ((in_info->h_sub[1]) < (t_info->h_sub[1]))
+      loss += SCORE_CHROMA_H_LOSS;
+  }
+  if ((in_info->w_sub[1]) != (t_info->w_sub[1])) {
+    loss += SCORE_CHROMA_W_CHANGE;
+    if ((in_info->w_sub[1]) < (t_info->w_sub[1]))
+      loss += SCORE_CHROMA_W_LOSS;
+  }
 
-  if ((in_info->bits) > (t_info->bits))
-    loss += SCORE_DEPTH_LOSS;
+  if ((in_info->bits) != (t_info->bits)) {
+    loss += SCORE_DEPTH_CHANGE;
+    if ((in_info->bits) > (t_info->bits))
+      loss += SCORE_DEPTH_LOSS;
+  }
 
   GST_DEBUG_OBJECT (base, "score %s -> %s = %d",
       GST_VIDEO_FORMAT_INFO_NAME (in_info),
