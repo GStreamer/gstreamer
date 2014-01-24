@@ -126,8 +126,16 @@ verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
 
     gst_buffer_map (buffer, &map, GST_MAP_READ);
     fail_unless (map.size > 4);
-    /* only need to check avc output case */
-    if (GST_READ_UINT32_BE (map.data) == 0x01) {
+    /* only need to check avc and bs-to-nal output case */
+    if (GST_READ_UINT24_BE (map.data) == 0x01) {
+      /* in bs-to-nal, a leading 0x00 is stripped from output */
+      fail_unless (gst_buffer_get_size (buffer) ==
+          vdata->data_to_verify_size - 1);
+      fail_unless (gst_buffer_memcmp (buffer, 0, vdata->data_to_verify + 1,
+              vdata->data_to_verify_size - 1) == 0);
+      return TRUE;
+    } else if (GST_READ_UINT32_BE (map.data) == 0x01) {
+      /* this is not avc, use default tests from parser.c */
       gst_buffer_unmap (buffer, &map);
       return FALSE;
     }
