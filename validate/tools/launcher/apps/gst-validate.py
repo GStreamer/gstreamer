@@ -51,11 +51,18 @@ class NamedDic(object):
     def __init__(self, props):
         for name, value in props.iteritems():
             setattr(self, name, value)
+PROTOCOL_TIMEOUTS = {"http": 60,
+                     "hls": 60}
 
 
 class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
                  timeout=DEFAULT_TIMEOUT, scenario=None, file_infos=None):
+        try:
+            timeout = PROTOCOL_TIMEOUTS[file_infos.get("file-info", "protocol")]
+        except KeyError:
+            pass
+
         super(GstValidateLaunchTest, self).__init__(DEFAULT_GST_VALIDATE, classname,
                                               options, reporter,
                                               scenario=scenario,)
