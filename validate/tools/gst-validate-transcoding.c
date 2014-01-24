@@ -47,6 +47,10 @@ static GstEncodingProfile *encoding_profile = NULL;
 static gboolean eos_on_shutdown = FALSE;
 static gboolean force_reencoding = FALSE;
 static GList *all_raw_caps = NULL;
+static guint print_pos_srcid = 0;
+
+static gboolean buffering = FALSE;
+static gboolean is_live = FALSE;
 
 typedef struct
 {
@@ -458,6 +462,9 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         gst_message_parse_state_changed (message, &old, &new, &pending);
 
         if (new == GST_STATE_PLAYING) {
+          if (print_pos_srcid == 0)
+            print_pos_srcid =
+                g_timeout_add (50, (GSourceFunc) print_position, NULL);
           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
               GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate-transcode.playing");
         }
@@ -489,6 +496,39 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_EOS:
       g_main_loop_quit (loop);
       break;
+    case GST_MESSAGE_BUFFERING:{
+      gint percent;
+
+      if (!buffering) {
+        g_print ("\n");
+      }
+
+      gst_message_parse_buffering (message, &percent);
+      g_print ("%s %d%%  \r", "Buffering...", percent);
+
+      /* no state management needed for live pipelines */
+      if (is_live)
+        break;
+
+      if (percent == 100) {
+        /* a 100% message means buffering is done */
+        if (buffering) {
+          buffering = FALSE;
+          gst_element_set_state (pipeline, GST_STATE_PLAYING);
+        }
+      } else {
+        /* buffering... */
+        if (!buffering) {
+          gst_element_set_state (pipeline, GST_STATE_PAUSED);
+          if (print_pos_srcid) {
+            if (g_source_remove (print_pos_srcid))
+              print_pos_srcid = 0;
+          }
+          buffering = TRUE;
+        }
+      }
+      break;
+    }
     default:
       break;
   }
@@ -704,6 +744,8 @@ main (int argc, gchar ** argv)
   GstValidateMonitor *monitor;
   GOptionContext *ctx;
   int rep_err;
+  GstStateChangeReturn sret;
+
 #ifdef G_OS_UNIX
   guint signal_watch_id;
 #endif
@@ -833,13 +875,24 @@ main (int argc, gchar ** argv)
   gst_object_unref (bus);
 
   g_print ("Starting pipeline\n");
-  if (gst_element_set_state (pipeline,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-    g_print ("Pipeline failed to go to PLAYING state\n");
-    ret = -1;
-    goto exit;
+  sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  switch (sret) {
+    case GST_STATE_CHANGE_FAILURE:
+      /* ignore, we should get an error message posted on the bus */
+      g_print ("Pipeline failed to go to PLAYING state\n");
+      ret = -1;
+      goto exit;
+    case GST_STATE_CHANGE_NO_PREROLL:
+      g_print ("Pipeline is live.\n");
+      is_live = TRUE;
+      break;
+    case GST_STATE_CHANGE_ASYNC:
+      g_print ("Prerolling...\r");
+      break;
+    default:
+      break;
   }
-  g_timeout_add (50, (GSourceFunc) print_position, NULL);
+
   g_main_loop_run (mainloop);
 
   rep_err = gst_validate_runner_printf (runner);

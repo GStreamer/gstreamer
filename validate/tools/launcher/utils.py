@@ -210,6 +210,10 @@ def _parse_position(p):
     return parse_gsttimeargs(start_stop[0]), parse_gsttimeargs(start_stop[1])
 
 
+def _parse_buffering(b):
+    return b.split("buffering... ")[1].split("%")[0], 100
+
+
 def _get_position(test):
     position = duration = -1
 
@@ -217,7 +221,7 @@ def _get_position(test):
     m = None
     for l in reversed(test.reporter.out.readlines()):
         l = l.lower()
-        if "<position:" in l:
+        if "<position:" in l or "buffering" in l:
             m = l
             break
 
@@ -228,6 +232,8 @@ def _get_position(test):
     for j in m.split("\r"):
         if j.startswith("<position:") and j.endswith("/>"):
             position, duration = _parse_position(j)
+        elif j.startswith("buffering") and j.endswith("%"):
+            position, duration = _parse_buffering(j)
 
     return position, duration
 
