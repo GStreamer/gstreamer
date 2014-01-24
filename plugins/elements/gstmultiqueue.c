@@ -1931,15 +1931,15 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
     if (oq->srcresult == GST_FLOW_NOT_LINKED) {
       GST_LOG_OBJECT (mq, "Queue %d is not-linked", oq->id);
-        continue;
+      continue;
     }
 
     all_not_linked = FALSE;
     GST_LOG_OBJECT (mq, "Checking Queue %d", oq->id);
-
     if (gst_data_queue_is_empty (oq->queue)) {
       GST_LOG_OBJECT (mq, "Queue %d is empty", oq->id);
       empty_found = TRUE;
+      break;
     }
   }
 
