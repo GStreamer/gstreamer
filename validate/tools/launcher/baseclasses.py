@@ -36,9 +36,15 @@ class Test(Loggable):
     """ A class representing a particular test. """
 
     def __init__(self, application_name, classname, options,
-                 reporter, timeout=DEFAULT_TIMEOUT):
+                 reporter, timeout=DEFAULT_TIMEOUT, hard_timeout=None):
+        """
+        @timeout: The timeout during which the value return by get_current_value
+                  keeps being exactly equal
+        @hard_timeout: Max time the test can take in absolute
+        """
         Loggable.__init__(self)
         self.timeout = timeout
+        self.hard_timeout = hard_timeout
         self.classname = classname
         self.options = options
         self.application = application_name
@@ -111,6 +117,7 @@ class Test(Loggable):
     def wait_process(self):
         last_val = 0
         last_change_ts = time.time()
+        start_ts = time.time()
         while True:
             self.process.poll()
             if self.process.returncode is not None:
@@ -137,10 +144,13 @@ class Test(Loggable):
 
             if val == last_val:
                 delta = time.time() - last_change_ts
-                self.debug("Same value for %d seconds" % delta)
+                self.debug("%s: Same value for %d/%d seconds" % (self, delta, self.timeout))
                 if delta > self.timeout:
                     self.result = Result.TIMEOUT
                     break
+            elif self.hard_timeout and time.time() - start_ts > self.hard_timeout:
+                self.result = Result.TIMEOUT
+                break
             else:
                 last_change_ts = time.time()
                 last_val = val
@@ -192,10 +202,10 @@ class GstValidateTest(Test):
 
     def __init__(self, application_name, classname,
                  options, reporter, timeout=DEFAULT_TIMEOUT,
-                 scenario=None):
+                 scenario=None, hard_timeout=None):
 
         super(GstValidateTest, self).__init__(application_name, classname, options,
-                                              reporter, timeout=DEFAULT_TIMEOUT)
+                                              reporter, timeout=timeout, hard_timeout=hard_timeout)
 
         if scenario is None or scenario.name.lower() == "none":
             self.scenario = None

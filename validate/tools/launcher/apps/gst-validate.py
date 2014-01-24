@@ -78,7 +78,9 @@ class GstValidateLaunchTest(GstValidateTest):
 
         super(GstValidateLaunchTest, self).__init__(DEFAULT_GST_VALIDATE, classname,
                                               options, reporter,
-                                              scenario=scenario,)
+                                              scenario=scenario,
+                                              timeout=timeout)
+
         self.pipeline_desc = pipeline_desc
         self.file_infos = file_infos
 
@@ -105,11 +107,26 @@ class GstValidateMediaCheckTest(Test):
 
 class GstValidateTranscodingTest(GstValidateTest):
     def __init__(self, classname, options, reporter,
-                 combination, uri, file_infos):
+                 combination, uri, file_infos, timeout=DEFAULT_TIMEOUT,
+                 scenario=Scenario.get_scenario("play_15s")):
+
+        try:
+            timeout = PROTOCOL_TIMEOUTS[file_infos.get("file-info", "protocol")]
+        except KeyError:
+            pass
+
+        try:
+            # FIXME Come up with a less arbitrary calculation!
+            hard_timeout = 4 * scenario.max_duration + timeout
+        except AttributeError:
+            hard_timeout = None
+            pass
 
         super(GstValidateTranscodingTest, self).__init__(
             DEFAULT_GST_VALIDATE_TRANSCODING, classname,
-            options, reporter, scenario=None)
+            options, reporter, scenario=scenario, timeout=timeout,
+            hard_timeout=hard_timeout)
+
         self.file_infos = file_infos
         self.uri = uri
         self.combination = combination
