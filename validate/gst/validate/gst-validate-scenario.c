@@ -721,19 +721,26 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
     {
       if (scenario->priv->actions) {
         GList *tmp;
+        guint nb_actions = 0;
         gchar *actions = g_strdup (""), *tmpconcat;
 
         for (tmp = scenario->priv->actions; tmp; tmp = tmp->next) {
           GstValidateAction *action = ((GstValidateAction *) tmp->data);
           tmpconcat = actions;
+
+          if (g_strcmp0 (action->name, "eos"))
+            continue;
+
+          nb_actions++;
           actions = g_strdup_printf ("%s\n%*s%s",
               actions, 20, "", gst_structure_to_string (action->structure));
           g_free (tmpconcat);
 
         }
 
-        GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
-            "The following action were not executed: %s", actions);
+        if (nb_actions > 0)
+          GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
+              "%i actions were not executed: %s", nb_actions, actions);
         g_free (actions);
       }
     }
