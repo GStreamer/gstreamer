@@ -433,3 +433,31 @@ class _TestsLauncher(Loggable):
         for tester in self.testers:
             if tester.needs_http_server():
                 return True
+
+
+class NamedDic(object):
+
+    def __init__(self, props):
+        if props:
+            for name, value in props.iteritems():
+                setattr(self, name, value)
+
+
+class Scenario(NamedDic):
+
+    def __init__(self, name, props=None):
+        self.name = name
+        NamedDic.__init__(self, props)
+
+    @classmethod
+    def get_scenario(cls, name):
+        return [scenario for scenario in ALL_SCENARIOS if scenario.name == name][0]
+
+ALL_SCENARIOS = [
+    Scenario("play_15s", {"max_duration": 15}),
+    Scenario("simple_backward"),
+    Scenario("fast_forward"),
+    Scenario("seek_forward"),
+    Scenario("seek_backward"),
+    Scenario("scrub_forward_seeking")
+]

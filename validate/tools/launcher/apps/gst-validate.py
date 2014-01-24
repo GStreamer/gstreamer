@@ -22,7 +22,7 @@ import subprocess
 import ConfigParser
 from loggable import Loggable
 
-from baseclasses import GstValidateTest, TestsManager, Test
+from baseclasses import GstValidateTest, TestsManager, Test, Scenario, NamedDic
 from utils import MediaFormatCombination, get_profile,\
     path2url, get_current_position, get_current_size, \
     DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
@@ -45,14 +45,27 @@ COMBINATIONS = [
     MediaFormatCombination("mp4", "mp3", "h264"),
     MediaFormatCombination("mkv", "vorbis", "h264")]
 
-
-class NamedDic(object):
-
-    def __init__(self, props):
-        for name, value in props.iteritems():
-            setattr(self, name, value)
 PROTOCOL_TIMEOUTS = {"http": 60,
                      "hls": 60}
+
+G_V_SCENARIOS = {"file": [Scenario.get_scenario("play_15s"),
+                          Scenario.get_scenario("simple_backward"),
+                          Scenario.get_scenario("fast_forward"),
+                          Scenario.get_scenario("seek_forward"),
+                          Scenario.get_scenario("seek_backward"),
+                          Scenario.get_scenario("scrub_forward_seeking")],
+                 "http": [Scenario.get_scenario("play_15s"),
+                          Scenario.get_scenario("fast_forward"),
+                          Scenario.get_scenario("seek_forward"),
+                          Scenario.get_scenario("seek_backward"),
+                          Scenario.get_scenario("simple_backward")],
+                 "hls": [Scenario.get_scenario("play_15s"),
+                         Scenario.get_scenario("fast_forward"),
+                         Scenario.get_scenario("seek_forward"),
+                         Scenario.get_scenario("seek_backward")],
+                 }
+
+
 
 
 class GstValidateLaunchTest(GstValidateTest):
@@ -78,10 +91,10 @@ class GstValidateLaunchTest(GstValidateTest):
 
 
 class GstValidateMediaCheckTest(Test):
-    def __init__(self, classname, options, reporter, media_info_path, uri):
+    def __init__(self, classname, options, reporter, media_info_path, uri, timeout=DEFAULT_TIMEOUT):
         super(GstValidateMediaCheckTest, self).__init__(DISCOVERER_COMMAND[0], classname,
                                               options, reporter,
-                                              timeout=30)
+                                              timeout=timeout)
         self._uri = uri
         self._media_info_path = urlparse.urlparse(media_info_path).path
 
@@ -115,6 +128,7 @@ class GstValidateTranscodingTest(GstValidateTest):
         self.add_arguments("-o", profile)
 
     def build_arguments(self):
+        GstValidateTest.build_arguments(self)
         self.set_rendering_info()
         self.add_arguments(self.uri, self.dest_file)
 
@@ -146,13 +160,8 @@ class GstValidateManager(TestsManager, Loggable):
         return False
 
     def list_tests(self):
-        SCENARIOS = ["play_15s", "simple_backward",
-                     "fast_forward", "seek_forward",
-                     "seek_backward", "scrub_forward_seeking"]
-
         for test_pipeline in PLAYBACK_TESTS:
-            for scenario in SCENARIOS:
-                self._add_playback_test(scenario, test_pipeline)
+            self._add_playback_test(test_pipeline)
 
         for uri, mediainfo in self._list_uris():
             classname = "validate.media_check.%s" % (os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
@@ -160,7 +169,8 @@ class GstValidateManager(TestsManager, Loggable):
                                                     self.options,
                                                     self.reporter,
                                                     mediainfo.path,
-                                                    uri))
+                                                    uri,
+                                                    timeout=timeout))
 
         for uri, mediainfo in self._list_uris():
             if mediainfo.config.getboolean("media-info", "is-image") is True:
@@ -246,12 +256,12 @@ class GstValidateManager(TestsManager, Loggable):
         return self._uris
 
     def _get_fname(self, scenario, protocol=None):
-        if scenario is not None and scenario.lower() != "none":
-            return "%s.%s.%s.%s" % ("validate", protocol, "playback", scenario)
+        if scenario is not None and scenario.name.lower() != "none":
+            return "%s.%s.%s.%s" % ("validate", protocol, "playback", scenario.name)
 
         return "%s.%s.%s" % ("validate", protocol, "playback")
 
-    def _add_playback_test(self, scenario, pipe):
+    def _add_playback_test(self, pipe):
         if self.options.mute:
             if "autovideosink" in pipe:
                 pipe = pipe.replace("autovideosink", "fakesink")
@@ -263,7 +273,7 @@ class GstValidateManager(TestsManager, Loggable):
                 npipe = pipe
                 protocol = minfo.config.get("file-info", "protocol")
 
-                if scenario != "none":
+                for scenario in G_V_SCENARIOS[protocol]:
                     if minfo.config.getboolean("media-info", "seekable") is False:
                         self.debug("Do not run %s as %s does not support seeking",
                                    scenario, uri)
@@ -274,17 +284,17 @@ class GstValidateManager(TestsManager, Loggable):
                         # is run sync, otherwize some tests will fail
                         npipe = pipe.replace("fakesink", "'fakesink sync=true'")
 
-                fname = "%s.%s" % (self._get_fname(scenario,
-                                   protocol),
-                                   os.path.basename(uri).replace(".", "_"))
-                self.debug("Adding: %s", fname)
+                    fname = "%s.%s" % (self._get_fname(scenario,
+                                       protocol),
+                                       os.path.basename(uri).replace(".", "_"))
+                    self.debug("Adding: %s", fname)
 
-                self.add_test(GstValidateLaunchTest(fname,
-                                                    self.options,
-                                                    self.reporter,
-                                                    npipe.replace("__uri__", uri),
-                                                    scenario=scenario,
-                                                    file_infos=minfo.config)
+                    self.add_test(GstValidateLaunchTest(fname,
+                                                        self.options,
+                                                        self.reporter,
+                                                        npipe.replace("__uri__", uri),
+                                                        scenario=scenario,
+                                                        file_infos=minfo.config)
                                  )
         else:
             self.add_test(GstValidateLaunchTest(self._get_fname(scenario, "testing"),
