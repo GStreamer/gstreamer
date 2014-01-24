@@ -123,6 +123,7 @@ enum
   SIGNAL_HANDLE_REQUEST,
   SIGNAL_ON_SDP,
   SIGNAL_SELECT_STREAM,
+  SIGNAL_NEW_MANAGER,
   LAST_SIGNAL
 };
 
@@ -654,6 +655,20 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       (GCallback) default_select_stream, select_stream_accum, NULL,
       g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2, G_TYPE_UINT,
       GST_TYPE_CAPS);
+  /**
+   * GstRTSPSrc::new-manager:
+   * @rtspsrc: a #GstRTSPSrc
+   * @manager: a #GstElement
+   *
+   * Emited after a new manager (like rtpbin) was created and the default
+   * properties were configured.
+   *
+   * Since: 1.4
+   */
+  gst_rtspsrc_signals[SIGNAL_NEW_MANAGER] =
+      g_signal_new_class_handler ("new-manager", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL,
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
@@ -2804,7 +2819,7 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
       set_manager_buffer_mode (src);
 
-      /* connect to signals if we did not already do so */
+      /* connect to signals */
       GST_DEBUG_OBJECT (src, "connect to signals on session manager, stream %p",
           stream);
       src->manager_sig_id =
@@ -2816,6 +2831,9 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
       g_signal_connect (src->manager, "on-npt-stop", (GCallback) on_npt_stop,
           src);
+
+      g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_NEW_MANAGER], 0,
+          src->manager);
     }
 
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
