@@ -3687,8 +3687,12 @@ gst_mxf_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 
   if (gst_pad_peer_query (sinkpad, query)) {
     if (gst_query_has_scheduling_mode_with_flags (query,
-            GST_PAD_MODE_PULL, GST_SCHEDULING_FLAG_SEEKABLE))
-      mode = GST_PAD_MODE_PULL;
+            GST_PAD_MODE_PULL, GST_SCHEDULING_FLAG_SEEKABLE)) {
+      GstSchedulingFlags flags;
+      gst_query_parse_scheduling (query, &flags, NULL, NULL, NULL);
+      if (!(flags & GST_SCHEDULING_FLAG_SEQUENTIAL))
+        mode = GST_PAD_MODE_PULL;
+    }
   }
   gst_query_unref (query);
 
