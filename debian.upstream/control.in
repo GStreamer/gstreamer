@@ -26,7 +26,7 @@ Description: VA-API plugins for GStreamer
  - `vaapidecode': decode bitstreams using VA-API
 @USE_ENCODERS_TRUE@ - `vaapiencode_mpeg2': encode bitstreams using VA-API (MPEG-2 codec)
 @USE_ENCODERS_TRUE@ - `vaapiencode_h264': encode bitstreams using VA-API (H.264 codec)
-@USE_GST_API_0_10_TRUE@ - `vaapiupload': convert from YUV pixels to VA surfaces 
+@USE_GST_API_0_10_TRUE@ - `vaapiupload': convert from YUV pixels to VA surfaces
 @USE_GST_API_0_10_TRUE@ - `vaapidownload': convert from VA surfaces to YUV pixels
  - `vaapipostproc': postprocess VA surfaces, e.g. for deinterlacing
  - `vaapisink': a VA-API based video sink
