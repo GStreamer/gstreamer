@@ -173,7 +173,6 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_TCP_TIMEOUT      20000000
 #define DEFAULT_LATENCY_MS       2000
 #define DEFAULT_DROP_ON_LATENCY  FALSE
-#define DEFAULT_DO_RETRANSMISSION FALSE
 #define DEFAULT_CONNECTION_SPEED 0
 #define DEFAULT_NAT_METHOD       GST_RTSP_NAT_DUMMY
 #define DEFAULT_DO_RTCP          TRUE
@@ -203,7 +202,6 @@ enum
   PROP_TCP_TIMEOUT,
   PROP_LATENCY,
   PROP_DROP_ON_LATENCY,
-  PROP_DO_RETRANSMISSION,
   PROP_CONNECTION_SPEED,
   PROP_NAT_METHOD,
   PROP_DO_RTCP,
@@ -405,12 +403,6 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "Drop buffers when maximum latency is reached",
           "Tells the jitterbuffer to never exceed the given latency in size",
           DEFAULT_DROP_ON_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_DO_RETRANSMISSION,
-      g_param_spec_boolean ("do-retransmission", "Do retransmission",
-          "Send retransmission events upstream when a packet is late",
-          DEFAULT_DO_RETRANSMISSION,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
       g_param_spec_uint64 ("connection-speed", "Connection Speed",
@@ -700,7 +692,6 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   gst_rtspsrc_set_tcp_timeout (src, DEFAULT_TCP_TIMEOUT);
   src->latency = DEFAULT_LATENCY_MS;
   src->drop_on_latency = DEFAULT_DROP_ON_LATENCY;
-  src->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   src->connection_speed = DEFAULT_CONNECTION_SPEED;
   src->nat_method = DEFAULT_NAT_METHOD;
   src->do_rtcp = DEFAULT_DO_RTCP;
@@ -891,9 +882,6 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_DROP_ON_LATENCY:
       rtspsrc->drop_on_latency = g_value_get_boolean (value);
       break;
-    case PROP_DO_RETRANSMISSION:
-      rtspsrc->do_retransmission = g_value_get_boolean (value);
-      break;
     case PROP_CONNECTION_SPEED:
       rtspsrc->connection_speed = g_value_get_uint64 (value);
       break;
@@ -1025,9 +1013,6 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_DROP_ON_LATENCY:
       g_value_set_boolean (value, rtspsrc->drop_on_latency);
-      break;
-    case PROP_DO_RETRANSMISSION:
-      g_value_set_boolean (value, rtspsrc->do_retransmission);
       break;
     case PROP_CONNECTION_SPEED:
       g_value_set_uint64 (value, rtspsrc->connection_speed);
@@ -2790,11 +2775,6 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
       if (g_object_class_find_property (klass, "drop-on-latency")) {
         g_object_set (src->manager, "drop-on-latency", src->drop_on_latency,
-            NULL);
-      }
-
-      if (g_object_class_find_property (klass, "do-retransmission")) {
-        g_object_set (src->manager, "do-retransmission", src->do_retransmission,
             NULL);
       }
 

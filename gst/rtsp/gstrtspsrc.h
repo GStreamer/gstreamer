@@ -204,7 +204,6 @@ struct _GstRTSPSrc {
   GTimeVal         *ptcp_timeout;
   guint             latency;
   gboolean          drop_on_latency;
-  gboolean          do_retransmission;
   guint64           connection_speed;
   GstRTSPNatMethod  nat_method;
   gboolean          do_rtcp;
