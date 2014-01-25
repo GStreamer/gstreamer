@@ -205,8 +205,12 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     standard.index = n;
 
     if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_ENUMSTD, &standard) < 0) {
-      if (errno == EINVAL || errno == ENOTTY || errno == ENODATA)
+      if (errno == EINVAL || errno == ENOTTY)
         break;                  /* end of enumeration */
+#ifdef ENODATA
+      else if (errno == ENODATA)
+        break;                  /* end of enumeration, as of Linux 3.7-rc1 */
+#endif
       else {
         GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
             (_("Failed to query norm on device '%s'."),
