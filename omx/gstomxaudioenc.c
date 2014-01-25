@@ -534,15 +534,20 @@ flow_error:
       gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (self),
           gst_event_new_eos ());
       gst_pad_pause_task (GST_AUDIO_ENCODER_SRC_PAD (self));
-    } else if (flow_ret == GST_FLOW_NOT_LINKED || flow_ret < GST_FLOW_EOS) {
+      self->started = FALSE;
+    } else if (flow_ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Internal data stream error."),
           ("stream stopped, reason %s", gst_flow_get_name (flow_ret)));
 
       gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (self),
           gst_event_new_eos ());
       gst_pad_pause_task (GST_AUDIO_ENCODER_SRC_PAD (self));
+      self->started = FALSE;
+    } else if (flow_ret == GST_FLOW_FLUSHING) {
+      GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
+      gst_pad_pause_task (GST_AUDIO_ENCODER_SRC_PAD (self));
+      self->started = FALSE;
     }
-    self->started = FALSE;
     GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
     return;
   }
