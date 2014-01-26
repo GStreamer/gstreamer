@@ -17,7 +17,9 @@ libgstmpegts_@GST_API_VERSION@include_HEADERS = \
 	gst-dvb-section.h			\
 	gstmpegtsdescriptor.h			\
 	gst-dvb-descriptor.h			\
-	mpegts.h \
+	mpegts.h
+
+nodist_libgstmpegts_@GST_API_VERSION@include_HEADERS = \
 	gstmpegts-enumtypes.h
 
 libgstmpegts_@GST_API_VERSION@_la_CFLAGS = \
