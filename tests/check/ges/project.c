@@ -24,6 +24,8 @@
 #include <gst/controller/gstdirectcontrolbinding.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 
+GMainLoop *mainloop;
+
 static void
 project_loaded_cb (GESProject * project, GESTimeline * timeline,
     GMainLoop * mainloop)
@@ -50,7 +52,6 @@ GST_START_TEST (test_project_simple)
   gchar *id;
   GESProject *project;
   GESTimeline *timeline;
-  GMainLoop *mainloop;
 
   ges_init ();
 
@@ -84,6 +85,16 @@ asset_removed_add_cb (GESProject * project, GESAsset * asset, gboolean * called)
   *called = TRUE;
 }
 
+static void
+asset_created_cb (GObject * source, GAsyncResult * res, GESAsset ** asset)
+{
+  GError *error = NULL;
+  *asset = ges_asset_request_finish (res, &error);
+
+  fail_unless (error == NULL);
+  g_main_loop_quit (mainloop);
+}
+
 GST_START_TEST (test_project_add_assets)
 {
   GESProject *project;
@@ -93,8 +104,8 @@ GST_START_TEST (test_project_add_assets)
 
   ges_init ();
 
+  mainloop = g_main_loop_new (NULL, FALSE);
   project = GES_PROJECT (ges_asset_request (GES_TYPE_TIMELINE, NULL, NULL));
-  fail_unless (GES_IS_PROJECT (project));
   fail_unless (GES_IS_PROJECT (project));
 
   g_signal_connect (project, "asset-added",
@@ -102,7 +113,11 @@ GST_START_TEST (test_project_add_assets)
   g_signal_connect (project, "asset-removed",
       (GCallback) asset_removed_add_cb, &removed_cb_called);
 
-  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+  ges_asset_request_async (GES_TYPE_TEST_CLIP, NULL, NULL,
+      (GAsyncReadyCallback) asset_created_cb, &asset);
+  g_main_loop_run (mainloop);
+  g_main_loop_unref (mainloop);
+
   fail_unless (GES_IS_ASSET (asset));
 
   fail_unless (ges_project_add_asset (project, asset));
@@ -113,17 +128,16 @@ GST_START_TEST (test_project_add_assets)
 
   fail_unless (ges_project_remove_asset (project, asset));
   fail_unless (removed_cb_called);
-  gst_object_unref (asset);
-  gst_object_unref (project);
 
   g_signal_handlers_disconnect_by_func (project,
       (GCallback) asset_removed_add_cb, &added_cb_called);
   g_signal_handlers_disconnect_by_func (project,
       (GCallback) asset_removed_add_cb, &removed_cb_called);
 
+  gst_object_unref (asset);
+  gst_object_unref (project);
   ASSERT_OBJECT_REFCOUNT (asset, "The asset (1 ref in cache)", 1);
   ASSERT_OBJECT_REFCOUNT (project, "The project (1 ref in cache)", 1);
-
 }
 
 GST_END_TEST;
@@ -140,14 +154,12 @@ error_loading_asset_cb (GESProject * project, GError * error, gchar * id,
 GST_START_TEST (test_project_unexistant_effect)
 {
   GESProject *project;
-  GMainLoop *mainloop;
   gboolean added_cb_called = FALSE;
   gboolean removed_cb_called = FALSE;
 
   ges_init ();
 
   project = GES_PROJECT (ges_asset_request (GES_TYPE_TIMELINE, NULL, NULL));
-  fail_unless (GES_IS_PROJECT (project));
   fail_unless (GES_IS_PROJECT (project));
 
   mainloop = g_main_loop_new (NULL, FALSE);
@@ -404,7 +416,6 @@ _check_keyframes (GESTimeline * timeline)
 
 GST_START_TEST (test_project_add_keyframes)
 {
-  GMainLoop *mainloop;
   GESProject *project;
   GESTimeline *timeline;
   GESAsset *formatter_asset;
@@ -469,7 +480,6 @@ GST_END_TEST;
 GST_START_TEST (test_project_load_xges)
 {
   gboolean saved;
-  GMainLoop *mainloop;
   GESProject *project;
   GESTimeline *timeline;
   GESAsset *formatter_asset;
@@ -534,7 +544,6 @@ GST_END_TEST;
 GST_START_TEST (test_project_auto_transition)
 {
   GList *layers;
-  GMainLoop *mainloop;
   GESProject *project;
   GESTimeline *timeline;
   GESLayer *layer = NULL;

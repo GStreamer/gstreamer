@@ -219,7 +219,7 @@ async_initable_init_async (GAsyncInitable * initable, gint io_priority,
   simple = g_simple_async_result_new (G_OBJECT (asset),
       callback, user_data, ges_asset_request_async);
 
-  ges_asset_cache_put (asset, simple);
+  ges_asset_cache_put (g_object_ref (asset), simple);
   switch (GES_ASSET_GET_CLASS (asset)->start_loading (asset, &error)) {
     case GES_ASSET_LOADING_ERROR:
     {
