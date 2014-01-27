@@ -611,6 +611,13 @@ _gst_select_accumulator (GSignalInvocationHint * ihint,
   if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
     g_value_set_enum (return_accu, res);
 
+  /* Call the next handler in the chain (if any) when the current callback
+   * returns TRY. This makes it possible to register separate autoplug-select
+   * handlers that implement different TRY/EXPOSE/SKIP strategies.
+   */
+  if (res == GST_AUTOPLUG_SELECT_TRY)
+    return TRUE;
+
   return FALSE;
 }
 
@@ -778,9 +785,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * next factory.
    *
    * <note>
-   *   Only the signal handler that is connected first will ever by invoked.
-   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
-   *   signal, they will never be invoked!
+   *   The signal handler will not be invoked if any of the previously
+   *   registered signal handlers (if any) return a value other than
+   *   GST_AUTOPLUG_SELECT_TRY. Which also means that if you return
+   *   GST_AUTOPLUG_SELECT_TRY from one signal handler, handlers that get
+   *   registered next (again, if any) can override that decision.
    * </note>
    *
    * Returns: a #GST_TYPE_AUTOPLUG_SELECT_RESULT that indicates the required
