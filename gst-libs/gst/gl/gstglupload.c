@@ -69,6 +69,15 @@ static gboolean _do_upload_draw_gles2 (GstGLContext * context,
       "const vec3 gcoeff = vec3(1.164,-0.391,-0.813);\n" \
       "const vec3 bcoeff = vec3(1.164, 2.018, 0.000);\n"
 
+/** GRAY16 to RGB conversion 
+ *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
+ *  high byte weight as : 255*256/65535 
+ *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
+ *  low byte weight as : 255/65535 (similar)
+ * */
+#define COMPOSE_WEIGHT \
+    "const vec2 compose_weight = vec2(0.996109, 0.003891);\n"
+
 #if GST_GL_HAVE_OPENGL
 
 static const char *frag_AYUV_opengl = {
@@ -142,15 +151,6 @@ static const char *frag_REORDER_opengl = {
       " gl_FragColor = vec4(t.%c, t.%c, t.%c, 1.0);\n"
       "}"
 };
-
-/** GRAY16 to RGB conversion 
- *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
- *  high byte weight as : 255*256/65535 
- *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
- *  low byte weight as : 255/65535 (similar)
- * */
-#define COMPOSE_WEIGHT \
-    "const vec2 compose_weight = vec2(0.996109, 0.003891);\n"
 
 /* Compose LUMINANCE/ALPHA as 8bit-8bit value */
 static const char *frag_COMPOSE_opengl = {
@@ -1449,12 +1449,12 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_GRAY8:
-      gl->TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
-      gl->TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
           GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_RGB:
