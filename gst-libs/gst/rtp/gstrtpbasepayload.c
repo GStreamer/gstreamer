@@ -46,6 +46,7 @@ struct _GstRTPBasePayloadPrivate
 
   guint64 base_offset;
   gint64 base_rtime;
+  guint64 running_time;
 
   gint64 prop_max_ptime;
   gint64 caps_max_ptime;
@@ -78,6 +79,7 @@ enum
 #define DEFAULT_MIN_PTIME               0
 #define DEFAULT_PERFECT_RTPTIME         TRUE
 #define DEFAULT_PTIME_MULTIPLE          0
+#define DEFAULT_RUNNING_TIME            GST_CLOCK_TIME_NONE
 
 enum
 {
@@ -271,6 +273,11 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    *     stream</para></listitem>
    *   </varlistentry>
    *   <varlistentry>
+   *     <term>running-time</term>
+   *     <listitem><para>#G_TYPE_UINT64, running time
+   *     </para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
    *     <term>seqnum</term>
    *     <listitem><para>#G_TYPE_UINT, sequence number, same as
    *     #GstRTPBasePayload:seqnum</para></listitem>
@@ -333,6 +340,7 @@ gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload, gpointer g_class)
   rtpbasepayload->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
   rtpbasepayload->ssrc = DEFAULT_SSRC;
   rtpbasepayload->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
+  priv->running_time = DEFAULT_RUNNING_TIME;
   priv->seqnum_offset_random = (rtpbasepayload->seqnum_offset == -1);
   priv->ts_offset_random = (rtpbasepayload->ts_offset == -1);
   priv->ssrc_random = (rtpbasepayload->ssrc == -1);
@@ -966,6 +974,12 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
         data.offset - priv->base_offset;
     GST_LOG_OBJECT (payload,
         "Using offset %" G_GUINT64_FORMAT " for RTP timestamp", data.offset);
+
+    /* store buffer's running time */
+    GST_LOG_OBJECT (payload,
+        "setting running-time to %" G_GUINT64_FORMAT,
+        data.offset - priv->base_offset);
+    priv->running_time = priv->base_rtime + data.offset - priv->base_offset;
   } else if (GST_CLOCK_TIME_IS_VALID (data.pts)) {
     gint64 rtime;
 
@@ -987,6 +1001,11 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
     }
     /* add running_time in clock-rate units to the base timestamp */
     data.rtptime = payload->ts_base + rtime;
+
+    /* store buffer's running time */
+    GST_LOG_OBJECT (payload,
+        "setting running-time to %" G_GUINT64_FORMAT, rtime);
+    priv->running_time = rtime;
   } else {
     GST_LOG_OBJECT (payload,
         "Using previous RTP timestamp %" G_GUINT32_FORMAT, payload->timestamp);
@@ -1097,10 +1116,14 @@ gst_rtp_base_payload_push (GstRTPBasePayload * payload, GstBuffer * buffer)
 static GstStructure *
 gst_rtp_base_payload_create_stats (GstRTPBasePayload *rtpbasepayload)
 {
+  GstRTPBasePayloadPrivate *priv;
   GstStructure *s;
+
+  priv = rtpbasepayload->priv;
 
   s = gst_structure_new ("application/x-rtp-payload-stats",
     "clock-rate", G_TYPE_UINT, rtpbasepayload->clock_rate,
+    "running-time", G_TYPE_UINT64, priv->running_time,
     "seqnum", G_TYPE_UINT, rtpbasepayload->seqnum,
     "timestamp", G_TYPE_UINT, rtpbasepayload->timestamp,
     NULL);
@@ -1261,6 +1284,7 @@ gst_rtp_base_payload_change_state (GstElement * element,
       else
         rtpbasepayload->ts_base = rtpbasepayload->ts_offset;
       rtpbasepayload->timestamp = rtpbasepayload->ts_base;
+      priv->running_time = DEFAULT_RUNNING_TIME;
       g_atomic_int_set (&rtpbasepayload->priv->notified_first_timestamp, 1);
       priv->base_offset = GST_BUFFER_OFFSET_NONE;
       priv->negotiated = FALSE;
