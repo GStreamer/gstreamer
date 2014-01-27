@@ -847,6 +847,43 @@ remove_fields (GstCaps * caps)
 }
 
 static GstCaps *
+extend_caps (GstCaps * caps, gboolean add_private)
+{
+  guint i, n;
+  GstCaps *ncaps = gst_caps_new_empty ();
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+
+    if (add_private && !gst_structure_has_name (s, "audio/x-private1-ac3")) {
+      GstStructure *ns = gst_structure_copy (s);
+      gst_structure_set_name (ns, "audio/x-private1-ac3");
+      gst_caps_append_structure (ncaps, ns);
+    } else if (!add_private &&
+        gst_structure_has_name (s, "audio/x-private1-ac3")) {
+      GstStructure *ns = gst_structure_copy (s);
+      gst_structure_set_name (ns, "audio/x-ac3");
+      gst_caps_append_structure (ncaps, ns);
+      ns = gst_structure_copy (s);
+      gst_structure_set_name (ns, "audio/x-eac3");
+      gst_caps_append_structure (ncaps, ns);
+    } else if (!add_private) {
+      gst_caps_append_structure (ncaps, gst_structure_copy (s));
+    }
+  }
+
+  if (add_private) {
+    gst_caps_append (caps, ncaps);
+  } else {
+    gst_caps_unref (caps);
+    caps = ncaps;
+  }
+
+  return caps;
+}
+
+static GstCaps *
 gst_ac3_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
 {
   GstCaps *peercaps, *templ;
@@ -857,6 +894,8 @@ gst_ac3_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
     GstCaps *fcopy = gst_caps_copy (filter);
     /* Remove the fields we convert */
     remove_fields (fcopy);
+    /* we do not ask downstream to handle x-private1-ac3 */
+    fcopy = extend_caps (fcopy, FALSE);
     peercaps = gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (parse), fcopy);
     gst_caps_unref (fcopy);
   } else
@@ -867,6 +906,8 @@ gst_ac3_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
      * between different alignments. */
     peercaps = gst_caps_make_writable (peercaps);
     remove_fields (peercaps);
+    /* also allow for x-private1-ac3 input */
+    peercaps = extend_caps (peercaps, TRUE);
 
     res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
