@@ -1944,6 +1944,7 @@ static gboolean
 gst_omx_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
 {
   GstOMXVideoDec *self;
+  OMX_ERRORTYPE err = OMX_ErrorNone;
 
   self = GST_OMX_VIDEO_DEC (decoder);
 
@@ -1958,8 +1959,10 @@ gst_omx_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
   gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
 
 #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
-  gst_omx_port_set_flushing (self->egl_in_port, 5 * GST_SECOND, TRUE);
-  gst_omx_port_set_flushing (self->egl_out_port, 5 * GST_SECOND, TRUE);
+  if (self->eglimage) {
+    gst_omx_port_set_flushing (self->egl_in_port, 5 * GST_SECOND, TRUE);
+    gst_omx_port_set_flushing (self->egl_out_port, 5 * GST_SECOND, TRUE);
+  }
 #endif
 
   /* Wait until the srcpad loop is finished,
@@ -1972,12 +1975,23 @@ gst_omx_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
 
   gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, FALSE);
   gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, FALSE);
-  gst_omx_port_populate (self->dec_out_port);
 
 #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
-  gst_omx_port_set_flushing (self->egl_in_port, 5 * GST_SECOND, FALSE);
-  gst_omx_port_set_flushing (self->egl_out_port, 5 * GST_SECOND, FALSE);
+  if (self->eglimage) {
+    gst_omx_port_set_flushing (self->egl_in_port, 5 * GST_SECOND, FALSE);
+    gst_omx_port_set_flushing (self->egl_out_port, 5 * GST_SECOND, FALSE);
+    err = gst_omx_port_populate (self->egl_out_port);
+  } else {
+    err = gst_omx_port_populate (self->dec_out_port);
+  }
+#else
+  err = gst_omx_port_populate (self->dec_out_port);
 #endif
+
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (self, "Failed to populate output port: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+  }
 
   /* Start the srcpad loop again */
   self->last_upstream_ts = 0;
