@@ -328,7 +328,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
   }
 
   /* jump if we don't have a PES 2nd extension */
-  if (!flags & 0x01)
+  if (!(flags & 0x01))
     goto stuffing_byte;
 
   /* Extension flag 2 */
