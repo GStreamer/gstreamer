@@ -275,6 +275,20 @@ gst_capsfilter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
+static void
+gst_capsfilter_push_pending_events (GstCapsFilter * filter, GList * events)
+{
+  GList *l;
+
+  for (l = g_list_last (events); l; l = l->prev) {
+    GST_LOG_OBJECT (filter, "Forwarding %s event",
+        GST_EVENT_TYPE_NAME (l->data));
+    GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (GST_BASE_TRANSFORM_CAST
+        (filter), l->data);
+  }
+  g_list_free (events);
+}
+
 /* Ouput buffer preparation ... if the buffer has no caps, and our allowed
  * output caps is fixed, then send the caps downstream, making sure caps are
  * sent before segment event.
@@ -289,14 +303,15 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
     GstBuffer ** buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  GstCapsFilter *filter = GST_CAPSFILTER (trans);
 
   /* always return the input as output buffer */
   *buf = input;
 
   if (GST_PAD_MODE (trans->srcpad) == GST_PAD_MODE_PUSH
       && !gst_pad_has_current_caps (trans->sinkpad)) {
+
     /* No caps. See if the output pad only supports fixed caps */
-    GstCapsFilter *filter = GST_CAPSFILTER (trans);
     GstCaps *out_caps;
     GList *pending_events = filter->pending_events;
 
@@ -319,15 +334,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
       if (!gst_pad_has_current_caps (trans->srcpad)) {
         if (gst_pad_set_caps (trans->srcpad, out_caps)) {
           if (pending_events) {
-            GList *l;
-
-            for (l = g_list_last (pending_events); l; l = l->prev) {
-              GST_LOG_OBJECT (trans, "Forwarding %s event",
-                  GST_EVENT_TYPE_NAME (l->data));
-              GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans,
-                  l->data);
-            }
-            g_list_free (pending_events);
+            gst_capsfilter_push_pending_events (filter, pending_events);
             pending_events = NULL;
           }
         } else {
@@ -353,6 +360,13 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 
       ret = GST_FLOW_ERROR;
     }
+  } else if (G_UNLIKELY (filter->pending_events)) {
+    GList *events = filter->pending_events;
+
+    filter->pending_events = NULL;
+
+    /* push pending events before a buffer */
+    gst_capsfilter_push_pending_events (filter, events);
   }
 
   return ret;
