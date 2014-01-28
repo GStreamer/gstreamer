@@ -168,6 +168,9 @@ cleanup_videoencodertest (void)
 {
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
+
+  gst_element_set_state (dec, GST_STATE_NULL);
+
   gst_check_teardown_src_pad (dec);
   gst_check_teardown_sink_pad (dec);
   gst_check_teardown_element (dec);
@@ -274,6 +277,120 @@ GST_START_TEST (videoencoder_playback)
 
 GST_END_TEST;
 
+/* make sure tags sent right before eos are pushed */
+GST_START_TEST (videoencoder_tags_before_eos)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  GstTagList *tags;
+
+  setup_videoencodertester ();
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push buffer */
+  buffer = create_test_buffer (0);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* clean received events list */
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  /* push a tag event */
+  tags = gst_tag_list_new (GST_TAG_COMMENT, "test-comment", NULL);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_tag (tags)));
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* check that the tag was received */
+  {
+    GstEvent *tag_event = events->data;
+    gchar *str;
+
+    fail_unless (GST_EVENT_TYPE (tag_event) == GST_EVENT_TAG);
+    gst_event_parse_tag (tag_event, &tags);
+    fail_unless (gst_tag_list_get_string (tags, GST_TAG_COMMENT, &str));
+    fail_unless (strcmp (str, "test-comment") == 0);
+    g_free (str);
+  }
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  cleanup_videoencodertest ();
+}
+
+GST_END_TEST;
+
+/* make sure events sent right before eos are pushed */
+GST_START_TEST (videoencoder_events_before_eos)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  GstMessage *msg;
+
+  setup_videoencodertester ();
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push buffer */
+  buffer = create_test_buffer (0);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* clean received events list */
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  /* push a serialized event */
+  msg =
+      gst_message_new_element (GST_OBJECT (mysrcpad),
+      gst_structure_new_empty ("test"));
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_sink_message ("sink-test", msg)));
+  gst_message_unref (msg);
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* check that the tag was received */
+  {
+    GstEvent *msg_event = events->data;
+    const GstStructure *structure;
+
+    fail_unless (GST_EVENT_TYPE (msg_event) == GST_EVENT_SINK_MESSAGE);
+    fail_unless (gst_event_has_name (msg_event, "sink-test"));
+    gst_event_parse_sink_message (msg_event, &msg);
+    structure = gst_message_get_structure (msg);
+    fail_unless (gst_structure_has_name (structure, "test"));
+    gst_message_unref (msg);
+  }
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  cleanup_videoencodertest ();
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_videoencoder_suite (void)
@@ -283,6 +400,9 @@ gst_videoencoder_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, videoencoder_playback);
+
+  tcase_add_test (tc, videoencoder_tags_before_eos);
+  tcase_add_test (tc, videoencoder_events_before_eos);
 
   return s;
 }
