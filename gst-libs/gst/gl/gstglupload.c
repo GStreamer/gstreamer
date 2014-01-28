@@ -438,8 +438,6 @@ gst_gl_upload_new (GstGLContext * context)
   upload->context = gst_object_ref (context);
   priv = upload->priv;
 
-  g_mutex_init (&upload->lock);
-
 #if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (context)) {
     priv->YUY2_UYVY = frag_YUY2_UYVY_opengl;
