@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <locale.h>
+
 #include <stdlib.h>
 #include <glib.h>
 #include <gst/gst.h>
@@ -531,6 +533,8 @@ main (int argc, char **argv)
     {NULL}
   };
   GOptionContext *ctx;
+
+  setlocale (LC_ALL, "");
 
   ctx =
       g_option_context_new
