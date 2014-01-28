@@ -926,6 +926,16 @@ gst_video_encoder_push_event (GstVideoEncoder * encoder, GstEvent * event)
   return gst_pad_push_event (encoder->srcpad, event);
 }
 
+static inline void
+gst_video_encoder_check_and_push_tags (GstVideoEncoder * encoder)
+{
+  if (encoder->priv->tags && encoder->priv->tags_changed) {
+    gst_video_encoder_push_event (encoder,
+        gst_event_new_tag (gst_tag_list_ref (encoder->priv->tags)));
+    encoder->priv->tags_changed = FALSE;
+  }
+}
+
 static gboolean
 gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
     GstEvent * event)
@@ -959,6 +969,21 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
       } else {
         flow_ret = GST_FLOW_OK;
       }
+
+      if (encoder->priv->current_frame_events) {
+        GList *l;
+
+        for (l = g_list_last (encoder->priv->current_frame_events); l;
+            l = g_list_previous (l)) {
+          GstEvent *event = GST_EVENT (l->data);
+
+          gst_video_encoder_push_event (encoder, event);
+        }
+      }
+      g_list_free (encoder->priv->current_frame_events);
+      encoder->priv->current_frame_events = NULL;
+
+      gst_video_encoder_check_and_push_tags (encoder);
 
       ret = (flow_ret == GST_FLOW_OK);
       GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
@@ -1850,11 +1875,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
       break;
   }
 
-  if (priv->tags && priv->tags_changed) {
-    gst_video_encoder_push_event (encoder,
-        gst_event_new_tag (gst_tag_list_ref (priv->tags)));
-    priv->tags_changed = FALSE;
-  }
+  gst_video_encoder_check_and_push_tags (encoder);
 
   /* no buffer data means this frame is skipped/dropped */
   if (!frame->output_buffer) {
