@@ -1889,6 +1889,9 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
 
   g_object_get (priv->payloader, "stats", &stats, NULL);
 
+  if (stats == NULL)
+    goto no_stats;
+
   if (seq)
     gst_structure_get_uint (stats, "seqnum", seq);
 
@@ -1904,9 +1907,19 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
       *running_time = GST_CLOCK_TIME_NONE;
   }
 
+  gst_structure_free (stats);
+
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
+
+  /* ERRORS */
+no_stats:
+  {
+    GST_WARNING ("Could not get payloader stats");
+    g_mutex_unlock (&priv->lock);
+    return FALSE;
+  }
 }
 
 /**
