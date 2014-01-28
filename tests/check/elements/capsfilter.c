@@ -30,6 +30,21 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (CAPS_TEMPLATE_STRING)
     );
 
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (CAPS_TEMPLATE_STRING)
+    );
+
+static GList *events = NULL;
+
+static gboolean
+test_pad_eventfunc (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  events = g_list_append (events, event);
+  return TRUE;
+}
+
 GST_START_TEST (test_unfixed_downstream_caps)
 {
   GstElement *pipe, *src, *filter;
@@ -227,6 +242,87 @@ GST_START_TEST (test_accept_caps_query)
 
 GST_END_TEST;
 
+GST_START_TEST (test_push_pending_events)
+{
+  GstElement *filter;
+  GstPad *mysinkpad;
+  GstPad *mysrcpad;
+  GstSegment segment;
+  GstTagList *tags;
+  GstBuffer *buffer;
+  GstEvent *event;
+
+  filter = gst_check_setup_element ("capsfilter");
+  mysinkpad = gst_check_setup_sink_pad (filter, &sinktemplate);
+  gst_pad_set_event_function (mysinkpad, test_pad_eventfunc);
+  gst_pad_set_active (mysinkpad, TRUE);
+  mysrcpad = gst_check_setup_src_pad (filter, &srctemplate);
+  gst_pad_set_active (mysrcpad, TRUE);
+
+  fail_unless_equals_int (gst_element_set_state (filter, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  /* push the stream start */
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_stream_start ("test-stream")));
+  fail_unless (g_list_length (events) == 1);
+  event = events->data;
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  /* the tag should get trapped as we haven't pushed a caps yet */
+  tags = gst_tag_list_new (GST_TAG_COMMENT, "testcomment", NULL);
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_tag (gst_tag_list_ref (tags))));
+  fail_unless (g_list_length (events) == 0);
+
+  /* push a caps */
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_caps (gst_caps_from_string ("audio/x-raw, "
+                  "channels=(int)2, " "rate = (int)44100"))));
+  fail_unless (g_list_length (events) == 1);
+  event = events->data;
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  /* push a segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  fail_unless (g_list_length (events) == 1);
+  event = events->data;
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  /* push a buffer, the tag should now be pushed downstream */
+  buffer = gst_buffer_new_wrapped (g_malloc0 (1024), 1024);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  fail_unless (g_list_length (events) == 1);
+  event = events->data;
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_TAG);
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  /* We don't expect any output buffers unless the check fails */
+  fail_unless (g_list_length (buffers) == 1);
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  /* cleanup */
+  GST_DEBUG ("cleanup");
+
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
+  gst_check_teardown_src_pad (filter);
+  gst_check_teardown_sink_pad (filter);
+  gst_check_teardown_element (filter);
+  gst_tag_list_unref (tags);
+}
+
+GST_END_TEST;
+
 static Suite *
 capsfilter_suite (void)
 {
@@ -238,6 +334,7 @@ capsfilter_suite (void)
   tcase_add_test (tc_chain, test_caps_property);
   tcase_add_test (tc_chain, test_caps_query);
   tcase_add_test (tc_chain, test_accept_caps_query);
+  tcase_add_test (tc_chain, test_push_pending_events);
 
   return s;
 }
