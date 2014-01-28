@@ -63,6 +63,10 @@ static gboolean _do_upload_draw_gles2 (GstGLContext * context,
 
 /* *INDENT-OFF* */
 
+/* BT. 601 standard with the following ranges:
+ * Y = [16..235] (of 255)
+ * Cb/Cr = [16..240] (of 255)
+ */
 #define YUV_TO_RGB_COEFFICIENTS \
       "const vec3 offset = vec3(-0.0625, -0.5, -0.5);\n" \
       "const vec3 rcoeff = vec3(1.164, 0.000, 1.596);\n" \
@@ -358,6 +362,11 @@ static const gchar *text_vertex_shader_gles2 =
 
 /* *INDENT-ON* */
 
+struct TexData
+{
+  guint internal_format, format, type, width, height;
+};
+
 struct _GstGLUploadPrivate
 {
   int n_textures;
@@ -373,6 +382,8 @@ struct _GstGLUploadPrivate
   const gchar *vert_shader;
 
     gboolean (*draw) (GstGLContext * context, GstGLUpload * download);
+
+  struct TexData texture_info[GST_VIDEO_MAX_PLANES];
 
   GstBuffer *buffer;
   GstVideoFrame frame;
@@ -1096,11 +1107,7 @@ _init_upload (GstGLContext * context, GstGLUpload * upload)
       upload->priv->n_textures = 2;
       break;
     case GST_VIDEO_FORMAT_UYVY:
-      if (USING_GLES2 (context)) {
-        frag_prog = g_strdup_printf (upload->priv->YUY2_UYVY, 'a', 'r', 'b');
-      } else {
-        frag_prog = g_strdup_printf (upload->priv->YUY2_UYVY, 'a', 'b', 'r');
-      }
+      frag_prog = g_strdup_printf (upload->priv->YUY2_UYVY, 'a', 'r', 'b');
       free_frag_prog = TRUE;
       upload->priv->n_textures = 2;
       break;
@@ -1244,11 +1251,6 @@ error:
   }
 }
 
-struct TexData
-{
-  gint internal_format, format, type, width, height;
-};
-
 /* called by gst_gl_context_thread_do_upload (in the gl thread) */
 gboolean
 _do_upload_make (GstGLContext * context, GstGLUpload * upload)
@@ -1256,7 +1258,7 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
   GstGLFuncs *gl;
   GstVideoFormat v_format;
   guint in_width, in_height;
-  struct TexData tex[GST_VIDEO_MAX_PLANES];
+  struct TexData *tex = upload->priv->texture_info;
   guint i;
 
   gl = context->gl_vtable;
@@ -1274,6 +1276,7 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_AYUV:
       tex[0].internal_format = GL_RGBA;
       tex[0].format = GL_RGBA;
       tex[0].type = GL_UNSIGNED_BYTE;
@@ -1285,13 +1288,6 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
       tex[0].internal_format = GL_RGB;
       tex[0].format = GL_RGB;
       tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
-      tex[0].height = in_height;
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-      tex[0].internal_format = GL_RGBA;
-      tex[0].format = GL_BGRA;
-      tex[0].type = GL_UNSIGNED_INT_8_8_8_8;
       tex[0].width = in_width;
       tex[0].height = in_height;
       break;
@@ -1311,17 +1307,6 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
       tex[0].height = in_height;
       break;
     case GST_VIDEO_FORMAT_YUY2:
-      tex[0].internal_format = GL_LUMINANCE_ALPHA;
-      tex[0].format = GL_LUMINANCE_ALPHA;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
-      tex[0].height = in_height;
-      tex[1].internal_format = GL_RGBA8;
-      tex[1].format = GL_BGRA;
-      tex[1].type = GL_UNSIGNED_INT_8_8_8_8;
-      tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
-      tex[1].height = in_height;
-      break;
     case GST_VIDEO_FORMAT_UYVY:
       tex[0].internal_format = GL_LUMINANCE_ALPHA;
       tex[0].format = GL_LUMINANCE_ALPHA;
@@ -1329,8 +1314,8 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
       tex[0].width = in_width;
       tex[0].height = in_height;
       tex[1].internal_format = GL_RGBA8;
-      tex[1].format = GL_BGRA;
-      tex[1].type = GL_UNSIGNED_INT_8_8_8_8_REV;
+      tex[1].format = GL_RGBA;
+      tex[1].type = GL_UNSIGNED_BYTE;
       tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
       tex[1].height = in_height;
       break;
@@ -1439,162 +1424,39 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
 gboolean
 _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
 {
-  GstGLFuncs *gl;
+  guint i;
   GstVideoFormat v_format;
-  guint in_width, in_height;
+  struct TexData *tex = upload->priv->texture_info;
+  const GstGLFuncs *gl = context->gl_vtable;
 
-  gl = context->gl_vtable;
-
-  in_width = upload->in_width;
-  in_height = upload->in_height;
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
 
-  gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[0]);
+  for (i = 0; i < upload->priv->n_textures; i++) {
+    guint data_i = i;
 
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_GRAY8:
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
-      break;
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
-          GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
-          GL_RGB, GL_UNSIGNED_BYTE, upload->data[0]);
-      break;
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_ABGR:
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
-          GL_RGBA, GL_UNSIGNED_BYTE, upload->data[0]);
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width,
-          in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
+    if (v_format == GST_VIDEO_FORMAT_YUY2 || v_format == GST_VIDEO_FORMAT_UYVY)
+      data_i = 0;
 
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_ROUND_UP_2 (in_width) / 2, in_height,
-          GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
-      break;
-    case GST_VIDEO_FORMAT_UYVY:
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width,
-          in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
-
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_ROUND_UP_2 (in_width) / 2, in_height,
-          GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
-
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          in_width / 2, in_height / 2,
-          GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[1]);
-      break;
-    case GST_VIDEO_FORMAT_I420:
-    {
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
-
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
-
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[2]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
+    /* YV12 is the same as I420 except that planes 1+2 are swapped */
+    if (v_format == GST_VIDEO_FORMAT_YV12) {
+      if (i == 1)
+        data_i = 2;
+      else if (i == 2)
+        data_i = 1;
     }
-      break;
-    case GST_VIDEO_FORMAT_YV12:        /* same as I420 except plane 1+2 swapped */
-    {
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
 
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[2]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
+    GST_LOG ("data transfer for texture no %u, id:%u, %ux%u %u", i,
+        upload->in_texture[i], tex[i].width, tex[i].height, data_i);
 
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
-    }
-      break;
-    case GST_VIDEO_FORMAT_Y444:
-    {
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
-
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          in_width, in_height, GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
-
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[2]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          in_width, in_height, GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
-    }
-      break;
-    case GST_VIDEO_FORMAT_Y42B:
-    {
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
-
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_ROUND_UP_2 (in_width) / 2, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
-
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[2]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_ROUND_UP_2 (in_width) / 2, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
-    }
-      break;
-    case GST_VIDEO_FORMAT_Y41B:
-    {
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
-
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_ROUND_UP_4 (in_width) / 4, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
-
-      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[2]);
-      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_ROUND_UP_4 (in_width) / 4, in_height,
-          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
-    }
-      break;
-    default:
-      gst_gl_context_set_error (context, "Unsupported upload video format %d",
-          v_format);
-      g_assert_not_reached ();
-      break;
+    gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
+    gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, tex[i].width, tex[i].height,
+        tex[i].format, tex[i].type, upload->data[data_i]);
   }
 
   /* make sure no texture is in use in our opengl context 
    * in case we want to use the upload texture in an other opengl context
    */
-  glBindTexture (GL_TEXTURE_2D, 0);
+  gl->BindTexture (GL_TEXTURE_2D, 0);
 
   return TRUE;
 }
