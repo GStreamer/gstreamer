@@ -51,6 +51,7 @@ GST_START_TEST (test_properties)
   gchar *res_privkey_file = NULL;
   gchar *res_passphrase = NULL;
   gchar *res_kh_file = NULL;
+  gchar *res_host_pubkey_md5 = NULL;
   guint res_auth_type = 0;
   gboolean res_accept_unkh = FALSE;
 
@@ -73,6 +74,8 @@ GST_START_TEST (test_properties)
   g_object_set (G_OBJECT (sink), "ssh-pub-keyfile", "public_key_file", NULL);
   g_object_set (G_OBJECT (sink), "ssh-priv-keyfile", "private_key_file", NULL);
   g_object_set (G_OBJECT (sink), "ssh-knownhosts", "known_hosts", NULL);
+  g_object_set (G_OBJECT (sink), "ssh-host-pubkey-md5",
+      "00112233445566778899aabbccddeeff", NULL);
   g_object_set (G_OBJECT (sink), "ssh-accept-unknownhost", TRUE, NULL);
   g_object_set (G_OBJECT (sink), "ssh-key-passphrase", "SoMePaSsPhRaSe", NULL);
 
@@ -86,6 +89,7 @@ GST_START_TEST (test_properties)
       "timeout", &res_timeout, "qos-dscp", &res_qos_dscp,
       "ssh-auth-type", &res_auth_type, "ssh-pub-keyfile", &res_pubkey_file,
       "ssh-priv-keyfile", &res_privkey_file, "ssh-knownhosts", &res_kh_file,
+      "ssh-host-pubkey-md5", &res_host_pubkey_md5,
       "ssh-accept-unknownhost", &res_accept_unkh,
       "create-dirs", &res_create_dirs, "ssh-key-passphrase", &res_passphrase,
       NULL);
@@ -107,6 +111,8 @@ GST_START_TEST (test_properties)
           strlen ("private_key_file")) == 0);
   fail_unless (strncmp (res_kh_file, "known_hosts", strlen ("known_hosts"))
       == 0);
+  fail_unless (strncmp (res_host_pubkey_md5, "00112233445566778899aabbccddeeff",
+          strlen ("00112233445566778899aabbccddeeff")) == 0);
   fail_unless (strncmp (res_passphrase, "SoMePaSsPhRaSe",
           strlen ("SoMePaSsPhRaSe")) == 0);
   fail_unless (res_accept_unkh == TRUE);
@@ -120,6 +126,7 @@ GST_START_TEST (test_properties)
   g_free (res_privkey_file);
   g_free (res_passphrase);
   g_free (res_kh_file);
+  g_free (res_host_pubkey_md5);
 
   /* ------- change properties ------------- */
 
@@ -136,6 +143,8 @@ GST_START_TEST (test_properties)
   g_object_set (G_OBJECT (sink), "ssh-pub-keyfile", "/xxx/pub_key", NULL);
   g_object_set (G_OBJECT (sink), "ssh-priv-keyfile", "/yyy/pvt_key", NULL);
   g_object_set (G_OBJECT (sink), "ssh-knownhosts", "/zzz/known_hosts", NULL);
+  g_object_set (G_OBJECT (sink), "ssh-host-pubkey-md5",
+      "ffeeddccbbaa99887766554433221100", NULL);
   g_object_set (G_OBJECT (sink), "ssh-accept-unknownhost", FALSE, NULL);
   g_object_set (G_OBJECT (sink), "ssh-key-passphrase", "OtherPASSphrase", NULL);
 
@@ -150,6 +159,7 @@ GST_START_TEST (test_properties)
       "ssh-auth-type", &res_auth_type, "ssh-pub-keyfile", &res_pubkey_file,
       "ssh-priv-keyfile", &res_privkey_file, "ssh-knownhosts", &res_kh_file,
       "ssh-accept-unknownhost", &res_accept_unkh,
+      "ssh-host-pubkey-md5", &res_host_pubkey_md5,
       "ssh-key-passphrase", &res_passphrase, "create-dirs", &res_create_dirs,
       NULL);
 
@@ -170,6 +180,8 @@ GST_START_TEST (test_properties)
           strlen ("/yyy/pvt_key")) == 0);
   fail_unless (strncmp (res_kh_file, "/zzz/known_hosts",
           strlen ("/zzz/known_host")) == 0);
+  fail_unless (strncmp (res_host_pubkey_md5, "ffeeddccbbaa99887766554433221100",
+          strlen ("ffeeddccbbaa99887766554433221100")) == 0);
   fail_unless (strncmp (res_passphrase, "OtherPASSphrase",
           strlen ("OtherPASSphrase")) == 0);
   fail_unless (res_accept_unkh == FALSE);
@@ -183,6 +195,7 @@ GST_START_TEST (test_properties)
   g_free (res_privkey_file);
   g_free (res_passphrase);
   g_free (res_kh_file);
+  g_free (res_host_pubkey_md5);
 
   cleanup_curlsftpsink (sink);
 }

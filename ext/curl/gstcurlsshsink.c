@@ -48,8 +48,6 @@
 
 /* Default values */
 #define GST_CAT_DEFAULT    gst_curl_ssh_sink_debug
-#define DEFAULT_INSECURE   TRUE
-
 
 /* Plugin specific settings */
 
@@ -63,6 +61,7 @@ enum
   PROP_SSH_PRIV_KEYFILE,
   PROP_SSH_KEY_PASSPHRASE,
   PROP_SSH_KNOWNHOSTS,
+  PROP_SSH_HOST_PUBLIC_KEY_MD5,
   PROP_SSH_ACCEPT_UNKNOWNHOST
 };
 
@@ -159,6 +158,13 @@ gst_curl_ssh_sink_class_init (GstCurlSshSinkClass * klass)
           "The complete path & filename of the SSH 'known_hosts' file",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_SSH_HOST_PUBLIC_KEY_MD5,
+      g_param_spec_string ("ssh-host-pubkey-md5",
+          "MD5 checksum of the remote host's public key",
+          "MD5 checksum (32 hexadecimal digits, case-insensitive) of the "
+          "remote host's public key",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_SSH_ACCEPT_UNKNOWNHOST,
       g_param_spec_boolean ("ssh-accept-unknownhost",
           "SSH accept unknown host",
@@ -174,6 +180,7 @@ gst_curl_ssh_sink_init (GstCurlSshSink * sink)
   sink->ssh_priv_keyfile = NULL;
   sink->ssh_key_passphrase = NULL;
   sink->ssh_knownhosts = NULL;
+  sink->ssh_host_public_key_md5 = NULL;
   sink->ssh_accept_unknownhost = FALSE;
 }
 
@@ -188,6 +195,7 @@ gst_curl_ssh_sink_finalize (GObject * gobject)
   g_free (this->ssh_priv_keyfile);
   g_free (this->ssh_key_passphrase);
   g_free (this->ssh_knownhosts);
+  g_free (this->ssh_host_public_key_md5);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -242,6 +250,13 @@ gst_curl_ssh_sink_set_property (GObject * object, guint prop_id,
       GST_DEBUG_OBJECT (sink, "ssh_knownhosts set to %s", sink->ssh_knownhosts);
       break;
 
+    case PROP_SSH_HOST_PUBLIC_KEY_MD5:
+      g_free (sink->ssh_host_public_key_md5);
+      sink->ssh_host_public_key_md5 = g_value_dup_string (value);
+      GST_DEBUG_OBJECT (sink, "ssh_host_public_key_md5 set to %s",
+          sink->ssh_host_public_key_md5);
+      break;
+
     case PROP_SSH_ACCEPT_UNKNOWNHOST:
       sink->ssh_accept_unknownhost = g_value_get_boolean (value);
       GST_DEBUG_OBJECT (sink, "ssh_accept_unknownhost set to %d",
@@ -285,6 +300,10 @@ gst_curl_ssh_sink_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, sink->ssh_knownhosts);
       break;
 
+    case PROP_SSH_HOST_PUBLIC_KEY_MD5:
+      g_value_set_string (value, sink->ssh_host_public_key_md5);
+      break;
+
     case PROP_SSH_ACCEPT_UNKNOWNHOST:
       g_value_set_boolean (value, sink->ssh_accept_unknownhost);
       break;
@@ -325,6 +344,26 @@ gst_curl_ssh_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
                 sink->ssh_knownhosts)) != CURLE_OK) {
       GST_ERROR_OBJECT (sink, "curl error: %d setting known_hosts file: %s.",
           curl_err, sink->ssh_knownhosts);
+      return FALSE;
+    }
+  }
+
+  if (sink->ssh_host_public_key_md5) {
+    /* libcurl is freaking tricky. If the input string is not exactly 32
+     * hexdigits long it silently ignores CURLOPT_SSH_HOST_PUBLIC_KEY_MD5 and
+     * performs the transfer without authenticating the server! */
+    if (strlen (sink->ssh_host_public_key_md5) != 32) {
+      GST_ERROR_OBJECT (sink,
+          "MD5-hash string has invalid length, must be exactly 32 hexdigits!");
+      return FALSE;
+    }
+
+    if ((curl_err =
+            curl_easy_setopt (bcsink->curl, CURLOPT_SSH_HOST_PUBLIC_KEY_MD5,
+                sink->ssh_host_public_key_md5)) != CURLE_OK) {
+      GST_ERROR_OBJECT (sink,
+          "curl error: %d setting remote host's public key MD5: %s.", curl_err,
+          sink->ssh_host_public_key_md5);
       return FALSE;
     }
   }

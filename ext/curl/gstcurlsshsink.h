@@ -70,6 +70,8 @@ struct _GstCurlSshSink
                                    CURLOPT_SSH_KNOWN_HOSTS */
   gboolean ssh_accept_unknownhost;      /* accept or reject unknown public key
                                            from remote host */
+  gchar *ssh_host_public_key_md5;   /* MD5-hash of the remote host's public key:
+                                       CURLOPT_SSH_HOST_PUBLIC_KEY_MD5 */
 };
 
 struct _GstCurlSshSinkClass
