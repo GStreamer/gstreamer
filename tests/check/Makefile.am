@@ -117,6 +117,7 @@ check_PROGRAMS = \
 	libs/tag \
 	libs/video \
 	libs/videodecoder \
+	libs/videoencoder \
 	libs/xmpwriter \
 	$(cxx_checks) \
 	$(check_orc) \
@@ -449,6 +450,16 @@ libs_videodecoder_CFLAGS = \
 	$(AM_CFLAGS)
 
 libs_videodecoder_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
+
+libs_videoencoder_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+libs_videoencoder_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
