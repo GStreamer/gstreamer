@@ -2,6 +2,7 @@
 audio
 audiocdsrc
 audiodecoder
+audioencoder
 discoverer
 fft
 gstlibscpp
