@@ -133,3 +133,92 @@ specified TOC UID (you can use gst_toc_find_entry() to find entry in TOC by UID)
 To create TOC select event use gst_event_new_toc_select(). The common action on
 such event is to seek to specified UID within your element. 
 
+
+5. Implementation coverage, Specifications, ...
+
+AIFC: -/-
+http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/AIFF/Docs/AIFF-1.3.pdf
+o 'MARK'
+o 'INST'
+
+The 'MARK' chunk defines a list of (cue-id, position_in_samples, label).
+
+The 'INST' chunk contains a sustainLoop and releaseLoop, each consisting of 
+(loop-type, cue-begin, cue-end)
+
+
+FLAC: read/write
+http://xiph.org/flac/format.html#metadata_block_cuesheet
+* METADATA_BLOCK_CUESHEET
+  * CUESHEET_TRACK
+    o CUESHEET_TRACK_INDEX
+    
+Both CUESHEET_TRACK and CUESHEET_TRACK_INDEX have a (relative) offset in
+samples. CUESHEET_TRACK has ISRC metadata.
+
+
+MKV: read/write
+http://matroska.org/technical/specs/chapters/index.html
+* Chapters and Editions each having a uid
+* Chapter have start/end time and metadata:
+  ChapString, ChapLanguage, ChapCountry
+
+  
+MP4:
+* elst
+
+The 'elst' atom contains a list of edits. Each edit consists of (length, start,
+play-back speed).
+
+
+OGG: -/-
+https://wiki.xiph.org/Chapter_Extension
+o VorbisComment fields called CHAPTERxxx and CHAPTERxxxNAME with xxx being a
+number between 000 and 999.
+
+
+WAV: read/write
+http://www.sonicspot.com/guide/wavefiles.html
+* 'cue '
+o 'plst'
+* 'adtl'
+  * 'labl'
+  * 'note'
+  o 'ltxt'
+  o 'smpl'
+
+The 'cue ' chunk defines a list of markers in the stream with 'cue-id's. The
+'smpl' chunk defines a list of regions in the stream with 'cue-id's in the same
+namespace (?).
+
+The various 'adtl' chunks: 'labl', 'note' and 'ltxt' refer to the 'cue-id's.
+
+A 'plst' chunk defines a sequence of segments (cue-id, length_samples, repeats).
+The 'smpl' chunk defines a list of loops (cue-id, beg, end, loop-type, repeats).
+
+
+Conclusion/Ideas
+
+All formats have table of [cue-id, cue-start, (cue-end), (extra tags)]
+- cue-id is commonly represented as and unsigned int 32bit
+- cue-end is optional
+- extra tags could be represented as a structure/taglist
+
+Many formats have metadata that references the cue-table.
+- loops in instruments in wav, aifc
+- edit lists in wav, mp4
+
+For mp4.edtl, wav.plst we could expose two editions.
+1) the edit list is flattened: default, for playback
+2) the stream has the raw data and the edit list is there as chapter markers:
+   useful for editing software
+
+We might want to introduce a new GST_TOC_ENTRY_TYPE_MARKER or _CUE. This would
+be a sequence entry-type and it would not be used for navigational purposes, but
+to attach data to a point in time (envelopes, loops, ...).
+
+API wise there is some overlap between:
+- exposing multiple audio/video tracks as pads or as ToC editions. For ToC
+  editions, we have the TocSelect event.
+- exposing subtitles as a sparse stream or as as ToC sequence of markers with
+  labels
