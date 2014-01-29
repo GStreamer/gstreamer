@@ -67,8 +67,7 @@ static gboolean gst_omx_video_dec_start (GstVideoDecoder * decoder);
 static gboolean gst_omx_video_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
-static gboolean gst_omx_video_dec_reset (GstVideoDecoder * decoder,
-    gboolean hard);
+static gboolean gst_omx_video_dec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static GstFlowReturn gst_omx_video_dec_finish (GstVideoDecoder * decoder);
@@ -114,7 +113,7 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
   video_decoder_class->close = GST_DEBUG_FUNCPTR (gst_omx_video_dec_close);
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_omx_video_dec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_omx_video_dec_stop);
-  video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_omx_video_dec_reset);
+  video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_omx_video_dec_flush);
   video_decoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_set_format);
   video_decoder_class->handle_frame =
@@ -1941,16 +1940,12 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
 }
 
 static gboolean
-gst_omx_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
+gst_omx_video_dec_flush (GstVideoDecoder * decoder)
 {
-  GstOMXVideoDec *self;
+  GstOMXVideoDec *self = GST_OMX_VIDEO_DEC (decoder);
   OMX_ERRORTYPE err = OMX_ErrorNone;
 
-  self = GST_OMX_VIDEO_DEC (decoder);
-
-  /* FIXME: Handle different values of hard */
-
-  GST_DEBUG_OBJECT (self, "Resetting decoder");
+  GST_DEBUG_OBJECT (self, "Flushing decoder");
 
   if (gst_omx_component_get_state (self->dec, 0) == OMX_StateLoaded)
     return TRUE;
@@ -2000,7 +1995,7 @@ gst_omx_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
   gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
       (GstTaskFunction) gst_omx_video_dec_loop, decoder, NULL);
 
-  GST_DEBUG_OBJECT (self, "Reset decoder");
+  GST_DEBUG_OBJECT (self, "Flush decoder");
 
   return TRUE;
 }
