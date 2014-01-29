@@ -30,7 +30,8 @@ gst_gl_effects_rgb_to_curve (GstGLEffects * effects,
     gint curve_index, gint width, gint height, GLuint texture)
 {
   GstGLShader *shader;
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "rgbmap0");
@@ -86,7 +87,7 @@ gst_gl_effects_rgb_to_curve (GstGLEffects * effects,
 
   gl->Disable (GL_TEXTURE_1D);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void

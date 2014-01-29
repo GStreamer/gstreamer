@@ -63,9 +63,9 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
           GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
               ("%s", gst_gl_context_get_error ()), (NULL));
         } else {
-          effects->draw_attr_position_loc =
+          filter->draw_attr_position_loc =
               gst_gl_shader_get_attribute_location (shader, "a_position");
-          effects->draw_attr_texture_loc =
+          filter->draw_attr_texture_loc =
               gst_gl_shader_get_attribute_location (shader, "a_texCoord");
         }
       }
@@ -107,7 +107,7 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
   }
 #endif
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 void

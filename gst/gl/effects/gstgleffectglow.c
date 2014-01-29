@@ -32,7 +32,8 @@ gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow0");
@@ -62,7 +63,7 @@ gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void
@@ -71,7 +72,8 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow1");
@@ -108,7 +110,7 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 7, gauss_kernel);
   gst_gl_shader_set_uniform_1f (shader, "height", height);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 void
@@ -117,7 +119,8 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow2");
@@ -149,7 +152,7 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 7, gauss_kernel);
   gst_gl_shader_set_uniform_1f (shader, "width", width);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 void
@@ -158,7 +161,8 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow3");
@@ -197,7 +201,7 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (shader, "beta", (gfloat) 1 / 3.5f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 void

@@ -66,11 +66,6 @@ struct _GstGLEffects
   GHashTable *shaderstable;
 
   gboolean horizontal_swap; /* switch left to right */
-
-#if GST_GL_HAVE_GLES2
-  GLint draw_attr_position_loc;
-  GLint draw_attr_texture_loc;
-#endif
 };
 
 struct _GstGLEffectsClass
@@ -87,8 +82,6 @@ enum
 
 
 GType gst_gl_effects_get_type (void);
-
-void gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width, guint height);
 
 void gst_gl_effects_identity (GstGLEffects *effects);
 void gst_gl_effects_mirror (GstGLEffects *effects);

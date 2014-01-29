@@ -44,7 +44,8 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray1");
@@ -81,7 +82,7 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
   gst_gl_shader_set_uniform_1f (shader, "width", width);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void
@@ -90,7 +91,8 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray2");
@@ -122,7 +124,7 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
   gst_gl_shader_set_uniform_1f (shader, "height", height);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 /* multipass separable sobel */
@@ -132,7 +134,8 @@ gst_gl_effects_xray_desaturate (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray_desat");
@@ -162,7 +165,7 @@ gst_gl_effects_xray_desaturate (gint width, gint height, guint texture,
   gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void
@@ -171,7 +174,8 @@ gst_gl_effects_xray_sobel_hconv (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_hconv");
@@ -203,7 +207,7 @@ gst_gl_effects_xray_sobel_hconv (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1f (shader, "width", width);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void
@@ -212,7 +216,8 @@ gst_gl_effects_xray_sobel_vconv (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_vconv");
@@ -244,7 +249,7 @@ gst_gl_effects_xray_sobel_vconv (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1f (shader, "height", height);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void
@@ -253,7 +258,8 @@ gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_len");
@@ -284,7 +290,7 @@ gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1i (shader, "invert", TRUE);
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 /* end of sobel passes */
@@ -295,7 +301,8 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray4");
@@ -333,7 +340,7 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (shader, "alpha", (gfloat) 0.5f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 void

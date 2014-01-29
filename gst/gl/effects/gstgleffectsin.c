@@ -29,7 +29,8 @@ gst_gl_effects_sin_callback (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLContext *context = filter->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "sin0");
@@ -58,7 +59,7 @@ gst_gl_effects_sin_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
-  gst_gl_effects_draw_texture (effects, texture, width, height);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 void
