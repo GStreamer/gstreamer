@@ -1114,6 +1114,21 @@ GST_START_TEST (test_features)
   gst_caps_unref (c3);
   gst_caps_unref (c2);
   gst_caps_unref (c1);
+
+  c1 = gst_caps_from_string ("video/x-raw");
+  c2 = gst_caps_from_string ("video/x-raw");
+
+  f1 = gst_caps_get_features (c1, 0);
+  gst_caps_features_add (f1, "memory:VASurface");
+
+  fail_unless (gst_caps_features_is_equal (f1, gst_caps_get_features (c1, 0)));
+
+  f2 = gst_caps_get_features (c2, 0);
+  fail_unless (gst_caps_features_is_equal
+      (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY, f2));
+
+  gst_caps_unref (c2);
+  gst_caps_unref (c1);
 }
 
 GST_END_TEST;
