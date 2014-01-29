@@ -901,9 +901,8 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 
   if (!filter->upload) {
     filter->upload = gst_gl_upload_new (filter->context);
-    gst_gl_upload_init_format (filter->upload,
-        GST_VIDEO_INFO_FORMAT (&filter->in_info), in_width, in_height,
-        out_width, out_height);
+    gst_gl_upload_init_format (filter->upload, filter->in_info,
+        filter->out_info);
   }
   //blocking call, generate a FBO
   if (!gst_gl_context_gen_fbo (filter->context, out_width, out_height,

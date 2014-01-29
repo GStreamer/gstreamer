@@ -1576,9 +1576,6 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
       GstSegment *seg;
       guint in_tex;
       GstGLMixerFrameData *frame;
-      GstVideoFormat in_format;
-      guint in_width, in_height, out_width, out_height;
-
 
       frame = g_ptr_array_index (mix->frames, array_index);
       frame->pad = pad;
@@ -1595,19 +1592,13 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
       if (GST_CLOCK_TIME_IS_VALID (stream_time))
         gst_object_sync_values (GST_OBJECT (pad), stream_time);
 
-      in_format = GST_VIDEO_INFO_FORMAT (&pad->in_info);
-      in_width = GST_VIDEO_INFO_WIDTH (&pad->in_info);
-      in_height = GST_VIDEO_INFO_HEIGHT (&pad->in_info);
-      out_width = GST_VIDEO_INFO_WIDTH (&mix->out_info);
-      out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
-
       if (!pad->upload) {
         pad->upload = gst_gl_upload_new (mix->context);
 
-        if (!gst_gl_upload_init_format (pad->upload, in_format,
-                in_width, in_height, out_width, out_height)) {
-          GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-              ("%s", "Failed to init upload format"), (NULL));
+        if (!gst_gl_upload_init_format (pad->upload, pad->in_info,
+                mix->out_info)) {
+          GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s",
+                  "Failed to init upload format"), (NULL));
           res = FALSE;
           goto out;
         }
