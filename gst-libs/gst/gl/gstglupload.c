@@ -711,8 +711,14 @@ gst_gl_upload_perform_with_memory (GstGLUpload * upload, GstGLMemory * gl_mem)
 
   g_return_val_if_fail (upload != NULL, FALSE);
 
-  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED))
-    return FALSE;
+  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED)) {
+    GstVideoInfo info;
+
+    gst_video_info_set_format (&info, gl_mem->v_format, gl_mem->width,
+        gl_mem->height);
+
+    gst_gl_upload_init_format (upload, info, info);
+  }
 
   if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD))
     return FALSE;
