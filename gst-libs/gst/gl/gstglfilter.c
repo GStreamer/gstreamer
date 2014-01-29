@@ -1089,8 +1089,8 @@ gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
     in_height = out_height;
   }
 
-  GST_LOG ("rendering to target. in:%ux%u out:%ux%u", in_width, in_height,
-      out_width, out_height);
+  GST_LOG ("rendering to target. in %u, %ux%u out %u, %ux%u", input, in_width,
+      in_height, target, out_width, out_height);
 
   gst_gl_context_use_fbo (filter->context,
       out_width, out_height,
@@ -1099,22 +1099,23 @@ gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
       in_width, 0, in_height, GST_GL_DISPLAY_PROJECTION_ORTHO2D, data);
 }
 
-#if GST_GL_HAVE_OPENGL
 static void
 _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFuncs *gl = filter->context->gl_vtable;
 
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+#if GST_GL_HAVE_OPENGL
+  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_shader_use (filter->default_shader);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
-  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (filter->default_shader, "tex", 1);
   gst_gl_shader_set_uniform_1f (filter->default_shader, "width", width);
@@ -1143,9 +1144,6 @@ void
 gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter,
     gboolean resize, GLuint input, GLuint target, GstGLShader * shader)
 {
-  g_return_if_fail (gst_gl_context_get_gl_api (filter->context) &
-      GST_GL_API_OPENGL);
-
   filter->default_shader = shader;
   gst_gl_filter_render_to_target (filter, resize, input, target,
       _draw_with_shader_cb, filter);
@@ -1164,36 +1162,69 @@ void
 gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
     guint width, guint height)
 {
-  GstGLFuncs *gl = filter->context->gl_vtable;
-
-  GLfloat verts[] = { -1.0f, -1.0f,
-    1.0f, -1.0f,
-    1.0f, 1.0f,
-    -1.0f, 1.0f
-  };
-  GLfloat texcoords[] = { 0.0f, 0.0f,
-    1.0f, 0.0f,
-    1.0f, 1.0f,
-    0.0f, 1.0f
-  };
+  GstGLContext *context = filter->context;
+  GstGLFuncs *gl = context->gl_vtable;
 
   GST_DEBUG ("drawing texture:%u dimensions:%ux%u", texture, width, height);
 
-  gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_2D);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
+#if GST_GL_HAVE_OPENGL
+  if (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL) {
+    GLfloat verts[] = { -1.0f, -1.0f,
+      1.0f, -1.0f,
+      1.0f, 1.0f,
+      -1.0f, 1.0f
+    };
+    GLfloat texcoords[] = { 0.0f, 0.0f,
+      1.0f, 0.0f,
+      1.0f, 1.0f,
+      0.0f, 1.0f
+    };
 
-  gl->ClientActiveTexture (GL_TEXTURE0);
+    gl->ActiveTexture (GL_TEXTURE0);
 
-  gl->EnableClientState (GL_VERTEX_ARRAY);
-  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+    gl->Enable (GL_TEXTURE_2D);
+    gl->BindTexture (GL_TEXTURE_2D, texture);
 
-  gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
+    gl->ClientActiveTexture (GL_TEXTURE0);
 
-  gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+    gl->EnableClientState (GL_VERTEX_ARRAY);
+    gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
 
-  gl->DisableClientState (GL_VERTEX_ARRAY);
-  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+    gl->VertexPointer (2, GL_FLOAT, 0, &verts);
+    gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
+
+    gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+
+    gl->DisableClientState (GL_VERTEX_ARRAY);
+    gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+  }
+#endif
+#if GST_GL_HAVE_GLES2
+  if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2) {
+    const GLfloat vVertices[] = {
+      -1.0f, -1.0f, 0.0f,
+      0.0f, 0.0f,
+      1.0, -1.0f, 0.0f,
+      1.0f, 0.0f,
+      1.0f, 1.0f, 0.0f, 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f
+    };
+
+    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+
+    /* glClear (GL_COLOR_BUFFER_BIT); */
+
+    /* Load the vertex position */
+    gl->VertexAttribPointer (filter->draw_attr_position_loc, 3, GL_FLOAT,
+        GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+
+    /* Load the texture coordinate */
+    gl->VertexAttribPointer (filter->draw_attr_texture_loc, 2, GL_FLOAT,
+        GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+
+    gl->EnableVertexAttribArray (filter->draw_attr_position_loc);
+    gl->EnableVertexAttribArray (filter->draw_attr_texture_loc);
+
+    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+  }
+#endif
 }
-#endif /* GST_GL_HAVE_OPENGL */
