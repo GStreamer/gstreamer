@@ -171,7 +171,7 @@ main (int argc, gchar ** argv)
   gchar *expected_file = NULL;
   gchar *output = NULL;
   gsize outputlength;
-  gboolean ret;
+  gboolean ret, discover_only;
 
   GOptionEntry options[] = {
     {"output-file", 'o', 0, G_OPTION_ARG_FILENAME,
@@ -180,6 +180,9 @@ main (int argc, gchar ** argv)
     {"expected-results", 'e', 0, G_OPTION_ARG_FILENAME,
           &expected_file, "Path to file containing the expected results "
           "(or the last results found) for comparison with new results",
+        NULL},
+    {"discover-only", 'e', 0, G_OPTION_ARG_NONE,
+          &discover_only, "Only discover files, no other playback tests",
         NULL},
     {NULL}
   };
@@ -213,7 +216,7 @@ main (int argc, gchar ** argv)
   g_option_context_free (ctx);
 
   gst_validate_media_info_init (&mi);
-  ret = gst_validate_media_info_inspect_uri (&mi, argv[1], NULL);
+  ret = gst_validate_media_info_inspect_uri (&mi, argv[1], discover_only, NULL);
   output = gst_validate_media_info_to_string (&mi, &outputlength);
 
   if (output_file)

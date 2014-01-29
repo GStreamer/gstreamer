@@ -92,6 +92,7 @@ gst_validate_media_info_init (GstValidateMediaInfo * mi)
   mi->reverse_playback_error = NULL;
   mi->track_switch_error = NULL;
   mi->is_image = FALSE;
+  mi->discover_only = FALSE;
 }
 
 void
@@ -1064,7 +1065,7 @@ check_is_image (GstDiscovererInfo *info)
 
 gboolean
 gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
-    const gchar * uri, GError ** err)
+    const gchar * uri, gboolean discover_only, GError ** err)
 {
   GstDiscovererInfo *info;
   GstDiscoverer *discoverer = gst_discoverer_new (GST_SECOND * 60, err);
@@ -1094,7 +1095,10 @@ gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
   if (mi->is_image)
       goto done;
 
-  ret = check_seekable (mi, info) & ret;
+  check_seekable (mi, info);
+  if (discover_only)
+      goto done;
+
   ret = check_playback (mi, &mi->playback_error) & ret;
   ret = check_reverse_playback (mi, &mi->reverse_playback_error) & ret;
   ret = check_track_selection (mi, &mi->track_switch_error) & ret;
@@ -1125,21 +1129,25 @@ gst_validate_media_info_compare (GstValidateMediaInfo * expected,
     g_print ("File isn't seekable anymore\n");
     ret = FALSE;
   }
-  if (expected->playback_error == NULL && extracted->playback_error) {
-    g_print ("Playback is now failing with: %s\n", extracted->playback_error);
-    ret = FALSE;
+
+  if (extracted->discover_only == FALSE) {
+      if (expected->playback_error == NULL && extracted->playback_error) {
+          g_print ("Playback is now failing with: %s\n", extracted->playback_error);
+          ret = FALSE;
+      }
+      if (expected->reverse_playback_error == NULL
+              && extracted->reverse_playback_error) {
+          g_print ("Reverse playback is now failing with: %s\n",
+                  extracted->reverse_playback_error);
+          ret = FALSE;
+      }
+      if (expected->track_switch_error == NULL && extracted->track_switch_error) {
+          g_print ("Track switching is now failing with: %s\n",
+                  extracted->track_switch_error);
+          ret = FALSE;
+      }
   }
-  if (expected->reverse_playback_error == NULL
-      && extracted->reverse_playback_error) {
-    g_print ("Reverse playback is now failing with: %s\n",
-        extracted->reverse_playback_error);
-    ret = FALSE;
-  }
-  if (expected->track_switch_error == NULL && extracted->track_switch_error) {
-    g_print ("Track switching is now failing with: %s\n",
-        extracted->track_switch_error);
-    ret = FALSE;
-  }
+
   if (expected->stream_info
       && !gst_caps_is_equal_fixed (expected->stream_info->caps,
           extracted->stream_info->caps)) {
