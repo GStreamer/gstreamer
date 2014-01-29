@@ -105,6 +105,21 @@ gst_stream_splitter_finalize (GObject * object)
   G_OBJECT_CLASS (gst_stream_splitter_parent_class)->finalize (object);
 }
 
+static void
+gst_stream_splitter_push_pending_events (GstStreamSplitter * splitter,
+    GstPad * srcpad)
+{
+  GList *tmp;
+  GST_DEBUG_OBJECT (srcpad, "Pushing out pending events");
+
+  for (tmp = splitter->pending_events; tmp; tmp = tmp->next) {
+    GstEvent *event = (GstEvent *) tmp->data;
+    gst_pad_push_event (srcpad, event);
+  }
+  g_list_free (splitter->pending_events);
+  splitter->pending_events = NULL;
+}
+
 static GstFlowReturn
 gst_stream_splitter_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
@@ -120,17 +135,8 @@ gst_stream_splitter_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (G_UNLIKELY (srcpad == NULL))
     goto nopad;
 
-  if (G_UNLIKELY (stream_splitter->pending_events)) {
-    GList *tmp;
-    GST_DEBUG_OBJECT (srcpad, "Pushing out pending events");
-
-    for (tmp = stream_splitter->pending_events; tmp; tmp = tmp->next) {
-      GstEvent *event = (GstEvent *) tmp->data;
-      gst_pad_push_event (srcpad, event);
-    }
-    g_list_free (stream_splitter->pending_events);
-    stream_splitter->pending_events = NULL;
-  }
+  if (G_UNLIKELY (stream_splitter->pending_events))
+    gst_stream_splitter_push_pending_events (stream_splitter, srcpad);
 
   /* Forward to currently activated stream */
   res = gst_pad_push (srcpad, buf);
@@ -180,6 +186,21 @@ gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
       toall = TRUE;
       break;
     case GST_EVENT_EOS:
+
+      if (G_UNLIKELY (stream_splitter->pending_events)) {
+        GstPad *srcpad = NULL;
+
+        STREAMS_LOCK (stream_splitter);
+        if (stream_splitter->current)
+          srcpad = gst_object_ref (stream_splitter->current);
+        STREAMS_UNLOCK (stream_splitter);
+
+        if (srcpad) {
+          gst_stream_splitter_push_pending_events (stream_splitter, srcpad);
+          gst_object_unref (srcpad);
+        }
+      }
+
       toall = TRUE;
       break;
     default:
