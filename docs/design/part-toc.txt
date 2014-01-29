@@ -136,6 +136,12 @@ such event is to seek to specified UID within your element.
 
 5. Implementation coverage, Specifications, ...
 
+Below is a list of container formats, links to documentation and a summary of
+toc related features. Each section title also indicates whether reading/writing
+a toc is implemented. Below hollow bullet point 'o' indicate no support and
+filled bullets '*' indicate that this feature is handled.
+
+
 AIFC: -/-
 http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/AIFF/Docs/AIFF-1.3.pdf
 o 'MARK'
@@ -197,7 +203,11 @@ A 'plst' chunk defines a sequence of segments (cue-id, length_samples, repeats).
 The 'smpl' chunk defines a list of loops (cue-id, beg, end, loop-type, repeats).
 
 
-Conclusion/Ideas
+6. Conclusion/Ideas/Future work
+
+Based on the data of chapter 5, a few thoughts and observations that can be used
+to extend and refine our API. These things below are not reflecting the current
+implementation.
 
 All formats have table of [cue-id, cue-start, (cue-end), (extra tags)]
 - cue-id is commonly represented as and unsigned int 32bit
