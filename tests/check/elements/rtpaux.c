@@ -243,7 +243,8 @@ GST_START_TEST (test_simple_rtpbin_aux)
   rtpdepayloader = gst_element_factory_make ("rtpspeexdepay", "rtpdepayloader");
   decoder = gst_element_factory_make ("speexdec", "decoder");
   converter = gst_element_factory_make ("identity", "converter");
-  sink = gst_element_factory_make ("alsasink", "sink");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  g_object_set (sink, "sync", TRUE, NULL);
 
   gst_bin_add_many (GST_BIN (binsend), rtpbinsend, src, encoder, rtppayloader,
       sendrtp_udpsink, sendrtcp_udpsink, sendrtcp_udpsrc, NULL);
@@ -306,7 +307,7 @@ GST_START_TEST (test_simple_rtpbin_aux)
   /* gst-launch-1.0 rtpbin name=rtpbin udpsrc caps="application/x-rtp,media=(string)audio, \
    * clock-rate=(int)8000,encoding-name=(string)AMR,encoding-params=(string)1,o
    * ctet-align=(string)1" port=5002 ! rtpbin.recv_rtp_sink_1 rtpbin. ! rtpamrdepay ! \
-   * amrnbdec ! alsasink  udpsrc port=5003 ! rtpbin.recv_rtcp_sink_1 \
+   * amrnbdec ! fakesink sync=True  udpsrc port=5003 ! rtpbin.recv_rtcp_sink_1 \
    * rtpbin.send_rtcp_src_1 ! udpsink host="127.0.0.1" port=5007 sync=false async=false
    */
 
