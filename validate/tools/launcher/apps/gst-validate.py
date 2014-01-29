@@ -31,7 +31,7 @@ from utils import MediaFormatCombination, get_profile,\
 
 DEFAULT_GST_VALIDATE = "gst-validate-1.0"
 DEFAULT_GST_VALIDATE_TRANSCODING = "gst-validate-transcoding-1.0"
-DISCOVERER_COMMAND = ["gst-validate-media-check-1.0"]
+DISCOVERER_COMMAND = "gst-validate-media-check-1.0 --discover-only"
 
 MEDIA_INFO_EXT = "media_info"
 STREAM_INFO = "stream_info"
@@ -94,7 +94,7 @@ class GstValidateLaunchTest(GstValidateTest):
 
 class GstValidateMediaCheckTest(Test):
     def __init__(self, classname, options, reporter, media_info_path, uri, timeout=DEFAULT_TIMEOUT):
-        super(GstValidateMediaCheckTest, self).__init__(DISCOVERER_COMMAND[0], classname,
+        super(GstValidateMediaCheckTest, self).__init__(DISCOVERER_COMMAND, classname,
                                               options, reporter,
                                               timeout=timeout)
         self._uri = uri
@@ -180,7 +180,16 @@ class GstValidateManager(TestsManager, Loggable):
         for test_pipeline in PLAYBACK_TESTS:
             self._add_playback_test(test_pipeline)
 
+        TIMEOUT_BY_PROTOCOL = {
+            "http": 60,
+            "hls": 120
+        }
         for uri, mediainfo in self._list_uris():
+            try:
+                timeout = TIMEOUT_BY_PROTOCOL[mediainfo.config.get("file-info", "protocol")]
+            except KeyError:
+                timeout = DEFAULT_TIMEOUT
+
             classname = "validate.media_check.%s" % (os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
             self.add_test(GstValidateMediaCheckTest(classname,
                                                     self.options,
@@ -229,7 +238,7 @@ class GstValidateManager(TestsManager, Loggable):
     def _discover_file(self, uri, fpath):
         try:
             media_info = "%s.%s" % (fpath, MEDIA_INFO_EXT)
-            args = list(DISCOVERER_COMMAND)
+            args = DISCOVERER_COMMAND.split(" ")
             args.append(uri)
             if os.path.isfile(media_info):
                 self._check_discovering_info(media_info, uri)
