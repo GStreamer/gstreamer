@@ -365,6 +365,8 @@ static const gchar *text_vertex_shader_gles2 =
 struct TexData
 {
   guint internal_format, format, type, width, height;
+  guint tex_scaling[2];
+  const gchar *name;
 };
 
 struct _GstGLUploadPrivate
@@ -428,8 +430,6 @@ gst_gl_upload_init (GstGLUpload * upload)
 
   upload->shader_attr_position_loc = 0;
   upload->shader_attr_texture_loc = 0;
-
-  gst_video_info_init (&upload->info);
 }
 
 /**
@@ -523,16 +523,13 @@ gst_gl_upload_finalize (GObject * object)
 
 static gboolean
 _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
-    GstVideoFormat v_format, guint in_width, guint in_height, guint out_width,
-    guint out_height)
+    GstVideoInfo in_info, GstVideoInfo out_info)
 {
-  GstVideoInfo info;
-
   g_return_val_if_fail (upload != NULL, FALSE);
-  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_ENCODED, FALSE);
-  g_return_val_if_fail (in_width > 0 && in_height > 0, FALSE);
-  g_return_val_if_fail (out_width > 0 && out_height > 0, FALSE);
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&in_info) !=
+      GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&in_info) !=
+      GST_VIDEO_FORMAT_ENCODED, FALSE);
 
   if (upload->initted) {
     return FALSE;
@@ -540,11 +537,8 @@ _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
     upload->initted = TRUE;
   }
 
-  gst_video_info_set_format (&info, v_format, out_width, out_height);
-
-  upload->info = info;
-  upload->in_width = in_width;
-  upload->in_height = in_height;
+  upload->in_info = in_info;
+  upload->out_info = out_info;
 
   gst_gl_context_thread_add (upload->context,
       (GstGLContextThreadFunc) _init_upload, upload);
@@ -556,26 +550,22 @@ _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
 /**
  * gst_gl_upload_init_format:
  * @upload: a #GstGLUpload
- * @v_format: a #GstVideoFormat
- * @in_width: the width of the data to upload
- * @in_height: the height of the data to upload
- * @out_width: the width to upload to
- * @out_height: the height to upload to
+ * @in_info: input #GstVideoInfo
+ * @out_info: output #GstVideoInfo
  *
  * Initializes @upload with the information required for upload.
  *
  * Returns: whether the initialization was successful
  */
 gboolean
-gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
-    guint in_width, guint in_height, guint out_width, guint out_height)
+gst_gl_upload_init_format (GstGLUpload * upload, GstVideoInfo in_info,
+    GstVideoInfo out_info)
 {
   gboolean ret;
 
   g_mutex_lock (&upload->lock);
 
-  ret = _gst_gl_upload_init_format_unlocked (upload, v_format, in_width,
-      in_height, out_width, out_height);
+  ret = _gst_gl_upload_init_format_unlocked (upload, in_info, out_info);
 
   g_mutex_unlock (&upload->lock);
 
@@ -611,7 +601,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   if (gst_is_gl_memory (mem)) {
     GST_LOG_OBJECT (upload, "Attempting upload with GstGLMemory");
     /* Assuming only one memory */
-    if (!gst_video_frame_map (&upload->priv->frame, &upload->info, buffer,
+    if (!gst_video_frame_map (&upload->priv->frame, &upload->in_info, buffer,
             GST_MAP_READ | GST_MAP_GL)) {
       GST_ERROR_OBJECT (upload, "Failed to map memory");
       return FALSE;
@@ -625,9 +615,9 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
 
   if (!upload->priv->tex_id)
     gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
-        GST_VIDEO_INFO_FORMAT (&upload->info),
-        GST_VIDEO_INFO_WIDTH (&upload->info),
-        GST_VIDEO_INFO_HEIGHT (&upload->info));
+        GST_VIDEO_INFO_FORMAT (&upload->in_info),
+        GST_VIDEO_INFO_WIDTH (&upload->in_info),
+        GST_VIDEO_INFO_HEIGHT (&upload->in_info));
 
   /* GstVideoGLTextureUploadMeta */
   gl_tex_upload_meta = gst_buffer_get_video_gl_texture_upload_meta (buffer);
@@ -635,11 +625,6 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
     guint texture_ids[] = { 0, 0, 0, 0 };
     GST_LOG_OBJECT (upload, "Attempting upload with "
         "GstVideoGLTextureUploadMeta");
-    if (!upload->priv->tex_id)
-      gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
-          GST_VIDEO_FORMAT_RGBA, GST_VIDEO_INFO_WIDTH (&upload->info),
-          GST_VIDEO_INFO_HEIGHT (&upload->info));
-
     texture_ids[0] = upload->priv->tex_id;
 
     if (!gst_gl_upload_perform_with_gl_texture_upload_meta (upload,
@@ -655,7 +640,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
 
   GST_LOG_OBJECT (upload, "Attempting upload with raw data");
   /* GstVideoMeta map */
-  if (!gst_video_frame_map (&upload->priv->frame, &upload->info, buffer,
+  if (!gst_video_frame_map (&upload->priv->frame, &upload->in_info, buffer,
           GST_MAP_READ)) {
     GST_ERROR_OBJECT (upload, "Failed to map memory");
     return FALSE;
@@ -688,12 +673,9 @@ _upload_memory_unlocked (GstGLUpload * upload, GstGLMemory * gl_mem,
   guint i;
   gboolean ret;
 
-  upload->in_width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  upload->in_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->info); i++) {
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
     data[i] = (guint8 *) gl_mem->data +
-        GST_VIDEO_INFO_PLANE_OFFSET (&upload->info, i);
+        GST_VIDEO_INFO_PLANE_OFFSET (&upload->in_info, i);
   }
 
   ret = _gst_gl_upload_perform_with_data_unlocked (upload, tex_id, data);
@@ -749,7 +731,7 @@ static gboolean
 _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
 {
   GstVideoMeta *v_meta;
-  GstVideoInfo info;
+  GstVideoInfo in_info, out_info;
   GstVideoFrame frame;
   GstMemory *mem;
   gboolean ret;
@@ -770,8 +752,10 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
     width = v_meta->width;
     height = v_meta->height;
 
-    if (!_gst_gl_upload_init_format_unlocked (upload, v_format, width, height,
-            width, height))
+    gst_video_info_set_format (&in_info, v_format, width, height);
+    gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA, width, height);
+
+    if (!_gst_gl_upload_init_format_unlocked (upload, in_info, out_info))
       return FALSE;
   }
 
@@ -791,10 +775,14 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
       return TRUE;
   }
 
-  gst_video_info_set_format (&info, v_meta->format, v_meta->width,
+  if (v_meta == NULL)
+    return FALSE;
+
+  gst_video_info_set_format (&in_info, v_meta->format, v_meta->width,
       v_meta->height);
 
-  if (!gst_video_frame_map (&frame, &info, upload->priv->buffer, GST_MAP_READ)) {
+  if (!gst_video_frame_map (&frame, &in_info, upload->priv->buffer,
+          GST_MAP_READ)) {
     GST_ERROR ("failed to map video frame");
     return FALSE;
   }
@@ -939,7 +927,7 @@ gst_gl_upload_add_video_gl_texture_upload_meta (GstGLUpload * upload,
  * @data: where the downloaded data should go
  *
  * Uploads @data into @texture_id. data size and format is specified by
- * the #GstVideoFormat passed to gst_gl_upload_init_format() 
+ * the #GstVideoInfo<!--  -->s passed to gst_gl_upload_init_format() 
  *
  * Returns: whether the upload was successful
  */
@@ -968,13 +956,9 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
 
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (texture_id > 0, FALSE);
-  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&upload->info) !=
-      GST_VIDEO_FORMAT_UNKNOWN
-      && GST_VIDEO_INFO_FORMAT (&upload->info) != GST_VIDEO_FORMAT_ENCODED,
-      FALSE);
 
   upload->out_texture = texture_id;
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->info); i++) {
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
     upload->data[i] = data[i];
   }
 
@@ -1025,7 +1009,7 @@ _init_upload (GstGLContext * context, GstGLUpload * upload)
 
   gl = context->gl_vtable;
 
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
+  v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
 
   GST_INFO ("Initializing texture upload for format:%s",
       gst_video_format_to_string (v_format));
@@ -1036,7 +1020,9 @@ _init_upload (GstGLContext * context, GstGLUpload * upload)
     goto error;
   }
 
-  _init_upload_fbo (context, upload);
+  if (!_init_upload_fbo (context, upload)) {
+    goto error;
+  }
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_AYUV:
@@ -1153,8 +1139,8 @@ _init_upload_fbo (GstGLContext * context, GstGLUpload * upload)
 
   gl = context->gl_vtable;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
+  out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
 
   if (!gl->GenFramebuffers) {
     /* turn off the pipeline because Frame buffer object is a not present */
@@ -1225,10 +1211,10 @@ _do_upload (GstGLContext * context, GstGLUpload * upload)
 {
   guint in_width, in_height, out_width, out_height;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
-  in_width = upload->in_width;
-  in_height = upload->in_height;
+  out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
+  in_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
+  in_height = GST_VIDEO_INFO_HEIGHT (&upload->in_info);
 
   GST_TRACE ("uploading to texture:%u dimensions:%ux%u, "
       "from textures:%u,%u,%u dimensions:%ux%u", upload->out_texture,
@@ -1263,9 +1249,9 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
 
   gl = context->gl_vtable;
 
-  in_width = upload->in_width;
-  in_height = upload->in_height;
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
+  in_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
+  in_height = GST_VIDEO_INFO_HEIGHT (&upload->in_info);
+  v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBx:
@@ -1429,7 +1415,7 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
   struct TexData *tex = upload->priv->texture_info;
   const GstGLFuncs *gl = context->gl_vtable;
 
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
+  v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
 
   for (i = 0; i < upload->priv->n_textures; i++) {
     guint data_i = i;
@@ -1486,9 +1472,9 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
 
   gl = context->gl_vtable;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
+  out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
+  v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
 
@@ -1648,9 +1634,9 @@ _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
 
   gl = context->gl_vtable;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
+  out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
+  v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
 

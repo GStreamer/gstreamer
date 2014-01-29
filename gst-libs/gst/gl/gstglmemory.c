@@ -130,9 +130,14 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
       if (GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
         if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem,
                 GST_GL_MEMORY_FLAG_UPLOAD_INITTED)) {
-          if (!gst_gl_upload_init_format (gl_mem->upload, gl_mem->v_format,
-                  gl_mem->width, gl_mem->height, gl_mem->width,
-                  gl_mem->height)) {
+          GstVideoInfo in_info, out_info;
+
+          gst_video_info_set_format (&in_info, gl_mem->v_format, gl_mem->width,
+              gl_mem->height);
+          gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA,
+              gl_mem->width, gl_mem->height);
+
+          if (!gst_gl_upload_init_format (gl_mem->upload, in_info, out_info)) {
             goto error;
           }
           GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED);

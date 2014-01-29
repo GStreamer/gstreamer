@@ -51,7 +51,8 @@ struct _GstGLUpload
   GstGLContext    *context;
 
   /* input data */
-  GstVideoInfo    info;
+  GstVideoInfo     in_info;
+  GstVideoInfo     out_info;
 
   gpointer         data[GST_VIDEO_MAX_PLANES];
   gboolean         initted;
@@ -61,8 +62,6 @@ struct _GstGLUpload
   GLuint           depth_buffer;
   GLuint           out_texture;
   GLuint           in_texture[GST_VIDEO_MAX_PLANES];
-  guint            in_width;
-  guint            in_height;
   GstGLShader     *shader;
   GLint            shader_attr_position_loc;
   GLint            shader_attr_texture_loc;
@@ -102,9 +101,7 @@ struct _GstGLUploadClass
 
 GstGLUpload * gst_gl_upload_new            (GstGLContext * context);
 
-gboolean gst_gl_upload_init_format         (GstGLUpload * upload, GstVideoFormat v_format,
-                                            guint in_width, guint in_height,
-                                            guint out_width, guint out_height);
+gboolean gst_gl_upload_init_format         (GstGLUpload * upload, GstVideoInfo in_info, GstVideoInfo out_info);
 
 gboolean gst_gl_upload_add_video_gl_texture_upload_meta (GstGLUpload * upload, GstBuffer * buffer);
 
