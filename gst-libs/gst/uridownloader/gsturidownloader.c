@@ -457,7 +457,10 @@ quit:
       gst_element_get_state (urisrc, NULL, NULL, GST_CLOCK_TIME_NONE);
       gst_element_set_bus (urisrc, NULL);
       gst_object_unref (urisrc);
+    } else {
+      GST_OBJECT_UNLOCK (downloader);
     }
+
     g_mutex_unlock (&downloader->priv->download_lock);
     return download;
   }
