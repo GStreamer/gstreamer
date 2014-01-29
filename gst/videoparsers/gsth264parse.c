@@ -1182,17 +1182,15 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       modified = TRUE;
     }
 
-    /* 0/1 is set as the default in the codec parser */
-    if (sps->vui_parameters.timing_info_present_flag &&
-        !(sps->fps_num == 0 && sps->fps_den == 1)) {
-      if (G_UNLIKELY (h264parse->fps_num != sps->fps_num
-              || h264parse->fps_den != sps->fps_den)) {
-        GST_INFO_OBJECT (h264parse, "framerate changed %d/%d",
-            sps->fps_num, sps->fps_den);
-        h264parse->fps_num = sps->fps_num;
-        h264parse->fps_den = sps->fps_den;
-        modified = TRUE;
-      }
+    /* 0/1 is set as the default in the codec parser, we will set
+     * it in case we have no info */
+    if (G_UNLIKELY (h264parse->fps_num != sps->fps_num
+            || h264parse->fps_den != sps->fps_den)) {
+      GST_DEBUG_OBJECT (h264parse, "framerate changed %d/%d",
+          sps->fps_num, sps->fps_den);
+      h264parse->fps_num = sps->fps_num;
+      h264parse->fps_den = sps->fps_den;
+      modified = TRUE;
     }
 
     if (sps->vui_parameters.aspect_ratio_info_present_flag) {
@@ -1232,15 +1230,16 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
         gst_structure_get_fraction (s, "framerate", &fps_num, &fps_den);
 
       /* but not necessarily or reliably this */
-      if (fps_num > 0 && fps_den > 0) {
-        GST_INFO_OBJECT (h264parse, "setting framerate in caps");
+      if (fps_den > 0) {
         gst_caps_set_simple (caps, "framerate",
             GST_TYPE_FRACTION, fps_num, fps_den, NULL);
         gst_base_parse_set_frame_rate (GST_BASE_PARSE (h264parse),
             fps_num, fps_den, 0, 0);
-        latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
-        gst_base_parse_set_latency (GST_BASE_PARSE (h264parse), latency,
-            latency);
+        if (fps_num > 0) {
+          latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
+          gst_base_parse_set_latency (GST_BASE_PARSE (h264parse), latency,
+              latency);
+        }
       }
     }
   }
