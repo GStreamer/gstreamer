@@ -62,20 +62,20 @@ guint nal_reader_get_pos (const NalReader * nr);
 guint nal_reader_get_remaining (const NalReader * nr);
 guint nal_reader_get_epb_count (const NalReader * nr);
 
-gboolean gst_nal_reader_is_byte_aligned (NalReader * nr);
-gboolean gst_nal_reader_has_more_data (NalReader * nr);
+gboolean nal_reader_is_byte_aligned (NalReader * nr);
+gboolean nal_reader_has_more_data (NalReader * nr);
 
-#define GST_NAL_READER_READ_BITS_H(bits) \
+#define NAL_READER_READ_BITS_H(bits) \
 gboolean nal_reader_get_bits_uint##bits (NalReader *nr, guint##bits *val, guint nbits)
 
-GST_NAL_READER_READ_BITS_H (8);
-GST_NAL_READER_READ_BITS_H (16);
-GST_NAL_READER_READ_BITS_H (32);
+NAL_READER_READ_BITS_H (8);
+NAL_READER_READ_BITS_H (16);
+NAL_READER_READ_BITS_H (32);
 
-#define GST_NAL_READER_PEEK_BITS_H(bits) \
+#define NAL_READER_PEEK_BITS_H(bits) \
 gboolean nal_reader_peek_bits_uint##bits (const NalReader *nr, guint##bits *val, guint nbits)
 
-GST_NAL_READER_PEEK_BITS_H (8);
+NAL_READER_PEEK_BITS_H (8);
 
 gboolean nal_reader_get_ue (NalReader * nr, guint32 * val);
 gboolean nal_reader_get_se (NalReader * nr, gint32 * val);

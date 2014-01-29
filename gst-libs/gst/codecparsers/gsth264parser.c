@@ -888,13 +888,13 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
   /* When SEI message doesn't end at byte boundary,
    * check remaining bits fit the specification.
    */
-  if (!gst_nal_reader_is_byte_aligned (nr)) {
+  if (!nal_reader_is_byte_aligned (nr)) {
     guint8 bit_equal_to_one;
     READ_UINT8 (nr, bit_equal_to_one, 1);
     if (!bit_equal_to_one)
       GST_WARNING ("Bit non equal to one.");
 
-    while (!gst_nal_reader_is_byte_aligned (nr)) {
+    while (!nal_reader_is_byte_aligned (nr)) {
       guint8 bit_equal_to_zero;
       READ_UINT8 (nr, bit_equal_to_zero, 1);
       if (bit_equal_to_zero)
@@ -1458,7 +1458,7 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   READ_UINT8 (&nr, pps->constrained_intra_pred_flag, 1);
   READ_UINT8 (&nr, pps->redundant_pic_cnt_present_flag, 1);
 
-  if (!gst_nal_reader_has_more_data (&nr))
+  if (!nal_reader_has_more_data (&nr))
     goto done;
 
   READ_UINT8 (&nr, pps->transform_8x8_mode_flag, 1);
@@ -1730,7 +1730,7 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
       g_array_append_val (*messages, sei);
     else
       break;
-  } while (gst_nal_reader_has_more_data (&nr));
+  } while (nal_reader_has_more_data (&nr));
 
   return res;
 }
