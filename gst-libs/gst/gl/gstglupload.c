@@ -197,8 +197,7 @@ static const gchar *frag_YUY2_UYVY_opengl =
     "  float fx, fy, y, u, v, r, g, b;\n"
     "  vec3 yuv;\n"
     "  yuv.x = texture2D(Ytex, gl_TexCoord[0].xy * tex_scale0).%c;\n"
-    "  yuv.y = texture2D(UVtex, gl_TexCoord[0].xy * tex_scale1).%c;\n"
-    "  yuv.z = texture2D(UVtex, gl_TexCoord[0].xy * tex_scale2).%c;\n"
+    "  yuv.yz = texture2D(UVtex, gl_TexCoord[0].xy * tex_scale1).%c%c;\n"
     "  yuv += offset;\n"
     "  r = dot(yuv, rcoeff);\n"
     "  g = dot(yuv, gcoeff);\n"
@@ -220,7 +219,7 @@ static const char *frag_REORDER_gles2 = {
       "uniform vec2 tex_scale2;\n"
       "void main(void)\n"
       "{\n"
-      " vec4 t = texture2D(tex, v_texcoord);\n"
+      " vec4 t = texture2D(tex, v_texcoord * tex_scale0);\n"
       " gl_FragColor = vec4(t.%c, t.%c, t.%c, 1.0);\n"
       "}"
 };
@@ -241,7 +240,7 @@ static const char *frag_COMPOSE_gles2 = {
       COMPOSE_WEIGHT
       "void main(void)\n"
       "{\n"
-      " vec4 t = texture2D(tex, v_texcoord);\n"
+      " vec4 t = texture2D(tex, v_texcoord * tex_scale0);\n"
       " float value = dot(t.%c%c, compose_weight);"
       " gl_FragColor = vec4(value, value, value, 1.0);\n"
       "}"
@@ -258,7 +257,7 @@ static const char *frag_AYUV_gles2 = {
       "void main(void) {\n"
       "  float r,g,b;\n"
       "  vec3 yuv;\n"
-      "  yuv  = texture2D(tex,v_texcoord).gba;\n"
+      "  yuv  = texture2D(tex,v_texcoord * tex_scale0).gba;\n"
       "  yuv += offset;\n"
       "  r = dot(yuv, rcoeff);\n"
       "  g = dot(yuv, gcoeff);\n"
@@ -279,7 +278,7 @@ static const char *frag_PLANAR_YUV_gles2 = {
       "void main(void) {\n"
       "  float r,g,b;\n"
       "  vec3 yuv;\n"
-      "  yuv.x=texture2D(Ytex,v_texcoord).r;\n"
+      "  yuv.x=texture2D(Ytex,v_texcoord * tex_scale0).r;\n"
       "  yuv.y=texture2D(Utex,v_texcoord).r;\n"
       "  yuv.z=texture2D(Vtex,v_texcoord).r;\n"
       "  yuv += offset;\n"
@@ -302,8 +301,8 @@ static const char *frag_NV12_NV21_gles2 = {
       "void main(void) {\n"
       "  float r,g,b;\n"
       "  vec3 yuv;\n"
-      "  yuv.x=texture2D(Ytex, v_texcoord).r;\n"
-      "  yuv.yz=texture2D(UVtex, v_texcoord).%c%c;\n"
+      "  yuv.x=texture2D(Ytex, v_texcoord * tex_scale0).r;\n"
+      "  yuv.yz=texture2D(UVtex, v_texcoord * tex_scale1).%c%c;\n"
       "  yuv += offset;\n"
       "  r = dot(yuv, rcoeff);\n"
       "  g = dot(yuv, gcoeff);\n"
@@ -322,7 +321,7 @@ static const char *frag_COPY_gles2 = {
       "uniform vec2 tex_scale2;\n"
       "void main(void)\n"
       "{\n"
-      " vec4 t = texture2D(tex, v_texcoord);\n"
+      " vec4 t = texture2D(tex, v_texcoord * tex_scale0);\n"
       " gl_FragColor = vec4(t.rgb, 1.0);\n"
       "}"
 };
@@ -333,15 +332,17 @@ static const gchar *frag_YUY2_UYVY_gles2 =
     "precision mediump float;\n"
     "varying vec2 v_texcoord;\n"
     "uniform sampler2D Ytex, UVtex;\n"
+    "uniform vec2 tex_scale0;\n"
+    "uniform vec2 tex_scale1;\n"
+    "uniform vec2 tex_scale2;\n"
     YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
     "  vec3 yuv;\n"
     "  float fx, fy, y, u, v, r, g, b;\n"
     "  fx = v_texcoord.x;\n"
     "  fy = v_texcoord.y;\n"
-    "  yuv.x = texture2D(Ytex,vec2(fx,fy)).%c;\n"
-    "  yuv.y = texture2D(UVtex,vec2(fx,fy)).%c;\n"
-    "  yuv.z = texture2D(UVtex,vec2(fx,fy)).%c;\n"
+    "  yuv.x = texture2D(Ytex,v_texcoord * tex_scale0).%c;\n"
+    "  yuv.yz = texture2D(UVtex,v_texcoord * tex_scale1).%c%c;\n"
     "  yuv+=offset;\n"
     "  r = dot(yuv, rcoeff);\n"
     "  g = dot(yuv, gcoeff);\n"
@@ -365,8 +366,9 @@ static const gchar *text_vertex_shader_gles2 =
 struct TexData
 {
   guint internal_format, format, type, width, height;
-  guint tex_scaling[2];
-  const gchar *name;
+  gfloat tex_scaling[2];
+  const gchar *shader_name;
+  guint unpack_length;
 };
 
 struct _GstGLUploadPrivate
@@ -1237,19 +1239,35 @@ error:
   }
 }
 
+static inline guint
+_gl_format_n_components (GLenum format)
+{
+  switch (format) {
+    case GL_RGBA:
+      return 4;
+    case GL_RGB:
+      return 3;
+    case GL_LUMINANCE_ALPHA:
+      return 2;
+    case GL_LUMINANCE:
+      return 1;
+    default:
+      return 1;
+  }
+}
+
 /* called by gst_gl_context_thread_do_upload (in the gl thread) */
 gboolean
 _do_upload_make (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
-  guint in_width, in_height;
+  guint in_height;
   struct TexData *tex = upload->priv->texture_info;
   guint i;
 
   gl = context->gl_vtable;
 
-  in_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
   in_height = GST_VIDEO_INFO_HEIGHT (&upload->in_info);
   v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
 
@@ -1266,126 +1284,94 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
       tex[0].internal_format = GL_RGBA;
       tex[0].format = GL_RGBA;
       tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
       tex[0].height = in_height;
+      tex[0].shader_name = "tex";
       break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       tex[0].internal_format = GL_RGB;
       tex[0].format = GL_RGB;
       tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
       tex[0].height = in_height;
+      tex[0].shader_name = "tex";
       break;
     case GST_VIDEO_FORMAT_GRAY8:
       tex[0].internal_format = GL_LUMINANCE;
       tex[0].format = GL_LUMINANCE;
       tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
       tex[0].height = in_height;
+      tex[0].shader_name = "tex";
       break;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
       tex[0].internal_format = GL_LUMINANCE_ALPHA;
       tex[0].format = GL_LUMINANCE_ALPHA;
       tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
       tex[0].height = in_height;
+      tex[0].shader_name = "tex";
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
       tex[0].internal_format = GL_LUMINANCE_ALPHA;
       tex[0].format = GL_LUMINANCE_ALPHA;
       tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
       tex[0].height = in_height;
+      tex[0].shader_name = "Ytex";
       tex[1].internal_format = GL_RGBA8;
       tex[1].format = GL_RGBA;
       tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
       tex[1].height = in_height;
+      tex[1].shader_name = "UVtex";
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
       tex[0].internal_format = GL_LUMINANCE;
       tex[0].format = GL_LUMINANCE;
       tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
       tex[0].height = in_height;
+      tex[0].shader_name = "Ytex";
       tex[1].internal_format = GL_LUMINANCE_ALPHA;
       tex[1].format = GL_LUMINANCE_ALPHA;
       tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
       tex[1].height = GST_ROUND_UP_2 (in_height) / 2;
+      tex[1].shader_name = "UVtex";
       break;
     case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
       tex[0].internal_format = GL_LUMINANCE;
       tex[0].format = GL_LUMINANCE;
       tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
       tex[0].height = in_height;
+      tex[0].shader_name = "Ytex";
       tex[1].internal_format = GL_LUMINANCE;
       tex[1].format = GL_LUMINANCE;
       tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].width = in_width;
       tex[1].height = in_height;
+      tex[1].shader_name = "Utex";
       tex[2].internal_format = GL_LUMINANCE;
       tex[2].format = GL_LUMINANCE;
       tex[2].type = GL_UNSIGNED_BYTE;
-      tex[2].width = in_width;
       tex[2].height = in_height;
+      tex[2].shader_name = "Vtex";
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
       tex[0].internal_format = GL_LUMINANCE;
       tex[0].format = GL_LUMINANCE;
       tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
       tex[0].height = in_height;
+      tex[0].shader_name = "Ytex";
       tex[1].internal_format = GL_LUMINANCE;
       tex[1].format = GL_LUMINANCE;
       tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
       tex[1].height = GST_ROUND_UP_2 (in_height) / 2;
+      tex[1].shader_name = "Utex";
       tex[2].internal_format = GL_LUMINANCE;
       tex[2].format = GL_LUMINANCE;
       tex[2].type = GL_UNSIGNED_BYTE;
-      tex[2].width = GST_ROUND_UP_2 (in_width) / 2;
       tex[2].height = GST_ROUND_UP_2 (in_height) / 2;
-      break;
-    case GST_VIDEO_FORMAT_Y42B:
-      tex[0].internal_format = GL_LUMINANCE;
-      tex[0].format = GL_LUMINANCE;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
-      tex[0].height = in_height;
-      tex[1].internal_format = GL_LUMINANCE;
-      tex[1].format = GL_LUMINANCE;
-      tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
-      tex[1].height = in_height;
-      tex[2].internal_format = GL_LUMINANCE;
-      tex[2].format = GL_LUMINANCE;
-      tex[2].type = GL_UNSIGNED_BYTE;
-      tex[2].width = GST_ROUND_UP_2 (in_width) / 2;
-      tex[2].height = in_height;
-      break;
-    case GST_VIDEO_FORMAT_Y41B:
-      tex[0].internal_format = GL_LUMINANCE;
-      tex[0].format = GL_LUMINANCE;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].width = in_width;
-      tex[0].height = in_height;
-      tex[1].internal_format = GL_LUMINANCE;
-      tex[1].format = GL_LUMINANCE;
-      tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].width = GST_ROUND_UP_4 (in_width) / 4;
-      tex[1].height = in_height;
-      tex[2].internal_format = GL_LUMINANCE;
-      tex[2].format = GL_LUMINANCE;
-      tex[2].type = GL_UNSIGNED_BYTE;
-      tex[2].width = GST_ROUND_UP_4 (in_width) / 4;
-      tex[2].height = in_height;
+      tex[2].shader_name = "Vtex";
       break;
     default:
       gst_gl_context_set_error (context, "Unsupported upload video format %d",
@@ -1395,6 +1381,93 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
   }
 
   for (i = 0; i < upload->priv->n_textures; i++) {
+    guint plane_stride, plane_width;
+
+    if (GST_VIDEO_INFO_IS_YUV (&upload->in_info))
+      /* For now component width and plane width are the same and the
+       * plane-component mapping matches
+       */
+      plane_width = GST_VIDEO_INFO_COMP_WIDTH (&upload->in_info, i);
+    else                        /* RGB, GRAY */
+      plane_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
+    plane_stride = GST_VIDEO_INFO_PLANE_STRIDE (&upload->in_info, i);
+
+    /* YUV interleaved packed formats require special attention as we upload
+     * multiple textures from the same plane.
+     */
+    if (v_format == GST_VIDEO_FORMAT_YUY2 || v_format == GST_VIDEO_FORMAT_UYVY) {
+      if (i == 1)
+        plane_stride = GST_VIDEO_INFO_COMP_STRIDE (&upload->in_info, 1);
+    }
+
+    tex[i].width = plane_width;
+    tex[i].tex_scaling[0] = 1.0f;
+    tex[i].tex_scaling[1] = 1.0f;
+
+#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
+    if (USING_OPENGL (context) || USING_GLES3 (context)) {
+      guint n_gl_comps = _gl_format_n_components (tex[i].format);
+
+      tex[i].unpack_length = plane_stride / n_gl_comps;
+    }
+#endif
+#if GST_GL_HAVE_GLES2
+    if (USING_GLES2 (context)) {
+      guint pstride, n_planes;
+      guint j = 8;
+
+      pstride = GST_VIDEO_INFO_COMP_PSTRIDE (&upload->in_info, i);
+      n_planes = GST_VIDEO_INFO_N_PLANES (&upload->in_info);
+
+      while (j >= pstride) {
+        /* GST_ROUND_UP_j(plane_width * pstride) */
+        guint round_up_j = ((plane_width * pstride) + j - 1) & ~(j - 1);
+
+        if (round_up_j == plane_stride) {
+          GST_LOG ("Found alignment of %u for plane %u based on width (with "
+              "plane width:%u, plane stride:%u and pixel stride:%u. "
+              "RU%u(%u*%u) = %u)", j, i, plane_width, plane_stride, pstride,
+              j, plane_width, pstride, round_up_j);
+
+          tex[i].unpack_length = j;
+          break;
+        }
+        j >>= 1;
+      }
+
+      if (j < pstride) {
+        /* Failed to find a suitable alignment, try based on plane_stride and
+         * scale in the shader.  Useful for alignments that are greater than 8.
+         */
+        j = 8;
+
+        while (j >= n_planes) {
+          /* GST_ROUND_UP_j(plane_stride) */
+          guint round_up_j = ((plane_stride) + j - 1) & ~(j - 1);
+
+          if (round_up_j == plane_stride) {
+            GST_LOG ("Found alignment of %u for plane %u based on stride "
+                "(with plane stride:%u and pixel stride:%u. RU%u(%u) = %u)",
+                j, i, plane_stride, pstride, j, plane_stride, round_up_j);
+
+            tex[i].unpack_length = j;
+            tex[i].tex_scaling[0] =
+                (gfloat) (plane_width * pstride) / (gfloat) plane_stride;
+            break;
+          }
+          j >>= 1;
+        }
+
+        if (j < n_planes) {
+          GST_ERROR
+              ("Failed to find matching alignment for plane %u, Image may "
+              "look corrupted. plane width:%u, plane stride:%u and pixel "
+              "stride:%u", i, plane_width, plane_stride, pstride);
+        }
+      }
+    }
+#endif
+
     gl->GenTextures (1, &upload->in_texture[i]);
     gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
 
@@ -1420,6 +1493,7 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
   for (i = 0; i < upload->priv->n_textures; i++) {
     guint data_i = i;
 
+    /* upload from the same plane */
     if (v_format == GST_VIDEO_FORMAT_YUY2 || v_format == GST_VIDEO_FORMAT_UYVY)
       data_i = 0;
 
@@ -1430,6 +1504,16 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
       else if (i == 2)
         data_i = 1;
     }
+#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
+    if (USING_OPENGL (context) || USING_GLES3 (context)) {
+      gl->PixelStorei (GL_UNPACK_ROW_LENGTH, tex[i].unpack_length);
+    }
+#endif
+#if GST_GL_HAVE_GLES2
+    if (USING_GLES2 (context)) {
+      gl->PixelStorei (GL_UNPACK_ALIGNMENT, tex[i].unpack_length);
+    }
+#endif
 
     GST_LOG ("data transfer for texture no %u, id:%u, %ux%u %u", i,
         upload->in_texture[i], tex[i].width, tex[i].height, data_i);
@@ -1453,11 +1537,9 @@ static gboolean
 _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
-  GstVideoFormat v_format;
   guint out_width, out_height;
-  char *texnames[GST_VIDEO_MAX_PLANES];
+  struct TexData *tex = upload->priv->texture_info;
   gint i;
-  gfloat tex_scaling[6] = { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
 
   GLfloat verts[8] = { 1.0f, -1.0f,
     -1.0f, -1.0f,
@@ -1474,7 +1556,6 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
 
   out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
 
@@ -1506,58 +1587,7 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
   gl->ClearColor (0.0, 0.0, 0.0, 0.0);
   gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-      texnames[0] = "tex";
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      texnames[0] = "Ytex";
-      texnames[1] = "UVtex";
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-      texnames[0] = "Ytex";
-      texnames[1] = "UVtex";
-      break;
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y41B:
-      texnames[0] = "Ytex";
-      texnames[1] = "Utex";
-      texnames[2] = "Vtex";
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-      texnames[0] = "tex";
-      break;
-
-    default:
-      gst_gl_context_set_error (context, "Unsupported upload video format %d",
-          v_format);
-      g_assert_not_reached ();
-      break;
-  }
-
   gst_gl_shader_use (upload->shader);
-  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale0", 1,
-      &tex_scaling[0]);
-  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale1", 1,
-      &tex_scaling[2]);
-  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale2", 1,
-      &tex_scaling[4]);
 
   gl->MatrixMode (GL_PROJECTION);
   gl->LoadIdentity ();
@@ -1565,8 +1595,13 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
   gl->Enable (GL_TEXTURE_2D);
 
   for (i = upload->priv->n_textures - 1; i >= 0; i--) {
+    gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
+
     gl->ActiveTexture (GL_TEXTURE0 + i);
-    gst_gl_shader_set_uniform_1i (upload->shader, texnames[i], i);
+    gst_gl_shader_set_uniform_1i (upload->shader, tex[i].shader_name, i);
+    gst_gl_shader_set_uniform_2fv (upload->shader, scale_name, 1,
+        &tex[i].tex_scaling[0]);
+    g_free (scale_name);
 
     gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -1612,11 +1647,9 @@ static gboolean
 _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
-  GstVideoFormat v_format;
+  struct TexData *tex = upload->priv->texture_info;
   guint out_width, out_height;
-  char *texnames[GST_VIDEO_MAX_PLANES];
   gint i;
-  gfloat tex_scaling[6] = { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
 
   GLint viewport_dim[4];
 
@@ -1636,7 +1669,6 @@ _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
 
   out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
 
@@ -1656,57 +1688,7 @@ _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
   gl->ClearColor (0.0, 0.0, 0.0, 0.0);
   gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-      texnames[0] = "tex";
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      texnames[0] = "Ytex";
-      texnames[1] = "UVtex";
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-      texnames[0] = "Ytex";
-      texnames[1] = "UVtex";
-      break;
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y41B:
-      texnames[0] = "Ytex";
-      texnames[1] = "Utex";
-      texnames[2] = "Vtex";
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-      texnames[0] = "tex";
-      break;
-    default:
-      gst_gl_context_set_error (context, "Unsupported upload video format %d",
-          v_format);
-      g_assert_not_reached ();
-      break;
-  }
-
   gst_gl_shader_use (upload->shader);
-  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale0", 1,
-      &tex_scaling[0]);
-  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale1", 1,
-      &tex_scaling[2]);
-  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale2", 1,
-      &tex_scaling[4]);
 
   gl->VertexAttribPointer (upload->shader_attr_position_loc, 3,
       GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
@@ -1717,8 +1699,14 @@ _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
   gl->EnableVertexAttribArray (upload->shader_attr_texture_loc);
 
   for (i = upload->priv->n_textures - 1; i >= 0; i--) {
+    gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
+
     gl->ActiveTexture (GL_TEXTURE0 + i);
-    gst_gl_shader_set_uniform_1i (upload->shader, texnames[i], i);
+    gst_gl_shader_set_uniform_1i (upload->shader, tex[i].shader_name, i);
+    gst_gl_shader_set_uniform_2fv (upload->shader, scale_name, 1,
+        &tex[i].tex_scaling[0]);
+
+    g_free (scale_name);
 
     gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
