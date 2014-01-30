@@ -65,10 +65,10 @@ libgstvalidate_preload_@GST_API_VERSION@_la_SOURCES = \
 
 libgstvalidate_preload_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS)
 libgstvalidate_preload_@GST_API_VERSION@_la_LDFLAGS =  $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
-	$(GST_LT_LDFLAGS) -lgstvalidate-@GST_API_VERSION@
+	$(GST_LT_LDFLAGS)
 libgstvalidate_preload_@GST_API_VERSION@_la_LIBADD =  \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
-	$(GST_ALL_LIBS) -lgstvalidate-@GST_API_VERSION@
+	$(GST_ALL_LIBS)
 libgstvalidate_preload_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/validate
 libgstvalidate_preload_@GST_API_VERSION@include_HEADERS =
 
