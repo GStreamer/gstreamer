@@ -28,6 +28,41 @@ from utils import MediaFormatCombination, get_profile,\
     compare_rendered_with_original, Protocols
 
 
+class PipelineDescriptor(object):
+    def __init__(self, name, pipeline):
+        self.name = name
+        self._pipeline = pipeline
+
+    def needs_uri(self):
+        return False
+
+    def get_pipeline(self, protocol=Protocols.FILE, uri=""):
+        return self._pipeline
+
+
+class PlaybinDescriptor(PipelineDescriptor):
+    def __init__(self):
+        PipelineDescriptor.__init__(self, "playbin", "playbin")
+
+    def needs_uri(self):
+        return True
+
+    def get_pipeline(self, options, protocol, scenario, uri):
+        pipe = self._pipeline
+        if options.mute:
+            fakesink = "fakesink"
+            if scenario and scenario.seeks:
+                fakesink = "'" + fakesink + " sync=true'"
+            pipe += " audio-sink=%s video-sink=%s" %(fakesink, fakesink)
+
+        pipe += " uri=%s" % uri
+
+        if scenario.reverse and protocol == Protocols.HTTP:
+            # 10MB so we can reverse playbacl
+            pipe += " ring-buffer-max-size=10240"
+
+        return pipe
+
 # definitions of commands to use
 GST_VALIDATE_COMMAND = "gst-validate-1.0"
 GST_VALIDATE_TRANSCODING_COMMAND = "gst-validate-transcoding-1.0"
@@ -76,8 +111,7 @@ G_V_SCENARIOS = {Protocols.FILE: [Scenario.get_scenario("play_15s"),
 
 G_V_BLACKLISTED_TESTS = [("validate.hls.playback.fast_forward.*", "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
                          ("validate.hls.playback.seek_with_stop.*", "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
-                         ("validate.*.simple_backward.*webm$", "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
-                         ("validate.http.simple_backward.*", "https://bugzilla.gnome.org/show_bug.cgi?id=723270"),
+                         ("validate.*.reverse_playback.*webm$", "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
                          ("validate.http.playback.seek_with_stop.*webm", "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
                          ("validate.http.playback.seek_with_stop.*mkv", "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode")
                          ]
@@ -297,28 +331,18 @@ class GstValidateManager(TestsManager, Loggable):
 
         return "%s.%s.%s" % ("validate", protocol, "playback")
 
-    def _add_playback_test(self, pipe):
-        if self.options.mute:
-            if "autovideosink" in pipe:
-                pipe = pipe.replace("autovideosink", "fakesink")
-            if "autoaudiosink" in pipe:
-                pipe = pipe.replace("autoaudiosink", "fakesink")
-
-        if "__uri__" in pipe:
+    def _add_playback_test(self, pipe_descriptor):
+        if pipe_descriptor.needs_uri():
             for uri, minfo in self._list_uris():
-                npipe = pipe
                 protocol = minfo.config.get("file-info", "protocol")
-
                 for scenario in G_V_SCENARIOS[protocol]:
+                    npipe = pipe_descriptor.get_pipeline(self.options,
+                                                         protocol,
+                                                         scenario, uri)
                     if minfo.config.getboolean("media-info", "seekable") is False:
                         self.debug("Do not run %s as %s does not support seeking",
                                    scenario, uri)
                         continue
-
-                    if self.options.mute:
-                        # In case of seeking we need to make sure the pipeline
-                        # is run sync, otherwize some tests will fail
-                        npipe = pipe.replace("fakesink", "'fakesink sync=true'")
 
                     fname = "%s.%s" % (self._get_fname(scenario,
                                        protocol),
@@ -328,7 +352,7 @@ class GstValidateManager(TestsManager, Loggable):
                     self.add_test(GstValidateLaunchTest(fname,
                                                         self.options,
                                                         self.reporter,
-                                                        npipe.replace("__uri__", uri),
+                                                        npipe,
                                                         scenario=scenario,
                                                         file_infos=minfo.config)
                                  )
@@ -336,7 +360,7 @@ class GstValidateManager(TestsManager, Loggable):
             self.add_test(GstValidateLaunchTest(self._get_fname(scenario, "testing"),
                                                 self.options,
                                                 self.reporter,
-                                                pipe,
+                                                pipe_descriptor.get_pipeline(self.options),
                                                 scenario=scenario))
 
     def needs_http_server(self):
