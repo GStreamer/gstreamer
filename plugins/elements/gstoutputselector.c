@@ -378,6 +378,10 @@ gst_output_selector_switch (GstOutputSelector * osel)
   /* Send SEGMENT event and latest buffer if switching succeeded
    * and we already have a valid segment configured */
   if (res) {
+    gst_pad_sticky_events_foreach (osel->sinkpad, forward_sticky_events,
+        osel->active_srcpad);
+
+    /* update segment if required */
     if (osel->segment.format != GST_FORMAT_UNDEFINED) {
       /* Send SEGMENT to the pad we are going to switch to */
       seg = &osel->segment;
@@ -493,6 +497,34 @@ gst_output_selector_change_state (GstElement * element,
 }
 
 static gboolean
+gst_output_selector_forward_event (GstOutputSelector * sel, GstEvent * event)
+{
+  gboolean res = TRUE;
+  GstPad *active;
+
+  switch (sel->pad_negotiation_mode) {
+    case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL:
+      /* Send to all src pads */
+      res = gst_pad_event_default (sel->sinkpad, GST_OBJECT_CAST (sel), event);
+      break;
+    case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE:
+      gst_event_unref (event);
+      break;
+    default:
+      active = gst_output_selector_get_active (sel);
+      if (active) {
+        res = gst_pad_push_event (active, event);
+        gst_object_unref (active);
+      } else {
+        gst_event_unref (event);
+      }
+      break;
+  }
+
+  return res;
+}
+
+static gboolean
 gst_output_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
@@ -502,28 +534,6 @@ gst_output_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
   sel = GST_OUTPUT_SELECTOR (parent);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      switch (sel->pad_negotiation_mode) {
-        case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL:
-          /* Send caps to all src pads */
-          res = gst_pad_event_default (pad, parent, event);
-          break;
-        case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE:
-          gst_event_unref (event);
-          break;
-        default:
-          active = gst_output_selector_get_active (sel);
-          if (active) {
-            res = gst_pad_push_event (active, event);
-            gst_object_unref (active);
-          } else {
-            gst_event_unref (event);
-          }
-          break;
-      }
-      break;
-    }
     case GST_EVENT_SEGMENT:
     {
       gst_event_copy_segment (event, &sel->segment);
@@ -531,14 +541,13 @@ gst_output_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_DEBUG_OBJECT (sel, "configured SEGMENT %" GST_SEGMENT_FORMAT,
           &sel->segment);
 
-      /* Send newsegment to all src pads */
-      res = gst_pad_event_default (pad, parent, event);
+      res = gst_output_selector_forward_event (sel, event);
       break;
     }
     default:
     {
       if (GST_EVENT_IS_STICKY (event)) {
-        res = gst_pad_event_default (pad, parent, event);
+        res = gst_output_selector_forward_event (sel, event);
       } else {
         /* Send other events to pending or active src pad */
         active = gst_output_selector_get_active (sel);
