@@ -823,6 +823,9 @@ gst_rtp_base_payload_set_outcaps (GstRTPBasePayload * payload,
       payload->seqnum_base = g_value_get_uint (value);
       GST_LOG_OBJECT (payload, "using peer seqnum-offset %u",
           payload->seqnum_base);
+      payload->priv->next_seqnum = payload->seqnum_base;
+      payload->seqnum = payload->seqnum_base;
+      payload->priv->seqnum_offset_random = FALSE;
     } else {
       /* FIXME, fixate_nearest_uint would be even better */
       gst_structure_set (s, "seqnum-offset", G_TYPE_UINT, payload->seqnum_base,
