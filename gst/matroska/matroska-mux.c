@@ -196,9 +196,6 @@ static GstStaticPadTemplate subtitlesink_templ =
         "application/x-subtitle-unknown")
     );
 
-static GArray *used_uids;
-G_LOCK_DEFINE_STATIC (used_uids);
-
 static gpointer parent_class;   /* NULL */
 
 /* Matroska muxer destructor */
@@ -233,7 +230,7 @@ static void gst_matroska_mux_get_property (GObject * object,
 static void gst_matroska_mux_reset (GstElement * element);
 
 /* uid generation */
-static guint64 gst_matroska_mux_create_uid ();
+static guint64 gst_matroska_mux_create_uid (GstMatroskaMux * mux);
 
 static gboolean theora_streamheader_to_codecdata (const GValue * streamheader,
     GstMatroskaTrackContext * context);
@@ -477,6 +474,9 @@ gst_matroska_mux_init (GstMatroskaMux * mux, gpointer g_class)
   mux->num_t_streams = 0;
   mux->num_v_streams = 0;
 
+  /* create used uid list */
+  mux->used_uids = g_array_sized_new (FALSE, FALSE, sizeof (guint64), 10);
+
   /* initialize remaining variables */
   gst_matroska_mux_reset (GST_ELEMENT (mux));
 }
@@ -500,41 +500,38 @@ gst_matroska_mux_finalize (GObject * object)
   if (mux->writing_app)
     g_free (mux->writing_app);
 
+  g_array_free (mux->used_uids, TRUE);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 
 /**
  * gst_matroska_mux_create_uid:
+ * @mux: #GstMatroskaMux to generate UID for.
  *
  * Generate new unused track UID.
  *
  * Returns: New track UID.
  */
 static guint64
-gst_matroska_mux_create_uid (void)
+gst_matroska_mux_create_uid (GstMatroskaMux * mux)
 {
   guint64 uid = 0;
-
-  G_LOCK (used_uids);
-
-  if (!used_uids)
-    used_uids = g_array_sized_new (FALSE, FALSE, sizeof (guint64), 10);
 
   while (!uid) {
     guint i;
 
     uid = (((guint64) g_random_int ()) << 32) | g_random_int ();
-    for (i = 0; i < used_uids->len; i++) {
-      if (g_array_index (used_uids, guint64, i) == uid) {
+    for (i = 0; i < mux->used_uids->len; i++) {
+      if (g_array_index (mux->used_uids, guint64, i) == uid) {
         uid = 0;
         break;
       }
     }
-    g_array_append_val (used_uids, uid);
+    g_array_append_val (mux->used_uids, uid);
   }
 
-  G_UNLOCK (used_uids);
   return uid;
 }
 
@@ -676,6 +673,11 @@ gst_matroska_mux_reset (GstElement * element)
   gst_toc_setter_reset (GST_TOC_SETTER (mux));
 
   mux->chapters_pos = 0;
+
+  /* clear used uids */
+  if (mux->used_uids->len > 0) {
+    g_array_remove_range (mux->used_uids, 0, mux->used_uids->len);
+  }
 }
 
 /**
@@ -2303,7 +2305,7 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKTYPE, context->type);
 
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKUID,
-      gst_matroska_mux_create_uid ());
+      gst_matroska_mux_create_uid (mux));
   if (context->default_duration) {
     gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKDEFAULTDURATION,
         context->default_duration);
