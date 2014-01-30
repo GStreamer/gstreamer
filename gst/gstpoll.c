@@ -553,9 +553,8 @@ gst_poll_new (gboolean controllable)
 {
   GstPoll *nset;
 
-  GST_DEBUG ("controllable : %d", controllable);
-
   nset = g_slice_new0 (GstPoll);
+  GST_DEBUG ("%p: new controllable : %d", nset, controllable);
   g_mutex_init (&nset->lock);
 #ifndef G_OS_WIN32
   nset->mode = GST_POLL_MODE_AUTO;
@@ -870,7 +869,7 @@ gst_poll_fd_ctl_write (GstPoll * set, GstPollFD * fd, gboolean active)
     else
       pfd->events &= ~POLLOUT;
 
-    GST_LOG ("pfd->events now %d (POLLOUT:%d)", pfd->events, POLLOUT);
+    GST_LOG ("%p: pfd->events now %d (POLLOUT:%d)", set, pfd->events, POLLOUT);
 #else
     gst_poll_update_winsock_event_mask (set, idx, FD_WRITE | FD_CONNECT,
         active);
@@ -1193,7 +1192,7 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
 
   g_return_val_if_fail (set != NULL, -1);
 
-  GST_DEBUG ("timeout :%" GST_TIME_FORMAT, GST_TIME_ARGS (timeout));
+  GST_DEBUG ("%p: timeout :%" GST_TIME_FORMAT, set, GST_TIME_ARGS (timeout));
 
   is_timer = set->timer;
 
@@ -1304,9 +1303,9 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
             tvptr = NULL;
           }
 
-          GST_DEBUG ("Calling select");
+          GST_DEBUG ("%p: Calling select", set);
           res = select (max_fd + 1, &readfds, &writefds, &errorfds, tvptr);
-          GST_DEBUG ("After select, res:%d", res);
+          GST_DEBUG ("%p: After select, res:%d", set, res);
         } else {
 #ifdef HAVE_PSELECT
           struct timespec ts;
@@ -1319,10 +1318,10 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
             tsptr = NULL;
           }
 
-          GST_DEBUG ("Calling pselect");
+          GST_DEBUG ("%p: Calling pselect", set);
           res =
               pselect (max_fd + 1, &readfds, &writefds, &errorfds, tsptr, NULL);
-          GST_DEBUG ("After pselect, res:%d", res);
+          GST_DEBUG ("%p: After pselect, res:%d", set, res);
 #endif
         }
 
