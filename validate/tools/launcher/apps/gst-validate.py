@@ -57,7 +57,7 @@ G_V_BLACKLISTED_TESTS = [("validate.hls.playback.fast_forward.*", "https://bugzi
                          ]
 
 G_V_SCENARIOS = {"file": [Scenario.get_scenario("play_15s"),
-                          Scenario.get_scenario("simple_backward"),
+                          Scenario.get_scenario("reverse_playback"),
                           Scenario.get_scenario("fast_forward"),
                           Scenario.get_scenario("seek_forward"),
                           Scenario.get_scenario("seek_backward"),
@@ -68,7 +68,7 @@ G_V_SCENARIOS = {"file": [Scenario.get_scenario("play_15s"),
                           Scenario.get_scenario("seek_forward"),
                           Scenario.get_scenario("seek_backward"),
                           Scenario.get_scenario("seek_with_stop"),
-                          Scenario.get_scenario("simple_backward")],
+                          Scenario.get_scenario("reverse_playback")],
                  "hls": [Scenario.get_scenario("play_15s"),
                          Scenario.get_scenario("fast_forward"),
                          Scenario.get_scenario("seek_forward"),

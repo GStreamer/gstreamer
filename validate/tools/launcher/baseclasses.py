@@ -573,10 +573,10 @@ class Scenario(NamedDic):
 
 ALL_SCENARIOS = [
     Scenario("play_15s", {"max_duration": 15}),
-    Scenario("simple_backward"),
     Scenario("fast_forward"),
     Scenario("seek_forward"),
     Scenario("seek_backward"),
     Scenario("scrub_forward_seeking"),
     Scenario("seek_with_stop"),
+    Scenario("reverse_playback"),
 ]
