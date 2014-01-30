@@ -178,6 +178,9 @@ gst_buffer_pool_init (GstBufferPool * pool)
   gst_allocation_params_init (&priv->params);
   gst_buffer_pool_config_set_allocator (priv->config, priv->allocator,
       &priv->params);
+  /* 1 control write for flushing */
+  gst_poll_write_control (priv->poll);
+  /* 1 control write for marking that we are not waiting for poll */
   gst_poll_write_control (priv->poll);
 
   GST_DEBUG_OBJECT (pool, "created");
@@ -1007,9 +1010,12 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
       break;
     }
 
-    /* now wait */
-    GST_LOG_OBJECT (pool, "waiting for free buffers");
+    /* now we release the control socket, we wait for a buffer release or
+     * flushing */
+    gst_poll_read_control (pool->priv->poll);
+    GST_LOG_OBJECT (pool, "waiting for free buffers or flushing");
     gst_poll_wait (priv->poll, GST_CLOCK_TIME_NONE);
+    gst_poll_write_control (pool->priv->poll);
   }
 
   return result;
