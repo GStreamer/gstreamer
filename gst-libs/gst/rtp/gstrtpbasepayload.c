@@ -183,7 +183,7 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PT,
       g_param_spec_uint ("pt", "payload type",
-          "The payload type of the packets", 0, 0x80, DEFAULT_PT,
+          "The payload type of the packets", 0, 0x7f, DEFAULT_PT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
       g_param_spec_uint ("ssrc", "SSRC",
