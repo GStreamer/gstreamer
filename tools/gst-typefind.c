@@ -147,6 +147,8 @@ main (int argc, char *argv[])
     {NULL}
   };
 
+  setlocale (LC_ALL, "");
+
 #ifdef ENABLE_NLS
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
