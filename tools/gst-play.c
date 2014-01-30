@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#include <locale.h>
+
 #include <gst/gst.h>
 #include <gst/gst-i18n-app.h>
 #include <gst/pbutils/pbutils.h>
@@ -642,6 +644,8 @@ main (int argc, char **argv)
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
     {NULL}
   };
+
+  setlocale (LC_ALL, "");
 
 #ifdef ENABLE_NLS
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
