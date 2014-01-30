@@ -291,6 +291,9 @@ class TestsManager(Loggable):
     def get_tests(self):
         return self.tests
 
+    def get_blacklisted(self):
+        return []
+
     def add_options(self, parser):
         """ Add more arguments. """
         pass
@@ -443,6 +446,16 @@ class _TestsLauncher(Loggable):
         for tester in self.testers:
             if tester.needs_http_server():
                 return True
+
+    def get_blacklisted(self):
+        res = []
+        for tester in self.testers:
+            for blacklisted in tester.get_blacklisted():
+                if isinstance(blacklisted, str):
+                    res.append(blacklisted, "Unknown")
+                else:
+                    res.append(blacklisted)
+        return res
 
 
 class NamedDic(object):

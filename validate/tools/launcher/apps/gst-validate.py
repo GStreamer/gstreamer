@@ -48,6 +48,14 @@ COMBINATIONS = [
 PROTOCOL_TIMEOUTS = {"http": 60,
                      "hls": 60}
 
+G_V_BLACKLISTED_TESTS = [("validate.hls.playback.fast_forward.*", "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
+                         ("validate.hls.playback.seek_with_stop.*", "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
+                         ("validate.*.simple_backward.*webm$", "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
+                         ("validate.http.simple_backward.*", "https://bugzilla.gnome.org/show_bug.cgi?id=723270"),
+                         ("validate.http.playback.seek_with_stop.*webm", "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
+                         ("validate.http.playback.seek_with_stop.*mkv", "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode")
+                         ]
+
 G_V_SCENARIOS = {"file": [Scenario.get_scenario("play_15s"),
                           Scenario.get_scenario("simple_backward"),
                           Scenario.get_scenario("fast_forward"),
@@ -334,3 +342,6 @@ class GstValidateManager(TestsManager, Loggable):
             if urlparse.urlparse(uri).scheme == "http" and \
                     "127.0.0.1:%s" % (self.options.http_server_port) in uri:
                 return True
+
+    def get_blacklisted(self):
+        return G_V_BLACKLISTED_TESTS

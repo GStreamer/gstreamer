@@ -25,15 +25,10 @@ from optparse import OptionParser
 
 from httpserver import HTTPServer
 from baseclasses import _TestsLauncher
-from utils import printc, path2url, DEFAULT_GST_QA_ASSETS, launch_command
+from utils import printc, path2url, DEFAULT_GST_QA_ASSETS, launch_command, Colors
 
 
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
-BLACKLISTED_TESTS = ["validate.hls.playback.simple_backward",  # bug 698155
-                     "validate.hls.playback.fast_forward",  # bug 698155
-                     "validate.*.simple_backward.*webm$",  # bug 679250
-                     ]
-
 
 def main():
     parser = OptionParser()
@@ -60,8 +55,7 @@ def main():
     parser.add_option("-b", "--blacklisted-tests", dest="blacklisted_tests",
                       default=[],
                       action="append",
-                      help="Define the tests not to execute, it can be a regex."
-                      " Currently blacklisted tests are: %s" % BLACKLISTED_TESTS)
+                      help="Define the tests not to execute, it can be a regex.")
     parser.add_option("-L", "--list-tests",
                       dest="list_tests",
                       action="store_true",
@@ -99,8 +93,14 @@ def main():
     tests_launcher = _TestsLauncher()
     tests_launcher.add_options(parser)
 
-    for p in BLACKLISTED_TESTS:
-        sys.argv.extend(["-b", p])
+    blacklisted = tests_launcher.get_blacklisted()
+    if blacklisted:
+        msg = "Currently 'hardcoded' blacklisted tests:\n"
+        for name, bug in blacklisted:
+            sys.argv.extend(["-b", name])
+            msg += "    + %s -- bug: %s\n" % (name, bug)
+
+        printc(msg, Colors.FAIL, True)
 
     (options, args) = parser.parse_args()
     if options.xunit_file is None:
