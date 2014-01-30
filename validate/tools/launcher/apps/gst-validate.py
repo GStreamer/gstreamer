@@ -25,28 +25,54 @@ from loggable import Loggable
 from baseclasses import GstValidateTest, TestsManager, Test, Scenario, NamedDic
 from utils import MediaFormatCombination, get_profile,\
     path2url, DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
-    compare_rendered_with_original
+    compare_rendered_with_original, Protocols
 
 
+# definitions of commands to use
 GST_VALIDATE_COMMAND = "gst-validate-1.0"
 GST_VALIDATE_TRANSCODING_COMMAND = "gst-validate-transcoding-1.0"
 G_V_DISCOVERER_COMMAND = "gst-validate-media-check-1.0 --discover-only"
 
+# Some extension file for discovering results
 G_V_MEDIA_INFO_EXT = "media_info"
 G_V_STREAM_INFO_EXT = "stream_info"
 
-G_V_CAPS_TO_PROTOCOL = [("application/x-hls", "hls")]
+# Some info about protocols and how to handle them
+G_V_CAPS_TO_PROTOCOL = [("application/x-hls", Protocols.HLS)]
+G_V_PROTOCOL_TIMEOUTS = {Protocols.HTTP: 60,
+                         Protocols.HLS: 120}
 
-G_V_PLAYBACK_TESTS = ["playbin uri=__uri__ audio_sink=autoaudiosink video_sink=autovideosink"]
+# Tests descriptions
+G_V_PLAYBACK_TESTS = [PlaybinDescriptor()]
 
+# Description of wanted output formats for transcoding test
 G_V_ENCODING_TARGET_COMBINATIONS = [
     MediaFormatCombination("ogg", "vorbis", "theora"),
     MediaFormatCombination("webm", "vorbis", "vp8"),
     MediaFormatCombination("mp4", "mp3", "h264"),
     MediaFormatCombination("mkv", "vorbis", "h264")]
 
-G_V_PROTOCOL_TIMEOUTS = {"http": 60,
-                         "hls": 60}
+
+# List of scenarios to run depending on the protocol in use
+G_V_SCENARIOS = {Protocols.FILE: [Scenario.get_scenario("play_15s"),
+                                  Scenario.get_scenario("reverse_playback"),
+                                  Scenario.get_scenario("fast_forward"),
+                                  Scenario.get_scenario("seek_forward"),
+                                  Scenario.get_scenario("seek_backward"),
+                                  Scenario.get_scenario("seek_with_stop"),
+                                  Scenario.get_scenario("scrub_forward_seeking")],
+                 Protocols.HTTP: [Scenario.get_scenario("play_15s"),
+                                  Scenario.get_scenario("fast_forward"),
+                                  Scenario.get_scenario("seek_forward"),
+                                  Scenario.get_scenario("seek_backward"),
+                                  Scenario.get_scenario("seek_with_stop"),
+                                  Scenario.get_scenario("reverse_playback")],
+                 Protocols.HLS: [Scenario.get_scenario("play_15s"),
+                                 Scenario.get_scenario("fast_forward"),
+                                 Scenario.get_scenario("seek_forward"),
+                                 Scenario.get_scenario("seek_with_stop"),
+                                 Scenario.get_scenario("seek_backward")],
+                 }
 
 G_V_BLACKLISTED_TESTS = [("validate.hls.playback.fast_forward.*", "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
                          ("validate.hls.playback.seek_with_stop.*", "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
@@ -55,34 +81,6 @@ G_V_BLACKLISTED_TESTS = [("validate.hls.playback.fast_forward.*", "https://bugzi
                          ("validate.http.playback.seek_with_stop.*webm", "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
                          ("validate.http.playback.seek_with_stop.*mkv", "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode")
                          ]
-
-G_V_SCENARIOS = {"file": [Scenario.get_scenario("play_15s"),
-                          Scenario.get_scenario("reverse_playback"),
-                          Scenario.get_scenario("fast_forward"),
-                          Scenario.get_scenario("seek_forward"),
-                          Scenario.get_scenario("seek_backward"),
-                          Scenario.get_scenario("seek_with_stop"),
-                          Scenario.get_scenario("scrub_forward_seeking")],
-                 "http": [Scenario.get_scenario("play_15s"),
-                          Scenario.get_scenario("fast_forward"),
-                          Scenario.get_scenario("seek_forward"),
-                          Scenario.get_scenario("seek_backward"),
-                          Scenario.get_scenario("seek_with_stop"),
-                          Scenario.get_scenario("reverse_playback")],
-                 "hls": [Scenario.get_scenario("play_15s"),
-                         Scenario.get_scenario("fast_forward"),
-                         Scenario.get_scenario("seek_forward"),
-                         Scenario.get_scenario("seek_with_stop"),
-                         Scenario.get_scenario("seek_backward")],
-                 }
-
-
-
-G_V_TIMEOUT_BY_PROTOCOL = {
-    "http": 60,
-    "hls": 120
-}
-
 
 class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
@@ -198,7 +196,7 @@ class GstValidateManager(TestsManager, Loggable):
 
         for uri, mediainfo in self._list_uris():
             try:
-                timeout = G_V_TIMEOUT_BY_PROTOCOL[mediainfo.config.get("file-info", "protocol")]
+                timeout = G_V_PROTOCOL_TIMEOUTS[mediainfo.config.get("file-info", "protocol")]
             except KeyError:
                 timeout = DEFAULT_TIMEOUT
 
@@ -343,7 +341,7 @@ class GstValidateManager(TestsManager, Loggable):
 
     def needs_http_server(self):
         for uri, mediainfo in self._list_uris():
-            if urlparse.urlparse(uri).scheme == "http" and \
+            if urlparse.urlparse(uri).scheme == Protocols.HTTP and \
                     "127.0.0.1:%s" % (self.options.http_server_port) in uri:
                 return True
 

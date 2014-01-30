@@ -40,6 +40,12 @@ class Result(object):
     PASSED = "Passed"
 
 
+class Protocols(object):
+    HTTP = "http"
+    FILE = "file"
+    HLS = "hls"
+
+
 class Colors(object):
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
