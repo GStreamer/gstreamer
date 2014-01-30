@@ -5,6 +5,7 @@ gstatomicqueue
 gstbin
 gstbuffer
 gstbufferlist
+gstbufferpool
 gstbus
 gstcaps
 gstcapsfeatures
