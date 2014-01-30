@@ -1405,7 +1405,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
     mpegts_packetizer_flush (base->packetizer, FALSE);
   }
 
-  if (flags & (GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_SKIP)) {
+  if (flags & (GST_SEEK_FLAG_SEGMENT)) {
     GST_WARNING ("seek flags 0x%x are not supported", (int) flags);
     goto done;
   }

@@ -514,7 +514,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
     goto done;
   }
 
-  if (flags & (GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_SKIP)) {
+  if (flags & (GST_SEEK_FLAG_SEGMENT)) {
     GST_WARNING ("seek flags 0x%x are not supported", (int) flags);
     goto done;
   }
