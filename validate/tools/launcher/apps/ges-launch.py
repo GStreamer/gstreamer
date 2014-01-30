@@ -106,7 +106,7 @@ class GESPlaybackTest(GESTest):
                                       project_uri, scenario=scenario)
 
     def get_current_value(self):
-        return utils.get_current_position(self)
+        return self.get_current_position()
 
 
 class GESRenderTest(GESTest):
@@ -151,7 +151,7 @@ class GESRenderTest(GESTest):
                 GstValidateTest.check_results(self)
 
     def get_current_value(self):
-        return utils.get_current_size(self)
+        return self.get_current_size()
 
 
 class GESTestsManager(TestsManager):

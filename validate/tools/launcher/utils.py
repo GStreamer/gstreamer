@@ -193,81 +193,16 @@ def get_profile(combination):
 ##################################################
 #  Some utilities to parse gst-validate output   #
 ##################################################
-
-
-def _parse_position(p):
-    def parse_gsttimeargs(time):
-        return int(time.split(":")[0]) * 3600 + int(time.split(":")[1]) * 60 + int(time.split(":")[2].split(".")[0]) * 60
-    start_stop = p.replace("<position: ", '').replace("/>", "").split(" duration: ")
-
-    if len(start_stop) < 2:
-        loggable.warning("utils", "Got a unparsable value: %s" % p)
-        return 0, 0
-
-    if " speed:  "in start_stop[1]:
-        start_stop[1] = start_stop[1].split("speed: ")[0]
-
-    return parse_gsttimeargs(start_stop[0]), parse_gsttimeargs(start_stop[1])
-
-
-def _parse_buffering(b):
-    return b.split("buffering... ")[1].split("%")[0], 100
-
-
-def _get_position(test):
-    position = duration = -1
-
-    test.reporter.out.seek(0)
-    m = None
-    for l in reversed(test.reporter.out.readlines()):
-        l = l.lower()
-        if "<position:" in l or "buffering" in l:
-            m = l
-            break
-
-    if m is None:
-        loggable.debug("utils", "Could not fine any positionning info")
-        return position, duration
-
-    for j in m.split("\r"):
-        if j.startswith("<position:") and j.endswith("/>"):
-            position, duration = _parse_position(j)
-        elif j.startswith("buffering") and j.endswith("%"):
-            position, duration = _parse_buffering(j)
-
-    return position, duration
-
-
-def get_current_position(test, max_passed_stop=0.5):
-    position, duration = _get_position(test)
-
-    if position > duration + max_passed_stop:
-        loggable.warning("utils", "Position > duration -> Returning -1")
-        return -1
-
-    return position
-
-
-def get_current_size(test):
-    position = get_current_position(test)
-
-    if position is -1:
-        return -1
-
-    size = os.stat(urlparse.urlparse(test.dest_file).path).st_size
-    loggable.debug("utils", "Size: %s" % size)
-    return size
-
+def parse_gsttimeargs(time):
+    stime = time.split(":")
+    sns = stime[2].split(".")
+    stime[2] = sns[0]
+    stime.append(sns[1])
+    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2]) * 60) * GST_SECOND +  int(stime[3]))
 
 def get_duration(media_file):
-    duration = 0
 
-    def parse_gsttimeargs(time):
-        stime = time.split(":")
-        sns = stime[2].split(".")
-        stime[2] = sns[0]
-        stime.append(sns[1])
-        return (int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2]) * 60) * GST_SECOND +  int(stime[3])
+    duration = 0
     try:
         res = subprocess.check_output([DISCOVERER_COMMAND, media_file])
     except subprocess.CalledProcessError:

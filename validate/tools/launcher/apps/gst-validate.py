@@ -24,8 +24,7 @@ from loggable import Loggable
 
 from baseclasses import GstValidateTest, TestsManager, Test, Scenario, NamedDic
 from utils import MediaFormatCombination, get_profile,\
-    path2url, get_current_position, get_current_size, \
-    DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
+    path2url, DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
     compare_rendered_with_original
 
 
@@ -97,7 +96,7 @@ class GstValidateLaunchTest(GstValidateTest):
         self.add_arguments(self.pipeline_desc)
 
     def get_current_value(self):
-        return get_current_position(self)
+        return self.get_current_position()
 
 
 class GstValidateMediaCheckTest(Test):
@@ -158,7 +157,7 @@ class GstValidateTranscodingTest(GstValidateTest):
         self.add_arguments(self.uri, self.dest_file)
 
     def get_current_value(self):
-        return get_current_size(self)
+        return self.get_current_size()
 
     def check_results(self):
         if self.process.returncode == 0:
