@@ -561,22 +561,24 @@ class NamedDic(object):
                 setattr(self, name, value)
 
 
-class Scenario(NamedDic):
+class Scenario(object):
 
-    def __init__(self, name, props=None):
+    def __init__(self, name, max_duration=None, seeks=True, reverse=False):
         self.name = name
-        NamedDic.__init__(self, props)
+        self.max_duration = max_duration
+        self.seeks = seeks
+        self.reverse = reverse
 
     @classmethod
     def get_scenario(cls, name):
         return [scenario for scenario in ALL_SCENARIOS if scenario.name == name][0]
 
 ALL_SCENARIOS = [
-    Scenario("play_15s", {"max_duration": 15}),
-    Scenario("fast_forward"),
-    Scenario("seek_forward"),
-    Scenario("seek_backward"),
-    Scenario("scrub_forward_seeking"),
-    Scenario("seek_with_stop"),
-    Scenario("reverse_playback"),
+    Scenario("play_15s", seeks=False, max_duration=15),
+    Scenario("reverse_playback", reverse=True),
+    Scenario("fast_forward", seeks=True),
+    Scenario("seek_forward", seeks=True),
+    Scenario("seek_backward", seeks=True),
+    Scenario("scrub_forward_seeking", seeks=True),
+    Scenario("seek_with_stop", seeks=True),
 ]
