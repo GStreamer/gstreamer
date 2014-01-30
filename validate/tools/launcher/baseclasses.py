@@ -577,5 +577,6 @@ ALL_SCENARIOS = [
     Scenario("fast_forward"),
     Scenario("seek_forward"),
     Scenario("seek_backward"),
-    Scenario("scrub_forward_seeking")
+    Scenario("scrub_forward_seeking"),
+    Scenario("seek_with_stop"),
 ]
