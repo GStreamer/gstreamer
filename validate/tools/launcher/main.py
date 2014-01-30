@@ -47,7 +47,7 @@ def main():
                       dest='xunit_file', metavar="FILE",
                       default=None,
                       help=("Path to xml file to store the xunit report in. "
-                      "Default is xunit.xml the logs-dir directory"))
+                      "Default is xunit.xml in the logs-dir directory"))
     parser.add_option("-t", "--wanted-tests", dest="wanted_tests",
                       default=[],
                       action="append",
@@ -61,9 +61,13 @@ def main():
                       action="store_true",
                       default=False,
                       help="List tests and exit")
+    parser.add_option("-o", "--output-dir", dest="outputdir",
+                      action="store_true", default=os.path.expanduser("~/gst-validate/"),
+                      help="Directory where to store logs and rendered files")
     parser.add_option("-l", "--logs-dir", dest="logsdir",
-                      action="store_true", default=os.path.expanduser("~/gst-validate/logs/"),
-                      help="Directory where to store logs")
+                      action="store_true", default=None,
+                      help="Directory where to store logs, default is logs/ in "
+                      "--output-dir result")
     parser.add_option("-p", "--medias-paths", dest="paths", action="append",
                       default=[os.path.join(DEFAULT_GST_QA_ASSETS, "medias")],
                       help="Paths in which to look for media files")
@@ -71,7 +75,7 @@ def main():
                       action="store_true", default=False,
                       help="Mute playback output, which mean that we use "
                       "a fakesink")
-    parser.add_option("-o", "--output-path", dest="dest",
+    parser.add_option("-R", "--render-path", dest="dest",
                      default=None,
                      help="Set the path to which projects should be"
                      " renderd")
@@ -103,10 +107,12 @@ def main():
         printc(msg, Colors.FAIL, True)
 
     (options, args) = parser.parse_args()
+    if options.logsdir is None:
+        options.logsdir = os.path.join(options.outputdir, "logs")
     if options.xunit_file is None:
         options.xunit_file = os.path.join(options.logsdir, "xunit.xml")
     if options.dest is None:
-        options.dest = os.path.join(options.logsdir, "rendered")
+        options.dest = os.path.join(options.outputdir, "rendered")
     if not os.path.exists(options.dest):
         os.makedirs(options.dest)
     if urlparse.urlparse(options.dest).scheme == "":
