@@ -24,17 +24,17 @@
  * @short_description: Pool for buffers
  * @see_also: #GstBuffer
  *
- * a #GstBufferPool is an object that can be used to pre-allocate and recycle
+ * A #GstBufferPool is an object that can be used to pre-allocate and recycle
  * buffers of the same size and with the same properties.
  *
  * A #GstBufferPool is created with gst_buffer_pool_new().
  *
- * After the buffer is created, it needs to be configured.
- * gst_buffer_pool_get_config() get the current configuration structure from the
- * pool. With gst_buffer_pool_config_set_params() and
- * gst_buffer_pool_config_set_allocator() the bufferpool parameters and allocator
- * can be configured. Other properties can be configured in the pool depending
- * on the pool implementation.
+ * Once a pool is created, it needs to be configured. A call to
+ * gst_buffer_pool_get_config() returns the current configuration structure from
+ * the pool. With gst_buffer_pool_config_set_params() and
+ * gst_buffer_pool_config_set_allocator() the bufferpool parameters and
+ * allocator can be configured. Other properties can be configured in the pool
+ * depending on the pool implementation.
  *
  * A bufferpool can have extra options that can be enabled with
  * gst_buffer_pool_config_add_option(). The available options can be retrieved
@@ -52,8 +52,8 @@
  * When the pool is active, gst_buffer_pool_acquire_buffer() can be used to
  * retrieve a buffer from the pool.
  *
- * Buffer allocated from a bufferpool will automatically be returned to the pool
- * with gst_buffer_pool_release_buffer() when their refcount drops to 0.
+ * Buffers allocated from a bufferpool will automatically be returned to the
+ * pool with gst_buffer_pool_release_buffer() when their refcount drops to 0.
  *
  * The bufferpool can be deactivated again with gst_buffer_pool_set_active().
  * All further gst_buffer_pool_acquire_buffer() calls will return an error. When
@@ -62,7 +62,7 @@
  * Use gst_object_unref() to release the reference to a bufferpool. If the
  * refcount of the pool reaches 0, the pool will be freed.
  *
- * Last reviewed on 2012-03-28 (0.11.3)
+ * Last reviewed on 2014-01-30 (1.3.0)
  */
 
 #include "gst_private.h"
@@ -100,7 +100,7 @@ struct _GstBufferPoolPrivate
 
   gboolean started;
   gboolean active;
-  gint outstanding;
+  gint outstanding;             /* number of buffers that are in use */
 
   gboolean configured;
   GstStructure *config;
@@ -111,12 +111,6 @@ struct _GstBufferPoolPrivate
   guint cur_buffers;
   GstAllocator *allocator;
   GstAllocationParams params;
-};
-
-enum
-{
-  /* add more above */
-  LAST_SIGNAL
 };
 
 static void gst_buffer_pool_finalize (GObject * object);
@@ -167,7 +161,7 @@ gst_buffer_pool_init (GstBufferPool * pool)
   g_rec_mutex_init (&priv->rec_lock);
 
   priv->poll = gst_poll_new_timer ();
-  priv->queue = gst_atomic_queue_new (10);
+  priv->queue = gst_atomic_queue_new (16);
   pool->flushing = 1;
   priv->active = FALSE;
   priv->configured = FALSE;
@@ -303,8 +297,7 @@ alloc_failed:
   }
 }
 
-/* the default implementation for preallocating the buffers
- * in the pool */
+/* the default implementation for preallocating the buffers in the pool */
 static gboolean
 default_start (GstBufferPool * pool)
 {
@@ -378,7 +371,7 @@ default_stop (GstBufferPool * pool)
 
   /* clear the pool */
   while ((buffer = gst_atomic_queue_pop (priv->queue))) {
-    GST_LOG_OBJECT (pool, "freeing %p", buffer);
+    GST_LOG_OBJECT (pool, "freeing buffer %p", buffer);
     gst_poll_read_control (priv->poll);
 
     if (G_LIKELY (pclass->free_buffer))
@@ -578,12 +571,12 @@ wrong_config:
  * and gst_buffer_pool_config_add_option().
  *
  * If the parameters in @config can not be set exactly, this function returns
- * FALSE and will try to update as much state as possible. The new state can
+ * %FALSE and will try to update as much state as possible. The new state can
  * then be retrieved and refined with gst_buffer_pool_get_config().
  *
  * This function takes ownership of @config.
  *
- * Returns: TRUE when the configuration could be set.
+ * Returns: %TRUE when the configuration could be set.
  */
 gboolean
 gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
@@ -676,11 +669,12 @@ static const gchar *empty_option[] = { NULL };
  * gst_buffer_pool_get_options:
  * @pool: a #GstBufferPool
  *
- * Get a NULL terminated array of string with supported bufferpool options for
+ * Get a %NULL terminated array of string with supported bufferpool options for
  * @pool. An option would typically be enabled with
  * gst_buffer_pool_config_add_option().
  *
- * Returns: (array zero-terminated=1) (transfer none): a NULL terminated array of strings.
+ * Returns: (array zero-terminated=1) (transfer none): a %NULL terminated array
+ *          of strings.
  */
 const gchar **
 gst_buffer_pool_get_options (GstBufferPool * pool)
@@ -715,7 +709,7 @@ invalid_result:
  *
  * Check if the bufferpool supports @option.
  *
- * Returns: a NULL terminated array of strings.
+ * Returns: a %NULL terminated array of strings.
  */
 gboolean
 gst_buffer_pool_has_option (GstBufferPool * pool, const gchar * option)
@@ -768,10 +762,10 @@ gst_buffer_pool_config_set_params (GstStructure * config, GstCaps * caps,
  *
  * Set the @allocator and @params on @config.
  *
- * One of @allocator and @params can be NULL, but not both. When @allocator
- * is NULL, the default allocator of the pool will use the values in @param
- * to perform its allocation. When @param is NULL, the pool will use the
- * provided allocator with its default #GstAllocationParams.
+ * One of @allocator and @params can be %NULL, but not both. When @allocator
+ * is %NULL, the default allocator of the pool will use the values in @param
+ * to perform its allocation. When @param is %NULL, the pool will use the
+ * provided @allocator with its default #GstAllocationParams.
  *
  * A call to gst_buffer_pool_set_config() can update the allocator and params
  * with the values that it is able to do. Some pools are, for example, not able
@@ -835,8 +829,8 @@ gst_buffer_pool_config_add_option (GstStructure * config, const gchar * option)
  * gst_buffer_pool_config_n_options:
  * @config: a #GstBufferPool configuration
  *
- * Retrieve the number of values currently stored in the
- * options array of the @config structure.
+ * Retrieve the number of values currently stored in the options array of the
+ * @config structure.
  *
  * Returns: the options array size as a #guint.
  */
@@ -860,8 +854,8 @@ gst_buffer_pool_config_n_options (GstStructure * config)
  * @config: a #GstBufferPool configuration
  * @index: position in the option array to read
  *
- * Parse an available @config and get the option
- * at @index of the options API array.
+ * Parse an available @config and get the option at @index of the options API
+ * array.
  *
  * Returns: a #gchar of the option at @index.
  */
@@ -889,9 +883,9 @@ gst_buffer_pool_config_get_option (GstStructure * config, guint index)
  * @config: a #GstBufferPool configuration
  * @option: an option
  *
- * Check if @config contains @option
+ * Check if @config contains @option.
  *
- * Returns: TRUE if the options array contains @option.
+ * Returns: %TRUE if the options array contains @option.
  */
 gboolean
 gst_buffer_pool_config_has_option (GstStructure * config, const gchar * option)
@@ -948,7 +942,9 @@ gst_buffer_pool_config_get_params (GstStructure * config, GstCaps ** caps,
  * @allocator: (transfer none): a #GstAllocator
  * @params: #GstAllocationParams
  *
- * Get the allocator and params from @config.
+ * Get the @allocator and @params from @config.
+ *
+ * Returns: %TRUE, if the values are set. 
  */
 gboolean
 gst_buffer_pool_config_get_allocator (GstStructure * config,
@@ -1080,7 +1076,8 @@ default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
  * Acquire a buffer from @pool. @buffer should point to a memory location that
  * can hold a pointer to the new buffer.
  *
- * @params can be NULL or contain optional parameters to influence the allocation.
+ * @params can be %NULL or contain optional parameters to influence the
+ * allocation.
  *
  * Returns: a #GstFlowReturn such as GST_FLOW_FLUSHING when the pool is
  * inactive.
