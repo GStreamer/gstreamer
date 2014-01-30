@@ -31,7 +31,7 @@ main (gint argc, gchar * argv[])
   GstBuffer *tmp;
   GstBufferPool *pool;
   GstClockTime start, end;
-  GstClockTimeDiff dur;
+  GstClockTimeDiff dur1, dur2;
   guint64 nbuffers;
   GstStructure *conf;
 
@@ -68,10 +68,10 @@ main (gint argc, gchar * argv[])
     gst_buffer_unref (tmp);
   }
   end = gst_util_get_timestamp ();
-  dur = GST_CLOCK_DIFF (start, end);
+  dur1 = GST_CLOCK_DIFF (start, end);
   g_print ("*** total %" GST_TIME_FORMAT " - average %" GST_TIME_FORMAT
       "  - Done creating %" G_GUINT64_FORMAT " fresh buffers\n",
-      GST_TIME_ARGS (dur), GST_TIME_ARGS (dur / nbuffers), nbuffers);
+      GST_TIME_ARGS (dur1), GST_TIME_ARGS (dur1 / nbuffers), nbuffers);
 
   /* allocate buffers from the pool */
   start = gst_util_get_timestamp ();
@@ -80,10 +80,12 @@ main (gint argc, gchar * argv[])
     gst_buffer_unref (tmp);
   }
   end = gst_util_get_timestamp ();
-  dur = GST_CLOCK_DIFF (start, end);
+  dur2 = GST_CLOCK_DIFF (start, end);
   g_print ("*** total %" GST_TIME_FORMAT " - average %" GST_TIME_FORMAT
       "  - Done creating %" G_GUINT64_FORMAT " pooled buffers\n",
-      GST_TIME_ARGS (dur), GST_TIME_ARGS (dur / nbuffers), nbuffers);
+      GST_TIME_ARGS (dur2), GST_TIME_ARGS (dur2 / nbuffers), nbuffers);
+
+  g_print ("*** speedup %6.4lf\n", ((gdouble) dur1 / (gdouble) dur2));
 
   gst_buffer_pool_set_active (pool, FALSE);
   gst_object_unref (pool);
