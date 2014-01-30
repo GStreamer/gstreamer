@@ -492,7 +492,7 @@ elements_audioresample_LDADD = \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
-elements_textoverlay_LDADD = $(GST_BASE_LIBS) $(LDADD)
+elements_textoverlay_LDADD = $(GST_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ $(LDADD)
 elements_textoverlay_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_volume_LDADD = \
