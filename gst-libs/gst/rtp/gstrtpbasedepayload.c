@@ -439,7 +439,7 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
         /* we get this event from the jitterbuffer when it considers a packet as
          * being lost. We send it to our packet_lost vmethod. The default
          * implementation will make time progress by pushing out a GAP event.
-         * Subclasses can override and to one of the following:
+         * Subclasses can override and do one of the following:
          *  - Adjust timestamp/duration to something more accurate before
          *    calling the parent (default) packet_lost method.
          *  - do some more advanced error concealing on the already received
@@ -638,7 +638,7 @@ gst_rtp_base_depayload_push_list (GstRTPBaseDepayload * filter,
   return res;
 }
 
-/* convert the PacketLost event form a jitterbuffer to a GAP event.
+/* convert the PacketLost event from a jitterbuffer to a GAP event.
  * subclasses can override this.  */
 static gboolean
 gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload * filter,
