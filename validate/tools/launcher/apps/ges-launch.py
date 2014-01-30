@@ -121,6 +121,7 @@ class GESRenderTest(GESTest):
 
     def _set_rendering_info(self):
         self.dest_file = os.path.join(self.options.dest,
+                                 "ges.",
                                  os.path.basename(self.project_uri) +
                                  '-' + self.combination.acodec +
                                  self.combination.vcodec + '.' +

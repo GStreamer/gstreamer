@@ -74,8 +74,8 @@ G_V_STREAM_INFO_EXT = "stream_info"
 
 # Some info about protocols and how to handle them
 G_V_CAPS_TO_PROTOCOL = [("application/x-hls", Protocols.HLS)]
-G_V_PROTOCOL_TIMEOUTS = {Protocols.HTTP: 60,
-                         Protocols.HLS: 120}
+G_V_PROTOCOL_TIMEOUTS = {Protocols.HTTP: 120,
+                         Protocols.HLS: 240}
 
 # Tests descriptions
 G_V_PLAYBACK_TESTS = [PlaybinDescriptor()]
@@ -109,12 +109,18 @@ G_V_SCENARIOS = {Protocols.FILE: [Scenario.get_scenario("play_15s"),
                                  Scenario.get_scenario("seek_backward")],
                  }
 
-G_V_BLACKLISTED_TESTS = [("validate.hls.playback.fast_forward.*", "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
-                         ("validate.hls.playback.seek_with_stop.*", "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
-                         ("validate.*.reverse_playback.*webm$", "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
-                         ("validate.http.playback.seek_with_stop.*webm", "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
-                         ("validate.http.playback.seek_with_stop.*mkv", "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode")
-                         ]
+G_V_BLACKLISTED_TESTS = \
+[("validate.hls.playback.fast_forward.*",
+  "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
+ ("validate.hls.playback.seek_with_stop.*",
+  "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
+ ("validate.*.reverse_playback.*webm$",
+  "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
+ ("validate.http.playback.seek_with_stop.*webm",
+  "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
+ ("validate.http.playback.seek_with_stop.*mkv",
+  "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode")
+ ]
 
 class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
@@ -163,12 +169,10 @@ class GstValidateTranscodingTest(GstValidateTest):
         except KeyError:
             pass
 
-        try:
-            # FIXME Come up with a less arbitrary calculation!
+        if scenario.max_duration is not None:
             hard_timeout = 4 * scenario.max_duration + timeout
-        except AttributeError:
+        else:
             hard_timeout = None
-            pass
 
         super(GstValidateTranscodingTest, self).__init__(
             GST_VALIDATE_TRANSCODING_COMMAND, classname,
@@ -182,6 +186,7 @@ class GstValidateTranscodingTest(GstValidateTest):
 
     def set_rendering_info(self):
         self.dest_file = os.path.join(self.options.dest,
+                                 "validate.transcoding." +
                                  os.path.basename(self.uri) +
                                  '-' + self.combination.acodec +
                                  self.combination.vcodec + '.' +
@@ -234,7 +239,7 @@ class GstValidateManager(TestsManager, Loggable):
             except KeyError:
                 timeout = DEFAULT_TIMEOUT
 
-            classname = "validate.media_check.%s" % (os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
+            classname = "validate.media_check.%s" % (os.path.basename(uri).replace(".", "_"))
             self.add_test(GstValidateMediaCheckTest(classname,
                                                     self.options,
                                                     self.reporter,
@@ -248,7 +253,7 @@ class GstValidateManager(TestsManager, Loggable):
             for comb in G_V_ENCODING_TARGET_COMBINATIONS:
                 classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.config.get("file-info", "protocol"),
                                                                 str(comb).replace(' ', '_'),
-                                                                os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
+                                                                os.path.basename(uri).replace(".", "_"))
                 self.add_test(GstValidateTranscodingTest(classname,
                                                          self.options,
                                                          self.reporter,
