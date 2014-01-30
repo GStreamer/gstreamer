@@ -28,24 +28,25 @@ from utils import MediaFormatCombination, get_profile,\
     compare_rendered_with_original
 
 
-DEFAULT_GST_VALIDATE = "gst-validate-1.0"
-DEFAULT_GST_VALIDATE_TRANSCODING = "gst-validate-transcoding-1.0"
-DISCOVERER_COMMAND = "gst-validate-media-check-1.0 --discover-only"
+GST_VALIDATE_COMMAND = "gst-validate-1.0"
+GST_VALIDATE_TRANSCODING_COMMAND = "gst-validate-transcoding-1.0"
+G_V_DISCOVERER_COMMAND = "gst-validate-media-check-1.0 --discover-only"
 
-MEDIA_INFO_EXT = "media_info"
-STREAM_INFO = "stream_info"
+G_V_MEDIA_INFO_EXT = "media_info"
+G_V_STREAM_INFO_EXT = "stream_info"
 
-SPECIAL_PROTOCOLS = [("application/x-hls", "hls")]
+G_V_CAPS_TO_PROTOCOL = [("application/x-hls", "hls")]
 
-PLAYBACK_TESTS = ["playbin uri=__uri__ audio_sink=autoaudiosink video_sink=autovideosink"]
-COMBINATIONS = [
+G_V_PLAYBACK_TESTS = ["playbin uri=__uri__ audio_sink=autoaudiosink video_sink=autovideosink"]
+
+G_V_ENCODING_TARGET_COMBINATIONS = [
     MediaFormatCombination("ogg", "vorbis", "theora"),
     MediaFormatCombination("webm", "vorbis", "vp8"),
     MediaFormatCombination("mp4", "mp3", "h264"),
     MediaFormatCombination("mkv", "vorbis", "h264")]
 
-PROTOCOL_TIMEOUTS = {"http": 60,
-                     "hls": 60}
+G_V_PROTOCOL_TIMEOUTS = {"http": 60,
+                         "hls": 60}
 
 G_V_BLACKLISTED_TESTS = [("validate.hls.playback.fast_forward.*", "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
                          ("validate.hls.playback.seek_with_stop.*", "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
@@ -77,16 +78,21 @@ G_V_SCENARIOS = {"file": [Scenario.get_scenario("play_15s"),
 
 
 
+G_V_TIMEOUT_BY_PROTOCOL = {
+    "http": 60,
+    "hls": 120
+}
+
 
 class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
                  timeout=DEFAULT_TIMEOUT, scenario=None, file_infos=None):
         try:
-            timeout = PROTOCOL_TIMEOUTS[file_infos.get("file-info", "protocol")]
+            timeout = G_V_PROTOCOL_TIMEOUTS[file_infos.get("file-info", "protocol")]
         except KeyError:
             pass
 
-        super(GstValidateLaunchTest, self).__init__(DEFAULT_GST_VALIDATE, classname,
+        super(GstValidateLaunchTest, self).__init__(GST_VALIDATE_COMMAND, classname,
                                               options, reporter,
                                               scenario=scenario,
                                               timeout=timeout)
@@ -104,7 +110,7 @@ class GstValidateLaunchTest(GstValidateTest):
 
 class GstValidateMediaCheckTest(Test):
     def __init__(self, classname, options, reporter, media_info_path, uri, timeout=DEFAULT_TIMEOUT):
-        super(GstValidateMediaCheckTest, self).__init__(DISCOVERER_COMMAND, classname,
+        super(GstValidateMediaCheckTest, self).__init__(G_V_DISCOVERER_COMMAND, classname,
                                               options, reporter,
                                               timeout=timeout)
         self._uri = uri
@@ -121,7 +127,7 @@ class GstValidateTranscodingTest(GstValidateTest):
                  scenario=Scenario.get_scenario("play_15s")):
 
         try:
-            timeout = PROTOCOL_TIMEOUTS[file_infos.get("file-info", "protocol")]
+            timeout = G_V_PROTOCOL_TIMEOUTS[file_infos.get("file-info", "protocol")]
         except KeyError:
             pass
 
@@ -133,7 +139,7 @@ class GstValidateTranscodingTest(GstValidateTest):
             pass
 
         super(GstValidateTranscodingTest, self).__init__(
-            DEFAULT_GST_VALIDATE_TRANSCODING, classname,
+            GST_VALIDATE_TRANSCODING_COMMAND, classname,
             options, reporter, scenario=scenario, timeout=timeout,
             hard_timeout=hard_timeout)
 
@@ -181,22 +187,18 @@ class GstValidateManager(TestsManager, Loggable):
         self._uris = []
 
     def init(self):
-        if which(DEFAULT_GST_VALIDATE) and which(DEFAULT_GST_VALIDATE_TRANSCODING):
+        if which(GST_VALIDATE_COMMAND) and which(GST_VALIDATE_TRANSCODING_COMMAND):
             return True
 
         return False
 
     def list_tests(self):
-        for test_pipeline in PLAYBACK_TESTS:
+        for test_pipeline in G_V_PLAYBACK_TESTS:
             self._add_playback_test(test_pipeline)
 
-        TIMEOUT_BY_PROTOCOL = {
-            "http": 60,
-            "hls": 120
-        }
         for uri, mediainfo in self._list_uris():
             try:
-                timeout = TIMEOUT_BY_PROTOCOL[mediainfo.config.get("file-info", "protocol")]
+                timeout = G_V_TIMEOUT_BY_PROTOCOL[mediainfo.config.get("file-info", "protocol")]
             except KeyError:
                 timeout = DEFAULT_TIMEOUT
 
@@ -211,7 +213,7 @@ class GstValidateManager(TestsManager, Loggable):
         for uri, mediainfo in self._list_uris():
             if mediainfo.config.getboolean("media-info", "is-image") is True:
                 continue
-            for comb in COMBINATIONS:
+            for comb in G_V_ENCODING_TARGET_COMBINATIONS:
                 classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.config.get("file-info", "protocol"),
                                                                 str(comb).replace(' ', '_'),
                                                                 os.path.splitext(os.path.basename(uri))[0].replace(".", "_"))
@@ -234,7 +236,7 @@ class GstValidateManager(TestsManager, Loggable):
             if uri is None:
                 uri = config.get("file-info", "uri")
             config.set("file-info", "protocol", urlparse.urlparse(uri).scheme)
-            for caps2, prot in SPECIAL_PROTOCOLS:
+            for caps2, prot in G_V_CAPS_TO_PROTOCOL:
                 if caps2 == caps:
                     config.set("file-info", "protocol", prot)
                     break
@@ -247,13 +249,13 @@ class GstValidateManager(TestsManager, Loggable):
 
     def _discover_file(self, uri, fpath):
         try:
-            media_info = "%s.%s" % (fpath, MEDIA_INFO_EXT)
-            args = DISCOVERER_COMMAND.split(" ")
+            media_info = "%s.%s" % (fpath, G_V_MEDIA_INFO_EXT)
+            args = G_V_DISCOVERER_COMMAND.split(" ")
             args.append(uri)
             if os.path.isfile(media_info):
                 self._check_discovering_info(media_info, uri)
                 return True
-            elif fpath.endswith(STREAM_INFO):
+            elif fpath.endswith(G_V_STREAM_INFO_EXT):
                 self._check_discovering_info(fpath)
                 return True
             elif self.options.generate_info:
@@ -282,7 +284,7 @@ class GstValidateManager(TestsManager, Loggable):
                 for root, dirs, files in os.walk(path):
                     for f in files:
                         fpath = os.path.join(path, root, f)
-                        if os.path.isdir(fpath) or fpath.endswith(MEDIA_INFO_EXT):
+                        if os.path.isdir(fpath) or fpath.endswith(G_V_MEDIA_INFO_EXT):
                             continue
                         else:
                             self._discover_file(path2url(fpath), fpath)

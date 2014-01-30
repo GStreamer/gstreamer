@@ -25,11 +25,11 @@ from urllib import unquote
 import xml.etree.ElementTree as ET
 from baseclasses import GstValidateTest, TestsManager, Scenario
 
-DURATION_TOLERANCE = utils.GST_SECOND / 2
-DEFAULT_GES_LAUNCH = "ges-launch-1.0"
+GES_DURATION_TOLERANCE = utils.GST_SECOND / 2
+GES_LAUNCH_COMMAND = "ges-launch-1.0"
 
 
-COMBINATIONS = [
+GES_ENCODING_TARGET_COMBINATIONS = [
     utils.MediaFormatCombination("ogg", "vorbis", "theora"),
     utils.MediaFormatCombination("webm", "vorbis", "vp8"),
     utils.MediaFormatCombination("mp4", "mp3", "h264"),
@@ -59,7 +59,7 @@ def find_xges_duration(path):
 class GESTest(GstValidateTest):
     def __init__(self, classname, options, reporter, project_uri, scenario=None,
                  combination=None):
-        super(GESTest, self).__init__(DEFAULT_GES_LAUNCH, classname, options, reporter,
+        super(GESTest, self).__init__(GES_LAUNCH_COMMAND, classname, options, reporter,
                                       scenario=scenario)
         self.project_uri = project_uri
         self.duration = find_xges_duration(utils.url2path(project_uri))
@@ -162,7 +162,7 @@ class GESTestsManager(TestsManager):
 
     def init(self):
         try:
-            if "--set-scenario=" in subprocess.check_output([DEFAULT_GES_LAUNCH, "--help"]):
+            if "--set-scenario=" in subprocess.check_output([GES_LAUNCH_COMMAND, "--help"]):
                 return True
             else:
                 self.warning("Can not use ges-launch, it seems not to be compiled against"
@@ -224,7 +224,7 @@ class GESTestsManager(TestsManager):
                                   )
 
             # And now rendering casses
-            for comb in COMBINATIONS:
+            for comb in GES_ENCODING_TARGET_COMBINATIONS:
                 classname = "ges.render.%s.%s" % (str(comb).replace(' ', '_'),
                                                   os.path.splitext(os.path.basename(proj))[0])
                 self.add_test(GESRenderTest(classname, self.options,
