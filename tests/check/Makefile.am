@@ -195,7 +195,8 @@ check_PROGRAMS = \
 	libs/pbutils \
 	libs/profile \
 	libs/rtp \
-	libs/rtp-basepayloading \
+	libs/rtpbasedepayload \
+	libs/rtpbasepayload \
 	libs/rtsp \
 	libs/rtspconnection \
 	libs/sdp \
@@ -363,10 +364,17 @@ libs_rtp_LDADD = \
 	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
-libs_rtp_basepayloading_CFLAGS = \
+libs_rtpbasepayload_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(AM_CFLAGS)
-libs_rtp_basepayloading_LDADD = \
+libs_rtpbasepayload_LDADD = \
+	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) $(LDADD)
+
+libs_rtpbasedepayload_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+libs_rtpbasedepayload_LDADD = \
 	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
