@@ -714,8 +714,9 @@ gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   }
 
   /* if we have EOS, we should send on EOS ourselves */
-  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    GST_DEBUG_OBJECT (this, "Sending on EOS event %p", event);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS
+      || GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
+    GST_DEBUG_OBJECT (this, "Sending on event %" GST_PTR_FORMAT, event);
     /* ref, we unref later again */
     ret = gst_pad_push_event (this->srcpad, gst_event_ref (event));
   }
