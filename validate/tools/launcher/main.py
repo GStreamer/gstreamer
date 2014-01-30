@@ -64,7 +64,7 @@ def main():
     parser.add_option("-l", "--logs-dir", dest="logsdir",
                       action="store_true", default=os.path.expanduser("~/gst-validate/logs/"),
                       help="Directory where to store logs")
-    parser.add_option("-p", "--medias-paths", dest="paths",
+    parser.add_option("-p", "--medias-paths", dest="paths", action="append",
                       default=[os.path.join(DEFAULT_GST_QA_ASSETS, "medias")],
                       help="Paths in which to look for media files")
     parser.add_option("-m", "--mute", dest="mute",
