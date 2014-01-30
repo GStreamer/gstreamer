@@ -24,7 +24,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <stdio.h>
 #include "gst-validate-override.h"
 #include "gst-validate-override-registry.h"
 #include "gst-validate-report.h"
