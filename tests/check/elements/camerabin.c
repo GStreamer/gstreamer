@@ -360,6 +360,13 @@ check_preview_image (GstElement * camera, const gchar * filename, gint index)
             preview_caps));
   }
   g_free (prev_filename);
+
+  /* clean up preview info for next capture */
+  g_free (preview_filename);
+  preview_filename = NULL;
+  if (preview_sample)
+    gst_sample_unref (preview_sample);
+  preview_sample = NULL;
 }
 
 static void
