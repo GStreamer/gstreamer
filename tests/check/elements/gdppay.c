@@ -376,6 +376,8 @@ GST_START_TEST (test_first_no_caps)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
+  gst_check_setup_events (mysrcpad, gdppay, NULL, GST_FORMAT_TIME);
+
   GST_DEBUG ("first buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
