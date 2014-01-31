@@ -844,7 +844,7 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
 
     /* by default we remove all metadata, subclasses should implement a
      * filter_meta function */
-    if (gst_meta_api_type_has_tag (api, GST_META_TAG_MEMORY)) {
+    if (gst_meta_api_type_has_tag (api, _gst_meta_tag_memory)) {
       /* remove all memory dependent metadata because we are going to have to
        * allocate different memory for input and output. */
       GST_LOG_OBJECT (trans, "removing memory specific metadata %s",
@@ -1682,7 +1682,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
     GST_DEBUG_OBJECT (trans, "not copying pooled metadata %s",
         g_type_name (info->api));
     do_copy = FALSE;
-  } else if (gst_meta_api_type_has_tag (info->api, GST_META_TAG_MEMORY)) {
+  } else if (gst_meta_api_type_has_tag (info->api, _gst_meta_tag_memory)) {
     /* never call the transform_meta with memory specific metadata */
     GST_DEBUG_OBJECT (trans, "not copying memory specific metadata %s",
         g_type_name (info->api));

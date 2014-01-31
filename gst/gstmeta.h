@@ -222,7 +222,9 @@ GST_EXPORT GQuark _gst_meta_tag_memory;
  * Deprecated: The GQuarks are not exported by any public API, use
  *   GST_META_TAG_MEMORY_STR instead.
  */
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_META_TAG_MEMORY (_gst_meta_tag_memory)
+#endif
 
 G_END_DECLS
 

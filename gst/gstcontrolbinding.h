@@ -75,6 +75,11 @@ struct _GstControlBinding {
 /**
  * GstControlBindingClass:
  * @parent_class: Parent class
+ * @sync_values: implementation for updating the target values
+ * @get_value: implementation to fetch a single control-value
+ * @get_value_array: implementation to fetch a series of control-values
+ * @get_g_value_array: implementation to fetch a series of control-values
+ *                     as g_values
  *
  * The class structure of #GstControlBinding.
  */
@@ -83,7 +88,7 @@ struct _GstControlBindingClass
 {
   GstObjectClass parent_class;
 
-  /* virtual methods */
+  /*< public >*/
   gboolean (* sync_values) (GstControlBinding *binding, GstObject *object, GstClockTime timestamp, GstClockTime last_sync);
   GValue * (* get_value) (GstControlBinding *binding, GstClockTime timestamp);
   gboolean (* get_value_array) (GstControlBinding *binding, GstClockTime timestamp,GstClockTime interval, guint n_values, gpointer values);
