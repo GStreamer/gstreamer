@@ -200,6 +200,8 @@ class Test(Loggable):
 class GstValidateTest(Test):
 
     """ A class representing a particular test. """
+    findpos_regex = re.compile('.*position.*(\d+):(\d+):(\d+).(\d+).*duration.*(\d+):(\d+):(\d+).(\d+)')
+    findlastseek_regex = re.compile('seeking to.*(\d+):(\d+):(\d+).(\d+).*stop.*(\d+):(\d+):(\d+).(\d+).*rate.*(\d+)\.(\d+)')
 
     def __init__(self, application_name, classname,
                  options, reporter, timeout=DEFAULT_TIMEOUT,
@@ -263,17 +265,14 @@ class GstValidateTest(Test):
                                 ))
     def _parse_position(self, p):
         self.log("Parsing %s" % p)
+        times = self.findpos_regex.findall(p)
 
-        start_stop = p.replace("<position: ", '').replace("/>", "").split(" duration: ")
-
-        if len(start_stop) < 2:
+        if len(times) != 1:
             self.warning("Got a unparsable value: %s" % p)
             return 0, 0
 
-        if "speed:"in start_stop[1]:
-            start_stop[1] = start_stop[1].split("speed:")[0].rstrip().lstrip()
-
-        return utils.parse_gsttimeargs(start_stop[0]), utils.parse_gsttimeargs(start_stop[1])
+        return (utils.gsttime_from_tuple(times[0][:4]),
+                utils.gsttime_from_tuple(times[0][4:]))
 
 
     def _parse_buffering(self, b):
@@ -303,7 +302,7 @@ class GstValidateTest(Test):
             elif j.startswith("buffering") and j.endswith("%"):
                 position, duration = self._parse_buffering(j)
             else:
-                self.debug("No info in %s" % j)
+                self.log("No info in %s" % j)
 
         return position, duration
 
@@ -321,12 +320,16 @@ class GstValidateTest(Test):
             self.debug("Could not fine any seeking info")
             return start, stop, rate
 
-        tmp = m.split("seeking to: ")[1].split(" stop: ")
-        start = tmp[0]
-        stop_rate = tmp[1].split("  Rate")
 
-        return utils.parse_gsttimeargs(start), \
-            utils.parse_gsttimeargs(stop_rate[0]), float(stop_rate[1].replace(":",""))
+        values = self.findlastseek_regex.findall(m)
+        if len(values) != 1:
+            self.warning("Got a unparsable value: %s" % p)
+            return start, stop, rate
+
+        v = values[0]
+        return (utils.gsttime_from_tuple(v[:4]),
+                utils.gsttime_from_tuple(v[4:8]),
+                float(str(v[8]) + "." + str(v[9])))
 
     def get_current_position(self):
         position, duration = self._get_position()

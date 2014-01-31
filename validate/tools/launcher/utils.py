@@ -19,10 +19,13 @@
 """ Some utilies. """
 
 import os
+import re
 import urllib
 import loggable
 import urlparse
 import subprocess
+
+from operator import itemgetter
 
 
 GST_SECOND = 1000000000
@@ -199,11 +202,12 @@ def get_profile(combination):
 ##################################################
 #  Some utilities to parse gst-validate output   #
 ##################################################
+def gsttime_from_tuple(stime):
+    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2]) * 60) * GST_SECOND +  int(stime[3]))
+
+timeregex = re.compile(r'(?P<_0>.+):(?P<_1>.+):(?P<_2>.+)\.(?P<_3>.+)')
 def parse_gsttimeargs(time):
-    stime = time.split(":")
-    sns = stime[2].split(".")
-    stime[2] = sns[0]
-    stime.append(sns[1])
+    stime = map(itemgetter(1), sorted(timeregex.match(time).groupdict().items()))
     return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2]) * 60) * GST_SECOND +  int(stime[3]))
 
 def get_duration(media_file):
