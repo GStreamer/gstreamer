@@ -96,11 +96,11 @@
 
 #include <cairo.h>
 
+/* RGB16 is native-endianness in GStreamer */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define TEMPLATE_CAPS GST_VIDEO_CAPS_MAKE("{ BGRx, BGRA }")
+#define TEMPLATE_CAPS GST_VIDEO_CAPS_MAKE("{ BGRx, BGRA, RGB16 }")
 #else
-#define TEMPLATE_CAPS GST_VIDEO_CAPS_MAKE("{ xRGB, ARGB }")
-
+#define TEMPLATE_CAPS GST_VIDEO_CAPS_MAKE("{ xRGB, ARGB, RGB16 }")
 #endif
 
 static GstStaticPadTemplate gst_cairo_overlay_src_template =
@@ -149,10 +149,25 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
   cairo_t *cr;
   cairo_format_t format;
 
-  if (GST_VIDEO_FRAME_N_COMPONENTS (frame) == 4)
-    format = CAIRO_FORMAT_ARGB32;
-  else
-    format = CAIRO_FORMAT_RGB24;
+  switch (GST_VIDEO_FRAME_FORMAT (frame)) {
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_BGRA:
+      format = CAIRO_FORMAT_ARGB32;
+      break;
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_BGRx:
+      format = CAIRO_FORMAT_RGB24;
+      break;
+    case GST_VIDEO_FORMAT_RGB16:
+      format = CAIRO_FORMAT_RGB16_565;
+      break;
+    default:
+    {
+      GST_WARNING ("No matching cairo format for %s",
+          gst_video_format_to_string (GST_VIDEO_FRAME_FORMAT (frame)));
+      return GST_FLOW_ERROR;
+    }
+  }
 
   surface =
       cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA (frame,
