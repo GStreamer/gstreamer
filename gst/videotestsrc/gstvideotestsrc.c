@@ -624,6 +624,7 @@ gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   gboolean update;
   guint size, min, max;
   GstStructure *config;
+  GstCaps *caps = NULL;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
@@ -649,6 +650,11 @@ gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   }
 
   config = gst_buffer_pool_get_config (pool);
+
+  gst_query_parse_allocation (query, &caps, NULL);
+  if (caps)
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
