@@ -1375,6 +1375,7 @@ gst_iterator_result_get_type
 gst_memory_alignment
 
 GstAllocator
+GstAllocatorClass
 GstAllocatorFlags
 GstAllocationParams
 
@@ -1399,7 +1400,6 @@ GST_ALLOCATOR_CLASS
 GST_ALLOCATOR_GET_CLASS
 GST_IS_ALLOCATOR
 GST_IS_ALLOCATOR_CLASS
-GstAllocatorClass
 <SUBSECTION Private>
 GST_TYPE_ALLOCATOR_FLAGS
 GstAllocatorPrivate

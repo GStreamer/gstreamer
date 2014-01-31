@@ -92,8 +92,6 @@ typedef enum {
 
 /**
  * GstAllocator:
- * @object: parent structure
- * @mem_type: the memory type this allocator provides
  * @mem_map: the implementation of the GstMemoryMapFunction
  * @mem_unmap: the implementation of the GstMemoryUnmapFunction
  * @mem_copy: the implementation of the GstMemoryCopyFunction
@@ -108,6 +106,7 @@ struct _GstAllocator
 
   const gchar              *mem_type;
 
+  /*< public >*/
   GstMemoryMapFunction      mem_map;
   GstMemoryUnmapFunction    mem_unmap;
 
@@ -121,9 +120,18 @@ struct _GstAllocator
   GstAllocatorPrivate *priv;
 };
 
+/**
+ * GstAllocatorClass:
+ * @object_class:  Object parent class
+ * @alloc: implementation that acquires memory
+ * @free: implementation that releases memory
+ *
+ * The #GstAllocator is used to create new memory.
+ */
 struct _GstAllocatorClass {
   GstObjectClass object_class;
 
+  /*< public >*/
   GstMemory *  (*alloc)      (GstAllocator *allocator, gsize size,
                               GstAllocationParams *params);
   void         (*free)       (GstAllocator *allocator, GstMemory *memory);
