@@ -133,12 +133,17 @@ gboolean
 gst_rtsp_thread_reuse (GstRTSPThread * thread)
 {
   GstRTSPThreadImpl *impl = (GstRTSPThreadImpl *) thread;
+  gboolean res;
 
   g_return_val_if_fail (GST_IS_RTSP_THREAD (thread), FALSE);
 
   GST_DEBUG ("reuse thread %p", thread);
 
-  return g_atomic_int_add (&impl->reused, 1) > 0;
+  res = g_atomic_int_add (&impl->reused, 1) > 0;
+  if (res)
+    gst_rtsp_thread_ref (thread);
+
+  return res;
 }
 
 static gboolean
@@ -174,7 +179,8 @@ gst_rtsp_thread_stop (GstRTSPThread * thread)
         thread, (GDestroyNotify) gst_rtsp_thread_unref);
     g_source_attach (source, thread->context);
     g_source_unref (source);
-  }
+  } else
+    gst_rtsp_thread_unref (thread);
 }
 
 #define GST_RTSP_THREAD_POOL_GET_PRIVATE(obj)  \
@@ -458,7 +464,6 @@ default_get_thread (GstRTSPThreadPool * pool,
              * stops. */
             goto retry;
           }
-          gst_rtsp_thread_ref (thread);
         } else {
           /* make more threads */
           GST_DEBUG_OBJECT (pool, "make new client thread");

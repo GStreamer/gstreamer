@@ -34,6 +34,8 @@ GST_START_TEST (test_pool_get_thread)
   thread = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
       NULL);
   fail_unless (thread != NULL);
+  /* one ref is hold by the pool */
+  fail_unless (GST_MINI_OBJECT_REFCOUNT (thread) == 2);
 
   gst_rtsp_thread_stop (thread);
   g_object_unref (pool);
@@ -62,6 +64,8 @@ GST_START_TEST (test_pool_get_thread_reuse)
   fail_unless (thread2 != NULL);
 
   fail_unless (thread == thread2);
+  /* one ref is hold by the pool */
+  fail_unless (GST_MINI_OBJECT_REFCOUNT (thread) == 3);
 
   gst_rtsp_thread_stop (thread);
   gst_rtsp_thread_stop (thread2);
