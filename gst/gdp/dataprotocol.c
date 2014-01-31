@@ -161,6 +161,9 @@ gst_dp_header_from_buffer_any (const GstBuffer * buffer, GstDPHeaderFlag flags,
 
   GST_WRITE_UINT16_BE (h + 42, GST_BUFFER_FLAGS (buffer) & flags_mask);
 
+  /* from gstreamer 1.x, buffers also have the DTS */
+  GST_WRITE_UINT64_BE (h + 44, GST_BUFFER_DTS (buffer));
+
   GST_DP_SET_CRC (h, flags, map.data, map.size);
 
   gst_buffer_unmap ((GstBuffer *) buffer, &map);
@@ -440,6 +443,7 @@ gst_dp_buffer_from_header (guint header_length, const guint8 * header)
       (guint) GST_DP_HEADER_PAYLOAD_LENGTH (header), NULL);
 
   GST_BUFFER_TIMESTAMP (buffer) = GST_DP_HEADER_TIMESTAMP (header);
+  GST_BUFFER_DTS (buffer) = GST_DP_HEADER_DTS (header);
   GST_BUFFER_DURATION (buffer) = GST_DP_HEADER_DURATION (header);
   GST_BUFFER_OFFSET (buffer) = GST_DP_HEADER_OFFSET (header);
   GST_BUFFER_OFFSET_END (buffer) = GST_DP_HEADER_OFFSET_END (header);
