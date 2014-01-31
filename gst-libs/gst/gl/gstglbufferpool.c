@@ -167,9 +167,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     goto no_buffer;
   }
 
-  if (!(gl_mem =
-          gst_gl_memory_alloc (glpool->context, GST_VIDEO_INFO_FORMAT (info),
-              GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info))))
+  if (!(gl_mem = gst_gl_memory_alloc (glpool->context, priv->info)))
     goto mem_create_failed;
   gst_buffer_append_memory (buf, gl_mem);
 

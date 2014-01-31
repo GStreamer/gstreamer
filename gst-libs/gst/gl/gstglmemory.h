@@ -84,10 +84,8 @@ struct _GstGLMemory
 
   GstGLContext      *context;
   GLuint             tex_id;
-  GstVideoFormat     v_format;
+  GstVideoInfo       v_info;
   GLenum             gl_format;
-  GLuint             width;
-  GLuint             height;
 
   GstGLDownload     *download;
   GstGLUpload       *upload;
@@ -145,11 +143,9 @@ struct _GstGLMemory
 
 void gst_gl_memory_init (void);
 
-GstMemory * gst_gl_memory_alloc (GstGLContext * context, GstVideoFormat format,
-                                 gsize width, gsize height);
+GstMemory * gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo info);
 
-GstGLMemory * gst_gl_memory_wrapped (GstGLContext * context, GstVideoFormat format,
-                                     guint width, guint height, gpointer data,
+GstGLMemory * gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo info, gpointer data,
                                      gpointer user_data, GDestroyNotify notify);
 
 gboolean gst_is_gl_memory (GstMemory * mem);
