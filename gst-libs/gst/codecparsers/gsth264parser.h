@@ -156,6 +156,7 @@ typedef enum
  * GstH264SEIPayloadType:
  * @GST_H264_SEI_BUF_PERIOD: Buffering Period SEI Message
  * @GST_H264_SEI_PIC_TIMING: Picture Timing SEI Message
+ * @GST_H264_SEI_RECOVERY_POINT: Recovery Point SEI Message (D.2.7)
  * ...
  *
  * The type of SEI message.
@@ -163,7 +164,8 @@ typedef enum
 typedef enum
 {
   GST_H264_SEI_BUF_PERIOD = 0,
-  GST_H264_SEI_PIC_TIMING = 1
+  GST_H264_SEI_PIC_TIMING = 1,
+  GST_H264_SEI_RECOVERY_POINT = 6,
       /* and more...  */
 } GstH264SEIPayloadType;
 
@@ -234,6 +236,7 @@ typedef struct _GstH264SliceHdr               GstH264SliceHdr;
 typedef struct _GstH264ClockTimestamp         GstH264ClockTimestamp;
 typedef struct _GstH264PicTiming              GstH264PicTiming;
 typedef struct _GstH264BufferingPeriod        GstH264BufferingPeriod;
+typedef struct _GstH264RecoveryPoint          GstH264RecoveryPoint;
 typedef struct _GstH264SEIMessage             GstH264SEIMessage;
 
 /**
@@ -706,6 +709,14 @@ struct _GstH264BufferingPeriod
   guint8 vcl_initial_cpb_removal_delay_offset[32];
 };
 
+struct _GstH264RecoveryPoint
+{
+  guint32 recovery_frame_cnt;
+  guint8 exact_match_flag;
+  guint8 broken_link_flag;
+  guint8 changing_slice_group_idc;
+};
+
 struct _GstH264SEIMessage
 {
   GstH264SEIPayloadType payloadType;
@@ -713,6 +724,7 @@ struct _GstH264SEIMessage
   union {
     GstH264BufferingPeriod buffering_period;
     GstH264PicTiming pic_timing;
+    GstH264RecoveryPoint recovery_point;
     /* ... could implement more */
   } payload;
 };

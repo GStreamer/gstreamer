@@ -853,6 +853,31 @@ error:
 }
 
 static GstH264ParserResult
+gst_h264_parser_parse_recovery_point (GstH264NalParser * nalparser,
+    GstH264RecoveryPoint * rp, NalReader * nr)
+{
+  GstH264SPS *const sps = nalparser->last_sps;
+
+  GST_DEBUG ("parsing \"Recovery point\"");
+  if (!sps || !sps->valid) {
+    GST_WARNING ("didn't get the associated sequence paramater set for the "
+        "current access unit");
+    goto error;
+  }
+
+  READ_UE_ALLOWED (nr, rp->recovery_frame_cnt, 0, sps->max_frame_num - 1);
+  READ_UINT8 (nr, rp->exact_match_flag, 1);
+  READ_UINT8 (nr, rp->broken_link_flag, 1);
+  READ_UINT8 (nr, rp->changing_slice_group_idc, 2);
+
+  return GST_H264_PARSER_OK;
+
+error:
+  GST_WARNING ("error parsing \"Recovery point\"");
+  return GST_H264_PARSER_ERROR;
+}
+
+static GstH264ParserResult
 gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
     NalReader * nr, GstH264SEIMessage * sei)
 {
@@ -892,6 +917,10 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
       /* size not set; might depend on emulation_prevention_three_byte */
       res = gst_h264_parser_parse_pic_timing (nalparser,
           &sei->payload.pic_timing, nr);
+      break;
+    case GST_H264_SEI_RECOVERY_POINT:
+      res = gst_h264_parser_parse_recovery_point (nalparser,
+          &sei->payload.recovery_point, nr);
       break;
     default:
       /* Just consume payloadSize bytes, which does not account for
