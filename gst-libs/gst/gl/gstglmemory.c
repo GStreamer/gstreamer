@@ -62,44 +62,41 @@ typedef struct
 
 static void
 _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
-    GstGLContext * context, GstVideoFormat v_format, gsize width, gsize height,
-    gpointer user_data, GDestroyNotify notify)
+    GstGLContext * context, GstVideoInfo v_info, gpointer user_data,
+    GDestroyNotify notify)
 {
   gsize maxsize;
-  GstVideoInfo info;
 
-  gst_video_info_set_format (&info, v_format, width, height);
-
-  maxsize = info.size;
+  maxsize = v_info.size;
 
   gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
       allocator, parent, maxsize, 0, 0, maxsize);
 
   mem->context = gst_object_ref (context);
   mem->gl_format = GL_RGBA;
-  mem->v_format = v_format;
-  mem->width = width;
-  mem->height = height;
+  mem->v_info = v_info;
   mem->notify = notify;
   mem->user_data = user_data;
   mem->wrapped = FALSE;
   mem->upload = gst_gl_upload_new (context);
   mem->download = gst_gl_download_new (context);
 
-  GST_CAT_DEBUG (GST_CAT_GL_MEMORY,
-      "new GL texture memory:%p format:%u dimensions:%" G_GSIZE_FORMAT
-      "x%" G_GSIZE_FORMAT, mem, v_format, width, height);
+  GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "new GL texture memory:%p format:%u "
+      "dimensions:%ux%u", mem, GST_VIDEO_INFO_FORMAT (&v_info),
+      GST_VIDEO_INFO_WIDTH (&v_info), GST_VIDEO_INFO_HEIGHT (&v_info));
 }
 
 static GstGLMemory *
 _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
-    GstGLContext * context, GstVideoFormat v_format, gsize width, gsize height,
-    gpointer user_data, GDestroyNotify notify)
+    GstGLContext * context, GstVideoInfo v_info, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstGLMemory *mem;
   GLuint tex_id;
 
-  gst_gl_context_gen_texture (context, &tex_id, v_format, width, height);
+  gst_gl_context_gen_texture (context, &tex_id,
+      GST_VIDEO_INFO_FORMAT (&v_info), GST_VIDEO_INFO_WIDTH (&v_info),
+      GST_VIDEO_INFO_HEIGHT (&v_info));
   if (!tex_id) {
     GST_CAT_WARNING (GST_CAT_GL_MEMORY,
         "Could not create GL texture with context:%p", context);
@@ -108,8 +105,7 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
   GST_CAT_TRACE (GST_CAT_GL_MEMORY, "created texture %u", tex_id);
 
   mem = g_slice_alloc (sizeof (GstGLMemory));
-  _gl_mem_init (mem, allocator, parent, context, v_format, width, height,
-      user_data, notify);
+  _gl_mem_init (mem, allocator, parent, context, v_info, user_data, notify);
 
   mem->tex_id = tex_id;
 
@@ -130,14 +126,8 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
       if (GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
         if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem,
                 GST_GL_MEMORY_FLAG_UPLOAD_INITTED)) {
-          GstVideoInfo in_info, out_info;
-
-          gst_video_info_set_format (&in_info, gl_mem->v_format, gl_mem->width,
-              gl_mem->height);
-          gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA,
-              gl_mem->width, gl_mem->height);
-
-          if (!gst_gl_upload_init_format (gl_mem->upload, in_info, out_info)) {
+          if (!gst_gl_upload_init_format (gl_mem->upload, gl_mem->v_info,
+                  gl_mem->v_info)) {
             goto error;
           }
           GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED);
@@ -161,8 +151,10 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
       if (GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD)) {
         if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem,
                 GST_GL_MEMORY_FLAG_DOWNLOAD_INITTED)) {
-          if (!gst_gl_download_init_format (gl_mem->download, gl_mem->v_format,
-                  gl_mem->width, gl_mem->height)) {
+          if (!gst_gl_download_init_format (gl_mem->download,
+                  GST_VIDEO_INFO_FORMAT (&gl_mem->v_info),
+                  GST_VIDEO_INFO_WIDTH (&gl_mem->v_info),
+                  GST_VIDEO_INFO_HEIGHT (&gl_mem->v_info))) {
             goto error;
           }
           GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_DOWNLOAD_INITTED);
@@ -219,9 +211,9 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   copy_params = (GstGLMemoryCopyParams *) data;
   src = copy_params->src;
   tex_id = copy_params->tex_id;
-  width = src->width;
-  height = src->height;
-  v_format = src->v_format;
+  width = GST_VIDEO_INFO_WIDTH (&src->v_info);
+  height = GST_VIDEO_INFO_HEIGHT (&src->v_info);
+  v_format = GST_VIDEO_INFO_FORMAT (&src->v_info);
   gl_format = src->gl_format;
 
   gl = src->context->gl_vtable;
@@ -318,8 +310,8 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
   GstGLMemoryCopyParams copy_params;
 
   if (GST_GL_MEMORY_FLAG_IS_SET (src, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
-    dest = _gl_mem_new (src->mem.allocator, NULL, src->context, src->v_format,
-        src->width, src->height, NULL, NULL);
+    dest = _gl_mem_new (src->mem.allocator, NULL, src->context, src->v_info,
+        NULL, NULL);
     dest->data = g_malloc (src->mem.maxsize);
     memcpy (dest->data, src->data, src->mem.maxsize);
     GST_GL_MEMORY_FLAG_SET (dest, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
@@ -330,8 +322,8 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     gst_gl_context_thread_add (src->context, _gl_mem_copy_thread, &copy_params);
 
     dest = g_slice_alloc (sizeof (GstGLMemory));
-    _gl_mem_init (dest, src->mem.allocator, NULL, src->context, src->v_format,
-        src->width, src->height, NULL, NULL);
+    _gl_mem_init (dest, src->mem.allocator, NULL, src->context, src->v_info,
+        NULL, NULL);
 
     if (!copy_params.result) {
       GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
@@ -424,21 +416,17 @@ gst_gl_memory_copy_into_texture (GstGLMemory * gl_mem, guint tex_id)
 /**
  * gst_gl_memory_alloc:
  * @context:a #GstGLContext
- * @format: the format for the texture
- * @width: width of the texture
- * @height: height of the texture
+ * @v_info: the #GstVideoInfo of the memory
  *
- * Returns: a #GstMemory object with a GL texture specified by @format, @width and @height
+ * Returns: a #GstMemory object with a GL texture specified by @v_info
  *          from @context
  */
 GstMemory *
-gst_gl_memory_alloc (GstGLContext * context, GstVideoFormat format,
-    gsize width, gsize height)
+gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo v_info)
 {
   GstGLMemory *mem;
 
-  mem = _gl_mem_new (_gl_allocator, NULL, context, format, width, height,
-      NULL, NULL);
+  mem = _gl_mem_new (_gl_allocator, NULL, context, v_info, NULL, NULL);
 
   mem->data = g_malloc (mem->mem.maxsize);
   if (mem->data == NULL) {
@@ -452,25 +440,21 @@ gst_gl_memory_alloc (GstGLContext * context, GstVideoFormat format,
 /**
  * gst_gl_memory_wrapped
  * @context:a #GstGLContext
- * @format: the format for the texture
- * @width: width of the texture
- * @height: height of the texture
+ * @v_info: the #GstVideoInfo of the memory and data
  * @data: the data to wrap
  * @user_data: data called with for @notify
  * @notify: function called with @user_data when @data needs to be freed
  * 
- * Returns: a #GstGLMemory object with a GL texture specified by @format, @width and @height
+ * Returns: a #GstGLMemory object with a GL texture specified by @v_info
  *          from @context and contents specified by @data
  */
 GstGLMemory *
-gst_gl_memory_wrapped (GstGLContext * context, GstVideoFormat format,
-    guint width, guint height, gpointer data,
-    gpointer user_data, GDestroyNotify notify)
+gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo v_info,
+    gpointer data, gpointer user_data, GDestroyNotify notify)
 {
   GstGLMemory *mem;
 
-  mem = _gl_mem_new (_gl_allocator, NULL, context, format, width, height,
-      user_data, notify);
+  mem = _gl_mem_new (_gl_allocator, NULL, context, v_info, user_data, notify);
 
   mem->data = data;
   mem->wrapped = TRUE;
