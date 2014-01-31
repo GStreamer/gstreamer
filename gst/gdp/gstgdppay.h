@@ -52,6 +52,7 @@ struct _GstGDPPay
 
   GstCaps *caps; /* incoming caps */
 
+  GstBuffer *streamstartid_buf;
   GstBuffer *caps_buf;
   GstBuffer *new_segment_buf;
   GstBuffer *tag_buf;

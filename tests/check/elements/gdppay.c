@@ -166,7 +166,7 @@ GST_START_TEST (test_audio)
   check_caps_buffer (2, caps);
 
   /* third buffer is the serialized new_segment event */
-  check_segment_buffer (1);
+  check_segment_buffer (2);
 
   /* the fourth buffer is the GDP buffer for our pushed buffer */
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
@@ -311,9 +311,10 @@ GST_START_TEST (test_streamheader)
   sh = gst_structure_get_value (structure, "streamheader");
   fail_unless (G_VALUE_TYPE (sh) == GST_TYPE_ARRAY);
   shbuffers = g_value_peek_pointer (sh);
-  /* a serialized new_segment, a serialized caps, and serialization of our
+  /* a serialized stream-start-id, a serialized new_segment,
+   * a serialized caps, and serialization of our
    * incoming streamheader */
-  fail_unless_equals_int (shbuffers->len, 3);
+  fail_unless_equals_int (shbuffers->len, 4);
 
   gst_caps_unref (sinkcaps);
 
@@ -326,7 +327,7 @@ GST_START_TEST (test_streamheader)
 
   /* third buffer is the serialized new_segment event;
    * the element also holds a ref to it */
-  check_segment_buffer (1);
+  check_segment_buffer (2);
 
   /* the fourth buffer is the GDP buffer for our pushed buffer */
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
@@ -508,7 +509,7 @@ GST_START_TEST (test_crc)
   /* third buffer is the serialized new_segment event */
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   buffers = g_list_remove (buffers, outbuffer);
-  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
+  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 2);
 
   /* verify the header checksum */
   /* CRC's start at 58 in the header */

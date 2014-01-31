@@ -200,6 +200,10 @@ gst_gdp_pay_reset (GstGDPPay * this)
     gst_buffer_unref (this->new_segment_buf);
     this->new_segment_buf = NULL;
   }
+  if (this->streamstartid_buf) {
+    gst_buffer_unref (this->streamstartid_buf);
+    this->streamstartid_buf = NULL;
+  }
   this->sent_streamheader = FALSE;
   this->offset = 0;
 }
@@ -312,7 +316,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
 {
   GstCaps *caps;
   /* We use copies of these to avoid circular refcounts */
-  GstBuffer *new_segment_buf, *caps_buf, *tag_buf;
+  GstBuffer *new_segment_buf, *caps_buf, *tag_buf, *streamstartid_buf;
   GstStructure *structure;
   GstFlowReturn r = GST_FLOW_OK;
   gboolean version_one_zero = TRUE;
@@ -326,8 +330,9 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     version_one_zero = FALSE;
 
   if (version_one_zero) {
-    if (!this->new_segment_buf || !this->caps_buf) {
-      GST_DEBUG_OBJECT (this, "1.0, missing new_segment or caps, returning");
+    if (!this->new_segment_buf || !this->caps_buf || !this->streamstartid_buf) {
+      GST_DEBUG_OBJECT (this, "1.0, missing new_segment or caps or stream "
+          "start id, returning");
       return GST_FLOW_OK;
     }
   } else {
@@ -341,6 +346,27 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
    * Stamp the buffers with offset and offset_end as well.
    * We do this here so the offsets match the order the buffers go out in */
   g_value_init (&array, GST_TYPE_ARRAY);
+
+  if (version_one_zero) {
+    gst_gdp_stamp_buffer (this, this->streamstartid_buf);
+    GST_DEBUG_OBJECT (this, "appending copy of stream start id buffer %p",
+        this->streamstartid_buf);
+    streamstartid_buf = gst_buffer_copy (this->streamstartid_buf);
+    g_value_init (&value, GST_TYPE_BUFFER);
+    gst_value_set_buffer (&value, streamstartid_buf);
+    gst_value_array_append_value (&array, &value);
+    g_value_unset (&value);
+    gst_buffer_unref (streamstartid_buf);
+  }
+
+  gst_gdp_stamp_buffer (this, this->caps_buf);
+  GST_DEBUG_OBJECT (this, "appending copy of caps buffer %p", this->caps_buf);
+  caps_buf = gst_buffer_copy (this->caps_buf);
+  g_value_init (&value, GST_TYPE_BUFFER);
+  gst_value_set_buffer (&value, caps_buf);
+  gst_value_array_append_value (&array, &value);
+  g_value_unset (&value);
+  gst_buffer_unref (caps_buf);
 
   if (version_one_zero) {
     gst_gdp_stamp_buffer (this, this->new_segment_buf);
@@ -367,15 +393,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
       gst_buffer_unref (tag_buf);
     }
   }
-
-  gst_gdp_stamp_buffer (this, this->caps_buf);
-  GST_DEBUG_OBJECT (this, "appending copy of caps buffer %p", this->caps_buf);
-  caps_buf = gst_buffer_copy (this->caps_buf);
-  g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, caps_buf);
-  gst_value_array_append_value (&array, &value);
-  g_value_unset (&value);
-  gst_buffer_unref (caps_buf);
 
   /* we also need to add GDP serializations of the streamheaders of the
    * incoming caps */
@@ -462,6 +479,20 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
   }
 
   /* push out these streamheader buffers, then flush our internal queue */
+  GST_DEBUG_OBJECT (this, "Pushing GDP stream-start-id buffer %p",
+      this->streamstartid_buf);
+  r = gst_pad_push (this->srcpad, gst_buffer_ref (this->streamstartid_buf));
+  if (r != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (this, "pushing GDP stream-start-id buffer returned %d",
+        r);
+    goto done;
+  }
+  GST_DEBUG_OBJECT (this, "Pushing GDP caps buffer %p", this->caps_buf);
+  r = gst_pad_push (this->srcpad, gst_buffer_ref (this->caps_buf));
+  if (r != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (this, "pushing GDP caps buffer returned %d", r);
+    goto done;
+  }
   GST_DEBUG_OBJECT (this, "Pushing GDP new_segment buffer %p with offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT, this->new_segment_buf,
       GST_BUFFER_OFFSET (this->new_segment_buf),
@@ -480,12 +511,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
       GST_WARNING_OBJECT (this, "pushing GDP tag buffer returned %d", r);
       goto done;
     }
-  }
-  GST_DEBUG_OBJECT (this, "Pushing GDP caps buffer %p", this->caps_buf);
-  r = gst_pad_push (this->srcpad, gst_buffer_ref (this->caps_buf));
-  if (r != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (this, "pushing GDP caps buffer returned %d", r);
-    goto done;
   }
   this->sent_streamheader = TRUE;
   GST_DEBUG_OBJECT (this, "need to push %d queued buffers",
@@ -663,6 +688,17 @@ gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   /* if we got a new segment or tag event, we should put it on our streamheader,
    * and not send it on */
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+      GST_DEBUG_OBJECT (this, "Storing stream start id in buffer %p",
+          outbuffer);
+
+      if (this->streamstartid_buf)
+        gst_buffer_unref (this->streamstartid_buf);
+      this->streamstartid_buf = outbuffer;
+
+      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_HEADER);
+      gst_gdp_pay_reset_streamheader (this);
+      break;
     case GST_EVENT_SEGMENT:
       GST_DEBUG_OBJECT (this, "Storing in caps buffer %p as new_segment_buf",
           outbuffer);
