@@ -17,10 +17,10 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:gstaudio
- * @short_description: Support library for audio elements
+ * SECTION:gstaudiochannels
+ * @short_description: Support library for audio channel handling
  *
- * This library contains some helper functions for audio elements.
+ * This library contains some helper functions for multichannel audio.
  */
 
 #ifdef HAVE_CONFIG_H

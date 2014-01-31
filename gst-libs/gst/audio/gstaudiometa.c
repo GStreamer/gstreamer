@@ -17,6 +17,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstaudiometa
+ * @short_description: Buffer metadata for audio downmix matrix handling
+ *
+ * #GstAudioDownmixMeta defines an audio downmix matrix to be send along with
+ * audio buffers. These functions in this module help to create and attach the
+ * meta as well as extracting it.
+ */
+
 #include <string.h>
 
 #include "gstaudiometa.h"
@@ -103,7 +112,7 @@ gst_buffer_get_audio_downmix_meta_for_channels (GstBuffer * buffer,
  * @to_channels: The number of channels of the destination
  * @matrix: The matrix coefficients.
  *
- * Attaches GstAudioDownmixMeta metadata to @buffer with the given parameters.
+ * Attaches #GstAudioDownmixMeta metadata to @buffer with the given parameters.
  *
  * @matrix is an two-dimensional array of @to_channels times @from_channels
  * coefficients, i.e. the i-th output channels is constructed by multiplicating

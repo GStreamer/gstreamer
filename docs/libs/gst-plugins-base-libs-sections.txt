@@ -373,13 +373,6 @@ GST_AUDIO_FILTER_RATE
 </SECTION>
 
 <SECTION>
-<FILE>gstaudiomixerutils</FILE>
-<INCLUDE>gst/audio/mixerutils.h</INCLUDE>
-GstAudioMixerFilterFunc
-gst_audio_default_registry_mixer_filter
-</SECTION>
-
-<SECTION>
 <FILE>gstaudiosink</FILE>
 <INCLUDE>gst/audio/gstaudiosink.h</INCLUDE>
 GstAudioSink
