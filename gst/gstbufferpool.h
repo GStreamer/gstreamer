@@ -98,7 +98,6 @@ struct _GstBufferPoolAcquireParams {
 
 /**
  * GstBufferPool:
- * @object: the parent structure
  *
  * The structure of a #GstBufferPool. Use the associated macros to access the public
  * variables.
@@ -148,7 +147,7 @@ struct _GstBufferPool {
 struct _GstBufferPoolClass {
   GstObjectClass    object_class;
 
-  /* vmethods */
+  /*< public >*/
   const gchar ** (*get_options)    (GstBufferPool *pool);
   gboolean       (*set_config)     (GstBufferPool *pool, GstStructure *config);
 

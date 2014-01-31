@@ -49,6 +49,7 @@ GST_START_TEST (test_new_buffer_from_empty_pool)
 
 GST_END_TEST;
 
+
 GST_START_TEST (test_buffer_is_recycled)
 {
   GstBufferPool *pool = create_pool (10, 0, 0);
@@ -58,6 +59,7 @@ GST_START_TEST (test_buffer_is_recycled)
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
   prev = buf;
   gst_buffer_unref (buf);
+
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
   fail_unless (buf == prev, "got a fresh buffer instead of previous");
 
@@ -67,6 +69,62 @@ GST_START_TEST (test_buffer_is_recycled)
 }
 
 GST_END_TEST;
+
+
+GST_START_TEST (test_buffer_out_of_order_reuse)
+{
+  GstBufferPool *pool = create_pool (10, 0, 0);
+  GstBuffer *buf1 = NULL, *buf2 = NULL, *prev;
+
+  gst_buffer_pool_set_active (pool, TRUE);
+  gst_buffer_pool_acquire_buffer (pool, &buf1, NULL);
+  gst_buffer_pool_acquire_buffer (pool, &buf2, NULL);
+  prev = buf2;
+  gst_buffer_unref (buf2);
+
+  gst_buffer_pool_acquire_buffer (pool, &buf2, NULL);
+  fail_unless (buf2 == prev, "got a fresh buffer instead of previous");
+
+  gst_buffer_unref (buf1);
+  gst_buffer_unref (buf2);
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_pool_config_buffer_size)
+{
+  GstBufferPool *pool = create_pool (10, 0, 0);
+  GstBuffer *buf = NULL;
+
+  gst_buffer_pool_set_active (pool, TRUE);
+  gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  ck_assert_int_eq (gst_buffer_get_size (buf), 10);
+
+  gst_buffer_unref (buf);
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_inactive_pool_returns_flushing)
+{
+  GstBufferPool *pool = create_pool (10, 0, 0);
+  GstFlowReturn ret;
+  GstBuffer *buf = NULL;
+
+  ret = gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  ck_assert_int_eq (ret, GST_FLOW_FLUSHING);
+
+  gst_object_unref (pool);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_buffer_pool_suite (void)
@@ -79,6 +137,9 @@ gst_buffer_pool_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_new_buffer_from_empty_pool);
   tcase_add_test (tc_chain, test_buffer_is_recycled);
+  tcase_add_test (tc_chain, test_buffer_out_of_order_reuse);
+  tcase_add_test (tc_chain, test_pool_config_buffer_size);
+  tcase_add_test (tc_chain, test_inactive_pool_returns_flushing);
 
   return s;
 }
