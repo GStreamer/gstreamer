@@ -113,6 +113,8 @@ GST_START_TEST (test_audio_per_byte)
   guint8 *header, *payload;
   guint len;
   GstDPPacketizer *pk;
+  GstEvent *event;
+  GstSegment segment;
 
   pk = gst_dp_packetizer_new (GST_DP_VERSION_1_0);
 
@@ -132,6 +134,19 @@ GST_START_TEST (test_audio_per_byte)
   gst_check_setup_events (mysrcpad, gdpdepay, caps, GST_FORMAT_BYTES);
   gst_caps_unref (caps);
 
+  /* send stream-start event */
+  event = gst_event_new_stream_start ("s-s-id-1234");
+  fail_unless (pk->packet_from_event (event, 0, &len, &header, &payload));
+  gst_event_unref (event);
+  gdpdepay_push_per_byte ("caps header", header, len);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  gdpdepay_push_per_byte ("caps payload", payload,
+      gst_dp_header_payload_length (header));
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  g_free (header);
+  g_free (payload);
+
   /* create caps and buffer packets and push them */
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   fail_unless (pk->packet_from_caps (caps, 0, &len, &header, &payload));
@@ -144,6 +159,20 @@ GST_START_TEST (test_audio_per_byte)
   caps = gst_pad_query_caps (srcpad, NULL);
   fail_if (gst_caps_is_any (caps));
   gst_caps_unref (caps);
+
+  g_free (header);
+  g_free (payload);
+
+  /* send segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  event = gst_event_new_segment (&segment);
+  fail_unless (pk->packet_from_event (event, 0, &len, &header, &payload));
+  gst_event_unref (event);
+  gdpdepay_push_per_byte ("caps header", header, len);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  gdpdepay_push_per_byte ("caps payload", payload,
+      gst_dp_header_payload_length (header));
+  fail_unless_equals_int (g_list_length (buffers), 0);
 
   g_free (header);
   g_free (payload);
@@ -190,9 +219,13 @@ GST_START_TEST (test_audio_in_one_buffer)
   GstElement *gdpdepay;
   GstBuffer *buffer, *inbuffer;
   guint8 *caps_header, *caps_payload, *buf_header;
-  guint header_len, payload_len;
+  guint8 *streamstart_header, *streamstart_payload;
+  guint8 *segment_header, *segment_payload;
+  guint header_len, payload_len, streamstart_len, segment_len;
   guint i;
   GstDPPacketizer *pk;
+  GstEvent *event;
+  GstSegment segment;
 
   pk = gst_dp_packetizer_new (GST_DP_VERSION_1_0);
 
@@ -213,23 +246,55 @@ GST_START_TEST (test_audio_in_one_buffer)
   gst_check_setup_events (mysrcpad, gdpdepay, caps, GST_FORMAT_BYTES);
   gst_caps_unref (caps);
 
+  /* create stream-start event */
+  event = gst_event_new_stream_start ("s-s-id-1234");
+  fail_unless (pk->packet_from_event (event, 0, &streamstart_len,
+          &streamstart_header, &streamstart_payload));
+  gst_event_unref (event);
+
   /* create caps and buffer packets and push them as one buffer */
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   fail_unless (pk->packet_from_caps (caps, 0, &header_len, &caps_header,
           &caps_payload));
 
+  /* create segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  event = gst_event_new_segment (&segment);
+  fail_unless (pk->packet_from_event (event, 0, &segment_len, &segment_header,
+          &segment_payload));
+  gst_event_unref (event);
+
   buffer = gst_buffer_new_and_alloc (4);
   gst_buffer_fill (buffer, 0, "f00d", 4);
   fail_unless (pk->header_from_buffer (buffer, 0, &header_len, &buf_header));
 
-  payload_len = gst_dp_header_payload_length (caps_header);
+  payload_len =
+      gst_dp_header_payload_length (caps_header) +
+      gst_dp_header_payload_length (streamstart_header) +
+      gst_dp_header_payload_length (segment_header);
 
-  inbuffer = gst_buffer_new_and_alloc (2 * GST_DP_HEADER_LENGTH +
+  inbuffer = gst_buffer_new_and_alloc (4 * GST_DP_HEADER_LENGTH +
       payload_len + gst_buffer_get_size (buffer));
-  gst_buffer_fill (inbuffer, 0, caps_header, GST_DP_HEADER_LENGTH);
-  i = GST_DP_HEADER_LENGTH;
-  gst_buffer_fill (inbuffer, i, caps_payload, payload_len);
-  i += payload_len;
+  i = 0;
+
+  gst_buffer_fill (inbuffer, i, streamstart_header, GST_DP_HEADER_LENGTH);
+  i += GST_DP_HEADER_LENGTH;
+  gst_buffer_fill (inbuffer, i, streamstart_payload,
+      gst_dp_header_payload_length (streamstart_header));
+  i += gst_dp_header_payload_length (streamstart_header);
+
+  gst_buffer_fill (inbuffer, i, caps_header, GST_DP_HEADER_LENGTH);
+  i += GST_DP_HEADER_LENGTH;
+  gst_buffer_fill (inbuffer, i, caps_payload,
+      gst_dp_header_payload_length (caps_header));
+  i += gst_dp_header_payload_length (caps_header);
+
+  gst_buffer_fill (inbuffer, i, segment_header, GST_DP_HEADER_LENGTH);
+  i += GST_DP_HEADER_LENGTH;
+  gst_buffer_fill (inbuffer, i, segment_payload,
+      gst_dp_header_payload_length (segment_header));
+  i += gst_dp_header_payload_length (segment_header);
+
   gst_buffer_fill (inbuffer, i, buf_header, GST_DP_HEADER_LENGTH);
   i += GST_DP_HEADER_LENGTH;
   gst_buffer_fill (inbuffer, i, "f00d", 4);
@@ -237,8 +302,12 @@ GST_START_TEST (test_audio_in_one_buffer)
   gst_caps_unref (caps);
   gst_buffer_unref (buffer);
 
+  g_free (streamstart_header);
+  g_free (streamstart_payload);
   g_free (caps_header);
   g_free (caps_payload);
+  g_free (segment_header);
+  g_free (segment_payload);
   g_free (buf_header);
 
   /* now push it */
@@ -292,6 +361,11 @@ GST_START_TEST (test_streamheader)
   GstElement *gdpdepay;
   GstBuffer *buffer, *inbuffer, *outbuffer, *shbuffer;
   guint8 *caps_header, *caps_payload, *buf_header;
+  guint8 *streamstart_header, *streamstart_payload;
+  guint8 *segment_header, *segment_payload;
+  guint streamstart_len, segment_len;
+  GstEvent *event;
+  GstSegment segment;
   GstMapInfo map;
   guint header_len, payload_len;
   guint i;
@@ -336,6 +410,21 @@ GST_START_TEST (test_streamheader)
   gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&array);
 
+
+  /* basic events */
+  /* create stream-start event */
+  event = gst_event_new_stream_start ("s-s-id-1234");
+  fail_unless (pk->packet_from_event (event, 0, &streamstart_len,
+          &streamstart_header, &streamstart_payload));
+  gst_event_unref (event);
+
+  /* create segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  event = gst_event_new_segment (&segment);
+  fail_unless (pk->packet_from_event (event, 0, &segment_len, &segment_header,
+          &segment_payload));
+  gst_event_unref (event);
+
   /* create GDP packets for the caps and the buffer, and put them in one
    * GDP buffer */
   fail_unless (pk->packet_from_caps (caps, 0, &header_len, &caps_header,
@@ -343,15 +432,34 @@ GST_START_TEST (test_streamheader)
 
   fail_unless (pk->header_from_buffer (buffer, 0, &header_len, &buf_header));
 
-  payload_len = gst_dp_header_payload_length (caps_header);
+  payload_len =
+      gst_dp_header_payload_length (caps_header) +
+      gst_dp_header_payload_length (streamstart_header) +
+      gst_dp_header_payload_length (segment_header);
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
-  inbuffer = gst_buffer_new_and_alloc (2 * GST_DP_HEADER_LENGTH +
+  inbuffer = gst_buffer_new_and_alloc (4 * GST_DP_HEADER_LENGTH +
       payload_len + map.size);
-  gst_buffer_fill (inbuffer, 0, caps_header, GST_DP_HEADER_LENGTH);
-  i = GST_DP_HEADER_LENGTH;
-  gst_buffer_fill (inbuffer, i, caps_payload, payload_len);
-  i += payload_len;
+  i = 0;
+
+  gst_buffer_fill (inbuffer, i, streamstart_header, GST_DP_HEADER_LENGTH);
+  i += GST_DP_HEADER_LENGTH;
+  gst_buffer_fill (inbuffer, i, streamstart_payload,
+      gst_dp_header_payload_length (streamstart_header));
+  i += gst_dp_header_payload_length (streamstart_header);
+
+  gst_buffer_fill (inbuffer, i, caps_header, GST_DP_HEADER_LENGTH);
+  i += GST_DP_HEADER_LENGTH;
+  gst_buffer_fill (inbuffer, i, caps_payload,
+      gst_dp_header_payload_length (caps_header));
+  i += gst_dp_header_payload_length (caps_header);
+
+  gst_buffer_fill (inbuffer, i, segment_header, GST_DP_HEADER_LENGTH);
+  i += GST_DP_HEADER_LENGTH;
+  gst_buffer_fill (inbuffer, i, segment_payload,
+      gst_dp_header_payload_length (segment_header));
+  i += gst_dp_header_payload_length (segment_header);
+
   gst_buffer_fill (inbuffer, i, buf_header, GST_DP_HEADER_LENGTH);
   i += GST_DP_HEADER_LENGTH;
   gst_buffer_fill (inbuffer, i, map.data, map.size);
@@ -360,9 +468,14 @@ GST_START_TEST (test_streamheader)
   gst_caps_unref (caps);
   gst_buffer_unref (buffer);
 
+  g_free (streamstart_header);
+  g_free (streamstart_payload);
   g_free (caps_header);
   g_free (caps_payload);
+  g_free (segment_header);
+  g_free (segment_payload);
   g_free (buf_header);
+
 
   /* now push it */
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
