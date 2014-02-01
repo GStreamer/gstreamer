@@ -689,7 +689,8 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
       flow_ret =
           gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
     } else {
-      gst_video_codec_frame_unref (frame);
+      /* no frame attached, so will be skipped and removed from frame list */
+      gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
     }
   }
 
