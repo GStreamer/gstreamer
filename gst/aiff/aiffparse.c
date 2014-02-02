@@ -850,6 +850,7 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
           aiff->offset += 8;
 
           buf = gst_adapter_take_buffer (aiff->adapter, size);
+          aiff->offset += size;
         } else {
           if ((res = gst_aiff_parse_read_chunk (aiff,
                       &aiff->offset, &tag, &buf)) != GST_FLOW_OK)
