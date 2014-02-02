@@ -544,31 +544,6 @@ return 0;
     ])
 
   if [ test x$HAVE_GST_V4L2 = xyes ]; then
-    dnl check for missing v4l2_buffer declaration (see #135919)
-    MISSING_DECL=0
-    AC_MSG_CHECKING(struct v4l2_buffer declaration)
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <sys/types.h>
-#ifdef __sun /* Solaris */
-#include <sys/types.h>
-#include <sys/videodev2.h>
-#elif __FreeBSD__
-#include <linux/videodev2.h>
-#else /* Linux */
-#include <linux/types.h>
-#define _LINUX_TIME_H
-#define __user
-#include <linux/videodev2.h>
-#endif
-    ]], [[
-struct v4l2_buffer buf;
-buf.index = 0;
-return 0;
-    ]])],[ AC_MSG_RESULT(yes) ],[ MISSING_DECL=1 && AC_MSG_RESULT(no) ])
-    if [ test x$MISSING_DECL = x1 ]; then
-      AC_DEFINE(GST_V4L2_MISSING_BUFDECL, 1, [struct v4l2_buffer missing])
-    fi
-
     dnl check for XOverlay libraries
     AG_GST_CHECK_XV
   fi
