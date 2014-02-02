@@ -56,6 +56,25 @@ else
 check_vorbis =
 endif
 
+if USE_PLUGIN_AUDIOTESTSRC
+check_audiotestsrc = elements/audiotestsrc
+else
+check_audiotestsrc =
+endif
+
+if USE_PLUGIN_AUDIOCONVERT
+check_audioconvert = elements/audioconvert
+else
+check_audioconvert =
+endif
+
+if USE_PLUGIN_PLAYBACK
+check_playback = elements/decodebin elements/playbin \
+    elements/playbin-complex elements/streamsynchronizer
+else
+check_playback =
+endif
+
 if USE_THEORA
 check_theora = pipelines/theoraenc
 else
@@ -72,16 +91,88 @@ else
 check_encodebin =
 endif
 
+if USE_PLUGIN_TYPEFIND
+check_typefind = gst/typefindfunctions
+else
+check_typefind =
+endif
+
 if USE_PLUGIN_SUBPARSE
 check_subparse = elements/subparse
 else
 check_subparse =
 endif
 
+if USE_PLUGIN_VIDEOCONVERT
+check_videoconvert = elements/videoconvert
+else
+check_videoconvert =
+endif
+
+if USE_PLUGIN_VIDEORATE
+check_videorate = elements/videorate
+else
+check_videorate =
+endif
+
+if USE_PLUGIN_VIDEOSCALE
+check_videoscale = elements/videoscale
+else
+check_videoscale =
+endif
+
+if USE_PLUGIN_VIDEOTESTSRC
+check_videotestsrc = elements/videotestsrc
+else
+check_videotestsrc =
+endif
+
+if USE_PLUGIN_VOLUME
+check_volume = elements/volume
+else
+check_volume =
+endif
+
+if USE_PLUGIN_ADDER
+check_adder = elements/adder
+else
+check_adder =
+endif
+
 if HAVE_ORC
 check_orc = orc/video orc/audio orc/adder orc/audioconvert orc/volume orc/videoscale orc/videotestsrc
 else
 check_orc =
+endif
+
+if USE_PLUGIN_GIO
+check_gio = pipelines/gio
+else
+check_gio =
+endif
+
+if USE_PLUGIN_APP
+check_app = elements/appsink elements/appsrc
+else
+check_app =
+endif
+
+if USE_PLUGIN_AUDIORATE
+check_audiorate = elements/audiorate
+else
+check_audiorate =
+endif
+
+if USE_PLUGIN_TCP
+check_tcp = elements/multifdsink elements/multisocketsink
+else
+check_tcp =
+endif
+
+if USE_PLUGIN_AUDIORESAMPLE
+check_audioresample = elements/audioresample
+else
+check_audioresample =
 endif
 
 if HAVE_CXX
@@ -91,16 +182,8 @@ cxx_checks =
 endif
 
 check_PROGRAMS = \
-	$(check_ogg) \
-	$(check_vorbis) \
-	elements/audioconvert \
-	elements/audiotestsrc \
-	elements/decodebin \
-	elements/streamsynchronizer \
-	$(check_encodebin) \
 	generic/clock-selection \
 	generic/states \
-	gst/typefindfunctions \
 	libs/libsabi \
 	libs/audio \
 	libs/audiocdsrc \
@@ -120,29 +203,32 @@ check_PROGRAMS = \
 	libs/videodecoder \
 	libs/videoencoder \
 	libs/xmpwriter \
-	$(cxx_checks) \
-	$(check_orc) \
 	pipelines/simple-launch-lines \
 	pipelines/basetime \
 	pipelines/capsfilter-renegotiation \
-	pipelines/gio \
-	elements/appsink            \
-	elements/appsrc             \
-	elements/audiorate          \
-	elements/audioresample      \
-	elements/multifdsink        \
-	elements/multisocketsink    \
-	elements/playbin            \
-	elements/playbin-complex    \
-	$(check_pango)              \
-	$(check_subparse)           \
-	elements/videoconvert       \
-	elements/videorate          \
-	elements/videoscale         \
-	elements/videotestsrc       \
-	elements/volume             \
-	elements/adder              \
-	$(check_theora)
+	$(check_adder) \
+	$(check_app) \
+	$(check_audioconvert) \
+	$(check_audiorate) \
+	$(check_audioresample) \
+	$(check_audiotestsrc) \
+	$(check_encodebin) \
+	$(check_gio) \
+	$(check_ogg) \
+	$(check_pango) \
+	$(check_playback) \
+	$(check_subparse) \
+	$(check_tcp) \
+	$(check_theora) \
+	$(check_typefind) \
+	$(check_videoconvert) \
+	$(check_videorate) \
+	$(check_videoscale) \
+	$(check_videotestsrc) \
+	$(check_volume) \
+	$(check_vorbis) \
+	$(cxx_checks) \
+	$(check_orc)
 
 # TORTURE_TO_FIX = \
 #       elements/adder
