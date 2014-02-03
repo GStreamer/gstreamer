@@ -36,16 +36,143 @@ CLEANFILES = core.* test-registry.*
 clean-local: clean-local-check
 distclean-local: distclean-local-orc
 
+if USE_PLUGIN_ALPHA
+check_alpha = elements/alphacolor
+else
+check_alpha =
+endif
+
+if USE_PLUGIN_AUDIOFX
+check_audiofx = \
+	elements/audioamplify \
+	elements/audiochebband \
+	elements/audiocheblimit \
+	elements/audiodynamic \
+	elements/audioecho \
+	elements/audiofirfilter \
+	elements/audioiirfilter \
+	elements/audioinvert \
+	elements/audiopanorama \
+	elements/audiowsincband \
+	elements/audiowsinclimit
+else
+check_audiofx =
+endif
+
+if USE_PLUGIN_AUDIOPARSERS
+check_audioparsers = \
+	elements/aacparse \
+	elements/ac3parse \
+	elements/amrparse \
+	elements/flacparse \
+	elements/mpegaudioparse \
+	elements/wavpackparse
+else
+check_audioparsers =
+endif
+
+if USE_PLUGIN_AUTODETECT
+check_autodetect = elements/autodetect
+else
+check_autodetect =
+endif
+
+if USE_PLUGIN_AVI
+check_avi = \
+  elements/avimux \
+  elements/avisubtitle
+else
+check_avi =
+endif
+
+if USE_PLUGIN_DEBUGUTILS
+check_debugutils = elements/capssetter
+else
+check_debugutils =
+endif
+
+if USE_PLUGIN_DEINTERLACE
+check_deinterlace = elements/deinterlace
+else
+check_deinterlace =
+endif
+
+if USE_PLUGIN_DTMF
+check_dtmf = elements/dtmf
+else
+check_dtmf =
+endif
+
+if USE_PLUGIN_EFFECTV
+check_effectv = pipelines/effectv
+else
+check_effectv =
+endif
+
+if USE_PLUGIN_EQUALIZER
+check_equalizer = elements/equalizer
+else
+check_equalizer =
+endif
+
 if USE_FLAC
 check_flac = pipelines/flacdec
 else
 check_flac =
 endif
 
+if USE_PLUGIN_FLV
+check_flv = \
+        elements/flvdemux \
+        elements/flvmux
+else
+check_flv =
+endif
+
+if USE_PLUGIN_ISOMP4
+check_isomp4 = elements/qtmux
+else
+check_isomp4 =
+endif
+
+if USE_PLUGIN_LAW
+check_law = \
+	elements/mulawdec \
+	elements/mulawenc
+else
+check_law =
+endif
+
 if USE_GDK_PIXBUF
 check_gdkpixbuf = elements/gdkpixbufsink
 else
 check_gdkpixbuf =
+endif
+
+if USE_PLUGIN_ICYDEMUX
+check_icydemux = elements/icydemux
+else
+check_icydemux =
+endif
+
+if USE_PLUGIN_ID3DEMUX
+check_id3demux = elements/id3demux
+else
+check_id3demux =
+endif
+
+if USE_PLUGIN_IMAGEFREEZE
+check_imagefreeze = elements/imagefreeze
+else
+check_imagefreeze =
+endif
+
+if USE_PLUGIN_INTERLEAVE
+check_interleave = \
+        elements/deinterleave \
+        elements/interleave
+else
+check_interleave =
 endif
 
 if USE_JPEG
@@ -56,16 +183,77 @@ else
 check_jpeg =
 endif
 
+if USE_PLUGIN_LEVEL
+check_level = elements/level
+else
+check_level =
+endif
+
+if USE_PLUGIN_MATROSKA
+check_matroska = \
+	elements/matroskamux \
+	elements/matroskaparse
+else
+check_matroska =
+endif
+
+if USE_PLUGIN_MULTIFILE
+check_multifile = elements/multifile
+else
+check_multifile =
+endif
+
+if USE_PLUGIN_REPLAYGAIN
+check_replaygain = \
+	elements/rganalysis \
+	elements/rglimiter \
+	elements/rgvolume
+else
+check_replaygain =
+endif
+
+if USE_PLUGIN_RTP
+check_rtp = elements/rtp-payloading
+else
+check_rtp =
+endif
+
+if USE_PLUGIN_RTPMANAGER
+check_rtpmanager = \
+	elements/rtpaux \
+	elements/rtpbin \
+	elements/rtpbin_buffer_list \
+	elements/rtpcollision \
+	elements/rtpjitterbuffer \
+	elements/rtpmux \
+	elements/rtprtx \
+	elements/rtpsession
+else
+check_rtpmanager =
+endif
+
 if USE_SOUP
 check_soup = elements/souphttpsrc
 else
 check_soup =
 endif
 
+if USE_PLUGIN_SPECTRUM
+check_spectrum = elements/spectrum
+else
+check_spectrum =
+endif
+
 if USE_SUNAUDIO
 check_sunaudio = elements/sunaudio
 else
 check_sunaudio =
+endif
+
+if USE_PLUGIN_SHAPEWIPE
+check_shapewipe = elements/shapewipe
+else
+check_shapewipe =
 endif
 
 if USE_TAGLIB
@@ -76,10 +264,44 @@ else
 check_taglib =
 endif
 
+if USE_PLUGIN_UDP
+check_udp = \
+        elements/udpsink \
+        elements/udpsrc
+else
+check_udp =
+endif
+
+if USE_PLUGIN_VIDEOCROP
+check_videocrop = \
+	elements/aspectratiocrop \
+	elements/videocrop
+else
+check_videocrop =
+endif
+
+if USE_PLUGIN_VIDEOFILTER
+check_videofilter = elements/videofilter
+else
+check_videofilter =
+endif
+
+if USE_PLUGIN_VIDEOMIXER
+check_videomixer = elements/videomixer
+else
+check_videomixer =
+endif
+
 if USE_VPX
 check_vpx=elements/vp8enc elements/vp8dec
 else
 check_vpx=
+endif
+
+if USE_PLUGIN_WAVENC
+check_wavenc = pipelines/wavenc
+else
+check_wavenc =
 endif
 
 if USE_WAVPACK
@@ -91,6 +313,18 @@ else
 check_wavpack =
 endif
 
+if USE_PLUGIN_WAVPARSE
+check_wavparse = elements/wavparse
+else
+check_wavparse =
+endif
+
+if USE_PLUGIN_Y4M
+check_y4m = elements/y4menc
+else
+check_y4m =
+endif
+
 if HAVE_ORC
 check_orc = orc/deinterlace orc/videomixer orc/videobox
 else
@@ -100,79 +334,48 @@ endif
 
 check_PROGRAMS = \
 	generic/states \
-	elements/aacparse \
-	elements/ac3parse \
-	elements/amrparse \
-	elements/alphacolor \
-	elements/aspectratiocrop \
-	elements/audioamplify \
-	elements/audiochebband \
-	elements/audiocheblimit \
-	elements/audiodynamic \
-	elements/audioecho \
-	elements/audiofirfilter \
-	elements/audioiirfilter \
-	elements/audioinvert \
-	elements/audiopanorama \
-	elements/audiowsincband \
-	elements/audiowsinclimit \
-	elements/autodetect \
-	elements/avimux \
-	elements/avisubtitle \
-	elements/capssetter \
-	elements/deinterlace \
-	elements/deinterleave \
-	elements/dtmf \
-	elements/equalizer \
-	elements/flacparse \
-	elements/flvdemux \
-	elements/flvmux \
-	elements/icydemux \
-	elements/id3demux \
-	elements/imagefreeze \
-	elements/interleave \
-	elements/level \
-	elements/matroskamux \
-	elements/matroskaparse \
-	elements/mpegaudioparse \
-	elements/mulawdec \
-	elements/mulawenc \
-	elements/multifile \
-	elements/qtmux \
-	elements/rganalysis \
-	elements/rglimiter \
-	elements/rgvolume \
-	elements/rtpaux \
-	elements/rtpcollision \
-	elements/rtp-payloading \
-	elements/rtpbin \
-	elements/rtpsession \
-	elements/rtpbin_buffer_list \
-	elements/rtpjitterbuffer \
-	elements/rtpmux \
-	elements/rtprtx \
-	elements/shapewipe \
-	elements/spectrum \
-	elements/udpsink \
-	elements/udpsrc \
-	elements/videocrop \
-	elements/videofilter \
-	elements/wavpackparse \
-	elements/wavparse \
-	elements/y4menc \
-	elements/videomixer \
 	pipelines/simple-launch-lines \
-	pipelines/effectv \
 	pipelines/tagschecking \
-	pipelines/wavenc \
+	$(check_alpha) \
+	$(check_audiofx) \
+	$(check_audioparsers) \
+	$(check_autodetect) \
+	$(check_avi) \
+	$(check_debugutils) \
+	$(check_deinterlace) \
+	$(check_dtmf) \
+	$(check_effectv) \
+	$(check_equalizer) \
 	$(check_flac) \
+	$(check_flv) \
 	$(check_gdkpixbuf) \
+	$(check_isomp4) \
+	$(check_icydemux) \
+	$(check_id3demux) \
+	$(check_imagefreeze) \
+	$(check_interleave) \
 	$(check_jpeg) \
+	$(check_law) \
+	$(check_level) \
+	$(check_matroska) \
+	$(check_multifile) \
+	$(check_replaygain) \
+	$(check_rtp) \
+	$(check_rtpmanager) \
+	$(check_shapewipe) \
 	$(check_soup) \
+	$(check_spectrum) \
 	$(check_sunaudio) \
 	$(check_taglib) \
+	$(check_udp) \
+	$(check_videocrop) \
+	$(check_videofilter) \
+	$(check_videomixer) \
 	$(check_vpx) \
+	$(check_wavenc) \
 	$(check_wavpack) \
+	$(check_wavparse) \
+	$(check_y4m) \
 	$(check_orc)
 
 VALGRIND_TO_FIX = \
