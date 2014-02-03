@@ -337,7 +337,8 @@ not_prepared:
 stream_rtpinfo_missing:
   {
     g_mutex_unlock (&priv->lock);
-    g_string_free (rtpinfo, TRUE);
+    if (rtpinfo)
+      g_string_free (rtpinfo, TRUE);
     GST_ERROR_OBJECT (media, "could not get stream %d rtpinfo", i);
     return NULL;
   }
