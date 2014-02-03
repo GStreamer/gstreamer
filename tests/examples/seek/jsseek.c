@@ -2996,8 +2996,10 @@ main (int argc, char **argv)
    * asks for the XID of the window to render onto */
   gtk_widget_realize (window);
 
+#ifdef HAVE_X
   /* we should have the XID now */
   g_assert (embed_xid != 0);
+#endif
 
   if (verbose) {
     g_signal_connect (pipeline, "deep_notify",
