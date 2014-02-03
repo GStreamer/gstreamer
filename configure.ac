@@ -860,7 +860,12 @@ HAVE_APPLE_MEDIA="no"
 dnl SystemConfiguration.h is common to OS X and iOS, so we check for that
 AG_GST_CHECK_FEATURE(APPLE_MEDIA, [Apple video], applemedia, [
   AC_CHECK_HEADER(SystemConfiguration/SystemConfiguration.h, HAVE_APPLE_MEDIA="yes", HAVE_APPLE_MEDIA="no")
+  dnl OSX 10.7 and earlier lack VideoToolbox/VideoToolbox.h
+  if test "x$HAVE_IOS" = "xno"; then
+    AC_CHECK_HEADER(VideoToolbox/VideoToolbox.h,, HAVE_APPLE_MEDIA="no")
+  fi
 ])
+
 dnl in case header SystemConfiguration/SystemConfiguration.h is found on other platforms
 case "$host" in
   *-*darwin*)
