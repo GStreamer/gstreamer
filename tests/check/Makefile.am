@@ -43,6 +43,12 @@ else
 check_x264enc=
 endif
 
+if USE_PLUGIN_XINGMUX
+check_xingmux = element/xingmux
+else
+check_xingmux =
+endif
+
 # generic/index
 check_PROGRAMS = \
 	generic/states \
@@ -50,7 +56,7 @@ check_PROGRAMS = \
 	$(LAME) \
 	$(MPEG2DEC) \
 	$(check_x264enc) \
-	elements/xingmux
+	$(check_xingmux)
 
 # these tests don't even pass
 noinst_PROGRAMS =
