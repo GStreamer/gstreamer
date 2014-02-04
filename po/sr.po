@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011, 2012, 2013.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011, 2012, 2013, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.1.4\n"
+"Project-Id-Version: gst-plugins-base-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-26 17:36+0100\n"
-"PO-Revision-Date: 2013-10-04 12:00+0200\n"
+"POT-Creation-Date: 2014-02-04 16:21+0100\n"
+"PO-Revision-Date: 2014-01-13 20:16+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -204,7 +204,7 @@ msgid "Run-length encoding"
 msgstr "Кодирање покретања дужине"
 
 msgid "Timed Text"
-msgstr ""
+msgstr "Временски текст"
 
 msgid "Subtitle"
 msgstr "Превод"
@@ -228,30 +228,30 @@ msgid "Kate subtitle format"
 msgstr "Кејт запис превода"
 
 msgid "Uncompressed video"
-msgstr "Незапаковани снимак"
+msgstr "Несажети снимак"
 
 msgid "Uncompressed gray"
-msgstr "Незапакована сива слика"
+msgstr "Несажета сива слика"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Незапакован %s YUV %s"
+msgstr "Несажета упакована YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Незапакован %s YUV %s"
+msgstr "Несажета полу-равна YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Незапакован %s YUV %s"
+msgstr "Несажета равна YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Незапакован %s%d-битни %s"
+msgstr "Несажета палетизована %d-битна %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Незапакован %s%d-битни %s"
+msgstr "Несажета %d-битна %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -509,23 +509,25 @@ msgid "Initial key in which the sound starts"
 msgstr "Почетни кључ у коме почиње звук"
 
 msgid "Buffering..."
-msgstr ""
+msgstr "Смештам у међумеморију..."
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Исписује податке о издању и излази"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Усаглашавање снимка за коришћење (основно је „autovideosink“)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Усаглашавање звука за коришћење (основно је „autoaudiosink“)"
 
 msgid "Enable gapless playback"
-msgstr ""
+msgstr "Укључује пуштање без застоја"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
+"Употреба: %s ДАТОТЕКА1|ПУТАЊА1 [ДАТОТЕКА2|ПУТАЊА2] [ДАТОТЕКА3|ПУТАЊА3] ..."
 
 msgid "You must provide at least one filename or URI to play."
 msgstr ""
+"Морате да доставите барем један назив датотеке или путању да бисте пустили."

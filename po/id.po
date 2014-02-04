@@ -1,21 +1,20 @@
 # Indonesian translations for gst-plugins-base package.
 # This file is put in the public domain.
-# Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2012.
 # Andika Triwidada <andika@gmail.com>, 2013.
+# Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.1.4\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-26 17:36+0100\n"
-"PO-Revision-Date: 2013-10-15 16:11+0700\n"
-"Last-Translator: Andika Triwidada <andika@gmail.com>\n"
+"POT-Creation-Date: 2014-02-04 16:21+0100\n"
+"PO-Revision-Date: 2014-01-28 18:53+0700\n"
+"Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.7\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Tak dapat membuka divais untuk putar kembali dalam mode mono."
@@ -202,7 +201,7 @@ msgid "Run-length encoding"
 msgstr "Penyandian sepanjang-jalan"
 
 msgid "Timed Text"
-msgstr ""
+msgstr "Teks Waktu"
 
 msgid "Subtitle"
 msgstr "Subjudul"
@@ -231,25 +230,25 @@ msgstr "Video tak dikompresi"
 msgid "Uncompressed gray"
 msgstr "Citra abu-abu tak dikompresi"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "YUV %2s tak dikompresi %1s"
+msgstr "YUV terkemas tak dikompresi %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "YUV %2s tak dikompresi %1s"
+msgstr "YUV semi-planar tak dikompresi %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "YUV %2s tak dikompresi %1s"
+msgstr "YUV palanar tak dikompresi %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Tak dikompresi %s%d-bit %s"
+msgstr "%d-bit terpalet tak dikompresi %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Tak dikompresi %s%d-bit %s"
+msgstr "%d tak dikompresi %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -509,23 +508,24 @@ msgid "Initial key in which the sound starts"
 msgstr "Kunci awal dimana suara dimulai"
 
 msgid "Buffering..."
-msgstr ""
+msgstr "Menyangga..."
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Cetak informasi versi lalu keluar"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Sink video yang digunakan (standar adalah autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Sink audio yang digunakan (standar adalah autoaudiosink)"
 
 msgid "Enable gapless playback"
-msgstr ""
+msgstr "Aktifkan putar balik tanpa jeda"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Penggunaan: %s BERKAS1|URI1 [BERKAS2|URI2] [BERKAS3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
 msgstr ""
+"Anda harus menyediakan setidaknya satu nama berkas atau URI untuk diputar."
