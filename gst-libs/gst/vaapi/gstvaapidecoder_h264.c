@@ -68,6 +68,7 @@ struct _GstVaapiParserInfoH264 {
         GstH264PPS      pps;
         GstH264SliceHdr slice_hdr;
     }                   data;
+    guint               state;
 };
 
 static inline const GstVaapiMiniObjectClass *
@@ -2581,9 +2582,7 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     if (!fill_picture(decoder, picture, pi))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-    priv->decoder_state = priv->parser_state & (
-        GST_H264_VIDEO_STATE_GOT_SPS |
-        GST_H264_VIDEO_STATE_GOT_PPS);
+    priv->decoder_state = pi->state;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -2745,7 +2744,7 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 
     GST_DEBUG("slice (%u bytes)", pi->nalu.size);
 
-    if (!is_valid_state(priv->decoder_state,
+    if (!is_valid_state(pi->state,
             GST_H264_VIDEO_STATE_VALID_PICTURE_HEADERS)) {
         GST_WARNING("failed to receive enough headers to decode slice");
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -2787,9 +2786,11 @@ scan_for_start_code(GstAdapter *adapter, guint ofs, guint size, guint32 *scp)
 static GstVaapiDecoderStatus
 decode_unit(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiParserInfoH264 * const pi = unit->parsed_info;
     GstVaapiDecoderStatus status;
 
+    priv->decoder_state |= pi->state;
     switch (pi->nalu.type) {
     case GST_H264_NAL_SLICE_IDR:
         /* fall-through. IDR specifics are handled in init_picture() */
@@ -3044,6 +3045,7 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     GST_VAAPI_DECODER_UNIT_FLAG_SET(unit, flags);
 
     pi->nalu.data = NULL;
+    pi->state = priv->parser_state;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
