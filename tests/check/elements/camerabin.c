@@ -784,7 +784,8 @@ GST_START_TEST (test_multiple_image_captures)
 
     msg = wait_for_element_message (camera, "image-done", GST_CLOCK_TIME_NONE);
     fail_unless (msg != NULL);
-    gst_message_unref (msg);
+    if (msg)
+      gst_message_unref (msg);
 
     check_preview_image (camera, image_filename, i);
   }
