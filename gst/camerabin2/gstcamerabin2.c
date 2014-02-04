@@ -2065,12 +2065,6 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
     }
       break;
     case PROP_IMAGE_CAPTURE_CAPS:{
-      GstPad *pad = NULL;
-
-      if (camera->src)
-        pad =
-            gst_element_get_static_pad (camera->src,
-            GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME);
 
       GST_DEBUG_OBJECT (camera,
           "Setting image capture caps to %" GST_PTR_FORMAT,
@@ -2082,19 +2076,9 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       } else {
         GST_WARNING_OBJECT (camera, "Image capsfilter missing");
       }
-
-      if (pad)
-        gst_object_unref (pad);
     }
       break;
     case PROP_VIDEO_CAPTURE_CAPS:{
-      GstPad *pad = NULL;
-
-      if (camera->src)
-        pad =
-            gst_element_get_static_pad (camera->src,
-            GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
-
       GST_DEBUG_OBJECT (camera,
           "Setting video capture caps to %" GST_PTR_FORMAT,
           gst_value_get_caps (value));
@@ -2106,19 +2090,9 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
         GST_WARNING_OBJECT (camera, "Video capsfilter missing");
       }
 
-      if (pad) {
-        gst_object_unref (pad);
-      }
     }
       break;
     case PROP_VIEWFINDER_CAPS:{
-      GstPad *pad = NULL;
-
-      if (camera->src)
-        pad =
-            gst_element_get_static_pad (camera->src,
-            GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME);
-
       GST_DEBUG_OBJECT (camera,
           "Setting viewfinder capture caps to %" GST_PTR_FORMAT,
           gst_value_get_caps (value));
@@ -2128,10 +2102,6 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
             gst_value_get_caps (value), NULL);
       } else {
         GST_WARNING_OBJECT (camera, "Viewfinder capsfilter missing");
-      }
-
-      if (pad) {
-        gst_object_unref (pad);
       }
     }
       break;
