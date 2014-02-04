@@ -210,6 +210,7 @@ gst_uri_downloader_bus_handler (GstBus * bus,
       GST_DEBUG_OBJECT (downloader, "Stopping download");
       g_object_unref (downloader->priv->download);
       downloader->priv->download = NULL;
+      downloader->priv->cancelled = TRUE;
       g_cond_signal (&downloader->priv->cond);
     }
     GST_OBJECT_UNLOCK (downloader);
@@ -409,7 +410,8 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
    *   - the download was canceled
    */
   GST_DEBUG_OBJECT (downloader, "Waiting to fetch the URI %s", uri);
-  g_cond_wait (&downloader->priv->cond, GST_OBJECT_GET_LOCK (downloader));
+  while (!downloader->priv->cancelled && !downloader->priv->download->completed)
+    g_cond_wait (&downloader->priv->cond, GST_OBJECT_GET_LOCK (downloader));
 
   if (downloader->priv->cancelled) {
     if (downloader->priv->download) {
