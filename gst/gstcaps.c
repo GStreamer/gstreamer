@@ -1103,7 +1103,7 @@ gst_caps_is_fixed (const GstCaps * caps)
   if (GST_CAPS_LEN (caps) != 1)
     return FALSE;
 
-  features = gst_caps_get_features (caps, 0);
+  features = gst_caps_get_features_unchecked (caps, 0);
   if (features && gst_caps_features_is_any (features))
     return FALSE;
 
@@ -2111,7 +2111,7 @@ gst_caps_fixate (GstCaps * caps)
   gst_structure_fixate (s);
 
   /* Set features to sysmem if they're still ANY */
-  f = gst_caps_get_features (caps, 0);
+  f = gst_caps_get_features_unchecked (caps, 0);
   if (f && gst_caps_features_is_any (f)) {
     f = gst_caps_features_new_empty ();
     gst_caps_set_features (caps, 0, f);
