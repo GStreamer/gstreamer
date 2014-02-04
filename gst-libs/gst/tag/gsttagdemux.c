@@ -1001,6 +1001,10 @@ gst_tag_demux_seek_push (GstTagDemux * tagdemux, GstEvent * event)
     upstream = gst_event_new_seek (rate, format, flags,
         start_type, start, stop_type, stop);
     res = gst_pad_push_event (tagdemux->priv->sinkpad, upstream);
+  } else if (format == GST_FORMAT_TIME &&
+      tagdemux->priv->state == GST_TAG_DEMUX_STREAMING &&
+      gst_pad_is_linked (tagdemux->priv->sinkpad)) {
+    res = gst_pad_push_event (tagdemux->priv->sinkpad, gst_event_ref (event));
   }
 
   return res;
