@@ -2,22 +2,21 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2007.
-# Johnny A. Solbu <johnny@solbu.net>, 2012.
+# Johnny A. Solbu <johnny@solbu.net>, 2012-2014
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
+"Project-Id-Version: gst-plugins-bad 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-26 17:46+0100\n"
-"PO-Revision-Date: 2012-07-28 07:10+0100\n"
+"POT-Creation-Date: 2014-02-04 16:24+0100\n"
+"PO-Revision-Date: 2014-01-22 17:56+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
-"Language: \n"
+"Language: nb_NO\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Norwegian Bokmal\n"
-"X-Poedit-Country: NORWAY\n"
+"X-Generator: Poedit 1.5.4\n"
 
 msgid "Could not read title information for DVD."
 msgstr "Kunne ikke lese tittelinformasjonen til DVD-en."
@@ -40,16 +39,16 @@ msgid "Could not read DVD."
 msgstr "Kunne ikke lese DVD-en."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Denne filen inneholder ingen spillbare strømmer."
 
 msgid "Couldn't get the Manifest's URI"
-msgstr ""
+msgstr "Kunne ikke hente Manifest-nettadressen."
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Klarte ikke å hente fragment-nettadresse."
 
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Kunne ikke laste ned fragmenter"
 
 msgid "No file name specified for writing."
 msgstr "Ingen filnavn oppgitt for skriving."
@@ -66,38 +65,37 @@ msgid "Could not write to file \"%s\"."
 msgstr "Kunne ikke skrive til fil «%s»."
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Kunne ikke opprette forbindelse til sndio"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Spørring etter tilgjengelige egenskaper i sndio feilet"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "Kunne ikke åpne filen «%s» for lesing."
+msgstr "Kunne ikke konfigurere sndio"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "Kunne ikke lese DVD-en."
+msgstr "Kunne ikke starte sndio"
 
 msgid "Internal data flow error."
 msgstr "Intern feil i datastrøm."
 
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr ""
+msgstr "Genererte filen har en større preroll tid enn strømmens varighet"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Mangler element «%s» - kontroller GStreamer-installasjonen din."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
+"Filplassering er satt til NULL, vennligst sett den til et gyldig filnavn"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "Underbildeformat er ikke konfigurert før dataflyt"
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
+msgstr "Oppgitt filnavn «%s» kan ikke konverteres til lokal filnavnkoding."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -116,15 +114,15 @@ msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åpne filen «%s» for lesing."
 
 msgid "Couldn't find DVB channel configuration file"
-msgstr ""
+msgstr "Kunne ikke finne DVB-kanal-konfigurasjonsfil"
 
 #, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
-msgstr ""
+msgstr "Kunne ikke finne DVB-kanalkonfigurasjonsfil: %s"
 
 msgid "DVB channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "DVB-kanalkonfigurasjonsfilen inneholder ingen kanaler"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
+msgstr "Kunne ikke finne detaljer for DVB-kanal %s"

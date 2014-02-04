@@ -2,15 +2,15 @@
 # Czech translations of gst-plugins.
 # Copyright (C) 2004 gst-plugins' COPYRIGHT HOLDER
 # This file is put in the public domain.
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-bad 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-26 17:46+0100\n"
-"PO-Revision-Date: 2010-03-08 09:20+0100\n"
-"Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
+"POT-Creation-Date: 2014-02-04 16:24+0100\n"
+"PO-Revision-Date: 2014-01-30 10:44+0100\n"
+"Last-Translator: Peter Tuharsky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
@@ -29,28 +29,29 @@ msgid "Failed to open DVD device '%s'."
 msgstr "Nepodarilo sa otvoriť zariadenie DVD '%s'."
 
 msgid "Failed to set PGC based seeking."
-msgstr "Nepodarilo sa nastaviť PGC posun."
+msgstr "Nepodarilo sa nastaviť PGC posun pozície."
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Nepodarilo sa čítať DVD. Možno je DVD šifrované a dešifrovacia knižnica nie "
+"je nainštalovaná."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Nepodarilo sa prečítať titulok DVD."
+msgstr "Nepodarilo sa prečítať DVD."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Tento súbor neobsahuje prehrateľné prúdy údajov."
 
 msgid "Couldn't get the Manifest's URI"
-msgstr ""
+msgstr "Nepodarilo sa získať URI Manifestu"
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Nepodarilo sa získať URL fragmentu."
 
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Nepodarilo sa získať fragmenty"
 
 msgid "No file name specified for writing."
 msgstr "Nebolo zadané žiadne meno súboru pre zápis."
@@ -67,38 +68,41 @@ msgid "Could not write to file \"%s\"."
 msgstr "Nepodarilo sa zapísať do súboru \"%s\"."
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Nepodarilo sa pripojiť na sndio"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Nepodarilo sa zistiť schopnosti sndio"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
+msgstr "Nepodarilo nastaviť sndio"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "Nepodarilo sa prečítať titulok DVD."
+msgstr "Nepodarilo sa spustiť sndio"
 
 msgid "Internal data flow error."
 msgstr "Vnútorná chyba prúdu údajov."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"Vytvorený súbor má väčší prerolovací čas než je trvanie jeho prúdu údajov"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Chýba prvok '%s' - skontrolujte si svoju inštaláciu GStreamer."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
+"Umiestnenie súboru je nastavené na NULOVÉ, prosím nastavte platný názov "
+"súboru"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "Formát podobrázku nebol nastavený pred prúdom údajov."
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+"Zadaný názov súboru \"%s\" sa nedá previesť na miestne kódovanie názvu "
+"súboru."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -116,20 +120,19 @@ msgstr "Nepodarilo sa získať nastavenia od zariadenia \"%s\"."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
 
-#, fuzzy
 msgid "Couldn't find DVB channel configuration file"
-msgstr "Konfigurácia kanálov virtuálneho mixéra"
+msgstr "Nepodarilo sa nájsť konfiguračný súbor DVB kanálu"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
-msgstr "Konfigurácia kanálov virtuálneho mixéra"
+msgstr "Nepodarilo sa načítať konfiguračný súbor DVB kanálu: %s"
 
 msgid "DVB channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
+msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
 
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr ""

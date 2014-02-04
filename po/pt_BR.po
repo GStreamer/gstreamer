@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.0.3\n"
+"Project-Id-Version: gst-plugins-bad-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-26 17:46+0100\n"
-"PO-Revision-Date: 2013-08-19 23:34-0300\n"
+"POT-Creation-Date: 2014-02-04 16:24+0100\n"
+"PO-Revision-Date: 2013-12-17 01:09-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -40,16 +40,16 @@ msgid "Could not read DVD."
 msgstr "Não foi possível ler o DVD."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Este arquivo não contém fluxos reproduzíveis."
 
 msgid "Couldn't get the Manifest's URI"
-msgstr ""
+msgstr "Não foi possível obter a URI do manifesto"
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Falha ao obter um fragmento de URL."
 
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Não foi possível baixar os fragmentos"
 
 msgid "No file name specified for writing."
 msgstr "Nenhum nome de arquivo especificado para gravação."
@@ -66,38 +66,41 @@ msgid "Could not write to file \"%s\"."
 msgstr "Não foi possível gravar no arquivo \"%s\"."
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Não foi possível estabelecer a conexão para sndio"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Falha ao consultar os recursos de sndio"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
+msgstr "Não foi possível configurar o sndio"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "Não foi possível ler o DVD."
+msgstr "Não foi possível iniciar o sndio"
 
 msgid "Internal data flow error."
 msgstr "Erro interno de fluxo de dados."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"O arquivo gerado tem um tempo de preparação maior que a sua duração de fluxo"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
+"O elemento \"%s\" está faltando, verifique a sua instalação do GStreamer."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
+"A localização do arquivo está NULA, favor definir um nome de arquivo válido"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "O formato de subimagem não foi configurado antes do fluxo de dados"
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+"O nome de arquivo fornecido \"%s\" não pode ser convertido para a "
+"codificação de nome de arquivo local."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -117,15 +120,15 @@ msgid "Could not open file \"%s\" for reading."
 msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
 
 msgid "Couldn't find DVB channel configuration file"
-msgstr ""
+msgstr "Não foi possível encontrar o arquivo de configuração de canal DVB"
 
 #, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
-msgstr ""
+msgstr "Não foi possível carregar o arquivo de configuração de canal DVB: %s"
 
 msgid "DVB channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "O arquivo de configuração de canal DVB não contém nenhum canal"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
+msgstr "Não foi possível encontrar detalhes para o canal DVB %s"
