@@ -98,9 +98,9 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
 };
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS "{ S8, S16LE, S24LE, S24_32LE } "
+#define FORMATS "{ S24LE, S24_32LE, S16LE, S8 } "
 #else
-#define FORMATS "{ S8, S16BE, S24BE, S24_32BE } "
+#define FORMATS "{ S24BE, S24_32BE, S16BE, S8 } "
 #endif
 
 #define FLAC_SINK_CAPS                                    \
