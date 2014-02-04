@@ -1915,7 +1915,11 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
         !g_object_class_find_property (payobjclass, "timestamp"))
       goto no_stats;
 
-    g_object_get (priv->payloader, "seqnum", seq, "timestamp", rtptime, NULL);
+    if (seq)
+      g_object_get (priv->payloader, "seqnum", seq, NULL);
+
+    if (rtptime)
+      g_object_get (priv->payloader, "timestamp", rtptime, NULL);
 
     if (running_time)
       *running_time = GST_CLOCK_TIME_NONE;
