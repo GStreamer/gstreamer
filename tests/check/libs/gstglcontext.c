@@ -89,21 +89,23 @@ init (gpointer data)
   fail_if (tex == 0, "failed to create texture");
 
 #if GST_GL_HAVE_GLES2
-  shader = gst_gl_shader_new (context);
-  fail_if (shader == NULL, "failed to create shader object");
+  if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2) {
+    shader = gst_gl_shader_new (context);
+    fail_if (shader == NULL, "failed to create shader object");
 
-  gst_gl_shader_set_vertex_source (shader, vertex_shader_str_gles2);
-  gst_gl_shader_set_fragment_source (shader, fragment_shader_str_gles2);
+    gst_gl_shader_set_vertex_source (shader, vertex_shader_str_gles2);
+    gst_gl_shader_set_fragment_source (shader, fragment_shader_str_gles2);
 
-  error = NULL;
-  gst_gl_shader_compile (shader, &error);
-  fail_if (error != NULL, "Error compiling shader %s\n",
-      error ? error->message : "Unknown Error");
+    error = NULL;
+    gst_gl_shader_compile (shader, &error);
+    fail_if (error != NULL, "Error compiling shader %s\n",
+        error ? error->message : "Unknown Error");
 
-  shader_attr_position_loc =
-      gst_gl_shader_get_attribute_location (shader, "a_position");
-  shader_attr_texture_loc =
-      gst_gl_shader_get_attribute_location (shader, "a_texCoord");
+    shader_attr_position_loc =
+        gst_gl_shader_get_attribute_location (shader, "a_position");
+    shader_attr_texture_loc =
+        gst_gl_shader_get_attribute_location (shader, "a_texCoord");
+  }
 #endif
 }
 
@@ -151,72 +153,76 @@ draw_render (gpointer data)
   /* redraw the texture into the system provided framebuffer */
 
 #if GST_GL_HAVE_OPENGL
-  GLfloat verts[8] = { 1.0f, 1.0f,
-    -1.0f, 1.0f,
-    -1.0f, -1.0f,
-    1.0f, -1.0f
-  };
-  GLfloat texcoords[8] = { 1.0f, 0.0f,
-    0.0f, 0.0f,
-    0.0f, 1.0f,
-    1.0f, 1.0f
-  };
+  if (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL) {
+    GLfloat verts[8] = { 1.0f, 1.0f,
+      -1.0f, 1.0f,
+      -1.0f, -1.0f,
+      1.0f, -1.0f
+    };
+    GLfloat texcoords[8] = { 1.0f, 0.0f,
+      0.0f, 0.0f,
+      0.0f, 1.0f,
+      1.0f, 1.0f
+    };
 
-  gl->Viewport (0, 0, 320, 240);
+    gl->Viewport (0, 0, 320, 240);
 
-  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
 
-  gl->Enable (GL_TEXTURE_2D);
-  gl->BindTexture (GL_TEXTURE_2D, tex);
+    gl->Enable (GL_TEXTURE_2D);
+    gl->BindTexture (GL_TEXTURE_2D, tex);
 
-  gl->EnableClientState (GL_VERTEX_ARRAY);
-  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
-  gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
+    gl->EnableClientState (GL_VERTEX_ARRAY);
+    gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+    gl->VertexPointer (2, GL_FLOAT, 0, &verts);
+    gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
 
-  gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+    gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
 
-  gl->DisableClientState (GL_VERTEX_ARRAY);
-  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+    gl->DisableClientState (GL_VERTEX_ARRAY);
+    gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
 
-  gl->Disable (GL_TEXTURE_2D);
+    gl->Disable (GL_TEXTURE_2D);
+  }
 #endif
 #if GST_GL_HAVE_GLES2
-  const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
-    1.0f, 0.0f,
-    -1.0f, 1.0f, 0.0f,
-    0.0f, 0.0f,
-    -1.0f, -1.0f, 0.0f,
-    0.0f, 1.0f,
-    1.0f, -1.0f, 0.0f,
-    1.0f, 1.0f
-  };
+  if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2) {
+    const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
+      1.0f, 0.0f,
+      -1.0f, 1.0f, 0.0f,
+      0.0f, 0.0f,
+      -1.0f, -1.0f, 0.0f,
+      0.0f, 1.0f,
+      1.0f, -1.0f, 0.0f,
+      1.0f, 1.0f
+    };
 
-  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-  gl->Clear (GL_COLOR_BUFFER_BIT);
+    gl->Clear (GL_COLOR_BUFFER_BIT);
 
-  gst_gl_shader_use (shader);
+    gst_gl_shader_use (shader);
 
-  /* Load the vertex position */
-  gl->VertexAttribPointer (shader_attr_position_loc, 3,
-      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+    /* Load the vertex position */
+    gl->VertexAttribPointer (shader_attr_position_loc, 3,
+        GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
 
-  /* Load the texture coordinate */
-  gl->VertexAttribPointer (shader_attr_texture_loc, 2,
-      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+    /* Load the texture coordinate */
+    gl->VertexAttribPointer (shader_attr_texture_loc, 2,
+        GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
-  gl->EnableVertexAttribArray (shader_attr_position_loc);
-  gl->EnableVertexAttribArray (shader_attr_texture_loc);
+    gl->EnableVertexAttribArray (shader_attr_position_loc);
+    gl->EnableVertexAttribArray (shader_attr_texture_loc);
 
-  gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, tex);
-  gst_gl_shader_set_uniform_1i (shader, "s_texture", 0);
+    gl->ActiveTexture (GL_TEXTURE0);
+    gl->BindTexture (GL_TEXTURE_2D, tex);
+    gst_gl_shader_set_uniform_1i (shader, "s_texture", 0);
 
-  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+  }
 #endif
 
   context_class->swap_buffers (context);

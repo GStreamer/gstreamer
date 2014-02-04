@@ -73,14 +73,14 @@ GST_START_TEST (test_basic)
 
     /* test allocator creation */
     ASSERT_WARNING (mem = gst_allocator_alloc (gl_allocator, 0, NULL););
-    mem = gst_gl_memory_alloc (context, formats[i], width, height);
+    mem = gst_gl_memory_alloc (context, vinfo);
     fail_if (mem == NULL);
     gl_mem = (GstGLMemory *) mem;
 
     /* test init params */
-    fail_if (gl_mem->width != width);
-    fail_if (gl_mem->height != height);
-    fail_if (gl_mem->v_format != formats[i]);
+    fail_if (GST_VIDEO_INFO_WIDTH (&gl_mem->v_info) != width);
+    fail_if (GST_VIDEO_INFO_HEIGHT (&gl_mem->v_info) != height);
+    fail_if (GST_VIDEO_INFO_FORMAT (&gl_mem->v_info) != formats[i]);
     fail_if (gl_mem->context != context);
     fail_if (gl_mem->tex_id == 0);
 
@@ -91,9 +91,12 @@ GST_START_TEST (test_basic)
 
     /* test params */
     fail_if (gl_mem->tex_id == gl_mem2->tex_id);
-    fail_if (gl_mem->width != gl_mem->width);
-    fail_if (gl_mem->height != gl_mem->height);
-    fail_if (gl_mem->v_format != gl_mem->v_format);
+    fail_if (GST_VIDEO_INFO_FORMAT (&gl_mem->v_info) !=
+        GST_VIDEO_INFO_FORMAT (&gl_mem2->v_info));
+    fail_if (GST_VIDEO_INFO_WIDTH (&gl_mem->v_info) !=
+        GST_VIDEO_INFO_WIDTH (&gl_mem2->v_info));
+    fail_if (GST_VIDEO_INFO_HEIGHT (&gl_mem->v_info) !=
+        GST_VIDEO_INFO_HEIGHT (&gl_mem2->v_info));
     fail_if (gl_mem->gl_format != gl_mem->gl_format);
     fail_if (gl_mem->context != gl_mem->context);
     fail_if (gl_mem->tex_id == 0);
