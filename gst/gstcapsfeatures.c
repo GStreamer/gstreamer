@@ -66,6 +66,7 @@ struct _GstCapsFeatures
 };
 
 GType _gst_caps_features_type = 0;
+static gint static_caps_features_parent_refcount = G_MAXINT;
 GstCapsFeatures *_gst_caps_features_any = NULL;
 GstCapsFeatures *_gst_caps_features_memory_system_memory = NULL;
 static GQuark _gst_caps_feature_memory_system_memory = 0;
@@ -95,8 +96,13 @@ _priv_gst_caps_features_initialize (void)
       gst_caps_features_transform_to_string);
 
   _gst_caps_features_any = gst_caps_features_new_any ();
+  gst_caps_features_set_parent_refcount (_gst_caps_features_any,
+      &static_caps_features_parent_refcount);
   _gst_caps_features_memory_system_memory =
       gst_caps_features_new_id (_gst_caps_feature_memory_system_memory, 0);
+  gst_caps_features_set_parent_refcount
+      (_gst_caps_features_memory_system_memory,
+      &static_caps_features_parent_refcount);
 }
 
 gboolean
