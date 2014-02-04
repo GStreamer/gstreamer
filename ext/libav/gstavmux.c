@@ -478,7 +478,7 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
   collect_pad = (GstFFMpegMuxPad *) gst_pad_get_element_private (pad);
 
   st = ffmpegmux->context->streams[collect_pad->padnum];
-  av_opt_set_int (&ffmpegmux->context, "preload", ffmpegmux->preload, 0);
+  av_opt_set_int (ffmpegmux->context, "preload", ffmpegmux->preload, 0);
   ffmpegmux->context->max_delay = ffmpegmux->max_delay;
 
   /* for the format-specific guesses, we'll go to
