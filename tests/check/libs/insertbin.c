@@ -27,17 +27,17 @@
 #include <gst/check/gstcheck.h>
 #include <gst/insertbin/gstinsertbin.h>
 
-GstStaticPadTemplate sinkpad_template = GST_STATIC_PAD_TEMPLATE ("sink",        // the name of the pad
-    GST_PAD_SINK,               // the direction of the pad
-    GST_PAD_ALWAYS,             // when this pad will be present
-    GST_STATIC_CAPS (           // the capabilities of the padtemplate
+GstStaticPadTemplate sinkpad_template = GST_STATIC_PAD_TEMPLATE ("sink",        /* the name of the pad */
+    GST_PAD_SINK,               /* the direction of the pad */
+    GST_PAD_ALWAYS,             /* when this pad will be present */
+    GST_STATIC_CAPS (           /* the capabilities of the padtemplate */
         "video/test")
     );
 
-GstStaticPadTemplate srcpad_template = GST_STATIC_PAD_TEMPLATE ("src",  // the name of the pad
-    GST_PAD_SRC,                // the direction of the pad
-    GST_PAD_ALWAYS,             // when this pad will be present
-    GST_STATIC_CAPS (           // the capabilities of the padtemplate
+GstStaticPadTemplate srcpad_template = GST_STATIC_PAD_TEMPLATE ("src",  /* the name of the pad */
+    GST_PAD_SRC,                /* the direction of the pad */
+    GST_PAD_ALWAYS,             /* when this pad will be present */
+    GST_STATIC_CAPS (           /* the capabilities of the padtemplate */
         "video/test")
     );
 
@@ -47,6 +47,7 @@ GMutex mutex;
 GCond cond;
 
 GThread *push_thread = NULL;
+GThread *streaming_thread = NULL;
 gulong block_probe_id = 0;
 gboolean is_blocked = FALSE;
 
@@ -54,7 +55,7 @@ static void
 success_cb (GstInsertBin * insertbin, GstElement * element, gboolean success,
     gpointer user_data)
 {
-  fail_unless (g_thread_self () != push_thread);
+  fail_unless (g_thread_self () == push_thread);
   fail_unless (success == TRUE);
   fail_unless (GST_IS_ELEMENT (insertbin));
   fail_unless (GST_IS_ELEMENT (element));
@@ -170,7 +171,9 @@ GST_START_TEST (test_insertbin_simple)
           fail_cb, NULL));
   fail_unless (cb_count == 0);
 
-
+  /* insertbin is stopped and pads are idle, should be called immediately
+   * from this same thread */
+  push_thread = g_thread_self ();
   elem = gst_element_factory_make ("identity", NULL);
   gst_insert_bin_append (GST_INSERT_BIN (insertbin), elem, success_cb, NULL);
   check_reset_cb_count (1);
@@ -190,63 +193,70 @@ GST_START_TEST (test_insertbin_simple)
   fail_unless (cb_count == 0);
   fail_unless (buffers == NULL);
 
+  push_thread = g_thread_self ();
   push_buffer (srcpad, 0);
 
+  /* now the pad should be active, the change should come from the
+   * 'streaming thread' */
+  push_thread = NULL;
   block_thread ();
   elem = gst_element_factory_make ("identity", NULL);
   gst_insert_bin_prepend (GST_INSERT_BIN (insertbin), elem, success_cb, NULL);
   unblock_thread ();
-  push_buffer (srcpad, 1);
-  push_buffer (srcpad, 0);
+  check_reset_cb_count (1);
 
+  /* can't add the same element twice */
   block_thread ();
   gst_insert_bin_append (GST_INSERT_BIN (insertbin), elem, fail_cb, NULL);
   check_reset_cb_count (1);
   unblock_thread ();
   push_buffer (srcpad, 0);
 
+  /* remove the element */
   block_thread ();
   gst_insert_bin_remove (GST_INSERT_BIN (insertbin), elem, success_cb, NULL);
   unblock_thread ();
-  push_buffer (srcpad, 1);
+  check_reset_cb_count (1);
   push_buffer (srcpad, 0);
 
+  /* try adding multiple elements, one at a time */
   block_thread ();
   elem = gst_element_factory_make ("identity", NULL);
   gst_insert_bin_append (GST_INSERT_BIN (insertbin), elem, success_cb, NULL);
   unblock_thread ();
-  push_buffer (srcpad, 1);
+  check_reset_cb_count (1);
   push_buffer (srcpad, 0);
 
   block_thread ();
   elem2 = gst_element_factory_make ("identity", NULL);
   gst_insert_bin_append (GST_INSERT_BIN (insertbin), elem2, success_cb, NULL);
   unblock_thread ();
-  push_buffer (srcpad, 1);
+  check_reset_cb_count (1);
   push_buffer (srcpad, 0);
 
   block_thread ();
   elem3 = gst_element_factory_make ("identity", NULL);
   gst_insert_bin_append (GST_INSERT_BIN (insertbin), elem3, success_cb, NULL);
   unblock_thread ();
-  push_buffer (srcpad, 1);
+  check_reset_cb_count (1);
   push_buffer (srcpad, 0);
 
   block_thread ();
   elem4 = gst_element_factory_make ("identity", NULL);
   gst_insert_bin_prepend (GST_INSERT_BIN (insertbin), elem4, success_cb, NULL);
   unblock_thread ();
-  push_buffer (srcpad, 1);
+  check_reset_cb_count (1);
   push_buffer (srcpad, 0);
 
+  /* remove 2 of those elements at once */
   block_thread ();
   gst_insert_bin_remove (GST_INSERT_BIN (insertbin), elem3, success_cb, NULL);
   gst_insert_bin_remove (GST_INSERT_BIN (insertbin), elem2, success_cb, NULL);
   unblock_thread ();
-  push_buffer (srcpad, 1);
-  push_buffer (srcpad, 1);
+  check_reset_cb_count (2);
   push_buffer (srcpad, 0);
 
+  /* add another 2 elements at once */
   block_thread ();
   elem2 = gst_element_factory_make ("identity", NULL);
   elem3 = gst_element_factory_make ("identity", NULL);
@@ -255,17 +265,18 @@ GST_START_TEST (test_insertbin_simple)
   gst_insert_bin_insert_before (GST_INSERT_BIN (insertbin), elem3, elem4,
       success_cb, NULL);
   unblock_thread ();
-  push_buffer (srcpad, 1);
-  push_buffer (srcpad, 1);
+  check_reset_cb_count (2);
   push_buffer (srcpad, 0);
 
+  /* remove 2 elements */
   block_thread ();
   gst_insert_bin_remove (GST_INSERT_BIN (insertbin), elem3, success_cb, NULL);
   gst_insert_bin_remove (GST_INSERT_BIN (insertbin), elem2, success_cb, NULL);
   unblock_thread ();
-  push_buffer (srcpad, 2);
+  check_reset_cb_count (2);
   push_buffer (srcpad, 0);
 
+  /* and add again */
   block_thread ();
   elem2 = gst_element_factory_make ("identity", NULL);
   elem3 = gst_element_factory_make ("identity", NULL);
@@ -274,15 +285,17 @@ GST_START_TEST (test_insertbin_simple)
   gst_insert_bin_insert_after (GST_INSERT_BIN (insertbin), elem2, elem,
       success_cb, NULL);
   unblock_thread ();
-  push_buffer (srcpad, 2);
+  check_reset_cb_count (2);
   push_buffer (srcpad, 0);
 
+  /* try to add an element that has no pads */
   block_thread ();
   elem = gst_bin_new (NULL);
   gst_insert_bin_append (GST_INSERT_BIN (insertbin), elem, fail_cb, NULL);
   check_reset_cb_count (1);
   unblock_thread ();
 
+  /* try to add an element that has a parent */
   block_thread ();
   elem = gst_bin_new (NULL);
   elem2 = gst_element_factory_make ("identity", NULL);
@@ -293,20 +306,29 @@ GST_START_TEST (test_insertbin_simple)
   check_reset_cb_count (1);
   unblock_thread ();
   gst_object_unref (elem);
-
   push_buffer (srcpad, 0);
 
-  block_thread ();
+  /* when removing an element insertbin will look at the pending operations list
+   * and check if that element is pending and remove it before adding.
+   * So we check that the callback count hapenned before the end, and it
+   * also happens from this same main thread. So we need to store the
+   * streaming thread to restore it after the check */
   elem = gst_element_factory_make ("identity", NULL);
   elem2 = gst_element_factory_make ("identity", NULL);
+  block_thread ();
   gst_insert_bin_append (GST_INSERT_BIN (insertbin), elem, success_cb, NULL);
   gst_insert_bin_append (GST_INSERT_BIN (insertbin), elem2, success_cb, NULL);
+  streaming_thread = push_thread;
+  push_thread = g_thread_self ();
   gst_insert_bin_remove (GST_INSERT_BIN (insertbin), elem2, success_cb, NULL);
+  push_thread = streaming_thread;
   check_reset_cb_count (2);
   unblock_thread ();
-  push_buffer (srcpad, 1);
+  check_reset_cb_count (1);
   push_buffer (srcpad, 0);
 
+  /* fail when trying to add an element before another that isn't in
+   * insertbin */
   block_thread ();
   elem = gst_element_factory_make ("identity", NULL);
   elem2 = gst_element_factory_make ("identity", NULL);
@@ -322,7 +344,8 @@ GST_START_TEST (test_insertbin_simple)
   gst_pad_set_active (srcpad, FALSE);
   gst_pad_set_active (sinkpad, FALSE);
 
-
+  cb_count = 0;
+  push_thread = g_thread_self ();
   elem = gst_element_factory_make ("identity", NULL);
   gst_insert_bin_remove (GST_INSERT_BIN (insertbin), elem, fail_cb, NULL);
   check_reset_cb_count (1);
