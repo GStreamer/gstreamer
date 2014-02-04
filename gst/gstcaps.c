@@ -114,8 +114,10 @@ typedef struct _GstCapsImpl
  * length check */
 #define gst_caps_get_structure_unchecked(caps, index) \
      (g_array_index (GST_CAPS_ARRAY (caps), GstCapsArrayElement, (index)).structure)
+#define gst_caps_get_features_storage_unchecked(caps, index) \
+     (&g_array_index (GST_CAPS_ARRAY (caps), GstCapsArrayElement, (index)).features)
 #define gst_caps_get_features_unchecked(caps, index) \
-     (g_array_index (GST_CAPS_ARRAY (caps), GstCapsArrayElement, (index)).features)
+     (g_atomic_pointer_get (gst_caps_get_features_storage_unchecked (caps, index)))
 /* quick way to append a structure without checking the args */
 #define gst_caps_append_structure_unchecked(caps, s, f) G_STMT_START{\
   GstCapsArrayElement __e={s, f};                                      \
@@ -856,8 +858,25 @@ gst_caps_get_features (const GstCaps * caps, guint index)
   g_return_val_if_fail (index < GST_CAPS_LEN (caps), NULL);
 
   features = gst_caps_get_features_unchecked (caps, index);
-  if (!features)
-    features = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
+  if (!features) {
+    GstCapsFeatures **storage;
+
+    /* We have to do some atomic pointer magic here as the caps
+     * might not be writable and someone else calls this function
+     * at the very same time */
+    features = gst_caps_features_copy (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
+    gst_caps_features_set_parent_refcount (features, &GST_CAPS_REFCOUNT (caps));
+
+    storage = gst_caps_get_features_storage_unchecked (caps, index);
+    if (!g_atomic_pointer_compare_and_exchange (storage, NULL, features)) {
+      /* Someone did the same we just tried in the meantime */
+      gst_caps_features_set_parent_refcount (features, NULL);
+      gst_caps_features_free (features);
+
+      features = gst_caps_get_features_unchecked (caps, index);
+      g_assert (features != NULL);
+    }
+  }
 
   return features;
 }
@@ -881,9 +900,10 @@ gst_caps_set_features (GstCaps * caps, guint index, GstCapsFeatures * features)
   g_return_if_fail (index <= gst_caps_get_size (caps));
   g_return_if_fail (IS_WRITABLE (caps));
 
-  storage = &gst_caps_get_features_unchecked (caps, index);
-  old = *storage;
-  *storage = features;
+  storage = gst_caps_get_features_storage_unchecked (caps, index);
+  /* Not much problem here as caps are writable */
+  old = g_atomic_pointer_get (storage);
+  g_atomic_pointer_set (storage, features);
 
   if (features)
     gst_caps_features_set_parent_refcount (features, &GST_CAPS_REFCOUNT (caps));
