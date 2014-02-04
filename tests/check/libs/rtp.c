@@ -131,6 +131,9 @@ GST_START_TEST (test_rtp_buffer)
   fail_unless_equals_int (gst_rtp_buffer_get_csrc (&rtp, 0), 0);
   fail_unless_equals_int (gst_rtp_buffer_get_csrc (&rtp, 1), 0);
   fail_unless_equals_int (gst_rtp_buffer_get_csrc (&rtp, 2), 0);
+  fail_unless_equals_int (gst_rtp_buffer_get_header_len (&rtp),
+      RTP_HEADER_LEN + 4 * 3);
+  fail_unless_equals_int (gst_rtp_buffer_get_payload_len (&rtp), 16);
 
   data += RTP_HEADER_LEN;       /* skip the other header stuff */
   gst_rtp_buffer_set_csrc (&rtp, 0, 0xf7c0);
