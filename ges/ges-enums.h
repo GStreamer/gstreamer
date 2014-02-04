@@ -353,27 +353,22 @@ GType ges_pipeline_flags_get_type (void);
  *  The Ripple mode allows you to modify the beginning/end of a clip
  *  and move the neighbours accordingly. This will change the overall
  *  timeline duration. In the case of ripple end, the duration of the
- *  clip being rippled can't be supperior to it max-duration - inpoint
- *  and if it would be the case, nothing wil happen.
+ *  clip being rippled can't be superior to its max_duration - inpoint
+ *  otherwise the action won't be executed.
  * @GES_EDIT_MODE_ROLL: The object is edited in roll mode.
  *  The Roll mode allows you to modify the position of an editing point
  *  between two clips without modifying the inpoint of the first clip
  *  nor the out-point of the second clip. This will not change the
- *  overall timeline duration. In the case of ripple end, the duration of the
- *  clip being rolled can't be supperior to it max-duration - inpoint and if
- *  it would be the case, nothing wil happen.
+ *  overall timeline duration.
  * @GES_EDIT_MODE_TRIM: The object is edited in trim mode.
- *  The Trim mode allows you to modify the in-point/out-point of a clip without
- *  modifying it's duration or position in the timeline. A clip being trim
+ *  The Trim mode allows you to modify the in-point/duration of a clip
+ *  without modifying its position in the timeline.
  * @GES_EDIT_MODE_SLIDE: The object is edited in slide mode.
  *  The Slide mode allows you to modify the position of a clip in a
- *  timeline without modifying it's duration or it's in-point, but will
- *  modify the out-point of the previous clip and in-point of the
- *  following clip so as not to modify the overall timeline duration.
+ *  timeline without modifying its duration or its in-point, but will
+ *  modify the duration of the previous clip and in-point of the
+ *  following clip so does not modify the overall timeline duration.
  *  (not implemented yet)
- *
- * The various edition modes a clip can be edited with.
- *
  *
  * You can also find more explanation about the behaviour of those modes at:
  * <ulink url="http://pitivi.org/manual/trimming.html"> trim, ripple and roll</ulink>
