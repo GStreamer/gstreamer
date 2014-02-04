@@ -2,13 +2,13 @@
 # Copyright (C) 2004, 2005 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Danilo Segan <dsegan@gmx.net>, 2004, 2005.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011, 2013.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011, 2013, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.1.4\n"
+"Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2013-12-26 17:29+0100\n"
-"PO-Revision-Date: 2013-10-04 22:39+0200\n"
+"PO-Revision-Date: 2014-01-13 17:53+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -28,12 +28,11 @@ msgstr "Чини сва упозорења кобним"
 msgid "Print available debug categories and exit"
 msgstr "Исписује доступне категорије за уклањање грешака и излази"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Подразумевани ниво за уклањање грешака од 1 (само грешке) до 5 (све) или 0 "
-"(без излаза)"
+"Основни ниво за уклањање грешака од 1 (само грешке) до 9 (све) или 0 (без "
+"излаза)"
 
 msgid "LEVEL"
 msgstr "НИВО"
@@ -1176,9 +1175,9 @@ msgstr "Напредовање: (%s) %s\n"
 msgid "Missing element: %s\n"
 msgstr "Недостаје елемент: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Добих садржај из елемента „%s“: %s\n"
+msgstr "Добих садржај из елемента „%s“: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Излазне ознаке (такође познате и као метаподаци)"

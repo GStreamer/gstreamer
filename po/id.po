@@ -1,22 +1,21 @@
 # Indonesian translations for gstreamer package.
 # This file is put in the public domain.
-# Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2012.
-# Andika Triwidada <andika@gmail.com>.
+# Andika Triwidada <andika@gmail.com>, 2013.
+# Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.1.4\n"
+"Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2013-12-26 17:29+0100\n"
-"PO-Revision-Date: 2013-10-15 15:58+0700\n"
-"Last-Translator: Andika Triwidada <andika@gmail.com>\n"
+"PO-Revision-Date: 2014-01-27 20:09+0700\n"
+"Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 1.5.7\n"
 
 msgid "Print the GStreamer version"
 msgstr "Cetak versi GStreamer"
@@ -27,11 +26,10 @@ msgstr "Buat semua peringatan fatal"
 msgid "Print available debug categories and exit"
 msgstr "Cetak kategori awakutu yang tersedia lalu keluar"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Level awakutu standar dari 1 (hanya galat) ke 5 (apapun) atau 0 untuk tak "
+"Level awakutu standar dari 1 (hanya galat) ke 9 (apapun) atau 0 untuk tak "
 "ada keluaran"
 
 msgid "LEVEL"
@@ -1167,9 +1165,9 @@ msgstr "Kemajuan: (%s) %s\n"
 msgid "Missing element: %s\n"
 msgstr "Elemen kurang: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Mendapat konteks dari elemen '%s': %s\n"
+msgstr "Mendapat konteks dari elemen '%s': %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tag keluaran (juga dikenal sebagai metadata)"

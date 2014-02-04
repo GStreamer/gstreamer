@@ -1,17 +1,17 @@
-# translation of gstreamer-1.1.4.po to Dutch
+# translation of gstreamer-1.2.1.po to Dutch
 # Dutch translation of gstreamer
 # Copyright (C) 2003-2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Taco Witte <tcwitte@cs.uu.nl>, 2006.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.1.4\n"
+"Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2013-12-26 17:29+0100\n"
-"PO-Revision-Date: 2013-09-15 13:39+0200\n"
+"PO-Revision-Date: 2014-01-09 12:55+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -30,11 +30,10 @@ msgstr "Alle waarschuwingen fataal maken"
 msgid "Print available debug categories and exit"
 msgstr "Beschikbare debug-categorieën weergeven en afsluiten"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Standaard debug-niveau van 1 (enkel fouten) tot 5 (alles) of 0 voor geen "
+"Standaard debug-niveau van 1 (alleen fouten) tot 9 (alles) of 0 voor geen "
 "uitvoer"
 
 msgid "LEVEL"
@@ -1180,9 +1179,9 @@ msgstr "Voortgang: (%s) %s\n"
 msgid "Missing element: %s\n"
 msgstr "ontbrekend element: \"%s\"\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Context verkregen van element '%s': %s\n"
+msgstr "Context verkregen van element '%s': %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tags (ook bekend als metadata) weergeven"
