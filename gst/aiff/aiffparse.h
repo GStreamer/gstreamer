@@ -82,6 +82,7 @@ struct _GstAiffParse {
   guint32 bps;
 
   guint bytes_per_sample;
+  guint max_buf_size;
 
   guint32   total_frames;
 

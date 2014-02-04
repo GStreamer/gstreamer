@@ -108,6 +108,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
             "S32LE, S32BE, F32BE, F64BE }"))
     );
 
+#define MAX_BUFFER_SIZE 4096
+
 #define gst_aiff_parse_parent_class parent_class
 G_DEFINE_TYPE (GstAiffParse, gst_aiff_parse, GST_TYPE_ELEMENT);
 
@@ -270,6 +272,32 @@ gst_aiff_parse_stream_init (GstAiffParse * aiff)
   aiff->offset += 12;
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_aiff_parse_time_to_bytepos (GstAiffParse * aiff, gint64 ts,
+    gint64 * bytepos)
+{
+  /* -1 always maps to -1 */
+  if (ts == -1) {
+    *bytepos = -1;
+    return TRUE;
+  }
+
+  /* 0 always maps to 0 */
+  if (ts == 0) {
+    *bytepos = 0;
+    return TRUE;
+  }
+
+  if (aiff->bps > 0) {
+    *bytepos = gst_util_uint64_scale_ceil (ts, (guint64) aiff->bps, GST_SECOND);
+    return TRUE;
+  }
+
+  GST_WARNING_OBJECT (aiff, "No valid bps to convert position");
+
+  return FALSE;
 }
 
 /* This function is used to perform seeks on the element in
@@ -1031,6 +1059,19 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
 
   aiff->state = AIFF_PARSE_DATA;
 
+  /* determine reasonable max buffer size,
+   * that is, buffers not too small either size or time wise
+   * so we do not end up with too many of them */
+  /* var abuse */
+  upstream_size = 0;
+  gst_aiff_parse_time_to_bytepos (aiff, 40 * GST_MSECOND, &upstream_size);
+  aiff->max_buf_size = upstream_size;
+  aiff->max_buf_size = MAX (aiff->max_buf_size, MAX_BUFFER_SIZE);
+  if (aiff->bytes_per_sample > 0)
+    aiff->max_buf_size -= (aiff->max_buf_size % aiff->bytes_per_sample);
+
+  GST_DEBUG_OBJECT (aiff, "max buffer size %u", aiff->max_buf_size);
+
   return GST_FLOW_OK;
 
   /* ERROR */
@@ -1152,8 +1193,6 @@ gst_aiff_parse_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
-#define MAX_BUFFER_SIZE 4096
-
 static GstFlowReturn
 gst_aiff_parse_stream_data (GstAiffParse * aiff)
 {
@@ -1176,7 +1215,7 @@ iterate_adapter:
    * amounts of data regardless of the playback rate */
   desired =
       MIN (gst_guint64_to_gdouble (aiff->dataleft),
-      MAX_BUFFER_SIZE * ABS (aiff->segment.rate));
+      aiff->max_buf_size * ABS (aiff->segment.rate));
 
   if (desired >= aiff->bytes_per_sample && aiff->bytes_per_sample > 0)
     desired -= (desired % aiff->bytes_per_sample);
