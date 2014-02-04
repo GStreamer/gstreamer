@@ -337,8 +337,9 @@ gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec,
         mpg123_feed (mpg123_decoder->handle, info.data, info.size);
         gst_buffer_unmap (input_buffer, &info);
       } else {
-        GST_ERROR_OBJECT (mpg123_decoder, "gst_memory_map() failed");
-        return GST_FLOW_ERROR;
+        GST_AUDIO_DECODER_ERROR (mpg123_decoder, 1, RESOURCE, READ, (NULL),
+            ("gst_memory_map() failed"), retval);
+        return retval;
       }
     }
 
@@ -398,6 +399,7 @@ gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec,
     {
       /* Anything else is considered an error */
       int errcode;
+      retval = GST_FLOW_ERROR;  /* use error by default */
       switch (decode_error) {
         case MPG123_ERR:
           errcode = mpg123_errcode (mpg123_decoder->handle);
@@ -420,11 +422,12 @@ gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec,
         }
         default:{
           char const *errmsg = mpg123_plain_strerror (errcode);
-          GST_ERROR_OBJECT (dec, "Reported error: %s", errmsg);
+          /* GST_AUDIO_DECODER_ERROR sets a new return value according to
+           * its estimations */
+          GST_AUDIO_DECODER_ERROR (mpg123_decoder, 1, STREAM, DECODE, (NULL),
+              ("mpg123 decoding error: %s", errmsg), retval);
         }
       }
-
-      retval = GST_FLOW_ERROR;
     }
   }
 
@@ -506,6 +509,10 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
   {
     GstCaps *allowed_srccaps_unnorm =
         gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
+    if (!allowed_srccaps_unnorm) {
+      GST_ERROR_OBJECT (dec, "Allowed src caps are NULL");
+      return FALSE;
+    }
     allowed_srccaps = gst_caps_normalize (allowed_srccaps_unnorm);
   }
 
