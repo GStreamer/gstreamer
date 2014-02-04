@@ -1369,7 +1369,7 @@ main (int argc, char **argv)
         video effect on a simple pipeline every second.
       </para>
       <programlisting>
-<!-- example-begin test-effect-switch.c -->
+<!-- example-begin effectswitch.c -->
 <![CDATA[
 #include <gst/gst.h>
 
@@ -1578,7 +1578,7 @@ main (int argc, char **argv)
   return 0;
 }
 ]]>
-<!-- example-end test-effect-switch.c -->
+<!-- example-end effectswitch.c -->
       </programlisting>
       <para>
         Note how we added videoconvert elements before and after the effect.
