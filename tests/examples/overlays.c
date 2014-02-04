@@ -92,7 +92,7 @@ make_timeline (char *path, float duration, char *text, guint32 color,
   ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
 
   timeline = ges_timeline_new ();
-  ges_pipeline_add_timeline (pipeline, timeline);
+  ges_pipeline_set_timeline (pipeline, timeline);
 
   trackv = GES_TRACK (ges_video_track_new ());
   ges_timeline_add_track (timeline, trackv);

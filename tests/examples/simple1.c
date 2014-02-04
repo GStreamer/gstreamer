@@ -84,7 +84,7 @@ main (int argc, gchar ** argv)
       !ges_timeline_add_layer (timeline, layer2) ||
       !ges_timeline_add_track (timeline, tracka) ||
       !ges_timeline_add_track (timeline, trackv) ||
-      !ges_pipeline_add_timeline (pipeline, timeline))
+      !ges_pipeline_set_timeline (pipeline, timeline))
     return -1;
 
   if (1) {

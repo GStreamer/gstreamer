@@ -35,7 +35,7 @@ class Simple:
 
     def _create_pipeline(self, timeline):
         self.pipeline = GES.Pipeline()
-        self.pipeline.add_timeline(timeline)
+        self.pipeline.set_timeline(timeline)
         bus = self.pipeline.get_bus()
         bus.add_signal_watch()
         bus.connect("message", self.bus_message_cb)

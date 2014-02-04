@@ -633,7 +633,7 @@ project_loaded_now_play_cb (GESProject * project, GESTimeline * timeline)
 
   GESPipeline *pipeline = ges_pipeline_new ();
 
-  fail_unless (ges_pipeline_add_timeline (pipeline, timeline));
+  fail_unless (ges_pipeline_set_timeline (pipeline, timeline));
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),

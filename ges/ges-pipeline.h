@@ -79,7 +79,7 @@ GType ges_pipeline_get_type (void);
 
 GESPipeline* ges_pipeline_new (void);
 
-gboolean ges_pipeline_add_timeline (GESPipeline * pipeline,
+gboolean ges_pipeline_set_timeline (GESPipeline * pipeline,
 					     GESTimeline * timeline);
 
 gboolean ges_pipeline_set_render_settings (GESPipeline *pipeline,

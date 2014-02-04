@@ -183,7 +183,7 @@ ges_pipeline_set_property (GObject * object, guint property_id,
           value);
       break;
     case PROP_TIMELINE:
-      ges_pipeline_add_timeline (GES_PIPELINE (object),
+      ges_pipeline_set_timeline (GES_PIPELINE (object),
           g_value_get_object (value));
       break;
     case PROP_MODE:
@@ -261,11 +261,11 @@ ges_pipeline_class_init (GESPipelineClass * klass)
    * GESPipeline:timeline:
    *
    * Timeline to use in this pipeline. See also
-   * ges_pipeline_add_timeline() for more info.
+   * ges_pipeline_set_timeline() for more info.
    */
   properties[PROP_TIMELINE] = g_param_spec_object ("timeline", "Timeline",
       "Timeline to use in this pipeline. See also "
-      "ges_pipeline_add_timeline() for more info.",
+      "ges_pipeline_set_timeline() for more info.",
       GES_TYPE_TIMELINE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_TIMELINE,
       properties[PROP_TIMELINE]);
@@ -786,7 +786,7 @@ no_more_pads_cb (GstElement * timeline, GESPipeline * self)
 }
 
 /**
- * ges_pipeline_add_timeline:
+ * ges_pipeline_set_timeline:
  * @pipeline: a #GESPipeline
  * @timeline: the #GESTimeline to set on the @pipeline.
  *
@@ -798,7 +798,7 @@ no_more_pads_cb (GstElement * timeline, GESPipeline * self)
  * else FALSE.
  */
 gboolean
-ges_pipeline_add_timeline (GESPipeline * pipeline, GESTimeline * timeline)
+ges_pipeline_set_timeline (GESPipeline * pipeline, GESTimeline * timeline)
 {
   g_return_val_if_fail (GES_IS_PIPELINE (pipeline), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);

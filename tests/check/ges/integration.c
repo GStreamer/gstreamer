@@ -350,7 +350,7 @@ check_timeline (GESTimeline * timeline)
   gst_bus_add_watch (bus, my_bus_callback, &ret);
   gst_object_unref (bus);
 
-  ges_pipeline_add_timeline (pipeline, timeline);
+  ges_pipeline_set_timeline (pipeline, timeline);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),

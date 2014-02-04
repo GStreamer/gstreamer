@@ -100,7 +100,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
   ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
 
   timeline = ges_timeline_new ();
-  ges_pipeline_add_timeline (pipeline, timeline);
+  ges_pipeline_set_timeline (pipeline, timeline);
 
   trackv = GES_TRACK (ges_video_track_new ());
   ges_timeline_add_track (timeline, trackv);

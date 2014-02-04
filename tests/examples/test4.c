@@ -134,7 +134,7 @@ main (int argc, gchar ** argv)
   pipeline = ges_pipeline_new ();
 
   /* Add the timeline to that pipeline */
-  if (!ges_pipeline_add_timeline (pipeline, timeline))
+  if (!ges_pipeline_set_timeline (pipeline, timeline))
     return -1;
 
 

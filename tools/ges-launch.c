@@ -343,7 +343,7 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
   pipeline = ges_pipeline_new ();
 
   /* Add the timeline to that pipeline */
-  if (!ges_pipeline_add_timeline (pipeline, timeline))
+  if (!ges_pipeline_set_timeline (pipeline, timeline))
     goto failure;
 
   *ret_timeline = timeline;

@@ -101,7 +101,7 @@ create_timeline (void)
 
   pipeline = ges_pipeline_new ();
 
-  if (!ges_pipeline_add_timeline (pipeline, timeline))
+  if (!ges_pipeline_set_timeline (pipeline, timeline))
     return NULL;
 
   return pipeline;

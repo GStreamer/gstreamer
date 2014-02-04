@@ -97,7 +97,7 @@ ges_test_create_pipeline (GESTimeline * timeline)
   GESPipeline *pipeline;
 
   pipeline = ges_pipeline_new ();
-  fail_unless (ges_pipeline_add_timeline (pipeline, timeline));
+  fail_unless (ges_pipeline_set_timeline (pipeline, timeline));
 
   g_object_set (pipeline, "audio-sink", gst_element_factory_make ("fakesink",
           "test-audiofakesink"), "video-sink",
@@ -264,7 +264,7 @@ play_timeline (GESTimeline * timeline)
   gst_bus_add_watch (bus, (GstBusFunc) my_bus_callback, loop);
   gst_object_unref (bus);
 
-  ges_pipeline_add_timeline (pipeline, timeline);
+  ges_pipeline_set_timeline (pipeline, timeline);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
 

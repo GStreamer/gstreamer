@@ -1142,7 +1142,7 @@ app_launch_project (App * app, gchar * uri)
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   mainloop = g_main_loop_new (NULL, FALSE);
 
-  ges_pipeline_add_timeline (pipeline, timeline);
+  ges_pipeline_set_timeline (pipeline, timeline);
   ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_bus_add_signal_watch (bus);
@@ -1268,7 +1268,7 @@ app_init (void)
   if (!(ret->pipeline = ges_pipeline_new ()))
     goto fail;
 
-  if (!ges_pipeline_add_timeline (ret->pipeline, ret->timeline))
+  if (!ges_pipeline_set_timeline (ret->pipeline, ret->timeline))
     goto fail;
 
   if (!(create_ui (ret)))
