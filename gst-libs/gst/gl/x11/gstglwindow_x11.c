@@ -418,7 +418,7 @@ gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
    * If no loop then the parent is directly set in XCreateWindow
    */
   if (window_x11->loop && g_main_loop_is_running (window_x11->loop)) {
-    GST_LOG ("set parent window id: %lud", id);
+    GST_LOG ("set parent window id: %" G_GUINTPTR_FORMAT, id);
 
     g_mutex_lock (&window_x11->disp_send_lock);
     XGetWindowAttributes (window_x11->disp_send, window_x11->parent_win, &attr);
