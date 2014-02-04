@@ -1371,10 +1371,6 @@ main (int argc, char **argv)
       <programlisting>
 <!-- example-begin test-effect-switch.c -->
 <![CDATA[
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <gst/gst.h>
 
 static gchar *opt_effects = NULL;
@@ -1506,15 +1502,13 @@ main (int argc, char **argv)
   gchar **effect_names, **e;
 
   ctx = g_option_context_new ("");
-  g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
+  g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", err->message);
     return 1;
   }
   g_option_context_free (ctx);
-
-  GST_FIXME ("Multiple things to check/fix, see source code");
 
   if (opt_effects != NULL)
     effect_names = g_strsplit (opt_effects, ",", -1);
