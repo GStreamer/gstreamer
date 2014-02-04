@@ -42,6 +42,8 @@
 
 #include <wayland-client.h>
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_WAYLAND_SINK \
 	    (gst_wayland_sink_get_type())
 #define GST_WAYLAND_SINK(obj) \
@@ -87,7 +89,9 @@ struct shm_pool {
 typedef struct _GstWaylandSink GstWaylandSink;
 typedef struct _GstWaylandSinkClass GstWaylandSinkClass;
 
+G_END_DECLS
 #include "waylandpool.h"
+G_BEGIN_DECLS
 
 struct _GstWaylandSink
 {

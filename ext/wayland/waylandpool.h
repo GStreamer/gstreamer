@@ -21,16 +21,16 @@
 #ifndef __GST_WAYLAND_BUFFER_POOL_H__
 #define __GST_WAYLAND_BUFFER_POOL_H__
 
+#include "gstwaylandsink.h"
+
 G_BEGIN_DECLS
 
-#include "gstwaylandsink.h"
+/* buffer meta */
 typedef struct _GstWlMeta GstWlMeta;
-
-typedef struct _GstWaylandBufferPool GstWaylandBufferPool;
-typedef struct _GstWaylandBufferPoolClass GstWaylandBufferPoolClass;
 
 GType gst_wl_meta_api_get_type (void);
 #define GST_WL_META_API_TYPE  (gst_wl_meta_api_get_type())
+
 const GstMetaInfo * gst_wl_meta_get_info (void);
 #define GST_WL_META_INFO  (gst_wl_meta_get_info())
 
@@ -46,11 +46,14 @@ struct _GstWlMeta {
   size_t size;
 };
 
-/* buffer pool functions */
+/* buffer pool */
 #define GST_TYPE_WAYLAND_BUFFER_POOL      (gst_wayland_buffer_pool_get_type())
 #define GST_IS_WAYLAND_BUFFER_POOL(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WAYLAND_BUFFER_POOL))
 #define GST_WAYLAND_BUFFER_POOL(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_WAYLAND_BUFFER_POOL, GstWaylandBufferPool))
 #define GST_WAYLAND_BUFFER_POOL_CAST(obj) ((GstWaylandBufferPool*)(obj))
+
+typedef struct _GstWaylandBufferPool GstWaylandBufferPool;
+typedef struct _GstWaylandBufferPoolClass GstWaylandBufferPoolClass;
 
 struct _GstWaylandBufferPool
 {
