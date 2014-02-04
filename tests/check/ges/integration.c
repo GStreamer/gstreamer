@@ -243,8 +243,10 @@ get_position (void)
     if ((position >= (seek->seeking_position - seek_tol))
         && (position <= (seek->seeking_position + seek_tol))) {
 
-      if (!got_async_done)
-        fail_if (GST_CLOCK_TIME_IS_VALID (seeked_position));
+      if (!got_async_done) {
+        GST_INFO ("Still not received ASYNC_DONE, keep going");
+        return TRUE;
+      }
       got_async_done = FALSE;
 
       GST_INFO ("seeking to: %" GST_TIME_FORMAT,
