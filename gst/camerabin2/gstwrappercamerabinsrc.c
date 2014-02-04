@@ -828,6 +828,7 @@ start_image_capture (GstWrapperCameraBinSrc * self)
   GstCaps *caps;
 
   GST_DEBUG_OBJECT (self, "Starting image capture");
+  gst_element_set_state (self->src_vid_src, GST_STATE_READY);
 
   if (self->image_renegotiate) {
     /* clean capsfilter caps so they don't interfere here */
@@ -852,6 +853,7 @@ start_image_capture (GstWrapperCameraBinSrc * self)
   }
 
   if (photography) {
+    gst_element_set_state (self->src_vid_src, GST_STATE_PLAYING);
     GST_DEBUG_OBJECT (self, "prepare image capture caps %" GST_PTR_FORMAT,
         self->image_capture_caps);
     ret = gst_photography_prepare_for_capture (photography,
@@ -863,6 +865,7 @@ start_image_capture (GstWrapperCameraBinSrc * self)
         self->image_capture_caps);
     g_mutex_lock (&bcamsrc->capturing_mutex);
     ret = TRUE;
+    gst_element_set_state (self->src_vid_src, GST_STATE_PLAYING);
   }
 
   return ret;
