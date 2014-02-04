@@ -98,9 +98,9 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
 };
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS "{ S8LE, S16LE, S24LE, S24_32LE } "
+#define FORMATS "{ S8, S16LE, S24LE, S24_32LE } "
 #else
-#define FORMATS "{ S8BE, S16BE, S24BE, S24_32BE } "
+#define FORMATS "{ S8, S16BE, S24BE, S24_32BE } "
 #endif
 
 #define FLAC_SINK_CAPS                                    \
@@ -734,7 +734,7 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
     g_value_init (&v_list, GST_TYPE_LIST);
     g_value_init (&v, G_TYPE_STRING);
 
-    g_value_set_static_string (&v, GST_AUDIO_NE (S8));
+    g_value_set_static_string (&v, "S8");
     gst_value_list_append_value (&v_list, &v);
     g_value_set_static_string (&v, GST_AUDIO_NE (S16));
     gst_value_list_append_value (&v_list, &v);

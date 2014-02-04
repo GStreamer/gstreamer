@@ -69,7 +69,7 @@ static GstStaticPadTemplate cutter_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) { " GST_AUDIO_NE (S8) "," GST_AUDIO_NE (S16) " }, "
+        "format = (string) { S8," GST_AUDIO_NE (S16) " }, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ], "
         "layout = (string) interleaved")
     );
@@ -79,7 +79,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) { " GST_AUDIO_NE (S8) "," GST_AUDIO_NE (S16) " }, "
+        "format = (string) { S8," GST_AUDIO_NE (S16) " }, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ], "
         "layout = (string) interleaved")
     );
