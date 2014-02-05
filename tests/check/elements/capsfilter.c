@@ -251,6 +251,7 @@ GST_START_TEST (test_push_pending_events)
   GstTagList *tags;
   GstBuffer *buffer;
   GstEvent *event;
+  GstCaps *caps;
 
   filter = gst_check_setup_element ("capsfilter");
   mysinkpad = gst_check_setup_sink_pad (filter, &sinktemplate);
@@ -278,9 +279,10 @@ GST_START_TEST (test_push_pending_events)
   fail_unless (g_list_length (events) == 0);
 
   /* push a caps */
-  fail_unless (gst_pad_push_event (mysrcpad,
-          gst_event_new_caps (gst_caps_from_string ("audio/x-raw, "
-                  "channels=(int)2, " "rate = (int)44100"))));
+  caps = gst_caps_from_string ("audio/x-raw, "
+      "channels=(int)2, " "rate = (int)44100");
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
   fail_unless (g_list_length (events) == 1);
   event = events->data;
   fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
