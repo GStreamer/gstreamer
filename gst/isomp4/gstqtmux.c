@@ -235,7 +235,8 @@ gst_qt_mux_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstQTMuxClass *klass = (GstQTMuxClass *) g_class;
   GstQTMuxClassParams *params;
-  GstPadTemplate *videosinktempl, *audiosinktempl, *srctempl;
+  GstPadTemplate *videosinktempl, *audiosinktempl, *subtitlesinktempl;
+  GstPadTemplate *srctempl;
   gchar *longname, *description;
 
   params =
@@ -268,6 +269,12 @@ gst_qt_mux_base_init (gpointer g_class)
     videosinktempl = gst_pad_template_new ("video_%u",
         GST_PAD_SINK, GST_PAD_REQUEST, params->video_sink_caps);
     gst_element_class_add_pad_template (element_class, videosinktempl);
+  }
+
+  if (params->subtitle_sink_caps) {
+    subtitlesinktempl = gst_pad_template_new ("subtitle_%u",
+        GST_PAD_SINK, GST_PAD_REQUEST, params->subtitle_sink_caps);
+    gst_element_class_add_pad_template (element_class, subtitlesinktempl);
   }
 
   klass->format = params->prop->format;
@@ -2478,11 +2485,11 @@ gst_qtmux_caps_is_subset_full (GstQTMux * qtmux, GstCaps * subset,
 }
 
 static gboolean
-gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
+gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 {
+  GstPad *pad = qtpad->collect.pad;
   GstQTMux *qtmux = GST_QT_MUX_CAST (gst_pad_get_parent (pad));
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
-  GstQTPad *qtpad = NULL;
   GstStructure *structure;
   const gchar *mimetype;
   gint rate, channels;
@@ -2493,10 +2500,6 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
   AtomInfo *ext_atom = NULL;
   gint constant_size = 0;
   const gchar *stream_format;
-
-  /* find stream data */
-  qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
-  g_assert (qtpad);
 
   qtpad->prepare_buf_func = NULL;
 
@@ -2794,11 +2797,11 @@ adjust_rate (guint64 rate)
 }
 
 static gboolean
-gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
+gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 {
+  GstPad *pad = qtpad->collect.pad;
   GstQTMux *qtmux = GST_QT_MUX_CAST (gst_pad_get_parent (pad));
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
-  GstQTPad *qtpad = NULL;
   GstStructure *structure;
   const gchar *mimetype;
   gint width, height, depth = -1;
@@ -2812,10 +2815,6 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   GList *ext_atom_list = NULL;
   gboolean sync = FALSE;
   int par_num, par_den;
-
-  /* find stream data */
-  qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
-  g_assert (qtpad);
 
   qtpad->prepare_buf_func = NULL;
 
@@ -3139,6 +3138,57 @@ refuse_renegotiation:
 }
 
 static gboolean
+gst_qt_mux_subtitle_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
+{
+  GstPad *pad = qtpad->collect.pad;
+  GstQTMux *qtmux = GST_QT_MUX_CAST (gst_pad_get_parent (pad));
+
+  qtpad->prepare_buf_func = NULL;
+
+  /* does not go well to renegotiate stream mid-way, unless
+   * the old caps are a subset of the new one (this means upstream
+   * added more info to the caps, as both should be 'fixed' caps) */
+  if (qtpad->fourcc) {
+    GstCaps *current_caps;
+
+    current_caps = gst_pad_get_current_caps (pad);
+    g_assert (caps != NULL);
+
+    if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
+      gst_caps_unref (current_caps);
+      goto refuse_renegotiation;
+    }
+    GST_DEBUG_OBJECT (qtmux,
+        "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
+        GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
+    gst_caps_unref (current_caps);
+  }
+
+  GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (pad), caps);
+
+  /* subtitles default */
+  qtpad->is_out_of_order = FALSE;
+  qtpad->sync = FALSE;
+
+  /* TODO fill me */
+
+  gst_object_unref (qtmux);
+  /* not implemented */
+  return FALSE;
+
+  /* ERRORS */
+refuse_renegotiation:
+  {
+    GST_WARNING_OBJECT (qtmux,
+        "pad %s refused renegotiation to %" GST_PTR_FORMAT, GST_PAD_NAME (pad),
+        caps);
+    gst_object_unref (qtmux);
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_qt_mux_sink_event (GstCollectPads * pads, GstCollectData * data,
     GstEvent * event, gpointer user_data)
 {
@@ -3161,7 +3211,7 @@ gst_qt_mux_sink_event (GstCollectPads * pads, GstCollectData * data,
       g_assert (collect_pad);
       g_assert (collect_pad->set_caps);
 
-      ret = collect_pad->set_caps (pad, caps);
+      ret = collect_pad->set_caps (collect_pad, caps);
       gst_event_unref (event);
       event = NULL;
       break;
@@ -3253,7 +3303,7 @@ gst_qt_mux_request_new_pad (GstElement * element,
   GstQTMux *qtmux = GST_QT_MUX_CAST (element);
   GstQTPad *collect_pad;
   GstPad *newpad;
-  gboolean audio;
+  GstQTPadSetCapsFunc setcaps_func;
   gchar *name;
   gint pad_id;
 
@@ -3264,18 +3314,25 @@ gst_qt_mux_request_new_pad (GstElement * element,
     goto too_late;
 
   if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
-    audio = TRUE;
+    setcaps_func = gst_qt_mux_audio_sink_set_caps;
     if (req_name != NULL && sscanf (req_name, "audio_%u", &pad_id) == 1) {
       name = g_strdup (req_name);
     } else {
       name = g_strdup_printf ("audio_%u", qtmux->audio_pads++);
     }
   } else if (templ == gst_element_class_get_pad_template (klass, "video_%u")) {
-    audio = FALSE;
+    setcaps_func = gst_qt_mux_video_sink_set_caps;
     if (req_name != NULL && sscanf (req_name, "video_%u", &pad_id) == 1) {
       name = g_strdup (req_name);
     } else {
       name = g_strdup_printf ("video_%u", qtmux->video_pads++);
+    }
+  } else if (templ == gst_element_class_get_pad_template (klass, "subtitle_%u")) {
+    setcaps_func = gst_qt_mux_subtitle_sink_set_caps;
+    if (req_name != NULL && sscanf (req_name, "subtitle_%u", &pad_id) == 1) {
+      name = g_strdup (req_name);
+    } else {
+      name = g_strdup_printf ("subtitle_%u", qtmux->subtitle_pads++);
     }
   } else
     goto wrong_template;
@@ -3296,10 +3353,7 @@ gst_qt_mux_request_new_pad (GstElement * element,
   qtmux->sinkpads = g_slist_append (qtmux->sinkpads, collect_pad);
 
   /* set up pad functions */
-  if (audio)
-    collect_pad->set_caps = GST_DEBUG_FUNCPTR (gst_qt_mux_audio_sink_set_caps);
-  else
-    collect_pad->set_caps = GST_DEBUG_FUNCPTR (gst_qt_mux_video_sink_set_caps);
+  collect_pad->set_caps = setcaps_func;
 
   gst_pad_set_active (newpad, TRUE);
   gst_element_add_pad (element, newpad);
@@ -3506,6 +3560,7 @@ gst_qt_mux_register (GstPlugin * plugin)
 
   while (TRUE) {
     GstQTMuxFormatProp *prop;
+    GstCaps *subtitle_caps;
 
     prop = &gst_qt_mux_format_list[i];
     format = prop->format;
@@ -3518,6 +3573,12 @@ gst_qt_mux_register (GstPlugin * plugin)
     params->src_caps = gst_static_caps_get (&prop->src_caps);
     params->video_sink_caps = gst_static_caps_get (&prop->video_sink_caps);
     params->audio_sink_caps = gst_static_caps_get (&prop->audio_sink_caps);
+    subtitle_caps = gst_static_caps_get (&prop->subtitle_sink_caps);
+    if (!gst_caps_is_equal (subtitle_caps, GST_CAPS_NONE)) {
+      params->subtitle_sink_caps = subtitle_caps;
+    } else {
+      gst_caps_unref (subtitle_caps);
+    }
 
     /* create the type now */
     type = g_type_register_static (GST_TYPE_ELEMENT, prop->type_name, &typeinfo,

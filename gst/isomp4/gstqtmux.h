@@ -78,6 +78,8 @@ typedef struct _GstQTPad GstQTPad;
 typedef GstBuffer * (*GstQTPadPrepareBufferFunc) (GstQTPad * pad,
     GstBuffer * buf, GstQTMux * qtmux);
 
+typedef gboolean (*GstQTPadSetCapsFunc) (GstQTPad * pad, GstCaps * caps);
+
 #define QTMUX_NO_OF_TS   10
 
 struct _GstQTPad
@@ -126,7 +128,7 @@ struct _GstQTPad
 
   /* if nothing is set, it won't be called */
   GstQTPadPrepareBufferFunc prepare_buf_func;
-  gboolean (*set_caps) (GstPad * pad, GstCaps * caps);
+  GstQTPadSetCapsFunc set_caps;
 };
 
 typedef enum _GstQTMuxState
@@ -192,7 +194,7 @@ struct _GstQTMux
   gboolean streamable;
 
   /* for request pad naming */
-  guint video_pads, audio_pads;
+  guint video_pads, audio_pads, subtitle_pads;
 };
 
 struct _GstQTMuxClass
@@ -209,6 +211,7 @@ typedef struct _GstQTMuxClassParams
   GstCaps *src_caps;
   GstCaps *video_sink_caps;
   GstCaps *audio_sink_caps;
+  GstCaps *subtitle_sink_caps;
 } GstQTMuxClassParams;
 
 #define GST_QT_MUX_PARAMS_QDATA g_quark_from_static_string("qt-mux-params")
