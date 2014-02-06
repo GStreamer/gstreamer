@@ -133,6 +133,10 @@
   "audio/x-alac, " \
   COMMON_AUDIO_CAPS(2, MAX)
 
+#define TEXT_UTF8 \
+  "text/x-raw, " \
+  "format=(string)utf8"
+
 /* FIXME 0.11 - take a look at bugs #580005 and #340375 */
 GstQTMuxFormatProp gst_qt_mux_format_list[] = {
   /* original QuickTime format; see Apple site (e.g. qtff.pdf) */
@@ -167,7 +171,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             "audio/x-alaw, " COMMON_AUDIO_CAPS (2, MAX) "; "
             "audio/x-mulaw, " COMMON_AUDIO_CAPS (2, MAX) "; "
             AMR_CAPS " ; " ALAC_CAPS),
-      GST_STATIC_CAPS_NONE}
+      GST_STATIC_CAPS (TEXT_UTF8)}
   ,
   /* ISO 14496-14: mp42 as ISO base media extension
    * (supersedes original ISO 144996-1 mp41) */
@@ -181,7 +185,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";"
             "video/x-mp4-part," COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS " ; " ALAC_CAPS),
-      GST_STATIC_CAPS_NONE}
+      GST_STATIC_CAPS (TEXT_UTF8)}
   ,
   /* Microsoft Smooth Streaming fmp4/isml */
   /* TODO add WMV/WMA support */
@@ -207,7 +211,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS ("video/quicktime, variant = (string) 3gpp"),
         GST_STATIC_CAPS (H263_CAPS "; " MPEG4V_CAPS "; " H264_CAPS),
         GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS),
-      GST_STATIC_CAPS_NONE}
+      GST_STATIC_CAPS (TEXT_UTF8)}
   ,
   /* ISO 15444-3: Motion-JPEG-2000 (also ISO base media extension) */
   {

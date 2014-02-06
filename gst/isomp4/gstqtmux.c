@@ -550,6 +550,39 @@ gst_qt_mux_prepare_jpc_buffer (GstQTPad * qtpad, GstBuffer * buf,
   return newbuf;
 }
 
+static GstBuffer *
+gst_qt_mux_prepare_tx3g_buffer (GstQTPad * qtpad, GstBuffer * buf,
+    GstQTMux * qtmux)
+{
+  GstBuffer *newbuf;
+  GstMapInfo frommap;
+  GstMapInfo tomap;
+  gsize size;
+
+  GST_LOG_OBJECT (qtmux, "Preparing tx3g buffer %" GST_PTR_FORMAT, buf);
+
+  if (buf == NULL)
+    return NULL;
+
+  size = gst_buffer_get_size (buf);
+  newbuf = gst_buffer_new_and_alloc (size + 2);
+
+  gst_buffer_map (buf, &frommap, GST_MAP_READ);
+  gst_buffer_map (newbuf, &tomap, GST_MAP_WRITE);
+
+  GST_WRITE_UINT16_BE (tomap.data, size);
+  memcpy (tomap.data + 2, frommap.data, size);
+
+  gst_buffer_unmap (newbuf, &tomap);
+  gst_buffer_unmap (buf, &frommap);
+
+  gst_buffer_copy_into (newbuf, buf, GST_BUFFER_COPY_METADATA, 0, size);
+
+  gst_buffer_unref (buf);
+
+  return newbuf;
+}
+
 static void
 gst_qt_mux_add_mp4_tag (GstQTMux * qtmux, const GstTagList * list,
     const char *tag, const char *tag2, guint32 fourcc)
@@ -1806,6 +1839,10 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   guint32 timescale;
   GstClockTime first_ts = GST_CLOCK_TIME_NONE;
 
+  /* for setting some subtitles fields */
+  guint max_width = 0;
+  guint max_height = 0;
+
   GST_DEBUG_OBJECT (qtmux, "Updating remaining values and sending last data");
 
   /* pushing last buffers for each pad */
@@ -1845,6 +1882,12 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       first_ts = qtpad->last_dts;
     }
 
+    /* subtitles need to know the video width/height,
+     * it is stored shifted 16 bits to the left according to the
+     * spec */
+    max_width = MAX (max_width, (qtpad->trak->tkhd.width >> 16));
+    max_height = MAX (max_height, (qtpad->trak->tkhd.height >> 16));
+
     /* update average bitrate of streams if needed */
     {
       guint32 avgbitrate = 0;
@@ -1857,6 +1900,23 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
             8 * GST_SECOND, qtpad->total_duration);
 
       atom_trak_update_bitrates (qtpad->trak, avgbitrate, maxbitrate);
+    }
+  }
+
+  /* need to update values on subtitle traks now that we know the
+   * max width and height */
+  for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstQTPad *qtpad = (GstQTPad *) cdata;
+
+    if (!qtpad->fourcc) {
+      GST_DEBUG_OBJECT (qtmux, "Pad %s has never had buffers",
+          GST_PAD_NAME (qtpad->collect.pad));
+      continue;
+    }
+
+    if (qtpad->fourcc == FOURCC_tx3g) {
+      atom_trak_tx3g_update_dimension (qtpad->trak, max_width, max_height);
     }
   }
 
@@ -3142,6 +3202,8 @@ gst_qt_mux_subtitle_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 {
   GstPad *pad = qtpad->collect.pad;
   GstQTMux *qtmux = GST_QT_MUX_CAST (gst_pad_get_parent (pad));
+  GstStructure *structure;
+  SubtitleSampleEntry entry = { 0, };
 
   qtpad->prepare_buf_func = NULL;
 
@@ -3168,16 +3230,38 @@ gst_qt_mux_subtitle_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       GST_DEBUG_PAD_NAME (pad), caps);
 
   /* subtitles default */
+  subtitle_sample_entry_init (&entry);
   qtpad->is_out_of_order = FALSE;
   qtpad->sync = FALSE;
+  qtpad->prepare_buf_func = NULL;
 
-  /* TODO fill me */
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_has_name (structure, "text/x-raw")) {
+    const gchar *format = gst_structure_get_string (structure, "format");
+    if (format && strcmp (format, "utf8") == 0) {
+      entry.fourcc = FOURCC_tx3g;
+      qtpad->prepare_buf_func = gst_qt_mux_prepare_tx3g_buffer;
+    }
+  }
+
+  if (!entry.fourcc)
+    goto refuse_caps;
+
+  qtpad->fourcc = entry.fourcc;
+  atom_trak_set_subtitle_type (qtpad->trak, qtmux->context, &entry);
 
   gst_object_unref (qtmux);
-  /* not implemented */
-  return FALSE;
+  return TRUE;
 
   /* ERRORS */
+refuse_caps:
+  {
+    GST_WARNING_OBJECT (qtmux, "pad %s refused caps %" GST_PTR_FORMAT,
+        GST_PAD_NAME (pad), caps);
+    gst_object_unref (qtmux);
+    return FALSE;
+  }
 refuse_renegotiation:
   {
     GST_WARNING_OBJECT (qtmux,
