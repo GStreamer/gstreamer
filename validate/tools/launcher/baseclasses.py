@@ -351,7 +351,11 @@ class GstValidateTest(Test):
     def get_current_size(self):
         position = self.get_current_position()
 
-        size = os.stat(urlparse.urlparse(self.dest_file).path).st_size
+        try:
+            size = os.stat(urlparse.urlparse(self.dest_file).path).st_size
+        except OSError as e:
+            return position
+
         self.debug("Size: %s" % size)
         return size
 
