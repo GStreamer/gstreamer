@@ -41,7 +41,7 @@
  */
 
 /**
- * SECTION:element-quarktv
+ * SECTION:element-revtv
  *
  * RevTV acts like a video waveform monitor for each line of video
  * processed. This creates a pseudo 3D effect based on the brightness
