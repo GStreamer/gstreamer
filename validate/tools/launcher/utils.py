@@ -30,8 +30,8 @@ from operator import itemgetter
 
 GST_SECOND = 1000000000
 DEFAULT_TIMEOUT = 10
-DEFAULT_GST_QA_ASSETS = os.path.join(os.path.expanduser('~'), "Videos",
-                          "gst-qa-assets")
+DEFAULT_MAIN_DIR = os.path.expanduser("~/gst-validate/")
+DEFAULT_GST_QA_ASSETS =  os.path.join(DEFAULT_MAIN_DIR, "gst-qa-assets")
 DISCOVERER_COMMAND = "gst-discoverer-1.0"
 DURATION_TOLERANCE = GST_SECOND / 2
 

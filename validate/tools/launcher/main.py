@@ -21,13 +21,14 @@ import sys
 import utils
 import urlparse
 import loggable
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 
 from httpserver import HTTPServer
 from baseclasses import _TestsLauncher
-from utils import printc, path2url, DEFAULT_GST_QA_ASSETS, launch_command, Colors
+from utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors
 
 
+QA_ASSETS = "gst-qa-assets"
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
 
 def main():
@@ -43,11 +44,6 @@ def main():
     parser.add_option("-F", "--fatal-error", dest="fatal_error",
                       action="store_true", default=False,
                       help="Stop on first fail")
-    parser.add_option('--xunit-file', action='store',
-                      dest='xunit_file', metavar="FILE",
-                      default=None,
-                      help=("Path to xml file to store the xunit report in. "
-                      "Default is xunit.xml in the logs-dir directory"))
     parser.add_option("-t", "--wanted-tests", dest="wanted_tests",
                       default=[],
                       action="append",
@@ -61,36 +57,72 @@ def main():
                       action="store_true",
                       default=False,
                       help="List tests and exit")
-    parser.add_option("-o", "--output-dir", dest="outputdir",
-                      action="store_true", default=os.path.expanduser("~/gst-validate/"),
-                      help="Directory where to store logs and rendered files")
-    parser.add_option("-l", "--logs-dir", dest="logsdir",
-                      action="store_true", default=None,
-                      help="Directory where to store logs, default is logs/ in "
-                      "--output-dir result")
-    parser.add_option("-p", "--medias-paths", dest="paths", action="append",
-                      default=[os.path.join(DEFAULT_GST_QA_ASSETS, "medias")],
-                      help="Paths in which to look for media files")
     parser.add_option("-m", "--mute", dest="mute",
                       action="store_true", default=False,
                       help="Mute playback output, which mean that we use "
                       "a fakesink")
-    parser.add_option("-R", "--render-path", dest="dest",
-                     default=None,
-                     help="Set the path to which projects should be"
-                     " renderd")
     parser.add_option("-n", "--no-color", dest="no_color",
                      action="store_true", default=False,
                      help="Set it to output no colored text in the terminal")
     parser.add_option("-g", "--generate-media-info", dest="generate_info",
                      action="store_true", default=False,
                      help="Set it in order to generate the missing .media_infos files")
-    parser.add_option("-s", "--folder-for-http-server", dest="http_server_dir",
-                      default=os.path.join(DEFAULT_GST_QA_ASSETS, "medias"),
-                      help="Folder in which to create an http server on localhost")
-    parser.add_option("", "--http-server-port", dest="http_server_port",
+
+    dir_group = OptionGroup(parser, "Directories and files to be used by the launcher")
+    parser.add_option('--xunit-file', action='store',
+                      dest='xunit_file', metavar="FILE",
+                      default=None,
+                      help=("Path to xml file to store the xunit report in. "
+                      "Default is xunit.xml in the logs-dir directory"))
+    dir_group.add_option("-M", "--main-dir", dest="main_dir",
+                      default=DEFAULT_MAIN_DIR,
+                      help="Main directory where to put files."
+                      "Logs will land into 'main_dir'" + os.pathsep + "'logs' and"
+                      "assets will be cloned into 'main_dir'" + os.pathsep + "'gst-qa-assets'"
+                      " if not explicitely changed")
+    dir_group.add_option("-o", "--output-dir", dest="outputdir",
+                      action="store_true", default=os.path.join(DEFAULT_MAIN_DIR,
+                      "logs"),
+                      help="Directory where to store logs and rendered files")
+    dir_group.add_option("-l", "--logs-dir", dest="logsdir",
+                      default=None,
+                      help="Directory where to store logs, default is logs/ in "
+                      "--output-dir result")
+    dir_group.add_option("-R", "--render-path", dest="dest",
+                     default=None,
+                     help="Set the path to which projects should be rendered")
+    dir_group.add_option("-p", "--medias-paths", dest="paths", action="append",
+                      default=None,
+                      help="Paths in which to look for media files, will be %s "
+                      "if nothing specified" %
+                      os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "medias"))
+    dir_group.add_option("", "--clone-dir", dest="clone_dir",
+                      default=None,
+                      help="Paths in which to look for media files, will be %s "
+                      "if nothing specified" %
+                      [os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS)])
+    parser.add_option_group(dir_group)
+
+    http_server_group = OptionGroup(parser, "Handle the HTTP server to be created")
+    http_server_group.add_option("", "--http-server-port", dest="http_server_port",
                       default=8079,
                       help="Port on which to run the http server on localhost")
+    http_server_group.add_option("-s", "--folder-for-http-server", dest="http_server_dir",
+                      default=os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "medias"),
+                      help="Folder in which to create an http server on localhost")
+    parser.add_option_group(http_server_group)
+
+    assets_group = OptionGroup(parser, "Handle remote assets")
+    assets_group.add_option("-u", "--update-assets-command", dest="update_assets_command",
+                      default="git pull --rebase",
+                      help="Command to update assets")
+    assets_group.add_option("", "--get-assets-command", dest="get_assets_command",
+                      default="git clone",
+                      help="Command to get assets")
+    assets_group.add_option("", "--remote-assets-url", dest="remote_assets_url",
+                      default=DEFAULT_GST_QA_ASSETS_REPO,
+                      help="Url to the remote assets")
+    parser.add_option_group(assets_group)
 
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 
@@ -111,22 +143,31 @@ def main():
         options.logsdir = os.path.join(options.outputdir, "logs")
     if options.xunit_file is None:
         options.xunit_file = os.path.join(options.logsdir, "xunit.xml")
+
     if options.dest is None:
         options.dest = os.path.join(options.outputdir, "rendered")
     if not os.path.exists(options.dest):
         os.makedirs(options.dest)
     if urlparse.urlparse(options.dest).scheme == "":
         options.dest = path2url(options.dest)
+
     if options.no_color:
         utils.desactivate_colors()
+    if options.clone_dir is None:
+        options.clone_dir = os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS)
+    if options.paths is None:
+        options.paths = options.clone_dir
 
     tests_launcher.set_settings(options, args)
 
-    if options.paths == [os.path.join(DEFAULT_GST_QA_ASSETS, "medias")]:
-        if os.path.exists(DEFAULT_GST_QA_ASSETS):
-            launch_command("cd %s && git pull --rebase" % DEFAULT_GST_QA_ASSETS)
+    if options.remote_assets_url:
+        if os.path.exists(options.clone_dir):
+            launch_command("cd %s && %s" % (options.clone_dir,
+                                            options.update_assets_command))
         else:
-            launch_command("git clone %s %s" % (DEFAULT_GST_QA_ASSETS_REPO, DEFAULT_GST_QA_ASSETS))
+            launch_command("%s %s %s" % (options.get_assets_command,
+                                         options.remote_assets_url,
+                                         options.clone_dir))
 
     tests_launcher.list_tests()
 
