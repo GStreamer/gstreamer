@@ -1593,8 +1593,6 @@ scan_and_update_registry (GstRegistry * default_registry,
     g_free (home_plugins);
 
     /* add the main (installed) library path */
-    GST_DEBUG ("scanning main plugins %s", PLUGINDIR);
-    changed |= gst_registry_scan_path_internal (&context, PLUGINDIR);
 
 #ifdef G_OS_WIN32
     {
@@ -1606,8 +1604,13 @@ scan_and_update_registry (GstRegistry * default_registry,
           (_priv_gst_dll_handle);
 
       dir =
-          g_build_filename (base_dir, "lib", "gstreamer-" GST_API_VERSION,
-          NULL);
+          g_build_filename (base_dir,
+#ifdef _DEBUG
+                            "debug"
+#endif
+                            "lib",
+                            "gstreamer-" GST_API_VERSION,
+                            NULL);
       GST_DEBUG ("scanning DLL dir %s", dir);
 
       changed |= gst_registry_scan_path_internal (&context, dir);
@@ -1615,6 +1618,9 @@ scan_and_update_registry (GstRegistry * default_registry,
       g_free (dir);
       g_free (base_dir);
     }
+#else
+    GST_DEBUG ("scanning main plugins %s", PLUGINDIR);
+    changed |= gst_registry_scan_path_internal (&context, PLUGINDIR);
 #endif
   } else {
     gchar **list;

@@ -33,8 +33,13 @@
 #include <fcntl.h>
 #include <unistd.h>
 #else
+#define WIN32_LEAN_AND_MEAN
+
 #define fsync(fd) _commit(fd)
 #include <io.h>
+
+#include <windows.h>
+extern HMODULE _priv_gst_dll_handle;
 #endif
 
 #ifdef HAVE_SYS_UTSNAME_H
@@ -470,7 +475,22 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
 
   if (!res) {
     GST_LOG ("Trying installed plugin scanner");
+
+#ifdef G_OS_WIN32
+    {
+      gchar *basedir;
+
+      basedir = g_win32_get_package_installation_directory_of_module (_priv_gst_dll_handle);
+      helper_bin = g_build_filename (basedir,
+                                     "lib",
+                                     "gstreamer-" GST_API_VERSION,
+                                     "gst-plugin-scanner.exe",
+                                     NULL);
+      g_free (basedir);
+    }
+#else
     helper_bin = g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
+#endif
     res = gst_plugin_loader_try_helper (loader, helper_bin);
     g_free (helper_bin);
 

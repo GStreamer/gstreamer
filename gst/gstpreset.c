@@ -78,6 +78,13 @@
 #endif
 #include <glib/gstdio.h>
 
+#ifdef G_OS_WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+extern HMODULE _priv_gst_dll_handle;
+#endif
+
 #define GST_CAT_DEFAULT preset_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -175,8 +182,18 @@ preset_get_paths (GstPreset * preset, const gchar ** preset_user_path,
       gchar *preset_dir;
 
       /* system presets in '$GST_DATADIR/gstreamer-1.0/presets/GstAudioPanorama.prs' */
+#ifdef G_OS_WIN32
+      gchar *basedir = g_win32_get_package_installation_directory_of_module (_priv_gst_dll_handle);
+      preset_dir = g_build_filename (basedir,
+                                     "share",
+                                     "gstreamer-" GST_API_VERSION,
+                                     "presets",
+                                     NULL);
+      g_free (basedir);
+#else
       preset_dir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
           "presets", NULL);
+#endif
       GST_INFO_OBJECT (preset, "system_preset_dir: '%s'", preset_dir);
       preset_path = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s.prs",
           preset_dir, element_name);

@@ -461,6 +461,7 @@ static gboolean
 init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     GError ** error)
 {
+  gchar *libdir;
   if (gst_initialized) {
     GST_DEBUG ("already initialized");
     return TRUE;
@@ -481,8 +482,24 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   /* This is the earliest we can make stuff show up in the logs.
    * So give some useful info about GStreamer here */
+#ifdef G_OS_WIN32
+  {
+    gchar *basedir = g_win32_get_package_installation_directory_of_module (_priv_gst_dll_handle);
+
+    libdir = g_build_filename (basedir,
+#ifdef _DEBUG
+                               "debug"
+#endif
+                               "lib",
+                               NULL);
+    g_free (basedir);
+  }
+#else
+  libdir = g_strdup (LIBDIR);
+#endif
   GST_INFO ("Initializing GStreamer Core Library version %s", VERSION);
-  GST_INFO ("Using library installed in %s", LIBDIR);
+  GST_INFO ("Using library installed in %s", libdir);
+  g_free (libdir);
 
   /* Print some basic system details if possible (OS/architecture) */
 #ifdef HAVE_SYS_UTSNAME_H
