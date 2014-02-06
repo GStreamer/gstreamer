@@ -1518,6 +1518,18 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
         tex[i].format, tex[i].type, upload->data[data_i]);
   }
 
+  /* Reset to default values */
+#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
+  if (USING_OPENGL (context) || USING_GLES3 (context)) {
+    gl->PixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+  }
+#endif
+#if GST_GL_HAVE_GLES2
+  if (USING_GLES2 (context)) {
+    gl->PixelStorei (GL_UNPACK_ALIGNMENT, 4);
+  }
+#endif
+
   /* make sure no texture is in use in our opengl context 
    * in case we want to use the upload texture in an other opengl context
    */
