@@ -64,7 +64,21 @@ if sys.version_info < minver:
   sys.exit(1)
 sys.exit(0)"
 
+dnl check for GStreamer
+GST_API_VERSION=1.0
+AC_SUBST(GST_API_VERSION)
+PKG_CHECK_MODULES(GST, gstreamer-$GST_API_VERSION >= $GST_REQ)
+AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION", [Gst API version])
+GST_CFLAGS="$GST_CFLAGS $GLIB_EXTRA_CFLAGS"
+AC_SUBST(GST_CFLAGS)
+AC_SUBST(GST_LIBS)
 
+
+dnl check for pygobject
+PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ)
+AC_SUBST(PYGOBJECT_CFLAGS)
+
+dnl check for python
 if $PYTHON -c "$prog" 1>&AC_FD_CC 2>&AC_FD_CC
 then
   AC_MSG_RESULT(okay)
@@ -109,6 +123,8 @@ GST_CFLAGS="$GST_CFLAGS $GLIB_EXTRA_CFLAGS"
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
+AG_GST_SET_PLUGINDIR
+
 dnl check for pygobject
 PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ)
 AC_SUBST(PYGOBJECT_CFLAGS)
@@ -116,6 +132,8 @@ AC_SUBST(PYGOBJECT_CFLAGS)
 dnl and set the override directory
 AC_ARG_WITH([pygi_overrides_dir],
             AC_HELP_STRING([--with-pygi-overrides-dir], [Path to pygobject overrides directory]))
+
+AM_CHECK_PYTHON_LIBS(, AC_MSG_ERROR([Python libs not found. Windows requires Python modules to be explicitly linked to libpython.]))
 
 AG_GST_VALGRIND_CHECK
 
@@ -133,5 +151,6 @@ AC_OUTPUT([
   common/Makefile
   common/m4/Makefile
   gi/Makefile
+  plugin/Makefile
   gi/overrides/Makefile
 ])

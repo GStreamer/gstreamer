@@ -47,6 +47,11 @@ py_prefix=`$PYTHON -c "import sys; print(sys.prefix)"`
 py_exec_prefix=`$PYTHON -c "import sys; print(sys.exec_prefix)"`
 if $PYTHON-config --help 1>/dev/null 2>/dev/null; then
   PYTHON_INCLUDES=`$PYTHON-config --includes 2>/dev/null`
+  if $PYTHON-config --abiflags 1>/dev/null 2>/dev/null; then
+    PYTHON_ABI_FLAGS=`$PYTHON-config --abiflags 2>/dev/null`
+  else
+    PYTHON_ABI_FLAGS=
+  fi
 else
   PYTHON_INCLUDES="-I${py_prefix}/include/python${PYTHON_VERSION}"
   if test "$py_prefix" != "$py_exec_prefix"; then
@@ -86,8 +91,12 @@ if $PYTHON-config --help 1>/dev/null 2>/dev/null; then
 
     # default to prefix/lib for distros that don't have a link in
     # .../pythonX.Y/config/
-    if test ! -e $PYTHON_LIB_LOC/libpython${PYTHON_VERSION}.so; then
-      PYTHON_LIB_LOC=${py_prefix}/lib
+    if test ! -e $PYTHON_LIB_LOC/libpython${PYTHON_VERSION}${PYTHON_ABI_FLAGS}.so; then
+      if test -e ${py_prefix}/lib64/libpython${PYTHON_VERSION}${PYTHON_ABI_FLAGS}.so; then
+        PYTHON_LIB_LOC=${py_prefix}/lib64
+      else
+        PYTHON_LIB_LOC=${py_prefix}/lib
+      fi
     fi
   fi
 else
@@ -111,6 +120,7 @@ fi
 
 AC_SUBST(PYTHON_LIBS)
 AC_SUBST(PYTHON_LIB_LOC)
+AC_SUBST(PYTHON_ABI_FLAGS)
 AC_SUBST(PYTHON_LIB_SUFFIX)
 dnl check if the headers exist:
 save_LIBS="$LIBS"
