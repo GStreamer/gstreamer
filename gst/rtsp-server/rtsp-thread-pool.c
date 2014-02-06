@@ -56,6 +56,7 @@ typedef struct _GstRTSPThreadImpl
   GstRTSPThread thread;
 
   gint reused;
+  GSource *source;
 } GstRTSPThreadImpl;
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstRTSPThread, gst_rtsp_thread);
@@ -67,6 +68,7 @@ _gst_rtsp_thread_free (GstRTSPThreadImpl * impl)
 {
   GST_DEBUG ("free thread %p", impl);
 
+  g_source_unref (impl->source);
   g_main_loop_unref (impl->thread.loop);
   g_main_context_unref (impl->thread.context);
   g_slice_free1 (sizeof (GstRTSPThreadImpl), impl);
@@ -171,14 +173,11 @@ gst_rtsp_thread_stop (GstRTSPThread * thread)
   GST_DEBUG ("stop thread %p", thread);
 
   if (g_atomic_int_dec_and_test (&impl->reused)) {
-    GSource *source;
-
     GST_DEBUG ("add idle source to quit mainloop of thread %p", thread);
-    source = g_idle_source_new ();
-    g_source_set_callback (source, (GSourceFunc) do_quit,
+    impl->source = g_idle_source_new ();
+    g_source_set_callback (impl->source, (GSourceFunc) do_quit,
         thread, (GDestroyNotify) gst_rtsp_thread_unref);
-    g_source_attach (source, thread->context);
-    g_source_unref (source);
+    g_source_attach (impl->source, thread->context);
   } else
     gst_rtsp_thread_unref (thread);
 }
