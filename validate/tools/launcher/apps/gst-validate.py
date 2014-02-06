@@ -185,12 +185,10 @@ class GstValidateTranscodingTest(GstValidateTest):
         self.dest_file = ""
 
     def set_rendering_info(self):
-        self.dest_file = os.path.join(self.options.dest,
-                                 "validate.transcoding." +
-                                 os.path.basename(self.uri) +
-                                 '-' + self.combination.acodec +
-                                 self.combination.vcodec + '.' +
-                                 self.combination.container)
+        self.dest_file = path = os.path.join(self.options.dest,
+                                             self.classname.replace(".transcode.", os.sep).
+                                             replace(".", os.sep))
+        utils.mkdir(os.path.dirname(urlparse.urlsplit(self.dest_file).path))
         if urlparse.urlparse(self.dest_file).scheme == "":
             self.dest_file = path2url(self.dest_file)
 

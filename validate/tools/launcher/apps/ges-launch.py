@@ -120,12 +120,10 @@ class GESRenderTest(GESTest):
         self._set_rendering_info()
 
     def _set_rendering_info(self):
-        self.dest_file = os.path.join(self.options.dest,
-                                 "ges.",
-                                 os.path.basename(self.project_uri) +
-                                 '-' + self.combination.acodec +
-                                 self.combination.vcodec + '.' +
-                                 self.combination.container)
+        self.dest_file = path = os.path.join(self.options.dest,
+                                             self.classname.replace(".render.", os.sep).
+                                             replace(".", os.sep))
+        utils.mkdir(os.path.dirname(urlparse.urlsplit(self.dest_file).path))
         if not utils.isuri(self.dest_file):
             self.dest_file = utils.path2url(self.dest_file)
 
