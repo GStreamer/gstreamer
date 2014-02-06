@@ -340,7 +340,8 @@ typedef enum _SampleEntryKind
 {
   UNKNOWN,
   AUDIO,
-  VIDEO
+  VIDEO,
+  SUBTITLE,
 } SampleEntryKind;
 
 typedef struct _SampleTableEntry
@@ -350,7 +351,7 @@ typedef struct _SampleTableEntry
   guint8 reserved[6];
   guint16 data_reference_index;
 
-  /* sort of entry */
+  /* type of entry */
   SampleEntryKind kind;
 } SampleTableEntry;
 
@@ -420,6 +421,19 @@ typedef struct _SampleTableEntryMP4S
 
   AtomESDS es;
 } SampleTableEntryMP4S;
+
+typedef struct _SampleTableEntryTX3G
+{
+  SampleTableEntry se;
+
+  guint32 display_flags;
+  guint64 default_text_box;
+  guint16 font_id;
+  guint8  font_face; /* bold=0x1, italic=0x2, underline=0x4 */
+  guint8  font_size; /* should always be 0.05 multiplied by the video track header height */
+  guint32 foreground_color_rgba;
+
+} SampleTableEntryTX3G;
 
 typedef struct _AtomSTSD
 {
@@ -899,6 +913,17 @@ typedef struct
   GstBuffer *codec_data;
 } AudioSampleEntry;
 
+typedef struct
+{
+  guint32 fourcc;
+
+  guint8  font_face; /* bold=0x1, italic=0x2, underline=0x4 */
+  guint8  font_size;
+  guint32 foreground_color_rgba;
+} SubtitleSampleEntry;
+
+void subtitle_sample_entry_init (SubtitleSampleEntry * entry);
+
 void atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
                                AudioSampleEntry * entry, guint32 scale,
                                AtomInfo * ext, gint sample_size);
@@ -907,8 +932,14 @@ void atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
                                VisualSampleEntry * entry, guint32 rate,
                                GList * ext_atoms_list);
 
+void atom_trak_set_subtitle_type (AtomTRAK * trak, AtomsContext * context,
+                               SubtitleSampleEntry * entry);
+
 void atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
                                 guint32 max_bitrate);
+
+void atom_trak_tx3g_update_dimension (AtomTRAK * trak, guint32 width,
+                                      guint32 height);
 
 AtomInfo *   build_codec_data_extension  (guint32 fourcc, const GstBuffer * codec_data);
 AtomInfo *   build_mov_aac_extension     (AtomTRAK * trak, const GstBuffer * codec_data,
