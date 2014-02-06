@@ -1487,7 +1487,6 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 {
   GstRTSPMediaClass *klass;
   GstRTSPMediaPrivate *priv;
-  GstSeekFlags flags;
   gboolean res;
   GstClockTime start, stop;
   GstSeekType start_type, stop_type;
@@ -1520,10 +1519,6 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   if (!priv->seekable)
     goto not_seekable;
 
-  /* depends on the current playing state of the pipeline. We might need to
-   * queue this until we get EOS. */
-  flags = GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT;
-
   start_type = stop_type = GST_SEEK_TYPE_NONE;
 
   if (!klass->convert_range (media, range, GST_RTSP_RANGE_NPT))
@@ -1546,6 +1541,8 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     stop_type = GST_SEEK_TYPE_SET;
 
   if (start != GST_CLOCK_TIME_NONE || stop != GST_CLOCK_TIME_NONE) {
+    GstSeekFlags flags;
+
     GST_INFO ("seeking to %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
@@ -1553,6 +1550,15 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     if (priv->blocked)
       media_streams_set_blocked (media, TRUE);
 
+    /* depends on the current playing state of the pipeline. We might need to
+     * queue this until we get EOS. */
+    flags = GST_SEEK_FLAG_FLUSH;
+
+    /* only set keyframe flag when modifying start */
+    if (start_type != GST_SEEK_TYPE_NONE)
+      flags |= GST_SEEK_FLAG_KEY_UNIT;
+
+    /* FIXME, we only do forwards */
     res = gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME,
         flags, start_type, start, stop_type, stop);
 
