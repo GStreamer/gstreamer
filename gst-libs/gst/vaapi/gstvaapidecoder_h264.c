@@ -445,6 +445,7 @@ struct _GstVaapiDecoderH264Private {
     GstH264NalParser           *parser;
     guint                       parser_state;
     guint                       decoder_state;
+    GstVaapiStreamAlignH264     stream_alignment;
     GstVaapiPictureH264        *current_picture;
     GstVaapiParserInfoH264     *sps[GST_H264_MAX_SPS_COUNT];
     GstVaapiParserInfoH264     *active_sps;
@@ -3880,7 +3881,14 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    size = gst_adapter_available(adapter);
+    switch (priv->stream_alignment) {
+    case GST_VAAPI_STREAM_ALIGN_H264_NALU:
+        size = gst_adapter_available_fast(adapter);
+        break;
+    default:
+        size = gst_adapter_available(adapter);
+        break;
+    }
 
     if (priv->is_avcC) {
         if (size < priv->nal_length_size)
@@ -3902,30 +3910,34 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
         if (size < 4)
             return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-        ofs = scan_for_start_code(adapter, 0, size, NULL);
-        if (ofs < 0)
-            return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-
-        if (ofs > 0) {
-            gst_adapter_flush(adapter, ofs);
-            size -= ofs;
-        }
-
-        ofs2 = ps->input_offset2 - ofs - 4;
-        if (ofs2 < 4)
-            ofs2 = 4;
-
-        ofs = G_UNLIKELY(size < ofs2 + 4) ? -1 :
-            scan_for_start_code(adapter, ofs2, size - ofs2, NULL);
-        if (ofs < 0) {
-            // Assume the whole NAL unit is present if end-of-stream
-            if (!at_eos) {
-                ps->input_offset2 = size;
+        if (priv->stream_alignment == GST_VAAPI_STREAM_ALIGN_H264_NALU)
+            buf_size = size;
+        else {
+            ofs = scan_for_start_code(adapter, 0, size, NULL);
+            if (ofs < 0)
                 return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+
+            if (ofs > 0) {
+                gst_adapter_flush(adapter, ofs);
+                size -= ofs;
             }
-            ofs = size;
+
+            ofs2 = ps->input_offset2 - ofs - 4;
+            if (ofs2 < 4)
+                ofs2 = 4;
+
+            ofs = G_UNLIKELY(size < ofs2 + 4) ? -1 :
+                scan_for_start_code(adapter, ofs2, size - ofs2, NULL);
+            if (ofs < 0) {
+                // Assume the whole NAL unit is present if end-of-stream
+                if (!at_eos) {
+                    ps->input_offset2 = size;
+                    return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+                }
+                ofs = size;
+            }
+            buf_size = ofs;
         }
-        buf_size = ofs;
     }
     ps->input_offset2 = 0;
 
@@ -4125,6 +4137,24 @@ gst_vaapi_decoder_h264_class(void)
         g_once_init_leave(&g_class_init, TRUE);
     }
     return GST_VAAPI_DECODER_CLASS(&g_class);
+}
+
+/**
+ * gst_vaapi_decoder_h264_set_alignment:
+ * @decoder: a #GstVaapiDecoderH264
+ * @alignment: the #GstVaapiStreamAlignH264
+ *
+ * Specifies how stream buffers are aligned / fed, i.e. the boundaries
+ * of each buffer that is supplied to the decoder. This could be no
+ * specific alignment, NAL unit boundaries, or access unit boundaries.
+ */
+void
+gst_vaapi_decoder_h264_set_alignment(GstVaapiDecoderH264 *decoder,
+    GstVaapiStreamAlignH264 alignment)
+{
+    g_return_if_fail(decoder != NULL);
+
+    decoder->priv.stream_alignment = alignment;
 }
 
 /**

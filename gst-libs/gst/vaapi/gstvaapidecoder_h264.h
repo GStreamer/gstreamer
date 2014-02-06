@@ -27,10 +27,33 @@
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_DECODER_H264(decoder) \
+    ((GstVaapiDecoderH264 *)(decoder))
+
 typedef struct _GstVaapiDecoderH264             GstVaapiDecoderH264;
+
+/**
+ * GstVaapiStreamAlignH264:
+ * @GST_VAAPI_STREAM_ALIGN_H264_NONE: Generic H.264 stream buffers
+ * @GST_VAAPI_STREAM_ALIGN_H264_NALU: H.264 stream buffers aligned NAL
+ *   unit boundaries
+ * @GST_VAAPI_STREAM_ALIGN_H264_AU: H.264 stream buffers aligned on
+ *   access unit boundaries
+ *
+ * Set of possible buffer alignments for H.264 streams.
+ */
+typedef enum {
+    GST_VAAPI_STREAM_ALIGN_H264_NONE,
+    GST_VAAPI_STREAM_ALIGN_H264_NALU,
+    GST_VAAPI_STREAM_ALIGN_H264_AU
+} GstVaapiStreamAlignH264;
 
 GstVaapiDecoder *
 gst_vaapi_decoder_h264_new(GstVaapiDisplay *display, GstCaps *caps);
+
+void
+gst_vaapi_decoder_h264_set_alignment(GstVaapiDecoderH264 *decoder,
+    GstVaapiStreamAlignH264 alignment);
 
 G_END_DECLS
 

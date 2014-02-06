@@ -644,6 +644,24 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
         break;
     case GST_VAAPI_CODEC_H264:
         decode->decoder = gst_vaapi_decoder_h264_new(dpy, caps);
+
+        /* Set the stream buffer alignment for better optimizations */
+        if (decode->decoder && caps) {
+            GstStructure * const structure = gst_caps_get_structure(caps, 0);
+            const gchar *str = NULL;
+
+            if ((str = gst_structure_get_string(structure, "alignment"))) {
+                GstVaapiStreamAlignH264 alignment;
+                if (g_strcmp0(str, "au") == 0)
+                    alignment = GST_VAAPI_STREAM_ALIGN_H264_AU;
+                else if (g_strcmp0(str, "nal") == 0)
+                    alignment = GST_VAAPI_STREAM_ALIGN_H264_NALU;
+                else
+                    alignment = GST_VAAPI_STREAM_ALIGN_H264_NONE;
+                gst_vaapi_decoder_h264_set_alignment(
+                    GST_VAAPI_DECODER_H264(decode->decoder), alignment);
+            }
+        }
         break;
     case GST_VAAPI_CODEC_WMV3:
     case GST_VAAPI_CODEC_VC1:
