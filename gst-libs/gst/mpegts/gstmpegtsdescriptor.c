@@ -899,7 +899,7 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
  * gst_mpegts_descriptor_parse_iso_639_language_idx:
  * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegTsDescriptor
  * @idx: Table id of the language to parse
- * @lang (out) (transfer none): 4-byte gchar array to hold the language code
+ * @lang: (out) (transfer none): 4-byte gchar array to hold the language code
  * @audio_type: (out) (transfer none) (allow-none): the #GstMpegTsIso639AudioType to set
  *
  * Extracts the iso 639-2 language information from specific table id in @descriptor.

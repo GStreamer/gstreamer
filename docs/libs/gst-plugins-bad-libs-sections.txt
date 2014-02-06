@@ -188,6 +188,9 @@ GstMpegTsDescriptorType
 GstMpegTsMiscDescriptorType
 gst_mpegts_find_descriptor
 gst_mpegts_parse_descriptors
+gst_mpegts_descriptor_from_custom
+<SUBSECTION registration>
+gst_mpegts_descriptor_from_registration
 <SUBSECTION iso639>
 GstMpegTsISO639LanguageDescriptor
 GstMpegTsIso639AudioType
@@ -257,10 +260,19 @@ GstMpegTsCableOuterFECScheme
 gst_mpegts_descriptor_parse_cable_delivery_system
 <SUBSECTION short_event>
 gst_mpegts_descriptor_parse_dvb_short_event
+<SUBSECTION network_name>
 gst_mpegts_descriptor_parse_dvb_network_name
+gst_mpegts_descriptor_from_dvb_network_name
 <SUBSECTION service>
 GstMpegTsDVBServiceType
 gst_mpegts_descriptor_parse_dvb_service
+<SUBSECTION teletext>
+GstMpegTsDVBTeletextType
+gst_mpegts_descriptor_parse_dvb_teletext_idx
+gst_mpegts_descriptor_parse_dvb_teletext_nb
+<SUBSECTION subtitling>
+gst_mpegts_descriptor_parse_dvb_subtitling
+gst_mpegts_descriptor_from_dvb_subtitling
 <SUBSECTION Standard>
 GST_TYPE_MPEG_TSDVB_CODE_RATE
 gst_mpeg_tsdvb_code_rate_get_type
@@ -283,17 +295,26 @@ GstMpegTsSectionTableID
 GstMpegTsSectionType
 gst_message_new_mpegts_section
 gst_message_parse_mpegts_section
+gst_mpegts_section_send_event
+gst_event_parse_mpegts_section
+gst_mpegts_section_packetize
 gst_mpegts_section_new
 gst_mpegts_section_ref
 gst_mpegts_section_unref
 <SUBSECTION PAT>
 GstMpegTsPatProgram
 gst_mpegts_section_get_pat
+gst_mpegts_pat_new
+gst_mpegts_pat_program_new
+gst_mpegts_section_from_pat
 <SUBSECTION PMT>
 GstMpegTsPMT
 GstMpegTsPMTStream
 GstMpegTsStreamType
 gst_mpegts_section_get_pmt
+gst_mpegts_pmt_new
+gst_mpegts_pmt_stream_new
+gst_mpegts_section_from_pmt
 <SUBSECTION TSDT>
 gst_mpegts_section_get_tsdt
 <SUBSECTION CAT>
@@ -330,6 +351,9 @@ GstMpegTsSectionDVBTableID
 GstMpegTsNIT
 GstMpegTsNITStream
 gst_mpegts_section_get_nit
+gst_mpegts_nit_new
+gst_mpegts_nit_stream_new
+gst_mpegts_section_from_nit
 <SUBSECTION BAT>
 GstMpegTsBAT
 GstMpegTsBATStream
