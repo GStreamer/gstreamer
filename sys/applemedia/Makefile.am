@@ -43,7 +43,7 @@ libgstapplemedia_la_LIBADD =			\
 	-lgstaudio-$(GST_API_VERSION)		\
 	$(GMODULE_NO_EXPORT_LIBS)
 
-libgstapplemedia_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+libgstapplemedia_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
 
 libgstapplemedia_la_LDFLAGS =			\
 	$(GST_PLUGIN_LDFLAGS)			\

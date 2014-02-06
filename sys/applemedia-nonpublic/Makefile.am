@@ -42,7 +42,7 @@ libgstapplemedia_nonpublic_la_LIBADD =			\
 	-lgstvideo-$(GST_API_VERSION)		\
 	$(GMODULE_NO_EXPORT_LIBS)
 
-libgstapplemedia_nonpublic_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+libgstapplemedia_nonpublic_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
 
 libgstapplemedia_nonpublic_la_LDFLAGS =			\
 	$(GST_PLUGIN_LDFLAGS)			\
