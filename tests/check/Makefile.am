@@ -44,7 +44,7 @@ check_x264enc=
 endif
 
 if USE_PLUGIN_XINGMUX
-check_xingmux = element/xingmux
+check_xingmux = elements/xingmux
 else
 check_xingmux =
 endif
