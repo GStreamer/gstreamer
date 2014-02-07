@@ -480,7 +480,6 @@ gst_mpegts_descriptor_from_dvb_subtitling (const gchar * lang,
   data += 2;
 
   GST_WRITE_UINT16_BE (data, ancillary);
-  data += 2;
 
   return descriptor;
 }
