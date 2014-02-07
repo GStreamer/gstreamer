@@ -6,7 +6,7 @@ pluginsdir=@libdir@/gstreamer-@GST_PKG_VERSION@
 
 Name: GStreamer VA-API Plugins Libraries
 Description: Streaming media framework, VA-API plugins libraries
-Requires: gstreamer-@GST_PKG_VERSION@ gstreamer-base-@GST_PKG_VERSION@ @LIBVA_PKGNAME@
+Requires: gstreamer-@GST_PKG_VERSION@ >= @GST_VERSION_REQUIRED@ gstreamer-base-@GST_PKG_VERSION@ >= @GST_PLUGINS_BASE_VERSION_REQUIRED@ @LIBVA_PKGNAME@
 Version: @VERSION@
 Libs: -L${libdir} -lgstvaapi-@GST_API_VERSION@
 Cflags: -I${includedir}

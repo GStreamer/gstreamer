@@ -17,7 +17,7 @@ lib_LTLIBRARIES += libgstvaapi-wayland-@GST_API_VERSION@.la
 endif
 
 libgstvaapi_includedir = \
-	$(includedir)/gstreamer-$(GST_API_VERSION)/gst/vaapi
+	$(includedir)/gstreamer-$(GST_PKG_VERSION)/gst/vaapi
 
 libgstvaapi_cflags =				\
 	-DIN_LIBGSTVAAPI			\
