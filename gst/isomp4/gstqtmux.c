@@ -378,10 +378,12 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->last_dts = 0;
   qtpad->first_ts = GST_CLOCK_TIME_NONE;
   qtpad->prepare_buf_func = NULL;
+  qtpad->create_empty_buffer = NULL;
   qtpad->avg_bitrate = 0;
   qtpad->max_bitrate = 0;
   qtpad->total_duration = 0;
   qtpad->total_bytes = 0;
+  qtpad->sparse = FALSE;
 
   qtpad->buf_head = 0;
   qtpad->buf_tail = 0;
@@ -581,6 +583,17 @@ gst_qt_mux_prepare_tx3g_buffer (GstQTPad * qtpad, GstBuffer * buf,
   gst_buffer_unref (buf);
 
   return newbuf;
+}
+
+static GstBuffer *
+gst_qt_mux_create_empty_tx3g_buffer (GstQTPad * qtpad, gint64 duration)
+{
+  guint8 *data;
+
+  data = g_malloc (2);
+  GST_WRITE_UINT16_BE (data, 0);
+
+  return gst_buffer_new_wrapped (data, 2);;
 }
 
 static void
@@ -2185,6 +2198,41 @@ check_and_subtract_ts (GstQTMux * qtmux, GstClockTime * ts_a, GstClockTime ts_b)
   }
 }
 
+
+static GstFlowReturn
+gst_qt_mux_register_and_push_sample (GstQTMux * qtmux, GstQTPad * pad,
+    GstBuffer * buffer, gboolean is_last_buffer, guint nsamples,
+    gint64 last_dts, gint64 scaled_duration, guint sample_size,
+    guint chunk_offset, gboolean sync, gboolean do_pts, gint64 pts_offset)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  /* note that a new chunk is started each time (not fancy but works) */
+  if (qtmux->moov_recov_file) {
+    if (!atoms_recov_write_trak_samples (qtmux->moov_recov_file, pad->trak,
+            nsamples, (gint32) scaled_duration, sample_size, chunk_offset, sync,
+            do_pts, pts_offset)) {
+      GST_WARNING_OBJECT (qtmux, "Failed to write sample information to "
+          "recovery file, disabling recovery");
+      fclose (qtmux->moov_recov_file);
+      qtmux->moov_recov_file = NULL;
+    }
+  }
+
+  if (qtmux->fragment_sequence) {
+    /* ensure that always sync samples are marked as such */
+    ret = gst_qt_mux_pad_fragment_add_buffer (qtmux, pad, buffer,
+        is_last_buffer, nsamples, last_dts, (gint32) scaled_duration,
+        sample_size, !pad->sync || sync, pts_offset);
+  } else {
+    atom_trak_add_samples (pad->trak, nsamples, (gint32) scaled_duration,
+        sample_size, chunk_offset, sync, pts_offset);
+    ret = gst_qt_mux_send_buffer (qtmux, buffer, &qtmux->mdat_size, TRUE);
+  }
+
+  return ret;
+}
+
 /*
  * Here we push the buffer and update the tables in the track atoms
  */
@@ -2304,22 +2352,23 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
    * the duration based on the difference in DTS or PTS, falling back
    * to DURATION if the other two don't exist, such as with the last
    * sample before EOS. */
-  if (last_buf && buf && GST_BUFFER_DTS_IS_VALID (buf)
-      && GST_BUFFER_DTS_IS_VALID (last_buf))
-    duration = GST_BUFFER_DTS (buf) - GST_BUFFER_DTS (last_buf);
-  else if (last_buf && buf && GST_BUFFER_PTS_IS_VALID (buf)
-      && GST_BUFFER_PTS_IS_VALID (last_buf))
-    duration = GST_BUFFER_PTS (buf) - GST_BUFFER_PTS (last_buf);
-  else
-    duration = GST_BUFFER_DURATION (last_buf);
+  duration = GST_BUFFER_DURATION (last_buf);
+  if (!pad->sparse) {
+    if (last_buf && buf && GST_BUFFER_DTS_IS_VALID (buf)
+        && GST_BUFFER_DTS_IS_VALID (last_buf))
+      duration = GST_BUFFER_DTS (buf) - GST_BUFFER_DTS (last_buf);
+    else if (last_buf && buf && GST_BUFFER_PTS_IS_VALID (buf)
+        && GST_BUFFER_PTS_IS_VALID (last_buf))
+      duration = GST_BUFFER_PTS (buf) - GST_BUFFER_PTS (last_buf);
+  }
+
+  gst_buffer_replace (&pad->last_buf, buf);
 
   /* for computing the avg bitrate */
   if (G_LIKELY (last_buf)) {
     pad->total_bytes += gst_buffer_get_size (last_buf);
     pad->total_duration += duration;
   }
-
-  gst_buffer_replace (&pad->last_buf, buf);
 
   last_dts = gst_util_uint64_scale_round (pad->last_dts,
       atom_trak_get_timescale (pad->trak), GST_SECOND);
@@ -2425,31 +2474,43 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   }
 
   /* now we go and register this buffer/sample all over */
-  /* note that a new chunk is started each time (not fancy but works) */
-  if (qtmux->moov_recov_file) {
-    if (!atoms_recov_write_trak_samples (qtmux->moov_recov_file, pad->trak,
-            nsamples, (gint32) scaled_duration, sample_size, chunk_offset, sync,
-            do_pts, pts_offset)) {
-      GST_WARNING_OBJECT (qtmux, "Failed to write sample information to "
-          "recovery file, disabling recovery");
-      fclose (qtmux->moov_recov_file);
-      qtmux->moov_recov_file = NULL;
+  ret = gst_qt_mux_register_and_push_sample (qtmux, pad, last_buf,
+      buf == NULL, nsamples, last_dts, scaled_duration, sample_size,
+      chunk_offset, sync, do_pts, pts_offset);
+
+  /* if this is sparse and we have a next buffer, check if there is any gap
+   * between them to insert an empty sample */
+  if (pad->sparse && buf) {
+    if (pad->create_empty_buffer) {
+      GstBuffer *empty_buf;
+      gint64 empty_duration =
+          GST_BUFFER_TIMESTAMP (buf) - (GST_BUFFER_TIMESTAMP (last_buf) +
+          duration);
+      gint64 empty_duration_scaled;
+
+      empty_buf = pad->create_empty_buffer (pad, empty_duration);
+
+      empty_duration_scaled = gst_util_uint64_scale_round (empty_duration,
+          atom_trak_get_timescale (pad->trak), GST_SECOND);
+
+      pad->total_bytes += gst_buffer_get_size (empty_buf);
+      pad->total_duration += duration;
+
+      ret =
+          gst_qt_mux_register_and_push_sample (qtmux, pad, empty_buf, FALSE, 1,
+          last_dts + scaled_duration, empty_duration_scaled,
+          gst_buffer_get_size (empty_buf), qtmux->mdat_size, sync, do_pts, 0);
+    } else {
+      /* our only case currently is tx3g subtitles, so there is no reason to fill this yet */
+      g_assert_not_reached ();
+      GST_WARNING_OBJECT (qtmux,
+          "no empty buffer creation function found for pad %s",
+          GST_PAD_NAME (pad->collect.pad));
     }
   }
 
   if (buf)
     gst_buffer_unref (buf);
-
-  if (qtmux->fragment_sequence) {
-    /* ensure that always sync samples are marked as such */
-    ret = gst_qt_mux_pad_fragment_add_buffer (qtmux, pad, last_buf,
-        buf == NULL, nsamples, last_dts, (gint32) scaled_duration, sample_size,
-        !pad->sync || sync, pts_offset);
-  } else {
-    atom_trak_add_samples (pad->trak, nsamples, (gint32) scaled_duration,
-        sample_size, chunk_offset, sync, pts_offset);
-    ret = gst_qt_mux_send_buffer (qtmux, last_buf, &qtmux->mdat_size, TRUE);
-  }
 
 exit:
 
@@ -3233,6 +3294,7 @@ gst_qt_mux_subtitle_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   subtitle_sample_entry_init (&entry);
   qtpad->is_out_of_order = FALSE;
   qtpad->sync = FALSE;
+  qtpad->sparse = TRUE;
   qtpad->prepare_buf_func = NULL;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -3242,6 +3304,7 @@ gst_qt_mux_subtitle_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     if (format && strcmp (format, "utf8") == 0) {
       entry.fourcc = FOURCC_tx3g;
       qtpad->prepare_buf_func = gst_qt_mux_prepare_tx3g_buffer;
+      qtpad->create_empty_buffer = gst_qt_mux_create_empty_tx3g_buffer;
     }
   }
 

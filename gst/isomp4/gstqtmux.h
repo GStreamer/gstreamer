@@ -79,6 +79,7 @@ typedef GstBuffer * (*GstQTPadPrepareBufferFunc) (GstQTPad * pad,
     GstBuffer * buf, GstQTMux * qtmux);
 
 typedef gboolean (*GstQTPadSetCapsFunc) (GstQTPad * pad, GstCaps * caps);
+typedef GstBuffer * (*GstQTPadCreateEmptyBufferFunc) (GstQTPad * pad, gint64 duration);
 
 #define QTMUX_NO_OF_TS   10
 
@@ -96,6 +97,9 @@ struct _GstQTPad
   guint sample_size;
   /* make sync table entry */
   gboolean sync;
+  /* if it is a sparse stream
+   * (meaning we can't use PTS differences to compute duration) */
+  gboolean sparse;
   /* bitrates */
   guint32 avg_bitrate, max_bitrate;
 
@@ -129,6 +133,7 @@ struct _GstQTPad
   /* if nothing is set, it won't be called */
   GstQTPadPrepareBufferFunc prepare_buf_func;
   GstQTPadSetCapsFunc set_caps;
+  GstQTPadCreateEmptyBufferFunc create_empty_buffer;
 };
 
 typedef enum _GstQTMuxState
