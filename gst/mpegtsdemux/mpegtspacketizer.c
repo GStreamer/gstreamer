@@ -1535,11 +1535,10 @@ _reevaluate_group_pcr_offset (MpegTSPCR * pcrtable, PCROffsetGroup * group)
       guint64 prevbr, lastbr;
       guint64 prevpcr;
       guint64 prevoffset, lastoffset;
-      guint64 guess_offset;
 
       /* Take the previous group pcr_offset and figure out how much to add
        * to it for the current group */
-      guess_offset = prev->pcr_offset;
+
       /* Right now we do a dumb bitrate estimation
        * estimate bitrate (prev - first) : bitrate from the start
        * estimate bitrate (prev) : bitrate of previous group
@@ -1600,6 +1599,8 @@ _reevaluate_group_pcr_offset (MpegTSPCR * pcrtable, PCROffsetGroup * group)
 
       if (prevpcr - cur->first_pcr > (PCR_MAX_VALUE * 9 / 10)) {
         gfloat diffprev;
+        guint64 guess_offset;
+
         /* Let's assume there is a PCR wraparound between the previous and current
          * group.
          * [ prev ]... PCR_MAX | 0 ...[ current ]
@@ -2213,8 +2214,6 @@ mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
 
   if (pcrtable->groups == NULL)
     return -1;
-
-  firstpcr = ((PCROffsetGroup *) pcrtable->groups->data)->first_pcr;
 
   querypcr = GSTTIME_TO_PCRTIME (ts);
 
