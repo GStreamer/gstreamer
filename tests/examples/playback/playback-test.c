@@ -2955,6 +2955,7 @@ create_ui (PlaybackApp * app)
   gtk_scale_set_digits (GTK_SCALE (app->seek_scale), 2);
   gtk_scale_set_value_pos (GTK_SCALE (app->seek_scale), GTK_POS_RIGHT);
   gtk_range_set_show_fill_level (GTK_RANGE (app->seek_scale), TRUE);
+  gtk_range_set_restrict_to_fill_level (GTK_RANGE (app->seek_scale), FALSE);
   gtk_range_set_fill_level (GTK_RANGE (app->seek_scale), N_GRAD);
 
   g_signal_connect (app->seek_scale, "button_press_event",
