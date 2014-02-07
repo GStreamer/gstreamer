@@ -372,7 +372,6 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
 {
   qtpad->fourcc = 0;
   qtpad->is_out_of_order = FALSE;
-  qtpad->have_dts = FALSE;
   qtpad->sample_size = 0;
   qtpad->sync = FALSE;
   qtpad->last_dts = 0;
@@ -2267,7 +2266,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   /* if buffer has missing DTS, we take either segment start or previous buffer end time, 
      which ever is later */
-  if (buf && pad->have_dts && !GST_BUFFER_DTS_IS_VALID (buf)) {
+  if (buf && !GST_BUFFER_DTS_IS_VALID (buf)) {
     GstClockTime last_buf_duration = last_buf
         && GST_BUFFER_DURATION_IS_VALID (last_buf) ?
         GST_BUFFER_DURATION (last_buf) : 0;
@@ -2284,6 +2283,9 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
         GST_BUFFER_DTS (buf)) {
       GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (last_buf) + last_buf_duration;
     }
+
+    if (GST_BUFFER_PTS_IS_VALID (buf))
+      GST_BUFFER_DTS (buf) = MIN (GST_BUFFER_DTS (buf), GST_BUFFER_PTS (buf));
   }
 
   if (last_buf && !buf && !GST_BUFFER_DURATION_IS_VALID (last_buf)) {
@@ -2311,7 +2313,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   /* if this is the first buffer, store the timestamp */
   if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE) && last_buf) {
-    if (pad->have_dts) {
+    if (GST_BUFFER_DTS_IS_VALID (last_buf)) {
       /* first pad always has DTS. If it was not provided by upstream it was set to segment start */
       pad->first_ts = GST_BUFFER_DTS (last_buf);
     } else if (GST_BUFFER_PTS_IS_VALID (last_buf)) {
@@ -2397,9 +2399,10 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   } else {
     nsamples = 1;
     sample_size = gst_buffer_get_size (last_buf);
-    if (pad->have_dts) {
+    if ((pad->last_buf && GST_BUFFER_DTS_IS_VALID (pad->last_buf))
+        || GST_BUFFER_DTS_IS_VALID (last_buf)) {
       gint64 scaled_dts;
-      if (pad->last_buf) {
+      if (pad->last_buf && GST_BUFFER_DTS_IS_VALID (pad->last_buf)) {
         pad->last_dts = GST_BUFFER_DTS (pad->last_buf);
       } else {
         pad->last_dts = GST_BUFFER_DTS (last_buf) +
@@ -2662,7 +2665,6 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     codec_data = gst_value_get_buffer (value);
 
   qtpad->is_out_of_order = FALSE;
-  qtpad->have_dts = FALSE;
 
   /* set common properties */
   entry.sample_rate = rate;
@@ -3104,7 +3106,6 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     ext_atom = build_codec_data_extension (FOURCC_avcC, codec_data);
     if (ext_atom != NULL)
       ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
-    qtpad->have_dts = TRUE;
   } else if (strcmp (mimetype, "video/x-svq") == 0) {
     gint version = 0;
     const GstBuffer *seqh = NULL;
@@ -3213,19 +3214,16 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     sync = FALSE;
   } else if (strcmp (mimetype, "video/x-dirac") == 0) {
     entry.fourcc = FOURCC_drac;
-    qtpad->have_dts = TRUE;
   } else if (strcmp (mimetype, "video/x-qt-part") == 0) {
     guint32 fourcc;
 
     gst_structure_get_uint (structure, "format", &fourcc);
     entry.fourcc = fourcc;
-    qtpad->have_dts = TRUE;
   } else if (strcmp (mimetype, "video/x-mp4-part") == 0) {
     guint32 fourcc;
 
     gst_structure_get_uint (structure, "format", &fourcc);
     entry.fourcc = fourcc;
-    qtpad->have_dts = TRUE;
   }
 
   if (!entry.fourcc)

@@ -91,8 +91,6 @@ struct _GstQTPad
   guint32 fourcc;
   /* whether using format that have out of order buffers */
   gboolean is_out_of_order;
-  /* whether upstream provides valid PTS data */
-  gboolean have_dts;
   /* if not 0, track with constant sized samples, e.g. raw audio */
   guint sample_size;
   /* make sync table entry */
