@@ -1168,7 +1168,7 @@ ensure_srcpad_buffer_pool(GstVaapiPostproc *postproc, GstCaps *caps)
     gst_video_info_set_format(&vi, postproc->format,
         GST_VIDEO_INFO_WIDTH(&vi), GST_VIDEO_INFO_HEIGHT(&vi));
 
-    if (!video_info_changed(&vi, &postproc->filter_pool_info))
+    if (postproc->filter_pool && !video_info_changed(&vi, &postproc->filter_pool_info))
         return TRUE;
     postproc->filter_pool_info = vi;
 
