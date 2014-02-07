@@ -239,8 +239,8 @@ gst_rtsp_session_media_get_base_time (GstRTSPSessionMedia * media)
  * Retrieve the RTP-Info header string for all streams in @media
  * with configured transports.
  *
- * Returns: (transfer full): The RTP-Info as a string, g_free()
- *   after usage.
+ * Returns: (transfer full): The RTP-Info as a string or %NULL when
+ *   no RTP-Info could be generated, g_free() after usage.
  */
 gchar *
 gst_rtsp_session_media_get_rtpinfo (GstRTSPSessionMedia * media)
@@ -306,8 +306,10 @@ gst_rtsp_session_media_get_rtpinfo (GstRTSPSessionMedia * media)
 
     stream_rtpinfo =
         gst_rtsp_stream_transport_get_rtpinfo (transport, earliest);
-    if (stream_rtpinfo == NULL)
-      goto stream_rtpinfo_missing;
+    if (stream_rtpinfo == NULL) {
+      GST_DEBUG_OBJECT (media, "ignoring unknown RTPInfo %d", i);
+      continue;
+    }
 
     if (rtpinfo == NULL)
       rtpinfo = g_string_new ("");
@@ -317,14 +319,12 @@ gst_rtsp_session_media_get_rtpinfo (GstRTSPSessionMedia * media)
     g_string_append (rtpinfo, stream_rtpinfo);
     g_free (stream_rtpinfo);
   }
-
-  if (rtpinfo == NULL) {
-    GST_INFO_OBJECT (media, "no transports configured, RTP info is empty");
-    rtpinfo = g_string_new ("");
-  }
-
   g_mutex_unlock (&priv->lock);
 
+  if (rtpinfo == NULL) {
+    GST_WARNING_OBJECT (media, "RTP info is empty");
+    return NULL;
+  }
   return g_string_free (rtpinfo, FALSE);
 
   /* ERRORS */
@@ -332,14 +332,6 @@ not_prepared:
   {
     g_mutex_unlock (&priv->lock);
     GST_ERROR_OBJECT (media, "media was not prepared");
-    return NULL;
-  }
-stream_rtpinfo_missing:
-  {
-    g_mutex_unlock (&priv->lock);
-    if (rtpinfo)
-      g_string_free (rtpinfo, TRUE);
-    GST_ERROR_OBJECT (media, "could not get stream %d rtpinfo", i);
     return NULL;
   }
 }

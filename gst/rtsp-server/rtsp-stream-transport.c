@@ -315,10 +315,10 @@ gst_rtsp_stream_transport_get_url (GstRTSPStreamTransport * trans)
  * @trans: a #GstRTSPStreamTransport
  * @start_time: a star time
  *
- * Get the RTPInfo string for @trans and @start_time.
+ * Get the RTP-Info string for @trans and @start_time.
  *
- * Returns: the RTPInfo string for @trans and @start_time. g_free() after
- * usage.
+ * Returns: the RTPInfo string for @trans and @start_time or %NULL when
+ * the RTP-Info could not be determined. g_free() after usage.
  */
 gchar *
 gst_rtsp_stream_transport_get_rtpinfo (GstRTSPStreamTransport * trans,
