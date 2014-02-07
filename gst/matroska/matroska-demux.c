@@ -4900,7 +4900,16 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
         format = GST_VIDEO_FORMAT_AYUV;
         break;
-
+      case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
+      case GST_MAKE_FOURCC ('Y', '8', ' ', ' '):
+        format = GST_VIDEO_FORMAT_GRAY8;
+        break;
+      case GST_MAKE_FOURCC ('R', 'G', 'B', 24):
+        format = GST_VIDEO_FORMAT_RGB;
+        break;
+      case GST_MAKE_FOURCC ('B', 'G', 'R', 24):
+        format = GST_VIDEO_FORMAT_BGR;
+        break;
       default:
         GST_DEBUG ("Unknown fourcc %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (videocontext->fourcc));
