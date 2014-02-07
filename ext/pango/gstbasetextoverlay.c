@@ -2194,11 +2194,11 @@ wait_for_text_buf:
       /* If timestamp and duration are valid */
       if (valid_text_time) {
         text_running_time =
-            gst_segment_to_running_time (&overlay->segment, GST_FORMAT_TIME,
-            text_start);
+            gst_segment_to_running_time (&overlay->text_segment,
+            GST_FORMAT_TIME, text_start);
         text_running_time_end =
-            gst_segment_to_running_time (&overlay->segment, GST_FORMAT_TIME,
-            text_end);
+            gst_segment_to_running_time (&overlay->text_segment,
+            GST_FORMAT_TIME, text_end);
       }
 
       GST_LOG_OBJECT (overlay, "T: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
