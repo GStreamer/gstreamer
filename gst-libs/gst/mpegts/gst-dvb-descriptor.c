@@ -378,7 +378,7 @@ guint
 gst_mpegts_descriptor_parse_dvb_teletext_nb (const GstMpegTsDescriptor *
     descriptor)
 {
-  if (descriptor == NULL && descriptor->data == NULL)
+  if (descriptor == NULL || descriptor->data == NULL)
     return 0;
 
   return descriptor->length / 5;
