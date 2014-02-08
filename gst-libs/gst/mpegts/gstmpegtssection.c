@@ -827,7 +827,7 @@ _packetize_pmt (GstMpegTsSection * section)
 
       if (stream->descriptors) {
         for (j = 0; j < stream->descriptors->len; j++) {
-          descriptor = g_ptr_array_index (stream->descriptors, i);
+          descriptor = g_ptr_array_index (stream->descriptors, j);
           stream_length += descriptor->length + 2;
         }
       }
