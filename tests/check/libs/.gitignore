@@ -1,5 +1,6 @@
 .dirstamp
 h264parser
 mpegvideoparser
+mpegts
 vc1parser
 insertbin

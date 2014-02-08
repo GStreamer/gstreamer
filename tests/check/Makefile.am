@@ -233,6 +233,7 @@ check_PROGRAMS = \
 	pipelines/mxf \
 	$(check_mimic) \
 	libs/mpegvideoparser \
+	libs/mpegts \
 	libs/h264parser \
 	$(check_uvch264) \
 	libs/vc1parser \
@@ -279,6 +280,16 @@ libs_mpegvideoparser_LDADD = \
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+libs_mpegts_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_CFLAGS)
+
+libs_mpegts_LDADD = \
+	$(top_builddir)/gst-libs/gst/mpegts/libgstmpegts-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) \
+	$(GST_LIBS) $(LDADD)
 
 libs_h264parser_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \

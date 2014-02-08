@@ -1,0 +1,387 @@
+/* Gstreamer
+ * Copyright (C) <2014> Jesper Larsen <knorr.jesper@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#include <gst/check/gstcheck.h>
+#include <gst/mpegts/mpegts.h>
+
+static const guint8 pat_data_check[] = {
+  0x00, 0xB0, 0x11, 0x00, 0x00, 0xc1, 0x00,
+  0x00, 0x00, 0x00, 0xe0, 0x30, 0x00, 0x01,
+  0xe0, 0x31, 0x98, 0xdf, 0x37, 0xc4
+};
+
+static const guint8 pmt_data_check[] = {
+  0x02, 0xb0, 0x29, 0x00, 0x01, 0xc1, 0x00,
+  0x00, 0xff, 0xff, 0xf0, 0x06, 0x05, 0x04,
+  0x48, 0x44, 0x4d, 0x56, 0x1b, 0xe0, 0x40,
+  0xF0, 0x06, 0x05, 0x04, 0x48, 0x44, 0x4d,
+  0x56, 0x1b, 0xe0, 0x41, 0xF0, 0x06, 0x05,
+  0x04, 0x48, 0x44, 0x4d, 0x56, 0x15, 0x41,
+  0x5f, 0x5b
+};
+
+static const guint8 nit_data_check[] = {
+  0x40, 0xf0, 0x49, 0x1f, 0xff, 0xc1, 0x00,
+  0x00, 0xf0, 0x0e, 0x40, 0x0c, 0x4e, 0x65,
+  0x74, 0x77, 0x6f, 0x72, 0x6b, 0x20, 0x6e,
+  0x61, 0x6d, 0x65, 0xf0, 0x2e, 0x1f, 0xff,
+  0x1f, 0xfe, 0xf0, 0x11, 0x40, 0x0f, 0x41,
+  0x6e, 0x6f, 0x74, 0x68, 0x65, 0x72, 0x20,
+  0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b,
+  0x1f, 0xff, 0x1f, 0xfe, 0xf0, 0x11, 0x40,
+  0x0f, 0x41, 0x6e, 0x6f, 0x74, 0x68, 0x65,
+  0x72, 0x20, 0x6e, 0x65, 0x74, 0x77, 0x6f,
+  0x72, 0x6b, 0xce, 0x03, 0xf5, 0x94
+};
+
+GST_START_TEST (test_mpegts_pat)
+{
+  GstMpegTsPatProgram *program;
+  GPtrArray *pat;
+  GstMpegTsSection *pat_section;
+  gint i;
+  guint8 *data;
+  gsize data_size;
+
+  /* Check creation of PAT */
+  pat = g_ptr_array_new ();
+
+  for (i = 0; i < 2; i++) {
+    program = gst_mpegts_pat_program_new ();
+
+    program->program_number = i;
+    program->network_or_program_map_PID = 0x30 + i;
+
+    g_ptr_array_add (pat, program);
+  }
+
+  pat_section = gst_mpegts_section_from_pat (pat, 0);
+  fail_if (pat_section == NULL);
+
+  /* Re-parse the PAT from section */
+  pat = gst_mpegts_section_get_pat (pat_section);
+
+  fail_unless (pat->len == 2);
+
+  for (i = 0; i < 2; i++) {
+    program = g_ptr_array_index (pat, i);
+
+    assert_equals_int (program->program_number, i);
+    assert_equals_int (program->network_or_program_map_PID, 0x30 + i);
+  }
+
+  /* Packetize the section, and check the data integrity */
+  data = gst_mpegts_section_packetize (pat_section, &data_size);
+  fail_if (data == NULL);
+
+  for (i = 0; i < data_size; i++) {
+    if (data[i] != pat_data_check[i])
+      fail ("0x%X != 0x%X in byte %d of PAT section", data[i],
+          pat_data_check[i], i);
+  }
+
+  /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
+  pat_section->data[pat_section->section_length - 1]++;
+  pat_section->cached_parsed = NULL;
+  pat = gst_mpegts_section_get_pat (pat_section);
+
+  fail_unless (pat == NULL);
+
+  gst_mpegts_section_unref (pat_section);
+
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_mpegts_pmt)
+{
+  GstMpegTsPMT *pmt;
+  GstMpegTsPMTStream *stream;
+  GstMpegTsDescriptor *desc;
+  GstMpegTsSection *pmt_section;
+  guint8 *data;
+  gsize data_size;
+  gint i;
+
+  /* Check creation of PMT */
+  pmt = gst_mpegts_pmt_new ();
+
+  pmt->pcr_pid = 0x1FFF;
+  pmt->program_number = 1;
+
+  desc = gst_mpegts_descriptor_from_registration ("HDMV", NULL, 0);
+  g_ptr_array_add (pmt->descriptors, desc);
+
+  for (i = 0; i < 2; i++) {
+    stream = gst_mpegts_pmt_stream_new ();
+
+    stream->stream_type = GST_MPEG_TS_STREAM_TYPE_VIDEO_H264;
+    stream->pid = 0x40 + i;
+
+    desc = gst_mpegts_descriptor_from_registration ("HDMV", NULL, 0);
+
+    g_ptr_array_add (stream->descriptors, desc);
+    g_ptr_array_add (pmt->streams, stream);
+  }
+
+  pmt_section = gst_mpegts_section_from_pmt (pmt, 0x30);
+  fail_if (pmt_section == NULL);
+
+  /* Re-parse the PMT from section */
+  pmt = (GstMpegTsPMT *) gst_mpegts_section_get_pmt (pmt_section);
+
+  fail_unless (pmt->pcr_pid == 0x1FFF);
+  fail_unless (pmt->program_number == 1);
+  fail_unless (pmt->descriptors->len == 1);
+  fail_unless (pmt->streams->len == 2);
+
+  desc = (GstMpegTsDescriptor *) gst_mpegts_find_descriptor (pmt->descriptors,
+      GST_MTS_DESC_REGISTRATION);
+  fail_if (desc == NULL);
+
+  for (i = 0; i < 2; i++) {
+    stream = g_ptr_array_index (pmt->streams, i);
+
+    fail_unless (stream->stream_type == GST_MPEG_TS_STREAM_TYPE_VIDEO_H264);
+    fail_unless (stream->pid == 0x40 + i);
+    fail_unless (stream->descriptors->len == 1);
+
+    desc =
+        (GstMpegTsDescriptor *) gst_mpegts_find_descriptor (stream->descriptors,
+        GST_MTS_DESC_REGISTRATION);
+    fail_if (desc == NULL);
+  }
+
+  /* Packetize the section, and check data integrity */
+  data = gst_mpegts_section_packetize (pmt_section, &data_size);
+
+  for (i = 0; i < data_size; i++) {
+    if (data[i] != pmt_data_check[i])
+      fail ("0x%X != 0x%X in byte %d of PMT section", data[i],
+          pmt_data_check[i], i);
+  }
+
+  /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
+  pmt_section->data[pmt_section->section_length - 1]++;
+  pmt_section->cached_parsed = NULL;
+  pmt = (GstMpegTsPMT *) gst_mpegts_section_get_pmt (pmt_section);
+
+  fail_unless (pmt == NULL);
+
+  gst_mpegts_section_unref (pmt_section);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_mpegts_nit)
+{
+  GstMpegTsNITStream *stream;
+  GstMpegTsNIT *nit;
+  GstMpegTsDescriptor *desc;
+  GstMpegTsSection *nit_section;
+  gchar *name;
+  guint8 *data;
+  gsize data_size;
+  gint i;
+
+  /* Check creation of NIT */
+  nit = gst_mpegts_nit_new ();
+
+  nit->actual_network = TRUE;
+  nit->network_id = 0x1FFF;
+
+  desc = gst_mpegts_descriptor_from_dvb_network_name ("Network name");
+
+  fail_if (desc == NULL);
+
+  g_ptr_array_add (nit->descriptors, desc);
+
+  for (i = 0; i < 2; i++) {
+    stream = gst_mpegts_nit_stream_new ();
+    stream->transport_stream_id = 0x1FFF;
+    stream->original_network_id = 0x1FFE;
+
+    desc = gst_mpegts_descriptor_from_dvb_network_name ("Another network");
+
+    g_ptr_array_add (stream->descriptors, desc);
+    g_ptr_array_add (nit->streams, stream);
+  }
+
+  nit_section = gst_mpegts_section_from_nit (nit);
+  fail_if (nit_section == NULL);
+
+  /* Re-parse the NIT from section */
+  nit = (GstMpegTsNIT *) gst_mpegts_section_get_nit (nit_section);
+
+  fail_unless (nit->descriptors->len == 1);
+  fail_unless (nit->streams->len == 2);
+  fail_unless (nit->actual_network == TRUE);
+  fail_unless (nit->network_id == 0x1FFF);
+
+  desc = (GstMpegTsDescriptor *) gst_mpegts_find_descriptor (nit->descriptors,
+      GST_MTS_DESC_DVB_NETWORK_NAME);
+
+  fail_if (desc == NULL);
+
+  fail_unless (gst_mpegts_descriptor_parse_dvb_network_name (desc,
+          &name) == TRUE);
+
+  for (i = 0; i < 2; i++) {
+    stream = g_ptr_array_index (nit->streams, i);
+
+    fail_unless (stream->transport_stream_id == 0x1FFF);
+    fail_unless (stream->original_network_id == 0x1FFE);
+    fail_unless (stream->descriptors->len == 1);
+
+    desc =
+        (GstMpegTsDescriptor *) gst_mpegts_find_descriptor (stream->descriptors,
+        GST_MTS_DESC_DVB_NETWORK_NAME);
+
+    fail_unless (gst_mpegts_descriptor_parse_dvb_network_name (desc,
+            &name) == TRUE);
+  }
+
+  /* Packetize the section, and check data integrity */
+  data = gst_mpegts_section_packetize (nit_section, &data_size);
+
+  fail_if (data == NULL);
+
+  for (i = 0; i < data_size; i++) {
+    if (data[i] != nit_data_check[i])
+      fail ("0x%X != 0x%X in byte %d of NIT section", data[i],
+          nit_data_check[i], i);
+  }
+
+  /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
+  nit_section->data[nit_section->section_length - 1]++;
+  nit_section->cached_parsed = NULL;
+  nit = (GstMpegTsNIT *) gst_mpegts_section_get_nit (nit_section);
+
+  fail_unless (nit == NULL);
+
+  gst_mpegts_section_unref (nit_section);
+}
+
+GST_END_TEST;
+
+static const guint8 registration_descriptor[] = {
+  0x05, 0x04, 0x48, 0x44, 0x4d, 0x56
+};
+
+GST_START_TEST (test_mpegts_descriptors)
+{
+  GstMpegTsDescriptor *desc;
+  guint i;
+
+  /*
+   * Registration descriptor (0x05)
+   */
+
+  /* Check creation of descriptor */
+  desc = gst_mpegts_descriptor_from_registration ("HDMV", NULL, 0);
+  fail_if (desc == NULL);
+  fail_unless (desc->length == 4);
+  fail_unless (desc->tag == 0x05);
+  for (i = 0; i < 6; i++) {
+    if (registration_descriptor[i] != desc->data[i])
+      fail ("0x%X != 0x%X in byte %d of registration descriptor",
+          desc->data[i], registration_descriptor[i], i);
+  }
+}
+
+GST_END_TEST;
+
+static const guint8 network_name_descriptor[] = {
+  0x40, 0x04, 0x4e, 0x61, 0x6d, 0x65
+};
+
+GST_START_TEST (test_mpegts_dvb_descriptors)
+{
+  GstMpegTsDescriptor *desc;
+  gchar *string;
+  gchar long_string[257];
+  gboolean ret;
+  guint i;
+
+  /*
+   * Network name descriptor (0x40)
+   */
+
+  /* Check creation of descriptor */
+  desc = gst_mpegts_descriptor_from_dvb_network_name ("Name");
+  fail_if (desc == NULL);
+  fail_unless (desc->length == 4);
+  fail_unless (desc->tag == 0x40);
+
+  for (i = 0; i < 6; i++) {
+    if (desc->data[i] != network_name_descriptor[i])
+      fail ("0x%X != 0x%X in byte %d of network name descriptor",
+          desc->data[i], network_name_descriptor[i], i);
+  }
+
+  /* Check parsing of descriptor */
+  ret = gst_mpegts_descriptor_parse_dvb_network_name (desc, &string);
+  fail_unless (ret == TRUE);
+  fail_unless (strcmp (string, "Name") == 0);
+
+  /* Descriptor should fail if string is more than 255 bytes */
+  memset (long_string, 0x41, 256);
+  long_string[256] = 0x00;
+  ASSERT_CRITICAL (gst_mpegts_descriptor_from_dvb_network_name (long_string));
+}
+
+GST_END_TEST;
+
+static Suite *
+mpegts_suite (void)
+{
+  Suite *s = suite_create ("MPEG Transport Stream helper library");
+
+  TCase *tc_chain = tcase_create ("general");
+
+  gst_mpegts_initialize ();
+
+  suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_mpegts_pat);
+  tcase_add_test (tc_chain, test_mpegts_pmt);
+  tcase_add_test (tc_chain, test_mpegts_nit);
+  tcase_add_test (tc_chain, test_mpegts_descriptors);
+  tcase_add_test (tc_chain, test_mpegts_dvb_descriptors);
+
+  return s;
+}
+
+int
+main (int argc, char **argv)
+{
+  int nf;
+
+  Suite *s = mpegts_suite ();
+
+  SRunner *sr = srunner_create (s);
+
+  gst_check_init (&argc, &argv);
+
+  srunner_run_all (sr, CK_NORMAL);
+  nf = srunner_ntests_failed (sr);
+  srunner_free (sr);
+
+  return nf;
+}
