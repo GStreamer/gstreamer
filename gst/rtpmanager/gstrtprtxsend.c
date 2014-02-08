@@ -336,7 +336,7 @@ static SSRCRtxData *
 gst_rtp_rtx_send_get_ssrc_data (GstRtpRtxSend * rtx, guint32 ssrc)
 {
   SSRCRtxData *data;
-  guint32 rtx_ssrc;
+  guint32 rtx_ssrc = 0;
   gboolean consider = FALSE;
 
   if (G_UNLIKELY (!g_hash_table_contains (rtx->ssrc_data,
