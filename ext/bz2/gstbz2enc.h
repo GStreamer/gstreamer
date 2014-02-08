@@ -17,7 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_BZ2ENC_H_
+#ifndef __GST_BZ2ENC_H__
 #define __GST_BZ2ENC_H__
 
 #include <gst/gst.h>
