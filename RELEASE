@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.2.2
+Release notes for GStreamer Ugly Plugins 1.2.3
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -56,9 +56,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 710615 : mpeg2dec: gst_video_decoder_allocate_output_frame: assertion 'frame- > output_buffer == NULL' failed
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -95,6 +94,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Mark Nauwelaerts
-      * Tim-Philipp Müller
+      * Sebastian Dröge
  
