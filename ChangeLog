@@ -1,9 +1,266 @@
-=== release 1.2.2 ===
+=== release 1.2.3 ===
 
-2013-12-26  Sebastian Dröge <slomo@coaxion.net>
+2014-02-08  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.2
+	  releasing 1.2.3
+
+2014-02-06 12:21:07 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/effectv/gstrev.c:
+	  effectv: fix doc section of revtv element
+
+2014-01-24 01:52:08 +0000  Mike Sheldon <elleo@gnu.org>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Ignore Broadcast Wave Format (BWF) tags when searching for 'fmt' chunk
+	  https://bugzilla.gnome.org/show_bug.cgi?id=723125
+
+2014-01-25 02:06:00 -0500  Ryan Lortie <desrt@desrt.ca>
+
+	* sys/v4l2/v4l2_calls.c:
+	  v4l2: guard use of ENODATA with #ifdef
+	  Not all systems with v4l have ENODATA defined, so check that we have it
+	  before attempting to use it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722953
+
+2014-01-20 10:12:45 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpvp8pay.c:
+	  rtpvp8pay: Don't leak input buffers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722414
+
+2014-01-15 22:47:12 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Don't skip all video frames until the first keyframe
+	  Instead do it like all other demuxers and let parsers and decoders
+	  handle that. The keyframe information inside the container might
+	  be completely wrong like in the sample file of the bug report,
+	  and if it is correct and we push no keyframes, then the parsers
+	  and decoders will handle that properly anyway.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=682276
+
+2014-02-04 16:22:33 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/nb.po:
+	* po/pt_BR.po:
+	* po/sk.po:
+	  po: Update translations
+
+2014-01-19 17:40:56 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/avi/gstavimux.c:
+	  avimux: reset some more audio pad data when needed
+
+2014-01-19 17:38:59 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/avi/gstavimux.c:
+	* gst/avi/gstavimux.h:
+	  avimux: write correct blockalign for vbr audio
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=720659
+
+2014-01-14 19:08:49 +0900  Justin Joy <justin.joy.9to5@gmail.com>
+
+	* sys/oss/gstosshelper.c:
+	  osshelper: Don't leak fd when getting card name
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722163
+
+2014-01-14 15:42:01 +0900  Justin Joy <justin.joy.9to5@gmail.com>
+
+	* gst/rtp/gstrtpg726pay.c:
+	  rtpg726pay: don't leak encoding_name string
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722159
+
+2014-01-10 14:16:00 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/matroska/matroska-read-common.c:
+	  matroskademux: don't leak TOC chapter list
+
+2014-01-08 11:28:04 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/matroska/matroska-mux.c:
+	  Revert "matroskamux: Use the running time for container timestamps, not buffer timestamps"
+	  This reverts commit b3aa8755fe07639f22e4104f4932d769d6c9075a.
+	  We are already using the running-time because they were placed on the
+	  buffers with gst_collect_pads_clip_running_time(). Arguably it would be
+	  better to not modify the incomming buffers but collectpads seems to want
+	  to use absolute timestamps from the buffers for finding the best buffer
+	  (this can be changed with a custom compare function..).
+
+2013-12-01 23:32:20 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: fix off-by-one crash when downstream caps contain a list of framerates
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719544
+
+2014-01-10 08:52:16 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: remove obsolete write-dummy-and-overwrite-on-eos code
+	  The need for rewriting apparently is obsolete 0.10 leftover.
+	  We now have caps for subtitles when we create the headers,
+	  so we always write the correct data in the first place.
+
+2014-01-09 18:25:04 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: write subtitle codec ID and data at start when known
+	  This avoids issues with writing dummy data first, then having
+	  to come back and write correct data later. Doing so prevents
+	  the muxed stream from being actually streamable.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=712134
+
+2014-01-05 10:28:21 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: Add missing semicolon from last commit
+
+2014-01-05 10:22:37 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: Use the running time for container timestamps, not buffer timestamps
+	  Buffer timestamps have no real meaning here, and for selecting the next
+	  buffer we already use the running time anyway.
+
+2013-12-31 13:31:52 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: Handle v4l2_ioctl() errors even in error handling
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=721268
+
+2013-12-31 10:25:28 +0100  Stéphane Cerveau <scerveau@gmail.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Skip id3 tag
+	  Skip id3 tag during wav parse.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=721241
+
+=== release 1.2.2 ===
+
+2013-12-26 17:47:09 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.2.2
+
+2013-12-26 17:46:54 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2013-12-26 16:46:27 +0100  Sebastian Dröge <sebastian@centricular.com>
 
