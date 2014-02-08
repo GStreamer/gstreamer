@@ -132,6 +132,7 @@ GST_START_TEST (test_set_default)
   clock = g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "TestClock", NULL);
   gst_system_clock_set_default (clock);
   g_assert_cmpint (GST_OBJECT_REFCOUNT (static_clock), ==, 1);
+  g_object_unref (static_clock);
   static_clock = gst_system_clock_obtain ();
   fail_unless (static_clock == clock);
   g_assert_cmpint (GST_OBJECT_REFCOUNT (clock), ==, 3);
