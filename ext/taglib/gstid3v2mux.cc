@@ -461,7 +461,7 @@ add_image_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
         if (strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0) {
           frame->setType (ID3v2::AttachedPictureFrame::FileIcon);
         } else {
-          int image_type = image_type = ID3v2::AttachedPictureFrame::Other;
+          int image_type = ID3v2::AttachedPictureFrame::Other;
 
           if (info_struct) {
             if (gst_structure_get (info_struct, "image-type",
