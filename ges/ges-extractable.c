@@ -213,10 +213,9 @@ ges_extractable_type_check_id (GType type, const gchar * id, GError ** error)
   GObjectClass *klass;
   GESExtractableInterface *iface;
 
-  g_return_val_if_fail (error == NULL || *error == NULL, G_TYPE_INVALID);
-  g_return_val_if_fail (g_type_is_a (type, G_TYPE_OBJECT), G_TYPE_INVALID);
-  g_return_val_if_fail (g_type_is_a (type, GES_TYPE_EXTRACTABLE),
-      G_TYPE_INVALID);
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+  g_return_val_if_fail (g_type_is_a (type, G_TYPE_OBJECT), NULL);
+  g_return_val_if_fail (g_type_is_a (type, GES_TYPE_EXTRACTABLE), NULL);
 
   klass = g_type_class_ref (type);
 
