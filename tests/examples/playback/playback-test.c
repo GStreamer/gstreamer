@@ -2416,7 +2416,7 @@ buffer_size_activate_cb (GtkEntry * entry, PlaybackApp * app)
 
   text = gtk_entry_get_text (entry);
   if (text != NULL && *text != '\0') {
-    gint v;
+    gint64 v;
     gchar *endptr;
 
     v = g_ascii_strtoll (text, &endptr, 10);
@@ -2467,7 +2467,7 @@ connection_speed_activate_cb (GtkEntry * entry, PlaybackApp * app)
 
   text = gtk_entry_get_text (entry);
   if (text != NULL && *text != '\0') {
-    guint v;
+    gint64 v;
     gchar *endptr;
 
     v = g_ascii_strtoll (text, &endptr, 10);
