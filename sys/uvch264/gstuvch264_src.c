@@ -1382,121 +1382,157 @@ gst_uvc_h264_src_get_int_setting (GstUvcH264Src * self, gchar * property,
     ret = probe_setting (self, UVCX_VIDEO_CONFIG_PROBE,
         offsetof (uvcx_video_config_probe_commit_t, dwBitRate), 4,
         &min32, &def32, &max32);
-    *min = min32;
-    *def = def32;
-    *max = max32;
+    if (ret) {
+      *min = min32;
+      *def = def32;
+      *max = max32;
+    }
   } else if (g_strcmp0 (property, "slice-units") == 0) {
     ret = probe_setting (self, UVCX_VIDEO_CONFIG_PROBE,
         offsetof (uvcx_video_config_probe_commit_t, wSliceUnits), 2,
         &min16, &def16, &max16);
-    *min = min16;
-    *def = def16;
-    *max = max16;
+    if (ret) {
+      *min = min16;
+      *def = def16;
+      *max = max16;
+    }
   } else if (g_strcmp0 (property, "iframe-period") == 0) {
     ret = probe_setting (self, UVCX_VIDEO_CONFIG_PROBE,
         offsetof (uvcx_video_config_probe_commit_t, wIFramePeriod), 2,
         &min16, &def16, &max16);
-    *min = min16;
-    *def = def16;
-    *max = max16;
+    if (ret) {
+      *min = min16;
+      *def = def16;
+      *max = max16;
+    }
   } else if (g_strcmp0 (property, "num-reorder-frames") == 0) {
     ret = probe_setting (self, UVCX_VIDEO_CONFIG_PROBE,
         offsetof (uvcx_video_config_probe_commit_t, bNumOfReorderFrames), 1,
         &min8, &def8, &max8);
-    *min = min8;
-    *def = def8;
-    *max = max8;
+    if (ret) {
+      *min = min8;
+      *def = def8;
+      *max = max8;
+    }
   } else if (g_strcmp0 (property, "leaky-bucket-size") == 0) {
     ret = probe_setting (self, UVCX_VIDEO_CONFIG_PROBE,
         offsetof (uvcx_video_config_probe_commit_t, wLeakyBucketSize), 2,
         &min16, &def16, &max16);
-    *min = min16;
-    *def = def16;
-    *max = max16;
+    if (ret) {
+      *min = min16;
+      *def = def16;
+      *max = max16;
+    }
   } else if (g_strcmp0 (property, "level-idc") == 0) {
     ret = probe_setting (self, UVCX_VIDEO_ADVANCE_CONFIG,
         offsetof (uvcx_video_advance_config_t, blevel_idc), 1,
         &min8, &def8, &max8);
-    *min = min8;
-    *def = def8;
-    *max = max8;
+    if (ret) {
+      *min = min8;
+      *def = def8;
+      *max = max8;
+    }
   } else if (g_strcmp0 (property, "max-mbps") == 0) {
     ret = probe_setting (self, UVCX_VIDEO_ADVANCE_CONFIG,
         offsetof (uvcx_video_advance_config_t, dwMb_max), 4,
         &min32, &def32, &max32);
-    *min = min32;
-    *def = def32;
-    *max = max32;
+    if (ret) {
+      *min = min32;
+      *def = def32;
+      *max = max32;
+    }
   } else if (g_strcmp0 (property, "peak-bitrate") == 0) {
     ret = probe_setting (self, UVCX_BITRATE_LAYERS,
         offsetof (uvcx_bitrate_layers_t, dwPeakBitrate), 4,
         &min32, &def32, &max32);
-    *min = min32;
-    *def = def32;
-    *max = max32;
+    if (ret) {
+      *min = min32;
+      *def = def32;
+      *max = max32;
+    }
   } else if (g_strcmp0 (property, "average-bitrate") == 0) {
     ret = probe_setting (self, UVCX_BITRATE_LAYERS,
         offsetof (uvcx_bitrate_layers_t, dwAverageBitrate), 4,
         &min32, &def32, &max32);
-    *min = min32;
-    *def = def32;
-    *max = max32;
+    if (ret) {
+      *min = min32;
+      *def = def32;
+      *max = max32;
+    }
   } else if (g_strcmp0 (property, "min-iframe-qp") == 0) {
     if (update_qp (self, QP_I_FRAME))
       ret = probe_setting (self, UVCX_QP_STEPS_LAYERS,
           offsetof (uvcx_qp_steps_layers_t, bMinQp), 1, &smin8, &sdef8, &smax8);
-    *min = smin8;
-    *def = sdef8;
-    *max = smax8;
+    if (ret) {
+      *min = smin8;
+      *def = sdef8;
+      *max = smax8;
+    }
   } else if (g_strcmp0 (property, "max-iframe-qp") == 0) {
     if (update_qp (self, QP_I_FRAME))
       ret = probe_setting (self, UVCX_QP_STEPS_LAYERS,
           offsetof (uvcx_qp_steps_layers_t, bMaxQp), 1, &smin8, &sdef8, &smax8);
-    *min = smin8;
-    *def = sdef8;
-    *max = smax8;
+    if (ret) {
+      *min = smin8;
+      *def = sdef8;
+      *max = smax8;
+    }
   } else if (g_strcmp0 (property, "min-pframe-qp") == 0) {
     if (update_qp (self, QP_P_FRAME))
       ret = probe_setting (self, UVCX_QP_STEPS_LAYERS,
           offsetof (uvcx_qp_steps_layers_t, bMinQp), 1, &smin8, &sdef8, &smax8);
-    *min = smin8;
-    *def = sdef8;
-    *max = smax8;
+    if (ret) {
+      *min = smin8;
+      *def = sdef8;
+      *max = smax8;
+    }
   } else if (g_strcmp0 (property, "max-pframe-qp") == 0) {
     if (update_qp (self, QP_P_FRAME))
       ret = probe_setting (self, UVCX_QP_STEPS_LAYERS,
           offsetof (uvcx_qp_steps_layers_t, bMaxQp), 1, &smin8, &sdef8, &smax8);
-    *min = smin8;
-    *def = sdef8;
-    *max = smax8;
+    if (ret) {
+      *min = smin8;
+      *def = sdef8;
+      *max = smax8;
+    }
   } else if (g_strcmp0 (property, "min-bframe-qp") == 0) {
     if (update_qp (self, QP_B_FRAME))
       ret = probe_setting (self, UVCX_QP_STEPS_LAYERS,
           offsetof (uvcx_qp_steps_layers_t, bMinQp), 1, &smin8, &sdef8, &smax8);
-    *min = smin8;
-    *def = sdef8;
-    *max = smax8;
+    if (ret) {
+      *min = smin8;
+      *def = sdef8;
+      *max = smax8;
+    }
   } else if (g_strcmp0 (property, "max-bframe-qp") == 0) {
     if (update_qp (self, QP_B_FRAME))
       ret = probe_setting (self, UVCX_QP_STEPS_LAYERS,
           offsetof (uvcx_qp_steps_layers_t, bMaxQp), 1, &smin8, &sdef8, &smax8);
-    *min = smin8;
-    *def = sdef8;
-    *max = smax8;
+    if (ret) {
+      *min = smin8;
+      *def = sdef8;
+      *max = smax8;
+    }
   } else if (g_strcmp0 (property, "ltr-buffer-size") == 0) {
     ret = probe_setting (self, UVCX_LTR_BUFFER_SIZE_CONTROL,
         offsetof (uvcx_ltr_buffer_size_control_t, bLTRBufferSize), 1,
         &min8, &def8, &max8);
-    *min = min8;
-    *def = def8;
-    *max = max8;
+    if (ret) {
+      *min = min8;
+      *def = def8;
+      *max = max8;
+    }
   } else if (g_strcmp0 (property, "ltr-encoder-control") == 0) {
     ret = probe_setting (self, UVCX_LTR_BUFFER_SIZE_CONTROL,
         offsetof (uvcx_ltr_buffer_size_control_t, bLTREncoderControl), 1,
         &min8, &def8, &max8);
-    *min = min8;
-    *def = def8;
-    *max = max8;
+    if (ret) {
+      *min = min8;
+      *def = def8;
+      *max = max8;
+    }
+  } else {
+    g_return_val_if_reached (FALSE);
   }
 
   return ret;
