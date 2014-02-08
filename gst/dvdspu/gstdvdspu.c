@@ -79,13 +79,6 @@ static GstStaticPadTemplate subpic_sink_factory =
     GST_STATIC_CAPS ("subpicture/x-dvd; subpicture/x-pgs")
     );
 
-static const guint32 default_clut[16] = {
-  0xb48080, 0x248080, 0x628080, 0xd78080,
-  0x808080, 0x808080, 0x808080, 0x808080,
-  0x808080, 0x808080, 0x808080, 0x808080,
-  0x808080, 0x808080, 0x808080, 0x808080
-};
-
 #define gst_dvd_spu_parent_class parent_class
 G_DEFINE_TYPE (GstDVDSpu, gst_dvd_spu, GST_TYPE_ELEMENT);
 
