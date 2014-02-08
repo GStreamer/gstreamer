@@ -1,9 +1,92 @@
-=== release 1.2.2 ===
+=== release 1.2.3 ===
 
-2013-12-26  Sebastian Dröge <slomo@coaxion.net>
+2014-02-08  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.2
+	  releasing 1.2.3
+
+2014-02-04 18:17:32 +0200  Dmitry Melnichenko <dmitry.m@samsung.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Fix invalid address passing to av_opt_set_int()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=723615
+
+2014-01-21 22:58:42 +1100  Tim 'mithro' Ansell <mithro@mithis.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Force DV audio input format to 48kHz, 2 channels
+	  libavformat only supports muxing 16bit, 48kHz stereo into DV containers.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=722672
+
+2014-02-04 16:12:59 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v9.11 bugfix release
+
+2014-01-15 09:02:33 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavdeinterlace.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  gst-libav: fix context leaks
+	  A AVCodecContext needs cleaning up before being freed.
+	  Go through all of the allocations/setups to ensure none of them
+	  can leak a context or its contents.
+
+2014-01-11 19:19:24 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  Revert "avviddec: release buffers when not direct rendering"
+	  This reverts commit fcf09aff3272a12b1f91168a856637f146ced113.
+	  This broke the build. In theory the problem might occur with
+	  libav 9 too, but it seems in practice it doesn't, unless you
+	  link against ffmpeg 2.x, but then you're on your own anyway.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=721077
+
+2014-01-10 17:18:53 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: release buffers when not direct rendering
+	  New libav will not call the release_buffer callback anymore when
+	  avcodec_default_get_buffer() is called from get_buffer. Releasing of the
+	  memory in a picture should now be done by registering a callback to the
+	  avbuffer objects in the picture. There is some compatibility code to
+	  wrap the memory we provide in get_buffer in avbuffer with a callback to
+	  release_buffer but that is not done when avcodec_default_get_buffer()
+	  is called.
+	  Work around this by adding a dummy avbuffer object to the picture that
+	  will release the frame.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=721077
+
+2014-01-03 15:58:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: fix regression with wmv3 video in WMVA format
+	  The VC-1 decoder should handle that. Before avdec_wmv3 handled
+	  it, but then we added format=WMV3 to its sink pad template
+	  caps, at which point nothing handled WMVA any longer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697665
+
+2013-12-27 12:06:28 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure.ac: Remove warning when building against a system version of libav
+	  Nowadays libav has proper releases and API/ABI guarantees.
+	  We're not living in last decade.
+
+=== release 1.2.2 ===
+
+2013-12-26 17:55:41 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.2.2
 
 2013-12-07 11:35:09 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
 
