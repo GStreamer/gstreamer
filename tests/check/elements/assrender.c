@@ -65,31 +65,31 @@ typedef struct
 static const TestBuffer buf0 = {
   0,
   0,
-  "[Script Info]\n"
-      "; This is a Sub Station Alpha v4 script.\n"
-      "; For Sub Station Alpha info and downloads,\n"
-      "; go to http://www.eswat.demon.co.uk/\n"
-      "Title: Some Test\n"
-      "Script Updated By: version 2.8.01\n"
-      "ScriptType: v4.00\n"
-      "Collisions: Normal\n"
-      "PlayResY: 200\n"
-      "PlayDepth: 0\n"
-      "Timer: 100,0000\n"
-      " \n"
-      "[V4 Styles]\n"
-      "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, TertiaryColour, BackColour, Bold, Italic, BorderStyle, Outline, Shadow, \n"
-      "   Alignment, MarginL, MarginR, MarginV, AlphaLevel, Encoding\n"
-      "Style: DefaultVCD, Arial,28,11861244,11861244,11861244,-2147483640,-1,0,1,1,2,2,30,30,30,0,0\n"
-      " \n"
-      "[Events]\n"
-      "Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
+  {"[Script Info]\n"
+        "; This is a Sub Station Alpha v4 script.\n"
+        "; For Sub Station Alpha info and downloads,\n"
+        "; go to http://www.eswat.demon.co.uk/\n"
+        "Title: Some Test\n"
+        "Script Updated By: version 2.8.01\n"
+        "ScriptType: v4.00\n"
+        "Collisions: Normal\n"
+        "PlayResY: 200\n"
+        "PlayDepth: 0\n"
+        "Timer: 100,0000\n"
+        " \n"
+        "[V4 Styles]\n"
+        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, TertiaryColour, BackColour, Bold, Italic, BorderStyle, Outline, Shadow, \n"
+        "   Alignment, MarginL, MarginR, MarginV, AlphaLevel, Encoding\n"
+        "Style: DefaultVCD, Arial,28,11861244,11861244,11861244,-2147483640,-1,0,1,1,2,2,30,30,30,0,0\n"
+        " \n"
+        "[Events]\n"
+        "Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"}
 };
 
 static const TestBuffer buf1 = {
   40 * GST_MSECOND,
   60 * GST_MSECOND,
-  "1,,DefaultVCD, NTP,0000,0000,0000,,Some Test Blabla"
+  {"1,,DefaultVCD, NTP,0000,0000,0000,,Some Test Blabla"}
 };
 
 static void
