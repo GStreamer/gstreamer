@@ -503,7 +503,7 @@ do_get (SoupMessage * msg, const char *path)
 
   int buflen = 4096;
 
-  SoupKnownStatusCode status = SOUP_STATUS_OK;
+  SoupStatus status = SOUP_STATUS_OK;
 
   uri = soup_uri_to_string (soup_message_get_uri (msg), FALSE);
   GST_DEBUG ("request: \"%s\"", uri);
