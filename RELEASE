@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.2.2
+Release notes for GStreamer 1.2.3
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -42,12 +42,15 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 712597 : regression: playbin: buffering of live radio stream never finishes
-      * 719437 : ghostpad: Clearing ghostpad sticky events when switching targets causes regressions
-      * 707230 : flacparse: disregards container timestamps
-      * 712300 : gst-launch: exits with 0 error code even after an error occurred
-      * 714989 : docs/gst-utils: Fix escaping of stream id format
-      * 719575 : multiqueue: improve for adaptive scenario
+      * 712597 : multiqueue: regression: buffering of live radio stream never finishes
+      * 719814 : docs: add missing files for distribution
+      * 721253 : multiqueue: May cause hanging if shut down while handling a serialized query
+      * 721289 : pad: using multiple blocking probes doesn't work as expected
+      * 721300 : tee: Does not protect pad from being destroyed from pad probe during gst_pad_push()
+      * 721350 : baseparse: push pending events before GAP
+      * 721422 : Negative pad offsets don't work
+      * 721941 : baseparse: do not accumulate buffers on passthrough mode
+      * 722467 : pad: Leaks events when iterating sticky events and callback drops event
 
 ==== Download ====
 
@@ -84,12 +87,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Mark Nauwelaerts
-      * Olivier Crête
-      * Philippe Normand
+      * Arnaud Vrac
+      * Pedro Côrte-Real
       * Sebastian Dröge
       * Sebastian Rasmussen
       * Thiago Santos
-      * Tim-Philipp Müller
       * Wim Taymans
+      * YanpingZhang
  
