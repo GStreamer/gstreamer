@@ -759,7 +759,7 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
         if (strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0) {
           id3v2_frame_write_uint8 (&frame, ID3V2_APIC_PICTURE_FILE_ICON);
         } else {
-          int image_type;
+          int image_type = ID3V2_APIC_PICTURE_OTHER;
 
           if (info_struct) {
             if (gst_structure_get (info_struct, "image-type",
