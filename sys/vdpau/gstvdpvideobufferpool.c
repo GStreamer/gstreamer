@@ -70,7 +70,7 @@ gst_vdp_video_buffer_pool_set_config (GstBufferPool * pool,
   GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
       caps);
 
-  if (GST_VIDEO_INFO_FORMAT (&info) == -1)
+  if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_UNKNOWN)
     goto unknown_format;
 
   vdppool->info = info;
