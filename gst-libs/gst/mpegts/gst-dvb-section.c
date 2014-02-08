@@ -685,7 +685,7 @@ _packetize_nit (GstMpegTsSection * section)
       loop_length += 6;
       if (stream->descriptors) {
         for (j = 0; j < stream->descriptors->len; j++) {
-          descriptor = g_ptr_array_index (stream->descriptors, i);
+          descriptor = g_ptr_array_index (stream->descriptors, j);
           loop_length += descriptor->length + 2;
         }
       }
@@ -734,7 +734,7 @@ _packetize_nit (GstMpegTsSection * section)
       _packetize_descriptor_array (stream->descriptors, &data);
 
       /* Go back and update the descriptor length */
-      GST_WRITE_UINT16_BE (pos, data - pos - 2);
+      GST_WRITE_UINT16_BE (pos, (data - pos - 2) | 0xF000);
     }
   }
 

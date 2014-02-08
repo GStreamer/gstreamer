@@ -1087,7 +1087,14 @@ _packetize_common_section (GstMpegTsSection * section, gsize length)
   /* section_syntax_indicator         - 1  bit
      reserved                         - 3  bit
      section_length                   - 12 bit uimsbf */
-  GST_WRITE_UINT16_BE (data, (section->section_length - 3) | 0x7000);
+  if (section->section_type == (GST_MPEGTS_SECTION_PAT ||
+          GST_MPEGTS_SECTION_PMT ||
+          GST_MPEGTS_SECTION_CAT || GST_MPEGTS_SECTION_TSDT)) {
+    /* Tables from ISO/IEC 13818-1 has a '0' bit
+     * after the section_syntax_indicator */
+    GST_WRITE_UINT16_BE (data, (section->section_length - 3) | 0x3000);
+  } else
+    GST_WRITE_UINT16_BE (data, (section->section_length - 3) | 0x7000);
 
   if (!section->short_section)
     *data |= 0x80;
@@ -1206,8 +1213,10 @@ gst_mpegts_section_packetize (GstMpegTsSection * section, gsize * output_size)
   g_return_val_if_fail (section->packetizer != NULL, NULL);
 
   /* Section data has already been packetized */
-  if (section->data)
+  if (section->data) {
+    *output_size = section->section_length;
     return section->data;
+  }
 
   if (!section->packetizer (section))
     return NULL;
