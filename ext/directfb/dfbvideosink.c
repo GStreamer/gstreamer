@@ -2252,7 +2252,7 @@ gst_dfbvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstBufferPool *pool;
   GstCaps *caps;
   gboolean need_pool;
-  guint size;
+  guint size = 0;
 
   dfbvideosink = GST_DFBVIDEOSINK (bsink);
 
