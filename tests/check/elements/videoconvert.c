@@ -35,7 +35,7 @@ get_num_formats (void)
 {
   guint i = 2;
 
-  while (gst_video_format_to_string ((GstFormat) i) != NULL)
+  while (gst_video_format_to_string ((GstVideoFormat) i) != NULL)
     ++i;
 
   return i;
