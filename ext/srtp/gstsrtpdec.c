@@ -410,8 +410,8 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
       rtcp_cipher);
   stream->rtcp_auth = enum_value_from_nick (GST_TYPE_SRTP_AUTH_TYPE, rtcp_auth);
 
-  if (stream->rtp_cipher == -1 || stream->rtp_auth == -1 ||
-      stream->rtcp_cipher == -1 || stream->rtcp_auth == -1) {
+  if ((gint) stream->rtp_cipher == -1 || (gint) stream->rtp_auth == -1 ||
+      (gint) stream->rtcp_cipher == -1 || (gint) stream->rtcp_auth == -1) {
     GST_WARNING_OBJECT (filter, "Invalid caps for stream,"
         " unknown cipher or auth type");
     goto error;
