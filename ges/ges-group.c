@@ -162,7 +162,7 @@ _child_group_priority_changed (GESTimelineElement * child,
 
   offset = _ges_container_get_priority_offset (container, child);
 
-  if (_PRIORITY (group) + offset < 0 ||
+  if (_PRIORITY (group) < offset ||
       (GES_TIMELINE_ELEMENT_TIMELINE (group) &&
           _PRIORITY (group) + offset + GES_CONTAINER_HEIGHT (group) >
           g_list_length (GES_TIMELINE_ELEMENT_TIMELINE (group)->layers))) {
