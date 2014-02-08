@@ -1087,14 +1087,18 @@ _packetize_common_section (GstMpegTsSection * section, gsize length)
   /* section_syntax_indicator         - 1  bit
      reserved                         - 3  bit
      section_length                   - 12 bit uimsbf */
-  if (section->section_type == (GST_MPEGTS_SECTION_PAT ||
-          GST_MPEGTS_SECTION_PMT ||
-          GST_MPEGTS_SECTION_CAT || GST_MPEGTS_SECTION_TSDT)) {
-    /* Tables from ISO/IEC 13818-1 has a '0' bit
-     * after the section_syntax_indicator */
-    GST_WRITE_UINT16_BE (data, (section->section_length - 3) | 0x3000);
-  } else
-    GST_WRITE_UINT16_BE (data, (section->section_length - 3) | 0x7000);
+  switch (section->section_type) {
+    case GST_MPEGTS_SECTION_PAT:
+    case GST_MPEGTS_SECTION_PMT:
+    case GST_MPEGTS_SECTION_CAT:
+    case GST_MPEGTS_SECTION_TSDT:
+      /* Tables from ISO/IEC 13818-1 has a '0' bit
+       * after the section_syntax_indicator */
+      GST_WRITE_UINT16_BE (data, (section->section_length - 3) | 0x3000);
+      break;
+    default:
+      GST_WRITE_UINT16_BE (data, (section->section_length - 3) | 0x7000);
+  }
 
   if (!section->short_section)
     *data |= 0x80;
