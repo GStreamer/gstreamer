@@ -18,7 +18,7 @@
  */
 
 #ifndef GST_OSS4_AUDIO_H
-#define GST_OSS4_AUDIO_H_
+#define GST_OSS4_AUDIO_H
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
