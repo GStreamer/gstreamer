@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.2.2
+Release notes for GStreamer Base Plugins 1.2.3
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,15 +60,20 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
+      * 603921 : resindvd: DVD menus not working
+      * 697665 : Add format=WMV3 for WMV 3 video
+      * 711816 : audiobasesrc: Avoid unnecessary configuration if caps don't change
+      * 712367 : Prevent the NEON check in configure from passing under aarch64.
       * 715138 : xvimagesink 1.2 ignores resize events when used on a QWidget
-      * 708200 : multiqueue: Switching audio tracks doesn't work on some files
-      * 707621 : decodebin: stream-id can't be retrieved from autoplug-continue signal
-      * 709965 : vorbisdec: Does not put timestamps on first buffer sometimes
-      * 711819 : rtpbuffer: gst_rtp_buffer_ext_timestamp() returns wrong value when compiled with clang 5 on iOS/ARM
-      * 712280 : playsink: Unable to play audio stream with visualization plugin
-      * 712796 : videodecoder: incorrect timestamps sequence
-      * 712805 : subparse: crashes when loading a sami subtitle
-      * 678011 : typefinding: some mpeg files are not identified as mpeg files
+      * 719615 : oggdemux: slow seeking on some ogg files
+      * 719684 : videodecoder: Allocation query is always at least sent twice
+      * 720015 : docs: add missing files for distribution
+      * 720661 : audiobasesink: Fix locking bug accessing ring buffer time
+      * 721078 : videodecoder: cannot call gst_video_decoder_negotiate without output_state
+      * 721666 : videodecoder: push newsegment earlier for reverse playback
+      * 721835 : videodecoder: do not drop events when releasing frames
+      * 722144 : audiodecoder: do not negotiate caps with rate=1 and channels=1 for gap
+      * 722656 : videoconvert: scoring system ranks colour loss very low
 
 ==== Download ====
 
@@ -105,11 +110,15 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jihyun Cho
-      * Justin Joy
-      * Mark Nauwelaerts
-      * Reynaldo H. Verdejo Pinochet
+      * Holger Kaelberer
+      * Jan Schmidt
+      * Julien Isorce
       * Sebastian Dröge
+      * Sebastian Rasmussen
+      * Stéphane Cerveau
+      * Thiago Santos
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
+      * William Grant
       * Wim Taymans
  
