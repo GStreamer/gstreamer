@@ -19,7 +19,7 @@
  */
 
 #ifndef __GST_OGG_MUX_H__
-#define __GST_OGGEMUX_H__
+#define __GST_OGG_MUX_H__
 
 #include <ogg/ogg.h>
 
