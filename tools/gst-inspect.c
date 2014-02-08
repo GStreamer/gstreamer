@@ -40,6 +40,9 @@ static char *_name = NULL;
 static int print_element_info (GstElementFactory * factory,
     gboolean print_names);
 
+/* *INDENT-OFF* */
+G_GNUC_PRINTF (1, 2)
+/* *INDENT-ON* */
 static void
 n_print (const char *format, ...)
 {
@@ -693,8 +696,6 @@ print_pad_info (GstElement * element)
 
     pad = GST_PAD (pads->data);
     pads = g_list_next (pads);
-
-    n_print ("");
 
     name = gst_pad_get_name (pad);
     if (gst_pad_get_direction (pad) == GST_PAD_SRC)
