@@ -253,7 +253,7 @@ private:
   int m_gridx, m_gridy;
   double m_cellwidth, m_cellheight;
   double m_alpha, m_beta;
-  double m_thresholdBoundingboxArea, m_cellArea, m_sensitivity;
+  double m_sensitivity;
   int m_framecnt, m_motioncells_idx_count, m_initerrorcode, m_saveerrorcode;
   char *m_motioncellsidxcstr, *m_initdatafilefailed, *m_savedatafilefailed;
   FILE *mc_savefile;
