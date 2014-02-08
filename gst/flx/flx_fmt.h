@@ -18,7 +18,7 @@
  */
 
 
-#ifndef __GST_FLX_FMT__H__
+#ifndef __GST_FLX_FMT_H__
 #define __GST_FLX_FMT_H__
 
 #include <gst/gst.h>
