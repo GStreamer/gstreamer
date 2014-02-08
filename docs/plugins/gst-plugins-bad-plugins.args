@@ -26800,7 +26800,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash (Y)</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>4.77773e-299</DEFAULT>
+<DEFAULT>7.75037e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26840,7 +26840,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>3.81574e-236</DEFAULT>
+<DEFAULT>1.24823e-315</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26850,7 +26850,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>5.96421e-212</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26860,7 +26860,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>1.63247e-316</DEFAULT>
+<DEFAULT>1.96009e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26890,7 +26890,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color (B)</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>2.84114e-29</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26900,7 +26900,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color (G)</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>7.05334e-30</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26910,7 +26910,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color (R)</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.05334e-30</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27240,7 +27240,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>4.34585e-311</DEFAULT>
+<DEFAULT>6.27686e-311</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27430,7 +27430,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>4.62958e-299</DEFAULT>
+<DEFAULT>4.63015e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27440,7 +27440,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.75038e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27620,7 +27620,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>1.62197e-316</DEFAULT>
+<DEFAULT>1.95806e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58846,11 +58846,11 @@
 <ARG>
 <NAME>GstOpusEnc::max-payload-size</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[2,1275]</RANGE>
+<RANGE>[2,4000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max payload size</NICK>
 <BLURB>Maximum payload size in bytes.</BLURB>
-<DEFAULT>1024</DEFAULT>
+<DEFAULT>4000</DEFAULT>
 </ARG>
 
 <ARG>

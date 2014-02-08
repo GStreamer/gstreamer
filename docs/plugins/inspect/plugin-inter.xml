@@ -3,7 +3,7 @@
   <description>plugin for inter-pipeline communication</description>
   <filename>../../gst/inter/.libs/libgstinter.so</filename>
   <basename>libgstinter.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>

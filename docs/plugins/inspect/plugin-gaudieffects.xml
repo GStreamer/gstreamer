@@ -3,7 +3,7 @@
   <description>Gaudi video effects.</description>
   <filename>../../gst/gaudieffects/.libs/libgstgaudieffects.so</filename>
   <basename>libgstgaudieffects.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>

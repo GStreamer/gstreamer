@@ -3,7 +3,7 @@
   <description>GME Audio Decoder</description>
   <filename>../../ext/gme/.libs/libgstgme.so</filename>
   <basename>libgstgme.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

@@ -3,7 +3,7 @@
   <description>Demuxes/decodes YUV4MPEG streams</description>
   <filename>../../gst/y4m/.libs/libgsty4mdec.so</filename>
   <basename>libgsty4mdec.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>

@@ -1,9 +1,306 @@
-=== release 1.2.2 ===
+=== release 1.2.3 ===
 
-2013-12-26  Sebastian Dröge <slomo@coaxion.net>
+2014-02-08  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.2
+	  releasing 1.2.3
+
+2014-02-04 12:52:25 +0100  Duncan Palmer <dpalmer@digisoft.tv>
+
+	* gst-libs/gst/uridownloader/gsturidownloader.c:
+	  uridownloader: Fix race condition between EOS handling and downloading a range
+	  https://bugzilla.gnome.org/show_bug.cgi?id=723134
+
+2014-01-29 20:38:57 +0100  Duncan Palmer <dpalmer@digisoft.tv>
+
+	* gst-libs/gst/uridownloader/gsturidownloader.c:
+	  uridownloader: Always release the object lock in gst_uri_downloader_fetch_uri_with_range()
+	  even if downloader->priv->urisrc is not set. This avoids deadlock under some
+	  some conditions on cancel.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=723127
+
+2013-12-20 19:42:52 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst-libs/gst/uridownloader/gsturidownloader.c:
+	  uridownloader: fix deadlock near EOS
+	  A deadlock can happen when the source sends EOS when
+	  being put to NULL as the object lock is being held by the
+	  thread that sets the element to NULL and is needed by
+	  the event handler.
+
+2014-01-03 09:44:28 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	* gst-libs/gst/codecparsers/gsth264parser.h:
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: Fix multiple SEI messages in one SEI RBSP parsing.
+	  An SEI RBSP could contains more than one SEI message as specified in
+	  7.4.2.3.1.
+	  This commit change the parser API: the gst_h264_parser_parse_sei()
+	  function now create and fill a GArray containing GstH264SEIMessage.
+
+2014-01-30 20:28:04 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: We do not support the SKIP seek flag but that is not a problem
+
+2014-01-29 13:25:37 +0100  Nicola Murino <nicola.murino@gmail.com>
+
+	* configure.ac:
+	  opencv: The plugin works with 2.4.8 too
+	  https://bugzilla.gnome.org/show_bug.cgi?id=723230
+
+2014-01-21 09:44:00 +0100  Alexey Chernov <4ernov@gmail.com>
+
+	* sys/d3dvideosink/d3dhelpers.c:
+	  d3dvideosink: First destroy the window, then unregister the class
+	  It's impossible to create another pipeline with d3dvideosink after disposing
+	  the previous one due to some problem in d3dvideosink. The message is: "Unable
+	  to register Direct3D hidden window class".
+	  I've evaluated the problem and it's that UnregisterClass() in working thread is
+	  called before DestroyWindow() and UnregisterClass() does nothing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722622
+
+2014-01-13 10:01:43 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/schroedinger/gstschroenc.c:
+	  schroenc: set buffer offset to buffer timestamp
+	  oggmux expects this to order incoming buffers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722078
+
+2014-02-04 16:24:34 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/nb.po:
+	* po/pt_BR.po:
+	* po/sk.po:
+	  po: Update translations
+
+2014-02-04 05:46:16 -0500  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/aiff/aiffparse.c:
+	* gst/aiff/aiffparse.h:
+	  aiffparse: adaptive buffer size
+	  Copied from wavparse, helps with CPU usage on high bitrate
+	  files.
+
+2014-02-02 13:50:53 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/aiff/aiffparse.c:
+	  aiffparse: fix data start offset calculation not counting COMM size
+	  In particular, this fixes seeking back to the start reading data
+	  out of sync with sample start granularity, yielding swapped channels.
+
+2014-01-31 16:58:16 -0500  Colin Macdonald <cbm@m.fsf.org>
+
+	* gst/geometrictransform/gstfisheye.c:
+	  fisheye: Fix documentation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=723398
+
+2014-01-26 14:42:52 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst-libs/gst/mpegts/Makefile.am:
+	  mpegts: install but nodist for generated header
+
+2014-01-25 17:40:46 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  androidmedia: Don't handle FLUSHING or NOT_LINKED as error
+	  And also just stop the task for FLUSHING.
+
+2014-01-20 17:24:54 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	  h264parser: remove trailling 0x00 bytes as the spec doesn't allow them
+	  The spec states that the last byte of a NAL 'shall not' be 0x00
+	  and it is allowed for byte-stream format to add padding 0x00 for
+	  alignment.
+	  So our parser should strip any trailling 0x00.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=721384
+
+2013-10-09 17:49:06 +0200  Jorge Zapata <jorgeluis.zapata@gmail.com>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  amcvideodec: Add the divx variant for mpeg4 video
+	  Looks like all the mpeg4 video decoders also accept the divx
+	  variants. So we better add those caps too
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711163
+
+2014-01-14 10:38:37 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/opencv/gstfaceblur.c:
+	  faceblur: set maximum feature size to 0x0
+	  Previously faces would only be detected if they were at least 30x30 pixels
+	  large and at most 32x32 pixels. We keep the minimum setting (maybe needs
+	  a property as in facedetect) but disable the maximum feature size.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=722158
+
+2014-01-14 01:06:02 -0500  Kipp Cannon <kcannon@cita.utoronto.ca>
+
+	* ext/opencv/gstfacedetect.c:
+	  facedetect: set maximum feature size to 0x0
+	  This disables the "max feature size" feature. The current configuration
+	  is totally busted: The max feature size is hard-coded to 2 pixels more
+	  than the user-supplied min feature size which pretty much means you need
+	  to guess the size of the person's face to within a few pixels to get the
+	  code to find it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722158
+
+2014-01-03 09:59:34 +0100  Miguel París Díaz <mparisdiaz@gmail.com>
+
+	* ext/srtp/gstsrtpdec.c:
+	  srtpdec: Fix GstCaps memory leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=721382
+
+2013-10-02 05:49:43 +0300  Dominik Röttsches <dominik.rottsches@intel.com>
+
+	* sys/applemedia/vtenc.c:
+	  vtenc: Add support for I420
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709241
+
+2013-12-29 13:31:53 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  opencv: The plugin works with 2.4.7 too
+	  Reported by kwm on IRC.
+
+2013-12-27 14:29:46 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusenc.c:
+	  opusenc: increase max payload size to 4000 bytes
+	  1275 is the maximum size of a frame, but the encoder may return
+	  up to 3 frames, and we need a few extra bytes for TOC, etc. We
+	  use 4000, which is a bit more, and suggested in the libopus docs.
+
+=== release 1.2.2 ===
+
+2013-12-26 17:51:25 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/inspect/plugin-accurip.xml:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-eglglessink.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-ofa.xml:
+	* docs/plugins/inspect/plugin-openal.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rfbsrc.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 1.2.2
+
+2013-12-26 17:48:03 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-12-26 16:47:45 +0100  Sebastian Dröge <sebastian@centricular.com>
 

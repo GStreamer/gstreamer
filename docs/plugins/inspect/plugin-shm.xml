@@ -3,7 +3,7 @@
   <description>shared memory sink source</description>
   <filename>../../sys/shm/.libs/libgstshm.so</filename>
   <basename>libgstshm.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

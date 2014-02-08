@@ -3,7 +3,7 @@
   <description>Compress or decompress streams</description>
   <filename>../../ext/bz2/.libs/libgstbz2.so</filename>
   <basename>libgstbz2.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

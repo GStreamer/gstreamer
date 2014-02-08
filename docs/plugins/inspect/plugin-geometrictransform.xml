@@ -3,7 +3,7 @@
   <description>Various geometric image transform elements</description>
   <filename>../../gst/geometrictransform/.libs/libgstgeometrictransform.so</filename>
   <basename>libgstgeometrictransform.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -76,7 +76,7 @@
       <name>fisheye</name>
       <longname>fisheye</longname>
       <class>Transform/Effect/Video</class>
-      <description>Split the image into two halves and reflect one over each other</description>
+      <description>Simulate a fisheye lens by zooming on the center of the image and compressing the edges</description>
       <author>Filippo Argiolas &lt;filippo.argiolas@gmail.com&gt;</author>
       <pads>
         <caps>

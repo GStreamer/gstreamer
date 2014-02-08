@@ -3,7 +3,7 @@
   <description>RTMP source and sink</description>
   <filename>../../ext/rtmp/.libs/libgstrtmp.so</filename>
   <basename>libgstrtmp.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

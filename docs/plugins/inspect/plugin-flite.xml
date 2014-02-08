@@ -3,7 +3,7 @@
   <description>Flite speech synthesizer plugin</description>
   <filename>../../ext/flite/.libs/libgstflite.so</filename>
   <basename>libgstflite.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

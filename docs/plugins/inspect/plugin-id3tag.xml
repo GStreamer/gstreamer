@@ -3,7 +3,7 @@
   <description>ID3 v1 and v2 muxing plugin</description>
   <filename>../../gst/id3tag/.libs/libgstid3tag.so</filename>
   <basename>libgstid3tag.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

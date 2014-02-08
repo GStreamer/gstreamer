@@ -3,7 +3,7 @@
   <description>Collection of elements that may or may not be useful for debugging</description>
   <filename>../../gst/debugutils/.libs/libgstdebugutilsbad.so</filename>
   <basename>libgstdebugutilsbad.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

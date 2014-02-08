@@ -3,7 +3,7 @@
   <description>Calculate MusicIP fingerprint from audio files</description>
   <filename>../../ext/ofa/.libs/libgstofa.so</filename>
   <basename>libgstofa.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

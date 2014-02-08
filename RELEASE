@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.2.2
+Release notes for GStreamer Bad Plugins 1.2.3
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -62,21 +62,18 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 667564 : mpeg4videoparse: does not detect config data when VOP only stream is sent
-      * 680700 : decklinksrc: does not forward EOS events passed via send_event
-      * 706211 : applemedia: Garbled output from vtenc_h264
-      * 709416 : gsmdec: MS GSM playback is broken
-      * 710223 : smoothstreaming: strip both /manifest and /Manifest from the manifest uri
-      * 711495 : srtpenc: new streams remove any existing streams
-      * 711627 : mpegvparse: Incorrect repositioning of start code location when input buffer is empty
-      * 712219 : dvdspu: stalled playback
-      * 712605 : h264parse: Broken conversion avc/au to byte-stream/nal
-      * 715166 : pngparse: Don't set a framerate from uninitialized variables
-      * 719657 : gstmpegvideoparser: debug category not always initialized soon enough
-      * 720099 : codecparsers: h264: fix picture level scaling lists derivation from fall-back rule set B
-      * 720421 : eglglessink: simultaneous eglglessinks not possible in iOS application
-      * 720532 : configure.ac: Fix typo in bz2-check
-      * 720673 : mpegts: Does not install all headers
+      * 709241 : applemedia: Enable I420 on input pad
+      * 711163 : amcvideodec: Add the xvid and divx variants for mpeg4 video
+      * 721382 : srtpdec: fix GstCaps memory leak
+      * 721384 : h264parse: clears keyframe flags when passing through byte-stream AUs (regression)
+      * 721715 : h264parse: Multiple SEI messages in SEI RBSP
+      * 722158 : facedetect: element non-functional because of unreasonable, hardcoded max-size setting
+      * 722414 : vp8pay: Memory leak
+      * 722622 : d3dvideosink: Unable to register Direct3D hidden window class
+      * 723127 : hlsdemux: Seeks sometimes deadlock
+      * 723134 : hlsdemux: Playback may not always start when using a file:// url because of racy EOS handling
+      * 723230 : opencv: works with 2.4.8 too
+      * 723398 : fisheye: plugin has wrong description
 
 ==== Download ====
 
@@ -113,17 +110,17 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Alexey Chernov
       * Aurélien Zanelli
-      * Cong Zhong
+      * Colin Macdonald
       * Dominik Röttsches
-      * Jan Schmidt
-      * Lubosz Sarnecki
-      * Mariusz Buras
+      * Duncan Palmer
+      * Jorge Zapata
+      * Kipp Cannon
       * Mark Nauwelaerts
-      * Olivier Crête
+      * Miguel París Díaz
+      * Nicola Murino
       * Sebastian Dröge
       * Thiago Santos
-      * Thibault Saunier
-      * Tim-Philipp Müller
-      * Todd Agulnick
+      * Vincent Penquerc'h
  

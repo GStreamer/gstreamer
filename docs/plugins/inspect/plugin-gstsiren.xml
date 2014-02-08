@@ -3,7 +3,7 @@
   <description>Siren encoder/decoder/payloader/depayloader plugins</description>
   <filename>../../gst/siren/.libs/libgstsiren.so</filename>
   <basename>libgstsiren.so</basename>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
