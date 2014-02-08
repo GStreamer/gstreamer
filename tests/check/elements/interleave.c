@@ -482,6 +482,8 @@ sink_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
       GST_AUDIO_CHANNEL_POSITION_REAR_CENTER
     };
     gst_audio_channel_positions_to_mask (pos, 2, FALSE, &mask);
+  } else {
+    g_assert_not_reached ();
   }
 
   caps = gst_caps_new_simple ("audio/x-raw",
