@@ -72,7 +72,7 @@ data_item_free (gpointer data)
 }
 
 static void
-data_item_dump (gconstpointer a, gpointer prefix)
+data_item_dump (gconstpointer a, gconstpointer prefix)
 {
   const DataItem *item = a;
 
@@ -251,7 +251,8 @@ gst_rtsp_mount_points_match (GstRTSPMountPoints * mounts,
   g_mutex_lock (&priv->lock);
   if (priv->dirty) {
     g_sequence_sort (priv->mounts, data_item_compare, mounts);
-    g_sequence_foreach (priv->mounts, (GFunc) data_item_dump, "sort :");
+    g_sequence_foreach (priv->mounts, (GFunc) data_item_dump,
+        (gpointer) "sort :");
     priv->dirty = FALSE;
   }
 

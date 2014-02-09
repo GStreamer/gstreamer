@@ -144,7 +144,7 @@ setup_client (const gchar * launch_line)
 }
 
 static void
-teardown_client (GstRTSPClient *client)
+teardown_client (GstRTSPClient * client)
 {
   gst_rtsp_client_set_thread_pool (client, NULL);
   g_object_unref (client);
@@ -332,7 +332,7 @@ GST_START_TEST (test_describe)
 
 GST_END_TEST;
 
-gchar *expected_transport = NULL;;
+static const gchar *expected_transport = NULL;;
 
 static gboolean
 test_setup_response_200_multicast (GstRTSPClient * client,
