@@ -250,39 +250,6 @@ setPixelRGB_ (Uint * buffer, Uint x, Color c, guint32 resolx, guint32 resoly)
 #endif
 }
 
-
-
-static inline void
-getPixelRGB (Uint * buffer, Uint x, Uint y, Color * c,
-    guint32 resolx, guint32 resoly)
-{
-  register unsigned char *tmp8;
-
-#ifdef _DEBUG
-  if (x + y * resolx >= resolx * resoly) {
-    printf ("getPixel ERROR : hors du tableau... %i, %i\n", x, y);
-    exit (1);
-  }
-#endif
-
-#ifdef __BIG_ENDIAN__
-  c->b = *(unsigned char *) (tmp8 =
-      (unsigned char *) (buffer + (x + y * resolx)));
-  c->r = *(unsigned char *) (++tmp8);
-  c->v = *(unsigned char *) (++tmp8);
-  c->b = *(unsigned char *) (++tmp8);
-
-#else
-  /* ATTENTION AU PETIT INDIEN  */
-  c->b = *(unsigned char *) (tmp8 =
-      (unsigned char *) (buffer + (x + y * resolx)));
-  c->v = *(unsigned char *) (++tmp8);
-  c->r = *(unsigned char *) (++tmp8);
-/*      *c = (Color) buffer[x+y*WIDTH] ; */
-#endif
-}
-
-
 static inline void
 getPixelRGB_ (Uint * buffer, Uint x, Color * c, guint32 resolx, guint32 resoly)
 {

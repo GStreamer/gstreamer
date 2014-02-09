@@ -74,16 +74,6 @@ setPixelRGB_ (Pixel * buffer, Uint x, Color c)
 }
 
 static inline void
-getPixelRGB (PluginInfo * goomInfo, Pixel * buffer, Uint x, Uint y, Color * c)
-{
-  Pixel i = *(buffer + (x + y * goomInfo->screen.width));
-
-  c->b = i.channels.b;
-  c->v = i.channels.g;
-  c->r = i.channels.r;
-}
-
-static inline void
 getPixelRGB_ (Pixel * buffer, Uint x, Color * c)
 {
   Pixel i = *(buffer + x);
