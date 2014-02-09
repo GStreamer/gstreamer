@@ -1108,6 +1108,7 @@ gst_matroska_parse_element_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
+#if 0
 /* searches for a cluster start from @pos,
  * return GST_FLOW_OK and cluster position in @pos if found */
 static GstFlowReturn
@@ -1205,7 +1206,7 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
   *pos = newpos;
   return ret;
 }
-
+#endif
 
 static gboolean
 gst_matroska_parse_handle_seek_event (GstMatroskaParse * parse,
@@ -2232,6 +2233,7 @@ gst_matroska_parse_check_read_size (GstMatroskaParse * parse, guint64 bytes)
   }
 }
 
+#if 0
 /* returns TRUE if we truely are in error state, and should give up */
 static inline gboolean
 gst_matroska_parse_check_parse_error (GstMatroskaParse * parse)
@@ -2252,6 +2254,7 @@ gst_matroska_parse_check_parse_error (GstMatroskaParse * parse)
     return FALSE;
   }
 }
+#endif
 
 /* initializes @ebml with @bytes from input stream at current offset.
  * Returns EOS if insufficient available,
