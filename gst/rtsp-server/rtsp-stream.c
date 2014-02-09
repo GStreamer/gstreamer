@@ -2194,7 +2194,7 @@ gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
 {
   GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
   GSocket *socket;
-  gchar *name;
+  const gchar *name;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
   g_return_val_if_fail (family == G_SOCKET_FAMILY_IPV4 ||
@@ -2228,7 +2228,7 @@ gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
 {
   GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
   GSocket *socket;
-  gchar *name;
+  const gchar *name;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
   g_return_val_if_fail (family == G_SOCKET_FAMILY_IPV4 ||

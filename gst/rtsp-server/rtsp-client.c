@@ -1040,10 +1040,11 @@ invalid_state:
 /* convert @url and @path to a URL used as a content base for the factory
  * located at @path */
 static gchar *
-make_base_url (GstRTSPClient * client, GstRTSPUrl * url, gchar * path)
+make_base_url (GstRTSPClient * client, GstRTSPUrl * url, const gchar * path)
 {
   GstRTSPUrl tmp;
-  gchar *result, *trail;
+  gchar *result;
+  const gchar *trail;
 
   /* check for trailing '/' and append one */
   trail = (path[strlen (path) - 1] != '/' ? "/" : "");
