@@ -173,12 +173,10 @@ gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
           "The control string for this stream", DEFAULT_CONTROL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-#ifdef GST_TYPE_RTSP_PROFILE
   g_object_class_install_property (gobject_class, PROP_PROFILES,
       g_param_spec_flags ("profiles", "Profiles",
           "Allowed transfer profiles", GST_TYPE_RTSP_PROFILE,
           DEFAULT_PROFILES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#endif
 
   g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
       g_param_spec_flags ("protocols", "Protocols",
