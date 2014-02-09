@@ -13,7 +13,8 @@ DIST_SUBDIRS = $(SUBDIRS)
 EXTRA_DIST = \
 	ChangeLog autogen.sh depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	gst-rtsp.spec docs/design/gst-rtp-server-design
+	gst-rtsp.spec docs/design/gst-rtp-server-design \
+	gst-rtsp-server.doap
 
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
