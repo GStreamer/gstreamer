@@ -822,15 +822,6 @@ ges_meta_container_get_float (GESMetaContainer * container,
   return TRUE;
 }
 
-static inline gchar *
-_gst_strdup0 (const gchar * s)
-{
-  if (s == NULL || *s == '\0')
-    return NULL;
-
-  return g_strdup (s);
-}
-
 /**
  * ges_meta_container_get_string:
  * @container: Target container

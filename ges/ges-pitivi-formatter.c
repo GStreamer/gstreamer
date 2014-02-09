@@ -127,17 +127,6 @@ pitivi_can_load_uri (GESFormatter * dummy_instance, const gchar * uri,
   return ret;
 }
 
-/* Project saving functions */
-
-static void inline
-write_int_attribute (xmlTextWriterPtr writer, guint64 nb, const gchar * attr,
-    const gchar * type)
-{
-  gchar *str = g_strdup_printf ("%s%" G_GUINT64_FORMAT, type, nb);
-  xmlTextWriterWriteAttribute (writer, BAD_CAST attr, BAD_CAST str);
-  g_free (str);
-}
-
 /* Project loading functions */
 
 /* Return: a GHashTable containing:
