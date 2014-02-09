@@ -42,7 +42,12 @@
 #endif
 
 #include <string.h>
+#ifdef HAVE_NETTLE
+#include <nettle/aes.h>
+#include <nettle/cbc.h>
+#else
 #include <gcrypt.h>
+#endif
 #include "gsthlsdemux.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
@@ -1231,6 +1236,59 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
   return gst_hls_demux_change_playlist (demux, bitrate * demux->bitrate_limit);
 }
 
+#ifdef HAVE_NETTLE
+static gboolean
+decrypt_fragment (GstHLSDemux * demux, gsize length,
+    const guint8 * encrypted_data, guint8 * decrypted_data,
+    const guint8 * key_data, const guint8 * iv_data)
+{
+  struct CBC_CTX (struct aes_ctx, AES_BLOCK_SIZE) aes_ctx;
+
+  if (length % 16 != 0)
+    return FALSE;
+
+  aes_set_decrypt_key (&aes_ctx.ctx, 16, key_data);
+  CBC_SET_IV (&aes_ctx, iv_data);
+
+  CBC_DECRYPT (&aes_ctx, aes_decrypt, length, decrypted_data, encrypted_data);
+
+  return TRUE;
+}
+#else
+static gboolean
+decrypt_fragment (GstHLSDemux * demux, gsize length,
+    const guint8 * encrypted_data, guint8 * decrypted_data,
+    const guint8 * key_data, const guint8 * iv_data)
+{
+  gcry_cipher_hd_t aes_ctx = NULL;
+  gcry_error_t err = 0;
+  gboolean ret = FALSE;
+
+  err =
+      gcry_cipher_open (&aes_ctx, GCRY_CIPHER_AES128, GCRY_CIPHER_MODE_CBC, 0);
+  if (err)
+    goto out;
+  err = gcry_cipher_setkey (aes_ctx, key_data, 16);
+  if (err)
+    goto out;
+  err = gcry_cipher_setiv (aes_ctx, iv_data, 16);
+  if (err)
+    goto out;
+  err = gcry_cipher_decrypt (aes_ctx, decrypted_data, length,
+      encrypted_data, length);
+  if (err)
+    goto out;
+
+  ret = TRUE;
+
+out:
+  if (aes_ctx)
+    gcry_cipher_close (aes_ctx);
+
+  return ret;
+}
+#endif
+
 static GstFragment *
 gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
     GstFragment * encrypted_fragment, const gchar * key, const guint8 * iv)
@@ -1238,8 +1296,6 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   GstFragment *key_fragment, *ret = NULL;
   GstBuffer *key_buffer, *encrypted_buffer, *decrypted_buffer;
   GstMapInfo key_info, encrypted_info, decrypted_info;
-  gcry_cipher_hd_t aes_ctx = NULL;
-  gcry_error_t err = 0;
   gsize unpadded_size;
 
   GST_INFO_OBJECT (demux, "Fetching key %s", key);
@@ -1257,21 +1313,9 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   gst_buffer_map (encrypted_buffer, &encrypted_info, GST_MAP_READ);
   gst_buffer_map (decrypted_buffer, &decrypted_info, GST_MAP_WRITE);
 
-  err =
-      gcry_cipher_open (&aes_ctx, GCRY_CIPHER_AES128, GCRY_CIPHER_MODE_CBC, 0);
-  if (err)
-    goto gcry_error;
-  err = gcry_cipher_setkey (aes_ctx, key_info.data, 16);
-  if (err)
-    goto gcry_error;
-  err = gcry_cipher_setiv (aes_ctx, iv, 16);
-  if (err)
-    goto gcry_error;
-  err = gcry_cipher_decrypt (aes_ctx, decrypted_info.data, decrypted_info.size,
-      encrypted_info.data, encrypted_info.size);
-  if (err)
-    goto gcry_error;
-  gcry_cipher_close (aes_ctx);
+  if (!decrypt_fragment (demux, encrypted_info.size,
+          encrypted_info.data, decrypted_info.data, key_info.data, iv))
+    goto decrypt_error;
 
   /* Handle pkcs7 unpadding here */
   unpadded_size =
@@ -1294,12 +1338,8 @@ key_failed:
   g_object_unref (encrypted_fragment);
   return ret;
 
-gcry_error:
-  GST_ERROR_OBJECT (demux, "Failed to decrypt fragment: %s",
-      gpg_strerror (err));
-
-  if (aes_ctx)
-    gcry_cipher_close (aes_ctx);
+decrypt_error:
+  GST_ERROR_OBJECT (demux, "Failed to decrypt fragment");
 
   gst_buffer_unref (key_buffer);
   gst_buffer_unref (encrypted_buffer);
