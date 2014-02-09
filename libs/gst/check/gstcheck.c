@@ -697,18 +697,26 @@ gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
   return nf;
 }
 
-gboolean
-_gst_check_run_test_func (const gchar * func_name)
+static gboolean
+gst_check_have_checks_list (const gchar * env_var_name)
+{
+  const gchar *env_val;
+
+  env_val = g_getenv (env_var_name);
+  return (env_val != NULL && *env_val != '\0');
+}
+
+static gboolean
+gst_check_func_is_in_list (const gchar * env_var, const gchar * func_name)
 {
   const gchar *gst_checks;
   gboolean res = FALSE;
   gchar **funcs, **f;
 
-  gst_checks = g_getenv ("GST_CHECKS");
+  gst_checks = g_getenv (env_var);
 
-  /* no filter specified => run all checks */
   if (gst_checks == NULL || *gst_checks == '\0')
-    return TRUE;
+    return FALSE;
 
   /* only run specified functions */
   funcs = g_strsplit (gst_checks, ",", -1);
@@ -720,6 +728,21 @@ _gst_check_run_test_func (const gchar * func_name)
   }
   g_strfreev (funcs);
   return res;
+}
+
+gboolean
+_gst_check_run_test_func (const gchar * func_name)
+{
+  /* if we have a whitelist, run it only if it's in the whitelist */
+  if (gst_check_have_checks_list ("GST_CHECKS"))
+    return gst_check_func_is_in_list ("GST_CHECKS", func_name);
+
+  /* if we have a blacklist, run it only if it's not in the blacklist */
+  if (gst_check_have_checks_list ("GST_CHECKS_IGNORE"))
+    return !gst_check_func_is_in_list ("GST_CHECKS_IGNORE", func_name);
+
+  /* no filter specified => run all checks */
+  return TRUE;
 }
 
 /**
