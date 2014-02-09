@@ -220,18 +220,6 @@ static const gchar *const _sub_pad_names[] = { "subpicture", "subpicture_sink",
   "subtitle_sink", "subtitle"
 };
 
-static inline gboolean
-_is_raw_video (GstStructure * s)
-{
-  const gchar *name;
-
-  name = gst_structure_get_name (s);
-
-  if (g_str_equal (name, "video/x-raw"))
-    return TRUE;
-  return FALSE;
-}
-
 static gboolean
 _is_video_pad (GstPad * pad, gboolean * hw_accelerated)
 {
