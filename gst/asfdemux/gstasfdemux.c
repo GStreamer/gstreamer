@@ -2197,32 +2197,6 @@ gst_asf_demux_get_uint64 (guint8 ** p_data, guint64 * p_size)
   return ret;
 }
 
-static inline guint32
-gst_asf_demux_get_var_length (guint8 type, guint8 ** p_data, guint64 * p_size)
-{
-  switch (type) {
-    case 0:
-      return 0;
-
-    case 1:
-      g_assert (*p_size >= 1);
-      return gst_asf_demux_get_uint8 (p_data, p_size);
-
-    case 2:
-      g_assert (*p_size >= 2);
-      return gst_asf_demux_get_uint16 (p_data, p_size);
-
-    case 3:
-      g_assert (*p_size >= 4);
-      return gst_asf_demux_get_uint32 (p_data, p_size);
-
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-  return 0;
-}
-
 static gboolean
 gst_asf_demux_get_buffer (GstBuffer ** p_buf, guint num_bytes_to_read,
     guint8 ** p_data, guint64 * p_size)
