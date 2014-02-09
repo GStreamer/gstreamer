@@ -64,7 +64,7 @@ struct _GstAudioSrc {
  * @prepare: configure device with format
  * @unprepare: undo the configuration
  * @close: close the device
- * @read: read samples to the audio device
+ * @read: read samples from the audio device
  * @delay: the number of samples queued in the device
  * @reset: unblock a read to the device and reset.
  *
