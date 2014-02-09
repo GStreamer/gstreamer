@@ -84,7 +84,7 @@ struct _GstHLSDemux
   GstTask *updates_task;
   GRecMutex updates_lock;
   GMutex updates_timed_lock;
-  GTimeVal next_update;         /* Time of the next update */
+  gint64 next_update;         /* Time of the next update */
   gboolean cancelled;
 
   /* Position in the stream */

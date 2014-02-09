@@ -25,7 +25,6 @@
 #include <glib.h>
 #include <string.h>
 
-#include <gst/glib-compat-private.h>
 #include "gstfragmented.h"
 #include "m3u8.h"
 
@@ -440,7 +439,7 @@ gst_m3u8_client_new (const gchar * uri)
   client->current = NULL;
   client->sequence = -1;
   client->update_failed_count = 0;
-  client->lock = g_mutex_new ();
+  g_mutex_init (&client->lock);
   gst_m3u8_set_uri (client->main, g_strdup (uri));
 
   return client;
@@ -452,7 +451,7 @@ gst_m3u8_client_free (GstM3U8Client * self)
   g_return_if_fail (self != NULL);
 
   gst_m3u8_free (self->main);
-  g_mutex_free (self->lock);
+  g_mutex_clear (&self->lock);
   g_free (self);
 }
 

@@ -41,12 +41,7 @@
 #  include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <string.h>
-#include <gst/glib-compat-private.h>
 #include <gcrypt.h>
 #include "gsthlsdemux.h"
 
@@ -879,8 +874,8 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
 
     /*  block until the next scheduled update or the signal to quit this thread */
     GST_DEBUG_OBJECT (demux, "Waiting");
-    if (g_cond_timed_wait (GST_TASK_GET_COND (demux->updates_task),
-            &demux->updates_timed_lock, &demux->next_update)) {
+    if (g_cond_wait_until (GST_TASK_GET_COND (demux->updates_task),
+            &demux->updates_timed_lock, demux->next_update)) {
       GST_DEBUG_OBJECT (demux, "Unlocked");
       goto quit;
     }
@@ -1009,7 +1004,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
     gst_element_post_message (GST_ELEMENT (demux),
         gst_message_new_buffering (GST_OBJECT (demux),
             100 * i / demux->fragments_cache));
-    g_get_current_time (&demux->next_update);
+    demux->next_update = g_get_monotonic_time ();
     if (!gst_hls_demux_get_next_fragment (demux, TRUE)) {
       if (demux->end_of_playlist)
         break;
@@ -1025,7 +1020,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
   gst_element_post_message (GST_ELEMENT (demux),
       gst_message_new_buffering (GST_OBJECT (demux), 100));
 
-  g_get_current_time (&demux->next_update);
+  demux->next_update = g_get_monotonic_time ();
 
   demux->need_cache = FALSE;
   return TRUE;
@@ -1197,11 +1192,10 @@ gst_hls_demux_schedule (GstHLSDemux * demux)
 
   /* schedule the next update using the target duration field of the
    * playlist */
-  g_time_val_add (&demux->next_update,
-      gst_m3u8_client_get_target_duration (demux->client)
-      / GST_SECOND * G_USEC_PER_SEC * update_factor);
-  GST_DEBUG_OBJECT (demux, "Next update scheduled at %s",
-      g_time_val_to_iso8601 (&demux->next_update));
+  demux->next_update += gst_m3u8_client_get_target_duration (demux->client)
+      / GST_SECOND * G_USEC_PER_SEC * update_factor;
+  GST_DEBUG_OBJECT (demux, "Next update scheduled at %" G_GINT64_FORMAT,
+      demux->next_update);
 
   return TRUE;
 }
@@ -1209,7 +1203,6 @@ gst_hls_demux_schedule (GstHLSDemux * demux)
 static gboolean
 gst_hls_demux_switch_playlist (GstHLSDemux * demux)
 {
-  GTimeVal now;
   GstClockTime diff;
   gsize size;
   gint bitrate;
@@ -1226,8 +1219,7 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
 
   /* compare the time when the fragment was downloaded with the time when it was
    * scheduled */
-  g_get_current_time (&now);
-  diff = (GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (demux->next_update));
+  diff = g_get_monotonic_time () - demux->next_update;
   buffer = gst_fragment_get_buffer (fragment);
   size = gst_buffer_get_size (buffer);
   bitrate = (size * 8) / ((double) diff / GST_SECOND);
