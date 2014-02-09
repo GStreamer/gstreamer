@@ -39,6 +39,20 @@ dnl we override it here if we need to for the release candidate of new series
 GST_API_VERSION=1.0
 AC_SUBST(GST_API_VERSION)
 
+dnl CURRENT, REVISION, AGE
+dnl - library source changed -> increment REVISION
+dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
+dnl - interfaces added -> increment AGE
+dnl - interfaces removed -> AGE = 0
+dnl
+dnl Keep CURRENT as MINOR * 100 + MICRO
+dnl Ex : 1.0.0 => 0
+dnl      1.0.3 => 3
+dnl      1.1.0 => 100
+dnl      1.2.5 => 205
+dnl      1.10.9 (who knows) => 1009
+dnl
+dnl sets GST_LT_LDFLAGS
 AS_LIBTOOL(GST, 300, 0, 300)
 
 dnl *** required versions of GStreamer stuff ***
@@ -63,13 +77,33 @@ dnl the version check needs to stay here because autopoint greps for it
 
 dnl *** check for arguments to configure ***
 
+AG_GST_ARG_DISABLE_FATAL_WARNINGS
+
 AG_GST_ARG_DEBUG
 AG_GST_ARG_VALGRIND
 AG_GST_ARG_GCOV
+AG_GST_ARG_WITH_PKG_CONFIG_PATH
 AG_GST_ARG_WITH_PACKAGE_NAME
 AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
 AG_GST_PKG_CONFIG_PATH
+
+AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
+  ["${srcdir}/gst-rtsp-server.doap"],
+  [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
+
+dnl building of tests
+AC_ARG_ENABLE(tests,
+  AS_HELP_STRING([--disable-tests],[disable building test apps]),
+  [
+    case "${enableval}" in
+      yes) BUILD_TESTS=yes ;;
+      no)  BUILD_TESTS=no ;;
+      *)   AC_MSG_ERROR(bad value ${enableval} for --disable-tests) ;;
+    esac
+  ],
+[BUILD_TESTS=yes]) dnl Default value
+AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
 
 dnl *** checks for platform ***
 
@@ -79,17 +113,23 @@ dnl *** checks for programs ***
 
 dnl find a compiler
 AC_PROG_CC
+AC_PROG_CC_STDC
+
+dnl check if the compiler supports '-c' and '-o' options
 AM_PROG_CC_C_O
+
+dnl find an assembler
+AM_PROG_AS
 
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
 dnl check for gobject-introspection
-GOBJECT_INTROSPECTION_CHECK([0.6.3])
+GOBJECT_INTROSPECTION_CHECK([1.31.1])
 
 dnl check for documentation tools
 AG_GST_DOCBOOK_CHECK
-GTK_DOC_CHECK([1.3])
+GTK_DOC_CHECK([1.12])
 
 dnl *** checks for libraries ***
 
@@ -139,6 +179,20 @@ AC_MSG_NOTICE(Using GStreamer Good Plugins in $GSTPG_PLUGINS_DIR)
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
+dnl Check for -Bsymbolic-functions linker flag used to avoid
+dnl intra-library PLT jumps, if available.
+AC_ARG_ENABLE(Bsymbolic,
+              [AS_HELP_STRING([--disable-Bsymbolic],[avoid linking with -Bsymbolic])],,
+              [SAVED_LDFLAGS="${LDFLAGS}"
+               AC_MSG_CHECKING([for -Bsymbolic-functions linker flag])
+               LDFLAGS=-Wl,-Bsymbolic-functions
+               AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[int main (void) { return 0; }]])],[
+                           AC_MSG_RESULT(yes)
+                           enable_Bsymbolic=yes],[
+                           AC_MSG_RESULT(no)
+                           enable_Bsymbolic=no])
+               LDFLAGS="${SAVED_LDFLAGS}"])
+
 dnl *** set variables based on configure arguments ***
 
 dnl set license and copyright notice
@@ -155,7 +209,7 @@ NO_WARNINGS=""
 AG_GST_CHECK_GST_DEBUG_DISABLED([NO_WARNINGS="-Wno-unused"], [NO_WARNINGS=""])
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS($GST_GIT, [$NO_WARNINGS])
+AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [-Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return -Wno-multichar -Wnested-externs $NO_WARNINGS])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
@@ -179,7 +233,15 @@ if test "x$USE_DEBUG" = xyes; then
 fi
 AC_SUBST(PROFILE_CFLAGS)
 
-DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+# GST_DISABLE_DEPRECATED: hide the visibility of deprecated
+# functionality from the API that gstreamer uses
+# GST_REMOVE_DEPRECATED: don't compile deprecated functionality (breaks ABI)
+if test "x$PACKAGE_VERSION_NANO" = "x1"; then
+  dnl Define _only_ when compiling from git (not for pre-releases or releases)
+  DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+else
+  DEPRECATED_CFLAGS=""
+fi
 AC_SUBST(DEPRECATED_CFLAGS)
 
 dnl every flag in GST_OPTION_CFLAGS can be overridden at make time
@@ -209,6 +271,10 @@ AC_SUBST([GST_ALL_LIBS])
 dnl LDFLAGS really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
+if test "x${enable_Bsymbolic}" = "xyes"; then
+  GST_ALL_LDFLAGS="$GST_ALL_LDFLAGS -Wl,-Bsymbolic-functions"
+fi
+
 AC_SUBST(GST_ALL_LDFLAGS)
 
 dnl GST_LIB_LDFLAGS
