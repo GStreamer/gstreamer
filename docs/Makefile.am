@@ -26,3 +26,6 @@ EXTRA_DIST = \
 upload:
 	@if test "x$(SUBDIRS)" != x; then for a in $(SUBDIRS); do cd $$a; make upload; cd ..; done; fi
 
+libs: gst
+
+include $(top_srcdir)/common/parallel-subdirs.mak
