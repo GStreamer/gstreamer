@@ -489,6 +489,31 @@ See the GLib API reference for more details.
 
 </formalpara>
 
+<formalpara id="GST_TAG_ENCODING">
+  <title><envar>GST_TAG_ENCODING</envar></title>
+  <para>
+Try this character encoding first for tag-related strings where the encoding
+is not defined and which are not UTF-8 already. By defaul the current locale
+will be tried (if not UTF-8).
+  </para>
+</formalpara>
+
+<formalpara id="GST_TAG_ID3_ENCODING">
+  <title><envar>GST_TAG_ID3_ENCODING</envar></title>
+  <para>
+Try this character encoding first for ID3 tag-related strings where the
+encoding is not defined and which are not UTF-8 already. By defaul the current
+locale will be tried (if not UTF-8).
+  </para>
+</formalpara>
+
+<formalpara id="GST_TAG_ID3V1_ENCODING">
+  <title><envar>GST_TAG_ID3V1_ENCODING</envar></title>
+  <para>
+Try this character encoding first for ID3v1 tag-related strings where the
+encoding does not look like UTF-8.
+  </para>
+</formalpara>
 </refsect2>
 
 </refsect1>
