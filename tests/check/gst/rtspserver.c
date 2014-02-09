@@ -183,7 +183,7 @@ start_server (void)
 
 /* stop the tested rtsp server */
 static void
-stop_server ()
+stop_server (void)
 {
   g_source_remove (source_id);
   source_id = 0;
