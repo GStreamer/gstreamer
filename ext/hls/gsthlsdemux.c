@@ -47,8 +47,7 @@
 
 #include <string.h>
 #include <gst/glib-compat-private.h>
-#include <gnutls/gnutls.h>
-#include <gnutls/crypto.h>
+#include <gcrypt.h>
 #include "gsthlsdemux.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
@@ -1247,8 +1246,8 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   GstFragment *key_fragment, *ret = NULL;
   GstBuffer *key_buffer, *encrypted_buffer, *decrypted_buffer;
   GstMapInfo key_info, encrypted_info, decrypted_info;
-  gnutls_cipher_hd_t aes_ctx;
-  gnutls_datum_t key_d, iv_d;
+  gcry_cipher_hd_t aes_ctx = NULL;
+  gcry_error_t err = 0;
   gsize unpadded_size;
 
   GST_INFO_OBJECT (demux, "Fetching key %s", key);
@@ -1266,15 +1265,21 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   gst_buffer_map (encrypted_buffer, &encrypted_info, GST_MAP_READ);
   gst_buffer_map (decrypted_buffer, &decrypted_info, GST_MAP_WRITE);
 
-  key_d.data = key_info.data;
-  key_d.size = 16;
-  iv_d.data = (unsigned char *) iv;
-  iv_d.size = 16;
-  gnutls_cipher_init (&aes_ctx, gnutls_cipher_get_id ("AES-128-CBC"), &key_d,
-      &iv_d);
-  gnutls_cipher_decrypt2 (aes_ctx, encrypted_info.data, encrypted_info.size,
-      decrypted_info.data, decrypted_info.size);
-  gnutls_cipher_deinit (aes_ctx);
+  err =
+      gcry_cipher_open (&aes_ctx, GCRY_CIPHER_AES128, GCRY_CIPHER_MODE_CBC, 0);
+  if (err)
+    goto gcry_error;
+  err = gcry_cipher_setkey (aes_ctx, key_info.data, 16);
+  if (err)
+    goto gcry_error;
+  err = gcry_cipher_setiv (aes_ctx, iv, 16);
+  if (err)
+    goto gcry_error;
+  err = gcry_cipher_decrypt (aes_ctx, decrypted_info.data, decrypted_info.size,
+      encrypted_info.data, encrypted_info.size);
+  if (err)
+    goto gcry_error;
+  gcry_cipher_close (aes_ctx);
 
   /* Handle pkcs7 unpadding here */
   unpadded_size =
@@ -1294,6 +1299,24 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   gst_fragment_add_buffer (ret, decrypted_buffer);
   ret->completed = TRUE;
 key_failed:
+  g_object_unref (encrypted_fragment);
+  return ret;
+
+gcry_error:
+  GST_ERROR_OBJECT (demux, "Failed to decrypt fragment: %s",
+      gpg_strerror (err));
+
+  if (aes_ctx)
+    gcry_cipher_close (aes_ctx);
+
+  gst_buffer_unref (key_buffer);
+  gst_buffer_unref (encrypted_buffer);
+  gst_buffer_unref (decrypted_buffer);
+
+  gst_buffer_unmap (decrypted_buffer, &decrypted_info);
+  gst_buffer_unmap (encrypted_buffer, &encrypted_info);
+  gst_buffer_unmap (key_buffer, &key_info);
+
   g_object_unref (encrypted_fragment);
   return ret;
 }

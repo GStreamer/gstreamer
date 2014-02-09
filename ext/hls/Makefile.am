@@ -8,11 +8,11 @@ libgstfragmented_la_SOURCES =			\
 	gsthlssink.c 				\
 	gstm3u8playlist.c
 
-libgstfragmented_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS) $(GNUTLS_CFLAGS)
+libgstfragmented_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS) $(LIBGCRYPT_CFLAGS)
 libgstfragmented_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) -lgstvideo-$(GST_API_VERSION) \
-	$(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS) $(LIBM) $(GNUTLS_LIBS)
+	$(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS) $(LIBM) $(LIBGCRYPT_LIBS)
 libgstfragmented_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -no-undefined
 libgstfragmented_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 

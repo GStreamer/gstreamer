@@ -2211,7 +2211,7 @@ AG_GST_CHECK_FEATURE(SNDIO, [sndio audio], sndio, [
 dnl *** hls ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_HLS, true)
 AG_GST_CHECK_FEATURE(HLS, [http live streaming plugin], hls, [
-  PKG_CHECK_MODULES(GNUTLS, gnutls >= 2.11.3, [ HAVE_HLS="yes" ], [ HAVE_HLS="no" ])
+  AM_PATH_LIBGCRYPT([1.2.0], [ HAVE_HLS="yes" ], [ HAVE_HLS="no" ])
 ])
 
 else
