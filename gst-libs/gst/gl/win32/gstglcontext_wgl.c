@@ -43,6 +43,8 @@ static gboolean gst_gl_context_wgl_create_context (GstGLContext * context,
     GstGLAPI gl_api, GstGLContext * other_context, GError ** error);
 static void gst_gl_context_wgl_destroy_context (GstGLContext * context);
 GstGLAPI gst_gl_context_wgl_get_gl_api (GstGLContext * context);
+static GstGLPlatform gst_gl_context_wgl_get_gl_platform (GstGLContext *
+    context);
 static gpointer gst_gl_context_wgl_get_proc_address (GstGLContext * context,
     const gchar * name);
 
@@ -66,6 +68,8 @@ gst_gl_context_wgl_class_init (GstGLContextWGLClass * klass)
   context_class->get_proc_address =
       GST_DEBUG_FUNCPTR (gst_gl_context_wgl_get_proc_address);
   context_class->get_gl_api = GST_DEBUG_FUNCPTR (gst_gl_context_wgl_get_gl_api);
+  context_class->get_gl_platform =
+      GST_DEBUG_FUNCPTR (gst_gl_context_wgl_get_gl_platform);
 }
 
 static void
@@ -88,7 +92,7 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
 {
   GstGLWindow *window;
   GstGLContextWGL *context_wgl;
-  GstGLContextWGL *other_wgl = NULL;
+  HGLRC external_gl_context = NULL;
   HDC device;
 
   context_wgl = GST_GL_CONTEXT_WGL (context);
@@ -102,7 +106,7 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
           "Cannot share context with a non-WGL context");
       goto failure;
     }
-    other_wgl = (GstGLContextWGL *) other_context;
+    external_gl_context = (HGLRC) gst_gl_context_get_gl_context (other_context);
   }
 
   context_wgl->wgl_context = wglCreateContext (device);
@@ -120,8 +124,8 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
   GST_LOG ("gl context id: %" G_GUINTPTR_FORMAT,
       (guintptr) context_wgl->wgl_context);
 
-  if (other_wgl) {
-    if (!wglShareLists (other_wgl->wgl_context, context_wgl->wgl_context)) {
+  if (external_gl_context) {
+    if (!wglShareLists (external_gl_context, context_wgl->wgl_context)) {
       g_set_error (error, GST_GL_CONTEXT_ERROR,
           GST_GL_CONTEXT_ERROR_CREATE_CONTEXT, "failed to share contexts 0x%x",
           (unsigned int) GetLastError ());
@@ -251,6 +255,12 @@ GstGLAPI
 gst_gl_context_wgl_get_gl_api (GstGLContext * context)
 {
   return GST_GL_API_OPENGL;
+}
+
+static GstGLPlatform
+gst_gl_context_wgl_get_gl_platform (GstGLContext * context)
+{
+  return GST_GL_PLATFORM_WGL;
 }
 
 static gpointer

@@ -33,6 +33,7 @@ static void gst_gl_context_cocoa_destroy_context (GstGLContext *context);
 static guintptr gst_gl_context_cocoa_get_gl_context (GstGLContext * window);
 static gboolean gst_gl_context_cocoa_activate (GstGLContext * context, gboolean activate);
 static GstGLAPI gst_gl_context_cocoa_get_gl_api (GstGLContext * context);
+static GstGLPlatform gst_gl_context_cocoa_get_gl_platform (GstGLContext * context);
 
 #define GST_GL_CONTEXT_COCOA_GET_PRIVATE(o)  \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_CONTEXT_COCOA, GstGLContextCocoaPrivate))
@@ -85,6 +86,8 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
   context_class->activate = GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_activate);
   context_class->get_gl_api =
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_api);
+  context_class->get_gl_platform =
+      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_platform);
 
 #ifndef GNUSTEP
   pool = [[NSAutoreleasePool alloc] init];
@@ -254,4 +257,10 @@ static GstGLAPI
 gst_gl_context_cocoa_get_gl_api (GstGLContext * context)
 {
   return GST_GL_API_OPENGL;
+}
+
+static GstGLPlatform
+gst_gl_context_cocoa_get_gl_platform (GstGLContext * context)
+{
+  return GST_GL_API_COCOA;
 }

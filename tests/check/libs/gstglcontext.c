@@ -117,7 +117,8 @@ deinit (gpointer data)
   gl->DeleteTextures (1, &tex);;
   gst_object_unref (fbo);
 #if GST_GL_HAVE_GLES2
-  gst_object_unref (shader);
+  if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
+    gst_object_unref (shader);
 #endif
 }
 
@@ -281,6 +282,66 @@ GST_START_TEST (test_share)
 
 GST_END_TEST;
 
+GST_START_TEST (test_wrapped_context)
+{
+  GstGLContext *context, *other_context, *wrapped_context;
+  GstGLWindow *window, *other_window;
+  GError *error = NULL;
+  gint i = 0;
+  guintptr handle;
+  GstGLPlatform platform;
+  GstGLAPI apis;
+
+  display = gst_gl_display_new ();
+  context = gst_gl_context_new (display);
+
+  window = gst_gl_window_new (display);
+  gst_gl_context_set_window (context, window);
+
+  gst_gl_context_create (context, 0, &error);
+
+  fail_if (error != NULL, "Error creating master context %s\n",
+      error ? error->message : "Unknown Error");
+
+  handle = gst_gl_context_get_gl_context (context);
+  platform = gst_gl_context_get_gl_platform (context);
+  apis = gst_gl_context_get_gl_api (context);
+
+  wrapped_context =
+      gst_gl_context_new_wrapped (display, handle, platform, apis);
+
+  other_context = gst_gl_context_new (display);
+  other_window = gst_gl_window_new (display);
+  gst_gl_context_set_window (other_context, other_window);
+
+  gst_gl_context_create (other_context, wrapped_context, &error);
+
+  fail_if (error != NULL, "Error creating secondary context %s\n",
+      error ? error->message : "Unknown Error");
+
+  /* make the window visible */
+  gst_gl_window_draw (window, 320, 240);
+
+  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (init), context);
+
+  while (i < 1000) {
+    gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (draw_tex),
+        context);
+    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (draw_render),
+        context);
+    i++;
+  }
+
+  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (deinit), context);
+
+  gst_object_unref (window);
+  gst_object_unref (other_window);
+  gst_object_unref (other_context);
+  gst_object_unref (context);
+}
+
+GST_END_TEST;
+
 
 Suite *
 gst_gl_memory_suite (void)
@@ -291,6 +352,7 @@ gst_gl_memory_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_share);
+  tcase_add_test (tc_chain, test_wrapped_context);
 
   return s;
 }
