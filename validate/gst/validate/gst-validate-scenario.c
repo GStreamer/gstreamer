@@ -81,6 +81,7 @@ struct _GstValidateScenarioPrivate
   GstClockTime seek_pos_tol;
 
   guint num_actions;
+  GRegex *clean_action_str;
 
   guint get_pos_id;
 };
@@ -743,14 +744,14 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
 
 static gboolean
 _load_scenario_file (GstValidateScenario * scenario,
-    const gchar * scenario_file, gboolean *is_config)
+    const gchar * scenario_file, gboolean * is_config)
 {
   guint i;
   gsize xmlsize;
   GFile *file = NULL;
   GError *err = NULL;
   gboolean ret = TRUE;
-  gchar *content = NULL, **lines = NULL;
+  gchar *content = NULL, *escaped_content, **lines = NULL;
   GstValidateScenarioPrivate *priv = scenario->priv;
   gchar *uri = gst_filename_to_uri (scenario_file, &err);
 
@@ -769,7 +770,10 @@ _load_scenario_file (GstValidateScenario * scenario,
     goto failed;
 
   *is_config = FALSE;
-  lines = g_strsplit (content, "\n", 0);
+  escaped_content = g_regex_replace (priv->clean_action_str,
+          content, -1, 0, "", 0, NULL);
+  lines = g_strsplit (escaped_content, "\n", 0);
+  g_free (escaped_content);
   for (i = 0; lines[i]; i++) {
     const gchar *type, *str_playback_time;
     gdouble playback_time;
@@ -1000,6 +1004,8 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   priv->seek_pos_tol = DEFAULT_SEEK_TOLERANCE;
   priv->segment_start = 0;
   priv->segment_stop = GST_CLOCK_TIME_NONE;
+  priv->clean_action_str =
+      g_regex_new ("\\\\\n| ", G_REGEX_CASELESS, 0, NULL);
 }
 
 static void
@@ -1012,6 +1018,7 @@ gst_validate_scenario_dispose (GObject * object)
   if (priv->pipeline)
     gst_object_unref (priv->pipeline);
   g_list_free_full (priv->actions, (GDestroyNotify) _free_scenario_action);
+  g_regex_unref (priv->clean_action_str);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->dispose (object);
 }
