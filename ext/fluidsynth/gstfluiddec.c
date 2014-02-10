@@ -63,7 +63,7 @@ enum
   LAST_SIGNAL
 };
 
-#define SOUNDFONT_PATH "/usr/share/sounds/sf2/"
+#define SOUNDFONT_PATH "sounds/sf2/"
 
 #define DEFAULT_SOUNDFONT       NULL
 #define DEFAULT_SYNTH_CHORUS    TRUE
@@ -507,6 +507,9 @@ gst_fluid_dec_open (GstFluidDec * fluiddec)
 {
   GDir *dir;
   GError *error = NULL;
+  gint shared_dirs_count;
+  gint shared_dirs_failed;
+  const gchar *const *sharedirs;
 
   if (fluiddec->sf != -1)
     return TRUE;
@@ -522,32 +525,52 @@ gst_fluid_dec_open (GstFluidDec * fluiddec)
     GST_DEBUG_OBJECT (fluiddec, "loaded soundfont file %s",
         fluiddec->soundfont);
   } else {
-
-    dir = g_dir_open (SOUNDFONT_PATH, 0, &error);
-    if (dir == NULL)
-      goto open_dir_failed;
-
-    while (TRUE) {
-      const gchar *name;
-      gchar *filename;
-
-      if ((name = g_dir_read_name (dir)) == NULL)
-        break;
-
-      filename = g_build_filename (SOUNDFONT_PATH, name, NULL);
-
-      GST_DEBUG_OBJECT (fluiddec, "loading soundfont file %s", filename);
-      fluiddec->sf = fluid_synth_sfload (fluiddec->synth, filename, 1);
-      if (fluiddec->sf != -1) {
-        GST_DEBUG_OBJECT (fluiddec, "loaded soundfont file %s", filename);
-        break;
+    gint i;
+    shared_dirs_count = 0;
+    shared_dirs_failed = 0;
+    sharedirs = g_get_system_data_dirs ();
+    for (i = 0; sharedirs[i]; i++) {
+      gchar *soundfont_path = g_build_path ("/", sharedirs[i], SOUNDFONT_PATH,
+          NULL);
+      shared_dirs_count += 1;
+      GST_DEBUG_OBJECT (fluiddec, "Trying to list contents of a %s directory",
+          soundfont_path);
+      error = NULL;
+      dir = g_dir_open (soundfont_path, 0, &error);
+      if (dir == NULL) {
+        GST_DEBUG_OBJECT (fluiddec, "Can't open a potential soundfont directory %s: %s",
+            soundfont_path, error->message);
+        g_free (soundfont_path);
+        g_error_free (error);
+        shared_dirs_failed += 1;
+        continue;
       }
-      GST_DEBUG_OBJECT (fluiddec, "could not load soundfont file %s", filename);
-    }
-    g_dir_close (dir);
 
-    if (fluiddec->sf == -1)
+      while (TRUE) {
+        const gchar *name;
+        gchar *filename;
+
+        if ((name = g_dir_read_name (dir)) == NULL)
+          break;
+
+        filename = g_build_filename (soundfont_path, name, NULL);
+
+        GST_DEBUG_OBJECT (fluiddec, "loading soundfont file %s", filename);
+        fluiddec->sf = fluid_synth_sfload (fluiddec->synth, filename, 1);
+        if (fluiddec->sf != -1) {
+          GST_DEBUG_OBJECT (fluiddec, "loaded soundfont file %s", filename);
+          break;
+        }
+        GST_DEBUG_OBJECT (fluiddec, "could not load soundfont file %s", filename);
+      }
+      g_dir_close (dir);
+      g_free (soundfont_path);
+    }
+    if (fluiddec->sf == -1) {
+      if (shared_dirs_count == shared_dirs_failed)
+        goto open_dir_failed;
       goto no_soundfont;
+    }
   }
   return TRUE;
 
@@ -562,17 +585,17 @@ load_failed:
 open_dir_failed:
   {
     GST_ELEMENT_ERROR (fluiddec, RESOURCE, OPEN_READ,
-        ("Can't open directory %s", SOUNDFONT_PATH),
-        ("failed to open directory %s for reading: %s", SOUNDFONT_PATH,
-            error->message));
-    g_error_free (error);
+        ("No path in the XDG_DATA_DIRS pathlist has a %s subdirectory that can be opened",
+            SOUNDFONT_PATH),
+        ("failed to open subdirectory %s in each of the directories in XDG_DATA_DIRS pathlist",
+            SOUNDFONT_PATH));
     return FALSE;
   }
 no_soundfont:
   {
     GST_ELEMENT_ERROR (fluiddec, RESOURCE, OPEN_READ,
-        ("Can't find soundfont file in directory %s", SOUNDFONT_PATH),
-        ("No usable soundfont files found in %s", SOUNDFONT_PATH));
+        ("Can't find a soundfont file in subdirectory %s of XDG_DATA_DIRS paths", SOUNDFONT_PATH),
+        ("no usable soundfont files found in %s subdirectories of XDG_DATA_DIRS", SOUNDFONT_PATH));
     return FALSE;
   }
 }
