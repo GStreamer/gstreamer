@@ -63,12 +63,18 @@ typedef enum {
   GST_GL_API_NONE = 0,
   GST_GL_API_OPENGL = (1 << 0),
   GST_GL_API_OPENGL3 = (1 << 1),
-  GST_GL_API_GLES = (1 << 15),
+  GST_GL_API_GLES1 = (1 << 15),
   GST_GL_API_GLES2 = (1 << 16),
   GST_GL_API_GLES3 = (1 << 17),
 
   GST_GL_API_ANY = G_MAXUINT32
 } GstGLAPI;
+
+#define GST_GL_API_OPENGL_NAME "opengl"
+#define GST_GL_API_OPENGL3_NAME "opengl3"
+#define GST_GL_API_GLES1_NAME "gles1"
+#define GST_GL_API_GLES2_NAME "gles2"
+#define GST_GL_API_GLES3_NAME "gles3"
 
 typedef enum
 {
@@ -110,7 +116,8 @@ typedef struct _GstGLFuncs
 #undef GST_GL_EXT_FUNCTION
 #undef GST_GL_EXT_END
 
-gchar * gst_gl_api_string (GstGLAPI api);
+gchar * gst_gl_api_to_string (GstGLAPI api);
+GstGLAPI gst_gl_api_from_string (const gchar * api_s);
 
 G_END_DECLS
 

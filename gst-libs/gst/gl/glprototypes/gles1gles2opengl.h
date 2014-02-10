@@ -43,7 +43,7 @@
    available */
 GST_GL_EXT_BEGIN (core,
                   0, 0,
-                  GST_GL_API_GLES | GST_GL_API_GLES2,
+                  GST_GL_API_GLES1 | GST_GL_API_GLES2,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, BindTexture,
@@ -181,7 +181,7 @@ GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (only_in_both_gles_and_gl_1_3,
                   1, 3,
-                  GST_GL_API_GLES |
+                  GST_GL_API_GLES1 |
                   GST_GL_API_GLES2,
                   "\0",
                   "\0")
@@ -210,7 +210,7 @@ GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (only_in_both_gles_and_gl_1_5,
                   1, 5,
-                  GST_GL_API_GLES |
+                  GST_GL_API_GLES1 |
                   GST_GL_API_GLES2,
                   "\0",
                   "\0")
@@ -219,7 +219,7 @@ GST_GL_EXT_FUNCTION (void, GetBufferParameteriv,
 GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (vbos, 1, 5,
-                  GST_GL_API_GLES |
+                  GST_GL_API_GLES1 |
                   GST_GL_API_GLES2,
                   "ARB\0",
                   "vertex_buffer_object\0")
@@ -249,7 +249,7 @@ GST_GL_EXT_END ()
 /* Available in GL 1.3, the multitexture extension or GLES. These are
    required */
 GST_GL_EXT_BEGIN (multitexture_part0, 1, 3,
-                GST_GL_API_GLES |
+                GST_GL_API_GLES1 |
                 GST_GL_API_GLES2,
                 "ARB\0",
                 "multitexture\0")

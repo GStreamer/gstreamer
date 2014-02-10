@@ -39,7 +39,7 @@
  */
 
 GST_GL_EXT_BEGIN (multitexture_part1, 1, 3,
-                  GST_GL_API_GLES,
+                  GST_GL_API_GLES1,
                   "ARB\0",
                   "multitexture\0")
 GST_GL_EXT_FUNCTION (void, ClientActiveTexture,
@@ -50,7 +50,7 @@ GST_GL_EXT_END ()
    supports fixed-function (ie, GL and GLES1.1) */
 GST_GL_EXT_BEGIN (fixed_function_core,
                   0, 0,
-                  GST_GL_API_GLES,
+                  GST_GL_API_GLES1,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, AlphaFunc,

@@ -23,8 +23,15 @@
 
 #include "gstglapi.h"
 
+/**
+ * gst_gl_api_to_string():
+ *
+ * @api: a #GstGLAPI to stringify
+ *
+ * Returns: A space seperated string of the OpenGL api's enabled in @api
+ */
 gchar *
-gst_gl_api_string (GstGLAPI api)
+gst_gl_api_to_string (GstGLAPI api)
 {
   GString *str = NULL;
   gchar *ret;
@@ -38,38 +45,84 @@ gst_gl_api_string (GstGLAPI api)
   }
 
   if (api & GST_GL_API_OPENGL) {
-    str = g_string_new ("opengl");
+    str = g_string_new (GST_GL_API_OPENGL_NAME);
   }
   if (api & GST_GL_API_OPENGL3) {
     if (str) {
-      g_string_append (str, " opengl3");
+      g_string_append (str, " " GST_GL_API_OPENGL3_NAME);
     } else {
-      str = g_string_new ("opengl3");
+      str = g_string_new (GST_GL_API_OPENGL3_NAME);
     }
   }
-  if (api & GST_GL_API_GLES) {
+  if (api & GST_GL_API_GLES1) {
     if (str) {
-      g_string_append (str, " gles1");
+      g_string_append (str, " " GST_GL_API_GLES1_NAME);
     } else {
-      str = g_string_new ("gles1");
+      str = g_string_new (GST_GL_API_GLES1_NAME);
     }
   }
   if (api & GST_GL_API_GLES2) {
     if (str) {
-      g_string_append (str, " gles2");
+      g_string_append (str, " " GST_GL_API_GLES2_NAME);
     } else {
-      str = g_string_new ("gles2");
+      str = g_string_new (GST_GL_API_GLES2_NAME);
     }
   }
   if (api & GST_GL_API_GLES3) {
     if (str) {
-      g_string_append (str, " gles3");
+      g_string_append (str, " " GST_GL_API_GLES3_NAME);
     } else {
-      str = g_string_new ("gles3");
+      str = g_string_new (GST_GL_API_GLES3_NAME);
     }
   }
 
   ret = g_string_free (str, FALSE);
+
+  return ret;
+}
+
+/**
+ * gst_gl_api_from_string():
+ *
+ * @apis_s: a space seperated string of OpenGL apis
+ *
+ * Returns: The #GstGLAPI represented by @apis_s
+ */
+GstGLAPI
+gst_gl_api_from_string (const gchar * apis_s)
+{
+  GstGLAPI ret = GST_GL_API_NONE;
+  gchar *apis = (gchar *) apis_s;
+
+  if (!apis || apis[0] == '\0') {
+    ret = GST_GL_API_ANY;
+  } else {
+    while (apis) {
+      if (apis[0] == '\0') {
+        break;
+      } else if (apis[0] == ' ' || apis[0] == ',') {
+        apis = &apis[1];
+      } else if (g_strstr_len (apis, 7, GST_GL_API_OPENGL3_NAME)) {
+        ret |= GST_GL_API_OPENGL3;
+        apis = &apis[7];
+      } else if (g_strstr_len (apis, 6, GST_GL_API_OPENGL_NAME)) {
+        ret |= GST_GL_API_OPENGL;
+        apis = &apis[6];
+      } else if (g_strstr_len (apis, 5, GST_GL_API_GLES1_NAME)) {
+        ret |= GST_GL_API_GLES1;
+        apis = &apis[5];
+      } else if (g_strstr_len (apis, 5, GST_GL_API_GLES2_NAME)) {
+        ret |= GST_GL_API_GLES2;
+        apis = &apis[5];
+      } else if (g_strstr_len (apis, 5, GST_GL_API_GLES3_NAME)) {
+        ret |= GST_GL_API_GLES3;
+        apis = &apis[5];
+      } else {
+        GST_ERROR ("Error parsing \'%s\'", apis);
+        break;
+      }
+    }
+  }
 
   return ret;
 }

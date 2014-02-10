@@ -572,43 +572,6 @@ _compiled_api (void)
   return ret;
 }
 
-GstGLAPI
-_parse_gl_api (const gchar * apis_s)
-{
-  GstGLAPI ret = GST_GL_API_NONE;
-  gchar *apis = (gchar *) apis_s;
-
-  while (apis) {
-    if (apis[0] == '\0') {
-      break;
-    } else if (apis[0] == ' ' || apis[0] == ',') {
-      apis = &apis[1];
-    } else if (g_strstr_len (apis, 7, "opengl3")) {
-      ret |= GST_GL_API_OPENGL3;
-      apis = &apis[7];
-    } else if (g_strstr_len (apis, 6, "opengl")) {
-      ret |= GST_GL_API_OPENGL;
-      apis = &apis[6];
-    } else if (g_strstr_len (apis, 5, "gles1")) {
-      ret |= GST_GL_API_GLES;
-      apis = &apis[5];
-    } else if (g_strstr_len (apis, 5, "gles2")) {
-      ret |= GST_GL_API_GLES2;
-      apis = &apis[5];
-    } else if (g_strstr_len (apis, 5, "gles3")) {
-      ret |= GST_GL_API_GLES3;
-      apis = &apis[5];
-    } else {
-      break;
-    }
-  }
-
-  if (ret == GST_GL_API_NONE)
-    ret = GST_GL_API_ANY;
-
-  return ret;
-}
-
 static void
 _unlock_create_thread (GstGLContext * context)
 {
@@ -653,10 +616,10 @@ gst_gl_context_create_thread (GstGLContext * context)
 
   user_choice = g_getenv ("GST_GL_API");
 
-  user_api = _parse_gl_api (user_choice);
-  user_api_string = gst_gl_api_string (user_api);
+  user_api = gst_gl_api_from_string (user_choice);
+  user_api_string = gst_gl_api_to_string (user_api);
 
-  compiled_api_s = gst_gl_api_string (compiled_api);
+  compiled_api_s = gst_gl_api_to_string (compiled_api);
 
   if ((user_api & compiled_api) == GST_GL_API_NONE) {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_API,
@@ -700,7 +663,7 @@ gst_gl_context_create_thread (GstGLContext * context)
   g_assert (display->gl_api != GST_GL_API_NONE
       && display->gl_api != GST_GL_API_ANY);
 
-  api_string = gst_gl_api_string (display->gl_api);
+  api_string = gst_gl_api_to_string (display->gl_api);
   GST_INFO ("available GL APIs: %s", api_string);
 
   if (((compiled_api & display->gl_api) & user_api) == GST_GL_API_NONE) {
