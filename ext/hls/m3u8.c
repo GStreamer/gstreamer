@@ -161,7 +161,7 @@ double_from_string (gchar * ptr, gchar ** endptr, gdouble * val)
   if (endptr)
     *endptr = end;
 
-  *val = (gint) ret;
+  *val = (gdouble) ret;
 
   return end != ptr;
 }
