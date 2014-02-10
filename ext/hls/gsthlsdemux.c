@@ -184,7 +184,7 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_FRAGMENTS_CACHE,
       g_param_spec_uint ("fragments-cache", "Fragments cache",
           "Number of fragments needed to be cached to start playing",
-          2, G_MAXUINT, DEFAULT_FRAGMENTS_CACHE,
+          1, G_MAXUINT, DEFAULT_FRAGMENTS_CACHE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BITRATE_LIMIT,
@@ -696,7 +696,7 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
 static void
 gst_hls_demux_stream_loop (GstHLSDemux * demux)
 {
-  GstFragment *fragment;
+  GstFragment *fragment = NULL;
   GstBuffer *buf;
   GstFlowReturn ret;
   GstCaps *bufcaps, *srccaps = NULL;
@@ -712,19 +712,26 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
     if (!gst_hls_demux_cache_fragments (demux))
       goto cache_error;
 
+    /* Pop off the first fragment immediately so the
+     * update task can get the next one already */
+    fragment = g_queue_pop_head (demux->queue);
+
     /* we can start now the updates thread (only if on playing) */
     gst_task_start (demux->updates_task);
     GST_INFO_OBJECT (demux, "First fragments cached successfully");
   }
 
-  if (g_queue_is_empty (demux->queue)) {
+  if (!fragment && g_queue_is_empty (demux->queue)) {
     if (demux->end_of_playlist)
       goto end_of_playlist;
 
     goto pause_task;
   }
 
-  fragment = g_queue_pop_head (demux->queue);
+  /* If we didn't get our fragment above already */
+  if (!fragment)
+    fragment = g_queue_pop_head (demux->queue);
+
   buf = gst_fragment_get_buffer (fragment);
 
   /* Figure out if we need to create/switch pads */
@@ -874,6 +881,34 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
     if (demux->cancelled)
       goto quit;
 
+    /* fetch the next fragment */
+    if (g_queue_get_length (demux->queue) < demux->fragments_cache) {
+      GST_DEBUG_OBJECT (demux, "queue not full, get next fragment");
+      if (!gst_hls_demux_get_next_fragment (demux, FALSE)) {
+        if (demux->cancelled) {
+          goto quit;
+        } else if (!demux->end_of_playlist) {
+          demux->client->update_failed_count++;
+          if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
+            GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
+            continue;
+          } else {
+            GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
+                ("Could not fetch the next fragment"), (NULL));
+            goto error;
+          }
+        }
+      } else {
+        demux->client->update_failed_count = 0;
+
+        if (demux->cancelled)
+          goto quit;
+
+        /* try to switch to another bitrate if needed */
+        gst_hls_demux_switch_playlist (demux);
+      }
+    }
+
     /* schedule the next update */
     gst_hls_demux_schedule (demux);
 
@@ -919,34 +954,6 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
 
     if (demux->cancelled)
       goto quit;
-
-    /* fetch the next fragment */
-    if (g_queue_get_length (demux->queue) < demux->fragments_cache) {
-      GST_DEBUG_OBJECT (demux, "queue empty, get next fragment");
-      if (!gst_hls_demux_get_next_fragment (demux, FALSE)) {
-        if (demux->cancelled) {
-          goto quit;
-        } else if (!demux->end_of_playlist) {
-          demux->client->update_failed_count++;
-          if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
-            GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
-            continue;
-          } else {
-            GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
-                ("Could not fetch the next fragment"), (NULL));
-            goto error;
-          }
-        }
-      } else {
-        demux->client->update_failed_count = 0;
-
-        if (demux->cancelled)
-          goto quit;
-
-        /* try to switch to another bitrate if needed */
-        gst_hls_demux_switch_playlist (demux);
-      }
-    }
   }
 
 quit:
@@ -1025,11 +1032,12 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
   gst_element_post_message (GST_ELEMENT (demux),
       gst_message_new_buffering (GST_OBJECT (demux), 100));
 
-  demux->next_update = g_get_monotonic_time ();
+  /* Start downloading 1s early to keep the risk of
+   * underflows lower */
+  demux->next_update = g_get_monotonic_time () - G_USEC_PER_SEC;
 
   demux->need_cache = FALSE;
   return TRUE;
-
 }
 
 static gchar *
