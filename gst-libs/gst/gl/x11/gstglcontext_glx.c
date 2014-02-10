@@ -55,6 +55,8 @@ static void gst_gl_context_glx_destroy_context (GstGLContext * context);
 static gboolean gst_gl_context_glx_choose_format (GstGLContext *
     context, GError ** error);
 GstGLAPI gst_gl_context_glx_get_gl_api (GstGLContext * context);
+static GstGLPlatform gst_gl_context_glx_get_gl_platform (GstGLContext *
+    context);
 static gpointer gst_gl_context_glx_get_proc_address (GstGLContext * context,
     const gchar * name);
 
@@ -90,6 +92,8 @@ gst_gl_context_glx_class_init (GstGLContextGLXClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_glx_swap_buffers);
 
   context_class->get_gl_api = GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_gl_api);
+  context_class->get_gl_platform =
+      GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_gl_platform);
   context_class->get_proc_address =
       GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_proc_address);
 }
@@ -149,23 +153,17 @@ gst_gl_context_glx_create_context (GstGLContext * context,
   window_x11 = GST_GL_WINDOW_X11 (window);
 
   if (other_context) {
-    GstGLWindow *other_window;
-
-    if (!GST_GL_IS_CONTEXT_GLX (other_context)) {
+    if (gst_gl_context_get_gl_platform (other_context) != GST_GL_PLATFORM_GLX) {
       g_set_error (error, GST_GL_CONTEXT_ERROR,
           GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
           "Cannot share context with non-GLX context");
       goto failure;
     }
 
-    other_window = gst_gl_context_get_window (other_context);
     external_gl_context = gst_gl_context_get_gl_context (other_context);
-    device = (Display *) gst_gl_window_get_display (other_window);
-    gst_object_unref (other_window);
-  } else {
-    device = (Display *) gst_gl_window_get_display (window);
   }
 
+  device = (Display *) gst_gl_window_get_display (window);
   glx_exts = glXQueryExtensionsString (device, DefaultScreen (device));
 
   create_context = gst_gl_check_extension ("GLX_ARB_create_context", glx_exts);
@@ -406,6 +404,12 @@ gst_gl_context_glx_get_gl_api (GstGLContext * context)
   context_glx = GST_GL_CONTEXT_GLX (context);
 
   return context_glx->priv->context_api;
+}
+
+static GstGLPlatform
+gst_gl_context_glx_get_gl_platform (GstGLContext * context)
+{
+  return GST_GL_PLATFORM_GLX;
 }
 
 static gpointer

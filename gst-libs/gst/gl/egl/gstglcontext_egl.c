@@ -48,6 +48,8 @@ static gboolean gst_gl_context_egl_activate (GstGLContext * context,
 static void gst_gl_context_egl_swap_buffers (GstGLContext * context);
 static guintptr gst_gl_context_egl_get_gl_context (GstGLContext * context);
 static GstGLAPI gst_gl_context_egl_get_gl_api (GstGLContext * context);
+static GstGLPlatform gst_gl_context_egl_get_gl_platform (GstGLContext *
+    context);
 static gpointer gst_gl_context_egl_get_proc_address (GstGLContext * context,
     const gchar * name);
 
@@ -71,6 +73,8 @@ gst_gl_context_egl_class_init (GstGLContextEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_egl_swap_buffers);
 
   context_class->get_gl_api = GST_DEBUG_FUNCPTR (gst_gl_context_egl_get_gl_api);
+  context_class->get_gl_platform =
+      GST_DEBUG_FUNCPTR (gst_gl_context_egl_get_gl_platform);
   context_class->get_proc_address =
       GST_DEBUG_FUNCPTR (gst_gl_context_egl_get_proc_address);
 }
@@ -213,12 +217,14 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   const gchar *egl_exts;
   gboolean need_surface = TRUE;
   guintptr external_gl_context = 0;
+  guintptr native_display;
+  GstGLDisplay *display;
 
   egl = GST_GL_CONTEXT_EGL (context);
   window = gst_gl_context_get_window (context);
 
   if (other_context) {
-    if (!GST_GL_IS_CONTEXT_EGL (other_context)) {
+    if (gst_gl_context_get_gl_platform (other_context) != GST_GL_PLATFORM_EGL) {
       g_set_error (error, GST_GL_CONTEXT_ERROR,
           GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
           "Cannot share context with non-EGL context");
@@ -460,6 +466,12 @@ static GstGLAPI
 gst_gl_context_egl_get_gl_api (GstGLContext * context)
 {
   return GST_GL_CONTEXT_EGL (context)->gl_api;
+}
+
+static GstGLPlatform
+gst_gl_context_egl_get_gl_platform (GstGLContext * context)
+{
+  return GST_GL_PLATFORM_EGL;
 }
 
 static gpointer

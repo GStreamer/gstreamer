@@ -47,6 +47,10 @@ GQuark gst_gl_context_error_quark (void);
  */
 typedef void (*GstGLContextThreadFunc) (GstGLContext * context, gpointer data);
 
+#define GST_GL_CONTEXT_TYPE_GLX "gst.gl.context.GLX"
+#define GST_GL_CONTEXT_TYPE_EGL "gst.gl.context.EGL"
+#define GST_GL_CONTEXT_TYPE_WGL "gst.gl.context.WGL"
+
 typedef enum
 {
   GST_GL_CONTEXT_ERROR_FAILED,
@@ -89,15 +93,16 @@ struct _GstGLContext {
 struct _GstGLContextClass {
   GObjectClass parent_class;
 
-  guintptr (*get_gl_context)     (GstGLContext *context);
-  GstGLAPI (*get_gl_api)         (GstGLContext *context);
-  gpointer (*get_proc_address)   (GstGLContext *context, const gchar *name);
-  gboolean (*activate)           (GstGLContext *context, gboolean activate);
-  gboolean (*choose_format)      (GstGLContext *context, GError **error);
-  gboolean (*create_context)     (GstGLContext *context, GstGLAPI gl_api,
-                                  GstGLContext *other_context, GError ** error);
-  void     (*destroy_context)    (GstGLContext *context);
-  void     (*swap_buffers)       (GstGLContext *context);
+  guintptr      (*get_gl_context)     (GstGLContext *context);
+  GstGLAPI      (*get_gl_api)         (GstGLContext *context);
+  GstGLPlatform (*get_gl_platform)    (GstGLContext *context);
+  gpointer      (*get_proc_address)   (GstGLContext *context, const gchar *name);
+  gboolean      (*activate)           (GstGLContext *context, gboolean activate);
+  gboolean      (*choose_format)      (GstGLContext *context, GError **error);
+  gboolean      (*create_context)     (GstGLContext *context, GstGLAPI gl_api,
+                                       GstGLContext *other_context, GError ** error);
+  void          (*destroy_context)    (GstGLContext *context);
+  void          (*swap_buffers)       (GstGLContext *context);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -106,12 +111,16 @@ struct _GstGLContextClass {
 /* methods */
 
 GstGLContext * gst_gl_context_new  (GstGLDisplay *display);
+GstGLContext * gst_gl_context_new_wrapped (GstGLDisplay *display,
+                                           guintptr handle,
+                                           GstGLPlatform context_type,
+                                           GstGLAPI available_apis);
 
 gboolean      gst_gl_context_activate         (GstGLContext *context, gboolean activate);
 
 GstGLDisplay * gst_gl_context_get_display (GstGLContext *context);
 gpointer      gst_gl_context_get_proc_address (GstGLContext *context, const gchar *name);
-GstGLPlatform gst_gl_context_get_platform     (GstGLContext *context);
+GstGLPlatform gst_gl_context_get_gl_platform  (GstGLContext *context);
 GstGLAPI      gst_gl_context_get_gl_api       (GstGLContext *context);
 guintptr      gst_gl_context_get_gl_context   (GstGLContext *context);
 
