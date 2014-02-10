@@ -48,7 +48,6 @@
  *   * GST_MTS_DESC_DVB_STREAM_IDENTIFIER
  *   * GST_MTS_DESC_DVB_EXTENDED_EVENT
  *   * GST_MTS_DESC_DVB_COMPONENT
- *   * GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM
  *   * GST_MTS_DESC_DVB_FREQUENCY_LIST
  */
 
@@ -482,4 +481,180 @@ gst_mpegts_descriptor_from_dvb_subtitling (const gchar * lang,
   GST_WRITE_UINT16_BE (data, ancillary);
 
   return descriptor;
+}
+
+/* GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM (0x5A) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_terrestrial_delivary_system:
+ * @descriptor: a %GST_MTS_DESC_DVB_CONTENT #GstMpegTsDescriptor
+ * @res: (out) (transfer none): #GstMpegTsTerrestrialSystemDescriptor
+ *
+ * Parses out the terrestrial delivery system from the @descriptor:
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_terrestrial_delivery_system (const
+    GstMpegTsDescriptor * descriptor,
+    GstMpegTsTerrestrialDeliverySystemDescriptor * res)
+{
+  guint8 *data;
+  guint8 tmp;
+
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
+  g_return_val_if_fail (res != NULL, FALSE);
+  g_return_val_if_fail (descriptor->tag == 0x5a, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  res->frequency = 0;
+  res->frequency =
+      *(data + 3) | *(data + 2) << 8 | *(data + 1) << 16 | *data << 24;
+  res->frequency *= 10;
+
+  data += 4;
+
+  tmp = *data;
+  switch ((tmp >> 5) & 0x07) {
+    case 0:
+      res->bandwidth = GST_MPEGTS_BANDWIDTH_8;
+      break;
+    case 1:
+      res->bandwidth = GST_MPEGTS_BANDWIDTH_7;
+      break;
+    case 2:
+      res->bandwidth = GST_MPEGTS_BANDWIDTH_6;
+      break;
+    case 3:
+      res->bandwidth = GST_MPEGTS_BANDWIDTH_5;
+      break;
+    default:
+      res->bandwidth = GST_MPEGTS_BANDWIDTH_AUTO;
+      break;
+  }
+
+  res->priority = (tmp >> 4) & 0x01;
+  res->time_slicing = (tmp >> 3) & 0x01;
+  res->mpe_fec = (tmp >> 2) & 0x01;
+  data += 1;
+
+  tmp = *data;
+  switch ((tmp >> 6) & 0x03) {
+    case 0:
+      res->constellation = GST_MPEGTS_MODULATION_QPSK;
+      break;
+    case 1:
+      res->constellation = GST_MPEGTS_MODULATION_QAM_16;
+      break;
+    case 2:
+      res->constellation = GST_MPEGTS_MODULATION_QAM_64;
+      break;
+    default:
+      break;
+  }
+
+  switch ((tmp >> 3) & 0x07) {
+    case 0:
+      res->hierarchy = GST_MPEGTS_HIERARCHY_NONE;
+      break;
+    case 1:
+      res->hierarchy = GST_MPEGTS_HIERARCHY_1;
+      break;
+    case 2:
+      res->hierarchy = GST_MPEGTS_HIERARCHY_2;
+      break;
+    case 3:
+      res->hierarchy = GST_MPEGTS_HIERARCHY_4;
+      break;
+    case 4:
+      res->hierarchy = GST_MPEGTS_HIERARCHY_NONE;
+      break;
+    case 5:
+      res->hierarchy = GST_MPEGTS_HIERARCHY_1;
+      break;
+    case 6:
+      res->hierarchy = GST_MPEGTS_HIERARCHY_2;
+      break;
+    case 7:
+      res->hierarchy = GST_MPEGTS_HIERARCHY_4;
+      break;
+    default:
+      break;
+  }
+
+  switch (tmp & 0x07) {
+    case 0:
+      res->code_rate_hp = GST_MPEGTS_FEC_1_2;
+      break;
+    case 1:
+      res->code_rate_hp = GST_MPEGTS_FEC_2_3;
+      break;
+    case 2:
+      res->code_rate_hp = GST_MPEGTS_FEC_3_4;
+      break;
+    case 3:
+      res->code_rate_hp = GST_MPEGTS_FEC_5_6;
+      break;
+    case 4:
+      res->code_rate_hp = GST_MPEGTS_FEC_7_8;
+      break;
+    default:
+      break;
+  }
+  data += 1;
+
+  tmp = *data;
+  switch ((tmp >> 5) & 0x07) {
+    case 0:
+      res->code_rate_lp = GST_MPEGTS_FEC_1_2;
+      break;
+    case 1:
+      res->code_rate_lp = GST_MPEGTS_FEC_2_3;
+      break;
+    case 2:
+      res->code_rate_lp = GST_MPEGTS_FEC_3_4;
+      break;
+    case 3:
+      res->code_rate_lp = GST_MPEGTS_FEC_5_6;
+      break;
+    case 4:
+      res->code_rate_lp = GST_MPEGTS_FEC_7_8;
+      break;
+    default:
+      break;
+  }
+
+  switch ((tmp >> 3) & 0x03) {
+    case 0:
+      res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_1_32;
+      break;
+    case 1:
+      res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_1_16;
+      break;
+    case 2:
+      res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_1_8;
+      break;
+    case 3:
+      res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_1_4;
+      break;
+    default:
+      break;
+  }
+
+  switch ((tmp >> 1) & 0x03) {
+    case 0:
+      res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_2K;
+      break;
+    case 1:
+      res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_4K;
+      break;
+    case 2:
+      res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_8K;
+      break;
+    default:
+      break;
+  }
+  res->other_frequency = tmp & 0x01;
+
+  return TRUE;
 }

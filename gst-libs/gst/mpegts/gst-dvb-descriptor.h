@@ -376,7 +376,88 @@ GstMpegTsDescriptor * gst_mpegts_descriptor_from_dvb_subtitling (const gchar *la
 
 
 /* GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM (0x5A) */
-/* FIXME : Implement */
+typedef struct _GstMpegTsTerrestrialDeliverySystemDescriptor GstMpegTsTerrestrialDeliverySystemDescriptor;
+
+typedef enum {
+  GST_MPEGTS_BANDWIDTH_8 = 0,
+  GST_MPEGTS_BANDWIDTH_7,
+  GST_MPEGTS_BANDWIDTH_6,
+  GST_MPEGTS_BANDWIDTH_AUTO,
+  GST_MPEGTS_BANDWIDTH_5,
+  GST_MPEGTS_BANDWIDTH_10,
+  GST_MPEGTS_BANDWIDTH_1_172
+} GstMpegTsTerrestrialBandwidth;
+
+typedef enum {
+  GST_MPEGTS_TRANSMISSION_MODE_2K = 0,
+  GST_MPEGTS_TRANSMISSION_MODE_8K,
+  GST_MPEGTS_TRANSMISSION_MODE_AUTO,
+  GST_MPEGTS_TRANSMISSION_MODE_4K,
+  GST_MPEGTS_TRANSMISSION_MODE_1K,
+  GST_MPEGTS_TRANSMISSION_MODE_16K,
+  GST_MPEGTS_TRANSMISSION_MODE_32K,
+  GST_MPEGTS_TRANSMISSION_MODE_C1,
+  GST_MPEGTS_TRANSMISSION_MODE_C3780
+} GstMpegTsTerrestrialTransmissionMode;
+
+typedef enum {
+  GST_MPEGTS_GUARD_INTERVAL_1_32 = 0,
+  GST_MPEGTS_GUARD_INTERVAL_1_16,
+  GST_MPEGTS_GUARD_INTERVAL_1_8,
+  GST_MPEGTS_GUARD_INTERVAL_1_4,
+  GST_MPEGTS_GUARD_INTERVAL_AUTO,
+  GST_MPEGTS_GUARD_INTERVAL_1_128,
+  GST_MPEGTS_GUARD_INTERVAL_19_128,
+  GST_MPEGTS_GUARD_INTERVAL_19_256,
+  GST_MPEGTS_GUARD_INTERVAL_PN420,
+  GST_MPEGTS_GUARD_INTERVAL_PN595,
+  GST_MPEGTS_GUARD_INTERVAL_PN945
+} GstMpegTsTerrestrialGuardInterval;
+
+typedef enum {
+  GST_MPEGTS_HIERARCHY_NONE = 0,
+  GST_MPEGTS_HIERARCHY_1,
+  GST_MPEGTS_HIERARCHY_2,
+  GST_MPEGTS_HIERARCHY_4,
+  GST_MPEGTS_HIERARCHY_AUTO
+} GstMpegTsTerrestrialHierarchy;
+
+/**
+ * GstMpegTsTerrestrialDeliverySystemDescriptor:
+ * @frequency: the frequency in Hz (Hertz)
+ * @bandwidth: the bandwidth
+ * @priority: %TRUE High Priority %FALSE Low Priority
+ * @time_slicing: %TRUE no time slicing %FALSE time slicing
+ * @mpe_fec: %TRUE no mpe-fec is used %FALSE mpe-fec is use
+ * @constellation: the constallation
+ * @hierarchy: the hierarchy
+ * @code_rate_hp:
+ * @code_rate_lp:
+ * @guard_interval:
+ * @transmission_mode:
+ * @other_frequency: %TRUE more frequency are use, else not
+ *
+ * Terrestrial Delivery System Descriptor (EN 300 468 v.1.13.1)
+ */
+
+struct _GstMpegTsTerrestrialDeliverySystemDescriptor
+{
+  guint32				frequency;
+  GstMpegTsTerrestrialBandwidth		bandwidth;
+  gboolean				priority;
+  gboolean				time_slicing;
+  gboolean				mpe_fec;
+  GstMpegTsModulationType		constellation;
+  GstMpegTsTerrestrialHierarchy		hierarchy;
+  GstMpegTsDVBCodeRate			code_rate_hp;
+  GstMpegTsDVBCodeRate			code_rate_lp;
+  GstMpegTsTerrestrialGuardInterval	guard_interval;
+  GstMpegTsTerrestrialTransmissionMode	transmission_mode;
+  gboolean				other_frequency;
+};
+
+gboolean gst_mpegts_descriptor_parse_terrestrial_delivery_system (const GstMpegTsDescriptor
+              *descriptor, GstMpegTsTerrestrialDeliverySystemDescriptor * res);
 
 /* GST_MTS_DESC_DVB_FREQUENCY_LIST (0x62) */
 /* FIXME : Implement */
