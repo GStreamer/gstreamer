@@ -513,9 +513,6 @@ gst_v4l2_adjust_buf_type (GstV4l2Object * v4l2object)
       break;
     case V4L2_BUF_TYPE_VIDEO_CAPTURE:
       if (v4l2object->vcap.capabilities & CHECK_CAPS) {
-        /* FIXME: for now it's an untested case so just put a warning */
-        GST_WARNING ("untested V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE");
-
         GST_DEBUG ("adjust type to multi-planar capture");
         v4l2object->type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
       }
