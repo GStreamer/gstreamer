@@ -1231,7 +1231,7 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
   diff = (GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (demux->next_update));
   buffer = gst_fragment_get_buffer (fragment);
   size = gst_buffer_get_size (buffer);
-  bitrate = (size * 8) / ((double) diff / GST_SECOND);
+  bitrate = (size * 8) / ((double) diff / G_USEC_PER_SEC);
 
   GST_DEBUG ("Downloaded %d bytes in %" GST_TIME_FORMAT ". Bitrate is : %d",
       (guint) size, GST_TIME_ARGS (diff), bitrate);
