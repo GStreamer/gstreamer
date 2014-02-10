@@ -428,8 +428,10 @@ void
 sp_writer_close (ShmPipe * self, sp_buffer_free_callback callback,
     void *user_data)
 {
-  if (self->main_socket >= 0)
+  if (self->main_socket >= 0) {
     shutdown (self->main_socket, SHUT_RDWR);
+    close (self->main_socket);
+  }
 
   if (self->socket_path) {
     unlink (self->socket_path);
@@ -841,6 +843,7 @@ sp_writer_accept_client (ShmPipe * self)
 
 error:
   shutdown (fd, SHUT_RDWR);
+  close (fd);
   return NULL;
 }
 
@@ -893,6 +896,7 @@ sp_writer_close_client (ShmPipe * self, ShmClient * client,
   ShmClient *item = NULL, *prev_item = NULL;
 
   shutdown (client->fd, SHUT_RDWR);
+  close (client->fd);
 
 again:
   for (buffer = self->buffers; buffer; buffer = buffer->next) {
