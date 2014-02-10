@@ -510,8 +510,8 @@ print_element_properties_info (GstElement * element)
               gst_value_get_fraction_numerator (&value),
               gst_value_get_fraction_denominator (&value));
         } else {
-          n_print ("%-23.23s Unknown type %ld \"%s\"", "", param->value_type,
-              g_type_name (param->value_type));
+          n_print ("%-23.23s Unknown type %ld \"%s\"", "",
+              (glong) param->value_type, g_type_name (param->value_type));
         }
         break;
     }
