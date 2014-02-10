@@ -46,6 +46,7 @@ EXTRA_DIST = \
 	part-scheduling.txt \
 	part-seeking.txt \
 	part-segments.txt \
+	part-seqnums.txt \
 	part-sparsestreams.txt \
 	part-standards.txt \
 	part-states.txt \
