@@ -110,20 +110,20 @@ static gboolean
 int_from_string (gchar * ptr, gchar ** endptr, gint * val)
 {
   gchar *end;
-  glong ret;
+  gint64 ret;
 
   g_return_val_if_fail (ptr != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
   errno = 0;
-  ret = strtol (ptr, &end, 10);
-  if ((errno == ERANGE && (ret == LONG_MAX || ret == LONG_MIN))
+  ret = g_ascii_strtoll (ptr, &end, 10);
+  if ((errno == ERANGE && (ret == G_MAXINT64 || ret == G_MININT64))
       || (errno != 0 && ret == 0)) {
     GST_WARNING ("%s", g_strerror (errno));
     return FALSE;
   }
 
-  if (ret > G_MAXINT) {
+  if (ret > G_MAXINT || ret < G_MININT) {
     GST_WARNING ("%s", g_strerror (ERANGE));
     return FALSE;
   }
@@ -146,7 +146,7 @@ double_from_string (gchar * ptr, gchar ** endptr, gdouble * val)
   g_return_val_if_fail (val != NULL, FALSE);
 
   errno = 0;
-  ret = strtod (ptr, &end);
+  ret = g_ascii_strtod (ptr, &end);
   if ((errno == ERANGE && (ret == HUGE_VAL || ret == -HUGE_VAL))
       || (errno != 0 && ret == 0)) {
     GST_WARNING ("%s", g_strerror (errno));
