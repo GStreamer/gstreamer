@@ -143,8 +143,14 @@ gst_gl_colorscale_callback (gint width, gint height, guint texture,
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+#if GST_GL_HAVE_OPENGL
+  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
+    const GstGLFuncs *gl = filter->context->gl_vtable;
+
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }

@@ -21,8 +21,6 @@ OPENGL_SOURCES =  \
 	gstglfilterapp.h \
 	gstglfilterreflectedscreen.c \
 	gstglfilterreflectedscreen.h \
-	gstglcolorscale.c \
-	gstglcolorscale.h \
 	gstgldeinterlace.c \
 	gstgldeinterlace.h \
 	gltestsrc.c \
@@ -74,6 +72,8 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectidentity.c \
 	effects/gstgleffectmirror.c \
 	effects/gstgleffectsqueeze.c \
+	gstglcolorscale.c \
+	gstglcolorscale.h \
 	$(OPENGL_SOURCES)
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around

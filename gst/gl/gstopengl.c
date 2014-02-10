@@ -53,6 +53,7 @@
 
 #include "gstglfiltercube.h"
 #include "gstgleffects.h"
+#include "gstglcolorscale.h"
 
 GType gst_gl_filter_cube_get_type (void);
 GType gst_gl_effects_get_type (void);
@@ -64,7 +65,6 @@ GType gst_gl_effects_get_type (void);
 #include "gstglfilterapp.h"
 #include "gstglfilterreflectedscreen.h"
 #include "gstglfiltershader.h"
-#include "gstglcolorscale.h"
 #include "gstgldeinterlace.h"
 #include "gstglmosaic.h"
 #include "gstglvideomixer.h"
@@ -123,6 +123,11 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_effects_get_type ())) {
     return FALSE;
   }
+
+  if (!gst_element_register (plugin, "glcolorscale",
+          GST_RANK_NONE, GST_TYPE_GL_COLORSCALE)) {
+    return FALSE;
+  }
 #if GST_GL_HAVE_OPENGL
   if (!gst_element_register (plugin, "gltestsrc",
           GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
@@ -166,11 +171,6 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "gldeinterlace",
           GST_RANK_NONE, GST_TYPE_GL_DEINTERLACE)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glcolorscale",
-          GST_RANK_NONE, GST_TYPE_GL_COLORSCALE)) {
     return FALSE;
   }
 
