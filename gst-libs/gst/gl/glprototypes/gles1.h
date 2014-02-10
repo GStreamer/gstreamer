@@ -40,7 +40,7 @@
 
 GST_GL_EXT_BEGIN (only_in_gles1,
                 255, 255,
-                GST_GL_API_GLES,
+                GST_GL_API_GLES1,
                 "\0",
                 "\0")
 GST_GL_EXT_FUNCTION (void, ClipPlanef, (GLenum plane, const GLfloat *equation))

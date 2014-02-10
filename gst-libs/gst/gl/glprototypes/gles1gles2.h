@@ -40,7 +40,7 @@
 
 GST_GL_EXT_BEGIN (only_in_both_gles,
                   255, 255,
-                  GST_GL_API_GLES |
+                  GST_GL_API_GLES1 |
                   GST_GL_API_GLES2,
                   "\0",
                   "\0")
