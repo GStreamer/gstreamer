@@ -13,5 +13,5 @@ libgstwinks_la_LIBADD = \
 libgstwinks_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstwinks_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
-noinst_HEADERS= gstksclock.h
+noinst_HEADERS= gstksclock.h ksvideohelpers.h gstksvideodevice.h gstksvideosrc.h
 
