@@ -845,6 +845,7 @@ GST_START_TEST (test_autoplug_decoder_sink_combination)
   g_free (path);
 
   playbin = create_playbin (uri, FALSE);
+  g_free (uri);
 
   asink = gst_element_factory_make ("fakesink", NULL);
   g_object_set (asink, "sync", TRUE, NULL);
