@@ -921,7 +921,7 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
       goto quit;
 
     /* fetch the next fragment */
-    if (g_queue_is_empty (demux->queue)) {
+    if (g_queue_get_length (demux->queue) < demux->fragments_cache) {
       GST_DEBUG_OBJECT (demux, "queue empty, get next fragment");
       if (!gst_hls_demux_get_next_fragment (demux, FALSE)) {
         if (demux->cancelled) {
