@@ -3853,7 +3853,7 @@ create_decoders_list (GList * factory_list, GSequence * avelements)
             GST_ELEMENT_FACTORY_TYPE_PARSER) ||
         gst_element_factory_list_is_type (factory,
             GST_ELEMENT_FACTORY_TYPE_SINK)) {
-      dec_list = g_list_prepend (dec_list, factory);
+      dec_list = g_list_prepend (dec_list, gst_object_ref (factory));
     } else {
       GSequenceIter *seq_iter;
 
@@ -3905,9 +3905,10 @@ create_decoders_list (GList * factory_list, GSequence * avelements)
   ave_list = g_list_sort (ave_list, (GCompareFunc) avelement_compare);
   for (tmp = ave_list; tmp; tmp = tmp->next) {
     ave = (GstAVElement *) tmp->data;
-    dec_list = g_list_prepend (dec_list, ave->dec);
+    dec_list = g_list_prepend (dec_list, gst_object_ref (ave->dec));
   }
   g_list_free (ave_list);
+  gst_plugin_feature_list_free (factory_list);
 
   for (tmp = ave_free_list; tmp; tmp = tmp->next)
     g_slice_free (GstAVElement, tmp->data);
