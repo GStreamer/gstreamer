@@ -813,7 +813,7 @@ AG_GST_CHECK_FEATURE(DIRECTSHOW, [DirectShow plug-in], winks, [
 #include <windows.h>
 #include <strmif.h>
 #include <uuids.h>
-
+]], [[
 int main () {
   IGraphBuilder *pGraph = NULL;
   HRESULT hr = CoInitialize(NULL);
