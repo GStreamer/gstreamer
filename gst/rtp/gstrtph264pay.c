@@ -711,6 +711,7 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     GstRtpH264Pay * rtph264pay, GstClockTime dts, GstClockTime pts)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  gboolean sent_all_sps_pps = TRUE;
   guint i;
 
   for (i = 0; i < rtph264pay->sps->len; i++) {
@@ -722,8 +723,10 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     ret = gst_rtp_h264_pay_payload_nal (basepayload, gst_buffer_ref (sps_buf),
         dts, pts, FALSE);
     /* Not critical here; but throw a warning */
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
+      sent_all_sps_pps = FALSE;
       GST_WARNING ("Problem pushing SPS");
+    }
   }
   for (i = 0; i < rtph264pay->pps->len; i++) {
     GstBuffer *pps_buf =
@@ -734,11 +737,13 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     ret = gst_rtp_h264_pay_payload_nal (basepayload, gst_buffer_ref (pps_buf),
         dts, pts, FALSE);
     /* Not critical here; but throw a warning */
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
+      sent_all_sps_pps = FALSE;
       GST_WARNING ("Problem pushing PPS");
+    }
   }
 
-  if (pts != -1)
+  if (pts != -1 && sent_all_sps_pps)
     rtph264pay->last_spspps = pts;
 
   return ret;
