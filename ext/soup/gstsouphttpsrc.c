@@ -955,10 +955,7 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
       GST_DEBUG_OBJECT (src, "Ignoring error %d:%s during HEAD request",
           msg->status_code, msg->reason_phrase);
     } else {
-      /* FIXME: reason_phrase is not translated, add proper error message */
-      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-          ("%s", msg->reason_phrase),
-          ("libsoup status code %d", msg->status_code));
+      gst_soup_http_src_parse_status (msg, src);
     }
   }
   if (src->loop)
