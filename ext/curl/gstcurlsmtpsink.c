@@ -638,7 +638,7 @@ gst_curl_smtp_sink_set_transfer_options_unlocked (GstCurlBaseSink * bcsink)
 
   /* time */
   date = g_date_time_new_now_local ();
-  date_str = g_date_time_format (date, "%a %b %e %H:%M:%S %Y");
+  date_str = g_date_time_format (date, "%a %b %e %H:%M:%S %Y %z");
   g_date_time_unref (date);
 
   /* recipient, sender and subject are all UTF-8 strings, which are additionally
