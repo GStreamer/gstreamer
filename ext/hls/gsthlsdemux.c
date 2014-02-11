@@ -1077,7 +1077,7 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update)
 
   const gchar *uri = gst_m3u8_client_get_current_uri (demux->client);
 
-  download = gst_uri_downloader_fetch_uri (demux->downloader, uri);
+  download = gst_uri_downloader_fetch_uri (demux->downloader, uri, NULL);
 
   if (download == NULL)
     return FALSE;
@@ -1307,7 +1307,7 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   gsize unpadded_size;
 
   GST_INFO_OBJECT (demux, "Fetching key %s", key);
-  key_fragment = gst_uri_downloader_fetch_uri (demux->downloader, key);
+  key_fragment = gst_uri_downloader_fetch_uri (demux->downloader, key, NULL);
   if (key_fragment == NULL)
     goto key_failed;
 
@@ -1384,7 +1384,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching)
   GST_INFO_OBJECT (demux, "Fetching next fragment %s", next_fragment_uri);
 
   download = gst_uri_downloader_fetch_uri (demux->downloader,
-      next_fragment_uri);
+      next_fragment_uri, NULL);
 
   if (download && key)
     download = gst_hls_demux_decrypt_fragment (demux, download, key, iv);
