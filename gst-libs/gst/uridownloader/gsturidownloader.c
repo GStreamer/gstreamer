@@ -478,8 +478,11 @@ quit:
             "Failed to download '%s'", uri);
       } else {
         g_propagate_error (err, downloader->priv->err);
+        downloader->priv->err = NULL;
       }
     }
+
+    downloader->priv->cancelled = FALSE;
 
     g_mutex_unlock (&downloader->priv->download_lock);
     return download;
