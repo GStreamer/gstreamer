@@ -41,6 +41,8 @@ struct _GstUriDownloaderPrivate
   GstFragment *download;
   GMutex download_lock;         /* used to restrict to one download only */
 
+  GError *err;
+
   GCond cond;
   gboolean cancelled;
 };
@@ -198,7 +200,12 @@ gst_uri_downloader_bus_handler (GstBus * bus,
         "Received error: %s from %s, the download will be cancelled",
         GST_OBJECT_NAME (message->src), err->message);
     GST_DEBUG ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
-    g_error_free (err);
+
+    if (!downloader->priv->err)
+      downloader->priv->err = err;
+    else
+      g_error_free (err);
+
     g_free (dbg_info);
 
     /* remove the sync handler to avoid duplicated messages */
@@ -332,9 +339,10 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri)
 }
 
 GstFragment *
-gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri)
+gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri,
+    GError ** err)
 {
-  return gst_uri_downloader_fetch_uri_with_range (downloader, uri, 0, -1);
+  return gst_uri_downloader_fetch_uri_with_range (downloader, uri, 0, -1, err);
 }
 
 /**
@@ -348,7 +356,7 @@ gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri)
  */
 GstFragment *
 gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
-    const gchar * uri, gint64 range_start, gint64 range_end)
+    const gchar * uri, gint64 range_start, gint64 range_end, GError ** err)
 {
   GstStateChangeReturn ret;
   GstFragment *download = NULL;
@@ -356,6 +364,7 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
   GST_DEBUG_OBJECT (downloader, "Fetching URI %s", uri);
 
   g_mutex_lock (&downloader->priv->download_lock);
+  downloader->priv->err = NULL;
 
   GST_OBJECT_LOCK (downloader);
   if (downloader->priv->cancelled) {
@@ -461,6 +470,15 @@ quit:
       gst_object_unref (urisrc);
     } else {
       GST_OBJECT_UNLOCK (downloader);
+    }
+
+    if (download == NULL) {
+      if (!downloader->priv->err) {
+        g_set_error (err, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
+            "Failed to download '%s'", uri);
+      } else {
+        g_propagate_error (err, downloader->priv->err);
+      }
     }
 
     g_mutex_unlock (&downloader->priv->download_lock);
