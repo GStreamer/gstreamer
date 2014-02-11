@@ -1,1 +1,2 @@
+description, seek=true, duration=5.0
 seek, playback_time=1.0, start=0.0, stop="min(5.0, duration-1.0)", flags=accurate+flush

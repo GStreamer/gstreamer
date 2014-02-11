@@ -1,3 +1,4 @@
+description, seek=true, duration=5.0
 seek, playback_time=1.0, rate=1.0, start=2.0, flags=accurate+flush
 seek, playback_time=3.0, rate=1.0, start=0.0, flags=accurate+flush
 seek, playback_time=1.0, rate=1.0, start=2.0, stop=3.0, flags=accurate+flush

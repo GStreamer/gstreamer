@@ -1,1 +1,2 @@
-eos, playback_time="min(duration - 1, 15.0)"
+description, duration=15.0
+eos, playback_time=15.0

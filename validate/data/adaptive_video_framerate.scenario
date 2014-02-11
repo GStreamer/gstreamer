@@ -1,3 +1,4 @@
+description, duration=15.0
 set-restriction, playback_time=5.0, restriction-caps="video/x-raw,framerate=(fraction)5/1"
 set-restriction, playback_time=10.0, restriction-caps="video/x-raw,framerate=(fraction)30/1"
 eos, playback_time=15.0

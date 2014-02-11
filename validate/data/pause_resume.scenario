@@ -1,3 +1,4 @@
+description, duration=14.0, min-media-duration=7.0
 pause, name=First-pause,  playback_time=1.0, duration=1.0
 pause, name=Second-pause, playback_time=3.0, duration=5.0
 pause, name=Third-pause,  playback_time=5.0, duration=1.0
