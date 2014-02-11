@@ -53,6 +53,7 @@ enum
 static GHashTable *action_types_table;
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
+static GRegex *clean_action_str;
 
 G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
     G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL));
@@ -81,11 +82,15 @@ struct _GstValidateScenarioPrivate
   GstClockTime seek_pos_tol;
 
   guint num_actions;
-  GRegex *clean_action_str;
 
   guint get_pos_id;
 };
 
+typedef struct KeyFileGroupName
+{
+  GKeyFile *kf;
+  gchar *group_name;
+} KeyFileGroupName;
 
 static guint
 get_flags_from_string (GType type, const gchar * str_flags)
@@ -537,7 +542,6 @@ _set_rank (GstValidateScenario * scenario, GstValidateAction * action)
   }
 
   gst_plugin_feature_set_rank (feature, rank);
-  GST_ERROR ("Setting %s rank to %i", feature_name, rank);
   gst_object_unref (feature);
 
   return TRUE;
@@ -614,7 +618,6 @@ get_position (GstValidateScenario * scenario)
       if (repeat_expr) {
         act->repeat = parse_expression (repeat_expr, _set_variable_func,
             scenario, &error);
-        g_print ("REPEAT %i", act->repeat);
       }
     }
 
@@ -742,58 +745,159 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
   GST_DEBUG_OBJECT (scenario, "pipeline was freed");
 }
 
-static gboolean
-_load_scenario_file (GstValidateScenario * scenario,
-    const gchar * scenario_file, gboolean * is_config)
+static gchar **
+_scenario_file_get_lines (GFile *file)
 {
-  guint i;
-  gsize xmlsize;
-  GFile *file = NULL;
+  gsize size;
+
   GError *err = NULL;
-  gboolean ret = TRUE;
-  gchar *content = NULL, *escaped_content, **lines = NULL;
-  GstValidateScenarioPrivate *priv = scenario->priv;
-  gchar *uri = gst_filename_to_uri (scenario_file, &err);
-
-  if (uri == NULL)
-    goto failed;
-
-  GST_DEBUG ("Trying to load %s", scenario_file);
-  if ((file = g_file_new_for_path (scenario_file)) == NULL)
-    goto wrong_uri;
+  gchar *content = NULL, *escaped_content = NULL, **lines = NULL;
 
   /* TODO Handle GCancellable */
-  if (!g_file_load_contents (file, NULL, &content, &xmlsize, NULL, &err))
+  if (!g_file_load_contents (file, NULL, &content, &size, NULL, &err))
     goto failed;
 
   if (g_strcmp0 (content, "") == 0)
     goto failed;
 
-  *is_config = FALSE;
-  escaped_content = g_regex_replace (priv->clean_action_str,
-          content, -1, 0, "", 0, NULL);
+  escaped_content = g_regex_replace (clean_action_str, content, -1, 0, "", 0,
+      NULL);
+  g_free (content);
+
   lines = g_strsplit (escaped_content, "\n", 0);
   g_free (escaped_content);
+
+done:
+
+  return lines;
+
+failed:
+  if (err) {
+    GST_WARNING ("Failed to load contents: %d %s", err->code, err->message);
+    g_error_free (err);
+  }
+
+  if (content)
+    g_free (content);
+  content = NULL;
+
+  if (escaped_content)
+    g_free (escaped_content);
+  escaped_content = NULL;
+
+  if (lines)
+    g_strfreev (lines);
+  lines = NULL;
+
+  goto done;
+}
+
+static gchar **
+_scenario_get_lines (const gchar *scenario_file)
+{
+  GFile *file = NULL;
+  gchar **lines = NULL;
+
+  GST_DEBUG ("Trying to load %s", scenario_file);
+  if ((file = g_file_new_for_path (scenario_file)) == NULL) {
+    GST_WARNING ("%s wrong uri", scenario_file);
+    return NULL;
+  }
+
+  lines = _scenario_file_get_lines (file);
+
+  g_object_unref (file);
+
+  return lines;
+}
+
+static GList *
+_scenario_lines_get_strutures (gchar **lines)
+{
+  gint i;
+  GList *structures = NULL;
+
   for (i = 0; lines[i]; i++) {
-    const gchar *type, *str_playback_time;
-    gdouble playback_time;
-    GstValidateAction *action;
     GstStructure *structure;
-    GstValidateActionType *action_type;
 
     if (g_strcmp0 (lines[i], "") == 0)
       continue;
 
     structure = gst_structure_from_string (lines[i], NULL);
     if (structure == NULL) {
-      GST_ERROR_OBJECT (scenario, "Could not parse action %s", lines[i]);
+      GST_ERROR ("Could not parse action %s", lines[i]);
       goto failed;
     }
 
-    type = gst_structure_get_name (structure);
-    if (!g_strcmp0 (type, "scenario")) {
-      gst_structure_get_boolean (structure, "is-config", is_config);
+    structures = g_list_append (structures, structure);
+  }
+  
+done:
+  if (lines)
+    g_strfreev (lines);
 
+  return structures;
+
+failed:
+  if (structures)
+    g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
+  structures = NULL;
+
+  goto done;
+}
+
+static GList*
+_scenario_get_structures (const gchar *scenario_file)
+{
+  gchar **lines;
+
+  lines = _scenario_get_lines (scenario_file);
+
+  if (lines == NULL)
+    return NULL;
+
+  return _scenario_lines_get_strutures (lines);
+}
+
+static GList*
+_scenario_file_get_structures (GFile *scenario_file)
+{
+  gchar **lines;
+
+  lines = _scenario_file_get_lines (scenario_file);
+
+  if (lines == NULL)
+    return NULL;
+
+  return _scenario_lines_get_strutures (lines);
+}
+
+static gboolean
+_load_scenario_file (GstValidateScenario * scenario,
+    const gchar * scenario_file, gboolean * is_config)
+{
+  gboolean ret = TRUE;
+  GList *structures, *tmp;
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
+  *is_config = FALSE;
+
+  structures = _scenario_get_structures (scenario_file);
+  if (structures == NULL)
+    goto failed;
+
+  for (tmp = structures; tmp; tmp = tmp->next) {
+    gdouble playback_time;
+    GstValidateAction *action;
+    GstValidateActionType *action_type;
+    const gchar *type, *str_playback_time;
+
+    GstStructure *structure = tmp->data;
+
+
+    type = gst_structure_get_name (structure);
+    if (!g_strcmp0 (type, "description")) {
+      gst_structure_get_boolean (structure, "is-config", is_config);
       continue;
     } else if (!(action_type = g_hash_table_lookup (action_types_table, type))) {
       GST_ERROR_OBJECT (scenario, "We do not handle action types %s", type);
@@ -809,7 +913,8 @@ _load_scenario_file (GstValidateScenario * scenario,
             gst_structure_get_string (structure, "playback_time"))) {
       priv->needs_parsing = g_list_append (priv->needs_parsing, action);
     } else
-      GST_WARNING_OBJECT (scenario, "No playback time for action %s", lines[i]);
+      GST_WARNING_OBJECT (scenario, "No playback time for action %" GST_PTR_FORMAT,
+          structure);
 
     if (!(action->name = gst_structure_get_string (structure, "name")))
       action->name = "";
@@ -830,26 +935,17 @@ _load_scenario_file (GstValidateScenario * scenario,
   }
 
 done:
-  if (content)
-    g_free (content);
-
-  if (file)
-    gst_object_unref (file);
+  if (structures)
+    g_list_free (structures);
 
   return ret;
 
-wrong_uri:
-  GST_WARNING ("%s wrong uri", scenario_file);
-
-  ret = FALSE;
-  goto done;
-
 failed:
   ret = FALSE;
-  if (err) {
-    GST_WARNING ("Failed to load contents: %d %s", err->code, err->message);
-    g_error_free (err);
-  }
+  if (structures)
+    g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
+  structures = NULL;
+
   goto done;
 }
 
@@ -868,9 +964,9 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
 
   scenarios = g_strsplit (scenario_name, ":", -1);
 
-  for (i=0; scenarios[i]; i++) {
+  for (i = 0; scenarios[i]; i++) {
     lfilename =
-      g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenarios[i]);
+        g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenarios[i]);
 
     tldir = g_build_filename ("data/", lfilename, NULL);
 
@@ -901,9 +997,9 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
       if (!(ret = _load_scenario_file (scenario, tldir, &is_config))) {
         goto invalid_name;
       }
-    } /* else check scenario */
-
-check_scenario:
+    }
+    /* else check scenario */
+  check_scenario:
     if (tldir)
       g_free (tldir);
     if (lfilename)
@@ -1004,8 +1100,6 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   priv->seek_pos_tol = DEFAULT_SEEK_TOLERANCE;
   priv->segment_start = 0;
   priv->segment_stop = GST_CLOCK_TIME_NONE;
-  priv->clean_action_str =
-      g_regex_new ("\\\\\n| ", G_REGEX_CASELESS, 0, NULL);
 }
 
 static void
@@ -1018,7 +1112,6 @@ gst_validate_scenario_dispose (GObject * object)
   if (priv->pipeline)
     gst_object_unref (priv->pipeline);
   g_list_free_full (priv->actions, (GDestroyNotify) _free_scenario_action);
-  g_regex_unref (priv->clean_action_str);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->dispose (object);
 }
@@ -1064,8 +1157,18 @@ gst_validate_scenario_factory_create (GstValidateRunner * runner,
   return scenario;
 }
 
+static gboolean
+_add_description (GQuark field_id, const GValue *value, KeyFileGroupName *kfg)
+{
+  g_key_file_set_string (kfg->kf, kfg->group_name, g_quark_to_string (field_id),
+        gst_value_serialize (value));
+
+  return TRUE;
+}
+
+
 static void
-_list_scenarios_in_dir (GFile * dir)
+_list_scenarios_in_dir (GFile * dir, GKeyFile *kf)
 {
   GFileEnumerator *fenum;
   GFileInfo *info;
@@ -1079,12 +1182,34 @@ _list_scenarios_in_dir (GFile * dir)
   for (info = g_file_enumerator_next_file (fenum, NULL, NULL);
       info; info = g_file_enumerator_next_file (fenum, NULL, NULL)) {
     if (g_str_has_suffix (g_file_info_get_name (info),
-            GST_VALIDATE_SCENARIO_SUFFIX)) {
+          GST_VALIDATE_SCENARIO_SUFFIX)) {
       gchar **name = g_strsplit (g_file_info_get_name (info),
           GST_VALIDATE_SCENARIO_SUFFIX, 0);
 
-      g_print ("Scenario %s \n", name[0]);
 
+      GstStructure *desc = NULL;
+      GFile *f = g_file_enumerator_get_child (fenum, info);
+      GList *tmp, *structures = _scenario_file_get_structures (f);
+
+      gst_object_unref (f);
+      for (tmp = structures; tmp; tmp=tmp->next) {
+        if (gst_structure_has_name(tmp->data, "description")) {
+          desc = tmp->data;
+          break;
+        }
+      }
+
+      if (desc) {
+        KeyFileGroupName kfg;
+
+        kfg.group_name = name[0];
+        kfg.kf = kf;
+
+        gst_structure_foreach (desc, (GstStructureForeachFunc) _add_description, &kfg);
+      } else {
+        g_key_file_set_string (kf, name[0], "noinfo", "nothing");
+      }
+      g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
       g_strfreev (name);
     }
   }
@@ -1093,36 +1218,37 @@ _list_scenarios_in_dir (GFile * dir)
 void
 gst_validate_list_scenarios (void)
 {
+  GKeyFile *kf = NULL;
   const gchar *env_scenariodir = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
   gchar *tldir = g_build_filename (g_get_user_data_dir (),
       "gstreamer-" GST_API_VERSION, GST_VALIDATE_SCENARIO_DIRECTORY,
       NULL);
   GFile *dir = g_file_new_for_path (tldir);
 
-  g_print ("====================\n"
-      "Avalaible scenarios:\n" "====================\n");
-  _list_scenarios_in_dir (dir);
+  kf = g_key_file_new ();
+  _list_scenarios_in_dir (dir, kf);
   g_object_unref (dir);
   g_free (tldir);
 
   tldir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
       GST_VALIDATE_SCENARIO_DIRECTORY, NULL);
   dir = g_file_new_for_path (tldir);
-  _list_scenarios_in_dir (dir);
+  _list_scenarios_in_dir (dir, kf);
   g_object_unref (dir);
   g_free (tldir);
 
   if (env_scenariodir) {
     dir = g_file_new_for_path (env_scenariodir);
-    _list_scenarios_in_dir (dir);
+    _list_scenarios_in_dir (dir, kf);
     g_object_unref (dir);
   }
 
   /* Hack to make it work uninstalled */
   dir = g_file_new_for_path ("data/");
-  _list_scenarios_in_dir (dir);
+  _list_scenarios_in_dir (dir, kf);
   g_object_unref (dir);
 
+  g_print ("Full file:\n%s", g_key_file_to_data (kf, NULL, NULL));
 }
 
 static void
@@ -1161,6 +1287,8 @@ init_scenarios (void)
 {
   const gchar *seek_mandatory_fields[] = { "start", NULL };
 
+  clean_action_str =
+      g_regex_new ("\\\\\n", G_REGEX_CASELESS, 0, NULL);
   gst_validate_add_action_type ("seek", _execute_seek, seek_mandatory_fields,
       "Allows to seek into the files", FALSE);
   gst_validate_add_action_type ("pause", _execute_pause, NULL,

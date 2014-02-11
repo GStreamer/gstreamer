@@ -56,6 +56,7 @@ struct _GstValidateAction
 struct _GstValidateScenarioClass
 {
   GObjectClass parent_class;
+
 };
 
 struct _GstValidateScenario

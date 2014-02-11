@@ -235,7 +235,6 @@ main (int argc, gchar ** argv)
 
   if (list_scenarios) {
     gst_validate_list_scenarios ();
-
     return 0;
   }
 
