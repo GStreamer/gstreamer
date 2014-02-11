@@ -1183,11 +1183,26 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
 
     /* FIXME: reason_phrase is not translated and not suitable for user
      * error dialog according to libsoup documentation.
-     * FIXME: error code (OPEN_READ vs. READ) should depend on http status? */
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        ("%s", msg->reason_phrase),
-        ("%s (%d), URL: %s", msg->reason_phrase, msg->status_code,
-            src->location));
+     */
+    if (msg->status_code == SOUP_STATUS_NOT_FOUND) {
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+          ("%s", msg->reason_phrase),
+          ("%s (%d), URL: %s", msg->reason_phrase, msg->status_code,
+              src->location));
+    } else if (msg->status_code == SOUP_STATUS_UNAUTHORIZED ||
+        msg->status_code == SOUP_STATUS_PAYMENT_REQUIRED ||
+        msg->status_code == SOUP_STATUS_FORBIDDEN ||
+        msg->status_code == SOUP_STATUS_PROXY_AUTHENTICATION_REQUIRED) {
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_AUTHORIZED,
+          ("%s", msg->reason_phrase),
+          ("%s (%d), URL: %s", msg->reason_phrase, msg->status_code,
+              src->location));
+    } else {
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+          ("%s", msg->reason_phrase),
+          ("%s (%d), URL: %s", msg->reason_phrase, msg->status_code,
+              src->location));
+    }
     src->ret = GST_FLOW_ERROR;
   }
 }
