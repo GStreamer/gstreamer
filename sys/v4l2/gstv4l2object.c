@@ -2142,6 +2142,10 @@ static void
 gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
     guint32 format, GstCaps * caps, GstStructure * s)
 {
+  /* FIXME remove when VP8 parser is ready, bug #722760 */
+  if (format == V4L2_PIX_FMT_VP8)
+    goto done;
+
   /* Encoded stream on output buffer need to be parsed */
   if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT ||
       v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
@@ -2156,6 +2160,7 @@ gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
     }
   }
 
+done:
   gst_caps_append_structure (caps, s);
 }
 
