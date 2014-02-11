@@ -745,6 +745,7 @@ main (int argc, gchar ** argv)
   GOptionContext *ctx;
   int rep_err;
   GstStateChangeReturn sret;
+  gchar *output_file = NULL;
 
 #ifdef G_OS_UNIX
   guint signal_watch_id;
@@ -780,6 +781,10 @@ main (int argc, gchar ** argv)
           "exiting.", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the avalaible scenarios that can be run", NULL},
+    {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,
+        &output_file, "The output file to store scenarios details. "
+            "Implies --list-scenario",
+        NULL},
     {"force-reencoding", 'r', 0, G_OPTION_ARG_NONE, &force_reencoding,
         "Whether to try to force reencoding, meaning trying to only remux "
         "if possible(default: TRUE)", NULL},
@@ -830,9 +835,9 @@ main (int argc, gchar ** argv)
 
   gst_validate_init ();
 
-  if (list_scenarios) {
-    gst_validate_list_scenarios ();
-
+  if (list_scenarios || output_file) {
+    if (gst_validate_list_scenarios (output_file))
+        return 1;
     return 0;
   }
 

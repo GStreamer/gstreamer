@@ -173,6 +173,7 @@ main (int argc, gchar ** argv)
   const gchar *scenario = NULL, *configs = NULL;
   gboolean list_scenarios = FALSE;
   GstStateChangeReturn sret;
+  gchar *output_file = NULL;
 
 #ifdef G_OS_UNIX
   guint signal_watch_id;
@@ -185,6 +186,10 @@ main (int argc, gchar ** argv)
           "environment variable", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the avalaible scenarios that can be run", NULL},
+    {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,
+        &output_file, "The output file to store scenarios details. "
+            "Implies --list-scenario",
+        NULL},
     {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
         "Let you set a config scenario, the scenario needs to be set as 'config"
         "' you can specify a list of scenario separated by ':'"
@@ -233,8 +238,9 @@ main (int argc, gchar ** argv)
   gst_init (&argc, &argv);
   gst_validate_init ();
 
-  if (list_scenarios) {
-    gst_validate_list_scenarios ();
+  if (list_scenarios || output_file) {
+    if (gst_validate_list_scenarios (output_file))
+        return 1;
     return 0;
   }
 

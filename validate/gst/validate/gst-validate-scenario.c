@@ -1215,9 +1215,13 @@ _list_scenarios_in_dir (GFile * dir, GKeyFile *kf)
   }
 }
 
-void
-gst_validate_list_scenarios (void)
+gboolean
+gst_validate_list_scenarios (gchar *output_file)
 {
+  gchar *result;
+
+  gsize datalength;
+  GError *err = NULL;
   GKeyFile *kf = NULL;
   const gchar *env_scenariodir = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
   gchar *tldir = g_build_filename (g_get_user_data_dir (),
@@ -1248,7 +1252,21 @@ gst_validate_list_scenarios (void)
   _list_scenarios_in_dir (dir, kf);
   g_object_unref (dir);
 
-  g_print ("Full file:\n%s", g_key_file_to_data (kf, NULL, NULL));
+  result = g_key_file_to_data (kf, &datalength, &err);
+  g_print ("All scenarios avalaible:\n%s", result);
+
+
+  if (output_file && !err)
+    g_file_set_contents (output_file, result, datalength, &err);
+
+  if (err) {
+    GST_WARNING ("Got error '%s' listing scenarios", err->message);
+    g_clear_error (&err);
+
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static void
