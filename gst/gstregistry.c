@@ -57,15 +57,21 @@
  *   <listitem>
  *     <para>default locations (if GST_PLUGIN_SYSTEM_PATH is not set). Those
  *       default locations are:
- *       <filename>~/.gstreamer-$GST_API_VERSION/plugins/</filename>
+ *       <filename>$XDG_DATA_HOME/gstreamer-$GST_API_VERSION/plugins/</filename>
  *       and <filename>$prefix/libs/gstreamer-$GST_API_VERSION/</filename>.
+ *       <ulink url="http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html">
+ *       <filename>$XDG_DATA_HOME</filename></ulink> defaults to
+ *       <filename>$HOME/.local/share</filename>.
  *     </para>
  *   </listitem>
  * </itemizedlist>
  * The registry cache file is loaded from
- * <filename>~/.gstreamer-$GST_API_VERSION/registry-$ARCH.bin</filename> or the
- * file listed in the GST_REGISTRY env var. One reason to change the registry
- * location is for testing.
+ * <filename>$XDG_CACHE_HOME/gstreamer-$GST_API_VERSION/registry-$ARCH.bin</filename>
+ * (where
+ * <ulink url="http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html">
+ * <filename>$XDG_CACHE_HOME</filename></ulink> defaults to
+ * <filename>$HOME/.cache</filename>) or the file listed in the GST_REGISTRY
+ * env var. One reason to change the registry location is for testing.
  *
  * For each plugin that is found in the plugin search path, there could be 3
  * possibilities for cached information:
