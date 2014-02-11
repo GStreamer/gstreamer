@@ -215,6 +215,53 @@ gst_m3u8_compare_playlist_by_bitrate (gconstpointer a, gconstpointer b)
   return ((GstM3U8 *) (a))->bandwidth - ((GstM3U8 *) (b))->bandwidth;
 }
 
+static gint
+hex_char_to_int (const gchar * v)
+{
+  switch (*v) {
+    case '0':
+      return 0;
+    case '1':
+      return 1;
+    case '2':
+      return 2;
+    case '3':
+      return 3;
+    case '4':
+      return 4;
+    case '5':
+      return 5;
+    case '6':
+      return 6;
+    case '7':
+      return 7;
+    case '8':
+      return 8;
+    case '9':
+      return 9;
+    case 'A':
+    case 'a':
+      return 0xa;
+    case 'B':
+    case 'b':
+      return 0xb;
+    case 'C':
+    case 'c':
+      return 0xc;
+    case 'D':
+    case 'd':
+      return 0xd;
+    case 'E':
+    case 'e':
+      return 0xe;
+    case 'F':
+    case 'f':
+      return 0xf;
+    default:
+      return -1;
+  }
+}
+
 /*
  * @data: a m3u8 playlist text data, taking ownership
  */
@@ -226,6 +273,8 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
   gchar *title, *end;
 //  gboolean discontinuity;
   GstM3U8 *list;
+  gboolean have_iv = FALSE;
+  guint8 iv[16] = { 0, };
 
   g_return_val_if_fail (self != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
@@ -302,8 +351,12 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
         /* set encryption params */
         file->key = g_strdup (self->key);
         if (file->key) {
-          guint8 *iv = file->iv + 12;
-          GST_WRITE_UINT32_BE (iv, file->sequence);
+          if (have_iv) {
+            memcpy (file->iv, iv, sizeof (iv));
+          } else {
+            guint8 *iv = file->iv + 12;
+            GST_WRITE_UINT32_BE (iv + 12, file->sequence);
+          }
         }
 
         duration = 0;
@@ -366,6 +419,11 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       gchar *v, *a;
 
       data = data + 11;
+
+      /* IV and KEY are only valid until the next #EXT-X-KEY */
+      have_iv = FALSE;
+      g_free (self->key);
+      self->key = NULL;
       while (data && parse_attributes (&data, &a, &v)) {
         if (g_str_equal (a, "URI")) {
           gchar *key = g_strdup (v);
@@ -380,6 +438,33 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
 
           self->key = uri_join (self->uri, key);
           g_free (keyp);
+        } else if (g_str_equal (a, "IV")) {
+          gchar *ivp = v;
+          gint i;
+
+          if (strlen (ivp) < 32 + 2 || (!g_str_has_prefix (ivp, "0x")
+                  && !g_str_has_prefix (ivp, "0X"))) {
+            GST_WARNING ("Can't read IV");
+            continue;
+          }
+
+          ivp += 2;
+          for (i = 0; i < 16; i++) {
+            gint h, l;
+
+            h = hex_char_to_int (ivp++);
+            l = hex_char_to_int (ivp++);
+            if (h == -1 || l == -1) {
+              i = -1;
+              break;
+            }
+            iv[i] = (h << 4) | l;
+          }
+          if (i == -1) {
+            GST_WARNING ("Can't read IV");
+            continue;
+          }
+          have_iv = TRUE;
         }
       }
     } else if (g_str_has_prefix (data, "#EXTINF:")) {
