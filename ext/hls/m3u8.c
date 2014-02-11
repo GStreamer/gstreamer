@@ -465,6 +465,11 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
             continue;
           }
           have_iv = TRUE;
+        } else if (g_str_equal (a, "METHOD")) {
+          if (!g_str_equal (v, "AES-128")) {
+            GST_WARNING ("Encryption method %s not supported", v);
+            continue;
+          }
         }
       }
     } else if (g_str_has_prefix (data, "#EXTINF:")) {
