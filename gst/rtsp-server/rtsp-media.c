@@ -2204,6 +2204,8 @@ wait_status:
 was_prepared:
   {
     GST_LOG ("media %p was prepared", media);
+    /* we are not going to use the giving thread, so stop it. */
+    gst_rtsp_thread_stop (thread);
     g_rec_mutex_unlock (&priv->state_lock);
     return TRUE;
   }
