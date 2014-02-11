@@ -828,10 +828,13 @@ main (int argc, gchar ** argv)
     g_free (scenarios);
   }
 
-  if (list_scenarios)
+  gst_validate_init ();
+
+  if (list_scenarios) {
     gst_validate_list_scenarios ();
 
-  gst_validate_init ();
+    return 0;
+  }
 
 
   _register_actions ();
