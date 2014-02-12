@@ -73,57 +73,15 @@ gst_wl_meta_get_info (void)
   return wl_meta_info;
 }
 
-/* bufferpool */
-static void gst_wayland_buffer_pool_finalize (GObject * object);
+/* shm pool */
 
-#define gst_wayland_buffer_pool_parent_class parent_class
-G_DEFINE_TYPE (GstWaylandBufferPool, gst_wayland_buffer_pool,
-    GST_TYPE_BUFFER_POOL);
-
-static gboolean
-wayland_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
+struct shm_pool
 {
-  GstWaylandBufferPool *wpool = GST_WAYLAND_BUFFER_POOL_CAST (pool);
-  GstVideoInfo info;
-  GstCaps *caps;
-
-  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
-    goto wrong_config;
-
-  if (caps == NULL)
-    goto no_caps;
-
-  /* now parse the caps from the config */
-  if (!gst_video_info_from_caps (&info, caps))
-    goto wrong_caps;
-
-  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
-      caps);
-
-  /*Fixme: Enable metadata checking handling based on the config of pool */
-
-  wpool->width = info.width;
-  wpool->height = info.height;
-
-  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
-  /* ERRORS */
-wrong_config:
-  {
-    GST_WARNING_OBJECT (pool, "invalid config");
-    return FALSE;
-  }
-no_caps:
-  {
-    GST_WARNING_OBJECT (pool, "no caps in config");
-    return FALSE;
-  }
-wrong_caps:
-  {
-    GST_WARNING_OBJECT (pool,
-        "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-}
+  struct wl_shm_pool *pool;
+  size_t size;
+  size_t used;
+  void *data;
+};
 
 static struct wl_shm_pool *
 make_shm_pool (GstWlDisplay * display, int size, void **data)
@@ -181,6 +139,14 @@ shm_pool_create (GstWlDisplay * display, size_t size)
   return pool;
 }
 
+static void
+shm_pool_destroy (struct shm_pool *pool)
+{
+  munmap (pool->data, pool->size);
+  wl_shm_pool_destroy (pool->pool);
+  free (pool);
+}
+
 static void *
 shm_pool_allocate (struct shm_pool *pool, size_t size, int *offset)
 {
@@ -198,6 +164,58 @@ static void
 shm_pool_reset (struct shm_pool *pool)
 {
   pool->used = 0;
+}
+
+/* bufferpool */
+static void gst_wayland_buffer_pool_finalize (GObject * object);
+
+#define gst_wayland_buffer_pool_parent_class parent_class
+G_DEFINE_TYPE (GstWaylandBufferPool, gst_wayland_buffer_pool,
+    GST_TYPE_BUFFER_POOL);
+
+static gboolean
+wayland_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
+{
+  GstWaylandBufferPool *wpool = GST_WAYLAND_BUFFER_POOL_CAST (pool);
+  GstVideoInfo info;
+  GstCaps *caps;
+
+  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
+    goto wrong_config;
+
+  if (caps == NULL)
+    goto no_caps;
+
+  /* now parse the caps from the config */
+  if (!gst_video_info_from_caps (&info, caps))
+    goto wrong_caps;
+
+  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
+      caps);
+
+  /*Fixme: Enable metadata checking handling based on the config of pool */
+
+  wpool->width = info.width;
+  wpool->height = info.height;
+
+  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
+  /* ERRORS */
+wrong_config:
+  {
+    GST_WARNING_OBJECT (pool, "invalid config");
+    return FALSE;
+  }
+no_caps:
+  {
+    GST_WARNING_OBJECT (pool, "no caps in config");
+    return FALSE;
+  }
+wrong_caps:
+  {
+    GST_WARNING_OBJECT (pool,
+        "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
 }
 
 static GstWlMeta *
@@ -218,21 +236,21 @@ gst_buffer_add_wayland_meta (GstBuffer * buffer, GstWaylandBufferPool * wpool)
   wmeta->sink = gst_object_ref (sink);
 
   /*Fixme: size calculation should be more grcefull, have to consider the padding */
-  if (!sink->shm_pool) {
-    sink->shm_pool = shm_pool_create (sink->display, size * 15);
-    shm_pool_reset (sink->shm_pool);
+  if (!wpool->shm_pool) {
+    wpool->shm_pool = shm_pool_create (sink->display, size * 15);
+    shm_pool_reset (wpool->shm_pool);
   }
 
-  if (!sink->shm_pool) {
+  if (!wpool->shm_pool) {
     GST_ERROR ("Failed to create shm_pool");
     return NULL;
   }
 
-  data = shm_pool_allocate (sink->shm_pool, size, &offset);
+  data = shm_pool_allocate (wpool->shm_pool, size, &offset);
   if (!data)
     return NULL;
 
-  wmeta->wbuffer = wl_shm_pool_create_buffer (sink->shm_pool->pool, offset,
+  wmeta->wbuffer = wl_shm_pool_create_buffer (wpool->shm_pool->pool, offset,
       sink->video_width, sink->video_height, stride, sink->format);
 
   wmeta->data = data;
@@ -305,6 +323,9 @@ static void
 gst_wayland_buffer_pool_finalize (GObject * object)
 {
   GstWaylandBufferPool *pool = GST_WAYLAND_BUFFER_POOL_CAST (object);
+
+  if (pool->shm_pool)
+    shm_pool_destroy (pool->shm_pool);
 
   gst_object_unref (pool->sink);
 

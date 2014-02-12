@@ -95,7 +95,6 @@ static void frame_redraw_callback (void *data,
     struct wl_callback *callback, uint32_t time);
 static void create_window (GstWaylandSink * sink, GstWlDisplay * display,
     int width, int height);
-static void shm_pool_destroy (struct shm_pool *pool);
 
 typedef struct
 {
@@ -183,7 +182,6 @@ gst_wayland_sink_init (GstWaylandSink * sink)
 {
   sink->display = NULL;
   sink->window = NULL;
-  sink->shm_pool = NULL;
   sink->pool = NULL;
 
   g_mutex_init (&sink->wayland_lock);
@@ -237,14 +235,6 @@ destroy_window (struct window *window)
 }
 
 static void
-shm_pool_destroy (struct shm_pool *pool)
-{
-  munmap (pool->data, pool->size);
-  wl_shm_pool_destroy (pool->pool);
-  free (pool);
-}
-
-static void
 gst_wayland_sink_finalize (GObject * object)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (object);
@@ -255,8 +245,6 @@ gst_wayland_sink_finalize (GObject * object)
     destroy_window (sink->window);
   if (sink->display)
     g_object_unref (sink->display);
-  if (sink->shm_pool)
-    shm_pool_destroy (sink->shm_pool);
 
   g_mutex_clear (&sink->wayland_lock);
 

@@ -69,13 +69,6 @@ struct window
 
 };
 
-struct shm_pool {
-  struct wl_shm_pool *pool;
-  size_t size;
-  size_t used;
-  void *data;
-};
-
 typedef struct _GstWaylandSink GstWaylandSink;
 typedef struct _GstWaylandSinkClass GstWaylandSinkClass;
 
@@ -89,7 +82,6 @@ struct _GstWaylandSink
 
   GstWlDisplay *display;
   struct window *window;
-  struct shm_pool *shm_pool;
 
   GstBufferPool *pool;
 
