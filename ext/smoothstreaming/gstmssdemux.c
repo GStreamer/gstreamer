@@ -937,7 +937,8 @@ gst_mss_demux_reload_manifest (GstMssDemux * mssdemux)
   downloader = gst_uri_downloader_new ();
 
   manifest_data =
-      gst_uri_downloader_fetch_uri (downloader, mssdemux->manifest_uri, NULL);
+      gst_uri_downloader_fetch_uri (downloader, mssdemux->manifest_uri, TRUE,
+      NULL);
   manifest_buffer = gst_fragment_get_buffer (manifest_data);
   g_object_unref (manifest_data);
 
@@ -1033,7 +1034,8 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
 
   GST_DEBUG_OBJECT (mssdemux, "Got url '%s' for stream %p", url, stream);
 
-  fragment = gst_uri_downloader_fetch_uri (stream->downloader, url, NULL);
+  fragment =
+      gst_uri_downloader_fetch_uri (stream->downloader, url, FALSE, NULL);
   g_free (path);
   g_free (url);
 
