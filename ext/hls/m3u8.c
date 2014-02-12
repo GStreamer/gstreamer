@@ -263,12 +263,17 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
   title = NULL;
   data += 7;
   while (TRUE) {
+    gchar *r;
+
     end = g_utf8_strchr (data, -1, '\n');
     if (end)
       *end = '\0';
 
+    r = g_utf8_strchr (data, -1, '\r');
+    if (r)
+      *r = '\0';
+
     if (data[0] != '#') {
-      gchar *r;
 
       if (duration <= 0 && list == NULL) {
         GST_LOG ("%s: got line without EXTINF or EXTSTREAMINF, dropping", data);
@@ -278,10 +283,6 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       data = uri_join (self->uri, data);
       if (data == NULL)
         goto next_line;
-
-      r = g_utf8_strchr (data, -1, '\r');
-      if (r)
-        *r = '\0';
 
       if (list != NULL) {
         if (g_list_find_custom (self->lists, data,
