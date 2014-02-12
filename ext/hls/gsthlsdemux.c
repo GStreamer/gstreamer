@@ -731,12 +731,19 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
   if (!fragment)
     fragment = g_queue_pop_head (demux->queue);
 
-  buf = gst_fragment_get_buffer (fragment);
-
   /* Figure out if we need to create/switch pads */
   if (G_LIKELY (demux->srcpad))
     srccaps = gst_pad_get_current_caps (demux->srcpad);
   bufcaps = gst_fragment_get_caps (fragment);
+  if (G_UNLIKELY (!bufcaps)) {
+    if (srccaps)
+      gst_caps_unref (srccaps);
+    g_object_unref (fragment);
+    goto type_not_found;
+  }
+
+  buf = gst_fragment_get_buffer (fragment);
+
   if (G_UNLIKELY (!srccaps || !gst_caps_is_equal_fixed (bufcaps, srccaps)
           || demux->need_segment)) {
     switch_pads (demux, bufcaps);
@@ -787,6 +794,17 @@ cache_error:
     if (!demux->cancelled) {
       GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
           ("Could not cache the first fragments"), (NULL));
+      gst_hls_demux_pause_tasks (demux, FALSE);
+    }
+    return;
+  }
+
+type_not_found:
+  {
+    gst_task_pause (demux->stream_task);
+    if (!demux->cancelled) {
+      GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
+          ("Could not determine type of stream"), (NULL));
       gst_hls_demux_pause_tasks (demux, FALSE);
     }
     return;
@@ -1458,6 +1476,14 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching,
   /* We actually need to do this every time we switch bitrate */
   if (G_UNLIKELY (demux->do_typefind)) {
     GstCaps *caps = gst_fragment_get_caps (download);
+
+    if (G_UNLIKELY (!caps)) {
+      GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
+          ("Could not determine type of stream"), (NULL));
+      gst_buffer_unref (buf);
+      g_object_unref (download);
+      goto error;
+    }
 
     if (!demux->input_caps || !gst_caps_is_equal (caps, demux->input_caps)) {
       gst_caps_replace (&demux->input_caps, caps);
