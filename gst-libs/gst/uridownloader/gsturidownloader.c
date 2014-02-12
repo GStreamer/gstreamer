@@ -452,29 +452,29 @@ quit:
       GstPad *pad;
       GstElement *urisrc;
 
-      GST_DEBUG_OBJECT (downloader, "Stopping source element %s",
-          GST_ELEMENT_NAME (downloader->priv->urisrc));
-
-      /* remove the bus' sync handler */
-      gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL, NULL);
-      /* unlink the source element from the internal pad */
-      pad = gst_pad_get_peer (downloader->priv->pad);
-      if (pad) {
-        gst_pad_unlink (pad, downloader->priv->pad);
-        gst_object_unref (pad);
-      }
       urisrc = downloader->priv->urisrc;
-      downloader->priv->urisrc = NULL;
-      GST_OBJECT_UNLOCK (downloader);
 
       GST_DEBUG_OBJECT (downloader, "Stopping source element %s",
           GST_ELEMENT_NAME (urisrc));
+
+      /* remove the bus' sync handler */
+      gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL, NULL);
 
       /* set the element state to NULL */
       gst_bus_set_flushing (downloader->priv->bus, TRUE);
       gst_element_set_state (urisrc, GST_STATE_NULL);
       gst_element_get_state (urisrc, NULL, NULL, GST_CLOCK_TIME_NONE);
       gst_element_set_bus (urisrc, NULL);
+
+      /* unlink the source element from the internal pad */
+      pad = gst_pad_get_peer (downloader->priv->pad);
+      if (pad) {
+        gst_pad_unlink (pad, downloader->priv->pad);
+        gst_object_unref (pad);
+      }
+      downloader->priv->urisrc = NULL;
+      GST_OBJECT_UNLOCK (downloader);
+
       gst_object_unref (urisrc);
     } else {
       GST_OBJECT_UNLOCK (downloader);
