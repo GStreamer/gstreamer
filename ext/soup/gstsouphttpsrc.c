@@ -107,12 +107,14 @@ enum
   PROP_IRADIO_MODE,
   PROP_TIMEOUT,
   PROP_EXTRA_HEADERS,
-  PROP_SOUP_LOG_LEVEL
+  PROP_SOUP_LOG_LEVEL,
+  PROP_COMPRESS
 };
 
 #define DEFAULT_USER_AGENT           "GStreamer souphttpsrc "
 #define DEFAULT_IRADIO_MODE          TRUE
 #define DEFAULT_SOUP_LOG_LEVEL       SOUP_LOGGER_LOG_NONE
+#define DEFAULT_COMPRESS             FALSE
 
 static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -259,6 +261,21 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
           "Set log level for soup's HTTP session log",
           SOUP_TYPE_LOGGER_LOG_LEVEL, DEFAULT_SOUP_LOG_LEVEL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+ /**
+   * GstSoupHTTPSrc::compress:
+   *
+   * If set to %TRUE, souphttpsrc will automatically handle gzip
+   * and deflate Content-Encodings. This does not make much difference
+   * and causes more load for normal media files, but makes a real
+   * difference in size for plaintext files.
+   *
+   * Since: 1.4
+   */
+  g_object_class_install_property (gobject_class, PROP_COMPRESS,
+      g_param_spec_boolean ("compress", "Compress",
+          "Allow compressed content encodings",
+          DEFAULT_COMPRESS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
@@ -458,6 +475,9 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
     case PROP_SOUP_LOG_LEVEL:
       src->log_level = g_value_get_enum (value);
       break;
+    case PROP_COMPRESS:
+      src->compress = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -521,6 +541,9 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SOUP_LOG_LEVEL:
       g_value_set_enum (value, src->log_level);
+      break;
+    case PROP_COMPRESS:
+      g_value_set_boolean (value, src->compress);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -721,6 +744,9 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
 
   /* Set up logging */
   gst_soup_util_log_setup (src->session, src->log_level, GST_ELEMENT (src));
+
+  if (src->compress)
+    soup_session_add_feature_by_type (src->session, SOUP_TYPE_CONTENT_DECODER);
 
   return TRUE;
 }

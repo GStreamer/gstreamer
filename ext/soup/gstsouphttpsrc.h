@@ -83,7 +83,6 @@ struct _GstSoupHTTPSrc {
                                 * decide if an out of range request should be
                                 * handled as an error or EOS when the content
                                 * size is unknown */
-  SoupLoggerLogLevel log_level;/* Soup HTTP session logger level */
 
   /* Shoutcast/icecast metadata extraction handling. */
   gboolean iradio_mode;
@@ -93,6 +92,10 @@ struct _GstSoupHTTPSrc {
   gchar *iradio_url;
 
   GstStructure *extra_headers;
+
+  SoupLoggerLogLevel log_level;/* Soup HTTP session logger level */
+
+  gboolean compress;
 
   guint timeout;
 
