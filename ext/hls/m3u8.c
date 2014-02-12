@@ -273,8 +273,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
     if (r)
       *r = '\0';
 
-    if (data[0] != '#') {
-
+    if (data[0] != '#' && data[0] != '\0') {
       if (duration <= 0 && list == NULL) {
         GST_LOG ("%s: got line without EXTINF or EXTSTREAMINF, dropping", data);
         goto next_line;
