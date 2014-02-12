@@ -1506,12 +1506,13 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
         gst_iterator_resync (pads_iter);
         break;
       case GST_ITERATOR_OK:
-        pad = g_value_get_object (&item);
+        pad = g_value_dup_object (&item);
         /* we now officially have an ouput pad */
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */
         if (!has_all_raw_caps (pad, rawcaps, is_raw)) {
+          gst_object_unref (pad);
           g_value_reset (&item);
           break;
         }
@@ -1538,12 +1539,14 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
             decoder->queue = outelem;
 
             /* get the new raw srcpad */
+            gst_object_unref (pad);
             pad = gst_element_get_static_pad (outelem, "src");
           } else {
             outelem = decoder->source;
           }
           expose_decoded_pad (outelem, pad, decoder);
         }
+        gst_object_unref (pad);
         g_value_reset (&item);
         break;
     }
@@ -1579,6 +1582,7 @@ no_queue2:
   {
     post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "queue2");
 
+    gst_object_unref (pad);
     g_value_unset (&item);
     gst_iterator_free (pads_iter);
     gst_caps_unref (rawcaps);
