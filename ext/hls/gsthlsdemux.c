@@ -914,17 +914,19 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
       GST_DEBUG_OBJECT (demux, "queue not full, get next fragment");
       if (!gst_hls_demux_get_next_fragment (demux, FALSE, &err)) {
         if (demux->cancelled) {
+          g_clear_error (&err);
           goto quit;
         } else if (!demux->end_of_playlist) {
           demux->client->update_failed_count++;
           if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
             GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
+            g_clear_error (&err);
             continue;
           } else {
             gst_element_post_message (GST_ELEMENT_CAST (demux),
                 gst_message_new_error (GST_OBJECT_CAST (demux), err,
                     "Could not fetch the next fragment"));
-            g_error_free (err);
+            g_clear_error (&err);
             goto error;
           }
         }
@@ -1063,8 +1065,8 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
         gst_element_post_message (GST_ELEMENT_CAST (demux),
             gst_message_new_error (GST_OBJECT_CAST (demux), err,
                 "Error caching the first fragments"));
-        g_error_free (err);
       }
+      g_clear_error (&err);
       return FALSE;
     }
     /* make sure we stop caching fragments if something cancelled it */
