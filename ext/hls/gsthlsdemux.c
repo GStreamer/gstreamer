@@ -325,6 +325,7 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
       demux->cancelled = TRUE;
       gst_hls_demux_stop (demux);
       gst_task_join (demux->stream_task);
+      gst_task_join (demux->updates_task);
       gst_hls_demux_reset (demux, FALSE);
       break;
     default:
