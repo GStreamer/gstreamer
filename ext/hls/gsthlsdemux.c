@@ -1367,6 +1367,8 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   gst_buffer_map (encrypted_buffer, &encrypted_info, GST_MAP_READ);
   gst_buffer_map (decrypted_buffer, &decrypted_info, GST_MAP_WRITE);
 
+  if (key_info.size != 16)
+    goto decrypt_error;
   if (!decrypt_fragment (demux, encrypted_info.size,
           encrypted_info.data, decrypted_info.data, key_info.data, iv))
     goto decrypt_error;
