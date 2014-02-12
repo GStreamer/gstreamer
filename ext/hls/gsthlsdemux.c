@@ -823,6 +823,13 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
   demux->cancelled = FALSE;
   demux->do_typefind = TRUE;
 
+  g_free (demux->key_url);
+  demux->key_url = NULL;
+
+  if (demux->key_fragment)
+    g_object_unref (demux->key_fragment);
+  demux->key_fragment = NULL;
+
   if (demux->input_caps) {
     gst_caps_unref (demux->input_caps);
     demux->input_caps = NULL;
@@ -1332,10 +1339,23 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   GstMapInfo key_info, encrypted_info, decrypted_info;
   gsize unpadded_size;
 
-  GST_INFO_OBJECT (demux, "Fetching key %s", key);
-  key_fragment = gst_uri_downloader_fetch_uri (demux->downloader, key, err);
-  if (key_fragment == NULL)
-    goto key_failed;
+  if (demux->key_url && strcmp (demux->key_url, key) == 0) {
+    key_fragment = g_object_ref (demux->key_fragment);
+  } else {
+    g_free (demux->key_url);
+    demux->key_url = NULL;
+
+    if (demux->key_fragment)
+      g_object_unref (demux->key_fragment);
+    demux->key_fragment = NULL;
+
+    GST_INFO_OBJECT (demux, "Fetching key %s", key);
+    key_fragment = gst_uri_downloader_fetch_uri (demux->downloader, key, err);
+    if (key_fragment == NULL)
+      goto key_failed;
+    demux->key_url = g_strdup (key);
+    demux->key_fragment = g_object_ref (key_fragment);
+  }
 
   key_buffer = gst_fragment_get_buffer (key_fragment);
   encrypted_buffer = gst_fragment_get_buffer (encrypted_fragment);

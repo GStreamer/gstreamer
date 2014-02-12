@@ -90,6 +90,10 @@ struct _GstHLSDemux
   /* Position in the stream */
   GstClockTime position_shift;
   gboolean need_segment;
+
+  /* Cache for the last key */
+  gchar *key_url;
+  GstFragment *key_fragment;
 };
 
 struct _GstHLSDemuxClass
