@@ -102,8 +102,6 @@ wayland_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   /*Fixme: Enable metadata checking handling based on the config of pool */
 
-  wpool->caps = gst_caps_ref (caps);
-  wpool->info = info;
   wpool->width = info.width;
   wpool->height = info.height;
 

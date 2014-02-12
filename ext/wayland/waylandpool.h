@@ -62,8 +62,6 @@ struct _GstWaylandBufferPool
   GstWaylandSink *sink;
 
   /*Fixme: keep all these in GstWaylandBufferPoolPrivate*/
-  GstCaps *caps;
-  GstVideoInfo info;
   guint width;
   guint height;
 };

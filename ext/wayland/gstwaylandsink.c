@@ -227,9 +227,6 @@ destroy_window (struct window *window)
   if (window->callback)
     wl_callback_destroy (window->callback);
 
-  if (window->buffer)
-    wl_buffer_destroy (window->buffer);
-
   if (window->shell_surface)
     wl_shell_surface_destroy (window->shell_surface);
 
