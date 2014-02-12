@@ -309,9 +309,11 @@ gst_uri_downloader_set_range (GstUriDownloader * downloader,
 }
 
 static gboolean
-gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri)
+gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
+    gboolean compress)
 {
   GstPad *pad;
+  GObjectClass *gobject_class;
 
   if (!gst_uri_is_valid (uri))
     return FALSE;
@@ -323,6 +325,10 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri)
       gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
   if (!downloader->priv->urisrc)
     return FALSE;
+
+  gobject_class = G_OBJECT_GET_CLASS (downloader->priv->urisrc);
+  if (g_object_class_find_property (gobject_class, "compress"))
+    g_object_set (downloader->priv->urisrc, "compress", compress, NULL);
 
   /* add a sync handler for the bus messages to detect errors in the download */
   gst_element_set_bus (GST_ELEMENT (downloader->priv->urisrc),
@@ -340,9 +346,10 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri)
 
 GstFragment *
 gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri,
-    GError ** err)
+    gboolean compress, GError ** err)
 {
-  return gst_uri_downloader_fetch_uri_with_range (downloader, uri, 0, -1, err);
+  return gst_uri_downloader_fetch_uri_with_range (downloader, uri, compress, 0,
+      -1, err);
 }
 
 /**
@@ -356,7 +363,8 @@ gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri,
  */
 GstFragment *
 gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
-    const gchar * uri, gint64 range_start, gint64 range_end, GError ** err)
+    const gchar * uri, gboolean compress, gint64 range_start,
+    gint64 range_end, GError ** err)
 {
   GstStateChangeReturn ret;
   GstFragment *download = NULL;
@@ -372,7 +380,7 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
     goto quit;
   }
 
-  if (!gst_uri_downloader_set_uri (downloader, uri)) {
+  if (!gst_uri_downloader_set_uri (downloader, uri, compress)) {
     GST_WARNING_OBJECT (downloader, "Failed to set URI");
     goto quit;
   }
