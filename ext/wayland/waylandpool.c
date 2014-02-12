@@ -24,6 +24,7 @@
 
 /* Object header */
 #include "gstwaylandsink.h"
+#include "wldisplay.h"
 
 /* Debugging category */
 #include <gst/gstinfo.h>
@@ -127,7 +128,7 @@ wrong_caps:
 }
 
 static struct wl_shm_pool *
-make_shm_pool (struct display *display, int size, void **data)
+make_shm_pool (GstWlDisplay * display, int size, void **data)
 {
   struct wl_shm_pool *pool;
   int fd;
@@ -162,7 +163,7 @@ make_shm_pool (struct display *display, int size, void **data)
 }
 
 static struct shm_pool *
-shm_pool_create (struct display *display, size_t size)
+shm_pool_create (GstWlDisplay * display, size_t size)
 {
   struct shm_pool *pool = malloc (sizeof *pool);
 

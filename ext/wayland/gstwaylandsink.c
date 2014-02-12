@@ -91,12 +91,9 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query);
 static gboolean gst_wayland_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
 
-static struct display *create_display (void);
-static void registry_handle_global (void *data, struct wl_registry *registry,
-    uint32_t id, const char *interface, uint32_t version);
 static void frame_redraw_callback (void *data,
     struct wl_callback *callback, uint32_t time);
-static void create_window (GstWaylandSink * sink, struct display *display,
+static void create_window (GstWaylandSink * sink, GstWlDisplay * display,
     int width, int height);
 static void shm_pool_destroy (struct shm_pool *pool);
 
@@ -225,23 +222,6 @@ gst_wayland_sink_set_property (GObject * object,
 }
 
 static void
-destroy_display (struct display *display)
-{
-  if (display->shm)
-    wl_shm_destroy (display->shm);
-
-  if (display->shell)
-    wl_shell_destroy (display->shell);
-
-  if (display->compositor)
-    wl_compositor_destroy (display->compositor);
-
-  wl_display_flush (display->display);
-  wl_display_disconnect (display->display);
-  free (display);
-}
-
-static void
 destroy_window (struct window *window)
 {
   if (window->callback)
@@ -277,7 +257,7 @@ gst_wayland_sink_finalize (GObject * object)
   if (sink->window)
     destroy_window (sink->window);
   if (sink->display)
-    destroy_display (sink->display);
+    g_object_unref (sink->display);
   if (sink->shm_pool)
     shm_pool_destroy (sink->shm_pool);
 
@@ -304,68 +284,6 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     caps = intersection;
   }
   return caps;
-}
-
-static void
-shm_format (void *data, struct wl_shm *wl_shm, uint32_t format)
-{
-  struct display *d = data;
-
-  d->formats |= (1 << format);
-}
-
-struct wl_shm_listener shm_listenter = {
-  shm_format
-};
-
-static void
-registry_handle_global (void *data, struct wl_registry *registry,
-    uint32_t id, const char *interface, uint32_t version)
-{
-  struct display *d = data;
-
-  if (strcmp (interface, "wl_compositor") == 0) {
-    d->compositor =
-        wl_registry_bind (registry, id, &wl_compositor_interface, 1);
-  } else if (strcmp (interface, "wl_shell") == 0) {
-    d->shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
-  } else if (strcmp (interface, "wl_shm") == 0) {
-    d->shm = wl_registry_bind (registry, id, &wl_shm_interface, 1);
-    wl_shm_add_listener (d->shm, &shm_listenter, d);
-  }
-}
-
-static const struct wl_registry_listener registry_listener = {
-  registry_handle_global
-};
-
-static struct display *
-create_display (void)
-{
-  struct display *display;
-
-  display = malloc (sizeof *display);
-  display->display = wl_display_connect (NULL);
-
-  if (display->display == NULL) {
-    free (display);
-    return NULL;
-  }
-
-  display->registry = wl_display_get_registry (display->display);
-  wl_registry_add_listener (display->registry, &registry_listener, display);
-
-  wl_display_roundtrip (display->display);
-  if (display->shm == NULL) {
-    GST_ERROR ("No wl_shm global..");
-    return NULL;
-  }
-
-  wl_display_roundtrip (display->display);
-
-  wl_display_get_fd (display->display);
-
-  return display;
 }
 
 static gboolean
@@ -473,7 +391,7 @@ static const struct wl_shell_surface_listener shell_surface_listener = {
 };
 
 static void
-create_window (GstWaylandSink * sink, struct display *display, int width,
+create_window (GstWaylandSink * sink, GstWlDisplay * display, int width,
     int height)
 {
   struct window *window;
@@ -484,7 +402,6 @@ create_window (GstWaylandSink * sink, struct display *display, int width,
   g_mutex_lock (&sink->wayland_lock);
 
   window = malloc (sizeof *window);
-  window->display = display;
   window->width = width;
   window->height = height;
   window->redraw_pending = FALSE;
@@ -511,16 +428,17 @@ gst_wayland_sink_start (GstBaseSink * bsink)
 {
   GstWaylandSink *sink = (GstWaylandSink *) bsink;
   gboolean result = TRUE;
+  GError *error = NULL;
 
   GST_DEBUG_OBJECT (sink, "start");
 
   if (!sink->display)
-    sink->display = create_display ();
+    sink->display = gst_wl_display_new (NULL, &error);
 
   if (sink->display == NULL) {
-    GST_ELEMENT_ERROR (bsink, RESOURCE, OPEN_READ_WRITE,
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ_WRITE,
         ("Could not initialise Wayland output"),
-        ("Could not create Wayland display"));
+        ("Failed to create GstWlDisplay: '%s'", error->message));
     return FALSE;
   }
 
@@ -617,6 +535,7 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 {
   struct window *window = (struct window *) data;
   window->redraw_pending = FALSE;
+  GST_LOG ("frame_redraw_cb");
   wl_callback_destroy (callback);
 }
 
@@ -633,20 +552,14 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstWlMeta *meta;
   GstFlowReturn ret;
   struct window *window;
-  struct display *display;
 
   GST_LOG_OBJECT (sink, "render buffer %p", buffer);
   if (!sink->window)
     create_window (sink, sink->display, sink->video_width, sink->video_height);
 
   window = sink->window;
-  display = sink->display;
 
   meta = gst_buffer_get_wl_meta (buffer);
-
-  if (window->redraw_pending) {
-    wl_display_dispatch (display->display);
-  }
 
   if (meta && meta->sink == sink) {
     GST_LOG_OBJECT (sink, "buffer %p from our pool, writing directly", buffer);
@@ -685,7 +598,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   window->callback = wl_surface_frame (window->surface);
   wl_callback_add_listener (window->callback, &frame_callback_listener, window);
   wl_surface_commit (window->surface);
-  wl_display_dispatch (display->display);
+  wl_display_flush (sink->display->display);
 
   if (buffer != to_render)
     gst_buffer_unref (to_render);
