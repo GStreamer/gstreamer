@@ -23,7 +23,7 @@ import subprocess
 import utils
 from urllib import unquote
 import xml.etree.ElementTree as ET
-from baseclasses import GstValidateTest, TestsManager, Scenario
+from baseclasses import GstValidateTest, TestsManager, ScenarioManager
 
 GES_DURATION_TOLERANCE = utils.GST_SECOND / 2
 GES_LAUNCH_COMMAND = "ges-launch-1.0"
@@ -156,6 +156,8 @@ class GESRenderTest(GESTest):
 class GESTestsManager(TestsManager):
     name = "ges"
 
+    _scenarios = ScenarioManager()
+
     def __init__(self):
         super(GESTestsManager, self).__init__()
 
@@ -206,13 +208,14 @@ class GESTestsManager(TestsManager):
                 else:
                     projects.append(utils.path2url(proj))
 
-        SCENARIOS = [Scenario.get_scenario("play_15s"),
-                     Scenario.get_scenario("seek_forward"),
-                     Scenario.get_scenario("seek_backward"),
-                     Scenario.get_scenario("scrub_forward_seeking")]
+        SCENARIOS = ["play_15s",
+                     "seek_forward",
+                     "seek_backward",
+                     "scrub_forward_seeking"]
         for proj in projects:
             # First playback casses
-            for scenario in SCENARIOS:
+            for scenario_name in SCENARIOS:
+                scenario = self._scenarios.get_scenario(scenario_name)
                 classname = "ges.playback.%s.%s" % (scenario.name,
                                                     os.path.basename(proj).replace(".xges", ""))
                 self.add_test(GESPlaybackTest(classname,

@@ -26,6 +26,7 @@ import utils
 import urlparse
 import subprocess
 import reporters
+import ConfigParser
 from loggable import Loggable
 from optparse import OptionGroup
 
@@ -568,25 +569,42 @@ class NamedDic(object):
             for name, value in props.iteritems():
                 setattr(self, name, value)
 
-
 class Scenario(object):
-
-    def __init__(self, name, max_duration=None, seeks=True, reverse=False):
+    def __init__(self, name, props):
         self.name = name
-        self.max_duration = max_duration
-        self.seeks = seeks
-        self.reverse = reverse
 
-    @classmethod
-    def get_scenario(cls, name):
-        return [scenario for scenario in ALL_SCENARIOS if scenario.name == name][0]
+        for prop, value in props:
+            setattr(self, prop, value)
 
-ALL_SCENARIOS = [
-    Scenario("play_15s", seeks=False, max_duration=15),
-    Scenario("reverse_playback", reverse=True),
-    Scenario("fast_forward", seeks=True),
-    Scenario("seek_forward", seeks=True),
-    Scenario("seek_backward", seeks=True),
-    Scenario("scrub_forward_seeking", seeks=True),
-    Scenario("seek_with_stop", seeks=True),
-]
+class ScenarioManager(object):
+    _instance = None
+    all_scenarios = []
+    GST_VALIDATE_COMMAND = "gst-validate-1.0"
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(ScenarioManager, cls).__new__(
+                                cls, *args, **kwargs)
+            cls._instance.config = None
+        return cls._instance
+
+    def get_scenario(self, name):
+        if self.all_scenarios:
+            return [scenario for scenario in self.all_scenarios if scenario.name == name][0]
+
+        scenario_defs = os.path.join(self.config.main_dir, "scenarios.def")
+        try:
+            subprocess.check_output([self.GST_VALIDATE_COMMAND,
+                                     "--scenarios-defs-output-file",
+                                     scenario_defs])
+        except subprocess.CalledProcessError:
+            pass
+
+        config = ConfigParser.ConfigParser()
+        f = open(scenario_defs)
+        config.readfp(f)
+
+        for section in config.sections():
+            self.all_scenarios.append(Scenario(section,
+                                               config.items(section)))
+

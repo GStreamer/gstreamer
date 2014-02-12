@@ -22,7 +22,7 @@ import subprocess
 import ConfigParser
 from loggable import Loggable
 
-from baseclasses import GstValidateTest, TestsManager, Test, Scenario, NamedDic
+from baseclasses import GstValidateTest, TestsManager, Test, ScenarioManager, NamedDic
 from utils import MediaFormatCombination, get_profile,\
     path2url, DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
     compare_rendered_with_original, Protocols
@@ -51,13 +51,16 @@ class PlaybinDescriptor(PipelineDescriptor):
         pipe = self._pipeline
         if options.mute:
             fakesink = "fakesink"
-            if scenario and scenario.seeks:
-                fakesink = "'" + fakesink + " sync=true'"
+            try:
+                if scenario and bool(scenario.seek) == True:
+                    fakesink = "'" + fakesink + " sync=true'"
+            except AttributeError:
+                pass
             pipe += " audio-sink=%s video-sink=%s" %(fakesink, fakesink)
 
         pipe += " uri=%s" % uri
 
-        if scenario.reverse and protocol == Protocols.HTTP:
+        if hasattr(scenario, "reverse-playback") and protocol == Protocols.HTTP:
             # 10MB so we can reverse playbacl
             pipe += " ring-buffer-max-size=10240"
 
@@ -89,24 +92,24 @@ G_V_ENCODING_TARGET_COMBINATIONS = [
 
 
 # List of scenarios to run depending on the protocol in use
-G_V_SCENARIOS = {Protocols.FILE: [Scenario.get_scenario("play_15s"),
-                                  Scenario.get_scenario("reverse_playback"),
-                                  Scenario.get_scenario("fast_forward"),
-                                  Scenario.get_scenario("seek_forward"),
-                                  Scenario.get_scenario("seek_backward"),
-                                  Scenario.get_scenario("seek_with_stop"),
-                                  Scenario.get_scenario("scrub_forward_seeking")],
-                 Protocols.HTTP: [Scenario.get_scenario("play_15s"),
-                                  Scenario.get_scenario("fast_forward"),
-                                  Scenario.get_scenario("seek_forward"),
-                                  Scenario.get_scenario("seek_backward"),
-                                  Scenario.get_scenario("seek_with_stop"),
-                                  Scenario.get_scenario("reverse_playback")],
-                 Protocols.HLS: [Scenario.get_scenario("play_15s"),
-                                 Scenario.get_scenario("fast_forward"),
-                                 Scenario.get_scenario("seek_forward"),
-                                 Scenario.get_scenario("seek_with_stop"),
-                                 Scenario.get_scenario("seek_backward")],
+G_V_SCENARIOS = {Protocols.FILE: ["play_15s",
+                                  "reverse_playback",
+                                  "fast_forward",
+                                  "seek_forward",
+                                  "seek_backward",
+                                  "seek_with_stop",
+                                  "scrub_forward_seeking"],
+                 Protocols.HTTP: ["play_15s",
+                                  "fast_forward",
+                                  "seek_forward",
+                                  "seek_backward",
+                                  "seek_with_stop",
+                                  "reverse_playback"],
+                 Protocols.HLS: ["play_15s",
+                                 "fast_forward",
+                                 "seek_forward",
+                                 "seek_with_stop",
+                                 "seek_backward"],
                  }
 
 G_V_BLACKLISTED_TESTS = \
@@ -160,18 +163,20 @@ class GstValidateMediaCheckTest(Test):
 
 
 class GstValidateTranscodingTest(GstValidateTest):
+    _scenarios = ScenarioManager()
     def __init__(self, classname, options, reporter,
                  combination, uri, file_infos, timeout=DEFAULT_TIMEOUT,
-                 scenario=Scenario.get_scenario("play_15s")):
+                 scenario_name="play_15s"):
 
+        scenario = self._scenarios.get_scenario(scenario_name)
         try:
             timeout = G_V_PROTOCOL_TIMEOUTS[file_infos.get("file-info", "protocol")]
         except KeyError:
             pass
 
-        if scenario.max_duration is not None:
-            hard_timeout = 4 * scenario.max_duration + timeout
-        else:
+        try:
+            hard_timeout = 4 * int(scenario.duration) + timeout
+        except AttributeError:
             hard_timeout = None
 
         super(GstValidateTranscodingTest, self).__init__(
@@ -215,6 +220,8 @@ class GstValidateTranscodingTest(GstValidateTest):
 class GstValidateManager(TestsManager, Loggable):
 
     name = "validate"
+    _scenarios = ScenarioManager()
+
 
     def __init__(self):
         TestsManager.__init__(self)
@@ -338,10 +345,12 @@ class GstValidateManager(TestsManager, Loggable):
         if pipe_descriptor.needs_uri():
             for uri, minfo in self._list_uris():
                 protocol = minfo.config.get("file-info", "protocol")
-                for scenario in G_V_SCENARIOS[protocol]:
+                for scenario_name in G_V_SCENARIOS[protocol]:
+                    scenario = self._scenarios.get_scenario(scenario_name)
                     npipe = pipe_descriptor.get_pipeline(self.options,
                                                          protocol,
-                                                         scenario, uri)
+                                                         scenario,
+                                                         uri)
                     if minfo.config.getboolean("media-info", "seekable") is False:
                         self.debug("Do not run %s as %s does not support seeking",
                                    scenario, uri)

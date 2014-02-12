@@ -24,7 +24,7 @@ import loggable
 from optparse import OptionParser, OptionGroup
 
 from httpserver import HTTPServer
-from baseclasses import _TestsLauncher
+from baseclasses import _TestsLauncher, ScenarioManager
 from utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors
 
 
@@ -169,6 +169,8 @@ def main():
                                          options.remote_assets_url,
                                          options.clone_dir))
 
+    # Ensure that the scenario manager singleton is ready to be used
+    ScenarioManager().config = options
     tests_launcher.list_tests()
 
     httpsrv = HTTPServer(options)

@@ -238,3 +238,9 @@ def compare_rendered_with_original(orig_duration, dest_file, tolerance=DURATION_
                     "wrong-duration")
         else:
             return (Result.PASSED, "")
+
+
+def get_scenarios():
+    GST_VALIDATE_COMMAND = "gst-validate-1.0"
+    os.system("%s --scenarios-defs-output-file %s" % (GST_VALIDATE_COMMAND,
+                                                      ))
