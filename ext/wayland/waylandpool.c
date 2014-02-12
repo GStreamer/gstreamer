@@ -168,10 +168,44 @@ shm_pool_reset (struct shm_pool *pool)
 
 /* bufferpool */
 static void gst_wayland_buffer_pool_finalize (GObject * object);
+static gboolean wayland_buffer_pool_set_config (GstBufferPool * pool,
+    GstStructure * config);
+static GstFlowReturn wayland_buffer_pool_alloc (GstBufferPool * pool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
 
 #define gst_wayland_buffer_pool_parent_class parent_class
 G_DEFINE_TYPE (GstWaylandBufferPool, gst_wayland_buffer_pool,
     GST_TYPE_BUFFER_POOL);
+
+static void
+gst_wayland_buffer_pool_class_init (GstWaylandBufferPoolClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
+
+  gobject_class->finalize = gst_wayland_buffer_pool_finalize;
+
+  gstbufferpool_class->set_config = wayland_buffer_pool_set_config;
+  gstbufferpool_class->alloc_buffer = wayland_buffer_pool_alloc;
+}
+
+static void
+gst_wayland_buffer_pool_init (GstWaylandBufferPool * pool)
+{
+}
+
+static void
+gst_wayland_buffer_pool_finalize (GObject * object)
+{
+  GstWaylandBufferPool *pool = GST_WAYLAND_BUFFER_POOL_CAST (object);
+
+  if (pool->shm_pool)
+    shm_pool_destroy (pool->shm_pool);
+
+  gst_object_unref (pool->sink);
+
+  G_OBJECT_CLASS (gst_wayland_buffer_pool_parent_class)->finalize (object);
+}
 
 static gboolean
 wayland_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
@@ -300,34 +334,4 @@ gst_wayland_buffer_pool_new (GstWaylandSink * waylandsink)
   pool->sink = gst_object_ref (waylandsink);
 
   return GST_BUFFER_POOL_CAST (pool);
-}
-
-static void
-gst_wayland_buffer_pool_class_init (GstWaylandBufferPoolClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
-
-  gobject_class->finalize = gst_wayland_buffer_pool_finalize;
-
-  gstbufferpool_class->set_config = wayland_buffer_pool_set_config;
-  gstbufferpool_class->alloc_buffer = wayland_buffer_pool_alloc;
-}
-
-static void
-gst_wayland_buffer_pool_init (GstWaylandBufferPool * pool)
-{
-}
-
-static void
-gst_wayland_buffer_pool_finalize (GObject * object)
-{
-  GstWaylandBufferPool *pool = GST_WAYLAND_BUFFER_POOL_CAST (object);
-
-  if (pool->shm_pool)
-    shm_pool_destroy (pool->shm_pool);
-
-  gst_object_unref (pool->sink);
-
-  G_OBJECT_CLASS (gst_wayland_buffer_pool_parent_class)->finalize (object);
 }
