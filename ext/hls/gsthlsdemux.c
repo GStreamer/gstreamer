@@ -654,7 +654,6 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
       GST_DEBUG_FUNCPTR (gst_hls_demux_src_event));
   gst_pad_set_query_function (demux->srcpad,
       GST_DEBUG_FUNCPTR (gst_hls_demux_src_query));
-  gst_pad_set_element_private (demux->srcpad, demux);
   gst_pad_use_fixed_caps (demux->srcpad);
   gst_pad_set_active (demux->srcpad, TRUE);
 
