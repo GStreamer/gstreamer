@@ -461,9 +461,11 @@ quit:
       gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL, NULL);
 
       /* set the element state to NULL */
+      GST_OBJECT_UNLOCK (downloader);
       gst_bus_set_flushing (downloader->priv->bus, TRUE);
       gst_element_set_state (urisrc, GST_STATE_NULL);
       gst_element_get_state (urisrc, NULL, NULL, GST_CLOCK_TIME_NONE);
+      GST_OBJECT_LOCK (downloader);
       gst_element_set_bus (urisrc, NULL);
 
       /* unlink the source element from the internal pad */
