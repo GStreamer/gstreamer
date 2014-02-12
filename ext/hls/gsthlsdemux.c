@@ -426,7 +426,6 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       demux->need_segment = TRUE;
       GST_M3U8_CLIENT_UNLOCK (demux->client);
 
-
       if (flags & GST_SEEK_FLAG_FLUSH) {
         GST_DEBUG_OBJECT (demux, "sending flush stop");
         gst_pad_push_event (demux->srcpad, gst_event_new_flush_stop (TRUE));
@@ -656,6 +655,7 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
   gst_pad_set_query_function (demux->srcpad,
       GST_DEBUG_FUNCPTR (gst_hls_demux_src_query));
   gst_pad_set_element_private (demux->srcpad, demux);
+  gst_pad_use_fixed_caps (demux->srcpad);
   gst_pad_set_active (demux->srcpad, TRUE);
 
   stream_id =
