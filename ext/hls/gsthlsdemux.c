@@ -645,12 +645,15 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
   GstPad *oldpad = demux->srcpad;
   GstEvent *event;
   gchar *stream_id;
+  gchar *name;
 
   GST_DEBUG ("Switching pads (oldpad:%p) with caps: %" GST_PTR_FORMAT, oldpad,
       newcaps);
 
   /* First create and activate new pad */
-  demux->srcpad = gst_pad_new_from_static_template (&srctemplate, NULL);
+  name = g_strdup_printf ("src_%u", demux->srcpad_counter++);
+  demux->srcpad = gst_pad_new_from_static_template (&srctemplate, name);
+  g_free (name);
   gst_pad_set_event_function (demux->srcpad,
       GST_DEBUG_FUNCPTR (gst_hls_demux_src_event));
   gst_pad_set_query_function (demux->srcpad,
@@ -879,6 +882,12 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
 
   demux->have_group_id = FALSE;
   demux->group_id = G_MAXUINT;
+
+  demux->srcpad_counter = 0;
+  if (demux->srcpad) {
+    gst_element_remove_pad (GST_ELEMENT_CAST (demux), demux->srcpad);
+    demux->srcpad = NULL;
+  }
 }
 
 static gboolean

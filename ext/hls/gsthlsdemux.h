@@ -55,8 +55,9 @@ struct _GstHLSDemux
 {
   GstElement parent;
 
-  GstPad *srcpad;
   GstPad *sinkpad;
+  GstPad *srcpad;
+  gint srcpad_counter;
 
   gboolean have_group_id;
   guint group_id;
