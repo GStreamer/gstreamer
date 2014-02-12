@@ -32,7 +32,7 @@ gst_soup_util_log_make_level_tag (SoupLoggerLogLevel level)
 {
   gchar c;
 
-  if (G_UNLIKELY (level > 9))
+  if (G_UNLIKELY ((gint) level > 9))
     return '?';
 
   switch (level) {
