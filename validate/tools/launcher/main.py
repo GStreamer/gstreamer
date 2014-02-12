@@ -29,6 +29,7 @@ from utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors
 
 
 QA_ASSETS = "gst-qa-assets"
+MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
 
 def main():
@@ -156,7 +157,7 @@ def main():
     if options.clone_dir is None:
         options.clone_dir = os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS)
     if options.paths is None:
-        options.paths = options.clone_dir
+        options.paths = os.path.join(options.clone_dir, MEDIAS_FOLDER)
 
     tests_launcher.set_settings(options, args)
 
