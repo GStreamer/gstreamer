@@ -962,7 +962,7 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
      * was complete. Do nothing */
   } else if (src->session_io_status ==
       GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING && src->read_position > 0 &&
-      (!src->have_size || src->read_position < src->content_size)) {
+      (src->have_size && src->read_position < src->content_size)) {
     /* The server disconnected while streaming. Reconnect and seeking to the
      * last location. */
     src->retry = TRUE;
@@ -1127,7 +1127,8 @@ gst_soup_http_src_response_cb (SoupSession * session, SoupMessage * msg,
   GST_DEBUG_OBJECT (src, "got response %d: %s", msg->status_code,
       msg->reason_phrase);
   if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING &&
-      src->read_position > 0) {
+      src->read_position > 0 && (src->have_size
+          && src->read_position < src->content_size)) {
     /* The server disconnected while streaming. Reconnect and seeking to the
      * last location. */
     src->retry = TRUE;
