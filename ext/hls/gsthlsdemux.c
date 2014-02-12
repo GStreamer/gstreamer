@@ -1377,14 +1377,15 @@ decrypt_error:
   g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_DECRYPT,
       "Failed to decrypt fragment");
 
-  gst_buffer_unref (key_buffer);
-  gst_buffer_unref (encrypted_buffer);
-  gst_buffer_unref (decrypted_buffer);
-
   gst_buffer_unmap (decrypted_buffer, &decrypted_info);
   gst_buffer_unmap (encrypted_buffer, &encrypted_info);
   gst_buffer_unmap (key_buffer, &key_info);
 
+  gst_buffer_unref (key_buffer);
+  gst_buffer_unref (encrypted_buffer);
+  gst_buffer_unref (decrypted_buffer);
+
+  g_object_unref (key_fragment);
   g_object_unref (encrypted_fragment);
   return ret;
 }
