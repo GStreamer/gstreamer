@@ -64,9 +64,6 @@ struct window
   int width, height;
   struct wl_surface *surface;
   struct wl_shell_surface *shell_surface;
-  struct wl_callback *callback;
-  guint redraw_pending :1;
-
 };
 
 typedef struct _GstWaylandSink GstWaylandSink;

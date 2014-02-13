@@ -179,9 +179,6 @@ gst_wayland_sink_set_property (GObject * object,
 static void
 destroy_window (struct window *window)
 {
-  if (window->callback)
-    wl_callback_destroy (window->callback);
-
   if (window->shell_surface)
     wl_shell_surface_destroy (window->shell_surface);
 
@@ -330,7 +327,6 @@ create_window (GstWaylandSink * sink, GstWlDisplay * display, int width,
   window = malloc (sizeof *window);
   window->width = width;
   window->height = height;
-  window->redraw_pending = FALSE;
 
   window->surface = wl_compositor_create_surface (display->compositor);
 
@@ -459,8 +455,6 @@ gst_wayland_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 static void
 frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 {
-  struct window *window = (struct window *) data;
-  window->redraw_pending = FALSE;
   GST_LOG ("frame_redraw_cb");
   wl_callback_destroy (callback);
 }
@@ -478,6 +472,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstWlMeta *meta;
   GstFlowReturn ret;
   struct window *window;
+  struct wl_callback *callback;
 
   GST_LOG_OBJECT (sink, "render buffer %p", buffer);
   if (!sink->window)
@@ -520,9 +515,8 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   wl_surface_attach (sink->window->surface, meta->wbuffer, 0, 0);
   wl_surface_damage (sink->window->surface, 0, 0, res.w, res.h);
-  window->redraw_pending = TRUE;
-  window->callback = wl_surface_frame (window->surface);
-  wl_callback_add_listener (window->callback, &frame_callback_listener, window);
+  callback = wl_surface_frame (window->surface);
+  wl_callback_add_listener (callback, &frame_callback_listener, window);
   wl_surface_commit (window->surface);
   wl_display_flush (sink->display->display);
 
