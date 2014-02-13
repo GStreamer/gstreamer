@@ -270,12 +270,14 @@ class GstValidateManager(TestsManager, Loggable):
             self._add_playback_test(test_pipeline)
 
         for uri, mediainfo in self._list_uris():
+            protocol = mediainfo.config.get("file-info", "protocol")
             try:
-                timeout = G_V_PROTOCOL_TIMEOUTS[mediainfo.config.get("file-info", "protocol")]
+                timeout = G_V_PROTOCOL_TIMEOUTS[protocol]
             except KeyError:
                 timeout = DEFAULT_TIMEOUT
 
-            classname = "validate.media_check.%s" % (os.path.basename(uri).replace(".", "_"))
+            classname = "validate.%s.media_check.%s" % (protocol,
+                                                        os.path.basename(uri).replace(".", "_"))
             self.add_test(GstValidateMediaCheckTest(classname,
                                                     self.options,
                                                     self.reporter,
