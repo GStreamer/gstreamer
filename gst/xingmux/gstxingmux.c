@@ -418,7 +418,7 @@ gst_xing_mux_class_init (GstXingMuxClass * klass)
   GST_DEBUG_CATEGORY_INIT (xing_mux_debug, "xingmux", 0, "Xing Header Muxer");
 
   gst_element_class_set_static_metadata (gstelement_class, "MP3 Xing muxer",
-      "Formatter/Metadata",
+      "Formatter/Muxer/Metadata",
       "Adds a Xing header to the beginning of a VBR MP3 file",
       "Christophe Fergeau <teuf@gnome.org>");
 }

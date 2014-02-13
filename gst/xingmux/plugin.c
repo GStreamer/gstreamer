@@ -27,7 +27,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "xingmux", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "xingmux", GST_RANK_MARGINAL,
           GST_TYPE_XING_MUX))
     return FALSE;
 
