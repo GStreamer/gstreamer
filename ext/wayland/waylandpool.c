@@ -25,6 +25,7 @@
 /* Object header */
 #include "gstwaylandsink.h"
 #include "wldisplay.h"
+#include "wlvideoformat.h"
 
 /* Debugging category */
 #include <gst/gstinfo.h>
@@ -244,7 +245,8 @@ gst_wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   height = GST_VIDEO_INFO_HEIGHT (&self->info);
   stride = GST_VIDEO_INFO_PLANE_STRIDE (&self->info, 0);
   size = GST_VIDEO_INFO_SIZE (&self->info);
-  format = self->sink->format;
+  format =
+      gst_video_format_to_wayland_format (GST_VIDEO_INFO_FORMAT (&self->info));
 
   GST_DEBUG_OBJECT (self, "Allocating buffer of size %" G_GSSIZE_FORMAT
       " (%d x %d, stride %d), format %d", size, width, height, stride, format);
