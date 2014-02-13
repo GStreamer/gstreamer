@@ -114,7 +114,7 @@ enum
 
 #define DEFAULT_USER_AGENT           "GStreamer souphttpsrc "
 #define DEFAULT_IRADIO_MODE          TRUE
-#define DEFAULT_SOUP_LOG_LEVEL       SOUP_LOGGER_LOG_NONE
+#define DEFAULT_SOUP_LOG_LEVEL       SOUP_LOGGER_LOG_HEADERS
 #define DEFAULT_COMPRESS             FALSE
 #define DEFAULT_KEEP_ALIVE           FALSE
 
@@ -1181,14 +1181,18 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
     src->request_position = new_position;
   src->read_position = new_position;
 
-  if (src->content_size != 0 && new_position > src->content_size) {
-    GST_DEBUG_OBJECT (src, "Got position previous estimated content size "
-        "(%" G_GINT64_FORMAT " > %" G_GINT64_FORMAT ")", new_position,
-        src->content_size);
-    src->content_size = new_position;
-    basesrc->segment.duration = src->content_size;
-    gst_element_post_message (GST_ELEMENT (src),
-        gst_message_new_duration_changed (GST_OBJECT (src)));
+  if (src->have_size) {
+    if (new_position > src->content_size) {
+      GST_DEBUG_OBJECT (src, "Got position previous estimated content size "
+          "(%" G_GINT64_FORMAT " > %" G_GINT64_FORMAT ")", new_position,
+          src->content_size);
+      src->content_size = new_position;
+      basesrc->segment.duration = src->content_size;
+      gst_element_post_message (GST_ELEMENT (src),
+          gst_message_new_duration_changed (GST_OBJECT (src)));
+    } else if (new_position == src->content_size) {
+      GST_DEBUG_OBJECT (src, "We're EOS now");
+    }
   }
 
   src->ret = GST_FLOW_OK;
@@ -1607,7 +1611,7 @@ gst_soup_http_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
     return FALSE;
   }
 
-  if (src->content_size != 0 && segment->start >= src->content_size) {
+  if (src->have_size && segment->start >= src->content_size) {
     GST_WARNING_OBJECT (src,
         "Potentially seeking behind end of file, might EOS immediately");
   }
