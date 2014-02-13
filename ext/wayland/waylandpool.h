@@ -25,8 +25,6 @@
 
 G_BEGIN_DECLS
 
-struct shm_pool;
-
 /* buffer meta */
 typedef struct _GstWlMeta GstWlMeta;
 
@@ -60,13 +58,16 @@ typedef struct _GstWaylandBufferPoolClass GstWaylandBufferPoolClass;
 struct _GstWaylandBufferPool
 {
   GstBufferPool bufferpool;
-
   GstWaylandSink *sink;
 
-  /*Fixme: keep all these in GstWaylandBufferPoolPrivate*/
-  guint width;
-  guint height;
-  struct shm_pool *shm_pool;
+  /* external configuration */
+  GstVideoInfo info;
+
+  /* allocation data */
+  struct wl_shm_pool *wl_pool;
+  size_t size;
+  size_t used;
+  void *data;
 };
 
 struct _GstWaylandBufferPoolClass

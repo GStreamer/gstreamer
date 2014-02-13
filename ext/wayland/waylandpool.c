@@ -34,6 +34,8 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
+#include <errno.h>
+
 /* wl metadata */
 GType
 gst_wl_meta_api_get_type (void)
@@ -73,104 +75,13 @@ gst_wl_meta_get_info (void)
   return wl_meta_info;
 }
 
-/* shm pool */
-
-struct shm_pool
-{
-  struct wl_shm_pool *pool;
-  size_t size;
-  size_t used;
-  void *data;
-};
-
-static struct wl_shm_pool *
-make_shm_pool (GstWlDisplay * display, int size, void **data)
-{
-  struct wl_shm_pool *pool;
-  int fd;
-  char filename[1024];
-  static int init = 0;
-
-  snprintf (filename, 256, "%s/%s-%d-%s", g_get_user_runtime_dir (),
-      "wayland-shm", init++, "XXXXXX");
-
-  fd = mkstemp (filename);
-  if (fd < 0) {
-    GST_ERROR ("open %s failed:", filename);
-    return NULL;
-  }
-  if (ftruncate (fd, size) < 0) {
-    GST_ERROR ("ftruncate failed:..!");
-    close (fd);
-    return NULL;
-  }
-
-  *data = mmap (NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (*data == MAP_FAILED) {
-    GST_ERROR ("mmap failed: ");
-    close (fd);
-    return NULL;
-  }
-
-  pool = wl_shm_create_pool (display->shm, fd, size);
-
-  close (fd);
-
-  return pool;
-}
-
-static struct shm_pool *
-shm_pool_create (GstWlDisplay * display, size_t size)
-{
-  struct shm_pool *pool = malloc (sizeof *pool);
-
-  if (!pool)
-    return NULL;
-
-  pool->pool = make_shm_pool (display, size, &pool->data);
-  if (!pool->pool) {
-    free (pool);
-    return NULL;
-  }
-
-  pool->size = size;
-  pool->used = 0;
-
-  return pool;
-}
-
-static void
-shm_pool_destroy (struct shm_pool *pool)
-{
-  munmap (pool->data, pool->size);
-  wl_shm_pool_destroy (pool->pool);
-  free (pool);
-}
-
-static void *
-shm_pool_allocate (struct shm_pool *pool, size_t size, int *offset)
-{
-  if (pool->used + size > pool->size)
-    return NULL;
-
-  *offset = pool->used;
-  pool->used += size;
-
-  return (char *) pool->data + *offset;
-}
-
-/* Start allocating from the beginning of the pool again */
-static void
-shm_pool_reset (struct shm_pool *pool)
-{
-  pool->used = 0;
-}
-
 /* bufferpool */
 static void gst_wayland_buffer_pool_finalize (GObject * object);
-static gboolean wayland_buffer_pool_set_config (GstBufferPool * pool,
+static gboolean gst_wayland_buffer_pool_set_config (GstBufferPool * pool,
     GstStructure * config);
-static GstFlowReturn wayland_buffer_pool_alloc (GstBufferPool * pool,
+static gboolean gst_wayland_buffer_pool_start (GstBufferPool * pool);
+static gboolean gst_wayland_buffer_pool_stop (GstBufferPool * pool);
+static GstFlowReturn gst_wayland_buffer_pool_alloc (GstBufferPool * pool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
 
 #define gst_wayland_buffer_pool_parent_class parent_class
@@ -185,13 +96,16 @@ gst_wayland_buffer_pool_class_init (GstWaylandBufferPoolClass * klass)
 
   gobject_class->finalize = gst_wayland_buffer_pool_finalize;
 
-  gstbufferpool_class->set_config = wayland_buffer_pool_set_config;
-  gstbufferpool_class->alloc_buffer = wayland_buffer_pool_alloc;
+  gstbufferpool_class->set_config = gst_wayland_buffer_pool_set_config;
+  gstbufferpool_class->start = gst_wayland_buffer_pool_start;
+  gstbufferpool_class->stop = gst_wayland_buffer_pool_stop;
+  gstbufferpool_class->alloc_buffer = gst_wayland_buffer_pool_alloc;
 }
 
 static void
-gst_wayland_buffer_pool_init (GstWaylandBufferPool * pool)
+gst_wayland_buffer_pool_init (GstWaylandBufferPool * self)
 {
+  gst_video_info_init (&self->info);
 }
 
 static void
@@ -199,8 +113,8 @@ gst_wayland_buffer_pool_finalize (GObject * object)
 {
   GstWaylandBufferPool *pool = GST_WAYLAND_BUFFER_POOL_CAST (object);
 
-  if (pool->shm_pool)
-    shm_pool_destroy (pool->shm_pool);
+  if (pool->wl_pool)
+    gst_wayland_buffer_pool_stop (GST_BUFFER_POOL (pool));
 
   gst_object_unref (pool->sink);
 
@@ -208,10 +122,9 @@ gst_wayland_buffer_pool_finalize (GObject * object)
 }
 
 static gboolean
-wayland_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
+gst_wayland_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
-  GstWaylandBufferPool *wpool = GST_WAYLAND_BUFFER_POOL_CAST (pool);
-  GstVideoInfo info;
+  GstWaylandBufferPool *self = GST_WAYLAND_BUFFER_POOL_CAST (pool);
   GstCaps *caps;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
@@ -221,16 +134,14 @@ wayland_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     goto no_caps;
 
   /* now parse the caps from the config */
-  if (!gst_video_info_from_caps (&info, caps))
+  if (!gst_video_info_from_caps (&self->info, caps))
     goto wrong_caps;
 
-  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
+  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT,
+      GST_VIDEO_INFO_WIDTH (&self->info), GST_VIDEO_INFO_HEIGHT (&self->info),
       caps);
 
   /*Fixme: Enable metadata checking handling based on the config of pool */
-
-  wpool->width = info.width;
-  wpool->height = info.height;
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
   /* ERRORS */
@@ -252,67 +163,113 @@ wrong_caps:
   }
 }
 
-static GstWlMeta *
-gst_buffer_add_wayland_meta (GstBuffer * buffer, GstWaylandBufferPool * wpool)
+static gboolean
+gst_wayland_buffer_pool_start (GstBufferPool * pool)
 {
-  GstWlMeta *wmeta;
-  GstWaylandSink *sink;
-  void *data;
-  gint offset;
-  guint stride = 0;
+  GstWaylandBufferPool *self = GST_WAYLAND_BUFFER_POOL (pool);
   guint size = 0;
+  int fd;
+  char filename[1024];
+  static int init = 0;
 
-  sink = wpool->sink;
-  stride = wpool->width * 4;
-  size = stride * wpool->height;
+  GST_DEBUG_OBJECT (self, "Initializing wayland buffer pool");
 
-  wmeta = (GstWlMeta *) gst_buffer_add_meta (buffer, GST_WL_META_INFO, NULL);
-  wmeta->sink = gst_object_ref (sink);
+  /* configure */
+  size = GST_VIDEO_INFO_SIZE (&self->info) * 15;
 
-  /*Fixme: size calculation should be more grcefull, have to consider the padding */
-  if (!wpool->shm_pool) {
-    wpool->shm_pool = shm_pool_create (sink->display, size * 15);
-    shm_pool_reset (wpool->shm_pool);
+  /* allocate shm pool */
+  snprintf (filename, 1024, "%s/%s-%d-%s", g_get_user_runtime_dir (),
+      "wayland-shm", init++, "XXXXXX");
+
+  fd = mkstemp (filename);
+  if (fd < 0) {
+    GST_ERROR_OBJECT (pool, "opening temp file %s failed: %s", filename,
+        strerror (errno));
+    return FALSE;
+  }
+  if (ftruncate (fd, size) < 0) {
+    GST_ERROR_OBJECT (pool, "ftruncate failed: %s", strerror (errno));
+    close (fd);
+    return FALSE;
   }
 
-  if (!wpool->shm_pool) {
-    GST_ERROR ("Failed to create shm_pool");
-    return NULL;
+  self->data = mmap (NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (self->data == MAP_FAILED) {
+    GST_ERROR_OBJECT (pool, "mmap failed: %s", strerror (errno));
+    close (fd);
+    return FALSE;
   }
 
-  data = shm_pool_allocate (wpool->shm_pool, size, &offset);
-  if (!data)
-    return NULL;
+  self->wl_pool =
+      wl_shm_create_pool (self->sink->display->shm,
+      fd, size);
+  close (fd);
 
-  wmeta->wbuffer = wl_shm_pool_create_buffer (wpool->shm_pool->pool, offset,
-      sink->video_width, sink->video_height, stride, sink->format);
+  self->size = size;
+  self->used = 0;
 
-  wmeta->data = data;
-  wmeta->size = size;
+  return TRUE;
+}
 
-  gst_buffer_append_memory (buffer,
-      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
-          size, 0, size, NULL, NULL));
+static gboolean
+gst_wayland_buffer_pool_stop (GstBufferPool * pool)
+{
+  GstWaylandBufferPool *self = GST_WAYLAND_BUFFER_POOL (pool);
 
+  GST_DEBUG_OBJECT (self, "Stopping wayland buffer pool");
 
-  return wmeta;
+  munmap (self->data, self->size);
+  wl_shm_pool_destroy (self->wl_pool);
+
+  self->wl_pool = NULL;
+  self->size = 0;
+  self->used = 0;
+
+  return TRUE;
 }
 
 static GstFlowReturn
-wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
+gst_wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     GstBufferPoolAcquireParams * params)
 {
-  GstWaylandBufferPool *w_pool = GST_WAYLAND_BUFFER_POOL_CAST (pool);
-  GstBuffer *w_buffer;
+  GstWaylandBufferPool *self = GST_WAYLAND_BUFFER_POOL_CAST (pool);
+  gint width, height, stride;
+  gsize size;
+  enum wl_shm_format format;
+  gint offset;
+  void *data;
   GstWlMeta *meta;
 
-  w_buffer = gst_buffer_new ();
-  meta = gst_buffer_add_wayland_meta (w_buffer, w_pool);
-  if (meta == NULL) {
-    gst_buffer_unref (w_buffer);
+  width = GST_VIDEO_INFO_WIDTH (&self->info);
+  height = GST_VIDEO_INFO_HEIGHT (&self->info);
+  stride = GST_VIDEO_INFO_PLANE_STRIDE (&self->info, 0);
+  size = GST_VIDEO_INFO_SIZE (&self->info);
+  format = self->sink->format;
+
+  GST_DEBUG_OBJECT (self, "Allocating buffer of size %" G_GSSIZE_FORMAT
+      " (%d x %d, stride %d), format %d", size, width, height, stride, format);
+
+  /* try to reserve another memory block from the shm pool */
+  if (self->used + size > self->size)
     goto no_buffer;
-  }
-  *buffer = w_buffer;
+
+  offset = self->used;
+  self->used += size;
+  data = ((gchar *) self->data) + offset;
+
+  /* create buffer and its metadata object */
+  *buffer = gst_buffer_new ();
+  meta = (GstWlMeta *) gst_buffer_add_meta (*buffer, GST_WL_META_INFO, NULL);
+  meta->sink = gst_object_ref (self->sink);
+  meta->wbuffer = wl_shm_pool_create_buffer (self->wl_pool, offset,
+      width, height, stride, format);
+  meta->data = data;
+  meta->size = size;
+
+  /* add the allocated memory on the GstBuffer */
+  gst_buffer_append_memory (*buffer,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
+          size, 0, size, NULL, NULL));
 
   return GST_FLOW_OK;
 
