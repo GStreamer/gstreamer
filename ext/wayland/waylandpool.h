@@ -21,6 +21,9 @@
 #ifndef __GST_WAYLAND_BUFFER_POOL_H__
 #define __GST_WAYLAND_BUFFER_POOL_H__
 
+#include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
+
 #include "gstwaylandsink.h"
 
 G_BEGIN_DECLS

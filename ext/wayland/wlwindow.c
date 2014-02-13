@@ -20,6 +20,10 @@
  * Boston, MA 02110-1301 USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "wlwindow.h"
 
 G_DEFINE_TYPE (GstWlWindow, gst_wl_window, G_TYPE_OBJECT);

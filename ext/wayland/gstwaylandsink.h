@@ -22,23 +22,8 @@
 #ifndef __GST_WAYLAND_VIDEO_SINK_H__
 #define __GST_WAYLAND_VIDEO_SINK_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <unistd.h>
-
 #include <gst/gst.h>
-#include <gst/video/video.h>
 #include <gst/video/gstvideosink.h>
-#include <gst/video/gstvideometa.h>
 
 #include <wayland-client.h>
 
@@ -62,10 +47,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstWaylandSink GstWaylandSink;
 typedef struct _GstWaylandSinkClass GstWaylandSinkClass;
-
-G_END_DECLS
-#include "waylandpool.h"
-G_BEGIN_DECLS
 
 struct _GstWaylandSink
 {

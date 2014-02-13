@@ -42,6 +42,7 @@
 
 #include "gstwaylandsink.h"
 #include "wlvideoformat.h"
+#include "waylandpool.h"
 
 /* signals */
 enum
