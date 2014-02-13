@@ -27,6 +27,9 @@
 
 #include "wlvideoformat.h"
 
+GST_DEBUG_CATEGORY_EXTERN (gstwayland_debug);
+#define GST_CAT_DEFAULT gstwayland_debug
+
 typedef struct
 {
   enum wl_shm_format wl_format;

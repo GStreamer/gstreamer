@@ -26,6 +26,9 @@
 
 #include "wlwindow.h"
 
+GST_DEBUG_CATEGORY_EXTERN (gstwayland_debug);
+#define GST_CAT_DEFAULT gstwayland_debug
+
 G_DEFINE_TYPE (GstWlWindow, gst_wl_window, G_TYPE_OBJECT);
 
 static void gst_wl_window_finalize (GObject * gobject);

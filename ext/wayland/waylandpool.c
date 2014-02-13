@@ -34,6 +34,9 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gstwayland_debug);
+#define GST_CAT_DEFAULT gstwayland_debug
+
 /* wl metadata */
 GType
 gst_wl_meta_api_get_type (void)
