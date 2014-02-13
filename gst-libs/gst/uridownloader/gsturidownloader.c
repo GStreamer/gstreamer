@@ -112,6 +112,7 @@ gst_uri_downloader_dispose (GObject * object)
   GstUriDownloader *downloader = GST_URI_DOWNLOADER (object);
 
   if (downloader->priv->urisrc != NULL) {
+    gst_element_set_state (downloader->priv->urisrc, GST_STATE_NULL);
     gst_object_unref (downloader->priv->urisrc);
     downloader->priv->urisrc = NULL;
   }
@@ -318,13 +319,36 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
   if (!gst_uri_is_valid (uri))
     return FALSE;
 
-  g_assert (downloader->priv->urisrc == NULL);
+  if (downloader->priv->urisrc) {
+    gchar *old_protocol, *new_protocol;
+    gchar *old_uri;
 
-  GST_DEBUG_OBJECT (downloader, "Creating source element for the URI:%s", uri);
-  downloader->priv->urisrc =
-      gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
-  if (!downloader->priv->urisrc)
-    return FALSE;
+    old_uri =
+        gst_uri_handler_get_uri (GST_URI_HANDLER (downloader->priv->urisrc));
+    old_protocol = gst_uri_get_protocol (old_uri);
+    new_protocol = gst_uri_get_protocol (uri);
+
+    if (!g_str_equal (old_protocol, new_protocol)) {
+      gst_element_set_state (downloader->priv->urisrc, GST_STATE_NULL);
+      gst_object_unref (downloader->priv->urisrc);
+      downloader->priv->urisrc = NULL;
+      GST_DEBUG_OBJECT (downloader, "Can't re-use old source element");
+    } else {
+      GST_DEBUG_OBJECT (downloader, "Re-using old source element");
+    }
+    g_free (old_uri);
+    g_free (old_protocol);
+    g_free (new_protocol);
+  }
+
+  if (!downloader->priv->urisrc) {
+    GST_DEBUG_OBJECT (downloader, "Creating source element for the URI:%s",
+        uri);
+    downloader->priv->urisrc =
+        gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
+    if (!downloader->priv->urisrc)
+      return FALSE;
+  }
 
   gobject_class = G_OBJECT_GET_CLASS (downloader->priv->urisrc);
   if (g_object_class_find_property (gobject_class, "compress"))
@@ -459,12 +483,11 @@ quit:
 
       /* remove the bus' sync handler */
       gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL, NULL);
+      gst_bus_set_flushing (downloader->priv->bus, TRUE);
 
       /* set the element state to NULL */
       GST_OBJECT_UNLOCK (downloader);
-      gst_bus_set_flushing (downloader->priv->bus, TRUE);
-      gst_element_set_state (urisrc, GST_STATE_NULL);
-      gst_element_get_state (urisrc, NULL, NULL, GST_CLOCK_TIME_NONE);
+      gst_element_set_state (urisrc, GST_STATE_READY);
       GST_OBJECT_LOCK (downloader);
       gst_element_set_bus (urisrc, NULL);
 
@@ -474,13 +497,8 @@ quit:
         gst_pad_unlink (pad, downloader->priv->pad);
         gst_object_unref (pad);
       }
-      downloader->priv->urisrc = NULL;
-      GST_OBJECT_UNLOCK (downloader);
-
-      gst_object_unref (urisrc);
-    } else {
-      GST_OBJECT_UNLOCK (downloader);
     }
+    GST_OBJECT_UNLOCK (downloader);
 
     if (download == NULL) {
       if (!downloader->priv->err) {
