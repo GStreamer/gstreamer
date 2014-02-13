@@ -95,6 +95,12 @@ AC_ARG_VAR([GIT], [Path to git program, if any])
 AC_PATH_PROG([GIT], [git])
 AM_CONDITIONAL([HAVE_GIT], [test -n "$GIT"])
 
+AC_ARG_VAR([YASM], [Path to yasm program, if any])
+AC_PATH_PROG([YASM], [yasm])
+if test -z "$YASM"; then
+    AC_MSG_ERROR([yasm is needed to build libvpx sources])
+fi
+
 dnl Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT
@@ -834,6 +840,7 @@ debian.upstream/libgstvaapi-x11.install.in
     docs/reference/plugins/Makefile
     docs/reference/plugins/plugins-docs.xml
     ext/Makefile
+    ext/libvpx/Makefile
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/base/Makefile

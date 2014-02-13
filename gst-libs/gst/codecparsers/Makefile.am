@@ -18,6 +18,8 @@ libgstvaapi_codecparsers_libs =			\
 	$(GST_LIBS)				\
 	$(NULL)
 
+add_source_c =
+add_source_h =
 gen_source_c = parserutils.c nalutils.c
 gen_source_h = parserutils.h nalutils.h
 
@@ -43,9 +45,17 @@ endif
 if USE_LOCAL_CODEC_PARSERS_VP8
 gen_source_c += gstvp8parser.c
 gen_source_h += gstvp8parser.h gstvp8rangedecoder.h vp8utils.h
+#gen_source_c += dboolhuff.c gstvp8rangedecoder.c vp8utils.c
+#gen_source_h += dboolhuff.h
+add_source_c += gstvaapilibvpx.c
 
-gen_source_c += dboolhuff.c gstvp8rangedecoder.c vp8utils.c
-gen_source_h += dboolhuff.h
+libgstvaapi_codecparsers_cflags += \
+	-I$(top_srcdir)/ext/libvpx \
+	-I$(top_srcdir)/ext/libvpx/upstream \
+	-I$(top_builddir)/ext/libvpx/upstream
+
+libgstvaapi_codecparsers_libs += \
+	$(top_builddir)/ext/libvpx/libgstcodecparsers_vpx.la
 endif
 
 GENFILES = \
@@ -57,6 +67,7 @@ nodist_EXTRA_libgstvaapi_codecparsers_la_SOURCES = dummy.c
 
 nodist_libgstvaapi_codecparsers_la_SOURCES =	\
 	$(gen_source_c)				\
+	$(add_source_c)				\
 	$(NULL)
 
 libgstvaapi_codecparsers_la_CFLAGS =		\
@@ -80,6 +91,12 @@ $(gen_source_c): %.c: $(local_codecparsers_srcdir)/%.c $(gen_source_h)
 	$(LN_S) -f $< $@
 $(gen_source_h): %.h: $(local_codecparsers_srcdir)/%.h
 	$(LN_S) -f $< $@
+$(top_builddir)/ext/libvpx/libgstcodecparsers_vpx.la:
+	$(MAKE) -C $(top_builddir)/ext/libvpx
+
+EXTRA_DIST = \
+	$(add_source_c) \
+	$(NULL)
 
 DISTCLEANFILES = $(GENFILES) .timestamp.symlinks
 

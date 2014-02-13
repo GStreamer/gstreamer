@@ -1,3 +1,5 @@
+SUBDIRS = libvpx
+
 EXTRA_DIST =
 
 codecparsers_srcdir = \

@@ -4,3 +4,6 @@
 [submodule "ext/videoutils"]
 	path = ext/videoutils
 	url = git://gitorious.org/vaapi/gstreamer-videoutils.git
+[submodule "ext/libvpx/upstream"]
+	path = ext/libvpx/upstream
+	url = https://chromium.googlesource.com/webm/libvpx
