@@ -94,8 +94,6 @@ static gboolean gst_wayland_sink_render (GstBaseSink * bsink,
 
 static void frame_redraw_callback (void *data,
     struct wl_callback *callback, uint32_t time);
-static void create_window (GstWaylandSink * sink, GstWlDisplay * display,
-    int width, int height);
 
 static void
 gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
@@ -177,18 +175,6 @@ gst_wayland_sink_set_property (GObject * object,
 }
 
 static void
-destroy_window (struct window *window)
-{
-  if (window->shell_surface)
-    wl_shell_surface_destroy (window->shell_surface);
-
-  if (window->surface)
-    wl_surface_destroy (window->surface);
-
-  free (window);
-}
-
-static void
 gst_wayland_sink_finalize (GObject * object)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (object);
@@ -196,7 +182,7 @@ gst_wayland_sink_finalize (GObject * object)
   GST_DEBUG_OBJECT (sink, "Finalizing the sink..");
 
   if (sink->window)
-    destroy_window (sink->window);
+    g_object_unref (sink->window);
   if (sink->display)
     g_object_unref (sink->display);
 
@@ -287,62 +273,6 @@ config_failed:
     GST_DEBUG_OBJECT (bsink, "failed setting config");
     return FALSE;
   }
-}
-
-static void
-handle_ping (void *data, struct wl_shell_surface *shell_surface,
-    uint32_t serial)
-{
-  wl_shell_surface_pong (shell_surface, serial);
-}
-
-static void
-handle_configure (void *data, struct wl_shell_surface *shell_surface,
-    uint32_t edges, int32_t width, int32_t height)
-{
-}
-
-static void
-handle_popup_done (void *data, struct wl_shell_surface *shell_surface)
-{
-}
-
-static const struct wl_shell_surface_listener shell_surface_listener = {
-  handle_ping,
-  handle_configure,
-  handle_popup_done
-};
-
-static void
-create_window (GstWaylandSink * sink, GstWlDisplay * display, int width,
-    int height)
-{
-  struct window *window;
-
-  if (sink->window)
-    return;
-
-  g_mutex_lock (&sink->wayland_lock);
-
-  window = malloc (sizeof *window);
-  window->width = width;
-  window->height = height;
-
-  window->surface = wl_compositor_create_surface (display->compositor);
-
-  window->shell_surface = wl_shell_get_shell_surface (display->shell,
-      window->surface);
-
-  g_return_if_fail (window->shell_surface);
-
-  wl_shell_surface_add_listener (window->shell_surface,
-      &shell_surface_listener, window);
-
-  wl_shell_surface_set_toplevel (window->shell_surface);
-
-  sink->window = window;
-
-  g_mutex_unlock (&sink->wayland_lock);
 }
 
 static gboolean
@@ -471,14 +401,13 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstBuffer *to_render;
   GstWlMeta *meta;
   GstFlowReturn ret;
-  struct window *window;
+  struct wl_surface *surface;
   struct wl_callback *callback;
 
   GST_LOG_OBJECT (sink, "render buffer %p", buffer);
   if (!sink->window)
-    create_window (sink, sink->display, sink->video_width, sink->video_height);
-
-  window = sink->window;
+    sink->window = gst_wl_window_new_toplevel (sink->display, sink->video_width,
+        sink->video_height);
 
   meta = gst_buffer_get_wl_meta (buffer);
 
@@ -513,11 +442,13 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   gst_video_sink_center_rect (src, dst, &res, FALSE);
 
-  wl_surface_attach (sink->window->surface, meta->wbuffer, 0, 0);
-  wl_surface_damage (sink->window->surface, 0, 0, res.w, res.h);
-  callback = wl_surface_frame (window->surface);
-  wl_callback_add_listener (callback, &frame_callback_listener, window);
-  wl_surface_commit (window->surface);
+  surface = gst_wl_window_get_wl_surface (sink->window);
+
+  wl_surface_attach (surface, meta->wbuffer, 0, 0);
+  wl_surface_damage (surface, 0, 0, res.w, res.h);
+  callback = wl_surface_frame (surface);
+  wl_callback_add_listener (callback, &frame_callback_listener, NULL);
+  wl_surface_commit (surface);
   wl_display_flush (sink->display->display);
 
   if (buffer != to_render)

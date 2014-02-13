@@ -43,6 +43,7 @@
 #include <wayland-client.h>
 
 #include "wldisplay.h"
+#include "wlwindow.h"
 
 G_BEGIN_DECLS
 
@@ -59,13 +60,6 @@ G_BEGIN_DECLS
 #define GST_WAYLAND_SINK_GET_CLASS(inst) \
         (G_TYPE_INSTANCE_GET_CLASS ((inst), GST_TYPE_WAYLAND_SINK, GstWaylandSinkClass))
 
-struct window
-{
-  int width, height;
-  struct wl_surface *surface;
-  struct wl_shell_surface *shell_surface;
-};
-
 typedef struct _GstWaylandSink GstWaylandSink;
 typedef struct _GstWaylandSinkClass GstWaylandSinkClass;
 
@@ -78,8 +72,7 @@ struct _GstWaylandSink
   GstVideoSink parent;
 
   GstWlDisplay *display;
-  struct window *window;
-
+  GstWlWindow *window;
   GstBufferPool *pool;
 
   GMutex wayland_lock;
