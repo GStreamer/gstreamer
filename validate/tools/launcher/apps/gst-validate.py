@@ -17,6 +17,7 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import os
+import time
 import urlparse
 import subprocess
 import ConfigParser
@@ -168,7 +169,15 @@ class GstValidateTranscodingTest(GstValidateTest):
                  combination, uri, file_infos, timeout=DEFAULT_TIMEOUT,
                  scenario_name="play_15s"):
 
-        scenario = self._scenarios.get_scenario(scenario_name)
+        Loggable.__init__(self)
+
+        file_dur = long(file_infos.get("media-info", "file-duration")) / GST_SECOND
+        if  file_dur < 30:
+            self.debug("%s is short (%ds< 30 secs) playing it all" % (uri, file_dur))
+            scenario = None
+        else:
+            self.debug("%s is long (%ds > 30 secs) playing it all" % (uri, file_dur))
+            scenario = self._scenarios.get_scenario(scenario_name)
         try:
             timeout = G_V_PROTOCOL_TIMEOUTS[file_infos.get("file-info", "protocol")]
         except KeyError:
@@ -206,14 +215,26 @@ class GstValidateTranscodingTest(GstValidateTest):
         self.add_arguments(self.uri, self.dest_file)
 
     def get_current_value(self):
+        sent_eos = self.sent_eos_position()
+        if sent_eos is not None:
+            if ((time.time() - sent_eos)) > 30:
+                if self.file_infos.get("file-info", "protocol") == Protocols.HLS:
+                    self.set_result(Result.PASSED,
+                                    """Got no EOS 30 seconds after sending EOS,
+                                    in HLS known and tolerated issue:
+                                    https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
+                    return Result.KNOWN_ERROR
+
+                return Result.FAILED
+
         return self.get_current_size()
 
     def check_results(self):
-        if self.process.returncode == 0:
+        if self.result is Result.PASSED:
             orig_duration = long(self.file_infos.get("media-info", "file-duration"))
             res, msg = compare_rendered_with_original(orig_duration, self.dest_file)
             self.set_result(res, msg)
-        else:
+        elif self.message == "":
             GstValidateTest.check_results(self)
 
 

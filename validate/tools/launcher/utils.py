@@ -28,7 +28,7 @@ import subprocess
 from operator import itemgetter
 
 
-GST_SECOND = 1000000000
+GST_SECOND = long(1000000000)
 DEFAULT_TIMEOUT = 10
 DEFAULT_MAIN_DIR = os.path.expanduser("~/gst-validate/")
 DEFAULT_GST_QA_ASSETS =  os.path.join(DEFAULT_MAIN_DIR, "gst-qa-assets")
@@ -41,6 +41,7 @@ class Result(object):
     FAILED = "Failed"
     TIMEOUT = "Timeout"
     PASSED = "Passed"
+    KNOWN_ERROR = "Known error"
 
 
 class Protocols(object):
@@ -203,12 +204,12 @@ def get_profile(combination):
 #  Some utilities to parse gst-validate output   #
 ##################################################
 def gsttime_from_tuple(stime):
-    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2]) * 60) * GST_SECOND +  int(stime[3]))
+    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND +  int(stime[3]))
 
 timeregex = re.compile(r'(?P<_0>.+):(?P<_1>.+):(?P<_2>.+)\.(?P<_3>.+)')
 def parse_gsttimeargs(time):
     stime = map(itemgetter(1), sorted(timeregex.match(time).groupdict().items()))
-    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2]) * 60) * GST_SECOND +  int(stime[3]))
+    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND +  int(stime[3]))
 
 def get_duration(media_file):
 
