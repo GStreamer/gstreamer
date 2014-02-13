@@ -377,6 +377,8 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
         proxy);
   }
 
+  gst_base_src_set_automatic_eos (GST_BASE_SRC (src), FALSE);
+
   gst_soup_http_src_reset (src);
 }
 
