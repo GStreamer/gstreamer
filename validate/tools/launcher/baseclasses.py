@@ -228,10 +228,9 @@ class GstValidateTest(Test):
             self.add_arguments("--set-scenario", self.scenario.name)
 
     def get_validate_criticals_errors(self):
-        self.reporter.out.seek(0)
         ret = "["
         errors = []
-        for l in self.reporter.out.readlines():
+        for l in open(self.logfile, 'r').readlines():
             if "critical : " in l:
                 if ret != "[":
                     ret += ", "
@@ -287,9 +286,8 @@ class GstValidateTest(Test):
         position = duration = -1
 
         self.debug("Getting position")
-        self.reporter.out.seek(0)
         m = None
-        for l in reversed(self.reporter.out.readlines()):
+        for l in reversed(open(self.logfile, 'r').readlines()):
             l = l.lower()
             if "<position:" in l or "buffering" in l:
                 m = l
@@ -314,7 +312,7 @@ class GstValidateTest(Test):
         m = None
         rate = start = stop = None
 
-        for l in reversed(self.reporter.out.readlines()):
+        for l in reversed(open(self.logfile, 'r').readlines()):
             l = l.lower()
             if "seeking to: " in l:
                 m = l
