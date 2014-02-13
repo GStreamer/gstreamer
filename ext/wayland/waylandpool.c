@@ -249,7 +249,8 @@ gst_wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
       gst_video_format_to_wayland_format (GST_VIDEO_INFO_FORMAT (&self->info));
 
   GST_DEBUG_OBJECT (self, "Allocating buffer of size %" G_GSSIZE_FORMAT
-      " (%d x %d, stride %d), format %d", size, width, height, stride, format);
+      " (%d x %d, stride %d), format %s", size, width, height, stride,
+      gst_wayland_format_to_string (format));
 
   /* try to reserve another memory block from the shm pool */
   if (self->used + size > self->size)
