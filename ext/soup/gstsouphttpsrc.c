@@ -415,6 +415,11 @@ gst_soup_http_src_finalize (GObject * gobject)
   g_free (src->proxy_pw);
   g_strfreev (src->cookies);
 
+  if (src->extra_headers) {
+    gst_structure_free (src->extra_headers);
+    src->extra_headers = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
@@ -1458,11 +1463,6 @@ gst_soup_http_src_stop (GstBaseSrc * bsrc)
     gst_soup_http_src_cancel_message (src);
   else
     gst_soup_http_src_session_close (src);
-
-  if (src->extra_headers) {
-    gst_structure_free (src->extra_headers);
-    src->extra_headers = NULL;
-  }
 
   gst_soup_http_src_reset (src);
   return TRUE;
