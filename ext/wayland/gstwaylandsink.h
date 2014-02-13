@@ -89,7 +89,7 @@ struct _GstWaylandSink
 
   gint video_width;
   gint video_height;
-  uint32_t format;
+  enum wl_shm_format format;
 };
 
 struct _GstWaylandSinkClass

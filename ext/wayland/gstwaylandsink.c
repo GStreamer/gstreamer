@@ -41,6 +41,7 @@
 #endif
 
 #include "gstwaylandsink.h"
+#include "wlvideoformat.h"
 
 /* signals */
 enum
@@ -95,50 +96,6 @@ static void frame_redraw_callback (void *data,
     struct wl_callback *callback, uint32_t time);
 static void create_window (GstWaylandSink * sink, GstWlDisplay * display,
     int width, int height);
-
-typedef struct
-{
-  uint32_t wl_format;
-  GstVideoFormat gst_format;
-} wl_VideoFormat;
-
-static const wl_VideoFormat formats[] = {
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-  {WL_SHM_FORMAT_XRGB8888, GST_VIDEO_FORMAT_xRGB},
-  {WL_SHM_FORMAT_ARGB8888, GST_VIDEO_FORMAT_ARGB},
-#else
-  {WL_SHM_FORMAT_XRGB8888, GST_VIDEO_FORMAT_BGRx},
-  {WL_SHM_FORMAT_ARGB8888, GST_VIDEO_FORMAT_BGRA},
-#endif
-};
-
-static uint32_t
-gst_wayland_format_to_wl_format (GstVideoFormat format)
-{
-  guint i;
-
-  for (i = 0; i < G_N_ELEMENTS (formats); i++)
-    if (formats[i].gst_format == format)
-      return formats[i].wl_format;
-
-  GST_WARNING ("wayland video format not found");
-  return -1;
-}
-
-#ifndef GST_DISABLE_GST_DEBUG
-static const gchar *
-gst_wayland_format_to_string (uint32_t wl_format)
-{
-  guint i;
-  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
-
-  for (i = 0; i < G_N_ELEMENTS (formats); i++)
-    if (formats[i].wl_format == wl_format)
-      format = formats[i].gst_format;
-
-  return gst_video_format_to_string (format);
-}
-#endif
 
 static void
 gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
@@ -269,22 +226,6 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     caps = intersection;
   }
   return caps;
-}
-
-static gboolean
-gst_wayland_sink_format_from_caps (uint32_t * wl_format, GstCaps * caps)
-{
-  GstStructure *structure;
-  const gchar *format;
-  GstVideoFormat fmt;
-
-  structure = gst_caps_get_structure (caps, 0);
-  format = gst_structure_get_string (structure, "format");
-  fmt = gst_video_format_from_string (format);
-
-  *wl_format = gst_wayland_format_to_wl_format (fmt);
-
-  return (*wl_format != -1);
 }
 
 static gboolean
