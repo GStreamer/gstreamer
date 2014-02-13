@@ -128,6 +128,8 @@ static void gst_soup_http_src_set_property (GObject * object, guint prop_id,
 static void gst_soup_http_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstStateChangeReturn gst_soup_http_src_change_state (GstElement *
+    element, GstStateChange transition);
 static GstFlowReturn gst_soup_http_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 static gboolean gst_soup_http_src_start (GstBaseSrc * bsrc);
@@ -303,6 +305,8 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
       "Source/Network",
       "Receive data as a client over the network via HTTP using SOUP",
       "Wouter Cloetens <wouter@mind.be>");
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_soup_http_src_change_state);
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_soup_http_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_soup_http_src_stop);
@@ -1462,6 +1466,27 @@ gst_soup_http_src_stop (GstBaseSrc * bsrc)
 
   gst_soup_http_src_reset (src);
   return TRUE;
+}
+
+static GstStateChangeReturn
+gst_soup_http_src_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstSoupHTTPSrc *src;
+
+  src = GST_SOUP_HTTP_SRC (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_soup_http_src_session_close (src);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  return ret;
 }
 
 /* Interrupt a blocking request. */
