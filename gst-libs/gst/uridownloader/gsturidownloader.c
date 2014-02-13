@@ -334,7 +334,18 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
       downloader->priv->urisrc = NULL;
       GST_DEBUG_OBJECT (downloader, "Can't re-use old source element");
     } else {
+      GError *err = NULL;
+
       GST_DEBUG_OBJECT (downloader, "Re-using old source element");
+      if (!gst_uri_handler_set_uri (GST_URI_HANDLER (downloader->priv->urisrc),
+              uri, &err)) {
+        GST_DEBUG_OBJECT (downloader, "Failed to re-use old source element: %s",
+            err->message);
+        g_clear_error (&err);
+        gst_element_set_state (downloader->priv->urisrc, GST_STATE_NULL);
+        gst_object_unref (downloader->priv->urisrc);
+        downloader->priv->urisrc = NULL;
+      }
     }
     g_free (old_uri);
     g_free (old_protocol);
@@ -353,6 +364,8 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
   gobject_class = G_OBJECT_GET_CLASS (downloader->priv->urisrc);
   if (g_object_class_find_property (gobject_class, "compress"))
     g_object_set (downloader->priv->urisrc, "compress", compress, NULL);
+  if (g_object_class_find_property (gobject_class, "keep-alive"))
+    g_object_set (downloader->priv->urisrc, "keep-alive", TRUE, NULL);
 
   /* add a sync handler for the bus messages to detect errors in the download */
   gst_element_set_bus (GST_ELEMENT (downloader->priv->urisrc),
