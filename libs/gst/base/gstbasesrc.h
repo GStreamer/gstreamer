@@ -239,6 +239,8 @@ void            gst_base_src_set_format       (GstBaseSrc *src, GstFormat format
 
 void            gst_base_src_set_dynamic_size (GstBaseSrc * src, gboolean dynamic);
 
+void            gst_base_src_set_automatic_eos (GstBaseSrc * src, gboolean automatic_eos);
+
 void            gst_base_src_set_async        (GstBaseSrc *src, gboolean async);
 gboolean        gst_base_src_is_async         (GstBaseSrc *src);
 
