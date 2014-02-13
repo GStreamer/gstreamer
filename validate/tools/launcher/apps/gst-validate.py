@@ -113,6 +113,11 @@ G_V_SCENARIOS = {Protocols.FILE: ["play_15s",
                                  "seek_backward"],
                  }
 
+G_V_PROTOCOL_VIDEO_RESTRICTION_CAPS = {
+    # Handle the unknown framerate in HLS samples
+    Protocols.HLS: "video/x-raw,framerate=25/1"
+}
+
 G_V_BLACKLISTED_TESTS = \
 [("validate.hls.playback.fast_forward.*",
   "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
@@ -206,7 +211,12 @@ class GstValidateTranscodingTest(GstValidateTest):
         if urlparse.urlparse(self.dest_file).scheme == "":
             self.dest_file = path2url(self.dest_file)
 
-        profile = get_profile(self.combination)
+        try:
+            video_restriction = G_V_PROTOCOL_VIDEO_RESTRICTION_CAPS[self.file_infos.get("file-info", "protocol")]
+        except KeyError:
+            video_restriction = None
+
+        profile = get_profile(self.combination, video_restriction=video_restriction)
         self.add_arguments("-o", profile)
 
     def build_arguments(self):

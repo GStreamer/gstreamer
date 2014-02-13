@@ -194,11 +194,12 @@ def get_profile_full(muxer, venc, aenc, video_restriction=None,
     return ret.replace("::", ":")
 
 
-def get_profile(combination):
+def get_profile(combination, video_restriction=None, audio_restriction=None):
     return get_profile_full(FORMATS[combination.container],
                             FORMATS[combination.vcodec],
                             FORMATS[combination.acodec],
-                            video_restriction="video/x-raw,format=I420")
+                            video_restriction=video_restriction,
+                            audio_restriction=audio_restriction)
 
 ##################################################
 #  Some utilities to parse gst-validate output   #

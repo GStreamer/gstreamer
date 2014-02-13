@@ -127,7 +127,8 @@ class GESRenderTest(GESTest):
         if not utils.isuri(self.dest_file):
             self.dest_file = utils.path2url(self.dest_file)
 
-        profile = utils.get_profile(self.combination)
+        profile = utils.get_profile(self.combination,
+                                    video_restriction="video/x-raw,format=I420")
         self.add_arguments("-f", profile, "-o", self.dest_file)
 
     def check_results(self):
