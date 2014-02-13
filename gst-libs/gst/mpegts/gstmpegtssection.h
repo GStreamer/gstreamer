@@ -161,6 +161,7 @@ struct _GstMpegTsSection
   GstMpegTsPacketizeFunc packetizer;
 };
 
+GBytes *gst_mpegts_section_get_data (GstMpegTsSection *section);
 
 /* PAT */
 #define GST_TYPE_MPEGTS_PAT_PROGRAM (gst_mpegts_pat_program_get_type())

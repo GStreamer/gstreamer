@@ -230,6 +230,19 @@ _gst_mpegts_section_copy (GstMpegTsSection * section)
   return copy;
 }
 
+/**
+ * gst_mpegts_section_get_data:
+ * @section: a #GstMpegTsSection
+ *
+ * Gets the original unparsed section data.
+ *
+ * Returns: (transfer full): The original unparsed section data.
+ */
+GBytes *
+gst_mpegts_section_get_data (GstMpegTsSection * section)
+{
+  return g_bytes_new (section->data, section->section_length);
+}
 
 /**
  * gst_message_parse_mpegts_section:
