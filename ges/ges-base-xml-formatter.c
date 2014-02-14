@@ -29,9 +29,10 @@ G_DEFINE_ABSTRACT_TYPE (GESBaseXmlFormatter, ges_base_xml_formatter,
     GES_TYPE_FORMATTER);
 
 #define _GET_PRIV(o)\
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_BASE_XML_FORMATTER, GESBaseXmlFormatterPrivate))
+  (((GESBaseXmlFormatter*) o)->priv)
 
-static void _loading_done (GESFormatter * self);
+
+static gboolean _loading_done_cb (GESFormatter * self);
 
 typedef struct PendingEffects
 {
@@ -235,7 +236,7 @@ _load_from_uri (GESFormatter * self, GESTimeline * timeline, const gchar * uri,
 
   if (g_hash_table_size (priv->assetid_pendingclips) == 0 &&
       priv->pending_assets == NULL)
-    g_idle_add ((GSourceFunc) _loading_done, self);
+    g_idle_add ((GSourceFunc) _loading_done_cb, g_object_ref (self));
 
   return TRUE;
 }
@@ -346,7 +347,12 @@ _finalize (GObject * object)
 static void
 ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
 {
-  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+  GESBaseXmlFormatterPrivate *priv;
+
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_BASE_XML_FORMATTER, GESBaseXmlFormatterPrivate);
+
+  priv = self->priv;
 
   priv->check_only = FALSE;
   priv->parsecontext = NULL;
@@ -411,7 +417,7 @@ _set_auto_transition (gpointer prio, LayerEntry * entry, gpointer udata)
 static void
 _loading_done (GESFormatter * self)
 {
-  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+  GESBaseXmlFormatterPrivate *priv = GES_BASE_XML_FORMATTER (self)->priv;
 
   if (priv->parsecontext)
     g_markup_parse_context_free (priv->parsecontext);
@@ -422,6 +428,15 @@ _loading_done (GESFormatter * self)
 
   g_hash_table_foreach (priv->layers, (GHFunc) _set_auto_transition, NULL);
   ges_project_set_loaded (self->project, self);
+}
+
+static gboolean
+_loading_done_cb (GESFormatter * self)
+{
+  _loading_done (self);
+  g_object_unref (self);
+
+  return FALSE;
 }
 
 static void
