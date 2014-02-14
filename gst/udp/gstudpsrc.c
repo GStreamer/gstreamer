@@ -78,8 +78,7 @@
  * </itemizedlist>
  * The message is typically used to detect that no UDP arrives in the receiver
  * because it is blocked by a firewall.
- * </para>
- * <para>
+ *
  * A custom file descriptor can be configured with the
  * #GstUDPSrc:sockfd property. The socket will be closed when setting the
  * element to READY by default. This behaviour can be
