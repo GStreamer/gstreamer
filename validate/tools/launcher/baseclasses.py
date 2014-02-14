@@ -208,14 +208,13 @@ class GstValidateTest(Test):
 
     def __init__(self, application_name, classname,
                  options, reporter, timeout=DEFAULT_TIMEOUT,
-                 scenario=None, hard_timeout=None, max_outside_segment=5):
+                 scenario=None, hard_timeout=None):
 
         super(GstValidateTest, self).__init__(application_name, classname, options,
                                               reporter, timeout=timeout, hard_timeout=hard_timeout)
 
         # defines how much the process can be outside of the configured
         # segment / seek
-        self.max_outside_segment = max_outside_segment
         self._sent_eos_pos = None
 
         if scenario is None or scenario.name.lower() == "none":
@@ -262,7 +261,7 @@ class GstValidateTest(Test):
                                 "segfault")
             else:
                 self.set_result(Result.FAILED,
-                                "Application returned %d (issues: %s)" % (
+                                "Application returned %s (issues: %s)" % (
                                 self.process.returncode,
                                 self.get_validate_criticals_errors()
                                 ))
@@ -351,17 +350,8 @@ class GstValidateTest(Test):
 
     def get_current_position(self):
         position, duration = self._get_position()
-
-        start, stop, rate = self._get_last_seek_values()
-        if start and not (start - self.max_outside_segment * GST_SECOND < position < stop +
-                          self.max_outside_segment):
-            self.set_result(Result.FAILED,
-                            "Position not in expected 'segment' (with %d second tolerance)"
-                            "seek.start %d < position %d < seek.stop %d is FALSE"
-                            % (self.max_outside_segment,
-                               start - self.max_outside_segment, position,
-                               stop + self.max_outside_segment)
-                            )
+        if position == -1:
+            return position
 
         return position
 

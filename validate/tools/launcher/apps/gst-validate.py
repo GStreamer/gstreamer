@@ -152,6 +152,19 @@ class GstValidateLaunchTest(GstValidateTest):
         self.add_arguments(self.pipeline_desc)
 
     def get_current_value(self):
+        if self.scenario:
+            sent_eos = self.sent_eos_position()
+            if sent_eos is not None:
+                if ((time.time() - sent_eos)) > 30:
+                    if self.file_infos.get("file-info", "protocol") == Protocols.HLS:
+                        self.set_result(Result.PASSED,
+                                        """Got no EOS 30 seconds after sending EOS,
+                                        in HLS known and tolerated issue:
+                                        https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
+                        return Result.KNOWN_ERROR
+
+                    return Result.FAILED
+
         return self.get_current_position()
 
 
@@ -225,22 +238,23 @@ class GstValidateTranscodingTest(GstValidateTest):
         self.add_arguments(self.uri, self.dest_file)
 
     def get_current_value(self):
-        sent_eos = self.sent_eos_position()
-        if sent_eos is not None:
-            if ((time.time() - sent_eos)) > 30:
-                if self.file_infos.get("file-info", "protocol") == Protocols.HLS:
-                    self.set_result(Result.PASSED,
-                                    """Got no EOS 30 seconds after sending EOS,
-                                    in HLS known and tolerated issue:
-                                    https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
-                    return Result.KNOWN_ERROR
+        if self.scenario:
+            sent_eos = self.sent_eos_position()
+            if sent_eos is not None:
+                if ((time.time() - sent_eos)) > 30:
+                    if self.file_infos.get("file-info", "protocol") == Protocols.HLS:
+                        self.set_result(Result.PASSED,
+                                        """Got no EOS 30 seconds after sending EOS,
+                                        in HLS known and tolerated issue:
+                                        https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
+                        return Result.KNOWN_ERROR
 
-                return Result.FAILED
+                    return Result.FAILED
 
         return self.get_current_size()
 
     def check_results(self):
-        if self.result is Result.PASSED:
+        if self.result is Result.PASSED and not self.scenario:
             orig_duration = long(self.file_infos.get("media-info", "file-duration"))
             res, msg = compare_rendered_with_original(orig_duration, self.dest_file)
             self.set_result(res, msg)

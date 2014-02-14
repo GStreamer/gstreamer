@@ -132,7 +132,7 @@ class GESRenderTest(GESTest):
         self.add_arguments("-f", profile, "-o", self.dest_file)
 
     def check_results(self):
-        if self.process.returncode == 0:
+        if self.result is Result.PASSED and self.scenario is None:
             res, msg = utils.compare_rendered_with_original(self.duration, self.dest_file)
             self.set_result(res, msg)
         else:
