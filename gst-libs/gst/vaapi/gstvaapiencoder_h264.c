@@ -260,7 +260,7 @@ bs_error:
 
 /* Write an SPS NAL unit */
 static gboolean
-bs_write_sps (GstBitWriter * bs,
+bs_write_sps_data (GstBitWriter * bs,
     const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile,
     const VAEncMiscParameterHRD * hrd_params)
 {
@@ -306,7 +306,9 @@ bs_write_sps (GstBitWriter * bs,
   /* seq_parameter_set_id */
   WRITE_UE (bs, seq_param->seq_parameter_set_id);
 
-  if (profile == GST_VAAPI_PROFILE_H264_HIGH) {
+  if (profile == GST_VAAPI_PROFILE_H264_HIGH ||
+      profile == GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH ||
+      profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH) {
     /* for high profile */
     /* chroma_format_idc  = 1, 4:2:0 */
     WRITE_UE (bs, seq_param->seq_fields.bits.chroma_format_idc);
@@ -465,9 +467,6 @@ bs_write_sps (GstBitWriter * bs,
     /* bs_restriction_flag */
     WRITE_UINT32 (bs, 0, 1);
   }
-
-  /* rbsp_trailing_bits */
-  bs_write_trailing_bits (bs);
   return TRUE;
 
   /* ERRORS */
@@ -476,6 +475,113 @@ bs_error:
     GST_WARNING ("failed to write SPS NAL unit");
     return FALSE;
   }
+}
+
+static gboolean
+bs_write_sps (GstBitWriter * bs,
+    const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile,
+    const VAEncMiscParameterHRD * hrd_params)
+{
+  if (!bs_write_sps_data (bs, seq_param, profile, hrd_params))
+    return FALSE;
+
+  /* rbsp_trailing_bits */
+  bs_write_trailing_bits (bs);
+
+  return FALSE;
+}
+
+static gboolean
+bs_write_subset_sps (GstBitWriter * bs,
+    const VAEncSequenceParameterBufferH264_MVC * seq_param,
+    GstVaapiProfile profile, const VAEncMiscParameterHRD * hrd_params)
+{
+  guint32 i, j, k;
+
+  if (!bs_write_sps_data (bs, &seq_param->base, profile, hrd_params))
+    return FALSE;
+
+  if (profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH ||
+      profile == GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH) {
+
+    guint32 num_views_minus1 = seq_param->num_views_minus1;
+
+    /* bit equal to one */
+    WRITE_UINT32 (bs, 1, 1);
+
+    WRITE_UE (bs, seq_param->num_views_minus1);
+
+    for (i = 0; i <= num_views_minus1; i++)
+      WRITE_UE (bs, seq_param->view_list[i].view_id);
+
+    for (i = 1; i <= num_views_minus1; i++) {
+      guint num_anchor_refs_l0 = seq_param->view_list[i].num_anchor_refs_l0;
+      WRITE_UE (bs, num_anchor_refs_l0);
+      for (j = 0; j < num_anchor_refs_l0; j++)
+        WRITE_UE (bs, seq_param->view_list[i].anchor_ref_l0[j]);
+
+      guint num_anchor_refs_l1 = seq_param->view_list[i].num_anchor_refs_l1;
+      WRITE_UE (bs, num_anchor_refs_l1);
+      for (j = 0; j < num_anchor_refs_l1; j++)
+        WRITE_UE (bs, seq_param->view_list[i].anchor_ref_l1[j]);
+    }
+
+    for (i = 1; i <= num_views_minus1; i++) {
+      guint num_non_anchor_refs_l0 =
+          seq_param->view_list[i].num_non_anchor_refs_l0;
+      WRITE_UE (bs, num_non_anchor_refs_l0);
+      for (j = 0; j < num_non_anchor_refs_l0; j++)
+        WRITE_UE (bs, seq_param->view_list[i].non_anchor_ref_l0[i]);
+
+      guint num_non_anchor_refs_l1 =
+          seq_param->view_list[i].num_non_anchor_refs_l1;
+      WRITE_UE (bs, num_non_anchor_refs_l1);
+      for (j = 0; j < num_non_anchor_refs_l1; j++)
+        WRITE_UE (bs, seq_param->view_list[i].non_anchor_ref_l1[j]);
+    }
+
+    /* num level values signalled minus1 */
+    WRITE_UE (bs, seq_param->num_level_values_signalled_minus1);
+
+    for (i = 0; i <= seq_param->num_level_values_signalled_minus1; i++) {
+      struct H264SPSExtMVCLevelValue *level_value =
+          &(seq_param->level_value_list[i]);
+
+      WRITE_UINT32 (bs, level_value->level_idc, 8);
+      WRITE_UE (bs, level_value->num_applicable_ops_minus1);
+
+      for (j = 0; j <= level_value->num_applicable_ops_minus1; j++) {
+        struct H264SPSExtMVCLevelValueOps *level_value_ops =
+            &(level_value->level_value_ops_list[j]);
+
+        WRITE_UINT32 (bs, level_value_ops->temporal_id, 3);
+        WRITE_UE (bs, level_value_ops->num_target_views_minus1);
+
+        for (k = 0; k <= level_value_ops->num_target_views_minus1; k++)
+          WRITE_UE (bs, level_value_ops->target_view_id_list[k]);
+
+        WRITE_UE (bs, level_value_ops->num_views_minus1);
+      }
+    }
+
+    /* mvc_vui_parameters_present_flag */
+    WRITE_UINT32 (bs, 0, 1);
+  }
+
+  /* additional_extension2_flag */
+  WRITE_UINT32 (bs, 0, 1);
+
+  /* rbsp_trailing_bits */
+  bs_write_trailing_bits (bs);
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write subset SPS NAL unit");
+    return FALSE;
+  }
+  return FALSE;
 }
 
 /* Write a PPS NAL unit */
