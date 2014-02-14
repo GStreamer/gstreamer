@@ -44,6 +44,9 @@
 #include "wlvideoformat.h"
 #include "waylandpool.h"
 
+#include <gst/wayland/wayland.h>
+#include <gst/video/videooverlay.h>
+
 /* signals */
 enum
 {
@@ -73,10 +76,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (CAPS))
     );
 
-/*Fixme: Add more interfaces */
-#define gst_wayland_sink_parent_class parent_class
-G_DEFINE_TYPE (GstWaylandSink, gst_wayland_sink, GST_TYPE_VIDEO_SINK);
-
 static void gst_wayland_sink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_wayland_sink_set_property (GObject * object,
@@ -93,8 +92,27 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query);
 static gboolean gst_wayland_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
 
-static void frame_redraw_callback (void *data,
-    struct wl_callback *callback, uint32_t time);
+/* VideoOverlay interface */
+static void gst_wayland_sink_videooverlay_init (GstVideoOverlayInterface *
+    iface);
+static void gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay,
+    guintptr handle);
+static void gst_wayland_sink_expose (GstVideoOverlay * overlay);
+
+/* WaylandVideo interface */
+static void gst_wayland_sink_waylandvideo_init (GstWaylandVideoInterface *
+    iface);
+static void gst_wayland_sink_set_surface_size (GstWaylandVideo * video,
+    gint w, gint h);
+static void gst_wayland_sink_pause_rendering (GstWaylandVideo * video);
+static void gst_wayland_sink_resume_rendering (GstWaylandVideo * video);
+
+#define gst_wayland_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstWaylandSink, gst_wayland_sink, GST_TYPE_VIDEO_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
+        gst_wayland_sink_videooverlay_init)
+    G_IMPLEMENT_INTERFACE (GST_TYPE_WAYLAND_VIDEO,
+        gst_wayland_sink_waylandvideo_init));
 
 static void
 gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
@@ -485,6 +503,56 @@ activate_failed:
     ret = GST_FLOW_ERROR;
     return ret;
   }
+}
+
+static void
+gst_wayland_sink_videooverlay_init (GstVideoOverlayInterface * iface)
+{
+  iface->set_window_handle = gst_wayland_sink_set_window_handle;
+  iface->expose = gst_wayland_sink_expose;
+}
+
+static void
+gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (overlay);
+  g_return_if_fail (sink != NULL);
+}
+
+static void
+gst_wayland_sink_expose (GstVideoOverlay * overlay)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (overlay);
+  g_return_if_fail (sink != NULL);
+}
+
+static void
+gst_wayland_sink_waylandvideo_init (GstWaylandVideoInterface * iface)
+{
+  iface->set_surface_size = gst_wayland_sink_set_surface_size;
+  iface->pause_rendering = gst_wayland_sink_pause_rendering;
+  iface->resume_rendering = gst_wayland_sink_resume_rendering;
+}
+
+static void
+gst_wayland_sink_set_surface_size (GstWaylandVideo * video, gint w, gint h)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (video);
+  g_return_if_fail (sink != NULL);
+}
+
+static void
+gst_wayland_sink_pause_rendering (GstWaylandVideo * video)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (video);
+  g_return_if_fail (sink != NULL);
+}
+
+static void
+gst_wayland_sink_resume_rendering (GstWaylandVideo * video)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (video);
+  g_return_if_fail (sink != NULL);
 }
 
 static gboolean
