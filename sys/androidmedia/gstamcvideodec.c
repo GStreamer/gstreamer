@@ -192,7 +192,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           0, 1, G_MAXINT, 1,
           "divxversion", GST_TYPE_INT_RANGE, 3, 5,
           "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-      gst_caps_merge_structure (ret, tmp);
+      ret = gst_caps_merge_structure (ret, tmp);
     } else if (strcmp (type->mime, "video/3gpp") == 0) {
       gint j;
       GstStructure *tmp, *tmp2;
