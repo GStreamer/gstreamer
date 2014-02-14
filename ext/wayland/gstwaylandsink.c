@@ -212,7 +212,7 @@ static gboolean
 gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstWaylandSink *sink;
-  GstBufferPool *newpool, *oldpool;
+  GstBufferPool *newpool;
   GstVideoInfo info;
   GstStructure *structure;
   static GstAllocationParams params = { 0, 0, 0, 15, };
@@ -252,10 +252,8 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
-  oldpool = sink->pool;
-  sink->pool = newpool;
-  if (oldpool)
-    gst_object_unref (oldpool);
+  gst_object_replace ((GstObject **) & sink->pool, (GstObject *) newpool);
+  gst_object_unref (newpool);
 
   return TRUE;
 
@@ -298,7 +296,7 @@ static gboolean
 gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
-  GstBufferPool *pool;
+  GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
   guint size;
@@ -309,8 +307,8 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (caps == NULL)
     goto no_caps;
 
-  if ((pool = sink->pool))
-    gst_object_ref (pool);
+  if (sink->pool)
+    pool = gst_object_ref (sink->pool);
 
   if (pool != NULL) {
     GstCaps *pcaps;
