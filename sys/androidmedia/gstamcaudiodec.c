@@ -612,6 +612,7 @@ retry:
     GstBuffer *outbuf;
     GstAmcBuffer *buf;
     GstMapInfo minfo;
+    gint nframes;
 
     /* This sometimes happens at EOS or if the input is not properly framed,
      * let's handle it gracefully by allocating a new buffer for the current
@@ -661,12 +662,18 @@ retry:
     }
     gst_buffer_unmap (outbuf, &minfo);
 
-    /* FIXME: We should get one decoded input frame here for
-     * every buffer. If this is not the case somewhere, we will
-     * error out at some point and will need to add workarounds
-     */
+    nframes = 1;
+    if (self->spf != -1) {
+      nframes = buffer_info.size / self->info.bpf;
+      if (nframes % self->spf != 0)
+        GST_WARNING_OBJECT (self, "Output buffer does not contain an integer "
+            "number of input frames (frames: %d, spf: %d)", nframes, self->spf);
+      nframes = (nframes + self->spf - 1) / self->spf;
+    }
+
     flow_ret =
-        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (self), outbuf, 1);
+        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (self), outbuf,
+        nframes);
   }
 
 done:
@@ -1006,6 +1013,26 @@ gst_amc_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   if (!self->input_buffers) {
     GST_ERROR_OBJECT (self, "Failed to get input buffers");
     return FALSE;
+  }
+
+  self->spf = -1;
+  /* TODO: Implement for other codecs too */
+  if (gst_structure_has_name (s, "audio/mpeg")) {
+    gint mpegversion = -1;
+
+    gst_structure_get_int (s, "mpegversion", &mpegversion);
+    if (mpegversion == 1) {
+      gint layer = -1, mpegaudioversion = -1;
+
+      gst_structure_get_int (s, "layer", &layer);
+      gst_structure_get_int (s, "mpegaudioversion", &mpegaudioversion);
+      if (layer == 1)
+        self->spf = 384;
+      else if (layer == 2)
+        self->spf = 1152;
+      else if (layer == 3 && mpegaudioversion != -1)
+        self->spf = (mpegaudioversion == 1 ? 1152 : 576);
+    }
   }
 
   self->started = TRUE;
