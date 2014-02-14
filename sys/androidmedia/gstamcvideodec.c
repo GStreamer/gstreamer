@@ -1185,6 +1185,9 @@ retry:
     if ((flow_ret = gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER
                 (self), frame)) != GST_FLOW_OK) {
       GST_ERROR_OBJECT (self, "Failed to allocate buffer");
+      if (!gst_amc_codec_release_output_buffer (self->codec, idx))
+        GST_ERROR_OBJECT (self, "Failed to release output buffer index %d",
+            idx);
       goto flow_error;
     }
 
