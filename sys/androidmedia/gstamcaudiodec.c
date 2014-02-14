@@ -630,6 +630,9 @@ retry:
       }
     }
 
+    if (buffer_info.size % self->info.bpf != 0)
+      goto invalid_buffer_size;
+
     outbuf =
         gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER (self),
         buffer_info.size);
@@ -773,6 +776,17 @@ invalid_buffer_index:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Invalid input buffer index %d of %d", idx, self->n_input_buffers));
+    gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (self), gst_event_new_eos ());
+    gst_pad_pause_task (GST_AUDIO_DECODER_SRC_PAD (self));
+    self->downstream_flow_ret = GST_FLOW_ERROR;
+    GST_AUDIO_DECODER_STREAM_UNLOCK (self);
+    return;
+  }
+invalid_buffer_size:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
+        ("Invalid buffer size %u (bfp %d)", buffer_info.size, self->info.bpf));
+    gst_amc_codec_release_output_buffer (self->codec, idx);
     gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (self), gst_event_new_eos ());
     gst_pad_pause_task (GST_AUDIO_DECODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_ERROR;
