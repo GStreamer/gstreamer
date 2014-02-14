@@ -139,8 +139,6 @@ gst_wayland_sink_init (GstWaylandSink * sink)
   sink->display = NULL;
   sink->window = NULL;
   sink->pool = NULL;
-
-  g_mutex_init (&sink->wayland_lock);
 }
 
 static void
@@ -186,8 +184,6 @@ gst_wayland_sink_finalize (GObject * object)
     g_object_unref (sink->window);
   if (sink->display)
     g_object_unref (sink->display);
-
-  g_mutex_clear (&sink->wayland_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -313,10 +309,8 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (caps == NULL)
     goto no_caps;
 
-  g_mutex_lock (&sink->wayland_lock);
   if ((pool = sink->pool))
     gst_object_ref (pool);
-  g_mutex_unlock (&sink->wayland_lock);
 
   if (pool != NULL) {
     GstCaps *pcaps;

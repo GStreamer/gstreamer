@@ -56,8 +56,6 @@ struct _GstWaylandSink
   GstWlWindow *window;
   GstBufferPool *pool;
 
-  GMutex wayland_lock;
-
   gint video_width;
   gint video_height;
   enum wl_shm_format format;
