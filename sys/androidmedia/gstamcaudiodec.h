@@ -57,6 +57,7 @@ struct _GstAmcAudioDec
   GstCaps *input_caps;
   GList *codec_datas;
   gboolean input_caps_changed;
+  gint spf;
 
   /* Output format of the codec */
   GstAudioInfo info;
