@@ -2120,6 +2120,7 @@ create_recv_rtp_sink (GstRtpSession * rtpsession)
       gst_rtp_session_event_recv_rtp_sink);
   gst_pad_set_iterate_internal_links_function (rtpsession->recv_rtp_sink,
       gst_rtp_session_iterate_internal_links);
+  GST_PAD_SET_PROXY_ALLOCATION (rtpsession->recv_rtp_sink);
   gst_pad_set_active (rtpsession->recv_rtp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->recv_rtp_sink);
@@ -2234,6 +2235,8 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
       gst_rtp_session_event_send_rtp_sink);
   gst_pad_set_iterate_internal_links_function (rtpsession->send_rtp_sink,
       gst_rtp_session_iterate_internal_links);
+  GST_PAD_SET_PROXY_CAPS (rtpsession->send_rtp_sink);
+  GST_PAD_SET_PROXY_ALLOCATION (rtpsession->send_rtp_sink);
   gst_pad_set_active (rtpsession->send_rtp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->send_rtp_sink);
@@ -2245,6 +2248,7 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
       gst_rtp_session_iterate_internal_links);
   gst_pad_set_event_function (rtpsession->send_rtp_src,
       gst_rtp_session_event_send_rtp_src);
+  GST_PAD_SET_PROXY_CAPS (rtpsession->send_rtp_src);
   gst_pad_set_active (rtpsession->send_rtp_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->send_rtp_src);
 
