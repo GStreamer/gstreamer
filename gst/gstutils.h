@@ -113,6 +113,7 @@ guint           gst_util_group_id_next          (void);
 #define _GST_PUT(__data, __idx, __size, __shift, __num) \
     (((guint8 *) (__data))[__idx] = (((guint##__size) (__num)) >> (__shift)) & 0xff)
 
+#ifndef __GTK_DOC_IGNORE__
 #if GST_HAVE_UNALIGNED_ACCESS
 static inline guint16 __gst_fast_read16(const guint8 *v) {
   return *(const guint16*)(v);
@@ -134,6 +135,7 @@ static inline guint64 __gst_fast_read_swap64(const guint8 *v) {
 }
 # define _GST_FAST_READ(s, d) __gst_fast_read##s((const guint8 *)(d))
 # define _GST_FAST_READ_SWAP(s, d) __gst_fast_read_swap##s((const guint8 *)(d))
+#endif
 #endif
 
 
