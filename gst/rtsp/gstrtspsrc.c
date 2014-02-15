@@ -188,8 +188,9 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_UDP_RECONNECT    TRUE
 #define DEFAULT_MULTICAST_IFACE  NULL
 #define DEFAULT_NTP_SYNC         FALSE
-#define DEFAULT_USE_PIPELINE_CLOCK      FALSE
-#define DEFAULT_TLS_VALIDATION_FLAGS G_TLS_CERTIFICATE_VALIDATE_ALL
+#define DEFAULT_USE_PIPELINE_CLOCK       FALSE
+#define DEFAULT_TLS_VALIDATION_FLAGS     G_TLS_CERTIFICATE_VALIDATE_ALL
+#define DEFAULT_TLS_DATABASE     NULL
 
 enum
 {
@@ -223,6 +224,7 @@ enum
   PROP_USE_PIPELINE_CLOCK,
   PROP_SDES,
   PROP_TLS_VALIDATION_FLAGS,
+  PROP_TLS_DATABASE,
   PROP_LAST
 };
 
@@ -586,6 +588,19 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRTSPSrc::tls-database:
+   *
+   * TLS database with anchor certificate authorities used to validate
+   * the server certificate.
+   *
+   * Since: 1.4
+   */
+  g_object_class_install_property (gobject_class, PROP_TLS_DATABASE,
+      g_param_spec_object ("tls-database", "TLS database",
+          "TLS database with anchor certificate authorities used to validate the server certificate",
+          G_TYPE_TLS_DATABASE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
    * @request: a #GstRTSPMessage
@@ -712,6 +727,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
   src->sdes = NULL;
   src->tls_validation_flags = DEFAULT_TLS_VALIDATION_FLAGS;
+  src->tls_database = DEFAULT_TLS_DATABASE;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -756,6 +772,9 @@ gst_rtspsrc_finalize (GObject * object)
 
   if (rtspsrc->sdes)
     gst_structure_free (rtspsrc->sdes);
+
+  if (rtspsrc->tls_database)
+    g_object_unref (rtspsrc->tls_database);
 
   /* free locks */
   g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
@@ -969,6 +988,10 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_TLS_VALIDATION_FLAGS:
       rtspsrc->tls_validation_flags = g_value_get_flags (value);
       break;
+    case PROP_TLS_DATABASE:
+      g_clear_object (&rtspsrc->tls_database);
+      rtspsrc->tls_database = g_value_dup_object (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1096,6 +1119,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TLS_VALIDATION_FLAGS:
       g_value_set_flags (value, rtspsrc->tls_validation_flags);
+      break;
+    case PROP_TLS_DATABASE:
+      g_value_set_object (value, rtspsrc->tls_database);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3713,6 +3739,10 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
       if (!gst_rtsp_connection_set_tls_validation_flags (info->connection,
               src->tls_validation_flags))
         GST_WARNING_OBJECT (src, "Unable to set TLS validation flags");
+
+      if (src->tls_database)
+        gst_rtsp_connection_set_tls_database (info->connection,
+            src->tls_database);
     }
 
     if (info->url->transports & GST_RTSP_LOWER_TRANS_HTTP)

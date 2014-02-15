@@ -228,6 +228,7 @@ struct _GstRTSPSrc {
   gboolean          use_pipeline_clock;
   GstStructure     *sdes;
   GTlsCertificateFlags tls_validation_flags;
+  GTlsDatabase     *tls_database;
 
   /* state */
   GstRTSPState       state;
