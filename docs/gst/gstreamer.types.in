@@ -31,10 +31,16 @@ gst_task_get_type
 gst_type_find_factory_get_type
 gst_uri_handler_get_type
 
-% these are not GObject derived types
-% this works with gtk-doc 1.10 at least
-%gst_buffer_get_type
-%gst_mini_object_get_type
-%gst_message_get_type
-%gst_query_get_type
+gst_buffer_get_type
+gst_buffer_list_get_type
+gst_caps_get_type
+gst_context_get_type
+gst_event_get_type
+gst_memory_get_type
+gst_message_get_type
+gst_query_get_type
+gst_sample_get_type
+gst_tag_list_get_type
+gst_toc_get_type
+gst_toc_entry_get_type
 
