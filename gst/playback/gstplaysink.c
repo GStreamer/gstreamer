@@ -3464,22 +3464,44 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
     GST_DEBUG_OBJECT (playsink, "no text needed");
     /* we have no subtitles/text or we are requested to not show them */
 
-    if (playsink->text_sinkpad_stream_synchronizer) {
-      gst_element_release_request_pad (GST_ELEMENT_CAST
-          (playsink->stream_synchronizer),
-          playsink->text_sinkpad_stream_synchronizer);
-      gst_object_unref (playsink->text_sinkpad_stream_synchronizer);
-      playsink->text_sinkpad_stream_synchronizer = NULL;
-      gst_object_unref (playsink->text_srcpad_stream_synchronizer);
-      playsink->text_srcpad_stream_synchronizer = NULL;
-    }
-
     if (playsink->textchain) {
       if (playsink->text_pad == NULL) {
         /* no text pad, remove the chain entirely */
         GST_DEBUG_OBJECT (playsink, "removing text chain");
         add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
         activate_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
+
+        if (playsink->text_sinkpad_stream_synchronizer) {
+          gst_element_release_request_pad (GST_ELEMENT_CAST
+              (playsink->stream_synchronizer),
+              playsink->text_sinkpad_stream_synchronizer);
+          gst_object_unref (playsink->text_sinkpad_stream_synchronizer);
+          playsink->text_sinkpad_stream_synchronizer = NULL;
+          gst_object_unref (playsink->text_srcpad_stream_synchronizer);
+          playsink->text_srcpad_stream_synchronizer = NULL;
+        }
+
+        if (!need_video && playsink->video_pad) {
+          if (playsink->video_sinkpad_stream_synchronizer) {
+            gst_element_release_request_pad (GST_ELEMENT_CAST
+                (playsink->stream_synchronizer),
+                playsink->video_sinkpad_stream_synchronizer);
+            gst_object_unref (playsink->video_sinkpad_stream_synchronizer);
+            playsink->video_sinkpad_stream_synchronizer = NULL;
+            gst_object_unref (playsink->video_srcpad_stream_synchronizer);
+            playsink->video_srcpad_stream_synchronizer = NULL;
+          }
+
+          gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
+              NULL);
+        }
+
+        if (playsink->text_pad && !playsink->textchain)
+          gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
+              NULL);
+
+        if (playsink->text_sink)
+          gst_element_set_state (playsink->text_sink, GST_STATE_NULL);
       } else {
         /* we have a chain and a textpad, turn the subtitles off */
         GST_DEBUG_OBJECT (playsink, "turning off the text");
@@ -3488,25 +3510,6 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
               NULL);
       }
     }
-    if (!need_video && playsink->video_pad) {
-      if (playsink->video_sinkpad_stream_synchronizer) {
-        gst_element_release_request_pad (GST_ELEMENT_CAST
-            (playsink->stream_synchronizer),
-            playsink->video_sinkpad_stream_synchronizer);
-        gst_object_unref (playsink->video_sinkpad_stream_synchronizer);
-        playsink->video_sinkpad_stream_synchronizer = NULL;
-        gst_object_unref (playsink->video_srcpad_stream_synchronizer);
-        playsink->video_srcpad_stream_synchronizer = NULL;
-      }
-
-      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad), NULL);
-    }
-
-    if (playsink->text_pad && !playsink->textchain)
-      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad), NULL);
-
-    if (playsink->text_sink)
-      gst_element_set_state (playsink->text_sink, GST_STATE_NULL);
   }
   update_av_offset (playsink);
   do_async_done (playsink);
