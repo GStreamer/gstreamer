@@ -1859,8 +1859,13 @@ typedef struct
 static gboolean
 event_forward_func (GstPad * pad, EventData * data)
 {
-  data->result &= gst_pad_push_event (pad, gst_event_ref (data->event));
+  gboolean ret = TRUE;
+  GstPad *peer = gst_pad_get_peer (pad);
 
+  if (peer)
+    ret = gst_pad_send_event (peer, gst_event_ref (data->event));
+
+  data->result &= ret;
   /* Always send to all pads */
   return FALSE;
 }
