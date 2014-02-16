@@ -798,17 +798,17 @@ AG_GST_CHECK_FEATURE(WINSCREENCAP, [winscreencap plug-in], winscreencap, [
   AC_SUBST(HAVE_WINSCREENCAP)
 ])
 
-dnl DirectShow
-translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTSHOW, true)
-AG_GST_CHECK_FEATURE(DIRECTSHOW, [DirectShow plug-in], winks, [
-  HAVE_DIRECTSHOW="no"
+dnl winks
+translit(dnm, m, l) AM_CONDITIONAL(USE_WINKS, true)
+AG_GST_CHECK_FEATURE(WINKS, [Winks plug-in], winks, [
+  HAVE_WINKS="no"
   save_CFLAGS="$CFLAGS"
   save_LDFLAGS="$LDFLAGS"
   save_LIBS="$LIBS"
   CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -lole32 -luuid -lstrmiids"
-  AC_MSG_CHECKING(for DirectShow LDFLAGS)
+  AC_MSG_CHECKING(for Winks LDFLAGS)
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <strmif.h>
@@ -823,21 +823,21 @@ int main () {
   return 0;
 }
 ]])],
-    [HAVE_DIRECTSHOW="yes"],
-    [HAVE_DIRECTSHOW="no"])
-  AC_MSG_RESULT($HAVE_DIRECTSHOW)
+    [HAVE_WINKS="yes"],
+    [HAVE_WINKS="no"])
+  AC_MSG_RESULT($HAVE_WINKS)
   CFLAGS=$save_CFLAGS
   LDFLAGS=$save_LDFLAGS
   LIBS=$save_LIBS
 
-  if test "x$HAVE_DIRECTSHOW" = "xyes";  then
+  if test "x$HAVE_WINKS" = "xyes";  then
     dnl this is much more than we want
-    DIRECTSHOW_LIBS="-ldxguid -lole32 -luuid -lstrmiids -lksuser -lsetupapi"
+    WINKS_LIBS="-ldxguid -lole32 -luuid -lstrmiids -lksuser -lsetupapi"
     AC_SUBST(DIRECTX_CFLAGS)
     AC_SUBST(DIRECTX_LDFLAGS)
-    AC_SUBST(DIRECTSHOW_LIBS)
+    AC_SUBST(WINKS_LIBS)
   fi
-  AC_SUBST(HAVE_DIRECTSHOW)
+  AC_SUBST(HAVE_WINKS)
 ])
 
 dnl *** Android Media ***
