@@ -46,7 +46,6 @@
  *   * GST_MTS_DESC_DVB_DATA_BROADCAST
  *   * GST_MTS_DESC_DVB_CAROUSEL_IDENTIFIER
  *   * GST_MTS_DESC_DVB_STREAM_IDENTIFIER
- *   * GST_MTS_DESC_DVB_EXTENDED_EVENT
  *   * GST_MTS_DESC_DVB_COMPONENT
  *   * GST_MTS_DESC_DVB_FREQUENCY_LIST
  */
@@ -481,6 +480,72 @@ gst_mpegts_descriptor_from_dvb_subtitling (const gchar * lang,
   GST_WRITE_UINT16_BE (data, ancillary);
 
   return descriptor;
+}
+
+/* GST_MTS_DESC_DVB_EXTENDED_EVENT (0x4E) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_extended_event:
+ * @descriptor: a %GST_MTS_DESC_DVB_EXTENDED_EVENT #GstMpegTsDescriptor
+ * @res: (out) (transfer none): the #GstMpegTsExtendedEventDescriptor to fill
+ *
+ * Extracts the DVB extended event information from @descriptor.
+ *
+ * Returns: %TRUE if parsing succeeded, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescriptor
+    * descriptor, GstMpegTsExtendedEventDescriptor * res)
+{
+  guint8 *data, *desc_data;
+  guint8 tmp, len_item;
+  GstMpegTsExtendedEventItem *item;
+
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
+  g_return_val_if_fail (res != NULL, FALSE);
+  g_return_val_if_fail (descriptor->tag == GST_MTS_DESC_DVB_EXTENDED_EVENT,
+      FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  tmp = *data;
+  res->descriptor_number = tmp >> 4;
+  res->last_descriptor_number = tmp & 0x0f;
+
+  data += 1;
+
+  memcpy (data, res->language_code, 3);
+
+  data += 3;
+
+  len_item = *data;
+
+  data += 1;
+
+  res->nb_items = 0;
+  res->items = g_ptr_array_new ();
+
+  for (guint i = 0; i < len_item;) {
+    desc_data = data;
+    item = malloc (sizeof (GstMpegTsExtendedEventItem));
+    item->item_description =
+        get_encoding_and_convert ((const gchar *) desc_data + 1, *desc_data);
+
+    desc_data += *desc_data + 1;
+    i += *desc_data + 1;
+
+    item->item =
+        get_encoding_and_convert ((const gchar *) desc_data + 1, *desc_data);
+
+    desc_data += *desc_data + 1;
+    i += *desc_data + 1;
+
+    g_ptr_array_add (res->items, item);
+    res->nb_items += 1;
+  }
+  data += len_item;
+  res->text = get_encoding_and_convert ((const gchar *) data + 1, *data);
+
+  return TRUE;
 }
 
 /* GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM (0x5A) */

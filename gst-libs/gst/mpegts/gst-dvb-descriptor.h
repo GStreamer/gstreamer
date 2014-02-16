@@ -307,13 +307,16 @@ struct _GstMpegTsExtendedEventItem
   gchar *item;
 };
 
+/**
+  * @items: (element-type GstMpegTsExtendedEventItem): 
+  */
 struct _GstMpegTsExtendedEventDescriptor
 {
   guint8 descriptor_number;
   guint8 last_descriptor_number;
   gchar  language_code[3];
   guint8 nb_items;
-  GstMpegTsExtendedEventItem items[128];
+  GPtrArray *items;
   gchar *text;
 };
 
