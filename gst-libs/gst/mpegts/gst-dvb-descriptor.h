@@ -342,6 +342,18 @@ gboolean gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor *d
 gboolean gst_mpegts_descriptor_parse_dvb_stream_identifier (const GstMpegTsDescriptor *descriptor,
 							    guint8 *component_tag);
 
+/* GST_MTS_DESC_DVB_CONTENT (0x54) */
+typedef struct _GstMpegTsContent GstMpegTsContent;
+struct _GstMpegTsContent
+{
+  guint8 content_nibble_1;
+  guint8 content_nibble_2;
+  guint8 user_byte;
+};
+
+gboolean gst_mpegts_descriptor_parse_dvb_content (const GstMpegTsDescriptor *
+	descriptor, GPtrArray ** content);
+
 /* GST_MTS_DESC_DVB_TELETEXT (0x56) */
 /**
  * GstMpegTsDVBTeletextType:

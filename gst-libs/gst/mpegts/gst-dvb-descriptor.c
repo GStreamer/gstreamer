@@ -590,6 +590,45 @@ gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor
   return TRUE;
 }
 
+/* GST_MTS_DESC_DVB_CONTENT (0x54) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_content:
+ * @descriptor: a %GST_MTS_DESC_DVB_CONTENT #GstMpegTsDescriptor
+ * @content: (out) (transfer none) (element-type GstMpegTsContent): #GstMpegTsContent
+ *
+ * Extracts the DVB content information from @descriptor:
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_content (const GstMpegTsDescriptor
+    * descriptor, GPtrArray ** content)
+{
+  guint8 *data;
+  guint8 len, tmp;
+
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
+  g_return_val_if_fail (descriptor->tag == GST_MTS_DESC_DVB_CONTENT, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+  len = descriptor->length;
+
+  *content = g_ptr_array_new ();
+  for (guint8 i = 0; i < len;) {
+    GstMpegTsContent *cont = malloc (sizeof (GstMpegTsContent));
+    tmp = *data;
+    cont->content_nibble_1 = (tmp & 0xf0) >> 4;
+    cont->content_nibble_2 = tmp & 0x0f;
+    data += 1;
+    cont->user_byte = *data;
+    data += 1;
+    i += 2;
+    g_ptr_array_add (*content, cont);
+  }
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM (0x5A) */
 /**
  * gst_mpegts_descriptor_parse_dvb_terrestrial_delivary_system:
