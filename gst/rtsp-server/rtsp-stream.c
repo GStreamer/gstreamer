@@ -2071,14 +2071,14 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
       }
 
       if (add) {
-        GST_INFO ("adding %s:%d-%d", dest, min, max);
-        g_signal_emit_by_name (priv->udpsink[0], "add", dest, min, NULL);
-        g_signal_emit_by_name (priv->udpsink[1], "add", dest, max, NULL);
         if (ttl > 0) {
           GST_INFO ("setting ttl-mc %d", ttl);
           g_object_set (G_OBJECT (priv->udpsink[0]), "ttl-mc", ttl, NULL);
           g_object_set (G_OBJECT (priv->udpsink[1]), "ttl-mc", ttl, NULL);
         }
+        GST_INFO ("adding %s:%d-%d", dest, min, max);
+        g_signal_emit_by_name (priv->udpsink[0], "add", dest, min, NULL);
+        g_signal_emit_by_name (priv->udpsink[1], "add", dest, max, NULL);
         priv->transports = g_list_prepend (priv->transports, trans);
       } else {
         GST_INFO ("removing %s:%d-%d", dest, min, max);
