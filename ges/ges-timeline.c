@@ -1944,7 +1944,9 @@ clip_track_element_added_cb (GESClip * clip,
 {
   guint i;
   GESTrack *track;
+  gboolean is_source;
   GPtrArray *tracks = NULL;
+  GESTrackElement *existing_src = NULL;
 
   if (timeline->priv->ignore_track_element_added == clip) {
     GST_DEBUG_OBJECT (timeline, "Ignoring element added (%" GST_PTR_FORMAT
@@ -1980,14 +1982,27 @@ clip_track_element_added_cb (GESClip * clip,
 
   /* We add the current element to the first track */
   track = g_ptr_array_index (tracks, 0);
-  if (!ges_track_add_element (track, track_element)) {
-    GST_WARNING_OBJECT (clip, "Failed to add track element to track");
+
+  is_source = g_type_is_a (G_OBJECT_TYPE (track_element), GES_TYPE_SOURCE);
+  if (is_source)
+    existing_src = ges_clip_find_track_element (clip, track, GES_TYPE_SOURCE);
+
+  if (existing_src == NULL) {
+    if (!ges_track_add_element (track, track_element)) {
+      GST_WARNING_OBJECT (clip, "Failed to add track element to track");
+      ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (track_element));
+      return;
+    }
+  } else {
+    GST_INFO_OBJECT (clip, "Already had a Source Element in %" GST_PTR_FORMAT
+        " of type %s, removing new one.", track,
+        G_OBJECT_TYPE_NAME (track_element));
     ges_container_remove (GES_CONTAINER (clip),
         GES_TIMELINE_ELEMENT (track_element));
-    gst_object_unref (track_element);
-    return;
   }
   gst_object_unref (track);
+  g_clear_object (&existing_src);
 
   /* And create copies to add to other tracks */
   timeline->priv->ignore_track_element_added = clip;
@@ -1996,6 +2011,22 @@ clip_track_element_added_cb (GESClip * clip,
     GESTrackElement *track_element_copy;
 
     track = g_ptr_array_index (tracks, i);
+    if (is_source)
+      existing_src = ges_clip_find_track_element (clip, track, GES_TYPE_SOURCE);
+    if (existing_src == NULL) {
+      ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (track_element));
+      gst_object_unref (track);
+      continue;
+    } else {
+      GST_INFO_OBJECT (clip, "Already had a Source Element in %" GST_PTR_FORMAT
+          " of type %s, removing new one.", track,
+          G_OBJECT_TYPE_NAME (track_element));
+      ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (track_element));
+    }
+    g_clear_object (&existing_src);
+
     track_element_copy =
         GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
             (track_element), TRUE));
