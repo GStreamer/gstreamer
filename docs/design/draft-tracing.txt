@@ -5,6 +5,25 @@ This subsystem will provide a mechanism to get structured tracing info from
 GStreamer applications. This can be used for post-run analysis as well as for
 live introspection.
 
+Use cases
+---------
+* I'd like to get statistics from a running application.
+
+* I'd like to to understand which parts of my pipeline use how many resources.
+
+* I'd like to know which parts of the pipeline use how much memory.
+
+* I'd like to know about ref-counts of parts in the pipeline to find ref-count
+  issues.
+
+Non use-cases
+-------------
+* Some element in the pipeline does not play along the rules, find out which
+  one. This could be done with generic tests.
+
+Design
+------
+
 The system brings the following new items:
 core hooks: probes in the core api, that will expose internal state when tracing
   is in use
@@ -22,23 +41,10 @@ plugins:  GST_TRACE="log(events,buffers);stats(all)".
 When then plugins are loaded, we'll add them to certain hooks according to which
 they are interested in.
 
-Another env var GST_TRACE_CHANNEL can be used to send the tracing to a file or
-a socket (Do the same for GST_DEBUG_CHANNEL / use a common channel
-GST_{DEBBUG,LOG}_{CHANNEL,OUT}).
-The syntax could be
-  stderr
-  file:///path/to/file (or /path/to/file , file)
-  tcp://<ip>:<port> (or just <ip>:<port>)
-If no channel is set, the tracing goes to stderr like the debug logging.
-
-TODO(ensonic): we might want to have GST_{DEBUG,TRACE,LOG)_FORMAT envars as well.
-These could be:
-  raw
-  ansi-color
-  binary (see babeltrace (Common Trace Format (CTF), e.g. used by lttng)
-  ...
-
-With these we can deprecate GST_DEBUG_FILE and GST_DEBUG_NO_COLOR.
+Right now tracing info is logged as structures to the TRACE level. Idea: Another
+env var GST_TRACE_CHANNEL could be used to send the tracing to a file or a
+socket. See https://bugzilla.gnome.org/show_bug.cgi?id=733188 for discussion on
+these environment variables.
 
 Hook api
 --------
@@ -121,13 +127,16 @@ a message, a query or a measurement.
 
 GstTraceEventClass { // meta data for events, can be printed from gst-inspect
   gchar *name;         // something that front ends can use as a label for a graph
+                       // should ideally contain a unit
   gchar *description;  // something that front ends can use as a tooltip
   
   GstTraceEventScope scope; // a way to associate the event
   // enum(per process, thread, element, pad, ...)
 
-  Gst??? type; // some kind of hierarchical event type?
+  Gst??? type; // some kind of hierarchical event type? or make name a 'path'
   // event.eos, event.seek.flushing, measurement.cpu.load, ...
+  
+  GstTraceEventClassFlags flags;  // cummulative, ...
 }
 
 GstTraceEvent {
@@ -143,15 +152,40 @@ GstTraceEvent {
   // - GVariant ?
 }
 
+instead of "gpointer owner", we could send a trace-events that register new
+owners with an id (atomic int) and unregister them at the end of their
+live-time. Then we can reference the owner as "guint owner".
+
+We could also consider to add each value as a READABLE gobject property. The
+property has name/description. We could use qdata for scope and flags (or have
+some new property flags).
+We would also need a new "notify" signal, so that value-change notifications 
+would include a time-stamp. This way the tracers would not needs to be aware of
+the logging. The core tracer would register the notify handlers and emit the
+log.
+Or we just add a gst_tracer_class_install_event() and that mimics the 
+g_object_class_install_property().
+
+The log would have a bunch of streams. A stream has a reference to the 
+GstTraceEventClass.
+
 Frontends can:
 - do a events over time histogram
-- plot curves of values over time
+- plot curves of values over time or deltas
+- show gauges
+- collect statistics (min, max, avg, ...)
 
 
 Plugins ideas
 =============
 
 We can have some under gstreamer/plugins/tracers/
+
+latency
+-------
+- register to buffer and event flow
+- send custom event on buffer flow at source elements
+- catch events on event transfer at sink elements
 
 meminfo
 -------
@@ -202,6 +236,11 @@ gst-stats
 A terminal app that shows summary/running stats like the summary gst-tracelib
 shows at the end of a run.
 
+live-graphers
+-------------
+Maybe we can even feed the log into existing live graphers, with a little driver
+* https://github.com/dkogan/feedgnuplot
+
 
 Problems / Open items
 =====================
@@ -220,6 +259,9 @@ Problems / Open items
       active
     - should the tracer call gst_debug_category_set_threshold() to ensure things
       work, even though the levels don't make a lot of sense here
+  - make logging a tracer
+    - log all debug log to the tracer log, some of the current logging
+      statements can be replaced by generic logging as shown in the log-tracer
 
 - when hooking into a timer, should we just have some predefined intervals?
 - when connecting to a running app, we can't easily get the 'current' state if
@@ -227,9 +269,12 @@ Problems / Open items
 
 Try it
 ======
-GST_DEBUG="GST_TRACER:4,GST_BUFFER*:7,GST_EVENT:7,GST_MESSAGE:7,query:7,log:7" GST_TRACE=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
-- traces for buffer flow in TRACE level and default category
+GST_DEBUG="GST_TRACER:7,GST_BUFFER*:7,GST_EVENT:7,GST_MESSAGE:7" GST_TRACE=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
+- traces for buffer flow in TRACE level
 
-GST_DEBUG="GST_TRACER:4,stats:7" GST_TRACE=stats gst-launch-1.0 2>trace.log fakesrc num-buffers=10 sizetype=fixed ! queue ! fakesink
+GST_DEBUG="GST_TRACER:7" GST_TRACE="stats;rusage" gst-launch-1.0 2>trace.log fakesrc num-buffers=10 sizetype=fixed ! queue ! fakesink
 gst-stats-1.0 trace.log
 - print some pipeline stats on exit
+
+GST_DEBUG="GST_TRACER:7" GST_TRACE=latency gst-launch-1.0 audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! autoaudiosink
+- print processing latencies
