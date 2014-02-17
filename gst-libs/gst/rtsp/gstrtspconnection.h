@@ -76,7 +76,8 @@ GstRTSPResult      gst_rtsp_connection_free           (GstRTSPConnection *conn);
 GTlsConnection *     gst_rtsp_connection_get_tls                  (GstRTSPConnection * conn, GError ** error);
 gboolean             gst_rtsp_connection_set_tls_validation_flags (GstRTSPConnection * conn, GTlsCertificateFlags flags);
 GTlsCertificateFlags gst_rtsp_connection_get_tls_validation_flags (GstRTSPConnection * conn);
-
+void                 gst_rtsp_connection_set_tls_database (GstRTSPConnection * conn, GTlsDatabase * database);
+GTlsDatabase *       gst_rtsp_connection_get_tls_database (GstRTSPConnection * conn);
 
 /* sending/receiving raw bytes */
 GstRTSPResult      gst_rtsp_connection_read           (GstRTSPConnection * conn, guint8 * data,

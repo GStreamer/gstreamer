@@ -151,6 +151,9 @@ struct _GstRTSPConnection
   gchar *passwd;
   GHashTable *auth_params;
 
+  /* TLS */
+  GTlsDatabase *tls_database;
+
   DecodeCtx ctx;
   DecodeCtx *ctxp;
 
@@ -195,6 +198,66 @@ build_reset (GstRTSPBuilder * builder)
   memset (builder, 0, sizeof (GstRTSPBuilder));
 }
 
+static gboolean
+tls_accept_certificate (GTlsConnection * conn, GTlsCertificate * peer_cert,
+    GTlsCertificateFlags errors, GstRTSPConnection * rtspconn)
+{
+  GError *error = NULL;
+  gboolean accept = FALSE;
+
+  if (rtspconn->tls_database) {
+    GSocketConnectable *peer_identity;
+    GTlsCertificateFlags validation_flags;
+
+    GST_DEBUG ("TLS peer certificate not accepted, checking user database...");
+
+    peer_identity =
+        g_tls_client_connection_get_server_identity (G_TLS_CLIENT_CONNECTION
+        (conn));
+
+    errors =
+        g_tls_database_verify_chain (rtspconn->tls_database, peer_cert,
+        G_TLS_DATABASE_PURPOSE_AUTHENTICATE_SERVER, peer_identity,
+        g_tls_connection_get_interaction (conn), G_TLS_DATABASE_VERIFY_NONE,
+        NULL, &error);
+
+    if (error)
+      goto verify_error;
+
+    validation_flags = gst_rtsp_connection_get_tls_validation_flags (rtspconn);
+
+    accept = ((errors & validation_flags) == 0);
+    if (accept)
+      GST_DEBUG ("Peer certificate accepted");
+    else
+      GST_DEBUG ("Peer certificate not accepted (errors: 0x%08X)", errors);
+  }
+
+  return accept;
+
+/* ERRORS */
+verify_error:
+  {
+    GST_ERROR ("An error occurred while verifying the peer certificate: %s",
+        error->message);
+    g_clear_error (&error);
+    return FALSE;
+  }
+}
+
+static void
+socket_client_event (GSocketClient * client, GSocketClientEvent event,
+    GSocketConnectable * connectable, GIOStream * connection,
+    GstRTSPConnection * rtspconn)
+{
+  if (event == G_SOCKET_CLIENT_TLS_HANDSHAKING) {
+    GST_DEBUG ("TLS handshaking about to start...");
+
+    g_signal_connect (connection, "accept-certificate",
+        (GCallback) tls_accept_certificate, rtspconn);
+  }
+}
+
 /**
  * gst_rtsp_connection_create:
  * @url: a #GstRTSPUrl
@@ -224,6 +287,9 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
 
   if (url->transports & GST_RTSP_LOWER_TRANS_TLS)
     g_socket_client_set_tls (newconn->client, TRUE);
+
+  g_signal_connect (newconn->client, "event", (GCallback) socket_client_event,
+      newconn);
 
   newconn->url = gst_rtsp_url_copy (url);
   newconn->timer = g_timer_new ();
@@ -491,6 +557,62 @@ gst_rtsp_connection_get_tls_validation_flags (GstRTSPConnection * conn)
   g_return_val_if_fail (conn != NULL, 0);
 
   return g_socket_client_get_tls_validation_flags (conn->client);
+}
+
+/**
+ * gst_rtsp_connection_set_tls_database:
+ * @conn: a #GstRTSPConnection
+ * @database: a #GTlsDatabase
+ *
+ * Sets the anchor certificate authorities database. This certificate
+ * database will be used to verify the server's certificate in case it
+ * can't be verified with the default certificate database first.
+ *
+ * Since: 1.4
+ */
+void
+gst_rtsp_connection_set_tls_database (GstRTSPConnection * conn,
+    GTlsDatabase * database)
+{
+  GTlsDatabase *old_db;
+
+  g_return_if_fail (conn != NULL);
+
+  if (database)
+    g_object_ref (database);
+
+  old_db = conn->tls_database;
+  conn->tls_database = database;
+
+  if (old_db)
+    g_object_unref (old_db);
+}
+
+/**
+ * gst_rtsp_connection_get_tls_database:
+ * @conn: a #GstRTSPConnection
+ *
+ * Gets the anchor certificate authorities database that will be used
+ * after a server certificate can't be verified with the default
+ * certificate database.
+ *
+ * Returns: (transfer full): the anchor certificate authorities database, or NULL if no
+ * database has been previously set. Use g_object_unref() to release the
+ * certificate database.
+ *
+ * Since: 1.4
+ */
+GTlsDatabase *
+gst_rtsp_connection_get_tls_database (GstRTSPConnection * conn)
+{
+  GTlsDatabase *result;
+
+  g_return_val_if_fail (conn != NULL, NULL);
+
+  if ((result = conn->tls_database))
+    g_object_ref (result);
+
+  return result;
 }
 
 static GstRTSPResult
@@ -2147,6 +2269,8 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
     g_object_unref (conn->cancellable);
   if (conn->client)
     g_object_unref (conn->client);
+  if (conn->tls_database)
+    g_object_unref (conn->tls_database);
 
   g_timer_destroy (conn->timer);
   gst_rtsp_url_free (conn->url);
