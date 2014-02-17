@@ -229,8 +229,8 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
-            <entry morerows="1">audio/*</entry>
-            <entry morerows="1">
+            <entry morerows="4">audio/*</entry>
+            <entry morerows="4">
               <emphasis>All audio types</emphasis>
             </entry>
             <entry>rate</entry>
@@ -246,6 +246,34 @@ plugin_init (GstPlugin *plugin)
             <entry>greater than 0</entry>
             <entry>
               The number of channels of audio data.
+            </entry>
+          </row>
+          <row>
+            <entry>channel-mask</entry>
+            <entry>bitmask</entry>
+            <entry></entry>
+            <entry>
+              Channel positions present. See <quote>GstAudioChannelPosition</quote>.
+              0 means unpositioned.
+            </entry>
+          </row>
+          <row>
+            <entry>format</entry>
+            <entry>string</entry>
+            <entry>
+              S8 U8 S16LE S16BE U16LE U16BE S24_32LE S24_32BE U24_32LE U24_32BE S32LE S32BE U32LE U32BE
+              S24LE S24BE U24LE U24BE S20LE S20BE U20LE U20BE S18LE S18BE U18LE U18BE F32LE F32BE F64LE F64BE
+            </entry>
+            <entry>
+              The format of the sample data.
+            </entry>
+          </row>
+          <row>
+            <entry>layout</entry>
+            <entry>string</entry>
+            <entry>"interleaved" or "non-interleaved"</entry>
+            <entry>
+              Layout of channels within a buffer.
             </entry>
           </row>
 
@@ -264,14 +292,11 @@ plugin_init (GstPlugin *plugin)
             <entry>
               Unstructured and uncompressed raw audio data.
             </entry>
-            <entry>format</entry>
-            <entry>string</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
             <entry>
-              S8 U8 S16LE S16BE U16LE U16BE S24_32LE S24_32BE U24_32LE U24_32BE S32LE S32BE U32LE U32BE
-              S24LE S24BE U24LE U24BE S20LE S20BE U20LE U20BE S18LE S18BE U18LE U18BE F32LE F32BE F64LE F64BE
-            </entry>
-            <entry>
-              The format of the sample data.
+              All properties (except channel-mask, in the mono and stereo cases) are mandatory.
             </entry>
           </row>
 
@@ -657,8 +682,8 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
-            <entry morerows="2">video/*</entry>
-            <entry morerows="2">
+            <entry morerows="9">video/*</entry>
+            <entry morerows="9">
               <emphasis>All video types</emphasis>
             </entry>
             <entry>width</entry>
@@ -675,13 +700,83 @@ plugin_init (GstPlugin *plugin)
           <row>
             <entry>framerate</entry>
             <entry>fraction</entry>
-            <entry>greater or equal 0</entry>
+            <entry>greater or equal 0; default 0/1</entry>
             <entry>
               The (average) framerate in frames per second. Note that this
               property does not guarantee in <emphasis>any</emphasis> way that
               it will actually come close to this value. If you need a fixed
               framerate, please use an element that provides that (such as
-              <quote>videorate</quote>). 0 means a variable framerate.
+              <quote>videorate</quote>). 0/1 means a variable framerate.
+            </entry>
+          </row>
+          <row>
+            <entry>max-framerate</entry>
+            <entry>fraction</entry>
+            <entry>greater or equal 0; default as framerate</entry>
+            <entry>
+              For variable framerates, the maximum framerate that is expected.
+              Only valid when framerate is 0/1.
+            </entry>
+          </row>
+          <row>
+            <entry>views</entry>
+            <entry>integer</entry>
+            <entry>greater than 0; default 1</entry>
+            <entry>
+              The number of views for multiview video. Each buffer contains
+              multiple <quote>GstVideoMeta</quote> buffers that describe each view. Use the
+              frame ID to get access to the different views.
+            </entry>
+          </row>
+          <row>
+            <entry>interlace-mode</entry>
+            <entry>string</entry>
+            <entry>progressive, interleaved, mixed, fields; default progressive</entry>
+            <entry>
+              The interlace mode. Extra buffer flags describe the frame and fields.
+            </entry>
+          </row>
+          <row>
+            <entry>chroma-site</entry>
+            <entry>string</entry>
+            <entry>jpeg, mpeg2, dv; default UNKNOWN</entry>
+            <entry>
+              The chroma siting of the video frames.
+            </entry>
+          </row>
+          <row>
+            <entry>colorimetry</entry>
+            <entry>string</entry>
+            <entry>bt601, bt709, smpte240m; default UNKNOWN</entry>
+            <entry>
+              The colorimetry of the video frames.
+            </entry>
+          </row>
+          <row>
+            <entry>pixel-aspect-ratio</entry>
+            <entry>fraction</entry>
+            <entry>greater than 0; default 1/1</entry>
+            <entry>
+              The pixel aspect ratio of the video.
+            </entry>
+          </row>
+          <row>
+            <entry>format</entry>
+            <entry>string</entry>
+            <entry>
+              I420 YV12 YUY2 UYVY AYUV RGBx BGRx xRGB xBGR RGBA BGRA ARGB ABGR RGB BGR Y41B Y42B
+              YVYU Y444 v210 v216 NV12 NV21 GRAY8 GRAY16_BE GRAY16_LE
+              v308 RGB16 BGR16 RGB15 BGR15 UYVP A420 RGB8P YUV9 YVU9
+              IYU1 ARGB64 AYUV64 r210 I420_10LE I420_10BE I422_10LE I422_10BE
+            </entry>
+            <entry>
+              The format of the video. See <ulink type="http"
+              url="http://www.fourcc.org/">FourCC definition site</ulink>
+              for references and definitions. YUY2, YVYU and UYVY are 4:2:2
+              packed-pixel, Y41P is 4:1:1 packed-pixel and IYU2 is 4:4:4
+              packed-pixel. Y42B is 4:2:2 planar, YV12 and I420 are 4:2:0
+              planar, Y41B is 4:1:1 planar and YUV9 and YVU9 are 4:1:0 planar.
+              Y800 contains Y-samples only (black/white).
             </entry>
           </row>
 
@@ -698,22 +793,11 @@ plugin_init (GstPlugin *plugin)
           <row>
             <entry>video/x-raw</entry>
             <entry>Unstructured and uncompressed raw video data.</entry>
-            <entry>format</entry>
-            <entry>string</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
             <entry>
-              I420 YV12 YUY2 UYVY AYUV RGBx BGRx xRGB xBGR RGBA BGRA ARGB ABGR RGB BGR Y41B Y42B
-              YVYU Y444 v210 v216 NV12 NV21 GRAY8 GRAY16_BE GRAY16_LE
-              v308 RGB16 BGR16 RGB15 BGR15 UYVP A420 RGB8P YUV9 YVU9
-              IYU1 ARGB64 AYUV64 r210 I420_10LE I420_10BE I422_10LE I422_10BE
-            </entry>
-            <entry>
-              The layout of the video. See <ulink type="http"
-              url="http://www.fourcc.org/">FourCC definition site</ulink>
-              for references and definitions. YUY2, YVYU and UYVY are 4:2:2
-              packed-pixel, Y41P is 4:1:1 packed-pixel and IYU2 is 4:4:4
-              packed-pixel. Y42B is 4:2:2 planar, YV12 and I420 are 4:2:0
-              planar, Y41B is 4:1:1 planar and YUV9 and YVU9 are 4:1:0 planar.
-              Y800 contains Y-samples only (black/white).
+              The properties width, height and format are mandatory.
             </entry>
           </row>
 
