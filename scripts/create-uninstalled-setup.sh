@@ -87,11 +87,11 @@ echo "  Please visit"
 echo ""
 echo "      http://gstreamer.freedesktop.org/wiki/BuildDependenciesDebianUbuntu"
 echo ""
-echo "         or"
-echo ""
-echo "      http://gstreamer.freedesktop.org/wiki/Fedora"
-echo ""
-echo "  for instructions how to install them."
+#echo "         or"
+#echo ""
+#echo "      http://gstreamer.freedesktop.org/wiki/Fedora"
+#echo ""
+echo "  for instructions how to install them on Debian/Ubuntu-based systems."
 echo ""
 echo "==========================================================================================="
 fi
@@ -155,8 +155,8 @@ echo "into --prefix=$UNINSTALLED_ROOT/$BRANCH/prefix and it should be picked up"
 echo "by autogen.sh/configure"
 echo
 echo "==========================================================================================="
-echo
-echo "Also see http://gstreamer.freedesktop.org/wiki/UninstalledSetup"
-echo
-echo "==========================================================================================="
+#echo
+#echo "Also see http://gstreamer.freedesktop.org/wiki/UninstalledSetup"
+#echo
+#echo "==========================================================================================="
 
