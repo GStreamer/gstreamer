@@ -83,7 +83,10 @@ typedef enum
   GST_VAAPI_ENCODER_H264_NAL_IDR = 5,   /* ref_idc != 0 */
   GST_VAAPI_ENCODER_H264_NAL_SEI = 6,   /* ref_idc == 0 */
   GST_VAAPI_ENCODER_H264_NAL_SPS = 7,
-  GST_VAAPI_ENCODER_H264_NAL_PPS = 8
+  GST_VAAPI_ENCODER_H264_NAL_PPS = 8,
+  GST_VAAPI_ENCODER_H264_NAL_PREFIX = 14,       /* mvc nal prefix */
+  GST_VAAPI_ENCODER_H264_NAL_SUBSET_SPS = 15,
+  GST_VAAPI_ENCODER_H264_NAL_SLICE_EXT = 20
 } GstVaapiEncoderH264NalType;
 
 typedef struct
@@ -875,6 +878,12 @@ ensure_profile (GstVaapiEncoderH264 * encoder)
   if (encoder->use_dct8x8)
     profile = GST_VAAPI_PROFILE_H264_HIGH;
 
+  /* MVC profiles coding tools */
+  if (encoder->num_views == 2)
+    profile = GST_VAAPI_PROFILE_H264_STEREO_HIGH;
+  else if (encoder->num_views > 2)
+    profile = GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH;
+
   encoder->profile = profile;
   encoder->profile_idc = gst_vaapi_utils_h264_get_profile_idc (profile);
   return TRUE;
@@ -1065,6 +1074,8 @@ add_packed_sequence_header (GstVaapiEncoderH264 * encoder,
   GstBitWriter bs;
   VAEncPackedHeaderParameterBuffer packed_seq_param = { 0 };
   const VAEncSequenceParameterBufferH264 *const seq_param = sequence->param;
+  GstVaapiProfile profile = encoder->profile;
+
   VAEncMiscParameterHRD hrd_params;
   guint32 data_bit_size;
   guint8 *data;
@@ -1075,7 +1086,16 @@ add_packed_sequence_header (GstVaapiEncoderH264 * encoder,
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs,
       GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH, GST_VAAPI_ENCODER_H264_NAL_SPS);
-  bs_write_sps (&bs, seq_param, encoder->profile, &hrd_params);
+
+  /* Set High profile for encoding the MVC base view. Otherwise, some
+     traditional decoder cannot recognize MVC profile streams with
+     only the base view in there */
+  if (profile == GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH ||
+      profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH)
+    profile = GST_VAAPI_PROFILE_H264_HIGH;
+
+  bs_write_sps (&bs, seq_param, profile, &hrd_params);
+
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
   data = GST_BIT_WRITER_DATA (&bs);
@@ -1094,6 +1114,56 @@ add_packed_sequence_header (GstVaapiEncoderH264 * encoder,
 
   /* store sps data */
   _check_sps_pps_status (encoder, data + 4, data_bit_size / 8 - 4);
+  gst_bit_writer_clear (&bs, TRUE);
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write SPS NAL unit");
+    gst_bit_writer_clear (&bs, TRUE);
+    return FALSE;
+  }
+}
+
+static gboolean
+add_packed_sequence_header_mvc (GstVaapiEncoderH264 * encoder,
+    GstVaapiEncPicture * picture, GstVaapiEncSequence * sequence)
+{
+  GstVaapiEncPackedHeader *packed_seq;
+  GstBitWriter bs;
+  VAEncPackedHeaderParameterBuffer packed_header_param_buffer = { 0 };
+  VAEncSequenceParameterBufferH264_MVC *mvc_seq_param = sequence->param;
+  VAEncMiscParameterHRD hrd_params;
+  guint32 data_bit_size;
+  guint8 *data;
+
+  fill_hrd_params (encoder, &hrd_params);
+
+  /* non-base layer, pack one subset sps */
+  gst_bit_writer_init (&bs, 128 * 8);
+  WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
+  bs_write_nal_header (&bs,
+      GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH,
+      GST_VAAPI_ENCODER_H264_NAL_SUBSET_SPS);
+
+  bs_write_subset_sps (&bs, mvc_seq_param, encoder->profile, &hrd_params);
+
+  g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
+  data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
+  data = GST_BIT_WRITER_DATA (&bs);
+
+  packed_header_param_buffer.type = VAEncPackedHeaderSequence;
+  packed_header_param_buffer.bit_length = data_bit_size;
+  packed_header_param_buffer.has_emulation_bytes = 0;
+
+  packed_seq = gst_vaapi_enc_packed_header_new (GST_VAAPI_ENCODER (encoder),
+      &packed_header_param_buffer, sizeof (packed_header_param_buffer),
+      data, (data_bit_size + 7) / 8);
+  g_assert (packed_seq);
+
+  gst_vaapi_enc_picture_add_packed_header (picture, packed_seq);
+  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & packed_seq, NULL);
   gst_bit_writer_clear (&bs, TRUE);
   return TRUE;
 
@@ -1266,7 +1336,7 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
       &encoder->ref_pools[encoder->view_idx];
 
   memset (seq_param, 0, sizeof (VAEncSequenceParameterBufferH264));
-  seq_param->seq_parameter_set_id = 0;
+  seq_param->seq_parameter_set_id = encoder->view_idx;
   seq_param->level_idc = encoder->level_idc;
   seq_param->intra_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
   seq_param->ip_period = 1 + encoder->num_bframes;
@@ -1342,6 +1412,125 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
   return TRUE;
 }
 
+/* Free MVC sequence parameters used for encoding */
+static void
+free_sequence_mvc (GstVaapiEncSequence * sequence)
+{
+  guint i, j;
+  VAEncSequenceParameterBufferH264_MVC *mvc_seq = sequence->param;
+
+  if (mvc_seq->view_list) {
+    g_free (mvc_seq->view_list);
+    mvc_seq->view_list = NULL;
+  }
+
+  if (mvc_seq->level_value_list) {
+    for (i = 0; i <= mvc_seq->num_level_values_signalled_minus1; i++) {
+      struct H264SPSExtMVCLevelValue *level_value =
+          &(mvc_seq->level_value_list[i]);
+      for (j = 0; j < level_value->num_applicable_ops_minus1 + 1; j++) {
+        struct H264SPSExtMVCLevelValueOps *level_value_ops =
+            &(level_value->level_value_ops_list[j]);
+        if (level_value_ops->target_view_id_list) {
+          g_free (level_value_ops->target_view_id_list);
+          level_value_ops->target_view_id_list = NULL;
+        }
+      }
+
+      g_free (level_value->level_value_ops_list);
+      level_value->level_value_ops_list = NULL;
+    }
+
+    g_free (mvc_seq->level_value_list);
+    mvc_seq->level_value_list = NULL;
+  }
+}
+
+/* Fills in VA sequence parameter buffer for MVC encoding */
+static gboolean
+fill_sequence_mvc (GstVaapiEncoderH264 * encoder,
+    GstVaapiEncSequence * sequence)
+{
+  guint i, j, k;
+  VAEncSequenceParameterBufferH264_MVC *mvc_seq = sequence->param;
+  guint16 num_views_minus1, num_level_values_signalled_minus1;
+  struct H264SPSExtMVCViewInfo *view = NULL;
+  struct H264SPSExtMVCLevelValue *level_value = NULL;
+  struct H264SPSExtMVCLevelValueOps *level_value_ops = NULL;
+
+  memset (mvc_seq, 0, sizeof (VAEncSequenceParameterBufferH264_MVC));
+
+  if (!fill_sequence (encoder, sequence))
+    return FALSE;
+
+  num_views_minus1 = encoder->num_views - 1;
+  g_assert (num_views_minus1 < 1024);
+  mvc_seq->num_views_minus1 = num_views_minus1;
+
+  if (!mvc_seq->view_list)
+    mvc_seq->view_list =
+        g_new0 (struct H264SPSExtMVCViewInfo, num_views_minus1 + 1);
+
+  for (i = 0; i <= num_views_minus1; i++) {
+    view = &(mvc_seq->view_list[i]);
+    view->view_id = i;
+
+    view->num_anchor_refs_l0 = 15;
+    for (j = 0; j < view->num_anchor_refs_l0; j++)
+      view->anchor_ref_l0[j] = 0;
+
+    view->num_anchor_refs_l1 = 15;
+    for (j = 0; j < view->num_anchor_refs_l1; j++)
+      view->anchor_ref_l1[j] = 0;
+
+    view->num_non_anchor_refs_l0 = 15;
+    for (j = 0; j < view->num_non_anchor_refs_l0; j++)
+      view->non_anchor_ref_l0[j] = 0;
+
+    view->num_non_anchor_refs_l1 = 15;
+    for (j = 0; j < view->num_non_anchor_refs_l1; j++)
+      view->non_anchor_ref_l1[j] = 0;
+  }
+
+  num_level_values_signalled_minus1 = 0;
+  g_assert (num_level_values_signalled_minus1 < 64);
+  mvc_seq->num_level_values_signalled_minus1 =
+      num_level_values_signalled_minus1;
+
+  if (!mvc_seq->level_value_list)
+    mvc_seq->level_value_list = g_new0 (struct H264SPSExtMVCLevelValue,
+        num_level_values_signalled_minus1 + 1);
+
+  for (i = 0; i <= num_level_values_signalled_minus1; i++) {
+    level_value = &(mvc_seq->level_value_list[i]);
+
+    guint16 num_applicable_ops_minus1 = 0;
+    g_assert (num_applicable_ops_minus1 < 1024);
+    level_value->num_applicable_ops_minus1 = num_applicable_ops_minus1;
+    level_value->level_idc = encoder->level;
+
+    if (!level_value->level_value_ops_list)
+      level_value->level_value_ops_list =
+          g_new0 (struct H264SPSExtMVCLevelValueOps,
+          num_applicable_ops_minus1 + 1);
+    for (j = 0; j <= num_applicable_ops_minus1; j++) {
+      level_value_ops = &(level_value->level_value_ops_list[j]);
+
+      guint16 num_target_views_minus1 = 1;
+      level_value_ops->num_target_views_minus1 = num_target_views_minus1;
+      level_value_ops->num_views_minus1 = num_views_minus1;
+
+      if (!level_value_ops->target_view_id_list)
+        level_value_ops->target_view_id_list =
+            g_new0 (guint16, num_views_minus1 + 1);
+
+      for (k = 0; k <= num_target_views_minus1; k++)
+        level_value_ops->target_view_id_list[k] = k;
+    }
+  }
+  return TRUE;
+}
+
 /* Fills in VA picture parameter buffer */
 static gboolean
 fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
@@ -1378,8 +1567,8 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
   }
   pic_param->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
 
-  pic_param->pic_parameter_set_id = 0;
-  pic_param->seq_parameter_set_id = 0;
+  pic_param->pic_parameter_set_id = encoder->view_idx;
+  pic_param->seq_parameter_set_id = encoder->view_idx;
   pic_param->last_picture = 0;  /* means last encoding picture */
   pic_param->frame_num = picture->frame_num;
   pic_param->pic_init_qp = encoder->init_qp;
@@ -1407,6 +1596,25 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
   /* bottom_field_pic_order_in_frame_present_flag */
   pic_param->pic_fields.bits.pic_order_present_flag = FALSE;
   pic_param->pic_fields.bits.pic_scaling_matrix_present_flag = FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+fill_mvc_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
+    GstVaapiCodedBuffer * codedbuf, GstVaapiSurfaceProxy * surface)
+{
+  VAEncPictureParameterBufferH264_MVC *const mvc_pic = picture->param;
+
+  if (!fill_picture (encoder, picture, codedbuf, surface))
+    return FALSE;
+
+  mvc_pic->view_id = encoder->view_idx;
+  mvc_pic->inter_view_flag = 0;
+  if (picture->type == GST_VAAPI_PICTURE_TYPE_I)
+    mvc_pic->anchor_pic_flag = 1;
+  else
+    mvc_pic->anchor_pic_flag = 0;
 
   return TRUE;
 }
@@ -1448,7 +1656,7 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     slice_param->macroblock_info = VA_INVALID_ID;
     slice_param->slice_type = h264_get_slice_type (picture->type);
     g_assert (slice_param->slice_type != -1);
-    slice_param->pic_parameter_set_id = 0;
+    slice_param->pic_parameter_set_id = encoder->view_idx;
     slice_param->idr_pic_id = encoder->idr_num;
     slice_param->pic_order_cnt_lsb = picture->poc;
 
@@ -1542,22 +1750,38 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
 static gboolean
 ensure_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 {
-  GstVaapiEncSequence *sequence;
+  GstVaapiEncSequence *sequence = NULL;
 
   // Submit an SPS header before every new I-frame
   if (picture->type != GST_VAAPI_PICTURE_TYPE_I)
     return TRUE;
 
-  sequence = GST_VAAPI_ENC_SEQUENCE_NEW (H264, encoder);
-  if (!sequence || !fill_sequence (encoder, sequence))
-    goto error_create_seq_param;
+  /* add subset sps for non-base view and sps for base view */
+  if (encoder->is_mvc && encoder->view_idx) {
+    sequence = GST_VAAPI_ENC_SEQUENCE_NEW (H264_MVC, encoder);
+    if (!sequence || !fill_sequence_mvc (encoder, sequence))
+      goto error_create_seq_param;
 
-  if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderH264_SPS)
-      && !add_packed_sequence_header (encoder, picture, sequence))
-    goto error_create_packed_seq_hdr;
+    if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderH264_SPS)
+        && !add_packed_sequence_header_mvc (encoder, picture, sequence))
+      goto error_create_packed_seq_hdr;
 
-  gst_vaapi_enc_picture_set_sequence (picture, sequence);
-  gst_vaapi_codec_object_replace (&sequence, NULL);
+    free_sequence_mvc (sequence);
+
+  } else {
+    sequence = GST_VAAPI_ENC_SEQUENCE_NEW (H264, encoder);
+    if (!sequence || !fill_sequence (encoder, sequence))
+      goto error_create_seq_param;
+
+    if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderH264_SPS)
+        && !add_packed_sequence_header (encoder, picture, sequence))
+      goto error_create_packed_seq_hdr;
+  }
+
+  if (sequence) {
+    gst_vaapi_enc_picture_set_sequence (picture, sequence);
+    gst_vaapi_codec_object_replace (&sequence, NULL);
+  }
   return TRUE;
 
   /* ERRORS */
@@ -1619,8 +1843,14 @@ ensure_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
 {
   GstVaapiCodedBuffer *const codedbuf =
       GST_VAAPI_CODED_BUFFER_PROXY_BUFFER (codedbuf_proxy);
+  gboolean res = FALSE;
 
-  if (!fill_picture (encoder, picture, codedbuf, surface))
+  if (encoder->is_mvc)
+    res = fill_mvc_picture (encoder, picture, codedbuf, surface);
+  else
+    res = fill_picture (encoder, picture, codedbuf, surface);
+
+  if (!res)
     return FALSE;
 
   if (picture->type == GST_VAAPI_PICTURE_TYPE_I &&
@@ -1787,6 +2017,7 @@ reset_properties (GstVaapiEncoderH264 * encoder)
   encoder->max_pic_order_cnt = (1 << encoder->log2_max_pic_order_cnt);
   encoder->idr_num = 0;
 
+  encoder->is_mvc = encoder->num_views > 1;
   for (i = 0; i < encoder->num_views; i++) {
     GstVaapiH264ViewRefPool *const ref_pool = &encoder->ref_pools[i];
     ref_pool->max_reflist0_count = 1;
@@ -1958,12 +2189,20 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
 {
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264_CAST (base_encoder);
-  GstVaapiH264ViewReorderPool *reorder_pool =
-      &encoder->reorder_pools[encoder->view_idx];
+  GstVaapiH264ViewReorderPool *reorder_pool = NULL;
   GstVaapiEncPicture *picture;
   gboolean is_idr = FALSE;
 
   *output = NULL;
+
+  /* encoding views alternatively for MVC */
+  if (encoder->is_mvc) {
+    if (frame)
+      encoder->view_idx = frame->system_frame_number % MAX_NUM_VIEWS;
+    else
+      encoder->view_idx = (encoder->view_idx + 1) % MAX_NUM_VIEWS;
+  }
+  reorder_pool = &encoder->reorder_pools[encoder->view_idx];
 
   if (!frame) {
     if (reorder_pool->reorder_state != GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES)
@@ -1983,7 +2222,11 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
   }
 
   /* new frame coming */
-  picture = GST_VAAPI_ENC_PICTURE_NEW (H264, encoder, frame);
+  if (encoder->is_mvc)
+    picture = GST_VAAPI_ENC_PICTURE_NEW (H264_MVC, encoder, frame);
+  else
+    picture = GST_VAAPI_ENC_PICTURE_NEW (H264, encoder, frame);
+
   if (!picture) {
     GST_WARNING ("create H264 picture failed, frame timestamp:%"
         GST_TIME_FORMAT, GST_TIME_ARGS (frame->pts));
@@ -2077,7 +2320,8 @@ set_context_info (GstVaapiEncoder * base_encoder)
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
 
   base_encoder->num_ref_frames =
-      (encoder->num_bframes ? 2 : 1) + DEFAULT_SURFACES_COUNT;
+      ((encoder->num_bframes ? 2 : 1) + DEFAULT_SURFACES_COUNT)
+      * encoder->view_idx;
 
   /* Only YUV 4:2:0 formats are supported for now. This means that we
      have a limit of 3200 bits per macroblock. */
@@ -2219,6 +2463,9 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_CPB_LENGTH:
       encoder->cpb_length = g_value_get_uint (value);
       break;
+    case GST_VAAPI_ENCODER_H264_PROP_NUM_VIEWS:
+      encoder->num_views = g_value_get_uint (value);
+      break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -2358,6 +2605,18 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           "CPB Length", "Length of the CPB buffer in milliseconds",
           1, 10000, DEFAULT_CPB_LENGTH,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:num-views:
+   *
+   * The number of views for MVC encoding .
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_NUM_VIEWS,
+      g_param_spec_uint ("num-views",
+          "Number of Views",
+          "Number of Views for MVC encoding",
+          1, MAX_NUM_VIEWS, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }

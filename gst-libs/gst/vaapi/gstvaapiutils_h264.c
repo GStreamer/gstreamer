@@ -43,8 +43,8 @@ static const struct map gst_vaapi_h264_profile_map[] = {
   { GST_VAAPI_PROFILE_H264_HIGH_444,             "high-4:4:4"           },
   { GST_VAAPI_PROFILE_H264_SCALABLE_BASELINE,    "scalable-baseline"    },
   { GST_VAAPI_PROFILE_H264_SCALABLE_HIGH,        "scalable-high"        },
-  { GST_VAAPI_PROFILE_H264_STEREO_HIGH,          "stereo-high"          },
   { GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH,       "multiview-high"       },
+  { GST_VAAPI_PROFILE_H264_STEREO_HIGH,          "stereo-high"          },
   { 0, NULL }
 /* *INDENT-ON* */
 };

@@ -63,7 +63,7 @@ static const char gst_vaapiencode_h264_sink_caps_str[] =
 /* *INDENT-OFF* */
 static const char gst_vaapiencode_h264_src_caps_str[] =
   GST_CODEC_CAPS ", "
-  "profile = (string) { constrained-baseline, baseline, main, high }";
+  "profile = (string) { constrained-baseline, baseline, main, high, multiview-high, stereo-high }";
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
