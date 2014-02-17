@@ -44,10 +44,10 @@
  * SECTION:gstrtspconnection
  * @short_description: manage RTSP connections
  * @see_also: gstrtspurl
- *  
+ *
  * This object manages the RTSP connection to the server. It provides function
  * to receive and send bytes and messages.
- *  
+ *
  * Last reviewed on 2007-07-24 (0.10.14)
  */
 
@@ -197,7 +197,7 @@ build_reset (GstRTSPBuilder * builder)
 
 /**
  * gst_rtsp_connection_create:
- * @url: a #GstRTSPUrl 
+ * @url: a #GstRTSPUrl
  * @conn: (out) (transfer full): storage for a #GstRTSPConnection
  *
  * Create a newly allocated #GstRTSPConnection from @url and store it in @conn.
@@ -661,7 +661,7 @@ remote_address_failed:
 
 /**
  * gst_rtsp_connection_connect:
- * @conn: a #GstRTSPConnection 
+ * @conn: a #GstRTSPConnection
  * @timeout: a #GTimeVal timeout
  *
  * Attempt to connect to the url of @conn made with
@@ -1214,7 +1214,7 @@ read_line (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size,
  * Attempt to write @size bytes of @data to the connected @conn, blocking up to
  * the specified @timeout. @timeout can be #NULL, in which case this function
  * might block forever.
- * 
+ *
  * This function can be cancelled with gst_rtsp_connection_flush().
  *
  * Returns: #GST_RTSP_OK on success.
@@ -1354,7 +1354,7 @@ message_to_string (GstRTSPConnection * conn, GstRTSPMessage * message)
  * Attempt to send @message to the connected @conn, blocking up to
  * the specified @timeout. @timeout can be #NULL, in which case this function
  * might block forever.
- * 
+ *
  * This function can be cancelled with gst_rtsp_connection_flush().
  *
  * Returns: #GST_RTSP_OK on success.
@@ -2073,7 +2073,7 @@ cleanup:
  *
  * Close the connected @conn. After this call, the connection is in the same
  * state as when it was first created.
- * 
+ *
  * Returns: #GST_RTSP_OK on success.
  */
 GstRTSPResult
@@ -2131,7 +2131,7 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
  * @conn: a #GstRTSPConnection
  *
  * Close and free @conn.
- * 
+ *
  * Returns: #GST_RTSP_OK on success.
  */
 GstRTSPResult
@@ -2160,7 +2160,7 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
  * gst_rtsp_connection_poll:
  * @conn: a #GstRTSPConnection
  * @events: a bitmask of #GstRTSPEvent flags to check
- * @revents: location for result flags 
+ * @revents: location for result flags
  * @timeout: a timeout
  *
  * Wait up to the specified @timeout for the connection to become available for
@@ -2171,7 +2171,7 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
  * @timeout can be #NULL, in which case this function might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
- * 
+ *
  * Returns: #GST_RTSP_OK on success.
  */
 GstRTSPResult
@@ -2318,7 +2318,7 @@ gst_rtsp_connection_reset_timeout (GstRTSPConnection * conn)
  * Start or stop the flushing action on @conn. When flushing, all current
  * and future actions on @conn will return #GST_RTSP_EINTR until the connection
  * is set to non-flushing mode again.
- * 
+ *
  * Returns: #GST_RTSP_OK.
  */
 GstRTSPResult
@@ -2341,7 +2341,7 @@ gst_rtsp_connection_flush (GstRTSPConnection * conn, gboolean flush)
  * @port: the proxy port
  *
  * Set the proxy host and port.
- * 
+ *
  * Returns: #GST_RTSP_OK.
  */
 GstRTSPResult
@@ -2366,7 +2366,7 @@ gst_rtsp_connection_set_proxy (GstRTSPConnection * conn,
  *
  * Configure @conn for authentication mode @method with @user and @pass as the
  * user and password respectively.
- * 
+ *
  * Returns: #GST_RTSP_OK.
  */
 GstRTSPResult
@@ -2690,7 +2690,7 @@ gst_rtsp_connection_set_tunneled (GstRTSPConnection * conn, gboolean tunneled)
  * gst_rtsp_connection_is_tunneled:
  * @conn: a #GstRTSPConnection
  *
- * Get the tunneling state of the connection. 
+ * Get the tunneling state of the connection.
  *
  * Returns: if @conn is using HTTP tunneling.
  */
@@ -2706,7 +2706,7 @@ gst_rtsp_connection_is_tunneled (const GstRTSPConnection * conn)
  * gst_rtsp_connection_get_tunnelid:
  * @conn: a #GstRTSPConnection
  *
- * Get the tunnel session id the connection. 
+ * Get the tunnel session id the connection.
  *
  * Returns: returns a non-empty string if @conn is being tunneled over HTTP.
  */
@@ -3148,7 +3148,7 @@ static GSourceFuncs gst_rtsp_source_funcs = {
  * called with @user_data when activity happened on the watch.
  *
  * The new watch is usually created so that it can be attached to a
- * maincontext with gst_rtsp_watch_attach(). 
+ * maincontext with gst_rtsp_watch_attach().
  *
  * @conn must exist for the entire lifetime of the watch.
  *
@@ -3227,7 +3227,7 @@ gst_rtsp_watch_reset (GstRTSPWatch * watch)
  *
  * Adds a #GstRTSPWatch to a context so that it will be executed within that context.
  *
- * Returns: the ID (greater than 0) for the watch within the GMainContext. 
+ * Returns: the ID (greater than 0) for the watch within the GMainContext.
  */
 guint
 gst_rtsp_watch_attach (GstRTSPWatch * watch, GMainContext * context)
