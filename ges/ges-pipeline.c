@@ -35,7 +35,7 @@
 #include "ges-pipeline.h"
 #include "ges-screenshot.h"
 
-#define DEFAULT_TIMELINE_MODE  TIMELINE_MODE_PREVIEW
+#define DEFAULT_TIMELINE_MODE  GES_PIPELINE_MODE_PREVIEW
 
 /* Structure corresponding to a timeline - sink link */
 
@@ -113,8 +113,8 @@ _overlay_set_render_rectangle (GstVideoOverlay * overlay, gint x,
 {
   GESPipeline *pipeline = GES_PIPELINE (overlay);
 
-  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (pipeline->priv->
-          playsink), x, y, width, height);
+  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (pipeline->
+          priv->playsink), x, y, width, height);
 }
 
 static void
@@ -122,8 +122,8 @@ _overlay_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
 {
   GESPipeline *pipeline = GES_PIPELINE (overlay);
 
-  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (pipeline->
-          priv->playsink), handle);
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (pipeline->priv->
+          playsink), handle);
 }
 
 static void
@@ -200,7 +200,7 @@ ges_pipeline_dispose (GObject * object)
   GESPipeline *self = GES_PIPELINE (object);
 
   if (self->priv->playsink) {
-    if (self->priv->mode & (TIMELINE_MODE_PREVIEW))
+    if (self->priv->mode & (GES_PIPELINE_MODE_PREVIEW))
       gst_bin_remove (GST_BIN (object), self->priv->playsink);
     else
       gst_object_unref (self->priv->playsink);
@@ -208,7 +208,8 @@ ges_pipeline_dispose (GObject * object)
   }
 
   if (self->priv->encodebin) {
-    if (self->priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+    if (self->priv->mode & (GES_PIPELINE_MODE_RENDER |
+            GES_PIPELINE_MODE_SMART_RENDER))
       gst_bin_remove (GST_BIN (object), self->priv->encodebin);
     else
       gst_object_unref (self->priv->encodebin);
@@ -367,7 +368,7 @@ ges_pipeline_update_caps (GESPipeline * self)
       GstEncodingProfile *prof = (GstEncodingProfile *) lstream->data;
 
       if (TRACK_COMPATIBLE_PROFILE (track->type, prof)) {
-        if (self->priv->mode == TIMELINE_MODE_SMART_RENDER) {
+        if (self->priv->mode == GES_PIPELINE_MODE_SMART_RENDER) {
           GstCaps *ocaps, *rcaps;
 
           GST_DEBUG ("Smart Render mode, setting input caps");
@@ -425,8 +426,8 @@ ges_pipeline_change_state (GstElement * element, GstStateChange transition)
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->priv->
-          mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      if (self->priv->mode & (GES_PIPELINE_MODE_RENDER |
+              GES_PIPELINE_MODE_SMART_RENDER))
         GST_DEBUG ("rendering => Updating pipeline caps");
       if (!ges_pipeline_update_caps (self)) {
         GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
@@ -572,15 +573,15 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESPipeline * self)
 
   /* Don't connect track if it's not going to be used */
   if (track->type == GES_TRACK_TYPE_VIDEO &&
-      !(self->priv->mode & TIMELINE_MODE_PREVIEW_VIDEO) &&
-      !(self->priv->mode & TIMELINE_MODE_RENDER) &&
-      !(self->priv->mode & TIMELINE_MODE_SMART_RENDER)) {
+      !(self->priv->mode & GES_PIPELINE_MODE_PREVIEW_VIDEO) &&
+      !(self->priv->mode & GES_PIPELINE_MODE_RENDER) &&
+      !(self->priv->mode & GES_PIPELINE_MODE_SMART_RENDER)) {
     GST_DEBUG_OBJECT (self, "Video track... but we don't need it. Not linking");
   }
   if (track->type == GES_TRACK_TYPE_AUDIO &&
-      !(self->priv->mode & TIMELINE_MODE_PREVIEW_AUDIO) &&
-      !(self->priv->mode & TIMELINE_MODE_RENDER) &&
-      !(self->priv->mode & TIMELINE_MODE_SMART_RENDER)) {
+      !(self->priv->mode & GES_PIPELINE_MODE_PREVIEW_AUDIO) &&
+      !(self->priv->mode & GES_PIPELINE_MODE_RENDER) &&
+      !(self->priv->mode & GES_PIPELINE_MODE_SMART_RENDER)) {
     GST_DEBUG_OBJECT (self, "Audio track... but we don't need it. Not linking");
   }
 
@@ -600,7 +601,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESPipeline * self)
   gst_object_unref (sinkpad);
 
   /* Connect playsink */
-  if (self->priv->mode & TIMELINE_MODE_PREVIEW) {
+  if (self->priv->mode & GES_PIPELINE_MODE_PREVIEW) {
     const gchar *sinkpad_name;
     GstPad *tmppad;
 
@@ -653,7 +654,8 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESPipeline * self)
   }
 
   /* Connect to encodebin */
-  if (self->priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) {
+  if (self->priv->
+      mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER)) {
     GstPad *tmppad;
     GST_DEBUG_OBJECT (self, "Connecting to encodebin");
 
@@ -837,7 +839,7 @@ ges_pipeline_set_timeline (GESPipeline * pipeline, GESTimeline * timeline)
  * safely free those values afterwards.
  *
  * This method must be called before setting the pipeline mode to
- * #TIMELINE_MODE_RENDER
+ * #GES_PIPELINE_MODE_RENDER
  *
  * Returns: %TRUE if the settings were aknowledged properly, else %FALSE
  */
@@ -871,7 +873,7 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
   if (pipeline->priv->profile)
     gst_encoding_profile_unref (pipeline->priv->profile);
   g_object_set (pipeline->priv->encodebin, "avoid-reencoding",
-      !(!(pipeline->priv->mode & TIMELINE_MODE_SMART_RENDER)), NULL);
+      !(!(pipeline->priv->mode & GES_PIPELINE_MODE_SMART_RENDER)), NULL);
   g_object_set (pipeline->priv->encodebin, "profile", profile, NULL);
   g_object_get (pipeline->priv->encodebin, "profile", &set_profile, NULL);
 
@@ -906,7 +908,7 @@ ges_pipeline_get_mode (GESPipeline * pipeline)
  * @mode: the #GESPipelineFlags to use
  *
  * switches the @pipeline to the specified @mode. The default mode when
- * creating a #GESPipeline is #TIMELINE_MODE_PREVIEW.
+ * creating a #GESPipeline is #GES_PIPELINE_MODE_PREVIEW.
  *
  * Note: The @pipeline will be set to #GST_STATE_NULL during this call due to
  * the internal changes that happen. The caller will therefore have to 
@@ -934,16 +936,16 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
   gst_element_set_state (GST_ELEMENT_CAST (pipeline), GST_STATE_NULL);
 
   /* remove no-longer needed components */
-  if (pipeline->priv->mode & TIMELINE_MODE_PREVIEW &&
-      !(mode & TIMELINE_MODE_PREVIEW)) {
+  if (pipeline->priv->mode & GES_PIPELINE_MODE_PREVIEW &&
+      !(mode & GES_PIPELINE_MODE_PREVIEW)) {
     /* Disable playsink */
     GST_DEBUG ("Disabling playsink");
     gst_object_ref (pipeline->priv->playsink);
     gst_bin_remove (GST_BIN_CAST (pipeline), pipeline->priv->playsink);
   }
   if ((pipeline->priv->mode &
-          (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) &&
-      !(mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))) {
+          (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER)) &&
+      !(mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER))) {
     GList *tmp;
     GstCaps *caps;
 
@@ -970,8 +972,8 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
   }
 
   /* Add new elements */
-  if (!(pipeline->priv->mode & TIMELINE_MODE_PREVIEW) &&
-      (mode & TIMELINE_MODE_PREVIEW)) {
+  if (!(pipeline->priv->mode & GES_PIPELINE_MODE_PREVIEW) &&
+      (mode & GES_PIPELINE_MODE_PREVIEW)) {
     /* Add playsink */
     GST_DEBUG ("Adding playsink");
 
@@ -981,8 +983,8 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
     }
   }
   if (!(pipeline->priv->mode &
-          (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) &&
-      (mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))) {
+          (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER)) &&
+      (mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER))) {
     /* Adding render bin */
     GST_DEBUG ("Adding render bin");
 
@@ -999,7 +1001,7 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
       return FALSE;
     }
     g_object_set (pipeline->priv->encodebin, "avoid-reencoding",
-        !(!(mode & TIMELINE_MODE_SMART_RENDER)), NULL);
+        !(!(mode & GES_PIPELINE_MODE_SMART_RENDER)), NULL);
 
     gst_element_link_pads_full (pipeline->priv->encodebin, "src",
         pipeline->priv->urisink, "sink", GST_PAD_LINK_CHECK_NOTHING);
@@ -1149,7 +1151,7 @@ ges_pipeline_get_thumbnail_rgb24 (GESPipeline * self, gint width, gint height)
  * @self: a #GESPipeline
  *
  * Obtains a pointer to playsink's video sink element that is used for
- * displaying video when the #GESPipeline is in %TIMELINE_MODE_PREVIEW
+ * displaying video when the #GESPipeline is in %GES_PIPELINE_MODE_PREVIEW
  *
  * The caller is responsible for unreffing the returned element with
  * #gst_object_unref.
@@ -1174,7 +1176,7 @@ ges_pipeline_preview_get_video_sink (GESPipeline * self)
  * @sink: (transfer none): a video sink #GstElement
  *
  * Sets playsink's video sink element that is used for displaying video when
- * the #GESPipeline is in %TIMELINE_MODE_PREVIEW
+ * the #GESPipeline is in %GES_PIPELINE_MODE_PREVIEW
  */
 void
 ges_pipeline_preview_set_video_sink (GESPipeline * self, GstElement * sink)
@@ -1189,7 +1191,7 @@ ges_pipeline_preview_set_video_sink (GESPipeline * self, GstElement * sink)
  * @self: a #GESPipeline
  *
  * Obtains a pointer to playsink's audio sink element that is used for
- * displaying audio when the #GESPipeline is in %TIMELINE_MODE_PREVIEW
+ * displaying audio when the #GESPipeline is in %GES_PIPELINE_MODE_PREVIEW
  *
  * The caller is responsible for unreffing the returned element with
  * #gst_object_unref.
@@ -1214,7 +1216,7 @@ ges_pipeline_preview_get_audio_sink (GESPipeline * self)
  * @sink: (transfer none): a audio sink #GstElement
  *
  * Sets playsink's audio sink element that is used for displaying audio when
- * the #GESPipeline is in %TIMELINE_MODE_PREVIEW
+ * the #GESPipeline is in %GES_PIPELINE_MODE_PREVIEW
  */
 void
 ges_pipeline_preview_set_audio_sink (GESPipeline * self, GstElement * sink)

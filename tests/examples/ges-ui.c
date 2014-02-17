@@ -1143,7 +1143,7 @@ app_launch_project (App * app, gchar * uri)
   mainloop = g_main_loop_new (NULL, FALSE);
 
   ges_pipeline_set_timeline (pipeline, timeline);
-  ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
+  ges_pipeline_set_mode (pipeline, GES_PIPELINE_MODE_PREVIEW_VIDEO);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (project_bus_message_cb),

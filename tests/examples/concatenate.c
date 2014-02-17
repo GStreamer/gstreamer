@@ -56,7 +56,7 @@ asset_loaded_cb (GObject * source_object, GAsyncResult * res,
     GstEncodingProfile *profile = make_profile_from_info (info);
     ges_pipeline_set_render_settings (pipeline, output_uri, profile);
     /* We want the pipeline to render (without any preview) */
-    if (!ges_pipeline_set_mode (pipeline, TIMELINE_MODE_SMART_RENDER)) {
+    if (!ges_pipeline_set_mode (pipeline, GES_PIPELINE_MODE_SMART_RENDER)) {
       g_main_loop_quit (mainloop);
       return;
     }

@@ -97,7 +97,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
 
   pipeline = ges_pipeline_new ();
 
-  ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
+  ges_pipeline_set_mode (pipeline, GES_PIPELINE_MODE_PREVIEW_VIDEO);
 
   timeline = ges_timeline_new ();
   ges_pipeline_set_timeline (pipeline, timeline);

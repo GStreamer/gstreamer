@@ -150,7 +150,7 @@ main (int argc, gchar ** argv)
     return -1;
 
   /* We want the pipeline to render (without any preview) */
-  if (!ges_pipeline_set_mode (pipeline, TIMELINE_MODE_SMART_RENDER))
+  if (!ges_pipeline_set_mode (pipeline, GES_PIPELINE_MODE_SMART_RENDER))
     return -1;
 
 

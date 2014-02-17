@@ -732,7 +732,8 @@ main (int argc, gchar ** argv)
 
     if (!prof || !ges_pipeline_set_render_settings (pipeline, outputuri, prof)
         || !ges_pipeline_set_mode (pipeline,
-            smartrender ? TIMELINE_MODE_SMART_RENDER : TIMELINE_MODE_RENDER)) {
+            smartrender ? GES_PIPELINE_MODE_SMART_RENDER :
+            GES_PIPELINE_MODE_RENDER)) {
       g_free (outputuri);
       exit (1);
     }
@@ -740,7 +741,7 @@ main (int argc, gchar ** argv)
 
     gst_encoding_profile_unref (prof);
   } else {
-    ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
+    ges_pipeline_set_mode (pipeline, GES_PIPELINE_MODE_PREVIEW);
   }
 
   if (verbose) {

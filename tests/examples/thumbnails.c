@@ -164,7 +164,7 @@ main (int argc, gchar ** argv)
   if (!pipeline)
     exit (-1);
 
-  ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
+  ges_pipeline_set_mode (pipeline, GES_PIPELINE_MODE_PREVIEW);
 
   /* Play the pipeline */
   mainloop = g_main_loop_new (NULL, FALSE);

@@ -333,7 +333,7 @@ check_timeline (GESTimeline * timeline)
 
     profile = create_audio_video_profile (current_profile);
     ges_pipeline_set_render_settings (pipeline, render_uri, profile);
-    ges_pipeline_set_mode (pipeline, TIMELINE_MODE_RENDER);
+    ges_pipeline_set_mode (pipeline, GES_PIPELINE_MODE_RENDER);
 
 
     gst_object_unref (profile);
