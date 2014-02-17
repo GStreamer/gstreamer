@@ -36,6 +36,9 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+/* Define the maximum number of views supported */
+#define MAX_NUM_VIEWS 2
+
 /* Define the maximum IDR period */
 #define MAX_IDR_PERIOD 512
 
@@ -96,6 +99,23 @@ typedef enum
   GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES = 1,
   GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES = 2
 } GstVaapiEncH264ReorderState;
+
+typedef struct _GstVaapiH264ViewRefPool
+{
+  GQueue ref_list;
+  guint max_ref_frames;
+  guint max_reflist0_count;
+  guint max_reflist1_count;
+} GstVaapiH264ViewRefPool;
+
+typedef struct _GstVaapiH264ViewReorderPool
+{
+  GQueue reorder_frame_list;
+  guint reorder_state;
+  guint frame_index;
+  guint cur_frame_num;
+  guint cur_present_index;
+} GstVaapiH264ViewReorderPool;
 
 static inline gboolean
 _poc_greater_than (guint poc1, guint poc2, guint max_poc)
@@ -680,21 +700,7 @@ struct _GstVaapiEncoderH264
   guint32 mb_height;
   gboolean use_cabac;
   gboolean use_dct8x8;
-
-  /* re-ordering */
-  GQueue reorder_frame_list;
-  guint reorder_state;
-  guint frame_index;
-  guint cur_frame_num;
-  guint cur_present_index;
   GstClockTime cts_offset;
-
-  /* reference list */
-  GQueue ref_list;
-  guint max_ref_frames;
-  /* max reflist count */
-  guint max_reflist0_count;
-  guint max_reflist1_count;
 
   /* frame, poc */
   guint32 max_frame_num;
@@ -709,6 +715,13 @@ struct _GstVaapiEncoderH264
   guint bitrate_bits;           // bitrate (bits)
   guint cpb_length;             // length of CPB buffer (ms)
   guint cpb_length_bits;        // length of CPB buffer (bits)
+
+  /* MVC */
+  gboolean is_mvc;
+  guint32 view_idx;
+  guint32 num_views;
+  GstVaapiH264ViewRefPool ref_pools[MAX_NUM_VIEWS];
+  GstVaapiH264ViewReorderPool reorder_pools[MAX_NUM_VIEWS];
 };
 
 static inline void
@@ -954,38 +967,50 @@ ensure_tuning (GstVaapiEncoderH264 * encoder)
 static void
 reset_gop_start (GstVaapiEncoderH264 * encoder)
 {
+  GstVaapiH264ViewReorderPool *const reorder_pool =
+      &encoder->reorder_pools[encoder->view_idx];
+
+  reorder_pool->frame_index = 1;
+  reorder_pool->cur_frame_num = 0;
+  reorder_pool->cur_present_index = 0;
   ++encoder->idr_num;
-  encoder->frame_index = 1;
-  encoder->cur_frame_num = 0;
-  encoder->cur_present_index = 0;
 }
 
 /* Marks the supplied picture as a B-frame */
 static void
 set_b_frame (GstVaapiEncPicture * pic, GstVaapiEncoderH264 * encoder)
 {
+  GstVaapiH264ViewReorderPool *const reorder_pool =
+      &encoder->reorder_pools[encoder->view_idx];
+
   g_assert (pic && encoder);
   g_return_if_fail (pic->type == GST_VAAPI_PICTURE_TYPE_NONE);
   pic->type = GST_VAAPI_PICTURE_TYPE_B;
-  pic->frame_num = (encoder->cur_frame_num % encoder->max_frame_num);
+  pic->frame_num = (reorder_pool->cur_frame_num % encoder->max_frame_num);
 }
 
 /* Marks the supplied picture as a P-frame */
 static void
 set_p_frame (GstVaapiEncPicture * pic, GstVaapiEncoderH264 * encoder)
 {
+  GstVaapiH264ViewReorderPool *const reorder_pool =
+      &encoder->reorder_pools[encoder->view_idx];
+
   g_return_if_fail (pic->type == GST_VAAPI_PICTURE_TYPE_NONE);
   pic->type = GST_VAAPI_PICTURE_TYPE_P;
-  pic->frame_num = (encoder->cur_frame_num % encoder->max_frame_num);
+  pic->frame_num = (reorder_pool->cur_frame_num % encoder->max_frame_num);
 }
 
 /* Marks the supplied picture as an I-frame */
 static void
 set_i_frame (GstVaapiEncPicture * pic, GstVaapiEncoderH264 * encoder)
 {
+  GstVaapiH264ViewReorderPool *const reorder_pool =
+      &encoder->reorder_pools[encoder->view_idx];
+
   g_return_if_fail (pic->type == GST_VAAPI_PICTURE_TYPE_NONE);
   pic->type = GST_VAAPI_PICTURE_TYPE_I;
-  pic->frame_num = (encoder->cur_frame_num % encoder->max_frame_num);
+  pic->frame_num = (reorder_pool->cur_frame_num % encoder->max_frame_num);
 
   g_assert (pic->frame);
   GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (pic->frame);
@@ -1157,20 +1182,24 @@ reference_list_update (GstVaapiEncoderH264 * encoder,
     GstVaapiEncPicture * picture, GstVaapiSurfaceProxy * surface)
 {
   GstVaapiEncoderH264Ref *ref;
+  GstVaapiH264ViewRefPool *const ref_pool =
+      &encoder->ref_pools[encoder->view_idx];
 
   if (GST_VAAPI_PICTURE_TYPE_B == picture->type) {
     gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder), surface);
     return TRUE;
   }
   if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture)) {
-    while (!g_queue_is_empty (&encoder->ref_list))
-      reference_pic_free (encoder, g_queue_pop_head (&encoder->ref_list));
-  } else if (g_queue_get_length (&encoder->ref_list) >= encoder->max_ref_frames) {
-    reference_pic_free (encoder, g_queue_pop_head (&encoder->ref_list));
+    while (!g_queue_is_empty (&ref_pool->ref_list))
+      reference_pic_free (encoder, g_queue_pop_head (&ref_pool->ref_list));
+  } else if (g_queue_get_length (&ref_pool->ref_list) >=
+      ref_pool->max_ref_frames) {
+    reference_pic_free (encoder, g_queue_pop_head (&ref_pool->ref_list));
   }
   ref = reference_pic_create (encoder, picture, surface);
-  g_queue_push_tail (&encoder->ref_list, ref);
-  g_assert (g_queue_get_length (&encoder->ref_list) <= encoder->max_ref_frames);
+  g_queue_push_tail (&ref_pool->ref_list, ref);
+  g_assert (g_queue_get_length (&ref_pool->ref_list) <=
+      ref_pool->max_ref_frames);
   return TRUE;
 }
 
@@ -1182,6 +1211,8 @@ reference_list_init (GstVaapiEncoderH264 * encoder,
     GstVaapiEncoderH264Ref ** reflist_1, guint * reflist_1_count)
 {
   GstVaapiEncoderH264Ref *tmp;
+  GstVaapiH264ViewRefPool *const ref_pool =
+      &encoder->ref_pools[encoder->view_idx];
   GList *iter, *list_0_start = NULL, *list_1_start = NULL;
   guint max_pic_order_cnt = (1 << encoder->log2_max_pic_order_cnt);
   guint count;
@@ -1191,7 +1222,7 @@ reference_list_init (GstVaapiEncoderH264 * encoder,
   if (picture->type == GST_VAAPI_PICTURE_TYPE_I)
     return TRUE;
 
-  iter = g_queue_peek_tail_link (&encoder->ref_list);
+  iter = g_queue_peek_tail_link (&ref_pool->ref_list);
   for (; iter; iter = g_list_previous (iter)) {
     tmp = (GstVaapiEncoderH264Ref *) iter->data;
     g_assert (tmp && tmp->poc != picture->poc);
@@ -1231,6 +1262,8 @@ static gboolean
 fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
 {
   VAEncSequenceParameterBufferH264 *const seq_param = sequence->param;
+  GstVaapiH264ViewRefPool *const ref_pool =
+      &encoder->ref_pools[encoder->view_idx];
 
   memset (seq_param, 0, sizeof (VAEncSequenceParameterBufferH264));
   seq_param->seq_parameter_set_id = 0;
@@ -1239,7 +1272,7 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
   seq_param->ip_period = 1 + encoder->num_bframes;
   seq_param->bits_per_second = encoder->bitrate_bits;
 
-  seq_param->max_num_ref_frames = encoder->max_ref_frames;
+  seq_param->max_num_ref_frames = ref_pool->max_ref_frames;
   seq_param->picture_width_in_mbs = encoder->mb_width;
   seq_param->picture_height_in_mbs = encoder->mb_height;
 
@@ -1315,6 +1348,8 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     GstVaapiCodedBuffer * codedbuf, GstVaapiSurfaceProxy * surface)
 {
   VAEncPictureParameterBufferH264 *const pic_param = picture->param;
+  GstVaapiH264ViewRefPool *const ref_pool =
+      &encoder->ref_pools[encoder->view_idx];
   GstVaapiEncoderH264Ref *ref_pic;
   GList *reflist;
   guint i;
@@ -1326,7 +1361,7 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
   pic_param->CurrPic.TopFieldOrderCnt = picture->poc;
   i = 0;
   if (picture->type != GST_VAAPI_PICTURE_TYPE_I) {
-    for (reflist = g_queue_peek_head_link (&encoder->ref_list);
+    for (reflist = g_queue_peek_head_link (&ref_pool->ref_list);
         reflist; reflist = g_list_next (reflist)) {
       ref_pic = reflist->data;
       g_assert (ref_pic && ref_pic->pic &&
@@ -1336,7 +1371,7 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
           GST_VAAPI_SURFACE_PROXY_SURFACE_ID (ref_pic->pic);
       ++i;
     }
-    g_assert (i <= 16 && i <= encoder->max_ref_frames);
+    g_assert (i <= 16 && i <= ref_pool->max_ref_frames);
   }
   for (; i < 16; ++i) {
     pic_param->ReferenceFrames[i].picture_id = VA_INVALID_ID;
@@ -1349,9 +1384,9 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
   pic_param->frame_num = picture->frame_num;
   pic_param->pic_init_qp = encoder->init_qp;
   pic_param->num_ref_idx_l0_active_minus1 =
-      (encoder->max_reflist0_count ? (encoder->max_reflist0_count - 1) : 0);
+      (ref_pool->max_reflist0_count ? (ref_pool->max_reflist0_count - 1) : 0);
   pic_param->num_ref_idx_l1_active_minus1 =
-      (encoder->max_reflist1_count ? (encoder->max_reflist1_count - 1) : 0);
+      (ref_pool->max_reflist1_count ? (ref_pool->max_reflist1_count - 1) : 0);
   pic_param->chroma_qp_index_offset = 0;
   pic_param->second_chroma_qp_index_offset = 0;
 
@@ -1603,6 +1638,8 @@ ensure_slices (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 {
   GstVaapiEncoderH264Ref *reflist_0[16];
   GstVaapiEncoderH264Ref *reflist_1[16];
+  GstVaapiH264ViewRefPool *const ref_pool =
+      &encoder->ref_pools[encoder->view_idx];
   guint reflist_0_count = 0, reflist_1_count = 0;
 
   g_assert (picture);
@@ -1614,11 +1651,11 @@ ensure_slices (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     return FALSE;
   }
 
-  g_assert (reflist_0_count + reflist_1_count <= encoder->max_ref_frames);
-  if (reflist_0_count > encoder->max_reflist0_count)
-    reflist_0_count = encoder->max_reflist0_count;
-  if (reflist_1_count > encoder->max_reflist1_count)
-    reflist_1_count = encoder->max_reflist1_count;
+  g_assert (reflist_0_count + reflist_1_count <= ref_pool->max_ref_frames);
+  if (reflist_0_count > ref_pool->max_reflist0_count)
+    reflist_0_count = ref_pool->max_reflist0_count;
+  if (reflist_1_count > ref_pool->max_reflist1_count)
+    reflist_1_count = ref_pool->max_reflist1_count;
 
   if (!add_slice_headers (encoder, picture,
           reflist_0, reflist_0_count, reflist_1, reflist_1_count))
@@ -1715,7 +1752,7 @@ static void
 reset_properties (GstVaapiEncoderH264 * encoder)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-  guint mb_size;
+  guint mb_size, i;
 
   if (encoder->idr_period < base_encoder->keyframe_period)
     encoder->idr_period = base_encoder->keyframe_period;
@@ -1748,13 +1785,19 @@ reset_properties (GstVaapiEncoderH264 * encoder)
   encoder->max_frame_num = (1 << encoder->log2_max_frame_num);
   encoder->log2_max_pic_order_cnt = encoder->log2_max_frame_num + 1;
   encoder->max_pic_order_cnt = (1 << encoder->log2_max_pic_order_cnt);
-
-  encoder->frame_index = 0;
   encoder->idr_num = 0;
-  encoder->max_reflist0_count = 1;
-  encoder->max_reflist1_count = encoder->num_bframes > 0;
-  encoder->max_ref_frames =
-      encoder->max_reflist0_count + encoder->max_reflist1_count;
+
+  for (i = 0; i < encoder->num_views; i++) {
+    GstVaapiH264ViewRefPool *const ref_pool = &encoder->ref_pools[i];
+    ref_pool->max_reflist0_count = 1;
+    ref_pool->max_reflist1_count = encoder->num_bframes > 0;
+    ref_pool->max_ref_frames = ref_pool->max_reflist0_count
+        + ref_pool->max_reflist1_count;
+
+    GstVaapiH264ViewReorderPool *const reorder_pool =
+        &encoder->reorder_pools[i];
+    reorder_pool->frame_index = 0;
+  }
 }
 
 static GstVaapiEncoderStatus
@@ -1797,16 +1840,23 @@ gst_vaapi_encoder_h264_flush (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiH264ViewReorderPool *reorder_pool;
   GstVaapiEncPicture *pic;
+  guint i;
 
-  encoder->frame_index = 0;
-  encoder->cur_frame_num = 0;
-  encoder->cur_present_index = 0;
-  while (!g_queue_is_empty (&encoder->reorder_frame_list)) {
-    pic = g_queue_pop_head (&encoder->reorder_frame_list);
-    gst_vaapi_enc_picture_unref (pic);
+  for (i = 0; i < encoder->num_views; i++) {
+    reorder_pool = &encoder->reorder_pools[i];
+    reorder_pool->frame_index = 0;
+    reorder_pool->cur_frame_num = 0;
+    reorder_pool->cur_present_index = 0;
+
+    while (!g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
+      pic = (GstVaapiEncPicture *)
+          g_queue_pop_head (&reorder_pool->reorder_frame_list);
+      gst_vaapi_enc_picture_unref (pic);
+    }
+    g_queue_clear (&reorder_pool->reorder_frame_list);
   }
-  g_queue_clear (&encoder->reorder_frame_list);
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
@@ -1908,24 +1958,26 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
 {
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiH264ViewReorderPool *reorder_pool =
+      &encoder->reorder_pools[encoder->view_idx];
   GstVaapiEncPicture *picture;
   gboolean is_idr = FALSE;
 
   *output = NULL;
 
   if (!frame) {
-    if (encoder->reorder_state != GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES)
+    if (reorder_pool->reorder_state != GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES)
       return GST_VAAPI_ENCODER_STATUS_NO_SURFACE;
 
     /* reorder_state = GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES
        dump B frames from queue, sometime, there may also have P frame or I frame */
     g_assert (encoder->num_bframes > 0);
-    g_return_val_if_fail (!g_queue_is_empty (&encoder->reorder_frame_list),
+    g_return_val_if_fail (!g_queue_is_empty (&reorder_pool->reorder_frame_list),
         GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN);
-    picture = g_queue_pop_head (&encoder->reorder_frame_list);
+    picture = g_queue_pop_head (&reorder_pool->reorder_frame_list);
     g_assert (picture);
-    if (g_queue_is_empty (&encoder->reorder_frame_list)) {
-      encoder->reorder_state = GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES;
+    if (g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
+      reorder_pool->reorder_state = GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES;
     }
     goto end;
   }
@@ -1937,60 +1989,60 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
         GST_TIME_FORMAT, GST_TIME_ARGS (frame->pts));
     return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
   }
-  ++encoder->cur_present_index;
-  picture->poc = ((encoder->cur_present_index * 2) %
+  ++reorder_pool->cur_present_index;
+  picture->poc = ((reorder_pool->cur_present_index * 2) %
       encoder->max_pic_order_cnt);
 
-  is_idr = (encoder->frame_index == 0 ||
-      encoder->frame_index >= encoder->idr_period);
+  is_idr = (reorder_pool->frame_index == 0 ||
+      reorder_pool->frame_index >= encoder->idr_period);
 
   /* check key frames */
   if (is_idr || GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame) ||
-      (encoder->frame_index % GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder)) ==
-      0) {
-    ++encoder->cur_frame_num;
-    ++encoder->frame_index;
+      (reorder_pool->frame_index %
+          GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder)) == 0) {
+    ++reorder_pool->cur_frame_num;
+    ++reorder_pool->frame_index;
 
     /* b frame enabled,  check queue of reorder_frame_list */
     if (encoder->num_bframes
-        && !g_queue_is_empty (&encoder->reorder_frame_list)) {
+        && !g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
       GstVaapiEncPicture *p_pic;
 
-      p_pic = g_queue_pop_tail (&encoder->reorder_frame_list);
+      p_pic = g_queue_pop_tail (&reorder_pool->reorder_frame_list);
       set_p_frame (p_pic, encoder);
-      g_queue_foreach (&encoder->reorder_frame_list,
+      g_queue_foreach (&reorder_pool->reorder_frame_list,
           (GFunc) set_b_frame, encoder);
-      ++encoder->cur_frame_num;
+      ++reorder_pool->cur_frame_num;
       set_key_frame (picture, encoder, is_idr);
-      g_queue_push_tail (&encoder->reorder_frame_list, picture);
+      g_queue_push_tail (&reorder_pool->reorder_frame_list, picture);
       picture = p_pic;
-      encoder->reorder_state = GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES;
+      reorder_pool->reorder_state = GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES;
     } else {                    /* no b frames in queue */
       set_key_frame (picture, encoder, is_idr);
-      g_assert (g_queue_is_empty (&encoder->reorder_frame_list));
+      g_assert (g_queue_is_empty (&reorder_pool->reorder_frame_list));
       if (encoder->num_bframes)
-        encoder->reorder_state = GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES;
+        reorder_pool->reorder_state = GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES;
     }
     goto end;
   }
 
   /* new p/b frames coming */
-  ++encoder->frame_index;
-  if (encoder->reorder_state == GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES &&
-      g_queue_get_length (&encoder->reorder_frame_list) <
+  ++reorder_pool->frame_index;
+  if (reorder_pool->reorder_state == GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES &&
+      g_queue_get_length (&reorder_pool->reorder_frame_list) <
       encoder->num_bframes) {
-    g_queue_push_tail (&encoder->reorder_frame_list, picture);
+    g_queue_push_tail (&reorder_pool->reorder_frame_list, picture);
     return GST_VAAPI_ENCODER_STATUS_NO_SURFACE;
   }
 
-  ++encoder->cur_frame_num;
+  ++reorder_pool->cur_frame_num;
   set_p_frame (picture, encoder);
 
-  if (encoder->reorder_state == GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES) {
-    g_queue_foreach (&encoder->reorder_frame_list, (GFunc) set_b_frame,
+  if (reorder_pool->reorder_state == GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES) {
+    g_queue_foreach (&reorder_pool->reorder_frame_list, (GFunc) set_b_frame,
         encoder);
-    encoder->reorder_state = GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES;
-    g_assert (!g_queue_is_empty (&encoder->reorder_frame_list));
+    reorder_pool->reorder_state = GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES;
+    g_assert (!g_queue_is_empty (&reorder_pool->reorder_frame_list));
   }
 
 end:
@@ -2072,16 +2124,32 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  guint32 i;
 
-  /* re-ordering */
-  g_queue_init (&encoder->reorder_frame_list);
-  encoder->reorder_state = GST_VAAPI_ENC_H264_REORD_NONE;
+  /* Multi-view coding information */
+  encoder->is_mvc = FALSE;
+  encoder->num_views = 1;
+  encoder->view_idx = 0;
 
-  /* reference frames */
-  g_queue_init (&encoder->ref_list);
-  encoder->max_ref_frames = 0;
-  encoder->max_reflist0_count = 1;
-  encoder->max_reflist1_count = 1;
+  /* re-ordering  list initialize */
+  for (i = 0; i < MAX_NUM_VIEWS; i++) {
+    GstVaapiH264ViewReorderPool *const reorder_pool =
+        &encoder->reorder_pools[i];
+    g_queue_init (&reorder_pool->reorder_frame_list);
+    reorder_pool->reorder_state = GST_VAAPI_ENC_H264_REORD_NONE;
+    reorder_pool->frame_index = 0;
+    reorder_pool->cur_frame_num = 0;
+    reorder_pool->cur_present_index = 0;
+  }
+
+  /* reference list info initialize */
+  for (i = 0; i < MAX_NUM_VIEWS; i++) {
+    GstVaapiH264ViewRefPool *const ref_pool = &encoder->ref_pools[i];
+    g_queue_init (&ref_pool->ref_list);
+    ref_pool->max_ref_frames = 0;
+    ref_pool->max_reflist0_count = 1;
+    ref_pool->max_reflist1_count = 1;
+  }
 
   return TRUE;
 }
@@ -2094,22 +2162,32 @@ gst_vaapi_encoder_h264_finalize (GstVaapiEncoder * base_encoder)
       GST_VAAPI_ENCODER_H264_CAST (base_encoder);
   GstVaapiEncPicture *pic;
   GstVaapiEncoderH264Ref *ref;
+  guint32 i;
 
   gst_buffer_replace (&encoder->sps_data, NULL);
   gst_buffer_replace (&encoder->pps_data, NULL);
 
-  while (!g_queue_is_empty (&encoder->ref_list)) {
-    ref = g_queue_pop_head (&encoder->ref_list);
-    reference_pic_free (encoder, ref);
+  /* reference list info de-init */
+  for (i = 0; i < MAX_NUM_VIEWS; i++) {
+    GstVaapiH264ViewRefPool *const ref_pool = &encoder->ref_pools[i];
+    while (!g_queue_is_empty (&ref_pool->ref_list)) {
+      ref = (GstVaapiEncoderH264Ref *) g_queue_pop_head (&ref_pool->ref_list);
+      reference_pic_free (encoder, ref);
+    }
+    g_queue_clear (&ref_pool->ref_list);
   }
-  g_queue_clear (&encoder->ref_list);
 
-  while (!g_queue_is_empty (&encoder->reorder_frame_list)) {
-    pic = g_queue_pop_head (&encoder->reorder_frame_list);
-    gst_vaapi_enc_picture_unref (pic);
+  /* re-ordering  list initialize */
+  for (i = 0; i < MAX_NUM_VIEWS; i++) {
+    GstVaapiH264ViewReorderPool *const reorder_pool =
+        &encoder->reorder_pools[i];
+    while (!g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
+      pic = (GstVaapiEncPicture *)
+          g_queue_pop_head (&reorder_pool->reorder_frame_list);
+      gst_vaapi_enc_picture_unref (pic);
+    }
+    g_queue_clear (&reorder_pool->reorder_frame_list);
   }
-  g_queue_clear (&encoder->reorder_frame_list);
-
 }
 
 static GstVaapiEncoderStatus
