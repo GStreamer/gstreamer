@@ -598,7 +598,6 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
 
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->current != NULL, FALSE);
-  g_return_val_if_fail (discontinuity != NULL, FALSE);
 
   GST_M3U8_CLIENT_LOCK (client);
   GST_DEBUG ("Looking for fragment %d", client->sequence);
@@ -609,20 +608,51 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     return FALSE;
   }
 
-  gst_m3u8_client_get_current_position (client, timestamp);
-
   file = GST_M3U8_MEDIA_FILE (l->data);
+  GST_DEBUG ("Got fragment with sequence %u (client sequence %u)",
+      file->sequence, client->sequence);
 
-  *discontinuity = client->sequence != file->sequence;
-  client->sequence = file->sequence + 1;
+  if (timestamp)
+    gst_m3u8_client_get_current_position (client, timestamp);
 
-  *uri = file->uri;
-  *duration = file->duration;
-  *key = file->key;
-  *iv = file->iv;
+  if (discontinuity)
+    *discontinuity = client->sequence != file->sequence;
+  if (uri)
+    *uri = file->uri;
+  if (duration)
+    *duration = file->duration;
+  if (key)
+    *key = file->key;
+  if (iv)
+    *iv = file->iv;
 
   GST_M3U8_CLIENT_UNLOCK (client);
   return TRUE;
+}
+
+void
+gst_m3u8_client_advance_fragment (GstM3U8Client * client)
+{
+  GList *l;
+  GstM3U8MediaFile *file;
+
+  g_return_if_fail (client != NULL);
+  g_return_if_fail (client->current != NULL);
+
+  GST_M3U8_CLIENT_LOCK (client);
+  GST_DEBUG ("Looking for fragment %d", client->sequence);
+  l = g_list_find_custom (client->current->files, client,
+      (GCompareFunc) _find_next);
+  if (l == NULL) {
+    GST_ERROR ("Could not find current fragment");
+    GST_M3U8_CLIENT_UNLOCK (client);
+    return;
+  }
+
+  file = GST_M3U8_MEDIA_FILE (l->data);
+  GST_DEBUG ("Advancing from sequence %u", file->sequence);
+  client->sequence = file->sequence + 1;
+  GST_M3U8_CLIENT_UNLOCK (client);
 }
 
 static void

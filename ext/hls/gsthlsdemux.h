@@ -66,9 +66,6 @@ struct _GstHLSDemux
   GstCaps *input_caps;
   GstUriDownloader *downloader;
   GstM3U8Client *client;        /* M3U8 client */
-  GQueue *queue;                /* Queue storing the fetched fragments */
-  gboolean need_cache;          /* Wheter we need to cache some fragments before starting to push data */
-  gboolean end_of_playlist;
   gboolean do_typefind;         /* Whether we need to typefind the next buffer */
 
   /* Properties */
@@ -80,13 +77,19 @@ struct _GstHLSDemux
   GstTask *stream_task;
   GRecMutex stream_lock;
   gboolean stop_stream_task;
+  GMutex download_lock;         /* Used for protecting queue and the two conds */
+  GCond download_cond;          /* Signalled when something is added to the queue */
+  gboolean end_of_playlist;
+  gint download_failed_count;
+  gint64 next_download;
 
   /* Updates task */
   GstTask *updates_task;
   GRecMutex updates_lock;
+  gint64 next_update;           /* Time of the next update */
+  gboolean stop_updates_task;
   GMutex updates_timed_lock;
-  gint64 next_update;         /* Time of the next update */
-  gboolean cancelled;
+  GCond updates_timed_cond;     /* Signalled when the playlist should be updated */
 
   /* Position in the stream */
   GstClockTime position_shift;
