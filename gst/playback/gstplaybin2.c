@@ -3271,6 +3271,13 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   if (!(peer = g_object_get_data (G_OBJECT (pad), "playbin.sinkpad")))
     goto not_linked;
 
+  /* unlink the pad now (can fail, the pad is unlinked before it's removed) */
+  gst_pad_unlink (pad, peer);
+
+  /* get combiner */
+  combiner = GST_ELEMENT_CAST (gst_pad_get_parent (peer));
+  g_assert (combiner != NULL);
+
   if ((combine = g_object_get_data (G_OBJECT (peer), "playbin.combine"))) {
     if (combine->has_tags) {
       gulong notify_tags_handler;
@@ -3315,17 +3322,6 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     }
   }
 
-  /* unlink the pad now (can fail, the pad is unlinked before it's removed) */
-  gst_pad_unlink (pad, peer);
-
-  /* get combiner, this can be NULL when the element is removing the pads
-   * because it's being disposed. */
-  combiner = GST_ELEMENT_CAST (gst_pad_get_parent (peer));
-  if (!combiner) {
-    gst_object_unref (peer);
-    goto no_combiner;
-  }
-
   /* release the pad to the combiner, this will make the combiner choose a new
    * pad. */
   gst_element_release_request_pad (combiner, peer);
@@ -3344,11 +3340,6 @@ exit:
 not_linked:
   {
     GST_DEBUG_OBJECT (playbin, "pad not linked");
-    goto exit;
-  }
-no_combiner:
-  {
-    GST_DEBUG_OBJECT (playbin, "combiner not found");
     goto exit;
   }
 }
