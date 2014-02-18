@@ -68,7 +68,6 @@ typedef struct _GstValidateActionType
 
 struct _GstValidateScenarioPrivate
 {
-  GstElement *pipeline;
   GstValidateRunner *runner;
 
   GList *actions;
@@ -142,7 +141,7 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
   if (!g_strcmp0 (name, "duration")) {
     gint64 duration;
 
-    if (!gst_element_query_duration (scenario->priv->pipeline,
+    if (!gst_element_query_duration (scenario->pipeline,
             GST_FORMAT_TIME, &duration)) {
       GST_WARNING_OBJECT (scenario, "Could not query duration");
       return FALSE;
@@ -153,7 +152,7 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
   } else if (!g_strcmp0 (name, "position")) {
     gint64 position;
 
-    if (!gst_element_query_position (scenario->priv->pipeline,
+    if (!gst_element_query_position (scenario->pipeline,
             GST_FORMAT_TIME, &position)) {
       GST_WARNING_OBJECT (scenario, "Could not query position");
       return FALSE;
@@ -245,7 +244,7 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   seek = gst_event_new_seek (rate, format, flags, start_type, start,
       stop_type, stop);
   gst_event_ref (seek);
-  if (gst_element_send_event (priv->pipeline, seek)) {
+  if (gst_element_send_event (scenario->pipeline, seek)) {
     gst_event_replace (&priv->last_seek, seek);
   } else {
     GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
@@ -265,7 +264,10 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _pause_action_restore_playing (GstValidateScenario * scenario)
 {
-  GstElement *pipeline = scenario->priv->pipeline;
+  GstElement *pipeline = scenario->pipeline;
+
+
+  g_print ("\n\nBack to playing\n\n");
 
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -282,8 +284,6 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
 {
   gdouble duration = 0;
 
-  GstValidateScenarioPrivate *priv = scenario->priv;
-
   gst_structure_get_double (action->structure, "duration", &duration);
   g_print ("\n%s (num %u), pausing for %" GST_TIME_FORMAT "\n",
       action->name, action->action_number,
@@ -292,7 +292,7 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
   GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration * GST_SECOND));
 
-  if (gst_element_set_state (priv->pipeline, GST_STATE_PAUSED) ==
+  if (gst_element_set_state (scenario->pipeline, GST_STATE_PAUSED) ==
       GST_STATE_CHANGE_FAILURE) {
     GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
         "Failed to set state to paused");
@@ -313,14 +313,14 @@ _execute_play (GstValidateScenario * scenario, GstValidateAction * action)
 
   GST_DEBUG ("Playing back");
 
-  if (gst_element_set_state (scenario->priv->pipeline, GST_STATE_PLAYING) ==
+  if (gst_element_set_state (scenario->pipeline, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
     GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
         "Failed to set state to playing");
 
     return FALSE;
   }
-  gst_element_get_state (scenario->priv->pipeline, NULL, NULL, -1);
+  gst_element_get_state (scenario->pipeline, NULL, NULL, -1);
   return TRUE;
 }
 
@@ -334,8 +334,7 @@ _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
   GST_DEBUG ("Sending eos to pipeline at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (action->playback_time));
 
-  return gst_element_send_event (scenario->priv->pipeline,
-      gst_event_new_eos ());
+  return gst_element_send_event (scenario->pipeline, gst_event_new_eos ());
 }
 
 static int
@@ -474,7 +473,7 @@ _execute_switch_track (GstValidateScenario * scenario,
 
   /* First find an input selector that has the right type */
   input_selector =
-      find_input_selector_with_type (GST_BIN (scenario->priv->pipeline), type);
+      find_input_selector_with_type (GST_BIN (scenario->pipeline), type);
   if (input_selector) {
     GstPad *pad;
 
@@ -521,14 +520,15 @@ _set_rank (GstValidateScenario * scenario, GstValidateAction * action)
   GstPluginFeature *feature;
   const gchar *feature_name;
 
-  if (!(feature_name = gst_structure_get_string (action->structure, "feature-name"))) {
+  if (!(feature_name =
+          gst_structure_get_string (action->structure, "feature-name"))) {
     GST_ERROR ("Could not find the name of the feature to tweak");
 
     return FALSE;
   }
 
   if (!(gst_structure_get_uint (action->structure, "rank", &rank) ||
-        gst_structure_get_int (action->structure, "rank", (gint*) &rank))) {
+          gst_structure_get_int (action->structure, "rank", (gint *) & rank))) {
     GST_ERROR ("Could not get rank to set on %s", feature_name);
 
     return FALSE;
@@ -558,10 +558,10 @@ get_position (GstValidateScenario * scenario)
   gint64 position, duration;
   GstFormat format = GST_FORMAT_TIME;
   GstValidateScenarioPrivate *priv = scenario->priv;
-  GstElement *pipeline = scenario->priv->pipeline;
+  GstElement *pipeline = scenario->pipeline;
 
   query = gst_query_new_segment (GST_FORMAT_DEFAULT);
-  if (gst_element_query (GST_ELEMENT (priv->pipeline), query))
+  if (gst_element_query (GST_ELEMENT (scenario->pipeline), query))
     gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
 
   gst_query_unref (query);
@@ -739,8 +739,8 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
   GstValidateScenarioPrivate *priv = scenario->priv;
 
   if (priv->get_pos_id)
-      g_source_remove (priv->get_pos_id);
-  priv->pipeline = NULL;
+    g_source_remove (priv->get_pos_id);
+  scenario->pipeline = NULL;
 
   GST_DEBUG_OBJECT (scenario, "pipeline was freed");
 }
@@ -1109,9 +1109,8 @@ gst_validate_scenario_dispose (GObject * object)
 
   if (priv->last_seek)
     gst_event_unref (priv->last_seek);
-  if (priv->pipeline)
-    gst_object_unref (priv->pipeline);
-  g_list_free_full (priv->actions, (GDestroyNotify) _free_scenario_action);
+  if (GST_VALIDATE_SCENARIO (object)->pipeline)
+    gst_object_unref (GST_VALIDATE_SCENARIO (object)->pipeline);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->dispose (object);
 }
@@ -1138,7 +1137,7 @@ gst_validate_scenario_factory_create (GstValidateRunner * runner,
     return NULL;
   }
 
-  scenario->priv->pipeline = pipeline;
+  scenario->pipeline = pipeline;
   g_object_weak_ref (G_OBJECT (pipeline),
       (GWeakNotify) _pipeline_freed_cb, scenario);
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (scenario),

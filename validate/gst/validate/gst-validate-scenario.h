@@ -63,6 +63,7 @@ struct _GstValidateScenario
 {
   GObject parent;
 
+  GstElement *pipeline;
   GstValidateScenarioPrivate *priv;
 };
 
