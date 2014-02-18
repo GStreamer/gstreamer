@@ -46,7 +46,7 @@
 #error "This header is for gtk-doc only and not supposed to be included"
 
 typedef struct _GstMP4Mux GstMP4Mux;
-typedef struct _Gst3GPPMux GstMP4Mux;
-typedef struct _GstISMLMux GstMP4Mux;
+typedef struct _Gst3GPPMux Gst3GPPMux;
+typedef struct _GstISMLMux GstISMLMux;
 typedef struct _GstMJ2Mux GstMJ2Mux;
 
