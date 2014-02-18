@@ -35,9 +35,9 @@
  *
  * <refsect2>
  * <title>Example application</title>
- * |[
+ * <informalexample><programlisting language="C">
  * <xi:include xmlns:xi="http://www.w3.org/2003/XInclude" parse="text" href="../../../../tests/examples/audiofx/iirfilter-example.c" />
- * ]|
+ * </programlisting></informalexample>
  * </refsect2>
  */
 
