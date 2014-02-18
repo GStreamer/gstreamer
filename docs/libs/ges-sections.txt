@@ -144,7 +144,6 @@ ges_track_element_get_child_properties
 ges_track_element_get_child_property_valist
 ges_track_element_get_child_property_by_pspec
 ges_track_element_edit
-ges_track_element_copy
 ges_track_element_set_control_source
 ges_track_element_get_control_binding
 <SUBSECTION Standard>
@@ -424,6 +423,7 @@ ges_timeline_element_roll_start
 ges_timeline_element_roll_end
 ges_timeline_element_trim
 ges_timeline_element_get_toplevel_parent
+ges_timeline_element_copy
 GES_TIMELINE_ELEMENT_PARENT
 GES_TIMELINE_ELEMENT_TIMELINE
 GES_TIMELINE_ELEMENT_START
