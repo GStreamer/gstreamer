@@ -2321,16 +2321,18 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length,
   stop = src->segment.stop;
   /* get total file size */
   size = src->segment.duration;
-  if (!g_atomic_int_get (&src->priv->automatic_eos))
-    size = -1;
 
   /* only operate if we are working with bytes */
   if (format != GST_FORMAT_BYTES)
     return TRUE;
 
-  /* the max amount of bytes to read is the total size or
-   * up to the segment.stop if present. */
-  if (stop != -1)
+  /* when not doing automatic EOS, just use the stop position. We don't use
+   * the size to check for EOS */
+  if (!g_atomic_int_get (&src->priv->automatic_eos))
+    maxsize = stop;
+  /* Otherwise, the max amount of bytes to read is the total
+   * size or up to the segment.stop if present. */
+  else if (stop != -1)
     maxsize = size != -1 ? MIN (size, stop) : stop;
   else
     maxsize = size;
@@ -2368,8 +2370,8 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length,
     }
   }
 
-  /* keep track of current duration.
-   * segment is in bytes, we checked that above. */
+  /* keep track of current duration. segment is in bytes, we checked
+   * that above. */
   GST_OBJECT_LOCK (src);
   src->segment.duration = size;
   GST_OBJECT_UNLOCK (src);
