@@ -27,6 +27,7 @@
 #include<stdlib.h>
 
 #include "gst-validate-utils.h"
+#include <gst/gst.h>
 
 #define PARSER_BOOLEAN_EQUALITY_THRESHOLD (1e-10)
 #define PARSER_MAX_TOKEN_SIZE 256
@@ -444,7 +445,7 @@ _read_power (MathParser * parser)
 }
 
 gdouble
-parse_expression (const gchar * expr, ParseVariableFunc variable_func,
+gst_validate_utils_parse_expression (const gchar * expr, ParseVariableFunc variable_func,
     gpointer user_data, gchar ** error)
 {
   gdouble val;
@@ -464,4 +465,37 @@ parse_expression (const gchar * expr, ParseVariableFunc variable_func,
       *error = NULL;
   }
   return val;
+}
+
+guint
+gst_validate_utils_flags_from_str (GType type, const gchar * str_flags)
+{
+  guint i;
+  gint flags = 0;
+  GFlagsClass *class = g_type_class_ref (type);
+
+  for (i = 0; i < class->n_values; i++) {
+    if (g_strrstr (str_flags, class->values[i].value_nick)) {
+      flags |= class->values[i].value;
+    }
+  }
+  g_type_class_unref (class);
+
+  return flags;
+}
+
+void
+gst_validate_utils_enum_from_str (GType type, const gchar * str_enum, guint * enum_value)
+{
+  guint i;
+  GEnumClass *class = g_type_class_ref (type);
+
+  for (i = 0; i < class->n_values; i++) {
+    if (g_strrstr (str_enum, class->values[i].value_nick)) {
+      *enum_value = class->values[i].value;
+      break;
+    }
+  }
+
+  g_type_class_unref (class);
 }

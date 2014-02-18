@@ -91,39 +91,6 @@ typedef struct KeyFileGroupName
   gchar *group_name;
 } KeyFileGroupName;
 
-static guint
-get_flags_from_string (GType type, const gchar * str_flags)
-{
-  guint i;
-  gint flags = 0;
-  GFlagsClass *class = g_type_class_ref (type);
-
-  for (i = 0; i < class->n_values; i++) {
-    if (g_strrstr (str_flags, class->values[i].value_nick)) {
-      flags |= class->values[i].value;
-    }
-  }
-  g_type_class_unref (class);
-
-  return flags;
-}
-
-static void
-get_enum_from_string (GType type, const gchar * str_enum, guint * enum_value)
-{
-  guint i;
-  GEnumClass *class = g_type_class_ref (type);
-
-  for (i = 0; i < class->n_values; i++) {
-    if (g_strrstr (str_enum, class->values[i].value_nick)) {
-      *enum_value = class->values[i].value;
-      break;
-    }
-  }
-
-  g_type_class_unref (class);
-}
-
 static void
 _free_scenario_action (GstValidateAction * act)
 {
@@ -179,7 +146,8 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
       GST_DEBUG_OBJECT (scenario, "Could not find %s", name);
       return FALSE;
     }
-    val = parse_expression (strval, _set_variable_func, scenario, &error);
+    val = gst_validate_utils_parse_expression (strval,
+        _set_variable_func, scenario, &error);
 
     if (error) {
       GST_WARNING ("Error while parsing %s: %s", strval, error);
@@ -219,18 +187,18 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 
   gst_structure_get_double (action->structure, "rate", &rate);
   if ((str_format = gst_structure_get_string (action->structure, "format")))
-    get_enum_from_string (GST_TYPE_FORMAT, str_format, &format);
+    gst_validate_utils_enum_from_str (GST_TYPE_FORMAT, str_format, &format);
 
   if ((str_start_type =
           gst_structure_get_string (action->structure, "start_type")))
-    get_enum_from_string (GST_TYPE_SEEK_TYPE, str_start_type, &start_type);
+    gst_validate_utils_enum_from_str (GST_TYPE_SEEK_TYPE, str_start_type, &start_type);
 
   if ((str_stop_type =
           gst_structure_get_string (action->structure, "stop_type")))
-    get_enum_from_string (GST_TYPE_SEEK_TYPE, str_stop_type, &stop_type);
+    gst_validate_utils_enum_from_str (GST_TYPE_SEEK_TYPE, str_stop_type, &stop_type);
 
   if ((str_flags = gst_structure_get_string (action->structure, "flags")))
-    flags = get_flags_from_string (GST_TYPE_SEEK_FLAGS, str_flags);
+    flags = gst_validate_utils_flags_from_str (GST_TYPE_SEEK_FLAGS, str_flags);
 
   gst_validate_action_get_clocktime (scenario, action, "stop", &stop);
 
@@ -616,8 +584,9 @@ get_position (GstValidateScenario * scenario)
           "repeat");
 
       if (repeat_expr) {
-        act->repeat = parse_expression (repeat_expr, _set_variable_func,
-            scenario, &error);
+        act->repeat =
+            gst_validate_utils_parse_expression (repeat_expr,
+            _set_variable_func, scenario, &error);
       }
     }
 

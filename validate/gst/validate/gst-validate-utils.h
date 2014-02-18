@@ -26,12 +26,17 @@
 #include<setjmp.h>
 #include<stdlib.h>
 #include<glib.h>
+#include <gst/gst.h>
 
 typedef int (*ParseVariableFunc) (const gchar *name,
     double *value, gpointer user_data);
 
-gdouble parse_expression (const gchar *expr,
-                          ParseVariableFunc variable_func,
-                          gpointer user_data,
-                          gchar **error);
+gdouble gst_validate_utils_parse_expression (const gchar *expr,
+                                             ParseVariableFunc variable_func,
+                                             gpointer user_data,
+                                             gchar **error);
+guint gst_validate_utils_flags_from_str     (GType type, const gchar * str_flags);
+void gst_validate_utils_enum_from_str       (GType type,
+                                             const gchar * str_enum,
+                                             guint * enum_value);
 #endif
