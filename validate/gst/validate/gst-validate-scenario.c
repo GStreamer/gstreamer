@@ -91,14 +91,57 @@ typedef struct KeyFileGroupName
   gchar *group_name;
 } KeyFileGroupName;
 
-static void
-_free_scenario_action (GstValidateAction * act)
-{
-  if (act->structure)
-    gst_structure_free (act->structure);
+GType _gst_validate_action_type;
+static GType gst_validate_action_get_type            (void);
 
-  g_slice_free (GstValidateAction, act);
+GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
+static GstValidateAction * gst_validate_action_new (void);
+
+static GstValidateAction *
+_action_copy (GstValidateAction *act)
+{
+  GstValidateAction *copy = gst_validate_action_new ();
+
+  if (act->structure) {
+    copy->structure = gst_structure_copy (act->structure);
+    copy->type = gst_structure_get_name (copy->structure);
+    if (!(act->name = gst_structure_get_string (copy->structure, "name")))
+      act->name = "";
+  }
+
+  copy->action_number = act->action_number;
+  copy->playback_time = act->playback_time;
+
+  return copy;
 }
+
+static void
+_action_free (GstValidateAction *action)
+{
+  if (action->structure)
+    gst_structure_free (action->structure);
+}
+
+static void
+gst_validate_action_init (GstValidateAction *action)
+{
+  gst_mini_object_init (((GstMiniObject*) action), 0, _gst_validate_action_type,
+      (GstMiniObjectCopyFunction) _action_copy,
+      NULL,
+      (GstMiniObjectFreeFunction) _action_free);
+
+}
+
+static GstValidateAction *
+gst_validate_action_new (void)
+{
+    GstValidateAction *action = g_slice_new0 (GstValidateAction);
+
+    gst_validate_action_init (action);
+
+    return action;
+}
+
 
 static gboolean
 _set_variable_func (const gchar * name, double *value, gpointer user_data)
@@ -134,7 +177,7 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
 
 gboolean
 gst_validate_action_get_clocktime (GstValidateScenario * scenario,
-    GstValidateAction *action, const gchar * name, GstClockTime * retval)
+    GstValidateAction * action, const gchar * name, GstClockTime * retval)
 {
   gdouble val;
   const gchar *strval;
@@ -143,11 +186,12 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
     gchar *error = NULL;
 
     if (!(strval = gst_structure_get_string (action->structure, name))) {
-      GST_DEBUG_OBJECT (scenario, "Could not find %s", name);
+      GST_WARNING_OBJECT (scenario, "Could not find %s", name);
       return FALSE;
     }
-    val = gst_validate_utils_parse_expression (strval,
-        _set_variable_func, scenario, &error);
+    val =
+        gst_validate_utils_parse_expression (strval, _set_variable_func,
+        scenario, &error);
 
     if (error) {
       GST_WARNING ("Error while parsing %s: %s", strval, error);
@@ -181,8 +225,7 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   GstClockTime stop = GST_CLOCK_TIME_NONE;
   GstEvent *seek;
 
-  if (!gst_validate_action_get_clocktime (scenario, action, "start",
-          &start))
+  if (!gst_validate_action_get_clocktime (scenario, action, "start", &start))
     return FALSE;
 
   gst_structure_get_double (action->structure, "rate", &rate);
@@ -601,7 +644,7 @@ get_position (GstValidateScenario * scenario)
     } else {
       tmp = priv->actions;
       priv->actions = g_list_remove_link (priv->actions, tmp);
-      _free_scenario_action (act);
+      gst_mini_object_unref (GST_MINI_OBJECT (act));
       g_list_free (tmp);
     }
   }
@@ -715,7 +758,7 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
 }
 
 static gchar **
-_scenario_file_get_lines (GFile *file)
+_scenario_file_get_lines (GFile * file)
 {
   gsize size;
 
@@ -762,7 +805,7 @@ failed:
 }
 
 static gchar **
-_scenario_get_lines (const gchar *scenario_file)
+_scenario_get_lines (const gchar * scenario_file)
 {
   GFile *file = NULL;
   gchar **lines = NULL;
@@ -781,7 +824,7 @@ _scenario_get_lines (const gchar *scenario_file)
 }
 
 static GList *
-_scenario_lines_get_strutures (gchar **lines)
+_scenario_lines_get_strutures (gchar ** lines)
 {
   gint i;
   GList *structures = NULL;
@@ -800,7 +843,7 @@ _scenario_lines_get_strutures (gchar **lines)
 
     structures = g_list_append (structures, structure);
   }
-  
+
 done:
   if (lines)
     g_strfreev (lines);
@@ -815,8 +858,8 @@ failed:
   goto done;
 }
 
-static GList*
-_scenario_get_structures (const gchar *scenario_file)
+static GList *
+_scenario_get_structures (const gchar * scenario_file)
 {
   gchar **lines;
 
@@ -828,8 +871,8 @@ _scenario_get_structures (const gchar *scenario_file)
   return _scenario_lines_get_strutures (lines);
 }
 
-static GList*
-_scenario_file_get_structures (GFile *scenario_file)
+static GList *
+_scenario_file_get_structures (GFile * scenario_file)
 {
   gchar **lines;
 
@@ -873,7 +916,7 @@ _load_scenario_file (GstValidateScenario * scenario,
       goto failed;
     }
 
-    action = g_slice_new0 (GstValidateAction);
+    action = gst_validate_action_new ();
     action->type = type;
     action->repeat = -1;
     if (gst_structure_get_double (structure, "playback_time", &playback_time)) {
@@ -882,16 +925,17 @@ _load_scenario_file (GstValidateScenario * scenario,
             gst_structure_get_string (structure, "playback_time"))) {
       priv->needs_parsing = g_list_append (priv->needs_parsing, action);
     } else
-      GST_WARNING_OBJECT (scenario, "No playback time for action %" GST_PTR_FORMAT,
-          structure);
+      GST_WARNING_OBJECT (scenario,
+          "No playback time for action %" GST_PTR_FORMAT, structure);
 
     if (!(action->name = gst_structure_get_string (structure, "name")))
       action->name = "";
 
     action->structure = structure;
+
     if (action_type->is_config) {
       ret = action_type->execute (scenario, action);
-      g_slice_free (GstValidateAction, action);
+      gst_mini_object_unref (GST_MINI_OBJECT (action));
 
       if (ret == FALSE)
         goto failed;
@@ -953,8 +997,8 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
 
     /* Try from local profiles */
     tldir =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
-          GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
+        g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
+        GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
 
 
     if (!(ret = _load_scenario_file (scenario, tldir, &is_config))) {
@@ -1080,6 +1124,7 @@ gst_validate_scenario_dispose (GObject * object)
     gst_event_unref (priv->last_seek);
   if (GST_VALIDATE_SCENARIO (object)->pipeline)
     gst_object_unref (GST_VALIDATE_SCENARIO (object)->pipeline);
+  g_list_free_full (priv->actions, (GDestroyNotify) gst_mini_object_unref);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->dispose (object);
 }
@@ -1126,17 +1171,17 @@ gst_validate_scenario_factory_create (GstValidateRunner * runner,
 }
 
 static gboolean
-_add_description (GQuark field_id, const GValue *value, KeyFileGroupName *kfg)
+_add_description (GQuark field_id, const GValue * value, KeyFileGroupName * kfg)
 {
   g_key_file_set_string (kfg->kf, kfg->group_name, g_quark_to_string (field_id),
-        gst_value_serialize (value));
+      gst_value_serialize (value));
 
   return TRUE;
 }
 
 
 static void
-_list_scenarios_in_dir (GFile * dir, GKeyFile *kf)
+_list_scenarios_in_dir (GFile * dir, GKeyFile * kf)
 {
   GFileEnumerator *fenum;
   GFileInfo *info;
@@ -1150,7 +1195,7 @@ _list_scenarios_in_dir (GFile * dir, GKeyFile *kf)
   for (info = g_file_enumerator_next_file (fenum, NULL, NULL);
       info; info = g_file_enumerator_next_file (fenum, NULL, NULL)) {
     if (g_str_has_suffix (g_file_info_get_name (info),
-          GST_VALIDATE_SCENARIO_SUFFIX)) {
+            GST_VALIDATE_SCENARIO_SUFFIX)) {
       gchar **name = g_strsplit (g_file_info_get_name (info),
           GST_VALIDATE_SCENARIO_SUFFIX, 0);
 
@@ -1160,8 +1205,8 @@ _list_scenarios_in_dir (GFile * dir, GKeyFile *kf)
       GList *tmp, *structures = _scenario_file_get_structures (f);
 
       gst_object_unref (f);
-      for (tmp = structures; tmp; tmp=tmp->next) {
-        if (gst_structure_has_name(tmp->data, "description")) {
+      for (tmp = structures; tmp; tmp = tmp->next) {
+        if (gst_structure_has_name (tmp->data, "description")) {
           desc = tmp->data;
           break;
         }
@@ -1173,7 +1218,8 @@ _list_scenarios_in_dir (GFile * dir, GKeyFile *kf)
         kfg.group_name = name[0];
         kfg.kf = kf;
 
-        gst_structure_foreach (desc, (GstStructureForeachFunc) _add_description, &kfg);
+        gst_structure_foreach (desc, (GstStructureForeachFunc) _add_description,
+            &kfg);
       } else {
         g_key_file_set_string (kf, name[0], "noinfo", "nothing");
       }
@@ -1184,7 +1230,7 @@ _list_scenarios_in_dir (GFile * dir, GKeyFile *kf)
 }
 
 gboolean
-gst_validate_list_scenarios (gchar *output_file)
+gst_validate_list_scenarios (gchar * output_file)
 {
   gchar *result;
 
@@ -1273,8 +1319,9 @@ init_scenarios (void)
 {
   const gchar *seek_mandatory_fields[] = { "start", NULL };
 
-  clean_action_str =
-      g_regex_new ("\\\\\n", G_REGEX_CASELESS, 0, NULL);
+  _gst_validate_action_type = gst_validate_action_get_type ();
+
+  clean_action_str = g_regex_new ("\\\\\n", G_REGEX_CASELESS, 0, NULL);
   gst_validate_add_action_type ("seek", _execute_seek, seek_mandatory_fields,
       "Allows to seek into the files", FALSE);
   gst_validate_add_action_type ("pause", _execute_pause, NULL,
@@ -1295,6 +1342,5 @@ init_scenarios (void)
       " track'), note that you need to state that it is a string in the scenario file"
       " prefixing it with (string).", FALSE);
   gst_validate_add_action_type ("set-feature-rank", _set_rank, NULL,
-      "Allows you to change the ranking of a particular plugin feature",
-      TRUE);
+      "Allows you to change the ranking of a particular plugin feature", TRUE);
 }

@@ -43,8 +43,12 @@ typedef struct _GstValidateAction        GstValidateAction;
 
 typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
 
+GST_EXPORT GType _gst_validate_action_type;
+
 struct _GstValidateAction
 {
+  GstMiniObject          mini_object;
+
   const gchar *type;
   const gchar *name;
   guint action_number;
