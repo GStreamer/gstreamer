@@ -948,21 +948,14 @@ GST_START_TEST (test_encodebin_reuse)
   GstEncodingProfile *prof1;
   GstEncodingProfile *prof2;
   GstEncodingProfile *prof3;
-  GstCaps *caps;
 
-  caps = gst_caps_new_empty_simple ("application/ogg");
-  prof1 = (GstEncodingProfile *) gst_encoding_container_profile_new ((gchar *)
-      "myprofile", NULL, caps, NULL);
-  gst_caps_unref (caps);
-
+  prof1 = create_ogg_profile ();
   prof2 = create_ogg_theora_vorbis_profile (1, 1);
   prof3 = create_vorbis_only_profile ();
 
   _test_encodebin_reuse (prof1, NULL);
   _test_encodebin_reuse (prof1, prof1);
-
   _test_encodebin_reuse (prof1, prof2);
-
   _test_encodebin_reuse (prof2, prof3);
 
   gst_encoding_profile_unref (prof1);
