@@ -20,7 +20,7 @@
  */
 /**
  * SECTION: ges-extractable
- * @short_description: An interface letting an object be extracted from a GESAsset
+ * @short_description: An interface for objects which can be extracted from a GESAsset
  *
  * FIXME: Long description needed
  */
@@ -78,11 +78,11 @@ ges_extractable_default_init (GESExtractableInterface * iface)
 
 /**
  * ges_extractable_get_asset:
- * @self: The #GESExtractable from which to retrieve a #GESAsset from
+ * @self: The #GESExtractable from which to retrieve a #GESAsset
  *
- * Method to get a asset from a #GESExtractable
+ * Method for getting an asset from a #GESExtractable
  *
- * Returns: (transfer none): the #GESAsset or %NULL if none have been set
+ * Returns: (transfer none): The #GESAsset or %NULL if none has been set
  */
 GESAsset *
 ges_extractable_get_asset (GESExtractable * self)
@@ -97,7 +97,7 @@ ges_extractable_get_asset (GESExtractable * self)
  * @self: Target object
  * @asset: (transfer none): The #GESAsset to set
  *
- * Method to set asset which was used to instaniate specified object
+ * Method to set the asset which instantiated the specified object
  */
 void
 ges_extractable_set_asset (GESExtractable * self, GESAsset * asset)

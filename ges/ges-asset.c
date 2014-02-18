@@ -20,12 +20,12 @@
  */
 /**
  * SECTION: ges-asset
- * @short_description: Represents usable ressources inside the GStreamer Editing Services
+ * @short_description: Represents usable resources inside the GStreamer Editing Services
  *
- * The Assets in the GStreamer Editing Services represent the ressources
+ * The Assets in the GStreamer Editing Services represent the resources
  * that can be used. You can create assets for any type that implements the #GESExtractable
  * interface, for example #GESClips, #GESFormatter, and #GESTrackElement do implement it.
- * This means that asssets will represent for example a #GESUriClips, #GESBaseEffect etc,
+ * This means that assets will represent for example a #GESUriClips, #GESBaseEffect etc,
  * and then you can extract objects of those types with the appropriate parameters from the asset
  * using the #ges_asset_extract method:
  *
@@ -46,18 +46,18 @@
  * to the #GESAsset through the #GESMetaContainer interface and you have a model for your
  * custom effects. Note that #GESAsset management is making easier thanks to the #GESProject class.
  *
- * Each asset are represented by a pair of @extractable_type and @id (string). Actually the @extractable_type
+ * Each asset is represented by a pair of @extractable_type and @id (string). Actually the @extractable_type
  * is the type that implements the #GESExtractable interface, that means that for example for a #GESUriClip,
  * the type that implements the #GESExtractable interface is #GESClip.
  * The identifier represents different things depending on the @extractable_type and you should check
  * the documentation of each type to know what the ID of #GESAsset actually represents for that type. By default,
  * we only have one #GESAsset per type, and the @id is the name of the type, but this behaviour is overriden
- * to be more usefull. For example, for GESTransitionClips, the ID is the vtype of the transition
- * you will extract from it (ie crossfade, box-wipe-rc etc..) For #GESEffect the id is the
+ * to be more useful. For example, for GESTransitionClips, the ID is the vtype of the transition
+ * you will extract from it (ie crossfade, box-wipe-rc etc..) For #GESEffect the ID is the
  * @bin-description property of the extracted objects (ie the gst-launch style description of the bin that
  * will be used).
  *
- * Each and every #GESAsset are cached into GES, and you can query those with the #ges_list_assets function.
+ * Each and every #GESAsset is cached into GES, and you can query those with the #ges_list_assets function.
  * Also the system will automatically register #GESAssets for #GESFormatters and #GESTransitionClips
  * and standard effects (actually not implemented yet) and you can simply query those calling:
  * |[
