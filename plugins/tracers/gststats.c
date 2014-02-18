@@ -171,12 +171,6 @@ get_real_pad_parent (GstPad * pad)
     pad = GST_PAD_CAST (parent);
     parent = GST_OBJECT_PARENT (pad);
   }
-  /* if pad is a ghost-pad, then parent is a bin and it is the parent of a
-   * proxy_pad */
-  while (parent && GST_IS_GHOST_PAD (pad)) {
-    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-    parent = pad ? GST_OBJECT_PARENT (pad) : NULL;
-  }
   return GST_ELEMENT_CAST (parent);
 }
 

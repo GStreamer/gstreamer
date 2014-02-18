@@ -84,12 +84,6 @@ get_real_pad_parent (GstPad * pad)
     pad = GST_PAD_CAST (parent);
     parent = GST_OBJECT_PARENT (pad);
   }
-  /* if pad is a ghost-pad, then parent is a bin and it is the parent of a
-   * proxy_pad */
-  while (parent && GST_IS_GHOST_PAD (pad)) {
-    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-    parent = pad ? GST_OBJECT_PARENT (pad) : NULL;
-  }
   return GST_ELEMENT_CAST (parent);
 }
 
@@ -123,7 +117,7 @@ static void
 send_latency_probe (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
     guint64 ts)
 {
-  if (parent && !GST_IS_BIN (parent) &&
+  if (parent && (!GST_IS_BIN (parent)) &&
       GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE)) {
     GstEvent *latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
         gst_structure_new_id (latency_probe_id,
@@ -164,7 +158,7 @@ do_push_event_pre (GstLatencyTracer * self, va_list var_args)
   GstPad *peer_pad = GST_PAD_PEER (pad);
   GstElement *parent = get_real_pad_parent (peer_pad);
 
-  if (parent && !GST_IS_BIN (parent) &&
+  if (parent && (!GST_IS_BIN (parent)) &&
       GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SINK)) {
     if (GST_EVENT_TYPE (ev) == GST_EVENT_CUSTOM_DOWNSTREAM) {
       const GstStructure *data = gst_event_get_structure (ev);
