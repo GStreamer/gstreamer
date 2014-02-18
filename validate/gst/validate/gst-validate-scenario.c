@@ -970,7 +970,9 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   guint i;
   gchar *lfilename = NULL, *tldir = NULL;
   gboolean found_actions = FALSE, is_config, ret = TRUE;
-  const gchar *env_scenariodir = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
+
+  gchar ** env_scenariodir = g_strsplit (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"), ":",
+      0);
 
   if (!scenario_name)
     goto invalid_name;
@@ -989,10 +991,14 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
     g_free (tldir);
 
     if (env_scenariodir) {
-      tldir = g_build_filename (env_scenariodir, lfilename, NULL);
-      if ((ret = _load_scenario_file (scenario, tldir, &is_config)))
-        goto check_scenario;
-      g_free (tldir);
+      guint i;
+
+      for (i = 0; env_scenariodir[i]; i++) {
+        tldir = g_build_filename (env_scenariodir[i], lfilename, NULL);
+        if ((ret = _load_scenario_file (scenario, tldir, &is_config)))
+          goto check_scenario;
+        g_free (tldir);
+      }
     }
 
     /* Try from local profiles */
@@ -1027,6 +1033,9 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   }
 
 done:
+
+  if (env_scenariodir)
+    g_strfreev (env_scenariodir);
 
   if (ret == FALSE)
     g_error ("Could not set scenario %s => EXIT\n", scenario_name);
@@ -1237,7 +1246,8 @@ gst_validate_list_scenarios (gchar * output_file)
   gsize datalength;
   GError *err = NULL;
   GKeyFile *kf = NULL;
-  const gchar *env_scenariodir = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
+  gchar ** env_scenariodir = g_strsplit (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"), ":",
+      0);
   gchar *tldir = g_build_filename (g_get_user_data_dir (),
       "gstreamer-" GST_API_VERSION, GST_VALIDATE_SCENARIO_DIRECTORY,
       NULL);
@@ -1256,9 +1266,13 @@ gst_validate_list_scenarios (gchar * output_file)
   g_free (tldir);
 
   if (env_scenariodir) {
-    dir = g_file_new_for_path (env_scenariodir);
-    _list_scenarios_in_dir (dir, kf);
-    g_object_unref (dir);
+    guint i;
+
+    for (i = 0; env_scenariodir[i]; i++) {
+      dir = g_file_new_for_path (env_scenariodir[i]);
+      _list_scenarios_in_dir (dir, kf);
+      g_object_unref (dir);
+    }
   }
 
   /* Hack to make it work uninstalled */
@@ -1269,9 +1283,11 @@ gst_validate_list_scenarios (gchar * output_file)
   result = g_key_file_to_data (kf, &datalength, &err);
   g_print ("All scenarios avalaible:\n%s", result);
 
-
   if (output_file && !err)
     g_file_set_contents (output_file, result, datalength, &err);
+
+  if (env_scenariodir)
+    g_strfreev (env_scenariodir);
 
   if (err) {
     GST_WARNING ("Got error '%s' listing scenarios", err->message);
