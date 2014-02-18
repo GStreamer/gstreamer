@@ -6,7 +6,7 @@ pluginsdir=@libdir@/gstreamer-@GST_PKG_VERSION@
 
 Name: GStreamer VA-API (DRM) Plugins Libraries
 Description: Streaming media framework, VA-API (DRM) plugins libraries
-Requires: gstreamer-vaapi-@GST_API_VERSION@ libva-drm
+Requires: gstreamer-vaapi-@GST_PKG_VERSION@ libva-drm
 Version: @VERSION@
 Libs: -L${libdir} -lgstvaapi-drm-@GST_API_VERSION@
 Cflags: -I${includedir}

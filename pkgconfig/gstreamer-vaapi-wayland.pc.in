@@ -6,7 +6,7 @@ pluginsdir=@libdir@/gstreamer-@GST_PKG_VERSION@
 
 Name: GStreamer VA-API (Wayland) Plugins Libraries
 Description: Streaming media framework, VA-API (Wayland) plugins libraries
-Requires: gstreamer-vaapi-@GST_API_VERSION@ libva-wayland
+Requires: gstreamer-vaapi-@GST_PKG_VERSION@ libva-wayland
 Version: @VERSION@
 Libs: -L${libdir} -lgstvaapi-wayland-@GST_API_VERSION@
 Cflags: -I${includedir}

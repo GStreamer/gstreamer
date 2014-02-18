@@ -793,15 +793,15 @@ debian.upstream/libgstvaapi-x11.install.in
     gst/Makefile
     gst/vaapi/Makefile
     pkgconfig/Makefile
-    pkgconfig/gstreamer-vaapi-$GST_API_VERSION.pc:\
+    pkgconfig/gstreamer-vaapi-$GST_PKG_VERSION.pc:\
 pkgconfig/gstreamer-vaapi.pc.in
-    pkgconfig/gstreamer-vaapi-drm-$GST_API_VERSION.pc:\
+    pkgconfig/gstreamer-vaapi-drm-$GST_PKG_VERSION.pc:\
 pkgconfig/gstreamer-vaapi-drm.pc.in
-    pkgconfig/gstreamer-vaapi-glx-$GST_API_VERSION.pc:\
+    pkgconfig/gstreamer-vaapi-glx-$GST_PKG_VERSION.pc:\
 pkgconfig/gstreamer-vaapi-glx.pc.in
-    pkgconfig/gstreamer-vaapi-wayland-$GST_API_VERSION.pc:\
+    pkgconfig/gstreamer-vaapi-wayland-$GST_PKG_VERSION.pc:\
 pkgconfig/gstreamer-vaapi-wayland.pc.in
-    pkgconfig/gstreamer-vaapi-x11-$GST_API_VERSION.pc:\
+    pkgconfig/gstreamer-vaapi-x11-$GST_PKG_VERSION.pc:\
 pkgconfig/gstreamer-vaapi-x11.pc.in
     tests/Makefile
 ])
