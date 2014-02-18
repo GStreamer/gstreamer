@@ -1528,9 +1528,7 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   GST_INFO ("current %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
       GST_TIME_ARGS (priv->range_start), GST_TIME_ARGS (priv->range_stop));
 
-  if (priv->range_start == start)
-    start = GST_CLOCK_TIME_NONE;
-  else if (start != GST_CLOCK_TIME_NONE)
+  if (start != GST_CLOCK_TIME_NONE)
     start_type = GST_SEEK_TYPE_SET;
 
   if (priv->range_stop == stop)
@@ -1552,9 +1550,30 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
      * queue this until we get EOS. */
     flags = GST_SEEK_FLAG_FLUSH;
 
-    /* only set keyframe flag when modifying start */
-    if (start_type != GST_SEEK_TYPE_NONE)
-      flags |= GST_SEEK_FLAG_KEY_UNIT;
+    /* if range start was not supplied we must continue from current position.
+     * but since we're doing a flushing seek, let us query the current position
+     * so we end up at exactly the same position after the seek. */
+    if (range->min.type == GST_RTSP_TIME_END) { /* Yepp, that's right! */
+      gint64 position;
+      gboolean ret = FALSE;
+
+      if (klass->query_position)
+        ret = klass->query_position (media, &position);
+
+      if (!ret) {
+        GST_WARNING ("position query failed");
+      } else {
+        GST_DEBUG ("doing accurate seek to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (position));
+        start = position;
+        start_type = GST_SEEK_TYPE_SET;
+        flags |= GST_SEEK_FLAG_ACCURATE;
+      }
+    } else {
+      /* only set keyframe flag when modifying start */
+      if (start_type != GST_SEEK_TYPE_NONE)
+        flags |= GST_SEEK_FLAG_KEY_UNIT;
+    }
 
     /* FIXME, we only do forwards */
     res = gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME,
