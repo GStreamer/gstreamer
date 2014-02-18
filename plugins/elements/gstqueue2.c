@@ -1065,6 +1065,8 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
   queue->seeking = TRUE;
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
+  debug_ranges (queue);
+
   GST_DEBUG_OBJECT (queue, "Seeking to %" G_GUINT64_FORMAT, offset);
 
   event =
@@ -1087,6 +1089,22 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
   }
 
   return res;
+}
+
+/* get the threshold for when we decide to seek rather than wait */
+static guint64
+get_seek_threshold (GstQueue2 * queue)
+{
+  guint64 threshold;
+
+  /* FIXME, find a good threshold based on the incoming rate. */
+  threshold = 1024 * 512;
+
+  if (QUEUE_IS_USING_RING_BUFFER (queue)) {
+    threshold = MIN (threshold,
+        QUEUE_MAX_BYTES (queue) - queue->cur_level.bytes);
+  }
+  return threshold;
 }
 
 /* see if there is enough data in the file to read a full buffer */
@@ -1127,13 +1145,8 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
         " len %u", offset, length);
     /* we don't have the range, see how far away we are */
     if (!queue->is_eos && queue->current) {
-      /* FIXME, find a good threshold based on the incoming rate. */
-      guint64 threshold = 1024 * 512;
+      guint64 threshold = get_seek_threshold (queue);
 
-      if (QUEUE_IS_USING_RING_BUFFER (queue)) {
-        threshold = MIN (threshold,
-            QUEUE_MAX_BYTES (queue) - queue->cur_level.bytes);
-      }
       if (offset >= queue->current->offset && offset <=
           queue->current->writing_pos + threshold) {
         GST_INFO_OBJECT (queue,
@@ -1615,6 +1628,7 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
   guint size, rb_size;
   guint64 writing_pos, new_writing_pos;
   GstQueue2Range *range, *prev, *next;
+  gboolean do_seek = FALSE;
 
   if (QUEUE_IS_USING_RING_BUFFER (queue))
     writing_pos = queue->current->rb_writing_pos;
@@ -1788,15 +1802,19 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
           GST_DEBUG_OBJECT (queue, "merging ranges %" G_GUINT64_FORMAT,
               next->writing_pos);
 
-          /* remove the group, we could choose to not read the data in this range
-           * again. This would involve us doing a seek to the current writing position
-           * in the range. FIXME, It would probably make sense to do a seek when there
-           * is a lot of data in the range we merged with to avoid reading it all
-           * again. */
+          /* remove the group */
           queue->current->next = next->next;
-          g_slice_free (GstQueue2Range, next);
 
-          debug_ranges (queue);
+          /* We use the threshold to decide if we want to do a seek or simply
+           * read the data again. If there is not so much data in the range we
+           * prefer to avoid to seek and read it again. */
+          if (next->writing_pos > new_writing_pos + get_seek_threshold (queue)) {
+            /* the new range had more data than the threshold, it's worth keeping
+             * it and doing a seek. */
+            new_writing_pos = next->writing_pos;
+            do_seek = TRUE;
+          }
+          g_slice_free (GstQueue2Range, next);
         }
         goto update_and_signal;
       }
@@ -1846,6 +1864,9 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
     } else {
       queue->current->writing_pos = writing_pos = new_writing_pos;
     }
+    if (do_seek)
+      perform_seek_to_offset (queue, new_writing_pos);
+
     update_cur_level (queue, queue->current);
 
     /* update the buffering status */
