@@ -1543,10 +1543,10 @@ gst_queue2_flush_temp_file (GstQueue2 * queue)
 }
 
 static void
-gst_queue2_locked_flush (GstQueue2 * queue, gboolean full)
+gst_queue2_locked_flush (GstQueue2 * queue, gboolean full, gboolean clear_temp)
 {
   if (!QUEUE_IS_USING_QUEUE (queue)) {
-    if (QUEUE_IS_USING_TEMP_FILE (queue))
+    if (QUEUE_IS_USING_TEMP_FILE (queue) && clear_temp)
       gst_queue2_flush_temp_file (queue);
     init_ranges (queue);
   } else {
@@ -2257,7 +2257,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
         ret = gst_pad_push_event (queue->srcpad, event);
 
         GST_QUEUE2_MUTEX_LOCK (queue);
-        gst_queue2_locked_flush (queue, FALSE);
+        gst_queue2_locked_flush (queue, FALSE, TRUE);
         queue->srcresult = GST_FLOW_OK;
         queue->sinkresult = GST_FLOW_OK;
         queue->is_eos = FALSE;
@@ -3118,7 +3118,7 @@ gst_queue2_sink_activate_mode (GstPad * pad, GstObject * parent,
         /* wait until it is unblocked and clean up */
         GST_PAD_STREAM_LOCK (pad);
         GST_QUEUE2_MUTEX_LOCK (queue);
-        gst_queue2_locked_flush (queue, TRUE);
+        gst_queue2_locked_flush (queue, TRUE, FALSE);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
         GST_PAD_STREAM_UNLOCK (pad);
       }
