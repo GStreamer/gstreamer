@@ -654,6 +654,10 @@ gst_channel_mix_passthrough (AudioConvertCtx * this)
   if (this->in.channels != this->out.channels)
     return FALSE;
 
+  /* passthrough for 1->1 channels (MONO and NONE position are the same here) */
+  if (this->in.channels == 1 && this->out.channels == 1)
+    return TRUE;
+
   /* passthrough if both channel masks are the same */
   in_mask = out_mask = 0;
   for (i = 0; i < this->in.channels; i++) {
