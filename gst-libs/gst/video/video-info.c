@@ -582,9 +582,9 @@ fill_planes (GstVideoInfo * info)
           GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_128 (width) / 64,
           GST_ROUND_UP_64 (height) / 64);
       info->offset[0] = 0;
-      info->offset[1] = info->stride[0] * GST_ROUND_UP_32 (height);
-      info->size =
-          info->offset[1] + info->stride[0] * GST_ROUND_UP_64 (height) / 2;
+      info->offset[1] = GST_ROUND_UP_128 (width) * GST_ROUND_UP_32 (height);
+      info->size = info->offset[1] +
+          GST_ROUND_UP_128 (width) * GST_ROUND_UP_64 (height) / 2;
       break;
     case GST_VIDEO_FORMAT_ENCODED:
       break;
