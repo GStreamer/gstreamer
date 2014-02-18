@@ -219,7 +219,7 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
     goto no_channels;
 
   if (!gst_structure_get (str, "channel-mask", GST_TYPE_BITMASK, &channel_mask,
-          NULL)) {
+          NULL) || (channel_mask == 0 && channels == 1)) {
     if (channels == 1) {
       position[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
     } else if (channels == 2) {
