@@ -159,6 +159,11 @@ AC_SUBST(GST_VALIDATE_CFLAGS)
 AC_SUBST(GST_VALIDATE_LIBS)
 AM_CONDITIONAL(HAVE_GST_VALIDATE, [test "x$HAVE_GST_VALIDATE" = "xyes"])
 
+dnl needed for scenarios definition files
+GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
+AC_SUBST(GST_PREFIX)
+GST_DATADIR="$GST_PREFIX/share"
+AC_DEFINE_UNQUOTED(GST_DATADIR, "$GST_DATADIR", [system wide data directory])
 
 
 dnl *** checks for libraries ***
@@ -381,6 +386,7 @@ tests/Makefile
 tests/check/Makefile
 tests/benchmarks/Makefile
 tests/examples/Makefile
+tests/scenarios/Makefile
 tools/Makefile
 docs/Makefile
 docs/version.entities
