@@ -30,6 +30,10 @@
 #include "ges-extractable.h"
 #include "ges-meta-container.h"
 #include "ges-internal.h"
+#include <string.h>
+
+/* maps type name quark => count */
+static GData *object_name_counts = NULL;
 
 static void
 extractable_set_asset (GESExtractable * extractable, GESAsset * asset)
@@ -58,6 +62,7 @@ enum
   PROP_DURATION,
   PROP_MAX_DURATION,
   PROP_PRIORITY,
+  PROP_NAME,
   PROP_LAST
 };
 
@@ -96,6 +101,9 @@ _get_property (GObject * object, guint property_id,
     case PROP_PRIORITY:
       g_value_set_uint (value, self->priority);
       break;
+    case PROP_NAME:
+      g_value_take_string (value, ges_timeline_element_get_name (self));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, property_id, pspec);
   }
@@ -129,21 +137,23 @@ _set_property (GObject * object, guint property_id,
     case PROP_MAX_DURATION:
       ges_timeline_element_set_max_duration (self, g_value_get_uint64 (value));
       break;
+    case PROP_NAME:
+      ges_timeline_element_set_name (self, g_value_get_string (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_element_init (GESTimelineElement * ges_timeline_element)
-{
-
-}
-
-static void
 ges_timeline_element_finalize (GObject * self)
 {
   G_OBJECT_CLASS (ges_timeline_element_parent_class)->finalize (self);
+}
+
+static void
+ges_timeline_element_init (GESTimelineElement * ges_timeline_element)
+{
 }
 
 static void
@@ -216,10 +226,19 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   /**
    * GESTimelineElement:priority:
    *
-   * The layer priority of the object.
+   * The priority of the object.
    */
   properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
       "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE);
+
+  /**
+   * GESTimelineElement:name:
+   *
+   * The name of the object
+   */
+  properties[PROP_NAME] =
+      g_param_spec_string ("name", "Name", "The name of the timeline object",
+      NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST, properties);
 
@@ -237,6 +256,55 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   klass->roll_start = NULL;
   klass->roll_end = NULL;
   klass->trim = NULL;
+}
+
+static gboolean
+_set_name_default (GESTimelineElement * self)
+{
+  const gchar *type_name;
+  gint count;
+  gchar *name;
+  GQuark q;
+  guint i, l;
+
+  if (!object_name_counts) {
+    g_datalist_init (&object_name_counts);
+  }
+
+  q = g_type_qname (G_OBJECT_TYPE (self));
+  count = GPOINTER_TO_INT (g_datalist_id_get_data (&object_name_counts, q));
+  g_datalist_id_set_data (&object_name_counts, q, GINT_TO_POINTER (count + 1));
+
+  /* GstFooSink -> foosink<N> */
+  type_name = g_quark_to_string (q);
+  if (strncmp (type_name, "GES", 3) == 0)
+    type_name += 3;
+  /* give the 20th "uriclip" element and the first "uriclip2" (if needed in the future)
+   * different names */
+  l = strlen (type_name);
+  if (l > 0 && g_ascii_isdigit (type_name[l - 1])) {
+    name = g_strdup_printf ("%s-%d", type_name, count);
+  } else {
+    name = g_strdup_printf ("%s%d", type_name, count);
+  }
+
+  l = strlen (name);
+  for (i = 0; i < l; i++)
+    name[i] = g_ascii_tolower (name[i]);
+
+  g_free (self->name);
+  if (G_UNLIKELY (self->parent != NULL))
+    goto had_parent;
+
+  self->name = name;
+
+  return TRUE;
+
+had_parent:
+  {
+    GST_WARNING ("parented objects can't be renamed");
+    return FALSE;
+  }
 }
 
 /*********************************************
@@ -337,6 +405,16 @@ ges_timeline_element_set_timeline (GESTimelineElement * self,
 
   if (timeline != NULL && G_UNLIKELY (self->timeline != NULL))
     goto had_timeline;
+
+  if (timeline == NULL) {
+    if (self->timeline) {
+      if (!timeline_remove_element (self->timeline, self))
+        return FALSE;
+    }
+  } else {
+    if (!timeline_add_element (timeline, self))
+      return FALSE;
+  }
 
   self->timeline = timeline;
 
@@ -830,7 +908,10 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
   n_params = 0;
 
   for (n = 0; n < n_specs; ++n) {
+    /* We do not want the timeline or the name to be copied */
     if (g_strcmp0 (specs[n]->name, "parent") &&
+        g_strcmp0 (specs[n]->name, "timeline") &&
+        g_strcmp0 (specs[n]->name, "name") &&
         (specs[n]->flags & G_PARAM_READWRITE) == G_PARAM_READWRITE) {
       params[n_params].name = g_intern_string (specs[n]->name);
       g_value_init (&params[n_params].value, specs[n]->value_type);
@@ -879,4 +960,72 @@ ges_timeline_element_get_toplevel_parent (GESTimelineElement * self)
     toplevel = GES_TIMELINE_ELEMENT_PARENT (toplevel);
 
   return gst_object_ref (toplevel);
+}
+
+/**
+ * ges_timeline_element_get_name:
+ * @self: a #GESTimelineElement
+ *
+ *
+ * Returns a copy of the name of @self.
+ * Caller should g_free() the return value after usage.
+ *
+ * Returns: (transfer full): The name of @self
+ */
+gchar *
+ges_timeline_element_get_name (GESTimelineElement * self)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
+
+  return g_strdup (self->name);
+}
+
+/**
+ * ges_timeline_element_set_name:
+ * @self: a #GESTimelineElement
+ *
+ *
+ * Sets the name of object, or gives @self a guaranteed unique name (if name is NULL).
+ * This function makes a copy of the provided name, so the caller retains ownership
+ * of the name it sent.
+ */
+gboolean
+ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
+{
+  gboolean result, readd_to_timeline = FALSE;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+
+  /* parented objects cannot be renamed */
+  if (self->timeline != NULL) {
+    GESTimelineElement *tmp = ges_timeline_get_element (self->timeline, name);
+
+    if (tmp) {
+      gst_object_unref (tmp);
+      goto had_timeline;
+    }
+
+    timeline_remove_element (self->timeline, self);
+    readd_to_timeline = TRUE;
+  }
+
+  if (name != NULL) {
+    g_free (self->name);
+    self->name = g_strdup (name);
+    result = TRUE;
+  } else {
+    result = _set_name_default (self);
+  }
+
+  if (readd_to_timeline)
+    timeline_add_element (self->timeline, self);
+
+  return result;
+
+  /* error */
+had_timeline:
+  {
+    GST_WARNING ("Objects already in a timeline can't be renamed");
+    return FALSE;
+  }
 }

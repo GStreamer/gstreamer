@@ -91,6 +91,15 @@ void
 timeline_remove_group          (GESTimeline *timeline,
                                 GESGroup *group);
 
+G_GNUC_INTERNAL
+gboolean
+timeline_add_element           (GESTimeline *timeline,
+                                GESTimelineElement *element);
+G_GNUC_INTERNAL
+gboolean
+timeline_remove_element       (GESTimeline *timeline,
+                               GESTimelineElement *element);
+
 G_GNUC_INTERNAL void
 ges_asset_cache_init (void);
 

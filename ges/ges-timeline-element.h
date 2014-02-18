@@ -101,6 +101,14 @@ typedef struct _GESTimelineElementPrivate GESTimelineElementPrivate;
 #define GES_TIMELINE_ELEMENT_TIMELINE(obj) (((GESTimelineElement*)obj)->timeline)
 
 /**
+ * GES_TIMELINE_ELEMENT_NAME:
+ * @obj: a #GESTimelineElement
+ *
+ * The name of the object.
+ */
+#define GES_TIMELINE_ELEMENT_NAME(obj) (((GESTimelineElement*)obj)->name)
+
+/**
  * GESTimelineElement:
  * @parent: The #GESTimelineElement that controls the object
  * @asset: The #GESAsset from which the object has been extracted
@@ -128,6 +136,7 @@ struct _GESTimelineElement
   GstClockTime maxduration;
   guint32 priority;
   GESTimeline *timeline;
+  gchar *name;
 
   /*< private >*/
   GESTimelineElementPrivate *priv;
@@ -209,6 +218,8 @@ gboolean ges_timeline_element_roll_start             (GESTimelineElement *self, 
 gboolean ges_timeline_element_roll_end               (GESTimelineElement *self, GstClockTime  end);
 gboolean ges_timeline_element_trim                   (GESTimelineElement *self, GstClockTime  start);
 GESTimelineElement * ges_timeline_element_copy       (GESTimelineElement *self, gboolean deep);
+gchar  * ges_timeline_element_get_name               (GESTimelineElement *self);
+gboolean  ges_timeline_element_set_name              (GESTimelineElement *self, const gchar *name);
 
 G_END_DECLS
 

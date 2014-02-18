@@ -187,6 +187,8 @@ struct _GESTimelinePrivate
   GList *groups;
 
   guint group_id;
+
+  GHashTable *all_elements;
 };
 
 /* private structure to contain our track-related information */
@@ -556,6 +558,9 @@ ges_timeline_init (GESTimeline * self)
   priv->auto_transitions =
       g_hash_table_new_full (g_str_hash, g_str_equal, NULL, gst_object_unref);
   priv->needs_transitions_update = TRUE;
+
+  priv->all_elements =
+      g_hash_table_new_full (g_str_hash, g_str_equal, g_free, gst_object_unref);
 
   priv->group_id = -1;
 
@@ -2387,6 +2392,27 @@ pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
   tr_priv->pad = NULL;
 }
 
+gboolean
+timeline_add_element (GESTimeline * timeline, GESTimelineElement * element)
+{
+  GST_DEBUG_OBJECT (timeline, "Adding element: %s", element->name);
+  if (g_hash_table_contains (timeline->priv->all_elements, element->name)) {
+    GST_WARNING_OBJECT (timeline, "Already in %s the timeline", element->name);
+    return FALSE;
+  }
+
+  g_hash_table_insert (timeline->priv->all_elements,
+      ges_timeline_element_get_name (element), gst_object_ref (element));
+
+  return TRUE;
+}
+
+gboolean
+timeline_remove_element (GESTimeline * timeline, GESTimelineElement * element)
+{
+  return g_hash_table_remove (timeline->priv->all_elements, element->name);
+}
+
 /**** API *****/
 /**
  * ges_timeline_new:
@@ -3026,4 +3052,28 @@ ges_timeline_set_snapping_distance (GESTimeline * timeline,
   g_return_if_fail (GES_IS_TIMELINE (timeline));
 
   timeline->priv->snapping_distance = snapping_distance;
+}
+
+/**
+ * ges_timeline_get_element:
+ * @timeline: a #GESTimeline
+ *
+ * Gets a #GESTimelineElement contained in the timeline
+ *
+ * Returns: (transfer full): The #GESTimelineElement or %NULL if
+ * not found.
+ */
+GESTimelineElement *
+ges_timeline_get_element (GESTimeline * timeline, const gchar * name)
+{
+  GESTimelineElement *ret;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+
+  ret = g_hash_table_lookup (timeline->priv->all_elements, name);
+
+  if (ret)
+    return gst_object_ref (ret);
+
+  return NULL;
 }

@@ -369,6 +369,7 @@ ges_timeline_get_auto_transition
 ges_timeline_set_auto_transition
 ges_timeline_get_snapping_distance
 ges_timeline_set_snapping_distance
+ges_timeline_get_element
 <SUBSECTION Standard>
 GESTimelinePrivate
 GESTimelineClass
@@ -441,6 +442,8 @@ ges_timeline_element_roll_end
 ges_timeline_element_trim
 ges_timeline_element_get_toplevel_parent
 ges_timeline_element_copy
+ges_timeline_element_get_name
+ges_timeline_element_set_name
 GES_TIMELINE_ELEMENT_PARENT
 GES_TIMELINE_ELEMENT_TIMELINE
 GES_TIMELINE_ELEMENT_START
@@ -449,6 +452,7 @@ GES_TIMELINE_ELEMENT_INPOINT
 GES_TIMELINE_ELEMENT_DURATION
 GES_TIMELINE_ELEMENT_MAX_DURATION
 GES_TIMELINE_ELEMENT_PRIORITY
+GES_TIMELINE_ELEMENT_NAME
 <SUBSECTION Standard>
 GESTimelineElementPrivate
 ges_timeline_element_get_type

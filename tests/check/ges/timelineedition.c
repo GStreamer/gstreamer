@@ -290,12 +290,8 @@ GST_START_TEST (test_snapping)
   fail_unless (ges_track_element_get_track (trackelement) == track);
   assert_equals_uint64 (_DURATION (trackelement), 37);
 
-  /* We have 3 references to trackelement from:
-   *  track + timeline + clip */
-  ASSERT_OBJECT_REFCOUNT (trackelement, "First trackelement", 3);
-  /* We have 1 ref to clip1:
-   * + layer */
-  ASSERT_OBJECT_REFCOUNT (clip, "First clip", 1);
+  ASSERT_OBJECT_REFCOUNT (trackelement, "track + timeline + clip", 4);
+  ASSERT_OBJECT_REFCOUNT (clip, "layer + timeline", 2);
 
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip1)));
   fail_unless ((trackelements = GES_CONTAINER_CHILDREN (clip1)) != NULL);
@@ -305,8 +301,8 @@ GST_START_TEST (test_snapping)
   assert_equals_uint64 (_DURATION (trackelement1), 15);
 
   /* Same ref logic */
-  ASSERT_OBJECT_REFCOUNT (trackelement1, "First trackelement", 3);
-  ASSERT_OBJECT_REFCOUNT (clip1, "First clip", 1);
+  ASSERT_OBJECT_REFCOUNT (trackelement1, "First trackelement", 4);
+  ASSERT_OBJECT_REFCOUNT (clip1, "First clip", 2);
 
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip2)));
   fail_unless ((trackelements = GES_CONTAINER_CHILDREN (clip2)) != NULL);
@@ -316,8 +312,8 @@ GST_START_TEST (test_snapping)
   assert_equals_uint64 (_DURATION (trackelement2), 60);
 
   /* Same ref logic */
-  ASSERT_OBJECT_REFCOUNT (trackelement2, "First trackelement", 3);
-  ASSERT_OBJECT_REFCOUNT (clip2, "First clip", 1);
+  ASSERT_OBJECT_REFCOUNT (trackelement2, "First trackelement", 4);
+  ASSERT_OBJECT_REFCOUNT (clip2, "First clip", 2);
 
   /* Snaping to edge, so no move */
   g_object_set (timeline, "snapping-distance", (guint64) 3, NULL);
@@ -461,12 +457,12 @@ GST_START_TEST (test_snapping)
   CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
 
   /* Check we didn't lose/screwed any references */
-  ASSERT_OBJECT_REFCOUNT (trackelement, "First trackelement", 3);
-  ASSERT_OBJECT_REFCOUNT (trackelement1, "Second trackelement", 3);
-  ASSERT_OBJECT_REFCOUNT (trackelement2, "Third trackelement", 3);
-  ASSERT_OBJECT_REFCOUNT (clip, "First clip", 1);
-  ASSERT_OBJECT_REFCOUNT (clip1, "Second clip", 1);
-  ASSERT_OBJECT_REFCOUNT (clip2, "Third clip", 1);
+  ASSERT_OBJECT_REFCOUNT (trackelement, "First trackelement", 4);
+  ASSERT_OBJECT_REFCOUNT (trackelement1, "Second trackelement", 4);
+  ASSERT_OBJECT_REFCOUNT (trackelement2, "Third trackelement", 4);
+  ASSERT_OBJECT_REFCOUNT (clip, "First clip", 2);
+  ASSERT_OBJECT_REFCOUNT (clip1, "Second clip", 2);
+  ASSERT_OBJECT_REFCOUNT (clip2, "Third clip", 2);
 
   check_destroyed (G_OBJECT (timeline), G_OBJECT (trackelement),
       trackelement1, trackelement2, clip, clip1, clip2, layer, NULL);
@@ -817,14 +813,12 @@ GST_START_TEST (test_timeline_edition_mode)
   /* We have 3 references:
    *  track  + timeline  + clip
    */
-  ASSERT_OBJECT_REFCOUNT (trackelement, "First trackelement", 3);
-  ASSERT_OBJECT_REFCOUNT (trackelement1, "Second trackelement", 3);
-  ASSERT_OBJECT_REFCOUNT (trackelement2, "Third trackelement", 3);
-  /* We have 1 ref:
-   * + layer */
-  ASSERT_OBJECT_REFCOUNT (clip, "First clip", 1);
-  ASSERT_OBJECT_REFCOUNT (clip1, "Second clip", 1);
-  ASSERT_OBJECT_REFCOUNT (clip2, "Third clip", 1);
+  ASSERT_OBJECT_REFCOUNT (trackelement, "First trackelement", 4);
+  ASSERT_OBJECT_REFCOUNT (trackelement1, "Second trackelement", 4);
+  ASSERT_OBJECT_REFCOUNT (trackelement2, "Third trackelement", 4);
+  ASSERT_OBJECT_REFCOUNT (clip, "First clip", 2);
+  ASSERT_OBJECT_REFCOUNT (clip1, "Second clip", 2);
+  ASSERT_OBJECT_REFCOUNT (clip2, "Third clip", 2);
 
   /* Ripple clip end to 52
    * New timeline:

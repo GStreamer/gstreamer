@@ -394,7 +394,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Moving first source to 250");
   ges_timeline_element_set_start (src, 250);
@@ -579,14 +579,14 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 600);
   assert_equals_uint64 (_DURATION (transition), 1250 - 600);
-  ASSERT_OBJECT_REFCOUNT (transition, "The layer and ourself own a ref", 2);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline + ourself", 3);
 
   current = current->next;
   transition = current->data;
   assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 600);
   assert_equals_uint64 (_DURATION (transition), 1250 - 600);
-  ASSERT_OBJECT_REFCOUNT (transition, "The layer and ourself own a ref", 2);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline + ourself", 3);
 
   current = current->next;
   fail_unless (current->data == src);
@@ -596,14 +596,14 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1250);
   assert_equals_uint64 (_DURATION (transition), 1400 - 1250);
-  ASSERT_OBJECT_REFCOUNT (transition, "The layer and ourself own a ref", 2);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline + ourself", 3);
 
   current = current->next;
   transition = current->data;
   assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1250);
   assert_equals_uint64 (_DURATION (transition), 1400 - 1250);
-  ASSERT_OBJECT_REFCOUNT (transition, "The layer and ourself own a ref", 2);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline + ourself", 3);
 
   current = current->next;
   fail_unless (current->data == src2);
@@ -806,7 +806,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Adding clip 2 from 500 -- 1000 to second layer");
   src2 = GES_TIMELINE_ELEMENT (ges_layer_add_asset (layer1, asset, 0,
@@ -850,7 +850,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Checking transitions on second layer");
   current = objects = ges_layer_get_clips (layer1);
@@ -898,7 +898,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Checking transitions has been added on second layer");
   current = objects = ges_layer_get_clips (layer1);
@@ -917,7 +917,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Moving src3 to 1000. should remove transition");
   ges_timeline_element_set_start (src3, 1000);
@@ -956,7 +956,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Checking transitions has been removed on second layer");
   current = objects = ges_layer_get_clips (layer1);
@@ -964,7 +964,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   fail_unless (current->data == src2);
   fail_unless (current->next->data == src3);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Moving src3 to first layer, should add a transition");
   ges_clip_move_to_layer (GES_CLIP (src3), layer);
@@ -1023,14 +1023,14 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   fail_unless (current->data == src3);
 
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Checking second layer");
   current = objects = ges_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objects), 1);
   fail_unless (current->data == src2);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG
       ("Moving src to second layer, should remove first transition on first layer");
@@ -1073,7 +1073,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   current = current->next;
   fail_unless (current->data == src3);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Checking second layer");
   current = objects = ges_layer_get_clips (layer1);
@@ -1081,7 +1081,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   assert_is_type (current->next->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Edit src to first layer start=1500");
   ges_container_edit (GES_CONTAINER (src), NULL, 0,
@@ -1139,14 +1139,14 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   current = current->next;
   fail_unless (current->data == src);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Checking second layer");
   current = objects = ges_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objects), 1);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Ripple src1 to 700");
   ges_container_edit (GES_CONTAINER (src1), NULL, 0,
@@ -1204,14 +1204,14 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   current = current->next;
   fail_unless (current->data == src);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Checking second layer");
   current = objects = ges_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objects), 1);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   gst_object_unref (timeline);
 }
@@ -1368,7 +1368,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   current = current->next;
   fail_unless (current->data == src3);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   GST_DEBUG ("Moving src2 to 1200, check everything updates properly");
   ges_timeline_element_set_start (src2, 1200);
@@ -1441,7 +1441,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   current = current->next;
   fail_unless (current->data == src3);
   g_list_free_full (objects, gst_object_unref);
-  ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
+  ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
 
   gst_object_unref (timeline);

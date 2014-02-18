@@ -66,7 +66,7 @@ GST_START_TEST (test_move_group)
   g_list_free (clips);
 
   fail_unless (GES_IS_GROUP (group));
-  ASSERT_OBJECT_REFCOUNT (group, "1 ref for the timeline", 1);
+  ASSERT_OBJECT_REFCOUNT (group, "2 ref for the timeline", 2);
   fail_unless (g_list_length (GES_CONTAINER_CHILDREN (group)) == 3);
   assert_equals_int (GES_CONTAINER_HEIGHT (group), 2);
 
@@ -299,7 +299,7 @@ GST_START_TEST (test_move_group)
   CHECK_OBJECT_PROPS (clip2, 55, 0, 65);
   CHECK_OBJECT_PROPS (group, 10, 0, 110);
 
-  ASSERT_OBJECT_REFCOUNT (group, "1 ref for the timeline", 1);
+  ASSERT_OBJECT_REFCOUNT (group, "2 ref for the timeline", 2);
   check_destroyed (G_OBJECT (timeline), G_OBJECT (group), NULL);
   gst_object_unref (asset);
 }

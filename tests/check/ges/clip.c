@@ -181,9 +181,11 @@ GST_START_TEST (test_split_object)
   fail_unless (splitclip != clip);
 
   /* We own the only ref */
-  ASSERT_OBJECT_REFCOUNT (splitclip, "splitclip", 1);
-  /* 1 ref for the Clip, 1 ref for the Track and 1 ref for the timeline */
-  ASSERT_OBJECT_REFCOUNT (splittrackelement, "splittrackelement", 3);
+  ASSERT_OBJECT_REFCOUNT (splitclip, "1 ref for us + 1 for the timeline", 2);
+  /* 1 ref for the Clip, 1 ref for the Track and 2 ref for the timeline
+   * (1 for the "all_element" hashtable, another for the sequence of TrackElement*/
+  ASSERT_OBJECT_REFCOUNT (splittrackelement,
+      "1 ref for the Clip, 1 ref for the Track and 2 ref for the timeline", 4);
 
   check_destroyed (G_OBJECT (timeline), G_OBJECT (splitclip), clip,
       splittrackelement, NULL);
@@ -216,7 +218,7 @@ GST_START_TEST (test_clip_group_ungroup)
   assert_is_type (asset, GES_TYPE_ASSET);
 
   clip = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
-  ASSERT_OBJECT_REFCOUNT (clip, "1 layer", 1);
+  ASSERT_OBJECT_REFCOUNT (clip, "1 layer + 1 timeline.all_elements", 2);
   assert_equals_uint64 (_START (clip), 0);
   assert_equals_uint64 (_INPOINT (clip), 0);
   assert_equals_uint64 (_DURATION (clip), 10);
@@ -229,20 +231,23 @@ GST_START_TEST (test_clip_group_ungroup)
   assert_equals_uint64 (_START (clip), 0);
   assert_equals_uint64 (_INPOINT (clip), 0);
   assert_equals_uint64 (_DURATION (clip), 10);
-  ASSERT_OBJECT_REFCOUNT (clip, "1 for the layer + 1 in containers list", 2);
+  ASSERT_OBJECT_REFCOUNT (clip, "1 for the layer + 1 for the timeline + "
+      "1 in containers list", 3);
 
   clip2 = containers->next->data;
   fail_if (clip2 == clip);
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (clip2) != NULL);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip2)), 1);
   assert_equals_uint64 (_START (clip2), 0);
   assert_equals_uint64 (_INPOINT (clip2), 0);
   assert_equals_uint64 (_DURATION (clip2), 10);
-  ASSERT_OBJECT_REFCOUNT (clip2, "1 for the layer + 1 in containers list", 2);
+  ASSERT_OBJECT_REFCOUNT (clip2, "1 for the layer + 1 for the timeline +"
+      " 1 in containers list", 3);
 
   tmp = ges_track_get_elements (audio_track);
   assert_equals_int (g_list_length (tmp), 1);
   ASSERT_OBJECT_REFCOUNT (tmp->data, "1 for the track + 1 for the container "
-      "+ 1 for the timeline + 1 in tmp list", 4);
+      "+ 2 for the timeline + 1 in tmp list", 5);
   assert_equals_int (ges_track_element_get_track_type (tmp->data),
       GES_TRACK_TYPE_AUDIO);
   assert_equals_int (ges_clip_get_supported_formats (GES_CLIP
@@ -251,7 +256,7 @@ GST_START_TEST (test_clip_group_ungroup)
   tmp = ges_track_get_elements (video_track);
   assert_equals_int (g_list_length (tmp), 1);
   ASSERT_OBJECT_REFCOUNT (tmp->data, "1 for the track + 1 for the container "
-      "+ 1 for the timeline + 1 in tmp list", 4);
+      "+ 2 for the timeline + 1 in tmp list", 5);
   assert_equals_int (ges_track_element_get_track_type (tmp->data),
       GES_TRACK_TYPE_VIDEO);
   assert_equals_int (ges_clip_get_supported_formats (GES_CLIP
@@ -302,7 +307,7 @@ GST_START_TEST (test_clip_group_ungroup)
   tmp = ges_track_get_elements (video_track);
   assert_equals_int (g_list_length (tmp), 1);
   ASSERT_OBJECT_REFCOUNT (tmp->data, "1 for the track + 1 for the container "
-      "+ 1 for the timeline + 1 in tmp list", 4);
+      "+ 2 for the timeline + 1 in tmp list", 5);
   assert_equals_int (ges_track_element_get_track_type (tmp->data),
       GES_TRACK_TYPE_VIDEO);
   fail_unless (GES_CONTAINER (ges_timeline_element_get_parent (tmp->data)) ==
