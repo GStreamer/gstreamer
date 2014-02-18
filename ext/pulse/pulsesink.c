@@ -2790,7 +2790,7 @@ no_mainloop:
 no_buffer:
   {
     GST_DEBUG_OBJECT (pulsesink, "we have no ringbuffer");
-    goto unlock;
+    return NULL;
   }
 info_failed:
   {
