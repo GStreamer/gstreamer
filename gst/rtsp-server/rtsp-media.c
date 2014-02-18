@@ -1548,14 +1548,14 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     if (priv->blocked)
       media_streams_set_blocked (media, TRUE);
 
+    flags = GST_SEEK_FLAG_NONE;
+
+    /* only set flush and keyframe flag when modifying start */
+    if (start_type != GST_SEEK_TYPE_NONE)
+      flags = GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT;
+
     /* depends on the current playing state of the pipeline. We might need to
      * queue this until we get EOS. */
-    flags = GST_SEEK_FLAG_FLUSH;
-
-    /* only set keyframe flag when modifying start */
-    if (start_type != GST_SEEK_TYPE_NONE)
-      flags |= GST_SEEK_FLAG_KEY_UNIT;
-
     /* FIXME, we only do forwards */
     res = gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME,
         flags, start_type, start, stop_type, stop);
