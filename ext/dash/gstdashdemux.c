@@ -321,6 +321,7 @@ gst_dash_demux_init (GstDashDemux * demux)
   demux->max_buffering_time = DEFAULT_MAX_BUFFERING_TIME * GST_SECOND;
   demux->bandwidth_usage = DEFAULT_BANDWIDTH_USAGE;
   demux->max_bitrate = DEFAULT_MAX_BITRATE;
+  demux->last_manifest_update = GST_CLOCK_TIME_NONE;
 
   g_mutex_init (&demux->client_lock);
 }
