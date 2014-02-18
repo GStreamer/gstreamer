@@ -39,9 +39,9 @@
  * their output since they generally save metadata in the file header.
  * Therefore, it is often necessary that applications read the results in a bus
  * event handler for the tag message.  Obtaining the values this way is always
- * needed for <link linkend="GstRgAnalysis--num-tracks">album processing</link>
- * since the album gain and peak values need to be associated with all tracks of
- * an album, not just the last one.
+ * needed for album processing (see #GstRgAnalysis:num-tracks property) since
+ * the album gain and peak values need to be associated with all tracks of an
+ * album, not just the last one.
  * 
  * <refsect2>
  * <title>Example launch lines</title>

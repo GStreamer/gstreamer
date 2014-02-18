@@ -76,12 +76,10 @@
  *   #GValueArray of #gdouble
  *   <classname>&quot;decay&quot;</classname>:
  *   the decaying peak power level in dB for each channel
- *   the decaying peak level follows the peak level, but starts dropping
- *   if no new peak is reached after the time given by
- *   the <link linkend="GstLevel--peak-ttl">the time to live</link>.
- *   When the decaying peak level drops, it does so at the decay rate
- *   as specified by the
- *   <link linkend="GstLevel--peak-falloff">the peak falloff rate</link>.
+ *   The decaying peak level follows the peak level, but starts dropping if no
+ *   new peak is reached after the time given by the #GstLevel:peak-ttl.
+ *   When the decaying peak level drops, it does so at the decay rate as
+ *   specified by the #GstLevel:peak-falloff.
  *   </para>
  * </listitem>
  * <listitem>

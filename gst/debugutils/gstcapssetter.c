@@ -20,34 +20,24 @@
 /**
  * SECTION:element-capssetter
  *
- * <refsect2>
- * <para>
- * Sets or merges caps on a stream's buffers.
- * That is, a buffer's caps are updated using (fields of)
- * <link linkend="GstCapsSetter--caps">caps</link>.  Note that this may
- * contain multiple structures (though not likely recommended), but each
- * of these must be fixed (or will otherwise be rejected).
- * </para>
- * <para>
- * If <link linkend="GstCapsSetter--join">join</link>
- * is TRUE, then the incoming caps' mime-type is compared to the mime-type(s)
- * of provided caps and only matching structure(s) are considered for updating.
- * </para>
- * <para>
- * If <link linkend="GstCapsSetter--replace">replace</link>
- * is TRUE, then any caps update is preceded by clearing existing fields,
- * making provided fields (as a whole) replace incoming ones.
- * Otherwise, no clearing is performed, in which case provided fields are
- * added/merged onto incoming caps
- * </para>
- * <para>
+ * Sets or merges caps on a stream's buffers. That is, a buffer's caps are
+ * updated using (fields of) #GstCapsSetter:caps. Note that this may contain
+ * multiple structures (though not likely recommended), but each of these must
+ * be fixed (or will otherwise be rejected).
+ * 
+ * If #GstCapsSetter:join is %TRUE, then the incoming caps' mime-type is
+ * compared to the mime-type(s) of provided caps and only matching structure(s)
+ * are considered for updating.
+ * 
+ * If #GstCapsSetter:replace is %TRUE, then any caps update is preceded by
+ * clearing existing fields, making provided fields (as a whole) replace
+ * incoming ones. Otherwise, no clearing is performed, in which case provided
+ * fields are added/merged onto incoming caps
+ * 
  * Although this element might mainly serve as debug helper,
  * it can also practically be used to correct a faulty pixel-aspect-ratio,
  * or to modify a yuv fourcc value to effectively swap chroma components or such
  * alike.
- * </para>
- * </refsect2>
- *
  */
 
 
