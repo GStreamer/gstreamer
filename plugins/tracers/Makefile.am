@@ -9,6 +9,7 @@ endif
 
 libgstcoretracers_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la
 libgstcoretracers_la_SOURCES = \
+  gstlatency.c \
   gstlog.c \
   $(RUSAGE_SOURCES) \
   gststats.c \
@@ -22,6 +23,7 @@ libgstcoretracers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcoretracers_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
+  gstlatency.h \
   gstlog.h \
   gstrusage.h \
   gststats.h

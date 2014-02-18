@@ -24,6 +24,7 @@
 #endif
 
 #include <gst/gst.h>
+#include "gstlatency.h"
 #include "gstlog.h"
 #include "gstrusage.h"
 #include "gststats.h"
@@ -31,6 +32,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_tracer_register (plugin, "latency", gst_latency_tracer_get_type ()))
+    return FALSE;
   if (!gst_tracer_register (plugin, "log", gst_log_tracer_get_type ()))
     return FALSE;
 #ifdef HAVE_GETRUSAGE
