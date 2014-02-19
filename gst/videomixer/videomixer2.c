@@ -841,8 +841,6 @@ gst_videomixer2_reset (GstVideoMixer2 * mix)
   }
 
   mix->newseg_pending = TRUE;
-  g_atomic_int_set (&mix->flush_stop_pending, FALSE);
-  g_atomic_int_set (&mix->waiting_flush_stop, FALSE);
 }
 
 /*  1 == OK
@@ -1197,11 +1195,6 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
   /* If we're not negotiated yet... */
   if (GST_VIDEO_INFO_FORMAT (&mix->info) == GST_VIDEO_FORMAT_UNKNOWN)
     return GST_FLOW_NOT_NEGOTIATED;
-
-  if (g_atomic_int_compare_and_exchange (&mix->flush_stop_pending, TRUE, FALSE)) {
-    GST_DEBUG_OBJECT (mix, "pending flush stop");
-    gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop (TRUE));
-  }
 
   if (mix->send_stream_start) {
     gchar s_id[32];
@@ -1587,20 +1580,6 @@ gst_videomixer2_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       GST_DEBUG_OBJECT (mix, "Handling SEEK event");
 
-      /* check if we are flushing */
-      if (flags & GST_SEEK_FLAG_FLUSH) {
-        /* flushing seek, start flush downstream, the flush will be done
-         * when all pads received a FLUSH_STOP. */
-        gst_pad_push_event (mix->srcpad, gst_event_new_flush_start ());
-
-        /* make sure we accept nothing anymore and return WRONG_STATE */
-        gst_collect_pads_set_flushing (mix->collect, TRUE);
-      }
-
-      /* now wait for the collected to be finished and mark a new
-       * segment */
-      GST_COLLECT_PADS_STREAM_LOCK (mix->collect);
-
       abs_rate = ABS (rate);
 
       GST_VIDEO_MIXER2_LOCK (mix);
@@ -1634,24 +1613,9 @@ gst_videomixer2_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       mix->nframes = 0;
       mix->newseg_pending = TRUE;
 
-      if (flags & GST_SEEK_FLAG_FLUSH) {
-        gst_collect_pads_set_flushing (mix->collect, FALSE);
-
-        /* we can't send FLUSH_STOP here since upstream could start pushing data
-         * after we unlock mix->collect.
-         * We set flush_stop_pending to TRUE instead and send FLUSH_STOP after
-         * forwarding the seek upstream or from gst_videomixer_collected,
-         * whichever happens first.
-         */
-        g_atomic_int_set (&mix->flush_stop_pending, TRUE);
-        g_atomic_int_set (&mix->waiting_flush_stop, FALSE);
-      }
-
-      GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
-
       gst_videomixer2_reset_qos (mix);
 
-      result = gst_videomixer2_push_sink_event (mix, event);
+      result = gst_collect_pads_src_event_default (mix->collect, pad, event);
       break;
     }
     case GST_EVENT_NAVIGATION:
@@ -1914,6 +1878,15 @@ gst_videomixer2_sink_clip (GstCollectPads * pads,
   return GST_FLOW_OK;
 }
 
+static void
+gst_videomixer2_flush (GstCollectPads * pads, GstVideoMixer2 * mix)
+{
+  if (mix->pending_tags) {
+    gst_tag_list_unref (mix->pending_tags);
+    mix->pending_tags = NULL;
+  }
+}
+
 static gboolean
 gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
     GstEvent * event, GstVideoMixer2 * mix)
@@ -1944,29 +1917,9 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
       g_assert (seg.format == GST_FORMAT_TIME);
       break;
     }
-    case GST_EVENT_FLUSH_START:
-      g_atomic_int_set (&mix->waiting_flush_stop, TRUE);
-      g_atomic_int_set (&mix->flush_stop_pending, FALSE);
-      ret = gst_collect_pads_event_default (pads, cdata, event, discard);
-      event = NULL;
-      if (mix->pending_tags) {
-        gst_tag_list_unref (mix->pending_tags);
-        mix->pending_tags = NULL;
-      }
-      break;
     case GST_EVENT_FLUSH_STOP:
       mix->newseg_pending = TRUE;
-      if (g_atomic_int_compare_and_exchange (&mix->waiting_flush_stop, TRUE,
-              FALSE)) {
-        GST_DEBUG_OBJECT (pad, "forwarding flush stop");
-        ret = gst_collect_pads_event_default (pads, cdata, event, discard);
-        event = NULL;
-      } else {
-        discard = TRUE;
-        GST_DEBUG_OBJECT (pad, "eating flush stop");
-      }
 
-      /* FIXME Should we reset in case we were not awaiting a flush stop? */
       gst_videomixer2_reset_qos (mix);
       gst_buffer_replace (&pad->mixcol->buffer, NULL);
       pad->mixcol->start_time = -1;
@@ -2342,6 +2295,8 @@ gst_videomixer2_init (GstVideoMixer2 * mix)
   gst_element_add_pad (GST_ELEMENT (mix), mix->srcpad);
 
   mix->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_flush_function (mix->collect,
+      (GstCollectPadsFlushFunction) gst_videomixer2_flush, mix);
   mix->background = DEFAULT_BACKGROUND;
   mix->current_caps = NULL;
   mix->pending_tags = NULL;

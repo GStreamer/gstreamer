@@ -97,11 +97,6 @@ struct _GstVideoMixer2
   gboolean send_caps;
 
   gboolean newseg_pending;
-  gboolean flush_stop_pending; /* Used when we receive a flushing seek,
-                                  to send a flush_stop right before the
-                                  following buffer */
-  gboolean waiting_flush_stop; /* Used when we receive a flush_start to make
-                                  sure to forward the flush_stop only once */
 
   GstVideoMixer2Background background;
 
