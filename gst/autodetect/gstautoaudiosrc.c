@@ -197,27 +197,6 @@ gst_auto_audio_src_factory_filter (GstPluginFeature * feature, gpointer data)
 }
 
 static GstElement *
-gst_auto_audio_src_create_element_with_pretty_name (GstAutoAudioSrc * src,
-    GstElementFactory * factory)
-{
-  GstElement *element;
-  gchar *name, *marker;
-
-  marker = g_strdup (GST_OBJECT_NAME (factory));
-  if (g_str_has_suffix (marker, "src"))
-    marker[strlen (marker) - 4] = '\0';
-  if (g_str_has_prefix (marker, "gst"))
-    memmove (marker, marker + 3, strlen (marker + 3) + 1);
-  name = g_strdup_printf ("%s-actual-src-%s", GST_OBJECT_NAME (src), marker);
-  g_free (marker);
-
-  element = gst_element_factory_create (factory, name);
-  g_free (name);
-
-  return element;
-}
-
-static GstElement *
 gst_auto_audio_src_find_best (GstAutoAudioSrc * src)
 {
   GList *list, *item;
@@ -243,7 +222,8 @@ gst_auto_audio_src_find_best (GstAutoAudioSrc * src)
     GstElementFactory *f = GST_ELEMENT_FACTORY (item->data);
     GstElement *el;
 
-    if ((el = gst_auto_audio_src_create_element_with_pretty_name (src, f))) {
+    if ((el = gst_auto_create_element_with_pretty_name (GST_ELEMENT_CAST (src),
+                f, "src"))) {
       GstStateChangeReturn ret;
 
       GST_DEBUG_OBJECT (src, "Testing %s", GST_OBJECT_NAME (f));

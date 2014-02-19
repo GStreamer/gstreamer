@@ -23,4 +23,8 @@
 GST_DEBUG_CATEGORY_EXTERN (autodetect_debug);
 #define GST_CAT_DEFAULT autodetect_debug
 
+GstElement * gst_auto_create_element_with_pretty_name (
+    GstElement * autodetect, GstElementFactory * factory, const gchar *suffix);
+
+
 #endif /* __GST_AUTO_DETECT_H__ */

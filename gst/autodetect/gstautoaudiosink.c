@@ -211,27 +211,6 @@ gst_auto_audio_sink_factory_filter (GstPluginFeature * feature, gpointer data)
 }
 
 static GstElement *
-gst_auto_audio_sink_create_element_with_pretty_name (GstAutoAudioSink * sink,
-    GstElementFactory * factory)
-{
-  GstElement *element;
-  gchar *name, *marker;
-
-  marker = g_strdup (GST_OBJECT_NAME (factory));
-  if (g_str_has_suffix (marker, "sink"))
-    marker[strlen (marker) - 4] = '\0';
-  if (g_str_has_prefix (marker, "gst"))
-    memmove (marker, marker + 3, strlen (marker + 3) + 1);
-  name = g_strdup_printf ("%s-actual-sink-%s", GST_OBJECT_NAME (sink), marker);
-  g_free (marker);
-
-  element = gst_element_factory_create (factory, name);
-  g_free (name);
-
-  return element;
-}
-
-static GstElement *
 gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
 {
   GList *list, *item;
@@ -257,7 +236,8 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
     GstElementFactory *f = GST_ELEMENT_FACTORY (item->data);
     GstElement *el;
 
-    if ((el = gst_auto_audio_sink_create_element_with_pretty_name (sink, f))) {
+    if ((el = gst_auto_create_element_with_pretty_name (GST_ELEMENT_CAST (sink),
+                f, "sink"))) {
       GstStateChangeReturn ret;
 
       GST_DEBUG_OBJECT (sink, "Testing %s", GST_OBJECT_NAME (f));

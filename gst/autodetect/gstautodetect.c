@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include <gst/gst.h>
 
 #include "gstautodetect.h"
@@ -30,6 +32,30 @@
 #include "gstautovideosrc.h"
 
 GST_DEBUG_CATEGORY (autodetect_debug);
+
+GstElement *
+gst_auto_create_element_with_pretty_name (GstElement * autodetect,
+    GstElementFactory * factory, const gchar * suffix)
+{
+  GstElement *element;
+  gchar *name, *marker;
+
+  marker = g_strdup (GST_OBJECT_NAME (factory));
+  if (g_str_has_suffix (marker, suffix))
+    marker[strlen (marker) - 4] = '\0';
+  if (g_str_has_prefix (marker, "gst"))
+    memmove (marker, marker + 3, strlen (marker + 3) + 1);
+  name = g_strdup_printf ("%s-actual-%s-%s", GST_OBJECT_NAME (autodetect),
+      suffix, marker);
+  g_free (marker);
+
+  element = gst_element_factory_create (factory, name);
+  g_free (name);
+
+  return element;
+}
+
+
 
 static gboolean
 plugin_init (GstPlugin * plugin)
