@@ -746,8 +746,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
 
   buf = gst_fragment_get_buffer (fragment);
 
-  if (G_UNLIKELY (!srccaps || !gst_caps_is_equal_fixed (bufcaps, srccaps)
-          || demux->need_segment)) {
+  if (G_UNLIKELY (!srccaps || !gst_caps_is_equal_fixed (bufcaps, srccaps))) {
     switch_pads (demux, bufcaps);
     demux->need_segment = TRUE;
   }
