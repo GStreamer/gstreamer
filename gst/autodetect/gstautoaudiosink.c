@@ -39,35 +39,25 @@
 #include "config.h"
 #endif
 
-#include <string.h>
-
 #include "gstautoaudiosink.h"
-#include "gstautodetect.h"
 
 #define DEFAULT_TS_OFFSET           0
-#define DEFAULT_SYNC                TRUE
 
 /* Properties */
 enum
 {
   PROP_0,
-  PROP_CAPS,
   PROP_TS_OFFSET,
-  PROP_SYNC,
 };
 
-static GstStateChangeReturn
-gst_auto_audio_sink_change_state (GstElement * element,
-    GstStateChange transition);
-static void gst_auto_audio_sink_dispose (GstAutoAudioSink * sink);
-static void gst_auto_audio_sink_clear_kid (GstAutoAudioSink * sink);
 static void gst_auto_audio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_auto_audio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_auto_audio_sink_configure (GstAutoDetect * autodetect,
+    GstElement * kid);
 
-#define gst_auto_audio_sink_parent_class parent_class
-G_DEFINE_TYPE (GstAutoAudioSink, gst_auto_audio_sink, GST_TYPE_BIN);
+G_DEFINE_TYPE (GstAutoAudioSink, gst_auto_audio_sink, GST_TYPE_AUTO_DETECT);
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -77,45 +67,22 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static void
 gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *eklass;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
+  GstAutoDetectClass *aklass = GST_AUTO_DETECT_CLASS (klass);
 
-  gobject_class = G_OBJECT_CLASS (klass);
-  eklass = GST_ELEMENT_CLASS (klass);
-
-  gobject_class->dispose = (GObjectFinalizeFunc) gst_auto_audio_sink_dispose;
   gobject_class->set_property = gst_auto_audio_sink_set_property;
   gobject_class->get_property = gst_auto_audio_sink_get_property;
 
-  eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_audio_sink_change_state);
-
-  /**
-   * GstAutoAudioSink:filter-caps:
-   *
-   * This property will filter out candidate sinks that can handle the specified
-   * caps. By default only audio sinks that support raw floating point and
-   * integer audio are selected.
-   *
-   * This property can only be set before the element goes to the READY state.
-   */
-  g_object_class_install_property (gobject_class, PROP_CAPS,
-      g_param_spec_boxed ("filter-caps", "Filter caps",
-          "Filter sink candidates using these caps.", GST_TYPE_CAPS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  aklass->configure = gst_auto_audio_sink_configure;
 
   g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
       g_param_spec_int64 ("ts-offset", "TS Offset",
           "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
           DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_SYNC,
-      g_param_spec_boolean ("sync", "Sync",
-          "Sync on the clock", DEFAULT_SYNC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&sink_template));
-
   gst_element_class_set_static_metadata (eklass, "Auto audio sink",
       "Sink/Audio",
       "Wrapper audio sink for automatically detected audio sink",
@@ -123,272 +90,22 @@ gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
 }
 
 static void
-gst_auto_audio_sink_dispose (GstAutoAudioSink * sink)
-{
-  gst_auto_audio_sink_clear_kid (sink);
-
-  if (sink->filter_caps)
-    gst_caps_unref (sink->filter_caps);
-  sink->filter_caps = NULL;
-
-  G_OBJECT_CLASS (parent_class)->dispose ((GObject *) sink);
-}
-
-static void
-gst_auto_audio_sink_clear_kid (GstAutoAudioSink * sink)
-{
-  if (sink->kid) {
-    gst_element_set_state (sink->kid, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (sink), sink->kid);
-    sink->kid = NULL;
-    /* Don't lose the SINK flag */
-    GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_FLAG_SINK);
-  }
-}
-
-/*
- * Hack to make initial linking work; ideally, this'd work even when
- * no target has been assigned to the ghostpad yet.
- */
-static void
-gst_auto_audio_sink_reset (GstAutoAudioSink * sink)
-{
-  GstPad *targetpad;
-
-  gst_auto_audio_sink_clear_kid (sink);
-
-  /* fakesink placeholder */
-  sink->kid = gst_element_factory_make ("fakesink", "tempsink");
-  gst_bin_add (GST_BIN (sink), sink->kid);
-
-  /* pad */
-  targetpad = gst_element_get_static_pad (sink->kid, "sink");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
-  gst_object_unref (targetpad);
-}
-
-static GstStaticCaps raw_caps = GST_STATIC_CAPS ("audio/x-raw");
-
-static void
 gst_auto_audio_sink_init (GstAutoAudioSink * sink)
 {
-  sink->pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
+  GstAutoDetect *autodetect = GST_AUTO_DETECT (sink);
 
-  gst_auto_audio_sink_reset (sink);
+  autodetect->media_klass = "Audio";
+  autodetect->flag = GST_ELEMENT_FLAG_SINK;
 
-  /* set the default raw audio caps */
-  sink->filter_caps = gst_static_caps_get (&raw_caps);
   sink->ts_offset = DEFAULT_TS_OFFSET;
-  sink->sync = DEFAULT_SYNC;
-
-  /* mark as sink */
-  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_FLAG_SINK);
 }
 
-static gboolean
-gst_auto_audio_sink_factory_filter (GstPluginFeature * feature, gpointer data)
+static void
+gst_auto_audio_sink_configure (GstAutoDetect * autodetect, GstElement * kid)
 {
-  guint rank;
-  const gchar *klass;
+  GstAutoAudioSink *self = GST_AUTO_AUDIO_SINK (autodetect);
 
-  /* we only care about element factories */
-  if (!GST_IS_ELEMENT_FACTORY (feature))
-    return FALSE;
-
-  /* audio sinks */
-  klass = gst_element_factory_get_metadata (GST_ELEMENT_FACTORY (feature),
-      GST_ELEMENT_METADATA_KLASS);
-  if (!(strstr (klass, "Sink") && strstr (klass, "Audio")))
-    return FALSE;
-
-  /* only select elements with autoplugging rank */
-  rank = gst_plugin_feature_get_rank (feature);
-  if (rank < GST_RANK_MARGINAL)
-    return FALSE;
-
-  return TRUE;
-}
-
-static GstElement *
-gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
-{
-  GList *list, *item;
-  GstElement *choice = NULL;
-  GstMessage *message = NULL;
-  GSList *errors = NULL;
-  GstBus *bus = gst_bus_new ();
-  GstPad *el_pad = NULL;
-  GstCaps *el_caps = NULL;
-  gboolean no_match = TRUE;
-
-  list = gst_registry_feature_filter (gst_registry_get (),
-      (GstPluginFeatureFilter) gst_auto_audio_sink_factory_filter, FALSE, sink);
-  list =
-      g_list_sort (list, (GCompareFunc) gst_plugin_feature_rank_compare_func);
-
-  /* We don't treat sound server sinks special. Our policy is that sound
-   * server sinks that have a rank must not auto-spawn a daemon under any
-   * circumstances, so there's nothing for us to worry about here */
-  GST_LOG_OBJECT (sink, "Trying to find usable audio devices ...");
-
-  for (item = list; item != NULL; item = item->next) {
-    GstElementFactory *f = GST_ELEMENT_FACTORY (item->data);
-    GstElement *el;
-
-    if ((el = gst_auto_create_element_with_pretty_name (GST_ELEMENT_CAST (sink),
-                f, "sink"))) {
-      GstStateChangeReturn ret;
-
-      GST_DEBUG_OBJECT (sink, "Testing %s", GST_OBJECT_NAME (f));
-
-      /* If autoaudiosink has been provided with filter caps,
-       * accept only sinks that match with the filter caps */
-      if (sink->filter_caps) {
-        el_pad = gst_element_get_static_pad (GST_ELEMENT (el), "sink");
-        el_caps = gst_pad_query_caps (el_pad, NULL);
-        gst_object_unref (el_pad);
-        GST_DEBUG_OBJECT (sink,
-            "Checking caps: %" GST_PTR_FORMAT " vs. %" GST_PTR_FORMAT,
-            sink->filter_caps, el_caps);
-        no_match = !gst_caps_can_intersect (sink->filter_caps, el_caps);
-        gst_caps_unref (el_caps);
-
-        if (no_match) {
-          GST_DEBUG_OBJECT (sink, "Incompatible caps");
-          gst_object_unref (el);
-          continue;
-        } else {
-          GST_DEBUG_OBJECT (sink, "Found compatible caps");
-        }
-      }
-
-      gst_element_set_bus (el, bus);
-      ret = gst_element_set_state (el, GST_STATE_READY);
-      if (ret == GST_STATE_CHANGE_SUCCESS) {
-        GST_DEBUG_OBJECT (sink, "This worked!");
-        choice = el;
-        break;
-      }
-
-      /* collect all error messages */
-      while ((message = gst_bus_pop_filtered (bus, GST_MESSAGE_ERROR))) {
-        GST_DEBUG_OBJECT (sink, "error message %" GST_PTR_FORMAT, message);
-        errors = g_slist_append (errors, message);
-      }
-
-      gst_element_set_state (el, GST_STATE_NULL);
-      gst_object_unref (el);
-    }
-  }
-
-  GST_DEBUG_OBJECT (sink, "done trying");
-  if (!choice) {
-    if (errors) {
-      /* FIXME: we forward the first error for now; but later on it might make
-       * sense to actually analyse them */
-      gst_message_ref (GST_MESSAGE (errors->data));
-      GST_DEBUG_OBJECT (sink, "reposting message %p", errors->data);
-      gst_element_post_message (GST_ELEMENT (sink), GST_MESSAGE (errors->data));
-    } else {
-      /* send warning message to application and use a fakesink */
-      GST_ELEMENT_WARNING (sink, RESOURCE, NOT_FOUND, (NULL),
-          ("Failed to find a usable audio sink"));
-      choice = gst_element_factory_make ("fakesink", "fake-audio-sink");
-      if (g_object_class_find_property (G_OBJECT_GET_CLASS (choice), "sync"))
-        g_object_set (choice, "sync", TRUE, NULL);
-      gst_element_set_state (choice, GST_STATE_READY);
-    }
-  }
-  gst_object_unref (bus);
-  gst_plugin_feature_list_free (list);
-  g_slist_foreach (errors, (GFunc) gst_mini_object_unref, NULL);
-  g_slist_free (errors);
-
-  return choice;
-}
-
-static gboolean
-gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
-{
-  GstElement *esink;
-  GstPad *targetpad;
-
-  gst_auto_audio_sink_clear_kid (sink);
-
-  /* find element */
-  GST_DEBUG_OBJECT (sink, "Creating new kid");
-  if (!(esink = gst_auto_audio_sink_find_best (sink)))
-    goto no_sink;
-
-  g_object_set (G_OBJECT (esink), "ts-offset", sink->ts_offset, NULL);
-  g_object_set (G_OBJECT (esink), "sync", sink->sync, NULL);
-
-  sink->kid = esink;
-  /* Ensure the child is brought up to the right state to match the parent
-   * although it's currently always in READY and 
-   * we're always doing NULL->READY. */
-  if (GST_STATE (sink->kid) < GST_STATE (sink))
-    gst_element_set_state (sink->kid, GST_STATE (sink));
-
-  gst_bin_add (GST_BIN (sink), esink);
-
-  /* attach ghost pad */
-  GST_DEBUG_OBJECT (sink, "Re-assigning ghostpad");
-  targetpad = gst_element_get_static_pad (sink->kid, "sink");
-  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad))
-    goto target_failed;
-
-  gst_object_unref (targetpad);
-  GST_DEBUG_OBJECT (sink, "done changing auto audio sink");
-
-  return TRUE;
-
-  /* ERRORS */
-no_sink:
-  {
-    GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
-        ("Failed to find a supported audio sink"));
-    return FALSE;
-  }
-target_failed:
-  {
-    GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
-        ("Failed to set target pad"));
-    gst_object_unref (targetpad);
-    return FALSE;
-  }
-}
-
-static GstStateChangeReturn
-gst_auto_audio_sink_change_state (GstElement * element,
-    GstStateChange transition)
-{
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstAutoAudioSink *sink = GST_AUTO_AUDIO_SINK (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_auto_audio_sink_detect (sink))
-        return GST_STATE_CHANGE_FAILURE;
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_auto_audio_sink_reset (sink);
-      break;
-    default:
-      break;
-  }
-
-  return ret;
+  g_object_set (G_OBJECT (kid), "ts-offset", self->ts_offset, NULL);
 }
 
 static void
@@ -396,22 +113,13 @@ gst_auto_audio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstAutoAudioSink *sink = GST_AUTO_AUDIO_SINK (object);
+  GstAutoDetect *autodetect = (GstAutoDetect *) sink;
 
   switch (prop_id) {
-    case PROP_CAPS:
-      if (sink->filter_caps)
-        gst_caps_unref (sink->filter_caps);
-      sink->filter_caps = gst_caps_copy (gst_value_get_caps (value));
-      break;
     case PROP_TS_OFFSET:
       sink->ts_offset = g_value_get_int64 (value);
-      if (sink->kid)
-        g_object_set_property (G_OBJECT (sink->kid), pspec->name, value);
-      break;
-    case PROP_SYNC:
-      sink->sync = g_value_get_boolean (value);
-      if (sink->kid)
-        g_object_set_property (G_OBJECT (sink->kid), pspec->name, value);
+      if (autodetect->kid)
+        g_object_set_property (G_OBJECT (autodetect->kid), pspec->name, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -426,15 +134,8 @@ gst_auto_audio_sink_get_property (GObject * object, guint prop_id,
   GstAutoAudioSink *sink = GST_AUTO_AUDIO_SINK (object);
 
   switch (prop_id) {
-    case PROP_CAPS:{
-      gst_value_set_caps (value, sink->filter_caps);
-      break;
-    }
     case PROP_TS_OFFSET:
       g_value_set_int64 (value, sink->ts_offset);
-      break;
-    case PROP_SYNC:
-      g_value_set_boolean (value, sink->sync);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

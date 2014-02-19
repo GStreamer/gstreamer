@@ -21,6 +21,7 @@
 #define __GST_AUTO_VIDEO_SINK_H__
 
 #include <gst/gst.h>
+#include "gstautodetect.h"
 
 G_BEGIN_DECLS
 
@@ -38,18 +39,13 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_AUTO_VIDEO_SINK))
 
 typedef struct _GstAutoVideoSink {
-  GstBin parent;
+  GstAutoDetect parent;
 
-  /* explicit pointers to stuff used */
-  GstPad *pad;
-  GstElement *kid;
-  GstCaps *filter_caps;
   GstClockTimeDiff ts_offset;
-  gboolean sync;
 } GstAutoVideoSink;
 
 typedef struct _GstAutoVideoSinkClass {
-  GstBinClass parent_class;
+  GstAutoDetectClass parent_class;
 } GstAutoVideoSinkClass;
 
 GType   gst_auto_video_sink_get_type    (void);

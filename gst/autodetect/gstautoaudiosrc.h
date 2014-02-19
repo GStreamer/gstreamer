@@ -22,6 +22,7 @@
 #define __GST_AUTO_AUDIO_SRC_H__
 
 #include <gst/gst.h>
+#include "gstautodetect.h"
 
 G_BEGIN_DECLS
 
@@ -39,16 +40,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_AUTO_AUDIO_SRC))
 
 typedef struct _GstAutoAudioSrc {
-  GstBin parent;
-
-  /* explicit pointers to stuff used */
-  GstPad *pad;
-  GstElement *kid;
-  GstCaps *filter_caps;
+  GstAutoDetect parent;
 } GstAutoAudioSrc;
 
 typedef struct _GstAutoAudioSrcClass {
-  GstBinClass parent_class;
+  GstAutoDetectClass parent_class;
 } GstAutoAudioSrcClass;
 
 GType   gst_auto_audio_src_get_type    (void);
