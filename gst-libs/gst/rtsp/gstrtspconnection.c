@@ -3025,6 +3025,19 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
   if (res == GST_RTSP_EINTR)
     goto done;
   else if (G_UNLIKELY (res == GST_RTSP_EEOF)) {
+    if (watch->readsrc) {
+      g_source_remove_child_source ((GSource *) watch, watch->readsrc);
+      g_source_unref (watch->readsrc);
+      watch->readsrc = NULL;
+    }
+
+    if (conn->stream1) {
+      g_object_unref (conn->stream1);
+      conn->stream1 = NULL;
+      conn->socket1 = NULL;
+      conn->input_stream = NULL;
+    }
+
     /* When we are in tunnelled mode, the read socket can be closed and we
      * should be prepared for a new POST method to reopen it */
     if (conn->tstate == TUNNEL_STATE_COMPLETE) {
