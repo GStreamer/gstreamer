@@ -24,20 +24,16 @@
 
 #include <gst/check/gstcheck.h>
 
-GST_START_TEST (test_autovideosink_ghostpad_error_case)
+static void
+test_ghostpad_error_case (GstCaps * caps, GstElement * sink,
+    const gchar * fake_sink_name)
 {
   GstStateChangeReturn state_ret;
-  GstElement *pipeline, *src, *filter, *sink;
-  GstCaps *caps;
-  GstElement *fakesink;
+  GstElement *pipeline, *src, *filter, *fakesink;
 
   pipeline = gst_pipeline_new ("pipeline");
   src = gst_element_factory_make ("fakesrc", NULL);
   filter = gst_element_factory_make ("capsfilter", NULL);
-  sink = gst_element_factory_make ("autovideosink", NULL);
-
-  caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
-      "ABCD", NULL);
 
   g_object_set (filter, "caps", caps, NULL);
   gst_caps_unref (caps);
@@ -56,9 +52,9 @@ GST_START_TEST (test_autovideosink_ghostpad_error_case)
     state_ret =
         gst_element_get_state (pipeline, &state, &state, GST_CLOCK_TIME_NONE);
   }
-  fakesink = gst_bin_get_by_name (GST_BIN (sink), "fake-video-sink");
+  fakesink = gst_bin_get_by_name (GST_BIN (sink), fake_sink_name);
   if (fakesink != NULL) {
-    /* no real video sink available */
+    /* no real sink available */
     fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS,
         "pipeline _set_state() to PAUSED failed");
     gst_object_unref (fakesink);
@@ -79,42 +75,24 @@ GST_START_TEST (test_autovideosink_ghostpad_error_case)
   gst_object_unref (pipeline);
 }
 
+GST_START_TEST (test_autovideosink_ghostpad_error_case)
+{
+  GstElement *sink = gst_element_factory_make ("autovideosink", NULL);
+  GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+      "ABCD", NULL);
+
+  test_ghostpad_error_case (caps, sink, "fake-video-sink");
+}
+
 GST_END_TEST;
 
 GST_START_TEST (test_autoaudiosink_ghostpad_error_case)
 {
-  GstStateChangeReturn state_ret;
-  GstElement *pipeline, *src, *filter, *sink;
-  GstCaps *caps;
+  GstElement *sink = gst_element_factory_make ("autoaudiosink", NULL);
+  GstCaps *caps = gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING,
+      "ABCD", NULL);
 
-  pipeline = gst_pipeline_new ("pipeline");
-  src = gst_element_factory_make ("fakesrc", NULL);
-  filter = gst_element_factory_make ("capsfilter", NULL);
-  sink = gst_element_factory_make ("autoaudiosink", NULL);
-
-  caps = gst_caps_new_simple ("audio/x-raw", "width", G_TYPE_INT, 42, NULL);
-
-  g_object_set (filter, "caps", caps, NULL);
-  gst_caps_unref (caps);
-
-  gst_bin_add_many (GST_BIN (pipeline), src, filter, sink, NULL);
-
-  fail_unless (gst_element_link (src, filter));
-  fail_unless (gst_element_link (filter, sink));
-
-  /* this should fail, there's no such width (hopefully) */
-  state_ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  fail_unless (state_ret == GST_STATE_CHANGE_FAILURE,
-      "pipeline _set_state() to PAUSED succeeded but should have failed");
-
-  /* so, we hit an error and try to shut down the pipeline; this shouldn't
-   * deadlock or block anywhere when autoaudiosink resets the ghostpad
-   * targets etc. */
-  state_ret = gst_element_set_state (pipeline, GST_STATE_NULL);
-  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
-
-  /* clean up */
-  gst_object_unref (pipeline);
+  test_ghostpad_error_case (caps, sink, "fake-audio-sink");
 }
 
 GST_END_TEST;
@@ -127,8 +105,7 @@ autodetect_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_autovideosink_ghostpad_error_case);
-  /* disable this for now, too many valgrind suppressions needed for libasound */
-  tcase_skip_broken_test (tc_chain, test_autoaudiosink_ghostpad_error_case);
+  tcase_add_test (tc_chain, test_autoaudiosink_ghostpad_error_case);
 
   return s;
 }
