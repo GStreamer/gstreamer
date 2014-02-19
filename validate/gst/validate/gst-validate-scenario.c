@@ -676,6 +676,17 @@ gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
   }
 }
 
+static gint
+_compare_actions (GstValidateAction *a, GstValidateAction * b)
+{
+  if (a->action_number < b->action_number)
+    return -1;
+  else if (a->action_number == b->action_number)
+    return 0;
+
+  return 1;
+}
+
 static gboolean
 message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 {
@@ -704,6 +715,9 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
             return FALSE;
           }
+
+          priv->actions = g_list_insert_sorted (priv->actions, action,
+              (GCompareFunc) _compare_actions);
         }
 
         g_list_free (priv->needs_parsing);
@@ -909,7 +923,7 @@ _load_scenario_file (GstValidateScenario * scenario,
     gdouble playback_time;
     GstValidateAction *action;
     GstValidateActionType *action_type;
-    const gchar *type, *str_playback_time;
+    const gchar *type, *str_playback_time = NULL;
 
     GstStructure *structure = tmp->data;
 
@@ -951,7 +965,8 @@ _load_scenario_file (GstValidateScenario * scenario,
     }
 
     action->action_number = priv->num_actions++;
-    priv->actions = g_list_append (priv->actions, action);
+    if (str_playback_time == NULL)
+      priv->actions = g_list_append (priv->actions, action);
   }
 
 done:
