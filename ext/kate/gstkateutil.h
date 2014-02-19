@@ -61,6 +61,7 @@ typedef struct
   gboolean initialized;
 
   GstTagList *tags;
+  gboolean tags_changed;
 
   gchar *language;
   gchar *category;
@@ -110,6 +111,11 @@ extern gboolean
 gst_kate_util_decoder_base_queue_event (GstKateDecoderBase * decoder,
     GstEvent * event, gboolean (*handler)(GstPad *, GstObject *, GstEvent *),
     GstObject * parent, GstPad * pad);
+extern void
+gst_kate_util_decoder_base_add_tags (GstKateDecoderBase * decoder,
+    GstTagList * tags, gboolean take_ownership_of_tags);
+extern GstEvent *
+gst_kate_util_decoder_base_get_tag_event (GstKateDecoderBase * decoder);
 extern const char *
 gst_kate_util_get_error_message (int ret);
 

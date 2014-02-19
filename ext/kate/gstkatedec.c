@@ -424,7 +424,6 @@ gst_kate_dec_sink_handle_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstKateDec *kd = GST_KATE_DEC (parent);
-  gboolean res = TRUE;
 
   GST_LOG_OBJECT (pad, "Handling event on sink pad: %s",
       GST_EVENT_TYPE_NAME (event));
@@ -432,25 +431,29 @@ gst_kate_dec_sink_handle_event (GstPad * pad, GstObject * parent,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
       gst_kate_util_decoder_base_segment_event (&kd->decoder, event);
-      res = gst_pad_event_default (pad, parent, event);
       break;
 
     case GST_EVENT_FLUSH_START:
       gst_kate_util_decoder_base_set_flushing (&kd->decoder, TRUE);
-      res = gst_pad_event_default (pad, parent, event);
       break;
 
     case GST_EVENT_FLUSH_STOP:
       gst_kate_util_decoder_base_set_flushing (&kd->decoder, FALSE);
-      res = gst_pad_event_default (pad, parent, event);
       break;
 
+    case GST_EVENT_TAG:{
+      GstTagList *tags;
+      gst_event_parse_tag (event, &tags);
+      gst_kate_util_decoder_base_add_tags (&kd->decoder, tags, FALSE);
+      gst_event_unref (event);
+      event = gst_kate_util_decoder_base_get_tag_event (&kd->decoder);
+      break;
+    }
     default:
-      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
-  return res;
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static gboolean
