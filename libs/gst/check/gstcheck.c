@@ -26,6 +26,10 @@
  *
  * These macros and functions are for internal use of the unit tests found
  * inside the 'check' directories of various GStreamer packages.
+ *
+ * One notable feature is that one can use the environment variables GST_CHECK
+ * and GST_CHECK_IGNORE to select which tests to run or skip. Both variables
+ * can contain a comman separated list of test name globs (e.g. test_*).
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

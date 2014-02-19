@@ -558,7 +558,8 @@ int main (int argc, char **argv)                                \
 }
 
 /* Hack to allow run-time selection of unit tests to run via the
- * GST_CHECKS environment variable (test function names, comma-separated) */
+ * GST_CHECKS environment variable (test function names globs, comma
+ * separated), or GST_CHECKS_IGNORE with the same semantics */
 
 gboolean _gst_check_run_test_func (const gchar * func_name);
 
@@ -573,12 +574,13 @@ __gst_tcase_add_test (TCase * tc, TFun tf, const char * fname, int signal,
 
 #define _tcase_add_test __gst_tcase_add_test
 
-/* add define to skip broken tests */
+/* A special variant to add broken tests. These are normally skipped, but can be 
+ * forced to run via GST_CHECKS */
 #define tcase_skip_broken_test(chain,test_func) \
 G_STMT_START {                                                  \
   const char *env = g_getenv ("GST_CHECKS");                    \
                                                                 \
-  if (env != NULL && strstr (env, G_STRINGIFY (test_func))) {   \
+  if (env != NULL && g_pattern_match_simple (env, G_STRINGIFY (test_func))) {   \
     tcase_add_test(chain,test_func);                            \
   } else {                                                      \
     g_printerr ("FIXME: skipping test %s because it's broken\n", G_STRINGIFY (test_func)); \
