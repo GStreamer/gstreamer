@@ -22,7 +22,113 @@
 # include <config.h>
 #endif
 
+#include <gst/audio/audio.h>
+#include <gst/base/gstbasesink.h>
 #include <gst/check/gstcheck.h>
+#include <gst/video/video.h>
+
+/* dummy sink elements */
+
+#define GST_TYPE_FAKE_AUDIO_SINK (gst_fake_audio_sink_get_type ())
+typedef GstBaseSink GstFakeAudioSink;
+typedef GstBaseSinkClass GstFakeAudioSinkClass;
+GType gst_fake_audio_sink_get_type (void);
+G_DEFINE_TYPE (GstFakeAudioSink, gst_fake_audio_sink, GST_TYPE_BASE_SINK);
+
+static void
+gst_fake_audio_sink_class_init (GstFakeAudioSinkClass * klass)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL) "; "));
+
+  gst_element_class_set_static_metadata (gstelement_class, "Fake Audio Sink",
+      "Sink/Audio", "Audio sink fake for testing", "Stefan Sauer");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&pad_template));
+}
+
+static void
+gst_fake_audio_sink_init (GstFakeAudioSink * sink)
+{
+}
+
+#define GST_TYPE_FAKE_VIDEO_SINK (gst_fake_video_sink_get_type ())
+typedef GstBaseSink GstFakeVideoSink;
+typedef GstBaseSinkClass GstFakeVideoSinkClass;
+GType gst_fake_video_sink_get_type (void);
+G_DEFINE_TYPE (GstFakeVideoSink, gst_fake_video_sink, GST_TYPE_BASE_SINK);
+
+static void
+gst_fake_video_sink_class_init (GstFakeVideoSinkClass * klass)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) "; "));
+
+  gst_element_class_set_static_metadata (gstelement_class, "Fake Video Sink",
+      "Sink/Video", "Video sink fake for testing", "Stefan Sauer");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&pad_template));
+}
+
+static void
+gst_fake_video_sink_init (GstFakeVideoSink * sink)
+{
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  if (!gst_element_register (plugin, "fakeaudiosink", G_MAXINT,
+          GST_TYPE_FAKE_AUDIO_SINK))
+    return FALSE;
+  if (!gst_element_register (plugin, "fakevideosink", G_MAXINT,
+          GST_TYPE_FAKE_VIDEO_SINK))
+    return FALSE;
+  return TRUE;
+}
+
+/* tests */
+
+static void
+test_plugs_best (GstElement * sink, GType expected)
+{
+  GstStateChangeReturn state_ret;
+  GList *child;
+
+  state_ret = gst_element_set_state (sink, GST_STATE_READY);
+  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS, NULL);
+
+  child = GST_BIN_CHILDREN (sink);
+  fail_unless (child != NULL, "no elements plugged");
+  ck_assert_int_eq (g_list_length (child), 1);
+  fail_unless (G_OBJECT_TYPE (child), expected);
+
+  /* clean up */
+  gst_element_set_state (sink, GST_STATE_NULL);
+  gst_object_unref (sink);
+}
+
+GST_START_TEST (test_autovideosink_plugs_best)
+{
+  GstElement *sink = gst_element_factory_make ("autovideosink", NULL);
+
+  test_plugs_best (sink, GST_TYPE_FAKE_VIDEO_SINK);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_autoaudiosink_plugs_best)
+{
+  GstElement *sink = gst_element_factory_make ("autoaudiosink", NULL);
+
+  test_plugs_best (sink, GST_TYPE_FAKE_AUDIO_SINK);
+}
+
+GST_END_TEST;
 
 static void
 test_ghostpad_error_case (GstCaps * caps, GstElement * sink,
@@ -103,7 +209,17 @@ autodetect_suite (void)
   Suite *s = suite_create ("autodetect");
   TCase *tc_chain = tcase_create ("general");
 
+  gst_plugin_register_static (GST_VERSION_MAJOR,
+      GST_VERSION_MINOR,
+      "autodetect-test",
+      "autodetect test elements",
+      plugin_init,
+      VERSION, "LGPL", PACKAGE, PACKAGE_NAME,
+      "http://gstreamer.freedesktop.org");
+
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_autovideosink_plugs_best);
+  tcase_add_test (tc_chain, test_autoaudiosink_plugs_best);
   tcase_add_test (tc_chain, test_autovideosink_ghostpad_error_case);
   tcase_add_test (tc_chain, test_autoaudiosink_ghostpad_error_case);
 
