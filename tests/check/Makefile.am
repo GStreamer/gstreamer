@@ -197,6 +197,7 @@ check_PROGRAMS = \
 	libs/rtp \
 	libs/rtp-basepayloading \
 	libs/rtsp \
+	libs/rtspconnection \
 	libs/sdp \
 	libs/tag \
 	libs/video \
@@ -375,6 +376,14 @@ libs_rtsp_CFLAGS = \
 libs_rtsp_LDADD = \
 	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
+
+libs_rtspconnection_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(AM_CFLAGS)
+libs_rtspconnection_LDADD = \
+	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) $(GIO_LIBS) $(LDADD)
 
 libs_tag_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
