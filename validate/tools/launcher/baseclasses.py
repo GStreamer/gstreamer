@@ -89,6 +89,8 @@ class Test(Loggable):
         pass
 
     def set_result(self, result, message="", error=""):
+        self.debug("Setting result: %s (message: %s, error: %s", result,
+                   message, error)
         self.result = result
         self.message = message
         self.error_str = error
@@ -101,7 +103,7 @@ class Test(Loggable):
         if self.result == Result.TIMEOUT:
             self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
         elif self.process.returncode == 0:
-            self.result = Result.PASSED
+            self.set_result(Result.PASSED)
         else:
             self.set_result(Result.FAILED,
                             "Application returned %d" % (
@@ -244,7 +246,7 @@ class GstValidateTest(Test):
             return ret + "]"
 
     def check_results(self):
-        if self.result is Result.FAILED:
+        if self.result is Result.FAILED or self.result is Result.PASSED:
             return
 
         self.debug("%s returncode: %s", self, self.process.returncode)
