@@ -1877,7 +1877,7 @@ static void
 type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstURIDecodeBin * decoder)
 {
-  GstElement *dec_elem, *queue;
+  GstElement *src_elem, *dec_elem, *queue = NULL;
   GstStructure *s;
   const gchar *media_type;
   gboolean do_download = FALSE;
@@ -1901,68 +1901,74 @@ type_found (GstElement * typefind, guint probability,
   if (!dec_elem)
     goto no_decodebin;
 
-  queue = gst_element_factory_make ("queue2", NULL);
-  if (!queue)
-    goto no_queue2;
+  if (decoder->is_adaptive) {
+    src_elem = typefind;
+  } else {
+    queue = gst_element_factory_make ("queue2", NULL);
+    if (!queue)
+      goto no_queue2;
 
-  g_object_set (queue, "use-buffering", TRUE, NULL);
-  g_object_set (queue, "ring-buffer-max-size", decoder->ring_buffer_max_size,
-      NULL);
-  decoder->queue = queue;
+    g_object_set (queue, "use-buffering", TRUE, NULL);
+    g_object_set (queue, "ring-buffer-max-size", decoder->ring_buffer_max_size,
+        NULL);
+    decoder->queue = queue;
 
-  GST_DEBUG_OBJECT (decoder, "check media-type %s, %d", media_type,
-      do_download);
+    GST_DEBUG_OBJECT (decoder, "check media-type %s, %d", media_type,
+        do_download);
 
-  if (do_download) {
-    gchar *temp_template, *filename;
-    const gchar *tmp_dir, *prgname;
+    if (do_download) {
+      gchar *temp_template, *filename;
+      const gchar *tmp_dir, *prgname;
 
-    tmp_dir = g_get_user_cache_dir ();
-    prgname = g_get_prgname ();
-    if (prgname == NULL)
-      prgname = "GStreamer";
+      tmp_dir = g_get_user_cache_dir ();
+      prgname = g_get_prgname ();
+      if (prgname == NULL)
+        prgname = "GStreamer";
 
-    filename = g_strdup_printf ("%s-XXXXXX", prgname);
+      filename = g_strdup_printf ("%s-XXXXXX", prgname);
 
-    /* build our filename */
-    temp_template = g_build_filename (tmp_dir, filename, NULL);
+      /* build our filename */
+      temp_template = g_build_filename (tmp_dir, filename, NULL);
 
-    GST_DEBUG_OBJECT (decoder, "enable download buffering in %s (%s, %s, %s)",
-        temp_template, tmp_dir, prgname, filename);
+      GST_DEBUG_OBJECT (decoder, "enable download buffering in %s (%s, %s, %s)",
+          temp_template, tmp_dir, prgname, filename);
 
-    /* configure progressive download for selected media types */
-    g_object_set (queue, "temp-template", temp_template, NULL);
+      /* configure progressive download for selected media types */
+      g_object_set (queue, "temp-template", temp_template, NULL);
 
-    g_free (filename);
-    g_free (temp_template);
+      g_free (filename);
+      g_free (temp_template);
+    }
+
+    /* Disable max-size-buffers */
+    g_object_set (queue, "max-size-buffers", 0, NULL);
+
+    /* If buffer size or duration are set, set them on the queue2 element */
+    if (decoder->buffer_size != -1)
+      g_object_set (queue, "max-size-bytes", decoder->buffer_size, NULL);
+    if (decoder->buffer_duration != -1)
+      g_object_set (queue, "max-size-time", decoder->buffer_duration, NULL);
+
+    gst_bin_add (GST_BIN_CAST (decoder), queue);
+
+    if (!gst_element_link_pads (typefind, "src", queue, "sink"))
+      goto could_not_link;
+    src_elem = queue;
   }
-
-  /* Disable max-size-buffers */
-  g_object_set (queue, "max-size-buffers", 0, NULL);
-
-  /* If buffer size or duration are set, set them on the queue2 element */
-  if (decoder->buffer_size != -1)
-    g_object_set (queue, "max-size-bytes", decoder->buffer_size, NULL);
-  if (decoder->buffer_duration != -1)
-    g_object_set (queue, "max-size-time", decoder->buffer_duration, NULL);
-
-  gst_bin_add (GST_BIN_CAST (decoder), queue);
-
-  if (!gst_element_link_pads (typefind, "src", queue, "sink"))
-    goto could_not_link;
 
   /* to force caps on the decodebin element and avoid reparsing stuff by
    * typefind. It also avoids a deadlock in the way typefind activates pads in
    * the state change */
   g_object_set (dec_elem, "sink-caps", caps, NULL);
 
-  if (!gst_element_link_pads (queue, "src", dec_elem, "sink"))
+  if (!gst_element_link_pads (src_elem, "src", dec_elem, "sink"))
     goto could_not_link;
 
   /* PLAYING in one go might fail (see bug #632782) */
   gst_element_set_state (dec_elem, GST_STATE_PAUSED);
   gst_element_set_state (dec_elem, GST_STATE_PLAYING);
-  gst_element_set_state (queue, GST_STATE_PLAYING);
+  if (queue)
+    gst_element_set_state (queue, GST_STATE_PLAYING);
 
   do_async_done (decoder);
 
