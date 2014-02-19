@@ -1734,7 +1734,9 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
         if (!GST_COLLECT_PADS_STATE_IS_SET (data,
                 GST_COLLECT_PADS_STATE_WAITING))
           pads->priv->queuedpads++;
-        pads->priv->eospads--;
+        if (!g_atomic_int_get (&pads->priv->seeking)) {
+          pads->priv->eospads--;
+        }
         GST_COLLECT_PADS_STATE_UNSET (data, GST_COLLECT_PADS_STATE_EOS);
       }
       GST_COLLECT_PADS_STREAM_UNLOCK (pads);
@@ -1911,6 +1913,8 @@ gst_collect_pads_src_event_default (GstCollectPads * pads, GstPad * pad,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
       GstSeekFlags flags;
+
+      pads->priv->eospads = 0;
 
       GST_INFO_OBJECT (pads, "starting seek");
 
