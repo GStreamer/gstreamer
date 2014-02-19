@@ -1826,9 +1826,10 @@ make_decoder (GstURIDecodeBin * decoder)
     /* propagate the use-buffering property but only when we are not already
      * doing stream buffering with queue2. FIXME, we might want to do stream
      * buffering with the multiqueue buffering instead of queue2. */
-    g_object_set (decodebin, "use-buffering", decoder->use_buffering, NULL);
+    g_object_set (decodebin, "use-buffering", decoder->use_buffering
+        || decoder->is_adaptive, NULL);
 
-    if (decoder->use_buffering) {
+    if (decoder->use_buffering || decoder->is_adaptive) {
       guint max_bytes;
       guint64 max_time;
 
