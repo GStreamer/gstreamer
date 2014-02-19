@@ -92,13 +92,13 @@ typedef struct KeyFileGroupName
 } KeyFileGroupName;
 
 GType _gst_validate_action_type;
-static GType gst_validate_action_get_type            (void);
+static GType gst_validate_action_get_type (void);
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
-static GstValidateAction * gst_validate_action_new (void);
+static GstValidateAction *gst_validate_action_new (void);
 
 static GstValidateAction *
-_action_copy (GstValidateAction *act)
+_action_copy (GstValidateAction * act)
 {
   GstValidateAction *copy = gst_validate_action_new ();
 
@@ -116,18 +116,17 @@ _action_copy (GstValidateAction *act)
 }
 
 static void
-_action_free (GstValidateAction *action)
+_action_free (GstValidateAction * action)
 {
   if (action->structure)
     gst_structure_free (action->structure);
 }
 
 static void
-gst_validate_action_init (GstValidateAction *action)
+gst_validate_action_init (GstValidateAction * action)
 {
-  gst_mini_object_init (((GstMiniObject*) action), 0, _gst_validate_action_type,
-      (GstMiniObjectCopyFunction) _action_copy,
-      NULL,
+  gst_mini_object_init (((GstMiniObject *) action), 0,
+      _gst_validate_action_type, (GstMiniObjectCopyFunction) _action_copy, NULL,
       (GstMiniObjectFreeFunction) _action_free);
 
 }
@@ -135,11 +134,11 @@ gst_validate_action_init (GstValidateAction *action)
 static GstValidateAction *
 gst_validate_action_new (void)
 {
-    GstValidateAction *action = g_slice_new0 (GstValidateAction);
+  GstValidateAction *action = g_slice_new0 (GstValidateAction);
 
-    gst_validate_action_init (action);
+  gst_validate_action_init (action);
 
-    return action;
+  return action;
 }
 
 
@@ -234,11 +233,13 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 
   if ((str_start_type =
           gst_structure_get_string (action->structure, "start_type")))
-    gst_validate_utils_enum_from_str (GST_TYPE_SEEK_TYPE, str_start_type, &start_type);
+    gst_validate_utils_enum_from_str (GST_TYPE_SEEK_TYPE, str_start_type,
+        &start_type);
 
   if ((str_stop_type =
           gst_structure_get_string (action->structure, "stop_type")))
-    gst_validate_utils_enum_from_str (GST_TYPE_SEEK_TYPE, str_stop_type, &stop_type);
+    gst_validate_utils_enum_from_str (GST_TYPE_SEEK_TYPE, str_stop_type,
+        &stop_type);
 
   if ((str_flags = gst_structure_get_string (action->structure, "flags")))
     flags = gst_validate_utils_flags_from_str (GST_TYPE_SEEK_FLAGS, str_flags);
@@ -656,7 +657,7 @@ static void
 gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
     GstEvent * seek)
 {
-  GstValidateScenarioPrivate *priv = scenario->priv;
+  GstValidateScenarioPrivate * priv = scenario->priv;
   gint64 start, stop;
   GstSeekType start_type, stop_type;
 
@@ -771,8 +772,10 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
 
-  if (priv->get_pos_id)
+  if (priv->get_pos_id) {
     g_source_remove (priv->get_pos_id);
+    priv->get_pos_id = 0;
+  }
   scenario->pipeline = NULL;
 
   GST_DEBUG_OBJECT (scenario, "pipeline was freed");
@@ -993,7 +996,8 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   gchar *lfilename = NULL, *tldir = NULL;
   gboolean found_actions = FALSE, is_config, ret = TRUE;
 
-  gchar ** env_scenariodir = g_strsplit (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"), ":",
+  gchar **env_scenariodir =
+      g_strsplit (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"), ":",
       0);
 
   if (!scenario_name)
@@ -1025,8 +1029,9 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
 
     /* Try from local profiles */
     tldir =
-        g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
-        GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
+        g_build_filename (g_get_user_data_dir (),
+        "gstreamer-" GST_API_VERSION, GST_VALIDATE_SCENARIO_DIRECTORY,
+        lfilename, NULL);
 
 
     if (!(ret = _load_scenario_file (scenario, tldir, &is_config))) {
@@ -1167,8 +1172,8 @@ gst_validate_scenario_finalize (GObject * object)
 }
 
 GstValidateScenario *
-gst_validate_scenario_factory_create (GstValidateRunner * runner,
-    GstElement * pipeline, const gchar * scenario_name)
+gst_validate_scenario_factory_create (GstValidateRunner *
+    runner, GstElement * pipeline, const gchar * scenario_name)
 {
   GstBus *bus;
   GstValidateScenario *scenario =
@@ -1204,8 +1209,8 @@ gst_validate_scenario_factory_create (GstValidateRunner * runner,
 static gboolean
 _add_description (GQuark field_id, const GValue * value, KeyFileGroupName * kfg)
 {
-  g_key_file_set_string (kfg->kf, kfg->group_name, g_quark_to_string (field_id),
-      gst_value_serialize (value));
+  g_key_file_set_string (kfg->kf, kfg->group_name,
+      g_quark_to_string (field_id), gst_value_serialize (value));
 
   return TRUE;
 }
@@ -1249,8 +1254,8 @@ _list_scenarios_in_dir (GFile * dir, GKeyFile * kf)
         kfg.group_name = name[0];
         kfg.kf = kf;
 
-        gst_structure_foreach (desc, (GstStructureForeachFunc) _add_description,
-            &kfg);
+        gst_structure_foreach (desc,
+            (GstStructureForeachFunc) _add_description, &kfg);
       } else {
         g_key_file_set_string (kf, name[0], "noinfo", "nothing");
       }
@@ -1268,7 +1273,8 @@ gst_validate_list_scenarios (gchar * output_file)
   gsize datalength;
   GError *err = NULL;
   GKeyFile *kf = NULL;
-  gchar ** env_scenariodir = g_strsplit (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"), ":",
+  gchar **env_scenariodir =
+      g_strsplit (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"), ":",
       0);
   gchar *tldir = g_build_filename (g_get_user_data_dir (),
       "gstreamer-" GST_API_VERSION, GST_VALIDATE_SCENARIO_DIRECTORY,
