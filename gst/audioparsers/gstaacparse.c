@@ -393,6 +393,14 @@ gst_aac_parse_check_adts_frame (GstAacParse * aacparse,
     return FALSE;
 
   if ((data[0] == 0xff) && ((data[1] & 0xf6) == 0xf0)) {
+
+    /* This looks like an ADTS frame header but
+       we need at least 6 bytes to proceed */
+    if (G_UNLIKELY (avail < 6)) {
+      *needed_data = 6;
+      return FALSE;
+    }
+
     *framesize = gst_aac_parse_adts_get_frame_len (data);
 
     /* In EOS mode this is enough. No need to examine the data further.
