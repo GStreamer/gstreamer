@@ -54,6 +54,9 @@ class Test(Loggable):
         self.reporter = reporter
         self.process = None
 
+        self.clean()
+
+    def clean(self):
         self.message = ""
         self.error_str = ""
         self.time_taken = 0.0
@@ -223,6 +226,10 @@ class GstValidateTest(Test):
             self.scenario = None
         else:
             self.scenario = scenario
+
+    def clean(self):
+        Test.clean(self)
+        self._sent_eos_pos = None
 
     def build_arguments(self):
         if self.scenario is not None:
@@ -458,6 +465,10 @@ class TestsManager(Loggable):
 
         return Result.PASSED
 
+    def clean_tests(self):
+        for test in self.tests:
+            test.clean()
+
     def needs_http_server(self):
         return False
 
@@ -543,10 +554,14 @@ class _TestsLauncher(Loggable):
 
         return True
 
+    def _clean_tests(self):
+        for tester in self.testers:
+            tester.clean_tests()
+
     def run_tests(self):
         if self.options.forever:
             while self._run_tests():
-                continue
+                self._clean_tests()
 
             return False
         else:

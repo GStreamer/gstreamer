@@ -155,7 +155,8 @@ class GstValidateLaunchTest(GstValidateTest):
         if self.scenario:
             sent_eos = self.sent_eos_position()
             if sent_eos is not None:
-                if ((time.time() - sent_eos)) > 30:
+                t = time.time()
+                if ((t - sent_eos)) > 30:
                     if self.file_infos.get("file-info", "protocol") == Protocols.HLS:
                         self.set_result(Result.PASSED,
                                         """Got no EOS 30 seconds after sending EOS,
@@ -241,13 +242,15 @@ class GstValidateTranscodingTest(GstValidateTest):
         if self.scenario:
             sent_eos = self.sent_eos_position()
             if sent_eos is not None:
-                if ((time.time() - sent_eos)) > 30:
+                t = time.time()
+                if ((t - sent_eos)) > 30:
                     if self.file_infos.get("file-info", "protocol") == Protocols.HLS:
                         self.set_result(Result.PASSED,
                                         """Got no EOS 30 seconds after sending EOS,
                                         in HLS known and tolerated issue:
                                         https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
                         return Result.KNOWN_ERROR
+
 
                     return Result.FAILED
 
