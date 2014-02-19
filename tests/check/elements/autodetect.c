@@ -81,8 +81,6 @@ GST_START_TEST (test_autovideosink_ghostpad_error_case)
 
 GST_END_TEST;
 
-/* disable this for now, too many valgrind suppressions needed for libasound */
-#if 0
 GST_START_TEST (test_autoaudiosink_ghostpad_error_case)
 {
   GstStateChangeReturn state_ret;
@@ -120,26 +118,17 @@ GST_START_TEST (test_autoaudiosink_ghostpad_error_case)
 }
 
 GST_END_TEST;
-#endif
 
 static Suite *
 autodetect_suite (void)
 {
-  guint maj, min, mic, nano;
-
   Suite *s = suite_create ("autodetect");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-
-  gst_version (&maj, &min, &mic, &nano);
-
-  /* requires fixes from 0.10.10.1, but don't want to add a hard dependency
-   * in configure.ac just for this yet */
-  if (maj > 0 || min > 10 || mic > 10 || (mic == 10 && nano > 0)) {
-    tcase_add_test (tc_chain, test_autovideosink_ghostpad_error_case);
-    /* tcase_add_test (tc_chain, test_autoaudiosink_ghostpad_error_case); */
-  }
+  tcase_add_test (tc_chain, test_autovideosink_ghostpad_error_case);
+  /* disable this for now, too many valgrind suppressions needed for libasound */
+  tcase_skip_broken_test (tc_chain, test_autoaudiosink_ghostpad_error_case);
 
   return s;
 }
