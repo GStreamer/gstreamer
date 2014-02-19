@@ -56,7 +56,7 @@ AC_ARG_WITH(a52dec-prefix,
                    [prefix where a52dec is installed (optional)]),
     a52dec_config_prefix="$withval", a52dec_config_prefix="")
 
-if test x$a52dec_config_prefix = x ; then
+if test "x$a52dec_config_prefix" = "x" ; then
     A52_CHECK_LIBHEADER(A52DEC, a52, a52_init, a52dec/a52.h,
         A52DEC_LIBS="-la52 -lm", , -lm)
 else
@@ -66,7 +66,7 @@ else
         ], , -L$a52dec_config_prefix/lib, -I$a52dec_config_prefix/include)
 fi
 
-if test $HAVE_A52DEC = "yes"; then
+if test "x$HAVE_A52DEC" = "xyes"; then
     ac_save_CFLAGS="$CFLAGS"
     ac_save_LIBS="$LIBS"
     CFLAGS="$CFLAGS $A52DEC_CFLAGS"
@@ -89,7 +89,7 @@ main ()
 }
         ],, HAVE_A52DEC=no, [echo $ac_n "cross compiling; assumed OK... $ac_c"])
 
-    if test HAVE_A52DEC = "no"; then
+    if test "x$HAVE_A52DEC" = "xno"; then
         echo "*** Your a52dec is borked somehow. Please update to 0.7.4 or newer."
     else
         AC_TRY_RUN([
@@ -103,9 +103,9 @@ main ()
   if ( i )
     return 0;
 }
-            ], HAVE_A52DEC=no,, [echo $ac_n "cross compiling; assumed OK... $ac_c"])
+            ],, HAVE_A52DEC=no, [echo $ac_n "cross compiling; assumed OK... $ac_c"])
 
-        if test HAVE_A52DEC = "no"; then
+        if test "x$HAVE_A52DEC" = "xno"; then
             echo "*** Your a52dec is too old. Please update to 0.7.4 or newer."
         fi
     fi
@@ -113,7 +113,7 @@ main ()
     LIBS="$ac_save_LIBS"
 fi
 
-if test HAVE_A52DEC = "no"; then
+if test "x$HAVE_A52DEC" = "xno"; then
     A52DEC_CFLAGS=""
     A52DEC_LIBS=""
 fi
