@@ -387,12 +387,21 @@ gst_aac_parse_check_adts_frame (GstAacParse * aacparse,
     const guint8 * data, const guint avail, gboolean drain,
     guint * framesize, guint * needed_data)
 {
+  guint crc_size;
+
   *needed_data = 0;
 
-  if (G_UNLIKELY (avail < 2))
+  /* Absolute minimum to perform the ADTS syncword,
+     layer and sampling frequency tests */
+  if (G_UNLIKELY (avail < 3))
     return FALSE;
 
+  /* Syncword and layer tests */
   if ((data[0] == 0xff) && ((data[1] & 0xf6) == 0xf0)) {
+
+    /* Sampling frequency test */
+    if (G_UNLIKELY ((data[2] & 0x3C) >> 2 == 15))
+      return FALSE;
 
     /* This looks like an ADTS frame header but
        we need at least 6 bytes to proceed */
@@ -402,6 +411,14 @@ gst_aac_parse_check_adts_frame (GstAacParse * aacparse,
     }
 
     *framesize = gst_aac_parse_adts_get_frame_len (data);
+
+    /* If frame has CRC, it needs 2 bytes
+       for it at the end of the header */
+    crc_size = (data[1] & 0x01) ? 0 : 2;
+
+    /* CRC size test */
+    if (*framesize < 7 + crc_size)
+      return FALSE;
 
     /* In EOS mode this is enough. No need to examine the data further.
        We also relax the check when we have sync, on the assumption that
