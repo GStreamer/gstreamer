@@ -51,6 +51,7 @@ typedef struct _GstAutoDetect {
 
   /* < private > */ 
   GstElement *kid;
+  gboolean has_sync;
   const gchar *type_klass; /* Source/Sink */
   const gchar *media_klass_lc, *type_klass_lc; /* lower case versions */
 
