@@ -2642,12 +2642,6 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
   GST_DEBUG_OBJECT (element, "Setting group %p to complete", group);
 
   group->no_more_pads = TRUE;
-  /* this group has prerolled enough to not need more pads,
-   * we can probably set its buffering state to playing now */
-  GST_DEBUG_OBJECT (group->dbin, "Setting group %p multiqueue to "
-      "'playing' buffering mode", group);
-  decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
-      (group->parent ? group->parent->seekable : TRUE));
   CHAIN_MUTEX_UNLOCK (chain);
 
   EXPOSE_LOCK (chain->dbin);
@@ -3061,12 +3055,6 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
       queue);
 
   group->overrun = TRUE;
-  /* this group has prerolled enough to not need more pads,
-   * we can probably set its buffering state to playing now */
-  GST_DEBUG_OBJECT (group->dbin, "Setting group %p multiqueue to "
-      "'playing' buffering mode", group);
-  decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
-      (group->parent ? group->parent->seekable : TRUE));
 
   /* FIXME: We should make sure that everything gets exposed now
    * even if child chains are not complete because the will never
@@ -4087,9 +4075,6 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads,
     return FALSE;
 
   dbin = group->dbin;
-
-  /* configure queues for playback */
-  decodebin_set_queue_size (dbin, group->multiqueue, FALSE, TRUE);
 
   /* we can now disconnect any overrun signal, which is used to expose the
    * group. */
