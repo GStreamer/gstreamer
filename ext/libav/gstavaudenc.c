@@ -425,97 +425,107 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
   ctx = ffmpegaudenc->context;
 
-  GST_LOG_OBJECT (ffmpegaudenc, "encoding buffer ");
+  GST_LOG_OBJECT (ffmpegaudenc, "encoding buffer %p size:%u", audio_in,
+      in_size);
 
   memset (&pkt, 0, sizeof (pkt));
-  memset (&frame, 0, sizeof (frame));
-  avcodec_get_frame_defaults (&frame);
 
-  info = gst_audio_encoder_get_audio_info (enc);
-  planar = av_sample_fmt_is_planar (ffmpegaudenc->context->sample_fmt);
+  if (audio_in != NULL) {
+    memset (&frame, 0, sizeof (frame));
+    avcodec_get_frame_defaults (&frame);
 
-  if (planar && info->channels > 1) {
-    gint channels, nsamples;
-    gint i, j;
+    info = gst_audio_encoder_get_audio_info (enc);
+    planar = av_sample_fmt_is_planar (ffmpegaudenc->context->sample_fmt);
 
-    nsamples = frame.nb_samples = in_size / info->bpf;
-    channels = info->channels;
+    if (planar && info->channels > 1) {
+      gint channels, nsamples;
+      gint i, j;
 
-    if (info->channels > AV_NUM_DATA_POINTERS) {
-      frame.extended_data = g_new (uint8_t *, info->channels);
+      nsamples = frame.nb_samples = in_size / info->bpf;
+      channels = info->channels;
+
+      if (info->channels > AV_NUM_DATA_POINTERS) {
+        frame.extended_data = g_new (uint8_t *, info->channels);
+      } else {
+        frame.extended_data = frame.data;
+      }
+
+      frame.extended_data[0] = g_malloc (in_size);
+      frame.linesize[0] = in_size / channels;
+      for (i = 1; i < channels; i++)
+        frame.extended_data[i] = frame.extended_data[i - 1] + frame.linesize[0];
+
+      switch (info->finfo->width) {
+        case 8:{
+          const guint8 *idata = (const guint8 *) audio_in;
+
+          for (i = 0; i < nsamples; i++) {
+            for (j = 0; j < channels; j++) {
+              ((guint8 *) frame.extended_data[j])[i] = idata[j];
+            }
+            idata += channels;
+          }
+          break;
+        }
+        case 16:{
+          const guint16 *idata = (const guint16 *) audio_in;
+
+          for (i = 0; i < nsamples; i++) {
+            for (j = 0; j < channels; j++) {
+              ((guint16 *) frame.extended_data[j])[i] = idata[j];
+            }
+            idata += channels;
+          }
+          break;
+        }
+        case 32:{
+          const guint32 *idata = (const guint32 *) audio_in;
+
+          for (i = 0; i < nsamples; i++) {
+            for (j = 0; j < channels; j++) {
+              ((guint32 *) frame.extended_data[j])[i] = idata[j];
+            }
+            idata += channels;
+          }
+
+          break;
+        }
+        case 64:{
+          const guint64 *idata = (const guint64 *) audio_in;
+
+          for (i = 0; i < nsamples; i++) {
+            for (j = 0; j < channels; j++) {
+              ((guint64 *) frame.extended_data[j])[i] = idata[j];
+            }
+            idata += channels;
+          }
+
+          break;
+        }
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+
     } else {
+      frame.data[0] = audio_in;
       frame.extended_data = frame.data;
+      frame.linesize[0] = in_size;
+      frame.nb_samples = in_size / info->bpf;
     }
 
-    frame.extended_data[0] = g_malloc (in_size);
-    frame.linesize[0] = in_size / channels;
-    for (i = 1; i < channels; i++)
-      frame.extended_data[i] = frame.extended_data[i - 1] + frame.linesize[0];
+    /* we have a frame to feed the encoder */
+    res = avcodec_encode_audio2 (ctx, &pkt, &frame, have_data);
 
-    switch (info->finfo->width) {
-      case 8:{
-        const guint8 *idata = (const guint8 *) audio_in;
-
-        for (i = 0; i < nsamples; i++) {
-          for (j = 0; j < channels; j++) {
-            ((guint8 *) frame.extended_data[j])[i] = idata[j];
-          }
-          idata += channels;
-        }
-        break;
-      }
-      case 16:{
-        const guint16 *idata = (const guint16 *) audio_in;
-
-        for (i = 0; i < nsamples; i++) {
-          for (j = 0; j < channels; j++) {
-            ((guint16 *) frame.extended_data[j])[i] = idata[j];
-          }
-          idata += channels;
-        }
-        break;
-      }
-      case 32:{
-        const guint32 *idata = (const guint32 *) audio_in;
-
-        for (i = 0; i < nsamples; i++) {
-          for (j = 0; j < channels; j++) {
-            ((guint32 *) frame.extended_data[j])[i] = idata[j];
-          }
-          idata += channels;
-        }
-
-        break;
-      }
-      case 64:{
-        const guint64 *idata = (const guint64 *) audio_in;
-
-        for (i = 0; i < nsamples; i++) {
-          for (j = 0; j < channels; j++) {
-            ((guint64 *) frame.extended_data[j])[i] = idata[j];
-          }
-          idata += channels;
-        }
-
-        break;
-      }
-      default:
-        g_assert_not_reached ();
-        break;
-    }
+    if (planar && info->channels > 1)
+      g_free (frame.data[0]);
+    if (frame.extended_data != frame.data)
+      g_free (frame.extended_data);
 
   } else {
-    frame.data[0] = audio_in;
-    frame.extended_data = frame.data;
-    frame.linesize[0] = in_size;
-    frame.nb_samples = in_size / info->bpf;
+    /* flushing the encoder */
+    res = avcodec_encode_audio2 (ctx, &pkt, NULL, have_data);
   }
-
-  res = avcodec_encode_audio2 (ctx, &pkt, &frame, have_data);
-  if (planar && info->channels > 1)
-    g_free (frame.data[0]);
-  if (frame.extended_data != frame.data)
-    g_free (frame.extended_data);
 
   if (res < 0) {
     char error_str[128] = { 0, };
