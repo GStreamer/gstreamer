@@ -3174,11 +3174,11 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
   if (preroll || use_buffering) {
     /* takes queue limits, initially we only queue up up to the max bytes limit,
      * with a default of 2MB. we use the same values for buffering mode. */
-    if ((max_bytes = dbin->max_size_bytes) == 0)
+    if (preroll || (max_bytes = dbin->max_size_bytes) == 0)
       max_bytes = AUTO_PREROLL_SIZE_BYTES;
-    if ((max_buffers = dbin->max_size_buffers) == 0)
+    if (preroll || (max_buffers = dbin->max_size_buffers) == 0)
       max_buffers = AUTO_PREROLL_SIZE_BUFFERS;
-    if ((max_time = dbin->max_size_time) == 0)
+    if (preroll || (max_time = dbin->max_size_time) == 0)
       max_time = seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
           AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME;
   } else {
