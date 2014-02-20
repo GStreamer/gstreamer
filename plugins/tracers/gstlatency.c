@@ -18,6 +18,13 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/* TODO(ensonic): if there are two sources feeding into a mixer/muxer and later
+ * we fan-out with tee and have two sinks, each sink would get all two events,
+ * the later event would overwrite the former. Unfortunately when the buffer
+ * arrives on the sink we don't know to which event it correlates. Better would
+ * be to use the buffer meta in 1.0 instead of the event. Or we track a min/max
+ * latency.
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -100,6 +107,29 @@ gst_latency_tracer_init (GstLatencyTracer * self)
 /* hooks */
 
 static void
+log_latency (const GstStructure * data, GstPad * sink_pad, guint64 sink_ts)
+{
+  GstPad *src_pad;
+  guint64 src_ts;
+  gchar *src, *sink;
+
+  gst_structure_id_get (data,
+      latency_probe_pad, GST_TYPE_PAD, &src_pad,
+      latency_probe_ts, G_TYPE_UINT64, &src_ts, NULL);
+
+  src = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (src_pad));
+  sink = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (sink_pad));
+
+  /* TODO(ensonic): report format is still unstable */
+  gst_tracer_log_trace (gst_structure_new ("latency",
+          "src", G_TYPE_STRING, src,
+          "sink", G_TYPE_STRING, sink,
+          "time", G_TYPE_UINT64, GST_CLOCK_DIFF (src_ts, sink_ts), NULL));
+  g_free (src);
+  g_free (sink);
+}
+
+static void
 send_latency_probe (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
     guint64 ts)
 {
@@ -136,9 +166,43 @@ do_pull_buffer_pre (GstLatencyTracer * self, va_list var_args)
 }
 
 static void
-do_push_event_pre (GstLatencyTracer * self, va_list var_args)
+calculate_latency (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
+    guint64 ts)
+{
+  if (parent && (!GST_IS_BIN (parent)) &&
+      GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SINK)) {
+    GstEvent *ev = g_object_get_qdata ((GObject *) pad, latency_probe_id);
+
+    log_latency (gst_event_get_structure (ev), pad, ts);
+    gst_event_unref (ev);
+  }
+}
+
+static void
+do_push_buffer_post (GstLatencyTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
+  GstPad *pad = va_arg (var_args, GstPad *);
+  GstPad *peer_pad = GST_PAD_PEER (pad);
+  GstElement *parent = get_real_pad_parent (peer_pad);
+
+  calculate_latency (self, parent, peer_pad, ts);
+}
+
+static void
+do_pull_range_post (GstLatencyTracer * self, va_list var_args)
+{
+  guint64 ts = va_arg (var_args, guint64);
+  GstPad *pad = va_arg (var_args, GstPad *);
+  GstElement *parent = get_real_pad_parent (pad);
+
+  calculate_latency (self, parent, pad, ts);
+}
+
+static void
+do_push_event_pre (GstLatencyTracer * self, va_list var_args)
+{
+  G_GNUC_UNUSED guint64 ts = va_arg (var_args, guint64);
   GstPad *pad = va_arg (var_args, GstPad *);
   GstEvent *ev = va_arg (var_args, GstEvent *);
   GstPad *peer_pad = GST_PAD_PEER (pad);
@@ -150,25 +214,10 @@ do_push_event_pre (GstLatencyTracer * self, va_list var_args)
       const GstStructure *data = gst_event_get_structure (ev);
 
       if (gst_structure_get_name_id (data) == latency_probe_id) {
-        GstPad *origin_pad;
-        guint64 origin_ts;
-        gchar *from, *to;
-
-        /* TODO(ensonic): we'd like to do this when actually rendering */
-        gst_structure_id_get (data,
-            latency_probe_pad, GST_TYPE_PAD, &origin_pad,
-            latency_probe_ts, G_TYPE_UINT64, &origin_ts, NULL);
-
-        from = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (origin_pad));
-        to = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (peer_pad));
-
-        /* TODO(ensonic): report format is still unstable */
-        gst_tracer_log_trace (gst_structure_new ("latency",
-                "from", G_TYPE_STRING, from,
-                "to", G_TYPE_STRING, to,
-                "time", G_TYPE_UINT64, GST_CLOCK_DIFF (origin_ts, ts), NULL));
-        g_free (from);
-        g_free (to);
+        /* store event and calculate latency when the buffer that follows
+         * has been processed */
+        g_object_set_qdata ((GObject *) peer_pad, latency_probe_id,
+            gst_event_ref (ev));
       }
     }
   }
@@ -185,8 +234,15 @@ gst_latency_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
     case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_PRE:
       do_push_buffer_pre (self, var_args);
       break;
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_POST:
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_POST:
+      do_push_buffer_post (self, var_args);
+      break;
     case GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_PRE:
       do_pull_buffer_pre (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_POST:
+      do_pull_range_post (self, var_args);
       break;
     case GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_PRE:
       do_push_event_pre (self, var_args);
