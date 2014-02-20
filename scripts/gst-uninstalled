@@ -214,6 +214,11 @@ export PATH=$GST/insanity/bin:$PATH
 export PKG_CONFIG_PATH=$GST/insanity/lib:$GST/insanity-gst/lib:$PKG_CONFIG_PATH
 export GI_TYPELIB_PATH=$GST/insanity/lib/insanity:$GST/insanity-gst/lib/insanity-gst:$GI_TYPELIB_PATH
 
+# gst-devtools/validate
+export PATH=$GST/gst-devtools/validate/tools:$PATH
+export PKG_CONFIG_PATH=$GST/gst-devtools/validate/pkgconfig:$PKG_CONFIG_PATH
+export GST_VALIDATE_SCENARIOS_PATH=$GST/gst-devtools/validate/data:$GST_VALIDATE_SCENARIOS_PATH
+
 if [ -d "$GST/gst-libav" -a -d "$GST/gst-ffmpeg" ]; then
   echo
   echo "====================================================================="
