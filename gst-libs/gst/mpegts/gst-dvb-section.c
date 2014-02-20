@@ -246,7 +246,7 @@ gst_mpegts_section_get_eit (GstMpegTsSection * section)
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
 
   if (!section->cached_parsed)
-    section->cached_parsed = __common_desc_checks (section, 18, _parse_eit,
+    section->cached_parsed = __common_section_checks (section, 18, _parse_eit,
         (GDestroyNotify) _gst_mpegts_eit_free);
 
   return (const GstMpegTsEIT *) section->cached_parsed;
@@ -420,7 +420,7 @@ gst_mpegts_section_get_bat (GstMpegTsSection * section)
 
   if (!section->cached_parsed)
     section->cached_parsed =
-        __common_desc_checks (section, 16, _parse_bat,
+        __common_section_checks (section, 16, _parse_bat,
         (GDestroyNotify) _gst_mpegts_bat_free);
 
   return (const GstMpegTsBAT *) section->cached_parsed;
@@ -599,7 +599,7 @@ gst_mpegts_section_get_nit (GstMpegTsSection * section)
 
   if (!section->cached_parsed)
     section->cached_parsed =
-        __common_desc_checks (section, 16, _parse_nit,
+        __common_section_checks (section, 16, _parse_nit,
         (GDestroyNotify) _gst_mpegts_nit_free);
 
   return (const GstMpegTsNIT *) section->cached_parsed;
@@ -924,7 +924,7 @@ gst_mpegts_section_get_sdt (GstMpegTsSection * section)
 
   if (!section->cached_parsed)
     section->cached_parsed =
-        __common_desc_checks (section, 15, _parse_sdt,
+        __common_section_checks (section, 15, _parse_sdt,
         (GDestroyNotify) _gst_mpegts_sdt_free);
 
   return (const GstMpegTsSDT *) section->cached_parsed;
@@ -954,7 +954,7 @@ gst_mpegts_section_get_tdt (GstMpegTsSection * section)
 
   if (!section->cached_parsed)
     section->cached_parsed =
-        __common_desc_checks (section, 8, _parse_tdt,
+        __common_section_checks (section, 8, _parse_tdt,
         (GDestroyNotify) gst_date_time_unref);
 
   if (section->cached_parsed)
@@ -1028,7 +1028,7 @@ gst_mpegts_section_get_tot (GstMpegTsSection * section)
 
   if (!section->cached_parsed)
     section->cached_parsed =
-        __common_desc_checks (section, 14, _parse_tot,
+        __common_section_checks (section, 14, _parse_tot,
         (GDestroyNotify) _gst_mpegts_tot_free);
 
   return (const GstMpegTsTOT *) section->cached_parsed;

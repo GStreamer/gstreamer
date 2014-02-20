@@ -150,7 +150,7 @@ _calc_crc32 (const guint8 * data, guint datalen)
 }
 
 gpointer
-__common_desc_checks (GstMpegTsSection * section, guint min_size,
+__common_section_checks (GstMpegTsSection * section, guint min_size,
     GstMpegTsParseFunc parsefunc, GDestroyNotify destroynotify)
 {
   gpointer res;
@@ -474,7 +474,7 @@ gst_mpegts_section_get_pat (GstMpegTsSection * section)
 
   if (!section->cached_parsed)
     section->cached_parsed =
-        __common_desc_checks (section, 12, _parse_pat,
+        __common_section_checks (section, 12, _parse_pat,
         (GDestroyNotify) g_ptr_array_unref);
 
   if (section->cached_parsed)
@@ -736,7 +736,7 @@ gst_mpegts_section_get_pmt (GstMpegTsSection * section)
 
   if (!section->cached_parsed)
     section->cached_parsed =
-        __common_desc_checks (section, 16, _parse_pmt,
+        __common_section_checks (section, 16, _parse_pmt,
         (GDestroyNotify) _gst_mpegts_pmt_free);
 
   return (const GstMpegTsPMT *) section->cached_parsed;
@@ -938,7 +938,7 @@ gst_mpegts_section_get_cat (GstMpegTsSection * section)
 
   if (!section->cached_parsed)
     section->cached_parsed =
-        __common_desc_checks (section, 12, _parse_cat,
+        __common_section_checks (section, 12, _parse_cat,
         (GDestroyNotify) g_ptr_array_unref);
 
   if (section->cached_parsed)
