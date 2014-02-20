@@ -882,6 +882,7 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
   g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (res != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == 0x0A, FALSE);
+  /* This descriptor can be empty, no size check needed */
 
   data = (guint8 *) descriptor->data + 2;
   /* Each language is 3 + 1 bytes */
@@ -970,6 +971,7 @@ gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *
 
   g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == 0x83, FALSE);
+  /* This descriptor loop can be empty, no size check required */
 
   data = (guint8 *) descriptor->data;
   res->nb_channels = descriptor->length / 4;

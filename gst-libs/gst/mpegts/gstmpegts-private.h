@@ -48,6 +48,7 @@ G_GNUC_INTERNAL gpointer __common_section_checks (GstMpegTsSection *section,
 						  GstMpegTsParseFunc parsefunc,
 						  GDestroyNotify destroynotify);
 
+
 G_END_DECLS
 
 #endif	/* _GST_MPEGTS_PRIVATE_H_ */

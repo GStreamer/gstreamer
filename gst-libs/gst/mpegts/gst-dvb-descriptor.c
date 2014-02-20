@@ -66,6 +66,8 @@ gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTsDescriptor *
 {
   g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == 0x40, FALSE);
+  /* We need at least one byte of data for the string */
+  g_return_val_if_fail (descriptor->length >= 1, FALSE);
 
   *name = get_encoding_and_convert ((gchar *) descriptor->data + 2,
       descriptor->data[1]);
@@ -126,6 +128,8 @@ gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegTsDescriptor
   g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (res != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == 0x43, FALSE);
+  /* This descriptor is always 11 bytes long */
+  g_return_val_if_fail (descriptor->length == 11, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
 
@@ -201,6 +205,8 @@ gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTsDescriptor *
   g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (res != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == 0x44, FALSE);
+  /* This descriptor is always 11 bytes long */
+  g_return_val_if_fail (descriptor->length == 11, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
   /* BCD in MHz, decimal place after the fourth character */
@@ -265,6 +271,8 @@ gst_mpegts_descriptor_parse_dvb_service (const GstMpegTsDescriptor *
 
   g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == 0x48, FALSE);
+  /* Need at least 3 bytes (type and 2 bytes for the string length) */
+  g_return_val_if_fail (descriptor->length >= 3, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
 
@@ -300,6 +308,8 @@ gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTsDescriptor *
 
   g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == 0x4D, FALSE);
+  /* Need at least 5 bytes (3 for language code, 2 for each string length) */
+  g_return_val_if_fail (descriptor->length >= 5, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
 
@@ -503,6 +513,8 @@ gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescriptor
   g_return_val_if_fail (res != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == GST_MTS_DESC_DVB_EXTENDED_EVENT,
       FALSE);
+  /* Need at least 6 bytes (1 for desc number, 3 for language code, 2 for the loop length) */
+  g_return_val_if_fail (descriptor->length >= 6, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
 
@@ -568,6 +580,8 @@ gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor
   g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (res != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == GST_MTS_DESC_DVB_COMPONENT, FALSE);
+  /* Need 6 bytes at least (1 for content, 1 for type, 1 for tag, 3 for language code) */
+  g_return_val_if_fail (descriptor->length >= 6, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
 
@@ -650,6 +664,8 @@ gst_mpegts_descriptor_parse_terrestrial_delivery_system (const
   g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (res != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == 0x5a, FALSE);
+  /* Descriptor is always 11 bytes long */
+  g_return_val_if_fail (descriptor->length == 11, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
 
