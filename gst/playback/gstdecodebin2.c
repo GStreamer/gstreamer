@@ -3653,7 +3653,8 @@ gst_decode_group_reset_buffering (GstDecodeGroup * group)
         "low-percent", group->dbin->low_percent,
         "high-percent", group->dbin->high_percent, NULL);
   }
-  decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE, FALSE);
+  decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
+      (group->parent ? group->parent->seekable : TRUE));
 
   GST_DEBUG_OBJECT (group->dbin, "Setting %s buffering to %d",
       GST_ELEMENT_NAME (group->multiqueue), !ret);
