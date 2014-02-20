@@ -1410,6 +1410,7 @@ gst_decode_bin_autoplug_query (GstElement * element, GstPad * pad,
 
 static gboolean are_final_caps (GstDecodeBin * dbin, GstCaps * caps);
 static gboolean is_demuxer_element (GstElement * srcelement);
+static gboolean is_adaptive_demuxer_element (GstElement * srcelement);
 
 static gboolean connect_pad (GstDecodeBin * dbin, GstElement * src,
     GstDecodePad * dpad, GstPad * pad, GstCaps * caps, GValueArray * factories,
@@ -2103,6 +2104,30 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     delem->capsfilter = NULL;
     chain->elements = g_list_prepend (chain->elements, delem);
     chain->demuxer = is_demuxer_element (element);
+
+    /* For adaptive streaming demuxer we insert a multiqueue after
+     * this demuxer. This multiqueue will get one fragment per buffer.
+     * Now for the case where we have a container stream inside these
+     * buffers, another demuxer will be plugged and after this second
+     * demuxer there will be a second multiqueue. This second multiqueue
+     * will get smaller buffers and will be the one emitting buffering
+     * messages.
+     * If we don't have a container stream inside the fragment buffers,
+     * we'll insert a multiqueue below right after the next element after
+     * the adaptive streaming demuxer. This is going to be a parser or
+     * decoder, and will output smaller buffers.
+     */
+    if (chain->parent && chain->parent->parent) {
+      GstDecodeChain *parent_chain = chain->parent->parent;
+      GstDecodeElement *parent_last_element;
+
+      parent_last_element =
+          parent_chain->elements ? parent_chain->elements->data : NULL;
+      if (parent_last_element
+          && is_adaptive_demuxer_element (parent_last_element->element))
+        chain->demuxer = TRUE;
+    }
+
     CHAIN_MUTEX_UNLOCK (chain);
 
     /* Set connection-speed property if needed */
@@ -2706,6 +2731,23 @@ is_demuxer_element (GstElement * srcelement)
   }
 
   if (potential_src_pads < 2)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+is_adaptive_demuxer_element (GstElement * srcelement)
+{
+  GstElementFactory *srcfactory;
+  const gchar *klass;
+
+  srcfactory = gst_element_get_factory (srcelement);
+  klass =
+      gst_element_factory_get_metadata (srcfactory, GST_ELEMENT_METADATA_KLASS);
+
+  /* Can't be a demuxer unless it has Demux in the klass name */
+  if (!strstr (klass, "Demux") || !strstr (klass, "Adaptive"))
     return FALSE;
 
   return TRUE;
