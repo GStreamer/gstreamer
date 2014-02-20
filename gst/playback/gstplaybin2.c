@@ -4565,6 +4565,15 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   return GST_AUTOPLUG_SELECT_EXPOSE;
 }
 
+#define GST_PLAY_BIN_FILTER_CAPS(filter,caps) G_STMT_START {                  \
+  if ((filter)) {                                                             \
+    GstCaps *intersection =                                                   \
+        gst_caps_intersect_full ((filter), (caps), GST_CAPS_INTERSECT_FIRST); \
+    gst_caps_unref ((caps));                                                  \
+    (caps) = intersection;                                                    \
+  }                                                                           \
+} G_STMT_END
+
 static gboolean
 autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
     GstElement * element, GstQuery * query, GstSourceGroup * group)
@@ -4669,6 +4678,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
       have_sink = TRUE;
     } else {
       GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
+      GST_PLAY_BIN_FILTER_CAPS (filter, subcaps);
       if (!result)
         result = subcaps;
       else
@@ -4700,6 +4710,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
         templ_caps = gst_static_pad_template_get_caps (l->data);
 
         if (!gst_caps_is_any (templ_caps)) {
+          GST_PLAY_BIN_FILTER_CAPS (filter, templ_caps);
           if (!result)
             result = templ_caps;
           else
@@ -4727,17 +4738,13 @@ done:
     GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
 
     if (target) {
-      result = gst_caps_merge (result, gst_pad_get_pad_template_caps (target));
+      GstCaps *target_caps = gst_pad_get_pad_template_caps (target);
+      GST_PLAY_BIN_FILTER_CAPS (filter, target_caps);
+      result = gst_caps_merge (result, target_caps);
       gst_object_unref (target);
     }
   }
 
-  if (filter) {
-    GstCaps *intersection =
-        gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (result);
-    result = intersection;
-  }
 
   gst_query_set_caps_result (query, result);
   gst_caps_unref (result);
