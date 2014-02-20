@@ -2842,7 +2842,9 @@ gst_base_src_loop (GstPad * pad)
     goto pause;
   }
 
-  if (G_UNLIKELY (eos)) {
+  /* Segment pending means that a new segment was configured
+   * during this loop run */
+  if (G_UNLIKELY (eos && !src->priv->segment_pending)) {
     GST_INFO_OBJECT (src, "pausing after end of segment");
     ret = GST_FLOW_EOS;
     goto pause;

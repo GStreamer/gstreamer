@@ -608,6 +608,152 @@ GST_START_TEST (basesrc_seek_events_rate_update)
 GST_END_TEST;
 
 
+typedef struct
+{
+  gboolean seeked;
+  gint buffer_count;
+  GList *events;
+} LastBufferSeekData;
+
+static GstPadProbeReturn
+seek_on_buffer (GstObject * pad, GstPadProbeInfo * info, gpointer * user_data)
+{
+  LastBufferSeekData *data = (LastBufferSeekData *) user_data;
+
+  fail_unless (user_data != NULL);
+
+  if (info->type & GST_PAD_PROBE_TYPE_BUFFER) {
+    data->buffer_count++;
+
+    if (!data->seeked) {
+      fail_unless (gst_pad_push_event (GST_PAD (pad),
+              gst_event_new_seek (1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_FLUSH,
+                  GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, 1)));
+      data->seeked = TRUE;
+    }
+  } else if (info->type & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
+    data->events = g_list_append (data->events, gst_event_ref (info->data));
+  } else {
+    fail ("Should not be reached");
+  }
+  return GST_PAD_PROBE_OK;
+}
+
+/* basesrc_seek_on_last_buffer:
+ *  - make sure basesrc doesn't go eos if a seek is sent
+ * after the last buffer push
+ *
+ * This is just a test and is a controlled environment.
+ * For testing purposes sending the seek from the streaming
+ * thread is ok but doing this in an application might not
+ * be a good idea.
+ */
+GST_START_TEST (basesrc_seek_on_last_buffer)
+{
+  GstStateChangeReturn state_ret;
+  GstElement *src, *sink, *pipe;
+  GstMessage *msg;
+  GstBus *bus;
+  GstPad *probe_pad;
+  guint probe;
+  GstEvent *seek;
+  LastBufferSeekData seek_data;
+
+  pipe = gst_pipeline_new ("pipeline");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  src = gst_element_factory_make ("fakesrc", "src");
+
+  g_assert (pipe != NULL);
+  g_assert (sink != NULL);
+  g_assert (src != NULL);
+
+  /* use 'sizemax' buffers to avoid receiving empty buffers */
+  g_object_set (src, "sizetype", 2, NULL);
+
+  fail_unless (gst_bin_add (GST_BIN (pipe), src) == TRUE);
+  fail_unless (gst_bin_add (GST_BIN (pipe), sink) == TRUE);
+
+  fail_unless (gst_element_link (src, sink) == TRUE);
+
+  bus = gst_element_get_bus (pipe);
+
+  /* set up probe to catch the last buffer and send a seek event */
+  probe_pad = gst_element_get_static_pad (sink, "sink");
+  fail_unless (probe_pad != NULL);
+
+  seek_data.buffer_count = 0;
+  seek_data.seeked = FALSE;
+  seek_data.events = NULL;
+
+  probe =
+      gst_pad_add_probe (probe_pad,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      (GstPadProbeCallback) seek_on_buffer, &seek_data, NULL);
+
+  /* prepare the segment so that it has only one buffer */
+  seek = gst_event_new_seek (1, GST_FORMAT_BYTES, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, 1);
+
+  gst_element_set_state (pipe, GST_STATE_READY);
+  fail_unless (gst_element_send_event (src, seek));
+
+  GST_INFO ("going to playing");
+
+  /* play */
+  gst_element_set_state (pipe, GST_STATE_PLAYING);
+  state_ret = gst_element_get_state (pipe, NULL, NULL, -1);
+  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
+
+  /* ... and wait for the EOS message from the sink */
+  msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ERROR);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_element_get_state (pipe, NULL, NULL, -1);
+
+  GST_INFO ("stopped");
+
+  /* check that we have go the event */
+  fail_unless (seek_data.buffer_count == 2);
+  fail_unless (seek_data.seeked);
+
+  /* events: stream-start -> segment -> segment -> eos */
+  fail_unless (g_list_length (seek_data.events) == 4);
+  {
+    GstEvent *event;
+
+    event = seek_data.events->data;
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+    gst_event_unref (event);
+    seek_data.events = g_list_delete_link (seek_data.events, seek_data.events);
+
+    event = seek_data.events->data;
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
+    gst_event_unref (event);
+    seek_data.events = g_list_delete_link (seek_data.events, seek_data.events);
+
+    event = seek_data.events->data;
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
+    gst_event_unref (event);
+    seek_data.events = g_list_delete_link (seek_data.events, seek_data.events);
+
+    event = seek_data.events->data;
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_EOS);
+    gst_event_unref (event);
+    seek_data.events = g_list_delete_link (seek_data.events, seek_data.events);
+  }
+
+  gst_pad_remove_probe (probe_pad, probe);
+  gst_object_unref (probe_pad);
+  gst_message_unref (msg);
+  gst_object_unref (bus);
+  gst_object_unref (pipe);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_basesrc_suite (void)
 {
@@ -622,6 +768,7 @@ gst_basesrc_suite (void)
   tcase_add_test (tc, basesrc_eos_events_push_live_eos);
   tcase_add_test (tc, basesrc_eos_events_pull_live_eos);
   tcase_add_test (tc, basesrc_seek_events_rate_update);
+  tcase_add_test (tc, basesrc_seek_on_last_buffer);
 
   return s;
 }
