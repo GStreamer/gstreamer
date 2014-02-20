@@ -1943,6 +1943,9 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
     }
   }
 
+  if (!mq->queues || !mq->queues->next)
+    all_not_linked = FALSE;
+
   /* if hard limits are not reached then we allow one more buffer in the full
    * queue, but only if any of the other singelqueues are empty or all are
    * not linked */
