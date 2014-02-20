@@ -3240,14 +3240,6 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
   if (G_UNLIKELY (!group->multiqueue))
     goto missing_multiqueue;
 
-  /* default is for use-buffering is FALSE */
-  if (dbin->use_buffering) {
-    g_object_set (mq,
-        "use-buffering", TRUE,
-        "low-percent", dbin->low_percent,
-        "high-percent", dbin->high_percent, NULL);
-  }
-
   /* configure queue sizes for preroll */
   seekable = FALSE;
   if (parent && parent->demuxer) {
@@ -3669,7 +3661,9 @@ gst_decode_group_reset_buffering (GstDecodeGroup * group)
     /* all chains are buffering already, no need to do it here */
     g_object_set (group->multiqueue, "use-buffering", FALSE, NULL);
   } else {
-    g_object_set (group->multiqueue, "use-buffering", TRUE, NULL);
+    g_object_set (group->multiqueue, "use-buffering", TRUE,
+        "low-percent", group->dbin->low_percent,
+        "high-percent", group->dbin->high_percent, NULL);
   }
   decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE, FALSE);
 
