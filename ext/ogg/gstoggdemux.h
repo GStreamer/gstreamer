@@ -157,7 +157,6 @@ struct _GstOggDemux
   GstSegment segment;
   guint32  seqnum;
 
-  GstEvent *event;
   GstEvent *newsegment;         /* pending newsegment to be sent from _loop */
 
   /* annodex stuff */
