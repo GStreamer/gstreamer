@@ -294,7 +294,7 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
 
   gst_element_class_set_static_metadata (gstelement_class,
       "DASH Demuxer",
-      "Codec/Demuxer",
+      "Codec/Demuxer/Adaptive",
       "Dynamic Adaptive Streaming over HTTP demuxer",
       "David Corvoysier <david.corvoysier@orange.com>\n\
                 Hamid Zakari <hamid.zakari@gmail.com>\n\

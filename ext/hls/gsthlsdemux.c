@@ -190,7 +190,7 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "HLS Demuxer",
-      "Demuxer/URIList",
+      "Codec/Demuxer/Adaptive",
       "HTTP Live Streaming demuxer",
       "Marc-Andre Lureau <marcandre.lureau@gmail.com>\n"
       "Andoni Morales Alastruey <ylatuya@gmail.com>");
