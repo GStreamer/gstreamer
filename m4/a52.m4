@@ -91,23 +91,6 @@ main ()
 
     if test "x$HAVE_A52DEC" = "xno"; then
         echo "*** Your a52dec is borked somehow. Please update to 0.7.4 or newer."
-    else
-        AC_TRY_RUN([
-#include <inttypes.h>
-#include <a52dec/a52.h>
-
-int 
-main ()
-{
-  int i = sizeof (a52_state_t);
-  if ( i )
-    return 0;
-}
-            ],, HAVE_A52DEC=no, [echo $ac_n "cross compiling; assumed OK... $ac_c"])
-
-        if test "x$HAVE_A52DEC" = "xno"; then
-            echo "*** Your a52dec is too old. Please update to 0.7.4 or newer."
-        fi
     fi
     CFLAGS="$ac_save_CFLAGS"
     LIBS="$ac_save_LIBS"
