@@ -1977,7 +1977,11 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
     }
 
     /* construct the type */
-    plugin_name = g_strdup ((gchar *) in_plugin->name);
+    if (!strcmp (in_plugin->name, "hevc")) {
+      plugin_name = g_strdup ("h265");
+    } else {
+      plugin_name = g_strdup ((gchar *) in_plugin->name);
+    }
     g_strdelimit (plugin_name, NULL, '_');
     type_name = g_strdup_printf ("avdec_%s", plugin_name);
     g_free (plugin_name);
