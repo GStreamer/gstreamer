@@ -78,7 +78,7 @@ libgstopengl_la_SOURCES = \
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
 # (like in AM_CFLAGS)?
-libgstopengl_la_CFLAGS = -I$(top_srcdir)/gst-libs $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
+libgstopengl_la_CFLAGS = -I$(top_srcdir)/gst-libs $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GL_CFLAGS) $(LIBPNG_CFLAGS)
 
 libgstopengl_la_LIBADD = \
