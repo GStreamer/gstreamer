@@ -21,6 +21,18 @@
 #include "gst/video/gstvideopool.h"
 
 /**
+ * SECTION:gstvideopool
+ * @short_description: GstBufferPool for raw video buffers
+ * @see_also: #GstBufferPool
+ *
+ * Special GstBufferPool subclass for raw video buffers.
+ *
+ * Allows configuration of video-specific requirements such as
+ * stride alignments or pixel padding, and can also be configured
+ * to automatically add #GstVideoMeta to the buffers.
+ */
+
+/**
  * gst_buffer_pool_config_set_video_alignment:
  * @config: a #GstStructure
  * @align: a #GstVideoAlignment

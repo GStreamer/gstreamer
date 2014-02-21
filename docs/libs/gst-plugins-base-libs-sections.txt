@@ -2337,6 +2337,7 @@ GST_TYPE_NAVIGATION_EVENT_TYPE
 
 <SECTION>
 <FILE>gstvideopool</FILE>
+<TITLE>GstVideoPool</TITLE>
 <INCLUDE>gst/video/gstvideopool.h</INCLUDE>
 GstVideoBufferPool
 GstVideoBufferPoolClass

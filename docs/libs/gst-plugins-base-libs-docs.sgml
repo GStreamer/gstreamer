@@ -195,6 +195,7 @@
       <xi:include href="xml/gstvideooverlay.xml" />
       <xi:include href="xml/gstvideodecoder.xml" />
       <xi:include href="xml/gstvideoencoder.xml" />
+      <xi:include href="xml/gstvideopool.xml" />
       <xi:include href="xml/gstvideoutils.xml" />
     </chapter>
   </part>
