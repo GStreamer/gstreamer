@@ -225,6 +225,16 @@ gst_gl_filter_reset (GstGLFilter * filter)
 {
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
+  if (filter->upload) {
+    gst_object_unref (filter->upload);
+    filter->upload = NULL;
+  }
+
+  if (filter->download) {
+    gst_object_unref (filter->download);
+    filter->download = NULL;
+  }
+
   if (filter->context) {
     if (filter_class->onReset)
       filter_class->onReset (filter);
