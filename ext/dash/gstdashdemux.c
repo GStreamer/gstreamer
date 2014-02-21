@@ -1834,8 +1834,7 @@ gst_dash_demux_wait_for_fragment_to_be_available (GstDashDemux * demux,
     gint64 diff;
 
     cur_time = gst_date_time_new_now_utc ();
-    diff = gst_mpd_client_calculate_time_difference (cur_time, seg_end_time)
-        / GST_MSECOND;
+    diff = gst_mpd_client_calculate_time_difference (cur_time, seg_end_time);
     gst_date_time_unref (seg_end_time);
     gst_date_time_unref (cur_time);
     if (diff > 0) {
