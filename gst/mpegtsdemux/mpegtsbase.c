@@ -186,17 +186,10 @@ mpegts_base_reset (MpegTSBase * base)
   /* ATSC */
   MPEGTS_BIT_SET (base->known_psi, 0x1ffb);
 
-  /* FIXME : Commenting the Following lines is to be in sync with the following
-   * commit
-   *
-   * 61a885613316ce7657c36a6cd215b43f9dc67b79
-   *     mpegtsparse: don't free PAT structure which may still be needed later
-   */
-
-  /* if (base->pat != NULL) */
-  /*   gst_structure_free (base->pat); */
-  /* base->pat = NULL; */
-  /* pmt pids will be added and removed dynamically */
+  if (base->pat) {
+    g_ptr_array_unref (base->pat);
+    base->pat = NULL;
+  }
 
   gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
   base->last_seek_seqnum = (guint32) - 1;
