@@ -638,42 +638,16 @@ static GstCaps *
 gst_gl_filter_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  //GstGLFilter* filter = GST_GL_FILTER (bt);
-  GstStructure *structure;
-  GstCapsFeatures *features;
   GstCaps *newcaps, *result;
-  const GValue *par;
-  guint i, n;
 
-  par = NULL;
-  newcaps = gst_caps_new_empty ();
-  n = gst_caps_get_size (caps);
-
-  for (i = 0; i < n; i++) {
-    structure = gst_caps_get_structure (caps, i);
-    features = gst_caps_get_features (caps, i);
-
-    if (i > 0
-        && gst_caps_is_subset_structure_full (newcaps, structure, features))
-      continue;
-
-    structure = gst_structure_copy (structure);
-    features = gst_caps_features_copy (features);
-
-    gst_structure_set (structure,
-        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-
-    gst_structure_remove_field (structure, "format");
-
-    if ((par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) {
-      gst_structure_set (structure,
-          "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
-          NULL);
-    }
-
-    gst_caps_append_structure_full (newcaps, structure, features);
-  }
+  if (direction == GST_PAD_SINK)
+    newcaps =
+        gst_static_pad_template_get_caps (&gst_gl_filter_src_pad_template);
+  else if (direction == GST_PAD_SRC)
+    newcaps =
+        gst_static_pad_template_get_caps (&gst_gl_filter_sink_pad_template);
+  else
+    newcaps = gst_caps_new_any ();
 
   if (filter) {
     result =
