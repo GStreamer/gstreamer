@@ -1993,6 +1993,15 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
           break;
         }
       }
+
+      if (!skip && chain->parent && chain->parent->parent) {
+        GstDecodeChain *parent_chain = chain->parent->parent;
+        GstDecodeElement *pelem =
+            parent_chain->elements ? parent_chain->elements->data : NULL;
+
+        if (pelem && gst_element_get_factory (pelem->element) == factory)
+          skip = TRUE;
+      }
       CHAIN_MUTEX_UNLOCK (chain);
       if (skip) {
         GST_DEBUG_OBJECT (dbin,
