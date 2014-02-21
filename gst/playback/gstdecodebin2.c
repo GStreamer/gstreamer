@@ -1502,6 +1502,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if (chain->demuxer) {
     GstDecodeGroup *group;
     GstDecodeChain *oldchain = chain;
+    GstDecodeElement *demux = (chain->elements ? chain->elements->data : NULL);
 
     if (chain->current_pad)
       gst_object_unref (chain->current_pad);
@@ -1520,6 +1521,12 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       GST_WARNING_OBJECT (dbin, "No current group");
       return;
     }
+
+    /* If this is not a dynamic pad demuxer, we're no-more-pads
+     * already before anything else happens
+     */
+    if (!demux->no_more_pads_id)
+      group->no_more_pads = TRUE;
   }
 
   if ((caps == NULL) || gst_caps_is_empty (caps))
