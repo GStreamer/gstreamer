@@ -1475,6 +1475,9 @@ gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec)
 {
   GstFFMpegVidDecClass *oclass;
 
+  if (!ffmpegdec->opened)
+    return;
+
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
