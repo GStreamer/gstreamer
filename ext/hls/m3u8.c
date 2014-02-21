@@ -169,7 +169,7 @@ double_from_string (gchar * ptr, gchar ** endptr, gdouble * val)
 static gboolean
 parse_attributes (gchar ** ptr, gchar ** a, gchar ** v)
 {
-  gchar *end, *p;
+  gchar *end=NULL, *p;
 
   g_return_val_if_fail (ptr != NULL, FALSE);
   g_return_val_if_fail (*ptr != NULL, FALSE);
@@ -180,6 +180,19 @@ parse_attributes (gchar ** ptr, gchar ** a, gchar ** v)
 
   *a = *ptr;
   end = p = g_utf8_strchr (*ptr, -1, ',');
+  if(end){
+	gchar *q = g_utf8_strchr (*ptr, -1, '"');
+	if(q && q<end){
+	  /* special case, such as CODECS="avc1.77.30, mp4a.40.2" */
+	  q = g_utf8_next_char (q);
+	  if(q){
+		q = g_utf8_strchr (q, -1, '"');
+	  }
+	  if(q){
+		end = p = g_utf8_strchr (q, -1, ',');
+	  }
+	}
+  }
   if (end) {
     do {
       end = g_utf8_next_char (end);
@@ -392,7 +405,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
         } else if (g_str_equal (a, "RESOLUTION")) {
           if (!int_from_string (v, &v, &list->width))
             GST_WARNING ("Error while reading RESOLUTION width");
-          if (!v || *v != '=') {
+          if (!v || *v != 'x') {
             GST_WARNING ("Missing height");
           } else {
             v = g_utf8_next_char (v);
