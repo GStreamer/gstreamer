@@ -4,6 +4,7 @@ plugin_LTLIBRARIES = libgstcoreelements.la
 libgstcoreelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la
 libgstcoreelements_la_SOURCES =	\
 	gstcapsfilter.c		\
+	gstdownloadbuffer.c     \
 	gstelements.c		\
 	gstfakesrc.c		\
 	gstfakesink.c		\
@@ -31,6 +32,7 @@ libgstcoreelements_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS =		\
 	gstcapsfilter.h		\
+	gstdownloadbuffer.h	\
 	gstfakesink.h		\
 	gstfakesrc.h		\
 	gstfdsrc.h		\

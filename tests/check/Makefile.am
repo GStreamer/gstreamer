@@ -91,6 +91,7 @@ REGISTRY_CHECKS =				\
 	libs/baseparse				\
 	libs/basesrc				\
 	libs/basesink				\
+	libs/sparsefile				\
 	libs/controller				\
 	libs/queuearray				\
 	libs/typefindhelper			\
@@ -142,6 +143,7 @@ check_PROGRAMS =				\
 	libs/bitreader-noinline		\
 	libs/bytereader-noinline	\
 	libs/bytewriter-noinline	\
+	libs/sparsefile				\
 	libs/collectpads			\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider			\

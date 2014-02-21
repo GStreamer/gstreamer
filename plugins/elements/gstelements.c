@@ -28,6 +28,7 @@
 #include <gst/gst.h>
 
 #include "gstcapsfilter.h"
+#include "gstdownloadbuffer.h"
 #include "gstfakesink.h"
 #include "gstfakesrc.h"
 #include "gstfdsrc.h"
@@ -50,6 +51,9 @@ plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "capsfilter", GST_RANK_NONE,
           gst_capsfilter_get_type ()))
+    return FALSE;
+  if (!gst_element_register (plugin, "downloadbuffer", GST_RANK_NONE,
+          gst_download_buffer_get_type ()))
     return FALSE;
   if (!gst_element_register (plugin, "fakesrc", GST_RANK_NONE,
           gst_fake_src_get_type ()))

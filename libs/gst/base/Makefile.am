@@ -11,6 +11,7 @@ libgstbase_@GST_API_VERSION@_la_SOURCES = \
 	gstbitreader.c		\
 	gstbytereader.c		\
 	gstbytewriter.c         \
+	gstsparsefile.c         \
 	gstcollectpads.c	\
 	gstdataqueue.c		\
 	gstpushsrc.c		\
@@ -18,7 +19,7 @@ libgstbase_@GST_API_VERSION@_la_SOURCES = \
 	gsttypefindhelper.c
 
 libgstbase_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS)
-libgstbase_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS)
+libgstbase_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS) $(GIO_LIBS)
 libgstbase_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 libgstbase_@GST_API_VERSION@includedir =		\
@@ -34,6 +35,7 @@ libgstbase_@GST_API_VERSION@include_HEADERS =	\
 	gstbitreader.h		\
 	gstbytereader.h		\
 	gstbytewriter.h         \
+	gstsparsefile.h         \
 	gstcollectpads.h	\
 	gstdataqueue.h		\
 	gstpushsrc.h		\
