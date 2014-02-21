@@ -795,7 +795,15 @@ uri_join (const gchar * uri1, const gchar * uri2)
   uri_copy = g_strdup (uri1);
   if (uri2[0] != '/') {
     /* uri2 is a relative uri2 */
-    tmp = g_utf8_strrchr (uri_copy, -1, '/');
+    /* look for query params */
+    tmp = g_utf8_strchr (uri_copy, -1, '?');
+    if (tmp) {
+      /* find last / char, ignoring query params */
+      tmp = g_utf8_strrchr (uri_copy, tmp - uri_copy, '/');
+    } else {
+      /* find last / char in URL */
+      tmp = g_utf8_strrchr (uri_copy, -1, '/');
+    }
     if (!tmp) {
       GST_WARNING ("Can't build a valid uri_copy");
       goto out;
