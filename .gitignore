@@ -45,6 +45,10 @@ stamp-h.in
 /examples/test-multicast
 /examples/test-multicast2
 
+/test-driver
+/tests/check/gst/*.log
+/tests/check/gst/*.trs
+/tests/check/test-suite.log
 /tests/check/gst/addresspool
 /tests/check/gst/client
 /tests/check/gst/media
