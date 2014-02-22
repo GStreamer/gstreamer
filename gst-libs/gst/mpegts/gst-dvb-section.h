@@ -233,6 +233,9 @@ struct _GstMpegTsSDTService
 
 /**
  * GstMpegTsSDT:
+ * @original_network_id: Network ID of the originating delivery system
+ * @actual_ts: True if the table describes this transport stream
+ * @transport_stream_id: ID of this transport stream
  * @services: (element-type GstMpegTsSDTService): List of services
  *
  * Service Description Table (EN 300 468)
@@ -242,6 +245,7 @@ struct _GstMpegTsSDT
 {
   guint16    original_network_id;
   gboolean   actual_ts;
+  guint16    transport_stream_id;
 
   GPtrArray *services;
 };

@@ -832,6 +832,8 @@ _parse_sdt (GstMpegTsSection * section)
   data = section->data;
   end = data + section->section_length;
 
+  sdt->transport_stream_id = section->subtable_extension;
+
   /* Skip common fields */
   data += 8;
 
