@@ -646,6 +646,23 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       open_flags |= GST_FFMPEG_URL_STREAMHEADER;
     }
 
+    /* some house-keeping for downstream before starting data flow */
+    /* stream-start (FIXME: create id based on input ids) */
+    {
+      gchar s_id[32];
+
+      g_snprintf (s_id, sizeof (s_id), "avmux-%08x", g_random_int ());
+      gst_pad_push_event (ffmpegmux->srcpad, gst_event_new_stream_start (s_id));
+    }
+    /* segment */
+    {
+      GstSegment segment;
+
+      /* let downstream know we think in BYTES and expect to do seeking later on */
+      gst_segment_init (&segment, GST_FORMAT_BYTES);
+      gst_pad_push_event (ffmpegmux->srcpad, gst_event_new_segment (&segment));
+    }
+
     if (gst_ffmpegdata_open (ffmpegmux->srcpad, open_flags,
             &ffmpegmux->context->pb) < 0) {
       GST_ELEMENT_ERROR (ffmpegmux, LIBRARY, TOO_LAZY, (NULL),
