@@ -216,6 +216,11 @@ typedef struct _GstMpegTsSDT GstMpegTsSDT;
 
 /**
  * GstMpegTsSDTService:
+ * @service_id: The program number this table belongs to
+ * @EIT_schedule_flag: EIT schedule information is present in this transport stream
+ * @EIT_present_following_flag: EIT present/following information is present in this transport stream
+ * @running_status: Status of this service
+ * @free_CA_mode: True if one or more streams is controlled by a CA system
  * @descriptors: (element-type GstMpegTsDescriptor): List of descriptors
  *
  */
@@ -254,6 +259,11 @@ GType gst_mpegts_sdt_get_type (void);
 GType gst_mpegts_sdt_service_get_type (void);
 
 const GstMpegTsSDT *gst_mpegts_section_get_sdt (GstMpegTsSection *section);
+
+GstMpegTsSection *gst_mpegts_section_from_sdt (GstMpegTsSDT * sdt);
+
+GstMpegTsSDT *gst_mpegts_sdt_new (void);
+GstMpegTsSDTService *gst_mpegts_sdt_service_new (void);
 
 /* EIT */
 

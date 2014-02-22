@@ -932,6 +932,165 @@ gst_mpegts_section_get_sdt (GstMpegTsSection * section)
   return (const GstMpegTsSDT *) section->cached_parsed;
 }
 
+/**
+ * gst_mpegts_sdt_new:
+ *
+ * Allocates and initializes a #GstMpegTsSDT.
+ *
+ * Returns: (transfer full): A newly allocated #GstMpegTsSDT
+ */
+GstMpegTsSDT *
+gst_mpegts_sdt_new (void)
+{
+  GstMpegTsSDT *sdt;
+
+  sdt = g_slice_new0 (GstMpegTsSDT);
+
+  sdt->services = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_sdt_service_free);
+
+  return sdt;
+}
+
+/**
+ * gst_mpegts_sdt_service_new:
+ *
+ * Allocates and initializes a #GstMpegTsSDTService.
+ *
+ * Returns: (transfer full): A newly allocated #GstMpegTsSDTService
+ */
+GstMpegTsSDTService *
+gst_mpegts_sdt_service_new (void)
+{
+  GstMpegTsSDTService *service;
+
+  service = g_slice_new0 (GstMpegTsSDTService);
+
+  service->descriptors = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _free_descriptor);
+
+  return service;
+}
+
+static gboolean
+_packetize_sdt (GstMpegTsSection * section)
+{
+  gsize length, service_length;
+  const GstMpegTsSDT *sdt;
+  GstMpegTsSDTService *service;
+  GstMpegTsDescriptor *descriptor;
+  guint i, j;
+  guint8 *data, *pos;
+
+  sdt = gst_mpegts_section_get_sdt (section);
+
+  if (sdt == NULL)
+    return FALSE;
+
+  /* 8 byte common section fields
+     2 byte original_network_id
+     1 byte reserved
+     4 byte CRC */
+  length = 15;
+
+  /* Find length of services */
+  service_length = 0;
+  if (sdt->services) {
+    for (i = 0; i < sdt->services->len; i++) {
+      service = g_ptr_array_index (sdt->services, i);
+      service_length += 5;
+      if (service->descriptors) {
+        for (j = 0; j < service->descriptors->len; j++) {
+          descriptor = g_ptr_array_index (service->descriptors, j);
+          service_length += descriptor->length + 2;
+        }
+      }
+    }
+  }
+
+  length += service_length;
+
+  /* Max length if SDT section is 1024 bytes */
+  g_return_val_if_fail (length <= 1024, FALSE);
+
+  _packetize_common_section (section, length);
+
+  data = section->data + 8;
+  /* original_network_id            - 16 bit uimsbf */
+  GST_WRITE_UINT16_BE (data, sdt->original_network_id);
+  data += 2;
+  /* reserved                       -  8 bit */
+  *data++ = 0xFF;
+
+  if (sdt->services) {
+    for (i = 0; i < sdt->services->len; i++) {
+      service = g_ptr_array_index (sdt->services, i);
+      /* service_id                 - 16 bit uimsbf */
+      GST_WRITE_UINT16_BE (data, service->service_id);
+      data += 2;
+
+      /* reserved                   -  6 bit
+         EIT_schedule_flag          -  1 bit
+         EIT_present_following_flag -  1 bit */
+      *data = 0xFC;
+      if (service->EIT_schedule_flag)
+        *data |= 0x02;
+      if (service->EIT_present_following_flag)
+        *data |= 0x01;
+      data++;
+
+      /* running_status             -  3 bit uimsbf
+         free_CA_mode               -  1 bit
+         descriptors_loop_length    - 12 bit uimsbf */
+      /* Set length to zero for now */
+      pos = data;
+      *data++ = 0x00;
+      *data++ = 0x00;
+
+      _packetize_descriptor_array (service->descriptors, &data);
+
+      /* Go back and update the descriptor length */
+      GST_WRITE_UINT16_BE (pos, data - pos - 2);
+
+      *pos |= service->running_status << 5;
+      if (service->free_CA_mode)
+        *pos |= 0x10;
+    }
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_mpegts_section_from_sdt:
+ * @sdt: (transfer full): a #GstMpegTsSDT to create the #GstMpegTsSection from
+ *
+ * Ownership of @sdt is taken. The data in @sdt is managed by the #GstMpegTsSection
+ *
+ * Returns: (transfer full): the #GstMpegTsSection
+ */
+GstMpegTsSection *
+gst_mpegts_section_from_sdt (GstMpegTsSDT * sdt)
+{
+  GstMpegTsSection *section;
+
+  g_return_val_if_fail (sdt != NULL, NULL);
+
+  if (sdt->actual_ts)
+    section = _gst_mpegts_section_init (0x11,
+        GST_MTS_TABLE_ID_SERVICE_DESCRIPTION_ACTUAL_TS);
+  else
+    section = _gst_mpegts_section_init (0x11,
+        GST_MTS_TABLE_ID_SERVICE_DESCRIPTION_OTHER_TS);
+
+  section->subtable_extension = sdt->transport_stream_id;
+  section->cached_parsed = (gpointer) sdt;
+  section->packetizer = _packetize_sdt;
+  section->destroy_parsed = (GDestroyNotify) _gst_mpegts_sdt_free;
+
+  return section;
+}
+
 /* Time and Date Table (TDT) */
 static gpointer
 _parse_tdt (GstMpegTsSection * section)
