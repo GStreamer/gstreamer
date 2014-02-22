@@ -624,8 +624,13 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
 
     gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
     if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
-            GST_GL_TYPE_CONTEXT, &context, NULL) && context)
-      gst_object_replace ((GstObject **) & src->context, (GstObject *) context);
+            GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
+      GstGLContext *old = src->context;
+
+      src->context = context;
+      if (old)
+        gst_object_unref (old);
+    }
   }
 
   if (!src->context) {

@@ -867,9 +867,13 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 
     gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
     if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
-            GST_GL_TYPE_CONTEXT, &context, NULL) && context)
-      gst_object_replace ((GstObject **) & filter->context,
-          (GstObject *) context);
+            GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
+      GstGLContext *old = filter->context;
+
+      filter->context = context;
+      if (old)
+        gst_object_unref (old);
+    }
   }
 
   if (!filter->context) {
