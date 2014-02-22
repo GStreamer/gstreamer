@@ -548,6 +548,8 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
             GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META)) {
         GST_INFO("no pool or doesn't support GstVaapiVideoMeta, "
             "making new pool");
+        if (pool)
+            gst_object_unref(pool);
         pool = gst_vaapi_video_buffer_pool_new(
             GST_VAAPI_PLUGIN_BASE_DISPLAY(decode));
         if (!pool)
