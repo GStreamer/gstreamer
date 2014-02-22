@@ -1069,8 +1069,13 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
 
     gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
     if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
-            GST_GL_TYPE_CONTEXT, &context, NULL) && context)
-      gst_object_replace ((GstObject **) & mix->context, (GstObject *) context);
+            GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
+      GstGLContext *old = mix->context;
+
+      mix->context = context;
+      if (old)
+        gst_object_unref (old);
+    }
   }
 
   if (!mix->context) {
