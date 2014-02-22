@@ -290,6 +290,10 @@ gboolean gst_mpegts_descriptor_parse_dvb_service (const GstMpegTsDescriptor *des
 						  gchar **service_name,
 						  gchar **provider_name);
 
+GstMpegTsDescriptor *gst_mpegts_descriptor_from_dvb_service (GstMpegTsDVBServiceType service_type,
+							     const gchar * service_name,
+							     const gchar * service_provider);
+
 /* GST_MTS_DESC_DVB_SHORT_EVENT (0x4D) */
 gboolean gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTsDescriptor *descriptor,
 						       gchar **language_code,

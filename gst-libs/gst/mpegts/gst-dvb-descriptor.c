@@ -285,6 +285,76 @@ gst_mpegts_descriptor_parse_dvb_service (const GstMpegTsDescriptor *
   return TRUE;
 }
 
+/**
+ * gst_mpegts_descriptor_from_dvb_service:
+ * @service_type: Service type defined as a #GstMpegTsDVBServiceType
+ * @service_name: (allow-none): Name of the service
+ * @service_provider: (allow-none): Name of the service provider
+ *
+ * Fills a #GstMpegTsDescriptor to be a %GST_MTS_DESC_DVB_SERVICE.
+ * The data field of the #GstMpegTsDescriptor will be allocated,
+ * and transferred to the caller.
+ *
+ * Returns: (transfer full): the #GstMpgTsDescriptor or %NULL on fail
+ */
+GstMpegTsDescriptor *
+gst_mpegts_descriptor_from_dvb_service (GstMpegTsDVBServiceType service_type,
+    const gchar * service_name, const gchar * service_provider)
+{
+  GstMpegTsDescriptor *descriptor;
+  guint8 *conv_provider_name = NULL, *conv_service_name = NULL;
+  gsize provider_size = 0, service_size = 0;
+  guint8 *data;
+
+  if (service_provider) {
+    conv_provider_name = dvb_text_from_utf8 (service_provider, &provider_size);
+
+    if (!conv_provider_name) {
+      GST_WARNING ("Could not find proper encoding for string `%s`",
+          service_provider);
+      return NULL;
+    }
+  }
+
+  if (provider_size >= 256) {
+    g_free (conv_provider_name);
+    g_return_val_if_reached (NULL);
+  }
+
+  if (service_name) {
+    conv_service_name = dvb_text_from_utf8 (service_name, &service_size);
+
+    if (!conv_service_name) {
+      GST_WARNING ("Could not find proper encoding for string `%s`",
+          service_name);
+      return NULL;
+    }
+  }
+
+  if (service_size >= 256) {
+    g_free (conv_provider_name);
+    g_free (conv_service_name);
+    g_return_val_if_reached (NULL);
+  }
+
+  descriptor =
+      _new_descriptor (GST_MTS_DESC_DVB_SERVICE,
+      3 + provider_size + service_size);
+
+  data = descriptor->data + 2;
+  *data++ = service_type;
+  *data++ = provider_size;
+  memcpy (data, conv_provider_name, provider_size);
+  data += provider_size;
+  *data++ = service_size;
+  memcpy (data, conv_service_name, service_size);
+
+  g_free (conv_provider_name);
+  g_free (conv_service_name);
+
+  return descriptor;
+}
+
 /* GST_MTS_DESC_DVB_SHORT_EVENT (0x4D) */
 /**
  * gst_mpegts_descriptor_parse_dvb_short_event:
