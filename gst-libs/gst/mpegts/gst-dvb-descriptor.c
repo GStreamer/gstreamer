@@ -92,9 +92,10 @@ gst_mpegts_descriptor_from_dvb_network_name (const gchar * name)
   gsize size;
 
   g_return_val_if_fail (name != NULL, NULL);
-  g_return_val_if_fail (strlen (name) <= 256, NULL);
 
   converted_name = dvb_text_from_utf8 (name, &size);
+
+  g_return_val_if_fail (size < 256, NULL);
 
   if (!converted_name) {
     GST_WARNING ("Could not find proper encoding for string `%s`", name);
