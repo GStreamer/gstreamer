@@ -29,11 +29,26 @@
 GST_DEBUG_CATEGORY_STATIC (gst_jack_audio_client_debug);
 #define GST_CAT_DEFAULT gst_jack_audio_client_debug
 
+static void
+jack_log_error (const gchar * msg)
+{
+  GST_ERROR ("%s", msg);
+}
+
+static void
+jack_info_error (const gchar * msg)
+{
+  GST_INFO ("%s", msg);
+}
+
 void
 gst_jack_audio_client_init (void)
 {
   GST_DEBUG_CATEGORY_INIT (gst_jack_audio_client_debug, "jackclient", 0,
       "jackclient helpers");
+
+  jack_set_error_function (jack_log_error);
+  jack_set_info_function (jack_info_error);
 }
 
 /* a list of global connections indexed by id and server. */
