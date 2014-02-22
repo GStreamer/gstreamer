@@ -257,6 +257,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     if (!next)
       n++;
 
+  retry:
     /* when we reached the last official CID, continue with private CIDs */
     if (n == V4L2_CID_LASTP1) {
       GST_DEBUG_OBJECT (e, "checking private CIDs");
@@ -274,7 +275,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
           GST_DEBUG_OBJECT (e, "V4L2_CTRL_FLAG_NEXT_CTRL not supported.");
           next = 0;
           n = V4L2_CID_BASE;
-          continue;
+          goto retry;
         }
       }
       if (errno == EINVAL || errno == ENOTTY || errno == EIO || errno == ENOENT) {
@@ -292,7 +293,10 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         continue;
       }
     }
-    n = control.id;
+    /* bogus driver might mess with id in unexpected ways (e.g. set to 0), so
+     * make sure to simply try all if V4L2_CTRL_FLAG_NEXT_CTRL not supported */
+    if (next)
+      n = control.id;
     if (control.flags & V4L2_CTRL_FLAG_DISABLED) {
       GST_DEBUG_OBJECT (e, "skipping disabled control");
       continue;
