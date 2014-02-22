@@ -313,20 +313,27 @@ gst_auto_detect_find_best (GstAutoDetect * self)
 
   GST_DEBUG_OBJECT (self, "done trying");
   if (!choice) {
+    /* We post a warning and plug a fake-element. This is convenient for running
+     * tests without requiring hardware src/sinks. */
     if (errors) {
-      /* FIXME: we forward the first error for now; but later on it might make
-       * sense to actually analyse them */
-      message = gst_message_ref (GST_MESSAGE (errors->data));
-      GST_DEBUG_OBJECT (self, "reposting message %p", message);
-      gst_element_post_message (GST_ELEMENT_CAST (self), message);
+      GError *err = NULL;
+      gchar *dbg = NULL;
+
+      /* FIXME: we forward the first message for now; but later on it might make
+       * sense to forward all so that apps can actually analyse them. */
+      gst_message_parse_error (GST_MESSAGE (errors->data), &err, &dbg);
+      gst_element_post_message (GST_ELEMENT_CAST (self),
+          gst_message_new_warning (GST_OBJECT_CAST (self), err, dbg));
+      g_error_free (err);
+      g_free (dbg);
     } else {
       /* send warning message to application and use a fakesrc */
       GST_ELEMENT_WARNING (self, RESOURCE, NOT_FOUND, (NULL),
           ("Failed to find a usable %s %s", self->media_klass_lc,
               self->type_klass_lc));
-      choice = gst_auto_detect_create_fake_element (self);
-      gst_element_set_state (choice, GST_STATE_READY);
     }
+    choice = gst_auto_detect_create_fake_element (self);
+    gst_element_set_state (choice, GST_STATE_READY);
   }
   gst_object_unref (bus);
   gst_plugin_feature_list_free (list);
