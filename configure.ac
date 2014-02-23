@@ -504,7 +504,8 @@ dnl renamed to GST_V4L2 because of some conflict with kernel headers
 translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
 AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
   AC_MSG_CHECKING([Checking for up to date v4l2 installation])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+  HAVE_V4L2_PLANE=no
+  AC_CHECK_TYPE(struct v4l2_plane,HAVE_V4L2_PLANE=yes,,[
 #include <sys/types.h>
 #ifdef __sun /* Solaris */
 #include <sys/types.h>
@@ -517,15 +518,11 @@ AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
 #define __user
 #include <linux/videodev2.h>
 #endif
-#if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
-#error too early v4l2 version or no v4l2 at all
-#endif
-    ]], [[
-return 0;
-    ]])],[
+    ])
+    if [ test x$HAVE_V4L2_PLANE = xyes ]; then
       HAVE_GST_V4L2="yes"
       AC_MSG_RESULT(yes)
-    ],[
+    else
       HAVE_GST_V4L2="no"
       AC_MSG_RESULT(no)
 
@@ -541,7 +538,7 @@ return 0;
       else
         AC_MSG_WARN([video4linux2 was not found])
       fi
-    ])
+    fi
 
   if [ test x$HAVE_GST_V4L2 = xyes ]; then
     dnl check for XOverlay libraries
