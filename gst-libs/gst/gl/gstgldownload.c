@@ -640,8 +640,10 @@ _init_download (GstGLContext * context, GstGLDownload * download)
             GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, download->depth_buffer);
       }
 
-      if (!gst_gl_context_check_framebuffer_status (context))
+      if (!gst_gl_context_check_framebuffer_status (context)) {
         gst_gl_context_set_error (context, "GL framebuffer status incomplete");
+        goto error;
+      }
 
       /* unbind the FBO */
       gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
