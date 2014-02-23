@@ -458,7 +458,7 @@ gst_gl_context_default_get_proc_address (GstGLContext * context,
 gboolean
 gst_gl_context_set_window (GstGLContext * context, GstGLWindow * window)
 {
-  g_return_val_if_fail (!GST_GL_IS_WRAPPED_CONTEXT (context), NULL);
+  g_return_val_if_fail (!GST_GL_IS_WRAPPED_CONTEXT (context), FALSE);
 
   /* we can't change the window while we are running */
   if (context->priv->alive)
