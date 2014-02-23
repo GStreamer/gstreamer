@@ -163,7 +163,8 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FRAGMENTS_CACHE,
       g_param_spec_uint ("fragments-cache", "Fragments cache",
-          "Number of fragments needed to be cached to start playing",
+          "Number of fragments needed to be cached to start playing "
+          "(DEPRECATED: Has no effect since 1.3.1)",
           1, G_MAXUINT, DEFAULT_FRAGMENTS_CACHE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -216,7 +217,6 @@ gst_hls_demux_init (GstHLSDemux * demux)
   demux->do_typefind = TRUE;
 
   /* Properties */
-  demux->fragments_cache = DEFAULT_FRAGMENTS_CACHE;
   demux->bitrate_limit = DEFAULT_BITRATE_LIMIT;
   demux->connection_speed = DEFAULT_CONNECTION_SPEED;
 
@@ -248,7 +248,6 @@ gst_hls_demux_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_FRAGMENTS_CACHE:
-      demux->fragments_cache = g_value_get_uint (value);
       break;
     case PROP_BITRATE_LIMIT:
       demux->bitrate_limit = g_value_get_float (value);
@@ -270,7 +269,7 @@ gst_hls_demux_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_FRAGMENTS_CACHE:
-      g_value_set_uint (value, demux->fragments_cache);
+      g_value_set_uint (value, 1);
       break;
     case PROP_BITRATE_LIMIT:
       g_value_set_float (value, demux->bitrate_limit);
