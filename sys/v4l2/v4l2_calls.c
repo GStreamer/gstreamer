@@ -380,8 +380,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       case V4L2_CID_AUDIO_TREBLE:
       case V4L2_CID_AUDIO_MUTE:
       case V4L2_CID_AUDIO_LOUDNESS:
-        /* FIXME: We should implement GstMixer interface */
-        /* fall through */
+        /* FIXME: We should implement GstMixer interface instead */
+        /* but let's not be pedantic and make element more useful for now */
+        break;
       default:
         GST_DEBUG_OBJECT (e,
             "ControlID %s (%x) unhandled, FIXME", control.name, n);
