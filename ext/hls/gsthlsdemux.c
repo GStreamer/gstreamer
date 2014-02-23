@@ -329,7 +329,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstSeekType start_type, stop_type;
       gint64 start, stop;
       GList *walk;
-      GstClockTime position, current_pos, target_pos;
+      GstClockTime current_pos, target_pos;
       gint current_sequence;
       GstM3U8MediaFile *file;
 
@@ -388,8 +388,8 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_M3U8_CLIENT_LOCK (demux->client);
       GST_DEBUG_OBJECT (demux, "seeking to sequence %d", current_sequence);
       demux->client->sequence = current_sequence;
-      gst_m3u8_client_get_current_position (demux->client, &position);
-      demux->position_shift = start - position;
+      demux->client->sequence_position = current_pos;
+      demux->position_shift = start - current_pos;
       demux->need_segment = TRUE;
       GST_M3U8_CLIENT_UNLOCK (demux->client);
 

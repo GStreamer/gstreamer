@@ -484,6 +484,7 @@ gst_m3u8_client_new (const gchar * uri)
   client->main = gst_m3u8_new ();
   client->current = NULL;
   client->sequence = -1;
+  client->sequence_position = 0;
   client->update_failed_count = 0;
   g_mutex_init (&client->lock);
   gst_m3u8_set_uri (client->main, g_strdup (uri));
@@ -546,6 +547,7 @@ gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
   if (m3u8->files && self->sequence == -1) {
     self->sequence =
         GST_M3U8_MEDIA_FILE (g_list_first (m3u8->files)->data)->sequence;
+    self->sequence_position = 0;
     GST_DEBUG ("Setting first sequence at %d", self->sequence);
   }
 
@@ -568,24 +570,6 @@ _find_next (GstM3U8MediaFile * file, GstM3U8Client * client)
   if (file->sequence >= client->sequence)
     return FALSE;
   return TRUE;
-}
-
-void
-gst_m3u8_client_get_current_position (GstM3U8Client * client,
-    GstClockTime * timestamp)
-{
-  GList *l;
-  GList *walk;
-
-  l = g_list_find_custom (client->current->files, client,
-      (GCompareFunc) _find_next);
-
-  *timestamp = 0;
-  for (walk = client->current->files; walk; walk = walk->next) {
-    if (walk == l)
-      break;
-    *timestamp += GST_M3U8_MEDIA_FILE (walk->data)->duration;
-  }
 }
 
 gboolean
@@ -613,7 +597,7 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
       file->sequence, client->sequence);
 
   if (timestamp)
-    gst_m3u8_client_get_current_position (client, timestamp);
+    *timestamp = client->sequence_position;
 
   if (discontinuity)
     *discontinuity = client->sequence != file->sequence;
@@ -652,6 +636,7 @@ gst_m3u8_client_advance_fragment (GstM3U8Client * client)
   file = GST_M3U8_MEDIA_FILE (l->data);
   GST_DEBUG ("Advancing from sequence %u", file->sequence);
   client->sequence = file->sequence + 1;
+  client->sequence_position += file->duration;
   GST_M3U8_CLIENT_UNLOCK (client);
 }
 
