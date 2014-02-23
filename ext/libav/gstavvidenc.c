@@ -62,8 +62,8 @@ enum
   PROP_ME_METHOD,
   PROP_BUFSIZE,
   PROP_RTP_PAYLOAD_SIZE,
-  PROP_CFG_BASE,
   PROP_COMPLIANCE,
+  PROP_CFG_BASE,
 };
 
 #define GST_TYPE_ME_METHOD (gst_ffmpegvidenc_me_method_get_type())
@@ -214,7 +214,7 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* register additional properties, possibly dependent on the exact CODEC */
-  gst_ffmpeg_cfg_install_property (klass, PROP_COMPLIANCE);
+  gst_ffmpeg_cfg_install_property (klass, PROP_CFG_BASE);
 
   venc_class->start = gst_ffmpegvidenc_start;
   venc_class->stop = gst_ffmpegvidenc_stop;
