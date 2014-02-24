@@ -48,6 +48,31 @@ G_GNUC_INTERNAL gpointer __common_section_checks (GstMpegTsSection *section,
 						  GstMpegTsParseFunc parsefunc,
 						  GDestroyNotify destroynotify);
 
+#define __common_desc_check_base(desc, tagtype, retval)			\
+  if (G_UNLIKELY ((desc)->data == NULL)) {				\
+    GST_WARNING ("Descriptor is empty (data field == NULL)");		\
+    return retval;							\
+  }									\
+  if (G_UNLIKELY ((desc)->tag != (tagtype))) {				\
+    GST_WARNING ("Wrong descriptor type (Got 0x%02x, expected 0x%02x)",	\
+		 (desc)->tag, tagtype);					\
+    return retval;							\
+  }									\
+
+#define __common_desc_checks(desc, tagtype, minlen, retval)		\
+  __common_desc_check_base(desc, tagtype, retval);			\
+  if (G_UNLIKELY ((desc)->length < (minlen))) {				\
+    GST_WARNING ("Descriptor too small (Got %d, expected at least %d)",	\
+		 (desc)->length, minlen);				\
+    return retval;							\
+  }
+#define __common_desc_checks_exact(desc, tagtype, len, retval)		\
+  __common_desc_check_base(desc, tagtype, retval);			\
+  if (G_UNLIKELY ((desc)->length != (len))) {				\
+    GST_WARNING ("Wrong descriptor size (Got %d, expected %d)",		\
+		 (desc)->length, len);					\
+    return retval;							\
+  }
 
 G_END_DECLS
 

@@ -879,10 +879,9 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
   guint i;
   guint8 *data;
 
-  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
-  g_return_val_if_fail (res != NULL, FALSE);
-  g_return_val_if_fail (descriptor->tag == 0x0A, FALSE);
+  g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
   /* This descriptor can be empty, no size check needed */
+  __common_desc_checks (descriptor, GST_MTS_DESC_ISO_639_LANGUAGE, 0, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
   /* Each language is 3 + 1 bytes */
@@ -917,10 +916,9 @@ gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegTsDescriptor *
 {
   guint8 *data;
 
-  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
-  g_return_val_if_fail (lang != NULL, FALSE);
-  g_return_val_if_fail (descriptor->tag == GST_MTS_DESC_ISO_639_LANGUAGE,
-      FALSE);
+  g_return_val_if_fail (descriptor != NULL && lang != NULL, FALSE);
+  /* This descriptor can be empty, no size check needed */
+  __common_desc_checks (descriptor, GST_MTS_DESC_ISO_639_LANGUAGE, 0, FALSE);
 
   if (descriptor->length / 4 <= idx)
     return FALSE;
@@ -948,7 +946,9 @@ guint
 gst_mpegts_descriptor_parse_iso_639_language_nb (const GstMpegTsDescriptor *
     descriptor)
 {
-  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, 0);
+  g_return_val_if_fail (descriptor != NULL, 0);
+  /* This descriptor can be empty, no size check needed */
+  __common_desc_checks (descriptor, GST_MTS_DESC_ISO_639_LANGUAGE, 0, FALSE);
 
   return descriptor->length / 4;
 }
@@ -969,9 +969,9 @@ gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *
   guint i;
   guint8 *data;
 
-  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
-  g_return_val_if_fail (descriptor->tag == 0x83, FALSE);
+  g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
   /* This descriptor loop can be empty, no size check required */
+  __common_desc_checks (descriptor, GST_MTS_DESC_DTG_LOGICAL_CHANNEL, 0, FALSE);
 
   data = (guint8 *) descriptor->data;
   res->nb_channels = descriptor->length / 4;
