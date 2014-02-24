@@ -1845,6 +1845,23 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   render_start = gst_util_uint64_scale_int (render_start, rate, GST_SECOND);
   render_stop = gst_util_uint64_scale_int (render_stop, rate, GST_SECOND);
 
+  /* If the slaving got us an interval spanning 0, render_start will
+     have been set to 0. So if render_start is 0, we check whether
+     render_stop is set to contain all samples. If not, we need to
+     drop samples to match. */
+  if (render_start == 0) {
+    guint nsamples = render_stop - render_start;
+    if (nsamples < samples) {
+      guint diff;
+
+      diff = samples - nsamples;
+      GST_DEBUG_OBJECT (bsink, "Clipped start: %u/%u samples", nsamples,
+          samples);
+      samples -= diff;
+      offset += diff * bpf;
+    }
+  }
+
   /* positive playback rate, first sample is render_start, negative rate, first
    * sample is render_stop. When no rate conversion is active, render exactly
    * the amount of input samples to avoid aligning to rounding errors. */
