@@ -752,31 +752,20 @@ setup_pipeline (void)
     if (mode == MODE_VIDEO) {
       GstCaps *caps = NULL;
       if (view_framerate_num > 0)
-        caps = gst_caps_new_full (gst_structure_new ("video/x-raw-yuv",
-                "width", G_TYPE_INT, image_width,
-                "height", G_TYPE_INT, image_height,
-                "framerate", GST_TYPE_FRACTION, view_framerate_num,
-                view_framerate_den, NULL),
-            gst_structure_new ("video/x-raw-rgb",
+        caps = gst_caps_new_full (gst_structure_new ("video/x-raw",
                 "width", G_TYPE_INT, image_width,
                 "height", G_TYPE_INT, image_height,
                 "framerate", GST_TYPE_FRACTION, view_framerate_num,
                 view_framerate_den, NULL), NULL);
       else
-        caps = gst_caps_new_full (gst_structure_new ("video/x-raw-yuv",
-                "width", G_TYPE_INT, image_width,
-                "height", G_TYPE_INT, image_height, NULL),
-            gst_structure_new ("video/x-raw-rgb",
+        caps = gst_caps_new_full (gst_structure_new ("video/x-raw",
                 "width", G_TYPE_INT, image_width,
                 "height", G_TYPE_INT, image_height, NULL), NULL);
 
       g_object_set (camerabin, "video-capture-caps", caps, NULL);
       gst_caps_unref (caps);
     } else {
-      GstCaps *caps = gst_caps_new_full (gst_structure_new ("video/x-raw-yuv",
-              "width", G_TYPE_INT, image_width,
-              "height", G_TYPE_INT, image_height, NULL),
-          gst_structure_new ("video/x-raw-rgb",
+      GstCaps *caps = gst_caps_new_full (gst_structure_new ("video/x-raw",
               "width", G_TYPE_INT, image_width,
               "height", G_TYPE_INT, image_height, NULL), NULL);
 
