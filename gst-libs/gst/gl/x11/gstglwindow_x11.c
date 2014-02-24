@@ -292,19 +292,9 @@ gst_gl_window_x11_close (GstGLWindow * window)
     while (XPending (window_x11->device))
       XNextEvent (window_x11->device, &event);
 
-    /*XAddToSaveSet (display, w)
-       Display *display;
-       Window w; */
-
-    //FIXME: it seems it causes destroy all created windows, even by other display connection:
-    //This is case in: gst-launch-0.10 videotestsrc ! tee name=t t. ! queue ! glimagesink t. ! queue ! glimagesink
-    //When the first window is closed and so its display is closed by the following line, then the other Window managed by the
-    //other glimagesink, is not useable and so each opengl call causes a segmentation fault.
-    //Maybe the solution is to use: XAddToSaveSet
-    //The following line is commented to avoid the disagreement explained before.
-    //XCloseDisplay (window_x11->device);
-
+    XCloseDisplay (window_x11->device);
     GST_DEBUG ("display receiver closed");
+
     XCloseDisplay (window_x11->disp_send);
     GST_DEBUG ("display sender closed");
   }
