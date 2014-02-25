@@ -548,6 +548,11 @@ gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
     goto out;
   }
 
+  if (self->current && !self->current->files) {
+    GST_ERROR ("Invalid media playlist, it does not contain any media files");
+    goto out;
+  }
+
   /* select the first playlist, for now */
   if (!self->current) {
     if (self->main->lists) {
@@ -672,8 +677,8 @@ gst_m3u8_client_get_duration (GstM3U8Client * client)
     GST_M3U8_CLIENT_UNLOCK (client);
     return GST_CLOCK_TIME_NONE;
   }
-
-  g_list_foreach (client->current->files, (GFunc) _sum_duration, &duration);
+  if (client->current && client->current->files)
+    g_list_foreach (client->current->files, (GFunc) _sum_duration, &duration);
   GST_M3U8_CLIENT_UNLOCK (client);
   return duration;
 }
