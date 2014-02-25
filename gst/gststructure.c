@@ -1546,22 +1546,7 @@ gboolean
 gst_structure_get_clock_time (const GstStructure * structure,
     const gchar * fieldname, GstClockTime * value)
 {
-  GstStructureField *field;
-
-  g_return_val_if_fail (structure != NULL, FALSE);
-  g_return_val_if_fail (fieldname != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
-
-  field = gst_structure_get_field (structure, fieldname);
-
-  if (field == NULL)
-    return FALSE;
-  if (!G_VALUE_HOLDS_UINT64 (&field->value))
-    return FALSE;
-
-  *value = gst_g_value_get_uint64_unchecked (&field->value);
-
-  return TRUE;
+  return gst_structure_get_uint64 (structure, fieldname, value);
 }
 
 /**
