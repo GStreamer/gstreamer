@@ -47,6 +47,8 @@
 
 #include <gst/gl/gstgl_fwd.h>
 
+G_BEGIN_DECLS
+
 #define GST_GL_CHECK_GL_VERSION(driver_major, driver_minor, \
                                 target_major, target_minor) \
   ((driver_major) > (target_major) || \
@@ -102,5 +104,7 @@ _gst_gl_feature_check_ext_functions (GstGLContext *context,
                                    int gl_major,
                                    int gl_minor,
                                    const char *gl_extensions);
+
+G_END_DECLS
 
 #endif /* __COGL_FEATURE_PRIVATE_H */
