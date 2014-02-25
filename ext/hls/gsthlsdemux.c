@@ -129,6 +129,8 @@ static void gst_hls_demux_decrypt_end (GstHLSDemux * demux);
 #define gst_hls_demux_parent_class parent_class
 G_DEFINE_TYPE (GstHLSDemux, gst_hls_demux, GST_TYPE_BIN);
 
+#define GST_HLS_DEMUX_STATISTIC_MSG_NAME "hlsdemux-statistics"
+
 static void
 gst_hls_demux_dispose (GObject * obj)
 {
@@ -581,6 +583,14 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return gst_pad_event_default (pad, parent, event);
 }
 
+static void
+gst_hls_demux_post_stat_msg (GstHLSDemux * demux, GstStructure * structure)
+{
+  GstMessage *message =
+      gst_message_new_element (GST_OBJECT_CAST (demux), structure);
+  gst_element_post_message (GST_ELEMENT_CAST (demux), message);
+}
+
 static gboolean
 gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -592,6 +602,7 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (event->type) {
     case GST_EVENT_EOS:{
+      GstStructure *stat;
       gchar *playlist = NULL;
 
       if (demux->playlist == NULL) {
@@ -601,6 +612,12 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       GST_DEBUG_OBJECT (demux,
           "Got EOS on the sink pad: main playlist fetched");
+
+      stat =
+          gst_structure_new (GST_HLS_DEMUX_STATISTIC_MSG_NAME,
+          "time-of-first-playlist", GST_TYPE_CLOCK_TIME,
+          gst_util_get_timestamp (), NULL);
+      gst_hls_demux_post_stat_msg (demux, stat);
 
       query = gst_query_new_uri ();
       ret = gst_pad_peer_query (demux->sinkpad, query);
@@ -1504,6 +1521,7 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
   gchar *playlist;
   gboolean main_checked = FALSE, updated = FALSE;
   const gchar *uri;
+  GstStructure *stat;
 
 retry:
   uri = gst_m3u8_client_get_current_uri (demux->client);
@@ -1561,6 +1579,11 @@ retry:
       return FALSE;
     }
   }
+
+  stat = gst_structure_new (GST_HLS_DEMUX_STATISTIC_MSG_NAME,
+      "time-to-playlist", GST_TYPE_CLOCK_TIME,
+      download->download_stop_time - download->download_start_time, NULL);
+  gst_hls_demux_post_stat_msg (demux, stat);
 
   /* Set the base URI of the playlist to the redirect target if any */
   GST_M3U8_CLIENT_LOCK (demux->client);
@@ -2058,9 +2081,17 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
       }
     }
   } else {
+    GstStructure *stat;
+
     gst_element_set_state (demux->src, GST_STATE_READY);
     if (demux->segment.rate > 0)
       demux->segment.position += demux->current_duration;
+
+    stat = gst_structure_new (GST_HLS_DEMUX_STATISTIC_MSG_NAME,
+        "time-to-download-fragment", GST_TYPE_CLOCK_TIME,
+        demux->download_total_time,
+        "fragment-size", G_TYPE_UINT64, demux->download_total_bytes, NULL);
+    gst_hls_demux_post_stat_msg (demux, stat);
   }
 
   if (demux->last_ret != GST_FLOW_OK)
