@@ -867,7 +867,7 @@ mpegtsmux_sink_event (GstCollectPads * pads, GstCollectData * data,
 
       /* handled this, don't want collectpads to forward it downstream */
       res = TRUE;
-      forward = FALSE;
+      forward = gst_tag_list_get_scope (list) == GST_TAG_SCOPE_GLOBAL;
       break;
     }
     default:
