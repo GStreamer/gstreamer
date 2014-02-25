@@ -79,6 +79,8 @@ static void default_thread_enter (GstRTSPThreadPool * pool,
 static void default_configure_thread (GstRTSPThreadPool * pool,
     GstRTSPThread * thread, GstRTSPContext * ctx);
 
+static GType gst_rtsp_cgroup_pool_get_type (void);
+
 G_DEFINE_TYPE (GstRTSPCGroupPool, gst_rtsp_cgroup_pool,
     GST_TYPE_RTSP_THREAD_POOL);
 
