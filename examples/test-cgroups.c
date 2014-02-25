@@ -107,9 +107,11 @@ static void
 gst_rtsp_cgroup_pool_init (GstRTSPCGroupPool * pool)
 {
   pool->user = cgroup_new_cgroup ("user");
-  g_assert (cgroup_add_controller (pool->user, "cpu") != NULL);
+  if (cgroup_add_controller (pool->user, "cpu") == NULL)
+    g_error ("Failed to add cpu controller to user cgroup");
   pool->admin = cgroup_new_cgroup ("admin");
-  g_assert (cgroup_add_controller (pool->admin, "cpu") != NULL);
+  if (cgroup_add_controller (pool->admin, "cpu") == NULL)
+    g_error ("Failed to add cpu controller to admin cgroup");
 }
 
 static void
