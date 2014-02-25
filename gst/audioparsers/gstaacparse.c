@@ -146,6 +146,30 @@ gst_aac_parse_init (GstAacParse * aacparse)
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (aacparse));
 }
 
+static GstBuffer *
+gst_aac_parse_create_codec_data (GstAacParse * aacparse)
+{
+  GstMapInfo map;
+  int idx;
+  GstBuffer *codec_data;
+  guint16 codec_data_data;
+
+  idx = gst_codec_utils_aac_get_index_from_sample_rate (aacparse->sample_rate);
+  if (idx < 0)
+    return NULL;
+
+  /* The codec_data data is according to AudioSpecificConfig,
+     ISO/IEC 14496-3, 1.6.2.1 */
+  codec_data = gst_buffer_new_and_alloc (2);
+  gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
+  codec_data_data =
+      (aacparse->object_type << 11) | (idx << 7) | (aacparse->channels << 3);
+  GST_WRITE_UINT16_BE (map.data, codec_data_data);
+  gst_buffer_unmap (codec_data, &map);
+
+  return codec_data;
+}
+
 
 /**
  * gst_aac_parse_set_src_caps:
@@ -165,7 +189,7 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   gboolean res = FALSE;
   const gchar *stream_format;
   GstBuffer *codec_data;
-  guint16 codec_data_data;
+  gboolean need_codec_data = FALSE;
 
   GST_DEBUG_OBJECT (aacparse, "sink caps: %" GST_PTR_FORMAT, sink_caps);
   if (sink_caps)
@@ -189,6 +213,7 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
       break;
     case DSPAAC_HEADER_LOAS:
       stream_format = "loas";
+      need_codec_data = TRUE;
       break;
     default:
       stream_format = NULL;
@@ -202,6 +227,12 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   if (stream_format)
     gst_structure_set (s, "stream-format", G_TYPE_STRING, stream_format, NULL);
 
+  if (need_codec_data) {
+    codec_data = gst_aac_parse_create_codec_data (aacparse);
+    if (codec_data != NULL)
+      gst_structure_set (s, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+  }
+
   allowed = gst_pad_get_allowed_caps (GST_BASE_PARSE (aacparse)->srcpad);
   if (!gst_caps_can_intersect (src_caps, allowed)) {
     GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
@@ -212,28 +243,14 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
       gst_caps_set_simple (src_caps, "stream-format", G_TYPE_STRING, "raw",
           NULL);
       if (gst_caps_can_intersect (src_caps, allowed)) {
-        GstMapInfo map;
-        int idx;
-
-        idx =
-            gst_codec_utils_aac_get_index_from_sample_rate
-            (aacparse->sample_rate);
-        if (idx < 0)
-          goto not_a_known_rate;
 
         GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
             "Caps can intersect, we will drop the ADTS layer");
         aacparse->output_header_type = DSPAAC_HEADER_NONE;
 
-        /* The codec_data data is according to AudioSpecificConfig,
-           ISO/IEC 14496-3, 1.6.2.1 */
-        codec_data = gst_buffer_new_and_alloc (2);
-        gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
-        codec_data_data =
-            (aacparse->object_type << 11) |
-            (idx << 7) | (aacparse->channels << 3);
-        GST_WRITE_UINT16_BE (map.data, codec_data_data);
-        gst_buffer_unmap (codec_data, &map);
+        codec_data = gst_aac_parse_create_codec_data (aacparse);
+        if (codec_data == NULL)
+          goto codec_data_failed;
         gst_caps_set_simple (src_caps, "codec_data", GST_TYPE_BUFFER,
             codec_data, NULL);
       }
@@ -257,7 +274,7 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   gst_caps_unref (src_caps);
   return res;
 
-not_a_known_rate:
+codec_data_failed:
   gst_caps_unref (allowed);
   gst_caps_unref (src_caps);
   return FALSE;
@@ -510,11 +527,12 @@ gst_aac_parse_get_audio_sample_rate (GstAacParse * aacparse, GstBitReader * br,
 /* See table 1.13 in ISO/IEC 14496-3 */
 static gboolean
 gst_aac_parse_read_loas_audio_specific_config (GstAacParse * aacparse,
-    GstBitReader * br, gint * sample_rate, gint * channels, guint32 * bits)
+    GstBitReader * br, gint * sample_rate, gint * channels,
+    guint8 * object_type, guint32 * bits)
 {
-  guint8 audio_object_type, channel_configuration;
+  guint8 channel_configuration;
 
-  if (!gst_aac_parse_get_audio_object_type (aacparse, br, &audio_object_type))
+  if (!gst_aac_parse_get_audio_object_type (aacparse, br, object_type))
     return FALSE;
 
   if (!gst_aac_parse_get_audio_sample_rate (aacparse, br, sample_rate))
@@ -527,15 +545,15 @@ gst_aac_parse_read_loas_audio_specific_config (GstAacParse * aacparse,
   if (!*channels)
     return FALSE;
 
-  if (audio_object_type == 5) {
+  if (*object_type == 5) {
     GST_LOG_OBJECT (aacparse,
         "Audio object type 5, so rereading sampling rate...");
     if (!gst_aac_parse_get_audio_sample_rate (aacparse, br, sample_rate))
       return FALSE;
   }
 
-  GST_INFO_OBJECT (aacparse, "Found LOAS config: %d Hz, %d channels",
-      *sample_rate, *channels);
+  GST_INFO_OBJECT (aacparse, "Found LOAS config: %d Hz, %d channels,"
+      " audio object type: %u", *sample_rate, *channels, *object_type);
 
   /* There's LOTS of stuff next, but we ignore it for now as we have
      what we want (sample rate and number of channels */
@@ -549,7 +567,8 @@ gst_aac_parse_read_loas_audio_specific_config (GstAacParse * aacparse,
 
 static gboolean
 gst_aac_parse_read_loas_config (GstAacParse * aacparse, const guint8 * data,
-    guint avail, gint * sample_rate, gint * channels, gint * version)
+    guint avail, gint * sample_rate, gint * channels,
+    guint8 * object_type, gint * version)
 {
   GstBitReader br;
   guint8 u8, v, vA;
@@ -621,14 +640,14 @@ gst_aac_parse_read_loas_config (GstAacParse * aacparse, const guint8 * data,
         if (!use_same_config) {
           if (v == 0) {
             if (!gst_aac_parse_read_loas_audio_specific_config (aacparse, &br,
-                    sample_rate, channels, NULL))
+                    sample_rate, channels, object_type, NULL))
               return FALSE;
           } else {
             guint32 bits, asc_len;
             if (!gst_aac_parse_latm_get_value (aacparse, &br, &asc_len))
               return FALSE;
             if (!gst_aac_parse_read_loas_audio_specific_config (aacparse, &br,
-                    sample_rate, channels, &bits))
+                    sample_rate, channels, object_type, &bits))
               return FALSE;
             asc_len -= bits;
             if (!gst_bit_reader_skip (&br, asc_len))
@@ -851,16 +870,19 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
   if (gst_aac_parse_check_loas_frame (aacparse, data, avail, drain,
           framesize, &need_data_loas)) {
     gint rate, channels;
+    guint8 object_type;
 
     GST_INFO ("LOAS, framesize: %d", *framesize);
 
     aacparse->header_type = DSPAAC_HEADER_LOAS;
 
     if (!gst_aac_parse_read_loas_config (aacparse, data, avail, &rate,
-            &channels, &aacparse->mpegversion)) {
+            &channels, &object_type, &aacparse->mpegversion)) {
       GST_WARNING_OBJECT (aacparse, "Error reading LOAS config");
       return FALSE;
     }
+
+    aacparse->object_type = object_type;
 
     if (rate && channels) {
       gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse), rate,
@@ -1187,6 +1209,7 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
   GstBuffer *buffer;
   guint framesize;
   gint rate, channels;
+  guint8 object_type;
 
   aacparse = GST_AAC_PARSE (parse);
   buffer = frame->buffer;
@@ -1269,15 +1292,16 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
     frame->overhead = 3;
 
     if (!gst_aac_parse_read_loas_config (aacparse, map.data, map.size, &rate,
-            &channels, NULL)) {
+            &channels, &object_type, NULL)) {
       GST_WARNING_OBJECT (aacparse, "Error reading LOAS config");
     } else if (G_UNLIKELY (rate != aacparse->sample_rate
             || channels != aacparse->channels)) {
       aacparse->sample_rate = rate;
       aacparse->channels = channels;
+      aacparse->object_type = object_type;
       setcaps = TRUE;
-      GST_INFO_OBJECT (aacparse, "New LOAS config: %d Hz, %d channels", rate,
-          channels);
+      GST_INFO_OBJECT (aacparse, "New LOAS config: %d Hz, %d channels, "
+          "audio object type: %u", rate, channels, object_type);
     }
 
     /* We want to set caps both at start, and when rate/channels change.
