@@ -5,10 +5,10 @@ noinst_PROGRAMS = test-video test-ogg test-mp4 test-readme \
 #INCLUDES = -I$(top_srcdir) -I$(srcdir)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS)
-AM_LDFLAGS = $(GST_OBJ_LIBS) $(GIO_LIBS)
+LDADD = $(GST_OBJ_LIBS) $(GIO_LIBS)
 
 if HAVE_LIBCGROUP
 noinst_PROGRAMS += test-cgroups
-AM_LDFLAGS += $(LIBCGROUP_LIBS)
+LDADD += $(LIBCGROUP_LIBS)
 endif
 
