@@ -50,6 +50,18 @@ static const guint8 nit_data_check[] = {
   0x72, 0x6b, 0xce, 0x03, 0xf5, 0x94
 };
 
+static const guint8 sdt_data_check[] = {
+  0x42, 0xf0, 0x38, 0x1f, 0xff, 0xc1, 0x00,
+  0x00, 0x1f, 0xff, 0xff, 0x00, 0x00, 0xFF,
+  0x90, 0x11, 0x48, 0x0f, 0x01, 0x08, 0x50,
+  0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72,
+  0x04, 0x4e, 0x61, 0x6d, 0x65, 0x00, 0x01,
+  0xFF, 0xB0, 0x11, 0x48, 0x0f, 0x01, 0x08,
+  0x50, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65,
+  0x72, 0x04, 0x4e, 0x61, 0x6d, 0x65, 0x25,
+  0xe5, 0x02, 0xd9
+};
+
 GST_START_TEST (test_mpegts_pat)
 {
   GstMpegTsPatProgram *program;
@@ -281,6 +293,94 @@ GST_START_TEST (test_mpegts_nit)
 
 GST_END_TEST;
 
+GST_START_TEST (test_mpegts_sdt)
+{
+  GstMpegTsSDTService *service;
+  GstMpegTsSDT *sdt;
+  GstMpegTsDescriptor *desc;
+  GstMpegTsSection *sdt_section;
+  guint8 *data;
+  gsize data_size;
+  gint i;
+
+  /* Check creation of SDT */
+  sdt = gst_mpegts_sdt_new ();
+
+  sdt->actual_ts = TRUE;
+  sdt->original_network_id = 0x1FFF;
+  sdt->transport_stream_id = 0x1FFF;
+
+  for (i = 0; i < 2; i++) {
+    service = gst_mpegts_sdt_service_new ();
+    service->service_id = i;
+    service->EIT_schedule_flag = TRUE;
+    service->EIT_present_following_flag = TRUE;
+    service->running_status = GST_MPEGTS_RUNNING_STATUS_RUNNING + i;
+    service->free_CA_mode = TRUE;
+
+    desc = gst_mpegts_descriptor_from_dvb_service
+        (GST_DVB_SERVICE_DIGITAL_TELEVISION, "Name", "Provider");
+
+    g_ptr_array_add (service->descriptors, desc);
+    g_ptr_array_add (sdt->services, service);
+  }
+
+  sdt_section = gst_mpegts_section_from_sdt (sdt);
+  fail_if (sdt_section == NULL);
+
+  /* Re-parse the SDT from section */
+  sdt = (GstMpegTsSDT *) gst_mpegts_section_get_sdt (sdt_section);
+
+  fail_unless (sdt->services->len == 2);
+  fail_unless (sdt->actual_ts == TRUE);
+  fail_unless (sdt->original_network_id == 0x1FFF);
+  fail_unless (sdt->transport_stream_id == 0x1FFF);
+
+  for (i = 0; i < 2; i++) {
+    service = g_ptr_array_index (sdt->services, i);
+
+    fail_if (service == NULL);
+    fail_unless (service->descriptors->len == 1);
+    fail_unless (service->service_id == i);
+    fail_unless (service->EIT_schedule_flag == TRUE);
+    fail_unless (service->EIT_present_following_flag == TRUE);
+    fail_unless (service->running_status ==
+        GST_MPEGTS_RUNNING_STATUS_RUNNING + i);
+    fail_unless (service->free_CA_mode == TRUE);
+
+    desc = (GstMpegTsDescriptor *)
+        gst_mpegts_find_descriptor (service->descriptors,
+        GST_MTS_DESC_DVB_SERVICE);
+
+    fail_if (desc == NULL);
+
+    fail_unless (gst_mpegts_descriptor_parse_dvb_service (desc,
+            NULL, NULL, NULL) == TRUE);
+  }
+
+  /* Packetize the section, and check data integrity */
+  data = gst_mpegts_section_packetize (sdt_section, &data_size);
+
+  fail_if (data == NULL);
+
+  for (i = 0; i < data_size; i++) {
+    if (data[i] != sdt_data_check[i])
+      fail ("0x%X != 0x%X in byte %d of SDT section", data[i],
+          sdt_data_check[i], i);
+  }
+
+  /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
+  sdt_section->data[sdt_section->section_length - 1]++;
+  sdt_section->cached_parsed = NULL;
+  sdt = (GstMpegTsSDT *) gst_mpegts_section_get_sdt (sdt_section);
+
+  fail_unless (sdt == NULL);
+
+  gst_mpegts_section_unref (sdt_section);
+}
+
+GST_END_TEST;
+
 static const guint8 registration_descriptor[] = {
   0x05, 0x04, 0x48, 0x44, 0x4d, 0x56
 };
@@ -312,10 +412,17 @@ static const guint8 network_name_descriptor[] = {
   0x40, 0x04, 0x4e, 0x61, 0x6d, 0x65
 };
 
+static const guint8 service_descriptor[] = {
+  0x48, 0x0f, 0x01, 0x08, 0x50, 0x72, 0x6f,
+  0x76, 0x69, 0x64, 0x65, 0x72, 0x04, 0x4e,
+  0x61, 0x6d, 0x65
+};
+
 GST_START_TEST (test_mpegts_dvb_descriptors)
 {
   GstMpegTsDescriptor *desc;
-  gchar *string;
+  GstMpegTsDVBServiceType service_type;
+  gchar *string, *provider;
   gchar long_string[257];
   gboolean ret;
   guint i;
@@ -345,6 +452,50 @@ GST_START_TEST (test_mpegts_dvb_descriptors)
   memset (long_string, 0x41, 256);
   long_string[256] = 0x00;
   ASSERT_CRITICAL (gst_mpegts_descriptor_from_dvb_network_name (long_string));
+
+  /*
+   * Service descriptor (0x48)
+   */
+
+  /* Check creation of descriptor with data */
+  desc = gst_mpegts_descriptor_from_dvb_service
+      (GST_DVB_SERVICE_DIGITAL_TELEVISION, "Name", "Provider");
+  fail_if (desc == NULL);
+  fail_unless (desc->length == 15);
+  fail_unless (desc->tag == 0x48);
+
+  for (i = 0; i < 17; i++) {
+    if (desc->data[i] != service_descriptor[i])
+      fail ("0x%X != 0x%X in byte %d of service descriptor",
+          desc->data[i], service_descriptor[i], i);
+  }
+
+  /* Check parsing of descriptor with data */
+  ret = gst_mpegts_descriptor_parse_dvb_service
+      (desc, &service_type, &string, &provider);
+  fail_unless (ret == TRUE);
+  fail_unless (service_type == GST_DVB_SERVICE_DIGITAL_TELEVISION);
+  fail_unless (strcmp (string, "Name") == 0);
+  fail_unless (strcmp (provider, "Provider") == 0);
+
+  /* Check creation of descriptor without data */
+  desc = gst_mpegts_descriptor_from_dvb_service
+      (GST_DVB_SERVICE_DIGITAL_TELEVISION, NULL, NULL);
+  fail_if (desc == NULL);
+  fail_unless (desc->length == 3);
+  fail_unless (desc->tag == 0x48);
+
+  /* Check parsing of descriptor without data */
+  ret = gst_mpegts_descriptor_parse_dvb_service (desc, NULL, NULL, NULL);
+  fail_unless (ret == TRUE);
+
+  /* Descriptor should fail if string is more than 255 bytes */
+  memset (long_string, 0x41, 256);
+  long_string[256] = 0x00;
+  ASSERT_CRITICAL (gst_mpegts_descriptor_from_dvb_service
+      (GST_DVB_SERVICE_DIGITAL_TELEVISION, long_string, NULL));
+  ASSERT_CRITICAL (gst_mpegts_descriptor_from_dvb_service
+      (GST_DVB_SERVICE_DIGITAL_TELEVISION, NULL, long_string));
 }
 
 GST_END_TEST;
@@ -362,6 +513,7 @@ mpegts_suite (void)
   tcase_add_test (tc_chain, test_mpegts_pat);
   tcase_add_test (tc_chain, test_mpegts_pmt);
   tcase_add_test (tc_chain, test_mpegts_nit);
+  tcase_add_test (tc_chain, test_mpegts_sdt);
   tcase_add_test (tc_chain, test_mpegts_descriptors);
   tcase_add_test (tc_chain, test_mpegts_dvb_descriptors);
 
