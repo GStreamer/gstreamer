@@ -7066,6 +7066,7 @@ gst_rtspsrc_start (GstRTSPSrc * src)
   /* ERRORS */
 task_error:
   {
+    GST_OBJECT_UNLOCK (src);
     GST_ERROR_OBJECT (src, "failed to create task");
     return FALSE;
   }
