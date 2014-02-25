@@ -2541,6 +2541,8 @@ gst_structure_id_has_field_typed
 gst_structure_get_boolean
 gst_structure_get_int
 gst_structure_get_uint
+gst_structure_get_int64
+gst_structure_get_uint64
 gst_structure_get_double
 gst_structure_get_string
 gst_structure_get_date

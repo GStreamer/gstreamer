@@ -1084,11 +1084,13 @@ EXPORTS
 	gst_structure_get_field_type
 	gst_structure_get_fraction
 	gst_structure_get_int
+	gst_structure_get_int64
 	gst_structure_get_name
 	gst_structure_get_name_id
 	gst_structure_get_string
 	gst_structure_get_type
 	gst_structure_get_uint
+	gst_structure_get_uint64
 	gst_structure_get_valist
 	gst_structure_get_value
 	gst_structure_has_field

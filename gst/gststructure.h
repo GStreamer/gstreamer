@@ -230,6 +230,14 @@ gboolean              gst_structure_get_uint             (const GstStructure  * 
                                                           const gchar         * fieldname,
                                                           guint               * value);
 
+gboolean              gst_structure_get_int64            (const GstStructure  * structure,
+                                                          const gchar         * fieldname,
+                                                          gint64              * value);
+
+gboolean              gst_structure_get_uint64           (const GstStructure  * structure,
+                                                          const gchar         * fieldname,
+                                                          guint64             * value);
+
 gboolean              gst_structure_get_double           (const GstStructure  * structure,
                                                           const gchar         * fieldname,
                                                           gdouble             * value);

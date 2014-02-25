@@ -1369,6 +1369,82 @@ gst_structure_get_uint (const GstStructure * structure,
 }
 
 /**
+ * gst_structure_get_int64:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @value: (out): a pointer to an int64 to set
+ *
+ * Sets the int64 pointed to by @value corresponding to the value of the
+ * given field. Caller is responsible for making sure the field exists
+ * and has the correct type.
+ *
+ * Returns: %TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain an int64, this function
+ * returns %FALSE.
+ *
+ * Since: 1.4
+ */
+gboolean
+gst_structure_get_int64 (const GstStructure * structure,
+    const gchar * fieldname, gint64 * value)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  field = gst_structure_get_field (structure, fieldname);
+
+  if (field == NULL)
+    return FALSE;
+  if (!G_VALUE_HOLDS_INT64 (&field->value))
+    return FALSE;
+
+  *value = gst_g_value_get_int64_unchecked (&field->value);
+
+  return TRUE;
+}
+
+/**
+ * gst_structure_get_uint64:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @value: (out): a pointer to a uint64 to set
+ *
+ * Sets the uint64 pointed to by @value corresponding to the value of the
+ * given field. Caller is responsible for making sure the field exists
+ * and has the correct type.
+ *
+ * Returns: %TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain a uint64, this function
+ * returns %FALSE.
+ *
+ * Since: 1.4
+ */
+gboolean
+gst_structure_get_uint64 (const GstStructure * structure,
+    const gchar * fieldname, guint64 * value)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  field = gst_structure_get_field (structure, fieldname);
+
+  if (field == NULL)
+    return FALSE;
+  if (!G_VALUE_HOLDS_UINT64 (&field->value))
+    return FALSE;
+
+  *value = gst_g_value_get_uint64_unchecked (&field->value);
+
+  return TRUE;
+}
+
+/**
  * gst_structure_get_date:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
