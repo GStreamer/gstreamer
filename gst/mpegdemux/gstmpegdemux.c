@@ -1529,16 +1529,17 @@ gst_flups_demux_reset_psm (GstFluPSDemux * demux)
   for (i=start; i <= stop; i++)			\
     demux->psm[i] = type;
 
-  FILL_TYPE (0x00, 0x1f, -1);
+  /* Initialize all fields to -1 first */
+  FILL_TYPE (0x00, GST_FLUPS_DEMUX_MAX_PSM, -1);
+
   FILL_TYPE (0x20, 0x3f, ST_PS_DVD_SUBPICTURE);
-  FILL_TYPE (0x40, 0x7f, -1);
+
   FILL_TYPE (0x80, 0x87, ST_PS_AUDIO_AC3);
   FILL_TYPE (0x88, 0x9f, ST_PS_AUDIO_DTS);
   FILL_TYPE (0xa0, 0xaf, ST_PS_AUDIO_LPCM);
-  FILL_TYPE (0xbd, 0xbd, -1);
+
   FILL_TYPE (0xc0, 0xdf, ST_AUDIO_MPEG1);
   FILL_TYPE (0xe0, 0xef, ST_GST_VIDEO_MPEG1_OR_2);
-  FILL_TYPE (0xf0, 0xff, -1);
 
 #undef FILL_TYPE
 }
