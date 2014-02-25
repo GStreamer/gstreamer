@@ -203,6 +203,11 @@ AC_SUBST(GST_LICENSE)
 dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
+dnl set release date/time (and check that release version is in doap file)
+AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
+  ["${srcdir}/gst-rtsp-server.doap"],
+  [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
+
 # set by AG_GST_PARSE_SUBSYSTEM_DISABLES above
 dnl make sure it doesn't complain about unused variables if debugging is disabled
 NO_WARNINGS=""
