@@ -266,6 +266,7 @@ gst_mpegts_descriptor_from_dvb_network_name
 <SUBSECTION service>
 GstMpegTsDVBServiceType
 gst_mpegts_descriptor_parse_dvb_service
+gst_mpegts_descriptor_from_dvb_service
 <SUBSECTION teletext>
 GstMpegTsDVBTeletextType
 gst_mpegts_descriptor_parse_dvb_teletext_idx
@@ -361,6 +362,9 @@ GstMpegTsBATStream
 GstMpegTsSDT
 GstMpegTsSDTService
 gst_mpegts_section_get_sdt
+gst_mpegts_sdt_new
+gst_mpegts_sdt_service_new
+gst_mpegts_section_from_sdt
 <SUBSECTION EIT>
 GstMpegTsEIT
 GstMpegTsEITEvent
