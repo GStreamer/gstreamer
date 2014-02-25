@@ -359,27 +359,36 @@ default_free_buffer (GstBufferPool * pool, GstBuffer * buffer)
   gst_buffer_unref (buffer);
 }
 
+static void
+do_free_buffer (GstBufferPool * pool, GstBuffer * buffer)
+{
+  GstBufferPoolPrivate *priv;
+  GstBufferPoolClass *pclass;
+
+  priv = pool->priv;
+  pclass = GST_BUFFER_POOL_GET_CLASS (pool);
+
+  g_atomic_int_add (&priv->cur_buffers, -1);
+  GST_LOG_OBJECT (pool, "freeing buffer %p (%u left)", buffer,
+      priv->cur_buffers);
+
+  if (G_LIKELY (pclass->free_buffer))
+    pclass->free_buffer (pool, buffer);
+}
+
 /* must be called with the lock */
 static gboolean
 default_stop (GstBufferPool * pool)
 {
   GstBufferPoolPrivate *priv = pool->priv;
   GstBuffer *buffer;
-  GstBufferPoolClass *pclass;
-
-  pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
   /* clear the pool */
   while ((buffer = gst_atomic_queue_pop (priv->queue))) {
-    GST_LOG_OBJECT (pool, "freeing buffer %p", buffer);
     gst_poll_read_control (priv->poll);
-
-    if (G_LIKELY (pclass->free_buffer))
-      pclass->free_buffer (pool, buffer);
+    do_free_buffer (pool, buffer);
   }
-  priv->cur_buffers = 0;
-
-  return TRUE;
+  return priv->cur_buffers == 0;
 }
 
 /* must be called with the lock */
