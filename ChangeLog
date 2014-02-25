@@ -1,0 +1,3957 @@
+=== release 1.2.3 ===
+
+2014-02-25  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  releasing 1.2.3
+
+2014-02-25 20:29:14 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.2.3
+
+2014-02-25 15:13:40 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/Makefile.am:
+	  examples: use LDADD for libs instead of LDFLAGS
+
+2014-02-25 14:42:09 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: make sure releases are in .doap file
+
+2014-02-25 14:11:00 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/test-cgroups.c:
+	  examples: test-cgroups: don't put code with side effects into g_assert()
+	  The g_assert() might get compiled out with the right
+	  compiler/preprocessor flags.
+
+2014-02-25 14:07:50 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/.gitignore:
+	  examples: add cgroup test binary to .gitignore
+
+2014-02-25 14:06:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/test-cgroups.c:
+	  examples: fix cgroup test build
+	  Fixes build failure caused by compiler warning:
+	  test-cgroups.c:82:35: error: no previous prototype for ‘gst_rtsp_cgroup_pool_get_type’ [-Werror=missing-prototypes]
+
+2014-02-21 16:46:45 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	  .gitignore: ignore temp files created in the course of 'make check'
+
+2014-02-18 09:44:34 +0100  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: don't loose frames handling new PLAY request
+	  If client supplied a range check if the range specifies the start point.
+	  If not, then do an accurate seek to the current position. If a start
+	  point was specified do do a key unit seek to make sure the streaming
+	  starts with decodeable frames.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=724611
+
+2014-02-17 10:43:05 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: set ttl-mc before adding the socket
+	  Set ttl-mc before adding the socket. Otherwise the value ttl-mc will
+	  never be set on socket.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=724531
+
+2014-02-11 14:20:39 -0800  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: stop thread if media is already prepared
+	  in gst_rtsp_media_prepare() the thread is not used if media is already
+	  prepared (e.g. media shared) so we want to stop the thread. otherwise, a
+	  leak occurs.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724182
+
+=== release 1.1.90 ===
+
+2014-02-09 10:52:29 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* Makefile.am:
+	  build: Ship gst-rtsp-server.doap file
+
+2014-02-09 10:51:23 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Set version to 1.1.90 for pre-release and require GStreamer 1.2.3 or newer
+
+2014-02-09 10:47:09 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: Fix another compiler warning with gcc
+
+2014-02-09 10:45:28 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/client.c:
+	  rtsp-server: Fix lots of compiler warnings with clang
+
+2014-02-09 10:41:14 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* tests/Makefile.am:
+	  configure: Synchronise with the configure scripts of the other modules
+
+2014-02-09 10:25:44 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Update version to 1.3.0.1 and require GStreamer 1.3.0
+
+2014-02-09 10:19:50 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  Revert "rtsp-server: support build against last stable release"
+	  This reverts commit 099a10f61f11413ad0ada8ee0b7b7ad1210b1b2f.
+	  Let us require 1.2.3 now, which is going to be released in a few
+	  minutes.
+
+2014-02-07 16:39:49 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	  session: improve RTP-Info
+	  Ignore streams that can't generate RTP-Info instead of failing.
+	  Don't return the empty string when all streams are unconfigured but
+	  return NULL so that we don't generate and empty RTP-Info header.
+	  Improve docs a little.
+
+2014-02-03 22:41:48 +0200  Andrey Utkin <andrey.krieger.utkin@gmail.com>
+
+	* gst/rtsp-server/rtsp-session-media.c:
+	  Don't free rtpinfo GString when it is NULL
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=723554
+
+2014-02-06 09:48:05 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: only set keyframe flag when modifying start
+	  Only set the keyframe flag when we modify the start position. The
+	  keyframe flag should probably be ignored when no change is requested but
+	  until we can claim this is all documented properly and all demuxer
+	  implement this, avoid setting the flag.
+	  See also https://bugzilla.gnome.org/show_bug.cgi?id=723075
+
+2014-02-06 09:03:50 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  thread-pool: Unref source after mainloop has quit to avoid races in GLib
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=723741
+
+2014-02-04 16:27:12 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: handle NULL seqnum and rtptime arguments
+
+2014-01-31 15:02:22 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	* tests/check/gst/threadpool.c:
+	  thread-pool: Unref reused threads in gst_rtsp_thread_stop()
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=723519
+
+2014-02-04 10:14:45 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: add fallback for missing stats property
+	  Use a fallback when the payloader does not have a stats property
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=723554
+
+2014-01-30 10:45:56 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From f7bc1c3 to 1a07da9
+
+2014-01-28 14:51:26 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: don't leak stats structure
+	  Don't leak the stats structure and deal with NULL stats.
+
+2014-01-22 22:03:14 +0100  Sebastian Rasmussen <sebrn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: Get rtpinfo properties atomically from payloader
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=722844
+
+2014-01-21 14:46:47 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: refactor state change functions and signals
+	  Make functions to set the target state and the pipeline state and emit
+	  the signals from those functions.
+
+2014-01-21 12:01:25 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: add signal to notify of pending state changes
+
+2014-01-12 16:55:21 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: support build against last stable release
+	  Until 1.2.3 is out with the new get_type function and we
+	  can require that.
+
+2014-01-07 15:28:05 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: fix compilation
+
+2014-01-07 12:21:09 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add property to configure profiles
+
+2014-01-07 12:28:47 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: let stream check supported transport
+	  Delegate the check if a transport is allowed to the stream.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=720696
+
+2014-01-07 12:14:15 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add method to check supported transport
+	  Add a method to check if a transport is supported
+
+2013-12-27 13:11:45 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure.ac: Only check for gstreamer-check, not check
+	  We include check in gstreamer-check since quite some time now.
+
+2013-12-26 17:02:50 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: return clock-rate from get_rtpinfo
+	  And use it to correct the rtptime to the requested start-time.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=712198
+
+2013-12-26 16:28:59 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	  session-media: calculate start-time
+
+2013-12-26 14:43:35 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: also return the running-time
+	  Return the running-time in the rtpinfo as well.
+
+2013-12-26 15:41:14 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	  session-media: let the session-media make the RTPInfo
+	  Add method to create the RTPInfo for a stream-transport.
+	  Add method to create the RTPInfo for all stream-transports in a
+	  session-media.
+	  Use the session-media RTPInfo code in client. This allows us to refactor
+	  another method to link the TCP callbacks.
+
+2013-12-20 16:39:07 -0800  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	  mount-points: sort sequence before g_sequence_lookup
+	  * gst/rtsp-server/rtsp-mount-points.c (gst_rtsp_mount_points_remove_factory):
+	  sort sequence if dirty, otherwise lookup will fail.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=720855
+
+2013-12-22 23:16:56 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: rename package from gst-rtsp to gst-rtsp-server
+	  To match git module name and avoid confusion with the
+	  rtsp lib in gst-plugins-base and rtsp plugin in -good.
+
+2013-12-22 23:15:02 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: bump core/base/good requirement to 1.2.0
+	  Bump to released stable version and make implicit
+	  requirements explicit.
+
+2013-12-22 23:04:48 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	* common:
+	* configure.ac:
+	  Fix broken gettext setup which is not used anyway
+
+2013-12-22 22:36:06 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From dbedaa0 to d48bed3
+
+2013-12-18 16:37:27 +0100  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: add setup_sdp vmethod
+	  gst/rtsp-server/rtsp-media.[ch]: added setup_sdp vmethod and public
+	  gst_rtsp_media_setup_sdp.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=720155
+
+2013-12-19 14:26:34 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Check return value of sscanf
+	  streamid is only valid if sscanf matched something.
+
+2013-12-19 14:24:54 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Fix iteration
+	  Wouldn't even enter the code block otherwise (i++ was used as the check
+	  and not the postfix).
+
+2013-12-18 15:57:03 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: add vmethod to configure media and streams
+	  Implement a vmethod that can be used to configure the media and the
+	  streams based on the current context. Handle the blocksize handling in
+	  the default handler.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=720667
+
+2013-12-12 00:38:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	  Make git ignore more unit test binaries
+
+2013-12-12 00:36:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-address-pool.h:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-context.h:
+	* gst/rtsp-server/rtsp-media-factory-uri.h:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-mount-points.h:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	* gst/rtsp-server/rtsp-session.h:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.h:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	* gst/rtsp-server/rtsp-token.h:
+	  rtsp-server: add padding to many public structures
+	  Not mini objects though, since they are not subclassable
+	  anyway, nor kept on the stack or inlined in a structure.
+
+2013-12-03 11:54:42 -0800  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	  media: add new create_rtpbin vmethod
+	  * gst/rtsp-server/rtsp-media.[ch]: add new create_rtpbin vmethod.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719734
+
+2013-12-03 00:34:52 +0100  Sebastian Rasmussen <sebras@gmail.com>
+
+	* tests/check/gst/media.c:
+	  tests: fix memory leak, free test's thread pool
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=719733
+
+2013-11-29 15:50:52 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	  stream-transport: free url in finalize
+
+2013-11-29 15:50:23 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: also do state change in suspended state
+
+2013-11-29 10:53:08 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	  media: also handle prepare and range in suspended state
+	  When we are suspended, we are already prepared.
+	  We can get the range in the suspended state.
+
+2013-11-27 15:04:04 +0100  Branko Subasic <branko@axis.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/sessionmedia.c:
+	  check: add test for uri in setup
+	  Added unit tests for the new functionality in GstRTSPStreamTransport.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=715168
+
+2013-11-28 17:47:18 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: store setup uri and use in PLAY response
+	  Store the uri used when doing the setup and use that in the PLAY
+	  response.
+	  fixes https://bugzilla.gnome.org/show_bug.cgi?id=715168
+
+2013-11-28 17:35:45 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	  stream-transport: add method to get/set url
+
+2013-11-28 14:14:35 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: suspend after SDP and unsuspend before PLAYING
+	  Based on patches by Ognyan Tonchev <ognyan@axis.com>
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=711257
+
+2013-11-28 14:10:19 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* tests/check/gst/media.c:
+	* tests/check/gst/mediafactory.c:
+	  media: add suspend modes
+	  Add support for different suspend modes. The stream is suspended right after
+	  producing the SDP and after PAUSE. Different suspend modes are available that
+	  affect the state of the pipeline. NONE leaves the pipeline state unchanged and
+	  is the current and old behaviour, PAUSE will set the pipeline to the PAUSED
+	  state and RESET will bring the pipeline to the NULL state.
+	  A stream is also unsuspended when it goes back to PLAYING, for RESET streams,
+	  this means that the pipeline needs to be prerolled again.
+	  Base on patches by Ognyan Tonchev <ognyan@axis.com>
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=711257
+
+2013-11-28 14:06:53 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: start live streams in blocked state
+	  Start live streams in the blocked state and make them preroll using the
+	  messages. This ensure that no data is played by the sink until we explicitly
+	  unblock the stream right before going to PLAYING.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=711257
+
+2013-11-28 13:58:05 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: refactor starting and waiting for preroll
+	  Based on patches from Ognyan Tonchev <ognyan@axis.com>
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=711257
+
+2013-11-28 13:42:21 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add API to block streams
+	  Add an API to block on the streams and make it post a message.
+	  Based on patch by Ognyan Tonchev <ognyan@axis.com>
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=711257
+
+2013-11-27 15:42:45 +0100  Edward Hervey <edward@collabora.com>
+
+	* docs/libs/Makefile.am:
+	  docs: Specify the override file
+	  Even if it's empty (for now) it avoids make distcheck complaining
+
+2013-11-26 17:23:04 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: move default implementations to where they are used
+
+2013-11-26 16:25:37 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: take the right lock in gst_rtsp_media_set_pipeline_state()
+	  We need to take the state_lock when calling this method.
+
+2013-11-26 16:24:35 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: handle add-added on non-bins too
+	  Handle dynamic payloaders that are not bins, as used in the unit-test.
+
+2013-11-22 01:30:53 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media/-factory: Fix request pad name comments
+	  These must be escaped for gtk-doc to parse the comments without warnings.
+
+2013-11-20 15:51:54 -0800  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	  rtsp-media: remove transports if media is in error status
+	  * gst/rtsp-server/rtsp-media.c (gst_rtsp_media_set_state): if we are
+	  trying to change to GST_STATE_NULL and media is in error status, we
+	  remove all transports.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=712776
+
+2013-11-22 11:16:20 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: use element metadata to find payloader
+	  Use the element metadata to find the payloader instead of checking
+	  for the base class.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=712396
+
+2013-11-15 12:14:32 -0800  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	  rtsp-stream: add getter for payload type
+	  * gst/rtsp-server/rtsp-stream.c: add new method gst_rtsp_stream_get_pt.
+	  * gst/rtsp-server/rtsp-media.c (pad_added_cb): find real payloader
+	  element and create the stream with this one instead of the dynpay%d
+	  element.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=712396
+
+2013-11-22 02:28:28 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-context.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-token.c:
+	  rtsp-*: Refer to NULL as a constant in comments
+	  Plus one typo fix.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=714988
+
+2013-11-22 03:10:01 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	  rtsp-*: Fix type name typos in comments
+	  * rtsp-auth: Refer to GstRTSPToken, not GstRTSPtoken
+	  * rtsp-auth: Refer to part of constant name as text
+	  * rtsp-auth/-permissions/-token: Refer to Permissions not Permission
+	  * rtsp-session-media: Fix GstRTSPSessionMedia typo
+	  * rtsp-stream: Fix typo when refering to GstBin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=714988
+
+2013-11-22 00:45:17 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* docs/README:
+	* docs/libs/gst-rtsp-server-docs.sgml:
+	* docs/libs/gst-rtsp-server-sections.txt:
+	  docs: Improve documentation
+	  * Include annotation-glossary to quiet gtk-doc
+	  * Rename remaining ClientState -> Context
+	  * Rename object hierarchy file
+	  * Remove stale chapter references
+	  * Add missing function and object references
+	  * Include missing GstRTSPAddressPoolResult
+	  https://bugzilla.gnome.org/show_bug.cgi?id=714988
+
+2013-11-18 10:47:04 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: sprinkle some allow-none annotations for g-i
+
+2013-11-18 11:18:15 +0100  Wim Taymans <wim.taymans@gmail.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add method to filter transports
+	  Add a method to safely iterate and collect the stream transports
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=711664
+
+2013-11-15 16:35:05 +0100  Wim Taymans <wim.taymans@gmail.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp: allow NULL func in filters
+	  Passing a null function make the filters return a list of
+	  refcounted objects.
+
+2013-11-12 16:52:35 +0100  Wim Taymans <wim.taymans@gmail.com>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* tests/check/gst/addresspool.c:
+	  address-pool: fix address increment
+	  Use a guint instead of guint8 to increment the address. It's still not
+	  completely correct because a guint might not be able to hold the complete
+	  address range, but that's an enhacement for later.
+	  Add unit test to test improved behaviour.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708237
+
+2013-11-12 10:55:14 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* tests/check/gst/client.c:
+	  client: allow absolute path in requests
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=711689
+
+2013-11-07 13:22:09 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: make make_path_from_uri a vmethod
+
+2013-11-12 12:04:55 +0100  Wim Taymans <wim.taymans@gmail.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/Makefile.am:
+	* tests/check/gst/stream.c:
+	  stream: Add functions to get rtp and rtcp sockets
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=710100
+
+2013-11-12 11:21:55 +0100  Wim Taymans <wim.taymans@gmail.com>
+
+	* gst/rtsp-server/rtsp-context.c:
+	* gst/rtsp-server/rtsp-context.h:
+	  context: defing a GType for the context
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=710018
+
+2013-10-12 23:56:00 +0200  Sebastian Pölsterl <sebp@k-d-w.org>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-context.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  Fixed several GIR warnings
+
+2013-11-12 11:15:46 +0100  Wim Taymans <wim.taymans@gmail.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  auth: small typos
+
+2013-10-19 19:25:27 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/token.c:
+	  tests: Add unit tests for token
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=710520
+
+2013-10-19 19:24:34 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/rtsp-server/rtsp-token.c:
+	  token: Validate args for gst_rtsp_token_is_allowed
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=710520
+
+2013-10-19 19:21:53 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/rtsp-server/rtsp-token.c:
+	  token: Fix bug when creating empty token
+	  We always want to have a valid GstStructure in the token.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=710520
+
+2013-11-12 10:28:55 +0100  Wim Taymans <wim.taymans@gmail.com>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  thread-pool: avoid race in shutdown
+	  If we call g_main_loop_quit before the thread has entered g_main_loop_run, we
+	  don't actually stop the mainloop ever. Solve this race by adding an idle source
+	  to the mainloop that calls the _quit. This way we immediately exit the mainloop
+	  if quit was called before we started it.
+
+2013-10-19 17:36:05 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/permissions.c:
+	  tests: Add unit tests for permissions
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=710202
+
+2013-10-15 18:50:47 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* tests/check/gst/mediafactory.c:
+	  tests: Test mediafactory permissions
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=710202
+
+2013-10-19 17:39:35 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/rtsp-server/rtsp-permissions.c:
+	  permissions: Fix refcounting when adding/removing roles
+	  Previously a role that was removed was unreffed twice, and when
+	  replacing an existing role the replaced role was freed while still being
+	  referenced. Both bugs are now fixed.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=710202
+
+2013-10-15 18:01:38 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* tests/check/gst/media.c:
+	* tests/check/gst/mediafactory.c:
+	* tests/check/gst/rtspserver.c:
+	  tests: Check gst_rtsp_url_parse return value
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=710202
+
+2013-11-05 11:22:51 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 865aa20 to dbedaa0
+
+2013-10-14 12:03:07 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  rtsp-server: Fix socket leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710088
+
+2013-10-30 22:16:54 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	  rtsp-session-pool: Make sure session IDs are properly URI-escaped
+	  https://bugzilla.gnome.org/show_bug.cgi?id=643812
+
+2013-10-15 16:37:34 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* examples/.gitignore:
+	* examples/test-video.c:
+	  examples: fix compilation when WITH_AUTH is defined
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710228
+
+2013-10-30 19:10:59 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* .gitignore:
+	  gitignore: Add new test binary
+
+2013-10-09 15:19:12 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/threadpool.c:
+	  thread-pool: Add unit test for the thread pools
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710228
+
+2013-10-09 15:25:10 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  thread-pool: Fix thread leak when reusing threads
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709730
+
+2013-10-14 08:30:33 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	* tests/check/gst/rtspserver.c:
+	  tests: fixed racy behavior in rtspserver tests
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710078
+
+2013-10-14 19:36:24 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* tests/check/gst/addresspool.c:
+	  tests: Improve address pool unit tests
+	  Add a range with mixed IPV4 and IPV6 addresses to pool.
+	  Get an IPV4 address from an IPV6-only pool.
+	  Get an IPV6 address from an IPV4-only pool.
+	  Reserve a IPV6 address from an IPV4-only pool.
+	  Check for unicast addresses in multicast-only pool.
+	  Check for unicast addresses in uni-/multicast-mixed pool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710128
+
+2013-10-04 06:29:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: append query string in PAUSE/PLAY/TEARDOWN as well
+
+2013-10-01 14:04:17 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Add query to control path
+	  If the SETUP url contains a query it must be appended to the control
+	  path so that it matches any already created stream in the media. The
+	  query will also be appended to the session media path.
+
+2013-10-04 05:48:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: remove old line
+
+2013-10-01 13:15:19 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: Correct control comparison
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709176
+
+2013-09-09 21:51:44 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: Check dynamically if the pipeline supports seeking
+	  We should not depend on whether or not the pipeline state change
+	  returned NO_PREROLL or not. A media could dynamically change its
+	  element and switch from seekable to non seekable so it's best to test
+	  the seekable nature of the pipeline dynamically when we try to do a seek.
+
+2013-09-09 21:51:23 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: Return FALSE if seeking is not supported
+
+2013-10-01 17:16:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: don't seek accurate by default
+	  Accurate seeking is perhaps a little overkill in the most common situation and
+	  causes some formats (mp3) over slow media to seek extremely slowly.
+
+2013-09-26 14:36:58 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: fix unit test
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=708742
+
+2013-09-26 11:20:05 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Reply 400 if media cannot be constructed
+	  Reply 400 Bad Request instead of 503 Service Unavailable if media
+	  cannot be constructed in SETUP.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=708821
+
+2013-09-26 09:41:10 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Send setup reply once only
+	  If find_media() failed in handle_setup_request() two replies was sent.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=708819
+
+2013-09-24 18:35:36 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6b03ba7 to 865aa20
+
+2013-09-23 14:28:04 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: Emit client-connected signal earlier
+	  Emit client-connected before the client ref is given to a GSource,
+	  otherwise client-connected can be emitted after the client object has
+	  been freed.
+
+2013-09-24 17:30:18 +0200  Patrick Radizi <patrick.radizi at axis.com>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-address-pool.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/addresspool.c:
+	  addresspool: return reason of failure
+	  Let gst_rtsp_address_pool_reserve_address() return the reason why
+	  the address could not be reserved.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=708229
+
+2013-09-20 16:47:56 +0200  Edward Hervey <edward@collabora.com>
+
+	* autogen.sh:
+	  autogen.sh: Sync behaviour with other GStreamer modules
+	  Allows building from outside of tree amongst other things
+
+2013-09-20 16:18:54 +0200  Edward Hervey <edward@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b613661 to 6b03ba7
+
+2013-09-19 18:46:14 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 74a6857 to b613661
+
+2013-09-19 17:39:24 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 01a7a46 to 74a6857
+
+2013-09-19 15:44:26 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Do not read beyond end of path string
+	  If the setup was done without a control url, make sure we don't try to read the
+	  non-existing control string and crash.
+
+2013-09-17 14:39:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Fix RTPInfo header
+	  Refactor the method to make the content_base.
+	  Use the content-base and the control url to construct the RTPInfo
+	  url.
+
+2013-09-17 12:21:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: map url to path only in describe
+	  Only map the request url to a path in the DESCRIBE method. The SDP then
+	  contains the base and control urls that should be used to SETUP/PAUSE/
+	  PLAY/TEARDOWN the media.
+
+2013-09-17 11:41:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  Revert "client: map URL to path in requests"
+	  This reverts commit e3fded2cec897a2ec003450607b916cc1601fd2d.
+	  This is not correct, we only remap the URL to a path in DESCRIBE, the SDP then
+	  contains the base and control urls which are used in the SETUP, PLAY,
+	  PAUSE and TEARDOWN requests.
+
+2013-09-16 17:16:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: map URL to path in requests
+
+2013-09-16 16:47:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-mount-points.h:
+	  mount-points: make vmethod to make path from uri
+	  Make a vmethod to transform an url into a path. The path is then used to lookup
+	  the factory. This makes it possible to also use other bits of the url, such as
+	  the query parameters, to locate the factory.
+
+2013-09-09 11:05:26 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	  thread-pool: Add cleanup to wait for the threadpool to finish
+	  Also fix race condition if two threads are asking for the first
+	  thread from the thread pool at once. This would case two internal
+	  GThreadPools to be created.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707753
+
+2013-09-05 08:56:02 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* tests/check/gst/client.c:
+	  client: free threadpool
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707638
+
+2013-09-06 17:23:20 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* tests/check/gst/mountpoints.c:
+	  mountpoints tests: unref matched factories
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707638
+
+2013-09-05 18:01:18 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* tests/check/gst/media.c:
+	  media tests: unref thread pool and caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707638
+
+2013-09-05 08:53:55 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	  auth, media, media-factory: unref permissions
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707638
+
+2013-08-23 15:15:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/Makefile.am:
+	  Makefile: add rule for appsrc example
+
+2013-08-23 15:14:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-appsrc.c:
+	  tests: add appsrc example
+	  Add an example on how to use appsrc to feed the server pipeline with data.
+
+2013-08-22 12:10:39 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: remove query part from content-base string
+	  Make sure that after the control url has been resolved, it's
+	  not a part of the query-string.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=706568
+
+2013-08-23 10:38:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: don't check url in response
+	  There is no url or method in the response to check
+
+2013-08-08 10:57:42 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  Add handle-response signal for when we receive a GET_PARAMETER response
+
+2013-08-16 12:42:22 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  Fix gst_rtsp_server_client_filter, using wrong variable type
+
+2013-08-22 18:39:59 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	  rtsp-media-factory-uri: check AAC properly for whether it's parsed or not
+	  For AAC we need to check for framed=true instead of parsed=true.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701384
+
+2013-08-16 17:05:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: optimize pipeline for protocols
+	  When TCP is not an allowed protocol for the stream, avoid creating the
+	  appsrc/appsink/queue and tee elements.
+
+2013-08-16 16:34:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: set protocols on streams
+
+2013-08-16 16:16:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: use protocols supported by stream
+
+2013-08-16 16:16:00 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  media-factory: allow all protocols
+
+2013-08-16 16:10:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: configure protocols in new streams
+
+2013-08-16 16:08:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add protocols property
+
+2013-08-05 10:46:33 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: send state in "new-state" signal
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705110
+
+2013-08-02 14:11:01 +0200  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* configure.ac:
+	  build: add subdir-objects to AM_INIT_AUTOMAKE
+	  Fixes warnings with automake 1.14
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705350
+
+2013-08-02 17:15:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  server: add method to iterate clients of server
+
+2013-06-11 19:10:01 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  Add vmethod for rtsp-media subclass to access rtpbin
+
+2013-07-11 16:12:04 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.h:
+	  small documentation fix
+
+2013-07-11 16:11:55 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  Do not take range header if range is invalid
+
+2013-08-02 16:57:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-media.c:
+	  media: add docs for new method
+
+2013-07-02 18:55:28 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  Add API to rtsp-media set the pipeline's state
+
+2013-06-11 19:09:42 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  Update current position/duration when gst_rtsp_media_get_range_string is called
+
+2013-07-22 17:27:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-cgroups.c:
+	  tests: add some more docs
+
+2013-07-22 14:25:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-cgroups.c:
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-context.c:
+	* gst/rtsp-server/rtsp-context.h:
+	* gst/rtsp-server/rtsp-params.c:
+	* gst/rtsp-server/rtsp-params.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	* tests/check/gst/client.c:
+	  ClientState -> Context
+	  Rename the clientstate to context and put the code in a separate file.
+
+2013-07-18 12:19:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	  auth: add support for default token
+	  The default token is used when the user is not authenticated and can be used to
+	  give minimal permissions.
+
+2013-07-18 11:44:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	  auth: use defines when possible
+
+2013-07-18 11:44:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	  address-pool: improve docs
+
+2013-07-18 12:26:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-permissions.c:
+	  permissions: add the role to the copy
+
+2013-07-17 19:35:33 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-permissions.c:
+	  permissions: Also copy the roles
+
+2013-07-17 19:32:09 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-permissions.c:
+	  permissions: Make it build
+
+2013-07-16 12:36:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-address-pool.h:
+	  docs: small fixes
+
+2013-07-16 12:32:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/client.c:
+	  docs: improve docs
+
+2013-07-16 12:32:00 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-address-pool.h:
+	* tests/check/gst/addresspool.c:
+	* tests/check/gst/rtspserver.c:
+	  address-pool: cleanups
+	  Remove redundant method, improve docs.
+
+2013-07-15 17:31:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-permissions.c:
+	* gst/rtsp-server/rtsp-permissions.h:
+	* gst/rtsp-server/rtsp-token.c:
+	  docs: improve docs
+
+2013-07-15 17:12:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-permissions.c:
+	  permissions: implement _remove_role
+
+2013-07-15 17:12:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-permissions.c:
+	  permissions: update docs
+
+2013-07-15 16:48:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/client.c:
+	  tests: simplify tests
+	  Client settings are now disabled by default so we don't need an auth
+	  module to disable them.
+
+2013-07-15 16:47:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  auth: add default authorizations
+	  When no auth module is specified, use our table of defaults to look up the
+	  default value of the check instead of always allowing everything. This was
+	  we can disallow client settings by default.
+
+2013-07-15 16:05:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/README:
+	  README: update readme
+
+2013-07-15 15:25:00 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	  thread-pool: add more docs
+
+2013-07-15 14:50:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	  thread-pool: fix race in thread reuse
+	  If we try to reuse a thread right after we made it stop, we end up using a
+	  stopped thread. Catch this case and only reuse threads that are not stopping.
+
+2013-07-15 14:50:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: add small debug
+
+2013-07-15 11:58:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/client.c:
+	  client: fix test
+	  Add some permissions to media so we can use the auth and enable
+	  client settings.
+
+2013-07-15 11:57:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: support pushed context in handle_request
+	  If we already have a pushed state, reuse it and add our own things. This makes
+	  it easier to write tests.
+
+2013-07-15 11:56:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  auth: don't auth on methods
+	  Don't authorize on methods anymore but on the resources that we
+	  try to access, this is more flexible.
+	  Move the authorization checks to where they are needed and let the
+	  check return the response on error.
+
+2013-07-15 11:51:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-mount-points.c:
+	  mount-points: add some debug
+
+2013-07-12 17:26:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/client.c:
+	  tests: almost fix test
+
+2013-07-12 17:07:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  auth: let the auth module check client_settings
+	  Let the auth module decide if client settings are allowed for the
+	  current client.
+
+2013-07-12 17:06:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-token.c:
+	* gst/rtsp-server/rtsp-token.h:
+	  token: add method to check boolean permission
+
+2013-07-12 16:36:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	* examples/test-cgroups.c:
+	* gst/rtsp-server/rtsp-token.c:
+	* gst/rtsp-server/rtsp-token.h:
+	  token: simplify token constructor
+	  Use variable arguments to make easier API.
+
+2013-07-12 16:17:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	* examples/test-cgroups.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	  media-factory: add convenience API for factory
+
+2013-07-12 16:03:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	* examples/test-cgroups.c:
+	* gst/rtsp-server/rtsp-permissions.c:
+	* gst/rtsp-server/rtsp-permissions.h:
+	  permissions: simplify API a little
+	  Avoid passing GstStructure in the add_role method, use varargs instead
+	  to construct the structure behind the scenes. We can then also use the
+	  structure name as the role and simplify some more logic.
+
+2013-07-12 16:01:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  auth: fix typo
+
+2013-07-12 15:19:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.c:
+	  auth: handle unauthorized response
+	  Move handling of the unauthorized response to the auth module, it can add
+	  the appropriate headers to request authorization for the required method
+	  much better than the client.
+
+2013-07-12 15:13:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: allow for sending any message, not only requests
+	  Change the _send_request() method to _send_message() so that we
+	  can both send requests and replies.
+
+2013-07-12 14:10:13 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-server.h:
+	  docs: fix docs
+
+2013-07-12 12:41:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-video.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  auth: move TLS handling to auth module
+	  Remove the TLS settings on the server and move it to the auth module because
+	  that is where security related bits go.
+
+2013-07-12 12:38:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: add state push/pop
+
+2013-07-12 12:36:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: add connection to state
+
+2013-07-11 20:45:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-mount-points.c:
+	  mount-points: fix debug
+
+2013-07-11 17:28:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/media.c:
+	  tests: fix media test
+
+2013-07-11 17:28:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  thread-pool: we don't require a state
+
+2013-07-11 17:18:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: let context ref the server
+	  So that we don't risk losing the server object early anc crash.
+
+2013-07-11 17:05:00 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/client.c:
+	  tests: fix client test
+
+2013-07-11 16:57:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/README:
+	* docs/libs/gst-rtsp-server-docs.sgml:
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-params.c:
+	* gst/rtsp-server/rtsp-permissions.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	* gst/rtsp-server/rtsp-token.c:
+	  docs: improve docs
+
+2013-07-11 16:28:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	  session-pool: make vmethod to create a session
+	  Make a vmethod to create a sessions so that subclasses can create
+	  custom session objects
+
+2013-07-11 12:24:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-mount-points.h:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	* gst/rtsp-server/rtsp-stream.h:
+	  docs: more updates
+
+2013-07-11 12:18:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-docs.sgml:
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-address-pool.h:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-permissions.c:
+	* gst/rtsp-server/rtsp-permissions.h:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	* gst/rtsp-server/rtsp-session.h:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	  docs: update docs
+
+2013-07-11 10:28:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	* examples/Makefile.am:
+	  configure: compile cgroup example conditionally
+	  Only compile the cgroup example when we have libcgroup
+
+2013-07-10 20:57:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	* examples/Makefile.am:
+	* examples/test-cgroups.c:
+	  examples: add cgroups example
+
+2013-07-10 20:55:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: fix compilation
+
+2013-07-10 20:48:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  thread-pool: fix vmethod invocation
+
+2013-07-10 20:48:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	  thread-pool: store thread type in thread
+
+2013-07-10 17:09:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: pass thread from pool to media _prepare
+	  Get a thread from the configured threadpool and pass it to the prepare method of
+	  the media.
+
+2013-07-10 17:08:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: Accept a thread in _prepare
+	  Remove out own threadpool handling and use the provided thread and
+	  maincontext for the bus messages and the state changes.
+
+2013-07-10 17:07:13 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: configure client thread pool
+
+2013-07-10 17:06:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: add method to configure thread pool
+
+2013-07-10 16:49:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  server: use thread pool
+	  Use the thread pool instead of doing our own thing.
+
+2013-07-10 16:47:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	  thread-pool: add object to manage threads
+	  Add an object to manage the client and media threads.
+
+2013-07-10 15:28:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  auth: debug authorization check
+
+2013-07-09 20:44:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: start media pipeline in context
+	  Start the media pipeline in the provided context (or our default one
+	  when NULL). This makes sure that we run the bus thread in this context and that
+	  all media threads are children of this context.
+
+2013-07-09 16:38:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  factory: pass permissions to media by default
+
+2013-07-09 16:09:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	  test: add permissions to auth test
+	  Ass some permissions to the media factory in the test.
+
+2013-07-09 16:04:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.c:
+	  auth: simplify auth checks
+	  Remove client from methods, it's now in the state
+	  Perform the check specified by the string, use the information from the
+	  thread local context.
+
+2013-07-09 16:01:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: add state to current thread
+	  Add the client to the ClientState object.
+	  Place the ClientState on the current thread.
+
+2013-07-09 14:33:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: make it possible to set permissions
+	  Make it possible to set permissions on media and media factory objects
+
+2013-07-09 14:31:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-permissions.c:
+	* gst/rtsp-server/rtsp-permissions.h:
+	  permissions: add permissions object
+	  Add a mini object to store permissions based on a role.
+
+2013-07-08 16:29:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.c:
+	  auth: add auth checks
+	  Add an enum with auth checks and implement the checks in the auth object.
+	  Perform the checks from the client.
+
+2013-07-05 20:48:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.h:
+	  auth: use the token after authentication
+	  After we authenticated a user, keep the Token around in the state.
+
+2013-07-05 20:43:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* tests/check/gst/media.c:
+	  media: add optional context for bus messages
+	  Add an optional mainloop to _prepare that will handle the bus messages instead
+	  of always using the shared mainloop.
+
+2013-07-05 20:34:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-token.c:
+	* gst/rtsp-server/rtsp-token.h:
+	  token: add authorization token
+	  Add a simply miniobject that contains the authorizations. The object contains a
+	  GstStructure that hold all authorization fields. When a user is authenticated,
+	  the auth module will create a Token for the user. The token is then used to
+	  check what operations the user is allowed to do and various other configuration
+	  values.
+
+2013-07-05 12:08:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  auth: remove auth from media and factory
+	  Remove the auth object from media and factory. We want to have the RTSPClient
+	  authenticate and authorize resources, there is no need to place another auth
+	  manager on the media/factory.
+
+2013-07-04 14:33:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.h:
+	  auth: add support for multiple basic auth tokens
+	  Make it possible to add multiple basic authorisation tokens to one authorization
+	  object. Associate with each token an authorization group that will define what
+	  capabilities are allowed.
+
+2013-07-03 16:15:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: error out on non-aggregate control
+	  We require aggregate control (for now) for PLAY, PAUSE and TEARDOWN.
+
+2013-07-03 15:55:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: rework setup request a little
+	  Cache the media in DESCRIBE based on the longest matching path with the uri
+	  that we can find in the mount points.
+	  Rework the setup request a little to get the media from the session or from
+	  the longest matching path, this way we can derive the control string as
+	  everything after the path instead of hardcoding it.
+	  Find the stream based on the control string and only open a session when all
+	  this can be done.
+
+2013-07-03 15:14:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: add method to find a stream by control url
+
+2013-07-03 15:13:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add method to check control url of stream
+
+2013-07-03 12:37:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	  session: use path matching for session media
+	  Use a path string instead of a uri to lookup session media in the sessions. Also
+	  use path matching to find the largest possible path that matches.
+
+2013-07-03 11:04:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-mount-points.h:
+	* tests/check/gst/mountpoints.c:
+	  mount-points: remove useless vmethod
+	  Making lookups in the mount points should not be done with a URL, if there is a
+	  mapping to be done from URL to mount points, we'll need to do it somewhere
+	  else.
+
+2013-07-03 10:25:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-mount-points.h:
+	* tests/check/gst/mountpoints.c:
+	  mount-points: improve mount point searching
+	  Use a GSequence to keep track of the mount points.
+	  Match a URL to the longest matching registered mount point. This should be the
+	  URL to perform aggreagate control and the remainder is the stream specific
+	  control part.
+	  Add some unit tests for this.
+
+2013-07-03 10:40:33 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/rtsp-server/Makefile.am:
+	  rtsp-server: Allow building of static library
+
+2013-07-02 15:59:16 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/mediafactory.c:
+	  tests: fix compilation
+
+2013-07-02 15:54:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  sdp: get control string from stream
+	  Use the control string as configured in the stream.
+
+2013-07-02 14:44:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add methods and property to set control string
+
+2013-07-02 11:58:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: cleanups
+	  Rename variables for clarity
+	  Keep media in state when we can
+
+2013-07-01 16:46:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add more support for IPv6
+	  Rename _get_address to _get_multicast_address in GstRTSPStream to
+	  make it clear that this function only deals with multicast.
+	  Make it possible to have both an IPv4 and IPv6 multicast address on
+	  a stream. Give the client an IPv4 or IPv6 address depending on the
+	  address it used to connect to the server.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=702002
+
+2013-07-01 15:18:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: fix comment
+
+2013-07-01 14:45:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: handle failed port allocation
+	  Allow for ipv4 or ipv6 socket allocations to fail. Only report failure if we
+	  can't allocate any family at all. Also keep track of what port families we
+	  allocated.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=703175
+
+2013-07-01 12:20:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: improve docs
+
+2013-07-01 12:04:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	  stream-transport: remove old if 0 block
+
+2013-06-27 11:21:42 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* tests/check/gst/client.c:
+	  tests: fix tests
+	  gst_rtsp_client_get_uri() has been removed
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=703173
+
+2013-06-26 17:18:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: add method to filter managed sessions
+	  Add a method to filter the sessions managed by this client connection.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=703016
+
+2013-06-26 16:32:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: remove _get_uri() method
+	  Remove the get_uri() method on the client. A client has no uri, the uri
+	  property is an internal property to manage the last cached media for
+	  the client.
+
+2013-06-26 16:31:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-factory.h:
+	  media-factory: fix typo
+
+2013-06-26 14:42:15 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Do not leak the query in default_query_stop
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=703120
+
+2013-06-25 15:46:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: don't unlock when conversion fails
+	  Don't unlock the state lock when conversion fails because it was not locked.
+
+2013-06-10 17:32:40 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  Add query_position and query_stop vmethods to rtsp-media
+
+2013-06-10 17:33:01 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  Fix typo in property install for rtsp-media's time-provider
+
+2013-06-25 15:09:13 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: clean some variables
+	  Clean some variables and add some guards to _send_request()
+
+2013-06-10 17:32:12 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  Add gst_rtsp_client_send_request API
+	  This makes it possible to send arbitrary messages to a client, such as
+	  SET_PARAMETER or GET_PARAMETER
+
+2013-06-24 23:56:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: add _get_element() method
+	  Add method to get the element used when creating the media.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=703008
+
+2013-06-24 23:51:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: fix docs
+
+2013-06-24 11:41:27 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: allow access to the rtp session
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703004
+
+2013-06-24 10:43:59 +0200  Alexander Schrab <alexas@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  dscp qos support in gst-rtsp-stream
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=702645
+
+2013-06-20 17:30:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: fix test
+	  Actually do what the comment says. Also keep the old code around, not sure what
+	  should happen when you get a 454 from a TEARDOWN, does it close the connection?
+	  it currently doesn't.
+
+2013-06-20 12:20:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: also watch newly created session
+	  When we newly created a session, start watching it immediately instead of
+	  on the next request.
+
+2013-06-20 12:18:23 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* tests/check/gst/client.c:
+	  tests: add unit test for new-session
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=701587
+
+2013-06-20 12:16:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: emit new-session when new session is created
+	  Only emit new-session when we created a new session for a client, not when a
+	  client picked up a previous session.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=701587
+
+2013-06-20 11:17:29 +0200  Alexander Schrab <alexas@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: handle asterisk as path in requests
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=701266
+
+2013-06-20 11:14:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: handle segment query format mismatch
+	  It's possible that the segment query returns with a different format than what
+	  we asked for, handle this case also.
+
+2013-06-11 15:28:32 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: use segment stop in collect_media_stats
+	  Use segment stop instead of duration as range end point.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=701185
+
+2013-06-17 16:47:56 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/media.c:
+	  rtsp-media: Do not leak the element in take_pipeline
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=702470
+
+2013-06-17 16:18:37 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-client: Make configure_client_transport virtual
+	  This patch makes configure_client_transport virtual. The functionality is
+	  needed to handle some weird clients sending multicast transport settings as url
+	  options.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=702173
+
+2013-06-12 12:23:56 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-client: Make param_set and param_get virtual
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=702072
+
+2013-06-05 15:49:45 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: convert_range replaces get_range_times
+	  get_range_times worked for handling UTC ranges for seeks, but we also
+	  need to convert back from NPT to the requested unit in
+	  get_range_string. convert_range is now used for both.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=702084
+
+2013-06-14 16:05:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-sdp.h:
+	  sdp: cleanup sdp info
+	  We don't need to pass the proto, we can more easily check a boolean.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=702063
+
+2013-06-12 15:22:57 +0200  Alexander Schrab <alexas@axis.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  use 0.0.0.0 or :: for c= line instead of server address
+
+2013-06-12 10:56:16 +0200  Alexander Schrab <alexas@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  use local address, not remote, in SDP
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=702063
+
+2013-06-05 15:18:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 098c0d7 to 01a7a46
+
+2013-05-29 13:45:00 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: possibility to override range time conversion
+	  Make it possible to override the conversion from GstRTSPTimeRange to
+	  GstClockTimes, that is done before seeking on the media
+	  pipeline. Overriding can be useful for UTC ranges, where the default
+	  conversion gives nanoseconds since 1900.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=701191
+
+2013-06-03 12:04:44 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  rtsp-server: Expose the use_client_settings API
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=699935
+
+2013-05-30 08:07:48 +0200  Alexander Schrab <alexas@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtspstream: handle both ipv4 and ipv6 clients
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=701129
+
+2013-05-31 15:28:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  Revert "rtsp-sdp: Parse width/height from caps and set SDP attribute"
+	  This reverts commit 5fd034ff1a517db7f629ffcc3ed16839c61f5c97.
+	  We already have a way to place extra attributes in the SDP by using a string
+	  property with prefix x- or a- in the caps.
+
+2013-05-31 15:27:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  Revert "rtsp-sdp: Parse framerate caps field and set SDP attribute"
+	  This reverts commit d6a4dee03642a2d2c05fec4752dc3ccb60b19494.
+	  We already have a way to place extra attributes in the SDP, just make a string
+	  property in the payloader with a- or x- prefix.
+
+2013-05-31 15:41:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  rtsp: place a- and x- properties as attributes
+	  application/x-rtp has properties with a- and x- prefixes that should be
+	  placed as attributes in the SDP for the media instead of being added to the
+	  fmtp.
+
+2013-05-31 12:10:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/Makefile.am:
+	* examples/test-video.c:
+	  example: add TLS example
+
+2013-05-31 11:42:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  server: add support for TLS
+	  Add methods to set and get a TLS certificate.
+	  Add vmethod to configure a new connection. By default, configure the TLS
+	  certificate in a new connection if needed.
+
+2013-05-31 11:14:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  server: remove accept_client vmethod
+	  This vmethod is not very useful so remove it.
+
+2013-05-30 17:23:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: don't crash on NULL GError
+
+2013-05-30 10:46:33 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	  rtsp-session-pool: corrected session timeout detection
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=701253
+
+2013-05-30 10:52:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: improve debug
+
+2013-05-30 07:18:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-server.c:
+	  server: refactor connection setup
+	  Let the server accept the socket connection and construct a GstRTSPConnection
+	  from it. Remove the code from the client and let the client only deal with
+	  a fully configure GstRTSPConnection object.
+	  We will need this later when the server will configure the connection for
+	  TLS.
+
+2013-05-30 06:49:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: keep the transport object alive
+	  Keep the transport object alive while we have it as qdata on the
+	  source.
+
+2013-05-27 12:58:07 +0200  Alexander Schrab <alexas@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-server.c:
+	  rtsp-server: Do not crash on nmapping of server
+	  * generate error when gst_rtsp_connection_accept fails
+	  * do not stop accepting incoming connections because
+	  accepting a client fails
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701072
+
+2013-05-24 13:39:50 +0200  Alexander Schrab <alexas@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: ipv4 adress should not be marked ipv6 even if socket is ipv6
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700953
+
+2013-05-22 03:29:38 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  rtsp-sdp: Parse framerate caps field and set SDP attribute
+	  The SDP attribute and its format is described in RFC4566.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=700747
+
+2013-05-22 03:29:30 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  rtsp-sdp: Parse width/height from caps and set SDP attribute
+	  The SDP attribute and its format is described in RFC6064.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=700747
+
+2013-04-29 14:46:30 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	* tests/check/gst/client.c:
+	  rtsp-sdp: add bandwidth line
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699220
+
+2013-05-15 10:55:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5edcd85 to 098c0d7
+
+2013-04-23 11:28:39 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* tests/check/gst/media.c:
+	  tests: add dynamic payloader prepare/unprepare check
+
+2013-04-23 10:27:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: release lock when removing fakesink
+
+2013-04-23 10:16:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: set elements to NULL before removing
+	  When removing a stream, set the elements to NULL first. This avoids
+	  element-is-not-in-NULL-state errors when we dispose the elements.
+
+2013-04-22 23:55:48 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3cb3d3c to 5edcd85
+
+2013-04-22 17:34:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: listen to pad-removed signals
+	  Listen to the pad-removed signal and remove the stream associated with the
+	  removed pad.
+	  Add signal to be notified of the removed pad.
+	  Remove the fakesink in unprepare()
+	  Fix signatures of the signal methods
+
+2013-04-22 17:33:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-sdp.c:
+	  tests: add example of reusable pipelines
+
+2013-04-22 17:32:31 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add method to get the srcpad
+
+2013-04-22 16:49:39 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* tests/check/gst/media.c:
+	  check: add media prepare/unprepare test
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=698376
+
+2013-04-22 16:40:48 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: disconnect from signal handlers in unprepare()
+	  We connected to the pad-added and no-more-pads signals in prepare() so
+	  we need to disconnect from them in unprepare().
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=698376
+
+2013-04-22 16:25:17 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: don't free streams array
+	  Don't free the streams array in the unprepare() method, they were not
+	  added in prepare().
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=698376
+
+2013-04-22 16:19:35 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: don't unref the pipeline in unprepare
+	  Unprepare() should undo what prepare() does. Because the pipeline is
+	  not created in prepare(), we should not unref it in unprepare()
+
+2013-04-22 16:09:22 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: clear session and caps for reuse
+	  Set the session and caps to NULL after unref otherwise we might unref
+	  them again later.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=698376
+
+2013-04-15 12:21:54 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: send out teardown signal before tearing down
+	  The advantage is that in the signal handler you get direct access to
+	  information about what streams are about to get torn down (in the
+	  GstRTSPClientState).
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=697686
+
+2013-04-15 12:17:34 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: expose connection
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=697546
+
+2013-04-14 17:58:22 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From aed87ae to 3cb3d3c
+
+2013-04-12 11:34:38 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	  media: add method to get the base_time of the pipeline
+	  Together with a shared clock, this base-time could eventually be sent to
+	  the client so that it can reconstruct the exact running-time of the clock
+	  on the server.
+
+2013-04-09 22:35:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-sdp.c:
+	  media: add GstNetTimeProvider support
+	  Add a property to let the media provide a GstNetTimeProvider for its clock.
+	  Make methods to get the clock and nettimeprovider
+	  Add a x-gst-clock property to the SDP with the IP and port number of the nettime
+	  provider and also the current time of the clock. This should make it possible
+	  for (GStreamer) clients to slave their clock to the server clock.
+
+2013-04-09 21:02:47 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 04c7a1e to aed87ae
+
+2013-04-09 20:39:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: wait for buffering to complete
+	  Wait for buffering to complete before changing the state to the target state.
+
+2013-04-09 20:11:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: small cleanup
+
+2013-03-20 12:33:54 +0100  David Svensson Fors <davidsf@axis.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: remove extra unref in test_setup_non_existing_stream
+	  The unref is not needed anymore, teardown runs without it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696542
+
+2013-03-20 11:28:11 +0100  David Svensson Fors <davidsf@axis.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: GSocketService cleanup in test_bind_already_in_use
+	  Use g_socket_service_stop so the rtspserver test stops listening for
+	  incoming connections in test_bind_already_in_use.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696541
+
+2013-03-22 18:25:07 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  rtsp-media-factory: g_signal_connect_object is not thread safe, can't use it here
+	  Instead use a GWeakRef which is safe to use
+	  This is a known GLib bug, see:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=667145
+
+2013-02-22 14:17:29 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* tests/check/gst/media.c:
+	* tests/check/gst/rtspserver.c:
+	  rtsp-media/client: Reply to PLAY request with same type of Range
+	  Remember the type of Range from the PLAY request and use the same type for
+	  the reply.
+
+2013-03-18 09:25:54 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* tests/check/gst/client.c:
+	  rtsp-client: expose uri
+
+2013-03-13 17:46:58 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/mediafactory.c:
+	  tests: Hold ref while creating second media
+	  To test if the media aren't shared, make sure we keep the first one while creating a second
+	  otherwise the same memory address may be reused.
+
+2013-03-12 00:10:18 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: remove out-of-date comment
+
+2013-03-12 00:05:49 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* .gitignore:
+	  .gitignore: ignore more build files
+
+2013-03-12 00:03:36 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/Makefile.am:
+	  tests: use right _LIBS variable for gst-plugins-base libs
+
+2013-03-11 11:35:14 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  check: add librtp to libs
+
+2013-02-20 19:37:51 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: Add test to check selecting a port the server will send from
+
+2013-02-20 18:30:01 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: Make sure packets are actually received
+
+2013-02-19 18:27:20 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: Select unicast address from pool if appropriate
+
+2013-02-19 16:43:08 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: Properties are always there in Gst 1.0
+
+2013-02-19 16:36:20 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/addresspool.c:
+	  tests: Add tests for unicast addresses in pool
+
+2013-02-20 14:26:03 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* tests/check/gst/addresspool.c:
+	  address-pool: Verify that multicast addresses are used for multicast and vice-versa
+
+2013-02-19 16:34:16 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-address-pool.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/addresspool.c:
+	  address-pool: Add unicast addresses
+
+2013-02-19 13:19:41 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* configure.ac:
+	* gst/rtsp-server/rtsp-server.c:
+	* tests/check/gst/rtspserver.c:
+	  rtsp-server: Limit the number of threads per server instance
+	  If we exceed the maximum, just round robin the clients over the existing
+	  threads.
+
+2013-02-19 12:31:23 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  rtsp-server: No need to store the GMainContext in the client context
+
+2013-02-18 20:22:18 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: Add test for client disconnection
+
+2013-02-18 20:15:41 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: Test client and session timeouts with multiple threads
+
+2013-02-18 14:59:58 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session.c:
+	  Document locking and its order
+
+2013-02-15 20:02:31 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: Test that slow DESCRIBE don't block other clients
+
+2013-02-14 19:52:09 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/client.c:
+	  tests: Add tests for client-requested multicast address
+
+2013-02-14 13:44:54 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	  docs: Put the various functions in the right sections
+
+2013-02-14 13:38:07 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/libs/gst-rtsp-server-docs.sgml:
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-address-pool.h:
+	  docs: Generate docs for GstRTSPAddressPool
+
+2013-02-13 18:32:20 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  client: Check client provided addresses against the address pool
+
+2013-02-13 18:01:43 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-address-pool.h:
+	* tests/check/gst/addresspool.c:
+	  address-pool: Add API to request a specific address from the pool
+	  Also add relevant unit tests.
+
+2013-02-12 19:34:24 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/mediafactory.c:
+	  tests: Check the passing around of a RTSPAddressPool
+	  Make sure the RTSPAddressPool is propagated from the MediaFactory all the
+	  way down to the stream.
+
+2013-02-12 16:34:37 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/addresspool.c:
+	  tests: Add more tests for the address pool
+
+2013-02-12 16:29:25 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	  address-pool: Fix off by one error
+	  When splitting a port range, the port after a skip is not part of range.
+
+2013-03-07 00:04:19 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 2de221c to 04c7a1e
+
+2013-02-07 16:18:08 -0600  George McCollister <george.mccollister@gmail.com>
+
+	* configure.ac:
+	  configure: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+	  AM_CONFIG_HEADER was removed in automake 1.13
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693368
+
+2013-01-28 20:45:44 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a942293 to 2de221c
+
+2013-01-28 10:31:50 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: make sure the watch exists while sending data
+	  Protect the send_func with a lock. This allows us to wait for sending
+	  to complete before changing the send_func and user_data. We add an
+	  extra ref to the watch to make sure that it remains valid during
+	  sending.
+	  When closing the connection, set the send_func to NULL
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=692433
+
+2013-01-16 12:16:32 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  tests: use GST_*_1_0 environment variables everywhere
+	  The _1_0 suffixed environment variables override the
+	  non-suffixed ones, so if we're in an environment that
+	  sets the _1_0 suffixed ones, such as jhbuild, we need
+	  to set those to make sure ours actually always get
+	  used.
+
+2013-01-15 15:09:24 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From acb04d9 to a942293
+
+2012-12-14 11:58:29 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: set the client backlog
+	  Set the client backlog to a reasonable default
+
+2012-12-04 09:47:35 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Make the element a constructor parameter
+	  https://bugzilla.gnome.org/show_bug.cgi?id=689594
+
+2012-12-04 01:05:31 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* docs/libs/Makefile.am:
+	  docs: Link with gcov library when gcov is enabled
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=689583
+
+2012-11-30 15:03:15 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: match prepare with unprepare
+	  Really unprepare when there were an equal amount of prepare calls.
+
+2012-11-30 14:58:46 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: media has to be unprepared in finalize
+	  Because unprepare takes away the last ref on the media.
+
+2012-11-30 14:36:30 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  Revert "client: never call gst_rtsp_media_unprepare, let gst_rtsp_media_finalize do it"
+	  This reverts commit ba5b78ff2ff223049188eb456e228c709ccd3e05.
+	  We can't use the refcount to trigger unprepare because it is the unprepare call
+	  that removes the last refcount after all messages are consumed. What we should
+	  probably do is make a prepared refcount and only unprepare when the refcount
+	  reaches 0.
+
+2012-11-30 13:35:05 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: let the source unref the last media ref
+	  the last ref to the media is held by the source so we don't need to add more ref
+	  and unrefs, we simply destroy the media when the source is gone.
+
+2012-11-30 12:54:10 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: improve debug
+
+2012-11-30 12:53:02 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: check state
+	  Make sure we are in the right state when collecting the position and duration.
+	  Only make ourselves PREPARED when we were previously PREPARING.
+
+2012-11-30 10:05:48 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: use g_object_ref/unref for GObjects
+
+2012-11-30 07:05:25 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: never call gst_rtsp_media_unprepare, let gst_rtsp_media_finalize do it
+	  Calling gst_rtsp_media_unprepare breaks shared medias. Just unref
+	  GstRTSPMedia instances and let gst_rtsp_media_finalize unprepare when a media
+	  isn't being used anymore.
+
+2012-11-30 06:17:46 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  Fix compiler warning
+
+2012-11-30 06:14:49 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	  Add missing g_type_class_add_private in GstRTSPMediaFactoryURI
+
+2012-11-29 17:21:12 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-session-media.h:
+	  small cleanup
+
+2012-11-29 17:20:56 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/media.c:
+	  media: avoid element leak
+
+2012-11-29 17:20:26 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: require an element in media constructor
+
+2012-11-29 17:07:30 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  Revert "client: TEARDOWN brings that state to Init again"
+	  This reverts commit 4b61fdad85a3ca84752bf074fdb2fa203954b32e.
+	  The object is already disposed, there is no point in setting the state.
+
+2012-11-29 12:30:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: TEARDOWN brings that state to Init again
+
+2012-11-29 11:11:05 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* examples/test-auth.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-media-factory-uri.h:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-mount-points.h:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/media.c:
+	  rtsp: make object details private
+	  Make all object details private
+	  Add methods to access private bits
+
+2012-11-28 14:50:47 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/media.c:
+	  tests: add media tests
+
+2012-11-28 14:45:30 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: check if prepared for some methods
+	  Check that the media object is prepared before doing seek and getting the
+	  current position etc.
+	  Add some g_return checks.
+
+2012-11-28 12:40:46 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/mediafactory.c:
+	  tests: add mediafactory test
+
+2012-11-28 12:40:18 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: improve debug
+
+2012-11-28 12:39:37 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: unref pipeline in finalize to avoid leaking it
+
+2012-11-28 12:10:47 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp: use gst_object_unref on GstObjects
+
+2012-11-28 12:10:14 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  media-factory: require an url
+
+2012-11-28 11:40:33 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-uri.c:
+	  examples: fix include
+
+2012-11-28 11:17:27 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.h:
+	  server: remove unused include
+
+2012-11-28 11:07:57 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/mountpoints.c:
+	  tests: add test for mountpoints
+
+2012-11-28 11:05:08 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: fix factory leak
+	  Keep the factory in the state object only for authorization checks and make
+	  sure we unref it on failure. Also don't keep invalid objects in the state
+	  object.
+
+2012-11-28 10:40:14 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-mount-points.c:
+	  mounts: add g_return_if guards
+
+2012-11-27 12:51:55 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/client.c:
+	  tests: add more tests
+
+2012-11-27 12:33:02 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: improve debug
+
+2012-11-27 12:24:21 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: improve debug and fix leaks
+	  Cleanup the uri and session when there is a bad request.
+
+2012-11-27 12:17:05 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* common:
+	  update common
+
+2012-11-27 12:13:59 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/client.c:
+	  test: add test for session in options request
+
+2012-11-27 12:11:41 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: use 454 when session can't be found
+	  We should use 454 when a session can't be found because there was no session
+	  pool configured in the server. This is not a server configuration problem
+	  because the server on which the request is done might not be the same one that
+	  will keep the sessions for us and so it does not need to support sessions.
+
+2012-11-27 11:17:45 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: only free connection when there is one
+	  It's possible that the client doesn't have a connection when we try to free it.
+
+2012-11-27 11:17:31 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/client.c:
+	  tests: add unit test for the client object
+
+2012-11-26 17:35:51 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: small cleanup
+
+2012-11-26 17:34:35 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.h:
+	  client: remove unused include
+
+2012-11-26 17:34:24 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: fix compilation
+
+2012-11-26 17:28:29 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: call destroy without the lock
+
+2012-11-26 17:20:39 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: make the client usable without a socket
+	  Make a method to let the client handle a message and a callback when the client
+	  wants us to send a response message back. This makes it possible to also use the
+	  client object without the sockets, which should make it easier to test.
+
+2012-11-26 16:45:04 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: small cleanup
+
+2012-11-26 16:39:26 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-server.c:
+	  client: remove reference to server
+	  We don't need to keep a ref to the server
+
+2012-11-26 16:30:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: add locking
+	  Also add some g_return_if()
+
+2012-11-26 13:37:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: log more errors
+
+2012-11-26 13:35:48 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: fix compilation
+
+2012-11-26 13:16:59 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: add generic close-after-send support
+	  Add a property to send_response() to close the connection after the response has
+	  been sent to the client.
+
+2012-11-26 12:34:05 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/README:
+	* docs/libs/gst-rtsp-server-docs.sgml:
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* docs/libs/gst-rtsp-server.types:
+	* examples/test-auth.c:
+	* examples/test-launch.c:
+	* examples/test-mp4.c:
+	* examples/test-multicast.c:
+	* examples/test-multicast2.c:
+	* examples/test-ogg.c:
+	* examples/test-readme.c:
+	* examples/test-sdp.c:
+	* examples/test-uri.c:
+	* examples/test-video.c:
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media-mapping.c:
+	* gst/rtsp-server/rtsp-media-mapping.h:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-mount-points.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	* tests/check/gst/rtspserver.c:
+	  MediaMapping -> MountPoints
+	  Describes better what the object manages.
+
+2012-11-26 09:36:09 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  configure: bump required version of -base
+
+2012-11-21 17:21:28 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: fix seeking
+
+2012-11-21 16:41:56 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: support more Range formats
+	  Use the new -base methods to convert the Range string into a seek start and stop
+	  value.
+
+2012-11-21 16:41:37 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-launch.c:
+	  examples: fix whitespace
+
+2012-11-20 13:34:46 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-auth.c:
+	  test-auth: add example of how to remove sessions
+	  Add an example of the session filter api.
+
+2012-11-20 12:47:49 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-uri.c:
+	  test-uri: remove mapping example
+
+2012-11-20 12:47:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-uri.c:
+	  test-uri: fix callback signature
+
+2012-11-20 12:29:55 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  factory: keep ref to factory while media active
+	  While the media from a factory is alive, keep a ref to the factory.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=663555
+
+2012-11-20 12:29:26 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	  factory-uri: add some debug
+
+2012-11-20 12:24:13 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: set udp sources to PLAYING
+	  Set the UDP sources to PLAYING and locked state before we add it to the pipeline
+	  so that it doesn't cause our pipeline to produce ASYNC-DONE.
+
+2012-11-20 12:10:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	  factory-uri: take ref to factory
+	  Take a ref to the factory that we place in our list.
+
+2012-11-20 11:30:09 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/Makefile.am:
+	* tests/test-reuse.c:
+	  test: add test for server reuse
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=688395
+
+2012-11-15 14:02:37 +0100  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: start and stop multiple times
+	  Stop listening on the RTSP port when the GSource is removed, so clients
+	  can't connect and the server can be started again.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=688395
+
+2012-11-20 11:24:35 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: fix small leak
+
+2012-11-20 09:42:51 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: unref source in finish_unprepare
+	  The source is created in prepare, unref it in finish_unprepare.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=688707
+
+2012-11-19 15:47:08 +0100  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: remove bus watch before finalizing
+	  * A GDestroyNotify function is set for the bus watch in gst_rtsp_media_prepare.
+	  * An extra media ref is added for the bus watch. This extra ref is unreffed by
+	  the GDestroyNotify function.
+	  * gst_rtsp_media_unprepare destroys the source so the bus watch is removed.
+	  * GstRTSPClient, which calls gst_rtsp_media_prepare, also calls
+	  gst_rtsp_media_unprepare before unreffing the media.
+	  This way, the bus watch will be removed before the media is finalized.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=688707
+
+2012-11-17 14:51:52 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: wait until the TEARDOWN response is sent to close the connection
+	  Responses can be sent async so we need to wait until the TEARDOWN response has
+	  been written before we close the connection to the client. This avoids the risk
+	  of writing/polling closed sockets.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=688535
+
+2012-11-19 15:44:27 +0100  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: plug socket leak
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=688703
+
+2012-11-19 11:31:12 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6bb6951 to a72faea
+
+2012-11-17 00:11:27 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	  rtsp-server: don't use deprecated API
+
+2012-11-17 00:03:42 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: fix unused-but-set-variable compiler warning
+	  rtsp-client.c:1260:21: error: variable 'protocols' set but not used
+
+2012-11-15 17:11:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* TODO:
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp: cleanups
+
+2012-11-15 16:52:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/Makefile.am:
+	* examples/test-multicast2.c:
+	  examples: add another multicast example
+	  Add an example for how to configure separate multicast ranges for each media
+	  stream.
+
+2012-11-15 16:21:51 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-multicast.c:
+	  test: set shared
+
+2012-11-15 16:18:29 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	  stream: use the address managed by the stream
+	  Use the address managed by the stream for multicast. This allows us to have 1
+	  multicast address for each stream.
+	  Because the address is now managed by the stream we don't have to pass it around
+	  anymore.
+	  Set the address pool on the streams.
+
+2012-11-15 16:15:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp: improve debug
+
+2012-11-15 15:41:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: add signal for new streams
+	  This allows applications to listen for new streams and configure properties on
+	  them, like the address pool.
+
+2012-11-15 15:41:19 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: configure address pool in new streams
+
+2012-11-15 15:36:21 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add methods to deal with address pool
+	  Add methods to get and set the address pool for the stream
+	  Add method to allocate and get the multicast addresses for this stream.
+
+2012-11-15 15:32:43 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: remove MTU property
+	  It is a stream property
+
+2012-11-15 15:29:35 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: set blocksize only on stream
+	  Set the blocksize only on the current stream.
+
+2012-11-15 13:52:07 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: share src and sink sockets
+	  the allocated socket is in the used-socket property, not socket.
+
+2012-11-15 13:25:14 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-address-pool.h:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* tests/check/gst/addresspool.c:
+	  rtsp: make address-pool return an address object
+	  Return a boxed GstRTSPAddress from the GstRTSPAddressPool. This allows us to
+	  store more info in the structure and allows us to more easily return the address
+	  to the right pool when no longer needed.
+	  Pass the address to the StreamTransport so that we can return it to the pool
+	  when the stream transport is freed or changed.
+
+2012-11-15 13:22:54 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/Makefile.am:
+	* examples/test-multicast.c:
+	  examples: add multicast example
+	  Show how to set up the multicast address pool so that media can be
+	  server with multicast.
+
+2012-11-14 17:23:59 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  rtsp: use AddressPool
+	  Remove the multicast_group property.
+	  Use the configured addresspool to allocate multicast addresses.
+
+2012-11-14 16:17:33 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-address-pool.h:
+	  address-pool: add clear method
+
+2012-11-14 16:10:45 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	  address-pool: small cleanups
+
+2012-11-14 15:50:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/addresspool.c:
+	  tests: add addresspool unit test
+
+2012-11-14 15:49:06 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-address-pool.h:
+	  address-pool: add object to manage multicast addresses
+	  Make an object that can manage a rage of multicast addresses and ports.
+
+2012-11-13 12:05:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: set default max-threads property
+
+2012-11-13 11:54:17 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: wait for concurrent _prepare
+	  If a prepare is busy, wait for the result.
+
+2012-11-13 11:49:08 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: add lock around message handler
+	  We don't want to dispatch messages while we are still processing the result of
+	  the state change.
+
+2012-11-13 11:15:35 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: add lock to protect state changes
+
+2012-11-13 11:14:49 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: add locking
+
+2012-11-12 17:11:18 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream-transport: add keep-alive method
+
+2012-11-12 17:06:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream-transport: add method to handle RTP/RTCP
+	  Call new methods instead of poking into the structures directly.
+
+2012-11-12 16:51:03 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	  session-media: add locking
+
+2012-11-12 16:42:37 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	  session: add locking
+
+2012-11-12 16:30:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: free old socket
+
+2012-11-12 16:18:57 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-mapping.c:
+	* gst/rtsp-server/rtsp-media-mapping.h:
+	  mapping: add locking
+
+2012-11-12 16:14:19 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  media-factory: add locking
+
+2012-11-12 16:03:21 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	  auth: add locking
+
+2012-11-12 15:53:28 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  server: add max-thread property
+
+2012-11-12 15:29:39 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  server: use a threadpool for the mainloops
+
+2012-11-12 14:30:43 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: rename method
+	  gst_rtsp_client_create_from_socket -> gst_rtsp_client_use_socket: we
+	  don't really create the client from the socket, we use the socket for the
+	  client.
+
+2012-11-12 14:09:09 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-server.c:
+	  server: rework maincontext handling in clients
+	  Make a separate method to attach a client to a MainContext.
+	  Let the server decide in what GMainContext the client will operate and give this
+	  context to the client in attach. Then the server can later decide to use a
+	  separate thread for each client or just use the mainthread.
+
+2012-11-12 12:40:34 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	  session: move session header code in session object
+
+2012-11-04 00:14:25 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* COPYING:
+	* COPYING.LIB:
+	* examples/test-auth.c:
+	* examples/test-launch.c:
+	* examples/test-mp4.c:
+	* examples/test-ogg.c:
+	* examples/test-readme.c:
+	* examples/test-sdp.c:
+	* examples/test-uri.c:
+	* examples/test-video.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-media-factory-uri.h:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media-mapping.c:
+	* gst/rtsp-server/rtsp-media-mapping.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-params.c:
+	* gst/rtsp-server/rtsp-params.h:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-sdp.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/rtspserver.c:
+	* tests/test-cleanup.c:
+	  Fix FSF address
+
+2012-10-28 13:48:44 +0100  Sebastian Pölsterl <sebp@k-d-w.org>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp-server: added annotations to indicate type of ownership transfer of return values
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680777
+
+2012-10-28 15:37:51 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  No need to define GST_USE_UNSTABLE_API any more, 1.0 is stable now
+
+2012-10-28 15:09:04 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* Makefile.am:
+	* bindings/Makefile.am:
+	* bindings/vala/Makefile.am:
+	* bindings/vala/gst-rtsp-server-0.10.deps:
+	* bindings/vala/gst-rtsp-server-0.10.vapi:
+	* bindings/vala/packages/gst-rtsp-server-0.10.deps:
+	* bindings/vala/packages/gst-rtsp-server-0.10.files:
+	* bindings/vala/packages/gst-rtsp-server-0.10.gi:
+	* bindings/vala/packages/gst-rtsp-server-0.10.metadata:
+	* bindings/vala/packages/gst-rtsp-server-0.10.namespace:
+	* configure.ac:
+	  bindings: remove vala bindings
+	  They'll be reunited with the other GStreamer bindings
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680777
+
+2012-10-28 00:23:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	  rtsp: only create transport when needed
+	  Only create the StreamTransport when configured.
+
+2012-10-27 23:53:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: small cleanup
+
+2012-10-27 23:49:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	  rtsp: refactor configuration of transport
+	  Move the configuration of the transport to a place where it makes
+	  more sense.
+
+2012-10-27 21:26:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: refactor transport parsing
+
+2012-10-27 21:05:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: refuse to change the MTU on shared media
+	  If we change the MTU of chared media, it changes for all clients.
+	  We don't want to set the MTU to something large for clients that
+	  stream over UDP.
+
+2012-10-27 11:53:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* examples/test-mp4.c:
+	* gst/rtsp-server/rtsp-media.c:
+	  small fixes to docs and debug
+
+2012-10-26 17:29:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: transports must already have been removed
+
+2012-10-26 17:28:10 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: improve join and leave of the pipeline
+	  simplify code
+	  Do the cleanup properly
+	  Add some docs
+
+2012-10-26 15:23:16 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: move unprepare below default implementation
+	  Makes it easier to find the default implementation
+
+2012-10-26 15:21:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: signal unprepared when we actually finish
+
+2012-10-26 15:19:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: no need to unlock, unprepare does that when needed
+
+2012-10-26 12:33:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media-mapping.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-params.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.h:
+	  docs: update docs
+
+2012-10-26 12:04:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-mapping.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp: fix MTU setting
+	  Fix setting of the MTU. There is no need for a vmethod.
+
+2012-10-26 11:02:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/README:
+	  docs: update docs
+
+2012-10-26 11:24:55 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: bump version number after refactoring
+
+2012-10-25 21:29:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp: massive refactoring
+	  Make GObjects from the remaining simple structures.
+	  Remove GstRTSPSessionStream, it's not needed.
+	  Rename GstRTSPMediaStream -> GstRTSPStream: It is shorter
+	  Rename GstRTSPMediaTrans -> GstRTSPStreamTransport: It describes how
+	  a GstRTSPStream should be transported to a client.
+	  Rename GstRTSPMediaFactory::get_element -> create_element because that
+	  more accurately describes what it does.
+	  Make nice methods instead of poking in the structures.
+	  Move some methods inside the relevant object source code.
+	  Use GPtrArray to store objects instead of plain arrays, it is more
+	  natural and allows us to more easily clean up.
+	  Move the allocation of udp ports to the Stream object. The Stream object
+	  contains the elements needed to stream the media to a client.
+	  Improve the prepare and unprepare methods. Unprepare should now undo
+	  everything prepare did. Improve also async unprepare when doing EOS on
+	  shutdown. Make sure we always unprepare correctly.
+
+2012-10-23 22:11:17 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Unref server address clients connected to
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=686725
+
+2012-10-22 16:09:24 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  rtsp-server: don't ref server socket if it is NULL
+	  Fixes test_bind_already_in_use unit test again after commit 6a497440.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686644
+
+2012-10-22 16:29:09 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* tests/check/Makefile.am:
+	  tests: Add libgio link dependency
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=686647
+
+2012-10-01 20:03:43 +0200  Sebastian Pölsterl <sebp@k-d-w.org>
+
+	* gst/rtsp-server/rtsp-media-mapping.c:
+	* gst/rtsp-server/rtsp-media-mapping.h:
+	  rtsp-media-mapping: rename find_media vfunc to find_factory
+	  The virtual method and class method should have the same name
+	  so it is correctly represented in GIR file
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680777
+
+2012-10-01 19:46:15 +0200  Sebastian Pölsterl <sebp@k-d-w.org>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-mapping.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp-server: fixed comments and GIR annotations
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680777
+
+2012-10-12 07:18:19 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/rtsp-server/rtsp-media-mapping.c:
+	  media-mapping: fix transfer mode for gst_rtsp_media_mapping_add_factory
+
+2012-10-12 07:08:57 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  rtsp-server: allow binding on port 0 (binds on a random port)
+
+2012-10-12 06:21:24 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  rtsp-server: add bound-port property
+	  bound-port can be used to retrieve the port number when the server is bound on
+	  port 0, which binds on a random port.
+
+2012-10-12 06:11:36 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	  rtsp-media-factory: make ::get_element overridable by GI bindings
+	  The way to annotate vfuncs with GI seems to be to create an invoker (GI term)
+	  for them and to annotate the invoker. Add gst_rtsp_media_factory_get_element()
+	  as the invoker for ::get_element(), making it overridable by GI generated
+	  bindings.
+
+2012-10-12 06:07:07 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	  rtsp-media-factory-uri: don't autoplug parsers in a loop
+	  Stop autoplugging parsers if caps have parsed=true set. Fixes autoplugging
+	  h264parse forever.
+
+2012-10-06 15:49:07 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/rtsp-server/Makefile.am:
+	  Explicitly link against gio. Fix link error on mac.
+
+2012-10-10 11:13:10 +0200  Ognyan Tonchev <ognyan.tonchev at axis.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	  session: add ttl to the transport header in SETUP
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=685561
+
+2012-10-10 11:06:02 +0200  Ognyan Tonchev <ognyan.tonchev at axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media.c:
+	  client: Use client transport settings for multicast if allowed.
+	  This patch makes it possible for the client to send transport settings for
+	  multicast (destination && ttl). Client settings must be explicitly allowed or
+	  the server will use its own settings.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=685561
+
+2012-10-06 15:02:27 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6c0b52c to 6bb6951
+
+2012-10-01 16:13:50 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: do not destroy the rtsp watch
+	  Don't destroy the client watch while dispatching.  The rtsp watch is
+	  automatically destroyed after the rtsp watch function closed() has
+	  been called.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=685220
+
+2012-09-22 16:11:48 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4f962f7 to 6c0b52c
+
+2012-09-10 16:25:57 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: fix check for seekability
+
+2012-09-07 17:14:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: use more GIO
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=681593
+
+2012-09-07 17:14:10 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: remove obsolete includes
+
+2012-09-03 17:33:17 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	  rtsp-media: also initialize transports in on_ssrc_active (bug #683304)
+	  * gst/rtsp-server/rtsp-media.c: GstRTSPMediaStream transports might not
+	  be available in "on_new_ssrc". The transports are added in
+	  gst_rtsp_media_set_state when going to PLAYING state. However,
+	  "on_new_ssrc" might be called before this happens.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683304
+
+2012-09-03 10:48:14 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-client: add signals for rtsp requests (fixes #683287)
+
+2012-08-30 12:03:27 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  add new-session signal to rtsp-client (fixes #683058)
+
+2012-08-22 13:34:55 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 668acee to 4f962f7
+
+2012-08-15 15:54:32 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	* tests/check/gst/rtspserver.c:
+	  rtsp-server: fixed segfault in gst_rtsp_server_create_socket
+	  Do not assume that *error is set in g_socket_address_enumerator_next.
+	  Added test_bind_already_in_use unit-test.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=681914
+
+2012-08-05 16:43:53 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 94ccf4c to 668acee
+
+2012-07-18 15:54:49 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-client: make create_sdp virtual method
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680173
+
+2012-07-23 08:48:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 98e386f to 94ccf4c
+
+2012-07-10 11:39:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: fix docs
+
+2012-07-03 18:06:00 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	  rtsp-server: use an existing socket to establish HTTP tunnel
+	  Make it possible to transfer a socket from an HTTP server to be used as
+	  an RTSP over HTTP tunnel.
+
+2012-07-03 13:26:30 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  rtsp: Handle the blocksize parameter
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=679325
+
+2012-06-25 14:28:10 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/rtspserver.c:
+	  Have unit test get header from source dir, not installed dir
+	  This makes compilation of unit tests work in a build directory other
+	  than the source directory.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=678789
+
+2012-06-23 15:06:11 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: update for gst_element_make_from_uri() changes
+
+2012-06-19 15:25:36 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* configure.ac:
+	* tests/Makefile.am:
+	* tests/check/Makefile.am:
+	* tests/check/gst/rtspserver.c:
+	  rtsp: add unit test
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=678076
+
+2012-06-13 11:43:17 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: don't collect media stats when going to NULL
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=678015
+
+2012-06-14 09:59:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: don't leak transports
+
+2012-06-12 14:45:39 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: free transport on no_stream in SETUP handler
+
+2012-06-12 14:33:35 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: changed session media iteration
+	  In client_unlink_session: now don't iterate in session->medias
+	  list where items are removed by gst_rtsp_session_release_media.
+	  Instead, repeatedly remove the first item.
+
+2012-06-12 13:39:35 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: don't use g_object_unref on GstRTSPSessionMedia
+	  GstRTSPSessionMedia is not a GObject type. When the
+	  GstRTSPSession is freed, it will free the media.
+
+2012-06-12 13:36:57 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  factory: plug pad leak in collect_streams
+	  In gst_rtsp_media_factory_collect_streams: unref the srcpad that
+	  was retrieved using gst_element_get_static_pad. gst_ghost_pad_new
+	  will take one reference, and the other reference will otherwise
+	  give a memory leak.
+
+2012-05-25 16:43:38 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* configure.ac:
+	  configure: suppress some warnings when debug is disabled
+	  Warnings about unused variables should be suppressed if core has the
+	  debug system disabled.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676824
+
+2012-06-09 17:41:05 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/libs/Makefile.am:
+	  docs: fix build in uninstalled setup
+	  Include gst-plugins-base libs properly.
+
+2012-05-25 16:38:15 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* docs/libs/gst-rtsp-server.types:
+	  docs: include headers defining rtsp-server object types
+	  Fixes compiler warnings during docs build.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676824
+
+2012-05-25 17:11:53 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* configure.ac:
+	  configure: Add warning flags for compiler when configuring
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676824
+
+2012-06-08 15:07:06 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 03a0e57 to 98e386f
+
+2012-06-06 18:20:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1fab359 to 03a0e57
+
+2012-06-06 14:49:02 +0200  David Svensson Fors <davidsf at axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: fix GSocketAddress leak in gst_rtsp_client_accept
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=677463
+
+2012-06-01 10:30:58 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From f1b5a96 to 1fab359
+
+2012-05-31 13:11:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 92b7266 to f1b5a96
+
+2012-05-30 12:48:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ec1c4a8 to 92b7266
+
+2012-05-30 11:27:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3429ba6 to ec1c4a8
+
+2012-05-22 15:37:25 +0200  David Svensson Fors <davidsf at axis.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-server.c:
+	  rtsp: fix compiler warnings
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676500
+
+2012-05-13 15:59:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From dc70203 to 3429ba6
+
+2012-05-11 09:42:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	  rtsp-server: port to new thread API
+
+2012-04-16 09:11:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6db25be to dc70203
+
+2012-04-13 15:27:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-server: Fix compilation and compiler warnings
+
+2012-04-13 13:49:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* autogen.sh:
+	* configure.ac:
+	* gst/rtsp-server/Makefile.am:
+	  configure: Modernize autotools setup a bit
+	  Also we now only create tar.bz2 and tar.xz tarballs.
+
+2012-04-13 13:39:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 464fe15 to 6db25be
+
+2012-04-05 18:45:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7fda524 to 464fe15
+

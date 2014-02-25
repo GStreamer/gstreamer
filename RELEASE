@@ -1,0 +1,85 @@
+
+Release notes for GStreamer RTSP Server Library 1.2.3
+
+
+The GStreamer team is proud to announce the first release
+of the GStreamer RTSP Server Library for the GStreamer 1.0
+API series.
+
+
+Features of this release
+
+      * Ported to GStreamer 1.0 API
+      * Multithreaded for better responsiveness and scaleability
+      * Support for authentication and access restrictions
+      * Support for TLS
+      * API refactored a bit for clarity (e.g. MediaMapping -> MountPoints)
+      * Improved seeking support
+      * Better live pipeline support
+      * Better IPv6 and multicast support
+      * Improved portability (ported to gio)
+      * Support for automatic synchronous playback of multiple clients via GstNetTimeProvider
+      * Support for more range formats
+      * New example how to feed data to the server via appsrc
+      * New example how to prioritise some clients over others using cgroups
+      * Many more unit tests
+      * Hundreds of bug-fixes and other improvements
+
+==== Download ====
+
+You can find source releases of gst-rtsp-server in the download
+directory: http://gstreamer.freedesktop.org/src/gst-rtsp-server/
+
+The git repository and details how to clone it can be found at
+http://cgit.freedesktop.org/gstreamer/gst-rtsp-server/
+
+==== Homepage ====
+
+The project's website is http://gstreamer.freedesktop.org/
+
+==== Support and Bugs ====
+
+We use GNOME's bugzilla for bug reports and feature requests:
+http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+
+Please submit patches via bugzilla as well.
+
+For help and support, please subscribe to and send questions to the
+gstreamer-devel mailing list (see below for details).
+
+There is also a #gstreamer IRC channel on the Freenode IRC network.
+
+==== Developers ====
+
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned
+from there (see link above).
+
+Interested developers of the core library, plugins, and applications should
+subscribe to the gstreamer-devel list.
+
+
+Contributors to this release
+
+      * Aleix Conchillo Flaqué
+      * Alessandro Decina
+      * Alexander Schrab
+      * Andrey Utkin
+      * Branko Subasic
+      * David Svensson Fors
+      * Edward Hervey
+      * George McCollister
+      * Göran Jönsson
+      * Jonas Holmberg
+      * Lubosz Sarnecki
+      * Ognyan Tonchev
+      * Olivier Crête
+      * Patricia Muscalu
+      * Patrick Radizi
+      * Sebastian Dröge
+      * Sebastian Pölsterl
+      * Sebastian Rasmussen
+      * Stefan Sauer
+      * Tim-Philipp Müller
+      * Wim Taymans
+      * Youness Alaoui
+ 
