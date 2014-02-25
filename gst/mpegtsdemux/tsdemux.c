@@ -344,6 +344,11 @@ gst_ts_demux_reset (MpegTSBase * base)
     demux->update_segment = NULL;
   }
 
+  if (demux->global_tags) {
+    gst_tag_list_unref (demux->global_tags);
+    demux->global_tags = NULL;
+  }
+
   demux->have_group_id = FALSE;
   demux->group_id = G_MAXUINT;
 }
@@ -607,21 +612,54 @@ gst_ts_demux_srcpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return res;
 }
 
+static void
+clean_global_taglist (GstTagList * taglist)
+{
+  gst_tag_list_remove_tag (taglist, GST_TAG_CONTAINER_FORMAT);
+  gst_tag_list_remove_tag (taglist, GST_TAG_CODEC);
+}
+
 static gboolean
 push_event (MpegTSBase * base, GstEvent * event)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
   GList *tmp;
+  gboolean early_ret = FALSE;
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GST_DEBUG_OBJECT (base, "Ignoring segment event (recreated later)");
     gst_event_unref (event);
     return TRUE;
+
+  } else if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
+    /* In case we receive tags before data, store them to send later
+     * If we already have the program, send it right away */
+    GstTagList *taglist;
+
+    gst_event_parse_tag (event, &taglist);
+
+    if (demux->global_tags == NULL) {
+      demux->global_tags = gst_tag_list_copy (taglist);
+
+      /* Tags that are stream specific for the container should be considered
+       * global for the container streams */
+      if (gst_tag_list_get_scope (taglist) == GST_TAG_SCOPE_STREAM) {
+        gst_tag_list_set_scope (demux->global_tags, GST_TAG_SCOPE_GLOBAL);
+      }
+    } else {
+      demux->global_tags = gst_tag_list_make_writable (demux->global_tags);
+      gst_tag_list_insert (demux->global_tags, taglist, GST_TAG_MERGE_REPLACE);
+    }
+    clean_global_taglist (demux->global_tags);
+
+    /* tags are stored to be used after if there are no streams yet,
+     * so we should never reject */
+    early_ret = TRUE;
   }
 
   if (G_UNLIKELY (demux->program == NULL)) {
     gst_event_unref (event);
-    return FALSE;
+    return early_ret;
   }
 
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
@@ -1666,6 +1704,11 @@ push_new_segment:
     gst_pad_push_event (stream->pad, demux->segment_event);
   }
 
+  if (demux->global_tags) {
+    gst_pad_push_event (stream->pad,
+        gst_event_new_tag (gst_tag_list_ref (demux->global_tags)));
+  }
+
   /* Push pending tags */
   if (stream->taglist) {
     GST_DEBUG_OBJECT (stream->pad, "Sending tags %" GST_PTR_FORMAT,
@@ -1818,6 +1861,10 @@ gst_ts_demux_flush (MpegTSBase * base, gboolean hard)
     demux->segment_event = NULL;
   }
   demux->calculate_update_segment = FALSE;
+  if (demux->global_tags) {
+    gst_tag_list_unref (demux->global_tags);
+    demux->global_tags = NULL;
+  }
   if (hard) {
     /* For pull mode seeks the current segment needs to be preserved */
     demux->rate = 1.0;

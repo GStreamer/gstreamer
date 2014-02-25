@@ -69,6 +69,9 @@ struct _GstTSDemux
   GstSegment segment;
   GstEvent *segment_event;
 
+  /* global taglist */
+  GstTagList *global_tags;
+
   /* Set when program change */
   gboolean calculate_update_segment;
   /* update segment is */
