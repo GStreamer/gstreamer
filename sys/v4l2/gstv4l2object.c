@@ -977,6 +977,7 @@ typedef enum
   GST_V4L2_RAW = 1 << 0,
   GST_V4L2_CODEC = 1 << 1,
   GST_V4L2_TRANSPORT = 1 << 2,
+  GST_V4L2_NO_PARSE = 1 << 3,
   GST_V4L2_ALL = 0xffff
 } GstV4L2FormatFlags;
 
@@ -1044,7 +1045,8 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {V4L2_PIX_FMT_H264, FALSE, GST_V4L2_CODEC},
 #endif
 #ifdef V4L2_PIX_FMT_VP8
-  {V4L2_PIX_FMT_VP8, FALSE, GST_V4L2_CODEC},
+  /* VP8 not parseable */
+  {V4L2_PIX_FMT_VP8, FALSE, GST_V4L2_CODEC | GST_V4L2_NO_PARSE},
 #endif
 
   /*  Vendor-specific formats   */
@@ -2142,10 +2144,6 @@ static void
 gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
     guint32 format, GstCaps * caps, GstStructure * s)
 {
-  /* FIXME remove when VP8 parser is ready, bug #722760 */
-  if (format == V4L2_PIX_FMT_VP8)
-    goto done;
-
   /* Encoded stream on output buffer need to be parsed */
   if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT ||
       v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
@@ -2153,14 +2151,14 @@ gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
 
     for (; i < GST_V4L2_FORMAT_COUNT; i++) {
       if (format == gst_v4l2_formats[i].format &&
-          gst_v4l2_formats[i].flags == GST_V4L2_CODEC) {
+          gst_v4l2_formats[i].flags & GST_V4L2_CODEC &&
+          !(gst_v4l2_formats[i].flags & GST_V4L2_NO_PARSE)) {
         gst_structure_set (s, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
         break;
       }
     }
   }
 
-done:
   gst_caps_append_structure (caps, s);
 }
 
