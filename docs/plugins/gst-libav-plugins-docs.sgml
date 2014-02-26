@@ -7,27 +7,34 @@
 
 <book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>GStreamer FFMPeg &GST_API_VERSION; Plugins Reference Manual</title>
+    <title>GStreamer libav &GST_API_VERSION; Plugins Reference Manual</title>
     <releaseinfo>
-      for GStreamer FFMPeg Plugins &GST_API_VERSION; (&GST_VERSION;)
+      for GStreamer libav Plugins &GST_API_VERSION; (&GST_VERSION;)
       The latest version of this documentation can be found on-line at
       <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-ffmpeg-plugins/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-ffmpeg-plugins/html/</ulink>.
     </releaseinfo>
   </bookinfo>
 
   <chapter>
-    <title>gst-ffmpeg Element Types</title>
-    <xi:include href="xml/type-ffenc.xml" />
+    <title>gst-libav Base and Support classes</title>
+    <xi:include href="xml/gstav.xml" />
+    <xi:include href="xml/gstavauddec.xml" />
+    <xi:include href="xml/gstavaudenc.xml" />
+    <xi:include href="xml/gstavcfg.xml" />
+    <xi:include href="xml/gstavcodecmap.xml" />
+    <xi:include href="xml/gstavprotocol.xml" />
+    <xi:include href="xml/gstavutils.xml" />
+    <xi:include href="xml/gstavviddec.xml" />
+    <xi:include href="xml/gstavvidenc.xml" />
   </chapter>
 
   <chapter>
-    <title>gst-ffmpeg Elements</title>
-    <xi:include href="xml/element-ffenc_h263p.xml" />
-    <xi:include href="xml/element-ffenc_mpeg4.xml" />
-  </chapter>
-
-  <chapter>
-    <title>gst-ffmpeg Plugins</title>
+    <title>gst-libav Plugins</title>
     <xi:include href="xml/plugin-libav.xml" />
+  </chapter>
+
+  <chapter>
+    <title>Object Hierarchy</title>
+    <xi:include href="xml/tree_index.sgml" />
   </chapter>
 </book>

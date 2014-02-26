@@ -438,7 +438,6 @@ GObject
       GstPlugin
       GstPluginFeature
         GstElementFactory
-        GstTracerFactory
         GstTypeFindFactory
       GstRegistry
       GstTask

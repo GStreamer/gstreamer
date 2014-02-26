@@ -22,7 +22,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 DOC_SOURCE_DIR = $(top_srcdir)/ext/libav
 
 # Extra options to supply to gtkdoc-scan.
-SCAN_OPTIONS=
+SCAN_OPTIONS=--rebuild-sections
 
 # Extra options to supply to gtkdoc-mkdb.
 MKDB_OPTIONS=--sgml-mode
@@ -47,9 +47,6 @@ IGNORE_CFILES =
 # but I'm not sure about that - it might be this Just Works given that
 # the registry won't have the element
 
-# huh? thats not a header 
-#EXTRA_HFILES = $(DOC_SOURCE_DIR)/gstffmpegenc.c
-
 # Images to copy into HTML directory.
 HTML_IMAGES =
 
@@ -61,8 +58,9 @@ extra_files =
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
-GTKDOC_CFLAGS = $(GST_BASE_CFLAGS) -I$(top_builddir) -I$(top_builddir)/gst-libs
-GTKDOC_LIBS = $(GST_BASE_LIBS)
+GTKDOC_CFLAGS = $(LIBAV_CFLAGS) $(GST_CFLAGS) -I$(top_builddir) -I$(top_builddir)/ext/libav
+GTKDOC_LIBS = -L$(top_builddir)/ext/libav -lgstlibav \
+  $(LIBAV_LIBS) $(GST_BASE_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)
