@@ -65,6 +65,9 @@
 #include <glib.h>
 #include <gst/gst.h>
 
+/* necessary for IP_TOS define */
+#include <gio/gnetworking.h>
+
 #include "gstrtspconnection.h"
 
 #ifdef IP_TOS
@@ -2607,6 +2610,7 @@ static GstRTSPResult
 set_qos_dscp (GSocket * socket, guint qos_dscp)
 {
 #ifndef IP_TOS
+  GST_FIXME ("IP_TOS socket option is not defined, not setting dscp");
   return GST_RTSP_OK;
 #else
   gint fd;
