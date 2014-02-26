@@ -1819,6 +1819,46 @@
 </ARG>
 
 <ARG>
+<NAME>GstDvbSrc::delsys</NAME>
+<TYPE>GstDvbSrcDelsys</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>delsys</NICK>
+<BLURB>The delivery system.</BLURB>
+<DEFAULT>UNDEFINED</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::pilot</NAME>
+<TYPE>GstDvbSrcPilot</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>pilot</NICK>
+<BLURB>The pilot (DVB-S2)</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::rolloff</NAME>
+<TYPE>GstDvbSrcRolloff</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rolloff</NICK>
+<BLURB>The rolloff (DVB-S2)</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::stream-id</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>stream-id</NICK>
+<BLURB>The stream id (-1 disabled, DVB-T2 and DVB-S2 max 255, ISDB max 65535).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRfbSrc::host</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
