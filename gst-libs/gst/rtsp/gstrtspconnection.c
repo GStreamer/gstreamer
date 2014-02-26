@@ -66,7 +66,9 @@
 #include <gst/gst.h>
 
 /* necessary for IP_TOS define */
+#if GLIB_CHECK_VERSION(2, 36, 0)
 #include <gio/gnetworking.h>
+#endif
 
 #include "gstrtspconnection.h"
 
