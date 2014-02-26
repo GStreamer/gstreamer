@@ -898,10 +898,6 @@ _get_mapped (GstBuffer * buffer, guint idx, GstMapInfo * info,
  * the memory block in @buffer is removed, replaced or merged, typically with
  * any call that modifies the memory in @buffer.
  *
- * Since this call does not influence the refcount of the memory,
- * gst_memory_is_writable() can be used to check if @buffer is the sole owner
- * of the returned memory.
- *
  * Returns: (transfer none): the #GstMemory at @idx.
  */
 GstMemory *
