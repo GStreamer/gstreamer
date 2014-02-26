@@ -312,8 +312,16 @@ struct _GstMpegTsExtendedEventItem
 };
 
 /**
-  * @items: (element-type GstMpegTsExtendedEventItem): 
-  */
+ * GstMpegTsExtendedEventDescriptor:
+ * @desctiptor_number:
+ * @last_descriptor_number:
+ * @language_code:
+ * @nb_items:
+ * @items: (element-type GstMpegTsExtendedEventItem): the #GstMpegTsExtendedEventItem
+ * @text:
+ *
+ * Extended Event Descriptor (EN 300 468 v.1.13.1)
+ */
 struct _GstMpegTsExtendedEventDescriptor
 {
   guint8 descriptor_number;

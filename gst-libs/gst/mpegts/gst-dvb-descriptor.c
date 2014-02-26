@@ -671,7 +671,7 @@ gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor
  * @descriptor: a %GST_MTS_DESC_DVB_CONTENT #GstMpegTsDescriptor
  * @content: (out) (transfer none) (element-type GstMpegTsContent): #GstMpegTsContent
  *
- * Extracts the DVB content information from @descriptor:
+ * Extracts the DVB content information from @descriptor.
  *
  * Returns: %TRUE if the parsing happened correctly, else %FALSE.
  */
@@ -706,11 +706,11 @@ gst_mpegts_descriptor_parse_dvb_content (const GstMpegTsDescriptor
 
 /* GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM (0x5A) */
 /**
- * gst_mpegts_descriptor_parse_dvb_terrestrial_delivary_system:
+ * gst_mpegts_descriptor_parse_terrestrial_delivery_system:
  * @descriptor: a %GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM #GstMpegTsDescriptor
- * @res: (out) (transfer none): #GstMpegTsTerrestrialSystemDescriptor
+ * @res: (out) (transfer none): #GstMpegTsTerrestrialDeliverySystemDescriptor
  *
- * Parses out the terrestrial delivery system from the @descriptor:
+ * Parses out the terrestrial delivery system from the @descriptor.
  *
  * Returns: %TRUE if the parsing happened correctly, else %FALSE.
  */

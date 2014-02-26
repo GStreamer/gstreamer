@@ -240,6 +240,9 @@ gst_mpeg_ts_atsc_descriptor_type_get_type
 <SECTION>
 <FILE>gst-dvb-descriptor</FILE>
 GstMpegTsDVBDescriptorType
+<SUBSECTION content>
+GstMpegTsContent
+gst_mpegts_descriptor_parse_dvb_content
 <SUBSECTION component>
 GstMpegTsComponentDescriptor
 gst_mpegts_descriptor_parse_dvb_component
@@ -258,6 +261,15 @@ gst_mpegts_descriptor_parse_satellite_delivery_system
 GstMpegTsCableDeliverySystemDescriptor
 GstMpegTsCableOuterFECScheme
 gst_mpegts_descriptor_parse_cable_delivery_system
+<SUBSECTION terrestrial_delivery>
+GstMpegTsTerrestrialDeliverySystemDescriptor
+GstMpegTsTerrestrialBandwidth
+GstMpegTsTerrestrialTransmissionMode
+GstMpegTsTerrestrialGuardInterval
+GstMpegTsTerrestrialHierarchy
+GstMpegTsModulationType
+GstMpegTsDVBCodeRate
+gst_mpegts_descriptor_parse_terrestrial_delivery_system
 <SUBSECTION short_event>
 gst_mpegts_descriptor_parse_dvb_short_event
 <SUBSECTION network_name>
