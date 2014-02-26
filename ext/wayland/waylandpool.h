@@ -24,7 +24,7 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
 
-#include "gstwaylandsink.h"
+#include "wldisplay.h"
 
 G_BEGIN_DECLS
 
@@ -42,7 +42,7 @@ const GstMetaInfo * gst_wl_meta_get_info (void);
 struct _GstWlMeta {
   GstMeta meta;
 
-  GstWaylandSink *sink;
+  GstWlDisplay *display;
 
   struct wl_buffer *wbuffer;
   void *data;
@@ -61,7 +61,7 @@ typedef struct _GstWaylandBufferPoolClass GstWaylandBufferPoolClass;
 struct _GstWaylandBufferPool
 {
   GstBufferPool bufferpool;
-  GstWaylandSink *sink;
+  GstWlDisplay *display;
 
   /* external configuration */
   GstVideoInfo info;
@@ -80,7 +80,7 @@ struct _GstWaylandBufferPoolClass
 
 GType gst_wayland_buffer_pool_get_type (void);
 
-GstBufferPool *gst_wayland_buffer_pool_new (GstWaylandSink * waylandsink);
+GstBufferPool *gst_wayland_buffer_pool_new (GstWlDisplay * display);
 
 G_END_DECLS
 

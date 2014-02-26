@@ -241,7 +241,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   size = info.size;
 
   /* create a new pool for the new configuration */
-  newpool = gst_wayland_buffer_pool_new (sink);
+  newpool = gst_wayland_buffer_pool_new (sink->display);
 
   if (!newpool) {
     GST_DEBUG_OBJECT (sink, "Failed to create new pool");
@@ -334,7 +334,7 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       goto invalid_caps;
 
     GST_DEBUG_OBJECT (sink, "create new pool");
-    pool = gst_wayland_buffer_pool_new (sink);
+    pool = gst_wayland_buffer_pool_new (sink->display);
 
     /* the normal size of a frame */
     size = info.size;
@@ -406,7 +406,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   meta = gst_buffer_get_wl_meta (buffer);
 
-  if (meta && meta->sink == sink) {
+  if (meta && meta->display == sink->display) {
     GST_LOG_OBJECT (sink, "buffer %p from our pool, writing directly", buffer);
     to_render = buffer;
   } else {

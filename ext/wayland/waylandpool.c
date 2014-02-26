@@ -55,7 +55,7 @@ gst_wl_meta_api_get_type (void)
 static void
 gst_wl_meta_free (GstWlMeta * meta, GstBuffer * buffer)
 {
-  gst_object_unref (meta->sink);
+  g_object_unref (meta->display);
   munmap (meta->data, meta->size);
   wl_buffer_destroy (meta->wbuffer);
 }
@@ -117,7 +117,7 @@ gst_wayland_buffer_pool_finalize (GObject * object)
   if (pool->wl_pool)
     gst_wayland_buffer_pool_stop (GST_BUFFER_POOL (pool));
 
-  gst_object_unref (pool->sink);
+  g_object_unref (pool->display);
 
   G_OBJECT_CLASS (gst_wayland_buffer_pool_parent_class)->finalize (object);
 }
@@ -201,9 +201,7 @@ gst_wayland_buffer_pool_start (GstBufferPool * pool)
     return FALSE;
   }
 
-  self->wl_pool =
-      wl_shm_create_pool (self->sink->display->shm,
-      fd, size);
+  self->wl_pool = wl_shm_create_pool (self->display->shm, fd, size);
   close (fd);
 
   self->size = size;
@@ -263,7 +261,7 @@ gst_wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   /* create buffer and its metadata object */
   *buffer = gst_buffer_new ();
   meta = (GstWlMeta *) gst_buffer_add_meta (*buffer, GST_WL_META_INFO, NULL);
-  meta->sink = gst_object_ref (self->sink);
+  meta->display = g_object_ref (self->display);
   meta->wbuffer = wl_shm_pool_create_buffer (self->wl_pool, offset,
       width, height, stride, format);
   meta->data = data;
@@ -285,13 +283,13 @@ no_buffer:
 }
 
 GstBufferPool *
-gst_wayland_buffer_pool_new (GstWaylandSink * waylandsink)
+gst_wayland_buffer_pool_new (GstWlDisplay * display)
 {
   GstWaylandBufferPool *pool;
 
-  g_return_val_if_fail (GST_IS_WAYLAND_SINK (waylandsink), NULL);
+  g_return_val_if_fail (GST_IS_WL_DISPLAY (display), NULL);
   pool = g_object_new (GST_TYPE_WAYLAND_BUFFER_POOL, NULL);
-  pool->sink = gst_object_ref (waylandsink);
+  pool->display = g_object_ref (display);
 
   return GST_BUFFER_POOL_CAST (pool);
 }
