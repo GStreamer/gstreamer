@@ -345,6 +345,16 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
     if (g_str_has_prefix (fname, "x-gst-rtsp-server-rtx-time"))
       continue;
 
+    if (!strcmp (fname, "a-framesize")) {
+      /* a-framesize attribute */
+      if ((fval = gst_structure_get_string (s, fname))) {
+        tmp = g_strdup_printf ("%d %s", caps_pt, fval);
+        gst_sdp_media_add_attribute (smedia, fname + 2, tmp);
+        g_free (tmp);
+      }
+      continue;
+    }
+
     if (g_str_has_prefix (fname, "a-")) {
       /* attribute */
       if ((fval = gst_structure_get_string (s, fname)))
