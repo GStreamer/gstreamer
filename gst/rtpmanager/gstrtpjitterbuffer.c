@@ -2008,7 +2008,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     type = TIMER_TYPE_LOST;
   }
 
-  while (expected < seqnum) {
+  while (gst_rtp_buffer_compare_seqnum (expected, seqnum) > 0) {
     add_timer (jitterbuffer, type, expected, 0, expected_dts, 0, duration);
     expected_dts += duration;
     expected++;
@@ -2859,7 +2859,9 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       } else if (timer_timeout == -1) {
         /* we already have an immediate timeout, the new timer must be an
          * immediate timer with smaller seqnum to become the best */
-        if (test_timeout == -1 && test->seqnum < timer->seqnum)
+        if (test_timeout == -1
+            && (gst_rtp_buffer_compare_seqnum (test->seqnum,
+                    timer->seqnum) > 0))
           save_best = TRUE;
       } else if (test_timeout == -1) {
         /* first immediate timer */
@@ -2867,7 +2869,9 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       } else if (test_timeout < timer_timeout) {
         /* earlier timer */
         save_best = TRUE;
-      } else if (test_timeout == timer_timeout && test->seqnum < timer->seqnum) {
+      } else if (test_timeout == timer_timeout
+          && (gst_rtp_buffer_compare_seqnum (test->seqnum,
+                  timer->seqnum) > 0)) {
         /* same timer, smaller seqnum */
         save_best = TRUE;
       }
