@@ -25,7 +25,7 @@ Use Cases
   activated to transform the incoming collection of segments to a
   single continuous segment.
 
-  Example applications: PiTiVi, Jokosher
+  Example applications: Pitivi, Jokosher
 
 * Encoding of live sources
 
@@ -87,7 +87,7 @@ Use Cases
   that file.
   This is similar to the transmuxing use-case.
 
-  Example applications: PiTiVi, Transmageddon, Arista, ...
+  Example applications: Pitivi, Transmageddon, Arista, ...
 
 * Multi-pass encoding
 

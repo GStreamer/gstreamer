@@ -19,7 +19,7 @@
 
 /**
  * SECTION: ges-pitivi-formatter
- * @short_description: A formatter for the PiTiVi project file format
+ * @short_description: A formatter for the obsolete Pitivi xptv project file format
  *
  * This is a legacy format and you should avoid to use it. The formatter
  * is really not in good shape and is deprecated.
@@ -38,7 +38,7 @@
 #include "ges-internal.h"
 #include <ges/ges.h>
 
-/* The PiTiVi etree formatter is 0.1 we set GES one to 0.2 */
+/* The Pitivi etree formatter is 0.1 we set GES one to 0.2 */
 #define VERSION "0.2"
 #define DOUBLE_VERSION 0.2
 

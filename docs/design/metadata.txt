@@ -56,7 +56,7 @@ Let's call the interface GESMetaContainer for now (name to be defined).
     UC-3. Hold information about projects (title, author, description)
     UC-4. Hold user comments about any of TimelineLayer/Timeline/Project/TimelineObjects
     UC-5. Hold application specific settings (i.e. layer height, folding state
-          in PiTiVi)
+          in Pitivi)
     UC-6. Serialize a timeline, project and keep metadatas
 
 5. API

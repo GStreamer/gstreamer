@@ -43,7 +43,7 @@ typedef struct _GESPitiviFormatterPrivate GESPitiviFormatterPrivate;
 /**
  * GESPitiviFormatter:
  *
- * Serializes a #GESTimeline to a file using the Xml PiTiVi file format
+ * Serializes a #GESTimeline to a file using the xptv Pitivi file format
  */
 struct _GESPitiviFormatter {
   GESFormatter parent;
