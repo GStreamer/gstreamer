@@ -55,7 +55,7 @@ enum
 enum
 {
   PROP_0,
-  PROP_WAYLAND_DISPLAY
+  PROP_DISPLAY
 };
 
 GST_DEBUG_CATEGORY (gstwayland_debug);
@@ -127,10 +127,10 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_wayland_sink_propose_allocation);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_wayland_sink_render);
 
-  g_object_class_install_property (gobject_class, PROP_WAYLAND_DISPLAY,
-      g_param_spec_pointer ("wayland-display", "Wayland Display",
-          "Wayland  Display handle created by the application ",
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DISPLAY,
+      g_param_spec_string ("display", "Wayland Display name", "Wayland "
+          "display name to connect to, if not supplied with GstVideoOverlay",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -148,8 +148,8 @@ gst_wayland_sink_get_property (GObject * object,
   GstWaylandSink *sink = GST_WAYLAND_SINK (object);
 
   switch (prop_id) {
-    case PROP_WAYLAND_DISPLAY:
-      g_value_set_pointer (value, sink->display);
+    case PROP_DISPLAY:
+      g_value_set_string (value, sink->display_name);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -164,8 +164,8 @@ gst_wayland_sink_set_property (GObject * object,
   GstWaylandSink *sink = GST_WAYLAND_SINK (object);
 
   switch (prop_id) {
-    case PROP_WAYLAND_DISPLAY:
-      sink->display = g_value_get_pointer (value);
+    case PROP_DISPLAY:
+      sink->display_name = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -184,6 +184,8 @@ gst_wayland_sink_finalize (GObject * object)
     g_object_unref (sink->window);
   if (sink->display)
     g_object_unref (sink->display);
+  if (sink->display_name)
+    g_free (sink->display_name);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -280,7 +282,7 @@ gst_wayland_sink_start (GstBaseSink * bsink)
   GST_DEBUG_OBJECT (sink, "start");
 
   if (!sink->display)
-    sink->display = gst_wl_display_new (NULL, &error);
+    sink->display = gst_wl_display_new (sink->display_name, &error);
 
   if (sink->display == NULL) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ_WRITE,
