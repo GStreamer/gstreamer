@@ -47,7 +47,7 @@ struct _GstWlDisplay
   struct wl_compositor *compositor;
   struct wl_shell *shell;
   struct wl_shm *shm;
-  guint32 formats;
+  GArray *formats;
 
   /* private */
   gboolean own_display;

@@ -219,29 +219,37 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstWaylandSink *sink;
   GstBufferPool *newpool;
   GstVideoInfo info;
+  enum wl_shm_format format;
+  GArray *formats;
+  gint i;
   GstStructure *structure;
   static GstAllocationParams params = { 0, 0, 0, 15, };
-  guint size;
 
   sink = GST_WAYLAND_SINK (bsink);
 
   GST_LOG_OBJECT (sink, "set caps %" GST_PTR_FORMAT, caps);
 
+  /* extract info from caps */
   if (!gst_video_info_from_caps (&info, caps))
     goto invalid_format;
 
-  if (!gst_wayland_sink_format_from_caps (&sink->format, caps))
+  format = gst_video_format_to_wayland_format (GST_VIDEO_INFO_FORMAT (&info));
+  if (format == -1)
     goto invalid_format;
 
-  if (!(sink->display->formats & (1 << sink->format))) {
-    GST_DEBUG_OBJECT (sink, "%s not available",
-        gst_wayland_format_to_string (sink->format));
-    return FALSE;
+  /* verify we support the requested format */
+  formats = sink->display->formats;
+  for (i = 0; i < formats->len; i++) {
+    if (g_array_index (formats, uint32_t, i) == format)
+      break;
   }
 
+  if (i >= formats->len)
+    goto unsupported_format;
+
+  /* store the video size */
   sink->video_width = info.width;
   sink->video_height = info.height;
-  size = info.size;
 
   /* create a new pool for the new configuration */
   newpool = gst_wayland_buffer_pool_new (sink->display);
@@ -252,7 +260,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   }
 
   structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
+  gst_buffer_pool_config_set_params (structure, caps, info.size, 2, 0);
   gst_buffer_pool_config_set_allocator (structure, NULL, &params);
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
@@ -266,6 +274,12 @@ invalid_format:
   {
     GST_DEBUG_OBJECT (sink,
         "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+unsupported_format:
+  {
+    GST_DEBUG_OBJECT (sink, "Format %s is not available on the display",
+        gst_wayland_format_to_string (format));
     return FALSE;
   }
 config_failed:

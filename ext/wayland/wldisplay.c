@@ -43,6 +43,7 @@ gst_wl_display_class_init (GstWlDisplayClass * klass)
 static void
 gst_wl_display_init (GstWlDisplay * self)
 {
+  self->formats = g_array_new (FALSE, FALSE, sizeof (uint32_t));
   self->wl_fd_poll = gst_poll_new (TRUE);
 }
 
@@ -56,6 +57,7 @@ gst_wl_display_finalize (GObject * gobject)
   if (self->thread)
     g_thread_join (self->thread);
 
+  g_array_unref (self->formats);
   gst_poll_free (self->wl_fd_poll);
 
   if (self->shm)
@@ -117,7 +119,7 @@ shm_format (void *data, struct wl_shm *wl_shm, uint32_t format)
 {
   GstWlDisplay *self = data;
 
-  self->formats |= (1 << format);
+  g_array_append_val (self->formats, format);
 }
 
 static const struct wl_shm_listener shm_listener = {
