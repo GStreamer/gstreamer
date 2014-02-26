@@ -2534,6 +2534,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
       res = gst_pad_peer_query (priv->srcpad, outquery);
 
       JBUF_LOCK_CHECK (priv, out_flushing);
+      result = GST_FLOW_OK;
       GST_LOG_OBJECT (jitterbuffer, "did query %p, return %d", outquery, res);
       JBUF_SIGNAL_QUERY (priv, res);
       break;
