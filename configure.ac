@@ -90,10 +90,8 @@ AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
 dnl check for documentation tools
-AG_GST_DOCBOOK_CHECK
 GTK_DOC_CHECK([1.12])
-AS_PATH_PYTHON([2.1])
-AG_GST_PLUGIN_DOCS([1.3],[2.1])
+AG_GST_PLUGIN_DOCS([1.12])
 
 dnl *** checks for libraries ***
 

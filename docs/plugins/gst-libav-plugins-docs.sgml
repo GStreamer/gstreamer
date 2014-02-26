@@ -28,6 +28,6 @@
 
   <chapter>
     <title>gst-ffmpeg Plugins</title>
-    <xi:include href="xml/plugin-ffmpeg.xml" />
+    <xi:include href="xml/plugin-libav.xml" />
   </chapter>
 </book>

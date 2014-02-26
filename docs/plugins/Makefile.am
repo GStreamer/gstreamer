@@ -19,7 +19,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # The directory containing the source code.
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting functions and macros.
-DOC_SOURCE_DIR = $(top_srcdir)/ext/ffmpeg
+DOC_SOURCE_DIR = $(top_srcdir)/ext/libav
 
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=
@@ -32,8 +32,8 @@ MKDB_OPTIONS=--sgml-mode
 #FIXXREF_OPTIONS=--extra-dir=../gst/html
 
 # Used for dependencies.
-HFILE_GLOB=$(top_srcdir)/ext/ffmpeg/*.h
-CFILE_GLOB=$(top_srcdir)/ext/ffmpeg/*.c
+HFILE_GLOB=$(top_srcdir)/ext/libav/*.h
+CFILE_GLOB=$(top_srcdir)/ext/libav/*.c
 
 # Header files to ignore when scanning.
 IGNORE_HFILES = 
@@ -47,7 +47,8 @@ IGNORE_CFILES =
 # but I'm not sure about that - it might be this Just Works given that
 # the registry won't have the element
 
-EXTRA_HFILES = $(DOC_SOURCE_DIR)/gstffmpegenc.c
+# huh? thats not a header 
+#EXTRA_HFILES = $(DOC_SOURCE_DIR)/gstffmpegenc.c
 
 # Images to copy into HTML directory.
 HTML_IMAGES =
