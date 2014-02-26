@@ -184,6 +184,9 @@ gst_wayland_sink_finalize (GObject * object)
     g_object_unref (sink->window);
   if (sink->display)
     g_object_unref (sink->display);
+  if (sink->pool)
+    gst_object_unref (sink->pool);
+
   if (sink->display_name)
     g_free (sink->display_name);
 
