@@ -8,7 +8,7 @@ else
 PLUGIN_DOCS_DIRS = plugins
 endif
 
-SUBDIRS = libs $((PLUGIN_DOCS_DIRS)
+SUBDIRS = libs $(PLUGIN_DOCS_DIRS)
 DIST_SUBDIRS = libs plugins
 
 EXTRA_DIST = \
