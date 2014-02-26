@@ -434,6 +434,7 @@ ext/libswscale/Makefile
 gst-libs/Makefile
 gst-libs/ext/Makefile
 docs/Makefile
+docs/plugins/Makefile
 docs/version.entities
 tests/Makefile
 tests/check/Makefile
