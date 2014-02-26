@@ -664,6 +664,12 @@ gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
         "  label=\"<%s>\\n%s%s%s\";\n"
         "  node [style=filled, shape=box, fontsize=\"9\", fontname=\"sans\", margin=\"0.0,0.0\"];\n"
         "  edge [labelfontsize=\"6\", fontsize=\"9\", fontname=\"monospace\"];\n"
+        "  \n"
+        "  legend [\n"
+        "    pos=\"0,0!\",\n"
+        "    margin=\"0.05,0.05\",\n"
+        "    label=\"Legend\\lElement-States: [~] void-pending, [0] null, [-] ready, [=] paused, [>] playing\\lPad-Activation: [-] none, [>] push, [<] pull\\lPad-Flags: [b]locked, [f]lushing, [b]locking; upper-case is set\\lPad-Task: [T] has started task, [t] has paused task\\l\"\n,"
+        "  ];"
         "\n", G_OBJECT_TYPE_NAME (bin), GST_OBJECT_NAME (bin),
         (state_name ? state_name : ""), (param_name ? param_name : "")
         );
