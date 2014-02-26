@@ -20,7 +20,7 @@
 /**
  * SECTION:ges-effect
  * @short_description: adds an effect build from a parse-launch style 
- * bin description to a stream in a #GESSourceClip or a #GESLayer
+ * bin description to a stream in a GESSourceClip or a GESLayer
  */
 
 #include "ges-internal.h"

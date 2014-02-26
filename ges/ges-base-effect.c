@@ -20,7 +20,7 @@
 /**
  * SECTION:ges-base-effect
  * @short_description: adds an effect to a stream in a GESSourceClip or a
- * #GESLayer
+ * GESLayer
  */
 
 #include <glib/gprintf.h>

@@ -20,7 +20,7 @@
 /**
  * SECTION: ges-effect-clip
  * @short_description: An effect created by parse-launch style bin descriptions
- * in a #GESLayer
+ * in a GESLayer
  *
  * The effect will be applied on the sources that have lower priorities
  * (higher number) between the inpoint and the end of it.

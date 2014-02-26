@@ -20,13 +20,12 @@
 
 /**
  * SECTION:ges-test-clip
- * @short_description: Render video and audio test patterns in a
- * #GESLayer
+ * @short_description: Render video and audio test patterns in a GESLayer
  *
  * Useful for testing purposes.
  *
- * You can use the ges_asset_request_simple API to create a Asset
- * capable of extractinf GESTestClip-s
+ * You can use the ges_asset_request_simple API to create an Asset
+ * capable of extracting GESTestClip-s
  */
 
 #include "ges-internal.h"

@@ -20,8 +20,7 @@
 
 /**
  * SECTION: ges-transition-clip
- * @short_description: Transition from one clip to another in a
- * #GESLayer
+ * @short_description: Transition from one clip to another in a GESLayer
  *
  * Creates an object that mixes together the two underlying objects, A and B.
  * The A object is assumed to have a higher prioirity (lower number) than the
