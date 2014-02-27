@@ -157,9 +157,15 @@ GST_START_TEST (test_buffer_modify_discard)
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
   fail_unless (buf == prev, "got a fresh buffer instead of previous");
   mem = gst_buffer_get_memory (buf, 0);
-
+  /* exclusive lock so pool should not reuse this buffer */
+  gst_memory_lock (mem, GST_LOCK_FLAG_EXCLUSIVE);
   gst_buffer_unref (buf);
+  gst_memory_unlock (mem, GST_LOCK_FLAG_EXCLUSIVE);
+  gst_memory_unref (mem);
 
+  gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  fail_if (buf == prev, "got a reused buffer instead of new one");
+  gst_buffer_unref (buf);
   gst_buffer_pool_set_active (pool, FALSE);
   gst_object_unref (pool);
 }

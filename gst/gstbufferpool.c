@@ -1135,12 +1135,24 @@ default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
   GST_LOG_OBJECT (pool, "released buffer %p %d", buffer,
       GST_MINI_OBJECT_FLAGS (buffer));
 
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY)) {
-    /* keep it around in our queue */
-    gst_atomic_queue_push (pool->priv->queue, buffer);
-    gst_poll_write_control (pool->priv->poll);
-  } else {
+  /* memory should be untouched */
+  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY))
+    goto discard;
+
+  /* all memory should be exclusive to this buffer (and thus be writable) */
+  if (!gst_buffer_is_all_memory_writable (buffer))
+    goto discard;
+
+  /* keep it around in our queue */
+  gst_atomic_queue_push (pool->priv->queue, buffer);
+  gst_poll_write_control (pool->priv->poll);
+
+  return;
+
+discard:
+  {
     do_free_buffer (pool, buffer);
+    return;
   }
 }
 
