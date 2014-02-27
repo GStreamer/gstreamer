@@ -374,9 +374,8 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_M3U8_CLIENT_UNLOCK (demux->client);
 
       if (walk == NULL) {
-        GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
-        gst_event_unref (event);
-        return FALSE;
+        GST_DEBUG_OBJECT (demux, "seeking further than track duration");
+        current_sequence++;
       }
 
       if (flags & GST_SEEK_FLAG_FLUSH) {
@@ -660,7 +659,8 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
   gst_pad_push_event (demux->srcpad, event);
   g_free (stream_id);
 
-  gst_pad_set_caps (demux->srcpad, newcaps);
+  if (newcaps != NULL)
+    gst_pad_set_caps (demux->srcpad, newcaps);
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad);
 
@@ -674,13 +674,63 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
   }
 }
 
+static gboolean
+gst_hls_demux_configure_src_pad (GstHLSDemux * demux, GstFragment * fragment)
+{
+  GstCaps *bufcaps = NULL, *srccaps = NULL;
+  GstBuffer *buf = NULL;
+  /* Figure out if we need to create/switch pads */
+  if (G_LIKELY (demux->srcpad))
+    srccaps = gst_pad_get_current_caps (demux->srcpad);
+  if (fragment) {
+    bufcaps = gst_fragment_get_caps (fragment);
+    if (G_UNLIKELY (!bufcaps)) {
+      if (srccaps)
+        gst_caps_unref (srccaps);
+      return FALSE;
+    }
+    buf = gst_fragment_get_buffer (fragment);
+  }
+
+  if (G_UNLIKELY (!srccaps || demux->discont || (buf
+              && GST_BUFFER_IS_DISCONT (buf)))) {
+    switch_pads (demux, bufcaps);
+    demux->need_segment = TRUE;
+    demux->discont = FALSE;
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+  }
+  if (bufcaps)
+    gst_caps_unref (bufcaps);
+  if (G_LIKELY (srccaps))
+    gst_caps_unref (srccaps);
+
+  if (demux->need_segment) {
+    GstSegment segment;
+    GstClockTime start =
+        buf ? GST_BUFFER_PTS (buf) : demux->client->sequence_position;
+
+    start += demux->position_shift;
+    /* And send a newsegment */
+    GST_DEBUG_OBJECT (demux, "Sending new-segment. segment start:%"
+        GST_TIME_FORMAT, GST_TIME_ARGS (start));
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = start;
+    segment.time = start;
+    gst_pad_push_event (demux->srcpad, gst_event_new_segment (&segment));
+    demux->need_segment = FALSE;
+    demux->position_shift = 0;
+  }
+  if (buf)
+    gst_buffer_unref (buf);
+  return TRUE;
+}
+
 static void
 gst_hls_demux_stream_loop (GstHLSDemux * demux)
 {
   GstFragment *fragment;
   GstBuffer *buf;
   GstFlowReturn ret;
-  GstCaps *bufcaps, *srccaps = NULL;
   gboolean end_of_playlist;
   GError *err = NULL;
 
@@ -778,44 +828,12 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
     goto pause_task;
   }
 
-  /* Figure out if we need to create/switch pads */
-  if (G_LIKELY (demux->srcpad))
-    srccaps = gst_pad_get_current_caps (demux->srcpad);
-  bufcaps = gst_fragment_get_caps (fragment);
-  if (G_UNLIKELY (!bufcaps)) {
-    if (srccaps)
-      gst_caps_unref (srccaps);
+  if (!gst_hls_demux_configure_src_pad (demux, fragment)) {
     g_object_unref (fragment);
     goto type_not_found;
   }
 
   buf = gst_fragment_get_buffer (fragment);
-
-  if (G_UNLIKELY (!srccaps || demux->discont || GST_BUFFER_IS_DISCONT (buf))) {
-    switch_pads (demux, bufcaps);
-    demux->need_segment = TRUE;
-    demux->discont = FALSE;
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-  }
-  gst_caps_unref (bufcaps);
-  if (G_LIKELY (srccaps))
-    gst_caps_unref (srccaps);
-
-  if (demux->need_segment) {
-    GstSegment segment;
-    GstClockTime start = GST_BUFFER_PTS (buf);
-
-    start += demux->position_shift;
-    /* And send a newsegment */
-    GST_DEBUG_OBJECT (demux, "Sending new-segment. segment start:%"
-        GST_TIME_FORMAT, GST_TIME_ARGS (start));
-    gst_segment_init (&segment, GST_FORMAT_TIME);
-    segment.start = start;
-    segment.time = start;
-    gst_pad_push_event (demux->srcpad, gst_event_new_segment (&segment));
-    demux->need_segment = FALSE;
-    demux->position_shift = 0;
-  }
 
   GST_DEBUG_OBJECT (demux, "Pushing buffer %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
@@ -835,6 +853,9 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
 end_of_playlist:
   {
     GST_DEBUG_OBJECT (demux, "Reached end of playlist, sending EOS");
+
+    gst_hls_demux_configure_src_pad (demux, NULL);
+
     gst_pad_push_event (demux->srcpad, gst_event_new_eos ());
     gst_hls_demux_pause_tasks (demux);
     return;
@@ -1121,8 +1142,8 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
 
     GST_M3U8_CLIENT_LOCK (demux->client);
     last_sequence =
-        GST_M3U8_MEDIA_FILE (g_list_last (demux->client->current->
-            files)->data)->sequence;
+        GST_M3U8_MEDIA_FILE (g_list_last (demux->client->current->files)->
+        data)->sequence;
 
     if (demux->client->sequence >= last_sequence - 3) {
       GST_DEBUG_OBJECT (demux, "Sequence is beyond playlist. Moving back to %d",
