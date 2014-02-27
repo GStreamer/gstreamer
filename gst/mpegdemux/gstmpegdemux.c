@@ -1530,7 +1530,7 @@ gst_flups_demux_reset_psm (GstFluPSDemux * demux)
     demux->psm[i] = type;
 
   /* Initialize all fields to -1 first */
-  FILL_TYPE (0x00, GST_FLUPS_DEMUX_MAX_PSM, -1);
+  FILL_TYPE (0x00, GST_FLUPS_DEMUX_MAX_PSM - 1, -1);
 
   FILL_TYPE (0x20, 0x3f, ST_PS_DVD_SUBPICTURE);
 
