@@ -28,9 +28,10 @@
  * the section <link linkend="gstreamer-Writing-typefind-functions">
  * "Writing typefind functions"</link>.
  *
- * <example>
- *   <title>how to write a simple typefinder</title>
- *   <programlisting>
+ * The following example shows how to write a very simple typefinder that
+ * identifies the given data. You can get quite a bit more complicated than
+ * that though.
+ * |[
  *   typedef struct {
  *     guint8 *data;
  *     guint size;
@@ -70,12 +71,7 @@
  *     g_list_free (type_list);
  *     return find.caps;
  *   };
- *   </programlisting>
- * </example>
- *
- * The above example shows how to write a very simple typefinder that
- * identifies the given data. You can get quite a bit more complicated than
- * that though.
+ * ]|
  *
  * Last reviewed on 2005-11-09 (0.9.4)
  */

@@ -54,9 +54,7 @@
  * (see gst_element_class_add_pad_template ()).
  *
  * The following code example shows the code to create a pad from a padtemplate.
- * <example>
- * <title>Create a pad from a padtemplate</title>
- *   <programlisting>
+ * |[
  *   GstStaticPadTemplate my_template =
  *   GST_STATIC_PAD_TEMPLATE (
  *     "sink",          // the name of the pad
@@ -74,23 +72,20 @@
  *     pad = gst_pad_new_from_static_template (&amp;my_template, "sink");
  *     ...
  *   }
- *   </programlisting>
- * </example>
+ * ]|
  *
  * The following example shows you how to add the padtemplate to an
  * element class, this is usually done in the class_init of the class:
- * <informalexample>
- *   <programlisting>
+ * |[
  *   static void
  *   my_element_class_init (GstMyElementClass *klass)
  *   {
  *     GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
- *
+ *   
  *     gst_element_class_add_pad_template (gstelement_class,
  *         gst_static_pad_template_get (&amp;my_template));
  *   }
- *   </programlisting>
- * </informalexample>
+ * ]|
  *
  * Last reviewed on 2006-02-14 (0.10.3)
  */

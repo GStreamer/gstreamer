@@ -33,9 +33,7 @@
  * created one will typically allocate memory for it and add it to the buffer.
  * The following example creates a buffer that can hold a given video frame
  * with a given width, height and bits per plane.
- * <example>
- * <title>Creating a buffer for a video frame</title>
- *   <programlisting>
+ * |[
  *   GstBuffer *buffer;
  *   GstMemory *memory;
  *   gint size, width, height, bpp;
@@ -45,11 +43,10 @@
  *   memory = gst_allocator_alloc (NULL, size, NULL);
  *   gst_buffer_insert_memory (buffer, -1, memory);
  *   ...
- *   </programlisting>
- * </example>
+ * ]|
  *
- * Alternatively, use gst_buffer_new_allocate()
- * to create a buffer with preallocated data of a given size.
+ * Alternatively, use gst_buffer_new_allocate() to create a buffer with
+ * preallocated data of a given size.
  *
  * Buffers can contain a list of #GstMemory objects. You can retrieve how many
  * memory objects with gst_buffer_n_memory() and you can get a pointer

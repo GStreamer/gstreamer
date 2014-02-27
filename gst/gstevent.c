@@ -51,9 +51,7 @@
  * construct and use seek events.
  * To do that gst_event_new_seek() is used to create a seek event. It takes
  * the needed parameters to specify seeking time and mode.
- * <example>
- * <title>performing a seek on a pipeline</title>
- *   <programlisting>
+ * [[
  *   GstEvent *event;
  *   gboolean result;
  *   ...
@@ -69,8 +67,7 @@
  *   if (!result)
  *     g_warning ("seek failed");
  *   ...
- *   </programlisting>
- * </example>
+ * ]|
  *
  * Last reviewed on 2012-03-28 (0.11.3)
  */

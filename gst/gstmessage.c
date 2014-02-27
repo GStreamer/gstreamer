@@ -34,13 +34,9 @@
  * application using the #GstBus.
  *
  * The basic use pattern of posting a message on a #GstBus is as follows:
- *
- * <example>
- * <title>Posting a #GstMessage</title>
- *   <programlisting>
- *    gst_bus_post (bus, gst_message_new_eos());
- *   </programlisting>
- * </example>
+ * |[
+ *   gst_bus_post (bus, gst_message_new_eos());
+ * ]|
  *
  * A #GstElement usually posts messages on the bus provided by the parent
  * container using gst_element_post_message().

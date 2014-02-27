@@ -34,20 +34,15 @@
  * handle or produce at runtime.
  *
  * A #GstCaps can be constructed with the following code fragment:
- *
- * <example>
- *  <title>Creating caps</title>
- *  <programlisting>
- *  GstCaps *caps;
- *  caps = gst_caps_new_simple ("video/x-raw",
- *       "format", G_TYPE_STRING, "I420",
- *       "framerate", GST_TYPE_FRACTION, 25, 1,
- *       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
- *       "width", G_TYPE_INT, 320,
- *       "height", G_TYPE_INT, 240,
- *       NULL);
- *  </programlisting>
- * </example>
+ * |[
+ *   GstCaps *caps = gst_caps_new_simple ("video/x-raw",
+ *      "format", G_TYPE_STRING, "I420",
+ *      "framerate", GST_TYPE_FRACTION, 25, 1,
+ *      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+ *      "width", G_TYPE_INT, 320,
+ *      "height", G_TYPE_INT, 240,
+ *      NULL);
+ * ]|
  *
  * A #GstCaps is fixed when it has no properties with ranges or lists. Use
  * gst_caps_is_fixed() to test for fixed caps. Fixed caps can be used in a

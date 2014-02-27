@@ -37,35 +37,31 @@
  * increased.  Your code is responsible for unreffing that object after use.
  *
  * The basic use pattern of an iterator is as follows:
- *
- * <example>
- * <title>Using an iterator</title>
- *   <programlisting>
- *    it = _get_iterator(object);
- *    done = FALSE;
- *    while (!done) {
- *      switch (gst_iterator_next (it, &amp;item)) {
- *        case GST_ITERATOR_OK:
- *          ... use/change item here...
- *          g_value_reset (&amp;item);
- *          break;
- *        case GST_ITERATOR_RESYNC:
- *          ...rollback changes to items...
- *          gst_iterator_resync (it);
- *          break;
- *        case GST_ITERATOR_ERROR:
- *          ...wrong parameters were given...
- *          done = TRUE;
- *          break;
- *        case GST_ITERATOR_DONE:
- *          done = TRUE;
- *          break;
- *      }
- *    }
- *    g_value_unset (&amp;item);
- *    gst_iterator_free (it);
- *   </programlisting>
- * </example>
+ * |[
+ *   GstIterator *it = _get_iterator(object);
+ *   done = FALSE;
+ *   while (!done) {
+ *     switch (gst_iterator_next (it, &amp;item)) {
+ *       case GST_ITERATOR_OK:
+ *         ... use/change item here...
+ *         g_value_reset (&amp;item);
+ *         break;
+ *       case GST_ITERATOR_RESYNC:
+ *         ...rollback changes to items...
+ *         gst_iterator_resync (it);
+ *         break;
+ *       case GST_ITERATOR_ERROR:
+ *         ...wrong parameters were given...
+ *         done = TRUE;
+ *         break;
+ *       case GST_ITERATOR_DONE:
+ *         done = TRUE;
+ *         break;
+ *     }
+ *   }
+ *   g_value_unset (&amp;item);
+ *   gst_iterator_free (it);
+ * ]|
  *
  * Last reviewed on 2009-06-16 (0.10.24)
  */

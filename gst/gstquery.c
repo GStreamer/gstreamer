@@ -36,25 +36,20 @@
  * gst_query_parse_*() helpers.
  *
  * The following example shows how to query the duration of a pipeline:
- *
- * <example>
- *  <title>Query duration on a pipeline</title>
- *  <programlisting>
- *  GstQuery *query;
- *  gboolean res;
- *  query = gst_query_new_duration (GST_FORMAT_TIME);
- *  res = gst_element_query (pipeline, query);
- *  if (res) {
- *    gint64 duration;
- *    gst_query_parse_duration (query, NULL, &amp;duration);
- *    g_print ("duration = %"GST_TIME_FORMAT, GST_TIME_ARGS (duration));
- *  }
- *  else {
- *    g_print ("duration query failed...");
- *  }
- *  gst_query_unref (query);
- *  </programlisting>
- * </example>
+ * |[
+ *   GstQuery *query;
+ *   gboolean res;
+ *   query = gst_query_new_duration (GST_FORMAT_TIME);
+ *   res = gst_element_query (pipeline, query);
+ *   if (res) {
+ *     gint64 duration;
+ *     gst_query_parse_duration (query, NULL, &amp;duration);
+ *     g_print ("duration = %"GST_TIME_FORMAT, GST_TIME_ARGS (duration));
+ *   } else {
+ *     g_print ("duration query failed...");
+ *   }
+ *   gst_query_unref (query);
+ * ]|
  *
  * Last reviewed on 2012-03-29 (0.11.3)
  */
