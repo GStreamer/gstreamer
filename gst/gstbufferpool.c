@@ -270,7 +270,13 @@ do_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   if (G_UNLIKELY (result != GST_FLOW_OK))
     goto alloc_failed;
 
+  /* lock all metadata and mark as pooled, we want this to remain on
+   * the buffer and we want to remove any other metadata that gets added
+   * later */
   gst_buffer_foreach_meta (*buffer, mark_meta_pooled, pool);
+  /* tag memory, this is how we expect the buffer when it is
+   * released again */
+  GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_TAG_MEMORY);
 
   GST_LOG_OBJECT (pool, "allocated buffer %d/%d, %p", cur_buffers,
       max_buffers, buffer);
@@ -1064,7 +1070,7 @@ remove_meta_unpooled (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
 static void
 default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
-  GST_BUFFER_FLAGS (buffer) = 0;
+  GST_BUFFER_FLAGS (buffer) &= GST_BUFFER_FLAG_TAG_MEMORY;
 
   GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
@@ -1126,10 +1132,16 @@ gst_buffer_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 static void
 default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
-  /* keep it around in our queue */
-  GST_LOG_OBJECT (pool, "released buffer %p", buffer);
-  gst_atomic_queue_push (pool->priv->queue, buffer);
-  gst_poll_write_control (pool->priv->poll);
+  GST_LOG_OBJECT (pool, "released buffer %p %d", buffer,
+      GST_MINI_OBJECT_FLAGS (buffer));
+
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY)) {
+    /* keep it around in our queue */
+    gst_atomic_queue_push (pool->priv->queue, buffer);
+    gst_poll_write_control (pool->priv->poll);
+  } else {
+    do_free_buffer (pool, buffer);
+  }
 }
 
 /**

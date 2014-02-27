@@ -125,6 +125,46 @@ GST_START_TEST (test_inactive_pool_returns_flushing)
 
 GST_END_TEST;
 
+GST_START_TEST (test_buffer_modify_discard)
+{
+
+  GstBufferPool *pool = create_pool (10, 0, 0);
+  GstBuffer *buf = NULL, *prev;
+  GstMemory *mem;
+
+  gst_buffer_pool_set_active (pool, TRUE);
+  gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  prev = buf;
+  /* remove all memory, pool should not reuse this buffer */
+  gst_buffer_remove_all_memory (buf);
+  gst_buffer_unref (buf);
+
+  gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  fail_if (buf == prev, "got a reused buffer instead of new one");
+  prev = buf;
+  /* do resize, pool should not reuse this buffer */
+  gst_buffer_resize (buf, 5, 2);
+  gst_buffer_unref (buf);
+
+  gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  fail_if (buf == prev, "got a reused buffer instead of new one");
+  prev = buf;
+  /* keep ref to memory, not exclusive so pool should reuse this buffer */
+  mem = gst_buffer_get_memory (buf, 0);
+  gst_buffer_unref (buf);
+  gst_memory_unref (mem);
+
+  gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  fail_unless (buf == prev, "got a fresh buffer instead of previous");
+  mem = gst_buffer_get_memory (buf, 0);
+
+  gst_buffer_unref (buf);
+
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_buffer_pool_suite (void)
@@ -140,6 +180,7 @@ gst_buffer_pool_suite (void)
   tcase_add_test (tc_chain, test_buffer_out_of_order_reuse);
   tcase_add_test (tc_chain, test_pool_config_buffer_size);
   tcase_add_test (tc_chain, test_inactive_pool_returns_flushing);
+  tcase_add_test (tc_chain, test_buffer_modify_discard);
 
   return s;
 }
