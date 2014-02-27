@@ -268,19 +268,6 @@ id3v2_frame_write_uint32 (GstId3v2Frame * frame, guint32 val)
   frame->dirty = TRUE;
 }
 
-static inline void
-id3v2_frame_write_uint32_syncsafe (GstId3v2Frame * frame, guint32 val)
-{
-  guint8 data[4];
-
-  data[0] = (guint8) ((val >> 21) & 0x7f);
-  data[1] = (guint8) ((val >> 14) & 0x7f);
-  data[2] = (guint8) ((val >> 7) & 0x7f);
-  data[3] = (guint8) ((val >> 0) & 0x7f);
-  gst_byte_writer_write_bytes (frame->writer, data, 4);
-  frame->dirty = TRUE;
-}
-
 static void
 id3v2_frame_init (GstId3v2Frame * frame, const gchar * frame_id, guint16 flags)
 {
