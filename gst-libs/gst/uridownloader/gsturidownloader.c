@@ -191,8 +191,7 @@ gst_uri_downloader_bus_handler (GstBus * bus,
 {
   GstUriDownloader *downloader = (GstUriDownloader *) (data);
 
-  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR ||
-      GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING) {
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
     GError *err = NULL;
     gchar *dbg_info = NULL;
 
@@ -222,6 +221,17 @@ gst_uri_downloader_bus_handler (GstBus * bus,
       g_cond_signal (&downloader->priv->cond);
     }
     GST_OBJECT_UNLOCK (downloader);
+  } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING) {
+    GError *err = NULL;
+    gchar *dbg_info = NULL;
+
+    gst_message_parse_warning (message, &err, &dbg_info);
+    GST_WARNING_OBJECT (downloader,
+        "Received error: %s from %s, the download will be cancelled",
+        GST_OBJECT_NAME (message->src), err->message);
+    GST_DEBUG ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
+    g_error_free (err);
+    g_free (dbg_info);
   }
 
   gst_message_unref (message);
