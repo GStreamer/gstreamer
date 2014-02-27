@@ -143,6 +143,7 @@ gst_hls_demux_dispose (GObject * obj)
 
   g_mutex_clear (&demux->download_lock);
   g_cond_clear (&demux->download_cond);
+  g_mutex_clear (&demux->updates_timed_lock);
   g_cond_clear (&demux->updates_timed_cond);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
@@ -222,6 +223,7 @@ gst_hls_demux_init (GstHLSDemux * demux)
 
   g_mutex_init (&demux->download_lock);
   g_cond_init (&demux->download_cond);
+  g_mutex_init (&demux->updates_timed_lock);
   g_cond_init (&demux->updates_timed_cond);
 
   /* Updates task */
