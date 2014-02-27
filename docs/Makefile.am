@@ -9,7 +9,7 @@ PLUGIN_DOCS_DIRS = plugins
 endif
 
 SUBDIRS = $(PLUGIN_DOCS_DIRS)
-DIST_SUBDIRS = # plugins
+DIST_SUBDIRS = plugins
 
 EXTRA_DIST = \
 	version.entities.in
