@@ -227,7 +227,7 @@ gst_uri_downloader_bus_handler (GstBus * bus,
 
     gst_message_parse_warning (message, &err, &dbg_info);
     GST_WARNING_OBJECT (downloader,
-        "Received error: %s from %s, the download will be cancelled",
+        "Received warning: %s from %s",
         GST_OBJECT_NAME (message->src), err->message);
     GST_DEBUG ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
     g_error_free (err);
