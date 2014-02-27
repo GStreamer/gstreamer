@@ -139,17 +139,6 @@ static GstStaticPadTemplate openalsrc_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 1, MAX ], " "channels = (int) 1")
     );
 
-static inline ALenum
-checkALError (const char *fname, unsigned int fline)
-{
-  ALenum err = alGetError ();
-  if (err != AL_NO_ERROR)
-    g_warning ("%s:%u: context error: %s", fname, fline, alGetString (err));
-  return err;
-}
-
-#define checkALError() checkALError(__FILE__, __LINE__)
-
 G_DEFINE_TYPE (GstOpenalSrc, gst_openal_src, GST_TYPE_AUDIO_SRC);
 
 static void
