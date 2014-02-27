@@ -337,14 +337,17 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       if (gst_m3u8_client_is_live (demux->client)) {
         GST_WARNING_OBJECT (demux, "Received seek event for live stream");
+        gst_event_unref (event);
         return FALSE;
       }
 
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
           &stop_type, &stop);
 
-      if (format != GST_FORMAT_TIME)
+      if (format != GST_FORMAT_TIME) {
+        gst_event_unref (event);
         return FALSE;
+      }
 
       GST_DEBUG_OBJECT (demux, "seek event, rate: %f start: %" GST_TIME_FORMAT
           " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
@@ -369,6 +372,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       if (walk == NULL) {
         GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
+        gst_event_unref (event);
         return FALSE;
       }
 
@@ -405,6 +409,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_task_start (demux->updates_task);
       g_rec_mutex_unlock (&demux->stream_lock);
 
+      gst_event_unref (event);
       return TRUE;
     }
     default:
