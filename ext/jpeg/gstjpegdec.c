@@ -457,6 +457,7 @@ need_more_data:
 have_full_frame:
   if (toadd)
     gst_video_decoder_add_to_frame (bdec, toadd);
+  GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
   return gst_video_decoder_have_frame (bdec);
 
 drop_frame:
