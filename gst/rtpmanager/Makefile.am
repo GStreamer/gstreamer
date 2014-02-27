@@ -1,8 +1,5 @@
 plugin_LTLIBRARIES = libgstrtpmanager.la
 
-# FIXME 0.11: ignore GValueArray warnings for now until this is sorted
-ERROR_CFLAGS=
-
 libgstrtpmanager_la_SOURCES = gstrtpmanager.c \
 			      gstrtpbin.c \
 			      gstrtpdtmfmux.c \
