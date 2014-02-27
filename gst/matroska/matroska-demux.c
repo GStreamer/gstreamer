@@ -5264,7 +5264,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
 
     *codec_name = g_strdup_printf ("Raw %d-bit PCM audio",
         audiocontext->bitdepth);
-    context->alignment = audiocontext->bitdepth / 8;
+    context->alignment = GST_ROUND_UP_8 (audiocontext->bitdepth) / 8;
     if (context->alignment > 1 && context->alignment % 2)
       ++context->alignment;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_FLOAT)) {
