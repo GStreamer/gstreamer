@@ -1193,13 +1193,14 @@ gst_buffer_is_memory_range_writable (GstBuffer * buffer, guint idx, gint length)
 {
   guint i, len;
 
-  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
 
   GST_CAT_DEBUG (GST_CAT_BUFFER, "idx %u, length %d", idx, length);
 
   len = GST_BUFFER_MEM_LEN (buffer);
-  g_return_if_fail ((len == 0 && idx == 0 && length == -1) ||
-      (length == -1 && idx < len) || (length > 0 && length + idx <= len));
+  g_return_val_if_fail ((len == 0 && idx == 0 && length == -1) ||
+      (length == -1 && idx < len) || (length > 0 && length + idx <= len),
+      FALSE);
 
   if (length == -1)
     length = len - idx;
