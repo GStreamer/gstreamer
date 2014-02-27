@@ -218,6 +218,9 @@ gst_buffer_get_all_memory
 gst_buffer_remove_memory
 gst_buffer_remove_all_memory
 
+gst_buffer_is_all_memory_writable
+gst_buffer_is_memory_range_writable
+
 gst_buffer_map
 gst_buffer_map_range
 gst_buffer_unmap
@@ -2482,6 +2485,7 @@ gst_segment_to_stream_time
 gst_segment_to_position
 gst_segment_set_running_time
 gst_segment_copy_into
+gst_segment_offset_running_time
 <SUBSECTION Standard>
 GST_TYPE_SEGMENT
 GST_TYPE_SEGMENT_FLAGS

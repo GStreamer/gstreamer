@@ -117,6 +117,8 @@ EXPORTS
 	gst_buffer_get_sizes_range
 	gst_buffer_get_type
 	gst_buffer_insert_memory
+	gst_buffer_is_all_memory_writable
+	gst_buffer_is_memory_range_writable
 	gst_buffer_iterate_meta
 	gst_buffer_list_foreach
 	gst_buffer_list_get
