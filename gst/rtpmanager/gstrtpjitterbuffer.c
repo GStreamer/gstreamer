@@ -2429,7 +2429,7 @@ static GstFlowReturn
 pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  GstFlowReturn result;
+  GstFlowReturn result = GST_FLOW_OK;
   RTPJitterBufferItem *item;
   GstBuffer *outbuf = NULL;
   GstEvent *outevent = NULL;
