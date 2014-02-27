@@ -1175,6 +1175,65 @@ gst_buffer_find_memory (GstBuffer * buffer, gsize offset, gsize size,
 }
 
 /**
+ * gst_buffer_is_memory_range_writable:
+ * @buffer: a #GstBuffer.
+ * @idx: an index
+ * @length: a length should not be 0
+ *
+ * Check if @length memory blocks in @buffer starting from @idx are writable.
+ *
+ * @length can be -1 to check all the memory blocks after @idx.
+ *
+ * Note that this function does not check if @buffer is writable, use
+ * gst_buffer_is_writable() to check that if needed.
+ *
+ * Returns: %TRUE if the memory range is writable
+ *
+ * Since: 1.4
+ */
+gboolean
+gst_buffer_is_memory_range_writable (GstBuffer * buffer, guint idx, gint length)
+{
+  guint i, len;
+
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+
+  GST_CAT_DEBUG (GST_CAT_BUFFER, "idx %u, length %d", idx, length);
+
+  len = GST_BUFFER_MEM_LEN (buffer);
+  g_return_if_fail ((len == 0 && idx == 0 && length == -1) ||
+      (length == -1 && idx < len) || (length > 0 && length + idx <= len));
+
+  if (length == -1)
+    length = len - idx;
+
+  for (i = 0; i < len; i++) {
+    if (!gst_memory_is_writable (GST_BUFFER_MEM_PTR (buffer, i)))
+      return FALSE;
+  }
+  return TRUE;
+}
+
+/**
+ * gst_buffer_is_all_memory_writable:
+ * @buffer: a #GstBuffer.
+ *
+ * Check if all memory blocks in @buffer are writable.
+ *
+ * Note that this function does not check if @buffer is writable, use
+ * gst_buffer_is_writable() to check that if needed.
+ *
+ * Returns: %TRUE if all memory blocks in @buffer are writable
+ *
+ * Since: 1.4
+ */
+gboolean
+gst_buffer_is_all_memory_writable (GstBuffer * buffer)
+{
+  return gst_buffer_is_memory_range_writable (buffer, 0, -1);
+}
+
+/**
  * gst_buffer_get_sizes:
  * @buffer: a #GstBuffer.
  * @offset: (out): a pointer to the offset

@@ -287,6 +287,9 @@ void        gst_buffer_remove_all_memory    (GstBuffer *buffer);
 gboolean    gst_buffer_find_memory         (GstBuffer *buffer, gsize offset, gsize size,
                                             guint *idx, guint *length, gsize *skip);
 
+gboolean    gst_buffer_is_memory_range_writable  (GstBuffer *buffer, guint idx, gint length);
+gboolean    gst_buffer_is_all_memory_writable    (GstBuffer *buffer);
+
 gsize       gst_buffer_fill                (GstBuffer *buffer, gsize offset,
                                             gconstpointer src, gsize size);
 gsize       gst_buffer_extract             (GstBuffer *buffer, gsize offset,
