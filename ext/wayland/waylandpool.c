@@ -202,6 +202,7 @@ gst_wayland_buffer_pool_start (GstBufferPool * pool)
   }
 
   self->wl_pool = wl_shm_create_pool (self->display->shm, fd, size);
+  unlink (filename);
   close (fd);
 
   self->size = size;
