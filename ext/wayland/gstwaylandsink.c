@@ -81,10 +81,13 @@ static void gst_wayland_sink_get_property (GObject * object,
 static void gst_wayland_sink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_wayland_sink_finalize (GObject * object);
+
+static GstStateChangeReturn gst_wayland_sink_change_state (GstElement * element,
+    GstStateChange transition);
+
 static GstCaps *gst_wayland_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
 static gboolean gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
-static gboolean gst_wayland_sink_start (GstBaseSink * bsink);
 static gboolean gst_wayland_sink_preroll (GstBaseSink * bsink,
     GstBuffer * buffer);
 static gboolean
@@ -137,9 +140,11 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
       "Output to wayland surface",
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_wayland_sink_change_state);
+
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_get_caps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_set_caps);
-  gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_wayland_sink_start);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_wayland_sink_preroll);
   gstbasesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_wayland_sink_propose_allocation);
@@ -154,9 +159,7 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
 static void
 gst_wayland_sink_init (GstWaylandSink * sink)
 {
-  sink->display = NULL;
-  sink->window = NULL;
-  sink->pool = NULL;
+  g_cond_init (&sink->render_cond);
 }
 
 static void
@@ -208,7 +211,43 @@ gst_wayland_sink_finalize (GObject * object)
   if (sink->display_name)
     g_free (sink->display_name);
 
+  g_cond_clear (&sink->render_cond);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static GstStateChangeReturn
+gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (element);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (!sink->window)
+        gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (sink));
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (gst_wl_window_is_toplevel (sink->window)) {
+        g_clear_object (&sink->window);
+        g_clear_object (&sink->display);
+        g_clear_object (&sink->pool);
+      }
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static GstCaps *
@@ -216,10 +255,23 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstWaylandSink *sink;
   GstCaps *caps;
+  gint width, height;
 
   sink = GST_WAYLAND_SINK (bsink);
 
   caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
+
+  /* If we don't have a window yet, it will
+   * be created using the upstream size.
+   * Otherwise, we should tell upstream exactly
+   * what size we want. We don't resize ourselves. */
+  if (sink->window) {
+    caps = gst_caps_make_writable (caps);
+    gst_wl_window_get_size (sink->window, &width, &height);
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height, NULL);
+  }
+
   if (filter) {
     GstCaps *intersection;
 
@@ -237,6 +289,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstWaylandSink *sink;
   GstBufferPool *newpool;
   GstVideoInfo info;
+  GError *error = NULL;
   enum wl_shm_format format;
   GArray *formats;
   gint i;
@@ -244,8 +297,9 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   static GstAllocationParams params = { 0, 0, 0, 15, };
 
   sink = GST_WAYLAND_SINK (bsink);
+  GST_OBJECT_LOCK (sink);
 
-  GST_LOG_OBJECT (sink, "set caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (sink, "set caps %" GST_PTR_FORMAT, caps);
 
   /* extract info from caps */
   if (!gst_video_info_from_caps (&info, caps))
@@ -254,6 +308,25 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   format = gst_video_format_to_wayland_format (GST_VIDEO_INFO_FORMAT (&info));
   if (format == -1)
     goto invalid_format;
+
+  /* store the video size */
+  sink->video_width = info.width;
+  sink->video_height = info.height;
+
+  /* create the output window if needed */
+  if (!sink->window || sink->video_width != sink->window->width ||
+      sink->video_height != sink->window->height) {
+
+    if (!sink->display)
+      sink->display = gst_wl_display_new (sink->display_name, &error);
+
+    if (sink->display == NULL)
+      goto display_failed;
+
+    g_clear_object (&sink->window);
+    sink->window = gst_wl_window_new_toplevel (sink->display, sink->video_width,
+        sink->video_height);
+  }
 
   /* verify we support the requested format */
   formats = sink->display->formats;
@@ -265,17 +338,10 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (i >= formats->len)
     goto unsupported_format;
 
-  /* store the video size */
-  sink->video_width = info.width;
-  sink->video_height = info.height;
-
   /* create a new pool for the new configuration */
   newpool = gst_wayland_buffer_pool_new (sink->display);
-
-  if (!newpool) {
-    GST_DEBUG_OBJECT (sink, "Failed to create new pool");
-    return FALSE;
-  }
+  if (!newpool)
+    goto pool_failed;
 
   structure = gst_buffer_pool_get_config (newpool);
   gst_buffer_pool_config_set_params (structure, caps, info.size, 2, 0);
@@ -286,47 +352,45 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_object_replace ((GstObject **) & sink->pool, (GstObject *) newpool);
   gst_object_unref (newpool);
 
+  sink->negotiated = TRUE;
+  GST_OBJECT_UNLOCK (sink);
   return TRUE;
 
 invalid_format:
   {
     GST_DEBUG_OBJECT (sink,
         "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
+    goto failure;
+  }
+display_failed:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ_WRITE,
+        ("Could not initialise Wayland output"),
+        ("Failed to create GstWlDisplay: '%s'", error->message));
+    g_error_free (error);
+    goto failure;
   }
 unsupported_format:
   {
     GST_DEBUG_OBJECT (sink, "Format %s is not available on the display",
         gst_wayland_format_to_string (format));
-    return FALSE;
+    goto failure;
+  }
+pool_failed:
+  {
+    GST_DEBUG_OBJECT (sink, "Failed to create new pool");
+    goto failure;
   }
 config_failed:
   {
     GST_DEBUG_OBJECT (bsink, "failed setting config");
+    goto failure;
+  }
+failure:
+  {
+    GST_OBJECT_UNLOCK (sink);
     return FALSE;
   }
-}
-
-static gboolean
-gst_wayland_sink_start (GstBaseSink * bsink)
-{
-  GstWaylandSink *sink = (GstWaylandSink *) bsink;
-  gboolean result = TRUE;
-  GError *error = NULL;
-
-  GST_DEBUG_OBJECT (sink, "start");
-
-  if (!sink->display)
-    sink->display = gst_wl_display_new (sink->display_name, &error);
-
-  if (sink->display == NULL) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ_WRITE,
-        ("Could not initialise Wayland output"),
-        ("Failed to create GstWlDisplay: '%s'", error->message));
-    return FALSE;
-  }
-
-  return result;
 }
 
 static gboolean
@@ -430,14 +494,17 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstVideoRectangle src, dst, res;
   GstBuffer *to_render;
   GstWlMeta *meta;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   struct wl_surface *surface;
   struct wl_callback *callback;
 
+  GST_OBJECT_LOCK (sink);
+
   GST_LOG_OBJECT (sink, "render buffer %p", buffer);
-  if (!sink->window)
-    sink->window = gst_wl_window_new_toplevel (sink->display, sink->video_width,
-        sink->video_height);
+
+  /* surface is resizing - drop buffers until finished */
+  if (sink->drawing_frozen || !sink->negotiated)
+    goto done;
 
   meta = gst_buffer_get_wl_meta (buffer);
 
@@ -481,26 +548,35 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   wl_surface_commit (surface);
   wl_display_flush (sink->display->display);
 
+  /* notify _resume_rendering() in case it's waiting */
+  g_cond_broadcast (&sink->render_cond);
+
   if (buffer != to_render)
     gst_buffer_unref (to_render);
-  return GST_FLOW_OK;
+  goto done;
 
 no_buffer:
   {
     GST_WARNING_OBJECT (sink, "could not create image");
-    return ret;
+    goto done;
   }
 no_pool:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
         ("Internal error: can't allocate images"),
         ("We don't have a bufferpool negotiated"));
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 activate_failed:
   {
     GST_ERROR_OBJECT (sink, "failed to activate bufferpool.");
     ret = GST_FLOW_ERROR;
+    goto done;
+  }
+done:
+  {
+    GST_OBJECT_UNLOCK (sink);
     return ret;
   }
 }
@@ -516,7 +592,45 @@ static void
 gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (overlay);
+  GstWaylandWindowHandle *whandle = (GstWaylandWindowHandle *) handle;
+  GError *error = NULL;
+  GstPad *peer;
+
   g_return_if_fail (sink != NULL);
+
+  GST_DEBUG_OBJECT (sink, "Setting window handle %" GST_PTR_FORMAT,
+      (void *) handle);
+
+  if (GST_STATE (sink) > GST_STATE_READY)
+    gst_wayland_sink_pause_rendering (GST_WAYLAND_VIDEO (sink));
+
+  g_clear_object (&sink->window);
+  g_clear_object (&sink->display);
+
+  if (handle) {
+    sink->display =
+        gst_wl_display_new_existing (whandle->display, FALSE, &error);
+    if (error) {
+      GST_ELEMENT_WARNING (sink, RESOURCE, OPEN_READ_WRITE,
+          ("Could not set window handle"),
+          ("Failed to use the external wayland display: '%s'", error->message));
+      g_error_free (error);
+    } else {
+      sink->window = gst_wl_window_new_from_surface (sink->display,
+          whandle->surface, whandle->width, whandle->height);
+    }
+  } else {
+    /* reconfigure to force creation of new window in set_caps */
+    sink->negotiated = FALSE;
+    peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
+    if (peer) {
+      gst_pad_send_event (peer, gst_event_new_reconfigure ());
+      gst_object_unref (peer);
+    }
+  }
+
+  if (GST_STATE (sink) > GST_STATE_READY)
+    gst_wayland_sink_resume_rendering (GST_WAYLAND_VIDEO (sink));
 }
 
 static void
@@ -538,7 +652,32 @@ static void
 gst_wayland_sink_set_surface_size (GstWaylandVideo * video, gint w, gint h)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (video);
+  GstPad *peer;
+
   g_return_if_fail (sink != NULL);
+  g_return_if_fail (sink->window != NULL);
+
+  GST_OBJECT_LOCK (sink);
+  if (!sink->window) {
+    GST_OBJECT_UNLOCK (sink);
+    GST_WARNING_OBJECT (sink,
+        "set_surface_size called without window, ignoring");
+    return;
+  }
+
+  gst_wl_window_set_size (sink->window, w, h);
+  sink->negotiated = FALSE;
+  GST_OBJECT_UNLOCK (sink);
+
+  /* upstream must change video size because we can't resize ourselves.
+   * This can be removed when we move to wl_viewport */
+  if (GST_STATE (sink) > GST_STATE_READY) {
+    peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
+    if (peer) {
+      gst_pad_send_event (peer, gst_event_new_reconfigure ());
+      gst_object_unref (peer);
+    }
+  }
 }
 
 static void
@@ -546,6 +685,10 @@ gst_wayland_sink_pause_rendering (GstWaylandVideo * video)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (video);
   g_return_if_fail (sink != NULL);
+
+  GST_OBJECT_LOCK (sink);
+  sink->drawing_frozen = TRUE;
+  GST_OBJECT_UNLOCK (sink);
 }
 
 static void
@@ -553,6 +696,11 @@ gst_wayland_sink_resume_rendering (GstWaylandVideo * video)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (video);
   g_return_if_fail (sink != NULL);
+
+  GST_OBJECT_LOCK (sink);
+  sink->drawing_frozen = FALSE;
+  g_cond_wait (&sink->render_cond, GST_OBJECT_GET_LOCK (sink));
+  GST_OBJECT_UNLOCK (sink);
 }
 
 static gboolean

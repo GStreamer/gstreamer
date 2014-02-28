@@ -60,6 +60,10 @@ struct _GstWaylandSink
   gint video_height;
 
   gchar *display_name;
+
+  gboolean drawing_frozen;
+  gboolean negotiated;
+  GCond render_cond;
 };
 
 struct _GstWaylandSinkClass

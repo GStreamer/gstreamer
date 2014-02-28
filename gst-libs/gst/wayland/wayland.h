@@ -22,8 +22,25 @@
 #define __GST_WAYLAND_H__
 
 #include <gst/gst.h>
+#include <wayland-client.h>
 
 G_BEGIN_DECLS
+
+/**
+ * GstWaylandWindowHandle:
+ *
+ * Window handle structure to pass to the GstVideoOverlay set_window_handle
+ * method.
+ */
+typedef struct _GstWaylandWindowHandle GstWaylandWindowHandle;
+
+struct _GstWaylandWindowHandle {
+  struct wl_display *display;
+  struct wl_surface *surface;
+  gint width;
+  gint height;
+};
+
 
 #define GST_TYPE_WAYLAND_VIDEO \
     (gst_wayland_video_get_type ())

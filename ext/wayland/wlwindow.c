@@ -152,6 +152,14 @@ gst_wl_window_get_wl_surface (GstWlWindow * window)
   return window->surface;
 }
 
+gboolean
+gst_wl_window_is_toplevel (GstWlWindow * window)
+{
+  g_return_val_if_fail (window != NULL, FALSE);
+
+  return (window->shell_surface != NULL);
+}
+
 void
 gst_wl_window_get_size (GstWlWindow * window, gint * w, gint * h)
 {
