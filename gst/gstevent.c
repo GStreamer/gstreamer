@@ -51,7 +51,7 @@
  * construct and use seek events.
  * To do that gst_event_new_seek() is used to create a seek event. It takes
  * the needed parameters to specify seeking time and mode.
- * [[
+ * |[
  *   GstEvent *event;
  *   gboolean result;
  *   ...

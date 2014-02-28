@@ -81,7 +81,7 @@
  *   my_element_class_init (GstMyElementClass *klass)
  *   {
  *     GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
- *   
+ *
  *     gst_element_class_add_pad_template (gstelement_class,
  *         gst_static_pad_template_get (&amp;my_template));
  *   }
