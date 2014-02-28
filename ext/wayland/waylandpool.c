@@ -57,6 +57,8 @@ gst_wl_meta_free (GstWlMeta * meta, GstBuffer * buffer)
 {
   g_object_unref (meta->display);
   munmap (meta->data, meta->size);
+
+  GST_DEBUG ("destroying wl_buffer %p", meta->wbuffer);
   wl_buffer_destroy (meta->wbuffer);
 }
 
@@ -208,7 +210,7 @@ gst_wayland_buffer_pool_start (GstBufferPool * pool)
   self->size = size;
   self->used = 0;
 
-  return TRUE;
+  return GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
 }
 
 static gboolean
@@ -225,7 +227,7 @@ gst_wayland_buffer_pool_stop (GstBufferPool * pool)
   self->size = 0;
   self->used = 0;
 
-  return TRUE;
+  return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
 
 static GstFlowReturn
