@@ -834,6 +834,7 @@ gst_srtp_enc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query,
       }
 
       gst_query_set_caps_result (query, ret);
+      gst_caps_unref (ret);
       return TRUE;
     return_template:
 
