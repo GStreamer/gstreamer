@@ -792,16 +792,18 @@ gst_gl_context_create_thread (GstGLContext * context)
 
   context->priv->alive = FALSE;
 
-  if (window_class->close) {
-    window_class->close (context->window);
-  }
-
   context_class->activate (context, FALSE);
 
   context_class->destroy_context (context);
 
+  /* User supplied callback */
   if (context->window->close)
     context->window->close (context->window->close_data);
+
+  /* window specific shutdown */
+  if (window_class->close) {
+    window_class->close (context->window);
+  }
 
   g_cond_signal (&context->priv->destroy_cond);
 
