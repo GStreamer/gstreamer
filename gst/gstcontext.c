@@ -37,12 +37,12 @@
  *
  * When an element needs a context it will do the following actions in this
  * order until one step succeeds:
- * 1) Check if the element already has a context
- * 2) Query downstream with GST_QUERY_CONTEXT for the context
- * 2) Query upstream with GST_QUERY_CONTEXT for the context
- * 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with the required
+ * 1. Check if the element already has a context
+ * 2. Query downstream with GST_QUERY_CONTEXT for the context
+ * 3. Query upstream with GST_QUERY_CONTEXT for the context
+ * 4. Post a GST_MESSAGE_NEED_CONTEXT message on the bus with the required
  *    context types and afterwards check if a usable context was set now
- * 4) Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT message
+ * 5. Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT message
  *    on the bus.
  *
  * Bins will catch GST_MESSAGE_NEED_CONTEXT messages and will set any previously
