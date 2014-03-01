@@ -1340,6 +1340,9 @@ gst_omx_video_enc_reset (GstVideoEncoder * encoder, gboolean hard)
 
   GST_DEBUG_OBJECT (self, "Resetting encoder");
 
+  if (gst_omx_component_get_state (self->enc, 0) == OMX_StateLoaded)
+    return TRUE;
+
   gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, TRUE);
   gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, TRUE);
 
