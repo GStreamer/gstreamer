@@ -56,6 +56,8 @@ gconstpointer           gst_adapter_map                 (GstAdapter *adapter, gs
 void                    gst_adapter_unmap               (GstAdapter *adapter);
 void                    gst_adapter_copy                (GstAdapter *adapter, gpointer dest,
                                                          gsize offset, gsize size);
+GBytes *                gst_adapter_copy_bytes          (GstAdapter *adapter,
+                                                         gsize offset, gsize size);
 void                    gst_adapter_flush               (GstAdapter *adapter, gsize flush);
 gpointer                gst_adapter_take                (GstAdapter *adapter, gsize nbytes);
 GstBuffer*              gst_adapter_take_buffer         (GstAdapter *adapter, gsize nbytes);

@@ -3,6 +3,7 @@ EXPORTS
 	gst_adapter_available_fast
 	gst_adapter_clear
 	gst_adapter_copy
+	gst_adapter_copy_bytes
 	gst_adapter_flush
 	gst_adapter_get_type
 	gst_adapter_map

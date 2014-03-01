@@ -159,6 +159,7 @@ gst_adapter_push
 gst_adapter_map
 gst_adapter_unmap
 gst_adapter_copy
+gst_adapter_copy_bytes
 gst_adapter_flush
 gst_adapter_available
 gst_adapter_available_fast

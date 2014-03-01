@@ -526,7 +526,7 @@ gst_adapter_unmap (GstAdapter * adapter)
 }
 
 /**
- * gst_adapter_copy:
+ * gst_adapter_copy: (skip)
  * @adapter: a #GstAdapter
  * @dest: (out caller-allocates) (array length=size) (element-type guint8):
  *     the memory to copy into
@@ -548,6 +548,32 @@ gst_adapter_copy (GstAdapter * adapter, gpointer dest, gsize offset, gsize size)
   g_return_if_fail (offset + size <= adapter->size);
 
   copy_into_unchecked (adapter, dest, offset + adapter->skip, size);
+}
+
+/**
+ * gst_adapter_copy_bytes:
+ * @adapter: a #GstAdapter
+ * @offset: the bytes offset in the adapter to start from
+ * @size: the number of bytes to copy
+ *
+ * Similar to gst_adapter_copy, but more suitable for language bindings. @size
+ * bytes of data starting at @offset will be copied out of the buffers contained
+ * in @adapter and into a new #GBytes structure which is returned. Depending on
+ * the value of the @size argument an empty #GBytes structure may be returned.
+ *
+ * Returns: (transfer full): A new #GBytes structure containing the copied data.
+ *
+ * Rename to: gst_adapter_copy
+ *
+ * Since: 1.4
+ */
+GBytes *
+gst_adapter_copy_bytes (GstAdapter * adapter, gsize offset, gsize size)
+{
+  gpointer data;
+  data = g_malloc (size);
+  gst_adapter_copy (adapter, data, offset, size);
+  return g_bytes_new_take (data, size);
 }
 
 /*Flushes the first @flush bytes in the @adapter*/
