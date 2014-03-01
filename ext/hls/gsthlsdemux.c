@@ -360,6 +360,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       current_sequence = file->sequence;
       current_pos = 0;
       target_pos = (GstClockTime) start;
+      /* FIXME: Here we need proper discont handling */
       for (walk = demux->client->current->files; walk; walk = walk->next) {
         file = walk->data;
 
@@ -793,9 +794,11 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
 
   buf = gst_fragment_get_buffer (fragment);
 
-  if (G_UNLIKELY (!srccaps || !gst_caps_is_equal_fixed (bufcaps, srccaps))) {
+  if (G_UNLIKELY (!srccaps || demux->discont || GST_BUFFER_IS_DISCONT (buf))) {
     switch_pads (demux, bufcaps);
     demux->need_segment = TRUE;
+    demux->discont = FALSE;
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
   }
   gst_caps_unref (bufcaps);
   if (G_LIKELY (srccaps))
@@ -905,6 +908,7 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
 
   demux->position_shift = 0;
   demux->need_segment = TRUE;
+  demux->discont = TRUE;
 
   demux->have_group_id = FALSE;
   demux->group_id = G_MAXUINT;
@@ -1162,6 +1166,7 @@ retry_failover_protection:
 
   GST_INFO_OBJECT (demux, "Client was on %dbps, max allowed is %dbps, switching"
       " to bitrate %dbps", old_bandwidth, max_bitrate, new_bandwidth);
+  demux->discont = TRUE;
 
   if (gst_hls_demux_update_playlist (demux, FALSE, NULL)) {
     GstStructure *s;
@@ -1436,6 +1441,8 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   if (discont) {
     GST_DEBUG_OBJECT (demux, "Marking fragment as discontinuous");
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+  } else {
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
   /* The buffer ref is still kept inside the fragment download */

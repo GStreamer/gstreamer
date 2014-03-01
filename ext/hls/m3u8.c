@@ -236,7 +236,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
   gint val;
   GstClockTime duration;
   gchar *title, *end;
-//  gboolean discontinuity;
+  gboolean discontinuity = FALSE;
   GstM3U8 *list;
   gboolean have_iv = FALSE;
   guint8 iv[16] = { 0, };
@@ -324,8 +324,11 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
           }
         }
 
+        file->discont = discontinuity;
+
         duration = 0;
         title = NULL;
+        discontinuity = FALSE;
         self->files = g_list_append (self->files, file);
       }
 
@@ -373,7 +376,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       if (int_from_string (data + 22, &data, &val))
         self->mediasequence = val;
     } else if (g_str_has_prefix (data, "#EXT-X-DISCONTINUITY")) {
-      /* discontinuity = TRUE; */
+      discontinuity = TRUE;
     } else if (g_str_has_prefix (data, "#EXT-X-PROGRAM-DATE-TIME:")) {
       /* <YYYY-MM-DDThh:mm:ssZ> */
       GST_DEBUG ("FIXME parse date");
@@ -618,7 +621,7 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     *timestamp = client->sequence_position;
 
   if (discontinuity)
-    *discontinuity = client->sequence != file->sequence;
+    *discontinuity = client->sequence != file->sequence || file->discont;
   if (uri)
     *uri = file->uri;
   if (duration)

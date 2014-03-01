@@ -66,6 +66,7 @@ struct _GstM3U8MediaFile
   GstClockTime duration;
   gchar *uri;
   guint sequence;               /* the sequence nb of this file */
+  gboolean discont;             /* this file marks a discontinuity */
   gchar *key;
   guint8 iv[16];
 };
