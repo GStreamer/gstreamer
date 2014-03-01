@@ -2735,6 +2735,9 @@ gst_omx_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
 
   GST_DEBUG_OBJECT (self, "Resetting decoder");
 
+  if (gst_omx_component_get_state (self->dec, 0) == OMX_StateLoaded)
+    return TRUE;
+
   gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, TRUE);
   gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
 
