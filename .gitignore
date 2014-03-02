@@ -41,6 +41,7 @@ Makefile.in
 Makefile
 *.gir
 *.typelib
+*.gc??
 
 tmp-orc.c
 gst*orc.h
