@@ -36,6 +36,7 @@ Makefile.in
 Makefile
 *~
 *.bak
+*.gc??
 
 Build
 *.user
