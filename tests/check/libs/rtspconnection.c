@@ -330,10 +330,18 @@ GST_START_TEST (test_rtspconnection_tunnel_setup)
   gst_rtsp_connection_free (rtsp_conn2);
   rtsp_conn2 = NULL;
 
+  /* check if rtspconnection can detect close of the get channel */
+  g_object_unref (client_get);
+  while (!g_main_context_iteration (NULL, TRUE));
+  fail_unless (tunnel_start_count == 1);
+  fail_unless (tunnel_complete_count == 2);
+  fail_unless (tunnel_lost_count == 1);
+  fail_unless (closed_count == 1);
+
   fail_unless (gst_rtsp_connection_close (rtsp_conn1) == GST_RTSP_OK);
   fail_unless (gst_rtsp_connection_free (rtsp_conn1) == GST_RTSP_OK);
+
   g_object_unref (client_post);
-  g_object_unref (client_get);
   g_object_unref (server_post);
   g_object_unref (server_get);
 }
