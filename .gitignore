@@ -36,6 +36,7 @@ Makefile.in
 Makefile
 *~
 *.swp
+*.gc??
 
 /m4
 
