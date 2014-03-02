@@ -42,6 +42,7 @@ Makefile.in
 Makefile
 *.gir
 *.typelib
+*.gc??
 
 /gst-libs/gst/pbutils/gstpluginsbaseversion.h
 /gst-libs/gst/tag/mklangtables
