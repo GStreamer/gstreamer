@@ -150,9 +150,9 @@ gst_meta_api_type_get_tags (GType api)
  * @api: the type of the #GstMeta API
  * @impl: the name of the #GstMeta implementation
  * @size: the size of the #GstMeta structure
- * @init_func: (scope async) a #GstMetaInitFunction
- * @free_func: (scope async) a #GstMetaFreeFunction
- * @transform_func: (scope async) a #GstMetaTransformFunction
+ * @init_func: (scope async): a #GstMetaInitFunction
+ * @free_func: (scope async): a #GstMetaFreeFunction
+ * @transform_func: (scope async): a #GstMetaTransformFunction
  *
  * Register a new #GstMeta implementation.
  *

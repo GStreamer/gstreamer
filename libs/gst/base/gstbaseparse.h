@@ -113,7 +113,7 @@ typedef enum {
 /**
  * GstBaseParseFrame:
  * @buffer: input data to be parsed for frames.
- * @out_buffer: (optional) (replacement) output data.
+ * @out_buffer: output data.
  * @offset: media specific offset of input frame
  *   Note that a converter may have a different one on the frame's buffer.
  * @overhead: subclass can set this to indicates the metadata overhead
