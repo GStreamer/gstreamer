@@ -407,6 +407,46 @@ gst_omx_component_send_message (GstOMXComponent * comp, GstOMXMessage * msg)
   g_mutex_unlock (&comp->messages_lock);
 }
 
+/* NOTE: Call with comp->lock, comp->messages_lock will be used */
+static gboolean
+gst_omx_component_wait_message (GstOMXComponent * comp, GstClockTime timeout)
+{
+  gboolean signalled;
+  gint64 wait_until = -1;
+
+  if (timeout != GST_CLOCK_TIME_NONE) {
+    gint64 add = timeout / (GST_SECOND / G_TIME_SPAN_SECOND);
+
+    if (add == 0)
+      return FALSE;
+
+    wait_until = g_get_monotonic_time () + add;
+    GST_DEBUG_OBJECT (comp->parent, "%s waiting for %" G_GINT64_FORMAT "us",
+        comp->name, add);
+  } else {
+    GST_DEBUG_OBJECT (comp->parent, "%s waiting for signal", comp->name);
+  }
+
+  g_mutex_lock (&comp->messages_lock);
+  g_mutex_unlock (&comp->lock);
+
+  if (!g_queue_is_empty (&comp->messages)) {
+    signalled = TRUE;
+  } else if (timeout == GST_CLOCK_TIME_NONE) {
+    g_cond_wait (&comp->messages_cond, &comp->messages_lock);
+    signalled = TRUE;
+  } else {
+    signalled =
+        g_cond_wait_until (&comp->messages_cond, &comp->messages_lock,
+        wait_until);
+  }
+
+  g_mutex_unlock (&comp->messages_lock);
+  g_mutex_lock (&comp->lock);
+
+  return signalled;
+}
+
 static OMX_ERRORTYPE
 EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
     OMX_U32 nData1, OMX_U32 nData2, OMX_PTR pEventData)
@@ -799,7 +839,6 @@ OMX_STATETYPE
 gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
 {
   OMX_STATETYPE ret;
-  gint64 wait_until = -1;
   gboolean signalled = TRUE;
 
   g_return_val_if_fail (comp != NULL, OMX_StateInvalid);
@@ -822,36 +861,10 @@ gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
     goto done;
   }
 
-  if (timeout != GST_CLOCK_TIME_NONE) {
-    gint64 add = timeout / (GST_SECOND / G_TIME_SPAN_SECOND);
-
-    if (add == 0)
-      goto done;
-
-    wait_until = g_get_monotonic_time () + add;
-    GST_DEBUG_OBJECT (comp->parent, "%s waiting for %" G_GINT64_FORMAT "us",
-        comp->name, add);
-  } else {
-    GST_DEBUG_OBJECT (comp->parent, "%s waiting for signal", comp->name);
-  }
-
-  gst_omx_component_handle_messages (comp);
   while (signalled && comp->last_error == OMX_ErrorNone
       && comp->pending_state != OMX_StateInvalid) {
-    g_mutex_lock (&comp->messages_lock);
-    g_mutex_unlock (&comp->lock);
-    if (!g_queue_is_empty (&comp->messages)) {
-      signalled = TRUE;
-    } else if (timeout == GST_CLOCK_TIME_NONE) {
-      g_cond_wait (&comp->messages_cond, &comp->messages_lock);
-      signalled = TRUE;
-    } else {
-      signalled =
-          g_cond_wait_until (&comp->messages_cond, &comp->messages_lock,
-          wait_until);
-    }
-    g_mutex_unlock (&comp->messages_lock);
-    g_mutex_lock (&comp->lock);
+
+    signalled = gst_omx_component_wait_message (comp, timeout);
     if (signalled)
       gst_omx_component_handle_messages (comp);
   };
@@ -1248,12 +1261,7 @@ retry:
           (err = comp->last_error) == OMX_ErrorNone && !port->flushing) {
         GST_DEBUG_OBJECT (comp->parent,
             "Waiting for %s output ports to reconfigure", comp->name);
-        g_mutex_lock (&comp->messages_lock);
-        g_mutex_unlock (&comp->lock);
-        if (g_queue_is_empty (&comp->messages))
-          g_cond_wait (&comp->messages_cond, &comp->messages_lock);
-        g_mutex_unlock (&comp->messages_lock);
-        g_mutex_lock (&comp->lock);
+        gst_omx_component_wait_message (comp, GST_CLOCK_TIME_NONE);
         gst_omx_component_handle_messages (comp);
       }
       goto retry;
@@ -1316,12 +1324,7 @@ retry:
   if (g_queue_is_empty (&port->pending_buffers)) {
     GST_DEBUG_OBJECT (comp->parent, "Queue of %s port %u is empty",
         comp->name, port->index);
-    g_mutex_lock (&comp->messages_lock);
-    g_mutex_unlock (&comp->lock);
-    if (g_queue_is_empty (&comp->messages))
-      g_cond_wait (&comp->messages_cond, &comp->messages_lock);
-    g_mutex_unlock (&comp->messages_lock);
-    g_mutex_lock (&comp->lock);
+    gst_omx_component_wait_message (comp, GST_CLOCK_TIME_NONE);
     gst_omx_component_handle_messages (comp);
 
     /* And now check everything again and maybe get a buffer */
@@ -1456,7 +1459,6 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
 
   port->flushing = flush;
   if (flush) {
-    gint64 wait_until = -1;
     gboolean signalled;
     OMX_ERRORTYPE last_error;
 
@@ -1487,22 +1489,12 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
       goto done;
     }
 
-    if (timeout != GST_CLOCK_TIME_NONE) {
-      gint64 add = timeout / (GST_SECOND / G_TIME_SPAN_SECOND);
-
-      if (add == 0) {
-        if (!port->flushed || (port->buffers
-                && port->buffers->len >
-                g_queue_get_length (&port->pending_buffers)))
-          err = OMX_ErrorTimeout;
-        goto done;
-      }
-
-      wait_until = g_get_monotonic_time () + add;
-      GST_DEBUG_OBJECT (comp->parent, "%s waiting for %" G_GINT64_FORMAT "us",
-          comp->name, add);
-    } else {
-      GST_DEBUG_OBJECT (comp->parent, "%s waiting for signal", comp->name);
+    if (timeout == 0) {
+      if (!port->flushed || (port->buffers
+              && port->buffers->len >
+              g_queue_get_length (&port->pending_buffers)))
+        err = OMX_ErrorTimeout;
+      goto done;
     }
 
     /* Retry until timeout or until an error happend or
@@ -1514,23 +1506,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
     while (signalled && last_error == OMX_ErrorNone && !port->flushed
         && port->buffers
         && port->buffers->len > g_queue_get_length (&port->pending_buffers)) {
-      g_mutex_lock (&comp->messages_lock);
-      g_mutex_unlock (&comp->lock);
-
-      if (!g_queue_is_empty (&comp->messages)) {
-        signalled = TRUE;
-      } else if (timeout == GST_CLOCK_TIME_NONE) {
-        g_cond_wait (&comp->messages_cond, &comp->messages_lock);
-        signalled = TRUE;
-      } else {
-        signalled =
-            g_cond_wait_until (&comp->messages_cond, &comp->messages_lock,
-            wait_until);
-      }
-
-      g_mutex_unlock (&comp->messages_lock);
-      g_mutex_lock (&comp->lock);
-
+      signalled = gst_omx_component_wait_message (comp, timeout);
       if (signalled)
         gst_omx_component_handle_messages (comp);
 
@@ -1927,7 +1903,6 @@ gst_omx_port_wait_buffers_released_unlocked (GstOMXPort * port,
   GstOMXComponent *comp;
   OMX_ERRORTYPE err = OMX_ErrorNone;
   OMX_ERRORTYPE last_error;
-  gint64 wait_until = -1;
   gboolean signalled;
 
   comp = port->comp;
@@ -1943,21 +1918,12 @@ gst_omx_port_wait_buffers_released_unlocked (GstOMXPort * port,
   GST_INFO_OBJECT (comp->parent, "Waiting for %s port %u to release all "
       "buffers", comp->name, port->index);
 
-  if (timeout != GST_CLOCK_TIME_NONE) {
-    gint64 add = timeout / (GST_SECOND / G_TIME_SPAN_SECOND);
-
-    if (add == 0) {
-      if (port->buffers
-          && port->buffers->len > g_queue_get_length (&port->pending_buffers))
-        err = OMX_ErrorTimeout;
-      goto done;
-    }
-
-    wait_until = g_get_monotonic_time () + add;
-    GST_DEBUG_OBJECT (comp->parent, "%s waiting for %" G_GINT64_FORMAT "us",
-        comp->name, add);
-  } else {
-    GST_DEBUG_OBJECT (comp->parent, "%s waiting for signal", comp->name);
+  if (timeout == 0) {
+    if (!port->flushed || (port->buffers
+            && port->buffers->len >
+            g_queue_get_length (&port->pending_buffers)))
+      err = OMX_ErrorTimeout;
+    goto done;
   }
 
   /* Wait until all buffers are released by the port */
@@ -1967,20 +1933,7 @@ gst_omx_port_wait_buffers_released_unlocked (GstOMXPort * port,
   while (signalled && last_error == OMX_ErrorNone && (port->buffers
           && port->buffers->len >
           g_queue_get_length (&port->pending_buffers))) {
-    g_mutex_lock (&comp->messages_lock);
-    g_mutex_unlock (&comp->lock);
-    if (!g_queue_is_empty (&comp->messages)) {
-      signalled = TRUE;
-    } else if (timeout != GST_CLOCK_TIME_NONE) {
-      signalled =
-          g_cond_wait_until (&comp->messages_cond, &comp->messages_lock,
-          wait_until);
-    } else {
-      signalled = TRUE;
-      g_cond_wait (&comp->messages_cond, &comp->messages_lock);
-    }
-    g_mutex_unlock (&comp->messages_lock);
-    g_mutex_lock (&comp->lock);
+    signalled = gst_omx_component_wait_message (comp, timeout);
     if (signalled)
       gst_omx_component_handle_messages (comp);
     last_error = comp->last_error;
@@ -2130,7 +2083,6 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
 {
   GstOMXComponent *comp;
   OMX_ERRORTYPE err = OMX_ErrorNone;
-  gint64 wait_until = -1;
   gboolean signalled;
   OMX_ERRORTYPE last_error;
   gboolean enabled;
@@ -2158,20 +2110,10 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
   GST_INFO_OBJECT (comp->parent, "Waiting for %s port %u to be %s",
       comp->name, port->index, (enabled ? "enabled" : "disabled"));
 
-  if (timeout != GST_CLOCK_TIME_NONE) {
-    gint64 add = timeout / (GST_SECOND / G_TIME_SPAN_SECOND);
-
-    if (add == 0) {
-      if (port->enabled_pending || port->disabled_pending)
-        err = OMX_ErrorTimeout;
-      goto done;
-    }
-
-    wait_until = g_get_monotonic_time () + add;
-    GST_DEBUG_OBJECT (comp->parent, "%s waiting for %" G_GINT64_FORMAT "us",
-        comp->name, add);
-  } else {
-    GST_DEBUG_OBJECT (comp->parent, "%s waiting for signal", comp->name);
+  if (timeout == 0) {
+    if (port->enabled_pending || port->disabled_pending)
+      err = OMX_ErrorTimeout;
+    goto done;
   }
 
   /* And now wait until the enable/disable command is finished */
@@ -2182,20 +2124,7 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
   while (signalled && last_error == OMX_ErrorNone &&
       (! !port->port_def.bEnabled != ! !enabled || port->enabled_pending
           || port->disabled_pending)) {
-    g_mutex_lock (&comp->messages_lock);
-    g_mutex_unlock (&comp->lock);
-    if (!g_queue_is_empty (&comp->messages)) {
-      signalled = TRUE;
-    } else if (timeout != GST_CLOCK_TIME_NONE) {
-      signalled =
-          g_cond_wait_until (&comp->messages_cond, &comp->messages_lock,
-          wait_until);
-    } else {
-      signalled = TRUE;
-      g_cond_wait (&comp->messages_cond, &comp->messages_lock);
-    }
-    g_mutex_unlock (&comp->messages_lock);
-    g_mutex_lock (&comp->lock);
+    signalled = gst_omx_component_wait_message (comp, timeout);
     if (signalled)
       gst_omx_component_handle_messages (comp);
     last_error = comp->last_error;
