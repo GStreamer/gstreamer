@@ -2186,8 +2186,8 @@ gst_rtsp_stream_remove_transport (GstRTSPStream * stream,
  *
  * @stream must be joined to a bin.
  *
- * Returns: the RTP socket or %NULL if no socket could be allocated for @family.
- *     Unref after usage
+ * Returns: (transfer full): the RTP socket or %NULL if no socket could be
+ *     allocated for @family. Unref after usage
  */
 GSocket *
 gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
@@ -2220,8 +2220,8 @@ gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
  *
  * @stream must be joined to a bin.
  *
- * Returns: the RTCP socket or %NULL if no socket could be allocated for
- *     @family. Unref after usage
+ * Returns: (transfer full): the RTCP socket or %NULL if no socket could be
+ *     allocated for @family. Unref after usage
  */
 GSocket *
 gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)

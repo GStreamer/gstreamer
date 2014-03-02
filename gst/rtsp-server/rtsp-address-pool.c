@@ -625,7 +625,7 @@ find_address_in_ranges (GList * addresses, Addr * addr, guint port,
  * @port: The first port to reserve
  * @n_ports: The number of ports
  * @ttl: The requested ttl
- * @address: (out) storage for a #GstRTSPAddress
+ * @address: (out): storage for a #GstRTSPAddress
  *
  * Take a specific address and ports from @pool. @n_ports consecutive
  * ports will be allocated of which the first one can be found in

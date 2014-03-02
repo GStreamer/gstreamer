@@ -75,6 +75,7 @@ GstRtspServer-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@
 		$(INTROSPECTION_SCANNER) -v --namespace GstRtspServer \
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
+		--warn-all \
 		-I$(top_srcdir) \
 		-I$(top_builddir) \
 		-DIN_GOBJECT_INTROSPECTION=1 \

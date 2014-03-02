@@ -1053,7 +1053,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
  * implementation of this function returns the bin created from the
  * launch parameter.
  *
- * Returns: (transfer floating) a new #GstElement.
+ * Returns: (transfer floating): a new #GstElement.
  */
 GstElement *
 gst_rtsp_media_factory_create_element (GstRTSPMediaFactory * factory,
