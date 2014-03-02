@@ -54,3 +54,4 @@ Build
 *.log
 *.trs
 .dirstamp
+*.gc??
