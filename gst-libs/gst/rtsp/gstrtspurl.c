@@ -393,7 +393,8 @@ unescape_path_component (gchar * comp)
  * Also note that since paths usually start with a slash, the first component
  * will usually be the empty string.
  *
- * Returns: a string vector. g_strfreev() after usage.
+ * Returns: (transfer full): %NULL-terminated array of URL components. Free with
+ * g_strfreev() when no longer needed.
  */
 gchar **
 gst_rtsp_url_decode_path_components (const GstRTSPUrl * url)

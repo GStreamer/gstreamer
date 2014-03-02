@@ -2776,8 +2776,8 @@ gst_video_format_get_info (GstVideoFormat format)
  * Get the default palette of @format. This the palette used in the pack
  * function for paletted formats.
  *
- * Returns: the default palette of @format or %NULL when @format does not have a
- * palette.
+ * Returns: (transfer none): the default palette of @format or %NULL when
+ * @format does not have a palette.
  *
  * Since: 1.2
  */

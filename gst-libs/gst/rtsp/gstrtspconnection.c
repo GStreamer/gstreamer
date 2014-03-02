@@ -2751,8 +2751,8 @@ gst_rtsp_connection_set_ip (GstRTSPConnection * conn, const gchar * ip)
  *
  * Get the file descriptor for reading.
  *
- * Returns: the file descriptor used for reading or %NULL on error. The file
- * descriptor remains valid until the connection is closed.
+ * Returns: (transfer none): the file descriptor used for reading or %NULL on
+ * error. The file descriptor remains valid until the connection is closed.
  */
 GSocket *
 gst_rtsp_connection_get_read_socket (const GstRTSPConnection * conn)
@@ -2769,8 +2769,8 @@ gst_rtsp_connection_get_read_socket (const GstRTSPConnection * conn)
  *
  * Get the file descriptor for writing.
  *
- * Returns: the file descriptor used for writing or NULL on error. The file
- * descriptor remains valid until the connection is closed.
+ * Returns: (transfer none): the file descriptor used for writing or NULL on
+ * error. The file descriptor remains valid until the connection is closed.
  */
 GSocket *
 gst_rtsp_connection_get_write_socket (const GstRTSPConnection * conn)
