@@ -117,7 +117,7 @@ gst_color_balance_base_init (GstColorBalanceInterface * iface)
  *
  * Retrieve a list of the available channels.
  *
- * Returns: (element-type GstColorBalanceChannel) (tranfer none): A
+ * Returns: (element-type GstColorBalanceChannel) (transfer none): A
  *          GList containing pointers to #GstColorBalanceChannel
  *          objects. The list is owned by the #GstColorBalance
  *          instance and must not be freed.

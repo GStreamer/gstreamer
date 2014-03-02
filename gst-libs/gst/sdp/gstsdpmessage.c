@@ -692,7 +692,7 @@ static const gchar hex[16] = "0123456789ABCDEF";
  *
  * Creates a uri from @msg with the given @scheme. The uri has the format:
  *
- *  @scheme:///[#type=value *[&type=value]]
+ *  \@scheme:///[#type=value *[&type=value]]
  *
  *  Where each value is url encoded.
  *

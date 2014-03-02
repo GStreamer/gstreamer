@@ -132,7 +132,7 @@ gst_video_colorimetry_to_string (GstVideoColorimetry * cinfo)
 
 /**
  * gst_video_colorimetry_matches:
- * @info: a #GstVideoInfo
+ * @cinfo: a #GstVideoInfo
  * @color: a colorimetry string
  *
  * Check if the colorimetry information in @info matches that of the
@@ -156,7 +156,7 @@ gst_video_colorimetry_matches (GstVideoColorimetry * cinfo, const gchar * color)
  * gst_video_color_range_offsets:
  * @range: a #GstVideoColorRange
  * @info: a #GstVideoFormatInfo
- * @offsets: (out): output offsets
+ * @offset: (out): output offsets
  * @scale: (out): output scale
  *
  * Compute the offset and scale values for each component of @info. For each

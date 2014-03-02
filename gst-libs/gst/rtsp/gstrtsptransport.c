@@ -273,7 +273,7 @@ gst_rtsp_transport_get_mime (GstRTSPTransMode trans, const gchar ** mime)
 /**
  * gst_rtsp_transport_get_media_type:
  * @transport: a #GstRTSPTransport
- * @mime: location to hold the result
+ * @media_type: media type of @transport
  *
  * Get the media type of @transport. This media type is typically
  * used to generate #GstCaps events.

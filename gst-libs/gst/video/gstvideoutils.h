@@ -42,8 +42,8 @@ typedef struct _GstVideoCodecFrame GstVideoCodecFrame;
  * GstVideoCodecState:
  * @info: The #GstVideoInfo describing the stream
  * @caps: The #GstCaps
- * @codec_data: (optional) a #GstBuffer corresponding to the
- *     'codec_data' field of a stream.
+ * @codec_data: a #GstBuffer corresponding to the
+ *     'codec_data' field of a stream, or NULL.
  *
  * Structure representing the state of an incoming or outgoing video
  * stream for encoders and decoders.

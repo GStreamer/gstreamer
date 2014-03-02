@@ -311,7 +311,7 @@ gst_navigation_query_set_commandsv (GstQuery * query, gint n_cmds,
 /**
  * gst_navigation_query_parse_commands_length:
  * @query: a #GstQuery
- * @n_cmds: (out) the number of commands in this query.
+ * @n_cmds: (out): the number of commands in this query.
  *
  * Parse the number of commands in the #GstNavigation commands @query.
  *
@@ -342,7 +342,7 @@ gst_navigation_query_parse_commands_length (GstQuery * query, guint * n_cmds)
  * gst_navigation_query_parse_commands_nth:
  * @query: a #GstQuery
  * @nth: the nth command to retrieve.
- * @cmd: (out) a pointer to store the nth command into.
+ * @cmd: (out): a pointer to store the nth command into.
  *
  * Parse the #GstNavigation command query and retrieve the @nth command from
  * it into @cmd. If the list contains less elements than @nth, @cmd will be
