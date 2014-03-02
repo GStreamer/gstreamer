@@ -1069,7 +1069,7 @@ default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
  * gst_buffer_pool_acquire_buffer:
  * @pool: a #GstBufferPool
  * @buffer: (out): a location for a #GstBuffer
- * @params: (transfer none) (allow-none) parameters.
+ * @params: (transfer none) (allow-none): parameters.
  *
  * Acquire a buffer from @pool. @buffer should point to a memory location that
  * can hold a pointer to the new buffer.
