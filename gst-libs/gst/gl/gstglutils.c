@@ -133,7 +133,7 @@ gst_gl_context_gen_texture (GstGLContext * context, GLuint * pTexture,
 void
 _del_texture (GstGLContext * context, guint * texture)
 {
-  glDeleteTextures (1, texture);
+  context->gl_vtable->DeleteTextures (1, texture);
 }
 
 void
