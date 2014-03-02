@@ -8,6 +8,7 @@
 *.sw[po]
 *.tar.*
 *~
+*.gc??
 .deps
 .libs
 ABOUT-NLS
