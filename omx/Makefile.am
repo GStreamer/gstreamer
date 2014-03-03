@@ -13,6 +13,7 @@ endif
 libgstomx_la_SOURCES = \
 	gstomx.c \
 	gstomxbufferpool.c \
+	gstomxvideo.c \
 	gstomxvideodec.c \
 	gstomxvideoenc.c \
 	gstomxaudioenc.c \
@@ -31,6 +32,7 @@ libgstomx_la_SOURCES = \
 
 noinst_HEADERS = \
 	gstomx.h \
+	gstomxvideo.h \
 	gstomxvideodec.h \
 	gstomxvideoenc.h \
 	gstomxaudioenc.h \

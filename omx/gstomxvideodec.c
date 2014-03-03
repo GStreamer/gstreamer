@@ -48,6 +48,7 @@
 #include <string.h>
 
 #include "gstomxbufferpool.h"
+#include "gstomxvideo.h"
 #include "gstomxvideodec.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_omx_video_dec_debug_category);
@@ -400,43 +401,6 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
-}
-
-static GstVideoCodecFrame *
-gst_omx_video_dec_find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
-{
-  GstVideoCodecFrame *best = NULL;
-  GstClockTimeDiff best_diff = G_MAXINT64;
-  GstClockTime timestamp;
-  GList *frames;
-  GList *l;
-
-  timestamp =
-      gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
-      OMX_TICKS_PER_SECOND);
-
-  frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (self));
-
-  for (l = frames; l; l = l->next) {
-    GstVideoCodecFrame *tmp = l->data;
-    GstClockTimeDiff diff = ABS (GST_CLOCK_DIFF (timestamp, tmp->pts));
-
-    if (diff < best_diff) {
-      best = tmp;
-      best_diff = diff;
-
-      if (diff == 0)
-        break;
-    }
-  }
-
-  if (best)
-    gst_video_codec_frame_ref (best);
-
-  g_list_foreach (frames, (GFunc) gst_video_codec_frame_unref, NULL);
-  g_list_free (frames);
-
-  return best;
 }
 
 static gboolean
@@ -1328,7 +1292,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       (guint) buf->omx_buf->nFlags, (guint64) buf->omx_buf->nTimeStamp);
 
   GST_VIDEO_DECODER_STREAM_LOCK (self);
-  frame = gst_omx_video_dec_find_nearest_frame (self, buf);
+  frame = gst_omx_video_find_nearest_frame (buf,
+      gst_video_decoder_get_frames (GST_VIDEO_DECODER (self)));
 
   if (frame
       && (deadline = gst_video_decoder_get_max_decode_time
@@ -1643,86 +1608,6 @@ gst_omx_video_dec_stop (GstVideoDecoder * decoder)
   return TRUE;
 }
 
-typedef struct
-{
-  GstVideoFormat format;
-  OMX_COLOR_FORMATTYPE type;
-} VideoNegotiationMap;
-
-static void
-video_negotiation_map_free (VideoNegotiationMap * m)
-{
-  g_slice_free (VideoNegotiationMap, m);
-}
-
-static GList *
-gst_omx_video_dec_get_supported_colorformats (GstOMXVideoDec * self)
-{
-  GstOMXComponent *comp;
-  GstOMXPort *port;
-  GstVideoCodecState *state = self->input_state;
-  OMX_VIDEO_PARAM_PORTFORMATTYPE param;
-  OMX_ERRORTYPE err;
-  GList *negotiation_map = NULL;
-  gint old_index;
-  VideoNegotiationMap *m;
-
-  port = self->dec_out_port;
-  comp = self->dec;
-
-  GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = port->index;
-  param.nIndex = 0;
-  if (!state || state->info.fps_n == 0)
-    param.xFramerate = 0;
-  else
-    param.xFramerate = (state->info.fps_n << 16) / (state->info.fps_d);
-
-  old_index = -1;
-  do {
-    err =
-        gst_omx_component_get_parameter (comp,
-        OMX_IndexParamVideoPortFormat, &param);
-
-    /* FIXME: Workaround for Bellagio that simply always
-     * returns the same value regardless of nIndex and
-     * never returns OMX_ErrorNoMore
-     */
-    if (old_index == param.nIndex)
-      break;
-
-    if (err == OMX_ErrorNone || err == OMX_ErrorNoMore) {
-      switch (param.eColorFormat) {
-        case OMX_COLOR_FormatYUV420Planar:
-        case OMX_COLOR_FormatYUV420PackedPlanar:
-          m = g_slice_new (VideoNegotiationMap);
-          m->format = GST_VIDEO_FORMAT_I420;
-          m->type = param.eColorFormat;
-          negotiation_map = g_list_append (negotiation_map, m);
-          GST_DEBUG_OBJECT (self, "Component supports I420 (%d) at index %u",
-              param.eColorFormat, (guint) param.nIndex);
-          break;
-        case OMX_COLOR_FormatYUV420SemiPlanar:
-          m = g_slice_new (VideoNegotiationMap);
-          m->format = GST_VIDEO_FORMAT_NV12;
-          m->type = param.eColorFormat;
-          negotiation_map = g_list_append (negotiation_map, m);
-          GST_DEBUG_OBJECT (self, "Component supports NV12 (%d) at index %u",
-              param.eColorFormat, (guint) param.nIndex);
-          break;
-        default:
-          GST_DEBUG_OBJECT (self,
-              "Component supports unsupported color format %d at index %u",
-              param.eColorFormat, (guint) param.nIndex);
-          break;
-      }
-    }
-    old_index = param.nIndex++;
-  } while (err == OMX_ErrorNone);
-
-  return negotiation_map;
-}
-
 static gboolean
 gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
 {
@@ -1745,16 +1630,11 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   GST_DEBUG_OBJECT (self, "Allowed downstream caps: %" GST_PTR_FORMAT,
       intersection);
 
-  negotiation_map = gst_omx_video_dec_get_supported_colorformats (self);
-  comp_supported_caps = gst_caps_new_empty ();
-  for (l = negotiation_map; l; l = l->next) {
-    VideoNegotiationMap *map = l->data;
+  negotiation_map =
+      gst_omx_video_get_supported_colorformats (self->dec_out_port,
+      self->input_state);
 
-    gst_caps_append_structure (comp_supported_caps,
-        gst_structure_new ("video/x-raw",
-            "format", G_TYPE_STRING,
-            gst_video_format_to_string (map->format), NULL));
-  }
+  comp_supported_caps = gst_omx_video_get_caps_4_map (negotiation_map);
 
   if (!gst_caps_is_empty (comp_supported_caps)) {
     GstCaps *tmp;
@@ -1769,7 +1649,7 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
     gst_caps_unref (intersection);
     GST_ERROR_OBJECT (self, "Empty caps");
     g_list_free_full (negotiation_map,
-        (GDestroyNotify) video_negotiation_map_free);
+        (GDestroyNotify) gst_omx_video_negotiation_map_free);
     return FALSE;
   }
 
@@ -1785,7 +1665,7 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
     GST_ERROR_OBJECT (self, "Invalid caps: %" GST_PTR_FORMAT, intersection);
     gst_caps_unref (intersection);
     g_list_free_full (negotiation_map,
-        (GDestroyNotify) video_negotiation_map_free);
+        (GDestroyNotify) gst_omx_video_negotiation_map_free);
     return FALSE;
   }
   gst_caps_unref (intersection);
@@ -1794,7 +1674,7 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   param.nPortIndex = self->dec_out_port->index;
 
   for (l = negotiation_map; l; l = l->next) {
-    VideoNegotiationMap *m = l->data;
+    GstOMXVideoNegotiationMap *m = l->data;
 
     if (m->format == format) {
       param.eColorFormat = m->type;
@@ -1808,7 +1688,7 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   /* We must find something here */
   g_assert (l != NULL);
   g_list_free_full (negotiation_map,
-      (GDestroyNotify) video_negotiation_map_free);
+      (GDestroyNotify) gst_omx_video_negotiation_map_free);
 
   err =
       gst_omx_component_set_parameter (self->dec,
