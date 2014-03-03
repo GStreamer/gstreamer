@@ -253,7 +253,7 @@ get_buffer_level (RTPJitterBuffer * jbuf)
   /* first first buffer with timestamp */
   high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (jbuf->packets);
   while (high_buf) {
-    if (high_buf->dts != -1)
+    if (high_buf->dts != -1 || high_buf->pts != -1)
       break;
 
     high_buf = (RTPJitterBufferItem *) g_list_previous (high_buf);
@@ -261,7 +261,7 @@ get_buffer_level (RTPJitterBuffer * jbuf)
 
   low_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (jbuf->packets);
   while (low_buf) {
-    if (low_buf->dts != -1)
+    if (low_buf->dts != -1 || low_buf->pts != -1)
       break;
 
     low_buf = (RTPJitterBufferItem *) g_list_next (low_buf);
@@ -272,8 +272,8 @@ get_buffer_level (RTPJitterBuffer * jbuf)
   } else {
     guint64 high_ts, low_ts;
 
-    high_ts = high_buf->dts;
-    low_ts = low_buf->dts;
+    high_ts = high_buf->dts != -1 ? high_buf->dts : high_buf->pts;
+    low_ts = low_buf->dts != -1 ? low_buf->dts : low_buf->pts;
 
     if (high_ts > low_ts)
       level = high_ts - low_ts;
