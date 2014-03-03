@@ -53,6 +53,7 @@ struct _GstRTSPMediaFactoryPrivate
   gboolean shared;
   GstRTSPSuspendMode suspend_mode;
   gboolean eos_shutdown;
+  GstRTSPProfile profiles;
   GstRTSPLowerTrans protocols;
   guint buffer_size;
   GstRTSPAddressPool *pool;
@@ -65,6 +66,7 @@ struct _GstRTSPMediaFactoryPrivate
 #define DEFAULT_SHARED          FALSE
 #define DEFAULT_SUSPEND_MODE    GST_RTSP_SUSPEND_MODE_NONE
 #define DEFAULT_EOS_SHUTDOWN    FALSE
+#define DEFAULT_PROFILES        GST_RTSP_PROFILE_AVP
 #define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | \
                                         GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_BUFFER_SIZE     0x80000
@@ -76,6 +78,7 @@ enum
   PROP_SHARED,
   PROP_SUSPEND_MODE,
   PROP_EOS_SHUTDOWN,
+  PROP_PROFILES,
   PROP_PROTOCOLS,
   PROP_BUFFER_SIZE,
   PROP_LAST
@@ -161,6 +164,11 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           "Send EOS down the pipeline before shutting down",
           DEFAULT_EOS_SHUTDOWN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_PROFILES,
+      g_param_spec_flags ("profiles", "Profiles",
+          "Allowed transfer profiles", GST_TYPE_RTSP_PROFILE,
+          DEFAULT_PROFILES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
       g_param_spec_flags ("protocols", "Protocols",
           "Allowed lower transport protocols", GST_TYPE_RTSP_LOWER_TRANS,
@@ -204,6 +212,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   priv->shared = DEFAULT_SHARED;
   priv->suspend_mode = DEFAULT_SUSPEND_MODE;
   priv->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
+  priv->profiles = DEFAULT_PROFILES;
   priv->protocols = DEFAULT_PROTOCOLS;
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
 
@@ -252,6 +261,9 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
       g_value_set_boolean (value,
           gst_rtsp_media_factory_is_eos_shutdown (factory));
       break;
+    case PROP_PROFILES:
+      g_value_set_flags (value, gst_rtsp_media_factory_get_profiles (factory));
+      break;
     case PROP_PROTOCOLS:
       g_value_set_flags (value, gst_rtsp_media_factory_get_protocols (factory));
       break;
@@ -284,6 +296,9 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_EOS_SHUTDOWN:
       gst_rtsp_media_factory_set_eos_shutdown (factory,
           g_value_get_boolean (value));
+      break;
+    case PROP_PROFILES:
+      gst_rtsp_media_factory_set_profiles (factory, g_value_get_flags (value));
       break;
     case PROP_PROTOCOLS:
       gst_rtsp_media_factory_set_protocols (factory, g_value_get_flags (value));
@@ -707,6 +722,56 @@ gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory)
 }
 
 /**
+ * gst_rtsp_media_factory_set_profiles:
+ * @factory: a #GstRTSPMediaFactory
+ * @profiles: the new flags
+ *
+ * Configure the allowed profiles for @factory.
+ */
+void
+gst_rtsp_media_factory_set_profiles (GstRTSPMediaFactory * factory,
+    GstRTSPProfile profiles)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  priv = factory->priv;
+
+  GST_DEBUG_OBJECT (factory, "profiles %d", profiles);
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv->profiles = profiles;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_profiles:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get the allowed profiles of @factory.
+ *
+ * Returns: a #GstRTSPProfile
+ */
+GstRTSPProfile
+gst_rtsp_media_factory_get_profiles (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  GstRTSPProfile res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory),
+      GST_RTSP_PROFILE_UNKNOWN);
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  res = priv->profiles;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return res;
+}
+
+/**
  * gst_rtsp_media_factory_set_protocols:
  * @factory: a #GstRTSPMediaFactory
  * @protocols: the new flags
@@ -722,6 +787,8 @@ gst_rtsp_media_factory_set_protocols (GstRTSPMediaFactory * factory,
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
 
   priv = factory->priv;
+
+  GST_DEBUG_OBJECT (factory, "protocols %d", protocols);
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   priv->protocols = protocols;
@@ -1012,6 +1079,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gboolean shared, eos_shutdown;
   guint size;
   GstRTSPSuspendMode suspend_mode;
+  GstRTSPProfile profiles;
   GstRTSPLowerTrans protocols;
   GstRTSPAddressPool *pool;
   GstRTSPPermissions *perms;
@@ -1022,6 +1090,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   shared = priv->shared;
   eos_shutdown = priv->eos_shutdown;
   size = priv->buffer_size;
+  profiles = priv->profiles;
   protocols = priv->protocols;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
@@ -1029,6 +1098,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_shared (media, shared);
   gst_rtsp_media_set_eos_shutdown (media, eos_shutdown);
   gst_rtsp_media_set_buffer_size (media, size);
+  gst_rtsp_media_set_profiles (media, profiles);
   gst_rtsp_media_set_protocols (media, protocols);
 
   if ((pool = gst_rtsp_media_factory_get_address_pool (factory))) {

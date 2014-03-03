@@ -126,6 +126,10 @@ void                  gst_rtsp_media_factory_set_eos_shutdown (GstRTSPMediaFacto
                                                                gboolean eos_shutdown);
 gboolean              gst_rtsp_media_factory_is_eos_shutdown  (GstRTSPMediaFactory *factory);
 
+void                  gst_rtsp_media_factory_set_profiles     (GstRTSPMediaFactory *factory,
+                                                               GstRTSPProfile profiles);
+GstRTSPProfile        gst_rtsp_media_factory_get_profiles     (GstRTSPMediaFactory *factory);
+
 void                  gst_rtsp_media_factory_set_protocols    (GstRTSPMediaFactory *factory,
                                                                GstRTSPLowerTrans protocols);
 GstRTSPLowerTrans     gst_rtsp_media_factory_get_protocols    (GstRTSPMediaFactory *factory);
