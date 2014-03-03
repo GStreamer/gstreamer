@@ -70,6 +70,178 @@ update_sdp_from_tags (GstRTSPStream * stream, GstSDPMedia * stream_media)
   gst_object_unref (src_pad);
 }
 
+static void
+make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
+    GstRTSPStream * stream, GstStructure * s, GstRTSPProfile profile)
+{
+  GstSDPMedia *smedia;
+  const gchar *caps_str, *caps_enc, *caps_params;
+  gchar *tmp;
+  gint caps_pt, caps_rate;
+  guint n_fields, j;
+  gboolean first;
+  GString *fmtp;
+  GstRTSPLowerTrans ltrans;
+  GSocketFamily family;
+  const gchar *addrtype, *proto;
+  gchar *address;
+  guint ttl;
+
+  gst_sdp_media_new (&smedia);
+
+  /* get media type and payload for the m= line */
+  caps_str = gst_structure_get_string (s, "media");
+  gst_sdp_media_set_media (smedia, caps_str);
+
+  gst_structure_get_int (s, "payload", &caps_pt);
+  tmp = g_strdup_printf ("%d", caps_pt);
+  gst_sdp_media_add_format (smedia, tmp);
+  g_free (tmp);
+
+  gst_sdp_media_set_port_info (smedia, 0, 1);
+
+  switch (profile) {
+    case GST_RTSP_PROFILE_AVP:
+      proto = "RTP/AVP";
+      break;
+    case GST_RTSP_PROFILE_AVPF:
+      proto = "RTP/AVPF";
+      break;
+    case GST_RTSP_PROFILE_SAVP:
+      proto = "RTP/SAVP";
+      break;
+    case GST_RTSP_PROFILE_SAVPF:
+      proto = "RTP/SAVPF";
+      break;
+    default:
+      proto = "udp";
+      break;
+  }
+  gst_sdp_media_set_proto (smedia, proto);
+
+  if (info->is_ipv6) {
+    addrtype = "IP6";
+    family = G_SOCKET_FAMILY_IPV6;
+  } else {
+    addrtype = "IP4";
+    family = G_SOCKET_FAMILY_IPV4;
+  }
+
+  ltrans = gst_rtsp_stream_get_protocols (stream);
+  if (ltrans == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+    GstRTSPAddress *addr;
+
+    addr = gst_rtsp_stream_get_multicast_address (stream, family);
+    if (addr == NULL)
+      goto no_multicast;
+
+    address = g_strdup (addr->address);
+    ttl = addr->ttl;
+    gst_rtsp_address_free (addr);
+  } else {
+    ttl = 16;
+    if (info->is_ipv6)
+      address = g_strdup ("::");
+    else
+      address = g_strdup ("0.0.0.0");
+  }
+
+  /* for the c= line */
+  gst_sdp_media_add_connection (smedia, "IN", addrtype, address, ttl, 1);
+  g_free (address);
+
+  /* get clock-rate, media type and params for the rtpmap attribute */
+  gst_structure_get_int (s, "clock-rate", &caps_rate);
+  caps_enc = gst_structure_get_string (s, "encoding-name");
+  caps_params = gst_structure_get_string (s, "encoding-params");
+
+  if (caps_enc) {
+    if (caps_params)
+      tmp = g_strdup_printf ("%d %s/%d/%s", caps_pt, caps_enc, caps_rate,
+          caps_params);
+    else
+      tmp = g_strdup_printf ("%d %s/%d", caps_pt, caps_enc, caps_rate);
+
+    gst_sdp_media_add_attribute (smedia, "rtpmap", tmp);
+    g_free (tmp);
+  }
+
+  /* the config uri */
+  tmp = gst_rtsp_stream_get_control (stream);
+  gst_sdp_media_add_attribute (smedia, "control", tmp);
+  g_free (tmp);
+
+  /* collect all other properties and add them to fmtp or attributes */
+  fmtp = g_string_new ("");
+  g_string_append_printf (fmtp, "%d ", caps_pt);
+  first = TRUE;
+  n_fields = gst_structure_n_fields (s);
+  for (j = 0; j < n_fields; j++) {
+    const gchar *fname, *fval;
+
+    fname = gst_structure_nth_field_name (s, j);
+
+    /* filter out standard properties */
+    if (!strcmp (fname, "media"))
+      continue;
+    if (!strcmp (fname, "payload"))
+      continue;
+    if (!strcmp (fname, "clock-rate"))
+      continue;
+    if (!strcmp (fname, "encoding-name"))
+      continue;
+    if (!strcmp (fname, "encoding-params"))
+      continue;
+    if (!strcmp (fname, "ssrc"))
+      continue;
+    if (!strcmp (fname, "clock-base"))
+      continue;
+    if (!strcmp (fname, "seqnum-base"))
+      continue;
+
+    if (g_str_has_prefix (fname, "a-")) {
+      /* attribute */
+      if ((fval = gst_structure_get_string (s, fname)))
+        gst_sdp_media_add_attribute (smedia, fname + 2, fval);
+      continue;
+    }
+    if (g_str_has_prefix (fname, "x-")) {
+      /* attribute */
+      if ((fval = gst_structure_get_string (s, fname)))
+        gst_sdp_media_add_attribute (smedia, fname, fval);
+      continue;
+    }
+
+    if ((fval = gst_structure_get_string (s, fname))) {
+      g_string_append_printf (fmtp, "%s%s=%s", first ? "" : ";", fname, fval);
+      first = FALSE;
+    }
+  }
+  if (!first) {
+    tmp = g_string_free (fmtp, FALSE);
+    gst_sdp_media_add_attribute (smedia, "fmtp", tmp);
+    g_free (tmp);
+  } else {
+    g_string_free (fmtp, TRUE);
+  }
+
+  update_sdp_from_tags (stream, smedia);
+
+  gst_sdp_message_add_media (sdp, smedia);
+  gst_sdp_media_free (smedia);
+
+  return;
+
+  /* ERRORS */
+no_multicast:
+  {
+    gst_sdp_media_free (smedia);
+    g_warning ("ignoring stream %d without multicast address",
+        gst_rtsp_stream_get_index (stream));
+    return;
+  }
+}
+
 /**
  * gst_rtsp_sdp_from_media:
  * @sdp: a #GstSDPMessage
@@ -99,20 +271,10 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
 
   for (i = 0; i < n_streams; i++) {
     GstRTSPStream *stream;
-    GstSDPMedia *smedia;
-    GstStructure *s;
-    const gchar *caps_str, *caps_enc, *caps_params;
-    gchar *tmp;
-    gint caps_pt, caps_rate;
-    guint n_fields, j;
-    gboolean first;
-    GString *fmtp;
     GstCaps *caps;
-    GstRTSPLowerTrans ltrans;
-    GSocketFamily family;
-    const gchar *addrtype;
-    gchar *address;
-    guint ttl;
+    GstStructure *s;
+    GstRTSPProfile profiles;
+    guint mask;
 
     stream = gst_rtsp_media_get_stream (media, i);
     caps = gst_rtsp_stream_get_caps (stream);
@@ -129,133 +291,17 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
       continue;
     }
 
-    gst_sdp_media_new (&smedia);
+    /* make a new media for each profile */
+    profiles = gst_rtsp_stream_get_profiles (stream);
+    mask = 1;
+    while (profiles >= mask) {
+      GstRTSPProfile prof = profiles & mask;
 
-    /* get media type and payload for the m= line */
-    caps_str = gst_structure_get_string (s, "media");
-    gst_sdp_media_set_media (smedia, caps_str);
+      if (prof)
+        make_media (sdp, info, media, stream, s, prof);
 
-    gst_structure_get_int (s, "payload", &caps_pt);
-    tmp = g_strdup_printf ("%d", caps_pt);
-    gst_sdp_media_add_format (smedia, tmp);
-    g_free (tmp);
-
-    gst_sdp_media_set_port_info (smedia, 0, 1);
-    gst_sdp_media_set_proto (smedia, "RTP/AVP");
-
-    if (info->is_ipv6) {
-      addrtype = "IP6";
-      family = G_SOCKET_FAMILY_IPV6;
-    } else {
-      addrtype = "IP4";
-      family = G_SOCKET_FAMILY_IPV4;
+      mask <<= 1;
     }
-
-    ltrans = gst_rtsp_stream_get_protocols (stream);
-    if (ltrans == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-      GstRTSPAddress *addr;
-
-      addr = gst_rtsp_stream_get_multicast_address (stream, family);
-      if (addr == NULL) {
-        gst_sdp_media_free (smedia);
-        gst_caps_unref (caps);
-        g_warning ("ignoring stream %d without multicast address", i);
-        continue;
-      }
-      address = g_strdup (addr->address);
-      ttl = addr->ttl;
-      gst_rtsp_address_free (addr);
-    } else {
-      ttl = 16;
-      if (info->is_ipv6)
-        address = g_strdup ("::");
-      else
-        address = g_strdup ("0.0.0.0");
-    }
-
-    /* for the c= line */
-    gst_sdp_media_add_connection (smedia, "IN", addrtype, address, ttl, 1);
-    g_free (address);
-
-    /* get clock-rate, media type and params for the rtpmap attribute */
-    gst_structure_get_int (s, "clock-rate", &caps_rate);
-    caps_enc = gst_structure_get_string (s, "encoding-name");
-    caps_params = gst_structure_get_string (s, "encoding-params");
-
-    if (caps_enc) {
-      if (caps_params)
-        tmp = g_strdup_printf ("%d %s/%d/%s", caps_pt, caps_enc, caps_rate,
-            caps_params);
-      else
-        tmp = g_strdup_printf ("%d %s/%d", caps_pt, caps_enc, caps_rate);
-
-      gst_sdp_media_add_attribute (smedia, "rtpmap", tmp);
-      g_free (tmp);
-    }
-
-    /* the config uri */
-    tmp = gst_rtsp_stream_get_control (stream);
-    gst_sdp_media_add_attribute (smedia, "control", tmp);
-    g_free (tmp);
-
-    /* collect all other properties and add them to fmtp or attributes */
-    fmtp = g_string_new ("");
-    g_string_append_printf (fmtp, "%d ", caps_pt);
-    first = TRUE;
-    n_fields = gst_structure_n_fields (s);
-    for (j = 0; j < n_fields; j++) {
-      const gchar *fname, *fval;
-
-      fname = gst_structure_nth_field_name (s, j);
-
-      /* filter out standard properties */
-      if (!strcmp (fname, "media"))
-        continue;
-      if (!strcmp (fname, "payload"))
-        continue;
-      if (!strcmp (fname, "clock-rate"))
-        continue;
-      if (!strcmp (fname, "encoding-name"))
-        continue;
-      if (!strcmp (fname, "encoding-params"))
-        continue;
-      if (!strcmp (fname, "ssrc"))
-        continue;
-      if (!strcmp (fname, "clock-base"))
-        continue;
-      if (!strcmp (fname, "seqnum-base"))
-        continue;
-
-      if (g_str_has_prefix (fname, "a-")) {
-        /* attribute */
-        if ((fval = gst_structure_get_string (s, fname)))
-          gst_sdp_media_add_attribute (smedia, fname + 2, fval);
-        continue;
-      }
-      if (g_str_has_prefix (fname, "x-")) {
-        /* attribute */
-        if ((fval = gst_structure_get_string (s, fname)))
-          gst_sdp_media_add_attribute (smedia, fname, fval);
-        continue;
-      }
-
-      if ((fval = gst_structure_get_string (s, fname))) {
-        g_string_append_printf (fmtp, "%s%s=%s", first ? "" : ";", fname, fval);
-        first = FALSE;
-      }
-    }
-    if (!first) {
-      tmp = g_string_free (fmtp, FALSE);
-      gst_sdp_media_add_attribute (smedia, "fmtp", tmp);
-      g_free (tmp);
-    } else {
-      g_string_free (fmtp, TRUE);
-    }
-
-    update_sdp_from_tags (stream, smedia);
-
-    gst_sdp_message_add_media (sdp, smedia);
-    gst_sdp_media_free (smedia);
     gst_caps_unref (caps);
   }
 
