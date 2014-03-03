@@ -136,8 +136,8 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstPadTemplate *videosrctempl, *audiosrctempl, *subsrctempl;
-  GstCaps *audcaps, *vidcaps, *subcaps;
+  GstPadTemplate *videosrctempl, *audiosrctempl, *subsrctempl, *subpicsrctempl;
+  GstCaps *audcaps, *vidcaps, *subcaps, *subpiccaps;;
 
   GST_DEBUG_CATEGORY_INIT (avidemux_debug, "avidemux",
       0, "Demuxer for AVI streams");
@@ -165,9 +165,13 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
   subcaps = gst_caps_new_empty_simple ("application/x-subtitle-avi");
   subsrctempl = gst_pad_template_new ("subtitle_%u",
       GST_PAD_SRC, GST_PAD_SOMETIMES, subcaps);
+  subpiccaps = gst_caps_new_empty_simple ("subpicture/x-xsub");
+  subpicsrctempl = gst_pad_template_new ("subpicture_%u",
+      GST_PAD_SRC, GST_PAD_SOMETIMES, subpiccaps);
   gst_element_class_add_pad_template (gstelement_class, audiosrctempl);
   gst_element_class_add_pad_template (gstelement_class, videosrctempl);
   gst_element_class_add_pad_template (gstelement_class, subsrctempl);
+  gst_element_class_add_pad_template (gstelement_class, subpicsrctempl);
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_templ));
 
@@ -255,6 +259,7 @@ gst_avi_demux_reset (GstAviDemux * avi)
   avi->num_v_streams = 0;
   avi->num_a_streams = 0;
   avi->num_t_streams = 0;
+  avi->num_sp_streams = 0;
   avi->main_stream = -1;
 
   avi->have_group_id = FALSE;
@@ -2280,32 +2285,41 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
 
       fourcc = (stream->strf.vids->compression) ?
           stream->strf.vids->compression : stream->strh->fcc_handler;
-      padname = g_strdup_printf ("video_%u", avi->num_v_streams);
-      templ = gst_element_class_get_pad_template (klass, "video_%u");
       caps = gst_riff_create_video_caps (fourcc, stream->strh,
           stream->strf.vids, stream->extradata, stream->initdata, &codec_name);
-      if (!caps) {
-        caps = gst_caps_new_simple ("video/x-avi-unknown", "fourcc",
-            G_TYPE_INT, fourcc, NULL);
-      } else if (got_vprp && vprp) {
-        guint32 aspect_n, aspect_d;
-        gint n, d;
 
-        aspect_n = vprp->aspect >> 16;
-        aspect_d = vprp->aspect & 0xffff;
-        /* calculate the pixel aspect ratio using w/h and aspect ratio */
-        n = aspect_n * stream->strf.vids->height;
-        d = aspect_d * stream->strf.vids->width;
-        if (n && d)
-          gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-              n, d, NULL);
-        /* very local, not needed elsewhere */
-        g_free (vprp);
-        vprp = NULL;
+      /* DXSB is XSUB, and it is placed inside a vids */
+      if (!caps || fourcc != GST_MAKE_FOURCC ('D', 'X', 'S', 'B')) {
+        padname = g_strdup_printf ("video_%u", avi->num_v_streams);
+        templ = gst_element_class_get_pad_template (klass, "video_%u");
+        if (!caps) {
+          caps = gst_caps_new_simple ("video/x-avi-unknown", "fourcc",
+              G_TYPE_INT, fourcc, NULL);
+        } else if (got_vprp && vprp) {
+          guint32 aspect_n, aspect_d;
+          gint n, d;
+
+          aspect_n = vprp->aspect >> 16;
+          aspect_d = vprp->aspect & 0xffff;
+          /* calculate the pixel aspect ratio using w/h and aspect ratio */
+          n = aspect_n * stream->strf.vids->height;
+          d = aspect_d * stream->strf.vids->width;
+          if (n && d)
+            gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+                n, d, NULL);
+          /* very local, not needed elsewhere */
+          g_free (vprp);
+          vprp = NULL;
+        }
+        caps = gst_avi_demux_check_caps (avi, caps, &stream->rgb8_palette);
+        tag_name = GST_TAG_VIDEO_CODEC;
+        avi->num_v_streams++;
+      } else {
+        padname = g_strdup_printf ("subpicture_%u", avi->num_sp_streams);
+        templ = gst_element_class_get_pad_template (klass, "subpicture_%u");
+        tag_name = NULL;
+        avi->num_sp_streams++;
       }
-      caps = gst_avi_demux_check_caps (avi, caps, &stream->rgb8_palette);
-      tag_name = GST_TAG_VIDEO_CODEC;
-      avi->num_v_streams++;
       break;
     }
     case GST_RIFF_FCC_auds:{
