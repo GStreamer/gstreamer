@@ -157,6 +157,9 @@ struct _TSDemuxStream
 
   /* List of pending buffers */
   GList *pending;
+
+  /* if != 0, output only PES from that substream */
+  guint8 target_pes_substream;
 };
 
 #define VIDEO_CAPS \
@@ -814,6 +817,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         break;
       }
       case ST_BD_AUDIO_EAC3:
+      case ST_BD_AUDIO_AC3_PLUS:
         template = gst_static_pad_template_get (&audio_template);
         name = g_strdup_printf ("audio_%04x", bstream->pid);
         caps = gst_caps_new_empty_simple ("audio/x-eac3");
@@ -822,6 +826,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         template = gst_static_pad_template_get (&audio_template);
         name = g_strdup_printf ("audio_%04x", bstream->pid);
         caps = gst_caps_new_empty_simple ("audio/x-true-hd");
+        stream->target_pes_substream = 0x72;
         break;
       case ST_BD_AUDIO_LPCM:
         template = gst_static_pad_template_get (&audio_template);
@@ -832,6 +837,13 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         template = gst_static_pad_template_get (&subpicture_template);
         name = g_strdup_printf ("subpicture_%04x", bstream->pid);
         caps = gst_caps_new_empty_simple ("subpicture/x-pgs");
+        break;
+      case ST_BD_AUDIO_DTS_HD:
+      case ST_BD_AUDIO_DTS_HD_MASTER_AUDIO:
+        template = gst_static_pad_template_get (&audio_template);
+        name = g_strdup_printf ("audio_%04x", bstream->pid);
+        caps = gst_caps_new_empty_simple ("audio/x-dts");
+        stream->target_pes_substream = 0x71;
         break;
     }
   }
@@ -1485,6 +1497,12 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
   if (G_UNLIKELY (parseres == PES_PARSING_BAD)) {
     GST_WARNING ("Error parsing PES header. pid: 0x%x stream_type: 0x%x",
         stream->stream.pid, stream->stream.stream_type);
+    goto discont;
+  }
+
+  if (stream->target_pes_substream != 0
+      && header.stream_id_extension != stream->target_pes_substream) {
+    GST_DEBUG ("Skipping unwanted substream");
     goto discont;
   }
 
