@@ -597,16 +597,19 @@ gst_rtsp_stream_is_transport_supported (GstRTSPStream * stream,
 unsupported_transmode:
   {
     GST_DEBUG ("unsupported transport mode %d", transport->trans);
+    g_mutex_unlock (&priv->lock);
     return FALSE;
   }
 unsupported_profile:
   {
     GST_DEBUG ("unsupported profile %d", transport->profile);
+    g_mutex_unlock (&priv->lock);
     return FALSE;
   }
 unsupported_ltrans:
   {
     GST_DEBUG ("unsupported lower transport %d", transport->lower_transport);
+    g_mutex_unlock (&priv->lock);
     return FALSE;
   }
 }
@@ -1854,6 +1857,7 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
 
 was_not_joined:
   {
+    g_mutex_unlock (&priv->lock);
     return TRUE;
   }
 }
