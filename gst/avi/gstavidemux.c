@@ -2430,7 +2430,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   gst_caps_unref (caps);
 
   /* make tags */
-  if (codec_name) {
+  if (codec_name && tag_name) {
     if (!stream->taglist)
       stream->taglist = gst_tag_list_new_empty ();
 
