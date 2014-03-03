@@ -70,8 +70,11 @@ main (int argc, char *argv[])
   /* make a new address pool */
   pool = gst_rtsp_address_pool_new ();
   gst_rtsp_address_pool_add_range (pool,
-      "224.3.0.0", "224.3.0.10", 5000, 5010, 1);
+      "224.3.0.0", "224.3.0.10", 5000, 5010, 16);
   gst_rtsp_media_factory_set_address_pool (factory, pool);
+  /* only allow multicast */
+  gst_rtsp_media_factory_set_protocols (factory,
+      GST_RTSP_LOWER_TRANS_UDP_MCAST);
   g_object_unref (pool);
 
   /* attach the test factory to the /test url */

@@ -108,6 +108,11 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     gboolean first;
     GString *fmtp;
     GstCaps *caps;
+    GstRTSPLowerTrans ltrans;
+    GSocketFamily family;
+    const gchar *addrtype;
+    gchar *address;
+    guint ttl;
 
     stream = gst_rtsp_media_get_stream (media, i);
     caps = gst_rtsp_stream_get_caps (stream);
@@ -138,12 +143,39 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     gst_sdp_media_set_port_info (smedia, 0, 1);
     gst_sdp_media_set_proto (smedia, "RTP/AVP");
 
-    /* for the c= line */
     if (info->is_ipv6) {
-      gst_sdp_media_add_connection (smedia, "IN", "IP6", "::", 16, 0);
+      addrtype = "IP6";
+      family = G_SOCKET_FAMILY_IPV6;
     } else {
-      gst_sdp_media_add_connection (smedia, "IN", "IP4", "0.0.0.0", 16, 0);
+      addrtype = "IP4";
+      family = G_SOCKET_FAMILY_IPV4;
     }
+
+    ltrans = gst_rtsp_stream_get_protocols (stream);
+    if (ltrans == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+      GstRTSPAddress *addr;
+
+      addr = gst_rtsp_stream_get_multicast_address (stream, family);
+      if (addr == NULL) {
+        gst_sdp_media_free (smedia);
+        gst_caps_unref (caps);
+        g_warning ("ignoring stream %d without multicast address", i);
+        continue;
+      }
+      address = g_strdup (addr->address);
+      ttl = addr->ttl;
+      gst_rtsp_address_free (addr);
+    } else {
+      ttl = 16;
+      if (info->is_ipv6)
+        address = g_strdup ("::");
+      else
+        address = g_strdup ("0.0.0.0");
+    }
+
+    /* for the c= line */
+    gst_sdp_media_add_connection (smedia, "IN", addrtype, address, ttl, 1);
+    g_free (address);
 
     /* get clock-rate, media type and params for the rtpmap attribute */
     gst_structure_get_int (s, "clock-rate", &caps_rate);
