@@ -1344,17 +1344,6 @@ gen_source_element (GstURIDecodeBin * decoder)
 
   source_class = G_OBJECT_GET_CLASS (source);
 
-  /* make HTTP sources send extra headers so we get icecast
-   * metadata in case the stream is an icecast stream */
-  if (!strncmp (decoder->uri, "http://", 7)) {
-    pspec = g_object_class_find_property (source_class, "iradio-mode");
-
-    if (pspec && G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_STRING) {
-      GST_LOG_OBJECT (decoder, "configuring iradio-mode");
-      g_object_set (source, "iradio-mode", TRUE, NULL);
-    }
-  }
-
   pspec = g_object_class_find_property (source_class, "connection-speed");
   if (pspec != NULL) {
     guint64 speed = decoder->connection_speed / 1000;
