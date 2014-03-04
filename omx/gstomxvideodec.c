@@ -856,8 +856,7 @@ gst_omx_video_dec_shutdown (GstOMXVideoDec * self)
 
     gst_omx_port_deallocate_buffers (self->dec_in_port);
     gst_omx_video_dec_deallocate_output_buffers (self);
-    gst_omx_component_close_tunnel (self->dec, self->dec_out_port,
-        self->egl_render, self->egl_in_port);
+    gst_omx_close_tunnel (self->dec_out_port, self->egl_in_port);
     if (state > OMX_StateLoaded) {
       gst_omx_component_get_state (self->egl_render, 5 * GST_SECOND);
       gst_omx_component_get_state (self->dec, 1 * GST_SECOND);
@@ -1621,9 +1620,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
 #undef OMX_IndexParamBrcmVideoEGLRenderDiscardMode
       }
 
-      err =
-          gst_omx_component_setup_tunnel (self->dec, self->dec_out_port,
-          self->egl_render, self->egl_in_port);
+      err = gst_omx_setup_tunnel (self->dec_out_port, self->egl_in_port);
       if (err != OMX_ErrorNone)
         goto no_egl;
 
@@ -1707,8 +1704,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
       gst_omx_component_set_state (self->egl_render, OMX_StateLoaded);
 
       gst_omx_video_dec_deallocate_output_buffers (self);
-      gst_omx_component_close_tunnel (self->dec, self->dec_out_port,
-          self->egl_render, self->egl_in_port);
+      gst_omx_close_tunnel (self->dec_out_port, self->egl_in_port);
 
       if (egl_state > OMX_StateLoaded) {
         gst_omx_component_get_state (self->egl_render, 5 * GST_SECOND);
@@ -2542,8 +2538,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
           gst_omx_component_set_state (self->egl_render, OMX_StateLoaded);
           gst_omx_component_set_state (self->dec, OMX_StateLoaded);
 
-          gst_omx_component_close_tunnel (self->dec, self->dec_out_port,
-              self->egl_render, self->egl_in_port);
+          gst_omx_close_tunnel (self->dec_out_port, self->egl_in_port);
 
           if (egl_state > OMX_StateLoaded) {
             gst_omx_component_get_state (self->egl_render, 5 * GST_SECOND);

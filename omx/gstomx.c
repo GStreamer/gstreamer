@@ -1059,19 +1059,22 @@ gst_omx_component_set_config (GstOMXComponent * comp, OMX_INDEXTYPE index,
 }
 
 OMX_ERRORTYPE
-gst_omx_component_setup_tunnel (GstOMXComponent * comp1, GstOMXPort * port1,
-    GstOMXComponent * comp2, GstOMXPort * port2)
+gst_omx_setup_tunnel (GstOMXPort * port1, GstOMXPort * port2)
 {
+  GstOMXComponent *comp1;
+  GstOMXComponent *comp2;
   OMX_ERRORTYPE err;
 
-  g_return_val_if_fail (comp1 != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (port1 != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (port1->port_def.eDir == OMX_DirOutput,
       OMX_ErrorUndefined);
-  g_return_val_if_fail (comp2 != NULL, OMX_ErrorUndefined);
+  comp1 = port1->comp;
+
   g_return_val_if_fail (port2 != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (port2->port_def.eDir == OMX_DirInput,
       OMX_ErrorUndefined);
+  comp2 = port2->comp;
+
   g_return_val_if_fail (comp1->core == comp2->core, OMX_ErrorUndefined);
 
   g_mutex_lock (&comp1->lock);
@@ -1100,19 +1103,22 @@ gst_omx_component_setup_tunnel (GstOMXComponent * comp1, GstOMXPort * port1,
 }
 
 OMX_ERRORTYPE
-gst_omx_component_close_tunnel (GstOMXComponent * comp1, GstOMXPort * port1,
-    GstOMXComponent * comp2, GstOMXPort * port2)
+gst_omx_close_tunnel (GstOMXPort * port1, GstOMXPort * port2)
 {
+  GstOMXComponent *comp1;
+  GstOMXComponent *comp2;
   OMX_ERRORTYPE err;
 
-  g_return_val_if_fail (comp1 != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (port1 != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (port1->port_def.eDir == OMX_DirOutput,
       OMX_ErrorUndefined);
-  g_return_val_if_fail (comp2 != NULL, OMX_ErrorUndefined);
+  comp1 = port1->comp;
+
   g_return_val_if_fail (port2 != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (port2->port_def.eDir == OMX_DirInput,
       OMX_ErrorUndefined);
+  comp2 = port2->comp;
+
   g_return_val_if_fail (comp1->core == comp2->core, OMX_ErrorUndefined);
   g_return_val_if_fail (port1->tunneled && port2->tunneled, OMX_ErrorUndefined);
 

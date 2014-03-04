@@ -311,8 +311,9 @@ OMX_ERRORTYPE     gst_omx_component_set_parameter (GstOMXComponent * comp, OMX_I
 
 OMX_ERRORTYPE     gst_omx_component_get_config (GstOMXComponent * comp, OMX_INDEXTYPE index, gpointer config);
 OMX_ERRORTYPE     gst_omx_component_set_config (GstOMXComponent * comp, OMX_INDEXTYPE index, gpointer config);
-OMX_ERRORTYPE     gst_omx_component_setup_tunnel (GstOMXComponent * comp1, GstOMXPort * port1, GstOMXComponent * comp2, GstOMXPort * port2);
-OMX_ERRORTYPE     gst_omx_component_close_tunnel (GstOMXComponent * comp1, GstOMXPort * port1, GstOMXComponent * comp2, GstOMXPort * port2);
+
+OMX_ERRORTYPE     gst_omx_setup_tunnel (GstOMXPort * port1, GstOMXPort * port2);
+OMX_ERRORTYPE     gst_omx_close_tunnel (GstOMXPort * port1, GstOMXPort * port2);
 
 
 OMX_ERRORTYPE     gst_omx_port_get_port_definition (GstOMXPort * port, OMX_PARAM_PORTDEFINITIONTYPE * port_def);
