@@ -108,7 +108,6 @@ struct _GstRTSPStream {
 
   /* for interleaved mode */
   guint8        channel[2];
-  GstCaps      *caps;
   GstPad       *channelpad[2];
 
   /* our udp sources */
@@ -125,9 +124,12 @@ struct _GstRTSPStream {
   GstElement   *fakesrc;
 
   /* state */
-  gint          pt;
   guint         port;
   gboolean      container;
+  gboolean      is_real;
+  guint8        default_pt;
+  GstRTSPProfile profile;
+  GArray       *ptmap;
   /* original control url */
   gchar        *control_url;
   guint32       ssrc;
@@ -149,6 +151,7 @@ struct _GstRTSPStream {
   gchar        *destination;
   gboolean      is_multicast;
   guint         ttl;
+
 };
 
 /**
