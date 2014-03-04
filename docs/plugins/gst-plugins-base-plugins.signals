@@ -186,14 +186,6 @@ gint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstGnomeVFSSink::allow-overwrite</NAME>
-<RETURNS>gboolean</RETURNS>
-<FLAGS>c</FLAGS>
-GstGnomeVFSSink *gstgnomevfssink
-GnomeVFSURI *arg1
-</SIGNAL>
-
-<SIGNAL>
 <NAME>GstCdParanoiaSrc::transport-error</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>

@@ -1729,86 +1729,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstGnomeVFSSrc::handle</NAME>
-<TYPE>GnomeVFSHandle*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>GnomeVFSHandle</NICK>
-<BLURB>Handle for GnomeVFS.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstGnomeVFSSrc::iradio-genre</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>iradio-genre</NICK>
-<BLURB>Genre of the stream.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstGnomeVFSSrc::iradio-mode</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>iradio-mode</NICK>
-<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstGnomeVFSSrc::iradio-name</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>iradio-name</NICK>
-<BLURB>Name of the stream.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstGnomeVFSSrc::iradio-title</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>iradio-title</NICK>
-<BLURB>Name of currently playing song.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstGnomeVFSSrc::iradio-url</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>iradio-url</NICK>
-<BLURB>Homepage URL for radio stream.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstGnomeVFSSrc::location</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>File Location</NICK>
-<BLURB>Location of the file to read.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstGnomeVFSSrc::random-access</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>random-mode</NICK>
-<BLURB>Enable random file access.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>GstOggMux::max-delay</NAME>
 <TYPE>guint64</TYPE>
 <RANGE></RANGE>
@@ -2616,36 +2536,6 @@
 <NICK>Device name</NICK>
 <BLURB>Human-readable name of the sound device.</BLURB>
 <DEFAULT>""</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstGnomeVFSSink::handle</NAME>
-<TYPE>GnomeVFSHandle*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>GnomeVFSHandle</NICK>
-<BLURB>Handle for GnomeVFS.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstGnomeVFSSink::location</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>File Location</NICK>
-<BLURB>Location of the file to write.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstGnomeVFSSink::uri</NAME>
-<TYPE>GnomeVFSURI*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>GnomeVFSURI</NICK>
-<BLURB>URI for GnomeVFS.</BLURB>
-<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>

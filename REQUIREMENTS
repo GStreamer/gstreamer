@@ -68,12 +68,6 @@ Plugins:	cdparanoia
 URL:		http://xiph.org/paranoia/
 DebianPackage:	libcdparanoia0-dev
 
-Package:	GnomeVFS
-Version:	>= 2.0 (2.4?)
-Plugins:	gnomevfs (gnomevfssrc)
-URL:		http://www.gnome.org/
-DebianPackage:	libgnomevfs2-dev
-
 Package:	libvisual
 Version:	>= 0.2.0
 Recommended:	0.4.0
