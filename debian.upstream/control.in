@@ -92,7 +92,7 @@ Description: GStreamer libraries from the "vaapi" set
 @USE_WAYLAND_TRUE@ .
 @USE_WAYLAND_TRUE@ This package contains Wayland libraries for the "vaapi" set.
 
-Package: libgstvaapi@GST_API_VERSION@-dev
+Package: libgstvaapi@GST_PKG_VERSION@-dev
 Architecture: any
 Section: libdevel
 Depends: ${shlibs:Depends}, ${misc:Depends},
