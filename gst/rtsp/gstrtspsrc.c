@@ -1299,55 +1299,11 @@ gst_rtspsrc_collect_connections (GstRTSPSrc * src, const GstSDPMessage * sdp,
   }
 }
 
-static const gchar *
-get_aggregate_control (GstRTSPSrc * src)
+static void
+gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
+    const GstSDPMedia * media, GstRTSPStream * stream)
 {
-  const gchar *base;
-
-  if (src->control)
-    base = src->control;
-  else if (src->content_base)
-    base = src->content_base;
-  else if (src->conninfo.url_str)
-    base = src->conninfo.url_str;
-  else
-    base = "/";
-
-  return base;
-}
-
-static GstRTSPStream *
-gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
-{
-  GstRTSPStream *stream;
-  const gchar *control_url;
   const gchar *payload;
-  const GstSDPMedia *media;
-
-  /* get media, should not return NULL */
-  media = gst_sdp_message_get_media (sdp, idx);
-  if (media == NULL)
-    return NULL;
-
-  stream = g_new0 (GstRTSPStream, 1);
-  stream->parent = src;
-  /* we mark the pad as not linked, we will mark it as OK when we add the pad to
-   * the element. */
-  stream->last_ret = GST_FLOW_NOT_LINKED;
-  stream->added = FALSE;
-  stream->disabled = FALSE;
-  stream->id = src->numstreams++;
-  stream->eos = FALSE;
-  stream->discont = TRUE;
-  stream->seqbase = -1;
-  stream->timebase = -1;
-
-  /* collect bandwidth information for this steam. FIXME, configure in the RTP
-   * session manager to scale RTCP. */
-  gst_rtspsrc_collect_bandwidth (src, sdp, media, stream);
-
-  /* collect connection info */
-  gst_rtspsrc_collect_connections (src, sdp, media, stream);
 
   /* we must have a payload. No payload means we cannot create caps */
   /* FIXME, handle multiple formats. The problem here is that we just want to
@@ -1376,6 +1332,59 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
       }
     }
   }
+}
+
+static const gchar *
+get_aggregate_control (GstRTSPSrc * src)
+{
+  const gchar *base;
+
+  if (src->control)
+    base = src->control;
+  else if (src->content_base)
+    base = src->content_base;
+  else if (src->conninfo.url_str)
+    base = src->conninfo.url_str;
+  else
+    base = "/";
+
+  return base;
+}
+
+static GstRTSPStream *
+gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
+{
+  GstRTSPStream *stream;
+  const gchar *control_url;
+  const GstSDPMedia *media;
+
+  /* get media, should not return NULL */
+  media = gst_sdp_message_get_media (sdp, idx);
+  if (media == NULL)
+    return NULL;
+
+  stream = g_new0 (GstRTSPStream, 1);
+  stream->parent = src;
+  /* we mark the pad as not linked, we will mark it as OK when we add the pad to
+   * the element. */
+  stream->last_ret = GST_FLOW_NOT_LINKED;
+  stream->added = FALSE;
+  stream->disabled = FALSE;
+  stream->id = src->numstreams++;
+  stream->eos = FALSE;
+  stream->discont = TRUE;
+  stream->seqbase = -1;
+  stream->timebase = -1;
+
+  /* collect bandwidth information for this steam. FIXME, configure in the RTP
+   * session manager to scale RTCP. */
+  gst_rtspsrc_collect_bandwidth (src, sdp, media, stream);
+
+  /* collect connection info */
+  gst_rtspsrc_collect_connections (src, sdp, media, stream);
+
+  gst_rtspsrc_collect_payloads (src, sdp, media, stream);
+
   /* collect port number */
   stream->port = gst_sdp_media_get_port (media);
 
