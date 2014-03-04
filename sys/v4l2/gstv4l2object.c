@@ -1539,6 +1539,10 @@ gst_v4l2_object_add_aspect_ratio (GstV4l2Object * v4l2object, GstStructure * s)
   num = cropcap.pixelaspect.numerator;
   den = cropcap.pixelaspect.denominator;
 
+  /* Ignore PAR that are 0/0 */
+  if (den == 0)
+    return;
+
 done:
   gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, num, den,
       NULL);

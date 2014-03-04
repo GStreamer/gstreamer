@@ -44,6 +44,7 @@
 #include "gstv4l2radio.h"
 #include "gstv4l2videodec.h"
 #include "gstv4l2devicemonitor.h"
+#include "gstv4l2transform.h"
 
 /* used in v4l2_calls.c and v4l2src_calls.c */
 GST_DEBUG_CATEGORY (v4l2_debug);
@@ -147,6 +148,9 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
 
     if (gst_v4l2_is_video_dec (sink_caps, src_caps))
       ret = gst_v4l2_video_dec_register (plugin, basename, it->device_path,
+          sink_caps, src_caps);
+    else if (gst_v4l2_is_transform (sink_caps, src_caps))
+      ret = gst_v4l2_transform_register (plugin, basename, it->device_path,
           sink_caps, src_caps);
     /* else if ( ... etc. */
 
