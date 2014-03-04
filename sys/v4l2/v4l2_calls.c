@@ -108,6 +108,29 @@ cap_failed:
   }
 }
 
+/******************************************************
+ * The video4linux command line tool v4l2-ctrl
+ * normalises the names of the controls received from
+ * the kernel like:
+ *
+ *     "Exposure (absolute)" -> "exposure_absolute"
+ *
+ * We follow their lead here.  @name is modified
+ * in-place.
+ ******************************************************/
+static void
+gst_v4l2_normalise_control_name (gchar * name)
+{
+  int i, j;
+  for (i = 0, j = 0; name[j]; ++j) {
+    if (g_ascii_isalnum (name[j])) {
+      if (i > 0 && !g_ascii_isalnum (name[j - 1]))
+        name[i++] = '_';
+      name[i++] = g_ascii_tolower (name[j]);
+    }
+  }
+  name[i++] = '\0';
+}
 
 /******************************************************
  * gst_v4l2_empty_lists() and gst_v4l2_fill_lists():
@@ -326,14 +349,8 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       case V4L2_CTRL_TYPE_BITMASK:
 #endif
       case V4L2_CTRL_TYPE_BUTTON:{
-        int i;
         control.name[31] = '\0';
-        for (i = 0; control.name[i]; ++i) {
-          control.name[i] = g_ascii_tolower (control.name[i]);
-          if (!g_ascii_isalnum (control.name[i]))
-            control.name[i] = '_';
-        }
-        GST_INFO_OBJECT (e, "adding generic controls '%s'", control.name);
+        gst_v4l2_normalise_control_name ((gchar *) control.name);
         g_datalist_id_set_data (&v4l2object->controls,
             g_quark_from_string ((const gchar *) control.name),
             GINT_TO_POINTER (n));
@@ -1012,7 +1029,28 @@ static gboolean
 set_contol (GQuark field_id, const GValue * value, gpointer user_data)
 {
   GstV4l2Object *v4l2object = user_data;
-  gpointer *d = g_datalist_id_get_data (&v4l2object->controls, field_id);
+  GQuark normalised_field_id;
+  gpointer *d;
+
+  /* 32 bytes is the maximum size for a control name according to v4l2 */
+  gchar name[32];
+
+  /* Backwards compatibility: in the past GStreamer would normalise strings in
+     a subtly different way to v4l2-ctl.  e.g. the kernel's "Focus (absolute)"
+     would become "focus__absolute_" whereas now it becomes "focus_absolute".
+     Please remove the following in GStreamer 1.5 for 1.6 */
+  strncpy (name, g_quark_to_string (field_id), sizeof (name));
+  name[31] = '\0';
+  gst_v4l2_normalise_control_name (name);
+  normalised_field_id = g_quark_from_string (name);
+  if (normalised_field_id != field_id)
+    g_warning ("In GStreamer 1.4 the way V4L2 control names were normalised "
+        "changed.  Instead of setting \"%s\" please use \"%s\".  The former is "
+        "deprecated and will be removed in a future version of GStreamer",
+        g_quark_to_string (field_id), name);
+  field_id = normalised_field_id;
+
+  d = g_datalist_id_get_data (&v4l2object->controls, field_id);
   if (!d) {
     GST_WARNING_OBJECT (v4l2object,
         "Control '%s' does not exist or has an unsupported type.",
