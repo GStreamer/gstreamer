@@ -23,7 +23,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-0.10 -v wininetsrc location="http://71.83.57.210:9000" ! application/x-icy,metadata-interval=0 ! icydemux ! mad ! audioconvert ! directsoundsink
+ * gst-launch-1.0 -v wininetsrc location="http://71.83.57.210:9000" ! application/x-icy,metadata-interval=0 ! icydemux ! mad ! audioconvert ! directsoundsink
  * ]| receive mp3 audio over http and play it back.
  * </refsect2>
  */
@@ -38,7 +38,7 @@
 
 #define DEFAULT_LOCATION "http://localhost/"
 #define DEFAULT_POLL_MODE FALSE
-#define DEFAULT_IRADIO_MODE FALSE
+#define DEFAULT_IRADIO_MODE TRUE
 
 enum
 {
