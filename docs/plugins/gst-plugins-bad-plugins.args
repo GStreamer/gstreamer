@@ -1579,13 +1579,23 @@
 </ARG>
 
 <ARG>
+<NAME>GstDvbSrc::bandwidth-hz</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>bandwidth-hz</NICK>
+<BLURB>Bandwidth in Hz (DVB-T).</BLURB>
+<DEFAULT>8000000</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDvbSrc::bandwidth</NAME>
 <TYPE>GstDvbSrcBandwidth</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bandwidth</NICK>
-<BLURB>Bandwidth (DVB-T).</BLURB>
-<DEFAULT>7</DEFAULT>
+<BLURB>Bandwidth (DVB-T) deprecated</BLURB>
+<DEFAULT>8</DEFAULT>
 </ARG>
 
 <ARG>

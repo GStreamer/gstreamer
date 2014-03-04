@@ -406,16 +406,6 @@ GstMpegTsDescriptor * gst_mpegts_descriptor_from_dvb_subtitling (const gchar *la
 typedef struct _GstMpegTsTerrestrialDeliverySystemDescriptor GstMpegTsTerrestrialDeliverySystemDescriptor;
 
 typedef enum {
-  GST_MPEGTS_BANDWIDTH_8 = 0,
-  GST_MPEGTS_BANDWIDTH_7,
-  GST_MPEGTS_BANDWIDTH_6,
-  GST_MPEGTS_BANDWIDTH_AUTO,
-  GST_MPEGTS_BANDWIDTH_5,
-  GST_MPEGTS_BANDWIDTH_10,
-  GST_MPEGTS_BANDWIDTH_1_172
-} GstMpegTsTerrestrialBandwidth;
-
-typedef enum {
   GST_MPEGTS_TRANSMISSION_MODE_2K = 0,
   GST_MPEGTS_TRANSMISSION_MODE_8K,
   GST_MPEGTS_TRANSMISSION_MODE_AUTO,
@@ -452,7 +442,7 @@ typedef enum {
 /**
  * GstMpegTsTerrestrialDeliverySystemDescriptor:
  * @frequency: the frequency in Hz (Hertz)
- * @bandwidth: the bandwidth
+ * @bandwidth: the bandwidth in Hz (Hertz)
  * @priority: %TRUE High Priority %FALSE Low Priority
  * @time_slicing: %TRUE no time slicing %FALSE time slicing
  * @mpe_fec: %TRUE no mpe-fec is used %FALSE mpe-fec is use
@@ -470,7 +460,7 @@ typedef enum {
 struct _GstMpegTsTerrestrialDeliverySystemDescriptor
 {
   guint32				frequency;
-  GstMpegTsTerrestrialBandwidth		bandwidth;
+  guint32				bandwidth;
   gboolean				priority;
   gboolean				time_slicing;
   gboolean				mpe_fec;

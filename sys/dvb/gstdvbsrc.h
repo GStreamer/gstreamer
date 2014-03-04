@@ -62,7 +62,7 @@ struct _GstDvbSrc
   int diseqc_src;
   gboolean send_diseqc;
 
-  int bandwidth;
+  guint bandwidth;
   int code_rate_hp;
   int code_rate_lp;
   int modulation;

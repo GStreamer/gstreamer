@@ -95,7 +95,8 @@ enum
   ARG_DVBSRC_DELSYS,
   ARG_DVBSRC_PILOT,
   ARG_DVBSRC_ROLLOFF,
-  ARG_DVBSRC_STREAM_ID
+  ARG_DVBSRC_STREAM_ID,
+  ARG_DVBSRC_BANDWIDTH_HZ
 };
 
 #define DEFAULT_ADAPTER 0
@@ -105,7 +106,8 @@ enum
 #define DEFAULT_POLARITY "H"
 #define DEFAULT_PIDS "8192"
 #define DEFAULT_SYMBOL_RATE 0
-#define DEFAULT_BANDWIDTH BANDWIDTH_7_MHZ
+#define DEFAULT_BANDWIDTH_HZ 8000000
+#define DEFAULT_BANDWIDTH BANDWIDTH_8_MHZ
 #define DEFAULT_CODE_RATE_HP FEC_AUTO
 #define DEFAULT_CODE_RATE_LP FEC_1_2
 #define DEFAULT_GUARD GUARD_INTERVAL_1_16
@@ -473,11 +475,15 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   /* DVB-T, additional properties */
 
+  g_object_class_install_property (gobject_class, ARG_DVBSRC_BANDWIDTH_HZ,
+      g_param_spec_uint ("bandwidth-hz", "bandwidth-hz",
+          "Bandwidth in Hz (DVB-T)",
+          0, G_MAXUINT, DEFAULT_BANDWIDTH_HZ, G_PARAM_READWRITE));
+
   g_object_class_install_property (gobject_class, ARG_DVBSRC_BANDWIDTH,
-      g_param_spec_enum ("bandwidth",
-          "bandwidth",
-          "Bandwidth (DVB-T)", GST_TYPE_DVBSRC_BANDWIDTH, DEFAULT_BANDWIDTH,
-          G_PARAM_READWRITE));
+      g_param_spec_enum ("bandwidth", "bandwidth",
+          "Bandwidth (DVB-T) deprecated",
+          GST_TYPE_DVBSRC_BANDWIDTH, DEFAULT_BANDWIDTH, G_PARAM_READWRITE));
 
   /* FIXME: DVB-C, DVB-S, DVB-S2 named it as innerFEC */
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_HP,
@@ -710,8 +716,25 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
           object->sym_rate);
       break;
 
+    case ARG_DVBSRC_BANDWIDTH_HZ:
+      object->bandwidth = g_value_get_uint (value);
+      break;
     case ARG_DVBSRC_BANDWIDTH:
-      object->bandwidth = g_value_get_enum (value);
+      switch (g_value_get_enum (value)) {
+        case BANDWIDTH_8_MHZ:
+          object->bandwidth = 8000000;
+          break;
+        case BANDWIDTH_7_MHZ:
+          object->bandwidth = 7000000;
+          break;
+        case BANDWIDTH_6_MHZ:
+          object->bandwidth = 6000000;
+          break;
+        default:
+          /* we don't know which bandwidth are set */
+          object->bandwidth = 0;
+          break;
+      }
       break;
     case ARG_DVBSRC_CODE_RATE_HP:
       object->code_rate_hp = g_value_get_enum (value);
@@ -803,9 +826,25 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
     case ARG_DVBSRC_DISEQC_SRC:
       g_value_set_int (value, object->diseqc_src);
       break;
-    case ARG_DVBSRC_BANDWIDTH:
-      g_value_set_enum (value, object->bandwidth);
+    case ARG_DVBSRC_BANDWIDTH_HZ:
+      g_value_set_uint (value, object->bandwidth);
       break;
+    case ARG_DVBSRC_BANDWIDTH:{
+      int tmp;
+      if (object->bandwidth == 0)
+        tmp = BANDWIDTH_AUTO;
+      else if (object->bandwidth <= 6000000)
+        tmp = BANDWIDTH_6_MHZ;
+      else if (object->bandwidth <= 7000000)
+        tmp = BANDWIDTH_7_MHZ;
+      else if (object->bandwidth <= 8000000)
+        tmp = BANDWIDTH_8_MHZ;
+      else
+        tmp = BANDWIDTH_AUTO;
+
+      g_value_set_enum (value, tmp);
+      break;
+    }
     case ARG_DVBSRC_CODE_RATE_HP:
       g_value_set_enum (value, object->code_rate_hp);
       break;
@@ -1476,7 +1515,6 @@ gst_dvbsrc_tune (GstDvbSrc * object)
   int j;
   unsigned int freq = object->freq;
   unsigned int sym_rate = object->sym_rate * 1000;
-  unsigned int bandwidth;
   int inversion = object->inversion;
 
   /* found in mail archive on linuxtv.org
@@ -1577,28 +1615,7 @@ gst_dvbsrc_tune (GstDvbSrc * object)
         break;
       case SYS_DVBT:
       case SYS_DVBT2:
-        bandwidth = 0;
-        if (object->bandwidth != BANDWIDTH_AUTO) {
-          /* Presumably not specifying bandwidth with s2api is equivalent
-           * to BANDWIDTH_AUTO.
-           */
-          switch (object->bandwidth) {
-            case BANDWIDTH_8_MHZ:
-              bandwidth = 8000000;
-              break;
-            case BANDWIDTH_7_MHZ:
-              bandwidth = 7000000;
-              break;
-            case BANDWIDTH_6_MHZ:
-              bandwidth = 6000000;
-              break;
-            default:
-              break;
-          }
-        }
-        if (bandwidth) {
-          set_prop (dvb_prop, &n, DTV_BANDWIDTH_HZ, bandwidth);
-        }
+        set_prop (dvb_prop, &n, DTV_BANDWIDTH_HZ, object->bandwidth);
         set_prop (dvb_prop, &n, DTV_CODE_RATE_HP, object->code_rate_hp);
         set_prop (dvb_prop, &n, DTV_CODE_RATE_LP, object->code_rate_lp);
         set_prop (dvb_prop, &n, DTV_MODULATION, object->modulation);

@@ -74,7 +74,8 @@ enum
   PROP_DELSYS,
   PROP_PILOT,
   PROP_ROLLOFF,
-  PROP_STREAM_ID
+  PROP_STREAM_ID,
+  PROP_BANDWIDTH_HZ
       /* FILL ME */
 };
 
@@ -222,6 +223,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
     {PROP_PILOT, "pilot"},
     {PROP_ROLLOFF, "rolloff"},
     {PROP_STREAM_ID, "stream-id"},
+    {PROP_BANDWIDTH_HZ, "bandwidth-hz"},
     {0, NULL}
   };
 
@@ -465,6 +467,7 @@ dvb_base_bin_set_property (GObject * object, guint prop_id,
     case PROP_PILOT:
     case PROP_ROLLOFF:
     case PROP_STREAM_ID:
+    case PROP_BANDWIDTH_HZ:
       /* FIXME: check if we can tune (state < PLAYING || program-numbers == "") */
       g_object_set_property (G_OBJECT (dvbbasebin->dvbsrc), pspec->name, value);
       break;
@@ -502,6 +505,7 @@ dvb_base_bin_get_property (GObject * object, guint prop_id,
     case PROP_PILOT:
     case PROP_ROLLOFF:
     case PROP_STREAM_ID:
+    case PROP_BANDWIDTH_HZ:
       g_object_get_property (G_OBJECT (dvbbasebin->dvbsrc), pspec->name, value);
       break;
     case PROP_PROGRAM_NUMBERS:

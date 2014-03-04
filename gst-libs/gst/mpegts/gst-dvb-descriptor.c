@@ -739,19 +739,19 @@ gst_mpegts_descriptor_parse_terrestrial_delivery_system (const
   tmp = *data;
   switch ((tmp >> 5) & 0x07) {
     case 0:
-      res->bandwidth = GST_MPEGTS_BANDWIDTH_8;
+      res->bandwidth = 8000000;
       break;
     case 1:
-      res->bandwidth = GST_MPEGTS_BANDWIDTH_7;
+      res->bandwidth = 7000000;
       break;
     case 2:
-      res->bandwidth = GST_MPEGTS_BANDWIDTH_6;
+      res->bandwidth = 6000000;
       break;
     case 3:
-      res->bandwidth = GST_MPEGTS_BANDWIDTH_5;
+      res->bandwidth = 5000000;
       break;
     default:
-      res->bandwidth = GST_MPEGTS_BANDWIDTH_AUTO;
+      res->bandwidth = 0;
       break;
   }
 
