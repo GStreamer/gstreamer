@@ -20,6 +20,7 @@ always_dirs = \
 	netclock \
 	queue      \
 	stepping \
+	streamiddemux \
 	streams \
 	typefind
 

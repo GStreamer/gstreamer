@@ -95,6 +95,7 @@ REGISTRY_CHECKS =				\
 	elements/queue                          \
 	elements/queue2                         \
 	elements/valve                          \
+	elements/streamiddemux			\
 	libs/baseparse				\
 	libs/basesrc				\
 	libs/basesink				\

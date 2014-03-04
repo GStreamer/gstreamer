@@ -46,6 +46,7 @@
 #include "gsttee.h"
 #include "gsttypefindelement.h"
 #include "gstvalve.h"
+#include "gststreamiddemux.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -107,6 +108,10 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   if (!gst_element_register (plugin, "valve", GST_RANK_NONE,
           gst_valve_get_type ()))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "streamiddemux", GST_RANK_PRIMARY,
+          gst_streamid_demux_get_type ()))
     return FALSE;
 
   return TRUE;

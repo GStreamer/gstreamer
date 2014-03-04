@@ -24,6 +24,7 @@ libgstcoreelements_la_SOURCES =	\
 	gstsparsefile.c		\
 	gsttee.c		\
 	gsttypefindelement.c	\
+	gststreamiddemux.c	\
 	gstvalve.c
 
 libgstcoreelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
@@ -54,6 +55,7 @@ noinst_HEADERS =		\
 	gstsparsefile.h		\
 	gsttee.h		\
 	gsttypefindelement.h	\
+	gststreamiddemux.h	\
 	gstvalve.h
 
 EXTRA_DIST = gstfdsrc.c \
