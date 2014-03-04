@@ -51,6 +51,9 @@
 
 #include "gstivfparse.h"
 
+#define IVF_FILE_HEADER_SIZE 32
+#define IVF_FRAME_HEADER_SIZE 12
+
 GST_DEBUG_CATEGORY_STATIC (gst_ivf_parse_debug);
 #define GST_CAT_DEFAULT gst_ivf_parse_debug
 
@@ -67,48 +70,51 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("ANY")
     );
 
-GST_BOILERPLATE (GstIvfParse, gst_ivf_parse, GstElement, GST_TYPE_ELEMENT);
+#define gst_ivf_parse_parent_class parent_class
+G_DEFINE_TYPE (GstIvfParse, gst_ivf_parse, GST_TYPE_BASE_PARSE);
 
-static void gst_ivf_parse_dispose (GObject * object);
-static GstFlowReturn gst_ivf_parse_chain (GstPad * pad, GstBuffer * buf);
+static void gst_ivf_parse_finalize (GObject * object);
+static gboolean gst_ivf_parse_start (GstBaseParse * parse);
+static gboolean gst_ivf_parse_stop (GstBaseParse * parse);
 
-/* GObject vmethod implementations */
-
-static void
-gst_ivf_parse_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_static_metadata (element_class,
-      "IVF parser",
-      "Codec/Demuxer",
-      "Demuxes a IVF stream", "Philip Jägenstedt <philipj@opera.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-}
+static GstFlowReturn
+gst_ivf_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 
 /* initialize the ivfparse's class */
 static void
 gst_ivf_parse_class_init (GstIvfParseClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+  GstBaseParseClass *gstbaseparse_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+  gstbaseparse_class = (GstBaseParseClass *) klass;
 
-  gobject_class->dispose = gst_ivf_parse_dispose;
+  gobject_class->finalize = gst_ivf_parse_finalize;
+
+  gstbaseparse_class->start = gst_ivf_parse_start;
+  gstbaseparse_class->stop = gst_ivf_parse_stop;
+  gstbaseparse_class->handle_frame = gst_ivf_parse_handle_frame;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "IVF parser", "Codec/Demuxer",
+      "Demuxes a IVF stream", "Philip Jägenstedt <philipj@opera.com>");
+
+  /* debug category for filtering log messages */
+  GST_DEBUG_CATEGORY_INIT (gst_ivf_parse_debug, "ivfparse", 0, "IVF parser");
 }
 
 static void
 gst_ivf_parse_reset (GstIvfParse * ivf)
 {
-  if (ivf->adapter) {
-    gst_adapter_clear (ivf->adapter);
-    g_object_unref (ivf->adapter);
-    ivf->adapter = NULL;
-  }
   ivf->state = GST_IVF_PARSE_START;
   ivf->rate_num = 0;
   ivf->rate_den = 0;
@@ -120,170 +126,202 @@ gst_ivf_parse_reset (GstIvfParse * ivf)
  * initialize instance structure
  */
 static void
-gst_ivf_parse_init (GstIvfParse * ivf, GstIvfParseClass * gclass)
+gst_ivf_parse_init (GstIvfParse * ivf)
 {
-  /* sink pad */
-  ivf->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_chain_function (ivf->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_ivf_parse_chain));
-
-  /* src pad */
-  ivf->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_use_fixed_caps (ivf->srcpad);
-
-  gst_element_add_pad (GST_ELEMENT (ivf), ivf->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (ivf), ivf->srcpad);
-
-  /* reset */
   gst_ivf_parse_reset (ivf);
 }
 
 static void
-gst_ivf_parse_dispose (GObject * object)
+gst_ivf_parse_finalize (GObject * object)
 {
-  GstIvfParse *ivf = GST_IVF_PARSE (object);
+  GstIvfParse *const ivf = GST_IVF_PARSE (object);
 
-  GST_DEBUG_OBJECT (ivf, "disposing");
+  GST_DEBUG_OBJECT (ivf, "finalizing");
   gst_ivf_parse_reset (ivf);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-/* GstElement vmethod implementations */
-
-/* chain function
- * this function does the actual processing
- */
-static GstFlowReturn
-gst_ivf_parse_chain (GstPad * pad, GstBuffer * buf)
+static gboolean
+gst_ivf_parse_start (GstBaseParse * parse)
 {
-  GstIvfParse *ivf = GST_IVF_PARSE (GST_OBJECT_PARENT (pad));
-  gboolean res;
+  GstIvfParse *const ivf = GST_IVF_PARSE (parse);
 
-  /* lazy creation of the adapter */
-  if (G_UNLIKELY (ivf->adapter == NULL)) {
-    ivf->adapter = gst_adapter_new ();
+  gst_ivf_parse_reset (ivf);
+
+  /* Minimal file header size needed at start */
+  gst_base_parse_set_min_frame_size (parse, IVF_FILE_HEADER_SIZE);
+
+  /* No sync code to detect frame boundaries */
+  gst_base_parse_set_syncable (parse, FALSE);
+
+  return TRUE;
+}
+
+static gboolean
+gst_ivf_parse_stop (GstBaseParse * parse)
+{
+  GstIvfParse *const ivf = GST_IVF_PARSE (parse);
+
+  gst_ivf_parse_reset (ivf);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_ivf_parse_handle_frame_start (GstIvfParse * ivf, GstBaseParseFrame * frame,
+    gint * skipsize)
+{
+  GstBuffer *const buffer = frame->buffer;
+  GstMapInfo map;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstCaps *caps;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  if (map.size >= IVF_FILE_HEADER_SIZE) {
+    guint32 magic = GST_READ_UINT32_LE (map.data);
+    guint16 version = GST_READ_UINT16_LE (map.data + 4);
+    guint16 header_size = GST_READ_UINT16_LE (map.data + 6);
+    guint32 fourcc = GST_READ_UINT32_LE (map.data + 8);
+    guint16 width = GST_READ_UINT16_LE (map.data + 12);
+    guint16 height = GST_READ_UINT16_LE (map.data + 14);
+    guint32 rate_num = GST_READ_UINT32_LE (map.data + 16);
+    guint32 rate_den = GST_READ_UINT32_LE (map.data + 20);
+#ifndef GST_DISABLE_GST_DEBUG
+    guint32 num_frames = GST_READ_UINT32_LE (map.data + 24);
+#endif
+
+    if (magic != GST_MAKE_FOURCC ('D', 'K', 'I', 'F') ||
+        version != 0 || header_size != 32 ||
+        fourcc != GST_MAKE_FOURCC ('V', 'P', '8', '0')) {
+      GST_ELEMENT_ERROR (ivf, STREAM, WRONG_TYPE, (NULL), (NULL));
+      ret = GST_FLOW_ERROR;
+      goto end;
+    }
+
+    /* create src pad caps */
+    caps = gst_caps_new_simple ("video/x-vp8",
+        "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
+        "framerate", GST_TYPE_FRACTION, rate_num, rate_den, NULL);
+
+    GST_INFO_OBJECT (ivf, "Found stream: %" GST_PTR_FORMAT, caps);
+
+    GST_LOG_OBJECT (ivf, "Stream has %d frames", num_frames);
+
+    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (ivf), caps);
+    gst_caps_unref (caps);
+
+    /* keep framerate in instance for convenience */
+    ivf->rate_num = rate_num;
+    ivf->rate_den = rate_den;
+
+    /* move along */
+    ivf->state = GST_IVF_PARSE_DATA;
+    gst_base_parse_set_min_frame_size (GST_BASE_PARSE_CAST (ivf),
+        IVF_FRAME_HEADER_SIZE);
+    *skipsize = IVF_FILE_HEADER_SIZE;
+  } else {
+    GST_LOG_OBJECT (ivf, "Header data not yet available.");
+    *skipsize = 0;
   }
 
-  GST_LOG_OBJECT (ivf, "Pushing buffer of size %u to adapter",
-      GST_BUFFER_SIZE (buf));
+end:
+  gst_buffer_unmap (buffer, &map);
+  return ret;
+}
 
-  gst_adapter_push (ivf->adapter, buf); /* adapter takes ownership of buf */
+static GstFlowReturn
+gst_ivf_parse_handle_frame_data (GstIvfParse * ivf, GstBaseParseFrame * frame,
+    gint * skipsize)
+{
+  GstBuffer *const buffer = frame->buffer;
+  GstMapInfo map;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *out_buffer;
 
-  res = GST_FLOW_OK;
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  if (map.size >= IVF_FILE_HEADER_SIZE) {
+    guint32 frame_size = GST_READ_UINT32_LE (map.data);
+    guint64 frame_pts = GST_READ_UINT64_LE (map.data + 4);
+
+    GST_LOG_OBJECT (ivf,
+        "Read frame header: size %u, pts %" G_GUINT64_FORMAT, frame_size,
+        frame_pts);
+
+    if (map.size < IVF_FRAME_HEADER_SIZE + frame_size) {
+      gst_base_parse_set_min_frame_size (GST_BASE_PARSE_CAST (ivf),
+          IVF_FRAME_HEADER_SIZE + frame_size);
+      gst_buffer_unmap (buffer, &map);
+      *skipsize = 0;
+      goto end;
+    }
+
+    gst_buffer_unmap (buffer, &map);
+
+    /* Eventually, we would need the buffer memory in a merged state anyway */
+    out_buffer = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_FLAGS |
+        GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_META |
+        GST_BUFFER_COPY_MEMORY | GST_BUFFER_COPY_MERGE,
+        IVF_FRAME_HEADER_SIZE, frame_size);
+    if (!out_buffer) {
+      GST_ERROR_OBJECT (ivf, "Failed to copy frame buffer");
+      ret = GST_FLOW_ERROR;
+      *skipsize = IVF_FRAME_HEADER_SIZE + frame_size;
+      goto end;
+    }
+    gst_buffer_replace (&frame->out_buffer, out_buffer);
+    gst_buffer_unref (out_buffer);
+
+    GST_BUFFER_TIMESTAMP (out_buffer) =
+        gst_util_uint64_scale_int (GST_SECOND * frame_pts, ivf->rate_den,
+        ivf->rate_num);
+    GST_BUFFER_DURATION (out_buffer) =
+        gst_util_uint64_scale_int (GST_SECOND, ivf->rate_den, ivf->rate_num);
+
+    GST_DEBUG_OBJECT (ivf, "Pushing frame of size %u, ts %"
+        GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", off %"
+        G_GUINT64_FORMAT ", off_end %" G_GUINT64_FORMAT,
+        frame_size,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out_buffer)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (out_buffer)),
+        GST_BUFFER_OFFSET (out_buffer), GST_BUFFER_OFFSET_END (out_buffer));
+
+    ret = gst_base_parse_finish_frame (GST_BASE_PARSE_CAST (ivf), frame,
+        IVF_FRAME_HEADER_SIZE + frame_size);
+    *skipsize = 0;
+  } else {
+    GST_LOG_OBJECT (ivf, "Frame data not yet available.");
+    gst_buffer_unmap (buffer, &map);
+    *skipsize = 0;
+  }
+
+end:
+  return ret;
+}
+
+static GstFlowReturn
+gst_ivf_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
+{
+  GstIvfParse *const ivf = GST_IVF_PARSE (parse);
 
   switch (ivf->state) {
     case GST_IVF_PARSE_START:
-      if (gst_adapter_available (ivf->adapter) >= 32) {
-        GstCaps *caps;
-
-        const guint8 *data = gst_adapter_peek (ivf->adapter, 32);
-        guint32 magic = GST_READ_UINT32_LE (data);
-        guint16 version = GST_READ_UINT16_LE (data + 4);
-        guint16 header_size = GST_READ_UINT16_LE (data + 6);
-        guint32 fourcc = GST_READ_UINT32_LE (data + 8);
-        guint16 width = GST_READ_UINT16_LE (data + 12);
-        guint16 height = GST_READ_UINT16_LE (data + 14);
-        guint32 rate_num = GST_READ_UINT32_LE (data + 16);
-        guint32 rate_den = GST_READ_UINT32_LE (data + 20);
-#ifndef GST_DISABLE_GST_DEBUG
-        guint32 num_frames = GST_READ_UINT32_LE (data + 24);
-#endif
-
-        /* last 4 bytes unused */
-        gst_adapter_flush (ivf->adapter, 32);
-
-        if (magic != GST_MAKE_FOURCC ('D', 'K', 'I', 'F') ||
-            version != 0 || header_size != 32 ||
-            fourcc != GST_MAKE_FOURCC ('V', 'P', '8', '0')) {
-          GST_ELEMENT_ERROR (ivf, STREAM, WRONG_TYPE, (NULL), (NULL));
-          return GST_FLOW_ERROR;
-        }
-
-        /* create src pad caps */
-        caps = gst_caps_new_simple ("video/x-vp8",
-            "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
-            "framerate", GST_TYPE_FRACTION, rate_num, rate_den, NULL);
-
-        GST_INFO_OBJECT (ivf, "Found stream: %" GST_PTR_FORMAT, caps);
-
-        GST_LOG_OBJECT (ivf, "Stream has %d frames", num_frames);
-
-        gst_pad_set_caps (ivf->srcpad, caps);
-        gst_caps_unref (caps);
-
-        /* keep framerate in instance for convenience */
-        ivf->rate_num = rate_num;
-        ivf->rate_den = rate_den;
-
-        gst_pad_push_event (ivf->srcpad, gst_event_new_new_segment (FALSE, 1.0,
-                GST_FORMAT_TIME, 0, -1, 0));
-
-        /* move along */
-        ivf->state = GST_IVF_PARSE_DATA;
-      } else {
-        GST_LOG_OBJECT (ivf, "Header data not yet available.");
-        break;
-      }
-
-      /* fall through */
-
+      return gst_ivf_parse_handle_frame_start (ivf, frame, skipsize);
     case GST_IVF_PARSE_DATA:
-      while (gst_adapter_available (ivf->adapter) > 12) {
-        const guint8 *data = gst_adapter_peek (ivf->adapter, 12);
-        guint32 frame_size = GST_READ_UINT32_LE (data);
-        guint64 frame_pts = GST_READ_UINT64_LE (data + 4);
-
-        GST_LOG_OBJECT (ivf,
-            "Read frame header: size %u, pts %" G_GUINT64_FORMAT, frame_size,
-            frame_pts);
-
-        if (gst_adapter_available (ivf->adapter) >= 12 + frame_size) {
-          GstBuffer *frame;
-
-          gst_adapter_flush (ivf->adapter, 12);
-
-          frame = gst_adapter_take_buffer (ivf->adapter, frame_size);
-          gst_buffer_set_caps (frame, GST_PAD_CAPS (ivf->srcpad));
-          GST_BUFFER_TIMESTAMP (frame) =
-              gst_util_uint64_scale_int (GST_SECOND * frame_pts, ivf->rate_den,
-              ivf->rate_num);
-          GST_BUFFER_DURATION (frame) =
-              gst_util_uint64_scale_int (GST_SECOND, ivf->rate_den,
-              ivf->rate_num);
-
-          GST_DEBUG_OBJECT (ivf, "Pushing frame of size %u, ts %"
-              GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", off %"
-              G_GUINT64_FORMAT ", off_end %" G_GUINT64_FORMAT,
-              GST_BUFFER_SIZE (frame),
-              GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (frame)),
-              GST_TIME_ARGS (GST_BUFFER_DURATION (frame)),
-              GST_BUFFER_OFFSET (frame), GST_BUFFER_OFFSET_END (frame));
-
-          res = gst_pad_push (ivf->srcpad, frame);
-          if (res != GST_FLOW_OK)
-            break;
-        } else {
-          GST_LOG_OBJECT (ivf, "Frame data not yet available.");
-          break;
-        }
-      }
-      break;
-
+      return gst_ivf_parse_handle_frame_data (ivf, frame, skipsize);
     default:
-      g_return_val_if_reached (GST_FLOW_ERROR);
+      break;
   }
 
-  return res;
+  g_assert_not_reached ();
+  return GST_FLOW_ERROR;
 }
 
 /* entry point to initialize the plug-in */
 static gboolean
 ivfparse_init (GstPlugin * ivfparse)
 {
-  /* debug category for filtering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_ivf_parse_debug, "ivfparse", 0, "IVF parser");
-
   /* register parser element */
   if (!gst_element_register (ivfparse, "ivfparse", GST_RANK_PRIMARY,
           GST_TYPE_IVF_PARSE))
