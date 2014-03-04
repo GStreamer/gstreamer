@@ -38,10 +38,10 @@ gst_gl_api_to_string (GstGLAPI api)
 
   if (api == GST_GL_API_NONE) {
     str = g_string_new ("none");
-    return str->str;
+    goto out;
   } else if (api == GST_GL_API_ANY) {
     str = g_string_new ("any");
-    return str->str;
+    goto out;
   }
 
   if (api & GST_GL_API_OPENGL) {
@@ -76,8 +76,11 @@ gst_gl_api_to_string (GstGLAPI api)
     }
   }
 
-  ret = g_string_free (str, FALSE);
+out:
+  if (!str)
+    return "unknown";
 
+  ret = g_string_free (str, FALSE);
   return ret;
 }
 
