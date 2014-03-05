@@ -1429,7 +1429,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
   stream->last_ret = GST_FLOW_NOT_LINKED;
   stream->added = FALSE;
   stream->disabled = FALSE;
-  stream->id = src->numstreams++;
+  stream->id = idx;
   stream->eos = FALSE;
   stream->discont = TRUE;
   stream->seqbase = -1;
@@ -1579,7 +1579,6 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
     gst_bin_remove (GST_BIN_CAST (src), src->manager);
     src->manager = NULL;
   }
-  src->numstreams = 0;
   if (src->props)
     gst_structure_free (src->props);
   src->props = NULL;

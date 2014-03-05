@@ -193,7 +193,6 @@ struct _GstRTSPSrc {
 
   GstSDPMessage   *sdp;
   gboolean         from_sdp;
-  gint             numstreams;
   GList           *streams;
   GstStructure    *props;
   gboolean         need_activate;
