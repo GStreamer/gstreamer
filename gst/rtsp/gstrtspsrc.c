@@ -295,6 +295,7 @@ static gboolean gst_rtspsrc_loop (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_stream_push_event (GstRTSPSrc * src,
     GstRTSPStream * stream, GstEvent * event);
 static gboolean gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event);
+static void gst_rtspsrc_connection_flush (GstRTSPSrc * src, gboolean flush);
 
 typedef struct
 {
@@ -2238,6 +2239,9 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   GST_RTSP_STREAM_LOCK (src);
 
   GST_DEBUG_OBJECT (src, "stopped streaming");
+
+  /* stop flushing the rtsp connection so we can send PAUSE/PLAY below */
+  gst_rtspsrc_connection_flush (src, FALSE);
 
   /* copy segment, we need this because we still need the old
    * segment when we close the current segment. */
