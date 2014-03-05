@@ -2341,6 +2341,9 @@ rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
     ssrc = GST_READ_UINT32_BE (data);
 
     own = find_source (sess, ssrc);
+    if (own == NULL)
+      continue;
+
     if (own->internal) {
       our_request = TRUE;
       break;
