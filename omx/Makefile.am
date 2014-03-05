@@ -12,6 +12,7 @@ endif
 
 libgstomx_la_SOURCES = \
 	gstomx.c \
+	gstomxbufferpool.c \
 	gstomxvideodec.c \
 	gstomxvideoenc.c \
 	gstomxaudioenc.c \
