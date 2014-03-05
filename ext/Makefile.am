@@ -406,6 +406,12 @@ else
 WEBP_DIR=
 endif
 
+if USE_X265
+X265_DIR=x265
+else
+X265_DIR=
+endif
+
 SUBDIRS=\
 	$(VOAACENC_DIR) \
 	$(ASSRENDER_DIR) \
@@ -473,7 +479,8 @@ SUBDIRS=\
 	$(ZBAR_DIR) \
 	$(RTMP_DIR) \
 	$(HLS_DIR) \
-	$(WEBP_DIR)
+	$(WEBP_DIR) \
+	$(X265_DIR)
 
 DIST_SUBDIRS = \
 	assrender \
@@ -538,6 +545,7 @@ DIST_SUBDIRS = \
 	xvid \
 	zbar \
 	rtmp \
-	webp
+	webp \
+	x265
 
 include $(top_srcdir)/common/parallel-subdirs.mak
