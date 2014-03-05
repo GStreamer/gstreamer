@@ -2587,9 +2587,9 @@ h263_video_type_find (GstTypeFind * tf, gpointer unused)
     data_scan_ctx_advance (tf, &c, 1);
   }
 
-  if (good > 0 && bad == 0)
-    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, H263_VIDEO_CAPS);
-  else if (good > 2 * bad)
+  GST_LOG ("good: %d, bad: %d", good, bad);
+
+  if (good > 2 * bad)
     gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, H263_VIDEO_CAPS);
 
   return;
