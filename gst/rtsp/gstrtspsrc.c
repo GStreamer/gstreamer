@@ -1170,16 +1170,20 @@ find_stream_by_udpsrc (GstRTSPStream * stream, gconstpointer a)
 static gint
 find_stream_by_setup (GstRTSPStream * stream, gconstpointer a)
 {
-  /* check qualified setup_url */
-  if (!strcmp (stream->conninfo.location, (gchar *) a))
-    return 0;
-  /* check original control_url */
-  if (!strcmp (stream->control_url, (gchar *) a))
-    return 0;
+  if (stream->conninfo.location) {
+    /* check qualified setup_url */
+    if (!strcmp (stream->conninfo.location, (gchar *) a))
+      return 0;
+  }
+  if (stream->control_url) {
+    /* check original control_url */
+    if (!strcmp (stream->control_url, (gchar *) a))
+      return 0;
 
-  /* check if qualified setup_url ends with string */
-  if (g_str_has_suffix (stream->control_url, (gchar *) a))
-    return 0;
+    /* check if qualified setup_url ends with string */
+    if (g_str_has_suffix (stream->control_url, (gchar *) a))
+      return 0;
+  }
 
   return -1;
 }
