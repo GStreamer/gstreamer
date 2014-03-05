@@ -150,7 +150,7 @@ FFT_HELPERS (gint32, S32, s32, 2147483647.0);
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, format = (string) S32LE ")
+    GST_STATIC_CAPS ("audio/x-raw, format = (string) " GST_AUDIO_NE (S32))
     );
 static GstStaticPadTemplate layer2_srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -321,7 +321,7 @@ run_decoding_test (GstElement * mpg123audiodec, gchar const *filename)
 
   /* check caps */
   out_caps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, "S32LE",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S32),
       "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 1, NULL);
 
