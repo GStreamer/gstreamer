@@ -207,15 +207,15 @@ typedef struct
   gboolean add_metavideo;
   gboolean want_eglimage;
   GstEGLDisplay *display;
-} GstEGLImageBufferPool;
+} GstCustomEGLImageBufferPool;
 
-typedef GstVideoBufferPoolClass GstEGLImageBufferPoolClass;
+typedef GstVideoBufferPoolClass GstCustomEGLImageBufferPoolClass;
 
-#define GST_EGL_IMAGE_BUFFER_POOL(p) ((GstEGLImageBufferPool*)(p))
+#define GST_CUSTOM_EGL_IMAGE_BUFFER_POOL(p) ((GstCustomEGLImageBufferPool*)(p))
 
-GType gst_egl_image_buffer_pool_get_type (void);
+GType gst_custom_egl_image_buffer_pool_get_type (void);
 
-G_DEFINE_TYPE (GstEGLImageBufferPool, gst_egl_image_buffer_pool,
+G_DEFINE_TYPE (GstCustomEGLImageBufferPool, gst_custom_egl_image_buffer_pool,
     GST_TYPE_VIDEO_BUFFER_POOL);
 
 static void init_ogl (APP_STATE_T * state);
@@ -227,7 +227,7 @@ static void redraw_scene (APP_STATE_T * state);
 static void update_model (APP_STATE_T * state);
 static void init_textures (APP_STATE_T * state);
 static APP_STATE_T _state, *state = &_state;
-static GstBufferPool *gst_egl_image_buffer_pool_new (APP_STATE_T * state,
+static GstBufferPool *gst_custom_egl_image_buffer_pool_new (APP_STATE_T * state,
     GstEGLDisplay * display);
 static gboolean queue_object (APP_STATE_T * state, GstMiniObject * obj,
     gboolean synchronous);
@@ -402,7 +402,7 @@ mem_error:
 }
 
 static const gchar **
-gst_egl_image_buffer_pool_get_options (GstBufferPool * bpool)
+gst_custom_egl_image_buffer_pool_get_options (GstBufferPool * bpool)
 {
   static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL
   };
@@ -411,10 +411,10 @@ gst_egl_image_buffer_pool_get_options (GstBufferPool * bpool)
 }
 
 static gboolean
-gst_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
+gst_custom_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
     GstStructure * config)
 {
-  GstEGLImageBufferPool *pool = GST_EGL_IMAGE_BUFFER_POOL (bpool);
+  GstCustomEGLImageBufferPool *pool = GST_CUSTOM_EGL_IMAGE_BUFFER_POOL (bpool);
   GstCaps *caps;
   GstVideoInfo info;
 
@@ -423,7 +423,8 @@ gst_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
   pool->allocator = NULL;
 
   if (!GST_BUFFER_POOL_CLASS
-      (gst_egl_image_buffer_pool_parent_class)->set_config (bpool, config))
+      (gst_custom_egl_image_buffer_pool_parent_class)->set_config (bpool,
+          config))
     return FALSE;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL)
@@ -452,16 +453,16 @@ gst_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
 }
 
 static GstFlowReturn
-gst_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
+gst_custom_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
 {
-  GstEGLImageBufferPool *pool = GST_EGL_IMAGE_BUFFER_POOL (bpool);
+  GstCustomEGLImageBufferPool *pool = GST_CUSTOM_EGL_IMAGE_BUFFER_POOL (bpool);
   *buffer = NULL;
 
   if (!pool->add_metavideo || !pool->want_eglimage)
     return
         GST_BUFFER_POOL_CLASS
-        (gst_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
+        (gst_custom_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
         buffer, params);
 
   if (!pool->allocator)
@@ -487,8 +488,8 @@ gst_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
         gst_query_unref (query);
         return
             GST_BUFFER_POOL_CLASS
-            (gst_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
-            buffer, params);
+            (gst_custom_egl_image_buffer_pool_parent_class)->alloc_buffer
+            (bpool, buffer, params);
       }
 
       v = gst_structure_get_value (s, "buffer");
@@ -499,8 +500,8 @@ gst_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
         GST_WARNING ("Fallback memory allocation");
         return
             GST_BUFFER_POOL_CLASS
-            (gst_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
-            buffer, params);
+            (gst_custom_egl_image_buffer_pool_parent_class)->alloc_buffer
+            (bpool, buffer, params);
       }
 
       return GST_FLOW_OK;
@@ -509,7 +510,7 @@ gst_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
     default:
       return
           GST_BUFFER_POOL_CLASS
-          (gst_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
+          (gst_custom_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
           buffer, params);
       break;
   }
@@ -518,20 +519,20 @@ gst_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
 }
 
 static GstFlowReturn
-gst_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
+gst_custom_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
 {
   GstFlowReturn ret;
-  GstEGLImageBufferPool *pool;
+  GstCustomEGLImageBufferPool *pool;
 
   ret =
       GST_BUFFER_POOL_CLASS
-      (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
+      (gst_custom_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
       buffer, params);
   if (ret != GST_FLOW_OK || !*buffer)
     return ret;
 
-  pool = GST_EGL_IMAGE_BUFFER_POOL (bpool);
+  pool = GST_CUSTOM_EGL_IMAGE_BUFFER_POOL (bpool);
 
   /* XXX: Don't return the memory we just rendered, glEGLImageTargetTexture2DOES()
    * keeps the EGLImage unmappable until the next one is uploaded
@@ -542,7 +543,7 @@ gst_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
 
     ret =
         GST_BUFFER_POOL_CLASS
-        (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
+        (gst_custom_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
         buffer, params);
     gst_object_replace ((GstObject **) & oldbuf->pool, (GstObject *) pool);
     gst_buffer_unref (oldbuf);
@@ -552,9 +553,9 @@ gst_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
 }
 
 static void
-gst_egl_image_buffer_pool_finalize (GObject * object)
+gst_custom_egl_image_buffer_pool_finalize (GObject * object)
 {
-  GstEGLImageBufferPool *pool = GST_EGL_IMAGE_BUFFER_POOL (object);
+  GstCustomEGLImageBufferPool *pool = GST_CUSTOM_EGL_IMAGE_BUFFER_POOL (object);
 
   if (pool->allocator)
     gst_object_unref (pool->allocator);
@@ -564,34 +565,39 @@ gst_egl_image_buffer_pool_finalize (GObject * object)
     gst_egl_display_unref (pool->display);
   pool->display = NULL;
 
-  G_OBJECT_CLASS (gst_egl_image_buffer_pool_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_custom_egl_image_buffer_pool_parent_class)->finalize
+      (object);
 }
 
 static void
-gst_egl_image_buffer_pool_class_init (GstEGLImageBufferPoolClass * klass)
+gst_custom_egl_image_buffer_pool_class_init (GstCustomEGLImageBufferPoolClass *
+    klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
 
-  gobject_class->finalize = gst_egl_image_buffer_pool_finalize;
-  gstbufferpool_class->get_options = gst_egl_image_buffer_pool_get_options;
-  gstbufferpool_class->set_config = gst_egl_image_buffer_pool_set_config;
-  gstbufferpool_class->alloc_buffer = gst_egl_image_buffer_pool_alloc_buffer;
+  gobject_class->finalize = gst_custom_egl_image_buffer_pool_finalize;
+  gstbufferpool_class->get_options =
+      gst_custom_egl_image_buffer_pool_get_options;
+  gstbufferpool_class->set_config = gst_custom_egl_image_buffer_pool_set_config;
+  gstbufferpool_class->alloc_buffer =
+      gst_custom_egl_image_buffer_pool_alloc_buffer;
   gstbufferpool_class->acquire_buffer =
-      gst_egl_image_buffer_pool_acquire_buffer;
+      gst_custom_egl_image_buffer_pool_acquire_buffer;
 }
 
 static void
-gst_egl_image_buffer_pool_init (GstEGLImageBufferPool * pool)
+gst_custom_egl_image_buffer_pool_init (GstCustomEGLImageBufferPool * pool)
 {
 }
 
 static GstBufferPool *
-gst_egl_image_buffer_pool_new (APP_STATE_T * state, GstEGLDisplay * display)
+gst_custom_egl_image_buffer_pool_new (APP_STATE_T * state,
+    GstEGLDisplay * display)
 {
-  GstEGLImageBufferPool *pool;
+  GstCustomEGLImageBufferPool *pool;
 
-  pool = g_object_new (gst_egl_image_buffer_pool_get_type (), NULL);
+  pool = g_object_new (gst_custom_egl_image_buffer_pool_get_type (), NULL);
   pool->display = gst_egl_display_ref (state->gst_display);
   pool->state = state;
 
@@ -1131,7 +1137,7 @@ handle_queued_objects (APP_STATE_T * state)
 
         buffer =
             gst_egl_allocate_eglimage (state,
-            GST_EGL_IMAGE_BUFFER_POOL (state->pool)->allocator, format,
+            GST_CUSTOM_EGL_IMAGE_BUFFER_POOL (state->pool)->allocator, format,
             width, height);
         g_value_init (&v, G_TYPE_POINTER);
         g_value_set_pointer (&v, buffer);
@@ -1301,7 +1307,7 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
         GST_DEBUG ("create new pool");
         state->pool = pool =
-            gst_egl_image_buffer_pool_new (state, state->display);
+            gst_custom_egl_image_buffer_pool_new (state, state->display);
         GST_DEBUG ("done create new pool %p", pool);
         /* the normal size of a frame */
         size = info.size;
