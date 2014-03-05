@@ -235,9 +235,21 @@ gst_fragment_get_caps (GstFragment * fragment)
     return NULL;
 
   g_mutex_lock (&fragment->priv->lock);
-  if (fragment->priv->caps == NULL)
+  if (fragment->priv->caps == NULL) {
+    guint64 offset, offset_end;
+
+    /* FIXME: This is currently necessary as typefinding only
+     * works with 0 offsets... need to find a better way to
+     * do that */
+    offset = GST_BUFFER_OFFSET (fragment->priv->buffer);
+    offset_end = GST_BUFFER_OFFSET_END (fragment->priv->buffer);
+    GST_BUFFER_OFFSET (fragment->priv->buffer) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET_END (fragment->priv->buffer) = GST_BUFFER_OFFSET_NONE;
     fragment->priv->caps =
         gst_type_find_helper_for_buffer (NULL, fragment->priv->buffer, NULL);
+    GST_BUFFER_OFFSET (fragment->priv->buffer) = offset;
+    GST_BUFFER_OFFSET_END (fragment->priv->buffer) = offset_end;
+  }
   gst_caps_ref (fragment->priv->caps);
   g_mutex_unlock (&fragment->priv->lock);
 

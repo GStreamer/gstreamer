@@ -136,6 +136,31 @@ int_from_string (gchar * ptr, gchar ** endptr, gint * val)
 }
 
 static gboolean
+int64_from_string (gchar * ptr, gchar ** endptr, gint64 * val)
+{
+  gchar *end;
+  gint64 ret;
+
+  g_return_val_if_fail (ptr != NULL, FALSE);
+  g_return_val_if_fail (val != NULL, FALSE);
+
+  errno = 0;
+  ret = g_ascii_strtoll (ptr, &end, 10);
+  if ((errno == ERANGE && (ret == G_MAXINT64 || ret == G_MININT64))
+      || (errno != 0 && ret == 0)) {
+    GST_WARNING ("%s", g_strerror (errno));
+    return FALSE;
+  }
+
+  if (endptr)
+    *endptr = end;
+
+  *val = ret;
+
+  return end != ptr;
+}
+
+static gboolean
 double_from_string (gchar * ptr, gchar ** endptr, gdouble * val)
 {
   gchar *end;
@@ -168,7 +193,7 @@ double_from_string (gchar * ptr, gchar ** endptr, gdouble * val)
 static gboolean
 parse_attributes (gchar ** ptr, gchar ** a, gchar ** v)
 {
-  gchar *end=NULL, *p;
+  gchar *end = NULL, *p;
 
   g_return_val_if_fail (ptr != NULL, FALSE);
   g_return_val_if_fail (*ptr != NULL, FALSE);
@@ -179,18 +204,18 @@ parse_attributes (gchar ** ptr, gchar ** a, gchar ** v)
 
   *a = *ptr;
   end = p = g_utf8_strchr (*ptr, -1, ',');
-  if(end){
-	gchar *q = g_utf8_strchr (*ptr, -1, '"');
-	if(q && q<end){
-	  /* special case, such as CODECS="avc1.77.30, mp4a.40.2" */
-	  q = g_utf8_next_char (q);
-	  if(q){
-		q = g_utf8_strchr (q, -1, '"');
-	  }
-	  if(q){
-		end = p = g_utf8_strchr (q, -1, ',');
-	  }
-	}
+  if (end) {
+    gchar *q = g_utf8_strchr (*ptr, -1, '"');
+    if (q && q < end) {
+      /* special case, such as CODECS="avc1.77.30, mp4a.40.2" */
+      q = g_utf8_next_char (q);
+      if (q) {
+        q = g_utf8_strchr (q, -1, '"');
+      }
+      if (q) {
+        end = p = g_utf8_strchr (q, -1, ',');
+      }
+    }
   }
   if (end) {
     do {
@@ -240,6 +265,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
   GstM3U8 *list;
   gboolean have_iv = FALSE;
   guint8 iv[16] = { 0, };
+  gint64 size = -1, offset = -1;
 
   g_return_val_if_fail (self != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
@@ -324,11 +350,31 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
           }
         }
 
+        if (size != -1) {
+          file->size = size;
+          if (offset != -1) {
+            file->offset = offset;
+          } else {
+            GstM3U8MediaFile *prev =
+                self->files ? g_list_last (self->files)->data : NULL;
+
+            if (!prev) {
+              offset = 0;
+            } else {
+              offset = prev->offset + prev->size;
+            }
+          }
+        } else {
+          file->size = -1;
+          file->offset = 0;
+        }
+
         file->discont = discontinuity;
 
         duration = 0;
         title = NULL;
         discontinuity = FALSE;
+        size = offset = -1;
         self->files = g_list_append (self->files, file);
       }
 
@@ -458,6 +504,15 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       if (data != end) {
         g_free (title);
         title = g_strdup (data);
+      }
+    } else if (g_str_has_prefix (data, "#EXT-X-BYTERANGE:")) {
+      gchar *v = data + 17;
+
+      if (int64_from_string (v, &v, &size)) {
+        if (*v == '@' && !int64_from_string (v + 1, &v, &offset))
+          goto next_line;
+      } else {
+        goto next_line;
       }
     } else {
       GST_LOG ("Ignored line: %s", data);
@@ -596,7 +651,8 @@ _find_next (GstM3U8MediaFile * file, GstM3U8Client * client)
 gboolean
 gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
-    GstClockTime * timestamp, const gchar ** key, const guint8 ** iv)
+    GstClockTime * timestamp, gint64 * range_start, gint64 * range_end,
+    const gchar ** key, const guint8 ** iv)
 {
   GList *l;
   GstM3U8MediaFile *file;
@@ -626,6 +682,10 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     *uri = file->uri;
   if (duration)
     *duration = file->duration;
+  if (range_start)
+    *range_start = file->offset;
+  if (range_end)
+    *range_end = file->size != -1 ? file->offset + file->size : -1;
   if (key)
     *key = file->key;
   if (iv)

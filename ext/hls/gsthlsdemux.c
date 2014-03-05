@@ -774,7 +774,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
 
           /* Got a new fragment or not live anymore? */
           if (gst_m3u8_client_get_next_fragment (demux->client, NULL, NULL,
-                  NULL, NULL, NULL, NULL)
+                  NULL, NULL, NULL, NULL, NULL, NULL)
               || !gst_m3u8_client_is_live (demux->client))
             break;
 
@@ -1403,21 +1403,25 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   GstClockTime timestamp;
   GstBuffer *buf;
   gboolean discont;
+  gint64 range_start, range_end;
   const gchar *key = NULL;
   const guint8 *iv = NULL;
 
   *end_of_playlist = FALSE;
   if (!gst_m3u8_client_get_next_fragment (demux->client, &discont,
-          &next_fragment_uri, &duration, &timestamp, &key, &iv)) {
+          &next_fragment_uri, &duration, &timestamp, &range_start, &range_end,
+          &key, &iv)) {
     GST_INFO_OBJECT (demux, "This playlist doesn't contain more fragments");
     *end_of_playlist = TRUE;
     return NULL;
   }
 
-  GST_INFO_OBJECT (demux, "Fetching next fragment %s", next_fragment_uri);
+  GST_INFO_OBJECT (demux,
+      "Fetching next fragment %s (range=%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT
+      ")", next_fragment_uri, range_start, range_end);
 
-  download = gst_uri_downloader_fetch_uri (demux->downloader,
-      next_fragment_uri, FALSE, err);
+  download = gst_uri_downloader_fetch_uri_with_range (demux->downloader,
+      next_fragment_uri, FALSE, range_start, range_end, err);
 
   if (download == NULL)
     goto error;
