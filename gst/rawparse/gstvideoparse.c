@@ -86,7 +86,7 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
           0, INT_MAX, 240, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FRAMERATE,
       gst_param_spec_fraction ("framerate", "Frame Rate",
-          "Frame rate of images in raw stream", 0, 1, 400, 1, 25, 1,
+          "Frame rate of images in raw stream", 0, 1, G_MAXINT, 1, 25, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAR,
       gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
