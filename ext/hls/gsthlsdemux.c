@@ -771,9 +771,6 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
       g_object_unref (fragment);
       goto pause_task;
     }
-
-    /* try to switch to another bitrate if needed */
-    gst_hls_demux_switch_playlist (demux, fragment);
   }
 
   if (demux->stop_updates_task) {
@@ -803,7 +800,6 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
   gst_caps_unref (bufcaps);
   if (G_LIKELY (srccaps))
     gst_caps_unref (srccaps);
-  g_object_unref (fragment);
 
   if (demux->need_segment) {
     GstSegment segment;
@@ -828,6 +824,10 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
   if (ret != GST_FLOW_OK)
     goto error_pushing;
 
+  /* try to switch to another bitrate if needed */
+  gst_hls_demux_switch_playlist (demux, fragment);
+  g_object_unref (fragment);
+
   GST_DEBUG_OBJECT (demux, "Pushed buffer");
 
   return;
@@ -850,6 +850,7 @@ type_not_found:
 
 error_pushing:
   {
+    g_object_unref (fragment);
     if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL),
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
@@ -1222,13 +1223,13 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux, GstFragment * fragment)
 
   /* compare the time when the fragment was downloaded with the time when it was
    * scheduled */
-  diff = g_get_monotonic_time () - demux->next_download;
+  diff = fragment->download_stop_time - fragment->download_start_time;
   buffer = gst_fragment_get_buffer (fragment);
   size = gst_buffer_get_size (buffer);
-  bitrate = (size * 8) / ((double) diff / G_USEC_PER_SEC);
+  bitrate = (size * 8) / ((double) diff / GST_SECOND);
 
   GST_DEBUG ("Downloaded %d bytes in %" GST_TIME_FORMAT ". Bitrate is : %d",
-      (guint) size, GST_TIME_ARGS (diff * GST_USECOND), bitrate);
+      (guint) size, GST_TIME_ARGS (diff), bitrate);
 
   gst_buffer_unref (buffer);
   return gst_hls_demux_change_playlist (demux, bitrate * demux->bitrate_limit);
