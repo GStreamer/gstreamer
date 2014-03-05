@@ -1009,6 +1009,11 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux, gboolean * popped)
               pad->have_type = gst_ogg_stream_setup_map (&pad->map, &packet);
             }
             if (!pad->have_type) {
+              /* fallback 2 to try to get the mapping from the caps */
+              pad->have_type =
+                  gst_ogg_stream_setup_map_from_caps (&pad->map, caps);
+            }
+            if (!pad->have_type) {
               GST_ERROR_OBJECT (data->pad,
                   "mapper didn't recognise input stream " "(pad caps: %"
                   GST_PTR_FORMAT ")", caps);
@@ -1097,6 +1102,7 @@ gst_ogg_mux_get_headers (GstOggPadData * pad)
   GstCaps *caps;
   const GValue *streamheader;
   GstPad *thepad;
+  GstBuffer *header;
 
   thepad = pad->collect.pad;
 
@@ -1138,6 +1144,9 @@ gst_ogg_mux_get_headers (GstOggPadData * pad)
   } else if (gst_structure_has_name (structure, "video/x-dirac")) {
     res = g_list_append (res, pad->buffer);
     pad->buffer = NULL;
+  } else if (pad->have_type
+      && (header = gst_ogg_stream_get_headers (&pad->map))) {
+    res = g_list_append (res, header);
   } else {
     GST_LOG_OBJECT (thepad, "caps don't have streamheader");
   }
