@@ -1628,7 +1628,7 @@ rtp_session_get_source_by_ssrc (RTPSession * sess, guint32 ssrc)
 
   RTP_SESSION_LOCK (sess);
   result = find_source (sess, ssrc);
-  if (result)
+  if (result != NULL)
     g_object_ref (result);
   RTP_SESSION_UNLOCK (sess);
 
@@ -2293,7 +2293,7 @@ rtp_session_process_pli (RTPSession * sess, guint32 sender_ssrc,
     return;
 
   src = find_source (sess, sender_ssrc);
-  if (!src)
+  if (src == NULL)
     return;
 
   rtp_session_request_local_key_unit (sess, src, FALSE, current_time);
@@ -3811,7 +3811,7 @@ rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc,
 
   RTP_SESSION_LOCK (sess);
   src = find_source (sess, ssrc);
-  if (!src)
+  if (src == NULL)
     goto no_source;
 
   if (fir) {
