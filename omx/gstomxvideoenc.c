@@ -1797,6 +1797,8 @@ gst_omx_video_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
             "format", G_TYPE_STRING,
             gst_video_format_to_string (map->format), NULL));
   }
+  g_list_free_full (negotiation_map,
+      (GDestroyNotify) video_negotiation_map_free);
 
   if (!gst_caps_is_empty (comp_supported_caps)) {
     GstCaps *ret =
