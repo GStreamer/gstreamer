@@ -836,7 +836,7 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
     GST_DEBUG_OBJECT (gpad, "clearing target");
 
   /* clear old target */
-  if ((oldtarget = GST_PROXY_PAD_TARGET (gpad))) {
+  if ((oldtarget = gst_pad_get_peer (internal))) {
     GST_OBJECT_UNLOCK (gpad);
 
     /* unlink internal pad */
@@ -844,6 +844,8 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
       gst_pad_unlink (internal, oldtarget);
     else
       gst_pad_unlink (oldtarget, internal);
+
+    gst_object_unref (oldtarget);
   } else {
     GST_OBJECT_UNLOCK (gpad);
   }
