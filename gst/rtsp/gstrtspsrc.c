@@ -1365,19 +1365,6 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
     item.pt = pt;
     item.caps = caps;
     g_array_append_val (stream->ptmap, item);
-
-#if 0
-    if (stream->pt >= 96) {
-      /* If we have a dynamic payload type, see if we have a stream with the
-       * same payload number. If there is one, they are part of the same
-       * container and we only need to add one pad. */
-      if (find_stream (src, &stream->pt, (gpointer) find_stream_by_pt)) {
-        stream->container = TRUE;
-        GST_DEBUG ("found another stream with pt %d, marking as container",
-            stream->pt);
-      }
-    }
-#endif
   }
   return;
 
