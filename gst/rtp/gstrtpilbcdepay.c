@@ -49,8 +49,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "clock-rate = (int) 8000, "
-        "encoding-name = (string) \"ILBC\", "
-        "mode = (string) { \"20\", \"30\" }")
+        "encoding-name = (string) \"ILBC\"")
+     /* "mode = (string) { \"20\", \"30\" }" */
     );
 
 static GstStaticPadTemplate gst_rtp_ilbc_depay_src_template =

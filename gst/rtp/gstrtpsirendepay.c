@@ -35,7 +35,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "clock-rate = (int) 16000, "
-        "encoding-name = (string) \"SIREN\", " "dct-length = (int) 320")
+        "encoding-name = (string) \"SIREN\"")
+    /* This is the default, so the peer doesn't have to specify it */
+    /*  " "dct-length = (int) 320") */
     );
 
 static GstStaticPadTemplate gst_rtp_siren_depay_src_template =
