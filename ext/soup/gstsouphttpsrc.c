@@ -1163,6 +1163,7 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
     GST_DEBUG_OBJECT (src, "got chunk but we're not expecting one");
     src->ret = GST_FLOW_OK;
     gst_soup_http_src_cancel_message (src);
+    g_main_loop_quit (src->loop);
     return;
   }
 
