@@ -562,12 +562,14 @@ gst_v4l2_video_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:{
       GstCaps *filter, *result = NULL;
+      GstPad *pad = GST_VIDEO_DECODER_SRC_PAD (decoder);
+
       gst_query_parse_caps (query, &filter);
 
       if (self->probed_srccaps)
         result = gst_caps_ref (self->probed_srccaps);
       else
-        result = gst_v4l2_object_get_raw_caps ();
+        result = gst_pad_get_pad_template_caps (pad);
 
       if (filter) {
         GstCaps *tmp = result;
@@ -600,12 +602,13 @@ gst_v4l2_video_dec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:{
       GstCaps *filter, *result = NULL;
+      GstPad *pad = GST_VIDEO_DECODER_SINK_PAD (decoder);
       gst_query_parse_caps (query, &filter);
 
       if (self->probed_sinkcaps)
         result = gst_caps_ref (self->probed_sinkcaps);
       else
-        result = gst_v4l2_object_get_codec_caps ();
+        result = gst_pad_get_pad_template_caps (pad);
 
       if (filter) {
         GstCaps *tmp = result;
