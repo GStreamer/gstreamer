@@ -1222,8 +1222,10 @@ cleanup_hook (GstPad * pad, GHook * hook)
  * Be notified of different states of pads. The provided callback is called for
  * every state that matches @mask.
  *
- * Returns: an id or 0 on error. The id can be used to remove the probe with
- * gst_pad_remove_probe().
+ * Returns: an id or 0 if no probe is pending. The id can be used to remove the
+ * probe with gst_pad_remove_probe(). When using GST_PAD_PROBE_TYPE_IDLE it can
+ * happend that the probe can be run immediately and if the probe returns
+ * GST_PAD_PROBE_REMOVE this functions returns 0.
  *
  * MT safe.
  */
@@ -4522,7 +4524,7 @@ store_sticky_event (GstPad * pad, GstEvent * event)
 
   type = GST_EVENT_TYPE (event);
 
-  /* Store all sticky events except SEGMENT/SEGMENT when we're flushing,
+  /* Store all sticky events except SEGMENT/EOS when we're flushing,
    * otherwise they can be dropped and nothing would ever resend them.
    * Only do that for activated pads though, everything else is a bug!
    */
@@ -4749,8 +4751,9 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
 
   /* Note: we gave away ownership of the event at this point but we can still
    * print the old pointer */
-  GST_LOG_OBJECT (pad, "sent event %p to peerpad %" GST_PTR_FORMAT ", ret %s",
-      event, peerpad, gst_flow_get_name (ret));
+  GST_LOG_OBJECT (pad,
+      "sent event %p (%s) to peerpad %" GST_PTR_FORMAT ", ret %s", event,
+      GST_EVENT_TYPE_NAME (event), peerpad, gst_flow_get_name (ret));
 
   gst_object_unref (peerpad);
 
