@@ -214,6 +214,8 @@ GstRTSPResult      gst_rtsp_watch_write_data         (GstRTSPWatch *watch,
 GstRTSPResult      gst_rtsp_watch_send_message       (GstRTSPWatch *watch,
                                                       GstRTSPMessage *message,
                                                       guint *id);
+GstRTSPResult      gst_rtsp_watch_wait_backlog       (GstRTSPWatch * watch,
+                                                      GTimeVal *timeout);
 
 G_END_DECLS
 
