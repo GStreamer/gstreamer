@@ -183,7 +183,8 @@ enum
   PROP_CLIENT_DRAW_CALLBACK,
   PROP_CLIENT_DATA,
   PROP_FORCE_ASPECT_RATIO,
-  PROP_PIXEL_ASPECT_RATIO
+  PROP_PIXEL_ASPECT_RATIO,
+  PROP_OTHER_CONTEXT
 };
 
 #define gst_glimage_sink_parent_class parent_class
@@ -243,6 +244,12 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gst_element_class_set_metadata (element_class, "OpenGL video sink",
       "Sink/Video", "A videosink based on OpenGL",
       "Julien Isorce <julien.isorce@gmail.com>");
+
+  g_object_class_install_property (gobject_class, PROP_OTHER_CONTEXT,
+      g_param_spec_object ("other-context",
+          "External OpenGL context",
+          "Give an external OpenGL context with which to share textures",
+          GST_GL_TYPE_CONTEXT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_glimage_sink_template));
@@ -322,6 +329,13 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
       glimage_sink->par_d = gst_value_get_fraction_denominator (value);
       break;
     }
+    case PROP_OTHER_CONTEXT:
+    {
+      if (glimage_sink->other_context)
+        gst_object_unref (glimage_sink->other_context);
+      glimage_sink->other_context = g_value_dup_object (value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -364,6 +378,9 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
     case PROP_PIXEL_ASPECT_RATIO:
       gst_value_set_fraction (value, glimage_sink->par_n, glimage_sink->par_d);
       break;
+    case PROP_OTHER_CONTEXT:
+      g_value_set_object (value, glimage_sink->other_context);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -380,7 +397,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
 
   if (!gl_sink->context) {
     gl_sink->context = gst_gl_context_new (gl_sink->display);
-    if (!gst_gl_context_create (gl_sink->context, NULL, &error))
+    if (!gst_gl_context_create (gl_sink->context, gl_sink->other_context,
+            &error))
       goto context_error;
   }
 
@@ -498,9 +516,10 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
           gst_gl_window_set_window_handle (window, glimage_sink->window_id);
         }
 
-        if (!gst_gl_context_create (glimage_sink->context, 0, &error)) {
-          GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-              ("%s", error->message), (NULL));
+        if (!gst_gl_context_create (glimage_sink->context,
+                glimage_sink->other_context, &error)) {
+          GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND, ("%s",
+                  error->message), (NULL));
 
           if (glimage_sink->display) {
             gst_object_unref (glimage_sink->display);

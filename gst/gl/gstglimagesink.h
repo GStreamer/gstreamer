@@ -62,6 +62,8 @@ struct _GstGLImageSink
 
     GstGLDisplay *display;
     GstGLContext *context;
+    GstGLContext *other_context;
+
     GstGLUpload *upload;
     GLuint     tex_id;
 
