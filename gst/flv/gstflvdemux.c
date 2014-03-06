@@ -885,10 +885,11 @@ gst_flv_demux_push_tags (GstFlvDemux * demux)
   }
 }
 
-static void
+static gboolean
 gst_flv_demux_update_resync (GstFlvDemux * demux, guint32 pts, gboolean discont,
     guint32 * last, GstClockTime * offset)
 {
+  gboolean ret = FALSE;
   gint32 dpts = pts - *last;
   if (!discont && ABS (dpts) >= RESYNC_THRESHOLD) {
     /* Theoretically, we should use substract the duration of the last buffer,
@@ -898,8 +899,12 @@ gst_flv_demux_update_resync (GstFlvDemux * demux, guint32 pts, gboolean discont,
     GST_WARNING_OBJECT (demux,
         "Large pts gap (%" G_GINT32_FORMAT " ms), assuming resync, offset now %"
         GST_TIME_FORMAT "", dpts, GST_TIME_ARGS (*offset));
+
+    ret = TRUE;
   }
   *last = pts;
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -1099,8 +1104,10 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* detect (and deem to be resyncs)  large pts gaps */
-  gst_flv_demux_update_resync (demux, pts, demux->audio_need_discont,
-      &demux->last_audio_pts, &demux->audio_time_offset);
+  if (gst_flv_demux_update_resync (demux, pts, demux->audio_need_discont,
+      &demux->last_audio_pts, &demux->audio_time_offset)) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
+  }
 
   /* Fill buffer with data */
   GST_BUFFER_TIMESTAMP (outbuf) = pts * GST_MSECOND + demux->audio_time_offset;
@@ -1484,8 +1491,10 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* detect (and deem to be resyncs)  large pts gaps */
-  gst_flv_demux_update_resync (demux, pts, demux->video_need_discont,
-      &demux->last_video_pts, &demux->video_time_offset);
+  if (gst_flv_demux_update_resync (demux, pts, demux->video_need_discont,
+      &demux->last_video_pts, &demux->video_time_offset)) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
+  }
 
   /* Fill buffer with data */
   GST_BUFFER_TIMESTAMP (outbuf) = pts * GST_MSECOND + demux->video_time_offset;
