@@ -847,7 +847,11 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
   gst_buffer_map (buf, &map, GST_MAP_READ);
   packet.packet = map.data;
   packet.bytes = map.size;
+
+  gst_ogg_stream_update_stats (&pad->map, &packet);
+
   duration = gst_ogg_stream_get_packet_duration (&pad->map, &packet);
+
   gst_buffer_unmap (buf, &map);
 
   /* give up if no duration can be determined, relying on upstream */

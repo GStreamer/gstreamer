@@ -524,6 +524,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   GST_DEBUG_OBJECT (ogg,
       "%p streaming to peer serial %08x", pad, pad->map.serialno);
 
+  gst_ogg_stream_update_stats (&pad->map, packet);
+
   if (pad->map.is_ogm) {
     const guint8 *data;
     long bytes;

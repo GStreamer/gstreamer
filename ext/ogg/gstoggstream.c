@@ -69,6 +69,8 @@ typedef gint64 (*GstOggMapGranuleposToKeyGranuleFunc) (GstOggStream * pad,
     gint64 granulepos);
 
 typedef GstBuffer *(*GstOggMapGetHeadersFunc) (GstOggStream * pad);
+typedef void (*GstOggMapUpdateStatsFunc) (GstOggStream * pad,
+    ogg_packet * packet);
 
 #define SKELETON_FISBONE_MIN_SIZE  52
 #define SKELETON_FISHEAD_3_3_MIN_SIZE 112
@@ -91,6 +93,7 @@ struct _GstOggMap
   GstOggMapGranuleposToKeyGranuleFunc granulepos_to_key_granule_func;
   GstOggMapExtractTagsFunc extract_tags_func;
   GstOggMapGetHeadersFunc get_headers_func;
+  GstOggMapUpdateStatsFunc update_stats_func;
 };
 
 extern const GstOggMap mappers[];
@@ -278,6 +281,15 @@ gst_ogg_stream_get_headers (GstOggStream * pad)
     return NULL;
 
   return mappers[pad->map].get_headers_func (pad);
+}
+
+void
+gst_ogg_stream_update_stats (GstOggStream * pad, ogg_packet * packet)
+{
+  if (!mappers[pad->map].get_headers_func)
+    return;
+
+  return mappers[pad->map].update_stats_func (pad, packet);
 }
 
 /* some generic functions */
@@ -742,11 +754,14 @@ static gint64
 granule_to_granulepos_vp8 (GstOggStream * pad, gint64 granule,
     gint64 keyframe_granule)
 {
-  /* FIXME: This requires to look into the content of the packets
-   * because the simple granule counter doesn't know about invisible
-   * frames...
-   */
-  return -1;
+  guint inv;
+  gint64 granulepos;
+
+  inv = (pad->invisible_count <= 0) ? 0x3 : pad->invisible_count - 1;
+
+  granulepos =
+      (granule << 32) | (inv << 30) | ((granule - keyframe_granule) << 3);
+  return granulepos;
 }
 
 /* Check if this packet contains an invisible frame or not */
@@ -811,6 +826,18 @@ get_headers_vp8 (GstOggStream * pad)
   }
   g_free (data);
   return NULL;
+}
+
+static void
+update_stats_vp8 (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet_duration_vp8 (pad, packet)) {
+    /* set to -1 as when we get thefirst invisible it should be
+     * set to 0 */
+    pad->invisible_count = -1;
+  } else {
+    pad->invisible_count++;
+  }
 }
 
 /* vorbis */
@@ -2221,6 +2248,7 @@ const GstOggMap mappers[] = {
     packet_duration_constant,
     NULL,
     extract_tags_theora,
+    NULL,
     NULL
   },
   {
@@ -2236,6 +2264,7 @@ const GstOggMap mappers[] = {
     packet_duration_vorbis,
     NULL,
     extract_tags_vorbis,
+    NULL,
     NULL
   },
   {
@@ -2251,6 +2280,7 @@ const GstOggMap mappers[] = {
     packet_duration_constant,
     NULL,
     extract_tags_count,
+    NULL,
     NULL
   },
   {
@@ -2263,6 +2293,7 @@ const GstOggMap mappers[] = {
     NULL,
     NULL,
     is_header_count,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -2281,6 +2312,7 @@ const GstOggMap mappers[] = {
     NULL,
     NULL,
     NULL,
+    NULL,
     NULL
   },
   {
@@ -2293,6 +2325,7 @@ const GstOggMap mappers[] = {
     NULL,
     NULL,
     is_header_count,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -2311,6 +2344,7 @@ const GstOggMap mappers[] = {
     NULL,
     NULL,
     NULL,
+    NULL,
     NULL
   },
   {
@@ -2324,6 +2358,7 @@ const GstOggMap mappers[] = {
     is_packet_keyframe_true,
     is_header_fLaC,
     packet_duration_flac,
+    NULL,
     NULL,
     NULL,
     NULL
@@ -2341,11 +2376,13 @@ const GstOggMap mappers[] = {
     packet_duration_flac,
     NULL,
     extract_tags_flac,
+    NULL,
     NULL
   },
   {
     "AnxData", 7, 0,
     "application/octet-stream",
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -2370,6 +2407,7 @@ const GstOggMap mappers[] = {
     packet_duration_constant,
     NULL,
     extract_tags_count,
+    NULL,
     NULL
   },
   {
@@ -2385,6 +2423,7 @@ const GstOggMap mappers[] = {
     packet_duration_kate,
     NULL,
     extract_tags_kate,
+    NULL,
     NULL
   },
   {
@@ -2399,6 +2438,7 @@ const GstOggMap mappers[] = {
     is_header_count,
     packet_duration_constant,
     granulepos_to_key_granule_dirac,
+    NULL,
     NULL,
     NULL
   },
@@ -2415,7 +2455,8 @@ const GstOggMap mappers[] = {
     packet_duration_vp8,
     granulepos_to_key_granule_vp8,
     extract_tags_vp8,
-    get_headers_vp8
+    get_headers_vp8,
+    update_stats_vp8
   },
   {
     "OpusHead", 8, 0,
@@ -2430,6 +2471,7 @@ const GstOggMap mappers[] = {
     packet_duration_opus,
     NULL,
     extract_tags_opus,
+    NULL,
     NULL
   },
   {
@@ -2443,6 +2485,7 @@ const GstOggMap mappers[] = {
     is_packet_keyframe_true,
     is_header_ogm,
     packet_duration_ogm,
+    NULL,
     NULL,
     NULL,
     NULL
@@ -2460,6 +2503,7 @@ const GstOggMap mappers[] = {
     packet_duration_constant,
     NULL,
     NULL,
+    NULL,
     NULL
   },
   {
@@ -2475,6 +2519,7 @@ const GstOggMap mappers[] = {
     packet_duration_ogm,
     NULL,
     extract_tags_ogm,
+    NULL,
     NULL
   },
   {
@@ -2490,6 +2535,7 @@ const GstOggMap mappers[] = {
     packet_duration_constant,
     NULL,
     extract_tags_daala,
+    NULL,
     NULL
   },
  

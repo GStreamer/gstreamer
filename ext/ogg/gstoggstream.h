@@ -94,6 +94,7 @@ struct _GstOggStream
   gboolean theora_has_zero_keyoffset;
   /* VP8 stuff */
   gboolean is_vp8;
+  gint64 invisible_count;
   /* opus stuff */
   gint64 first_granpos;
   /* OGM stuff */
@@ -136,6 +137,7 @@ gint64 gst_ogg_stream_get_packet_duration (GstOggStream * pad, ogg_packet *packe
 void gst_ogg_stream_extract_tags (GstOggStream * pad, ogg_packet * packet);
 const char *gst_ogg_stream_get_media_type (GstOggStream * pad);
 GstBuffer *gst_ogg_stream_get_headers (GstOggStream *pad);
+void gst_ogg_stream_update_stats (GstOggStream * pad, ogg_packet * packet);
 
 gboolean gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
     guint32 * serialno, GstOggSkeleton *type);
