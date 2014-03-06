@@ -1159,6 +1159,13 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
     GST_DEBUG_OBJECT (src, "got chunk, but not for current message");
     return;
   }
+  if (G_UNLIKELY (!src->outbuf)) {
+    GST_DEBUG_OBJECT (src, "got chunk but we're not expecting one");
+    src->ret = GST_FLOW_OK;
+    gst_soup_http_src_cancel_message (src);
+    return;
+  }
+
   src->have_body = FALSE;
   if (G_UNLIKELY (src->session_io_status !=
           GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
@@ -1426,11 +1433,21 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
 
     if (src->ret == GST_FLOW_CUSTOM_ERROR)
       g_main_loop_run (src->loop);
+
   } while (src->ret == GST_FLOW_CUSTOM_ERROR);
+
+  /* Let the request finish if we had a stop position and are there */
+  if (src->ret == GST_FLOW_OK && src->stop_position != -1
+      && src->read_position >= src->stop_position) {
+    src->outbuf = NULL;
+    gst_soup_http_src_session_unpause_message (src);
+    g_main_loop_run (src->loop);
+  }
 
   if (src->ret == GST_FLOW_CUSTOM_ERROR)
     src->ret = GST_FLOW_EOS;
   g_cond_signal (&src->request_finished_cond);
+
   return src->ret;
 }
 
