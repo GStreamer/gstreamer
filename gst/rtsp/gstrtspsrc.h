@@ -102,7 +102,8 @@ struct _GstRTSPStream {
   GstPad       *srcpad;
   GstFlowReturn last_ret;
   gboolean      added;
-  gboolean      disabled;
+  gboolean      setup;
+  gboolean      skipped;
   gboolean      eos;
   gboolean      discont;
 

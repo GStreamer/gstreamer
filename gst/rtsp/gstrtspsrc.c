@@ -1415,7 +1415,8 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
    * the element. */
   stream->last_ret = GST_FLOW_NOT_LINKED;
   stream->added = FALSE;
-  stream->disabled = FALSE;
+  stream->setup = FALSE;
+  stream->skipped = FALSE;
   stream->id = idx;
   stream->eos = FALSE;
   stream->discont = TRUE;
@@ -2614,12 +2615,12 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   for (ostreams = src->streams; ostreams; ostreams = g_list_next (ostreams)) {
     GstRTSPStream *ostream = (GstRTSPStream *) ostreams->data;
 
-    GST_DEBUG_OBJECT (src, "stream %p, container %d, disabled %d, added %d",
-        ostream, ostream->container, ostream->disabled, ostream->added);
+    GST_DEBUG_OBJECT (src, "stream %p, container %d, added %d, setup %d",
+        ostream, ostream->container, ostream->added, ostream->setup);
 
-    /* a container stream only needs one pad added. Also disabled streams don't
-     * count */
-    if (!ostream->container && !ostream->disabled && !ostream->added) {
+    /* if we find a stream for which we did a setup that is not added, we
+     * need to wait some more */
+    if (ostream->setup && !ostream->added) {
       all_added = FALSE;
       break;
     }
@@ -3681,6 +3682,9 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment,
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
     guint j, len;
 
+    if (!stream->setup)
+      continue;
+
     len = stream->ptmap->len;
     for (j = 0; j < len; j++) {
       GstCaps *caps;
@@ -3755,7 +3759,7 @@ gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
   gboolean res = TRUE;
 
   /* only streams that have a connection to the outside world */
-  if (stream->container || stream->disabled)
+  if (!stream->setup)
     goto done;
 
   if (stream->udpsrc[0]) {
@@ -5637,9 +5641,15 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
     GstCaps *caps;
 
     stream = (GstRTSPStream *) walk->data;
+
     caps = stream_get_caps_for_pt (stream, stream->default_pt);
     if (caps == NULL) {
       GST_DEBUG_OBJECT (src, "skipping stream %p, no caps", stream);
+      continue;
+    }
+
+    if (stream->skipped) {
+      GST_DEBUG_OBJECT (src, "skipping stream %p", stream);
       continue;
     }
 
@@ -5647,7 +5657,6 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
     if (!gst_rtsp_ext_list_configure_stream (src->extensions, caps)) {
       GST_DEBUG_OBJECT (src, "skipping stream %p, disabled by extension",
           stream);
-      stream->disabled = TRUE;
       continue;
     }
 
@@ -5655,10 +5664,8 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
         stream->id, caps, &selected);
     if (!selected) {
       GST_DEBUG_OBJECT (src, "skipping stream %p, disabled by signal", stream);
-      stream->disabled = TRUE;
       continue;
     }
-    stream->disabled = FALSE;
 
     /* merge/overwrite global caps */
     if (caps) {
@@ -5872,6 +5879,29 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
       }
       /* we need to activate at least one streams when we detect activity */
       src->need_activate = TRUE;
+
+      /* stream is setup now */
+      stream->setup = TRUE;
+      {
+        GList *skip = walk;
+
+        while (TRUE) {
+          GstRTSPStream *sskip;
+
+          skip = g_list_next (skip);
+          if (skip == NULL)
+            break;
+
+          sskip = (GstRTSPStream *) skip->data;
+
+          /* skip all streams with the same control url */
+          if (g_str_equal (stream->conninfo.location, sskip->conninfo.location)) {
+            GST_DEBUG_OBJECT (src, "found stream %p with same control %s",
+                sskip, sskip->conninfo.location);
+            sskip->skipped = TRUE;
+          }
+        }
+      }
     next:
       /* clean up our transport struct */
       gst_rtsp_transport_init (&transport);
