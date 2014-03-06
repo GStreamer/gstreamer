@@ -1422,7 +1422,8 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
           NULL);
       break;
     case V4L2_PIX_FMT_MPEG:    /* MPEG          */
-      structure = gst_structure_new_empty ("video/mpegts");
+      structure = gst_structure_new ("video/mpegts",
+          "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       break;
@@ -1935,7 +1936,8 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
   guint32 w, h;
 
   if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
-    return gst_caps_new_empty_simple ("video/mpegts");
+    return gst_caps_new_simple ("video/mpegts",
+        "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
 
   memset (&size, 0, sizeof (struct v4l2_frmsizeenum));
   size.index = 0;
