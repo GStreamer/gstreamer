@@ -395,9 +395,11 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_DEBUG_OBJECT (demux, "seeking to sequence %d", current_sequence);
       demux->client->sequence = current_sequence;
       demux->client->sequence_position = current_pos;
-      demux->position_shift = start - current_pos;
-      demux->need_segment = TRUE;
       GST_M3U8_CLIENT_UNLOCK (demux->client);
+
+      gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+          start, stop_type, stop, NULL);
+      demux->need_segment = TRUE;
 
       if (flags & GST_SEEK_FLAG_FLUSH) {
         GST_DEBUG_OBJECT (demux, "sending flush stop");
@@ -695,6 +697,7 @@ gst_hls_demux_configure_src_pad (GstHLSDemux * demux, GstFragment * fragment)
   if (G_UNLIKELY (!srccaps || demux->discont || (buf
               && GST_BUFFER_IS_DISCONT (buf)))) {
     switch_pads (demux, bufcaps);
+    demux->segment.offset = demux->segment.position;
     demux->need_segment = TRUE;
     demux->discont = FALSE;
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
@@ -705,20 +708,11 @@ gst_hls_demux_configure_src_pad (GstHLSDemux * demux, GstFragment * fragment)
     gst_caps_unref (srccaps);
 
   if (demux->need_segment) {
-    GstSegment segment;
-    GstClockTime start =
-        buf ? GST_BUFFER_PTS (buf) : demux->client->sequence_position;
-
-    start += demux->position_shift;
     /* And send a newsegment */
-    GST_DEBUG_OBJECT (demux, "Sending new-segment. segment start:%"
-        GST_TIME_FORMAT, GST_TIME_ARGS (start));
-    gst_segment_init (&segment, GST_FORMAT_TIME);
-    segment.start = start;
-    segment.time = start;
-    gst_pad_push_event (demux->srcpad, gst_event_new_segment (&segment));
+    GST_DEBUG_OBJECT (demux, "Sending segment event: %"
+        GST_SEGMENT_FORMAT, &demux->segment);
+    gst_pad_push_event (demux->srcpad, gst_event_new_segment (&demux->segment));
     demux->need_segment = FALSE;
-    demux->position_shift = 0;
   }
   if (buf)
     gst_buffer_unref (buf);
@@ -838,6 +832,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
   GST_DEBUG_OBJECT (demux, "Pushing buffer %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
+  demux->segment.position = GST_BUFFER_TIMESTAMP (buf);
   ret = gst_pad_push (demux->srcpad, buf);
   if (ret != GST_FLOW_OK)
     goto error_pushing;
@@ -928,7 +923,7 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
     demux->client = gst_m3u8_client_new ("");
   }
 
-  demux->position_shift = 0;
+  gst_segment_init (&demux->segment, GST_FORMAT_TIME);
   demux->need_segment = TRUE;
   demux->discont = TRUE;
 

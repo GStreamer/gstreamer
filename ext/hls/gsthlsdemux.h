@@ -92,7 +92,7 @@ struct _GstHLSDemux
   GCond updates_timed_cond;     /* Signalled when the playlist should be updated */
 
   /* Position in the stream */
-  GstClockTime position_shift;
+  GstSegment segment;
   gboolean need_segment;
   gboolean discont;
 
