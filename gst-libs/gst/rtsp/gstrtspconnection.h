@@ -164,6 +164,9 @@ typedef struct _GstRTSPWatch GstRTSPWatch;
  * @error_full: callback when an error occured with more information than
  *   the @error callback.
  * @tunnel_lost: callback when the post connection of a tunnel is closed.
+ * @tunnel_http_response: callback when an HTTP response to the GET request
+ *   is about to be sent for a tunneled connection. The response can be
+ *   modified in the callback. Since 1.4.
  *
  * Callback functions from a #GstRTSPWatch.
  */
@@ -181,9 +184,13 @@ typedef struct {
                                          GstRTSPMessage *message, guint id,
                                          gpointer user_data);
   GstRTSPResult     (*tunnel_lost)      (GstRTSPWatch *watch, gpointer user_data);
+  GstRTSPResult     (*tunnel_http_response) (GstRTSPWatch *watch,
+                                             GstRTSPMessage *request,
+                                             GstRTSPMessage *response,
+                                             gpointer user_data);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING-1];
 } GstRTSPWatchFuncs;
 
 GstRTSPWatch *     gst_rtsp_watch_new                (GstRTSPConnection *conn,

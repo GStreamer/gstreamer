@@ -3138,6 +3138,9 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
 
         /* queue the response */
         response = gen_tunnel_reply (conn, code, &watch->message);
+        if (watch->funcs.tunnel_http_response)
+          watch->funcs.tunnel_http_response (watch, &watch->message, response,
+              watch->user_data);
         gst_rtsp_watch_send_message (watch, response, NULL);
         gst_rtsp_message_free (response);
         goto read_done;
