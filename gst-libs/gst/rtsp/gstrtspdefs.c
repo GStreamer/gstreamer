@@ -174,6 +174,9 @@ static struct rtsp_header rtsp_headers[] = {
   /* Since 0.10.36 */
   {"RTCP-Interval", FALSE},
 
+  /* Since 1.4 */
+  {"KeyMgmt", FALSE},
+
   {NULL, FALSE}
 };
 
@@ -229,6 +232,7 @@ rtsp_init_status (void)
       "Only aggregate operation allowed");
   DEF_STATUS (GST_RTSP_STS_UNSUPPORTED_TRANSPORT, "Unsupported transport");
   DEF_STATUS (GST_RTSP_STS_DESTINATION_UNREACHABLE, "Destination unreachable");
+  DEF_STATUS (GST_RTSP_STS_KEY_MANAGEMENT_FAILURE, "Key management failure");
   DEF_STATUS (GST_RTSP_STS_INTERNAL_SERVER_ERROR, "Internal Server Error");
   DEF_STATUS (GST_RTSP_STS_NOT_IMPLEMENTED, "Not Implemented");
   DEF_STATUS (GST_RTSP_STS_BAD_GATEWAY, "Bad Gateway");

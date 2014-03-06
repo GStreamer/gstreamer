@@ -335,6 +335,9 @@ typedef enum {
   /* Since 0.10.36 */
   GST_RTSP_HDR_RTCP_INTERVAL,       /* RTCP-Interval */
 
+  /* Since 1.4 */
+  GST_RTSP_HDR_KEYMGMT,             /* KeyMgmt */
+
   GST_RTSP_HDR_LAST
 } GstRTSPHeaderField;
 
@@ -382,6 +385,7 @@ typedef enum {
   GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED     = 460,
   GST_RTSP_STS_UNSUPPORTED_TRANSPORT                = 461,
   GST_RTSP_STS_DESTINATION_UNREACHABLE              = 462,
+  GST_RTSP_STS_KEY_MANAGEMENT_FAILURE               = 463, /* since 1.4 */
   GST_RTSP_STS_INTERNAL_SERVER_ERROR                = 500,
   GST_RTSP_STS_NOT_IMPLEMENTED                      = 501,
   GST_RTSP_STS_BAD_GATEWAY                          = 502,
