@@ -831,9 +831,10 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
     }
 
     {
-      const char *flag_list[15] = {
+      const char *flag_list[] = {
         "", "", "", "", "live", "decode-only", "discont", "resync", "corrupted",
-        "marker", "header", "gap", "droppable", "delta-unit", "in-caps"
+        "marker", "header", "gap", "droppable", "delta-unit", "tag-memory",
+        "FIXME"
       };
       int i;
       char *end = flag_str;

@@ -471,9 +471,10 @@ gst_identity_update_last_message_for_buffer (GstIdentity * identity,
   GST_OBJECT_LOCK (identity);
 
   {
-    const char *flag_list[15] = {
+    const char *flag_list[] = {
       "", "", "", "", "live", "decode-only", "discont", "resync", "corrupted",
-      "marker", "header", "gap", "droppable", "delta-unit", "in-caps"
+      "marker", "header", "gap", "droppable", "delta-unit", "tag-memory",
+      "FIXME"
     };
     int i;
     char *end = flag_str;
