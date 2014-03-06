@@ -195,9 +195,7 @@ gst_proxy_pad_get_target (GstPad * pad)
   GstPad *target;
 
   GST_OBJECT_LOCK (pad);
-  target = GST_PROXY_PAD_TARGET (pad);
-  if (target)
-    gst_object_ref (target);
+  target = gst_pad_get_peer (GST_PROXY_PAD_INTERNAL (pad));
   GST_OBJECT_UNLOCK (pad);
 
   return target;
