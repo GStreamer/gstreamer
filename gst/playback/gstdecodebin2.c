@@ -416,6 +416,7 @@ struct _GstDecodeChain
 
   gboolean drained;             /* TRUE if the all children are drained */
   gboolean demuxer;             /* TRUE if elements->data is a demuxer */
+  gboolean adaptive_demuxer;    /* TRUE if elements->data is an adaptive streaming demuxer */
   gboolean seekable;            /* TRUE if this chain ends on a demuxer and is seekable */
   GList *elements;              /* All elements in this group, first
                                    is the latest and most downstream element */
@@ -2120,6 +2121,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     delem->capsfilter = NULL;
     chain->elements = g_list_prepend (chain->elements, delem);
     chain->demuxer = is_demuxer_element (element);
+    chain->adaptive_demuxer = is_adaptive_demuxer_element (element);
 
     /* For adaptive streaming demuxer we insert a multiqueue after
      * this demuxer. This multiqueue will get one fragment per buffer.
@@ -2135,12 +2137,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
      */
     if (chain->parent && chain->parent->parent) {
       GstDecodeChain *parent_chain = chain->parent->parent;
-      GstDecodeElement *parent_last_element;
 
-      parent_last_element =
-          parent_chain->elements ? parent_chain->elements->data : NULL;
-      if (parent_last_element
-          && is_adaptive_demuxer_element (parent_last_element->element))
+      if (parent_chain->adaptive_demuxer)
         chain->demuxer = TRUE;
     }
 
