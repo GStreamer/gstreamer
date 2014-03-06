@@ -2316,7 +2316,7 @@ gst_base_text_overlay_video_chain (GstPad * pad, GstObject * parent,
       GST_DEBUG_OBJECT (overlay, "estimating duration based on framerate");
       stop = start + gst_util_uint64_scale_int (GST_SECOND, fps_denom, fps_num);
     } else {
-      GST_WARNING_OBJECT (overlay, "no duration, assuming minimal duration");
+      GST_LOG_OBJECT (overlay, "no duration, assuming minimal duration");
       stop = start + 1;         /* we need to assume some interval */
     }
     gst_caps_unref (caps);
