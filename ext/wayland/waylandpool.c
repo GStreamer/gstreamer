@@ -56,7 +56,6 @@ static void
 gst_wl_meta_free (GstWlMeta * meta, GstBuffer * buffer)
 {
   g_object_unref (meta->display);
-  munmap (meta->data, meta->size);
 
   GST_DEBUG ("destroying wl_buffer %p", meta->wbuffer);
   wl_buffer_destroy (meta->wbuffer);
@@ -267,8 +266,6 @@ gst_wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   meta->display = g_object_ref (self->display);
   meta->wbuffer = wl_shm_pool_create_buffer (self->wl_pool, offset,
       width, height, stride, format);
-  meta->data = data;
-  meta->size = size;
 
   /* add the allocated memory on the GstBuffer */
   gst_buffer_append_memory (*buffer,

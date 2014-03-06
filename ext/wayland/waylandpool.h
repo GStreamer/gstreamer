@@ -43,10 +43,7 @@ struct _GstWlMeta {
   GstMeta meta;
 
   GstWlDisplay *display;
-
   struct wl_buffer *wbuffer;
-  void *data;
-  size_t size;
 };
 
 /* buffer pool */
