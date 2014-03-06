@@ -46,8 +46,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "clock-rate =  (int) [6000, 48000], "
-        "encoding-name = (string) \"SPEEX\", "
-        "encoding-params = (string) \"1\"")
+        "encoding-name = (string) \"SPEEX\", ")
+    /*  "encoding-params = (string) \"1\"" */
     );
 
 static GstStaticPadTemplate gst_rtp_speex_depay_src_template =
