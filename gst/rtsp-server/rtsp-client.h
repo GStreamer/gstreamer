@@ -85,6 +85,8 @@ struct _GstRTSPClient {
  *    RTSP response(ctx->response) via a call to gst_rtsp_message_init_response()
  * @params_get: get parameters. This function should also initialize the
  *    RTSP response(ctx->response) via a call to gst_rtsp_message_init_response()
+ * @tunnel_http_response: called when a response to the GET request is about to
+ *   be sent for a tunneled connection. The response can be modified. Since 1.4
  *
  * The client class structure.
  */
@@ -115,8 +117,10 @@ struct _GstRTSPClientClass {
   void     (*get_parameter_request)   (GstRTSPClient *client, GstRTSPContext *ctx);
   void     (*handle_response)         (GstRTSPClient *client, GstRTSPContext *ctx);
 
+  void     (*tunnel_http_response)    (GstRTSPClient * client, GstRTSPMessage * request,
+                                       GstRTSPMessage * response);
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE];
+  gpointer _gst_reserved[GST_PADDING_LARGE-1];
 };
 
 GType                 gst_rtsp_client_get_type          (void);

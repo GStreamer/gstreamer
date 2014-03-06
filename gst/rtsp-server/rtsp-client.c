@@ -2821,6 +2821,22 @@ tunnel_closed:
   }
 }
 
+static GstRTSPResult
+tunnel_http_response (GstRTSPWatch * watch, GstRTSPMessage * request,
+    GstRTSPMessage * response, gpointer user_data)
+{
+  GstRTSPClientClass *klass;
+
+  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+  klass = GST_RTSP_CLIENT_GET_CLASS (client);
+
+  if (klass->tunnel_http_response) {
+    klass->tunnel_http_response (client, request, response);
+  }
+
+  return GST_RTSP_OK;
+}
+
 static GstRTSPWatchFuncs watch_funcs = {
   message_received,
   message_sent,
@@ -2829,7 +2845,8 @@ static GstRTSPWatchFuncs watch_funcs = {
   tunnel_start,
   tunnel_complete,
   error_full,
-  tunnel_lost
+  tunnel_lost,
+  tunnel_http_response
 };
 
 static void
