@@ -3,6 +3,7 @@
  * Copyright (C) 2011 Intel Corporation
  * Copyright (C) 2011 Sreerenj Balachandran <sreerenj.balachandran@intel.com>
  * Copyright (C) 2012 Wim Taymans <wim.taymans@gmail.com>
+ * Copyright (C) 2014 Collabora Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -201,10 +202,14 @@ gst_wayland_sink_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (sink, "Finalizing the sink..");
 
+  if (sink->display) {
+    /* see comment about this call in gst_wayland_sink_change_state() */
+    gst_wayland_compositor_release_all_buffers (GST_WAYLAND_BUFFER_POOL
+        (sink->pool));
+    g_object_unref (sink->display);
+  }
   if (sink->window)
     g_object_unref (sink->window);
-  if (sink->display)
-    g_object_unref (sink->display);
   if (sink->pool)
     gst_object_unref (sink->pool);
 
@@ -238,6 +243,21 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (gst_wl_window_is_toplevel (sink->window)) {
+        /* Force all buffers to return to the pool, regardless of
+         * whether the compositor has released them or not. We are
+         * going to kill the display, so we need to return all buffers
+         * to be destroyed before this happens.
+         * Note that this is done here instead of the pool destructor
+         * because the buffers hold a reference to the pool. Also,
+         * the buffers can only be unref'ed from the display's event loop
+         * and the pool holds a reference to the display. If we drop
+         * our references here, when the compositor releases the buffers,
+         * they will be unref'ed from the event loop thread, which will
+         * unref the pool and therefore the display, which will try to
+         * stop the thread from within itself and cause a deadlock.
+         */
+        gst_wayland_compositor_release_all_buffers (GST_WAYLAND_BUFFER_POOL
+            (sink->pool));
         g_clear_object (&sink->window);
         g_clear_object (&sink->display);
         g_clear_object (&sink->pool);
@@ -508,7 +528,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   meta = gst_buffer_get_wl_meta (buffer);
 
-  if (meta && meta->display == sink->display) {
+  if (meta && meta->pool->display == sink->display) {
     GST_LOG_OBJECT (sink, "buffer %p from our pool, writing directly", buffer);
     to_render = buffer;
   } else {
@@ -540,6 +560,12 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   gst_video_sink_center_rect (src, dst, &res, FALSE);
 
   surface = gst_wl_window_get_wl_surface (sink->window);
+
+  /* Here we essentially add a reference to the buffer. This represents
+   * the fact that the compositor is using the buffer and it should
+   * not return back to the pool and be reused until the compositor
+   * releases it. The release is handled internally in the pool */
+  gst_wayland_compositor_acquire_buffer (meta->pool, to_render);
 
   wl_surface_attach (surface, meta->wbuffer, 0, 0);
   wl_surface_damage (surface, 0, 0, res.w, res.h);

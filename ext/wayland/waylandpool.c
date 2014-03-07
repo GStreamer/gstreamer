@@ -1,7 +1,8 @@
 /* GStreamer
  * Copyright (C) 2012 Intel Corporation
  * Copyright (C) 2012 Sreerenj Balachandran <sreerenj.balachandran@intel.com>
-
+ * Copyright (C) 2014 Collabora Ltd.
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -55,8 +56,6 @@ gst_wl_meta_api_get_type (void)
 static void
 gst_wl_meta_free (GstWlMeta * meta, GstBuffer * buffer)
 {
-  g_object_unref (meta->display);
-
   GST_DEBUG ("destroying wl_buffer %p", meta->wbuffer);
   wl_buffer_destroy (meta->wbuffer);
 }
@@ -108,6 +107,8 @@ static void
 gst_wayland_buffer_pool_init (GstWaylandBufferPool * self)
 {
   gst_video_info_init (&self->info);
+  g_mutex_init (&self->buffers_map_mutex);
+  self->buffers_map = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 static void
@@ -118,9 +119,84 @@ gst_wayland_buffer_pool_finalize (GObject * object)
   if (pool->wl_pool)
     gst_wayland_buffer_pool_stop (GST_BUFFER_POOL (pool));
 
+  g_mutex_clear (&pool->buffers_map_mutex);
+  g_hash_table_unref (pool->buffers_map);
+
   g_object_unref (pool->display);
 
   G_OBJECT_CLASS (gst_wayland_buffer_pool_parent_class)->finalize (object);
+}
+
+static void
+buffer_release (void *data, struct wl_buffer *wl_buffer)
+{
+  GstWaylandBufferPool *self = data;
+  GstBuffer *buffer;
+  GstWlMeta *meta;
+
+  g_mutex_lock (&self->buffers_map_mutex);
+  buffer = g_hash_table_lookup (self->buffers_map, wl_buffer);
+
+  GST_LOG_OBJECT (self, "wl_buffer::release (GstBuffer: %p)", buffer);
+
+  if (buffer) {
+    meta = gst_buffer_get_wl_meta (buffer);
+    if (meta->used_by_compositor) {
+      meta->used_by_compositor = FALSE;
+      /* unlock before unref because stop() may be called from here */
+      g_mutex_unlock (&self->buffers_map_mutex);
+      gst_buffer_unref (buffer);
+      return;
+    }
+  }
+  g_mutex_unlock (&self->buffers_map_mutex);
+}
+
+static const struct wl_buffer_listener buffer_listener = {
+  buffer_release
+};
+
+void
+gst_wayland_compositor_acquire_buffer (GstWaylandBufferPool * self,
+    GstBuffer * buffer)
+{
+  GstWlMeta *meta;
+
+  meta = gst_buffer_get_wl_meta (buffer);
+  g_return_if_fail (meta != NULL);
+  g_return_if_fail (meta->pool == self);
+  g_return_if_fail (meta->used_by_compositor == FALSE);
+
+  meta->used_by_compositor = TRUE;
+  gst_buffer_ref (buffer);
+}
+
+static void
+unref_used_buffers (gpointer key, gpointer value, gpointer data)
+{
+  GstBuffer *buffer = value;
+  GstWlMeta *meta = gst_buffer_get_wl_meta (buffer);
+  GList **to_unref = data;
+
+  if (meta->used_by_compositor) {
+    meta->used_by_compositor = FALSE;
+    *to_unref = g_list_prepend (*to_unref, buffer);
+  }
+}
+
+void
+gst_wayland_compositor_release_all_buffers (GstWaylandBufferPool * self)
+{
+  GList *to_unref = NULL;
+
+  g_mutex_lock (&self->buffers_map_mutex);
+  g_hash_table_foreach (self->buffers_map, unref_used_buffers, &to_unref);
+  g_mutex_unlock (&self->buffers_map_mutex);
+
+  /* unref without the lock because stop() may be called from here */
+  if (to_unref) {
+    g_list_free_full (to_unref, (GDestroyNotify) gst_buffer_unref);
+  }
 }
 
 static gboolean
@@ -226,6 +302,12 @@ gst_wayland_buffer_pool_stop (GstBufferPool * pool)
   self->size = 0;
   self->used = 0;
 
+  /* all buffers are about to be destroyed;
+   * we should no longer do anything with them */
+  g_mutex_lock (&self->buffers_map_mutex);
+  g_hash_table_remove_all (self->buffers_map);
+  g_mutex_unlock (&self->buffers_map_mutex);
+
   return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
 
@@ -263,9 +345,17 @@ gst_wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   /* create buffer and its metadata object */
   *buffer = gst_buffer_new ();
   meta = (GstWlMeta *) gst_buffer_add_meta (*buffer, GST_WL_META_INFO, NULL);
-  meta->display = g_object_ref (self->display);
+  meta->pool = self;
   meta->wbuffer = wl_shm_pool_create_buffer (self->wl_pool, offset,
       width, height, stride, format);
+  meta->used_by_compositor = FALSE;
+
+  /* configure listening to wl_buffer.release */
+  g_mutex_lock (&self->buffers_map_mutex);
+  g_hash_table_insert (self->buffers_map, meta->wbuffer, *buffer);
+  g_mutex_unlock (&self->buffers_map_mutex);
+
+  wl_buffer_add_listener (meta->wbuffer, &buffer_listener, self);
 
   /* add the allocated memory on the GstBuffer */
   gst_buffer_append_memory (*buffer,
