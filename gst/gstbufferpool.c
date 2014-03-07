@@ -274,9 +274,10 @@ do_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
    * the buffer and we want to remove any other metadata that gets added
    * later */
   gst_buffer_foreach_meta (*buffer, mark_meta_pooled, pool);
-  /* tag memory, this is how we expect the buffer when it is
+
+  /* un-tag memory, this is how we expect the buffer when it is
    * released again */
-  GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_TAG_MEMORY);
+  GST_BUFFER_FLAG_UNSET (*buffer, GST_BUFFER_FLAG_TAG_MEMORY);
 
   GST_LOG_OBJECT (pool, "allocated buffer %d/%d, %p", cur_buffers,
       max_buffers, buffer);
@@ -1136,7 +1137,7 @@ default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
       GST_MINI_OBJECT_FLAGS (buffer));
 
   /* memory should be untouched */
-  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY))
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY))
     goto discard;
 
   /* all memory should be exclusive to this buffer (and thus be writable) */

@@ -192,7 +192,7 @@ typedef struct _GstBufferPool GstBufferPool;
  * @GST_BUFFER_FLAG_DROPPABLE:   the buffer can be dropped without breaking the
  *                               stream, for example to reduce bandwidth.
  * @GST_BUFFER_FLAG_DELTA_UNIT:  this unit cannot be decoded independently.
- * @GST_BUFFER_FLAG_TAG_MEMORY:  this flag is cleared when the memory of the buffer
+ * @GST_BUFFER_FLAG_TAG_MEMORY:  this flag is set when memory of the buffer
  *                               is added/removed
  * @GST_BUFFER_FLAG_LAST:        additional media specific flags can be added starting from
  *                               this flag.

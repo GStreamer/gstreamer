@@ -283,7 +283,7 @@ _replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
         &GST_BUFFER_MEM_PTR (buffer, end), (len - end) * sizeof (gpointer));
   }
   GST_BUFFER_MEM_LEN (buffer) = len - length;
-  GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
 }
 
 static inline void
@@ -319,7 +319,7 @@ _memory_add (GstBuffer * buffer, gint idx, GstMemory * mem, gboolean lock)
   GST_BUFFER_MEM_PTR (buffer, idx) = mem;
   GST_BUFFER_MEM_LEN (buffer) = len + 1;
 
-  GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstBuffer, gst_buffer);
@@ -519,7 +519,7 @@ _gst_buffer_copy (GstBuffer * buffer)
   if (!gst_buffer_copy_into (copy, buffer, GST_BUFFER_COPY_ALL, 0, -1))
     gst_buffer_replace (&copy, NULL);
 
-  GST_BUFFER_FLAG_SET (copy, GST_BUFFER_FLAG_TAG_MEMORY);
+  GST_BUFFER_FLAG_UNSET (copy, GST_BUFFER_FLAG_TAG_MEMORY);
 
   return copy;
 }
@@ -725,7 +725,7 @@ gst_buffer_new_allocate (GstAllocator * allocator, gsize size,
   if (size > 0)
     _memory_add (newbuf, -1, gst_memory_ref (mem), TRUE);
 #endif
-  GST_BUFFER_FLAG_SET (newbuf, GST_BUFFER_FLAG_TAG_MEMORY);
+  GST_BUFFER_FLAG_UNSET (newbuf, GST_BUFFER_FLAG_TAG_MEMORY);
 
   return newbuf;
 
@@ -772,7 +772,7 @@ gst_buffer_new_wrapped_full (GstMemoryFlags flags, gpointer data,
       gst_memory_new_wrapped (flags, data, maxsize, offset, size, user_data,
       notify);
   _memory_add (newbuf, -1, mem, TRUE);
-  GST_BUFFER_FLAG_SET (newbuf, GST_BUFFER_FLAG_TAG_MEMORY);
+  GST_BUFFER_FLAG_UNSET (newbuf, GST_BUFFER_FLAG_TAG_MEMORY);
 
   return newbuf;
 }
@@ -887,7 +887,7 @@ _get_mapped (GstBuffer * buffer, guint idx, GstMapInfo * info,
     GST_BUFFER_MEM_PTR (buffer, idx) = mapped;
     /* unlock old memory */
     gst_memory_unlock (mem, GST_LOCK_FLAG_EXCLUSIVE);
-    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
   }
   gst_memory_unref (mem);
 
@@ -1460,7 +1460,7 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
         gst_memory_unref (mem);
 
       }
-      GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
     }
 
     offset = noffs;
@@ -1920,7 +1920,7 @@ gst_buffer_append_region (GstBuffer * buf1, GstBuffer * buf2, gssize offset,
   }
 
   GST_BUFFER_MEM_LEN (buf2) = 0;
-  GST_BUFFER_FLAG_UNSET (buf2, GST_BUFFER_FLAG_TAG_MEMORY);
+  GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_FLAG_TAG_MEMORY);
   gst_buffer_unref (buf2);
 
   return buf1;

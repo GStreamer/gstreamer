@@ -132,18 +132,18 @@ struct _GstBufferPool {
  *        buffers from the configured memory allocator and with the configured
  *        parameters. All metadata that is present on the allocated buffer will
  *        be marked as #GST_META_FLAG_POOLED and #GST_META_FLAG_LOCKED and will
- *        not be removed from the buffer in @reset_buffer. Memory will be marked
- *        with GST_BUFFER_FLAG_TAG_MEMORY.
+ *        not be removed from the buffer in @reset_buffer. The buffer should
+ *        have the GST_BUFFER_FLAG_TAG_MEMORY cleared.
  * @reset_buffer: reset the buffer to its state when it was freshly allocated.
  *        The default implementation will clear the flags, timestamps and
  *        will remove the metadata without the #GST_META_FLAG_POOLED flag (even
  *        the metadata with #GST_META_FLAG_LOCKED). If the
- *        #GST_BUFFER_FLAG_TAG_MEMORY was removed, this function can also try to
- *        restore the memory and set the #GST_BUFFER_FLAG_TAG_MEMORY again.
+ *        #GST_BUFFER_FLAG_TAG_MEMORY was set, this function can also try to
+ *        restore the memory and clear the #GST_BUFFER_FLAG_TAG_MEMORY again.
  * @release_buffer: release a buffer back in the pool. The default
  *        implementation will put the buffer back in the queue and notify any
  *        blocking acquire_buffer calls when the #GST_BUFFER_FLAG_TAG_MEMORY
- *        is set on the buffer. If #GST_BUFFER_FLAG_TAG_MEMORY is not set, the 
+ *        is not set on the buffer. If #GST_BUFFER_FLAG_TAG_MEMORY is set, the 
  *        buffer will be freed with @free_buffer.
  * @free_buffer: free a buffer. The default implementation unrefs the buffer.
  *
