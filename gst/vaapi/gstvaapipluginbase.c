@@ -65,6 +65,7 @@ plugin_set_context (GstElement * element, GstContext * context)
     GST_INFO_OBJECT (element, "set display %p", display);
     gst_vaapi_display_replace (&plugin->display, display);
     gst_vaapi_display_unref (display);
+    plugin->display_type = gst_vaapi_display_get_display_type (display);
   }
 }
 #else
@@ -75,6 +76,7 @@ plugin_set_context (GstVideoContext * context, const gchar * type,
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (context);
 
   gst_vaapi_set_display (type, value, &plugin->display);
+  plugin->display_type = gst_vaapi_display_get_display_type (plugin->display);
 }
 
 static void
