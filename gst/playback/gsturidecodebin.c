@@ -1837,7 +1837,7 @@ make_decoder (GstURIDecodeBin * decoder)
       if ((max_bytes = decoder->buffer_size) == -1)
         max_bytes = 2 * 1024 * 1024;
       if ((max_time = decoder->buffer_duration) == -1)
-        max_time = 2 * GST_SECOND;
+        max_time = 5 * GST_SECOND;
 
       g_object_set (decodebin, "max-size-bytes", max_bytes, "max-size-buffers",
           (guint) 0, "max-size-time", max_time, NULL);

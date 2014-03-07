@@ -3194,9 +3194,13 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
       max_bytes = AUTO_PREROLL_SIZE_BYTES;
     if (preroll || (max_buffers = dbin->max_size_buffers) == 0)
       max_buffers = AUTO_PREROLL_SIZE_BUFFERS;
-    if (preroll || (max_time = dbin->max_size_time) == 0)
-      max_time = seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
-          AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME;
+    if (preroll || (max_time = dbin->max_size_time) == 0) {
+      if (dbin->use_buffering && !preroll)
+        max_time = 5 * GST_SECOND;
+      else
+        max_time = seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
+            AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME;
+    }
   } else {
     /* update runtime limits. At runtime, we try to keep the amount of buffers
      * in the queues as low as possible (but at least 5 buffers). */
