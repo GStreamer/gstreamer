@@ -339,6 +339,8 @@ gst_soup_http_src_reset (GstSoupHTTPSrc * src)
   src->content_size = 0;
   src->have_body = FALSE;
 
+  src->ret = GST_FLOW_OK;
+
   gst_caps_replace (&src->src_caps, NULL);
   g_free (src->iradio_name);
   src->iradio_name = NULL;
@@ -1380,6 +1382,13 @@ static GstFlowReturn
 gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
     GstBuffer ** outbuf)
 {
+  /* If we're not OK, just go out of here */
+  if (src->ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (src, "Previous flow return not OK: %s",
+        gst_flow_get_name (src->ret));
+    return src->ret;
+  }
+
   GST_LOG_OBJECT (src, "Running request for method: %s", method);
   if (src->msg && (src->request_position != src->read_position)) {
     if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE) {
@@ -1443,6 +1452,12 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
     src->outbuf = NULL;
     gst_soup_http_src_session_unpause_message (src);
     g_main_loop_run (src->loop);
+
+    g_cond_signal (&src->request_finished_cond);
+    /* Return OK unconditionally here, src->ret will
+     * be most likely be EOS now but we want to
+     * consume the buffer we got above */
+    return GST_FLOW_OK;
   }
 
   if (src->ret == GST_FLOW_CUSTOM_ERROR)
@@ -1461,6 +1476,7 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   src = GST_SOUP_HTTP_SRC (psrc);
 
   g_mutex_lock (&src->mutex);
+  *outbuf = NULL;
   ret = gst_soup_http_src_do_request (src, SOUP_METHOD_GET, outbuf);
   g_mutex_unlock (&src->mutex);
   return ret;
@@ -1639,6 +1655,7 @@ gst_soup_http_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
   /* Wait for create() to handle the jump in offset. */
   src->request_position = segment->start;
   src->stop_position = segment->stop;
+
   return TRUE;
 }
 
