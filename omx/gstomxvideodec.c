@@ -1222,6 +1222,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
 
     add_videometa = gst_buffer_pool_config_has_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
+    gst_structure_free (config);
 
 #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
     eglimage = self->eglimage && (allocator
