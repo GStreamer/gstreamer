@@ -685,7 +685,7 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
   if (range_start)
     *range_start = file->offset;
   if (range_end)
-    *range_end = file->size != -1 ? file->offset + file->size : -1;
+    *range_end = file->size != -1 ? file->offset + file->size - 1 : -1;
   if (key)
     *key = file->key;
   if (iv)
