@@ -409,26 +409,6 @@ gst_v4l2_object_new (GstElement * element,
 
   v4l2object->n_v4l2_planes = 0;
 
-  /*
-   * this boolean only applies in v4l2-MPLANE mode.
-   * TRUE: means it prefers to use several v4l2 (non contiguous)
-   * planes. For example if the device supports NV12 and NV12M
-   * both in MPLANE mode, then it will prefer NV12M
-   * FALSE: means it prefers to use one v4l2 plane (which contains
-   * all gst planes as if it was working in non-v4l2-MPLANE mode.
-   * For example if the device supports NV12 and NV12M
-   * both in MPLANE mode, then it will prefer NV12
-   *
-   * this boolean is also used to manage the case where the
-   * device only supports the mode MPLANE and at the same time it
-   * does not support both NV12 and NV12M. So in this case we first
-   * try to use the prefered config, and at least try the other case
-   * if it fails. For example in MPLANE mode if it has NV12 and not
-   * NV21M then even if you set prefered_non_contiguous to TRUE it will
-   * try NV21 as well.
-   */
-  v4l2object->prefered_non_contiguous = TRUE;
-
   v4l2object->no_initial_format = FALSE;
 
   return v4l2object;
@@ -1345,38 +1325,6 @@ gst_v4l2_object_get_codec_caps (void)
   return gst_caps_ref (caps);
 }
 
-/* gst_v4l2_object_choose_fourcc:
- * @obj a #GstV4l2Object
- * @fourcc_splane The format type in single plane representation
- * @fourcc_mplane The format type in multi-plane representation
- * @fourcc Set to the first format to try
- * @fourcc_alt The alternative format to use, or zero if mplane is not
- * supported. Note that if alternate is used, the prefered_non_contiguous
- * setting need to be inversed.
- *
- * Certain format can be stored into multi-planar buffer type with two
- * representation. As an example, NV12, which has two planes, can be stored
- * into 1 plane of multi-planar buffer sturcture, or two. This function will
- * choose the right format to use base on the object settings.
- */
-static void
-gst_v4l2_object_choose_fourcc (GstV4l2Object * obj, guint32 fourcc_splane,
-    guint32 fourcc_mplane, guint32 * fourcc, guint32 * fourcc_alt)
-{
-  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-    if (obj->prefered_non_contiguous) {
-      *fourcc = fourcc_mplane;
-      *fourcc_alt = fourcc_splane;
-    } else {
-      *fourcc = fourcc_splane;
-      *fourcc_alt = fourcc_mplane;
-    }
-  } else {
-    *fourcc = fourcc_splane;
-    *fourcc_alt = 0;
-  }
-}
-
 /* collect data for the given caps
  * @caps: given input caps
  * @format: location for the v4l format
@@ -1389,12 +1337,9 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     struct v4l2_fmtdesc **format, GstVideoInfo * info)
 {
   GstStructure *structure;
-  guint32 fourcc, fourcc_alt = 0;
+  guint32 fourcc = 0, fourcc_nc = 0;
   const gchar *mimetype;
-  struct v4l2_fmtdesc *fmt;
-
-  /* default unknown values */
-  fourcc = 0;
+  struct v4l2_fmtdesc *fmt = NULL;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -1429,15 +1374,15 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         fourcc = V4L2_PIX_FMT_YUV422P;
         break;
       case GST_VIDEO_FORMAT_NV12:
-        gst_v4l2_object_choose_fourcc (v4l2object, V4L2_PIX_FMT_NV12,
-            V4L2_PIX_FMT_NV12M, &fourcc, &fourcc_alt);
+        fourcc = V4L2_PIX_FMT_NV12;
+        fourcc_nc = V4L2_PIX_FMT_NV12M;
         break;
       case GST_VIDEO_FORMAT_NV12_64Z32:
-        fourcc = V4L2_PIX_FMT_NV12MT;
+        fourcc_nc = V4L2_PIX_FMT_NV12MT;
         break;
       case GST_VIDEO_FORMAT_NV21:
-        gst_v4l2_object_choose_fourcc (v4l2object, V4L2_PIX_FMT_NV21,
-            V4L2_PIX_FMT_NV21M, &fourcc, &fourcc_alt);
+        fourcc = V4L2_PIX_FMT_NV21;
+        fourcc_nc = V4L2_PIX_FMT_NV21M;
         break;
       case GST_VIDEO_FORMAT_YVYU:
         fourcc = V4L2_PIX_FMT_YVYU;
@@ -1508,17 +1453,18 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     }
   }
 
-  if (fourcc == 0)
+
+  /* Prefer the non-contiguous if supported */
+  v4l2object->prefered_non_contiguous = TRUE;
+
+  if (fourcc_nc)
+    fmt = gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc_nc);
+  else if (fourcc == 0)
     goto unhandled_format;
 
-  fmt = gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc);
-
-  if (fmt == NULL && fourcc_alt != 0) {
-    GST_DEBUG_OBJECT (v4l2object, "No support for %" GST_FOURCC_FORMAT
-        " trying %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc),
-        GST_FOURCC_ARGS (fourcc_alt));
-    v4l2object->prefered_non_contiguous = !v4l2object->prefered_non_contiguous;
-    fmt = gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc_alt);
+  if (fmt == NULL) {
+    fmt = gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc);
+    v4l2object->prefered_non_contiguous = FALSE;
   }
 
   if (fmt == NULL)
