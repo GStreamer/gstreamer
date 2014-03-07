@@ -499,7 +499,11 @@ gst_wayland_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 static void
 frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 {
+  GstWaylandSink *sink = data;
+
   GST_LOG ("frame_redraw_cb");
+
+  g_atomic_int_set (&sink->redraw_pending, FALSE);
   wl_callback_destroy (callback);
 }
 
@@ -524,6 +528,10 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   /* surface is resizing - drop buffers until finished */
   if (sink->drawing_frozen || !sink->negotiated)
+    goto done;
+
+  /* drop buffers until we get a frame callback */
+  if (g_atomic_int_get (&sink->redraw_pending) == TRUE)
     goto done;
 
   meta = gst_buffer_get_wl_meta (buffer);
@@ -567,10 +575,12 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
    * releases it. The release is handled internally in the pool */
   gst_wayland_compositor_acquire_buffer (meta->pool, to_render);
 
+  g_atomic_int_set (&sink->redraw_pending, TRUE);
+
   wl_surface_attach (surface, meta->wbuffer, 0, 0);
   wl_surface_damage (surface, 0, 0, res.w, res.h);
   callback = wl_surface_frame (surface);
-  wl_callback_add_listener (callback, &frame_callback_listener, NULL);
+  wl_callback_add_listener (callback, &frame_callback_listener, sink);
   wl_surface_commit (surface);
   wl_display_flush (sink->display->display);
 

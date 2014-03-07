@@ -61,6 +61,7 @@ struct _GstWaylandSink
 
   gchar *display_name;
 
+  gboolean redraw_pending;
   gboolean drawing_frozen;
   gboolean negotiated;
   GCond render_cond;
