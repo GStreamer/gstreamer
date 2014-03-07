@@ -165,6 +165,8 @@ gst_dvd_spu_init (GstDVDSpu * dvdspu)
   gst_pad_set_chain_function (dvdspu->subpic_sinkpad, gst_dvd_spu_subpic_chain);
   gst_pad_set_event_function (dvdspu->subpic_sinkpad, gst_dvd_spu_subpic_event);
 
+  GST_PAD_SET_PROXY_ALLOCATION (dvdspu->videosinkpad);
+
   gst_element_add_pad (GST_ELEMENT (dvdspu), dvdspu->videosinkpad);
   gst_element_add_pad (GST_ELEMENT (dvdspu), dvdspu->subpic_sinkpad);
   gst_element_add_pad (GST_ELEMENT (dvdspu), dvdspu->srcpad);
