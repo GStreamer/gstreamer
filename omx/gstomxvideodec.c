@@ -2379,10 +2379,12 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
           gst_video_format_from_string (format_str)) ==
       GST_VIDEO_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (self, "Invalid caps: %" GST_PTR_FORMAT, intersection);
+    gst_caps_unref (intersection);
     g_list_free_full (negotiation_map,
         (GDestroyNotify) video_negotiation_map_free);
     return FALSE;
   }
+  gst_caps_unref (intersection);
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = self->dec_out_port->index;
