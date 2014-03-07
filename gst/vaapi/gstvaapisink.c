@@ -898,9 +898,13 @@ gst_vaapisink_show_frame_glx(
     guint                       flags
 )
 {
-    GstVaapiWindowGLX * const window = GST_VAAPI_WINDOW_GLX(sink->window);
+    GstVaapiWindowGLX *window;
     GLenum target;
     GLuint texture;
+
+    if (!sink->window)
+        return FALSE;
+    window = GST_VAAPI_WINDOW_GLX(sink->window);
 
     gst_vaapi_window_glx_make_current(window);
     if (!gst_vaapisink_ensure_texture(sink, surface))
@@ -960,6 +964,9 @@ gst_vaapisink_put_surface(
     guint                       flags
 )
 {
+    if (!sink->window)
+        return FALSE;
+
     if (!gst_vaapi_window_put_surface(sink->window, surface,
                 surface_rect, &sink->display_rect, flags)) {
         GST_DEBUG("could not render VA surface");
@@ -1003,9 +1010,6 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
     meta = gst_buffer_get_vaapi_video_meta(buffer);
     GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE(sink,
         gst_vaapi_video_meta_get_display(meta));
-
-    if (!sink->window)
-        goto error;
 
     gst_vaapisink_ensure_rotation(sink, TRUE);
 
@@ -1207,6 +1211,19 @@ gst_vaapisink_get_property(
 }
 
 static void
+gst_vaapisink_set_bus(GstElement *element, GstBus *bus)
+{
+    /* Make sure to allocate a VA display in the sink element first,
+       so that upstream elements could query a display that was
+       allocated here, and that exactly matches what the user
+       requested through the "display" property */
+    if (!GST_ELEMENT_BUS(element) && bus)
+        gst_vaapisink_ensure_display(GST_VAAPISINK(element));
+
+    GST_ELEMENT_CLASS(gst_vaapisink_parent_class)->set_bus(element, bus);
+}
+
+static void
 gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 {
     GObjectClass * const     object_class   = G_OBJECT_CLASS(klass);
@@ -1240,6 +1257,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->buffer_alloc = gst_vaapisink_buffer_alloc;
 #endif
 
+    element_class->set_bus = gst_vaapisink_set_bus;
     gst_element_class_set_static_metadata(element_class,
         "VA-API sink",
         "Sink/Video",
