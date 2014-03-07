@@ -39,6 +39,7 @@ struct _GstUriDownloaderPrivate
   GstPad *pad;
   GTimeVal *timeout;
   GstFragment *download;
+  gboolean got_buffer;
   GMutex download_lock;         /* used to restrict to one download only */
 
   GError *err;
@@ -258,6 +259,7 @@ gst_uri_downloader_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_LOG_OBJECT (downloader, "The uri fetcher received a new buffer "
       "of size %" G_GSIZE_FORMAT, gst_buffer_get_size (buf));
+  downloader->priv->got_buffer = TRUE;
   if (!gst_fragment_add_buffer (downloader->priv->download, buf))
     GST_WARNING_OBJECT (downloader, "Could not add buffer to fragment");
   GST_OBJECT_UNLOCK (downloader);
@@ -420,6 +422,7 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
 
   g_mutex_lock (&downloader->priv->download_lock);
   downloader->priv->err = NULL;
+  downloader->priv->got_buffer = FALSE;
 
   GST_OBJECT_LOCK (downloader);
   if (downloader->priv->cancelled) {
@@ -487,6 +490,11 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
 
   download = downloader->priv->download;
   downloader->priv->download = NULL;
+  if (!downloader->priv->got_buffer) {
+    g_object_unref (download);
+    download = NULL;
+    GST_ERROR_OBJECT (downloader, "Didn't retrieve a buffer before EOS");
+  }
 
   if (download != NULL)
     GST_INFO_OBJECT (downloader, "URI fetched successfully");
