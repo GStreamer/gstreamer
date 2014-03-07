@@ -177,11 +177,8 @@ gst_vaapi_display_x11_open_display (GstVaapiDisplay * base_display,
 {
   GstVaapiDisplayX11 *const display = GST_VAAPI_DISPLAY_X11_CAST (base_display);
   GstVaapiDisplayX11Private *const priv = &display->priv;
-  GstVaapiDisplayCache *cache;
+  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_GET_CACHE (display);
   const GstVaapiDisplayInfo *info;
-
-  cache = gst_vaapi_display_get_cache ();
-  g_return_val_if_fail (cache != NULL, FALSE);
 
   if (!set_display_name (display, name))
     return FALSE;
@@ -258,15 +255,11 @@ gst_vaapi_display_x11_get_display_info (GstVaapiDisplay * display,
 {
   GstVaapiDisplayX11Private *const priv =
       GST_VAAPI_DISPLAY_X11_PRIVATE (display);
-  GstVaapiDisplayCache *cache;
+  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_GET_CACHE (display);
   const GstVaapiDisplayInfo *cached_info;
 
   /* Return any cached info even if child has its own VA display */
-  cache = gst_vaapi_display_get_cache ();
-  if (!cache)
-    return FALSE;
-  cached_info =
-      gst_vaapi_display_cache_lookup_by_native_display (cache,
+  cached_info = gst_vaapi_display_cache_lookup_by_native_display (cache,
       priv->x11_display, GST_VAAPI_DISPLAY_TYPES (display));
   if (cached_info) {
     *info = *cached_info;

@@ -128,9 +128,20 @@ typedef void (*GstVaapiDisplayGetSizeMFunc) (GstVaapiDisplay * display,
 #define GST_VAAPI_DISPLAY_HAS_VPP(display) \
     gst_vaapi_display_has_video_processing(GST_VAAPI_DISPLAY_CAST(display))
 
+/**
+ * GST_VAAPI_DISPLAY_CACHE:
+ * @display: a @GstVaapiDisplay
+ *
+ * Returns the #GstVaapiDisplayCache attached to the supplied @display object.
+ */
+#undef  GST_VAAPI_DISPLAY_GET_CACHE
+#define GST_VAAPI_DISPLAY_GET_CACHE(display) \
+    (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->cache)
+
 struct _GstVaapiDisplayPrivate
 {
   GstVaapiDisplay *parent;
+  GstVaapiDisplayCache *cache;
   GRecMutex mutex;
   GstVaapiDisplayType display_type;
   VADisplay display;
@@ -213,9 +224,6 @@ gst_vaapi_display_class_init (GstVaapiDisplayClass * klass);
 GstVaapiDisplay *
 gst_vaapi_display_new (const GstVaapiDisplayClass * klass,
     GstVaapiDisplayInitType init_type, gpointer init_value);
-
-GstVaapiDisplayCache *
-gst_vaapi_display_get_cache (void);
 
 static inline guint
 gst_vaapi_display_get_display_types (GstVaapiDisplay * display)

@@ -204,11 +204,8 @@ gst_vaapi_display_wayland_open_display (GstVaapiDisplay * display,
 {
   GstVaapiDisplayWaylandPrivate *const priv =
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
-  GstVaapiDisplayCache *cache;
+  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_GET_CACHE (display);
   const GstVaapiDisplayInfo *info;
-
-  cache = gst_vaapi_display_get_cache ();
-  g_return_val_if_fail (cache != NULL, FALSE);
 
   if (!set_display_name (display, name))
     return FALSE;
@@ -266,13 +263,10 @@ gst_vaapi_display_wayland_get_display_info (GstVaapiDisplay * display,
 {
   GstVaapiDisplayWaylandPrivate *const priv =
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
-  GstVaapiDisplayCache *cache;
+  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_GET_CACHE (display);
   const GstVaapiDisplayInfo *cached_info;
 
   /* Return any cached info even if child has its own VA display */
-  cache = gst_vaapi_display_get_cache ();
-  if (!cache)
-    return FALSE;
   cached_info = gst_vaapi_display_cache_lookup_by_native_display (cache,
       priv->wl_display, GST_VAAPI_DISPLAY_TYPES (display));
   if (cached_info) {

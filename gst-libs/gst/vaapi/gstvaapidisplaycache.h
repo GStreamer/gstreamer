@@ -25,6 +25,7 @@
 
 #include "libgstvaapi_priv_check.h"
 #include <gst/vaapi/gstvaapidisplay.h>
+#include "gstvaapiminiobject.h"
 
 typedef struct _GstVaapiDisplayCache            GstVaapiDisplayCache;
 
@@ -32,13 +33,18 @@ G_GNUC_INTERNAL
 GstVaapiDisplayCache *
 gst_vaapi_display_cache_new (void);
 
-G_GNUC_INTERNAL
-void
-gst_vaapi_display_cache_free (GstVaapiDisplayCache * cache);
+#define gst_vaapi_display_cache_ref(cache) \
+    ((GstVaapiDisplayCache *) gst_vaapi_mini_object_ref ( \
+        GST_VAAPI_MINI_OBJECT (cache)))
+#define gst_vaapi_display_cache_unref(cache) \
+    gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (cache))
+#define gst_vaapi_display_cache_replace(old_cache_ptr, new_cache) \
+    gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) (old_cache_ptr), \
+        GST_VAAPI_MINI_OBJECT (new_cache))
 
 G_GNUC_INTERNAL
-guint
-gst_vaapi_display_cache_get_size (GstVaapiDisplayCache * cache);
+gboolean
+gst_vaapi_display_cache_is_empty (GstVaapiDisplayCache * cache);
 
 G_GNUC_INTERNAL
 gboolean

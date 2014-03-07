@@ -36,7 +36,7 @@ struct _CacheEntry
 
 struct _GstVaapiDisplayCache
 {
-  GMutex mutex;
+  GstVaapiMiniObject parent_instance;
   GList *list;
 };
 
@@ -103,7 +103,6 @@ cache_lookup_1 (GstVaapiDisplayCache * cache, GCompareFunc func,
 {
   GList *l;
 
-  g_mutex_lock (&cache->mutex);
   for (l = cache->list; l != NULL; l = l->next) {
     GstVaapiDisplayInfo *const info = &((CacheEntry *) l->data)->info;
     if (!is_compatible_display_type (info->display_type, display_types))
@@ -111,7 +110,6 @@ cache_lookup_1 (GstVaapiDisplayCache * cache, GCompareFunc func,
     if (func (info, data))
       break;
   }
-  g_mutex_unlock (&cache->mutex);
   return l;
 }
 
@@ -161,6 +159,30 @@ compare_display_name (gconstpointer a, gconstpointer b)
   return strcmp (info->display_name, display_name) == 0;
 }
 
+static void
+gst_vaapi_display_cache_finalize (GstVaapiDisplayCache * cache)
+{
+  GList *l;
+
+  if (!cache->list)
+    return;
+
+  for (l = cache->list; l != NULL; l = l->next)
+    cache_entry_free (l->data);
+  g_list_free (cache->list);
+  cache->list = NULL;
+}
+
+static const GstVaapiMiniObjectClass *
+gst_vaapi_display_cache_class (void)
+{
+  static const GstVaapiMiniObjectClass GstVaapiDisplayCacheClass = {
+    .size = sizeof (GstVaapiDisplayCache),
+    .finalize = (GDestroyNotify) gst_vaapi_display_cache_finalize
+  };
+  return &GstVaapiDisplayCacheClass;
+}
+
 /**
  * gst_vaapi_display_cache_new:
  *
@@ -171,59 +193,24 @@ compare_display_name (gconstpointer a, gconstpointer b)
 GstVaapiDisplayCache *
 gst_vaapi_display_cache_new (void)
 {
-  GstVaapiDisplayCache *cache;
-
-  cache = g_slice_new0 (GstVaapiDisplayCache);
-  if (!cache)
-    return NULL;
-
-  g_mutex_init (&cache->mutex);
-  return cache;
+  return (GstVaapiDisplayCache *)
+      gst_vaapi_mini_object_new0 (gst_vaapi_display_cache_class ());
 }
 
 /**
- * gst_vaapi_display_cache_new:
- * @cache: the #GstVaapiDisplayCache to destroy
- *
- * Destroys a VA display cache.
- */
-void
-gst_vaapi_display_cache_free (GstVaapiDisplayCache * cache)
-{
-  GList *l;
-
-  if (!cache)
-    return;
-
-  if (cache->list) {
-    for (l = cache->list; l != NULL; l = l->next)
-      cache_entry_free (l->data);
-    g_list_free (cache->list);
-    cache->list = NULL;
-  }
-  g_mutex_clear (&cache->mutex);
-  g_slice_free (GstVaapiDisplayCache, cache);
-}
-
-/**
- * gst_vaapi_display_cache_get_size:
+ * gst_vaapi_display_cache_is_empty:
  * @cache: the #GstVaapiDisplayCache
  *
- * Gets the size of the display cache @cache.
+ * Checks whether the display cache @cache is empty.
  *
- * Return value: the size of the display cache
+ * Return value: %TRUE if the display @cache is empty, %FALSE otherwise.
  */
-guint
-gst_vaapi_display_cache_get_size (GstVaapiDisplayCache * cache)
+gboolean
+gst_vaapi_display_cache_is_empty (GstVaapiDisplayCache * cache)
 {
-  guint size;
-
   g_return_val_if_fail (cache != NULL, 0);
 
-  g_mutex_lock (&cache->mutex);
-  size = g_list_length (cache->list);
-  g_mutex_unlock (&cache->mutex);
-  return size;
+  return cache->list == NULL;
 }
 
 /**
@@ -249,9 +236,7 @@ gst_vaapi_display_cache_add (GstVaapiDisplayCache * cache,
   if (!entry)
     return FALSE;
 
-  g_mutex_lock (&cache->mutex);
   cache->list = g_list_prepend (cache->list, entry);
-  g_mutex_unlock (&cache->mutex);
   return TRUE;
 }
 
@@ -274,9 +259,7 @@ gst_vaapi_display_cache_remove (GstVaapiDisplayCache * cache,
     return;
 
   cache_entry_free (m->data);
-  g_mutex_lock (&cache->mutex);
   cache->list = g_list_delete_link (cache->list, m);
-  g_mutex_unlock (&cache->mutex);
 }
 
 /**

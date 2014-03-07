@@ -219,11 +219,8 @@ gst_vaapi_display_drm_open_display (GstVaapiDisplay * display,
 {
   GstVaapiDisplayDRMPrivate *const priv =
       GST_VAAPI_DISPLAY_DRM_PRIVATE (display);
-  GstVaapiDisplayCache *cache;
+  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_GET_CACHE (display);
   const GstVaapiDisplayInfo *info;
-
-  cache = gst_vaapi_display_get_cache ();
-  g_return_val_if_fail (cache != NULL, FALSE);
 
   if (!set_device_path (display, name))
     return FALSE;
@@ -271,15 +268,11 @@ gst_vaapi_display_drm_get_display_info (GstVaapiDisplay * display,
 {
   GstVaapiDisplayDRMPrivate *const priv =
       GST_VAAPI_DISPLAY_DRM_PRIVATE (display);
-  GstVaapiDisplayCache *cache;
+  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_GET_CACHE (display);
   const GstVaapiDisplayInfo *cached_info;
 
   /* Return any cached info even if child has its own VA display */
-  cache = gst_vaapi_display_get_cache ();
-  if (!cache)
-    return FALSE;
-  cached_info =
-      gst_vaapi_display_cache_lookup_by_native_display (cache,
+  cached_info = gst_vaapi_display_cache_lookup_by_native_display (cache,
       GINT_TO_POINTER (priv->drm_device), GST_VAAPI_DISPLAY_TYPES (display));
   if (cached_info) {
     *info = *cached_info;
