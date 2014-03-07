@@ -140,6 +140,8 @@ static void
 ges_formatter_dispose (GObject * object)
 {
   ges_formatter_set_project (GES_FORMATTER (object), NULL);
+
+  G_OBJECT_CLASS (ges_formatter_parent_class)->dispose (object);
 }
 
 static gboolean

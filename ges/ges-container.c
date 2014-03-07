@@ -196,6 +196,8 @@ _dispose (GObject * object)
   GESContainer *self = GES_CONTAINER (object);
 
   g_hash_table_unref (self->priv->mappings);
+
+  G_OBJECT_CLASS (ges_container_parent_class)->dispose (object);
 }
 
 static void

@@ -273,6 +273,8 @@ _finalize (GObject * object)
 
   if (priv->uri)
     g_free (priv->uri);
+
+  G_OBJECT_CLASS (ges_project_parent_class)->finalize (object);
 }
 
 static void

@@ -55,15 +55,6 @@ static GParamSpec *properties[PROP_LAST];
  *      GObject vmetods implemenation          *
  *                                             *
  ***********************************************/
-static void
-_dispose (GObject * object)
-{
-}
-
-static void
-_finalize (GObject * object)
-{
-}
 
 static void
 _get_property (GObject * object, guint property_id,
@@ -123,8 +114,6 @@ ges_clip_asset_class_init (GESClipAssetClass * self_class)
 
   g_type_class_add_private (self_class, sizeof (GESClipAssetPrivate));
   object_class->constructed = _constructed;
-  object_class->dispose = _dispose;
-  object_class->finalize = _finalize;
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;
 

@@ -226,6 +226,8 @@ gst_frame_positionner_dispose (GObject * object)
         (GWeakNotify) _weak_notify_cb, pos);
     pos->current_track = NULL;
   }
+
+  G_OBJECT_CLASS (gst_frame_positionner_parent_class)->dispose (object);
 }
 
 static void
