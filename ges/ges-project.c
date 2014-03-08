@@ -412,7 +412,7 @@ ges_project_class_init (GESProjectClass * klass)
       G_TYPE_NONE, 3, G_TYPE_ERROR, G_TYPE_STRING, G_TYPE_GTYPE);
 
   object_class->dispose = _dispose;
-  object_class->dispose = _finalize;
+  object_class->finalize = _finalize;
 
   GES_ASSET_CLASS (klass)->extract = ges_project_extract;
 }
