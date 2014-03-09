@@ -558,7 +558,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
     data = g_utf8_next_char (end);      /* skip \n */
   }
 
-  /* redorder playlists by bitrate */
+  /* reorder playlists by bitrate */
   if (self->lists) {
     gchar *top_variant_uri = NULL;
     gboolean iframe = FALSE;
@@ -670,7 +670,7 @@ gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
     self->sequence =
         GST_M3U8_MEDIA_FILE (g_list_first (m3u8->files)->data)->sequence;
     self->sequence_position = 0;
-    GST_DEBUG ("Setting first sequence at %d", self->sequence);
+    GST_DEBUG ("Setting first sequence at %u", (guint) self->sequence);
   }
 
   ret = TRUE;
@@ -688,8 +688,17 @@ _find_current (GstM3U8MediaFile * file, GstM3U8Client * client)
 static gboolean
 _find_next (GstM3U8MediaFile * file, GstM3U8Client * client)
 {
-  GST_DEBUG ("Found fragment %d", file->sequence);
+  GST_DEBUG ("Found fragment %u", (guint) file->sequence);
   if (file->sequence >= client->sequence)
+    return FALSE;
+  return TRUE;
+}
+
+static gboolean
+_find_previous (GstM3U8MediaFile * file, GstM3U8Client * client)
+{
+  GST_DEBUG ("Found fragment %u", (guint) file->sequence);
+  if (file->sequence <= client->sequence)
     return FALSE;
   return TRUE;
 }
@@ -698,7 +707,7 @@ gboolean
 gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
     GstClockTime * timestamp, gint64 * range_start, gint64 * range_end,
-    const gchar ** key, const guint8 ** iv)
+    const gchar ** key, const guint8 ** iv, gboolean forward)
 {
   GList *l;
   GstM3U8MediaFile *file;
@@ -707,9 +716,13 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
   g_return_val_if_fail (client->current != NULL, FALSE);
 
   GST_M3U8_CLIENT_LOCK (client);
-  GST_DEBUG ("Looking for fragment %d", client->sequence);
+  GST_DEBUG ("Looking for fragment %" G_GINT64_FORMAT, client->sequence);
+  if (client->sequence < 0) {
+    GST_M3U8_CLIENT_UNLOCK (client);
+    return FALSE;
+  }
   l = g_list_find_custom (client->current->files, client,
-      (GCompareFunc) _find_next);
+      (GCompareFunc) (forward ? _find_next : _find_previous));
   if (l == NULL) {
     GST_M3U8_CLIENT_UNLOCK (client);
     return FALSE;
@@ -717,7 +730,7 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
 
   file = GST_M3U8_MEDIA_FILE (l->data);
   GST_DEBUG ("Got fragment with sequence %u (client sequence %u)",
-      file->sequence, client->sequence);
+      (guint) file->sequence, (guint) client->sequence);
 
   if (timestamp)
     *timestamp = client->sequence_position;
@@ -742,7 +755,7 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
 }
 
 void
-gst_m3u8_client_advance_fragment (GstM3U8Client * client)
+gst_m3u8_client_advance_fragment (GstM3U8Client * client, gboolean forward)
 {
   GList *l;
   GstM3U8MediaFile *file;
@@ -751,9 +764,9 @@ gst_m3u8_client_advance_fragment (GstM3U8Client * client)
   g_return_if_fail (client->current != NULL);
 
   GST_M3U8_CLIENT_LOCK (client);
-  GST_DEBUG ("Looking for fragment %d", client->sequence);
+  GST_DEBUG ("Looking for fragment %" G_GINT64_FORMAT, client->sequence);
   l = g_list_find_custom (client->current->files, client,
-      (GCompareFunc) _find_next);
+      (GCompareFunc) _find_current);
   if (l == NULL) {
     GST_ERROR ("Could not find current fragment");
     GST_M3U8_CLIENT_UNLOCK (client);
@@ -761,9 +774,17 @@ gst_m3u8_client_advance_fragment (GstM3U8Client * client)
   }
 
   file = GST_M3U8_MEDIA_FILE (l->data);
-  GST_DEBUG ("Advancing from sequence %u", file->sequence);
-  client->sequence = file->sequence + 1;
-  client->sequence_position += file->duration;
+  GST_DEBUG ("Advancing from sequence %u", (guint) file->sequence);
+  if (forward) {
+    client->sequence = file->sequence + 1;
+    client->sequence_position += file->duration;
+  } else {
+    client->sequence = file->sequence - 1;
+    if (client->sequence_position > file->duration)
+      client->sequence_position -= file->duration;
+    else
+      client->sequence_position = 0;
+  }
   GST_M3U8_CLIENT_UNLOCK (client);
 }
 

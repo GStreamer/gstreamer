@@ -114,6 +114,9 @@ static gboolean gst_hls_demux_set_location (GstHLSDemux * demux,
     const gchar * uri);
 static gchar *gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf);
 
+static gboolean gst_hls_demux_change_playlist (GstHLSDemux * demux,
+    guint max_bitrate);
+
 #define gst_hls_demux_parent_class parent_class
 G_DEFINE_TYPE (GstHLSDemux, gst_hls_demux, GST_TYPE_ELEMENT);
 
@@ -332,7 +335,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gint64 start, stop;
       GList *walk;
       GstClockTime current_pos, target_pos;
-      gint current_sequence;
+      gint64 current_sequence;
       GstM3U8MediaFile *file;
 
       GST_INFO_OBJECT (demux, "Received GST_EVENT_SEEK");
@@ -351,15 +354,67 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         return FALSE;
       }
 
+      if ((rate > 1.0 || rate < -1.0) && (!demux->client->main
+              || !demux->client->main->iframe_lists)) {
+        GST_ERROR_OBJECT (demux,
+            "Trick modes only allowed for streams with I-frame lists");
+        gst_event_unref (event);
+        return FALSE;
+      }
+
       GST_DEBUG_OBJECT (demux, "seek event, rate: %f start: %" GST_TIME_FORMAT
           " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
+
+      gst_hls_demux_pause_tasks (demux);
+
+      /* wait for streaming to finish */
+      g_rec_mutex_lock (&demux->updates_lock);
+      g_rec_mutex_unlock (&demux->updates_lock);
+
+      g_rec_mutex_lock (&demux->stream_lock);
+
+      /* Use I-frame variants for trick modes */
+      if ((rate > 1.0 || rate < -1.0) && demux->segment.rate >= -1.0
+          && demux->segment.rate <= 1.0) {
+        GST_M3U8_CLIENT_LOCK (demux->client);
+        /* Switch to I-frame variant */
+        demux->client->main->current_variant =
+            demux->client->main->iframe_lists;
+        GST_M3U8_CLIENT_UNLOCK (demux->client);
+        gst_m3u8_client_set_current (demux->client,
+            demux->client->main->iframe_lists->data);
+
+        gst_uri_downloader_reset (demux->downloader);
+        gst_hls_demux_update_playlist (demux, FALSE, NULL);
+        demux->discont = TRUE;
+        demux->do_typefind = TRUE;
+
+        gst_hls_demux_change_playlist (demux,
+            demux->current_download_rate * demux->bitrate_limit / ABS (rate));
+      } else if (rate > -1.0 && rate <= 1.0 && (demux->segment.rate < -1.0
+              || demux->segment.rate > 1.0)) {
+        GST_M3U8_CLIENT_LOCK (demux->client);
+        /* Switch to normal variant */
+        demux->client->main->current_variant = demux->client->main->lists;
+        GST_M3U8_CLIENT_UNLOCK (demux->client);
+        gst_m3u8_client_set_current (demux->client,
+            demux->client->main->lists->data);
+
+        gst_uri_downloader_reset (demux->downloader);
+        gst_hls_demux_update_playlist (demux, FALSE, NULL);
+        demux->discont = TRUE;
+        demux->do_typefind = TRUE;
+
+        gst_hls_demux_change_playlist (demux,
+            demux->current_download_rate * demux->bitrate_limit);
+      }
 
       GST_M3U8_CLIENT_LOCK (demux->client);
       file = GST_M3U8_MEDIA_FILE (demux->client->current->files->data);
       current_sequence = file->sequence;
       current_pos = 0;
-      target_pos = (GstClockTime) start;
+      target_pos = rate > 0 ? start : stop;
       /* FIXME: Here we need proper discont handling */
       for (walk = demux->client->current->files; walk; walk = walk->next) {
         file = walk->data;
@@ -383,16 +438,9 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_pad_push_event (demux->srcpad, gst_event_new_flush_start ());
       }
 
-      gst_hls_demux_pause_tasks (demux);
-
-      /* wait for streaming to finish */
-      g_rec_mutex_lock (&demux->updates_lock);
-      g_rec_mutex_unlock (&demux->updates_lock);
-
-      g_rec_mutex_lock (&demux->stream_lock);
-
       GST_M3U8_CLIENT_LOCK (demux->client);
-      GST_DEBUG_OBJECT (demux, "seeking to sequence %d", current_sequence);
+      GST_DEBUG_OBJECT (demux, "seeking to sequence %u",
+          (guint) current_sequence);
       demux->client->sequence = current_sequence;
       demux->client->sequence_position = current_pos;
       GST_M3U8_CLIENT_UNLOCK (demux->client);
@@ -768,7 +816,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
 
           /* Got a new fragment or not live anymore? */
           if (gst_m3u8_client_get_next_fragment (demux->client, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL, NULL)
+                  NULL, NULL, NULL, NULL, NULL, NULL, demux->segment.rate > 0)
               || !gst_m3u8_client_is_live (demux->client))
             break;
 
@@ -809,7 +857,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
     }
   } else {
     demux->download_failed_count = 0;
-    gst_m3u8_client_advance_fragment (demux->client);
+    gst_m3u8_client_advance_fragment (demux->client, demux->segment.rate > 0);
 
     if (demux->stop_updates_task) {
       g_object_unref (fragment);
@@ -1135,7 +1183,7 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
    * three fragments before the end of the list */
   if (updated && update == FALSE && demux->client->current &&
       gst_m3u8_client_is_live (demux->client)) {
-    guint last_sequence;
+    gint64 last_sequence;
 
     GST_M3U8_CLIENT_LOCK (demux->client);
     last_sequence =
@@ -1143,8 +1191,8 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
         data)->sequence;
 
     if (demux->client->sequence >= last_sequence - 3) {
-      GST_DEBUG_OBJECT (demux, "Sequence is beyond playlist. Moving back to %d",
-          last_sequence - 3);
+      GST_DEBUG_OBJECT (demux, "Sequence is beyond playlist. Moving back to %u",
+          (guint) (last_sequence - 3));
       demux->need_segment = TRUE;
       demux->client->sequence = last_sequence - 3;
     }
@@ -1211,7 +1259,11 @@ retry_failover_protection:
     GST_M3U8_CLIENT_UNLOCK (demux->client);
     gst_m3u8_client_set_current (demux->client, previous_variant->data);
     /*  Try a lower bitrate (or stop if we just tried the lowest) */
-    if (new_bandwidth ==
+    if (GST_M3U8 (previous_variant->data)->iframe && new_bandwidth ==
+        GST_M3U8 (g_list_first (demux->client->main->iframe_lists)->
+            data)->bandwidth)
+      return FALSE;
+    else if (!GST_M3U8 (previous_variant->data)->iframe && new_bandwidth ==
         GST_M3U8 (g_list_first (demux->client->main->lists)->data)->bandwidth)
       return FALSE;
     else
@@ -1421,7 +1473,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   *end_of_playlist = FALSE;
   if (!gst_m3u8_client_get_next_fragment (demux->client, &discont,
           &next_fragment_uri, &duration, &timestamp, &range_start, &range_end,
-          &key, &iv)) {
+          &key, &iv, demux->segment.rate > 0)) {
     GST_INFO_OBJECT (demux, "This playlist doesn't contain more fragments");
     *end_of_playlist = TRUE;
     return NULL;

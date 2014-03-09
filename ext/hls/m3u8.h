@@ -59,7 +59,7 @@ struct _GstM3U8
   GList *iframe_lists;          /* I-frame lists from the main playlist */
   GList *current_variant;       /* Current variant playlist used */
   GstM3U8 *parent;              /* main playlist (if any) */
-  guint mediasequence;          /* EXT-X-MEDIA-SEQUENCE & increased with new media file */
+  gint64 mediasequence;          /* EXT-X-MEDIA-SEQUENCE & increased with new media file */
 };
 
 struct _GstM3U8MediaFile
@@ -67,7 +67,7 @@ struct _GstM3U8MediaFile
   gchar *title;
   GstClockTime duration;
   gchar *uri;
-  guint sequence;               /* the sequence nb of this file */
+  gint64 sequence;               /* the sequence nb of this file */
   gboolean discont;             /* this file marks a discontinuity */
   gchar *key;
   guint8 iv[16];
@@ -79,7 +79,7 @@ struct _GstM3U8Client
   GstM3U8 *main;                /* main playlist */
   GstM3U8 *current;
   guint update_failed_count;
-  gint sequence;                /* the next sequence for this client */
+  gint64 sequence;              /* the next sequence for this client */
   GstClockTime sequence_position; /* position of this sequence */
   GMutex lock;
 };
@@ -92,8 +92,8 @@ void gst_m3u8_client_set_current (GstM3U8Client * client, GstM3U8 * m3u8);
 gboolean gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
     GstClockTime * timestamp, gint64 * range_start, gint64 * range_end,
-    const gchar ** key, const guint8 ** iv);
-void gst_m3u8_client_advance_fragment (GstM3U8Client * client);
+    const gchar ** key, const guint8 ** iv, gboolean forward);
+void gst_m3u8_client_advance_fragment (GstM3U8Client * client, gboolean forward);
 GstClockTime gst_m3u8_client_get_duration (GstM3U8Client * client);
 GstClockTime gst_m3u8_client_get_target_duration (GstM3U8Client * client);
 const gchar *gst_m3u8_client_get_uri(GstM3U8Client * client);
