@@ -1026,7 +1026,7 @@ ctrl_failed:
 }
 
 static gboolean
-set_contol (GQuark field_id, const GValue * value, gpointer user_data)
+set_control (GQuark field_id, const GValue * value, gpointer user_data)
 {
   GstV4l2Object *v4l2object = user_data;
   GQuark normalised_field_id;
@@ -1070,7 +1070,7 @@ set_contol (GQuark field_id, const GValue * value, gpointer user_data)
 gboolean
 gst_v4l2_set_controls (GstV4l2Object * v4l2object, GstStructure * controls)
 {
-  return gst_structure_foreach (controls, set_contol, v4l2object);
+  return gst_structure_foreach (controls, set_control, v4l2object);
 }
 
 gboolean
