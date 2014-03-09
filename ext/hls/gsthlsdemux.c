@@ -935,6 +935,8 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
     gst_element_remove_pad (GST_ELEMENT_CAST (demux), demux->srcpad);
     demux->srcpad = NULL;
   }
+
+  demux->current_download_rate = -1;
 }
 
 static gboolean
@@ -1227,15 +1229,11 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux, GstFragment * fragment)
 {
   GstClockTime diff;
   gsize size;
-  gint bitrate;
+  gint64 bitrate;
   GstBuffer *buffer;
 
-  GST_M3U8_CLIENT_LOCK (demux->client);
-  if (!demux->client->main->lists || !fragment) {
-    GST_M3U8_CLIENT_UNLOCK (demux->client);
+  if (!fragment)
     return TRUE;
-  }
-  GST_M3U8_CLIENT_UNLOCK (demux->client);
 
   /* compare the time when the fragment was downloaded with the time when it was
    * scheduled */
@@ -1244,10 +1242,28 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux, GstFragment * fragment)
   size = gst_buffer_get_size (buffer);
   bitrate = (size * 8) / ((double) diff / GST_SECOND);
 
-  GST_DEBUG ("Downloaded %d bytes in %" GST_TIME_FORMAT ". Bitrate is : %d",
-      (guint) size, GST_TIME_ARGS (diff), bitrate);
+  GST_DEBUG_OBJECT (demux,
+      "Downloaded %d bytes in %" GST_TIME_FORMAT ". Bitrate is : %d",
+      (guint) size, GST_TIME_ARGS (diff), (gint) bitrate);
+
+  /* Take old rate into account too */
+  if (demux->current_download_rate != -1)
+    bitrate = (demux->current_download_rate + bitrate * 3) / 4;
+  if (bitrate > G_MAXINT)
+    bitrate = G_MAXINT;
+  demux->current_download_rate = bitrate;
+
+  GST_DEBUG_OBJECT (demux, "Using current download rate: %d", (gint) bitrate);
 
   gst_buffer_unref (buffer);
+
+  GST_M3U8_CLIENT_LOCK (demux->client);
+  if (!demux->client->main->lists) {
+    GST_M3U8_CLIENT_UNLOCK (demux->client);
+    return TRUE;
+  }
+  GST_M3U8_CLIENT_UNLOCK (demux->client);
+
   return gst_hls_demux_change_playlist (demux, bitrate * demux->bitrate_limit);
 }
 

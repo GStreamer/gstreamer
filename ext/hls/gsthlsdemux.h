@@ -99,6 +99,9 @@ struct _GstHLSDemux
   /* Cache for the last key */
   gchar *key_url;
   GstFragment *key_fragment;
+
+  /* Current download rate (bps) */
+  gint current_download_rate;
 };
 
 struct _GstHLSDemuxClass
