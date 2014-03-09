@@ -50,11 +50,13 @@ struct _GstM3U8
   gchar *codecs;
   gint width;
   gint height;
+  gboolean iframe;
   GList *files;
 
   /*< private > */
   gchar *last_data;
   GList *lists;                 /* list of GstM3U8 from the main playlist */
+  GList *iframe_lists;          /* I-frame lists from the main playlist */
   GList *current_variant;       /* Current variant playlist used */
   GstM3U8 *parent;              /* main playlist (if any) */
   guint mediasequence;          /* EXT-X-MEDIA-SEQUENCE & increased with new media file */

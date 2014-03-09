@@ -75,6 +75,8 @@ gst_m3u8_free (GstM3U8 * self)
   g_free (self->last_data);
   g_list_foreach (self->lists, (GFunc) gst_m3u8_free, NULL);
   g_list_free (self->lists);
+  g_list_foreach (self->iframe_lists, (GFunc) gst_m3u8_free, NULL);
+  g_list_free (self->iframe_lists);
 
   g_free (self);
 }
@@ -383,37 +385,69 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
     } else if (g_str_has_prefix (data, "#EXT-X-VERSION:")) {
       if (int_from_string (data + 15, &data, &val))
         self->version = val;
-    } else if (g_str_has_prefix (data, "#EXT-X-STREAM-INF:")) {
+    } else if (g_str_has_prefix (data, "#EXT-X-STREAM-INF:") ||
+        g_str_has_prefix (data, "#EXT-X-I-FRAME-STREAM-INF:")) {
       gchar *v, *a;
+      gboolean iframe = g_str_has_prefix (data, "#EXT-X-I-FRAME-STREAM-INF:");
+      GstM3U8 *new_list;
 
-      if (list != NULL) {
-        GST_WARNING ("Found a list without a uri..., dropping");
-        gst_m3u8_free (list);
-      }
-
-      list = gst_m3u8_new ();
-      data = data + 18;
+      new_list = gst_m3u8_new ();
+      new_list->iframe = iframe;
+      data = data + (iframe ? 26 : 18);
       while (data && parse_attributes (&data, &a, &v)) {
         if (g_str_equal (a, "BANDWIDTH")) {
-          if (!int_from_string (v, NULL, &list->bandwidth))
+          if (!int_from_string (v, NULL, &new_list->bandwidth))
             GST_WARNING ("Error while reading BANDWIDTH");
         } else if (g_str_equal (a, "PROGRAM-ID")) {
-          if (!int_from_string (v, NULL, &list->program_id))
+          if (!int_from_string (v, NULL, &new_list->program_id))
             GST_WARNING ("Error while reading PROGRAM-ID");
         } else if (g_str_equal (a, "CODECS")) {
-          g_free (list->codecs);
-          list->codecs = g_strdup (v);
+          g_free (new_list->codecs);
+          new_list->codecs = g_strdup (v);
         } else if (g_str_equal (a, "RESOLUTION")) {
-          if (!int_from_string (v, &v, &list->width))
+          if (!int_from_string (v, &v, &new_list->width))
             GST_WARNING ("Error while reading RESOLUTION width");
           if (!v || *v != 'x') {
             GST_WARNING ("Missing height");
           } else {
             v = g_utf8_next_char (v);
-            if (!int_from_string (v, NULL, &list->height))
+            if (!int_from_string (v, NULL, &new_list->height))
               GST_WARNING ("Error while reading RESOLUTION height");
           }
+        } else if (iframe && g_str_equal (a, "URI")) {
+          gchar *uri = g_strdup (v);
+          gchar *urip = uri;
+          int len = strlen (uri);
+
+          /* handle the \"uri\" case */
+          if (uri[len - 1] == '"')
+            uri[len - 1] = '\0';
+          if (uri[0] == '"')
+            uri += 1;
+
+          data = uri_join (self->uri, uri);
+          g_free (urip);
+
+          if (data == NULL)
+            continue;
+          gst_m3u8_set_uri (new_list, data);
         }
+      }
+
+      if (iframe) {
+        if (g_list_find_custom (self->iframe_lists, new_list->uri,
+                (GCompareFunc) _m3u8_compare_uri)) {
+          GST_DEBUG ("Already have a list with this URI");
+          gst_m3u8_free (new_list);
+          g_free (data);
+        } else {
+          self->iframe_lists = g_list_append (self->iframe_lists, new_list);
+        }
+      } else if (list != NULL) {
+        GST_WARNING ("Found a list without a uri..., dropping");
+        gst_m3u8_free (list);
+      } else {
+        list = new_list;
       }
     } else if (g_str_has_prefix (data, "#EXT-X-TARGETDURATION:")) {
       if (int_from_string (data + 22, &data, &val))
@@ -527,18 +561,30 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
   /* redorder playlists by bitrate */
   if (self->lists) {
     gchar *top_variant_uri = NULL;
+    gboolean iframe = FALSE;
 
-    if (!self->current_variant)
+    if (!self->current_variant) {
       top_variant_uri = GST_M3U8 (self->lists->data)->uri;
-    else
+    } else {
       top_variant_uri = GST_M3U8 (self->current_variant->data)->uri;
+      iframe = GST_M3U8 (self->current_variant->data)->iframe;
+    }
 
     self->lists =
         g_list_sort (self->lists,
         (GCompareFunc) gst_m3u8_compare_playlist_by_bitrate);
 
-    self->current_variant = g_list_find_custom (self->lists, top_variant_uri,
-        (GCompareFunc) _m3u8_compare_uri);
+    self->iframe_lists =
+        g_list_sort (self->iframe_lists,
+        (GCompareFunc) gst_m3u8_compare_playlist_by_bitrate);
+
+    if (iframe)
+      self->current_variant =
+          g_list_find_custom (self->iframe_lists, top_variant_uri,
+          (GCompareFunc) _m3u8_compare_uri);
+    else
+      self->current_variant = g_list_find_custom (self->lists, top_variant_uri,
+          (GCompareFunc) _m3u8_compare_uri);
   }
 
   return TRUE;
