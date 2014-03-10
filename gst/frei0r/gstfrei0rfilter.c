@@ -40,14 +40,24 @@ gst_frei0r_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstFrei0rFilter *self = GST_FREI0R_FILTER (trans);
+  GstFrei0rFilterClass *klass = GST_FREI0R_FILTER_GET_CLASS (trans);
   GstVideoInfo info;
+  gboolean destroy_f0r_instance = FALSE;
 
   gst_video_info_init (&info);
   if (!gst_video_info_from_caps (&info, incaps))
     return FALSE;
 
+  if (self->width != info.width || self->height != info.height)
+    destroy_f0r_instance = TRUE;
+
   self->width = info.width;
   self->height = info.height;
+
+  if (self->f0r_instance && destroy_f0r_instance) {
+    klass->ftable->destruct (self->f0r_instance);
+    self->f0r_instance = NULL;
+  }
 
   return TRUE;
 }
