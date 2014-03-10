@@ -2577,7 +2577,7 @@ gst_queue2_dequeue_on_eos (GstQueue2 * queue, GstQueue2ItemType * item_type)
 static GstFlowReturn
 gst_queue2_push_one (GstQueue2 * queue)
 {
-  GstFlowReturn result = GST_FLOW_OK;
+  GstFlowReturn result = queue->srcresult;
   GstMiniObject *data;
   GstQueue2ItemType item_type;
 

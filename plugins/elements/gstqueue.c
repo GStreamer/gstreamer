@@ -1089,7 +1089,7 @@ out_unexpected:
 static GstFlowReturn
 gst_queue_push_one (GstQueue * queue)
 {
-  GstFlowReturn result = GST_FLOW_OK;
+  GstFlowReturn result = queue->srcresult;
   GstMiniObject *data;
 
   data = gst_queue_locked_dequeue (queue);
