@@ -3385,6 +3385,15 @@ gst_queue2_set_property (GObject * object,
       break;
     case PROP_USE_BUFFERING:
       queue->use_buffering = g_value_get_boolean (value);
+      if (!queue->use_buffering && queue->is_buffering) {
+        GstMessage *msg = gst_message_new_buffering (GST_OBJECT_CAST (queue),
+            100);
+
+        GST_DEBUG_OBJECT (queue, "Disabled buffering while buffering, "
+            "posting 100%% message");
+        queue->is_buffering = FALSE;
+        gst_element_post_message (GST_ELEMENT_CAST (queue), msg);
+      }
       break;
     case PROP_USE_RATE_ESTIMATE:
       queue->use_rate_estimate = g_value_get_boolean (value);
