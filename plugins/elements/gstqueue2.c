@@ -894,7 +894,6 @@ update_buffering (GstQueue2 * queue)
      * below the low threshold */
     if (percent < queue->low_percent) {
       queue->is_buffering = TRUE;
-      queue->buffering_iteration++;
       post = TRUE;
     }
   }
