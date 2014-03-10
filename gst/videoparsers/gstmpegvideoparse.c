@@ -505,6 +505,7 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
         ret = TRUE;
       break;
     case GST_MPEG_VIDEO_PACKET_EXTENSION:
+      mpvparse->config_flags |= FLAG_MPEG2;
       GST_LOG_OBJECT (mpvparse, "startcode is VIDEO PACKET EXTENSION");
       if (mpvparse->pic_offset >= 0) {
         GST_LOG_OBJECT (mpvparse, "... considered PICTURE EXTENSION");
