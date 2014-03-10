@@ -1445,6 +1445,10 @@ eos:
   {
     g_mutex_lock (&self->drain_lock);
     if (self->draining) {
+      /* Drain the pipeline to reclaim all memories back to the pool */
+      gst_pad_peer_query (GST_VIDEO_DECODER_SRC_PAD (self),
+          gst_query_new_drain ());
+
       GST_DEBUG_OBJECT (self, "Drained");
       self->draining = FALSE;
       g_cond_broadcast (&self->drain_cond);
@@ -1759,14 +1763,8 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     GST_DEBUG_OBJECT (self, "Need to disable and drain decoder");
 
     gst_omx_video_dec_drain (self, FALSE);
+    gst_omx_video_dec_flush (decoder);
     gst_omx_port_set_flushing (out_port, 5 * GST_SECOND, TRUE);
-
-    /* Wait until the srcpad loop is finished,
-     * unlock GST_VIDEO_DECODER_STREAM_LOCK to prevent deadlocks
-     * caused by using this lock from inside the loop function */
-    GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-    gst_pad_stop_task (GST_VIDEO_DECODER_SRC_PAD (decoder));
-    GST_VIDEO_DECODER_STREAM_LOCK (self);
 
     if (klass->cdata.hacks & GST_OMX_HACK_NO_COMPONENT_RECONFIGURE) {
       GST_VIDEO_DECODER_STREAM_UNLOCK (self);
@@ -1929,13 +1927,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     return FALSE;
   }
 
-  /* Start the srcpad loop again */
-  GST_DEBUG_OBJECT (self, "Starting task again");
-
   self->downstream_flow_ret = GST_FLOW_OK;
-  gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_video_dec_loop, decoder, NULL);
-
   return TRUE;
 }
 

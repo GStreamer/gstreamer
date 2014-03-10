@@ -1275,7 +1275,8 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstQuery *query = GST_PAD_PROBE_INFO_QUERY (info);
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ALLOCATION:{
+    case GST_QUERY_ALLOCATION:
+    {
       GstBufferPool *pool;
       GstStructure *config;
       GstCaps *caps;
@@ -1378,8 +1379,13 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
       GST_DEBUG ("done alocation");
       return GST_PAD_PROBE_OK;
-    }
       break;
+    }
+    case GST_QUERY_DRAIN:
+    {
+      flush_internal (state);
+      break;
+    }
     default:
       break;
   }
