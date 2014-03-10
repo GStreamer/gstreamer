@@ -1067,7 +1067,7 @@ static GstFlowReturn
 gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     GstMiniObject * object)
 {
-  GstFlowReturn result = GST_FLOW_OK;
+  GstFlowReturn result = sq->srcresult;
 
   if (GST_IS_BUFFER (object)) {
     GstBuffer *buffer;
