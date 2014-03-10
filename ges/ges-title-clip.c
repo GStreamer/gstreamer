@@ -416,7 +416,7 @@ ges_title_clip_set_background (GESTitleClip * self, guint32 background)
   self->priv->background = background;
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_title_clip_set_background_color_color (GES_TITLE_SOURCE (tmp->data),
+    ges_title_source_set_background_color (GES_TITLE_SOURCE (tmp->data),
         self->priv->background);
   }
 }
@@ -622,7 +622,7 @@ ges_title_clip_create_track_element (GESClip * clip, GESTrackType type)
     ges_title_source_set_halignment ((GESTitleSource *) res, priv->halign);
     ges_title_source_set_valignment ((GESTitleSource *) res, priv->valign);
     ges_title_source_set_text_color ((GESTitleSource *) res, priv->color);
-    ges_title_clip_set_background_color_color ((GESTitleSource *) res,
+    ges_title_source_set_background_color ((GESTitleSource *) res,
         priv->background);
     ges_title_source_set_xpos ((GESTitleSource *) res, priv->xpos);
     ges_title_source_set_ypos ((GESTitleSource *) res, priv->ypos);

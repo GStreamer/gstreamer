@@ -90,7 +90,7 @@ void ges_title_source_set_valignment (GESTitleSource *self,
 
 void ges_title_source_set_text_color (GESTitleSource *self,
 					   guint32 color);
-void ges_title_clip_set_background_color_color (GESTitleSource *self,
+void ges_title_source_set_background_color (GESTitleSource *self,
 					   guint32 color);
 void ges_title_source_set_xpos (GESTitleSource *self,
 					   gdouble position);

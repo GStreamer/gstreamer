@@ -282,14 +282,14 @@ ges_title_source_set_text_color (GESTitleSource * self, guint32 color)
 }
 
 /**
- * ges_title_clip_set_background_color_color:
+ * ges_title_source_set_background_color:
  * @self: the #GESTitleSource* to set
  * @color: the color @self is being set to
  *
  * Sets the color of the background
  */
 void
-ges_title_clip_set_background_color_color (GESTitleSource * self, guint32 color)
+ges_title_source_set_background_color (GESTitleSource * self, guint32 color)
 {
   GST_DEBUG ("self:%p, background color:%d", self, color);
 
