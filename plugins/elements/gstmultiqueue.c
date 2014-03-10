@@ -539,6 +539,15 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_BUFFERING:
       mq->use_buffering = g_value_get_boolean (value);
+      if (!mq->use_buffering && mq->buffering) {
+        GstMessage *message;
+
+        mq->buffering = FALSE;
+        GST_DEBUG_OBJECT (mq, "buffering 100 percent");
+        message = gst_message_new_buffering (GST_OBJECT_CAST (mq), 100);
+
+        gst_element_post_message (GST_ELEMENT_CAST (mq), message);
+      };
       break;
     case PROP_LOW_PERCENT:
       mq->low_percent = g_value_get_int (value);
