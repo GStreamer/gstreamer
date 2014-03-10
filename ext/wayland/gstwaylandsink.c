@@ -652,6 +652,8 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
           ("Failed to use the external wayland display: '%s'", error->message));
       g_error_free (error);
     } else {
+      wl_proxy_set_queue ((struct wl_proxy *) whandle->surface,
+          sink->display->queue);
       sink->window = gst_wl_window_new_from_surface (sink->display,
           whandle->surface, whandle->width, whandle->height);
     }
