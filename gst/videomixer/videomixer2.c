@@ -138,8 +138,11 @@ struct _GstVideoMixer2Collect
   GstVideoMixer2Pad *mixpad;
 
   GstBuffer *queued;            /* buffer for which we don't know the end time yet */
+  GstVideoInfo queued_vinfo;
 
   GstBuffer *buffer;            /* buffer that should be blended now */
+  GstVideoInfo buffer_vinfo;
+
   GstClockTime start_time;
   GstClockTime end_time;
 };
@@ -860,6 +863,7 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
     GstVideoMixer2Collect *mixcol = pad->mixcol;
     GstSegment *segment = &pad->mixcol->collect.segment;
     GstBuffer *buf;
+    GstVideoInfo *vinfo;
 
     buf = gst_collect_pads_peek (mix->collect, &mixcol->collect);
     if (buf) {
@@ -871,6 +875,8 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
         GST_ERROR_OBJECT (pad, "Need timestamped buffers!");
         return -2;
       }
+
+      vinfo = &pad->info;
 
       /* FIXME: Make all this work with negative rates */
 
@@ -890,6 +896,7 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
         start_time = GST_BUFFER_TIMESTAMP (mixcol->queued);
         gst_buffer_unref (buf);
         buf = gst_buffer_ref (mixcol->queued);
+        vinfo = &mixcol->queued_vinfo;
       } else {
         end_time = GST_BUFFER_DURATION (buf);
 
@@ -897,6 +904,7 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
           mixcol->queued = buf;
           buf = gst_collect_pads_pop (mix->collect, &mixcol->collect);
           gst_buffer_unref (buf);
+          mixcol->queued_vinfo = pad->info;
           need_more_data = TRUE;
           continue;
         }
@@ -958,6 +966,7 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
             "Taking new buffer with start time %" GST_TIME_FORMAT,
             GST_TIME_ARGS (start_time));
         gst_buffer_replace (&mixcol->buffer, buf);
+        mixcol->buffer_vinfo = *vinfo;
         mixcol->start_time = start_time;
         mixcol->end_time = end_time;
 
@@ -1093,7 +1102,8 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
       if (GST_CLOCK_TIME_IS_VALID (stream_time))
         gst_object_sync_values (GST_OBJECT (pad), stream_time);
 
-      gst_video_frame_map (&frame, &pad->info, mixcol->buffer, GST_MAP_READ);
+      gst_video_frame_map (&frame, &mixcol->buffer_vinfo, mixcol->buffer,
+          GST_MAP_READ);
 
       if (pad->convert) {
         gint converted_size;
