@@ -159,6 +159,7 @@ gst_atdec_destroy_queue (GstATDec * atdec, gboolean drain)
   AudioQueueDispose (atdec->queue, true);
   atdec->queue = NULL;
   atdec->output_position = 0;
+  atdec->input_position = 0;
 }
 
 void
@@ -181,6 +182,7 @@ gst_atdec_start (GstAudioDecoder * decoder)
 
   GST_DEBUG_OBJECT (atdec, "start");
   atdec->output_position = 0;
+  atdec->input_position = 0;
 
   return TRUE;
 }
@@ -406,47 +408,21 @@ gst_atdec_buffer_emptied (void *user_data, AudioQueueRef queue,
 }
 
 static GstFlowReturn
-gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
+gst_atdec_offline_render (GstATDec * atdec, GstAudioInfo * audio_info)
 {
   OSStatus status;
   AudioTimeStamp timestamp = { 0 };
-  AudioStreamPacketDescription packet;
-  AudioQueueBufferRef input_buffer, output_buffer;
-  GstBuffer *out;
-  GstMapInfo info;
-  GstAudioInfo *audio_info;
-  int size, out_frames;
+  AudioQueueBufferRef output_buffer;
   GstFlowReturn flow_ret = GST_FLOW_OK;
-  GstATDec *atdec = GST_ATDEC (decoder);
-
-  if (buffer == NULL)
-    return GST_FLOW_OK;
-
-  audio_info = gst_audio_decoder_get_audio_info (decoder);
-
-  /* copy the input buffer into an AudioQueueBuffer */
-  size = gst_buffer_get_size (buffer);
-  status = AudioQueueAllocateBuffer (atdec->queue, size, &input_buffer);
-  if (status)
-    goto allocate_input_failed;
-  gst_buffer_extract (buffer, 0, input_buffer->mAudioData, size);
-  input_buffer->mAudioDataByteSize = size;
-
-  /* assume framed input */
-  packet.mStartOffset = 0;
-  packet.mVariableFramesInPacket = 1;
-  packet.mDataByteSize = size;
-
-  /* enqueue the buffer. It will get free'd once the gst_atdec_buffer_emptied
-   * callback is called
-   */
-  status = AudioQueueEnqueueBuffer (atdec->queue, input_buffer, 1, &packet);
-  if (status)
-    goto enqueue_buffer_failed;
+  GstBuffer *out;
+  guint out_frames;
 
   /* figure out how many frames we need to pull out of the queue */
-  size = atdec->spf * audio_info->bpf;
-  AudioQueueAllocateBuffer (atdec->queue, size, &output_buffer);
+  out_frames = atdec->input_position - atdec->output_position;
+  if (out_frames > atdec->spf)
+    out_frames = atdec->spf;
+  status = AudioQueueAllocateBuffer (atdec->queue, out_frames * audio_info->bpf,
+      &output_buffer);
   if (status)
     goto allocate_output_failed;
 
@@ -467,35 +443,21 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
         output_buffer->mAudioDataByteSize / audio_info->bpf;
 
     out =
-        gst_audio_decoder_allocate_output_buffer (decoder,
+        gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER (atdec),
         output_buffer->mAudioDataByteSize);
 
-    gst_buffer_map (out, &info, GST_MAP_WRITE);
-    memcpy (info.data, output_buffer->mAudioData,
+    gst_buffer_fill (out, 0, output_buffer->mAudioData,
         output_buffer->mAudioDataByteSize);
-    gst_buffer_unmap (out, &info);
 
-    flow_ret = gst_audio_decoder_finish_frame (decoder, out, 1);
+    flow_ret =
+        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (atdec), out, 1);
+  } else {
+    flow_ret = GST_FLOW_CUSTOM_SUCCESS;
   }
 
   AudioQueueFreeBuffer (atdec->queue, output_buffer);
 
   return flow_ret;
-
-allocate_input_failed:
-  {
-    GST_ELEMENT_ERROR (atdec, STREAM, DECODE, (NULL),
-        ("AudioQueueAllocateBuffer returned error: %d", (gint) status));
-    return GST_FLOW_ERROR;
-  }
-
-enqueue_buffer_failed:
-  {
-    GST_AUDIO_DECODER_ERROR (atdec, 1, STREAM, DECODE, (NULL),
-        ("AudioQueueEnqueueBuffer returned error: %d", (gint) status),
-        flow_ret);
-    return flow_ret;
-  }
 
 allocate_output_failed:
   {
@@ -527,6 +489,77 @@ invalid_buffer_size:
   }
 }
 
+static GstFlowReturn
+gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
+{
+  OSStatus status;
+  AudioStreamPacketDescription packet;
+  AudioQueueBufferRef input_buffer;
+  GstAudioInfo *audio_info;
+  int size;
+  GstFlowReturn flow_ret = GST_FLOW_OK;
+  GstATDec *atdec = GST_ATDEC (decoder);
+
+  audio_info = gst_audio_decoder_get_audio_info (decoder);
+
+  if (buffer == NULL) {
+    AudioQueueFlush (atdec->queue);
+
+    while (atdec->input_position > atdec->output_position
+        && flow_ret == GST_FLOW_OK) {
+      flow_ret = gst_atdec_offline_render (atdec, audio_info);
+    }
+
+    if (flow_ret == GST_FLOW_CUSTOM_SUCCESS)
+      flow_ret = GST_FLOW_OK;
+
+    return flow_ret;
+  }
+
+  /* copy the input buffer into an AudioQueueBuffer */
+  size = gst_buffer_get_size (buffer);
+  status = AudioQueueAllocateBuffer (atdec->queue, size, &input_buffer);
+  if (status)
+    goto allocate_input_failed;
+  gst_buffer_extract (buffer, 0, input_buffer->mAudioData, size);
+  input_buffer->mAudioDataByteSize = size;
+
+  /* assume framed input */
+  packet.mStartOffset = 0;
+  packet.mVariableFramesInPacket = 1;
+  packet.mDataByteSize = size;
+
+  /* enqueue the buffer. It will get free'd once the gst_atdec_buffer_emptied
+   * callback is called
+   */
+  status = AudioQueueEnqueueBuffer (atdec->queue, input_buffer, 1, &packet);
+  if (status)
+    goto enqueue_buffer_failed;
+
+  atdec->input_position += atdec->spf;
+
+  flow_ret = gst_atdec_offline_render (atdec, audio_info);
+  if (flow_ret == GST_FLOW_CUSTOM_SUCCESS)
+    flow_ret = GST_FLOW_OK;
+
+  return flow_ret;
+
+allocate_input_failed:
+  {
+    GST_ELEMENT_ERROR (atdec, STREAM, DECODE, (NULL),
+        ("AudioQueueAllocateBuffer returned error: %d", (gint) status));
+    return GST_FLOW_ERROR;
+  }
+
+enqueue_buffer_failed:
+  {
+    GST_AUDIO_DECODER_ERROR (atdec, 1, STREAM, DECODE, (NULL),
+        ("AudioQueueEnqueueBuffer returned error: %d", (gint) status),
+        flow_ret);
+    return flow_ret;
+  }
+}
+
 static void
 gst_atdec_flush (GstAudioDecoder * decoder, gboolean hard)
 {
@@ -534,4 +567,5 @@ gst_atdec_flush (GstAudioDecoder * decoder, gboolean hard)
 
   AudioQueueReset (atdec->queue);
   atdec->output_position = 0;
+  atdec->input_position = 0;
 }
