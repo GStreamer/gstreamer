@@ -149,6 +149,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideodecoder.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideoencoder.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideoutils.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/video-tile.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/navigation.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-blend.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-color.h
