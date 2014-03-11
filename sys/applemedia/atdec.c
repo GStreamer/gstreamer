@@ -439,6 +439,9 @@ gst_atdec_offline_render (GstATDec * atdec, GstAudioInfo * audio_info)
     if (output_buffer->mAudioDataByteSize % audio_info->bpf != 0)
       goto invalid_buffer_size;
 
+    GST_DEBUG_OBJECT (atdec,
+        "Got output buffer of size %u at position %" G_GUINT64_FORMAT,
+        output_buffer->mAudioDataByteSize, atdec->output_position);
     atdec->output_position +=
         output_buffer->mAudioDataByteSize / audio_info->bpf;
 
@@ -451,7 +454,10 @@ gst_atdec_offline_render (GstATDec * atdec, GstAudioInfo * audio_info)
 
     flow_ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (atdec), out, 1);
+    GST_DEBUG_OBJECT (atdec, "Finished buffer: %s",
+        gst_flow_get_name (flow_ret));
   } else {
+    GST_DEBUG_OBJECT (atdec, "Got empty output buffer");
     flow_ret = GST_FLOW_CUSTOM_SUCCESS;
   }
 
@@ -503,6 +509,7 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
   audio_info = gst_audio_decoder_get_audio_info (decoder);
 
   if (buffer == NULL) {
+    GST_DEBUG_OBJECT (atdec, "Draining");
     AudioQueueFlush (atdec->queue);
 
     while (atdec->input_position > atdec->output_position
@@ -518,6 +525,9 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
 
   /* copy the input buffer into an AudioQueueBuffer */
   size = gst_buffer_get_size (buffer);
+  GST_DEBUG_OBJECT (atdec,
+      "Handling buffer of size %u at timestamp %" GST_TIME_FORMAT, (guint) size,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
   status = AudioQueueAllocateBuffer (atdec->queue, size, &input_buffer);
   if (status)
     goto allocate_input_failed;
@@ -565,6 +575,7 @@ gst_atdec_flush (GstAudioDecoder * decoder, gboolean hard)
 {
   GstATDec *atdec = GST_ATDEC (decoder);
 
+  GST_DEBUG_OBJECT (atdec, "Flushing");
   AudioQueueReset (atdec->queue);
   atdec->output_position = 0;
   atdec->input_position = 0;
