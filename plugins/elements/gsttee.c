@@ -313,8 +313,13 @@ static gboolean
 forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
   GstPad *srcpad = GST_PAD_CAST (user_data);
+  GstFlowReturn ret;
 
-  gst_pad_push_event (srcpad, gst_event_ref (*event));
+  ret = gst_pad_store_sticky_event (srcpad, *event);
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (srcpad, "storing sticky event %p (%s) failed: %s", *event,
+        GST_EVENT_TYPE_NAME (*event), gst_flow_get_name (ret));
+  }
 
   return TRUE;
 }
@@ -652,12 +657,12 @@ restart:
       gst_object_ref (pad);
       GST_OBJECT_UNLOCK (tee);
 
-      GST_LOG_OBJECT (tee, "Starting to push %s %p",
+      GST_LOG_OBJECT (pad, "Starting to push %s %p",
           is_list ? "list" : "buffer", data);
 
       ret = gst_tee_do_push (tee, pad, data, is_list);
 
-      GST_LOG_OBJECT (tee, "Pushing item %p yielded result %s", data,
+      GST_LOG_OBJECT (pad, "Pushing item %p yielded result %s", data,
           gst_flow_get_name (ret));
 
       GST_OBJECT_LOCK (tee);
@@ -668,7 +673,7 @@ restart:
     } else {
       /* already pushed, use previous return value */
       ret = GST_TEE_PAD_CAST (pad)->result;
-      GST_LOG_OBJECT (tee, "pad already pushed with %s",
+      GST_LOG_OBJECT (pad, "pad already pushed with %s",
           gst_flow_get_name (ret));
     }
 
@@ -676,7 +681,7 @@ restart:
      * the same. It could be possible that the pad we just pushed was removed
      * and the return value it not valid anymore */
     if (G_UNLIKELY (GST_ELEMENT_CAST (tee)->pads_cookie != cookie)) {
-      GST_LOG_OBJECT (tee, "pad list changed");
+      GST_LOG_OBJECT (pad, "pad list changed");
       /* the list of pads changed, restart iteration. Pads that we already
        * pushed on and are still in the new list, will not be pushed on
        * again. */
@@ -689,7 +694,7 @@ restart:
 
     /* keep all other return values, overwriting the previous one. */
     if (G_LIKELY (ret != GST_FLOW_NOT_LINKED)) {
-      GST_LOG_OBJECT (tee, "Replacing ret val %d with %d", cret, ret);
+      GST_LOG_OBJECT (pad, "Replacing ret val %d with %d", cret, ret);
       cret = ret;
     }
     pads = g_list_next (pads);
