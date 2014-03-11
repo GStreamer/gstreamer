@@ -213,6 +213,8 @@ gst_caps_to_at_format (GstCaps * caps, AudioStreamBasicDescription * format)
   int rate = 0;
   GstStructure *structure;
 
+  memset (format, 0, sizeof (AudioStreamBasicDescription));
+
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "rate", &rate);
   gst_structure_get_int (structure, "channels", &channels);
