@@ -713,6 +713,7 @@ gst_wayland_sink_set_surface_size (GstWaylandVideo * video, gint w, gint h)
     return;
   }
 
+  GST_DEBUG_OBJECT (sink, "changing window size to %d x %d", w, h);
   gst_wl_window_set_size (sink->window, w, h);
   GST_OBJECT_UNLOCK (sink);
 }
@@ -734,6 +735,8 @@ gst_wayland_sink_resume_rendering (GstWaylandVideo * video)
   GstWaylandSink *sink = GST_WAYLAND_SINK (video);
   g_return_if_fail (sink != NULL);
 
+  GST_DEBUG_OBJECT (sink, "resuming rendering");
+
   GST_OBJECT_LOCK (sink);
   sink->drawing_frozen = FALSE;
 
@@ -741,9 +744,11 @@ gst_wayland_sink_resume_rendering (GstWaylandVideo * video)
     sink->rendered = FALSE;
     while (sink->rendered == FALSE)
       g_cond_wait (&sink->render_cond, GST_OBJECT_GET_LOCK (sink));
+    GST_DEBUG_OBJECT (sink, "synchronized with render()");
   } else if (sink->window && sink->last_buffer &&
       g_atomic_int_get (&sink->redraw_pending) == FALSE) {
     render_last_buffer (sink);
+    GST_DEBUG_OBJECT (sink, "last buffer redrawn");
   }
 
   GST_OBJECT_UNLOCK (sink);
