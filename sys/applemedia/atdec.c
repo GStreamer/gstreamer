@@ -158,6 +158,7 @@ gst_atdec_destroy_queue (GstATDec * atdec, gboolean drain)
   AudioQueueStop (atdec->queue, drain);
   AudioQueueDispose (atdec->queue, true);
   atdec->queue = NULL;
+  atdec->output_position = 0;
 }
 
 void
@@ -179,6 +180,7 @@ gst_atdec_start (GstAudioDecoder * decoder)
   GstATDec *atdec = GST_ATDEC (decoder);
 
   GST_DEBUG_OBJECT (atdec, "start");
+  atdec->output_position = 0;
 
   return TRUE;
 }
@@ -419,6 +421,8 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
     goto allocate_output_failed;
 
   /* pull the frames */
+  timestamp.kAudioTimeStampSampleTimeValid;
+  timestamp.mSampleTime = atdec->output_position;
   status =
       AudioQueueOfflineRender (atdec->queue, &timestamp, output_buffer,
       out_frames);
@@ -426,6 +430,12 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
     goto offline_render_failed;
 
   if (output_buffer->mAudioDataByteSize) {
+    if (output_buffer->mAudioDataByteSize % audio_info->bpf != 0)
+      goto invalid_buffer_size;
+
+    atdec->output_position +=
+        output_buffer->mAudioDataByteSize / audio_info->bpf;
+
     out =
         gst_audio_decoder_allocate_output_buffer (decoder,
         output_buffer->mAudioDataByteSize);
@@ -474,6 +484,17 @@ offline_render_failed:
 
     return flow_ret;
   }
+
+invalid_buffer_size:
+  {
+    GST_AUDIO_DECODER_ERROR (atdec, 1, STREAM, DECODE, (NULL),
+        ("AudioQueueOfflineRender returned invalid buffer size: %u (bpf %d)",
+            output_buffer->mAudioDataByteSize, audio_info->bpf), flow_ret);
+
+    AudioQueueFreeBuffer (atdec->queue, output_buffer);
+
+    return flow_ret;
+  }
 }
 
 static void
@@ -482,4 +503,5 @@ gst_atdec_flush (GstAudioDecoder * decoder, gboolean hard)
   GstATDec *atdec = GST_ATDEC (decoder);
 
   AudioQueueReset (atdec->queue);
+  atdec->output_position = 0;
 }
