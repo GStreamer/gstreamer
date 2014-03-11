@@ -75,7 +75,7 @@ void
 gst_vtutil_dict_set_boolean (CFMutableDictionaryRef dict, CFStringRef key,
     gboolean value)
 {
-  CFDictionarySetValue (dict, key, value ? kCFBooleanTrue: kCFBooleanFalse);
+  CFDictionarySetValue (dict, key, value ? kCFBooleanTrue : kCFBooleanFalse);
 }
 
 void
@@ -91,7 +91,7 @@ gst_vtutil_dict_set_data (CFMutableDictionaryRef dict, CFStringRef key,
 
 void
 gst_vtutil_dict_set_object (CFMutableDictionaryRef dict, CFStringRef key,
-    CFTypeRef *value)
+    CFTypeRef * value)
 {
   CFDictionarySetValue (dict, key, value);
   CFRelease (value);
