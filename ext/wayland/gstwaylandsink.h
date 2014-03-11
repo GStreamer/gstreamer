@@ -64,6 +64,7 @@ struct _GstWaylandSink
   gboolean redraw_pending;
   gboolean drawing_frozen;
   GCond render_cond;
+  GstBuffer *last_buffer;
 };
 
 struct _GstWaylandSinkClass

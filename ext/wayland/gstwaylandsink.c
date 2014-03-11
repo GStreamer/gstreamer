@@ -202,6 +202,8 @@ gst_wayland_sink_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (sink, "Finalizing the sink..");
 
+  if (sink->last_buffer)
+    gst_buffer_unref (sink->last_buffer);
   if (sink->display) {
     /* see comment about this call in gst_wayland_sink_change_state() */
     gst_wayland_compositor_release_all_buffers (GST_WAYLAND_BUFFER_POOL
@@ -258,6 +260,7 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
          */
         gst_wayland_compositor_release_all_buffers (GST_WAYLAND_BUFFER_POOL
             (sink->pool));
+        gst_buffer_replace (&sink->last_buffer, NULL);
         g_clear_object (&sink->window);
         g_clear_object (&sink->display);
         g_clear_object (&sink->pool);
@@ -495,16 +498,52 @@ static const struct wl_callback_listener frame_callback_listener = {
   frame_redraw_callback
 };
 
+/* must be called with the object lock */
+static void
+render_last_buffer (GstWaylandSink * sink)
+{
+  GstWlMeta *meta;
+  struct wl_surface *surface;
+  struct wl_callback *callback;
+  GstVideoRectangle src, dst, res;
+
+  meta = gst_buffer_get_wl_meta (sink->last_buffer);
+  surface = gst_wl_window_get_wl_surface (sink->window);
+
+  g_atomic_int_set (&sink->redraw_pending, TRUE);
+  callback = wl_surface_frame (surface);
+  wl_callback_add_listener (callback, &frame_callback_listener, sink);
+
+  /* Here we essentially add a reference to the buffer. This represents
+   * the fact that the compositor is using the buffer and it should
+   * not return back to the pool and be reused until the compositor
+   * releases it. The release is handled internally in the pool */
+  gst_wayland_compositor_acquire_buffer (meta->pool, sink->last_buffer);
+
+  src.w = sink->video_width;
+  src.h = sink->video_height;
+  dst.w = sink->window->width;
+  dst.h = sink->window->height;
+  gst_video_sink_center_rect (src, dst, &res, FALSE);
+
+  wl_viewport_set (sink->window->viewport, wl_fixed_from_int (0),
+      wl_fixed_from_int (0), wl_fixed_from_int (src.w),
+      wl_fixed_from_int (src.h), res.w, res.h);
+
+  wl_surface_attach (surface, meta->wbuffer, 0, 0);
+  wl_surface_damage (surface, 0, 0, res.w, res.h);
+
+  wl_surface_commit (surface);
+  wl_display_flush (sink->display->display);
+}
+
 static GstFlowReturn
 gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
-  GstVideoRectangle src, dst, res;
   GstBuffer *to_render;
   GstWlMeta *meta;
   GstFlowReturn ret = GST_FLOW_OK;
-  struct wl_surface *surface;
-  struct wl_callback *callback;
 
   GST_OBJECT_LOCK (sink);
 
@@ -540,38 +579,10 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     gst_buffer_map (buffer, &src, GST_MAP_READ);
     gst_buffer_fill (to_render, 0, src.data, src.size);
     gst_buffer_unmap (buffer, &src);
-
-    meta = gst_buffer_get_wl_meta (to_render);
   }
 
-  src.w = sink->video_width;
-  src.h = sink->video_height;
-  dst.w = sink->window->width;
-  dst.h = sink->window->height;
-
-  gst_video_sink_center_rect (src, dst, &res, FALSE);
-
-  surface = gst_wl_window_get_wl_surface (sink->window);
-
-  /* Here we essentially add a reference to the buffer. This represents
-   * the fact that the compositor is using the buffer and it should
-   * not return back to the pool and be reused until the compositor
-   * releases it. The release is handled internally in the pool */
-  gst_wayland_compositor_acquire_buffer (meta->pool, to_render);
-
-  g_atomic_int_set (&sink->redraw_pending, TRUE);
-
-  wl_surface_attach (surface, meta->wbuffer, 0, 0);
-  wl_surface_damage (surface, 0, 0, res.w, res.h);
-
-  wl_viewport_set (sink->window->viewport, wl_fixed_from_int (0),
-      wl_fixed_from_int (0), wl_fixed_from_int (src.w),
-      wl_fixed_from_int (src.h), res.w, res.h);
-
-  callback = wl_surface_frame (surface);
-  wl_callback_add_listener (callback, &frame_callback_listener, sink);
-  wl_surface_commit (surface);
-  wl_display_flush (sink->display->display);
+  gst_buffer_replace (&sink->last_buffer, to_render);
+  render_last_buffer (sink);
 
   /* notify _resume_rendering() in case it's waiting */
   g_cond_broadcast (&sink->render_cond);
@@ -664,7 +675,17 @@ static void
 gst_wayland_sink_expose (GstVideoOverlay * overlay)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (overlay);
+
   g_return_if_fail (sink != NULL);
+
+  GST_DEBUG_OBJECT (sink, "expose");
+
+  GST_OBJECT_LOCK (sink);
+  if (sink->last_buffer && g_atomic_int_get (&sink->redraw_pending) == FALSE) {
+    GST_DEBUG_OBJECT (sink, "redrawing last buffer");
+    render_last_buffer (sink);
+  }
+  GST_OBJECT_UNLOCK (sink);
 }
 
 static void
@@ -714,7 +735,13 @@ gst_wayland_sink_resume_rendering (GstWaylandVideo * video)
 
   GST_OBJECT_LOCK (sink);
   sink->drawing_frozen = FALSE;
-  g_cond_wait (&sink->render_cond, GST_OBJECT_GET_LOCK (sink));
+
+  if (GST_STATE (sink) == GST_STATE_PLAYING)
+    g_cond_wait (&sink->render_cond, GST_OBJECT_GET_LOCK (sink));
+  else if (sink->window && sink->last_buffer &&
+      g_atomic_int_get (&sink->redraw_pending) == FALSE)
+    render_last_buffer (sink);
+
   GST_OBJECT_UNLOCK (sink);
 }
 
