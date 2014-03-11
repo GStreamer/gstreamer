@@ -222,9 +222,26 @@ gst_caps_to_at_format (GstCaps * caps, AudioStreamBasicDescription * format)
   if (can_intersect_static_caps (caps, &aac_caps)) {
     format->mFormatID = kAudioFormatMPEG4AAC;
     format->mFramesPerPacket = 1024;
-  } else if (can_intersect_static_caps (caps, &mp3_caps))
-    format->mFormatID = kAudioFormatMPEGLayer3;
-  else if (can_intersect_static_caps (caps, &raw_caps)) {
+  } else if (can_intersect_static_caps (caps, &mp3_caps)) {
+    gint layer;
+
+    gst_structure_get_int (structure, "layer", &layer);
+    switch (layer) {
+      case 1:
+        format->mFormatID = kAudioFormatMPEGLayer1;
+        break;
+      case 2:
+        format->mFormatID = kAudioFormatMPEGLayer2;
+        break;
+      case 3:
+        format->mFormatID = kAudioFormatMPEGLayer3;
+        break;
+      default:
+        g_warn_if_reached ();
+        format->mFormatID = kAudioFormatMPEGLayer3;
+        break;
+    }
+  } else if (can_intersect_static_caps (caps, &raw_caps)) {
     GstAudioFormat audio_format;
     const char *audio_format_str;
 
