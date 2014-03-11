@@ -342,7 +342,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  mve mythtv nuvdemux \
  patchdetect real \
  sdi tta \
- videomeasure videosignal \
+ videomeasure \
  linsys vcd \
  apexsink dc1394 \
  gsettings \
