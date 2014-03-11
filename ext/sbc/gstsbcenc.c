@@ -118,21 +118,10 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
   GST_DEBUG_OBJECT (enc, "fixating caps %" GST_PTR_FORMAT, output_caps);
   output_caps = gst_caps_truncate (output_caps);
   s = gst_caps_get_structure (output_caps, 0);
-  if (enc->channels == 1) {
-    if (!gst_structure_fixate_field_string (s, "channel-mode", "mono")) {
-      GST_DEBUG_OBJECT (enc, "Failed to fixate channel-mode to mono");
-      gst_caps_unref (output_caps);
-      return FALSE;
-    }
-  } else {
-    if (!gst_structure_fixate_field_string (s, "channel-mode", "joint") &&
-        !gst_structure_fixate_field_string (s, "channel-mode", "stereo") &&
-        !gst_structure_fixate_field_string (s, "channel-mode", "dual")) {
-      GST_DEBUG_OBJECT (enc, "Failed to fixate channel-mode for 2 channels");
-      gst_caps_unref (output_caps);
-      return FALSE;
-    }
-  }
+  if (enc->channels == 1)
+    gst_structure_fixate_field_string (s, "channel-mode", "mono");
+  else
+    gst_structure_fixate_field_string (s, "channel-mode", "joint");
 
   gst_structure_fixate_field_nearest_int (s, "bitpool", 64);
   gst_structure_fixate_field_nearest_int (s, "blocks", 16);
@@ -153,6 +142,25 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
   gst_structure_get_int (s, "bitpool", &enc->bitpool);
   allocation_method = gst_structure_get_string (s, "allocation-method");
   channel_mode = gst_structure_get_string (s, "channel-mode");
+
+  /* We want channel-mode and channels coherent */
+  if (enc->channels == 1) {
+    if (g_strcmp0 (channel_mode, "mono") != 0) {
+      GST_ERROR_OBJECT (enc, "Can't have channel-mode '%s' for 1 channel",
+          channel_mode);
+      gst_caps_unref (output_caps);
+      return FALSE;
+    }
+  } else {
+    if (g_strcmp0 (channel_mode, "joint") != 0 &&
+        g_strcmp0 (channel_mode, "stereo") != 0 &&
+        g_strcmp0 (channel_mode, "dual") != 0) {
+      GST_ERROR_OBJECT (enc, "Can't have channel-mode '%s' for 2 channels",
+          channel_mode);
+      gst_caps_unref (output_caps);
+      return FALSE;
+    }
+  }
 
   /* we want to be handed all available samples in handle_frame, but always
    * enough to encode a frame */
