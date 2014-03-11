@@ -436,5 +436,5 @@ gst_atdec_flush (GstAudioDecoder * decoder, gboolean hard)
 {
   GstATDec *atdec = GST_ATDEC (decoder);
 
-  AudioQueueFlush (atdec->queue);
+  AudioQueueReset (atdec->queue);
 }
