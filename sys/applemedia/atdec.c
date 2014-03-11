@@ -374,6 +374,7 @@ gst_atdec_buffer_emptied (void *user_data, AudioQueueRef queue,
 static GstFlowReturn
 gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
 {
+  OSStatus status;
   AudioTimeStamp timestamp = { 0 };
   AudioStreamPacketDescription packet;
   AudioQueueBufferRef input_buffer, output_buffer;
@@ -391,7 +392,9 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
 
   /* copy the input buffer into an AudioQueueBuffer */
   size = gst_buffer_get_size (buffer);
-  AudioQueueAllocateBuffer (atdec->queue, size, &input_buffer);
+  status = AudioQueueAllocateBuffer (atdec->queue, size, &input_buffer);
+  if (status)
+    goto allocate_input_failed;
   gst_buffer_extract (buffer, 0, input_buffer->mAudioData, size);
   input_buffer->mAudioDataByteSize = size;
 
@@ -403,16 +406,25 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
   /* enqueue the buffer. It will get free'd once the gst_atdec_buffer_emptied
    * callback is called
    */
-  AudioQueueEnqueueBuffer (atdec->queue, input_buffer, 1, &packet);
+  status = AudioQueueEnqueueBuffer (atdec->queue, input_buffer, 1, &packet);
+  if (status)
+    goto enqueue_buffer_failed;
 
   /* figure out how many frames we need to pull out of the queue */
   out_frames = GST_CLOCK_TIME_TO_FRAMES (GST_BUFFER_DURATION (buffer),
       audio_info->rate);
   size = out_frames * audio_info->bpf;
   AudioQueueAllocateBuffer (atdec->queue, size, &output_buffer);
+  if (status)
+    goto allocate_output_failed;
 
   /* pull the frames */
-  AudioQueueOfflineRender (atdec->queue, &timestamp, output_buffer, out_frames);
+  status =
+      AudioQueueOfflineRender (atdec->queue, &timestamp, output_buffer,
+      out_frames);
+  if (status)
+    goto offline_render_failed;
+
   if (output_buffer->mAudioDataByteSize) {
     out =
         gst_audio_decoder_allocate_output_buffer (decoder,
@@ -429,6 +441,39 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
   AudioQueueFreeBuffer (atdec->queue, output_buffer);
 
   return flow_ret;
+
+allocate_input_failed:
+  {
+    GST_ELEMENT_ERROR (atdec, STREAM, DECODE, (NULL),
+        ("AudioQueueAllocateBuffer returned error: %d", (gint) status));
+    return GST_FLOW_ERROR;
+  }
+
+enqueue_buffer_failed:
+  {
+    GST_AUDIO_DECODER_ERROR (atdec, 1, STREAM, DECODE, (NULL),
+        ("AudioQueueEnqueueBuffer returned error: %d", (gint) status),
+        flow_ret);
+    return flow_ret;
+  }
+
+allocate_output_failed:
+  {
+    GST_ELEMENT_ERROR (atdec, STREAM, DECODE, (NULL),
+        ("AudioQueueAllocateBuffer returned error: %d", (gint) status));
+    return GST_FLOW_ERROR;
+  }
+
+offline_render_failed:
+  {
+    AudioQueueFreeBuffer (atdec->queue, output_buffer);
+
+    GST_AUDIO_DECODER_ERROR (atdec, 1, STREAM, DECODE, (NULL),
+        ("AudioQueueOfflineRender returned error: %d", (gint) status),
+        flow_ret);
+
+    return flow_ret;
+  }
 }
 
 static void
