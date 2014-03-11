@@ -300,6 +300,8 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 
   /* configure input_format from caps */
   gst_caps_to_at_format (caps, &input_format);
+  /* Remember the number of samples per frame */
+  atdec->spf = input_format.mFramesPerPacket;
 
   /* negotiate output caps */
   output_caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (atdec));
@@ -411,9 +413,7 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
     goto enqueue_buffer_failed;
 
   /* figure out how many frames we need to pull out of the queue */
-  out_frames = GST_CLOCK_TIME_TO_FRAMES (GST_BUFFER_DURATION (buffer),
-      audio_info->rate);
-  size = out_frames * audio_info->bpf;
+  size = atdec->spf * audio_info->bpf;
   AudioQueueAllocateBuffer (atdec->queue, size, &output_buffer);
   if (status)
     goto allocate_output_failed;
