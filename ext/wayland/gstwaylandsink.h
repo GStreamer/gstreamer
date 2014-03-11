@@ -63,6 +63,7 @@ struct _GstWaylandSink
 
   gboolean redraw_pending;
   gboolean drawing_frozen;
+  gboolean rendered;
   GCond render_cond;
   GstBuffer *last_buffer;
 };

@@ -585,6 +585,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   render_last_buffer (sink);
 
   /* notify _resume_rendering() in case it's waiting */
+  sink->rendered = TRUE;
   g_cond_broadcast (&sink->render_cond);
 
   if (buffer != to_render)
@@ -736,11 +737,14 @@ gst_wayland_sink_resume_rendering (GstWaylandVideo * video)
   GST_OBJECT_LOCK (sink);
   sink->drawing_frozen = FALSE;
 
-  if (GST_STATE (sink) == GST_STATE_PLAYING)
-    g_cond_wait (&sink->render_cond, GST_OBJECT_GET_LOCK (sink));
-  else if (sink->window && sink->last_buffer &&
-      g_atomic_int_get (&sink->redraw_pending) == FALSE)
+  if (GST_STATE (sink) == GST_STATE_PLAYING) {
+    sink->rendered = FALSE;
+    while (sink->rendered == FALSE)
+      g_cond_wait (&sink->render_cond, GST_OBJECT_GET_LOCK (sink));
+  } else if (sink->window && sink->last_buffer &&
+      g_atomic_int_get (&sink->redraw_pending) == FALSE) {
     render_last_buffer (sink);
+  }
 
   GST_OBJECT_UNLOCK (sink);
 }
