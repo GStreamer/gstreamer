@@ -4787,9 +4787,11 @@ gst_duration_to_fraction (guint64 duration, gint * dest_n, gint * dest_d)
   for (i = 0; i < G_N_ELEMENTS (common_den); i++) {
     d = common_den[i];
     n = floor (0.5 + (d * 1e9) / duration);
-    a = gst_util_uint64_scale_int (1000000000, d, n);
-    if (duration >= a - 2 && duration <= a + 2) {
-      goto out;
+    if (n > 0) {
+      a = gst_util_uint64_scale_int (1000000000, d, n);
+      if (duration >= a - 2 && duration <= a + 2) {
+        goto out;
+      }
     }
   }
 
