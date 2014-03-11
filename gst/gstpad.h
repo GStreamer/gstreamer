@@ -179,8 +179,9 @@ typedef enum {
   GST_FLOW_CUSTOM_ERROR_2 = -102
 } GstFlowReturn;
 
-const gchar*	        gst_flow_get_name	(GstFlowReturn ret);
-GQuark			gst_flow_to_quark	(GstFlowReturn ret);
+const gchar*	        gst_flow_get_name (GstFlowReturn ret);
+GQuark			          gst_flow_to_quark (GstFlowReturn ret);
+const gchar*          gst_pad_link_get_name (GstPadLinkReturn ret);
 
 /**
  * GstPadLinkCheck:

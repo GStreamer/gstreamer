@@ -251,6 +251,27 @@ gst_flow_to_quark (GstFlowReturn ret)
   return 0;
 }
 
+/**
+ * gst_pad_link_get_name:
+ * @ret: a #GstPadLinkReturn to get the name of.
+ *
+ * Gets a string representing the given pad-link return.
+ *
+ * Returns: a static string with the name of the pad-link return.
+ *
+ * Since: 1.3.1
+ */
+const gchar *
+gst_pad_link_get_name (GstPadLinkReturn ret)
+{
+  static const gchar *names[(-(GST_PAD_LINK_REFUSED)) + 1] = {
+    "ok", "wrong hierarchy", "was linked", "wrong direction", "no format",
+    "incompatible scheduling", "refused"
+  };
+  ret = CLAMP (ret, GST_PAD_LINK_REFUSED, GST_PAD_LINK_OK);
+  return names[-ret];
+}
+
 #define _do_init \
 { \
   gint i; \
@@ -2352,8 +2373,9 @@ concurrent_link:
   }
 link_failed:
   {
-    GST_CAT_INFO (GST_CAT_PADS, "link between %s:%s and %s:%s failed",
-        GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+    GST_CAT_INFO (GST_CAT_PADS, "link between %s:%s and %s:%s failed: %s",
+        GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad),
+        gst_pad_link_get_name (result));
 
     GST_PAD_PEER (srcpad) = NULL;
     GST_PAD_PEER (sinkpad) = NULL;

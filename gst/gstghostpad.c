@@ -869,8 +869,8 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   /* ERRORS */
 link_failed:
   {
-    GST_WARNING_OBJECT (gpad, "could not link internal and target, reason:%d",
-        lret);
+    GST_WARNING_OBJECT (gpad, "could not link internal and target, reason:%s",
+        gst_pad_link_get_name (lret));
     return FALSE;
   }
 }
