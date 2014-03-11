@@ -94,15 +94,9 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, gint width, gint height)
 {
   GstWlWindow *window;
 
-  window = g_object_new (GST_TYPE_WL_WINDOW, NULL);
-  window->display = g_object_ref (display);
-  window->width = width;
-  window->height = height;
-
-  window->surface = wl_compositor_create_surface (display->compositor);
+  window = gst_wl_window_new_from_surface (display,
+      wl_compositor_create_surface (display->compositor), width, height);
   window->own_surface = TRUE;
-
-  window->viewport = wl_scaler_get_viewport (display->scaler, window->surface);
 
   window->shell_surface = wl_shell_get_shell_surface (display->shell,
       window->surface);
