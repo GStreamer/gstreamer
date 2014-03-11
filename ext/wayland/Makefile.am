@@ -1,7 +1,13 @@
 plugin_LTLIBRARIES = libgstwaylandsink.la
 
-libgstwaylandsink_la_SOURCES =  gstwaylandsink.c waylandpool.c \
-                                wldisplay.c wlwindow.c wlvideoformat.c
+libgstwaylandsink_la_SOURCES =  \
+	gstwaylandsink.c \
+	waylandpool.c \
+	wldisplay.c \
+	wlwindow.c \
+	wlvideoformat.c \
+	scaler-protocol.c
+
 libgstwaylandsink_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
                                $(WAYLAND_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS)
 libgstwaylandsink_la_LIBADD = \
@@ -12,5 +18,19 @@ libgstwaylandsink_la_LIBADD = \
 libgstwaylandsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstwaylandsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
-noinst_HEADERS = gstwaylandsink.h waylandpool.h \
-                 wldisplay.h wlwindow.h wlvideoformat.h
+noinst_HEADERS = \
+	gstwaylandsink.h \
+	waylandpool.h \
+	wldisplay.h \
+	wlwindow.h \
+	wlvideoformat.h \
+	scaler-client-protocol.h
+
+EXTRA_DIST = scaler.xml
+CLEANFILES = scaler-protocol.c scaler-client-protocol.h
+
+%-protocol.c : %.xml
+	$(wayland_scanner) code < $< > $@
+
+%-client-protocol.h : %.xml
+	$(wayland_scanner) client-header < $< > $@
