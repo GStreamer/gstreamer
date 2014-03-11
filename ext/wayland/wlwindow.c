@@ -120,6 +120,7 @@ gst_wl_window_new_from_surface (GstWlDisplay * display,
     struct wl_surface * surface, gint width, gint height)
 {
   GstWlWindow *window;
+  struct wl_region *region;
 
   g_return_val_if_fail (surface != NULL, NULL);
 
@@ -132,6 +133,11 @@ gst_wl_window_new_from_surface (GstWlDisplay * display,
   window->own_surface = FALSE;
 
   window->viewport = wl_scaler_get_viewport (display->scaler, window->surface);
+
+  /* do not accept input */
+  region = wl_compositor_create_region (display->compositor);
+  wl_surface_set_input_region (surface, region);
+  wl_region_destroy (region);
 
   return window;
 }
