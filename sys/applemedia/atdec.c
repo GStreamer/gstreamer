@@ -293,6 +293,8 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   GstAudioInfo output_info = { 0 };
   AudioChannelLayout output_layout = { 0 };
   GstCaps *output_caps;
+  AudioTimeStamp timestamp = { 0 };
+  AudioQueueBufferRef output_buffer;
   GstATDec *atdec = GST_ATDEC (decoder);
 
   GST_DEBUG_OBJECT (atdec, "set_format");
@@ -348,6 +350,21 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   if (status)
     goto start_error;
 
+  timestamp.mFlags = kAudioTimeStampSampleTimeValid;
+  timestamp.mSampleTime = 0;
+
+  status =
+      AudioQueueAllocateBuffer (atdec->queue, atdec->spf * output_info.bpf,
+      &output_buffer);
+  if (status)
+    goto allocate_output_error;
+
+  status = AudioQueueOfflineRender (atdec->queue, &timestamp, output_buffer, 0);
+  if (status)
+    goto offline_render_error;
+
+  AudioQueueFreeBuffer (atdec->queue, output_buffer);
+
   return TRUE;
 
 create_queue_error:
@@ -364,6 +381,19 @@ set_format_error:
 start_error:
   GST_ELEMENT_ERROR (atdec, STREAM, FORMAT, (NULL),
       ("AudioQueueStart returned error: %d", (gint) status));
+  gst_atdec_destroy_queue (atdec, FALSE);
+  return FALSE;
+
+allocate_output_error:
+  GST_ELEMENT_ERROR (atdec, STREAM, FORMAT, (NULL),
+      ("AudioQueueAllocateBuffer returned error: %d", (gint) status));
+  gst_atdec_destroy_queue (atdec, FALSE);
+  return FALSE;
+
+offline_render_error:
+  GST_ELEMENT_ERROR (atdec, STREAM, FORMAT, (NULL),
+      ("AudioQueueOfflineRender returned error: %d", (gint) status));
+  AudioQueueFreeBuffer (atdec->queue, output_buffer);
   gst_atdec_destroy_queue (atdec, FALSE);
   return FALSE;
 }
@@ -421,7 +451,7 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
     goto allocate_output_failed;
 
   /* pull the frames */
-  timestamp.kAudioTimeStampSampleTimeValid;
+  timestamp.mFlags = kAudioTimeStampSampleTimeValid;
   timestamp.mSampleTime = atdec->output_position;
   status =
       AudioQueueOfflineRender (atdec->queue, &timestamp, output_buffer,
