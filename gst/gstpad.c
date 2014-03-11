@@ -259,17 +259,28 @@ gst_flow_to_quark (GstFlowReturn ret)
  *
  * Returns: a static string with the name of the pad-link return.
  *
- * Since: 1.3.1
+ * Since: 1.4
  */
 const gchar *
 gst_pad_link_get_name (GstPadLinkReturn ret)
 {
-  static const gchar *names[(-(GST_PAD_LINK_REFUSED)) + 1] = {
-    "ok", "wrong hierarchy", "was linked", "wrong direction", "no format",
-    "incompatible scheduling", "refused"
-  };
-  ret = CLAMP (ret, GST_PAD_LINK_REFUSED, GST_PAD_LINK_OK);
-  return names[-ret];
+  switch (ret) {
+    case GST_PAD_LINK_OK:
+      return "ok";
+    case GST_PAD_LINK_WRONG_HIERARCHY:
+      return "wrong hierarchy";
+    case GST_PAD_LINK_WAS_LINKED:
+      return "was linked";
+    case GST_PAD_LINK_WRONG_DIRECTION:
+      return "wrong direction";
+    case GST_PAD_LINK_NOFORMAT:
+      return "no common format";
+    case GST_PAD_LINK_NOSCHED:
+      return "incompatible scheduling";
+    case GST_PAD_LINK_REFUSED:
+      return "refused";
+  }
+  g_return_val_if_reached ("unknown");
 }
 
 #define _do_init \
