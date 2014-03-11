@@ -288,7 +288,7 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buffer;
 
-  if (!self->input_state)
+  if (!self->processing)
     goto done;
 
   GST_DEBUG_OBJECT (self, "Finishing decoding");
