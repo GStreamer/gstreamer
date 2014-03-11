@@ -1635,12 +1635,17 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
 
   if (audiomixer->send_stream_start) {
     gchar s_id[32];
+    GstEvent *event;
 
     GST_INFO_OBJECT (audiomixer->srcpad, "send pending stream start event");
-    /* stream-start (FIXME: create id based on input ids) */
+    /* FIXME: create id based on input ids, we can't use 
+     * gst_pad_create_stream_id() though as that only handles 0..1 sink-pad
+     */
     g_snprintf (s_id, sizeof (s_id), "audiomixer-%08x", g_random_int ());
-    if (!gst_pad_push_event (audiomixer->srcpad,
-            gst_event_new_stream_start (s_id))) {
+    event = gst_event_new_stream_start (s_id);
+    gst_event_set_group_id (event, gst_util_group_id_next ());
+
+    if (!gst_pad_push_event (audiomixer->srcpad, event)) {
       GST_WARNING_OBJECT (audiomixer->srcpad,
           "Sending stream start event failed");
     }
