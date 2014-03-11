@@ -225,22 +225,27 @@ gst_caps_to_at_format (GstCaps * caps, AudioStreamBasicDescription * format)
     format->mFormatID = kAudioFormatMPEG4AAC;
     format->mFramesPerPacket = 1024;
   } else if (can_intersect_static_caps (caps, &mp3_caps)) {
-    gint layer;
+    gint layer, mpegaudioversion = 1;
 
     gst_structure_get_int (structure, "layer", &layer);
+    gst_structure_get_int (structure, "mpegaudioversion", &mpegaudioversion);
     switch (layer) {
       case 1:
         format->mFormatID = kAudioFormatMPEGLayer1;
+        format->mFramesPerPacket = 384;
         break;
       case 2:
         format->mFormatID = kAudioFormatMPEGLayer2;
+        format->mFramesPerPacket = 1152;
         break;
       case 3:
         format->mFormatID = kAudioFormatMPEGLayer3;
+        format->mFramesPerPacket = (mpegaudioversion == 1 ? 1152 : 576);
         break;
       default:
         g_warn_if_reached ();
         format->mFormatID = kAudioFormatMPEGLayer3;
+        format->mFramesPerPacket = 1152;
         break;
     }
   } else if (can_intersect_static_caps (caps, &raw_caps)) {
