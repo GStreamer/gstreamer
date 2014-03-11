@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <wayland-client.h>
+#include "scaler-client-protocol.h"
 
 #define GST_TYPE_WL_DISPLAY                  (gst_wl_display_get_type ())
 #define GST_WL_DISPLAY(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_WL_DISPLAY, GstWlDisplay))
@@ -47,6 +48,7 @@ struct _GstWlDisplay
   struct wl_compositor *compositor;
   struct wl_shell *shell;
   struct wl_shm *shm;
+  struct wl_scaler *scaler;
   GArray *formats;
 
   /* private */

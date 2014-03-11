@@ -275,22 +275,10 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstWaylandSink *sink;
   GstCaps *caps;
-  gint width, height;
 
   sink = GST_WAYLAND_SINK (bsink);
 
   caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
-
-  /* If we don't have a window yet, it will
-   * be created using the upstream size.
-   * Otherwise, we should tell upstream exactly
-   * what size we want. We don't resize ourselves. */
-  if (sink->window) {
-    caps = gst_caps_make_writable (caps);
-    gst_wl_window_get_size (sink->window, &width, &height);
-    gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height, NULL);
-  }
 
   if (filter) {
     GstCaps *intersection;
@@ -334,16 +322,13 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   sink->video_height = info.height;
 
   /* create the output window if needed */
-  if (!sink->window || sink->video_width != sink->window->width ||
-      sink->video_height != sink->window->height) {
-
+  if (!sink->window) {
     if (!sink->display)
       sink->display = gst_wl_display_new (sink->display_name, &error);
 
     if (sink->display == NULL)
       goto display_failed;
 
-    g_clear_object (&sink->window);
     sink->window = gst_wl_window_new_toplevel (sink->display, sink->video_width,
         sink->video_height);
   }
@@ -372,7 +357,6 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_object_replace ((GstObject **) & sink->pool, (GstObject *) newpool);
   gst_object_unref (newpool);
 
-  sink->negotiated = TRUE;
   GST_OBJECT_UNLOCK (sink);
   return TRUE;
 
@@ -527,7 +511,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GST_LOG_OBJECT (sink, "render buffer %p", buffer);
 
   /* surface is resizing - drop buffers until finished */
-  if (sink->drawing_frozen || !sink->negotiated)
+  if (sink->drawing_frozen)
     goto done;
 
   /* drop buffers until we get a frame callback */
@@ -579,6 +563,11 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   wl_surface_attach (surface, meta->wbuffer, 0, 0);
   wl_surface_damage (surface, 0, 0, res.w, res.h);
+
+  wl_viewport_set (sink->window->viewport, wl_fixed_from_int (0),
+      wl_fixed_from_int (0), wl_fixed_from_int (src.w),
+      wl_fixed_from_int (src.h), res.w, res.h);
+
   callback = wl_surface_frame (surface);
   wl_callback_add_listener (callback, &frame_callback_listener, sink);
   wl_surface_commit (surface);
@@ -690,7 +679,6 @@ static void
 gst_wayland_sink_set_surface_size (GstWaylandVideo * video, gint w, gint h)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (video);
-  GstPad *peer;
 
   g_return_if_fail (sink != NULL);
   g_return_if_fail (sink->window != NULL);
@@ -704,18 +692,7 @@ gst_wayland_sink_set_surface_size (GstWaylandVideo * video, gint w, gint h)
   }
 
   gst_wl_window_set_size (sink->window, w, h);
-  sink->negotiated = FALSE;
   GST_OBJECT_UNLOCK (sink);
-
-  /* upstream must change video size because we can't resize ourselves.
-   * This can be removed when we move to wl_viewport */
-  if (GST_STATE (sink) > GST_STATE_READY) {
-    peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
-    if (peer) {
-      gst_pad_send_event (peer, gst_event_new_reconfigure ());
-      gst_object_unref (peer);
-    }
-  }
 }
 
 static void

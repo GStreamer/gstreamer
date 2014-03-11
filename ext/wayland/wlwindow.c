@@ -74,6 +74,8 @@ gst_wl_window_finalize (GObject * gobject)
 {
   GstWlWindow *self = GST_WL_WINDOW (gobject);
 
+  wl_viewport_destroy (self->viewport);
+
   if (self->shell_surface) {
     wl_shell_surface_destroy (self->shell_surface);
   }
@@ -99,6 +101,8 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, gint width, gint height)
 
   window->surface = wl_compositor_create_surface (display->compositor);
   window->own_surface = TRUE;
+
+  window->viewport = wl_scaler_get_viewport (display->scaler, window->surface);
 
   window->shell_surface = wl_shell_get_shell_surface (display->shell,
       window->surface);
@@ -132,6 +136,8 @@ gst_wl_window_new_from_surface (GstWlDisplay * display,
 
   window->surface = surface;
   window->own_surface = FALSE;
+
+  window->viewport = wl_scaler_get_viewport (display->scaler, window->surface);
 
   return window;
 }

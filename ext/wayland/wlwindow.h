@@ -39,6 +39,7 @@ struct _GstWlWindow
 
   GstWlDisplay *display;
   struct wl_surface *surface;
+  struct wl_viewport *viewport;
   struct wl_shell_surface *shell_surface;
   gint width, height;
   gboolean own_surface;
