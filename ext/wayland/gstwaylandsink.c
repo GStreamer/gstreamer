@@ -136,7 +136,8 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "wayland video sink", "Sink/Video",
       "Output to wayland surface",
-      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
+      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, "
+      "George Kiagiadakis <george.kiagiadakis@collabora.com>");
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_wayland_sink_change_state);
