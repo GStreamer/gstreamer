@@ -141,6 +141,27 @@ gst_validate_action_new (void)
   return action;
 }
 
+static void
+gst_validate_action_print (GstValidateAction * action, const gchar * format,
+    ...)
+{
+  va_list var_args;
+  GString *string = g_string_new (NULL);
+
+  g_string_printf (string, "(Executing action: %s, number: %u at position: %"
+      GST_TIME_FORMAT " repeat: %i) | ", g_strcmp0 (action->name, "") == 0 ?
+      "Unnamed" : action->name,
+      action->action_number, GST_TIME_ARGS (action->playback_time),
+      action->repeat);
+
+  va_start (var_args, format);
+  g_string_append_vprintf (string, format, var_args);
+  va_end (var_args);
+
+  g_print ("%s\n", string->str);
+
+  g_string_free (string, TRUE);
+}
 
 static gboolean
 _set_variable_func (const gchar * name, double *value, gpointer user_data)
@@ -246,12 +267,9 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 
   gst_validate_action_get_clocktime (scenario, action, "stop", &stop);
 
-  g_print ("(position %" GST_TIME_FORMAT
-      "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
-      " stop: %" GST_TIME_FORMAT " Rate %lf\n",
-      GST_TIME_ARGS (action->playback_time), action->name,
-      action->action_number, action->repeat, GST_TIME_ARGS (start),
-      GST_TIME_ARGS (stop), rate);
+  gst_validate_action_print (action, "seeking to: %" GST_TIME_FORMAT
+      " stop: %" GST_TIME_FORMAT " Rate %lf",
+      GST_TIME_ARGS (start), GST_TIME_ARGS (stop), rate);
 
   seek = gst_event_new_seek (rate, format, flags, start_type, start,
       stop_type, stop);
@@ -279,7 +297,7 @@ _pause_action_restore_playing (GstValidateScenario * scenario)
   GstElement *pipeline = scenario->pipeline;
 
 
-  g_print ("\n\nBack to playing\n\n");
+  g_print ("\n==== Back to playing ===\n");
 
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -297,8 +315,7 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
   gdouble duration = 0;
 
   gst_structure_get_double (action->structure, "duration", &duration);
-  g_print ("\n%s (num %u), pausing for %" GST_TIME_FORMAT "\n",
-      action->name, action->action_number,
+  gst_validate_action_print (action, "pausing for %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration * GST_SECOND));
 
   GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
@@ -321,7 +338,7 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _execute_play (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  g_print ("\n%s (num %u), Playing back", action->name, action->action_number);
+  gst_validate_action_print (action, "Playing back");
 
   GST_DEBUG ("Playing back");
 
@@ -339,8 +356,7 @@ _execute_play (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  g_print ("\n%s (num %u), sending EOS at %" GST_TIME_FORMAT "\n",
-      action->name, action->action_number,
+  gst_validate_action_print (action, "sending EOS at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (action->playback_time));
 
   GST_DEBUG ("Sending eos to pipeline at %" GST_TIME_FORMAT,
@@ -512,7 +528,7 @@ _execute_switch_track (GstValidateScenario * scenario,
       }
     }
 
-    g_print ("Switching to track number: %i\n", index);
+    gst_validate_action_print (action, "Switching to track number: %i", index);
     pad = find_nth_sink_pad (input_selector, index);
     g_object_set (input_selector, "active-pad", pad, NULL);
     gst_object_unref (pad);
@@ -657,7 +673,7 @@ static void
 gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
     GstEvent * seek)
 {
-  GstValidateScenarioPrivate * priv = scenario->priv;
+  GstValidateScenarioPrivate *priv = scenario->priv;
   gint64 start, stop;
   GstSeekType start_type, stop_type;
 
@@ -678,7 +694,7 @@ gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
 }
 
 static gint
-_compare_actions (GstValidateAction *a, GstValidateAction * b)
+_compare_actions (GstValidateAction * a, GstValidateAction * b)
 {
   if (a->action_number < b->action_number)
     return -1;
