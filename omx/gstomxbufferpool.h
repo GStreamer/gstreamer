@@ -19,7 +19,7 @@
  */
 
 #ifndef __GST_OMX_BUFFER_POOL_H__
-#define __GST_OMX_BUFEFR_POOL_H__
+#define __GST_OMX_BUFFER_POOL_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
