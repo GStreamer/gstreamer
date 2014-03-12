@@ -1219,8 +1219,12 @@ gst_validate_scenario_factory_create (GstValidateRunner *
 static gboolean
 _add_description (GQuark field_id, const GValue * value, KeyFileGroupName * kfg)
 {
+  gchar *tmp = gst_value_serialize (value);
+
   g_key_file_set_string (kfg->kf, kfg->group_name,
-      g_quark_to_string (field_id), gst_value_serialize (value));
+      g_quark_to_string (field_id), g_strcompress (tmp));
+
+  g_free (tmp);
 
   return TRUE;
 }
