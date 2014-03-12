@@ -65,16 +65,13 @@ enum
 GST_DEBUG_CATEGORY (gstwayland_debug);
 #define GST_CAT_DEFAULT gstwayland_debug
 
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-#define CAPS "{xRGB, ARGB}"
-#else
-#define CAPS "{BGRx, BGRA}"
-#endif
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (CAPS))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ BGRx, BGRA, RGBx, xBGR, xRGB, RGBA, ABGR, ARGB, RGB, BGR, "
+            "RGB16, BGR16, YUY2, YVYU, UYVY, AYUV, NV12, NV21, NV16, "
+            "YUV9, YVU9, Y41B, I420, YV12, Y42B, v308 }"))
     );
 
 static void gst_wayland_sink_get_property (GObject * object,
@@ -287,6 +284,29 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 
   caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
 
+  if (sink->display) {
+    GValue list = G_VALUE_INIT;
+    GValue value = G_VALUE_INIT;
+    GArray *formats;
+    gint i;
+    enum wl_shm_format fmt;
+
+    g_value_init (&list, GST_TYPE_LIST);
+    g_value_init (&value, G_TYPE_STRING);
+
+    formats = sink->display->formats;
+    for (i = 0; i < formats->len; i++) {
+      fmt = g_array_index (formats, uint32_t, i);
+      g_value_set_string (&value, gst_wayland_format_to_string (fmt));
+      gst_value_list_append_value (&list, &value);
+    }
+
+    caps = gst_caps_make_writable (caps);
+    gst_structure_set_value (gst_caps_get_structure (caps, 0), "format", &list);
+
+    GST_DEBUG_OBJECT (sink, "display caps: %" GST_PTR_FORMAT, caps);
+  }
+
   if (filter) {
     GstCaps *intersection;
 
@@ -295,6 +315,7 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     gst_caps_unref (caps);
     caps = intersection;
   }
+
   return caps;
 }
 
