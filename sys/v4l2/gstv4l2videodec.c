@@ -377,6 +377,13 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
    * comes in and holding this lock would prevent that.
    */
   pool = gst_video_decoder_get_buffer_pool (decoder);
+
+  /* Pool may be NULL if we started going to READY state */
+  if (pool == NULL) {
+    ret = GST_FLOW_FLUSHING;
+    goto beach;
+  }
+
   ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
   g_object_unref (pool);
 
