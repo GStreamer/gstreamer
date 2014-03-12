@@ -206,8 +206,10 @@ gst_wayland_sink_finalize (GObject * object)
     gst_buffer_unref (sink->last_buffer);
   if (sink->display) {
     /* see comment about this call in gst_wayland_sink_change_state() */
-    gst_wayland_compositor_release_all_buffers (GST_WAYLAND_BUFFER_POOL
-        (sink->pool));
+    if (sink->pool) {
+      gst_wayland_compositor_release_all_buffers (GST_WAYLAND_BUFFER_POOL
+          (sink->pool));
+    }
     g_object_unref (sink->display);
   }
   if (sink->window)
@@ -258,8 +260,10 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
          * unref the pool and therefore the display, which will try to
          * stop the thread from within itself and cause a deadlock.
          */
-        gst_wayland_compositor_release_all_buffers (GST_WAYLAND_BUFFER_POOL
-            (sink->pool));
+        if (sink->pool) {
+          gst_wayland_compositor_release_all_buffers (GST_WAYLAND_BUFFER_POOL
+              (sink->pool));
+        }
         gst_buffer_replace (&sink->last_buffer, NULL);
         g_clear_object (&sink->window);
         g_clear_object (&sink->display);
