@@ -251,6 +251,7 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
       goto done;
     }
     gst_video_codec_state_unref (self->input_state);
+    self->input_state = NULL;
 
     /* FIXME we probably need to do more work if pools are active */
   }
