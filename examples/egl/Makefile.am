@@ -1,4 +1,8 @@
-noinst_PROGRAMS = testegl
+noinst_PROGRAMS = 
+
+if USE_OMX_TARGET_RPI
+noinst_PROGRAMS += testegl
+endif
 
 testegl_SOURCES = testegl.c
 
