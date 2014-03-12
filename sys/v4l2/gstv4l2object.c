@@ -1143,7 +1143,6 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
       break;
     default:
       format = GST_VIDEO_FORMAT_UNKNOWN;
-      g_assert_not_reached ();
       break;
   }
 
@@ -2697,12 +2696,6 @@ gst_v4l2_object_setup_format (GstV4l2Object * v4l2object,
 
   /* No need to care about mplane, the four first params are the same */
   format = gst_v4l2_object_v4l2fourcc_to_video_format (fmt.fmt.pix.pixelformat);
-
-  /* FIXME do more work in the whole function if
-   * format is GST_VIDEO_FORMAT_ENCODED
-   * Also gst_v4l2_object_v4l2fourcc_to_video_format should be improved
-   * because for now it never returns GST_VIDEO_FORMAT_ENCODED
-   */
 
   /* fails if we do no translate the fmt.pix.pixelformat to GstVideoFormat */
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
