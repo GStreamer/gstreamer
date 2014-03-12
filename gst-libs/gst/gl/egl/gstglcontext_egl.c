@@ -244,6 +244,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 
   if (!native_display) {
     GstGLWindow *window = NULL;
+    GST_WARNING ("Failed to get a global display handle, falling back to "
+        "per-window display handles.  Context sharing may not work");
 
     if (other_context)
       window = gst_gl_context_get_window (other_context);
