@@ -798,7 +798,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    if (encoder_output->buffer_size < encoder_output->buffer_size_min)
       encoder_output->buffer_size = encoder_output->buffer_size_min;
 
-   g_print("encoder buffer size is %u\n", (guint)encoder_output->buffer_size);
+   GST_DEBUG ("encoder buffer size is %u", (guint)encoder_output->buffer_size);
 
    encoder_output->buffer_num = encoder_output->buffer_num_recommended;
 

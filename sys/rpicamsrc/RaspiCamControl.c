@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <memory.h>
 
+#include <gst/gst.h>
+
 #include "interface/vcos/vcos.h"
 
 #include "interface/vmcs_host/vc_vchi_gencmd.h"
@@ -40,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "interface/mmal/util/mmal_util_params.h"
 #include "interface/mmal/util/mmal_default_components.h"
 #include "RaspiCamControl.h"
+#include "RaspiCapture.h"
 
 #if 0
 /// Structure to cross reference exposure strings against the MMAL parameter equivalent

@@ -54,6 +54,11 @@
 #include "RaspiCamControl.h"
 #include "RaspiPreview.h"
 
+GST_DEBUG_CATEGORY_EXTERN (gst_rpi_cam_src_debug);
+#define GST_CAT_DEFAULT gst_rpi_cam_src_debug
+
+#undef fprintf
+#define fprintf(f,...) GST_LOG(__VA_ARGS__)
 G_BEGIN_DECLS
 
 /** Structure containing all state information for the current run

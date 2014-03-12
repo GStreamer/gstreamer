@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 #include <memory.h>
+#include <gst/gst.h>
 
 #include "interface/vcos/vcos.h"
 
@@ -44,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "interface/mmal/util/mmal_connection.h"
 
 #include "RaspiPreview.h"
+#include "RaspiCapture.h"
 
 #if 0
 #define CommandPreview        1

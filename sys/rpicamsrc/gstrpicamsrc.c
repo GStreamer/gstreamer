@@ -77,8 +77,7 @@
 #include "interface/mmal/util/mmal_default_components.h"
 #include "interface/mmal/util/mmal_connection.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_rpi_cam_src_debug);
-#define GST_CAT_DEFAULT gst_rpi_cam_src_debug
+GST_DEBUG_CATEGORY (gst_rpi_cam_src_debug);
 
 /* Filter signals and args */
 enum
@@ -514,7 +513,7 @@ static gboolean
 gst_rpi_cam_src_start (GstBaseSrc * parent)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (parent);
-  g_print ("In src_start()\n");
+  GST_LOG_OBJECT (src, "In src_start()");
   src->capture_state = raspi_capture_setup (&src->capture_config);
   if (src->capture_state == NULL)
     return FALSE;
@@ -576,7 +575,7 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 static gboolean
 gst_rpi_cam_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
-  g_print ("In decide_allocation\n");
+  GST_LOG_OBJECT (bsrc, "In decide_allocation");
   return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
 }
 
@@ -622,7 +621,7 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
   /* FIXME: Use custom allocator */
   ret = raspi_capture_fill_buffer (src->capture_state, buf);
   if (*buf)
-    GST_LOG_OBJECT (src, "Made buffer of size %" G_GSIZE_FORMAT "\n",
+    GST_LOG_OBJECT (src, "Made buffer of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (*buf));
 
   return ret;
