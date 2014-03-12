@@ -210,6 +210,15 @@ gst_v4l2_video_dec_stop (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Stopping");
 
+  gst_v4l2_object_unlock (self->v4l2output);
+  gst_v4l2_object_unlock (self->v4l2capture);
+
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+  /* Wait for capture thread to stop */
+  gst_pad_stop_task (decoder->srcpad);
+  self->output_flow = GST_FLOW_OK;
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
   /* Should have been flushed already */
   g_assert (g_atomic_int_get (&self->active) == FALSE);
   g_assert (g_atomic_int_get (&self->processing) == FALSE);
