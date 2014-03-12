@@ -324,7 +324,7 @@ GST_START_TEST (test_wrapped_context)
 
   gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (init), context);
 
-  while (i < 1000) {
+  while (i < 10) {
     gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (draw_tex),
         context);
     gst_gl_window_send_message (window, GST_GL_WINDOW_CB (draw_render),
