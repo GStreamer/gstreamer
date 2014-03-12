@@ -1,4 +1,8 @@
 /*
+ * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+ * Copyright (C) 2013, Collabora Ltd.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk> *
  * Copyright 2014 Advanced Micro Devices, Inc.
  *   Author: Christian König <christian.koenig@amd.com>
  *
