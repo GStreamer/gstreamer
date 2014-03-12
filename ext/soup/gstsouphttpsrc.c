@@ -109,7 +109,10 @@ enum
   PROP_EXTRA_HEADERS,
   PROP_SOUP_LOG_LEVEL,
   PROP_COMPRESS,
-  PROP_KEEP_ALIVE
+  PROP_KEEP_ALIVE,
+  PROP_SSL_STRICT,
+  PROP_SSL_CA_FILE,
+  PROP_SSL_USE_SYSTEM_CA_FILE
 };
 
 #define DEFAULT_USER_AGENT           "GStreamer souphttpsrc "
@@ -117,6 +120,9 @@ enum
 #define DEFAULT_SOUP_LOG_LEVEL       SOUP_LOGGER_LOG_HEADERS
 #define DEFAULT_COMPRESS             FALSE
 #define DEFAULT_KEEP_ALIVE           FALSE
+#define DEFAULT_SSL_STRICT           TRUE
+#define DEFAULT_SSL_CA_FILE          NULL
+#define DEFAULT_SSL_USE_SYSTEM_CA_FILE TRUE
 
 static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -298,6 +304,45 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
           "Use HTTP persistent connections", DEFAULT_KEEP_ALIVE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+ /**
+   * GstSoupHTTPSrc::ssl-strict:
+   *
+   * If set to %TRUE, souphttpsrc will reject all SSL certificates that
+   * are considered invalid.
+   *
+   * Since: 1.4
+   */
+  g_object_class_install_property (gobject_class, PROP_SSL_STRICT,
+      g_param_spec_boolean ("ssl-strict", "SSL Strict",
+          "Strict SSL certificate checking", DEFAULT_SSL_STRICT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+ /**
+   * GstSoupHTTPSrc::ssl-ca-file:
+   *
+   * A SSL anchor CA file that should be used for checking certificates
+   * instead of the system CA file.
+   *
+   * Since: 1.4
+   */
+  g_object_class_install_property (gobject_class, PROP_SSL_CA_FILE,
+      g_param_spec_string ("ssl-ca-file", "SSL CA File",
+          "Location of a SSL anchor CA file to use", DEFAULT_SSL_CA_FILE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+ /**
+   * GstSoupHTTPSrc::ssl-use-system-ca-file:
+   *
+   * If set to %TRUE, souphttpsrc will use the system's CA file for
+   * checking certificates.
+   *
+   * Since: 1.4
+   */
+  g_object_class_install_property (gobject_class, PROP_SSL_USE_SYSTEM_CA_FILE,
+      g_param_spec_boolean ("ssl-use-system-ca-file", "Use System CA File",
+          "Use system CA file", DEFAULT_SSL_USE_SYSTEM_CA_FILE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
 
@@ -372,6 +417,8 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->session = NULL;
   src->msg = NULL;
   src->log_level = DEFAULT_SOUP_LOG_LEVEL;
+  src->ssl_strict = DEFAULT_SSL_STRICT;
+  src->ssl_use_system_ca_file = DEFAULT_SSL_USE_SYSTEM_CA_FILE;
   proxy = g_getenv ("http_proxy");
   if (proxy && !gst_soup_http_src_set_proxy (src, proxy)) {
     GST_WARNING_OBJECT (src,
@@ -423,6 +470,8 @@ gst_soup_http_src_finalize (GObject * gobject)
     gst_structure_free (src->extra_headers);
     src->extra_headers = NULL;
   }
+
+  g_free (src->ssl_ca_file);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -525,6 +574,17 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
     case PROP_KEEP_ALIVE:
       src->keep_alive = g_value_get_boolean (value);
       break;
+    case PROP_SSL_STRICT:
+      src->ssl_strict = g_value_get_boolean (value);
+      break;
+    case PROP_SSL_CA_FILE:
+      if (src->ssl_ca_file)
+        g_free (src->ssl_ca_file);
+      src->ssl_ca_file = g_value_dup_string (value);
+      break;
+    case PROP_SSL_USE_SYSTEM_CA_FILE:
+      src->ssl_use_system_ca_file = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -594,6 +654,15 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_KEEP_ALIVE:
       g_value_set_boolean (value, src->keep_alive);
+      break;
+    case PROP_SSL_STRICT:
+      g_value_set_boolean (value, src->ssl_strict);
+      break;
+    case PROP_SSL_CA_FILE:
+      g_value_set_string (value, src->ssl_ca_file);
+      break;
+    case PROP_SSL_USE_SYSTEM_CA_FILE:
+      g_value_set_boolean (value, src->ssl_strict);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -776,6 +845,7 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
           soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
           src->context, SOUP_SESSION_USER_AGENT, src->user_agent,
           SOUP_SESSION_TIMEOUT, src->timeout,
+          SOUP_SESSION_SSL_STRICT, src->ssl_strict,
           SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_PROXY_RESOLVER_DEFAULT,
           NULL);
     } else {
@@ -783,6 +853,7 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
           soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
           src->context, SOUP_SESSION_PROXY_URI, src->proxy,
           SOUP_SESSION_TIMEOUT, src->timeout,
+          SOUP_SESSION_SSL_STRICT, src->ssl_strict,
           SOUP_SESSION_USER_AGENT, src->user_agent, NULL);
     }
 
@@ -797,6 +868,11 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
 
     /* Set up logging */
     gst_soup_util_log_setup (src->session, src->log_level, GST_ELEMENT (src));
+    if (src->ssl_ca_file)
+      g_object_set (src->session, "ssl-ca-file", src->ssl_ca_file, NULL);
+    else
+      g_object_set (src->session, "ssl-use-system-ca-file",
+          src->ssl_use_system_ca_file, NULL);
   } else {
     GST_DEBUG_OBJECT (src, "Re-using session");
   }

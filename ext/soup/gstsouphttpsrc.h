@@ -84,6 +84,9 @@ struct _GstSoupHTTPSrc {
                                 * handled as an error or EOS when the content
                                 * size is unknown */
   gboolean keep_alive;         /* Use keep-alive sessions */
+  gboolean ssl_strict;
+  gchar *ssl_ca_file;
+  gboolean ssl_use_system_ca_file;
 
   /* Shoutcast/icecast metadata extraction handling. */
   gboolean iradio_mode;
