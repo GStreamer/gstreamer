@@ -1634,7 +1634,7 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
       gst_omx_video_get_supported_colorformats (self->dec_out_port,
       self->input_state);
 
-  comp_supported_caps = gst_omx_video_get_caps_4_map (negotiation_map);
+  comp_supported_caps = gst_omx_video_get_caps_for_map (negotiation_map);
 
   if (!gst_caps_is_empty (comp_supported_caps)) {
     GstCaps *tmp;

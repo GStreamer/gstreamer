@@ -1680,7 +1680,7 @@ gst_omx_video_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   negotiation_map =
       gst_omx_video_get_supported_colorformats (self->enc_in_port,
       self->input_state);
-  comp_supported_caps = gst_omx_video_get_caps_4_map (negotiation_map);
+  comp_supported_caps = gst_omx_video_get_caps_for_map (negotiation_map);
   g_list_free_full (negotiation_map,
       (GDestroyNotify) gst_omx_video_negotiation_map_free);
 

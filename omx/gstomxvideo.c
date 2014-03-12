@@ -94,7 +94,7 @@ gst_omx_video_get_supported_colorformats (GstOMXPort * port,
 }
 
 GstCaps *
-gst_omx_video_get_caps_4_map (GList * map)
+gst_omx_video_get_caps_for_map (GList * map)
 {
   GstCaps *caps = gst_caps_new_empty ();
   GList *l;

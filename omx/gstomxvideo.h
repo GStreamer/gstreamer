@@ -42,7 +42,7 @@ GList *
 gst_omx_video_get_supported_colorformats (GstOMXPort * port,
     GstVideoCodecState * state);
 
-GstCaps * gst_omx_video_get_caps_4_map(GList * map);
+GstCaps * gst_omx_video_get_caps_for_map(GList * map);
 
 void
 gst_omx_video_negotiation_map_free (GstOMXVideoNegotiationMap * m);
