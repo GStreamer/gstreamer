@@ -76,6 +76,7 @@ struct _GstValidateScenarioPrivate
   GList *needs_parsing;
 
   GstEvent *last_seek;
+  GstSeekFlags seek_flags;
   GstClockTime segment_start;
   GstClockTime segment_stop;
   GstClockTime seek_pos_tol;
@@ -276,6 +277,7 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   gst_event_ref (seek);
   if (gst_element_send_event (scenario->pipeline, seek)) {
     gst_event_replace (&priv->last_seek, seek);
+    priv->seek_flags = flags;
   } else {
     GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
         "Could not execute seek: '(position %" GST_TIME_FORMAT
@@ -616,8 +618,8 @@ get_position (GstValidateScenario * scenario)
       MAX (0, (gint64) (priv->segment_start - priv->seek_pos_tol));
   stop_with_tolerance =
       priv->segment_stop != -1 ? priv->segment_stop + priv->seek_pos_tol : -1;
-  if ((stop_with_tolerance != -1 && position > stop_with_tolerance)
-      || position < start_with_tolerance) {
+  if ((GST_CLOCK_TIME_IS_VALID (stop_with_tolerance) && position > stop_with_tolerance)
+      || (priv->seek_flags & GST_SEEK_FLAG_ACCURATE && position < start_with_tolerance)) {
 
     GST_VALIDATE_REPORT (scenario, QUERY_POSITION_OUT_OF_SEGMENT,
         "Current position %" GST_TIME_FORMAT " not in the expected range [%"
