@@ -163,7 +163,7 @@ gst_gl_context_glx_create_context (GstGLContext * context,
     external_gl_context = gst_gl_context_get_gl_context (other_context);
   }
 
-  device = (Display *) gst_gl_window_get_display (window);
+  device = (Display *) gst_gl_display_get_handle (window->display);
   glx_exts = glXQueryExtensionsString (device, DefaultScreen (device));
 
   create_context = gst_gl_check_extension ("GLX_ARB_create_context", glx_exts);
@@ -248,7 +248,7 @@ gst_gl_context_glx_destroy_context (GstGLContext * context)
 
   context_glx = GST_GL_CONTEXT_GLX (context);
   window = gst_gl_context_get_window (context);
-  device = (Display *) gst_gl_window_get_display (window);
+  device = (Display *) gst_gl_display_get_handle (window->display);
 
   glXDestroyContext (device, context_glx->glx_context);
 
@@ -270,7 +270,7 @@ gst_gl_context_glx_choose_format (GstGLContext * context, GError ** error)
   context_glx = GST_GL_CONTEXT_GLX (context);
   window = gst_gl_context_get_window (context);
   window_x11 = GST_GL_WINDOW_X11 (window);
-  device = (Display *) gst_gl_window_get_display (window);
+  device = (Display *) gst_gl_display_get_handle (window->display);
 
   if (!glXQueryExtension (device, &error_base, &event_base)) {
     g_set_error (error, GST_GL_CONTEXT_ERROR,
@@ -362,7 +362,7 @@ static void
 gst_gl_context_glx_swap_buffers (GstGLContext * context)
 {
   GstGLWindow *window = gst_gl_context_get_window (context);
-  Display *device = (Display *) gst_gl_window_get_display (window);
+  Display *device = (Display *) gst_gl_display_get_handle (window->display);
   Window window_handle = (Window) gst_gl_window_get_window_handle (window);
 
   glXSwapBuffers (device, window_handle);
@@ -380,7 +380,7 @@ static gboolean
 gst_gl_context_glx_activate (GstGLContext * context, gboolean activate)
 {
   GstGLWindow *window = gst_gl_context_get_window (context);
-  Display *device = (Display *) gst_gl_window_get_display (window);
+  Display *device = (Display *) gst_gl_display_get_handle (window->display);
   Window window_handle = (Window) gst_gl_window_get_window_handle (window);
   gboolean result;
 
