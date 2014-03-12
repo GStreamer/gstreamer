@@ -1006,6 +1006,16 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   scenarios = g_strsplit (scenario_name, ":", -1);
 
   for (i = 0; scenarios[i]; i++) {
+
+    /* First check if the scenario name is not a full path to the
+     * actual scenario */
+    if (g_file_test (scenarios[i], G_FILE_TEST_IS_REGULAR)) {
+      GST_DEBUG_OBJECT (scenario, "Scenario: %s is a full path to a scenario "
+          "trying to load it", scenarios[i]);
+      if ((ret = _load_scenario_file (scenario, scenario_name, &is_config)))
+        goto check_scenario;
+    }
+
     lfilename =
         g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenarios[i]);
 
