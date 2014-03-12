@@ -133,8 +133,8 @@ registry_handle_global (void *data, struct wl_registry *registry,
   GstWlDisplay *self = data;
 
   if (g_strcmp0 (interface, "wl_compositor") == 0) {
-    self->compositor =
-        wl_registry_bind (registry, id, &wl_compositor_interface, 1);
+    self->compositor = wl_registry_bind (registry, id, &wl_compositor_interface,
+        MIN (version, 3));
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
     self->shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
   } else if (g_strcmp0 (interface, "wl_shm") == 0) {
