@@ -17,7 +17,7 @@
  *
  * This plugin reads data from a remote location specified by a URI.
  * Supported protocols are 'http', 'https'.
- * 
+ *
  * An HTTP proxy must be specified by its URL.
  * If the "http_proxy" environment variable is set, its value is used.
  * If built with libsoup's GNOME integration features, the GNOME proxy
@@ -123,6 +123,7 @@ enum
 #define DEFAULT_SSL_STRICT           TRUE
 #define DEFAULT_SSL_CA_FILE          NULL
 #define DEFAULT_SSL_USE_SYSTEM_CA_FILE TRUE
+#define DEFAULT_TIMEOUT              15
 
 static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -250,7 +251,7 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_TIMEOUT,
       g_param_spec_uint ("timeout", "timeout",
           "Value in seconds to timeout a blocking I/O (0 = No timeout).", 0,
-          3600, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          3600, DEFAULT_TIMEOUT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_EXTRA_HEADERS,
       g_param_spec_boxed ("extra-headers", "Extra Headers",
           "Extra headers to append to the HTTP request",
@@ -416,6 +417,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->context = NULL;
   src->session = NULL;
   src->msg = NULL;
+  src->timeout = DEFAULT_TIMEOUT;
   src->log_level = DEFAULT_SOUP_LOG_LEVEL;
   src->ssl_strict = DEFAULT_SSL_STRICT;
   src->ssl_use_system_ca_file = DEFAULT_SSL_USE_SYSTEM_CA_FILE;
