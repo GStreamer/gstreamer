@@ -700,7 +700,8 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
   if (!success)
     goto error_copy_buffer;
 
-  gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+  gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_FLAGS |
+      GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
   *outbuf_ptr = outbuf;
   return GST_FLOW_OK;
 
