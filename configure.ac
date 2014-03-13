@@ -59,6 +59,7 @@ dnl *** required versions of GStreamer stuff ***
 GST_REQ=1.3.0.1
 GSTPB_REQ=1.3.0.1
 GSTPG_REQ=1.3.0.1
+GSTPD_REQ=1.3.0.1
 
 dnl *** autotools stuff ****
 
@@ -175,6 +176,11 @@ AG_GST_CHECK_GST_PLUGINS_GOOD($GST_API_VERSION, [$GSTPG_REQ], [yes])
 GSTPG_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-good-$GST_API_VERSION --variable pluginsdir`
 AC_SUBST(GSTPG_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Good Plugins in $GSTPG_PLUGINS_DIR)
+
+AG_GST_CHECK_GST_PLUGINS_BAD($GST_API_VERSION, [$GSTPD_REQ], [yes])
+GSTPD_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-bad-$GST_API_VERSION --variable pluginsdir`
+AC_SUBST(GSTPD_PLUGINS_DIR)
+AC_MSG_NOTICE(Using GStreamer Bad Plugins in $GSTPD_PLUGINS_DIR)
 
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_GST_CHECK" = "xyes")

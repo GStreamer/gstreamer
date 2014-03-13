@@ -26,6 +26,8 @@
 
 #include <string.h>
 
+#include <gst/sdp/gstmikey.h>
+
 #include "rtsp-sdp.h"
 
 static gboolean
@@ -171,6 +173,93 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
   gst_sdp_media_add_attribute (smedia, "control", tmp);
   g_free (tmp);
 
+
+  /* check for srtp */
+  do {
+    GstBuffer *srtpkey;
+    const GValue *val;
+    const gchar *srtpcipher, *srtpauth, *srtcpcipher, *srtcpauth;
+    GstMIKEYMessage *msg;
+    GstMIKEYPayload *payload;
+    GBytes *bytes;
+    GstMapInfo info;
+    const guint8 *data;
+    gsize size;
+    gchar *base64;
+    guint8 byte;
+    guint32 ssrc;
+
+    val = gst_structure_get_value (s, "srtp-key");
+    if (val == NULL)
+      break;
+
+    srtpkey = gst_value_get_buffer (val);
+    if (srtpkey == NULL)
+      break;
+
+    srtpcipher = gst_structure_get_string (s, "srtp-cipher");
+    srtpauth = gst_structure_get_string (s, "srtp-auth");
+    srtcpcipher = gst_structure_get_string (s, "srtcp-cipher");
+    srtcpauth = gst_structure_get_string (s, "srtcp-auth");
+
+    if (srtpcipher == NULL || srtpauth == NULL || srtcpcipher == NULL ||
+        srtcpauth == NULL)
+      break;
+
+    msg = gst_mikey_message_new ();
+    /* unencrypted MIKEY message, we send this over TLS so this is allowed */
+    gst_mikey_message_set_info (msg, GST_MIKEY_VERSION, GST_MIKEY_TYPE_PSK_INIT,
+        FALSE, GST_MIKEY_PRF_MIKEY_1, 0, GST_MIKEY_MAP_TYPE_SRTP);
+    /* add policy '0' for our SSRC */
+    gst_rtsp_stream_get_ssrc (stream, &ssrc);
+    gst_mikey_message_add_cs_srtp (msg, 0, ssrc, 0);
+    /* timestamp is now */
+    gst_mikey_message_add_t_now_ntp_utc (msg);
+    /* add some random data */
+    gst_mikey_message_add_rand_len (msg, 16);
+
+    /* the policy '0' is SRTP with the above discovered algorithms */
+    payload = gst_mikey_payload_new (GST_MIKEY_PT_SP);
+    gst_mikey_payload_sp_set (payload, 0, GST_MIKEY_SEC_PROTO_SRTP);
+
+    /* only AES-CM is supported */
+    byte = 1;
+    gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_ALG, 1,
+        &byte);
+    /* only HMAC-SHA1 */
+    gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_ALG, 1,
+        &byte);
+    /* we enable encryption on RTP and RTCP */
+    gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTP_ENC, 1,
+        &byte);
+    gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTCP_ENC, 1,
+        &byte);
+    /* we enable authentication on RTP and RTCP */
+    gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTP_AUTH, 1,
+        &byte);
+    gst_mikey_message_add_payload (msg, payload);
+
+    /* add the key in KEMAC */
+    gst_buffer_map (srtpkey, &info, GST_MAP_READ);
+    gst_mikey_message_add_kemac (msg, GST_MIKEY_ENC_NULL, info.size, info.data,
+        GST_MIKEY_MAC_NULL, NULL);
+    gst_buffer_unmap (srtpkey, &info);
+
+    /* now serialize this to bytes */
+    bytes = gst_mikey_message_to_bytes (msg);
+    gst_mikey_message_free (msg);
+    /* and make it into base64 */
+    data = g_bytes_get_data (bytes, &size);
+    base64 = g_base64_encode (data, size);
+    g_bytes_unref (bytes);
+
+    tmp = g_strdup_printf ("mikey %s", base64);
+    g_free (base64);
+
+    gst_sdp_media_add_attribute (smedia, "key-mgmt", tmp);
+    g_free (tmp);
+  } while (FALSE);
+
   /* collect all other properties and add them to fmtp or attributes */
   fmtp = g_string_new ("");
   g_string_append_printf (fmtp, "%d ", caps_pt);
@@ -197,6 +286,10 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
     if (!strcmp (fname, "clock-base"))
       continue;
     if (!strcmp (fname, "seqnum-base"))
+      continue;
+    if (g_str_has_prefix (fname, "srtp-"))
+      continue;
+    if (g_str_has_prefix (fname, "srtcp-"))
       continue;
 
     if (g_str_has_prefix (fname, "a-")) {

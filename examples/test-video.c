@@ -136,6 +136,7 @@ main (int argc, char *argv[])
   gst_rtsp_media_factory_set_permissions (factory, permissions);
   gst_rtsp_permissions_unref (permissions);
 #endif
+  gst_rtsp_media_factory_set_profiles (factory, GST_RTSP_PROFILE_SAVP);
 
   /* attach the test factory to the /test url */
   gst_rtsp_mount_points_add_factory (mounts, "/test", factory);

@@ -11,8 +11,8 @@ TESTS_ENVIRONMENT = \
         GST_STATE_IGNORE_ELEMENTS="$(STATE_IGNORE_ELEMENTS)"	\
 	$(REGISTRY_ENVIRONMENT)					\
 	GST_PLUGIN_SYSTEM_PATH_1_0=					\
-	GST_PLUGIN_PATH_1_0=$(GST_PLUGINS_DIR):$(GSTPB_PLUGINS_DIR):$(GSTPG_PLUGINS_DIR)	\
-	GST_PLUGIN_LOADING_WHITELIST="gstreamer:gst-plugins-base:gst-plugins-good"
+	GST_PLUGIN_PATH_1_0=$(GST_PLUGINS_DIR):$(GSTPB_PLUGINS_DIR):$(GSTPG_PLUGINS_DIR):$(GSTPD_PLUGINS_DIR)	\
+	GST_PLUGIN_LOADING_WHITELIST="gstreamer:gst-plugins-base:gst-plugins-good:gst-plugins-bad"
 
 
 # ths core dumps of some machines have PIDs appended

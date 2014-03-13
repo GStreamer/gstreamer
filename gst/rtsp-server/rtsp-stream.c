@@ -79,6 +79,10 @@ struct _GstRTSPStreamPrivate
   /* the RTPSession object */
   GObject *session;
 
+  /* SRTP encoder/decoder */
+  GstElement *srtpenc;
+  GstElement *srtpdec;
+
   /* sinks used for sending and receiving RTP and RTCP over ipv4, they share
    * sockets */
   GstElement *udpsrc_v4[2];
@@ -1503,6 +1507,87 @@ static GstAppSinkCallbacks sink_cb = {
   handle_new_sample,
 };
 
+static GstElement *
+get_rtp_encoder (GstRTSPStream * stream, guint session)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+
+  if (priv->srtpenc == NULL) {
+    gchar *name;
+
+    name = g_strdup_printf ("srtpenc_%u", session);
+    priv->srtpenc = gst_element_factory_make ("srtpenc", name);
+    g_free (name);
+
+    g_object_set (priv->srtpenc, "random-key", TRUE, NULL);
+  }
+  return gst_object_ref (priv->srtpenc);
+}
+
+static GstElement *
+request_rtp_encoder (GstElement * rtpbin, guint session, GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GstElement *enc;
+  GstPad *pad;
+  gchar *name;
+
+  if (priv->idx != session)
+    return NULL;
+
+  GST_DEBUG_OBJECT (stream, "make RTP encoder for session %u", session);
+
+  enc = get_rtp_encoder (stream, session);
+  name = g_strdup_printf ("rtp_sink_%d", session);
+  pad = gst_element_get_request_pad (enc, name);
+  g_free (name);
+  gst_object_unref (pad);
+
+  return enc;
+}
+
+static GstElement *
+request_rtcp_encoder (GstElement * rtpbin, guint session,
+    GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GstElement *enc;
+  GstPad *pad;
+  gchar *name;
+
+  if (priv->idx != session)
+    return NULL;
+
+  GST_DEBUG_OBJECT (stream, "make RTCP encoder for session %u", session);
+
+  enc = get_rtp_encoder (stream, session);
+  name = g_strdup_printf ("rtcp_sink_%d", session);
+  pad = gst_element_get_request_pad (enc, name);
+  g_free (name);
+  gst_object_unref (pad);
+
+  return enc;
+}
+
+static GstElement *
+request_rtcp_decoder (GstElement * rtpbin, guint session,
+    GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+
+  if (priv->idx != session)
+    return NULL;
+
+  if (priv->srtpdec == NULL) {
+    gchar *name;
+
+    name = g_strdup_printf ("srtpdec_%u", session);
+    priv->srtpdec = gst_element_factory_make ("srtpdec", name);
+    g_free (name);
+  }
+  return gst_object_ref (priv->srtpdec);
+}
+
 /**
  * gst_rtsp_stream_join_bin:
  * @stream: a #GstRTSPStream
@@ -1548,6 +1633,21 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
 
   /* update the dscp qos field in the sinks */
   update_dscp_qos (stream);
+
+  if (priv->profiles & GST_RTSP_PROFILE_SAVP
+      || priv->profiles & GST_RTSP_PROFILE_SAVPF) {
+    /* For SRTP */
+    g_signal_connect (rtpbin, "request-rtp-encoder",
+        (GCallback) request_rtp_encoder, stream);
+    g_signal_connect (rtpbin, "request-rtcp-encoder",
+        (GCallback) request_rtcp_encoder, stream);
+#if 0
+    g_signal_connect (rtpbin, "request-rtp-decoder",
+        (GCallback) request_rtp_decoder, stream);
+#endif
+    g_signal_connect (rtpbin, "request-rtcp-decoder",
+        (GCallback) request_rtcp_decoder, stream);
+  }
 
   /* get a pad for sending RTP */
   name = g_strdup_printf ("send_rtp_sink_%u", idx);
@@ -1872,6 +1972,9 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   if (priv->caps)
     gst_caps_unref (priv->caps);
   priv->caps = NULL;
+
+  if (priv->srtpenc)
+    gst_object_unref (priv->srtpenc);
 
   priv->is_joined = FALSE;
   g_mutex_unlock (&priv->lock);
