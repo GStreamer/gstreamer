@@ -2657,7 +2657,7 @@ pool_failed:
 }
 
 /**
- * gst_v4l2_object_setup_format:
+ * gst_v4l2_object_acquire_format:
  * @v4l2object the object
  * @info a GstVideoInfo to be filled
  * @align a GstVideoAlignment to be filled
@@ -2665,12 +2665,14 @@ pool_failed:
  * Setup the format base on the currently configured format. This is useful in
  * decoder or encoder elements where the output format is dictated by the
  * input.
+ * Acquire the driver choosen format. This is useful in decoder or encoder elements where
+ * the output format is choosen by the HW.
  *
  * Returns: %TRUE on success, %FALSE on failure.
  */
 gboolean
-gst_v4l2_object_setup_format (GstV4l2Object * v4l2object,
-    GstVideoInfo * info, GstVideoAlignment * align)
+gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info,
+    GstVideoAlignment * align)
 {
   struct v4l2_fmtdesc *fmtdesc;
   struct v4l2_format fmt;

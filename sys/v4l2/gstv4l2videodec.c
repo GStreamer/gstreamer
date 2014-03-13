@@ -475,7 +475,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     gst_buffer_unref (codec_data);
 
-    if (!gst_v4l2_object_setup_format (self->v4l2capture, &info, &self->align))
+    if (!gst_v4l2_object_acquire_format (self->v4l2capture, &info))
       goto not_negotiated;
 
     output_state = gst_video_decoder_set_output_state (decoder,

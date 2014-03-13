@@ -253,10 +253,10 @@ gboolean      gst_v4l2_object_copy        (GstV4l2Object * v4l2object,
 GstCaps *     gst_v4l2_object_get_caps    (GstV4l2Object * v4l2object,
                                            GstCaps * filter);
 
-gboolean      gst_v4l2_object_setup_format (GstV4l2Object * v4l2object,
-                                            GstVideoInfo * info,
-                                            GstVideoAlignment * align);
-
+gboolean      gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object,
+                                              GstVideoInfo * info,
+                                              GstVideoAlignment * align);
+ 
 gboolean      gst_v4l2_object_decide_allocation (GstV4l2Object * v4l2object,
                                                  GstQuery * query);
 
