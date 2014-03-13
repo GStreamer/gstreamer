@@ -119,6 +119,8 @@ struct _GstRTSPStreamPrivate
   /* transports we stream to */
   guint n_active;
   GList *transports;
+  gboolean tr_changed;
+  GList *tr_cache;
 
   gint dscp_qos;
 
@@ -1442,6 +1444,14 @@ on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
   }
 }
 
+static void
+clear_tr_cache (GstRTSPStreamPrivate * priv)
+{
+  g_list_foreach (priv->tr_cache, (GFunc) g_object_unref, NULL);
+  g_list_free (priv->tr_cache);
+  priv->tr_cache = NULL;
+}
+
 static GstFlowReturn
 handle_new_sample (GstAppSink * sink, gpointer user_data)
 {
@@ -1450,6 +1460,7 @@ handle_new_sample (GstAppSink * sink, gpointer user_data)
   GstSample *sample;
   GstBuffer *buffer;
   GstRTSPStream *stream;
+  gboolean is_rtp;
 
   sample = gst_app_sink_pull_sample (sink);
   if (!sample)
@@ -1459,18 +1470,28 @@ handle_new_sample (GstAppSink * sink, gpointer user_data)
   priv = stream->priv;
   buffer = gst_sample_get_buffer (sample);
 
+  is_rtp = GST_ELEMENT_CAST (sink) == priv->appsink[0];
+
   g_mutex_lock (&priv->lock);
-  for (walk = priv->transports; walk; walk = g_list_next (walk)) {
+  if (priv->tr_changed) {
+    clear_tr_cache (priv);
+    for (walk = priv->transports; walk; walk = g_list_next (walk)) {
+      GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
+      priv->tr_cache = g_list_prepend (priv->tr_cache, g_object_ref (tr));
+    }
+    priv->tr_changed = FALSE;
+  }
+  g_mutex_unlock (&priv->lock);
+
+  for (walk = priv->tr_cache; walk; walk = g_list_next (walk)) {
     GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
 
-    if (GST_ELEMENT_CAST (sink) == priv->appsink[0]) {
+    if (is_rtp) {
       gst_rtsp_stream_transport_send_rtp (tr, buffer);
     } else {
       gst_rtsp_stream_transport_send_rtcp (tr, buffer);
     }
   }
-  g_mutex_unlock (&priv->lock);
-
   gst_sample_unref (sample);
 
   return GST_FLOW_OK;
@@ -1776,6 +1797,8 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
 
   /* all transports must be removed by now */
   g_return_val_if_fail (priv->transports == NULL, FALSE);
+
+  clear_tr_cache (priv);
 
   GST_INFO ("stream %p leaving bin", stream);
 
@@ -2090,6 +2113,7 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         g_signal_emit_by_name (priv->udpsink[1], "remove", dest, max, NULL);
         priv->transports = g_list_remove (priv->transports, trans);
       }
+      priv->tr_changed = TRUE;
       break;
     }
     case GST_RTSP_LOWER_TRANS_TCP:
@@ -2100,6 +2124,7 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         GST_INFO ("removing TCP %s", tr->destination);
         priv->transports = g_list_remove (priv->transports, trans);
       }
+      priv->tr_changed = TRUE;
       break;
     default:
       goto unknown_transport;
