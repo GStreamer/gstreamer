@@ -1738,7 +1738,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
   }
 
   /* be notified of caps changes */
-  priv->caps_sig = g_signal_connect (priv->send_rtp_sink, "notify::caps",
+  priv->caps_sig = g_signal_connect (priv->send_src[0], "notify::caps",
       (GCallback) caps_notify, stream);
 
   priv->is_joined = TRUE;
@@ -1803,7 +1803,7 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   GST_INFO ("stream %p leaving bin", stream);
 
   gst_pad_unlink (priv->srcpad, priv->send_rtp_sink);
-  g_signal_handler_disconnect (priv->send_rtp_sink, priv->caps_sig);
+  g_signal_handler_disconnect (priv->send_src[0], priv->caps_sig);
   gst_element_release_request_pad (rtpbin, priv->send_rtp_sink);
   gst_object_unref (priv->send_rtp_sink);
   priv->send_rtp_sink = NULL;
