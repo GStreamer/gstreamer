@@ -428,13 +428,9 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
 
   if (!pool->add_videometa &&
       GST_VIDEO_INFO_FORMAT (&obj->info) != GST_VIDEO_FORMAT_ENCODED) {
-    /* in non MPLANE mode, there is only one  bytesperline field */
-    gint nb_checked_planes =
-        V4L2_TYPE_IS_MULTIPLANAR (obj->type) ? GST_VIDEO_INFO_N_PLANES (&obj->
-        info) : 1;
     gint stride = 0;
     gint i = 0;
-    for (i = 0; i < nb_checked_planes; i++) {
+    for (i = 0; i < obj->n_v4l2_planes; i++) {
       /* we don't have video metadata, and we are dealing with raw video,
        * see if the strides are compatible */
       stride = GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, i);
