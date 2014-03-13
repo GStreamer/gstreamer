@@ -28,7 +28,7 @@
 
 #include "gstomxvideo.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_omx_video_debug_category);
+GST_DEBUG_CATEGORY (gst_omx_video_debug_category);
 #define GST_CAT_DEFAULT gst_omx_video_debug_category
 
 GList *

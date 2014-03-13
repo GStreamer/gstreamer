@@ -341,6 +341,8 @@ gboolean          gst_omx_port_is_enabled (GstOMXPort * port);
 
 void              gst_omx_set_default_role (GstOMXClassData *class_data, const gchar *default_role);
 
+/* refered by plugin_init */
+GST_DEBUG_CATEGORY_EXTERN (gst_omx_video_debug_category);
 
 G_END_DECLS
 

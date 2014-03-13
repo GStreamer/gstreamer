@@ -2633,6 +2633,8 @@ plugin_init (GstPlugin * plugin)
   static const gchar *env_config_name[] = { "GST_OMX_CONFIG_DIR", NULL };
 
   GST_DEBUG_CATEGORY_INIT (gstomx_debug, "omx", 0, "gst-omx");
+  GST_DEBUG_CATEGORY_INIT (gst_omx_video_debug_category, "omxvideo", 0,
+      "gst-omx-video");
 
   /* Read configuration file gstomx.conf from the preferred
    * configuration directories */
