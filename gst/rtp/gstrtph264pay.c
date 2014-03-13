@@ -1245,6 +1245,10 @@ gst_rtp_h264_pay_change_state (GstElement * element, GstStateChange transition)
       rtph264pay->send_spspps = FALSE;
       gst_adapter_clear (rtph264pay->adapter);
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      rtph264pay->last_spspps = -1;
+      gst_rtp_h264_pay_clear_sps_pps (rtph264pay);
+      break;
     default:
       break;
   }
