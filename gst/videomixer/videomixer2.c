@@ -1642,15 +1642,15 @@ gst_videomixer2_src_setcaps (GstPad * pad, GstVideoMixer2 * mix, GstCaps * caps)
 
   GST_INFO_OBJECT (pad, "set src caps: %" GST_PTR_FORMAT, caps);
 
-  mix->blend = NULL;
-  mix->overlay = NULL;
-  mix->fill_checker = NULL;
-  mix->fill_color = NULL;
-
   if (!gst_video_info_from_caps (&info, caps))
     goto done;
 
   GST_VIDEO_MIXER2_LOCK (mix);
+
+  mix->blend = NULL;
+  mix->overlay = NULL;
+  mix->fill_checker = NULL;
+  mix->fill_color = NULL;
 
   if (GST_VIDEO_INFO_FPS_N (&mix->info) != GST_VIDEO_INFO_FPS_N (&info) ||
       GST_VIDEO_INFO_FPS_D (&mix->info) != GST_VIDEO_INFO_FPS_D (&info)) {
