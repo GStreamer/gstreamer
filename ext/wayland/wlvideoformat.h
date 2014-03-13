@@ -32,7 +32,4 @@ GstVideoFormat gst_wayland_format_to_video_format (enum wl_shm_format wl_format)
 
 const gchar *gst_wayland_format_to_string (enum wl_shm_format wl_format);
 
-gboolean gst_wayland_sink_format_from_caps (enum wl_shm_format * wl_format,
-    GstCaps * caps);
-
 #endif

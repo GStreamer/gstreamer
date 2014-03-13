@@ -61,7 +61,6 @@ GstWlDisplay *gst_wl_window_get_display (GstWlWindow * window);
 struct wl_surface *gst_wl_window_get_wl_surface (GstWlWindow * window);
 gboolean gst_wl_window_is_toplevel (GstWlWindow *window);
 
-void gst_wl_window_get_size (GstWlWindow * window, gint * w, gint * h);
 void gst_wl_window_set_size (GstWlWindow * window, gint w, gint h);
 
 #endif /* __GST_WL_WINDOW_H__ */

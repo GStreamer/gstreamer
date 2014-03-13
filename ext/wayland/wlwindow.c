@@ -167,18 +167,6 @@ gst_wl_window_is_toplevel (GstWlWindow * window)
 }
 
 void
-gst_wl_window_get_size (GstWlWindow * window, gint * w, gint * h)
-{
-  g_return_if_fail (window != NULL);
-
-  if (w)
-    *w = window->width;
-
-  if (h)
-    *h = window->height;
-}
-
-void
 gst_wl_window_set_size (GstWlWindow * window, gint w, gint h)
 {
   g_return_if_fail (window != NULL);

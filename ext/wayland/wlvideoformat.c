@@ -109,18 +109,3 @@ gst_wayland_format_to_string (enum wl_shm_format wl_format)
   return gst_video_format_to_string
       (gst_wayland_format_to_video_format (wl_format));
 }
-
-gboolean
-gst_wayland_sink_format_from_caps (enum wl_shm_format * wl_format,
-    GstCaps * caps)
-{
-  GstVideoInfo info;
-  GstVideoFormat fmt;
-
-  gst_video_info_from_caps (&info, caps);
-  fmt = GST_VIDEO_INFO_FORMAT (&info);
-
-  *wl_format = gst_video_format_to_wayland_format (fmt);
-
-  return (*wl_format != -1);
-}
