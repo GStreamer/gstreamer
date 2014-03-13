@@ -33,7 +33,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_OMX_BUFFER_POOL(pool) ((GstOMXBufferPool *) pool)
+#define GST_TYPE_OMX_BUFFER_POOL \
+  (gst_omx_buffer_pool_get_type())
+#define GST_OMX_BUFFER_POOL(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OMX_BUFFER_POOL,GstOMXBufferPool))
+#define GST_IS_OMX_BUFFER_POOL(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OMX_BUFFER_POOL))
+
 typedef struct _GstOMXBufferPool GstOMXBufferPool;
 typedef struct _GstOMXBufferPoolClass GstOMXBufferPoolClass;
 
