@@ -793,10 +793,10 @@ gst_rtsp_stream_get_multicast_address (GstRTSPStream * stream,
 
   if (family == G_SOCKET_FAMILY_IPV6) {
     flags = GST_RTSP_ADDRESS_FLAG_IPV6;
-    addrp = &priv->addr_v4;
+    addrp = &priv->addr_v6;
   } else {
     flags = GST_RTSP_ADDRESS_FLAG_IPV4;
-    addrp = &priv->addr_v6;
+    addrp = &priv->addr_v4;
   }
 
   g_mutex_lock (&priv->lock);
@@ -871,9 +871,9 @@ gst_rtsp_stream_reserve_address (GstRTSPStream * stream,
   }
 
   if (family == G_SOCKET_FAMILY_IPV6)
-    addrp = &priv->addr_v4;
-  else
     addrp = &priv->addr_v6;
+  else
+    addrp = &priv->addr_v4;
 
   g_mutex_lock (&priv->lock);
   if (*addrp == NULL) {
