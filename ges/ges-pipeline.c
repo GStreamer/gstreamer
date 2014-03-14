@@ -852,6 +852,21 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
 
   g_return_val_if_fail (GES_IS_PIPELINE (pipeline), FALSE);
 
+  /*  FIXME Properly handle multi track, for now GESPipeline
+   *  only hanles single track per type, so we should just set the
+   *  presence to 1.
+   */
+  if (GST_IS_ENCODING_CONTAINER_PROFILE (profile)) {
+    const GList *tmpprofiles =
+        gst_encoding_container_profile_get_profiles
+        (GST_ENCODING_CONTAINER_PROFILE (profile));
+
+    for (; tmpprofiles; tmpprofiles = tmpprofiles->next) {
+      GST_DEBUG_OBJECT (pipeline, "Setting presence to 1!");
+      gst_encoding_profile_set_presence (tmpprofiles->data, 1);
+    }
+  }
+
   /* Clear previous URI sink if it existed */
   /* FIXME : We should figure out if it was added to the pipeline,
    * and if so, remove it. */
