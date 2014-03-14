@@ -44,7 +44,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define DEFAULT_CAPS "audio/x-raw,format=(string)S32LE;"
 #else
-#define DEFAULT_CAPS "audio/x-raw,format=(string)S32BE;";
+#define DEFAULT_CAPS "audio/x-raw,format=(string)S32BE;"
 #endif
 
 typedef struct _PadInfos
