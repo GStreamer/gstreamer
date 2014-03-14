@@ -318,25 +318,36 @@ gst_vaapipostproc_stop(GstBaseTransform *trans)
 }
 
 static gboolean
-is_interlaced_buffer(GstVaapiPostproc *postproc, GstBuffer *buf)
+should_deinterlace_buffer(GstVaapiPostproc *postproc, GstBuffer *buf)
 {
-    if (!(postproc->flags & GST_VAAPI_POSTPROC_FLAG_DEINTERLACE))
+    if (!(postproc->flags & GST_VAAPI_POSTPROC_FLAG_DEINTERLACE) ||
+        postproc->deinterlace_mode == GST_VAAPI_DEINTERLACE_MODE_DISABLED)
         return FALSE;
 
+    if (postproc->deinterlace_mode == GST_VAAPI_DEINTERLACE_MODE_INTERLACED)
+        return TRUE;
+
+    g_assert(postproc->deinterlace_mode == GST_VAAPI_DEINTERLACE_MODE_AUTO);
+
     switch (GST_VIDEO_INFO_INTERLACE_MODE(&postproc->sinkpad_info)) {
+    case GST_VIDEO_INTERLACE_MODE_INTERLEAVED:
+        return TRUE;
+    case GST_VIDEO_INTERLACE_MODE_PROGRESSIVE:
+        return FALSE;
     case GST_VIDEO_INTERLACE_MODE_MIXED:
 #if GST_CHECK_VERSION(1,0,0)
-        if (!GST_BUFFER_FLAG_IS_SET(buf, GST_VIDEO_BUFFER_FLAG_INTERLACED))
-            return FALSE;
+        if (GST_BUFFER_FLAG_IS_SET(buf, GST_VIDEO_BUFFER_FLAG_INTERLACED))
+            return TRUE;
 #else
-        if (GST_BUFFER_FLAG_IS_SET(buf, GST_VIDEO_BUFFER_PROGRESSIVE))
-            return FALSE;
+        if (!GST_BUFFER_FLAG_IS_SET(buf, GST_VIDEO_BUFFER_PROGRESSIVE))
+            return TRUE;
 #endif
         break;
     default:
+        GST_ERROR("unhandled \"interlace-mode\", disabling deinterlacing" );
         break;
     }
-    return TRUE;
+    return FALSE;
 }
 
 static GstBuffer *
@@ -479,7 +490,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
 
     timestamp  = GST_BUFFER_TIMESTAMP(inbuf);
     tff        = GST_BUFFER_FLAG_IS_SET(inbuf, GST_VIDEO_BUFFER_FLAG_TFF);
-    deint      = is_interlaced_buffer(postproc, inbuf);
+    deint      = should_deinterlace_buffer(postproc, inbuf);
 
     /* Drop references if deinterlacing conditions changed */
     deint_changed = deint != ds->deint;
@@ -648,7 +659,7 @@ gst_vaapipostproc_process(GstBaseTransform *trans, GstBuffer *inbuf,
 
     timestamp  = GST_BUFFER_TIMESTAMP(inbuf);
     tff        = GST_BUFFER_FLAG_IS_SET(inbuf, GST_VIDEO_BUFFER_FLAG_TFF);
-    deint      = is_interlaced_buffer(postproc, inbuf);
+    deint      = should_deinterlace_buffer(postproc, inbuf);
 
     flags = gst_vaapi_video_meta_get_render_flags(meta) &
         ~GST_VAAPI_PICTURE_STRUCTURE_MASK;
