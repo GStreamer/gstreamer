@@ -128,92 +128,39 @@ static GstStructure *
 ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
 {
   GstStructure *structure = NULL;
+  const gchar *media_type = NULL, *format = NULL;
 
   if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_MJPG) || IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_TVMJ) ||     /* FIXME: NOT tested */
       IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_WAKE) ||        /* FIXME: NOT tested */
       IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_CFCC) ||        /* FIXME: NOT tested */
       IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_IJPG)) {        /* FIXME: NOT tested */
-    structure = gst_structure_new ("image/jpeg", NULL);
-  } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB555) ||       /* FIXME: NOT tested */
-      IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB565) ||      /* FIXME: NOT tested */
-      IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB24) || IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB32) ||   /* FIXME: NOT tested */
-      IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB1555) ||    /* FIXME: NOT tested */
-      IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB32) ||      /* FIXME: NOT tested */
-      IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB4444)) {    /* FIXME: NOT tested */
-    guint depth = 0, bpp = 0;
-    gint endianness = 0;
-    guint32 r_mask = 0, b_mask = 0, g_mask = 0;
-
-    if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB555)) {
-      bpp = 16;
-      depth = 15;
-      endianness = G_BIG_ENDIAN;
-      r_mask = 0x7c00;
-      g_mask = 0x03e0;
-      b_mask = 0x001f;
-    } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB565)) {
-      bpp = depth = 16;
-      endianness = G_BIG_ENDIAN;
-      r_mask = 0xf800;
-      g_mask = 0x07e0;
-      b_mask = 0x001f;
-    } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB24)) {
-      bpp = depth = 24;
-      endianness = G_BIG_ENDIAN;
-      r_mask = 0x0000ff;
-      g_mask = 0x00ff00;
-      b_mask = 0xff0000;
-    } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB32)) {
-      bpp = 32;
-      depth = 24;
-      endianness = G_BIG_ENDIAN;
-      r_mask = 0x000000ff;
-      g_mask = 0x0000ff00;
-      b_mask = 0x00ff0000;
-      /* FIXME: check
-       *r_mask = 0xff000000;
-       *g_mask = 0x00ff0000;
-       *b_mask = 0x0000ff00;
-       */
-    } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB1555)) {
-      bpp = 16;
-      depth = 15;
-      endianness = G_BIG_ENDIAN;
-      r_mask = 0x7c00;
-      g_mask = 0x03e0;
-      b_mask = 0x001f;
-    } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB32)) {
-      bpp = depth = 32;
-      endianness = G_BIG_ENDIAN;
-      r_mask = 0x000000ff;
-      g_mask = 0x0000ff00;
-      b_mask = 0x00ff0000;
-      /* FIXME: check
-       *r_mask = 0xff000000;
-       *g_mask = 0x00ff0000;
-       *b_mask = 0x0000ff00;
-       */
-    } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB4444)) {
-      bpp = 16;
-      depth = 12;
-      endianness = G_BIG_ENDIAN;
-      r_mask = 0x0f00;
-      g_mask = 0x00f0;
-      b_mask = 0x000f;
-      //r_mask = 0x000f;
-      //g_mask = 0x00f0;
-      //b_mask = 0x0f00;
-    } else {
-      g_assert_not_reached ();
-    }
-
-    structure = gst_structure_new ("video/x-raw-rgb",
-        "bpp", G_TYPE_INT, bpp,
-        "depth", G_TYPE_INT, depth,
-        "red_mask", G_TYPE_INT, r_mask,
-        "green_mask", G_TYPE_INT, g_mask,
-        "blue_mask", G_TYPE_INT, b_mask,
-        "endianness", G_TYPE_INT, endianness, NULL);
+    media_type = "image/jpeg";
+  } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB555)) {
+    media_type = "video/x-raw";
+    format = "RGB15";
+  } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB565)) {
+    media_type = "video/x-raw";
+    format = "RGB16";
+  } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB24)) {
+    media_type = "video/x-raw";
+    format = "RGBx";
+  } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB32)) {
+    media_type = "video/x-raw";
+    format = "RGB";
+  } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB32)) {
+    media_type = "video/x-raw";
+    format = "ARGB";
+  } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB1555)) {
+    GST_WARNING ("Unsupported video format ARGB15555");
+  } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB4444)) {
+    GST_WARNING ("Unsupported video format ARGB4444");
+  } else if (memcmp (&subtype_guid.Data2, &MEDIASUBTYPE_FOURCC.Data2,
+          sizeof (subtype_guid) - sizeof (subtype_guid.Data1)) == 0) {
+    guint8 *p = (guint8 *) & subtype_guid.Data1;
+    gchar *format = g_strdup_printf ("%c%c%c%c", p[0], p[1], p[2], p[3]);
+    structure = gst_structure_new ("video/x-raw", "format",
+        G_TYPE_STRING, format, NULL);
+    g_free (format);
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_dvsd)) {
     if (IsEqualGUID (&format_guid, &FORMAT_DvInfo)) {
       structure = gst_structure_new ("video/x-dv",
@@ -221,23 +168,23 @@ ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
     } else if (IsEqualGUID (&format_guid, &FORMAT_VideoInfo)) {
       structure = gst_structure_new ("video/x-dv",
           "systemstream", G_TYPE_BOOLEAN, FALSE,
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
-          NULL);
+          "format", G_TYPE_STRING, "dvsd", NULL);
     }
-  } else if (memcmp (&subtype_guid.Data, &MEDIASUBTYPE_FOURCC.Data,
-          sizeof (subtype_guid) - sizeof (subtype_guid.Data1)) == 0) {
-    guint8 *p = (guint8 *) & subtype_guid.Data1;
+  }
 
-    structure = gst_structure_new ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC (p[0], p[1], p[2], p[3]),
-        NULL);
+  if (media_type) {
+    structure = gst_structure_new_empty (media_type);
+    if (format) {
+      gst_structure_set (structure, "format", G_TYPE_STRING, format, NULL);
+    }
   }
 
   if (!structure) {
     GST_DEBUG ("Unknown DirectShow Video GUID %08x-%04x-%04x-%04x-%08x%04x",
-        subtype_guid.Data1, subtype_guid.Data, subtype_guid.Data3,
-        *(WORD *) subtype_guid.Data4, *(DWORD *) & subtype_guid.Data4[2],
-        *(WORD *) & subtype_guid.Data4[6]);
+        (guint) subtype_guid.Data1, (guint) subtype_guid.Data2,
+        (guint) subtype_guid.Data3,
+        (guint) subtype_guid.Data4, (guint) & subtype_guid.Data4[2],
+        (guint) & subtype_guid.Data4[6]);
   }
 
   return structure;
@@ -736,8 +683,8 @@ ks_video_get_all_caps (void)
 
     /* YUV formats */
     structure =
-        ks_video_append_var_video_fields (gst_structure_new ("video/x-raw-yuv",
-            NULL));
+        ks_video_append_var_video_fields (gst_structure_new_empty
+        ("video/x-raw"));
     gst_caps_append_structure (caps, structure);
 
     /* Other formats */

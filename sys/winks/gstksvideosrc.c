@@ -66,15 +66,15 @@ enum
 GST_DEBUG_CATEGORY (gst_ks_debug);
 #define GST_CAT_DEFAULT gst_ks_debug
 
-#define KS_WORKER_LOCK(priv) g_mutex_lock (priv->worker_lock)
-#define KS_WORKER_UNLOCK(priv) g_mutex_unlock (priv->worker_lock)
+#define KS_WORKER_LOCK(priv) g_mutex_lock (&priv->worker_lock)
+#define KS_WORKER_UNLOCK(priv) g_mutex_unlock (&priv->worker_lock)
 #define KS_WORKER_WAIT(priv) \
-    g_cond_wait (priv->worker_notify_cond, priv->worker_lock)
-#define KS_WORKER_NOTIFY(priv) g_cond_signal (priv->worker_notify_cond)
+    g_cond_wait (&priv->worker_notify_cond, &priv->worker_lock)
+#define KS_WORKER_NOTIFY(priv) g_cond_signal (&priv->worker_notify_cond)
 #define KS_WORKER_WAIT_FOR_RESULT(priv) \
-    g_cond_wait (priv->worker_result_cond, priv->worker_lock)
+    g_cond_wait (&priv->worker_result_cond, &priv->worker_lock)
 #define KS_WORKER_NOTIFY_RESULT(priv) \
-    g_cond_signal (priv->worker_result_cond)
+    g_cond_signal (&priv->worker_result_cond)
 
 typedef enum
 {
@@ -103,9 +103,9 @@ struct _GstKsVideoSrcPrivate
 
   /* Worker thread */
   GThread *worker_thread;
-  GMutex *worker_lock;
-  GCond *worker_notify_cond;
-  GCond *worker_result_cond;
+  GMutex worker_lock;
+  GCond worker_notify_cond;
+  GCond worker_result_cond;
   KsWorkerState worker_state;
 
   GstCaps *worker_pending_caps;
@@ -124,22 +124,14 @@ struct _GstKsVideoSrcPrivate
 
 #define GST_KS_VIDEO_SRC_GET_PRIVATE(o) ((o)->priv)
 
-static void gst_ks_video_src_init_interfaces (GType type);
-
 static void gst_ks_video_src_finalize (GObject * object);
 static void gst_ks_video_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_ks_video_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-static void gst_ks_video_src_probe_interface_init (GstPropertyProbeInterface *
-    iface);
-static const GList *gst_ks_video_src_probe_get_properties (GstPropertyProbe *
-    probe);
-static GValueArray *gst_ks_video_src_probe_get_values (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec);
-static GValueArray *gst_ks_video_src_get_device_name_values (GstKsVideoSrc *
-    self);
+G_GNUC_UNUSED static GArray
+    * gst_ks_video_src_get_device_name_values (GstKsVideoSrc * self);
 static void gst_ks_video_src_reset (GstKsVideoSrc * self);
 
 static GstStateChangeReturn gst_ks_video_src_change_state (GstElement * element,
@@ -147,10 +139,11 @@ static GstStateChangeReturn gst_ks_video_src_change_state (GstElement * element,
 static gboolean gst_ks_video_src_set_clock (GstElement * element,
     GstClock * clock);
 
-static GstCaps *gst_ks_video_src_get_caps (GstBaseSrc * basesrc);
+static GstCaps *gst_ks_video_src_get_caps (GstBaseSrc * basesrc,
+    GstCaps * filter);
 static gboolean gst_ks_video_src_set_caps (GstBaseSrc * basesrc,
     GstCaps * caps);
-static void gst_ks_video_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
+static GstCaps *gst_ks_video_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 static gboolean gst_ks_video_src_query (GstBaseSrc * basesrc, GstQuery * query);
 static gboolean gst_ks_video_src_unlock (GstBaseSrc * basesrc);
 static gboolean gst_ks_video_src_unlock_stop (GstBaseSrc * basesrc);
@@ -160,25 +153,9 @@ static GstFlowReturn gst_ks_video_src_create (GstPushSrc * pushsrc,
 static GstBuffer *gst_ks_video_src_alloc_buffer (guint size, guint alignment,
     gpointer user_data);
 
-GST_BOILERPLATE_FULL (GstKsVideoSrc, gst_ks_video_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, gst_ks_video_src_init_interfaces);
+G_DEFINE_TYPE (GstKsVideoSrc, gst_ks_video_src, GST_TYPE_PUSH_SRC);
 
-static void
-gst_ks_video_src_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_static_metadata (element_class, "KsVideoSrc",
-      "Source/Video",
-      "Stream data from a video capture device through Windows kernel streaming",
-      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>\n"
-      "Haakon Sporsheim <hakon.sporsheim@tandberg.com>\n"
-      "Andres Colubri <andres.colubri@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          ks_video_get_all_caps ()));
-}
+static GstKsVideoSrcClass *parent_class = NULL;
 
 static void
 gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
@@ -189,6 +166,19 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
   GstPushSrcClass *gstpushsrc_class = GST_PUSH_SRC_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GstKsVideoSrcPrivate));
+
+  parent_class = g_type_class_peek_parent (klass);
+
+  gst_element_class_set_static_metadata (gstelement_class, "KsVideoSrc",
+      "Source/Video",
+      "Stream data from a video capture device through Windows kernel streaming",
+      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>\n"
+      "Haakon Sporsheim <hakon.sporsheim@tandberg.com>\n"
+      "Andres Colubri <andres.colubri@gmail.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          ks_video_get_all_caps ()));
 
   gobject_class->finalize = gst_ks_video_src_finalize;
   gobject_class->get_property = gst_ks_video_src_get_property;
@@ -238,7 +228,7 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
 }
 
 static void
-gst_ks_video_src_init (GstKsVideoSrc * self, GstKsVideoSrcClass * gclass)
+gst_ks_video_src_init (GstKsVideoSrc * self)
 {
   GstBaseSrc *basesrc = GST_BASE_SRC (self);
   GstKsVideoSrcPrivate *priv;
@@ -397,65 +387,12 @@ gst_ks_video_src_apply_driver_quirks (GstKsVideoSrc * self)
   }
 }
 
-static void
-gst_ks_video_src_init_interfaces (GType type)
-{
-  static const GInterfaceInfo ksvideosrc_info = {
-    (GInterfaceInitFunc) gst_ks_video_src_probe_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE, &ksvideosrc_info);
-}
-
-static void
-gst_ks_video_src_probe_interface_init (GstPropertyProbeInterface * iface)
-{
-  iface->get_properties = gst_ks_video_src_probe_get_properties;
-  iface->get_values = gst_ks_video_src_probe_get_values;
-}
-
-static const GList *
-gst_ks_video_src_probe_get_properties (GstPropertyProbe * probe)
-{
-  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
-  static GList *props = NULL;
-
-  if (!props) {
-    GParamSpec *pspec;
-
-    pspec = g_object_class_find_property (klass, "device-name");
-    props = g_list_append (props, pspec);
-  }
-
-  return props;
-}
-
-static GValueArray *
-gst_ks_video_src_probe_get_values (GstPropertyProbe * probe, guint prop_id,
-    const GParamSpec * pspec)
-{
-  GstKsVideoSrc *src = GST_KS_VIDEO_SRC (probe);
-  GValueArray *array = NULL;
-
-  switch (prop_id) {
-    case PROP_DEVICE_NAME:
-      array = gst_ks_video_src_get_device_name_values (src);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-      break;
-  }
-
-  return array;
-}
-
-static GValueArray *
+/*FIXME: when we have a devices API replacement */
+G_GNUC_UNUSED static GArray *
 gst_ks_video_src_get_device_name_values (GstKsVideoSrc * self)
 {
   GList *devices, *cur;
-  GValueArray *array = g_value_array_new (0);
+  GArray *array = g_array_new (TRUE, TRUE, sizeof (GValue));
 
   devices = ks_enumerate_devices (&KSCATEGORY_VIDEO);
   if (devices == NULL)
@@ -469,7 +406,7 @@ gst_ks_video_src_get_device_name_values (GstKsVideoSrc * self)
 
     g_value_init (&value, G_TYPE_STRING);
     g_value_set_string (&value, entry->name);
-    g_value_array_append (array, &value);
+    g_array_append_val (array, value);
     g_value_unset (&value);
 
     ks_device_entry_free (entry);
@@ -506,9 +443,9 @@ gst_ks_video_src_open_device (GstKsVideoSrc * self)
     gboolean match;
 
     if (priv->device_path != NULL) {
-      match = g_strcasecmp (entry->path, priv->device_path) == 0;
+      match = g_ascii_strcasecmp (entry->path, priv->device_path) == 0;
     } else if (priv->device_name != NULL) {
-      match = g_strcasecmp (entry->name, priv->device_name) == 0;
+      match = g_ascii_strcasecmp (entry->name, priv->device_name) == 0;
     } else if (priv->device_index >= 0) {
       match = entry->index == priv->device_index;
     } else {
@@ -666,16 +603,16 @@ gst_ks_video_src_start_worker (GstKsVideoSrc * self)
   GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
   gboolean result;
 
-  priv->worker_lock = g_mutex_new ();
-  priv->worker_notify_cond = g_cond_new ();
-  priv->worker_result_cond = g_cond_new ();
+  g_mutex_init (&priv->worker_lock);
+  g_cond_init (&priv->worker_notify_cond);
+  g_cond_init (&priv->worker_result_cond);
 
   priv->worker_pending_caps = NULL;
   priv->worker_pending_run = FALSE;
 
   priv->worker_state = KS_WORKER_STATE_STARTING;
   priv->worker_thread =
-      g_thread_create (gst_ks_video_src_worker_func, self, TRUE, NULL);
+      g_thread_new ("ks-worker", gst_ks_video_src_worker_func, self);
 
   KS_WORKER_LOCK (priv);
   while (priv->worker_state < KS_WORKER_STATE_READY)
@@ -699,12 +636,9 @@ gst_ks_video_src_stop_worker (GstKsVideoSrc * self)
   g_thread_join (priv->worker_thread);
   priv->worker_thread = NULL;
 
-  g_cond_free (priv->worker_result_cond);
-  priv->worker_result_cond = NULL;
-  g_cond_free (priv->worker_notify_cond);
-  priv->worker_notify_cond = NULL;
-  g_mutex_free (priv->worker_lock);
-  priv->worker_lock = NULL;
+  g_cond_clear (&priv->worker_result_cond);
+  g_cond_clear (&priv->worker_notify_cond);
+  g_mutex_clear (&priv->worker_lock);
 }
 
 static GstStateChangeReturn
@@ -756,11 +690,11 @@ gst_ks_video_src_set_clock (GstElement * element, GstClock * clock)
     gst_ks_clock_provide_master_clock (priv->ksclock, clock);
   GST_OBJECT_UNLOCK (element);
 
-  return GST_ELEMENT_CLASS (element)->set_clock (element, clock);
+  return GST_ELEMENT_CLASS (parent_class)->set_clock (element, clock);
 }
 
 static GstCaps *
-gst_ks_video_src_get_caps (GstBaseSrc * basesrc)
+gst_ks_video_src_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
 {
   GstKsVideoSrc *self = GST_KS_VIDEO_SRC (basesrc);
   GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
@@ -787,18 +721,28 @@ gst_ks_video_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
     KS_WORKER_WAIT_FOR_RESULT (priv);
   KS_WORKER_UNLOCK (priv);
 
+  GST_DEBUG ("Result is %d", priv->worker_setcaps_result);
   return priv->worker_setcaps_result;
 }
 
-static void
+static GstCaps *
 gst_ks_video_src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 {
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  GstStructure *structure;
+  GstCaps *fixated_caps;
+  gint i;
 
-  gst_structure_fixate_field_nearest_int (structure, "width", G_MAXINT);
-  gst_structure_fixate_field_nearest_int (structure, "height", G_MAXINT);
-  gst_structure_fixate_field_nearest_fraction (structure, "framerate",
-      G_MAXINT, 1);
+  fixated_caps = gst_caps_make_writable (caps);
+
+  for (i = 0; i < gst_caps_get_size (fixated_caps); ++i) {
+    structure = gst_caps_get_structure (fixated_caps, i);
+    gst_structure_fixate_field_nearest_int (structure, "width", G_MAXINT);
+    gst_structure_fixate_field_nearest_int (structure, "height", G_MAXINT);
+    gst_structure_fixate_field_nearest_fraction (structure, "framerate",
+        G_MAXINT, 1);
+  }
+
+  return gst_caps_fixate (fixated_caps);
 }
 
 static gboolean
@@ -1006,6 +950,7 @@ gst_ks_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
   GstClockTime presentation_time;
   gulong error_code;
   gchar *error_str;
+  GstMapInfo info;
 
   g_assert (priv->device != NULL);
 
@@ -1042,8 +987,9 @@ gst_ks_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
   if (G_UNLIKELY (priv->do_stats))
     gst_ks_video_src_update_statistics (self);
 
-  gst_ks_video_device_postprocess_frame (priv->device,
-      GST_BUFFER_DATA (*buf), GST_BUFFER_SIZE (*buf));
+  gst_buffer_map (*buf, &info, GST_MAP_WRITE);
+  gst_ks_video_device_postprocess_frame (priv->device, info.data, info.size);
+  gst_buffer_unmap (*buf, &info);
 
   return GST_FLOW_OK;
 
@@ -1062,15 +1008,17 @@ error_start_capture:
     switch (error_code) {
       case ERROR_FILE_NOT_FOUND:
         GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-            ("failed to start capture (device unplugged)"), (debug_str));
+            ("failed to start capture (device unplugged)"), ("%s", debug_str));
         break;
       case ERROR_NO_SYSTEM_RESOURCES:
         GST_ELEMENT_ERROR (self, RESOURCE, BUSY,
-            ("failed to start capture (device already in use)"), (debug_str));
+            ("failed to start capture (device already in use)"), ("%s",
+                debug_str));
         break;
       default:
         GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
-            ("failed to start capture (0x%08x)", error_code), (debug_str));
+            ("failed to start capture (0x%08x)", (guint) error_code), ("%s",
+                debug_str));
         break;
     }
 
@@ -1081,10 +1029,10 @@ error_read_frame:
     if (result == GST_FLOW_ERROR) {
       if (error_str != NULL) {
         GST_ELEMENT_ERROR (self, RESOURCE, READ,
-            ("read failed: %s [0x%08x]", error_str, error_code),
+            ("read failed: %s [0x%08x]", error_str, (guint) error_code),
             ("gst_ks_video_device_read_frame failed"));
       }
-    } else if (result == GST_FLOW_UNEXPECTED) {
+    } else if (result == GST_FLOW_CUSTOM_ERROR) {
       GST_ELEMENT_ERROR (self, RESOURCE, READ,
           ("read failed"), ("gst_ks_video_device_read_frame failed"));
     }
@@ -1100,32 +1048,14 @@ gst_ks_video_src_alloc_buffer (guint size, guint alignment, gpointer user_data)
 {
   GstKsVideoSrc *self = GST_KS_VIDEO_SRC (user_data);
   GstBuffer *buf;
-  GstCaps *caps;
-  GstFlowReturn flow_ret;
+  GstAllocationParams params = { 0, alignment - 1, 0, 0, };
 
-  caps = gst_pad_get_negotiated_caps (GST_BASE_SRC_PAD (self));
-  if (caps == NULL)
-    goto error_no_caps;
-  flow_ret = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (self), 0,
-      size + (alignment - 1), caps, &buf);
-  gst_caps_unref (caps);
-  if (G_UNLIKELY (flow_ret != GST_FLOW_OK))
+  buf = gst_buffer_new_allocate (NULL, size, &params);
+  if (buf == NULL)
     goto error_alloc_buffer;
-
-  GST_BUFFER_DATA (buf) =
-      GSIZE_TO_POINTER ((GPOINTER_TO_SIZE (GST_BUFFER_DATA (buf)) + (alignment -
-              1)) & ~(alignment - 1));
-  GST_BUFFER_SIZE (buf) = size;
 
   return buf;
 
-error_no_caps:
-  {
-    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
-        ("not negotiated"), ("maybe setcaps failed?"));
-
-    return NULL;
-  }
 error_alloc_buffer:
   {
     GST_ELEMENT_ERROR (self, CORE, PAD, ("alloc_buffer failed"), (NULL));

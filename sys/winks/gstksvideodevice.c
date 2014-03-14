@@ -105,17 +105,16 @@ static void gst_ks_video_device_set_property (GObject * object, guint prop_id,
 static void gst_ks_video_device_reset_caps (GstKsVideoDevice * self);
 static guint gst_ks_video_device_get_frame_size (GstKsVideoDevice * self);
 
-GST_BOILERPLATE (GstKsVideoDevice, gst_ks_video_device, GObject, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GstKsVideoDevice, gst_ks_video_device, G_TYPE_OBJECT);
 
-static void
-gst_ks_video_device_base_init (gpointer gclass)
-{
-}
+static GstKsVideoDeviceClass *parent_class = NULL;
 
 static void
 gst_ks_video_device_class_init (GstKsVideoDeviceClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  parent_class = g_type_class_peek_parent (klass);
 
   g_type_class_add_private (klass, sizeof (GstKsVideoDevicePrivate));
 
@@ -135,8 +134,7 @@ gst_ks_video_device_class_init (GstKsVideoDeviceClass * klass)
 }
 
 static void
-gst_ks_video_device_init (GstKsVideoDevice * self,
-    GstKsVideoDeviceClass * gclass)
+gst_ks_video_device_init (GstKsVideoDevice * self)
 {
   GstKsVideoDevicePrivate *priv;
 
@@ -313,7 +311,8 @@ gst_ks_video_device_prepare_buffers (GstKsVideoDevice * self)
   }
 
   for (i = 0; i < priv->num_requests; i++) {
-    ReadRequest req = { 0, };
+    ReadRequest req;
+    memset (&req, '0', sizeof (ReadRequest));
 
     req.buf = self->allocfunc (frame_size, KS_BUFFER_ALIGNMENT,
         self->allocfunc_data);
@@ -568,7 +567,8 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
   alignment = 0;
 
   if (ks_object_get_property (pin_handle, KSPROPSETID_Connection,
-          KSPROPERTY_CONNECTION_ALLOCATORFRAMING_EX, &framing_ex, NULL, NULL)) {
+          KSPROPERTY_CONNECTION_ALLOCATORFRAMING_EX, (void *) &framing_ex, NULL,
+          NULL)) {
     if (framing_ex->CountItems >= 1) {
       *num_outstanding = framing_ex->FramingItem[0].Frames;
       alignment = framing_ex->FramingItem[0].FileAlignment;
@@ -580,8 +580,8 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
         "ALLOCATORFRAMING");
 
     if (ks_object_get_property (pin_handle, KSPROPSETID_Connection,
-            KSPROPERTY_CONNECTION_ALLOCATORFRAMING, &framing, &framing_size,
-            NULL)) {
+            KSPROPERTY_CONNECTION_ALLOCATORFRAMING, (void *) &framing,
+            &framing_size, NULL)) {
       *num_outstanding = framing->Frames;
       alignment = framing->FileAlignment;
     } else {
@@ -590,7 +590,7 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
   }
 
   GST_DEBUG ("num_outstanding: %lu alignment: 0x%08x", *num_outstanding,
-      alignment);
+      (guint) alignment);
 
   if (*num_outstanding == 0 || *num_outstanding > MAX_OUTSTANDING_FRAMES) {
     GST_DEBUG ("setting number of allowable outstanding frames to 1");
@@ -627,7 +627,8 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
     if (ks_object_get_property (pin_handle, KSPROPSETID_Stream,
             KSPROPERTY_STREAM_MASTERCLOCK, (gpointer *) & cur_clock_handle,
             &cur_clock_handle_size, NULL)) {
-      GST_DEBUG ("current master clock handle: 0x%08x", *cur_clock_handle);
+      GST_DEBUG ("current master clock handle: 0x%08x",
+          (guint) * cur_clock_handle);
       CloseHandle (*cur_clock_handle);
       g_free (cur_clock_handle);
     } else {
@@ -948,6 +949,7 @@ gst_ks_video_device_request_frame (GstKsVideoDevice * self, ReadRequest * req,
   KSSTREAM_READ_PARAMS *params;
   BOOL success;
   DWORD bytes_returned = 0;
+  GstMapInfo info;
 
   if (!gst_ks_read_request_pick_buffer (self, req))
     goto error_pick_buffer;
@@ -961,15 +963,17 @@ gst_ks_video_device_request_frame (GstKsVideoDevice * self, ReadRequest * req,
   params = &req->params;
   memset (params, 0, sizeof (KSSTREAM_READ_PARAMS));
 
+  gst_buffer_map (req->buf, &info, GST_MAP_READ);
   params->header.Size = sizeof (KSSTREAM_HEADER) + sizeof (KS_FRAME_INFO);
   params->header.PresentationTime.Numerator = 1;
   params->header.PresentationTime.Denominator = 1;
   params->header.FrameExtent = gst_ks_video_device_get_frame_size (self);
-  params->header.Data = GST_BUFFER_DATA (req->buf);
+  params->header.Data = info.data;
   params->frame_info.ExtendedHeaderSize = sizeof (KS_FRAME_INFO);
 
   success = DeviceIoControl (priv->pin_handle, IOCTL_KS_READ_STREAM, NULL, 0,
       params, params->header.Size, &bytes_returned, &req->overlapped);
+  gst_buffer_unmap (req->buf, &info);
   if (!success && GetLastError () != ERROR_IO_PENDING)
     goto error_ioctl;
 
@@ -1067,7 +1071,7 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, GstBuffer ** buf,
 
         if (G_LIKELY (hdr->DataUsed != 0)) {
           /* Assume it's a good frame */
-          GST_BUFFER_SIZE (req->buf) = hdr->DataUsed;
+          gst_buffer_set_size (req->buf, hdr->DataUsed);
           *buf = gst_buffer_ref (req->buf);
         }
 
@@ -1130,7 +1134,7 @@ error_timeout:
     if (error_str != NULL)
       *error_str = NULL;
 
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_CUSTOM_ERROR;
   }
 error_wait:
   {

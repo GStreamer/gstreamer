@@ -21,6 +21,7 @@
 
 #include <ksmedia.h>
 #include <setupapi.h>
+#include <gst/gst.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_ks_debug);
 #define GST_CAT_DEFAULT gst_ks_debug
@@ -28,7 +29,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_ks_debug);
 #ifndef STATIC_KSPROPSETID_Wave_Queued
 #define STATIC_KSPROPSETID_Wave_Queued \
     0x16a15b10L,0x16f0,0x11d0,0xa1,0x95,0x00,0x20,0xaf,0xd1,0x56,0xe4
-DEFINE_GUIDSTRUCT("16a15b10-16f0-11d0-a195-0020afd156e4", KSPROPSETID_Wave_Queued);
+DEFINE_GUIDSTRUCT ("16a15b10-16f0-11d0-a195-0020afd156e4",
+    KSPROPSETID_Wave_Queued);
 #endif
 
 gboolean
@@ -165,8 +167,10 @@ ks_filter_get_pin_property (HANDLE filter_handle, gulong pin_id,
     GUID prop_set, gulong prop_id, gpointer value, gulong value_size,
     gulong * error)
 {
-  KSP_PIN prop = { 0, };
+  KSP_PIN prop;
   DWORD bytes_returned = 0;
+
+  memset (&prop, 0, sizeof (KSP_PIN));
 
   prop.PinId = pin_id;
   prop.Property.Set = prop_set;
@@ -181,11 +185,12 @@ gboolean
 ks_filter_get_pin_property_multi (HANDLE filter_handle, gulong pin_id,
     GUID prop_set, gulong prop_id, KSMULTIPLE_ITEM ** items, gulong * error)
 {
-  KSP_PIN prop = { 0, };
+  KSP_PIN prop;
   DWORD items_size = 0, bytes_written = 0;
   gulong err;
   gboolean ret;
 
+  memset (&prop, 0, sizeof (KSP_PIN));
   *items = NULL;
 
   prop.PinId = pin_id;
@@ -221,11 +226,12 @@ gboolean
 ks_object_query_property (HANDLE handle, GUID prop_set, gulong prop_id,
     gulong prop_flags, gpointer * value, gulong * value_size, gulong * error)
 {
-  KSPROPERTY prop = { 0, };
+  KSPROPERTY prop;
   DWORD req_value_size = 0, bytes_written = 0;
   gulong err;
   gboolean ret;
 
+  memset (&prop, 0, sizeof (KSPROPERTY));
   *value = NULL;
 
   prop.Set = prop_set;
@@ -278,9 +284,10 @@ gboolean
 ks_object_set_property (HANDLE handle, GUID prop_set, gulong prop_id,
     gpointer value, gulong value_size, gulong * error)
 {
-  KSPROPERTY prop = { 0, };
+  KSPROPERTY prop;
   DWORD bytes_returned;
 
+  memset (&prop, 0, sizeof (KSPROPERTY));
   prop.Set = prop_set;
   prop.Id = prop_id;
   prop.Flags = KSPROPERTY_TYPE_SET;
@@ -300,7 +307,7 @@ ks_object_get_supported_property_sets (HANDLE handle, GUID ** propsets,
   *len = 0;
 
   if (ks_object_query_property (handle, GUID_NULL, 0,
-          KSPROPERTY_TYPE_SETSUPPORT, propsets, &size, &error)) {
+          KSPROPERTY_TYPE_SETSUPPORT, (void *) propsets, &size, &error)) {
     if (size % sizeof (GUID) == 0) {
       *len = size / sizeof (GUID);
       return TRUE;
@@ -324,9 +331,10 @@ gchar *
 ks_guid_to_string (const GUID * guid)
 {
   return g_strdup_printf ("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-      guid->Data1, guid->Data, guid->Data3, guid->Data4[0], guid->Data4[1],
-      guid->Data4[2], guid->Data4[3], guid->Data4[4], guid->Data4[5],
-      guid->Data4[6], guid->Data4[7]);
+      (guint) guid->Data1, (guint) guid->Data2, (guint) guid->Data3,
+      (guint) guid->Data4[0], (guint) guid->Data4[1], (guint) guid->Data4[2],
+      (guint) guid->Data4[3], (guint) guid->Data4[4], (guint) guid->Data4[5],
+      (guint) guid->Data4[6], (guint) guid->Data4[7]);
 }
 
 const gchar *
@@ -379,7 +387,7 @@ ks_options_flags_to_string (gulong flags)
   CHECK_OPTIONS_FLAG (LOOPEDDATA);
 
   if (flags != 0)
-    g_string_append_printf (str, "|0x%08x", flags);
+    g_string_append_printf (str, "|0x%08x", (guint) flags);
 
   ret = str->str;
   g_string_free (str, FALSE);

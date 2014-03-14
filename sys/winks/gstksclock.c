@@ -26,9 +26,9 @@ GST_DEBUG_CATEGORY_EXTERN (gst_ks_debug);
 
 struct _GstKsClockPrivate
 {
-  GMutex *mutex;
-  GCond *client_cond;
-  GCond *worker_cond;
+  GMutex mutex;
+  GCond client_cond;
+  GCond worker_cond;
 
   HANDLE clock_handle;
 
@@ -45,23 +45,23 @@ struct _GstKsClockPrivate
 
 #define GST_KS_CLOCK_GET_PRIVATE(o) ((o)->priv)
 
-#define GST_KS_CLOCK_LOCK() g_mutex_lock (priv->mutex)
-#define GST_KS_CLOCK_UNLOCK() g_mutex_unlock (priv->mutex)
+#define GST_KS_CLOCK_LOCK() g_mutex_lock (&priv->mutex)
+#define GST_KS_CLOCK_UNLOCK() g_mutex_unlock (&priv->mutex)
 
 static void gst_ks_clock_dispose (GObject * object);
 static void gst_ks_clock_finalize (GObject * object);
 
-GST_BOILERPLATE (GstKsClock, gst_ks_clock, GObject, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GstKsClock, gst_ks_clock, G_TYPE_OBJECT);
 
-static void
-gst_ks_clock_base_init (gpointer gclass)
-{
-}
+static GstKsClockClass *parent_class = NULL;
+
 
 static void
 gst_ks_clock_class_init (GstKsClockClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  parent_class = g_type_class_peek_parent (klass);
 
   g_type_class_add_private (klass, sizeof (GstKsClockPrivate));
 
@@ -70,7 +70,7 @@ gst_ks_clock_class_init (GstKsClockClass * klass)
 }
 
 static void
-gst_ks_clock_init (GstKsClock * self, GstKsClockClass * gclass)
+gst_ks_clock_init (GstKsClock * self)
 {
   GstKsClockPrivate *priv;
 
@@ -79,9 +79,9 @@ gst_ks_clock_init (GstKsClock * self, GstKsClockClass * gclass)
 
   priv = GST_KS_CLOCK_GET_PRIVATE (self);
 
-  priv->mutex = g_mutex_new ();
-  priv->client_cond = g_cond_new ();
-  priv->worker_cond = g_cond_new ();
+  g_mutex_init (&priv->mutex);
+  g_cond_init (&priv->client_cond);
+  g_cond_init (&priv->worker_cond);
 
   priv->clock_handle = INVALID_HANDLE_VALUE;
 
@@ -110,9 +110,9 @@ gst_ks_clock_finalize (GObject * object)
   GstKsClock *self = GST_KS_CLOCK (object);
   GstKsClockPrivate *priv = GST_KS_CLOCK_GET_PRIVATE (self);
 
-  g_cond_free (priv->worker_cond);
-  g_cond_free (priv->client_cond);
-  g_mutex_free (priv->mutex);
+  g_cond_clear (&priv->worker_cond);
+  g_cond_clear (&priv->client_cond);
+  g_mutex_clear (&priv->mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -218,7 +218,7 @@ gst_ks_clock_close_unlocked (GstKsClock * self)
 
   if (priv->worker_thread != NULL) {
     priv->worker_running = FALSE;
-    g_cond_signal (priv->worker_cond);
+    g_cond_signal (&priv->worker_cond);
 
     GST_KS_CLOCK_UNLOCK ();
     g_thread_join (priv->worker_thread);
@@ -305,10 +305,10 @@ gst_ks_clock_worker_thread_func (gpointer data)
 
     if (!priv->worker_initialized) {
       priv->worker_initialized = TRUE;
-      g_cond_signal (priv->client_cond);
+      g_cond_signal (&priv->client_cond);
     }
 
-    g_cond_wait (priv->worker_cond, priv->mutex);
+    g_cond_wait (&priv->worker_cond, &priv->mutex);
   }
 
   priv->worker_initialized = FALSE;
@@ -329,11 +329,11 @@ gst_ks_clock_start (GstKsClock * self)
     priv->worker_initialized = FALSE;
 
     priv->worker_thread =
-        g_thread_create (gst_ks_clock_worker_thread_func, self, TRUE, NULL);
+        g_thread_new ("ks-worker", gst_ks_clock_worker_thread_func, self);
   }
 
   while (!priv->worker_initialized)
-    g_cond_wait (priv->client_cond, priv->mutex);
+    g_cond_wait (&priv->client_cond, &priv->mutex);
 
   GST_KS_CLOCK_UNLOCK ();
 }
@@ -349,7 +349,7 @@ gst_ks_clock_provide_master_clock (GstKsClock * self, GstClock * master_clock)
   if (priv->master_clock != NULL)
     gst_object_unref (priv->master_clock);
   priv->master_clock = master_clock;
-  g_cond_signal (priv->worker_cond);
+  g_cond_signal (&priv->worker_cond);
 
   GST_KS_CLOCK_UNLOCK ();
 }

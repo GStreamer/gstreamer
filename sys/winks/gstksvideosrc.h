@@ -21,7 +21,6 @@
 #define __GST_KS_VIDEO_SRC_H__
 
 #include <gst/base/gstpushsrc.h>
-#include <gst/interfaces/propertyprobe.h>
 
 G_BEGIN_DECLS
 
