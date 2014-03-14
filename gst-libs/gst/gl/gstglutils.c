@@ -28,6 +28,10 @@
 #include "gl.h"
 #include "gstglutils.h"
 
+#if GST_GL_HAVE_WINDOW_X11
+#include <gst/gl/x11/gstgldisplay_x11.h>
+#endif
+
 #ifndef GL_FRAMEBUFFER_UNDEFINED
 #define GL_FRAMEBUFFER_UNDEFINED          0x8219
 #endif
@@ -422,30 +426,26 @@ run_context_query (GstElement * element, GstQuery * query,
   return g_value_get_boolean (&res);
 }
 
-static void
-gst_gl_display_context_prepare (GstElement * element,
-    GstGLDisplay ** display_ptr)
+GstQuery *
+_gst_gl_display_context_query (GstElement * element,
+    GstGLDisplay ** display_ptr, const gchar * display_type)
 {
-  GstContext *ctxt;
   GstQuery *query;
-
-  if (!GST_CAT_CONTEXT)
-    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
+  GstContext *ctxt;
 
   /*  2a) Query downstream with GST_QUERY_CONTEXT for the context and
    *      check if downstream already has a context of the specific type
    *  2b) Query upstream as above.
    */
-  ctxt = NULL;
-  query = gst_query_new_context (GST_GL_DISPLAY_CONTEXT_TYPE);
+  query = gst_query_new_context (display_type);
   if (run_context_query (element, query, GST_PAD_SRC)) {
+    gst_query_parse_context (query, &ctxt);
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "found context (%p) in downstream query", ctxt);
-    gst_query_parse_context (query, &ctxt);
   } else if (run_context_query (element, query, GST_PAD_SINK)) {
+    gst_query_parse_context (query, &ctxt);
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "found context (%p) in upstream query", ctxt);
-    gst_query_parse_context (query, &ctxt);
   } else {
     /* 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
      *    the required context type and afterwards check if a
@@ -467,12 +467,51 @@ gst_gl_display_context_prepare (GstElement * element,
    * GstElement::set_context() with the required context in which the element
    * is required to update the display_ptr or call gst_gl_handle_set_context().
    */
-  if (ctxt) {
-    if (gst_context_has_context_type (ctxt, GST_GL_DISPLAY_CONTEXT_TYPE)) {
-      gst_context_get_gl_display (ctxt, display_ptr);
+
+  return query;
+}
+
+static void
+gst_gl_display_context_prepare (GstElement * element,
+    GstGLDisplay ** display_ptr)
+{
+  GstContext *ctxt;
+  GstQuery *query;
+
+  if (!GST_CAT_CONTEXT)
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
+
+  query =
+      _gst_gl_display_context_query (element, display_ptr,
+      GST_GL_DISPLAY_CONTEXT_TYPE);
+  gst_query_parse_context (query, &ctxt);
+  if (ctxt && gst_context_has_context_type (ctxt, GST_GL_DISPLAY_CONTEXT_TYPE)) {
+    gst_context_get_gl_display (ctxt, display_ptr);
+    if (*display_ptr)
+      goto out;
+  }
+  gst_query_unref (query);
+
+#if GST_GL_HAVE_WINDOW_X11
+  query =
+      _gst_gl_display_context_query (element, display_ptr,
+      "gst.x11.display.handle");
+  gst_query_parse_context (query, &ctxt);
+  if (ctxt && gst_context_has_context_type (ctxt, "gst.x11.display.handle")) {
+    const GstStructure *s;
+    Display *display;
+
+    s = gst_context_get_structure (ctxt);
+    if (gst_structure_get (s, "display", G_TYPE_POINTER, &display, NULL)
+        && display) {
+      *display_ptr =
+          (GstGLDisplay *) gst_gl_display_x11_new_with_display (display);
+      goto out;
     }
   }
+#endif
 
+out:
   gst_query_unref (query);
 }
 
@@ -550,6 +589,17 @@ gst_gl_handle_set_context (GstElement * element, GstContext * context,
       return FALSE;
     }
   }
+#if GST_GL_HAVE_WINDOW_X11
+  else if (g_strcmp0 (context_type, "gst.x11.display.handle") == 0) {
+    const GstStructure *s;
+    Display *display;
+
+    s = gst_context_get_structure (context);
+    if (gst_structure_get (s, "display", G_TYPE_POINTER, &display, NULL))
+      replacement =
+          (GstGLDisplay *) gst_gl_display_x11_new_with_display (display);
+  }
+#endif
 
   if (replacement)
     gst_object_replace ((GstObject **) display, (GstObject *) replacement);
@@ -586,6 +636,32 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
 
     res = *display != NULL;
   }
+#if GST_GL_HAVE_WINDOW_X11
+  else if (g_strcmp0 (context_type, "gst.x11.display.handle") == 0) {
+    GstStructure *s;
+    Display *x11_display = NULL;
+
+    gst_query_parse_context (query, &old_context);
+
+    if (old_context)
+      context = gst_context_copy (old_context);
+    else
+      context = gst_context_new ("gst.x11.display.handle", TRUE);
+
+    if (*display
+        && ((*display)->type & GST_GL_DISPLAY_TYPE_X11) ==
+        GST_GL_DISPLAY_TYPE_X11)
+      x11_display = (Display *) gst_gl_display_get_handle (*display);
+
+    s = gst_context_writable_structure (context);
+    gst_structure_set (s, "display", G_TYPE_POINTER, x11_display, NULL);
+
+    gst_query_set_context (query, context);
+    gst_context_unref (context);
+
+    res = x11_display != NULL;
+  }
+#endif
 
   return res;
 }
