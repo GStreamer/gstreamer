@@ -44,6 +44,33 @@ _validate_report_added_cb (GstValidateRunner * runner,
 }
 
 static gboolean
+_set_child_property (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  const GValue *value;
+  GESTimeline *timeline;
+  GESTimelineElement *element;
+  const gchar *property_name, *element_name;
+
+  element_name = gst_structure_get_string (action->structure, "element-name");
+
+  g_object_get (scenario->pipeline, "timeline", &timeline, NULL);
+  g_return_val_if_fail (timeline, FALSE);
+
+  element = ges_timeline_get_element (timeline, element_name);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
+
+  property_name = gst_structure_get_string (action->structure, "property");
+  value = gst_structure_get_value (action->structure, "value");
+
+  GST_DEBUG ("%s Setting %s property to %p",
+      element->name, property_name, value);
+  ges_track_element_set_child_property (GES_TRACK_ELEMENT (element),
+      property_name, (GValue *) value);
+
+  return TRUE;
+}
+
+static gboolean
 _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GList *layers = NULL;
@@ -113,6 +140,9 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
       NULL
     };
 
+    const gchar *set_child_property_mandatory_fields[] =
+        { "element-name", "property", "value", NULL };
+
     gst_validate_init ();
 
     if (g_strcmp0 (scenario, "none")) {
@@ -123,6 +153,10 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
 
     gst_validate_add_action_type ("edit-clip", _edit_clip,
         move_clip_mandatory_fields, "Allows to seek into the files", FALSE);
+
+    gst_validate_add_action_type ("set-child-property", _set_child_property,
+        set_child_property_mandatory_fields,
+        "Allows to change child property of an object", FALSE);
 
     runner = gst_validate_runner_new ();
     g_signal_connect (runner, "report-added",
