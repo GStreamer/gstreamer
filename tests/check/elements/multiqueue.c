@@ -389,7 +389,8 @@ mq_dummypad_event (GstPad * sinkpad, GstObject * parent, GstEvent * event)
     g_mutex_lock (pad_data->mutex);
 
     /* Accumulate that we've seen the EOS and signal the main thread */
-    *(pad_data->eos_count_ptr) += 1;
+    if (pad_data->eos_count_ptr)
+      *(pad_data->eos_count_ptr) += 1;
 
     GST_DEBUG ("EOS on pad %u", pad_data->pad_num);
 
@@ -634,7 +635,10 @@ GST_START_TEST (test_sparse_stream)
 
     pad_data[i].pad_num = i;
     pad_data[i].max_linked_id_ptr = &max_linked_id;
-    pad_data[i].eos_count_ptr = &eos_seen;
+    if (i == 0)
+      pad_data[i].eos_count_ptr = &eos_seen;
+    else
+      pad_data[i].eos_count_ptr = NULL;
     pad_data[i].is_linked = (i == 0) ? TRUE : FALSE;
     pad_data[i].n_linked = 1;
     pad_data[i].cond = &cond;
@@ -698,8 +702,8 @@ GST_START_TEST (test_sparse_stream)
 
   /* Wait while the buffers are processed */
   g_mutex_lock (&mutex);
-  /* We wait until EOS has been pushed on all pads */
-  while (eos_seen < 2) {
+  /* We wait until EOS has been pushed on pad 1 */
+  while (eos_seen < 1) {
     g_cond_wait (&cond, &mutex);
   }
   g_mutex_unlock (&mutex);
