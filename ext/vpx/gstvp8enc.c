@@ -370,6 +370,7 @@ static gboolean gst_vp8_enc_stop (GstVideoEncoder * encoder);
 static gboolean gst_vp8_enc_set_format (GstVideoEncoder *
     video_encoder, GstVideoCodecState * state);
 static gboolean gst_vp8_enc_finish (GstVideoEncoder * video_encoder);
+static gboolean gst_vp8_enc_drain (GstVideoEncoder * video_encoder);
 static GstFlowReturn gst_vp8_enc_handle_frame (GstVideoEncoder *
     video_encoder, GstVideoCodecFrame * frame);
 static GstFlowReturn gst_vp8_enc_pre_push (GstVideoEncoder * encoder,
@@ -1510,8 +1511,8 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   GST_DEBUG_OBJECT (video_encoder, "set_format");
 
   if (encoder->inited) {
-    GST_DEBUG_OBJECT (video_encoder, "refusing renegotiation");
-    return FALSE;
+    gst_vp8_enc_drain (video_encoder);
+    vpx_codec_destroy (&encoder->encoder);
   }
 
   g_mutex_lock (&encoder->encoder_lock);
@@ -1552,7 +1553,9 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   }
 
   if (encoder->cfg.g_pass == VPX_RC_FIRST_PASS) {
-    encoder->first_pass_cache_content = g_byte_array_sized_new (4096);
+    if (encoder->first_pass_cache_content == NULL) {
+      encoder->first_pass_cache_content = g_byte_array_sized_new (4096);
+    }
   } else if (encoder->cfg.g_pass == VPX_RC_LAST_PASS) {
     GError *err = NULL;
 
@@ -1561,6 +1564,12 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
           ("No multipass cache file provided"), (NULL));
       g_mutex_unlock (&encoder->encoder_lock);
       return FALSE;
+    }
+
+    if (encoder->cfg.rc_twopass_stats_in.buf != NULL) {
+      g_free (encoder->cfg.rc_twopass_stats_in.buf);
+      encoder->cfg.rc_twopass_stats_in.buf = NULL;
+      encoder->cfg.rc_twopass_stats_in.sz = 0;
     }
 
     if (!g_file_get_contents (encoder->multipass_cache_file,
@@ -1866,22 +1875,25 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
   return ret;
 }
 
+/* This function should be called holding then stream lock*/
 static GstFlowReturn
-gst_vp8_enc_finish (GstVideoEncoder * video_encoder)
+gst_vp8_enc_drain (GstVideoEncoder * video_encoder)
 {
   GstVP8Enc *encoder;
   int flags = 0;
   vpx_codec_err_t status;
-
-  GST_DEBUG_OBJECT (video_encoder, "finish");
+  gint64 deadline;
 
   encoder = GST_VP8_ENC (video_encoder);
 
   g_mutex_lock (&encoder->encoder_lock);
+  deadline = encoder->deadline;
+  g_mutex_unlock (&encoder->encoder_lock);
+
   status =
       vpx_codec_encode (&encoder->encoder, NULL, encoder->n_frames, 1, flags,
-      encoder->deadline);
-  g_mutex_unlock (&encoder->encoder_lock);
+      deadline);
+
   if (status != 0) {
     GST_ERROR_OBJECT (encoder, "encode returned %d %s", status,
         gst_vpx_error_name (status));
@@ -1891,6 +1903,7 @@ gst_vp8_enc_finish (GstVideoEncoder * video_encoder)
   /* dispatch remaining frames */
   gst_vp8_enc_process (encoder);
 
+  g_mutex_lock (&encoder->encoder_lock);
   if (encoder->cfg.g_pass == VPX_RC_FIRST_PASS && encoder->multipass_cache_file) {
     GError *err = NULL;
 
@@ -1902,8 +1915,21 @@ gst_vp8_enc_finish (GstVideoEncoder * video_encoder)
       g_error_free (err);
     }
   }
+  g_mutex_unlock (&encoder->encoder_lock);
 
   return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_vp8_enc_finish (GstVideoEncoder * video_encoder)
+{
+  GstFlowReturn ret;
+
+  GST_DEBUG_OBJECT (video_encoder, "finish");
+
+  ret = gst_vp8_enc_drain (video_encoder);
+
+  return ret;
 }
 
 static vpx_image_t *
