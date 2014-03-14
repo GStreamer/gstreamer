@@ -550,7 +550,10 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
 
   if (ges_timeline_element_set_parent (child, GES_TIMELINE_ELEMENT (container))
       == FALSE) {
-    GST_FIXME_OBJECT (container, "Revert everything that was done before!");
+
+    g_hash_table_remove (priv->mappings, child);
+    container->children = g_list_remove (container->children, child);
+    _ges_container_sort_children (container);
 
     return FALSE;
   }

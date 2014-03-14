@@ -487,6 +487,44 @@ GST_START_TEST (test_group_in_group)
 
 GST_END_TEST;
 
+GST_START_TEST (test_group_in_self)
+{
+  GESLayer *layer;
+  GESClip *c, *c1;
+  GESAsset *asset;
+  GESTimeline *timeline;
+  GESGroup *group;
+
+  GList *clips = NULL;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+
+  layer = ges_timeline_append_layer (timeline);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+
+  c = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  c1 = ges_layer_add_asset (layer, asset, 10, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  clips = g_list_prepend (clips, c);
+  clips = g_list_prepend (clips, c1);
+
+
+  group = GES_GROUP (ges_container_group (clips));
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (group) == timeline);
+  g_list_free (clips);
+
+  fail_if (ges_container_add (GES_CONTAINER (group),
+          GES_TIMELINE_ELEMENT (group)));
+  clips = ges_container_get_children (GES_CONTAINER (group), TRUE);
+  assert_equals_int (g_list_length (clips), 6);
+
+  gst_object_unref (timeline);
+  gst_object_unref (asset);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -497,6 +535,7 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, test_move_group);
   tcase_add_test (tc_chain, test_group_in_group);
+  tcase_add_test (tc_chain, test_group_in_self);
 
   return s;
 }

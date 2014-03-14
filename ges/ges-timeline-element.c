@@ -261,7 +261,13 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (parent == NULL
       || GES_IS_TIMELINE_ELEMENT (parent), FALSE);
-  g_return_val_if_fail (self != parent, FALSE);
+
+  if (self == parent) {
+    GST_INFO_OBJECT (self, "Trying to add %p in itself, not a good idea!",
+        self);
+
+    return FALSE;
+  }
 
   GST_DEBUG_OBJECT (self, "set parent to %" GST_PTR_FORMAT, parent);
 
