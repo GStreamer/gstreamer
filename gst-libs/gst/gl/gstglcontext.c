@@ -652,6 +652,22 @@ _unlock_create_thread (GstGLContext * context)
   g_mutex_unlock (&context->priv->render_lock);
 }
 
+static gchar *
+_build_extension_string (GstGLContext * context)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+  GString *exts = g_string_sized_new (1024);
+  int i, n;
+
+  gl->GetIntegerv (GL_NUM_EXTENSIONS, &n);
+
+  for (i = 0; i < n; i++) {
+    g_string_append_printf (exts, "%s ", gl->GetStringi (GL_EXTENSIONS, i));
+  }
+
+  return exts->str;
+}
+
 //gboolean
 //gst_gl_context_create (GstGLContext * context, GstGLContext * other_context, GError ** error)
 static gpointer
@@ -667,7 +683,7 @@ gst_gl_context_create_thread (GstGLContext * context)
   gchar *api_string;
   gchar *compiled_api_s;
   gchar *user_api_string;
-  const gchar *user_choice;
+  const gchar *user_choice, *extensions;
   GError **error;
   GstGLContext *other_context;
 
@@ -757,6 +773,8 @@ gst_gl_context_create_thread (GstGLContext * context)
 
   gl->GetError = gst_gl_context_get_proc_address (context, "glGetError");
   gl->GetString = gst_gl_context_get_proc_address (context, "glGetString");
+  gl->GetStringi = gst_gl_context_get_proc_address (context, "glGetStringi");
+  gl->GetIntegerv = gst_gl_context_get_proc_address (context, "glGetIntegerv");
 
   if (!gl->GetError || !gl->GetString) {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
@@ -773,8 +791,14 @@ gst_gl_context_create_thread (GstGLContext * context)
   if (!ret)
     goto failure;
 
-  _gst_gl_feature_check_ext_functions (context, gl_major, gl_minor,
-      (const gchar *) gl->GetString (GL_EXTENSIONS));
+  /* GL core contexts and GLES3 */
+  if (gl->GetIntegerv && gl->GetStringi) {
+    extensions = _build_extension_string (context);
+  } else {
+    extensions = (const gchar *) gl->GetString (GL_EXTENSIONS);
+  }
+
+  _gst_gl_feature_check_ext_functions (context, gl_major, gl_minor, extensions);
 
   context->priv->alive = TRUE;
 

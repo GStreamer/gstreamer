@@ -163,3 +163,12 @@ GST_GL_EXT_FUNCTION (void, ColorMaterial,
 GST_GL_EXT_FUNCTION (void, ShadeModel,
                      (GLenum value))
 GST_GL_EXT_END ()
+
+GST_GL_EXT_BEGIN (gl3,
+                  3, 1,
+                  GST_GL_API_GLES3, /* not in GLES */
+                  "\0",
+                  "\0")
+GST_GL_EXT_FUNCTION (const GLubyte*, GetStringi,
+                     (GLenum name, GLint index))
+GST_GL_EXT_END ()
