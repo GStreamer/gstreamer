@@ -78,13 +78,10 @@
 #include <ges/ges-gerror.h>
 #include <ges/ges-audio-track.h>
 #include <ges/ges-video-track.h>
+#include <ges/ges-version.h>
 
 G_BEGIN_DECLS
 
-#define GES_VERSION_MAJOR (1)
-#define GES_VERSION_MINOR (0)
-#define GES_VERSION_MICRO (0)
-#define GES_VERSION_NANO  (0)
 
 gboolean ges_init    (void);
 

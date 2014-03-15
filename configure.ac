@@ -35,6 +35,16 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
  [AM_DEFAULT_VERBOSITY=1
  AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
+dnl GES versioning, this is mostly informational
+GES_VERSION_MAJOR=$PACKAGE_VERSION_MAJOR
+GES_VERSION_MINOR=$PACKAGE_VERSION_MINOR
+GES_VERSION_MICRO=$PACKAGE_VERSION_MICRO
+GES_VERSION_NANO=$PACKAGE_VERSION_NANO
+AC_SUBST(GES_VERSION_MAJOR)
+AC_SUBST(GES_VERSION_MINOR)
+AC_SUBST(GES_VERSION_MICRO)
+AC_SUBST(GES_VERSION_NANO)
+
 dnl our libraries and install dirs use major.minor as a version
 GST_API_VERSION=$GST_EDITING_SERVICES_VERSION_MAJOR.$GST_EDITING_SERVICES_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
@@ -348,6 +358,7 @@ dnl po/Makefile.in
 
 AC_CONFIG_FILES(
 Makefile
+ges/ges-version.h
 common/Makefile
 common/m4/Makefile
 gst-editing-services.spec
