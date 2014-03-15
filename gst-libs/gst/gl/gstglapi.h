@@ -78,7 +78,7 @@ typedef enum {
 
 typedef enum
 {
-  GST_GL_PLATFORM_UNKNOWN = 0,
+  GST_GL_PLATFORM_NONE = 0,
   GST_GL_PLATFORM_EGL = (1 << 0),
   GST_GL_PLATFORM_GLX = (1 << 1),
   GST_GL_PLATFORM_WGL = (1 << 2),
@@ -118,6 +118,9 @@ typedef struct _GstGLFuncs
 
 gchar * gst_gl_api_to_string (GstGLAPI api);
 GstGLAPI gst_gl_api_from_string (const gchar * api_s);
+
+gchar * gst_gl_platform_to_string (GstGLPlatform api);
+GstGLPlatform gst_gl_platform_from_string (const gchar * platform_s);
 
 G_END_DECLS
 
