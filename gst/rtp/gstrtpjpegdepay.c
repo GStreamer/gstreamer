@@ -50,7 +50,6 @@ static GstStaticPadTemplate gst_rtp_jpeg_depay_sink_template =
         /*
          * "a-framerate = (string) 0.00, "
          * "x-framerate = (string) 0.00, "
-         * "a-framesize = (string) 1234-1234, "
          * "x-dimensions = (string) \"1234,1234\", "
          */
         "application/x-rtp, "
@@ -61,7 +60,6 @@ static GstStaticPadTemplate gst_rtp_jpeg_depay_sink_template =
         /*
          * "a-framerate = (string) 0.00, "
          * "x-framerate = (string) 0.00, "
-         * "a-framesize = (string) 1234-1234, "
          * "x-dimensions = (string) \"1234,1234\""
          */
     )
@@ -453,15 +451,6 @@ gst_rtp_jpeg_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     gint w, h;
 
     if (sscanf (media_attr, "%d,%d", &w, &h) == 2) {
-      rtpjpegdepay->media_width = w;
-      rtpjpegdepay->media_height = h;
-    }
-  }
-
-  if ((media_attr = gst_structure_get_string (structure, "a-framesize"))) {
-    gint w, h;
-
-    if (sscanf (media_attr, "%d-%d", &w, &h) == 2) {
       rtpjpegdepay->media_width = w;
       rtpjpegdepay->media_height = h;
     }
