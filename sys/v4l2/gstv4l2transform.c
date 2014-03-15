@@ -407,6 +407,7 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
   GstBufferPool *pool = GST_BUFFER_POOL (self->v4l2output->pool);
   GstFlowReturn ret = GST_FLOW_OK;
+  GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_CLASS (parent_class);
 
   if (gst_base_transform_is_passthrough (trans)) {
     GST_DEBUG_OBJECT (self, "Passthrough, no need to do anything");
@@ -440,6 +441,13 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
     gst_buffer_unref (*outbuf);
     *outbuf = NULL;
   }
+
+  if (bclass->copy_metadata)
+    if (!bclass->copy_metadata (trans, inbuf, *outbuf)) {
+      /* something failed, post a warning */
+      GST_ELEMENT_WARNING (self, STREAM, NOT_IMPLEMENTED,
+          ("could not copy metadata"), (NULL));
+    }
 
 beach:
   return ret;
