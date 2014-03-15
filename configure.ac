@@ -54,12 +54,12 @@ dnl check if the compiler supports '-c' and '-o' options
 AM_PROG_CC_C_O
 
 dnl check for python
-dnl AM_PATH_PYTHON(2.5)
+dnl AM_PATH_PYTHON(2.7)
 AM_PATH_PYTHON
-AC_MSG_CHECKING(for python >= 2.5)
+AC_MSG_CHECKING(for python >= 2.7)
 prog="
 import sys, string
-minver = (2,5,0,'final',0)
+minver = (2,7,0,'final',0)
 if sys.version_info < minver:
   sys.exit(1)
 sys.exit(0)"
