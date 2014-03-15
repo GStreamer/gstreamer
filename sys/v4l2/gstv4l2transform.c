@@ -183,6 +183,8 @@ gst_v4l2_transform_stop (GstBaseTransform * trans)
 
   GST_DEBUG_OBJECT (self, "Closing");
 
+  gst_v4l2_object_stop (self->v4l2output);
+  gst_v4l2_object_stop (self->v4l2capture);
   gst_v4l2_object_close (self->v4l2output);
   gst_v4l2_object_close (self->v4l2capture);
   gst_caps_replace (&self->probed_srccaps, NULL);
