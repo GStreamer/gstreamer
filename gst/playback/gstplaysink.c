@@ -2444,14 +2444,14 @@ notify_mute_cb (GObject * object, GParamSpec * pspec, GstPlaySink * playsink)
  * We add a tee as the first element so that we can link the visualisation chain
  * to it when requested.
  *
- *  +-------------------------------------------------------------+
- *  | abin                                                        |
- *  |      +---------+   +----------+   +---------+   +---------+ |
- *  |      |audioconv|   |audioscale|   | volume  |   |audiosink| |
- *  |   +-srck      src-sink       src-sink      src-sink       | |
- *  |   |  +---------+   +----------+   +---------+   +---------+ |
- * sink-+                                                         |
- *  +-------------------------------------------------------------+
+ *  +------------------------------------------------+
+ *  | abin                                           |
+ *  |      +---------+   +---------+   +-----------+ |
+ *  |      |  queue  |   | convbin |   | audiosink | |
+ *  |   +-sink      src-sink       src-sink        | |
+ *  |   |  +---------+   +---------+   +-----------+ |
+ * sink-+                                            |
+ *  +------------------------------------------------+
  */
 static GstPlayAudioChain *
 gen_audio_chain (GstPlaySink * playsink, gboolean raw)
