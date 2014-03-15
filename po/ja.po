@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2012-12-22 20:13+0900\n"
 "Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -254,6 +254,10 @@ msgstr "デバイス '%s' は %dx%d でキャプチャできません"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "デバイス '%s' は指定されたフォーマットでキャプチャできません"
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
+
 # SUN REVIEWED
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -264,6 +268,20 @@ msgstr "ビデオデバイスが新しいフレームレート設定を受け付
 
 msgid "Video device could not create buffer pool."
 msgstr "ビデオデバイスはバッファプールを作成できませんでした。"
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "ビデオデバイスが新しいフレームレート設定を受け付けません。"
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "デバイス '%s' のドライバはIOメソッド%dをサポートしていません"
+
+msgid "Video devices uses an unsupported pixel format."
+msgstr ""
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -290,10 +308,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "デバイス '%s' のミュート状態の変更に失敗しました"
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "デバイス'%s'を特定できません。"
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -318,6 +332,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "デバイス '%s' のコントロール属性の取得に失敗しました"
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "デバイス'%s'を特定できません。"
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "これはデバイス '%s' ではありません"
 
@@ -333,6 +351,15 @@ msgstr "デバイス '%s' はキャプチャデバイスではありません"
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "デバイス '%s' は出力デバイスではありません"
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "デバイス '%s' は出力デバイスではありません"
+
+# SUN REVIEWED
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "デバイス '%s' を読み取り用と書き込み用に開くことができません"
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

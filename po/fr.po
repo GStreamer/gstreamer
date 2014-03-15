@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2011-04-28 09:22+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -250,6 +250,10 @@ msgstr "Le périphérique « %s » n'est pas un périphérique d'enregistremen
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Le périphérique « %s » n'est pas un périphérique d'enregistrement."
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Le périphérique « %s » n'est pas un périphérique de sortie."
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Impossible d'obtenir les paramètres du périphérique « %s »"
@@ -261,6 +265,24 @@ msgstr ""
 "fréquence d'image."
 
 msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr ""
+"Le périphérique d'entrée vidéo n'a pas accepté le nouveau paramètre de "
+"fréquence d'image."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr ""
+"Le pilote du périphérique « %s » ne prend en charge aucune méthode "
+"d'enregistrement connue."
+
+msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
 #, fuzzy, c-format
@@ -289,10 +311,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Impossible d'obtenir la force du signal du périphérique « %s »."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Impossible d'identifier le périphérique « %s »."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -318,6 +336,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "Impossible d'obtenir les attributs de contrôle du périphérique « %s »."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Impossible d'identifier le périphérique « %s »."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Ceci n'est pas un périphérique « %s »."
 
@@ -332,6 +354,14 @@ msgstr "Le périphérique « %s » n'est pas un périphérique d'enregistremen
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Le périphérique « %s » n'est pas un périphérique de sortie."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Le périphérique « %s » n'est pas un périphérique de sortie."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Impossible d'ouvrir le périphérique « %s » en lecture et écriture."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

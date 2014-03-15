@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2012-12-15 03:46+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -249,6 +249,10 @@ msgstr "O dispositivo «%s» non pode capturar a %dx%d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "O dispositivo «%s» non pode capturar o formato especificado"
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "O dispositivo «%s» non admite a captura de vídeo."
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Non foi posíbel obter os parámetros para o dispositivo «%s»"
@@ -259,6 +263,21 @@ msgstr ""
 
 msgid "Video device could not create buffer pool."
 msgstr "O dispositivo de vídeo non pode crear un pool de búfer."
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr ""
+"O dispositivo de vídeo non acepta a nova configuración de taxa de marcos."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "O controlador do dispositivo «%s» non admite o método IO %d"
+
+msgid "Video devices uses an unsupported pixel format."
+msgstr ""
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -288,10 +307,6 @@ msgstr ""
 "Produciuse un erro ao cambiar o estado de enmudecido para o dispositivo «%s»."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Non foi posíbel identificar o dispositivo «%s»."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -319,6 +334,10 @@ msgstr ""
 "Produciuse un erro ao obter os atributos de control do dispositivo «%s»."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Non foi posíbel identificar o dispositivo «%s»."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Este non é un dispositivo «%s»."
 
@@ -333,6 +352,14 @@ msgstr "O dispositivo «%s» non é un dispositivo de captura."
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "O dispositivo «%s» non é un dispositivo de captura."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "O dispositivo «%s» non é un dispositivo de captura."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Non foi posíbel abrir o dispositivo «%s» para lectura e escritura."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

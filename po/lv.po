@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2011-09-02 11:23-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -245,6 +245,10 @@ msgstr "Ierīce \"%s\" nav ierakstīšanas ierīce."
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Ierīce \"%s\" nav ierakstīšanas ierīce."
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Ierīce \"%s\" nav izvades ierīce."
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Nevar nolasīt parametrus no ierīces \"%s\""
@@ -254,6 +258,21 @@ msgid "Video device did not accept new frame rate setting."
 msgstr "Video ievades ierīce nepieņem jaunos kadra frekvences uzstādījumus."
 
 msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "Video ievades ierīce nepieņem jaunos kadra frekvences uzstādījumus."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr ""
+"Ierīces \"%s\" draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
+
+msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
 #, fuzzy, c-format
@@ -281,10 +300,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Neizdevās saņemt signāla stiprumu no ierīces \"%s\"."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Nevar atpazīt ierīci \"%s\""
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -309,6 +324,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "Neizdevās iegūt kontroles atribūtus ierīcei \"%s\"."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Nevar atpazīt ierīci \"%s\""
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Šī nav ierīce \"%s\""
 
@@ -323,6 +342,14 @@ msgstr "Ierīce \"%s\" nav ierakstīšanas ierīce."
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Ierīce \"%s\" nav izvades ierīce."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Ierīce \"%s\" nav izvades ierīce."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

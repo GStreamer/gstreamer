@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2013-09-15 13:31+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -243,6 +243,10 @@ msgstr "Apparaat '%s' kan geen opname maken met %dx%d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Apparaat '%s' kan geen opname maken in het gespecificeerde formaat"
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Apparaat '%s' ondersteunt het opnemen van video niet"
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Kan de parameters op apparaat '%s' niet verkrijgen"
@@ -252,6 +256,20 @@ msgstr "Videoapparaat heeft de nieuwe frame-snelheid niet geaccepteerd."
 
 msgid "Video device could not create buffer pool."
 msgstr "Videoapparaat kon geen bufferpool aanmaken."
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "Videoapparaat heeft de nieuwe frame-snelheid niet geaccepteerd."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "Het stuurprogramma van apparaat '%s' ondersteunt de IO-methode %d niet"
+
+msgid "Video devices uses an unsupported pixel format."
+msgstr ""
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -278,10 +296,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "De gedempte status van apparaat '%s' wijzigen is mislukt."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Kan apparaat '%s' niet identificeren."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -306,6 +320,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "Kan de knopeigenschappen op apparaat '%s' niet verkrijgen."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Kan apparaat '%s' niet identificeren."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Dit is geen apparaat '%s'."
 
@@ -320,6 +338,14 @@ msgstr "Apparaat '%s' is geen opnameapparaat."
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Apparaat '%s' is geen uitvoerapparaat."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Apparaat '%s' is geen uitvoerapparaat."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Kan apparaat '%s' niet openen voor lezen en schrijven."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

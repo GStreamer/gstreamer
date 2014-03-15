@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.2 0.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2006-08-29 01:08+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -229,6 +229,10 @@ msgid "Device '%s' cannot capture in the specified format"
 msgstr ""
 
 #, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr ""
+
+#, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr ""
 
@@ -236,6 +240,18 @@ msgid "Video device did not accept new frame rate setting."
 msgstr ""
 
 msgid "Video device could not create buffer pool."
+msgstr ""
+
+msgid "Video device did not provide output format."
+msgstr ""
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+msgid "Video devices uses an unsupported interlacing method."
+msgstr ""
+
+msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
 #, c-format
@@ -263,10 +279,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr ""
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr ""
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -289,6 +301,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr ""
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr ""
 
@@ -303,6 +319,14 @@ msgstr ""
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr ""
+
+#, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "无法打开音频文件进行混音控制操作。"
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -346,9 +370,6 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""
-
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "无法打开音频文件进行混音控制操作。"
 
 #~ msgid ""
 #~ "Could not open audio device for mixer control handling. This version of "

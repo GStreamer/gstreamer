@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2011-06-04 21:48+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -230,6 +230,10 @@ msgid "Device '%s' cannot capture in the specified format"
 msgstr ""
 
 #, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr ""
+
+#, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr ""
 
@@ -237,6 +241,18 @@ msgid "Video device did not accept new frame rate setting."
 msgstr ""
 
 msgid "Video device could not create buffer pool."
+msgstr ""
+
+msgid "Video device did not provide output format."
+msgstr ""
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+msgid "Video devices uses an unsupported interlacing method."
+msgstr ""
+
+msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
 #, c-format
@@ -264,10 +280,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr ""
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr ""
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -290,6 +302,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr ""
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Tio ne estas '%s'-aparato."
 
@@ -304,6 +320,14 @@ msgstr ""
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr ""
+
+#, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Ne eblis malfermi sonaparaton por registrado."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

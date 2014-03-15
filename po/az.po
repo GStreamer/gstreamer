@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -235,6 +235,10 @@ msgid "Device '%s' cannot capture in the specified format"
 msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
 
 #, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+
+#, fuzzy, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "\"%s\" avadanlığından bufferlər alına bilmədi."
 
@@ -242,6 +246,18 @@ msgid "Video device did not accept new frame rate setting."
 msgstr ""
 
 msgid "Video device could not create buffer pool."
+msgstr ""
+
+msgid "Video device did not provide output format."
+msgstr ""
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+msgid "Video devices uses an unsupported interlacing method."
+msgstr ""
+
+msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
 #, fuzzy, c-format
@@ -268,10 +284,6 @@ msgstr "\"%s\" audio avadanlığı bağlana bilmədi."
 msgid "Failed to change mute state for device '%s'."
 msgstr "\"%s\" avadanlığından bufferlər alına bilmədi."
 
-#, fuzzy, c-format
-msgid "Cannot identify device '%s'."
-msgstr "\"%s\" avadanlığına yazıla bilmədi."
-
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
@@ -294,6 +306,10 @@ msgstr ""
 msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
 
+#, fuzzy, c-format
+msgid "Cannot identify device '%s'."
+msgstr "\"%s\" avadanlığına yazıla bilmədi."
+
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr ""
@@ -309,6 +325,14 @@ msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
 #, fuzzy, c-format
 msgid "Device '%s' is not a output device."
 msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
 
 #, fuzzy, c-format
 msgid "Failed to set norm for device '%s'."

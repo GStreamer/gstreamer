@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2012-11-30 15:05+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -249,6 +249,10 @@ msgstr "A(z) „%s” eszköz nem képes felvenni %dx%d felbontásban"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "A(z) „%s” eszköz nem képes felvenni a megadott formátumban"
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "A(z) „%s” eszköz nem támogatja a videofelvételt"
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Nem kérhetők le a(z) „%s” eszköz paraméterei"
@@ -258,6 +262,20 @@ msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
 
 msgid "Video device could not create buffer pool."
 msgstr "A videoeszköz nem tudott létrehozni puffertárolót."
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "A(z) „%s” eszköz illesztőprogramja nem támogatja a(z) %d. IO módot"
+
+msgid "Video devices uses an unsupported pixel format."
+msgstr ""
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -284,10 +302,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "A némítási állapot módosítása meghiúsult a(z) „%s” eszközön."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Nem azonosítható a(z) „%s” eszköz."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -312,6 +326,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "A vezérlőattribútumok lekérése meghiúsult a(z) „%s” eszközön."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Nem azonosítható a(z) „%s” eszköz."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Ez nem egy eszköz: „%s”."
 
@@ -326,6 +344,14 @@ msgstr "A(z) „%s” eszköz nem rögzítőeszköz."
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "A(z) „%s” eszköz nem kimeneti eszköz."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "A(z) „%s” eszköz nem kimeneti eszköz."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Nem lehet olvasásra és írásra megnyitni a(z) „%s” eszközt."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

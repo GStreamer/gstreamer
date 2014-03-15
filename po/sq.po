@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -234,6 +234,10 @@ msgid "Device '%s' cannot capture in the specified format"
 msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
 
 #, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
+
+#, fuzzy, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "E pamundur marrja e buffers nga dispozitivi \"%s\"."
 
@@ -241,6 +245,18 @@ msgid "Video device did not accept new frame rate setting."
 msgstr ""
 
 msgid "Video device could not create buffer pool."
+msgstr ""
+
+msgid "Video device did not provide output format."
+msgstr ""
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+msgid "Video devices uses an unsupported interlacing method."
+msgstr ""
+
+msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
 #, fuzzy, c-format
@@ -267,10 +283,6 @@ msgstr "E pamundur mbyllja e dispozitivit audio \"%s\"."
 msgid "Failed to change mute state for device '%s'."
 msgstr "E pamundur marrja e buffers nga dispozitivi \"%s\"."
 
-#, fuzzy, c-format
-msgid "Cannot identify device '%s'."
-msgstr "I pamundur shkrimi në dispozitivin \"%s\"."
-
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
@@ -293,6 +305,10 @@ msgstr ""
 msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
 
+#, fuzzy, c-format
+msgid "Cannot identify device '%s'."
+msgstr "I pamundur shkrimi në dispozitivin \"%s\"."
+
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr ""
@@ -308,6 +324,14 @@ msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
 #, fuzzy, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
 
 #, fuzzy, c-format
 msgid "Failed to set norm for device '%s'."

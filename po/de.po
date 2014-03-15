@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2012-11-28 19:56+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -258,6 +258,10 @@ msgstr "Das Gerät »%s« kann nicht bei %dx%d aufnehmen"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Das angegebene Format kann nicht vom Gerät »%s« ausgelesen werden"
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Gerät »%s« unterstützt keine Videoaufnahme"
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Parameter konnten nicht von Gerät »%s« ausgelesen werden"
@@ -269,6 +273,22 @@ msgstr ""
 
 msgid "Video device could not create buffer pool."
 msgstr "Das Videogerät konnte keinen Puffer-Pool erstellen"
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr ""
+"Das Video-Eingabegerät akzeptierte nicht die neue Einstellung zur "
+"Bildwiederholungsrate."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "Der Treiber von Gerät »%s« unterstützt nicht die EA-Methode %d"
+
+msgid "Video devices uses an unsupported pixel format."
+msgstr ""
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -296,10 +316,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Ändern des Stummzustands von Gerät »%s« schlug fehl."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Gerät »%s« kann nicht identifiziert werden."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -325,6 +341,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "Abfrage der Kontrollattribute auf Gerät »%s« schlug fehl."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Gerät »%s« kann nicht identifiziert werden."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "»%s« ist kein Gerät."
 
@@ -339,6 +359,14 @@ msgstr "»%s« ist kein Aufnahmegerät."
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "»%s« ist kein Wiedergabegerät."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "»%s« ist kein Wiedergabegerät."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Gerät »%s« konnte nicht zum Lesen oder Schreiben geöffnet werden."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

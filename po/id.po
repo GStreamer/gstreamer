@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2011-02-26 18:09+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -245,6 +245,10 @@ msgstr "Divais '%s' tak dapat menangkap di %dx%d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Divais '%s' tak dapat menangkap dalam format yang ditentukan"
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Divais '%s' bukan divais keluaran."
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Tak bisa mendapatkan parameter di divais '%s'"
@@ -254,6 +258,21 @@ msgid "Video device did not accept new frame rate setting."
 msgstr "Divais masukan video tak menerima pengaturan rasio bingkai baru."
 
 msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "Divais masukan video tak menerima pengaturan rasio bingkai baru."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr ""
+"Driver dari divais '%s' tak mendukung metode penangkap apapun yang dikenal."
+
+msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
 #, fuzzy, c-format
@@ -281,10 +300,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Gagal mendapatkan kekuatan sinyal untuk divais '%s'."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Tak dapat mengidentifikasi divais '%s'."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -309,6 +324,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "Gagal mendapatkan kendali atribut di divais '%s'."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Tak dapat mengidentifikasi divais '%s'."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Ini bukan divais '%s'."
 
@@ -323,6 +342,14 @@ msgstr "Divais '%s' bukan divais penangkap."
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Divais '%s' bukan divais keluaran."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Divais '%s' bukan divais keluaran."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Tak dapat membuka divais '%s' untuk dibaca dan ditulis."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2012-12-13 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -252,6 +252,10 @@ msgstr "Enheden »%s« kan ikke optage med %dx%d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Enheden »%s« kan ikke optage i det angivne format"
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Enheden »%s« understøtter ikke videooptagelse"
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Kunne ikke hente parametre fra enhed '%s'"
@@ -261,6 +265,20 @@ msgstr "Videoenheden accepterede ikke ny indstilling for billedrate."
 
 msgid "Video device could not create buffer pool."
 msgstr "Videoenhed kunne ikke oprette mellemlagerkø."
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "Videoenheden accepterede ikke ny indstilling for billedrate."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "Driveren til enhed »%s« understøtter ikke IO-metoden %d"
+
+msgid "Video devices uses an unsupported pixel format."
+msgstr ""
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -287,10 +305,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Kunne ikke ændre tilstand for tænk/slut for enhed »%s«."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Kan ikke identificere enhed '%s'."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -315,6 +329,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "Hentning af kontrolattributter for enhed '%s' fejlede."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Kan ikke identificere enhed '%s'."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Dette er ikke en enheds '%s'."
 
@@ -329,6 +347,14 @@ msgstr "Enhed '%s' er ikke en optageenhed."
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Enhed '%s' er ikke en uddataenhed."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Enhed '%s' er ikke en uddataenhed."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Kunne ikke tilgå enhed '%s'."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

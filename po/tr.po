@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2013-03-10 13:05+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -239,6 +239,10 @@ msgstr "Aygıt '%s' görüntü yakalayamadı%dx%d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Aygıt '%s' belirtilen kipte görüntü yakalayamadı"
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Aygıt '%s' video yakalamayı desteklemiyor"
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Değiştirgeler aygıttan '%s' alınamıyor"
@@ -248,6 +252,20 @@ msgstr "Vidyo aygıtı yeni çerçeve oranı ayarlarını kabul etmedi."
 
 msgid "Video device could not create buffer pool."
 msgstr "Video aygıtı tampon havuzu yaratamadı."
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "Vidyo aygıtı yeni çerçeve oranı ayarlarını kabul etmedi."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "Bu aygıtın sürücüsü '%s' IO yöntemini desteklemiyor %d"
+
+msgid "Video devices uses an unsupported pixel format."
+msgstr ""
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -274,10 +292,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Aygıt '%s' susturulmaya ayarlanamadı."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Aygıt tanımlanamıyor '%s'."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -302,6 +316,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "Denetim davranışları şu aygıtta '%s' bulunamadı."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Aygıt tanımlanamıyor '%s'."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Bu bir aygıt değil'%s'."
 
@@ -316,6 +334,14 @@ msgstr "Aygıt '%s' bir yakalama aygıtı değil."
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Aygıt '%s' bir çıkış aygıtı değil."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Aygıt '%s' bir çıkış aygıtı değil."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Şu aygıtı '%s' okuma ve yazma için açamıyor."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

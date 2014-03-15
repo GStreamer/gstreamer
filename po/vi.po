@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2013-09-16 14:36+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -248,6 +248,10 @@ msgstr "Thiết bị “%s” không thể chụp tại %dx%d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Thiết bị “%s” không thể chụp ở định dạng đã cho"
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Thiết bị “%s” không hỗ trợ chức năng quay video"
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Không thể lấy các tham số về thiết bị “%s”."
@@ -257,6 +261,20 @@ msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khu
 
 msgid "Video device could not create buffer pool."
 msgstr "Thiết bị video không thể tạo kho đệm."
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khung hình mới."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR %d"
+
+msgid "Video devices uses an unsupported pixel format."
+msgstr ""
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -284,10 +302,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Gặp lỗi khi thay đổi trạng thái ngắt tiếng cho thiết bị “%s”."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Không thể nhận diện thiết bị “%s”."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -312,6 +326,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "Lỗi lấy các thuộc tính của bộ điều khiển trên thiết bị “%s”."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Không thể nhận diện thiết bị “%s”."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Không phải là thiết bị “%s”."
 
@@ -326,6 +344,14 @@ msgstr "Thiết bị “%s” không phải là thiết bị bắt hình/tiếng
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Thiết bị “%s” không phải là thiết bị xuất ra."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Thiết bị “%s” không phải là thiết bị xuất ra."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Không thể mở thiết bị “%s” để đọc và ghi."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

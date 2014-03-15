@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2013-01-05 10:03+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -249,6 +249,10 @@ msgstr "Naprava \"%s\" ne podpira zajemanja v ločljivosti %dx%d."
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Naprava \"%s\" ne podpira zajemanja v izbrani obliki."
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Naprava \"%s\" ne podpira zajemanja videa."
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Ni mogoče pridobiti parametrov na napravi '%s'."
@@ -258,6 +262,20 @@ msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
 
 msgid "Video device could not create buffer pool."
 msgstr "Naprava ne more ustvariti zaloge medpomnilnika."
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "Gonilnik naprave \"%s\" ne podpira nobenega načina I/O %d."
+
+msgid "Video devices uses an unsupported pixel format."
+msgstr ""
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -287,10 +305,6 @@ msgstr ""
 "Med nastavljanjem stanja glasnosti na napravi \"%s\" je prišlo do napake."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Ni mogoče določiti naprave '%s'."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -315,6 +329,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "Napaka med pridobivanjem atributov nadzora naprave '%s'."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Ni mogoče določiti naprave '%s'."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "To ni naprava '%s'."
 
@@ -329,6 +347,14 @@ msgstr "Naprava '%s' ni naprava za zajemanje."
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Naprava '%s' ni izhodna naprava."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Naprava '%s' ni izhodna naprava."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Ni mogoče odpreti naprave '%s' za branje in pisanje."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

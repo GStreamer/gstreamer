@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2012-05-05 19:05+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -244,6 +244,10 @@ msgstr "Η συσκευή '%s' δεν είναι μια συσκευή λήψη�
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Η συσκευή '%s' δεν είναι μια συσκευή λήψης."
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Η συσκευή '%s' δεν είναι συσκευή εξόδου."
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Δεν ήταν δυνατή η ανάγνωση των παραμέτρων στην συσκευή '%s'"
@@ -253,6 +257,20 @@ msgid "Video device did not accept new frame rate setting."
 msgstr "Η συσκευή εισόδου βίντεο δεν αποδέχθηκε τη νέα ρύθμιση ταχύτητας καρέ."
 
 msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "Η συσκευή εισόδου βίντεο δεν αποδέχθηκε τη νέα ρύθμιση ταχύτητας καρέ."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "Ο οδηγός της συσκευής '%s' δεν υποστηρίζει κάποια γνωστή μέθοδο λήψης."
+
+msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
 #, fuzzy, c-format
@@ -280,10 +298,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Αποτυχία ανάγνωσης ισχύς σήματος για την συσκευή '%s'."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Δεν ήταν δυνατή η ταυτοποίηση της συσκευής '%s'."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -309,6 +323,10 @@ msgstr ""
 "Αποτυχία κατά την ανάγνωση των χαρακτηριστικών ελέγχου στην συσκευή '%s'."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Δεν ήταν δυνατή η ταυτοποίηση της συσκευής '%s'."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Αυτή δεν είναι μια συκευή '%s'."
 
@@ -324,6 +342,15 @@ msgstr "Η συσκευή '%s' δεν είναι μια συσκευή λήψη�
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Η συσκευή '%s' δεν είναι συσκευή εξόδου."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Η συσκευή '%s' δεν είναι συσκευή εξόδου."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr ""
+"Δεν ήταν δυνατό το άνοιγμα της συσκευής '%s' για ανάγνωση και γράψιμο. "
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

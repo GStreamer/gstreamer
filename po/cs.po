@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:19+0200\n"
+"POT-Creation-Date: 2014-03-15 13:34+0100\n"
 "PO-Revision-Date: 2013-09-18 19:18+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -245,6 +245,10 @@ msgstr "Zařízení „%s“ neumí zachytávat v rozměru %d × %d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Zařízení „%s“ neumí zachytávat v tomto konkrétním formátu"
 
+#, fuzzy, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "Zařízení „%s“ nepodporuje zachytávání videa"
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Nezdařilo se zjištění parametrů na zařízení „%s“"
@@ -254,6 +258,20 @@ msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
 
 msgid "Video device could not create buffer pool."
 msgstr "Videozařízení se nezdařilo vytvořit společnou vyrovnávací paměť."
+
+#, fuzzy
+msgid "Video device did not provide output format."
+msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
+
+msgid "Video device returned invalid dimensions."
+msgstr ""
+
+#, fuzzy
+msgid "Video devices uses an unsupported interlacing method."
+msgstr "Ovladač zařízení „%s“ nepodporuje V/V metodu %d"
+
+msgid "Video devices uses an unsupported pixel format."
+msgstr ""
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -280,10 +298,6 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Selhala změna stavu zapnutí/vypnutí zvuku u zařízení „%s“."
 
 #, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Nezdařilo se rozpoznat zařízení „%s“."
-
-#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -308,6 +322,10 @@ msgid "Failed getting controls attributes on device '%s'."
 msgstr "Nezdařilo se zjištění vlastností ovládacích prvků u zařízení „%s“."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Nezdařilo se rozpoznat zařízení „%s“."
+
+#, c-format
 msgid "This isn't a device '%s'."
 msgstr "Toto není zařízení „%s“."
 
@@ -322,6 +340,14 @@ msgstr "Zařízení „%s“ není zachytávacím zařízením."
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Zařízení „%s“ není výstupním zařízením."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "Zařízení „%s“ není výstupním zařízením."
+
+#, fuzzy, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "Nezdařilo se otevřít zařízení „%s“ pro čtení a pro zápisu."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
