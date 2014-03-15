@@ -544,8 +544,7 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     if (gst_pad_peer_query (y4mdec->srcpad, query)) {
       y4mdec->video_meta =
-          gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
-          NULL);
+          gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
       /* We only need a pool if we need to do stride conversion for downstream */
       if (!y4mdec->video_meta && memcmp (&y4mdec->info, &y4mdec->out_info,
