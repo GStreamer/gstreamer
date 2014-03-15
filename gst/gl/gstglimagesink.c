@@ -861,6 +861,8 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   guint size;
   gboolean need_pool;
   GstStructure *gl_context;
+  gchar *platform, *gl_apis;
+  gpointer handle;
 
   if (!_ensure_gl_setup (glimage_sink))
     return FALSE;
@@ -915,11 +917,23 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   gst_object_unref (pool);
 
+  gl_apis =
+      gst_gl_api_to_string (gst_gl_context_get_gl_api (glimage_sink->context));
+  platform =
+      gst_gl_platform_to_string (gst_gl_context_get_gl_platform
+      (glimage_sink->context));
+  handle = (gpointer) gst_gl_context_get_gl_context (glimage_sink->context);
+
   gl_context =
       gst_structure_new ("GstVideoGLTextureUploadMeta", "gst.gl.GstGLContext",
-      GST_GL_TYPE_CONTEXT, glimage_sink->context, NULL);
+      GST_GL_TYPE_CONTEXT, glimage_sink->context, "gst.gl.context.handle",
+      G_TYPE_POINTER, handle, "gst.gl.context.type", G_TYPE_STRING, platform,
+      "gst.gl.context.apis", G_TYPE_STRING, gl_apis, NULL);
   gst_query_add_allocation_meta (query,
       GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, gl_context);
+
+  g_free (gl_apis);
+  g_free (platform);
   gst_structure_free (gl_context);
 
   return TRUE;

@@ -328,6 +328,8 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix,
   gboolean need_pool;
   GError *error = NULL;
   GstStructure *gl_context;
+  gchar *platform, *gl_apis;
+  gpointer handle;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -386,11 +388,21 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix,
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
 
+  gl_apis = gst_gl_api_to_string (gst_gl_context_get_gl_api (mix->context));
+  platform =
+      gst_gl_platform_to_string (gst_gl_context_get_gl_platform (mix->context));
+  handle = (gpointer) gst_gl_context_get_gl_context (mix->context);
+
   gl_context =
       gst_structure_new ("GstVideoGLTextureUploadMeta", "gst.gl.GstGLContext",
-      GST_GL_TYPE_CONTEXT, mix->context, NULL);
+      GST_GL_TYPE_CONTEXT, mix->context, "gst.gl.context.handle",
+      G_TYPE_POINTER, handle, "gst.gl.context.type", G_TYPE_STRING, platform,
+      "gst.gl.context.apis", G_TYPE_STRING, gl_apis, NULL);
   gst_query_add_allocation_meta (query,
       GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, gl_context);
+
+  g_free (gl_apis);
+  g_free (platform);
   gst_structure_free (gl_context);
 
   return TRUE;
@@ -1080,6 +1092,7 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   GError *error = NULL;
   guint idx;
   guint out_width, out_height;
+  GstGLContext *other_context = NULL;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -1104,6 +1117,9 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
           GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {
     GstGLContext *context;
     const GstStructure *upload_meta_params;
+    gpointer handle;
+    gchar *type;
+    gchar *apis;
 
     gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
     if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
@@ -1113,12 +1129,31 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
       mix->context = context;
       if (old)
         gst_object_unref (old);
+    } else if (gst_structure_get (upload_meta_params, "gst.gl.context.handle",
+            G_TYPE_POINTER, &handle, "gst.gl.context.type", G_TYPE_STRING,
+            &type, "gst.gl.context.apis", G_TYPE_STRING, &apis, NULL)
+        && handle) {
+      GstGLPlatform platform = GST_GL_PLATFORM_NONE;
+      GstGLAPI gl_apis;
+
+      GST_DEBUG ("got GL context handle 0x%p with type %s and apis %s", handle,
+          type, apis);
+
+      if (g_strcmp0 (type, "glx") == 0)
+        platform = GST_GL_PLATFORM_GLX;
+
+      gl_apis = gst_gl_api_from_string (apis);
+
+      if (gl_apis && platform)
+        other_context =
+            gst_gl_context_new_wrapped (mix->display, (guintptr) handle,
+            platform, gl_apis);
     }
   }
 
   if (!mix->context) {
     mix->context = gst_gl_context_new (mix->display);
-    if (!gst_gl_context_create (mix->context, NULL, &error))
+    if (!gst_gl_context_create (mix->context, other_context, &error))
       goto context_error;
   }
 
