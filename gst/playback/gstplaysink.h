@@ -72,6 +72,9 @@ GstPad *         gst_play_sink_request_pad    (GstPlaySink *playsink, GstPlaySin
 void             gst_play_sink_release_pad    (GstPlaySink *playsink, GstPad *pad);
 void             gst_play_sink_refresh_pad    (GstPlaySink *playsink, GstPad *pad, GstPlaySinkType type);
 
+void             gst_play_sink_set_filter     (GstPlaySink * playsink, GstPlaySinkType type, GstElement * filter);
+GstElement *     gst_play_sink_get_filter     (GstPlaySink * playsink, GstPlaySinkType type);
+
 void             gst_play_sink_set_sink       (GstPlaySink * playsink, GstPlaySinkType type, GstElement * sink);
 GstElement *     gst_play_sink_get_sink       (GstPlaySink * playsink, GstPlaySinkType type);
 
