@@ -532,6 +532,8 @@ static void gst_gl_mixer_finalize (GObject * object);
 
 static gboolean gst_gl_mixer_src_query (GstPad * pad, GstObject * object,
     GstQuery * query);
+static gboolean gst_gl_mixer_src_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static GstFlowReturn gst_gl_mixer_sink_clip (GstCollectPads * pads,
     GstCollectData * data, GstBuffer * buf, GstBuffer ** outbuf,
     GstGLMixer * mix);
@@ -703,6 +705,8 @@ gst_gl_mixer_init (GstGLMixer * mix)
       GST_DEBUG_FUNCPTR (gst_gl_mixer_src_query));
   gst_pad_set_event_function (GST_PAD (mix->srcpad),
       GST_DEBUG_FUNCPTR (gst_gl_mixer_src_event));
+  gst_pad_set_activatemode_function (mix->srcpad,
+      GST_DEBUG_FUNCPTR (gst_gl_mixer_src_activate_mode));
   gst_element_add_pad (GST_ELEMENT (mix), mix->srcpad);
 
   mix->collect = gst_collect_pads_new ();
@@ -978,6 +982,40 @@ gst_gl_mixer_set_context (GstElement * element, GstContext * context)
   GstGLMixer *mix = GST_GL_MIXER (element);
 
   gst_gl_handle_set_context (element, context, &mix->display);
+}
+
+static gboolean
+gst_gl_mixer_activate (GstGLMixer * mix, gboolean active)
+{
+  gboolean result = TRUE;
+
+  if (active) {
+    if (!gst_gl_ensure_display (mix, &mix->display))
+      result = FALSE;
+  }
+
+  return result;
+}
+
+static gboolean
+gst_gl_mixer_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  gboolean result = FALSE;
+  GstGLMixer *mix;
+
+  mix = GST_GL_MIXER (parent);
+
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+    case GST_PAD_MODE_PULL:
+      result = gst_gl_mixer_activate (mix, active);
+      break;
+    default:
+      result = TRUE;
+      break;
+  }
+  return result;
 }
 
 static gboolean
