@@ -1,9 +1,169 @@
-=== release 1.1.90 ===
+=== release 1.2.0 ===
 
-2013-09-24  Thibault Saunier <thibault.saunier@collabora.com>
+2014-03-15  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.1.90
+	  releasing 1.2.0
+
+2014-03-15 12:40:32 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  We actually depend on python 2.5 not 2.7
+
+2014-03-15 15:45:43 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gi/overrides/Gst.py:
+	  overrides: Checking an empty caps should return False
+
+2013-12-12 11:20:12 +0000  Simon Farnsworth <simon.farnsworth@onelan.co.uk>
+
+	* COPYING:
+	* examples/audioconcat.py:
+	* examples/bps.py:
+	* examples/cp.py:
+	* examples/cutter.py:
+	* examples/debugslider.py:
+	* examples/decodebin.py:
+	* examples/f2f.py:
+	* examples/filesrc.py:
+	* examples/fvumeter.py:
+	* examples/gst-discover:
+	* examples/pipeline-tester:
+	* examples/tagsetter.py:
+	* examples/vumeter.py:
+	* gi/__init__.py:
+	* gi/overrides/Gst.py:
+	* gi/overrides/GstPbutils.py:
+	* gi/overrides/gstmodule.c:
+	* pygst.py.in:
+	* testsuite/common.py:
+	* testsuite/runtests.py:
+	* testsuite/test_adapter.py:
+	* testsuite/test_audio.py:
+	* testsuite/test_bin.py:
+	* testsuite/test_buffer.py:
+	* testsuite/test_bus.py:
+	* testsuite/test_caps.py:
+	* testsuite/test_element.py:
+	* testsuite/test_event.py:
+	* testsuite/test_fraction.py:
+	* testsuite/test_ghostpad.py:
+	* testsuite/test_gst.py:
+	* testsuite/test_interface.py:
+	* testsuite/test_iterator.py:
+	* testsuite/test_libtag.py:
+	* testsuite/test_message.py:
+	* testsuite/test_pad.py:
+	* testsuite/test_pbutils.py:
+	* testsuite/test_pipeline.py:
+	* testsuite/test_registry.py:
+	* testsuite/test_segment.py:
+	* testsuite/test_struct.py:
+	* testsuite/test_taglist.py:
+	* testsuite/test_typefind.py:
+	* testsuite/test_xml.py:
+	  Fix zip code of new FSF address
+	  I missed the zip code last time round - fix it. Thanks to Michael Schwendt
+	  in https://bugzilla.redhat.com/show_bug.cgi?id=1034341#c11 for pointing this
+	  out to me.
+	  Signed-off-by: Simon Farnsworth <simon.farnsworth@onelan.co.uk>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720317
+
+2013-12-03 17:49:11 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gi/overrides/Gst.py:
+	  Gst: Add python version of GST_TIME_ARGS
+
+2013-12-03 17:36:07 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* .gitignore:
+	  Add *.so to gitignore
+
+2013-11-25 17:01:48 +0000  Simon Farnsworth <simon.farnsworth@onelan.co.uk>
+
+	* COPYING:
+	* examples/audioconcat.py:
+	* examples/bps.py:
+	* examples/cp.py:
+	* examples/cutter.py:
+	* examples/debugslider.py:
+	* examples/decodebin.py:
+	* examples/f2f.py:
+	* examples/filesrc.py:
+	* examples/fvumeter.py:
+	* examples/gst-discover:
+	* examples/pipeline-tester:
+	* examples/tagsetter.py:
+	* examples/vumeter.py:
+	* gi/__init__.py:
+	* gi/overrides/Gst.py:
+	* gi/overrides/GstPbutils.py:
+	* gi/overrides/gstmodule.c:
+	* pygst.py.in:
+	* testsuite/common.py:
+	* testsuite/runtests.py:
+	* testsuite/test_adapter.py:
+	* testsuite/test_audio.py:
+	* testsuite/test_bin.py:
+	* testsuite/test_buffer.py:
+	* testsuite/test_bus.py:
+	* testsuite/test_caps.py:
+	* testsuite/test_element.py:
+	* testsuite/test_event.py:
+	* testsuite/test_fraction.py:
+	* testsuite/test_ghostpad.py:
+	* testsuite/test_gst.py:
+	* testsuite/test_interface.py:
+	* testsuite/test_iterator.py:
+	* testsuite/test_libtag.py:
+	* testsuite/test_message.py:
+	* testsuite/test_pad.py:
+	* testsuite/test_pbutils.py:
+	* testsuite/test_pipeline.py:
+	* testsuite/test_registry.py:
+	* testsuite/test_segment.py:
+	* testsuite/test_struct.py:
+	* testsuite/test_taglist.py:
+	* testsuite/test_typefind.py:
+	* testsuite/test_xml.py:
+	  Update FSF address
+	  The FSF has moved since these files were created. Update the address, in
+	  order to keep packaging tools such as rpmlint quiet.
+	  Signed-off-by: Simon Farnsworth <simon.farnsworth@onelan.co.uk>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=715182
+
+2013-09-30 13:27:33 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gi/overrides/__init__.py:
+	  Fix another syntax error with newer Python versions
+
+2013-09-30 13:07:03 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Fix typo
+
+2013-09-30 12:45:59 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gi/overrides/gstmodule.c:
+	  Fix compilation with Python 3.0
+	  Changes partially taken from pygobject.
+
+2013-09-30 12:30:43 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* acinclude.m4:
+	  configure: Fix Python configure checks to work with all Python versions between 2.7 and 3.3
+
+2013-09-28 21:07:47 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* configure.ac:
+	  Back to development
+
+2013-09-28 20:48:40 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ChangeLog:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.1.90
 
 2013-08-27 01:07:48 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
 

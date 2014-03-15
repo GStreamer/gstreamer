@@ -1,79 +1,66 @@
 
-Release notes for GStreamer Python bindings 0.10.22 "Ninety Tons of Thunder"
-        
+Release notes for GStreamer Python bindings 1.2
 
 
-The GStreamer team is proud to announce a new release
-in the 0.10.x stable series of the
-GStreamer Python Bindings.
-
-
-The 0.10.x series is a stable series targeted at end users.
-
+  The GStreamer team is proud to announce the first stable release
+  of the 1.X serie of the gst-python overrides for the PyGObject
+  runtime bindings.
 
   
 
 Features of this release
     
-      * pad probes working properly with recent GStreamer
-      * fixes for encoding profiles and encodebin
-      * build fixes
-      * install pygst.h, pygstminiobject.h and other headers so they can be used by other python bindings such the ones for gstreamer-editing-services
+      * Python 3.3 support
 
-Bugs fixed in this release
-     
-      * 587432 : Update .defs for changed API
-      * 639421 : remuxer.py: do not crash when clicking open without having selected a file
-      * 639423 : remuxer.py: list files named *.og[gvax], not only *.ogg
-      * 639427 : remuxer.py: allow more than one stream of the same type
-      * 640207 : Fix make check when locale is not the default one
-      * 640341 : gst-python 0.10.21 does not compile
-      * 640410 : codegen: Respect ignore-type for miniobjects
-      * 640837 : GStreamer-python fails to build
-      * 649227 : [python] Check for Py_None when setting a miniobject
-      * 650986 : [gst-python] Fix overrides of pad probes
-      * 650987 : 0.10.34 gstreamer has pad_probe counting issues
-      * 656289 : We should be able to reuse (Py)GstMiniObject and its subclasses from outside of pygst
-      * 657435 : Does not add the include path to the pkg-config file, needed in an uninstalled setup by g-e-s
+There were no bugs fixed in this release
+    
 
-Download
+==== Download ====
 
-You can find source releases of gst-python in the download directory:
-http://gstreamer.freedesktop.org/src/gst-python/
+You can find source releases of gst-python in the download
+directory: http://gstreamer.freedesktop.org/src/gst-python/
 
-GStreamer Homepage
+The git repository and details how to clone it can be found at
+http://cgit.freedesktop.org/gstreamer/gst-python/
 
-More details can be found on the project's website:
-http://gstreamer.freedesktop.org/
+==== Homepage ====
 
-Support and Bugs
+The project's website is http://gstreamer.freedesktop.org/
+
+==== Support and Bugs ====
 
 We use GNOME's bugzilla for bug reports and feature requests:
 http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
 
-Developers
+Please submit patches via bugzilla as well.
 
-GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
-Interested developers of the core library, plug-ins, and applications should
-subscribe to the gstreamer-devel list. If there is sufficient interest we
-will create more lists as necessary.
+For help and support, please subscribe to and send questions to the
+gstreamer-devel mailing list (see below for details).
+
+There is also a #gstreamer IRC channel on the Freenode IRC network.
+
+==== Developers ====
+
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned
+from there (see link above).
+
+Interested developers of the core library, plugins, and applications should
+subscribe to the gstreamer-devel list.
 
         
 Applications
   
 Contributors to this release
     
+      * Alessandro Decina
       * Andoni Morales Alastruey
-      * Arun Raghavan
-      * David Schleef
-      * Edward Hervey
-      * Luis de Bethencourt
+      * George McCollister
       * Mark Nauwelaerts
+      * Olivier Crête
+      * René Stadler
       * Sebastian Dröge
-      * Stefan Kost
+      * Simon Farnsworth
       * Stefan Sauer
-      * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
  

@@ -3,7 +3,7 @@ AC_PREREQ(2.60)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(GStreamer GObject Introspection overrides for Python , 1.1.90.1,
+AC_INIT(GStreamer GObject Introspection overrides for Python , 1.2.0,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-python)
 
@@ -38,7 +38,7 @@ AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 
 dnl required versions of other packages
 dnl Note that they are runtime requirements
-AC_SUBST(GST_REQ,   1.2.0)
+AC_SUBST(GST_REQ, 1.2.0)
 AC_SUBST(PYGOBJECT_REQ, 3.0)
 
 AC_DISABLE_STATIC
