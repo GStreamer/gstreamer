@@ -2645,14 +2645,22 @@ set_qos_dscp (GSocket * socket, guint qos_dscp)
   /* extract and shift 6 bits of the DSCP */
   tos = (qos_dscp & 0x3f) << 2;
 
+#ifdef G_OS_WIN32
+#  define SETSOCKOPT_ARG4_TYPE const char *
+#else
+#  define SETSOCKOPT_ARG4_TYPE const void *
+#endif
+
   switch (af) {
     case AF_INET:
-      if (setsockopt (fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos)) < 0)
+      if (setsockopt (fd, IPPROTO_IP, IP_TOS, (SETSOCKOPT_ARG4_TYPE) &tos,
+          sizeof (tos)) < 0)
         goto no_setsockopt;
       break;
     case AF_INET6:
 #ifdef IPV6_TCLASS
-      if (setsockopt (fd, IPPROTO_IPV6, IPV6_TCLASS, &tos, sizeof (tos)) < 0)
+      if (setsockopt (fd, IPPROTO_IPV6, IPV6_TCLASS,
+          (SETSOCKOPT_ARG4_TYPE) &tos, sizeof (tos)) < 0)
         goto no_setsockopt;
       break;
 #endif
