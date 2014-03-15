@@ -914,6 +914,10 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 
   if (!other_context)
     other_context = filter->other_context;
+  else
+    GST_ELEMENT_WARNING (filter, LIBRARY, SETTINGS,
+        ("%s", "Cannot share with more than one GL context"),
+        ("%s", "Cannot share with more than one GL context"));
 
   if (!filter->context) {
     filter->context = gst_gl_context_new (filter->display);
