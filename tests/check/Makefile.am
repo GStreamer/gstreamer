@@ -194,6 +194,7 @@ check_PROGRAMS = \
 	libs/navigation \
 	libs/pbutils \
 	libs/profile \
+	libs/mikey \
 	libs/rtp \
 	libs/rtpbasedepayload \
 	libs/rtpbasepayload \
@@ -362,6 +363,13 @@ libs_rtp_CFLAGS = \
 	$(AM_CFLAGS)
 libs_rtp_LDADD = \
 	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) $(LDADD)
+
+libs_mikey_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+libs_mikey_LDADD = \
+	$(top_builddir)/gst-libs/gst/sdp/libgstsdp-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
 libs_rtpbasepayload_CFLAGS = \

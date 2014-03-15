@@ -2,11 +2,12 @@ libgstsdpincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/sdp
 
 libgstsdpinclude_HEADERS = sdp.h \
 			   gstsdp.h \
+			   gstmikey.h \
 			   gstsdpmessage.h
 
 lib_LTLIBRARIES = libgstsdp-@GST_API_VERSION@.la
 
-libgstsdp_@GST_API_VERSION@_la_SOURCES = gstsdpmessage.c
+libgstsdp_@GST_API_VERSION@_la_SOURCES = gstsdpmessage.c gstmikey.c
 
 libgstsdp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
 libgstsdp_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) $(GIO_LIBS)
