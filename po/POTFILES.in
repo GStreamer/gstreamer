@@ -21,6 +21,5 @@ sys/sunaudio/gstsunaudiomixertrack.c
 sys/v4l2/gstv4l2bufferpool.c
 sys/v4l2/gstv4l2object.c
 sys/v4l2/gstv4l2radio.c
-sys/v4l2/gstv4l2videooverlay.c
 sys/v4l2/v4l2_calls.c
 sys/ximage/gstximagesrc.c

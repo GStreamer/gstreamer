@@ -498,9 +498,6 @@ AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
       ]], [[return 0;]])],[HAVE_OSX_VIDEO="yes"],[HAVE_OSX_VIDEO="no"])
 ])
 
-dnl check for XOverlay libraries
-AG_GST_CHECK_XV
-
 # Optional gudev for device probing
 AC_ARG_WITH([gudev],
   AS_HELP_STRING([--with-gudev],[device detection with gudev]),
@@ -601,13 +598,6 @@ AG_GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
 ], ,[
   AC_SUBST(HAVE_XSHM)
   AC_SUBST(XSHM_LIBS)
-])
-
-dnl for V4L2, we also need to know if we have XVIDEO
-translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
-AG_GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
-                  [], [
-  AG_GST_CHECK_XV
 ])
 
 dnl *** ext plug-ins ***
@@ -946,7 +936,6 @@ AM_CONDITIONAL(USE_WAVEFORM, false)
 AM_CONDITIONAL(USE_WAVPACK, false)
 AM_CONDITIONAL(USE_X, false)
 AM_CONDITIONAL(USE_XSHM, false)
-AM_CONDITIONAL(USE_XVIDEO, false)
 AM_CONDITIONAL(USE_ZLIB, false)
 
 fi dnl of EXT plugins

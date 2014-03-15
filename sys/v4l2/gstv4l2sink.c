@@ -57,9 +57,6 @@
 
 #include "gstv4l2colorbalance.h"
 #include "gstv4l2tuner.h"
-#ifdef HAVE_XVIDEO
-#include "gstv4l2videooverlay.h"
-#endif
 #include "gstv4l2vidorient.h"
 
 #include "gstv4l2sink.h"
@@ -89,29 +86,11 @@ enum
 
 GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Sink, gst_v4l2sink);
 GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Sink, gst_v4l2sink);
-#ifdef HAVE_XVIDEO
-GST_IMPLEMENT_V4L2_VIDEO_OVERLAY_METHODS (GstV4l2Sink, gst_v4l2sink);
-#endif
 GST_IMPLEMENT_V4L2_VIDORIENT_METHODS (GstV4l2Sink, gst_v4l2sink);
-
-#ifdef HAVE_XVIDEO
-static void gst_v4l2sink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure);
-static void
-gst_v4l2sink_navigation_init (GstNavigationInterface * iface)
-{
-  iface->send_event = gst_v4l2sink_navigation_send_event;
-}
-#endif
 
 #define gst_v4l2sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstV4l2Sink, gst_v4l2sink, GST_TYPE_VIDEO_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TUNER, gst_v4l2sink_tuner_interface_init);
-#ifdef HAVE_XVIDEO
-    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
-        gst_v4l2sink_video_overlay_interface_init);
-    G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION, gst_v4l2sink_navigation_init);
-#endif
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
         gst_v4l2sink_color_balance_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_ORIENTATION,
@@ -526,10 +505,6 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_v4l2sink_sync_overlay_fields (v4l2sink);
   gst_v4l2sink_sync_crop_fields (v4l2sink);
 
-#ifdef HAVE_XVIDEO
-  gst_v4l2_video_overlay_prepare_window_handle (v4l2sink->v4l2object, TRUE);
-#endif
-
   GST_INFO_OBJECT (v4l2sink, "outputting buffers via mmap()");
 
   v4l2sink->video_width = GST_V4L2_WIDTH (v4l2sink->v4l2object);
@@ -643,47 +618,3 @@ not_negotiated:
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
-
-#ifdef HAVE_XVIDEO
-static void
-gst_v4l2sink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
-{
-  GstV4l2Sink *v4l2sink = GST_V4L2SINK (navigation);
-  GstV4l2Xv *xv = v4l2sink->v4l2object->xv;
-  GstPad *peer;
-
-  if (!xv)
-    return;
-
-  if ((peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (v4l2sink)))) {
-    GstVideoRectangle rect;
-    gdouble x, y, xscale = 1.0, yscale = 1.0;
-
-    gst_v4l2_video_overlay_get_render_rect (v4l2sink->v4l2object, &rect);
-
-    /* We calculate scaling using the original video frames geometry to
-     * include pixel aspect ratio scaling.
-     */
-    xscale = (gdouble) v4l2sink->video_width / rect.w;
-    yscale = (gdouble) v4l2sink->video_height / rect.h;
-
-    /* Converting pointer coordinates to the non scaled geometry */
-    if (gst_structure_get_double (structure, "pointer_x", &x)) {
-      x = MIN (x, rect.x + rect.w);
-      x = MAX (x - rect.x, 0);
-      gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-          (gdouble) x * xscale, NULL);
-    }
-    if (gst_structure_get_double (structure, "pointer_y", &y)) {
-      y = MIN (y, rect.y + rect.h);
-      y = MAX (y - rect.y, 0);
-      gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-          (gdouble) y * yscale, NULL);
-    }
-
-    gst_pad_send_event (peer, gst_event_new_navigation (structure));
-    gst_object_unref (peer);
-  }
-}
-#endif
