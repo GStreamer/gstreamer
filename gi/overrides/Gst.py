@@ -63,6 +63,9 @@ __all__.append('Bin')
 
 class Caps(Gst.Caps):
 
+    def __nonzero__(self):
+        return not self.is_empty()
+
     def __new__(cls, *kwargs):
         if not kwargs:
             return Caps.new_empty()
