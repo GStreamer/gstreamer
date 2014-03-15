@@ -501,12 +501,12 @@ AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
 dnl *** Video 4 Linux 2 ***
 dnl renamed to GST_V4L2 because of some conflict with kernel headers
 translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
-HAVE_VIDEODEC=no
+HAVE_GST_V4L2=no
 AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], video4linux2, [
   AC_MSG_CHECKING([Checking for video4linux2 header ...])
-  AC_CHECK_HEADER(linux/videodev2.h, [ HAVE_VIDEODEV=yes ],
+  AC_CHECK_HEADER(linux/videodev2.h, [ HAVE_GST_V4L2=yes ],
   [
-    AC_CHECK_HEADER(sys/videodev2.h, [ HAVE_VIDEODEV=yes ])
+    AC_CHECK_HEADER(sys/videodev2.h, [ HAVE_GST_V4L2=yes ])
   ])
   if test "x$HAVE_VIDEODEV" = "xno"; then
      AC_MSG_WARN([video4linux2 was not found])
