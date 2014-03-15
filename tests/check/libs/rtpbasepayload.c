@@ -287,6 +287,14 @@ validate_event (guint index, const gchar * name, const gchar * field, ...)
       fail_unless (gst_structure_get_uint (gst_caps_get_structure (caps, 0),
               "ssrc", &ssrc));
       fail_unless_equals_int (ssrc, expected);
+    } else if (!g_strcmp0 (field, "a-framerate")) {
+      const gchar *expected = va_arg (var_args, const gchar *);
+      GstCaps *caps;
+      const gchar *framerate;
+      gst_event_parse_caps (event, &caps);
+      framerate = gst_structure_get_string (gst_caps_get_structure (caps, 0),
+          "a-framerate");
+      fail_unless_equals_string (framerate, expected);
     } else {
       fail ("test cannot validate unknown event field '%s'", field);
     }
@@ -1764,6 +1772,90 @@ GST_START_TEST (rtp_base_payload_property_stats_test)
 
 GST_END_TEST;
 
+/* push a single buffer to the payloader which should successfully payload it
+ * into an RTP packet. besides the payloaded RTP packet there should be the
+ * three events initial events: stream-start, caps and segment. because of that
+ * the input caps has framerate this will be propagated to an a-framerate field
+ * on the output caps.
+ */
+GST_START_TEST (rtp_base_payload_framerate_attribute)
+{
+  State *state;
+
+  state = create_payloader ("video/x-raw,framerate=(fraction)1/4", &sinktmpl,
+      "perfect-rtptime", FALSE,
+      NULL);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_buffer (state,
+      "pts", 0 * GST_SECOND,
+      NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (1);
+
+  validate_buffer (0,
+      "pts", 0 * GST_SECOND,
+      NULL);
+
+  validate_events_received (3);
+
+  validate_normal_start_events (0);
+
+  validate_event (1, "caps",
+      "a-framerate", "0.25",
+      NULL);
+
+  destroy_payloader (state);
+}
+
+GST_END_TEST;
+
+/* push a single buffer to the payloader which should successfully payload it
+ * into an RTP packet. besides the payloaded RTP packet there should be the
+ * three events initial events: stream-start, caps and segment. because of that
+ * the input caps has both framerate and max-framerate set the a-framerate field
+ * on the output caps will correspond to the value of the max-framerate field.
+ */
+GST_START_TEST (rtp_base_payload_max_framerate_attribute)
+{
+  State *state;
+
+  state = create_payloader (
+      "video/x-raw,framerate=(fraction)0/1,max-framerate=(fraction)1/8",
+      &sinktmpl,
+      "perfect-rtptime", FALSE,
+      NULL);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_buffer (state,
+      "pts", 0 * GST_SECOND,
+      NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (1);
+
+  validate_buffer (0,
+      "pts", 0 * GST_SECOND,
+      NULL);
+
+  validate_events_received (3);
+
+  validate_normal_start_events (0);
+
+  validate_event (1, "caps",
+      "a-framerate", "0.125",
+      NULL);
+
+  destroy_payloader (state);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_basepayloading_suite (void)
 {
@@ -1797,6 +1889,9 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_payload_property_perfect_rtptime_test);
   tcase_add_test (tc_chain, rtp_base_payload_property_ptime_multiple_test);
   tcase_add_test (tc_chain, rtp_base_payload_property_stats_test);
+
+  tcase_add_test (tc_chain, rtp_base_payload_framerate_attribute);
+  tcase_add_test (tc_chain, rtp_base_payload_max_framerate_attribute);
 
   return s;
 }

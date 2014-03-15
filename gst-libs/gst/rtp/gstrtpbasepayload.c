@@ -60,6 +60,7 @@ struct _GstRTPBasePayloadPrivate
   GstEvent *pending_segment;
 
   GstCaps *subclass_srccaps;
+  GstCaps *sinkcaps;
 };
 
 /* RTPBasePayload signals and args */
@@ -403,6 +404,7 @@ gst_rtp_base_payload_finalize (GObject * object)
   rtpbasepayload->encoding_name = NULL;
 
   gst_caps_replace (&rtpbasepayload->priv->subclass_srccaps, NULL);
+  gst_caps_replace (&rtpbasepayload->priv->sinkcaps, NULL);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -449,6 +451,8 @@ gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
 
       gst_event_parse_caps (event, &caps);
       GST_DEBUG_OBJECT (rtpbasepayload, "setting caps %" GST_PTR_FORMAT, caps);
+
+      gst_caps_replace (&rtpbasepayload->priv->sinkcaps, caps);
 
       rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
       if (rtpbasepayload_class->set_caps)
@@ -775,6 +779,7 @@ static gboolean
 gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
 {
   GstCaps *templ, *peercaps, *srccaps;
+  GstStructure *s, *d;
   gboolean res;
 
   payload->priv->caps_max_ptime = DEFAULT_MAX_PTIME;
@@ -806,7 +811,6 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
     GST_DEBUG_OBJECT (payload, "no peer caps: %" GST_PTR_FORMAT, srccaps);
   } else {
     GstCaps *temp;
-    GstStructure *s, *d;
     const GValue *value;
     gboolean have_pt = FALSE;
     gboolean have_ts_offset = FALSE;
@@ -1027,6 +1031,35 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
     gst_caps_unref (temp);
 
     GST_DEBUG_OBJECT (payload, "with peer caps: %" GST_PTR_FORMAT, srccaps);
+  }
+
+  if (payload->priv->sinkcaps != NULL) {
+    s = gst_caps_get_structure (payload->priv->sinkcaps, 0);
+    if (g_str_has_prefix (gst_structure_get_name (s), "video")) {
+      gboolean has_framerate;
+      gint num, denom;
+
+      GST_DEBUG_OBJECT (payload, "video caps: %" GST_PTR_FORMAT,
+          payload->priv->sinkcaps);
+
+      has_framerate = gst_structure_get_fraction (s, "framerate", &num, &denom);
+      if (has_framerate && num == 0 && denom == 1) {
+        has_framerate =
+            gst_structure_get_fraction (s, "max-framerate", &num, &denom);
+      }
+
+      if (has_framerate) {
+        gchar str[G_ASCII_DTOSTR_BUF_SIZE];
+        gdouble framerate;
+
+        gst_util_fraction_to_double (num, denom, &framerate);
+        g_ascii_dtostr (str, G_ASCII_DTOSTR_BUF_SIZE, framerate);
+        d = gst_caps_get_structure (srccaps, 0);
+        gst_structure_set (d, "a-framerate", G_TYPE_STRING, str, NULL);
+      }
+
+      GST_DEBUG_OBJECT (payload, "with video caps: %" GST_PTR_FORMAT, srccaps);
+    }
   }
 
   update_max_ptime (payload);
@@ -1493,6 +1526,7 @@ gst_rtp_base_payload_change_state (GstElement * element,
       priv->base_offset = GST_BUFFER_OFFSET_NONE;
       priv->negotiated = FALSE;
       gst_caps_replace (&rtpbasepayload->priv->subclass_srccaps, NULL);
+      gst_caps_replace (&rtpbasepayload->priv->sinkcaps, NULL);
       break;
     default:
       break;
