@@ -476,7 +476,12 @@ static int rtp_h263_frame_count = 1;
 GST_START_TEST (rtp_h263)
 {
   rtp_pipeline_test (rtp_h263_frame_data, rtp_h263_frame_data_size,
-      rtp_h263_frame_count, "video/x-h263,variant=(string)itu,h263version=h263",
+      rtp_h263_frame_count,
+      "video/x-h263,variant=(string)itu,h263version=h263",
+      "rtph263pay", "rtph263depay", 0, 0, FALSE);
+  rtp_pipeline_test (rtp_h263_frame_data, rtp_h263_frame_data_size,
+      rtp_h263_frame_count,
+      "video/x-h263,variant=(string)itu,h263version=h263,width=10,height=20",
       "rtph263pay", "rtph263depay", 0, 0, FALSE);
 }
 

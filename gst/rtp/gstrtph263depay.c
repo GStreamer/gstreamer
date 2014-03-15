@@ -55,9 +55,16 @@ static GstStaticPadTemplate gst_rtp_h263_depay_sink_template =
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_H263_STRING ", "
         "clock-rate = (int) 90000; "
+        /* optional SDP attribute:
+         * "a-framesize = (string) \"1234-1234\", "
+         */
         "application/x-rtp, "
         "media = (string) \"video\", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263\"")
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263\""
+        /* optional SDP attribute:
+         * "a-framesize = (string) \"1234-1234\", "
+         */
+    )
     );
 
 #define gst_rtp_h263_depay_parent_class parent_class
@@ -129,20 +136,81 @@ gst_rtp_h263_depay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gboolean
+gst_rtp_h263_parse_framesize (GstRTPBaseDepayload * filter,
+    const gchar * media_attr, GstCaps * srccaps)
+{
+  gchar *dimension, *endptr;
+  gint pt, width, height;
+  GstStructure *d;
+
+  /* <payload type number> <width>-<height> */
+
+  pt = g_ascii_strtoull (media_attr, &endptr, 10);
+  if (pt != GST_RTP_PAYLOAD_H263) {
+    GST_ERROR_OBJECT (filter,
+        "Framesize media attribute has incorrect payload type");
+    return FALSE;
+  } else if (*endptr != ' ') {
+    GST_ERROR_OBJECT (filter,
+        "Framesize media attribute has invalid payload type separator");
+    return FALSE;
+  }
+
+  dimension = endptr + 1;
+  width = g_ascii_strtoull (dimension, &endptr, 10);
+  if (width <= 0) {
+    GST_ERROR_OBJECT (filter,
+        "Framesize media attribute width out of valid range");
+    return FALSE;
+  } else if (*endptr != '-') {
+    GST_ERROR_OBJECT (filter,
+        "Framesize media attribute has invalid dimension separator");
+    return FALSE;
+  }
+
+  dimension = endptr + 1;
+  height = g_ascii_strtoull (dimension, &endptr, 10);
+  if (height <= 0) {
+    GST_ERROR_OBJECT (filter,
+        "Framesize media attribute height out of valid range");
+    return FALSE;
+  } else if (*endptr != '\0') {
+    GST_ERROR_OBJECT (filter,
+        "Framesize media attribute unexpectedly has trailing characters");
+    return FALSE;
+  }
+
+  d = gst_caps_get_structure (srccaps, 0);
+  gst_structure_set (d, "width", G_TYPE_INT, width, "height", G_TYPE_INT,
+      height, NULL);
+
+  return TRUE;
+}
+
 gboolean
 gst_rtp_h263_depay_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 {
   GstCaps *srccaps;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint clock_rate;
+  const gchar *framesize;
+
+  srccaps = gst_caps_new_simple ("video/x-h263",
+      "variant", G_TYPE_STRING, "itu",
+      "h263version", G_TYPE_STRING, "h263", NULL);
 
   if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
     clock_rate = 90000;         /* default */
   filter->clock_rate = clock_rate;
 
-  srccaps = gst_caps_new_simple ("video/x-h263",
-      "variant", G_TYPE_STRING, "itu",
-      "h263version", G_TYPE_STRING, "h263", NULL);
+  framesize = gst_structure_get_string (structure, "a-framesize");
+  if (framesize != NULL) {
+    if (!gst_rtp_h263_parse_framesize (filter, framesize, srccaps)) {
+      return FALSE;
+    }
+  }
+
   gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (filter), srccaps);
   gst_caps_unref (srccaps);
 
