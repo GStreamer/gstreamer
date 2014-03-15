@@ -7,17 +7,12 @@ else
 GTK_TESTS =
 endif
 
-if USE_GST_V4L2
 V4L2_TESTS = v4l2src-test
 
 v4l2src_test_SOURCES = v4l2src-test.c
 v4l2src_test_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 v4l2src_test_LDADD = $(GST_PLUGINS_BASE_LIBS) \
 		     -lgstvideo-$(GST_API_VERSION)
-
-else
-V4L2_TESTS =
-endif
 
 if USE_OSS4
 OSS4_TESTS=test-oss4

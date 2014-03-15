@@ -47,33 +47,6 @@
 
 #include <gst/video/video.h>
 
-/* videodev2.h is not versioned and we can't easily check for the presence
- * of enum values at compile time, but the V4L2_CAP_VIDEO_OUTPUT_OVERLAY define
- * was added in the same commit as V4L2_FIELD_INTERLACED_{TB,BT} (b2787845) */
-#ifndef V4L2_CAP_VIDEO_OUTPUT_OVERLAY
-#define V4L2_FIELD_INTERLACED_TB 8
-#define V4L2_FIELD_INTERLACED_BT 9
-#endif
-
-#ifndef V4L2_PIX_FMT_NV12M
-#define V4L2_PIX_FMT_NV12M GST_MAKE_FOURCC ('N', 'M', '1', '2')
-#endif
-#ifndef V4L2_PIX_FMT_NV12MT
-#define V4L2_PIX_FMT_NV12MT GST_MAKE_FOURCC ('T', 'M', '1', '2')
-#endif
-#ifndef V4L2_PIX_FMT_NV21M
-#define V4L2_PIX_FMT_NV21M GST_MAKE_FOURCC ('N', 'M', '2', '1')
-#endif
-#ifndef V4L2_PIX_FMT_MPEG1
-#define V4L2_PIX_FMT_MPEG1 GST_MAKE_FOURCC ('M', 'P', 'G', '1')
-#endif
-#ifndef V4L2_PIX_FMT_MPEG2
-#define V4L2_PIX_FMT_MPEG2 GST_MAKE_FOURCC ('M', 'P', 'G', '2')
-#endif
-#ifndef V4L2_PIX_FMT_MPEG4
-#define V4L2_PIX_FMT_MPEG4 GST_MAKE_FOURCC ('M', 'P', 'G', '4')
-#endif
-
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT v4l2_debug
@@ -1022,48 +995,29 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {V4L2_PIX_FMT_HI240, TRUE, GST_V4L2_RAW},
 
   /* see http://www.siliconimaging.com/RGB%20Bayer.htm */
-#ifdef V4L2_PIX_FMT_SBGGR8
   {V4L2_PIX_FMT_SBGGR8, TRUE, GST_V4L2_CODEC},
-#endif
 
   /* compressed formats */
   {V4L2_PIX_FMT_MJPEG, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_JPEG, FALSE, GST_V4L2_CODEC},
-#ifdef V4L2_PIX_FMT_PJPG
   {V4L2_PIX_FMT_PJPG, FALSE, GST_V4L2_CODEC},
-#endif
   {V4L2_PIX_FMT_DV, FALSE, GST_V4L2_TRANSPORT},
   {V4L2_PIX_FMT_MPEG, FALSE, GST_V4L2_TRANSPORT},
   {V4L2_PIX_FMT_MPEG1, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_MPEG2, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_MPEG4, FALSE, GST_V4L2_CODEC},
 
-#ifdef V4L2_PIX_FMT_H263
   {V4L2_PIX_FMT_H263, FALSE, GST_V4L2_CODEC},
-#endif
-#ifdef V4L2_PIX_FMT_H264
   {V4L2_PIX_FMT_H264, FALSE, GST_V4L2_CODEC},
-#endif
-#ifdef V4L2_PIX_FMT_VP8
   /* VP8 not parseable */
   {V4L2_PIX_FMT_VP8, FALSE, GST_V4L2_CODEC | GST_V4L2_NO_PARSE},
-#endif
 
   /*  Vendor-specific formats   */
   {V4L2_PIX_FMT_WNVA, TRUE, GST_V4L2_CODEC},
-
-#ifdef V4L2_PIX_FMT_SN9C10X
   {V4L2_PIX_FMT_SN9C10X, TRUE, GST_V4L2_CODEC},
-#endif
-#ifdef V4L2_PIX_FMT_PWC1
   {V4L2_PIX_FMT_PWC1, TRUE, GST_V4L2_CODEC},
-#endif
-#ifdef V4L2_PIX_FMT_PWC2
   {V4L2_PIX_FMT_PWC2, TRUE, GST_V4L2_CODEC},
-#endif
-#ifdef V4L2_PIX_FMT_YVYU
   {V4L2_PIX_FMT_YVYU, TRUE, GST_V4L2_RAW},
-#endif
 };
 
 #define GST_V4L2_FORMAT_COUNT (G_N_ELEMENTS (gst_v4l2_formats))
@@ -1086,16 +1040,10 @@ gst_v4l2_object_get_format_from_fourcc (GstV4l2Object * v4l2object,
       return fmt;
     /* special case for jpeg */
     if (fmt->pixelformat == V4L2_PIX_FMT_MJPEG ||
-        fmt->pixelformat == V4L2_PIX_FMT_JPEG
-#ifdef V4L2_PIX_FMT_PJPG
-        || fmt->pixelformat == V4L2_PIX_FMT_PJPG
-#endif
-        ) {
-      if (fourcc == V4L2_PIX_FMT_JPEG || fourcc == V4L2_PIX_FMT_MJPEG
-#ifdef V4L2_PIX_FMT_PJPG
-          || fourcc == V4L2_PIX_FMT_PJPG
-#endif
-          ) {
+        fmt->pixelformat == V4L2_PIX_FMT_JPEG ||
+        fmt->pixelformat == V4L2_PIX_FMT_PJPG) {
+      if (fourcc == V4L2_PIX_FMT_JPEG || fourcc == V4L2_PIX_FMT_MJPEG ||
+          fourcc == V4L2_PIX_FMT_PJPG) {
         return fmt;
       }
     }
@@ -1121,13 +1069,6 @@ gst_v4l2_object_get_format_from_fourcc (GstV4l2Object * v4l2object,
 #define GREY_BASE_RANK       5
 #define PWC_BASE_RANK        1
 
-/* This flag is already used by libv4l2 although
- * it was added to the Linux kernel in 2.6.32
- */
-#ifndef V4L2_FMT_FLAG_EMULATED
-#define V4L2_FMT_FLAG_EMULATED 0x0002
-#endif
-
 static gint
 gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
 {
@@ -1137,11 +1078,9 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
 
   switch (fourcc) {
     case V4L2_PIX_FMT_MJPEG:
-#ifdef V4L2_PIX_FMT_PJPG
     case V4L2_PIX_FMT_PJPG:
       rank = JPEG_BASE_RANK;
       break;
-#endif
     case V4L2_PIX_FMT_JPEG:
       rank = JPEG_BASE_RANK + 1;
       break;
@@ -1217,28 +1156,20 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
       rank = 0;
       break;
 
-#ifdef V4L2_PIX_FMT_SBGGR8
     case V4L2_PIX_FMT_SBGGR8:
       rank = BAYER_BASE_RANK;
       break;
-#endif
 
-#ifdef V4L2_PIX_FMT_SN9C10X
     case V4L2_PIX_FMT_SN9C10X:
       rank = S910_BASE_RANK;
       break;
-#endif
 
-#ifdef V4L2_PIX_FMT_PWC1
     case V4L2_PIX_FMT_PWC1:
       rank = PWC_BASE_RANK;
       break;
-#endif
-#ifdef V4L2_PIX_FMT_PWC2
     case V4L2_PIX_FMT_PWC2:
       rank = PWC_BASE_RANK;
       break;
-#endif
 
     default:
       rank = 0;
@@ -1445,11 +1376,9 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
     case V4L2_PIX_FMT_YUV422P:
       format = GST_VIDEO_FORMAT_Y42B;
       break;
-#ifdef V4L2_PIX_FMT_YVYU
     case V4L2_PIX_FMT_YVYU:
       format = GST_VIDEO_FORMAT_YVYU;
       break;
-#endif
     default:
       format = GST_VIDEO_FORMAT_UNKNOWN;
       g_assert_not_reached ();
@@ -1466,9 +1395,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
 
   switch (fourcc) {
     case V4L2_PIX_FMT_MJPEG:   /* Motion-JPEG */
-#ifdef V4L2_PIX_FMT_PJPG
     case V4L2_PIX_FMT_PJPG:    /* Progressive-JPEG */
-#endif
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
       structure = gst_structure_new_empty ("image/jpeg");
       break;
@@ -1489,24 +1416,18 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
           "mpegversion", G_TYPE_INT, 4, "systemstream",
           G_TYPE_BOOLEAN, FALSE, NULL);
       break;
-#ifdef V4L2_PIX_FMT_H263
     case V4L2_PIX_FMT_H263:
       structure = gst_structure_new ("video/x-h263",
           "variant", G_TYPE_STRING, "itu", NULL);
       break;
-#endif
-#ifdef V4L2_PIX_FMT_H264
     case V4L2_PIX_FMT_H264:    /* H.264 */
       structure = gst_structure_new ("video/x-h264",
           "stream-format", G_TYPE_STRING, "byte-stream", "alignment",
           G_TYPE_STRING, "au", NULL);
       break;
-#endif
-#ifdef V4L2_PIX_FMT_VP8
     case V4L2_PIX_FMT_VP8:
       structure = gst_structure_new_empty ("video/x-vp8");
       break;
-#endif
     case V4L2_PIX_FMT_RGB332:
     case V4L2_PIX_FMT_RGB555X:
     case V4L2_PIX_FMT_RGB565X:
@@ -1534,9 +1455,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
     case V4L2_PIX_FMT_Y41P:
 #endif
     case V4L2_PIX_FMT_YUV422P:
-#ifdef V4L2_PIX_FMT_YVYU
     case V4L2_PIX_FMT_YVYU:
-#endif
     case V4L2_PIX_FMT_YUV411P:{
       GstVideoFormat format;
       format = gst_v4l2_object_v4l2fourcc_to_video_format (fourcc);
@@ -1555,26 +1474,18 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
       break;
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       break;
-#ifdef V4L2_PIX_FMT_SBGGR8
     case V4L2_PIX_FMT_SBGGR8:
       structure = gst_structure_new_empty ("video/x-bayer");
       break;
-#endif
-#ifdef V4L2_PIX_FMT_SN9C10X
     case V4L2_PIX_FMT_SN9C10X:
       structure = gst_structure_new_empty ("video/x-sonix");
       break;
-#endif
-#ifdef V4L2_PIX_FMT_PWC1
     case V4L2_PIX_FMT_PWC1:
       structure = gst_structure_new_empty ("video/x-pwc1");
       break;
-#endif
-#ifdef V4L2_PIX_FMT_PWC2
     case V4L2_PIX_FMT_PWC2:
       structure = gst_structure_new_empty ("video/x-pwc2");
       break;
-#endif
     default:
       GST_DEBUG ("Unknown fourcc 0x%08x %" GST_FOURCC_FORMAT,
           fourcc, GST_FOURCC_ARGS (fourcc));
@@ -1741,11 +1652,9 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         gst_v4l2_object_choose_fourcc (v4l2object, V4L2_PIX_FMT_NV21,
             V4L2_PIX_FMT_NV21M, &fourcc, &fourcc_alt);
         break;
-#ifdef V4L2_PIX_FMT_YVYU
       case GST_VIDEO_FORMAT_YVYU:
         fourcc = V4L2_PIX_FMT_YVYU;
         break;
-#endif
       case GST_VIDEO_FORMAT_RGB15:
         fourcc = V4L2_PIX_FMT_RGB555;
         break;
@@ -1795,35 +1704,21 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
             break;
         }
       }
-#ifdef V4L2_PIX_FMT_H263
     } else if (g_str_equal (mimetype, "video/x-h263")) {
       fourcc = V4L2_PIX_FMT_H263;
-#endif
-#ifdef V4L2_PIX_FMT_H264
     } else if (g_str_equal (mimetype, "video/x-h264")) {
       fourcc = V4L2_PIX_FMT_H264;
-#endif
-#ifdef V4L2_PIX_FMT_VP8
     } else if (g_str_equal (mimetype, "video/x-vp8")) {
       fourcc = V4L2_PIX_FMT_VP8;
-#endif
-#ifdef V4L2_PIX_FMT_SBGGR8
     } else if (g_str_equal (mimetype, "video/x-bayer")) {
       fourcc = V4L2_PIX_FMT_SBGGR8;
-#endif
-#ifdef V4L2_PIX_FMT_SN9C10X
     } else if (g_str_equal (mimetype, "video/x-sonix")) {
       fourcc = V4L2_PIX_FMT_SN9C10X;
-#endif
-#ifdef V4L2_PIX_FMT_PWC1
     } else if (g_str_equal (mimetype, "video/x-pwc1")) {
       fourcc = V4L2_PIX_FMT_PWC1;
-#endif
-#ifdef V4L2_PIX_FMT_PWC2
     } else if (g_str_equal (mimetype, "video/x-pwc2")) {
       fourcc = V4L2_PIX_FMT_PWC2;
     }
-#endif
   }
 
   if (fourcc == 0)
@@ -1907,7 +1802,6 @@ cropcap_failed:
 
 
 /* The frame interval enumeration code first appeared in Linux 2.6.19. */
-#ifdef VIDIOC_ENUM_FRAMEINTERVALS
 static GstStructure *
 gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
     guint32 pixelformat,
@@ -2122,9 +2016,7 @@ unknown_type:
     return NULL;
   }
 }
-#endif /* defined VIDIOC_ENUM_FRAMEINTERVALS */
 
-#ifdef VIDIOC_ENUM_FRAMESIZES
 static gint
 sort_by_frame_size (GstStructure * s1, GstStructure * s2)
 {
@@ -2138,7 +2030,6 @@ sort_by_frame_size (GstStructure * s1, GstStructure * s2)
   /* I think it's safe to assume that this won't overflow for a while */
   return ((w2 * h2) - (w1 * h1));
 }
-#endif
 
 static void
 gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
@@ -2168,8 +2059,6 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
 {
   GstCaps *ret = gst_caps_new_empty ();
   GstStructure *tmp;
-
-#ifdef VIDIOC_ENUM_FRAMESIZES
   gint fd = v4l2object->video_fd;
   struct v4l2_frmsizeenum size;
   GList *results = NULL;
@@ -2318,8 +2207,8 @@ unknown_type:
         ": %u", GST_FOURCC_ARGS (pixelformat), size.type);
     goto default_frame_sizes;
   }
+
 default_frame_sizes:
-#endif /* defined VIDIOC_ENUM_FRAMESIZES */
   {
     gint min_w, max_w, min_h, max_h, fix_num = 0, fix_denom = 0;
     gboolean interlaced;

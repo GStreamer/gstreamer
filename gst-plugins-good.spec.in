@@ -132,9 +132,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvideofilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioparsers.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdtmf.so
-
-# sys plugins
-@USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so

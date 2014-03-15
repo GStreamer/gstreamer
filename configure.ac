@@ -498,73 +498,14 @@ AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
       ]], [[return 0;]])],[HAVE_OSX_VIDEO="yes"],[HAVE_OSX_VIDEO="no"])
 ])
 
-dnl *** Video 4 Linux 2 ***
-dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
-dnl renamed to GST_V4L2 because of some conflict with kernel headers
-translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
-AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
-  AC_MSG_CHECKING([Checking for up to date v4l2 installation])
-  HAVE_V4L2_PLANE=no
-  AC_CHECK_TYPE(struct v4l2_plane,HAVE_V4L2_PLANE=yes,,[
-#include <sys/types.h>
-#ifdef __sun /* Solaris */
-#include <sys/types.h>
-#include <sys/videodev2.h>
-#elif __FreeBSD__
-#include <linux/videodev2.h>
-#else /* Linux */
-#include <linux/types.h>
-#define _LINUX_TIME_H
-#define __user
-#include <linux/videodev2.h>
-#endif
-    ])
-    if [ test x$HAVE_V4L2_PLANE = xyes ]; then
-      HAVE_GST_V4L2="yes"
-      AC_MSG_RESULT(yes)
-    else
-      HAVE_GST_V4L2="no"
-      AC_MSG_RESULT(no)
-
-      HAVE_VIDEODEV=no
-      AC_CHECK_HEADER(linux/videodev2.h, [ HAVE_VIDEODEV=yes ],
-      [
-        AC_CHECK_HEADER(sys/videodev2.h, [ HAVE_VIDEODEV=yes ])
-      ])
-
-      if test "x$HAVE_VIDEODEV" = "xyes"; then
-        AC_MSG_WARN([video4linux2 headers were found, but they're old.])
-        AC_MSG_WARN([Please update v4l2 to compile the v4l2 plugins])
-      else
-        AC_MSG_WARN([video4linux2 was not found])
-      fi
-    fi
-
-  if [ test x$HAVE_GST_V4L2 = xyes ]; then
-    dnl check for XOverlay libraries
-    AG_GST_CHECK_XV
-  fi
-])
+dnl check for XOverlay libraries
+AG_GST_CHECK_XV
 
 # Optional gudev for device probing
 AC_ARG_WITH([gudev],
   AS_HELP_STRING([--with-gudev],[device detection with gudev]),
   [],
   [with_gudev=check])
-if test x$HAVE_GST_V4L2 = xyes; then
-  if test x$with_gudev != xno; then
-      PKG_CHECK_MODULES(GUDEV, [ gudev-1.0 >= 143 ],
-          [ have_gudev=yes
-            AC_DEFINE(HAVE_GUDEV, 1,
-               [Whether gudev is available for device detection])
-            AC_DEFINE([G_UDEV_API_IS_SUBJECT_TO_CHANGE], 1, [I know the API is subject to change.])
-          ], [
-          have_gudev=no
-          ])
-  else
-    have_gudev=no
-  fi
-fi
 AC_SUBST(GUDEV_CFLAGS)
 AC_SUBST(GUDEV_LIBS)
 
@@ -585,24 +526,6 @@ if test x$HAVE_GST_V4L2 = xyes; then
   else
     have_libv4l2=no
   fi
-fi
-
-# Check if v4l2 support dmabuf
-if test x$HAVE_GST_V4L2 = xyes; then
-	AC_CHECK_DECLS(V4L2_MEMORY_DMABUF,,,[
-					#include <sys/types.h>
-					#ifdef __sun /* Solaris */
-					#include <sys/types.h>
-					#include <sys/videodev2.h>
-					#elif __FreeBSD__
-					#include <linux/videodev2.h>
-					#else /* Linux */
-					#include <linux/types.h>
-					#define _LINUX_TIME_H
-					#define __user
-					#include <linux/videodev2.h>
-					#endif
-					])
 fi
 
 dnl Check for X11
@@ -1002,7 +925,6 @@ AM_CONDITIONAL(USE_DIRECTSOUND, false)
 AM_CONDITIONAL(USE_DV1394, false)
 AM_CONDITIONAL(USE_FLAC, false)
 AM_CONDITIONAL(USE_GDK_PIXBUF, false)
-AM_CONDITIONAL(USE_GST_V4L2, false)
 AM_CONDITIONAL(USE_JACK, false)
 AM_CONDITIONAL(USE_JPEG, false)
 AM_CONDITIONAL(USE_LIBCACA, false)

@@ -26,12 +26,10 @@
 #  include <config.h>
 #endif
 
-#if HAVE_DECL_V4L2_MEMORY_DMABUF
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE            /* O_CLOEXEC */
 #endif
 #include <fcntl.h>
-#endif
 
 #include <sys/mman.h>
 #include <string.h>
@@ -47,14 +45,6 @@
 #include "v4l2_calls.h"
 #include "gst/gst-i18n-plugin.h"
 #include <gst/glib-compat-private.h>
-
-/* videodev2.h is not versioned and we can't easily check for the presence
- * of enum values at compile time, but the V4L2_CAP_VIDEO_OUTPUT_OVERLAY define
- * was added in the same commit as V4L2_FIELD_INTERLACED_{TB,BT} (b2787845) */
-#ifndef V4L2_CAP_VIDEO_OUTPUT_OVERLAY
-#define V4L2_FIELD_INTERLACED_TB 8
-#define V4L2_FIELD_INTERLACED_BT 9
-#endif
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define GST_CAT_DEFAULT v4l2_debug
@@ -167,7 +157,6 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
     case GST_V4L2_IO_MMAP:
     case GST_V4L2_IO_DMABUF:
     {
-#ifdef VIDIOC_CREATE_BUFS
       if (pool->num_allocated == pool->num_buffers) {
         struct v4l2_create_buffers create_bufs;
 
@@ -188,7 +177,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         pool->buffers = g_renew (GstBuffer *, pool->buffers, pool->num_buffers);
         pool->buffers[pool->num_buffers - 1] = NULL;
       }
-#endif
+
       newbuf = gst_buffer_new ();
       meta = GST_V4L2_META_ADD (newbuf);
 
@@ -264,7 +253,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
                   meta->vplanes[i].length, NULL, NULL));
         }
       }
-#if HAVE_DECL_V4L2_MEMORY_DMABUF
+
       if (obj->mode == GST_V4L2_IO_DMABUF) {
         struct v4l2_exportbuffer expbuf;
 
@@ -292,7 +281,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         if (!V4L2_TYPE_IS_MULTIPLANAR (obj->type))
           meta->vplanes[0].m.fd = meta->vbuffer.m.fd;
       }
-#endif
+
       /* add metadata to raw video buffers */
       if (pool->add_videometa && info->finfo) {
         const GstVideoFormatInfo *finfo = info->finfo;
@@ -365,7 +354,6 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   return GST_FLOW_OK;
 
   /* ERRORS */
-#ifdef VIDIOC_CREATE_BUFS
 g_fmt_failed:
   {
     gint errnosave = errno;
@@ -382,7 +370,6 @@ create_bufs_failed:
     errno = errnosave;
     return GST_FLOW_ERROR;
   }
-#endif
 querybuf_failed:
   {
     gint errnosave = errno;
@@ -401,7 +388,6 @@ mmap_failed:
     errno = errnosave;
     return GST_FLOW_ERROR;
   }
-#if HAVE_DECL_V4L2_MEMORY_DMABUF
 expbuf_failed:
   {
     gint errnosave = errno;
@@ -411,7 +397,6 @@ expbuf_failed:
     errno = errnosave;
     return GST_FLOW_ERROR;
   }
-#endif
 }
 
 static gboolean
@@ -895,11 +880,10 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   /* prepare the buffer */
   memset (&vbuffer, 0x00, sizeof (vbuffer));
   vbuffer.type = obj->type;
-#if HAVE_DECL_V4L2_MEMORY_DMABUF
+
   if (obj->mode == GST_V4L2_IO_DMABUF)
     vbuffer.memory = V4L2_MEMORY_DMABUF;
   else
-#endif
     vbuffer.memory = V4L2_MEMORY_MMAP;
 
   /* prepare the planes of the buffer */
@@ -1106,7 +1090,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
           /* start copying buffers when we are running low on buffers */
           if (pool->num_queued < pool->copy_threshold) {
             GstBuffer *copy;
-#ifdef VIDIOC_CREATE_BUFS
+
             if (pool->can_alloc) {
               if (GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool,
                       &copy, params) == GST_FLOW_OK) {
@@ -1116,7 +1100,6 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
                 pool->can_alloc = FALSE;
               }
             }
-#endif
 
             /* copy the buffer */
             copy = gst_buffer_copy_region (*buffer,

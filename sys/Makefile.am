@@ -53,12 +53,6 @@ endif
 # QCAM_DIR=
 # endif
 
-if USE_GST_V4L2
-V4L2_DIR=v4l2
-else
-V4L2_DIR=
-endif
-
 # if USE_VCD
 # VCD_DIR=vcd
 # else
@@ -83,7 +77,7 @@ else
 XIMAGE_DIR=
 endif
 
-SUBDIRS=$(DIRECTSOUND_DIR) $(WAVEFORM_DIR) $(OSS_DIR) $(OSS4_DIR) $(OSX_AUDIO_DIR) $(OSX_VIDEO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
+SUBDIRS=$(DIRECTSOUND_DIR) $(WAVEFORM_DIR) $(OSS_DIR) $(OSS4_DIR) $(OSX_AUDIO_DIR) $(OSX_VIDEO_DIR) $(SUNAUDIO_DIR) $(XIMAGE_DIR)
 
 DIST_SUBDIRS=directsound oss oss4 osxaudio osxvideo sunaudio v4l2 waveform ximage
 

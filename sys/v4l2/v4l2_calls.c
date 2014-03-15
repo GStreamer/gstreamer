@@ -51,21 +51,6 @@
 
 #include "gst/gst-i18n-plugin.h"
 
-/* Those are ioctl calls */
-#ifndef V4L2_CID_HCENTER
-#define V4L2_CID_HCENTER V4L2_CID_HCENTER_DEPRECATED
-#endif
-#ifndef V4L2_CID_VCENTER
-#define V4L2_CID_VCENTER V4L2_CID_VCENTER_DEPRECATED
-#endif
-
-#ifndef V4L2_CAP_VIDEO_M2M
-#define V4L2_CAP_VIDEO_M2M              0x00008000
-#endif
-#ifndef V4L2_CAP_VIDEO_M2M_MPLANE
-#define V4L2_CAP_VIDEO_M2M_MPLANE       0x00004000
-#endif
-
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define GST_CAT_DEFAULT v4l2_debug
 
@@ -273,14 +258,10 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   GST_DEBUG_OBJECT (e, "  controls+menus");
 
   /* and lastly, controls+menus (if appropriate) */
-#ifdef V4L2_CTRL_FLAG_NEXT_CTRL
   next = V4L2_CTRL_FLAG_NEXT_CTRL;
   n = 0;
-#else
-  next = 0;
-  n = V4L2_CID_BASE;
-#endif
   control.id = next;
+
   while (TRUE) {
     GstV4l2ColorBalanceChannel *v4l2channel;
     GstColorBalanceChannel *channel;
@@ -332,22 +313,18 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       GST_DEBUG_OBJECT (e, "skipping disabled control");
       continue;
     }
-#ifdef V4L2_CTRL_TYPE_CTRL_CLASS
+
     if (control.type == V4L2_CTRL_TYPE_CTRL_CLASS) {
       GST_DEBUG_OBJECT (e, "starting control class '%s'", control.name);
       continue;
     }
-#endif
+
     switch (control.type) {
       case V4L2_CTRL_TYPE_INTEGER:
       case V4L2_CTRL_TYPE_BOOLEAN:
       case V4L2_CTRL_TYPE_MENU:
-#ifdef V4L2_CTRL_TYPE_INTEGER_MENU
       case V4L2_CTRL_TYPE_INTEGER_MENU:
-#endif
-#ifdef V4L2_CTRL_TYPE_BITMASK
       case V4L2_CTRL_TYPE_BITMASK:
-#endif
       case V4L2_CTRL_TYPE_BUTTON:{
         control.name[31] = '\0';
         gst_v4l2_normalise_control_name ((gchar *) control.name);
@@ -377,25 +354,13 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       case V4L2_CID_EXPOSURE:
       case V4L2_CID_AUTOGAIN:
       case V4L2_CID_GAIN:
-#ifdef V4L2_CID_SHARPNESS
       case V4L2_CID_SHARPNESS:
-#endif
         /* we only handle these for now (why?) */
         break;
       case V4L2_CID_HFLIP:
       case V4L2_CID_VFLIP:
-#ifndef V4L2_CID_PAN_RESET
-      case V4L2_CID_HCENTER:
-#endif
-#ifndef V4L2_CID_TILT_RESET
-      case V4L2_CID_VCENTER:
-#endif
-#ifdef V4L2_CID_PAN_RESET
       case V4L2_CID_PAN_RESET:
-#endif
-#ifdef V4L2_CID_TILT_RESET
       case V4L2_CID_TILT_RESET:
-#endif
         /* not handled here, handled by VideoOrientation interface */
         control.id++;
         break;
@@ -515,12 +480,7 @@ gst_v4l2_adjust_buf_type (GstV4l2Object * v4l2object)
    * in a contiguous manner. In this case the first v4l2 plane
    * contains all the gst planes.
    */
-#ifdef V4L2_CAP_VIDEO_M2M_MPLANE
 #define CHECK_CAPS (V4L2_CAP_VIDEO_OUTPUT_MPLANE | V4L2_CAP_VIDEO_M2M_MPLANE)
-#else
-#define CHECK_CAPS (V4L2_CAP_VIDEO_OUTPUT_MPLANE)
-#endif
-
   switch (v4l2object->type) {
     case V4L2_BUF_TYPE_VIDEO_OUTPUT:
       if (v4l2object->vcap.capabilities & CHECK_CAPS) {
@@ -537,6 +497,7 @@ gst_v4l2_adjust_buf_type (GstV4l2Object * v4l2object)
     default:
       break;
   }
+#undef CHECK_CAPS
 }
 
 /******************************************************
