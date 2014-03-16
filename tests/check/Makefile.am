@@ -176,6 +176,14 @@ else
 check_shm=
 endif
 
+if USE_GL
+check_gl=libs/gstglcontext \
+    libs/gstglmemory \
+    libs/gstglupload
+else
+check_gl=
+endif
+
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex    \
@@ -242,6 +250,7 @@ check_PROGRAMS = \
 	$(check_zbar) \
 	$(check_orc) \
 	libs/insertbin \
+	$(check_gl) \
 	$(EXPERIMENTAL_CHECKS)
 
 noinst_HEADERS = elements/mxfdemux.h
@@ -408,6 +417,33 @@ orc_audiomixer_LDADD = $(ORC_LIBS) -lorc-test-0.4
 orc/audiomixer.c: $(top_srcdir)/gst/audiomixer/gstaudiomixerorc.orc
 	$(MKDIR_P) orc
 	$(ORCC) --test -o $@ $<
+
+libs_gstglcontext_LDADD = \
+	$(GST_PLUGINS_BAD_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la
+
+libs_gstglcontext_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+
+libs_gstglmemory_LDADD = \
+	$(GST_PLUGINS_BAD_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la
+
+libs_gstglmemory_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+
+libs_gstglupload_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+
+libs_gstglupload_LDADD = \
+	$(GST_PLUGINS_BAD_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la
 
 
 distclean-local-orc:

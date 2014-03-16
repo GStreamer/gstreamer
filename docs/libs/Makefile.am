@@ -57,6 +57,7 @@ GTKDOC_LIBS = \
 	$(top_builddir)/gst-libs/gst/insertbin/libgstinsertbin-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/mpegts/libgstmpegts-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
   $(GST_BASE_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)

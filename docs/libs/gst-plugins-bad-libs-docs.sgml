@@ -56,6 +56,32 @@
       <title>Useful elements</title>
       <xi:include href="xml/gstinsertbin.xml" />
     </chapter>
+
+    <chapter id="gl">
+      <title>OpenGL Helper Library</title>
+      <xi:include href="xml/gstglapi.xml"/>
+      <xi:include href="xml/gstglbufferpool.xml"/>
+      <xi:include href="xml/gstglcontext.xml"/>
+      <xi:include href="xml/gstglcontextcocoa.xml"/>
+      <xi:include href="xml/gstglcontextegl.xml"/>
+      <xi:include href="xml/gstglcontextglx.xml"/>
+      <xi:include href="xml/gstglcontextwgl.xml"/>
+      <xi:include href="xml/gstgldisplay.xml"/>
+      <xi:include href="xml/gstgldownload.xml"/>
+      <xi:include href="xml/gstglfilter.xml"/>
+      <xi:include href="xml/gstglmemory.xml"/>
+      <xi:include href="xml/gstglmixer.xml"/>
+      <xi:include href="xml/gstglshader.xml"/>
+      <xi:include href="xml/gstglupload.xml"/>
+      <xi:include href="xml/gstglutils.xml"/>
+      <xi:include href="xml/gstglwindow.xml"/>
+      <xi:include href="xml/gstglwindowandroid.xml"/>
+      <xi:include href="xml/gstglwindowcocoa.xml"/>
+      <xi:include href="xml/gstglwindowdispmanx.xml"/>
+      <xi:include href="xml/gstglwindowwayland.xml"/>
+      <xi:include href="xml/gstglwindowwin32.xml"/>
+      <xi:include href="xml/gstglwindowx11.xml"/>
+    </chapter>
   </part>
 
   <part id="gstreamer-libs-hierarchy">

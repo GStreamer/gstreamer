@@ -4,6 +4,7 @@
 #include <gst/codecparsers/gstmpegvideoparser.h>
 #include <gst/insertbin/gstinsertbin.h>
 #include <gst/mpegts/mpegts.h>
+#include <gst/gl/gl.h>
 
 gst_mpegts_section_get_type
 gst_mpeg_ts_section_type_get_type
@@ -23,3 +24,15 @@ gst_mpeg_ts_stream_type_get_type
 
 
 gst_insert_bin_get_type
+
+
+gst_gl_upload_get_type
+gst_gl_download_get_type
+gst_gl_display_get_type
+gst_gl_context_get_type
+gst_gl_filter_get_type
+gst_gl_shader_get_type
+gst_gl_mixer_get_type
+gst_gl_buffer_pool_get_type
+gst_gl_allocator_get_type
+gst_gl_window_get_type

@@ -4,3 +4,6 @@ mpegvideoparser
 mpegts
 vc1parser
 insertbin
+gstglcontext
+gstglmemory
+gstglupload

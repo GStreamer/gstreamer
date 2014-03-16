@@ -82,6 +82,12 @@ else
 EGLGLES_DIR=
 endif
 
+if USE_GL
+GL_DIR=gl
+else
+GL_DIR=
+endif
+
 if USE_RESINDVD
  RESINDVD_DIR = resindvd
 else
@@ -152,6 +158,12 @@ if USE_LIBMMS
 LIBMMS_DIR=libmms
 else 
 LIBMMS_DIR=
+endif
+
+if USE_LIBVISUAL
+LIBVISUAL_DIR=libvisual
+else
+LIBVISUAL_DIR=
 endif
 
 if USE_MODPLUG
@@ -405,6 +417,7 @@ SUBDIRS=\
 	$(DTS_DIR) \
 	$(RESINDVD_DIR) \
 	$(EGLGLES_DIR) \
+	$(GL_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FLITE_DIR) \
@@ -417,6 +430,7 @@ SUBDIRS=\
 	$(LV2_DIR) \
 	$(LIBFAME_DIR) \
 	$(LIBMMS_DIR) \
+	$(LIBVISUAL_DIR) \
 	$(MODPLUG_DIR) \
 	$(MPEG2ENC_DIR) \
 	$(MPG123_DIR) \
@@ -478,6 +492,7 @@ DIST_SUBDIRS = \
 	daala \
 	dts \
 	eglgles \
+	gl \
 	modplug \
 	mimic \
 	mpeg2enc \
