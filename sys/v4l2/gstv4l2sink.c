@@ -600,11 +600,27 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   GstFlowReturn ret;
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstV4l2Object *obj = v4l2sink->v4l2object;
+  GstBufferPool *bpool = GST_BUFFER_POOL (obj->pool);
 
   GST_DEBUG_OBJECT (v4l2sink, "render buffer: %p", buf);
 
   if (G_UNLIKELY (obj->pool == NULL))
     goto not_negotiated;
+
+  if (G_UNLIKELY (!gst_buffer_pool_is_active (bpool))) {
+    GstStructure *config;
+
+    /* this pool was not activated, configure and activate */
+    GST_DEBUG_OBJECT (bsink, "activating pool");
+
+    config = gst_buffer_pool_get_config (bpool);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+    gst_buffer_pool_set_config (bpool, config);
+
+    if (!gst_buffer_pool_set_active (bpool, TRUE))
+      goto activate_failed;
+  }
 
   ret =
       gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL_CAST (obj->pool), buf);
@@ -616,5 +632,12 @@ not_negotiated:
   {
     GST_ERROR_OBJECT (bsink, "not negotiated");
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+activate_failed:
+  {
+    GST_ELEMENT_ERROR (bsink, RESOURCE, SETTINGS,
+        (_("Failed to allocated required memory.")),
+        ("Buffer pool activation failed"));
+    return GST_FLOW_ERROR;
   }
 }

@@ -1438,6 +1438,8 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (pool, "process buffer %p", buf);
 
+  g_return_val_if_fail (gst_buffer_pool_is_active (bpool), GST_FLOW_ERROR);
+
   switch (obj->type) {
     case V4L2_BUF_TYPE_VIDEO_CAPTURE:
     case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
@@ -1495,20 +1497,6 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
             GST_LOG_OBJECT (pool, "processing buffer from our pool");
           } else {
             GST_LOG_OBJECT (pool, "alloc buffer from our pool");
-            if (!gst_buffer_pool_is_active (bpool)) {
-              GstStructure *config;
-
-              /* this pool was not activated, configure and activate */
-              GST_DEBUG_OBJECT (pool, "activating pool");
-
-              config = gst_buffer_pool_get_config (bpool);
-              gst_buffer_pool_config_add_option (config,
-                  GST_BUFFER_POOL_OPTION_VIDEO_META);
-              gst_buffer_pool_set_config (bpool, config);
-
-              if (!gst_buffer_pool_set_active (bpool, TRUE))
-                goto activate_failed;
-            }
 
             /* this can block if all buffers are outstanding which would be
              * strange because we would expect the upstream element to have
@@ -1565,11 +1553,6 @@ done:
   return ret;
 
   /* ERRORS */
-activate_failed:
-  {
-    GST_ERROR_OBJECT (obj->element, "failed to activate pool");
-    return GST_FLOW_ERROR;
-  }
 acquire_failed:
   {
     GST_WARNING_OBJECT (obj->element, "failed to acquire a buffer: %s",
