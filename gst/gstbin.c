@@ -3273,8 +3273,7 @@ bin_do_stream_start (GstBin * bin)
   }
 }
 
-/* must be called with the object lock. This function releases the lock to post
- * the message. */
+/* must be called without the object lock as it posts messages */
 static void
 bin_do_message_forward (GstBin * bin, GstMessage * message)
 {
@@ -3283,7 +3282,6 @@ bin_do_message_forward (GstBin * bin, GstMessage * message)
 
     GST_DEBUG_OBJECT (bin, "pass %s message upward",
         GST_MESSAGE_TYPE_NAME (message));
-    GST_OBJECT_UNLOCK (bin);
 
     /* we need to convert these messages to element messages so that our parent
      * bin can easily ignore them and so that the application can easily
@@ -3293,8 +3291,6 @@ bin_do_message_forward (GstBin * bin, GstMessage * message)
             "message", GST_TYPE_MESSAGE, message, NULL));
 
     gst_element_post_message (GST_ELEMENT_CAST (bin), forwarded);
-
-    GST_OBJECT_LOCK (bin);
   }
 }
 
@@ -3411,8 +3407,8 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
     {
 
       /* collect all eos messages from the children */
-      GST_OBJECT_LOCK (bin);
       bin_do_message_forward (bin, message);
+      GST_OBJECT_LOCK (bin);
       /* ref message for future use  */
       bin_replace_message (bin, message, GST_MESSAGE_EOS);
       GST_OBJECT_UNLOCK (bin);
@@ -3448,8 +3444,9 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       gst_message_parse_segment_start (message, &format, &position);
       seqnum = gst_message_get_seqnum (message);
 
-      GST_OBJECT_LOCK (bin);
       bin_do_message_forward (bin, message);
+
+      GST_OBJECT_LOCK (bin);
       /* if this is the first segment-start, post to parent but not to the
        * application */
       if (!find_message (bin, NULL, GST_MESSAGE_SEGMENT_START) &&
@@ -3481,8 +3478,9 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       gst_message_parse_segment_done (message, &format, &position);
       seqnum = gst_message_get_seqnum (message);
 
-      GST_OBJECT_LOCK (bin);
       bin_do_message_forward (bin, message);
+
+      GST_OBJECT_LOCK (bin);
       bin_replace_message (bin, message, GST_MESSAGE_SEGMENT_START);
       /* if there are no more segment_start messages, everybody posted
        * a segment_done and we can post one on the bus. */
@@ -3583,9 +3581,9 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       GST_DEBUG_OBJECT (bin, "ASYNC_START message %p, %s", message,
           src ? GST_OBJECT_NAME (src) : "(NULL)");
 
-      GST_OBJECT_LOCK (bin);
       bin_do_message_forward (bin, message);
 
+      GST_OBJECT_LOCK (bin);
       /* we ignore the message if we are going to <= READY */
       if ((target = GST_STATE_TARGET (bin)) <= GST_STATE_READY)
         goto ignore_start_message;
@@ -3616,9 +3614,9 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 
       gst_message_parse_async_done (message, &running_time);
 
-      GST_OBJECT_LOCK (bin);
       bin_do_message_forward (bin, message);
 
+      GST_OBJECT_LOCK (bin);
       /* ignore messages if we are shutting down */
       if ((target = GST_STATE_TARGET (bin)) <= GST_STATE_READY)
         goto ignore_done_message;
