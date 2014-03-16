@@ -2313,7 +2313,6 @@ GstRTSPResult
 gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
     GstRTSPEvent * revents, GTimeVal * timeout)
 {
-  GstClockTime to;
   GMainContext *ctx;
   GSource *rs, *ws, *ts;
   GIOCondition condition;
@@ -2327,45 +2326,43 @@ gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
   ctx = g_main_context_new ();
 
   /* configure timeout if any */
-  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : GST_CLOCK_TIME_NONE;
-
   if (timeout) {
-    ts = g_timeout_source_new (to / GST_MSECOND);
+    ts = g_timeout_source_new (GST_TIMEVAL_TO_TIME (*timeout) / GST_MSECOND);
     g_source_set_dummy_callback (ts);
     g_source_attach (ts, ctx);
     g_source_unref (ts);
   }
 
-  rs = g_socket_create_source (conn->read_socket,
-      G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP, conn->cancellable);
-  g_source_set_dummy_callback (rs);
-  g_source_attach (rs, ctx);
-  g_source_unref (rs);
+  if (events & GST_RTSP_EV_READ) {
+    rs = g_socket_create_source (conn->read_socket, G_IO_IN | G_IO_PRI,
+        conn->cancellable);
+    g_source_set_dummy_callback (rs);
+    g_source_attach (rs, ctx);
+    g_source_unref (rs);
+  }
 
-  ws = g_socket_create_source (conn->write_socket,
-      G_IO_OUT | G_IO_ERR | G_IO_HUP, conn->cancellable);
-  g_source_set_dummy_callback (ws);
-  g_source_attach (ws, ctx);
-  g_source_unref (ws);
+  if (events & GST_RTSP_EV_WRITE) {
+    ws = g_socket_create_source (conn->write_socket, G_IO_OUT,
+        conn->cancellable);
+    g_source_set_dummy_callback (ws);
+    g_source_attach (ws, ctx);
+    g_source_unref (ws);
+  }
 
   /* Returns after handling all pending events */
-  g_main_context_iteration (ctx, TRUE);
+  while (!g_main_context_iteration (ctx, TRUE));
 
   g_main_context_unref (ctx);
 
-  condition =
-      g_socket_condition_check (conn->read_socket,
-      G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP);
-  condition |=
-      g_socket_condition_check (conn->write_socket,
-      G_IO_OUT | G_IO_ERR | G_IO_HUP);
-
   *revents = 0;
   if (events & GST_RTSP_EV_READ) {
+    condition = g_socket_condition_check (conn->read_socket,
+        G_IO_IN | G_IO_PRI);
     if ((condition & G_IO_IN) || (condition & G_IO_PRI))
       *revents |= GST_RTSP_EV_READ;
   }
   if (events & GST_RTSP_EV_WRITE) {
+    condition = g_socket_condition_check (conn->write_socket, G_IO_OUT);
     if ((condition & G_IO_OUT))
       *revents |= GST_RTSP_EV_WRITE;
   }
