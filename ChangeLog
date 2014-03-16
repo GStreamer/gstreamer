@@ -1,3 +1,568 @@
+=== release 1.2.0 ===
+
+2014-03-16  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  releasing 1.2.0
+
+2014-03-15 10:34:17 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* configure.ac:
+	* ges/ges-version.h.in:
+	* ges/ges.h:
+	  Properly generate versioning #define-s during autogen
+
+2014-03-14 20:04:33 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-container.c:
+	* ges/ges-timeline-element.c:
+	* tests/check/ges/group.c:
+	  container: Properly handle the case where we could not set parent
+	  In this case we had a FIXME about reverting everything that was done,
+	  implement that FIXME!
+
+2014-03-14 19:59:27 +0100  Andreas Schwab <schwab@linux-m68k.org>
+
+	* ges/ges-smart-adder.c:
+	  ges: remove extra semicolon
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726365
+
+2014-03-14 18:48:44 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Always set the encoding profile presence to 1
+	  We currenty do not support multiple tracks with same type in GESPipeline
+	  and we actually need to set the presence field to avoid a scenario where
+	  we have only video in a video track, and no audio in the audio track. So
+	  audiotestsrc is used and we end up encoding the whole audio stream but
+	  no decoded video frame as reached the decodebin src pad, so the pad
+	  has not been created and thus it will not be linked to the encodebin.
+	  On the audio part, the EOS will be emitted so fast that the resulting stream will
+	  not have any video in it as the muxer will not even have a video pad created.
+	  Setting the presence will ensure that the muxer does have a video pad
+	  (because of how encodebin behaves) and thus will create a pad for it
+	  and wait for its EOS.
+
+2014-03-10 11:18:21 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* ges/ges-title-source.h:
+	  title-source: Rename ges_title_clip_set_backrgound_colour as appropriate
+	  The method was badly called _clip_ instead of _source_ we have not release the API
+	  so we still can change it.
+
+2014-03-08 11:26:13 +0000  Dan Williams <dcbw@redhat.com>
+
+	* ges/ges-project.c:
+	  ges: fix finalize/dispose mixup
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725918
+
+2014-03-07 14:48:06 -0600  Dan Williams <dcbw@redhat.com>
+
+	* ges/ges-clip-asset.c:
+	* ges/ges-container.c:
+	* ges/ges-formatter.c:
+	* ges/ges-project.c:
+	* ges/gstframepositionner.c:
+	  ges: Ensure GObject finalize and dispose methods chain up to parents
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725918
+
+2014-03-07 09:28:16 -0600  Dan Williams <dcbw@redhat.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  Fix use-after-free in _free_pending_clip()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725855
+
+2014-02-28 09:37:01 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From fe1672e to bcb1518
+
+2014-02-26 04:36:11 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* docs/design/encoding-research.txt:
+	* docs/design/metadata.txt:
+	* ges/ges-pitivi-formatter.c:
+	* ges/ges-pitivi-formatter.h:
+	  Update the documentation to use Pitivi instead of PiTiVi
+
+2014-02-26 04:17:36 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-base-effect.c:
+	* ges/ges-effect-clip.c:
+	* ges/ges-effect.c:
+	* ges/ges-test-clip.c:
+	* ges/ges-text-overlay.c:
+	* ges/ges-transition-clip.c:
+	  Remove "#" from short-description
+	  It breaks the display in the index.html page.
+
+2014-02-18 22:14:00 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-extractable.c:
+	  Minor documentation fixes: GESExtractable, GESAsset
+
+2014-02-26 22:16:13 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1a07da9 to fe1672e
+
+2014-02-18 12:40:06 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* docs/libs/ges-sections.txt:
+	  docs: Fix documentation about copying timeline elements
+
+2014-02-17 13:33:51 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Make sure not to add 2 times a TrackElement in the same track
+	  Without that, if a UriClip contains several tracks of a same type (ie.
+	  video or audio...), we would add all the TrackElements to each track
+	  making everything failling as we end up with several GNL sources at
+	  the same position with the same priority.
+
+2014-02-17 12:34:04 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-pipeline.c:
+	* tests/check/ges/integration.c:
+	* tests/examples/concatenate.c:
+	* tests/examples/ges-ui.c:
+	* tests/examples/overlays.c:
+	* tests/examples/test4.c:
+	* tests/examples/text_properties.c:
+	* tests/examples/thumbnails.c:
+	* tests/examples/transition.c:
+	* tools/ges-launch.c:
+	  Rename TIMELINE_MODE_XXX to GES_PIPELINE_MODE_XXX so it corresponds to reality
+	  First, it was not in any namespace, second the name of the enum is
+	  GESPipelineFlags.
+
+2014-02-14 13:20:31 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  ges: Give a reference to the formatter for the idle callback
+	  This avoid segfault as we are not guaranteed that the formatter will
+	  not be destroyed in the meantime.
+	  + Minor cleanup of handling of private members
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724337
+
+2014-02-09 23:50:25 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-meta-container.c:
+	* ges/ges-pitivi-formatter.c:
+	  ges: Remove unused functions
+
+2014-02-08 20:19:53 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-group.c:
+	  ges-group: Properly check for integer underflows
+	  error: comparison of unsigned expression < 0 is always false
+
+2014-02-08 20:18:11 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-extractable.c:
+	  ges-extractable: Return NULL instead of G_TYPE_INVALID
+	  The return type of this function is gchar *, not GType
+
+2014-02-05 00:10:52 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-enums.h:
+	  ges: Some documentation cleanup
+
+2014-02-04 13:58:48 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tests/check/ges/integration.c:
+	  tests:integration: Fix a race about get_position being called before AYNC_DONE happens
+
+2014-02-04 10:45:58 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* bindings/python/examples/simple.py:
+	* docs/libs/ges-sections.txt:
+	* ges/ges-pipeline.c:
+	* ges/ges-pipeline.h:
+	* tests/check/ges/integration.c:
+	* tests/check/ges/project.c:
+	* tests/check/ges/test-utils.c:
+	* tests/examples/concatenate.c:
+	* tests/examples/ges-ui.c:
+	* tests/examples/overlays.c:
+	* tests/examples/simple1.c:
+	* tests/examples/test1.c:
+	* tests/examples/test2.c:
+	* tests/examples/test3.c:
+	* tests/examples/test4.c:
+	* tests/examples/text_properties.c:
+	* tests/examples/thumbnails.c:
+	* tests/examples/transition.c:
+	* tools/ges-launch.c:
+	  ges-pipeline: Rename add_timeline to set_timeline
+	  API BREAKAGE:
+	  - ges_pipeline_add_timeline
+	  + ges_pipeline_set_timeline
+
+2014-01-16 15:25:06 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-project.c:
+	* ges/ges-uri-asset.c:
+	  uri-asset: Let a chance for user to change URI if the set one is not readable
+	  It sounds like the most logical thing to do in that case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=721111
+
+2014-01-15 19:12:08 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-video-source.c:
+	* ges/ges-video-uri-source.c:
+	  videosource: Always add a deinterlace at the beining of videosrcbin
+	  It might be needed in some cases (for example when decoding prores files) and
+	  it is the way it is done with playbin now. Also deinterlace now properly supports
+	  passtrough mode.
+
+2014-01-27 15:30:40 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-asset.c:
+	* tests/check/ges/project.c:
+	* tests/check/ges/uriclip.c:
+	  ges-asset: Do not forget to give a ref to the registry
+	  + Add test in the testsuite
+	  + Fix broken tests
+	  https://bugzilla.gnome.org/show_bug.cgi?id=721111
+
+2014-01-30 10:46:09 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d48bed3 to 1a07da9
+
+2014-01-09 18:13:00 +0100  Mathieu Duponchelle <mduponchelle1@gmail.com>
+
+	* ges/ges-track-element.c:
+	  track-element: clamp interpolated keyframe values.
+
+2014-01-10 00:05:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	  .gitignore: add test driver and more test binaries
+
+2013-12-27 10:08:47 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  base-xml-formatter: Emit 'loaded' right after a project with empy timeline is loaded
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720040
+
+2013-12-24 15:34:51 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-audio-test-source.h:
+	* ges/ges-audio-uri-source.h:
+	* ges/ges-image-source.h:
+	* ges/ges-internal.h:
+	* ges/ges-title-source.h:
+	* ges/ges-video-test-source.h:
+	* ges/ges-video-uri-source.h:
+	  track-element: Remove constructors for TrackElement from the API
+	  Most of the time the user should not create GESTrackElements
+	  himself, instead he should add a GESAsset to a layer, that will
+	  result in a clip creation and the proper TrackElements to be
+	  created and added to the tracks.
+	  The case of effects and overlays is a bit different as the user should
+	  create the TrackElement and add them to a clip.
+
+2013-12-24 15:08:24 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-effect-clip.c:
+	* ges/ges-effect.c:
+	* ges/ges-text-overlay-clip.c:
+	* ges/ges-text-overlay.c:
+	* ges/ges-timeline.c:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track-element.h:
+	* ges/ges-track.c:
+	  ges: Remove versionning infos now that we start on the 1.X API serie
+	  They are now meaningless, all the current symbols are the basic
+	  ones for the 1.X serie.
+
+2013-12-24 14:34:09 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-base-xml-formatter.h:
+	* ges/ges-effect-asset.h:
+	* ges/ges-smart-adder.h:
+	* ges/ges-smart-video-mixer.h:
+	* ges/ges-xml-formatter.h:
+	* ges/gstframepositionner.h:
+	  ges: Add padding for API extension where missing
+
+2013-12-22 22:36:16 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From dbedaa0 to d48bed3
+
+2013-11-28 15:13:06 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-project.c:
+	* ges/ges-timeline.c:
+	  ges: Reimplement 'always create a project to back a timeline'
+	  Keeping it simple, and making sure everything is synchronous
+
+2013-11-28 15:08:33 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-project.c:
+	* ges/ges-timeline.c:
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/effects.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/mixers.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/test-utils.c:
+	* tests/check/ges/test-utils.h:
+	* tests/check/ges/text_properties.c:
+	* tests/check/ges/timelineedition.c:
+	* tests/check/ges/titles.c:
+	* tests/check/ges/transition.c:
+	* tests/check/ges/uriclip.c:
+	  Revert "ges: Always create a project to back a timeline"
+	  This reverts commit 59d83f1a93055391097e7c1fe34f5a39eb8ec625.
+	  Conflicts:
+	  tests/check/ges/backgroundsource.c
+	  tests/check/ges/effects.c
+	  tests/check/ges/overlays.c
+	  tests/check/ges/simplelayer.c
+	  tests/check/ges/text_properties.c
+	  tests/check/ges/titles.c
+
+2013-11-25 15:17:33 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-project.c:
+	* ges/ges-timeline.c:
+	  timeline: Add all assets of the clip added to the timeline to the project
+
+2013-11-22 17:49:49 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	* ges/Makefile.am:
+	* ges/ges-base-effect-clip.c:
+	* ges/ges-effect-clip.c:
+	* ges/ges-simple-layer.c:
+	* ges/ges-simple-layer.h:
+	* ges/ges-transition-clip.c:
+	* ges/ges.h:
+	* tests/check/Makefile.am:
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/effects.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/simplelayer.c:
+	* tests/check/ges/text_properties.c:
+	* tests/check/ges/titles.c:
+	* tests/examples/concatenate.c:
+	* tests/examples/ges-ui.c:
+	* tests/examples/simple1.c:
+	* tests/examples/test3.c:
+	* tests/examples/test4.c:
+	* tests/examples/thumbnails.c:
+	* tools/ges-launch.c:
+	  Remove GESSimplerLayer, that API should land into GESLayer in the end
+	  The priority handling of clip is now handled by GESLayer itself, and
+	  handling clip as a ordered list should be implemented in GESLayer itself
+	  too, this way the user can decide to switch mode at any time instead of
+
+2013-11-22 17:36:12 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-layer.c:
+	  layer: Set clip start to the duration of the layer if == TIME_NONE
+	  In the provided start of a clip is GST_CLOCK_TIME_NONE in
+	  ges_layer_add_asset, it means that we want the clip to be
+	  added at the end of the layer
+
+2013-11-22 17:33:18 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-layer.c:
+	* ges/ges-layer.h:
+	  layer: Add an API to get the total duration of the layer
+	  API:
+	  ges_layer_get_duration
+
+2013-11-22 17:23:31 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	  Remove the android/ toplevel directory
+	  To build gstreamer for android we are now using androgenizer which
+	  generates the needed Android.mk files. Androgenizer can be found here:
+	  * http://cgit.collabora.com/git/android/androgenizer.git/
+
+2013-11-13 13:18:00 +0100  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* ges/Makefile.am:
+	* ges/ges-gerror.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-utils.c:
+	* ges/ges-utils.h:
+	  gir: fix warnings
+
+2013-11-18 13:41:07 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-video-uri-source.c:
+	  video-uri-source: Handle interlaced videos
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710168
+
+2013-11-14 16:17:31 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Let user set the track types to use
+
+2013-11-09 09:55:39 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* bindings/python/examples/material.py:
+	  python: Remove old material.py example
+
+2013-11-09 09:51:55 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Dot the pipeline on state changes and warnings
+
+2013-11-09 09:49:03 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/gstframepositionner.c:
+	  framepositionner: Fix the range of properties dealing with number of pixels
+	  This way it is possible to interpolate those values.
+
+2013-11-09 09:47:21 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-project.c:
+	* ges/ges-timeline.c:
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/effects.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/mixers.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/simplelayer.c:
+	* tests/check/ges/test-utils.c:
+	* tests/check/ges/test-utils.h:
+	* tests/check/ges/text_properties.c:
+	* tests/check/ges/timelineedition.c:
+	* tests/check/ges/titles.c:
+	* tests/check/ges/transition.c:
+	* tests/check/ges/uriclip.c:
+	  ges: Always create a project to back a timeline
+	  And fix all the tests as we need to wait for the project to be loaded
+	  to check the reference count of the timeline (as we keep a ref on the
+	  timeline in project to later emit "loaded" on idle).
+
+2013-11-09 09:46:10 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* bindings/python/examples/simple.py:
+	  bindings: Cleanup and fix simple python example
+
+2013-11-05 11:23:08 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 865aa20 to dbedaa0
+
+2013-10-17 15:16:00 +0200  Kishore Arepalli <kishore.arepalli@gmail.com>
+
+	* ges/ges-audio-source.c:
+	* ges/ges-image-source.c:
+	* ges/ges-pipeline.c:
+	* ges/ges-smart-adder.c:
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-source.c:
+	* ges/ges-title-source.c:
+	* ges/ges-track.c:
+	* ges/ges-video-track.c:
+	  ges: Fix several memory leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710390
+
+2013-10-30 00:27:36 +0100  Mathieu Duponchelle <mduponchelle1@gmail.com>
+
+	* ges/ges-clip.c:
+	  track-element: add start to the position to which we wish we split the bindings.
+	  The bindings split is relative to the beginning of the clip.
+
+2013-10-29 07:59:22 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-clip.c:
+	  clip: Fix the find_track_element method
+	  What we want is to be able to find a TrackElement by its type, and
+	  possibly specify a Track where to look into.
+
+2013-10-15 10:57:31 +0200  Kishore Arepalli <kishore.arepalli@gmail.com>
+
+	* ges/ges-extractable.h:
+	* ges/ges-formatter.h:
+	* ges/ges-uri-asset.h:
+	  ges-formatter: don't use 'class' as function argument name in headers
+	  It's a keyword in C++ and C++ compilers won't like it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710172
+
+2013-10-11 17:00:22 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-uri-asset.c:
+	  uri-asset: Check if file exists before trying it as a proxy
+	  This avoids:
+	  1- discovering file that we know do not exist
+	  2- proposing the current proxy path (that failed) as a possible proxy
+	  which lead to errors
+
+2013-10-11 17:05:03 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Remember URIS that we tried to discover
+	  So we do not fail several time trying to discover the same URI
+	  Conflicts:
+	  tools/ges-launch.c
+
+2013-10-08 13:45:55 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-formatter.c:
+	  formatter: Try to use best formatter first
+
+2013-10-09 20:07:14 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ges/ges-audio-source.c:
+	  audiosource: Add audioconvert and audioresample before the volume element
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709777
+
+2013-10-01 20:07:10 +0200  Mathieu Duponchelle <mduponchelle1@gmail.com>
+
+	* ges/ges-timeline.c:
+	  timeline: pass the correct argument to disconnect_by_func.
+	  fixes #709205
+
+2013-09-28 21:07:10 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.90 ===
+
+2013-09-28 20:49:13 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* ChangeLog:
+	* configure.ac:
+	  Release 1.1.90
+
 2013-09-28 18:09:49 +0200  Thibault Saunier <thibault.saunier@collabora.com>
 
 	* ges/ges-clip.c:

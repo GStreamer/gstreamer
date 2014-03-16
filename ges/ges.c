@@ -22,8 +22,8 @@
 #include "ges/gstframepositionner.h"
 #include "ges-internal.h"
 
-#define GES_GNONLIN_VERSION_NEEDED_MAJOR 0
-#define GES_GNONLIN_VERSION_NEEDED_MINOR 11
+#define GES_GNONLIN_VERSION_NEEDED_MAJOR 1
+#define GES_GNONLIN_VERSION_NEEDED_MINOR 2
 #define GES_GNONLIN_VERSION_NEEDED_MICRO 0
 
 GST_DEBUG_CATEGORY (_ges_debug);

@@ -3,7 +3,7 @@ AC_PREREQ(2.62)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(GStreamer Editing Services, 1.1.90.1,
+AC_INIT(GStreamer Editing Services, 1.2.0,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer-editing-services)
 

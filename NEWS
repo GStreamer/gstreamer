@@ -1,15 +1,1 @@
-This is the 0.10.1 Release of the GStreamer Editing Services "This is Scandinavian one-o-one"
-
-Features of this release:
-
-  * Highly portable and lightweight, written in C/GObject
-  * High-level API for simple applications
-  * Full-depth API for advanced applications
-  * gobject-introspection support for easy language bindings creation
-  * Audio/Video/Image file support
-  * Audio/Video Transitions
-  * Title/Credits
-  * Title overlay
-  * Saving/Loading of timelines to custom file format
-  * Playback/Rendering of timelines with convenience GstPipeline
-
+This is the 1.2.0 Release of the GStreamer Editing Services
