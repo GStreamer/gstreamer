@@ -20,6 +20,7 @@
 #include <gst/check/gstcheck.h>
 
 #include <rtsp-stream.h>
+#include <rtsp-address-pool.h>
 
 GST_START_TEST (test_get_sockets)
 {
@@ -92,6 +93,69 @@ GST_START_TEST (test_get_sockets)
 
 GST_END_TEST;
 
+GST_START_TEST (test_get_multicast_address)
+{
+  GstPad *srcpad;
+  GstElement *pay;
+  GstRTSPStream *stream;
+  GstRTSPAddressPool *pool;
+  GstRTSPAddress *addr1;
+  GstRTSPAddress *addr2;
+
+  srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  gst_pad_set_active (srcpad, TRUE);
+  pay = gst_element_factory_make ("rtpgstpay", "testpayloader");
+  fail_unless (pay != NULL);
+  stream = gst_rtsp_stream_new (0, pay, srcpad);
+  fail_unless (stream != NULL);
+  gst_object_unref (pay);
+  gst_object_unref (srcpad);
+
+  pool = gst_rtsp_address_pool_new ();
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "233.252.0.0", "233.252.0.0", 5000, 5001, 1));
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "FF11:DB8::1", "FF11:DB8::1", 5002, 5003, 1));
+  gst_rtsp_stream_set_address_pool (stream, pool);
+
+  addr1 = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
+  fail_unless (addr1 != NULL);
+  fail_unless_equals_string (addr1->address, "233.252.0.0");
+  fail_unless_equals_int (addr1->port, 5000);
+  fail_unless_equals_int (addr1->n_ports, 2);
+
+  addr2 = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
+  fail_unless (addr2 != NULL);
+  fail_unless_equals_string (addr2->address, "233.252.0.0");
+  fail_unless_equals_int (addr2->port, 5000);
+  fail_unless_equals_int (addr2->n_ports, 2);
+
+  gst_rtsp_address_free (addr1);
+  gst_rtsp_address_free (addr2);
+
+  addr1 = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV6);
+  fail_unless (addr1 != NULL);
+  fail_unless (!g_ascii_strcasecmp (addr1->address, "FF11:DB8::1"));
+  fail_unless_equals_int (addr1->port, 5002);
+  fail_unless_equals_int (addr1->n_ports, 2);
+
+  addr2 = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV6);
+  fail_unless (addr2 != NULL);
+  fail_unless (!g_ascii_strcasecmp (addr2->address, "FF11:DB8::1"));
+  fail_unless_equals_int (addr2->port, 5002);
+  fail_unless_equals_int (addr2->n_ports, 2);
+
+  gst_rtsp_address_free (addr1);
+  gst_rtsp_address_free (addr2);
+
+  g_object_unref (pool);
+
+  gst_object_unref (stream);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspstream_suite (void)
 {
@@ -100,6 +164,7 @@ rtspstream_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_get_sockets);
+  tcase_add_test (tc, test_get_multicast_address);
 
   return s;
 }
