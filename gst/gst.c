@@ -484,14 +484,15 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
    * So give some useful info about GStreamer here */
 #ifdef G_OS_WIN32
   {
-    gchar *basedir = g_win32_get_package_installation_directory_of_module (_priv_gst_dll_handle);
+    gchar *basedir =
+        g_win32_get_package_installation_directory_of_module
+        (_priv_gst_dll_handle);
 
     libdir = g_build_filename (basedir,
 #ifdef _DEBUG
-                               "debug"
+        "debug"
 #endif
-                               "lib",
-                               NULL);
+        "lib", NULL);
     g_free (basedir);
   }
 #else
