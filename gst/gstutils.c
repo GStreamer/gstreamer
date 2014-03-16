@@ -2449,7 +2449,6 @@ gboolean
 gst_pad_proxy_query_accept_caps (GstPad * pad, GstQuery * query)
 {
   QueryAcceptCapsData data;
-  gboolean result;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
@@ -2460,16 +2459,16 @@ gst_pad_proxy_query_accept_caps (GstPad * pad, GstQuery * query)
 
   data.query = query;
   /* value to hold the return, by default it holds TRUE */
+  /* FIXME: TRUE is wrong when there are no pads */
   data.ret = TRUE;
 
-  result = gst_pad_forward (pad, (GstPadForwardFunction) query_accept_caps_func,
-      &data);
+  gst_pad_forward (pad, (GstPadForwardFunction) query_accept_caps_func, &data);
   gst_query_set_accept_caps_result (query, data.ret);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "proxying accept caps query: %d",
-      result);
+      data.ret);
 
-  return result;
+  return data.ret;
 }
 
 typedef struct
@@ -2543,6 +2542,7 @@ gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
   gst_query_set_caps_result (query, result);
   gst_caps_unref (result);
 
+  /* FIXME: return something depending on the processing */
   return TRUE;
 }
 
