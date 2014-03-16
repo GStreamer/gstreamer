@@ -490,9 +490,8 @@ gst_gl_display_context_prepare (GstElement * element,
     if (*display_ptr)
       goto out;
   }
-  gst_query_unref (query);
-
 #if GST_GL_HAVE_WINDOW_X11
+  gst_query_unref (query);
   query =
       _gst_gl_display_context_query (element, display_ptr,
       "gst.x11.display.handle");
