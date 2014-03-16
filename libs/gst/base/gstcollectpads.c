@@ -1862,8 +1862,10 @@ event_forward_func (GstPad * pad, EventData * data)
   gboolean ret = TRUE;
   GstPad *peer = gst_pad_get_peer (pad);
 
-  if (peer)
+  if (peer) {
     ret = gst_pad_send_event (peer, gst_event_ref (data->event));
+    gst_object_unref (peer);
+  }
 
   data->result &= ret;
   /* Always send to all pads */
