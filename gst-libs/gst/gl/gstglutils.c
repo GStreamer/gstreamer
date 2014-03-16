@@ -426,7 +426,7 @@ run_context_query (GstElement * element, GstQuery * query,
   return g_value_get_boolean (&res);
 }
 
-GstQuery *
+static GstQuery *
 _gst_gl_display_context_query (GstElement * element,
     GstGLDisplay ** display_ptr, const gchar * display_type)
 {
