@@ -40,6 +40,10 @@
 #define _GNU_SOURCE
 #endif
 
+#ifndef GL_NUM_EXTENSIONS
+#define GL_NUM_EXTENSIONS 0x0000821d
+#endif
+
 #include <gmodule.h>
 
 #include "gl.h"
