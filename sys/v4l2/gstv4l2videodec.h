@@ -72,6 +72,8 @@ struct _GstV4l2VideoDec
 struct _GstV4l2VideoDecClass
 {
   GstVideoDecoderClass parent_class;
+
+  gchar *default_device;
 };
 
 GType gst_v4l2_video_dec_get_type (void);
