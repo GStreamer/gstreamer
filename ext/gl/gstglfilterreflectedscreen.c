@@ -334,7 +334,7 @@ gst_gl_filter_reflected_screen_draw_screen (GstGLFilter * filter,
 }
 
 static void
-gst_gl_filter_reflected_screen_draw_background ()
+gst_gl_filter_reflected_screen_draw_background (void)
 {
   glBegin (GL_QUADS);
 
@@ -352,7 +352,7 @@ gst_gl_filter_reflected_screen_draw_background ()
 }
 
 static void
-gst_gl_filter_reflected_screen_draw_floor ()
+gst_gl_filter_reflected_screen_draw_floor (void)
 {
   GLUquadricObj *q;
   //create a quadric for the floor's drawing

@@ -53,13 +53,13 @@ static const gchar *fragment_shader_str_gles2 =
 
 static GstGLDisplay *display;
 
-void
+static void
 setup (void)
 {
   display = gst_gl_display_new ();
 }
 
-void
+static void
 teardown (void)
 {
   gst_object_unref (display);
@@ -74,7 +74,7 @@ static GLint shader_attr_position_loc;
 static GLint shader_attr_texture_loc;
 #endif
 
-void
+static void
 init (gpointer data)
 {
   GstGLContext *context = data;
@@ -109,7 +109,7 @@ init (gpointer data)
 #endif
 }
 
-void
+static void
 deinit (gpointer data)
 {
   GstGLContext *context = data;
@@ -122,7 +122,7 @@ deinit (gpointer data)
 #endif
 }
 
-void
+static void
 clear_tex (gpointer data)
 {
   GstGLContext *context = data;
@@ -137,14 +137,14 @@ clear_tex (gpointer data)
   b = b > 1.0 ? 0.0 : b + 0.015;
 }
 
-void
+static void
 draw_tex (gpointer data)
 {
   gst_gl_framebuffer_use_v2 (fbo, 320, 240, fbo_id, rbo, tex,
       (GLCB_V2) clear_tex, data);
 }
 
-void
+static void
 draw_render (gpointer data)
 {
   GstGLContext *context = data;
@@ -343,8 +343,8 @@ GST_START_TEST (test_wrapped_context)
 GST_END_TEST;
 
 
-Suite *
-gst_gl_memory_suite (void)
+static Suite *
+gst_gl_context_suite (void)
 {
   Suite *s = suite_create ("GstGLContext");
   TCase *tc_chain = tcase_create ("general");
@@ -357,4 +357,4 @@ gst_gl_memory_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (gst_gl_memory);
+GST_CHECK_MAIN (gst_gl_context);

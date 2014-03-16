@@ -43,7 +43,7 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "squeeze0", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "squeeze0", shader);
 
 #if GST_GL_HAVE_GLES2
     if (USING_GLES2 (context)) {

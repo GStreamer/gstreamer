@@ -75,6 +75,8 @@ struct _GstGLOverlayClass
   GstGLFilterClass filter_class;
 };
 
+GType gst_gl_overlay_get_type (void);
+
 G_END_DECLS
 
 #endif /* _GST_GL_OVERLAY_H_ */

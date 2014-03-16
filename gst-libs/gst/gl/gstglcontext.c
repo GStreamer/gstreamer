@@ -585,7 +585,7 @@ _create_context_gles2 (GstGLContext * context, gint * gl_major, gint * gl_minor,
   return TRUE;
 }
 
-gboolean
+static gboolean
 _create_context_opengl (GstGLContext * context, gint * gl_major,
     gint * gl_minor, GError ** error)
 {
@@ -631,7 +631,7 @@ _create_context_opengl (GstGLContext * context, gint * gl_major,
   return TRUE;
 }
 
-GstGLAPI
+static GstGLAPI
 _compiled_api (void)
 {
   GstGLAPI ret = GST_GL_API_NONE;
@@ -998,14 +998,4 @@ gst_gl_wrapped_context_class_init (GstGLWrappedContextClass * klass)
 static void
 gst_gl_wrapped_context_init (GstGLWrappedContext * context)
 {
-}
-
-/* Must be called in the gl thread */
-GstGLWrappedContext *
-gst_gl_wrapped_context_new (void)
-{
-  GstGLWrappedContext *context =
-      g_object_new (GST_GL_TYPE_WRAPPED_CONTEXT, NULL);
-
-  return context;
 }

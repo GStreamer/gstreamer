@@ -50,6 +50,6 @@ struct _GstGLFilterShaderClass
   GstGLFilterClass filter_class;
 };
 
-GType gst_gl_glfiltershader_get_type (void);
+GType gst_gl_filtershader_get_type (void);
 
 #endif /* _GST_GL_FILTERSHADER_H_ */

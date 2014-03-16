@@ -37,7 +37,7 @@ gst_gl_effects_fisheye_callback (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "fisheye0", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "fisheye0", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,

@@ -48,6 +48,6 @@ struct _GstGLFilterBlurClass
   GstGLFilterClass filter_class;
 };
 
-GType gst_gl_glfilterblur_get_type (void);
+GType gst_gl_filterblur_get_type (void);
 
 #endif /* _GST_GL_FILTERBLUR_H_ */

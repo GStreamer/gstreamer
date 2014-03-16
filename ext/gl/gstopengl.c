@@ -55,42 +55,23 @@
 #include "gstgleffects.h"
 #include "gstglcolorscale.h"
 
-GType gst_gl_filter_cube_get_type (void);
-GType gst_gl_effects_get_type (void);
-
 #if GST_GL_HAVE_OPENGL
 #include "gstgltestsrc.h"
 #include "gstglfilterlaplacian.h"
 #include "gstglfilterglass.h"
 #include "gstglfilterapp.h"
+#include "gstglfilterblur.h"
 #include "gstglfilterreflectedscreen.h"
 #include "gstglfiltershader.h"
+#include "gstglfiltersobel.h"
 #include "gstgldeinterlace.h"
 #include "gstglmosaic.h"
 #include "gstglvideomixer.h"
-
-GType gst_gl_deinterlace_get_type (void);
-GType gst_gl_filter_app_get_type (void);
-GType gst_gl_filter_reflected_screen_get_type (void);
-GType gst_gl_filterblur_get_type (void);
-GType gst_gl_filtershader_get_type (void);
-GType gst_gl_filtersobel_get_type (void);
-GType gst_gl_filter_laplacian_get_type (void);
-GType gst_gl_filter_glass_get_type (void);
-GType gst_gl_mosaic_get_type (void);
-
 #if HAVE_PNG
 #include "gstgldifferencematte.h"
 #include "gstglbumper.h"
-
-GType gst_gl_differencematte_get_type (void);
-GType gst_gl_bumper_get_type (void);
-
 #if HAVE_JPEG
 #include "gstgloverlay.h"
-
-GType gst_gl_overlay_get_type (void);
-
 #endif /* HAVE_JPEG */
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */

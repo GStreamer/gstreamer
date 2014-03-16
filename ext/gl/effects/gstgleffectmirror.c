@@ -43,7 +43,7 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "mirror0", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "mirror0", shader);
 
 #if GST_GL_HAVE_GLES2
     if (USING_GLES2 (context)) {

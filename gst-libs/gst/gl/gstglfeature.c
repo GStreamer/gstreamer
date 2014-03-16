@@ -86,7 +86,7 @@ static const GstGLFeatureData gst_gl_feature_ext_functions_data[] = {
 #undef GST_GL_EXT_FUNCTION
 #undef GST_GL_EXT_END
 
-gboolean
+static gboolean
 _gst_gl_feature_check_for_extension (const GstGLFeatureData * data,
     const char *driver_prefix, const char *extensions_string,
     const char **suffix)

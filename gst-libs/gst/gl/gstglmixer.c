@@ -46,9 +46,6 @@ GST_DEBUG_CATEGORY (gst_gl_mixer_debug);
 #define GST_GL_MIXER_UNLOCK(mix) \
   (g_mutex_unlock(&GST_GL_MIXER_GET_LOCK (mix)))
 
-static void gst_gl_mixer_pad_class_init (GstGLMixerPadClass * klass);
-static void gst_gl_mixer_pad_init (GstGLMixerPad * mixerpad);
-
 static void gst_gl_mixer_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_mixer_pad_set_property (GObject * object, guint prop_id,
@@ -539,8 +536,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
             "RGBA"))
     );
-
-static void gst_gl_mixer_finalize (GObject * object);
 
 static gboolean gst_gl_mixer_src_query (GstPad * pad, GstObject * object,
     GstQuery * query);

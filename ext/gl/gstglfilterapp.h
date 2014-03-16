@@ -48,7 +48,7 @@ struct _GstGLFilterAppClass
     GstGLFilterClass filter_class;
 };
 
-GType gst_gl_glfilterapp_get_type (void);
+GType gst_gl_filter_app_get_type (void);
 
 G_END_DECLS
 

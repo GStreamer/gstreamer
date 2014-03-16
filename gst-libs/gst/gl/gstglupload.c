@@ -861,7 +861,7 @@ gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload * upload,
   return ret;
 }
 
-gboolean
+static gboolean
 _gst_gl_upload_perform_for_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
     meta, guint texture_id[4])
 {

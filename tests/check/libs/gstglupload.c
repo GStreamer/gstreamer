@@ -85,7 +85,7 @@ static gchar rgba_data[] =
   RED, GREEN, BLUE, RED, GREEN, BLUE, RED, GREEN, BLUE, RED
 };
 
-void
+static void
 setup (void)
 {
   GError *error = NULL;
@@ -102,7 +102,7 @@ setup (void)
   upload = gst_gl_upload_new (context);
 }
 
-void
+static void
 teardown (void)
 {
   GLuint error = context->gl_vtable->GetError ();
@@ -115,7 +115,7 @@ teardown (void)
   gst_object_unref (display);
 }
 
-void
+static void
 init (gpointer data)
 {
 #if GST_GL_HAVE_GLES2
@@ -139,7 +139,7 @@ init (gpointer data)
 #endif
 }
 
-void
+static void
 draw_render (gpointer data)
 {
   GstGLContext *context = data;
@@ -403,7 +403,7 @@ GST_START_TEST (test_upload_meta_producer)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 gst_gl_upload_suite (void)
 {
   Suite *s = suite_create ("GstGLUpload");

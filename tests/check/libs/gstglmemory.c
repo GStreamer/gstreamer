@@ -33,7 +33,7 @@
 static GstGLDisplay *display;
 static GstGLContext *context;
 
-void
+static void
 setup (void)
 {
   display = gst_gl_display_new ();
@@ -42,7 +42,7 @@ setup (void)
   gst_gl_memory_init ();
 }
 
-void
+static void
 teardown (void)
 {
   gst_object_unref (display);
@@ -115,7 +115,7 @@ GST_START_TEST (test_basic)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 gst_gl_memory_suite (void)
 {
   Suite *s = suite_create ("GstGLMemory");

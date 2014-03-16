@@ -37,7 +37,7 @@ gst_gl_effects_stretch_callback (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "stretch0", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "stretch0", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,

@@ -294,7 +294,7 @@ gst_gl_shader_init (GstGLShader * self)
   priv->active = FALSE;         /* unused at the moment */
 }
 
-gboolean
+static gboolean
 _fill_vtable (GstGLShader * shader, GstGLContext * context)
 {
   GstGLFuncs *gl = context->gl_vtable;

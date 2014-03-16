@@ -58,7 +58,7 @@ struct _GstGLFilterCubeClass
     GstGLFilterClass filter_class;
 };
 
-GType gst_gl_glfiltercube_get_type (void);
+GType gst_gl_filter_cube_get_type (void);
 
 G_END_DECLS
 
