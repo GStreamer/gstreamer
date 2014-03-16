@@ -3,7 +3,7 @@ SUBDIRS = sources sources/glue doc
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer-sharp-1.0.pc
 
-EXTRA_DIST = gstreamer-sharp-1.0.pc.in
+EXTRA_DIST = gstreamer-sharp-1.0.pc.in out/gstreamer-sharp.dll.config
 DISTCLEANFILES = gstreamer-sharp-1.0.pc
 
 regenerate:
