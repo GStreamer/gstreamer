@@ -254,7 +254,8 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     }
 
     GST_DEBUG_OBJECT (self, "default nPFrames:%u, nIDRPeriod:%u",
-        config_avcintraperiod.nPFrames, config_avcintraperiod.nIDRPeriod);
+        (guint) config_avcintraperiod.nPFrames,
+        (guint) config_avcintraperiod.nIDRPeriod);
 
     if (self->periodicty_idr !=
         GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT) {
