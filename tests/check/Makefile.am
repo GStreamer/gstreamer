@@ -36,7 +36,8 @@ check_PROGRAMS = \
 	gst/threadpool \
 	gst/permissions \
 	gst/token \
-	gst/sessionmedia
+	gst/sessionmedia \
+	gst/sessionpool
 
 # these tests don't even pass
 noinst_PROGRAMS =
