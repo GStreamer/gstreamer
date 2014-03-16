@@ -58,8 +58,8 @@
 
 #include <sys/time.h>
 #include <sys/ioctl.h>
-#include <linux/types.h>
 
+#include "ext/types-compat.h"
 #include "ext/v4l2-common.h"
 #include "ext/v4l2-controls.h"
 
