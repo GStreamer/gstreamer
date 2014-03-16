@@ -9,7 +9,7 @@ sources = custom/*.cs
 
 build_sources = AssemblyInfo.cs $(sources)
 
-CLEANFILES = $(DLL) generated-stamp generated/*.cs $(API)
+CLEANFILES = $(DLL) generated-stamp generated/*/*.cs $(API)
 
 DISTCLEANFILES = AssemblyInfo.cs $(DLLMAP)
 
@@ -30,7 +30,8 @@ $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA)
 	$(GAPI_FIXUP) --api=$(srcdir)/$(API) --metadata=$(srcdir)/$(METADATA)
 
 generated-stamp: $(API)
-	 $(GAPI_CODEGEN) --generate $(srcdir)/$(API) $(GLIB_SHARP_CFLAGS) \
+	rm -rf generated/* && \
+	$(GAPI_CODEGEN) --generate $(srcdir)/$(API) $(GLIB_SHARP_CFLAGS) \
 		--outdir=generated \
 		--glue-filename=$(GLUEDIR)/generated.c --gluelib-name=libgstreamersharpglue-1.0.0.dll \
 		--glue-includes=gst/gst.h,`cd $(GST_INCLUDEDIR);find gst -type f | tr "\n" ","` \
@@ -38,7 +39,7 @@ generated-stamp: $(API)
 
 $(DLL): $(build_sources) generated-stamp
 	$(CSC) -nowarn:169 -unsafe -target:library $(GLIB_SHARP_LIBS) \
-		$(build_sources)  generated/*.cs -out:$(DLL)
+		$(build_sources)  generated/*/*.cs -out:$(DLL)
 
 install-data-local:
 	echo "$(GACUTIL) /i $(DLL) /f $(GACUTIL_FLAGS)";  \
@@ -47,3 +48,5 @@ install-data-local:
 uninstall-local:
 	echo "$(GACUTIL) /u $(ASSEMBLY_NAME) $(GACUTIL_FLAGS)"; \
         $(GACUTIL) /u $(ASSEMBLY_NAME) $(GACUTIL_FLAGS) || exit 1;
+clean-local:
+	-rm -r generated/*

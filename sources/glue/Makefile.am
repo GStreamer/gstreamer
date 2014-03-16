@@ -13,6 +13,6 @@ INCLUDES = $(GST_CFLAGS) -I$(top_srcdir)
 libgstreamersharpglue.dll: $(libgstreamersharpglue_1_0_0_la_OBJECTS) libgstreamersharpglue.rc libgstreamersharpglue.def
 	./build-dll libgstreamersharpglue $(VERSION)
 
-CLEANFILES = lib*.a lib*.dll
+CLEANFILES = lib*.a lib*.dll generated.c
 
 EXTRA_DIST =

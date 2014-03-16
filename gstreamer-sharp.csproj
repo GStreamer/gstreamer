@@ -40,7 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="sources\custom\*.cs" />
-    <Compile Include="sources\generated\*.cs" />
+    <Compile Include="sources\generated\**\*.cs" />
     <Compile Include="sources\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

@@ -208,32 +208,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace[@name='GstRtp']" name="name">Gst.Rtp</attr>
 	<attr path="/api/namespace[@name='GstRtsp']" name="name">Gst.Rtsp</attr>
 	<attr path="/api/namespace[@name='GstSdp']" name="name">Gst.Sdp</attr>
-	<attr path="/api/namespace[@name='Gst.Base']/object[@name='Global']" name="name">GlobalBase</attr>
-	<attr path="/api/namespace[@name='Gst.Video']/object[@name='Global']" name="name">GlobalVideo</attr>
-	<attr path="/api/namespace[@name='Gst.Audio']/object[@name='Global']" name="name">GlobalAudio</attr>
-	<attr path="/api/namespace[@name='Gst.PbUtils']/object[@name='Global']" name="name">GlobalPbUtil</attr>
-	<attr path="/api/namespace[@name='Gst.Tags']/object[@name='Global']" name="name">GlobalTag</attr>
-	<attr path="/api/namespace[@name='Gst.App']/object[@name='Global']" name="name">GlobalApp</attr>
-	<attr path="/api/namespace[@name='Gst.Controller']/object[@name='Global']" name="name">GlobalController</attr>
-	<attr path="/api/namespace[@name='Gst.FFT']/object[@name='Global']" name="name">GlobalFFT</attr>
-	<attr path="/api/namespace[@name='Gst.Net']/object[@name='Global']" name="name">GlobalNet</attr>
-	<attr path="/api/namespace[@name='Gst.Riff']/object[@name='Global']" name="name">GlobalRiff</attr>
-	<attr path="/api/namespace[@name='Gst.Rtp']/object[@name='Global']" name="name">GlobalRtp</attr>
-	<attr path="/api/namespace[@name='Gst.Rtsp']/object[@name='Global']" name="name">GlobalRtsp</attr>
-	<attr path="/api/namespace[@name='Gst.Sdp']/object[@name='Global']" name="name">GlobalSdp</attr>
-	<attr path="/api/namespace[@name='Gst.Base']/object[@name='Constants']" name="name">ConstantsBase</attr>
-	<attr path="/api/namespace[@name='Gst.Video']/object[@name='Constants']" name="name">ConstantsVideo</attr>
-	<attr path="/api/namespace[@name='Gst.Audio']/object[@name='Constants']" name="name">ConstantsAudio</attr>
-	<attr path="/api/namespace[@name='Gst.PbUtils']/object[@name='Constants']" name="name">ConstantsPbUtil</attr>
-	<attr path="/api/namespace[@name='Gst.Tags']/object[@name='Constants']" name="name">ConstantsTag</attr>
-	<attr path="/api/namespace[@name='Gst.App']/object[@name='Constants']" name="name">ConstantsApp</attr>
-	<attr path="/api/namespace[@name='Gst.Controller']/object[@name='Constants']" name="name">ConstantsController</attr>
-	<attr path="/api/namespace[@name='Gst.FFT']/object[@name='Constants']" name="name">ConstantsFFT</attr>
-	<attr path="/api/namespace[@name='Gst.Net']/object[@name='Constants']" name="name">ConstantsNet</attr>
-	<attr path="/api/namespace[@name='Gst.Riff']/object[@name='Constants']" name="name">ConstantsRiff</attr>
-	<attr path="/api/namespace[@name='Gst.Rtp']/object[@name='Constants']" name="name">ConstantsRtp</attr>
-	<attr path="/api/namespace[@name='Gst.Rtsp']/object[@name='Constants']" name="name">ConstantsRtsp</attr>
-	<attr path="/api/namespace[@name='Gst.Sdp']/object[@name='Constants']" name="name">ConstantsSdp</attr>
 
 	<!-- FIXME: Remove when https://bugzilla.gnome.org/show_bug.cgi?id=710001 is fixed -->
 	<attr path="/api/namespace" name="library">libgstreamer-1.0-0.dll</attr>
