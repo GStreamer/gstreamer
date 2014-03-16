@@ -531,6 +531,27 @@ gst_v4l2_transform_init (GstV4l2Transform * self)
 }
 
 static void
+gst_v4l2_transform_subinstance_init (GTypeInstance * instance, gpointer g_class)
+{
+  GstV4l2TransformClass *klass = GST_V4L2_TRANSFORM_CLASS (g_class);
+  GstV4l2Transform *self = GST_V4L2_TRANSFORM (instance);
+
+  self->v4l2output = gst_v4l2_object_new (GST_ELEMENT (self),
+      V4L2_BUF_TYPE_VIDEO_OUTPUT, klass->default_device,
+      gst_v4l2_get_output, gst_v4l2_set_output, NULL);
+  self->v4l2output->no_initial_format = TRUE;
+  self->v4l2output->keep_aspect = FALSE;
+
+  self->v4l2capture = gst_v4l2_object_new (GST_ELEMENT (self),
+      V4L2_BUF_TYPE_VIDEO_CAPTURE, klass->default_device,
+      gst_v4l2_get_input, gst_v4l2_set_input, NULL);
+  self->v4l2capture->no_initial_format = TRUE;
+  self->v4l2output->keep_aspect = FALSE;
+
+  g_object_set (self, "device", klass->default_device, NULL);
+}
+
+static void
 gst_v4l2_transform_class_init (GstV4l2TransformClass * klass)
 {
   GstElementClass *element_class;
@@ -616,27 +637,6 @@ gst_v4l2_transform_subclass_init (gpointer g_class, gpointer data)
           cdata->src_caps));
 
   g_free (cdata);
-}
-
-static void
-gst_v4l2_transform_subinstance_init (GTypeInstance * instance, gpointer g_class)
-{
-  GstV4l2TransformClass *klass = GST_V4L2_TRANSFORM_CLASS (g_class);
-  GstV4l2Transform *self = GST_V4L2_TRANSFORM (instance);
-
-  self->v4l2output = gst_v4l2_object_new (GST_ELEMENT (self),
-      V4L2_BUF_TYPE_VIDEO_OUTPUT, klass->default_device,
-      gst_v4l2_get_output, gst_v4l2_set_output, NULL);
-  self->v4l2output->no_initial_format = TRUE;
-  self->v4l2output->keep_aspect = FALSE;
-
-  self->v4l2capture = gst_v4l2_object_new (GST_ELEMENT (self),
-      V4L2_BUF_TYPE_VIDEO_CAPTURE, klass->default_device,
-      gst_v4l2_get_input, gst_v4l2_set_input, NULL);
-  self->v4l2capture->no_initial_format = TRUE;
-  self->v4l2output->keep_aspect = FALSE;
-
-  g_object_set (self, "device", klass->default_device, NULL);
 }
 
 /* Probing functions */
