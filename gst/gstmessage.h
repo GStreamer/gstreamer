@@ -99,11 +99,18 @@ typedef struct _GstMessage GstMessage;
  *     the URI for the next title has been set).
  * @GST_MESSAGE_NEED_CONTEXT: Message indicating that an element wants a specific context (Since 1.2)
  * @GST_MESSAGE_HAVE_CONTEXT: Message indicating that an element created a context (Since 1.2)
- * @GST_MESSAGE_EXTENDED: See gst_message_get_extended_type() to get the type (Since 1.2)
+ * @GST_MESSAGE_EXTENDED: Message is an extended message type (see below).
+ *     These extended message IDs can't be used directly with mask-based API
+ *     like gst_bus_poll() or gst_bus_timed_pop_filtered(), but you can still
+ *     filter for GST_MESSAGE_EXTENDED and then check the result for the
+ *     specific type. (Since 1.4)
+ * @GST_MESSAGE_DEVICE_ADDED: Message indicating a #GstDevice was added to
+ *     a #GstDeviceMonitor (Since 1.4)
+ * @GST_MESSAGE_DEVICE_REMOVED: Message indicating a #GstDevice was removed
+ *     from a #GstDeviceMonitor (Since 1.4)
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
- * The different message types that are available. Also see
- * #GstMessageExtendedType for more types.
+ * The different message types that are available.
  */
 /* NOTE: keep in sync with quark registration in gstmessage.c
  * NOTE: keep GST_MESSAGE_ANY a valid gint to avoid compiler warnings.
@@ -144,26 +151,10 @@ typedef enum
   GST_MESSAGE_NEED_CONTEXT      = (1 << 29),
   GST_MESSAGE_HAVE_CONTEXT      = (1 << 30),
   GST_MESSAGE_EXTENDED          = (1 << 31),
+  GST_MESSAGE_DEVICE_ADDED      = GST_MESSAGE_EXTENDED + 1,
+  GST_MESSAGE_DEVICE_REMOVED    = GST_MESSAGE_EXTENDED + 2,
   GST_MESSAGE_ANY               = ~0
 } GstMessageType;
-
-/**
- * GstMessageExtendedType:
- * @GST_MESSAGE_DEVICE_ADDED: A #GstDevice addition according to
- * a #GstDeviceMonitor (Since 1.4)
- * @GST_MESSAGE_DEVICE_REMOVED: A #GstDevice removal according to
- * a #GstDeviceMonitor (Since 1.4)
- *
- * Extra message types, see #GstMessageType for the basic types
- *
- * Since: 1.4
- */
-
-typedef enum {
-  /* Skip those defined in #GstMessage to avoid confusion */
-  GST_MESSAGE_DEVICE_ADDED               = 3,
-  GST_MESSAGE_DEVICE_REMOVED             = 5
-} GstMessageExtendedType;
 
 #include <gst/gstminiobject.h>
 #include <gst/gstobject.h>
@@ -322,8 +313,6 @@ GType           gst_message_get_type            (void);
 
 const gchar*    gst_message_type_get_name       (GstMessageType type);
 GQuark          gst_message_type_to_quark       (GstMessageType type);
-
-GstMessageExtendedType gst_message_get_extended_type (GstMessage * msg);
 
 /* refcounting */
 /**

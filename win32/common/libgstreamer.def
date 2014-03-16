@@ -621,8 +621,6 @@ EXPORTS
 	gst_memory_resize
 	gst_memory_share
 	gst_memory_unmap
-	gst_message_extended_type_get_type
-	gst_message_get_extended_type
 	gst_message_get_seqnum
 	gst_message_get_stream_status_object
 	gst_message_get_structure

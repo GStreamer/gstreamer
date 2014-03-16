@@ -60,8 +60,6 @@ typedef struct
 {
   GstMessage message;
 
-  GstMessageExtendedType extended_type;
-
   GstStructure *structure;
 } GstMessageImpl;
 
@@ -107,7 +105,6 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_STREAM_START, "stream-start", 0},
   {GST_MESSAGE_NEED_CONTEXT, "need-context", 0},
   {GST_MESSAGE_HAVE_CONTEXT, "have-context", 0},
-  {GST_MESSAGE_EXTENDED, "extended", 0},
   {GST_MESSAGE_DEVICE_ADDED, "device-added", 0},
   {GST_MESSAGE_DEVICE_REMOVED, "device-removed", 0},
   {0, NULL, 0}
@@ -240,16 +237,6 @@ _gst_message_copy (GstMessage * message)
   return GST_MESSAGE_CAST (copy);
 }
 
-GstMessageExtendedType
-gst_message_get_extended_type (GstMessage * msg)
-{
-  GstMessageImpl *message = (GstMessageImpl *) msg;
-
-  g_return_val_if_fail (GST_IS_MESSAGE (msg), 0);
-
-  return message->extended_type;
-}
-
 static void
 gst_message_init (GstMessageImpl * message, GstMessageType type,
     GstObject * src)
@@ -313,20 +300,6 @@ had_parent:
     g_warning ("structure is already owned by another object");
     return NULL;
   }
-}
-
-static inline GstMessage *
-gst_message_new_extended (GstMessageExtendedType extended_type, GstObject * src,
-    GstStructure * structure)
-{
-  GstMessageImpl *message;
-
-  message = (GstMessageImpl *) gst_message_new_custom (GST_MESSAGE_EXTENDED,
-      src, structure);
-
-  message->extended_type = extended_type;
-
-  return GST_MESSAGE_CAST (message);
 }
 
 /**
@@ -2378,9 +2351,12 @@ gst_message_new_device_added (GstObject * src, GstDevice * device)
   GstMessage *message;
   GstStructure *structure;
 
+  g_return_val_if_fail (device != NULL, NULL);
+  g_return_val_if_fail (GST_IS_DEVICE (device), NULL);
+
   structure = gst_structure_new_id (GST_QUARK (MESSAGE_DEVICE_ADDED),
       GST_QUARK (DEVICE), GST_TYPE_DEVICE, device, NULL);
-  message = gst_message_new_extended (GST_MESSAGE_DEVICE_ADDED, src, structure);
+  message = gst_message_new_custom (GST_MESSAGE_DEVICE_ADDED, src, structure);
 
   return message;
 }
@@ -2400,9 +2376,7 @@ void
 gst_message_parse_device_added (GstMessage * message, GstDevice ** device)
 {
   g_return_if_fail (GST_IS_MESSAGE (message));
-  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_EXTENDED);
-  g_return_if_fail (gst_message_get_extended_type (message) ==
-      GST_MESSAGE_DEVICE_ADDED);
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_DEVICE_ADDED);
 
   if (device)
     gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
@@ -2428,10 +2402,12 @@ gst_message_new_device_removed (GstObject * src, GstDevice * device)
   GstMessage *message;
   GstStructure *structure;
 
+  g_return_val_if_fail (device != NULL, NULL);
+  g_return_val_if_fail (GST_IS_DEVICE (device), NULL);
+
   structure = gst_structure_new_id (GST_QUARK (MESSAGE_DEVICE_REMOVED),
       GST_QUARK (DEVICE), GST_TYPE_DEVICE, device, NULL);
-  message = gst_message_new_extended (GST_MESSAGE_DEVICE_REMOVED, src,
-      structure);
+  message = gst_message_new_custom (GST_MESSAGE_DEVICE_REMOVED, src, structure);
 
   return message;
 }
@@ -2451,9 +2427,7 @@ void
 gst_message_parse_device_removed (GstMessage * message, GstDevice ** device)
 {
   g_return_if_fail (GST_IS_MESSAGE (message));
-  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_EXTENDED);
-  g_return_if_fail (gst_message_get_extended_type (message) ==
-      GST_MESSAGE_DEVICE_REMOVED);
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_DEVICE_REMOVED);
 
   if (device)
     gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
