@@ -390,6 +390,31 @@ GST_START_TEST (test_timed_pop)
 
 GST_END_TEST;
 
+static GType foo_device_get_type (void);
+
+typedef struct
+{
+  GstDevice device;
+} FooDevice;
+typedef struct
+{
+  GstDeviceClass device_klass;
+} FooDeviceClass;
+
+G_DEFINE_TYPE (FooDevice, foo_device, GST_TYPE_DEVICE);
+
+static void
+foo_device_class_init (FooDeviceClass * klass)
+{
+  /* nothing to do here */
+}
+
+static void
+foo_device_init (FooDevice * device)
+{
+  /* nothing to do here */
+}
+
 /* test that you get the messages with pop_filtered */
 GST_START_TEST (test_timed_pop_filtered)
 {
@@ -432,6 +457,23 @@ GST_START_TEST (test_timed_pop_filtered)
   gst_message_unref (msg);
   msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_ERROR);
   fail_unless (msg == NULL);
+
+  send_5app_1el_1err_2app_messages (0);
+  {
+    GstDevice *device;
+
+    device = g_object_new (foo_device_get_type (), NULL);
+    msg = gst_message_new_device_added (NULL, device);
+    gst_object_unref (device);
+
+    GST_LOG ("posting device message");
+    gst_bus_post (test_bus, msg);
+  }
+  send_5app_1el_1err_2app_messages (0);
+  msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_EXTENDED);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_DEVICE_ADDED);
+  gst_message_unref (msg);
 
   gst_object_unref (test_bus);
 }
