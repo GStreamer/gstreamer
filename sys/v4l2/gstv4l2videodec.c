@@ -449,6 +449,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
   }
 
   if (G_UNLIKELY (!GST_V4L2_IS_ACTIVE (self->v4l2capture))) {
+    GstBufferPool *pool = GST_BUFFER_POOL (self->v4l2output->pool);
     GstVideoInfo info;
     GstVideoCodecState *output_state;
     GstBuffer *codec_data;
@@ -467,6 +468,9 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
       codec_data = frame->input_buffer;
       frame->input_buffer = NULL;
     }
+
+    if (!gst_buffer_pool_set_active (pool, TRUE))
+      goto activate_failed;
 
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     gst_v4l2_object_unlock_stop (self->v4l2output);
@@ -494,6 +498,11 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
       else
         goto not_negotiated;
     }
+
+    /* Ensure our internal pool is activated */
+    if (!gst_buffer_pool_set_active (GST_BUFFER_POOL (self->v4l2capture->pool),
+            TRUE))
+      goto activate_failed;
   }
 
   if (g_atomic_int_get (&self->processing) == FALSE) {
@@ -541,6 +550,13 @@ not_negotiated:
     GST_ERROR_OBJECT (self, "not negotiated");
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto drop;
+  }
+activate_failed:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+        (_("Failed to allocated required memory.")),
+        ("Buffer pool activation failed"));
+    return GST_FLOW_ERROR;
   }
 flushing:
   {
