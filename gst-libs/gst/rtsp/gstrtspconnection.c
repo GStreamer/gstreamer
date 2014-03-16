@@ -750,6 +750,7 @@ connect_failed:
   {
     GST_ERROR ("failed to connect: %s", error->message);
     g_clear_error (&error);
+    g_free (uri);
     return GST_RTSP_ERROR;
   }
 remote_address_failed:
@@ -757,11 +758,13 @@ remote_address_failed:
     GST_ERROR ("failed to connect: %s", error->message);
     g_object_unref (connection);
     g_clear_error (&error);
+    g_free (uri);
     return GST_RTSP_ERROR;
   }
 tunneling_failed:
   {
     GST_ERROR ("failed to setup tunneling");
+    g_free (uri);
     return res;
   }
 }
