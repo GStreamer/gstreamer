@@ -2873,6 +2873,7 @@ gst_v4l2_object_get_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 gboolean
 gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 {
+  GstCaps *caps;
   GstBufferPool *pool;
   guint size, min, max;
   gboolean update;
@@ -2885,10 +2886,9 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   g_return_val_if_fail (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
       obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE, FALSE);
 
-  if (obj->pool == NULL) {
-    GstCaps *caps;
-    gst_query_parse_allocation (query, &caps, NULL);
+  gst_query_parse_allocation (query, &caps, NULL);
 
+  if (obj->pool == NULL) {
     if (!gst_v4l2_object_setup_pool (obj, caps))
       goto pool_failed;
   }
@@ -2984,10 +2984,8 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 
   if (pool) {
     GstStructure *config;
-    GstCaps *caps;
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
     /* if downstream supports video metadata, add this to the pool config */
@@ -3004,10 +3002,8 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
    * copy to a downstream compatible buffer */
   if (pool != obj->pool && obj->need_video_meta) {
     GstStructure *config;
-    GstCaps *caps;
 
     config = gst_buffer_pool_get_config (obj->pool);
-    gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);
     gst_buffer_pool_config_set_params (config, caps, obj->sizeimage, min, 0);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -3018,6 +3014,17 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   if (obj->need_crop_meta)
     gst_v4l2_buffer_pool_add_crop_meta (GST_V4L2_BUFFER_POOL (obj->pool),
         obj->need_crop_meta);
+
+  /* Size field is mandatory and we have no size if now using our own pool and
+   * downstream didn't provide one. */
+  if (size == 0) {
+    GstVideoInfo info;
+
+    gst_video_info_init (&info);
+    gst_video_info_from_caps (&info, caps);
+
+    size = GST_VIDEO_INFO_SIZE (&info);
+  }
 
   if (update)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
