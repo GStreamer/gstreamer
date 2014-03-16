@@ -26,6 +26,11 @@
 
 #include "gstomxh264enc.h"
 
+#ifdef USE_OMX_TARGET_RPI
+#include <OMX_Broadcom.h>
+#include <OMX_Index.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_omx_h264_enc_debug_category);
 #define GST_CAT_DEFAULT gst_omx_h264_enc_debug_category
 
@@ -36,11 +41,27 @@ static GstCaps *gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc,
     GstOMXPort * port, GstVideoCodecState * state);
 static GstFlowReturn gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc *
     self, GstOMXPort * port, GstOMXBuffer * buf, GstVideoCodecFrame * frame);
+static void gst_omx_h264_enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_omx_h264_enc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 enum
 {
-  PROP_0
+  PROP_0,
+#ifdef USE_OMX_TARGET_RPI
+  PROP_INLINESPSPPSHEADERS,
+#endif
+  PROP_PERIODICITYOFIDRFRAMES,
+  PROP_INTERVALOFCODINGINTRAFRAMES
 };
+
+#ifdef USE_OMX_TARGET_RPI
+#define GST_OMX_H264_VIDEO_ENC_INLINE_SPS_PPS_HEADERS_DEFAULT      TRUE
+#endif
+#define GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT    (0xffffffff)
+#define GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT (0xffffffff)
+
 
 /* class initialization */
 
@@ -54,11 +75,43 @@ G_DEFINE_TYPE_WITH_CODE (GstOMXH264Enc, gst_omx_h264_enc,
 static void
 gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (klass);
 
   videoenc_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h264_enc_set_format);
   videoenc_class->get_caps = GST_DEBUG_FUNCPTR (gst_omx_h264_enc_get_caps);
+
+  gobject_class->set_property = gst_omx_h264_enc_set_property;
+  gobject_class->get_property = gst_omx_h264_enc_get_property;
+
+#ifdef USE_OMX_TARGET_RPI
+  g_object_class_install_property (gobject_class, PROP_INLINESPSPPSHEADERS,
+      g_param_spec_boolean ("inline-header",
+          "Inline SPS/PPS headers before IDR",
+          "Inline SPS/PPS header before IDR",
+          GST_OMX_H264_VIDEO_ENC_INLINE_SPS_PPS_HEADERS_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+#endif
+
+  g_object_class_install_property (gobject_class, PROP_PERIODICITYOFIDRFRAMES,
+      g_param_spec_uint ("periodicty-idr", "Target Bitrate",
+          "Periodicity of IDR frames (0xffffffff=component default)",
+          0, G_MAXUINT,
+          GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class,
+      PROP_INTERVALOFCODINGINTRAFRAMES,
+      g_param_spec_uint ("interval-intraframes",
+          "Interval of coding Intra frames",
+          "Interval of coding Intra frames (0xffffffff=component default)", 0,
+          G_MAXUINT,
+          GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 
   videoenc_class->cdata.default_src_template_caps = "video/x-h264, "
       "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
@@ -75,8 +128,64 @@ gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
 }
 
 static void
+gst_omx_h264_enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstOMXH264Enc *self = GST_OMX_H264_ENC (object);
+
+  switch (prop_id) {
+#ifdef USE_OMX_TARGET_RPI
+    case PROP_INLINESPSPPSHEADERS:
+      self->inline_sps_pps_headers = g_value_get_boolean (value);
+      break;
+#endif
+    case PROP_PERIODICITYOFIDRFRAMES:
+      self->periodicty_idr = g_value_get_uint (value);
+      break;
+    case PROP_INTERVALOFCODINGINTRAFRAMES:
+      self->interval_intraframes = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_omx_h264_enc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstOMXH264Enc *self = GST_OMX_H264_ENC (object);
+
+  switch (prop_id) {
+#ifdef USE_OMX_TARGET_RPI
+    case PROP_INLINESPSPPSHEADERS:
+      g_value_set_boolean (value, self->inline_sps_pps_headers);
+      break;
+#endif
+    case PROP_PERIODICITYOFIDRFRAMES:
+      g_value_set_uint (value, self->periodicty_idr);
+      break;
+    case PROP_INTERVALOFCODINGINTRAFRAMES:
+      g_value_set_uint (value, self->interval_intraframes);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_omx_h264_enc_init (GstOMXH264Enc * self)
 {
+#ifdef USE_OMX_TARGET_RPI
+  self->inline_sps_pps_headers =
+      GST_OMX_H264_VIDEO_ENC_INLINE_SPS_PPS_HEADERS_DEFAULT;
+#endif
+  self->periodicty_idr =
+      GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT;
+  self->interval_intraframes =
+      GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT;
 }
 
 static gboolean
@@ -87,8 +196,86 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstCaps *peercaps;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
+  OMX_VIDEO_CONFIG_AVCINTRAPERIOD config_avcintraperiod;
+#ifdef USE_OMX_TARGET_RPI
+  OMX_CONFIG_PORTBOOLEANTYPE config_inline_header;
+#endif
   OMX_ERRORTYPE err;
   const gchar *profile_string, *level_string;
+
+#ifdef USE_OMX_TARGET_RPI
+  GST_OMX_INIT_STRUCT (&config_inline_header);
+  config_inline_header.nPortIndex =
+      GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
+  err =
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexParamBrcmVideoAVCInlineHeaderEnable, &config_inline_header);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "can't get OMX_IndexParamBrcmVideoAVCInlineHeaderEnable %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  if (self->inline_sps_pps_headers) {
+    config_inline_header.bEnabled = OMX_TRUE;
+  } else {
+    config_inline_header.bEnabled = OMX_FALSE;
+  }
+
+  err =
+      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexParamBrcmVideoAVCInlineHeaderEnable, &config_inline_header);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "can't set OMX_IndexParamBrcmVideoAVCInlineHeaderEnable %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+#endif
+
+  if (self->periodicty_idr !=
+      GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT
+      || self->interval_intraframes !=
+      GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT) {
+
+
+    GST_OMX_INIT_STRUCT (&config_avcintraperiod);
+    config_avcintraperiod.nPortIndex =
+        GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
+    err =
+        gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+        OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
+    if (err != OMX_ErrorNone) {
+      GST_ERROR_OBJECT (self,
+          "can't get OMX_IndexConfigVideoAVCIntraPeriod %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+      return FALSE;
+    }
+
+    GST_DEBUG_OBJECT (self, "default nPFrames:%u, nIDRPeriod:%u",
+        config_avcintraperiod.nPFrames, config_avcintraperiod.nIDRPeriod);
+
+    if (self->periodicty_idr !=
+        GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT) {
+      config_avcintraperiod.nIDRPeriod = self->periodicty_idr;
+    }
+
+    if (self->interval_intraframes !=
+        GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT) {
+      config_avcintraperiod.nPFrames = self->interval_intraframes;
+    }
+
+    err =
+        gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+        OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
+    if (err != OMX_ErrorNone) {
+      GST_ERROR_OBJECT (self,
+          "can't set OMX_IndexConfigVideoAVCIntraPeriod %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+      return FALSE;
+    }
+  }
 
   gst_omx_port_get_port_definition (GST_OMX_VIDEO_ENC (self)->enc_out_port,
       &port_def);
