@@ -183,6 +183,8 @@ struct _GstDecodeBin
   gboolean expose_allstreams;   /* Whether to expose unknow type streams or not */
 
   GList *filtered;              /* elements for which error messages are filtered */
+
+  GList *buffering_status;      /* element currently buffering messages */
 };
 
 struct _GstDecodeBinClass
@@ -4563,6 +4565,9 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
         dbin->decode_chain = NULL;
       }
       EXPOSE_UNLOCK (dbin);
+      g_list_free_full (dbin->buffering_status,
+          (GDestroyNotify) gst_message_unref);
+      dbin->buffering_status = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
     default:
@@ -4597,6 +4602,80 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
     GST_OBJECT_LOCK (dbin);
     drop = (g_list_find (dbin->filtered, GST_MESSAGE_SRC (msg)) != NULL);
     GST_OBJECT_UNLOCK (dbin);
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_BUFFERING) {
+    gint perc, msg_perc;
+    gint smaller_perc = 100;
+    GstMessage *smaller = NULL;
+    GList *found = NULL;
+    GList *iter;
+
+    /* buffering messages must be aggregated as there might be multiple
+     * multiqueue in the pipeline and their independent buffering messages
+     * will confuse the application
+     *
+     * decodebin keeps a list of messages received from elements that are
+     * buffering.
+     * Rules are:
+     * 1) Always post the smaller buffering %
+     * 2) If an element posts a 100% buffering message, remove it from the list
+     * 3) When there are no more messages on the list, post 100% message
+     * 4) When an element posts a new buffering message, update the one
+     *    on the list to this new value
+     */
+
+    gst_message_parse_buffering (msg, &msg_perc);
+
+    /*
+     * Single loop for 2 things:
+     * 1) Look for a message with the same source
+     *   1.1) If the received message is 100%, remove it from the list
+     * 2) Find the minimum buffering from the list
+     */
+    for (iter = dbin->buffering_status; iter;) {
+      GstMessage *bufstats = iter->data;
+      if (GST_MESSAGE_SRC (bufstats) == GST_MESSAGE_SRC (msg)) {
+        found = iter;
+        if (msg_perc < 100) {
+          gst_message_unref (iter->data);
+          bufstats = iter->data = gst_message_ref (msg);
+        } else {
+          GList *current = iter;
+
+          /* remove the element here and avoid confusing the loop */
+          iter = g_list_next (iter);
+
+          gst_message_unref (current->data);
+          dbin->buffering_status =
+              g_list_delete_link (dbin->buffering_status, current);
+
+          continue;
+        }
+      }
+
+      gst_message_parse_buffering (bufstats, &perc);
+      if (perc < smaller_perc) {
+        smaller_perc = perc;
+        smaller = bufstats;
+      }
+      iter = g_list_next (iter);
+    }
+
+    if (found == NULL && msg_perc < 100) {
+      if (msg_perc < smaller_perc) {
+        smaller_perc = msg_perc;
+        smaller = msg;
+      }
+      dbin->buffering_status =
+          g_list_prepend (dbin->buffering_status, gst_message_ref (msg));
+    }
+
+    /* now compute the buffering message that should be posted */
+    if (smaller_perc == 100) {
+      g_assert (dbin->buffering_status == NULL);
+      /* we are posting the original received msg */
+    } else {
+      gst_message_replace (&msg, smaller);
+    }
   }
 
   if (drop)

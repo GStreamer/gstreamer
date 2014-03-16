@@ -623,6 +623,99 @@ GST_START_TEST (test_parser_negotiation)
 
 GST_END_TEST;
 
+GST_START_TEST (test_buffering_aggregation)
+{
+  GstElement *pipe, *decodebin;
+  GstMessage *msg;
+  GstElement *mq0, *mq1, *mq2;
+  gint perc;
+
+  pipe = gst_pipeline_new (NULL);
+  fail_unless (pipe != NULL, "failed to create pipeline");
+
+  decodebin = gst_element_factory_make ("decodebin", "decodebin");
+  fail_unless (decodebin != NULL, "Failed to create decodebin element");
+
+  fail_unless (gst_bin_add (GST_BIN (pipe), decodebin));
+
+  /* to simulate the buffering scenarios we stuff 2 multiqueues inside
+   * decodebin. This is hacky, but sould make decodebin handle its buffering
+   * messages all the same */
+  mq0 = gst_element_factory_make ("multiqueue", NULL);
+  mq1 = gst_element_factory_make ("multiqueue", NULL);
+  mq2 = gst_element_factory_make ("multiqueue", NULL);
+
+  fail_unless (gst_bin_add (GST_BIN (decodebin), mq0));
+  fail_unless (gst_bin_add (GST_BIN (decodebin), mq1));
+  fail_unless (gst_bin_add (GST_BIN (decodebin), mq2));
+
+  fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_READY),
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_ASYNC);
+
+  /* currently we shoud have no buffering messages */
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_BUFFERING, 0);
+  fail_unless (msg == NULL);
+
+  /* only a single element buffering, the buffering percent should be the
+   * same as it */
+  gst_element_post_message (mq0, gst_message_new_buffering (GST_OBJECT (mq0),
+          50));
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_BUFFERING, 0);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_SRC (msg) == (GstObject *) mq0);
+  gst_message_parse_buffering (msg, &perc);
+  fail_unless (perc == 50);
+  gst_message_unref (msg);
+
+  /* two elements buffering, the buffering percent should be the
+   * lowest one */
+  gst_element_post_message (mq1, gst_message_new_buffering (GST_OBJECT (mq1),
+          20));
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_BUFFERING, 0);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_SRC (msg) == (GstObject *) mq1);
+  gst_message_parse_buffering (msg, &perc);
+  fail_unless (perc == 20);
+  gst_message_unref (msg);
+
+  /* a 100% message should be ignored */
+  gst_element_post_message (mq2, gst_message_new_buffering (GST_OBJECT (mq2),
+          100));
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_BUFFERING, 0);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_SRC (msg) == (GstObject *) mq1);
+  gst_message_parse_buffering (msg, &perc);
+  fail_unless (perc == 20);
+  gst_message_unref (msg);
+
+  /* a new buffering message is posted with a higher value, go with the 20 */
+  gst_element_post_message (mq2, gst_message_new_buffering (GST_OBJECT (mq2),
+          80));
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_BUFFERING, 0);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_SRC (msg) == (GstObject *) mq1);
+  gst_message_parse_buffering (msg, &perc);
+  fail_unless (perc == 20);
+  gst_message_unref (msg);
+
+  /* The mq1 finishes buffering, new buffering status is now 50% from mq0 */
+  gst_element_post_message (mq1, gst_message_new_buffering (GST_OBJECT (mq1),
+          100));
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_BUFFERING, 0);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_SRC (msg) == (GstObject *) mq0);
+  gst_message_parse_buffering (msg, &perc);
+  fail_unless (perc == 50);
+  gst_message_unref (msg);
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (pipe);
+}
+
+GST_END_TEST;
+
 static Suite *
 decodebin_suite (void)
 {
@@ -634,6 +727,7 @@ decodebin_suite (void)
   tcase_add_test (tc_chain, test_reuse_without_decoders);
   tcase_add_test (tc_chain, test_mp3_parser_loop);
   tcase_add_test (tc_chain, test_parser_negotiation);
+  tcase_add_test (tc_chain, test_buffering_aggregation);
 
   return s;
 }
