@@ -67,7 +67,8 @@ typedef enum
   GST_PLAY_FLAG_DOWNLOAD = (1 << 7),
   GST_PLAY_FLAG_BUFFERING = (1 << 8),
   GST_PLAY_FLAG_DEINTERLACE = (1 << 9),
-  GST_PLAY_FLAG_SOFT_COLORBALANCE = (1 << 10)
+  GST_PLAY_FLAG_SOFT_COLORBALANCE = (1 << 10),
+  GST_PLAY_FLAG_FORCE_FILTERS = (1 << 11),
 } GstPlayFlags;
 
 /* configuration */

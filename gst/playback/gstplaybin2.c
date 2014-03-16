@@ -565,6 +565,8 @@ enum
   PROP_AV_OFFSET,
   PROP_RING_BUFFER_MAX_SIZE,
   PROP_FORCE_ASPECT_RATIO,
+  PROP_AUDIO_FILTER,
+  PROP_VIDEO_FILTER,
   PROP_LAST
 };
 
@@ -837,6 +839,14 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "ISO-8859-15 will be assumed.", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_klass, PROP_VIDEO_FILTER,
+      g_param_spec_object ("video-filter", "Video filter",
+          "the video filter(s) to apply, if possible",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_klass, PROP_AUDIO_FILTER,
+      g_param_spec_object ("audio-filter", "Audio filter",
+          "the audio filter(s) to apply, if possible",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_VIDEO_SINK,
       g_param_spec_object ("video-sink", "Video Sink",
           "the video output element to use (NULL = default sink)",
@@ -2252,6 +2262,14 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
     case PROP_SUBTITLE_ENCODING:
       gst_play_bin_set_encoding (playbin, g_value_get_string (value));
       break;
+    case PROP_VIDEO_FILTER:
+      gst_play_sink_set_filter (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
+          GST_ELEMENT (g_value_get_object (value)));
+      break;
+    case PROP_AUDIO_FILTER:
+      gst_play_sink_set_filter (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
+          GST_ELEMENT (g_value_get_object (value)));
+      break;
     case PROP_VIDEO_SINK:
       gst_play_bin_set_sink (playbin, GST_PLAY_SINK_TYPE_VIDEO, "video",
           &playbin->video_sink, g_value_get_object (value));
@@ -2468,6 +2486,16 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_take_string (value,
           gst_play_sink_get_subtitle_encoding (playbin->playsink));
       GST_PLAY_BIN_UNLOCK (playbin);
+      break;
+    case PROP_VIDEO_FILTER:
+      g_value_take_object (value,
+          gst_play_sink_get_filter (playbin->playsink,
+              GST_PLAY_SINK_TYPE_VIDEO));
+      break;
+    case PROP_AUDIO_FILTER:
+      g_value_take_object (value,
+          gst_play_sink_get_filter (playbin->playsink,
+              GST_PLAY_SINK_TYPE_AUDIO));
       break;
     case PROP_VIDEO_SINK:
       g_value_take_object (value,
