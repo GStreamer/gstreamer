@@ -23,6 +23,8 @@
 static GstBus *test_bus = NULL;
 static GMainLoop *main_loop;
 
+static GType foo_device_get_type (void);
+
 #define NUM_MESSAGES 1000
 #define NUM_THREADS 10
 
@@ -295,7 +297,7 @@ message_func (GstBus * bus, GstMessage * message, gpointer data)
 }
 
 static void
-send_5app_1el_1err_2app_messages (guint interval_usecs)
+send_5app_1el_1err_2app_1eos_messages (guint interval_usecs)
 {
   GstMessage *m;
   GstStructure *s;
@@ -328,7 +330,35 @@ send_5app_1el_1err_2app_messages (guint interval_usecs)
     gst_bus_post (test_bus, m);
     g_usleep (interval_usecs);
   }
+  for (i = 0; i < 1; i++) {
+    m = gst_message_new_eos (NULL);
+    GST_LOG ("posting EOS message");
+    gst_bus_post (test_bus, m);
+    g_usleep (interval_usecs);
+  }
 }
+
+static void
+send_extended_messages (guint interval_usecs)
+{
+  GstMessage *msg;
+  GstDevice *device;
+
+  device = g_object_new (foo_device_get_type (), NULL);
+
+  msg = gst_message_new_device_added (NULL, device);
+  GST_LOG ("posting device-added message");
+  gst_bus_post (test_bus, msg);
+  g_usleep (interval_usecs);
+
+  msg = gst_message_new_device_removed (NULL, device);
+  GST_LOG ("posting device-removed message");
+  gst_bus_post (test_bus, msg);
+  g_usleep (interval_usecs);
+
+  gst_object_unref (device);
+}
+
 
 static void
 send_10_app_messages (void)
@@ -390,8 +420,6 @@ GST_START_TEST (test_timed_pop)
 
 GST_END_TEST;
 
-static GType foo_device_get_type (void);
-
 typedef struct
 {
   GstDevice device;
@@ -444,7 +472,7 @@ GST_START_TEST (test_timed_pop_filtered)
   msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_ANY);
   fail_unless (msg == NULL);
 
-  send_5app_1el_1err_2app_messages (0);
+  send_5app_1el_1err_2app_1eos_messages (0);
   msg = gst_bus_timed_pop_filtered (test_bus, 0,
       GST_MESSAGE_ANY ^ GST_MESSAGE_APPLICATION);
   fail_unless (msg != NULL);
@@ -458,21 +486,43 @@ GST_START_TEST (test_timed_pop_filtered)
   msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_ERROR);
   fail_unless (msg == NULL);
 
-  send_5app_1el_1err_2app_messages (0);
-  {
-    GstDevice *device;
+  gst_object_unref (test_bus);
 
-    device = g_object_new (foo_device_get_type (), NULL);
-    msg = gst_message_new_device_added (NULL, device);
-    gst_object_unref (device);
+  /* Test extended messages */
+  GST_DEBUG
+      ("Checking extended messages received from gst_bus_timed_pop_filtered");
+  test_bus = gst_bus_new ();
 
-    GST_LOG ("posting device message");
-    gst_bus_post (test_bus, msg);
-  }
-  send_5app_1el_1err_2app_messages (0);
+  send_5app_1el_1err_2app_1eos_messages (0);
+  send_extended_messages (0);
+  send_5app_1el_1err_2app_1eos_messages (0);
   msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_EXTENDED);
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_DEVICE_ADDED);
+  gst_message_unref (msg);
+
+  msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_EXTENDED);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_DEVICE_REMOVED);
+  gst_message_unref (msg);
+  gst_object_unref (test_bus);
+
+  /* Now check extended messages don't appear when we don't ask for them */
+  GST_DEBUG
+      ("Checking extended messages *not* received from gst_bus_timed_pop_filtered when not wanted");
+  test_bus = gst_bus_new ();
+
+  send_extended_messages (0);
+  send_5app_1el_1err_2app_1eos_messages (0);
+
+  msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_ERROR);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ERROR);
+  gst_message_unref (msg);
+
+  msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_EOS);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
   gst_object_unref (test_bus);
@@ -484,7 +534,7 @@ static gpointer
 post_delayed_thread (gpointer data)
 {
   THREAD_START ();
-  send_5app_1el_1err_2app_messages (1 * G_USEC_PER_SEC);
+  send_5app_1el_1err_2app_1eos_messages (1 * G_USEC_PER_SEC);
   return NULL;
 }
 

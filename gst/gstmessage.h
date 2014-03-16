@@ -188,6 +188,15 @@ typedef enum
  */
 #define GST_MESSAGE_TYPE(message)       (GST_MESSAGE_CAST(message)->type)
 /**
+ * GST_MESSAGE_TYPE_IS_EXTENDED:
+ * @message: a #GstMessage
+ *
+ * Check if the message is in the extended message group
+ * (Since 1.4)
+ */
+#define GST_MESSAGE_TYPE_IS_EXTENDED(message)       (!!(GST_MESSAGE_CAST(message)->type & GST_MESSAGE_EXTENDED))
+
+/**
  * GST_MESSAGE_TYPE_NAME:
  * @message: a #GstMessage
  *

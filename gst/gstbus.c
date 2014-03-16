@@ -505,13 +505,18 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
           message, GST_MESSAGE_TYPE_NAME (message),
           GST_MESSAGE_SRC_NAME (message), (guint) types);
       if ((GST_MESSAGE_TYPE (message) & types) != 0) {
-        /* exit the loop, we have a message */
-        goto beach;
-      } else {
-        GST_DEBUG_OBJECT (bus, "discarding message, does not match mask");
-        gst_message_unref (message);
-        message = NULL;
+        /* Extra check to ensure extended types don't get matched unless
+         * asked for */
+        if ((GST_MESSAGE_TYPE_IS_EXTENDED (message) == FALSE)
+            || (types & GST_MESSAGE_EXTENDED)) {
+          /* exit the loop, we have a message */
+          goto beach;
+        }
       }
+
+      GST_DEBUG_OBJECT (bus, "discarding message, does not match mask");
+      gst_message_unref (message);
+      message = NULL;
     }
 
     /* no need to wait, exit loop */
