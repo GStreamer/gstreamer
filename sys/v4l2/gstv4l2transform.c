@@ -291,11 +291,22 @@ gst_v4l2_transform_decide_allocation (GstBaseTransform * trans,
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
   gboolean ret = FALSE;
 
-  if (gst_v4l2_object_decide_allocation (self->v4l2capture, query))
+  if (gst_v4l2_object_decide_allocation (self->v4l2capture, query)) {
+    GstBufferPool *pool = GST_BUFFER_POOL (self->v4l2capture->pool);
+
     ret = GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
         query);
 
+    if (!gst_buffer_pool_set_active (pool, TRUE))
+      goto activate_failed;
+  }
+
   return ret;
+
+activate_failed:
+  GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+      ("failed to activate bufferpool"), ("failed to activate bufferpool"));
+  return GST_FLOW_ERROR;
 }
 
 /* TODO */
@@ -417,17 +428,16 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
     goto beach;
   }
 
+  /* Ensure input internal pool is active */
+  if (!gst_buffer_pool_set_active (pool, TRUE))
+    goto activate_failed;
+
   GST_DEBUG_OBJECT (self, "Queue input buffer");
   ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool), inbuf);
-  if (ret != GST_FLOW_OK)
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
 
   pool = gst_base_transform_get_buffer_pool (trans);
-
-  if (!gst_buffer_pool_is_active (pool)) {
-    if (!gst_buffer_pool_set_active (pool, TRUE))
-      goto activate_failed;
-  }
 
   GST_DEBUG_OBJECT (self, "Dequeue output buffer");
   ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL);
