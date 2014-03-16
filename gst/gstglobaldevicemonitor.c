@@ -61,16 +61,14 @@ static void
 bus_sync_message (GstBus * bus, GstMessage * message,
     GstGlobalDeviceMonitor * monitor)
 {
+  GstMessageType type = GST_MESSAGE_TYPE (message);
 
-  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_EXTENDED &&
-      (gst_message_get_extended_type (message) == GST_MESSAGE_DEVICE_ADDED ||
-          gst_message_get_extended_type (message) ==
-          GST_MESSAGE_DEVICE_REMOVED)) {
+  if (type == GST_MESSAGE_DEVICE_ADDED || type == GST_MESSAGE_DEVICE_REMOVED) {
     gboolean intersects;
     GstCaps *caps;
     GstDevice *device;
 
-    if (gst_message_get_extended_type (message) == GST_MESSAGE_DEVICE_ADDED)
+    if (type == GST_MESSAGE_DEVICE_ADDED)
       gst_message_parse_device_added (message, &device);
     else
       gst_message_parse_device_removed (message, &device);
@@ -117,7 +115,7 @@ gst_global_device_monitor_init (GstGlobalDeviceMonitor * self)
       GstBus *bus = gst_device_monitor_get_bus (monitor);
 
       gst_bus_enable_sync_message_emission (bus);
-      g_signal_connect (monitor, "sync-message::extended",
+      g_signal_connect (monitor, "sync-message",
           G_CALLBACK (bus_sync_message), self);
       g_ptr_array_add (self->priv->monitors, monitor);
     }
@@ -352,7 +350,7 @@ gst_global_device_monitor_set_type_filter (GstGlobalDeviceMonitor * self,
       GstBus *bus = gst_device_monitor_get_bus (monitor);
 
       gst_bus_enable_sync_message_emission (bus);
-      g_signal_connect (bus, "sync-message::extended",
+      g_signal_connect (bus, "sync-message",
           G_CALLBACK (bus_sync_message), self);
       gst_object_unref (bus);
       g_ptr_array_add (self->priv->monitors, monitor);
