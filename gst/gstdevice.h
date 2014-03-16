@@ -68,8 +68,16 @@ GstElement * gst_device_create_element (GstDevice * device, const gchar * name);
 
 GstCaps *    gst_device_get_caps (GstDevice * device);
 gchar *      gst_device_get_display_name (GstDevice * device);
+gchar *      gst_device_get_klass (GstDevice * device);
 gboolean     gst_device_reconfigure_element (GstDevice * device,
                                              GstElement * element);
+
+gboolean      gst_device_has_classesv (GstDevice * device,
+                                       gchar ** classes);
+
+gboolean      gst_device_has_classes (GstDevice * device,
+                                      const gchar * classes);
+
 
 G_END_DECLS
 

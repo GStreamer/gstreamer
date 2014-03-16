@@ -64,7 +64,7 @@ bus_sync_message (GstBus * bus, GstMessage * message,
   GstMessageType type = GST_MESSAGE_TYPE (message);
 
   if (type == GST_MESSAGE_DEVICE_ADDED || type == GST_MESSAGE_DEVICE_REMOVED) {
-    gboolean intersects;
+    gboolean matches;
     GstCaps *caps;
     GstDevice *device;
 
@@ -75,11 +75,12 @@ bus_sync_message (GstBus * bus, GstMessage * message,
 
     GST_OBJECT_LOCK (monitor);
     caps = gst_device_get_caps (device);
-    intersects = gst_caps_can_intersect (monitor->priv->caps, caps);
+    matches = gst_caps_can_intersect (monitor->priv->caps, caps) &&
+        gst_device_has_classes (device, monitor->priv->classes);
     gst_caps_unref (caps);
     GST_OBJECT_UNLOCK (monitor);
 
-    if (intersects)
+    if (matches)
       gst_bus_post (monitor->priv->bus, gst_message_ref (message));
   }
 }
@@ -204,7 +205,8 @@ again:
       GstDevice *dev = GST_DEVICE (item->data);
       GstCaps *caps = gst_device_get_caps (dev);
 
-      if (gst_caps_can_intersect (self->priv->caps, caps))
+      if (gst_caps_can_intersect (self->priv->caps, caps) &&
+          gst_device_has_classes (dev, self->priv->classes))
         devices = g_list_prepend (devices, gst_object_ref (dev));
       gst_caps_unref (caps);
     }

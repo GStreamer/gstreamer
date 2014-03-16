@@ -31,7 +31,8 @@
 enum
 {
   PROP_DISPLAY_NAME = 1,
-  PROP_CAPS
+  PROP_CAPS,
+  PROP_KLASS
 };
 
 enum
@@ -43,6 +44,7 @@ enum
 struct _GstDevicePrivate
 {
   GstCaps *caps;
+  gchar *klass;
   gchar *display_name;
 };
 
@@ -77,6 +79,10 @@ gst_device_class_init (GstDeviceClass * klass)
       g_param_spec_boxed ("caps", "Device Caps",
           "The possible caps of a device", GST_TYPE_CAPS,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property (object_class, PROP_KLASS,
+      g_param_spec_string ("klass", "Device Class",
+          "The Class of the device", "",
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   signals[REMOVED] = g_signal_new ("removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
@@ -97,6 +103,7 @@ gst_device_finalize (GObject * object)
   gst_caps_replace (&device->priv->caps, NULL);
 
   g_free (device->priv->display_name);
+  g_free (device->priv->klass);
 
   G_OBJECT_CLASS (gst_device_parent_class)->finalize (object);
 }
@@ -116,6 +123,9 @@ gst_device_get_property (GObject * object, guint prop_id,
     case PROP_CAPS:
       if (gstdevice->priv->caps)
         g_value_take_boxed (value, gst_device_get_caps (gstdevice));
+      break;
+    case PROP_KLASS:
+      g_value_take_string (value, gst_device_get_klass (gstdevice));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -138,6 +148,9 @@ gst_device_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CAPS:
       gst_caps_replace (&gstdevice->priv->caps, g_value_get_boxed (value));
+      break;
+    case PROP_KLASS:
+      gstdevice->priv->klass = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -199,7 +212,26 @@ gst_device_get_caps (GstDevice * device)
 gchar *
 gst_device_get_display_name (GstDevice * device)
 {
-  return g_strdup (device->priv->display_name);
+  return
+      g_strdup (device->priv->display_name ? device->priv->display_name : "");
+}
+
+/**
+ * gst_device_get_klass:
+ * @device: a #GstDevice
+ *
+ * Gets the "class" of a device. This is a "/" separated list of
+ * classes that represent this device. They are a subset of the
+ * classes of the #GstDeviceMonitor that produced this device.
+ *
+ * Returns: The device class. Free with g_free() after use.
+ *
+ * Since: 1.4
+ */
+gchar *
+gst_device_get_klass (GstDevice * device)
+{
+  return g_strdup (device->priv->klass ? device->priv->klass : "");
 }
 
 /**
@@ -228,4 +260,71 @@ gst_device_reconfigure_element (GstDevice * device, GstElement * element)
     return klass->reconfigure_element (device, element);
   else
     return FALSE;
+}
+
+/**
+ * gst_device_has_classesv:
+ * @device: a #GstDevice
+ * @classes: a %NULL terminated array of klasses to match, only match if all
+ *  classes are matched
+ *
+ * Check if @factory matches all of the given classes
+ *
+ * Returns: %TRUE if @device matches.
+ *
+ * Since: 1.4
+ */
+gboolean
+gst_device_has_classesv (GstDevice * device, gchar ** classes)
+{
+  g_return_val_if_fail (GST_IS_DEVICE (device), FALSE);
+
+
+  for (; classes[0]; classes++) {
+    const gchar *found;
+    guint len;
+
+    if (classes[0] == '\0')
+      continue;
+
+    found = strstr (device->priv->klass, classes[0]);
+
+    if (!found)
+      return FALSE;
+    if (found != device->priv->klass && *(found - 1) != '/')
+      return FALSE;
+
+    len = strlen (classes[0]);
+    if (found[len] != 0 && found[len] != '/')
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_device_has_classes:
+ * @device: a #GstDevice
+ * @classes: a "/" separate list of klasses to match, only match if all classes
+ *  are matched
+ *
+ * Check if @device matches all of the given classes
+ *
+ * Returns: %TRUE if @device matches.
+ *
+ * Since: 1.4
+ */
+gboolean
+gst_device_has_classes (GstDevice * device, const gchar * classes)
+{
+  gchar **classesv;
+  gboolean res;
+
+  classesv = g_strsplit (classes, "/", 0);
+
+  res = gst_device_has_classesv (device, classesv);
+
+  g_strfreev (classesv);
+
+  return res;
 }
