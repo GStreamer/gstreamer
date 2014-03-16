@@ -276,8 +276,11 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
   gst_pad_stop_task (decoder->srcpad);
   self->output_flow = GST_FLOW_OK;
 
-  gst_v4l2_buffer_pool_flush (GST_V4L2_BUFFER_POOL (self->v4l2output->pool));
-  gst_v4l2_buffer_pool_flush (GST_V4L2_BUFFER_POOL (self->v4l2capture->pool));
+  if (self->v4l2output->pool)
+    gst_v4l2_buffer_pool_flush (GST_V4L2_BUFFER_POOL (self->v4l2output->pool));
+
+  if (self->v4l2capture->pool)
+    gst_v4l2_buffer_pool_flush (GST_V4L2_BUFFER_POOL (self->v4l2capture->pool));
 
   /* Output will remain flushing until new frame comes in */
   gst_v4l2_object_unlock_stop (self->v4l2capture);
