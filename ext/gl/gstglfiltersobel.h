@@ -51,6 +51,6 @@ struct _GstGLFilterSobelClass
   GstGLFilterClass filter_class;
 };
 
-GType gst_gl_glfiltersobel_get_type (void);
+GType gst_gl_filtersobel_get_type (void);
 
 #endif /* _GST_GL_FILTERSOBEL_H_ */

@@ -52,7 +52,7 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "xray1", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "xray1", shader);
   }
 
   if (!kernel_ready) {
@@ -99,7 +99,7 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "xray2", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "xray2", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
@@ -142,7 +142,7 @@ gst_gl_effects_xray_desaturate (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "xray_desat", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "xray_desat", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
@@ -182,7 +182,8 @@ gst_gl_effects_xray_sobel_hconv (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "xray_sob_hconv", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "xray_sob_hconv",
+        shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
@@ -224,7 +225,8 @@ gst_gl_effects_xray_sobel_vconv (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "xray_sob_vconv", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "xray_sob_vconv",
+        shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
@@ -266,7 +268,8 @@ gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "xray_sob_len", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "xray_sob_len",
+        shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
@@ -295,7 +298,7 @@ gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
 
 /* end of sobel passes */
 
-void
+static void
 gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
     gpointer data)
 {
@@ -309,7 +312,7 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
 
   if (!shader) {
     shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, "xray4", shader);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "xray4", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,

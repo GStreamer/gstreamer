@@ -56,4 +56,6 @@ struct _GstGLDifferenceMatteClass
   GstGLFilterClass filter_class;
 };
 
+GType gst_gl_differencematte_get_type (void);
+
 #endif /* _GST_GL_DIFFERENCEMATTE_H_ */

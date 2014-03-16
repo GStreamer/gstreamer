@@ -46,7 +46,7 @@ struct _GstGLFilterLaplacianClass
   GstGLFilterClass filter_class;
 };
 
-GType gst_gl_glfilterlaplacian_get_type (void);
+GType gst_gl_filter_laplacian_get_type (void);
 
 G_END_DECLS
 

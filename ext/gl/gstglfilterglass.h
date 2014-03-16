@@ -49,7 +49,7 @@ struct _GstGLFilterGlassClass
   GstGLFilterClass filter_class;
 };
 
-GType gst_gl_glfilterglass_get_type (void);
+GType gst_gl_filter_glass_get_type (void);
 
 G_END_DECLS
 

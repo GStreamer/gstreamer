@@ -78,7 +78,7 @@ gst_gl_api_to_string (GstGLAPI api)
 
 out:
   if (!str)
-    return "unknown";
+    str = g_string_new ("unknown");
 
   ret = g_string_free (str, FALSE);
   return ret;
@@ -168,7 +168,7 @@ gst_gl_platform_to_string (GstGLPlatform platform)
 
 out:
   if (!str)
-    return "unknown";
+    str = g_string_new ("unknown");
 
   ret = g_string_free (str, FALSE);
   return ret;

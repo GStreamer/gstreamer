@@ -44,6 +44,8 @@ G_DEFINE_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_GL_TYPE_WINDOW);
 static int TrappedErrorCode = 0;
 static int (*old_error_handler) (Display *, XErrorEvent *);
 
+gboolean gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11);
+
 enum
 {
   ARG_0,
@@ -464,7 +466,7 @@ gst_gl_window_x11_run (GstGLWindow * window)
   g_main_loop_run (window_x11->loop);
 }
 
-static inline gchar *
+static inline const gchar *
 event_type_to_string (guint type)
 {
   switch (type) {

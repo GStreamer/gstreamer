@@ -51,7 +51,8 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
 
     if (!shader) {
       shader = gst_gl_shader_new (context);
-      g_hash_table_insert (effects->shaderstable, "identity0", shader);
+      g_hash_table_insert (effects->shaderstable, (gchar *) "identity0",
+          shader);
 
       if (shader) {
         GError *error = NULL;

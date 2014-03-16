@@ -112,7 +112,7 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
   return mem;
 }
 
-gpointer
+static gpointer
 _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
 {
   gpointer data;
@@ -182,7 +182,7 @@ error:
   }
 }
 
-void
+static void
 _gl_mem_unmap (GstGLMemory * gl_mem)
 {
   if ((gl_mem->map_flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
@@ -196,7 +196,7 @@ _gl_mem_unmap (GstGLMemory * gl_mem)
   gl_mem->map_flags = 0;
 }
 
-void
+static void
 _gl_mem_copy_thread (GstGLContext * context, gpointer data)
 {
   GstGLMemoryCopyParams *copy_params;
@@ -303,7 +303,7 @@ error:
   }
 }
 
-GstMemory *
+static GstMemory *
 _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
 {
   GstGLMemory *dest;
@@ -344,19 +344,19 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
   return (GstMemory *) dest;
 }
 
-GstMemory *
+static GstMemory *
 _gl_mem_share (GstGLMemory * mem, gssize offset, gssize size)
 {
   return NULL;
 }
 
-gboolean
+static gboolean
 _gl_mem_is_span (GstGLMemory * mem1, GstGLMemory * mem2, gsize * offset)
 {
   return FALSE;
 }
 
-GstMemory *
+static GstMemory *
 _gl_mem_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)
 {
@@ -366,7 +366,7 @@ _gl_mem_alloc (GstAllocator * allocator, gsize size,
   return NULL;
 }
 
-void
+static void
 _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
 {
   GstGLMemory *gl_mem = (GstGLMemory *) mem;

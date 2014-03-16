@@ -39,7 +39,7 @@
 	while(end>=s && strchr(chars,end[0])) (end--)[0]=0; \
 }
 
-char *gst_gl_shadervariable_datatype[] = {
+const char *gst_gl_shadervariable_datatype[] = {
   "bool",
   "int",
   "uint",

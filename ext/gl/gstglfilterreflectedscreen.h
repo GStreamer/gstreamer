@@ -53,7 +53,7 @@ struct _GstGLFilterReflectedScreenClass
 	GstGLFilterClass filter_class;
 };
 
-GType gst_gl_glfilterreflectedscreen_get_type (void);
+GType gst_gl_filter_reflected_screen_get_type (void);
 
 G_END_DECLS
 
