@@ -435,7 +435,7 @@ gst_pulse_format_info_to_caps (pa_format_info * format)
         ret = gst_caps_from_string (_PULSE_CAPS_ALAW);
 
       } else if (ss.format == PA_SAMPLE_ULAW) {
-        ret = gst_caps_from_string (_PULSE_CAPS_MP3);
+        ret = gst_caps_from_string (_PULSE_CAPS_MULAW);
 
       } else {
         /* Linear PCM format */
