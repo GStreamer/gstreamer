@@ -68,55 +68,13 @@ gboolean                gst_device_monitor_register                   (GstPlugin
                                                                        guint rank,
                                                                        GType type);
 
-/* Factory list functions */
+gboolean      gst_device_monitor_factory_has_classesv (GstDeviceMonitorFactory * factory,
+                                                       gchar ** classes);
 
-/**
- * GstDeviceMonitorFactoryListType:
- * @GST_DEVICE_MONITOR_FACTORY_TYPE_SINK: Sink elements
- * @GST_DEVICE_MONITOR_FACTORY_TYPE_SRC: Source elements
- * @GST_DEVICE_MONITOR_FACTORY_TYPE_MAX_DEVICE_MONITORS: Private, do not use
- * @GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_VIDEO: Elements handling video media types
- * @GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_AUDIO: Elements handling audio media types
- * @GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_IMAGE: Elements handling image media types
- * @GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_SUBTITLE: Elements handling subtitle media types
- * @GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_METADATA: Elements handling metadata media types
- *
- * The type of #GstDeviceMonitorFactory to filter.
- *
- * All @GstDeviceMonitorFactoryListType up to @GST_DEVICE_MONITOR_FACTORY_TYPE_MAX_DEVICE_MONITORS are exclusive.
- *
- * If one or more of the MEDIA types are specified, then only elements
- * matching the specified media types will be selected.
- *
- * Since: 1.4
- */
+gboolean      gst_device_monitor_factory_has_classes (GstDeviceMonitorFactory *factory,
+                                                      const gchar * classes);
 
-typedef guint64 GstDeviceMonitorFactoryListType;
-
-#define  GST_DEVICE_MONITOR_FACTORY_TYPE_SINK           (G_GUINT64_CONSTANT (1) << 0)
-#define  GST_DEVICE_MONITOR_FACTORY_TYPE_SRC            (G_GUINT64_CONSTANT (1) << 1)
-#define  GST_DEVICE_MONITOR_FACTORY_TYPE_MAX_DEVICE_MONITORS   (G_GUINT64_CONSTANT (1) << 48)
-
-#define  GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_VIDEO    (G_GUINT64_CONSTANT (1) << 49)
-#define  GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_AUDIO    (G_GUINT64_CONSTANT (1) << 50)
-#define  GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_IMAGE    (G_GUINT64_CONSTANT (1) << 51)
-#define  GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_SUBTITLE (G_GUINT64_CONSTANT (1) << 52)
-#define  GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_METADATA (G_GUINT64_CONSTANT (1) << 53)
-
-/* Element klass defines */
-#define GST_DEVICE_MONITOR_FACTORY_KLASS_DECODER               "Decoder"
-#define GST_DEVICE_MONITOR_FACTORY_KLASS_ENCODER               "Encoder"
-
-#define GST_DEVICE_MONITOR_FACTORY_KLASS_MEDIA_VIDEO           "Video"
-#define GST_DEVICE_MONITOR_FACTORY_KLASS_MEDIA_AUDIO           "Audio"
-#define GST_DEVICE_MONITOR_FACTORY_KLASS_MEDIA_IMAGE           "Image"
-#define GST_DEVICE_MONITOR_FACTORY_KLASS_MEDIA_SUBTITLE        "Subtitle"
-#define GST_DEVICE_MONITOR_FACTORY_KLASS_MEDIA_METADATA        "Metadata"
-
-gboolean      gst_device_monitor_factory_list_is_type (GstDeviceMonitorFactory *factory,
-                                                       GstDeviceMonitorFactoryListType type);
-
-GList *       gst_device_monitor_factory_list_get_device_monitors (GstDeviceMonitorFactoryListType type,
+GList *       gst_device_monitor_factory_list_get_device_monitors (const gchar *types,
                                                                    GstRank minrank) G_GNUC_MALLOC;
 
 G_END_DECLS

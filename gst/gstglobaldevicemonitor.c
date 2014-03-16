@@ -38,7 +38,7 @@ struct _GstGlobalDeviceMonitorPrivate
   guint cookie;
 
   GstCaps *caps;
-  GstDeviceMonitorFactoryListType type;
+  gchar *classes;
 };
 
 
@@ -98,11 +98,11 @@ gst_global_device_monitor_init (GstGlobalDeviceMonitor * self)
 
   self->priv->monitors = g_ptr_array_new ();
   self->priv->caps = gst_caps_new_any ();
-  self->priv->type = GST_DEVICE_MONITOR_FACTORY_TYPE_SINK |
-      GST_DEVICE_MONITOR_FACTORY_TYPE_SRC;
+  self->priv->classes = g_strdup ("");
 
   factories =
-      gst_device_monitor_factory_list_get_device_monitors (self->priv->type, 1);
+      gst_device_monitor_factory_list_get_device_monitors (self->priv->classes,
+      1);
 
   while (factories) {
     GstDeviceMonitorFactory *factory = factories->data;
@@ -155,6 +155,7 @@ gst_global_device_monitor_dispose (GObject * object)
   }
 
   gst_caps_replace (&self->priv->caps, NULL);
+  g_free (self->priv->classes);
   gst_object_replace ((GstObject **) & self->priv->bus, NULL);
 
   G_OBJECT_CLASS (gst_global_device_monitor_parent_class)->dispose (object);
@@ -293,28 +294,27 @@ gst_global_device_monitor_stop (GstGlobalDeviceMonitor * self)
 }
 
 void
-gst_global_device_monitor_set_type_filter (GstGlobalDeviceMonitor * self,
-    GstDeviceMonitorFactoryListType type)
+gst_global_device_monitor_set_classes_filter (GstGlobalDeviceMonitor * self,
+    const gchar * classes)
 {
   GList *factories = NULL;
   guint i;
 
   g_return_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (self));
   g_return_if_fail (!self->priv->started);
-  g_return_if_fail (type &
-      (GST_DEVICE_MONITOR_FACTORY_TYPE_SINK |
-          GST_DEVICE_MONITOR_FACTORY_TYPE_SRC));
 
   GST_OBJECT_LOCK (self);
-  if (self->priv->type == type) {
+  if (!strcmp (self->priv->classes, classes)) {
     GST_OBJECT_UNLOCK (self);
     return;
   }
 
-  self->priv->type = type;
+  g_free (self->priv->classes);
+  self->priv->classes = g_strdup (classes);
 
   factories =
-      gst_device_monitor_factory_list_get_device_monitors (self->priv->type, 1);
+      gst_device_monitor_factory_list_get_device_monitors (self->priv->classes,
+      1);
 
   for (i = 0; i < self->priv->monitors->len; i++) {
     GstDeviceMonitor *monitor = g_ptr_array_index (self->priv->monitors, i);
@@ -363,15 +363,15 @@ gst_global_device_monitor_set_type_filter (GstGlobalDeviceMonitor * self,
   GST_OBJECT_UNLOCK (self);
 }
 
-GstDeviceMonitorFactoryListType
-gst_global_device_monitor_get_type_filter (GstGlobalDeviceMonitor * self)
+gchar *
+gst_global_device_monitor_get_classes_filter (GstGlobalDeviceMonitor * self)
 {
-  GstDeviceMonitorFactoryListType res;
+  gchar *res;
 
   g_return_val_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (self), 0);
 
   GST_OBJECT_LOCK (self);
-  res = self->priv->type;
+  res = g_strdup (self->priv->classes);
   GST_OBJECT_UNLOCK (self);
 
   return res;

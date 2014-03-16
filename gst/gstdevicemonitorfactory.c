@@ -456,30 +456,25 @@ gst_device_monitor_factory_get_metadata_keys (GstDeviceMonitorFactory * factory)
   return arr;
 }
 
-typedef struct
-{
-  GstDeviceMonitorFactoryListType type;
-  GstRank minrank;
-} FilterData;
-
-
 /**
- * gst_device_monitor_factory_list_is_type:
+ * gst_device_monitor_factory_has_classesv:
  * @factory: a #GstDeviceMonitorFactory
- * @type: a #GstDeviceMonitorFactoryListType
+ * @classes: a %NULL terminated array of klasses to match, only match if all
+ *  classes are matched
  *
- * Check if @factory is of the given types.
+ * Check if @factory matches all of the given classes
  *
- * Returns: %TRUE if @factory is of @type.
+ * Returns: %TRUE if @factory matches.
  *
  * Since: 1.4
  */
 gboolean
-gst_device_monitor_factory_list_is_type (GstDeviceMonitorFactory * factory,
-    GstDeviceMonitorFactoryListType type)
+gst_device_monitor_factory_has_classesv (GstDeviceMonitorFactory * factory,
+    gchar ** classes)
 {
-  gboolean res = FALSE;
   const gchar *klass;
+
+  g_return_val_if_fail (GST_IS_DEVICE_MONITOR_FACTORY (factory), FALSE);
 
   klass = gst_device_monitor_factory_get_metadata (factory,
       GST_ELEMENT_METADATA_KLASS);
@@ -487,32 +482,64 @@ gst_device_monitor_factory_list_is_type (GstDeviceMonitorFactory * factory,
   if (klass == NULL) {
     GST_ERROR_OBJECT (factory,
         "device monitor factory is missing klass identifiers");
-    return res;
+    return FALSE;
   }
 
-  /* Filter by device monitor type first, as soon as it matches
-   * one type, we skip all other tests */
-  if (!res && (type & GST_DEVICE_MONITOR_FACTORY_TYPE_SINK))
-    res = (strstr (klass, "Sink") != NULL);
+  for (; classes[0]; classes++) {
+    const gchar *found;
+    guint len;
 
-  if (!res && (type & GST_DEVICE_MONITOR_FACTORY_TYPE_SRC))
-    res = (strstr (klass, "Source") != NULL);
+    if (classes[0] == '\0')
+      continue;
 
-  /* Filter by media type now, we only test if it
-   * matched any of the types above. */
-  if (res
-      && (type & (GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_AUDIO |
-              GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_VIDEO |
-              GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_IMAGE)))
-    res = ((type & GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_AUDIO)
-        && (strstr (klass, "Audio") != NULL))
-        || ((type & GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_VIDEO)
-        && (strstr (klass, "Video") != NULL))
-        || ((type & GST_DEVICE_MONITOR_FACTORY_TYPE_MEDIA_IMAGE)
-        && (strstr (klass, "Image") != NULL));
+    found = strstr (klass, classes[0]);
+
+    if (!found)
+      return FALSE;
+    if (found != klass && *(found - 1) != '/')
+      return FALSE;
+
+    len = strlen (classes[0]);
+    if (found[len] != 0 && found[len] != '/')
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_device_monitor_factory_has_classes:
+ * @factory: a #GstDeviceMonitorFactory
+ * @classes: a "/" separate list of klasses to match, only match if all classes
+ *  are matched
+ *
+ * Check if @factory matches all of the given @classes
+ *
+ * Returns: %TRUE if @factory matches.
+ *
+ * Since: 1.4
+ */
+gboolean
+gst_device_monitor_factory_has_classes (GstDeviceMonitorFactory * factory,
+    const gchar * classes)
+{
+  gchar **classesv;
+  gboolean res;
+
+  classesv = g_strsplit (classes, "/", 0);
+
+  res = gst_device_monitor_factory_has_classesv (factory, classesv);
+
+  g_strfreev (classesv);
 
   return res;
 }
+
+typedef struct
+{
+  const char *classes;
+  GstRank minrank;
+} FilterData;
 
 static gboolean
 device_monitor_filter (GstPluginFeature * feature, FilterData * data)
@@ -524,20 +551,21 @@ device_monitor_filter (GstPluginFeature * feature, FilterData * data)
     return FALSE;
 
   res = (gst_plugin_feature_get_rank (feature) >= data->minrank) &&
-      gst_device_monitor_factory_list_is_type (GST_DEVICE_MONITOR_FACTORY_CAST
-      (feature), data->type);
+      gst_device_monitor_factory_has_classes (GST_DEVICE_MONITOR_FACTORY_CAST
+      (feature), data->classes);
 
   return res;
 }
 
 /**
  * gst_device_monitor_factory_list_get_device_monitors:
- * @type: a #GstDeviceMonitorFactoryListType
+ * @classes: a "/" separate list of klasses to match, only match if all classes
+ *  are matched
  * @minrank: Minimum rank
  *
- * Get a list of factories that match the given @type. Only device monitors
- * with a rank greater or equal to @minrank will be returned.
- * The list of factories is returned by decreasing rank.
+ * Get a list of factories that match all of the given @classes. Only
+ * device monitors with a rank greater or equal to @minrank will be
+ * returned.  The list of factories is returned by decreasing rank.
  *
  * Returns: (transfer full) (element-type Gst.DeviceMonitorFactory): a #GList of
  *     #GstDeviceMonitorFactory device monitors. Use gst_plugin_feature_list_free() after
@@ -546,13 +574,13 @@ device_monitor_filter (GstPluginFeature * feature, FilterData * data)
  * Since: 1.4
  */
 GList *gst_device_monitor_factory_list_get_device_monitors
-    (GstDeviceMonitorFactoryListType type, GstRank minrank)
+    (const gchar * classes, GstRank minrank)
 {
   GList *result;
   FilterData data;
 
   /* prepare type */
-  data.type = type;
+  data.classes = classes;
   data.minrank = minrank;
 
   /* get the feature list using the filter */

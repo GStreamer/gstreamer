@@ -70,11 +70,10 @@ gboolean    gst_global_device_monitor_start (GstGlobalDeviceMonitor * monitor);
 void        gst_global_device_monitor_stop  (GstGlobalDeviceMonitor * monitor);
 
 
-void        gst_global_device_monitor_set_type_filter (
-  GstGlobalDeviceMonitor * monitor,
-  GstDeviceMonitorFactoryListType type);
+void        gst_global_device_monitor_set_classes_filter (
+    GstGlobalDeviceMonitor * monitor, const gchar *classes);
 
-GstDeviceMonitorFactoryListType gst_global_device_monitor_get_type_filter (
+gchar *gst_global_device_monitor_get_classes_filter (
   GstGlobalDeviceMonitor * monitor);
 
 
