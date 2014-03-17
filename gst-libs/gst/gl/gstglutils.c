@@ -478,8 +478,10 @@ gst_gl_display_context_prepare (GstElement * element,
   GstContext *ctxt;
   GstQuery *query;
 
+#ifndef GST_DISABLE_GST_DEBUG
   if (!GST_CAT_CONTEXT)
     GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
+#endif
 
   query =
       _gst_gl_display_context_query (element, display_ptr,
