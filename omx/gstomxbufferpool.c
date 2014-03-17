@@ -192,6 +192,9 @@ static GQuark gst_omx_buffer_data_quark = 0;
 
 G_DEFINE_TYPE (GstOMXBufferPool, gst_omx_buffer_pool, GST_TYPE_BUFFER_POOL);
 
+static void gst_omx_buffer_pool_free_buffer (GstBufferPool * bpool,
+    GstBuffer * buffer);
+
 static gboolean
 gst_omx_buffer_pool_start (GstBufferPool * bpool)
 {
@@ -214,6 +217,14 @@ static gboolean
 gst_omx_buffer_pool_stop (GstBufferPool * bpool)
 {
   GstOMXBufferPool *pool = GST_OMX_BUFFER_POOL (bpool);
+  gint i = 0;
+
+  /* When not using the default GstBufferPool::GstAtomicQueue then
+   * GstBufferPool::free_buffer is not called while stopping the pool
+   * (because the queue is empty) */
+  for (i = 0; i < pool->buffers->len; i++)
+    gst_omx_buffer_pool_free_buffer (bpool, g_ptr_array_index (pool->buffers,
+            i));
 
   /* Remove any buffers that are there */
   g_ptr_array_set_size (pool->buffers, 0);
