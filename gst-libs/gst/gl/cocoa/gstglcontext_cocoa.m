@@ -176,7 +176,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   glContext = [[NSOpenGLContext alloc] initWithFormat:fmt 
     shareContext:context_cocoa->priv->external_gl_context];
 
-  GST_DEBUG ("NSOpenGL context created: %lud\n", (guintptr) glContext);
+  GST_DEBUG ("NSOpenGL context created: %"G_GUINTPTR_FORMAT, (guintptr) glContext);
 
   context_cocoa->priv->gl_context = glContext;
 
@@ -262,5 +262,5 @@ gst_gl_context_cocoa_get_gl_api (GstGLContext * context)
 static GstGLPlatform
 gst_gl_context_cocoa_get_gl_platform (GstGLContext * context)
 {
-  return GST_GL_API_COCOA;
+  return GST_GL_PLATFORM_CGL;
 }
