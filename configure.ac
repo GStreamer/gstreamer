@@ -518,12 +518,14 @@ AC_ARG_WITH([gudev],
   AS_HELP_STRING([--with-gudev],[device detection with gudev]),
   [],
   [with_gudev=check])
-if test x$with_gudev != xno; then
-  PKG_CHECK_MODULES(GUDEV, [ gudev-1.0 >= 147 ],
-    [ AC_DEFINE(HAVE_GUDEV, 1,
-        [Whether gudev is available for device detection])
-    ],
-    [true])
+if test x$HAVE_GST_V4L2 = xyes; then
+  if test x$with_gudev != xno; then
+    PKG_CHECK_MODULES(GUDEV, [ gudev-1.0 >= 147 ],
+      [ AC_DEFINE(HAVE_GUDEV, 1,
+          [Whether gudev is available for device detection])
+      ],
+      [true])
+  fi
 fi
 
 AC_SUBST(GUDEV_CFLAGS)
