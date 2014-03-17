@@ -1695,7 +1695,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
   mix_class->process_textures (mix, mix->frames, out_tex);
 
   if (out_gl_wrapped) {
-    if (gst_gl_download_perform_with_data (mix->download, out_tex,
+    if (!gst_gl_download_perform_with_data (mix->download, out_tex,
             out_frame.data)) {
       GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s",
               "Failed to download video frame"), (NULL));
