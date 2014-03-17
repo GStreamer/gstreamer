@@ -148,7 +148,7 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
     NSResizableWindowMask | NSMiniaturizableWindowMask)
     backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
 
-  GST_DEBUG ("NSWindow id: %lud\n", (guintptr) priv->internal_win_id);
+  GST_DEBUG ("NSWindow id: %"G_GUINTPTR_FORMAT, (guintptr) priv->internal_win_id);
 
   priv->thread = [NSThread currentThread];
 
