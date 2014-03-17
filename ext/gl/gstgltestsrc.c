@@ -627,32 +627,34 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
     gchar *apis;
 
     gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
-    if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
-            GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
-      GstGLContext *old = src->context;
+    if (upload_meta_params) {
+      if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
+              GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
+        GstGLContext *old = src->context;
 
-      src->context = context;
-      if (old)
-        gst_object_unref (old);
-    } else if (gst_structure_get (upload_meta_params, "gst.gl.context.handle",
-            G_TYPE_POINTER, &handle, "gst.gl.context.type", G_TYPE_STRING,
-            &type, "gst.gl.context.apis", G_TYPE_STRING, &apis, NULL)
-        && handle) {
-      GstGLPlatform platform = GST_GL_PLATFORM_NONE;
-      GstGLAPI gl_apis;
+        src->context = context;
+        if (old)
+          gst_object_unref (old);
+      } else if (gst_structure_get (upload_meta_params, "gst.gl.context.handle",
+              G_TYPE_POINTER, &handle, "gst.gl.context.type", G_TYPE_STRING,
+              &type, "gst.gl.context.apis", G_TYPE_STRING, &apis, NULL)
+          && handle) {
+        GstGLPlatform platform = GST_GL_PLATFORM_NONE;
+        GstGLAPI gl_apis;
 
-      GST_DEBUG ("got GL context handle 0x%p with type %s and apis %s", handle,
-          type, apis);
+        GST_DEBUG ("got GL context handle 0x%p with type %s and apis %s",
+            handle, type, apis);
 
-      if (g_strcmp0 (type, "glx") == 0)
-        platform = GST_GL_PLATFORM_GLX;
+        if (g_strcmp0 (type, "glx") == 0)
+          platform = GST_GL_PLATFORM_GLX;
 
-      gl_apis = gst_gl_api_from_string (apis);
+        gl_apis = gst_gl_api_from_string (apis);
 
-      if (gl_apis && platform)
-        other_context =
-            gst_gl_context_new_wrapped (src->display, (guintptr) handle,
-            platform, gl_apis);
+        if (gl_apis && platform)
+          other_context =
+              gst_gl_context_new_wrapped (src->display, (guintptr) handle,
+              platform, gl_apis);
+      }
     }
   }
 
