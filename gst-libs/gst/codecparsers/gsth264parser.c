@@ -1348,8 +1348,7 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps,
         vui->fixed_frame_rate_flag, sps->frame_mbs_only_flag,
         vui->pic_struct_present_flag);
 
-    if (parse_vui_params && vui->fixed_frame_rate_flag &&
-        sps->frame_mbs_only_flag && !vui->pic_struct_present_flag) {
+    if (parse_vui_params && vui->fixed_frame_rate_flag) {
       sps->fps_num = vui->time_scale;
       sps->fps_den = vui->num_units_in_tick;
       /* picture is a frame = 2 fields */
