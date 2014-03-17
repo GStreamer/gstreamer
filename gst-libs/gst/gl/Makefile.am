@@ -48,6 +48,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gl.h
 
 libgstgl_@GST_API_VERSION@_la_LIBADD = \
+	$(GMODULE_NO_EXPORT_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
