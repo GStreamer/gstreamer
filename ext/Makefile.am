@@ -156,7 +156,7 @@ LIBFAME_DIR=
 
 if USE_LIBMMS
 LIBMMS_DIR=libmms
-else 
+else
 LIBMMS_DIR=
 endif
 

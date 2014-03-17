@@ -506,7 +506,7 @@ case "$EGL_WINDOW_SYSTEM" in
       HAVE_EGL="no"
       old_LIBS=$LIBS
       old_CFLAGS=$CFLAGS
-      
+
       AC_CHECK_LIB([EGL], [eglGetProcAddress],
         [
           AC_CHECK_HEADER([EGL/egl.h],
@@ -518,11 +518,11 @@ case "$EGL_WINDOW_SYSTEM" in
           )
         ]
       )
-      
+
       LIBS=$old_LIBS
       CFLAGS=$old_CFLAGS
     ])
-      
+
     dnl X11 specific part, above is auto and X11
     if test x"$HAVE_EGL" = x"yes" -a x"$EGL_WINDOW_SYSTEM" = x"x11"; then
       if test x"$HAVE_X11" != x"yes"; then
@@ -1315,7 +1315,7 @@ int main ()
 
 	int result = 0;
     // result = do_everything(argc, argv);
-    
+
     CoUninitialize();
     return result;
 }
@@ -1450,7 +1450,7 @@ AG_GST_CHECK_FEATURE(WINKS, [Winks plug-in], winks, [
 int main () {
   IGraphBuilder *pGraph = NULL;
   HRESULT hr = CoInitialize(NULL);
-  hr = CoCreateInstance(&CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, 
+  hr = CoCreateInstance(&CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER,
                         &IID_IGraphBuilder, (void **)&pGraph);
 
   return 0;
@@ -2414,7 +2414,7 @@ dnl *** OpenJPEG ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENJPEG, true)
 AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
   HAVE_OPENJPEG="no"
-  
+
   AG_GST_CHECK_LIBHEADER(OPENJPEG, openjp2, opj_version, ,openjpeg-2.0/openjpeg.h, OPENJPEG_LIBS="-lopenjp2")
   if test x"$HAVE_OPENJPEG" = x"no"; then
     PKG_CHECK_MODULES(OPENJPEG, libopenjpeg1,
