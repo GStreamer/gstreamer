@@ -49,6 +49,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 
 libgstgl_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
+	$(top_builddir)/gst-libs/gst/egl/libgstegl-$(GST_API_VERSION).la \
 	-lgstvideo-$(GST_API_VERSION) \
 	-lgstegl-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
