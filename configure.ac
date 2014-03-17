@@ -705,7 +705,11 @@ HAVE_GLES2=no
 HAVE_GLU=no
 HAVE_GNUSTEP_COCOA=no
 HAVE_WAYLAND_EGL=no
-HAVE_EGL_RPI=no
+
+HAVE_EGL_RPI="no"
+if test x"$HAVE_EGL" = x"yes" -a x"$EGL_WINDOW_SYSTEM" = x"rpi"; then
+HAVE_EGL_RPI="yes"
+fi
 
 case $host in
   *-mingw32* )
