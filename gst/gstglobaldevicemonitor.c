@@ -23,10 +23,8 @@
 #include "config.h"
 #endif
 
-#include <gst/gstglobaldevicemonitor.h>
-
-#include "gst/gst_private.h"
-#include <gst/gst.h>
+#include "gst_private.h"
+#include "gstglobaldevicemonitor.h"
 
 struct _GstGlobalDeviceMonitorPrivate
 {

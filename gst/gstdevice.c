@@ -23,10 +23,9 @@
 #include "config.h"
 #endif
 
-#include "gst/gst_private.h"
+#include "gst_private.h"
 
-#include <gst/gstdevice.h>
-#include <gst/gst.h>
+#include "gstdevice.h"
 
 enum
 {
