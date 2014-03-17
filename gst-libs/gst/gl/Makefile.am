@@ -104,7 +104,6 @@ libgstgl_@GST_API_VERSION@_la_CFLAGS = \
 	$(GL_CFLAGS)
 
 libgstgl_@GST_API_VERSION@_la_LDFLAGS = \
-	-lgstegl-$(GST_API_VERSION) \
 	$(GST_LIB_LDFLAGS) \
 	$(GST_ALL_LDFLAGS) \
 	$(GST_LT_LDFLAGS)
