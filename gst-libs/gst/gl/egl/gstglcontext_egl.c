@@ -209,7 +209,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 {
   GstGLContextEGL *egl;
   GstGLWindow *window = NULL;
-  EGLNativeWindowType window_handle;
+  EGLNativeWindowType window_handle = (EGLNativeWindowType) 0;
   gint i = 0;
   EGLint context_attrib[3];
   EGLint majorVersion;
@@ -217,7 +217,6 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   const gchar *egl_exts;
   gboolean need_surface = TRUE;
   guintptr external_gl_context = 0;
-  guintptr native_display;
   GstGLDisplay *display;
 
   egl = GST_GL_CONTEXT_EGL (context);
@@ -240,24 +239,29 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   }
 
   display = gst_gl_context_get_display (context);
-  native_display = gst_gl_display_get_handle (display);
 
-  if (!native_display) {
-    GstGLWindow *window = NULL;
-    GST_WARNING ("Failed to get a global display handle, falling back to "
-        "per-window display handles.  Context sharing may not work");
+  if (display->type == GST_GL_DISPLAY_TYPE_EGL) {
+    egl->egl_display = (EGLDisplay) gst_gl_display_get_handle (display);
+  } else {
+    guintptr native_display = gst_gl_display_get_handle (display);
 
-    if (other_context)
-      window = gst_gl_context_get_window (other_context);
-    if (!window)
-      window = gst_gl_context_get_window (context);
-    if (window) {
-      native_display = gst_gl_window_get_display (window);
-      gst_object_unref (window);
+    if (!native_display) {
+      GstGLWindow *window = NULL;
+      GST_WARNING ("Failed to get a global display handle, falling back to "
+          "per-window display handles.  Context sharing may not work");
+
+      if (other_context)
+        window = gst_gl_context_get_window (other_context);
+      if (!window)
+        window = gst_gl_context_get_window (context);
+      if (window) {
+        native_display = gst_gl_window_get_display (window);
+        gst_object_unref (window);
+      }
     }
-  }
 
-  egl->egl_display = eglGetDisplay ((EGLNativeDisplayType) native_display);
+    egl->egl_display = eglGetDisplay ((EGLNativeDisplayType) native_display);
+  }
   gst_object_unref (display);
 
   if (eglInitialize (egl->egl_display, &majorVersion, &minorVersion)) {
@@ -358,8 +362,9 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 #endif
   }
 
-  window_handle =
-      (EGLNativeWindowType) gst_gl_window_get_window_handle (window);
+  if (window)
+    window_handle =
+        (EGLNativeWindowType) gst_gl_window_get_window_handle (window);
 
   if (window_handle) {
     egl->egl_surface =
@@ -398,7 +403,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     }
   }
 
-  gst_object_unref (window);
+  if (window)
+    gst_object_unref (window);
 
   return TRUE;
 
@@ -424,10 +430,7 @@ gst_gl_context_egl_destroy_context (GstGLContext * context)
   if (egl->egl_context)
     eglDestroyContext (egl->egl_display, egl->egl_context);
 
-  if (egl->egl_display) {
-    eglTerminate (egl->egl_display);
-    eglReleaseThread ();
-  }
+  eglReleaseThread ();
 }
 
 static gboolean
