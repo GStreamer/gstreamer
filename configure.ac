@@ -971,11 +971,13 @@ case $host in
       AC_MSG_ERROR([OpenGL|ES 2.0 is not supported on your platform yet])
     fi
 
-    GL_LIBS="$LIBS -framework OpenGL -framework Cocoa"
-    GL_CFLAGS="$GL_CFLAGS"
-    USE_COCOA=yes
-    HAVE_WINDOW_COCOA=yes
-    USE_OPENGL=yes
+    if test "x$NEED_COCOA" != "xno"; then
+      GL_LIBS="$LIBS -framework OpenGL -framework Cocoa"
+      GL_CFLAGS="$GL_CFLAGS"
+      USE_COCOA=yes
+      HAVE_WINDOW_COCOA=yes
+      USE_OPENGL=yes
+    fi
 
     if test "x$USE_GLX" = "xyes"; then
       if test "x$HAVE_X" = "xyes"; then
@@ -993,6 +995,7 @@ case $host in
         if test "x$HAVE_GLU" = "xyes"; then
           GL_LIBS="$GL_LIBS -lGLU"
         fi
+        USE_OPENGL=yes
       fi
     fi
     ;;
