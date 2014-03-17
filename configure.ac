@@ -788,12 +788,6 @@ if test "x$HAVE_GL" = "xno"; then
   fi
 fi
 
-if test "x$NEED_GLES2" = "xno"; then
-  if test "x$NEED_GL" = "xno"; then
-    AC_MSG_ERROR([Either OpenGL or OpenGL|ES is required])
-  fi
-fi
-
 if test "x$HAVE_GLES2" = "xno"; then
   if test "x$NEED_GLES2" = "xyes"; then
     AC_MSG_ERROR([Could not find the required OpenGL|ES 2.0 libraries])
@@ -884,7 +878,7 @@ case $host in
 
     if test "x$HAVE_X" = "xno"; then
       if test "x$HAVE_WAYLAND_EGL" = "xno"; then
-        AC_MSG_ERROR([X or Wayland is required])
+        AC_MSG_WARN([X or Wayland is required for OpenGL support])
       fi
     fi
 
@@ -916,7 +910,7 @@ case $host in
 
     if test "x$HAVE_WAYLAND_EGL" = "xyes"; then
       if test "x$NEED_EGL" = "xno" -o "x$HAVE_EGL" = "xno"; then
-        AC_MSG_WARN([EGL is required by the Wayland backend])
+        AC_MSG_WARN([EGL is required by the Wayland backend for OpenGL support])
       else
         if test "x$NEED_WAYLAND_EGL" != "xno"; then
           HAVE_WINDOW_WAYLAND=yes
@@ -936,7 +930,7 @@ case $host in
     dnl EGL
     if test "x$HAVE_EGL" = "xno"; then
       if test "x$HAVE_GL" = "xno"; then
-        AC_MSG_ERROR([Building requires either EGL or GLX])
+        AC_MSG_WARN([Building requires either EGL or GLX for OpenGL support])
       fi
     else
       if test "x$NEED_EGL" != "xno"; then
@@ -1024,7 +1018,7 @@ case $host in
     fi
     ;;
   *)
-    AC_MSG_ERROR([Don't know how to check for OpenGL on your platform.])
+    AC_MSG_WARN([Don't know how to check for OpenGL on your platform.])
     exit 1
     ;;
 esac
@@ -1102,13 +1096,32 @@ fi
 
 dnl Check for no platforms/window systems
 if test "x$GL_APIS" = "x"; then
-  AC_MSG_ERROR([Either OpenGL or OpenGL|ES is required])
+  AC_MSG_WARN([Either OpenGL or OpenGL|ES is required for OpenGL support])
 fi
 if test "x$GL_PLATFORMS" = "x"; then
-  AC_MSG_ERROR([Could not find any OpenGL platforms to use such as Cocoa, WGL or GLX])
+  AC_MSG_WARN([Could not find any OpenGL platforms to use such as CGL, WGL or GLX])
 fi
 if test "x$GL_WINDOWS" = "x"; then
-  AC_MSG_ERROR([Could not find any window systems to use such as Cocoa, Win32API or X11])
+  AC_MSG_WARN([Could not find any window systems to use such as Cocoa, Win32API or X11])
+fi
+
+if test "x$GL_APIS" = "x" -o "x$GL_PLATFORMS" = "x" -o "x$GL_WINDOWS" = "x"; then
+  GL_LIBS=
+  GL_CFLAGS=
+  GL_OBJCFLAGS=
+  USE_OPENGL=no
+  USE_GLES2=no
+  USE_GLX=no
+  USE_EGL=no
+  USE_WGL=no
+  USE_COCOA=no
+  USE_EGL_RPI=no
+
+  HAVE_WINDOW_X11=no
+  HAVE_WINDOW_WIN32=no
+  HAVE_WINDOW_DISPMANX=no
+  HAVE_WINDOW_WAYLAND=no
+  HAVE_WINDOW_ANDROID=no
 fi
 
 AC_SUBST(GL_LIBS)
@@ -1118,7 +1131,6 @@ AC_SUBST(USE_OPENGL)
 AC_SUBST(USE_GLES2)
 
 AM_CONDITIONAL(HAVE_WINDOW_X11, test "x$HAVE_WINDOW_X11" = "xyes")
-AM_CONDITIONAL(HAVE_WINDOW_X11ES2, test "x$HAVE_WINDOW_X11ES2" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_COCOA, test "x$HAVE_WINDOW_COCOA" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_WIN32, test "x$HAVE_WINDOW_WIN32" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_DISPMANX, test "x$HAVE_WINDOW_DISPMANX" = "xyes")
@@ -1131,7 +1143,7 @@ AM_CONDITIONAL(USE_GLX, test "x$USE_GLX" = "xyes")
 AM_CONDITIONAL(USE_EGL, test "x$USE_EGL" = "xyes")
 AM_CONDITIONAL(USE_WGL, test "x$USE_WGL" = "xyes")
 AM_CONDITIONAL(USE_COCOA, test "x$USE_COCOA" = "xyes")
-AM_CONDITIONAL(USE_EGL_PRI, test "x$USE_EGL_RPI" = "xyes")
+AM_CONDITIONAL(USE_EGL_RPI, test "x$USE_EGL_RPI" = "xyes")
 
 dnl Check for some types that are not always present
 GL_INCLUDES=""
@@ -2525,7 +2537,7 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_GL, true)
 AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
   HAVE_GL="no"
 
-  if test x"$HAVE_OPENGL" = x"yes" -o x"$HAVE_GLES2" = x"yes"; then
+  if test x"$USE_OPENGL" = x"yes" -o x"$USE_GLES2" = x"yes"; then
     HAVE_GL="yes"
   fi
 ])
