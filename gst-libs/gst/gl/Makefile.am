@@ -25,9 +25,32 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
         gstglutils.c \
         gstglframebuffer.c
 
+libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
+libgstgl_@GST_API_VERSION@include_HEADERS = \
+	gstglwindow.h \
+	gstgldisplay.h \
+	gstglcontext.h \
+	gstglmemory.h \
+	gstglbufferpool.h \
+	gstgles2.h \
+	gstglfilter.h \
+	gstglmixer.h \
+	gstglmixerpad.h \
+	gstglshadervariables.h \
+	gstglshader.h \
+	gstgldownload.h \
+	gstglupload.h \
+	gstglapi.h \
+	gstglfeature.h \
+	gstglutils.h \
+	gstglframebuffer.h \
+	gstgl_fwd.h \
+	gl.h
+
 libgstgl_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-$(GST_API_VERSION) \
+	-lgstegl-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(GL_LIBS)
@@ -63,31 +86,11 @@ libgstgl_@GST_API_VERSION@_la_LIBADD += android/libgstgl-android.la
 endif
 
 if USE_EGL
-libgstgl_@GST_API_VERSION@_la_SOURCES += egl/gstglcontext_egl.c
+libgstgl_@GST_API_VERSION@_la_SOURCES += egl/gstglcontext_egl.c \
+	egl/gstgldisplay_egl.c
+libgstgl_@GST_API_VERSION@include_HEADERS += egl/gstgldisplay_egl.h
 noinst_HEADERS += egl/gstglcontext_egl.h
 endif
-
-libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
-libgstgl_@GST_API_VERSION@include_HEADERS = \
-	gstglwindow.h \
-	gstgldisplay.h \
-	gstglcontext.h \
-	gstglmemory.h \
-	gstglbufferpool.h \
-	gstgles2.h \
-	gstglfilter.h \
-	gstglmixer.h \
-	gstglmixerpad.h \
-	gstglshadervariables.h \
-	gstglshader.h \
-	gstgldownload.h \
-	gstglupload.h \
-	gstglapi.h \
-	gstglfeature.h \
-	gstglutils.h \
-	gstglframebuffer.h \
-	gstgl_fwd.h \
-	gl.h
 
 nodist_libgstgl_@GST_API_VERSION@include_HEADERS = \
 	$(built_header_configure)
