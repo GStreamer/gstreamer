@@ -31,3 +31,5 @@ libgstgl_cocoa_la_OBJCFLAGS = \
 libgstgl_cocoa_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \
 	$(GST_ALL_LDFLAGS)
+
+libgstgl_cocoa_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
