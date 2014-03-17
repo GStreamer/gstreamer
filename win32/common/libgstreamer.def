@@ -1279,6 +1279,7 @@ EXPORTS
 	gst_toc_dump
 	gst_toc_entry_append_sub_entry
 	gst_toc_entry_get_entry_type
+	gst_toc_entry_get_loop
 	gst_toc_entry_get_parent
 	gst_toc_entry_get_start_stop_times
 	gst_toc_entry_get_sub_entries
@@ -1290,6 +1291,7 @@ EXPORTS
 	gst_toc_entry_is_sequence
 	gst_toc_entry_merge_tags
 	gst_toc_entry_new
+	gst_toc_entry_set_loop
 	gst_toc_entry_set_start_stop_times
 	gst_toc_entry_set_tags
 	gst_toc_entry_type_get_nick
@@ -1299,6 +1301,7 @@ EXPORTS
 	gst_toc_get_scope
 	gst_toc_get_tags
 	gst_toc_get_type
+	gst_toc_loop_type_get_type
 	gst_toc_merge_tags
 	gst_toc_new
 	gst_toc_scope_get_type
