@@ -794,10 +794,10 @@ GST_START_TEST (test_position)
     fail_if (eret == FALSE);
   }
 
-  /* this should now just report the stream time of the last buffer */
+  /* this should now just report the last stream time */
   qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
-  fail_unless (qcur == 2 * GST_SECOND);
+  fail_unless (qcur >= 2 * GST_SECOND && qcur <= 3 * GST_SECOND);
 
   {
     GST_DEBUG ("sending flush_stop");
@@ -869,7 +869,7 @@ GST_START_TEST (test_position)
    * record of that anywhere */
   qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
-  fail_unless (qcur >= 4 * GST_SECOND);
+  fail_unless (qcur == 3 * GST_SECOND);
 
   ret = gst_element_set_state (pipeline, GST_STATE_READY);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
