@@ -59,6 +59,7 @@ core_tests = [
   [ 'libs/basesrc.c', not gst_registry ],
   [ 'libs/basesink.c', not gst_registry ],
   [ 'libs/bitreader.c' ],
+  [ 'libs/bitwriter.c' ],
   [ 'libs/bytereader.c' ],
   [ 'libs/bytewriter.c' ],
   [ 'libs/bitreader-noinline.c' ],

@@ -6,6 +6,7 @@ basesink
 basesrc
 bitreader
 bitreader-noinline
+bitwriter
 bytereader
 bytereader-noinline
 bytewriter

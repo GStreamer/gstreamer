@@ -154,6 +154,7 @@ check_PROGRAMS =				\
 	libs/adapter				\
 	libs/aggregator				\
 	libs/bitreader				\
+	libs/bitwriter				\
 	libs/bytereader				\
 	libs/bytewriter				\
 	libs/bitreader-noinline		\
