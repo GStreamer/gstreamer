@@ -24,16 +24,16 @@
 #include <gst/gl/gstglconfig.h>
 
 /* undefined typedefs */
-#ifndef GST_GL_HAVE_GLEGLIMAGEOES
+#if !GST_GL_HAVE_GLEGLIMAGEOES
 typedef gpointer GLeglImageOES;
 #endif
-#ifndef GST_GL_HAVE_GLCHAR
+#if !GST_GL_HAVE_GLCHAR
 typedef gchar GLchar;
 #endif
-#ifndef GST_GL_HAVE_GLSIZEIPTR
+#if !GST_GL_HAVE_GLSIZEIPTR
 typedef ptrdiff_t GLsizeiptr;
 #endif
-#ifndef GST_GL_HAVE_GLINTPTR
+#if !GST_GL_HAVE_GLINTPTR
 typedef ptrdiff_t GLintptr;
 #endif
 

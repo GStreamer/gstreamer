@@ -173,7 +173,7 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl,
     config_attrib[i++] = EGL_OPENGL_ES2_BIT;
   else
     config_attrib[i++] = EGL_OPENGL_BIT;
-#if defined(USE_EGL_RPI) && defined(GST_GL_HAVE_WINDOW_WAYLAND)
+#if defined(USE_EGL_RPI) && GST_GL_HAVE_WINDOW_WAYLAND
   /* The configurations r=5 g=6 b=5 seems to be buggy whereas
    * it works when using dispmanx directly */
   config_attrib[i++] = EGL_BUFFER_SIZE;
@@ -485,7 +485,7 @@ gst_gl_context_egl_get_proc_address (GstGLContext * context, const gchar * name)
   gpointer result = NULL;
 
   /* FIXME: On Android this returns wrong addresses for non-EGL functions */
-#ifdef GST_GL_HAVE_WINDOW_ANDROID
+#if GST_GL_HAVE_WINDOW_ANDROID
   if (!(result = gst_gl_context_default_get_proc_address (context, name))) {
     if (g_str_has_prefix (name, "egl"))
       result = eglGetProcAddress (name);
