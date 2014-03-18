@@ -697,6 +697,7 @@ AC_ARG_ENABLE([dispmanx],
        *) AC_MSG_ERROR([bad value ${enableval} for --enable-dispmanx]) ;;
      esac],[NEED_DISPMANX=auto])
 
+AG_GST_CHECK_X
 save_CPPFLAGS="$CPPFLAGS"
 save_LIBS="$LIBS"
 
@@ -720,7 +721,6 @@ case $host in
     HAVE_GLU=yes
   ;;
   *)
-    AG_GST_CHECK_X
     AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,, GL/gl.h)
     AG_GST_CHECK_LIBHEADER(GLU, GLU, gluSphere,, GL/glu.h)
     AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
