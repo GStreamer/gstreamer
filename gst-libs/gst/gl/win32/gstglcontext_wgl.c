@@ -29,6 +29,7 @@
 #include <gst/gl/gstglcontext.h>
 
 #include "gstglcontext_wgl.h"
+#include <gl/wglext.h>
 
 #define gst_gl_context_wgl_parent_class parent_class
 G_DEFINE_TYPE (GstGLContextWGL, gst_gl_context_wgl, GST_GL_TYPE_CONTEXT);
@@ -93,6 +94,7 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
   GstGLWindow *window;
   GstGLContextWGL *context_wgl;
   HGLRC external_gl_context = NULL;
+  PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
   HDC device;
 
   context_wgl = GST_GL_CONTEXT_WGL (context);
@@ -100,7 +102,7 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
   device = (HDC) gst_gl_window_get_display (window);
 
   if (other_context) {
-    if (!GST_GL_IS_CONTEXT_WGL (other_context)) {
+    if (gst_gl_context_get_gl_platform (other_context) != GST_GL_PLATFORM_WGL) {
       g_set_error (error, GST_GL_CONTEXT_ERROR,
           GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
           "Cannot share context with a non-WGL context");
@@ -121,17 +123,37 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
   }
   g_assert (context_wgl->wgl_context);
 
-  GST_LOG ("gl context id: %" G_GUINTPTR_FORMAT,
-      (guintptr) context_wgl->wgl_context);
 
   if (external_gl_context) {
-    if (!wglShareLists (external_gl_context, context_wgl->wgl_context)) {
+
+    wglMakeCurrent (device, context_wgl->wgl_context);
+
+    wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)
+        wglGetProcAddress ("wglCreateContextAttribsARB");
+
+    if (wglCreateContextAttribsARB != NULL) {
+      wglMakeCurrent (device, 0);
+      wglDeleteContext (context_wgl->wgl_context);
+      context_wgl->wgl_context =
+          wglCreateContextAttribsARB (device, external_gl_context, 0);
+      if (context_wgl->wgl_context == NULL) {
+        g_set_error (error, GST_GL_CONTEXT_ERROR,
+            GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
+            "failed to share context through wglCreateContextAttribsARB 0x%x",
+            (unsigned int) GetLastError ());
+        goto failure;
+      }
+    } else if (!wglShareLists (external_gl_context, context_wgl->wgl_context)){
       g_set_error (error, GST_GL_CONTEXT_ERROR,
-          GST_GL_CONTEXT_ERROR_CREATE_CONTEXT, "failed to share contexts 0x%x",
-          (unsigned int) GetLastError ());
+            GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
+            "failed to share contexts through wglShareLists 0x%x",
+            (unsigned int) GetLastError ());
       goto failure;
     }
   }
+
+  GST_LOG ("gl context id: %" G_GUINTPTR_FORMAT,
+      (guintptr) context_wgl->wgl_context);
 
   gst_object_unref (window);
 
