@@ -2857,6 +2857,44 @@ gst_base_sink_do_render_stats (GstBaseSink * basesink, gboolean start)
 }
 
 static void
+gst_base_sink_update_start_time (GstBaseSink * basesink)
+{
+  GstClock *clock;
+
+  GST_OBJECT_LOCK (basesink);
+  if ((clock = GST_ELEMENT_CLOCK (basesink))) {
+    GstClockTime now;
+
+    gst_object_ref (clock);
+    GST_OBJECT_UNLOCK (basesink);
+
+    /* calculate the time when we stopped */
+    now = gst_clock_get_time (clock);
+    gst_object_unref (clock);
+
+    GST_OBJECT_LOCK (basesink);
+    /* store the current running time */
+    if (GST_ELEMENT_START_TIME (basesink) != GST_CLOCK_TIME_NONE) {
+      if (now != GST_CLOCK_TIME_NONE)
+        GST_ELEMENT_START_TIME (basesink) =
+            now - GST_ELEMENT_CAST (basesink)->base_time;
+      else
+        GST_WARNING_OBJECT (basesink,
+            "Clock %s returned invalid time, can't calculate "
+            "running_time when going to the PAUSED state",
+            GST_OBJECT_NAME (clock));
+    }
+    GST_DEBUG_OBJECT (basesink,
+        "start_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
+        ", base_time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_ELEMENT_START_TIME (basesink)),
+        GST_TIME_ARGS (now),
+        GST_TIME_ARGS (GST_ELEMENT_CAST (basesink)->base_time));
+  }
+  GST_OBJECT_UNLOCK (basesink);
+}
+
+static void
 gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
 {
   /* make sure we are not blocked on the clock also clear any pending
@@ -2872,6 +2910,7 @@ gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
    * prerolled buffer */
   basesink->playing_async = TRUE;
   if (basesink->priv->async_enabled) {
+    gst_base_sink_update_start_time (basesink);
     gst_element_lost_state (GST_ELEMENT_CAST (basesink));
   } else {
     /* start time reset in above case as well;
@@ -3819,6 +3858,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       sink->playing_async = TRUE;
       priv->pending_step.need_preroll = TRUE;
       sink->need_preroll = FALSE;
+      gst_base_sink_update_start_time (sink);
       gst_element_lost_state (GST_ELEMENT_CAST (sink));
     } else {
       sink->priv->have_latency = TRUE;
