@@ -2393,31 +2393,41 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     format.fmt.pix_mp.field = field;
     format.fmt.pix_mp.num_planes = n_v4l_planes;
 
-    /* try to ask our prefered stride but it's not a failure
-     * if not accepted */
-    for (i = 0; i < format.fmt.pix_mp.num_planes; i++)
-      format.fmt.pix_mp.plane_fmt[i].bytesperline =
-          GST_VIDEO_INFO_PLANE_STRIDE (&info, i);
+    /* try to ask our prefered stride but it's not a failure if not
+     * accepted */
+    for (i = 0; i < n_v4l_planes; i++) {
+      gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, i);
+
+      if (GST_VIDEO_FORMAT_INFO_IS_TILED (info.finfo))
+        stride = GST_VIDEO_TILE_X_TILES (stride) <<
+            GST_VIDEO_FORMAT_INFO_TILE_WS (info.finfo);
+
+      format.fmt.pix_mp.plane_fmt[i].bytesperline = stride;
+    }
 
     if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_ENCODED)
       format.fmt.pix_mp.plane_fmt[0].sizeimage = ENCODED_BUFFER_SIZE;
   } else {
+    gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
+
     format.type = v4l2object->type;
     format.fmt.pix.width = width;
     format.fmt.pix.height = height;
     format.fmt.pix.pixelformat = pixelformat;
     format.fmt.pix.field = field;
+
+    if (GST_VIDEO_FORMAT_INFO_IS_TILED (info.finfo))
+      stride = GST_VIDEO_TILE_X_TILES (stride) <<
+          GST_VIDEO_FORMAT_INFO_TILE_WS (info.finfo);
+
     /* try to ask our prefered stride */
-    format.fmt.pix.bytesperline = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
+    format.fmt.pix.bytesperline = stride;
 
     if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_ENCODED)
       format.fmt.pix.sizeimage = ENCODED_BUFFER_SIZE;
   }
 
-  if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
-    goto set_fmt_failed;
-
-  GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
+  GST_DEBUG_OBJECT (v4l2object->element, "Desired format is %dx%d, format "
       "%" GST_FOURCC_FORMAT ", nb planes %d", format.fmt.pix.width,
       format.fmt.pix_mp.height,
       GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
@@ -2428,6 +2438,30 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     for (i = 0; i < format.fmt.pix_mp.num_planes; i++)
       GST_DEBUG_OBJECT (v4l2object->element, "  stride %d",
           format.fmt.pix_mp.plane_fmt[i].bytesperline);
+  } else {
+    GST_DEBUG_OBJECT (v4l2object->element, "  stride %d",
+        format.fmt.pix.bytesperline);
+  }
+#endif
+
+  if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
+    goto set_fmt_failed;
+
+  GST_DEBUG_OBJECT (v4l2object->element, "Got format of %dx%d, format "
+      "%" GST_FOURCC_FORMAT ", nb planes %d", format.fmt.pix.width,
+      format.fmt.pix_mp.height,
+      GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
+      is_mplane ? format.fmt.pix_mp.num_planes : 1);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (is_mplane) {
+    for (i = 0; i < format.fmt.pix_mp.num_planes; i++)
+      GST_DEBUG_OBJECT (v4l2object->element, "  stride %d, sizeimage %d",
+          format.fmt.pix_mp.plane_fmt[i].bytesperline,
+          format.fmt.pix_mp.plane_fmt[i].sizeimage);
+  } else {
+    GST_DEBUG_OBJECT (v4l2object->element, "  stride %d, sizeimage %d",
+        format.fmt.pix.bytesperline, format.fmt.pix.sizeimage);
   }
 #endif
 
