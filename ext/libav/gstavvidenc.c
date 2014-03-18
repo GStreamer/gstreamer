@@ -62,6 +62,7 @@ enum
   PROP_ME_METHOD,
   PROP_BUFSIZE,
   PROP_RTP_PAYLOAD_SIZE,
+  PROP_MAX_THREADS,
   PROP_COMPLIANCE,
   PROP_CFG_BASE,
 };
@@ -174,6 +175,7 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstVideoEncoderClass *venc_class;
+  int caps;
 
   gobject_class = (GObjectClass *) klass;
   venc_class = (GstVideoEncoderClass *) klass;
@@ -206,6 +208,14 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
       PROP_RTP_PAYLOAD_SIZE, g_param_spec_int ("rtp-payload-size",
           "RTP Payload Size", "Target GOB length", 0, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  caps = klass->in_plugin->capabilities;
+  if (caps & (CODEC_CAP_FRAME_THREADS | CODEC_CAP_SLICE_THREADS)) {
+    g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_THREADS,
+        g_param_spec_int ("max-threads", "Maximum encode threads",
+            "Maximum number of worker threads to spawn. (0 = auto)",
+            0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  }
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COMPLIANCE,
       g_param_spec_enum ("compliance", "Compliance",
@@ -247,6 +257,7 @@ gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc)
   ffmpegenc->gop_size = DEFAULT_VIDEO_GOP_SIZE;
   ffmpegenc->rtp_payload_size = 0;
   ffmpegenc->compliance = FFMPEG_DEFAULT_COMPLIANCE;
+  ffmpegenc->max_threads = 0;
 
   ffmpegenc->lmin = 2;
   ffmpegenc->lmax = 31;
@@ -319,6 +330,14 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   ffmpegenc->context->me_method = ffmpegenc->me_method;
   GST_DEBUG_OBJECT (ffmpegenc, "Setting avcontext to bitrate %d, gop_size %d",
       ffmpegenc->bitrate, ffmpegenc->gop_size);
+
+  if (ffmpegenc->max_threads == 0) {
+    if (!(oclass->in_plugin->capabilities & CODEC_CAP_AUTO_THREADS))
+      ffmpegenc->context->thread_count = gst_ffmpeg_auto_max_threads ();
+    else
+      ffmpegenc->context->thread_count = 0;
+  } else
+    ffmpegenc->context->thread_count = ffmpegenc->max_threads;
 
   /* RTP payload used for GOB production (for Asterisk) */
   if (ffmpegenc->rtp_payload_size) {
@@ -557,7 +576,7 @@ gst_ffmpegvidenc_propose_allocation (GstVideoEncoder * encoder,
 static void
 gst_ffmpegvidenc_free_avpacket (gpointer pkt)
 {
-  av_packet_unref ((AVPacket *)pkt);
+  av_packet_unref ((AVPacket *) pkt);
   g_slice_free (AVPacket, pkt);
 }
 
@@ -570,7 +589,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   gint ret = 0, c;
   GstVideoInfo *info = &ffmpegenc->input_state->info;
   GstVideoFrame vframe;
-  AVPacket * pkt;
+  AVPacket *pkt;
   int have_data = 0;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame))
@@ -757,6 +776,9 @@ gst_ffmpegvidenc_set_property (GObject * object,
     case PROP_COMPLIANCE:
       ffmpegenc->compliance = g_value_get_enum (value);
       break;
+    case PROP_MAX_THREADS:
+      ffmpegenc->max_threads = g_value_get_int (value);
+      break;
     default:
       if (!gst_ffmpeg_cfg_set_property (object, value, pspec))
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -792,6 +814,9 @@ gst_ffmpegvidenc_get_property (GObject * object,
       break;
     case PROP_COMPLIANCE:
       g_value_set_enum (value, ffmpegenc->compliance);
+      break;
+    case PROP_MAX_THREADS:
+      g_value_set_int (value, ffmpegenc->max_threads);
       break;
     default:
       if (!gst_ffmpeg_cfg_get_property (object, value, pspec))

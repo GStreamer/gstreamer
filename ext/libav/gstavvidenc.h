@@ -50,6 +50,7 @@ struct _GstFFMpegVidEnc
   gint buffer_size;
   gint rtp_payload_size;
   gint compliance;
+  gint max_threads;
 
   guint8 *working_buf;
   gsize working_buf_size;
