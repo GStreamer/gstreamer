@@ -439,6 +439,9 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
 
   pool = gst_base_transform_get_buffer_pool (trans);
 
+  if (!gst_buffer_pool_set_active (pool, TRUE))
+    goto activate_failed;
+
   GST_DEBUG_OBJECT (self, "Dequeue output buffer");
   ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL);
   g_object_unref (pool);
