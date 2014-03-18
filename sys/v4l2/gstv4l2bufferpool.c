@@ -426,27 +426,8 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
       gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-  if (!pool->add_videometa &&
-      GST_VIDEO_INFO_FORMAT (&obj->info) != GST_VIDEO_FORMAT_ENCODED) {
-    gint stride = 0;
-    gint i = 0;
-    for (i = 0; i < obj->n_v4l2_planes; i++) {
-      /* we don't have video metadata, and we are dealing with raw video,
-       * see if the strides are compatible */
-      stride = GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, i);
-
-      if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo)) {
-        stride = GST_VIDEO_TILE_X_TILES (stride) <<
-            GST_VIDEO_FORMAT_INFO_TILE_WS ((obj->info.finfo));
-      }
-
-      GST_DEBUG_OBJECT (pool, "no videometadata, checking strides %d and %u",
-          stride, obj->bytesperline[i]);
-
-      if (stride != obj->bytesperline[i])
-        goto missing_video_api;
-    }
-  }
+  if (!pool->add_videometa && obj->need_video_meta)
+    goto missing_video_api;
 
   /* parse the config and keep around */
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
@@ -479,9 +460,7 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   /* ERRORS */
 missing_video_api:
   {
-    GST_ERROR_OBJECT (pool, "missing GstMetaVideo API in config, "
-        "default stride: %d, wanted stride %u",
-        GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, 0), obj->bytesperline[0]);
+    GST_ERROR_OBJECT (pool, "missing GstMetaVideo API in config");
     return FALSE;
   }
 wrong_config:

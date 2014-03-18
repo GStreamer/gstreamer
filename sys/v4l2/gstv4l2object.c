@@ -2257,8 +2257,16 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
       ((align->padding_bottom + align->padding_right) != 0));
 
   /* ... or also video meta if stride is non "standard" */
-  if (GST_VIDEO_INFO_PLANE_STRIDE (info, 0) != v4l2object->bytesperline[0])
-    v4l2object->need_video_meta = TRUE;
+  for (i = 0; i < v4l2object->n_v4l2_planes; i++) {
+    gint stride = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
+
+    if (GST_VIDEO_FORMAT_INFO_IS_TILED (info->finfo))
+      stride = GST_VIDEO_TILE_X_TILES (stride) <<
+          GST_VIDEO_FORMAT_INFO_TILE_WS (info->finfo);
+
+    if (stride != v4l2object->bytesperline[i])
+      v4l2object->need_video_meta = TRUE;
+  }
 
   /* ... or also video meta if we use multiple, non-contiguous, planes */
   if (v4l2object->n_v4l2_planes > 1)
