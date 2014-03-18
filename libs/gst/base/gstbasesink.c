@@ -4431,9 +4431,8 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
     start = basesink->priv->current_sstart;
     stop = basesink->priv->current_sstop;
 
-    if (in_paused || last_seen) {
-      /* in paused or when we don't use the clock, we use the last position
-       * as a lower bound */
+    if (last_seen) {
+      /* when we don't use the clock, we use the last position as a lower bound */
       if (stop == -1 || segment->rate > 0.0)
         last = start;
       else
@@ -4442,7 +4441,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       GST_DEBUG_OBJECT (basesink, "in PAUSED using last %" GST_TIME_FORMAT,
           GST_TIME_ARGS (last));
     } else {
-      /* in playing, use last stop time as upper bound */
+      /* in playing and paused, use last stop time as upper bound */
       if (start == -1 || segment->rate > 0.0)
         last = stop;
       else
@@ -4519,15 +4518,9 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
 
     *cur = time + gst_guint64_to_gdouble (now - base_time) * rate;
 
-    if (in_paused) {
-      /* never report less than segment values in paused */
-      if (last != -1)
-        *cur = MAX (last, *cur);
-    } else {
-      /* never report more than last seen position in playing */
-      if (last != -1)
-        *cur = MIN (last, *cur);
-    }
+    /* never report more than last seen position */
+    if (last != -1)
+      *cur = MIN (last, *cur);
 
     GST_DEBUG_OBJECT (basesink,
         "now %" GST_TIME_FORMAT " - base_time %" GST_TIME_FORMAT " - base %"
