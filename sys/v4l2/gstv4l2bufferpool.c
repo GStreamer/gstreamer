@@ -1335,6 +1335,14 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
   gst_buffer_pool_config_set_params (config, caps, obj->sizeimage, 2, 0);
 
+  /* Ensure our internal pool has required features */
+  if (obj->need_video_meta)
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  if (obj->need_crop_meta)
+    gst_v4l2_buffer_pool_add_crop_meta (pool, obj->need_crop_meta);
+
   res = gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), config);
   if (!res)
     goto config_failed;

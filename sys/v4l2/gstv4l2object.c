@@ -2998,23 +2998,6 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     gst_buffer_pool_set_config (pool, config);
   }
 
-  /* Our pool may be incompatible, though we'll need the metadata in order to
-   * copy to a downstream compatible buffer */
-  if (pool != obj->pool && obj->need_video_meta) {
-    GstStructure *config;
-
-    config = gst_buffer_pool_get_config (obj->pool);
-    gst_buffer_pool_config_set_params (config, caps, obj->sizeimage, min, 0);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-    gst_buffer_pool_set_config (obj->pool, config);
-  }
-
-  if (obj->need_crop_meta)
-    gst_v4l2_buffer_pool_add_crop_meta (GST_V4L2_BUFFER_POOL (obj->pool),
-        obj->need_crop_meta);
-
   /* Size field is mandatory and we have no size if now using our own pool and
    * downstream didn't provide one. */
   if (size == 0) {
