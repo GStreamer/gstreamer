@@ -198,6 +198,8 @@ static void compute_high_time (GstMultiQueue * mq);
 static void single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 static void single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 
+static void update_buffering (GstMultiQueue * mq, GstSingleQueue * sq);
+
 static void gst_single_queue_flush_queue (GstSingleQueue * sq, gboolean full);
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%u",
@@ -477,6 +479,7 @@ gst_multi_queue_finalize (GObject * object)
     while (tmp) {						\
       GstSingleQueue *q = (GstSingleQueue*)tmp->data;		\
       q->max_size.format = mq->max_size.format;                 \
+      update_buffering (mq, q);                                 \
       tmp = g_list_next(tmp);					\
     };								\
 } G_STMT_END
@@ -501,6 +504,8 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
 
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
+      mq->max_size.visible = new_size;
+
       tmp = mq->queues;
       while (tmp) {
         GstDataQueueSize size;
@@ -513,10 +518,9 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
         } else if (new_size > size.visible) {
           q->max_size.visible = new_size;
         }
+        update_buffering (mq, q);
         tmp = g_list_next (tmp);
-      };
-
-      mq->max_size.visible = new_size;
+      }
 
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
@@ -547,7 +551,23 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
         message = gst_message_new_buffering (GST_OBJECT_CAST (mq), 100);
 
         gst_element_post_message (GST_ELEMENT_CAST (mq), message);
-      };
+      }
+
+      if (mq->use_buffering) {
+        GList *tmp;
+
+        GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+
+        mq->buffering = TRUE;
+        tmp = mq->queues;
+        while (tmp) {
+          GstSingleQueue *q = (GstSingleQueue *) tmp->data;
+          update_buffering (mq, q);
+          tmp = g_list_next (tmp);
+        }
+
+        GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+      }
       break;
     case PROP_LOW_PERCENT:
       mq->low_percent = g_value_get_int (value);
