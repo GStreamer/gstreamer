@@ -618,8 +618,10 @@ get_position (GstValidateScenario * scenario)
       MAX (0, (gint64) (priv->segment_start - priv->seek_pos_tol));
   stop_with_tolerance =
       priv->segment_stop != -1 ? priv->segment_stop + priv->seek_pos_tol : -1;
-  if ((GST_CLOCK_TIME_IS_VALID (stop_with_tolerance) && position > stop_with_tolerance)
-      || (priv->seek_flags & GST_SEEK_FLAG_ACCURATE && position < start_with_tolerance)) {
+  if ((GST_CLOCK_TIME_IS_VALID (stop_with_tolerance)
+          && position > stop_with_tolerance)
+      || (priv->seek_flags & GST_SEEK_FLAG_ACCURATE
+          && position < start_with_tolerance)) {
 
     GST_VALIDATE_REPORT (scenario, QUERY_POSITION_OUT_OF_SEGMENT,
         "Current position %" GST_TIME_FORMAT " not in the expected range [%"
@@ -1305,13 +1307,16 @@ gst_validate_list_scenarios (gchar * output_file)
   gsize datalength;
   GError *err = NULL;
   GKeyFile *kf = NULL;
-  gchar **env_scenariodir =
-      g_strsplit (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"), ":",
-      0);
+  const gchar *envvar;
+  gchar **env_scenariodir = NULL;
   gchar *tldir = g_build_filename (g_get_user_data_dir (),
       "gstreamer-" GST_API_VERSION, GST_VALIDATE_SCENARIO_DIRECTORY,
       NULL);
   GFile *dir = g_file_new_for_path (tldir);
+
+  envvar = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
+  if (envvar)
+    env_scenariodir = g_strsplit (envvar, ":", 0);
 
   kf = g_key_file_new ();
   _list_scenarios_in_dir (dir, kf);
