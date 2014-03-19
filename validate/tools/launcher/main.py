@@ -123,6 +123,8 @@ def main():
     assets_group.add_option("", "--remote-assets-url", dest="remote_assets_url",
                       default=DEFAULT_GST_QA_ASSETS_REPO,
                       help="Url to the remote assets")
+    assets_group.add_option("-S", "--sync", dest="sync", action="store_true",
+                            default=False, help="Synchronize asset repository")
     parser.add_option_group(assets_group)
 
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
@@ -161,7 +163,7 @@ def main():
 
     tests_launcher.set_settings(options, args)
 
-    if options.remote_assets_url:
+    if options.remote_assets_url and options.sync:
         if os.path.exists(options.clone_dir):
             launch_command("cd %s && %s" % (options.clone_dir,
                                             options.update_assets_command))
