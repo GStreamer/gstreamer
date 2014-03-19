@@ -47,8 +47,6 @@
 #include <bcm_host.h>
 #endif
 
-#include <gst/gl/gstglconfig.h>
-
 #include "gstglimagesink.h"
 
 #include "gstglfiltercube.h"

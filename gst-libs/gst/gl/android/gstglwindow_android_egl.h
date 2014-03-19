@@ -22,8 +22,6 @@
 #ifndef __GST_GL_WINDOW_ANDROID_EGL_H__
 #define __GST_GL_WINDOW_ANDROID_EGL_H__
 
-#include <EGL/egl.h>
-
 #include <gst/gl/gl.h>
 
 G_BEGIN_DECLS

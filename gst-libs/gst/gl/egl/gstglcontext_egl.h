@@ -22,10 +22,7 @@
 #define __GST_GL_EGL_H__
 
 #include <gst/gst.h>
-#include <EGL/egl.h>
-
-#include <gst/gl/gstgl_fwd.h>
-#include <gst/gl/gstglcontext.h>
+#include <gst/gl/gl.h>
 
 G_BEGIN_DECLS
 
