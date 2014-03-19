@@ -444,6 +444,8 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     goto flushing;
 
   if (G_UNLIKELY (!GST_V4L2_IS_ACTIVE (self->v4l2output))) {
+    if (!self->input_state)
+      goto not_negotiated;
     if (!gst_v4l2_object_set_format (self->v4l2output, self->input_state->caps))
       goto not_negotiated;
   }
