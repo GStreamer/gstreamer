@@ -82,8 +82,26 @@ gst_v4l2_probe_template_caps (const gchar * device, gint video_fd,
 
     template = gst_v4l2_object_v4l2fourcc_to_structure (format.pixelformat);
 
-    if (template)
+    if (template) {
+      GstStructure *alt_t = NULL;
+
+      switch (format.pixelformat) {
+        case V4L2_PIX_FMT_RGB32:
+          alt_t = gst_structure_copy (template);
+          gst_structure_set (alt_t, "format", G_TYPE_STRING, "ARGB", NULL);
+          break;
+        case V4L2_PIX_FMT_BGR32:
+          alt_t = gst_structure_copy (template);
+          gst_structure_set (alt_t, "format", G_TYPE_STRING, "BGRA", NULL);
+        default:
+          break;
+      }
+
       gst_caps_append_structure (caps, template);
+
+      if (alt_t)
+        gst_caps_append_structure (caps, alt_t);
+    }
   }
 
   return gst_caps_simplify (caps);
