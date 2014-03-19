@@ -20,7 +20,8 @@ EXTRA_DIST = \
 	$(sources) \
 	$(METADATA) \
 	AssemblyInfo.cs.in \
-	$(ASSEMBLY_NAME).snk
+	$(ASSEMBLY_NAME).snk \
+	gstreamer-sharp.xml
 
 all: generated-stamp $(ASSEMBLY)
 
@@ -43,10 +44,12 @@ $(DLL): $(build_sources) generated-stamp
 
 install-data-local:
 	echo "$(GACUTIL) /i $(DLL) /f $(GACUTIL_FLAGS)";  \
-        $(GACUTIL) /i $(DLL) /f $(GACUTIL_FLAGS) || exit 1;
+        $(GACUTIL) /i $(DLL) /f $(GACUTIL_FLAGS) || exit 1; \
+	cp $(API) $(gapidir);
 
 uninstall-local:
 	echo "$(GACUTIL) /u $(ASSEMBLY_NAME) $(GACUTIL_FLAGS)"; \
         $(GACUTIL) /u $(ASSEMBLY_NAME) $(GACUTIL_FLAGS) || exit 1;
+	rm -f $(gapidir)/$(API)
 clean-local:
 	-rm -r generated/*
