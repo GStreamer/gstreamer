@@ -104,6 +104,11 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_EOS:
       g_main_loop_quit (loop);
       break;
+    case GST_MESSAGE_ASYNC_DONE:
+      if (print_pos_srcid == 0)
+        print_pos_srcid =
+            g_timeout_add (50, (GSourceFunc) print_position, NULL);
+      break;
     case GST_MESSAGE_STATE_CHANGED:
       if (GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline)) {
         GstState oldstate, newstate, pending;
@@ -117,9 +122,6 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             gst_element_state_get_name (pending));
 
         if (newstate == GST_STATE_PLAYING) {
-          if (print_pos_srcid == 0)
-            print_pos_srcid =
-                g_timeout_add (50, (GSourceFunc) print_position, NULL);
           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
               GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.playing");
         }
