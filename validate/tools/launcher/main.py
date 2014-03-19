@@ -176,17 +176,19 @@ def main():
     ScenarioManager().config = options
     tests_launcher.list_tests()
 
+    if options.list_tests:
+        l = tests_launcher.tests
+        l.sort()
+        for test in l:
+            printc(test)
+        return 0
+
     httpsrv = HTTPServer(options)
     if tests_launcher.needs_http_server():
         httpsrv.start()
 
     e = None
     try:
-        if options.list_tests:
-            for test in tests_launcher.tests:
-                printc(test)
-            return 0
-
         tests_launcher.run_tests()
         tests_launcher.final_report()
     except Exception as e:
