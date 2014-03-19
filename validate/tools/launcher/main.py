@@ -132,16 +132,12 @@ def main():
     tests_launcher = _TestsLauncher()
     tests_launcher.add_options(parser)
 
-    blacklisted = tests_launcher.get_blacklisted()
-    if blacklisted:
-        msg = "Currently 'hardcoded' blacklisted tests:\n"
-        for name, bug in blacklisted:
-            sys.argv.extend(["-b", name])
-            msg += "    + %s -- bug: %s\n" % (name, bug)
-
-        printc(msg, Colors.FAIL, True)
-
     (options, args) = parser.parse_args()
+
+    if not options.sync and not os.path.exists(options.main_dir):
+        printc("MAIN_DIR (%s) does not exists. Forgot to run --sync ?" % os.path.abspath(options.main_dir), Colors.FAIL, True)
+        return -1
+
     if options.logsdir is None:
         options.logsdir = os.path.join(options.outputdir, "logs")
     if options.xunit_file is None:
@@ -162,6 +158,15 @@ def main():
         options.paths = os.path.join(options.clone_dir, MEDIAS_FOLDER)
 
     tests_launcher.set_settings(options, args)
+
+    blacklisted = tests_launcher.get_blacklisted()
+    if blacklisted:
+        msg = "Currently 'hardcoded' blacklisted tests:\n"
+        for name, bug in blacklisted:
+            sys.argv.extend(["-b", name])
+            msg += "    + %s -- bug: %s\n" % (name, bug)
+
+        printc(msg, Colors.FAIL, True)
 
     if options.remote_assets_url and options.sync:
         if os.path.exists(options.clone_dir):
