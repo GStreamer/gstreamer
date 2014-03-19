@@ -511,6 +511,14 @@ gst_osx_video_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+gst_osx_video_sink_propose_allocation (GstBaseSink * base_sink, GstQuery * query)
+{
+    gst_query_add_allocation_meta (query,
+        GST_VIDEO_META_API_TYPE, NULL);
+
+    return TRUE;
+}
 
 static void
 gst_osx_video_sink_init (GstOSXVideoSink * sink)
@@ -572,6 +580,7 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
   gstbasesink_class->set_caps = gst_osx_video_sink_setcaps;
   gstbasesink_class->preroll = gst_osx_video_sink_show_frame;
   gstbasesink_class->render = gst_osx_video_sink_show_frame;
+  gstbasesink_class->propose_allocation = gst_osx_video_sink_propose_allocation;
   gstelement_class->change_state = gst_osx_video_sink_change_state;
 
   /**
