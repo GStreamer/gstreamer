@@ -3394,6 +3394,11 @@ gst_queue2_set_property (GObject * object,
         queue->is_buffering = FALSE;
         gst_element_post_message (GST_ELEMENT_CAST (queue), msg);
       }
+
+      if (queue->use_buffering) {
+        queue->is_buffering = TRUE;
+        update_buffering (queue);
+      }
       break;
     case PROP_USE_RATE_ESTIMATE:
       queue->use_rate_estimate = g_value_get_boolean (value);
