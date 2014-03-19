@@ -43,10 +43,6 @@
 #include "config.h"
 #endif
 
-#ifdef USE_EGL_RPI
-#include <bcm_host.h>
-#endif
-
 #include "gstglimagesink.h"
 
 #include "gstglfiltercube.h"
@@ -73,6 +69,10 @@
 #endif /* HAVE_JPEG */
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
+
+#ifdef USE_EGL_RPI
+#include <bcm_host.h>
+#endif
 
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
