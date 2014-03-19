@@ -30,9 +30,7 @@
  * maximum allowed pause is determined by the timeout property.
  *
  * This element is currently intended for transcoding pipelines,
- * although may be useful in other contexts.  In particular, it is
- * not aware of expected pauses in buffer flow, such as the PAUSED
- * state.
+ * although may be useful in other contexts.
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -68,6 +66,10 @@ static gboolean gst_watchdog_src_event (GstBaseTransform * trans,
     GstEvent * event);
 static GstFlowReturn gst_watchdog_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
+static void gst_watchdog_feed (GstWatchdog * watchdog);
+
+static GstStateChangeReturn
+gst_watchdog_change_state (GstElement * element, GstStateChange transition);
 
 enum
 {
@@ -88,6 +90,8 @@ gst_watchdog_class_init (GstWatchdogClass * klass)
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
 
+  GstElementClass *gstelement_klass = (GstElementClass *) klass;
+
   gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           gst_caps_new_any ()));
@@ -99,6 +103,8 @@ gst_watchdog_class_init (GstWatchdogClass * klass)
       "Watchdog", "Generic", "Watches for pauses in stream buffers",
       "David Schleef <ds@schleef.org>");
 
+  gstelement_klass->change_state =
+      GST_DEBUG_FUNCPTR (gst_watchdog_change_state);
   gobject_class->set_property = gst_watchdog_set_property;
   gobject_class->get_property = gst_watchdog_get_property;
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_watchdog_start);
@@ -112,7 +118,7 @@ gst_watchdog_class_init (GstWatchdogClass * klass)
   g_object_class_install_property (gobject_class, PROP_TIMEOUT,
       g_param_spec_int ("timeout", "Timeout", "Timeout (in ms) after "
           "which an element error is sent to the bus if no buffers are "
-          "received.", 1, G_MAXINT, 1000,
+          "received. 0 means disabled.", 0, G_MAXINT, 1000,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 }
@@ -132,7 +138,10 @@ gst_watchdog_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_TIMEOUT:
+      GST_OBJECT_LOCK (watchdog);
       watchdog->timeout = g_value_get_int (value);
+      gst_watchdog_feed (watchdog);
+      GST_OBJECT_UNLOCK (watchdog);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -205,10 +214,13 @@ gst_watchdog_feed (GstWatchdog * watchdog)
     g_source_unref (watchdog->source);
     watchdog->source = NULL;
   }
-  watchdog->source = g_timeout_source_new (watchdog->timeout);
-  g_source_set_callback (watchdog->source, gst_watchdog_trigger, watchdog,
-      NULL);
-  g_source_attach (watchdog->source, watchdog->main_context);
+
+  if (watchdog->timeout != 0) {
+    watchdog->source = g_timeout_source_new (watchdog->timeout);
+    g_source_set_callback (watchdog->source, gst_watchdog_trigger, watchdog,
+        NULL);
+    g_source_attach (watchdog->source, watchdog->main_context);
+  }
 }
 
 static gboolean
@@ -217,11 +229,13 @@ gst_watchdog_start (GstBaseTransform * trans)
   GstWatchdog *watchdog = GST_WATCHDOG (trans);
 
   GST_DEBUG_OBJECT (watchdog, "start");
+  GST_OBJECT_LOCK (watchdog);
 
   watchdog->main_context = g_main_context_new ();
   watchdog->main_loop = g_main_loop_new (watchdog->main_context, TRUE);
   watchdog->thread = g_thread_new ("watchdog", gst_watchdog_thread, watchdog);
 
+  GST_OBJECT_UNLOCK (watchdog);
   return TRUE;
 }
 
@@ -232,6 +246,7 @@ gst_watchdog_stop (GstBaseTransform * trans)
   GSource *quit_source;
 
   GST_DEBUG_OBJECT (watchdog, "stop");
+  GST_OBJECT_LOCK (watchdog);
 
   if (watchdog->source) {
     g_source_destroy (watchdog->source);
@@ -248,9 +263,15 @@ gst_watchdog_stop (GstBaseTransform * trans)
   g_source_unref (quit_source);
 
   g_thread_join (watchdog->thread);
-  g_main_loop_unref (watchdog->main_loop);
-  g_main_context_unref (watchdog->main_context);
+  watchdog->thread = NULL;
 
+  g_main_loop_unref (watchdog->main_loop);
+  watchdog->main_loop = NULL;
+
+  g_main_context_unref (watchdog->main_context);
+  watchdog->main_context = NULL;
+
+  GST_OBJECT_UNLOCK (watchdog);
   return TRUE;
 }
 
@@ -261,7 +282,9 @@ gst_watchdog_sink_event (GstBaseTransform * trans, GstEvent * event)
 
   GST_DEBUG_OBJECT (watchdog, "sink_event");
 
+  GST_OBJECT_LOCK (watchdog);
   gst_watchdog_feed (watchdog);
+  GST_OBJECT_UNLOCK (watchdog);
 
   return
       GST_BASE_TRANSFORM_CLASS (gst_watchdog_parent_class)->sink_event (trans,
@@ -275,7 +298,9 @@ gst_watchdog_src_event (GstBaseTransform * trans, GstEvent * event)
 
   GST_DEBUG_OBJECT (watchdog, "src_event");
 
+  GST_OBJECT_LOCK (watchdog);
   gst_watchdog_feed (watchdog);
+  GST_OBJECT_UNLOCK (watchdog);
 
   return GST_BASE_TRANSFORM_CLASS (gst_watchdog_parent_class)->src_event (trans,
       event);
@@ -288,7 +313,56 @@ gst_watchdog_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (watchdog, "transform_ip");
 
+  GST_OBJECT_LOCK (watchdog);
   gst_watchdog_feed (watchdog);
+  GST_OBJECT_UNLOCK (watchdog);
 
   return GST_FLOW_OK;
+}
+
+/*
+ * Change state handler for the element.
+ */
+static GstStateChangeReturn
+gst_watchdog_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstWatchdog *watchdog = GST_WATCHDOG (element);
+
+  GST_DEBUG_OBJECT (watchdog, "gst_watchdog_change_state");
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      /* Activate timer */
+      GST_OBJECT_LOCK (watchdog);
+      gst_watchdog_feed (watchdog);
+      GST_OBJECT_UNLOCK (watchdog);
+      break;
+    default:
+      break;
+  }
+
+  ret =
+      GST_ELEMENT_CLASS (gst_watchdog_parent_class)->change_state (element,
+      transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      /* Disable the timer */
+      GST_OBJECT_LOCK (watchdog);
+      if (watchdog->source) {
+        g_source_destroy (watchdog->source);
+        g_source_unref (watchdog->source);
+        watchdog->source = NULL;
+      }
+      GST_OBJECT_UNLOCK (watchdog);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+
+
 }
