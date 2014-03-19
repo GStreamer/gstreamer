@@ -157,8 +157,10 @@ def main():
     if options.http_server_dir is None:
         options.http_server_dir = options.paths
 
-    if not options.sync and not os.path.exists(options.clone_dir):
-        printc("Media path (%s) does not exists. Forgot to run --sync ?" % options.clone_dir, Colors.FAIL, True)
+    if not options.sync and not os.path.exists(options.clone_dir) and \
+            options.clone_dir == os.path.join(options.clone_dir, MEDIAS_FOLDER):
+        printc("Media path (%s) does not exists. Forgot to run --sync ?"
+               % options.clone_dir, Colors.FAIL, True)
         return -1
 
     tests_launcher.set_settings(options, args)
