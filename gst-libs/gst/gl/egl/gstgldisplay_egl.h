@@ -22,11 +22,10 @@
 #define __GST_GL_DISPLAY_EGL_H__
 
 #include <gst/gst.h>
+#include <gst/gl/gl.h>
 
+/* FIXME temp until merge */
 #include <gst/egl/egl.h>
-
-#include <gst/gl/gstgl_fwd.h>
-#include <gst/gl/gstgldisplay.h>
 
 G_BEGIN_DECLS
 

@@ -21,12 +21,9 @@
 #ifndef __GST_GL_WINDOW_DISPMANX_EGL_H__
 #define __GST_GL_WINDOW_DISPMANX_EGL_H__
 
-#include <bcm_host.h>
 #include <gst/video/gstvideosink.h>
-
-#include <EGL/egl.h>
-
 #include <gst/gl/gl.h>
+#include <bcm_host.h>
 
 G_BEGIN_DECLS
 
