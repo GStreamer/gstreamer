@@ -1278,14 +1278,33 @@ gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
 
     structure =
         gst_v4l2_object_v4l2fourcc_to_bare_struct (gst_v4l2_formats[i].format);
+
     if (structure) {
+      GstStructure *alt_s = NULL;
+
       if (gst_v4l2_formats[i].dimensions) {
         gst_structure_set (structure,
             "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
             "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
             "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
       }
+
+      switch (gst_v4l2_formats[i].format) {
+        case V4L2_PIX_FMT_RGB32:
+          alt_s = gst_structure_copy (structure);
+          gst_structure_set (alt_s, "format", G_TYPE_STRING, "ARGB", NULL);
+          break;
+        case V4L2_PIX_FMT_BGR32:
+          alt_s = gst_structure_copy (structure);
+          gst_structure_set (alt_s, "format", G_TYPE_STRING, "BGRA", NULL);
+        default:
+          break;
+      }
+
       gst_caps_append_structure (caps, structure);
+
+      if (alt_s)
+        gst_caps_append_structure (caps, alt_s);
     }
   }
 
@@ -1768,6 +1787,8 @@ static void
 gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
     guint32 format, GstCaps * caps, GstStructure * s)
 {
+  GstStructure *alt_s = NULL;
+
   /* Encoded stream on output buffer need to be parsed */
   if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT ||
       v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
@@ -1783,7 +1804,27 @@ gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
     }
   }
 
+  if (v4l2object->has_alpha_component &&
+      (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
+          v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
+    switch (format) {
+      case V4L2_PIX_FMT_RGB32:
+        alt_s = gst_structure_copy (s);
+        gst_structure_set (alt_s, "format", G_TYPE_STRING, "ARGB", NULL);
+        break;
+      case V4L2_PIX_FMT_BGR32:
+        alt_s = gst_structure_copy (s);
+        gst_structure_set (alt_s, "format", G_TYPE_STRING, "BGRA", NULL);
+        break;
+      default:
+        break;
+    }
+  }
+
   gst_caps_append_structure (caps, s);
+
+  if (alt_s)
+    gst_caps_append_structure (caps, alt_s);
 }
 
 static GstCaps *
@@ -2494,6 +2535,16 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
 
   if (is_mplane && format.fmt.pix_mp.num_planes != n_v4l_planes)
     goto invalid_planes;
+
+  if (GST_VIDEO_INFO_HAS_ALPHA (&info)) {
+    struct v4l2_control ctl = { 0, };
+    ctl.id = V4L2_CID_ALPHA_COMPONENT;
+    ctl.value = 0xff;
+
+    if (v4l2_ioctl (fd, VIDIOC_S_CTRL, &ctl) < 0)
+      GST_WARNING_OBJECT (v4l2object->element,
+          "Failed to set alpha component value");
+  }
 
   /* Is there a reason we require the caller to always specify a framerate? */
   GST_DEBUG_OBJECT (v4l2object->element, "Desired framerate: %u/%u", fps_n,

@@ -374,6 +374,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         /* FIXME: We should implement GstMixer interface instead */
         /* but let's not be pedantic and make element more useful for now */
         break;
+      case V4L2_CID_ALPHA_COMPONENT:
+        v4l2object->has_alpha_component = TRUE;
+        break;
       default:
         GST_DEBUG_OBJECT (e,
             "ControlID %s (%x) unhandled, FIXME", control.name, n);

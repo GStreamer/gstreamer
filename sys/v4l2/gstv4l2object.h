@@ -99,8 +99,10 @@ struct _GstV4l2Object {
   GstVideoInfo info;
   GstVideoAlignment align;
 
+  /* Features */
   gboolean need_video_meta;
   gboolean need_crop_meta;
+  gboolean has_alpha_component;
 
   /* only used if the device supports MPLANE
    * nb planes is meaning of v4l2 planes
