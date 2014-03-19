@@ -27,6 +27,7 @@
 #ifndef __GST_OSX_VIDEO_SINK_H__
 #define __GST_OSX_VIDEO_SINK_H__
 
+#include <gst/video/video.h>
 #include <gst/video/gstvideosink.h>
 
 #include <string.h>
@@ -83,6 +84,7 @@ struct _GstOSXVideoSink {
   NSView *superview;
   gboolean keep_par;
   gboolean embed;
+  GstVideoInfo info;
 };
 
 struct _GstOSXVideoSinkClass {

@@ -375,6 +375,9 @@ gst_osx_video_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   gst_osx_video_sink_osxwindow_resize (osxvideosink, osxvideosink->osxwindow,
       video_width, video_height);
+
+  gst_video_info_from_caps (&osxvideosink->info, caps);
+
   result = TRUE;
 
 beach:
@@ -875,8 +878,7 @@ gst_osx_video_sink_get_type (void)
 
 - (void) showFrame: (GstBufferObject *) object
 {
-  GstMapInfo info;
-  GstVideoMeta *vmeta;
+  GstVideoFrame frame;
   guint8 *data, *readp, *writep;
   gint i, active_width, stride;
   guint8 *texture_buffer;
@@ -891,9 +893,11 @@ gst_osx_video_sink_get_type (void)
   if (G_UNLIKELY (texture_buffer == NULL))
       goto no_texture_buffer;
 
-  vmeta = (GstVideoMeta *) gst_buffer_get_meta (buf, GST_VIDEO_META_API_TYPE);
-  gst_video_meta_map (vmeta, 0, &info, (gpointer *) &data, &stride, GST_MAP_READ);
-  readp = data;
+  if (!gst_video_frame_map (&frame, &osxvideosink->info, buf, GST_MAP_READ))
+      goto no_map;
+
+  data = readp = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
   writep = texture_buffer;
   active_width = GST_VIDEO_SINK_WIDTH (osxvideosink) * sizeof (short);
   for (i = 0; i < GST_VIDEO_SINK_HEIGHT (osxvideosink); i++) {
@@ -903,7 +907,7 @@ gst_osx_video_sink_get_type (void)
   }
   [osxvideosink->osxwindow->gstview displayTexture];
 
-  gst_video_meta_unmap (vmeta, 0, &info);
+  gst_video_frame_unmap (&frame);
 
 out:
   GST_OBJECT_UNLOCK (osxvideosink);
@@ -911,6 +915,10 @@ out:
 
   [pool release];
   return;
+
+no_map:
+  GST_WARNING_OBJECT (osxvideosink, "couldn't map frame");
+  goto out;
 
 no_window:
   GST_WARNING_OBJECT (osxvideosink, "not showing frame since we have no window (!?)");
