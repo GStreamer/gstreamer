@@ -1018,7 +1018,8 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
       priv->running_time = rtime_hz;
     } else {
       GST_LOG_OBJECT (payload,
-          "setting running-time to %" GST_TIME_FORMAT, GST_TIME_ARGS (rtime_ns));
+          "setting running-time to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (rtime_ns));
       priv->running_time = rtime_ns;
     }
   } else {
@@ -1044,8 +1045,8 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
       (is_list) ? -1 : gst_buffer_get_size (GST_BUFFER (obj)),
       payload->seqnum, data.rtptime, GST_TIME_ARGS (data.pts));
 
-  if (g_atomic_int_compare_and_exchange (&payload->priv->
-          notified_first_timestamp, 1, 0)) {
+  if (g_atomic_int_compare_and_exchange (&payload->
+          priv->notified_first_timestamp, 1, 0)) {
     g_object_notify (G_OBJECT (payload), "timestamp");
     g_object_notify (G_OBJECT (payload), "seqnum");
   }
@@ -1129,7 +1130,7 @@ gst_rtp_base_payload_push (GstRTPBasePayload * payload, GstBuffer * buffer)
 }
 
 static GstStructure *
-gst_rtp_base_payload_create_stats (GstRTPBasePayload *rtpbasepayload)
+gst_rtp_base_payload_create_stats (GstRTPBasePayload * rtpbasepayload)
 {
   GstRTPBasePayloadPrivate *priv;
   GstStructure *s;
@@ -1137,11 +1138,12 @@ gst_rtp_base_payload_create_stats (GstRTPBasePayload *rtpbasepayload)
   priv = rtpbasepayload->priv;
 
   s = gst_structure_new ("application/x-rtp-payload-stats",
-    "clock-rate", G_TYPE_UINT, rtpbasepayload->clock_rate,
-    "running-time", G_TYPE_UINT64, priv->running_time,
-    "seqnum", G_TYPE_UINT, rtpbasepayload->seqnum,
-    "timestamp", G_TYPE_UINT, rtpbasepayload->timestamp,
-    NULL);
+      "clock-rate", G_TYPE_UINT, rtpbasepayload->clock_rate,
+      "running-time", G_TYPE_UINT64, priv->running_time,
+      "seqnum", G_TYPE_UINT, rtpbasepayload->seqnum,
+      "timestamp", G_TYPE_UINT, rtpbasepayload->timestamp,
+      "ssrc", G_TYPE_UINT, rtpbasepayload->current_ssrc,
+      "pt", G_TYPE_UINT, rtpbasepayload->pt, NULL);
 
   return s;
 }
