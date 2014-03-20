@@ -813,10 +813,16 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   do {
     GstBuffer *outbuf;
     guint8 *payload;
-    guint payload_size = (bytes_left < mtu ? bytes_left : mtu);
+    guint payload_size;
     guint header_size;
     GstBuffer *paybuf;
     GstRTPBuffer rtp = { NULL };
+    guint rtp_header_size = gst_rtp_buffer_calc_header_len (0);
+
+    /* The available room is the packet MTU, minus the RTP header length. */
+    payload_size =
+        (bytes_left < (mtu - rtp_header_size) ? bytes_left :
+        (mtu - rtp_header_size));
 
     header_size = sizeof (jpeg_header) + quant_data_size;
     if (dri_found)
