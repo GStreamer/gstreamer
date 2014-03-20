@@ -282,6 +282,12 @@ ges_track_element_init (GESTrackElement * self)
 
 }
 
+static gint
+compare_gparamspec (GParamSpec ** a, GParamSpec ** b, gpointer udata)
+{
+  return g_strcmp0 ((*a)->name, (*b)->name);
+}
+
 static gfloat
 interpolate_values_for_position (GstTimedValue * first_value,
     GstTimedValue * second_value, guint64 position)
@@ -1253,13 +1259,18 @@ GParamSpec **
 ges_track_element_list_children_properties (GESTrackElement * object,
     guint * n_properties)
 {
+  GParamSpec **ret;
   GESTrackElementClass *class;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
 
   class = GES_TRACK_ELEMENT_GET_CLASS (object);
 
-  return class->list_children_properties (object, n_properties);
+  ret = class->list_children_properties (object, n_properties);
+  g_qsort_with_data (ret, *n_properties, sizeof (GParamSpec *),
+      (GCompareDataFunc) compare_gparamspec, NULL);
+
+  return ret;
 }
 
 /**
