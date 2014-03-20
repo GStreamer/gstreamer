@@ -366,9 +366,7 @@ typedef enum
  * GstMIKEYPayloadSP:
  * @pt: the payload header
  * @policy: the policy number
- * @prot: the security protocol
- * @param_len:  the total length of the policy parameters for the
- *              specific security protocol
+ * @proto: the security protocol
  * @params: array of #GstMIKEYPayloadPSParam
  *
  * The Security Policy payload defines a set of policies that apply to a

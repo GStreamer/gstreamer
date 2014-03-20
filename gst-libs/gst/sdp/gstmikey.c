@@ -19,6 +19,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstmikey
+ * @short_description: Helper methods for dealing with MIKEY messages
+ *
+ * <refsect2>
+ * <para>
+ * The GstMIKEY helper functions makes it easy to parse and create MIKEY
+ * messages.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2014-03-20 (1.3.0)
+ */
+
 #include <string.h>
 
 #include "gstmikey.h"
