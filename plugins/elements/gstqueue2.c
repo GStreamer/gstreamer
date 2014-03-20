@@ -2335,8 +2335,7 @@ gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
          * completely, which can not happen if we block on the query..
          * Therefore we only potentially block when we are not buffering. */
         GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->sinkresult, out_flushing);
-        if (QUEUE_IS_USING_QUEUE (queue) && (gst_queue2_is_empty (queue)
-                || !queue->use_buffering)) {
+        if (QUEUE_IS_USING_QUEUE (queue) && !queue->is_buffering) {
           gst_queue2_locked_enqueue (queue, query, GST_QUEUE2_ITEM_TYPE_QUERY);
 
           STATUS (queue, queue->sinkpad, "wait for QUERY");
