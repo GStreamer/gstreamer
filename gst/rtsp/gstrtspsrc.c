@@ -1769,14 +1769,16 @@ gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media)
   /* get and parse rtpmap */
   rtpmap = rtsp_get_attribute_for_pt (media, "rtpmap", pt);
 
+  if (rtpmap) {
+    ret = gst_rtspsrc_parse_rtpmap (rtpmap, &payload, &name, &rate, &params);
+    if (!ret) {
+      g_warning ("error parsing rtpmap, ignoring");
+      rtpmap = NULL;
+    }
+  }
   /* dynamic payloads need rtpmap or we fail */
   if (rtpmap == NULL && pt >= 96)
     goto no_rtpmap;
-
-  ret = gst_rtspsrc_parse_rtpmap (rtpmap, &payload, &name, &rate, &params);
-  if (!ret) {
-    g_warning ("error parsing rtpmap, ignoring");
-  }
 
   /* check if we have a rate, if not, we need to look up the rate from the
    * default rates based on the payload types. */
