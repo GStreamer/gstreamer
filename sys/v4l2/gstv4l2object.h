@@ -262,6 +262,8 @@ GstCaps *     gst_v4l2_object_get_caps    (GstV4l2Object * v4l2object,
 
 gboolean      gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object,
                                               GstVideoInfo * info);
+
+gboolean      gst_v4l2_object_set_crop    (GstV4l2Object * obj);
  
 gboolean      gst_v4l2_object_decide_allocation (GstV4l2Object * v4l2object,
                                                  GstQuery * query);

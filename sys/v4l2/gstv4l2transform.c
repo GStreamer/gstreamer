@@ -209,23 +209,30 @@ gst_v4l2_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   if (!gst_v4l2_object_set_format (self->v4l2capture, outcaps))
     goto outcaps_failed;
 
-  return TRUE;
+  /* FIXME implement fallback if crop not supported */
+  if (!gst_v4l2_object_set_crop (self->v4l2output))
+    goto failed;
 
+  if (!gst_v4l2_object_set_crop (self->v4l2capture))
+    goto failed;
+
+  return TRUE;
 
 incaps_failed:
   {
     GST_ERROR_OBJECT (self, "failed to set input caps: %" GST_PTR_FORMAT,
         incaps);
-    return FALSE;
+    goto failed;
   }
-
 outcaps_failed:
   {
     gst_v4l2_object_stop (self->v4l2output);
     GST_ERROR_OBJECT (self, "failed to set output caps: %" GST_PTR_FORMAT,
         outcaps);
-    return FALSE;
+    goto failed;
   }
+failed:
+  return FALSE;
 }
 
 static gboolean

@@ -2826,6 +2826,39 @@ unsupported_format:
 }
 
 gboolean
+gst_v4l2_object_set_crop (GstV4l2Object * obj)
+{
+  struct v4l2_crop crop = { 0 };
+
+  crop.type = obj->type;
+  crop.c.left = obj->align.padding_left;
+  crop.c.top = obj->align.padding_top;
+  crop.c.width = obj->info.width;
+  crop.c.height = obj->info.height;
+
+  if (obj->align.padding_left + obj->align.padding_top +
+      obj->align.padding_right + obj->align.padding_bottom == 0) {
+    GST_DEBUG_OBJECT (obj->element, "no cropping needed");
+    return TRUE;
+  }
+
+  GST_DEBUG_OBJECT (obj->element,
+      "Desired cropping left %u, top %u, size %ux%u", crop.c.left, crop.c.top,
+      crop.c.width, crop.c.height);
+
+  if (v4l2_ioctl (obj->video_fd, VIDIOC_S_CROP, &crop) < 0) {
+    GST_WARNING_OBJECT (obj->element, "VIDIOC_S_CROP failed");
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (obj->element,
+      "Got cropping left %u, top %u, size %ux%u", crop.c.left, crop.c.top,
+      crop.c.width, crop.c.height);
+
+  return TRUE;
+}
+
+gboolean
 gst_v4l2_object_caps_equal (GstV4l2Object * v4l2object, GstCaps * caps)
 {
   GstStructure *s;
