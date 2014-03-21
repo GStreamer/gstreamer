@@ -18,8 +18,8 @@ libgstvaapi_codecparsers_libs =			\
 	$(GST_LIBS)				\
 	$(NULL)
 
-gen_source_c = parserutils.c
-gen_source_h = parserutils.h
+gen_source_c = parserutils.c nalutils.c
+gen_source_h = parserutils.h nalutils.h
 
 # Always build VC-1 and MPEG-4 parsers for now
 gen_source_c += gstvc1parser.c gstmpeg4parser.c
