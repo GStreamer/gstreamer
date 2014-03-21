@@ -68,6 +68,14 @@ static guint8 mpeg2_iframe[] = {
   0x8b, 0x94, 0xa5, 0x22, 0x20
 };
 
+static guint8 mpeg1_iframe[] = {
+  0x00, 0x00, 0x01, 0x00, 0x00, 0x0f, 0xff, 0xf8,
+  0x00, 0x00, 0x01, 0x01, 0x23, 0xf8, 0x7d,
+  0x29, 0x48, 0x8b, 0x94, 0xa5, 0x22, 0x20, 0x00,
+  0x00, 0x01, 0x02, 0x23, 0xf8, 0x7d, 0x29, 0x48,
+  0x8b, 0x94, 0xa5, 0x22, 0x20
+};
+
 static gboolean
 verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
 {
@@ -166,10 +174,12 @@ mpeg_video_parse_check_caps (guint version, guint8 * seq, gint size)
 
   ctx_headers[0].data = seq;
   ctx_headers[0].size = size;
-  /* parser does not really care that mpeg1 and mpeg2 frame data
-   * should be a bit different */
-  caps = gst_parser_test_get_output_caps (mpeg2_iframe, sizeof (mpeg2_iframe),
-      NULL);
+  if (version == 1)
+    caps = gst_parser_test_get_output_caps (mpeg1_iframe, sizeof (mpeg1_iframe),
+        NULL);
+  else
+    caps = gst_parser_test_get_output_caps (mpeg2_iframe, sizeof (mpeg2_iframe),
+        NULL);
   fail_unless (caps != NULL);
 
   /* Check that the negotiated caps are as expected */
