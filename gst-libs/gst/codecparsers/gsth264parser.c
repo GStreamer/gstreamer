@@ -687,25 +687,29 @@ gst_h264_parser_parse_buffering_period (GstH264NalParser * nalparser,
 
     if (vui->nal_hrd_parameters_present_flag) {
       GstH264HRDParams *hrd = &vui->nal_hrd_parameters;
+      const guint8 nbits = hrd->initial_cpb_removal_delay_length_minus1 + 1;
       guint8 sched_sel_idx;
 
       for (sched_sel_idx = 0; sched_sel_idx <= hrd->cpb_cnt_minus1;
           sched_sel_idx++) {
-        READ_UINT8 (nr, per->nal_initial_cpb_removal_delay[sched_sel_idx], 5);
+        READ_UINT8 (nr, per->nal_initial_cpb_removal_delay[sched_sel_idx],
+            nbits);
         READ_UINT8 (nr,
-            per->nal_initial_cpb_removal_delay_offset[sched_sel_idx], 5);
+            per->nal_initial_cpb_removal_delay_offset[sched_sel_idx], nbits);
       }
     }
 
     if (vui->vcl_hrd_parameters_present_flag) {
       GstH264HRDParams *hrd = &vui->vcl_hrd_parameters;
+      const guint8 nbits = hrd->initial_cpb_removal_delay_length_minus1 + 1;
       guint8 sched_sel_idx;
 
       for (sched_sel_idx = 0; sched_sel_idx <= hrd->cpb_cnt_minus1;
           sched_sel_idx++) {
-        READ_UINT8 (nr, per->vcl_initial_cpb_removal_delay[sched_sel_idx], 5);
+        READ_UINT8 (nr, per->vcl_initial_cpb_removal_delay[sched_sel_idx],
+            nbits);
         READ_UINT8 (nr,
-            per->vcl_initial_cpb_removal_delay_offset[sched_sel_idx], 5);
+            per->vcl_initial_cpb_removal_delay_offset[sched_sel_idx], nbits);
       }
     }
   }
