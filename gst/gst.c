@@ -663,6 +663,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_meta_flags_get_type ());
   g_type_class_ref (gst_toc_entry_type_get_type ());
   g_type_class_ref (gst_toc_scope_get_type ());
+  g_type_class_ref (gst_toc_loop_type_get_type ());
   g_type_class_ref (gst_control_binding_get_type ());
   g_type_class_ref (gst_control_source_get_type ());
   g_type_class_ref (gst_lock_flags_get_type ());
@@ -1059,6 +1060,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_control_binding_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_control_source_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_toc_entry_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_toc_loop_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_lock_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_allocator_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_stream_flags_get_type ()));
