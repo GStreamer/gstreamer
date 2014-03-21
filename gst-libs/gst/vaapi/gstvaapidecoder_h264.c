@@ -1056,18 +1056,19 @@ parse_sei(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiParserInfoH264 * const pi = unit->parsed_info;
-    GstH264SEIMessage sei;
+    GArray *sei_messages = NULL;
     GstH264ParserResult result;
 
     GST_DEBUG("parse SEI");
 
-    memset(&sei, 0, sizeof(sei));
-    result = gst_h264_parser_parse_sei(priv->parser, &pi->nalu, &sei);
+    result = gst_h264_parser_parse_sei(priv->parser, &pi->nalu, &sei_messages);
     if (result != GST_H264_PARSER_OK) {
-        GST_WARNING("failed to parse SEI, payload type:%d", sei.payloadType);
+        GST_WARNING("failed to parse SEI messages");
+        g_array_unref(sei_messages);
         return get_status(result);
     }
 
+    g_array_unref(sei_messages);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
