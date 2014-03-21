@@ -29,7 +29,7 @@
 #include <gst/gl/gstglcontext.h>
 
 #include "gstglcontext_wgl.h"
-#include <gl/wglext.h>
+#include <GL/wglext.h>
 
 #define gst_gl_context_wgl_parent_class parent_class
 G_DEFINE_TYPE (GstGLContextWGL, gst_gl_context_wgl, GST_GL_TYPE_CONTEXT);
@@ -143,11 +143,11 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
             (unsigned int) GetLastError ());
         goto failure;
       }
-    } else if (!wglShareLists (external_gl_context, context_wgl->wgl_context)){
+    } else if (!wglShareLists (external_gl_context, context_wgl->wgl_context)) {
       g_set_error (error, GST_GL_CONTEXT_ERROR,
-            GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
-            "failed to share contexts through wglShareLists 0x%x",
-            (unsigned int) GetLastError ());
+          GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
+          "failed to share contexts through wglShareLists 0x%x",
+          (unsigned int) GetLastError ());
       goto failure;
     }
   }
