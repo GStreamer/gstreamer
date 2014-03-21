@@ -124,21 +124,6 @@ nal_reader_skip (NalReader * nr, guint nbits)
   return TRUE;
 }
 
-inline gboolean
-nal_reader_skip_to_next_byte (NalReader * nr)
-{
-  if (nr->bits_in_cache == 0) {
-    if (G_LIKELY ((nr->size - nr->byte) > 0))
-      nr->byte++;
-    else
-      return FALSE;
-  }
-
-  nr->bits_in_cache = 0;
-
-  return TRUE;
-}
-
 inline guint
 nal_reader_get_pos (const NalReader * nr)
 {

@@ -882,10 +882,14 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
     res = gst_h264_parser_parse_pic_timing (nalparser,
         &sei->payload.pic_timing, nr);
   } else {
-    /* Just consume payloadSize */
-    guint32 i;
-    for (i = 0; i < payloadSize; i++)
-      nal_reader_skip_to_next_byte (nr);
+    /* Just consume payloadSize bytes, which does not account for
+       emulation prevention bytes */
+    guint nbits = payload_size % 8;
+    while (payload_size > 0) {
+      nal_reader_skip (nr, nbits);
+      payload_size -= nbits;
+      nbits = 8;
+    }
     res = GST_H264_PARSER_OK;
   }
 
