@@ -542,6 +542,13 @@ gst_ffmpegvidenc_propose_allocation (GstVideoEncoder * encoder,
       query);
 }
 
+static void
+gst_ffmpegvidenc_free_avpacket (gpointer pkt)
+{
+  av_packet_unref ((AVPacket *)pkt);
+  g_slice_free (AVPacket, pkt);
+}
+
 static GstFlowReturn
 gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
@@ -551,7 +558,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   gint ret = 0, c;
   GstVideoInfo *info = &ffmpegenc->input_state->info;
   GstVideoFrame vframe;
-  AVPacket pkt;
+  AVPacket * pkt;
   int have_data = 0;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame))
@@ -579,13 +586,16 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
       ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
 
   have_data = 0;
-  memset (&pkt, 0, sizeof (pkt));
+  pkt = g_slice_new0 (AVPacket);
 
   ret =
-      avcodec_encode_video2 (ffmpegenc->context, &pkt, ffmpegenc->picture,
+      avcodec_encode_video2 (ffmpegenc->context, pkt, ffmpegenc->picture,
       &have_data);
 
   gst_video_frame_unmap (&vframe);
+
+  if (ret < 0 || !have_data)
+    g_slice_free (AVPacket, pkt);
 
   if (ret < 0)
     goto encode_fail;
@@ -607,8 +617,8 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   frame = gst_video_encoder_get_oldest_frame (encoder);
 
   outbuf =
-      gst_buffer_new_wrapped_full (0, pkt.data, pkt.size, 0, pkt.size, pkt.data,
-      av_free);
+      gst_buffer_new_wrapped_full (0, pkt->data, pkt->size, 0, pkt->size, pkt,
+      gst_ffmpegvidenc_free_avpacket);
   frame->output_buffer = outbuf;
 
   /* buggy codec may not set coded_frame */
