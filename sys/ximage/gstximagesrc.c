@@ -1021,6 +1021,7 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
   GstXContext *xcontext;
   gint width, height;
   GstVideoFormat format;
+  guint32 alpha_mask;
 
   if ((!s->xcontext) && (!gst_ximage_src_open_display (s, s->display_name)))
     return gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->srcpad);
@@ -1071,10 +1072,14 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
   }
   GST_DEBUG ("width = %d, height=%d", width, height);
 
+  /* extrapolate alpha mask */
+  alpha_mask = ~(xcontext->r_mask_output
+      | xcontext->g_mask_output | xcontext->b_mask_output);
+
   format =
       gst_video_format_from_masks (xcontext->depth, xcontext->bpp,
       xcontext->endianness, xcontext->r_mask_output, xcontext->g_mask_output,
-      xcontext->b_mask_output, 0);
+      xcontext->b_mask_output, alpha_mask);
 
   return gst_caps_new_simple ("video/x-raw",
       "format", G_TYPE_STRING, gst_video_format_to_string (format),
