@@ -29,13 +29,34 @@ GST_START_TEST (test_pool_get_thread)
   GstRTSPThread *thread;
 
   pool = gst_rtsp_thread_pool_new ();
-  fail_unless (pool != NULL);
+  fail_unless (GST_IS_RTSP_THREAD_POOL (pool));
 
   thread = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
       NULL);
-  fail_unless (thread != NULL);
+  fail_unless (GST_IS_RTSP_THREAD (thread));
   /* one ref is hold by the pool */
-  fail_unless (GST_MINI_OBJECT_REFCOUNT (thread) == 2);
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (thread), 2);
+
+  gst_rtsp_thread_stop (thread);
+  g_object_unref (pool);
+  gst_rtsp_thread_pool_cleanup ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_pool_get_media_thread)
+{
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread;
+
+  pool = gst_rtsp_thread_pool_new ();
+  fail_unless (GST_IS_RTSP_THREAD_POOL (pool));
+
+  thread = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_MEDIA,
+      NULL);
+  fail_unless (GST_IS_RTSP_THREAD (thread));
+  /* one ref is hold by the pool */
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (thread), 2);
 
   gst_rtsp_thread_stop (thread);
   g_object_unref (pool);
@@ -47,27 +68,27 @@ GST_END_TEST;
 GST_START_TEST (test_pool_get_thread_reuse)
 {
   GstRTSPThreadPool *pool;
-  GstRTSPThread *thread;
+  GstRTSPThread *thread1;
   GstRTSPThread *thread2;
 
   pool = gst_rtsp_thread_pool_new ();
-  fail_unless (pool != NULL);
+  fail_unless (GST_IS_RTSP_THREAD_POOL (pool));
 
   gst_rtsp_thread_pool_set_max_threads (pool, 1);
 
-  thread = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
+  thread1 = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
       NULL);
-  fail_unless (thread != NULL);
+  fail_unless (GST_IS_RTSP_THREAD (thread1));
 
   thread2 = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
       NULL);
-  fail_unless (thread2 != NULL);
+  fail_unless (GST_IS_RTSP_THREAD (thread2));
 
-  fail_unless (thread == thread2);
+  fail_unless (thread2 == thread1);
   /* one ref is hold by the pool */
-  fail_unless (GST_MINI_OBJECT_REFCOUNT (thread) == 3);
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (thread1), 3);
 
-  gst_rtsp_thread_stop (thread);
+  gst_rtsp_thread_stop (thread1);
   gst_rtsp_thread_stop (thread2);
   g_object_unref (pool);
 
@@ -76,6 +97,123 @@ GST_START_TEST (test_pool_get_thread_reuse)
 
 GST_END_TEST;
 
+static void
+do_test_pool_max_thread (gboolean use_property)
+{
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread1;
+  GstRTSPThread *thread2;
+  GstRTSPThread *thread3;
+  gint max_threads;
+
+  pool = gst_rtsp_thread_pool_new ();
+  fail_unless (GST_IS_RTSP_THREAD_POOL (pool));
+
+  if (use_property) {
+    g_object_get (pool, "max-threads", &max_threads, NULL);
+    fail_unless_equals_int (max_threads, 1);
+  } else {
+    fail_unless_equals_int (gst_rtsp_thread_pool_get_max_threads (pool), 1);
+  }
+
+  thread1 = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
+      NULL);
+  fail_unless (GST_IS_RTSP_THREAD (thread1));
+
+  thread2 = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
+      NULL);
+  fail_unless (GST_IS_RTSP_THREAD (thread2));
+
+  fail_unless (thread1 == thread2);
+
+  gst_rtsp_thread_stop (thread1);
+  gst_rtsp_thread_stop (thread2);
+
+  if (use_property) {
+    g_object_set (pool, "max-threads", 2, NULL);
+    g_object_get (pool, "max-threads", &max_threads, NULL);
+    fail_unless_equals_int (max_threads, 2);
+  } else {
+    gst_rtsp_thread_pool_set_max_threads (pool, 2);
+    fail_unless_equals_int (gst_rtsp_thread_pool_get_max_threads (pool), 2);
+  }
+
+  thread1 = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
+      NULL);
+  fail_unless (GST_IS_RTSP_THREAD (thread1));
+
+  thread2 = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
+      NULL);
+  fail_unless (GST_IS_RTSP_THREAD (thread2));
+
+  thread3 = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
+      NULL);
+  fail_unless (GST_IS_RTSP_THREAD (thread3));
+
+  fail_unless (thread2 != thread1);
+  fail_unless (thread3 == thread2 || thread3 == thread1);
+
+  gst_rtsp_thread_stop (thread1);
+  gst_rtsp_thread_stop (thread2);
+  gst_rtsp_thread_stop (thread3);
+
+  if (use_property) {
+    g_object_set (pool, "max-threads", 0, NULL);
+    g_object_get (pool, "max-threads", &max_threads, NULL);
+    fail_unless_equals_int (max_threads, 0);
+  } else {
+    gst_rtsp_thread_pool_set_max_threads (pool, 0);
+    fail_unless_equals_int (gst_rtsp_thread_pool_get_max_threads (pool), 0);
+  }
+
+  thread1 = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
+      NULL);
+  fail_if (GST_IS_RTSP_THREAD (thread1));
+
+  g_object_unref (pool);
+
+  gst_rtsp_thread_pool_cleanup ();
+}
+
+GST_START_TEST (test_pool_max_threads)
+{
+  do_test_pool_max_thread (FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_pool_max_threads_property)
+{
+  do_test_pool_max_thread (TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_pool_thread_copy)
+{
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread1;
+  GstRTSPThread *thread2;
+
+  pool = gst_rtsp_thread_pool_new ();
+  fail_unless (GST_IS_RTSP_THREAD_POOL (pool));
+
+  thread1 = gst_rtsp_thread_pool_get_thread (pool, GST_RTSP_THREAD_TYPE_CLIENT,
+      NULL);
+  fail_unless (GST_IS_RTSP_THREAD (thread1));
+  fail_unless (GST_IS_MINI_OBJECT_TYPE (thread1, GST_TYPE_RTSP_THREAD));
+
+  thread2 = GST_RTSP_THREAD (gst_mini_object_copy (GST_MINI_OBJECT (thread1)));
+  fail_unless (GST_IS_RTSP_THREAD (thread2));
+  fail_unless (GST_IS_MINI_OBJECT_TYPE (thread2, GST_TYPE_RTSP_THREAD));
+
+  gst_rtsp_thread_stop (thread1);
+  gst_rtsp_thread_stop (thread2);
+  g_object_unref (pool);
+  gst_rtsp_thread_pool_cleanup ();
+}
+
+GST_END_TEST;
 
 static Suite *
 rtspthreadpool_suite (void)
@@ -86,7 +224,11 @@ rtspthreadpool_suite (void)
   suite_add_tcase (s, tc);
   tcase_set_timeout (tc, 20);
   tcase_add_test (tc, test_pool_get_thread);
+  tcase_add_test (tc, test_pool_get_media_thread);
   tcase_add_test (tc, test_pool_get_thread_reuse);
+  tcase_add_test (tc, test_pool_max_threads);
+  tcase_add_test (tc, test_pool_max_threads_property);
+  tcase_add_test (tc, test_pool_thread_copy);
 
   return s;
 }
