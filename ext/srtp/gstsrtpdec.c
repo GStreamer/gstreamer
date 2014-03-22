@@ -88,6 +88,13 @@
  * subsequent packet is dropped, until a new key is set and the stream
  * has been updated.
  *
+ * If a stream is to be shared between multiple clients the SRTP
+ * rollover counter for a given SSRC must be set in the caps "roc" field
+ * when the request-key signal is emitted by the decoder. The rollover
+ * counters should have been transmitted by a signaling protocol by some
+ * other means. If no rollover counter is provided by the user, 0 is
+ * used by default.
+ *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
@@ -113,6 +120,8 @@
 #include "gstsrtp-enumtypes.h"
 
 #include "gstsrtpdec.h"
+
+#include <srtp/srtp_priv.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_srtp_dec_debug);
 #define GST_CAT_DEFAULT gst_srtp_dec_debug
@@ -203,6 +212,7 @@ struct _GstSrtpDecSsrcStream
 {
   guint32 ssrc;
 
+  guint32 roc;
   GstBuffer *key;
   GstSrtpCipherType rtp_cipher;
   GstSrtpAuthType rtp_auth;
@@ -215,6 +225,7 @@ struct _GstSrtpDecSsrcStream
       stream->rtcp_cipher != GST_SRTP_CIPHER_NULL ||    \
       stream->rtp_auth != GST_SRTP_AUTH_NULL ||         \
       stream->rtcp_auth != GST_SRTP_AUTH_NULL)
+
 
 /* initialize the srtpdec's class */
 static void
@@ -238,11 +249,14 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
       "A SRTP and SRTCP decoder",
       "Gabriel Millaire <millaire.gabriel@collabora.com>");
 
+  /* Install callbacks */
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_srtp_dec_change_state);
+
   klass->clear_streams = GST_DEBUG_FUNCPTR (gst_srtp_dec_clear_streams);
   klass->remove_stream = GST_DEBUG_FUNCPTR (gst_srtp_dec_remove_stream);
 
+  /* Install signals */
   /**
    * GstSrtpDec::request-key:
    * @gstsrtpdec: the element on which the signal is emitted
@@ -369,6 +383,7 @@ gst_srtp_dec_init (GstSrtpDec * filter)
   gst_element_add_pad (GST_ELEMENT (filter), filter->rtcp_srcpad);
 
   filter->first_session = TRUE;
+  filter->roc_changed = FALSE;
 }
 
 static void
@@ -421,6 +436,7 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
   if (!rtp_cipher || !rtp_auth || !rtcp_cipher || !rtcp_auth)
     goto error;
 
+  gst_structure_get_uint (s, "roc", &stream->roc);
 
   stream->rtp_cipher = enum_value_from_nick (GST_TYPE_SRTP_CIPHER_TYPE,
       rtp_cipher);
@@ -518,6 +534,17 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
     gst_buffer_unmap (stream->key, &map);
 
   if (ret == err_status_ok) {
+    srtp_stream_t srtp_stream;
+
+    srtp_stream = srtp_get_stream (filter->session, htonl (ssrc));
+    if (srtp_stream) {
+      /* Here, we just set the ROC, but we also need to set the initial
+       * RTP sequence number later, otherwise libsrtp will not be able
+       * to get the right packet index. */
+      rdbx_set_roc (&srtp_stream->rtp_rdbx, stream->roc);
+      filter->roc_changed = TRUE;
+    }
+
     filter->first_session = FALSE;
     g_hash_table_insert (filter->streams, GUINT_TO_POINTER (stream->ssrc),
         stream);
@@ -672,9 +699,9 @@ request_key_with_signal (GstSrtpDec * filter, guint32 ssrc, gint signal)
   if (caps) {
     stream = update_session_stream_from_caps (filter, ssrc, caps);
     if (stream)
-      GST_DEBUG_OBJECT (filter, "New stream set with SSRC %d", ssrc);
+      GST_DEBUG_OBJECT (filter, "New stream set with SSRC %u", ssrc);
     else
-      GST_WARNING_OBJECT (filter, "Could not set stream with SSRC %d", ssrc);
+      GST_WARNING_OBJECT (filter, "Could not set stream with SSRC %u", ssrc);
     gst_caps_unref (caps);
   }
 
@@ -1016,8 +1043,32 @@ unprotect:
 
   if (is_rtcp)
     err = srtp_unprotect_rtcp (filter->session, map.data, &size);
-  else
+  else {
+    /* If ROC has changed, we know we need to set the initial RTP
+     * sequence number too. */
+    if (filter->roc_changed) {
+      srtp_stream_t stream;
+
+      stream = srtp_get_stream (filter->session, htonl (ssrc));
+
+      if (stream) {
+        guint16 seqnum = 0;
+        GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
+
+        gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuf);
+        seqnum = gst_rtp_buffer_get_seq (&rtpbuf);
+        gst_rtp_buffer_unmap (&rtpbuf);
+
+        /* We finally add the RTP sequence number to the current
+         * rollover counter. */
+        stream->rtp_rdbx.index &= ~0xFFFF;
+        stream->rtp_rdbx.index |= seqnum;
+      }
+
+      filter->roc_changed = FALSE;
+    }
     err = srtp_unprotect (filter->session, map.data, &size);
+  }
 
   gst_buffer_unmap (buf, &map);
 

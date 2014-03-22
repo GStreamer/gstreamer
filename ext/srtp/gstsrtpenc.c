@@ -92,6 +92,13 @@
  * subsequent packet is dropped, until a new key is set and the stream
  * has been updated.
  *
+ * If a stream is to be shared between multiple clients it is also
+ * possible to request the internal SRTP rollover counter for a given
+ * SSRC. The rollover counter should be then transmitted and used by the
+ * clients to authenticate and decrypt the packets. Failing to do that
+ * the clients will start with a rollover counter of 0 which will
+ * probably be incorrect if the stream has been transmitted for a
+ * while to other clients.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -107,6 +114,8 @@
 
 #include "gstsrtp.h"
 #include "gstsrtp-enumtypes.h"
+
+#include <srtp/srtp_priv.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_srtp_enc_debug);
 #define GST_CAT_DEFAULT gst_srtp_enc_debug
@@ -135,6 +144,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_srtp_enc_debug);
 enum
 {
   SIGNAL_SOFT_LIMIT,
+  SIGNAL_GET_ROLLOVER_COUNTER,
   LAST_SIGNAL
 };
 
@@ -221,6 +231,28 @@ static GstPad *gst_srtp_enc_request_new_pad (GstElement * element,
 
 static void gst_srtp_enc_release_pad (GstElement * element, GstPad * pad);
 
+
+static guint32
+gst_srtp_enc_get_rollover_counter (GstSrtpEnc * filter, guint32 ssrc)
+{
+  guint32 roc = 0;
+  srtp_stream_t stream;
+
+  GST_OBJECT_LOCK (filter);
+
+  GST_DEBUG_OBJECT (filter, "retrieving SRTP Rollover Counter, ssrc: %u", ssrc);
+
+  if (filter->session) {
+    stream = srtp_get_stream (filter->session, htonl (ssrc));
+    if (stream)
+      roc = stream->rtp_rdbx.index >> 16;
+  }
+
+  GST_OBJECT_UNLOCK (filter);
+
+  return roc;
+}
+
 /* initialize the srtpenc's class
  */
 static void
@@ -301,6 +333,22 @@ gst_srtp_enc_class_init (GstSrtpEncClass * klass)
   gst_srtp_enc_signals[SIGNAL_SOFT_LIMIT] =
       g_signal_new ("soft-limit", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+
+  /**
+   * GstSrtpEnc::get-rollover-counter:
+   * @gstsrtpenc: the element on which the signal is emitted
+   * @ssrc: The unique SSRC of the stream
+   *
+   * Request the SRTP rollover counter for the stream with @ssrc.
+   */
+  gst_srtp_enc_signals[SIGNAL_GET_ROLLOVER_COUNTER] =
+      g_signal_new ("get-rollover-counter", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstSrtpEncClass,
+          get_rollover_counter), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_UINT, 1, G_TYPE_UINT);
+
+  klass->get_rollover_counter =
+      GST_DEBUG_FUNCPTR (gst_srtp_enc_get_rollover_counter);
 }
 
 

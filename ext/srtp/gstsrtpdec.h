@@ -81,6 +81,8 @@ struct _GstSrtpDec
 
   gboolean rtp_has_segment;
   gboolean rtcp_has_segment;
+
+  gboolean roc_changed;
 };
 
 struct _GstSrtpDecClass
