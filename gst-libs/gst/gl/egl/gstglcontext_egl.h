@@ -54,6 +54,11 @@ struct _GstGLContextEGLClass {
 GType gst_gl_context_egl_get_type     (void);
 GstGLContextEGL * gst_gl_context_egl_new (void);
 
+/* TODO:
+ * add support for EGL_NO_CONTEXT
+ * add gst_gl_context_egl_new_gl_no_context that only manages the display
+ * add gst_gl_context_egl_is_gl_no_context () */
+
 G_END_DECLS
 
 #endif /* __GST_GL_EGL_H__ */

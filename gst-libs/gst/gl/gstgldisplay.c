@@ -44,6 +44,7 @@
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL
 #include <gst/gl/egl/gstgldisplay_egl.h>
+#include <gst/gl/egl/gsteglimagememory.h>
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_context);
@@ -89,6 +90,10 @@ gst_gl_display_init (GstGLDisplay * display)
   GST_TRACE ("init %p", display);
 
   gst_gl_memory_init ();
+
+#if GST_GL_HAVE_PLATFORM_EGL
+  gst_egl_image_memory_init ();
+#endif
 }
 
 static void

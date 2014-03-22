@@ -25,6 +25,10 @@
 #include "gl.h"
 #include "gstglbufferpool.h"
 
+#if GST_GL_HAVE_PLATFORM_EGL
+#include <gst/gl/egl/gsteglimagememory.h>
+#endif
+
 /**
  * SECTION:gstglbufferpool
  * @short_description: buffer pool for #GstGLMemory objects
@@ -46,13 +50,14 @@ struct _GstGLBufferPoolPrivate
   GstCaps *caps;
   gint im_format;
   GstVideoInfo info;
-  guint padded_width;
-  guint padded_height;
   gboolean add_videometa;
+#if GST_GL_HAVE_PLATFORM_EGL
+  gboolean want_eglimage;
+  GstBuffer *last_buffer;
+#endif
 };
 
 static void gst_gl_buffer_pool_finalize (GObject * object);
-static void gst_gl_buffer_pool_dispose (GObject * object);
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_BUFFER_POOL);
 #define GST_CAT_DEFAULT GST_CAT_GL_BUFFER_POOL
@@ -119,6 +124,11 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->add_videometa = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
+#if GST_GL_HAVE_PLATFORM_EGL
+  priv->want_eglimage = (priv->allocator
+      && g_strcmp0 (priv->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
+#endif
+
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
   /* ERRORS */
@@ -166,6 +176,18 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   if (!(buf = gst_buffer_new ())) {
     goto no_buffer;
   }
+#if GST_GL_HAVE_PLATFORM_EGL
+  if (priv->want_eglimage) {
+    /* alloc and append memories, also add video_meta and
+     * texture_upload_meta */
+    if (!gst_egl_image_memory_setup_buffer (glpool->context, info, buf))
+      goto egl_image_mem_create_failed;
+
+    *buffer = buf;
+
+    return GST_FLOW_OK;
+  }
+#endif
 
   if (!(gl_mem = gst_gl_memory_alloc (glpool->context, priv->info)))
     goto mem_create_failed;
@@ -192,12 +214,56 @@ no_buffer:
     GST_WARNING_OBJECT (pool, "can't create image");
     return GST_FLOW_ERROR;
   }
-
 mem_create_failed:
   {
     GST_WARNING_OBJECT (pool, "Could not create GL Memory");
     return GST_FLOW_ERROR;
   }
+#if GST_GL_HAVE_PLATFORM_EGL
+egl_image_mem_create_failed:
+  {
+    GST_WARNING_OBJECT (pool, "Could not create EGLImage Memory");
+    return GST_FLOW_ERROR;
+  }
+#endif
+}
+
+
+static GstFlowReturn
+gst_gl_buffer_pool_acquire_buffer (GstBufferPool * bpool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+#if GST_GL_HAVE_PLATFORM_EGL
+  GstGLBufferPool *glpool = NULL;
+#endif
+
+  ret =
+      GST_BUFFER_POOL_CLASS
+      (gst_gl_buffer_pool_parent_class)->acquire_buffer (bpool, buffer, params);
+  if (ret != GST_FLOW_OK || !*buffer)
+    return ret;
+
+#if GST_GL_HAVE_PLATFORM_EGL
+  glpool = GST_GL_BUFFER_POOL (bpool);
+
+  /* XXX: Don't return the memory we just rendered, glEGLImageTargetTexture2DOES()
+   * keeps the EGLImage unmappable until the next one is uploaded
+   */
+  if (glpool->priv->want_eglimage && *buffer
+      && *buffer == glpool->priv->last_buffer) {
+    GstBuffer *oldbuf = *buffer;
+
+    ret =
+        GST_BUFFER_POOL_CLASS
+        (gst_gl_buffer_pool_parent_class)->acquire_buffer (bpool,
+        buffer, params);
+    gst_object_replace ((GstObject **) & oldbuf->pool, (GstObject *) glpool);
+    gst_buffer_unref (oldbuf);
+  }
+#endif
+
+  return ret;
 }
 
 /**
@@ -219,6 +285,18 @@ gst_gl_buffer_pool_new (GstGLContext * context)
   return GST_BUFFER_POOL_CAST (pool);
 }
 
+#if GST_GL_HAVE_PLATFORM_EGL
+void
+gst_gl_buffer_pool_replace_last_buffer (GstGLBufferPool * pool,
+    GstBuffer * buffer)
+{
+  g_return_if_fail (pool != NULL);
+  g_return_if_fail (buffer != NULL);
+
+  gst_buffer_replace (&pool->priv->last_buffer, buffer);
+}
+#endif
+
 static void
 gst_gl_buffer_pool_class_init (GstGLBufferPoolClass * klass)
 {
@@ -228,30 +306,32 @@ gst_gl_buffer_pool_class_init (GstGLBufferPoolClass * klass)
   g_type_class_add_private (klass, sizeof (GstGLBufferPoolPrivate));
 
   gobject_class->finalize = gst_gl_buffer_pool_finalize;
-  gobject_class->dispose = gst_gl_buffer_pool_dispose;
 
   gstbufferpool_class->get_options = gst_gl_buffer_pool_get_options;
   gstbufferpool_class->set_config = gst_gl_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_gl_buffer_pool_alloc;
+  gstbufferpool_class->acquire_buffer = gst_gl_buffer_pool_acquire_buffer;
 }
 
 static void
 gst_gl_buffer_pool_init (GstGLBufferPool * pool)
 {
+  GstGLBufferPoolPrivate *priv = NULL;
+
   pool->priv = GST_GL_BUFFER_POOL_GET_PRIVATE (pool);
-}
+  priv = pool->priv;
 
-static void
-gst_gl_buffer_pool_dispose (GObject * object)
-{
-  GstGLBufferPool *pool = GST_GL_BUFFER_POOL_CAST (object);
+  priv->allocator = NULL;
+  priv->caps = NULL;
+  priv->im_format = GST_VIDEO_FORMAT_UNKNOWN;
+  priv->add_videometa = TRUE;
+#if GST_GL_HAVE_PLATFORM_EGL
+  priv->want_eglimage = FALSE;
+  priv->last_buffer = FALSE;
+#endif
 
-  if (pool->context) {
-    gst_object_unref (pool->context);
-    pool->context = NULL;
-  }
-
-  G_OBJECT_CLASS (gst_gl_buffer_pool_parent_class)->dispose (object);
+  gst_video_info_init (&priv->info);
+  gst_allocation_params_init (&priv->params);
 }
 
 static void
@@ -262,8 +342,18 @@ gst_gl_buffer_pool_finalize (GObject * object)
 
   GST_LOG_OBJECT (pool, "finalize GL buffer pool %p", pool);
 
+#if GST_GL_HAVE_PLATFORM_EGL
+  gst_buffer_replace (&pool->priv->last_buffer, NULL);
+#endif
+
   if (priv->caps)
     gst_caps_unref (priv->caps);
 
   G_OBJECT_CLASS (gst_gl_buffer_pool_parent_class)->finalize (object);
+
+  /* only release the context once all our memory have been deleted */
+  if (pool->context) {
+    gst_object_unref (pool->context);
+    pool->context = NULL;
+  }
 }

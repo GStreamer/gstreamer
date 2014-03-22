@@ -327,6 +327,8 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix,
   GstStructure *gl_context;
   gchar *platform, *gl_apis;
   gpointer handle;
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -401,6 +403,12 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix,
   g_free (gl_apis);
   g_free (platform);
   gst_structure_free (gl_context);
+
+  gst_allocation_params_init (&params);
+
+  allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+  gst_query_add_allocation_param (query, allocator, &params);
+  gst_object_unref (allocator);
 
   return TRUE;
 

@@ -36,7 +36,11 @@
 #pragma GCC optimize ("gnu89-inline")
 #endif
 
+#ifndef EGL_EGLEXT_PROTOTYPES
+#define EGL_EGLEXT_PROTOTYPES 1
+#endif
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 #if defined (USE_EGL_RPI) && defined(__GNUC__)
 #pragma GCC reset_options
@@ -47,6 +51,9 @@
 
 /* OpenGL 2.0 for Embedded Systems */
 #if GST_GL_HAVE_GLES2
+#ifndef GL_GLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES 1
+#endif
 # include <GLES2/gl2.h>
 # include <GLES2/gl2ext.h>
 # if !GST_GL_HAVE_OPENGL

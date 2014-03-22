@@ -147,6 +147,169 @@ gst_gl_context_del_texture (GstGLContext * context, GLuint * pTexture)
       pTexture);
 }
 
+typedef struct _GenTextureFull
+{
+  const GstVideoInfo *info;
+  const gint comp;
+  guint result;
+} GenTextureFull;
+
+static void
+_gen_texture_full (GstGLContext * context, GenTextureFull * data)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+  GLint glinternalformat = 0;
+  GLenum glformat = 0;
+  GLenum gltype = 0;
+
+  gl->GenTextures (1, &data->result);
+  gl->BindTexture (GL_TEXTURE_2D, data->result);
+
+  switch (GST_VIDEO_INFO_FORMAT (data->info)) {
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    {
+      glinternalformat = GL_RGB8;
+      glformat = GL_RGB;
+      gltype = GL_UNSIGNED_BYTE;
+      break;
+    }
+    case GST_VIDEO_FORMAT_RGB16:
+    {
+      glinternalformat = GL_RGB16;
+      glformat = GL_RGB;
+      gltype = GL_UNSIGNED_SHORT_5_6_5;
+      break;
+    }
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_AYUV:
+    {
+      glinternalformat = GL_RGBA8;
+      glformat = GL_RGBA;
+      gltype = GL_UNSIGNED_BYTE;
+      break;
+    }
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+    {
+      glinternalformat = GL_LUMINANCE;
+      glformat = data->comp == 0 ? GL_LUMINANCE : GL_LUMINANCE_ALPHA;
+      gltype = GL_UNSIGNED_BYTE;
+      break;
+    }
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
+    {
+      glformat = GL_LUMINANCE;
+      gltype = GL_UNSIGNED_BYTE;
+      break;
+    }
+    default:
+      GST_WARNING ("unsupported %s",
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (data->info)));
+      break;
+  }
+
+  gl->TexImage2D (GL_TEXTURE_2D, 0, glinternalformat,
+      GST_VIDEO_INFO_COMP_WIDTH (data->info, data->comp),
+      GST_VIDEO_INFO_COMP_HEIGHT (data->info, data->comp), 0, glformat, gltype,
+      NULL);
+
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
+
+void
+gst_gl_generate_texture_full (GstGLContext * context, const GstVideoInfo * info,
+    const guint comp, gint stride[], gsize offset[], gsize size[],
+    GLuint * pTexture)
+{
+  GenTextureFull data = { info, comp, 0 };
+
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    {
+      stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (info) * 3);
+      offset[0] = 0;
+      size[0] = stride[0] * GST_VIDEO_INFO_HEIGHT (info);
+      break;
+    }
+    case GST_VIDEO_FORMAT_RGB16:
+    {
+      stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (info) * 2);
+      offset[0] = 0;
+      size[0] = stride[0] * GST_VIDEO_INFO_HEIGHT (info);
+      break;
+    }
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_AYUV:
+    {
+      stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (info) * 4);
+      offset[0] = 0;
+      size[0] = stride[0] * GST_VIDEO_INFO_HEIGHT (info);
+      break;
+    }
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+    {
+      size[comp] = stride[comp] * GST_VIDEO_INFO_COMP_HEIGHT (info, comp);
+      if (comp == 0) {
+        stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (info, 1));
+        offset[0] = 0;
+      } else {
+        stride[1] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (info, 1) * 2);
+        offset[1] = size[0];
+      }
+      break;
+    }
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
+    {
+      stride[comp] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (info, comp));;
+      size[comp] = stride[comp] * GST_VIDEO_INFO_COMP_HEIGHT (info, comp);
+      if (comp == 0)
+        offset[0] = 0;
+      else if (comp == 1)
+        offset[1] = size[0];
+      else
+        offset[2] = offset[1] + size[1];
+      break;
+    }
+    default:
+      GST_WARNING ("unsupported %s",
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+      break;
+  }
+
+  gst_gl_context_thread_add (context,
+      (GstGLContextThreadFunc) _gen_texture_full, &data);
+
+  *pTexture = data.result;
+}
+
 typedef struct _GenFBO
 {
   GstGLFramebuffer *frame;

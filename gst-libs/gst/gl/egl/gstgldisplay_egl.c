@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/gl/egl/gstgldisplay_egl.h>
+#include <gst/gl/egl/gsteglimagememory.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #define GST_CAT_DEFAULT gst_gl_display_debug
@@ -48,6 +49,8 @@ gst_gl_display_egl_init (GstGLDisplayEGL * display_egl)
 
   display->type = GST_GL_DISPLAY_TYPE_EGL;
   display_egl->foreign_display = FALSE;
+
+  gst_egl_image_memory_init ();
 }
 
 static void
@@ -55,10 +58,7 @@ gst_gl_display_egl_finalize (GObject * object)
 {
   GstGLDisplayEGL *display_egl = GST_GL_DISPLAY_EGL (object);
 
-  if (display_egl->gst_display) {
-    gst_egl_display_unref (display_egl->gst_display);
-    display_egl->gst_display = NULL;
-  } else if (display_egl->display && !display_egl->foreign_display) {
+  if (display_egl->display && !display_egl->foreign_display) {
     eglTerminate (display_egl->display);
     display_egl->display = NULL;
   }
@@ -101,7 +101,7 @@ gst_gl_display_egl_new (void)
  * Returns: (transfer full): a new #GstGLDisplayEGL
  */
 GstGLDisplayEGL *
-gst_gl_display_egl_new_with_egl_display (EGLDisplay * display)
+gst_gl_display_egl_new_with_egl_display (EGLDisplay display)
 {
   GstGLDisplayEGL *ret;
 
@@ -112,32 +112,6 @@ gst_gl_display_egl_new_with_egl_display (EGLDisplay * display)
   ret = g_object_new (GST_TYPE_GL_DISPLAY_EGL, NULL);
 
   ret->display = display;
-  ret->foreign_display = TRUE;
-
-  return ret;
-}
-
-/**
- * gst_gl_display_egl_new_with_display:
- * @display: an existing, x11 display
- *
- * Creates a new display connection from a X11 Display.
- *
- * Returns: (transfer full): a new #GstGLDisplayEGL
- */
-GstGLDisplayEGL *
-gst_gl_display_egl_new_with_gst_egl_display (GstEGLDisplay * display)
-{
-  GstGLDisplayEGL *ret;
-
-  g_return_val_if_fail (display != NULL, NULL);
-
-  GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
-
-  ret = g_object_new (GST_TYPE_GL_DISPLAY_EGL, NULL);
-
-  ret->gst_display = gst_egl_display_ref (display);
-  ret->display = gst_egl_display_get (display);
   ret->foreign_display = TRUE;
 
   return ret;

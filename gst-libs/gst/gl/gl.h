@@ -39,4 +39,9 @@
 #include <gst/gl/gstglmixer.h>
 #include <gst/gl/gstglshadervariables.h>
 
+#if GST_GL_HAVE_PLATFORM_EGL
+#include <gst/gl/egl/gstgldisplay_egl.h>
+#include <gst/gl/egl/gsteglimagememory.h>
+#endif
+
 #endif /* __GST_GL_H__ */
