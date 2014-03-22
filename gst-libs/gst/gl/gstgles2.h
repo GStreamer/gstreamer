@@ -30,6 +30,8 @@ G_BEGIN_DECLS
 /* SUPPORTED */
 
 //FIXME:
+#define GL_RGB16 GL_RGB565
+#define GL_RGB8 GL_RGB
 #define GL_RGBA8 GL_RGBA
 #define GL_BGRA GL_RGBA
 #define GL_BGR GL_RGB

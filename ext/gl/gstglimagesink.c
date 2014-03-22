@@ -169,7 +169,9 @@ static GstStaticPadTemplate gst_glimage_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS) "; "
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
+            "RGBA") "; " GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS) "; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
             GST_GL_UPLOAD_FORMATS))
@@ -863,6 +865,8 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstStructure *gl_context;
   gchar *platform, *gl_apis;
   gpointer handle;
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params;
 
   if (!_ensure_gl_setup (glimage_sink))
     return FALSE;
@@ -935,6 +939,18 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   g_free (gl_apis);
   g_free (platform);
   gst_structure_free (gl_context);
+
+  gst_allocation_params_init (&params);
+
+  allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+  gst_query_add_allocation_param (query, allocator, &params);
+  gst_object_unref (allocator);
+
+#if GST_GL_HAVE_PLATFORM_EGL
+  allocator = gst_allocator_find (GST_EGL_IMAGE_MEMORY_TYPE);
+  gst_query_add_allocation_param (query, allocator, &params);
+  gst_object_unref (allocator);
+#endif
 
   return TRUE;
 

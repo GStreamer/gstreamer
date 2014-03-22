@@ -22,10 +22,7 @@
 #define __GST_GL_DISPLAY_EGL_H__
 
 #include <gst/gst.h>
-#include <gst/gl/gl.h>
-
-/* FIXME temp until merge */
-#include <gst/egl/egl.h>
+#include <gst/gl/gstgldisplay.h>
 
 G_BEGIN_DECLS
 
@@ -52,8 +49,7 @@ struct _GstGLDisplayEGL
   GstGLDisplay          parent;
 
   /* <private> */
-  GstEGLDisplay *gst_display;
-  EGLDisplay *display;
+  EGLDisplay display;
 
   gboolean foreign_display;
 };
@@ -64,8 +60,7 @@ struct _GstGLDisplayEGLClass
 };
 
 GstGLDisplayEGL *gst_gl_display_egl_new (void);
-GstGLDisplayEGL *gst_gl_display_egl_new_with_egl_display (EGLDisplay *display);
-GstGLDisplayEGL *gst_gl_display_egl_new_with_gst_egl_display (GstEGLDisplay *display);
+GstGLDisplayEGL *gst_gl_display_egl_new_with_egl_display (EGLDisplay display);
 
 G_END_DECLS
 

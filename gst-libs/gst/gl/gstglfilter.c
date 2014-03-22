@@ -34,7 +34,10 @@ static GstStaticPadTemplate gst_gl_filter_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_GL_DOWNLOAD_FORMATS) "; "
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
+            "RGBA") "; "
+        GST_VIDEO_CAPS_MAKE (GST_GL_DOWNLOAD_FORMATS) "; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
             "RGBA"))
@@ -44,7 +47,10 @@ static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS) "; "
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
+            "RGBA") "; "
+        GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS) "; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
             "RGBA"))
@@ -737,6 +743,8 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
   GstStructure *gl_context;
   gchar *platform, *gl_apis;
   gpointer handle;
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -813,6 +821,18 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
   g_free (gl_apis);
   g_free (platform);
   gst_structure_free (gl_context);
+
+  gst_allocation_params_init (&params);
+
+  allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+  gst_query_add_allocation_param (query, allocator, &params);
+  gst_object_unref (allocator);
+
+#if GST_GL_HAVE_PLATFORM_EGL
+  allocator = gst_allocator_find (GST_EGL_IMAGE_MEMORY_TYPE);
+  gst_query_add_allocation_param (query, allocator, &params);
+  gst_object_unref (allocator);
+#endif
 
   return TRUE;
 

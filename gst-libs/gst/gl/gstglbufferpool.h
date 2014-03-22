@@ -65,6 +65,10 @@ struct _GstGLBufferPoolClass
 };
 
 GstBufferPool *gst_gl_buffer_pool_new (GstGLContext * context);
+#if GST_GL_HAVE_PLATFORM_EGL
+void gst_gl_buffer_pool_replace_last_buffer (GstGLBufferPool * pool,
+    GstBuffer * buffer);
+#endif
 
 G_END_DECLS
 
