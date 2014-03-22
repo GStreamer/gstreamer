@@ -4520,20 +4520,6 @@ pause:
         gst_element_no_more_pads (GST_ELEMENT (demux));
       }
 
-      /* Close the segment, i.e. update segment stop with the duration
-       * if no stop was set */
-      if (GST_CLOCK_TIME_IS_VALID (demux->last_stop_end) &&
-          !GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop) &&
-          GST_CLOCK_TIME_IS_VALID (demux->common.segment.start) &&
-          demux->last_stop_end > demux->common.segment.start) {
-        GstSegment segment = demux->common.segment;
-        GstEvent *event;
-
-        segment.stop = demux->last_stop_end;
-        event = gst_event_new_segment (&segment);
-        gst_matroska_demux_send_event (demux, event);
-      }
-
       if (demux->common.segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gint64 stop;
 
