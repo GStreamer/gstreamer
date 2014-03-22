@@ -38,116 +38,6 @@
  * License along with this library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-GST_GL_EXT_BEGIN (offscreen,
-                  3, 0,
-                  GST_GL_API_GLES2,
-                  /* for some reason the ARB version of this
-                     extension doesn't have an ARB suffix for the
-                     functions */
-                  "ARB:\0EXT\0OES\0",
-                  "framebuffer_object\0")
-GST_GL_EXT_FUNCTION (void, GenRenderbuffers,
-                     (GLsizei               n,
-                      GLuint               *renderbuffers))
-GST_GL_EXT_FUNCTION (void, DeleteRenderbuffers,
-                     (GLsizei               n,
-                      const GLuint         *renderbuffers))
-GST_GL_EXT_FUNCTION (void, BindRenderbuffer,
-                     (GLenum                target,
-                      GLuint                renderbuffer))
-GST_GL_EXT_FUNCTION (void, RenderbufferStorage,
-                     (GLenum                target,
-                      GLenum                internalformat,
-                      GLsizei               width,
-                      GLsizei               height))
-GST_GL_EXT_FUNCTION (void, GenFramebuffers,
-                     (GLsizei               n,
-                      GLuint               *framebuffers))
-GST_GL_EXT_FUNCTION (void, BindFramebuffer,
-                     (GLenum                target,
-                      GLuint                framebuffer))
-GST_GL_EXT_FUNCTION (void, FramebufferTexture2D,
-                     (GLenum                target,
-                      GLenum                attachment,
-                      GLenum                textarget,
-                      GLuint                texture,
-                      GLint                 level))
-GST_GL_EXT_FUNCTION (void, FramebufferRenderbuffer,
-                     (GLenum                target,
-                      GLenum                attachment,
-                      GLenum                renderbuffertarget,
-                      GLuint                renderbuffer))
-GST_GL_EXT_FUNCTION (GLboolean, IsRenderbuffer,
-                     (GLuint                renderbuffer))
-GST_GL_EXT_FUNCTION (GLenum, CheckFramebufferStatus,
-                     (GLenum                target))
-GST_GL_EXT_FUNCTION (void, DeleteFramebuffers,
-                     (GLsizei               n,
-                      const                 GLuint *framebuffers))
-GST_GL_EXT_FUNCTION (void, GenerateMipmap,
-                     (GLenum                target))
-GST_GL_EXT_FUNCTION (void, GetFramebufferAttachmentParameteriv,
-                     (GLenum                target,
-                      GLenum                attachment,
-                      GLenum                pname,
-                      GLint                *params))
-GST_GL_EXT_FUNCTION (void, GetRenderbufferParameteriv,
-                     (GLenum                target,
-                      GLenum                pname,
-                      GLint                *params))
-GST_GL_EXT_FUNCTION (GLboolean, IsFramebuffer,
-                     (GLuint                framebuffer))
-GST_GL_EXT_END ()
-
-GST_GL_EXT_BEGIN (blending, 1, 2,
-                  GST_GL_API_GLES2,
-                  "\0",
-                  "\0")
-GST_GL_EXT_FUNCTION (void, BlendEquation,
-                     (GLenum                mode))
-GST_GL_EXT_FUNCTION (void, BlendColor,
-                     (GLclampf              red,
-                      GLclampf              green,
-                      GLclampf              blue,
-                      GLclampf              alpha))
-GST_GL_EXT_END ()
-
-/* Optional, declared in 1.4 or GLES 1.2 */
-GST_GL_EXT_BEGIN (blend_func_separate, 1, 4,
-                  GST_GL_API_GLES2,
-                  "EXT\0",
-                  "blend_func_separate\0")
-GST_GL_EXT_FUNCTION (void, BlendFuncSeparate,
-                     (GLenum                srcRGB,
-                      GLenum                dstRGB,
-                      GLenum                srcAlpha,
-                      GLenum                dstAlpha))
-GST_GL_EXT_END ()
-
-/* Optional, declared in 2.0 */
-GST_GL_EXT_BEGIN (blend_equation_separate, 2, 0,
-                  GST_GL_API_GLES2,
-                  "EXT\0",
-                  "blend_equation_separate\0")
-GST_GL_EXT_FUNCTION (void, BlendEquationSeparate,
-                     (GLenum                modeRGB,
-                      GLenum                modeAlpha))
-GST_GL_EXT_END ()
-
-/* GL and GLES 2.0 apis */
-GST_GL_EXT_BEGIN (two_point_zero_api,
-                  2, 0,
-                  GST_GL_API_GLES2,
-                  "\0",
-                  "\0")
-GST_GL_EXT_FUNCTION (void, StencilFuncSeparate,
-                     (GLenum face, GLenum func, GLint ref, GLuint mask))
-GST_GL_EXT_FUNCTION (void, StencilMaskSeparate,
-                     (GLenum face, GLuint mask))
-GST_GL_EXT_FUNCTION (void, StencilOpSeparate,
-                     (GLenum face, GLenum fail, GLenum zfail, GLenum zpass))
-GST_GL_EXT_END ()
-
 /* This lists functions that are unique to GL 2.0 or GLES 2.0 and are
  * not in the old GLSL extensions */
 GST_GL_EXT_BEGIN (shaders_glsl_2_only, 2, 0,
@@ -377,40 +267,82 @@ GST_GL_EXT_FUNCTION (void, GetActiveAttrib,
                       GLchar* name))
 GST_GL_EXT_END ()
 
-
-GST_GL_EXT_BEGIN (texture_3d, 1, 2,
+/* These only list functions that come from the old GLSL extensions.
+ * Functions that are common to the extensions and GLSL 2.0 should
+ * instead be listed in cogl-glsl-functions.h */
+GST_GL_EXT_BEGIN (shader_objects, 255, 255,
                   0, /* not in either GLES */
-                  "OES\0",
-                  "texture_3D\0")
-GST_GL_EXT_FUNCTION (void, TexImage3D,
-                     (GLenum target, GLint level,
-                      GLint internalFormat,
-                      GLsizei width, GLsizei height,
-                      GLsizei depth, GLint border,
-                      GLenum format, GLenum type,
-                      const GLvoid *pixels))
-GST_GL_EXT_FUNCTION (void, TexSubImage3D,
-                     (GLenum target, GLint level,
-                      GLint xoffset, GLint yoffset,
-                      GLint zoffset, GLsizei width,
-                      GLsizei height, GLsizei depth,
-                      GLenum format,
-                      GLenum type, const GLvoid *pixels))
+                  "ARB\0",
+                  "shader_objects\0")
+GST_GL_EXT_FUNCTION (GLuint, CreateProgramObject,
+                     (void))
+GST_GL_EXT_FUNCTION (GLuint, CreateShaderObject,
+                     (GLenum shaderType))
+GST_GL_EXT_FUNCTION (void, DeleteObject,
+                     (GLuint obj))
+GST_GL_EXT_FUNCTION (void, AttachObject,
+                     (GLuint container, GLuint obj))
+GST_GL_EXT_FUNCTION (void, UseProgramObject,
+                     (GLuint programObj))
+GST_GL_EXT_FUNCTION (void, GetInfoLog,
+                     (GLuint                obj,
+                      GLsizei               maxLength,
+                      GLsizei              *length,
+                      char                 *infoLog))
+GST_GL_EXT_FUNCTION (void, GetObjectParameteriv,
+                     (GLuint                obj,
+                      GLenum                pname,
+                      GLint                *params))
+GST_GL_EXT_FUNCTION (void, DetachObject,
+                     (GLuint container, GLuint obj))
+GST_GL_EXT_FUNCTION (void, GetAttachedObjects,
+                     (GLuint program,
+                      GLsizei maxcount,
+                      GLsizei* count,
+                      GLuint* shaders))
 GST_GL_EXT_END ()
 
-GST_GL_EXT_BEGIN (offscreen_blit, 255, 255,
+/* ARB_fragment_program */
+GST_GL_EXT_BEGIN (arbfp, 255, 255,
                   0, /* not in either GLES */
-                  "EXT\0ANGLE\0",
-                  "framebuffer_blit\0")
-GST_GL_EXT_FUNCTION (void, BlitFramebuffer,
-                     (GLint                 srcX0,
-                      GLint                 srcY0,
-                      GLint                 srcX1,
-                      GLint                 srcY1,
-                      GLint                 dstX0,
-                      GLint                 dstY0,
-                      GLint                 dstX1,
-                      GLint                 dstY1,
-                      GLbitfield            mask,
-                      GLenum                filter))
+                  "ARB\0",
+                  "fragment_program\0")
+GST_GL_EXT_FUNCTION (void, GenPrograms,
+                     (GLsizei               n,
+                      GLuint               *programs))
+GST_GL_EXT_FUNCTION (void, DeletePrograms,
+                     (GLsizei               n,
+                      GLuint               *programs))
+GST_GL_EXT_FUNCTION (void, BindProgram,
+                     (GLenum                target,
+                      GLuint                program))
+GST_GL_EXT_FUNCTION (void, ProgramString,
+                     (GLenum                target,
+                      GLenum                format,
+                      GLsizei               len,
+                      const void           *program))
+GST_GL_EXT_FUNCTION (void, ProgramLocalParameter4fv,
+                     (GLenum                target,
+                      GLuint                index,
+                      GLfloat              *params))
+GST_GL_EXT_END ()
+
+/* This lists functions that are unique to GL 2.1 or GLES 3.0 and are
+ * not in the old GLSL extensions */
+GST_GL_EXT_BEGIN (shaders_2_1, 2, 1,
+                  GST_GL_API_GLES3,
+                  "\0",
+                  "\0")
+GST_GL_EXT_FUNCTION (void, UniformMatrix2x3fv,
+                     (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value))
+GST_GL_EXT_FUNCTION (void, UniformMatrix3x2fv,
+                     (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value))
+GST_GL_EXT_FUNCTION (void, UniformMatrix2x4fv,
+                     (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value))
+GST_GL_EXT_FUNCTION (void, UniformMatrix4x2fv,
+                     (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value))
+GST_GL_EXT_FUNCTION (void, UniformMatrix3x4fv,
+                     (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value))
+GST_GL_EXT_FUNCTION (void, UniformMatrix4x3fv,
+                     (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value))
 GST_GL_EXT_END ()

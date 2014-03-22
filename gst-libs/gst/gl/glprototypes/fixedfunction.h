@@ -103,3 +103,36 @@ GST_GL_EXT_FUNCTION (void, PushMatrix,
 GST_GL_EXT_FUNCTION (void, PopMatrix,
                      (void))
 GST_GL_EXT_END ()
+
+/* Eventually we want to remove this category */
+GST_GL_EXT_BEGIN (fixed_function_gl_only,
+                  0, 0,
+                  0,
+                  "\0",
+                  "\0")
+GST_GL_EXT_FUNCTION (void, PushAttrib,
+                     (GLbitfield            mask))
+GST_GL_EXT_FUNCTION (void, PopAttrib,
+                     (void))
+GST_GL_EXT_FUNCTION (void, TexImage1D,
+                     (GLenum                target,
+                      GLint                 level,
+                      GLint                 internalFormat,
+                      GLsizei               width,
+                      GLint                 border,
+                      GLenum                format,
+                      GLenum                type,
+                      const GLvoid         *data))
+GST_GL_EXT_FUNCTION (void, Rotatef,
+                     (GLfloat angle, GLfloat x, GLfloat y, GLfloat z))
+GST_GL_EXT_FUNCTION (void, Translatef,
+                     (GLfloat x, GLfloat y, GLfloat z))
+GST_GL_EXT_FUNCTION (void, Scalef,
+                     (GLfloat x, GLfloat y, GLfloat z))
+GST_GL_EXT_FUNCTION (void, Lightfv,
+                     (GLenum light, GLenum pname, const GLfloat *params))
+GST_GL_EXT_FUNCTION (void, ColorMaterial,
+                     (GLenum face, GLenum pname))
+GST_GL_EXT_FUNCTION (void, ShadeModel,
+                     (GLenum value))
+GST_GL_EXT_END ()

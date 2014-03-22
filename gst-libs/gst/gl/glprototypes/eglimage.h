@@ -38,10 +38,14 @@
  * License along with this library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-GST_GL_EXT_BEGIN (only_in_gles1,
-                255, 255,
-                GST_GL_API_GLES1,
-                "\0",
-                "\0")
-GST_GL_EXT_FUNCTION (void, ClipPlanef, (GLenum plane, const GLfloat *equation))
+GST_GL_EXT_BEGIN (EGL_image, 255, 255,
+                0, /* not in either GLES */
+                "OES\0",
+                "EGL_image\0")
+GST_GL_EXT_FUNCTION (void, EGLImageTargetTexture2D,
+                     (GLenum           target,
+                      GLeglImageOES    image))
+GST_GL_EXT_FUNCTION (void, EGLImageTargetRenderbufferStorage,
+                     (GLenum           target,
+                      GLeglImageOES    image))
 GST_GL_EXT_END ()
