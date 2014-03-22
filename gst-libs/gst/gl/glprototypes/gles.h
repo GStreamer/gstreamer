@@ -50,14 +50,48 @@ GST_GL_EXT_FUNCTION (void, ClearDepthf,
                      (GLclampf depth))
 GST_GL_EXT_END ()
 
-GST_GL_EXT_BEGIN (EGL_image, 255, 255,
-                0, /* not in either GLES */
-                "OES\0",
-                "EGL_image\0")
-GST_GL_EXT_FUNCTION (void, EGLImageTargetTexture2D,
+GST_GL_EXT_BEGIN (only_in_gles1,
+                255, 255,
+                GST_GL_API_GLES1,
+                "\0",
+                "\0")
+GST_GL_EXT_FUNCTION (void, ClipPlanef, (GLenum plane, const GLfloat *equation))
+GST_GL_EXT_END ()
+
+GST_GL_EXT_BEGIN (gles2_only_api,
+                  255, 255,
+                  GST_GL_API_GLES2,
+                  "\0",
+                  "\0")
+GST_GL_EXT_FUNCTION (void, ReleaseShaderCompiler, (void))
+GST_GL_EXT_FUNCTION (void, GetShaderPrecisionFormat,
+                     (GLenum shadertype,
+                      GLenum precisiontype,
+                      GLint* range,
+                      GLint* precision))
+GST_GL_EXT_FUNCTION (void, ShaderBinary,
+                     (GLsizei n,
+                      const GLuint* shaders,
+                      GLenum binaryformat,
+                      const GLvoid* binary,
+                      GLsizei length))
+GST_GL_EXT_END ()
+
+GST_GL_EXT_BEGIN (IMG_multisampled_render_to_texture, 255, 255,
+                  0, /* not in either GLES */
+                  "\0",
+                  "IMG_multisampled_render_to_texture\0")
+GST_GL_EXT_FUNCTION (void, RenderbufferStorageMultisampleIMG,
                      (GLenum           target,
-                      GLeglImageOES    image))
-GST_GL_EXT_FUNCTION (void, EGLImageTargetRenderbufferStorage,
+                      GLsizei          samples,
+                      GLenum           internal_format,
+                      GLsizei          width,
+                      GLsizei          height))
+GST_GL_EXT_FUNCTION (void, FramebufferTexture2DMultisampleIMG,
                      (GLenum           target,
-                      GLeglImageOES    image))
+                      GLenum           attachment,
+                      GLenum           textarget,
+                      GLuint           texture,
+                      GLint            level,
+                      GLsizei          samples))
 GST_GL_EXT_END ()

@@ -178,6 +178,25 @@ GST_GL_EXT_FUNCTION (void, LineWidth, (GLfloat width))
 GST_GL_EXT_FUNCTION (void, PolygonOffset, (GLfloat factor, GLfloat units))
 GST_GL_EXT_END ()
 
+GST_GL_EXT_BEGIN (texture_3d, 1, 2,
+                  0, /* not in either GLES */
+                  "OES\0",
+                  "texture_3D\0")
+GST_GL_EXT_FUNCTION (void, TexImage3D,
+                     (GLenum target, GLint level,
+                      GLint internalFormat,
+                      GLsizei width, GLsizei height,
+                      GLsizei depth, GLint border,
+                      GLenum format, GLenum type,
+                      const GLvoid *pixels))
+GST_GL_EXT_FUNCTION (void, TexSubImage3D,
+                     (GLenum target, GLint level,
+                      GLint xoffset, GLint yoffset,
+                      GLint zoffset, GLsizei width,
+                      GLsizei height, GLsizei depth,
+                      GLenum format,
+                      GLenum type, const GLvoid *pixels))
+GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (only_in_both_gles_and_gl_1_3,
                   1, 3,
@@ -269,4 +288,13 @@ GST_GL_EXT_FUNCTION (void *, MapBuffer,
                     GLenum		 access))
 GST_GL_EXT_FUNCTION (GLboolean, UnmapBuffer,
                    (GLenum		 target))
+GST_GL_EXT_END ()
+
+GST_GL_EXT_BEGIN (gl3,
+                  3, 1,
+                  GST_GL_API_GLES3,
+                  "\0",
+                  "\0")
+GST_GL_EXT_FUNCTION (const GLubyte*, GetStringi,
+                     (GLenum name, GLint index))
 GST_GL_EXT_END ()

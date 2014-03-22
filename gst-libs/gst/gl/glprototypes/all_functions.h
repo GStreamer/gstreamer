@@ -18,11 +18,11 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "glprototypes/base.h"
+#include "glprototypes/blending.h"
+#include "glprototypes/eglimage.h"
+#include "glprototypes/fbo.h"
+#include "glprototypes/fixedfunction.h"
+#include "glprototypes/gles.h"
 #include "glprototypes/opengl.h"
-#include "glprototypes/gles1.h"
-#include "glprototypes/gles1gles2.h"
-#include "glprototypes/gles1opengl.h"
-#include "glprototypes/gles1gles2opengl.h"
-#include "glprototypes/gles2.h"
-#include "glprototypes/gles2opengl.h"
-#include "glprototypes/gles3opengl.h"
+#include "glprototypes/shaders.h"

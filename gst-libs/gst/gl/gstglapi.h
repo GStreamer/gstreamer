@@ -114,22 +114,8 @@ typedef enum
 
 typedef struct _GstGLFuncs
 {
-#include <gst/gl/glprototypes/opengl.h>
-  gpointer padding1[GST_PADDING_LARGE];
-#include <gst/gl/glprototypes/gles1.h>
-  gpointer padding2[GST_PADDING_LARGE];
-#include <gst/gl/glprototypes/gles1gles2.h>
-  gpointer padding3[GST_PADDING_LARGE];
-#include <gst/gl/glprototypes/gles1opengl.h>
-  gpointer padding4[GST_PADDING_LARGE*2];
-#include <gst/gl/glprototypes/gles2.h>
-  gpointer padding5[GST_PADDING_LARGE*2];
-#include <gst/gl/glprototypes/gles2opengl.h>
-  gpointer padding6[GST_PADDING_LARGE*2];
-#include <gst/gl/glprototypes/gles1gles2opengl.h>
-  gpointer padding7[GST_PADDING_LARGE*2];
-#include <gst/gl/glprototypes/gles3opengl.h>
-  gpointer padding8[GST_PADDING_LARGE*4];
+#include <gst/gl/glprototypes/all_functions.h>
+  gpointer padding[GST_PADDING_LARGE*6];
 } GstGLFuncs;
 
 #undef GST_GL_EXT_BEGIN
