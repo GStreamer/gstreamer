@@ -633,7 +633,8 @@ encode_fail:
     GST_ERROR_OBJECT (ffmpegenc,
         "avenc_%s: failed to encode buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
-    return GST_FLOW_OK;
+    /* avoid frame (and ts etc) piling up */
+    return gst_video_encoder_finish_frame (encoder, frame);
   }
 }
 
