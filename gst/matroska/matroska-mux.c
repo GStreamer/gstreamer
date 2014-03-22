@@ -851,7 +851,8 @@ gst_matroska_mux_handle_sink_event (GstCollectPads * pads,
       event = NULL;
       break;
     }
-    case GST_EVENT_CUSTOM_DOWNSTREAM:{
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    case GST_EVENT_CUSTOM_DOWNSTREAM_STICKY:{
       const GstStructure *structure;
 
       structure = gst_event_get_structure (event);
