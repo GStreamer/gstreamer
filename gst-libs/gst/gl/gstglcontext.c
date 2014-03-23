@@ -656,20 +656,23 @@ _unlock_create_thread (GstGLContext * context)
   g_mutex_unlock (&context->priv->render_lock);
 }
 
-static gchar *
+static GString *
 _build_extension_string (GstGLContext * context)
 {
   const GstGLFuncs *gl = context->gl_vtable;
-  GString *exts = g_string_sized_new (1024);
+  GString *ext_g_str = g_string_sized_new (1024);
+  const gchar *ext_const_c_str = NULL;
   int i, n;
 
   gl->GetIntegerv (GL_NUM_EXTENSIONS, &n);
 
   for (i = 0; i < n; i++) {
-    g_string_append_printf (exts, "%s ", gl->GetStringi (GL_EXTENSIONS, i));
+    ext_const_c_str = (const gchar *) gl->GetStringi (GL_EXTENSIONS, i);
+    if (ext_const_c_str)
+      g_string_append_printf (ext_g_str, "%s ", ext_const_c_str);
   }
 
-  return exts->str;
+  return ext_g_str;
 }
 
 //gboolean
@@ -687,9 +690,11 @@ gst_gl_context_create_thread (GstGLContext * context)
   gchar *api_string;
   gchar *compiled_api_s;
   gchar *user_api_string;
-  const gchar *user_choice, *extensions;
+  const gchar *user_choice;
   GError **error;
   GstGLContext *other_context;
+  GString *ext_g_str = NULL;
+  const gchar *ext_const_c_str = NULL;
 
   g_mutex_lock (&context->priv->render_lock);
 
@@ -796,13 +801,22 @@ gst_gl_context_create_thread (GstGLContext * context)
     goto failure;
 
   /* GL core contexts and GLES3 */
-  if (gl->GetIntegerv && gl->GetStringi) {
-    extensions = _build_extension_string (context);
+  if (gl->GetIntegerv && gl->GetStringi)
+    ext_g_str = _build_extension_string (context);
+
+  if (ext_g_str->len) {
+    _gst_gl_feature_check_ext_functions (context, gl_major, gl_minor,
+        ext_g_str->str);
   } else {
-    extensions = (const gchar *) gl->GetString (GL_EXTENSIONS);
+    ext_const_c_str = (const gchar *) gl->GetString (GL_EXTENSIONS);
+    if (!ext_const_c_str)
+      ext_const_c_str = "";
+    _gst_gl_feature_check_ext_functions (context, gl_major, gl_minor,
+        ext_const_c_str);
   }
 
-  _gst_gl_feature_check_ext_functions (context, gl_major, gl_minor, extensions);
+  if (ext_g_str)
+    g_string_free (ext_g_str, TRUE);
 
   context->priv->alive = TRUE;
 
