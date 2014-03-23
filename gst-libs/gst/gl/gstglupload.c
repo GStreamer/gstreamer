@@ -52,14 +52,7 @@ static gboolean _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 static void _do_upload_with_meta (GstGLContext * context, GstGLUpload * upload);
 
-#if GST_GL_HAVE_OPENGL
-static gboolean _do_upload_draw_opengl (GstGLContext * context,
-    GstGLUpload * upload);
-#endif
-#if GST_GL_HAVE_GLES2
-static gboolean _do_upload_draw_gles2 (GstGLContext * context,
-    GstGLUpload * upload);
-#endif
+static gboolean _do_upload_draw (GstGLContext * context, GstGLUpload * upload);
 
 /* *INDENT-OFF* */
 
@@ -67,11 +60,27 @@ static gboolean _do_upload_draw_gles2 (GstGLContext * context,
  * Y = [16..235] (of 255)
  * Cb/Cr = [16..240] (of 255)
  */
+#define YUV_TO_RGB_BT601_COEFFICIENTS \
+      const gfloat[] bt601_offset = {-0.0625f, -0.5, -0.5) \
+      const gfloat[] bt601_rcoeff = {1.164, 0.000, 1.596} \
+      const gfloat[] bt601_gcoeff = {1.164,-0.391,-0.813} \
+      const gfloat[] bt601_bcoeff = {1.164, 2.018, 0.000}
+
 #define YUV_TO_RGB_COEFFICIENTS \
       "const vec3 offset = vec3(-0.0625, -0.5, -0.5);\n" \
       "const vec3 rcoeff = vec3(1.164, 0.000, 1.596);\n" \
       "const vec3 gcoeff = vec3(1.164,-0.391,-0.813);\n" \
       "const vec3 bcoeff = vec3(1.164, 2.018, 0.000);\n"
+
+/* BT. 709 standard with the following ranges:
+ * Y = [16..235] (of 255)
+ * Cb/Cr = [16..240] (of 255)
+ */
+#define YUV_TO_RGB_BT709_COEFFICIENTS \
+      const gfloat[] bt709_offset = {-0.0625, -0.5, -0.5} \
+      const gfloat[] bt709_rcoeff = {1.164, 0.000, 1.787} \
+      const gfloat[] bt709_gcoeff = {1.164,-0.213,-0.531} \
+      const gfloat[] bt709_bcoeff = {1.164,-2.112, 0.000}
 
 /** GRAY16 to RGB conversion 
  *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
@@ -82,136 +91,11 @@ static gboolean _do_upload_draw_gles2 (GstGLContext * context,
 #define COMPOSE_WEIGHT \
     "const vec2 compose_weight = vec2(0.996109, 0.003891);\n"
 
-#if GST_GL_HAVE_OPENGL
-
-static const char *frag_AYUV_opengl = {
-      "uniform sampler2D tex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      YUV_TO_RGB_COEFFICIENTS
-      "void main(void) {\n"
-      "  float r,g,b;\n"
-      "  vec3 yuv;\n"
-      "  yuv  = texture2D(tex, gl_TexCoord[0].xy * tex_scale0).gba;\n"
-      "  yuv += offset;\n"
-      "  r = dot(yuv, rcoeff);\n"
-      "  g = dot(yuv, gcoeff);\n"
-      "  b = dot(yuv, bcoeff);\n"
-      "  gl_FragColor=vec4(r,g,b,1.0);\n"
-      "}"
-};
-
-/** YUV to RGB conversion */
-static const char *frag_PLANAR_YUV_opengl = {
-      "uniform sampler2D Ytex,Utex,Vtex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      YUV_TO_RGB_COEFFICIENTS
-      "void main(void) {\n"
-      "  float r,g,b;\n"
-      "  vec3 yuv;\n"
-      "  yuv.x=texture2D(Ytex, gl_TexCoord[0].xy * tex_scale0).r;\n"
-      "  yuv.y=texture2D(Utex, gl_TexCoord[0].xy * tex_scale1).r;\n"
-      "  yuv.z=texture2D(Vtex, gl_TexCoord[0].xy * tex_scale2).r;\n"
-      "  yuv += offset;\n"
-      "  r = dot(yuv, rcoeff);\n"
-      "  g = dot(yuv, gcoeff);\n"
-      "  b = dot(yuv, bcoeff);\n"
-      "  gl_FragColor=vec4(r,g,b,1.0);\n"
-      "}"
-};
-
-/** NV12/NV21 to RGB conversion */
-static const char *frag_NV12_NV21_opengl = {
-      "uniform sampler2D Ytex,UVtex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      YUV_TO_RGB_COEFFICIENTS
-      "void main(void) {\n\n"
-      "  float r,g,b;\n"
-      "  vec3 yuv;\n"
-      "  yuv.x = texture2D(Ytex, gl_TexCoord[0].xy * tex_scale0).r;\n"
-      "  yuv.yz = texture2D(UVtex, gl_TexCoord[0].xy * tex_scale1).%c%c;\n"
-      "  yuv += offset;\n"
-      "  r = dot(yuv, rcoeff);\n"
-      "  g = dot(yuv, gcoeff);\n"
-      "  b = dot(yuv, bcoeff);\n"
-      "  gl_FragColor=vec4(r,g,b,1.0);\n"
-      "}"
-};
-
 /* Channel reordering for XYZ <-> ZYX conversion */
-static const char *frag_REORDER_opengl = {
-      "uniform sampler2D tex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      "void main(void)\n"
-      "{\n"
-      " vec4 t = texture2D(tex, gl_TexCoord[0].xy);\n"
-      " gl_FragColor = vec4(t.%c, t.%c, t.%c, 1.0);\n"
-      "}"
-};
-
-/* Compose LUMINANCE/ALPHA as 8bit-8bit value */
-static const char *frag_COMPOSE_opengl = {
-      "uniform sampler2D tex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      COMPOSE_WEIGHT
-      "void main(void)\n"
-      "{\n"
-      " vec4 t = texture2D(tex, gl_TexCoord[0].xy);\n"
-      " float value = dot(t.%c%c, compose_weight);"
-      " gl_FragColor = vec4(value, value, value, 1.0);\n"
-      "}"
-
-};
-
-/* Direct fragments copy with stride-scaling */
-static const char *frag_COPY_opengl = {
-      "uniform sampler2D tex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      "void main(void)\n"
-      "{\n"
-      " vec4 t = texture2D(tex, gl_TexCoord[0].xy);\n"
-      " gl_FragColor = vec4(t.rgb, 1.0);\n"
-      "}\n"
-};
-
-/* YUY2:r,g,a
-   UYVY:a,b,r */
-static const gchar *frag_YUY2_UYVY_opengl =
-    "uniform sampler2D Ytex, UVtex;\n"
-    "uniform vec2 tex_scale0;\n"
-    "uniform vec2 tex_scale1;\n"
-    "uniform vec2 tex_scale2;\n"
-    YUV_TO_RGB_COEFFICIENTS
-    "void main(void) {\n"
-    "  float fx, fy, y, u, v, r, g, b;\n"
-    "  vec3 yuv;\n"
-    "  yuv.x = texture2D(Ytex, gl_TexCoord[0].xy * tex_scale0).%c;\n"
-    "  yuv.yz = texture2D(UVtex, gl_TexCoord[0].xy * tex_scale1).%c%c;\n"
-    "  yuv += offset;\n"
-    "  r = dot(yuv, rcoeff);\n"
-    "  g = dot(yuv, gcoeff);\n"
-    "  b = dot(yuv, bcoeff);\n"
-    "  gl_FragColor = vec4(r, g, b, 1.0);\n"
-    "}\n";
-
-#define text_vertex_shader_opengl NULL
-#endif
-
-#if GST_GL_HAVE_GLES2
-/* Channel reordering for XYZ <-> ZYX conversion */
-static const char *frag_REORDER_gles2 = {
+static const char *frag_REORDER = {
+      "#ifdef GL_ES\n"
       "precision mediump float;\n"
+      "#endif\n"
       "varying vec2 v_texcoord;\n"
       "uniform sampler2D tex;\n"
       "uniform vec2 tex_scale0;\n"
@@ -230,8 +114,10 @@ static const char *frag_REORDER_gles2 = {
  *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
  *  low byte weight as : 255/65535 (similar)
  * */
-static const char *frag_COMPOSE_gles2 = {
+static const char *frag_COMPOSE = {
+      "#ifdef GL_ES\n"
       "precision mediump float;\n"
+      "#endif\n"
       "varying vec2 v_texcoord;\n"
       "uniform sampler2D tex;\n"
       "uniform vec2 tex_scale0;\n"
@@ -246,8 +132,10 @@ static const char *frag_COMPOSE_gles2 = {
       "}"
 
 };
-static const char *frag_AYUV_gles2 = {
+static const char *frag_AYUV = {
+      "#ifdef GL_ES\n"
       "precision mediump float;\n"
+      "#endif\n"
       "varying vec2 v_texcoord;\n"
       "uniform sampler2D tex;\n"
       "uniform vec2 tex_scale0;\n"
@@ -267,8 +155,10 @@ static const char *frag_AYUV_gles2 = {
 };
 
 /** YUV to RGB conversion */
-static const char *frag_PLANAR_YUV_gles2 = {
+static const char *frag_PLANAR_YUV = {
+      "#ifdef GL_ES\n"
       "precision mediump float;\n"
+      "#endif\n"
       "varying vec2 v_texcoord;\n"
       "uniform sampler2D Ytex,Utex,Vtex;\n"
       "uniform vec2 tex_scale0;\n"
@@ -279,8 +169,8 @@ static const char *frag_PLANAR_YUV_gles2 = {
       "  float r,g,b;\n"
       "  vec3 yuv;\n"
       "  yuv.x=texture2D(Ytex,v_texcoord * tex_scale0).r;\n"
-      "  yuv.y=texture2D(Utex,v_texcoord).r;\n"
-      "  yuv.z=texture2D(Vtex,v_texcoord).r;\n"
+      "  yuv.y=texture2D(Utex,v_texcoord * tex_scale1).r;\n"
+      "  yuv.z=texture2D(Vtex,v_texcoord * tex_scale2).r;\n"
       "  yuv += offset;\n"
       "  r = dot(yuv, rcoeff);\n"
       "  g = dot(yuv, gcoeff);\n"
@@ -290,8 +180,10 @@ static const char *frag_PLANAR_YUV_gles2 = {
 };
 
 /** NV12/NV21 to RGB conversion */
-static const char *frag_NV12_NV21_gles2 = {
+static const char *frag_NV12_NV21 = {
+      "#ifdef GL_ES\n"
       "precision mediump float;\n"
+      "#endif\n"
       "varying vec2 v_texcoord;\n"
       "uniform sampler2D Ytex,UVtex;\n"
       "uniform vec2 tex_scale0;\n"
@@ -312,8 +204,10 @@ static const char *frag_NV12_NV21_gles2 = {
 };
 
 /* Direct fragments copy with stride-scaling */
-static const char *frag_COPY_gles2 = {
+static const char *frag_COPY = {
+      "#ifdef GL_ES\n"
       "precision mediump float;\n"
+      "#endif\n"
       "varying vec2 v_texcoord;\n"
       "uniform sampler2D tex;\n"
       "uniform vec2 tex_scale0;\n"
@@ -328,8 +222,10 @@ static const char *frag_COPY_gles2 = {
 
 /* YUY2:r,g,a
    UYVY:a,b,r */
-static const gchar *frag_YUY2_UYVY_gles2 =
+static const gchar *frag_YUY2_UYVY =
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
+    "#endif\n"
     "varying vec2 v_texcoord;\n"
     "uniform sampler2D Ytex, UVtex;\n"
     "uniform vec2 tex_scale0;\n"
@@ -350,7 +246,7 @@ static const gchar *frag_YUY2_UYVY_gles2 =
     "  gl_FragColor = vec4(r, g, b, 1.0);\n"
     "}\n";
 
-static const gchar *text_vertex_shader_gles2 =
+static const gchar *text_vertex_shader =
     "attribute vec4 a_position;   \n"
     "attribute vec2 a_texcoord;   \n"
     "varying vec2 v_texcoord;     \n"
@@ -359,7 +255,6 @@ static const gchar *text_vertex_shader_gles2 =
     "   gl_Position = a_position; \n"
     "   v_texcoord = a_texcoord;  \n"
     "}                            \n";
-#endif
 
 /* *INDENT-ON* */
 
@@ -451,32 +346,15 @@ gst_gl_upload_new (GstGLContext * context)
   upload->context = gst_object_ref (context);
   priv = upload->priv;
 
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (context)) {
-    priv->YUY2_UYVY = frag_YUY2_UYVY_opengl;
-    priv->PLANAR_YUV = frag_PLANAR_YUV_opengl;
-    priv->AYUV = frag_AYUV_opengl;
-    priv->REORDER = frag_REORDER_opengl;
-    priv->COMPOSE = frag_COMPOSE_opengl;
-    priv->COPY = frag_COPY_opengl;
-    priv->NV12_NV21 = frag_NV12_NV21_opengl;
-    priv->vert_shader = text_vertex_shader_opengl;
-    priv->draw = _do_upload_draw_opengl;
-  }
-#endif
-#if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (context)) {
-    priv->YUY2_UYVY = frag_YUY2_UYVY_gles2;
-    priv->PLANAR_YUV = frag_PLANAR_YUV_gles2;
-    priv->AYUV = frag_AYUV_gles2;
-    priv->REORDER = frag_REORDER_gles2;
-    priv->COMPOSE = frag_COMPOSE_gles2;
-    priv->COPY = frag_COPY_gles2;
-    priv->NV12_NV21 = frag_NV12_NV21_gles2;
-    priv->vert_shader = text_vertex_shader_gles2;
-    priv->draw = _do_upload_draw_gles2;
-  }
-#endif
+  priv->YUY2_UYVY = frag_YUY2_UYVY;
+  priv->PLANAR_YUV = frag_PLANAR_YUV;
+  priv->AYUV = frag_AYUV;
+  priv->REORDER = frag_REORDER;
+  priv->COMPOSE = frag_COMPOSE;
+  priv->COPY = frag_COPY;
+  priv->NV12_NV21 = frag_NV12_NV21;
+  priv->vert_shader = text_vertex_shader;
+  priv->draw = _do_upload_draw;
 
   return upload;
 }
@@ -1108,12 +986,10 @@ _init_upload (GstGLContext * context, GstGLUpload * upload)
   if (!res)
     goto error;
 
-  if (USING_GLES2 (context)) {
-    upload->shader_attr_position_loc =
-        gst_gl_shader_get_attribute_location (upload->shader, "a_position");
-    upload->shader_attr_texture_loc =
-        gst_gl_shader_get_attribute_location (upload->shader, "a_texcoord");
-  }
+  upload->shader_attr_position_loc =
+      gst_gl_shader_get_attribute_location (upload->shader, "a_position");
+  upload->shader_attr_texture_loc =
+      gst_gl_shader_get_attribute_location (upload->shader, "a_texcoord");
 
   if (!_do_upload_make (context, upload))
     goto error;
@@ -1538,120 +1414,8 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
   return TRUE;
 }
 
-#if GST_GL_HAVE_OPENGL
-/* called by _do_upload (in the gl thread) */
 static gboolean
-_do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
-{
-  GstGLFuncs *gl;
-  guint out_width, out_height;
-  struct TexData *tex = upload->priv->texture_info;
-  gint i;
-
-  GLfloat verts[8] = { 1.0f, -1.0f,
-    -1.0f, -1.0f,
-    -1.0f, 1.0f,
-    1.0f, 1.0f
-  };
-  GLfloat texcoords[8] = { 1.0f, 0.0f,
-    0.0f, 0.0f,
-    0.0f, 1.0f,
-    1.0f, 1.0f
-  };
-
-  gl = context->gl_vtable;
-
-  out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
-
-  /* setup a texture to render to */
-  gl->Enable (GL_TEXTURE_2D);
-  gl->BindTexture (GL_TEXTURE_2D, upload->out_texture);
-
-  /* attach the texture to the FBO to renderer to */
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_2D, upload->out_texture, 0);
-
-  gst_gl_context_clear_shader (context);
-
-  gl->PushAttrib (GL_VIEWPORT_BIT);
-
-  gl->MatrixMode (GL_PROJECTION);
-  gl->PushMatrix ();
-  gl->LoadIdentity ();
-  gluOrtho2D (0.0, out_width, 0.0, out_height);
-
-  gl->MatrixMode (GL_MODELVIEW);
-  gl->PushMatrix ();
-  gl->LoadIdentity ();
-
-  gl->Viewport (0, 0, out_width, out_height);
-
-  gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
-
-  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
-  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  gst_gl_shader_use (upload->shader);
-
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
-
-  gl->Enable (GL_TEXTURE_2D);
-
-  for (i = upload->priv->n_textures - 1; i >= 0; i--) {
-    gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
-
-    gl->ActiveTexture (GL_TEXTURE0 + i);
-    gst_gl_shader_set_uniform_1i (upload->shader, tex[i].shader_name, i);
-    gst_gl_shader_set_uniform_2fv (upload->shader, scale_name, 1,
-        &tex[i].tex_scaling[0]);
-    g_free (scale_name);
-
-    gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  }
-
-  gl->EnableClientState (GL_VERTEX_ARRAY);
-  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-  gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
-
-  gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
-
-  gl->DisableClientState (GL_VERTEX_ARRAY);
-  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
-
-  gl->DrawBuffer (GL_NONE);
-
-  /* we are done with the shader */
-  gst_gl_context_clear_shader (context);
-
-  gl->Disable (GL_TEXTURE_2D);
-
-  gl->MatrixMode (GL_PROJECTION);
-  gl->PopMatrix ();
-  gl->MatrixMode (GL_MODELVIEW);
-  gl->PopMatrix ();
-  gl->PopAttrib ();
-
-  gst_gl_context_check_framebuffer_status (context);
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-
-  return TRUE;
-}
-#endif
-
-#if GST_GL_HAVE_GLES2
-static gboolean
-_do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
+_do_upload_draw (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   struct TexData *tex = upload->priv->texture_info;
@@ -1736,4 +1500,3 @@ _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
 
   return TRUE;
 }
-#endif
