@@ -1006,12 +1006,10 @@ guint
 gst_test_clock_process_id_list (GstTestClock * test_clock,
     GstTestClockIDList * pending_list)
 {
-  GstTestClockPrivate *priv;
   GList *cur;
   guint result = 0;
 
   g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), 0);
-  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
 
   GST_OBJECT_LOCK (test_clock);
 
