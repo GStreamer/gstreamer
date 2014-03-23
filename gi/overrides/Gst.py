@@ -243,7 +243,7 @@ class Fraction(Gst.Fraction):
 
     __rmul__ = __mul__
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Fraction):
             return Fraction(self.num * other.denom,
                             self.denom * other.num)
@@ -251,10 +251,14 @@ class Fraction(Gst.Fraction):
             return Fraction(self.num, self.denom * other)
         return TypeError
 
-    def __rdiv__(self, other):
+    __div__ = __truediv__
+
+    def __rtruediv__(self, other):
         if isinstance(other, int):
             return Fraction(self.denom * other, self.num)
         return TypeError
+
+    __rdiv__ = __rtruediv__
 
     def __float__(self):
         return float(self.num) / float(self.denom)
