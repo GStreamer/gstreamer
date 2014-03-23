@@ -181,7 +181,7 @@ gst_rtsp_address_pool_finalize (GObject * obj)
  *
  * Make a new #GstRTSPAddressPool.
  *
- * Returns: a new #GstRTSPAddressPool
+ * Returns: (transfer full): a new #GstRTSPAddressPool
  */
 GstRTSPAddressPool *
 gst_rtsp_address_pool_new (void)
@@ -424,7 +424,7 @@ split_range (GstRTSPAddressPool * pool, AddrRange * range, guint skip_addr,
  * one can be found in @port.
  *
  * Returns: a #GstRTSPAddress that should be freed with gst_rtsp_address_free
- *   after use or %NULL when no address could be acquired.
+ * after use or %NULL when no address could be acquired.
  */
 GstRTSPAddress *
 gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,

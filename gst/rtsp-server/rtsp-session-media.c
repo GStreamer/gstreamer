@@ -123,14 +123,14 @@ free_session_media (gpointer data)
 /**
  * gst_rtsp_session_media_new:
  * @path: the path
- * @media: the #GstRTSPMedia
+ * @media: (transfer full): the #GstRTSPMedia
  *
  * Create a new #GstRTSPSessionMedia that manages the streams
  * in @media for @path. @media should be prepared.
  *
  * Ownership is taken of @media.
  *
- * Returns: a new #GstRTSPSessionMedia.
+ * Returns: (transfer full): a new #GstRTSPSessionMedia.
  */
 GstRTSPSessionMedia *
 gst_rtsp_session_media_new (const gchar * path, GstRTSPMedia * media)
@@ -206,7 +206,7 @@ gst_rtsp_session_media_matches (GstRTSPSessionMedia * media,
  * Get the #GstRTSPMedia that was used when constructing @media
  *
  * Returns: (transfer none): the #GstRTSPMedia of @media. Remains valid as long
- *         as @media is valid.
+ * as @media is valid.
  */
 GstRTSPMedia *
 gst_rtsp_session_media_get_media (GstRTSPSessionMedia * media)
@@ -240,7 +240,7 @@ gst_rtsp_session_media_get_base_time (GstRTSPSessionMedia * media)
  * with configured transports.
  *
  * Returns: (transfer full): The RTP-Info as a string or %NULL when
- *   no RTP-Info could be generated, g_free() after usage.
+ * no RTP-Info could be generated, g_free() after usage.
  */
 gchar *
 gst_rtsp_session_media_get_rtpinfo (GstRTSPSessionMedia * media)
@@ -340,7 +340,7 @@ not_prepared:
  * gst_rtsp_session_media_set_transport:
  * @media: a #GstRTSPSessionMedia
  * @stream: a #GstRTSPStream
- * @tr: a #GstRTSPTransport
+ * @tr: (transfer full): a #GstRTSPTransport
  *
  * Configure the transport for @stream to @tr in @media.
  *
@@ -405,7 +405,7 @@ gst_rtsp_session_media_get_transport (GstRTSPSessionMedia * media, guint idx)
 /**
  * gst_rtsp_session_media_alloc_channels:
  * @media: a #GstRTSPSessionMedia
- * @range: a #GstRTSPRange
+ * @range: (out): a #GstRTSPRange
  *
  * Fill @range with the next available min and max channels for
  * interleaved transport.

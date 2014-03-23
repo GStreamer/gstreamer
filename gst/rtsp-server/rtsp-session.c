@@ -230,7 +230,7 @@ gst_rtsp_session_manage_media (GstRTSPSession * sess, const gchar * path,
 /**
  * gst_rtsp_session_release_media:
  * @sess: a #GstRTSPSession
- * @media: a #GstRTSPMedia
+ * @media: (transfer none): a #GstRTSPMedia
  *
  * Release the managed @media in @sess, freeing the memory allocated by it.
  *
@@ -314,7 +314,7 @@ gst_rtsp_session_get_media (GstRTSPSession * sess, const gchar * path,
  * gst_rtsp_session_filter:
  * @sess: a #GstRTSPSession
  * @func: (scope call) (allow-none): a callback
- * @user_data: user data passed to @func
+ * @user_data: (closure): user data passed to @func
  *
  * Call @func for each media in @sess. The result value of @func determines
  * what happens to the media. @func will be called with @sess
@@ -383,6 +383,8 @@ gst_rtsp_session_filter (GstRTSPSession * sess,
  * @sessionid: a session id
  *
  * Create a new #GstRTSPSession instance with @sessionid.
+ *
+ * Returns: (transfer full): a new #GstRTSPSession
  */
 GstRTSPSession *
 gst_rtsp_session_new (const gchar * sessionid)
@@ -402,8 +404,8 @@ gst_rtsp_session_new (const gchar * sessionid)
  *
  * Get the sessionid of @session.
  *
- * Returns: the sessionid of @session. The value remains valid as long as
- * @session is alive.
+ * Returns: (transfer none): the sessionid of @session. The value remains valid
+ * as long as @session is alive.
  */
 const gchar *
 gst_rtsp_session_get_sessionid (GstRTSPSession * session)
@@ -538,7 +540,7 @@ gst_rtsp_session_allow_expire (GstRTSPSession * session)
 /**
  * gst_rtsp_session_next_timeout:
  * @session: a #GstRTSPSession
- * @now: the current system time
+ * @now: (transfer none): the current system time
  *
  * Get the amount of milliseconds till the session will expire.
  *
@@ -580,7 +582,7 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
 /**
  * gst_rtsp_session_is_expired:
  * @session: a #GstRTSPSession
- * @now: the current system time
+ * @now: (transfer none): the current system time
  *
  * Check if @session timeout out.
  *

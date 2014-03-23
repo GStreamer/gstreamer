@@ -283,6 +283,8 @@ gst_rtsp_server_finalize (GObject * object)
  * gst_rtsp_server_new:
  *
  * Create a new #GstRTSPServer instance.
+ *
+ * Returns: (transfer full): a new #GstRTSPServer
  */
 GstRTSPServer *
 gst_rtsp_server_new (void)
@@ -325,7 +327,7 @@ gst_rtsp_server_set_address (GstRTSPServer * server, const gchar * address)
  *
  * Get the address on which the server will accept connections.
  *
- * Returns: the server address. g_free() after usage.
+ * Returns: (transfer full): the server address. g_free() after usage.
  */
 gchar *
 gst_rtsp_server_get_address (GstRTSPServer * server)
@@ -414,7 +416,7 @@ gst_rtsp_server_set_service (GstRTSPServer * server, const gchar * service)
  *
  * Get the service on which the server will accept connections.
  *
- * Returns: the service. use g_free() after usage.
+ * Returns: (transfer full): the service. use g_free() after usage.
  */
 gchar *
 gst_rtsp_server_get_service (GstRTSPServer * server)
@@ -485,7 +487,7 @@ gst_rtsp_server_get_backlog (GstRTSPServer * server)
 /**
  * gst_rtsp_server_set_session_pool:
  * @server: a #GstRTSPServer
- * @pool: a #GstRTSPSessionPool
+ * @pool: (transfer none): a #GstRTSPSessionPool
  *
  * configure @pool to be used as the session pool of @server.
  */
@@ -542,7 +544,7 @@ gst_rtsp_server_get_session_pool (GstRTSPServer * server)
 /**
  * gst_rtsp_server_set_mount_points:
  * @server: a #GstRTSPServer
- * @mounts: a #GstRTSPMountPoints
+ * @mounts: (transfer none): a #GstRTSPMountPoints
  *
  * configure @mounts to be used as the mount points of @server.
  */
@@ -600,7 +602,7 @@ gst_rtsp_server_get_mount_points (GstRTSPServer * server)
 /**
  * gst_rtsp_server_set_auth:
  * @server: a #GstRTSPServer
- * @auth: a #GstRTSPAuth
+ * @auth: (transfer none): a #GstRTSPAuth
  *
  * configure @auth to be used as the authentication manager of @server.
  */
@@ -657,7 +659,7 @@ gst_rtsp_server_get_auth (GstRTSPServer * server)
 /**
  * gst_rtsp_server_set_thread_pool:
  * @server: a #GstRTSPServer
- * @pool: a #GstRTSPThreadPool
+ * @pool: (transfer none): a #GstRTSPThreadPool
  *
  * configure @pool to be used as the thread pool of @server.
  */
@@ -771,13 +773,14 @@ gst_rtsp_server_set_property (GObject * object, guint propid,
 /**
  * gst_rtsp_server_create_socket:
  * @server: a #GstRTSPServer
- * @cancellable: a #GCancellable
- * @error: a #GError
+ * @cancellable: (allow-none): a #GCancellable
+ * @error: (out): a #GError
  *
  * Create a #GSocket for @server. The socket will listen on the
  * configured service.
  *
- * Returns: (transfer full): the #GSocket for @server or %NULL when an error occured.
+ * Returns: (transfer full): the #GSocket for @server or %NULL when an error
+ * occurred.
  */
 GSocket *
 gst_rtsp_server_create_socket (GstRTSPServer * server,
@@ -1089,7 +1092,7 @@ default_create_client (GstRTSPServer * server)
  * as an RTSP over HTTP tunnel. The @initial_buffer contains any remaining data
  * that the HTTP server read from the socket while parsing the HTTP header.
  *
- * Returns: TRUE if all was ok, FALSE if an error occured.
+ * Returns: TRUE if all was ok, FALSE if an error occurred.
  */
 gboolean
 gst_rtsp_server_transfer_connection (GstRTSPServer * server, GSocket * socket,
@@ -1140,12 +1143,12 @@ no_connection:
  * gst_rtsp_server_io_func:
  * @socket: a #GSocket
  * @condition: the condition on @source
- * @server: a #GstRTSPServer
+ * @server: (transfer none): a #GstRTSPServer
  *
  * A default #GSocketSourceFunc that creates a new #GstRTSPClient to accept and handle a
  * new connection on @socket or @server.
  *
- * Returns: TRUE if the source could be connected, FALSE if an error occured.
+ * Returns: TRUE if the source could be connected, FALSE if an error occurred.
  */
 gboolean
 gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
@@ -1229,8 +1232,8 @@ watch_destroyed (GstRTSPServer * server)
 /**
  * gst_rtsp_server_create_source:
  * @server: a #GstRTSPServer
- * @cancellable: a #GCancellable or %NULL.
- * @error: a #GError
+ * @cancellable: (allow-none): a #GCancellable or %NULL.
+ * @error: (out): a #GError
  *
  * Create a #GSource for @server. The new source will have a default
  * #GSocketSourceFunc of gst_rtsp_server_io_func().
@@ -1240,8 +1243,8 @@ watch_destroyed (GstRTSPServer * server)
  * unless cancellation happened at the same time as a condition change). You can
  * check for this in the callback using g_cancellable_is_cancelled().
  *
- * Returns: the #GSource for @server or %NULL when an error occured. Free with
- * g_source_unref ()
+ * Returns: (transfer full): the #GSource for @server or %NULL when an error
+ * occurred. Free with g_source_unref ()
  */
 GSource *
 gst_rtsp_server_create_source (GstRTSPServer * server,

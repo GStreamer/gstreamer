@@ -221,7 +221,8 @@ gst_rtsp_permissions_remove_role (GstRTSPPermissions * permissions,
  *
  * Get all permissions for @role in @permissions.
  *
- * Returns: the structure with permissions for @role.
+ * Returns: (transfer none): the structure with permissions for @role. It
+ * remains valid for as long as @permissions is valid.
  */
 const GstStructure *
 gst_rtsp_permissions_get_role (GstRTSPPermissions * permissions,

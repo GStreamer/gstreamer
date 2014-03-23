@@ -290,7 +290,7 @@ gst_rtsp_stream_set_property (GObject * object, guint propid,
  * Create a new media stream with index @idx that handles RTP data on
  * @srcpad and has a payloader element @payloader.
  *
- * Returns: a new #GstRTSPStream
+ * Returns: (transfer full): a new #GstRTSPStream
  */
 GstRTSPStream *
 gst_rtsp_stream_new (guint idx, GstElement * payloader, GstPad * srcpad)
@@ -372,7 +372,7 @@ gst_rtsp_stream_get_srcpad (GstRTSPStream * stream)
  *
  * Get the control string to identify this stream.
  *
- * Returns: (transfer full): the control string. free after usage.
+ * Returns: (transfer full): the control string. g_free() after usage.
  */
 gchar *
 gst_rtsp_stream_get_control (GstRTSPStream * stream)
@@ -565,7 +565,7 @@ gst_rtsp_stream_get_dscp_qos (GstRTSPStream * stream)
 /**
  * gst_rtsp_stream_is_transport_supported:
  * @stream: a #GstRTSPStream
- * @transport: a #GstRTSPTransport
+ * @transport: (transfer none): a #GstRTSPTransport
  *
  * Check if @transport can be handled by stream
  *
@@ -713,7 +713,7 @@ gst_rtsp_stream_get_protocols (GstRTSPStream * stream)
 /**
  * gst_rtsp_stream_set_address_pool:
  * @stream: a #GstRTSPStream
- * @pool: a #GstRTSPAddressPool
+ * @pool: (transfer none): a #GstRTSPAddressPool
  *
  * configure @pool to be used as the address pool of @stream.
  */
@@ -775,8 +775,8 @@ gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
  *
  * Get the multicast address of @stream for @family.
  *
- * Returns: the #GstRTSPAddress of @stream or %NULL when no address could be
- * allocated. gst_rtsp_address_free() after usage.
+ * Returns: (transfer full): the #GstRTSPAddress of @stream or %NULL when no
+ * address could be allocated. gst_rtsp_address_free() after usage.
  */
 GstRTSPAddress *
 gst_rtsp_stream_get_multicast_address (GstRTSPStream * stream,
@@ -1506,8 +1506,8 @@ static GstAppSinkCallbacks sink_cb = {
 /**
  * gst_rtsp_stream_join_bin:
  * @stream: a #GstRTSPStream
- * @bin: a #GstBin to join
- * @rtpbin: a rtpbin element in @bin
+ * @bin: (transfer none): a #GstBin to join
+ * @rtpbin: (transfer none): a rtpbin element in @bin
  * @state: the target state of the new elements
  *
  * Join the #GstBin @bin that contains the element @rtpbin.
@@ -1771,8 +1771,8 @@ link_failed:
 /**
  * gst_rtsp_stream_leave_bin:
  * @stream: a #GstRTSPStream
- * @bin: a #GstBin
- * @rtpbin: a rtpbin #GstElement
+ * @bin: (transfer none): a #GstBin
+ * @rtpbin: (transfer none): a rtpbin #GstElement
  *
  * Remove the elements of @stream from @bin.
  *
@@ -1890,7 +1890,7 @@ was_not_joined:
  * @stream: a #GstRTSPStream
  * @rtptime: (allow-none): result RTP timestamp
  * @seq: (allow-none): result RTP seqnum
- * @clock_rate: the clock rate
+ * @clock_rate: (allow-none): the clock rate
  * @running_time: (allow-none): result running-time
  *
  * Retrieve the current rtptime, seq and running-time. This is used to
@@ -1969,7 +1969,7 @@ no_stats:
  * Retrieve the current caps of @stream.
  *
  * Returns: (transfer full): the #GstCaps of @stream. use gst_caps_unref()
- *    after usage.
+ * after usage.
  */
 GstCaps *
 gst_rtsp_stream_get_caps (GstRTSPStream * stream)
@@ -2065,6 +2065,7 @@ gst_rtsp_stream_recv_rtcp (GstRTSPStream * stream, GstBuffer * buffer)
     gst_object_unref (element);
   } else {
     ret = GST_FLOW_OK;
+    gst_buffer_unref (buffer);
   }
   return ret;
 }
@@ -2143,7 +2144,7 @@ unknown_transport:
 /**
  * gst_rtsp_stream_add_transport:
  * @stream: a #GstRTSPStream
- * @trans: a #GstRTSPStreamTransport
+ * @trans: (transfer none): a #GstRTSPStreamTransport
  *
  * Add the transport in @trans to @stream. The media of @stream will
  * then also be send to the values configured in @trans.
@@ -2176,7 +2177,7 @@ gst_rtsp_stream_add_transport (GstRTSPStream * stream,
 /**
  * gst_rtsp_stream_remove_transport:
  * @stream: a #GstRTSPStream
- * @trans: a #GstRTSPStreamTransport
+ * @trans: (transfer none): a #GstRTSPStreamTransport
  *
  * Remove the transport in @trans from @stream. The media of @stream will
  * not be sent to the values configured in @trans.
@@ -2216,7 +2217,7 @@ gst_rtsp_stream_remove_transport (GstRTSPStream * stream,
  * @stream must be joined to a bin.
  *
  * Returns: (transfer full): the RTP socket or %NULL if no socket could be
- *     allocated for @family. Unref after usage
+ * allocated for @family. Unref after usage
  */
 GSocket *
 gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
@@ -2250,7 +2251,7 @@ gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
  * @stream must be joined to a bin.
  *
  * Returns: (transfer full): the RTCP socket or %NULL if no socket could be
- *     allocated for @family. Unref after usage
+ * allocated for @family. Unref after usage
  */
 GSocket *
 gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
@@ -2278,7 +2279,7 @@ gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
  * gst_rtsp_stream_transport_filter:
  * @stream: a #GstRTSPStream
  * @func: (scope call) (allow-none): a callback
- * @user_data: user data passed to @func
+ * @user_data: (closure): user data passed to @func
  *
  * Call @func for each transport managed by @stream. The result value of @func
  * determines what happens to the transport. @func will be called with @stream

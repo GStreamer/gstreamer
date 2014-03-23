@@ -106,7 +106,7 @@ gst_rtsp_thread_init (GstRTSPThreadImpl * impl)
  *
  * Create a new thread object that can run a mainloop.
  *
- * Returns: a #GstRTSPThread.
+ * Returns: (transfer full): a #GstRTSPThread.
  */
 GstRTSPThread *
 gst_rtsp_thread_new (GstRTSPThreadType type)
@@ -125,7 +125,7 @@ gst_rtsp_thread_new (GstRTSPThreadType type)
 
 /**
  * gst_rtsp_thread_reuse:
- * @thread: a #GstRTSPThread
+ * @thread: (transfer none): a #GstRTSPThread
  *
  * Reuse the mainloop of @thread
  *
@@ -346,7 +346,7 @@ do_loop (GstRTSPThread * thread)
  *
  * Create a new #GstRTSPThreadPool instance.
  *
- * Returns: a new #GstRTSPThreadPool
+ * Returns: (transfer full): a new #GstRTSPThreadPool
  */
 GstRTSPThreadPool *
 gst_rtsp_thread_pool_new (void)
@@ -506,11 +506,11 @@ thread_error:
  * gst_rtsp_thread_pool_get_thread:
  * @pool: a #GstRTSPThreadPool
  * @type: the #GstRTSPThreadType
- * @ctx: a #GstRTSPContext
+ * @ctx: (transfer none): a #GstRTSPContext
  *
  * Get a new #GstRTSPThread for @type and @ctx.
  *
- * Returns: a new #GstRTSPThread, gst_rtsp_thread_stop() after usage
+ * Returns: (transfer full): a new #GstRTSPThread, gst_rtsp_thread_stop() after usage
  */
 GstRTSPThread *
 gst_rtsp_thread_pool_get_thread (GstRTSPThreadPool * pool,

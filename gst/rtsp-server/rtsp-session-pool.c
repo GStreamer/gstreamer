@@ -172,7 +172,8 @@ gst_rtsp_session_pool_set_property (GObject * object, guint propid,
  *
  * Create a new #GstRTSPSessionPool instance.
  *
- * Returns: A new #GstRTSPSessionPool. g_object_unref() after usage.
+ * Returns: (transfer full): A new #GstRTSPSessionPool. g_object_unref() after
+ * usage.
  */
 GstRTSPSessionPool *
 gst_rtsp_session_pool_new (void)
@@ -409,7 +410,7 @@ too_many_sessions:
 /**
  * gst_rtsp_session_pool_remove:
  * @pool: a #GstRTSPSessionPool
- * @sess: a #GstRTSPSession
+ * @sess: (transfer none): a #GstRTSPSession
  *
  * Remove @sess from @pool, releasing the ref that the pool has on @sess.
  *
@@ -507,7 +508,7 @@ filter_func (gchar * sessionid, GstRTSPSession * sess, FilterData * data)
  * gst_rtsp_session_pool_filter:
  * @pool: a #GstRTSPSessionPool
  * @func: (scope call) (allow-none): a callback
- * @user_data: user data passed to @func
+ * @user_data: (closure): user data passed to @func
  *
  * Call @func for each session in @pool. The result value of @func determines
  * what happens to the session. @func will be called with the session pool
@@ -645,7 +646,10 @@ static GSourceFuncs gst_pool_source_funcs = {
  * gst_rtsp_session_pool_create_watch:
  * @pool: a #GstRTSPSessionPool
  *
- * A GSource that will be dispatched when the session should be cleaned up.
+ * Create a #GSource that will be dispatched when the session should be cleaned
+ * up.
+ *
+ * Returns: (transfer full): a #GSource
  */
 GSource *
 gst_rtsp_session_pool_create_watch (GstRTSPSessionPool * pool)

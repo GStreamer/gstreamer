@@ -172,9 +172,9 @@ gst_rtsp_token_new_valist (const gchar * firstfield, va_list var_args)
  *
  * Access the structure of the token.
  *
- * Returns: The structure of the token. The structure is still
- * owned by the token, which means that you should not free it and
- * that the pointer becomes invalid when you free the token.
+ * Returns: (transfer none): The structure of the token. The structure is still
+ * owned by the token, which means that you should not free it and that the
+ * pointer becomes invalid when you free the token.
  *
  * MT safe.
  */
@@ -192,10 +192,10 @@ gst_rtsp_token_get_structure (GstRTSPToken * token)
  *
  * Get a writable version of the structure.
  *
- * Returns: The structure of the token. The structure is still
- * owned by the token, which means that you should not free it and
- * that the pointer becomes invalid when you free the token.
- * This function checks if @token is writable and will never return %NULL.
+ * Returns: (transfer none): The structure of the token. The structure is still
+ * owned by the token, which means that you should not free it and that the
+ * pointer becomes invalid when you free the token. This function checks if
+ * @token is writable and will never return %NULL.
  *
  * MT safe.
  */
@@ -216,8 +216,9 @@ gst_rtsp_token_writable_structure (GstRTSPToken * token)
  *
  * Get the string value of @field in @token.
  *
- * Returns: the string value of @field in @token or %NULL when @field is not
- * defined in @token.
+ * Returns: (transfer none): the string value of @field in @token or %NULL when
+ * @field is not defined in @token. The string becomes invalid when you free
+ * @token.
  */
 const gchar *
 gst_rtsp_token_get_string (GstRTSPToken * token, const gchar * field)

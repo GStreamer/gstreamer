@@ -31,7 +31,7 @@
 /**
  * gst_rtsp_params_set:
  * @client: a #GstRTSPClient
- * @ctx: a #GstRTSPContext
+ * @ctx: (transfer none): a #GstRTSPContext
  *
  * Set parameters (not implemented yet)
  *
@@ -55,7 +55,7 @@ gst_rtsp_params_set (GstRTSPClient * client, GstRTSPContext * ctx)
 /**
  * gst_rtsp_params_get:
  * @client: a #GstRTSPClient
- * @ctx: a #GstRTSPContext
+ * @ctx: (transfer none): a #GstRTSPContext
  *
  * Get parameters (not implemented yet)
  *

@@ -156,7 +156,7 @@ gst_rtsp_mount_points_finalize (GObject * obj)
  *
  * Make a new mount points object.
  *
- * Returns: a new #GstRTSPMountPoints
+ * Returns: (transfer full): a new #GstRTSPMountPoints
  */
 GstRTSPMountPoints *
 gst_rtsp_mount_points_new (void)
@@ -181,7 +181,7 @@ default_make_path (GstRTSPMountPoints * mounts, const GstRTSPUrl * url)
  *
  * Make a path string from @url.
  *
- * Returns: a path string for @url, g_free() after usage.
+ * Returns: (transfer full): a path string for @url, g_free() after usage.
  */
 gchar *
 gst_rtsp_mount_points_make_path (GstRTSPMountPoints * mounts,
@@ -229,7 +229,7 @@ has_prefix (DataItem * str, DataItem * prefix)
  * the amount of characters that matched is returned in @matched.
  *
  * Returns: (transfer full): the #GstRTSPMediaFactory for @path.
- *          g_object_unref() after usage.
+ * g_object_unref() after usage.
  */
 GstRTSPMediaFactory *
 gst_rtsp_mount_points_match (GstRTSPMountPoints * mounts,

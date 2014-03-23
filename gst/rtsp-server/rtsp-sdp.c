@@ -245,8 +245,8 @@ no_multicast:
 /**
  * gst_rtsp_sdp_from_media:
  * @sdp: a #GstSDPMessage
- * @info: info
- * @media: a #GstRTSPMedia
+ * @info: (transfer none): a #GstSDPInfo
+ * @media: (transfer none): a #GstRTSPMedia
  *
  * Add @media specific info to @sdp. @info is used to configure the connection
  * information in the SDP.

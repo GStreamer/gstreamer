@@ -317,7 +317,7 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
  *
  * Create a new #GstRTSPMediaFactory instance.
  *
- * Returns: a new #GstRTSPMediaFactory object.
+ * Returns: (transfer full): a new #GstRTSPMediaFactory object.
  */
 GstRTSPMediaFactory *
 gst_rtsp_media_factory_new (void)
@@ -332,7 +332,7 @@ gst_rtsp_media_factory_new (void)
 /**
  * gst_rtsp_media_factory_set_permissions:
  * @factory: a #GstRTSPMediaFactory
- * @permissions: a #GstRTSPPermissions
+ * @permissions: (transfer none): a #GstRTSPPermissions
  *
  * Set @permissions on @factory.
  */
@@ -455,7 +455,8 @@ gst_rtsp_media_factory_set_launch (GstRTSPMediaFactory * factory,
  * Get the gst_parse_launch() pipeline description that will be used in the
  * default prepare vmethod.
  *
- * Returns: the configured launch description. g_free() after usage.
+ * Returns: (transfer full): the configured launch description. g_free() after
+ * usage.
  */
 gchar *
 gst_rtsp_media_factory_get_launch (GstRTSPMediaFactory * factory)
@@ -668,7 +669,7 @@ gst_rtsp_media_factory_get_buffer_size (GstRTSPMediaFactory * factory)
 /**
  * gst_rtsp_media_factory_set_address_pool:
  * @factory: a #GstRTSPMediaFactory
- * @pool: a #GstRTSPAddressPool
+ * @pool: (transfer none): a #GstRTSPAddressPool
  *
  * configure @pool to be used as the address pool of @factory.
  */

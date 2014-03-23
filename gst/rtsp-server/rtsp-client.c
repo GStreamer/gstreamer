@@ -412,7 +412,7 @@ gst_rtsp_client_set_property (GObject * object, guint propid,
  *
  * Create a new #GstRTSPClient instance.
  *
- * Returns: a new #GstRTSPClient
+ * Returns: (transfer full): a new #GstRTSPClient
  */
 GstRTSPClient *
 gst_rtsp_client_new (void)
@@ -2199,7 +2199,7 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
 /**
  * gst_rtsp_client_set_session_pool:
  * @client: a #GstRTSPClient
- * @pool: a #GstRTSPSessionPool
+ * @pool: (transfer none): a #GstRTSPSessionPool
  *
  * Set @pool as the sessionpool for @client which it will use to find
  * or allocate sessions. the sessionpool is usually inherited from the server
@@ -2257,7 +2257,7 @@ gst_rtsp_client_get_session_pool (GstRTSPClient * client)
 /**
  * gst_rtsp_client_set_mount_points:
  * @client: a #GstRTSPClient
- * @mounts: a #GstRTSPMountPoints
+ * @mounts: (transfer none): a #GstRTSPMountPoints
  *
  * Set @mounts as the mount points for @client which it will use to map urls
  * to media streams. These mount points are usually inherited from the server that
@@ -2315,7 +2315,7 @@ gst_rtsp_client_get_mount_points (GstRTSPClient * client)
 /**
  * gst_rtsp_client_set_auth:
  * @client: a #GstRTSPClient
- * @auth: a #GstRTSPAuth
+ * @auth: (transfer none): a #GstRTSPAuth
  *
  * configure @auth to be used as the authentication manager of @client.
  */
@@ -2372,7 +2372,7 @@ gst_rtsp_client_get_auth (GstRTSPClient * client)
 /**
  * gst_rtsp_client_set_thread_pool:
  * @client: a #GstRTSPClient
- * @pool: a #GstRTSPThreadPool
+ * @pool: (transfer none): a #GstRTSPThreadPool
  *
  * configure @pool to be used as the thread pool of @client.
  */
@@ -2511,9 +2511,9 @@ gst_rtsp_client_get_connection (GstRTSPClient * client)
 /**
  * gst_rtsp_client_set_send_func:
  * @client: a #GstRTSPClient
- * @func: a #GstRTSPClientSendFunc
- * @user_data: user data passed to @func
- * @notify: called when @user_data is no longer in use
+ * @func: (scope notified): a #GstRTSPClientSendFunc
+ * @user_data: (closure): user data passed to @func
+ * @notify: (allow-none): called when @user_data is no longer in use
  *
  * Set @func as the callback that will be called when a new message needs to be
  * sent to the client. @user_data is passed to @func and @notify is called when
@@ -2549,7 +2549,7 @@ gst_rtsp_client_set_send_func (GstRTSPClient * client,
 /**
  * gst_rtsp_client_handle_message:
  * @client: a #GstRTSPClient
- * @message: an #GstRTSPMessage
+ * @message: (transfer none): an #GstRTSPMessage
  *
  * Let the client handle @message.
  *
@@ -2581,8 +2581,8 @@ gst_rtsp_client_handle_message (GstRTSPClient * client,
 /**
  * gst_rtsp_client_send_message:
  * @client: a #GstRTSPClient
- * @session: a #GstRTSPSession to send the message to or %NULL
- * @message: The #GstRTSPMessage to send
+ * @session: (transfer none): a #GstRTSPSession to send the message to or %NULL
+ * @message: (transfer none): The #GstRTSPMessage to send
  *
  * Send a message message to the remote end. @message must be a
  * #GST_RTSP_MESSAGE_REQUEST or a #GST_RTSP_MESSAGE_RESPONSE.

@@ -161,7 +161,7 @@ gst_rtsp_auth_set_property (GObject * object, guint propid,
  *
  * Create a new #GstRTSPAuth instance.
  *
- * Returns: a new #GstRTSPAuth
+ * Returns: (transfer full): a new #GstRTSPAuth
  */
 GstRTSPAuth *
 gst_rtsp_auth_new (void)
@@ -176,7 +176,7 @@ gst_rtsp_auth_new (void)
 /**
  * gst_rtsp_auth_set_tls_certificate:
  * @auth: a #GstRTSPAuth
- * @cert: (allow-none): a #GTlsCertificate
+ * @cert: (transfer none) (allow-none): a #GTlsCertificate
  *
  * Set the TLS certificate for the auth. Client connections will only
  * be accepted when TLS is negotiated.
@@ -233,7 +233,7 @@ gst_rtsp_auth_get_tls_certificate (GstRTSPAuth * auth)
 /**
  * gst_rtsp_auth_set_default_token:
  * @auth: a #GstRTSPAuth
- * @token: (allow-none): a #GstRTSPToken
+ * @token: (transfer none) (allow-none): a #GstRTSPToken
  *
  * Set the default #GstRTSPToken to @token in @auth. The default token will
  * be used for unauthenticated users.
@@ -292,7 +292,7 @@ gst_rtsp_auth_get_default_token (GstRTSPAuth * auth)
  * gst_rtsp_auth_add_basic:
  * @auth: a #GstRTSPAuth
  * @basic: the basic token
- * @token: authorisation token
+ * @token: (transfer none): authorisation token
  *
  * Add a basic token for the default authentication algorithm that
  * enables the client with privileges listed in @token.
@@ -616,8 +616,8 @@ no_context:
  *
  * Construct a Basic authorisation token from @user and @pass.
  *
- * Returns: the base64 encoding of the string @user:@pass. g_free()
- *    after usage.
+ * Returns: (transfer full): the base64 encoding of the string @user:@pass.
+ * g_free() after usage.
  */
 gchar *
 gst_rtsp_auth_make_basic (const gchar * user, const gchar * pass)

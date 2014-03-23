@@ -135,7 +135,7 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
  * Create a new #GstRTSPStreamTransport that can be used to manage
  * @stream with transport @tr.
  *
- * Returns: a new #GstRTSPStreamTransport
+ * Returns: (transfer full): a new #GstRTSPStreamTransport
  */
 GstRTSPStreamTransport *
 gst_rtsp_stream_transport_new (GstRTSPStream * stream, GstRTSPTransport * tr)
@@ -175,8 +175,8 @@ gst_rtsp_stream_transport_get_stream (GstRTSPStreamTransport * trans)
  * @trans: a #GstRTSPStreamTransport
  * @send_rtp: (scope notified): a callback called when RTP should be sent
  * @send_rtcp: (scope notified): a callback called when RTCP should be sent
- * @user_data: user data passed to callbacks
- * @notify: called with the user_data when no longer needed.
+ * @user_data: (closure): user data passed to callbacks
+ * @notify: (allow-none): called with the user_data when no longer needed.
  *
  * Install callbacks that will be called when data for a stream should be sent
  * to a client. This is usually used when sending RTP/RTCP over TCP.
@@ -203,9 +203,9 @@ gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport * trans,
 /**
  * gst_rtsp_stream_transport_set_keepalive:
  * @trans: a #GstRTSPStreamTransport
- * @keep_alive: a callback called when the receiver is active
- * @user_data: user data passed to callback
- * @notify: called with the user_data when no longer needed.
+ * @keep_alive: (scope notified): a callback called when the receiver is active
+ * @user_data: (closure): user data passed to callback
+ * @notify: (allow-none): called with the user_data when no longer needed.
  *
  * Install callbacks that will be called when RTCP packets are received from the
  * receiver of @trans.
@@ -260,7 +260,7 @@ gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport * trans,
  * Get the transport configured in @trans.
  *
  * Returns: (transfer none): the transport configured in @trans. It remains
- *     valid for as long as @trans is valid.
+ * valid for as long as @trans is valid.
  */
 const GstRTSPTransport *
 gst_rtsp_stream_transport_get_transport (GstRTSPStreamTransport * trans)
@@ -300,7 +300,7 @@ gst_rtsp_stream_transport_set_url (GstRTSPStreamTransport * trans,
  * Get the url configured in @trans.
  *
  * Returns: (transfer none): the url configured in @trans. It remains
- *     valid for as long as @trans is valid.
+ * valid for as long as @trans is valid.
  */
 const GstRTSPUrl *
 gst_rtsp_stream_transport_get_url (GstRTSPStreamTransport * trans)
@@ -317,8 +317,8 @@ gst_rtsp_stream_transport_get_url (GstRTSPStreamTransport * trans)
  *
  * Get the RTP-Info string for @trans and @start_time.
  *
- * Returns: the RTPInfo string for @trans and @start_time or %NULL when
- * the RTP-Info could not be determined. g_free() after usage.
+ * Returns: (transfer full): the RTPInfo string for @trans and @start_time or
+ * %NULL when the RTP-Info could not be determined. g_free() after usage.
  */
 gchar *
 gst_rtsp_stream_transport_get_rtpinfo (GstRTSPStreamTransport * trans,
@@ -435,7 +435,7 @@ gst_rtsp_stream_transport_is_timed_out (GstRTSPStreamTransport * trans)
 /**
  * gst_rtsp_stream_transport_send_rtp:
  * @trans: a #GstRTSPStreamTransport
- * @buffer: a #GstBuffer
+ * @buffer: (transfer none): a #GstBuffer
  *
  * Send @buffer to the installed RTP callback for @trans.
  *
@@ -461,7 +461,7 @@ gst_rtsp_stream_transport_send_rtp (GstRTSPStreamTransport * trans,
 /**
  * gst_rtsp_stream_transport_send_rtcp:
  * @trans: a #GstRTSPStreamTransport
- * @buffer: a #GstBuffer
+ * @buffer: (transfer none): a #GstBuffer
  *
  * Send @buffer to the installed RTCP callback for @trans.
  *

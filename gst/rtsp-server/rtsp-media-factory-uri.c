@@ -276,7 +276,7 @@ gst_rtsp_media_factory_uri_set_property (GObject * object, guint propid,
  *
  * Create a new #GstRTSPMediaFactoryURI instance.
  *
- * Returns: a new #GstRTSPMediaFactoryURI object.
+ * Returns: (transfer full): a new #GstRTSPMediaFactoryURI object.
  */
 GstRTSPMediaFactoryURI *
 gst_rtsp_media_factory_uri_new (void)
@@ -318,7 +318,7 @@ gst_rtsp_media_factory_uri_set_uri (GstRTSPMediaFactoryURI * factory,
  *
  * Get the URI that will provide media for this factory.
  *
- * Returns: the configured URI. g_free() after usage.
+ * Returns: (transfer full): the configured URI. g_free() after usage.
  */
 gchar *
 gst_rtsp_media_factory_uri_get_uri (GstRTSPMediaFactoryURI * factory)

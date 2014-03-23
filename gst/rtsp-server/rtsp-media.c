@@ -563,7 +563,7 @@ collect_media_stats (GstRTSPMedia * media)
  *
  * Ownership is taken of @element.
  *
- * Returns: a new #GstRTSPMedia object.
+ * Returns: (transfer full): a new #GstRTSPMedia object.
  */
 GstRTSPMedia *
 gst_rtsp_media_new (GstElement * element)
@@ -632,7 +632,7 @@ gst_rtsp_media_take_pipeline (GstRTSPMedia * media, GstPipeline * pipeline)
 /**
  * gst_rtsp_media_set_permissions:
  * @media: a #GstRTSPMedia
- * @permissions: a #GstRTSPPermissions
+ * @permissions: (transfer none): a #GstRTSPPermissions
  *
  * Set @permissions on @media.
  */
@@ -1089,7 +1089,7 @@ gst_rtsp_media_is_time_provider (GstRTSPMedia * media)
 /**
  * gst_rtsp_media_set_address_pool:
  * @media: a #GstRTSPMedia
- * @pool: a #GstRTSPAddressPool
+ * @pool: (transfer none): a #GstRTSPAddressPool
  *
  * configure @pool to be used as the address pool of @media.
  */
@@ -1217,7 +1217,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
  * @srcpad should be a pad of an element inside @media->element.
  *
  * Returns: (transfer none): a new #GstRTSPStream that remains valid for as long
- *          as @media exists.
+ * as @media exists.
  */
 GstRTSPStream *
 gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
@@ -1397,7 +1397,7 @@ default_convert_range (GstRTSPMedia * media, GstRTSPTimeRange * range,
  * Get the current range as a string. @media must be prepared with
  * gst_rtsp_media_prepare ().
  *
- * Returns: The range as a string, g_free() after usage.
+ * Returns: (transfer full): The range as a string, g_free() after usage.
  */
 gchar *
 gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play,
@@ -1474,7 +1474,7 @@ media_streams_set_blocked (GstRTSPMedia * media, gboolean blocked)
 /**
  * gst_rtsp_media_seek:
  * @media: a #GstRTSPMedia
- * @range: a #GstRTSPTimeRange
+ * @range: (transfer none): a #GstRTSPTimeRange
  *
  * Seek the pipeline of @media to @range. @media must be prepared with
  * gst_rtsp_media_prepare().
@@ -2116,7 +2116,7 @@ preroll_failed:
 /**
  * gst_rtsp_media_prepare:
  * @media: a #GstRTSPMedia
- * @thread: a #GstRTSPThread to run the bus handler or %NULL
+ * @thread: (transfer full): a #GstRTSPThread to run the bus handler or %NULL
  *
  * Prepare @media for streaming. This function will create the objects
  * to manage the streaming. A pipeline must have been set on @media with
@@ -2541,9 +2541,9 @@ default_setup_sdp (GstRTSPMedia * media, GstSDPMessage * sdp, GstSDPInfo * info)
 
 /**
  * gst_rtsp_media_setup_sdp:
- * @sdp: a #GstSDPMessage
- * @info: info
  * @media: a #GstRTSPMedia
+ * @sdp: (transfer none): a #GstSDPMessage
+ * @info: (transfer none): a #GstSDPInfo
  *
  * Add @media specific info to @sdp. @info is used to configure the connection
  * information in the SDP.
@@ -2772,8 +2772,8 @@ gst_rtsp_media_set_pipeline_state (GstRTSPMedia * media, GstState state)
  * gst_rtsp_media_set_state:
  * @media: a #GstRTSPMedia
  * @state: the target state of the media
- * @transports: (element-type GstRtspServer.RTSPStreamTransport): a #GPtrArray
- * of #GstRTSPStreamTransport pointers
+ * @transports: (transfer none) (element-type GstRtspServer.RTSPStreamTransport):
+ * a #GPtrArray of #GstRTSPStreamTransport pointers
  *
  * Set the state of @media to @state and for the transports in @transports.
  *
