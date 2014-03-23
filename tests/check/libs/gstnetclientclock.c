@@ -51,8 +51,8 @@ GST_START_TEST (test_functioning)
   GstNetTimeProvider *ntp;
   GstClock *client, *server;
   GstClockTime basex, basey, rate_num, rate_denom;
-  GstClockTime servtime, clienttime;
-  gint port;
+  GstClockTime servtime, clienttime, diff;
+  gint port, i;
 
   server = gst_system_clock_obtain ();
   fail_unless (server != NULL, "failed to get system clock");
@@ -73,22 +73,38 @@ GST_START_TEST (test_functioning)
   g_object_get (client, "port", &port, NULL);
 
   /* let the clocks synchronize */
-  g_usleep (G_USEC_PER_SEC);
+  for (i = 0; i < 11; ++i) {
+    gchar sign;
 
-  servtime = gst_clock_get_time (server);
-  clienttime = gst_clock_get_time (client);
+    servtime = gst_clock_get_time (server);
+    clienttime = gst_clock_get_time (client);
 
-  /* can't in general make a precise assertion here, because this depends on
-   * system load and a lot of things. however within half a second they should
-   * at least be within 1/10 of a second of each other... */
-  if (servtime > clienttime)
-    fail_unless (servtime - clienttime < 100 * GST_MSECOND,
-        "clocks not in sync (%" GST_TIME_FORMAT ")",
-        GST_TIME_ARGS (servtime - clienttime));
-  else
-    fail_unless (clienttime - servtime < 100 * GST_MSECOND,
-        "clocks not in sync (%" GST_TIME_FORMAT ")",
-        GST_TIME_ARGS (clienttime - servtime));
+    if (servtime > clienttime) {
+      sign = '-';
+      diff = servtime - clienttime;
+    } else {
+      sign = '+';
+      diff = clienttime - servtime;
+    }
+
+    GST_LOG ("server time:  %" GST_TIME_FORMAT, GST_TIME_ARGS (servtime));
+    GST_LOG ("client time:  %" GST_TIME_FORMAT, GST_TIME_ARGS (clienttime));
+    GST_LOG ("diff       : %c%" GST_TIME_FORMAT, sign, GST_TIME_ARGS (diff));
+
+    /* can't in general make a precise assertion here, because this depends on
+     * system load and a lot of things. however within half a second they should
+     * at least be within 1/10 of a second of each other... */
+    if (diff < 100 * GST_MSECOND)
+      break;
+
+    g_usleep (G_USEC_PER_SEC / 20);
+  }
+
+  GST_INFO ("done after %d iterations, diff: %" GST_TIME_FORMAT, i,
+      GST_TIME_ARGS (diff));
+
+  if (diff > 100 * GST_MSECOND)
+    fail ("clocks not in sync (%" GST_TIME_FORMAT ")", diff);
 
   /*
      g_print ("diff: %" GST_TIME_FORMAT,
