@@ -98,6 +98,7 @@ nodist_libgstgl_@GST_API_VERSION@include_HEADERS = \
 
 libgstgl_@GST_API_VERSION@_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
+	-I$(top_builddir)/gst-libs \
 	$(GL_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
