@@ -14,7 +14,6 @@ noinst_HEADERS = \
 libgstgl_cocoa_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	$(GL_CFLAGS) \
-	$(X_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)
@@ -23,7 +22,6 @@ libgstgl_cocoa_la_OBJCFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	$(GL_CFLAGS) \
 	$(GL_OBJCFLAGS) \
-	$(X_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)

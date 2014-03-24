@@ -28,7 +28,6 @@ endif
 libgstgl_x11_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	$(GL_CFLAGS) \
-	$(X_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)
