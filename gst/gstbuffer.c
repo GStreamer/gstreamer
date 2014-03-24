@@ -519,7 +519,8 @@ _gst_buffer_copy (GstBuffer * buffer)
   if (!gst_buffer_copy_into (copy, buffer, GST_BUFFER_COPY_ALL, 0, -1))
     gst_buffer_replace (&copy, NULL);
 
-  GST_BUFFER_FLAG_UNSET (copy, GST_BUFFER_FLAG_TAG_MEMORY);
+  if (copy)
+    GST_BUFFER_FLAG_UNSET (copy, GST_BUFFER_FLAG_TAG_MEMORY);
 
   return copy;
 }
