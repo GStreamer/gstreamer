@@ -160,23 +160,57 @@ gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegTsDescriptor
     case 0x01:
       res->modulation_type = GST_MPEGTS_MODULATION_QPSK;
       break;
-    case 0x10:
+    case 0x02:
       res->modulation_type = GST_MPEGTS_MODULATION_PSK_8;
       break;
-    case 0x11:
+    case 0x03:
       res->modulation_type = GST_MPEGTS_MODULATION_QAM_16;
       break;
     default:
+      res->modulation_type = GST_MPEGTS_MODULATION_QAM_AUTO;
       break;
   }
-  res->modulation_type = tmp & 0x03;
   data += 1;
   /* symbol_rate is in Msymbols/ (decimal point occurs after 3rd character) */
   /* So direct BCD gives us units of (Msymbol / 10 000) = 100 sym/s */
   res->symbol_rate = BCD_28 (data) * 100;
   data += 3;
   /* fec_inner */
-  res->fec_inner = *data >> 4;
+  switch (*data >> 4) {
+    case 0x01:
+      res->fec_inner = GST_MPEGTS_FEC_1_2;
+      break;
+    case 0x02:
+      res->fec_inner = GST_MPEGTS_FEC_2_3;
+      break;
+    case 0x03:
+      res->fec_inner = GST_MPEGTS_FEC_3_4;
+      break;
+    case 0x04:
+      res->fec_inner = GST_MPEGTS_FEC_5_6;
+      break;
+    case 0x05:
+      res->fec_inner = GST_MPEGTS_FEC_7_8;
+      break;
+    case 0x06:
+      res->fec_inner = GST_MPEGTS_FEC_8_9;
+      break;
+    case 0x07:
+      res->fec_inner = GST_MPEGTS_FEC_3_5;
+      break;
+    case 0x08:
+      res->fec_inner = GST_MPEGTS_FEC_4_5;
+      break;
+    case 0x09:
+      res->fec_inner = GST_MPEGTS_FEC_9_10;
+      break;
+    case 0x0f:
+      res->fec_inner = GST_MPEGTS_FEC_NONE;
+      break;
+    default:
+      res->fec_inner = GST_MPEGTS_FEC_AUTO;
+      break;
+  }
 
 
   return TRUE;
@@ -241,7 +275,44 @@ gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTsDescriptor *
   res->symbol_rate = BCD_28 (data) * 100;
   data += 3;
   /* fec_inner */
-  res->fec_inner = *data & 0x0f;
+  switch (*data & 0xf) {
+    case 0x00:
+      res->fec_inner = GST_MPEGTS_FEC_AUTO;
+      break;
+    case 0x01:
+      res->fec_inner = GST_MPEGTS_FEC_1_2;
+      break;
+    case 0x02:
+      res->fec_inner = GST_MPEGTS_FEC_2_3;
+      break;
+    case 0x03:
+      res->fec_inner = GST_MPEGTS_FEC_3_4;
+      break;
+    case 0x04:
+      res->fec_inner = GST_MPEGTS_FEC_5_6;
+      break;
+    case 0x05:
+      res->fec_inner = GST_MPEGTS_FEC_7_8;
+      break;
+    case 0x06:
+      res->fec_inner = GST_MPEGTS_FEC_8_9;
+      break;
+    case 0x07:
+      res->fec_inner = GST_MPEGTS_FEC_3_5;
+      break;
+    case 0x08:
+      res->fec_inner = GST_MPEGTS_FEC_4_5;
+      break;
+    case 0x09:
+      res->fec_inner = GST_MPEGTS_FEC_9_10;
+      break;
+    case 0x0f:
+      res->fec_inner = GST_MPEGTS_FEC_NONE;
+      break;
+    default:
+      res->fec_inner = GST_MPEGTS_FEC_AUTO;
+      break;
+  }
 
   return TRUE;
 }
@@ -907,10 +978,10 @@ gst_mpegts_descriptor_parse_terrestrial_delivery_system (const
       res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_2K;
       break;
     case 1:
-      res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_4K;
+      res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_8K;
       break;
     case 2:
-      res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_8K;
+      res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_4K;
       break;
     default:
       break;
