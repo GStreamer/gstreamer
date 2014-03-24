@@ -3265,6 +3265,8 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
   /* we manage the UDP elements now. For unicast, the UDP sources where
    * allocated in the stream when we suggested a transport. */
   if (stream->udpsrc[0]) {
+    GstCaps *caps;
+
     gst_element_set_locked_state (stream->udpsrc[0], TRUE);
     gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[0]);
 
@@ -3275,6 +3277,9 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
      * if we can. */
     g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout",
         src->udp_timeout * 1000, NULL);
+
+    if ((caps = stream_get_caps_for_pt (stream, stream->default_pt)))
+      g_object_set (stream->udpsrc[0], "caps", caps, NULL);
 
     /* get output pad of the UDP source. */
     *outpad = gst_element_get_static_pad (stream->udpsrc[0], "src");
@@ -3728,6 +3733,10 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment,
       item->caps = caps;
       GST_DEBUG_OBJECT (src, "stream %p, pt %d, caps %" GST_PTR_FORMAT, stream,
           item->pt, caps);
+
+      if (item->pt == stream->default_pt && stream->udpsrc[0]) {
+        g_object_set (stream->udpsrc[0], "caps", caps, NULL);
+      }
     }
   }
   if (reset_manager && src->manager) {
