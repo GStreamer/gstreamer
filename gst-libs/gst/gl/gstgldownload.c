@@ -65,11 +65,33 @@ static void _do_download_draw_yuv_gles2 (GstGLContext * context,
 
 /* *INDENT-OFF* */
 
+/* FIXME: use the colormatrix support from videoconvert */
+
 #define RGB_TO_YUV_COEFFICIENTS \
-      "const vec3 offset = vec3(0.0625, 0.5, 0.5);\n" \
-      "const vec3 ycoeff = vec3(0.256816, 0.504154, 0.0979137);\n" \
-      "const vec3 ucoeff = vec3(-0.148246, -0.29102, 0.439266);\n" \
-      "const vec3 vcoeff = vec3(0.439271, -0.367833, -0.071438);\n"
+      "uniform vec3 offset;\n" \
+      "uniform vec3 ycoeff;\n" \
+      "uniform vec3 ucoeff;\n" \
+      "uniform vec3 vcoeff;\n"
+
+/* Matrix inverses of the color matrices found in gstglupload */
+/* BT. 601 standard with the following ranges:
+ * Y = [16..235] (of 255)
+ * Cb/Cr = [16..240] (of 255)
+ */
+static const gfloat bt601_offset[] = {0.0625, 0.5, 0.5};
+static const gfloat bt601_ycoeff[] = {0.256816, 0.504154, 0.0979137};
+static const gfloat bt601_ucoeff[] = {-0.148246, -0.29102, 0.439266};
+static const gfloat bt601_vcoeff[] = {0.439271, -0.367833, -0.071438};
+
+/* BT. 709 standard with the following ranges:
+ * Y = [16..235] (of 255)
+ * Cb/Cr = [16..240] (of 255)
+ */
+static const gfloat bt709_offset[] = {0.0625, 0.5, 0.5};
+static const gfloat bt709_ycoeff[] = {0.213392, 0.718140,-0.072426};
+static const gfloat bt709_ucoeff[] = {0.117608, 0.395793,-0.513401};
+static const gfloat bt709_vcoeff[] = {0.420599,-0.467775, 0.047176};
+
 #if GST_GL_HAVE_OPENGL
 /* YUY2:y2,u,y1,v
    UYVY:v,y1,u,y2 */
@@ -1070,6 +1092,10 @@ _do_download_draw_yuv_opengl (GstGLContext * context, GstGLDownload * download)
   GstVideoFormat v_format;
   guint out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   guint out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
+  const gfloat *cms_offset;
+  const gfloat *cms_ycoeff;
+  const gfloat *cms_ucoeff;
+  const gfloat *cms_vcoeff;
 
   GLenum multipleRT[] = {
     GL_COLOR_ATTACHMENT0,
@@ -1158,6 +1184,35 @@ _do_download_draw_yuv_opengl (GstGLContext * context, GstGLDownload * download)
       gst_gl_context_set_error (context,
           "Download video format inconsistensy %d", v_format);
   }
+
+  if (gst_video_colorimetry_matches (&download->info.colorimetry,
+          GST_VIDEO_COLORIMETRY_BT709)) {
+    cms_offset = bt709_offset;
+    cms_ycoeff = bt709_ycoeff;
+    cms_ucoeff = bt709_ucoeff;
+    cms_vcoeff = bt709_vcoeff;
+  } else if (gst_video_colorimetry_matches (&download->info.colorimetry,
+          GST_VIDEO_COLORIMETRY_BT601)) {
+    cms_offset = bt601_offset;
+    cms_ycoeff = bt601_ycoeff;
+    cms_ucoeff = bt601_ucoeff;
+    cms_vcoeff = bt601_vcoeff;
+  } else {
+    /* defaults */
+    cms_offset = bt601_offset;
+    cms_ycoeff = bt601_ycoeff;
+    cms_ucoeff = bt601_ucoeff;
+    cms_vcoeff = bt601_vcoeff;
+  }
+
+  gst_gl_shader_set_uniform_3fv (download->shader, "offset", 1,
+      (gfloat *) cms_offset);
+  gst_gl_shader_set_uniform_3fv (download->shader, "ycoeff", 1,
+      (gfloat *) cms_ycoeff);
+  gst_gl_shader_set_uniform_3fv (download->shader, "ucoeff", 1,
+      (gfloat *) cms_ucoeff);
+  gst_gl_shader_set_uniform_3fv (download->shader, "vcoeff", 1,
+      (gfloat *) cms_vcoeff);
 
   gl->ClientActiveTexture (GL_TEXTURE0);
 
@@ -1269,6 +1324,10 @@ _do_download_draw_yuv_gles2 (GstGLContext * context, GstGLDownload * download)
   GstGLFuncs *gl;
   GstVideoFormat v_format;
   guint out_width, out_height;
+  const gfloat *cms_offset;
+  const gfloat *cms_ycoeff;
+  const gfloat *cms_ucoeff;
+  const gfloat *cms_vcoeff;
 
   GLint viewport_dim[4];
 
@@ -1346,6 +1405,35 @@ _do_download_draw_yuv_gles2 (GstGLContext * context, GstGLDownload * download)
           "Download video format inconsistensy %d", v_format);
 
   }
+
+  if (gst_video_colorimetry_matches (&download->info.colorimetry,
+          GST_VIDEO_COLORIMETRY_BT709)) {
+    cms_offset = bt709_offset;
+    cms_ycoeff = bt709_ycoeff;
+    cms_ucoeff = bt709_ucoeff;
+    cms_vcoeff = bt709_vcoeff;
+  } else if (gst_video_colorimetry_matches (&download->info.colorimetry,
+          GST_VIDEO_COLORIMETRY_BT601)) {
+    cms_offset = bt601_offset;
+    cms_ycoeff = bt601_ycoeff;
+    cms_ucoeff = bt601_ucoeff;
+    cms_vcoeff = bt601_vcoeff;
+  } else {
+    /* defaults */
+    cms_offset = bt601_offset;
+    cms_ycoeff = bt601_ycoeff;
+    cms_ucoeff = bt601_ucoeff;
+    cms_vcoeff = bt601_vcoeff;
+  }
+
+  gst_gl_shader_set_uniform_3fv (download->shader, "offset", 1,
+      (gfloat *) cms_offset);
+  gst_gl_shader_set_uniform_3fv (download->shader, "ycoeff", 1,
+      (gfloat *) cms_ycoeff);
+  gst_gl_shader_set_uniform_3fv (download->shader, "ucoeff", 1,
+      (gfloat *) cms_ucoeff);
+  gst_gl_shader_set_uniform_3fv (download->shader, "vcoeff", 1,
+      (gfloat *) cms_vcoeff);
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
