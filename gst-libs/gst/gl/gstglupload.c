@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2012 Matthew Waters <ystree00@gmail.com>
+ * Copyright (C) 2012-2014 Matthew Waters <ystree00@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -56,31 +56,31 @@ static gboolean _do_upload_draw (GstGLContext * context, GstGLUpload * upload);
 
 /* *INDENT-OFF* */
 
+#define YUV_TO_RGB_COEFFICIENTS \
+      "uniform vec3 offset;\n" \
+      "uniform vec3 rcoeff;\n" \
+      "uniform vec3 gcoeff;\n" \
+      "uniform vec3 bcoeff;\n"
+
+/* FIXME: use the colormatrix support from videoconvert */
+
 /* BT. 601 standard with the following ranges:
  * Y = [16..235] (of 255)
  * Cb/Cr = [16..240] (of 255)
  */
-#define YUV_TO_RGB_BT601_COEFFICIENTS \
-      const gfloat[] bt601_offset = {-0.0625f, -0.5, -0.5) \
-      const gfloat[] bt601_rcoeff = {1.164, 0.000, 1.596} \
-      const gfloat[] bt601_gcoeff = {1.164,-0.391,-0.813} \
-      const gfloat[] bt601_bcoeff = {1.164, 2.018, 0.000}
-
-#define YUV_TO_RGB_COEFFICIENTS \
-      "const vec3 offset = vec3(-0.0625, -0.5, -0.5);\n" \
-      "const vec3 rcoeff = vec3(1.164, 0.000, 1.596);\n" \
-      "const vec3 gcoeff = vec3(1.164,-0.391,-0.813);\n" \
-      "const vec3 bcoeff = vec3(1.164, 2.018, 0.000);\n"
+static const gfloat bt601_offset[] = {-0.0625, -0.5, -0.5};
+static const gfloat bt601_rcoeff[] = {1.164, 0.000, 1.596};
+static const gfloat bt601_gcoeff[] = {1.164,-0.391,-0.813};
+static const gfloat bt601_bcoeff[] = {1.164, 2.018, 0.000};
 
 /* BT. 709 standard with the following ranges:
  * Y = [16..235] (of 255)
  * Cb/Cr = [16..240] (of 255)
  */
-#define YUV_TO_RGB_BT709_COEFFICIENTS \
-      const gfloat[] bt709_offset = {-0.0625, -0.5, -0.5} \
-      const gfloat[] bt709_rcoeff = {1.164, 0.000, 1.787} \
-      const gfloat[] bt709_gcoeff = {1.164,-0.213,-0.531} \
-      const gfloat[] bt709_bcoeff = {1.164,-2.112, 0.000}
+static const gfloat bt709_offset[] = {-0.0625, -0.5, -0.5};
+static const gfloat bt709_rcoeff[] = {1.164, 0.000, 1.787};
+static const gfloat bt709_gcoeff[] = {1.164,-0.213,-0.531};
+static const gfloat bt709_bcoeff[] = {1.164,-2.112, 0.000};
 
 /** GRAY16 to RGB conversion 
  *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
@@ -1420,6 +1420,10 @@ _do_upload_draw (GstGLContext * context, GstGLUpload * upload)
   GstGLFuncs *gl;
   struct TexData *tex = upload->priv->texture_info;
   guint out_width, out_height;
+  const gfloat *cms_offset;
+  const gfloat *cms_rcoeff;
+  const gfloat *cms_gcoeff;
+  const gfloat *cms_bcoeff;
   gint i;
 
   GLint viewport_dim[4];
@@ -1440,6 +1444,26 @@ _do_upload_draw (GstGLContext * context, GstGLUpload * upload)
 
   out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
+
+  if (gst_video_colorimetry_matches (&upload->in_info.colorimetry,
+          GST_VIDEO_COLORIMETRY_BT709)) {
+    cms_offset = bt709_offset;
+    cms_rcoeff = bt709_rcoeff;
+    cms_gcoeff = bt709_gcoeff;
+    cms_bcoeff = bt709_bcoeff;
+  } else if (gst_video_colorimetry_matches (&upload->in_info.colorimetry,
+          GST_VIDEO_COLORIMETRY_BT601)) {
+    cms_offset = bt601_offset;
+    cms_rcoeff = bt601_rcoeff;
+    cms_gcoeff = bt601_gcoeff;
+    cms_bcoeff = bt601_bcoeff;
+  } else {
+    /* defaults */
+    cms_offset = bt601_offset;
+    cms_rcoeff = bt601_rcoeff;
+    cms_gcoeff = bt601_gcoeff;
+    cms_bcoeff = bt601_bcoeff;
+  }
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
 
@@ -1468,6 +1492,15 @@ _do_upload_draw (GstGLContext * context, GstGLUpload * upload)
 
   gl->EnableVertexAttribArray (upload->shader_attr_position_loc);
   gl->EnableVertexAttribArray (upload->shader_attr_texture_loc);
+
+  gst_gl_shader_set_uniform_3fv (upload->shader, "offset", 1,
+      (gfloat *) cms_offset);
+  gst_gl_shader_set_uniform_3fv (upload->shader, "rcoeff", 1,
+      (gfloat *) cms_rcoeff);
+  gst_gl_shader_set_uniform_3fv (upload->shader, "gcoeff", 1,
+      (gfloat *) cms_gcoeff);
+  gst_gl_shader_set_uniform_3fv (upload->shader, "bcoeff", 1,
+      (gfloat *) cms_bcoeff);
 
   for (i = upload->priv->n_textures - 1; i >= 0; i--) {
     gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
