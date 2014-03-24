@@ -4827,8 +4827,18 @@ gst_base_sink_default_query (GstBaseSink * basesink, GstQuery * query)
       break;
     }
     case GST_QUERY_DRAIN:
+    {
+      GstBuffer *old;
+
+      GST_OBJECT_LOCK (basesink);
+      if ((old = basesink->priv->last_buffer))
+        basesink->priv->last_buffer = gst_buffer_copy (old);
+      GST_OBJECT_UNLOCK (basesink);
+      if (old)
+        gst_buffer_unref (old);
       res = TRUE;
       break;
+    }
     default:
       res =
           gst_pad_query_default (basesink->sinkpad, GST_OBJECT_CAST (basesink),
