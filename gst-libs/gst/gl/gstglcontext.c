@@ -804,7 +804,7 @@ gst_gl_context_create_thread (GstGLContext * context)
   if (gl->GetIntegerv && gl->GetStringi)
     ext_g_str = _build_extension_string (context);
 
-  if (ext_g_str->len) {
+  if (ext_g_str && ext_g_str->len) {
     _gst_gl_feature_check_ext_functions (context, gl_major, gl_minor,
         ext_g_str->str);
   } else {
