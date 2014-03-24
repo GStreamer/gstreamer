@@ -1397,6 +1397,13 @@ get_aggregate_control (GstRTSPSrc * src)
   return base;
 }
 
+static void
+clear_ptmap_item (PtMapItem * item)
+{
+  if (item->caps)
+    gst_caps_unref (item->caps);
+}
+
 static GstRTSPStream *
 gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
 {
@@ -1424,6 +1431,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
   stream->timebase = -1;
   stream->profile = GST_RTSP_PROFILE_AVP;
   stream->ptmap = g_array_new (FALSE, FALSE, sizeof (PtMapItem));
+  g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
 
   /* collect bandwidth information for this steam. FIXME, configure in the RTP
    * session manager to scale RTCP. */
