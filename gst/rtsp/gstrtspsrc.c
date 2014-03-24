@@ -1936,7 +1936,7 @@ again:
     g_object_set (G_OBJECT (udpsrc0), "buffer-size", src->udp_buffer_size,
         NULL);
 
-  ret = gst_element_set_state (udpsrc0, GST_STATE_PAUSED);
+  ret = gst_element_set_state (udpsrc0, GST_STATE_READY);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     if (tmp_rtp != 0) {
       GST_DEBUG_OBJECT (src, "Unable to make udpsrc from RTP port %d", tmp_rtp);
@@ -1990,7 +1990,7 @@ again:
   g_object_set (G_OBJECT (udpsrc1), "port", tmp_rtcp, "reuse", FALSE, NULL);
 
   GST_DEBUG_OBJECT (src, "starting RTCP on port %d", tmp_rtcp);
-  ret = gst_element_set_state (udpsrc1, GST_STATE_PAUSED);
+  ret = gst_element_set_state (udpsrc1, GST_STATE_READY);
   /* tmp_rtcp port is busy already : retry to make rtp/rtcp pair */
   if (ret == GST_STATE_CHANGE_FAILURE) {
     GST_DEBUG_OBJECT (src, "Unable to make udpsrc from RTCP port %d", tmp_rtcp);
@@ -3206,7 +3206,7 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
 
     /* change state */
     gst_element_set_locked_state (stream->udpsrc[0], TRUE);
-    gst_element_set_state (stream->udpsrc[0], GST_STATE_PAUSED);
+    gst_element_set_state (stream->udpsrc[0], GST_STATE_READY);
   }
 
   /* creating another UDP source for RTCP */
@@ -3231,7 +3231,7 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
       g_object_set (G_OBJECT (stream->udpsrc[0]), "multicast-iface",
           src->multi_iface, NULL);
 
-    gst_element_set_state (stream->udpsrc[1], GST_STATE_PAUSED);
+    gst_element_set_state (stream->udpsrc[1], GST_STATE_READY);
   }
   return TRUE;
 
