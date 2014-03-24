@@ -180,15 +180,9 @@ enum
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
 static GstCaps *gst_udpsrc_getcaps (GstBaseSrc * src, GstCaps * filter);
-
 static GstFlowReturn gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf);
-
-static gboolean gst_udpsrc_start (GstBaseSrc * bsrc);
-
-static gboolean gst_udpsrc_stop (GstBaseSrc * bsrc);
-
+static gboolean gst_udpsrc_close (GstUDPSrc * src);
 static gboolean gst_udpsrc_unlock (GstBaseSrc * bsrc);
-
 static gboolean gst_udpsrc_unlock_stop (GstBaseSrc * bsrc);
 
 static void gst_udpsrc_finalize (GObject * object);
@@ -197,6 +191,9 @@ static void gst_udpsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_udpsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
+static GstStateChangeReturn gst_udpsrc_change_state (GstElement * element,
+    GstStateChange transition);
 
 #define gst_udpsrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstUDPSrc, gst_udpsrc, GST_TYPE_PUSH_SRC,
@@ -294,8 +291,8 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
       "Wim Taymans <wim@fluendo.com>, "
       "Thijs Vermeir <thijs.vermeir@barco.com>");
 
-  gstbasesrc_class->start = gst_udpsrc_start;
-  gstbasesrc_class->stop = gst_udpsrc_stop;
+  gstelement_class->change_state = gst_udpsrc_change_state;
+
   gstbasesrc_class->unlock = gst_udpsrc_unlock;
   gstbasesrc_class->unlock_stop = gst_udpsrc_unlock_stop;
   gstbasesrc_class->get_caps = gst_udpsrc_getcaps;
@@ -810,14 +807,11 @@ name_resolve:
 
 /* create a socket for sending to remote machine */
 static gboolean
-gst_udpsrc_start (GstBaseSrc * bsrc)
+gst_udpsrc_open (GstUDPSrc * src)
 {
-  GstUDPSrc *src;
   GInetAddress *addr, *bind_addr;
   GSocketAddress *bind_saddr;
   GError *err = NULL;
-
-  src = GST_UDPSRC (bsrc);
 
   if (src->socket == NULL) {
     /* need to allocate a socket */
@@ -1013,7 +1007,7 @@ bind_error:
         ("bind failed: %s", err->message));
     g_clear_error (&err);
     g_object_unref (bind_saddr);
-    gst_udpsrc_stop (GST_BASE_SRC (src));
+    gst_udpsrc_close (src);
     return FALSE;
   }
 membership:
@@ -1021,7 +1015,7 @@ membership:
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("could add membership: %s", err->message));
     g_clear_error (&err);
-    gst_udpsrc_stop (GST_BASE_SRC (src));
+    gst_udpsrc_close (src);
     return FALSE;
   }
 getsockname_error:
@@ -1029,7 +1023,7 @@ getsockname_error:
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("getsockname failed: %s", err->message));
     g_clear_error (&err);
-    gst_udpsrc_stop (GST_BASE_SRC (src));
+    gst_udpsrc_close (src);
     return FALSE;
   }
 }
@@ -1061,13 +1055,9 @@ gst_udpsrc_unlock_stop (GstBaseSrc * bsrc)
 }
 
 static gboolean
-gst_udpsrc_stop (GstBaseSrc * bsrc)
+gst_udpsrc_close (GstUDPSrc * src)
 {
-  GstUDPSrc *src;
-
-  src = GST_UDPSRC (bsrc);
-
-  GST_DEBUG ("stopping, closing sockets");
+  GST_DEBUG ("closing sockets");
 
   if (src->used_socket) {
     if (src->auto_multicast
@@ -1103,6 +1093,52 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
 
   return TRUE;
 }
+
+
+static GstStateChangeReturn
+gst_udpsrc_change_state (GstElement * element, GstStateChange transition)
+{
+  GstUDPSrc *src;
+  GstStateChangeReturn result;
+
+  src = GST_UDPSRC (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!gst_udpsrc_open (src))
+        goto open_failed;
+      break;
+    default:
+      break;
+  }
+  if ((result =
+          GST_ELEMENT_CLASS (parent_class)->change_state (element,
+              transition)) == GST_STATE_CHANGE_FAILURE)
+    goto failure;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_udpsrc_close (src);
+      break;
+    default:
+      break;
+  }
+  return result;
+  /* ERRORS */
+open_failed:
+  {
+    GST_DEBUG_OBJECT (src, "failed to open socket");
+    return GST_STATE_CHANGE_FAILURE;
+  }
+failure:
+  {
+    GST_DEBUG_OBJECT (src, "parent failed state change");
+    return result;
+  }
+}
+
+
+
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
