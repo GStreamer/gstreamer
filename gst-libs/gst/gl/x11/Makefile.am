@@ -20,11 +20,6 @@ libgstgl_x11_la_SOURCES += gstglcontext_glx.c
 noinst_HEADERS += gstglcontext_glx.h
 endif
 
-#if USE_EGL
-#libgstgl_x11_la_SOURCES += gstglwindow_x11_egl.c
-#noinst_HEADERS += gstglwindow_x11_egl.h
-#endif
-
 libgstgl_x11_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
