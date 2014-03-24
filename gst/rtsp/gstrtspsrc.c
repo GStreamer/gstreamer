@@ -3220,7 +3220,11 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
     if (stream->udpsrc[1] == NULL)
       goto no_element;
 
-    caps = gst_caps_new_empty_simple ("application/x-rtcp");
+    if (stream->profile == GST_RTSP_PROFILE_SAVP ||
+        stream->profile == GST_RTSP_PROFILE_SAVPF)
+      caps = gst_caps_new_empty_simple ("application/x-srtcp");
+    else
+      caps = gst_caps_new_empty_simple ("application/x-rtcp");
     g_object_set (stream->udpsrc[1], "caps", caps, NULL);
     gst_caps_unref (caps);
 
@@ -3306,7 +3310,11 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
     gst_element_set_locked_state (stream->udpsrc[1], TRUE);
     gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[1]);
 
-    caps = gst_caps_new_empty_simple ("application/x-rtcp");
+    if (stream->profile == GST_RTSP_PROFILE_SAVP ||
+        stream->profile == GST_RTSP_PROFILE_SAVPF)
+      caps = gst_caps_new_empty_simple ("application/x-srtcp");
+    else
+      caps = gst_caps_new_empty_simple ("application/x-rtcp");
     g_object_set (stream->udpsrc[1], "caps", caps, NULL);
     gst_caps_unref (caps);
 
