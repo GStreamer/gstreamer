@@ -136,6 +136,7 @@ struct _GstRTSPStream {
   guint32       ssrc;
   guint32       seqbase;
   guint64       timebase;
+  GstElement   *srtpdec;
 
   /* per stream connection */
   GstRTSPConnInfo  conninfo;

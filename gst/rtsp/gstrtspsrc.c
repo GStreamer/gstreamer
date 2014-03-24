@@ -91,6 +91,7 @@
 
 #include <gst/net/gstnet.h>
 #include <gst/sdp/gstsdpmessage.h>
+#include <gst/sdp/gstmikey.h>
 #include <gst/rtp/gstrtppayloads.h>
 
 #include "gst/gst-i18n-plugin.h"
@@ -1301,7 +1302,6 @@ gst_rtspsrc_collect_connections (GstRTSPSrc * src, const GstSDPMessage * sdp,
   }
 }
 
-
 /*   m=<media> <UDP port> RTP/AVP <payload>
  */
 static void
@@ -1684,6 +1684,116 @@ gst_rtspsrc_parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
   return TRUE;
 }
 
+static gboolean
+parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
+{
+  gboolean res = FALSE;
+  gchar *p, *kmpid;
+  gsize size;
+  guchar *data;
+  GstMIKEYMessage *msg;
+  const GstMIKEYPayload *payload;
+  const gchar *srtp_cipher;
+  const gchar *srtp_auth;
+
+  p = (gchar *) keymgmt;
+
+  SKIP_SPACES (p);
+  if (*p == '\0')
+    return FALSE;
+
+  PARSE_STRING (p, " ", kmpid);
+  if (!g_str_equal (kmpid, "mikey"))
+    return FALSE;
+
+  data = g_base64_decode (p, &size);
+  if (data == NULL)
+    return FALSE;
+
+  msg = gst_mikey_message_new_from_data (data, size);
+  if (msg == NULL)
+    return FALSE;
+
+  srtp_cipher = "aes-128-icm";
+  srtp_auth = "hmac-sha1-80";
+
+  /* check the Security policy if any */
+  if ((payload = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_SP, 0))) {
+    GstMIKEYPayloadSP *p = (GstMIKEYPayloadSP *) payload;
+    guint len, i;
+
+    if (p->proto != GST_MIKEY_SEC_PROTO_SRTP)
+      goto done;
+
+    len = gst_mikey_payload_sp_get_n_params (payload);
+    for (i = 0; i < len; i++) {
+      const GstMIKEYPayloadSPParam *param =
+          gst_mikey_payload_sp_get_param (payload, i);
+
+      switch (param->type) {
+        case GST_MIKEY_SP_SRTP_ENC_ALG:
+          switch (param->val[0]) {
+            case 0:
+              srtp_cipher = "null";
+              break;
+            case 2:
+            case 1:
+              srtp_cipher = "aes-128-icm";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_AUTH_ALG:
+          switch (param->val[0]) {
+            case 0:
+              srtp_auth = "null";
+              break;
+            case 2:
+            case 1:
+              srtp_auth = "hmac-sha1-80";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_SRTP_ENC:
+          break;
+        case GST_MIKEY_SP_SRTP_SRTCP_ENC:
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  if (!(payload = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_KEMAC, 0)))
+    goto done;
+  else {
+    GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
+    GstBuffer *buf;
+
+    if (p->enc_alg != GST_MIKEY_ENC_NULL || p->mac_alg != GST_MIKEY_MAC_NULL)
+      goto done;
+
+    buf =
+        gst_buffer_new_wrapped (g_memdup (p->enc_data, p->enc_len), p->enc_len);
+    gst_caps_set_simple (caps, "srtp-key", GST_TYPE_BUFFER, buf, NULL);
+  }
+
+  gst_caps_set_simple (caps,
+      "srtp-cipher", G_TYPE_STRING, srtp_cipher,
+      "srtp-auth", G_TYPE_STRING, srtp_auth,
+      "srtcp-cipher", G_TYPE_STRING, srtp_cipher,
+      "srtcp-auth", G_TYPE_STRING, srtp_auth, NULL);
+
+  res = TRUE;
+done:
+  gst_mikey_message_free (msg);
+
+  return res;
+}
+
 /*
  * Mapping SDP attributes to caps
  *
@@ -1715,6 +1825,10 @@ gst_rtspsrc_sdp_attributes_to_caps (GArray * attributes, GstCaps * caps)
         continue;
       if (!strcmp (key, "range"))
         continue;
+      if (g_str_equal (key, "key-mgmt")) {
+        parse_keymgmt (attr->value, caps);
+        continue;
+      }
 
       /* string must be valid UTF8 */
       if (!g_utf8_validate (attr->value, -1, NULL))
@@ -2829,6 +2943,36 @@ set_manager_buffer_mode (GstRTSPSrc * src)
   }
 }
 
+static GstCaps *
+request_key (GstElement * srtpdec, guint ssrc, GstRTSPStream * stream)
+{
+  GST_DEBUG ("request key %u", ssrc);
+  return gst_caps_ref (stream_get_caps_for_pt (stream, stream->default_pt));
+}
+
+static GstElement *
+request_rtp_decoder (GstElement * rtpbin, guint session, GstRTSPStream * stream)
+{
+  if (stream->id != session)
+    return NULL;
+
+  if (stream->profile != GST_RTSP_PROFILE_SAVP &&
+      stream->profile != GST_RTSP_PROFILE_SAVPF)
+    return NULL;
+
+  if (stream->srtpdec == NULL) {
+    gchar *name;
+
+    name = g_strdup_printf ("srtpdec_%u", session);
+    stream->srtpdec = gst_element_factory_make ("srtpdec", name);
+    g_free (name);
+
+    g_signal_connect (stream->srtpdec, "request-key",
+        (GCallback) request_key, stream);
+  }
+  return gst_object_ref (stream->srtpdec);
+}
+
 /* try to get and configure a manager */
 static gboolean
 gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
@@ -2924,6 +3068,10 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_NEW_MANAGER], 0,
           src->manager);
     }
+    g_signal_connect (src->manager, "request-rtp-decoder",
+        (GCallback) request_rtp_decoder, stream);
+    g_signal_connect (src->manager, "request-rtcp-decoder",
+        (GCallback) request_rtp_decoder, stream);
 
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
      * into a separate RTP session. */
