@@ -845,9 +845,7 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
 {
   guint32 payloadSize;
   guint8 payload_type_byte, payload_size_byte;
-#ifndef GST_DISABLE_GST_DEBUG
   guint remaining, payload_size;
-#endif
   GstH264ParserResult res;
 
   GST_DEBUG ("parsing \"Sei message\"");
@@ -865,32 +863,35 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
   }
   while (payload_size_byte == 0xff);
 
-#ifndef GST_DISABLE_GST_DEBUG
   remaining = nal_reader_get_remaining (nr);
   payload_size = payloadSize * 8 < remaining ? payloadSize * 8 : remaining;
 
   GST_DEBUG ("SEI message received: payloadType  %u, payloadSize = %u bits",
       sei->payloadType, payload_size);
-#endif
 
-  if (sei->payloadType == GST_H264_SEI_BUF_PERIOD) {
-    /* size not set; might depend on emulation_prevention_three_byte */
-    res = gst_h264_parser_parse_buffering_period (nalparser,
-        &sei->payload.buffering_period, nr);
-  } else if (sei->payloadType == GST_H264_SEI_PIC_TIMING) {
-    /* size not set; might depend on emulation_prevention_three_byte */
-    res = gst_h264_parser_parse_pic_timing (nalparser,
-        &sei->payload.pic_timing, nr);
-  } else {
-    /* Just consume payloadSize bytes, which does not account for
-       emulation prevention bytes */
-    guint nbits = payload_size % 8;
-    while (payload_size > 0) {
-      nal_reader_skip (nr, nbits);
-      payload_size -= nbits;
-      nbits = 8;
+  switch (sei->payloadType) {
+    case GST_H264_SEI_BUF_PERIOD:
+      /* size not set; might depend on emulation_prevention_three_byte */
+      res = gst_h264_parser_parse_buffering_period (nalparser,
+          &sei->payload.buffering_period, nr);
+      break;
+    case GST_H264_SEI_PIC_TIMING:
+      /* size not set; might depend on emulation_prevention_three_byte */
+      res = gst_h264_parser_parse_pic_timing (nalparser,
+          &sei->payload.pic_timing, nr);
+      break;
+    default:{
+      /* Just consume payloadSize bytes, which does not account for
+         emulation prevention bytes */
+      guint nbits = payload_size % 8;
+      while (payload_size > 0) {
+        nal_reader_skip (nr, nbits);
+        payload_size -= nbits;
+        nbits = 8;
+      }
+      res = GST_H264_PARSER_OK;
+      break;
     }
-    res = GST_H264_PARSER_OK;
   }
 
   /* When SEI message doesn't end at byte boundary,
