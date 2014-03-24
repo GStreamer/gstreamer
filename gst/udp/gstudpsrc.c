@@ -370,15 +370,26 @@ static GstCaps *
 gst_udpsrc_getcaps (GstBaseSrc * src, GstCaps * filter)
 {
   GstUDPSrc *udpsrc;
+  GstCaps *caps, *result;
 
   udpsrc = GST_UDPSRC (src);
 
-  if (udpsrc->caps) {
-    return (filter) ? gst_caps_intersect_full (filter, udpsrc->caps,
-        GST_CAPS_INTERSECT_FIRST) : gst_caps_ref (udpsrc->caps);
+  GST_OBJECT_LOCK (src);
+  if ((caps = udpsrc->caps))
+    gst_caps_ref (caps);
+  GST_OBJECT_UNLOCK (src);
+
+  if (caps) {
+    if (filter) {
+      result = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+    } else {
+      result = caps;
+    }
   } else {
-    return (filter) ? gst_caps_ref (filter) : gst_caps_new_any ();
+    result = (filter) ? gst_caps_ref (filter) : gst_caps_new_any ();
   }
+  return result;
 }
 
 static GstFlowReturn
@@ -656,9 +667,7 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_CAPS:
     {
       const GstCaps *new_caps_val = gst_value_get_caps (value);
-
       GstCaps *new_caps;
-
       GstCaps *old_caps;
 
       if (new_caps_val == NULL) {
@@ -667,11 +676,14 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
         new_caps = gst_caps_copy (new_caps_val);
       }
 
+      GST_OBJECT_LOCK (udpsrc);
       old_caps = udpsrc->caps;
       udpsrc->caps = new_caps;
+      GST_OBJECT_UNLOCK (udpsrc);
       if (old_caps)
         gst_caps_unref (old_caps);
-      gst_pad_set_caps (GST_BASE_SRC (udpsrc)->srcpad, new_caps);
+
+      gst_pad_mark_reconfigure (GST_BASE_SRC_PAD (udpsrc));
       break;
     }
     case PROP_SOCKET:
@@ -734,7 +746,9 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_string (value, udpsrc->uri);
       break;
     case PROP_CAPS:
+      GST_OBJECT_LOCK (udpsrc);
       gst_value_set_caps (value, udpsrc->caps);
+      GST_OBJECT_UNLOCK (udpsrc);
       break;
     case PROP_SOCKET:
       g_value_set_object (value, udpsrc->socket);
