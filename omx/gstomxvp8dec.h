@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include "gstomxvideodec.h"
+#include <OMX_VideoExt.h>
 
 G_BEGIN_DECLS
 

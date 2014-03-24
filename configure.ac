@@ -176,7 +176,8 @@ AC_CHECK_DECLS([OMX_VIDEO_CodingVP8],
     HAVE_VP8=yes
   ], [
     HAVE_VP8=no
-  ], [[#include <OMX_Video.h>]])
+  ], [[#include <OMX_Video.h>
+       #include <OMX_VideoExt.h>]])
 AM_CONDITIONAL(HAVE_VP8, test "x$HAVE_VP8" = "xyes")
 
 AC_CHECK_DECLS([OMX_VIDEO_CodingTheora],
