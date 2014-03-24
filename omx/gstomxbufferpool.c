@@ -223,8 +223,8 @@ gst_omx_buffer_pool_stop (GstBufferPool * bpool)
    * GstBufferPool::free_buffer is not called while stopping the pool
    * (because the queue is empty) */
   for (i = 0; i < pool->buffers->len; i++)
-    gst_omx_buffer_pool_free_buffer (bpool, g_ptr_array_index (pool->buffers,
-            i));
+    GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->release_buffer
+        (bpool, g_ptr_array_index (pool->buffers, i));
 
   /* Remove any buffers that are there */
   g_ptr_array_set_size (pool->buffers, 0);
