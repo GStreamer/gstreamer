@@ -86,11 +86,8 @@ libgstgl_@GST_API_VERSION@_la_LIBADD += android/libgstgl-android.la
 endif
 
 if USE_EGL
-libgstgl_@GST_API_VERSION@_la_SOURCES += egl/gstglcontext_egl.c \
-	egl/gstgldisplay_egl.c
-libgstgl_@GST_API_VERSION@_la_LIBADD += $(top_builddir)/gst-libs/gst/egl/libgstegl-$(GST_API_VERSION).la
-libgstgl_@GST_API_VERSION@include_HEADERS += egl/gstgldisplay_egl.h
-noinst_HEADERS += egl/gstglcontext_egl.h
+SUBDIRS += egl
+libgstgl_@GST_API_VERSION@_la_LIBADD += egl/libgstgl-egl.la
 endif
 
 nodist_libgstgl_@GST_API_VERSION@include_HEADERS = \
