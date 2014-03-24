@@ -3183,6 +3183,7 @@ gst-libs/gst/gl/android/Makefile
 gst-libs/gst/gl/cocoa/Makefile
 gst-libs/gst/gl/dispmanx/Makefile
 gst-libs/gst/gl/glprototypes/Makefile
+gst-libs/gst/gl/egl/Makefile
 gst-libs/gst/gl/wayland/Makefile
 gst-libs/gst/gl/win32/Makefile
 gst-libs/gst/gl/x11/Makefile
