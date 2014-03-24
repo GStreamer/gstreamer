@@ -159,6 +159,13 @@ GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
 AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 
+AC_ARG_WITH([omx-header-path],
+            AS_HELP_STRING([--with-omx-header-path],[path of external OpenMAX IL header files]),
+        [omx_header_path="$withval"], [omx_header_path="none"])
+
+if test x"$omx_header_path" != x"none"; then
+    CPPFLAGS="$CPPFLAGS -I$omx_header_path"
+fi
 dnl Check for external OpenMAX IL headers
 AC_CHECK_HEADER([OMX_Core.h], [HAVE_EXTERNAL_OMX=yes], [HAVE_EXTERNAL_OMX=no], [AC_INCLUDES_DEFAULT])
 AM_CONDITIONAL(HAVE_EXTERNAL_OMX, test "x$HAVE_EXTERNAL_OMX" = "xyes")
