@@ -2334,17 +2334,17 @@ mpegts_packetizer_set_current_pcr_offset (MpegTSPacketizer2 * packetizer,
     if (tgroup == group)
       apply = TRUE;
     if (apply) {
-      group->pcr_offset += delta;
+      tgroup->pcr_offset += delta;
       GST_DEBUG ("Update group PCR %" GST_TIME_FORMAT " (offset %"
           G_GUINT64_FORMAT " pcr_offset %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->first_pcr)),
-          group->first_offset,
-          GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->pcr_offset)));
+          GST_TIME_ARGS (PCRTIME_TO_GSTTIME (tgroup->first_pcr)),
+          tgroup->first_offset,
+          GST_TIME_ARGS (PCRTIME_TO_GSTTIME (tgroup->pcr_offset)));
     } else
       GST_DEBUG ("Not modifying group PCR %" GST_TIME_FORMAT " (offset %"
           G_GUINT64_FORMAT " pcr_offset %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->first_pcr)),
-          group->first_offset,
-          GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->pcr_offset)));
+          GST_TIME_ARGS (PCRTIME_TO_GSTTIME (tgroup->first_pcr)),
+          tgroup->first_offset,
+          GST_TIME_ARGS (PCRTIME_TO_GSTTIME (tgroup->pcr_offset)));
   }
 }
