@@ -345,8 +345,8 @@ gst_mikey_payload_sp_get_param (const GstMIKEYPayload * payload, guint idx)
 {
   GstMIKEYPayloadSP *p = (GstMIKEYPayloadSP *) payload;
 
-  g_return_val_if_fail (payload != NULL, FALSE);
-  g_return_val_if_fail (payload->type == GST_MIKEY_PT_SP, FALSE);
+  g_return_val_if_fail (payload != NULL, NULL);
+  g_return_val_if_fail (payload->type == GST_MIKEY_PT_SP, NULL);
 
   return &g_array_index (p->params, GstMIKEYPayloadSPParam, idx);
 }
@@ -593,7 +593,7 @@ gst_mikey_message_new_from_bytes (GBytes * bytes)
   gconstpointer data;
   gsize size;
 
-  g_return_val_if_fail (bytes != NULL, FALSE);
+  g_return_val_if_fail (bytes != NULL, NULL);
 
   data = g_bytes_get_data (bytes, &size);
   return gst_mikey_message_new_from_data (data, size);
@@ -697,9 +697,9 @@ gboolean
 gst_mikey_message_insert_cs_srtp (GstMIKEYMessage * msg, gint idx,
     const GstMIKEYMapSRTP * map)
 {
-  g_return_val_if_fail (msg != NULL, NULL);
-  g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, NULL);
-  g_return_val_if_fail (map != NULL, NULL);
+  g_return_val_if_fail (msg != NULL, FALSE);
+  g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, FALSE);
+  g_return_val_if_fail (map != NULL, FALSE);
 
   if (idx == -1)
     g_array_append_val (msg->map_info, *map);
@@ -723,9 +723,9 @@ gboolean
 gst_mikey_message_replace_cs_srtp (GstMIKEYMessage * msg, gint idx,
     const GstMIKEYMapSRTP * map)
 {
-  g_return_val_if_fail (msg != NULL, NULL);
-  g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, NULL);
-  g_return_val_if_fail (map != NULL, NULL);
+  g_return_val_if_fail (msg != NULL, FALSE);
+  g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, FALSE);
+  g_return_val_if_fail (map != NULL, FALSE);
 
   g_array_index (msg->map_info, GstMIKEYMapSRTP, idx) = *map;
 
@@ -744,8 +744,8 @@ gst_mikey_message_replace_cs_srtp (GstMIKEYMessage * msg, gint idx,
 gboolean
 gst_mikey_message_remove_cs_srtp (GstMIKEYMessage * msg, gint idx)
 {
-  g_return_val_if_fail (msg != NULL, NULL);
-  g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, NULL);
+  g_return_val_if_fail (msg != NULL, FALSE);
+  g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, FALSE);
 
   g_array_remove_index (msg->map_info, idx);
 
@@ -769,8 +769,8 @@ gst_mikey_message_add_cs_srtp (GstMIKEYMessage * msg, guint8 policy,
 {
   GstMIKEYMapSRTP val;
 
-  g_return_val_if_fail (msg != NULL, NULL);
-  g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, NULL);
+  g_return_val_if_fail (msg != NULL, FALSE);
+  g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, FALSE);
 
   val.policy = policy;
   val.ssrc = ssrc;
@@ -791,7 +791,7 @@ gst_mikey_message_add_cs_srtp (GstMIKEYMessage * msg, guint8 policy,
 guint
 gst_mikey_message_get_n_payloads (const GstMIKEYMessage * msg)
 {
-  g_return_val_if_fail (msg != NULL, NULL);
+  g_return_val_if_fail (msg != NULL, 0);
 
   return msg->payloads->len;
 }
@@ -1341,7 +1341,7 @@ gst_mikey_message_new_from_data (gconstpointer data, gsize size)
   const guint8 *d = data;
   guint8 next_payload;
 
-  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, NULL);
 
   msg = gst_mikey_message_new ();
   /*                      1                   2                   3
