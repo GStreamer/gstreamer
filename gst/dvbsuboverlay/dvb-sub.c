@@ -943,7 +943,7 @@ _dvb_sub_parse_pixel_data_block (DvbSub * dvb_sub,
     y_pos++;
 
   while (buf < buf_end) {
-    GST_LOG ("Iteration start, %u bytes missing from end; buf = %p, "
+    GST_LOG ("Iteration start, %u bytes remaining; buf = %p, "
         "buf_end = %p; Region is number %u, with a dimension of %dx%d; "
         "We are at position %dx%d", (guint) (buf_end - buf), buf, buf_end,
         region->id, region->width, region->height, x_pos, y_pos);
