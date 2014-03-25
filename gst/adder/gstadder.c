@@ -1176,6 +1176,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   gint64 next_timestamp;
   gint rate, bps, bpf;
   gboolean had_mute = FALSE;
+  gboolean is_eos = TRUE;
 
   adder = GST_ADDER (user_data);
 
@@ -1260,9 +1261,6 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   /* get available bytes for reading, this can be 0 which could mean empty
    * buffers or EOS, which we will catch when we loop over the pads. */
   outsize = gst_collect_pads_available (pads);
-  /* can only happen when no pads to collect or all EOS */
-  if (outsize == 0)
-    goto eos;
 
   GST_LOG_OBJECT (adder,
       "starting to cycle through channels, %d bytes available (bps = %d, bpf = %d)",
@@ -1284,6 +1282,11 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     /* get a buffer of size bytes, if we get a buffer, it is at least outsize
      * bytes big. */
     inbuf = gst_collect_pads_take_buffer (pads, collect_data, outsize);
+
+    if (!GST_COLLECT_PADS_STATE_IS_SET (collect_data,
+                    GST_COLLECT_PADS_STATE_EOS))
+      is_eos = FALSE;
+
     /* NULL means EOS or an empty buffer so we still need to flush in
      * case of an empty buffer. */
     if (inbuf == NULL) {
@@ -1477,8 +1480,12 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     }
     GST_OBJECT_UNLOCK (pad);
   }
+
   if (outbuf)
     gst_buffer_unmap (outbuf, &outmap);
+
+  if (is_eos)
+    goto eos;
 
   if (outbuf == NULL) {
     /* no output buffer, reuse one of the GAP buffers then if we have one */
