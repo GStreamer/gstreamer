@@ -1517,6 +1517,7 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
     }
     if (stream->channelpad[i])
       gst_object_unref (stream->channelpad[i]);
+
     if (stream->udpsink[i]) {
       gst_element_set_state (stream->udpsink[i], GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (src), stream->udpsink[i]);
@@ -1533,12 +1534,16 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
     if (stream->added)
       gst_element_remove_pad (GST_ELEMENT_CAST (src), stream->srcpad);
   }
+  if (stream->srtpenc)
+    gst_object_unref (stream->srtpenc);
+  if (stream->srtpdec)
+    gst_object_unref (stream->srtpdec);
+  if (stream->key)
+    gst_buffer_unref (stream->key);
   if (stream->rtcppad)
     gst_object_unref (stream->rtcppad);
   if (stream->session)
     g_object_unref (stream->session);
-  if (stream->srtpdec)
-    gst_object_unref (stream->srtpdec);
   g_free (stream);
 }
 
@@ -2955,6 +2960,7 @@ request_key (GstElement * srtpdec, guint ssrc, GstRTSPStream * stream)
 static GstElement *
 request_rtp_decoder (GstElement * rtpbin, guint session, GstRTSPStream * stream)
 {
+  GST_DEBUG ("decoder session %u, stream %p, %d", session, stream, stream->id);
   if (stream->id != session)
     return NULL;
 
@@ -2974,6 +2980,38 @@ request_rtp_decoder (GstElement * rtpbin, guint session, GstRTSPStream * stream)
   }
   return gst_object_ref (stream->srtpdec);
 }
+
+static GstElement *
+request_rtcp_encoder (GstElement * rtpbin, guint session,
+    GstRTSPStream * stream)
+{
+  gchar *name;
+  GstPad *pad;
+
+  GST_DEBUG ("decoder session %u, stream %p, %d", session, stream, stream->id);
+  if (stream->id != session)
+    return NULL;
+
+  if (stream->profile != GST_RTSP_PROFILE_SAVP &&
+      stream->profile != GST_RTSP_PROFILE_SAVPF)
+    return NULL;
+
+  if (stream->srtpenc == NULL) {
+    name = g_strdup_printf ("srtpenc_%u", session);
+    stream->srtpenc = gst_element_factory_make ("srtpenc", name);
+    g_free (name);
+
+    /* key has been made before */
+    g_object_set (stream->srtpenc, "key", stream->key, NULL);
+  }
+  name = g_strdup_printf ("rtcp_sink_%d", session);
+  pad = gst_element_get_request_pad (stream->srtpenc, name);
+  g_free (name);
+  gst_object_unref (pad);
+
+  return gst_object_ref (stream->srtpenc);
+}
+
 
 /* try to get and configure a manager */
 static gboolean
@@ -3074,6 +3112,8 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
         (GCallback) request_rtp_decoder, stream);
     g_signal_connect (src->manager, "request-rtcp-decoder",
         (GCallback) request_rtp_decoder, stream);
+    g_signal_connect (src->manager, "request-rtcp-encoder",
+        (GCallback) request_rtcp_encoder, stream);
 
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
      * into a separate RTP session. */
@@ -5762,6 +5802,79 @@ failed:
   }
 }
 
+static gchar *
+gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
+{
+  GBytes *bytes;
+  gchar *result, *base64;
+  guint8 *key_data;
+  const guint8 *data;
+  gsize size;
+  guint i;
+  GstMIKEYMessage *msg;
+  GstMIKEYPayload *payload;
+  guint8 byte;
+#define KEY_SIZE 30
+
+  key_data = g_malloc (KEY_SIZE);
+  for (i = 0; i < KEY_SIZE; i += 4)
+    GST_WRITE_UINT32_BE (key_data + i, g_random_int ());
+
+  if (stream->key)
+    gst_buffer_unref (stream->key);
+  stream->key = gst_buffer_new_wrapped (key_data, KEY_SIZE);
+
+  msg = gst_mikey_message_new ();
+  /* unencrypted MIKEY message, we send this over TLS so this is allowed */
+  gst_mikey_message_set_info (msg, GST_MIKEY_VERSION, GST_MIKEY_TYPE_PSK_INIT,
+      FALSE, GST_MIKEY_PRF_MIKEY_1, 0, GST_MIKEY_MAP_TYPE_SRTP);
+  /* add policy '0' for our SSRC */
+  gst_mikey_message_add_cs_srtp (msg, 0, stream->ssrc, 0);
+  /* timestamp is now */
+  gst_mikey_message_add_t_now_ntp_utc (msg);
+  /* add some random data */
+  gst_mikey_message_add_rand_len (msg, 16);
+
+  /* the policy '0' is SRTP */
+  payload = gst_mikey_payload_new (GST_MIKEY_PT_SP);
+  gst_mikey_payload_sp_set (payload, 0, GST_MIKEY_SEC_PROTO_SRTP);
+
+  /* only AES-CM is supported */
+  byte = 1;
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_ALG, 1, &byte);
+  /* only HMAC-SHA1 */
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_ALG, 1,
+      &byte);
+  /* we enable encryption on RTP and RTCP */
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTP_ENC, 1,
+      &byte);
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTCP_ENC, 1,
+      &byte);
+  /* we enable authentication on RTP and RTCP */
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTP_AUTH, 1,
+      &byte);
+  gst_mikey_message_add_payload (msg, payload);
+
+  /* add the key in KEMAC */
+  gst_mikey_message_add_kemac (msg, GST_MIKEY_ENC_NULL, KEY_SIZE, key_data,
+      GST_MIKEY_MAC_NULL, NULL);
+
+  /* now serialize this to bytes */
+  bytes = gst_mikey_message_to_bytes (msg);
+  gst_mikey_message_free (msg);
+  /* and make it into base64 */
+  data = g_bytes_get_data (bytes, &size);
+  base64 = g_base64_encode (data, size);
+  g_bytes_unref (bytes);
+
+  result = g_strdup_printf ("prot=mikey; uri=\"%s\"; data=\"%s\"",
+      stream->conninfo.location, base64);
+  g_free (base64);
+
+  return result;
+}
+
+
 /* Perform the SETUP request for all the streams.
  *
  * We ask the server for a specific transport, which initially includes all the
@@ -5938,6 +6051,13 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
 
     /* select transport */
     gst_rtsp_message_take_header (&request, GST_RTSP_HDR_TRANSPORT, transports);
+
+    /* set up keys */
+    if (stream->profile == GST_RTSP_PROFILE_SAVP ||
+        stream->profile == GST_RTSP_PROFILE_SAVPF) {
+      hval = gst_rtspsrc_stream_make_keymgmt (src, stream);
+      gst_rtsp_message_take_header (&request, GST_RTSP_HDR_KEYMGMT, hval);
+    }
 
     /* if the user wants a non default RTP packet size we add the blocksize
      * parameter */
