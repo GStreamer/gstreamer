@@ -47,7 +47,7 @@
  *      #GST_H265_NAL_SEI: gst_h265_parser_parse_sei()
  *   </listitem>
  *   <listitem>
- *	    #GST_H265_NAL_VPS: gst_h265_parser_parse_vps()
+ *      #GST_H265_NAL_VPS: gst_h265_parser_parse_vps()
  *   </listitem>
  *   <listitem>
  *      #GST_H265_NAL_SPS: gst_h265_parser_parse_sps()

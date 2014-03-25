@@ -71,7 +71,7 @@ typedef enum {
  * else %FALSE.
  */
 #define GST_MPEG_VIDEO_PACKET_IS_SLICE(typecode) ((typecode) >= GST_MPEG_VIDEO_PACKET_SLICE_MIN && \
-						  (typecode) <= GST_MPEG_VIDEO_PACKET_SLICE_MAX)
+                                                  (typecode) <= GST_MPEG_VIDEO_PACKET_SLICE_MAX)
 
 /**
  * GstMpegVideoPacketExtensionCode:

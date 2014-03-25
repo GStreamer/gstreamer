@@ -51,7 +51,7 @@ G_BEGIN_DECLS
  *
  */
 typedef enum {
-  GST_H265_PROFILE_MAIN			= 1,
+  GST_H265_PROFILE_MAIN                 = 1,
   GST_H265_PROFILE_MAIN_10              = 2,
   GST_H265_PROFILE_MAIN_STILL_PICTURE   = 3
 } GstH265Profile;
@@ -88,31 +88,31 @@ typedef enum {
  */
 typedef enum
 {
-  GST_H265_NAL_SLICE_TRAIL_N	= 0,
-  GST_H265_NAL_SLICE_TRAIL_R	= 1,
-  GST_H265_NAL_SLICE_TSA_N	= 2,
-  GST_H265_NAL_SLICE_TSA_R	= 3,
-  GST_H265_NAL_SLICE_STSA_N	= 4,
-  GST_H265_NAL_SLICE_STSA_R	= 5,
-  GST_H265_NAL_SLICE_RADL_N	= 6,
-  GST_H265_NAL_SLICE_RADL_R	= 7,
-  GST_H265_NAL_SLICE_RASL_N	= 8,
-  GST_H265_NAL_SLICE_RASL_R	= 9,
-  GST_H265_NAL_SLICE_BLA_W_LP	= 16,
-  GST_H265_NAL_SLICE_BLA_W_RADL	= 17,
-  GST_H265_NAL_SLICE_BLA_N_LP	= 18,
-  GST_H265_NAL_SLICE_IDR_W_RADL	= 19,
-  GST_H265_NAL_SLICE_IDR_N_LP	= 20,
-  GST_H265_NAL_SLICE_CRA_NUT	= 21,
-  GST_H265_NAL_VPS		= 32,
-  GST_H265_NAL_SPS		= 33,
-  GST_H265_NAL_PPS		= 34,
-  GST_H265_NAL_AUD		= 35,
-  GST_H265_NAL_EOS		= 36,
-  GST_H265_NAL_EOB		= 37,
-  GST_H265_NAL_FD		= 38,
-  GST_H265_NAL_PREFIX_SEI	= 39,
-  GST_H265_NAL_SUFFIX_SEI	= 40
+  GST_H265_NAL_SLICE_TRAIL_N    = 0,
+  GST_H265_NAL_SLICE_TRAIL_R    = 1,
+  GST_H265_NAL_SLICE_TSA_N      = 2,
+  GST_H265_NAL_SLICE_TSA_R      = 3,
+  GST_H265_NAL_SLICE_STSA_N     = 4,
+  GST_H265_NAL_SLICE_STSA_R     = 5,
+  GST_H265_NAL_SLICE_RADL_N     = 6,
+  GST_H265_NAL_SLICE_RADL_R     = 7,
+  GST_H265_NAL_SLICE_RASL_N     = 8,
+  GST_H265_NAL_SLICE_RASL_R     = 9,
+  GST_H265_NAL_SLICE_BLA_W_LP   = 16,
+  GST_H265_NAL_SLICE_BLA_W_RADL = 17,
+  GST_H265_NAL_SLICE_BLA_N_LP   = 18,
+  GST_H265_NAL_SLICE_IDR_W_RADL = 19,
+  GST_H265_NAL_SLICE_IDR_N_LP   = 20,
+  GST_H265_NAL_SLICE_CRA_NUT    = 21,
+  GST_H265_NAL_VPS              = 32,
+  GST_H265_NAL_SPS              = 33,
+  GST_H265_NAL_PPS              = 34,
+  GST_H265_NAL_AUD              = 35,
+  GST_H265_NAL_EOS              = 36,
+  GST_H265_NAL_EOB              = 37,
+  GST_H265_NAL_FD               = 38,
+  GST_H265_NAL_PREFIX_SEI       = 39,
+  GST_H265_NAL_SUFFIX_SEI       = 40
 } GstH265NalUnitType;
 
 #define RESERVED_NON_IRAP_SUBLAYER_NAL_TYPE_MIN 10
@@ -192,19 +192,19 @@ typedef enum
  */
 typedef enum
 {
-  GST_H265_SEI_PIC_STRUCT_FRAME             		= 0,
-  GST_H265_SEI_PIC_STRUCT_TOP_FIELD         		= 1,
-  GST_H265_SEI_PIC_STRUCT_BOTTOM_FIELD      		= 2,
-  GST_H265_SEI_PIC_STRUCT_TOP_BOTTOM        		= 3,
-  GST_H265_SEI_PIC_STRUCT_BOTTOM_TOP        		= 4,
-  GST_H265_SEI_PIC_STRUCT_TOP_BOTTOM_TOP    		= 5,
-  GST_H265_SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM 		= 6,
-  GST_H265_SEI_PIC_STRUCT_FRAME_DOUBLING    		= 7,
-  GST_H265_SEI_PIC_STRUCT_FRAME_TRIPLING    		= 8,
-  GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_PREVIOUS_BOTTOM	= 9,
-  GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_PREVIOUS_TOP	= 10,
-  GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_NEXT_BOTTOM	= 11,
-  GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_NEXT_TOP	= 12
+  GST_H265_SEI_PIC_STRUCT_FRAME                         = 0,
+  GST_H265_SEI_PIC_STRUCT_TOP_FIELD                     = 1,
+  GST_H265_SEI_PIC_STRUCT_BOTTOM_FIELD                  = 2,
+  GST_H265_SEI_PIC_STRUCT_TOP_BOTTOM                    = 3,
+  GST_H265_SEI_PIC_STRUCT_BOTTOM_TOP                    = 4,
+  GST_H265_SEI_PIC_STRUCT_TOP_BOTTOM_TOP                = 5,
+  GST_H265_SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM             = 6,
+  GST_H265_SEI_PIC_STRUCT_FRAME_DOUBLING                = 7,
+  GST_H265_SEI_PIC_STRUCT_FRAME_TRIPLING                = 8,
+  GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_PREVIOUS_BOTTOM    = 9,
+  GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_PREVIOUS_TOP    = 10,
+  GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_NEXT_BOTTOM        = 11,
+  GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_NEXT_TOP        = 12
 } GstH265SEIPicStructType;
 
 /**
@@ -228,27 +228,27 @@ typedef enum
   GST_H265_QUANT_MATIX_32X32 = 3
 } GstH265QuantMatrixSize;
 
-typedef struct _GstH265Parser              GstH265Parser;
+typedef struct _GstH265Parser                   GstH265Parser;
 
-typedef struct _GstH265NalUnit                GstH265NalUnit;
+typedef struct _GstH265NalUnit                  GstH265NalUnit;
 
-typedef struct _GstH265VPS		      GstH265VPS;
-typedef struct _GstH265SPS                    GstH265SPS;
-typedef struct _GstH265PPS                    GstH265PPS;
-typedef struct _GstH265ProfileTierLevel	      GstH265ProfileTierLevel;
-typedef struct _GstH265SubLayerHRDParams      GstH265SubLayerHRDParams;
-typedef struct _GstH265HRDParams              GstH265HRDParams;
-typedef struct _GstH265VUIParams              GstH265VUIParams;
+typedef struct _GstH265VPS                      GstH265VPS;
+typedef struct _GstH265SPS                      GstH265SPS;
+typedef struct _GstH265PPS                      GstH265PPS;
+typedef struct _GstH265ProfileTierLevel         GstH265ProfileTierLevel;
+typedef struct _GstH265SubLayerHRDParams        GstH265SubLayerHRDParams;
+typedef struct _GstH265HRDParams                GstH265HRDParams;
+typedef struct _GstH265VUIParams                GstH265VUIParams;
 
-typedef struct _GstH265ScalingList	      GstH265ScalingList;
-typedef struct _GstH265RefPicListModification GstH265RefPicListModification;
-typedef struct _GstH265PredWeightTable        GstH265PredWeightTable;
-typedef struct _GstH265ShortTermRefPicSet     GstH265ShortTermRefPicSet;
-typedef struct _GstH265SliceHdr               GstH265SliceHdr;
+typedef struct _GstH265ScalingList              GstH265ScalingList;
+typedef struct _GstH265RefPicListModification   GstH265RefPicListModification;
+typedef struct _GstH265PredWeightTable          GstH265PredWeightTable;
+typedef struct _GstH265ShortTermRefPicSet       GstH265ShortTermRefPicSet;
+typedef struct _GstH265SliceHdr                 GstH265SliceHdr;
 
-typedef struct _GstH265PicTiming              GstH265PicTiming;
-typedef struct _GstH265BufferingPeriod        GstH265BufferingPeriod;
-typedef struct _GstH265SEIMessage             GstH265SEIMessage;
+typedef struct _GstH265PicTiming                GstH265PicTiming;
+typedef struct _GstH265BufferingPeriod          GstH265BufferingPeriod;
+typedef struct _GstH265SEIMessage               GstH265SEIMessage;
 
 /**
  * GstH265NalUnit:
@@ -282,14 +282,15 @@ struct _GstH265NalUnit
 
 /**
  * GstH265ProfileTierLevel:
- * @profile_space: specifies the context for the interpretation of general_profile_idc and
- *   		   general_profile_combatibility_flag
+ * @profile_space: specifies the context for the interpretation of
+ *   general_profile_idc and general_profile_combatibility_flag
  * @tier_flag: the tier context for the interpretation of general_level_idc
  * @profile_idc: profile id
  * @profile_compatibility_flag: compatibility flags
  * @progressive_source_flag: flag to indicate the type of stream
  * @interlaced_source_flag: flag to indicate the type of stream
- * @non_packed_constraint_flag: indicate the presence of frame packing arragement sei message
+ * @non_packed_constraint_flag: indicate the presence of frame packing
+ *   arragement sei message
  * @frame_only_constraint_flag: recognize the field_seq_flag
  * @level idc: indicate the level which the CVS confirms
  * @sub_layer_profile_present_flag: sublayer profile presence ind
@@ -300,9 +301,10 @@ struct _GstH265NalUnit
  * @sub_layer_profile_compatibility_flag[6][32]: compatibility flags for sublayers
  * @sub_layer_progressive_source_flag:progressive stream indicator for sublayer
  * @sub_layer_interlaced_source_flag: interlaced stream indicator for sublayer
- * @sub_layer_non_packed_constraint_flag: indicate the presence of frame packing arrangement
- * 					  sei message with in sublayers
- * @sub_layer_frame_only_constraint_flag:recognize the sublayer specific field_seq_flag
+ * @sub_layer_non_packed_constraint_flag: indicate the presence of
+ *   frame packing arrangement sei message with in sublayers
+ * @sub_layer_frame_only_constraint_flag:recognize the sublayer
+ *   specific field_seq_flag
  * @sub_layer_level_idc:indicate the sublayer specific level
  *
  * Define ProfileTierLevel parameters
@@ -336,16 +338,20 @@ struct _GstH265ProfileTierLevel {
 
 /**
  * GstH265SubLayerHRDParams:
- * @bit_rate_value_minus1:togeter with bit_rate_scale, it specifies the
- *	maximum input bitrate when the CPB operates at the access unit level
- * @cpb_size_value_minus1: is used together with cpb_size_scale to specify the CPB size
- *	when the CPB operates at the access unit level
- * @cpb_size_du_value_minus1: is used together with cpb_size_du_scale to
- *	specify the CPB size when the CPB operates at sub-picture level
- * @bit_rate_du_value_minus1: together with bit_rate_scale, it specifies the
- *	maximum input bit rate when the CPB operates at the sub-picture level
- * @cbr_flag: indicate whether HSS operates in intermittent bit rate mode or
- * 	constant bit rate mode.
+ * @bit_rate_value_minus1:togeter with bit_rate_scale, it specifies
+ *   the maximum input bitrate when the CPB operates at the access
+ *   unit level
+ * @cpb_size_value_minus1: is used together with cpb_size_scale to
+ *   specify the CPB size when the CPB operates at the access unit
+ *   level
+ * @cpb_size_du_value_minus1: is used together with cpb_size_du_scale
+ *   to specify the CPB size when the CPB operates at sub-picture
+ *   level
+ * @bit_rate_du_value_minus1: together with bit_rate_scale, it
+ *   specifies the maximum input bit rate when the CPB operates at the
+ *   sub-picture level
+ * @cbr_flag: indicate whether HSS operates in intermittent bit rate
+ *   mode or constant bit rate mode.
  *
  * Defines the Sublayer HRD parameters
  */
@@ -367,24 +373,24 @@ struct _GstH265SubLayerHRDParams
  * @sub_pic_hrd_params_present_flag: indicate the presence of sub_pic_hrd_params
  * @tick_divisor_minus2: is used to specify the clock sub-tick
  * @du_cpb_removal_delay_increment_length_minus1: specifies the length,
- *	in bits, of the nal_initial_cpb_removal_delay
+ *   in bits, of the nal_initial_cpb_removal_delay
  * @sub_pic_cpb_params_in_pic_timing_sei_flag: specifies the length, in bits, of
- *	the cpb_delay_offset and the au_cpb_removal_delay_minus1 syntax elements.
+ *   the cpb_delay_offset and the au_cpb_removal_delay_minus1 syntax elements.
  * @dpb_output_delay_du_length_minu1: specifies the length, in bits, of the
- *	dpb_delay_offset and the pic_dpb_output_delay syntax elements
+ *   dpb_delay_offset and the pic_dpb_output_delay syntax elements
  * @bit_rate_scale: maximum input bitrate
  * @cpb_size_scale: CPB size when operates in access unit level
  * @cpb_size_du_scale: CPB size when operates in sub-picture level
  * @initial_cpb_removal_delay_length_minus1: specifies the length, in bits, of the
- *	nal_initial_cpb_removal_delay, nal_initial_cpb_removal_offset,
- *	vcl_initial_cpb_removal_delay and vcl_initial_cpb_removal_offset.
+ *   nal_initial_cpb_removal_delay, nal_initial_cpb_removal_offset,
+ *   vcl_initial_cpb_removal_delay and vcl_initial_cpb_removal_offset.
  * @au_cpb_removal_delay_length_minus1: specifies the length, in bits, of the
- *	cpb_delay_offset and the au_cpb_removal_delay_minus1 syntax elements
+ *   cpb_delay_offset and the au_cpb_removal_delay_minus1 syntax elements
  * @dpb_output_delay_length_minus1: specifies the length, in bits, of the
- *	dpb_delay_offset and the pic_dpb_output_delay syntax elements
+ *   dpb_delay_offset and the pic_dpb_output_delay syntax elements
  * @fixed_pic_rate_general_flag: flag to indicate the presence of constraint
- *	on the temporal distance between the HRD output times of consecutive
- *	pictures in output order
+ *   on the temporal distance between the HRD output times of consecutive
+ *   pictures in output order
  * @fixed_pic_rate_within_cvs_flag: same as fixed_pic_rate_general_flag
  * @elemental_duration_in_tc_minus1: temporal distance in clock ticks
  * @low_delay_hrd_flag: specifies the HRD operational mode
@@ -426,34 +432,39 @@ struct _GstH265HRDParams
  * @id: vps id
  * @max_layers_minus1: should be zero, but can be other values in future
  * @max_sub_layers_minus1:specifies the maximum number of temporal sub-layers
- * @temporal_id_nesting_flag: specifies whether inter prediction is additionally restricted
- * @profile_tier_level:ProifleTierLevel info
- * @sub_layer_ordering_info_present_flag:
- *	indicates the presense of vps_max_dec_pic_buffering_minus1,
- *	vps_max_num_reorder_pics and vps_max_latency_increase_plus1
- * @max_dec_pic_buffering_minus1: specifies the maximum required size of
- *	the decoded picture buffer
- * @max_num_reorder_pics: indicates the maximum allowed number of pictures that can
- *	precede any picture in the CVS in decoding order
- * @max_latency_increase_plus1: is used to compute the value of VpsMaxLatencyPictures
+ * @temporal_id_nesting_flag: specifies whether inter prediction is
+ *   additionally restricted
+ * @profile_tier_level: ProfileTierLevel info
+ * @sub_layer_ordering_info_present_flag: indicates the presense of
+ *   vps_max_dec_pic_buffering_minus1, vps_max_num_reorder_pics and
+ *   vps_max_latency_increase_plus1
+ * @max_dec_pic_buffering_minus1: specifies the maximum required size
+ *   of the decoded picture buffer
+ * @max_num_reorder_pics: indicates the maximum allowed number of
+ *   pictures that can precede any picture in the CVS in decoding
+ *   order
+ * @max_latency_increase_plus1: is used to compute the value of
+ *   VpsMaxLatencyPictures
  * @max_layer_id: specifies the maximum allowed value of nuh_layer_id
  * @num_layer_sets_minus1: specifies the number of layer sets
- * @layer_id_included_flag: specifies whether a nuh_layer_id included in the
- *	layer identifier list
- * @timing_info_present_flag: indicate the presence of num_units_in_tick,
- *	time_scale, poc_proportional_to_timing_flag and num_hrd_parameters
+ * @layer_id_included_flag: specifies whether a nuh_layer_id included
+ *   in the layer identifier list
+ * @timing_info_present_flag: indicate the presence of
+ *   num_units_in_tick, time_scale, poc_proportional_to_timing_flag
+ *   and num_hrd_parameters
  * @num_units_in_tick: number of time units in a tick
  * @time_scale: number of time units that pass in one second
- * @poc_proportional_to_timing_flag: indicate whether the picture order count is
- *	proportional to output timin
- * @num_ticks_poc_diff_one_minus1: specifies the number of clock ticks corresponding
- *	to a difference of picture order count values equal to 1
+ * @poc_proportional_to_timing_flag: indicate whether the picture
+ *   order count is proportional to output timin
+ * @num_ticks_poc_diff_one_minus1: specifies the number of clock ticks
+ *   corresponding to a difference of picture order count values equal
+ *   to 1
  * @num_hrd_parameters: number of hrd_parameters present
  * @hrd_layer_set_idx: index to the list of layer hrd params.
  * @hrd_params: the GstH265HRDParams list
  *
  * Defines the VPS parameters
- **/
+ */
 struct _GstH265VPS {
   guint8 id;
 
@@ -647,10 +658,10 @@ struct _GstH265VUIParams
 
 /**
  * GstH265ScalingList:
- * @scaling_list_dc_coef_minus8_16x16: this plus 8 specifies the DC Coefficient
- *	values for 16x16 scaling list
- * @scaling_list_dc_coef_minus8_32x32: this plus 8 specifies the DC Coefficient
- *	values for 32x32 scaling list
+ * @scaling_list_dc_coef_minus8_16x16: this plus 8 specifies the DC
+ *   Coefficient values for 16x16 scaling list
+ * @scaling_list_dc_coef_minus8_32x32: this plus 8 specifies the DC
+ *   Coefficient values for 32x32 scaling list
  * @scaling_lists_4x4: 4x4 scaling list
  * @scaling_lists_8x8: 8x8 scaling list
  * @scaling_lists_16x16: 16x16 scaling list

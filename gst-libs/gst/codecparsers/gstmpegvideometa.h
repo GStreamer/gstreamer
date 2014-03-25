@@ -68,7 +68,7 @@ struct _GstMpegVideoMeta {
   GstMpegVideoPictureExt         *picext;
   GstMpegVideoQuantMatrixExt     *quantext;
 
-  guint	num_slices;
+  guint num_slices;
   gsize slice_offset;
 };
 
@@ -77,12 +77,12 @@ struct _GstMpegVideoMeta {
 
 GstMpegVideoMeta *
 gst_buffer_add_mpeg_video_meta (GstBuffer * buffer, 
-				const GstMpegVideoSequenceHdr *seq_hdr,
-				const GstMpegVideoSequenceExt *seq_ext,
-				const GstMpegVideoSequenceDisplayExt *disp_ext,
-				const GstMpegVideoPictureHdr *pic_hdr,
-				const GstMpegVideoPictureExt *pic_ext,
-				const GstMpegVideoQuantMatrixExt *quant_ext);
+                                const GstMpegVideoSequenceHdr *seq_hdr,
+                                const GstMpegVideoSequenceExt *seq_ext,
+                                const GstMpegVideoSequenceDisplayExt *disp_ext,
+                                const GstMpegVideoPictureHdr *pic_hdr,
+                                const GstMpegVideoPictureExt *pic_ext,
+                                const GstMpegVideoQuantMatrixExt *quant_ext);
 
 G_END_DECLS
 
