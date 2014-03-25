@@ -490,9 +490,10 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 
   region->clut = *buf++;
 
-  if (region->depth == 8)
+  if (region->depth == 8) {
     region->bgcolor = *buf++;
-  else {
+    buf += 1;                   /* Skip undefined 4-bit and 2-bit field */
+  } else {
     buf += 1;
 
     if (region->depth == 4)
@@ -913,6 +914,8 @@ _dvb_sub_read_8bit_string (guint8 * destbuf, gint dbuf_len,
   }
 
   GST_LOG ("Returning with %u pixels read", pixels_read);
+
+  *srcbuf += (gst_bit_reader_get_pos (&gb) + 7) >> 3;
 
   // FIXME: Shouldn't need this variable if tracking things in the loop better
   return pixels_read;
