@@ -988,13 +988,6 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  if (verbose) {
-    gchar **exclude_list =
-        exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
-    deep_notify_id = g_signal_connect (pipeline, "deep-notify",
-        G_CALLBACK (gst_object_default_deep_notify), exclude_list);
-  }
-
   if (!savefile) {
     GstState state, pending;
     GstStateChangeReturn ret;
@@ -1010,6 +1003,12 @@ main (int argc, char *argv[])
       }
       gst_bin_add (GST_BIN (real_pipeline), pipeline);
       pipeline = real_pipeline;
+    }
+    if (verbose) {
+      gchar **exclude_list =
+          exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
+      deep_notify_id = g_signal_connect (pipeline, "deep-notify",
+          G_CALLBACK (gst_object_default_deep_notify), exclude_list);
     }
 #if 0
     if (check_index) {
