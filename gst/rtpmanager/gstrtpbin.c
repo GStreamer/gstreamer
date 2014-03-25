@@ -2684,6 +2684,17 @@ manage_failed:
   }
 }
 
+static gboolean
+copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstPad *gpad = GST_PAD_CAST (user_data);
+
+  GST_DEBUG_OBJECT (gpad, "store sticky event %" GST_PTR_FORMAT, *event);
+  gst_pad_store_sticky_event (gpad, *event);
+
+  return TRUE;
+}
+
 /* a new pad (SSRC) was created in @session. This signal is emited from the
  * payload demuxer. */
 static void
@@ -2714,6 +2725,7 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
   gst_pad_set_active (gpad, TRUE);
   GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
 
+  gst_pad_sticky_events_foreach (pad, copy_sticky_events, gpad);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
 
   return;
