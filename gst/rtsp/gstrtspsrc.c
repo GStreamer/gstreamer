@@ -3536,6 +3536,9 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
 
     s = gst_caps_get_structure (item->caps, 0);
     gst_structure_set_name (s, media_type);
+    /* set ssrc if known */
+    if (transport->ssrc)
+      gst_structure_set (s, "ssrc", G_TYPE_UINT, transport->ssrc, NULL);
   }
 
   /* try to get and configure a manager, channelpad[0-1] will be configured with
