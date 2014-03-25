@@ -13,6 +13,7 @@ libgstglandroidinclude_HEADERS = \
 
 libgstgl_android_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
+	-I$(top_builddir)/gst-libs \
 	$(GL_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
