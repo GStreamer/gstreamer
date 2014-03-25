@@ -2240,11 +2240,42 @@ no_supported_capture_method:
 }
 
 static void
+gst_v4l2_object_extrapolate_stride (GstV4l2Object * v4l2object,
+    struct v4l2_format *format, const GstVideoFormatInfo * finfo, guint stride)
+{
+  gint i;
+
+  g_return_if_fail (v4l2object->n_v4l2_planes == 1);
+
+  /* figure out the frame layout */
+  for (i = 0; i < finfo->n_planes; i++) {
+    switch (finfo->format) {
+      case GST_VIDEO_FORMAT_NV12:
+      case GST_VIDEO_FORMAT_NV21:
+      case GST_VIDEO_FORMAT_NV16:
+      case GST_VIDEO_FORMAT_NV24:
+        v4l2object->bytesperline[i] = (i == 0 ? 1 : 2) *
+            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
+        break;
+      default:
+        v4l2object->bytesperline[i] =
+            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
+        break;
+    }
+
+    GST_DEBUG_OBJECT (v4l2object->element,
+        "Extrapolated stride for plane %d from %d to %d", i, stride,
+        v4l2object->bytesperline[i]);
+  }
+}
+
+static void
 gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
     struct v4l2_fmtdesc *fmtdesc, struct v4l2_format *format,
     GstVideoInfo * info, GstVideoAlignment * align)
 {
   const GstVideoFormatInfo *finfo = info->finfo;
+  guint stride;
   gint i;
 
   if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
@@ -2256,34 +2287,18 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
           format->fmt.pix_mp.plane_fmt[i].bytesperline;
       v4l2object->sizeimage += format->fmt.pix_mp.plane_fmt[i].sizeimage;
     }
+
+    /* Extrapolate stride if planar format are being set in 1 v4l2 plane */
+    if (v4l2object->n_v4l2_planes < finfo->n_planes) {
+      stride = format->fmt.pix_mp.plane_fmt[0].bytesperline;
+      gst_v4l2_object_extrapolate_stride (v4l2object, format, finfo, stride);
+    }
   } else {
     /* only one plane in non-MPLANE mode */
     v4l2object->n_v4l2_planes = 1;
-
-    /* figure out the frame layout */
-    for (i = 0; i < finfo->n_planes; i++) {
-      guint stride = format->fmt.pix.bytesperline;
-
-      switch (finfo->format) {
-        case GST_VIDEO_FORMAT_NV12:
-        case GST_VIDEO_FORMAT_NV21:
-        case GST_VIDEO_FORMAT_NV16:
-        case GST_VIDEO_FORMAT_NV24:
-          v4l2object->bytesperline[i] = (i == 0 ? 1 : 2) *
-              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
-          break;
-        default:
-          v4l2object->bytesperline[i] =
-              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
-          break;
-      }
-
-      GST_DEBUG_OBJECT (v4l2object->element,
-          "Extrapolated stride for plane %d from %d to %d", i, stride,
-          v4l2object->bytesperline[i]);
-    }
-
     v4l2object->sizeimage = format->fmt.pix.sizeimage;
+    stride = format->fmt.pix.bytesperline;
+    gst_v4l2_object_extrapolate_stride (v4l2object, format, finfo, stride);
   }
 
   GST_DEBUG_OBJECT (v4l2object->element, "Got sizeimage %u",
