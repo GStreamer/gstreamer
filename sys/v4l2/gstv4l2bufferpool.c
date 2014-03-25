@@ -1441,13 +1441,23 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
         {
           GstBuffer *tmp;
 
-          if (buf->pool == bpool)
-            /* nothing, data was inside the buffer when we did _acquire() */
-            goto done;
+          if (buf->pool == bpool) {
+            if (gst_buffer_get_size (buf) == 0)
+              goto eos;
+            else
+              /* nothing, data was inside the buffer when we did _acquire() */
+              goto done;
+          }
 
           /* buffer not from our pool, grab a frame and copy it into the target */
           if ((ret = gst_v4l2_buffer_pool_dqbuf (pool, &tmp)) != GST_FLOW_OK)
             goto done;
+
+          /* An empty buffer on capture indicates the end of stream */
+          if (gst_buffer_get_size (tmp) == 0) {
+            gst_buffer_unref (tmp);
+            goto eos;
+          }
 
           if (!gst_v4l2_object_copy (obj, buf, tmp))
             goto copy_failed;
@@ -1555,6 +1565,11 @@ start_failed:
   {
     GST_ERROR_OBJECT (obj->element, "failed to start streaming");
     return GST_FLOW_ERROR;
+  }
+eos:
+  {
+    GST_DEBUG_OBJECT (obj->element, "end of stream reached");
+    return GST_FLOW_EOS;
   }
 }
 

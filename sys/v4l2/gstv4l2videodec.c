@@ -393,10 +393,6 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
   if (ret != GST_FLOW_OK)
     goto beach;
 
-  /* Check if buffer isn't the last one */
-  if (gst_buffer_get_size (buffer) == 0)
-    goto beach;
-
   GST_LOG_OBJECT (decoder, "Process output buffer");
   ret =
       gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->
