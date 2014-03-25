@@ -534,6 +534,10 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       case GST_H264_SEI_STEREO_VIDEO_INFO:
         GST_LOG_OBJECT (h264parse, "stereo video information message");
         break;
+      case GST_H264_SEI_FRAME_PACKING:
+        GST_LOG_OBJECT (h264parse, "frame packing arrangement message: type %d",
+            sei.payload.frame_packing.frame_packing_type);
+        break;
     }
   }
   g_array_free (messages, TRUE);

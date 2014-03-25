@@ -171,6 +171,30 @@ typedef enum
 } GstH264ParserResult;
 
 /**
+ * GstH264FramePackingType:
+ * @GST_H264_FRAME_PACKING_NONE: A complete 2D frame without any frame packing
+ * @GST_H264_FRAME_PACKING_CHECKERBOARD_INTERLEAVING: Checkerboard
+ *   based interleaving
+ * @GST_H264_FRAME_PACKING_COLUMN_INTERLEAVING: Column based interleaving
+ * @GST_H264_FRAME_PACKING_ROW_INTERLEAVING: Row based interleaving
+ * @GST_H264_FRAME_PACKING_SIDE_BY_SIDE: Side-by-side packing
+ * @GST_H264_FRMAE_PACKING_TOP_BOTTOM: Top-Bottom packing
+ * @GST_H264_FRAME_PACKING_TEMPORAL_INTERLEAVING: Temporal interleaving
+ *
+ * Frame packing arrangement types.
+ */
+typedef enum
+{
+  GST_H264_FRAME_PACKING_NONE                           = 6,
+  GST_H264_FRAME_PACKING_CHECKERBOARD_INTERLEAVING      = 0,
+  GST_H264_FRAME_PACKING_COLUMN_INTERLEAVING            = 1,
+  GST_H264_FRAME_PACKING_ROW_INTERLEAVING               = 2,
+  GST_H264_FRAME_PACKING_SIDE_BY_SIDE                   = 3,
+  GST_H264_FRMAE_PACKING_TOP_BOTTOM                     = 4,
+  GST_H264_FRAME_PACKING_TEMPORAL_INTERLEAVING          = 5
+} GstH264FramePackingType;
+
+/**
  * GstH264SEIPayloadType:
  * @GST_H264_SEI_BUF_PERIOD: Buffering Period SEI Message
  * @GST_H264_SEI_PIC_TIMING: Picture Timing SEI Message
@@ -184,7 +208,8 @@ typedef enum
   GST_H264_SEI_BUF_PERIOD = 0,
   GST_H264_SEI_PIC_TIMING = 1,
   GST_H264_SEI_RECOVERY_POINT = 6,
-  GST_H264_SEI_STEREO_VIDEO_INFO = 21
+  GST_H264_SEI_STEREO_VIDEO_INFO = 21,
+  GST_H264_SEI_FRAME_PACKING = 45
       /* and more...  */
 } GstH264SEIPayloadType;
 
@@ -263,6 +288,7 @@ typedef struct _GstH264PicTiming              GstH264PicTiming;
 typedef struct _GstH264BufferingPeriod        GstH264BufferingPeriod;
 typedef struct _GstH264RecoveryPoint          GstH264RecoveryPoint;
 typedef struct _GstH264StereoVideoInfo        GstH264StereoVideoInfo;
+typedef struct _GstH264FramePacking           GstH264FramePacking;
 typedef struct _GstH264SEIMessage             GstH264SEIMessage;
 
 /**
@@ -844,6 +870,26 @@ struct _GstH264ClockTimestamp
   guint32 time_offset;
 };
 
+struct _GstH264FramePacking
+{
+  guint32 frame_packing_id;
+  guint8 frame_packing_cancel_flag;
+  guint8 frame_packing_type; /* GstH264FramePackingType */
+  guint8 quincunx_sampling_flag;
+  guint8 content_interpretation_type;
+  guint8 spatial_flipping_flag;
+  guint8 frame0_flipped_flag;
+  guint8 field_views_flag;
+  guint8 current_frame_is_frame0_flag;
+  guint8 frame0_self_contained_flag;
+  guint8 frame1_self_contained_flag;
+  guint8 frame0_grid_position_x;
+  guint8 frame0_grid_position_y;
+  guint8 frame1_grid_position_x;
+  guint8 frame1_grid_position_y;
+  guint16 frame_packing_repetition_period;
+};
+
 struct _GstH264StereoVideoInfo
 {
   guint8 field_views_flag;
@@ -897,6 +943,7 @@ struct _GstH264SEIMessage
     GstH264PicTiming pic_timing;
     GstH264RecoveryPoint recovery_point;
     GstH264StereoVideoInfo stereo_video_info;
+    GstH264FramePacking frame_packing;
     /* ... could implement more */
   } payload;
 };
