@@ -334,26 +334,6 @@ max_cipher_key_size (GstSrtpEnc * filter)
   return (rtp_size > rtcp_size) ? rtp_size : rtcp_size;
 }
 
-static gboolean
-check_key_size (GstSrtpEnc * filter)
-{
-  guint expected;
-  gboolean res;
-
-  expected = max_cipher_key_size (filter);
-
-  res = gst_buffer_get_size (filter->key) == expected;
-
-  if (!res) {
-    GST_ELEMENT_ERROR (filter, LIBRARY, SETTINGS,
-        ("Master key size is wrong"),
-        ("Expected master key of %d bytes, but received %" G_GSIZE_FORMAT
-            " bytes", expected, gst_buffer_get_size (filter->key)));
-  }
-
-  return res;
-}
-
 /* Create stream
  */
 static gboolean
@@ -373,6 +353,9 @@ check_new_stream_locked (GstSrtpEnc * filter, guint32 ssrc)
   GST_OBJECT_LOCK (filter);
 
   if (HAS_CRYPTO (filter)) {
+    guint expected;
+    gsize keysize;
+
     if (filter->key == NULL) {
       GST_OBJECT_UNLOCK (filter);
       GST_ELEMENT_ERROR (filter, LIBRARY, SETTINGS,
@@ -380,8 +363,16 @@ check_new_stream_locked (GstSrtpEnc * filter, guint32 ssrc)
           ("Cipher is not NULL, key must be set"));
       return FALSE;
     }
-    if (!check_key_size (filter)) {
+
+    expected = max_cipher_key_size (filter);
+    keysize = gst_buffer_get_size (filter->key);
+
+    if (expected != keysize) {
       GST_OBJECT_UNLOCK (filter);
+      GST_ELEMENT_ERROR (filter, LIBRARY, SETTINGS,
+          ("Master key size is wrong"),
+          ("Expected master key of %d bytes, but received %" G_GSIZE_FORMAT
+              " bytes", expected, keysize));
       return FALSE;
     }
   }
