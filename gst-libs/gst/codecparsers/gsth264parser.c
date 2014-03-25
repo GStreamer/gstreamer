@@ -893,18 +893,13 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
       res = gst_h264_parser_parse_pic_timing (nalparser,
           &sei->payload.pic_timing, nr);
       break;
-    default:{
+    default:
       /* Just consume payloadSize bytes, which does not account for
          emulation prevention bytes */
-      guint nbits = payload_size % 8;
-      while (payload_size > 0) {
-        nal_reader_skip (nr, nbits);
-        payload_size -= nbits;
-        nbits = 8;
-      }
+      if (!nal_reader_skip_long (nr, payload_size))
+        goto error;
       res = GST_H264_PARSER_OK;
       break;
-    }
   }
 
   /* When SEI message doesn't end at byte boundary,

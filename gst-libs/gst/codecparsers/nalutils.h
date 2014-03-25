@@ -57,6 +57,7 @@ void nal_reader_init (NalReader * nr, const guint8 * data, guint size);
 
 gboolean nal_reader_read (NalReader * nr, guint nbits);
 gboolean nal_reader_skip (NalReader * nr, guint nbits);
+gboolean nal_reader_skip_long (NalReader * nr, guint nbits);
 guint nal_reader_get_pos (const NalReader * nr);
 guint nal_reader_get_remaining (const NalReader * nr);
 guint nal_reader_get_epb_count (const NalReader * nr);
