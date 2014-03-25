@@ -1111,8 +1111,8 @@ gst_value_compare_int_range (const GValue * value1, const GValue * value2)
      and bounds lie on the same value */
   if (n1 > 1) {
     if (INT_RANGE_STEP (value1) == INT_RANGE_STEP (value2) &&
-        INT_RANGE_STEP (value1) == INT_RANGE_STEP (value2) &&
-        INT_RANGE_STEP (value1) == INT_RANGE_STEP (value2)) {
+        INT_RANGE_MIN (value1) == INT_RANGE_MIN (value2) &&
+        INT_RANGE_MAX (value1) == INT_RANGE_MAX (value2)) {
       return GST_VALUE_EQUAL;
     }
     return GST_VALUE_UNORDERED;
@@ -1366,8 +1366,8 @@ gst_value_compare_int64_range (const GValue * value1, const GValue * value2)
      and bounds lie on the same value */
   if (n1 > 1) {
     if (INT64_RANGE_STEP (value1) == INT64_RANGE_STEP (value2) &&
-        INT64_RANGE_STEP (value1) == INT64_RANGE_STEP (value2) &&
-        INT64_RANGE_STEP (value1) == INT64_RANGE_STEP (value2)) {
+        INT64_RANGE_MIN (value1) == INT64_RANGE_MIN (value2) &&
+        INT64_RANGE_MAX (value1) == INT64_RANGE_MAX (value2)) {
       return GST_VALUE_EQUAL;
     }
     return GST_VALUE_UNORDERED;
