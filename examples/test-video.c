@@ -59,6 +59,7 @@ main (int argc, char *argv[])
 #endif
 #ifdef WITH_TLS
   GTlsCertificate *cert;
+  GError *error = NULL;
 #endif
 
   gst_init (&argc, &argv);
@@ -95,7 +96,11 @@ main (int argc, char *argv[])
       "tTdPbW829BoUtIeH64cCIQDggG5i48v7HPacPBIH1RaSVhXl8qHCpQD3qrIw3FMw"
       "DwIga8PqH5Sf5sHedy2+CiK0V4MRfoU4c3zQ6kArI+bEgSkCIQCLA1vXBiE31B5s"
       "bdHoYa1BXebfZVd+1Hd95IfEM5mbRwIgSkDuQwV55BBlvWph3U8wVIMIb4GStaH8"
-      "W535W8UBbEg=" "-----END PRIVATE KEY-----", -1, NULL);
+      "W535W8UBbEg=" "-----END PRIVATE KEY-----", -1, &error);
+  if (cert == NULL) {
+    g_printerr ("failed to parse PEM: %s\n", error->message);
+    return -1;
+  }
   gst_rtsp_auth_set_tls_certificate (auth, cert);
   g_object_unref (cert);
 #endif
