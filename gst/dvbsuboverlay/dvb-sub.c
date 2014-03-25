@@ -644,14 +644,6 @@ _dvb_sub_read_2bit_string (guint8 * destbuf, gint dbuf_len,
   guint32 bits = 0;
   guint32 pixels_read = 0;
 
-  static gboolean warning_shown = FALSE;
-  if (!warning_shown) {
-    g_warning ("Parsing 2bit color DVB sub-picture. This is not tested at all. "
-        "If you see this message, please provide the developers with sample "
-        "media with these subtitles, if possible.");
-    warning_shown = TRUE;
-  }
-
   GST_TRACE ("dbuf_len = %d", dbuf_len);
 
   while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 0)) {
@@ -841,14 +833,6 @@ _dvb_sub_read_8bit_string (guint8 * destbuf, gint dbuf_len,
   gboolean stop_parsing = FALSE;
   guint32 bits = 0;
   guint32 pixels_read = 0;
-
-  static gboolean warning_shown = FALSE;
-  if (!warning_shown) {
-    g_warning
-        ("Parsing 8bit color DVB sub-picture. This is not tested at all. If you see this message, "
-        "please provide the developers with sample media with these subtitles, if possible.");
-    warning_shown = TRUE;
-  }
 
   GST_LOG ("dbuf_len = %d", dbuf_len);
 
