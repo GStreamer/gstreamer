@@ -173,7 +173,7 @@ typedef struct
   GCond *cond;
   gboolean flushing;
   GstMiniObject *popped_obj;
-  GstMemory *current_mem;
+  GstBuffer *current_buffer;
 
   GstBufferPool *pool;
   /* GLib mainloop */
@@ -537,8 +537,7 @@ gst_custom_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
   /* XXX: Don't return the memory we just rendered, glEGLImageTargetTexture2DOES()
    * keeps the EGLImage unmappable until the next one is uploaded
    */
-  if (*buffer
-      && gst_buffer_peek_memory (*buffer, 0) == pool->state->current_mem) {
+  if (*buffer && *buffer == pool->state->current_buffer) {
     GstBuffer *oldbuf = *buffer;
 
     ret =
@@ -961,12 +960,14 @@ render_scene (APP_STATE_T * state)
 static void
 update_image (APP_STATE_T * state, GstBuffer * buffer)
 {
-  GstMemory *mem = gst_buffer_peek_memory (buffer, 0);
+  GstMemory *mem = NULL;
 
-  if (state->current_mem) {
-    gst_memory_unref (state->current_mem);
+  if (state->current_buffer) {
+    gst_buffer_unref (state->current_buffer);
   }
-  state->current_mem = gst_memory_ref (mem);
+  state->current_buffer = gst_buffer_ref (buffer);
+
+  mem = gst_buffer_peek_memory (buffer, 0);
 
   TRACE_VC_MEMORY_ONCE_FOR_ID ("before glEGLImageTargetTexture2DOES", gid0);
 
@@ -1006,10 +1007,10 @@ terminate_intercom (APP_STATE_T * state)
 static void
 flush_internal (APP_STATE_T * state)
 {
-  if (state->current_mem) {
-    gst_memory_unref (state->current_mem);
+  if (state->current_buffer) {
+    gst_buffer_unref (state->current_buffer);
   }
-  state->current_mem = NULL;
+  state->current_buffer = NULL;
 }
 
 static void
@@ -1695,6 +1696,7 @@ main (int argc, char **argv)
   /* Clear application state */
   memset (state, 0, sizeof (*state));
   state->animate = TRUE;
+  state->current_buffer = NULL;
 
   /* must initialise the threading system before using any other GLib funtion */
   if (!g_thread_supported ())
