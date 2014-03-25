@@ -140,8 +140,10 @@ main (int argc, char *argv[])
       GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT, G_TYPE_BOOLEAN, TRUE, NULL);
   gst_rtsp_media_factory_set_permissions (factory, permissions);
   gst_rtsp_permissions_unref (permissions);
-#endif
+#ifdef WITH_TLS
   gst_rtsp_media_factory_set_profiles (factory, GST_RTSP_PROFILE_SAVP);
+#endif
+#endif
 
   /* attach the test factory to the /test url */
   gst_rtsp_mount_points_add_factory (mounts, "/test", factory);
