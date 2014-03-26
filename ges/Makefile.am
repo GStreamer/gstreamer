@@ -128,7 +128,8 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-smart-adder.h \
 	ges-smart-video-mixer.h \
 	ges-utils.h \
-	ges-group.h
+	ges-group.h \
+	ges-version.h
 
 noinst_HEADERS = \
 	ges-internal.h \
