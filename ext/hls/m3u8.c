@@ -679,28 +679,32 @@ out:
   return ret;
 }
 
-static gint
+static gboolean
 _find_current (GstM3U8MediaFile * file, GstM3U8Client * client)
 {
-  return file->sequence == client->sequence;
+  return file->sequence != client->sequence;
 }
 
-static gboolean
-_find_next (GstM3U8MediaFile * file, GstM3U8Client * client)
+static GList *
+find_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
 {
-  GST_DEBUG ("Found fragment %u", (guint) file->sequence);
-  if (file->sequence >= client->sequence)
-    return FALSE;
-  return TRUE;
-}
+  GstM3U8MediaFile *file;
 
-static gboolean
-_find_previous (GstM3U8MediaFile * file, GstM3U8Client * client)
-{
-  GST_DEBUG ("Found fragment %u", (guint) file->sequence);
-  if (file->sequence <= client->sequence)
-    return FALSE;
-  return TRUE;
+  if (!forward)
+    l = g_list_last (l);
+
+  while (l) {
+    file = l->data;
+
+    if (forward && file->sequence >= client->sequence)
+      break;
+    else if (!forward && file->sequence <= client->sequence)
+      break;
+
+    l = (forward ? l->next : l->prev);
+  }
+
+  return l;
 }
 
 gboolean
@@ -721,9 +725,8 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     GST_M3U8_CLIENT_UNLOCK (client);
     return FALSE;
   }
-  l = g_list_find_custom (client->current->files, client,
-      (GCompareFunc) (forward ? _find_next : _find_previous));
-  if (l == NULL) {
+  l = find_next_fragment (client, client->current->files, forward);
+  if (!l) {
     GST_M3U8_CLIENT_UNLOCK (client);
     return FALSE;
   }
@@ -749,6 +752,8 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     *key = file->key;
   if (iv)
     *iv = file->iv;
+
+  client->sequence = file->sequence;
 
   GST_M3U8_CLIENT_UNLOCK (client);
   return TRUE;
