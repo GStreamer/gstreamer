@@ -132,12 +132,19 @@ static void
 gst_aiff_mux_write_form_header (GstAiffMux * aiffmux, guint32 audio_data_size,
     GstByteWriter * writer)
 {
+  guint64 cur_size;
+
   /* ckID == 'FORM' */
   gst_byte_writer_put_uint32_le_unchecked (writer,
       GST_MAKE_FOURCC ('F', 'O', 'R', 'M'));
-  /* ckSize is currently bogus but we'll know what it is later */
-  gst_byte_writer_put_uint32_be_unchecked (writer,
-      audio_data_size + AIFF_HEADER_LEN - 8);
+
+  /* AIFF chunks must be even aligned */
+  cur_size = AIFF_HEADER_LEN - 8 + audio_data_size;
+  if ((cur_size & 1) && cur_size + 1 < G_MAXUINT32) {
+    cur_size += 1;
+  }
+
+  gst_byte_writer_put_uint32_be_unchecked (writer, cur_size);
   /* formType == 'AIFF' */
   gst_byte_writer_put_uint32_le_unchecked (writer,
       GST_MAKE_FOURCC ('A', 'I', 'F', 'F'));
@@ -395,7 +402,24 @@ gst_aiff_mux_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:{
+      guint64 cur_size;
       GST_DEBUG_OBJECT (aiffmux, "got EOS");
+
+      cur_size = aiffmux->length + AIFF_HEADER_LEN - 8;
+
+      /* ID3 chunk must be even aligned */
+      if ((aiffmux->length & 1) && cur_size + 1 < G_MAXUINT32) {
+        GstFlowReturn ret;
+        guint8 *data = g_new0 (guint8, 1);
+        GstBuffer *buffer = gst_buffer_new_wrapped (data, 1);
+        GST_BUFFER_OFFSET (buffer) = AIFF_HEADER_LEN + aiffmux->length;
+        GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
+        ret = gst_pad_push (aiffmux->srcpad, buffer);
+        if (ret != GST_FLOW_OK) {
+          GST_WARNING_OBJECT (aiffmux, "failed to push padding byte: %s",
+              gst_flow_get_name (ret));
+        }
+      }
 
       /* write header with correct length values */
       gst_aiff_mux_push_header (aiffmux, aiffmux->length);
