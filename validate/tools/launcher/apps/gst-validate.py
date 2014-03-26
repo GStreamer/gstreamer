@@ -170,12 +170,13 @@ class GstValidateLaunchTest(GstValidateTest):
 
 
 class GstValidateMediaCheckTest(Test):
-    def __init__(self, classname, options, reporter, media_info_path, uri, timeout=DEFAULT_TIMEOUT):
+    def __init__(self, classname, options, reporter, file_infos, uri, timeout=DEFAULT_TIMEOUT):
         super(GstValidateMediaCheckTest, self).__init__(G_V_DISCOVERER_COMMAND, classname,
                                               options, reporter,
                                               timeout=timeout)
         self._uri = uri
-        self._media_info_path = urlparse.urlparse(media_info_path).path
+        self.file_infos = file_infos
+        self._media_info_path = urlparse.urlparse(file_infos.path).path
 
     def build_arguments(self):
         self.add_arguments(self._uri, "--expected-results",
@@ -298,7 +299,7 @@ class GstValidateManager(TestsManager, Loggable):
             self.add_test(GstValidateMediaCheckTest(classname,
                                                     self.options,
                                                     self.reporter,
-                                                    mediainfo.path,
+                                                    mediainfo,
                                                     uri,
                                                     timeout=timeout))
 
@@ -314,6 +315,7 @@ class GstValidateManager(TestsManager, Loggable):
                                                          self.reporter,
                                                          comb, uri,
                                                          mediainfo.config))
+        return self.tests
 
     def _check_discovering_info(self, media_info, uri=None):
         self.debug("Checking %s", media_info)
@@ -426,10 +428,15 @@ class GstValidateManager(TestsManager, Loggable):
                                                 scenario=scenario))
 
     def needs_http_server(self):
-        for uri, mediainfo in self._list_uris():
-            if urlparse.urlparse(uri).scheme == Protocols.HTTP and \
+        for test in self.list_tests():
+            if self._is_test_wanted(test):
+                protocol = test.file_infos.config.get("file-info", "protocol")
+                uri = test.file_infos.config.get("file-info", "uri")
+
+                if protocol == Protocols.HTTP and \
                     "127.0.0.1:%s" % (self.options.http_server_port) in uri:
-                return True
+                    return True
+        return False
 
     def get_blacklisted(self):
         return G_V_BLACKLISTED_TESTS
