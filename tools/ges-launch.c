@@ -127,6 +127,7 @@ error_loading_asset_cb (GESProject * project, GError * error,
     const gchar * failed_id, GType extractable_type)
 {
   g_printerr ("Error loading asset %s: %s\n", failed_id, error->message);
+  seenerrors = TRUE;
 
   g_main_loop_quit (mainloop);
 }
