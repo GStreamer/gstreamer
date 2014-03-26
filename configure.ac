@@ -954,7 +954,8 @@ case $host in
       fi
     fi
     ;;
-  *-darwin*)
+  i386-darwin* | x86_64-darwin*)
+    dnl Only osx supports cocoa. ios requires EAGL.
     if test "x$NEED_WGL" = "xyes"; then
       AC_MSG_ERROR([WGL is not available on Mac OS X])
     fi
