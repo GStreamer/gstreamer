@@ -63,15 +63,20 @@ class Test(Loggable):
         self._starting_time = None
         self.result = Result.NOT_RUN
         self.logfile = None
+        self.extra_logfiles = []
 
     def __str__(self):
         string = self.classname
         if self.result != Result.NOT_RUN:
             string += ": " + self.result
             if self.result in [Result.FAILED, Result.TIMEOUT]:
-                string += " '%s'\n       You can reproduce with: %s\n       " \
-                    "You can find logs in: %s" % (self.message, self.command,
-                                                  self.logfile)
+                string += " '%s'\n" \
+                          "       You can reproduce with: %s\n" \
+                          "       You can find logs in:\n" \
+                          "             - %s" % (self.message, self.command,
+                                                 self.logfile)
+                for log in self.extra_logfiles:
+                    string += "\n             - %s" % log
 
         return string
 
@@ -173,20 +178,30 @@ class Test(Loggable):
 
         self.check_results()
 
+    def get_subproc_env(self):
+        return os.environ
+
     def run(self):
         self.command = "%s " % (self.application)
         self._starting_time = time.time()
         self.build_arguments()
-        printc("Launching: %s%s\n"
-               "           logs are in %s\n"
-               "           Command: '%s'"
-               % (Colors.ENDC, self.classname,
-                  self.logfile, self.command), Colors.OKBLUE)
+        proc_env = self.get_subproc_env()
+
+        message = "Launching: %s%s\n" \
+                  "    Command: '%s'\n" \
+                  "    Logs:\n" \
+                  "         - %s" % (Colors.ENDC, self.classname,
+                  self.command, self.logfile)
+        for log in self.extra_logfiles:
+            message += "\n         - %s" % log
+
+        printc(message, Colors.OKBLUE)
         try:
             self.process = subprocess.Popen(self.command,
                                             stderr=self.reporter.out,
                                             stdout=self.reporter.out,
-                                            shell=True)
+                                            shell=True,
+                                            env=proc_env)
             self.wait_process()
         except KeyboardInterrupt:
             self.process.kill()
@@ -233,6 +248,16 @@ class GstValidateTest(Test):
             self.scenario = None
         else:
             self.scenario = scenario
+
+    def get_subproc_env(self):
+        subproc_env = os.environ.copy()
+
+        if 'GST_DEBUG' in os.environ:
+            gstlogsfile = self.logfile + '.gstdebug'
+            self.extra_logfiles.append(gstlogsfile)
+            subproc_env["GST_DEBUG_FILE"] = gstlogsfile
+
+        return subproc_env
 
     def clean(self):
         Test.clean(self)
