@@ -413,6 +413,8 @@ gst_pngdec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
   guint64 signature;
   gsize size;
 
+  GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+
   /* FIXME : The overhead of using scan_uint32 is massive */
 
   size = gst_adapter_available (adapter);
