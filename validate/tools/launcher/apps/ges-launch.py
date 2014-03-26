@@ -76,6 +76,9 @@ class GESTest(GstValidateTest):
         else:
             paths = self.options.paths
 
+        if not isinstance(paths, list):
+            paths = [paths]
+
         for path in paths:
             if self.options.recurse_paths:
                 self.add_arguments("--sample-paths", quote_uri(path))
