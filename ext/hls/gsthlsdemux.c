@@ -745,7 +745,6 @@ gst_hls_demux_configure_src_pad (GstHLSDemux * demux, GstFragment * fragment)
   if (G_UNLIKELY (!srccaps || demux->discont || (buf
               && GST_BUFFER_IS_DISCONT (buf)))) {
     switch_pads (demux, bufcaps);
-    demux->segment.offset = demux->segment.position;
     demux->need_segment = TRUE;
     demux->discont = FALSE;
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
