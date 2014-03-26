@@ -5867,7 +5867,7 @@ gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
   base64 = g_base64_encode (data, size);
   g_bytes_unref (bytes);
 
-  result = g_strdup_printf ("prot=mikey; uri=\"%s\"; data=\"%s\"",
+  result = g_strdup_printf ("prot=mikey;uri=\"%s\";data=\"%s\"",
       stream->conninfo.location, base64);
   g_free (base64);
 
