@@ -366,6 +366,11 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
+      if (flags & GST_SEEK_FLAG_FLUSH) {
+        GST_DEBUG_OBJECT (demux, "sending flush start");
+        gst_pad_push_event (demux->srcpad, gst_event_new_flush_start ());
+      }
+
       gst_hls_demux_pause_tasks (demux);
 
       /* wait for streaming to finish */
@@ -431,11 +436,6 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (walk == NULL) {
         GST_DEBUG_OBJECT (demux, "seeking further than track duration");
         current_sequence++;
-      }
-
-      if (flags & GST_SEEK_FLAG_FLUSH) {
-        GST_DEBUG_OBJECT (demux, "sending flush start");
-        gst_pad_push_event (demux->srcpad, gst_event_new_flush_start ());
       }
 
       GST_M3U8_CLIENT_LOCK (demux->client);
