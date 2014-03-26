@@ -34,11 +34,10 @@ DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-asse
 
 def main():
     parser = OptionParser()
-    # FIXME:
-    #parser.add_option("-g", "--gdb", dest="gdb",
-                      #action="store_true",
-                      #default=False,
-                      #help="Run applications into gdb")
+    parser.add_option("-d", "--debug", dest="debug",
+                      action="store_true",
+                      default=False,
+                      help="Let user debug the process on timeout")
     parser.add_option("-f", "--forever", dest="forever",
                       action="store_true", default=False,
                       help="Keep running tests until one fails")

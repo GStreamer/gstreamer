@@ -94,6 +94,13 @@ class Test(Loggable):
     def set_result(self, result, message="", error=""):
         self.debug("Setting result: %s (message: %s, error: %s", result,
                    message, error)
+        if result is Result.TIMEOUT and self.options.debug is True:
+            pname = subprocess.check_output(("readlink -e /proc/%s/exe"
+                                             % self.process.pid).split(' ')).replace('\n', '')
+            raw_input("%sTimeout happened you can attach gdb doing: $gdb %s %d%s\n"
+                      "Press enter to continue" %(Colors.FAIL, pname, self.process.pid,
+                                                   Colors.ENDC))
+
         self.result = result
         self.message = message
         self.error_str = error
@@ -140,11 +147,11 @@ class Test(Loggable):
             if val is Result.NOT_RUN:
                 # The get_current_value logic is not implemented... dumb timeout
                 if time.time() - last_change_ts > self.timeout:
-                    self.result = Result.TIMEOUT
+                    self.set_result(Result.TIMEOUT)
                     break
                 continue
             elif val is Result.FAILED:
-                self.result = Result.FAILED
+                self.set_result(Result.FAILED)
                 break
             elif val is Result.KNOWN_ERROR:
                 break
@@ -155,10 +162,10 @@ class Test(Loggable):
                 delta = time.time() - last_change_ts
                 self.debug("%s: Same value for %d/%d seconds" % (self, delta, self.timeout))
                 if delta > self.timeout:
-                    self.result = Result.TIMEOUT
+                    self.set_result(Result.TIMEOUT)
                     break
             elif self.hard_timeout and time.time() - start_ts > self.hard_timeout:
-                self.result = Result.TIMEOUT
+                self.set_result(Result.TIMEOUT)
                 break
             else:
                 last_change_ts = time.time()
@@ -260,7 +267,7 @@ class GstValidateTest(Test):
         if self.result == Result.TIMEOUT:
             self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
         elif self.process.returncode == 0:
-            self.result = Result.PASSED
+            self.set_result(Result.PASSED)
         else:
             if self.process.returncode == 139:
                 # FIXME Reimplement something like that if needed
@@ -632,3 +639,4 @@ class ScenarioManager(object):
             self.all_scenarios.append(Scenario(section,
                                                config.items(section)))
 
+        return [scenario for scenario in self.all_scenarios if scenario.name == name][0]
