@@ -1502,6 +1502,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
 
   GST_BUFFER_DURATION (buf) = duration;
   GST_BUFFER_PTS (buf) = timestamp;
+  GST_BUFFER_DTS (buf) = GST_CLOCK_TIME_NONE;
 
   /* We actually need to do this every time we switch bitrate */
   if (G_UNLIKELY (demux->do_typefind)) {
