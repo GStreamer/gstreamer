@@ -26,6 +26,10 @@
 
 #include "gstglfilter.h"
 
+#if GST_GL_HAVE_PLATFORM_EGL
+#include "egl/gsteglimagememory.h"
+#endif
+
 #define GST_CAT_DEFAULT gst_gl_filter_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 

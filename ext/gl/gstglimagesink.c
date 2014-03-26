@@ -87,6 +87,10 @@
 
 #include "gstglimagesink.h"
 
+#if GST_GL_HAVE_PLATFORM_EGL
+#include <gst/gl/egl/gsteglimagememory.h>
+#endif
+
 GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define GST_CAT_DEFAULT gst_debug_glimage_sink
 
