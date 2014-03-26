@@ -1140,6 +1140,11 @@ default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY))
     goto discard;
 
+  /* size should have been reset. This is not a catch all, pool with
+   * size requirement per memory should do their own check. */
+  if (gst_buffer_get_size (buffer) != pool->priv->size)
+    goto discard;
+
   /* all memory should be exclusive to this buffer (and thus be writable) */
   if (!gst_buffer_is_all_memory_writable (buffer))
     goto discard;

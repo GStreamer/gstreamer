@@ -1462,8 +1462,8 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
         gst_memory_unlock (mem, GST_LOCK_FLAG_EXCLUSIVE);
         gst_memory_unref (mem);
 
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
       }
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
     }
 
     offset = noffs;
