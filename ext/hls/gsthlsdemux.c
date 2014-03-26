@@ -880,6 +880,12 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
   GST_DEBUG_OBJECT (demux, "Pushing buffer %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
+  /* Set DISCONT flag for every buffer in reverse playback mode
+   * as each fragment for its own has to be reversed */
+  if (demux->segment.rate < 0) {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+  }
+
   demux->segment.position = GST_BUFFER_TIMESTAMP (buf);
   ret = gst_pad_push (demux->srcpad, buf);
   if (ret != GST_FLOW_OK)
