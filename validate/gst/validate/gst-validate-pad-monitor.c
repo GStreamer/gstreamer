@@ -273,7 +273,7 @@ gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor)
 
         /* TODO What would be the correct caps operation to merge the caps in
          * case one sink is internally linked to multiple srcs? */
-        peercaps = gst_pad_peer_query_caps (otherpad, NULL);
+        peercaps = gst_pad_get_current_caps (otherpad);
         if (peercaps)
           caps = gst_caps_merge (caps, peercaps);
 
