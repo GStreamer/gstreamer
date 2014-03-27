@@ -717,8 +717,11 @@ case $host in
     LIBS="$LIBS -lgdi32"
     AG_GST_CHECK_LIBHEADER(GL, opengl32, glTexImage2D,, GL/gl.h)
     AG_GST_CHECK_LIBHEADER(GLU, glu32, gluSphere,, GL/glu.h)
-    HAVE_GL=yes
-    HAVE_GLU=yes
+    AC_CHECK_HEADER(GL/wglext.h, HAVE_WGLEXT="yes", HAVE_WGLEXT="no")
+    if test "x$HAVE_WGLEXT" = "xyes"; then
+      HAVE_GL=yes
+      HAVE_GLU=yes
+    fi
   ;;
   *)
     AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,, GL/gl.h)
@@ -1002,10 +1005,18 @@ case $host in
       AC_MSG_ERROR([OpenGL|ES 2.0 is not supported on your platform yet])
     fi
 
-    GL_LIBS="$GL_LIBS -lgdi32 -lopengl32 -lglu32"
-    HAVE_WINDOW_WIN32=yes
-    USE_OPENGL=yes
-    USE_WGL=yes
+    if test "x$HAVE_GL" = "xyes"; then
+      if test "$NEED_GL" != "xno"; then
+        if test "x$HAVE_WGL" = "xyes"; then
+          if test "$NEED_WGL" != "xno"; then
+            GL_LIBS="$GL_LIBS -lgdi32 -lopengl32 -lglu32"
+            HAVE_WINDOW_WIN32=yes
+            USE_OPENGL=yes
+            USE_WGL=yes
+          fi
+        fi
+      fi
+    fi
 
     dnl GNUstep provides the Cocoa API on win32
     if test "x$HAVE_GNUSTEP_COCOA" = "xyes" ; then
