@@ -960,14 +960,14 @@ gst_video_decoder_drain_out (GstVideoDecoder * dec, gboolean at_eos)
     if (!priv->packetized) {
       ret = gst_video_decoder_parse_available (dec, TRUE, FALSE);
     }
+
+    if (at_eos) {
+      if (decoder_class->finish)
+        ret = decoder_class->finish (dec);
+    }
   } else {
     /* Reverse playback mode */
     ret = gst_video_decoder_flush_parse (dec, TRUE);
-  }
-
-  if (at_eos) {
-    if (decoder_class->finish)
-      ret = decoder_class->finish (dec);
   }
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (dec);
@@ -1985,6 +1985,18 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
 
     walk = priv->parse_gather;
   }
+
+  /* We need to tell the subclass to drain now */
+  if (at_eos) {
+    GstVideoDecoderClass *decoder_class;
+
+    decoder_class = GST_VIDEO_DECODER_GET_CLASS (dec);
+    if (decoder_class->finish)
+      res = decoder_class->finish (dec);
+  }
+
+  if (res != GST_FLOW_OK)
+    goto done;
 
   /* now send queued data downstream */
   walk = priv->output_queued;
