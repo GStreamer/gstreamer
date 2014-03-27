@@ -43,7 +43,6 @@
  * * Add parsing methods for the following descriptors that were previously 
  *   handled in mpegtsbase:
  *   * GST_MTS_DESC_DVB_DATA_BROADCAST_ID
- *   * GST_MTS_DESC_DVB_DATA_BROADCAST
  *   * GST_MTS_DESC_DVB_CAROUSEL_IDENTIFIER
  *   * GST_MTS_DESC_DVB_FREQUENCY_LIST
  */
@@ -918,6 +917,48 @@ gst_mpegts_descriptor_parse_terrestrial_delivery_system (const
       break;
   }
   res->other_frequency = tmp & 0x01;
+
+  return TRUE;
+}
+
+/* GST_MTS_DESC_DVB_DATA_BROADCAST (0x64) */
+/**
+ * gst_mpegts_descriptor_parse_data_broadcast:
+ * @descriptor: a %GST_MTS_DESC_DVB_DATA_BROADCAST #GstMpegTsDescriptor
+ * @res: (out) (transfer none): #GstMpegTsDataBroadcastDescriptor
+ *
+ * Parses out the data broadcast from the @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegTsDescriptor
+    * descriptor, GstMpegTsDataBroadcastDescriptor * res)
+{
+  guint8 *data;
+  guint8 len;
+
+  g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
+  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_DATA_BROADCAST, 8, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  res->data_broadcast_id = GST_READ_UINT16_BE (data);
+  data += 2;
+
+  res->component_tag = *data;
+  data += 1;
+
+  len = *data;
+  data += 1;
+
+  res->selector_bytes = g_memdup (data, len);
+  data += len;
+
+  memcpy (data, res->language_code, 3);
+  data += 3;
+
+  res->text = get_encoding_and_convert ((const gchar *) data + 1, *data);
 
   return TRUE;
 }

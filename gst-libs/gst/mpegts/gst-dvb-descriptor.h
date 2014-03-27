@@ -480,7 +480,27 @@ gboolean gst_mpegts_descriptor_parse_terrestrial_delivery_system (const GstMpegT
 /* FIXME : Implement */
 
 /* GST_MTS_DESC_DVB_DATA_BROADCAST (0x64) */
-/* FIXME: Implement */
+typedef struct _GstMpegTsDataBroadcastDescriptor GstMpegTsDataBroadcastDescriptor;
+
+/**
+ * GstMpegTsDataBroadcastDescriptor:
+ * @data_broadcast_id: the data broadcast id
+ * @component_tag: the component tag
+ * @selector_bytes: the selector byte field
+ * @language_code: language of @text
+ * @text: description of data broadcast
+ */
+struct _GstMpegTsDataBroadcastDescriptor
+{
+  guint16     data_broadcast_id;
+  guint8      component_tag;
+  guint8      *selector_bytes;
+  gchar       language_code[3];
+  gchar       *text;
+};
+
+gboolean gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegTsDescriptor
+              *descriptor, GstMpegTsDataBroadcastDescriptor * res);
 
 /* GST_MTS_DESC_DVB_DATA_BROADCAST_ID (0x66) */
 /* FIXME : Implement */

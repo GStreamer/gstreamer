@@ -64,7 +64,6 @@
  * * Add parsing methods for the following descriptors that were previously 
  *   handled in mpegtsbase:
  *   * GST_MTS_DESC_DVB_DATA_BROADCAST_ID
- *   * GST_MTS_DESC_DVB_DATA_BROADCAST
  *   * GST_MTS_DESC_DVB_CAROUSEL_IDENTIFIER
  *   * GST_MTS_DESC_DVB_FREQUENCY_LIST
  */
