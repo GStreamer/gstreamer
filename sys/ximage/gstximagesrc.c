@@ -1073,8 +1073,12 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
   GST_DEBUG ("width = %d, height=%d", width, height);
 
   /* extrapolate alpha mask */
-  alpha_mask = ~(xcontext->r_mask_output
-      | xcontext->g_mask_output | xcontext->b_mask_output);
+  if (xcontext->depth == 32) {
+    alpha_mask = ~(xcontext->r_mask_output
+        | xcontext->g_mask_output | xcontext->b_mask_output);
+  } else {
+    alpha_mask = 0;
+  }
 
   format =
       gst_video_format_from_masks (xcontext->depth, xcontext->bpp,
