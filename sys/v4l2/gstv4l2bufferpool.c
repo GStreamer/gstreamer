@@ -165,10 +165,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         memset (&create_bufs, 0, sizeof (struct v4l2_create_buffers));
         create_bufs.count = 1;
         create_bufs.memory = V4L2_MEMORY_MMAP;
-        create_bufs.format.type = obj->type;
-
-        if (v4l2_ioctl (pool->video_fd, VIDIOC_G_FMT, &create_bufs.format) < 0)
-          goto g_fmt_failed;
+        create_bufs.format = obj->format;
 
         if (v4l2_ioctl (pool->video_fd, VIDIOC_CREATE_BUFS, &create_bufs) < 0)
           goto create_bufs_failed;
@@ -365,14 +362,6 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   return GST_FLOW_OK;
 
   /* ERRORS */
-g_fmt_failed:
-  {
-    gint errnosave = errno;
-
-    GST_WARNING ("Failed G_FMT: %s", g_strerror (errnosave));
-    errno = errnosave;
-    return GST_FLOW_ERROR;
-  }
 create_bufs_failed:
   {
     gint errnosave = errno;
@@ -1301,6 +1290,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   GstStructure *config;
   gboolean res = FALSE;
   gint fd;
+  guint min, max;
 
   fd = v4l2_dup (obj->video_fd);
   if (fd < 0)
@@ -1309,10 +1299,30 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   pool = (GstV4l2BufferPool *) g_object_new (GST_TYPE_V4L2_BUFFER_POOL, NULL);
   pool->video_fd = fd;
   pool->obj = obj;
-  pool->can_alloc = TRUE;
+  pool->can_alloc = FALSE;
+  min = max = 2;
+
+  /* Check for CREATE_BUFS support */
+  switch (obj->mode) {
+    case GST_V4L2_IO_MMAP:
+    case GST_V4L2_IO_DMABUF:
+    {
+      struct v4l2_create_buffers create_bufs = { 0 };
+      create_bufs.count = 0;
+      create_bufs.memory = V4L2_MEMORY_MMAP;
+      create_bufs.format = obj->format;
+      if (v4l2_ioctl (pool->video_fd, VIDIOC_CREATE_BUFS, &create_bufs) == 0) {
+        pool->can_alloc = TRUE;
+        max = 0;
+      }
+      break;
+    }
+    default:
+      break;
+  }
 
   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
-  gst_buffer_pool_config_set_params (config, caps, obj->sizeimage, 2, 0);
+  gst_buffer_pool_config_set_params (config, caps, obj->sizeimage, min, max);
 
   /* Ensure our internal pool has required features */
   if (obj->need_video_meta)

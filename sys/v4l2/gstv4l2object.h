@@ -96,6 +96,7 @@ struct _GstV4l2Object {
 
   /* the current format */
   struct v4l2_fmtdesc *fmtdesc;
+  struct v4l2_format format;
   GstVideoInfo info;
   GstVideoAlignment align;
 

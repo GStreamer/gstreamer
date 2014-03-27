@@ -2331,6 +2331,7 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
   gst_video_info_align (info, align);
   v4l2object->info = *info;
   v4l2object->align = *align;
+  v4l2object->format = *format;
   v4l2object->fmtdesc = fmtdesc;
 
   /* if we have a framerate pre-calculate duration */
@@ -3032,8 +3033,8 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   }
 
   /* Request a bigger max, if one was suggested but it's too small */
-  if (max != 0 && max < min)
-    max = min;
+  if (max != 0)
+    max = MAX (min, max);
 
   has_video_meta =
       gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
