@@ -770,8 +770,7 @@ gst_mpegts_descriptor_parse_terrestrial_delivery_system (const
   data = (guint8 *) descriptor->data + 2;
 
   res->frequency = 0;
-  res->frequency =
-      *(data + 3) | *(data + 2) << 8 | *(data + 1) << 16 | *data << 24;
+  res->frequency = GST_READ_UINT32_BE (data);
   res->frequency *= 10;
 
   data += 4;
