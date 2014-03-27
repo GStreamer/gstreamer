@@ -74,14 +74,14 @@
  * <refsect2>
  * <title>Example launch line with internal window creation disabled</title>
  * <para>
- * By setting the can_create_window property to FALSE you can force the
+ * By setting the create_window property to FALSE you can force the
  * sink to wait for a window handle through it's xOverlay interface even
  * if internal window creation is supported by the platform. Window creation
  * is only supported in X11 right now but it should be trivial to add support
  * for different platforms.
  * </para>
  * |[
- * gst-launch -v -m videotestsrc ! eglglessink can_create_window=FALSE
+ * gst-launch -v -m videotestsrc ! eglglessink create_window=FALSE
  * ]|
  * </refsect2>
  *
