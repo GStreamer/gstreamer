@@ -45,7 +45,6 @@
  *   * GST_MTS_DESC_DVB_DATA_BROADCAST_ID
  *   * GST_MTS_DESC_DVB_DATA_BROADCAST
  *   * GST_MTS_DESC_DVB_CAROUSEL_IDENTIFIER
- *   * GST_MTS_DESC_DVB_STREAM_IDENTIFIER
  *   * GST_MTS_DESC_DVB_FREQUENCY_LIST
  */
 
@@ -669,6 +668,33 @@ gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor
   len = descriptor->length - 6;
   if (len)
     res->text = get_encoding_and_convert ((const gchar *) data, len);
+
+  return TRUE;
+}
+
+/* GST_MTS_DESC_DVB_STREAM_IDENTIFIER (0x52) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_stream_identifier:
+ * @descriptor: a %GST_MTS_DESC_DVB_CONTENT #GstMpegTsDescriptor
+ * @component_tag: (out) (transfer none): the component tag
+ *
+ * Extracts the component tag from @descriptor.
+ *
+ * Returns: %TRUE if the parsing happended correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_stream_identifier (const GstMpegTsDescriptor
+    * descriptor, guint8 * component_tag)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL && component_tag != NULL, FALSE);
+  __common_desc_checks_exact (descriptor, GST_MTS_DESC_DVB_STREAM_IDENTIFIER,
+      1, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  *component_tag = *data;
 
   return TRUE;
 }
