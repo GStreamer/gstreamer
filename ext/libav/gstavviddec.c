@@ -47,6 +47,7 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define DEFAULT_DEBUG_MV		FALSE
 #define DEFAULT_MAX_THREADS		0
 #define DEFAULT_OUTPUT_CORRUPT		TRUE
+#define REQUIRED_POOL_MAX_BUFFERS       32
 
 enum
 {
@@ -1693,7 +1694,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstBufferPool *pool;
   guint size, min, max;
   GstStructure *config;
-  gboolean have_videometa, have_alignment;
+  gboolean have_videometa, have_alignment, update_pool;
   GstAllocator *allocator = NULL;
   GstAllocationParams params = { 0, 15, 0, 0, };
 
@@ -1711,6 +1712,22 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+  /* Don't use pool that can't grow, as we don't know how many buffer we'll
+   * need, otherwise we may stall */
+  if (max != 0 && max < REQUIRED_POOL_MAX_BUFFERS) {
+    gst_object_unref (pool);
+    pool = gst_video_buffer_pool_new ();
+    max = 0;
+    update_pool = TRUE;
+
+    /* if there is an allocator, also drop it, as it might be the reason we
+     * have this limit. Default will be used */
+    if (allocator) {
+      gst_object_unref (allocator);
+      allocator = NULL;
+    }
+  }
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
@@ -1798,6 +1815,9 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 
   /* and store */
   gst_buffer_pool_set_config (pool, config);
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
 
   gst_object_unref (pool);
   if (allocator)
