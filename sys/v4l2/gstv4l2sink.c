@@ -536,61 +536,7 @@ static gboolean
 gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
-  GstV4l2Object *obj = v4l2sink->v4l2object;
-  GstBufferPool *pool;
-  guint size = 0;
-  GstCaps *caps;
-  gboolean need_pool;
-
-  gst_query_parse_allocation (query, &caps, &need_pool);
-
-  if (caps == NULL)
-    goto no_caps;
-
-  if ((pool = obj->pool))
-    gst_object_ref (pool);
-
-  if (pool != NULL) {
-    GstCaps *pcaps;
-    GstStructure *config;
-
-    /* we had a pool, check caps */
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
-
-    GST_DEBUG_OBJECT (v4l2sink,
-        "we had a pool with caps %" GST_PTR_FORMAT, pcaps);
-    if (!gst_caps_is_equal (caps, pcaps)) {
-      gst_structure_free (config);
-      gst_object_unref (pool);
-      goto different_caps;
-    }
-    gst_structure_free (config);
-  }
-  /* we need at least 2 buffers to operate */
-  gst_query_add_allocation_pool (query, pool, size, 2, 0);
-
-  /* we also support various metadata */
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
-
-  if (pool)
-    gst_object_unref (pool);
-
-  return TRUE;
-
-  /* ERRORS */
-no_caps:
-  {
-    GST_DEBUG_OBJECT (v4l2sink, "no caps specified");
-    return FALSE;
-  }
-different_caps:
-  {
-    /* different caps, we can't use this pool */
-    GST_DEBUG_OBJECT (v4l2sink, "pool has different caps");
-    return FALSE;
-  }
+  return gst_v4l2_object_propose_allocation (v4l2sink->v4l2object, query);
 }
 
 /* called after A/V sync to render frame */

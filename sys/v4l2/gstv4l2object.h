@@ -268,6 +268,9 @@ gboolean      gst_v4l2_object_set_crop    (GstV4l2Object * obj);
 gboolean      gst_v4l2_object_decide_allocation (GstV4l2Object * v4l2object,
                                                  GstQuery * query);
 
+gboolean      gst_v4l2_object_propose_allocation (GstV4l2Object * obj,
+                                                  GstQuery * query);
+
 GstStructure * gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 
 
