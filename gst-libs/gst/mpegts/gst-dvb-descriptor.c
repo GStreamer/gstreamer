@@ -558,6 +558,13 @@ gst_mpegts_descriptor_from_dvb_subtitling (const gchar * lang,
 }
 
 /* GST_MTS_DESC_DVB_EXTENDED_EVENT (0x4E) */
+
+static void
+_gst_mpegts_extended_event_item_free (GstMpegTsExtendedEventItem * item)
+{
+  g_slice_free (GstMpegTsExtendedEventItem, item);
+}
+
 /**
  * gst_mpegts_descriptor_parse_dvb_extended_event:
  * @descriptor: a %GST_MTS_DESC_DVB_EXTENDED_EVENT #GstMpegTsDescriptor
@@ -596,11 +603,12 @@ gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescriptor
   data += 1;
 
   res->nb_items = 0;
-  res->items = g_ptr_array_new ();
+  res->items = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_extended_event_item_free);
 
   for (guint i = 0; i < len_item;) {
     desc_data = data;
-    item = malloc (sizeof (GstMpegTsExtendedEventItem));
+    item = g_slice_new0 (GstMpegTsExtendedEventItem);
     item->item_description =
         get_encoding_and_convert ((const gchar *) desc_data + 1, *desc_data);
 
@@ -666,6 +674,12 @@ gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor
 }
 
 /* GST_MTS_DESC_DVB_CONTENT (0x54) */
+static void
+_gst_mpegts_content_free (GstMpegTsContent * content)
+{
+  g_slice_free (GstMpegTsContent, content);
+}
+
 /**
  * gst_mpegts_descriptor_parse_dvb_content:
  * @descriptor: a %GST_MTS_DESC_DVB_CONTENT #GstMpegTsDescriptor
@@ -688,9 +702,10 @@ gst_mpegts_descriptor_parse_dvb_content (const GstMpegTsDescriptor
   data = (guint8 *) descriptor->data + 2;
   len = descriptor->length;
 
-  *content = g_ptr_array_new ();
+  *content = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_content_free);
   for (guint8 i = 0; i < len;) {
-    GstMpegTsContent *cont = malloc (sizeof (GstMpegTsContent));
+    GstMpegTsContent *cont = g_slice_new0 (GstMpegTsContent);
     tmp = *data;
     cont->content_nibble_1 = (tmp & 0xf0) >> 4;
     cont->content_nibble_2 = tmp & 0x0f;
