@@ -1020,7 +1020,6 @@ case $host in
     ;;
   *)
     AC_MSG_WARN([Don't know how to check for OpenGL on your platform.])
-    exit 1
     ;;
 esac
 
