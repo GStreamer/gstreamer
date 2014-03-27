@@ -906,9 +906,12 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
   }
 
   /* extrapolate alpha mask */
-  alpha_mask = ~(xcontext->visual->red_mask
-      | xcontext->visual->green_mask | xcontext->visual->blue_mask);
-  alpha_mask &= 0xffffffff;
+  if (xcontext->depth == 32) {
+    alpha_mask = ~(xcontext->visual->red_mask
+        | xcontext->visual->green_mask | xcontext->visual->blue_mask);
+  } else {
+    alpha_mask = 0;
+  }
 
   vformat =
       gst_video_format_from_masks (xcontext->depth, xcontext->bpp, endianness,
