@@ -192,7 +192,10 @@ typedef struct
 
 typedef struct
 {
+  GThread *thread;
+  EGLImageKHR image;
   GLuint texture;
+  APP_STATE_T *state;
 } GstEGLGLESImageData;
 
 /* EGLImage memory, buffer pool, etc */
@@ -278,9 +281,20 @@ got_egl_error (const char *wtf)
 }
 
 static void
-gst_egl_gles_image_data_free (GstEGLGLESImageData * data)
+image_data_free (GstEGLGLESImageData * data)
 {
-  glDeleteTextures (1, &data->texture);
+  if (data->thread == g_thread_self ()) {
+    eglDestroyImageKHR (state->display, data->image);
+    glDeleteTextures (1, &data->texture);
+  } else {
+    GstQuery *query;
+    GstStructure *s;
+    s = gst_structure_new ("eglglessink-deallocate-eglimage",
+        "EGLImage", G_TYPE_POINTER, data->image,
+        "GLTexture", G_TYPE_POINTER, data->texture, NULL);
+    query = gst_query_new_custom (GST_QUERY_CUSTOM, s);
+    queue_object (state, GST_MINI_OBJECT_CAST (query), FALSE);
+  }
   g_slice_free (GstEGLGLESImageData, data);
 }
 
@@ -313,7 +327,6 @@ gst_egl_allocate_eglimage (APP_STATE_T * ctx,
   switch (format) {
     case GST_VIDEO_FORMAT_RGBA:{
       gsize size;
-      EGLImageKHR image;
 
       mem[0] =
           gst_egl_image_allocator_alloc (allocator, ctx->gst_display,
@@ -326,6 +339,8 @@ gst_egl_allocate_eglimage (APP_STATE_T * ctx,
         GST_MINI_OBJECT_FLAG_SET (mem[0], GST_MEMORY_FLAG_NO_SHARE);
       } else {
         data = g_slice_new0 (GstEGLGLESImageData);
+        data->thread = g_thread_self ();
+        data->state = ctx;
 
         stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (&info) * 4);
         size = stride[0] * GST_VIDEO_INFO_HEIGHT (&info);
@@ -357,7 +372,7 @@ gst_egl_allocate_eglimage (APP_STATE_T * ctx,
         if (got_gl_error ("glTexImage2D"))
           goto mem_error;
 
-        image =
+        data->image =
             eglCreateImageKHR (gst_egl_display_get (ctx->gst_display),
             ctx->context, EGL_GL_TEXTURE_2D_KHR,
             (EGLClientBuffer) (guintptr) data->texture, NULL);
@@ -366,7 +381,8 @@ gst_egl_allocate_eglimage (APP_STATE_T * ctx,
 
         mem[0] =
             gst_egl_image_allocator_wrap (allocator, ctx->gst_display,
-            image, GST_VIDEO_GL_TEXTURE_TYPE_RGBA, flags, size, data, NULL);
+            data->image, GST_VIDEO_GL_TEXTURE_TYPE_RGBA, flags, size, data,
+            (GDestroyNotify) image_data_free);
 
         n_mem = 1;
       }
@@ -391,7 +407,7 @@ mem_error:
     GST_ERROR ("Failed to create EGLImage");
 
     if (data)
-      gst_egl_gles_image_data_free (data);
+      image_data_free (data);
 
     if (mem[0])
       gst_memory_unref (mem[0]);
@@ -1145,6 +1161,16 @@ handle_queued_objects (APP_STATE_T * state)
 
         gst_structure_set_value (s, "buffer", &v);
         g_value_unset (&v);
+      } else if (gst_structure_has_name (s, "eglglessink-deallocate-eglimage")) {
+        gpointer _image, _texture;
+        EGLImageKHR image;
+        GLuint texture;
+        gst_structure_get (s, "EGLImage", G_TYPE_POINTER, &_image, "GLTexture",
+            G_TYPE_POINTER, &_texture, NULL);
+        image = (EGLImageKHR) _image;
+        texture = (GLuint) _texture;
+        eglDestroyImageKHR (state->display, image);
+        glDeleteTextures (1, &texture);
       } else {
         g_assert_not_reached ();
       }
