@@ -316,8 +316,6 @@ activate_failed:
   return GST_FLOW_ERROR;
 }
 
-/* TODO */
-#if 0
 static gboolean
 gst_v4l2_transform_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
@@ -325,14 +323,17 @@ gst_v4l2_transform_propose_allocation (GstBaseTransform * trans,
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
   gboolean ret = FALSE;
 
-  /* FIXME propose alloc this need to be moved from src to v4l2object */
-  if (gst_v4l2_object_propose_allocation (self->v4l2output, query))
+  if (decide_query == NULL)
+    ret = TRUE;
+  else
+    ret = gst_v4l2_object_propose_allocation (self->v4l2output, query);
+
+  if (ret)
     ret = GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-        query);
+        decide_query, query);
 
   return ret;
 }
-#endif
 
 /* copies the given caps */
 static GstCaps *
@@ -604,11 +605,8 @@ gst_v4l2_transform_class_init (GstV4l2TransformClass * klass)
       GST_DEBUG_FUNCPTR (gst_v4l2_transform_sink_event);
   base_transform_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2_transform_decide_allocation);
-  /* TODO */
-#if 0
   base_transform_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2_transform_propose_allocation);
-#endif
   base_transform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_v4l2_transform_transform_caps);
   base_transform_class->fixate_caps =
