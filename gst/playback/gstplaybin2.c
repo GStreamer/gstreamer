@@ -367,6 +367,9 @@ struct _GstSourceGroup
   GMutex suburi_flushes_to_drop_lock;
   GSList *suburi_flushes_to_drop;
 
+  /* buffering message stored for after switching */
+  GstMessage *pending_buffering_msg;
+
   /* combiners for different streams */
   GstSourceCombine combiner[PLAYBIN_STREAM_LAST];
 };
@@ -1367,6 +1370,10 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   if (group->suburi_flushes_to_drop_lock.p)
     g_mutex_clear (&group->suburi_flushes_to_drop_lock);
   group->suburi_flushes_to_drop_lock.p = NULL;
+
+  if (group->pending_buffering_msg)
+    gst_message_unref (group->pending_buffering_msg);
+  group->pending_buffering_msg = NULL;
 }
 
 static void
@@ -2772,8 +2779,43 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
     }
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_START) {
     GstSourceGroup *new_group = playbin->curr_group;
+    GstMessage *buffering_msg = NULL;
 
+    GST_SOURCE_GROUP_LOCK (new_group);
     new_group->stream_changed_pending = FALSE;
+    if (new_group->pending_buffering_msg) {
+      buffering_msg = new_group->pending_buffering_msg;
+      new_group->pending_buffering_msg = NULL;
+    }
+    GST_SOURCE_GROUP_UNLOCK (new_group);
+
+    GST_DEBUG_OBJECT (playbin, "Stream start from new group %p", new_group);
+
+    if (buffering_msg) {
+      GST_DEBUG_OBJECT (playbin, "Posting pending buffering message: %"
+          GST_PTR_FORMAT, buffering_msg);
+      GST_BIN_CLASS (parent_class)->handle_message (bin, buffering_msg);
+    }
+
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_BUFFERING) {
+    GstSourceGroup *group = playbin->curr_group;
+    gboolean pending;
+
+    /* drop buffering messages from child queues while we are switching
+     * groups (because the application set a new uri in about-to-finish)
+     * if the playsink queue still has buffers to play */
+
+    GST_SOURCE_GROUP_LOCK (group);
+    pending = group->stream_changed_pending;
+
+    if (pending) {
+      GST_DEBUG_OBJECT (playbin, "Storing buffering message from pending group "
+          "%p %" GST_PTR_FORMAT, group, msg);
+      gst_message_replace (&group->pending_buffering_msg, msg);
+      gst_message_unref (msg);
+      msg = NULL;
+    }
+    GST_SOURCE_GROUP_UNLOCK (group);
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
     /* If we get an error of the subtitle uridecodebin transform
      * them into warnings and disable the subtitles */
@@ -5383,11 +5425,11 @@ setup_next_source (GstPlayBin * playbin, GstState target)
   if (!new_group || !new_group->valid)
     goto no_next_group;
 
-  new_group->stream_changed_pending = TRUE;
-
   /* first unlink the current source, if any */
   old_group = playbin->curr_group;
   if (old_group && old_group->valid && old_group->active) {
+    new_group->stream_changed_pending = TRUE;
+
     gst_play_bin_update_cached_duration (playbin);
     /* unlink our pads with the sink */
     deactivate_group (playbin, old_group);
