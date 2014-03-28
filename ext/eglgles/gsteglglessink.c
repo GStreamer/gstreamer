@@ -1693,6 +1693,20 @@ gst_eglglessink_query (GstBaseSink * bsink, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_DRAIN:
+    {
+      GST_OBJECT_LOCK (eglglessink);
+      /* no need to do a copy here as the textures which are being rendered are
+       * in eglglessink->egl_context->texture[i] and they are not part of a pool.
+       * See comment in gst_egl_image_buffer_pool_acquire_buffer to know what is
+       * this last_buffer ref is about */
+      if (eglglessink->pool)
+        gst_egl_image_buffer_pool_replace_last_buffer (GST_EGL_IMAGE_BUFFER_POOL
+            (eglglessink->pool), NULL);
+      GST_OBJECT_UNLOCK (eglglessink);
+
+      return TRUE;
+    }
 #endif
     default:
       return GST_BASE_SINK_CLASS (gst_eglglessink_parent_class)->query (bsink,
