@@ -84,8 +84,11 @@ class GESTest(GstValidateTest):
             paths = [paths]
 
         for path in paths:
+            # We always want paths separator to be cut with '/' for ges-launch
+            path = path.replace("\\", "/")
+            quote_uri(path)
             if self.options.recurse_paths:
-                self.add_arguments("--sample-paths", quote_uri(path))
+                self.add_arguments("--sample-paths", path)
                 for root, dirs, files in os.walk(path):
                     for directory in dirs:
                         self.add_arguments("--sample-paths",
@@ -95,7 +98,7 @@ class GESTest(GstValidateTest):
                                                      )
                                            )
             else:
-                self.add_arguments("--sample-paths", "file://" + path)
+                self.add_arguments("--sample-paths", utils.path2url(path))
 
     def build_arguments(self):
         GstValidateTest.build_arguments(self)
