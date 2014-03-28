@@ -62,6 +62,16 @@ AM_GNU_GETTEXT_VERSION([0.17])
 AM_GNU_GETTEXT([external])
 AG_GST_GETTEXT([gst-validate-$GST_API_VERSION])
 
+dnl Check wether to build LDPRELOAD related code or not
+AC_CANONICAL_HOST
+case $host_os in
+  mingw* | msvc* | mks*)
+    BUILD_LDPRELOAD=no ;;
+  *)
+    BUILD_LDPRELOAD=yes ;;
+esac
+AM_CONDITIONAL(HAVE_LD_PRELOAD, test "x$BUILD_LDPRELOAD" = "xyes")
+
 dnl *** check for arguments to configure ***
 
 AG_GST_ARG_DEBUG

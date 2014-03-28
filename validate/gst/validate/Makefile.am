@@ -33,20 +33,24 @@ libgstvalidate_@GST_API_VERSION@include_HEADERS = \
 	gst-validate-utils.h \
 	gst-validate-media-info.h
 
-lib_LTLIBRARIES = \
-	libgstvalidate-@GST_API_VERSION@.la \
-	libgstvalidate-default-overrides-@GST_API_VERSION@.la \
-	libgstvalidate-preload-@GST_API_VERSION@.la
 
-libgstvalidate_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS) $(GIO_CFLAGS)
+lib_LTLIBRARIES = libgstvalidate-@GST_API_VERSION@.la
+
+if HAVE_LD_PRELOAD
+lib_LTLIBRARIES += libgstvalidate-default-overrides-@GST_API_VERSION@.la \
+	libgstvalidate-preload-@GST_API_VERSION@.la
+endif
+
+libgstvalidate_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS) $(GIO_CFLAGS) $(GST_PBUTILS_CFLAGS)
 libgstvalidate_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
-	$(GST_LT_LDFLAGS) $(GIO_LDFLAGS)
+	$(GST_LT_LDFLAGS) $(GIO_LDFLAGS) $(GST_PBUTILS_LDFAGS)
 libgstvalidate_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
-	$(GST_ALL_LIBS) $(GIO_LIBS)
+	$(GST_ALL_LIBS) $(GIO_LIBS) $(GST_PBUTILS_LIBS)
 
 libgstvalidate_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/validate
 
+if HAVE_LD_PRELOAD
 libgstvalidate_default_overrides_@GST_API_VERSION@_la_SOURCES = \
     gst-validate-default-overrides.c
 
@@ -71,6 +75,7 @@ libgstvalidate_preload_@GST_API_VERSION@_la_LIBADD =  \
 	$(GST_ALL_LIBS)
 libgstvalidate_preload_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/validate
 libgstvalidate_preload_@GST_API_VERSION@include_HEADERS =
+endif
 
 #AM_CFLAGS = $(GST_ALL_CFLAGS) $(GST_PBUTILS_CFLAGS)
 #LDADD = $(top_builddir)/gst/validate/libgstvalidate-@GST_API_VERSION@.la $(GST_PBUTILS_LIBS) $(GST_LIBS)
