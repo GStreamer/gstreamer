@@ -1249,6 +1249,9 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream)
 static void
 gst_ts_demux_flush_streams (GstTSDemux * demux)
 {
+  if (!demux->program)
+    return;
+
   g_list_foreach (demux->program->stream_list,
       (GFunc) gst_ts_demux_stream_flush, NULL);
 }
