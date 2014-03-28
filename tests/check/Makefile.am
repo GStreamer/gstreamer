@@ -393,8 +393,8 @@ pipelines_streamheader_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 pipelines_streamheader_LDADD = $(GIO_LIBS) $(LDADD)
 
 libs_insertbin_LDADD = \
-	$(GST_PLUGINS_BAD_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
-	$(top_builddir)/gst-libs/gst/insertbin/libgstinsertbin-@GST_API_VERSION@.la
+	$(top_builddir)/gst-libs/gst/insertbin/libgstinsertbin-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 libs_insertbin_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 
