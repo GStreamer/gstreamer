@@ -37,6 +37,10 @@ libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 				 $(LIBRT)
 
 noinst_HEADERS = \
+	ext/types-compat.h \
+	ext/v4l2-common.h \
+	ext/v4l2-controls.h \
+	ext/videodev2.h \
 	gstv4l2bufferpool.h \
 	gstv4l2colorbalance.h \
 	gstv4l2devicemonitor.h \
