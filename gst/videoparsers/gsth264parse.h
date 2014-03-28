@@ -97,6 +97,8 @@ struct _GstH264Parse
   GstClockTime ts_trn_nb;
   gboolean do_ts;
 
+  gboolean discont;
+
   /* frame parsing */
   /*guint last_nal_pos;*/
   /*guint next_sc_pos;*/
