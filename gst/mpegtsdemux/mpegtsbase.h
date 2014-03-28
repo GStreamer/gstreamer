@@ -185,6 +185,9 @@ struct _MpegTSBaseClass {
   /* seek is called to wait for seeking */
   GstFlowReturn (*seek) (MpegTSBase * base, GstEvent * event);
 
+  /* Drain all currently pending data */
+  GstFlowReturn (*drain) (MpegTSBase * base);
+
   /* flush all streams
    * The hard inicator is used to flush completelly on FLUSH_STOP events
    * or partially in pull mode seeks of tsdemux */

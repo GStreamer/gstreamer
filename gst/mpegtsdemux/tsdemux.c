@@ -245,6 +245,7 @@ static GstFlowReturn
 gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     GstMpegTsSection * section);
 static void gst_ts_demux_flush (MpegTSBase * base, gboolean hard);
+static GstFlowReturn gst_ts_demux_drain (MpegTSBase * base);
 static void
 gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * stream,
     MpegTSBaseProgram * program);
@@ -326,6 +327,7 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   ts_class->stream_removed = gst_ts_demux_stream_removed;
   ts_class->seek = GST_DEBUG_FUNCPTR (gst_ts_demux_do_seek);
   ts_class->flush = GST_DEBUG_FUNCPTR (gst_ts_demux_flush);
+  ts_class->drain = GST_DEBUG_FUNCPTR (gst_ts_demux_drain);
 }
 
 static void
@@ -1891,6 +1893,28 @@ gst_ts_demux_flush (MpegTSBase * base, gboolean hard)
     demux->rate = 1.0;
     gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
   }
+}
+
+static GstFlowReturn
+gst_ts_demux_drain (MpegTSBase * base)
+{
+  GstTSDemux *demux = GST_TS_DEMUX_CAST (base);
+  GList *tmp;
+  GstFlowReturn res = GST_FLOW_OK;
+
+  if (!demux->program)
+    return res;
+
+  for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+    TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
+    if (stream->pad) {
+      res = gst_ts_demux_push_pending_data (demux, stream);
+      if (G_UNLIKELY (res != GST_FLOW_OK))
+        break;
+    }
+  }
+
+  return res;
 }
 
 static GstFlowReturn

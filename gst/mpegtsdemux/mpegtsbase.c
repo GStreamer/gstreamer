@@ -997,6 +997,18 @@ gst_mpegts_base_handle_eos (MpegTSBase * base)
   return TRUE;
 }
 
+static inline GstFlowReturn
+mpegts_base_drain (MpegTSBase * base)
+{
+  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+
+  /* Call implementation */
+  if (klass->drain)
+    return klass->drain (base);
+
+  return GST_FLOW_OK;
+}
+
 static inline void
 mpegts_base_flush (MpegTSBase * base, gboolean hard)
 {
@@ -1096,8 +1108,12 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (klass->input_done)
     gst_buffer_ref (buf);
 
-  if (FALSE && GST_BUFFER_IS_DISCONT (buf)) {
+  if (GST_BUFFER_IS_DISCONT (buf)) {
     GST_DEBUG_OBJECT (base, "Got DISCONT buffer, flushing");
+    res = mpegts_base_drain (base);
+    if (G_UNLIKELY (res != GST_FLOW_OK))
+      return res;
+
     mpegts_base_flush (base, FALSE);
     mpegts_packetizer_flush (base->packetizer, TRUE);
   }
