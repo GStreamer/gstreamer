@@ -1096,6 +1096,12 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (klass->input_done)
     gst_buffer_ref (buf);
 
+  if (FALSE && GST_BUFFER_IS_DISCONT (buf)) {
+    GST_DEBUG_OBJECT (base, "Got DISCONT buffer, flushing");
+    mpegts_base_flush (base, FALSE);
+    mpegts_packetizer_flush (base->packetizer, TRUE);
+  }
+
   mpegts_packetizer_push (base->packetizer, buf);
 
   while (res == GST_FLOW_OK) {
