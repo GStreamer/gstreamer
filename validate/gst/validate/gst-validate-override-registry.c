@@ -27,8 +27,7 @@
 
 #include <string.h>
 
-#define __USE_GNU
-#include <dlfcn.h>
+#include <gmodule.h>
 
 #include "gst-validate-internal.h"
 #include "gst-validate-override-registry.h"
@@ -52,6 +51,7 @@ static GstValidateOverrideRegistry *_registry_default;
 #define GST_VALIDATE_OVERRIDE_REGISTRY_UNLOCK(r) g_mutex_unlock (&r->mutex)
 
 #define GST_VALIDATE_OVERRIDE_INIT_SYMBOL "gst_validate_create_overrides"
+typedef int (*GstValidateCreateOverride)(void);
 
 static GstValidateOverrideRegistry *
 gst_validate_override_registry_new (void)
@@ -204,42 +204,44 @@ gst_validate_override_registry_attach_overrides (GstValidateMonitor * monitor)
 int
 gst_validate_override_registry_preload (void)
 {
-  gchar **solist, *const *so;
-  const char *sos, *soerr;
-  void *sol;
-  int ret, (*entry) (void), nloaded = 0;
+  gchar **modlist, *const *modname;
+  const char *sos, *loaderr;
+  GModule *module;
+  int ret, nloaded = 0;
+  gpointer ext_create_overrides;
 
   sos = g_getenv ("GST_VALIDATE_OVERRIDE");
   if (!sos) {
     GST_INFO ("No GST_VALIDATE_OVERRIDE found, no overrides to load");
     return 0;
   }
-  solist = g_strsplit (sos, ",", 0);
-  for (so = solist; *so; ++so) {
-    GST_INFO ("Loading overrides from %s", *so);
-    sol = dlopen (*so, RTLD_LAZY);
-    if (!sol) {
-      soerr = dlerror ();
-      GST_ERROR ("Failed to load %s %s", *so, soerr ? soerr : "no idea why");
+
+  modlist = g_strsplit (sos, ",", 0);
+  for (modname = modlist; *modname; ++modname) {
+    GST_INFO ("Loading overrides from %s", *modname);
+    module = g_module_open (*modname, G_MODULE_BIND_LAZY);
+    if (module == NULL) {
+      loaderr = g_module_error ();
+      GST_ERROR ("Failed to load %s %s", *modname, loaderr ? loaderr : "no idea why");
       continue;
     }
-    entry = dlsym (sol, GST_VALIDATE_OVERRIDE_INIT_SYMBOL);
-    if (entry) {
-      ret = (*entry) ();
+    if (g_module_symbol (module, GST_VALIDATE_OVERRIDE_INIT_SYMBOL,
+            &ext_create_overrides)) {
+      ret = ((GstValidateCreateOverride) ext_create_overrides) ();
       if (ret > 0) {
-        GST_INFO ("Loaded %d overrides from %s", ret, *so);
+        GST_INFO ("Loaded %d overrides from %s", ret, *modname);
         nloaded += ret;
       } else if (ret < 0) {
-        GST_WARNING ("Error loading overrides from %s", *so);
+        GST_WARNING ("Error loading overrides from %s", *modname);
       } else {
-        GST_INFO ("Loaded no overrides from %s", *so);
+        GST_INFO ("Loaded no overrides from %s", *modname);
       }
     } else {
-      GST_WARNING (GST_VALIDATE_OVERRIDE_INIT_SYMBOL " not found in %s", *so);
+      GST_WARNING (GST_VALIDATE_OVERRIDE_INIT_SYMBOL " not found in %s", *modname);
     }
-    dlclose (sol);
+    g_module_close (module);
   }
-  g_strfreev (solist);
+  g_strfreev (modlist);
   GST_INFO ("%d overrides loaded", nloaded);
   return nloaded;
 }
