@@ -148,6 +148,9 @@ struct _TSDemuxStream
   /* Whether this stream needs to send a newsegment */
   gboolean need_newsegment;
 
+  /* Whether the next output buffer should be DISCONT */
+  gboolean discont;
+
   /* The value to use when calculating the newsegment */
   GstClockTime first_dts;
 
@@ -1159,6 +1162,7 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     stream->active = FALSE;
 
     stream->need_newsegment = TRUE;
+    stream->discont = TRUE;
     stream->pts = GST_CLOCK_TIME_NONE;
     stream->dts = GST_CLOCK_TIME_NONE;
     stream->raw_pts = -1;
@@ -1237,6 +1241,7 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream)
   stream->allocated_size = 0;
   stream->current_size = 0;
   stream->need_newsegment = TRUE;
+  stream->discont = TRUE;
   stream->pts = GST_CLOCK_TIME_NONE;
   stream->dts = GST_CLOCK_TIME_NONE;
   stream->first_dts = GST_CLOCK_TIME_NONE;
@@ -1807,6 +1812,10 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
           GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (pend->buffer)),
           GST_TIME_ARGS (GST_BUFFER_DTS (pend->buffer)));
 
+      if (stream->discont)
+        GST_BUFFER_FLAG_SET (pend->buffer, GST_BUFFER_FLAG_DISCONT);
+      stream->discont = FALSE;
+
       res = gst_pad_push (stream->pad, pend->buffer);
       g_slice_free (PendingBuffer, pend);
     }
@@ -1825,6 +1834,10 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
       "Pushing buffer with PTS: %" GST_TIME_FORMAT " , DTS: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DTS (buffer)));
+
+  if (stream->discont)
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+  stream->discont = FALSE;
 
   res = gst_pad_push (stream->pad, buffer);
   GST_DEBUG_OBJECT (stream->pad, "Returned %s", gst_flow_get_name (res));
