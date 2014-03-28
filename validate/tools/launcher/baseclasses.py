@@ -645,12 +645,11 @@ class ScenarioManager(Loggable):
             cls._instance = super(ScenarioManager, cls).__new__(
                                 cls, *args, **kwargs)
             cls._instance.config = None
+            cls._instance.discovered = False
+            Loggable.__init__(cls._instance)
+
         return cls._instance
-
-    def get_scenario(self, name):
-        if self.all_scenarios:
-            return [scenario for scenario in self.all_scenarios if scenario.name == name][0]
-
+    def _discover_scenarios(self):
         scenario_defs = os.path.join(self.config.main_dir, "scenarios.def")
         try:
             subprocess.check_output([self.GST_VALIDATE_COMMAND,
@@ -667,4 +666,14 @@ class ScenarioManager(Loggable):
             self.all_scenarios.append(Scenario(section,
                                                config.items(section)))
 
-        return [scenario for scenario in self.all_scenarios if scenario.name == name][0]
+        self.discovered = True
+
+    def get_scenario(self, name):
+        if self.discovered is False:
+            self._discover_scenarios()
+
+        try:
+            return [scenario for scenario in self.all_scenarios if scenario.name == name][0]
+        except IndexError:
+            self.warning("Scenario: %s not found" % name)
+            return None

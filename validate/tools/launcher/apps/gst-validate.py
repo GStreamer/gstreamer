@@ -70,7 +70,12 @@ class PlaybinDescriptor(PipelineDescriptor):
 # definitions of commands to use
 GST_VALIDATE_COMMAND = "gst-validate-1.0"
 GST_VALIDATE_TRANSCODING_COMMAND = "gst-validate-transcoding-1.0"
-G_V_DISCOVERER_COMMAND = "gst-validate-media-check-1.0 --discover-only"
+G_V_DISCOVERER_COMMAND = "gst-validate-media-check-1.0"
+if "win32" in sys.platform:
+    GST_VALIDATE_COMMAND += ".exe"
+    GST_VALIDATE_TRANSCODING_COMMAND += ".exe"
+    G_V_DISCOVERER_COMMAND += ".exe"
+G_V_DISCOVERER_COMMAND += " --discover-only"
 
 # Some extension file for discovering results
 G_V_MEDIA_INFO_EXT = "media_info"

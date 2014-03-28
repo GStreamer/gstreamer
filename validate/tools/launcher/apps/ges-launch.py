@@ -175,6 +175,7 @@ class GESTestsManager(TestsManager):
     def init(self):
         try:
             if "--set-scenario=" in subprocess.check_output([GES_LAUNCH_COMMAND, "--help"]):
+
                 return True
             else:
                 self.warning("Can not use ges-launch, it seems not to be compiled against"
@@ -198,7 +199,6 @@ class GESTestsManager(TestsManager):
 
         try:
             os.makedirs(utils.url2path(options.dest)[0])
-            print "Created directory: %s" % options.dest
         except OSError:
             pass
 
@@ -210,7 +210,6 @@ class GESTestsManager(TestsManager):
                 for f in files:
                     if not f.endswith(".xges"):
                         continue
-
                     projects.append(utils.path2url(os.path.join(path, root, f)))
         else:
             for proj in self.args:
@@ -227,6 +226,8 @@ class GESTestsManager(TestsManager):
             # First playback casses
             for scenario_name in SCENARIOS:
                 scenario = self._scenarios.get_scenario(scenario_name)
+                if scenario is None:
+                    continue
                 classname = "ges.playback.%s.%s" % (scenario.name,
                                                     os.path.basename(proj).replace(".xges", ""))
                 self.add_test(GESPlaybackTest(classname,
