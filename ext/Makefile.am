@@ -488,6 +488,7 @@ DIST_SUBDIRS = \
 	ladspa \
 	kate \
 	libmms \
+	libvisual \
 	lv2 \
 	daala \
 	dts \
