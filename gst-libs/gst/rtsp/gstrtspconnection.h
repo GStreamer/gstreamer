@@ -217,6 +217,8 @@ GstRTSPResult      gst_rtsp_watch_send_message       (GstRTSPWatch *watch,
 GstRTSPResult      gst_rtsp_watch_wait_backlog       (GstRTSPWatch * watch,
                                                       GTimeVal *timeout);
 
+void               gst_rtsp_watch_set_flushing       (GstRTSPWatch * watch,
+                                                      gboolean flush);
 G_END_DECLS
 
 #endif /* __GST_RTSP_CONNECTION_H__ */

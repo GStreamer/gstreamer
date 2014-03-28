@@ -2653,14 +2653,14 @@ set_qos_dscp (GSocket * socket, guint qos_dscp)
 
   switch (af) {
     case AF_INET:
-      if (setsockopt (fd, IPPROTO_IP, IP_TOS, (SETSOCKOPT_ARG4_TYPE) &tos,
-          sizeof (tos)) < 0)
+      if (setsockopt (fd, IPPROTO_IP, IP_TOS, (SETSOCKOPT_ARG4_TYPE) & tos,
+              sizeof (tos)) < 0)
         goto no_setsockopt;
       break;
     case AF_INET6:
 #ifdef IPV6_TCLASS
       if (setsockopt (fd, IPPROTO_IPV6, IPV6_TCLASS,
-          (SETSOCKOPT_ARG4_TYPE) &tos, sizeof (tos)) < 0)
+              (SETSOCKOPT_ARG4_TYPE) & tos, sizeof (tos)) < 0)
         goto no_setsockopt;
       break;
 #endif
@@ -3008,6 +3008,7 @@ struct _GstRTSPWatch
   gsize max_bytes;
   guint max_messages;
   GCond queue_not_full;
+  gboolean flushing;
 
   GstRTSPWatchFuncs funcs;
 
@@ -3423,6 +3424,7 @@ gst_rtsp_watch_new (GstRTSPConnection * conn,
 
   gst_rtsp_watch_reset (result);
   result->keep_running = TRUE;
+  result->flushing = FALSE;
 
   result->funcs = *funcs;
   result->user_data = user_data;
@@ -3594,7 +3596,7 @@ gst_rtsp_watch_get_send_backlog (GstRTSPWatch * watch,
  * #GST_RTSP_ENOMEM.
  *
  * Returns: #GST_RTSP_OK on success. #GST_RTSP_ENOMEM when the backlog limits
- * are reached.
+ * are reached. #GST_RTSP_EINTR when @watch was flushing.
  */
 GstRTSPResult
 gst_rtsp_watch_write_data (GstRTSPWatch * watch, const guint8 * data,
@@ -3610,6 +3612,8 @@ gst_rtsp_watch_write_data (GstRTSPWatch * watch, const guint8 * data,
   g_return_val_if_fail (size != 0, GST_RTSP_EINVAL);
 
   g_mutex_lock (&watch->mutex);
+  if (watch->flushing)
+    goto flushing;
 
   /* try to send the message synchronously first */
   if (watch->messages->length == 0 && watch->write_data == NULL) {
@@ -3681,6 +3685,13 @@ done:
   return res;
 
   /* ERRORS */
+flushing:
+  {
+    GST_DEBUG ("we are flushing");
+    g_mutex_unlock (&watch->mutex);
+    g_free ((gpointer) data);
+    return GST_RTSP_EINTR;
+  }
 too_much_backlog:
   {
     GST_WARNING ("too much backlog: max_bytes %" G_GSIZE_FORMAT ", current %"
@@ -3729,7 +3740,8 @@ gst_rtsp_watch_send_message (GstRTSPWatch * watch, GstRTSPMessage * message,
  * @watch: a #GstRTSPWatch
  * @timeout: a #GTimeVal timeout
  *
- * Wait until there is place in the backlog queue or @timeout is reached.
+ * Wait until there is place in the backlog queue, @timeout is reached
+ * or @watch is set to flushing.
  *
  * If @timeout is #NULL this function can block forever. If @timeout
  * contains a valid timeout, this function will return #GST_RTSP_ETIMEOUT
@@ -3741,6 +3753,7 @@ gst_rtsp_watch_send_message (GstRTSPWatch * watch, GstRTSPMessage * message,
  *
  * Returns: #GST_RTSP_OK when if there is room in queue.
  *          #GST_RTSP_ETIMEOUT when @timeout was reached.
+ *          #GST_RTSP_EINTR when @watch is flushing
  *          #GST_RTSP_EINVAL when called with invalid parameters.
  *
  * Since: 1.4
@@ -3757,13 +3770,56 @@ gst_rtsp_watch_wait_backlog (GstRTSPWatch * watch, GTimeVal * timeout)
   end_time = g_get_monotonic_time () + GST_TIME_AS_USECONDS (to);
 
   g_mutex_lock (&watch->mutex);
+  if (watch->flushing)
+    goto flushing;
+
   while (IS_BACKLOG_FULL (watch)) {
-    if (!g_cond_wait_until (&watch->queue_not_full, &watch->mutex, end_time)) {
-      g_mutex_unlock (&watch->mutex);
-      return GST_RTSP_ETIMEOUT;
-    }
+    gboolean res;
+
+    res = g_cond_wait_until (&watch->queue_not_full, &watch->mutex, end_time);
+    if (watch->flushing)
+      goto flushing;
+
+    if (!res)
+      goto timeout;
   }
   g_mutex_unlock (&watch->mutex);
 
   return GST_RTSP_OK;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG ("we are flushing");
+    g_mutex_unlock (&watch->mutex);
+    return GST_RTSP_EINTR;
+  }
+timeout:
+  {
+    GST_DEBUG ("we timed out");
+    g_mutex_unlock (&watch->mutex);
+    return GST_RTSP_ETIMEOUT;
+  }
+}
+
+/**
+ * gst_rtsp_watch_set_flushing:
+ * @watch: a #GstRTSPWatch
+ * @flushing: new flushing state
+ *
+ * When @flushing is %TRUE, abort a call to gst_rtsp_watch_wait_backlog()
+ * and make sure gst_rtsp_watch_write_data() returns immediately with
+ * #GST_RTSP_EINTR.
+ *
+ * Since: 1.4
+ */
+void
+gst_rtsp_watch_set_flushing (GstRTSPWatch * watch, gboolean flushing)
+{
+  g_return_if_fail (watch != NULL);
+
+  g_mutex_lock (&watch->mutex);
+  watch->flushing = flushing;
+  g_cond_signal (&watch->queue_not_full);
+  g_mutex_unlock (&watch->mutex);
 }
