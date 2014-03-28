@@ -18,6 +18,7 @@
 # Boston, MA 02110-1301, USA.
 
 import os
+import sys
 import urlparse
 import subprocess
 import utils
@@ -26,7 +27,10 @@ import xml.etree.ElementTree as ET
 from baseclasses import GstValidateTest, TestsManager, ScenarioManager
 
 GES_DURATION_TOLERANCE = utils.GST_SECOND / 2
+
 GES_LAUNCH_COMMAND = "ges-launch-1.0"
+if "win32" in sys.platform:
+    GES_LAUNCH_COMMAND += ".exe"
 
 
 GES_ENCODING_TARGET_COMBINATIONS = [

@@ -20,6 +20,7 @@
 """ Class representing tests and test managers. """
 
 import os
+import sys
 import re
 import time
 import utils
@@ -632,10 +633,12 @@ class Scenario(object):
         for prop, value in props:
             setattr(self, prop, value)
 
-class ScenarioManager(object):
+class ScenarioManager(Loggable):
     _instance = None
     all_scenarios = []
     GST_VALIDATE_COMMAND = "gst-validate-1.0"
+    if "win32" in sys.platform:
+        GST_VALIDATE_COMMAND += ".exe"
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:

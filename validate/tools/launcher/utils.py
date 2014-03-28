@@ -18,6 +18,7 @@
 # Boston, MA 02110-1301, USA.
 """ Some utilies. """
 
+import sys
 import os
 import re
 import urllib
@@ -131,7 +132,11 @@ def path2url(path):
 
 
 def url2path(url):
-    return urlparse.urlparse(url).path
+    path = urlparse.urlparse(url).path
+    if "win32" in sys.platform:
+        if path[0] == '/':
+            return path[1:] # We need to remove the first '/' on windows
+    return path
 
 
 def isuri(string):
