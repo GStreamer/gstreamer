@@ -1,6 +1,6 @@
 common_cflags = $(PYGOBJECT_CFLAGS) $(GST_CFLAGS) -fno-strict-aliasing
 common_libadd = $(GST_LIBS) $(PYGOBJECT_LIBS)
-common_ldflags = -module -avoid-version
+common_ldflags = -module -avoid-version -shrext $(PYTHON_SO)
 
 # We install everything in the gi/overrides folder
 pygioverridesdir = $(PYGI_OVERRIDES_DIR)
@@ -27,9 +27,11 @@ build_pylinks:
 	    [ -e $(builddir)/$$f ] || $(LN_S) -f $(srcdir)/$$f $(builddir)/$$f; \
 	done
 
-all: $(pygioverridesexec_LTLIBRARIES:.la=.so) build_pylinks
-check-local: $(pygioverridesexec_LTLIBRARIES:.la=.so) build_pylinks
+all: $(pygioverridesexec_LTLIBRARIES:.la=$(PYTHON_SO)) build_pylinks
+check-local: $(pygioverridesexec_LTLIBRARIES:.la=$(PYTHON_SO)) build_pylinks
 clean-local:
-	rm -f $(pygioverridesexec_LTLIBRARIES:.la=.so)
-.la.so:
-	$(LN_S) -f .libs/$@ $@ || true
+	rm -f $(pygioverridesexec_LTLIBRARIES:.la=$(PYTHON_SO))
+
+%$(PYTHON_SO): %.la
+	$(LN_S) -f .libs/$@ $@
+
