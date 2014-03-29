@@ -10,7 +10,7 @@ pygioverridesexecdir = $(PYGI_OVERRIDES_DIR)
 
 EXTRA_DIST = Gst.py
 
-INCLUDES = $(PYTHON_INCLUDES)
+AM_CPPFLAGS = $(PYTHON_INCLUDES)
 
 pygioverridesexec_LTLIBRARIES = _gi_gst.la
 
