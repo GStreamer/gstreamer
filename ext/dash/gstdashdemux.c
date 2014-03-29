@@ -1839,7 +1839,7 @@ gst_dash_demux_wait_for_fragment_to_be_available (GstDashDemux * demux,
     gst_date_time_unref (cur_time);
     if (diff > 0) {
       GST_DEBUG_OBJECT (demux,
-          "Selected fragment has end timestamp > now (%" PRIi64
+          "Selected fragment has end timestamp > now (%" G_GINT64_FORMAT
           "), delaying download", diff);
       gst_dash_demux_download_wait (stream, diff);
     }
