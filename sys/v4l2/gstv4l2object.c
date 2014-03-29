@@ -2334,17 +2334,6 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
       "%" GST_FOURCC_FORMAT " stride: %d", width, height,
       GST_FOURCC_ARGS (pixelformat), v4l2object->bytesperline[0]);
 
-  /* MPEG-TS source cameras don't get their format set for some reason.
-   * It looks wrong and we weren't able to track down the reason for that code
-   * so it is disabled until someone who has an mpeg-ts camera complains...
-   */
-#if 0
-  /* Only unconditionally accept mpegts for sources */
-  if ((v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) &&
-      (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G')))
-    goto done;
-#endif
-
   memset (&format, 0x00, sizeof (struct v4l2_format));
   format.type = v4l2object->type;
 
@@ -2359,6 +2348,12 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
         format.fmt.pix_mp.width, format.fmt.pix_mp.height,
         GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
         format.fmt.pix_mp.colorspace, format.fmt.pix_mp.num_planes);
+
+    /* If no size in caps, use configured size */
+    if (width == 0 && height == 0) {
+      width = format.fmt.pix_mp.width;
+      height = format.fmt.pix_mp.height;
+    }
 
     if (format.type != v4l2object->type ||
         format.fmt.pix_mp.width != width ||
@@ -2438,6 +2433,12 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
         format.fmt.pix.width, format.fmt.pix.height,
         GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
         format.fmt.pix.bytesperline, format.fmt.pix.colorspace);
+
+    /* If no size in caps, use configured size */
+    if (width == 0 && height == 0) {
+      width = format.fmt.pix_mp.width;
+      height = format.fmt.pix_mp.height;
+    }
 
     if (format.type != v4l2object->type ||
         format.fmt.pix.width != width ||
