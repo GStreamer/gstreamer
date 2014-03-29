@@ -1,4 +1,4 @@
-AC_PREREQ(2.60)
+AC_PREREQ([2.68])
 
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
@@ -10,13 +10,13 @@ AC_INIT(GStreamer GObject Introspection overrides for Python , 1.3.0.1,
 AG_GST_INIT
 
 dnl initialize automake
-AM_INIT_AUTOMAKE([-Wno-portability 1.10])
+AM_INIT_AUTOMAKE([-Wno-portability 1.11 no-dist-gzip dist-xz tar-ustar subdir-objects])
 
 dnl define PACKAGE_VERSION_* variables
 AS_VERSION
 
 dnl check if this is a release version
-AS_NANO(GST_CVS="no", GST_CVS="yes")
+AS_NANO(GST_GIT="no", GST_GIT="yes")
 
 dnl can autoconf find the source ?
 # FIXME Port testsuite to 1.0
@@ -26,7 +26,7 @@ dnl define the output header for config
 AC_CONFIG_HEADERS([config.h])
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
-AM_MAINTAINER_MODE
+AM_MAINTAINER_MODE([enable])
 
 dnl use pretty build output with automake >= 1.11
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
@@ -43,8 +43,8 @@ AC_SUBST(PYGOBJECT_REQ, 3.0)
 
 AC_DISABLE_STATIC
 
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
+LT_PREREQ([2.2.6])
+LT_INIT([dlopen win32-dll disable-static])
 
 dnl find a compiler
 AC_PROG_CC
