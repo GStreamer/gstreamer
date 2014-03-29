@@ -2669,8 +2669,10 @@ gst_base_parse_finish_fragment (GstBaseParse * parse, gboolean prev_head)
         parse->priv->buffers_queued);
   }
 
-  /* audio may have all marked as keyframe, so arrange to send here */
-  if (!seen_delta)
+  /* audio may have all marked as keyframe, so arrange to send here. Also
+   * we might have ended the loop above on a keyframe, in which case we
+   * should */
+  if (!seen_delta || seen_key)
     ret = gst_base_parse_send_buffers (parse);
 
   /* any trailing unused no longer usable (ideally none) */
