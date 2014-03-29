@@ -4770,7 +4770,8 @@ probe_stopped:
   }
 not_linked:
   {
-    GST_DEBUG_OBJECT (pad, "Dropping event because pad is not linked");
+    GST_DEBUG_OBJECT (pad, "Dropping event %s because pad is not linked",
+        gst_event_type_get_name (GST_EVENT_TYPE (event)));
     GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
     gst_event_unref (event);
 
