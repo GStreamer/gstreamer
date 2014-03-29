@@ -424,6 +424,10 @@ gst_decklink_src_start (GstElement * element)
   }
 
   decklinksrc->input = gst_decklink_get_nth_input (decklinksrc->device_number);
+  if (decklinksrc->input == NULL) {
+    GST_ERROR ("no input source for device %i", decklinksrc->device_number);
+    return FALSE;
+  }
 
   delegate = new DeckLinkCaptureDelegate ();
   delegate->priv = decklinksrc;
@@ -435,6 +439,10 @@ gst_decklink_src_start (GstElement * element)
 
   decklinksrc->config = gst_decklink_get_nth_config (decklinksrc->device_number);
   config = decklinksrc->config;
+  if (decklinksrc->config == NULL) {
+    GST_ERROR ("no config for device %i", decklinksrc->device_number);
+    return FALSE;
+  }
 
   switch (decklinksrc->connection) {
     default:

@@ -321,6 +321,7 @@ gst_decklink_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/* FIXME: post error messages for the misc. failures */
 static gboolean
 gst_decklink_sink_start (GstDecklinkSink * decklinksink)
 {
@@ -335,6 +336,10 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   }
 
   decklinksink->output = gst_decklink_get_nth_output (decklinksink->device_number);
+  if (!decklinksink->decklink) {
+    GST_WARNING ("no output for device %d", decklinksink->device_number);
+    return FALSE;
+  }
 
   decklinksink->output->SetAudioCallback (decklinksink->callback);
 

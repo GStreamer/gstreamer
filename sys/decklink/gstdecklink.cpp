@@ -244,6 +244,11 @@ init_devices (void)
 
     ret = iterator->Next (&decklink);
     i++;
+
+    if (i == 10) {
+      GST_WARNING ("this hardware has more then 10 devices");
+      break;
+    }
   }
 
   n_devices = i;
