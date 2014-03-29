@@ -913,6 +913,9 @@ gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
       break;
   }
 
+  GST_DEBUG_OBJECT (decoder, "pushing event %s",
+      gst_event_type_get_name (GST_EVENT_TYPE (event)));
+
   return gst_pad_push_event (decoder->srcpad, event);
 }
 
