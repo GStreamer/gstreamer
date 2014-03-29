@@ -145,7 +145,7 @@ seen_section_before (MpegTSPacketizerStream * stream, guint8 table_id,
   /* Check if we've seen this table_id/subtable_extension first */
   subtable = find_subtable (stream->subtables, table_id, subtable_extension);
   if (!subtable) {
-    GST_DEBUG ("Haven't seen subtale");
+    GST_DEBUG ("Haven't seen subtable");
     return FALSE;
   }
   /* If we have, check it has the same version_number */
