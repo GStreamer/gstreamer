@@ -74,6 +74,32 @@ G_GNUC_INTERNAL gpointer __common_section_checks (GstMpegTsSection *section,
     return retval;							\
   }
 
+#define __common_desc_ext_check_base(desc, tagexttype, retval)          \
+  if (G_UNLIKELY ((desc)->data == NULL)) {                              \
+    GST_WARNING ("Descriptor is empty (data field == NULL)");           \
+    return retval;                                                      \
+  }                                                                     \
+  if (G_UNLIKELY ((desc)->tag != 0x7f) ||                               \
+    ((desc)->tag_extension != (tagexttype))) {                          \
+    GST_WARNING ("Wrong descriptor type (Got 0x%02x, expected 0x%02x)", \
+                 (desc)->tag_extension, tagexttype);                    \
+    return retval;                                                      \
+  }
+#define __common_desc_ext_checks(desc, tagexttype, minlen, retval)      \
+  __common_desc_ext_check_base(desc, tagexttype, retval);                    \
+  if (G_UNLIKELY ((desc)->length < (minlen))) {                         \
+    GST_WARNING ("Descriptor too small (Got %d, expected at least %d)", \
+                 (desc)->length, minlen);                               \
+    return retval;                                                      \
+  }
+#define __common_desc_ext_checks_exact(desc, tagexttype, len, retval)   \
+  __common_desc_ext_check_base(desc, tagexttype, retval);               \
+  if (G_UNLIKELY ((desc)->length != (len))) {                           \
+     GST_WARNING ("Wrong descriptor size (Got %d, expected %d)",        \
+                  (desc)->length, len);                                 \
+     return retval;                                                     \
+  }
+
 G_END_DECLS
 
 #endif	/* _GST_MPEGTS_PRIVATE_H_ */

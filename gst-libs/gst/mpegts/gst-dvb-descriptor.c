@@ -1032,3 +1032,186 @@ gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegTsDescriptor
 
   return TRUE;
 }
+
+/* GST_MTS_DESC_EXT_DVB_T2_DELIVERY_SYSTEM (0x7F && 0x04) */
+static void
+    _gst_mpegts_t2_delivery_system_cell_extension_free
+    (GstMpegTsT2DeliverySystemCellExtension * ext)
+{
+  g_slice_free (GstMpegTsT2DeliverySystemCellExtension, ext);
+}
+
+static void
+_gst_mpegts_t2_delivery_system_cell_free (GstMpegTsT2DeliverySystemCell * cell)
+{
+  g_ptr_array_unref (cell->sub_cells);
+  g_slice_free (GstMpegTsT2DeliverySystemCell, cell);
+}
+
+/**
+ * gst_mpegts_descriptor_parse_dvb_t2_delivery_system:
+ * @descriptor: a %GST_MTS_DESC_EXT_DVB_T2_DELIVERY_SYSTEM #GstMpegTsDescriptor
+ * @res: (out) (transfer none): #GstMpegTsT2DeliverySystemDescriptor
+ *
+ * Parses out the DVB-T2 delivery system from the @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegTsDescriptor
+    * descriptor, GstMpegTsT2DeliverySystemDescriptor * res)
+{
+  guint8 *data;
+  guint8 len, freq_len, sub_cell_len;
+  guint32 tmp_freq;
+
+  g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
+  __common_desc_ext_checks (descriptor, GST_MTS_DESC_EXT_DVB_T2_DELIVERY_SYSTEM,
+      4, FALSE);
+
+  data = (guint8 *) descriptor->data + 3;
+
+  res->plp_id = *data;
+  data += 1;
+
+  res->t2_system_id = GST_READ_UINT16_BE (data);
+  data += 2;
+
+  if (descriptor->length > 4) {
+    // FIXME: siso / miso
+    res->siso_miso = (*data >> 6) & 0x03;
+    switch ((*data >> 2) & 0x0f) {
+      case 0:
+        res->bandwidth = 8000000;
+        break;
+      case 1:
+        res->bandwidth = 7000000;
+        break;
+      case 2:
+        res->bandwidth = 6000000;
+        break;
+      case 3:
+        res->bandwidth = 5000000;
+        break;
+      case 4:
+        res->bandwidth = 10000000;
+        break;
+      case 5:
+        res->bandwidth = 1712000;
+        break;
+      default:
+        res->bandwidth = 0;
+        break;
+    }
+    data += 1;
+
+    switch ((*data >> 5) & 0x07) {
+      case 0:
+        res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_1_32;
+        break;
+      case 1:
+        res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_1_16;
+        break;
+      case 2:
+        res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_1_8;
+        break;
+      case 3:
+        res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_1_4;
+        break;
+      case 4:
+        res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_1_128;
+        break;
+      case 5:
+        res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_19_128;
+        break;
+      case 6:
+        res->guard_interval = GST_MPEGTS_GUARD_INTERVAL_19_256;
+        break;
+      default:
+        break;
+    }
+
+    switch ((*data >> 2) & 0x07) {
+      case 0:
+        res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_2K;
+        break;
+      case 1:
+        res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_8K;
+        break;
+      case 2:
+        res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_4K;
+        break;
+      case 3:
+        res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_1K;
+        break;
+      case 4:
+        res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_16K;
+        break;
+      case 5:
+        res->transmission_mode = GST_MPEGTS_TRANSMISSION_MODE_32K;
+        break;
+      default:
+        break;
+    }
+    res->other_frequency = (*data >> 1) & 0x01;
+    res->tfs = (*data) & 0x01;
+    data += 1;
+
+    len = descriptor->length - 6;
+
+    res->cells = g_ptr_array_new_with_free_func ((GDestroyNotify)
+        _gst_mpegts_t2_delivery_system_cell_free);
+
+    for (guint8 i = 0; i < len;) {
+      GstMpegTsT2DeliverySystemCell *cell;
+
+      cell = g_slice_new0 (GstMpegTsT2DeliverySystemCell);
+      g_ptr_array_add (res->cells, cell);
+
+      cell->cell_id = GST_READ_UINT16_BE (data);
+      data += 2;
+      i += 2;
+
+      cell->centre_frequencies = g_array_new (FALSE, FALSE, sizeof (guint32));
+
+      if (res->tfs == TRUE) {
+        freq_len = *data;
+        data += 1;
+        i += 1;
+
+        for (guint8 j = 0; j < freq_len;) {
+          tmp_freq = GST_READ_UINT32_BE (data) * 10;
+          g_array_append_val (cell->centre_frequencies, tmp_freq);
+          data += 4;
+          j += 4;
+          i += 4;
+        }
+      } else {
+        tmp_freq = GST_READ_UINT32_BE (data) * 10;
+        g_array_append_val (cell->centre_frequencies, tmp_freq);
+        data += 4;
+        i += 4;
+      }
+      sub_cell_len = (*data);
+      data += 1;
+      i += 1;
+
+      cell->sub_cells = g_ptr_array_new_with_free_func ((GDestroyNotify)
+          _gst_mpegts_t2_delivery_system_cell_extension_free);
+
+      for (guint8 k = 0; k < sub_cell_len;) {
+        GstMpegTsT2DeliverySystemCellExtension *cell_ext;
+        cell_ext = g_slice_new0 (GstMpegTsT2DeliverySystemCellExtension);
+
+        cell_ext->cell_id_extension = *data;
+        data += 1;
+
+        cell_ext->transposer_frequency = GST_READ_UINT32_BE (data) * 10;
+        data += 4;
+        i += 5;
+        k += 5;
+      }
+    }
+  }
+  return TRUE;
+}

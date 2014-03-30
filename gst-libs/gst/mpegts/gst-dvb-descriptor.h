@@ -116,6 +116,42 @@ typedef enum {
   GST_MTS_DESC_DVB_EXTENSION                    = 0x7F,
 } GstMpegTsDVBDescriptorType;
 
+/**
+ * GstMpegTsDVBExtendedDescriptorType:
+ *
+ * The type of #GstMpegTsDescriptor
+ *
+ * These values correspond to the registered extended descriptor
+ * type from the various DVB specifications.
+ *
+ * Consult the relevant specifications for more details.
+ */
+typedef enum {
+  /* 00 - 0x7F DVB extended tags ETSI EN 300 468
+   * (Specification for Service Information (SI) in DVB systems)
+   */
+  GST_MTS_DESC_EXT_DVB_IMAGE_ICON               = 0x00,
+  /* TS/TR 102 825 */
+  GST_MTS_DESC_EXT_DVB_CPCM_DELIVERY_SIGNALLING = 0x01,
+  GST_MTS_DESC_EXT_DVB_CP                       = 0x02,
+  GST_MTS_DESC_EXT_DVB_CP_IDENTIFIER            = 0x03,
+  GST_MTS_DESC_EXT_DVB_T2_DELIVERY_SYSTEM       = 0x04,
+  GST_MTS_DESC_EXT_DVB_SH_DELIVERY_SYSTEM       = 0x05,
+  GST_MTS_DESC_EXT_DVB_SUPPLEMENTARY_AUDIO      = 0x06,
+  GST_MTS_DESC_EXT_DVB_NETWORK_CHANGE_NOTIFY    = 0x07,
+  GST_MTS_DESC_EXT_DVB_MESSAGE                  = 0x08,
+  GST_MTS_DESC_EXT_DVB_TARGET_REGION            = 0x09,
+  GST_MTS_DESC_EXT_DVB_TARGET_REGION_NAME       = 0x0A,
+  GST_MTS_DESC_EXT_DVB_SERVICE_RELOCATED        = 0x0B,
+  GST_MTS_DESC_EXT_DVB_XAIT_PID                 = 0x0C,
+  GST_MTS_DESC_EXT_DVB_C2_DELIVERY_SYSTEM       = 0x0D,
+  GST_MTS_DESC_EXT_DVB_DTS_HD_AUDIO_STREAM      = 0x0E,
+  GST_MTS_DESC_EXT_DVB_DTS_NEUTRAL              = 0x0F,
+  GST_MTS_DESC_EXT_DVB_VIDEO_DEPTH_RANGE        = 0x10,
+  GST_MTS_DESC_EXT_DVB_T2MI                     = 0x11,
+  GST_MTS_DESC_EXT_DVB_URI_LINKAGE              = 0x13,
+} GstMpegTsDVBExtendedDescriptorType;
+
 /* GST_MTS_DESC_DVB_CAROUSEL_IDENTIFIER (0x13) */
 /* FIXME : Implement */
 
@@ -507,6 +543,68 @@ gboolean gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegTsDescript
 
 /* GST_MTS_DESC_DVB_AC3 (0x6a) */
 /* FIXME : Implement */
+
+/* GST_MTS_DESC_EXT_DVB_T2_DELIVERY_SYSTEM (0x7F && 0x04) */
+typedef struct _GstMpegTsT2DeliverySystemCellExtension GstMpegTsT2DeliverySystemCellExtension;
+
+/**
+ * GstMpegTsT2DeliverySystemCellExtension:
+ * @cell_id_extension: id of the sub cell
+ * @transposer_frequency: centre frequency of the sub cell in Hz
+ */
+struct _GstMpegTsT2DeliverySystemCellExtension
+{
+  guint8  cell_id_extension;
+  guint32 transposer_frequency;
+};
+
+typedef struct _GstMpegTsT2DeliverySystemCell GstMpegTsT2DeliverySystemCell;
+
+/**
+ * GstMpegTsT2DeliverySystemCell:
+ * @cell_id: id of the cell
+ * @centre_frequencies: centre frequencies in Hz
+ * @sub_cells: (element-type GstMpegTsT2DeliverySystemCellExtension):
+ */
+struct _GstMpegTsT2DeliverySystemCell
+{
+  guint16      cell_id;
+  GArray       *centre_frequencies;
+  GPtrArray    *sub_cells;
+};
+
+typedef struct _GstMpegTsT2DeliverySystemDescriptor GstMpegTsT2DeliverySystemDescriptor;
+
+/**
+ * GstMpegTsT2DeliverySystemDescriptor:
+ * @plp_id:
+ * @t2_system_id:
+ * @siso_miso:
+ * @bandwidth:
+ * @guard_interval:
+ * @transmission_mode:
+ * @other_frequency:
+ * @tfs:
+ * @cells: (element-type GstMpegTsT2DeliverySystemCell):
+ *
+ * describe DVB-T2 transmissions according to EN 302 755
+ */
+struct _GstMpegTsT2DeliverySystemDescriptor
+{
+  guint8                                plp_id;
+  guint16                               t2_system_id;
+  /* FIXME: */
+  guint8                                siso_miso;
+  guint32                               bandwidth;
+  GstMpegTsTerrestrialGuardInterval     guard_interval;
+  GstMpegTsTerrestrialTransmissionMode  transmission_mode;
+  gboolean                              other_frequency;
+  gboolean                              tfs;
+  GPtrArray                             *cells;
+};
+
+gboolean gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegTsDescriptor
+              *descriptor, GstMpegTsT2DeliverySystemDescriptor * res);
 
 G_END_DECLS
 
