@@ -1850,9 +1850,6 @@ gst_video_decoder_flush_decode (GstVideoDecoder * dec)
 
   GST_DEBUG_OBJECT (dec, "flushing buffers to decode");
 
-  /* clear buffer and decoder state */
-  gst_video_decoder_flush (dec, FALSE);
-
   walk = priv->decode;
   while (walk) {
     GList *next;
