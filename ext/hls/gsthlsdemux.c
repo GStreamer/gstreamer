@@ -382,6 +382,8 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* Use I-frame variants for trick modes */
       if ((rate > 1.0 || rate < -1.0) && demux->segment.rate >= -1.0
           && demux->segment.rate <= 1.0) {
+        GError *err = NULL;
+
         GST_M3U8_CLIENT_LOCK (demux->client);
         /* Switch to I-frame variant */
         demux->client->main->current_variant =
@@ -389,9 +391,16 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_M3U8_CLIENT_UNLOCK (demux->client);
         gst_m3u8_client_set_current (demux->client,
             demux->client->main->iframe_lists->data);
-
         gst_uri_downloader_reset (demux->downloader);
-        gst_hls_demux_update_playlist (demux, FALSE, NULL);
+        if (!gst_hls_demux_update_playlist (demux, FALSE, &err)) {
+          g_rec_mutex_unlock (&demux->stream_lock);
+          gst_element_post_message (GST_ELEMENT_CAST (demux),
+              gst_message_new_error (GST_OBJECT_CAST (demux), err,
+                  "Could not switch playlist"));
+          g_clear_error (&err);
+          gst_event_unref (event);
+          return FALSE;
+        }
         demux->discont = TRUE;
         demux->do_typefind = TRUE;
 
@@ -399,6 +408,8 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             demux->current_download_rate * demux->bitrate_limit / ABS (rate));
       } else if (rate > -1.0 && rate <= 1.0 && (demux->segment.rate < -1.0
               || demux->segment.rate > 1.0)) {
+        GError *err = NULL;
+
         GST_M3U8_CLIENT_LOCK (demux->client);
         /* Switch to normal variant */
         demux->client->main->current_variant = demux->client->main->lists;
@@ -407,7 +418,17 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             demux->client->main->lists->data);
 
         gst_uri_downloader_reset (demux->downloader);
-        gst_hls_demux_update_playlist (demux, FALSE, NULL);
+
+        if (!gst_hls_demux_update_playlist (demux, FALSE, &err)) {
+          g_rec_mutex_unlock (&demux->stream_lock);
+
+          gst_element_post_message (GST_ELEMENT_CAST (demux),
+              gst_message_new_error (GST_OBJECT_CAST (demux), err,
+                  "Could not switch playlist"));
+          g_clear_error (&err);
+          gst_event_unref (event);
+          return FALSE;
+        }
         demux->discont = TRUE;
         demux->do_typefind = TRUE;
 
