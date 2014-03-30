@@ -1928,19 +1928,10 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
     walk = next;
   }
 
-  /* now we can process frames. Start by moving each frame from the parse_gather
-   * to the decode list, reverse the order as we go, and stopping when/if we
-   * copy a keyframe. */
-  GST_DEBUG_OBJECT (dec, "checking parsed frames for a keyframe to decode");
   walk = priv->parse_gather;
   while (walk) {
     GstVideoCodecFrame *frame = (GstVideoCodecFrame *) (walk->data);
-
-    /* remove from the gather list */
-    priv->parse_gather = g_list_remove_link (priv->parse_gather, walk);
-
-    /* move it to the front of the decode queue */
-    priv->decode = g_list_concat (walk, priv->decode);
+    GList *walk2;
 
     /* this is reverse playback, check if we need to apply some segment
      * to the output before decoding, as during decoding the segment.rate
@@ -1952,11 +1943,11 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
      * pushing a segment before caps event. Negotiation only happens
      * when finish_frame is called.
      */
-    for (walk = frame->events; walk;) {
-      GList *cur = walk;
-      GstEvent *event = walk->data;
+    for (walk2 = frame->events; walk2;) {
+      GList *cur = walk2;
+      GstEvent *event = walk2->data;
 
-      walk = g_list_next (walk);
+      walk2 = g_list_next (walk2);
       if (GST_EVENT_TYPE (event) <= GST_EVENT_SEGMENT) {
 
         if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
@@ -1974,6 +1965,23 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
         frame->events = g_list_delete_link (frame->events, cur);
       }
     }
+
+    walk = walk->next;
+  }
+
+  /* now we can process frames. Start by moving each frame from the parse_gather
+   * to the decode list, reverse the order as we go, and stopping when/if we
+   * copy a keyframe. */
+  GST_DEBUG_OBJECT (dec, "checking parsed frames for a keyframe to decode");
+  walk = priv->parse_gather;
+  while (walk) {
+    GstVideoCodecFrame *frame = (GstVideoCodecFrame *) (walk->data);
+
+    /* remove from the gather list */
+    priv->parse_gather = g_list_remove_link (priv->parse_gather, walk);
+
+    /* move it to the front of the decode queue */
+    priv->decode = g_list_concat (walk, priv->decode);
 
     /* if we copied a keyframe, flush and decode the decode queue */
     if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
@@ -1993,6 +2001,7 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
   if (at_eos) {
     GstVideoDecoderClass *decoder_class;
 
+    GST_DEBUG_OBJECT (dec, "Finishing");
     decoder_class = GST_VIDEO_DECODER_GET_CLASS (dec);
     if (decoder_class->finish)
       res = decoder_class->finish (dec);
@@ -2257,6 +2266,7 @@ gst_video_decoder_new_frame (GstVideoDecoder * decoder)
   frame->duration = GST_CLOCK_TIME_NONE;
   frame->events = priv->current_frame_events;
   priv->current_frame_events = NULL;
+
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
   GST_LOG_OBJECT (decoder, "Created new frame %p (sfn:%d)",
