@@ -240,6 +240,7 @@ gst_mpeg_ts_atsc_descriptor_type_get_type
 <SECTION>
 <FILE>gst-dvb-descriptor</FILE>
 GstMpegTsDVBDescriptorType
+GstMpegTsDVBExtendedDescriptorType
 <SUBSECTION content>
 GstMpegTsContent
 gst_mpegts_descriptor_parse_dvb_content
@@ -270,6 +271,11 @@ GstMpegTsTerrestrialHierarchy
 GstMpegTsModulationType
 GstMpegTsDVBCodeRate
 gst_mpegts_descriptor_parse_terrestrial_delivery_system
+<SUBSECTION t2_delivery>
+GstMpegTsT2DeliverySystemCellExtension
+GstMpegTsT2DeliverySystemCell
+GstMpegTsT2DeliverySystemDescriptor
+gst_mpegts_descriptor_parse_dvb_t2_delivery_system
 <SUBSECTION short_event>
 gst_mpegts_descriptor_parse_dvb_short_event
 <SUBSECTION network_name>
@@ -286,9 +292,14 @@ gst_mpegts_descriptor_parse_dvb_teletext_nb
 <SUBSECTION subtitling>
 gst_mpegts_descriptor_parse_dvb_subtitling
 gst_mpegts_descriptor_from_dvb_subtitling
+<SUBSECTION data_broadcast>
+GstMpegTsDataBroadcastDescriptor
+gst_mpegts_descriptor_parse_dvb_data_broadcast
+<SUBSECTION stream_identifier>
+gst_mpegts_descriptor_parse_dvb_stream_identifier
 <SUBSECTION Standard>
 GST_TYPE_MPEG_TSDVB_CODE_RATE
-gst_mpeg_tsdvb_code_rate_get_type
+gst_mpegts_dvb_code_rate_get_type
 </SECTION>
 
 <SECTION>

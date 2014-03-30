@@ -993,7 +993,7 @@ gst_mpegts_descriptor_parse_terrestrial_delivery_system (const
 
 /* GST_MTS_DESC_DVB_DATA_BROADCAST (0x64) */
 /**
- * gst_mpegts_descriptor_parse_data_broadcast:
+ * gst_mpegts_descriptor_parse_dvb_data_broadcast:
  * @descriptor: a %GST_MTS_DESC_DVB_DATA_BROADCAST #GstMpegTsDescriptor
  * @res: (out) (transfer none): #GstMpegTsDataBroadcastDescriptor
  *
