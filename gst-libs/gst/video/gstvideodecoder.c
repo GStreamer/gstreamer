@@ -1888,6 +1888,9 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
   GstVideoDecoderPrivate *priv = dec->priv;
   GstFlowReturn res = GST_FLOW_OK;
   GList *walk;
+  GstVideoDecoderClass *decoder_class;
+
+  decoder_class = GST_VIDEO_DECODER_GET_CLASS (dec);
 
   GST_DEBUG_OBJECT (dec, "flushing buffers to parsing");
 
@@ -1995,14 +1998,9 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
   }
 
   /* We need to tell the subclass to drain now */
-  if (at_eos) {
-    GstVideoDecoderClass *decoder_class;
-
-    GST_DEBUG_OBJECT (dec, "Finishing");
-    decoder_class = GST_VIDEO_DECODER_GET_CLASS (dec);
-    if (decoder_class->finish)
-      res = decoder_class->finish (dec);
-  }
+  GST_DEBUG_OBJECT (dec, "Finishing");
+  if (decoder_class->finish)
+    res = decoder_class->finish (dec);
 
   if (res != GST_FLOW_OK)
     goto done;
