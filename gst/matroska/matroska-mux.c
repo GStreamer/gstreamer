@@ -160,6 +160,7 @@ static GstStaticPadTemplate audiosink_templ =
         COMMON_AUDIO_CAPS "; "
         "audio/x-flac, "
         COMMON_AUDIO_CAPS "; "
+        "audio/x-opus; "
         "audio/x-speex, "
         COMMON_AUDIO_CAPS "; "
         "audio/x-raw, "
@@ -1841,6 +1842,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
           ("speex stream headers missing or malformed"));
       goto refuse_caps;
     }
+  } else if (!strcmp (mimetype, "audio/x-opus")) {
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_OPUS);
   } else if (!strcmp (mimetype, "audio/x-ac3")) {
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_AC3);
   } else if (!strcmp (mimetype, "audio/x-eac3")) {
