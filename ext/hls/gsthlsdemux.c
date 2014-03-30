@@ -886,6 +886,9 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
   }
 
   demux->segment.position = GST_BUFFER_TIMESTAMP (buf);
+  if (demux->segment.rate > 0)
+    demux->segment.position += GST_BUFFER_DURATION (buf);
+
   ret = gst_pad_push (demux->srcpad, buf);
   if (ret != GST_FLOW_OK)
     goto error_pushing;
