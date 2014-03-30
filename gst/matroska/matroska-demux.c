@@ -5339,6 +5339,9 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
         context->codec_priv_size);
     /* FIXME: mark stream as broken and skip if there are no stream headers */
     context->send_stream_headers = TRUE;
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_OPUS)) {
+    caps = gst_caps_new_empty_simple ("audio/x-opus");
+    *codec_name = g_strdup ("Opus");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_ACM)) {
     gst_riff_strf_auds auds;
 
