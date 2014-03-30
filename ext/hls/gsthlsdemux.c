@@ -787,6 +787,17 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
   if (demux->stop_stream_task)
     goto pause_task;
 
+  /* Check if we're done with our segment */
+  if (demux->segment.rate > 0) {
+    if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop)
+        && demux->segment.position >= demux->segment.stop)
+      goto end_of_playlist;
+  } else {
+    if (GST_CLOCK_TIME_IS_VALID (demux->segment.start)
+        && demux->segment.position < demux->segment.start)
+      goto end_of_playlist;
+  }
+
   demux->next_download = g_get_monotonic_time ();
   if ((fragment =
           gst_hls_demux_get_next_fragment (demux, &end_of_playlist,
