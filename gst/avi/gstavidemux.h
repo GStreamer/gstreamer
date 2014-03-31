@@ -119,6 +119,7 @@ typedef struct {
   GstTagList	*taglist;
 
   gint           index_id;
+  gboolean is_raw;
 } GstAviStream;
 
 typedef enum {

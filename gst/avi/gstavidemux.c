@@ -1934,8 +1934,8 @@ gst_avi_demux_roundup_list (GstAviDemux * avi, GstBuffer ** buf)
 }
 
 static GstCaps *
-gst_avi_demux_check_caps (GstAviDemux * avi, GstCaps * caps,
-    GstBuffer ** rgb8_palette)
+gst_avi_demux_check_caps (GstAviDemux * avi, GstAviStream * stream,
+    GstCaps * caps)
 {
   GstStructure *s;
   const GValue *val;
@@ -2317,7 +2317,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           g_free (vprp);
           vprp = NULL;
         }
-        caps = gst_avi_demux_check_caps (avi, caps, &stream->rgb8_palette);
+        caps = gst_avi_demux_check_caps (avi, stream, caps);
         tag_name = GST_TAG_VIDEO_CODEC;
         avi->num_v_streams++;
       } else {
@@ -5239,14 +5239,16 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
     buf = gst_avi_demux_invert (stream, buf);
 
     /* mark non-keyframes */
-    if (keyframe) {
+    if (keyframe || stream->is_raw) {
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
       GST_BUFFER_PTS (buf) = timestamp;
     } else {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
       GST_BUFFER_PTS (buf) = GST_CLOCK_TIME_NONE;
     }
+
     GST_BUFFER_DTS (buf) = timestamp;
+
     GST_BUFFER_DURATION (buf) = duration;
     GST_BUFFER_OFFSET (buf) = out_offset;
     GST_BUFFER_OFFSET_END (buf) = out_offset_end;
