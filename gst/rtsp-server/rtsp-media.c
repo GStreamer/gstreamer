@@ -1935,8 +1935,10 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 
   /* join the element in the PAUSED state because this callback is
    * called from the streaming thread and it is PAUSED */
-  gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
-      priv->rtpbin, GST_STATE_PAUSED);
+  if (!gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
+      priv->rtpbin, GST_STATE_PAUSED)) {
+    GST_WARNING ("failed to join bin element");
+  }
 
   priv->adding = FALSE;
   g_rec_mutex_unlock (&priv->state_lock);
@@ -2089,8 +2091,10 @@ start_prepare (GstRTSPMedia * media)
 
     stream = g_ptr_array_index (priv->streams, i);
 
-    gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
-        priv->rtpbin, GST_STATE_NULL);
+    if (!gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
+        priv->rtpbin, GST_STATE_NULL)) {
+      goto join_bin_failed;
+    }
   }
 
   for (walk = priv->dynamic; walk; walk = g_list_next (walk)) {
@@ -2119,6 +2123,12 @@ start_prepare (GstRTSPMedia * media)
 
   return FALSE;
 
+join_bin_failed:
+  {
+    GST_WARNING ("failed to join bin element");
+    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
+    return FALSE;
+  }
 preroll_failed:
   {
     GST_WARNING ("failed to preroll pipeline");

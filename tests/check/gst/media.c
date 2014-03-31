@@ -294,6 +294,45 @@ GST_START_TEST (test_media_dyn_prepare)
 
 GST_END_TEST;
 
+GST_START_TEST (test_media_prepare_port_alloc_fail)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread;
+  GstRTSPAddressPool *addrpool;
+
+  pool = gst_rtsp_thread_pool_new ();
+
+  factory = gst_rtsp_media_factory_new ();
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( fakesrc is-live=true ! text/plain ! rtpgstpay name=pay0 )");
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  addrpool = gst_rtsp_address_pool_new ();
+  fail_unless (gst_rtsp_address_pool_add_range (addrpool, "192.168.1.1",
+      "192.168.1.1", 6000, 6001, 0));
+  gst_rtsp_media_set_address_pool (media, addrpool);
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_if (gst_rtsp_media_prepare (media, thread));
+
+  g_object_unref (media);
+  g_object_unref (addrpool);
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+  g_object_unref (pool);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_media_take_pipeline)
 {
   GstRTSPMediaFactory *factory;
@@ -379,6 +418,7 @@ rtspmedia_suite (void)
   tcase_add_test (tc, test_media);
   tcase_add_test (tc, test_media_prepare);
   tcase_add_test (tc, test_media_dyn_prepare);
+  tcase_add_test (tc, test_media_prepare_port_alloc_fail);
   tcase_add_test (tc, test_media_take_pipeline);
   tcase_add_test (tc, test_media_reset);
 
