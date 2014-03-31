@@ -181,7 +181,7 @@ class GstValidateMediaCheckTest(Test):
                                               timeout=timeout)
         self._uri = uri
         self.file_infos = file_infos
-        self._media_info_path = urlparse.urlparse(file_infos.path).path
+        self._media_info_path = urlparse.urlparse(file_infos.get("file-info", "uri")).path
 
     def build_arguments(self):
         self.add_arguments(self._uri, "--expected-results",
@@ -304,7 +304,7 @@ class GstValidateManager(TestsManager, Loggable):
             self.add_test(GstValidateMediaCheckTest(classname,
                                                     self.options,
                                                     self.reporter,
-                                                    mediainfo,
+                                                    mediainfo.config,
                                                     uri,
                                                     timeout=timeout))
 
@@ -435,8 +435,8 @@ class GstValidateManager(TestsManager, Loggable):
     def needs_http_server(self):
         for test in self.list_tests():
             if self._is_test_wanted(test):
-                protocol = test.file_infos.config.get("file-info", "protocol")
-                uri = test.file_infos.config.get("file-info", "uri")
+                protocol = test.file_infos.get("file-info", "protocol")
+                uri = test.file_infos.get("file-info", "uri")
 
                 if protocol == Protocols.HTTP and \
                     "127.0.0.1:%s" % (self.options.http_server_port) in uri:
