@@ -119,7 +119,8 @@ def printc(message, color="", title=False):
     if hasattr(message, "result") and color == '':
         color = get_color_for_result(message.result)
 
-    print color + str(message) + Colors.ENDC
+    sys.stdout.write(color + str(message) + Colors.ENDC + "\n")
+    sys.stdout.flush()
 
 
 def launch_command(command, color=None):
