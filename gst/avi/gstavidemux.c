@@ -1944,11 +1944,17 @@ gst_avi_demux_check_caps (GstAviDemux * avi, GstCaps * caps,
   caps = gst_caps_make_writable (caps);
 
   s = gst_caps_get_structure (caps, 0);
-  if (gst_structure_has_name (s, "video/x-raw") &&
-      gst_structure_has_field_typed (s, "palette_data", GST_TYPE_BUFFER)) {
-    gst_structure_get (s, "palette_data", GST_TYPE_BUFFER, rgb8_palette, NULL);
-    gst_structure_remove_field (s, "palette_data");
-    return caps;
+  if (gst_structure_has_name (s, "video/x-raw")) {
+    stream->is_raw = TRUE;
+    if (!gst_structure_has_field (s, "pixel-aspect-ratio"))
+      gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+          1, 1, NULL);
+    if (gst_structure_has_field_typed (s, "palette_data", GST_TYPE_BUFFER)) {
+      gst_structure_get (s, "palette_data", GST_TYPE_BUFFER,
+          &stream->rgb8_palette, NULL);
+      gst_structure_remove_field (s, "palette_data");
+      return caps;
+    }
   } else if (!gst_structure_has_name (s, "video/x-h264")) {
     return caps;
   }
