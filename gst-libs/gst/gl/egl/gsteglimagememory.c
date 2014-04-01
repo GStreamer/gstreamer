@@ -270,6 +270,7 @@ gst_egl_image_allocator_wrap (GstAllocator * allocator,
   return GST_MEMORY_CAST (mem);
 }
 
+#if 0
 static GstMemory *
 gst_egl_image_allocator_alloc (GstAllocator * allocator,
     GstGLContextEGL * context, GstVideoGLTextureType type, gint width,
@@ -278,6 +279,7 @@ gst_egl_image_allocator_alloc (GstAllocator * allocator,
   /* EGL_NO_CONTEXT */
   return NULL;
 }
+#endif
 
 static gboolean
 gst_eglimage_to_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
@@ -391,6 +393,7 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
           g_assert_not_reached ();
           break;
       }
+#if 0
       mem[0] =
           gst_egl_image_allocator_alloc (allocator, context,
           texture_types[0], GST_VIDEO_INFO_WIDTH (info),
@@ -399,7 +402,9 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
         stride[0] = size / GST_VIDEO_INFO_HEIGHT (info);
         n_mem = 1;
         GST_MINI_OBJECT_FLAG_SET (mem[0], GST_MEMORY_FLAG_NO_SHARE);
-      } else {
+      } else
+#endif
+      {
         gst_gl_generate_texture_full (GST_GL_CONTEXT (context), info, 0, stride,
             offset, &size, (GLuint *) & client_buffer_tex[0]);
 
@@ -425,7 +430,7 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
 
       texture_types[0] = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
       texture_types[1] = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA;
-
+#if 0
       mem[0] =
           gst_egl_image_allocator_alloc (allocator, context,
           texture_types[0], GST_VIDEO_INFO_COMP_WIDTH (info,
@@ -449,7 +454,9 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
         if (mem[1])
           gst_memory_unref (mem[1]);
         mem[0] = mem[1] = NULL;
-
+      }
+#endif
+      {
         for (i = 0; i < 2; i++) {
           gst_gl_generate_texture_full (GST_GL_CONTEXT (context), info, 0,
               stride, offset, size, (GLuint *) & client_buffer_tex[i]);
@@ -481,7 +488,7 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
       texture_types[0] = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
       texture_types[1] = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
       texture_types[2] = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
-
+#if 0
       mem[0] =
           gst_egl_image_allocator_alloc (allocator, context,
           texture_types[0], GST_VIDEO_INFO_COMP_WIDTH (info,
@@ -513,7 +520,9 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
         if (mem[2])
           gst_memory_unref (mem[2]);
         mem[0] = mem[1] = mem[2] = NULL;
-
+      }
+#endif
+      {
         for (i = 0; i < 3; i++) {
           gst_gl_generate_texture_full (GST_GL_CONTEXT (context), info, i,
               stride, offset, size, (GLuint *) & client_buffer_tex[i]);
