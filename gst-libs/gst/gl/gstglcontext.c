@@ -801,7 +801,7 @@ gst_gl_context_create_thread (GstGLContext * context)
     goto failure;
 
   /* GL core contexts and GLES3 */
-  if (gl->GetIntegerv && gl->GetStringi)
+  if (gl->GetIntegerv && gl->GetStringi && gl_major >= 3)
     ext_g_str = _build_extension_string (context);
 
   if (ext_g_str && ext_g_str->len) {
