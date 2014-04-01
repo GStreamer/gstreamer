@@ -28,6 +28,7 @@ gst_insert_bin_get_type
 
 gst_gl_upload_get_type
 gst_gl_download_get_type
+gst_gl_color_convert_get_type
 gst_gl_display_get_type
 gst_gl_context_get_type
 gst_gl_filter_get_type

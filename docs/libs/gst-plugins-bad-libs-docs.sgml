@@ -61,6 +61,7 @@
       <title>OpenGL Helper Library</title>
       <xi:include href="xml/gstglapi.xml"/>
       <xi:include href="xml/gstglbufferpool.xml"/>
+      <xi:include href="xml/gstglcolorconvert.xml"/>
       <xi:include href="xml/gstglcontext.xml"/>
       <xi:include href="xml/gstglcontextcocoa.xml"/>
       <xi:include href="xml/gstglcontextegl.xml"/>

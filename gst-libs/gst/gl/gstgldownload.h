@@ -49,6 +49,7 @@ struct _GstGLDownload
   GMutex           lock;
 
   GstGLContext     *context;
+  GstGLColorConvert *convert;
 
   /* output data */
   GstVideoInfo     info;
@@ -57,13 +58,8 @@ struct _GstGLDownload
   gboolean         initted;
 
   /* used for the conversion */
-  GLuint           fbo;
-  GLuint           depth_buffer;
   GLuint           in_texture;
   GLuint           out_texture[GST_VIDEO_MAX_PLANES];
-  GstGLShader     *shader;
-  GLint            shader_attr_position_loc;
-  GLint            shader_attr_texture_loc;
 
   GstGLDownloadPrivate *priv;
 
@@ -80,21 +76,6 @@ struct _GstGLDownloadClass
   /* <private> */
   GObjectClass object_class;
 };
-
-/**
- * GST_GL_DOWNLOAD_FORMATS:
- *
- * The currently supported formats that can be downloaded
- */
-# define GST_GL_DOWNLOAD_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
-                                 "xBGR, ARGB, ABGR, I420, YV12, YUY2, UYVY, AYUV }"
-
-/**
- * GST_GL_DOWNLOAD_VIDEO_CAPS:
- *
- * The currently supported #GstCaps that can be downloaded
- */
-#define GST_GL_DOWNLOAD_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_GL_DOWNLOAD_FORMATS)
 
 GstGLDownload * gst_gl_download_new          (GstGLContext * context);
 

@@ -47,12 +47,10 @@ static void _do_upload (GstGLContext * context, GstGLUpload * upload);
 static gboolean _do_upload_fill (GstGLContext * context, GstGLUpload * upload);
 static gboolean _do_upload_make (GstGLContext * context, GstGLUpload * upload);
 static void _init_upload (GstGLContext * context, GstGLUpload * upload);
-static gboolean _init_upload_fbo (GstGLContext * context, GstGLUpload * upload);
+//static gboolean _init_upload_fbo (GstGLContext * context, GstGLUpload * upload);
 static gboolean _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 static void _do_upload_with_meta (GstGLContext * context, GstGLUpload * upload);
-
-static gboolean _do_upload_draw (GstGLContext * context, GstGLUpload * upload);
 
 /* *INDENT-OFF* */
 
@@ -63,206 +61,10 @@ static gboolean _do_upload_draw (GstGLContext * context, GstGLUpload * upload);
       "uniform vec3 bcoeff;\n"
 
 /* FIXME: use the colormatrix support from videoconvert */
-
-/* BT. 601 standard with the following ranges:
- * Y = [16..235] (of 255)
- * Cb/Cr = [16..240] (of 255)
- */
-static const gfloat bt601_offset[] = {-0.0625, -0.5, -0.5};
-static const gfloat bt601_rcoeff[] = {1.164, 0.000, 1.596};
-static const gfloat bt601_gcoeff[] = {1.164,-0.391,-0.813};
-static const gfloat bt601_bcoeff[] = {1.164, 2.018, 0.000};
-
-/* BT. 709 standard with the following ranges:
- * Y = [16..235] (of 255)
- * Cb/Cr = [16..240] (of 255)
- */
-static const gfloat bt709_offset[] = {-0.0625, -0.5, -0.5};
-static const gfloat bt709_rcoeff[] = {1.164, 0.000, 1.787};
-static const gfloat bt709_gcoeff[] = {1.164,-0.213,-0.531};
-static const gfloat bt709_bcoeff[] = {1.164,-2.112, 0.000};
-
-/** GRAY16 to RGB conversion 
- *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
- *  high byte weight as : 255*256/65535 
- *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
- *  low byte weight as : 255/65535 (similar)
- * */
-#define COMPOSE_WEIGHT \
-    "const vec2 compose_weight = vec2(0.996109, 0.003891);\n"
-
-/* Channel reordering for XYZ <-> ZYX conversion */
-static const char *frag_REORDER = {
-      "#ifdef GL_ES\n"
-      "precision mediump float;\n"
-      "#endif\n"
-      "varying vec2 v_texcoord;\n"
-      "uniform sampler2D tex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      "void main(void)\n"
-      "{\n"
-      " vec4 t = texture2D(tex, v_texcoord * tex_scale0);\n"
-      " gl_FragColor = vec4(t.%c, t.%c, t.%c, 1.0);\n"
-      "}"
-};
-
-/** GRAY16 to RGB conversion 
- *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
- *  high byte weight as : 255*256/65535 
- *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
- *  low byte weight as : 255/65535 (similar)
- * */
-static const char *frag_COMPOSE = {
-      "#ifdef GL_ES\n"
-      "precision mediump float;\n"
-      "#endif\n"
-      "varying vec2 v_texcoord;\n"
-      "uniform sampler2D tex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      COMPOSE_WEIGHT
-      "void main(void)\n"
-      "{\n"
-      " vec4 t = texture2D(tex, v_texcoord * tex_scale0);\n"
-      " float value = dot(t.%c%c, compose_weight);"
-      " gl_FragColor = vec4(value, value, value, 1.0);\n"
-      "}"
-
-};
-static const char *frag_AYUV = {
-      "#ifdef GL_ES\n"
-      "precision mediump float;\n"
-      "#endif\n"
-      "varying vec2 v_texcoord;\n"
-      "uniform sampler2D tex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      YUV_TO_RGB_COEFFICIENTS
-      "void main(void) {\n"
-      "  float r,g,b;\n"
-      "  vec3 yuv;\n"
-      "  yuv  = texture2D(tex,v_texcoord * tex_scale0).gba;\n"
-      "  yuv += offset;\n"
-      "  r = dot(yuv, rcoeff);\n"
-      "  g = dot(yuv, gcoeff);\n"
-      "  b = dot(yuv, bcoeff);\n"
-      "  gl_FragColor=vec4(r,g,b,1.0);\n"
-      "}"
-};
-
-/** YUV to RGB conversion */
-static const char *frag_PLANAR_YUV = {
-      "#ifdef GL_ES\n"
-      "precision mediump float;\n"
-      "#endif\n"
-      "varying vec2 v_texcoord;\n"
-      "uniform sampler2D Ytex,Utex,Vtex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      YUV_TO_RGB_COEFFICIENTS
-      "void main(void) {\n"
-      "  float r,g,b;\n"
-      "  vec3 yuv;\n"
-      "  yuv.x=texture2D(Ytex,v_texcoord * tex_scale0).r;\n"
-      "  yuv.y=texture2D(Utex,v_texcoord * tex_scale1).r;\n"
-      "  yuv.z=texture2D(Vtex,v_texcoord * tex_scale2).r;\n"
-      "  yuv += offset;\n"
-      "  r = dot(yuv, rcoeff);\n"
-      "  g = dot(yuv, gcoeff);\n"
-      "  b = dot(yuv, bcoeff);\n"
-      "  gl_FragColor=vec4(r,g,b,1.0);\n"
-      "}"
-};
-
-/** NV12/NV21 to RGB conversion */
-static const char *frag_NV12_NV21 = {
-      "#ifdef GL_ES\n"
-      "precision mediump float;\n"
-      "#endif\n"
-      "varying vec2 v_texcoord;\n"
-      "uniform sampler2D Ytex,UVtex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      YUV_TO_RGB_COEFFICIENTS
-      "void main(void) {\n"
-      "  float r,g,b;\n"
-      "  vec3 yuv;\n"
-      "  yuv.x=texture2D(Ytex, v_texcoord * tex_scale0).r;\n"
-      "  yuv.yz=texture2D(UVtex, v_texcoord * tex_scale1).%c%c;\n"
-      "  yuv += offset;\n"
-      "  r = dot(yuv, rcoeff);\n"
-      "  g = dot(yuv, gcoeff);\n"
-      "  b = dot(yuv, bcoeff);\n"
-      "  gl_FragColor=vec4(r,g,b,1.0);\n"
-      "}"
-};
-
-/* Direct fragments copy with stride-scaling */
-static const char *frag_COPY = {
-      "#ifdef GL_ES\n"
-      "precision mediump float;\n"
-      "#endif\n"
-      "varying vec2 v_texcoord;\n"
-      "uniform sampler2D tex;\n"
-      "uniform vec2 tex_scale0;\n"
-      "uniform vec2 tex_scale1;\n"
-      "uniform vec2 tex_scale2;\n"
-      "void main(void)\n"
-      "{\n"
-      " vec4 t = texture2D(tex, v_texcoord * tex_scale0);\n"
-      " gl_FragColor = vec4(t.rgb, 1.0);\n"
-      "}"
-};
-
-/* YUY2:r,g,a
-   UYVY:a,b,r */
-static const gchar *frag_YUY2_UYVY =
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "varying vec2 v_texcoord;\n"
-    "uniform sampler2D Ytex, UVtex;\n"
-    "uniform vec2 tex_scale0;\n"
-    "uniform vec2 tex_scale1;\n"
-    "uniform vec2 tex_scale2;\n"
-    YUV_TO_RGB_COEFFICIENTS
-    "void main(void) {\n"
-    "  vec3 yuv;\n"
-    "  float fx, fy, y, u, v, r, g, b;\n"
-    "  fx = v_texcoord.x;\n"
-    "  fy = v_texcoord.y;\n"
-    "  yuv.x = texture2D(Ytex,v_texcoord * tex_scale0).%c;\n"
-    "  yuv.yz = texture2D(UVtex,v_texcoord * tex_scale1).%c%c;\n"
-    "  yuv+=offset;\n"
-    "  r = dot(yuv, rcoeff);\n"
-    "  g = dot(yuv, gcoeff);\n"
-    "  b = dot(yuv, bcoeff);\n"
-    "  gl_FragColor = vec4(r, g, b, 1.0);\n"
-    "}\n";
-
-static const gchar *text_vertex_shader =
-    "attribute vec4 a_position;   \n"
-    "attribute vec2 a_texcoord;   \n"
-    "varying vec2 v_texcoord;     \n"
-    "void main()                  \n"
-    "{                            \n"
-    "   gl_Position = a_position; \n"
-    "   v_texcoord = a_texcoord;  \n"
-    "}                            \n";
-
-/* *INDENT-ON* */
-
 struct TexData
 {
-  guint internal_format, format, type, width, height;
+  guint format, type, width, height;
   gfloat tex_scaling[2];
-  const gchar *shader_name;
   guint unpack_length;
 };
 
@@ -270,17 +72,6 @@ struct _GstGLUploadPrivate
 {
   int n_textures;
   gboolean result;
-
-  const gchar *YUY2_UYVY;
-  const gchar *PLANAR_YUV;
-  const gchar *AYUV;
-  const gchar *NV12_NV21;
-  const gchar *REORDER;
-  const gchar *COPY;
-  const gchar *COMPOSE;
-  const gchar *vert_shader;
-
-    gboolean (*draw) (GstGLContext * context, GstGLUpload * download);
 
   struct TexData texture_info[GST_VIDEO_MAX_PLANES];
 
@@ -319,14 +110,6 @@ gst_gl_upload_init (GstGLUpload * upload)
   upload->context = NULL;
 
   g_mutex_init (&upload->lock);
-
-  upload->fbo = 0;
-  upload->depth_buffer = 0;
-  upload->out_texture = 0;
-  upload->shader = NULL;
-
-  upload->shader_attr_position_loc = 0;
-  upload->shader_attr_texture_loc = 0;
 }
 
 /**
@@ -339,22 +122,11 @@ GstGLUpload *
 gst_gl_upload_new (GstGLContext * context)
 {
   GstGLUpload *upload;
-  GstGLUploadPrivate *priv;
 
   upload = g_object_new (GST_TYPE_GL_UPLOAD, NULL);
 
   upload->context = gst_object_ref (context);
-  priv = upload->priv;
-
-  priv->YUY2_UYVY = frag_YUY2_UYVY;
-  priv->PLANAR_YUV = frag_PLANAR_YUV;
-  priv->AYUV = frag_AYUV;
-  priv->REORDER = frag_REORDER;
-  priv->COMPOSE = frag_COMPOSE;
-  priv->COPY = frag_COPY;
-  priv->NV12_NV21 = frag_NV12_NV21;
-  priv->vert_shader = text_vertex_shader;
-  priv->draw = _do_upload_draw;
+  upload->convert = gst_gl_color_convert_new (context);
 
   return upload;
 }
@@ -363,32 +135,11 @@ static void
 gst_gl_upload_finalize (GObject * object)
 {
   GstGLUpload *upload;
-  guint i;
 
   upload = GST_GL_UPLOAD (object);
 
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (upload->in_texture[i]) {
-      gst_gl_context_del_texture (upload->context, &upload->in_texture[i]);
-      upload->in_texture[i] = 0;
-    }
-  }
-  if (upload->out_texture) {
-    gst_gl_context_del_texture (upload->context, &upload->out_texture);
-    upload->out_texture = 0;
-  }
-  if (upload->priv->tex_id) {
-    gst_gl_context_del_texture (upload->context, &upload->priv->tex_id);
-    upload->priv->tex_id = 0;
-  }
-  if (upload->fbo || upload->depth_buffer) {
-    gst_gl_context_del_fbo (upload->context, upload->fbo, upload->depth_buffer);
-    upload->fbo = 0;
-    upload->depth_buffer = 0;
-  }
-  if (upload->shader) {
-    gst_object_unref (upload->shader);
-    upload->shader = NULL;
+  if (upload->convert) {
+    gst_object_unref (upload->convert);
   }
 
   if (upload->context) {
@@ -403,7 +154,7 @@ gst_gl_upload_finalize (GObject * object)
 
 static gboolean
 _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
-    GstVideoInfo * in_info, GstVideoInfo * out_info)
+    GstVideoInfo *in_info)
 {
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
@@ -413,12 +164,9 @@ _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
 
   if (upload->initted) {
     return FALSE;
-  } else {
-    upload->initted = TRUE;
   }
 
   upload->in_info = *in_info;
-  upload->out_info = *out_info;
 
   gst_gl_context_thread_add (upload->context,
       (GstGLContextThreadFunc) _init_upload, upload);
@@ -431,7 +179,6 @@ _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
  * gst_gl_upload_init_format:
  * @upload: a #GstGLUpload
  * @in_info: input #GstVideoInfo
- * @out_info: output #GstVideoInfo
  *
  * Initializes @upload with the information required for upload.
  *
@@ -445,7 +192,7 @@ gst_gl_upload_init_format (GstGLUpload * upload, GstVideoInfo * in_info,
 
   g_mutex_lock (&upload->lock);
 
-  ret = _gst_gl_upload_init_format_unlocked (upload, in_info, out_info);
+  ret = _gst_gl_upload_init_format_unlocked (upload, in_info);
 
   g_mutex_unlock (&upload->lock);
 
@@ -469,6 +216,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
 {
   GstMemory *mem;
   GstVideoGLTextureUploadMeta *gl_tex_upload_meta;
+  guint texture_ids[] = { 0, 0, 0, 0 };
 
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (buffer != NULL, FALSE);
@@ -502,7 +250,6 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   /* GstVideoGLTextureUploadMeta */
   gl_tex_upload_meta = gst_buffer_get_video_gl_texture_upload_meta (buffer);
   if (gl_tex_upload_meta) {
-    guint texture_ids[] = { 0, 0, 0, 0 };
     GST_LOG_OBJECT (upload, "Attempting upload with "
         "GstVideoGLTextureUploadMeta");
     texture_ids[0] = upload->priv->tex_id;
@@ -606,7 +353,7 @@ static gboolean
 _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
 {
   GstVideoMeta *v_meta;
-  GstVideoInfo in_info, out_info;
+  GstVideoInfo in_info;
   GstVideoFrame frame;
   GstMemory *mem;
   gboolean ret;
@@ -628,9 +375,8 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
     height = v_meta->height;
 
     gst_video_info_set_format (&in_info, v_format, width, height);
-    gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA, width, height);
 
-    if (!_gst_gl_upload_init_format_unlocked (upload, &in_info, &out_info))
+    if (!_gst_gl_upload_init_format_unlocked (upload, &in_info))
       return FALSE;
   }
 
@@ -845,42 +591,13 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
   return TRUE;
 }
 
-static gboolean
-_create_shader (GstGLContext * context, const gchar * vertex_src,
-    const gchar * fragment_src, GstGLShader ** out_shader)
-{
-  GstGLShader *shader;
-  GError *error = NULL;
-
-  g_return_val_if_fail (vertex_src != NULL || fragment_src != NULL, FALSE);
-
-  shader = gst_gl_shader_new (context);
-
-  if (vertex_src)
-    gst_gl_shader_set_vertex_source (shader, vertex_src);
-  if (fragment_src)
-    gst_gl_shader_set_fragment_source (shader, fragment_src);
-
-  if (!gst_gl_shader_compile (shader, &error)) {
-    gst_gl_context_set_error (context, "%s", error->message);
-    g_error_free (error);
-    gst_gl_context_clear_shader (context);
-    gst_object_unref (shader);
-    return FALSE;
-  }
-
-  *out_shader = shader;
-  return TRUE;
-}
-
 /* Called in the gl thread */
 void
 _init_upload (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
-  gchar *frag_prog = NULL;
-  gboolean free_frag_prog, res;
+  GstVideoInfo out_info;
 
   gl = context->gl_vtable;
 
@@ -895,101 +612,46 @@ _init_upload (GstGLContext * context, GstGLUpload * upload)
     goto error;
   }
 
-  if (!_init_upload_fbo (context, upload)) {
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info), GST_VIDEO_INFO_HEIGHT (&upload->in_info));
+
+  if (!gst_gl_color_convert_init_format (upload->convert, upload->in_info, out_info))
     goto error;
-  }
 
   switch (v_format) {
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_AYUV:
-      frag_prog = (gchar *) upload->priv->AYUV;
-      free_frag_prog = FALSE;
       upload->priv->n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      upload->priv->n_textures = 2;
       break;
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
-      frag_prog = (gchar *) upload->priv->PLANAR_YUV;
-      free_frag_prog = FALSE;
       upload->priv->n_textures = 3;
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-      frag_prog = g_strdup_printf (upload->priv->NV12_NV21, 'r', 'a');
-      free_frag_prog = TRUE;
-      upload->priv->n_textures = 2;
-      break;
-    case GST_VIDEO_FORMAT_NV21:
-      frag_prog = g_strdup_printf (upload->priv->NV12_NV21, 'a', 'r');
-      free_frag_prog = TRUE;
-      upload->priv->n_textures = 2;
-      break;
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_BGRA:
-      frag_prog = g_strdup_printf (upload->priv->REORDER, 'b', 'g', 'r');
-      free_frag_prog = TRUE;
-      upload->priv->n_textures = 1;
-      break;
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_ARGB:
-      frag_prog = g_strdup_printf (upload->priv->REORDER, 'g', 'b', 'a');
-      free_frag_prog = TRUE;
-      upload->priv->n_textures = 1;
-      break;
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_ABGR:
-      frag_prog = g_strdup_printf (upload->priv->REORDER, 'a', 'b', 'g');
-      free_frag_prog = TRUE;
-      upload->priv->n_textures = 1;
-      break;
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-      frag_prog = g_strdup_printf (upload->priv->COMPOSE, 'r', 'a');
-      free_frag_prog = TRUE;
-      upload->priv->n_textures = 1;
-      break;
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-      frag_prog = g_strdup_printf (upload->priv->COMPOSE, 'a', 'r');
-      free_frag_prog = TRUE;
-      upload->priv->n_textures = 1;
-      break;
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_RGB16:
-      frag_prog = (gchar *) upload->priv->COPY;
-      free_frag_prog = FALSE;
-      upload->priv->n_textures = 1;
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-      frag_prog = g_strdup_printf (upload->priv->YUY2_UYVY, 'r', 'g', 'a');
-      free_frag_prog = TRUE;
-      upload->priv->n_textures = 2;
-      break;
-    case GST_VIDEO_FORMAT_UYVY:
-      frag_prog = g_strdup_printf (upload->priv->YUY2_UYVY, 'a', 'r', 'b');
-      free_frag_prog = TRUE;
-      upload->priv->n_textures = 2;
       break;
     default:
       g_assert_not_reached ();
       break;
   }
-
-  res =
-      _create_shader (context, upload->priv->vert_shader, frag_prog,
-      &upload->shader);
-  if (free_frag_prog)
-    g_free (frag_prog);
-  frag_prog = NULL;
-  if (!res)
-    goto error;
-
-  upload->shader_attr_position_loc =
-      gst_gl_shader_get_attribute_location (upload->shader, "a_position");
-  upload->shader_attr_texture_loc =
-      gst_gl_shader_get_attribute_location (upload->shader, "a_texcoord");
 
   if (!_do_upload_make (context, upload))
     goto error;
@@ -1001,104 +663,24 @@ error:
   upload->priv->result = FALSE;
 }
 
-
-/* called by _init_upload (in the gl thread) */
-gboolean
-_init_upload_fbo (GstGLContext * context, GstGLUpload * upload)
-{
-  GstGLFuncs *gl;
-  guint out_width, out_height;
-  GLuint fake_texture = 0;      /* a FBO must hava texture to init */
-
-  gl = context->gl_vtable;
-
-  out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
-
-  if (!gl->GenFramebuffers) {
-    /* turn off the pipeline because Frame buffer object is a not present */
-    gst_gl_context_set_error (context,
-        "Context, EXT_framebuffer_object supported: no");
-    return FALSE;
-  }
-
-  GST_INFO ("Context, EXT_framebuffer_object supported: yes");
-
-  /* setup FBO */
-  gl->GenFramebuffers (1, &upload->fbo);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
-
-  /* setup the render buffer for depth */
-  gl->GenRenderbuffers (1, &upload->depth_buffer);
-  gl->BindRenderbuffer (GL_RENDERBUFFER, upload->depth_buffer);
-  if (USING_OPENGL (context)) {
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-        out_width, out_height);
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
-        out_width, out_height);
-  }
-  if (USING_GLES2 (context)) {
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
-        out_width, out_height);
-  }
-
-  /* a fake texture is attached to the upload FBO (cannot init without it) */
-  gl->GenTextures (1, &fake_texture);
-  gl->BindTexture (GL_TEXTURE_2D, fake_texture);
-  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, out_width, out_height,
-      0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  /* attach the texture to the FBO to renderer to */
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_2D, fake_texture, 0);
-
-  /* attach the depth render buffer to the FBO */
-  gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-      GL_RENDERBUFFER, upload->depth_buffer);
-
-  if (USING_OPENGL (context)) {
-    gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-        GL_RENDERBUFFER, upload->depth_buffer);
-  }
-
-  if (!gst_gl_context_check_framebuffer_status (context)) {
-    gst_gl_context_set_error (context, "GL framebuffer status incomplete");
-    return FALSE;
-  }
-
-  /* unbind the FBO */
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-
-  gl->DeleteTextures (1, &fake_texture);
-
-  return TRUE;
-}
-
 /* Called by the idle function in the gl thread */
 void
 _do_upload (GstGLContext * context, GstGLUpload * upload)
 {
-  guint in_width, in_height, out_width, out_height;
+  guint in_width, in_height;
+  guint out_texture[] = {upload->out_texture, 0, 0, 0};
 
-  out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
   in_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
   in_height = GST_VIDEO_INFO_HEIGHT (&upload->in_info);
 
-  GST_TRACE ("uploading to texture:%u dimensions:%ux%u, "
-      "from textures:%u,%u,%u dimensions:%ux%u", upload->out_texture,
-      out_width, out_height, upload->in_texture[0], upload->in_texture[1],
+  GST_TRACE ("uploading to texture:%u with textures:%u,%u,%u dimensions:%ux%u", 
+      upload->out_texture, upload->in_texture[0], upload->in_texture[1],
       upload->in_texture[2], in_width, in_height);
 
   if (!_do_upload_fill (context, upload))
     goto error;
 
-  if (!upload->priv->draw (context, upload))
-    goto error;
+  gst_gl_color_convert_perform (upload->convert, upload->in_texture, out_texture);
 
   upload->priv->result = TRUE;
   return;
@@ -1135,6 +717,7 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
   GstVideoFormat v_format;
   guint in_height;
   struct TexData *tex = upload->priv->texture_info;
+  gfloat tex_scaling[GST_VIDEO_MAX_PLANES][2];
   guint i;
 
   gl = context->gl_vtable;
@@ -1152,97 +735,69 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_AYUV:
-      tex[0].internal_format = GL_RGBA;
       tex[0].format = GL_RGBA;
       tex[0].type = GL_UNSIGNED_BYTE;
       tex[0].height = in_height;
-      tex[0].shader_name = "tex";
       break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-      tex[0].internal_format = GL_RGB;
       tex[0].format = GL_RGB;
       tex[0].type = GL_UNSIGNED_BYTE;
       tex[0].height = in_height;
-      tex[0].shader_name = "tex";
       break;
     case GST_VIDEO_FORMAT_GRAY8:
-      tex[0].internal_format = GL_LUMINANCE;
       tex[0].format = GL_LUMINANCE;
       tex[0].type = GL_UNSIGNED_BYTE;
       tex[0].height = in_height;
-      tex[0].shader_name = "tex";
       break;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
-      tex[0].internal_format = GL_LUMINANCE_ALPHA;
       tex[0].format = GL_LUMINANCE_ALPHA;
       tex[0].type = GL_UNSIGNED_BYTE;
       tex[0].height = in_height;
-      tex[0].shader_name = "tex";
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
-      tex[0].internal_format = GL_LUMINANCE_ALPHA;
       tex[0].format = GL_LUMINANCE_ALPHA;
       tex[0].type = GL_UNSIGNED_BYTE;
       tex[0].height = in_height;
-      tex[0].shader_name = "Ytex";
-      tex[1].internal_format = GL_RGBA8;
       tex[1].format = GL_RGBA;
       tex[1].type = GL_UNSIGNED_BYTE;
       tex[1].height = in_height;
-      tex[1].shader_name = "UVtex";
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
-      tex[0].internal_format = GL_LUMINANCE;
       tex[0].format = GL_LUMINANCE;
       tex[0].type = GL_UNSIGNED_BYTE;
       tex[0].height = in_height;
-      tex[0].shader_name = "Ytex";
-      tex[1].internal_format = GL_LUMINANCE_ALPHA;
       tex[1].format = GL_LUMINANCE_ALPHA;
       tex[1].type = GL_UNSIGNED_BYTE;
       tex[1].height = GST_ROUND_UP_2 (in_height) / 2;
-      tex[1].shader_name = "UVtex";
       break;
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
-      tex[0].internal_format = GL_LUMINANCE;
       tex[0].format = GL_LUMINANCE;
       tex[0].type = GL_UNSIGNED_BYTE;
       tex[0].height = in_height;
-      tex[0].shader_name = "Ytex";
-      tex[1].internal_format = GL_LUMINANCE;
       tex[1].format = GL_LUMINANCE;
       tex[1].type = GL_UNSIGNED_BYTE;
       tex[1].height = in_height;
-      tex[1].shader_name = "Utex";
-      tex[2].internal_format = GL_LUMINANCE;
       tex[2].format = GL_LUMINANCE;
       tex[2].type = GL_UNSIGNED_BYTE;
       tex[2].height = in_height;
-      tex[2].shader_name = "Vtex";
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-      tex[0].internal_format = GL_LUMINANCE;
       tex[0].format = GL_LUMINANCE;
       tex[0].type = GL_UNSIGNED_BYTE;
       tex[0].height = in_height;
-      tex[0].shader_name = "Ytex";
-      tex[1].internal_format = GL_LUMINANCE;
       tex[1].format = GL_LUMINANCE;
       tex[1].type = GL_UNSIGNED_BYTE;
       tex[1].height = GST_ROUND_UP_2 (in_height) / 2;
-      tex[1].shader_name = "Utex";
-      tex[2].internal_format = GL_LUMINANCE;
       tex[2].format = GL_LUMINANCE;
       tex[2].type = GL_UNSIGNED_BYTE;
       tex[2].height = GST_ROUND_UP_2 (in_height) / 2;
-      tex[2].shader_name = "Vtex";
       break;
     default:
       gst_gl_context_set_error (context, "Unsupported upload video format %d",
@@ -1272,8 +827,8 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
     }
 
     tex[i].width = plane_width;
-    tex[i].tex_scaling[0] = 1.0f;
-    tex[i].tex_scaling[1] = 1.0f;
+    tex_scaling[i][0] = 1.0f;
+    tex_scaling[i][1] = 1.0f;
 
 #if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
     if (USING_OPENGL (context) || USING_GLES3 (context)) {
@@ -1322,7 +877,7 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
                 j, i, plane_stride, pstride, j, plane_stride, round_up_j);
 
             tex[i].unpack_length = j;
-            tex[i].tex_scaling[0] =
+            tex_scaling[i][0] =
                 (gfloat) (plane_width * pstride) / (gfloat) plane_stride;
             break;
           }
@@ -1342,13 +897,14 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
     gl->GenTextures (1, &upload->in_texture[i]);
     gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
 
-    gl->TexImage2D (GL_TEXTURE_2D, 0, tex[i].internal_format,
+    gl->TexImage2D (GL_TEXTURE_2D, 0, tex[i].format,
         tex[i].width, tex[i].height, 0, tex[i].format, tex[i].type, NULL);
   }
 
+  gst_gl_color_convert_set_texture_scaling (upload->convert, tex_scaling);
+
   return TRUE;
 }
-
 
 /* called by gst_gl_context_thread_do_upload (in the gl thread) */
 gboolean
@@ -1410,126 +966,6 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
    * in case we want to use the upload texture in an other opengl context
    */
   gl->BindTexture (GL_TEXTURE_2D, 0);
-
-  return TRUE;
-}
-
-static gboolean
-_do_upload_draw (GstGLContext * context, GstGLUpload * upload)
-{
-  GstGLFuncs *gl;
-  struct TexData *tex = upload->priv->texture_info;
-  guint out_width, out_height;
-  const gfloat *cms_offset;
-  const gfloat *cms_rcoeff;
-  const gfloat *cms_gcoeff;
-  const gfloat *cms_bcoeff;
-  gint i;
-
-  GLint viewport_dim[4];
-
-  const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
-    1.0f, 0.0f,
-    -1.0f, -1.0f, 0.0f,
-    0.0f, 0.0f,
-    -1.0f, 1.0f, 0.0f,
-    0.0f, 1.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f
-  };
-
-  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
-
-  gl = context->gl_vtable;
-
-  out_width = GST_VIDEO_INFO_WIDTH (&upload->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&upload->out_info);
-
-  if (gst_video_colorimetry_matches (&upload->in_info.colorimetry,
-          GST_VIDEO_COLORIMETRY_BT709)) {
-    cms_offset = bt709_offset;
-    cms_rcoeff = bt709_rcoeff;
-    cms_gcoeff = bt709_gcoeff;
-    cms_bcoeff = bt709_bcoeff;
-  } else if (gst_video_colorimetry_matches (&upload->in_info.colorimetry,
-          GST_VIDEO_COLORIMETRY_BT601)) {
-    cms_offset = bt601_offset;
-    cms_rcoeff = bt601_rcoeff;
-    cms_gcoeff = bt601_gcoeff;
-    cms_bcoeff = bt601_bcoeff;
-  } else {
-    /* defaults */
-    cms_offset = bt601_offset;
-    cms_rcoeff = bt601_rcoeff;
-    cms_gcoeff = bt601_gcoeff;
-    cms_bcoeff = bt601_bcoeff;
-  }
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
-
-  /* setup a texture to render to */
-  gl->BindTexture (GL_TEXTURE_2D, upload->out_texture);
-
-  /* attach the texture to the FBO to renderer to */
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_2D, upload->out_texture, 0);
-
-  gst_gl_context_clear_shader (context);
-
-  gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
-
-  gl->Viewport (0, 0, out_width, out_height);
-
-  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
-  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  gst_gl_shader_use (upload->shader);
-
-  gl->VertexAttribPointer (upload->shader_attr_position_loc, 3,
-      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-  gl->VertexAttribPointer (upload->shader_attr_texture_loc, 2,
-      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-  gl->EnableVertexAttribArray (upload->shader_attr_position_loc);
-  gl->EnableVertexAttribArray (upload->shader_attr_texture_loc);
-
-  gst_gl_shader_set_uniform_3fv (upload->shader, "offset", 1,
-      (gfloat *) cms_offset);
-  gst_gl_shader_set_uniform_3fv (upload->shader, "rcoeff", 1,
-      (gfloat *) cms_rcoeff);
-  gst_gl_shader_set_uniform_3fv (upload->shader, "gcoeff", 1,
-      (gfloat *) cms_gcoeff);
-  gst_gl_shader_set_uniform_3fv (upload->shader, "bcoeff", 1,
-      (gfloat *) cms_bcoeff);
-
-  for (i = upload->priv->n_textures - 1; i >= 0; i--) {
-    gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
-
-    gl->ActiveTexture (GL_TEXTURE0 + i);
-    gst_gl_shader_set_uniform_1i (upload->shader, tex[i].shader_name, i);
-    gst_gl_shader_set_uniform_2fv (upload->shader, scale_name, 1,
-        &tex[i].tex_scaling[0]);
-
-    g_free (scale_name);
-
-    gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  }
-
-  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-
-  /* we are done with the shader */
-  gst_gl_context_clear_shader (context);
-
-  gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
-      viewport_dim[3]);
-
-  gst_gl_context_check_framebuffer_status (context);
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 
   return TRUE;
 }

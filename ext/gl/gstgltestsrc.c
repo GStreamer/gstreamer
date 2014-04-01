@@ -160,7 +160,7 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_from_string (GST_GL_DOWNLOAD_VIDEO_CAPS)));
+          gst_caps_from_string (GST_GL_COLOR_CONVERT_VIDEO_CAPS)));
 
   element_class->set_context = gst_gl_test_src_set_context;
 

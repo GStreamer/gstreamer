@@ -681,6 +681,27 @@ GST_TYPE_GL_BUFFER_POOL
 </SECTION>
 
 <SECTION>
+<FILE>gstglcolorconvert</FILE>
+<TITLE>GstGLColorConvert</TITLE>
+GST_GL_COLOR_CONVERT_FORMATS
+GST_GL_COLOR_CONVERT_VIDEO_CAPS
+GstGLColorConvert
+GstGLColorConvertClass
+gst_gl_color_convert_new
+gst_gl_color_convert_init_format
+gst_gl_color_convert_set_texture_scaling
+gst_gl_color_convert_perform
+<SUBSECTION Standard>
+GstGLColorConvertPrivate
+GST_GL_COLOR_CONVERT
+GST_GL_COLOR_CONVERT_CLASS
+gst_gl_color_convert_get_type
+GST_IS_GL_COLOR_CONVERT
+GST_IS_GL_COLOR_CONVERT_CLASS
+GST_GL_TYPE_COLOR_CONVERT
+</SECTION>
+
+<SECTION>
 <FILE>gstglcontext</FILE>
 <TITLE>GstGLContext</TITLE>
 GST_GL_CONTEXT_ERROR
@@ -800,8 +821,6 @@ gst_gl_display_get_type
 
 <SECTION>
 <FILE>gstgldownload</FILE>
-GST_GL_DOWNLOAD_FORMATS
-GST_GL_DOWNLOAD_VIDEO_CAPS
 <TITLE>GstGLDownload</TITLE>
 GstGLDownload
 gst_gl_download_new
@@ -961,8 +980,6 @@ GST_GL_SHADER_GET_CLASS
 
 <SECTION>
 <FILE>gstglupload</FILE>
-GST_GL_UPLOAD_FORMATS
-GST_GL_UPLOAD_VIDEO_CAPS
 <TITLE>GstGLUpload</TITLE>
 GstGLUpload
 gst_gl_upload_new

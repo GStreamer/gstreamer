@@ -55,6 +55,10 @@ typedef struct _GstGLUpload GstGLUpload;
 typedef struct _GstGLUploadClass GstGLUploadClass;
 typedef struct _GstGLUploadPrivate GstGLUploadPrivate;
 
+typedef struct _GstGLColorConvert GstGLColorConvert;
+typedef struct _GstGLColorConvertClass GstGLColorConvertClass;
+typedef struct _GstGLColorConvertPrivate GstGLColorConvertPrivate;
+
 G_END_DECLS
 
 #endif /* __GST_GL_FWD_H__ */

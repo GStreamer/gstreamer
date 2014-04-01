@@ -49,22 +49,16 @@ struct _GstGLUpload
   GMutex           lock;
 
   GstGLContext    *context;
+  GstGLColorConvert *convert;
 
   /* input data */
   GstVideoInfo     in_info;
-  GstVideoInfo     out_info;
 
   gpointer         data[GST_VIDEO_MAX_PLANES];
   gboolean         initted;
 
-  /* used for the conversion */
-  GLuint           fbo;
-  GLuint           depth_buffer;
-  GLuint           out_texture;
   GLuint           in_texture[GST_VIDEO_MAX_PLANES];
-  GstGLShader     *shader;
-  GLint            shader_attr_position_loc;
-  GLint            shader_attr_texture_loc;
+  GLuint           out_texture;
 
   /* <private> */
   GstGLUploadPrivate *priv;
@@ -81,23 +75,6 @@ struct _GstGLUploadClass
 {
   GObjectClass object_class;
 };
-
-/**
- * GST_GL_UPLOAD_FORMATS:
- *
- * The currently supported formats that can be uploaded
- */
-#define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
-                               "xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, " \
-                               "Y41B, NV12, NV21, YUY2, UYVY, AYUV, " \
-                               "GRAY8, GRAY16_LE, GRAY16_BE }"
-
-/**
- * GST_GL_UPLOAD_VIDEO_CAPS:
- *
- * The currently supported #GstCaps that can be uploaded
- */
-#define GST_GL_UPLOAD_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS)
 
 GstGLUpload * gst_gl_upload_new            (GstGLContext * context);
 
