@@ -1584,7 +1584,6 @@ reference_list_init (GstVaapiEncoderH264 * encoder,
   GstVaapiH264ViewRefPool *const ref_pool =
       &encoder->ref_pools[encoder->view_idx];
   GList *iter, *list_0_start = NULL, *list_1_start = NULL;
-  guint max_pic_order_cnt = (1 << encoder->log2_max_pic_order_cnt);
   guint count;
 
   *reflist_0_count = 0;
@@ -1596,7 +1595,7 @@ reference_list_init (GstVaapiEncoderH264 * encoder,
   for (; iter; iter = g_list_previous (iter)) {
     tmp = (GstVaapiEncoderH264Ref *) iter->data;
     g_assert (tmp && tmp->poc != picture->poc);
-    if (_poc_greater_than (picture->poc, tmp->poc, max_pic_order_cnt)) {
+    if (_poc_greater_than (picture->poc, tmp->poc, encoder->max_pic_order_cnt)) {
       list_0_start = iter;
       list_1_start = g_list_next (iter);
       break;
