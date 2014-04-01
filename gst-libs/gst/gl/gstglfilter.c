@@ -43,7 +43,7 @@ static GstStaticPadTemplate gst_gl_filter_src_pad_template =
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
             "RGBA") "; "
 #endif
-        GST_VIDEO_CAPS_MAKE (GST_GL_DOWNLOAD_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS) "; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
             "RGBA"))
@@ -58,7 +58,7 @@ static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
             "RGBA") "; "
 #endif
-        GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS) "; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
             "RGBA"))
