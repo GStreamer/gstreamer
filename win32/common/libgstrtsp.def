@@ -117,6 +117,7 @@ EXPORTS
 	gst_rtsp_watch_new
 	gst_rtsp_watch_reset
 	gst_rtsp_watch_send_message
+	gst_rtsp_watch_set_flushing
 	gst_rtsp_watch_set_send_backlog
 	gst_rtsp_watch_unref
 	gst_rtsp_watch_wait_backlog
