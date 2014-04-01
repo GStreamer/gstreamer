@@ -272,7 +272,7 @@ def TIME_ARGS(time):
                                   time % Gst.SECOND)
 __all__.append('TIME_ARGS')
 
-import _gi_gst
+from . import _gi_gst
 _gi_gst
 
 # maybe more python and less C some day if core turns a bit more introspection
