@@ -1111,7 +1111,7 @@ ensure_tuning_high_compression (GstVaapiEncoderH264 * encoder)
     profile_idc = encoder->max_profile_idc;
 
   /* Tuning options to enable Main profile */
-  if (profile_idc >= 77) {
+  if (profile_idc >= 77 && profile_idc != 88) {
     encoder->use_cabac = TRUE;
     if (!encoder->num_bframes)
       encoder->num_bframes = 1;
