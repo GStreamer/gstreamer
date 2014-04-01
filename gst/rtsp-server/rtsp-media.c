@@ -2401,6 +2401,8 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
     goto is_busy;
 
   GST_INFO ("unprepare media %p", media);
+  if (priv->blocked)
+    media_streams_set_blocked (media, FALSE);
   set_target_state (media, GST_STATE_NULL, FALSE);
   success = TRUE;
 

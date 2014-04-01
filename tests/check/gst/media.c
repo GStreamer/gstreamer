@@ -123,6 +123,43 @@ GST_START_TEST (test_media)
 
 GST_END_TEST;
 
+static void
+test_prepare_reusable (GstRTSPThreadPool * pool, const gchar * launch_line)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+  GstRTSPThread *thread;
+
+  factory = gst_rtsp_media_factory_new ();
+  fail_if (gst_rtsp_media_factory_is_shared (factory));
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
+
+  gst_rtsp_media_factory_set_launch (factory, launch_line);
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 1);
+
+  g_object_set (G_OBJECT (media), "reusable", TRUE, NULL);
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (gst_rtsp_media_unprepare (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 1);
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (gst_rtsp_media_unprepare (media));
+
+  g_object_unref (media);
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+}
+
 GST_START_TEST (test_media_prepare)
 {
   GstRTSPMediaFactory *factory;
@@ -161,34 +198,10 @@ GST_START_TEST (test_media_prepare)
   g_object_unref (factory);
 
   /* test reusable media */
-  factory = gst_rtsp_media_factory_new ();
-  fail_if (gst_rtsp_media_factory_is_shared (factory));
-  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
-          &url) == GST_RTSP_OK);
+  test_prepare_reusable (pool, "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
+  test_prepare_reusable (pool,
+      "( videotestsrc is-live=true ! rtpvrawpay pt=96 name=pay0 )");
 
-  gst_rtsp_media_factory_set_launch (factory,
-      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
-
-  media = gst_rtsp_media_factory_construct (factory, url);
-  fail_unless (GST_IS_RTSP_MEDIA (media));
-  fail_unless (gst_rtsp_media_n_streams (media) == 1);
-
-  g_object_set (G_OBJECT (media), "reusable", TRUE, NULL);
-
-  thread = gst_rtsp_thread_pool_get_thread (pool,
-      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
-  fail_unless (gst_rtsp_media_prepare (media, thread));
-  fail_unless (gst_rtsp_media_unprepare (media));
-  fail_unless (gst_rtsp_media_n_streams (media) == 1);
-
-  thread = gst_rtsp_thread_pool_get_thread (pool,
-      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
-  fail_unless (gst_rtsp_media_prepare (media, thread));
-  fail_unless (gst_rtsp_media_unprepare (media));
-
-  g_object_unref (media);
-  gst_rtsp_url_free (url);
-  g_object_unref (factory);
   g_object_unref (pool);
 }
 
