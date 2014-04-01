@@ -94,6 +94,8 @@ GST_START_TEST (test_launch)
   g_object_unref (factory);
 
   g_object_unref (pool);
+
+  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -203,6 +205,8 @@ GST_START_TEST (test_media_prepare)
       "( videotestsrc is-live=true ! rtpvrawpay pt=96 name=pay0 )");
 
   g_object_unref (pool);
+  gst_rtsp_thread_stop (thread);
+  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -284,6 +288,8 @@ GST_START_TEST (test_media_dyn_prepare)
   gst_object_unref (srcpad);
   g_object_unref (media);
   g_object_unref (pool);
+
+  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -355,6 +361,8 @@ GST_START_TEST (test_media_reset)
   gst_rtsp_url_free (url);
   g_object_unref (factory);
   g_object_unref (pool);
+
+  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
