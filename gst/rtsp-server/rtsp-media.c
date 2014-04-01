@@ -1194,7 +1194,6 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
     name = g_strdup_printf ("dynpay%d", i);
     if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
       /* a stream that will dynamically create pads to provide RTP packets */
-
       GST_INFO ("found dynamic element %d, %p", i, elem);
 
       g_mutex_lock (&priv->lock);
@@ -1936,7 +1935,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
   /* join the element in the PAUSED state because this callback is
    * called from the streaming thread and it is PAUSED */
   if (!gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
-      priv->rtpbin, GST_STATE_PAUSED)) {
+          priv->rtpbin, GST_STATE_PAUSED)) {
     GST_WARNING ("failed to join bin element");
   }
 
@@ -2092,7 +2091,7 @@ start_prepare (GstRTSPMedia * media)
     stream = g_ptr_array_index (priv->streams, i);
 
     if (!gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
-        priv->rtpbin, GST_STATE_NULL)) {
+            priv->rtpbin, GST_STATE_NULL)) {
       goto join_bin_failed;
     }
   }
