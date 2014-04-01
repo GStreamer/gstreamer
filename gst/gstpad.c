@@ -4790,15 +4790,15 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
   GST_OBJECT_UNLOCK (pad);
 
   GST_LOG_OBJECT (pad, "sending event %p (%s) to peerpad %" GST_PTR_FORMAT,
-      event, GST_EVENT_TYPE_NAME (event), peerpad);
+      event, gst_event_type_get_name (event_type), peerpad);
 
   ret = gst_pad_send_event_unchecked (peerpad, event, type);
 
   /* Note: we gave away ownership of the event at this point but we can still
    * print the old pointer */
   GST_LOG_OBJECT (pad,
-      "sent event %p (%s) to peerpad %" GST_PTR_FORMAT ", ret %s", event,
-      GST_EVENT_TYPE_NAME (event), peerpad, gst_flow_get_name (ret));
+      "sent event %p to (%s) peerpad %" GST_PTR_FORMAT ", ret %s", event,
+      gst_event_type_get_name (event_type), peerpad, gst_flow_get_name (ret));
 
   gst_object_unref (peerpad);
 
