@@ -56,8 +56,8 @@ struct _GstGLColorConvert
 
   gboolean         initted;
 
-  guint            in_tex[GST_VIDEO_MAX_PLANES];
-  guint            out_tex[GST_VIDEO_MAX_PLANES];
+  GstGLMemory *    in_tex[GST_VIDEO_MAX_PLANES];
+  GstGLMemory *    out_tex[GST_VIDEO_MAX_PLANES];
 
   /* used for the conversion */
   GLuint           fbo;
@@ -109,8 +109,8 @@ void     gst_gl_color_convert_set_texture_scaling (GstGLColorConvert * convert,
                                                    gfloat scaling[GST_VIDEO_MAX_PLANES][2]);
 
 gboolean gst_gl_color_convert_perform        (GstGLColorConvert * convert,
-                                              guint in_tex[GST_VIDEO_MAX_PLANES],
-                                              guint out_tex[GST_VIDEO_MAX_PLANES]);
+                                              GstGLMemory * in_tex[GST_VIDEO_MAX_PLANES],
+                                              GstGLMemory * out_tex[GST_VIDEO_MAX_PLANES]);
 
 G_END_DECLS
 

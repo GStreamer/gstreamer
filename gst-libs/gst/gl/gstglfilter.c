@@ -43,10 +43,9 @@ static GstStaticPadTemplate gst_gl_filter_src_pad_template =
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
             "RGBA") "; "
 #endif
-        GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS) "; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
-            "RGBA"))
+            "RGBA") "; " GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS))
     );
 
 static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
@@ -58,10 +57,9 @@ static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
             "RGBA") "; "
 #endif
-        GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS) "; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
-            "RGBA"))
+        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA") "; "
+        GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS))
     );
 
 /* Properties */
@@ -964,8 +962,7 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 
   if (!filter->upload) {
     filter->upload = gst_gl_upload_new (filter->context);
-    gst_gl_upload_init_format (filter->upload, &filter->in_info,
-        &filter->out_info);
+    gst_gl_upload_init_format (filter->upload, &filter->in_info);
   }
   //blocking call, generate a FBO
   if (!gst_gl_context_gen_fbo (filter->context, out_width, out_height,
@@ -1288,6 +1285,9 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
     gl->EnableVertexAttribArray (filter->draw_attr_texture_loc);
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+
+    gl->DisableVertexAttribArray (filter->draw_attr_position_loc);
+    gl->DisableVertexAttribArray (filter->draw_attr_texture_loc);
   }
 #endif
 }

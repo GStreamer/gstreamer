@@ -59,7 +59,7 @@ struct _GstGLDownload
 
   /* used for the conversion */
   GLuint           in_texture;
-  GLuint           out_texture[GST_VIDEO_MAX_PLANES];
+  GstGLMemory *    out_texture[GST_VIDEO_MAX_PLANES];
 
   GstGLDownloadPrivate *priv;
 

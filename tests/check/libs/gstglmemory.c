@@ -54,33 +54,29 @@ GST_START_TEST (test_basic)
   GstMemory *mem, *mem2;
   GstGLMemory *gl_mem, *gl_mem2;
   GstAllocator *gl_allocator;
-  GstVideoInfo vinfo;
   gint i;
-  static GstVideoFormat formats[15] = {
-    GST_VIDEO_FORMAT_RGBx, GST_VIDEO_FORMAT_BGRx, GST_VIDEO_FORMAT_xRGB,
-    GST_VIDEO_FORMAT_xBGR, GST_VIDEO_FORMAT_RGBA, GST_VIDEO_FORMAT_BGRA,
-    GST_VIDEO_FORMAT_ARGB, GST_VIDEO_FORMAT_ABGR, GST_VIDEO_FORMAT_RGB,
-    GST_VIDEO_FORMAT_BGR, GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_UYVY,
-    GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_AYUV,
+  static GstVideoGLTextureType formats[] = {
+    GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_GL_TEXTURE_TYPE_RGB,
+    GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA,
+    GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
   };
 
   for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-    gsize width = 320, height = 240;
+    gsize width = 320, height = 240, stride = 324;
 
-    gst_video_info_set_format (&vinfo, formats[i], width, height);
     gl_allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
     fail_if (gl_allocator == NULL);
 
     /* test allocator creation */
     ASSERT_WARNING (mem = gst_allocator_alloc (gl_allocator, 0, NULL););
-    mem = gst_gl_memory_alloc (context, &vinfo);
+    mem = gst_gl_memory_alloc (context, formats[i], width, height, stride);
     fail_if (mem == NULL);
     gl_mem = (GstGLMemory *) mem;
 
     /* test init params */
-    fail_if (GST_VIDEO_INFO_WIDTH (&gl_mem->v_info) != width);
-    fail_if (GST_VIDEO_INFO_HEIGHT (&gl_mem->v_info) != height);
-    fail_if (GST_VIDEO_INFO_FORMAT (&gl_mem->v_info) != formats[i]);
+    fail_if (gl_mem->width != width);
+    fail_if (gl_mem->height != height);
+    fail_if (gl_mem->stride != stride);
     fail_if (gl_mem->context != context);
     fail_if (gl_mem->tex_id == 0);
 
@@ -91,15 +87,10 @@ GST_START_TEST (test_basic)
 
     /* test params */
     fail_if (gl_mem->tex_id == gl_mem2->tex_id);
-    fail_if (GST_VIDEO_INFO_FORMAT (&gl_mem->v_info) !=
-        GST_VIDEO_INFO_FORMAT (&gl_mem2->v_info));
-    fail_if (GST_VIDEO_INFO_WIDTH (&gl_mem->v_info) !=
-        GST_VIDEO_INFO_WIDTH (&gl_mem2->v_info));
-    fail_if (GST_VIDEO_INFO_HEIGHT (&gl_mem->v_info) !=
-        GST_VIDEO_INFO_HEIGHT (&gl_mem2->v_info));
-    fail_if (gl_mem->gl_format != gl_mem->gl_format);
-    fail_if (gl_mem->context != gl_mem->context);
-    fail_if (gl_mem->tex_id == 0);
+    fail_if (gl_mem->tex_type != gl_mem2->tex_type);
+    fail_if (gl_mem->width != gl_mem2->width);
+    fail_if (gl_mem->stride != gl_mem2->stride);
+    fail_if (gl_mem->context != gl_mem2->context);
 
     if (gst_gl_context_get_error ())
       printf ("%s\n", gst_gl_context_get_error ());

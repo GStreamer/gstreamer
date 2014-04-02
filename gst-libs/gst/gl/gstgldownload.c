@@ -122,8 +122,8 @@ gst_gl_download_finalize (GObject * object)
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     if (download->out_texture[i]) {
-      gst_gl_context_del_texture (download->context, &download->out_texture[i]);
-      download->out_texture[i] = 0;
+      gst_memory_unref ((GstMemory *) download->out_texture[i]);
+      download->out_texture[i] = NULL;
     }
   }
 
@@ -266,6 +266,8 @@ static gboolean
 _gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
 {
+  gboolean realloc = FALSE;
+  gpointer temp_data;
   guint i;
 
   g_return_val_if_fail (download != NULL, FALSE);
@@ -281,7 +283,26 @@ _gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
 
   download->in_texture = texture_id;
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&download->info); i++) {
-    download->data[i] = data[i];
+    if (download->data[i] != data[i])
+      realloc = TRUE;
+  }
+
+  if (realloc) {
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&download->info); i++) {
+      if (download->out_texture[i])
+        gst_memory_unref ((GstMemory *) download->out_texture[i]);
+      download->data[i] = data[i];
+    }
+
+    if (GST_VIDEO_INFO_FORMAT (&download->info) == GST_VIDEO_FORMAT_YV12) {
+      /* YV12 same as I420 except planes 1+2 swapped */
+      temp_data = download->data[1];
+      download->data[1] = download->data[2];
+      download->data[2] = temp_data;
+    }
+
+    gst_gl_memory_setup_wrapped (download->context, &download->info,
+        download->data, download->out_texture);
   }
 
   gst_gl_context_thread_add (download->context,
@@ -293,18 +314,26 @@ _gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
 static void
 _init_download (GstGLContext * context, GstGLDownload * download)
 {
-  const GstGLFuncs *gl;
   GstVideoFormat v_format;
   guint out_width, out_height;
   GstVideoInfo in_info;
 
-  gl = context->gl_vtable;
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
 
   GST_TRACE ("initializing texture download for format %s",
       gst_video_format_to_string (v_format));
+
+  if (USING_GLES2 (context) && !USING_GLES3 (context)) {
+    /* GL_RGBA is the only officially supported texture format in GLES2 */
+    if (v_format == GST_VIDEO_FORMAT_RGB || v_format == GST_VIDEO_FORMAT_BGR) {
+      gst_gl_context_set_error (context, "Cannot download RGB textures in "
+          "GLES2");
+      download->priv->result = FALSE;
+      return;
+    }
+  }
 
   gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_RGBA, out_width,
       out_height);
@@ -315,64 +344,25 @@ _init_download (GstGLContext * context, GstGLDownload * download)
   if (!download->priv->result)
     return;
 
-  if (USING_GLES2 (context) && !USING_GLES3 (context)) {
-    /* GL_RGBA is the only officially supported texture format in GLES2 */
-    if (v_format == GST_VIDEO_FORMAT_RGB || v_format == GST_VIDEO_FORMAT_BGR) {
-      download->priv->result = FALSE;
-      return;
-    }
-  }
-
-  gl->GenTextures (1, &download->out_texture[0]);
-  gl->BindTexture (GL_TEXTURE_2D, download->out_texture[0]);
-  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
-      out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  if (v_format == GST_VIDEO_FORMAT_I420 || v_format == GST_VIDEO_FORMAT_YV12) {
-    /* setup a second texture to render to */
-    gl->GenTextures (1, &download->out_texture[1]);
-    gl->BindTexture (GL_TEXTURE_2D, download->out_texture[1]);
-    gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
-        out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    /* setup a third texture to render to */
-    gl->GenTextures (1, &download->out_texture[2]);
-    gl->BindTexture (GL_TEXTURE_2D, download->out_texture[2]);
-    gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
-        out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  }
-
   download->priv->result = TRUE;
 }
 
 static void
 _do_download (GstGLContext * context, GstGLDownload * download)
 {
-  GstGLFuncs *gl;
-  GstVideoFormat v_format;
   guint out_width, out_height;
-  guint in_tex[] = { download->in_texture, 0, 0, 0 };
-
-  gl = context->gl_vtable;
+  GstMapInfo map_info;
+  GstGLMemory *in_tex[GST_VIDEO_MAX_PLANES] = { 0, };
+  gint i;
 
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
-  v_format = GST_VIDEO_INFO_FORMAT (&download->info);
 
   GST_TRACE ("doing YUV download of texture:%u (%ux%u)",
       download->in_texture, out_width, out_height);
+
+  in_tex[0] = gst_gl_memory_wrapped_texture (context, download->in_texture,
+      GST_VIDEO_GL_TEXTURE_TYPE_RGBA, out_width, out_height, NULL, NULL);
 
   download->priv->result =
       gst_gl_color_convert_perform (download->convert, in_tex,
@@ -380,74 +370,11 @@ _do_download (GstGLContext * context, GstGLDownload * download)
   if (!download->priv->result)
     return;
 
-  gl->BindFramebuffer (GL_FRAMEBUFFER, download->convert->fbo);
-  gl->ReadBuffer (GL_COLOR_ATTACHMENT0);
-
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_AYUV:
-      gl->ReadPixels (0, 0, out_width, out_height, GL_RGBA,
-          GL_UNSIGNED_BYTE, download->data[0]);
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_RGBA,
-          GL_UNSIGNED_BYTE, download->data[0]);
-      break;
-    case GST_VIDEO_FORMAT_I420:
-    {
-      gl->ReadPixels (0, 0, out_width, out_height, GL_LUMINANCE,
-          GL_UNSIGNED_BYTE, download->data[0]);
-
-      gl->ReadBuffer (GL_COLOR_ATTACHMENT1);
-      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
-          GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          download->data[1]);
-
-      gl->ReadBuffer (GL_COLOR_ATTACHMENT2);
-      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
-          GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          download->data[2]);
-    }
-      break;
-    case GST_VIDEO_FORMAT_YV12:
-    {
-      gl->ReadPixels (0, 0, out_width, out_height, GL_LUMINANCE,
-          GL_UNSIGNED_BYTE, download->data[0]);
-
-      gl->ReadBuffer (GL_COLOR_ATTACHMENT1);
-      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
-          GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          download->data[2]);
-
-      gl->ReadBuffer (GL_COLOR_ATTACHMENT2);
-      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
-          GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          download->data[1]);
-    }
-      break;
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_ABGR:
-      gl->ReadPixels (0, 0, out_width, out_height, GL_RGBA, GL_UNSIGNED_BYTE,
-          download->data[0]);
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-      gl->ReadPixels (0, 0, out_width, out_height, GL_RGB, GL_UNSIGNED_BYTE,
-          download->data[0]);
-      break;
-    default:
-      break;
-      gst_gl_context_set_error (context,
-          "Download video format inconsistensy %d", v_format);
-      g_assert_not_reached ();
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&download->info); i++) {
+    gst_memory_map ((GstMemory *) download->out_texture[i], &map_info,
+        GST_MAP_READ);
+    gst_memory_unmap ((GstMemory *) download->out_texture[i], &map_info);
   }
 
-  gst_gl_context_check_framebuffer_status (context);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+  gst_memory_unref ((GstMemory *) in_tex[0]);
 }
