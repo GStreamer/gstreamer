@@ -142,6 +142,7 @@ gst_gl_context_glx_create_context (GstGLContext * context,
   GstGLContextGLX *context_glx;
   GstGLWindow *window;
   GstGLWindowX11 *window_x11;
+  GstGLDisplay *display;
   gboolean create_context;
   const char *glx_exts;
   int x_error;
@@ -151,6 +152,7 @@ gst_gl_context_glx_create_context (GstGLContext * context,
   context_glx = GST_GL_CONTEXT_GLX (context);
   window = gst_gl_context_get_window (context);
   window_x11 = GST_GL_WINDOW_X11 (window);
+  display = gst_gl_context_get_display (context);
 
   if (other_context) {
     if (gst_gl_context_get_gl_platform (other_context) != GST_GL_PLATFORM_GLX) {
@@ -163,7 +165,7 @@ gst_gl_context_glx_create_context (GstGLContext * context,
     external_gl_context = gst_gl_context_get_gl_context (other_context);
   }
 
-  device = (Display *) gst_gl_display_get_handle (window->display);
+  device = (Display *) gst_gl_display_get_handle (display);
   glx_exts = glXQueryExtensionsString (device, DefaultScreen (device));
 
   create_context = gst_gl_check_extension ("GLX_ARB_create_context", glx_exts);
@@ -229,12 +231,14 @@ gst_gl_context_glx_create_context (GstGLContext * context,
   GST_LOG ("gl context id: %ld", (gulong) context_glx->glx_context);
 
   gst_object_unref (window);
+  gst_object_unref (display);
 
   return TRUE;
 
 failure:
   if (window)
     gst_object_unref (window);
+  gst_object_unref (display);
 
   return FALSE;
 }
