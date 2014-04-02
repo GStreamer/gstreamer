@@ -175,13 +175,14 @@ class GstValidateLaunchTest(GstValidateTest):
 
 
 class GstValidateMediaCheckTest(Test):
-    def __init__(self, classname, options, reporter, file_infos, uri, timeout=DEFAULT_TIMEOUT):
+    def __init__(self, classname, options, reporter, file_infos, uri, minfo_path,
+                 timeout=DEFAULT_TIMEOUT):
         super(GstValidateMediaCheckTest, self).__init__(G_V_DISCOVERER_COMMAND, classname,
                                               options, reporter,
                                               timeout=timeout)
         self._uri = uri
         self.file_infos = file_infos
-        self._media_info_path = urlparse.urlparse(file_infos.get("file-info", "uri")).path
+        self._media_info_path = minfo_path
 
     def build_arguments(self):
         self.add_arguments(self._uri, "--expected-results",
@@ -306,6 +307,7 @@ class GstValidateManager(TestsManager, Loggable):
                                                     self.reporter,
                                                     mediainfo.config,
                                                     uri,
+                                                    mediainfo.path,
                                                     timeout=timeout))
 
         for uri, mediainfo in self._list_uris():
