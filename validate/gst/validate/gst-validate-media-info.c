@@ -1148,7 +1148,10 @@ gst_validate_media_info_compare (GstValidateMediaInfo * expected,
       }
   }
 
-  if (expected->stream_info
+  if (extracted->stream_info == NULL || expected->stream_info == NULL) {
+    g_print ("Stream infos could not be retrived, an error occured\n");
+    ret = FALSE;
+  } else if (expected->stream_info
       && !gst_caps_is_equal_fixed (expected->stream_info->caps,
           extracted->stream_info->caps)) {
     gchar *caps1 = gst_caps_to_string (expected->stream_info->caps);
