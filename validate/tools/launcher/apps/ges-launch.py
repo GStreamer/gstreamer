@@ -203,6 +203,9 @@ class GESTestsManager(TestsManager):
             pass
 
     def list_tests(self):
+        if self.tests:
+            return self.tests
+
         projects = list()
         if not self.args:
             path = self.options.projects_paths
@@ -217,7 +220,6 @@ class GESTestsManager(TestsManager):
                     projects.append(proj)
                 else:
                     projects.append(utils.path2url(proj))
-
         SCENARIOS = ["play_15s",
                      "seek_forward",
                      "seek_backward",
@@ -245,3 +247,5 @@ class GESTestsManager(TestsManager):
                                             self.reporter, proj,
                                             combination=comb)
                                   )
+
+        return self.tests

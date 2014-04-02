@@ -197,6 +197,7 @@ class Test(Loggable):
             message += "\n         - %s" % log
 
         printc(message, Colors.OKBLUE)
+
         try:
             self.process = subprocess.Popen(self.command,
                                             stderr=self.reporter.out,
@@ -432,7 +433,7 @@ class TestsManager(Loggable):
         return False
 
     def list_tests(self):
-        pass
+        return self.tests
 
     def add_test(self, test):
         if self._is_test_wanted(test):
@@ -486,15 +487,17 @@ class TestsManager(Loggable):
 
         return False
 
-    def run_tests(self):
+    def run_tests(self, cur_test_num, total_num_tests):
+        i = cur_test_num
         for test in self.tests:
-            if self._is_test_wanted(test):
-                self.reporter.before_test(test)
-                res = test.run()
-                self.reporter.after_test()
-                if res != Result.PASSED and (self.options.forever or
-                                             self.options.fatal_error):
-                    return test.result
+            sys.stdout.write("[%d / %d] " % (i, total_num_tests))
+            self.reporter.before_test(test)
+            res = test.run()
+            i += 1
+            self.reporter.after_test()
+            if res != Result.PASSED and (self.options.forever or
+                                         self.options.fatal_error):
+                return test.result
 
         return Result.PASSED
 
@@ -577,10 +580,18 @@ class _TestsLauncher(Loggable):
         for tester in self.testers:
             tester.list_tests()
             self.tests.extend(tester.tests)
+        return self.tests
 
     def _run_tests(self):
+        cur_test_num = 0
+        total_num_tests = 0
         for tester in self.testers:
-            res = tester.run_tests()
+            total_num_tests += len(tester.list_tests())
+            print total_num_tests
+
+        for tester in self.testers:
+            res = tester.run_tests(cur_test_num, total_num_tests)
+            cur_test_num += len(tester.list_tests())
             if res != Result.PASSED and (self.options.forever or
                     self.options.fatal_error):
                 return False

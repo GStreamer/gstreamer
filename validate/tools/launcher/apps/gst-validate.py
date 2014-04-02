@@ -290,6 +290,9 @@ class GstValidateManager(TestsManager, Loggable):
         return False
 
     def list_tests(self):
+        if self.tests:
+            return self.tests
+
         for test_pipeline in G_V_PLAYBACK_TESTS:
             self._add_playback_test(test_pipeline)
 
