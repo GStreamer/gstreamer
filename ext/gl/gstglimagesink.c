@@ -921,12 +921,14 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       goto config_failed;
   }
   /* we need at least 2 buffer because we hold on to the last one */
-  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  if (pool) {
+    gst_query_add_allocation_pool (query, pool, size, 2, 0);
+    gst_object_unref (pool);
+  }
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
 
-  gst_object_unref (pool);
 
   gl_apis =
       gst_gl_api_to_string (gst_gl_context_get_gl_api (glimage_sink->context));

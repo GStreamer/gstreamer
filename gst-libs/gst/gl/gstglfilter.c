@@ -806,8 +806,10 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
       goto config_failed;
   }
   /* we need at least 2 buffer because we hold on to the last one */
-  gst_query_add_allocation_pool (query, pool, size, 1, 0);
-  gst_object_unref (pool);
+  if (pool) {
+    gst_query_add_allocation_pool (query, pool, size, 1, 0);
+    gst_object_unref (pool);
+  }
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
