@@ -3250,7 +3250,12 @@ gst_video_decoder_negotiate_pool (GstVideoDecoder * decoder, GstCaps * caps)
   decoder->priv->params = params;
 
   if (decoder->priv->pool) {
-    gst_buffer_pool_set_active (decoder->priv->pool, FALSE);
+    /* do not set the bufferpool to inactive here, it will be done
+     * on its finalize function. As videodecoder do late renegotiation
+     * it might happen that some element downstream is already using this
+     * same bufferpool and deactivating it will make it fail.
+     * Happens when a downstream element changes from passthrough to
+     * non-passthrough and gets this same bufferpool to use */
     gst_object_unref (decoder->priv->pool);
   }
   decoder->priv->pool = pool;
