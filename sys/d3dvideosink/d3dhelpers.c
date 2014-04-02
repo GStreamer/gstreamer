@@ -1710,6 +1710,7 @@ d3d_stretch_and_copy (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 back_buffer)
   GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
   GstVideoRectangle *render_rect = NULL;
   RECT r, s;
+  RECT *r_p = NULL;
   HRESULT hr;
   gboolean ret = FALSE;
 
@@ -1750,11 +1751,13 @@ d3d_stretch_and_copy (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 back_buffer)
     r.top = result.y;
     r.right = result.x + result.w;
     r.bottom = result.y + result.h;
+    r_p = &r;
   } else if (render_rect) {
     r.left = 0;
     r.top = 0;
     r.right = render_rect->w;
     r.bottom = render_rect->h;
+    r_p = &r;
   }
 
   s.left = sink->crop_rect.x;
@@ -1770,7 +1773,7 @@ d3d_stretch_and_copy (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 back_buffer)
   hr = IDirect3DDevice9_StretchRect (klass->d3d.device.d3d_device, sink->d3d.surface,   /* Source Surface */
       &s,                       /* Source Surface Rect (NULL: Whole) */
       back_buffer,              /* Dest Surface */
-      &r,                       /* Dest Surface Rect (NULL: Whole) */
+      r_p,                      /* Dest Surface Rect (NULL: Whole) */
       klass->d3d.device.filter_type);
 
   if (hr == D3D_OK) {
