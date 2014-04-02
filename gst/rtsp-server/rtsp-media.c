@@ -2593,7 +2593,7 @@ no_setup_sdp:
  *
  * Suspend @media. The state of the pipeline managed by @media is set to
  * GST_STATE_NULL but all streams are kept. @media can be prepared again
- * with gst_rtsp_media_undo_reset()
+ * with gst_rtsp_media_unsuspend()
  *
  * @media must be prepared with gst_rtsp_media_prepare();
  *
