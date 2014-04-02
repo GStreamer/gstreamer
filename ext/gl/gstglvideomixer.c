@@ -222,7 +222,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
   while (count < video_mixer->input_frames->len) {
     GstGLMixerFrameData *frame;
     /* *INDENT-OFF* */
-    gfloat v_vertices = {
+    gfloat v_vertices[] = {
       /* front face */
       -1.0,-1.0,-1.0f, 0.0f, 0.0f,
        1.0,-1.0,-1.0f, 1.0f, 0.0f,
@@ -240,7 +240,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
     if (!frame || !frame->texture || in_width <= 0 || in_height <= 0) {
       GST_DEBUG ("skipping texture:%u frame:%p width:%u height %u",
-          in_tex, frame, in_width, in_height);
+          frame->texture, frame, in_width, in_height);
       count++;
       continue;
     }
