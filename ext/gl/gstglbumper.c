@@ -169,9 +169,6 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   png_byte magic[8];
   gint n_read;
 
-  if (!context)
-    return;
-
   if (!bumper->location) {
     gst_gl_context_set_error (context, "A filename is required");
     return;
