@@ -321,7 +321,7 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix,
   GstBufferPool *pool;
   GstStructure *config;
   GstCaps *caps;
-  guint size;
+  guint size = 0;
   gboolean need_pool;
   GError *error = NULL;
   GstStructure *gl_context;
@@ -381,8 +381,11 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix,
     if (!gst_buffer_pool_set_config (pool, config))
       goto config_failed;
   }
-  gst_query_add_allocation_pool (query, pool, size, 1, 0);
-  gst_object_unref (pool);
+
+  if (pool) {
+    gst_query_add_allocation_pool (query, pool, size, 1, 0);
+    gst_object_unref (pool);
+  }
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
@@ -1614,7 +1617,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
   guint out_tex;
   guint array_index = 0;
   guint i;
-  gboolean res;
+  gboolean res = TRUE;
 
   GST_TRACE ("Processing buffers");
 
