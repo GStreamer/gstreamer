@@ -189,7 +189,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   }
 #endif
 
-  if (!(gl_mem = gst_gl_memory_alloc (glpool->context, priv->info)))
+  if (!(gl_mem = gst_gl_memory_alloc (glpool->context, info)))
     goto mem_create_failed;
   gst_buffer_append_memory (buf, gl_mem);
 
