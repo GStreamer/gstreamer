@@ -144,6 +144,9 @@ GSocket *         gst_rtsp_stream_get_rtp_socket   (GstRTSPStream *stream,
 GSocket *         gst_rtsp_stream_get_rtcp_socket  (GstRTSPStream *stream,
                                                     GSocketFamily family);
 
+gboolean          gst_rtsp_stream_update_crypto    (GstRTSPStream * stream,
+                                                    guint ssrc, GstCaps * crypto);
+
 /**
  * GstRTSPStreamTransportFilterFunc:
  * @stream: a #GstRTSPStream object

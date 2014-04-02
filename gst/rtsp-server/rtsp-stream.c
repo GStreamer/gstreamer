@@ -82,6 +82,7 @@ struct _GstRTSPStreamPrivate
   /* SRTP encoder/decoder */
   GstElement *srtpenc;
   GstElement *srtpdec;
+  GHashTable *keys;
 
   /* sinks used for sending and receiving RTP and RTCP over ipv4, they share
    * sockets */
@@ -209,6 +210,9 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
   priv->protocols = DEFAULT_PROTOCOLS;
 
   g_mutex_init (&priv->lock);
+
+  priv->keys = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      NULL, (GDestroyNotify) gst_caps_unref);
 }
 
 static void
@@ -239,6 +243,8 @@ gst_rtsp_stream_finalize (GObject * obj)
   gst_object_unref (priv->srcpad);
   g_free (priv->control);
   g_mutex_clear (&priv->lock);
+
+  g_hash_table_unref (priv->keys);
 
   G_OBJECT_CLASS (gst_rtsp_stream_parent_class)->finalize (obj);
 }
@@ -1057,10 +1063,10 @@ again:
   g_object_set (G_OBJECT (udpsrc0), "socket", rtp_socket, NULL);
   g_object_set (G_OBJECT (udpsrc1), "socket", rtcp_socket, NULL);
 
-  ret = gst_element_set_state (udpsrc0, GST_STATE_PAUSED);
+  ret = gst_element_set_state (udpsrc0, GST_STATE_READY);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto element_error;
-  ret = gst_element_set_state (udpsrc1, GST_STATE_PAUSED);
+  ret = gst_element_set_state (udpsrc1, GST_STATE_READY);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto element_error;
 
@@ -1569,6 +1575,22 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
   return enc;
 }
 
+static GstCaps *
+request_key (GstElement * srtpdec, guint ssrc, GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GstCaps *caps;
+
+  GST_DEBUG ("request key %08x", ssrc);
+
+  g_mutex_lock (&priv->lock);
+  if ((caps = g_hash_table_lookup (priv->keys, GINT_TO_POINTER (ssrc))))
+    gst_caps_ref (caps);
+  g_mutex_unlock (&priv->lock);
+
+  return caps;
+}
+
 static GstElement *
 request_rtcp_decoder (GstElement * rtpbin, guint session,
     GstRTSPStream * stream)
@@ -1584,6 +1606,9 @@ request_rtcp_decoder (GstElement * rtpbin, guint session,
     name = g_strdup_printf ("srtpdec_%u", session);
     priv->srtpdec = gst_element_factory_make ("srtpdec", name);
     g_free (name);
+
+    g_signal_connect (priv->srtpdec, "request-key",
+        (GCallback) request_key, stream);
   }
   return gst_object_ref (priv->srtpdec);
 }
@@ -1641,10 +1666,6 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
         (GCallback) request_rtp_encoder, stream);
     g_signal_connect (rtpbin, "request-rtcp-encoder",
         (GCallback) request_rtcp_encoder, stream);
-#if 0
-    g_signal_connect (rtpbin, "request-rtp-decoder",
-        (GCallback) request_rtp_decoder, stream);
-#endif
     g_signal_connect (rtpbin, "request-rtcp-decoder",
         (GCallback) request_rtcp_decoder, stream);
   }
@@ -2308,6 +2329,43 @@ gst_rtsp_stream_remove_transport (GstRTSPStream * stream,
   g_mutex_unlock (&priv->lock);
 
   return res;
+}
+
+/**
+ * gst_rtsp_stream_update_crypto:
+ * @stream: a #GstRTSPStream
+ * @ssrc: the SSRC
+ * @crypto: (transfer none) (allow none): a #GstCaps with crypto info
+ *
+ * Update the new crypto information for @ssrc in @stream. If information
+ * for @ssrc did not exist, it will be added. If information
+ * for @ssrc existed, it will be replaced. If @crypto is %NULL, it will
+ * be removed from @stream.
+ *
+ * Returns: %TRUE if @crypto could be updated
+ */
+gboolean
+gst_rtsp_stream_update_crypto (GstRTSPStream * stream,
+    guint ssrc, GstCaps * crypto)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (crypto), FALSE);
+
+  priv = stream->priv;
+
+  GST_DEBUG_OBJECT (stream, "update key for %08x", ssrc);
+
+  g_mutex_lock (&priv->lock);
+  if (crypto)
+    g_hash_table_insert (priv->keys, GINT_TO_POINTER (ssrc),
+        gst_caps_ref (crypto));
+  else
+    g_hash_table_remove (priv->keys, GINT_TO_POINTER (ssrc));
+  g_mutex_unlock (&priv->lock);
+
+  return TRUE;
 }
 
 /**
