@@ -620,7 +620,7 @@ print_clocking_info (GstElement * element)
 
   if (!requires_clock && !provides_clock) {
     n_print ("\n");
-    n_print ("Element has no clocking capabilities.");
+    n_print ("Element has no clocking capabilities.\n");
     return;
   }
 
