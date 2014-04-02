@@ -73,7 +73,7 @@ GST_START_TEST (test_basic)
 
     /* test allocator creation */
     ASSERT_WARNING (mem = gst_allocator_alloc (gl_allocator, 0, NULL););
-    mem = gst_gl_memory_alloc (context, vinfo);
+    mem = gst_gl_memory_alloc (context, &vinfo);
     fail_if (mem == NULL);
     gl_mem = (GstGLMemory *) mem;
 
