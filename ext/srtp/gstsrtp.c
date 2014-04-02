@@ -149,8 +149,10 @@ rtcp_buffer_get_ssrc (GstBuffer * buf, guint32 * ssrc)
     return FALSE;
 
   if (gst_rtcp_buffer_get_first_packet (&rtcpbuf, &packet)) {
+    GstRTCPType type;
     do {
-      switch (gst_rtcp_packet_get_type (&packet)) {
+      type = gst_rtcp_packet_get_type (&packet);
+      switch (type) {
         case GST_RTCP_TYPE_RR:
           *ssrc = gst_rtcp_packet_rr_get_ssrc (&packet);
           ret = TRUE;
@@ -163,7 +165,8 @@ rtcp_buffer_get_ssrc (GstBuffer * buf, guint32 * ssrc)
         default:
           break;
       }
-    } while (gst_rtcp_packet_move_to_next (&packet) && ret == FALSE);
+    } while ((ret == FALSE) && (type != GST_RTCP_TYPE_INVALID) &&
+        gst_rtcp_packet_move_to_next (&packet));
   }
 
   gst_rtcp_buffer_unmap (&rtcpbuf);
