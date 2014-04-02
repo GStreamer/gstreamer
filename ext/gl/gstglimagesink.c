@@ -178,10 +178,9 @@ static GstStaticPadTemplate gst_glimage_sink_template =
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE, "RGBA") "; "
 #endif
-        GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS) "; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
-            GST_GL_COLOR_CONVERT_FORMATS))
+            "RGBA") "; " GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS))
     );
 
 enum
@@ -438,8 +437,7 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
 
   if (!gl_sink->upload) {
     gl_sink->upload = gst_gl_upload_new (gl_sink->context);
-    if (!gst_gl_upload_init_format (gl_sink->upload, &gl_sink->info,
-            &gl_sink->info))
+    if (!gst_gl_upload_init_format (gl_sink->upload, &gl_sink->info))
       goto upload_error;
   }
 

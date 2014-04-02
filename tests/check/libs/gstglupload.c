@@ -65,7 +65,7 @@ static GLint shader_attr_texture_loc;
 #endif
 
 
-#define FORMAT GST_VIDEO_FORMAT_RGBA
+#define FORMAT GST_VIDEO_GL_TEXTURE_TYPE_RGBA
 #define WIDTH 10
 #define HEIGHT 10
 #define RED 0xff, 0x00, 0x00, 0xff
@@ -161,7 +161,7 @@ draw_render (gpointer data)
       1.0f, 1.0f
     };
 
-    gl->Viewport (0, 0, 320, 240);
+    gl->Viewport (0, 0, 10, 10);
 
     gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -241,7 +241,7 @@ GST_START_TEST (test_shader_compile)
 
     gst_video_info_set_format (&info, v_format, 320, 240);
 
-    res = gst_gl_upload_init_format (upload, &info, &info);
+    res = gst_gl_upload_init_format (upload, &info);
     fail_if (res == FALSE, "Failed to init upload for video format %s\n",
         formats[i]);
 
@@ -256,16 +256,15 @@ GST_START_TEST (test_upload_data)
 {
   gpointer data[GST_VIDEO_MAX_PLANES] = { rgba_data, NULL, NULL, NULL };
   GstVideoInfo in_info;
-  GstVideoInfo out_info;
   gboolean res;
   gint i = 0;
 
-  gst_video_info_set_format (&in_info, FORMAT, WIDTH, HEIGHT);
-  gst_video_info_set_format (&out_info, FORMAT, WIDTH, HEIGHT);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_RGBA, WIDTH, HEIGHT);
 
-  gst_gl_context_gen_texture (context, &tex_id, FORMAT, WIDTH, HEIGHT);
+  gst_gl_context_gen_texture (context, &tex_id, GST_VIDEO_FORMAT_RGBA, WIDTH,
+      HEIGHT);
 
-  gst_gl_upload_init_format (upload, &in_info, &out_info);
+  gst_gl_upload_init_format (upload, &in_info);
 
   res = gst_gl_upload_perform_with_data (upload, tex_id, data);
   fail_if (res == FALSE, "Failed to upload buffer: %s\n",
@@ -286,57 +285,23 @@ GST_START_TEST (test_upload_data)
 
 GST_END_TEST;
 
-GST_START_TEST (test_upload_memory)
-{
-  GstGLMemory *gl_mem;
-  GstVideoInfo in_info;
-  GstVideoInfo out_info;
-  gboolean res;
-  gint i = 0;
-
-  gst_video_info_set_format (&in_info, FORMAT, WIDTH, HEIGHT);
-  gst_video_info_set_format (&out_info, FORMAT, WIDTH, HEIGHT);
-
-  gl_mem = gst_gl_memory_wrapped (context, &in_info, rgba_data, NULL, NULL);
-
-  gst_gl_upload_init_format (upload, &in_info, &out_info);
-
-  res = gst_gl_upload_perform_with_memory (upload, gl_mem);
-  fail_if (res == FALSE, "Failed to upload GstGLMemory: %s\n",
-      gst_gl_context_get_error ());
-  tex_id = gl_mem->tex_id;
-
-  gst_gl_window_draw (window, WIDTH, HEIGHT);
-  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (init), context);
-
-  while (i < 2) {
-    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (draw_render),
-        context);
-    i++;
-  }
-}
-
-GST_END_TEST;
-
-
 GST_START_TEST (test_upload_buffer)
 {
   GstBuffer *buffer;
   GstGLMemory *gl_mem;
   GstVideoInfo in_info;
-  GstVideoInfo out_info;
   gint i = 0;
   gboolean res;
 
-  gst_video_info_set_format (&in_info, FORMAT, WIDTH, HEIGHT);
-  gst_video_info_set_format (&out_info, FORMAT, WIDTH, HEIGHT);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_RGBA, WIDTH, HEIGHT);
 
   /* create GL buffer */
   buffer = gst_buffer_new ();
-  gl_mem = gst_gl_memory_wrapped (context, &in_info, rgba_data, NULL, NULL);
+  gl_mem = gst_gl_memory_wrapped (context, FORMAT, WIDTH, HEIGHT, WIDTH * 4,
+      rgba_data, NULL, NULL);
   gst_buffer_append_memory (buffer, (GstMemory *) gl_mem);
 
-  gst_gl_upload_init_format (upload, &in_info, &out_info);
+  gst_gl_upload_init_format (upload, &in_info);
 
   res = gst_gl_upload_perform_with_buffer (upload, buffer, &tex_id);
   fail_if (res == FALSE, "Failed to upload buffer: %s\n",
@@ -352,6 +317,7 @@ GST_START_TEST (test_upload_buffer)
   }
 
   gst_gl_upload_release_buffer (upload);
+  gst_buffer_unref (buffer);
 }
 
 GST_END_TEST;
@@ -361,23 +327,25 @@ GST_START_TEST (test_upload_meta_producer)
   GstBuffer *buffer;
   GstGLMemory *gl_mem;
   GstVideoInfo in_info;
-  GstVideoInfo out_info;
   GstVideoGLTextureUploadMeta *gl_upload_meta;
   guint tex_ids[] = { 0, 0, 0, 0 };
   gboolean res;
   gint i = 0;
 
-  gst_video_info_set_format (&in_info, FORMAT, WIDTH, HEIGHT);
-  gst_video_info_set_format (&out_info, FORMAT, WIDTH, HEIGHT);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_RGBA, WIDTH, HEIGHT);
 
   /* create GL buffer */
   buffer = gst_buffer_new ();
-  gl_mem = gst_gl_memory_wrapped (context, &in_info, rgba_data, NULL, NULL);
+  gl_mem = gst_gl_memory_wrapped (context, FORMAT, WIDTH, HEIGHT, WIDTH * 4,
+      rgba_data, NULL, NULL);
   gst_buffer_append_memory (buffer, (GstMemory *) gl_mem);
 
-  gst_gl_context_gen_texture (context, &tex_ids[0], FORMAT, WIDTH, HEIGHT);
+  gst_gl_context_gen_texture (context, &tex_ids[0], GST_VIDEO_FORMAT_RGBA,
+      WIDTH, HEIGHT);
 
-  gst_gl_upload_init_format (upload, &in_info, &out_info);
+  gst_gl_upload_init_format (upload, &in_info);
+  gst_buffer_add_video_meta_full (buffer, 0, GST_VIDEO_FORMAT_RGBA, WIDTH,
+      HEIGHT, 1, in_info.offset, in_info.stride);
   gst_gl_upload_add_video_gl_texture_upload_meta (upload, buffer);
 
   gl_upload_meta = gst_buffer_get_video_gl_texture_upload_meta (buffer);
@@ -413,7 +381,6 @@ gst_gl_upload_suite (void)
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_shader_compile);
   tcase_add_test (tc_chain, test_upload_data);
-  tcase_add_test (tc_chain, test_upload_memory);
   tcase_add_test (tc_chain, test_upload_buffer);
   tcase_add_test (tc_chain, test_upload_meta_producer);
 

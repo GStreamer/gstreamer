@@ -874,7 +874,10 @@ GstGLMemory
 gst_gl_memory_init
 gst_gl_memory_alloc
 gst_gl_memory_wrapped
+gst_gl_memory_wrapped_texture
 gst_gl_memory_copy_into_texture
+gst_gl_memory_setup_buffer
+gst_gl_memory_setup_wrapped
 gst_is_gl_memory
 <SUBSECTION Standard>
 GST_GL_ALLOCATOR

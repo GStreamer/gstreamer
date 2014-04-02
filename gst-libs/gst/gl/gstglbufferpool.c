@@ -50,6 +50,7 @@ struct _GstGLBufferPoolPrivate
   GstCaps *caps;
   gint im_format;
   GstVideoInfo info;
+  GstGLUpload *upload;
   gboolean add_videometa;
 #if GST_GL_HAVE_PLATFORM_EGL
   gboolean want_eglimage;
@@ -129,6 +130,12 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       && g_strcmp0 (priv->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
 #endif
 
+  if (priv->upload)
+    gst_object_unref (priv->upload);
+  priv->upload = gst_gl_upload_new (glpool->context);
+
+  gst_gl_upload_init_format (priv->upload, &priv->info);
+
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
   /* ERRORS */
@@ -169,7 +176,6 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstGLBufferPoolPrivate *priv = glpool->priv;
   GstVideoInfo *info;
   GstBuffer *buf;
-  GstMemory *gl_mem;
 
   info = &priv->info;
 
@@ -189,20 +195,10 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   }
 #endif
 
-  if (!(gl_mem = gst_gl_memory_alloc (glpool->context, info)))
+  if (!gst_gl_memory_setup_buffer (glpool->context, info, buf))
     goto mem_create_failed;
-  gst_buffer_append_memory (buf, gl_mem);
 
-  if (priv->add_videometa) {
-    GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
-    /* these are just the defaults for now */
-    gst_buffer_add_video_meta (buf, 0,
-        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
-        GST_VIDEO_INFO_HEIGHT (info));
-
-    gst_gl_upload_add_video_gl_texture_upload_meta (((GstGLMemory *)
-            gl_mem)->upload, buf);
-  }
+  gst_gl_upload_add_video_gl_texture_upload_meta (glpool->priv->upload, buf);
 
   *buffer = buf;
 
@@ -348,6 +344,9 @@ gst_gl_buffer_pool_finalize (GObject * object)
 
   if (priv->caps)
     gst_caps_unref (priv->caps);
+
+  if (priv->upload)
+    gst_object_unref (priv->upload);
 
   G_OBJECT_CLASS (gst_gl_buffer_pool_parent_class)->finalize (object);
 

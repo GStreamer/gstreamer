@@ -54,11 +54,10 @@ struct _GstGLUpload
   /* input data */
   GstVideoInfo     in_info;
 
-  gpointer         data[GST_VIDEO_MAX_PLANES];
   gboolean         initted;
 
-  GLuint           in_texture[GST_VIDEO_MAX_PLANES];
-  GLuint           out_texture;
+  GstGLMemory     *in_tex[GST_VIDEO_MAX_PLANES];
+  GstGLMemory     *out_tex;
 
   /* <private> */
   GstGLUploadPrivate *priv;
@@ -78,13 +77,12 @@ struct _GstGLUploadClass
 
 GstGLUpload * gst_gl_upload_new            (GstGLContext * context);
 
-gboolean gst_gl_upload_init_format         (GstGLUpload * upload, GstVideoInfo * in_info, GstVideoInfo * out_info);
+gboolean gst_gl_upload_init_format         (GstGLUpload * upload, GstVideoInfo * in_info);
 
 gboolean gst_gl_upload_add_video_gl_texture_upload_meta (GstGLUpload * upload, GstBuffer * buffer);
 
 gboolean gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer, guint * tex_id);
 void gst_gl_upload_release_buffer (GstGLUpload * upload);
-gboolean gst_gl_upload_perform_with_memory        (GstGLUpload * upload, GstGLMemory * gl_mem);
 gboolean gst_gl_upload_perform_with_data          (GstGLUpload * upload, GLuint texture_id,
                                                    gpointer data[GST_VIDEO_MAX_PLANES]);
 

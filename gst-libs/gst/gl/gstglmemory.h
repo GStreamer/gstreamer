@@ -80,23 +80,25 @@ typedef enum
  */
 struct _GstGLMemory
 {
-  GstMemory          mem;
+  GstMemory                    mem;
 
-  GstGLContext      *context;
-  GLuint             tex_id;
-  GstVideoInfo       v_info;
-  GLenum             gl_format;
-
-  GstGLDownload     *download;
-  GstGLUpload       *upload;
+  GstGLContext         *context;
+  guint                 tex_id;
+  GstVideoGLTextureType tex_type;
+  gint                  width;
+  gint                  height;
+  gint                  stride;
+  gfloat                tex_scaling[2];
 
   /* <private> */
-  GstMapFlags        map_flags;
-  gpointer           data;
+  GstMapFlags           map_flags;
+  gpointer              data;
 
-  gboolean           wrapped;
-  GDestroyNotify     notify;
-  gpointer           user_data;
+  gboolean              data_wrapped;
+  gboolean              texture_wrapped;
+  GDestroyNotify        notify;
+  gpointer              user_data;
+  guint                 pbo;
 };
 
 /**
@@ -141,15 +143,31 @@ struct _GstGLMemory
  */
 #define GST_GL_MEMORY_FLAG_UNSET(mem,flag) GST_MEMORY_FLAG_UNSET(mem,flag)
 
-void gst_gl_memory_init (void);
+void          gst_gl_memory_init (void);
+gboolean      gst_is_gl_memory (GstMemory * mem);
 
-GstMemory * gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo * info);
+GstMemory *   gst_gl_memory_alloc   (GstGLContext * context, GstVideoGLTextureType tex_type, 
+                                     gint width, gint height, gint stride);
+GstGLMemory * gst_gl_memory_wrapped (GstGLContext * context, GstVideoGLTextureType tex_type, 
+                                     gint width, gint height, gint stride,
+                                     gpointer data, gpointer user_data,
+                                     GDestroyNotify notify);
+GstGLMemory * gst_gl_memory_wrapped_texture (GstGLContext * context, guint texture_id,
+                                             GstVideoGLTextureType tex_type, 
+                                             gint width, gint height,
+                                             gpointer user_data, GDestroyNotify notify);
 
-GstGLMemory * gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo * info, gpointer data,
-                                     gpointer user_data, GDestroyNotify notify);
+gboolean      gst_gl_memory_copy_into_texture (GstGLMemory *gl_mem, guint tex_id,
+                                               GstVideoGLTextureType tex_type, 
+                                               gint width, gint height, gboolean respecify);
 
-gboolean gst_is_gl_memory (GstMemory * mem);
-gboolean gst_gl_memory_copy_into_texture (GstGLMemory *gl_mem, guint tex_id);
+gboolean      gst_gl_memory_setup_buffer  (GstGLContext * context, GstVideoInfo * info,
+                                           GstBuffer * buffer);
+gboolean      gst_gl_memory_setup_wrapped (GstGLContext * context, GstVideoInfo * info,
+                                           gpointer data[GST_VIDEO_MAX_PLANES],
+                                           GstGLMemory *textures[GST_VIDEO_MAX_PLANES]);
+
+GstVideoGLTextureType gst_gl_texture_type_from_format (GstVideoFormat v_format, guint plane);
 
 /**
  * GstGLAllocator

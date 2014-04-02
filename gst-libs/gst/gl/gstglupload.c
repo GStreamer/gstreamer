@@ -43,9 +43,9 @@
 #define USING_GLES2(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
 #define USING_GLES3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES3)
 
-static void _do_upload (GstGLContext * context, GstGLUpload * upload);
-static gboolean _do_upload_fill (GstGLContext * context, GstGLUpload * upload);
-static gboolean _do_upload_make (GstGLContext * context, GstGLUpload * upload);
+static gboolean _upload_memory (GstGLUpload * upload);
+//static gboolean _do_upload_fill (GstGLContext * context, GstGLUpload * upload);
+//static gboolean _do_upload_make (GstGLContext * context, GstGLUpload * upload);
 static void _init_upload (GstGLContext * context, GstGLUpload * upload);
 //static gboolean _init_upload_fbo (GstGLContext * context, GstGLUpload * upload);
 static gboolean _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
@@ -70,7 +70,6 @@ struct TexData
 
 struct _GstGLUploadPrivate
 {
-  int n_textures;
   gboolean result;
 
   struct TexData texture_info[GST_VIDEO_MAX_PLANES];
@@ -142,6 +141,11 @@ gst_gl_upload_finalize (GObject * object)
     gst_object_unref (upload->convert);
   }
 
+  if (upload->out_tex) {
+    gst_memory_unref ((GstMemory *) upload->out_tex);
+    upload->out_tex = NULL;
+  }
+
   if (upload->context) {
     gst_object_unref (upload->context);
     upload->context = NULL;
@@ -163,7 +167,7 @@ _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
       GST_VIDEO_FORMAT_ENCODED, FALSE);
 
   if (upload->initted) {
-    return FALSE;
+    return TRUE;
   }
 
   upload->in_info = *in_info;
@@ -171,7 +175,9 @@ _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
   gst_gl_context_thread_add (upload->context,
       (GstGLContextThreadFunc) _init_upload, upload);
 
-  return upload->priv->result;
+  upload->initted = upload->priv->result;
+
+  return upload->initted;
 }
 
 
@@ -185,8 +191,7 @@ _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
  * Returns: whether the initialization was successful
  */
 gboolean
-gst_gl_upload_init_format (GstGLUpload * upload, GstVideoInfo * in_info,
-    GstVideoInfo * out_info)
+gst_gl_upload_init_format (GstGLUpload * upload, GstVideoInfo * in_info)
 {
   gboolean ret;
 
@@ -217,6 +222,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   GstMemory *mem;
   GstVideoGLTextureUploadMeta *gl_tex_upload_meta;
   guint texture_ids[] = { 0, 0, 0, 0 };
+  gint i;
 
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (buffer != NULL, FALSE);
@@ -227,24 +233,26 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   mem = gst_buffer_peek_memory (buffer, 0);
 
   if (gst_is_gl_memory (mem)) {
+    if (!upload->out_tex)
+      upload->out_tex = (GstGLMemory *) gst_gl_memory_alloc (upload->context,
+          GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
+          GST_VIDEO_INFO_HEIGHT (&upload->in_info),
+          GST_VIDEO_INFO_WIDTH (&upload->in_info));
+
     GST_LOG_OBJECT (upload, "Attempting upload with GstGLMemory");
-    /* Assuming only one memory */
-    if (!gst_video_frame_map (&upload->priv->frame, &upload->in_info, buffer,
-            GST_MAP_READ | GST_MAP_GL)) {
-      GST_ERROR_OBJECT (upload, "Failed to map memory");
-      return FALSE;
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
+      upload->in_tex[i] = (GstGLMemory *) gst_buffer_peek_memory (buffer, i);
     }
 
-    *tex_id = *(guint *) upload->priv->frame.data[0];
+    _upload_memory (upload);
 
-    upload->priv->mapped = TRUE;
+    *tex_id = upload->out_tex->tex_id;
     return TRUE;
   }
 
   if (!upload->priv->tex_id)
     gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
-        GST_VIDEO_INFO_FORMAT (&upload->in_info),
-        GST_VIDEO_INFO_WIDTH (&upload->in_info),
+        GST_VIDEO_FORMAT_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
         GST_VIDEO_INFO_HEIGHT (&upload->in_info));
 
   /* GstVideoGLTextureUploadMeta */
@@ -292,59 +300,6 @@ gst_gl_upload_release_buffer (GstGLUpload * upload)
     gst_video_frame_unmap (&upload->priv->frame);
 }
 
-static gboolean
-_upload_memory_unlocked (GstGLUpload * upload, GstGLMemory * gl_mem,
-    guint tex_id)
-{
-  gpointer data[GST_VIDEO_MAX_PLANES];
-  guint i;
-  gboolean ret;
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
-    data[i] = (guint8 *) gl_mem->data +
-        GST_VIDEO_INFO_PLANE_OFFSET (&upload->in_info, i);
-  }
-
-  ret = _gst_gl_upload_perform_with_data_unlocked (upload, tex_id, data);
-
-  if (ret && tex_id == gl_mem->tex_id)
-    GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
-
-  return ret;
-}
-
-/**
- * gst_gl_upload_perform_with_memory:
- * @upload: a #GstGLUpload
- * @gl_mem: a #GstGLMemory
- *
- * Uploads the texture in @gl_mem
- *
- * Returns: whether the upload was successful
- */
-gboolean
-gst_gl_upload_perform_with_memory (GstGLUpload * upload, GstGLMemory * gl_mem)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (upload != NULL, FALSE);
-
-  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED)) {
-    gst_gl_upload_init_format (upload, &gl_mem->v_info, &gl_mem->v_info);
-  }
-
-  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD))
-    return FALSE;
-
-  g_mutex_lock (&upload->lock);
-
-  ret = _upload_memory_unlocked (upload, gl_mem, gl_mem->tex_id);
-
-  g_mutex_unlock (&upload->lock);
-
-  return ret;
-}
-
 /*
  * Uploads as a result of a call to gst_video_gl_texture_upload_meta_upload().
  * i.e. provider of GstVideoGLTextureUploadMeta
@@ -384,15 +339,13 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
   mem = gst_buffer_peek_memory (upload->priv->buffer, 0);
 
   if (gst_is_gl_memory (mem)) {
-    if (GST_GL_MEMORY_FLAG_IS_SET (mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
-      ret = _upload_memory_unlocked (upload, (GstGLMemory *) mem,
-          upload->out_texture);
-    } else {
-      ret = gst_gl_memory_copy_into_texture ((GstGLMemory *) mem,
-          upload->out_texture);
-    }
+    GstGLMemory *gl_mem = (GstGLMemory *) mem;
 
-    if (ret)
+    upload->in_tex[0] = gl_mem;
+    _upload_memory (upload);
+    upload->in_tex[0] = NULL;
+
+    if (upload->priv->result)
       return TRUE;
   }
 
@@ -408,13 +361,10 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
     return FALSE;
   }
 
-  ret = _gst_gl_upload_perform_with_data_unlocked (upload, upload->out_texture,
-      frame.data);
+  ret = _gst_gl_upload_perform_with_data_unlocked (upload,
+      upload->out_tex->tex_id, frame.data);
 
   gst_video_frame_unmap (&frame);
-
-  if (ret)
-    return TRUE;
 
   return ret;
 }
@@ -470,7 +420,10 @@ gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload * upload,
   g_mutex_lock (&upload->lock);
 
   upload->priv->meta = meta;
-  upload->priv->tex_id = texture_id[0];
+  if (!upload->priv->tex_id)
+    gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
+        GST_VIDEO_FORMAT_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
+        GST_VIDEO_INFO_HEIGHT (&upload->in_info));
 
   GST_LOG ("Uploading with GLTextureUploadMeta with textures %i,%i,%i,%i",
       texture_id[0], texture_id[1], texture_id[2], texture_id[3]);
@@ -499,12 +452,18 @@ _gst_gl_upload_perform_for_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
 
   g_mutex_lock (&upload->lock);
 
-  upload->out_texture = texture_id[0];
+  upload->out_tex = gst_gl_memory_wrapped_texture (upload->context,
+      texture_id[0], GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
+      GST_VIDEO_INFO_WIDTH (&upload->in_info),
+      GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);;
 
   GST_LOG ("Uploading for meta with textures %i,%i,%i,%i", texture_id[0],
       texture_id[1], texture_id[2], texture_id[3]);
 
   ret = _do_upload_for_meta (upload, meta);
+
+  gst_memory_unref ((GstMemory *) upload->out_tex);
+  upload->out_tex = NULL;
 
   g_mutex_unlock (&upload->lock);
 
@@ -524,14 +483,20 @@ gboolean
 gst_gl_upload_add_video_gl_texture_upload_meta (GstGLUpload * upload,
     GstBuffer * buffer)
 {
-  GstVideoGLTextureType texture_types[] =
-      { GST_VIDEO_GL_TEXTURE_TYPE_RGBA, 0, 0, 0 };
+  GstVideoGLTextureType texture_types[GST_VIDEO_MAX_PLANES];
+  GstVideoMeta *v_meta;
+  gint i;
 
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (buffer != NULL, FALSE);
-  g_return_val_if_fail (gst_buffer_n_memory (buffer) == 1, FALSE);
+  v_meta = gst_buffer_get_video_meta (buffer);
+  g_return_val_if_fail (v_meta != NULL, FALSE);
 
   upload->priv->buffer = buffer;
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    texture_types[i] = gst_gl_texture_type_from_format (v_meta->format, i);
+  }
 
   gst_buffer_add_video_gl_texture_upload_meta (buffer,
       GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL, 1, texture_types,
@@ -562,7 +527,14 @@ gst_gl_upload_perform_with_data (GstGLUpload * upload, GLuint texture_id,
 
   g_mutex_lock (&upload->lock);
 
+  upload->out_tex = gst_gl_memory_wrapped_texture (upload->context, texture_id,
+      GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
+      GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);
+
   ret = _gst_gl_upload_perform_with_data_unlocked (upload, texture_id, data);
+
+  gst_memory_unref ((GstMemory *) upload->out_tex);
+  upload->out_tex = NULL;
 
   g_mutex_unlock (&upload->lock);
 
@@ -578,17 +550,19 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (texture_id > 0, FALSE);
 
-  upload->out_texture = texture_id;
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
-    upload->data[i] = data[i];
-  }
+  gst_gl_memory_setup_wrapped (upload->context, &upload->in_info, data,
+      upload->in_tex);
 
   GST_LOG ("Uploading data into texture %u", texture_id);
 
-  gst_gl_context_thread_add (upload->context,
-      (GstGLContextThreadFunc) _do_upload, upload);
+  _upload_memory (upload);
 
-  return TRUE;
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
+    gst_memory_unref ((GstMemory *) upload->in_tex[i]);
+    upload->in_tex[i] = NULL;
+  }
+
+  return upload->priv->result;
 }
 
 /* Called in the gl thread */
@@ -612,48 +586,12 @@ _init_upload (GstGLContext * context, GstGLUpload * upload)
     goto error;
   }
 
-  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info), GST_VIDEO_INFO_HEIGHT (&upload->in_info));
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA,
+      GST_VIDEO_INFO_WIDTH (&upload->in_info),
+      GST_VIDEO_INFO_HEIGHT (&upload->in_info));
 
-  if (!gst_gl_color_convert_init_format (upload->convert, upload->in_info, out_info))
-    goto error;
-
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_AYUV:
-      upload->priv->n_textures = 1;
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      upload->priv->n_textures = 2;
-      break;
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y41B:
-      upload->priv->n_textures = 3;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  if (!_do_upload_make (context, upload))
+  if (!gst_gl_color_convert_init_format (upload->convert, upload->in_info,
+        out_info))
     goto error;
 
   upload->priv->result = TRUE;
@@ -663,309 +601,40 @@ error:
   upload->priv->result = FALSE;
 }
 
-/* Called by the idle function in the gl thread */
-void
-_do_upload (GstGLContext * context, GstGLUpload * upload)
+static gboolean
+_upload_memory (GstGLUpload * upload)
 {
   guint in_width, in_height;
-  guint out_texture[] = {upload->out_texture, 0, 0, 0};
+  guint in_texture[GST_VIDEO_MAX_PLANES];
+  GstGLMemory *out_texture[GST_VIDEO_MAX_PLANES] = {upload->out_tex, 0, 0, 0};
+  GstMapInfo map_infos[GST_VIDEO_MAX_PLANES];
+  gboolean res = TRUE;
+  gint i;
 
   in_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
   in_height = GST_VIDEO_INFO_HEIGHT (&upload->in_info);
 
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
+    if (!gst_memory_map ((GstMemory *) upload->in_tex[i], &map_infos[i],
+          GST_MAP_READ | GST_MAP_GL)) {
+      gst_gl_context_set_error (upload->context, "Failed to map GL memory %u", i);
+      res = FALSE;
+      goto out;
+    }
+
+    in_texture[i] = upload->in_tex[i]->tex_id;
+  }
+
   GST_TRACE ("uploading to texture:%u with textures:%u,%u,%u dimensions:%ux%u", 
-      upload->out_texture, upload->in_texture[0], upload->in_texture[1],
-      upload->in_texture[2], in_width, in_height);
+      out_texture[0]->tex_id, in_texture[0], in_texture[1], in_texture[2],
+      in_width, in_height);
 
-  if (!_do_upload_fill (context, upload))
-    goto error;
+  gst_gl_color_convert_perform (upload->convert, upload->in_tex, out_texture);
 
-  gst_gl_color_convert_perform (upload->convert, upload->in_texture, out_texture);
-
-  upload->priv->result = TRUE;
-  return;
-
-error:
-  {
-    upload->priv->result = FALSE;
-    return;
-  }
-}
-
-static inline guint
-_gl_format_n_components (GLenum format)
-{
-  switch (format) {
-    case GL_RGBA:
-      return 4;
-    case GL_RGB:
-      return 3;
-    case GL_LUMINANCE_ALPHA:
-      return 2;
-    case GL_LUMINANCE:
-      return 1;
-    default:
-      return 1;
-  }
-}
-
-/* called by gst_gl_context_thread_do_upload (in the gl thread) */
-gboolean
-_do_upload_make (GstGLContext * context, GstGLUpload * upload)
-{
-  GstGLFuncs *gl;
-  GstVideoFormat v_format;
-  guint in_height;
-  struct TexData *tex = upload->priv->texture_info;
-  gfloat tex_scaling[GST_VIDEO_MAX_PLANES][2];
-  guint i;
-
-  gl = context->gl_vtable;
-
-  in_height = GST_VIDEO_INFO_HEIGHT (&upload->in_info);
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
-
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_AYUV:
-      tex[0].format = GL_RGBA;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].height = in_height;
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-      tex[0].format = GL_RGB;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].height = in_height;
-      break;
-    case GST_VIDEO_FORMAT_GRAY8:
-      tex[0].format = GL_LUMINANCE;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].height = in_height;
-      break;
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-      tex[0].format = GL_LUMINANCE_ALPHA;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].height = in_height;
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-      tex[0].format = GL_LUMINANCE_ALPHA;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].height = in_height;
-      tex[1].format = GL_RGBA;
-      tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].height = in_height;
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      tex[0].format = GL_LUMINANCE;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].height = in_height;
-      tex[1].format = GL_LUMINANCE_ALPHA;
-      tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].height = GST_ROUND_UP_2 (in_height) / 2;
-      break;
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y41B:
-      tex[0].format = GL_LUMINANCE;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].height = in_height;
-      tex[1].format = GL_LUMINANCE;
-      tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].height = in_height;
-      tex[2].format = GL_LUMINANCE;
-      tex[2].type = GL_UNSIGNED_BYTE;
-      tex[2].height = in_height;
-      break;
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-      tex[0].format = GL_LUMINANCE;
-      tex[0].type = GL_UNSIGNED_BYTE;
-      tex[0].height = in_height;
-      tex[1].format = GL_LUMINANCE;
-      tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].height = GST_ROUND_UP_2 (in_height) / 2;
-      tex[2].format = GL_LUMINANCE;
-      tex[2].type = GL_UNSIGNED_BYTE;
-      tex[2].height = GST_ROUND_UP_2 (in_height) / 2;
-      break;
-    default:
-      gst_gl_context_set_error (context, "Unsupported upload video format %d",
-          v_format);
-      g_assert_not_reached ();
-      break;
+out:
+  for (i--; i >= 0; i--) {
+    gst_memory_unmap ((GstMemory *) upload->in_tex[i], &map_infos[i]);
   }
 
-  for (i = 0; i < upload->priv->n_textures; i++) {
-    guint plane_stride, plane_width;
-
-    if (GST_VIDEO_INFO_IS_YUV (&upload->in_info))
-      /* For now component width and plane width are the same and the
-       * plane-component mapping matches
-       */
-      plane_width = GST_VIDEO_INFO_COMP_WIDTH (&upload->in_info, i);
-    else                        /* RGB, GRAY */
-      plane_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
-    plane_stride = GST_VIDEO_INFO_PLANE_STRIDE (&upload->in_info, i);
-
-    /* YUV interleaved packed formats require special attention as we upload
-     * multiple textures from the same plane.
-     */
-    if (v_format == GST_VIDEO_FORMAT_YUY2 || v_format == GST_VIDEO_FORMAT_UYVY) {
-      if (i == 1)
-        plane_stride = GST_VIDEO_INFO_COMP_STRIDE (&upload->in_info, 1);
-    }
-
-    tex[i].width = plane_width;
-    tex_scaling[i][0] = 1.0f;
-    tex_scaling[i][1] = 1.0f;
-
-#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
-    if (USING_OPENGL (context) || USING_GLES3 (context)) {
-      guint n_gl_comps = _gl_format_n_components (tex[i].format);
-
-      tex[i].unpack_length = plane_stride / n_gl_comps;
-    }
-#endif
-#if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (context)) {
-      guint pstride, n_planes;
-      guint j = 8;
-
-      pstride = GST_VIDEO_INFO_COMP_PSTRIDE (&upload->in_info, i);
-      n_planes = GST_VIDEO_INFO_N_PLANES (&upload->in_info);
-
-      while (j >= pstride) {
-        /* GST_ROUND_UP_j(plane_width * pstride) */
-        guint round_up_j = ((plane_width * pstride) + j - 1) & ~(j - 1);
-
-        if (round_up_j == plane_stride) {
-          GST_LOG ("Found alignment of %u for plane %u based on width (with "
-              "plane width:%u, plane stride:%u and pixel stride:%u. "
-              "RU%u(%u*%u) = %u)", j, i, plane_width, plane_stride, pstride,
-              j, plane_width, pstride, round_up_j);
-
-          tex[i].unpack_length = j;
-          break;
-        }
-        j >>= 1;
-      }
-
-      if (j < pstride) {
-        /* Failed to find a suitable alignment, try based on plane_stride and
-         * scale in the shader.  Useful for alignments that are greater than 8.
-         */
-        j = 8;
-
-        while (j >= n_planes) {
-          /* GST_ROUND_UP_j(plane_stride) */
-          guint round_up_j = ((plane_stride) + j - 1) & ~(j - 1);
-
-          if (round_up_j == plane_stride) {
-            GST_LOG ("Found alignment of %u for plane %u based on stride "
-                "(with plane stride:%u and pixel stride:%u. RU%u(%u) = %u)",
-                j, i, plane_stride, pstride, j, plane_stride, round_up_j);
-
-            tex[i].unpack_length = j;
-            tex_scaling[i][0] =
-                (gfloat) (plane_width * pstride) / (gfloat) plane_stride;
-            break;
-          }
-          j >>= 1;
-        }
-
-        if (j < n_planes) {
-          GST_ERROR
-              ("Failed to find matching alignment for plane %u, Image may "
-              "look corrupted. plane width:%u, plane stride:%u and pixel "
-              "stride:%u", i, plane_width, plane_stride, pstride);
-        }
-      }
-    }
-#endif
-
-    gl->GenTextures (1, &upload->in_texture[i]);
-    gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
-
-    gl->TexImage2D (GL_TEXTURE_2D, 0, tex[i].format,
-        tex[i].width, tex[i].height, 0, tex[i].format, tex[i].type, NULL);
-  }
-
-  gst_gl_color_convert_set_texture_scaling (upload->convert, tex_scaling);
-
-  return TRUE;
-}
-
-/* called by gst_gl_context_thread_do_upload (in the gl thread) */
-gboolean
-_do_upload_fill (GstGLContext * context, GstGLUpload * upload)
-{
-  guint i;
-  GstVideoFormat v_format;
-  struct TexData *tex = upload->priv->texture_info;
-  const GstGLFuncs *gl = context->gl_vtable;
-
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
-
-  for (i = 0; i < upload->priv->n_textures; i++) {
-    guint data_i = i;
-
-    /* upload from the same plane */
-    if (v_format == GST_VIDEO_FORMAT_YUY2 || v_format == GST_VIDEO_FORMAT_UYVY)
-      data_i = 0;
-
-    /* YV12 is the same as I420 except that planes 1+2 are swapped */
-    if (v_format == GST_VIDEO_FORMAT_YV12) {
-      if (i == 1)
-        data_i = 2;
-      else if (i == 2)
-        data_i = 1;
-    }
-#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
-    if (USING_OPENGL (context) || USING_GLES3 (context)) {
-      gl->PixelStorei (GL_UNPACK_ROW_LENGTH, tex[i].unpack_length);
-    }
-#endif
-#if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (context)) {
-      gl->PixelStorei (GL_UNPACK_ALIGNMENT, tex[i].unpack_length);
-    }
-#endif
-
-    GST_LOG ("data transfer for texture no %u, id:%u, %ux%u %u", i,
-        upload->in_texture[i], tex[i].width, tex[i].height, data_i);
-
-    gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
-    gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, tex[i].width, tex[i].height,
-        tex[i].format, tex[i].type, upload->data[data_i]);
-  }
-
-  /* Reset to default values */
-#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
-  if (USING_OPENGL (context) || USING_GLES3 (context)) {
-    gl->PixelStorei (GL_UNPACK_ROW_LENGTH, 0);
-  }
-#endif
-#if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (context)) {
-    gl->PixelStorei (GL_UNPACK_ALIGNMENT, 4);
-  }
-#endif
-
-  /* make sure no texture is in use in our opengl context 
-   * in case we want to use the upload texture in an other opengl context
-   */
-  gl->BindTexture (GL_TEXTURE_2D, 0);
-
-  return TRUE;
+  return res;
 }
