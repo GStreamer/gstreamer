@@ -719,6 +719,7 @@ case $host in
     AG_GST_CHECK_LIBHEADER(GLU, glu32, gluSphere,, GL/glu.h)
     AC_CHECK_HEADER(GL/wglext.h, HAVE_WGLEXT="yes", HAVE_WGLEXT="no", [#include <GL/gl.h>])
     if test "x$HAVE_WGLEXT" = "xyes"; then
+      HAVE_WGL=yes
       HAVE_GL=yes
       HAVE_GLU=yes
     fi
