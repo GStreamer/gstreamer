@@ -251,7 +251,7 @@ gst_gl_mosaic_callback (gpointer stuff)
   while (count < mosaic->input_frames->len && count < 6) {
     GstGLMixerFrameData *frame;
     /* *INDENT-OFF* */
-    gfloat v_vertices = {
+    gfloat v_vertices[] = {
       /* front face */
        1.0f, 1.0f,-1.0f, 1.0f, 0.0f,
        1.0f,-1.0f,-1.0f, 1.0f, 1.0f,
