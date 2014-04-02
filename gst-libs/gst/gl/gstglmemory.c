@@ -62,19 +62,19 @@ typedef struct
 
 static void
 _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
-    GstGLContext * context, GstVideoInfo v_info, gpointer user_data,
+    GstGLContext * context, GstVideoInfo * v_info, gpointer user_data,
     GDestroyNotify notify)
 {
   gsize maxsize;
 
-  maxsize = v_info.size;
+  maxsize = v_info->size;
 
   gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
       allocator, parent, maxsize, 0, 0, maxsize);
 
   mem->context = gst_object_ref (context);
   mem->gl_format = GL_RGBA;
-  mem->v_info = v_info;
+  mem->v_info = *v_info;
   mem->notify = notify;
   mem->user_data = user_data;
   mem->wrapped = FALSE;
@@ -82,21 +82,21 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->download = gst_gl_download_new (context);
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "new GL texture memory:%p format:%u "
-      "dimensions:%ux%u", mem, GST_VIDEO_INFO_FORMAT (&v_info),
-      GST_VIDEO_INFO_WIDTH (&v_info), GST_VIDEO_INFO_HEIGHT (&v_info));
+      "dimensions:%ux%u", mem, GST_VIDEO_INFO_FORMAT (v_info),
+      GST_VIDEO_INFO_WIDTH (v_info), GST_VIDEO_INFO_HEIGHT (v_info));
 }
 
 static GstGLMemory *
 _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
-    GstGLContext * context, GstVideoInfo v_info, gpointer user_data,
+    GstGLContext * context, GstVideoInfo * v_info, gpointer user_data,
     GDestroyNotify notify)
 {
   GstGLMemory *mem;
   GLuint tex_id;
 
   gst_gl_context_gen_texture (context, &tex_id,
-      GST_VIDEO_INFO_FORMAT (&v_info), GST_VIDEO_INFO_WIDTH (&v_info),
-      GST_VIDEO_INFO_HEIGHT (&v_info));
+      GST_VIDEO_INFO_FORMAT (v_info), GST_VIDEO_INFO_WIDTH (v_info),
+      GST_VIDEO_INFO_HEIGHT (v_info));
   if (!tex_id) {
     GST_CAT_WARNING (GST_CAT_GL_MEMORY,
         "Could not create GL texture with context:%p", context);
@@ -126,8 +126,8 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
       if (GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
         if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem,
                 GST_GL_MEMORY_FLAG_UPLOAD_INITTED)) {
-          if (!gst_gl_upload_init_format (gl_mem->upload, gl_mem->v_info,
-                  gl_mem->v_info)) {
+          if (!gst_gl_upload_init_format (gl_mem->upload, &gl_mem->v_info,
+                  &gl_mem->v_info)) {
             goto error;
           }
           GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED);
@@ -310,7 +310,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
   GstGLMemoryCopyParams copy_params;
 
   if (GST_GL_MEMORY_FLAG_IS_SET (src, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
-    dest = _gl_mem_new (src->mem.allocator, NULL, src->context, src->v_info,
+    dest = _gl_mem_new (src->mem.allocator, NULL, src->context, &src->v_info,
         NULL, NULL);
     dest->data = g_malloc (src->mem.maxsize);
     memcpy (dest->data, src->data, src->mem.maxsize);
@@ -322,7 +322,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     gst_gl_context_thread_add (src->context, _gl_mem_copy_thread, &copy_params);
 
     dest = g_slice_alloc (sizeof (GstGLMemory));
-    _gl_mem_init (dest, src->mem.allocator, NULL, src->context, src->v_info,
+    _gl_mem_init (dest, src->mem.allocator, NULL, src->context, &src->v_info,
         NULL, NULL);
 
     if (!copy_params.result) {
@@ -422,7 +422,7 @@ gst_gl_memory_copy_into_texture (GstGLMemory * gl_mem, guint tex_id)
  *          from @context
  */
 GstMemory *
-gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo v_info)
+gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo * v_info)
 {
   GstGLMemory *mem;
 
@@ -449,7 +449,7 @@ gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo v_info)
  *          from @context and contents specified by @data
  */
 GstGLMemory *
-gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo v_info,
+gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo * v_info,
     gpointer data, gpointer user_data, GDestroyNotify notify)
 {
   GstGLMemory *mem;

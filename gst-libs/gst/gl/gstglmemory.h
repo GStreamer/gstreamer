@@ -143,9 +143,9 @@ struct _GstGLMemory
 
 void gst_gl_memory_init (void);
 
-GstMemory * gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo info);
+GstMemory * gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo * info);
 
-GstGLMemory * gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo info, gpointer data,
+GstGLMemory * gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo * info, gpointer data,
                                      gpointer user_data, GDestroyNotify notify);
 
 gboolean gst_is_gl_memory (GstMemory * mem);

@@ -413,8 +413,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
 
   if (!gl_sink->upload) {
     gl_sink->upload = gst_gl_upload_new (gl_sink->context);
-    if (!gst_gl_upload_init_format (gl_sink->upload, gl_sink->info,
-            gl_sink->info))
+    if (!gst_gl_upload_init_format (gl_sink->upload, &gl_sink->info,
+            &gl_sink->info))
       goto upload_error;
   }
 

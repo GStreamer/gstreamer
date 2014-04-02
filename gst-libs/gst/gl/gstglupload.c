@@ -403,12 +403,12 @@ gst_gl_upload_finalize (GObject * object)
 
 static gboolean
 _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
-    GstVideoInfo in_info, GstVideoInfo out_info)
+    GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
   g_return_val_if_fail (upload != NULL, FALSE);
-  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&in_info) !=
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
       GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&in_info) !=
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
       GST_VIDEO_FORMAT_ENCODED, FALSE);
 
   if (upload->initted) {
@@ -417,8 +417,8 @@ _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
     upload->initted = TRUE;
   }
 
-  upload->in_info = in_info;
-  upload->out_info = out_info;
+  upload->in_info = *in_info;
+  upload->out_info = *out_info;
 
   gst_gl_context_thread_add (upload->context,
       (GstGLContextThreadFunc) _init_upload, upload);
@@ -438,8 +438,8 @@ _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
  * Returns: whether the initialization was successful
  */
 gboolean
-gst_gl_upload_init_format (GstGLUpload * upload, GstVideoInfo in_info,
-    GstVideoInfo out_info)
+gst_gl_upload_init_format (GstGLUpload * upload, GstVideoInfo * in_info,
+    GstVideoInfo * out_info)
 {
   gboolean ret;
 
@@ -583,7 +583,7 @@ gst_gl_upload_perform_with_memory (GstGLUpload * upload, GstGLMemory * gl_mem)
   g_return_val_if_fail (upload != NULL, FALSE);
 
   if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED)) {
-    gst_gl_upload_init_format (upload, gl_mem->v_info, gl_mem->v_info);
+    gst_gl_upload_init_format (upload, &gl_mem->v_info, &gl_mem->v_info);
   }
 
   if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD))
@@ -630,7 +630,7 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
     gst_video_info_set_format (&in_info, v_format, width, height);
     gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA, width, height);
 
-    if (!_gst_gl_upload_init_format_unlocked (upload, in_info, out_info))
+    if (!_gst_gl_upload_init_format_unlocked (upload, &in_info, &out_info))
       return FALSE;
   }
 
