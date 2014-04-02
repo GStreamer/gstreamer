@@ -250,7 +250,40 @@ gst_gl_mosaic_callback (gpointer stuff)
 
   while (count < mosaic->input_frames->len && count < 6) {
     GstGLMixerFrameData *frame;
-    GLfloat *v_vertices;
+    /* *INDENT-OFF* */
+    gfloat v_vertices = {
+      /* front face */
+       1.0f, 1.0f,-1.0f, 1.0f, 0.0f,
+       1.0f,-1.0f,-1.0f, 1.0f, 1.0f,
+      -1.0f,-1.0f,-1.0f, 0.0f, 1.0f,
+      -1.0f, 1.0f,-1.0f, 0.0f, 0.0f,
+      /* right face */
+       1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+       1.0f,-1.0f, 1.0f, 0.0f, 0.0f,
+       1.0f,-1.0f,-1.0f, 0.0f, 1.0f,
+       1.0f, 1.0f,-1.0f, 1.0f, 1.0f,
+      /* left face */
+      -1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+      -1.0f, 1.0f,-1.0f, 1.0f, 1.0f,
+      -1.0f,-1.0f,-1.0f, 0.0f, 1.0f,
+      -1.0f,-1.0f, 1.0f, 0.0f, 0.0f,
+      /* top face */
+       1.0f,-1.0f, 1.0f, 1.0f, 0.0f,
+      -1.0f,-1.0f, 1.0f, 0.0f, 0.0f,
+      -1.0f,-1.0f,-1.0f, 0.0f, 1.0f,
+       1.0f,-1.0f,-1.0f, 1.0f, 1.0f,
+      /* bottom face */
+       1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+       1.0f, 1.0f,-1.0f, 1.0f, 1.0f,
+      -1.0f, 1.0f,-1.0f, 0.0f, 1.0f,
+      -1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+      /* back face */
+       1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+      -1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+      -1.0f,-1.0f, 1.0f, 0.0f, 1.0f,
+       1.0f,-1.0f, 1.0f, 1.0f, 1.0f
+    };
+    /* *INDENT-ON* */
     guint in_tex;
     guint width, height;
 
@@ -267,65 +300,6 @@ gst_gl_mosaic_callback (gpointer stuff)
     }
 
     GST_TRACE ("processing texture:%u dimensions:%ux%u", in_tex, width, height);
-
-    /* *INDENT-OFF* */
-    v_vertices = (GLfloat[]) {
-      /* front face */
-      1.0f, 1.0f, -1.0f,
-      1.0f, 0.0f,
-      1.0f, -1.0f, -1.0f,
-      1.0f, 1.0f,
-      -1.0f, -1.0f, -1.0f,
-      0.0f, 1.0f,
-      -1.0f, 1.0f, -1.0f,
-      0.0f, 0.0f,
-      /* right face */
-      1.0f, 1.0f, 1.0f,
-      1.0f, 0.0f,
-      1.0f, -1.0f, 1.0f,
-      0.0f, 0.0f,
-      1.0f, -1.0f, -1.0f,
-      0.0f, 1.0f,
-      1.0f, 1.0f, -1.0f,
-      1.0f, 1.0f,
-      /* left face */
-      -1.0f, 1.0f, 1.0f,
-      1.0f, 0.0f,
-      -1.0f, 1.0f, -1.0f,
-      1.0f, 1.0f,
-      -1.0f, -1.0f, -1.0f,
-      0.0f, 1.0f,
-      -1.0f, -1.0f, 1.0f,
-      0.0f, 0.0f,
-      /* top face */
-      1.0f, -1.0f, 1.0f,
-      1.0f, 0.0f,
-      -1.0f, -1.0f, 1.0f,
-      0.0f, 0.0f,
-      -1.0f, -1.0f, -1.0f,
-      0.0f, 1.0f,
-      1.0f, -1.0f, -1.0f,
-      1.0f, 1.0f,
-      /* bottom face */
-      1.0f, 1.0f, 1.0f,
-      1.0f, 0.0f,
-      1.0f, 1.0f, -1.0f,
-      1.0f, 1.0f,
-      -1.0f, 1.0f, -1.0f,
-      0.0f, 1.0f,
-      -1.0f, 1.0f, 1.0f,
-      0.0f, 0.0f,
-      /* back face */
-      1.0f, 1.0f, 1.0f,
-      1.0f, 0.0f,
-      -1.0f, 1.0f, 1.0f,
-      0.0f, 0.0f,
-      -1.0f, -1.0f, 1.0f,
-      0.0f, 1.0f,
-      1.0f, -1.0f, 1.0f,
-      1.0f, 1.0f
-    };
-    /* *INDENT-ON* */
 
     gl->VertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
         GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[5 * 4 * count]);
