@@ -3031,8 +3031,14 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
 
   /* merge the tunnels into the first client */
   gst_rtsp_connection_do_tunnel (opriv->connection, priv->connection);
+  gst_rtsp_watch_reset (priv->watch);
   gst_rtsp_watch_reset (opriv->watch);
   g_object_unref (oclient);
+
+  /* the old client owns the tunnel now, the new one will be freed */
+  g_source_destroy ((GSource *) priv->watch);
+  priv->watch = NULL;
+  gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
 
   return GST_RTSP_OK;
 
