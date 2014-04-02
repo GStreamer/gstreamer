@@ -123,13 +123,17 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpeg, "
+        "parsed = (boolean) TRUE, "
         "mpegversion = (int) { 1, 2, 4 }, "
         "systemstream = (boolean) false; "
         "video/x-dirac;"
-        "video/x-h264,stream-format=(string)byte-stream;"
+        "video/x-h264,stream-format=(string)byte-stream,"
+        "parsed = (boolean) TRUE; "
         "audio/mpeg, "
+        "parsed = (boolean) TRUE, "
         "mpegversion = (int) { 1, 2 };"
         "audio/mpeg, "
+        "framed = (boolean) TRUE, "
         "mpegversion = (int) 4, stream-format = (string) { raw, adts };"
         "audio/x-lpcm, "
         "width = (int) { 16, 20, 24 }, "
@@ -137,7 +141,9 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
         "channels = (int) [ 1, 8 ], "
         "dynamic_range = (int) [ 0, 255 ], "
         "emphasis = (boolean) { FALSE, TRUE }, "
-        "mute = (boolean) { FALSE, TRUE }; " "audio/x-ac3;" "audio/x-dts;"
+        "mute = (boolean) { FALSE, TRUE }; "
+        "audio/x-ac3, framed = (boolean) TRUE;"
+        "audio/x-dts, framed = (boolean) TRUE;"
         "subpicture/x-dvb;" "application/x-teletext"));
 
 static GstStaticPadTemplate mpegtsmux_src_factory =
