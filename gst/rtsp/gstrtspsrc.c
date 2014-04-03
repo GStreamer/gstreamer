@@ -1537,6 +1537,8 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
     gst_object_unref (stream->rtcppad);
   if (stream->session)
     g_object_unref (stream->session);
+  if (stream->srtpdec)
+    gst_object_unref (stream->srtpdec);
   g_free (stream);
 }
 
