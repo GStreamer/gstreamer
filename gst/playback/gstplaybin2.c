@@ -5527,6 +5527,12 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
           l = l->next;
         }
       }
+
+      if (playbin->source) {
+        gst_object_unref (playbin->source);
+        playbin->source = NULL;
+      }
+
       GST_OBJECT_UNLOCK (playbin);
       break;
     }
