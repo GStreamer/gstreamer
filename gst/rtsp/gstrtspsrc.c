@@ -1514,41 +1514,29 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
       gst_element_set_state (stream->udpsrc[i], GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (src), stream->udpsrc[i]);
       gst_object_unref (stream->udpsrc[i]);
-      stream->udpsrc[i] = NULL;
     }
-    if (stream->channelpad[i]) {
+    if (stream->channelpad[i])
       gst_object_unref (stream->channelpad[i]);
-      stream->channelpad[i] = NULL;
-    }
     if (stream->udpsink[i]) {
       gst_element_set_state (stream->udpsink[i], GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (src), stream->udpsink[i]);
       gst_object_unref (stream->udpsink[i]);
-      stream->udpsink[i] = NULL;
     }
   }
   if (stream->fakesrc) {
     gst_element_set_state (stream->fakesrc, GST_STATE_NULL);
     gst_bin_remove (GST_BIN_CAST (src), stream->fakesrc);
     gst_object_unref (stream->fakesrc);
-    stream->fakesrc = NULL;
   }
   if (stream->srcpad) {
     gst_pad_set_active (stream->srcpad, FALSE);
-    if (stream->added) {
+    if (stream->added)
       gst_element_remove_pad (GST_ELEMENT_CAST (src), stream->srcpad);
-      stream->added = FALSE;
-    }
-    stream->srcpad = NULL;
   }
-  if (stream->rtcppad) {
+  if (stream->rtcppad)
     gst_object_unref (stream->rtcppad);
-    stream->rtcppad = NULL;
-  }
-  if (stream->session) {
+  if (stream->session)
     g_object_unref (stream->session);
-    stream->session = NULL;
-  }
   g_free (stream);
 }
 
