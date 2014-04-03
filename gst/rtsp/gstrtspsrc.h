@@ -139,6 +139,7 @@ struct _GstRTSPStream {
   GstElement   *srtpdec;
   GstBuffer    *key;
   GstElement   *srtpenc;
+  guint32       send_ssrc;
 
   /* per stream connection */
   GstRTSPConnInfo  conninfo;

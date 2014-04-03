@@ -3155,6 +3155,8 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
         g_object_set (rtpsession, "probation", src->probation, NULL);
 
+        g_object_set (rtpsession, "internal-ssrc", stream->send_ssrc, NULL);
+
         g_signal_connect (rtpsession, "on-bye-ssrc", (GCallback) on_bye_ssrc,
             stream);
         g_signal_connect (rtpsession, "on-bye-timeout", (GCallback) on_timeout,
@@ -5829,7 +5831,8 @@ gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
   gst_mikey_message_set_info (msg, GST_MIKEY_VERSION, GST_MIKEY_TYPE_PSK_INIT,
       FALSE, GST_MIKEY_PRF_MIKEY_1, g_random_int (), GST_MIKEY_MAP_TYPE_SRTP);
   /* add policy '0' for our SSRC */
-  gst_mikey_message_add_cs_srtp (msg, 0, stream->ssrc, 0);
+  stream->send_ssrc = g_random_int ();
+  gst_mikey_message_add_cs_srtp (msg, 0, stream->send_ssrc, 0);
   /* timestamp is now */
   gst_mikey_message_add_t_now_ntp_utc (msg);
   /* add some random data */
