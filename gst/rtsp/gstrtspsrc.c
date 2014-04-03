@@ -5827,7 +5827,7 @@ gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
   msg = gst_mikey_message_new ();
   /* unencrypted MIKEY message, we send this over TLS so this is allowed */
   gst_mikey_message_set_info (msg, GST_MIKEY_VERSION, GST_MIKEY_TYPE_PSK_INIT,
-      FALSE, GST_MIKEY_PRF_MIKEY_1, 0, GST_MIKEY_MAP_TYPE_SRTP);
+      FALSE, GST_MIKEY_PRF_MIKEY_1, g_random_int (), GST_MIKEY_MAP_TYPE_SRTP);
   /* add policy '0' for our SSRC */
   gst_mikey_message_add_cs_srtp (msg, 0, stream->ssrc, 0);
   /* timestamp is now */
