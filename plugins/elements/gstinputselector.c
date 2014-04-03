@@ -812,7 +812,7 @@ gst_input_selector_debug_cached_buffers (GstInputSelector * sel)
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (cached_buffer->buffer)));
     }
     str = g_string_free (timestamps, FALSE);
-    GST_DEBUG_OBJECT (selpad, str);
+    GST_DEBUG_OBJECT (selpad, "%s", str);
     g_free (str);
   }
 }
