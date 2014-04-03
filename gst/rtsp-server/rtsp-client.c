@@ -2958,28 +2958,6 @@ tunnel_existed:
   }
 }
 
-static GstRTSPStatusCode
-tunnel_start (GstRTSPWatch * watch, gpointer user_data)
-{
-  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
-  GstRTSPClientPrivate *priv = client->priv;
-
-  GST_INFO ("client %p: tunnel start (connection %p)", client,
-      priv->connection);
-
-  if (!remember_tunnel (client))
-    goto tunnel_error;
-
-  return GST_RTSP_STS_OK;
-
-  /* ERRORS */
-tunnel_error:
-  {
-    GST_ERROR ("client %p: error starting tunnel", client);
-    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
-  }
-}
-
 static GstRTSPResult
 tunnel_lost (GstRTSPWatch * watch, gpointer user_data)
 {
@@ -2995,72 +2973,100 @@ tunnel_lost (GstRTSPWatch * watch, gpointer user_data)
   return GST_RTSP_OK;
 }
 
-static GstRTSPResult
-tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
+static gboolean
+handle_tunnel (GstRTSPClient * client)
 {
-  const gchar *tunnelid;
-  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
   GstRTSPClientPrivate *priv = client->priv;
   GstRTSPClient *oclient;
   GstRTSPClientPrivate *opriv;
+  const gchar *tunnelid;
 
-  GST_INFO ("client %p: tunnel complete", client);
-
-  /* find previous tunnel */
   tunnelid = gst_rtsp_connection_get_tunnelid (priv->connection);
   if (tunnelid == NULL)
     goto no_tunnelid;
 
+  /* check for previous tunnel */
   g_mutex_lock (&tunnels_lock);
-  if (!(oclient = g_hash_table_lookup (tunnels, tunnelid)))
-    goto no_tunnel;
+  oclient = g_hash_table_lookup (tunnels, tunnelid);
 
-  /* remove the old client from the table. ref before because removing it will
-   * remove the ref to it. */
-  g_object_ref (oclient);
-  g_hash_table_remove (tunnels, tunnelid);
+  if (oclient == NULL) {
+    /* no previous tunnel, remember tunnel */
+    g_hash_table_insert (tunnels, g_strdup (tunnelid), g_object_ref (client));
+    g_mutex_unlock (&tunnels_lock);
 
-  opriv = oclient->priv;
+    GST_INFO ("client %p: no previous tunnel found, remembering tunnel (%p)",
+        client, priv->connection);
+  } else {
+    /* merge both tunnels into the first client */
+    /* remove the old client from the table. ref before because removing it will
+     * remove the ref to it. */
+    g_object_ref (oclient);
+    g_hash_table_remove (tunnels, tunnelid);
+    g_mutex_unlock (&tunnels_lock);
 
-  if (opriv->watch == NULL)
-    goto tunnel_closed;
-  g_mutex_unlock (&tunnels_lock);
+    opriv = oclient->priv;
 
-  GST_INFO ("client %p: found tunnel %p (old %p, new %p)", client, oclient,
-      opriv->connection, priv->connection);
+    if (opriv->watch == NULL)
+      goto tunnel_closed;
 
-  /* merge the tunnels into the first client */
-  gst_rtsp_connection_do_tunnel (opriv->connection, priv->connection);
-  gst_rtsp_watch_reset (priv->watch);
-  gst_rtsp_watch_reset (opriv->watch);
-  g_object_unref (oclient);
+    GST_INFO ("client %p: found previous tunnel %p (old %p, new %p)", client,
+        oclient, opriv->connection, priv->connection);
 
-  /* the old client owns the tunnel now, the new one will be freed */
-  g_source_destroy ((GSource *) priv->watch);
-  priv->watch = NULL;
-  gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
+    gst_rtsp_connection_do_tunnel (opriv->connection, priv->connection);
+    gst_rtsp_watch_reset (priv->watch);
+    gst_rtsp_watch_reset (opriv->watch);
+    g_object_unref (oclient);
 
-  return GST_RTSP_OK;
+    /* the old client owns the tunnel now, the new one will be freed */
+    g_source_destroy ((GSource *) priv->watch);
+    priv->watch = NULL;
+    gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
+  }
+
+  return TRUE;
 
   /* ERRORS */
 no_tunnelid:
   {
     GST_ERROR ("client %p: no tunnelid provided", client);
-    return GST_RTSP_ERROR;
-  }
-no_tunnel:
-  {
-    g_mutex_unlock (&tunnels_lock);
-    GST_ERROR ("client %p: tunnel session %s not found", client, tunnelid);
-    return GST_RTSP_ERROR;
+    return FALSE;
   }
 tunnel_closed:
   {
-    g_mutex_unlock (&tunnels_lock);
     GST_ERROR ("client %p: tunnel session %s was closed", client, tunnelid);
     g_object_unref (oclient);
+    return FALSE;
+  }
+}
+
+static GstRTSPStatusCode
+tunnel_get (GstRTSPWatch * watch, gpointer user_data)
+{
+  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+
+  GST_INFO ("client %p: tunnel get (connection %p)", client,
+      client->priv->connection);
+
+  if (!handle_tunnel (client)) {
+    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
+  }
+
+  return GST_RTSP_STS_OK;
+}
+
+static GstRTSPResult
+tunnel_post (GstRTSPWatch * watch, gpointer user_data)
+{
+  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+
+  GST_INFO ("client %p: tunnel post (connection %p)", client,
+      client->priv->connection);
+
+  if (!handle_tunnel (client)) {
     return GST_RTSP_ERROR;
   }
+
+  return GST_RTSP_OK;
 }
 
 static GstRTSPResult
@@ -3084,8 +3090,8 @@ static GstRTSPWatchFuncs watch_funcs = {
   message_sent,
   closed,
   error,
-  tunnel_start,
-  tunnel_complete,
+  tunnel_get,
+  tunnel_post,
   error_full,
   tunnel_lost,
   tunnel_http_response
