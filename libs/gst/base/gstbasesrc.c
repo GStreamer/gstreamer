@@ -2904,18 +2904,13 @@ pause:
       } else if (flag_segment) {
         GstMessage *message;
 
-        if (flag_segment) {
-          message = gst_message_new_segment_done (GST_OBJECT_CAST (src),
-              format, position);
-          gst_message_set_seqnum (message, src->priv->seqnum);
-          gst_element_post_message (GST_ELEMENT_CAST (src), message);
-          event = gst_event_new_segment_done (format, position);
-        } else {
-          event = gst_event_new_eos ();
-          gst_event_set_seqnum (event, src->priv->seqnum);
-        }
-
+        message = gst_message_new_segment_done (GST_OBJECT_CAST (src),
+            format, position);
+        gst_message_set_seqnum (message, src->priv->seqnum);
+        gst_element_post_message (GST_ELEMENT_CAST (src), message);
+        event = gst_event_new_segment_done (format, position);
         gst_event_set_seqnum (event, src->priv->seqnum);
+
       } else {
         event = gst_event_new_eos ();
         gst_event_set_seqnum (event, src->priv->seqnum);
