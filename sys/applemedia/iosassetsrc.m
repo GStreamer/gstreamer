@@ -39,6 +39,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/base/base.h>
 #include "iosassetsrc.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",

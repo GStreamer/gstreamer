@@ -2,6 +2,8 @@
  * GStreamer
  * Copyright (C) 2013 Fluendo S.L. <support@fluendo.com>
  *    Authors: Andoni Morales Alastruey <amorales@fluendo.com>
+ * Copyright (C) 2014 Collabora Ltd.
+ *    Authors: Matthieu Bouron <matthieu.bouron@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -36,11 +38,8 @@
 #  include <config.h>
 #endif
 
-#include <gst/gst.h>
-
 #include "iosavassetsrc.h"
 #include "coremediabuffer.h"
-#import <AVFoundation/AVFoundation.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_avasset_src_debug);
 #define GST_CAT_DEFAULT gst_avasset_src_debug
@@ -68,26 +67,27 @@ enum
   PROP_URI
 };
 
-#define COMMON_CAPS "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, " \
-        "signed = (boolean) { TRUE }, " \
-        "rate = (int) [1, MAX], " \
-        "channels = (int) [1, 2];"
-
 static GstStaticPadTemplate audio_factory = GST_STATIC_PAD_TEMPLATE ("audio",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS (
-        "audio/x-raw-float, width = (int) 32, depth = (int) 32, " COMMON_CAPS)
-    );
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) F32LE, "
+        "rate = " GST_AUDIO_RATE_RANGE ", "
+        "channels = (int) [1, 2], "
+        "layout = (string) interleaved"
+    )
+);
 
 static GstStaticPadTemplate video_factory = GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("video/x-raw-yuv, format=(fourcc)NV12, "
-        "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [1, MAX], "
-        "height = (int) [1, MAX]")
-    );
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) NV12, "
+        "framerate = " GST_VIDEO_FPS_RANGE ", "
+        "width = " GST_VIDEO_SIZE_RANGE ", "
+        "height = " GST_VIDEO_SIZE_RANGE
+    )
+);
 
 static void gst_avasset_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -98,8 +98,8 @@ static void gst_avasset_src_dispose (GObject *object);
 static GstStateChangeReturn gst_avasset_src_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_avasset_src_query (GstPad *pad, GstQuery *query);
-static gboolean gst_avasset_src_event (GstPad *pad, GstEvent *event);
+static gboolean gst_avasset_src_query (GstPad *pad, GstObject * parent, GstQuery *query);
+static gboolean gst_avasset_src_event (GstPad *pad, GstObject * parent, GstEvent *event);
 static gboolean gst_avasset_src_send_event (GstAVAssetSrc *self,
     GstEvent *event);
 
@@ -107,7 +107,7 @@ static void gst_avasset_src_read_audio (GstAVAssetSrc *self);
 static void gst_avasset_src_read_video (GstAVAssetSrc *self);
 static void gst_avasset_src_start (GstAVAssetSrc *self);
 static void gst_avasset_src_stop (GstAVAssetSrc *self);
-static void gst_avasset_src_start_reading (GstAVAssetSrc *self);
+static gboolean gst_avasset_src_start_reading (GstAVAssetSrc *self);
 static void gst_avasset_src_stop_reading (GstAVAssetSrc *self);
 static void gst_avasset_src_stop_all (GstAVAssetSrc *self);
 static void gst_avasset_src_uri_handler_init (gpointer g_iface,
@@ -128,27 +128,11 @@ _do_init (GType avassetsrc_type)
       0, "iosavassetsrc element");
 }
 
-GST_BOILERPLATE_FULL (GstAVAssetSrc, gst_avasset_src, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
+G_DEFINE_TYPE_WITH_CODE (GstAVAssetSrc, gst_avasset_src, GST_TYPE_ELEMENT,
+    _do_init (g_define_type_id));
+
 
 /* GObject vmethod implementations */
-
-static void
-gst_avasset_src_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple(element_class,
-    "Source and decoder for iOS assets",
-    "Source/Codec",
-    "Read and decode samples from iOS assets using the AVAssetReader API",
-    "Andoni Morales Alastruey amorales@fluendo.com");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&audio_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_factory));
-}
 
 static void
 gst_avasset_src_class_init (GstAVAssetSrcClass * klass)
@@ -158,6 +142,17 @@ gst_avasset_src_class_init (GstAVAssetSrcClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
+  gst_element_class_set_static_metadata (gstelement_class,
+    "Source and decoder for iOS assets",
+    "Source/Codec",
+    "Read and decode samples from iOS assets using the AVAssetReader API",
+    "Andoni Morales Alastruey amorales@fluendo.com");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&audio_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&video_factory));
 
   gobject_class->set_property = gst_avasset_src_set_property;
   gobject_class->get_property = gst_avasset_src_get_property;
@@ -180,33 +175,19 @@ gst_avasset_src_class_init (GstAVAssetSrcClass * klass)
 }
 
 static void
-gst_avasset_src_init (GstAVAssetSrc * self, GstAVAssetSrcClass * gclass)
+gst_avasset_src_init (GstAVAssetSrc * self)
 {
-  self->audio_task = gst_task_create (
-      (GstTaskFunction) gst_avasset_src_read_audio, self);
-  self->video_task = gst_task_create (
-      (GstTaskFunction) gst_avasset_src_read_video, self);
-  gst_task_set_lock (self->video_task, &self->video_lock);
-  gst_task_set_lock (self->audio_task, &self->audio_lock);
   self->selected_audio_track = 0;
   self->selected_video_track = 0;
-  g_mutex_init(&self->lock);
+  self->last_audio_pad_ret = GST_FLOW_OK;
+  self->last_video_pad_ret = GST_FLOW_OK;
+  g_mutex_init (&self->lock);
 }
 
 static void
 gst_avasset_src_dispose (GObject *object)
 {
   GstAVAssetSrc *self = GST_AVASSET_SRC (object);
-
-  if (self->video_task != NULL) {
-    gst_object_unref (self->video_task);
-    self->video_task = NULL;
-  }
-
-  if (self->audio_task) {
-    gst_object_unref (self->audio_task);
-    self->audio_task = NULL;
-  }
 
   if (self->uri != NULL) {
     g_free (self->uri);
@@ -261,6 +242,10 @@ gst_avasset_src_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
   GError *error;
 
+  GST_DEBUG ("%s => %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
   OBJC_CALLOUT_BEGIN ();
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY: {
@@ -277,9 +262,7 @@ gst_avasset_src_change_state (GstElement * element, GstStateChange transition)
     }
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_avasset_src_start (self);
-      self->state = GST_AVASSET_SRC_STATE_STARTED;
       gst_avasset_src_start_reading (self);
-      self->state = GST_AVASSET_SRC_STATE_READING;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -287,13 +270,14 @@ gst_avasset_src_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (gst_avasset_src_parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_avasset_src_stop_all (self);
+      gst_avasset_src_stop_reading (self);
+      gst_avasset_src_stop (self);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       [self->reader release];
@@ -305,11 +289,31 @@ gst_avasset_src_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-static gboolean
-gst_avasset_src_query (GstPad *pad, GstQuery *query)
+static GstCaps *
+gst_avasset_src_get_caps(GstAVAssetSrc * self, GstPad * pad, GstCaps * filter)
 {
-    gboolean ret;
-    GstAVAssetSrc *self = GST_AVASSET_SRC (gst_pad_get_parent_element(pad));
+  GstCaps * caps;
+
+  caps = gst_pad_get_current_caps (pad);
+  if (!caps) {
+    caps = gst_pad_get_pad_template_caps (pad);
+  }
+
+  if (filter) {
+    GstCaps *intersection = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = intersection;
+  }
+
+  return caps;
+}
+
+static gboolean
+gst_avasset_src_query (GstPad *pad, GstObject * parent, GstQuery *query)
+{
+    gboolean ret = FALSE;
+    GstCaps *caps;
+    GstAVAssetSrc *self = GST_AVASSET_SRC (parent);
 
     switch (GST_QUERY_TYPE (query)) {
       case GST_QUERY_URI:
@@ -320,21 +324,37 @@ gst_avasset_src_query (GstPad *pad, GstQuery *query)
         gst_query_set_duration (query, GST_FORMAT_TIME, self->reader.duration);
         ret = TRUE;
         break;
-     case GST_QUERY_POSITION:
+      case GST_QUERY_POSITION:
         gst_query_set_position (query, GST_FORMAT_TIME, self->reader.position);
         ret = TRUE;
         break;
-     default:
+      case GST_QUERY_SEEKING: {
+        GstFormat fmt;
+        gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+        if (fmt == GST_FORMAT_TIME) {
+          gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, self->reader.duration);
+          ret = TRUE;
+        }
+        break;
+      }
+      case GST_QUERY_CAPS: {
+        GstCaps *filter = NULL;
+        gst_query_parse_caps (query, &filter);
+        caps = gst_avasset_src_get_caps (self, pad, filter);
+        gst_query_set_caps_result (query, caps);
+        ret = TRUE;
+        break;
+      }
+      default:
         ret = FALSE;
         break;
     }
 
-    g_object_unref(self);
     return ret;
 }
 
 static gboolean
-gst_avasset_src_event (GstPad * pad, GstEvent * event)
+gst_avasset_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstAVAssetSrc *self;
   gboolean res = TRUE;
@@ -350,16 +370,23 @@ gst_avasset_src_event (GstPad * pad, GstEvent * event)
       gdouble rate;
       GstSeekType start_type, stop_type;
       gint64 start, stop;
-      GstEvent *newsegment;
+      GstSegment segment;
 
-      /* now do the seek */
-      GST_AVASSET_SRC_LOCK (self);
+      GST_DEBUG ("Processing SEEK event");
+
+      GST_AVF_ASSET_SRC_LOCK (self);
       if (self->seek_event && gst_event_get_seqnum (event) ==
           gst_event_get_seqnum (self->seek_event)) {
-        GST_AVASSET_SRC_UNLOCK (self);
+        GST_AVF_ASSET_SRC_UNLOCK (self);
         break;
       }
       self->seek_event = gst_event_ref (event);
+      GST_AVF_ASSET_SRC_UNLOCK (self);
+
+      /* pause tasks before re-acquiring the object's lock */
+      gst_avf_asset_src_stop_reading (self);
+      GST_AVF_ASSET_SRC_LOCK (self);
+
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type,
           &start, &stop_type, &stop);
 
@@ -370,9 +397,9 @@ gst_avasset_src_event (GstPad * pad, GstEvent * event)
         break;
       }
 
-      gst_avasset_src_stop_reading (self);
       if (format != GST_FORMAT_TIME || start_type == GST_SEEK_TYPE_NONE) {
         GST_AVASSET_SRC_UNLOCK(self);
+        gst_avasset_src_start_reading (self);
         res = FALSE;
         break;
       }
@@ -381,10 +408,15 @@ gst_avasset_src_event (GstPad * pad, GstEvent * event)
       }
       gst_avasset_src_send_event (self, gst_event_new_flush_start ());
       [self->reader seekTo: start: stop: &error];
-      newsegment = gst_event_new_new_segment (FALSE, rate, GST_FORMAT_TIME,
-          start, stop, start);
-      gst_avasset_src_send_event (self, gst_event_new_flush_stop ());
-      gst_avasset_src_send_event (self, newsegment);
+
+      gst_segment_init (&segment, GST_FORMAT_TIME);
+      segment.rate = rate;
+      segment.start = start;
+      segment.stop = stop;
+      segment.position = start;
+
+      gst_avasset_src_send_event (self, gst_event_new_flush_stop (TRUE));
+      gst_avasset_src_send_event (self, gst_event_new_segment (&segment));
 
       if (error != NULL) {
         GST_ELEMENT_ERROR (self, RESOURCE, SEEK,
@@ -392,13 +424,15 @@ gst_avasset_src_event (GstPad * pad, GstEvent * event)
         g_error_free(error);
         res = FALSE;
       }
-      gst_avasset_src_start_reading (self);
       GST_AVASSET_SRC_UNLOCK (self);
       gst_event_unref (event);
+
+      /* start tasks after releasing the object's lock */
+      gst_avasset_src_start_reading (self);
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -407,19 +441,68 @@ gst_avasset_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static GstFlowReturn
+gst_avasset_src_send_start_stream (GstAVAssetSrc * self, GstPad * pad)
+{
+  GstEvent *event;
+  gchar *stream_id;
+  GstFlowReturn ret;
+
+  stream_id = gst_pad_create_stream_id (pad, GST_ELEMENT_CAST (self), NULL);
+  GST_DEBUG_OBJECT (self, "Pushing STREAM START");
+  event = gst_event_new_stream_start (stream_id);
+  gst_event_set_group_id (event, gst_util_group_id_next ());
+
+  ret = gst_pad_push_event (pad, event);
+  g_free (stream_id);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_avasset_src_combine_flows (GstAVAssetSrc * self, GstAVAssetReaderMediaType type,
+    GstFlowReturn ret)
+{
+  gboolean has_other_pad;
+  GstFlowReturn last_other_pad_ret;
+
+  GST_AVASSET_SRC_LOCK (self);
+  if (type == GST_AVASSET_READER_MEDIA_TYPE_AUDIO) {
+    self->last_audio_pad_ret = ret;
+    has_other_pad = AVASSET_READER_HAS_VIDEO (ret);
+    last_other_pad_ret = self->last_video_pad_ret;
+  } else if (type == GST_AVASSET_READER_MEDIA_TYPE_VIDEO) {
+    self->last_video_pad_ret = ret;
+    has_other_pad = AVASSET_READER_HAS_AUDIO (ret);
+    last_other_pad_ret = self->last_audio_pad_ret;
+  } else {
+    GST_ERROR ("Unsupported media type");
+    ret = GST_FLOW_ERROR;
+    goto exit;
+  }
+
+  if (!has_other_pad || ret != GST_FLOW_NOT_LINKED)
+    goto exit;
+
+  ret = last_other_pad_ret;
+
+exit:
+  GST_AVASSET_SRC_UNLOCK (self);
+  return ret;
+}
 
 static void
 gst_avasset_src_read_data (GstAVAssetSrc *self, GstPad *pad,
     GstAVAssetReaderMediaType type)
 {
   GstBuffer *buf;
-  GstFlowReturn ret;
+  GstFlowReturn ret, combined_ret;
   GError *error;
 
   OBJC_CALLOUT_BEGIN ();
 
   GST_AVASSET_SRC_LOCK (self);
-  if (self->state == GST_AVASSET_SRC_STATE_STOPPED) {
+  if (self->state != GST_AVASSET_SRC_STATE_READING) {
     GST_AVASSET_SRC_UNLOCK (self);
     goto exit;
   }
@@ -432,19 +515,35 @@ gst_avasset_src_read_data (GstAVAssetSrc *self, GstPad *pad,
       GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Error reading next buffer"),
           ("%s", error->message));
       g_error_free (error);
-      gst_avasset_src_stop_all (self);
+
+      gst_avasset_src_combine_flows (self, type, GST_FLOW_ERROR);
+      gst_pad_pause_task (pad);
       goto exit;
     }
+
     gst_pad_push_event (pad, gst_event_new_eos ());
-    gst_avasset_src_stop_all (self);
+    gst_avasset_src_combine_flows (self, type, GST_FLOW_EOS);
+    gst_pad_pause_task (pad);
     goto exit;
   }
 
   ret = gst_pad_push (pad, buf);
-  if (GST_FLOW_IS_FATAL (ret)) {
-    GST_ELEMENT_ERROR (self, STREAM, FAILED, NULL,
-        ("Error pushing %s buffer on pad", MEDIA_TYPE_TO_STR (type)));
-    gst_avasset_src_stop_all (self);
+  combined_ret = gst_avasset_src_combine_flows (self, type, ret);
+
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING ("Error pushing %s buffer on pad %" GST_PTR_FORMAT
+        ", reason %s", MEDIA_TYPE_TO_STR (type), pad, gst_flow_get_name (ret));
+
+    if (ret == GST_FLOW_EOS) {
+      gst_pad_push_event (pad, gst_event_new_eos ());
+    }
+
+    if (combined_ret != GST_FLOW_OK) {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Internal data stream error."),
+          ("stream stopped reason %s", gst_flow_get_name (ret)));
+    }
+
+    gst_pad_pause_task (pad);
   }
 
 exit:
@@ -466,7 +565,7 @@ gst_avasset_src_read_video (GstAVAssetSrc *self)
 }
 
 static gboolean
-gst_avasset_src_start_task (GstAVAssetSrc *self, GstTask *task)
+gst_avasset_src_start_reader (GstAVAssetSrc * self)
 {
   GError *error = NULL;
   gboolean ret = TRUE;
@@ -478,43 +577,13 @@ gst_avasset_src_start_task (GstAVAssetSrc *self, GstTask *task)
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
         ("AVAssetReader could not start reading"), ("%s", error->message));
     g_error_free (error);
-    gst_avasset_src_stop_all (self);
     ret = FALSE;
     goto exit;
   }
-  gst_task_start (task);
 
 exit:
   OBJC_CALLOUT_END ();
   return ret;
-}
-
-static GstPadLinkReturn
-gst_avasset_src_audio_pad_link (GstPad *pad, GstPad *peer)
-{
-  GstAVAssetSrc *self = GST_AVASSET_SRC (gst_pad_get_parent_element (pad));
-
-  if (!gst_avasset_src_start_task (self, self->audio_task)) {
-    return GST_PAD_LINK_REFUSED;
-  }
-  GST_DEBUG ("Started audio streaming task");
-  g_object_unref (self);
-
-  return GST_PAD_LINK_OK;
-}
-
-static GstPadLinkReturn
-gst_avasset_src_video_pad_link (GstPad *pad, GstPad *peer)
-{
-  GstAVAssetSrc *self = GST_AVASSET_SRC (gst_pad_get_parent_element (pad));
-
-  if (!gst_avasset_src_start_task (self, self->video_task)) {
-    return GST_PAD_LINK_REFUSED;
-  }
-  GST_DEBUG ("Started video streaming task");
-  g_object_unref (self);
-
-  return GST_PAD_LINK_OK;
 }
 
 static gboolean
@@ -539,12 +608,17 @@ gst_avasset_src_send_event (GstAVAssetSrc *self, GstEvent *event)
 static void
 gst_avasset_src_start (GstAVAssetSrc *self)
 {
+  GstSegment segment;
+
   OBJC_CALLOUT_BEGIN ();
   if (self->state == GST_AVASSET_SRC_STATE_STARTED) {
     goto exit;
   }
 
   GST_DEBUG_OBJECT (self, "Creating pads and starting reader");
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.duration = self->reader.duration;
 
   /* We call AVAssetReader's startReading when the pads are linked
    * and no outputs can be added afterwards, so the tracks must be
@@ -561,30 +635,38 @@ gst_avasset_src_start (GstAVAssetSrc *self)
   if (AVASSET_READER_HAS_AUDIO (self)) {
     self->audiopad = gst_pad_new_from_static_template (&audio_factory, "audio");
     gst_pad_set_query_function (self->audiopad,
-        (GstPadQueryFunction) gst_avasset_src_query);
+        gst_avasset_src_query);
     gst_pad_set_event_function(self->audiopad,
-        (GstPadEventFunction) gst_avasset_src_event);
-    gst_pad_set_link_function(self->audiopad,
-        (GstPadLinkFunction) gst_avasset_src_audio_pad_link);
+        gst_avasset_src_event);
+    gst_pad_use_fixed_caps (self->audiopad);
     gst_pad_set_active (self->audiopad, TRUE);
+    gst_avasset_src_send_start_stream (self, self->audiopad);
     gst_pad_set_caps (self->audiopad,
         [self->reader getCaps: GST_AVASSET_READER_MEDIA_TYPE_AUDIO]);
+    gst_pad_push_event (self->audiopad, gst_event_new_caps (
+        [self->reader getCaps: GST_AVASSET_READER_MEDIA_TYPE_AUDIO]));
+    gst_pad_push_event (self->audiopad, gst_event_new_segment (&segment));
     gst_element_add_pad (GST_ELEMENT (self), self->audiopad);
   }
   if (AVASSET_READER_HAS_VIDEO (self)) {
     self->videopad = gst_pad_new_from_static_template (&video_factory, "video");
     gst_pad_set_query_function (self->videopad,
-        (GstPadQueryFunction) gst_avasset_src_query);
+        gst_avasset_src_query);
     gst_pad_set_event_function(self->videopad,
-        (GstPadEventFunction) gst_avasset_src_event);
-    gst_pad_set_link_function(self->videopad,
-        (GstPadLinkFunction) gst_avasset_src_video_pad_link);
+        gst_avasset_src_event);
+    gst_pad_use_fixed_caps (self->videopad);
     gst_pad_set_active (self->videopad, TRUE);
+    gst_avasset_src_send_start_stream (self, self->videopad);
     gst_pad_set_caps (self->videopad,
         [self->reader getCaps: GST_AVASSET_READER_MEDIA_TYPE_VIDEO]);
+    gst_pad_push_event (self->videopad, gst_event_new_caps (
+        [self->reader getCaps: GST_AVASSET_READER_MEDIA_TYPE_VIDEO]));
+    gst_pad_push_event (self->videopad, gst_event_new_segment (&segment));
     gst_element_add_pad (GST_ELEMENT (self), self->videopad);
   }
   gst_element_no_more_pads (GST_ELEMENT (self));
+
+  self->state = GST_AVASSET_SRC_STATE_STARTED;
 
 exit:
   OBJC_CALLOUT_END ();
@@ -600,61 +682,81 @@ gst_avasset_src_stop (GstAVAssetSrc *self)
     goto exit;
   }
 
-  GST_DEBUG ("Stop reading");
+  GST_DEBUG ("Stopping tasks and removing pads");
 
   has_audio = AVASSET_READER_HAS_AUDIO (self);
   has_video = AVASSET_READER_HAS_VIDEO (self);
   [self->reader stop];
 
   if (has_audio) {
+    gst_pad_stop_task (self->audiopad);
     gst_element_remove_pad (GST_ELEMENT (self), self->audiopad);
-    gst_task_stop (self->audio_task);
   }
   if (has_video) {
+    gst_pad_stop_task (self->videopad);
     gst_element_remove_pad (GST_ELEMENT (self), self->videopad);
-    gst_task_stop (self->video_task);
   }
+
+  self->state = GST_AVASSET_SRC_STATE_STOPPED;
 
 exit:
   OBJC_CALLOUT_END ();
 }
 
-static void
+static gboolean
 gst_avasset_src_start_reading (GstAVAssetSrc *self)
 {
-  /* Only start the task here if we were playing before, otherwise wait until
-   * the pad are linked to start the streaming task.
-   */
+  gboolean ret = TRUE;
 
-  if (self->state < GST_AVASSET_SRC_STATE_STARTED) {
-    return;
+  if (self->state != GST_AVASSET_SRC_STATE_STARTED) {
+    goto exit;
   }
 
   GST_DEBUG_OBJECT (self, "Start reading");
 
-  if (GST_TASK_STATE (self->audio_task) == GST_TASK_PAUSED) {
-    gst_task_start (self->audio_task);
+  if ((ret = gst_avasset_src_start_reader (self)) != TRUE) {
+    goto exit;
   }
-  if (GST_TASK_STATE (self->video_task) == GST_TASK_PAUSED) {
-    gst_task_start (self->video_task);
+
+  if (AVASSET_READER_HAS_AUDIO (self)) {
+    ret = gst_pad_start_task (self->audiopad, (GstTaskFunction)gst_avasset_src_read_audio, self, NULL);
+    if (!ret) {
+      GST_ERROR ("Failed to start audio task");
+      goto exit;
+    }
   }
+
+  if (AVASSET_READER_HAS_VIDEO (self)) {
+    ret = gst_pad_start_task (self->videopad, (GstTaskFunction)gst_avasset_src_read_video, self, NULL);
+    if (!ret) {
+      GST_ERROR ("Failed to start video task");
+      goto exit;
+    }
+  }
+
+  self->state = GST_AVASSET_SRC_STATE_READING;
+
+exit:
+  return ret;
 }
 
 static void
-gst_avasset_src_stop_reading (GstAVAssetSrc *self)
+gst_avasset_src_stop_reading (GstAVAssetSrc * self)
 {
   if (self->state != GST_AVASSET_SRC_STATE_READING) {
-      return;
+    return;
   }
 
   GST_DEBUG_OBJECT (self, "Stop reading");
 
-  if (GST_TASK_STATE (self->audio_task) == GST_TASK_STARTED) {
-    gst_task_pause (self->audio_task);
+  if (AVASSET_READER_HAS_AUDIO (self)) {
+    gst_pad_pause_task (self->audiopad);
   }
-  if (GST_TASK_STATE (self->video_task) == GST_TASK_STARTED) {
-    gst_task_pause (self->video_task);
+  if (AVASSET_READER_HAS_VIDEO (self)) {
+    gst_pad_pause_task (self->videopad);
   }
+
+  self->state = GST_AVASSET_SRC_STATE_STARTED;
 }
 
 static void
@@ -663,7 +765,6 @@ gst_avasset_src_stop_all (GstAVAssetSrc *self)
   GST_AVASSET_SRC_LOCK (self);
   gst_avasset_src_stop_reading (self);
   gst_avasset_src_stop (self);
-  self->state = GST_AVASSET_SRC_STATE_STOPPED;
   GST_AVASSET_SRC_UNLOCK (self);
 }
 
@@ -679,30 +780,29 @@ gst_avasset_src_error_quark (void)
 }
 
 static GstURIType
-gst_avasset_src_uri_get_type (void)
+gst_avasset_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
-static gchar **
-gst_avasset_src_uri_get_protocols (void)
+static const gchar * const *
+gst_avasset_src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (gchar *) "file",
-      (gchar *) "ipod-library",  NULL };
+  static const gchar * const protocols[] = { "file", "ipod-library", NULL };
 
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_avasset_src_uri_get_uri (GstURIHandler * handler)
 {
   GstAVAssetSrc *self = GST_AVASSET_SRC (handler);
 
-  return self->uri;
+  return g_strdup (self->uri);
 }
 
 static gboolean
-gst_avasset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_avasset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri, GError **error)
 {
   GstAVAssetSrc *self = GST_AVASSET_SRC (handler);
   NSString *str;
@@ -724,6 +824,9 @@ gst_avasset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
       g_free (self->uri);
     }
     self->uri = g_strdup (uri);
+  } else {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid URI '%s' for ios_assetsrc", self->uri);
   }
   OBJC_CALLOUT_END ();
   return ret;
@@ -747,24 +850,21 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 
 - (NSDictionary *) capsToAudioSettings
 {
-  gint samplerate, channels, depth, width;
+  gint depth;
   gboolean isFloat;
-  GstStructure *s;
+  GstAudioInfo info;
 
   if (!gst_caps_is_fixed (audio_caps))
     return NULL;
 
-  s = gst_caps_get_structure (audio_caps, 0);
-  isFloat = gst_structure_has_name (s, "audio/x-raw-float");
-  gst_structure_get_int (s, "rate", &samplerate);
-  gst_structure_get_int (s, "depth", &depth);
-  gst_structure_get_int (s, "width", &width);
-  gst_structure_get_int (s, "channels", &channels);
+  gst_audio_info_from_caps (&info, audio_caps);
+  isFloat = GST_AUDIO_INFO_IS_FLOAT(&info);
+  depth = GST_AUDIO_INFO_DEPTH(&info);
 
   return [NSDictionary dictionaryWithObjectsAndKeys:
       [NSNumber numberWithInt:kAudioFormatLinearPCM], AVFormatIDKey,
-      [NSNumber numberWithFloat: samplerate], AVSampleRateKey,
-      [NSNumber numberWithInt:channels], AVNumberOfChannelsKey,
+      [NSNumber numberWithFloat:info.rate], AVSampleRateKey,
+      [NSNumber numberWithInt:info.channels], AVNumberOfChannelsKey,
       //[NSData dataWithBytes:&channelLayout length:sizeof(AudioChannelLayout)],
       //AVChannelLayoutKey,
       [NSNumber numberWithInt:depth], AVLinearPCMBitDepthKey,
@@ -801,8 +901,8 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   audio_tracks = [[asset tracksWithMediaType:AVMediaTypeAudio] retain];
   video_tracks = [[asset tracksWithMediaType:AVMediaTypeVideo] retain];
   reader.timeRange = CMTimeRangeMake(kCMTimeZero, asset.duration);
-  GST_INFO ("Found %d video tracks and %d audio tracks",
-      [video_tracks count], [audio_tracks count]);
+  GST_INFO ("Found %lu video tracks and %lu audio tracks",
+      (unsigned long)[video_tracks count], (unsigned long)[audio_tracks count]);
 }
 
 - (id) initWithURI:(gchar*)uri : (GError **)error;
@@ -835,10 +935,8 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 
   /* FIXME: use fixed caps here until we found a way to determine
    * the native audio format */
-  audio_caps = gst_caps_from_string ("audio/x-raw-float, "
-     "endianness = (int) 1234, signed = (boolean) TRUE, "
-     "rate = (int) 44100, channels = (int) 2, "
-     "width= (int) 32, depth = (int) 32");
+  audio_caps = gst_caps_from_string ("audio/x-raw, "
+      "format=F32LE, rate=44100, channels=2, layout=interleaved");
 
   [self initReader: error];
   if (*error) {
@@ -985,14 +1083,13 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
     return NULL;
   }
 
-  buf = gst_core_media_buffer_new (cmbuf);
+  buf = gst_core_media_buffer_new (cmbuf, FALSE);
   dur = CMSampleBufferGetDuration (cmbuf);
   ts = CMSampleBufferGetPresentationTimeStamp (cmbuf);
   if (dur.value != 0) {
     GST_BUFFER_DURATION (buf) = CMTIME_TO_GST_TIME (dur);
   }
   GST_BUFFER_TIMESTAMP (buf) = CMTIME_TO_GST_TIME (ts);
-  gst_buffer_set_caps (buf, caps);
   GST_LOG ("Copying next %s buffer ts:%" GST_TIME_FORMAT " dur:%"
       GST_TIME_FORMAT, MEDIA_TYPE_TO_STR (type),
       GST_TIME_ARGS(GST_BUFFER_TIMESTAMP (buf)),
@@ -1016,8 +1113,8 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 
     track = [video_tracks objectAtIndex: selected_video_track];
     gst_util_double_to_fraction(track.nominalFrameRate, &fr_n, &fr_d);
-    caps = gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('N', 'V', '1', '2'),
+    caps = gst_caps_new_simple ("video/x-raw",
+        "format", G_TYPE_STRING, "NV12",
         "width", G_TYPE_INT, (int) track.naturalSize.width,
         "height", G_TYPE_INT, (int) track.naturalSize.height,
         "framerate", GST_TYPE_FRACTION, fr_n, fr_d, NULL);

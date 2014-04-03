@@ -79,8 +79,7 @@ noinst_HEADERS =				\
 if HAVE_IOS
 
 libgstapplemedia_la_SOURCES +=			\
-	iosassetsrc.m				\
-	iosavassetsrc.m
+	iosassetsrc.m
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,Foundation		\
@@ -102,7 +101,8 @@ endif
 if HAVE_AVFOUNDATION
 
 libgstapplemedia_la_SOURCES +=			\
-	avfvideosrc.m
+	avfvideosrc.m				\
+	iosavassetsrc.m
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,AVFoundation

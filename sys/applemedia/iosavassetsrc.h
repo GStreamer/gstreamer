@@ -22,7 +22,14 @@
 #ifndef __GST_AVASSET_SRC_H__
 #define __GST_AVASSET_SRC_H__
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <gst/gst.h>
+#include <gst/base/base.h>
+#include <gst/audio/audio.h>
+#import <AVFoundation/AVFoundation.h>
 #import <AVFoundation/AVAssetReader.h>
 #import <AVFoundation/AVAssetReaderOutput.h>
 
@@ -100,10 +107,6 @@ struct _GstAVAssetSrc
 
   GstPad *videopad;
   GstPad *audiopad;
-  GstTask *video_task;
-  GstTask *audio_task;
-  GStaticRecMutex video_lock;
-  GStaticRecMutex audio_lock;
   gint selected_video_track;
   gint selected_audio_track;
 
@@ -111,6 +114,9 @@ struct _GstAVAssetSrc
   GstAVAssetSrcState state;
   GMutex lock;
   GstEvent *seek_event;
+
+  GstFlowReturn last_audio_pad_ret;
+  GstFlowReturn last_video_pad_ret;
 
   /* Properties */
   gchar * uri;
