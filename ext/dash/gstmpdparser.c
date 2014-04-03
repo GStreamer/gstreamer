@@ -937,7 +937,7 @@ static gboolean
 gst_mpdparser_get_xml_node_content (xmlNode * a_node, gchar ** content)
 {
   xmlChar *node_content = NULL;
-  gboolean exists = TRUE;
+  gboolean exists = FALSE;
 
   node_content = xmlNodeGetContent (a_node);
   if (node_content) {
@@ -1061,12 +1061,11 @@ gst_mpdparser_parse_content_component_node (GList ** list, xmlNode * a_node)
 static void
 gst_mpdparser_parse_location_node (GList ** list, xmlNode * a_node)
 {
-  gchar *location;
+  gchar *location = NULL;
 
   GST_LOG ("content of Location node:");
-  gst_mpdparser_get_xml_node_content (a_node, &location);
-
-  *list = g_list_append (*list, location);
+  if (gst_mpdparser_get_xml_node_content (a_node, &location))
+    *list = g_list_append (*list, location);
 }
 
 static void
