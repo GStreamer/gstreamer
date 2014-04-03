@@ -2501,6 +2501,7 @@ gst_base_parse_send_buffers (GstBaseParse * parse)
   GSList *send = NULL;
   GstBuffer *buf;
   GstFlowReturn ret = GST_FLOW_OK;
+  gboolean first = TRUE;
 
   send = parse->priv->buffers_send;
 
@@ -2513,6 +2514,13 @@ gst_base_parse_send_buffers (GstBaseParse * parse)
         GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
         GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf));
+
+    /* Make sure the first buffer is always DISCONT. If we split
+     * GOPs inside the parser this is otherwise not guaranteed */
+    if (first) {
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      first = FALSE;
+    }
 
     /* iterate output queue an push downstream */
     ret = gst_pad_push (parse->srcpad, buf);
