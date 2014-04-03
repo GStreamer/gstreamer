@@ -1577,86 +1577,78 @@ no_transport:
   {
     GST_ERROR ("client %p: no transport", client);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
-    g_free (path);
-    return FALSE;
+    goto cleanup_path;
   }
 no_pool:
   {
     GST_ERROR ("client %p: no session pool configured", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
-    g_free (path);
-    return FALSE;
+    goto cleanup_path;
   }
 media_not_found_no_reply:
   {
     GST_ERROR ("client %p: media '%s' not found", client, path);
-    g_free (path);
     /* error reply is already sent */
-    return FALSE;
+    goto cleanup_path;
   }
 media_not_found:
   {
     GST_ERROR ("client %p: media '%s' not found", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    g_free (path);
-    return FALSE;
+    goto cleanup_path;
   }
 control_not_found:
   {
     GST_ERROR ("client %p: no control in path '%s'", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     g_object_unref (media);
-    g_free (path);
-    return FALSE;
+    goto cleanup_path;
   }
 stream_not_found:
   {
     GST_ERROR ("client %p: stream '%s' not found", client, control);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     g_object_unref (media);
-    g_free (path);
-    return FALSE;
+    goto cleanup_path;
   }
 service_unavailable:
   {
     GST_ERROR ("client %p: can't create session", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_object_unref (media);
-    g_free (path);
-    return FALSE;
+    goto cleanup_path;
   }
 sessmedia_unavailable:
   {
     GST_ERROR ("client %p: can't create session media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_object_unref (media);
-    g_object_unref (session);
-    g_free (path);
-    return FALSE;
+    goto cleanup_session;
   }
 configure_media_failed_no_reply:
   {
     GST_ERROR ("client %p: configure_media failed", client);
-    g_object_unref (session);
-    g_free (path);
     /* error reply is already sent */
-    return FALSE;
+    goto cleanup_session;
   }
 unsupported_transports:
   {
     GST_ERROR ("client %p: unsupported transports", client);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
-    gst_rtsp_transport_free (ct);
-    g_object_unref (session);
-    g_free (path);
-    return FALSE;
+    goto cleanup_transport;
   }
 unsupported_client_transport:
   {
     GST_ERROR ("client %p: unsupported client transport", client);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
+    goto cleanup_transport;
+  }
+  {
+  cleanup_transport:
     gst_rtsp_transport_free (ct);
+  cleanup_session:
     g_object_unref (session);
+  cleanup_path:
     g_free (path);
     return FALSE;
   }
