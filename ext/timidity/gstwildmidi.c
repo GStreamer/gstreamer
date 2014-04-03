@@ -417,7 +417,7 @@ gst_wildmidi_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 static GstEvent *
 gst_wildmidi_get_new_segment_event (GstWildmidi * wildmidi, GstFormat format)
 {
-  gint64 start, stop, time;
+  gint64 start = 0, stop = -1, time = 0;
   GstSegment *segment, newseg;
   GstEvent *event;
   GstFormat src_format;
