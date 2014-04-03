@@ -2053,7 +2053,8 @@ calculate_jitter (GstRtpJitterBuffer * jitterbuffer, GstClockTime dts,
   /* jitter is stored in nanoseconds */
   priv->avg_jitter = (diff + (15 * priv->avg_jitter)) >> 4;
 
-  GST_LOG ("dtsdiff %" GST_TIME_FORMAT " rtptime %" GST_TIME_FORMAT
+  GST_LOG_OBJECT (jitterbuffer,
+      "dtsdiff %" GST_TIME_FORMAT " rtptime %" GST_TIME_FORMAT
       ", clock-rate %d, diff %" GST_TIME_FORMAT ", jitter: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (dtsdiff), GST_TIME_ARGS (rtpdiffns), priv->clock_rate,
       GST_TIME_ARGS (diff), GST_TIME_ARGS (priv->avg_jitter));
@@ -2063,7 +2064,8 @@ calculate_jitter (GstRtpJitterBuffer * jitterbuffer, GstClockTime dts,
   /* ERRORS */
 no_time:
   {
-    GST_WARNING ("no dts or no clock-rate");
+    GST_DEBUG_OBJECT (jitterbuffer,
+        "no dts or no clock-rate, can't calculate jitter");
     return;
   }
 }
