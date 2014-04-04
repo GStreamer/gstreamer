@@ -1030,6 +1030,8 @@ gst_event_new_qos (GstQOSType type, gdouble proportion,
  *
  * Get the type, proportion, diff and timestamp in the qos event. See
  * gst_event_new_qos() for more information about the different QoS values.
+ *
+ * @timestamp will be adjusted for any pad offsets of pads it was passing through.
  */
 void
 gst_event_parse_qos (GstEvent * event, GstQOSType * type,
@@ -1053,10 +1055,18 @@ gst_event_parse_qos (GstEvent * event, GstQOSType * type,
     *diff =
         g_value_get_int64 (gst_structure_id_get_value (structure,
             GST_QUARK (DIFF)));
-  if (timestamp)
+  if (timestamp) {
+    gint64 offset = gst_event_get_running_time_offset (event);
+
     *timestamp =
         g_value_get_uint64 (gst_structure_id_get_value (structure,
             GST_QUARK (TIMESTAMP)));
+    /* Catch underflows */
+    if (*timestamp > -offset)
+      *timestamp += offset;
+    else
+      *timestamp = 0;
+  }
 }
 
 /**
