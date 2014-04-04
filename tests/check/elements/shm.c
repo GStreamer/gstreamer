@@ -72,6 +72,8 @@ setup_shm (void)
 static void
 teardown_shm (void)
 {
+  fail_unless (gst_element_set_state (src, GST_STATE_NULL) ==
+      GST_STATE_CHANGE_SUCCESS);
   gst_check_teardown_sink_pad (src);
   gst_check_teardown_src_pad (sink);
   gst_check_teardown_element (src);
