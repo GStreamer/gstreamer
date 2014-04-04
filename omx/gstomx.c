@@ -40,6 +40,8 @@
 #include "gstomxh264enc.h"
 #include "gstomxh263enc.h"
 #include "gstomxaacenc.h"
+#include "gstomxanalogaudiosink.h"
+#include "gstomxhdmiaudiosink.h"
 
 GST_DEBUG_CATEGORY (gstomx_debug);
 #define GST_CAT_DEFAULT gstomx_debug
@@ -2246,6 +2248,7 @@ done:
 typedef GType (*GGetTypeFunction) (void);
 
 static const GGetTypeFunction types[] = {
+  gst_omx_analog_audio_sink_get_type, gst_omx_hdmi_audio_sink_get_type,
   gst_omx_mpeg2_video_dec_get_type, gst_omx_mpeg4_video_dec_get_type,
   gst_omx_h264_dec_get_type, gst_omx_h263_dec_get_type,
   gst_omx_wmv_dec_get_type, gst_omx_mpeg4_video_enc_get_type,
@@ -2266,6 +2269,7 @@ struct TypeOffest
 };
 
 static const struct TypeOffest base_types[] = {
+  {gst_omx_audio_sink_get_type, G_STRUCT_OFFSET (GstOMXAudioSinkClass, cdata)},
   {gst_omx_video_dec_get_type, G_STRUCT_OFFSET (GstOMXVideoDecClass, cdata)},
   {gst_omx_video_enc_get_type, G_STRUCT_OFFSET (GstOMXVideoEncClass, cdata)},
   {gst_omx_audio_enc_get_type, G_STRUCT_OFFSET (GstOMXAudioEncClass, cdata)},
