@@ -275,7 +275,7 @@ fill_picture (GstVaapiDecoderVp8 * decoder, GstVaapiPicture * picture)
   GstVp8Parser *const parser = &priv->parser;
   GstVp8FrameHdr *const frame_hdr = &priv->frame_hdr;
   GstVp8Segmentation *const seg = &parser->segmentation;
-  gint i;
+  gint i, filter_levels;
 
   /* Fill in VAPictureParameterBufferVP8 */
   pic_param->frame_width = priv->width;
@@ -329,11 +329,15 @@ fill_picture (GstVaapiDecoderVp8 * decoder, GstVaapiPicture * picture)
     pic_param->loop_filter_deltas_mode[i] =
         parser->mb_lf_adjust.mb_mode_delta[i];
   }
-  if ((pic_param->pic_fields.bits.version == 0)
-      || (pic_param->pic_fields.bits.version == 1)) {
-    pic_param->pic_fields.bits.loop_filter_disable =
-        pic_param->loop_filter_level[0] == 0;
+
+  /* In decoding, the only loop filter settings that matter are those
+     in the frame header (9.1) */
+  filter_levels = pic_param->loop_filter_level[0];
+  if (seg->segmentation_enabled) {
+    for (i = 1; i < 4; i++)
+      filter_levels |= pic_param->loop_filter_level[i];
   }
+  pic_param->pic_fields.bits.loop_filter_disable = filter_levels == 0;
 
   pic_param->prob_skip_false = frame_hdr->prob_skip_false;
   pic_param->prob_intra = frame_hdr->prob_intra;
