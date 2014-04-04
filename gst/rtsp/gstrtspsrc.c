@@ -1705,7 +1705,7 @@ parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
   if (data == NULL)
     return FALSE;
 
-  msg = gst_mikey_message_new_from_data (data, size);
+  msg = gst_mikey_message_new_from_data (data, size, NULL, NULL);
   if (msg == NULL)
     return FALSE;
 
@@ -1766,13 +1766,23 @@ parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
     goto done;
   else {
     GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
+    const GstMIKEYPayload *sub;
+    GstMIKEYPayloadKeyData *pkd;
     GstBuffer *buf;
 
     if (p->enc_alg != GST_MIKEY_ENC_NULL || p->mac_alg != GST_MIKEY_MAC_NULL)
       goto done;
 
+    if (!(sub = gst_mikey_payload_kemac_get_sub (payload, 0)))
+      goto done;
+
+    if (sub->type != GST_MIKEY_PT_KEY_DATA)
+      goto done;
+
+    pkd = (GstMIKEYPayloadKeyData *) sub;
     buf =
-        gst_buffer_new_wrapped (g_memdup (p->enc_data, p->enc_len), p->enc_len);
+        gst_buffer_new_wrapped (g_memdup (pkd->key_data, pkd->key_len),
+        pkd->key_len);
     gst_caps_set_simple (caps, "srtp-key", GST_TYPE_BUFFER, buf, NULL);
   }
 
@@ -5814,7 +5824,7 @@ gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
   gsize size;
   guint i;
   GstMIKEYMessage *msg;
-  GstMIKEYPayload *payload;
+  GstMIKEYPayload *payload, *pkd;
   guint8 byte;
 #define KEY_SIZE 30
 
@@ -5858,12 +5868,18 @@ gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
       &byte);
   gst_mikey_message_add_payload (msg, payload);
 
+  /* make unencrypted KEMAC */
+  payload = gst_mikey_payload_new (GST_MIKEY_PT_KEMAC);
+  gst_mikey_payload_kemac_set (payload, GST_MIKEY_ENC_NULL, GST_MIKEY_MAC_NULL);
   /* add the key in KEMAC */
-  gst_mikey_message_add_kemac (msg, GST_MIKEY_ENC_NULL, KEY_SIZE, key_data,
-      GST_MIKEY_MAC_NULL, NULL);
+  pkd = gst_mikey_payload_new (GST_MIKEY_PT_KEY_DATA);
+  gst_mikey_payload_key_data_set_key (pkd, GST_MIKEY_KD_TEK, KEY_SIZE,
+      key_data);
+  gst_mikey_payload_kemac_add_sub (payload, pkd);
+  gst_mikey_message_add_payload (msg, payload);
 
   /* now serialize this to bytes */
-  bytes = gst_mikey_message_to_bytes (msg);
+  bytes = gst_mikey_message_to_bytes (msg, NULL, NULL);
   gst_mikey_message_free (msg);
   /* and make it into base64 */
   data = g_bytes_get_data (bytes, &size);
