@@ -482,6 +482,10 @@ gboolean        gst_event_has_name              (GstEvent *event, const gchar *n
 guint32         gst_event_get_seqnum            (GstEvent *event);
 void            gst_event_set_seqnum            (GstEvent *event, guint32 seqnum);
 
+/* accumulated pad offsets for the event */
+gint64          gst_event_get_running_time_offset (GstEvent *event);
+void            gst_event_set_running_time_offset (GstEvent *event, gint64 offset);
+
 /* Stream start event */
 GstEvent *      gst_event_new_stream_start      (const gchar *stream_id) G_GNUC_MALLOC;
 void            gst_event_parse_stream_start    (GstEvent *event, const gchar **stream_id);

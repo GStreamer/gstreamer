@@ -510,6 +510,7 @@ EXPORTS
 	gst_element_unlink_pads
 	gst_error_get_message
 	gst_event_copy_segment
+	gst_event_get_running_time_offset
 	gst_event_get_seqnum
 	gst_event_get_structure
 	gst_event_get_type
@@ -552,6 +553,7 @@ EXPORTS
 	gst_event_parse_toc
 	gst_event_parse_toc_select
 	gst_event_set_group_id
+	gst_event_set_running_time_offset
 	gst_event_set_seqnum
 	gst_event_set_stream_flags
 	gst_event_type_flags_get_type

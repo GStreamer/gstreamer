@@ -1055,6 +1055,9 @@ gst_event_has_name
 gst_event_get_seqnum
 gst_event_set_seqnum
 
+gst_event_get_running_time_offset
+gst_event_set_running_time_offset
+
 gst_event_new_flush_start
 gst_event_new_flush_stop
 gst_event_parse_flush_stop

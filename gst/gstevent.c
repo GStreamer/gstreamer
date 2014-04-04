@@ -90,6 +90,7 @@ typedef struct
   GstEvent event;
 
   GstStructure *structure;
+  gint64 running_time_offset;
 } GstEventImpl;
 
 #define GST_EVENT_STRUCTURE(e)  (((GstEventImpl *)(e))->structure)
@@ -251,6 +252,10 @@ _gst_event_copy (GstEvent * event)
   } else {
     GST_EVENT_STRUCTURE (copy) = NULL;
   }
+
+  ((GstEventImpl *) copy)->running_time_offset =
+      ((GstEventImpl *) event)->running_time_offset;
+
   return GST_EVENT_CAST (copy);
 }
 
@@ -264,6 +269,7 @@ gst_event_init (GstEventImpl * event, GstEventType type)
   GST_EVENT_TYPE (event) = type;
   GST_EVENT_TIMESTAMP (event) = GST_CLOCK_TIME_NONE;
   GST_EVENT_SEQNUM (event) = gst_util_seqnum_next ();
+  event->running_time_offset = 0;
 }
 
 
@@ -440,6 +446,54 @@ gst_event_set_seqnum (GstEvent * event, guint32 seqnum)
   g_return_if_fail (GST_IS_EVENT (event));
 
   GST_EVENT_SEQNUM (event) = seqnum;
+}
+
+/**
+ * gst_event_get_running_time_offset:
+ * @event: A #GstEvent.
+ *
+ * Retrieve the accumulated running time offset of the event.
+ *
+ * Events passing through #GstPads that have a running time
+ * offset set via gst_pad_set_offset() will get their offset
+ * adjusted according to the pad's offset.
+ *
+ * If the event contains any information that related to the
+ * running time, this information will need to be updated
+ * before usage with this offset.
+ *
+ * Returns: The event's running time offset
+ *
+ * MT safe.
+ *
+ * Since: 1.4
+ */
+gint64
+gst_event_get_running_time_offset (GstEvent * event)
+{
+  g_return_val_if_fail (GST_IS_EVENT (event), 0);
+
+  return ((GstEventImpl *) event)->running_time_offset;
+}
+
+/**
+ * gst_event_set_running_time_offset:
+ * @event: A #GstEvent.
+ * @offset: A the new running time offset
+ *
+ * Set the running time offset of a event. See
+ * gst_event_get_running_time_offset() for more information.
+ *
+ * MT safe.
+ *
+ * Since: 1.4
+ */
+void
+gst_event_set_running_time_offset (GstEvent * event, gint64 offset)
+{
+  g_return_if_fail (GST_IS_EVENT (event));
+
+  ((GstEventImpl *) event)->running_time_offset = offset;
 }
 
 /**
