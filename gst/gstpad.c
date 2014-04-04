@@ -601,20 +601,35 @@ restart:
 
 /* should be called with LOCK */
 static GstEvent *
-apply_pad_offset (GstPad * pad, GstEvent * event)
+apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream)
 {
   /* check if we need to adjust the segment */
   if (pad->offset != 0) {
-    GstSegment segment;
-
-    /* copy segment values */
-    gst_event_copy_segment (event, &segment);
-    gst_event_unref (event);
+    gint64 offset;
 
     GST_DEBUG_OBJECT (pad, "apply pad offset %" GST_TIME_FORMAT,
         GST_TIME_ARGS (pad->offset));
-    gst_segment_offset_running_time (&segment, segment.format, pad->offset);
-    event = gst_event_new_segment (&segment);
+
+    if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+      GstSegment segment;
+
+      g_assert (!upstream);
+
+      /* copy segment values */
+      gst_event_copy_segment (event, &segment);
+      gst_event_unref (event);
+
+      gst_segment_offset_running_time (&segment, segment.format, pad->offset);
+      event = gst_event_new_segment (&segment);
+    }
+
+    event = gst_event_make_writable (event);
+    offset = gst_event_get_running_time_offset (event);
+    if (upstream)
+      offset -= pad->offset;
+    else
+      offset += pad->offset;
+    gst_event_set_running_time_offset (event, offset);
   }
   return event;
 }
@@ -3339,6 +3354,13 @@ gst_pad_get_offset (GstPad * pad)
   return result;
 }
 
+static gboolean
+mark_event_not_received (GstPad * pad, PadEvent * ev, gpointer user_data)
+{
+  ev->received = FALSE;
+  return TRUE;
+}
+
 /**
  * gst_pad_set_offset:
  * @pad: a #GstPad
@@ -3349,8 +3371,6 @@ gst_pad_get_offset (GstPad * pad)
 void
 gst_pad_set_offset (GstPad * pad, gint64 offset)
 {
-  PadEvent *ev;
-
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_OBJECT_LOCK (pad);
@@ -3361,16 +3381,9 @@ gst_pad_set_offset (GstPad * pad, gint64 offset)
   pad->offset = offset;
   GST_DEBUG_OBJECT (pad, "changed offset to %" G_GINT64_FORMAT, offset);
 
-  /* sinkpads will apply their offset the next time a segment
-   * event is received. */
-  if (GST_PAD_IS_SINK (pad))
-    goto done;
-
-  /* resend the last segment event on next buffer push */
-  if ((ev = find_event_by_type (pad, GST_EVENT_SEGMENT, 0))) {
-    ev->received = FALSE;
-    GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-  }
+  /* resend all sticky events with updated offset on next buffer push */
+  events_foreach (pad, mark_event_not_received, NULL);
+  GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
 
 done:
   GST_OBJECT_UNLOCK (pad);
@@ -4702,6 +4715,10 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
   GstPad *peerpad;
   GstEventType event_type;
 
+  /* pass the adjusted event on. We need to do this even if
+   * there is no peer pad because of the probes. */
+  event = apply_pad_offset (pad, event, GST_PAD_IS_SINK (pad));
+
   /* Two checks to be made:
    * . (un)set the FLUSHING flag for flushing events,
    * . handle pad blocking */
@@ -4735,11 +4752,6 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
        */
 
       switch (GST_EVENT_TYPE (event)) {
-        case GST_EVENT_SEGMENT:
-          /* pass the adjusted segment event on. We need to do this even if
-           * there is no peer pad because of the probes. */
-          event = apply_pad_offset (pad, event);
-          break;
         case GST_EVENT_RECONFIGURE:
           if (GST_PAD_IS_SINK (pad))
             GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
@@ -4993,6 +5005,9 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
   GstObject *parent;
 
   GST_OBJECT_LOCK (pad);
+
+  event = apply_pad_offset (pad, event, GST_PAD_IS_SRC (pad));
+
   if (GST_PAD_IS_SINK (pad))
     serialized = GST_EVENT_IS_SERIALIZED (event);
   else
@@ -5054,14 +5069,6 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
 
         if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
           goto eos;
-      }
-
-      switch (GST_EVENT_TYPE (event)) {
-        case GST_EVENT_SEGMENT:
-          event = apply_pad_offset (pad, event);
-          break;
-        default:
-          break;
       }
       break;
   }
