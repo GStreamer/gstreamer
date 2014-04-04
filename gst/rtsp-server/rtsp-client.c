@@ -1484,13 +1484,14 @@ handle_mikey_data (GstRTSPClient * client, GstRTSPContext * ctx,
   guint i, n_cs;
   GstCaps *caps = NULL;
   GstMIKEYPayloadKEMAC *kemac;
+  const GstMIKEYPayloadKeyData *pkd;
   GstBuffer *key;
 
   /* the MIKEY message contains a CSB or crypto session bundle. It is a
    * set of Crypto Sessions protected with the same master key.
    * In the context of SRTP, an RTP and its RTCP stream is part of a
    * crypto session */
-  if ((msg = gst_mikey_message_new_from_data (data, size)) == NULL)
+  if ((msg = gst_mikey_message_new_from_data (data, size, NULL, NULL)) == NULL)
     goto parse_failed;
 
   /* we can only handle SRTP crypto sessions for now */
@@ -1513,10 +1514,13 @@ handle_mikey_data (GstRTSPClient * client, GstRTSPContext * ctx,
       || kemac->mac_alg != GST_MIKEY_MAC_NULL)
     goto unsupported_encryption;
 
-  /* FIXME get Key data sub-payload */
+  /* get Key data sub-payload */
+  pkd = (const GstMIKEYPayloadKeyData *)
+      gst_mikey_payload_kemac_get_sub (&kemac->pt, 0);
+
   key =
-      gst_buffer_new_wrapped (g_memdup (kemac->enc_data, kemac->enc_len),
-      kemac->enc_len);
+      gst_buffer_new_wrapped (g_memdup (pkd->key_data, pkd->key_len),
+      pkd->key_len);
 
   /* go over all crypto sessions and create the security policy for each
    * SSRC */

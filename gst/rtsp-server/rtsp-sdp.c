@@ -180,7 +180,7 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
     const GValue *val;
     const gchar *srtpcipher, *srtpauth, *srtcpcipher, *srtcpauth;
     GstMIKEYMessage *msg;
-    GstMIKEYPayload *payload;
+    GstMIKEYPayload *payload, *pkd;
     GBytes *bytes;
     GstMapInfo info;
     const guint8 *data;
@@ -239,14 +239,23 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
         &byte);
     gst_mikey_message_add_payload (msg, payload);
 
-    /* add the key in KEMAC */
+    /* make unencrypted KEMAC */
+    payload = gst_mikey_payload_new (GST_MIKEY_PT_KEMAC);
+    gst_mikey_payload_kemac_set (payload, GST_MIKEY_ENC_NULL,
+        GST_MIKEY_MAC_NULL);
+
+    /* add the key in key data */
+    pkd = gst_mikey_payload_new (GST_MIKEY_PT_KEY_DATA);
     gst_buffer_map (srtpkey, &info, GST_MAP_READ);
-    gst_mikey_message_add_kemac (msg, GST_MIKEY_ENC_NULL, info.size, info.data,
-        GST_MIKEY_MAC_NULL, NULL);
+    gst_mikey_payload_key_data_set_key (pkd, GST_MIKEY_KD_TEK, info.size,
+        info.data);
     gst_buffer_unmap (srtpkey, &info);
+    /* add key data to KEMAC */
+    gst_mikey_payload_kemac_add_sub (payload, pkd);
+    gst_mikey_message_add_payload (msg, payload);
 
     /* now serialize this to bytes */
-    bytes = gst_mikey_message_to_bytes (msg);
+    bytes = gst_mikey_message_to_bytes (msg, NULL, NULL);
     gst_mikey_message_free (msg);
     /* and make it into base64 */
     data = g_bytes_get_data (bytes, &size);
