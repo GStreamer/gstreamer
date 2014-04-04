@@ -346,7 +346,7 @@ gst_xvimage_allocator_alloc (GstXvImageAllocator * allocator, gint im_format,
   int (*handler) (Display *, XErrorEvent *);
   gboolean success = FALSE;
   GstXvContext *context;
-  gint align = 15, offset;
+  gint align, offset;
   GstXvImageMemory *mem;
 
   context = allocator->context;
@@ -453,8 +453,9 @@ gst_xvimage_allocator_alloc (GstXvImageAllocator * allocator, gint im_format,
     }
 
     /* get shared memory */
+    align = 0;
     mem->SHMInfo.shmid =
-        shmget (IPC_PRIVATE, mem->xvimage->data_size + align, IPC_CREAT | 0777);
+        shmget (IPC_PRIVATE, mem->xvimage->data_size, IPC_CREAT | 0777);
     if (mem->SHMInfo.shmid == -1)
       goto shmget_failed;
 
@@ -489,6 +490,7 @@ gst_xvimage_allocator_alloc (GstXvImageAllocator * allocator, gint im_format,
       goto create_failed;
 
     /* we have to use the returned data_size for our image size */
+    align = 15;                 /* g_malloc aligns to 8, we need 16 */
     mem->xvimage->data = g_malloc (mem->xvimage->data_size + align);
 
     XSync (context->disp, FALSE);
