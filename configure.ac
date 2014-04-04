@@ -958,43 +958,48 @@ case $host in
       fi
     fi
     ;;
-  i386*-darwin* | x86_64*-darwin*)
-    dnl Only osx supports cocoa. ios requires EAGL.
-    if test "x$NEED_WGL" = "xyes"; then
-      AC_MSG_ERROR([WGL is not available on Mac OS X])
-    fi
-    if test "x$NEED_EGL" = "xyes"; then
-      AC_MSG_ERROR([EGL is not available on Mac OS X])
-    fi
-    if test "x$NEED_GLES2" = "xyes"; then
-      AC_MSG_ERROR([OpenGL|ES 2.0 is not supported on your platform yet])
-    fi
-
-    if test "x$NEED_COCOA" != "xno"; then
-      GL_LIBS="$LIBS -framework OpenGL -framework Cocoa"
-      GL_CFLAGS="$GL_CFLAGS"
-      USE_COCOA=yes
-      HAVE_WINDOW_COCOA=yes
-      USE_OPENGL=yes
-    fi
-
-    if test "x$USE_GLX" = "xyes"; then
-      if test "x$HAVE_X" = "xyes"; then
-        if test "x$NEED_X11" != "xno"; then
-          GL_LIBS="$GL_LIBS $X_LIBS"
-          GL_CFLAGS="$GL_CFLAGS $X_CFLAGS"
-          HAVE_WINDOW_X11=yes
-        fi
+  *-darwin*)
+    if test "x$HAVE_IOS" = "xyes"; then
+      dnl iOS requires EAGL, which we don't support yet
+      AC_MSG_WARN([OpenGL support not ported to iOS yet])
+    else
+      dnl Only osx supports cocoa.
+      if test "x$NEED_WGL" = "xyes"; then
+        AC_MSG_ERROR([WGL is not available on Mac OS X])
+      fi
+      if test "x$NEED_EGL" = "xyes"; then
+        AC_MSG_ERROR([EGL is not available on Mac OS X])
+      fi
+      if test "x$NEED_GLES2" = "xyes"; then
+        AC_MSG_ERROR([OpenGL|ES 2.0 is not supported on your platform yet])
       fi
 
-      if test "x$HAVE_GL" = "xyes"; then
-        if test "x$NEED_GL" != "xno"; then
-          GL_LIBS="$GL_LIBS -lGL"
-        fi
-        if test "x$HAVE_GLU" = "xyes"; then
-          GL_LIBS="$GL_LIBS -lGLU"
-        fi
+      if test "x$NEED_COCOA" != "xno"; then
+        GL_LIBS="$LIBS -framework OpenGL -framework Cocoa"
+        GL_CFLAGS="$GL_CFLAGS"
+        USE_COCOA=yes
+        HAVE_WINDOW_COCOA=yes
         USE_OPENGL=yes
+      fi
+
+      if test "x$USE_GLX" = "xyes"; then
+        if test "x$HAVE_X" = "xyes"; then
+          if test "x$NEED_X11" != "xno"; then
+            GL_LIBS="$GL_LIBS $X_LIBS"
+            GL_CFLAGS="$GL_CFLAGS $X_CFLAGS"
+            HAVE_WINDOW_X11=yes
+          fi
+        fi
+
+        if test "x$HAVE_GL" = "xyes"; then
+          if test "x$NEED_GL" != "xno"; then
+            GL_LIBS="$GL_LIBS -lGL"
+          fi
+          if test "x$HAVE_GLU" = "xyes"; then
+            GL_LIBS="$GL_LIBS -lGLU"
+          fi
+          USE_OPENGL=yes
+        fi
       fi
     fi
     ;;
