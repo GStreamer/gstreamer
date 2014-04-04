@@ -213,7 +213,7 @@ ximage_memory_alloc (GstXImageBufferPool * xpool)
   int (*handler) (Display *, XErrorEvent *);
   gboolean success = FALSE;
   GstXContext *xcontext;
-  gint width, height, align = 15, offset;
+  gint width, height, align, offset;
   GstXImageMemory *mem;
 
   ximagesink = xpool->sink;
@@ -276,6 +276,7 @@ ximage_memory_alloc (GstXImageBufferPool * xpool)
         mem->size, width, mem->ximage->bytes_per_line);
 
     /* get shared memory */
+    align = 0;
     mem->SHMInfo.shmid =
         shmget (IPC_PRIVATE, mem->size + align, IPC_CREAT | 0777);
     if (mem->SHMInfo.shmid == -1)
@@ -330,6 +331,8 @@ ximage_memory_alloc (GstXImageBufferPool * xpool)
     allocsize =
         GST_ROUND_UP_4 (mem->ximage->bytes_per_line) * mem->ximage->height;
 
+    /* we want 16 byte aligned memory, g_malloc may only give 8 */
+    align = 15;
     mem->ximage->data = g_malloc (allocsize + align);
     GST_LOG_OBJECT (ximagesink,
         "non-XShm image size is %" G_GSIZE_FORMAT " (alloced: %u), width %d, "
