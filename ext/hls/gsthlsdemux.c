@@ -122,6 +122,8 @@ static GstFlowReturn gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream
 static gboolean gst_hls_demux_select_bitrate (GstAdaptiveDemuxStream * stream,
     guint64 bitrate);
 static void gst_hls_demux_reset (GstAdaptiveDemux * demux);
+static gboolean gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux,
+    gint64 * start, gint64 * stop);
 
 #define gst_hls_demux_parent_class parent_class
 G_DEFINE_TYPE (GstHLSDemux, gst_hls_demux, GST_TYPE_ADAPTIVE_DEMUX);
@@ -195,6 +197,7 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
       "Andoni Morales Alastruey <ylatuya@gmail.com>");
 
   adaptivedemux_class->is_live = gst_hls_demux_is_live;
+  adaptivedemux_class->get_live_seek_range = gst_hls_demux_get_live_seek_range;
   adaptivedemux_class->get_duration = gst_hls_demux_get_duration;
   adaptivedemux_class->get_manifest_update_interval =
       gst_hls_demux_get_manifest_update_interval;
@@ -1294,4 +1297,13 @@ gst_hls_demux_get_manifest_update_interval (GstAdaptiveDemux * demux)
 
   return gst_util_uint64_scale (gst_m3u8_client_get_target_duration
       (hlsdemux->client), G_USEC_PER_SEC, GST_SECOND);
+}
+
+static gboolean
+gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
+    gint64 * stop)
+{
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+
+  return gst_m3u8_client_get_seek_range (hlsdemux->client, start, stop);
 }
