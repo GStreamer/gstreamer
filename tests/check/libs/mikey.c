@@ -55,7 +55,7 @@ GST_START_TEST (create_common)
   fail_unless (msg->CSB_id == 0x12345678);
   fail_unless (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP);
 
-  bytes = gst_mikey_message_to_bytes (msg);
+  bytes = gst_mikey_message_to_bytes (msg, NULL, NULL);
   data = g_bytes_get_data (bytes, &size);
   fail_unless (data != NULL);
   fail_unless (size == 10);
@@ -67,7 +67,7 @@ GST_START_TEST (create_common)
   fail_unless (gst_mikey_message_add_cs_srtp (msg, 2, 0x23456789, 1));
   fail_unless (gst_mikey_message_get_n_cs (msg) == 2);
 
-  bytes = gst_mikey_message_to_bytes (msg);
+  bytes = gst_mikey_message_to_bytes (msg, NULL, NULL);
   data = g_bytes_get_data (bytes, &size);
   fail_unless (size == 28);
   fail_unless (memcmp (data + 10, test_data2, 18) == 0);
@@ -113,10 +113,11 @@ GST_END_TEST
 GST_START_TEST (create_payloads)
 {
   GstMIKEYMessage *msg;
-  GstMIKEYPayload *payload;
-  const GstMIKEYPayload *cp;
+  GstMIKEYPayload *payload, *kp;
+  const GstMIKEYPayload *cp, *cp2;
   const GstMIKEYPayloadKEMAC *p;
   const GstMIKEYPayloadT *pt;
+  const GstMIKEYPayloadKeyData *pkd;
   const guint8 ntp_data[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
   const guint8 edata[] = { 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
     0x90, 0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xf0, 0x10
@@ -147,32 +148,37 @@ GST_START_TEST (create_payloads)
   fail_unless (payload->type == GST_MIKEY_PT_T);
   fail_unless (gst_mikey_message_get_n_payloads (msg) == 1);
 
-  bytes = gst_mikey_message_to_bytes (msg);
+  bytes = gst_mikey_message_to_bytes (msg, NULL, NULL);
   data = g_bytes_get_data (bytes, &size);
   fail_unless (data != NULL);
   fail_unless (size == 20);
   g_bytes_unref (bytes);
 
-  fail_unless (gst_mikey_message_add_kemac (msg, GST_MIKEY_ENC_NULL, 16,
-          edata, GST_MIKEY_MAC_NULL, NULL));
+  payload = gst_mikey_payload_new (GST_MIKEY_PT_KEMAC);
+  fail_unless (gst_mikey_payload_kemac_set (payload, GST_MIKEY_ENC_NULL,
+          GST_MIKEY_MAC_NULL));
+  /* add the edata as a key payload */
+  kp = gst_mikey_payload_new (GST_MIKEY_PT_KEY_DATA);
+  gst_mikey_payload_key_data_set_key (kp, GST_MIKEY_KD_TEK,
+      sizeof (edata), edata);
+  fail_unless (gst_mikey_payload_kemac_add_sub (payload, kp));
+  fail_unless (gst_mikey_message_add_payload (msg, payload));
   fail_unless (gst_mikey_message_get_n_payloads (msg) == 2);
-  p = (GstMIKEYPayloadKEMAC *) gst_mikey_message_get_payload (msg, 1);
 
+  p = (GstMIKEYPayloadKEMAC *) gst_mikey_message_get_payload (msg, 1);
   fail_unless (p->enc_alg == GST_MIKEY_ENC_NULL);
-  fail_unless (p->enc_len == 16);
-  fail_unless (memcmp (p->enc_data, edata, 16) == 0);
   fail_unless (p->mac_alg == GST_MIKEY_MAC_NULL);
-  fail_unless (p->mac == NULL);
+  fail_unless (gst_mikey_payload_kemac_get_n_sub (&p->pt) == 1);
 
   fail_unless ((cp = gst_mikey_message_get_payload (msg, 0)) != NULL);
   fail_unless (cp->type == GST_MIKEY_PT_T);
   fail_unless ((cp = gst_mikey_message_get_payload (msg, 1)) != NULL);
   fail_unless (cp->type == GST_MIKEY_PT_KEMAC);
 
-  bytes = gst_mikey_message_to_bytes (msg);
+  bytes = gst_mikey_message_to_bytes (msg, NULL, NULL);
   gst_mikey_message_free (msg);
 
-  msg = gst_mikey_message_new_from_bytes (bytes);
+  msg = gst_mikey_message_new_from_bytes (bytes, NULL, NULL);
   fail_unless (msg != NULL);
   g_bytes_unref (bytes);
   fail_unless (gst_mikey_message_get_n_payloads (msg) == 2);
@@ -180,6 +186,19 @@ GST_START_TEST (create_payloads)
   fail_unless (cp->type == GST_MIKEY_PT_T);
   fail_unless ((cp = gst_mikey_message_get_payload (msg, 1)) != NULL);
   fail_unless (cp->type == GST_MIKEY_PT_KEMAC);
+
+  fail_unless ((cp2 = gst_mikey_payload_kemac_get_sub (cp, 0)) != NULL);
+  fail_unless (cp2->type == GST_MIKEY_PT_KEY_DATA);
+  pkd = (GstMIKEYPayloadKeyData *) cp2;
+
+  fail_unless (pkd->key_type == GST_MIKEY_KD_TEK);
+  fail_unless (pkd->key_len == sizeof (edata));
+  fail_unless (memcmp (pkd->key_data, edata, sizeof (edata)) == 0);
+  fail_unless (pkd->salt_len == 0);
+  fail_unless (pkd->salt_data == 0);
+  fail_unless (pkd->kv_type == GST_MIKEY_KV_NULL);
+
+
   gst_mikey_message_free (msg);
 }
 

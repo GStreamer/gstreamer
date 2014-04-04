@@ -27,6 +27,8 @@
 G_BEGIN_DECLS
 
 typedef struct _GstMIKEYMessage GstMIKEYMessage;
+typedef struct _GstMIKEYEncryptInfo GstMIKEYEncryptInfo;
+typedef struct _GstMIKEYDecryptInfo GstMIKEYDecryptInfo;
 
 /**
  * GST_MIKEY_VERSION:
@@ -206,10 +208,8 @@ typedef enum
  * GstMIKEYPayloadKEMAC:
  * @pt: the common #GstMIKEYPayload
  * @enc_alg: the #GstMIKEYEncAlg
- * @enc_len: the length of @enc_data
- * @enc_data: encryption data
  * @mac_alg: the #GstMIKEYMacAlg
- * @mac: the mac
+ * @subpayload: the subpayloads
  *
  * A structure holding the KEMAC payload
  */
@@ -217,16 +217,18 @@ typedef struct {
   GstMIKEYPayload pt;
 
   GstMIKEYEncAlg  enc_alg;
-  guint16         enc_len;
-  guint8         *enc_data;
   GstMIKEYMacAlg  mac_alg;
-  guint8         *mac;
+  GArray *subpayloads;
 } GstMIKEYPayloadKEMAC;
 
-gboolean               gst_mikey_payload_kemac_set   (GstMIKEYPayload *payload,
-                                                      GstMIKEYEncAlg enc_alg,
-                                                      guint16 enc_len, const guint8 *enc_data,
-                                                      GstMIKEYMacAlg mac_alg, const guint8 *mac);
+gboolean                gst_mikey_payload_kemac_set        (GstMIKEYPayload *payload,
+                                                            GstMIKEYEncAlg enc_alg,
+                                                            GstMIKEYMacAlg mac_alg);
+guint                   gst_mikey_payload_kemac_get_n_sub  (const GstMIKEYPayload *payload);
+const GstMIKEYPayload * gst_mikey_payload_kemac_get_sub    (const GstMIKEYPayload *payload, guint idx);
+gboolean                gst_mikey_payload_kemac_remove_sub (GstMIKEYPayload *payload, guint idx);
+gboolean                gst_mikey_payload_kemac_add_sub    (GstMIKEYPayload *payload,
+                                                            GstMIKEYPayload *newpay);
 
 /**
  * GstMIKEYCacheType:
@@ -404,8 +406,75 @@ typedef struct {
   guint8 *rand;
 } GstMIKEYPayloadRAND;
 
-gboolean   gst_mikey_payload_rand_set   (GstMIKEYPayload *payload,
-                                         guint8 len, const guint8 *rand);
+gboolean   gst_mikey_payload_rand_set     (GstMIKEYPayload *payload,
+                                           guint8 len, const guint8 *rand);
+
+/**
+ * GstMIKEYKeyDataType:
+ * @GST_MIKEY_KD_TGK: a TEK Generation Key
+ * @GST_MIKEY_KD_TEK: Traffic-Encrypting Key
+ *
+ * The type of key.
+ */
+typedef enum
+{
+  GST_MIKEY_KD_TGK      = 0,
+  GST_MIKEY_KD_TEK      = 2,
+} GstMIKEYKeyDataType;
+
+/**
+ * GstMIKEYKVType:
+ * @GST_MIKEY_KV_NULL: No specific usage rule
+ * @GST_MIKEY_KV_SPI: The key is associated with the SPI/MKI
+ * @GST_MIKEY_KV_INTERVAL: The key has a start and expiration time
+ *
+ * The key validity type
+ */
+typedef enum
+{
+  GST_MIKEY_KV_NULL      = 0,
+  GST_MIKEY_KV_SPI       = 1,
+  GST_MIKEY_KV_INTERVAL  = 2,
+} GstMIKEYKVType;
+
+/**
+ * GstMIKEYPayloadKeyData:
+ * @pt: the payload header
+ * @type: the #GstMIKEYKeyDataType of @key_data
+ * @key_len: length of @key_data
+ * @key_dat: the key data
+ * @salt_len: the length of @salt_data, can be 0
+ * @salt_data: salt data
+ * @kv_type: the Key Validity type
+ * @kv_len: length of @kv_data
+ * @kv_data: key validity data
+ *
+ * The Key data payload contains key material. It should be added as sub
+ * payload to the KEMAC.
+ */
+typedef struct {
+  GstMIKEYPayload pt;
+
+  GstMIKEYKeyDataType key_type;
+  guint16  key_len;
+  guint8  *key_data;
+  guint16  salt_len;
+  guint8  *salt_data;
+  GstMIKEYKVType kv_type;
+  guint8   kv_len[2];
+  guint8  *kv_data[2];
+} GstMIKEYPayloadKeyData;
+
+gboolean   gst_mikey_payload_key_data_set_key      (GstMIKEYPayload *payload,
+                                                    GstMIKEYKeyDataType key_type,
+                                                    guint16 key_len, const guint8 *key_data);
+gboolean   gst_mikey_payload_key_data_set_salt     (GstMIKEYPayload *payload,
+                                                    guint16 salt_len, const guint8 *salt_data);
+gboolean   gst_mikey_payload_key_data_set_spi      (GstMIKEYPayload *payload,
+                                                    guint8 spi_len, const guint8 *spi_data);
+gboolean   gst_mikey_payload_key_data_set_interval (GstMIKEYPayload *payload,
+                                                    guint8 vf_len, const guint8 *vf_data,
+                                                    guint8 vt_len, const guint8 *vt_data);
 
 /**
  * GstMIKEYMessage:
@@ -432,12 +501,15 @@ struct _GstMIKEYMessage
   GArray *payloads;
 };
 
-GstMIKEYMessage *           gst_mikey_message_new               (void);
-GstMIKEYMessage *           gst_mikey_message_new_from_data     (gconstpointer data, gsize size);
-GstMIKEYMessage *           gst_mikey_message_new_from_bytes    (GBytes *bytes);
-void                        gst_mikey_message_free              (GstMIKEYMessage *msg);
 
-GBytes *                    gst_mikey_message_to_bytes          (GstMIKEYMessage *msg);
+GstMIKEYMessage *           gst_mikey_message_new               (void);
+GstMIKEYMessage *           gst_mikey_message_new_from_data     (gconstpointer data, gsize size,
+                                                                 GstMIKEYDecryptInfo *info, GError **error);
+GstMIKEYMessage *           gst_mikey_message_new_from_bytes    (GBytes *bytes, GstMIKEYDecryptInfo *info,
+                                                                 GError **error);
+GBytes *                    gst_mikey_message_to_bytes          (GstMIKEYMessage *msg, GstMIKEYEncryptInfo *info,
+                                                                 GError **error);
+void                        gst_mikey_message_free              (GstMIKEYMessage *msg);
 
 gboolean                    gst_mikey_message_set_info          (GstMIKEYMessage *msg,
                                                                  guint8 version, GstMIKEYType type, gboolean V,
@@ -470,10 +542,6 @@ gboolean                    gst_mikey_message_replace_payload   (GstMIKEYMessage
 
 
 /* Key data transport payload (KEMAC) */
-gboolean                    gst_mikey_message_add_kemac         (GstMIKEYMessage *msg,
-                                                                 GstMIKEYEncAlg enc_alg,
-                                                                 guint16 enc_len, const guint8 *enc_data,
-                                                                 GstMIKEYMacAlg mac_alg, const guint8 *mac);
 /* Envelope data payload (PKE) */
 gboolean                    gst_mikey_message_add_pke           (GstMIKEYMessage *msg,
                                                                  GstMIKEYCacheType C,
@@ -497,7 +565,6 @@ gboolean                    gst_mikey_message_add_rand_len      (GstMIKEYMessage
 
 /* Error payload (ERR) */
 /* Key data sub-payload */
-/* Key validity data */
 /* General Extension Payload */
 
 

@@ -37,6 +37,8 @@
 
 #include "gstmikey.h"
 
+static void payload_destroy (GstMIKEYPayload ** payload);
+
 #define INIT_ARRAY(field, type, init_func)              \
 G_STMT_START {                                          \
   if (field)                                            \
@@ -90,10 +92,7 @@ get_mac_len (GstMIKEYMacAlg mac_alg)
  * gst_mikey_payload_kemac_set:
  * @payload: a #GstMIKEYPayload
  * @enc_alg: the #GstMIKEYEncAlg
- * @enc_len: the length of @enc_data
- * @enc_data: the encrypted data
  * @mac_alg: a #GstMIKEYMacAlg
- * @mac: the MAC
  *
  * Set the KEMAC parameters. @payload should point to a #GST_MIKEY_PT_KEMAC
  * payload.
@@ -102,23 +101,16 @@ get_mac_len (GstMIKEYMacAlg mac_alg)
  */
 gboolean
 gst_mikey_payload_kemac_set (GstMIKEYPayload * payload,
-    GstMIKEYEncAlg enc_alg, guint16 enc_len, const guint8 * enc_data,
-    GstMIKEYMacAlg mac_alg, const guint8 * mac)
+    GstMIKEYEncAlg enc_alg, GstMIKEYMacAlg mac_alg)
 {
   GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
-  guint mac_len;
 
   g_return_val_if_fail (payload != NULL, FALSE);
   g_return_val_if_fail (payload->type == GST_MIKEY_PT_KEMAC, FALSE);
 
-  if ((mac_len = get_mac_len (mac_alg)) == -1)
-    return FALSE;
-
   p->enc_alg = enc_alg;
-  p->enc_len = enc_len;
-  INIT_MEMDUP (p->enc_data, enc_data, enc_len);
   p->mac_alg = mac_alg;
-  INIT_MEMDUP (p->mac, mac, mac_len);
+  INIT_ARRAY (p->subpayloads, GstMIKEYPayload *, payload_destroy);
 
   return TRUE;
 }
@@ -126,17 +118,112 @@ gst_mikey_payload_kemac_set (GstMIKEYPayload * payload,
 static void
 gst_mikey_payload_kemac_clear (GstMIKEYPayloadKEMAC * payload)
 {
-  FREE_MEMDUP (payload->enc_data);
-  FREE_MEMDUP (payload->mac);
+  FREE_ARRAY (payload->subpayloads);
 }
 
 static GstMIKEYPayloadKEMAC *
 gst_mikey_payload_kemac_copy (const GstMIKEYPayloadKEMAC * payload)
 {
+  guint i, len;
   GstMIKEYPayloadKEMAC *copy = g_slice_dup (GstMIKEYPayloadKEMAC, payload);
-  gst_mikey_payload_kemac_set (&copy->pt, payload->enc_alg, payload->enc_len,
-      payload->enc_data, payload->mac_alg, payload->mac);
+  gst_mikey_payload_kemac_set (&copy->pt, payload->enc_alg, payload->mac_alg);
+  len = payload->subpayloads->len;
+  for (i = 0; i < len; i++) {
+    GstMIKEYPayload *pay = g_array_index (payload->subpayloads,
+        GstMIKEYPayload *, i);
+    gst_mikey_payload_kemac_add_sub (&copy->pt, gst_mikey_payload_copy (pay));
+  }
   return copy;
+}
+
+/**
+ * gst_mikey_payload_kemac_get_n_sub:
+ * @payload: a #GstMIKEYPayload
+ *
+ * Get the number of sub payloads of @payload. @payload should be of type
+ * #GST_MIKEY_PT_KEMAC.
+ *
+ * Returns: the number of sub payloads in @payload
+ */
+guint
+gst_mikey_payload_kemac_get_n_sub (const GstMIKEYPayload * payload)
+{
+  GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
+
+  g_return_val_if_fail (payload != NULL, 0);
+  g_return_val_if_fail (payload->type == GST_MIKEY_PT_KEMAC, 0);
+
+  return p->subpayloads->len;
+}
+
+/**
+ * gst_mikey_payload_kemac_get_sub:
+ * @payload: a #GstMIKEYPayload
+ * @idx: an index
+ *
+ * Get the sub payload of @payload at @idx. @payload should be of type
+ * #GST_MIKEY_PT_KEMAC.
+ *
+ * Returns: the #GstMIKEYPayload at @idx.
+ */
+const GstMIKEYPayload *
+gst_mikey_payload_kemac_get_sub (const GstMIKEYPayload * payload, guint idx)
+{
+  GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
+
+  g_return_val_if_fail (payload != NULL, 0);
+  g_return_val_if_fail (payload->type == GST_MIKEY_PT_KEMAC, 0);
+
+  if (p->subpayloads->len <= idx)
+    return NULL;
+
+  return g_array_index (p->subpayloads, GstMIKEYPayload *, idx);
+}
+
+/**
+ * gst_mikey_payload_kemac_remove_sub:
+ * @payload: a #GstMIKEYPayload
+ * @idx: the index to remove
+ *
+ * Remove the sub payload at @idx in @payload.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_mikey_payload_kemac_remove_sub (GstMIKEYPayload * payload, guint idx)
+{
+  GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
+
+  g_return_val_if_fail (payload != NULL, 0);
+  g_return_val_if_fail (payload->type == GST_MIKEY_PT_KEMAC, 0);
+  g_return_val_if_fail (p->subpayloads->len > idx, FALSE);
+
+  g_array_remove_index (p->subpayloads, idx);
+
+  return TRUE;
+}
+
+/**
+ * gst_mikey_payload_kemac_add_sub:
+ * @payload: a #GstMIKEYPayload
+ * @newpay: a #GstMIKEYPayload to add
+ *
+ * Add a new sub payload to @payload.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_mikey_payload_kemac_add_sub (GstMIKEYPayload * payload,
+    GstMIKEYPayload * newpay)
+{
+  GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
+
+  g_return_val_if_fail (payload != NULL, 0);
+  g_return_val_if_fail (payload->type == GST_MIKEY_PT_KEMAC, 0);
+
+  g_array_append_val (p->subpayloads, newpay);
+
+  return TRUE;
 }
 
 /* Envelope data payload (PKE) */
@@ -348,6 +435,9 @@ gst_mikey_payload_sp_get_param (const GstMIKEYPayload * payload, guint idx)
   g_return_val_if_fail (payload != NULL, NULL);
   g_return_val_if_fail (payload->type == GST_MIKEY_PT_SP, NULL);
 
+  if (p->params->len <= idx)
+    return NULL;
+
   return &g_array_index (p->params, GstMIKEYPayloadSPParam, idx);
 }
 
@@ -368,6 +458,7 @@ gst_mikey_payload_sp_remove_param (GstMIKEYPayload * payload, guint idx)
 
   g_return_val_if_fail (payload != NULL, FALSE);
   g_return_val_if_fail (payload->type == GST_MIKEY_PT_SP, FALSE);
+  g_return_val_if_fail (p->params->len > idx, FALSE);
 
   g_array_remove_index (p->params, idx);
 
@@ -426,7 +517,7 @@ gst_mikey_payload_rand_set (GstMIKEYPayload * payload, guint8 len,
   g_return_val_if_fail (payload->type == GST_MIKEY_PT_RAND, FALSE);
 
   p->len = len;
-  INIT_MEMDUP (p->rand, rand, len);;
+  INIT_MEMDUP (p->rand, rand, len);
 
   return TRUE;
 }
@@ -445,9 +536,165 @@ gst_mikey_payload_rand_copy (const GstMIKEYPayloadRAND * payload)
   return copy;
 }
 
+
+
 /* Error payload (ERR) */
 /* Key data sub-payload */
+
+/**
+ * gst_mikey_payload_key_data_set_key:
+ * @payload: a #GstMIKEYPayload
+ * @key_type: a #GstMIKEYKeyDataType
+ * @key_len: the length of @key_data
+ * @key_data: the key of type @key_type
+ *
+ * Set @key_len bytes of @key_data of type @key_type as the key for the
+ * #GST_MIKEY_PT_KEY_DATA @payload.
+ *
+ * Returns: %TRUE on success
+ */
+gboolean
+gst_mikey_payload_key_data_set_key (GstMIKEYPayload * payload,
+    GstMIKEYKeyDataType key_type, guint16 key_len, const guint8 * key_data)
+{
+  GstMIKEYPayloadKeyData *p = (GstMIKEYPayloadKeyData *) payload;
+
+  g_return_val_if_fail (payload != NULL, FALSE);
+  g_return_val_if_fail (payload->type == GST_MIKEY_PT_KEY_DATA, FALSE);
+  g_return_val_if_fail (key_len > 0 && key_data != NULL, FALSE);
+
+  p->key_type = key_type;
+  p->key_len = key_len;
+  INIT_MEMDUP (p->key_data, key_data, key_len);
+
+  return TRUE;
+}
+
+/**
+ * gst_mikey_payload_key_data_set_salt:
+ * @payload: a #GstMIKEYPayload
+ * @salt_len: the length of @salt_data
+ * @salt_data: the salt
+ *
+ * Set the salt key data. If @salt_len is 0 and @salt_data is %NULL, the
+ * salt data will be removed.
+ *
+ * Returns: %TRUE on success
+ */
+gboolean
+gst_mikey_payload_key_data_set_salt (GstMIKEYPayload * payload,
+    guint16 salt_len, const guint8 * salt_data)
+{
+  GstMIKEYPayloadKeyData *p = (GstMIKEYPayloadKeyData *) payload;
+
+  g_return_val_if_fail (payload != NULL, FALSE);
+  g_return_val_if_fail (payload->type == GST_MIKEY_PT_KEY_DATA, FALSE);
+  g_return_val_if_fail ((salt_len == 0 && salt_data == NULL) ||
+      (salt_len > 0 && salt_data != NULL), FALSE);
+
+  p->salt_len = salt_len;
+  INIT_MEMDUP (p->salt_data, salt_data, salt_len);
+
+  return TRUE;
+}
+
 /* Key validity data */
+
+/**
+ * gst_mikey_payload_key_data_set_spi:
+ * @payload: a #GstMIKEYPayload
+ * @spi_len: the length of @spi_data
+ * @spi_data: the SPI/MKI data
+ *
+ * Set the SPI/MKI validity in the #GST_MIKEY_PT_KEY_DATA @payload.
+ *
+ * Returns: %TRUE on success
+ */
+gboolean
+gst_mikey_payload_key_data_set_spi (GstMIKEYPayload * payload,
+    guint8 spi_len, const guint8 * spi_data)
+{
+  GstMIKEYPayloadKeyData *p = (GstMIKEYPayloadKeyData *) payload;
+
+  g_return_val_if_fail (payload != NULL, FALSE);
+  g_return_val_if_fail (payload->type == GST_MIKEY_PT_KEY_DATA, FALSE);
+  g_return_val_if_fail ((spi_len == 0 && spi_data == NULL) ||
+      (spi_len > 0 && spi_data != NULL), FALSE);
+
+  p->kv_type = GST_MIKEY_KV_SPI;
+  p->kv_len[0] = spi_len;
+  INIT_MEMDUP (p->kv_data[0], spi_data, spi_len);
+  p->kv_len[1] = 0;
+  FREE_MEMDUP (p->kv_data[1]);
+
+  return TRUE;
+}
+
+/**
+ * gst_mikey_payload_key_data_set_interval:
+ * @payload: a #GstMIKEYPayload
+ * @vf_len: the length of @vf_data
+ * @vf_data: the Valid From data
+ * @vt_len: the length of @vt_data
+ * @vt_data: the Valid To data
+ *
+ * Set the key validity period in the #GST_MIKEY_PT_KEY_DATA @payload.
+ *
+ * Returns: %TRUE on success
+ */
+gboolean
+gst_mikey_payload_key_data_set_interval (GstMIKEYPayload * payload,
+    guint8 vf_len, const guint8 * vf_data, guint8 vt_len,
+    const guint8 * vt_data)
+{
+  GstMIKEYPayloadKeyData *p = (GstMIKEYPayloadKeyData *) payload;
+
+  g_return_val_if_fail (payload != NULL, FALSE);
+  g_return_val_if_fail (payload->type == GST_MIKEY_PT_KEY_DATA, FALSE);
+  g_return_val_if_fail ((vf_len == 0 && vf_data == NULL) ||
+      (vf_len > 0 && vf_data != NULL), FALSE);
+  g_return_val_if_fail ((vt_len == 0 && vt_data == NULL) ||
+      (vt_len > 0 && vt_data != NULL), FALSE);
+
+  p->kv_type = GST_MIKEY_KV_INTERVAL;
+  p->kv_len[0] = vf_len;
+  INIT_MEMDUP (p->kv_data[0], vf_data, vf_len);
+  p->kv_len[1] = vt_len;
+  INIT_MEMDUP (p->kv_data[1], vt_data, vt_len);
+
+  return TRUE;
+}
+
+static void
+gst_mikey_payload_key_data_clear (GstMIKEYPayloadKeyData * payload)
+{
+  FREE_MEMDUP (payload->key_data);
+  FREE_MEMDUP (payload->salt_data);
+  FREE_MEMDUP (payload->kv_data[0]);
+  FREE_MEMDUP (payload->kv_data[1]);
+}
+
+static GstMIKEYPayloadKeyData *
+gst_mikey_payload_key_data_copy (const GstMIKEYPayloadKeyData * payload)
+{
+  GstMIKEYPayloadKeyData *copy = g_slice_dup (GstMIKEYPayloadKeyData, payload);
+  gst_mikey_payload_key_data_set_key (&copy->pt, payload->key_type,
+      payload->key_len, payload->key_data);
+  gst_mikey_payload_key_data_set_salt (&copy->pt, payload->salt_len,
+      payload->salt_data);
+  if (payload->kv_type == GST_MIKEY_KV_SPI)
+    gst_mikey_payload_key_data_set_spi (&copy->pt, payload->kv_len[0],
+        payload->kv_data[0]);
+  else if (payload->kv_type == GST_MIKEY_KV_INTERVAL)
+    gst_mikey_payload_key_data_set_interval (&copy->pt, payload->kv_len[0],
+        payload->kv_data[0], payload->kv_len[1], payload->kv_data[1]);
+  else {
+    FREE_MEMDUP (copy->kv_data[0]);
+    FREE_MEMDUP (copy->kv_data[1]);
+  }
+  return copy;
+}
+
 /* General Extension Payload */
 
 /**
@@ -499,7 +746,12 @@ gst_mikey_payload_new (GstMIKEYPayloadType type)
       copy = (GstMIKEYPayloadCopyFunc) gst_mikey_payload_rand_copy;
       break;
     case GST_MIKEY_PT_ERR:
+      break;
     case GST_MIKEY_PT_KEY_DATA:
+      len = sizeof (GstMIKEYPayloadKeyData);
+      clear = (GstMIKEYPayloadClearFunc) gst_mikey_payload_key_data_clear;
+      copy = (GstMIKEYPayloadCopyFunc) gst_mikey_payload_key_data_copy;
+      break;
     case GST_MIKEY_PT_GEN_EXT:
     case GST_MIKEY_PT_LAST:
       break;
@@ -582,13 +834,16 @@ gst_mikey_message_new (void)
 /**
  * gst_mikey_message_new_from_bytes:
  * @bytes: a #GBytes
+ * @info: a #GstMIKEYDecryptInfo
+ * @error: a #GError
  *
  * Make a new #GstMIKEYMessage from @bytes.
  *
  * Returns: a new #GstMIKEYMessage
  */
 GstMIKEYMessage *
-gst_mikey_message_new_from_bytes (GBytes * bytes)
+gst_mikey_message_new_from_bytes (GBytes * bytes, GstMIKEYDecryptInfo * info,
+    GError ** error)
 {
   gconstpointer data;
   gsize size;
@@ -596,7 +851,7 @@ gst_mikey_message_new_from_bytes (GBytes * bytes)
   g_return_val_if_fail (bytes != NULL, NULL);
 
   data = g_bytes_get_data (bytes, &size);
-  return gst_mikey_message_new_from_data (data, size);
+  return gst_mikey_message_new_from_data (data, size, info, error);
 }
 
 /**
@@ -678,6 +933,9 @@ gst_mikey_message_get_cs_srtp (const GstMIKEYMessage * msg, guint idx)
   g_return_val_if_fail (msg != NULL, NULL);
   g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, NULL);
 
+  if (msg->map_info->len <= idx)
+    return NULL;
+
   return &g_array_index (msg->map_info, GstMIKEYMapSRTP, idx);
 }
 
@@ -700,6 +958,7 @@ gst_mikey_message_insert_cs_srtp (GstMIKEYMessage * msg, gint idx,
   g_return_val_if_fail (msg != NULL, FALSE);
   g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, FALSE);
   g_return_val_if_fail (map != NULL, FALSE);
+  g_return_val_if_fail (idx == -1 || msg->map_info->len > idx, FALSE);
 
   if (idx == -1)
     g_array_append_val (msg->map_info, *map);
@@ -726,6 +985,7 @@ gst_mikey_message_replace_cs_srtp (GstMIKEYMessage * msg, gint idx,
   g_return_val_if_fail (msg != NULL, FALSE);
   g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, FALSE);
   g_return_val_if_fail (map != NULL, FALSE);
+  g_return_val_if_fail (msg->map_info->len > idx, FALSE);
 
   g_array_index (msg->map_info, GstMIKEYMapSRTP, idx) = *map;
 
@@ -746,6 +1006,7 @@ gst_mikey_message_remove_cs_srtp (GstMIKEYMessage * msg, gint idx)
 {
   g_return_val_if_fail (msg != NULL, FALSE);
   g_return_val_if_fail (msg->map_type == GST_MIKEY_MAP_TYPE_SRTP, FALSE);
+  g_return_val_if_fail (msg->map_info->len > idx, FALSE);
 
   g_array_remove_index (msg->map_info, idx);
 
@@ -861,6 +1122,7 @@ gboolean
 gst_mikey_message_remove_payload (GstMIKEYMessage * msg, guint idx)
 {
   g_return_val_if_fail (msg != NULL, FALSE);
+  g_return_val_if_fail (msg->payloads->len > idx, FALSE);
 
   g_array_remove_index (msg->payloads, idx);
 
@@ -884,6 +1146,7 @@ gst_mikey_message_insert_payload (GstMIKEYMessage * msg, guint idx,
 {
   g_return_val_if_fail (msg != NULL, FALSE);
   g_return_val_if_fail (payload != NULL, FALSE);
+  g_return_val_if_fail (idx == -1 || msg->payloads->len > idx, FALSE);
 
   if (idx == -1)
     g_array_append_val (msg->payloads, payload);
@@ -926,6 +1189,7 @@ gst_mikey_message_replace_payload (GstMIKEYMessage * msg, guint idx,
 
   g_return_val_if_fail (msg != NULL, FALSE);
   g_return_val_if_fail (payload != NULL, FALSE);
+  g_return_val_if_fail (msg->payloads->len > idx, FALSE);
 
   p = g_array_index (msg->payloads, GstMIKEYPayload *, idx);
   gst_mikey_payload_free (p);
@@ -935,37 +1199,7 @@ gst_mikey_message_replace_payload (GstMIKEYMessage * msg, guint idx,
 }
 
 /**
- * gst_mikey_message_add_kemac:
- * @msg: a #GstMIKEYMessage
- * @enc_alg: the encryption algorithm used to encrypt @enc_data
- * @enc_len: the length of @enc_data
- * @enc_data: the encrypted key sub-payloads
- * @mac_alg: specifies the authentication algorithm used
- * @mac: the message authentication code of the entire message
- *
- * Inserts a new KEMAC payload to @msg with the given parameters.
- *
- * Returns: %TRUE on success
- */
-gboolean
-gst_mikey_message_add_kemac (GstMIKEYMessage * msg, GstMIKEYEncAlg enc_alg,
-    guint16 enc_len, const guint8 * enc_data, GstMIKEYMacAlg mac_alg,
-    const guint8 * mac)
-{
-  GstMIKEYPayload *p;
-
-  g_return_val_if_fail (msg != NULL, FALSE);
-
-  p = gst_mikey_payload_new (GST_MIKEY_PT_KEMAC);
-  if (!gst_mikey_payload_kemac_set (p,
-          enc_alg, enc_len, enc_data, mac_alg, mac))
-    return FALSE;
-
-  return gst_mikey_message_insert_payload (msg, -1, p);
-}
-
-/**
- * gst_mikey_message_add_pke
+ * gst_mikey_message_add_pke:
  * @msg: a #GstMIKEYMessage
  * @C: envelope key cache indicator
  * @data_len: the length of @data
@@ -991,7 +1225,7 @@ gst_mikey_message_add_pke (GstMIKEYMessage * msg, GstMIKEYCacheType C,
 }
 
 /**
- * gst_mikey_message_add_t
+ * gst_mikey_message_add_t:
  * @msg: a #GstMIKEYMessage
  * @type: specifies the timestamp type used
  * @ts_value: The timestamp value of the specified @type
@@ -1095,84 +1329,31 @@ gst_mikey_message_add_rand_len (GstMIKEYMessage * msg, guint8 len)
   return gst_mikey_message_add_payload (msg, &p->pt);
 }
 
-/**
- * gst_mikey_message_to_bytes:
- * @msg: a #GstMIKEYMessage
- *
- * Convert @msg to a #GBytes.
- *
- * Returns: a new #GBytes for @msg.
- */
-GBytes *
-gst_mikey_message_to_bytes (GstMIKEYMessage * msg)
-{
-  GByteArray *arr = NULL;
-  guint8 *data;
-  GstMIKEYPayload *next_payload;
-  guint i, n_cs, n_payloads;
 #define ENSURE_SIZE(n)                          \
 G_STMT_START {                                  \
   guint offset = data - arr->data;              \
   g_byte_array_set_size (arr, offset + n);      \
   data = arr->data + offset;                    \
 } G_STMT_END
-  arr = g_byte_array_new ();
-  data = arr->data;
+static guint
+payloads_to_bytes (GArray * payloads, GByteArray * arr, guint8 ** ptr,
+    guint offset, GstMIKEYEncryptInfo * info, GError ** error)
+{
+  guint i, n_payloads, len, start, size;
+  guint8 *data;
+  GstMIKEYPayload *next_payload;
 
-  n_payloads = msg->payloads->len;
-  if (n_payloads == 0)
-    next_payload = 0;
-  else
-    next_payload = g_array_index (msg->payloads, GstMIKEYPayload *, 0);
+  len = arr->len;
+  start = *ptr - arr->data;
+  data = *ptr + offset;
 
-  n_cs = msg->map_info->len;
-  /*                      1                   2                   3
-   *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   * !  version      !  data type    ! next payload  !V! PRF func    !
-   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   * !                         CSB ID                                !
-   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   * ! #CS           ! CS ID map type! CS ID map info                ~
-   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   */
-  ENSURE_SIZE (10 + 9 * n_cs);
-  data[0] = msg->version;
-  data[1] = msg->type;
-  data[2] = next_payload ? next_payload->type : GST_MIKEY_PT_LAST;
-  data[3] = (msg->V ? 0x80 : 0x00) | (msg->prf_func & 0x7f);
-  GST_WRITE_UINT32_BE (&data[4], msg->CSB_id);
-  data[8] = n_cs;
-  data[9] = msg->map_type;
-  data += 10;
+  n_payloads = payloads->len;
 
-  for (i = 0; i < n_cs; i++) {
-    GstMIKEYMapSRTP *info = &g_array_index (msg->map_info, GstMIKEYMapSRTP, i);
-    /*                      1                   2                   3
-     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     * ! Policy_no_1   ! SSRC_1                                        !
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     * ! SSRC_1 (cont) ! ROC_1                                         !
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     * ! ROC_1 (cont)  ! Policy_no_2   ! SSRC_2                        !
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     * ! SSRC_2 (cont)                 ! ROC_2                         !
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     * ! ROC_2 (cont)                  !                               :
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ ...
-     */
-    data[0] = info->policy;
-    GST_WRITE_UINT32_BE (&data[1], info->ssrc);
-    GST_WRITE_UINT32_BE (&data[5], info->roc);
-    data += 9;
-  }
   for (i = 0; i < n_payloads; i++) {
-    GstMIKEYPayload *payload =
-        g_array_index (msg->payloads, GstMIKEYPayload *, i);
+    GstMIKEYPayload *payload = g_array_index (payloads, GstMIKEYPayload *, i);
 
     if (i + 1 < n_payloads)
-      next_payload = g_array_index (msg->payloads, GstMIKEYPayload *, i + 1);
+      next_payload = g_array_index (payloads, GstMIKEYPayload *, i + 1);
     else
       next_payload = NULL;
 
@@ -1180,6 +1361,7 @@ G_STMT_START {                                  \
       case GST_MIKEY_PT_KEMAC:
       {
         GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
+        guint enc_len;
         guint mac_len;
 
         if ((mac_len = get_mac_len (p->mac_alg)) == -1)
@@ -1195,14 +1377,17 @@ G_STMT_START {                                  \
          * ! Mac alg       !        MAC                                    ~
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
-        ENSURE_SIZE (5 + p->enc_len + mac_len);
+        ENSURE_SIZE (4);
         data[0] = next_payload ? next_payload->type : GST_MIKEY_PT_LAST;
         data[1] = p->enc_alg;
-        GST_WRITE_UINT16_BE (&data[2], p->enc_len);
-        memcpy (&data[4], p->enc_data, p->enc_len);
-        data += p->enc_len;
+        enc_len =
+            payloads_to_bytes (p->subpayloads, arr, &data, 4, info, error);
+        /* FIXME, encrypt data here */
+        GST_WRITE_UINT16_BE (&data[2], enc_len);
+        data += enc_len;
+        ENSURE_SIZE (5 + mac_len);
         data[4] = p->mac_alg;
-        memcpy (&data[5], p->mac, mac_len);
+        /* FIXME, do mac here */
         data += 5 + mac_len;
         break;
       }
@@ -1311,39 +1496,107 @@ G_STMT_START {                                  \
         break;
       }
       case GST_MIKEY_PT_ERR:
+        break;
       case GST_MIKEY_PT_KEY_DATA:
+      {
+        GstMIKEYPayloadKeyData *p = (GstMIKEYPayloadKeyData *) payload;
+        /*                        1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * !  Next Payload ! Type  ! KV    ! Key data len                  !
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * !                         Key data                              ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * ! Salt len (optional)           ! Salt data (optional)          ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * !                        KV data (optional)                     ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+        ENSURE_SIZE (4 + p->key_len);
+        data[0] = next_payload ? next_payload->type : GST_MIKEY_PT_LAST;
+        data[1] =
+            ((p->key_type | (p->salt_len ? 1 : 0)) << 4) | (p->kv_type & 0xf);
+        GST_WRITE_UINT16_BE (&data[2], p->key_len);
+        memcpy (&data[4], p->key_data, p->key_len);
+        data += 4 + p->key_len;
+
+        if (p->salt_len > 0) {
+          ENSURE_SIZE (2 + p->salt_len);
+          GST_WRITE_UINT16_BE (&data[0], p->salt_len);
+          memcpy (&data[2], p->salt_data, p->salt_len);
+          data += 2 + p->salt_len;
+        }
+        if (p->kv_type == GST_MIKEY_KV_SPI) {
+          /*
+           *                      1                   2                   3
+           *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           * ! SPI Length    ! SPI                                           ~
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           */
+          ENSURE_SIZE (1 + p->kv_len[0]);
+          data[0] = p->kv_len[0];
+          memcpy (&data[1], p->kv_data[0], p->kv_len[0]);
+          data += 1 + p->kv_len[0];
+        } else if (p->kv_type == GST_MIKEY_KV_INTERVAL) {
+          /*
+           *                      1                   2                   3
+           *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           * ! VF Length     ! Valid From                                    ~
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           * ! VT Length     ! Valid To (expires)                            ~
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           */
+          ENSURE_SIZE (1 + p->kv_len[0]);
+          data[0] = p->kv_len[0];
+          memcpy (&data[1], p->kv_data[0], p->kv_len[0]);
+          data += 1 + p->kv_len[0];
+          ENSURE_SIZE (1 + p->kv_len[1]);
+          data[0] = p->kv_len[1];
+          memcpy (&data[1], p->kv_data[1], p->kv_len[1]);
+          data += 1 + p->kv_len[1];
+        }
+        break;
+      }
       case GST_MIKEY_PT_GEN_EXT:
       case GST_MIKEY_PT_LAST:
         break;
     }
   }
-#undef ENSURE_SIZE
+  *ptr = arr->data + start;
+  size = arr->len - len;
 
-  return g_byte_array_free_to_bytes (arr);
+  return size;
 }
 
 /**
- * gst_mikey_message_new_from_data:
- * @data: bytes to read
- * @size: length of @data
+ * gst_mikey_message_to_bytes:
+ * @msg: a #GstMIKEYMessage
+ * @info: a #GstMIKEYEncryptInfo
+ * @error: a #GError
  *
- * Parse @size bytes from @data into a #GstMIKEYMessage
+ * Convert @msg to a #GBytes.
  *
- * Returns: a #GstMIKEYMessage on success or %NULL when parsing failed
+ * Returns: a new #GBytes for @msg.
  */
-GstMIKEYMessage *
-gst_mikey_message_new_from_data (gconstpointer data, gsize size)
+GBytes *
+gst_mikey_message_to_bytes (GstMIKEYMessage * msg, GstMIKEYEncryptInfo * info,
+    GError ** error)
 {
-  GstMIKEYMessage *msg;
-#define CHECK_SIZE(n) if (size < (n)) goto short_data;
-#define ADVANCE(n) (d += (n), size -= (n));
-  guint n_cs, i;
-  const guint8 *d = data;
-  guint8 next_payload;
+  GByteArray *arr = NULL;
+  guint8 *data;
+  GstMIKEYPayload *next_payload;
+  guint i, n_cs;
+  arr = g_byte_array_new ();
+  data = arr->data;
 
-  g_return_val_if_fail (data != NULL, NULL);
+  if (msg->payloads->len == 0)
+    next_payload = NULL;
+  else
+    next_payload = g_array_index (msg->payloads, GstMIKEYPayload *, 0);
 
-  msg = gst_mikey_message_new ();
+  n_cs = msg->map_info->len;
   /*                      1                   2                   3
    *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1354,24 +1607,18 @@ gst_mikey_message_new_from_data (gconstpointer data, gsize size)
    * ! #CS           ! CS ID map type! CS ID map info                ~
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  CHECK_SIZE (10);
-  msg->version = d[0];
-  if (msg->version != GST_MIKEY_VERSION)
-    goto unknown_version;
+  ENSURE_SIZE (10 + 9 * n_cs);
+  data[0] = msg->version;
+  data[1] = msg->type;
+  data[2] = next_payload ? next_payload->type : GST_MIKEY_PT_LAST;
+  data[3] = (msg->V ? 0x80 : 0x00) | (msg->prf_func & 0x7f);
+  GST_WRITE_UINT32_BE (&data[4], msg->CSB_id);
+  data[8] = n_cs;
+  data[9] = msg->map_type;
+  data += 10;
 
-  msg->type = d[1];
-  next_payload = d[2];
-  msg->V = d[3] & 0x80 ? TRUE : FALSE;
-  msg->prf_func = d[3] & 0x7f;
-  msg->CSB_id = GST_READ_UINT32_BE (&d[4]);
-  n_cs = d[8];
-  msg->map_type = d[9];
-  ADVANCE (10);
-
-  CHECK_SIZE (n_cs * 9);
   for (i = 0; i < n_cs; i++) {
-    GstMIKEYMapSRTP map;
-
+    GstMIKEYMapSRTP *info = &g_array_index (msg->map_info, GstMIKEYMapSRTP, i);
     /*                      1                   2                   3
      *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1379,15 +1626,42 @@ gst_mikey_message_new_from_data (gconstpointer data, gsize size)
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      * ! SSRC_1 (cont) ! ROC_1                                         !
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     * ! ROC_1 (cont)  ! Policy_no_2   ! SSRC_2                        ~
+     * ! ROC_1 (cont)  ! Policy_no_2   ! SSRC_2                        !
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * ! SSRC_2 (cont)                 ! ROC_2                         !
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * ! ROC_2 (cont)                  !                               :
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ ...
      */
-    map.policy = d[0];
-    map.ssrc = GST_READ_UINT32_BE (&d[1]);
-    map.roc = GST_READ_UINT32_BE (&d[5]);
-    gst_mikey_message_insert_cs_srtp (msg, -1, &map);
-    ADVANCE (9);
+    data[0] = info->policy;
+    GST_WRITE_UINT32_BE (&data[1], info->ssrc);
+    GST_WRITE_UINT32_BE (&data[5], info->roc);
+    data += 9;
   }
+
+  payloads_to_bytes (msg->payloads, arr, &data, 0, info, error);
+
+  return g_byte_array_free_to_bytes (arr);
+}
+
+#undef ENSURE_SIZE
+
+typedef enum
+{
+  STATE_PSK,
+  STATE_PK,
+  STATE_KEMAC,
+  STATE_OTHER
+} ParseState;
+
+#define CHECK_SIZE(n) if (size < (n)) goto short_data;
+#define ADVANCE(n) (d += (n), size -= (n));
+static gboolean
+payloads_from_bytes (ParseState state, GArray * payloads, const guint8 * d,
+    gsize size, guint8 next_payload, GstMIKEYDecryptInfo * info,
+    GError ** error)
+{
+  GstMIKEYPayload *p;
 
   while (next_payload != GST_MIKEY_PT_LAST) {
     switch (next_payload) {
@@ -1398,7 +1672,7 @@ gst_mikey_message_new_from_data (gconstpointer data, gsize size)
         guint16 enc_len;
         const guint8 *enc_data;
         GstMIKEYMacAlg mac_alg;
-        const guint8 *mac;
+        guint8 np;
         /*                  1                   2                   3
          *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1415,16 +1689,31 @@ gst_mikey_message_new_from_data (gconstpointer data, gsize size)
         enc_len = GST_READ_UINT16_BE (&d[2]);
         CHECK_SIZE (5 + enc_len);
         enc_data = &d[4];
+        /* FIXME, decrypt data */
         ADVANCE (enc_len);
         mac_alg = d[4];
         if ((mac_len = get_mac_len (mac_alg)) == -1)
           goto invalid_data;
         CHECK_SIZE (5 + mac_len);
-        mac = &d[5];
+        /* FIXME, check MAC */
         ADVANCE (5 + mac_len);
 
-        gst_mikey_message_add_kemac (msg, enc_alg, enc_len, enc_data,
-            mac_alg, mac);
+        p = gst_mikey_payload_new (GST_MIKEY_PT_KEMAC);
+        gst_mikey_payload_kemac_set (p, enc_alg, mac_alg);
+
+        if (state == STATE_PSK)
+          /* we expect Key data for Preshared key */
+          np = GST_MIKEY_PT_KEY_DATA;
+        else if (state == STATE_PK)
+          /* we expect ID for Public key */
+          np = GST_MIKEY_PT_ID;
+        else
+          goto invalid_data;
+
+        payloads_from_bytes (STATE_KEMAC,
+            ((GstMIKEYPayloadKEMAC *) p)->subpayloads, enc_data, enc_len, np,
+            info, error);
+        g_array_append_val (payloads, p);
         break;
       }
       case GST_MIKEY_PT_T:
@@ -1447,7 +1736,9 @@ gst_mikey_message_new_from_data (gconstpointer data, gsize size)
         ts_value = &d[2];
         ADVANCE (2 + ts_len);
 
-        gst_mikey_message_add_t (msg, type, ts_value);
+        p = gst_mikey_payload_new (GST_MIKEY_PT_T);
+        gst_mikey_payload_t_set (p, type, ts_value);
+        g_array_append_val (payloads, p);
         break;
       }
       case GST_MIKEY_PT_PKE:
@@ -1470,7 +1761,9 @@ gst_mikey_message_new_from_data (gconstpointer data, gsize size)
         data = &d[3];
         ADVANCE (3 + data_len);
 
-        gst_mikey_message_add_pke (msg, C, data_len, data);
+        p = gst_mikey_payload_new (GST_MIKEY_PT_PKE);
+        gst_mikey_payload_pke_set (p, C, data_len, data);
+        g_array_append_val (payloads, p);
         break;
       }
       case GST_MIKEY_PT_DH:
@@ -1522,7 +1815,7 @@ gst_mikey_message_new_from_data (gconstpointer data, gsize size)
           ADVANCE (2 + len);
           plen -= 2 + len;
         }
-        gst_mikey_message_add_payload (msg, p);
+        g_array_append_val (payloads, p);
         break;
       }
       case GST_MIKEY_PT_RAND:
@@ -1542,16 +1835,199 @@ gst_mikey_message_new_from_data (gconstpointer data, gsize size)
         rand = &d[2];
         ADVANCE (2 + len);
 
-        gst_mikey_message_add_rand (msg, len, rand);
+        p = gst_mikey_payload_new (GST_MIKEY_PT_RAND);
+        gst_mikey_payload_rand_set (p, len, rand);
+        g_array_append_val (payloads, p);
         break;
       }
       case GST_MIKEY_PT_ERR:
+        break;
       case GST_MIKEY_PT_KEY_DATA:
+      {
+        GstMIKEYKeyDataType key_type;
+        GstMIKEYKVType kv_type;
+        guint16 key_len, salt_len = 0;
+        const guint8 *key_data, *salt_data;
+        /*                        1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * !  Next Payload ! Type  ! KV    ! Key data len                  !
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * !                         Key data                              ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * ! Salt len (optional)           ! Salt data (optional)          ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * !                        KV data (optional)                     ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+        CHECK_SIZE (4);
+        next_payload = d[0];
+        key_type = d[1] >> 4;
+        kv_type = d[1] & 0xf;
+        key_len = GST_READ_UINT16_BE (&d[2]);
+        CHECK_SIZE (4 + key_len);
+        key_data = &d[4];
+        ADVANCE (4 + key_len);
+        if (key_type & 1) {
+          CHECK_SIZE (2);
+          salt_len = GST_READ_UINT16_BE (&d[0]);
+          CHECK_SIZE (2 + salt_len);
+          salt_data = &d[2];
+          ADVANCE (2 + salt_len);
+        }
+        p = gst_mikey_payload_new (GST_MIKEY_PT_KEY_DATA);
+        gst_mikey_payload_key_data_set_key (p, key_type & 2, key_len, key_data);
+        if (salt_len > 0)
+          gst_mikey_payload_key_data_set_salt (p, salt_len, salt_data);
+
+        if (kv_type == GST_MIKEY_KV_SPI) {
+          guint8 spi_len;
+          const guint8 *spi_data;
+          /*
+           *                      1                   2                   3
+           *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           * ! SPI Length    ! SPI                                           ~
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           */
+          CHECK_SIZE (1);
+          spi_len = d[0];
+          CHECK_SIZE (1 + spi_len);
+          spi_data = &d[1];
+          ADVANCE (1 + spi_len);
+
+          gst_mikey_payload_key_data_set_spi (p, spi_len, spi_data);
+        } else if (kv_type == GST_MIKEY_KV_INTERVAL) {
+          guint8 vf_len, vt_len;
+          const guint8 *vf_data, *vt_data;
+          /*
+           *                      1                   2                   3
+           *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           * ! VF Length     ! Valid From                                    ~
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           * ! VT Length     ! Valid To (expires)                            ~
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           */
+          CHECK_SIZE (1);
+          vf_len = d[0];
+          CHECK_SIZE (1 + vf_len);
+          vf_data = &d[1];
+          ADVANCE (1 + vf_len);
+          CHECK_SIZE (1);
+          vt_len = d[0];
+          CHECK_SIZE (1 + vt_len);
+          vt_data = &d[1];
+          ADVANCE (1 + vt_len);
+
+          gst_mikey_payload_key_data_set_interval (p, vf_len, vf_data, vt_len,
+              vt_data);
+        } else if (kv_type != GST_MIKEY_KV_NULL)
+          goto invalid_data;
+
+        g_array_append_val (payloads, p);
+        break;
+      }
       case GST_MIKEY_PT_GEN_EXT:
       case GST_MIKEY_PT_LAST:
         break;
     }
   }
+  return TRUE;
+
+  /* ERRORS */
+short_data:
+  {
+    GST_DEBUG ("not enough data");
+    return FALSE;
+  }
+invalid_data:
+  {
+    GST_DEBUG ("invalid data");
+    return FALSE;
+  }
+}
+
+/**
+ * gst_mikey_message_new_from_data:
+ * @data: bytes to read
+ * @size: length of @data
+ * @info: #GstMIKEYDecryptInfo
+ * @error: a #GError
+ *
+ * Parse @size bytes from @data into a #GstMIKEYMessage. @info contains the
+ * parameters to decrypt and verify the data.
+ *
+ * Returns: a #GstMIKEYMessage on success or %NULL when parsing failed and
+ * @error will be set.
+ */
+GstMIKEYMessage *
+gst_mikey_message_new_from_data (gconstpointer data, gsize size,
+    GstMIKEYDecryptInfo * info, GError ** error)
+{
+  GstMIKEYMessage *msg;
+  guint n_cs, i;
+  const guint8 *d = data;
+  guint8 next_payload;
+  ParseState state;
+
+  g_return_val_if_fail (data != NULL, NULL);
+
+  msg = gst_mikey_message_new ();
+  /*                      1                   2                   3
+   *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * !  version      !  data type    ! next payload  !V! PRF func    !
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * !                         CSB ID                                !
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * ! #CS           ! CS ID map type! CS ID map info                ~
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   */
+  CHECK_SIZE (10);
+  msg->version = d[0];
+  if (msg->version != GST_MIKEY_VERSION)
+    goto unknown_version;
+
+  msg->type = d[1];
+  next_payload = d[2];
+  msg->V = d[3] & 0x80 ? TRUE : FALSE;
+  msg->prf_func = d[3] & 0x7f;
+  msg->CSB_id = GST_READ_UINT32_BE (&d[4]);
+  n_cs = d[8];
+  msg->map_type = d[9];
+  ADVANCE (10);
+
+  CHECK_SIZE (n_cs * 9);
+  for (i = 0; i < n_cs; i++) {
+    GstMIKEYMapSRTP map;
+
+    /*                      1                   2                   3
+     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * ! Policy_no_1   ! SSRC_1                                        !
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * ! SSRC_1 (cont) ! ROC_1                                         !
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * ! ROC_1 (cont)  ! Policy_no_2   ! SSRC_2                        ~
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     */
+    map.policy = d[0];
+    map.ssrc = GST_READ_UINT32_BE (&d[1]);
+    map.roc = GST_READ_UINT32_BE (&d[5]);
+    gst_mikey_message_insert_cs_srtp (msg, -1, &map);
+    ADVANCE (9);
+  }
+  if (msg->type == GST_MIKEY_TYPE_PSK_INIT)
+    state = STATE_PSK;
+  else if (msg->type == GST_MIKEY_TYPE_PK_INIT)
+    state = STATE_PK;
+  else
+    state = STATE_OTHER;
+
+  if (!payloads_from_bytes (state, msg->payloads, d, size, next_payload, info,
+          error))
+    goto parse_error;
 
   return msg;
 
@@ -1568,9 +2044,9 @@ unknown_version:
     gst_mikey_message_free (msg);
     return NULL;
   }
-invalid_data:
+parse_error:
   {
-    GST_DEBUG ("invalid data");
+    GST_DEBUG ("failed to parse");
     gst_mikey_message_free (msg);
     return NULL;
   }
