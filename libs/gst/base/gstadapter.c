@@ -1091,7 +1091,6 @@ gst_adapter_prev_pts_at_offset (GstAdapter * adapter, gsize offset,
   GstClockTime pts = adapter->pts;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
-  g_return_val_if_fail (offset >= 0, GST_CLOCK_TIME_NONE);
 
   g = adapter->buflist;
 
@@ -1140,7 +1139,6 @@ gst_adapter_prev_dts_at_offset (GstAdapter * adapter, gsize offset,
   GstClockTime dts = adapter->dts;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
-  g_return_val_if_fail (offset >= 0, GST_CLOCK_TIME_NONE);
 
   g = adapter->buflist;
 
