@@ -3174,9 +3174,15 @@ gboolean
 gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
 {
   GstBufferPool *pool;
-  guint size = 0;
+  /* we need at least 2 buffers to operate */
+  guint size, min, max;
   GstCaps *caps;
   gboolean need_pool;
+
+  /* Set defaults allocation parameters */
+  size = obj->sizeimage;
+  min = GST_V4L2_MIN_BUFFERS;
+  max = VIDEO_MAX_FRAME;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -3192,7 +3198,7 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
 
     /* we had a pool, check caps */
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
+    gst_buffer_pool_config_get_params (config, &pcaps, NULL, NULL, NULL);
 
     GST_DEBUG_OBJECT (obj->element,
         "we had a pool with caps %" GST_PTR_FORMAT, pcaps);
@@ -3203,12 +3209,12 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
     }
     gst_structure_free (config);
   }
-  /* we need at least 2 buffers to operate */
-  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+
+  gst_query_add_allocation_pool (query, pool, size, min, max);
 
   /* we also support various metadata */
-  /* FIXME should it be set per class ? */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  /* FIXME probe for crop support */
   gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
   if (pool)
