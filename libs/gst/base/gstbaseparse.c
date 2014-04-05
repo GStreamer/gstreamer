@@ -4516,7 +4516,6 @@ gst_base_parse_set_ts_at_offset (GstBaseParse * parse, gsize offset)
   GstClockTime pts, dts;
 
   g_return_if_fail (GST_IS_BASE_PARSE (parse));
-  g_return_if_fail (offset >= 0);
 
   pts = gst_adapter_prev_pts_at_offset (parse->priv->adapter, offset, NULL);
   dts = gst_adapter_prev_dts_at_offset (parse->priv->adapter, offset, NULL);
