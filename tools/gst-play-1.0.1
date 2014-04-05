@@ -1,4 +1,4 @@
-.TH "GStreamer" "1" "August 2013" "" ""
+.TH "GStreamer" "1" "April 2014" "" ""
 .SH "NAME"
 gst\-play\-1.0 \- Simple command line playback testing tool
 .SH "SYNOPSIS"
@@ -21,14 +21,47 @@ Print help synopsis and available command line options
 Print version and exit
 .TP 8
 .B  \-\-audiosink=SOMESINK
-Use SOMESINK as audio sink instead of autoaudiosink.
+Use the SOMESINK element as audio sink instead of autoaudiosink
 .TP 8
 .B  \-\-videosink=SOMESINK
-Use SOMESINK as video sink instead of autovideosink.
+Use the SOMESINK element as video sink instead of autovideosink
 .TP 8
+.B  \-\-volume=VOLUME
+Set initial playback volume to VOLUME, where 0.0=silent and 1.0=unchanged
+.TP 8
+.B  \-\-shuffle
+Shuffle playlist (play files in random order)
+.TP 8
+.B  \-\-interactive
+Enable control through keyboard interaction in terminal (see below)
+.TP 8
+.B  \-\-gapless
+Enable gapless playback
+
+.SH "INTERACTIVE KEYBOARD CONTROL"
+.l
+.TP 8
+.B  SPACE
+Pause/Resume playback
+.TP 8
+.B  ARROW UP/DOWN
+Volume up/down
+.TP 8
+.B  ARROW LEFT/RIGHT
+Seek back/forward
+.TP 8
+.B  >
+Skip to next item in playlist
+.TP 8
+.B  <
+Go back to previous item in playlist
+.TP 8
+.B  Q, ESC
+Quit
 
 .SH "SEE ALSO"
 .BR gst\-inspect\-1.0 (1),
 .BR gst\-launch\-1.0 (1),
+.BR gst\-discoverer\-1.0 (1),
 .SH "AUTHOR"
 The GStreamer team at http://gstreamer.freedesktop.org/
