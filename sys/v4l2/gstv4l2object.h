@@ -38,7 +38,6 @@ typedef struct _GstV4l2Xv GstV4l2Xv;
 #include <gstv4l2bufferpool.h>
 
 /* size of v4l2 buffer pool in streaming case */
-#define GST_V4L2_MAX_BUFFERS 16
 #define GST_V4L2_MIN_BUFFERS 1
 
 /* max frame width/height */
