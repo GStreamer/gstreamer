@@ -32,6 +32,7 @@ typedef struct _GstV4l2BufferPoolClass GstV4l2BufferPoolClass;
 typedef struct _GstV4l2Meta GstV4l2Meta;
 
 #include "gstv4l2object.h"
+#include "gstv4l2allocator.h"
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2buffer_debug);
 
@@ -50,12 +51,13 @@ struct _GstV4l2BufferPool
   GstV4l2Object *obj;        /* the v4l2 object */
   gint video_fd;             /* a dup(2) of the v4l2object's video_fd */
 
+  GstV4l2Allocator *vallocator;
   GstAllocator *allocator;
   GstAllocationParams params;
   guint size;
+
   gboolean add_videometa;
   gboolean add_cropmeta;
-  gboolean can_alloc;        /* if extra buffers can be allocated */
 
   guint num_buffers;         /* number of buffers we use */
   guint num_allocated;       /* number of buffers allocated by the driver */
@@ -64,44 +66,16 @@ struct _GstV4l2BufferPool
 
   gboolean streaming;
 
-  GstBuffer **buffers;
+  GstBuffer *buffers[VIDEO_MAX_FRAME];
+
+  /* signal handlers */
+  gulong group_released_handler;
 };
 
 struct _GstV4l2BufferPoolClass
 {
   GstBufferPoolClass parent_class;
 };
-
-struct _GstV4l2Meta {
-  GstMeta meta;
-
-  /* number of v4l2 planes
-   * In MPLANE and non MPLANE case it can be one so
-   * it contains all yuv planes
-   * In MPLANE mode it can be one per yuv plane.
-   * For example, 2 for NV12 and 3 for I420
-   *
-   * In non MPLANE mode it's always equal to 1
-   * In MPLANE mode it's equivalent to vbuffer.length
-   */
-  guint n_planes;
-
-  /* only useful in GST_V4L2_IO_MMAP case.
-   * it contains address at which the mapping
-   * was placed for each v4l2 plane */
-  gpointer mem[GST_VIDEO_MAX_PLANES];
-
-  /* plane info for multi-planar buffers */
-  struct v4l2_plane vplanes[GST_VIDEO_MAX_PLANES];
-
-  /* video buffer info */
-  struct v4l2_buffer vbuffer;
-};
-
-GType gst_v4l2_meta_api_get_type (void);
-const GstMetaInfo * gst_v4l2_meta_get_info (void);
-#define GST_V4L2_META_GET(buf) ((GstV4l2Meta *)gst_buffer_get_meta(buf,gst_v4l2_meta_api_get_type()))
-#define GST_V4L2_META_ADD(buf) ((GstV4l2Meta *)gst_buffer_add_meta(buf,gst_v4l2_meta_get_info(),NULL))
 
 GType gst_v4l2_buffer_pool_get_type (void);
 
@@ -110,8 +84,6 @@ GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj, GstCaps *c
 GstFlowReturn       gst_v4l2_buffer_pool_process (GstV4l2BufferPool * bpool, GstBuffer * buf);
 
 gboolean gst_v4l2_buffer_pool_flush (GstV4l2BufferPool * pool);
-
-void gst_v4l2_buffer_pool_add_crop_meta (GstV4l2BufferPool * bpool, gboolean add);
 
 G_END_DECLS
 
