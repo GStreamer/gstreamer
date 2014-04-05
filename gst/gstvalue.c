@@ -4445,6 +4445,8 @@ gst_value_list_equals_range (const GValue * list, const GValue * value)
     const gint64 rmax = gst_value_get_int64_range_max (value);
     const gint64 rstep = gst_value_get_int64_range_step (value);
     GST_DEBUG ("List/range of int64s");
+    if (rstep == 0)
+      return FALSE;
     if (list_size != rmax / rstep - rmin / rstep + 1)
       return FALSE;
     for (n = 0; n < list_size; ++n) {
