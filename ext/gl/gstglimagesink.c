@@ -405,10 +405,35 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
     return FALSE;
 
   if (!gl_sink->context) {
+    GstGLWindow *window;
+
     gl_sink->context = gst_gl_context_new (gl_sink->display);
     if (!gst_gl_context_create (gl_sink->context, gl_sink->other_context,
             &error))
       goto context_error;
+
+    window = gst_gl_context_get_window (gl_sink->context);
+
+    if (!gl_sink->window_id && !gl_sink->new_window_id)
+      gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (gl_sink));
+
+    if (gl_sink->window_id != gl_sink->new_window_id) {
+      gl_sink->window_id = gl_sink->new_window_id;
+      gst_gl_window_set_window_handle (window, gl_sink->window_id);
+    }
+
+    /* setup callbacks */
+    gst_gl_window_set_resize_callback (window,
+        GST_GL_WINDOW_RESIZE_CB (gst_glimage_sink_on_resize),
+        gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
+    gst_gl_window_set_draw_callback (window,
+        GST_GL_WINDOW_CB (gst_glimage_sink_on_draw),
+        gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
+    gst_gl_window_set_close_callback (window,
+        GST_GL_WINDOW_CB (gst_glimage_sink_on_close),
+        gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
+
+    gst_object_unref (window);
   }
 
   if (!gl_sink->upload) {
@@ -507,51 +532,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_atomic_int_set (&glimage_sink->to_quit, 0);
       if (!glimage_sink->display) {
-        GstGLWindow *window;
-        GError *error = NULL;
-
         if (!gst_gl_ensure_display (glimage_sink, &glimage_sink->display))
           return GST_STATE_CHANGE_FAILURE;
-
-        glimage_sink->context = gst_gl_context_new (glimage_sink->display);
-        window = gst_gl_context_get_window (glimage_sink->context);
-
-        if (!glimage_sink->window_id && !glimage_sink->new_window_id)
-          gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY
-              (glimage_sink));
-
-        if (glimage_sink->window_id != glimage_sink->new_window_id) {
-          glimage_sink->window_id = glimage_sink->new_window_id;
-          gst_gl_window_set_window_handle (window, glimage_sink->window_id);
-        }
-
-        if (!gst_gl_context_create (glimage_sink->context,
-                glimage_sink->other_context, &error)) {
-          GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND, ("%s",
-                  error->message), (NULL));
-
-          if (glimage_sink->display) {
-            gst_object_unref (glimage_sink->display);
-            glimage_sink->display = NULL;
-          }
-          gst_object_unref (glimage_sink->context);
-          gst_object_unref (window);
-
-          return GST_STATE_CHANGE_FAILURE;
-        }
-
-        /* setup callbacks */
-        gst_gl_window_set_resize_callback (window,
-            GST_GL_WINDOW_RESIZE_CB (gst_glimage_sink_on_resize),
-            gst_object_ref (glimage_sink), (GDestroyNotify) gst_object_unref);
-        gst_gl_window_set_draw_callback (window,
-            GST_GL_WINDOW_CB (gst_glimage_sink_on_draw),
-            gst_object_ref (glimage_sink), (GDestroyNotify) gst_object_unref);
-        gst_gl_window_set_close_callback (window,
-            GST_GL_WINDOW_CB (gst_glimage_sink_on_close),
-            gst_object_ref (glimage_sink), (GDestroyNotify) gst_object_unref);
-
-        gst_object_unref (window);
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -669,9 +651,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   if (glimage_sink->tex_id)
     gst_gl_context_del_texture (glimage_sink->context, &glimage_sink->tex_id);
-  //FIXME: this texture seems to be never deleted when going to STATE_NULL
-  gst_gl_context_gen_texture (glimage_sink->context, &glimage_sink->tex_id,
-      GST_VIDEO_INFO_FORMAT (&vinfo), width, height);
 
   par_n = GST_VIDEO_INFO_PAR_N (&vinfo);
   par_d = GST_VIDEO_INFO_PAR_D (&vinfo);
@@ -720,6 +699,12 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       GST_VIDEO_SINK_HEIGHT (glimage_sink));
 
   glimage_sink->info = vinfo;
+  if (!_ensure_gl_setup (glimage_sink))
+    return FALSE;
+
+  //FIXME: this texture seems to be never deleted when going to STATE_NULL
+  gst_gl_context_gen_texture (glimage_sink->context, &glimage_sink->tex_id,
+      GST_VIDEO_INFO_FORMAT (&glimage_sink->info), width, height);
 
   newpool = gst_gl_buffer_pool_new (glimage_sink->context);
   structure = gst_buffer_pool_get_config (newpool);
