@@ -185,6 +185,7 @@ GES-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libges-@GST_API_VERSION@.la
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gio-2.0` \
 		--library=libges-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
+		--include=GstVideo-@GST_API_VERSION@ \
 		--include=GstPbutils-@GST_API_VERSION@ \
 		--include=Gio-2.0 \
 		--libtool="$(top_builddir)/libtool" \
