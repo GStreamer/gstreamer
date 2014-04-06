@@ -273,6 +273,11 @@ string_append_field (GQuark field, const GValue * value, gpointer ptr)
   gchar *value_str = gst_value_serialize (value);
   gchar *esc_value_str;
 
+  if (value_str == NULL) {
+    g_string_append_printf (str, "  %18s: NULL\\l", g_quark_to_string (field));
+    return TRUE;
+  }
+
   /* some enums can become really long */
   if (strlen (value_str) > 25) {
     gint pos = 24;
