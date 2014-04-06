@@ -34,7 +34,12 @@
 #include <libsoup/soup-auth-domain.h>
 #include <libsoup/soup-auth-domain-basic.h>
 #include <libsoup/soup-auth-domain-digest.h>
+#include <libsoup/soup-version.h>
 #include <gst/check/gstcheck.h>
+
+#if !(SOUP_CHECK_VERSION(2, 44, 0))
+#define SoupStatus SoupKnownStatusCode
+#endif
 
 static guint http_port = 0, https_port = 0;
 
