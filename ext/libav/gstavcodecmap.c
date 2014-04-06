@@ -1695,6 +1695,12 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       }
       break;
 
+    case AV_CODEC_ID_AIC:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode,
+          "video/x-apple-intermediate-codec", NULL);
+      break;
+
     case AV_CODEC_ID_WS_VQA:
     case AV_CODEC_ID_IDCIN:
     case AV_CODEC_ID_8BPS:
@@ -3724,6 +3730,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       id = AV_CODEC_ID_FFV1;
       video = TRUE;
     }
+  } else if (!strcmp (mimetype, "video/x-apple-intermediate-codec")) {
+    id = AV_CODEC_ID_AIC;
+    video = TRUE;
   } else if (!strcmp (mimetype, "audio/x-adpcm")) {
     const gchar *layout;
 
