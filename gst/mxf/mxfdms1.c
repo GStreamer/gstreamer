@@ -4712,7 +4712,7 @@ mxf_dms1_rights_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
     GST_DEBUG ("  rights start date and time = %s",
         mxf_timestamp_to_string (&self->rights_start_date_and_time, str));
   } else if (memcmp (tag_ul, &rights_stop_date_and_time_ul, 16) == 0) {
-    if (!mxf_timestamp_parse (&self->rights_start_date_and_time, tag_data,
+    if (!mxf_timestamp_parse (&self->rights_stop_date_and_time, tag_data,
             tag_size))
       goto error;
 
