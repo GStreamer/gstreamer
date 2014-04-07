@@ -466,7 +466,7 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstObject * parent,
         if (stream->is_vbr) {
           /* VBR */
           pos = avi_stream_convert_frames_to_time_unchecked (stream,
-              stream->current_total);
+              stream->current_entry);
           GST_DEBUG_OBJECT (avi, "VBR convert frame %u, time %"
               GST_TIME_FORMAT, stream->current_entry, GST_TIME_ARGS (pos));
         } else if (stream->strf.auds->av_bps != 0) {
