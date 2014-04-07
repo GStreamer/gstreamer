@@ -11,13 +11,13 @@ EXTRA_DIST = \
 #libgstparse_la_SOURCES = lex.priv_gst_parse_yy.c grammar.tab.c
 
 # uncomment these lines to _NOT_ dist the generated sources
-nodist_libgstparse_la_SOURCES = lex.priv_gst_parse_yy.c grammar.tab.c
+nodist_libgstparse_la_SOURCES = lex.priv_gst_parse_yy.c grammar.tab.c grammar.tag.h parse_lex.h
 CLEANFILES += grammar.tab.c lex.priv_gst_parse_yy.c
 
 libgstparse_la_CFLAGS = $(GST_ALL_CFLAGS) -DYYMALLOC=g_malloc -DYYFREE=g_free
 libgstparse_la_LIBADD = $(GST_ALL_LIBS)
 
-noinst_HEADERS = grammar.tab.h parse_lex.h types.h
+noinst_HEADERS = types.h
 
 Android.mk: Makefile.am
 	androgenizer -:PROJECT gstreamer -:STATIC libgstparse -:TAGS eng debug \
@@ -37,7 +37,7 @@ grammar.tab.c grammar.tab.h: grammar.y
 	rm grammar.tab_tmp.c && \
 	mv grammar.tab_tmp2.c grammar.tab.c
 
-lex.priv_gst_parse_yy.c: parse.l grammar.tab.h
+lex.priv_gst_parse_yy.c parse_lex.h: parse.l grammar.tab.h
 	$(AM_V_GEN)$(FLEX_PATH) --header-file=parse_lex.h -Ppriv_gst_parse_yy $^ && \
 	mv lex.priv_gst_parse_yy.c lex.priv_gst_parse_yy_tmp.c && \
 	echo '#ifdef HAVE_CONFIG_H' > lex.priv_gst_parse_yy_tmp2.c && \
