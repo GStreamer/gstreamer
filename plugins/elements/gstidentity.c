@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gstelements_private.h"
 #include "../../gst/gst-i18n-lib.h"
 #include "gstidentity.h"
 
@@ -470,33 +471,7 @@ gst_identity_update_last_message_for_buffer (GstIdentity * identity,
 
   GST_OBJECT_LOCK (identity);
 
-  {
-    static const char *const flag_list[] = {
-      "", "", "", "", "live", "decode-only", "discont", "resync", "corrupted",
-      "marker", "header", "gap", "droppable", "delta-unit", "tag-memory",
-      "FIXME"
-    };
-    int i, max_bytes;
-    char *end;
-
-    max_bytes = 1;              /* NUL */
-    for (i = 0; i < G_N_ELEMENTS (flag_list); i++) {
-      max_bytes += strlen (flag_list[i]) + 1;   /* string and space */
-    }
-    flag_str = g_malloc (max_bytes);
-
-    end = flag_str;
-    end[0] = '\0';
-    for (i = 0; i < G_N_ELEMENTS (flag_list); i++) {
-      if (GST_MINI_OBJECT_CAST (buf)->flags & (1 << i)) {
-        strcpy (end, flag_list[i]);
-        end += strlen (end);
-        end[0] = ' ';
-        end[1] = '\0';
-        end++;
-      }
-    }
-  }
+  flag_str = gst_buffer_get_flags_string (buf);
 
   g_free (identity->last_message);
   identity->last_message = g_strdup_printf ("%s   ******* (%s:%s) "

@@ -37,6 +37,7 @@
 #  include "config.h"
 #endif
 
+#include "gstelements_private.h"
 #include "gstfakesink.h"
 #include <string.h>
 
@@ -428,7 +429,7 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   if (!sink->silent) {
     gchar dts_str[64], pts_str[64], dur_str[64];
-    gchar flag_str[100];
+    gchar *flag_str;
 
     GST_OBJECT_LOCK (sink);
     g_free (sink->last_message);
@@ -454,25 +455,7 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       g_strlcpy (dur_str, "none", sizeof (dur_str));
     }
 
-    {
-      const char *flag_list[] = {
-        "", "", "", "", "live", "decode-only", "discont", "resync", "corrupted",
-        "marker", "header", "gap", "droppable", "delta-unit", "tag-memory",
-        "FIXME"
-      };
-      int i;
-      char *end = flag_str;
-      end[0] = '\0';
-      for (i = 0; i < G_N_ELEMENTS (flag_list); i++) {
-        if (GST_MINI_OBJECT_CAST (buf)->flags & (1 << i)) {
-          strcpy (end, flag_list[i]);
-          end += strlen (end);
-          end[0] = ' ';
-          end[1] = '\0';
-          end++;
-        }
-      }
-    }
+    flag_str = gst_buffer_get_flags_string (buf);
 
     sink->last_message =
         g_strdup_printf ("chain   ******* (%s:%s) (%u bytes, dts: %s, pts: %s"
@@ -482,6 +465,7 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
         (guint) gst_buffer_get_size (buf), dts_str, pts_str,
         dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
         GST_MINI_OBJECT_CAST (buf)->flags, flag_str, buf);
+    g_free (flag_str);
     GST_OBJECT_UNLOCK (sink);
 
     gst_fake_sink_notify_last_message (sink);

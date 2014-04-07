@@ -6,6 +6,7 @@ libgstcoreelements_la_SOURCES =	\
 	gstcapsfilter.c		\
 	gstdownloadbuffer.c     \
 	gstelements.c		\
+	gstelements_private.c	\
 	gstfakesrc.c		\
 	gstfakesink.c		\
 	gstfdsrc.c		\
@@ -34,6 +35,7 @@ libgstcoreelements_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 noinst_HEADERS =		\
 	gstcapsfilter.h		\
 	gstdownloadbuffer.h	\
+	gstelements_private.h	\
 	gstfakesink.h		\
 	gstfakesrc.h		\
 	gstfdsrc.h		\
