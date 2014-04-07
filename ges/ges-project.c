@@ -18,7 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION: ges-project
+ * SECTION: gesproject
  * @short_description: A GESAsset that is used to manage projects
  *
  * The #GESProject is used to control a set of #GESAsset and is a

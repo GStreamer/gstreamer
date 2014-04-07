@@ -65,7 +65,7 @@ ges_track_type_name
 </SECTION>
 
 <SECTION>
-<FILE>ges-track</FILE>
+<FILE>gestrack</FILE>
 <TITLE>GESTrack</TITLE>
 GESTrack
 GESCreateElementForGapFunc
@@ -92,7 +92,7 @@ GES_TYPE_TRACK
 </SECTION>
 
 <SECTION>
-<FILE>ges-audio-track</FILE>
+<FILE>gesaudiotrack</FILE>
 <TITLE>GESAudioTrack</TITLE>
 GESAudioTrack
 ges_audio_track_new
@@ -108,7 +108,7 @@ GES_TYPE_AUDIO_TRACK
 </SECTION>
 
 <SECTION>
-<FILE>ges-video-track</FILE>
+<FILE>gesvideotrack</FILE>
 <TITLE>GESVideoTrack</TITLE>
 GESVideoTrack
 ges_video_track_new
@@ -124,7 +124,7 @@ GES_TYPE_VIDEO_TRACK
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-element</FILE>
+<FILE>gestrackelement</FILE>
 <TITLE>GESTrackElement</TITLE>
 GESTrackElement
 GESTrackElementClass
@@ -159,7 +159,7 @@ GES_TYPE_TRACK_ELEMENT
 </SECTION>
 
 <SECTION>
-<FILE>ges-source</FILE>
+<FILE>gessource</FILE>
 <TITLE>GESSource</TITLE>
 GESSource
 GESSourceClass
@@ -175,7 +175,7 @@ ges_source_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-operation</FILE>
+<FILE>gesoperation</FILE>
 <TITLE>GESOperation</TITLE>
 GESOperation
 GESOperationClass
@@ -191,7 +191,7 @@ GES_TYPE_OPERATION
 </SECTION>
 
 <SECTION>
-<FILE>ges-video-source</FILE>
+<FILE>gesvideosource</FILE>
 <TITLE>GESVideoSource</TITLE>
 GESVideoSource
 <SUBSECTION Standard>
@@ -207,7 +207,7 @@ ges_video_source_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-audio-source</FILE>
+<FILE>gesaudiosource</FILE>
 <TITLE>GESAudioSource</TITLE>
 GESAudioSource
 <SUBSECTION Standard>
@@ -223,7 +223,7 @@ ges_audio_source_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-video-uri-source</FILE>
+<FILE>gesvideourisource</FILE>
 <TITLE>GESVideoUriSource</TITLE>
 GESVideoUriSource
 <SUBSECTION Standard>
@@ -239,7 +239,7 @@ ges_video_uri_source_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-audio-uri-source</FILE>
+<FILE>gesaudiourisource</FILE>
 <TITLE>GESAudioUriSource</TITLE>
 GESAudioUriSource
 <SUBSECTION Standard>
@@ -255,7 +255,7 @@ ges_audio_uri_source_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-image-source</FILE>
+<FILE>gesimagesource</FILE>
 <TITLE>GESImageSource</TITLE>
 GESImageSource
 <SUBSECTION Standard>
@@ -271,7 +271,7 @@ ges_image_source_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-multi-file-source</FILE>
+<FILE>gesmultifilesource</FILE>
 <TITLE>GESMultiFileSource</TITLE>
 GESMultiFileSource
 ges_multi_file_source_new
@@ -288,7 +288,7 @@ ges_multi_file_source_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-transition</FILE>
+<FILE>gestransition</FILE>
 <TITLE>GESTransition</TITLE>
 GESTransition
 GESTransitionClass
@@ -304,7 +304,7 @@ ges_transition_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-audio-transition</FILE>
+<FILE>gesaudiotransition</FILE>
 <TITLE>GESAudioTransition</TITLE>
 GESAudioTransition
 ges_audio_transition_new
@@ -321,7 +321,7 @@ GES_TYPE_AUDIO_TRANSITION
 </SECTION>
 
 <SECTION>
-<FILE>ges-video-transition</FILE>
+<FILE>gesvideotransition</FILE>
 <TITLE>GESVideoTransition</TITLE>
 GESVideoTransition
 ges_video_transition_new
@@ -344,7 +344,7 @@ GES_TYPE_VIDEO_TRANSITION
 </SECTION>
 
 <SECTION>
-<FILE>ges-timeline</FILE>
+<FILE>gestimeline</FILE>
 <TITLE>GESTimeline</TITLE>
 GESTimeline
 ges_timeline_new
@@ -383,7 +383,7 @@ GES_TYPE_TIMELINE
 
 
 <SECTION>
-<FILE>ges-layer</FILE>
+<FILE>geslayer</FILE>
 <TITLE>GESLayer</TITLE>
 GESLayer
 GESLayerClass
@@ -416,7 +416,7 @@ GES_TYPE_LAYER
 </SECTION>
 
 <SECTION>
-<FILE>ges-timeline-element</FILE>
+<FILE>gestimelineelement</FILE>
 <TITLE>GESTimelineElement</TITLE>
 GESTimelineElement
 GESTimelineElementClass
@@ -461,7 +461,7 @@ GES_TIMELINE_ELEMENT_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-container</FILE>
+<FILE>gescontainer</FILE>
 <TITLE>GESContainer</TITLE>
 GESContainer
 GESContainerClass
@@ -484,7 +484,7 @@ GES_CONTAINER_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-clip</FILE>
+<FILE>gesclip</FILE>
 <TITLE>GESClip</TITLE>
 GESClip
 GESClipClass
@@ -516,7 +516,7 @@ ges_clip_get_type
 
 
 <SECTION>
-<FILE>ges-pipeline</FILE>
+<FILE>gespipeline</FILE>
 <TITLE>GESPipeline</TITLE>
 GESPipeline
 ges_pipeline_new
@@ -546,7 +546,7 @@ GES_TYPE_PIPELINE
 
 
 <SECTION>
-<FILE>ges-source-clip</FILE>
+<FILE>gessourceclip</FILE>
 <TITLE>GESSourceClip</TITLE>
 GESSourceClip
 GESSourceClipClass
@@ -562,7 +562,7 @@ GES_TYPE_SOURCE_CLIP
 </SECTION>
 
 <SECTION>
-<FILE>ges-timeline-filesource</FILE>
+<FILE>gestimelinefilesource</FILE>
 <TITLE>GESUriClip</TITLE>
 GESUriClip
 ges_uri_clip_new
@@ -584,7 +584,7 @@ GES_TYPE_URI_CLIP
 </SECTION>
 
 <SECTION>
-<FILE>ges-operation-clip</FILE>
+<FILE>gesoperationclip</FILE>
 <TITLE>GESOperationClip</TITLE>
 GESOperationClip
 <SUBSECTION Standard>
@@ -600,7 +600,7 @@ GES_OPERATION_CLIP_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-overlay-clip</FILE>
+<FILE>gesoverlayclip</FILE>
 <TITLE>GESOverlayClip</TITLE>
 GESOverlayClip
 GESOverlayClipClass
@@ -616,7 +616,7 @@ GES_TYPE_OVERLAY_CLIP
 </SECTION>
 
 <SECTION>
-<FILE>ges-base-transition-clip</FILE>
+<FILE>gesbasetransitionclip</FILE>
 <TITLE>GESBaseTransitionClip</TITLE>
 GESBaseTransitionClip
 <SUBSECTION Standard>
@@ -632,7 +632,7 @@ GES_BASE_TRANSITION_CLIP_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-base-effect-clip</FILE>
+<FILE>gesbaseeffectclip</FILE>
 <TITLE>GESBaseEffectClip</TITLE>
 GESBaseEffectClip
 <SUBSECTION Standard>
@@ -648,7 +648,7 @@ GES_BASE_EFFECT_CLIP_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-effect-clip</FILE>
+<FILE>geseffectclip</FILE>
 <TITLE>GESEffectClip</TITLE>
 GESEffectClip
 ges_effect_clip_new
@@ -666,7 +666,7 @@ GES_EFFECT_CLIP_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-transition-clip</FILE>
+<FILE>gestransitionclip</FILE>
 <TITLE>GESTransitionClip</TITLE>
 GESTransitionClip
 ges_transition_clip_new
@@ -685,7 +685,7 @@ ges_transition_clip_get_type
 
 
 <SECTION>
-<FILE>ges-test-clip</FILE>
+<FILE>gestestclip</FILE>
 <TITLE>GESTestClip</TITLE>
 GESTestClip
 GESTestClipClass
@@ -711,7 +711,7 @@ GES_TEST_CLIP_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-title-clip</FILE>
+<FILE>gestitleclip</FILE>
 <TITLE>GESTitleClip</TITLE>
 GESTitleClip
 ges_title_clip_new
@@ -743,7 +743,7 @@ GES_TITLE_CLIP_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-text-overlay-clip</FILE>
+<FILE>gestextoverlayclip</FILE>
 <TITLE>GESTextOverlayClip</TITLE>
 GESTextOverlayClip
 ges_text_overlay_clip_new
@@ -774,7 +774,7 @@ GES_TYPE_OVERLAY_TEXT_CLIP
 </SECTION>
 
 <SECTION>
-<FILE>ges-video-test-source</FILE>
+<FILE>gesvideotestsource</FILE>
 <TITLE>GESVideoTestSource</TITLE>
 GESVideoTestSource
 ges_video_test_source_set_pattern
@@ -792,7 +792,7 @@ GES_TYPE_VIDEO_TEST_SOURCE
 </SECTION>
 
 <SECTION>
-<FILE>ges-audio-test-source</FILE>
+<FILE>gesaudiotestsource</FILE>
 <TITLE>GESAudioTestSource</TITLE>
 GESAudioTestSource
 ges_audio_test_source_set_freq
@@ -812,7 +812,7 @@ GES_IS_AUDIO_TEST_SOURCE_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-title-source</FILE>
+<FILE>gestitlesource</FILE>
 <TITLE>GESTitleSource</TITLE>
 GESTitleSource
 ges_title_source_set_text
@@ -845,7 +845,7 @@ GES_IS_TITLE_SOURCE_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-text-overlay</FILE>
+<FILE>gestextoverlay</FILE>
 <TITLE>GESTextOverlay</TITLE>
 GESTextOverlay
 ges_text_overlay_new
@@ -876,7 +876,7 @@ GES_TYPE_TEXT_OVERLAY
 </SECTION>
 
 <SECTION>
-<FILE>ges-formatter</FILE>
+<FILE>gesformatter</FILE>
 <TITLE>GESFormatter</TITLE>
 GESFormatter
 GESFormatterClass
@@ -907,7 +907,7 @@ GESFormatterPrivate
 </SECTION>
 
 <SECTION>
-<FILE>ges-pitivi-formatter</FILE>
+<FILE>gespitiviformatter</FILE>
 <TITLE>GESPitiviFormatter</TITLE>
 GESPitiviFormatter
 ges_pitivi_formatter_new
@@ -925,7 +925,7 @@ ges_pitivi_formatter_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-base-effect</FILE>
+<FILE>gesbaseeffect</FILE>
 <TITLE>GESBaseEffect</TITLE>
 GESBaseEffect
 <SUBSECTION Standard>
@@ -941,7 +941,7 @@ ges_base_effect_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-effect</FILE>
+<FILE>geseffect</FILE>
 <TITLE>GESEffect</TITLE>
 GESEffect
 ges_effect_new
@@ -958,7 +958,7 @@ ges_effect_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-meta-container</FILE>
+<FILE>gesmetacontainer</FILE>
 <TITLE>GESMetaContainer</TITLE>
 GESMetaContainer
 GESMetaForeachFunc
@@ -1019,7 +1019,7 @@ ges_meta_container_get_ype
 </SECTION>
 
 <SECTION>
-<FILE>ges-extractable</FILE>
+<FILE>gesextractable</FILE>
 <TITLE>GESExtractableInterface</TITLE>
 GESExtractable
 GESExtractableInterface
@@ -1036,7 +1036,7 @@ ges_extractable_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-asset</FILE>
+<FILE>gesasset</FILE>
 <TITLE>GESAsset</TITLE>
 GESAsset
 ges_asset_get_extractable_type
@@ -1058,7 +1058,7 @@ ges_asset_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-clip-asset</FILE>
+<FILE>gesclipasset</FILE>
 <TITLE>GESClipAsset</TITLE>
 GESClipAsset
 ges_clip_asset_get_type
@@ -1075,7 +1075,7 @@ GES_CLIP_ASSET_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-element-asset</FILE>
+<FILE>gestrackelementasset</FILE>
 <TITLE>GESTrackElementAsset</TITLE>
 GESTrackElementAsset
 ges_track_element_asset_get_type
@@ -1093,7 +1093,7 @@ GES_TRACK_ELEMENT_ASSET_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-uri-clip-asset</FILE>
+<FILE>gesuriclipasset</FILE>
 <TITLE>GESUriClipAsset</TITLE>
 GESUriClipAsset
 ges_uri_clip_asset_get_type
@@ -1115,7 +1115,7 @@ GES_URI_CLIP_ASSET_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-group</FILE>
+<FILE>gesgroup</FILE>
 <TITLE>GESGroup</TITLE>
 GESGroup
 ges_group_new
@@ -1132,7 +1132,7 @@ GES_GROUP_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-asset-track-file-source</FILE>
+<FILE>gesurisourceasset</FILE>
 <TITLE>GESUriSourceAsset</TITLE>
 GESUriSourceAsset
 ges_uri_source_asset_get_type
@@ -1150,7 +1150,7 @@ GES_URI_SOURCE_ASSET_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-project</FILE>
+<FILE>gesproject</FILE>
 <TITLE>GESProject</TITLE>
 GESProject
 ges_project_load
@@ -1177,7 +1177,7 @@ GES_TYPE_PROJECT
 </SECTION>
 
 <SECTION>
-<FILE>ges-base-xml-formatter</FILE>
+<FILE>gesbasexmlformatter</FILE>
 <TITLE>GESBaseXmlFormatter</TITLE>
 GESBaseXmlFormatter
 ges_base_xml_formatter_get_type
@@ -1192,7 +1192,7 @@ GES_TYPE_BASE_XML_FORMATTER
 </SECTION>
 
 <SECTION>
-<FILE>ges-xml-formatter</FILE>
+<FILE>gesxmlformatter</FILE>
 <TITLE>GESXmlFormatter</TITLE>
 ges_xml_formatter_get_type
 <SUBSECTION Standard>

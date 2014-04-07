@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION: ges-effect-clip
+ * SECTION: geseffectclip
  * @short_description: An effect created by parse-launch style bin descriptions
  * in a GESLayer
  *

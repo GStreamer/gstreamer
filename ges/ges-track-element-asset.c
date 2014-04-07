@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION: ges-track-element-asset
+ * SECTION: gestrackelementasset
  * @short_description: A GESAsset subclass specialized in GESTrackElement extraction
  */
 

@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-title-clip
+ * SECTION:gestitleclip
  * @short_description: Render stand-alone titles in  GESLayer.
  *
  * Renders the given text in the specified font, at specified position, and

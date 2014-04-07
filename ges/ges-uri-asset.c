@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION: ges-uri-clip-asset
+ * SECTION: gesuriclipasset
  * @short_description: A GESAsset subclass specialized in GESUriClip extraction
  *
  * The #GESUriClipAsset is a special #GESAsset that lets you handle
@@ -541,7 +541,7 @@ ges_uri_clip_asset_get_stream_assets (GESUriClipAsset * self)
  *            GESUriSourceAsset implementation             *
  *****************************************************************/
 /**
- * SECTION: ges-asset-track-file-source
+ * SECTION: gesurisourceasset
  * @short_description: A GESAsset subclass specialized in GESUriSource extraction
  *
  * NOTE: You should never request such a #GESAsset as they will be created automatically

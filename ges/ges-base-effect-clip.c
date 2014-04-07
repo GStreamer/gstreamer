@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION: ges-base-effect-clip
+ * SECTION: gesbaseeffectclip
  * @short_description: An effect in a GESLayer
  *
  * The effect will be applied on the sources that have lower priorities

@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-timeline-filesource
+ * SECTION:gestimelinefilesource
  * @short_description: An object for manipulating media files in a GESTimeline
  *
  * Represents all the output streams from a particular uri. It is assumed that

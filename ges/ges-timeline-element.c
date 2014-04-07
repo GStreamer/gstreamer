@@ -17,7 +17,7 @@
  */
 
 /**
- * SECTION:ges-timeline-element
+ * SECTION:gestimelineelement
  * @short_description: Base Class for all elements that will be in a way or
  * another inside a GESTimeline.
  *

@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION: ges-audio-track:
+ * SECTION: gesaudiotrack
  * @short_description: A standard GESTrack for raw audio
  */
 

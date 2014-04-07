@@ -18,7 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION: ges-clip-asset
+ * SECTION: gesclipasset
  * @short_description: A GESAsset subclass specialized in GESClip extraction
  *
  * The #GESUriClipAsset is a special #GESAsset specilized in #GESClip.

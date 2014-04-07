@@ -19,7 +19,7 @@
  */
 
 /** 
- * SECTION:ges-transition
+ * SECTION:gestransition
  * @short_description: base class for audio and video transitions
  *
  */

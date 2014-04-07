@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-audio-source
+ * SECTION:gesaudiosource
  * @short_description: Base Class for audio sources
  */
 

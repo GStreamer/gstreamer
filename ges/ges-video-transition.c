@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-video-transition
+ * SECTION:gesvideotransition
  * @short_description: implements video crossfade transition
  */
 

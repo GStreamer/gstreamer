@@ -35,85 +35,85 @@ platform as well as Windows. It is released under the GNU Library General Public
 
   <chapter>
     <title>Base Classes</title>
-    <xi:include href="xml/ges-timeline.xml"/>
-    <xi:include href="xml/ges-layer.xml"/>
-    <xi:include href="xml/ges-timeline-element.xml"/>
-    <xi:include href="xml/ges-container.xml"/>
-    <xi:include href="xml/ges-clip.xml"/>
-    <xi:include href="xml/ges-source-clip.xml"/>
-    <xi:include href="xml/ges-operation-clip.xml"/>
-    <xi:include href="xml/ges-overlay-clip.xml"/>
-    <xi:include href="xml/ges-base-effect-clip.xml"/>
-    <xi:include href="xml/ges-track.xml"/>
-    <xi:include href="xml/ges-track-element.xml"/>
-    <xi:include href="xml/ges-source.xml"/>
-    <xi:include href="xml/ges-video-source.xml"/>
-    <xi:include href="xml/ges-audio-source.xml"/>
-    <xi:include href="xml/ges-base-effect.xml"/>
-    <xi:include href="xml/ges-operation.xml"/>
-    <xi:include href="xml/ges-base-transition-clip.xml"/>
-    <xi:include href="xml/ges-asset.xml"/>
+    <xi:include href="xml/gestimeline.xml"/>
+    <xi:include href="xml/geslayer.xml"/>
+    <xi:include href="xml/gestimelineelement.xml"/>
+    <xi:include href="xml/gescontainer.xml"/>
+    <xi:include href="xml/gesclip.xml"/>
+    <xi:include href="xml/gessourceclip.xml"/>
+    <xi:include href="xml/gesoperationclip.xml"/>
+    <xi:include href="xml/gesoverlayclip.xml"/>
+    <xi:include href="xml/gesbaseeffectclip.xml"/>
+    <xi:include href="xml/gestrack.xml"/>
+    <xi:include href="xml/gestrackelement.xml"/>
+    <xi:include href="xml/gessource.xml"/>
+    <xi:include href="xml/gesvideosource.xml"/>
+    <xi:include href="xml/gesaudiosource.xml"/>
+    <xi:include href="xml/gesbaseeffect.xml"/>
+    <xi:include href="xml/gesoperation.xml"/>
+    <xi:include href="xml/gesbasetransitionclip.xml"/>
+    <xi:include href="xml/gesasset.xml"/>
   </chapter>
 
   <chapter>
     <title>Timeline objects</title>
-    <xi:include href="xml/ges-timeline-filesource.xml"/>
-    <xi:include href="xml/ges-title-clip.xml"/>
-    <xi:include href="xml/ges-test-clip.xml"/>
-    <xi:include href="xml/ges-text-overlay-clip.xml"/>
-    <xi:include href="xml/ges-transition-clip.xml"/>
-    <xi:include href="xml/ges-effect-clip.xml"/>
-    <xi:include href="xml/ges-group.xml"/>
+    <xi:include href="xml/gestimelinefilesource.xml"/>
+    <xi:include href="xml/gestitleclip.xml"/>
+    <xi:include href="xml/gestestclip.xml"/>
+    <xi:include href="xml/gestextoverlayclip.xml"/>
+    <xi:include href="xml/gestransitionclip.xml"/>
+    <xi:include href="xml/geseffectclip.xml"/>
+    <xi:include href="xml/gesgroup.xml"/>
   </chapter>
 
   <chapter>
     <title>Track objects</title>
-    <xi:include href="xml/ges-audio-uri-source.xml"/>
-    <xi:include href="xml/ges-video-uri-source.xml"/>
-    <xi:include href="xml/ges-title-source.xml"/>
-    <xi:include href="xml/ges-audio-test-source.xml"/>
-    <xi:include href="xml/ges-video-test-source.xml"/>
-    <xi:include href="xml/ges-text-overlay.xml"/>
-    <xi:include href="xml/ges-transition.xml"/>
-    <xi:include href="xml/ges-video-transition.xml"/>
-    <xi:include href="xml/ges-audio-transition.xml"/>
-    <xi:include href="xml/ges-image-source.xml"/>
-    <xi:include href="xml/ges-multi-file-source.xml"/>
-    <xi:include href="xml/ges-effect.xml"/>
+    <xi:include href="xml/gesaudiourisource.xml"/>
+    <xi:include href="xml/gesvideourisource.xml"/>
+    <xi:include href="xml/gestitlesource.xml"/>
+    <xi:include href="xml/gesaudiotestsource.xml"/>
+    <xi:include href="xml/gesvideotestsource.xml"/>
+    <xi:include href="xml/gestextoverlay.xml"/>
+    <xi:include href="xml/gestransition.xml"/>
+    <xi:include href="xml/gesvideotransition.xml"/>
+    <xi:include href="xml/gesaudiotransition.xml"/>
+    <xi:include href="xml/gesimagesource.xml"/>
+    <xi:include href="xml/gesmultifilesource.xml"/>
+    <xi:include href="xml/geseffect.xml"/>
   </chapter>
 
   <chapter>
     <title>Convenience classes</title>
-    <xi:include href="xml/ges-pipeline.xml"/>
+    <xi:include href="xml/gespipeline.xml"/>
   </chapter>
 
   <chapter>
     <title>Serialization Classes</title>
-    <xi:include href="xml/ges-formatter.xml"/>
-    <xi:include href="xml/ges-pitivi-formatter.xml"/>
-    <xi:include href="xml/ges-base-xml-formatter.xml"/>
-    <xi:include href="xml/ges-xml-formatter.xml"/>
+    <xi:include href="xml/gesformatter.xml"/>
+    <xi:include href="xml/gespitiviformatter.xml"/>
+    <xi:include href="xml/gesbasexmlformatter.xml"/>
+    <xi:include href="xml/gesxmlformatter.xml"/>
   </chapter>
 
   <chapter>
     <title>Interfaces</title>
-    <xi:include href="xml/ges-meta-container.xml"/>
-    <xi:include href="xml/ges-extractable.xml"/>
+    <xi:include href="xml/gesmetacontainer.xml"/>
+    <xi:include href="xml/gesextractable.xml"/>
   </chapter>
 
   <chapter>
     <title>Assets</title>
-    <xi:include href="xml/ges-clip-asset.xml"/>
-    <xi:include href="xml/ges-track-element-asset.xml"/>
-    <xi:include href="xml/ges-uri-clip-asset.xml"/>
-    <xi:include href="xml/ges-asset-track-file-source.xml"/>
-    <xi:include href="xml/ges-project.xml"/>
+    <xi:include href="xml/gesclipasset.xml"/>
+    <xi:include href="xml/gestrackelementasset.xml"/>
+    <xi:include href="xml/gesuriclipasset.xml"/>
+    <xi:include href="xml/gesurisourceasset.xml"/>
+    <xi:include href="xml/gesproject.xml"/>
   </chapter>
 
   <chapter>
     <title>Tracks</title>
-    <xi:include href="xml/ges-video-track.xml"/>
-    <xi:include href="xml/ges-audio-track.xml"/>
+    <xi:include href="xml/gesvideotrack.xml"/>
+    <xi:include href="xml/gesaudiotrack.xml"/>
   </chapter>
 
   <chapter id="ges-hierarchy">

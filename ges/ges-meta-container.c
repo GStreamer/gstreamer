@@ -4,7 +4,7 @@
 #include "ges-meta-container.h"
 
 /**
-* SECTION: ges-meta-container
+* SECTION: gesmetacontainer
 * @short_description: An interface for storing meta
 *
 * Interface that allows reading and writing meta

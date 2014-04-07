@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-source-clip
+ * SECTION:gessourceclip
  * @short_description: Base Class for sources of a GESLayer
  */
 

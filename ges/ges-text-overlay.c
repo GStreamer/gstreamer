@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-text-overlay
+ * SECTION:gestextoverlay
  * @short_description: render text onto another video stream in a GESLayer
  *
  */

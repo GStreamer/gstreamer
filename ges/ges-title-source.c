@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-title-source
+ * SECTION:gestitlesource
  * @short_description: render stand-alone text titles
  * 
  */

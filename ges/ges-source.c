@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-source
+ * SECTION:gessource
  * @short_description: Base Class for single-media sources
  */
 

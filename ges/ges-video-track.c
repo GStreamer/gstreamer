@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION: ges-video-track:
+ * SECTION: gesvideotrack
  * @short_description: A standard GESTrack for raw video
  */
 

@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-text-overlay-clip
+ * SECTION:gestextoverlayclip
  * @short_description: Render text onto another stream in a GESLayer
  *
  * Renders text onto the next lower priority stream using textrender.

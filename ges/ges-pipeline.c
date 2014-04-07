@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-pipeline
+ * SECTION:gespipeline
  * @short_description: Convenience GstPipeline for editing.
  *
  * #GESPipeline allows developers to view and render #GESTimeline

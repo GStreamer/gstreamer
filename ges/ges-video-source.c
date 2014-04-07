@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-video-source
+ * SECTION:gesvideosource
  * @short_description: Base Class for video sources
  */
 

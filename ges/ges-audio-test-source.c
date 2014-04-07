@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-audio-test-source
+ * SECTION:gesaudiotestsource
  * @short_description: produce a simple test waveform or silence
  * 
  * Outputs a test audio stream using audiotestsrc. The default property values

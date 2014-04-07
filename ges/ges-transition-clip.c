@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION: ges-transition-clip
+ * SECTION: gestransitionclip
  * @short_description: Transition from one clip to another in a GESLayer
  *
  * Creates an object that mixes together the two underlying objects, A and B.

@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION: ges-base-transition-clip
+ * SECTION: gesbasetransitionclip
  * @short_description: Base classes for transitions
  */
 

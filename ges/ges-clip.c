@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION:ges-clip
+ * SECTION:gesclip
  * @short_description: Base Class for objects in a GESLayer
  *
  * A #GESClip is a 'natural' object which controls one or more

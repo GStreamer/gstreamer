@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-track
+ * SECTION:gestrack
  * @short_description: Composition of objects
  *
  * Corresponds to one output format (i.e. audio OR video).

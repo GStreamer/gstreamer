@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION: ges-extractable
+ * SECTION: gesextractable
  * @short_description: An interface for objects which can be extracted from a GESAsset
  *
  * FIXME: Long description needed

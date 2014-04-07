@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-container
+ * SECTION:gescontainer
  * @short_description: Base Class for objects responsible for controlling other
  * GESTimelineElement-s
  */

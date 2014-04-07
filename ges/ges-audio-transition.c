@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-audio-transition
+ * SECTION:gesaudiotransition
  * @short_description: implements audio crossfade transition
  */
 

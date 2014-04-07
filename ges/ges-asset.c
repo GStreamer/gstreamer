@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION: ges-asset
+ * SECTION: gesasset
  * @short_description: Represents usable resources inside the GStreamer Editing Services
  *
  * The Assets in the GStreamer Editing Services represent the resources

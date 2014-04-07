@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-video-uri-source
+ * SECTION:gesvideourisource
  * @short_description: outputs a single video stream from a given file
  */
 
