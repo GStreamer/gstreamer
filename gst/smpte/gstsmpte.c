@@ -504,7 +504,7 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
     in2 = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
     gst_buffer_map (in2, &map, GST_MAP_WRITE);
     fill_i420 (map.data, smpte->width, smpte->height, 0);
-    gst_buffer_unmap (in1, &map);
+    gst_buffer_unmap (in2, &map);
   }
 
   if (GST_VIDEO_INFO_WIDTH (&smpte->vinfo1) !=
