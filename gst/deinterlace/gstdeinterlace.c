@@ -1425,6 +1425,11 @@ gst_deinterlace_get_pattern_lock (GstDeinterlace * self, gboolean * flush_one)
     }
   }
 
+  if (pattern < 0) {
+    GST_WARNING_OBJECT (self, "Failed to select a pattern");
+    return;
+  }
+
   GST_DEBUG_OBJECT (self,
       "Final pattern match result: pa %d, ph %d, l %d, s %d", pattern, phase,
       telecine_patterns[pattern].length, score);
