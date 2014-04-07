@@ -571,8 +571,7 @@ check_fork (void)
 #ifdef _POSIX_VERSION
   pid_t pid = fork ();
   /* Set the process to a process group to be able to kill it easily. */
-  if (pid > 0)
-    setpgid (pid, group_pid);
+  setpgid (pid, group_pid);
   return pid;
 #else /* _POSIX_VERSION */
   eprintf ("This version does not support fork", __FILE__, __LINE__);
