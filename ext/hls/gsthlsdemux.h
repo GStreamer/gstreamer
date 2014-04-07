@@ -53,7 +53,7 @@ typedef struct _GstHLSDemuxClass GstHLSDemuxClass;
  */
 struct _GstHLSDemux
 {
-  GstElement parent;
+  GstBin parent;
 
   GstPad *sinkpad;
   GstPad *srcpad;
@@ -103,11 +103,18 @@ struct _GstHLSDemux
 
   /* Current download rate (bps) */
   gint current_download_rate;
+
+  /* fragment download tooling */
+  GstElement *src;
+  GMutex fragment_download_lock;
+  GCond fragment_download_cond;
+  GstClockTime current_timestamp;
+  gboolean starting_fragment;
 };
 
 struct _GstHLSDemuxClass
 {
-  GstElementClass parent_class;
+  GstBinClass parent_class;
 };
 
 GType gst_hls_demux_get_type (void);
