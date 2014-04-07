@@ -1526,7 +1526,7 @@ gst_queue2_close_temp_location_file (GstQueue2 * queue)
   if (queue->temp_remove) {
     if (remove (queue->temp_location) < 0) {
       GST_WARNING_OBJECT (queue, "Failed to remove temporary file %s: %s",
-          queue->temp_location, strerror (errno));
+          queue->temp_location, g_strerror (errno));
     }
   }
 
