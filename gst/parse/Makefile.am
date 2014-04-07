@@ -11,7 +11,7 @@ EXTRA_DIST = \
 #libgstparse_la_SOURCES = lex.priv_gst_parse_yy.c grammar.tab.c
 
 # uncomment these lines to _NOT_ dist the generated sources
-nodist_libgstparse_la_SOURCES = lex.priv_gst_parse_yy.c grammar.tab.c
+nodist_libgstparse_la_SOURCES = lex.priv_gst_parse_yy.c grammar.tab.c grammar.tab.h
 CLEANFILES += grammar.tab.c lex.priv_gst_parse_yy.c
 
 # can't use GST_ALL_CFLAGS here because that'd pull in -Werror
@@ -19,7 +19,7 @@ libgstparse_la_CFLAGS = -I$(top_srcdir) -I$(top_builddir) \
 	$(GLIB_CFLAGS) $(GST_OPTION_CFLAGS)
 libgstparse_la_LIBADD = $(GST_ALL_LIBS)
 
-noinst_HEADERS = grammar.tab.h types.h
+noinst_HEADERS = types.h
 
 Android.mk: Makefile.am
 	androgenizer -:PROJECT gstreamer -:STATIC libgstparse -:TAGS eng debug \
