@@ -540,9 +540,9 @@ was_socket:
   }
 lseek_wonky:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("File \"%s\" could not seek back to zero after seek test."),
-            src->filename), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("Could not seek back to zero after seek test in file \"%s\"",
+            src->filename));
     goto error_close;
   }
 error_close:
