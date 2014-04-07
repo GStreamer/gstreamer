@@ -466,7 +466,7 @@ gst_identity_update_last_message_for_buffer (GstIdentity * identity,
     const gchar * action, GstBuffer * buf, gsize size)
 {
   gchar dts_str[64], pts_str[64], dur_str[64];
-  gchar flag_str[100];
+  gchar *flag_str;
 
   GST_OBJECT_LOCK (identity);
 
@@ -476,8 +476,16 @@ gst_identity_update_last_message_for_buffer (GstIdentity * identity,
       "marker", "header", "gap", "droppable", "delta-unit", "tag-memory",
       "FIXME"
     };
-    int i;
-    char *end = flag_str;
+    int i, max_bytes;
+    char *end;
+
+    max_bytes = 1;              /* NUL */
+    for (i = 0; i < G_N_ELEMENTS (flag_list); i++) {
+      max_bytes += strlen (flag_list[i]) + 1;   /* string and space */
+    }
+    flag_str = g_malloc (max_bytes);
+
+    end = flag_str;
     end[0] = '\0';
     for (i = 0; i < G_N_ELEMENTS (flag_list); i++) {
       if (GST_MINI_OBJECT_CAST (buf)->flags & (1 << i)) {
@@ -501,6 +509,7 @@ gst_identity_update_last_message_for_buffer (GstIdentity * identity,
       print_pretty_time (dur_str, sizeof (dur_str), GST_BUFFER_DURATION (buf)),
       GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
       GST_BUFFER_FLAGS (buf), flag_str, buf);
+  g_free (flag_str);
 
   GST_OBJECT_UNLOCK (identity);
 
