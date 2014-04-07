@@ -482,7 +482,12 @@ gst_file_src_start (GstBaseSrc * basesrc)
     } else {
       src->seekable = TRUE;
     }
-    lseek (src->fd, 0, SEEK_SET);
+    res = lseek (src->fd, 0, SEEK_SET);
+    if (res < 0) {
+      /* We really don't like not being able to go back to 0 */
+      src->seekable = FALSE;
+      goto lseek_wonky;
+    }
   }
 
   /* We can only really do seeking on regular files - for other file types, we
@@ -531,6 +536,13 @@ was_socket:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("File \"%s\" is a socket."), src->filename), (NULL));
+    goto error_close;
+  }
+lseek_wonky:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("File \"%s\" could not seek back to zero after seek test."),
+            src->filename), (NULL));
     goto error_close;
   }
 error_close:
