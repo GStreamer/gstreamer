@@ -1523,8 +1523,12 @@ gst_queue2_close_temp_location_file (GstQueue2 * queue)
   fflush (queue->temp_file);
   fclose (queue->temp_file);
 
-  if (queue->temp_remove)
-    remove (queue->temp_location);
+  if (queue->temp_remove) {
+    if (remove (queue->temp_location) < 0) {
+      GST_WARNING_OBJECT (queue, "Failed to remove temporary file %s: %s",
+          queue->temp_location, strerror (errno));
+    }
+  }
 
   queue->temp_file = NULL;
   clean_ranges (queue);
