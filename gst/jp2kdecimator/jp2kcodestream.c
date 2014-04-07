@@ -227,7 +227,7 @@ packet_iterator_next_rpcl (PacketIterator * it)
               || (it->cur_y == it->ty0
                   && ((it->try0 * it->two_nl_r) %
                       (it->two_ppy * it->two_nl_r) != 0)))
-          && ((it->cur_x % (it->xr * it->two_ppy * it->two_nl_r) == 0)
+          && ((it->cur_x % (it->xr * it->two_ppx * it->two_nl_r) == 0)
               || (it->cur_x == it->tx0
                   && ((it->trx0 * it->two_nl_r) %
                       (it->two_ppx * it->two_nl_r) != 0)))) {
@@ -297,7 +297,7 @@ packet_iterator_next_pcrl (PacketIterator * it)
               || (it->cur_y == it->ty0
                   && ((it->try0 * it->two_nl_r) %
                       (it->two_ppy * it->two_nl_r) != 0)))
-          && ((it->cur_x % (it->xr * it->two_ppy * it->two_nl_r) == 0)
+          && ((it->cur_x % (it->xr * it->two_ppx * it->two_nl_r) == 0)
               || (it->cur_x == it->tx0
                   && ((it->trx0 * it->two_nl_r) %
                       (it->two_ppx * it->two_nl_r) != 0)))) {
@@ -370,7 +370,7 @@ packet_iterator_next_cprl (PacketIterator * it)
               || (it->cur_y == it->ty0
                   && ((it->try0 * it->two_nl_r) %
                       (it->two_ppy * it->two_nl_r) != 0)))
-          && ((it->cur_x % (it->xr * it->two_ppy * it->two_nl_r) == 0)
+          && ((it->cur_x % (it->xr * it->two_ppx * it->two_nl_r) == 0)
               || (it->cur_x == it->tx0
                   && ((it->trx0 * it->two_nl_r) %
                       (it->two_ppx * it->two_nl_r) != 0)))) {
