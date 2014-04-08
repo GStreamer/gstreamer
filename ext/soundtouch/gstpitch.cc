@@ -267,6 +267,7 @@ gst_pitch_set_property (GObject * object, guint prop_id,
       /* Has no effect until the next input segment */
       pitch->out_seg_rate = g_value_get_float (value);
       GST_OBJECT_UNLOCK (pitch);
+      break;
     case ARG_PITCH:
       pitch->pitch = g_value_get_float (value);
       pitch->priv->st->setPitch (pitch->pitch);
