@@ -2991,6 +2991,7 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
       if (gst_structure_get_int (str, "bitrate", &bitrate))
         context->bit_rate = bitrate;
     }
+      break;
     case AV_CODEC_ID_ALAC:
       gst_structure_get_int (str, "samplesize",
           &context->bits_per_coded_sample);
