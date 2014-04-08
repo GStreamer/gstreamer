@@ -1099,6 +1099,7 @@ gst_interleave_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       res = TRUE;
+      break;
     }
     default:
       /* FIXME, needs a custom query handler because we have multiple
