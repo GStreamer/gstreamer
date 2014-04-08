@@ -646,7 +646,8 @@ _dvb_sub_read_2bit_string (guint8 * destbuf, gint dbuf_len,
 
   GST_TRACE ("dbuf_len = %d", dbuf_len);
 
-  while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 0)) {
+  /* Need at least 2 bits remaining */
+  while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 1)) {
     guint run_length = 0, clut_index = 0;
 
     bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 2);
@@ -739,7 +740,8 @@ _dvb_sub_read_4bit_string (guint8 * destbuf, gint dbuf_len,
   GST_TRACE ("RUNLEN: srcbuf position %p, buf_size = %d; destination buffer "
       "size is %d @ %p", *srcbuf, buf_size, dbuf_len, destbuf);
 
-  while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 0)) {
+  /* Need at least 4 bits */
+  while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 3)) {
     guint run_length = 0, clut_index = 0;
 
     bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 4);
@@ -843,7 +845,7 @@ _dvb_sub_read_8bit_string (guint8 * destbuf, gint dbuf_len,
    * FFMPEG-FIXME: lest have no chance of reading memory we don't own and visual corruption
    * FFMPEG-FIXME: is guaranteed anyway when not all bytes are present */
   /* Rephrased - it's better to work with bytes with default value '0' instead of reading from memory we don't own. */
-  while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 0)) {
+  while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 7)) {
     guint run_length = 0, clut_index = 0;
     bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 8);
 
