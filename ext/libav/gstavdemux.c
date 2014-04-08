@@ -655,11 +655,7 @@ static gboolean
 gst_ffmpegdemux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstFFMpegDemux *demux;
-  GstFFStream *stream;
   gboolean res = TRUE;
-
-  if (!(stream = gst_pad_get_element_private (pad)))
-    return FALSE;
 
   demux = (GstFFMpegDemux *) parent;
 
