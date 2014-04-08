@@ -189,7 +189,7 @@ gst_flite_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
     gst_structure_remove_field (structure, "channel-mask");
   } else {
     guint64 channel_mask = 0;
-    gint x = 64;
+    gint x = 63;
 
     if (!gst_structure_get (structure, "channel-mask", GST_TYPE_BITMASK,
             &channel_mask, NULL)) {
