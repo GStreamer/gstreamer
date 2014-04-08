@@ -41,12 +41,6 @@
 #endif
 
 #include <string.h>
-#ifdef HAVE_NETTLE
-#include <nettle/aes.h>
-#include <nettle/cbc.h>
-#else
-#include <gcrypt.h>
-#endif
 #include <gst/base/gsttypefindhelper.h>
 #include "gsthlsdemux.h"
 
@@ -117,6 +111,12 @@ static gchar *gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf);
 
 static gboolean gst_hls_demux_change_playlist (GstHLSDemux * demux,
     guint max_bitrate);
+static GstBuffer *gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
+    GstBuffer * encrypted_buffer, GError ** err);
+static gboolean
+gst_hls_demux_decrypt_start (GstHLSDemux * demux, const guint8 * key_data,
+    const guint8 * iv_data);
+static void gst_hls_demux_decrypt_end (GstHLSDemux * demux);
 
 #define gst_hls_demux_parent_class parent_class
 G_DEFINE_TYPE (GstHLSDemux, gst_hls_demux, GST_TYPE_BIN);
@@ -307,6 +307,9 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
       gst_hls_demux_reset (demux, FALSE);
       gst_uri_downloader_reset (demux->downloader);
       break;
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      demux->adapter = gst_adapter_new ();
+      break;
     default:
       break;
   }
@@ -320,6 +323,10 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
       gst_task_join (demux->updates_task);
       gst_task_join (demux->stream_task);
       gst_hls_demux_reset (demux, FALSE);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_object_unref (demux->adapter);
+      demux->adapter = NULL;
       break;
     default:
       break;
@@ -735,14 +742,90 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     gst_caps_unref (caps);
   }
 
+  /* Is it encrypted? */
+  if (demux->current_key) {
+    GError *err = NULL;
+    GstBuffer *tmp_buffer;
+    gsize available;
+
+    /* restart the decrypting lib for a new fragment */
+    if (demux->starting_fragment) {
+      GstFragment *key_fragment;
+      GstBuffer *key_buffer;
+      GstMapInfo key_info;
+
+      /* new key? */
+      if (demux->key_url && strcmp (demux->key_url, demux->current_key) == 0) {
+        key_fragment = g_object_ref (demux->key_fragment);
+      } else {
+        g_free (demux->key_url);
+        demux->key_url = NULL;
+
+        if (demux->key_fragment)
+          g_object_unref (demux->key_fragment);
+        demux->key_fragment = NULL;
+
+        GST_INFO_OBJECT (demux, "Fetching key %s", demux->current_key);
+        key_fragment =
+            gst_uri_downloader_fetch_uri_with_referer (demux->downloader,
+            demux->current_key, demux->client->main ?
+            demux->client->main->uri : NULL, FALSE, &err);
+        if (key_fragment == NULL)
+          goto key_failed;
+        demux->key_url = g_strdup (demux->current_key);
+        demux->key_fragment = g_object_ref (key_fragment);
+      }
+
+      key_buffer = gst_fragment_get_buffer (key_fragment);
+      gst_buffer_map (key_buffer, &key_info, GST_MAP_READ);
+
+      gst_hls_demux_decrypt_start (demux, key_info.data, demux->current_iv);
+
+      gst_buffer_unmap (key_buffer, &key_info);
+      gst_buffer_unref (key_buffer);
+      gst_object_unref (key_fragment);
+    }
+
+    gst_adapter_push (demux->adapter, buffer);
+
+    /* must be a multiple of 16 */
+    available = gst_adapter_available (demux->adapter) & (~0xF);
+
+    if (available == 0) {
+      return GST_FLOW_OK;
+    }
+
+    buffer = gst_adapter_take_buffer (demux->adapter, available);
+    buffer = gst_hls_demux_decrypt_fragment (demux, buffer, &err);
+    if (buffer == NULL) {
+      GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Failed to decrypt buffer"),
+          ("decryption failed %s", err->message));
+      g_error_free (err);
+
+      return GST_FLOW_ERROR;
+    }
+
+    tmp_buffer = demux->pending_buffer;
+    demux->pending_buffer = buffer;
+    buffer = tmp_buffer;
+  }
+
+  if (demux->starting_fragment) {
+    if (demux->segment.rate < 0)
+      /* Set DISCONT flag for every first buffer in reverse playback mode
+       * as each fragment for its own has to be reversed */
+      demux->discont = TRUE;
+    demux->starting_fragment = FALSE;
+  }
+
+  if (!buffer) {
+    return GST_FLOW_OK;
+  }
+
   if (demux->discont) {
     GST_DEBUG_OBJECT (demux, "Marking fragment as discontinuous");
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
     demux->discont = FALSE;
-  } else if (demux->starting_fragment && demux->segment.rate < 0) {
-    /* Set DISCONT flag for every buffer in reverse playback mode
-     * as each fragment for its own has to be reversed */
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
   } else {
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
   }
@@ -788,6 +871,10 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   ret = GST_FLOW_OK;
 
   return ret;
+
+key_failed:
+  /* TODO ERROR here */
+  return GST_FLOW_ERROR;
 }
 
 static gboolean
@@ -798,6 +885,27 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
+      if (demux->current_key)
+        gst_hls_demux_decrypt_end (demux);
+      /* TODO adapter should be empty */
+
+      /* pending buffer is only used for encrypted streams */
+      if (demux->pending_buffer) {
+        GstMapInfo info;
+        gsize unpadded_size;
+
+        /* Handle pkcs7 unpadding here */
+        gst_buffer_map (demux->pending_buffer, &info, GST_MAP_READ);
+        unpadded_size = info.size - info.data[info.size - 1];
+        gst_buffer_unmap (demux->pending_buffer, &info);
+
+        gst_buffer_resize (demux->pending_buffer, 0, unpadded_size);
+
+        /* TODO check return */
+        gst_pad_push (demux->srcpad, demux->pending_buffer);
+        demux->pending_buffer = NULL;
+      }
+
       g_cond_signal (&demux->fragment_download_cond);
       break;
     default:
@@ -1120,6 +1228,14 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
     demux->srcpad = NULL;
   }
 
+  if (demux->adapter)
+    gst_adapter_clear (demux->adapter);
+  if (demux->pending_buffer)
+    gst_buffer_unref (demux->pending_buffer);
+  demux->pending_buffer = NULL;
+  demux->current_key = NULL;
+  demux->current_iv = NULL;
+
   demux->current_download_rate = -1;
 }
 
@@ -1325,8 +1441,8 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
 
     GST_M3U8_CLIENT_LOCK (demux->client);
     last_sequence =
-        GST_M3U8_MEDIA_FILE (g_list_last (demux->client->current->
-            files)->data)->sequence;
+        GST_M3U8_MEDIA_FILE (g_list_last (demux->client->current->files)->
+        data)->sequence;
 
     if (demux->client->sequence >= last_sequence - 3) {
       GST_DEBUG_OBJECT (demux, "Sequence is beyond playlist. Moving back to %u",
@@ -1426,8 +1542,8 @@ retry_failover_protection:
     gst_m3u8_client_set_current (demux->client, previous_variant->data);
     /*  Try a lower bitrate (or stop if we just tried the lowest) */
     if (GST_M3U8 (previous_variant->data)->iframe && new_bandwidth ==
-        GST_M3U8 (g_list_first (demux->client->main->iframe_lists)->data)->
-        bandwidth)
+        GST_M3U8 (g_list_first (demux->client->main->iframe_lists)->
+            data)->bandwidth)
       return FALSE;
     else if (!GST_M3U8 (previous_variant->data)->iframe && new_bandwidth ==
         GST_M3U8 (g_list_first (demux->client->main->lists)->data)->bandwidth)
@@ -1487,126 +1603,105 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux, GstFragment * fragment)
 }
 #endif
 
-#if 0
 #ifdef HAVE_NETTLE
 static gboolean
-decrypt_fragment (GstHLSDemux * demux, gsize length,
-    const guint8 * encrypted_data, guint8 * decrypted_data,
-    const guint8 * key_data, const guint8 * iv_data)
+gst_hls_demux_decrypt_start (GstHLSDemux * demux, const guint8 * key_data,
+    const guint8 * iv_data)
 {
-  struct CBC_CTX (struct aes_ctx, AES_BLOCK_SIZE) aes_ctx;
-
-  if (length % 16 != 0)
-    return FALSE;
-
-  aes_set_decrypt_key (&aes_ctx.ctx, 16, key_data);
-  CBC_SET_IV (&aes_ctx, iv_data);
-
-  CBC_DECRYPT (&aes_ctx, aes_decrypt, length, decrypted_data, encrypted_data);
+  aes_set_decrypt_key (&demux->aes_ctx.ctx, 16, key_data);
+  CBC_SET_IV (&demux->aes_ctx, iv_data);
 
   return TRUE;
 }
-#else
+
 static gboolean
 decrypt_fragment (GstHLSDemux * demux, gsize length,
-    const guint8 * encrypted_data, guint8 * decrypted_data,
-    const guint8 * key_data, const guint8 * iv_data)
+    const guint8 * encrypted_data, guint8 * decrypted_data)
 {
-  gcry_cipher_hd_t aes_ctx = NULL;
+  if (length % 16 != 0)
+    return FALSE;
+
+  CBC_DECRYPT (&demux->aes_ctx, aes_decrypt, length, decrypted_data,
+      encrypted_data);
+
+  return TRUE;
+}
+
+static void
+gst_hls_demux_decrypt_end (GstHLSDemux * demux)
+{
+  /* NOP */
+}
+
+#else
+static gboolean
+gst_hls_demux_decrypt_start (GstHLSDemux * demux, const guint8 * key_data,
+    const guint8 * iv_data)
+{
   gcry_error_t err = 0;
   gboolean ret = FALSE;
 
   err =
-      gcry_cipher_open (&aes_ctx, GCRY_CIPHER_AES128, GCRY_CIPHER_MODE_CBC, 0);
+      gcry_cipher_open (&demux->aes_ctx, GCRY_CIPHER_AES128,
+      GCRY_CIPHER_MODE_CBC, 0);
   if (err)
     goto out;
-  err = gcry_cipher_setkey (aes_ctx, key_data, 16);
+  err = gcry_cipher_setkey (demux->aes_ctx, key_data, 16);
   if (err)
     goto out;
-  err = gcry_cipher_setiv (aes_ctx, iv_data, 16);
-  if (err)
-    goto out;
-  err = gcry_cipher_decrypt (aes_ctx, decrypted_data, length,
-      encrypted_data, length);
-  if (err)
-    goto out;
-
-  ret = TRUE;
+  err = gcry_cipher_setiv (demux->aes_ctx, iv_data, 16);
+  if (!err)
+    ret = TRUE;
 
 out:
-  if (aes_ctx)
-    gcry_cipher_close (aes_ctx);
+  if (!ret)
+    if (demux->aes_ctx)
+      gcry_cipher_close (demux->aes_ctx);
 
   return ret;
 }
+
+static gboolean
+decrypt_fragment (GstHLSDemux * demux, gsize length,
+    const guint8 * encrypted_data, guint8 * decrypted_data)
+{
+  gcry_error_t err = 0;
+
+  err = gcry_cipher_decrypt (demux->aes_ctx, decrypted_data, length,
+      encrypted_data, length);
+
+  return err == 0;
+}
+
+static void
+gst_hls_demux_decrypt_end (GstHLSDemux * demux)
+{
+  if (demux->aes_ctx)
+    gcry_cipher_close (demux->aes_ctx);
+}
 #endif
 
-static GstFragment *
+static GstBuffer *
 gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
-    GstFragment * encrypted_fragment, const gchar * key, const guint8 * iv,
-    GError ** err)
+    GstBuffer * encrypted_buffer, GError ** err)
 {
-  GstFragment *key_fragment, *ret = NULL;
-  GstBuffer *key_buffer, *encrypted_buffer, *decrypted_buffer;
-  GstMapInfo key_info, encrypted_info, decrypted_info;
-  gsize unpadded_size;
+  GstBuffer *decrypted_buffer = NULL;
+  GstMapInfo encrypted_info, decrypted_info;
 
-  if (demux->key_url && strcmp (demux->key_url, key) == 0) {
-    key_fragment = g_object_ref (demux->key_fragment);
-  } else {
-    g_free (demux->key_url);
-    demux->key_url = NULL;
-
-    if (demux->key_fragment)
-      g_object_unref (demux->key_fragment);
-    demux->key_fragment = NULL;
-
-    GST_INFO_OBJECT (demux, "Fetching key %s", key);
-    key_fragment =
-        gst_uri_downloader_fetch_uri_with_referer (demux->downloader, key,
-        demux->client->main ? demux->client->main->uri : NULL, FALSE, err);
-    if (key_fragment == NULL)
-      goto key_failed;
-    demux->key_url = g_strdup (key);
-    demux->key_fragment = g_object_ref (key_fragment);
-  }
-
-  key_buffer = gst_fragment_get_buffer (key_fragment);
-  encrypted_buffer = gst_fragment_get_buffer (encrypted_fragment);
   decrypted_buffer =
       gst_buffer_new_allocate (NULL, gst_buffer_get_size (encrypted_buffer),
       NULL);
 
-  gst_buffer_map (key_buffer, &key_info, GST_MAP_READ);
   gst_buffer_map (encrypted_buffer, &encrypted_info, GST_MAP_READ);
   gst_buffer_map (decrypted_buffer, &decrypted_info, GST_MAP_WRITE);
 
-  if (key_info.size != 16)
-    goto decrypt_error;
   if (!decrypt_fragment (demux, encrypted_info.size,
-          encrypted_info.data, decrypted_info.data, key_info.data, iv))
+          encrypted_info.data, decrypted_info.data))
     goto decrypt_error;
 
-  /* Handle pkcs7 unpadding here */
-  unpadded_size =
-      decrypted_info.size - decrypted_info.data[decrypted_info.size - 1];
 
   gst_buffer_unmap (decrypted_buffer, &decrypted_info);
   gst_buffer_unmap (encrypted_buffer, &encrypted_info);
-  gst_buffer_unmap (key_buffer, &key_info);
-
-  gst_buffer_resize (decrypted_buffer, 0, unpadded_size);
-
-  gst_buffer_unref (key_buffer);
-  gst_buffer_unref (encrypted_buffer);
-  g_object_unref (key_fragment);
-
-  ret = gst_fragment_new ();
-  gst_fragment_add_buffer (ret, decrypted_buffer);
-  ret->completed = TRUE;
-key_failed:
-  g_object_unref (encrypted_fragment);
-  return ret;
 
 decrypt_error:
   GST_ERROR_OBJECT (demux, "Failed to decrypt fragment");
@@ -1615,17 +1710,12 @@ decrypt_error:
 
   gst_buffer_unmap (decrypted_buffer, &decrypted_info);
   gst_buffer_unmap (encrypted_buffer, &encrypted_info);
-  gst_buffer_unmap (key_buffer, &key_info);
 
-  gst_buffer_unref (key_buffer);
   gst_buffer_unref (encrypted_buffer);
   gst_buffer_unref (decrypted_buffer);
 
-  g_object_unref (key_fragment);
-  g_object_unref (encrypted_fragment);
-  return ret;
+  return decrypted_buffer;
 }
-#endif
 
 static gboolean
 gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
@@ -1661,6 +1751,8 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   /* set up our source for download */
   demux->current_timestamp = timestamp;
   demux->starting_fragment = TRUE;
+  demux->current_key = key;
+  demux->current_iv = iv;
   g_object_set (demux->src, "location", next_fragment_uri, NULL);
   gst_element_set_state (demux->src, GST_STATE_READY);  /* TODO check return */
   gst_element_send_event (demux->src, gst_event_new_seek (1.0, GST_FORMAT_BYTES,
@@ -1674,14 +1766,6 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
 
   g_mutex_unlock (&demux->fragment_download_lock);
   gst_element_set_state (demux->src, GST_STATE_NULL);
-
-#if 0
-  if (key) {
-    download = gst_hls_demux_decrypt_fragment (demux, download, key, iv, err);
-    if (download == NULL)
-      goto error;
-  }
-#endif
 
   return TRUE;
 }

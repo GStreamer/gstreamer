@@ -29,6 +29,12 @@
 #include "m3u8.h"
 #include "gstfragmented.h"
 #include <gst/uridownloader/gsturidownloader.h>
+#ifdef HAVE_NETTLE
+#include <nettle/aes.h>
+#include <nettle/cbc.h>
+#else
+#include <gcrypt.h>
+#endif
 
 G_BEGIN_DECLS
 #define GST_TYPE_HLS_DEMUX \
@@ -110,6 +116,20 @@ struct _GstHLSDemux
   GCond fragment_download_cond;
   GstClockTime current_timestamp;
   gboolean starting_fragment;
+
+  /* decryption tooling */
+#ifdef HAVE_NETTLE
+  struct CBC_CTX (struct aes_ctx, AES_BLOCK_SIZE) aes_ctx;
+#else
+  gcry_cipher_hd_t aes_ctx;
+#endif
+  const gchar *current_key;
+  const guint8 *current_iv;
+  GstAdapter *adapter; /* used to accumulate 16 bytes multiple chunks */
+  GstBuffer *pending_buffer; /* decryption scenario:
+                              * the last buffer can only be pushed when
+                              * resized, so need to store and wait for
+                              * EOS to know it is the last */
 };
 
 struct _GstHLSDemuxClass
