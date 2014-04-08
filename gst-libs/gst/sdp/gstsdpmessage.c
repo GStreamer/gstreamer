@@ -436,7 +436,10 @@ gst_sdp_address_is_multicast (const gchar * nettype, const gchar * addrtype,
   if (nettype && strcmp (nettype, "IN") != 0)
     return FALSE;
 
-  iaddr = g_inet_address_new_from_string (addr);
+  /* guard against parse failures */
+  if ((iaddr = g_inet_address_new_from_string (addr)) == NULL)
+    return FALSE;
+
   ret = g_inet_address_get_is_multicast (iaddr);
   g_object_unref (iaddr);
 
