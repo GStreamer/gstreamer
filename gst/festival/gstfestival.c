@@ -358,6 +358,7 @@ festival_socket_open (const char *host, int port)
     serverhost = gethostbyname (host);
     if (serverhost == (struct hostent *) 0) {
       fprintf (stderr, "festival_client: gethostbyname failed\n");
+      close (fd);
       return -1;
     }
     memmove (&serv_addr.sin_addr, serverhost->h_addr, serverhost->h_length);
@@ -367,6 +368,7 @@ festival_socket_open (const char *host, int port)
 
   if (connect (fd, (struct sockaddr *) &serv_addr, sizeof (serv_addr)) != 0) {
     fprintf (stderr, "festival_client: connect to server failed\n");
+    close (fd);
     return -1;
   }
 
