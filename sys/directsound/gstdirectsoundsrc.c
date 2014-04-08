@@ -158,6 +158,9 @@ gst_directsound_src_class_init (GstDirectSoundSrcClass * klass)
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
+  GST_DEBUG_CATEGORY_INIT (directsoundsrc_debug, "directsoundsrc", 0,
+      "DirectSound Src");
+
   GST_DEBUG ("initializing directsoundsrc class");
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_directsound_src_finalize);
@@ -177,9 +180,6 @@ gst_directsound_src_class_init (GstDirectSoundSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_directsound_src_unprepare);
   gstaudiosrc_class->delay = GST_DEBUG_FUNCPTR (gst_directsound_src_delay);
   gstaudiosrc_class->reset = GST_DEBUG_FUNCPTR (gst_directsound_src_reset);
-
-  GST_DEBUG_CATEGORY_INIT (directsoundsrc_debug, "directsoundsrc", 0,
-      "DirectSound Src");
 
   gst_element_class_set_static_metadata (gstelement_class,
       "DirectSound audio source", "Source/Audio",
