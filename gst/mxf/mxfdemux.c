@@ -3400,10 +3400,11 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       p->last_flow = GST_FLOW_OK;
       gst_mxf_demux_pad_set_position (demux, p, start);
 
+      /* we always want to send data starting with a key unit */
       position = p->current_essence_track_position;
       off =
           gst_mxf_demux_find_essence_element (demux, p->current_essence_track,
-          &position, keyframe);
+          &position, TRUE);
       if (off == -1) {
         GST_DEBUG_OBJECT (demux, "Unable to find offset for pad %s",
             GST_PAD_NAME (p));
@@ -3411,11 +3412,11 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       } else {
         new_offset = MIN (off, new_offset);
         if (position != p->current_essence_track_position) {
-          p->last_flow -=
+          p->position -=
               gst_util_uint64_scale (p->current_essence_track_position -
               position,
               GST_SECOND * p->current_essence_track->source_track->edit_rate.d,
-              p->current_essence_track->source_track->edit_rate.d);
+              p->current_essence_track->source_track->edit_rate.n);
         }
         p->current_essence_track_position = position;
       }
@@ -3449,6 +3450,10 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
     /* Close the current segment for a linear playback */
     demux->close_seg_event = gst_event_new_segment (&demux->segment);
     gst_event_set_seqnum (demux->close_seg_event, demux->seqnum);
+  }
+
+  if (keyframe) {
+    /* FIXME: fix up segment start to position of key unit */
   }
 
   /* Ok seek succeeded, take the newly configured segment */
