@@ -1949,7 +1949,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
     a_attrs = &vts_attr->vtsm_audio_attr;
     n_audio = vts_attr->nr_of_vtsm_audio_streams;
     s_attrs = &vts_attr->vtsm_subp_attr;
-    n_subp = vts_attr->nr_of_vtsm_subp_streams;
+    n_subp = MAX (1, vts_attr->nr_of_vtsm_subp_streams);
   } else {
     /* VTS domain */
     vts_attr = get_vts_attr (src, src->vts_n);
