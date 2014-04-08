@@ -242,6 +242,7 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
+    gst_structure_get_int (structure, "channels", &info.channels);
     spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3;
     info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/x-eac3")) {
@@ -249,6 +250,7 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
+    gst_structure_get_int (structure, "channels", &info.channels);
     spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3;
     info.bpf = 16;
   } else if (g_str_equal (mimetype, "audio/x-dts")) {
@@ -256,6 +258,7 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
+    gst_structure_get_int (structure, "channels", &info.channels);
     spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS;
     info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/mpeg") &&
@@ -266,6 +269,7 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
+    gst_structure_get_int (structure, "channels", &info.channels);
     spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG;
     info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/mpeg") &&
@@ -276,6 +280,8 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
     /* MPEG-2 AAC or MPEG-4 AAC */
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
+
+    gst_structure_get_int (structure, "channels", &info.channels);
     spec->type = (i == 2) ? GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC :
         GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC;
     info.bpf = 4;
