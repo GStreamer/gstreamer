@@ -1920,11 +1920,14 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
   stream = gst_rtsp_media_create_stream (media, pay, pad);
   gst_object_unref (pay);
 
-  g_object_set_data (G_OBJECT (pad), "gst-rtsp-dynpad-stream", stream);
-
   GST_INFO ("pad added %s:%s, stream %p", GST_DEBUG_PAD_NAME (pad), stream);
 
   g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARING)
+    goto not_preparing;
+
+  g_object_set_data (G_OBJECT (pad), "gst-rtsp-dynpad-stream", stream);
+
   /* we will be adding elements below that will cause ASYNC_DONE to be
    * posted in the bus. We want to ignore those messages until the
    * pipeline really prerolled. */
@@ -1937,6 +1940,17 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 
   priv->adding = FALSE;
   g_rec_mutex_unlock (&priv->state_lock);
+
+  return;
+
+  /* ERRORS */
+not_preparing:
+  {
+    gst_rtsp_media_remove_stream (media, stream);
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_INFO ("ignore pad because we are not preparing");
+    return;
+  }
 }
 
 static void
@@ -2278,7 +2292,11 @@ finish_unprepare (GstRTSPMedia * media)
 
   GST_DEBUG ("shutting down");
 
+  /* release the lock on shutdown, otherwise pad_added_cb might try to
+   * acquire the lock and then we deadlock */
+  g_rec_mutex_unlock (&priv->state_lock);
   set_state (media, GST_STATE_NULL);
+  g_rec_mutex_lock (&priv->state_lock);
   remove_fakesink (priv);
 
   for (i = 0; i < priv->streams->len; i++) {
