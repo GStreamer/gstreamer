@@ -340,6 +340,7 @@ gst_rsvg_overlay_data_sink_event (GstPad * pad, GstObject * parent,
       }
       GST_RSVG_UNLOCK (overlay);
     }
+      break;
 
     case GST_EVENT_FLUSH_STOP:
       gst_adapter_clear (overlay->adapter);
