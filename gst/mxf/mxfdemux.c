@@ -3394,12 +3394,13 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 
     /* Do the actual seeking */
     for (i = 0; i < demux->src->len; i++) {
-      MXFMetadataTrackType track_type;
+      MXFMetadataTrackType track_type = MXF_METADATA_TRACK_UNKNOWN;
       GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
       gint64 position;
       guint64 off;
 
-      track_type = p->material_track->parent.type;
+      if (p->material_track != NULL)
+        track_type = p->material_track->parent.type;
 
       /* Reset EOS flag on all pads */
       p->eos = FALSE;
