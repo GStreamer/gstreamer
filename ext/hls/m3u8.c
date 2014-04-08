@@ -808,11 +808,11 @@ gst_m3u8_client_get_duration (GstM3U8Client * client)
 
   GST_M3U8_CLIENT_LOCK (client);
   /* We can only get the duration for on-demand streams */
-  if (!client->current->endlist) {
+  if (!client->current || client->current->endlist) {
     GST_M3U8_CLIENT_UNLOCK (client);
     return GST_CLOCK_TIME_NONE;
   }
-  if (client->current && client->current->files)
+  if (client->current->files)
     g_list_foreach (client->current->files, (GFunc) _sum_duration, &duration);
   GST_M3U8_CLIENT_UNLOCK (client);
   return duration;
