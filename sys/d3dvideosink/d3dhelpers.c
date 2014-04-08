@@ -1800,7 +1800,9 @@ d3d_render_buffer (GstD3DVideoSink * sink, GstBuffer * buf)
 
   if (!sink->d3d.window_handle) {
     if (sink->stream_stop_on_close) {
-      GST_LOG_OBJECT (sink, "Stopping stream. No render window");
+      /* Handle window deletion by posting an error on the bus */
+      GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
+          ("Output window was closed"), (NULL));
       ret = GST_FLOW_ERROR;
     }
     goto end;
