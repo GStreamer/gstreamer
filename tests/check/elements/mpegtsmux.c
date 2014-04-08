@@ -47,9 +47,11 @@ static GstPad *mysrcpad, *mysinkpad;
 #define AUDIO_CAPS_STRING "audio/mpeg, " \
                         "channels = (int) 1, " \
                         "rate = (int) 8000, " \
-                        "mpegversion = (int) 1"
+                        "mpegversion = (int) 1, "\
+                        "parsed = (boolean) true "
 #define VIDEO_CAPS_STRING "video/x-h264, " \
-                           "stream-format = (string) byte-stream"
+                          "stream-format = (string) byte-stream, " \
+                          "parsed = (boolean) true "
 
 /* setup and teardown needs some special handling for muxer */
 static GstPad *
