@@ -235,10 +235,15 @@ gst_gl_video_mixer_callback (gpointer stuff)
     gfloat w, h;
 
     frame = g_ptr_array_index (video_mixer->input_frames, count);
+    if (!frame) {
+      GST_DEBUG ("skipping texture, null frame");
+      count++;
+      continue;
+    }
     in_width = GST_VIDEO_INFO_WIDTH (&frame->pad->in_info);
     in_height = GST_VIDEO_INFO_HEIGHT (&frame->pad->in_info);
 
-    if (!frame || !frame->texture || in_width <= 0 || in_height <= 0) {
+    if (!frame->texture || in_width <= 0 || in_height <= 0) {
       GST_DEBUG ("skipping texture:%u frame:%p width:%u height %u",
           frame->texture, frame, in_width, in_height);
       count++;

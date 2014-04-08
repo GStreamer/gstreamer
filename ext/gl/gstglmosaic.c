@@ -288,11 +288,16 @@ gst_gl_mosaic_callback (gpointer stuff)
     guint width, height;
 
     frame = g_ptr_array_index (mosaic->input_frames, count);
+    if (!frame) {
+      GST_DEBUG ("skipping texture, null frame");
+      count++;
+      continue;
+    }
     in_tex = frame->texture;
     width = GST_VIDEO_INFO_WIDTH (&frame->pad->in_info);
     height = GST_VIDEO_INFO_HEIGHT (&frame->pad->in_info);
 
-    if (!frame || !in_tex || width <= 0 || height <= 0) {
+    if (!in_tex || width <= 0 || height <= 0) {
       GST_DEBUG ("skipping texture:%u frame:%p width:%u height %u",
           in_tex, frame, width, height);
       count++;
