@@ -362,6 +362,7 @@ gst_mpeg2enc_sink_query (GstPad * pad, GstObject * parent,
       gst_caps_unref (caps);
       res = TRUE;
     }
+      break;
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;
