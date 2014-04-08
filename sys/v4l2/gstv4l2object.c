@@ -2709,8 +2709,7 @@ set_parm_failed:
   }
 pool_failed:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Video device could not create buffer pool.")), GST_ERROR_SYSTEM);
+    /* setup_pool already send the error */
     return FALSE;
   }
 }
