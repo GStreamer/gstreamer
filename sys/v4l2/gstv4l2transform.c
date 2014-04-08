@@ -313,7 +313,7 @@ gst_v4l2_transform_decide_allocation (GstBaseTransform * trans,
 activate_failed:
   GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
       ("failed to activate bufferpool"), ("failed to activate bufferpool"));
-  return GST_FLOW_ERROR;
+  return TRUE;
 }
 
 static gboolean
