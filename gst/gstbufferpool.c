@@ -638,15 +638,15 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   else
     result = FALSE;
 
-  if (result) {
-    if (priv->config)
-      gst_structure_free (priv->config);
-    priv->config = config;
+  /* save the config regardless of the result so user can read back the
+   * modified config and evaluate if the changes are acceptable */
+  if (priv->config)
+    gst_structure_free (priv->config);
+  priv->config = config;
 
+  if (result) {
     /* now we are configured */
     priv->configured = TRUE;
-  } else {
-    gst_structure_free (config);
   }
   GST_BUFFER_POOL_UNLOCK (pool);
 
