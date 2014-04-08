@@ -3042,7 +3042,8 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 {
   GstCaps *caps;
   GstBufferPool *pool;
-  guint size, min, max;
+  GstStructure *config;
+  guint size, min, max, extra = 0;
   gboolean update;
   gboolean has_video_meta, has_crop_meta;
   gboolean can_use_own_pool;
@@ -3087,12 +3088,10 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     GST_DEBUG_OBJECT (obj->element, "driver require a minimum of %d buffers",
         ctl.value);
     obj->min_buffers_for_capture = ctl.value;
-    min += ctl.value;
+    extra += ctl.value;
+  } else {
+    obj->min_buffers_for_capture = 0;
   }
-
-  /* Request a bigger max, if one was suggested but it's too small */
-  if (max != 0)
-    max = MAX (min, max);
 
   has_video_meta =
       gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
@@ -3133,7 +3132,6 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
           gst_object_unref (pool);
         pool = obj->pool;
         size = obj->sizeimage;
-        max = 0;
         GST_DEBUG_OBJECT (obj->element,
             "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
       } else if (pool) {
@@ -3149,19 +3147,55 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       break;
   }
 
-  /* Size field is mandatory and we have no size if now using our own pool and
-   * downstream didn't provide one. */
-  if (size == 0) {
-    GstVideoInfo info;
+  if (size == 0)
+    goto no_size;
 
-    gst_video_info_init (&info);
-    gst_video_info_from_caps (&info, caps);
+  /* Request a bigger max, if one was suggested but it's too small */
+  if (max != 0)
+    max = MAX (min, max);
 
-    size = GST_VIDEO_INFO_SIZE (&info);
+  /* First step, configure our own pool */
+
+  /* If already configured/active, skip it */
+  /* FIXME not entirely correct, See bug 728268 */
+  if (gst_buffer_pool_is_active (obj->pool))
+    goto setup_other_pool;
+
+  config = gst_buffer_pool_get_config (obj->pool);
+
+  if (obj->need_video_meta) {
+    GST_DEBUG_OBJECT (pool, "activate Video Meta");
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
 
-  if (pool) {
-    GstStructure *config;
+  if (obj->need_crop_meta) {
+    GST_DEBUG_OBJECT (pool, "activate VideoCrop Meta");
+    gst_buffer_pool_config_add_option (config,
+        GST_V4L2_BUFFER_POOL_OPTION_CROP_META);
+  }
+
+  gst_buffer_pool_config_set_params (config, caps, size, min + extra, 0);
+
+  GST_DEBUG_OBJECT (pool, "setting config %" GST_PTR_FORMAT, config);
+
+  /* Our pool often need to adjust the value */
+  if (!gst_buffer_pool_set_config (obj->pool, config)) {
+    config = gst_buffer_pool_get_config (obj->pool);
+
+    GST_DEBUG_OBJECT (pool, "config changed to %" GST_PTR_FORMAT, config);
+
+    /* our pool will adjust the maximum buffer, which we are fine with */
+
+    if (!gst_buffer_pool_set_config (obj->pool, config))
+      goto config_failed;
+  }
+
+setup_other_pool:
+  /* Now configure the other pool if different */
+  if (pool && obj->pool != pool) {
+    if (gst_buffer_pool_is_active (obj->pool))
+      goto done;
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
@@ -3173,9 +3207,11 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
           GST_BUFFER_POOL_OPTION_VIDEO_META);
     }
 
+    /* TODO check return value, validate changes and confirm */
     gst_buffer_pool_set_config (pool, config);
   }
 
+done:
   if (update)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
@@ -3185,8 +3221,19 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 
 pool_failed:
   {
+    /* setup_pool already send the error */
+    return FALSE;
+  }
+config_failed:
+  {
     GST_ELEMENT_ERROR (obj->element, RESOURCE, SETTINGS,
-        (_("Video device could not create buffer pool.")), GST_ERROR_SYSTEM);
+        (_("Failed to configure internal buffer pool.")), (NULL));
+    return FALSE;
+  }
+no_size:
+  {
+    GST_ELEMENT_ERROR (obj->element, RESOURCE, SETTINGS,
+        (_("Video device did not suggest any buffer size.")), (NULL));
     return FALSE;
   }
 }
