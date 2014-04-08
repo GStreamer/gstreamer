@@ -1756,6 +1756,7 @@ mpegtsmux_send_event (GstElement * element, GstEvent * event)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_mpegts_initialize ();
   if (!gst_element_register (plugin, "mpegtsmux", GST_RANK_PRIMARY,
           mpegtsmux_get_type ()))
     return FALSE;
