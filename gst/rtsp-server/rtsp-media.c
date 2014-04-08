@@ -1471,6 +1471,52 @@ media_streams_set_blocked (GstRTSPMedia * media, gboolean blocked)
   g_ptr_array_foreach (priv->streams, (GFunc) stream_update_blocked, media);
 }
 
+static void
+gst_rtsp_media_set_status (GstRTSPMedia * media, GstRTSPMediaStatus status)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->status = status;
+  GST_DEBUG ("setting new status to %d", status);
+  g_cond_broadcast (&priv->cond);
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_status:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the status of @media. When @media is busy preparing, this function waits
+ * until @media is prepared or in error.
+ *
+ * Returns: the status of @media.
+ */
+GstRTSPMediaStatus
+gst_rtsp_media_get_status (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  GstRTSPMediaStatus result;
+  gint64 end_time;
+
+  g_mutex_lock (&priv->lock);
+  end_time = g_get_monotonic_time () + 20 * G_TIME_SPAN_SECOND;
+  /* while we are preparing, wait */
+  while (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING) {
+    GST_DEBUG ("waiting for status change");
+    if (!g_cond_wait_until (&priv->cond, &priv->lock, end_time)) {
+      GST_DEBUG ("timeout, assuming error status");
+      priv->status = GST_RTSP_MEDIA_STATUS_ERROR;
+    }
+  }
+  /* could be success or error */
+  result = priv->status;
+  GST_DEBUG ("got status %d", result);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
 /**
  * gst_rtsp_media_seek:
  * @media: a #GstRTSPMedia
@@ -1543,7 +1589,7 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     GST_INFO ("seeking to %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
-    priv->status = GST_RTSP_MEDIA_STATUS_PREPARING;
+    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
     if (priv->blocked)
       media_streams_set_blocked (media, TRUE);
 
@@ -1622,52 +1668,6 @@ preroll_failed:
     GST_WARNING ("failed to preroll after seek");
     return FALSE;
   }
-}
-
-static void
-gst_rtsp_media_set_status (GstRTSPMedia * media, GstRTSPMediaStatus status)
-{
-  GstRTSPMediaPrivate *priv = media->priv;
-
-  g_mutex_lock (&priv->lock);
-  priv->status = status;
-  GST_DEBUG ("setting new status to %d", status);
-  g_cond_broadcast (&priv->cond);
-  g_mutex_unlock (&priv->lock);
-}
-
-/**
- * gst_rtsp_media_get_status:
- * @media: a #GstRTSPMedia
- *
- * Get the status of @media. When @media is busy preparing, this function waits
- * until @media is prepared or in error.
- *
- * Returns: the status of @media.
- */
-GstRTSPMediaStatus
-gst_rtsp_media_get_status (GstRTSPMedia * media)
-{
-  GstRTSPMediaPrivate *priv = media->priv;
-  GstRTSPMediaStatus result;
-  gint64 end_time;
-
-  g_mutex_lock (&priv->lock);
-  end_time = g_get_monotonic_time () + 20 * G_TIME_SPAN_SECOND;
-  /* while we are preparing, wait */
-  while (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING) {
-    GST_DEBUG ("waiting for status change");
-    if (!g_cond_wait_until (&priv->cond, &priv->lock, end_time)) {
-      GST_DEBUG ("timeout, assuming error status");
-      priv->status = GST_RTSP_MEDIA_STATUS_ERROR;
-    }
-  }
-  /* could be success or error */
-  result = priv->status;
-  GST_DEBUG ("got status %d", result);
-  g_mutex_unlock (&priv->lock);
-
-  return result;
 }
 
 static void
@@ -2184,7 +2184,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   priv->buffering = FALSE;
   priv->thread = thread;
   /* we're preparing now */
-  priv->status = GST_RTSP_MEDIA_STATUS_PREPARING;
+  gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (priv->pipeline));
 
@@ -2317,7 +2317,7 @@ finish_unprepare (GstRTSPMedia * media)
   priv->nettime = NULL;
 
   priv->reused = TRUE;
-  priv->status = GST_RTSP_MEDIA_STATUS_UNPREPARED;
+  gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_UNPREPARED);
 
   /* when the media is not reusable, this will effectively unref the media and
    * recreate it */
@@ -2348,7 +2348,6 @@ default_unprepare (GstRTSPMedia * media)
     /* we need to go to playing again for the EOS to propagate, normally in this
      * state, nothing is receiving data from us anymore so this is ok. */
     set_state (media, GST_STATE_PLAYING);
-    priv->status = GST_RTSP_MEDIA_STATUS_UNPREPARING;
   } else {
     finish_unprepare (media);
   }
@@ -2386,6 +2385,8 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
   GST_INFO ("unprepare media %p", media);
   set_target_state (media, GST_STATE_NULL, FALSE);
   success = TRUE;
+
+  gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_UNPREPARING);
 
   if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED) {
     GstRTSPMediaClass *klass;
@@ -2638,7 +2639,7 @@ gst_rtsp_media_suspend (GstRTSPMedia * media)
   }
   /* let the streams do the state changes freely, if any */
   media_streams_set_blocked (media, FALSE);
-  priv->status = GST_RTSP_MEDIA_STATUS_SUSPENDED;
+  gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_SUSPENDED);
 done:
   g_rec_mutex_unlock (&priv->state_lock);
 
@@ -2682,14 +2683,14 @@ gst_rtsp_media_unsuspend (GstRTSPMedia * media)
 
   switch (priv->suspend_mode) {
     case GST_RTSP_SUSPEND_MODE_NONE:
-      priv->status = GST_RTSP_MEDIA_STATUS_PREPARED;
+      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
       break;
     case GST_RTSP_SUSPEND_MODE_PAUSE:
-      priv->status = GST_RTSP_MEDIA_STATUS_PREPARED;
+      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
       break;
     case GST_RTSP_SUSPEND_MODE_RESET:
     {
-      priv->status = GST_RTSP_MEDIA_STATUS_PREPARING;
+      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
       if (!start_preroll (media))
         goto start_failed;
       g_rec_mutex_unlock (&priv->state_lock);
