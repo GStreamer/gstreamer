@@ -2286,7 +2286,7 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
     /* figure out the frame layout */
     v4l2object->n_v4l2_planes = MAX (1, format->fmt.pix_mp.num_planes);
     v4l2object->sizeimage = 0;
-    for (i = 0; i < format->fmt.pix_mp.num_planes; i++) {
+    for (i = 0; i < v4l2object->n_v4l2_planes; i++) {
       v4l2object->bytesperline[i] =
           format->fmt.pix_mp.plane_fmt[i].bytesperline;
       v4l2object->sizeimage += format->fmt.pix_mp.plane_fmt[i].sizeimage;
