@@ -104,11 +104,11 @@ gst_bz2dec_decompress_init (GstBz2dec * b)
 static GstFlowReturn
 gst_bz2dec_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
 {
-  GstFlowReturn flow;
+  GstFlowReturn flow = GST_FLOW_OK;
   GstBuffer *out;
   GstBz2dec *b;
   int r = BZ_OK;
-  GstMapInfo map, omap;
+  GstMapInfo map = GST_MAP_INFO_INIT, omap;
 
   b = GST_BZ2DEC (parent);
 

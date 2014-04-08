@@ -108,7 +108,7 @@ gst_bz2enc_event (GstPad * pad, GstObject * parent, GstEvent * e)
   b = GST_BZ2ENC (parent);
   switch (GST_EVENT_TYPE (e)) {
     case GST_EVENT_EOS:{
-      GstFlowReturn flow;
+      GstFlowReturn flow = GST_FLOW_OK;
       int r = BZ_FINISH_OK;
 
       do {
@@ -173,7 +173,7 @@ gst_bz2enc_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   GstBz2enc *b;
   guint n;
   int bz2_ret;
-  GstMapInfo map, omap;
+  GstMapInfo map = GST_MAP_INFO_INIT, omap;
 
   b = GST_BZ2ENC (parent);
 
