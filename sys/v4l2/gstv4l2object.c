@@ -3128,6 +3128,17 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       break;
   }
 
+  /* Size field is mandatory and we have no size if now using our own pool and
+   * downstream didn't provide one. */
+  if (size == 0) {
+    GstVideoInfo info;
+
+    gst_video_info_init (&info);
+    gst_video_info_from_caps (&info, caps);
+
+    size = GST_VIDEO_INFO_SIZE (&info);
+  }
+
   if (pool) {
     GstStructure *config;
 
@@ -3142,17 +3153,6 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     }
 
     gst_buffer_pool_set_config (pool, config);
-  }
-
-  /* Size field is mandatory and we have no size if now using our own pool and
-   * downstream didn't provide one. */
-  if (size == 0) {
-    GstVideoInfo info;
-
-    gst_video_info_init (&info);
-    gst_video_info_from_caps (&info, caps);
-
-    size = GST_VIDEO_INFO_SIZE (&info);
   }
 
   if (update)
