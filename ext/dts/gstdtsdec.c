@@ -400,12 +400,12 @@ gst_dtsdec_renegotiate (GstDtsDec * dts)
 {
   gint channels;
   gboolean result = FALSE;
-  GstAudioChannelPosition from[6], to[6];
+  GstAudioChannelPosition from[7], to[7];
   GstAudioInfo info;
 
   channels = gst_dtsdec_channels (dts->using_channels, from);
 
-  if (!channels)
+  if (channels <= 0 || channels > 7)
     goto done;
 
   GST_INFO_OBJECT (dts, "dtsdec renegotiate, channels=%d, rate=%d",
