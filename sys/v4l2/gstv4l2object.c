@@ -3138,6 +3138,9 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
         GST_DEBUG_OBJECT (obj->element,
             "streaming mode: copying to downstream pool %" GST_PTR_FORMAT,
             pool);
+      } else {
+        GST_DEBUG_OBJECT (obj->element,
+            "streaming mode: no usable pool, copying to generic pool");
         size = MAX (size, obj->sizeimage);
       }
       break;
