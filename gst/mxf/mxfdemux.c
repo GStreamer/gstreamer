@@ -3316,6 +3316,7 @@ no_new_offset:
 static gboolean
 gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 {
+  GstClockTime keyunit_ts;
   GstFormat format;
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
@@ -3339,6 +3340,8 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 
   flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+
+  keyunit_ts = start;
 
   if (flush) {
     GstEvent *e;
@@ -3391,9 +3394,12 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 
     /* Do the actual seeking */
     for (i = 0; i < demux->src->len; i++) {
+      MXFMetadataTrackType track_type;
       GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
       gint64 position;
       guint64 off;
+
+      track_type = p->material_track->parent.type;
 
       /* Reset EOS flag on all pads */
       p->eos = FALSE;
@@ -3419,6 +3425,11 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
               p->current_essence_track->source_track->edit_rate.n);
         }
         p->current_essence_track_position = position;
+
+        /* FIXME: what about DV + MPEG-TS container essence tracks? */
+        if (track_type == MXF_METADATA_TRACK_PICTURE_ESSENCE) {
+          keyunit_ts = MIN (p->position, keyunit_ts);
+        }
       }
       p->discont = TRUE;
     }
@@ -3452,8 +3463,11 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
     gst_event_set_seqnum (demux->close_seg_event, demux->seqnum);
   }
 
-  if (keyframe) {
-    /* FIXME: fix up segment start to position of key unit */
+  if (keyframe && keyunit_ts != start) {
+    GST_INFO_OBJECT (demux, "key unit seek, adjusting segment start to "
+        "%" GST_TIME_FORMAT, GST_TIME_ARGS (keyunit_ts));
+    gst_segment_do_seek (&seeksegment, rate, format, flags,
+        start_type, keyunit_ts, stop_type, stop, &update);
   }
 
   /* Ok seek succeeded, take the newly configured segment */
