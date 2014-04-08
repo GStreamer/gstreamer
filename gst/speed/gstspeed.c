@@ -564,7 +564,7 @@ speed_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         return ret;
       }
     }
-
+      /* Fallthrough so that the caps event gets forwarded */
     default:
       ret = gst_pad_event_default (pad, parent, event);
       break;
