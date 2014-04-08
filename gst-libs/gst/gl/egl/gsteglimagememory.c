@@ -556,7 +556,7 @@ mem_error:
   {
     GST_ERROR_OBJECT (GST_CAT_DEFAULT, "Failed to create EGLImage");
 
-    for (i = 0; i < n_mem; i++) {
+    for (i = 0; i < 3; i++) {
       if (client_buffer_tex[i])
         gst_gl_context_del_texture (ctx, (GLuint *) & client_buffer_tex[i]);
       if (mem[i])
