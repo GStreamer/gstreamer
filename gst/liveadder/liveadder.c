@@ -1204,7 +1204,6 @@ gst_live_adder_loop (gpointer data)
   GstClockReturn ret;
   GstBuffer *buffer = NULL;
   GstFlowReturn result;
-  GstEvent *newseg_event = NULL;
 
   GST_OBJECT_LOCK (adder);
 
@@ -1311,9 +1310,6 @@ push_buffer:
   else
     adder->next_timestamp = GST_CLOCK_TIME_NONE;
   GST_OBJECT_UNLOCK (adder);
-
-  if (newseg_event)
-    gst_pad_push_event (adder->srcpad, newseg_event);
 
   GST_LOG_OBJECT (adder, "About to push buffer time:%" GST_TIME_FORMAT
       " duration:%" GST_TIME_FORMAT,
