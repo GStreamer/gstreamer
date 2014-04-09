@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 void gst_gl_effects_luma_to_curve (GstGLEffects *effects,
-                                   GstGLEffectsCurve curve,
+                                   const GstGLEffectsCurve *curve,
                                    gint curve_index,
                                    gint width, gint height,
                                    GLuint texture);
