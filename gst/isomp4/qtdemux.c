@@ -2380,7 +2380,7 @@ qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
       trex = qtdemux_tree_get_child_by_type_full (mvex, FOURCC_trex,
           &trex_data);
       while (trex) {
-        guint32 id = 0, dur = 0, size = 0, flags = 0;
+        guint32 id = 0, dur = 0, size = 0, flags = 0, dummy = 0;
 
         /* skip version/flags */
         if (!gst_byte_reader_skip (&trex_data, 4))
@@ -2390,7 +2390,7 @@ qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
         if (id != stream->track_id)
           goto next;
         /* sample description index; ignore */
-        if (!gst_byte_reader_get_uint32_be (&trex_data, &dur))
+        if (!gst_byte_reader_get_uint32_be (&trex_data, &dummy))
           goto next;
         if (!gst_byte_reader_get_uint32_be (&trex_data, &dur))
           goto next;
