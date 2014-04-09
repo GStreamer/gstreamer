@@ -302,7 +302,7 @@ gst_mim_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       mimdec->buffer_size = -1;
       mimdec->dec = mimic_open ();
-      if (!mimdec) {
+      if (!mimdec->dec) {
         GST_ERROR_OBJECT (mimdec, "mimic_open failed");
         return GST_STATE_CHANGE_FAILURE;
       }
