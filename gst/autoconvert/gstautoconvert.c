@@ -946,16 +946,6 @@ gst_auto_convert_sink_chain (GstPad * pad, GstObject * parent,
 
   internal_srcpad = gst_auto_convert_get_internal_srcpad (autoconvert);
   if (internal_srcpad) {
-    GList *events = NULL;
-    GList *l;
-
-    if (events) {
-      GST_DEBUG_OBJECT (autoconvert, "Sending cached events downstream");
-      for (l = events; l; l = l->next)
-        gst_pad_push_event (internal_srcpad, l->data);
-      g_list_free (events);
-    }
-
     ret = gst_pad_push (internal_srcpad, buffer);
     gst_object_unref (internal_srcpad);
     if (ret != GST_FLOW_OK) {
