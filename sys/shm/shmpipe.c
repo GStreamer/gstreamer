@@ -725,15 +725,11 @@ sp_writer_recv (ShmPipe * self, ShmClient * client, void **tag)
         if (buf->shm_area->id == cb.area_id &&
             buf->offset == cb.payload.ack_buffer.offset) {
           return sp_shmbuf_dec (self, buf, prev_buf, client, tag);
-          break;
         }
         prev_buf = buf;
       }
 
-      if (!buf)
-        return -2;
-
-      break;
+      return -2;
     default:
       return -99;
   }
