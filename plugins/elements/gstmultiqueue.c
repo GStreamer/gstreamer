@@ -480,6 +480,7 @@ gst_multi_queue_finalize (GObject * object)
       GstSingleQueue *q = (GstSingleQueue*)tmp->data;		\
       q->max_size.format = mq->max_size.format;                 \
       update_buffering (mq, q);                                 \
+      gst_data_queue_limits_changed (q->queue);                 \
       tmp = g_list_next(tmp);					\
     };								\
 } G_STMT_END
@@ -519,6 +520,7 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
           q->max_size.visible = new_size;
         }
         update_buffering (mq, q);
+        gst_data_queue_limits_changed (q->queue);
         tmp = g_list_next (tmp);
       }
 
@@ -563,6 +565,7 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
         while (tmp) {
           GstSingleQueue *q = (GstSingleQueue *) tmp->data;
           update_buffering (mq, q);
+          gst_data_queue_limits_changed (q->queue);
           tmp = g_list_next (tmp);
         }
 
