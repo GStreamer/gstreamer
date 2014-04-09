@@ -174,6 +174,7 @@ static void gst_rtsp_media_finalize (GObject * obj);
 static gboolean default_handle_message (GstRTSPMedia * media,
     GstMessage * message);
 static void finish_unprepare (GstRTSPMedia * media);
+static gboolean default_prepare (GstRTSPMedia * media, GstRTSPThread * thread);
 static gboolean default_unprepare (GstRTSPMedia * media);
 static gboolean default_convert_range (GstRTSPMedia * media,
     GstRTSPTimeRange * range, GstRTSPRangeUnit unit);
@@ -305,6 +306,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
 
   klass->handle_message = default_handle_message;
+  klass->prepare = default_prepare;
   klass->unprepare = default_unprepare;
   klass->convert_range = default_convert_range;
   klass->query_position = default_query_position;
@@ -2136,48 +2138,16 @@ preroll_failed:
   }
 }
 
-/**
- * gst_rtsp_media_prepare:
- * @media: a #GstRTSPMedia
- * @thread: (transfer full): a #GstRTSPThread to run the bus handler or %NULL
- *
- * Prepare @media for streaming. This function will create the objects
- * to manage the streaming. A pipeline must have been set on @media with
- * gst_rtsp_media_take_pipeline().
- *
- * It will preroll the pipeline and collect vital information about the streams
- * such as the duration.
- *
- * Returns: %TRUE on success.
- */
-gboolean
-gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
+static gboolean
+default_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
 {
   GstRTSPMediaPrivate *priv;
-  GstBus *bus;
-  GSource *source;
   GstRTSPMediaClass *klass;
+  GstBus *bus;
   GMainContext *context;
-
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+  GSource *source;
 
   priv = media->priv;
-
-  g_rec_mutex_lock (&priv->state_lock);
-  priv->prepare_count++;
-
-  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED ||
-      priv->status == GST_RTSP_MEDIA_STATUS_SUSPENDED)
-    goto was_prepared;
-
-  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
-    goto wait_status;
-
-  if (priv->status != GST_RTSP_MEDIA_STATUS_UNPREPARED)
-    goto not_unprepared;
-
-  if (!priv->reusable && priv->reused)
-    goto is_reused;
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
 
@@ -2199,17 +2169,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   if (priv->rtpbin == NULL)
     goto no_rtpbin;
 
-  GST_INFO ("preparing media %p", media);
-
-  /* reset some variables */
-  priv->is_live = FALSE;
-  priv->seekable = FALSE;
-  priv->buffering = FALSE;
   priv->thread = thread;
   context = (thread != NULL) ? (thread->context) : NULL;
-
-  /* we're preparing now */
-  gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (priv->pipeline));
 
@@ -2231,6 +2192,85 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   g_source_attach (source, context);
   g_source_unref (source);
 
+  return TRUE;
+
+  /* ERRORS */
+no_create_rtpbin:
+  {
+    /* we are not going to use the giving thread, so stop it. */
+    if (thread)
+      gst_rtsp_thread_stop (thread);
+    GST_ERROR ("no create_rtpbin function");
+    g_critical ("no create_rtpbin vmethod function set");
+    return FALSE;
+  }
+no_rtpbin:
+  {
+    /* we are not going to use the giving thread, so stop it. */
+    if (thread)
+      gst_rtsp_thread_stop (thread);
+    GST_WARNING ("no rtpbin element");
+    g_warning ("failed to create element 'rtpbin', check your installation");
+    return FALSE;
+  }
+}
+
+/**
+ * gst_rtsp_media_prepare:
+ * @media: a #GstRTSPMedia
+ * @thread: (transfer full): a #GstRTSPThread to run the bus handler or %NULL
+ *
+ * Prepare @media for streaming. This function will create the objects
+ * to manage the streaming. A pipeline must have been set on @media with
+ * gst_rtsp_media_take_pipeline().
+ *
+ * It will preroll the pipeline and collect vital information about the streams
+ * such as the duration.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
+{
+  GstRTSPMediaPrivate *priv;
+  GstRTSPMediaClass *klass;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  priv->prepare_count++;
+
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED ||
+      priv->status == GST_RTSP_MEDIA_STATUS_SUSPENDED)
+    goto was_prepared;
+
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
+    goto is_preparing;
+
+  if (priv->status != GST_RTSP_MEDIA_STATUS_UNPREPARED)
+    goto not_unprepared;
+
+  if (!priv->reusable && priv->reused)
+    goto is_reused;
+
+  GST_INFO ("preparing media %p", media);
+
+  /* reset some variables */
+  priv->is_live = FALSE;
+  priv->seekable = FALSE;
+  priv->buffering = FALSE;
+
+  /* we're preparing now */
+  gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
+
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+  if (klass->prepare) {
+    if (!klass->prepare (media, thread))
+      goto prepare_failed;
+  }
+
 wait_status:
   g_rec_mutex_unlock (&priv->state_lock);
 
@@ -2246,6 +2286,13 @@ wait_status:
   return TRUE;
 
   /* OK */
+is_preparing:
+  {
+    /* we are not going to use the giving thread, so stop it. */
+    if (thread)
+      gst_rtsp_thread_stop (thread);
+    goto wait_status;
+  }
 was_prepared:
   {
     GST_LOG ("media %p was prepared", media);
@@ -2276,26 +2323,14 @@ is_reused:
     GST_WARNING ("can not reuse media %p", media);
     return FALSE;
   }
-no_create_rtpbin:
+prepare_failed:
   {
     /* we are not going to use the giving thread, so stop it. */
     if (thread)
       gst_rtsp_thread_stop (thread);
     priv->prepare_count--;
     g_rec_mutex_unlock (&priv->state_lock);
-    GST_ERROR ("no create_rtpbin function");
-    g_critical ("no create_rtpbin vmethod function set");
-    return FALSE;
-  }
-no_rtpbin:
-  {
-    /* we are not going to use the giving thread, so stop it. */
-    if (thread)
-      gst_rtsp_thread_stop (thread);
-    priv->prepare_count--;
-    g_rec_mutex_unlock (&priv->state_lock);
-    GST_WARNING ("no rtpbin element");
-    g_warning ("failed to create element 'rtpbin', check your installation");
+    GST_ERROR ("failed to prepare media");
     return FALSE;
   }
 preroll_failed:

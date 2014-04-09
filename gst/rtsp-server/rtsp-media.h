@@ -105,6 +105,9 @@ struct _GstRTSPMedia {
 /**
  * GstRTSPMediaClass:
  * @handle_message: handle a message
+ * @prepare: the default implementation adds all elements and sets the
+ *           pipeline's state to GST_STATE_PAUSED (or GST_STATE_PLAYING
+ *           in case of NO_PREROLL elements).
  * @unprepare: the default implementation sets the pipeline's state
  *             to GST_STATE_NULL and removes all elements.
  * @convert_range: convert a range to the given unit
@@ -118,6 +121,7 @@ struct _GstRTSPMediaClass {
 
   /* vmethods */
   gboolean        (*handle_message)  (GstRTSPMedia *media, GstMessage *message);
+  gboolean        (*prepare)         (GstRTSPMedia *media, GstRTSPThread *thread);
   gboolean        (*unprepare)       (GstRTSPMedia *media);
   gboolean        (*convert_range)   (GstRTSPMedia *media, GstRTSPTimeRange *range,
                                       GstRTSPRangeUnit unit);
