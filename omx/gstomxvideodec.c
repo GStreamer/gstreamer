@@ -436,104 +436,63 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
   }
 
   /* Different strides */
+  if (gst_video_frame_map (&frame, vinfo, outbuf, GST_MAP_WRITE)) {
+    const guint nstride = port_def->format.video.nStride;
+    const guint nslice = port_def->format.video.nSliceHeight;
+    guint src_stride[GST_VIDEO_MAX_PLANES] = { nstride, 0, };
+    guint src_size[GST_VIDEO_MAX_PLANES] = { nstride * nslice, 0, };
+    gint dst_width[GST_VIDEO_MAX_PLANES] = { 0, };
+    gint dst_height[GST_VIDEO_MAX_PLANES] =
+        { GST_VIDEO_INFO_HEIGHT (vinfo), 0, };
+    const guint8 *src;
+    guint p;
 
-  switch (vinfo->finfo->format) {
-    case GST_VIDEO_FORMAT_I420:{
-      gint i, j, height, width;
-      guint8 *src, *dest;
-      gint src_stride, dest_stride;
-
-      gst_video_frame_map (&frame, vinfo, outbuf, GST_MAP_WRITE);
-      for (i = 0; i < 3; i++) {
-        if (i == 0) {
-          src_stride = port_def->format.video.nStride;
-          dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, i);
-
-          /* XXX: Try this if no stride was set */
-          if (src_stride == 0)
-            src_stride = dest_stride;
-        } else {
-          src_stride = port_def->format.video.nStride / 2;
-          dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, i);
-
-          /* XXX: Try this if no stride was set */
-          if (src_stride == 0)
-            src_stride = dest_stride;
-        }
-
-        src = inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset;
-        if (i > 0)
-          src +=
-              port_def->format.video.nSliceHeight *
-              port_def->format.video.nStride;
-        if (i == 2)
-          src +=
-              (port_def->format.video.nSliceHeight / 2) *
-              (port_def->format.video.nStride / 2);
-
-        dest = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
-        height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
-        width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i);
-
-        for (j = 0; j < height; j++) {
-          memcpy (dest, src, width);
-          src += src_stride;
-          dest += dest_stride;
-        }
-      }
-      gst_video_frame_unmap (&frame);
-      ret = TRUE;
-      break;
+    switch (GST_VIDEO_INFO_FORMAT (vinfo)) {
+      case GST_VIDEO_FORMAT_I420:
+        dst_width[0] = GST_VIDEO_INFO_WIDTH (vinfo);
+        src_stride[1] = nstride / 2;
+        src_size[1] = (src_stride[1] * nslice) / 2;
+        dst_width[1] = GST_VIDEO_INFO_WIDTH (vinfo) / 2;
+        dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo) / 2;
+        src_stride[2] = nstride / 2;
+        src_size[2] = (src_stride[1] * nslice) / 2;
+        dst_width[2] = GST_VIDEO_INFO_WIDTH (vinfo) / 2;
+        dst_height[2] = GST_VIDEO_INFO_HEIGHT (vinfo) / 2;
+        break;
+      case GST_VIDEO_FORMAT_NV12:
+        dst_width[0] = GST_VIDEO_INFO_WIDTH (vinfo);
+        src_stride[1] = nstride;
+        src_size[1] = src_stride[1] * nslice / 2;
+        dst_width[1] = GST_VIDEO_INFO_WIDTH (vinfo);
+        dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo) / 2;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
     }
-    case GST_VIDEO_FORMAT_NV12:{
-      gint i, j, height, width;
-      guint8 *src, *dest;
-      gint src_stride, dest_stride;
 
-      gst_video_frame_map (&frame, vinfo, outbuf, GST_MAP_WRITE);
-      for (i = 0; i < 2; i++) {
-        if (i == 0) {
-          src_stride = port_def->format.video.nStride;
-          dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, i);
+    src = inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset;
+    for (p = 0; p < GST_VIDEO_INFO_N_PLANES (vinfo); p++) {
+      const guint8 *data;
+      guint8 *dst;
+      guint h;
 
-          /* XXX: Try this if no stride was set */
-          if (src_stride == 0)
-            src_stride = dest_stride;
-        } else {
-          src_stride = port_def->format.video.nStride;
-          dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, i);
-
-          /* XXX: Try this if no stride was set */
-          if (src_stride == 0)
-            src_stride = dest_stride;
-        }
-
-        src = inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset;
-        if (i == 1)
-          src +=
-              port_def->format.video.nSliceHeight *
-              port_def->format.video.nStride;
-
-        dest = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
-        height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
-        width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i) * (i == 0 ? 1 : 2);
-
-        for (j = 0; j < height; j++) {
-          memcpy (dest, src, width);
-          src += src_stride;
-          dest += dest_stride;
-        }
+      dst = GST_VIDEO_FRAME_PLANE_DATA (&frame, p);
+      data = src;
+      for (h = 0; h < dst_height[p]; h++) {
+        memcpy (dst, data, dst_width[p]);
+        dst += GST_VIDEO_INFO_PLANE_STRIDE (vinfo, p);
+        data += src_stride[p];
       }
-      gst_video_frame_unmap (&frame);
-      ret = TRUE;
-      break;
+      src += src_size[p];
     }
-    default:
-      GST_ERROR_OBJECT (self, "Unsupported format");
-      goto done;
-      break;
+
+    gst_video_frame_unmap (&frame);
+    ret = TRUE;
+  } else {
+    GST_ERROR_OBJECT (self, "Can't map output buffer to frame");
+    goto done;
   }
-
 
 done:
   if (ret) {
