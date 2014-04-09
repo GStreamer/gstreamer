@@ -823,7 +823,6 @@ multiqueue_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-#if 0
   tcase_add_test (tc_chain, test_simple_create_destroy);
   tcase_add_test (tc_chain, test_simple_pipeline);
   tcase_add_test (tc_chain, test_simple_shutdown_while_running);
@@ -836,7 +835,6 @@ multiqueue_suite (void)
   tcase_skip_broken_test (tc_chain, test_output_order);
 
   tcase_add_test (tc_chain, test_sparse_stream);
-#endif
   tcase_add_test (tc_chain, test_limit_changes);
 
   return s;
