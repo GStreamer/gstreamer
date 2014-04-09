@@ -3201,6 +3201,14 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
         max_time = seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
             AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME;
     }
+  } else if (adaptive_streaming && dbin->use_buffering) {
+    /* If we're doing adaptive streaming and this is *not*
+     * the multiqueue doing the buffering messages, we only
+     * want a buffers limit here
+     */
+    max_buffers = AUTO_PLAY_ADAPTIVE_SIZE_BUFFERS;
+    max_time = 0;
+    max_bytes = 0;
   } else {
     /* update runtime limits. At runtime, we try to keep the amount of buffers
      * in the queues as low as possible (but at least 5 buffers). */
@@ -3212,9 +3220,7 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
      * a lower number of buffers as they are usually very
      * large */
     if ((max_buffers = dbin->max_size_buffers) == 0)
-      max_buffers =
-          (adaptive_streaming ? AUTO_PLAY_ADAPTIVE_SIZE_BUFFERS :
-          AUTO_PLAY_SIZE_BUFFERS);
+      max_buffers = AUTO_PLAY_SIZE_BUFFERS;
     /* this is a multiqueue with disabled buffering, don't limit max_time */
     if (dbin->use_buffering)
       max_time = 0;
