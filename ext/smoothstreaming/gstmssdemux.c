@@ -1060,7 +1060,7 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
   g_object_unref (fragment);
 
   after_download = g_get_real_time ();
-  if (_buffer) {
+  {
 #ifndef GST_DISABLE_GST_DEBUG
     guint64 bitrate = (8 * gst_buffer_get_size (buffer) * 1000000LLU) /
         (after_download - before_download);
