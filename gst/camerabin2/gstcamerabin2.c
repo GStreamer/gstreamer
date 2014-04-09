@@ -1112,8 +1112,8 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
     default:
       break;
   }
-  if (message)
-    GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+
+  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 
   if (dec_counter)
     GST_CAMERA_BIN2_PROCESSING_DEC (camerabin);
