@@ -26,7 +26,7 @@
 
 void
 gst_gl_effects_luma_to_curve (GstGLEffects * effects,
-    GstGLEffectsCurve curve,
+    const GstGLEffectsCurve * curve,
     gint curve_index, gint width, gint height, GLuint texture)
 {
   GstGLShader *shader;
@@ -65,8 +65,8 @@ gst_gl_effects_luma_to_curve (GstGLEffects * effects,
     gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-    gl->TexImage1D (GL_TEXTURE_1D, 0, curve.bytes_per_pixel,
-        curve.width, 0, GL_RGB, GL_UNSIGNED_BYTE, curve.pixel_data);
+    gl->TexImage1D (GL_TEXTURE_1D, 0, curve->bytes_per_pixel,
+        curve->width, 0, GL_RGB, GL_UNSIGNED_BYTE, curve->pixel_data);
 
     gl->Disable (GL_TEXTURE_1D);
   }
@@ -96,7 +96,7 @@ gst_gl_effects_heat_callback (gint width, gint height, guint texture,
 {
   GstGLEffects *effects = GST_GL_EFFECTS (data);
 
-  gst_gl_effects_luma_to_curve (effects, heat_curve, GST_GL_EFFECTS_CURVE_HEAT,
+  gst_gl_effects_luma_to_curve (effects, &heat_curve, GST_GL_EFFECTS_CURVE_HEAT,
       width, height, texture);
 }
 
@@ -115,7 +115,7 @@ gst_gl_effects_sepia_callback (gint width, gint height, guint texture,
 {
   GstGLEffects *effects = GST_GL_EFFECTS (data);
 
-  gst_gl_effects_luma_to_curve (effects, sepia_curve,
+  gst_gl_effects_luma_to_curve (effects, &sepia_curve,
       GST_GL_EFFECTS_CURVE_SEPIA, width, height, texture);
 }
 
@@ -134,7 +134,7 @@ gst_gl_effects_luma_xpro_callback (gint width, gint height, guint texture,
 {
   GstGLEffects *effects = GST_GL_EFFECTS (data);
 
-  gst_gl_effects_luma_to_curve (effects, luma_xpro_curve,
+  gst_gl_effects_luma_to_curve (effects, &luma_xpro_curve,
       GST_GL_EFFECTS_CURVE_LUMA_XPRO, width, height, texture);
 }
 

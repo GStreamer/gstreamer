@@ -34,7 +34,7 @@ gst_gl_effects_xray_step_one (gint width, gint height, guint texture,
 {
   GstGLEffects *effects = GST_GL_EFFECTS (data);
 
-  gst_gl_effects_luma_to_curve (effects, xray_curve, GST_GL_EFFECTS_CURVE_XRAY,
+  gst_gl_effects_luma_to_curve (effects, &xray_curve, GST_GL_EFFECTS_CURVE_XRAY,
       width, height, texture);
 }
 
