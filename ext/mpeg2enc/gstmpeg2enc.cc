@@ -381,8 +381,6 @@ gst_mpeg2enc_setcaps (GstMpeg2enc * enc, GstPad * pad, GstCaps * caps)
   if (enc->encoder)
     goto refuse_renegotiation;
 
-  pad = enc->sinkpad;
-
   /* since mpeg encoder does not really check, let's check caps */
   if (!gst_video_info_from_caps (&enc->vinfo, caps))
     goto refuse_caps;
