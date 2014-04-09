@@ -38,6 +38,9 @@ typedef struct
   OMX_COLOR_FORMATTYPE type;
 } GstOMXVideoNegotiationMap;
 
+GstVideoFormat
+gst_omx_video_get_format_from_omx (OMX_COLOR_FORMATTYPE omx_colorformat);
+
 GList *
 gst_omx_video_get_supported_colorformats (GstOMXPort * port,
     GstVideoCodecState * state);

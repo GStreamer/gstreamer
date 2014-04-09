@@ -31,6 +31,58 @@
 GST_DEBUG_CATEGORY (gst_omx_video_debug_category);
 #define GST_CAT_DEFAULT gst_omx_video_debug_category
 
+GstVideoFormat
+gst_omx_video_get_format_from_omx (OMX_COLOR_FORMATTYPE omx_colorformat)
+{
+  GstVideoFormat format;
+
+  switch (omx_colorformat) {
+    case OMX_COLOR_FormatL8:
+      format = GST_VIDEO_FORMAT_GRAY8;
+      break;
+    case OMX_COLOR_FormatYUV420Planar:
+    case OMX_COLOR_FormatYUV420PackedPlanar:
+      format = GST_VIDEO_FORMAT_I420;
+      break;
+    case OMX_COLOR_FormatYUV420SemiPlanar:
+      format = GST_VIDEO_FORMAT_NV12;
+      break;
+    case OMX_COLOR_FormatYUV422SemiPlanar:
+      format = GST_VIDEO_FORMAT_NV16;
+      break;
+    case OMX_COLOR_FormatYCbYCr:
+      format = GST_VIDEO_FORMAT_YUY2;
+      break;
+    case OMX_COLOR_FormatYCrYCb:
+      format = GST_VIDEO_FORMAT_YVYU;
+      break;
+    case OMX_COLOR_FormatCbYCrY:
+      format = GST_VIDEO_FORMAT_UYVY;
+      break;
+    case OMX_COLOR_Format32bitARGB8888:
+      /* There is a mismatch in omxil specification 4.2.1 between
+       * OMX_COLOR_Format32bitARGB8888 and its description
+       * Follow the description */
+      format = GST_VIDEO_FORMAT_ABGR;
+      break;
+    case OMX_COLOR_Format32bitBGRA8888:
+      /* Same issue as OMX_COLOR_Format32bitARGB8888 */
+      format = GST_VIDEO_FORMAT_ARGB;
+      break;
+    case OMX_COLOR_Format16bitRGB565:
+      format = GST_VIDEO_FORMAT_RGB16;
+      break;
+    case OMX_COLOR_Format16bitBGR565:
+      format = GST_VIDEO_FORMAT_BGR16;
+      break;
+    default:
+      format = GST_VIDEO_FORMAT_UNKNOWN;
+      break;
+  }
+
+  return format;
+}
+
 GList *
 gst_omx_video_get_supported_colorformats (GstOMXPort * port,
     GstVideoCodecState * state)
@@ -41,6 +93,7 @@ gst_omx_video_get_supported_colorformats (GstOMXPort * port,
   GList *negotiation_map = NULL;
   gint old_index;
   GstOMXVideoNegotiationMap *m;
+  GstVideoFormat f;
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = port->index;
@@ -64,31 +117,21 @@ gst_omx_video_get_supported_colorformats (GstOMXPort * port,
       break;
 
     if (err == OMX_ErrorNone || err == OMX_ErrorNoMore) {
-      switch (param.eColorFormat) {
-        case OMX_COLOR_FormatYUV420Planar:
-        case OMX_COLOR_FormatYUV420PackedPlanar:
-          m = g_slice_new (GstOMXVideoNegotiationMap);
-          m->format = GST_VIDEO_FORMAT_I420;
-          m->type = param.eColorFormat;
-          negotiation_map = g_list_append (negotiation_map, m);
-          GST_DEBUG_OBJECT (comp->parent,
-              "Component supports I420 (%d) at index %u",
-              param.eColorFormat, (guint) param.nIndex);
-          break;
-        case OMX_COLOR_FormatYUV420SemiPlanar:
-          m = g_slice_new (GstOMXVideoNegotiationMap);
-          m->format = GST_VIDEO_FORMAT_NV12;
-          m->type = param.eColorFormat;
-          negotiation_map = g_list_append (negotiation_map, m);
-          GST_DEBUG_OBJECT (comp->parent,
-              "Component supports NV12 (%d) at index %u",
-              param.eColorFormat, (guint) param.nIndex);
-          break;
-        default:
-          GST_DEBUG_OBJECT (comp->parent,
-              "Component supports unsupported color format %d at index %u",
-              param.eColorFormat, (guint) param.nIndex);
-          break;
+      f = gst_omx_video_get_format_from_omx (param.eColorFormat);
+
+      if (f != GST_VIDEO_FORMAT_UNKNOWN) {
+        m = g_slice_new (GstOMXVideoNegotiationMap);
+        m->format = f;
+        m->type = param.eColorFormat;
+        negotiation_map = g_list_append (negotiation_map, m);
+        GST_DEBUG_OBJECT (comp->parent,
+            "Component supports %s (%d) at index %u",
+            gst_video_format_to_string (f), param.eColorFormat,
+            (guint) param.nIndex);
+      } else {
+        GST_DEBUG_OBJECT (comp->parent,
+            "Component supports unsupported color format %d at index %u",
+            param.eColorFormat, (guint) param.nIndex);
       }
     }
     old_index = param.nIndex++;

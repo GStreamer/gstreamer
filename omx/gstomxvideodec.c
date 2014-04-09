@@ -1094,30 +1094,21 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
   gst_omx_port_get_port_definition (port, &port_def);
   g_assert (port_def.format.video.eCompressionFormat == OMX_VIDEO_CodingUnused);
 
-  switch (port_def.format.video.eColorFormat) {
-    case OMX_COLOR_FormatYUV420Planar:
-    case OMX_COLOR_FormatYUV420PackedPlanar:
-      GST_DEBUG_OBJECT (self, "Output is I420 (%d)",
-          port_def.format.video.eColorFormat);
-      format = GST_VIDEO_FORMAT_I420;
-      break;
-    case OMX_COLOR_FormatYUV420SemiPlanar:
-      GST_DEBUG_OBJECT (self, "Output is NV12 (%d)",
-          port_def.format.video.eColorFormat);
-      format = GST_VIDEO_FORMAT_NV12;
-      break;
-    default:
-      GST_ERROR_OBJECT (self, "Unsupported color format: %d",
-          port_def.format.video.eColorFormat);
-      GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-      err = OMX_ErrorUndefined;
-      goto done;
-      break;
+  format =
+      gst_omx_video_get_format_from_omx (port_def.format.video.eColorFormat);
+
+  if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (self, "Unsupported color format: %d",
+        port_def.format.video.eColorFormat);
+    GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+    err = OMX_ErrorUndefined;
+    goto done;
   }
 
   GST_DEBUG_OBJECT (self,
-      "Setting output state: format %s, width %u, height %u",
+      "Setting output state: format %s (%d), width %u, height %u",
       gst_video_format_to_string (format),
+      port_def.format.video.eColorFormat,
       (guint) port_def.format.video.nFrameWidth,
       (guint) port_def.format.video.nFrameHeight);
 
@@ -1223,31 +1214,23 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       g_assert (port_def.format.video.eCompressionFormat ==
           OMX_VIDEO_CodingUnused);
 
-      switch (port_def.format.video.eColorFormat) {
-        case OMX_COLOR_FormatYUV420Planar:
-        case OMX_COLOR_FormatYUV420PackedPlanar:
-          GST_DEBUG_OBJECT (self, "Output is I420 (%d)",
-              port_def.format.video.eColorFormat);
-          format = GST_VIDEO_FORMAT_I420;
-          break;
-        case OMX_COLOR_FormatYUV420SemiPlanar:
-          GST_DEBUG_OBJECT (self, "Output is NV12 (%d)",
-              port_def.format.video.eColorFormat);
-          format = GST_VIDEO_FORMAT_NV12;
-          break;
-        default:
-          GST_ERROR_OBJECT (self, "Unsupported color format: %d",
-              port_def.format.video.eColorFormat);
-          if (buf)
-            gst_omx_port_release_buffer (port, buf);
-          GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-          goto caps_failed;
-          break;
+      format =
+          gst_omx_video_get_format_from_omx (port_def.format.
+          video.eColorFormat);
+
+      if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+        GST_ERROR_OBJECT (self, "Unsupported color format: %d",
+            port_def.format.video.eColorFormat);
+        if (buf)
+          gst_omx_port_release_buffer (port, buf);
+        GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+        goto caps_failed;
       }
 
       GST_DEBUG_OBJECT (self,
-          "Setting output state: format %s, width %u, height %u",
+          "Setting output state: format %s (%d), width %u, height %u",
           gst_video_format_to_string (format),
+          port_def.format.video.eColorFormat,
           (guint) port_def.format.video.nFrameWidth,
           (guint) port_def.format.video.nFrameHeight);
 
