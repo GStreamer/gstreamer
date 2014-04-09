@@ -2738,6 +2738,7 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
 
   g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
   g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
+  g_return_val_if_fail (target_denominator != 0, FALSE);
 
   value = gst_structure_get_value (structure, field_name);
 
