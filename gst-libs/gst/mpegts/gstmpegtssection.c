@@ -657,6 +657,10 @@ _parse_pmt (GstMpegTsSection * section)
   guint stream_info_length;
 
   pmt = g_slice_new0 (GstMpegTsPMT);
+  if (!pmt) {
+    GST_WARNING ("Failed to allocate PMT structure");
+    goto error;
+  }
 
   data = section->data;
   end = data + section->section_length;
