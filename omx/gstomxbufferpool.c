@@ -372,27 +372,21 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
     g_ptr_array_add (pool->buffers, buf);
 
     if (pool->add_videometa) {
-      gsize offset[4] = { 0, };
-      gint stride[4] = { 0, };
+      const guint nstride = pool->port->port_def.format.video.nStride;
+      const guint nslice = pool->port->port_def.format.video.nSliceHeight;
+      gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
+      gint stride[GST_VIDEO_MAX_PLANES] = { nstride, 0, };
 
-      switch (pool->video_info.finfo->format) {
+      switch (GST_VIDEO_INFO_FORMAT (&pool->video_info)) {
         case GST_VIDEO_FORMAT_I420:
-          offset[0] = 0;
-          stride[0] = pool->port->port_def.format.video.nStride;
-          offset[1] =
-              stride[0] * pool->port->port_def.format.video.nSliceHeight;
-          stride[1] = pool->port->port_def.format.video.nStride / 2;
-          offset[2] =
-              offset[1] +
-              stride[1] * (pool->port->port_def.format.video.nSliceHeight / 2);
-          stride[2] = pool->port->port_def.format.video.nStride / 2;
+          stride[1] = nstride / 2;
+          offset[1] = offset[0] + stride[0] * nslice;
+          stride[2] = nstride / 2;
+          offset[2] = offset[1] + (stride[1] * nslice / 2);
           break;
         case GST_VIDEO_FORMAT_NV12:
-          offset[0] = 0;
-          stride[0] = pool->port->port_def.format.video.nStride;
-          offset[1] =
-              stride[0] * pool->port->port_def.format.video.nSliceHeight;
-          stride[1] = pool->port->port_def.format.video.nStride;
+          stride[1] = nstride;
+          offset[1] = offset[0] + stride[0] * nslice;
           break;
         default:
           g_assert_not_reached ();
