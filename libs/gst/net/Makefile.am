@@ -63,7 +63,7 @@ GstNet-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_API_VERSIO
 		--library=libgstnet-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
 		--include=Gio-2.0 \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gio-2.0 \
 		--pkg-export="gstreamer-net-@GST_API_VERSION@" \

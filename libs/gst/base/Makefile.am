@@ -89,7 +89,7 @@ GstBase-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_API_VERS
 		--library-path=$(top_builddir)/gst \
 		--library=libgstbase-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg-export gstreamer-base-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL,NULL);" \

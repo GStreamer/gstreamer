@@ -298,7 +298,7 @@ Gst-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_API_VERSIO
 		--include=GLib-2.0 \
 		--include=GObject-2.0 \
 		--include=GModule-2.0 \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg glib-2.0 \
 		--pkg gobject-2.0 \
 		--pkg gmodule-no-export-2.0 \

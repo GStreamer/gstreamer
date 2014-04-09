@@ -154,7 +154,7 @@ GstCheck-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_API_VE
 		--library-path=$(top_builddir)/gst \
 		--library=libgstcheck-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg-export gstreamer-check-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL,NULL);" \

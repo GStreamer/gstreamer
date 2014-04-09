@@ -63,7 +63,7 @@ GstController-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@
 		--library-path=$(top_builddir)/gst \
 		--library=libgstcontroller-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg-export gstreamer-controller-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL,NULL);" \
