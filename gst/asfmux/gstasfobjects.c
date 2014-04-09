@@ -578,7 +578,6 @@ gst_asf_parse_packet_from_data (guint8 * data, gsize size, GstBuffer * buffer,
   guint32 send_time = 0;
   guint16 duration = 0;
   gboolean has_keyframe;
-  GstMapInfo map;
 
   if (packet_size != 0 && size != packet_size) {
     GST_WARNING ("ASF packets should be aligned with buffers");
@@ -720,7 +719,6 @@ error:
   ret = FALSE;
   GST_WARNING ("Error while parsing data packet");
 end:
-  gst_buffer_unmap (buffer, &map);
   gst_byte_reader_free (reader);
   return ret;
 }
