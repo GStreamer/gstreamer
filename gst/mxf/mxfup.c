@@ -139,10 +139,17 @@ mxf_up_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   if (key->u[12] != 0x15 || (key->u[14] != 0x01 && key->u[14] != 0x02
           && key->u[14] != 0x03 && key->u[14] != 0x04)) {
     GST_ERROR ("Invalid uncompressed picture essence element");
+    gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
 
-  if (!data || (data->image_start_offset == 0 && data->image_end_offset == 0)) {
+  if (!data) {
+    GST_ERROR ("Invalid mapping data");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
+  }
+
+  if (data->image_start_offset == 0 && data->image_end_offset == 0) {
   } else {
     if (data->image_start_offset + data->image_end_offset
         > gst_buffer_get_size (buffer)) {
@@ -157,6 +164,7 @@ mxf_up_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
 
   if (gst_buffer_get_size (buffer) != data->bpp * data->width * data->height) {
     GST_ERROR ("Invalid buffer size");
+    gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
 
