@@ -292,11 +292,11 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec)
     pthread_mutex_unlock(&mutex);
 
     ctx = calloc(1, sizeof (struct mfc_dec_context));
-    ctx->output_frames_available = 0;
     if (!ctx) {
         GST_ERROR ("Unable to allocate memory for context");
         return NULL;
     }
+    ctx->output_frames_available = 0;
 
     if (stat (MFC_PATH, &sb) < 0) {
         GST_INFO ("MFC device node doesn't exist, failing quietly");
