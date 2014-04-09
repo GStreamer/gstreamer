@@ -848,7 +848,7 @@ tsmux_section_write_packet (GstMpegTsSectionType * type,
   GstBuffer *section_buffer;
   GstBuffer *packet_buffer = NULL;
   GstMemory *mem;
-  guint8 *packet = NULL;
+  guint8 *packet;
   guint8 *data;
   gsize data_size = 0;
   gsize payload_written;
@@ -882,8 +882,6 @@ tsmux_section_write_packet (GstMpegTsSectionType * type,
   while (section->pi.stream_avail > 0) {
 
     packet = g_malloc (TSMUX_PACKET_LENGTH);
-    if (!packet)
-      goto fail;
 
     if (section->pi.packet_start_unit_indicator) {
       /* Wee need room for a pointer byte */
