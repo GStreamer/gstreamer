@@ -926,6 +926,7 @@ tsmux_section_write_packet (GstMpegTsSectionType * type,
       goto fail;
       }
 
+    packet_buffer = NULL;
     section->pi.stream_avail -= len;
     payload_written += payload_len;
     section->pi.packet_start_unit_indicator = FALSE;
