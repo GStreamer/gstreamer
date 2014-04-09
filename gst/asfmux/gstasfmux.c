@@ -1331,11 +1331,9 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
     gst_asf_mux_write_ext_content_description (asfmux, &bufdata, asftags->tags);
   }
 
-  if (asftags) {
-    if (asftags->tags)
-      gst_tag_list_unref (asftags->tags);
-    g_free (asftags);
-  }
+  if (asftags->tags)
+    gst_tag_list_unref (asftags->tags);
+  g_free (asftags);
 
   /* writing header extension objects */
   gst_asf_mux_write_header_extension (asfmux, &bufdata, stream_num *
