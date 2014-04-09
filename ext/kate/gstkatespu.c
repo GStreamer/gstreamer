@@ -601,8 +601,8 @@ gst_kate_spu_decode_spu (GstKateEnc * ke, GstBuffer * buf, kate_region * kr,
     /* prefer relative sizes in case we're encoding for a different resolution
        that what the SPU was created for */
     kr->metric = kate_millionths;
-    kr->x = 1000000 * x / ke->original_canvas_width;
-    kr->y = 1000000 * y / ke->original_canvas_height;
+    kr->x = 1000000 * (size_t) x / ke->original_canvas_width;
+    kr->y = 1000000 * (size_t) y / ke->original_canvas_height;
     kr->w = 1000000 * kb->width / ke->original_canvas_width;
     kr->h = 1000000 * kb->height / ke->original_canvas_height;
   } else {
