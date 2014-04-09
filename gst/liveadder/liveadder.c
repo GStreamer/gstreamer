@@ -827,6 +827,7 @@ gst_live_adder_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_parse_caps (query, &filter);
       result = gst_live_adder_sink_getcaps (adder, pad, filter);
       gst_query_set_caps_result (query, result);
+      gst_caps_unref (result);
       res = TRUE;
       break;
     }
