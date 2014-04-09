@@ -39,7 +39,7 @@
 
 static BMDTimecodeFormat g_timecodeFormat = (BMDTimecodeFormat) 0;
 
-DeckLinkCaptureDelegate::DeckLinkCaptureDelegate ():m_refCount (0)
+DeckLinkCaptureDelegate::DeckLinkCaptureDelegate ():priv (NULL), m_refCount (0)
 {
   g_mutex_init (&m_mutex);
 }
