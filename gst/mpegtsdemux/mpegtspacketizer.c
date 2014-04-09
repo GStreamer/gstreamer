@@ -1720,12 +1720,18 @@ _insert_group_after (MpegTSPCR * pcrtable, PCROffsetGroup * group,
         break;
       }
     }
-    toinsert = g_list_append (NULL, group);
-    toinsert->next = nextlist;
-    toinsert->prev = prevlist;
-    prevlist->next = toinsert;
-    if (nextlist)
-      nextlist->prev = toinsert;
+    if (!prevlist) {
+      /* The non NULL prev given isn't in the list */
+      GST_WARNING ("Request to insert before a group which isn't in the list");
+      pcrtable->groups = g_list_prepend (pcrtable->groups, group);
+    } else {
+      toinsert = g_list_append (NULL, group);
+      toinsert->next = nextlist;
+      toinsert->prev = prevlist;
+      prevlist->next = toinsert;
+      if (nextlist)
+        nextlist->prev = toinsert;
+    }
   }
 }
 
