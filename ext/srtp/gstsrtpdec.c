@@ -988,7 +988,7 @@ unprotect:
         GST_OBJECT_LOCK (filter);
 
         /* Update stream */
-        if ((stream = find_stream_by_ssrc (filter, ssrc))) {
+        if (find_stream_by_ssrc (filter, ssrc)) {
           GST_OBJECT_UNLOCK (filter);
           if (request_key_with_signal (filter, ssrc, SIGNAL_HARD_LIMIT)) {
             GST_OBJECT_LOCK (filter);
