@@ -1487,6 +1487,7 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
   do {
     if (src->interrupted) {
       GST_DEBUG_OBJECT (src, "interrupted");
+      src->ret = GST_FLOW_FLUSHING;
       break;
     }
     if (src->retry) {
@@ -1615,6 +1616,7 @@ gst_soup_http_src_unlock (GstBaseSrc * bsrc)
   GST_DEBUG_OBJECT (src, "unlock()");
 
   src->interrupted = TRUE;
+  src->ret = GST_FLOW_FLUSHING;
   if (src->loop)
     g_main_loop_quit (src->loop);
   g_cond_signal (&src->request_finished_cond);
@@ -1631,6 +1633,7 @@ gst_soup_http_src_unlock_stop (GstBaseSrc * bsrc)
   GST_DEBUG_OBJECT (src, "unlock_stop()");
 
   src->interrupted = FALSE;
+  src->ret = GST_FLOW_OK;
   return TRUE;
 }
 
