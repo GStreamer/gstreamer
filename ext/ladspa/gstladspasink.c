@@ -296,8 +296,7 @@ gst_ladspa_sink_type_class_init (GstLADSPASinkClass * ladspa_class,
 {
   GObjectClass *object_class = G_OBJECT_CLASS (ladspa_class);
   GstElementClass *elem_class = GST_ELEMENT_CLASS (ladspa_class);
-  GstBaseSinkClass *base_class = base_class =
-      GST_BASE_SINK_CLASS (ladspa_class);
+  GstBaseSinkClass *base_class = GST_BASE_SINK_CLASS (ladspa_class);
 
   gst_ladspa_sink_type_parent_class = g_type_class_peek_parent (ladspa_class);
 
