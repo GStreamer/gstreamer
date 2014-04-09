@@ -363,6 +363,10 @@ gst_compare_ssim_window (GstCompare * comp, guint8 * data1, guint8 * data2,
   const gdouble c1 = (k1 * L) * (k1 * L);
   const gdouble c2 = (k2 * L) * (k2 * L);
 
+  /* For empty images, return maximum similarity */
+  if (height <= 0 || width <= 0)
+    return 1.0;
+
   /* plain and simple; no fancy optimizations */
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
@@ -413,6 +417,10 @@ gst_compare_ssim_component (GstCompare * comp, guint8 * data1, guint8 * data2,
       count++;
     }
   }
+
+  /* For empty images, return maximum similarity */
+  if (count == 0)
+    return 1.0;
 
   return (ssim_sum / count);
 }
