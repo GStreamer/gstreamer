@@ -324,8 +324,12 @@ speed_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_set_duration (query, GST_FORMAT_TIME, -1);
 
       if (!gst_pad_peer_query_duration (filter->sinkpad, rformat, &end)) {
-        GST_LOG_OBJECT (filter, "query on peer pad failed");
-        goto error;
+        GST_LOG_OBJECT (filter, "TIME query on peer pad failed, trying BYTES");
+        rformat = GST_FORMAT_BYTES;
+        if (!gst_pad_peer_query_duration (filter->sinkpad, rformat, &end)) {
+          GST_LOG_OBJECT (filter, "BYTES query on peer pad failed too");
+          goto error;
+        }
       }
 
       if (rformat == GST_FORMAT_BYTES)
