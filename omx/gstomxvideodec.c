@@ -448,6 +448,20 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
     guint p;
 
     switch (GST_VIDEO_INFO_FORMAT (vinfo)) {
+      case GST_VIDEO_FORMAT_ABGR:
+      case GST_VIDEO_FORMAT_ARGB:
+        dst_width[0] = GST_VIDEO_INFO_WIDTH (vinfo) * 4;
+        break;
+      case GST_VIDEO_FORMAT_RGB16:
+      case GST_VIDEO_FORMAT_BGR16:
+      case GST_VIDEO_FORMAT_YUY2:
+      case GST_VIDEO_FORMAT_UYVY:
+      case GST_VIDEO_FORMAT_YVYU:
+        dst_width[0] = GST_VIDEO_INFO_WIDTH (vinfo) * 2;
+        break;
+      case GST_VIDEO_FORMAT_GRAY8:
+        dst_width[0] = GST_VIDEO_INFO_WIDTH (vinfo);
+        break;
       case GST_VIDEO_FORMAT_I420:
         dst_width[0] = GST_VIDEO_INFO_WIDTH (vinfo);
         src_stride[1] = nstride / 2;
@@ -465,6 +479,13 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
         src_size[1] = src_stride[1] * nslice / 2;
         dst_width[1] = GST_VIDEO_INFO_WIDTH (vinfo);
         dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo) / 2;
+        break;
+      case GST_VIDEO_FORMAT_NV16:
+        dst_width[0] = GST_VIDEO_INFO_WIDTH (vinfo);
+        src_stride[1] = nstride;
+        src_size[1] = src_stride[1] * nslice;
+        dst_width[1] = GST_VIDEO_INFO_WIDTH (vinfo);
+        dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo);
         break;
       default:
         g_assert_not_reached ();

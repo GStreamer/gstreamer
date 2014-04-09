@@ -378,6 +378,15 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
       gint stride[GST_VIDEO_MAX_PLANES] = { nstride, 0, };
 
       switch (GST_VIDEO_INFO_FORMAT (&pool->video_info)) {
+        case GST_VIDEO_FORMAT_ABGR:
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_RGB16:
+        case GST_VIDEO_FORMAT_BGR16:
+        case GST_VIDEO_FORMAT_YUY2:
+        case GST_VIDEO_FORMAT_UYVY:
+        case GST_VIDEO_FORMAT_YVYU:
+        case GST_VIDEO_FORMAT_GRAY8:
+          break;
         case GST_VIDEO_FORMAT_I420:
           stride[1] = nstride / 2;
           offset[1] = offset[0] + stride[0] * nslice;
@@ -385,6 +394,7 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
           offset[2] = offset[1] + (stride[1] * nslice / 2);
           break;
         case GST_VIDEO_FORMAT_NV12:
+        case GST_VIDEO_FORMAT_NV16:
           stride[1] = nstride;
           offset[1] = offset[0] + stride[0] * nslice;
           break;
