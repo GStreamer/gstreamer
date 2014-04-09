@@ -656,7 +656,9 @@ gst_mss_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstFormat fmt;
       gint64 stop = -1;
 
-      if (mssdemux->manifest && gst_mss_manifest_is_live (mssdemux->manifest)) {
+      if (!mssdemux->manifest) {
+        return FALSE;           /* no seeking without manifest */
+      } else if (gst_mss_manifest_is_live (mssdemux->manifest)) {
         return FALSE;           /* no live seeking */
       }
 
