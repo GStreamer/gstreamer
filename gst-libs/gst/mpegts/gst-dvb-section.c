@@ -857,7 +857,7 @@ _parse_sdt (GstMpegTsSection * section)
 
     entry_begin = data;
 
-    if (sdt_info_length + 5 < 4) {
+    if (sdt_info_length - 4 < 5) {
       /* each entry must be at least 5 bytes (+4 bytes for the CRC) */
       GST_WARNING ("PID %d invalid SDT entry size %d",
           section->pid, sdt_info_length);
