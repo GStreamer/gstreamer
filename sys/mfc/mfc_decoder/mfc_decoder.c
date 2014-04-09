@@ -294,14 +294,14 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec)
     ctx = calloc(1, sizeof (struct mfc_dec_context));
     if (!ctx) {
         GST_ERROR ("Unable to allocate memory for context");
-        return NULL;
+        goto early_error;
     }
     ctx->output_frames_available = 0;
 
     if (stat (MFC_PATH, &sb) < 0) {
         GST_INFO ("MFC device node doesn't exist, failing quietly");
         free(ctx);
-        return NULL;
+        goto early_error;
     }
 
     GST_INFO ("Opening MFC device node at: %s", MFC_PATH);
@@ -309,7 +309,7 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec)
     if (ctx->fd == -1) {
         GST_WARNING ("Unable to open MFC device node: %d", errno);
         free(ctx);
-        return NULL;
+        goto early_error;
     }
 
     if (ioctl (ctx->fd, VIDIOC_QUERYCAP, &caps) < 0) {
@@ -331,6 +331,12 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec)
         return NULL;
     }
     return ctx;
+
+early_error:
+    pthread_mutex_lock(&mutex);
+    mfc_in_use = 0;
+    pthread_mutex_unlock(&mutex);
+    return NULL;
 }
 
 static int get_output_format(struct mfc_dec_context *ctx)
