@@ -2623,6 +2623,9 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
 done:
   gst_v4l2_object_save_format (v4l2object, fmtdesc, &format, &info, &align);
 
+  if (v4l2object->sizeimage < GST_VIDEO_INFO_SIZE (&info))
+    goto short_allocation;
+
   /* now configure the pool */
   if (!gst_v4l2_object_setup_pool (v4l2object, caps))
     goto pool_failed;
@@ -2707,6 +2710,14 @@ set_parm_failed:
         GST_ERROR_SYSTEM);
     goto done;
   }
+short_allocation:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Video device provided a image size that is too short.")),
+        ("Expected at least %" G_GSIZE_FORMAT " but got %u", info.size,
+            v4l2object->sizeimage));
+    return FALSE;
+  }
 pool_failed:
   {
     /* setup_pool already send the error */
@@ -2789,6 +2800,9 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
 
   gst_v4l2_object_save_format (v4l2object, fmtdesc, &fmt, info, &align);
 
+  if (v4l2object->sizeimage < GST_VIDEO_INFO_SIZE (info))
+    goto short_allocation;
+
   /* Shall we setup the pool ? */
 
   return TRUE;
@@ -2820,6 +2834,14 @@ unsupported_format:
         (_("Video devices uses an unsupported pixel format.")),
         ("V4L2 format %" GST_FOURCC_FORMAT " not supported",
             GST_FOURCC_ARGS (fmt.fmt.pix.pixelformat)));
+    return FALSE;
+  }
+short_allocation:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Video device provided a image size that is too short.")),
+        ("Expected at least %" G_GSIZE_FORMAT " but got %u", info->size,
+            v4l2object->sizeimage));
     return FALSE;
   }
 }
