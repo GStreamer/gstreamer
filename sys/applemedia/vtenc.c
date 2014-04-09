@@ -903,7 +903,9 @@ gst_vtenc_enqueue_buffer (void *data, int a2, int a3, int a4,
   }
   self->expect_keyframe = FALSE;
 
-  buf = gst_core_media_buffer_new (sbuf);
+  /* We are dealing with block buffers here, so we don't need
+   * to enable the use of the video meta API on the core media buffer */
+  buf = gst_core_media_buffer_new (sbuf, FALSE);
   gst_buffer_copy_into (buf, self->cur_inbuf, GST_BUFFER_COPY_TIMESTAMPS,
       0, -1);
   if (is_keyframe) {

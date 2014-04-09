@@ -811,7 +811,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     }
   }
 
-  *buf = gst_core_media_buffer_new (sbuf);
+  *buf = gst_core_media_buffer_new (sbuf, useVideoMeta);
   CFRelease (sbuf);
 
   [self timestampBuffer:*buf];
