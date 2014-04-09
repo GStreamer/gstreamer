@@ -66,6 +66,57 @@ typedef enum {
   GST_MTS_TABLE_ID_ATSC_SATELLITE_VIRTUAL_CHANNEL       = 0xDA,
 } GstMpegTsSectionATSCTableID;
 
+/* TVCT */
+#define GST_TYPE_MPEGTS_ATSC_TVCT (gst_mpegts_atsc_tvct_get_type ())
+#define GST_TYPE_MPEGTS_ATSC_TVCT_SOURCE (gst_mpegts_atsc_tvct_source_get_type ())
+
+typedef struct _GstMpegTsAtscTVCTSource GstMpegTsAtscTVCTSource;
+typedef struct _GstMpegTsAtscTVCT GstMpegTsAtscTVCT;
+
+/**
+ * GstMpegTsAtscTVCTSource:
+ *
+ * Source from a @GstMpegTsAtscTVCT
+ */
+struct _GstMpegTsAtscTVCTSource
+{
+  gunichar2 *short_name;
+  guint16   major_channel_number;
+  guint16   minor_channel_number;
+  guint8    modulation_mode;
+  guint32   carrier_frequency;
+  guint16   channel_TSID;
+  guint16   program_number;
+  /* FIXME: */
+  guint8    ETM_location;
+  gboolean  access_controlled;
+  gboolean  hidden;
+  gboolean  hide_guide;
+  /* FIXME: */
+  guint8    service_type;
+  guint16   source_id;
+  GPtrArray *descriptors;
+};
+
+/**
+ * GstMpegTsAtscTVCT:
+ *
+ * Terrestrial Virtual Channel Table (A65)
+ *
+ */
+struct _GstMpegTsAtscTVCT
+{
+  guint16   transport_stream_id;
+  guint8    protocol_version;
+  GPtrArray *sources;
+  GPtrArray *descriptors;
+};
+
+GType gst_mpegts_atsc_tvct_get_type (void);
+GType gst_mpegts_atsc_tvct_source_get_type (void);
+
+const GstMpegTsAtscTVCT * gst_mpegts_section_get_atsc_tvct (GstMpegTsSection * section);
+
 G_END_DECLS
 
 #endif				/* GST_MPEGTS_SECTION_H */

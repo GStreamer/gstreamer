@@ -52,15 +52,6 @@
  * and other specifications mentionned in the documentation.
  */
 
-/* FIXME : Move this to proper file once we have a C file for it */
-/**
- * SECTION:gst-atsc-section
- * @title: ATSC variants of MPEG-TS sections
- * @short_description: Sections for the various ATSC specifications
- * @include: gst/mpegts/mpegts.h
- *
- */
-
 /*
  * TODO
  *

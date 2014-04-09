@@ -363,6 +363,10 @@ gst_mpeg_ts_stream_type_get_type
 <SECTION>
 <FILE>gst-atsc-section</FILE>
 GstMpegTsSectionATSCTableID
+<SUBSECTION tvct>
+GstMpegTsAtscTVCTSource
+GstMpegTsAtscTVCT
+gst_mpegts_section_get_atsc_tvct
 <SUBSECTION Standard>
 GST_TYPE_MPEG_TS_SECTION_ATSC_TABLE_ID
 gst_mpeg_ts_section_atsc_table_id_get_type

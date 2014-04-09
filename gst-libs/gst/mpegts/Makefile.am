@@ -4,7 +4,8 @@ libgstmpegts_@GST_API_VERSION@_la_SOURCES = \
 	gstmpegtssection.c \
 	gstmpegtsdescriptor.c \
 	gst-dvb-descriptor.c \
-	gst-dvb-section.c
+	gst-dvb-section.c \
+	gst-atsc-section.c
 
 libgstmpegts_@GST_API_VERSION@includedir = \
 	$(includedir)/gstreamer-@GST_API_VERSION@/gst/mpegts
