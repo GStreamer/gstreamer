@@ -784,7 +784,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
     if (!state || self->width != width || self->height != height ||
         self->src_stride[0] != src_ystride
         || self->src_stride[1] != src_uvstride
-        || self->crop_left != self->crop_left || self->crop_top != crop_top
+        || self->crop_left != crop_left || self->crop_top != crop_top
         || self->crop_width != crop_width || self->crop_height != crop_height) {
       self->width = width;
       self->height = height;
