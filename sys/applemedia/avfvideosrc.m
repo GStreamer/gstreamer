@@ -103,6 +103,8 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
   BOOL captureScreen;
   BOOL captureScreenCursor;
   BOOL captureScreenMouseClicks;
+
+  BOOL useVideoMeta;
 }
 
 - (id)init;
@@ -163,6 +165,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     captureScreen = NO;
     captureScreenCursor = NO;
     captureScreenMouseClicks = NO;
+    useVideoMeta = NO;
 #if !HAVE_IOS
     displayId = kCGDirectMainDisplay;
 #endif
@@ -705,6 +708,14 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   return result;
 }
 
+- (BOOL)decideAllocation:(GstQuery *)query
+{
+  useVideoMeta = gst_query_find_allocation_meta (query,
+      GST_VIDEO_META_API_TYPE, NULL);
+
+  return YES;
+}
+
 - (BOOL)unlock
 {
   [bufQueueLock lock];
@@ -911,6 +922,8 @@ static gboolean gst_avf_video_src_start (GstBaseSrc * basesrc);
 static gboolean gst_avf_video_src_stop (GstBaseSrc * basesrc);
 static gboolean gst_avf_video_src_query (GstBaseSrc * basesrc,
     GstQuery * query);
+static gboolean gst_avf_video_src_decide_allocation (GstBaseSrc * basesrc,
+    GstQuery * query);
 static gboolean gst_avf_video_src_unlock (GstBaseSrc * basesrc);
 static gboolean gst_avf_video_src_unlock_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_avf_video_src_create (GstPushSrc * pushsrc,
@@ -938,6 +951,7 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
   gstbasesrc_class->query = gst_avf_video_src_query;
   gstbasesrc_class->unlock = gst_avf_video_src_unlock;
   gstbasesrc_class->unlock_stop = gst_avf_video_src_unlock_stop;
+  gstbasesrc_class->decide_allocation = gst_avf_video_src_decide_allocation;
 
   gstpushsrc_class->create = gst_avf_video_src_create;
 
@@ -1139,6 +1153,18 @@ gst_avf_video_src_query (GstBaseSrc * basesrc, GstQuery * query)
 
   OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) query:query];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_avf_video_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) decideAllocation:query];
   OBJC_CALLOUT_END ();
 
   return ret;
