@@ -388,8 +388,10 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
     mux->element_index = NULL;
   }
 #endif
-  gst_adapter_clear (mux->adapter);
-  gst_adapter_clear (mux->out_adapter);
+  if (mux->adapter)
+    gst_adapter_clear (mux->adapter);
+  if (mux->out_adapter)
+    gst_adapter_clear (mux->out_adapter);
 
   if (mux->tsmux) {
     tsmux_free (mux->tsmux);
@@ -414,10 +416,12 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   gst_event_replace (&mux->force_key_unit_event, NULL);
   gst_buffer_replace (&mux->out_buffer, NULL);
 
-  GST_COLLECT_PADS_STREAM_LOCK (mux->collect);
-  for (walk = mux->collect->data; walk != NULL; walk = g_slist_next (walk))
-    mpegtsmux_pad_reset ((MpegTsPadData *) walk->data);
-  GST_COLLECT_PADS_STREAM_UNLOCK (mux->collect);
+  if (mux->collect) {
+    GST_COLLECT_PADS_STREAM_LOCK (mux->collect);
+    for (walk = mux->collect->data; walk != NULL; walk = g_slist_next (walk))
+      mpegtsmux_pad_reset ((MpegTsPadData *) walk->data);
+    GST_COLLECT_PADS_STREAM_UNLOCK (mux->collect);
+  }
 
   if (alloc) {
     mux->tsmux = tsmux_new ();
