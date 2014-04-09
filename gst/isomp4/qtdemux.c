@@ -2418,7 +2418,7 @@ qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   *ds_duration = stream->def_sample_duration;
   *ds_size = stream->def_sample_size;
-  *ds_size = stream->def_sample_size;
+  *ds_flags = stream->def_sample_flags;
 
   /* even then, above values are better than random ... */
   if (G_UNLIKELY (!stream->parsed_trex)) {
