@@ -865,10 +865,26 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
       if (demux->download_failed_count < DEFAULT_FAILED_COUNT) {
         GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
         g_clear_error (&err);
-        /* Wait half the fragment duration before retrying */
-        demux->next_download +=
-            gst_util_uint64_scale (gst_m3u8_client_get_current_fragment_duration
-            (demux->client), G_USEC_PER_SEC, 2 * GST_SECOND);
+
+        /* First try to update the playlist for non-live playlists
+         * in case the URIs have changed in the meantime. But only
+         * try it the first time, after that we're going to wait a
+         * a bit to not flood the server */
+        if (demux->download_failed_count == 1
+            && !gst_m3u8_client_is_live (demux->client)
+            && gst_hls_demux_update_playlist (demux, FALSE, &err)) {
+          /* Retry immediately, the playlist actually has changed */
+          return;
+        } else {
+          /* Wait half the fragment duration before retrying */
+          demux->next_download +=
+              gst_util_uint64_scale
+              (gst_m3u8_client_get_current_fragment_duration (demux->client),
+              G_USEC_PER_SEC, 2 * GST_SECOND);
+        }
+
+        g_clear_error (&err);
+
         g_mutex_lock (&demux->download_lock);
         if (demux->stop_stream_task) {
           g_mutex_unlock (&demux->download_lock);
@@ -1220,7 +1236,7 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
     return FALSE;
   }
 
-  /*  If it's a live source, do not let the sequence number go beyond
+  /* If it's a live source, do not let the sequence number go beyond
    * three fragments before the end of the list */
   if (update == FALSE && demux->client->current &&
       gst_m3u8_client_is_live (demux->client)) {
