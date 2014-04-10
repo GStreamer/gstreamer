@@ -181,7 +181,7 @@ _parse_stream_profile (GMarkupParseContext * context,
           COLLECT_STR_OPT, "preset", &preset,
           COLLECT_STR_OPT, "preset-name", &preset_name,
           COLLECT_STR_OPT, "restriction", &restriction,
-          COLLECT_STR_OPT, "pass", &pass,
+          COLLECT_STR_OPT, "pass", &strpass,
           COLLECT_STR_OPT, "variableframerate", &strvariableframerate,
           G_MARKUP_COLLECT_STRING, "parent", &parent, G_MARKUP_COLLECT_INVALID))
     return;
