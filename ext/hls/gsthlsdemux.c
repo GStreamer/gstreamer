@@ -1222,7 +1222,7 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
 
   /*  If it's a live source, do not let the sequence number go beyond
    * three fragments before the end of the list */
-  if (updated && update == FALSE && demux->client->current &&
+  if (update == FALSE && demux->client->current &&
       gst_m3u8_client_is_live (demux->client)) {
     gint64 last_sequence;
 
@@ -1237,6 +1237,33 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
       demux->need_segment = TRUE;
       demux->client->sequence = last_sequence - 3;
     }
+    GST_M3U8_CLIENT_UNLOCK (demux->client);
+  } else if (demux->client->current && !gst_m3u8_client_is_live (demux->client)) {
+    GstClockTime current_pos, target_pos;
+    guint sequence = 0;
+    GList *walk;
+
+    /* Sequence numbers are not guaranteed to be the same in different
+     * playlists, so get the correct fragment here based on the current
+     * position
+     */
+    GST_M3U8_CLIENT_LOCK (demux->client);
+    current_pos = 0;
+    target_pos = demux->segment.position;
+    for (walk = demux->client->current->files; walk; walk = walk->next) {
+      GstM3U8MediaFile *file = walk->data;
+
+      sequence = file->sequence;
+      if (current_pos <= target_pos
+          && target_pos < current_pos + file->duration) {
+        break;
+      }
+      current_pos += file->duration;
+    }
+    /* End of playlist */
+    if (!walk)
+      sequence++;
+    demux->client->sequence = sequence;
     GST_M3U8_CLIENT_UNLOCK (demux->client);
   }
 
