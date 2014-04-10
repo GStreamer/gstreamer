@@ -776,6 +776,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
         "We got a Clip in a layer"
         " that does not exist, something is wrong either in the project file or"
         " in %s", g_type_name (G_OBJECT_TYPE (self)));
+    return;
   }
 
   /* We do not want the properties that are passed to layer-add_asset to be reset */
