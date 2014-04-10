@@ -1890,13 +1890,15 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
     tmppad = gst_element_get_static_pad (sgroup->outqueue, "src");
     pad = gst_pad_get_peer (tmppad);
 
-    /* Remove muxer request sink pad */
-    gst_pad_unlink (tmppad, pad);
-    if (GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad)) ==
-        GST_PAD_REQUEST)
-      gst_element_release_request_pad (ebin->muxer, pad);
+    if (pad) {
+      /* Remove muxer request sink pad */
+      gst_pad_unlink (tmppad, pad);
+      if (GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad)) ==
+          GST_PAD_REQUEST)
+        gst_element_release_request_pad (ebin->muxer, pad);
+      gst_object_unref (pad);
+    }
     gst_object_unref (tmppad);
-    gst_object_unref (pad);
   }
   if (sgroup->outqueue)
     gst_element_set_state (sgroup->outqueue, GST_STATE_NULL);
