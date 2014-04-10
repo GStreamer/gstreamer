@@ -498,7 +498,7 @@ is_granulepos_keyframe_theora (GstOggStream * pad, gint64 granulepos)
   if (granulepos == (gint64) - 1)
     return FALSE;
 
-  frame_mask = (1 << pad->granuleshift) - 1;
+  frame_mask = (1ll << pad->granuleshift) - 1;
 
   return ((granulepos & frame_mask) == 0);
 }
@@ -1105,7 +1105,7 @@ packet_duration_flac (GstOggStream * pad, ogg_packet * packet)
     return 576 << (block_size_index - 2);
   }
   if (block_size_index >= 8) {
-    return 256 << (block_size_index - 8);
+    return 256ll << (block_size_index - 8);
   }
   if (block_size_index == 6 || block_size_index == 7) {
     guint len, bytes = (block_size_index - 6) + 1;
@@ -2195,7 +2195,7 @@ is_granulepos_keyframe_daala (GstOggStream * pad, gint64 granulepos)
   if (granulepos == (gint64) - 1)
     return FALSE;
 
-  frame_mask = (1 << pad->granuleshift) - 1;
+  frame_mask = (1ll << pad->granuleshift) - 1;
 
   return ((granulepos & frame_mask) == 0);
 }
