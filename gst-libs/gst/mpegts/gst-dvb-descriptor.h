@@ -626,6 +626,11 @@ struct _GstMpegTsTerrestrialDeliverySystemDescriptor
 gboolean gst_mpegts_descriptor_parse_terrestrial_delivery_system (const GstMpegTsDescriptor
               *descriptor, GstMpegTsTerrestrialDeliverySystemDescriptor * res);
 
+/* GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER (0x5F) */
+gboolean gst_mpegts_descriptor_parse_dvb_private_data_specifier (const GstMpegTsDescriptor
+              * descriptor, guint32 * private_data_specifier, guint8 ** private_data,
+              guint8 * length);
+
 /* GST_MTS_DESC_DVB_FREQUENCY_LIST (0x62) */
 /* FIXME : Implement */
 

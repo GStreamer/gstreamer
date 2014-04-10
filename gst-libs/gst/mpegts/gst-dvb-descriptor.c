@@ -1247,6 +1247,42 @@ gst_mpegts_descriptor_parse_terrestrial_delivery_system (const
   return TRUE;
 }
 
+/* GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER (0x5F) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_private_data_specifier:
+ * @descriptor: a %GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER #GstMpegTsDescriptor
+ * @private_data_specifier: (out): the private data specifier id
+ * registered by http://www.dvbservices.com/
+ * @private_data: (out): additional data or NULL
+ * @length: (out): length of %private_data
+ *
+ * Parses out the private data specifier from the @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_private_data_specifier (const
+    GstMpegTsDescriptor * descriptor, guint32 * private_data_specifier,
+    guint8 ** private_data, guint8 * length)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL
+      && private_data_specifier != NULL, FALSE);
+  __common_desc_checks (descriptor,
+      GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER, 4, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  *private_data_specifier = GST_READ_UINT32_BE (data);
+
+  *length = descriptor->length - 4;
+
+  *private_data = g_memdup (data + 4, *length);
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_DVB_DATA_BROADCAST (0x64) */
 /**
  * gst_mpegts_descriptor_parse_dvb_data_broadcast:
