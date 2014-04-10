@@ -1280,6 +1280,7 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
     if (!walk)
       sequence++;
     demux->client->sequence = sequence;
+    demux->client->sequence_position = current_pos;
     GST_M3U8_CLIENT_UNLOCK (demux->client);
   }
 
