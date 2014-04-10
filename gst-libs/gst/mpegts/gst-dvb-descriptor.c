@@ -424,6 +424,185 @@ gst_mpegts_descriptor_from_dvb_service (GstMpegTsDVBServiceType service_type,
   return descriptor;
 }
 
+/* GST_MTS_DESC_DVB_LINKAGE (0x4A) */
+static void
+_gst_mpegts_dvb_linkage_extened_event_free (GstMpegTsDVBLinkageExtendedEvent *
+    item)
+{
+  g_slice_free (GstMpegTsDVBLinkageExtendedEvent, item);
+}
+
+/**
+ * gst_mpegts_descriptor_parse_dvb_linkage:
+ * @descriptor: a %GST_MTS_DESC_DVB_LINKAGE #GstMpegTsDescriptor
+ * @res: (out) (transfer none): the #GstMpegTsDVBLinkageDescriptor to fill
+ *
+ * Extracts the DVB linkage information from @descriptor.
+ *
+ * Returns: %TRUE if parsing succeeded, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_linkage (const GstMpegTsDescriptor * descriptor,
+    GstMpegTsDVBLinkageDescriptor * res)
+{
+  guint8 *data, *end;
+
+  g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
+  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_LINKAGE, 7, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+  end = data + descriptor->length;
+
+  res->transport_stream_id = GST_READ_UINT16_BE (data);
+  data += 2;
+
+  res->original_network_id = GST_READ_UINT16_BE (data);
+  data += 2;
+
+  res->service_id = GST_READ_UINT16_BE (data);
+  data += 2;
+
+  res->linkage_type = *data;
+  data += 1;
+
+  switch (res->linkage_type) {
+    case GST_MPEGTS_DVB_LINKAGE_MOBILE_HAND_OVER:{
+      GstMpegTsDVBLinkageMobileHandOver *hand_over;
+
+      if (end - data < 1)
+        return FALSE;
+
+      hand_over = g_slice_new0 (GstMpegTsDVBLinkageMobileHandOver);
+      res->linkage_data = (gpointer) hand_over;
+
+      hand_over->origin_type = (*data >> 7) & 0x01;
+      hand_over->hand_over_type = *data & 0x0f;
+      data += 1;
+
+      if (hand_over->hand_over_type ==
+          GST_MPEGTS_DVB_LINKAGE_HAND_OVER_IDENTICAL
+          || hand_over->hand_over_type ==
+          GST_MPEGTS_DVB_LINKAGE_HAND_OVER_LOCAL_VARIATION
+          || hand_over->hand_over_type ==
+          GST_MPEGTS_DVB_LINKAGE_HAND_OVER_ASSOCIATED) {
+        if (end - data < 2) {
+          g_slice_free (GstMpegTsDVBLinkageMobileHandOver, hand_over);
+          res->linkage_data = NULL;
+          return FALSE;
+        }
+
+        hand_over->network_id = GST_READ_UINT16_BE (data);
+        data += 2;
+      }
+
+      if (hand_over->origin_type == 0) {
+        if (end - data < 2) {
+          g_slice_free (GstMpegTsDVBLinkageMobileHandOver, hand_over);
+          res->linkage_data = NULL;
+          return FALSE;
+        }
+
+        hand_over->initial_service_id = GST_READ_UINT16_BE (data);
+        data += 2;
+      }
+      break;
+    }
+    case GST_MPEGTS_DVB_LINKAGE_EVENT:{
+      GstMpegTsDVBLinkageEvent *event;
+
+      if (end - data < 3)
+        return FALSE;
+
+      event = g_slice_new0 (GstMpegTsDVBLinkageEvent);
+      res->linkage_data = (gpointer) event;
+
+      event->target_event_id = GST_READ_UINT16_BE (data);
+      data += 2;
+      event->target_listed = *data & 0x01;
+      event->event_simulcast = (*data >> 1) & 0x01;
+      data += 1;
+      break;
+    }
+    case GST_MPEGTS_DVB_LINKAGE_EXTENDED_EVENT:{
+      GPtrArray *ext_events;
+      ext_events = g_ptr_array_new_with_free_func ((GDestroyNotify)
+          _gst_mpegts_dvb_linkage_extened_event_free);
+
+      res->linkage_data = (gpointer) ext_events;
+
+      for (guint8 i = 0; i < *data++;) {
+        GstMpegTsDVBLinkageExtendedEvent *ext_event;
+
+        if (end - data < 3)
+          goto fail;
+
+        ext_event = g_slice_new0 (GstMpegTsDVBLinkageExtendedEvent);
+        g_ptr_array_add (res->linkage_data, ext_event);
+
+        ext_event->target_event_id = GST_READ_UINT16_BE (data);
+        data += 2;
+        i += 2;
+
+        ext_event->target_listed = *data & 0x01;
+        ext_event->event_simulcast = (*data >> 1) & 0x01;
+        ext_event->link_type = (*data >> 3) & 0x03;
+        ext_event->target_id_type = (*data >> 5) & 0x03;
+        ext_event->original_network_id_flag = (*data >> 6) & 0x01;
+        ext_event->service_id_flag = (*data >> 7) & 0x01;
+        data += 1;
+        i += 1;
+
+        if (ext_event->target_id_type == 3) {
+          if (end - data < 2)
+            goto fail;
+
+          ext_event->user_defined_id = GST_READ_UINT16_BE (data);
+          data += 2;
+          i += 2;
+        } else {
+          if (ext_event->target_id_type == 1) {
+            if (end - data < 2)
+              goto fail;
+
+            ext_event->target_transport_stream_id = GST_READ_UINT16_BE (data);
+            data += 2;
+            i += 2;
+          }
+          if (ext_event->original_network_id_flag) {
+            if (end - data < 2)
+              goto fail;
+
+            ext_event->target_original_network_id = GST_READ_UINT16_BE (data);
+            data += 2;
+            i += 2;
+          }
+          if (ext_event->service_id_flag) {
+            if (end - data < 2)
+              goto fail;
+
+            ext_event->target_service_id = GST_READ_UINT16_BE (data);
+            data += 2;
+            i += 2;
+          }
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  res->private_data_length = end - data;
+  res->private_data_bytes = g_memdup (data, res->private_data_length);
+
+  return TRUE;
+
+fail:
+  g_ptr_array_unref (res->linkage_data);
+  res->linkage_data = NULL;
+  return FALSE;
+}
+
 /* GST_MTS_DESC_DVB_SHORT_EVENT (0x4D) */
 /**
  * gst_mpegts_descriptor_parse_dvb_short_event:

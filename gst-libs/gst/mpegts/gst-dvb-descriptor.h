@@ -330,6 +330,102 @@ GstMpegTsDescriptor *gst_mpegts_descriptor_from_dvb_service (GstMpegTsDVBService
 							     const gchar * service_name,
 							     const gchar * service_provider);
 
+/* GST_MTS_DESC_DVB_LINKAGE (0x4A) */
+/**
+ * GstMpegTsDVBLinkageType:
+ *
+ * Linkage Type (EN 300 468 v.1.13.1)
+ */
+typedef enum {
+  /* 0x00, 0x0F-0x7F reserved for future use */
+  GST_MPEGTS_DVB_LINKAGE_RESERVED_00               = 0x00,
+  GST_MPEGTS_DVB_LINKAGE_INFORMATION               = 0x01,
+  GST_MPEGTS_DVB_LINKAGE_EPG                       = 0x02,
+  GST_MPEGTS_DVB_LINKAGE_CA_REPLACEMENT            = 0x03,
+  GST_MPEGTS_DVB_LINKAGE_TS_CONTAINING_COMPLETE_SI = 0x04,
+  GST_MPEGTS_DVB_LINKAGE_SERVICE_REPLACEMENT       = 0x05,
+  GST_MPEGTS_DVB_LINKAGE_DATA_BROADCAST            = 0x06,
+  GST_MPEGTS_DVB_LINKAGE_RCS_MAP                   = 0x07,
+  GST_MPEGTS_DVB_LINKAGE_MOBILE_HAND_OVER          = 0x08,
+  GST_MPEGTS_DVB_LINKAGE_SYSTEM_SOFTWARE_UPDATE    = 0x09,
+  GST_MPEGTS_DVB_LINKAGE_TS_CONTAINING_SSU         = 0x0A,
+  GST_MPEGTS_DVB_LINKAGE_IP_MAC_NOTIFICATION       = 0x0B,
+  GST_MPEGTS_DVB_LINKAGE_TS_CONTAINING_INT         = 0x0C,
+  GST_MPEGTS_DVB_LINKAGE_EVENT                     = 0x0D,
+  GST_MPEGTS_DVB_LINKAGE_EXTENDED_EVENT            = 0x0E,
+} GstMpegTsDVBLinkageType;
+
+typedef enum {
+  GST_MPEGTS_DVB_LINKAGE_HAND_OVER_RESERVED        = 0x00,
+  GST_MPEGTS_DVB_LINKAGE_HAND_OVER_IDENTICAL       = 0x01,
+  GST_MPEGTS_DVB_LINKAGE_HAND_OVER_LOCAL_VARIATION = 0x02,
+  GST_MPEGTS_DVB_LINKAGE_HAND_OVER_ASSOCIATED      = 0x03,
+} GstMpegTsDVBLinkageHandOverType;
+
+typedef struct _GstMpegTsDVBLinkageMobileHandOver GstMpegTsDVBLinkageMobileHandOver;
+typedef struct _GstMpegTsDVBLinkageEvent GstMpegTsDVBLinkageEvent;
+typedef struct _GstMpegTsDVBLinkageExtendedEvent GstMpegTsDVBLinkageExtendedEvent;
+typedef struct _GstMpegTsDVBLinkageDescriptor GstMpegTsDVBLinkageDescriptor;
+
+struct _GstMpegTsDVBLinkageMobileHandOver
+{
+  GstMpegTsDVBLinkageHandOverType hand_over_type;
+  /* 0 = NIT, 1 = SDT */
+  gboolean                        origin_type;
+  guint16                         network_id;
+  guint16                         initial_service_id;
+};
+
+struct _GstMpegTsDVBLinkageEvent
+{
+  guint16  target_event_id;
+  gboolean target_listed;
+  gboolean event_simulcast;
+};
+
+struct _GstMpegTsDVBLinkageExtendedEvent
+{
+  guint16        target_event_id;
+  gboolean       target_listed;
+  gboolean       event_simulcast;
+  /* FIXME: */
+  guint8         link_type;
+  /* FIXME: */
+  guint8         target_id_type;
+  gboolean       original_network_id_flag;
+  gboolean       service_id_flag;
+  /* if (target_id_type == 3) */
+  guint16        user_defined_id;
+  /* else */
+  guint16        target_transport_stream_id;
+  guint16        target_original_network_id;
+  guint16        target_service_id;
+};
+
+/**
+ * GstMpegTsDVBLinkageDescriptor:
+ * @transport_stream_id: the transport id
+ * @original_network_id: the original network id
+ * @service_id: the service id
+ * @linkage_type: the type which %linkage_data has
+ * @linkage_data: the linkage structure depending from %linkage_type
+ * @private_data_length: the length for %private_data_bytes
+ * @private_data_bytes: additional data bytes
+ */
+struct _GstMpegTsDVBLinkageDescriptor
+{
+  guint16                           transport_stream_id;
+  guint16                           original_network_id;
+  guint16                           service_id;
+  GstMpegTsDVBLinkageType           linkage_type;
+  gpointer                          linkage_data;
+  guint8                            private_data_length;
+  guint8                            *private_data_bytes;
+};
+
+gboolean gst_mpegts_descriptor_parse_dvb_linkage (const GstMpegTsDescriptor * descriptor,
+                                                  GstMpegTsDVBLinkageDescriptor * res);
+
 /* GST_MTS_DESC_DVB_SHORT_EVENT (0x4D) */
 gboolean gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTsDescriptor *descriptor,
 						       gchar **language_code,
