@@ -367,6 +367,7 @@ gst_dvd_sub_dec_parse_subpic (GstDvdSubDec * dec)
                 gst_guint64_to_gdouble (GST_SECOND));
             return;
           }
+          break;
         } else {
           dec->parse_pos = NULL;
           dec->next_event_ts = GST_CLOCK_TIME_NONE;
