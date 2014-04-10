@@ -1061,6 +1061,8 @@ _has_class (GstElement * element, const gchar * classname)
 
   klass = GST_ELEMENT_GET_CLASS (element);
   value = gst_element_class_get_metadata (klass, GST_ELEMENT_METADATA_KLASS);
+  if (!value)
+    return FALSE;
 
   return strstr (value, classname) != NULL;
 }
