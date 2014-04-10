@@ -1506,6 +1506,9 @@ gst_ogg_map_search_index (GstOggStream * pad, gboolean before,
   guint64 ts;
   GstOggIndex *best;
 
+  g_return_val_if_fail (timestamp != NULL, FALSE);
+  g_return_val_if_fail (offset != NULL, FALSE);
+
   n_index = pad->n_index;
   if (n_index == 0 || pad->index == NULL)
     return FALSE;
@@ -1523,11 +1526,9 @@ gst_ogg_map_search_index (GstOggStream * pad, gboolean before,
 
   GST_INFO ("found at index %u", (guint) (best - pad->index));
 
-  if (offset)
-    *offset = best->offset;
-  if (timestamp)
-    *timestamp =
-        gst_util_uint64_scale (best->timestamp, GST_SECOND, pad->kp_denom);
+  *offset = best->offset;
+  *timestamp =
+      gst_util_uint64_scale (best->timestamp, GST_SECOND, pad->kp_denom);
 
   return TRUE;
 }
