@@ -1287,9 +1287,13 @@ gst_ogg_mux_add_fisbone_message_header_from_tags (GstOggMux * mux,
     gchar *tmp;
     if (n)
       g_string_append (s, ", ");
-    gst_tag_list_get_string_index (tags, tag, n, &tmp);
-    g_string_append (s, tmp);
-    g_free (tmp);
+    if (gst_tag_list_get_string_index (tags, tag, n, &tmp)) {
+      g_string_append (s, tmp);
+      g_free (tmp);
+    } else {
+      GST_WARNING_OBJECT (mux, "Tag %s index %u was not found (%u total)", tag,
+          n, size);
+    }
   }
   gst_ogg_mux_add_fisbone_message_header (mux, bw, header, s->str);
   g_string_free (s, TRUE);
