@@ -68,6 +68,8 @@ struct _GstSoupHTTPSrc {
   GstBuffer **outbuf;          /* Return buffer allocated by callback. */
   gboolean interrupted;        /* Signal unlock(). */
   gboolean retry;              /* Should attempt to reconnect. */
+  gint retry_count;            /* Number of retries since we received data */
+  gint max_retries;            /* Maximum number of retries */
 
   gboolean got_headers;        /* Already received headers from the server */
   gboolean have_size;          /* Received and parsed Content-Length

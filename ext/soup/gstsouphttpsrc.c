@@ -112,7 +112,8 @@ enum
   PROP_KEEP_ALIVE,
   PROP_SSL_STRICT,
   PROP_SSL_CA_FILE,
-  PROP_SSL_USE_SYSTEM_CA_FILE
+  PROP_SSL_USE_SYSTEM_CA_FILE,
+  PROP_RETRIES
 };
 
 #define DEFAULT_USER_AGENT           "GStreamer souphttpsrc "
@@ -124,6 +125,7 @@ enum
 #define DEFAULT_SSL_CA_FILE          NULL
 #define DEFAULT_SSL_USE_SYSTEM_CA_FILE TRUE
 #define DEFAULT_TIMEOUT              15
+#define DEFAULT_RETRIES              3
 
 static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -344,6 +346,19 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
           "Use system CA file", DEFAULT_SSL_USE_SYSTEM_CA_FILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+ /**
+   * GstSoupHTTPSrc::retries:
+   *
+   * Maximum number of retries until giving up.
+   *
+   * Since: 1.4
+   */
+  g_object_class_install_property (gobject_class, PROP_RETRIES,
+      g_param_spec_int ("retries", "Retries",
+          "Maximum number of retries until giving up (-1=infinite)", -1,
+          G_MAXINT, DEFAULT_RETRIES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
 
@@ -376,6 +391,7 @@ gst_soup_http_src_reset (GstSoupHTTPSrc * src)
 {
   src->interrupted = FALSE;
   src->retry = FALSE;
+  src->retry_count = 0;
   src->have_size = FALSE;
   src->got_headers = FALSE;
   src->seekable = FALSE;
@@ -421,6 +437,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->log_level = DEFAULT_SOUP_LOG_LEVEL;
   src->ssl_strict = DEFAULT_SSL_STRICT;
   src->ssl_use_system_ca_file = DEFAULT_SSL_USE_SYSTEM_CA_FILE;
+  src->max_retries = DEFAULT_RETRIES;
   proxy = g_getenv ("http_proxy");
   if (proxy && !gst_soup_http_src_set_proxy (src, proxy)) {
     GST_WARNING_OBJECT (src,
@@ -587,6 +604,9 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
     case PROP_SSL_USE_SYSTEM_CA_FILE:
       src->ssl_use_system_ca_file = g_value_get_boolean (value);
       break;
+    case PROP_RETRIES:
+      src->max_retries = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -665,6 +685,9 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SSL_USE_SYSTEM_CA_FILE:
       g_value_set_boolean (value, src->ssl_strict);
+      break;
+    case PROP_RETRIES:
+      g_value_set_int (value, src->max_retries);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1131,10 +1154,12 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
      * was complete. Do nothing */
   } else if (src->session_io_status ==
       GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING && src->read_position > 0 &&
-      (src->have_size && src->read_position < src->content_size)) {
+      (src->have_size && src->read_position < src->content_size) &&
+      (src->max_retries == -1 || src->retry_count < src->max_retries)) {
     /* The server disconnected while streaming. Reconnect and seeking to the
      * last location. */
     src->retry = TRUE;
+    src->retry_count++;
     src->ret = GST_FLOW_CUSTOM_ERROR;
   } else if (G_UNLIKELY (src->session_io_status !=
           GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
@@ -1247,6 +1272,9 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
     return;
   }
 
+  /* We got data, reset the retry counter */
+  src->retry_count = 0;
+
   src->have_body = FALSE;
   if (G_UNLIKELY (src->session_io_status !=
           GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
@@ -1309,10 +1337,12 @@ gst_soup_http_src_response_cb (SoupSession * session, SoupMessage * msg,
       msg->reason_phrase);
   if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING &&
       src->read_position > 0 && (src->have_size
-          && src->read_position < src->content_size)) {
+          && src->read_position < src->content_size) &&
+      (src->max_retries == -1 || src->retry_count < src->max_retries)) {
     /* The server disconnected while streaming. Reconnect and seeking to the
      * last location. */
     src->retry = TRUE;
+    src->retry_count++;
   } else
     gst_soup_http_src_parse_status (msg, src);
   /* The session's SoupMessage object expires after this callback returns. */
