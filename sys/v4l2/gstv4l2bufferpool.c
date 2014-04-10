@@ -73,6 +73,9 @@ gst_v4l2_is_buffer_valid (GstBuffer * buffer, GstV4l2MemoryGroup ** group)
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY))
     goto done;
 
+  if (gst_is_dmabuf_memory (mem))
+    mem = mem->parent;
+
   if (gst_is_v4l2_memory (mem)) {
     GstV4l2Memory *vmem = (GstV4l2Memory *) mem;
     valid = TRUE;
@@ -108,7 +111,8 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
       group = gst_v4l2_allocator_alloc_mmap (pool->vallocator);
       break;
     case GST_V4L2_IO_DMABUF:
-      /* TODO group = gst_v4l2_allocator_alloc_dmabuf (pool->vallocator); */
+      group = gst_v4l2_allocator_alloc_dmabuf (pool->vallocator,
+          pool->allocator);
       break;
     case GST_V4L2_IO_USERPTR:
     default:
@@ -850,6 +854,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
           break;
 
         case GST_V4L2_IO_MMAP:
+        case GST_V4L2_IO_DMABUF:
           /* get a free unqueued buffer */
           ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool,
               buffer, params);
@@ -929,6 +934,7 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
           break;
 
         case GST_V4L2_IO_MMAP:
+        case GST_V4L2_IO_DMABUF:
         {
           GstV4l2MemoryGroup *group;
           guint index;
@@ -1172,6 +1178,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
           break;
 
         case GST_V4L2_IO_MMAP:
+        case GST_V4L2_IO_DMABUF:
         {
           GstBuffer *tmp;
 

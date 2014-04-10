@@ -72,6 +72,7 @@ struct _GstV4l2Memory
   gint plane;
   GstV4l2MemoryGroup *group;
   gpointer data;
+  gint dmafd;
 };
 
 struct _GstV4l2MemoryGroup
@@ -121,6 +122,9 @@ guint                gst_v4l2_allocator_start          (GstV4l2Allocator * alloc
 gboolean             gst_v4l2_allocator_stop           (GstV4l2Allocator * allocator);
 
 GstV4l2MemoryGroup*  gst_v4l2_allocator_alloc_mmap     (GstV4l2Allocator * allocator);
+
+GstV4l2MemoryGroup*  gst_v4l2_allocator_alloc_dmabuf   (GstV4l2Allocator * allocator,
+                                                        GstAllocator * dmabuf_allocator);
 
 void                 gst_v4l2_allocator_flush          (GstV4l2Allocator * allocator);
 

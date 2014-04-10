@@ -23,7 +23,12 @@
 #include "gstv4l2allocator.h"
 #include "v4l2_calls.h"
 
+#include <gst/allocators/gstdmabuf.h>
+
+#include <fcntl.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #define GST_V4L2_MEMORY_TYPE "V4l2Memory"
 
@@ -121,7 +126,8 @@ _v4l2mem_dispose (GstV4l2Memory * mem)
   gboolean ret;
 
   if (group->mem[mem->plane]) {
-    gst_memory_ref ((GstMemory *) mem);
+    /* We may have a dmabuf, replace it with returned original memory */
+    group->mem[mem->plane] = gst_memory_ref ((GstMemory *) mem);
     gst_v4l2_allocator_release (allocator, mem);
     ret = FALSE;
   } else {
@@ -135,13 +141,15 @@ _v4l2mem_dispose (GstV4l2Memory * mem)
 static void
 _v4l2mem_free (GstV4l2Memory * mem)
 {
+  if (mem->dmafd > 0)
+    close (mem->dmafd);
   g_slice_free (GstV4l2Memory, mem);
 }
 
 static inline GstV4l2Memory *
 _v4l2mem_new (GstMemoryFlags flags, GstAllocator * allocator,
     GstMemory * parent, gsize maxsize, gsize align, gsize offset, gsize size,
-    gint plane, gpointer data, GstV4l2MemoryGroup * group)
+    gint plane, gpointer data, int dmafd, GstV4l2MemoryGroup * group)
 {
   GstV4l2Memory *mem;
 
@@ -155,6 +163,7 @@ _v4l2mem_new (GstMemoryFlags flags, GstAllocator * allocator,
 
   mem->plane = plane;
   mem->data = data;
+  mem->dmafd = dmafd;
   mem->group = group;
 
   return mem;
@@ -177,7 +186,7 @@ _v4l2mem_share (GstV4l2Memory * mem, gssize offset, gsize size)
   sub = _v4l2mem_new (GST_MINI_OBJECT_FLAGS (parent) |
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->mem.allocator, parent,
       mem->mem.maxsize, mem->mem.align, offset, size, mem->plane, mem->data,
-      mem->group);
+      -1, mem->group);
 
   return sub;
 }
@@ -190,6 +199,13 @@ _v4l2mem_is_span (GstV4l2Memory * mem1, GstV4l2Memory * mem2, gsize * offset)
 
   /* and memory is contiguous */
   return mem1->mem.offset + mem1->mem.size == mem2->mem.offset;
+}
+
+static void
+_v4l2mem_parent_to_dmabuf (GstV4l2Memory * mem, GstMemory * dma_mem)
+{
+  gst_memory_lock (&mem->mem, GST_LOCK_FLAG_EXCLUSIVE);
+  dma_mem->parent = gst_memory_ref (&mem->mem);
 }
 
 gboolean
@@ -721,7 +737,7 @@ gst_v4l2_allocator_alloc_mmap (GstV4l2Allocator * allocator)
 
       group->mem[i] = (GstMemory *) _v4l2mem_new (0, GST_ALLOCATOR (allocator),
           NULL, group->planes[i].length, 0, 0, group->planes[i].length, i,
-          data, group);
+          data, -1, group);
     } else {
       /* Take back the allocator reference */
       gst_object_ref (allocator);
@@ -757,14 +773,90 @@ mmap_failed:
   }
 }
 
-#if 0
 GstV4l2MemoryGroup *
-gst_v4l2_allocator_alloc_dmabuf (GstV4l2Allocator * allocator)
+gst_v4l2_allocator_alloc_dmabuf (GstV4l2Allocator * allocator,
+    GstAllocator * dmabuf_allocator)
 {
-  /* TODO */
-  return NULL;
+  GstV4l2MemoryGroup *group;
+  gint i;
+
+  g_return_val_if_fail (allocator->memory == V4L2_MEMORY_MMAP, NULL);
+
+  group = gst_v4l2_allocator_alloc (allocator);
+
+  if (group == NULL)
+    return NULL;
+
+  for (i = 0; i < group->n_mem; i++) {
+    GstV4l2Memory *mem;
+    GstMemory *dma_mem;
+    gint dmafd;
+
+    if (group->mem[i] == NULL) {
+      struct v4l2_exportbuffer expbuf = { 0 };
+
+      expbuf.type = allocator->type;
+      expbuf.index = group->buffer.index;
+      expbuf.plane = i;
+      expbuf.flags = O_CLOEXEC | O_RDWR;
+
+      if (v4l2_ioctl (allocator->video_fd, VIDIOC_EXPBUF, &expbuf) < 0)
+        goto expbuf_failed;
+
+      GST_LOG_OBJECT (allocator, "exported DMABUF as fd %i plane %d",
+          expbuf.fd, i);
+
+      group->mem[i] = (GstMemory *) _v4l2mem_new (0, GST_ALLOCATOR (allocator),
+          NULL, group->planes[i].length, 0, 0, group->planes[i].length, i,
+          NULL, expbuf.fd, group);
+    } else {
+      /* Take back the allocator reference */
+      gst_object_ref (allocator);
+    }
+
+    g_assert (gst_is_v4l2_memory (group->mem[i]));
+    mem = (GstV4l2Memory *) group->mem[i];
+
+    if ((dmafd = dup (mem->dmafd)) < 0)
+      goto dup_failed;
+
+    dma_mem = gst_dmabuf_allocator_alloc (dmabuf_allocator, dmafd,
+        mem->mem.maxsize);
+    _v4l2mem_parent_to_dmabuf (mem, dma_mem);
+
+    group->mem[i] = dma_mem;
+    group->mems_allocated++;
+  }
+
+  gst_v4l2_allocator_reset_size (allocator, group);
+
+  return group;
+
+expbuf_failed:
+  {
+    GST_ERROR_OBJECT (allocator, "Failed to export DMABUF: %s",
+        g_strerror (errno));
+    goto cleanup;
+  }
+dup_failed:
+  {
+    GST_ERROR_OBJECT (allocator, "Failed to dup DMABUF descriptor: %s",
+        g_strerror (errno));
+    goto cleanup;
+  }
+cleanup:
+  {
+    if (group->mems_allocated > 0) {
+      for (i = 0; i < group->n_mem; i++)
+        gst_memory_unref (group->mem[i]);
+    } else {
+      gst_atomic_queue_push (allocator->free_queue, group);
+    }
+    return NULL;
+  }
 }
 
+#if 0
 GstV4l2MemoryGroup *
 gst_v4l2_allocator_import_dmabuf (GstV4l2Allocator * allocator,
     gint dmabuf_fd[VIDEO_MAX_PLANES])
