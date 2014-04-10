@@ -961,9 +961,13 @@ gst_video_overlay_rectangle_apply_global_alpha (GstVideoOverlayRectangle * rect,
   GstVideoFrame frame;
   gint i, j, w, h, stride;
   gint argb_a, argb_r, argb_g, argb_b;
+  gint alpha_offset;
 
   g_assert (!(rect->applied_global_alpha != 1.0
           && rect->initial_alpha == NULL));
+
+  alpha_offset = GST_VIDEO_INFO_COMP_POFFSET (&rect->info, 3);
+  g_return_if_fail (alpha_offset == 0 || alpha_offset == 3);
 
   if (global_alpha == rect->applied_global_alpha)
     return;
