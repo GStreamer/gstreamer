@@ -564,12 +564,10 @@ gst_curl_smtp_sink_set_payload_headers_unlocked (GstCurlBaseSink * bcsink)
   sink->base64_chunk->save = 0;
 
   if (G_UNLIKELY (!append_headers)) {
-    if (sink->base64_chunk != NULL) {
-      g_byte_array_free (sink->base64_chunk->chunk_array, TRUE);
-      sink->base64_chunk->chunk_array = NULL;
-      g_free (sink->base64_chunk);
-      sink->base64_chunk = NULL;
-    }
+    g_byte_array_free (sink->base64_chunk->chunk_array, TRUE);
+    sink->base64_chunk->chunk_array = NULL;
+    g_free (sink->base64_chunk);
+    sink->base64_chunk = NULL;
     return FALSE;
   }
 
