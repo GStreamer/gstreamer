@@ -92,8 +92,9 @@ fragmented_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "dashdemux", GST_RANK_PRIMARY,
           GST_TYPE_DASH_DEMUX) || FALSE)
     return FALSE;
-  gst_type_find_register (plugin, "application/dash+xml",
-      GST_RANK_SECONDARY, dash_type_find, NULL, DASH_CAPS, NULL, NULL);
+  if (!gst_type_find_register (plugin, "application/dash+xml",
+          GST_RANK_SECONDARY, dash_type_find, NULL, DASH_CAPS, NULL, NULL))
+    return FALSE;
   return TRUE;
 }
 
