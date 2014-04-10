@@ -2998,7 +2998,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
     if (!pad) {
-      GST_WARNING_OBJECT (ogg, "No pad for serialno %08x", pad->map.serialno);
+      GST_WARNING_OBJECT (ogg, "No pad at index %d", i);
       pending--;
       continue;
     }
