@@ -996,6 +996,80 @@ gst_mpegts_descriptor_parse_dvb_content (const GstMpegTsDescriptor
   return TRUE;
 }
 
+/* GST_MTS_DESC_DVB_PARENTAL_RATING (0x55) */
+static void
+_gst_mpegts_dvb_parental_rating_item_free (GstMpegTsDVBParentalRatingItem *
+    item)
+{
+  g_slice_free (GstMpegTsDVBParentalRatingItem, item);
+}
+
+/**
+ * gst_mpegts_descriptor_parse_dvb_parental_rating:
+ * @descriptor: a %GST_MTS_DESC_DVB_PARENTAL_RATING #GstMpegTsDescriptor
+ * @rating: (out) (transfer none) (element-type GstMpegTsDVBParentalRatingItem):
+ * #GstMpegTsDVBParentalRatingItem
+ *
+ * Extracts the DVB parental rating information from @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegTsDescriptor
+    * descriptor, GPtrArray ** rating)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL && rating != NULL, FALSE);
+  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_PARENTAL_RATING, 0, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  *rating = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_dvb_parental_rating_item_free);
+
+  for (guint8 i = 0; i < descriptor->length - 3; i += 4) {
+    GstMpegTsDVBParentalRatingItem *item =
+        g_slice_new0 (GstMpegTsDVBParentalRatingItem);
+    g_ptr_array_add (*rating, item);
+
+    memcpy (data, item->country_code, 3);
+    data += 3;
+
+    if (g_strcmp0 (item->country_code, "BRA") == 0) {
+      /* brasil */
+      switch (*data & 0xf) {
+        case 1:
+          item->rating = 6;
+          break;
+        case 2:
+          item->rating = 10;
+          break;
+        case 3:
+          item->rating = 12;
+          break;
+        case 4:
+          item->rating = 14;
+          break;
+        case 5:
+          item->rating = 16;
+          break;
+        case 6:
+          item->rating = 18;
+          break;
+        default:
+          item->rating = 0;
+          break;
+      }
+    } else
+      item->rating = (*data & 0xf) + 3;
+
+    data += 1;
+  }
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM (0x5A) */
 /**
  * gst_mpegts_descriptor_parse_terrestrial_delivery_system:

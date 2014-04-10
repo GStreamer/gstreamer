@@ -303,6 +303,9 @@ gst_mpegts_descriptor_parse_dvb_linkage
 <SUBSECTION data_broadcast>
 GstMpegTsDataBroadcastDescriptor
 gst_mpegts_descriptor_parse_dvb_data_broadcast
+<SUBSECTION parental_rating>
+GstMpegTsDVBParentalRatingItem
+gst_mpegts_descriptor_parse_dvb_parental_rating
 <SUBSECTION stream_identifier>
 gst_mpegts_descriptor_parse_dvb_stream_identifier
 <SUBSECTION Standard>

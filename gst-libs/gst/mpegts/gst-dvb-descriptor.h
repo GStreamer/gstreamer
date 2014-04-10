@@ -498,6 +498,24 @@ struct _GstMpegTsContent
 gboolean gst_mpegts_descriptor_parse_dvb_content (const GstMpegTsDescriptor *
 	descriptor, GPtrArray ** content);
 
+/* GST_MTS_DESC_DVB_PARENTAL_RATING (0x55) */
+typedef struct _GstMpegTsDVBParentalRatingItem GstMpegTsDVBParentalRatingItem;
+
+/**
+ * GstMpegTsDVBParentalRating:
+ * @country_code: This 24-bit field identifies a country using the 3-character
+ * code as specified in ISO 3166
+ * @rating: the rating age
+ */
+struct _GstMpegTsDVBParentalRatingItem
+{
+  gchar  country_code[3];
+  guint8 rating;
+};
+
+gboolean gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegTsDescriptor
+        * descriptor, GPtrArray ** rating);
+
 /* GST_MTS_DESC_DVB_TELETEXT (0x56) */
 /**
  * GstMpegTsDVBTeletextType:
