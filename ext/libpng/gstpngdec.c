@@ -179,15 +179,12 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
 
   pngdec = GST_PNGDEC (png_get_io_ptr (png_ptr));
 
-  /* FIXME: implement interlaced pictures */
-
   /* If buffer_out doesn't exist, it means buffer_alloc failed, which 
    * will already have set the return code */
-  if (GST_IS_BUFFER (pngdec->current_frame->output_buffer)) {
+  if (new_row && GST_IS_BUFFER (pngdec->current_frame->output_buffer)) {
     GstVideoFrame frame;
     GstBuffer *buffer = pngdec->current_frame->output_buffer;
     size_t offset;
-    gint width;
     guint8 *data;
 
     if (!gst_video_frame_map (&frame, &pngdec->output_state->info, buffer,
@@ -198,13 +195,14 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
 
     data = GST_VIDEO_FRAME_COMP_DATA (&frame, 0);
     offset = row_num * GST_VIDEO_FRAME_COMP_STRIDE (&frame, 0);
-    GST_LOG ("got row %u, copying in buffer %p at offset %" G_GSIZE_FORMAT,
-        (guint) row_num, pngdec->current_frame->output_buffer, offset);
-    width = GST_ROUND_UP_4 (png_get_rowbytes (pngdec->png, pngdec->info));
-    memcpy (data + offset, new_row, width);
+    GST_LOG ("got row %u at pass %d, copying in buffer %p at offset %"
+        G_GSIZE_FORMAT, (guint) row_num, pass,
+        pngdec->current_frame->output_buffer, offset);
+    png_progressive_combine_row (pngdec->png, data + offset, new_row);
     gst_video_frame_unmap (&frame);
     pngdec->ret = GST_FLOW_OK;
-  }
+  } else
+    pngdec->ret = GST_FLOW_OK;
 }
 
 static void
@@ -285,6 +283,8 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
     GST_LOG_OBJECT (pngdec, "converting palette png to RGB");
     png_set_palette_to_rgb (pngdec->png);
   }
+
+  png_set_interlace_handling (pngdec->png);
 
   /* Update the info structure */
   png_read_update_info (pngdec->png, pngdec->info);
