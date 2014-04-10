@@ -2007,7 +2007,6 @@ gst_dash_demux_stream_get_next_fragment (GstDashDemuxStream * stream,
 {
   guint64 buffer_size = 0;
   GstClockTime diff;
-  gboolean end_of_period = TRUE;
   GstBuffer *buffer = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   GstDashDemux *demux = stream->demux;
@@ -2030,7 +2029,6 @@ gst_dash_demux_stream_get_next_fragment (GstDashDemuxStream * stream,
     /* check if this is live and we should wait for more data */
     if (gst_mpd_client_is_live (demux->client)
         && demux->client->mpd_node->minimumUpdatePeriod != -1) {
-      end_of_period = FALSE;
       return GST_FLOW_OK;       /* TODO wait */
     }
     return GST_FLOW_EOS;
@@ -2050,9 +2048,8 @@ gst_dash_demux_stream_get_next_fragment (GstDashDemuxStream * stream,
   buffer =
       gst_dash_demux_stream_download_fragment (demux, stream,
       &buffer_size, &diff);
-  end_of_period = FALSE;
 
-  demux->end_of_period = end_of_period;
+  demux->end_of_period = FALSE;
 
   if (buffer) {
     ret = gst_dash_demux_push (stream, buffer);
@@ -2061,10 +2058,7 @@ gst_dash_demux_stream_get_next_fragment (GstDashDemuxStream * stream,
     return GST_FLOW_ERROR;
   }
 
-  if (end_of_period)
-    return GST_FLOW_EOS;
-
-  if (stream && buffer_size > 0 && diff > 0) {
+  if (buffer_size > 0 && diff > 0) {
 #ifndef GST_DISABLE_GST_DEBUG
     guint64 brate;
 #endif
