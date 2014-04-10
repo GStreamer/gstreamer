@@ -1343,8 +1343,9 @@ gst_soup_http_src_response_cb (SoupSession * session, SoupMessage * msg,
      * last location. */
     src->retry = TRUE;
     src->retry_count++;
-  } else
+  } else {
     gst_soup_http_src_parse_status (msg, src);
+  }
   /* The session's SoupMessage object expires after this callback returns. */
   src->msg = NULL;
   g_main_loop_quit (src->loop);
@@ -1382,10 +1383,16 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
         src->ret = GST_FLOW_ERROR;
         break;
       case SOUP_STATUS_IO_ERROR:
-        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, READ,
-            _("A network error occured, or the server closed the connection "
-                "unexpectedly."));
-        src->ret = GST_FLOW_ERROR;
+        if (src->max_retries == -1 || src->retry_count < src->max_retries) {
+          src->retry = TRUE;
+          src->retry_count++;
+          src->ret = GST_FLOW_CUSTOM_ERROR;
+        } else {
+          SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, READ,
+              _("A network error occured, or the server closed the connection "
+                  "unexpectedly."));
+          src->ret = GST_FLOW_ERROR;
+        }
         break;
       case SOUP_STATUS_MALFORMED:
         SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, READ,
