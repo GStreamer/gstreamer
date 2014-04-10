@@ -519,7 +519,7 @@ gst_audio_cd_src_convert (GstAudioCdSrc * src, GstFormat src_format,
       goto wrong_value;
     }
     src_format = GST_FORMAT_DEFAULT;
-    src_val = src->priv->tracks[src_val].start * SAMPLES_PER_SECTOR;
+    src_val = src->priv->tracks[src_val].start * (gint64) SAMPLES_PER_SECTOR;
   } else if (src_format == sector_format) {
     src_format = GST_FORMAT_DEFAULT;
     src_val = src_val * SAMPLES_PER_SECTOR;
