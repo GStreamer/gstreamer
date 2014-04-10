@@ -1587,8 +1587,8 @@ unsupported_encryption:
     GST_DEBUG_OBJECT (client, "unsupported key encryption");
     goto cleanup_message;
   }
+cleanup_message:
   {
-  cleanup_message:
     gst_mikey_message_free (msg);
     return FALSE;
   }
