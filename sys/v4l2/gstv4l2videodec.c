@@ -74,8 +74,8 @@ gst_v4l2_video_dec_set_property (GObject * object,
           pspec);
       break;
     case PROP_CAPTURE_IO_MODE:
-      gst_v4l2_object_set_property_helper (self->v4l2capture, prop_id, value,
-          pspec);
+      gst_v4l2_object_set_property_helper (self->v4l2capture, PROP_IO_MODE,
+          value, pspec);
       break;
 
     case PROP_DEVICE:
@@ -811,7 +811,7 @@ gst_v4l2_video_dec_class_init (GstV4l2VideoDecClass * klass)
    *
    * Capture IO Mode
    */
-  g_object_class_install_property (gobject_class, PROP_IO_MODE,
+  g_object_class_install_property (gobject_class, PROP_CAPTURE_IO_MODE,
       g_param_spec_enum ("capture-io-mode", "Capture IO mode",
           "Capture I/O mode",
           GST_TYPE_V4L2_IO_MODE, GST_V4L2_IO_AUTO,
