@@ -131,7 +131,7 @@ sync_properties_from_caps (GstFramePositionner * pos, GstCaps * caps)
     if (!gst_structure_get_int (structure, "width", &width))
       width = 0;
     if (!gst_structure_get_int (structure, "height", &height))
-      width = 0;
+      height = 0;
     if (!gst_structure_get_fraction (structure, "framerate", &(pos->fps_n),
             &(pos->fps_d)))
       pos->fps_n = -1;
