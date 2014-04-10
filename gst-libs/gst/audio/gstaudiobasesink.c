@@ -1126,8 +1126,8 @@ wrong_state:
 static guint64
 gst_audio_base_sink_get_offset (GstAudioBaseSink * sink)
 {
-  guint64 sample;
-  gint writeseg, segdone, sps;
+  guint64 sample, sps;
+  gint writeseg, segdone;
   gint diff;
 
   /* assume we can append to the previous sample */
@@ -1540,7 +1540,7 @@ gst_audio_base_sink_get_alignment (GstAudioBaseSink * sink,
   gint64 sample_diff;
   gint64 max_sample_diff;
   gint segdone = g_atomic_int_get (&ringbuf->segdone) - ringbuf->segbase;
-  gint64 samples_done = segdone * ringbuf->samples_per_seg;
+  gint64 samples_done = segdone * (gint64) ringbuf->samples_per_seg;
   gint64 headroom = sample_offset - samples_done;
   gboolean allow_align = TRUE;
   gboolean discont = FALSE;
