@@ -658,7 +658,8 @@ gboolean gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegTsDescript
               *descriptor, GstMpegTsDataBroadcastDescriptor * res);
 
 /* GST_MTS_DESC_DVB_DATA_BROADCAST_ID (0x66) */
-/* FIXME : Implement */
+gboolean gst_mpegts_descriptor_parse_dvb_data_broadcast_id (const GstMpegTsDescriptor
+       * descriptor, guint16 * data_broadcast_id, guint8 ** id_selector_bytes, guint8 * len);
 
 /* GST_MTS_DESC_DVB_AC3 (0x6a) */
 /* FIXME : Implement */

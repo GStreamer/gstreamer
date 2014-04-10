@@ -1325,6 +1325,42 @@ gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegTsDescriptor
   return TRUE;
 }
 
+/* GST_MTS_DESC_DVB_DATA_BROADCAST_ID (0x66) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_data_broadcast_id:
+ * @descriptor: a %GST_MTS_DESC_DVB_DATA_BROADCAST_ID #GstMpegTsDescriptor
+ * @data_broadcast_id: (out): the data broadcast id
+ * @id_selector_bytes: (out): the selector bytes, if present
+ * @len: (out): the length of #id_selector_bytes
+ *
+ * Parses out the data broadcast id from the @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_data_broadcast_id (const GstMpegTsDescriptor
+    * descriptor, guint16 * data_broadcast_id, guint8 ** id_selector_bytes,
+    guint8 * len)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL && data_broadcast_id != NULL &&
+      id_selector_bytes != NULL, FALSE);
+  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_DATA_BROADCAST_ID, 2,
+      FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  *data_broadcast_id = GST_READ_UINT16_BE (data);
+  data += 2;
+
+  *len = descriptor->length - 2;
+
+  *id_selector_bytes = g_memdup (data, *len);
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_EXT_DVB_T2_DELIVERY_SYSTEM (0x7F && 0x04) */
 static void
     _gst_mpegts_t2_delivery_system_cell_extension_free
