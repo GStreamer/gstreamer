@@ -590,7 +590,7 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
       for (j = 0; j < src->vts_tmapt->tmap[i].nr_of_entries; j++) {
         guint64 time;
 
-        time = src->vts_tmapt->tmap[i].tmu * (j + 1) * GST_SECOND;
+        time = (guint64) src->vts_tmapt->tmap[i].tmu * (j + 1) * GST_SECOND;
         GST_LOG_OBJECT (src, "Time: %" GST_TIME_FORMAT " VOBU "
             "Sector: 0x%08x %s", GST_TIME_ARGS (time),
             src->vts_tmapt->tmap[i].map_ent[j] & 0x7fffffff,
@@ -695,7 +695,7 @@ gst_dvd_read_src_get_time_for_sector (GstDvdReadSrc * src, guint sector)
   for (i = 0; i < src->vts_tmapt->nr_of_tmaps; ++i) {
     for (j = 0; j < src->vts_tmapt->tmap[i].nr_of_entries; ++j) {
       if ((src->vts_tmapt->tmap[i].map_ent[j] & 0x7fffffff) == sector)
-        return src->vts_tmapt->tmap[i].tmu * (j + 1) * GST_SECOND;
+        return (guint64) src->vts_tmapt->tmap[i].tmu * (j + 1) * GST_SECOND;
     }
   }
 
@@ -718,7 +718,8 @@ gst_dvd_read_src_get_sector_from_time (GstDvdReadSrc * src, GstClockTime ts)
   for (j = 0; j < src->vts_tmapt->tmap[src->ttn - 1].nr_of_entries; ++j) {
     GstClockTime entry_time;
 
-    entry_time = src->vts_tmapt->tmap[src->ttn - 1].tmu * (j + 1) * GST_SECOND;
+    entry_time =
+        (guint64) src->vts_tmapt->tmap[src->ttn - 1].tmu * (j + 1) * GST_SECOND;
     if (entry_time <= ts) {
       sector = src->vts_tmapt->tmap[src->ttn - 1].map_ent[j] & 0x7fffffff;
     }
