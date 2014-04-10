@@ -658,6 +658,25 @@ struct _GstMpegTsDataBroadcastDescriptor
 gboolean gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegTsDescriptor
               *descriptor, GstMpegTsDataBroadcastDescriptor * res);
 
+/* GST_MTS_DESC_DVB_SCRAMBLING (0x65) */
+typedef enum
+{
+  GST_MPEGTS_DVB_SCRAMBLING_MODE_RESERVED              = 0x00,
+  GST_MPEGTS_DVB_SCRAMBLING_MODE_CSA1                  = 0x01,
+  GST_MPEGTS_DVB_SCRAMBLING_MODE_CSA2                  = 0x02,
+  GST_MPEGTS_DVB_SCRAMBLING_MODE_CSA3_STANDARD         = 0x03,
+  GST_MPEGTS_DVB_SCRAMBLING_MODE_CSA3_MINIMAL_ENHANCED = 0x04,
+  GST_MPEGTS_DVB_SCRAMBLING_MODE_CSA3_FULL_ENHANCED    = 0x05,
+  /* 0x06 - 0x0f reserved for future use */
+  GST_MPEGTS_DVB_SCRAMBLING_MODE_CISSA                 = 0x10,
+  /* 0x11 - 0x1f reserved for future DVB-CISSA versions */
+  GST_MPEGTS_DVB_SCRAMBLING_MODE_ATIS_0                = 0x70,
+  GST_MPEGTS_DVB_SCRAMBLING_MODE_ATIS_F                = 0x7f,
+} GstMpegTsDVBScramblingModeType;
+
+gboolean gst_mpegts_descriptor_parse_dvb_scrambling (const GstMpegTsDescriptor * descriptor,
+       GstMpegTsDVBScramblingModeType * scrambling_mode);
+
 /* GST_MTS_DESC_DVB_DATA_BROADCAST_ID (0x66) */
 gboolean gst_mpegts_descriptor_parse_dvb_data_broadcast_id (const GstMpegTsDescriptor
        * descriptor, guint16 * data_broadcast_id, guint8 ** id_selector_bytes, guint8 * len);

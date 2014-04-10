@@ -1386,6 +1386,37 @@ gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegTsDescriptor
   return TRUE;
 }
 
+/* GST_MTS_DESC_DVB_SCRAMBLING (0x65) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_scrambling:
+ * @descriptor: a %GST_MTS_DESC_DVB_SCRAMBLING #GstMpegTsDescriptor
+ * @scrambling_mode: (out): This 8-bit field identifies the selected
+ * mode of the scrambling algorithm (#GstMpegTsDVBScramblingModeType).
+ * The technical details of the scrambling algorithm are available only
+ * to bona-fide users upon signature of a Non Disclosure Agreement (NDA)
+ * administered by the DVB Common Scrambling Algorithm Custodian.
+ *
+ * Parses out the scrambling mode from the @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_scrambling (const GstMpegTsDescriptor *
+    descriptor, GstMpegTsDVBScramblingModeType * scrambling_mode)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL && scrambling_mode != NULL, FALSE);
+  __common_desc_checks_exact (descriptor, GST_MTS_DESC_DVB_SCRAMBLING, 1,
+      FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  *scrambling_mode = *data;
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_DVB_DATA_BROADCAST_ID (0x66) */
 /**
  * gst_mpegts_descriptor_parse_dvb_data_broadcast_id:

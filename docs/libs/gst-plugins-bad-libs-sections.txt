@@ -307,6 +307,9 @@ gst_mpegts_descriptor_parse_dvb_frequency_list
 <SUBSECTION data_broadcast>
 GstMpegTsDataBroadcastDescriptor
 gst_mpegts_descriptor_parse_dvb_data_broadcast
+<SUBSECTION scrambling>
+GstMpegTsDvbScramblingModeType
+gst_mpegts_descriptor_parse_dvb_scrambling
 <SUBSECTION data_broadcast_id>
 gst_mpegts_descriptor_parse_dvb_data_broadcast_id
 <SUBSECTION parental_rating>
