@@ -1823,7 +1823,6 @@ gst_dash_demux_wait_for_fragment_to_be_available (GstDashDemux * demux,
     GstDashDemuxStream * stream)
 {
   GstDateTime *seg_end_time;
-  GstDateTime *cur_time = gst_date_time_new_now_utc ();
   GstActiveStream *active_stream = stream->active_stream;
 
   seg_end_time =
@@ -1832,6 +1831,7 @@ gst_dash_demux_wait_for_fragment_to_be_available (GstDashDemux * demux,
 
   if (seg_end_time) {
     gint64 diff;
+    GstDateTime *cur_time;
 
     cur_time = gst_date_time_new_now_utc ();
     diff = gst_mpd_client_calculate_time_difference (cur_time, seg_end_time);
