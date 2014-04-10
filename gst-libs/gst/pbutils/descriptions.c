@@ -664,16 +664,21 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
     gboolean sysstream;
     gint ver = 0;
 
-    if (!gst_structure_get_boolean (s, "systemstream", &sysstream) ||
-        !gst_structure_get_int (s, "mpegversion", &ver) || ver < 1 || ver > 4) {
-      GST_WARNING ("Missing fields in mpeg video caps %" GST_PTR_FORMAT, caps);
-    } else {
+    if (!gst_structure_get_boolean (s, "systemstream", &sysstream)) {
+      GST_WARNING ("Missing systemstream field in mpeg video caps "
+          "%" GST_PTR_FORMAT, caps);
+      sysstream = FALSE;
+    }
+
+    if (gst_structure_get_int (s, "mpegversion", &ver) && ver > 0 && ver <= 4) {
       if (sysstream) {
         return g_strdup_printf ("MPEG-%d System Stream", ver);
       } else {
         return g_strdup_printf ("MPEG-%d Video", ver);
       }
     }
+    GST_WARNING ("Missing mpegversion field in mpeg video caps "
+        "%" GST_PTR_FORMAT, caps);
     return g_strdup ("MPEG Video");
   } else if (strcmp (info->type, "audio/x-raw") == 0) {
     gint depth = 0;
