@@ -888,7 +888,8 @@ theora_enc_handle_frame (GstVideoEncoder * benc, GstVideoCodecFrame * frame)
   running_time =
       gst_segment_to_running_time (&GST_VIDEO_ENCODER_INPUT_SEGMENT (enc),
       GST_FORMAT_TIME, timestamp);
-  g_return_val_if_fail (running_time >= 0 || timestamp < 0, GST_FLOW_ERROR);
+  g_return_val_if_fail (running_time >= 0 || timestamp == GST_CLOCK_TIME_NONE,
+      GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (enc);
   if (enc->bitrate_changed) {
