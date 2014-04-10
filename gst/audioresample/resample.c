@@ -988,6 +988,11 @@ speex_resampler_init_frac (spx_uint32_t nb_channels, spx_uint32_t ratio_num,
       *err = RESAMPLER_ERR_INVALID_ARG;
     return NULL;
   }
+  if (ratio_den == 0) {
+    if (err)
+      *err = RESAMPLER_ERR_INVALID_ARG;
+    return NULL;
+  }
   switch (sinc_filter_mode) {
     case RESAMPLER_SINC_FILTER_INTERPOLATED:
       use_full_sinc_table = 0;
