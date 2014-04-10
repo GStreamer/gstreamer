@@ -443,7 +443,7 @@ gst_video_gl_texture_upload_meta_transform (GstBuffer * dest, GstMeta * meta,
       dmeta->texture_orientation = smeta->texture_orientation;
       dmeta->n_textures = smeta->n_textures;
       memcpy (dmeta->texture_type, smeta->texture_type,
-          sizeof (smeta->texture_type[0] * 4));
+          sizeof (smeta->texture_type[0]) * 4);
       dmeta->buffer = dest;
       dmeta->upload = smeta->upload;
       dmeta->user_data = smeta->user_data;
@@ -509,7 +509,7 @@ gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
 
   meta->texture_orientation = texture_orientation;
   meta->n_textures = n_textures;
-  memcpy (meta->texture_type, texture_type, sizeof (texture_type[0] * 4));
+  memcpy (meta->texture_type, texture_type, sizeof (texture_type[0]) * 4);
   meta->buffer = buffer;
   meta->upload = upload;
   meta->user_data = user_data;
