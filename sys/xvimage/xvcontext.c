@@ -738,8 +738,8 @@ gst_xvcontext_new (GstXvContextConfig * config, GError ** error)
 
       channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
       channel->label = g_strdup (channels[i]);
-      channel->min_value = matching_attr ? matching_attr->min_value : -1000;
-      channel->max_value = matching_attr ? matching_attr->max_value : 1000;
+      channel->min_value = matching_attr->min_value;
+      channel->max_value = matching_attr->max_value;
 
       context->channels_list = g_list_append (context->channels_list, channel);
 
