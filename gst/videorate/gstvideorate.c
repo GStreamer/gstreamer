@@ -728,10 +728,6 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
           videorate->dup += count - 1;
           if (!videorate->silent)
             gst_video_rate_notify_duplicate (videorate);
-        } else if (count == 0) {
-          videorate->drop++;
-          if (!videorate->silent)
-            gst_video_rate_notify_drop (videorate);
         }
         /* clean up for the new one; _chain will resume from the new start */
         gst_video_rate_swap_prev (videorate, NULL, 0);
