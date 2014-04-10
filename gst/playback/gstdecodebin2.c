@@ -1528,7 +1528,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     /* If this is not a dynamic pad demuxer, we're no-more-pads
      * already before anything else happens
      */
-    if (!demux->no_more_pads_id)
+    if (demux == NULL || !demux->no_more_pads_id)
       group->no_more_pads = TRUE;
   }
 
