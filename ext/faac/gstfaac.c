@@ -633,6 +633,7 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
   gsize size, ret_size;
+  int enc_ret;
   GstMapInfo map, omap;
   guint8 *data;
   GstAudioInfo *info =
@@ -657,9 +658,10 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
     size = 0;
   }
 
-  if (G_UNLIKELY ((ret_size = faacEncEncode (faac->handle, (gint32 *) data,
+  if (G_UNLIKELY ((enc_ret = faacEncEncode (faac->handle, (gint32 *) data,
                   size / (info->finfo->width / 8), omap.data, omap.size)) < 0))
     goto encode_failed;
+  ret_size = enc_ret;
 
   if (in_buf)
     gst_buffer_unmap (in_buf, &map);
