@@ -708,6 +708,8 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     videotestsrc->bayer = TRUE;
     videotestsrc->x_invert = x_inv;
     videotestsrc->y_invert = y_inv;
+  } else {
+    goto unsupported_caps;
   }
 
   /* create chroma subsampler */
@@ -762,6 +764,11 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 parse_failed:
   {
     GST_DEBUG_OBJECT (bsrc, "failed to parse caps");
+    return FALSE;
+  }
+unsupported_caps:
+  {
+    GST_DEBUG_OBJECT (bsrc, "unsupported caps: %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 }
