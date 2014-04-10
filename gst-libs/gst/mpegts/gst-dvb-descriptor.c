@@ -948,6 +948,42 @@ gst_mpegts_descriptor_parse_dvb_stream_identifier (const GstMpegTsDescriptor
   return TRUE;
 }
 
+/* GST_MTS_DESC_DVB_CA_IDENTIFIER (0x53) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_ca_identifier:
+ * @descriptor: a %GST_MTS_DESC_DVB_CA_IDENTIFIER #GstMpegTsDescriptor
+ * @list: (out) (transfer none) (element-type guint16): This 16-bit field
+ * identifies the CA system. Allocations of the value of this field are found
+ * in http://www.dvbservices.com
+ *
+ * Extracts ca id's from @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_ca_identifier (const GstMpegTsDescriptor *
+    descriptor, GArray ** list)
+{
+  guint8 *data;
+  guint16 tmp;
+
+  g_return_val_if_fail (descriptor != NULL && list != NULL, FALSE);
+  /* 2 bytes = one entry */
+  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_CA_IDENTIFIER, 2, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  *list = g_array_new (FALSE, FALSE, sizeof (guint16));
+
+  for (guint i = 0; i < descriptor->length - 1; i += 2) {
+    tmp = GST_READ_UINT16_BE (data);
+    g_array_append_val (*list, tmp);
+    data += 2;
+  }
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_DVB_CONTENT (0x54) */
 static void
 _gst_mpegts_content_free (GstMpegTsContent * content)

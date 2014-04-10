@@ -317,6 +317,8 @@ GstMpegTsDVBParentalRatingItem
 gst_mpegts_descriptor_parse_dvb_parental_rating
 <SUBSECTION stream_identifier>
 gst_mpegts_descriptor_parse_dvb_stream_identifier
+<SUBSECTION ca_identifier>
+gst_mpegts_descriptor_parse_dvb_ca_identifier
 <SUBSECTION Standard>
 GST_TYPE_MPEG_TSDVB_CODE_RATE
 gst_mpegts_dvb_code_rate_get_type

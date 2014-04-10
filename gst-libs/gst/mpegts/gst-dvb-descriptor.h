@@ -486,6 +486,10 @@ gboolean gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor *d
 gboolean gst_mpegts_descriptor_parse_dvb_stream_identifier (const GstMpegTsDescriptor *descriptor,
 							    guint8 *component_tag);
 
+/* GST_MTS_DESC_DVB_CA_IDENTIFIER (0x53) */
+gboolean gst_mpegts_descriptor_parse_dvb_ca_identifier (const GstMpegTsDescriptor * descriptor,
+                                                        GArray ** list);
+
 /* GST_MTS_DESC_DVB_CONTENT (0x54) */
 typedef struct _GstMpegTsContent GstMpegTsContent;
 struct _GstMpegTsContent
