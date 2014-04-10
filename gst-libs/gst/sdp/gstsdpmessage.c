@@ -2796,8 +2796,10 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
   gchar str[8192];
   gchar *p = buffer;
 
-#define READ_STRING(field) read_string (str, sizeof (str), &p); REPLACE_STRING (field, str)
-#define READ_UINT(field) read_string (str, sizeof (str), &p); field = strtoul (str, NULL, 10)
+#define READ_STRING(field) \
+  do { read_string (str, sizeof (str), &p); REPLACE_STRING (field, str); } while (0)
+#define READ_UINT(field) \
+  do { read_string (str, sizeof (str), &p); field = strtoul (str, NULL, 10); } while (0)
 
   switch (type) {
     case 'v':
