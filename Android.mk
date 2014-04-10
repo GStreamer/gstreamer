@@ -4,12 +4,12 @@ include $(CLEAR_VARS)
 GST_PLUGINS_BAD_TOP := $(LOCAL_PATH)
 
 GST_PLUGINS_BAD_BUILT_SOURCES := \
-	pkgconfig/gstreamer-plugins-bad-1.0-uninstalled.pc 	\
+	pkgconfig/gstreamer-plugins-bad-1.0-uninstalled.pc \
 	pkgconfig/gstreamer-plugins-bad-1.0.pc \
 	gst-libs/gst/baseparse/Android.mk \
 	gst-libs/gst/basecamerabinsrc/Android.mk \
 	gst-libs/gst/codecparsers/Android.mk \
-	gst-libs/gst/insertbin/Android.mk
+	gst-libs/gst/insertbin/Android.mk \
 	gst-libs/gst/interfaces/Android.mk \
 	gst/h264parse/Android.mk \
 	gst/videoparsers/Android.mk \
