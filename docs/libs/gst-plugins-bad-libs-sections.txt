@@ -302,6 +302,8 @@ GstMpegTsDVBLinkageDescriptor
 gst_mpegts_descriptor_parse_dvb_linkage
 <SUBSECTION private_data_specifier>
 gst_mpegts_descriptor_parse_dvb_private_data_specifier
+<SUBSECTION frequency_list>
+gst_mpegts_descriptor_parse_dvb_frequency_list
 <SUBSECTION data_broadcast>
 GstMpegTsDataBroadcastDescriptor
 gst_mpegts_descriptor_parse_dvb_data_broadcast

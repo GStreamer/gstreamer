@@ -632,7 +632,8 @@ gboolean gst_mpegts_descriptor_parse_dvb_private_data_specifier (const GstMpegTs
               guint8 * length);
 
 /* GST_MTS_DESC_DVB_FREQUENCY_LIST (0x62) */
-/* FIXME : Implement */
+gboolean gst_mpegts_descriptor_parse_dvb_frequency_list (const GstMpegTsDescriptor
+    * descriptor, gboolean * offset, GArray ** list);
 
 /* GST_MTS_DESC_DVB_DATA_BROADCAST (0x64) */
 typedef struct _GstMpegTsDataBroadcastDescriptor GstMpegTsDataBroadcastDescriptor;

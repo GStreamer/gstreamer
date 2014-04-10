@@ -47,6 +47,12 @@
  *   * GST_MTS_DESC_DVB_FREQUENCY_LIST
  */
 
+#define BCD_UN(a) ((a) & 0x0f)
+#define BCD_DEC(a) (((a) >> 4) & 0x0f)
+#define BCD(a) (BCD_UN(a) + 10 * BCD_DEC(a))
+#define BCD_16(a) (BCD(a[1]) + 100 * BCD(a[0]))
+#define BCD_28(a) (BCD_DEC(a[3]) + 10 * BCD(a[2]) + 1000 * BCD(a[1]) + 100000 * BCD(a[0]))
+#define BCD_32(a) (BCD(a[3]) + 100 * BCD(a[2]) + 10000 * BCD(a[1]) + 1000000 * BCD(a[0]))
 
 /* GST_MTS_DESC_DVB_NETWORK_NAME (0x40) */
 /**
@@ -129,13 +135,6 @@ gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegTsDescriptor
       GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM, 11, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
-
-#define BCD_UN(a) ((a) & 0x0f)
-#define BCD_DEC(a) (((a) >> 4) & 0x0f)
-#define BCD(a) (BCD_UN(a) + 10 * BCD_DEC(a))
-#define BCD_16(a) (BCD(a[1]) + 100 * BCD(a[0]))
-#define BCD_28(a) (BCD_DEC(a[3]) + 10 * BCD(a[2]) + 1000 * BCD(a[1]) + 100000 * BCD(a[0]))
-#define BCD_32(a) (BCD(a[3]) + 100 * BCD(a[2]) + 10000 * BCD(a[1]) + 1000000 * BCD(a[0]))
 
   /* BCD coded frequency in GHz (decimal point occurs after the 3rd character)
    * So direct BCD gives us units of (GHz / 100 000) = 10 kHz*/
@@ -1279,6 +1278,68 @@ gst_mpegts_descriptor_parse_dvb_private_data_specifier (const
   *length = descriptor->length - 4;
 
   *private_data = g_memdup (data + 4, *length);
+
+  return TRUE;
+}
+
+/* GST_MTS_DESC_DVB_FREQUENCY_LIST (0x62) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_frequency_list:
+ * @descriptor: a %GST_MTS_DESC_DVB_FREQUENCY_LIST #GstMpegTsDescriptor
+ * @offset: (out): %FALSE in Hz, %TRUE in kHz
+ * @list: (out): a list of all frequencies in Hz/kHz depending from %offset
+ *
+ * Parses out a list of frequencies from the @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_frequency_list (const GstMpegTsDescriptor
+    * descriptor, gboolean * offset, GArray ** list)
+{
+  guint8 *data, type, len;
+  guint32 freq;
+
+  g_return_val_if_fail (descriptor != NULL && offset != NULL &&
+      list != NULL, FALSE);
+  /* 1 byte coding system, 4 bytes each frequency entry */
+  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_FREQUENCY_LIST, 5, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  type = *data & 0x03;
+  data += 1;
+
+  if (type == 1) {
+    /* satellite */
+    *offset = TRUE;
+  } else {
+    /* cable, terrestrial */
+    *offset = FALSE;
+  }
+
+  *list = g_array_new (FALSE, FALSE, sizeof (guint32));
+
+  len = descriptor->length - 1;
+
+  for (guint8 i = 0; i < len - 3; i += 4) {
+    switch (type) {
+      case 1:
+        freq = BCD_32 (data) * 10;
+        break;
+      case 2:
+        freq = BCD_32 (data) * 100;
+        break;
+      case 3:
+        freq = GST_READ_UINT32_BE (data) * 10;
+        break;
+      default:
+        break;
+    }
+
+    g_array_append_val (*list, freq);
+    data += 4;
+  }
 
   return TRUE;
 }
