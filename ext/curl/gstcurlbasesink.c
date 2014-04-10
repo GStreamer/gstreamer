@@ -333,7 +333,7 @@ gst_curl_base_sink_is_live (GstCurlBaseSink * sink)
 static GstFlowReturn
 gst_curl_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
-  GstCurlBaseSink *sink = GST_CURL_BASE_SINK (bsink);
+  GstCurlBaseSink *sink;
   GstMapInfo map;
   guint8 *data;
   size_t size;
