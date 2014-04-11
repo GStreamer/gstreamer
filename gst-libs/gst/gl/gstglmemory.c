@@ -53,6 +53,23 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 
 static GstAllocator *_gl_allocator;
 
+/* compatability definitions... */
+#ifndef GL_RED
+#define GL_RED 0x1903
+#endif
+#ifndef GL_RG
+#define GL_RG 0x8227
+#endif
+#ifndef GL_PIXEL_PACK_BUFFER
+#define GL_PIXEL_PACK_BUFFER 0x88EB
+#endif
+#ifndef GL_PIXEL_UNPACK_BUFFER
+#define GL_PIXEL_UNPACK_BUFFER 0x88EC
+#endif
+#ifndef GL_STREAM_COPY
+#define GL_STREAM_COPY 0x88E2
+#endif
+
 typedef struct
 {
   /* in */
