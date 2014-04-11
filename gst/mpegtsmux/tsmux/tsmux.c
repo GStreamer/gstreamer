@@ -937,8 +937,6 @@ tsmux_section_write_packet (GstMpegTsSectionType * type,
 fail:
   if (packet)
     g_free (packet);
-  if (packet_buffer)
-    gst_buffer_unref (packet_buffer);
   if (section_buffer)
     gst_buffer_unref (section_buffer);
   return FALSE;
