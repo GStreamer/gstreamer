@@ -99,6 +99,7 @@ struct _GstGLMemory
   GDestroyNotify        notify;
   gpointer              user_data;
   guint                 pbo;
+  guint                 unpack_length;
 };
 
 /**
