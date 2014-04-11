@@ -712,29 +712,35 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
   if (rtph264depay->merge) {
     gboolean start = FALSE, complete = FALSE;
 
-    /* consider a coded slices (IDR or not) to start a picture,
-     * (so ending the previous one) if first_mb_in_slice == 0
-     * (non-0 is part of previous one) */
-    /* NOTE this is not entirely according to Access Unit specs in 7.4.1.2.4,
-     * but in practice it works in sane cases, needs not much parsing,
-     * and also works with broken frame_num in NAL (where spec-wise would fail) */
-    if (nal_type == 1 || nal_type == 2 || nal_type == 5) {
-      /* we have a picture start */
-      start = TRUE;
-      if (map.data[5] & 0x80) {
-        /* first_mb_in_slice == 0 completes a picture */
+    /* marker bit isn't mandatory so in the following code we try to guess
+     * an AU boundary by detecting a new picture start */
+    if (!marker) {
+      /* consider a coded slices (IDR or not) to start a picture,
+       * (so ending the previous one) if first_mb_in_slice == 0
+       * (non-0 is part of previous one) */
+      /* NOTE this is not entirely according to Access Unit specs in 7.4.1.2.4,
+       * but in practice it works in sane cases, needs not much parsing,
+       * and also works with broken frame_num in NAL (where spec-wise would fail) */
+      /* FIXME: this code isn't correct for interlaced content as AUs should be
+       * constructed with pairs of fields and the guess here will just push out
+       * AUs with a single field in it */
+      if (nal_type == 1 || nal_type == 2 || nal_type == 5) {
+        /* we have a picture start */
+        start = TRUE;
+        if (map.data[5] & 0x80) {
+          /* first_mb_in_slice == 0 completes a picture */
+          complete = TRUE;
+        }
+      } else if (nal_type >= 6 && nal_type <= 9) {
+        /* SEI, SPS, PPS, AU terminate picture */
         complete = TRUE;
       }
-    } else if (nal_type >= 6 && nal_type <= 9) {
-      /* SEI, SPS, PPS, AU terminate picture */
-      complete = TRUE;
+      GST_DEBUG_OBJECT (depayload, "start %d, complete %d", start, complete);
+
+      if (complete && rtph264depay->picture_start)
+        outbuf = gst_rtp_h264_complete_au (rtph264depay, &out_timestamp,
+            &out_keyframe);
     }
-    GST_DEBUG_OBJECT (depayload, "start %d, complete %d", start, complete);
-
-    if (complete && rtph264depay->picture_start)
-      outbuf = gst_rtp_h264_complete_au (rtph264depay, &out_timestamp,
-          &out_keyframe);
-
     /* add to adapter */
     gst_buffer_unmap (nal, &map);
 
