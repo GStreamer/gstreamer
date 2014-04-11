@@ -123,6 +123,11 @@
 
 #include <gst/gst-i18n-plugin.h>
 
+/* Before 5.6 we map A to AC */
+#if !HAVE_V5_MINOR(6)
+#define SYS_DVBC_ANNEX_A SYS_DVBC_ANNEX_AC
+#endif
+
 /* NO_STREAM_ID_FILTER introduced in minor 8 */
 #ifndef NO_STREAM_ID_FILTER
 #define NO_STREAM_ID_FILTER    (~0U)
@@ -377,7 +382,9 @@ gst_dvbsrc_delsys_get_type (void)
     {SYS_DAB, "DAB", "dab"},
     {SYS_DVBT2, "DVB-T2", "dvb-t2"},
     {SYS_TURBO, "TURBO", "turbo"},
+#if HAVE_V5_MINOR(6)
     {SYS_DVBC_ANNEX_C, "DVB-C-C", "dvb-c-c"},
+#endif
     {0, NULL, NULL},
   };
 
@@ -1720,7 +1727,9 @@ gst_dvbsrc_tune (GstDvbSrc * object)
         break;
       case SYS_DVBC_ANNEX_A:
       case SYS_DVBC_ANNEX_B:
+#if HAVE_V5_MINOR(6)
       case SYS_DVBC_ANNEX_C:
+#endif
         GST_INFO_OBJECT (object, "Tuning DVB-C/ClearCable to %d, srate=%d",
             freq, sym_rate);
 
