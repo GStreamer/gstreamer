@@ -36,6 +36,65 @@
  * </refsect2>
  */
 
+/* 
+ * History of DVB_API_VERSION 5 minor changes
+ *
+ * API Addition/changes in reverse order (most recent addition first)
+ *
+ * Minor 10 (statistics properties)
+ *   DTV_STAT_*
+ *   FE_SCALE_* 
+ *
+ * Minor 9
+ *   DTV_LNA
+ *   LNA_AUTO
+ *
+ * Minor 8
+ *   FE_CAN_MULTISTREAM
+ *   DTV_ISDBS_TS_ID_LEGACY (was DVB_ISDBS_TS_ID)
+ *   DTV_DVBT2_PLP_ID_LEGACY (was DVB_DVBT2_PLP_ID)
+ *   NO_STREAM_ID_FILTER
+ *   INTERLEAVING_AUTO
+ *
+ * Minor 7 (DTMB Support)
+ *   FEC_2_5
+ *   QAM_4_NR
+ *   TRANSMISSION_MODE_C1 / _C3780
+ *   GUARD_INTERVAL_PN420 / _PN595 / _PN945
+ *   INTERLEAVING_NONE / _240 / _720
+ *   DTV_INTERLEAVING
+ *   SYS_DTMB (Renamed from SYS_DMBTH but has safety #define)
+ *
+ * Minor 6 (ATSC-MH)
+ *   DTV_ATSCMH_* (for those not defined in later versions)
+ *
+ * Somewhere in between 5 and 6:
+ *   SYS_DVBC_ANNEX_A / _C (Safety #define for _AC => A)
+ * 
+ * Minor 5 (Note : minimum version we support according to configure.ac)
+ *   DTV_ENUM_DELSYS
+ *
+ * Minor 4
+ *   SYS_TURBO
+ *
+ * Minor 3 (DVB-T2)
+ *   TRANSMISSION_MODE_1K / _16K / _32K
+ *   BANDWIDTH_5_MHZ / _10_MHZ / _1_712_MHZ
+ *   GUARD_INTERVAL_1_128 / _19_128 / _19_256
+ *   DTV_DVBT2_PLP_ID (/!\ renamed in minor 8 !)
+ *   SYS_DVBT2
+ *
+ * Minor 2
+ *   FE_CAN_TURBO_FEC
+ *   DTV_ISDBS_TS_ID (/!\ renamed in minor 8 !)
+ *
+ * Minor 1 (ISDB-T and ISDB-Tsb)
+ *   TRANSMISSION_MODE_4K
+ *   DTV_ISDBT_* (for those not defined in later version)
+ *
+ * Minor 0 : initial version
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
