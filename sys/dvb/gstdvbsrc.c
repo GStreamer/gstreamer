@@ -95,6 +95,20 @@
  * Minor 0 : initial version
  */
 
+/* We know we have at least DVB_API_VERSION >= 5 */
+#define HAVE_V5_MINOR(minor) ((DVB_API_VERSION > 5) || \
+			      (DVB_API_VERSION_MINOR >= (minor)))
+
+/* NO_STREAM_ID_FILTER introduced in minor 8 */
+#ifndef NO_STREAM_ID_FILTER
+#define NO_STREAM_ID_FILTER    (~0U)
+#endif
+
+/* DTV_STREAM_ID introduced in minor 8 (redefine) */
+#ifndef DTV_STREAM_ID
+#define DTV_STREAM_ID DTV_ISDBS_TS_ID
+#endif
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -356,7 +370,9 @@ gst_dvbsrc_delsys_get_type (void)
     {SYS_ISDBC, "ISDB-C", "isdb-c"},
     {SYS_ATSC, "ATSC", "atsc"},
     {SYS_ATSCMH, "ATSC-MH", "atsc-mh"},
+#if HAVE_V5_MINOR(7)
     {SYS_DTMB, "DTMB", "dtmb"},
+#endif
     {SYS_CMMB, "CMMB", "cmmb"},
     {SYS_DAB, "DAB", "dab"},
     {SYS_DVBT2, "DVB-T2", "dvb-t2"},
@@ -1101,8 +1117,10 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
     gst_structure_set (adapter_structure, "atsc-mh", G_TYPE_STRING, "ATSC-MH",
         NULL);
 
+#if HAVE_V5_MINOR(7)
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DTMB))
     gst_structure_set (adapter_structure, "dtmb", G_TYPE_STRING, "DTMB", NULL);
+#endif
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_CMMB))
     gst_structure_set (adapter_structure, "cmmb", G_TYPE_STRING, "CMMB", NULL);
