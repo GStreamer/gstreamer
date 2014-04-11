@@ -393,10 +393,9 @@ gst_dvdec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      gst_dvdec_sink_setcaps (dvdec, caps);
+      res = gst_dvdec_sink_setcaps (dvdec, caps);
       gst_event_unref (event);
       event = NULL;
-      res = TRUE;
       break;
     }
 
