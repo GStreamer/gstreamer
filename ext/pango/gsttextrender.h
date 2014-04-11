@@ -89,6 +89,8 @@ struct _GstTextRender {
 
     gint xpad;
     gint ypad;
+
+    GstEvent             *segment_event;
 };
 
 struct _GstTextRenderClass {

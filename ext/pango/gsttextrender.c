@@ -521,6 +521,11 @@ gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     goto done;
   }
 
+  if (render->segment_event) {
+    gst_pad_push_event (render->srcpad, render->segment_event);
+    render->segment_event = NULL;
+  }
+
   GST_DEBUG ("Allocating buffer WxH = %dx%d", render->width, render->height);
   outbuf = gst_buffer_new_and_alloc (render->width * render->height * 4);
 
@@ -589,10 +594,37 @@ done:
   return ret;
 }
 
+static gboolean
+gst_text_render_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstTextRender *render = GST_TEXT_RENDER (parent);
+  gboolean ret = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+    {
+      if (gst_pad_has_current_caps (render->srcpad)) {
+        ret = gst_pad_push_event (render->srcpad, event);
+      } else {
+        gst_event_replace (&render->segment_event, event);
+        gst_event_unref (event);
+      }
+      break;
+    }
+    default:
+      ret = gst_pad_push_event (render->srcpad, event);
+      break;
+  }
+
+  return ret;
+}
+
 static void
 gst_text_render_finalize (GObject * object)
 {
   GstTextRender *render = GST_TEXT_RENDER (object);
+
+  gst_event_replace (&render->segment_event, NULL);
 
   g_free (render->text_image);
 
@@ -613,6 +645,9 @@ gst_text_render_init (GstTextRender * render)
   gst_object_unref (template);
   gst_pad_set_chain_function (render->sinkpad,
       GST_DEBUG_FUNCPTR (gst_text_render_chain));
+  gst_pad_set_event_function (render->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_text_render_event));
+
   gst_element_add_pad (GST_ELEMENT (render), render->sinkpad);
 
   /* source */
