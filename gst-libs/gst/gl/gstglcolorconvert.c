@@ -1224,10 +1224,17 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
         || out_width != convert->out_tex[i]->width
         || out_height != convert->out_tex[i]->height) {
       GstGLMemory *gl_mem = convert->out_tex[i];
+      GstMapInfo from_info, to_info;
 
+      gst_memory_map ((GstMemory *) convert->priv->out_temp[i], &from_info,
+          GST_MAP_READ | GST_MAP_GL);
+      gst_memory_map ((GstMemory *) gl_mem, &to_info,
+          GST_MAP_WRITE | GST_MAP_GL);
       gst_gl_memory_copy_into_texture (convert->priv->out_temp[i],
           gl_mem->tex_id, gl_mem->tex_type, gl_mem->width, gl_mem->height,
           FALSE);
+      gst_memory_unmap ((GstMemory *) gl_mem, &to_info);
+      gst_memory_unmap ((GstMemory *) convert->priv->out_temp[i], &from_info);
     } else {
       convert->priv->out_temp[i] = NULL;
     }
