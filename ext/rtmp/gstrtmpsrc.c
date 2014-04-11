@@ -389,8 +389,14 @@ read_failed:
 eos:
   {
     gst_buffer_unref (buf);
-    GST_DEBUG_OBJECT (src, "Reading data gave EOS");
-    return GST_FLOW_EOS;
+    if (src->cur_offset == 0) {
+      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+          ("Failed to read any data from stream, check your URL"));
+      return GST_FLOW_ERROR;
+    } else {
+      GST_DEBUG_OBJECT (src, "Reading data gave EOS");
+      return GST_FLOW_EOS;
+    }
   }
 }
 
