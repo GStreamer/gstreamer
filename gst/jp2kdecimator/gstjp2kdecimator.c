@@ -232,7 +232,7 @@ gst_jp2k_decimator_sink_chain (GstPad * pad, GstObject * parent,
 {
   GstJP2kDecimator *self = GST_JP2K_DECIMATOR (parent);
   GstFlowReturn ret;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
 
   GST_LOG_OBJECT (pad,
       "Handling inbuf with timestamp %" GST_TIME_FORMAT " and duration %"
