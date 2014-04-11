@@ -1204,10 +1204,12 @@ gst_buffer_is_memory_range_writable (GstBuffer * buffer, guint idx, gint length)
       FALSE);
 
   if (length == -1)
-    length = len - idx;
+    len -= idx;
+  else
+    len = length;
 
   for (i = 0; i < len; i++) {
-    if (!gst_memory_is_writable (GST_BUFFER_MEM_PTR (buffer, i)))
+    if (!gst_memory_is_writable (GST_BUFFER_MEM_PTR (buffer, i + idx)))
       return FALSE;
   }
   return TRUE;
