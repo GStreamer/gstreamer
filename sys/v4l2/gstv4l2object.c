@@ -45,7 +45,6 @@
 #include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT v4l2_debug
 
 #define DEFAULT_PROP_DEVICE_NAME        NULL
@@ -2937,57 +2936,6 @@ done:
   return TRUE;
 }
 
-gboolean
-gst_v4l2_object_copy (GstV4l2Object * v4l2object, GstBuffer * dest,
-    GstBuffer * src)
-{
-  const GstVideoFormatInfo *finfo = v4l2object->info.finfo;
-
-  if (finfo && (finfo->format != GST_VIDEO_FORMAT_UNKNOWN &&
-          finfo->format != GST_VIDEO_FORMAT_ENCODED)) {
-    GstVideoFrame src_frame, dest_frame;
-
-    GST_DEBUG_OBJECT (v4l2object->element, "copy video frame");
-
-    /* FIXME This won't work if cropping apply */
-
-    /* we have raw video, use videoframe copy to get strides right */
-    if (!gst_video_frame_map (&src_frame, &v4l2object->info, src, GST_MAP_READ))
-      goto invalid_buffer;
-
-    if (!gst_video_frame_map (&dest_frame, &v4l2object->info, dest,
-            GST_MAP_WRITE)) {
-      gst_video_frame_unmap (&src_frame);
-      goto invalid_buffer;
-    }
-
-    gst_video_frame_copy (&dest_frame, &src_frame);
-
-    gst_video_frame_unmap (&src_frame);
-    gst_video_frame_unmap (&dest_frame);
-  } else {
-    GstMapInfo map;
-
-    GST_DEBUG_OBJECT (v4l2object->element, "copy raw bytes");
-    gst_buffer_map (src, &map, GST_MAP_READ);
-    gst_buffer_fill (dest, 0, map.data, gst_buffer_get_size (src));
-    gst_buffer_unmap (src, &map);
-    gst_buffer_resize (dest, 0, gst_buffer_get_size (src));
-  }
-  GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, v4l2object->element,
-      "slow copy into buffer %p", dest);
-
-  return TRUE;
-
-  /* ERRORS */
-invalid_buffer:
-  {
-    /* No Window available to put our image into */
-    GST_WARNING_OBJECT (v4l2object->element, "could not map image");
-    return FALSE;
-  }
-}
-
 GstCaps *
 gst_v4l2_object_get_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 {
@@ -3043,12 +2991,12 @@ gboolean
 gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 {
   GstCaps *caps;
-  GstBufferPool *pool;
+  GstBufferPool *pool, *other_pool = NULL;
   GstStructure *config;
   guint size, min, max, extra = 0;
   gboolean update;
   gboolean has_video_meta, has_crop_meta;
-  gboolean can_use_own_pool;
+  gboolean can_share_own_pool, pushing_from_our_pool = FALSE;
   struct v4l2_control ctl = { 0, };
 
   GST_DEBUG_OBJECT (obj->element, "decide allocation");
@@ -3078,7 +3026,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 
   if (min != 0) {
     /* if there is a min-buffers suggestion, use it. We add 1 because we need 1
-     * buffer extra to capture while the other two buffers are downstream */
+     * buffer extra to capture while the other buffers are downstream */
     min += 1;
   } else {
     min = 2;
@@ -3101,7 +3049,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
       NULL);
 
-  can_use_own_pool = ((has_crop_meta || !obj->need_crop_meta) &&
+  can_share_own_pool = ((has_crop_meta || !obj->need_crop_meta) &&
       (has_video_meta || !obj->need_video_meta));
 
   /* select a pool */
@@ -3116,28 +3064,42 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
          * other size than what the hardware gives us but for downstream pools
          * we can try */
         size = MAX (size, obj->sizeimage);
-      } else if (can_use_own_pool) {
+      } else if (can_share_own_pool) {
         /* no downstream pool, use our own then */
         GST_DEBUG_OBJECT (obj->element,
             "read/write mode: no downstream pool, using our own");
         pool = gst_object_ref (obj->pool);
         size = obj->sizeimage;
+        pushing_from_our_pool = TRUE;
       }
       break;
-    case GST_V4L2_IO_MMAP:
-    case GST_V4L2_IO_DMABUF:
-      /* FIXME in these case we actually prefer/need a downstream pool */
+
     case GST_V4L2_IO_USERPTR:
     case GST_V4L2_IO_DMABUF_IMPORT:
+      /* in importing mode, prefer our own pool, and pass the other pool to
+       * our own, so it can serve itself */
+      if (pool == NULL)
+        goto no_downstream_pool;
+      gst_v4l2_buffer_pool_set_other_pool (GST_V4L2_BUFFER_POOL (obj->pool),
+          pool);
+      other_pool = pool;
+      gst_object_unref (pool);
+      pool = gst_object_ref (obj->pool);
+      size = obj->sizeimage;
+      break;
+
+    case GST_V4L2_IO_MMAP:
+    case GST_V4L2_IO_DMABUF:
       /* in streaming mode, prefer our own pool */
       /* Check if we can use it ... */
-      if (can_use_own_pool) {
+      if (can_share_own_pool) {
         if (pool)
           gst_object_unref (pool);
         pool = gst_object_ref (obj->pool);
         size = obj->sizeimage;
         GST_DEBUG_OBJECT (obj->element,
             "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
+        pushing_from_our_pool = TRUE;
       } else if (pool) {
         GST_DEBUG_OBJECT (obj->element,
             "streaming mode: copying to downstream pool %" GST_PTR_FORMAT,
@@ -3182,7 +3144,14 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
         GST_V4L2_BUFFER_POOL_OPTION_CROP_META);
   }
 
-  gst_buffer_pool_config_set_params (config, caps, size, min + extra, 0);
+  /* If pushing from our own pool, configure it with queried minimum,
+   * otherwise use the minimum required */
+  if (pushing_from_our_pool)
+    extra += min;
+  else
+    extra += GST_V4L2_MIN_BUFFERS;
+
+  gst_buffer_pool_config_set_params (config, caps, size, extra, 0);
 
   GST_DEBUG_OBJECT (pool, "setting config %" GST_PTR_FORMAT, config);
 
@@ -3199,8 +3168,12 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   }
 
 setup_other_pool:
+
   /* Now configure the other pool if different */
-  if (pool && obj->pool != pool) {
+  if (obj->pool != pool)
+    other_pool = pool;
+
+  if (other_pool) {
     if (gst_buffer_pool_is_active (obj->pool))
       goto done;
 
@@ -3250,6 +3223,13 @@ cleanup:
   {
     if (pool)
       gst_object_unref (pool);
+    return FALSE;
+  }
+no_downstream_pool:
+  {
+    GST_ELEMENT_ERROR (obj->element, RESOURCE, SETTINGS,
+        (_("No downstream pool to import from.")),
+        ("When importing DMABUF or USERPTR, we need a pool to import from"));
     return FALSE;
   }
 }

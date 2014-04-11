@@ -253,10 +253,6 @@ gboolean      gst_v4l2_object_unlock_stop (GstV4l2Object * v4l2object);
 
 gboolean      gst_v4l2_object_stop        (GstV4l2Object * v4l2object);
 
-
-gboolean      gst_v4l2_object_copy        (GstV4l2Object * v4l2object,
-                                           GstBuffer * dest, GstBuffer * src);
-
 GstCaps *     gst_v4l2_object_get_caps    (GstV4l2Object * v4l2object,
                                            GstCaps * filter);
 

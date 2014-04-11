@@ -126,6 +126,26 @@ GstV4l2MemoryGroup*  gst_v4l2_allocator_alloc_mmap     (GstV4l2Allocator * alloc
 GstV4l2MemoryGroup*  gst_v4l2_allocator_alloc_dmabuf   (GstV4l2Allocator * allocator,
                                                         GstAllocator * dmabuf_allocator);
 
+GstV4l2MemoryGroup * gst_v4l2_allocator_alloc_dmabufin (GstV4l2Allocator * allocator);
+
+GstV4l2MemoryGroup * gst_v4l2_allocator_alloc_userptr  (GstV4l2Allocator * allocator);
+
+gboolean             gst_v4l2_allocator_import_dmabuf  (GstV4l2Allocator * allocator,
+                                                        GstV4l2MemoryGroup *group,
+                                                        gint n_mem, GstMemory ** dma_mem);
+
+void                 gst_v4l2_allocator_clear_dmabufin (GstV4l2Allocator * allocator,
+                                                        GstV4l2MemoryGroup *group);
+
+
+gboolean             gst_v4l2_allocator_import_userptr (GstV4l2Allocator * allocator,
+                                                        GstV4l2MemoryGroup *group,
+                                                        gsize img_size, int n_planes,
+                                                        gpointer * data, gsize * offset);
+
+void                 gst_v4l2_allocator_clear_userptr  (GstV4l2Allocator * allocator,
+                                                        GstV4l2MemoryGroup *group);
+
 void                 gst_v4l2_allocator_flush          (GstV4l2Allocator * allocator);
 
 gboolean             gst_v4l2_allocator_qbuf           (GstV4l2Allocator * allocator,
