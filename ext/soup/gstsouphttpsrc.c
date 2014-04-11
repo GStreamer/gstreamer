@@ -709,6 +709,7 @@ static void
 gst_soup_http_src_cancel_message (GstSoupHTTPSrc * src)
 {
   if (src->msg != NULL) {
+    GST_DEBUG_OBJECT (src, "Cancelling message");
     src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_CANCELLED;
     soup_session_cancel_message (src->session, src->msg, SOUP_STATUS_CANCELLED);
   }
@@ -914,6 +915,8 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
 static void
 gst_soup_http_src_session_close (GstSoupHTTPSrc * src)
 {
+  GST_DEBUG_OBJECT (src, "Closing session");
+
   if (src->session) {
     soup_session_abort (src->session);  /* This unrefs the message. */
     g_object_unref (src->session);
@@ -1152,6 +1155,7 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     /* gst_soup_http_src_cancel_message() triggered this; probably a seek
      * that occurred in the QUEUEING state; i.e. before the connection setup
      * was complete. Do nothing */
+    GST_DEBUG_OBJECT (src, "cancelled");
   } else if (src->session_io_status ==
       GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING && src->read_position > 0 &&
       (src->have_size && src->read_position < src->content_size) &&
@@ -1448,6 +1452,8 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
 static gboolean
 gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
 {
+  g_return_val_if_fail (src->msg == NULL, FALSE);
+
   src->msg = soup_message_new (method, src->location);
   if (!src->msg) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
@@ -1615,7 +1621,7 @@ gst_soup_http_src_stop (GstBaseSrc * bsrc)
 
   src = GST_SOUP_HTTP_SRC (bsrc);
   GST_DEBUG_OBJECT (src, "stop()");
-  if (src->keep_alive)
+  if (src->keep_alive && !src->msg)
     gst_soup_http_src_cancel_message (src);
   else
     gst_soup_http_src_session_close (src);
@@ -1723,7 +1729,6 @@ gst_soup_http_src_check_seekable (GstSoupHTTPSrc * src)
     gst_soup_http_src_cancel_message (src);
     g_mutex_unlock (&src->mutex);
   }
-
 }
 
 static gboolean
