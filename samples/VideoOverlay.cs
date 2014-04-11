@@ -134,7 +134,7 @@ namespace Gstreameroverlay
 				_playbin.Bus.SyncMessage += delegate (object bus, SyncMessageArgs sargs) {
 					Gst.Message msg = sargs.Message;
 
-					if (!Gst.Video.GlobalVideo.IsVideoOverlayPrepareWindowHandleMessage (msg))
+					if (!Gst.Video.Global.IsVideoOverlayPrepareWindowHandleMessage (msg))
 						return;
 
 					Element src = msg.Src as Element;
@@ -188,7 +188,7 @@ namespace Gstreameroverlay
 
 				if (sret == StateChangeReturn.Async) {
 					State state, pending;
-					sret = _playbin.GetState (out state, out pending, Constants.SECOND * 5L);
+					sret = _playbin.GetState (out state, out pending, Gst.Constants.SECOND * 5L);
 				}
 
 				if (sret == StateChangeReturn.Success) {
