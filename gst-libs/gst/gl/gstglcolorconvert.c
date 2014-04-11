@@ -422,6 +422,7 @@ static void
 gst_gl_color_convert_finalize (GObject * object)
 {
   GstGLColorConvert *convert;
+  guint i;
 
   convert = GST_GL_COLOR_CONVERT (object);
 
@@ -431,6 +432,13 @@ gst_gl_color_convert_finalize (GObject * object)
     convert->fbo = 0;
     convert->depth_buffer = 0;
   }
+
+  for (i = 0; i < convert->priv->convert_info.out_n_textures; i++) {
+    if (convert->priv->out_temp[i])
+      gst_memory_unref ((GstMemory *) convert->priv->out_temp[i]);
+    convert->priv->out_temp[i] = NULL;
+  }
+
   if (convert->shader) {
     gst_object_unref (convert->shader);
     convert->shader = NULL;
@@ -1182,7 +1190,22 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
         GST_MAP_READ | GST_MAP_GL);
   }
   for (i = 0; i < c_info->out_n_textures; i++) {
-    gst_memory_map ((GstMemory *) convert->out_tex[i], &out_infos[i],
+    if (convert->out_tex[i]->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
+        || convert->out_tex[i]->tex_type ==
+        GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
+        || out_width != convert->out_tex[i]->width
+        || out_height != convert->out_tex[i]->height) {
+      /* Luminance formats are not color renderable */
+      /* renderering to a framebuffer only renders the intersection of all
+       * the attachments i.e. the smallest attachment size */
+      if (!convert->priv->out_temp[i])
+        convert->priv->out_temp[i] =
+            (GstGLMemory *) gst_gl_memory_alloc (context,
+            GST_VIDEO_GL_TEXTURE_TYPE_RGBA, out_width, out_height, out_width);
+    } else {
+      convert->priv->out_temp[i] = convert->out_tex[i];
+    }
+    gst_memory_map ((GstMemory *) convert->priv->out_temp[i], &out_infos[i],
         GST_MAP_WRITE | GST_MAP_GL);
   }
 
@@ -1193,7 +1216,21 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
     gst_memory_unmap ((GstMemory *) convert->in_tex[i], &in_infos[i]);
   }
   for (i = 0; i < c_info->out_n_textures; i++) {
-    gst_memory_unmap ((GstMemory *) convert->out_tex[i], &out_infos[i]);
+    gst_memory_unmap ((GstMemory *) convert->priv->out_temp[i], &out_infos[i]);
+
+    if (convert->out_tex[i]->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
+        || convert->out_tex[i]->tex_type ==
+        GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
+        || out_width != convert->out_tex[i]->width
+        || out_height != convert->out_tex[i]->height) {
+      GstGLMemory *gl_mem = convert->out_tex[i];
+
+      gst_gl_memory_copy_into_texture (convert->priv->out_temp[i],
+          gl_mem->tex_id, gl_mem->tex_type, gl_mem->width, gl_mem->height,
+          FALSE);
+    } else {
+      convert->priv->out_temp[i] = NULL;
+    }
   }
 
   convert->priv->result = res;
@@ -1245,21 +1282,8 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
     /* needed? */
     gl->BindTexture (GL_TEXTURE_2D, convert->out_tex[i]->tex_id);
 
-    if (convert->out_tex[i]->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
-        || convert->out_tex[i]->tex_type ==
-        GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
-        || out_width != convert->out_tex[i]->width
-        || out_height != convert->out_tex[i]->height) {
-      /* Luminance formats are not color renderable */
-      /* renderering to a framebuffer only renders the intersection of all
-       * the attachments i.e. the smallest attachment size */
-      convert->priv->out_temp[i] = convert->out_tex[i];
-      convert->out_tex[i] = (GstGLMemory *) gst_gl_memory_alloc (context,
-          GST_VIDEO_GL_TEXTURE_TYPE_RGBA, out_width, out_height, out_width);
-    }
-
     gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
-        GL_TEXTURE_2D, convert->out_tex[i]->tex_id, 0);
+        GL_TEXTURE_2D, convert->priv->out_temp[i]->tex_id, 0);
   }
 
   if (gl->DrawBuffers)
@@ -1307,18 +1331,6 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   /* we are done with the shader */
   gst_gl_context_clear_shader (context);
-
-  for (i = 0; i < c_info->out_n_textures; i++) {
-    if (convert->priv->out_temp[i]) {
-      GstGLMemory *gl_mem = convert->priv->out_temp[i];
-
-      gst_gl_memory_copy_into_texture (convert->out_tex[i], gl_mem->tex_id,
-          gl_mem->tex_type, gl_mem->width, gl_mem->height, FALSE);
-
-      gst_memory_unref ((GstMemory *) convert->out_tex[i]);
-      convert->out_tex[i] = gl_mem;
-    }
-  }
 
   gst_gl_context_check_framebuffer_status (context);
 
