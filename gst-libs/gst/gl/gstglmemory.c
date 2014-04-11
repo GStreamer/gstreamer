@@ -292,7 +292,6 @@ static void
 _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
 {
   const GstGLFuncs *gl;
-  guint unpack_length, n_gl_bytes;
   GLenum gl_format, gl_type;
 
   if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
@@ -306,79 +305,15 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
     gl_type = GL_UNSIGNED_SHORT_5_6_5;
 
   gl_format = _gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
-  n_gl_bytes = _gl_texture_type_n_bytes (gl_mem->tex_type);
-
-  gl_mem->tex_scaling[0] = 1.0f;
-  gl_mem->tex_scaling[1] = 1.0f;
-  unpack_length = 1;
 
 #if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
   if (USING_OPENGL (context) || USING_GLES3 (context)) {
-    unpack_length = gl_mem->stride / n_gl_bytes;
+    gl->PixelStorei (GL_UNPACK_ROW_LENGTH, gl_mem->unpack_length);
   }
 #endif
 #if GST_GL_HAVE_GLES2
   if (USING_GLES2 (context)) {
-    guint j = 8;
-
-    while (j >= n_gl_bytes) {
-      /* GST_ROUND_UP_j(gl_mem->width * n_gl_bytes) */
-      guint round_up_j = ((gl_mem->width * n_gl_bytes) + j - 1) & ~(j - 1);
-
-      if (round_up_j == gl_mem->stride) {
-        GST_CAT_LOG (GST_CAT_GL_MEMORY, "Found alignment of %u based on width "
-            "(with plane width:%u, plane stride:%u and pixel stride:%u. "
-            "RU%u(%u*%u) = %u)", j, gl_mem->width, gl_mem->stride, n_gl_bytes,
-            j, gl_mem->width, n_gl_bytes, round_up_j);
-
-        unpack_length = j;
-        break;
-      }
-      j >>= 1;
-    }
-
-    if (j < n_gl_bytes) {
-      /* Failed to find a suitable alignment, try based on plane_stride and
-       * scale in the shader.  Useful for alignments that are greater than 8.
-       */
-      j = 8;
-
-      while (j >= n_gl_bytes) {
-        /* GST_ROUND_UP_j(gl_mem->stride) */
-        guint round_up_j = ((gl_mem->stride) + j - 1) & ~(j - 1);
-
-        if (round_up_j == gl_mem->stride) {
-          GST_CAT_LOG (GST_CAT_GL_MEMORY, "Found alignment of %u based on "
-              "stride (with plane stride:%u and pixel stride:%u. "
-              "RU%u(%u) = %u)", j, gl_mem->stride, n_gl_bytes, j,
-              gl_mem->stride, round_up_j);
-
-          unpack_length = j;
-          gl_mem->tex_scaling[0] =
-              (gfloat) (gl_mem->width * n_gl_bytes) / (gfloat) gl_mem->stride;
-          break;
-        }
-        j >>= 1;
-      }
-
-      if (j < n_gl_bytes) {
-        GST_CAT_ERROR
-            (GST_CAT_GL_MEMORY, "Failed to find matching alignment. Image may "
-            "look corrupted. plane width:%u, plane stride:%u and pixel "
-            "stride:%u", gl_mem->width, gl_mem->stride, n_gl_bytes);
-      }
-    }
-  }
-#endif
-
-#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
-  if (USING_OPENGL (context) || USING_GLES3 (context)) {
-    gl->PixelStorei (GL_UNPACK_ROW_LENGTH, unpack_length);
-  }
-#endif
-#if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (context)) {
-    gl->PixelStorei (GL_UNPACK_ALIGNMENT, unpack_length);
+    gl->PixelStorei (GL_UNPACK_ALIGNMENT, gl_mem->unpack_length);
   }
 #endif
 
@@ -403,6 +338,77 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
   GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+}
+
+static inline void
+_calculate_unpack_length (GstGLMemory * gl_mem)
+{
+  guint n_gl_bytes;
+
+  gl_mem->tex_scaling[0] = 1.0f;
+  gl_mem->tex_scaling[1] = 1.0f;
+  gl_mem->unpack_length = 1;
+
+  n_gl_bytes = _gl_texture_type_n_bytes (gl_mem->tex_type);
+
+#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
+  if (USING_OPENGL (gl_mem->context) || USING_GLES3 (gl_mem->context)) {
+    gl_mem->unpack_length = gl_mem->stride / n_gl_bytes;
+  }
+#endif
+#if GST_GL_HAVE_GLES2
+  if (USING_GLES2 (gl_mem->context)) {
+    guint j = 8;
+
+    while (j >= n_gl_bytes) {
+      /* GST_ROUND_UP_j(gl_mem->width * n_gl_bytes) */
+      guint round_up_j = ((gl_mem->width * n_gl_bytes) + j - 1) & ~(j - 1);
+
+      if (round_up_j == gl_mem->stride) {
+        GST_CAT_LOG (GST_CAT_GL_MEMORY, "Found alignment of %u based on width "
+            "(with plane width:%u, plane stride:%u and pixel stride:%u. "
+            "RU%u(%u*%u) = %u)", j, gl_mem->width, gl_mem->stride, n_gl_bytes,
+            j, gl_mem->width, n_gl_bytes, round_up_j);
+
+        gl_mem->unpack_length = j;
+        break;
+      }
+      j >>= 1;
+    }
+
+    if (j < n_gl_bytes) {
+      /* Failed to find a suitable alignment, try based on plane_stride and
+       * scale in the shader.  Useful for alignments that are greater than 8.
+       */
+      j = 8;
+
+      while (j >= n_gl_bytes) {
+        /* GST_ROUND_UP_j(gl_mem->stride) */
+        guint round_up_j = ((gl_mem->stride) + j - 1) & ~(j - 1);
+
+        if (round_up_j == gl_mem->stride) {
+          GST_CAT_LOG (GST_CAT_GL_MEMORY, "Found alignment of %u based on "
+              "stride (with plane stride:%u and pixel stride:%u. "
+              "RU%u(%u) = %u)", j, gl_mem->stride, n_gl_bytes, j,
+              gl_mem->stride, round_up_j);
+
+          gl_mem->unpack_length = j;
+          gl_mem->tex_scaling[0] =
+              (gfloat) (gl_mem->width * n_gl_bytes) / (gfloat) gl_mem->stride;
+          break;
+        }
+        j >>= 1;
+      }
+
+      if (j < n_gl_bytes) {
+        GST_CAT_ERROR
+            (GST_CAT_GL_MEMORY, "Failed to find matching alignment. Image may "
+            "look corrupted. plane width:%u, plane stride:%u and pixel "
+            "stride:%u", gl_mem->width, gl_mem->stride, n_gl_bytes);
+      }
+    }
+  }
+#endif
 }
 
 static void
@@ -486,6 +492,8 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->user_data = user_data;
   mem->data_wrapped = FALSE;
   mem->texture_wrapped = FALSE;
+
+  _calculate_unpack_length (mem);
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "new GL texture memory:%p format:%u "
       "dimensions:%ux%u", mem, tex_type, width, height);
