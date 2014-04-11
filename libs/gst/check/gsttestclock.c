@@ -876,6 +876,32 @@ gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
 }
 
 /**
+ * gst_test_clock_wait_for_pending_id_count:
+ * @test_clock: #GstTestClock for which to await having enough pending clock
+ * @count: the number of pending clock notifications to wait for
+ *
+ * Blocks until at least @count clock notifications have been requested from
+ * @test_clock. There is no timeout for this wait, see the main description of
+ * #GstTestClock.
+ *
+ * Since: 1.2
+ *
+ * Deprecated: use gst_test_clock_wait_for_multiple_pending_ids() instead.
+ */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+void gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
+    guint count);
+#endif
+void
+gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
+    guint count)
+{
+  gst_test_clock_wait_for_multiple_pending_ids (test_clock, count, NULL);
+}
+#endif
+
+/**
  * gst_test_clock_process_next_clock_id:
  * @test_clock: a #GstTestClock for which to retrieve the next pending clock
  * notification

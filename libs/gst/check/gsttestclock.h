@@ -113,6 +113,11 @@ gboolean      gst_test_clock_peek_next_pending_id (GstTestClock * test_clock,
 void          gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
                                                        GstClockID   * pending_id);
 
+#ifndef GST_DISABLE_DEPRECATED
+void          gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
+                                                        guint          count);
+#endif
+
 GstClockID    gst_test_clock_process_next_clock_id (GstTestClock * test_clock);
 
 GstClockTime  gst_test_clock_get_next_entry_time   (GstTestClock * test_clock);
