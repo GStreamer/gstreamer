@@ -150,27 +150,38 @@ gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
 }
 
 static gboolean
-gst_funnel_all_sinkpads_eos_unlocked (GstFunnel * funnel)
+gst_funnel_all_sinkpads_eos_unlocked (GstFunnel * funnel, GstPad * pad)
 {
   GstElement *element = GST_ELEMENT_CAST (funnel);
   GList *item;
+  gboolean all_eos = FALSE;
+
+  GST_OBJECT_LOCK (funnel);
 
   if (element->numsinkpads == 0)
-    return FALSE;
+    goto done;
 
   for (item = element->sinkpads; item != NULL; item = g_list_next (item)) {
     GstPad *sinkpad = item->data;
     GstEvent *eos;
+
+    /* eos event has not enrolled for current pad, we don't check for current pad */
+    if (pad == sinkpad)
+      continue;
 
     eos = gst_pad_get_sticky_event (sinkpad, GST_EVENT_EOS, 0);
     if (eos)
       gst_event_unref (eos);
 
     if (eos == NULL)
-      return FALSE;
+      goto done;
   }
 
-  return TRUE;
+  all_eos = TRUE;
+
+done:
+  GST_OBJECT_UNLOCK (funnel);
+  return all_eos;
 }
 
 static void
@@ -190,12 +201,10 @@ gst_funnel_release_pad (GstElement * element, GstPad * pad)
 
   gst_element_remove_pad (GST_ELEMENT_CAST (funnel), pad);
 
-  GST_OBJECT_LOCK (funnel);
-  if (eos == NULL && gst_funnel_all_sinkpads_eos_unlocked (funnel)) {
+  if (eos == NULL && gst_funnel_all_sinkpads_eos_unlocked (funnel, NULL)) {
     GST_DEBUG_OBJECT (funnel, "Pad removed. All others are EOS. Sending EOS");
     send_eos = TRUE;
   }
-  GST_OBJECT_UNLOCK (funnel);
 
   if (send_eos)
     if (!gst_pad_push_event (funnel->srcpad, gst_event_new_eos ()))
@@ -251,8 +260,12 @@ gst_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     unlock = TRUE;
     GST_PAD_STREAM_LOCK (funnel->srcpad);
 
-    if (pad != funnel->last_sinkpad)
+    if ((GST_EVENT_TYPE (event) == GST_EVENT_EOS) &&
+        (!gst_funnel_all_sinkpads_eos_unlocked (funnel, pad))) {
       forward = FALSE;
+    } else if (pad != funnel->last_sinkpad) {
+      forward = FALSE;
+    }
   }
 
   if (forward)
