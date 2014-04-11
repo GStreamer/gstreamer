@@ -319,7 +319,7 @@ create_session (GstRTSPSessionPool * pool, const gchar * id)
  *
  * Create a new #GstRTSPSession object in @pool.
  *
- * Returns: (transfer none): a new #GstRTSPSession.
+ * Returns: (transfer full): a new #GstRTSPSession.
  */
 GstRTSPSession *
 gst_rtsp_session_pool_create (GstRTSPSessionPool * pool)

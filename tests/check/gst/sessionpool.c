@@ -44,7 +44,8 @@ GST_START_TEST (test_pool)
 {
   GstRTSPSessionPool *pool;
   GstRTSPSession *session1, *session2, *session3;
-  const gchar *session1id, *session2id, *session3id;
+  GstRTSPSession *compare;
+  gchar *session1id, *session2id, *session3id;
   GList *list;
   guint maxsessions;
   GSource *source;
@@ -61,28 +62,35 @@ GST_START_TEST (test_pool)
   fail_unless (GST_IS_RTSP_SESSION (session1));
   fail_unless_equals_int (gst_rtsp_session_pool_get_n_sessions (pool), 1);
   fail_unless_equals_int (gst_rtsp_session_pool_get_max_sessions (pool), 3);
-  session1id = gst_rtsp_session_get_sessionid (session1);
+  session1id = g_strdup (gst_rtsp_session_get_sessionid (session1));
 
   session2 = gst_rtsp_session_pool_create (pool);
   fail_unless (GST_IS_RTSP_SESSION (session2));
   fail_unless_equals_int (gst_rtsp_session_pool_get_n_sessions (pool), 2);
   fail_unless_equals_int (gst_rtsp_session_pool_get_max_sessions (pool), 3);
-  session2id = gst_rtsp_session_get_sessionid (session2);
+  session2id = g_strdup (gst_rtsp_session_get_sessionid (session2));
 
   session3 = gst_rtsp_session_pool_create (pool);
   fail_unless (GST_IS_RTSP_SESSION (session3));
   fail_unless_equals_int (gst_rtsp_session_pool_get_n_sessions (pool), 3);
   fail_unless_equals_int (gst_rtsp_session_pool_get_max_sessions (pool), 3);
-  session3id = gst_rtsp_session_get_sessionid (session3);
+  session3id = g_strdup (gst_rtsp_session_get_sessionid (session3));
 
   fail_if (GST_IS_RTSP_SESSION (gst_rtsp_session_pool_create (pool)));
 
-  fail_unless (gst_rtsp_session_pool_find (pool, session1id) == session1);
-  fail_unless (gst_rtsp_session_pool_find (pool, session2id) == session2);
-  fail_unless (gst_rtsp_session_pool_find (pool, session3id) == session3);
+  compare = gst_rtsp_session_pool_find (pool, session1id);
+  fail_unless (compare == session1);
+  g_object_unref (compare);
+  compare = gst_rtsp_session_pool_find (pool, session2id);
+  fail_unless (compare == session2);
+  g_object_unref (compare);
+  compare = gst_rtsp_session_pool_find (pool, session3id);
+  fail_unless (compare == session3);
+  g_object_unref (compare);
   fail_unless (gst_rtsp_session_pool_find (pool, "") == NULL);
 
   fail_unless (gst_rtsp_session_pool_remove (pool, session2));
+  g_object_unref (session2);
   fail_unless_equals_int (gst_rtsp_session_pool_get_n_sessions (pool), 2);
   fail_unless_equals_int (gst_rtsp_session_pool_get_max_sessions (pool), 3);
 
@@ -98,7 +106,7 @@ GST_START_TEST (test_pool)
     fail_unless_equals_int (g_list_length (list), 2);
     fail_unless (g_list_find (list, session1) != NULL);
     fail_unless (g_list_find (list, session3) != NULL);
-    g_list_foreach (list, (GFunc) g_object_unref, NULL);
+    g_list_free_full (list, (GDestroyNotify) g_object_unref);
   }
 
   {
@@ -120,7 +128,7 @@ GST_START_TEST (test_pool)
     list = gst_rtsp_session_pool_filter (pool, filter_func, &responses);
     fail_unless_equals_int (g_list_length (list), 1);
     fail_unless (g_list_nth_data (list, 0) == session1);
-    g_list_foreach (list, (GFunc) g_object_unref, NULL);
+    g_list_free_full (list, (GDestroyNotify) g_object_unref);
   }
 
   {
@@ -131,9 +139,12 @@ GST_START_TEST (test_pool)
 
     list = gst_rtsp_session_pool_filter (pool, filter_func, &responses);
     fail_unless_equals_int (g_list_length (list), 0);
+    g_list_free (list);
   }
 
-  fail_unless (gst_rtsp_session_pool_find (pool, session1id) == session1);
+  compare = gst_rtsp_session_pool_find (pool, session1id);
+  fail_unless (compare == session1);
+  g_object_unref (compare);
   fail_unless (gst_rtsp_session_pool_find (pool, session2id) == NULL);
   fail_unless (gst_rtsp_session_pool_find (pool, session3id) == NULL);
 
@@ -157,6 +168,13 @@ GST_START_TEST (test_pool)
   while (!g_main_context_iteration (NULL, TRUE));
 
   g_source_unref (source);
+
+  g_object_unref (session1);
+  g_object_unref (session3);
+
+  g_free (session1id);
+  g_free (session2id);
+  g_free (session3id);
 
   g_object_unref (pool);
 }
