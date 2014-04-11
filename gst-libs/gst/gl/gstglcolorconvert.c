@@ -543,7 +543,7 @@ gst_gl_color_convert_set_texture_scaling (GstGLColorConvert * convert,
 {
   guint i;
 
-  g_return_val_if_fail (convert != NULL, FALSE);
+  g_return_if_fail (convert != NULL,);
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     convert->priv->convert_info.shader_scaling[i][0] = scaling[i][0];
