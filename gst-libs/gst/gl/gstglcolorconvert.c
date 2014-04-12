@@ -1051,9 +1051,8 @@ _init_convert (GstGLContext * context, GstGLColorConvert * convert)
     if (info->shader_tex_names[i])
       gst_gl_shader_set_uniform_1i (convert->shader, info->shader_tex_names[i],
           i);
-    if (info->shader_scaling[i])
-      gst_gl_shader_set_uniform_2fv (convert->shader, scale_name, 1,
-          info->shader_scaling[i]);
+    gst_gl_shader_set_uniform_2fv (convert->shader, scale_name, 1,
+        info->shader_scaling[i]);
 
     g_free (scale_name);
   }
