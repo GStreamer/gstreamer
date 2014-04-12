@@ -2258,6 +2258,9 @@ was_prepared:
   /* ERRORS */
 not_unprepared:
   {
+    /* we are not going to use the giving thread, so stop it. */
+    if (thread)
+      gst_rtsp_thread_stop (thread);
     GST_WARNING ("media %p was not unprepared", media);
     priv->prepare_count--;
     g_rec_mutex_unlock (&priv->state_lock);
@@ -2265,6 +2268,9 @@ not_unprepared:
   }
 is_reused:
   {
+    /* we are not going to use the giving thread, so stop it. */
+    if (thread)
+      gst_rtsp_thread_stop (thread);
     priv->prepare_count--;
     g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("can not reuse media %p", media);
@@ -2272,6 +2278,9 @@ is_reused:
   }
 no_create_rtpbin:
   {
+    /* we are not going to use the giving thread, so stop it. */
+    if (thread)
+      gst_rtsp_thread_stop (thread);
     priv->prepare_count--;
     g_rec_mutex_unlock (&priv->state_lock);
     GST_ERROR ("no create_rtpbin function");
@@ -2280,6 +2289,9 @@ no_create_rtpbin:
   }
 no_rtpbin:
   {
+    /* we are not going to use the giving thread, so stop it. */
+    if (thread)
+      gst_rtsp_thread_stop (thread);
     priv->prepare_count--;
     g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("no rtpbin element");

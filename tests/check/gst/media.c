@@ -205,7 +205,6 @@ GST_START_TEST (test_media_prepare)
       "( videotestsrc is-live=true ! rtpvrawpay pt=96 name=pay0 )");
 
   g_object_unref (pool);
-  gst_rtsp_thread_stop (thread);
   gst_rtsp_thread_pool_cleanup ();
 }
 
