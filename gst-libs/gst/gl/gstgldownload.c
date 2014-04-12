@@ -339,8 +339,8 @@ _init_download (GstGLContext * context, GstGLDownload * download)
       out_height);
 
   download->priv->result =
-      gst_gl_color_convert_init_format (download->convert, in_info,
-      download->info);
+      gst_gl_color_convert_init_format (download->convert, &in_info,
+      &download->info);
   if (!download->priv->result)
     return;
 

@@ -461,12 +461,18 @@ gst_gl_color_convert_finalize (GObject * object)
 
 static gboolean
 _gst_gl_color_convert_init_format_unlocked (GstGLColorConvert * convert,
-    GstVideoInfo in_info, GstVideoInfo out_info)
+    GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
   g_return_val_if_fail (convert != NULL, FALSE);
-  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&in_info) !=
+  g_return_val_if_fail (in_info, FALSE);
+  g_return_val_if_fail (out_info, FALSE);
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
       GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&in_info) !=
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
+      GST_VIDEO_FORMAT_ENCODED, FALSE);
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (out_info) !=
+      GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (out_info) !=
       GST_VIDEO_FORMAT_ENCODED, FALSE);
 
   if (convert->initted) {
@@ -475,8 +481,8 @@ _gst_gl_color_convert_init_format_unlocked (GstGLColorConvert * convert,
     convert->initted = TRUE;
   }
 
-  convert->in_info = in_info;
-  convert->out_info = out_info;
+  convert->in_info = *in_info;
+  convert->out_info = *out_info;
 
   gst_gl_context_thread_add (convert->context,
       (GstGLContextThreadFunc) _init_convert, convert);
@@ -496,7 +502,7 @@ _gst_gl_color_convert_init_format_unlocked (GstGLColorConvert * convert,
  */
 gboolean
 gst_gl_color_convert_init_format (GstGLColorConvert * convert,
-    GstVideoInfo in_info, GstVideoInfo out_info)
+    GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
   gboolean ret;
 
