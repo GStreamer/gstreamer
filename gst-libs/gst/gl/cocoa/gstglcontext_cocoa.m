@@ -41,6 +41,40 @@ static GstGLPlatform gst_gl_context_cocoa_get_gl_platform (GstGLContext * contex
 G_DEFINE_TYPE (GstGLContextCocoa, gst_gl_context_cocoa, GST_GL_TYPE_CONTEXT);
 
 #ifndef GNUSTEP
+static GMutex nsapp_lock;
+static GCond nsapp_cond;
+
+static gboolean
+gst_gl_window_cocoa_init_nsapp (gpointer data)
+{
+  NSAutoreleasePool *pool = nil;
+
+  g_mutex_lock (&nsapp_lock);
+
+  [[NSAutoreleasePool alloc] init];
+
+  /* The sharedApplication class method initializes
+   * the display environment and connects your program
+   * to the window server and the display server
+   */
+
+  /* TODO: so consider to create GstGLDisplayCocoa
+   * in gst/gl/cocoa/gstgldisplay_cocoa.h/c
+   */
+
+  /* has to be called in the main thread */
+  [NSApplication sharedApplication];
+
+  GST_DEBUG ("NSApp initialized from a GTimeoutSource");
+
+  [pool release];
+
+  g_cond_signal (&nsapp_cond);
+  g_mutex_unlock (&nsapp_lock);
+
+  return FALSE;
+}
+
 static gboolean
 gst_gl_window_cocoa_nsapp_iteration (gpointer data)
 {
@@ -67,13 +101,11 @@ gst_gl_window_cocoa_nsapp_iteration (gpointer data)
 static void
 gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
 {
-  GstGLContextClass *context_class;
+  GstGLContextClass *context_class = (GstGLContextClass *) klass;
 
 #ifndef GNUSTEP
   NSAutoreleasePool* pool = nil;
 #endif
-
-  context_class = (GstGLContextClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGLContextCocoaPrivate));
 
@@ -90,8 +122,57 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_platform);
 
 #ifndef GNUSTEP
-  pool = [[NSAutoreleasePool alloc] init];
-  [NSApplication sharedApplication];
+  [[NSAutoreleasePool alloc] init];
+
+  /* [NSApplication sharedApplication] will usually be
+   * called in your application so it's not necessary
+   * to do that the following. Except for debugging 
+   * purpose like when using gst-launch.
+   * So here we handle the two cases where the first
+   * GstGLContext is either created in the main thread
+   * or from another thread like a streaming thread
+   */
+
+  if ([NSThread isMainThread]) {
+    /* In the main thread so just do the call now */
+    
+    /* The sharedApplication class method initializes
+     * the display environment and connects your program
+     * to the window server and the display server
+     */
+
+    /* TODO: so consider to create GstGLDisplayCocoa
+     * in gst/gl/cocoa/gstgldisplay_cocoa.h/c
+     */
+
+    /* has to be called in the main thread */
+    [NSApplication sharedApplication];
+
+    GST_DEBUG ("NSApp initialized");
+  } else {
+    /* Not in the main thread, assume there is a
+     * glib main loop running this is for debugging
+     * purposes so that's ok to let us a chance
+     */
+    gboolean is_loop_running = FALSE;
+    gint64 end_time = 0;
+
+    g_mutex_init (&nsapp_lock);
+    g_cond_init (&nsapp_cond);
+
+    g_mutex_lock (&nsapp_lock);
+    g_timeout_add_seconds (0, gst_gl_window_cocoa_init_nsapp, NULL);
+    end_time = g_get_monotonic_time () + 2 * 1000 * 1000;
+    is_loop_running = g_cond_wait_until (&nsapp_cond, &nsapp_lock, end_time);
+    g_mutex_unlock (&nsapp_lock);
+
+    if (!is_loop_running) {
+      GST_WARNING ("no mainloop running");
+    }
+
+    g_cond_clear (&nsapp_cond);
+    g_mutex_clear (&nsapp_lock);
+  }
 
   [pool release];
 #endif
