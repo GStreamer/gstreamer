@@ -483,6 +483,12 @@ print_element_properties_info (GstElement * element)
         } else if (G_IS_PARAM_SPEC_BOXED (param)) {
           n_print ("%-23.23s Boxed pointer of type \"%s\"", "",
               g_type_name (param->value_type));
+          if (param->value_type == GST_TYPE_STRUCTURE) {
+            const GstStructure *s = gst_value_get_structure (&value);
+            if (s)
+              gst_structure_foreach (s, print_field,
+                  (gpointer) "                           ");
+          }
         } else if (G_IS_PARAM_SPEC_POINTER (param)) {
           if (param->value_type != G_TYPE_POINTER) {
             n_print ("%-23.23s Pointer of type \"%s\".", "",
