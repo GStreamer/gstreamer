@@ -407,9 +407,6 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
     GstGLWindow *window;
 
     gl_sink->context = gst_gl_context_new (gl_sink->display);
-    if (!gst_gl_context_create (gl_sink->context, gl_sink->other_context,
-            &error))
-      goto context_error;
 
     window = gst_gl_context_get_window (gl_sink->context);
 
@@ -420,6 +417,10 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
       gl_sink->window_id = gl_sink->new_window_id;
       gst_gl_window_set_window_handle (window, gl_sink->window_id);
     }
+
+    if (!gst_gl_context_create (gl_sink->context, gl_sink->other_context,
+            &error))
+      goto context_error;
 
     /* setup callbacks */
     gst_gl_window_set_resize_callback (window,
