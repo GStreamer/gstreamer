@@ -334,13 +334,20 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
   if (window) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-    AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc]
-        initWithAll:window_cocoa callback:callback userData:data];
+    /* performSelector is not re-entrant so do it manually */
+    if (G_UNLIKELY ([NSThread currentThread] == priv->thread)) {
+      if (callback)
+        callback (data);
+    } else {
+      AppThreadPerformer* app_thread_performer =
+          [[AppThreadPerformer alloc] initWithAll:window_cocoa
+              callback:callback userData:data];
 
-    [app_thread_performer performSelector:@selector(sendToApp) onThread:priv->thread
-        withObject:nil waitUntilDone:NO];
-
-    [pool release];
+      [app_thread_performer performSelector:@selector(sendToApp)
+          onThread:priv->thread withObject:nil waitUntilDone:NO];
+      
+      [pool release];
+    }
   }
 }
 
