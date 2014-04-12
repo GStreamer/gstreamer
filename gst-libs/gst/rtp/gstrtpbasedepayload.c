@@ -45,6 +45,8 @@ struct _GstRTPBaseDepayloadPrivate
   GstClockTime dts;
   GstClockTime duration;
 
+  guint32 last_seqnum;
+  guint32 last_rtptime;
   guint32 next_seqnum;
 
   gboolean negotiated;
@@ -62,6 +64,7 @@ enum
 enum
 {
   PROP_0,
+  PROP_STATS,
   PROP_LAST
 };
 
@@ -131,6 +134,69 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
   gobject_class->set_property = gst_rtp_base_depayload_set_property;
   gobject_class->get_property = gst_rtp_base_depayload_get_property;
 
+
+  /**
+   * GstRTPBaseDepayload:stats:
+   *
+   * Various depayloader statistics retrieved atomically (and are therefore
+   * synchroized with each other). This property return a GstStructure named
+   * application/x-rtp-depayload-stats containing the following fields relating to
+   * the last processed buffer and current state of the stream being depayloaded:
+   *
+   * <variablelist>
+   *   <varlistentry>
+   *     <term>clock-rate</term>
+   *     <listitem><para>#G_TYPE_UINT, clock-rate of the
+   *     stream</para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>npt-start</term>
+   *     <listitem><para>#G_TYPE_UINT64, time of playback start
+   *     </para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>npt-stop</term>
+   *     <listitem><para>#G_TYPE_UINT64, time of playback stop
+   *     </para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>play-speed</term>
+   *     <listitem><para>#G_TYPE_DOUBLE, the playback speed
+   *     </para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>play-scale</term>
+   *     <listitem><para>#G_TYPE_DOUBLE, the playback scale
+   *     </para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>running-time-dts</term>
+   *     <listitem><para>#G_TYPE_UINT64, the last running-time of the
+   *      last DTS
+   *     </para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>running-time-pts</term>
+   *     <listitem><para>#G_TYPE_UINT64, the last running-time of the
+   *      last PTS
+   *     </para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>seqnum</term>
+   *     <listitem><para>#G_TYPE_UINT, the last seen seqnum
+   *     </para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>timestamp</term>
+   *     <listitem><para>#G_TYPE_UINT, the last seen RTP timestamp
+   *     </para></listitem>
+   *   </varlistentry>
+   * </variablelist>
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_STATS,
+      g_param_spec_boxed ("stats", "Statistics", "Various statistics",
+          GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_rtp_base_depayload_change_state;
 
   klass->packet_lost = gst_rtp_base_depayload_packet_lost;
@@ -167,6 +233,14 @@ gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
   filter->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_pad_use_fixed_caps (filter->srcpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
+
+  priv->npt_start = 0;
+  priv->npt_stop = -1;
+  priv->play_speed = 1.0;
+  priv->play_scale = 1.0;
+  priv->dts = -1;
+  priv->pts = -1;
+  priv->duration = -1;
 
   gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
 }
@@ -296,6 +370,9 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   seqnum = gst_rtp_buffer_get_seq (&rtp);
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
   gst_rtp_buffer_unmap (&rtp);
+
+  priv->last_seqnum = seqnum;
+  priv->last_rtptime = rtptime;
 
   discont = buf_discont;
 
@@ -709,6 +786,29 @@ gst_rtp_base_depayload_change_state (GstElement * element,
   return ret;
 }
 
+static GstStructure *
+gst_rtp_base_depayload_create_stats (GstRTPBaseDepayload * depayload)
+{
+  GstRTPBaseDepayloadPrivate *priv;
+  GstStructure *s;
+
+  priv = depayload->priv;
+
+  s = gst_structure_new ("application/x-rtp-depayload-stats",
+      "clock_rate", G_TYPE_UINT, depayload->clock_rate,
+      "npt-start", G_TYPE_UINT64, priv->npt_start,
+      "npt-stop", G_TYPE_UINT64, priv->npt_stop,
+      "play-speed", G_TYPE_DOUBLE, priv->play_speed,
+      "play-scale", G_TYPE_DOUBLE, priv->play_scale,
+      "running-time-dts", G_TYPE_UINT64, priv->dts,
+      "running-time-pts", G_TYPE_UINT64, priv->pts,
+      "seqnum", G_TYPE_UINT, (guint) priv->last_seqnum,
+      "timestamp", G_TYPE_UINT, (guint) priv->last_rtptime, NULL);
+
+  return s;
+}
+
+
 static void
 gst_rtp_base_depayload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -724,7 +824,15 @@ static void
 gst_rtp_base_depayload_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstRTPBaseDepayload *depayload;
+
+  depayload = GST_RTP_BASE_DEPAYLOAD (object);
+
   switch (prop_id) {
+    case PROP_STATS:
+      g_value_take_boxed (value,
+          gst_rtp_base_depayload_create_stats (depayload));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
