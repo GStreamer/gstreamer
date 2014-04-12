@@ -623,7 +623,7 @@ _create_shader (GstGLContext * context, const gchar * vertex_src,
   return TRUE;
 }
 
-static inline const gchar
+static inline gchar
 _index_to_shader_swizzle (int idx)
 {
   switch (idx) {
