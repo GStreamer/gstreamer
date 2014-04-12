@@ -2,7 +2,7 @@
 lib_LTLIBRARIES = libgstgl-@GST_API_VERSION@.la
 
 SUBDIRS = glprototypes
-DIST_SUBDIRS = glprototypes android x11 win32 cocoa wayland dispmanx egl
+DIST_SUBDIRS = glprototypes android x11 win32 cocoa wayland dispmanx egl eagl
 
 noinst_HEADERS =
 
@@ -85,6 +85,11 @@ endif
 if HAVE_WINDOW_ANDROID
 SUBDIRS += android
 libgstgl_@GST_API_VERSION@_la_LIBADD += android/libgstgl-android.la
+endif
+
+if HAVE_WINDOW_EAGL
+SUBDIRS += eagl
+libgstgl_@GST_API_VERSION@_la_LIBADD += eagl/libgstgl-eagl.la
 endif
 
 if USE_EGL
