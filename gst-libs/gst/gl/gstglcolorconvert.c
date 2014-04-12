@@ -1257,6 +1257,8 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   guint out_width, out_height;
   gint i;
 
+  GLint viewport_dim[4];
+
   const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
     1.0f, 0.0f,
     -1.0f, -1.0f, 0.0f,
@@ -1303,6 +1305,8 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   else if (gl->DrawBuffer)
     gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
 
+  gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
+
   gl->Viewport (0, 0, out_width, out_height);
 
   gl->ClearColor (0.0, 0.0, 0.0, 0.0);
@@ -1343,6 +1347,9 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   /* we are done with the shader */
   gst_gl_context_clear_shader (context);
+
+  gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
+      viewport_dim[3]);
 
   gst_gl_context_check_framebuffer_status (context);
 
