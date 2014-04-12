@@ -54,8 +54,13 @@
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
 #endif
-# include <GLES2/gl2.h>
-# include <GLES2/gl2ext.h>
+# if __APPLE__
+#  include <OpenGLES/ES2/gl.h>
+#  include <OpenGLES/ES2/glext.h>
+# else
+#  include <GLES2/gl2.h>
+#  include <GLES2/gl2ext.h>
+# endif
 # if !GST_GL_HAVE_OPENGL
 #  include <gst/gl/gstgles2.h>
 # endif
@@ -110,6 +115,7 @@ typedef enum
   GST_GL_PLATFORM_GLX = (1 << 1),
   GST_GL_PLATFORM_WGL = (1 << 2),
   GST_GL_PLATFORM_CGL = (1 << 3),
+  GST_GL_PLATFORM_EAGL = (1 << 4),
 
   GST_GL_PLATFORM_ANY = G_MAXUINT32
 } GstGLPlatform;

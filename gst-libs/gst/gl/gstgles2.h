@@ -28,6 +28,12 @@
 G_BEGIN_DECLS
 
 /* SUPPORTED */
+/* FIXME: On iOS this exists but maps to an actual BGRA extension */
+#ifdef __APPLE__
+#ifdef GL_BGRA
+#undef GL_BGRA
+#endif
+#endif
 
 //FIXME:
 #define GL_RGB16 GL_RGB565

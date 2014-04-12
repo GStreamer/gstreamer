@@ -775,6 +775,7 @@ USE_GLX=no
 USE_COCOA=no
 USE_WGL=no
 USE_X11=no
+USE_EAGL=no
 GL_LIBS=
 GL_CFLAGS=
 GL_OBJCFLAGS=
@@ -960,8 +961,34 @@ case $host in
     ;;
   *-darwin*)
     if test "x$HAVE_IOS" = "xyes"; then
-      dnl iOS requires EAGL, which we don't support yet
-      AC_MSG_WARN([OpenGL support not ported to iOS yet])
+      if test "x$NEED_WGL" = "xyes"; then
+        AC_MSG_ERROR([WGL is not available on iOS])
+      fi
+      if test "x$NEED_GLX" = "xyes"; then
+        AC_MSG_ERROR([GLX is not available on iOS])
+      fi
+      if test "x$NEED_GL" = "xyes"; then
+        AC_MSG_ERROR([GL is not available on iOS])
+      fi
+      if test "x$NEED_X11" = "xyes"; then
+        AC_MSG_ERROR([X11 is not available on iOS])
+      fi
+      if test "x$NEED_COCOA" = "xyes"; then
+        AC_MSG_ERROR([Cocoa is not available on iOS])
+      fi
+      if test "x$NEED_EGL" = "xyes"; then
+        AC_MSG_ERROR([EGL is not available on iOS])
+      fi
+
+      GL_LIBS="$LIBS -framework OpenGLES -framework QuartzCore -framework UIKit -framework CoreGraphics -framework CoreFoundation -framework Foundation"
+      GL_CFLAGS="$GL_CFLAGS"
+      USE_GLES2=yes
+      USE_EAGL=yes
+      HAVE_WINDOW_EAGL=yes
+
+      ac_cv_type_GLsizeiptr=yes
+      ac_cv_type_GLintptr=yes
+      ac_cv_type_GLchar=yes
     else
       dnl Only osx supports cocoa.
       if test "x$NEED_WGL" = "xyes"; then
@@ -1074,6 +1101,7 @@ GST_GL_HAVE_WINDOW_WIN32=0
 GST_GL_HAVE_WINDOW_WAYLAND=0
 GST_GL_HAVE_WINDOW_ANDROID=0
 GST_GL_HAVE_WINDOW_DISPMANX=0
+GST_GL_HAVE_WINDOW_EAGL=0
 
 if test "x$HAVE_WINDOW_X11" = "xyes"; then
   GL_WINDOWS="x11 $GL_WINDOWS"
@@ -1099,6 +1127,10 @@ if test "x$HAVE_WINDOW_DISPMANX" = "xyes"; then
   GL_WINDOWS="dispmanx $GL_WINDOWS"
   GST_GL_HAVE_WINDOW_DISPMANX=1
 fi
+if test "x$HAVE_WINDOW_EAGL" = "xyes"; then
+  GL_WINDOWS="eagl $GL_WINDOWS"
+  GST_GL_HAVE_WINDOW_EAGL=1
+fi
 
 GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_WINDOW_X11 $GST_GL_HAVE_WINDOW_X11
@@ -1107,6 +1139,7 @@ GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_WINDOW_WAYLAND $GST_GL_HAVE_WINDOW_WAYLAND
 #define GST_GL_HAVE_WINDOW_ANDROID $GST_GL_HAVE_WINDOW_ANDROID
 #define GST_GL_HAVE_WINDOW_DISPMANX $GST_GL_HAVE_WINDOW_DISPMANX
+#define GST_GL_HAVE_WINDOW_EAGL $GST_GL_HAVE_WINDOW_EAGL
 "
 
 dnl PLATFORM's
@@ -1115,6 +1148,7 @@ GST_GL_HAVE_PLATFORM_EGL=0
 GST_GL_HAVE_PLATFORM_GLX=0
 GST_GL_HAVE_PLATFORM_WGL=0
 GST_GL_HAVE_PLATFORM_COCOA=0
+GST_GL_HAVE_PLATFORM_EAGL=0
 
 if test "x$USE_EGL" = "xyes"; then
   GL_PLATFORMS="egl $GL_PLATFORMS"
@@ -1132,12 +1166,17 @@ if test "x$USE_COCOA" = "xyes"; then
   GL_PLATFORMS="cocoa $GL_PLATFORMS"
   GST_GL_HAVE_PLATFORM_COCOA=1
 fi
+if test "x$USE_EAGL" = "xyes"; then
+  GL_PLATFORMS="eagl $GL_PLATFORMS"
+  GST_GL_HAVE_PLATFORM_EAGL=1
+fi
 
 GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_PLATFORM_EGL $GST_GL_HAVE_PLATFORM_EGL
 #define GST_GL_HAVE_PLATFORM_GLX $GST_GL_HAVE_PLATFORM_GLX
 #define GST_GL_HAVE_PLATFORM_WGL $GST_GL_HAVE_PLATFORM_WGL
 #define GST_GL_HAVE_PLATFORM_COCOA $GST_GL_HAVE_PLATFORM_COCOA
+#define GST_GL_HAVE_PLATFORM_EAGL $GST_GL_HAVE_PLATFORM_EAGL
 "
 
 dnl Check for no platforms/window systems
@@ -1162,12 +1201,15 @@ if test "x$GL_APIS" = "x" -o "x$GL_PLATFORMS" = "x" -o "x$GL_WINDOWS" = "x"; the
   USE_WGL=no
   USE_COCOA=no
   USE_EGL_RPI=no
+  USE_EAGL=no
 
   HAVE_WINDOW_X11=no
   HAVE_WINDOW_WIN32=no
   HAVE_WINDOW_DISPMANX=no
   HAVE_WINDOW_WAYLAND=no
   HAVE_WINDOW_ANDROID=no
+  HAVE_WINDOW_COCOA=no
+  HAVE_WINDOW_EAGL=no
 fi
 
 AC_SUBST(GL_LIBS)
@@ -1182,6 +1224,7 @@ AM_CONDITIONAL(HAVE_WINDOW_WIN32, test "x$HAVE_WINDOW_WIN32" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_DISPMANX, test "x$HAVE_WINDOW_DISPMANX" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_WAYLAND, test "x$HAVE_WINDOW_WAYLAND" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_ANDROID, test "x$HAVE_WINDOW_ANDROID" = "xyes")
+AM_CONDITIONAL(HAVE_WINDOW_EAGL, test "x$HAVE_WINDOW_EAGL" = "xyes")
 
 AM_CONDITIONAL(USE_OPENGL, test "x$USE_OPENGL" = "xyes")
 AM_CONDITIONAL(USE_GLES2, test "x$USE_GLES2" = "xyes")
@@ -1190,6 +1233,7 @@ AM_CONDITIONAL(USE_EGL, test "x$USE_EGL" = "xyes")
 AM_CONDITIONAL(USE_WGL, test "x$USE_WGL" = "xyes")
 AM_CONDITIONAL(USE_COCOA, test "x$USE_COCOA" = "xyes")
 AM_CONDITIONAL(USE_EGL_RPI, test "x$USE_EGL_RPI" = "xyes")
+AM_CONDITIONAL(USE_EAGL, test "x$USE_EAGL" = "xyes")
 
 AM_CONDITIONAL(HAVE_GST_GL, test "x$USE_OPENGL" = "xyes" -o "x$USE_GLES2" = "xyes")
 
@@ -3199,6 +3243,7 @@ gst-libs/gst/gl/android/Makefile
 gst-libs/gst/gl/cocoa/Makefile
 gst-libs/gst/gl/dispmanx/Makefile
 gst-libs/gst/gl/glprototypes/Makefile
+gst-libs/gst/gl/eagl/Makefile
 gst-libs/gst/gl/egl/Makefile
 gst-libs/gst/gl/wayland/Makefile
 gst-libs/gst/gl/win32/Makefile

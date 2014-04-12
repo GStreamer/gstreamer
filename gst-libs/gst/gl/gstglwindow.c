@@ -55,6 +55,9 @@
 #if GST_GL_HAVE_WINDOW_ANDROID
 #include "android/gstglwindow_android_egl.h"
 #endif
+#if GST_GL_HAVE_WINDOW_EAGL
+#include "eagl/gstglwindow_eagl.h"
+#endif
 #if GST_GL_HAVE_WINDOW_DISPMANX
 #include "dispmanx/gstglwindow_dispmanx_egl.h"
 #endif
@@ -177,6 +180,10 @@ gst_gl_window_new (GstGLDisplay * display)
 #if GST_GL_HAVE_WINDOW_ANDROID
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "android")))
     window = GST_GL_WINDOW (gst_gl_window_android_egl_new ());
+#endif
+#if GST_GL_HAVE_WINDOW_EAGL
+  if (!window && (!user_choice || g_strstr_len (user_choice, 7, "eagl")))
+    window = GST_GL_WINDOW (gst_gl_window_eagl_new ());
 #endif
   if (!window) {
     /* subclass returned a NULL window */

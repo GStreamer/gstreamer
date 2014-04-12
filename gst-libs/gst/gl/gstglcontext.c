@@ -61,6 +61,9 @@
 #if GST_GL_HAVE_PLATFORM_WGL
 #include "win32/gstglcontext_wgl.h"
 #endif
+#if GST_GL_HAVE_PLATFORM_EAGL
+#include "eagl/gstglcontext_eagl.h"
+#endif
 
 #define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
 #define USING_OPENGL3(display) (display->gl_api & GST_GL_API_OPENGL3)
@@ -217,6 +220,10 @@ gst_gl_context_new (GstGLDisplay * display)
   if (!context && (!user_choice || g_strstr_len (user_choice, 3, "wgl"))) {
     context = GST_GL_CONTEXT (gst_gl_context_wgl_new ());
   }
+#endif
+#if GST_GL_HAVE_PLATFORM_EAGL
+  if (!context && (!user_choice || g_strstr_len (user_choice, 5, "eagl")))
+    context = GST_GL_CONTEXT (gst_gl_context_eagl_new ());
 #endif
 
   if (!context) {
