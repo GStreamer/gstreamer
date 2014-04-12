@@ -83,7 +83,7 @@ struct _GstTestClockClass
  *
  * A #GstTestClockIDList structure, which is returned when waiting for multiple IDs
  *
- * Since: 1.2
+ * Since: 1.4
  */
  struct _GstTestClockIDList
 {

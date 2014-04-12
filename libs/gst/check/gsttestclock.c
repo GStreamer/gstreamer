@@ -995,7 +995,7 @@ gst_test_clock_get_next_entry_time (GstTestClock * test_clock)
  *
  * MT safe.
  *
- * Since: 1.2
+ * Since: 1.4
  */
 void
 gst_test_clock_wait_for_multiple_pending_ids (GstTestClock * test_clock,
@@ -1026,7 +1026,7 @@ gst_test_clock_wait_for_multiple_pending_ids (GstTestClock * test_clock,
  *
  * MT safe.
  *
- * Since: 1.2
+ * Since: 1.4
  */
 guint
 gst_test_clock_process_id_list (GstTestClock * test_clock,
@@ -1061,7 +1061,7 @@ gst_test_clock_process_id_list (GstTestClock * test_clock,
  *
  * MT safe.
  *
- * Since: 1.2
+ * Since: 1.4
  */
 GstClockTime
 gst_test_clock_id_list_get_latest_time (GstTestClockIDList * pending_list)
@@ -1087,7 +1087,7 @@ gst_test_clock_id_list_get_latest_time (GstTestClockIDList * pending_list)
  *
  * MT safe.
  *
- * Since: 1.2
+ * Since: 1.4
  */
 void
 gst_test_clock_id_list_free (GstTestClockIDList * pending_list)
