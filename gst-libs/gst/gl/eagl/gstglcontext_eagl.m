@@ -23,6 +23,7 @@
 #endif
 
 #import <OpenGLES/EAGL.h>
+#import <QuartzCore/QuartzCore.h>
 #import <UIKit/UIKit.h>
 #include <OpenGLES/ES2/gl.h>
 
