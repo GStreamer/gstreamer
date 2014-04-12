@@ -1138,12 +1138,14 @@ gst_rtp_base_payload_create_stats (GstRTPBasePayload * rtpbasepayload)
   priv = rtpbasepayload->priv;
 
   s = gst_structure_new ("application/x-rtp-payload-stats",
-      "clock-rate", G_TYPE_UINT, rtpbasepayload->clock_rate,
+      "clock-rate", G_TYPE_UINT, (guint) rtpbasepayload->clock_rate,
       "running-time", G_TYPE_UINT64, priv->running_time,
-      "seqnum", G_TYPE_UINT, rtpbasepayload->seqnum,
-      "timestamp", G_TYPE_UINT, rtpbasepayload->timestamp,
+      "seqnum", G_TYPE_UINT, (guint) rtpbasepayload->seqnum,
+      "timestamp", G_TYPE_UINT, (guint) rtpbasepayload->timestamp,
       "ssrc", G_TYPE_UINT, rtpbasepayload->current_ssrc,
-      "pt", G_TYPE_UINT, rtpbasepayload->pt, NULL);
+      "pt", G_TYPE_UINT, rtpbasepayload->pt,
+      "seqnum-offset", G_TYPE_UINT, (guint) rtpbasepayload->seqnum_base,
+      "timestamp-offset", G_TYPE_UINT, (guint) rtpbasepayload->ts_base, NULL);
 
   return s;
 }
