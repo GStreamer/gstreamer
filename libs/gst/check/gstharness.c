@@ -124,6 +124,11 @@
 #include "config.h"
 #endif
 
+/* we have code with side effects in asserts, so make sure they are active */
+#ifdef G_DISABLE_ASSERT
+#error "GstHarness must be compiled with G_DISABLE_ASSERT undefined"
+#endif
+
 #include "gstharness.h"
 
 #include <stdio.h>

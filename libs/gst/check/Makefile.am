@@ -13,6 +13,7 @@ libgstcheck_@GST_API_VERSION@_la_SOURCES =	\
 	gsttestclock.c
 
 libgstcheck_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) \
+	-UG_DISABLE_ASSERT \
 	-I$(top_builddir)/libs \
 	-I$(top_builddir)/libs/gst/check \
 	-I$(top_builddir)/libs/gst/check/libcheck
