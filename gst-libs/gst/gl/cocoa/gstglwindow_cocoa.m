@@ -91,10 +91,6 @@ static void
 gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
 {
   GstGLWindowClass *window_class;
-  
-#ifndef GNUSTEP
-  NSAutoreleasePool* pool = nil;
-#endif
 
   window_class = (GstGLWindowClass *) klass;
 
@@ -110,13 +106,6 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
   window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_quit);
   window_class->send_message_async =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message_async);
-
-#ifndef GNUSTEP
-  pool = [[NSAutoreleasePool alloc] init];
-  [NSApplication sharedApplication];
-
-  [pool release];
-#endif
 }
 
 static void
