@@ -1016,7 +1016,7 @@ plugin_init (GstPlugin * plugin)
 {
 
   if (!gst_element_register (plugin, "osxvideosink",
-          GST_RANK_PRIMARY, GST_TYPE_OSX_VIDEO_SINK))
+          GST_RANK_MARGINAL, GST_TYPE_OSX_VIDEO_SINK))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_osx_video_sink, "osxvideosink", 0,
