@@ -89,7 +89,7 @@ plugin_init (GstPlugin * plugin)
 #endif
 
   if (!gst_element_register (plugin, "glimagesink",
-          GST_RANK_MARGINAL, GST_TYPE_GLIMAGE_SINK)) {
+          GST_RANK_SECONDARY, GST_TYPE_GLIMAGE_SINK)) {
     return FALSE;
   }
 
