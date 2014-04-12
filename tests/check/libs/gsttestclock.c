@@ -690,6 +690,7 @@ GST_START_TEST (test_single_shot_sync_simultaneous_no_timeout)
 
   gst_object_unref (clock);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_processing_multiple_ids)
@@ -702,7 +703,7 @@ GST_START_TEST (test_processing_multiple_ids)
   SyncClockWaitContext context_b;
   GThread *worker_thread_a;
   GThread *worker_thread_b;
-  GstTestClockIDList * pending_list;
+  GList *pending_list = NULL;
 
   clock = gst_test_clock_new_with_start_time (GST_SECOND);
   test_clock = GST_TEST_CLOCK (clock);
@@ -727,10 +728,10 @@ GST_START_TEST (test_processing_multiple_ids)
   gst_test_clock_wait_for_multiple_pending_ids (test_clock, 2, &pending_list);
 
   /* assert they are correct */
-  assert_pending_id (pending_list->cur->data, clock_id_a, GST_CLOCK_ENTRY_SINGLE,
+  assert_pending_id (pending_list->data, clock_id_a, GST_CLOCK_ENTRY_SINGLE,
       5 * GST_SECOND);
-  assert_pending_id (pending_list->cur->next->data, clock_id_b, GST_CLOCK_ENTRY_SINGLE,
-      6 * GST_SECOND);
+  assert_pending_id (pending_list->next->data, clock_id_b,
+      GST_CLOCK_ENTRY_SINGLE, 6 * GST_SECOND);
 
   /* verify we are waiting for 6 seconds as the latest time */
   fail_unless_equals_int64 (6 * GST_SECOND,
@@ -738,7 +739,7 @@ GST_START_TEST (test_processing_multiple_ids)
 
   /* process both ID's at the same time */
   gst_test_clock_process_id_list (test_clock, pending_list);
-  gst_test_clock_id_list_free (pending_list);
+  g_list_free_full (pending_list, (GDestroyNotify) gst_clock_id_unref);
 
   g_thread_join (worker_thread_a);
   g_thread_join (worker_thread_b);
@@ -754,6 +755,7 @@ GST_START_TEST (test_processing_multiple_ids)
 
   gst_object_unref (clock);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_single_shot_async_past)

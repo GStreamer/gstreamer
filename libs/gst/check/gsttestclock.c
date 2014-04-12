@@ -624,24 +624,20 @@ process_entry_context_unlocked (GstTestClock * test_clock,
   }
 }
 
-static GstTestClockIDList *
+static GList *
 gst_test_clock_get_pending_id_list_unlocked (GstTestClock * test_clock)
 {
   GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
-  GstTestClockIDList *result = g_new0 (GstTestClockIDList, 1);
+  GQueue queue = G_QUEUE_INIT;
+  GList *cur;
 
-  if (priv->entry_contexts != NULL) {
-    GList *cur;
-    for (cur = priv->entry_contexts; cur != NULL; cur = cur->next) {
-      GstClockEntryContext *ctx = cur->data;
+  for (cur = priv->entry_contexts; cur != NULL; cur = cur->next) {
+    GstClockEntryContext *ctx = cur->data;
 
-      result->cur =
-          g_list_append (result->cur, gst_clock_id_ref (ctx->clock_entry));
-    }
+    g_queue_push_tail (&queue, gst_clock_id_ref (ctx->clock_entry));
   }
-  result->length = g_list_length (result->cur);
 
-  return result;
+  return queue.head;
 }
 
 /**
@@ -987,7 +983,9 @@ gst_test_clock_get_next_entry_time (GstTestClock * test_clock)
  * gst_test_clock_wait_for_multiple_pending_ids:
  * @test_clock: #GstTestClock for which to await having enough pending clock
  * @count: the number of pending clock notifications to wait for
- * @pending_list: A #GstTestClockIDList with pending #GstClockIDs
+ * @pending_list: (out) (element-type Gst.ClockID) (transfer full) (allow-none): Address
+ *     of a #GList pointer variable to store the list of pending #GstClockIDs
+ *     that expired, or NULL
  *
  * Blocks until at least @count clock notifications have been requested from
  * @test_clock. There is no timeout for this wait, see the main description of
@@ -999,7 +997,7 @@ gst_test_clock_get_next_entry_time (GstTestClock * test_clock)
  */
 void
 gst_test_clock_wait_for_multiple_pending_ids (GstTestClock * test_clock,
-    guint count, GstTestClockIDList ** pending_list)
+    guint count, GList ** pending_list)
 {
   GstTestClockPrivate *priv;
 
@@ -1020,9 +1018,10 @@ gst_test_clock_wait_for_multiple_pending_ids (GstTestClock * test_clock,
 /**
  * gst_test_clock_process_id_list:
  * @test_clock: #GstTestClock for which to process the pending IDs
- * @pending_list: A #GstTestClockIDList with pending #GstClockIDs
+ * @pending_list: (element-type Gst.ClockID) (transfer none) (allow-none): List
+ *     of pending #GstClockIDs
  *
- * Processes and releases the pending IDs in #GstTestClockIDList
+ * Processes and releases the pending IDs in the list.
  *
  * MT safe.
  *
@@ -1030,16 +1029,16 @@ gst_test_clock_wait_for_multiple_pending_ids (GstTestClock * test_clock,
  */
 guint
 gst_test_clock_process_id_list (GstTestClock * test_clock,
-    GstTestClockIDList * pending_list)
+    const GList * pending_list)
 {
-  GList *cur;
+  const GList *cur;
   guint result = 0;
 
   g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), 0);
 
   GST_OBJECT_LOCK (test_clock);
 
-  for (cur = pending_list->cur; cur != NULL; cur = cur->next) {
+  for (cur = pending_list; cur != NULL; cur = cur->next) {
     GstClockID pending_id = cur->data;
     GstClockEntryContext *ctx =
         gst_test_clock_lookup_entry_context (test_clock, pending_id);
@@ -1055,21 +1054,22 @@ gst_test_clock_process_id_list (GstTestClock * test_clock,
 
 /**
  * gst_test_clock_id_list_get_latest_time:
- * @pending_list: A #GstTestClockIDList with pending #GstClockIDs
+ * @pending_list:  (element-type Gst.ClockID) (transfer none) (allow-none): List
+ *     of of pending #GstClockIDs
  *
- * Finds the latest time inside the #GstTestClockIDList
+ * Finds the latest time inside the list.
  *
  * MT safe.
  *
  * Since: 1.4
  */
 GstClockTime
-gst_test_clock_id_list_get_latest_time (GstTestClockIDList * pending_list)
+gst_test_clock_id_list_get_latest_time (const GList * pending_list)
 {
-  GList *cur;
+  const GList *cur;
   GstClockTime result = 0;
 
-  for (cur = pending_list->cur; cur != NULL; cur = cur->next) {
+  for (cur = pending_list; cur != NULL; cur = cur->next) {
     GstClockID *pending_id = cur->data;
     GstClockTime time = gst_clock_id_get_time (pending_id);
     if (time > result)
@@ -1077,28 +1077,4 @@ gst_test_clock_id_list_get_latest_time (GstTestClockIDList * pending_list)
   }
 
   return result;
-}
-
-/**
- * gst_test_clock_id_list_free:
- * @pending_list: A #GstTestClockIDList with pending #GstClockIDs
- *
- * Free the supplied #GstTestClockIDList
- *
- * MT safe.
- *
- * Since: 1.4
- */
-void
-gst_test_clock_id_list_free (GstTestClockIDList * pending_list)
-{
-  GList *cur;
-
-  for (cur = pending_list->cur; cur != NULL; cur = cur->next) {
-    GstClockID *pending_id = cur->data;
-    gst_clock_id_unref (pending_id);
-  }
-
-  g_list_free (pending_list->cur);
-  g_free (pending_list);
 }

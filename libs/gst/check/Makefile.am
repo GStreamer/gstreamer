@@ -107,8 +107,7 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_test_clock_get_next_entry_time \
 	gst_test_clock_wait_for_multiple_pending_ids \
 	gst_test_clock_process_id_list \
-	gst_test_clock_id_list_get_latest_time \
-	gst_test_clock_id_list_free
+	gst_test_clock_id_list_get_latest_time
 
 
 LIBGSTCHECK_EXPORTED_SYMBOLS = \

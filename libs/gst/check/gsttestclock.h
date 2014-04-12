@@ -45,8 +45,6 @@ typedef struct _GstTestClock GstTestClock;
 typedef struct _GstTestClockClass GstTestClockClass;
 typedef struct _GstTestClockPrivate GstTestClockPrivate;
 
-typedef struct _GstTestClockIDList GstTestClockIDList;
-
 /**
  * GstTestClock:
  *
@@ -74,21 +72,6 @@ struct _GstTestClock
 struct _GstTestClockClass
 {
   GstClockClass parent_class;
-};
-
-/**
- * GstTestClockIDList:
- * @cur: A #GList with all pending #GstClockID
- * @length: A #guint with the length of the list
- *
- * A #GstTestClockIDList structure, which is returned when waiting for multiple IDs
- *
- * Since: 1.4
- */
- struct _GstTestClockIDList
-{
-  GList * cur;
-  guint length;
 };
 
 GType         gst_test_clock_get_type (void);
@@ -122,16 +105,14 @@ GstClockID    gst_test_clock_process_next_clock_id (GstTestClock * test_clock);
 
 GstClockTime  gst_test_clock_get_next_entry_time   (GstTestClock * test_clock);
 
-void          gst_test_clock_wait_for_multiple_pending_ids (GstTestClock        * test_clock,
-                                                            guint                 count,
-                                                            GstTestClockIDList ** pending_list);
+void          gst_test_clock_wait_for_multiple_pending_ids (GstTestClock * test_clock,
+                                                            guint          count,
+                                                            GList       ** pending_list);
 
-guint         gst_test_clock_process_id_list (GstTestClock       * test_clock,
-                                              GstTestClockIDList * pending_list);
+guint         gst_test_clock_process_id_list (GstTestClock * test_clock,
+                                              const GList  * pending_list);
 
-GstClockTime  gst_test_clock_id_list_get_latest_time (GstTestClockIDList * list);
-
-void          gst_test_clock_id_list_free (GstTestClockIDList * list);
+GstClockTime  gst_test_clock_id_list_get_latest_time (const GList * pending_list);
 
 G_END_DECLS
 
