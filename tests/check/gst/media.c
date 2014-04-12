@@ -317,7 +317,7 @@ GST_START_TEST (test_media_prepare_port_alloc_fail)
 
   addrpool = gst_rtsp_address_pool_new ();
   fail_unless (gst_rtsp_address_pool_add_range (addrpool, "192.168.1.1",
-      "192.168.1.1", 6000, 6001, 0));
+          "192.168.1.1", 6000, 6001, 0));
   gst_rtsp_media_set_address_pool (media, addrpool);
 
   thread = gst_rtsp_thread_pool_get_thread (pool,

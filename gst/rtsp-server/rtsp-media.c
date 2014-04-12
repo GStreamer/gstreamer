@@ -2157,9 +2157,9 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   GstBus *bus;
   GSource *source;
   GstRTSPMediaClass *klass;
+  GMainContext *context;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
-  g_return_val_if_fail (GST_IS_RTSP_THREAD (thread), FALSE);
 
   priv = media->priv;
 
@@ -2206,6 +2206,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   priv->seekable = FALSE;
   priv->buffering = FALSE;
   priv->thread = thread;
+  context = (thread != NULL) ? (thread->context) : NULL;
+
   /* we're preparing now */
   gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
 
@@ -2218,7 +2220,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   g_source_set_callback (priv->source, (GSourceFunc) bus_message,
       g_object_ref (media), (GDestroyNotify) watch_destroyed);
 
-  priv->id = g_source_attach (priv->source, thread->context);
+  priv->id = g_source_attach (priv->source, context);
 
   /* add stuff to the bin */
   gst_bin_add (GST_BIN (priv->pipeline), priv->rtpbin);
@@ -2226,7 +2228,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   /* do remainder in context */
   source = g_idle_source_new ();
   g_source_set_callback (source, (GSourceFunc) start_prepare, media, NULL);
-  g_source_attach (source, thread->context);
+  g_source_attach (source, context);
   g_source_unref (source);
 
 wait_status:
@@ -2248,7 +2250,8 @@ was_prepared:
   {
     GST_LOG ("media %p was prepared", media);
     /* we are not going to use the giving thread, so stop it. */
-    gst_rtsp_thread_stop (thread);
+    if (thread)
+      gst_rtsp_thread_stop (thread);
     g_rec_mutex_unlock (&priv->state_lock);
     return TRUE;
   }
