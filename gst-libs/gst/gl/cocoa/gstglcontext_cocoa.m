@@ -51,7 +51,7 @@ gst_gl_window_cocoa_init_nsapp (gpointer data)
 
   g_mutex_lock (&nsapp_lock);
 
-  [[NSAutoreleasePool alloc] init];
+  pool = [[NSAutoreleasePool alloc] init];
 
   /* The sharedApplication class method initializes
    * the display environment and connects your program
@@ -122,7 +122,7 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_platform);
 
 #ifndef GNUSTEP
-  [[NSAutoreleasePool alloc] init];
+  pool = [[NSAutoreleasePool alloc] init];
 
   /* [NSApplication sharedApplication] will usually be
    * called in your application so it's not necessary
