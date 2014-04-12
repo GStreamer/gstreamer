@@ -288,6 +288,26 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    *     <listitem><para>#G_TYPE_UINT, RTP timestamp, same as
    *     #GstRTPBasePayload:timestamp</para></listitem>
    *   </varlistentry>
+   *   <varlistentry>
+   *     <term>ssrc</term>
+   *     <listitem><para>#G_TYPE_UINT, The SSRC in use
+   *     </para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>pt</term>
+   *     <listitem><para>#G_TYPE_UINT, The Payload type in use, same as
+   *     #GstRTPBasePayload:pt</para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>seqnum-offset</term>
+   *     <listitem><para>#G_TYPE_UINT, The current offset added to the
+   *     seqnum</para></listitem>
+   *   </varlistentry>
+   *   <varlistentry>
+   *     <term>timestamp-offset</term>
+   *     <listitem><para>#G_TYPE_UINT, The current offset added to the
+   *     timestamp</para></listitem>
+   *   </varlistentry>
    * </variablelist>
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_STATS,
