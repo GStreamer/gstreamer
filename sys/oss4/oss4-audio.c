@@ -271,7 +271,7 @@ gst_oss4_audio_set_ringbuffer_channel_layout (GstObject * obj, gint fd,
   GstAudioChannelPosition ch_layout[8] = { 0, };
 
   num_channels = GST_AUDIO_INFO_CHANNELS (&spec->info);
-  if (num_channels < 3 || num_channels > 9)
+  if (num_channels < 3 || num_channels > 8)
     return;
 
   if (spec->type != GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW)
