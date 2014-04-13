@@ -100,6 +100,9 @@ struct _GstGLContextPrivate
   GstGLContext *other_context;
   GstGLAPI gl_api;
   GError **error;
+
+  gint gl_major;
+  gint gl_minor;
 };
 
 typedef struct
@@ -691,7 +694,6 @@ gst_gl_context_create_thread (GstGLContext * context)
   GstGLWindowClass *window_class;
   GstGLDisplay *display;
   GstGLFuncs *gl;
-  gint gl_major = 0, gl_minor = 0;
   gboolean ret = FALSE;
   GstGLAPI compiled_api, user_api;
   gchar *api_string;
@@ -800,26 +802,29 @@ gst_gl_context_create_thread (GstGLContext * context)
 
   /* gl api specific code */
   if (!ret && USING_OPENGL (display))
-    ret = _create_context_opengl (context, &gl_major, &gl_minor, error);
+    ret = _create_context_opengl (context, &context->priv->gl_major,
+        &context->priv->gl_minor, error);
   if (!ret && USING_GLES2 (display))
-    ret = _create_context_gles2 (context, &gl_major, &gl_minor, error);
+    ret =
+        _create_context_gles2 (context, &context->priv->gl_major,
+        &context->priv->gl_minor, error);
 
   if (!ret)
     goto failure;
 
   /* GL core contexts and GLES3 */
-  if (gl->GetIntegerv && gl->GetStringi && gl_major >= 3)
+  if (gl->GetIntegerv && gl->GetStringi && context->priv->gl_major >= 3)
     ext_g_str = _build_extension_string (context);
 
   if (ext_g_str && ext_g_str->len) {
-    _gst_gl_feature_check_ext_functions (context, gl_major, gl_minor,
-        ext_g_str->str);
+    _gst_gl_feature_check_ext_functions (context, context->priv->gl_major,
+        context->priv->gl_minor, ext_g_str->str);
   } else {
     ext_const_c_str = (const gchar *) gl->GetString (GL_EXTENSIONS);
     if (!ext_const_c_str)
       ext_const_c_str = "";
-    _gst_gl_feature_check_ext_functions (context, gl_major, gl_minor,
-        ext_const_c_str);
+    _gst_gl_feature_check_ext_functions (context, context->priv->gl_major,
+        context->priv->gl_minor, ext_const_c_str);
   }
 
   if (ext_g_str)
@@ -973,6 +978,28 @@ gst_gl_context_thread_add (GstGLContext * context,
   gst_object_unref (window);
 }
 
+/**
+ * gst_gl_context_get_gl_version:
+ * @context: a #GstGLContext
+ * @maj: (out): resulting major version
+ * @min: (out): resulting minor version
+ *
+ * Returns the OpenGL version implemented by @context.  See
+ * gst_gl_context_get_gl_api() for retreiving the OpenGL api implemented by
+ * @context.
+ */
+void
+gst_gl_context_get_gl_version (GstGLContext * context, gint * maj, gint * min)
+{
+  g_return_if_fail (GST_GL_IS_CONTEXT (context));
+  g_return_if_fail (maj == NULL && min == NULL);
+
+  if (maj)
+    *maj = context->priv->gl_major;
+
+  if (min)
+    *min = context->priv->gl_minor;
+}
 
 static GstGLAPI
 gst_gl_wrapped_context_get_gl_api (GstGLContext * context)
