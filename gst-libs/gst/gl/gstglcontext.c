@@ -817,12 +817,14 @@ gst_gl_context_create_thread (GstGLContext * context)
     ext_g_str = _build_extension_string (context);
 
   if (ext_g_str && ext_g_str->len) {
+    GST_DEBUG_OBJECT (context, "GL_EXTENSIONS: %s", ext_g_str->str);
     _gst_gl_feature_check_ext_functions (context, context->priv->gl_major,
         context->priv->gl_minor, ext_g_str->str);
   } else {
     ext_const_c_str = (const gchar *) gl->GetString (GL_EXTENSIONS);
     if (!ext_const_c_str)
       ext_const_c_str = "";
+    GST_DEBUG_OBJECT (context, "GL_EXTENSIONS: %s", ext_const_c_str);
     _gst_gl_feature_check_ext_functions (context, context->priv->gl_major,
         context->priv->gl_minor, ext_const_c_str);
   }
