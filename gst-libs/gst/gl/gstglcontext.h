@@ -131,6 +131,8 @@ gpointer      gst_gl_context_default_get_proc_address (GstGLContext *context, co
 gboolean      gst_gl_context_set_window (GstGLContext *context, GstGLWindow *window);
 GstGLWindow * gst_gl_context_get_window (GstGLContext *context);
 
+void          gst_gl_context_get_gl_version (GstGLContext *context, gint *maj, gint *min);
+
 /* FIXME: remove */
 void gst_gl_context_thread_add (GstGLContext * context,
     GstGLContextThreadFunc func, gpointer data);
