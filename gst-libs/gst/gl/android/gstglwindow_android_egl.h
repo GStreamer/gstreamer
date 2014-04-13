@@ -42,6 +42,7 @@ struct _GstGLWindowAndroidEGL {
 
   /* This is actually an ANativeWindow */
   EGLNativeWindowType native_window;
+  gint window_width, window_height;
 
   GMainContext *main_context;
   GMainLoop *loop;

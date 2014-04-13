@@ -30,6 +30,7 @@
 
 #include <gst/gst.h>
 
+#include <gst/gl/egl/gstglcontext_egl.h>
 #include "gstglwindow_android_egl.h"
 
 #define GST_CAT_DEFAULT gst_gl_window_debug
@@ -212,7 +213,25 @@ draw_cb (gpointer data)
   GstGLWindowAndroidEGL *window_egl = draw_data->window;
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
   GstGLContext *context = gst_gl_window_get_context (window);
+  GstGLContextEGL *context_egl = GST_GL_CONTEXT_EGL (context);
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
+
+  if (context_egl->egl_surface) {
+    gint width, height;
+
+    if (eglQuerySurface (context_egl->egl_display,
+            context_egl->egl_surface, EGL_WIDTH, &width) &&
+        eglQuerySurface (context_egl->egl_display,
+            context_egl->egl_surface, EGL_HEIGHT, &height)
+        && (width != window_egl->window_width
+            || height != window_egl->window_height)) {
+      window_egl->window_width = width;
+      window_egl->window_height = height;
+
+      if (window->resize)
+        window->resize (window->resize_data, width, height);
+    }
+  }
 
   if (window->draw)
     window->draw (window->draw_data);
@@ -226,8 +245,9 @@ static void
 gst_gl_window_android_egl_draw (GstGLWindow * window, guint width, guint height)
 {
   struct draw draw_data;
+  GstGLWindowAndroidEGL *window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
 
-  draw_data.window = GST_GL_WINDOW_ANDROID_EGL (window);
+  draw_data.window = window_egl;
   draw_data.width = width;
   draw_data.height = height;
 
