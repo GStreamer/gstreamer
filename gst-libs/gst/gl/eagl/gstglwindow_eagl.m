@@ -23,6 +23,7 @@
 #endif
 
 #import <OpenGLES/EAGL.h>
+#import <QuartzCore/QuartzCore.h>
 #import <UIKit/UIKit.h>
 
 #include "gstglwindow_eagl.h"
@@ -228,6 +229,22 @@ draw_cb (gpointer data)
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextEagl *eagl_context = GST_GL_CONTEXT_EAGL (context);
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
+
+  if (window_eagl->view) {
+    CGSize size;
+    CAEAGLLayer *eagl_layer;
+
+    eagl_layer = (CAEAGLLayer *)[window_eagl->priv->view layer];
+    size = eagl_layer.frame.size;
+
+    if (window_eagl->priv->window_width != size.width || window_eagl->priv->window_height != size.height) {
+      window_eagl->priv->window_width = size.width;
+      window_eagl->priv->window_height = size.height;
+
+      if (window->resize_cb)
+        window->resize_cb (window->resize_data, size.width, size.height);
+    }
+  }
 
   gst_gl_context_eagl_prepare_draw (eagl_context);
 
