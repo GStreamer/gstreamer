@@ -651,9 +651,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   width = GST_VIDEO_INFO_WIDTH (&vinfo);
   height = GST_VIDEO_INFO_HEIGHT (&vinfo);
 
-  if (glimage_sink->tex_id)
-    gst_gl_context_del_texture (glimage_sink->context, &glimage_sink->tex_id);
-
   par_n = GST_VIDEO_INFO_PAR_N (&vinfo);
   par_d = GST_VIDEO_INFO_PAR_D (&vinfo);
 
@@ -703,10 +700,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   glimage_sink->info = vinfo;
   if (!_ensure_gl_setup (glimage_sink))
     return FALSE;
-
-  //FIXME: this texture seems to be never deleted when going to STATE_NULL
-  gst_gl_context_gen_texture (glimage_sink->context, &glimage_sink->tex_id,
-      GST_VIDEO_INFO_FORMAT (&glimage_sink->info), width, height);
 
   newpool = gst_gl_buffer_pool_new (glimage_sink->context);
   structure = gst_buffer_pool_get_config (newpool);
