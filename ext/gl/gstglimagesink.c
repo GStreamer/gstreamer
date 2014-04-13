@@ -134,6 +134,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition);
 static void gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
     GstClockTime * start, GstClockTime * end);
 static gboolean gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
+static GstFlowReturn gst_glimage_sink_prepare (GstBaseSink * bsink,
+    GstBuffer * buf);
 static GstFlowReturn gst_glimage_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
 static gboolean gst_glimage_sink_propose_allocation (GstBaseSink * bsink,
@@ -271,6 +273,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gstbasesink_class->get_times = gst_glimage_sink_get_times;
   gstbasesink_class->preroll = gst_glimage_sink_render;
   gstbasesink_class->render = gst_glimage_sink_render;
+  gstbasesink_class->prepare = gst_glimage_sink_prepare;
   gstbasesink_class->propose_allocation = gst_glimage_sink_propose_allocation;
   gstbasesink_class->stop = gst_glimage_sink_stop;
 }
@@ -727,14 +730,13 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
+gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
-  guint tex_id;
-
-  GST_TRACE ("rendering buffer:%p", buf);
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
+
+  GST_TRACE ("preparing buffer:%p", buf);
 
   if (GST_VIDEO_SINK_WIDTH (glimage_sink) < 1 ||
       GST_VIDEO_SINK_HEIGHT (glimage_sink) < 1) {
@@ -744,7 +746,8 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (!_ensure_gl_setup (glimage_sink))
     return GST_FLOW_NOT_NEGOTIATED;
 
-  if (!gst_gl_upload_perform_with_buffer (glimage_sink->upload, buf, &tex_id))
+  if (!gst_gl_upload_perform_with_buffer (glimage_sink->upload, buf,
+          &glimage_sink->next_tex))
     goto upload_failed;
 
   if (glimage_sink->window_id != glimage_sink->new_window_id) {
@@ -756,15 +759,34 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     gst_object_unref (window);
   }
 
-  GST_TRACE ("redisplay texture:%u of size:%ux%u, window size:%ux%u", tex_id,
-      GST_VIDEO_INFO_WIDTH (&glimage_sink->info),
+  return GST_FLOW_OK;
+
+upload_failed:
+  {
+    GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
+        ("%s", "Failed to upload buffer"), (NULL));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
+{
+  GstGLImageSink *glimage_sink;
+
+  GST_TRACE ("rendering buffer:%p", buf);
+
+  glimage_sink = GST_GLIMAGE_SINK (bsink);
+
+  GST_TRACE ("redisplay texture:%u of size:%ux%u, window size:%ux%u",
+      glimage_sink->next_tex, GST_VIDEO_INFO_WIDTH (&glimage_sink->info),
       GST_VIDEO_INFO_HEIGHT (&glimage_sink->info),
       GST_VIDEO_SINK_WIDTH (glimage_sink),
       GST_VIDEO_SINK_HEIGHT (glimage_sink));
 
   /* Avoid to release the texture while drawing */
   GST_GLIMAGE_SINK_LOCK (glimage_sink);
-  glimage_sink->redisplay_texture = tex_id;
+  glimage_sink->redisplay_texture = glimage_sink->next_tex;
   GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
 
   /* Ask the underlying window to redraw its content */
@@ -790,13 +812,6 @@ redisplay_failed:
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
         ("%s", gst_gl_context_get_error ()), (NULL));
     return GST_FLOW_ERROR;
-  }
-
-upload_failed:
-  {
-    GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-        ("%s", "Failed to upload format"), (NULL));
-    return FALSE;
   }
 }
 
