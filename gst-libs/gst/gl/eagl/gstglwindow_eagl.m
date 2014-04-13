@@ -57,6 +57,7 @@ static void gst_gl_window_eagl_close (GstGLWindow * window);
 struct _GstGLWindowEaglPrivate
 {
   UIView *view;
+  gint window_width, window_height;
 
   GMainContext *main_context;
   GMainLoop *loop;
@@ -230,7 +231,7 @@ draw_cb (gpointer data)
   GstGLContextEagl *eagl_context = GST_GL_CONTEXT_EAGL (context);
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
-  if (window_eagl->view) {
+  if (window_eagl->priv->view) {
     CGSize size;
     CAEAGLLayer *eagl_layer;
 
@@ -241,8 +242,8 @@ draw_cb (gpointer data)
       window_eagl->priv->window_width = size.width;
       window_eagl->priv->window_height = size.height;
 
-      if (window->resize_cb)
-        window->resize_cb (window->resize_data, size.width, size.height);
+      if (window->resize)
+        window->resize (window->resize_data, size.width, size.height);
     }
   }
 
