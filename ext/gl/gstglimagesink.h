@@ -65,6 +65,7 @@ struct _GstGLImageSink
     GstGLContext *other_context;
 
     GstGLUpload *upload;
+    guint      next_tex;
     GLuint     tex_id;
 
     CRCB clientReshapeCallback;
