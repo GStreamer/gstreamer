@@ -53,8 +53,6 @@ struct _GstGLContextEaglClass {
 
   /*< private >*/
   gpointer _reserved[GST_PADDING_LARGE];
-
-  GstGLContextEaglPrivate *priv;
 };
 
 GType gst_gl_context_eagl_get_type (void);
