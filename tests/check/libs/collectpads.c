@@ -836,6 +836,7 @@ setup_src_pad (GstElement * element,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_pad_set_event_function (srcpad, src_event);
   gst_pad_set_active (srcpad, TRUE);
+  gst_object_unref (sinkpad);
 
   return srcpad;
 }
