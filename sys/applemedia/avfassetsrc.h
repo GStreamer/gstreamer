@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AVASSET_SRC_H__
-#define __GST_AVASSET_SRC_H__
+#ifndef __GST_AVF_ASSET_SRC_H__
+#define __GST_AVF_ASSET_SRC_H__
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -35,43 +35,43 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AVASSET_SRC \
-  (gst_avasset_src_get_type())
-#define GST_AVASSET_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVASSET_SRC,GstAVAssetSrc))
-#define GST_AVASSET_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AVASSET_SRC,GstAVAssetSrcClass))
-#define GST_IS_AVASSET_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVASSET_SRC))
-#define GST_IS_AVASSET_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVASSET_SRC))
-#define GST_AVASSET_SRC_ERROR gst_avasset_src_error_quark ()
+#define GST_TYPE_AVF_ASSET_SRC \
+  (gst_avf_asset_src_get_type())
+#define GST_AVF_ASSET_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVF_ASSET_SRC,GstAVFAssetSrc))
+#define GST_AVF_ASSET_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AVF_ASSET_SRC,GstAVFAssetSrcClass))
+#define GST_IS_AVF_ASSET_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVF_ASSET_SRC))
+#define GST_IS_AVF_ASSET_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVF_ASSET_SRC))
+#define GST_AVF_ASSET_SRC_ERROR gst_avf_asset_src_error_quark ()
 
-typedef struct _GstAVAssetSrc      GstAVAssetSrc;
-typedef struct _GstAVAssetSrcClass GstAVAssetSrcClass;
-
-typedef enum
-{
-  GST_AVASSET_READER_MEDIA_TYPE_AUDIO,
-  GST_AVASSET_READER_MEDIA_TYPE_VIDEO,
-} GstAVAssetReaderMediaType;
+typedef struct _GstAVFAssetSrc      GstAVFAssetSrc;
+typedef struct _GstAVFAssetSrcClass GstAVFAssetSrcClass;
 
 typedef enum
 {
-  GST_AVASSET_ERROR_NOT_PLAYABLE,
-  GST_AVASSET_ERROR_INIT,
-  GST_AVASSET_ERROR_START,
-  GST_AVASSET_ERROR_READ,
-} GstAVAssetError;
+  GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO,
+  GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO,
+} GstAVFAssetReaderMediaType;
 
 typedef enum
 {
-  GST_AVASSET_SRC_STATE_STOPPED,
-  GST_AVASSET_SRC_STATE_STARTED,
-  GST_AVASSET_SRC_STATE_READING,
-} GstAVAssetSrcState;
+  GST_AVF_ASSET_ERROR_NOT_PLAYABLE,
+  GST_AVF_ASSET_ERROR_INIT,
+  GST_AVF_ASSET_ERROR_START,
+  GST_AVF_ASSET_ERROR_READ,
+} GstAVFAssetError;
 
-@interface GstAVAssetReader: NSObject
+typedef enum
+{
+  GST_AVF_ASSET_SRC_STATE_STOPPED,
+  GST_AVF_ASSET_SRC_STATE_STARTED,
+  GST_AVF_ASSET_SRC_STATE_READING,
+} GstAVFAssetSrcState;
+
+@interface GstAVFAssetReader: NSObject
 {
   AVAsset *asset;
   AVAssetReader *reader;
@@ -95,13 +95,13 @@ typedef enum
 - (void) start : (GError **) error;
 - (void) stop;
 - (void) seekTo: (guint64) start : (guint64) stop : (GError **) error;
-- (bool) hasMediaType: (GstAVAssetReaderMediaType) type;
-- (GstCaps *) getCaps: (GstAVAssetReaderMediaType) type;
-- (bool) selectTrack: (GstAVAssetReaderMediaType) type : (gint) index;
-- (GstBuffer *) nextBuffer:  (GstAVAssetReaderMediaType) type : (GError **) error;
+- (bool) hasMediaType: (GstAVFAssetReaderMediaType) type;
+- (GstCaps *) getCaps: (GstAVFAssetReaderMediaType) type;
+- (bool) selectTrack: (GstAVFAssetReaderMediaType) type : (gint) index;
+- (GstBuffer *) nextBuffer:  (GstAVFAssetReaderMediaType) type : (GError **) error;
 @end
 
-struct _GstAVAssetSrc
+struct _GstAVFAssetSrc
 {
   GstElement element;
 
@@ -110,8 +110,8 @@ struct _GstAVAssetSrc
   gint selected_video_track;
   gint selected_audio_track;
 
-  GstAVAssetReader *reader;
-  GstAVAssetSrcState state;
+  GstAVFAssetReader *reader;
+  GstAVFAssetSrcState state;
   GMutex lock;
   GstEvent *seek_event;
 
@@ -122,13 +122,13 @@ struct _GstAVAssetSrc
   gchar * uri;
 };
 
-struct _GstAVAssetSrcClass
+struct _GstAVFAssetSrcClass
 {
   GstElementClass parent_class;
 };
 
-GType gst_avasset_src_get_type (void);
+GType gst_avf_asset_src_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_AVASSET_SRC_H__ */
+#endif /* __GST_AVF_ASSET_SRC_H__ */

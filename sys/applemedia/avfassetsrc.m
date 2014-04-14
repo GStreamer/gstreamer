@@ -24,12 +24,12 @@
 /**
  * SECTION:element-plugin
  *
- * Read and decode samples from iOS assets using the AVAssetReader API.
+ * Read and decode samples from iOS assets using the AVFAssetReader API.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m iosavassetsrc uri="file://movie.mp4" ! autovideosink
+ * gst-launch -v -m avfassetsrc uri="file://movie.mp4" ! autovideosink
  * ]|
  * </refsect2>
  */
@@ -38,22 +38,22 @@
 #  include <config.h>
 #endif
 
-#include "iosavassetsrc.h"
+#include "avfassetsrc.h"
 #include "coremediabuffer.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_avasset_src_debug);
-#define GST_CAT_DEFAULT gst_avasset_src_debug
+GST_DEBUG_CATEGORY_STATIC (gst_avf_asset_src_debug);
+#define GST_CAT_DEFAULT gst_avf_asset_src_debug
 
 #define CMTIME_TO_GST_TIME(x) \
     (x.value == 0 ? 0 : (guint64)(x.value * GST_SECOND / x.timescale));
-#define GST_AVASSET_SRC_LOCK(x) (g_mutex_lock (&x->lock));
-#define GST_AVASSET_SRC_UNLOCK(x) (g_mutex_unlock (&x->lock));
+#define GST_AVF_ASSET_SRC_LOCK(x) (g_mutex_lock (&x->lock));
+#define GST_AVF_ASSET_SRC_UNLOCK(x) (g_mutex_unlock (&x->lock));
 #define MEDIA_TYPE_TO_STR(x) \
-    (x == GST_AVASSET_READER_MEDIA_TYPE_AUDIO ? "audio" : "video")
-#define AVASSET_READER_HAS_AUDIO(x) \
-    ([self->reader hasMediaType:GST_AVASSET_READER_MEDIA_TYPE_AUDIO])
-#define AVASSET_READER_HAS_VIDEO(x) \
-    ([self->reader hasMediaType:GST_AVASSET_READER_MEDIA_TYPE_VIDEO])
+    (x == GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO ? "audio" : "video")
+#define AVF_ASSET_READER_HAS_AUDIO(x) \
+    ([self->reader hasMediaType:GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO])
+#define AVF_ASSET_READER_HAS_VIDEO(x) \
+    ([self->reader hasMediaType:GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO])
 #define OBJC_CALLOUT_BEGIN() \
    NSAutoreleasePool *pool; \
    \
@@ -89,53 +89,53 @@ static GstStaticPadTemplate video_factory = GST_STATIC_PAD_TEMPLATE ("video",
     )
 );
 
-static void gst_avasset_src_set_property (GObject * object, guint prop_id,
+static void gst_avf_asset_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_avasset_src_get_property (GObject * object, guint prop_id,
+static void gst_avf_asset_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_avasset_src_dispose (GObject *object);
+static void gst_avf_asset_src_dispose (GObject *object);
 
-static GstStateChangeReturn gst_avasset_src_change_state (GstElement * element,
+static GstStateChangeReturn gst_avf_asset_src_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_avasset_src_query (GstPad *pad, GstObject * parent, GstQuery *query);
-static gboolean gst_avasset_src_event (GstPad *pad, GstObject * parent, GstEvent *event);
-static gboolean gst_avasset_src_send_event (GstAVAssetSrc *self,
+static gboolean gst_avf_asset_src_query (GstPad *pad, GstObject * parent, GstQuery *query);
+static gboolean gst_avf_asset_src_event (GstPad *pad, GstObject * parent, GstEvent *event);
+static gboolean gst_avf_asset_src_send_event (GstAVFAssetSrc *self,
     GstEvent *event);
 
-static void gst_avasset_src_read_audio (GstAVAssetSrc *self);
-static void gst_avasset_src_read_video (GstAVAssetSrc *self);
-static void gst_avasset_src_start (GstAVAssetSrc *self);
-static void gst_avasset_src_stop (GstAVAssetSrc *self);
-static gboolean gst_avasset_src_start_reading (GstAVAssetSrc *self);
-static void gst_avasset_src_stop_reading (GstAVAssetSrc *self);
-static void gst_avasset_src_stop_all (GstAVAssetSrc *self);
-static void gst_avasset_src_uri_handler_init (gpointer g_iface,
+static void gst_avf_asset_src_read_audio (GstAVFAssetSrc *self);
+static void gst_avf_asset_src_read_video (GstAVFAssetSrc *self);
+static void gst_avf_asset_src_start (GstAVFAssetSrc *self);
+static void gst_avf_asset_src_stop (GstAVFAssetSrc *self);
+static gboolean gst_avf_asset_src_start_reading (GstAVFAssetSrc *self);
+static void gst_avf_asset_src_stop_reading (GstAVFAssetSrc *self);
+static void gst_avf_asset_src_stop_all (GstAVFAssetSrc *self);
+static void gst_avf_asset_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
 static void
-_do_init (GType avassetsrc_type)
+_do_init (GType avf_assetsrc_type)
 {
   static const GInterfaceInfo urihandler_info = {
-    gst_avasset_src_uri_handler_init,
+    gst_avf_asset_src_uri_handler_init,
     NULL,
     NULL
   };
 
-  g_type_add_interface_static (avassetsrc_type, GST_TYPE_URI_HANDLER,
+  g_type_add_interface_static (avf_assetsrc_type, GST_TYPE_URI_HANDLER,
       &urihandler_info);
-  GST_DEBUG_CATEGORY_INIT (gst_avasset_src_debug, "iosavassetsrc",
-      0, "iosavassetsrc element");
+  GST_DEBUG_CATEGORY_INIT (gst_avf_asset_src_debug, "avfassetsrc",
+      0, "avfassetsrc element");
 }
 
-G_DEFINE_TYPE_WITH_CODE (GstAVAssetSrc, gst_avasset_src, GST_TYPE_ELEMENT,
+G_DEFINE_TYPE_WITH_CODE (GstAVFAssetSrc, gst_avf_asset_src, GST_TYPE_ELEMENT,
     _do_init (g_define_type_id));
 
 
 /* GObject vmethod implementations */
 
 static void
-gst_avasset_src_class_init (GstAVAssetSrcClass * klass)
+gst_avf_asset_src_class_init (GstAVFAssetSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -146,7 +146,7 @@ gst_avasset_src_class_init (GstAVAssetSrcClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
     "Source and decoder for iOS assets",
     "Source/Codec",
-    "Read and decode samples from iOS assets using the AVAssetReader API",
+    "Read and decode samples from iOS assets using the AVFAssetReader API",
     "Andoni Morales Alastruey amorales@fluendo.com");
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -154,12 +154,12 @@ gst_avasset_src_class_init (GstAVAssetSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&video_factory));
 
-  gobject_class->set_property = gst_avasset_src_set_property;
-  gobject_class->get_property = gst_avasset_src_get_property;
-  gobject_class->dispose = gst_avasset_src_dispose;
+  gobject_class->set_property = gst_avf_asset_src_set_property;
+  gobject_class->get_property = gst_avf_asset_src_get_property;
+  gobject_class->dispose = gst_avf_asset_src_dispose;
 
   /**
-   * GstAVAssetSrc:uri
+   * GstAVFAssetSrc:uri
    *
    * URI of the asset to read
    *
@@ -170,12 +170,12 @@ gst_avasset_src_class_init (GstAVAssetSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
-  gstelement_class->change_state = gst_avasset_src_change_state;
+  gstelement_class->change_state = gst_avf_asset_src_change_state;
 
 }
 
 static void
-gst_avasset_src_init (GstAVAssetSrc * self)
+gst_avf_asset_src_init (GstAVFAssetSrc * self)
 {
   self->selected_audio_track = 0;
   self->selected_video_track = 0;
@@ -185,9 +185,9 @@ gst_avasset_src_init (GstAVAssetSrc * self)
 }
 
 static void
-gst_avasset_src_dispose (GObject *object)
+gst_avf_asset_src_dispose (GObject *object)
 {
-  GstAVAssetSrc *self = GST_AVASSET_SRC (object);
+  GstAVFAssetSrc *self = GST_AVF_ASSET_SRC (object);
 
   if (self->uri != NULL) {
     g_free (self->uri);
@@ -201,10 +201,10 @@ gst_avasset_src_dispose (GObject *object)
 }
 
 static void
-gst_avasset_src_set_property (GObject * object, guint prop_id,
+gst_avf_asset_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAVAssetSrc *self = GST_AVASSET_SRC (object);
+  GstAVFAssetSrc *self = GST_AVF_ASSET_SRC (object);
 
   switch (prop_id) {
     case PROP_URI:
@@ -220,10 +220,10 @@ gst_avasset_src_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_avasset_src_get_property (GObject * object, guint prop_id,
+gst_avf_asset_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAVAssetSrc *self = GST_AVASSET_SRC (object);
+  GstAVFAssetSrc *self = GST_AVF_ASSET_SRC (object);
 
   switch (prop_id) {
     case PROP_URI:
@@ -236,9 +236,9 @@ gst_avasset_src_get_property (GObject * object, guint prop_id,
 }
 
 static GstStateChangeReturn
-gst_avasset_src_change_state (GstElement * element, GstStateChange transition)
+gst_avf_asset_src_change_state (GstElement * element, GstStateChange transition)
 {
-  GstAVAssetSrc *self = GST_AVASSET_SRC (element);
+  GstAVFAssetSrc *self = GST_AVF_ASSET_SRC (element);
   GstStateChangeReturn ret;
   GError *error;
 
@@ -249,20 +249,20 @@ gst_avasset_src_change_state (GstElement * element, GstStateChange transition)
   OBJC_CALLOUT_BEGIN ();
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY: {
-      self->state = GST_AVASSET_SRC_STATE_STOPPED;
-      self->reader = [[GstAVAssetReader alloc] initWithURI:self->uri:&error];
+      self->state = GST_AVF_ASSET_SRC_STATE_STOPPED;
+      self->reader = [[GstAVFAssetReader alloc] initWithURI:self->uri:&error];
       if (error) {
-        GST_ELEMENT_ERROR (element, RESOURCE, FAILED, ("AVAssetReader error"),
+        GST_ELEMENT_ERROR (element, RESOURCE, FAILED, ("AVFAssetReader error"),
             ("%s", error->message));
         g_error_free (error);
-        gst_avasset_src_stop_all (self);
+        gst_avf_asset_src_stop_all (self);
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
     }
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_avasset_src_start (self);
-      gst_avasset_src_start_reading (self);
+      gst_avf_asset_src_start (self);
+      gst_avf_asset_src_start_reading (self);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -270,14 +270,14 @@ gst_avasset_src_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (gst_avasset_src_parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (gst_avf_asset_src_parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_avasset_src_stop_reading (self);
-      gst_avasset_src_stop (self);
+      gst_avf_asset_src_stop_reading (self);
+      gst_avf_asset_src_stop (self);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       [self->reader release];
@@ -290,7 +290,7 @@ gst_avasset_src_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstCaps *
-gst_avasset_src_get_caps(GstAVAssetSrc * self, GstPad * pad, GstCaps * filter)
+gst_avf_asset_src_get_caps(GstAVFAssetSrc * self, GstPad * pad, GstCaps * filter)
 {
   GstCaps * caps;
 
@@ -309,11 +309,11 @@ gst_avasset_src_get_caps(GstAVAssetSrc * self, GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_avasset_src_query (GstPad *pad, GstObject * parent, GstQuery *query)
+gst_avf_asset_src_query (GstPad *pad, GstObject * parent, GstQuery *query)
 {
     gboolean ret = FALSE;
     GstCaps *caps;
-    GstAVAssetSrc *self = GST_AVASSET_SRC (parent);
+    GstAVFAssetSrc *self = GST_AVF_ASSET_SRC (parent);
 
     switch (GST_QUERY_TYPE (query)) {
       case GST_QUERY_URI:
@@ -340,7 +340,7 @@ gst_avasset_src_query (GstPad *pad, GstObject * parent, GstQuery *query)
       case GST_QUERY_CAPS: {
         GstCaps *filter = NULL;
         gst_query_parse_caps (query, &filter);
-        caps = gst_avasset_src_get_caps (self, pad, filter);
+        caps = gst_avf_asset_src_get_caps (self, pad, filter);
         gst_query_set_caps_result (query, caps);
         ret = TRUE;
         break;
@@ -354,14 +354,14 @@ gst_avasset_src_query (GstPad *pad, GstObject * parent, GstQuery *query)
 }
 
 static gboolean
-gst_avasset_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_avf_asset_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstAVAssetSrc *self;
+  GstAVFAssetSrc *self;
   gboolean res = TRUE;
   GError *error = NULL;
 
   OBJC_CALLOUT_BEGIN ();
-  self = GST_AVASSET_SRC (gst_pad_get_parent_element (pad));
+  self = GST_AVF_ASSET_SRC (gst_pad_get_parent_element (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK: {
@@ -392,21 +392,21 @@ gst_avasset_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       if (rate < 0) {
         GST_WARNING ("Negative rates are not supported yet");
-        GST_AVASSET_SRC_UNLOCK (self);
+        GST_AVF_ASSET_SRC_UNLOCK (self);
         res = FALSE;
         break;
       }
 
       if (format != GST_FORMAT_TIME || start_type == GST_SEEK_TYPE_NONE) {
-        GST_AVASSET_SRC_UNLOCK(self);
-        gst_avasset_src_start_reading (self);
+        GST_AVF_ASSET_SRC_UNLOCK(self);
+        gst_avf_asset_src_start_reading (self);
         res = FALSE;
         break;
       }
       if (stop_type == GST_SEEK_TYPE_NONE) {
         stop = GST_CLOCK_TIME_NONE;
       }
-      gst_avasset_src_send_event (self, gst_event_new_flush_start ());
+      gst_avf_asset_src_send_event (self, gst_event_new_flush_start ());
       [self->reader seekTo: start: stop: &error];
 
       gst_segment_init (&segment, GST_FORMAT_TIME);
@@ -415,20 +415,20 @@ gst_avasset_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       segment.stop = stop;
       segment.position = start;
 
-      gst_avasset_src_send_event (self, gst_event_new_flush_stop (TRUE));
-      gst_avasset_src_send_event (self, gst_event_new_segment (&segment));
+      gst_avf_asset_src_send_event (self, gst_event_new_flush_stop (TRUE));
+      gst_avf_asset_src_send_event (self, gst_event_new_segment (&segment));
 
       if (error != NULL) {
         GST_ELEMENT_ERROR (self, RESOURCE, SEEK,
-            ("AVAssetReader seek failed"), ("%s", error->message));
+            ("AVFAssetReader seek failed"), ("%s", error->message));
         g_error_free(error);
         res = FALSE;
       }
-      GST_AVASSET_SRC_UNLOCK (self);
+      GST_AVF_ASSET_SRC_UNLOCK (self);
       gst_event_unref (event);
 
       /* start tasks after releasing the object's lock */
-      gst_avasset_src_start_reading (self);
+      gst_avf_asset_src_start_reading (self);
       break;
     }
     default:
@@ -442,7 +442,7 @@ gst_avasset_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_avasset_src_send_start_stream (GstAVAssetSrc * self, GstPad * pad)
+gst_avf_asset_src_send_start_stream (GstAVFAssetSrc * self, GstPad * pad)
 {
   GstEvent *event;
   gchar *stream_id;
@@ -460,20 +460,20 @@ gst_avasset_src_send_start_stream (GstAVAssetSrc * self, GstPad * pad)
 }
 
 static GstFlowReturn
-gst_avasset_src_combine_flows (GstAVAssetSrc * self, GstAVAssetReaderMediaType type,
+gst_avf_asset_src_combine_flows (GstAVFAssetSrc * self, GstAVFAssetReaderMediaType type,
     GstFlowReturn ret)
 {
   gboolean has_other_pad;
   GstFlowReturn last_other_pad_ret;
 
-  GST_AVASSET_SRC_LOCK (self);
-  if (type == GST_AVASSET_READER_MEDIA_TYPE_AUDIO) {
+  GST_AVF_ASSET_SRC_LOCK (self);
+  if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO) {
     self->last_audio_pad_ret = ret;
-    has_other_pad = AVASSET_READER_HAS_VIDEO (ret);
+    has_other_pad = AVF_ASSET_READER_HAS_VIDEO (ret);
     last_other_pad_ret = self->last_video_pad_ret;
-  } else if (type == GST_AVASSET_READER_MEDIA_TYPE_VIDEO) {
+  } else if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO) {
     self->last_video_pad_ret = ret;
-    has_other_pad = AVASSET_READER_HAS_AUDIO (ret);
+    has_other_pad = AVF_ASSET_READER_HAS_AUDIO (ret);
     last_other_pad_ret = self->last_audio_pad_ret;
   } else {
     GST_ERROR ("Unsupported media type");
@@ -487,13 +487,13 @@ gst_avasset_src_combine_flows (GstAVAssetSrc * self, GstAVAssetReaderMediaType t
   ret = last_other_pad_ret;
 
 exit:
-  GST_AVASSET_SRC_UNLOCK (self);
+  GST_AVF_ASSET_SRC_UNLOCK (self);
   return ret;
 }
 
 static void
-gst_avasset_src_read_data (GstAVAssetSrc *self, GstPad *pad,
-    GstAVAssetReaderMediaType type)
+gst_avf_asset_src_read_data (GstAVFAssetSrc *self, GstPad *pad,
+    GstAVFAssetReaderMediaType type)
 {
   GstBuffer *buf;
   GstFlowReturn ret, combined_ret;
@@ -501,14 +501,14 @@ gst_avasset_src_read_data (GstAVAssetSrc *self, GstPad *pad,
 
   OBJC_CALLOUT_BEGIN ();
 
-  GST_AVASSET_SRC_LOCK (self);
-  if (self->state != GST_AVASSET_SRC_STATE_READING) {
-    GST_AVASSET_SRC_UNLOCK (self);
+  GST_AVF_ASSET_SRC_LOCK (self);
+  if (self->state != GST_AVF_ASSET_SRC_STATE_READING) {
+    GST_AVF_ASSET_SRC_UNLOCK (self);
     goto exit;
   }
 
   buf = [self->reader nextBuffer:type:&error];
-  GST_AVASSET_SRC_UNLOCK (self);
+  GST_AVF_ASSET_SRC_UNLOCK (self);
 
   if (buf == NULL) {
     if (error != NULL) {
@@ -516,19 +516,19 @@ gst_avasset_src_read_data (GstAVAssetSrc *self, GstPad *pad,
           ("%s", error->message));
       g_error_free (error);
 
-      gst_avasset_src_combine_flows (self, type, GST_FLOW_ERROR);
+      gst_avf_asset_src_combine_flows (self, type, GST_FLOW_ERROR);
       gst_pad_pause_task (pad);
       goto exit;
     }
 
     gst_pad_push_event (pad, gst_event_new_eos ());
-    gst_avasset_src_combine_flows (self, type, GST_FLOW_EOS);
+    gst_avf_asset_src_combine_flows (self, type, GST_FLOW_EOS);
     gst_pad_pause_task (pad);
     goto exit;
   }
 
   ret = gst_pad_push (pad, buf);
-  combined_ret = gst_avasset_src_combine_flows (self, type, ret);
+  combined_ret = gst_avf_asset_src_combine_flows (self, type, ret);
 
   if (ret != GST_FLOW_OK) {
     GST_WARNING ("Error pushing %s buffer on pad %" GST_PTR_FORMAT
@@ -551,21 +551,21 @@ exit:
 }
 
 static void
-gst_avasset_src_read_audio (GstAVAssetSrc *self)
+gst_avf_asset_src_read_audio (GstAVFAssetSrc *self)
 {
-  gst_avasset_src_read_data (self, self->audiopad,
-      GST_AVASSET_READER_MEDIA_TYPE_AUDIO);
+  gst_avf_asset_src_read_data (self, self->audiopad,
+      GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO);
 }
 
 static void
-gst_avasset_src_read_video (GstAVAssetSrc *self)
+gst_avf_asset_src_read_video (GstAVFAssetSrc *self)
 {
-  gst_avasset_src_read_data (self, self->videopad,
-      GST_AVASSET_READER_MEDIA_TYPE_VIDEO);
+  gst_avf_asset_src_read_data (self, self->videopad,
+      GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO);
 }
 
 static gboolean
-gst_avasset_src_start_reader (GstAVAssetSrc * self)
+gst_avf_asset_src_start_reader (GstAVFAssetSrc * self)
 {
   GError *error = NULL;
   gboolean ret = TRUE;
@@ -575,7 +575,7 @@ gst_avasset_src_start_reader (GstAVAssetSrc * self)
   [self->reader start: &error];
   if (error != NULL) {
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
-        ("AVAssetReader could not start reading"), ("%s", error->message));
+        ("AVFAssetReader could not start reading"), ("%s", error->message));
     g_error_free (error);
     ret = FALSE;
     goto exit;
@@ -587,16 +587,16 @@ exit:
 }
 
 static gboolean
-gst_avasset_src_send_event (GstAVAssetSrc *self, GstEvent *event)
+gst_avf_asset_src_send_event (GstAVFAssetSrc *self, GstEvent *event)
 {
   gboolean ret = TRUE;
 
   OBJC_CALLOUT_BEGIN ();
 
-  if (AVASSET_READER_HAS_VIDEO (self)) {
+  if (AVF_ASSET_READER_HAS_VIDEO (self)) {
     ret |= gst_pad_push_event (self->videopad, gst_event_ref (event));
   }
-  if (AVASSET_READER_HAS_AUDIO (self)) {
+  if (AVF_ASSET_READER_HAS_AUDIO (self)) {
     ret |= gst_pad_push_event (self->audiopad, gst_event_ref (event));
   }
 
@@ -606,12 +606,12 @@ gst_avasset_src_send_event (GstAVAssetSrc *self, GstEvent *event)
 }
 
 static void
-gst_avasset_src_start (GstAVAssetSrc *self)
+gst_avf_asset_src_start (GstAVFAssetSrc *self)
 {
   GstSegment segment;
 
   OBJC_CALLOUT_BEGIN ();
-  if (self->state == GST_AVASSET_SRC_STATE_STARTED) {
+  if (self->state == GST_AVF_ASSET_SRC_STATE_STARTED) {
     goto exit;
   }
 
@@ -620,72 +620,72 @@ gst_avasset_src_start (GstAVAssetSrc *self)
   gst_segment_init (&segment, GST_FORMAT_TIME);
   segment.duration = self->reader.duration;
 
-  /* We call AVAssetReader's startReading when the pads are linked
+  /* We call AVFAssetReader's startReading when the pads are linked
    * and no outputs can be added afterwards, so the tracks must be
    * selected before adding any of the new pads */
-  if (AVASSET_READER_HAS_AUDIO (self)) {
-    [self->reader selectTrack: GST_AVASSET_READER_MEDIA_TYPE_AUDIO:
+  if (AVF_ASSET_READER_HAS_AUDIO (self)) {
+    [self->reader selectTrack: GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO:
         self->selected_audio_track];
   }
-  if (AVASSET_READER_HAS_VIDEO (self)) {
-    [self->reader selectTrack: GST_AVASSET_READER_MEDIA_TYPE_VIDEO:
+  if (AVF_ASSET_READER_HAS_VIDEO (self)) {
+    [self->reader selectTrack: GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO:
          self->selected_video_track];
   }
 
-  if (AVASSET_READER_HAS_AUDIO (self)) {
+  if (AVF_ASSET_READER_HAS_AUDIO (self)) {
     self->audiopad = gst_pad_new_from_static_template (&audio_factory, "audio");
     gst_pad_set_query_function (self->audiopad,
-        gst_avasset_src_query);
+        gst_avf_asset_src_query);
     gst_pad_set_event_function(self->audiopad,
-        gst_avasset_src_event);
+        gst_avf_asset_src_event);
     gst_pad_use_fixed_caps (self->audiopad);
     gst_pad_set_active (self->audiopad, TRUE);
-    gst_avasset_src_send_start_stream (self, self->audiopad);
+    gst_avf_asset_src_send_start_stream (self, self->audiopad);
     gst_pad_set_caps (self->audiopad,
-        [self->reader getCaps: GST_AVASSET_READER_MEDIA_TYPE_AUDIO]);
+        [self->reader getCaps: GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO]);
     gst_pad_push_event (self->audiopad, gst_event_new_caps (
-        [self->reader getCaps: GST_AVASSET_READER_MEDIA_TYPE_AUDIO]));
+        [self->reader getCaps: GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO]));
     gst_pad_push_event (self->audiopad, gst_event_new_segment (&segment));
     gst_element_add_pad (GST_ELEMENT (self), self->audiopad);
   }
-  if (AVASSET_READER_HAS_VIDEO (self)) {
+  if (AVF_ASSET_READER_HAS_VIDEO (self)) {
     self->videopad = gst_pad_new_from_static_template (&video_factory, "video");
     gst_pad_set_query_function (self->videopad,
-        gst_avasset_src_query);
+        gst_avf_asset_src_query);
     gst_pad_set_event_function(self->videopad,
-        gst_avasset_src_event);
+        gst_avf_asset_src_event);
     gst_pad_use_fixed_caps (self->videopad);
     gst_pad_set_active (self->videopad, TRUE);
-    gst_avasset_src_send_start_stream (self, self->videopad);
+    gst_avf_asset_src_send_start_stream (self, self->videopad);
     gst_pad_set_caps (self->videopad,
-        [self->reader getCaps: GST_AVASSET_READER_MEDIA_TYPE_VIDEO]);
+        [self->reader getCaps: GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO]);
     gst_pad_push_event (self->videopad, gst_event_new_caps (
-        [self->reader getCaps: GST_AVASSET_READER_MEDIA_TYPE_VIDEO]));
+        [self->reader getCaps: GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO]));
     gst_pad_push_event (self->videopad, gst_event_new_segment (&segment));
     gst_element_add_pad (GST_ELEMENT (self), self->videopad);
   }
   gst_element_no_more_pads (GST_ELEMENT (self));
 
-  self->state = GST_AVASSET_SRC_STATE_STARTED;
+  self->state = GST_AVF_ASSET_SRC_STATE_STARTED;
 
 exit:
   OBJC_CALLOUT_END ();
 }
 
 static void
-gst_avasset_src_stop (GstAVAssetSrc *self)
+gst_avf_asset_src_stop (GstAVFAssetSrc *self)
 {
   gboolean has_audio, has_video;
   OBJC_CALLOUT_BEGIN();
 
-  if (self->state == GST_AVASSET_SRC_STATE_STOPPED) {
+  if (self->state == GST_AVF_ASSET_SRC_STATE_STOPPED) {
     goto exit;
   }
 
   GST_DEBUG ("Stopping tasks and removing pads");
 
-  has_audio = AVASSET_READER_HAS_AUDIO (self);
-  has_video = AVASSET_READER_HAS_VIDEO (self);
+  has_audio = AVF_ASSET_READER_HAS_AUDIO (self);
+  has_video = AVF_ASSET_READER_HAS_VIDEO (self);
   [self->reader stop];
 
   if (has_audio) {
@@ -697,96 +697,96 @@ gst_avasset_src_stop (GstAVAssetSrc *self)
     gst_element_remove_pad (GST_ELEMENT (self), self->videopad);
   }
 
-  self->state = GST_AVASSET_SRC_STATE_STOPPED;
+  self->state = GST_AVF_ASSET_SRC_STATE_STOPPED;
 
 exit:
   OBJC_CALLOUT_END ();
 }
 
 static gboolean
-gst_avasset_src_start_reading (GstAVAssetSrc *self)
+gst_avf_asset_src_start_reading (GstAVFAssetSrc *self)
 {
   gboolean ret = TRUE;
 
-  if (self->state != GST_AVASSET_SRC_STATE_STARTED) {
+  if (self->state != GST_AVF_ASSET_SRC_STATE_STARTED) {
     goto exit;
   }
 
   GST_DEBUG_OBJECT (self, "Start reading");
 
-  if ((ret = gst_avasset_src_start_reader (self)) != TRUE) {
+  if ((ret = gst_avf_asset_src_start_reader (self)) != TRUE) {
     goto exit;
   }
 
-  if (AVASSET_READER_HAS_AUDIO (self)) {
-    ret = gst_pad_start_task (self->audiopad, (GstTaskFunction)gst_avasset_src_read_audio, self, NULL);
+  if (AVF_ASSET_READER_HAS_AUDIO (self)) {
+    ret = gst_pad_start_task (self->audiopad, (GstTaskFunction)gst_avf_asset_src_read_audio, self, NULL);
     if (!ret) {
       GST_ERROR ("Failed to start audio task");
       goto exit;
     }
   }
 
-  if (AVASSET_READER_HAS_VIDEO (self)) {
-    ret = gst_pad_start_task (self->videopad, (GstTaskFunction)gst_avasset_src_read_video, self, NULL);
+  if (AVF_ASSET_READER_HAS_VIDEO (self)) {
+    ret = gst_pad_start_task (self->videopad, (GstTaskFunction)gst_avf_asset_src_read_video, self, NULL);
     if (!ret) {
       GST_ERROR ("Failed to start video task");
       goto exit;
     }
   }
 
-  self->state = GST_AVASSET_SRC_STATE_READING;
+  self->state = GST_AVF_ASSET_SRC_STATE_READING;
 
 exit:
   return ret;
 }
 
 static void
-gst_avasset_src_stop_reading (GstAVAssetSrc * self)
+gst_avf_asset_src_stop_reading (GstAVFAssetSrc * self)
 {
-  if (self->state != GST_AVASSET_SRC_STATE_READING) {
+  if (self->state != GST_AVF_ASSET_SRC_STATE_READING) {
     return;
   }
 
   GST_DEBUG_OBJECT (self, "Stop reading");
 
-  if (AVASSET_READER_HAS_AUDIO (self)) {
+  if (AVF_ASSET_READER_HAS_AUDIO (self)) {
     gst_pad_pause_task (self->audiopad);
   }
-  if (AVASSET_READER_HAS_VIDEO (self)) {
+  if (AVF_ASSET_READER_HAS_VIDEO (self)) {
     gst_pad_pause_task (self->videopad);
   }
 
-  self->state = GST_AVASSET_SRC_STATE_STARTED;
+  self->state = GST_AVF_ASSET_SRC_STATE_STARTED;
 }
 
 static void
-gst_avasset_src_stop_all (GstAVAssetSrc *self)
+gst_avf_asset_src_stop_all (GstAVFAssetSrc *self)
 {
-  GST_AVASSET_SRC_LOCK (self);
-  gst_avasset_src_stop_reading (self);
-  gst_avasset_src_stop (self);
-  GST_AVASSET_SRC_UNLOCK (self);
+  GST_AVF_ASSET_SRC_LOCK (self);
+  gst_avf_asset_src_stop_reading (self);
+  gst_avf_asset_src_stop (self);
+  GST_AVF_ASSET_SRC_UNLOCK (self);
 }
 
 static GQuark
-gst_avasset_src_error_quark (void)
+gst_avf_asset_src_error_quark (void)
 {
   static GQuark q;              /* 0 */
 
   if (G_UNLIKELY (q == 0)) {
-      q = g_quark_from_static_string ("avasset-src-error-quark");
+      q = g_quark_from_static_string ("avfasset-src-error-quark");
   }
   return q;
 }
 
 static GstURIType
-gst_avasset_src_uri_get_type (GType type)
+gst_avf_asset_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static const gchar * const *
-gst_avasset_src_uri_get_protocols (GType type)
+gst_avf_asset_src_uri_get_protocols (GType type)
 {
   static const gchar * const protocols[] = { "file", "ipod-library", NULL };
 
@@ -794,17 +794,17 @@ gst_avasset_src_uri_get_protocols (GType type)
 }
 
 static gchar *
-gst_avasset_src_uri_get_uri (GstURIHandler * handler)
+gst_avf_asset_src_uri_get_uri (GstURIHandler * handler)
 {
-  GstAVAssetSrc *self = GST_AVASSET_SRC (handler);
+  GstAVFAssetSrc *self = GST_AVF_ASSET_SRC (handler);
 
   return g_strdup (self->uri);
 }
 
 static gboolean
-gst_avasset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri, GError **error)
+gst_avf_asset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri, GError **error)
 {
-  GstAVAssetSrc *self = GST_AVASSET_SRC (handler);
+  GstAVFAssetSrc *self = GST_AVF_ASSET_SRC (handler);
   NSString *str;
   NSURL *url;
   AVAsset *asset;
@@ -826,24 +826,24 @@ gst_avasset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri, GError 
     self->uri = g_strdup (uri);
   } else {
     g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
-        "Invalid URI '%s' for ios_assetsrc", self->uri);
+        "Invalid URI '%s' for avfassetsrc", self->uri);
   }
   OBJC_CALLOUT_END ();
   return ret;
 }
 
 static void
-gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
+gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 {
   GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
 
-  iface->get_type = gst_avasset_src_uri_get_type;
-  iface->get_protocols = gst_avasset_src_uri_get_protocols;
-  iface->get_uri = gst_avasset_src_uri_get_uri;
-  iface->set_uri = gst_avasset_src_uri_set_uri;
+  iface->get_type = gst_avf_asset_src_uri_get_type;
+  iface->get_protocols = gst_avf_asset_src_uri_get_protocols;
+  iface->get_uri = gst_avf_asset_src_uri_get_uri;
+  iface->set_uri = gst_avf_asset_src_uri_set_uri;
 }
 
-@implementation GstAVAssetReader
+@implementation GstAVFAssetReader
 
 @synthesize duration;
 @synthesize position;
@@ -891,7 +891,7 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   if (nserror != NULL) {
     GST_ERROR ("Error initializing reader: %s",
         [nserror.description UTF8String]);
-    *error = g_error_new (GST_AVASSET_SRC_ERROR, GST_AVASSET_ERROR_INIT, "%s",
+    *error = g_error_new (GST_AVF_ASSET_SRC_ERROR, GST_AVF_ASSET_ERROR_INIT, "%s",
         [nserror.description UTF8String]);
     [asset release];
     [reader release];
@@ -911,7 +911,7 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   NSURL *url;
   gchar *escaped_uri;
 
-  GST_INFO ("Initializing AVAssetReader with uri:%s", uri);
+  GST_INFO ("Initializing AVFAssetReader with uri:%s", uri);
   *error = NULL;
 
   escaped_uri = g_uri_escape_string (uri, ":/", TRUE);
@@ -921,7 +921,7 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   g_free (escaped_uri);
 
   if (!asset.playable) {
-    *error = g_error_new (GST_AVASSET_SRC_ERROR, GST_AVASSET_ERROR_NOT_PLAYABLE,
+    *error = g_error_new (GST_AVF_ASSET_SRC_ERROR, GST_AVF_ASSET_ERROR_NOT_PLAYABLE,
         "Media is not playable");
     [asset release];
     return nil;
@@ -947,7 +947,7 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   return self;
 }
 
-- (bool) selectTrack: (GstAVAssetReaderMediaType) type : (gint) index
+- (bool) selectTrack: (GstAVFAssetReaderMediaType) type : (gint) index
 {
   NSArray *tracks;
   AVAssetTrack *track;
@@ -958,12 +958,12 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 
   GST_INFO ("Selecting %s track %d", MEDIA_TYPE_TO_STR(type), index);
 
-  if (type == GST_AVASSET_READER_MEDIA_TYPE_AUDIO) {
+  if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO) {
     mediaType = AVMediaTypeAudio;
     selected_track = &selected_audio_track;
     output = &audio_track;
     settings = [self capsToAudioSettings];
-  } else if (type == GST_AVASSET_READER_MEDIA_TYPE_VIDEO) {
+  } else if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO) {
     mediaType = AVMediaTypeVideo;
     selected_track = &selected_video_track;
     output = &video_track;
@@ -996,7 +996,7 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
     return;
 
   if (![reader startReading]) {
-    *error = g_error_new (GST_AVASSET_SRC_ERROR, GST_AVASSET_ERROR_START,
+    *error = g_error_new (GST_AVF_ASSET_SRC_ERROR, GST_AVF_ASSET_ERROR_START,
         "%s", [reader.error.description UTF8String]);
     reading = FALSE;
     return;
@@ -1010,12 +1010,12 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   reading = FALSE;
 }
 
-- (bool) hasMediaType: (GstAVAssetReaderMediaType) type
+- (bool) hasMediaType: (GstAVFAssetReaderMediaType) type
 {
-  if (type == GST_AVASSET_READER_MEDIA_TYPE_AUDIO) {
+  if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO) {
     return [audio_tracks count] != 0;
   }
-  if (type == GST_AVASSET_READER_MEDIA_TYPE_VIDEO) {
+  if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO) {
     return [video_tracks count] != 0;
   }
   return FALSE;
@@ -1032,7 +1032,7 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
     stopTime = CMTimeMake (stopTS, GST_SECOND);
   }
 
-  /* AVAssetReader needs to be recreated before changing the
+  /* AVFAssetReader needs to be recreated before changing the
    * timerange property */
   [self stop];
   [self releaseReader];
@@ -1045,12 +1045,12 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
       GST_TIME_ARGS(startTS), GST_TIME_ARGS(stopTS));
 
   reader.timeRange = CMTimeRangeMake(startTime, stopTime);
-  [self selectTrack: GST_AVASSET_READER_MEDIA_TYPE_AUDIO:selected_audio_track];
-  [self selectTrack: GST_AVASSET_READER_MEDIA_TYPE_VIDEO:selected_video_track];
+  [self selectTrack: GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO:selected_audio_track];
+  [self selectTrack: GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO:selected_video_track];
   [self start: error];
 }
 
-- (GstBuffer *) nextBuffer: (GstAVAssetReaderMediaType) type : (GError **) error
+- (GstBuffer *) nextBuffer: (GstAVFAssetReaderMediaType) type : (GError **) error
 {
   CMSampleBufferRef cmbuf;
   AVAssetReaderTrackOutput *areader = NULL;
@@ -1059,10 +1059,10 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   CMTime dur, ts;
 
   GST_LOG ("Reading %s next buffer", MEDIA_TYPE_TO_STR (type));
-  if (type == GST_AVASSET_READER_MEDIA_TYPE_AUDIO && audio_track != NULL) {
+  if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO && audio_track != NULL) {
     areader = audio_track;
     caps = audio_caps;
-  } else if (type == GST_AVASSET_READER_MEDIA_TYPE_VIDEO &&
+  } else if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO &&
       video_track != NULL) {
     areader = video_track;
     caps = video_caps;
@@ -1076,7 +1076,7 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   cmbuf = [areader copyNextSampleBuffer];
   if (cmbuf == NULL) {
     if (reader.error != NULL) {
-      *error = g_error_new (GST_AVASSET_SRC_ERROR, GST_AVASSET_ERROR_READ,
+      *error = g_error_new (GST_AVF_ASSET_SRC_ERROR, GST_AVF_ASSET_ERROR_READ,
           "%s", [reader.error.description UTF8String]);
     }
     /* EOS */
@@ -1100,15 +1100,15 @@ gst_avasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   return buf;
 }
 
-- (GstCaps *) getCaps: (GstAVAssetReaderMediaType) type
+- (GstCaps *) getCaps: (GstAVFAssetReaderMediaType) type
 {
   GstCaps *caps = NULL;
   AVAssetTrack *track;
 
-  if (type == GST_AVASSET_READER_MEDIA_TYPE_AUDIO) {
+  if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO) {
     caps = gst_caps_ref (audio_caps);
     GST_INFO ("Using audio caps: %" GST_PTR_FORMAT, caps);
-  } else if (type == GST_AVASSET_READER_MEDIA_TYPE_VIDEO) {
+  } else if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO) {
     gint fr_n, fr_d;
 
     track = [video_tracks objectAtIndex: selected_video_track];

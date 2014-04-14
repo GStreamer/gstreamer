@@ -29,7 +29,7 @@
 #endif
 #ifdef HAVE_AVFOUNDATION
 #include "avfvideosrc.h"
-#include "iosavassetsrc.h"
+#include "avfassetsrc.h"
 #endif
 #ifndef HAVE_IOS
 #include "vth264decbin.h"
@@ -69,8 +69,8 @@ plugin_init (GstPlugin * plugin)
 #ifdef HAVE_AVFOUNDATION
   res &= gst_element_register (plugin, "avfvideosrc", GST_RANK_PRIMARY,
       GST_TYPE_AVF_VIDEO_SRC);
-  res &= gst_element_register (plugin, "iosavassetsrc", GST_RANK_PRIMARY,
-      GST_TYPE_AVASSET_SRC);
+  res &= gst_element_register (plugin, "avfassetsrc", GST_RANK_PRIMARY,
+      GST_TYPE_AVF_ASSET_SRC);
 #endif
 
 #if 0

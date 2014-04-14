@@ -74,7 +74,7 @@ noinst_HEADERS =				\
 	dynapi.h				\
 	dynapi-internal.h                       \
 	iosassetsrc.h				\
-	iosavassetsrc.h
+	avfassetsrc.h
 
 if HAVE_IOS
 
@@ -102,7 +102,7 @@ if HAVE_AVFOUNDATION
 
 libgstapplemedia_la_SOURCES +=			\
 	avfvideosrc.m				\
-	iosavassetsrc.m
+	avfassetsrc.m
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,AVFoundation
