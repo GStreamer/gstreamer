@@ -387,7 +387,7 @@ gst_wayland_sink_format_from_caps (uint32_t * wl_format, GstCaps * caps)
 static gboolean
 gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
-  GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
+  GstWaylandSink *sink;
   GstBufferPool *newpool, *oldpool;
   GstVideoInfo info;
   GstStructure *structure;
