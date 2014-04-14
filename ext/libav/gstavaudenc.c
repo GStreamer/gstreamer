@@ -239,15 +239,14 @@ gst_ffmpegaudenc_flush (GstAudioEncoder * encoder)
 static GstCaps *
 gst_ffmpegaudenc_getcaps (GstAudioEncoder * encoder, GstCaps * filter)
 {
-  GstFFMpegAudEnc *ffmpegaudenc = (GstFFMpegAudEnc *) encoder;
   GstCaps *caps = NULL;
 
-  GST_DEBUG_OBJECT (ffmpegaudenc, "getting caps");
+  GST_DEBUG_OBJECT (encoder, "getting caps");
 
   /* audio needs no special care */
   caps = gst_audio_encoder_proxy_getcaps (encoder, NULL, filter);
 
-  GST_DEBUG_OBJECT (ffmpegaudenc, "audio caps, return %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (encoder, "audio caps, return %" GST_PTR_FORMAT, caps);
 
   return caps;
 }
