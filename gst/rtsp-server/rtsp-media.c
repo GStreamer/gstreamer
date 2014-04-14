@@ -2197,18 +2197,12 @@ default_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   /* ERRORS */
 no_create_rtpbin:
   {
-    /* we are not going to use the giving thread, so stop it. */
-    if (thread)
-      gst_rtsp_thread_stop (thread);
     GST_ERROR ("no create_rtpbin function");
     g_critical ("no create_rtpbin vmethod function set");
     return FALSE;
   }
 no_rtpbin:
   {
-    /* we are not going to use the giving thread, so stop it. */
-    if (thread)
-      gst_rtsp_thread_stop (thread);
     GST_WARNING ("no rtpbin element");
     g_warning ("failed to create element 'rtpbin', check your installation");
     return FALSE;
