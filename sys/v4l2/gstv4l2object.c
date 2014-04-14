@@ -238,6 +238,8 @@ gst_v4l2_io_mode_get_type (void)
       {GST_V4L2_IO_MMAP, "GST_V4L2_IO_MMAP", "mmap"},
       {GST_V4L2_IO_USERPTR, "GST_V4L2_IO_USERPTR", "userptr"},
       {GST_V4L2_IO_DMABUF, "GST_V4L2_IO_DMABUF", "dmabuf"},
+      {GST_V4L2_IO_DMABUF_IMPORT, "GST_V4L2_IO_DMABUF_IMPORT",
+          "dmabuf-import"},
 
       {0, NULL, NULL}
     };
@@ -3123,8 +3125,10 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       }
       break;
     case GST_V4L2_IO_MMAP:
-    case GST_V4L2_IO_USERPTR:
     case GST_V4L2_IO_DMABUF:
+      /* FIXME in these case we actually prefer/need a downstream pool */
+    case GST_V4L2_IO_USERPTR:
+    case GST_V4L2_IO_DMABUF_IMPORT:
       /* in streaming mode, prefer our own pool */
       /* Check if we can use it ... */
       if (can_use_own_pool) {

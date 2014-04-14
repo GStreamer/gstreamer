@@ -115,6 +115,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
           pool->allocator);
       break;
     case GST_V4L2_IO_USERPTR:
+    case GST_V4L2_IO_DMABUF_IMPORT:
     default:
       newbuf = NULL;
       g_assert_not_reached ();
@@ -265,11 +266,14 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
           GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, USERPTR);
       break;
     case GST_V4L2_IO_RW:
-    default:
       pool->allocator = g_object_ref (allocator);
       pool->params = params;
       /* No need to change the configuration */
       goto done;
+      break;
+    case GST_V4L2_IO_DMABUF_IMPORT:
+    default:
+      g_assert_not_reached ();
       break;
   }
 
@@ -336,6 +340,7 @@ start_streaming (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_MMAP:
     case GST_V4L2_IO_USERPTR:
     case GST_V4L2_IO_DMABUF:
+    case GST_V4L2_IO_DMABUF_IMPORT:
       GST_DEBUG_OBJECT (pool, "STREAMON");
       if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMON, &obj->type) < 0)
         goto start_failed;
@@ -438,6 +443,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
       break;
     }
     case GST_V4L2_IO_USERPTR:
+    case GST_V4L2_IO_DMABUF_IMPORT:
     default:
       num_buffers = 0;
       copy_threshold = 0;
@@ -519,6 +525,7 @@ stop_streaming (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_MMAP:
     case GST_V4L2_IO_USERPTR:
     case GST_V4L2_IO_DMABUF:
+    case GST_V4L2_IO_DMABUF_IMPORT:
       GST_DEBUG_OBJECT (pool, "STREAMOFF");
       if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMOFF, &obj->type) < 0)
         goto stop_failed;
@@ -836,6 +843,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
           break;
 
         case GST_V4L2_IO_USERPTR:
+        case GST_V4L2_IO_DMABUF_IMPORT:
         default:
           ret = GST_FLOW_ERROR;
           g_assert_not_reached ();
@@ -861,6 +869,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
           break;
 
         case GST_V4L2_IO_USERPTR:
+        case GST_V4L2_IO_DMABUF_IMPORT:
         default:
           ret = GST_FLOW_ERROR;
           g_assert_not_reached ();
@@ -919,6 +928,7 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
           break;
         }
         case GST_V4L2_IO_USERPTR:
+        case GST_V4L2_IO_DMABUF_IMPORT:
         default:
           g_assert_not_reached ();
           break;
@@ -970,6 +980,7 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
         }
 
         case GST_V4L2_IO_USERPTR:
+        case GST_V4L2_IO_DMABUF_IMPORT:
         default:
           g_assert_not_reached ();
           break;
@@ -1210,6 +1221,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
         }
 
         case GST_V4L2_IO_USERPTR:
+        case GST_V4L2_IO_DMABUF_IMPORT:
         default:
           g_assert_not_reached ();
           break;
@@ -1281,6 +1293,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
         }
 
         case GST_V4L2_IO_USERPTR:
+        case GST_V4L2_IO_DMABUF_IMPORT:
         default:
           g_assert_not_reached ();
           break;
