@@ -242,7 +242,7 @@ PKG_CHECK_MODULES(GMODULE_EXPORT, gmodule-export-2.0, HAVE_GMODULE_EXPORT=yes, H
 dnl Needed by plugins that use g_module_*() API
 PKG_CHECK_MODULES(GMODULE_NO_EXPORT, gmodule-no-export-2.0)
 
-dnl x11 is optional for librfb and eglglessink
+dnl x11 is optional for librfb
 HAVE_X11=NO
 PKG_CHECK_MODULES(X11, x11, HAVE_X11=yes, HAVE_X11=no)
 AC_SUBST(X11_LIBS)
@@ -458,163 +458,6 @@ else
   AG_GST_DISABLE_PLUGIN(dccp)
 fi
 
-dnl *** gst-libs/gst/egl ***
-AC_ARG_WITH([egl-window-system],
-              AS_HELP_STRING([--with-egl-window-system],[EGL window system to use (x11, mali-fb, rpi, none)]),
-              [EGL_WINDOW_SYSTEM="$withval"],
-              [EGL_WINDOW_SYSTEM="auto"])
-
-if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
-  dnl Mali
-  old_LIBS=$LIBS
-  old_CFLAGS=$CFLAGS
-  LIBS="$LIBS -lUMP $EGL_LIBS"
-  CFLAGS="$CFLAGS $EGL_CFLAGS"
-  AC_CHECK_LIB([Mali], [mali_image_create], [EGL_WINDOW_SYSTEM="mali-fb"], [EGL_WINDOW_SYSTEM="auto"])
-  LIBS=$old_LIBS
-  CFLAGS=$old_CFLAGS
-
-  dnl RPi
-  if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
-      old_LIBS=$LIBS
-      old_CFLAGS=$CFLAGS
-      LIBS="$LIBS -lvcos -lvchiq_arm"
-      CFLAGS="$CFLAGS"
-      AC_CHECK_LIB([bcm_host], [bcm_host_init],
-        [
-          LIBS="$LIBS -lbcm_host"
-          AC_CHECK_HEADER([bcm_host.h], [EGL_WINDOW_SYSTEM="rpi"], [EGL_WINDOW_SYSTEM="auto"])
-      ])
-      LIBS=$old_LIBS
-      CFLAGS=$old_CFLAGS
-  fi
-
-  if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
-      if test x"$HAVE_X11" = x"yes"; then
-        EGL_WINDOW_SYSTEM="x11"
-      fi
-  fi
-
-  if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
-    EGL_WINDOW_SYSTEM="auto"
-  fi
-fi
-
-case "$EGL_WINDOW_SYSTEM" in
-  x11|auto)
-    PKG_CHECK_MODULES(EGL, egl, HAVE_EGL="yes", [
-      HAVE_EGL="no"
-      old_LIBS=$LIBS
-      old_CFLAGS=$CFLAGS
-
-      AC_CHECK_LIB([EGL], [eglGetProcAddress],
-        [
-          AC_CHECK_HEADER([EGL/egl.h],
-            [
-              HAVE_EGL="yes"
-              EGL_LIBS="-lEGL"
-              EGL_CFLAGS=""
-            ]
-          )
-        ]
-      )
-
-      LIBS=$old_LIBS
-      CFLAGS=$old_CFLAGS
-    ])
-
-    dnl X11 specific part, above is auto and X11
-    if test x"$HAVE_EGL" = x"yes" -a x"$EGL_WINDOW_SYSTEM" = x"x11"; then
-      if test x"$HAVE_X11" != x"yes"; then
-        AC_MSG_ERROR([libX11 not found and is required for EGL X11 window system])
-      else
-        AC_DEFINE(USE_EGL_X11, [1], [Use X11 EGL window system])
-        EGL_CFLAGS="$EGL_CFLAGS $X11_CFLAGS"
-        EGL_LIBS="$EGL_LIBS $X11_LIBS"
-      fi
-    fi
-    ;;
-  mali-fb)
-    dnl FIXME: Mali EGL depends on GLESv1 or GLESv2
-    HAVE_EGL="no"
-    old_LIBS=$LIBS
-    old_CFLAGS=$CFLAGS
-    AC_CHECK_HEADER([EGL/fbdev_window.h],
-      [
-        LIBS="$LIBS -lUMP"
-        AC_CHECK_LIB([Mali], [mali_image_create],
-          [
-            LIBS="$LIBS -lMali"
-            AC_CHECK_LIB([GLESv2], [glEnable],
-              [
-                AC_CHECK_HEADER([GLES2/gl2.h],
-                  [
-                    AC_CHECK_LIB([EGL], [eglGetProcAddress],
-                      [
-                        AC_CHECK_HEADER([EGL/egl.h],
-                          [
-                            HAVE_EGL="yes"
-                            EGL_LIBS="-lGLESv2 -lEGL -lMali -lUMP"
-                            EGL_CFLAGS=""
-                            AC_DEFINE(USE_EGL_MALI_FB, [1], [Use Mali FB EGL window system])
-                          ])
-                      ])
-                  ])
-              ])
-          ])
-      ])
-    LIBS=$old_LIBS
-    CFLAGS=$old_CFLAGS
-    ;;
-  rpi)
-    old_LIBS=$LIBS
-    old_CFLAGS=$CFLAGS
-
-    dnl FIXME: EGL of RPi depends on GLESv1 or GLESv2
-    dnl FIXME: GLESv2 of RPi depends on EGL... WTF!
-    LIBS="$LIBS -lvcos -lvchiq_arm"
-    AC_CHECK_LIB([bcm_host], [bcm_host_init],
-      [
-        LIBS="$LIBS -lbcm_host"
-        AC_CHECK_HEADER(bcm_host.h,
-          [
-            LIBS="$LIBS -lGLESv2"
-            AC_CHECK_LIB([EGL], [eglGetProcAddress],
-              [
-                LIBS="$LIBS -lEGL"
-                AC_CHECK_HEADER([EGL/egl.h],
-                  [
-                    AC_CHECK_LIB([GLESv2], [glEnable],
-                      [
-                        AC_CHECK_HEADER([GLES2/gl2.h],
-                          [
-                            HAVE_EGL="yes"
-                            EGL_LIBS="-lGLESv2 -lEGL -lbcm_host -lvcos -lvchiq_arm"
-                            EGL_CFLAGS=""
-                            AC_DEFINE(USE_EGL_RPI, [1], [Use RPi EGL window system])
-                        ])
-                    ])
-                ])
-            ])
-        ])
-    ])
-
-    LIBS=$old_LIBS
-    CFLAGS=$old_CFLAGS
-    ;;
-  none|no)
-    HAVE_EGL="no"
-    AC_MSG_WARN([No EGL window system specified, will not build gstreamer-egl])
-    ;;
-  *)
-    AC_MSG_ERROR([invalid EGL window system specified])
-    ;;
-esac
-
-AC_SUBST(EGL_LIBS)
-AC_SUBST(EGL_CFLAGS)
-AM_CONDITIONAL(HAVE_EGL, test x"$HAVE_EGL" = x"yes")
-
 dnl *** opengl ***
 AC_ARG_ENABLE([opengl],
      [  --enable-opengl         Enable Desktop OpenGL support @<:@default=auto@:>@],
@@ -707,10 +550,7 @@ HAVE_GLU=no
 HAVE_GNUSTEP_COCOA=no
 HAVE_WAYLAND_EGL=no
 
-HAVE_EGL_RPI="no"
-if test x"$HAVE_EGL" = x"yes" -a x"$EGL_WINDOW_SYSTEM" = x"rpi"; then
-HAVE_EGL_RPI="yes"
-fi
+HAVE_EGL_RPI=no
 
 case $host in
   *-mingw32* )
@@ -728,6 +568,70 @@ case $host in
     AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,, GL/gl.h)
     AG_GST_CHECK_LIBHEADER(GLU, GLU, gluSphere,, GL/glu.h)
     AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
+
+    old_LIBS=$LIBS
+    old_CFLAGS=$CFLAGS
+
+    dnl FIXME: Mali EGL depends on GLESv1 or GLESv2
+    AC_CHECK_HEADER([EGL/fbdev_window.h],
+      [
+        LIBS="$LIBS -lUMP"
+        AC_CHECK_LIB([Mali], [mali_image_create],
+          [
+            LIBS="$LIBS -lMali"
+            AC_CHECK_LIB([GLESv2], [glEnable],
+              [
+                AC_CHECK_HEADER([GLES2/gl2.h],
+                  [
+                    AC_CHECK_LIB([EGL], [eglGetProcAddress],
+                      [
+                        AC_CHECK_HEADER([EGL/egl.h],
+                          [
+                            HAVE_EGL=yes
+                            HAVE_GLES2=yes
+                            EGL_LIBS="-lMali -lUMP"
+                            EGL_CFLAGS=""
+                            AC_DEFINE(USE_EGL_MALI_FB, [1], [Use Mali FB EGL platform])
+                          ])
+                      ])
+                  ])
+              ])
+          ])
+      ])
+
+    dnl FIXME: EGL of RPi depends on GLESv1 or GLESv2
+    dnl FIXME: GLESv2 of RPi depends on EGL... WTF!
+    LIBS="$LIBS -lvcos -lvchiq_arm"
+    AC_CHECK_LIB([bcm_host], [bcm_host_init],
+      [
+        LIBS="$LIBS -lbcm_host"
+        AC_CHECK_HEADER(bcm_host.h,
+          [
+            LIBS="$LIBS -lGLESv2"
+            AC_CHECK_LIB([EGL], [eglGetProcAddress],
+              [
+                LIBS="$LIBS -lEGL"
+                AC_CHECK_HEADER([EGL/egl.h],
+                  [
+                    AC_CHECK_LIB([GLESv2], [glEnable],
+                      [
+                        AC_CHECK_HEADER([GLES2/gl2.h],
+                          [
+                            HAVE_EGL=yes
+                            HAVE_GLES2=yes
+                            HAVE_EGL_RPI=yes
+                            EGL_LIBS="-lbcm_host -lvcos -lvchiq_arm"
+                            EGL_CFLAGS=""
+                            AC_DEFINE(USE_EGL_RPI, [1], [Use RPi platform])
+                          ])
+                      ])
+                  ])
+              ])
+          ])
+      ])
+
+    LIBS=$old_LIBS
+    CFLAGS=$old_CFLAGS
 
     PKG_CHECK_MODULES(WAYLAND_EGL, wayland-client >= 1.0 wayland-cursor >= 1.0 wayland-egl >= 9.0, HAVE_WAYLAND_EGL=yes, HAVE_WAYLAND_EGL=no)
   ;;
@@ -1200,6 +1104,7 @@ if test "x$GL_APIS" = "x" -o "x$GL_PLATFORMS" = "x" -o "x$GL_WINDOWS" = "x"; the
   USE_EGL=no
   USE_WGL=no
   USE_COCOA=no
+  USE_EGL_MALI=no
   USE_EGL_RPI=no
   USE_EAGL=no
 
@@ -1232,6 +1137,7 @@ AM_CONDITIONAL(USE_GLX, test "x$USE_GLX" = "xyes")
 AM_CONDITIONAL(USE_EGL, test "x$USE_EGL" = "xyes")
 AM_CONDITIONAL(USE_WGL, test "x$USE_WGL" = "xyes")
 AM_CONDITIONAL(USE_COCOA, test "x$USE_COCOA" = "xyes")
+AM_CONDITIONAL(USE_EGL_MALI, test "x$USE_EGL_MALI" = "xyes")
 AM_CONDITIONAL(USE_EGL_RPI, test "x$USE_EGL_RPI" = "xyes")
 AM_CONDITIONAL(USE_EAGL, test "x$USE_EAGL" = "xyes")
 
@@ -2599,39 +2505,6 @@ AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
   AC_SUBST(RSVG_LIBS)
 ])
 
-dnl *** eglgles ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_EGLGLES, true)
-AG_GST_CHECK_FEATURE(EGLGLES, [eglgles sink], eglgles, [
-  HAVE_EGLGLES="no"
-
-  if test x"$HAVE_EGL" = x"yes"; then
-      PKG_CHECK_MODULES(EGLGLES, egl glesv2, HAVE_EGLGLES="yes", [
-        HAVE_EGLGLES="no"
-        old_LIBS=$LIBS
-        old_CFLAGS=$CFLAGS
-
-        LIBS="$LIBS $EGL_LIBS"
-        CFLAGS="$CFLAGS $EGL_CFLAGS"
-        AC_CHECK_LIB([GLESv2], [glEnable],
-          [
-            AC_CHECK_HEADER([GLES2/gl2.h],
-              [
-                 HAVE_EGLGLES="yes"
-                 EGLGLES_LIBS="-lGLESv2"
-                 EGLGLES_CFLAGS=""
-              ])
-          ])
-        LIBS=$old_LIBS
-        CFLAGS=$old_CFLAGS
-      ])
-  elif test x"$HAVE_IOS" = x"yes"; then
-      HAVE_EGLGLES="yes"
-  fi
-
-  AC_SUBST(EGLGLES_CFLAGS)
-  AC_SUBST(EGLGLES_LIBS)
-])
-
 dnl *** gl ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GL, true)
 AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
@@ -3056,8 +2929,6 @@ AM_CONDITIONAL(USE_OPENJPEG, false)
 AM_CONDITIONAL(USE_OPENNI2, false)
 AM_CONDITIONAL(USE_OPUS, false)
 AM_CONDITIONAL(USE_PVR, false)
-AM_CONDITIONAL(USE_RSVG, false)
-AM_CONDITIONAL(USE_EGLGLES, false)
 AM_CONDITIONAL(USE_LIBVISUAL, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -3237,7 +3108,6 @@ gst/yadif/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/basecamerabinsrc/Makefile
-gst-libs/gst/egl/Makefile
 gst-libs/gst/gl/Makefile
 gst-libs/gst/gl/android/Makefile
 gst-libs/gst/gl/cocoa/Makefile
@@ -3308,7 +3178,6 @@ ext/directfb/Makefile
 ext/wayland/Makefile
 ext/daala/Makefile
 ext/dts/Makefile
-ext/eglgles/Makefile
 ext/gl/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
@@ -3371,8 +3240,6 @@ pkgconfig/gstreamer-codecparsers.pc
 pkgconfig/gstreamer-codecparsers-uninstalled.pc
 pkgconfig/gstreamer-insertbin.pc
 pkgconfig/gstreamer-insertbin-uninstalled.pc
-pkgconfig/gstreamer-egl.pc
-pkgconfig/gstreamer-egl-uninstalled.pc
 pkgconfig/gstreamer-gl.pc
 pkgconfig/gstreamer-gl-uninstalled.pc
 pkgconfig/gstreamer-mpegts.pc

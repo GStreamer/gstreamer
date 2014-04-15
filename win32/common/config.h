@@ -205,9 +205,6 @@
 /* Define to enable DVB Source (used by dvb). */
 #undef HAVE_DVB
 
-/* Define to enable eglgles sink (used by eglgles). */
-#undef HAVE_EGLGLES
-
 /* Define to enable building of experimental plug-ins. */
 #undef HAVE_EXPERIMENTAL
 

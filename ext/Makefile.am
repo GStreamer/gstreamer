@@ -76,12 +76,6 @@ else
 DTS_DIR=
 endif
 
-if USE_EGLGLES
-EGLGLES_DIR=eglgles
-else
-EGLGLES_DIR=
-endif
-
 if USE_GL
 GL_DIR=gl
 else
@@ -416,7 +410,6 @@ SUBDIRS=\
 	$(DAALA_DIR) \
 	$(DTS_DIR) \
 	$(RESINDVD_DIR) \
-	$(EGLGLES_DIR) \
 	$(GL_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
@@ -492,7 +485,6 @@ DIST_SUBDIRS = \
 	lv2 \
 	daala \
 	dts \
-	eglgles \
 	gl \
 	modplug \
 	mimic \
