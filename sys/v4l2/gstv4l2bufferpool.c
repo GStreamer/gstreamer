@@ -388,9 +388,9 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
-      /* we preallocate 1 buffer, this value also instructs the latency
-       * calculation to have 1 frame latency max */
-      num_buffers = 1;
+      /* this value also instructs the latency calculation to have min_buffers
+       * frame latency max */
+      num_buffers = min_buffers;
       break;
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_MMAP:
