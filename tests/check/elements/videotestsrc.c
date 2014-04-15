@@ -465,6 +465,7 @@ GST_START_TEST (test_backward_playback)
   /* clean up */
   gst_pad_remove_probe (pad, pad_probe);
   gst_object_unref (pad);
+  gst_object_unref (src);
   g_main_loop_unref (loop);
   g_source_remove (bus_watch);
   gst_object_unref (bin);
