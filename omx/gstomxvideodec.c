@@ -37,7 +37,8 @@
 #endif
 
 #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
-#include <gst/egl/egl.h>
+#include <gst/gl/gl.h>
+#include <gst/gl/egl/gsteglimagememory.h>
 #endif
 
 #if defined (USE_OMX_TARGET_RPI) && defined(__GNUC__)
@@ -611,7 +612,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
     GList *images = NULL;
     gint i;
     GstBufferPoolAcquireParams params = { 0, };
-    GstEGLDisplay *display = NULL;
+    EGLDisplay egl_display = EGL_NO_DISPLAY;
 
     GST_DEBUG_OBJECT (self, "Trying to allocate %d EGLImages", min);
 
@@ -629,9 +630,6 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
         g_list_free (images);
         buffers = NULL;
         images = NULL;
-        if (display)
-          gst_egl_display_unref (display);
-        display = NULL;
         /* TODO: For non-RPi targets we want to use the normal memory code below */
         /* Retry without EGLImage */
         err = OMX_ErrorUndefined;
@@ -642,8 +640,8 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
       gst_egl_image_memory_set_orientation (mem,
           GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_FLIP);
       images = g_list_append (images, gst_egl_image_memory_get_image (mem));
-      if (!display)
-        display = gst_egl_image_memory_get_display (mem);
+      if (egl_display == EGL_NO_DISPLAY)
+        egl_display = gst_egl_image_memory_get_display (mem);
     }
 
     GST_DEBUG_OBJECT (self, "Allocated %d EGLImages successfully", min);
@@ -651,14 +649,10 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
     /* Everything went fine? */
     if (eglimage) {
       GST_DEBUG_OBJECT (self, "Setting EGLDisplay");
-      self->egl_out_port->port_def.format.video.pNativeWindow =
-          gst_egl_display_get (display);
+      self->egl_out_port->port_def.format.video.pNativeWindow = egl_display;
       err =
           gst_omx_port_update_port_definition (self->egl_out_port,
           &self->egl_out_port->port_def);
-      if (display)
-        gst_egl_display_unref (display);
-      display = NULL;
       if (err != OMX_ErrorNone) {
         GST_INFO_OBJECT (self,
             "Failed to set EGLDisplay on port: %s (0x%08x)",
