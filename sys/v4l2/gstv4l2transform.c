@@ -124,10 +124,8 @@ gst_v4l2_transform_get_property (GObject * object,
 }
 
 static gboolean
-gst_v4l2_transform_start (GstBaseTransform * trans)
+gst_v4l2_transform_open (GstV4l2Transform * self)
 {
-  GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
-
   GST_DEBUG_OBJECT (self, "Opening");
 
   if (!gst_v4l2_object_open (self->v4l2output))
@@ -176,19 +174,27 @@ failure:
   return FALSE;
 }
 
+static void
+gst_v4l2_transform_close (GstV4l2Transform * self)
+{
+  GST_DEBUG_OBJECT (self, "Closing");
+
+  gst_v4l2_object_close (self->v4l2output);
+  gst_v4l2_object_close (self->v4l2capture);
+
+  gst_caps_replace (&self->probed_srccaps, NULL);
+  gst_caps_replace (&self->probed_srccaps, NULL);
+}
+
 static gboolean
 gst_v4l2_transform_stop (GstBaseTransform * trans)
 {
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
 
-  GST_DEBUG_OBJECT (self, "Closing");
+  GST_DEBUG_OBJECT (self, "Stop");
 
   gst_v4l2_object_stop (self->v4l2output);
   gst_v4l2_object_stop (self->v4l2capture);
-  gst_v4l2_object_close (self->v4l2output);
-  gst_v4l2_object_close (self->v4l2capture);
-  gst_caps_replace (&self->probed_srccaps, NULL);
-  gst_caps_replace (&self->probed_srccaps, NULL);
   gst_caps_replace (&self->incaps, NULL);
   gst_caps_replace (&self->outcaps, NULL);
 
@@ -537,13 +543,32 @@ gst_v4l2_transform_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (element);
+  GstStateChangeReturn ret;
 
-  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY) {
-    gst_v4l2_object_unlock (self->v4l2output);
-    gst_v4l2_object_unlock (self->v4l2capture);
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!gst_v4l2_transform_open (self))
+        return GST_STATE_CHANGE_FAILURE;
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_v4l2_object_unlock (self->v4l2output);
+      gst_v4l2_object_unlock (self->v4l2capture);
+      break;
+    default:
+      break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_v4l2_transform_close (self);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static void
@@ -619,7 +644,6 @@ gst_v4l2_transform_class_init (GstV4l2TransformClass * klass)
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_v4l2_transform_get_property);
 
-  base_transform_class->start = GST_DEBUG_FUNCPTR (gst_v4l2_transform_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_v4l2_transform_stop);
   base_transform_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_v4l2_transform_set_caps);
