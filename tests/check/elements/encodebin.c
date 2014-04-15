@@ -327,6 +327,7 @@ GST_START_TEST (test_encodebin_preset)
   gst_element_set_state (ebin, GST_STATE_NULL);
   gst_preset_delete_preset (oggmuxpreset, "test_encodebin_preset");
 
+  gst_object_unref (oggmuxpreset);
   gst_object_unref (ebin);
 };
 
