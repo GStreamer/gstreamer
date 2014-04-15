@@ -26,7 +26,6 @@
 #include "gstcurlbasesink.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_CURL_SSH_SINK \
   (gst_curl_ssh_sink_get_type())
 #define GST_CURL_SSH_SINK(obj) \
@@ -39,9 +38,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CURL_SSH_SINK))
 #define GST_IS_CURL_SSH_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CURL_SSH_SINK))
-
 /* see <curl/curl.h> */
-typedef enum {
+    typedef enum
+{
   GST_CURLSSH_AUTH_NONE = CURLSSH_AUTH_NONE,
   GST_CURLSSH_AUTH_PUBLICKEY = CURLSSH_AUTH_PUBLICKEY,
   GST_CURLSSH_AUTH_PASSWORD = CURLSSH_AUTH_PASSWORD
@@ -55,22 +54,22 @@ struct _GstCurlSshSink
 {
   GstCurlBaseSink parent;
 
-  /*< private >*/
-  guint ssh_auth_type;  /* for now, supporting only:
-                           CURLSSH_AUTH_PASSWORD  (passwd auth) OR
-                           CURLSSH_AUTH_PUBLICKEY (pub/pvt key auth) */
+  /*< private > */
+  guint ssh_auth_type;          /* for now, supporting only:
+                                   CURLSSH_AUTH_PASSWORD  (passwd auth) OR
+                                   CURLSSH_AUTH_PUBLICKEY (pub/pvt key auth) */
 
-  gchar *ssh_pub_keyfile;            /* filename for the public key:
-                                        CURLOPT_SSH_PUBLIC_KEYFILE */
-  gchar *ssh_priv_keyfile;           /* filename for the private key:
-                                        CURLOPT_SSH_PRIVATE_KEYFILE */
-  gchar *ssh_key_passphrase;         /* passphrase for the pvt key:
-                                        CURLOPT_KEYPASSWD */
+  gchar *ssh_pub_keyfile;       /* filename for the public key:
+                                   CURLOPT_SSH_PUBLIC_KEYFILE */
+  gchar *ssh_priv_keyfile;      /* filename for the private key:
+                                   CURLOPT_SSH_PRIVATE_KEYFILE */
+  gchar *ssh_key_passphrase;    /* passphrase for the pvt key:
+                                   CURLOPT_KEYPASSWD */
 
-  gchar *ssh_knownhosts;            /* filename of the 'known_hosts' file:
-                                       CURLOPT_SSH_KNOWN_HOSTS */
-  gboolean ssh_accept_unknownhost;  /* accept or reject unknown public key
-                                       from remote host */
+  gchar *ssh_knownhosts;        /* filename of the 'known_hosts' file:
+                                   CURLOPT_SSH_KNOWN_HOSTS */
+  gboolean ssh_accept_unknownhost;      /* accept or reject unknown public key
+                                           from remote host */
 };
 
 struct _GstCurlSshSinkClass
@@ -78,11 +77,10 @@ struct _GstCurlSshSinkClass
   GstCurlBaseSinkClass parent_class;
 
   /* vmethods */
-  gboolean (*set_options_unlocked) (GstCurlBaseSink *sink);
+    gboolean (*set_options_unlocked) (GstCurlBaseSink * sink);
 };
 
 GType gst_curl_ssh_sink_get_type (void);
 
 G_END_DECLS
-
 #endif

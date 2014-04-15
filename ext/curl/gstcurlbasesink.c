@@ -1012,8 +1012,8 @@ gst_curl_base_sink_transfer_thread_func (gpointer data)
       /* Start driving the transfer. */
       klass->handle_transfer (sink);
 
-      /* easy handle will be possibly re-used for next transfer, thus it needs to
-       * be removed from the multi stack and re-added again */
+      /* easy handle will be possibly re-used for next transfer, thus it needs
+       * to be removed from the multi stack and re-added again */
       if (!gst_curl_base_sink_is_live (sink)) {
         curl_multi_remove_handle (sink->multi_handle, sink->curl);
       }

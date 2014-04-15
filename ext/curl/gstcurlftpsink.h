@@ -48,7 +48,7 @@ struct _GstCurlFtpSink
   gchar *ftp_port_arg;
   gboolean epsv_mode;
   gboolean tmpfile_create;
-  gchar *tmpfile_name;  
+  gchar *tmpfile_name;
   gboolean create_dirs;
 };
 

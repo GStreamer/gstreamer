@@ -26,7 +26,6 @@
 #include "gstcurlsshsink.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_CURL_SFTP_SINK \
   (gst_curl_sftp_sink_get_type())
 #define GST_CURL_SFTP_SINK(obj) \
@@ -37,7 +36,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CURL_SFTP_SINK))
 #define GST_IS_CURL_SFTP_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CURL_SFTP_SINK))
-
 typedef struct _GstCurlSftpSink GstCurlSftpSink;
 typedef struct _GstCurlSftpSinkClass GstCurlSftpSinkClass;
 
@@ -46,7 +44,7 @@ struct _GstCurlSftpSink
 {
   GstCurlSshSink parent;
 
-  /*< private >*/
+  /*< private > */
   gboolean create_dirs;
 };
 
@@ -58,5 +56,4 @@ struct _GstCurlSftpSinkClass
 GType gst_curl_sftp_sink_get_type (void);
 
 G_END_DECLS
-
 #endif

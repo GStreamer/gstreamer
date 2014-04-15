@@ -26,7 +26,8 @@
  * a local or network drive.
  *
  * <refsect2>
- * <title>Example launch line (upload a JPEG file to /home/test/images directory)</title>
+ * <title>Example launch line (upload a JPEG file to /home/test/images
+ * directory)</title>
  * |[
  * gst-launch filesrc location=image.jpg ! jpegparse ! curlfilesink  \
  *     file-name=image.jpg  \

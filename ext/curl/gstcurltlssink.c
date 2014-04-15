@@ -253,9 +253,9 @@ gst_curl_tls_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
     }
   }
 
-  /* note that, using ca-path can allow libcurl to make SSL-connections much more
-   * efficiently than using ca-cert if the ca-cert ile
-   * contains many CA certificates. */
+  /* note that, using ca-path can allow libcurl to make SSL-connections much
+   * more efficiently than using ca-cert if the ca-cert ile contains many CA
+   * certificates. */
   if (sink->ca_cert != NULL && strlen (sink->ca_cert)) {
     GST_DEBUG ("setting ca cert");
     curl_easy_setopt (bcsink->curl, CURLOPT_CAINFO, sink->ca_cert);

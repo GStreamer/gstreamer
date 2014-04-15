@@ -26,7 +26,8 @@
  * an FTP server.
  *
  * <refsect2>
- * <title>Example launch line (upload a JPEG file to /home/test/images directory)</title>
+ * <title>Example launch line (upload a JPEG file to /home/test/images
+ * directory)</title>
  * |[
  * gst-launch filesrc location=image.jpg ! jpegparse ! curlftpsink  \
  *     file-name=image.jpg  \

@@ -167,7 +167,8 @@ add_final_boundary_unlocked (GstCurlSmtpSink * sink)
   g_assert (array);
 
   /* it will need up to 5 bytes if line-breaking is enabled
-   * additional byte is needed for <CR> as it is not automatically added by glib */
+   * additional byte is needed for <CR> as it is not automatically added by
+   * glib */
   data_out = g_malloc (6);
   save = sink->base64_chunk->save;
   state = sink->base64_chunk->state;
@@ -719,7 +720,8 @@ gst_curl_smtp_sink_set_transfer_options_unlocked (GstCurlBaseSink * bcsink)
   return TRUE;
 }
 
-static void                     // FIXME: exactly the same function as in http sink
+/* FIXME: exactly the same function as in http sink */
+static void
 gst_curl_smtp_sink_set_mime_type (GstCurlBaseSink * bcsink, GstCaps * caps)
 {
   GstCurlSmtpSink *sink = GST_CURL_SMTP_SINK (bcsink);
@@ -769,7 +771,8 @@ gst_curl_smtp_sink_flush_data_unlocked (GstCurlBaseSink * bcsink,
   }
 
   /* it will need up to 5 bytes if line-breaking is enabled, however an
-   * additional byte is needed for <CR> as it is not automatically added by glib */
+   * additional byte is needed for <CR> as it is not automatically added by
+   * glib */
   data_out = g_malloc (6);
   len = g_base64_encode_close (TRUE, data_out, &state, &save);
   chunk->state = state;
@@ -834,8 +837,8 @@ transfer_chunk (void *curl_ptr, TransferBuffer * buffer, Base64Chunk * chunk,
     gint i;
 
     /* if line-breaking is enabled, at least: ((len / 3 + 1) * 4 + 4) / 72 + 1
-     * bytes of extra space is required. However, additional <CR>'s are required,
-     * thus we need ((len / 3 + 2) * 4 + 4) / 72 + 2 extra bytes.
+     * bytes of extra space is required. However, additional <CR>'s are
+     * required, thus we need ((len / 3 + 2) * 4 + 4) / 72 + 2 extra bytes.
      */
     size_out = (bytes_to_send / 3 + 1) * 4 + 4 + bytes_to_send +
         ((bytes_to_send / 3 + 2) * 4 + 4) / 72 + 2;
