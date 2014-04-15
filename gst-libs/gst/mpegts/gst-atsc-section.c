@@ -88,6 +88,7 @@ _parse_atsc_tvct (GstMpegTsSection * section)
   guint8 *data, *end, source_nb;
   guint32 tmp32;
   guint16 descriptors_loop_length, tmp16;
+  guint i;
 
   tvct = g_slice_new0 (GstMpegTsAtscTVCT);
 
@@ -112,7 +113,7 @@ _parse_atsc_tvct (GstMpegTsSection * section)
   tvct->sources = g_ptr_array_new_full (source_nb,
       (GDestroyNotify) _gst_mpegts_atsc_tvct_source_free);
 
-  for (guint i = 0; i < source_nb; i++) {
+  for (i = 0; i < source_nb; i++) {
     GstMpegTsAtscTVCTSource *source;
 
     /* minimum 32 bytes for a entry, 2 bytes second descriptor

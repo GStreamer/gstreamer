@@ -650,6 +650,7 @@ gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescriptor
   guint8 *data, *desc_data;
   guint8 tmp, len_item;
   GstMpegTsExtendedEventItem *item;
+  guint i;
 
   g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
   /* Need at least 6 bytes (1 for desc number, 3 for language code, 2 for the loop length) */
@@ -675,7 +676,7 @@ gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescriptor
   res->items = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_extended_event_item_free);
 
-  for (guint i = 0; i < len_item;) {
+  for (i = 0; i < len_item;) {
     desc_data = data;
     item = g_slice_new0 (GstMpegTsExtendedEventItem);
     item->item_description =
@@ -791,6 +792,7 @@ gst_mpegts_descriptor_parse_dvb_content (const GstMpegTsDescriptor
 {
   guint8 *data;
   guint8 len, tmp;
+  guint8 i;
 
   g_return_val_if_fail (descriptor != NULL && content != NULL, FALSE);
   __common_desc_checks (descriptor, GST_MTS_DESC_DVB_CONTENT, 0, FALSE);
@@ -800,7 +802,7 @@ gst_mpegts_descriptor_parse_dvb_content (const GstMpegTsDescriptor
 
   *content = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_content_free);
-  for (guint8 i = 0; i < len;) {
+  for (i = 0; i < len;) {
     GstMpegTsContent *cont = g_slice_new0 (GstMpegTsContent);
     tmp = *data;
     cont->content_nibble_1 = (tmp & 0xf0) >> 4;
@@ -1064,6 +1066,7 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegTsDescriptor
   guint8 *data;
   guint8 len, freq_len, sub_cell_len;
   guint32 tmp_freq;
+  guint8 i;
 
   g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
   __common_desc_ext_checks (descriptor, GST_MTS_DESC_EXT_DVB_T2_DELIVERY_SYSTEM,
@@ -1162,8 +1165,9 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegTsDescriptor
     res->cells = g_ptr_array_new_with_free_func ((GDestroyNotify)
         _gst_mpegts_t2_delivery_system_cell_free);
 
-    for (guint8 i = 0; i < len;) {
+    for (i = 0; i < len;) {
       GstMpegTsT2DeliverySystemCell *cell;
+      guint8 j, k;
 
       cell = g_slice_new0 (GstMpegTsT2DeliverySystemCell);
       g_ptr_array_add (res->cells, cell);
@@ -1179,7 +1183,7 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegTsDescriptor
         data += 1;
         i += 1;
 
-        for (guint8 j = 0; j < freq_len;) {
+        for (j = 0; j < freq_len;) {
           tmp_freq = GST_READ_UINT32_BE (data) * 10;
           g_array_append_val (cell->centre_frequencies, tmp_freq);
           data += 4;
@@ -1199,7 +1203,7 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegTsDescriptor
       cell->sub_cells = g_ptr_array_new_with_free_func ((GDestroyNotify)
           _gst_mpegts_t2_delivery_system_cell_extension_free);
 
-      for (guint8 k = 0; k < sub_cell_len;) {
+      for (k = 0; k < sub_cell_len;) {
         GstMpegTsT2DeliverySystemCellExtension *cell_ext;
         cell_ext = g_slice_new0 (GstMpegTsT2DeliverySystemCellExtension);
 
