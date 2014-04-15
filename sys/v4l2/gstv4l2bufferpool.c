@@ -141,11 +141,13 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   GstV4l2Meta *meta;
   GstV4l2Object *obj;
   GstVideoInfo *info;
+  GstVideoAlignment *align;
   guint index;
   gint i;
 
   obj = pool->obj;
   info = &obj->info;
+  align = &obj->align;
 
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
@@ -338,6 +340,15 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_FRAME_FLAG_NONE,
             GST_VIDEO_INFO_FORMAT (info), width, height, n_gst_planes,
             offset, stride);
+      }
+
+      if (pool->add_cropmeta) {
+        GstVideoCropMeta *crop;
+        crop = gst_buffer_add_video_crop_meta (newbuf);
+        crop->x = align->padding_left;
+        crop->y = align->padding_top;
+        crop->width = info->width;
+        crop->width = info->height;
       }
       break;
     }
@@ -1665,4 +1676,10 @@ start_failed:
     GST_ERROR_OBJECT (pool, "failed to start streaming");
     return FALSE;
   }
+}
+
+void
+gst_v4l2_buffer_pool_add_crop_meta (GstV4l2BufferPool * bpool, gboolean add)
+{
+  bpool->add_cropmeta = add;
 }

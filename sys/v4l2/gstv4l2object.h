@@ -97,6 +97,10 @@ struct _GstV4l2Object {
   /* the current format */
   struct v4l2_fmtdesc *fmtdesc;
   GstVideoInfo info;
+  GstVideoAlignment align;
+
+  gboolean need_video_meta;
+  gboolean need_crop_meta;
 
   /* only used if the device supports MPLANE
    * nb planes is meaning of v4l2 planes
@@ -254,8 +258,7 @@ GstCaps *     gst_v4l2_object_get_caps    (GstV4l2Object * v4l2object,
                                            GstCaps * filter);
 
 gboolean      gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object,
-                                              GstVideoInfo * info,
-                                              GstVideoAlignment * align);
+                                              GstVideoInfo * info);
  
 gboolean      gst_v4l2_object_decide_allocation (GstV4l2Object * v4l2object,
                                                  GstQuery * query);

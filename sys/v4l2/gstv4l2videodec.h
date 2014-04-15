@@ -65,8 +65,6 @@ struct _GstV4l2VideoDec
   gboolean active;
   gboolean processing;
   GstFlowReturn output_flow;
-
-  GstVideoAlignment align;
 };
 
 struct _GstV4l2VideoDecClass

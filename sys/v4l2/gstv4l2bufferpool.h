@@ -54,6 +54,7 @@ struct _GstV4l2BufferPool
   GstAllocationParams params;
   guint size;
   gboolean add_videometa;
+  gboolean add_cropmeta;
   gboolean can_alloc;        /* if extra buffers can be allocated */
 
   guint num_buffers;         /* number of buffers we use */
@@ -109,6 +110,8 @@ GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj, GstCaps *c
 GstFlowReturn       gst_v4l2_buffer_pool_process (GstV4l2BufferPool * bpool, GstBuffer * buf);
 
 gboolean gst_v4l2_buffer_pool_flush (GstV4l2BufferPool * pool);
+
+void gst_v4l2_buffer_pool_add_crop_meta (GstV4l2BufferPool * bpool, gboolean add);
 
 G_END_DECLS
 
