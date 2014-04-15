@@ -278,7 +278,7 @@ do_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   GST_BUFFER_FLAG_UNSET (*buffer, GST_BUFFER_FLAG_TAG_MEMORY);
 
   GST_LOG_OBJECT (pool, "allocated buffer %d/%d, %p", cur_buffers,
-      max_buffers, buffer);
+      max_buffers, *buffer);
 
   return result;
 
