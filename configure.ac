@@ -147,11 +147,11 @@ AG_GST_CHECK_GST_CONTROLLER($GST_API_VERSION, [$GST_REQ], yes)
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GST_REQ], yes)
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
-PKG_CHECK_MODULES([GST_EGL], [gstreamer-egl-1.0], [
-  AC_DEFINE(HAVE_GST_EGL, 1, [Have gstreamer-egl])
-  GST_EGL=yes
-], [GST_EGL=no])
-AM_CONDITIONAL(HAVE_GST_EGL, test "x$GST_EGL" = "xyes")
+PKG_CHECK_MODULES([GST_GL], [gstreamer-gl-1.0], [
+  AC_DEFINE(HAVE_GST_GL, 1, [Have gstreamer-gl])
+  GST_GL=yes
+], [GST_GL=no])
+AM_CONDITIONAL(HAVE_GST_GL, test "x$GST_GL" = "xyes")
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"

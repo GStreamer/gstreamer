@@ -1,4 +1,4 @@
-if HAVE_GST_EGL
+if HAVE_GST_GL
 SUBDIRS = egl
 endif
 

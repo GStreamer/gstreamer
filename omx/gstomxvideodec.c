@@ -36,7 +36,7 @@
 #pragma GCC optimize ("gnu89-inline")
 #endif
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
 #include <gst/egl/egl.h>
 #endif
 
@@ -192,7 +192,7 @@ gst_omx_video_dec_open (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Opened decoder");
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   GST_DEBUG_OBJECT (self, "Opening EGL renderer");
   self->egl_render =
       gst_omx_component_new (GST_OBJECT_CAST (self), klass->cdata.core_name,
@@ -249,7 +249,7 @@ gst_omx_video_dec_shutdown (GstOMXVideoDec * self)
 
   GST_DEBUG_OBJECT (self, "Shutting down decoder");
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   state = gst_omx_component_get_state (self->egl_render, 0);
   if (state > OMX_StateLoaded || state == OMX_StateInvalid) {
     if (state > OMX_StateIdle) {
@@ -306,7 +306,7 @@ gst_omx_video_dec_close (GstVideoDecoder * decoder)
     gst_omx_component_free (self->dec);
   self->dec = NULL;
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   self->egl_in_port = NULL;
   self->egl_out_port = NULL;
   if (self->egl_render)
@@ -357,7 +357,7 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
         gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, TRUE);
       if (self->dec_out_port)
         gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
       if (self->egl_in_port)
         gst_omx_port_set_flushing (self->egl_in_port, 5 * GST_SECOND, TRUE);
       if (self->egl_out_port)
@@ -544,7 +544,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
   GstVideoCodecState *state =
       gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   port = self->eglimage ? self->egl_out_port : self->dec_out_port;
 #else
   port = self->dec_out_port;
@@ -573,7 +573,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
         GST_BUFFER_POOL_OPTION_VIDEO_META);
     gst_structure_free (config);
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
     eglimage = self->eglimage && (allocator
         && g_strcmp0 (allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
 #else
@@ -591,7 +591,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
     GST_DEBUG_OBJECT (self, "No pool available, not negotiated yet");
   }
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   /* Will retry without EGLImage */
   if (self->eglimage && !eglimage) {
     GST_DEBUG_OBJECT (self,
@@ -605,7 +605,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
     self->out_port_pool =
         gst_omx_buffer_pool_new (GST_ELEMENT_CAST (self), self->dec, port);
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   if (eglimage) {
     GList *buffers = NULL;
     GList *images = NULL;
@@ -885,7 +885,7 @@ gst_omx_video_dec_deallocate_output_buffers (GstOMXVideoDec * self)
     gst_object_unref (self->out_port_pool);
     self->out_port_pool = NULL;
   }
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   err =
       gst_omx_port_deallocate_buffers (self->
       eglimage ? self->egl_out_port : self->dec_out_port);
@@ -907,7 +907,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
 
   /* At this point the decoder output port is disabled */
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   {
     OMX_STATETYPE egl_state;
 
@@ -1107,7 +1107,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (self);
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
 enable_port:
 #endif
   err = gst_omx_video_dec_allocate_output_buffers (self);
@@ -1138,7 +1138,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   GstClockTimeDiff deadline;
   OMX_ERRORTYPE err;
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   port = self->eglimage ? self->egl_out_port : self->dec_out_port;
 #else
   port = self->dec_out_port;
@@ -1535,7 +1535,7 @@ gst_omx_video_dec_stop (GstVideoDecoder * decoder)
   gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, TRUE);
   gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   gst_omx_port_set_flushing (self->egl_in_port, 5 * GST_SECOND, TRUE);
   gst_omx_port_set_flushing (self->egl_out_port, 5 * GST_SECOND, TRUE);
 #endif
@@ -1544,7 +1544,7 @@ gst_omx_video_dec_stop (GstVideoDecoder * decoder)
 
   if (gst_omx_component_get_state (self->dec, 0) > OMX_StateIdle)
     gst_omx_component_set_state (self->dec, OMX_StateIdle);
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   if (gst_omx_component_get_state (self->egl_render, 0) > OMX_StateIdle)
     gst_omx_component_set_state (self->egl_render, OMX_StateIdle);
 #endif
@@ -1559,7 +1559,7 @@ gst_omx_video_dec_stop (GstVideoDecoder * decoder)
   g_mutex_unlock (&self->drain_lock);
 
   gst_omx_component_get_state (self->dec, 5 * GST_SECOND);
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   gst_omx_component_get_state (self->egl_render, 1 * GST_SECOND);
 #endif
 
@@ -1716,7 +1716,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   }
 
   if (needs_disable && is_format_change) {
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
     GstOMXPort *out_port =
         self->eglimage ? self->egl_out_port : self->dec_out_port;
 #else
@@ -1739,7 +1739,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
         return FALSE;
       needs_disable = FALSE;
     } else {
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
       if (self->eglimage) {
         gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, TRUE);
         gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
@@ -1768,7 +1768,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
       if (gst_omx_port_wait_enabled (out_port, 1 * GST_SECOND) != OMX_ErrorNone)
         return FALSE;
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
       if (self->eglimage) {
         OMX_STATETYPE egl_state;
 
@@ -1918,7 +1918,7 @@ gst_omx_video_dec_flush (GstVideoDecoder * decoder)
     gst_omx_component_set_state (self->dec, OMX_StatePause);
     gst_omx_component_get_state (self->dec, GST_CLOCK_TIME_NONE);
   }
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   if (self->eglimage) {
     if (gst_omx_component_get_state (self->egl_render, 0) == OMX_StateExecuting) {
       gst_omx_component_set_state (self->egl_render, OMX_StatePause);
@@ -1932,7 +1932,7 @@ gst_omx_video_dec_flush (GstVideoDecoder * decoder)
   gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, TRUE);
   gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   if (self->eglimage) {
     gst_omx_port_set_flushing (self->egl_in_port, 5 * GST_SECOND, TRUE);
     gst_omx_port_set_flushing (self->egl_out_port, 5 * GST_SECOND, TRUE);
@@ -1942,7 +1942,7 @@ gst_omx_video_dec_flush (GstVideoDecoder * decoder)
   /* 3) Resume components */
   gst_omx_component_set_state (self->dec, OMX_StateExecuting);
   gst_omx_component_get_state (self->dec, GST_CLOCK_TIME_NONE);
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   if (self->eglimage) {
     gst_omx_component_set_state (self->egl_render, OMX_StateExecuting);
     gst_omx_component_get_state (self->egl_render, GST_CLOCK_TIME_NONE);
@@ -1953,7 +1953,7 @@ gst_omx_video_dec_flush (GstVideoDecoder * decoder)
   gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, FALSE);
   gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, FALSE);
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   if (self->eglimage) {
     gst_omx_port_set_flushing (self->egl_in_port, 5 * GST_SECOND, FALSE);
     gst_omx_port_set_flushing (self->egl_out_port, 5 * GST_SECOND, FALSE);
@@ -2368,7 +2368,7 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   GstBufferPool *pool;
   GstStructure *config;
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   {
     GstCaps *caps;
     gint i, n;
