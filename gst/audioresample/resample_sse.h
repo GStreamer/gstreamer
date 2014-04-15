@@ -41,36 +41,53 @@
 #define OVERRIDE_INNER_PRODUCT_SINGLE
 static inline float inner_product_single(const float *a, const float *b, unsigned int len)
 {
-   int i;
-   float ret;
+   int i = 0;
+   float ret = 0;
    __m128 sum = _mm_setzero_ps();
-   for (i=0;i<len;i+=8)
+
+   if (len > 7)
    {
-      sum = _mm_add_ps(sum, _mm_mul_ps(_mm_loadu_ps(a+i), _mm_loadu_ps(b+i)));
-      sum = _mm_add_ps(sum, _mm_mul_ps(_mm_loadu_ps(a+i+4), _mm_loadu_ps(b+i+4)));
+      for (;i<len-7;i+=8)
+      {
+         sum = _mm_add_ps(sum, _mm_mul_ps(_mm_loadu_ps(a+i), _mm_loadu_ps(b+i)));
+         sum = _mm_add_ps(sum, _mm_mul_ps(_mm_loadu_ps(a+i+4), _mm_loadu_ps(b+i+4)));
+      }
+      sum = _mm_add_ps(sum, _mm_movehl_ps(sum, sum));
+      sum = _mm_add_ss(sum, _mm_shuffle_ps(sum, sum, 0x55));
+      _mm_store_ss(&ret, sum);
    }
-   sum = _mm_add_ps(sum, _mm_movehl_ps(sum, sum));
-   sum = _mm_add_ss(sum, _mm_shuffle_ps(sum, sum, 0x55));
-   _mm_store_ss(&ret, sum);
+
+   for (; i < len; i++)
+     ret += a[i] * b[i];
+
    return ret;
 }
 
 #define OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
 static inline float interpolate_product_single(const float *a, const float *b, unsigned int len, const spx_uint32_t oversample, float *frac) {
-  int i;
-  float ret;
+  int i = 0;
+  float ret = 0;
   __m128 sum = _mm_setzero_ps();
   __m128 f = _mm_loadu_ps(frac);
-  for(i=0;i<len;i+=2)
+
+  if (len > 1)
   {
-    sum = _mm_add_ps(sum, _mm_mul_ps(_mm_load1_ps(a+i), _mm_loadu_ps(b+i*oversample)));
-    sum = _mm_add_ps(sum, _mm_mul_ps(_mm_load1_ps(a+i+1), _mm_loadu_ps(b+(i+1)*oversample)));
+     for(;i<len-1;i+=2)
+     {
+        sum = _mm_add_ps(sum, _mm_mul_ps(_mm_load1_ps(a+i), _mm_loadu_ps(b+i*oversample)));
+        sum = _mm_add_ps(sum, _mm_mul_ps(_mm_load1_ps(a+i+1), _mm_loadu_ps(b+(i+1)*oversample)));
+     }
+
+     sum = _mm_mul_ps(f, sum);
+     sum = _mm_add_ps(sum, _mm_movehl_ps(sum, sum));
+     sum = _mm_add_ss(sum, _mm_shuffle_ps(sum, sum, 0x55));
+     _mm_store_ss(&ret, sum);
   }
-   sum = _mm_mul_ps(f, sum);
-   sum = _mm_add_ps(sum, _mm_movehl_ps(sum, sum));
-   sum = _mm_add_ss(sum, _mm_shuffle_ps(sum, sum, 0x55));
-   _mm_store_ss(&ret, sum);
-   return ret;
+
+  if (i == len-1)
+    ret += a[i] * (frac[0]*b[i*oversample] + frac[1]*b[i*oversample + 1] + frac[2]*b[i*oversample + 2] + frac[3]*b[i*oversample + 3]);
+
+  return ret;
 }
 
 #ifdef _USE_SSE2
@@ -82,37 +99,53 @@ static inline float interpolate_product_single(const float *a, const float *b, u
 #ifdef DOUBLE_PRECISION
 static inline double inner_product_double(const double *a, const double *b, unsigned int len)
 {
-   int i;
-   double ret;
+   int i = 0;
+   double ret = 0;
    __m128d sum = _mm_setzero_pd();
-   for (i=0;i<len;i+=4)
+
+   if (len > 3)
    {
-      sum = _mm_add_pd(sum, _mm_mul_pd(_mm_loadu_pd(a+i), _mm_loadu_pd(b+i)));
-      sum = _mm_add_pd(sum, _mm_mul_pd(_mm_loadu_pd(a+i+2), _mm_loadu_pd(b+i+2)));
+      for (;i<len-3;i+=4)
+      {
+         sum = _mm_add_pd(sum, _mm_mul_pd(_mm_loadu_pd(a+i), _mm_loadu_pd(b+i)));
+         sum = _mm_add_pd(sum, _mm_mul_pd(_mm_loadu_pd(a+i+2), _mm_loadu_pd(b+i+2)));
+      }
+      sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
+      _mm_store_sd(&ret, sum);
    }
-   sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
-   _mm_store_sd(&ret, sum);
+
+   for (; i < len; i++)
+     ret += a[i] * b[i];
+
    return ret;
 }
 #else
 static inline double inner_product_double(const float *a, const float *b, unsigned int len)
 {
-   int i;
-   double ret;
+   int i = 0;
+   double ret = 0;
    __m128d sum = _mm_setzero_pd();
    __m128 t;
-   for (i=0;i<len;i+=8)
-   {
-      t = _mm_mul_ps(_mm_loadu_ps(a+i), _mm_loadu_ps(b+i));
-      sum = _mm_add_pd(sum, _mm_cvtps_pd(t));
-      sum = _mm_add_pd(sum, _mm_cvtps_pd(_mm_movehl_ps(t, t)));
 
-      t = _mm_mul_ps(_mm_loadu_ps(a+i+4), _mm_loadu_ps(b+i+4));
-      sum = _mm_add_pd(sum, _mm_cvtps_pd(t));
-      sum = _mm_add_pd(sum, _mm_cvtps_pd(_mm_movehl_ps(t, t)));
+   if (len > 7)
+   {
+      for (;i<len-7;i+=8)
+      {
+         t = _mm_mul_ps(_mm_loadu_ps(a+i), _mm_loadu_ps(b+i));
+         sum = _mm_add_pd(sum, _mm_cvtps_pd(t));
+         sum = _mm_add_pd(sum, _mm_cvtps_pd(_mm_movehl_ps(t, t)));
+
+         t = _mm_mul_ps(_mm_loadu_ps(a+i+4), _mm_loadu_ps(b+i+4));
+         sum = _mm_add_pd(sum, _mm_cvtps_pd(t));
+         sum = _mm_add_pd(sum, _mm_cvtps_pd(_mm_movehl_ps(t, t)));
+      }
+      sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
+      _mm_store_sd(&ret, sum);
    }
-   sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
-   _mm_store_sd(&ret, sum);
+
+   for (; i < len; i++)
+     ret += a[i] * b[i];
+
    return ret;
 }
 #endif
@@ -122,35 +155,43 @@ static inline double inner_product_double(const float *a, const float *b, unsign
 
 #ifdef DOUBLE_PRECISION
 static inline double interpolate_product_double(const double *a, const double *b, unsigned int len, const spx_uint32_t oversample, double *frac) {
-  int i;
-  double ret;
+  int i = 0;
+  double ret = 0;
   __m128d sum;
   __m128d sum1 = _mm_setzero_pd();
   __m128d sum2 = _mm_setzero_pd();
   __m128d f1 = _mm_loadu_pd(frac);
   __m128d f2 = _mm_loadu_pd(frac+2);
   __m128d t;
-  for(i=0;i<len;i+=2)
+  
+  if (len > 1)
   {
-    t = _mm_mul_pd(_mm_load1_pd(a+i), _mm_loadu_pd(b+i*oversample));
-    sum1 = _mm_add_pd(sum1, t);
-    sum2 = _mm_add_pd(sum2, _mm_unpackhi_pd(t, t));
+     for(;i<len-1;i+=2)
+     {
+       t = _mm_mul_pd(_mm_load1_pd(a+i), _mm_loadu_pd(b+i*oversample));
+       sum1 = _mm_add_pd(sum1, t);
+       sum2 = _mm_add_pd(sum2, _mm_unpackhi_pd(t, t));
 
-    t = _mm_mul_pd(_mm_load1_pd(a+i+1), _mm_loadu_pd(b+(i+1)*oversample));
-    sum1 = _mm_add_pd(sum1, t);
-    sum2 = _mm_add_pd(sum2, _mm_unpackhi_pd(t, t));
+       t = _mm_mul_pd(_mm_load1_pd(a+i+1), _mm_loadu_pd(b+(i+1)*oversample));
+       sum1 = _mm_add_pd(sum1, t);
+       sum2 = _mm_add_pd(sum2, _mm_unpackhi_pd(t, t));
+     }
+     sum1 = _mm_mul_pd(f1, sum1);
+     sum2 = _mm_mul_pd(f2, sum2);
+     sum = _mm_add_pd(sum1, sum2);
+     sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
+     _mm_store_sd(&ret, sum);
   }
-  sum1 = _mm_mul_pd(f1, sum1);
-  sum2 = _mm_mul_pd(f2, sum2);
-  sum = _mm_add_pd(sum1, sum2);
-  sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
-  _mm_store_sd(&ret, sum);
+
+  if (i == len-1)
+    ret += a[i] * (frac[0]*b[i*oversample] + frac[1]*b[i*oversample + 1] + frac[2]*b[i*oversample + 2] + frac[3]*b[i*oversample + 3]);
+
   return ret;
 }
 #else
 static inline double interpolate_product_double(const float *a, const float *b, unsigned int len, const spx_uint32_t oversample, float *frac) {
-  int i;
-  double ret;
+  int i = 0;
+  double ret = 0;
   __m128d sum;
   __m128d sum1 = _mm_setzero_pd();
   __m128d sum2 = _mm_setzero_pd();
@@ -158,21 +199,29 @@ static inline double interpolate_product_double(const float *a, const float *b, 
   __m128d f1 = _mm_cvtps_pd(f);
   __m128d f2 = _mm_cvtps_pd(_mm_movehl_ps(f,f));
   __m128 t;
-  for(i=0;i<len;i+=2)
-  {
-    t = _mm_mul_ps(_mm_load1_ps(a+i), _mm_loadu_ps(b+i*oversample));
-    sum1 = _mm_add_pd(sum1, _mm_cvtps_pd(t));
-    sum2 = _mm_add_pd(sum2, _mm_cvtps_pd(_mm_movehl_ps(t, t)));
 
-    t = _mm_mul_ps(_mm_load1_ps(a+i+1), _mm_loadu_ps(b+(i+1)*oversample));
-    sum1 = _mm_add_pd(sum1, _mm_cvtps_pd(t));
-    sum2 = _mm_add_pd(sum2, _mm_cvtps_pd(_mm_movehl_ps(t, t)));
+  if (len > 1)
+  {
+     for(;i<len-1;i+=2)
+     {
+        t = _mm_mul_ps(_mm_load1_ps(a+i), _mm_loadu_ps(b+i*oversample));
+        sum1 = _mm_add_pd(sum1, _mm_cvtps_pd(t));
+        sum2 = _mm_add_pd(sum2, _mm_cvtps_pd(_mm_movehl_ps(t, t)));
+
+        t = _mm_mul_ps(_mm_load1_ps(a+i+1), _mm_loadu_ps(b+(i+1)*oversample));
+        sum1 = _mm_add_pd(sum1, _mm_cvtps_pd(t));
+        sum2 = _mm_add_pd(sum2, _mm_cvtps_pd(_mm_movehl_ps(t, t)));
+     }
+     sum1 = _mm_mul_pd(f1, sum1);
+     sum2 = _mm_mul_pd(f2, sum2);
+     sum = _mm_add_pd(sum1, sum2);
+     sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
+     _mm_store_sd(&ret, sum);
   }
-  sum1 = _mm_mul_pd(f1, sum1);
-  sum2 = _mm_mul_pd(f2, sum2);
-  sum = _mm_add_pd(sum1, sum2);
-  sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
-  _mm_store_sd(&ret, sum);
+
+  if (i == len-1)
+    ret += a[i] * (frac[0]*b[i*oversample] + frac[1]*b[i*oversample + 1] + frac[2]*b[i*oversample + 2] + frac[3]*b[i*oversample + 3]);
+
   return ret;
 }
 #endif
