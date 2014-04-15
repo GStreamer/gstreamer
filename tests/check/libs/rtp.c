@@ -934,6 +934,7 @@ GST_START_TEST (test_rtp_buffer_get_payload_bytes)
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
+  g_bytes_unref (gb);
 
   /* create RTP buffer containing RTP packet */
   buf = gst_buffer_new_and_alloc (sizeof (rtppacket));
@@ -950,6 +951,7 @@ GST_START_TEST (test_rtp_buffer_get_payload_bytes)
   fail_unless (data != NULL);
   fail_unless (size == (sizeof (rtppacket) - RTP_HEADER_LEN));
   fail_unless_equals_string ("Hello", data);
+  g_bytes_unref (gb);
 
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unmap (buf, &map);
