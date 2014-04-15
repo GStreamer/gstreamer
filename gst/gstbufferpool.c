@@ -276,7 +276,7 @@ do_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   gst_buffer_foreach_meta (*buffer, mark_meta_pooled, pool);
 
   GST_LOG_OBJECT (pool, "allocated buffer %d/%d, %p", cur_buffers,
-      max_buffers, buffer);
+      max_buffers, *buffer);
 
   return result;
 
