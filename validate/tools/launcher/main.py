@@ -162,16 +162,16 @@ def main():
                % options.clone_dir, Colors.FAIL, True)
         return -1
 
-    tests_launcher.set_settings(options, args)
-
     blacklisted = tests_launcher.get_blacklisted()
     if blacklisted:
         msg = "Currently 'hardcoded' blacklisted tests:\n"
         for name, bug in blacklisted:
-            sys.argv.extend(["-b", name])
+            options.blacklisted_tests.append(name)
             msg += "    + %s -- bug: %s\n" % (name, bug)
 
         printc(msg, Colors.FAIL, True)
+
+    tests_launcher.set_settings(options, args)
 
     if options.remote_assets_url and options.sync:
         if os.path.exists(options.clone_dir):
