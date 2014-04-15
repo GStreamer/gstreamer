@@ -1071,7 +1071,7 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
       "auto-transmission-mode", G_TYPE_BOOLEAN,
       fe_info.caps & FE_CAN_TRANSMISSION_MODE_AUTO, "auto-guard-interval",
       G_TYPE_BOOLEAN, fe_info.caps & FE_CAN_GUARD_INTERVAL_AUTO,
-      "auto-hierarchy", G_TYPE_BOOLEAN, fe_info.caps % FE_CAN_HIERARCHY_AUTO,
+      "auto-hierarchy", G_TYPE_BOOLEAN, fe_info.caps & FE_CAN_HIERARCHY_AUTO,
       "auto-fec", G_TYPE_BOOLEAN, fe_info.caps & FE_CAN_FEC_AUTO, NULL);
 
   /* Capability delivery systems */
