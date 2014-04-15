@@ -79,7 +79,7 @@ gst_audio_decoder_tester_set_format (GstAudioDecoder * dec, GstCaps * caps)
   gst_caps_unref (caps);
 
   if (!tester->setoutputformat_on_decoding) {
-    caps = gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, "S16LE",
+    caps = gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, "S32LE",
         "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 44100,
         "layout", G_TYPE_STRING, "interleaved", NULL);
     gst_audio_info_from_caps (&info, caps);
@@ -99,7 +99,6 @@ gst_audio_decoder_tester_handle_frame (GstAudioDecoder * dec,
   gint size;
   GstMapInfo map;
   GstBuffer *output_buffer;
-  guint64 samples;
 
   if (buffer == NULL)
     return GST_FLOW_OK;
@@ -108,7 +107,7 @@ gst_audio_decoder_tester_handle_frame (GstAudioDecoder * dec,
     GstCaps *caps;
     GstAudioInfo info;
 
-    caps = gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, "S16LE",
+    caps = gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, "S32LE",
         "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 44100,
         "layout", G_TYPE_STRING, "interleaved", NULL);
     gst_audio_info_from_caps (&info, caps);
@@ -119,11 +118,9 @@ gst_audio_decoder_tester_handle_frame (GstAudioDecoder * dec,
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  /* the output is SE16LE stereo 44100 Hz */
-  samples =
-      gst_util_uint64_scale_round (44100, GST_BUFFER_DURATION (buffer),
-      GST_SECOND);
-  size = 2 * 2 * samples;
+  /* the output is SE32LE stereo 44100 Hz */
+  size = 2 * 4;
+  g_assert (size == sizeof (guint64));
   data = g_malloc0 (size);
 
   memcpy (data, map.data, sizeof (guint64));
@@ -179,14 +176,14 @@ _mysinkpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static void
 setup_audiodecodertester (void)
 {
-  GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("audio/x-raw, format=(string)S16LE, "
+      GST_STATIC_CAPS ("audio/x-raw, format=(string)S32LE, "
           "rate=(int)[1, 320000], channels=(int)[1, 32],"
           "layout=(string)interleaved")
       );
-  GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+  static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS ("audio/x-test-custom")
@@ -277,11 +274,11 @@ GST_START_TEST (audiodecoder_playback)
     gst_buffer_map (buffer, &map, GST_MAP_READ);
 
     num = *(guint64 *) map.data;
-    fail_unless (i == num);
-    fail_unless (GST_BUFFER_PTS (buffer) == gst_util_uint64_scale_round (i,
-            GST_SECOND, TEST_MSECS_PER_SAMPLE));
-    fail_unless (GST_BUFFER_DURATION (buffer) == gst_util_uint64_scale_round (1,
-            GST_SECOND, TEST_MSECS_PER_SAMPLE));
+    fail_unless_equals_uint64 (i, num);
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer),
+        gst_util_uint64_scale_round (i, GST_SECOND, TEST_MSECS_PER_SAMPLE));
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buffer),
+        gst_util_uint64_scale_round (1, GST_SECOND, TEST_MSECS_PER_SAMPLE));
 
     gst_buffer_unmap (buffer, &map);
 
