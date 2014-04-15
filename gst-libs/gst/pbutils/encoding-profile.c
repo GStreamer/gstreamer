@@ -255,6 +255,8 @@ gst_encoding_profile_finalize (GObject * object)
     g_free (prof->description);
   if (prof->restriction)
     gst_caps_unref (prof->restriction);
+  if (prof->preset_name)
+    g_free (prof->preset_name);
 }
 
 static void
