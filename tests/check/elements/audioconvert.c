@@ -47,28 +47,24 @@ static GstPad *mysrcpad, *mysinkpad;
 static GstElement *
 setup_audioconvert (GstCaps * outcaps)
 {
-  GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS (CONVERT_CAPS_TEMPLATE_STRING)
-      );
-  GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+  GstPadTemplate *sinktemplate;
+  static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS (CONVERT_CAPS_TEMPLATE_STRING)
       );
   GstElement *audioconvert;
-  gchar *caps_str;
 
-  caps_str = gst_caps_to_string (outcaps);
-  sinktemplate.static_caps.string = caps_str;
+  sinktemplate =
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, outcaps);
 
   GST_DEBUG ("setup_audioconvert with caps %" GST_PTR_FORMAT, outcaps);
   audioconvert = gst_check_setup_element ("audioconvert");
   g_object_set (G_OBJECT (audioconvert), "dithering", 0, NULL);
   g_object_set (G_OBJECT (audioconvert), "noise-shaping", 0, NULL);
   mysrcpad = gst_check_setup_src_pad (audioconvert, &srctemplate);
-  mysinkpad = gst_check_setup_sink_pad (audioconvert, &sinktemplate);
+  mysinkpad =
+      gst_check_setup_sink_pad_from_template (audioconvert, sinktemplate);
   /* this installs a getcaps func that will always return the caps we set
    * later */
   gst_pad_use_fixed_caps (mysinkpad);
@@ -76,7 +72,7 @@ setup_audioconvert (GstCaps * outcaps)
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  g_free (caps_str);
+  gst_object_unref (sinktemplate);
 
   return audioconvert;
 }
@@ -413,7 +409,7 @@ verify_convert (const gchar * which, void *in, int inlength,
   ASSERT_CAPS_REFCOUNT (incaps, "incaps", 1);
   ASSERT_CAPS_REFCOUNT (outcaps, "outcaps", 1);
   audioconvert = setup_audioconvert (outcaps);
-  ASSERT_CAPS_REFCOUNT (outcaps, "outcaps", 1);
+  ASSERT_CAPS_REFCOUNT (outcaps, "outcaps", 2);
 
   fail_unless (gst_element_set_state (audioconvert,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -487,6 +483,7 @@ done:
   cleanup_audioconvert (audioconvert);
   GST_DEBUG ("cleanup, unref incaps");
   gst_caps_unref (incaps);
+  gst_caps_unref (outcaps);
 }
 
 
@@ -1448,12 +1445,12 @@ GST_END_TEST;
 
 GST_START_TEST (test_preserve_width)
 {
-  GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS (SIMPLE_CAPS_TEMPLATE_STRING)
       );
-  GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+  static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS (CONVERT_CAPS_TEMPLATE_STRING)
