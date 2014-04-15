@@ -178,6 +178,7 @@ set_ftp_dynamic_options_unlocked (GstCurlBaseSink * basesink)
 {
   gchar *tmp = NULL;
   GstCurlFtpSink *sink = GST_CURL_FTP_SINK (basesink);
+  CURLcode res;
 
   if (sink->tmpfile_create) {
     gchar *rename_from = NULL;
@@ -213,10 +214,25 @@ set_ftp_dynamic_options_unlocked (GstCurlBaseSink * basesink)
     }
 
     tmp = g_strdup_printf ("%s%s", basesink->url, uploadfile_as);
-    curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp);
+
+    res = curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp);
+    if (res != CURLE_OK) {
+      g_free (tmp);
+      basesink->error = g_strdup_printf ("failed to set URL: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
+
     sink->headerlist = curl_slist_append (sink->headerlist, rename_from);
     sink->headerlist = curl_slist_append (sink->headerlist, rename_to);
-    curl_easy_setopt (basesink->curl, CURLOPT_POSTQUOTE, sink->headerlist);
+
+    res = curl_easy_setopt (basesink->curl, CURLOPT_POSTQUOTE, sink->headerlist);
+    if (res != CURLE_OK) {
+      g_free (tmp);
+      basesink->error = g_strdup_printf ("failed to set post quote: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
 
     g_free (rename_from);
     g_free (rename_to);
@@ -228,7 +244,13 @@ set_ftp_dynamic_options_unlocked (GstCurlBaseSink * basesink)
     }
   } else {
     tmp = g_strdup_printf ("%s%s", basesink->url, basesink->file_name);
-    curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp);
+    res = curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp);
+    if (res != CURLE_OK) {
+      g_free (tmp);
+      basesink->error = g_strdup_printf ("failed to set URL: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
   }
 
   g_free (tmp);
@@ -240,12 +262,18 @@ static gboolean
 set_ftp_options_unlocked (GstCurlBaseSink * basesink)
 {
   GstCurlFtpSink *sink = GST_CURL_FTP_SINK (basesink);
+  CURLcode res;
 
-  curl_easy_setopt (basesink->curl, CURLOPT_UPLOAD, 1L);
+  res = curl_easy_setopt (basesink->curl, CURLOPT_UPLOAD, 1L);
+  if (res != CURLE_OK) {
+    basesink->error = g_strdup_printf ("failed to prepare for upload: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   if (sink->ftp_port_arg != NULL && (strlen (sink->ftp_port_arg) > 0)) {
     /* Connect data stream actively. */
-    CURLcode res = curl_easy_setopt (basesink->curl, CURLOPT_FTPPORT,
+    res = curl_easy_setopt (basesink->curl, CURLOPT_FTPPORT,
         sink->ftp_port_arg);
 
     if (res != CURLE_OK) {
@@ -253,21 +281,31 @@ set_ftp_options_unlocked (GstCurlBaseSink * basesink)
           curl_easy_strerror (res));
       return FALSE;
     }
-
-    goto end;
+  } else {
+    /* Connect data stream passively.
+     * libcurl will always attempt to use EPSV before PASV.
+     */
+    if (!sink->epsv_mode) {
+      /* send only plain PASV command */
+      res = curl_easy_setopt (basesink->curl, CURLOPT_FTP_USE_EPSV, 0);
+      if (res != CURLE_OK) {
+        basesink->error =
+            g_strdup_printf ("failed to set extended passive mode: %s",
+            curl_easy_strerror (res));
+        return FALSE;
+      }
+    }
   }
 
-  /* Connect data stream passively.
-   * libcurl will always attempt to use EPSV before PASV.
-   */
-  if (!sink->epsv_mode) {
-    /* send only plain PASV command */
-    curl_easy_setopt (basesink->curl, CURLOPT_FTP_USE_EPSV, 0);
-  }
-
-end:
   if (sink->create_dirs) {
-    curl_easy_setopt (basesink->curl, CURLOPT_FTP_CREATE_MISSING_DIRS, 1L);
+    res = curl_easy_setopt (basesink->curl, CURLOPT_FTP_CREATE_MISSING_DIRS,
+        1L);
+    if (res != CURLE_OK) {
+      basesink->error =
+          g_strdup_printf ("failed to set create missing dirs: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
   }
 
   return TRUE;

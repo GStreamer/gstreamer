@@ -317,6 +317,7 @@ gst_curl_http_sink_set_header_unlocked (GstCurlBaseSink * bcsink)
 {
   GstCurlHttpSink *sink = GST_CURL_HTTP_SINK (bcsink);
   gchar *tmp;
+  CURLcode res;
 
   if (sink->header_list) {
     curl_slist_free_all (sink->header_list);
@@ -355,7 +356,12 @@ set_headers:
       "\"%s\"", bcsink->file_name);
   sink->header_list = curl_slist_append (sink->header_list, tmp);
   g_free (tmp);
-  curl_easy_setopt (bcsink->curl, CURLOPT_HTTPHEADER, sink->header_list);
+  res = curl_easy_setopt (bcsink->curl, CURLOPT_HTTPHEADER, sink->header_list);
+  if (res != CURLE_OK) {
+    bcsink->error = g_strdup_printf ("failed to set HTTP headers: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -365,6 +371,7 @@ gst_curl_http_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
 {
   GstCurlHttpSink *sink = GST_CURL_HTTP_SINK (bcsink);
   GstCurlTlsSinkClass *parent_class;
+  CURLcode res;
 
   /* proxy settings */
   if (sink->proxy != NULL) {
@@ -373,10 +380,21 @@ gst_curl_http_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
     }
   }
 
-  curl_easy_setopt (bcsink->curl, CURLOPT_POST, 1L);
+  res = curl_easy_setopt (bcsink->curl, CURLOPT_POST, 1L);
+  if (res != CURLE_OK) {
+    bcsink->error = g_strdup_printf ("failed to set HTTP POST: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   /* FIXME: check user & passwd */
-  curl_easy_setopt (bcsink->curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+  res = curl_easy_setopt (bcsink->curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+  if (res != CURLE_OK) {
+    bcsink->error =
+        g_strdup_printf ("failed to set HTTP authentication methods: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   parent_class = GST_CURL_TLS_SINK_GET_CLASS (sink);
 
@@ -449,30 +467,58 @@ static gboolean
 proxy_setup (GstCurlBaseSink * bcsink)
 {
   GstCurlHttpSink *sink = GST_CURL_HTTP_SINK (bcsink);
+  CURLcode res;
 
-  if (curl_easy_setopt (bcsink->curl, CURLOPT_PROXY, sink->proxy)
-      != CURLE_OK) {
+  res = curl_easy_setopt (bcsink->curl, CURLOPT_PROXY, sink->proxy);
+  if (res != CURLE_OK) {
+    bcsink->error = g_strdup_printf ("failed to set proxy: %s",
+        curl_easy_strerror (res));
     return FALSE;
   }
 
-  if (curl_easy_setopt (bcsink->curl, CURLOPT_PROXYPORT, sink->proxy_port)
-      != CURLE_OK) {
+  res = curl_easy_setopt (bcsink->curl, CURLOPT_PROXYPORT, sink->proxy_port);
+  if (res != CURLE_OK) {
+    bcsink->error = g_strdup_printf ("failed to set proxy port: %s",
+        curl_easy_strerror (res));
     return FALSE;
   }
 
   if (sink->proxy_user != NULL &&
       strlen (sink->proxy_user) &&
       sink->proxy_passwd != NULL && strlen (sink->proxy_passwd)) {
-    curl_easy_setopt (bcsink->curl, CURLOPT_PROXYUSERNAME, sink->proxy_user);
-    curl_easy_setopt (bcsink->curl, CURLOPT_PROXYPASSWORD, sink->proxy_passwd);
-    curl_easy_setopt (bcsink->curl, CURLOPT_PROXYAUTH, CURLAUTH_ANY);
+    res = curl_easy_setopt (bcsink->curl, CURLOPT_PROXYUSERNAME,
+        sink->proxy_user);
+    if (res != CURLE_OK) {
+      bcsink->error = g_strdup_printf ("failed to set proxy user name: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
+
+    res = curl_easy_setopt (bcsink->curl, CURLOPT_PROXYPASSWORD,
+        sink->proxy_passwd);
+    if (res != CURLE_OK) {
+      bcsink->error = g_strdup_printf ("failed to set proxy password: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
+
+    res = curl_easy_setopt (bcsink->curl, CURLOPT_PROXYAUTH, CURLAUTH_ANY);
+    if (res != CURLE_OK) {
+      bcsink->error =
+          g_strdup_printf ("failed to set proxy authentication method: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
+
     sink->proxy_auth = TRUE;
   }
 
   if (g_str_has_prefix (bcsink->url, "https://")) {
     /* tunnel all operations through a given HTTP proxy */
-    if (curl_easy_setopt (bcsink->curl, CURLOPT_HTTPPROXYTUNNEL, 1L)
-        != CURLE_OK) {
+    res = curl_easy_setopt (bcsink->curl, CURLOPT_HTTPPROXYTUNNEL, 1L);
+    if (res != CURLE_OK) {
+      bcsink->error = g_strdup_printf ("failed to set HTTP proxy tunnel: %s",
+          curl_easy_strerror (res));
       return FALSE;
     }
   }

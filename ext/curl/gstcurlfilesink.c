@@ -185,10 +185,15 @@ static gboolean
 set_file_dynamic_options_unlocked (GstCurlBaseSink * basesink)
 {
   gchar *tmp = g_strdup_printf ("%s%s", basesink->url, basesink->file_name);
+  CURLcode res;
 
-  curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp);
-
+  res = curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp);
   g_free (tmp);
+  if (res != CURLE_OK) {
+    basesink->error = g_strdup_printf ("failed to set URL: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -196,7 +201,14 @@ set_file_dynamic_options_unlocked (GstCurlBaseSink * basesink)
 static gboolean
 set_file_options_unlocked (GstCurlBaseSink * basesink)
 {
-  curl_easy_setopt (basesink->curl, CURLOPT_UPLOAD, 1L);
+  CURLcode res;
+
+  res = curl_easy_setopt (basesink->curl, CURLOPT_UPLOAD, 1L);
+  if (res != CURLE_OK) {
+    basesink->error = g_strdup_printf ("failed to prepare for upload: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   return TRUE;
 }

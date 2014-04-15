@@ -607,28 +607,81 @@ static gboolean
 gst_curl_base_sink_transfer_set_common_options_unlocked (GstCurlBaseSink * sink)
 {
   GstCurlBaseSinkClass *klass = GST_CURL_BASE_SINK_GET_CLASS (sink);
+  CURLcode res;
 
 #ifdef DEBUG
-  curl_easy_setopt (sink->curl, CURLOPT_VERBOSE, 1);
+  res = curl_easy_setopt (sink->curl, CURLOPT_VERBOSE, 1);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set verbose: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 #endif
 
-  curl_easy_setopt (sink->curl, CURLOPT_URL, sink->url);
+  res = curl_easy_setopt (sink->curl, CURLOPT_URL, sink->url);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set URL: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
-  curl_easy_setopt (sink->curl, CURLOPT_CONNECTTIMEOUT, sink->timeout);
+  res = curl_easy_setopt (sink->curl, CURLOPT_CONNECTTIMEOUT, sink->timeout);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set connection timeout: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   /* using signals in a multi-threaded application is dangerous */
-  curl_easy_setopt (sink->curl, CURLOPT_NOSIGNAL, 1);
+  res = curl_easy_setopt (sink->curl, CURLOPT_NOSIGNAL, 1);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set no signalling: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   /* socket settings */
-  curl_easy_setopt (sink->curl, CURLOPT_SOCKOPTDATA, sink);
-  curl_easy_setopt (sink->curl, CURLOPT_SOCKOPTFUNCTION,
+  res = curl_easy_setopt (sink->curl, CURLOPT_SOCKOPTDATA, sink);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set sockopt user data: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
+  res = curl_easy_setopt (sink->curl, CURLOPT_SOCKOPTFUNCTION,
       gst_curl_base_sink_transfer_socket_cb);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set sockopt function: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
-  curl_easy_setopt (sink->curl, CURLOPT_READFUNCTION, klass->transfer_read_cb);
-  curl_easy_setopt (sink->curl, CURLOPT_READDATA, sink);
-  curl_easy_setopt (sink->curl, CURLOPT_WRITEFUNCTION,
+  res = curl_easy_setopt (sink->curl, CURLOPT_READDATA, sink);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set read user data: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
+  res = curl_easy_setopt (sink->curl, CURLOPT_READFUNCTION,
+      klass->transfer_read_cb);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set read function: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
+
+  res = curl_easy_setopt (sink->curl, CURLOPT_WRITEDATA, sink);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set write user data: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
+  res = curl_easy_setopt (sink->curl, CURLOPT_WRITEFUNCTION,
       gst_curl_base_sink_transfer_write_cb);
-  curl_easy_setopt (sink->curl, CURLOPT_WRITEDATA, sink);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set write function: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -636,22 +689,34 @@ gst_curl_base_sink_transfer_set_common_options_unlocked (GstCurlBaseSink * sink)
 static gboolean
 gst_curl_base_sink_transfer_set_options_unlocked (GstCurlBaseSink * sink)
 {
-  gboolean res = FALSE;
   GstCurlBaseSinkClass *klass = GST_CURL_BASE_SINK_GET_CLASS (sink);
+  CURLcode res;
 
-  gst_curl_base_sink_transfer_set_common_options_unlocked (sink);
+  if (!gst_curl_base_sink_transfer_set_common_options_unlocked (sink)) {
+    return FALSE;
+  }
 
   /* authentication settings */
   if (sink->user != NULL && strlen (sink->user)) {
-    curl_easy_setopt (sink->curl, CURLOPT_USERNAME, sink->user);
-    curl_easy_setopt (sink->curl, CURLOPT_PASSWORD, sink->passwd);
+    res = curl_easy_setopt (sink->curl, CURLOPT_USERNAME, sink->user);
+    if (res != CURLE_OK) {
+      sink->error = g_strdup_printf ("failed to set user name: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
+    res = curl_easy_setopt (sink->curl, CURLOPT_PASSWORD, sink->passwd);
+    if (res != CURLE_OK) {
+      sink->error = g_strdup_printf ("failed to set password: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
   }
 
   if (klass->set_options_unlocked) {
-    res = klass->set_options_unlocked (sink);
+    return klass->set_options_unlocked (sink);
+  } else {
+    return FALSE;
   }
-
-  return res;
 }
 
 static size_t

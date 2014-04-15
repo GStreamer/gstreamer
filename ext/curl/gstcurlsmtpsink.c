@@ -630,6 +630,7 @@ gst_curl_smtp_sink_set_transfer_options_unlocked (GstCurlBaseSink * bcsink)
   gchar *from_header = NULL;
   gchar *enc_from;
   gint i;
+  CURLcode res;
 
   g_assert (sink->payload_headers == NULL);
   g_assert (sink->mail_rcpt != NULL);
@@ -694,7 +695,13 @@ gst_curl_smtp_sink_set_transfer_options_unlocked (GstCurlBaseSink * bcsink)
   g_free (from_header);
   g_free (request_headers);
 
-  curl_easy_setopt (bcsink->curl, CURLOPT_MAIL_FROM, sink->mail_from);
+  res = curl_easy_setopt (bcsink->curl, CURLOPT_MAIL_FROM, sink->mail_from);
+  if (res != CURLE_OK) {
+    bcsink->error =
+        g_strdup_printf ("failed to set SMTP sender email address: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   if (sink->curl_recipients != NULL) {
     curl_slist_free_all (sink->curl_recipients);
@@ -709,7 +716,14 @@ gst_curl_smtp_sink_set_transfer_options_unlocked (GstCurlBaseSink * bcsink)
   g_strfreev (tmp_list);
 
   /* note that the CURLOPT_MAIL_RCPT takes a list, not a char array */
-  curl_easy_setopt (bcsink->curl, CURLOPT_MAIL_RCPT, sink->curl_recipients);
+  res = curl_easy_setopt (bcsink->curl, CURLOPT_MAIL_RCPT,
+      sink->curl_recipients);
+  if (res != CURLE_OK) {
+    bcsink->error =
+        g_strdup_printf ("failed to set SMTP recipient email address: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   parent_class = GST_CURL_TLS_SINK_GET_CLASS (sink);
 
@@ -954,29 +968,44 @@ gst_curl_smtp_sink_prepare_transfer (GstCurlBaseSink * bcsink)
       return FALSE;
     }
 
-    curl_easy_setopt (sink->pop_curl, CURLOPT_URL, sink->pop_location);
+    res = curl_easy_setopt (sink->pop_curl, CURLOPT_URL, sink->pop_location);
+    if (res != CURLE_OK) {
+      bcsink->error = g_strdup_printf ("failed to set URL: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
+
     if (sink->pop_user != NULL && strlen (sink->pop_user) &&
         sink->pop_passwd != NULL && strlen (sink->pop_passwd)) {
-      curl_easy_setopt (sink->pop_curl, CURLOPT_USERNAME, sink->pop_user);
-      curl_easy_setopt (sink->pop_curl, CURLOPT_PASSWORD, sink->pop_passwd);
+      res = curl_easy_setopt (sink->pop_curl, CURLOPT_USERNAME, sink->pop_user);
+      if (res != CURLE_OK) {
+        bcsink->error = g_strdup_printf ("failed to set user name: %s",
+            curl_easy_strerror (res));
+        return FALSE;
+      }
+
+      res = curl_easy_setopt (sink->pop_curl, CURLOPT_PASSWORD,
+          sink->pop_passwd);
+      if (res != CURLE_OK) {
+        bcsink->error = g_strdup_printf ("failed to set user name: %s",
+            curl_easy_strerror (res));
+        return FALSE;
+      }
     }
   }
 
-  if (sink->pop_curl == NULL) {
-    goto end;
+  if (sink->pop_curl != NULL) {
+    /* ready to initialize connection to POP server */
+    res = curl_easy_perform (sink->pop_curl);
+    if (res != CURLE_OK) {
+      bcsink->error = g_strdup_printf ("POP transfer failed: %s",
+          curl_easy_strerror (res));
+      ret = FALSE;
+    }
+
+    curl_easy_cleanup (sink->pop_curl);
+    sink->pop_curl = NULL;
   }
 
-  /* ready to initialize connection to POP server */
-  res = curl_easy_perform (sink->pop_curl);
-  if (res != CURLE_OK) {
-    bcsink->error = g_strdup_printf ("POP transfer failed: %s",
-        curl_easy_strerror (res));
-    ret = FALSE;
-  }
-
-  curl_easy_cleanup (sink->pop_curl);
-  sink->pop_curl = NULL;
-
-end:
   return ret;
 }
