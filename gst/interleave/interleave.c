@@ -217,11 +217,13 @@ static gboolean gst_interleave_src_event (GstPad * pad, GstObject * parent,
 
 static gboolean gst_interleave_sink_event (GstCollectPads * pads,
     GstCollectData * data, GstEvent * event, gpointer user_data);
+static gboolean gst_interleave_sink_query (GstCollectPads * pads,
+    GstCollectData * data, GstQuery * query, gpointer user_data);
 
 static gboolean gst_interleave_sink_setcaps (GstInterleave * self,
     GstPad * pad, const GstCaps * caps, const GstAudioInfo * info);
 
-static GstCaps *gst_interleave_sink_getcaps (GstPad * pad, GstObject * parent,
+static GstCaps *gst_interleave_sink_getcaps (GstPad * pad, GstInterleave * self,
     GstCaps * filter);
 
 static GstFlowReturn gst_interleave_collected (GstCollectPads * pads,
@@ -502,6 +504,10 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
       (GstCollectPadsEventFunction)
       GST_DEBUG_FUNCPTR (gst_interleave_sink_event), self);
 
+  gst_collect_pads_set_query_function (self->collect,
+      (GstCollectPadsQueryFunction)
+      GST_DEBUG_FUNCPTR (gst_interleave_sink_query), self);
+
   if (!gst_element_add_pad (element, new_pad))
     goto could_not_add;
 
@@ -686,9 +692,9 @@ __set_channels (GstCaps * caps, gint channels)
 
 /* we can only accept caps that we and downstream can handle. */
 static GstCaps *
-gst_interleave_sink_getcaps (GstPad * pad, GstObject * parent, GstCaps * filter)
+gst_interleave_sink_getcaps (GstPad * pad, GstInterleave * self,
+    GstCaps * filter)
 {
-  GstInterleave *self = GST_INTERLEAVE (parent);
   GstCaps *result, *peercaps, *sinkcaps;
 
   GST_OBJECT_LOCK (self);
@@ -704,6 +710,7 @@ gst_interleave_sink_getcaps (GstPad * pad, GstObject * parent, GstCaps * filter)
     sinkcaps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
     __remove_channels (sinkcaps);
     if (peercaps) {
+      peercaps = gst_caps_make_writable (peercaps);
       __remove_channels (peercaps);
       /* if the peer has caps, intersect */
       GST_DEBUG_OBJECT (pad, "intersecting peer and template caps");
@@ -883,6 +890,36 @@ gst_interleave_sink_event (GstCollectPads * pads, GstCollectData * data,
   /* now GstCollectPads can take care of the rest, e.g. EOS */
   if (event != NULL)
     return gst_collect_pads_event_default (pads, data, event, FALSE);
+
+  return ret;
+}
+
+static gboolean
+gst_interleave_sink_query (GstCollectPads * pads,
+    GstCollectData * data, GstQuery * query, gpointer user_data)
+{
+  GstInterleave *self = GST_INTERLEAVE (user_data);
+  gboolean ret = TRUE;
+
+  GST_DEBUG ("Got %s query on pad %s:%s", GST_QUERY_TYPE_NAME (query),
+      GST_DEBUG_PAD_NAME (data->pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_interleave_sink_getcaps (data->pad, self, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_collect_pads_query_default (pads, data, query, FALSE);
+      break;
+  }
 
   return ret;
 }
@@ -1090,17 +1127,6 @@ gst_interleave_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_LATENCY:
       res = gst_interleave_src_query_latency (self, query);
       break;
-    case GST_QUERY_CAPS:
-    {
-      GstCaps *filter, *caps;
-
-      gst_query_parse_caps (query, &filter);
-      caps = gst_interleave_sink_getcaps (pad, parent, filter);
-      gst_query_set_caps_result (query, caps);
-      gst_caps_unref (caps);
-      res = TRUE;
-      break;
-    }
     default:
       /* FIXME, needs a custom query handler because we have multiple
        * sinkpads */
