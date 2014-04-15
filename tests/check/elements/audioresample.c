@@ -55,12 +55,8 @@ static GstElement *
 setup_audioresample (int channels, guint64 mask, int inrate, int outrate,
     const gchar * format)
 {
-  GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS (RESAMPLE_CAPS)
-      );
-  GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+  GstPadTemplate *sinktemplate;
+  static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS (RESAMPLE_CAPS)
@@ -68,7 +64,6 @@ setup_audioresample (int channels, guint64 mask, int inrate, int outrate,
   GstElement *audioresample;
   GstCaps *caps;
   GstStructure *structure;
-  gchar *caps_str;
 
   GST_DEBUG ("setup_audioresample");
   audioresample = gst_check_setup_element ("audioresample");
@@ -94,17 +89,18 @@ setup_audioresample (int channels, guint64 mask, int inrate, int outrate,
   gst_structure_set (structure, "channels", G_TYPE_INT, channels,
       "rate", G_TYPE_INT, outrate, "format", G_TYPE_STRING, format, NULL);
   fail_unless (gst_caps_is_fixed (caps));
-  caps_str = gst_caps_to_string (caps);
-  sinktemplate.static_caps.string = caps_str;
+  sinktemplate =
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
 
-  mysinkpad = gst_check_setup_sink_pad (audioresample, &sinktemplate);
+  mysinkpad =
+      gst_check_setup_sink_pad_from_template (audioresample, sinktemplate);
   gst_pad_set_active (mysinkpad, TRUE);
   /* this installs a getcaps func that will always return the caps we set
    * later */
   gst_pad_use_fixed_caps (mysinkpad);
 
-  g_free (caps_str);
   gst_caps_unref (caps);
+  gst_object_unref (sinktemplate);
 
   return audioresample;
 }
