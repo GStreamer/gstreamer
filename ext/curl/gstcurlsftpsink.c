@@ -137,13 +137,14 @@ gst_curl_sftp_sink_finalize (GObject * gobject)
 static gboolean
 set_sftp_dynamic_options_unlocked (GstCurlBaseSink * basesink)
 {
-  GstCurlSftpSink *sink = GST_CURL_SFTP_SINK (basesink);
   gchar *tmp = g_strdup_printf ("%s%s", basesink->url, basesink->file_name);
-  gint curl_err = CURLE_OK;
+  CURLcode curl_err = CURLE_OK;
 
   if ((curl_err =
           curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp)) != CURLE_OK) {
-    GST_ERROR_OBJECT (sink, "curl error: %d setting URL to: %s", curl_err, tmp);
+    basesink->error = g_strdup_printf ("failed to set URL: %s",
+        curl_easy_strerror (curl_err));
+    return FALSE;
   }
 
   g_free (tmp);
@@ -156,19 +157,22 @@ set_sftp_options_unlocked (GstCurlBaseSink * basesink)
 {
   GstCurlSftpSink *sink = GST_CURL_SFTP_SINK (basesink);
   GstCurlSshSinkClass *parent_class;
-  gint curl_err = CURLE_OK;
+  CURLcode curl_err = CURLE_OK;
 
   if ((curl_err =
           curl_easy_setopt (basesink->curl, CURLOPT_UPLOAD, 1L)) != CURLE_OK) {
-    GST_ERROR_OBJECT (sink, "curl error: %d setting CURLOPT_UPLOAD to 1",
-        curl_err);
+    basesink->error = g_strdup_printf ("failed to prepare for upload: %s",
+        curl_easy_strerror (curl_err));
+    return FALSE;
   }
 
   if (sink->create_dirs) {
     if ((curl_err = curl_easy_setopt (basesink->curl,
                 CURLOPT_FTP_CREATE_MISSING_DIRS, 1L)) != CURLE_OK) {
-      GST_ERROR_OBJECT (sink,
-          "curl error: %d setting FTP_CREATE_MISSING_DIRS to 1", curl_err);
+      basesink->error =
+          g_strdup_printf ("failed to set create missing dirs: %s",
+          curl_easy_strerror (curl_err));
+      return FALSE;
     }
   }
 

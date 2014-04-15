@@ -68,6 +68,7 @@ struct _GstCurlBaseSink
   GstPollFD fd;
   GstPoll *fdset;
   GThread *transfer_thread;
+  gchar *error;
   GstFlowReturn flow_ret;
   TransferBuffer *transfer_buf;
   TransferCondition *transfer_cond;

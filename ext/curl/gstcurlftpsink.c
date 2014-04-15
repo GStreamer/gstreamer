@@ -249,12 +249,8 @@ set_ftp_options_unlocked (GstCurlBaseSink * basesink)
         sink->ftp_port_arg);
 
     if (res != CURLE_OK) {
-      GST_DEBUG_OBJECT (sink, "Failed to set up active mode: %s",
+      basesink->error = g_strdup_printf ("failed to set up active mode: %s",
           curl_easy_strerror (res));
-      GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
-          ("Failed to set up active mode: %s", curl_easy_strerror (res)),
-          (NULL));
-
       return FALSE;
     }
 
