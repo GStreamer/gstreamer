@@ -69,9 +69,13 @@ gst_audio_encoder_tester_stop (GstAudioEncoder * enc)
 static gboolean
 gst_audio_encoder_tester_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 {
-  gst_audio_encoder_set_output_format (enc,
-      gst_caps_new_simple ("audio/x-test-custom", "rate", G_TYPE_INT,
-          TEST_AUDIO_RATE, "channels", G_TYPE_INT, TEST_AUDIO_CHANNELS, NULL));
+  GstCaps *caps;
+
+  caps = gst_caps_new_simple ("audio/x-test-custom", "rate", G_TYPE_INT,
+      TEST_AUDIO_RATE, "channels", G_TYPE_INT, TEST_AUDIO_CHANNELS, NULL);
+  gst_audio_encoder_set_output_format (enc, caps);
+  gst_caps_unref (caps);
+
   return TRUE;
 }
 
@@ -144,12 +148,12 @@ _mysinkpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static void
 setup_audioencodertester (void)
 {
-  GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS ("audio/x-test-custom")
       );
-  GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+  static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS ("audio/x-raw")
