@@ -467,8 +467,19 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
       frame->input_buffer = NULL;
     }
 
-    if (!gst_buffer_pool_set_active (pool, TRUE))
-      goto activate_failed;
+    /* Ensure input internal pool is active */
+    if (!gst_buffer_pool_is_active (pool)) {
+      GstStructure *config = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_set_params (config, self->input_state->caps,
+          self->v4l2output->sizeimage, 2, 2);
+
+      /* There is no reason to refuse this config */
+      if (!gst_buffer_pool_set_config (pool, config))
+        goto activate_failed;
+
+      if (!gst_buffer_pool_set_active (pool, TRUE))
+        goto activate_failed;
+    }
 
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     gst_v4l2_object_unlock_stop (self->v4l2output);
@@ -552,7 +563,7 @@ not_negotiated:
 activate_failed:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
-        (_("Failed to allocated required memory.")),
+        (_("Failed to allocate required memory.")),
         ("Buffer pool activation failed"));
     return GST_FLOW_ERROR;
   }
