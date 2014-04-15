@@ -67,6 +67,8 @@ struct _GstFFMpegVidDec
   gboolean is_realvideo;
 
   GstCaps *last_caps;
+
+  GSList *opaques;
 };
 
 typedef struct _GstFFMpegVidDecClass GstFFMpegVidDecClass;

@@ -591,6 +591,8 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   /* GstFFMpegVidDecVideoFrame receives the frame ref */
   picture->opaque = dframe = gst_ffmpegviddec_video_frame_new (frame);
 
+  ffmpegdec->opaques = g_slist_prepend (ffmpegdec->opaques, dframe);
+
   GST_DEBUG_OBJECT (ffmpegdec, "storing opaque %p", dframe);
 
   ffmpegdec->context->pix_fmt = context->pix_fmt;
@@ -695,6 +697,7 @@ fallback:
     int c;
     int ret = avcodec_default_get_buffer (context, picture);
 
+    GST_LOG_OBJECT (ffmpegdec, "performing fallback alloc");
     for (c = 0; c < AV_NUM_DATA_POINTERS; c++)
       ffmpegdec->stride[c] = picture->linesize[c];
 
@@ -775,8 +778,8 @@ gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
 
   ffmpegdec = (GstFFMpegVidDec *) context->opaque;
   frame = (GstFFMpegVidDecVideoFrame *) picture->opaque;
-  GST_DEBUG_OBJECT (ffmpegdec, "release frame SN %d",
-      frame->frame->system_frame_number);
+  GST_DEBUG_OBJECT (ffmpegdec, "release frame SN %d (%p)",
+      frame->frame->system_frame_number, frame);
 
   /* check if it was our buffer */
   if (picture->type != FF_BUFFER_TYPE_USER) {
@@ -788,6 +791,8 @@ gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
   picture->opaque = NULL;
 
   gst_ffmpegviddec_video_frame_free (ffmpegdec, frame);
+
+  ffmpegdec->opaques = g_slist_remove (ffmpegdec->opaques, frame);
 
   /* zero out the reference in ffmpeg */
   for (i = 0; i < 4; i++) {
@@ -1221,6 +1226,14 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   if (len < 0 || have_data <= 0)
     goto beach;
 
+  GST_LOG_OBJECT (ffmpegdec, "picture opaque %p", ffmpegdec->picture->opaque);
+  /* libav might be tripping, and handing a picture with invalid opaque
+   * (e.g. already released) (sigh), so double-check here ... */
+  if (!g_slist_find (ffmpegdec->opaques, ffmpegdec->picture->opaque)) {
+    GST_ERROR_OBJECT (ffmpegdec, "invalid picture opaque");
+    goto beach;
+  }
+
   /* get the output picture timing info again */
   out_dframe = ffmpegdec->picture->opaque;
   out_frame = gst_video_codec_frame_ref (out_dframe->frame);
@@ -1578,6 +1591,8 @@ gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
   if (ffmpegdec->output_state)
     gst_video_codec_state_unref (ffmpegdec->output_state);
   ffmpegdec->output_state = NULL;
+  g_slist_free (ffmpegdec->opaques);
+  ffmpegdec->opaques = NULL;
 
   ffmpegdec->ctx_width = 0;
   ffmpegdec->ctx_height = 0;
