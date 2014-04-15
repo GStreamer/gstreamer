@@ -59,6 +59,10 @@ struct _GstV4l2Transform
   /* pads */
   GstCaps *probed_srccaps;
   GstCaps *probed_sinkcaps;
+
+  /* Selected caps */
+  GstCaps *incaps;
+  GstCaps *outcaps;
 };
 
 struct _GstV4l2TransformClass

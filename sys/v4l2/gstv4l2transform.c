@@ -188,7 +188,9 @@ gst_v4l2_transform_stop (GstBaseTransform * trans)
   gst_v4l2_object_close (self->v4l2output);
   gst_v4l2_object_close (self->v4l2capture);
   gst_caps_replace (&self->probed_srccaps, NULL);
-  gst_caps_replace (&self->probed_sinkcaps, NULL);
+  gst_caps_replace (&self->probed_srccaps, NULL);
+  gst_caps_replace (&self->incaps, NULL);
+  gst_caps_replace (&self->outcaps, NULL);
 
   return TRUE;
 }
@@ -199,9 +201,20 @@ gst_v4l2_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 {
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
 
+  if (self->incaps && self->outcaps) {
+    if (gst_caps_is_equal (incaps, self->incaps) &&
+        gst_caps_is_equal (outcaps, self->outcaps)) {
+      GST_DEBUG_OBJECT (trans, "Caps did not changed");
+      return TRUE;
+    }
+  }
+
   /* TODO Add renegotiation support */
   g_return_val_if_fail (!GST_V4L2_IS_ACTIVE (self->v4l2output), FALSE);
   g_return_val_if_fail (!GST_V4L2_IS_ACTIVE (self->v4l2capture), FALSE);
+
+  gst_caps_replace (&self->incaps, incaps);
+  gst_caps_replace (&self->outcaps, outcaps);
 
   if (!gst_v4l2_object_set_format (self->v4l2output, incaps))
     goto incaps_failed;
