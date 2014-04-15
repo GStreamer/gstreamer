@@ -363,8 +363,8 @@ tools/Makefile
 config/Makefile
 config/bellagio/Makefile
 config/rpi/Makefile
-examples/Makefile
-examples/egl/Makefile
+dnl examples/Makefile
+dnl examples/egl/Makefile
 )
 
 AC_OUTPUT
