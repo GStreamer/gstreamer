@@ -1037,9 +1037,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   GstV4l2BufferPool *pool;
   GstStructure *config;
   gchar *name, *parent_name;
-  gboolean res = FALSE;
   gint fd;
-  guint min, max;
 
   fd = v4l2_dup (obj->video_fd);
   if (fd < 0)
@@ -1057,45 +1055,17 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 
   pool->video_fd = fd;
   pool->obj = obj;
-  min = max = 2;
 
   pool->vallocator =
       gst_v4l2_allocator_new (GST_OBJECT (pool), obj->video_fd, &obj->format);
 
-  switch (obj->mode) {
-    case GST_V4L2_IO_RW:
-      max = 0;
-      break;
-    case GST_V4L2_IO_MMAP:
-    case GST_V4L2_IO_DMABUF:
-      if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP))
-        max = VIDEO_MAX_FRAME;
-      break;
-    case GST_V4L2_IO_USERPTR:
-      if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, USERPTR))
-        max = VIDEO_MAX_FRAME;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
+  gst_object_ref (obj->element);
 
   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
-  gst_buffer_pool_config_set_params (config, caps, obj->sizeimage, min, max);
-
-  /* Ensure our internal pool has required features */
-  if (obj->need_video_meta)
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  if (obj->need_crop_meta)
-    pool->add_cropmeta = obj->need_crop_meta;
-
-  res = gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), config);
-  if (!res)
-    goto config_failed;
-
-  gst_object_ref (obj->element);
+  gst_buffer_pool_config_set_params (config, caps, obj->sizeimage, 0, 0);
+  /* This will simply set a default config, but will not configure the pool
+   * because min and max are not valid */
+  gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), config);
 
   return GST_BUFFER_POOL (pool);
 
@@ -1103,11 +1073,6 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 dup_failed:
   {
     GST_ERROR ("failed to dup fd %d (%s)", errno, g_strerror (errno));
-    return NULL;
-  }
-config_failed:
-  {
-    GST_WARNING ("failed to set pool config");
     return NULL;
   }
 }
