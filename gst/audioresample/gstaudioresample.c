@@ -116,8 +116,7 @@ static void gst_audio_resample_set_property (GObject * object,
 static void gst_audio_resample_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GType
-speex_resampler_sinc_filter_mode_get_type (void);
+static GType speex_resampler_sinc_filter_mode_get_type (void);
 
 /* vmethods */
 static gboolean gst_audio_resample_get_unit_size (GstBaseTransform * base,
@@ -166,12 +165,13 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
           SPEEX_RESAMPLER_SINC_FILTER_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_SINC_FILTER_AUTO_THRESHOLD,
-      g_param_spec_uint ("sinc-filter-auto-threshold", "Sinc filter auto mode threshold",
+  g_object_class_install_property (gobject_class,
+      PROP_SINC_FILTER_AUTO_THRESHOLD,
+      g_param_spec_uint ("sinc-filter-auto-threshold",
+          "Sinc filter auto mode threshold",
           "Memory usage threshold to use if sinc filter mode is AUTO, given in bytes",
-          0, G_MAXUINT,
-          SPEEX_RESAMPLER_SINC_FILTER_AUTO_THRESHOLD_DEFAULT,
-           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0, G_MAXUINT, SPEEX_RESAMPLER_SINC_FILTER_AUTO_THRESHOLD_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_audio_resample_src_template));
@@ -211,7 +211,8 @@ gst_audio_resample_init (GstAudioResample * resample)
 
   resample->quality = SPEEX_RESAMPLER_QUALITY_DEFAULT;
   resample->sinc_filter_mode = SPEEX_RESAMPLER_SINC_FILTER_DEFAULT;
-  resample->sinc_filter_auto_threshold = SPEEX_RESAMPLER_SINC_FILTER_AUTO_THRESHOLD_DEFAULT;
+  resample->sinc_filter_auto_threshold =
+      SPEEX_RESAMPLER_SINC_FILTER_AUTO_THRESHOLD_DEFAULT;
 
   gst_base_transform_set_gap_aware (trans, TRUE);
   gst_pad_set_query_function (trans->srcpad, gst_audio_resample_query);
@@ -389,7 +390,7 @@ gst_audio_resample_init_state (GstAudioResample * resample, gint width,
   const SpeexResampleFuncs *funcs = gst_audio_resample_get_funcs (width, fp);
 
   ret = funcs->init (channels, inrate, outrate, quality,
-        sinc_filter_mode, sinc_filter_auto_threshold, &err);
+      sinc_filter_mode, sinc_filter_auto_threshold, &err);
 
   if (G_UNLIKELY (err != RESAMPLER_ERR_SUCCESS)) {
     GST_ERROR_OBJECT (resample, "Failed to create resampler state: %s",
@@ -399,7 +400,7 @@ gst_audio_resample_init_state (GstAudioResample * resample, gint width,
 
   if (sinc_filter_mode == SPEEX_RESAMPLER_SINC_FILTER_AUTO) {
     GST_INFO_OBJECT (resample, "Using the %s sinc filter table",
-        funcs->get_sinc_filter_mode(ret) ? "full" : "interpolated");
+        funcs->get_sinc_filter_mode (ret) ? "full" : "interpolated");
   }
 
   funcs->skip_zeros (ret);
@@ -422,7 +423,8 @@ gst_audio_resample_update_state (GstAudioResample * resample, gint width,
   if (resample->state == NULL) {
     ret = TRUE;
   } else if (resample->channels != channels || fp != resample->fp
-      || width != resample->width || sinc_filter_mode != resample->sinc_filter_mode
+      || width != resample->width
+      || sinc_filter_mode != resample->sinc_filter_mode
       || sinc_filter_auto_threshold != resample->sinc_filter_auto_threshold) {
     resample->funcs->destroy (resample->state);
     resample->state =
@@ -1328,7 +1330,7 @@ gst_audio_resample_set_property (GObject * object, guint prop_id,
           quality, resample->fp, resample->sinc_filter_mode,
           resample->sinc_filter_auto_threshold);
       break;
-    case PROP_SINC_FILTER_MODE: {
+    case PROP_SINC_FILTER_MODE:{
       /* FIXME locking! */
       SpeexResamplerSincFilterMode sinc_filter_mode = g_value_get_enum (value);
 
@@ -1339,7 +1341,7 @@ gst_audio_resample_set_property (GObject * object, guint prop_id,
 
       break;
     }
-    case PROP_SINC_FILTER_AUTO_THRESHOLD: {
+    case PROP_SINC_FILTER_AUTO_THRESHOLD:{
       /* FIXME locking! */
       guint32 sinc_filter_auto_threshold = g_value_get_uint (value);
 
@@ -1369,10 +1371,10 @@ gst_audio_resample_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, resample->quality);
       break;
     case PROP_SINC_FILTER_MODE:
-      g_value_set_enum(value, resample->sinc_filter_mode);
+      g_value_set_enum (value, resample->sinc_filter_mode);
       break;
     case PROP_SINC_FILTER_AUTO_THRESHOLD:
-      g_value_set_uint(value, resample->sinc_filter_auto_threshold);
+      g_value_set_uint (value, resample->sinc_filter_auto_threshold);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1387,15 +1389,17 @@ speex_resampler_sinc_filter_mode_get_type (void)
 
   if (!speex_resampler_sinc_filter_mode_type) {
     static GEnumValue sinc_filter_modes[] = {
-      { SPEEX_RESAMPLER_SINC_FILTER_INTERPOLATED, "Use interpolated sinc table",                  "interpolated" },
-      { SPEEX_RESAMPLER_SINC_FILTER_FULL,         "Use full sinc table",                          "full"         },
-      { SPEEX_RESAMPLER_SINC_FILTER_AUTO,         "Use full table if table size below threshold", "auto"         },
-      { 0, NULL, NULL },
+      {SPEEX_RESAMPLER_SINC_FILTER_INTERPOLATED, "Use interpolated sinc table",
+          "interpolated"},
+      {SPEEX_RESAMPLER_SINC_FILTER_FULL, "Use full sinc table", "full"},
+      {SPEEX_RESAMPLER_SINC_FILTER_AUTO,
+          "Use full table if table size below threshold", "auto"},
+      {0, NULL, NULL},
     };
 
-    speex_resampler_sinc_filter_mode_type = g_enum_register_static (
-                                            "SpeexResamplerSincFilterMode",
-                                            sinc_filter_modes);
+    speex_resampler_sinc_filter_mode_type =
+        g_enum_register_static ("SpeexResamplerSincFilterMode",
+        sinc_filter_modes);
   }
 
   return speex_resampler_sinc_filter_mode_type;
@@ -1464,18 +1468,16 @@ _benchmark_integer_resampling (void)
   orc_profile_init (&b);
 
   sta = resample_float_resampler_init (1, 48000, 24000, 4,
-        SPEEX_RESAMPLER_SINC_FILTER_INTERPOLATED,
-        SPEEX_RESAMPLER_SINC_FILTER_AUTO_THRESHOLD_DEFAULT,
-        NULL);
+      SPEEX_RESAMPLER_SINC_FILTER_INTERPOLATED,
+      SPEEX_RESAMPLER_SINC_FILTER_AUTO_THRESHOLD_DEFAULT, NULL);
   if (sta == NULL) {
     GST_ERROR ("Failed to create float resampler state");
     return FALSE;
   }
 
   stb = resample_int_resampler_init (1, 48000, 24000, 4,
-        SPEEX_RESAMPLER_SINC_FILTER_INTERPOLATED,
-        SPEEX_RESAMPLER_SINC_FILTER_AUTO_THRESHOLD_DEFAULT,
-        NULL);
+      SPEEX_RESAMPLER_SINC_FILTER_INTERPOLATED,
+      SPEEX_RESAMPLER_SINC_FILTER_AUTO_THRESHOLD_DEFAULT, NULL);
   if (stb == NULL) {
     resample_float_resampler_destroy (sta);
     GST_ERROR ("Failed to create int resampler state");

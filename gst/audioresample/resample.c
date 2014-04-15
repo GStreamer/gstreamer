@@ -478,7 +478,7 @@ resampler_basic_direct_single (SpeexResamplerState * st,
     const spx_word16_t *iptr = &in[last_sample];
 
     SSE_FALLBACK (INNER_PRODUCT_SINGLE)
-    NEON_FALLBACK (INNER_PRODUCT_SINGLE)
+        NEON_FALLBACK (INNER_PRODUCT_SINGLE)
         sum = 0;
     for (j = 0; j < N; j++)
       sum += MULT16_16 (sinc[j], iptr[j]);
@@ -497,14 +497,14 @@ resampler_basic_direct_single (SpeexResamplerState * st,
 */
 #if defined(OVERRIDE_INNER_PRODUCT_SINGLE) && defined(_USE_NEON)
     NEON_IMPLEMENTATION (INNER_PRODUCT_SINGLE)
-    sum = inner_product_single (sinc, iptr, N);
-    NEON_END(INNER_PRODUCT_SINGLE)
+        sum = inner_product_single (sinc, iptr, N);
+    NEON_END (INNER_PRODUCT_SINGLE)
 #elif defined(OVERRIDE_INNER_PRODUCT_SINGLE) && defined(_USE_SSE)
     SSE_IMPLEMENTATION (INNER_PRODUCT_SINGLE)
         sum = inner_product_single (sinc, iptr, N);
     SSE_END (INNER_PRODUCT_SINGLE)
 #endif
-    out[out_stride * out_sample++] = SATURATE32PSHR(sum, 15, 32767);
+        out[out_stride * out_sample++] = SATURATE32PSHR (sum, 15, 32767);
     last_sample += int_advance;
     samp_frac_num += frac_advance;
     if (samp_frac_num >= den_rate) {
@@ -642,7 +642,7 @@ resampler_basic_interpolate_single (SpeexResamplerState * st,
         interp);
     SSE_END (INTERPOLATE_PRODUCT_SINGLE)
 #endif
-    out[out_stride * out_sample++] = SATURATE32PSHR(sum, 14, 32767);
+        out[out_stride * out_sample++] = SATURATE32PSHR (sum, 14, 32767);
     last_sample += int_advance;
     samp_frac_num += frac_advance;
     if (samp_frac_num >= den_rate) {
@@ -946,7 +946,8 @@ update_filter (SpeexResamplerState * st)
 
 EXPORT SpeexResamplerState *
 speex_resampler_init (spx_uint32_t nb_channels, spx_uint32_t in_rate,
-    spx_uint32_t out_rate, int quality, SpeexResamplerSincFilterMode sinc_filter_mode,
+    spx_uint32_t out_rate, int quality,
+    SpeexResamplerSincFilterMode sinc_filter_mode,
     spx_uint32_t sinc_filter_auto_threshold, int *err)
 {
   return speex_resampler_init_frac (nb_channels, in_rate, out_rate, in_rate,
@@ -1068,13 +1069,16 @@ speex_resampler_init_frac (spx_uint32_t nb_channels, spx_uint32_t ratio_num,
 
   if (sinc_filter_mode == RESAMPLER_SINC_FILTER_AUTO) {
     /*
-    Estimate how big the filter table would become if the full mode were to be used
-    calculations used correspond to the ones in update_filter()
-    if the size is bigger than the threshold, use interpolated sinc instead
-    */
-    spx_uint32_t base_filter_length = st->filt_len = quality_map[st->quality].base_length;
-    spx_uint32_t filter_table_size = base_filter_length * st->den_rate * sizeof(spx_uint16_t);
-    st->use_full_sinc_table = (filter_table_size > sinc_filter_auto_threshold) ? 0 : 1;
+       Estimate how big the filter table would become if the full mode were to be used
+       calculations used correspond to the ones in update_filter()
+       if the size is bigger than the threshold, use interpolated sinc instead
+     */
+    spx_uint32_t base_filter_length = st->filt_len =
+        quality_map[st->quality].base_length;
+    spx_uint32_t filter_table_size =
+        base_filter_length * st->den_rate * sizeof (spx_uint16_t);
+    st->use_full_sinc_table =
+        (filter_table_size > sinc_filter_auto_threshold) ? 0 : 1;
   }
 
   update_filter (st);
