@@ -398,6 +398,7 @@ gst_ogg_pad_data_reset (GstOggMux * ogg_mux, GstOggPadData * oggpad)
   oggpad->map.queued = NULL;
   oggpad->next_granule = 0;
   oggpad->keyframe_granule = -1;
+  ogg_stream_clear (&oggpad->map.stream);
   ogg_stream_init (&oggpad->map.stream, oggpad->map.serialno);
 
   if (oggpad->pagebuffers) {
@@ -2109,6 +2110,7 @@ gst_ogg_mux_init_collectpads (GstCollectPads * collect)
   while (walk) {
     GstOggPadData *oggpad = (GstOggPadData *) walk->data;
 
+    ogg_stream_clear (&oggpad->map.stream);
     ogg_stream_init (&oggpad->map.stream, oggpad->map.serialno);
     oggpad->packetno = 0;
     oggpad->pageno = 0;
