@@ -2089,7 +2089,7 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink,
 
 done:
   GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible",
-      (compatible ? "" : "not"));
+      (compatible ? "" : "not "));
 
   return compatible;
 }
