@@ -450,8 +450,18 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
   }
 
   /* Ensure input internal pool is active */
-  if (!gst_buffer_pool_set_active (pool, TRUE))
-    goto activate_failed;
+  if (!gst_buffer_pool_is_active (pool)) {
+    GstStructure *config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, self->incaps,
+        self->v4l2output->sizeimage, 2, 2);
+
+    /* There is no reason to refuse this config */
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto activate_failed;
+
+    if (!gst_buffer_pool_set_active (pool, TRUE))
+      goto activate_failed;
+  }
 
   GST_DEBUG_OBJECT (self, "Queue input buffer");
   ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool), inbuf);
