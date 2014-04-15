@@ -263,10 +263,47 @@ GstPad *
 gst_check_setup_src_pad_by_name (GstElement * element,
     GstStaticPadTemplate * tmpl, const gchar * name)
 {
+  GstPadTemplate *ptmpl = gst_static_pad_template_get (tmpl);
+  GstPad *srcpad;
+
+  srcpad =
+      gst_check_setup_src_pad_by_name_from_template (element, ptmpl, "sink");
+
+  gst_object_unref (ptmpl);
+
+  return srcpad;
+}
+
+/**
+ * gst_check_setup_src_pad_from_template:
+ * @element: element to setup pad on
+ * @tmpl: pad template
+ *
+ * Returns: (transfer full): a new pad
+ */
+GstPad *
+gst_check_setup_src_pad_from_template (GstElement * element,
+    GstPadTemplate * tmpl)
+{
+  return gst_check_setup_src_pad_by_name_from_template (element, tmpl, "sink");
+}
+
+/**
+ * gst_check_setup_src_pad_by_name_from_template:
+ * @element: element to setup pad on
+ * @tmpl: pad template
+ * @name: name
+ *
+ * Returns: (transfer full): a new pad
+ */
+GstPad *
+gst_check_setup_src_pad_by_name_from_template (GstElement * element,
+    GstPadTemplate * tmpl, const gchar * name)
+{
   GstPad *srcpad, *sinkpad;
 
   /* sending pad */
-  srcpad = gst_pad_new_from_static_template (tmpl, "src");
+  srcpad = gst_pad_new_from_template (tmpl, "src");
   GST_DEBUG_OBJECT (element, "setting up sending pad %p", srcpad);
   fail_if (srcpad == NULL, "Could not create a srcpad");
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
@@ -349,10 +386,47 @@ GstPad *
 gst_check_setup_sink_pad_by_name (GstElement * element,
     GstStaticPadTemplate * tmpl, const gchar * name)
 {
+  GstPadTemplate *ptmpl = gst_static_pad_template_get (tmpl);
+  GstPad *sinkpad;
+
+  sinkpad =
+      gst_check_setup_sink_pad_by_name_from_template (element, ptmpl, "src");
+
+  gst_object_unref (ptmpl);
+
+  return sinkpad;
+}
+
+/**
+ * gst_check_setup_sink_pad_from_template:
+ * @element: element to setup pad on
+ * @tmpl: pad template
+ *
+ * Returns: (transfer full): a new pad
+ */
+GstPad *
+gst_check_setup_sink_pad_from_template (GstElement * element,
+    GstPadTemplate * tmpl)
+{
+  return gst_check_setup_sink_pad_by_name_from_template (element, tmpl, "src");
+}
+
+/**
+ * gst_check_setup_sink_pad_by_name_from_template:
+ * @element: element to setup pad on
+ * @tmpl: pad template
+ * @name: name
+ *
+ * Returns: (transfer full): a new pad
+ */
+GstPad *
+gst_check_setup_sink_pad_by_name_from_template (GstElement * element,
+    GstPadTemplate * tmpl, const gchar * name)
+{
   GstPad *srcpad, *sinkpad;
 
   /* receiving pad */
-  sinkpad = gst_pad_new_from_static_template (tmpl, "sink");
+  sinkpad = gst_pad_new_from_template (tmpl, "sink");
   GST_DEBUG_OBJECT (element, "setting up receiving pad %p", sinkpad);
   fail_if (sinkpad == NULL, "Could not create a sinkpad");
 

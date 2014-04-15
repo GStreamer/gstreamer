@@ -82,9 +82,13 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_check_setup_events \
 	gst_check_setup_events_with_stream_id \
 	gst_check_setup_sink_pad \
+	gst_check_setup_sink_pad_from_template \
 	gst_check_setup_sink_pad_by_name \
+	gst_check_setup_sink_pad_by_name_from_templ \
 	gst_check_setup_src_pad \
+	gst_check_setup_src_pad_from_template \
 	gst_check_setup_src_pad_by_name \
+	gst_check_setup_src_pad_by_name_from_template \
 	gst_check_teardown_element \
 	gst_check_teardown_pad_by_name \
 	gst_check_teardown_sink_pad \
