@@ -3055,7 +3055,23 @@ gst_base_src_decide_allocation_default (GstBaseSrc * basesrc, GstQuery * query)
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
     gst_buffer_pool_config_set_allocator (config, allocator, &params);
-    gst_buffer_pool_set_config (pool, config);
+
+    /* buffer pool may have to do some changes */
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      config = gst_buffer_pool_get_config (pool);
+
+      /* If change are not acceptable, fallback to generic pool */
+      if (!gst_buffer_pool_config_validate_params (config, outcaps, size, min,
+              max)) {
+        GST_DEBUG_OBJECT (basesrc, "unsuported pool, making new pool");
+
+        gst_object_unref (pool);
+        pool = gst_buffer_pool_new ();
+      }
+
+      if (!gst_buffer_pool_set_config (pool, config))
+        goto config_failed;
+    }
   }
 
   if (update_allocator)
@@ -3071,6 +3087,12 @@ gst_base_src_decide_allocation_default (GstBaseSrc * basesrc, GstQuery * query)
   }
 
   return TRUE;
+
+config_failed:
+  GST_ELEMENT_ERROR (basesrc, RESOURCE, SETTINGS,
+      ("Failed to configure the buffer pool"),
+      ("Configuration is most likely invalid, please report this issue."));
+  return FALSE;
 }
 
 static gboolean
