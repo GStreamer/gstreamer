@@ -308,7 +308,7 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
   GstCaps *possible_caps;
   gchar *best_colorimetry;
   const gchar *best_chroma;
-  GHashTable *formats_table = g_hash_table_new (g_direct_hash, g_direct_equal);
+  GHashTable *formats_table;
   gint best_format_number = 0;
 
   best_format = GST_VIDEO_FORMAT_UNKNOWN;
@@ -318,6 +318,8 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
 
   if (!downstream_caps || gst_caps_is_empty (downstream_caps))
     return FALSE;
+
+  formats_table = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   /* first find new preferred format */
   for (tmp = mix->sinkpads; tmp; tmp = tmp->next) {
