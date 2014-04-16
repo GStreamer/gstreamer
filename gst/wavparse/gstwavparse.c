@@ -1601,9 +1601,10 @@ gst_wavparse_stream_headers (GstWavParse * wav)
    * that is, buffers not too small either size or time wise
    * so we do not end up with too many of them */
   /* var abuse */
-  upstream_size = 0;
-  gst_wavparse_time_to_bytepos (wav, 40 * GST_MSECOND, &upstream_size);
-  wav->max_buf_size = upstream_size;
+  if (gst_wavparse_time_to_bytepos (wav, 40 * GST_MSECOND, &upstream_size))
+    wav->max_buf_size = upstream_size;
+  else
+    wav->max_buf_size = 0;
   wav->max_buf_size = MAX (wav->max_buf_size, MAX_BUFFER_SIZE);
   if (wav->blockalign > 0)
     wav->max_buf_size -= (wav->max_buf_size % wav->blockalign);
