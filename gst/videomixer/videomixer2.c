@@ -2169,6 +2169,8 @@ gst_videomixer2_dispose (GObject * o)
   }
 
   gst_caps_replace (&mix->current_caps, NULL);
+
+  G_OBJECT_CLASS (parent_class)->dispose (o);
 }
 
 static void
