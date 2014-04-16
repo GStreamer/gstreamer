@@ -130,6 +130,7 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
 no_metadata:
   {
     GST_ERROR ("no GstVideoMeta for id %d", id);
+    memset (frame, 0, sizeof (GstVideoFrame));
     return FALSE;
   }
 frame_map_failed:
@@ -137,6 +138,7 @@ frame_map_failed:
     GST_ERROR ("failed to map video frame plane %d", i);
     while (--i >= 0)
       gst_video_meta_unmap (meta, i, &frame->map[i]);
+    memset (frame, 0, sizeof (GstVideoFrame));
     return FALSE;
   }
 map_failed:
@@ -149,6 +151,7 @@ invalid_size:
     GST_ERROR ("invalid buffer size %" G_GSIZE_FORMAT " < %" G_GSIZE_FORMAT,
         frame->map[0].size, info->size);
     gst_buffer_unmap (buffer, &frame->map[0]);
+    memset (frame, 0, sizeof (GstVideoFrame));
     return FALSE;
   }
 }
