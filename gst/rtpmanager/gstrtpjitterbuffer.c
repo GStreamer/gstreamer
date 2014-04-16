@@ -2518,7 +2518,8 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
       break;
     case ITEM_TYPE_LOST:
     case ITEM_TYPE_EVENT:
-      GST_DEBUG_OBJECT (jitterbuffer, "Pushing event %d", seqnum);
+      GST_DEBUG_OBJECT (jitterbuffer, "Pushing event %" GST_PTR_FORMAT
+          ", seqnum %d", outevent, seqnum);
 
       if (do_push)
         gst_pad_push_event (priv->srcpad, outevent);
@@ -3196,12 +3197,18 @@ gst_rtp_jitter_buffer_sink_query (GstPad * pad, GstObject * parent,
         RTPJitterBufferItem *item;
 
         JBUF_LOCK_CHECK (priv, out_flushing);
-        GST_DEBUG_OBJECT (jitterbuffer, "adding serialized query");
-        item = alloc_item (query, ITEM_TYPE_QUERY, -1, -1, -1, 0, -1);
-        rtp_jitter_buffer_insert (priv->jbuf, item, NULL, NULL);
-        JBUF_SIGNAL_EVENT (priv);
-        JBUF_WAIT_QUERY (priv, out_flushing);
-        res = priv->last_query;
+        if (rtp_jitter_buffer_get_mode (priv->jbuf) !=
+            RTP_JITTER_BUFFER_MODE_BUFFER) {
+          GST_DEBUG_OBJECT (jitterbuffer, "adding serialized query");
+          item = alloc_item (query, ITEM_TYPE_QUERY, -1, -1, -1, 0, -1);
+          rtp_jitter_buffer_insert (priv->jbuf, item, NULL, NULL);
+          JBUF_SIGNAL_EVENT (priv);
+          JBUF_WAIT_QUERY (priv, out_flushing);
+          res = priv->last_query;
+        } else {
+          GST_DEBUG_OBJECT (jitterbuffer, "refusing query, we are buffering");
+          res = FALSE;
+        }
         JBUF_UNLOCK (priv);
       } else {
         res = gst_pad_query_default (pad, parent, query);
