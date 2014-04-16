@@ -3899,7 +3899,7 @@ atom_trun_add_samples (AtomTRUN * trun, guint32 delta, guint32 size,
   TRUNSampleEntry nentry;
 
   if (pts_offset != 0)
-    trun->header.flags[1] |= TR_COMPOSITION_TIME_OFFSETS;
+    trun->header.flags[1] |= (TR_COMPOSITION_TIME_OFFSETS >> 8);
 
   nentry.sample_duration = delta;
   nentry.sample_size = size;
