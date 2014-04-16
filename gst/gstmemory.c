@@ -310,6 +310,7 @@ gst_memory_map (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
 lock_failed:
   {
     GST_CAT_DEBUG (GST_CAT_MEMORY, "mem %p: lock %d failed", mem, flags);
+    memset (info, 0, sizeof (GstMapInfo));
     return FALSE;
   }
 error:
@@ -317,6 +318,7 @@ error:
     /* something went wrong, restore the orginal state again */
     GST_CAT_ERROR (GST_CAT_MEMORY, "mem %p: subclass map failed", mem);
     gst_memory_unlock (mem, (GstLockFlags) flags);
+    memset (info, 0, sizeof (GstMapInfo));
     return FALSE;
   }
 }

@@ -1583,21 +1583,20 @@ not_writable:
   {
     GST_WARNING_OBJECT (buffer, "write map requested on non-writable buffer");
     g_critical ("write map requested on non-writable buffer");
+    memset (info, 0, sizeof (GstMapInfo));
     return FALSE;
   }
 no_memory:
   {
     /* empty buffer, we need to return NULL */
     GST_DEBUG_OBJECT (buffer, "can't get buffer memory");
-    info->memory = NULL;
-    info->data = NULL;
-    info->size = 0;
-    info->maxsize = 0;
+    memset (info, 0, sizeof (GstMapInfo));
     return TRUE;
   }
 cannot_map:
   {
     GST_DEBUG_OBJECT (buffer, "cannot map memory");
+    memset (info, 0, sizeof (GstMapInfo));
     return FALSE;
   }
 }
