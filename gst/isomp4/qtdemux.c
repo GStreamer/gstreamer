@@ -7362,7 +7362,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GST_LOG_OBJECT (qtdemux, "stsd type len:      %d", len);
 
   if ((fourcc == FOURCC_drms) || (fourcc == FOURCC_drmi) ||
-      ((fourcc & 0xFFFFFF00) == GST_MAKE_FOURCC ('e', 'n', 'c', 0)))
+      ((fourcc & 0x00FFFFFF) == GST_MAKE_FOURCC ('e', 'n', 'c', 0)))
     goto error_encrypted;
 
   if (stream->subtype == FOURCC_vide) {
