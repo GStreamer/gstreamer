@@ -551,7 +551,7 @@ gst_check_buffer_data (GstBuffer * buffer, gconstpointer data, gsize size)
 {
   GstMapInfo info;
 
-  gst_buffer_map (buffer, &info, GST_MAP_READ);
+  fail_unless (gst_buffer_map (buffer, &info, GST_MAP_READ));
   GST_MEMDUMP ("Converted data", info.data, info.size);
   GST_MEMDUMP ("Expected data", data, size);
   if (memcmp (info.data, data, size) != 0) {
@@ -698,8 +698,8 @@ gst_check_element_push_buffer_list (const gchar * element_name,
     GstBuffer *orig = GST_BUFFER (buffer_out->data);
     GstMapInfo newinfo, originfo;
 
-    gst_buffer_map (new, &newinfo, GST_MAP_READ);
-    gst_buffer_map (orig, &originfo, GST_MAP_READ);
+    fail_unless (gst_buffer_map (new, &newinfo, GST_MAP_READ));
+    fail_unless (gst_buffer_map (orig, &originfo, GST_MAP_READ));
 
     GST_LOG ("orig buffer: size %" G_GSIZE_FORMAT, originfo.size);
     GST_LOG ("new  buffer: size %" G_GSIZE_FORMAT, newinfo.size);
