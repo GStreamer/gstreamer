@@ -840,6 +840,8 @@ gst_v4l2_video_dec_probe_caps (gchar * device, gint video_fd,
   for (n = 0;; n++) {
     GstStructure *template;
 
+    memset (&format, 0, sizeof (format));
+
     format.index = n;
     format.type = type;
 
