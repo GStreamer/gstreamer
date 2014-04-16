@@ -791,7 +791,7 @@ alloc_item (gpointer data, guint type, GstClockTime dts, GstClockTime pts,
 static void
 free_item (RTPJitterBufferItem * item)
 {
-  if (item->data)
+  if (item->data && item->type != ITEM_TYPE_QUERY)
     gst_mini_object_unref (item->data);
   g_slice_free (RTPJitterBufferItem, item);
 }
