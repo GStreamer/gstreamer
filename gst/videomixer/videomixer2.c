@@ -2245,6 +2245,19 @@ gst_videomixer2_child_proxy_init (gpointer g_iface, gpointer iface_data)
   iface->get_children_count = gst_videomixer2_child_proxy_get_children_count;
 }
 
+static void
+gst_videomixer2_constructed (GObject * obj)
+{
+  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (obj);
+  gchar *cp_name;
+
+  cp_name = g_strconcat (GST_OBJECT_NAME (obj), "-collectpads", NULL);
+  gst_object_set_name (GST_OBJECT (mix->collect), cp_name);
+  g_free (cp_name);
+
+  G_OBJECT_CLASS (gst_videomixer2_parent_class)->constructed (obj);
+}
+
 /* GObject boilerplate */
 static void
 gst_videomixer2_class_init (GstVideoMixer2Class * klass)
@@ -2252,6 +2265,7 @@ gst_videomixer2_class_init (GstVideoMixer2Class * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->constructed = gst_videomixer2_constructed;
   gobject_class->finalize = gst_videomixer2_finalize;
   gobject_class->dispose = gst_videomixer2_dispose;
 
