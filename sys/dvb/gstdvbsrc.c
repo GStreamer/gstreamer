@@ -1026,7 +1026,6 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
         break;
     }
 
-    close (object->fd_frontend);
     g_free (frontend_dev);
     return FALSE;
   }
