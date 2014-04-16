@@ -183,12 +183,12 @@ preset_get_paths (GstPreset * preset, const gchar ** preset_user_path,
 
       /* system presets in '$GST_DATADIR/gstreamer-1.0/presets/GstAudioPanorama.prs' */
 #ifdef G_OS_WIN32
-      gchar *basedir = g_win32_get_package_installation_directory_of_module (_priv_gst_dll_handle);
-      preset_dir = g_build_filename (basedir,
-                                     "share",
-                                     "gstreamer-" GST_API_VERSION,
-                                     "presets",
-                                     NULL);
+      gchar *basedir =
+          g_win32_get_package_installation_directory_of_module
+          (_priv_gst_dll_handle);
+      preset_dir =
+          g_build_filename (basedir, "share", "gstreamer-" GST_API_VERSION,
+          "presets", NULL);
       g_free (basedir);
 #else
       preset_dir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
