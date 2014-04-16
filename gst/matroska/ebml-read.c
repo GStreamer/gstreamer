@@ -377,7 +377,7 @@ gst_ebml_read_bytes (GstEbmlRead * ebml, guint32 * id, const guint8 ** data,
     return GST_FLOW_ERROR;      /* FIXME: do proper error handling */
 
   *data = NULL;
-  if (G_LIKELY (length >= 0)) {
+  if (G_LIKELY (length > 0)) {
     if (!gst_byte_reader_get_data (gst_ebml_read_br (ebml), length, data))
       return GST_FLOW_PARSE;
   }
