@@ -168,8 +168,6 @@ mxf_ber_encode_size (guint size, guint8 ber[9])
   if (size <= 127) {
     ber[0] = size;
     return 1;
-  } else if (size > G_MAXUINT) {
-    return 0;
   }
 
   slen = 0;
