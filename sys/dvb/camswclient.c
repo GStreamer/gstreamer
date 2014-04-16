@@ -83,7 +83,7 @@ cam_sw_client_open (CamSwClient * client, const char *sock_path)
   strncpy (addr.sun_path, sock_path, sizeof (addr.sun_path));
 
   GST_INFO ("connecting to softcam socket: %s", sock_path);
-  if (client->sock = socket (PF_UNIX, SOCK_STREAM, 0)) {
+  if ((client->sock = socket (PF_UNIX, SOCK_STREAM, 0)) < 0) {
     GST_ERROR ("Failed to create a socket, error : %s", strerror (errno));
     return FALSE;
   }
