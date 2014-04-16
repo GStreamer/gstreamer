@@ -505,9 +505,7 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
   }
 
   /* calculate real blocksize from the blocksize index */
-  if (block_size == 0) {
-    goto error;
-  } else if (block_size == 6) {
+  if (block_size == 6) {
     if (!gst_bit_reader_get_bits_uint16 (&reader, &block_size, 8))
       goto need_more_data;
     block_size++;
