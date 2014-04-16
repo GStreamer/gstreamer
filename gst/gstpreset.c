@@ -531,6 +531,8 @@ gst_preset_default_get_property_names (GstPreset * preset)
         }
         g_free (props);
       }
+
+      g_object_unref (child);
     }
   }
   if (!result) {
