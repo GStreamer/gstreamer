@@ -242,9 +242,6 @@ gst_hls_demux_init (GstHLSDemux * demux)
   demux->stream_task =
       gst_task_new ((GstTaskFunction) gst_hls_demux_stream_loop, demux, NULL);
   gst_task_set_lock (demux->stream_task, &demux->stream_lock);
-  demux->src = gst_element_factory_make ("souphttpsrc", "hls-download-src");
-  gst_element_set_locked_state (demux->src, TRUE);
-  gst_bin_add (GST_BIN_CAST (demux), demux->src);
 
   demux->have_group_id = FALSE;
   demux->group_id = G_MAXUINT;
@@ -1717,6 +1714,48 @@ decrypt_error:
   return decrypted_buffer;
 }
 
+static void
+gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri)
+{
+  if (!gst_uri_is_valid (uri))  /* TODO error out */
+    return;
+
+  if (demux->src != NULL) {
+    gchar *old_protocol, *new_protocol;
+    gchar *old_uri;
+
+    old_uri = gst_uri_handler_get_uri (GST_URI_HANDLER (demux->src));
+    old_protocol = gst_uri_get_protocol (old_uri);
+    new_protocol = gst_uri_get_protocol (uri);
+
+    if (!g_str_equal (old_protocol, new_protocol)) {
+      gst_bin_remove (GST_BIN_CAST (demux), demux->src);
+      demux->src = NULL;
+      GST_DEBUG_OBJECT (demux, "Can't re-use old source element");
+    } else {
+      GError *err = NULL;
+
+      GST_DEBUG_OBJECT (demux, "Re-using old source element");
+      if (!gst_uri_handler_set_uri (GST_URI_HANDLER (demux->src), uri, &err)) {
+        GST_DEBUG_OBJECT (demux, "Failed to re-use old source element: %s",
+            err->message);
+        g_clear_error (&err);
+        gst_bin_remove (GST_BIN_CAST (demux), demux->src);
+        demux->src = NULL;
+      }
+    }
+    g_free (old_uri);
+    g_free (old_protocol);
+    g_free (new_protocol);
+  }
+
+  if (demux->src == NULL) {
+    demux->src = gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
+    gst_element_set_locked_state (demux->src, TRUE);
+    gst_bin_add (GST_BIN_CAST (demux), demux->src);
+  }
+}
+
 static gboolean
 gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
     gboolean * end_of_playlist, GError ** err)
@@ -1738,11 +1777,6 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
     return FALSE;
   }
 
-  if (!gst_hls_demux_configure_src_pad (demux, NULL)) {
-    *end_of_playlist = FALSE;
-    return FALSE;
-  }
-
   g_mutex_lock (&demux->fragment_download_lock);
   GST_DEBUG_OBJECT (demux,
       "Fetching next fragment %s (range=%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT
@@ -1753,7 +1787,13 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   demux->starting_fragment = TRUE;
   demux->current_key = key;
   demux->current_iv = iv;
-  g_object_set (demux->src, "location", next_fragment_uri, NULL);
+
+  gst_hls_demux_update_source (demux, next_fragment_uri);
+  if (!gst_hls_demux_configure_src_pad (demux, NULL)) {
+    *end_of_playlist = FALSE;
+    return FALSE;
+  }
+
   gst_element_set_state (demux->src, GST_STATE_READY);  /* TODO check return */
   gst_element_send_event (demux->src, gst_event_new_seek (1.0, GST_FORMAT_BYTES,
           (GstSeekFlags) GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, range_start,
