@@ -33,6 +33,14 @@ G_DEFINE_TYPE (GstV4l2Allocator, gst_v4l2_allocator, GST_TYPE_ALLOCATOR);
 GST_DEBUG_CATEGORY_STATIC (v4l2allocator_debug);
 #define GST_CAT_DEFAULT v4l2allocator_debug
 
+#define UNSET_QUEUED(buffer) \
+    ((buffer).flags &= ~(V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_DONE))
+
+#define SET_QUEUED(buffer) ((buffer).flags |= V4L2_BUF_FLAG_QUEUED)
+
+#define IS_QUEUED(buffer) \
+    ((buffer).flags & (V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_DONE))
+
 enum
 {
   GROUP_RELEASED,
@@ -787,11 +795,10 @@ gst_v4l2_allocator_flush (GstV4l2Allocator * allocator)
 
   for (i = 0; i < allocator->count; i++) {
     GstV4l2MemoryGroup *group = allocator->groups[i];
-    guint32 queued = (V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_DONE);
     gint n;
 
-    if (group->buffer.flags & queued) {
-      group->buffer.flags &= ~queued;
+    if (IS_QUEUED (group->buffer)) {
+      UNSET_QUEUED (group->buffer);
 
       for (n = 0; n < group->n_mem; n++)
         gst_memory_unref (group->mem[n]);
@@ -822,12 +829,28 @@ gst_v4l2_allocator_qbuf (GstV4l2Allocator * allocator,
     GST_ERROR_OBJECT (allocator, "failed queing buffer %i: %s",
         group->buffer.index, g_strerror (errno));
     ret = FALSE;
+    if (IS_QUEUED (group->buffer)) {
+      GST_DEBUG_OBJECT (allocator,
+          "driver pretends buffer is queued even if queue failed");
+      UNSET_QUEUED (group->buffer);
+    }
+    goto done;
+  }
+
+  GST_LOG_OBJECT (allocator, "queued buffer %i (flags 0x%X)",
+      group->buffer.index, group->buffer.flags);
+
+  if (!IS_QUEUED (group->buffer)) {
+    GST_DEBUG_OBJECT (allocator,
+        "driver pretends buffer is not queued even if queue succeeded");
+    SET_QUEUED (group->buffer);
   }
 
   /* Ensure the memory will stay around and is RO */
   for (i = 0; i < group->n_mem; i++)
     gst_memory_ref (group->mem[i]);
 
+done:
   return ret;
 }
 
@@ -853,6 +876,15 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator)
 
   group = allocator->groups[buffer.index];
   group->buffer = buffer;
+
+  GST_LOG_OBJECT (allocator, "dequeued buffer %i (flags 0x%X)", buffer.index,
+      buffer.flags);
+
+  if (IS_QUEUED (group->buffer)) {
+    GST_DEBUG_OBJECT (allocator,
+        "driver pretends buffer is queued even if dequeue succeeded");
+    UNSET_QUEUED (group->buffer);
+  }
 
   if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
     group->buffer.m.planes = group->planes;
@@ -907,7 +939,7 @@ error:
           " Note the driver might dequeue an (empty) buffer despite"
           " returning an error, or even stop capturing.");
       /* have we de-queued a buffer ? */
-      if (!(buffer.flags & (V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_DONE))) {
+      if (!IS_QUEUED (buffer)) {
         GST_DEBUG_OBJECT (allocator, "reenqueing buffer");
         /* FIXME ... should we do something here? */
       }
@@ -920,6 +952,12 @@ error:
           "Grabbing frame got interrupted unexpectedly. %d: %s.", errno,
           g_strerror (errno));
       break;
+  }
+
+  if (!IS_QUEUED (group->buffer)) {
+    GST_DEBUG_OBJECT (allocator,
+        "driver pretends buffer is dequeued even if dequeue failed");
+    SET_QUEUED (group->buffer);
   }
   return NULL;
 }
