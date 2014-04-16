@@ -1453,11 +1453,14 @@ gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
   GstStructure *structure;
   int fe_fd = src->fd_frontend;
 
-  ioctl (fe_fd, FE_READ_STATUS, &status);
-  ioctl (fe_fd, FE_READ_SIGNAL_STRENGTH, &_signal);
-  ioctl (fe_fd, FE_READ_SNR, &snr);
-  ioctl (fe_fd, FE_READ_BER, &ber);
-  ioctl (fe_fd, FE_READ_UNCORRECTED_BLOCKS, &uncorrected_blocks);
+  if (ioctl (fe_fd, FE_READ_STATUS, &status) ||
+      ioctl (fe_fd, FE_READ_SIGNAL_STRENGTH, &_signal) ||
+      ioctl (fe_fd, FE_READ_SNR, &snr) ||
+      ioctl (fe_fd, FE_READ_BER, &ber) ||
+      ioctl (fe_fd, FE_READ_UNCORRECTED_BLOCKS, &uncorrected_blocks)) {
+    GST_WARNING_OBJECT (src, "Failed to get statistics from the device");
+    return;
+  }
 
   structure = gst_structure_new ("dvb-frontend-stats", "status", G_TYPE_INT,
       status, "signal", G_TYPE_INT, _signal, "snr", G_TYPE_INT, snr,
