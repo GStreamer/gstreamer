@@ -1061,8 +1061,9 @@ gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegTsDescriptor
           item->rating = 0;
           break;
       }
-    } else
+    } else {
       item->rating = (*data & 0xf) + 3;
+    }
 
     data += 1;
   }
