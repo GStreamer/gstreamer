@@ -1158,7 +1158,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
         pad->current_component_duration = -1;
 
       if (track->edit_rate.n != source_track->edit_rate.n ||
-          track->edit_rate.n != source_track->edit_rate.n) {
+          track->edit_rate.d != source_track->edit_rate.d) {
         pad->current_component_start +=
             gst_util_uint64_scale (component->start_position,
             source_track->edit_rate.n * track->edit_rate.d,
@@ -1562,7 +1562,7 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
     pad->current_component_duration = -1;
 
   if (pad->material_track->edit_rate.n != source_track->edit_rate.n ||
-      pad->material_track->edit_rate.n != source_track->edit_rate.n) {
+      pad->material_track->edit_rate.d != source_track->edit_rate.d) {
     pad->current_component_start +=
         gst_util_uint64_scale (pad->current_component->start_position,
         source_track->edit_rate.n * pad->material_track->edit_rate.d,
