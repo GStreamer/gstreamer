@@ -3120,7 +3120,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
         /* no downstream pool, use our own then */
         GST_DEBUG_OBJECT (obj->element,
             "read/write mode: no downstream pool, using our own");
-        pool = obj->pool;
+        pool = gst_object_ref (obj->pool);
         size = obj->sizeimage;
       }
       break;
@@ -3134,7 +3134,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       if (can_use_own_pool) {
         if (pool)
           gst_object_unref (pool);
-        pool = obj->pool;
+        pool = gst_object_ref (obj->pool);
         size = obj->sizeimage;
         GST_DEBUG_OBJECT (obj->element,
             "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
@@ -3224,23 +3224,32 @@ done:
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
+  if (pool)
+    gst_object_unref (pool);
+
   return TRUE;
 
 pool_failed:
   {
     /* setup_pool already send the error */
-    return FALSE;
+    goto cleanup;
   }
 config_failed:
   {
     GST_ELEMENT_ERROR (obj->element, RESOURCE, SETTINGS,
         (_("Failed to configure internal buffer pool.")), (NULL));
-    return FALSE;
+    goto cleanup;
   }
 no_size:
   {
     GST_ELEMENT_ERROR (obj->element, RESOURCE, SETTINGS,
         (_("Video device did not suggest any buffer size.")), (NULL));
+    goto cleanup;
+  }
+cleanup:
+  {
+    if (pool)
+      gst_object_unref (pool);
     return FALSE;
   }
 }
