@@ -733,9 +733,9 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       gst_caps_replace (&demux->input_caps, caps);
       GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
           demux->input_caps);
-      demux->do_typefind = FALSE;
     }
     gst_pad_set_caps (srcpad, caps);
+    demux->do_typefind = FALSE;
     gst_caps_unref (caps);
   }
 
