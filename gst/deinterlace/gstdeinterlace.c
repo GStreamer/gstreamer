@@ -1872,8 +1872,8 @@ restart:
     if (ret != GST_FLOW_OK)
       goto no_buffer;
 
-    g_return_val_if_fail (self->history_count - 1 -
-        gst_deinterlace_method_get_latency (self->method) >= 0, GST_FLOW_ERROR);
+    g_return_val_if_fail (self->history_count >=
+        gst_deinterlace_method_get_latency (self->method) + 1, GST_FLOW_ERROR);
 
     buf =
         self->field_history[self->history_count - 1 -
