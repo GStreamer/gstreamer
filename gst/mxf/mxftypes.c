@@ -1254,7 +1254,8 @@ mxf_index_table_segment_parse (const MXFUL * ul,
 
           entry->pos_table = g_new0 (MXFFraction, segment->pos_table_count);
           for (j = 0; j < segment->pos_table_count; j++) {
-            mxf_fraction_parse (&entry->pos_table[j], tag_data, tag_size);
+            if (!mxf_fraction_parse (&entry->pos_table[j], tag_data, tag_size))
+              goto error;
             tag_data += 8;
             tag_size -= 8;
             GST_DEBUG ("    pos table %u = %d/%d", j, entry->pos_table[j].n,
@@ -1281,6 +1282,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
 
 error:
   GST_ERROR ("Invalid index table segment");
+  mxf_index_table_segment_reset (segment);
   return FALSE;
 }
 
