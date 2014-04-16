@@ -116,6 +116,9 @@ struct _GstHLSDemux
   GCond fragment_download_cond;
   GstClockTime current_timestamp;
   gboolean starting_fragment;
+  gint64 download_start_time;
+  gint64 download_total_time;
+  gint64 download_total_bytes;
 
   /* decryption tooling */
 #ifdef HAVE_NETTLE

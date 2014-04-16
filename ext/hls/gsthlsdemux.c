@@ -96,10 +96,7 @@ static void gst_hls_demux_stream_loop (GstHLSDemux * demux);
 static void gst_hls_demux_updates_loop (GstHLSDemux * demux);
 static void gst_hls_demux_stop (GstHLSDemux * demux);
 static void gst_hls_demux_pause_tasks (GstHLSDemux * demux);
-#if 0
-static gboolean gst_hls_demux_switch_playlist (GstHLSDemux * demux,
-    GstFragment * fragment);
-#endif
+static gboolean gst_hls_demux_switch_playlist (GstHLSDemux * demux);
 static gboolean gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
     gboolean * end_of_playlist, GError ** err);
 static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux,
@@ -853,7 +850,13 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     demux->need_segment = FALSE;
   }
 
+  /* accumulate time and size to get this chunk */
+  demux->download_total_time +=
+      g_get_monotonic_time () - demux->download_start_time;
+  demux->download_total_bytes += gst_buffer_get_size (buffer);
+
   ret = gst_proxy_pad_chain_default (pad, parent, buffer);
+  demux->download_start_time = g_get_monotonic_time ();
 
   if (ret != GST_FLOW_OK) {
     if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
@@ -902,6 +905,10 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_buffer_resize (demux->pending_buffer, 0, unpadded_size);
 
         /* TODO check return */
+        demux->download_total_time +=
+            g_get_monotonic_time () - demux->download_start_time;
+        demux->download_total_bytes +=
+            gst_buffer_get_size (demux->pending_buffer);
         gst_pad_push (demux->srcpad, demux->pending_buffer);
         demux->pending_buffer = NULL;
       }
@@ -945,6 +952,9 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
       newcaps);
 
   target = gst_element_get_static_pad (demux->src, "src");
+  if (oldpad) {
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (oldpad), NULL);
+  }
 
   /* First create and activate new pad */
   name = g_strdup_printf ("src_%u", demux->srcpad_counter++);
@@ -1150,11 +1160,11 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
   if (demux->stop_updates_task) {
     goto pause_task;
   }
-#if 0
 
   /* try to switch to another bitrate if needed */
-  gst_hls_demux_switch_playlist (demux, fragment);
-#endif
+  gst_hls_demux_switch_playlist (demux);
+  demux->download_total_bytes = 0;
+  demux->download_total_time = 0;
 
   GST_DEBUG_OBJECT (demux, "Finished pushing fragment");
 
@@ -1558,28 +1568,21 @@ retry_failover_protection:
   return TRUE;
 }
 
-#if 0
 static gboolean
-gst_hls_demux_switch_playlist (GstHLSDemux * demux, GstFragment * fragment)
+gst_hls_demux_switch_playlist (GstHLSDemux * demux)
 {
-  GstClockTime diff;
-  gsize size;
   gint64 bitrate;
-  GstBuffer *buffer;
-
-  if (!fragment)
-    return TRUE;
 
   /* compare the time when the fragment was downloaded with the time when it was
    * scheduled */
-  diff = fragment->download_stop_time - fragment->download_start_time;
-  buffer = gst_fragment_get_buffer (fragment);
-  size = gst_buffer_get_size (buffer);
-  bitrate = (size * 8) / ((double) diff / GST_SECOND);
+  bitrate =
+      (demux->download_total_bytes * 8) / ((double) demux->download_total_time /
+      G_GUINT64_CONSTANT (1000000));
 
   GST_DEBUG_OBJECT (demux,
-      "Downloaded %d bytes in %" GST_TIME_FORMAT ". Bitrate is : %d",
-      (guint) size, GST_TIME_ARGS (diff), (gint) bitrate);
+      "Downloaded %u bytes in %" GST_TIME_FORMAT ". Bitrate is : %d",
+      (guint) demux->download_total_bytes,
+      GST_TIME_ARGS (demux->download_total_time * GST_USECOND), (gint) bitrate);
 
   /* Take old rate into account too */
   if (demux->current_download_rate != -1)
@@ -1590,8 +1593,6 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux, GstFragment * fragment)
 
   GST_DEBUG_OBJECT (demux, "Using current download rate: %d", (gint) bitrate);
 
-  gst_buffer_unref (buffer);
-
   GST_M3U8_CLIENT_LOCK (demux->client);
   if (!demux->client->main->lists) {
     GST_M3U8_CLIENT_UNLOCK (demux->client);
@@ -1601,7 +1602,6 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux, GstFragment * fragment)
 
   return gst_hls_demux_change_playlist (demux, bitrate * demux->bitrate_limit);
 }
-#endif
 
 #ifdef HAVE_NETTLE
 static gboolean
@@ -1759,6 +1759,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
           (GstSeekFlags) GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, range_start,
           GST_SEEK_TYPE_SET, range_end));
 
+  demux->download_start_time = g_get_monotonic_time ();
   gst_element_sync_state_with_parent (demux->src);
 
   /* wait for the fragment to be completely downloaded */
