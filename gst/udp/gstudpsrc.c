@@ -424,8 +424,7 @@ retry:
     else
       timeout = -1;
 
-    GST_LOG_OBJECT (udpsrc, "doing select, timeout %" G_GUINT64_FORMAT,
-        timeout);
+    GST_LOG_OBJECT (udpsrc, "doing select, timeout %" G_GINT64_FORMAT, timeout);
 
     if (!g_socket_condition_timed_wait (udpsrc->used_socket, G_IO_IN | G_IO_PRI,
             timeout, udpsrc->cancellable, &err)) {
