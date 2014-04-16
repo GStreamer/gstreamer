@@ -831,7 +831,7 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
   if (GST_BUFFER_IS_DISCONT (inbuf)
       || (GST_CLOCK_TIME_IS_VALID (expected_timestamp)
           && (ABS (GST_CLOCK_DIFF (timestamp,
-                      expected_timestamp) > 5 * GST_MSECOND)))) {
+                      expected_timestamp)) > 5 * GST_MSECOND))) {
     GST_DEBUG_OBJECT (self, "Discontinuity detected - flushing");
     if (GST_CLOCK_TIME_IS_VALID (expected_timestamp))
       gst_audio_fx_base_fir_filter_push_residue (self);
