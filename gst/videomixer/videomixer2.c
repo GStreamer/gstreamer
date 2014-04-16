@@ -1896,8 +1896,8 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
   GstVideoMixer2Pad *pad = GST_VIDEO_MIXER2_PAD (cdata->pad);
   gboolean ret = TRUE, discard = FALSE;
 
-  GST_DEBUG_OBJECT (pad, "Got %s event on pad %s:%s",
-      GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (pad));
+  GST_DEBUG_OBJECT (pad, "Got %s event: %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
