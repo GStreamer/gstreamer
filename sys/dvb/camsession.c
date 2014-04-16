@@ -451,15 +451,16 @@ handle_close_session_request (CamSL * sl, CamTLConnection * connection,
 
   session = g_hash_table_lookup (sl->sessions,
       GINT_TO_POINTER ((guint) session_nb));
+
   if (session == NULL) {
     GST_WARNING ("got CLOSE_SESSION_REQUEST for unknown session: %d",
         session_nb);
+    return CAM_RETURN_OK;
+  }
 
-    status = 0xF0;
-  } else if (session->state == CAM_SL_SESSION_STATE_CLOSING) {
+  if (session->state == CAM_SL_SESSION_STATE_CLOSING) {
     GST_WARNING ("got CLOSE_SESSION_REQUEST for closing session: %d",
         session_nb);
-
     status = 0xF0;
   }
 
