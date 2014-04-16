@@ -409,9 +409,12 @@ gst_icydemux_handle_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         return gst_pad_event_default (pad, parent, event);
       default:
-        if (!GST_EVENT_IS_STICKY (event))
+        if (!GST_EVENT_IS_STICKY (event)) {
           icydemux->cached_events =
               g_list_append (icydemux->cached_events, event);
+        } else {
+          gst_event_unref (event);
+        }
         return TRUE;
     }
   } else {
