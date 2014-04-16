@@ -446,7 +446,8 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   if (G_UNLIKELY (buf == NULL))
     goto alloc_failed;
 
-  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  if (!gst_buffer_map (buf, &info, GST_MAP_WRITE))
+    goto buffer_read_error;
 
   do {
     readbytes = read (src->fd, info.data, blocksize);
@@ -505,6 +506,12 @@ read_error:
         ("read on file descriptor: %s.", g_strerror (errno)));
     GST_DEBUG_OBJECT (psrc, "Error reading from fd");
     gst_buffer_unmap (buf, &info);
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
+buffer_read_error:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL), ("Can't write to buffer"));
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }

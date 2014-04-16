@@ -716,7 +716,10 @@ gst_fake_src_create_buffer (GstFakeSrc * src, gsize * bufsize)
         /* try again (this will allocate a new parent) */
         return gst_fake_src_create_buffer (src, bufsize);
       }
-      gst_buffer_map (buf, &info, GST_MAP_WRITE);
+      if (buf == NULL)
+        goto buffer_create_fail;
+      if (!gst_buffer_map (buf, &info, GST_MAP_WRITE))
+        goto buffer_write_fail;
       gst_fake_src_prepare_buffer (src, info.data, info.size);
       gst_buffer_unmap (buf, &info);
       break;
@@ -726,12 +729,28 @@ gst_fake_src_create_buffer (GstFakeSrc * src, gsize * bufsize)
       break;
   }
   if (dump) {
-    gst_buffer_map (buf, &info, GST_MAP_READ);
-    gst_util_dump_mem (info.data, info.size);
-    gst_buffer_unmap (buf, &info);
+    if (gst_buffer_map (buf, &info, GST_MAP_READ)) {
+      gst_util_dump_mem (info.data, info.size);
+      gst_buffer_unmap (buf, &info);
+    }
   }
 
   return buf;
+
+buffer_create_fail:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, BUSY, (NULL),
+        ("Failed to create a buffer"));
+    return NULL;
+  }
+
+buffer_write_fail:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+        ("Failed to write to buffer"));
+    gst_buffer_unref (buf);
+    return NULL;
+  }
 }
 
 static void

@@ -1382,7 +1382,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
   else
     buf = *buffer;
 
-  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  if (!gst_buffer_map (buf, &info, GST_MAP_WRITE))
+    goto buffer_write_fail;
   data = info.data;
 
   GST_DEBUG_OBJECT (queue, "Reading %u bytes from %" G_GUINT64_FORMAT, length,
@@ -1532,6 +1533,14 @@ read_error:
     if (*buffer == NULL)
       gst_buffer_unref (buf);
     return ret;
+  }
+buffer_write_fail:
+  {
+    GST_ELEMENT_ERROR (queue, RESOURCE, WRITE, (NULL),
+        ("Can't write to buffer"));
+    if (*buffer == NULL)
+      gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -1784,7 +1793,8 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
   ring_buffer = queue->ring_buffer;
   rb_size = queue->ring_buffer_max_size;
 
-  gst_buffer_map (buffer, &info, GST_MAP_READ);
+  if (!gst_buffer_map (buffer, &info, GST_MAP_READ))
+    goto buffer_read_error;
 
   size = info.size;
   data = info.data;
@@ -2058,6 +2068,12 @@ handle_error:
       }
     }
     gst_buffer_unmap (buffer, &info);
+    return FALSE;
+  }
+buffer_read_error:
+  {
+    GST_ELEMENT_ERROR (queue, RESOURCE, READ, (NULL),
+        ("Can't read from buffer"));
     return FALSE;
   }
 }

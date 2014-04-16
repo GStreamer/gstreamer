@@ -479,9 +479,10 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (sink->dump) {
     GstMapInfo info;
 
-    gst_buffer_map (buf, &info, GST_MAP_READ);
-    gst_util_dump_mem (info.data, info.size);
-    gst_buffer_unmap (buf, &info);
+    if (gst_buffer_map (buf, &info, GST_MAP_READ)) {
+      gst_util_dump_mem (info.data, info.size);
+      gst_buffer_unmap (buf, &info);
+    }
   }
   if (sink->num_buffers_left == 0)
     goto eos;

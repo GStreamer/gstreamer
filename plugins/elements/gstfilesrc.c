@@ -350,7 +350,8 @@ gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
     src->read_position = offset;
   }
 
-  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  if (!gst_buffer_map (buf, &info, GST_MAP_WRITE))
+    goto buffer_write_fail;
   data = info.data;
 
   bytes_read = 0;
@@ -408,6 +409,11 @@ eos:
     gst_buffer_unmap (buf, &info);
     gst_buffer_resize (buf, 0, 0);
     return GST_FLOW_EOS;
+  }
+buffer_write_fail:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL), ("Can't write to buffer"));
+    return GST_FLOW_ERROR;
   }
 }
 
