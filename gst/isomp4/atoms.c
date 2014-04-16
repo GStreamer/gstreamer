@@ -2143,9 +2143,11 @@ atom_dref_copy_data (AtomDREF * dref, guint8 ** buffer, guint64 * size,
     Atom *atom = (Atom *) walker->data;
 
     if (atom->type == FOURCC_url_) {
-      atom_url_copy_data ((AtomURL *) atom, buffer, size, offset);
+      if (!atom_url_copy_data ((AtomURL *) atom, buffer, size, offset))
+        return 0;
     } else if (atom->type == FOURCC_alis) {
-      atom_full_copy_data ((AtomFull *) atom, buffer, size, offset);
+      if (!atom_full_copy_data ((AtomFull *) atom, buffer, size, offset))
+        return 0;
     } else {
       g_error ("Unsupported atom used inside dref atom");
     }
