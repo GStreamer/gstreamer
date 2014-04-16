@@ -2023,6 +2023,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   gst_riff_vprp *vprp = NULL;
   GstEvent *event;
   gchar *stream_id;
+  GstMapInfo map;
 
   element = GST_ELEMENT_CAST (avi);
 
@@ -2216,22 +2217,17 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
         break;
       case GST_RIFF_TAG_strn:
         g_free (stream->name);
-        if (sub != NULL) {
-          GstMapInfo map;
 
-          gst_buffer_map (sub, &map, GST_MAP_READ);
-          stream->name = g_strndup ((gchar *) map.data, map.size);
-          gst_buffer_unmap (sub, &map);
-          gst_buffer_unref (sub);
-          sub = NULL;
+        gst_buffer_map (sub, &map, GST_MAP_READ);
+        stream->name = g_strndup ((gchar *) map.data, map.size);
+        gst_buffer_unmap (sub, &map);
+        gst_buffer_unref (sub);
+        sub = NULL;
 
-          if (avi->globaltags == NULL)
-            avi->globaltags = gst_tag_list_new_empty ();
-          gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE,
-              GST_TAG_TITLE, stream->name, NULL);
-        } else {
-          stream->name = g_strdup ("");
-        }
+        if (avi->globaltags == NULL)
+          avi->globaltags = gst_tag_list_new_empty ();
+        gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_TITLE, stream->name, NULL);
         GST_DEBUG_OBJECT (avi, "stream name: %s", stream->name);
         break;
       case GST_RIFF_IDIT:
