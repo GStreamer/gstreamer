@@ -691,6 +691,52 @@ gst_dvbsrc_init (GstDvbSrc * object)
   object->timeout = DEFAULT_TIMEOUT;
 }
 
+static void
+gst_dvbsrc_set_pids (GstDvbSrc * dvbsrc, const gchar * pid_string)
+{
+  if (!strcmp (pid_string, "8192")) {
+    /* get the whole ts */
+    int pid_count = 1;
+    dvbsrc->pids[0] = 8192;
+    while (pid_count < MAX_FILTERS) {
+      dvbsrc->pids[pid_count++] = G_MAXUINT16;
+    }
+  } else {
+    int pid = 0;
+    int pid_count;
+    gchar **pids;
+    char **tmp;
+
+    tmp = pids = g_strsplit (pid_string, ":", MAX_FILTERS);
+
+    /* always add the PAT and CAT pids */
+    dvbsrc->pids[0] = 0;
+    dvbsrc->pids[1] = 1;
+
+    pid_count = 2;
+    while (*pids != NULL && pid_count < MAX_FILTERS) {
+      pid = strtol (*pids, NULL, 0);
+      if (pid > 1 && pid <= 8192) {
+        GST_INFO_OBJECT (dvbsrc, "\tParsed Pid: %d", pid);
+        dvbsrc->pids[pid_count] = pid;
+        pid_count++;
+      }
+      pids++;
+    }
+    while (pid_count < MAX_FILTERS) {
+      dvbsrc->pids[pid_count++] = G_MAXUINT16;
+    }
+
+    g_strfreev (tmp);
+  }
+  /* if we are in playing or paused, then set filters now */
+  GST_INFO_OBJECT (dvbsrc, "checking if playing for setting pes filters");
+  if (GST_ELEMENT (dvbsrc)->current_state == GST_STATE_PLAYING ||
+      GST_ELEMENT (dvbsrc)->current_state == GST_STATE_PAUSED) {
+    GST_INFO_OBJECT (dvbsrc, "Setting pes filters now");
+    gst_dvbsrc_set_pes_filters (dvbsrc);
+  }
+}
 
 static void
 gst_dvbsrc_set_property (GObject * _object, guint prop_id,
@@ -735,56 +781,14 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
     }
     case ARG_DVBSRC_PIDS:
     {
-      gchar *pid_string;
+      const gchar *pid_string;
 
-      pid_string = g_value_dup_string (value);
+      pid_string = g_value_get_string (value);
       GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_PIDS %s", pid_string);
-      if (!strcmp (pid_string, "8192")) {
-        /* get the whole ts */
-        int pid_count = 1;
-        object->pids[0] = 8192;
-        while (pid_count < MAX_FILTERS) {
-          object->pids[pid_count++] = G_MAXUINT16;
-        }
-      } else {
-        int pid = 0;
-        int pid_count;
-        gchar **pids;
-        char **tmp;
-
-        tmp = pids = g_strsplit (pid_string, ":", MAX_FILTERS);
-        if (pid_string)
-          g_free (pid_string);
-
-        /* always add the PAT and CAT pids */
-        object->pids[0] = 0;
-        object->pids[1] = 1;
-
-        pid_count = 2;
-        while (*pids != NULL && pid_count < MAX_FILTERS) {
-          pid = strtol (*pids, NULL, 0);
-          if (pid > 1 && pid <= 8192) {
-            GST_INFO_OBJECT (object, "\tParsed Pid: %d", pid);
-            object->pids[pid_count] = pid;
-            pid_count++;
-          }
-          pids++;
-        }
-        while (pid_count < MAX_FILTERS) {
-          object->pids[pid_count++] = G_MAXUINT16;
-        }
-
-        g_strfreev (tmp);
-      }
-      /* if we are in playing or paused, then set filters now */
-      GST_INFO_OBJECT (object, "checking if playing for setting pes filters");
-      if (GST_ELEMENT (object)->current_state == GST_STATE_PLAYING ||
-          GST_ELEMENT (object)->current_state == GST_STATE_PAUSED) {
-        GST_INFO_OBJECT (object, "Setting pes filters now");
-        gst_dvbsrc_set_pes_filters (object);
-      }
-    }
+      if (pid_string)
+        gst_dvbsrc_set_pids (object, pid_string);
       break;
+    }
     case ARG_DVBSRC_SYM_RATE:
       object->sym_rate = g_value_get_uint (value);
       GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_SYM_RATE to value %d",
