@@ -568,6 +568,7 @@ case $host in
     AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,, GL/gl.h)
     AG_GST_CHECK_LIBHEADER(GLU, GLU, gluSphere,, GL/glu.h)
     AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
+    AG_GST_CHECK_LIBHEADER(EGL, EGL, eglGetError,, EGL/egl.h)
 
     old_LIBS=$LIBS
     old_CFLAGS=$CFLAGS
