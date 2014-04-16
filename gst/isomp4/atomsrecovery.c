@@ -481,7 +481,8 @@ moov_recov_parse_tkhd (MoovRecovFile * moovrf, TrakRecovData * trakrd)
     return FALSE;
 
   /* advance the rest of tkhd */
-  fseek (moovrf->file, 68, SEEK_CUR);
+  if (fseek (moovrf->file, 68, SEEK_CUR) != 0)
+    return FALSE;
 
   trakrd->trak_id = GST_READ_UINT32_BE (data);
   return TRUE;
