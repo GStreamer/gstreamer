@@ -226,6 +226,8 @@ GST_START_TEST (test_parse_proxy_constraints)
 
   gst_object_unref (sinkpad);
 
+  gst_object_unref (filter);
+  gst_object_unref (parse);
 }
 
 GST_END_TEST;
