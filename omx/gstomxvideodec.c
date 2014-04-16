@@ -1628,7 +1628,6 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
         (GDestroyNotify) gst_omx_video_negotiation_map_free);
     return FALSE;
   }
-  gst_caps_unref (intersection);
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = self->dec_out_port->index;
@@ -1658,6 +1657,7 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
         gst_omx_error_to_string (err), err);
   }
 
+  gst_caps_unref (intersection);
   return (err == OMX_ErrorNone);
 }
 
