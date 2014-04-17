@@ -1434,6 +1434,59 @@ gst_mpegts_descriptor_parse_dvb_multilingual_network_name (const
   return TRUE;
 }
 
+/* GST_MTS_DESC_DVB_MULTILINGUAL_BOUQUET_NAME (0x5C) */
+static void
+    _gst_mpegts_dvb_multilingual_bouquet_name_item_free
+    (GstMpegTsDvbMultilingualBouquetNameItem * item)
+{
+  g_slice_free (GstMpegTsDvbMultilingualBouquetNameItem, item);
+}
+
+/**
+ * gst_mpegts_descriptor_parse_dvb_multilingual_bouquet_name:
+ * @descriptor: a %GST_MTS_DESC_DVB_MULTILINGUAL_BOUQUET_NAME
+ * #GstMpegTsDescriptor
+ * @bouquet_name_items: (out) (element-type GstMpegTsDvbMultilingualBouquetNameItem):
+ * a #GstMpegTsDvbMultilingualBouquetNameItem
+ *
+ * Parses out the multilingual bouquet name from the @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_multilingual_bouquet_name (const
+    GstMpegTsDescriptor * descriptor, GPtrArray ** bouquet_name_items)
+{
+  guint8 *data, i, len;
+  GstMpegTsDvbMultilingualBouquetNameItem *item;
+
+  g_return_val_if_fail (descriptor != NULL && bouquet_name_items != NULL,
+      FALSE);
+  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_MULTILINGUAL_BOUQUET_NAME,
+      5, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  *bouquet_name_items = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_dvb_multilingual_bouquet_name_item_free);
+
+  for (i = 0; i < descriptor->length - 3;) {
+    item = g_slice_new0 (GstMpegTsDvbMultilingualBouquetNameItem);
+    g_ptr_array_add (*bouquet_name_items, item);
+    memcpy (data, item->language_code, 3);
+    data += 3;
+    i += 3;
+
+    len = *data;
+    item->bouquet_name =
+        get_encoding_and_convert ((const gchar *) data + 1, len);
+    data += len + 1;
+    i += len + 1;
+  }
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER (0x5F) */
 /**
  * gst_mpegts_descriptor_parse_dvb_private_data_specifier:
