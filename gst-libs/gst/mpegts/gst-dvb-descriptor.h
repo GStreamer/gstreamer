@@ -330,6 +330,23 @@ GstMpegTsDescriptor *gst_mpegts_descriptor_from_dvb_service (GstMpegTsDVBService
 							     const gchar * service_name,
 							     const gchar * service_provider);
 
+/* GST_MTS_DESC_DVB_SERVICE_LIST (0x41) */
+typedef struct _GstMpegTsDVBServiceListItem GstMpegTsDVBServiceListItem;
+
+/**
+ * GstMpegTsDVBServiceListItem:
+ * @service_id: the id of a service
+ * @type: the type of a service
+ */
+struct _GstMpegTsDVBServiceListItem
+{
+  guint16                 service_id;
+  GstMpegTsDVBServiceType type;
+};
+
+gboolean gst_mpegts_descriptor_parse_dvb_service_list (const GstMpegTsDescriptor * descriptor,
+    GPtrArray ** list);
+
 /* GST_MTS_DESC_DVB_LINKAGE (0x4A) */
 /**
  * GstMpegTsDVBLinkageType:

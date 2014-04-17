@@ -112,6 +112,53 @@ gst_mpegts_descriptor_from_dvb_network_name (const gchar * name)
   return descriptor;
 }
 
+/* GST_MTS_DESC_DVB_SERVICE_LIST (0x41) */
+static void
+_gst_mpegts_dvb_service_list_item_free (GstMpegTsDVBServiceListItem * item)
+{
+  g_slice_free (GstMpegTsDVBServiceListItem, item);
+}
+
+/**
+ * gst_mpegts_descriptor_parse_dvb_service_list:
+ * @descriptor: a %GST_MTS_DESC_DVB_SERVICE_LIST #GstMpegTsDescriptor
+ * @list: (out) (transfer full) (element-type GstMpegTsDVBServiceListItem):
+ * the list of services
+ *
+ * Parses out a list of services from the @descriptor:
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_service_list (const GstMpegTsDescriptor *
+    descriptor, GPtrArray ** list)
+{
+  guint8 *data, i;
+
+  g_return_val_if_fail (descriptor != NULL && list != NULL, FALSE);
+  /* a entry has 3 bytes, 2 for service id, 1 for service type */
+  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_SERVICE_LIST, 3, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  *list = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_dvb_service_list_item_free);
+
+  for (i = 0; i < descriptor->length - 2; i += 3) {
+    GstMpegTsDVBServiceListItem *item =
+        g_slice_new0 (GstMpegTsDVBServiceListItem);
+
+    g_ptr_array_add (*list, item);
+    item->service_id = GST_READ_UINT16_BE (data);
+    data += 2;
+
+    item->type = *data;
+    data += 1;
+  }
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM (0x43) */
 /**
  * gst_mpegts_descriptor_parse_satellite_delivery_system:
