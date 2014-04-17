@@ -283,6 +283,10 @@ struct _GstMpegTsCableDeliverySystemDescriptor
 gboolean gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTsDescriptor *descriptor,
 							    GstMpegTsCableDeliverySystemDescriptor *res);
 
+/* GST_MTS_DESC_DVB_BOUQUET_NAME (0x47) */
+gboolean gst_mpegts_descriptor_parse_dvb_bouquet_name (const GstMpegTsDescriptor * descriptor,
+                                                       gchar ** bouquet_name);
+
 /* GST_MTS_DESC_DVB_SERVICE (0x48) */
 /**
  * GstMpegTsDVBServiceType:

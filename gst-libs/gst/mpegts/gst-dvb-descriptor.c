@@ -389,6 +389,31 @@ gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTsDescriptor *
   return TRUE;
 }
 
+/* GST_MTS_DESC_DVB_BOUQUET_NAME (0x47) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_bouquet_name:
+ * @bouquet_name: (out) (transfer full) (allow-none): the bouquet name
+ *
+ * Extracts the bouquet name from @descriptor.
+ *
+ * Returns: %TRUE if parsing succeeded, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_bouquet_name (const GstMpegTsDescriptor *
+    descriptor, gchar ** bouquet_name)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL && bouquet_name != NULL, FALSE);
+  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_BOUQUET_NAME, 1, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  *bouquet_name = get_encoding_and_convert ((const gchar *) data + 1, *data);
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_DVB_SERVICE (0x48) */
 /**
  * gst_mpegts_descriptor_parse_dvb_service:
