@@ -1009,6 +1009,15 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
       component =
           MXF_METADATA_SOURCE_CLIP (sequence->structural_components
           [component_index]);
+      if (!component) {
+        GST_WARNING_OBJECT (demux, "NULL conponent in non source package");
+        if (!pad) {
+          continue;
+        } else {
+          ret = GST_FLOW_ERROR;
+          goto error;
+        }
+      }
 
       if (component->source_package && component->source_package->top_level &&
           MXF_METADATA_GENERIC_PACKAGE (component->source_package)->tracks) {
