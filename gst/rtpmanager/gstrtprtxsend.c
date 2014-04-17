@@ -74,7 +74,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp")
+    GST_STATIC_CAPS ("application/x-rtp, " "clock-rate = (int) [1, MAX]")
     );
 
 static gboolean gst_rtp_rtx_send_queue_check_full (GstDataQueue * queue,
@@ -592,7 +592,8 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       g_assert (gst_caps_is_fixed (caps));
 
       s = gst_caps_get_structure (caps, 0);
-      gst_structure_get_uint (s, "ssrc", &ssrc);
+      if (!gst_structure_get_uint (s, "ssrc", &ssrc))
+        ssrc = -1;
 
       GST_OBJECT_LOCK (rtx);
       data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
