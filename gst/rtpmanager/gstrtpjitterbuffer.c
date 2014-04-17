@@ -2931,8 +2931,11 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       ret = gst_clock_id_wait (id, &clock_jitter);
 
       JBUF_LOCK (priv);
-      if (!priv->timer_running)
+      if (!priv->timer_running) {
+        gst_clock_id_unref (id);
+        priv->clock_id = NULL;
         break;
+      }
 
       if (ret != GST_CLOCK_UNSCHEDULED) {
         now = timer_timeout + MAX (clock_jitter, 0);
