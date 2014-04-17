@@ -318,9 +318,12 @@ _set_meta_foreach (const GstTagList * tags, const gchar * tag,
 {
   GValue value = { 0 };
 
-  gst_tag_list_copy_value (&value, tags, tag);
-  ges_meta_container_set_meta (container, tag, &value);
-  g_value_unset (&value);
+  if (gst_tag_list_copy_value (&value, tags, tag)) {
+    ges_meta_container_set_meta (container, tag, &value);
+    g_value_unset (&value);
+  } else {
+    GST_INFO ("Could not set metadata: %s", tag);
+  }
 }
 
 static void
