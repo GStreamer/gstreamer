@@ -121,6 +121,7 @@ setup_testharness (TestData * data, gboolean session_as_sender)
   GstPad *rtp_sink_pad, *rtcp_src_pad, *rtp_src_pad;
   GstSegment seg;
   GstMiniObject *obj;
+  GstCaps *caps;
 
   data->clock = gst_test_clock_new ();
   GST_DEBUG ("Setting default system clock to test clock");
@@ -161,7 +162,8 @@ setup_testharness (TestData * data, gboolean session_as_sender)
   data->rtcp_sink = gst_pad_new ("sink", GST_PAD_SINK);
   g_assert (data->rtcp_sink);
   gst_pad_set_element_private (data->rtcp_sink, data);
-  gst_pad_set_caps (data->rtcp_sink, generate_caps ());
+  caps = generate_caps ();
+  gst_pad_set_caps (data->rtcp_sink, caps);
   gst_pad_set_chain_function (data->rtcp_sink, test_sink_pad_chain_cb);
   rtcp_src_pad = gst_element_get_request_pad (data->session, "send_rtcp_src");
   g_assert (rtcp_src_pad);
@@ -174,8 +176,9 @@ setup_testharness (TestData * data, gboolean session_as_sender)
 
   gst_segment_init (&seg, GST_FORMAT_TIME);
   gst_pad_push_event (data->src, gst_event_new_stream_start ("stream0"));
-  gst_pad_set_caps (data->src, generate_caps ());
+  gst_pad_set_caps (data->src, caps);
   gst_pad_push_event (data->src, gst_event_new_segment (&seg));
+  gst_caps_unref (caps);
 
   while ((obj = g_async_queue_try_pop (data->rtcp_queue)))
     gst_mini_object_unref (obj);
@@ -185,7 +188,7 @@ GST_START_TEST (test_multiple_ssrc_rr)
 {
   TestData data;
   GstFlowReturn res;
-  GstClockID id;
+  GstClockID id, tid;
   GstBuffer *in_buf, *out_buf;
   GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
   GstRTCPPacket rtcp_packet;
@@ -208,7 +211,10 @@ GST_START_TEST (test_multiple_ssrc_rr)
 
 
     gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
-    gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+    tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+    gst_clock_id_unref (id);
+    if (tid)
+      gst_clock_id_unref (tid);
 
     in_buf =
         generate_test_buffer (i * 20 * GST_MSECOND, FALSE, i, i * 20,
@@ -217,16 +223,21 @@ GST_START_TEST (test_multiple_ssrc_rr)
     fail_unless (res == GST_FLOW_OK || res == GST_FLOW_FLUSHING);
 
     gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
-    gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+    tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
     GST_DEBUG ("pushed %i", i);
     gst_test_clock_set_time (GST_TEST_CLOCK (data.clock),
         gst_clock_id_get_time (id));
+    gst_clock_id_unref (id);
+    if (tid)
+      gst_clock_id_unref (tid);
   }
 
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock),
       gst_clock_id_get_time (id) + (2 * GST_SECOND));
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
-  gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  gst_clock_id_unref (id);
+  gst_clock_id_unref (tid);
 
   out_buf = g_async_queue_pop (data.rtcp_queue);
   g_assert (out_buf != NULL);
@@ -244,6 +255,8 @@ GST_START_TEST (test_multiple_ssrc_rr)
   gst_rtcp_packet_get_rb (&rtcp_packet, 1, &ssrc, &fractionlost, &packetslost,
       &exthighestseq, &jitter, &lsr, &dlsr);
   g_assert_cmpint (ssrc, ==, 0xDEADBEEF);
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (out_buf);
 
   destroy_testharness (&data);
 }
@@ -257,7 +270,7 @@ GST_START_TEST (test_multiple_senders_roundrobin_rbs)
 {
   TestData data;
   GstFlowReturn res;
-  GstClockID id;
+  GstClockID id, tid;
   GstBuffer *buf;
   GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
   GstRTCPPacket rtcp_packet;
@@ -298,8 +311,10 @@ GST_START_TEST (test_multiple_senders_roundrobin_rbs)
       time = gst_clock_id_get_time (id);
       GST_DEBUG ("Advancing time to %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
       gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), time);
-      fail_unless_equals_pointer (gst_test_clock_process_next_clock_id
-          (GST_TEST_CLOCK (data.clock)), id);
+      tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+      fail_unless_equals_pointer (tid, id);
+      gst_clock_id_unref (id);
+      gst_clock_id_unref (tid);
 
       /* wait for the RTCP pad thread to output its data
        * and start waiting on the next timeout */
@@ -313,6 +328,7 @@ GST_START_TEST (test_multiple_senders_roundrobin_rbs)
 
     GST_DEBUG ("RTCP timeout processed");
   }
+  gst_clock_id_unref (id);
 
   sr_ssrcs = g_hash_table_new (g_direct_hash, g_direct_equal);
   rb_ssrcs = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
