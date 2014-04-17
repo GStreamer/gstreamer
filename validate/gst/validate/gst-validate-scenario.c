@@ -1402,7 +1402,7 @@ init_scenarios (void)
 
   _gst_validate_action_type = gst_validate_action_get_type ();
 
-  clean_action_str = g_regex_new ("\\\\\n", G_REGEX_CASELESS, 0, NULL);
+  clean_action_str = g_regex_new ("\\\\\n|#.*\n", G_REGEX_CASELESS, 0, NULL);
   gst_validate_add_action_type ("seek", _execute_seek, seek_mandatory_fields,
       "Allows to seek into the files", FALSE);
   gst_validate_add_action_type ("pause", _execute_pause, NULL,
