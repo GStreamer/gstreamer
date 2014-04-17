@@ -785,6 +785,7 @@ rtprtxreceive_srcpad_probe_multiple (GstPad * pad, GstPadProbeInfo * info,
           GUINT_TO_POINTER (ssrc), GUINT_TO_POINTER (seqnum));
       g_hash_table_insert (rtxdata->ssrc_to_nb_packets_map,
           GUINT_TO_POINTER (ssrc), GUINT_TO_POINTER (1));
+      gst_rtp_buffer_unmap (&rtp);
       return GST_PAD_PROBE_OK;
     }
 
