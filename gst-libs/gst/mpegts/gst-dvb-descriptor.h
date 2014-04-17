@@ -656,6 +656,25 @@ struct _GstMpegTsTerrestrialDeliverySystemDescriptor
 gboolean gst_mpegts_descriptor_parse_terrestrial_delivery_system (const GstMpegTsDescriptor
               *descriptor, GstMpegTsTerrestrialDeliverySystemDescriptor * res);
 
+/* GST_MTS_DESC_DVB_MULTILINGUAL_NETWORK_NAME (0x5B) */
+typedef struct _GstMpegTsDvbMultilingualNetworkNameItem GstMpegTsDvbMultilingualNetworkNameItem;
+
+/**
+ * GstMpegTsDvbMultilingualNetworkNameItem:
+ * @language_code: the ISO 639 language code
+ * @network_name: the network name
+ *
+ * a multilingual network name entry
+ */
+struct _GstMpegTsDvbMultilingualNetworkNameItem
+{
+  gchar language_code[3];
+  gchar *network_name;
+};
+
+gboolean gst_mpegts_descriptor_parse_dvb_multilingual_network_name (const GstMpegTsDescriptor
+              *descriptor, GPtrArray ** network_name_items);
+
 /* GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER (0x5F) */
 gboolean gst_mpegts_descriptor_parse_dvb_private_data_specifier (const GstMpegTsDescriptor
               * descriptor, guint32 * private_data_specifier, guint8 ** private_data,
