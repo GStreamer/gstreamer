@@ -78,32 +78,32 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
 static GstBuffer *
 create_rtcp_app (guint32 ssrc)
 {
-  GInetAddress *inet_addr_0 = g_inet_address_new_from_string ("192.168.1.1");
+  GInetAddress *inet_addr_0;
   guint16 port = 5678;
-  GSocketAddress *socket_addr_0 = g_inet_socket_address_new (inet_addr_0, port);
-  GstBuffer *old_rtcp_buffer = gst_rtcp_buffer_new (1400);
-  GstBuffer *rtcp_buffer = NULL;
+  GSocketAddress *socket_addr_0;
+  GstBuffer *rtcp_buffer;
   GstRTCPPacket *rtcp_packet = NULL;
   GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
 
-  /* make sure to have a writable buffer before
-   * changing anything
-   */
-  rtcp_buffer = gst_buffer_make_writable (old_rtcp_buffer);
-  if (old_rtcp_buffer != rtcp_buffer) {
-    gst_buffer_unref (old_rtcp_buffer);
-  }
+  inet_addr_0 = g_inet_address_new_from_string ("192.168.1.1");
+  socket_addr_0 = g_inet_socket_address_new (inet_addr_0, port);
+  g_object_unref (inet_addr_0);
+
+  rtcp_buffer = gst_rtcp_buffer_new (1400);
   gst_buffer_add_net_address_meta (rtcp_buffer, socket_addr_0);
+  g_object_unref (socket_addr_0);
 
   /* need to begin with rr */
   gst_rtcp_buffer_map (rtcp_buffer, GST_MAP_READWRITE, &rtcp);
   rtcp_packet = g_slice_new0 (GstRTCPPacket);
   gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_RR, rtcp_packet);
   gst_rtcp_packet_rr_set_ssrc (rtcp_packet, ssrc);
+  g_slice_free (GstRTCPPacket, rtcp_packet);
 
   /* useful to make the rtcp buffer valid */
   rtcp_packet = g_slice_new0 (GstRTCPPacket);
   gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_APP, rtcp_packet);
+  g_slice_free (GstRTCPPacket, rtcp_packet);
   gst_rtcp_buffer_unmap (&rtcp);
 
   return rtcp_buffer;
@@ -152,6 +152,7 @@ rtpsession_sinkpad_probe (GstPad * pad, GstPadProbeInfo * info,
 static GstFlowReturn
 fake_udp_sink_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
+  gst_buffer_unref (buffer);
   return GST_FLOW_OK;
 }
 
