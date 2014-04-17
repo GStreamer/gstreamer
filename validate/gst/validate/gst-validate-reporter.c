@@ -35,7 +35,10 @@ typedef struct _GstValidateReporterPrivate
   GstValidateRunner *runner;
   GHashTable *reports;
   char *name;
+  guint log_handler_id;
 } GstValidateReporterPrivate;
+
+static GstValidateReporterPrivate * g_log_handler = NULL;
 
 G_DEFINE_INTERFACE (GstValidateReporter, gst_validate_reporter, G_TYPE_OBJECT);
 
@@ -52,6 +55,12 @@ gst_validate_reporter_default_init (GstValidateReporterInterface * iface)
 static void
 _free_priv (GstValidateReporterPrivate * priv)
 {
+
+  if (g_log_handler == priv) {
+    g_log_set_default_handler (g_log_default_handler, NULL);
+    g_log_handler = NULL;
+  }
+
   g_hash_table_unref (priv->reports);
   g_free (priv->name);
   g_slice_free (GstValidateReporterPrivate, priv);
@@ -118,7 +127,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
     }
 
     g_hash_table_insert (priv->reports, (gpointer) issue_id,
-            gst_validate_report_ref (report));
+        gst_validate_report_ref (report));
   }
 
   combo =
@@ -151,6 +160,19 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   }
 
   g_free (message);
+}
+
+static void
+gst_validate_reporter_g_log_func (const gchar * log_domain,
+    GLogLevelFlags log_level, const gchar * message,
+    GstValidateReporter * reporter)
+{
+  if (log_level & G_LOG_LEVEL_CRITICAL)
+    GST_VALIDATE_REPORT (reporter, G_LOG_CRITICAL, message);
+  else if (log_level & G_LOG_LEVEL_WARNING)
+    GST_VALIDATE_REPORT (reporter, G_LOG_WARNING, message);
+  else
+    GST_VALIDATE_REPORT (reporter, G_LOG_ISSUE, message);
 }
 
 void
@@ -198,4 +220,12 @@ gst_validate_reporter_set_runner (GstValidateReporter * reporter,
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
 
   priv->runner = runner;
+}
+
+void
+gst_validate_reporter_set_handle_g_logs (GstValidateReporter * reporter)
+{
+  g_log_set_default_handler ((GLogFunc) gst_validate_reporter_g_log_func, reporter);
+
+  g_log_handler = gst_validate_reporter_get_priv (reporter);
 }

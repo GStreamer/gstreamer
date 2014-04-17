@@ -870,6 +870,7 @@ main (int argc, gchar ** argv)
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
       NULL);
+  gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
   mainloop = g_main_loop_new (NULL, FALSE);
 
   if (!runner) {

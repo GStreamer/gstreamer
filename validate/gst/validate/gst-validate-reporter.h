@@ -77,8 +77,8 @@ void gst_validate_report                       (GstValidateReporter * reporter, 
 void gst_validate_report_valist                (GstValidateReporter * reporter, GstValidateIssueId issue_id,
                                           const gchar * format, va_list var_args);
 
-void gst_validate_reporter_set_runner          (GstValidateReporter * reporter,
-                                          GstValidateRunner *runner);
+void gst_validate_reporter_set_runner          (GstValidateReporter * reporter, GstValidateRunner *runner);
+void gst_validate_reporter_set_handle_g_logs   (GstValidateReporter * reporter);
 
 G_END_DECLS
 #endif /* _GST_VALIDATE_REPORTER_ */

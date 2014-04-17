@@ -213,6 +213,11 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_EXECUTION_ERROR,
       _("The execution of an action did not properly happen"),
         NULL);
+  REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_WARNING, _("We got a g_log warning"),
+        NULL);
+  REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_CRITICAL,
+          _("We got a g_log critical issue"), NULL);
+  REGISTER_VALIDATE_ISSUE (ISSUE, G_LOG_ISSUE, _("We got a g_log issue"), NULL);
 }
 
 void
