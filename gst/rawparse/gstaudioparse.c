@@ -371,7 +371,16 @@ gst_audio_parse_get_caps (GstRawParse * rp)
   if (ap->use_sink_caps) {
     gint rate;
     GstCaps *caps = gst_pad_get_current_caps (rp->sinkpad);
-    gst_audio_info_from_caps (&info, caps);
+    if (!caps) {
+      GST_WARNING_OBJECT (ap,
+          "Sink pad has no caps, but we were asked to use its caps");
+      return NULL;
+    }
+    if (!gst_audio_info_from_caps (&info, caps)) {
+      GST_WARNING_OBJECT (ap, "Failed to parse caps %" GST_PTR_FORMAT, caps);
+      gst_caps_unref (caps);
+      return NULL;
+    }
 
     ap->format = GST_AUDIO_PARSE_FORMAT_RAW;
     ap->raw_format = GST_AUDIO_INFO_FORMAT (&info);
