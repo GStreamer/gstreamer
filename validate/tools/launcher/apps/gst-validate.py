@@ -62,8 +62,8 @@ class PlaybinDescriptor(PipelineDescriptor):
         pipe += " uri=%s" % uri
 
         if hasattr(scenario, "reverse-playback") and protocol == Protocols.HTTP:
-            # 10MB so we can reverse playbacl
-            pipe += " ring-buffer-max-size=10240"
+            # 10MB so we can reverse playback
+            pipe += " ring-buffer-max-size=10485760"
 
         return pipe
 
