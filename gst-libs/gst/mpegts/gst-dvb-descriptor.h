@@ -694,6 +694,27 @@ struct _GstMpegTsDvbMultilingualBouquetNameItem
 gboolean gst_mpegts_descriptor_parse_dvb_multilingual_bouquet_name (const GstMpegTsDescriptor
               *descriptor, GPtrArray ** bouquet_name_items);
 
+/* GST_MTS_DESC_DVB_MULTILINGUAL_SERVICE_NAME (0x5D) */
+typedef struct _GstMpegTsDvbMultilingualServiceNameItem GstMpegTsDvbMultilingualServiceNameItem;
+
+/**
+ * GstMpegTsDvbMultilingualServiceNameItem:
+ * @language_code: the ISO 639 language code
+ * @provider_name: the provider name
+ * @service_name: the service name
+ *
+ * a multilingual service name entry
+ */
+struct _GstMpegTsDvbMultilingualServiceNameItem
+{
+  gchar language_code[3];
+  gchar *provider_name;
+  gchar *service_name;
+};
+
+gboolean gst_mpegts_descriptor_parse_dvb_multilingual_service_name (const GstMpegTsDescriptor
+              *descriptor, GPtrArray ** service_name_items);
+
 /* GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER (0x5F) */
 gboolean gst_mpegts_descriptor_parse_dvb_private_data_specifier (const GstMpegTsDescriptor
               * descriptor, guint32 * private_data_specifier, guint8 ** private_data,
