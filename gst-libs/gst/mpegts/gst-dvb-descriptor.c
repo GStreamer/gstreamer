@@ -159,6 +159,32 @@ gst_mpegts_descriptor_parse_dvb_service_list (const GstMpegTsDescriptor *
   return TRUE;
 }
 
+/* GST_MTS_DESC_DVB_STUFFING (0x42) */
+/**
+ * gst_mpegts_descriptor_parse_dvb_stuffing:
+ * @descriptor: a %GST_MTS_DESC_DVB_STUFFING #GstMpegTsDescriptor
+ * @stuffing_bytes: (out): the stuffing bytes
+ *
+ * Parses out the stuffing bytes from the @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_stuffing (const GstMpegTsDescriptor *
+    descriptor, guint8 ** stuffing_bytes)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL && stuffing_bytes != NULL, FALSE);
+  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_STUFFING, 0, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  *stuffing_bytes = g_memdup (data, descriptor->length);
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM (0x43) */
 /**
  * gst_mpegts_descriptor_parse_satellite_delivery_system:

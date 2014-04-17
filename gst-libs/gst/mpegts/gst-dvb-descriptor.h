@@ -161,6 +161,11 @@ gboolean gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTsDescriptor
 
 GstMpegTsDescriptor *gst_mpegts_descriptor_from_dvb_network_name (const gchar * name);
 
+/* GST_MTS_DESC_DVB_STUFFING (0x42) */
+gboolean gst_mpegts_descriptor_parse_dvb_stuffing (const GstMpegTsDescriptor * descriptor,
+                                                   guint8 ** stuffing_bytes);
+
+
 /* GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM (0x43) */
 typedef struct _GstMpegTsSatelliteDeliverySystemDescriptor GstMpegTsSatelliteDeliverySystemDescriptor;
 

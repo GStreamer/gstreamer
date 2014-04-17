@@ -323,6 +323,8 @@ gst_mpegts_descriptor_parse_dvb_ca_identifier
 <SUBSECTION service_list>
 GstMpegTsDVBServiceListItem
 gst_mpegts_descriptor_parse_dvb_service_list
+<SUBSECTION stuffing>
+gst_mpegts_descriptor_parse_dvb_stuffing
 <SUBSECTION Standard>
 GST_TYPE_MPEG_TSDVB_CODE_RATE
 gst_mpegts_dvb_code_rate_get_type
