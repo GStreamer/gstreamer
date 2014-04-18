@@ -1115,7 +1115,7 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       return res;
 
     mpegts_base_flush (base, FALSE);
-    mpegts_packetizer_flush (base->packetizer, TRUE);
+    mpegts_packetizer_flush (base->packetizer, FALSE);
   }
 
   mpegts_packetizer_push (base->packetizer, buf);
