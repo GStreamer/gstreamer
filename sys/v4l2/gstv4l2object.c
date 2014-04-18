@@ -2993,7 +2993,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   GstCaps *caps;
   GstBufferPool *pool, *other_pool = NULL;
   GstStructure *config;
-  guint size, min, max, extra = 0;
+  guint size, min, max, own_min = 0;
   gboolean update;
   gboolean has_video_meta, has_crop_meta;
   gboolean can_share_own_pool, pushing_from_our_pool = FALSE;
@@ -3023,25 +3023,6 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 
   GST_DEBUG_OBJECT (obj->element, "allocation: size:%u min:%u max:%u pool:%"
       GST_PTR_FORMAT, size, min, max, pool);
-
-  if (min != 0) {
-    /* if there is a min-buffers suggestion, use it. We add 1 because we need 1
-     * buffer extra to capture while the other buffers are downstream */
-    min += 1;
-  } else {
-    min = 2;
-  }
-
-  /* Certain driver may expose a minimum through controls */
-  ctl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
-  if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CTRL, &ctl) >= 0) {
-    GST_DEBUG_OBJECT (obj->element, "driver require a minimum of %d buffers",
-        ctl.value);
-    obj->min_buffers_for_capture = ctl.value;
-    extra += ctl.value;
-  } else {
-    obj->min_buffers_for_capture = 0;
-  }
 
   has_video_meta =
       gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
@@ -3119,6 +3100,39 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   if (size == 0)
     goto no_size;
 
+  /* Certain driver may expose a minimum through controls */
+  ctl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
+  if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CTRL, &ctl) >= 0) {
+    GST_DEBUG_OBJECT (obj->element, "driver require a minimum of %d buffers",
+        ctl.value);
+    obj->min_buffers_for_capture = ctl.value;
+  } else {
+    obj->min_buffers_for_capture = 0;
+  }
+
+  /* If pushing from our own pool, configure it with queried minimum,
+   * otherwise use the minimum required */
+  if (pushing_from_our_pool) {
+    /* When pushing from our own pool, we need what downstream one, to be able
+     * to fill the pipeline, the minimum required to decoder according to the
+     * driver and 1 more, so we don't endup up with everything downstream or
+     * held by the decoder. */
+    own_min = min + obj->min_buffers_for_capture + 1;
+
+    /* Update min/max so the base class does not reset our settings */
+    min = own_min;
+    max = 0;
+  } else {
+    /* In this case we'll have to configure two buffer pool. For our buffer
+     * pool, we'll need what the driver one, and one more, so we can dequeu */
+    own_min = obj->min_buffers_for_capture + 1;
+
+    /* for the downstream pool, we keep what downstream wants, though ensure
+     * at least a minimum if downstream didn't suggest anything (we are
+     * expecting the base class to create a default one for the context) */
+    min = MAX (min, GST_V4L2_MIN_BUFFERS);
+  }
+
   /* Request a bigger max, if one was suggested but it's too small */
   if (max != 0)
     max = MAX (min, max);
@@ -3133,33 +3147,28 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   config = gst_buffer_pool_get_config (obj->pool);
 
   if (obj->need_video_meta) {
-    GST_DEBUG_OBJECT (pool, "activate Video Meta");
+    GST_DEBUG_OBJECT (obj->element, "activate Video Meta");
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
 
   if (obj->need_crop_meta) {
-    GST_DEBUG_OBJECT (pool, "activate VideoCrop Meta");
+    GST_DEBUG_OBJECT (obj->element, "activate VideoCrop Meta");
     gst_buffer_pool_config_add_option (config,
         GST_V4L2_BUFFER_POOL_OPTION_CROP_META);
   }
 
-  /* If pushing from our own pool, configure it with queried minimum,
-   * otherwise use the minimum required */
-  if (pushing_from_our_pool)
-    extra += min;
-  else
-    extra += GST_V4L2_MIN_BUFFERS;
+  gst_buffer_pool_config_set_params (config, caps, size, own_min, 0);
 
-  gst_buffer_pool_config_set_params (config, caps, size, extra, 0);
-
-  GST_DEBUG_OBJECT (pool, "setting config %" GST_PTR_FORMAT, config);
+  GST_DEBUG_OBJECT (obj->element, "setting own pool config to %"
+      GST_PTR_FORMAT, config);
 
   /* Our pool often need to adjust the value */
   if (!gst_buffer_pool_set_config (obj->pool, config)) {
     config = gst_buffer_pool_get_config (obj->pool);
 
-    GST_DEBUG_OBJECT (pool, "config changed to %" GST_PTR_FORMAT, config);
+    GST_DEBUG_OBJECT (obj->element, "own pool config changed to %"
+        GST_PTR_FORMAT, config);
 
     /* our pool will adjust the maximum buffer, which we are fine with */
 
@@ -3180,9 +3189,12 @@ setup_other_pool:
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
+    GST_DEBUG_OBJECT (obj->element, "setting other pool config to %"
+        GST_PTR_FORMAT, config);
+
     /* if downstream supports video metadata, add this to the pool config */
     if (has_video_meta) {
-      GST_DEBUG_OBJECT (pool, "activate Video Meta");
+      GST_DEBUG_OBJECT (obj->element, "activate Video Meta");
       gst_buffer_pool_config_add_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_META);
     }
