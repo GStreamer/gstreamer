@@ -24,7 +24,7 @@
 /**
  * SECTION:element-plugin
  *
- * Read and decode samples from iOS assets using the AVFAssetReader API.
+ * Read and decode samples from AVFoundation assets using the AVFAssetReader API
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -144,9 +144,9 @@ gst_avf_asset_src_class_init (GstAVFAssetSrcClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   gst_element_class_set_static_metadata (gstelement_class,
-    "Source and decoder for iOS assets",
+    "Source and decoder for AVFoundation assets",
     "Source/Codec",
-    "Read and decode samples from iOS assets using the AVFAssetReader API",
+    "Read and decode samples from AVFoundation assets using the AVFAssetReader API",
     "Andoni Morales Alastruey amorales@fluendo.com");
 
   gst_element_class_add_pad_template (gstelement_class,
