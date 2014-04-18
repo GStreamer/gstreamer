@@ -64,6 +64,7 @@ Bugs fixed in this release
       * 725712 : rtpsession: Crash when RTCP FIR received with unknown SSRC
       * 725860 : v4l2src: Fix using v4l2src with Hauppauge HDPVR video capture device
       * 726777 : rtpjpegpay: payload size not correctly calculated
+      * 728017 : [regression]eos event could not be send out from gstrtpjitterbuffer.
       * 728041 : rtph264depay: marks all output buffers as delta units when outputting avc format
       * 724638 : aacparse : Missing resilience when no audio frame is found
       * 727329 : check: souphttpsrc: unknown type name ‘SoupStatus’
