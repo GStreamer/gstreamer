@@ -90,12 +90,12 @@
 /* PCR_TO_GST calculation requires at least 10 extra bits.
  * Since maximum PCR value is coded with 42 bits, we are
  * safe to use direct calculation (10+42 < 63)*/
-#define PCRTIME_TO_GSTTIME(t) ((t) * 1000 / 27)
+#define PCRTIME_TO_GSTTIME(t) (((t) * (guint64)1000) / 27)
 
 /* MPEG_TO_GST calculation requires at least 17 extra bits (100000)
  * Since maximum PTS/DTS value is coded with 33bits, we are
  * safe to use direct calculation (17+33 < 63) */
-#define MPEGTIME_TO_GSTTIME(t) ((t) * 100000 / 9)
+#define MPEGTIME_TO_GSTTIME(t) ((t) * (guint64)100000 / 9)
 
 #define GSTTIME_TO_MPEGTIME(time) (gst_util_uint64_scale ((time), \
             CLOCK_BASE, GST_MSECOND/10))
