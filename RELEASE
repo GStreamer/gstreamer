@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.2.3
+Release notes for GStreamer Bad Plugins 1.2.4
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -62,18 +62,9 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 709241 : applemedia: Enable I420 on input pad
-      * 711163 : amcvideodec: Add the xvid and divx variants for mpeg4 video
-      * 721382 : srtpdec: fix GstCaps memory leak
-      * 721384 : h264parse: clears keyframe flags when passing through byte-stream AUs (regression)
-      * 721715 : h264parse: Multiple SEI messages in SEI RBSP
-      * 722158 : facedetect: element non-functional because of unreasonable, hardcoded max-size setting
-      * 722414 : vp8pay: Memory leak
-      * 722622 : d3dvideosink: Unable to register Direct3D hidden window class
-      * 723127 : hlsdemux: Seeks sometimes deadlock
-      * 723134 : hlsdemux: Playback may not always start when using a file:// url because of racy EOS handling
-      * 723230 : opencv: works with 2.4.8 too
-      * 723398 : fisheye: plugin has wrong description
+      * 724013 : Don't hardcode /usr/share/sounds/sf2 path in fluiddec
+      * 725137 : hlsdemux: fails to compute media playlist URL if there is a query parameter
+      * 725140 : hlsdemux: fails to correctly parse CODECS and RESOLUTION
 
 ==== Download ====
 
@@ -110,17 +101,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alexey Chernov
-      * Aurélien Zanelli
-      * Colin Macdonald
-      * Dominik Röttsches
-      * Duncan Palmer
-      * Jorge Zapata
-      * Kipp Cannon
-      * Mark Nauwelaerts
-      * Miguel París Díaz
-      * Nicola Murino
+      * Alessandro Decina
+      * Alex Ashley
+      * Andoni Morales Alastruey
+      * Chris Bass
+      * Edward Hervey
       * Sebastian Dröge
       * Thiago Santos
       * Vincent Penquerc'h
+      * Wim Taymans
+      * Руслан Ижбулатов
  

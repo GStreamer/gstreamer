@@ -1,9 +1,363 @@
-=== release 1.2.3 ===
+=== release 1.2.4 ===
 
-2014-02-08  Sebastian Dröge <slomo@coaxion.net>
+2014-04-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.3
+	  releasing 1.2.4
+
+2013-09-19 14:53:46 +0200  Edward Hervey <edward@collabora.com>
+
+	* tests/check/elements/uvch264demux.c:
+	  check: Update uvch264demux for behaviour change
+	  Since 006e7a3428bd097fc6e6c648332bff583dd434f9 we no longer error out on
+	  incomplete aux segment.
+
+2014-02-04 14:15:40 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* tests/check/libs/insertbin.c:
+	  tests: insertbin: update tests to 1.x scenario
+	  The thread that calls the success/failure callback can be the
+	  same that is adding/removing the element as the IDLE probe can
+	  happen instantly if the pad is not 'busy'.
+	  This required moving some checks for the callback counter around
+	  as well as removing some pad pushes from the main test thread as
+	  they were made useless after the IDLE pad probe was fixed in core
+	  by commit 0324358ebc8122a41ab499a3ef7973b61c3e621b
+
+2014-04-04 15:30:20 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* tests/check/elements/shm.c:
+	  tests: fix shm test deadlock
+	  The test was not bringing the source back to NULL, so its thread
+	  could start creating a buffer while the pads were being shutdown.
+
+2014-03-11 15:30:19 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/atdec.c:
+	  atdec: Add some more debug output
+
+2014-03-11 14:47:04 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/atdec.c:
+	* sys/applemedia/atdec.h:
+	  atdec: Implement draining properly
+
+2014-03-11 14:37:49 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/atdec.c:
+	  atdec: First dequeue a buffer before enqueueing anything from the queue
+	  Required for offline rendering according to the docs. wtf.
+
+2014-03-11 14:32:12 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/atdec.c:
+	* sys/applemedia/atdec.h:
+	  atdec: Keep track of the current position
+	  It's required to set a valid sample time for decoding on iOS.
+
+2014-03-11 14:24:59 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/atdec.c:
+	* sys/applemedia/atdec.h:
+	  atdec: Always try to pull one decoded frame out of the queue
+	  ... instead of doing magic calculations with the buffer duration.
+
+2014-03-11 14:22:57 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/atdec.c:
+	  atdec: Handle errors in handle_frame() properly
+
+2014-03-11 14:14:23 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/atdec.c:
+	  atdec: Call AudioQueueReset() for flushing
+	  AudioQueueFlush() is for draining all remaining data.
+
+2014-03-11 11:18:22 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/atdec.c:
+	* sys/applemedia/coremediabuffer.c:
+	* sys/applemedia/vtutil.c:
+	  atdec: Set correct number of frames for MP3
+
+2014-03-11 11:18:11 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/atdec.c:
+	  atdec: Initialize the audio description with zeroes
+
+2014-03-11 11:14:21 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/atdec.c:
+	  atdec: Set the correct layer depending on the MP3 caps
+
+2013-12-22 17:44:01 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* sys/applemedia/atdec.c:
+	  applemedia: atdec: fix aac decoding on Mavericks
+
+2013-12-14 15:55:22 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* sys/applemedia/atdec.c:
+	  applemedia: atdec: fix mp3 caps
+
+2013-11-07 13:05:08 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/applemedia/atdec.c:
+	  avfvideosrc: fix compiler warning in iOS
+
+2014-02-21 09:36:51 +0000  Alex Ashley <bugzilla@ashley-family.net>
+
+	* ext/hls/m3u8.c:
+	  hlsdemux: Fix parsing of CODECS and RESOLUTION
+	  hlsdemux does not check for the '"' character in #EXT-X-STREAM-INF
+	  attributes. The CODECS parameter is an example of an attribute
+	  that might use the '"' symbol and might contain a ',' character
+	  inside this quoted string.
+	  For example: CODECS="avc1.77.30, mp4a.40.2"
+	  hlsdemux does not correctly parse the RESOLUTION attribute, it
+	  assumes that an '=' character is used to delineate the width
+	  and height values, but the HLS RFC states that a 'x' character
+	  must be used as the delimiter between width and height.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725140
+
+2014-02-21 09:30:49 +0000  Alex Ashley <bugzilla@ashley-family.net>
+
+	* ext/hls/m3u8.c:
+	  hlsdemux: Fix for URLs that contain a '/' in the query parameter
+	  If the URL for the master manifest files contains a '/' character
+	  in the query parameter (for example
+	  http://example.net/1054559_h264_1500k.mp4/master.m3u8?acl=/*1054559_h264_1500k.mp4),
+	  hlsdemux is incorrectly converting the relative URLs of the media
+	  playlists in to absolute URLs. It is incorrectly using the last '/' it
+	  finds in the URL. According to RFC3986 the '/' character is allowed in
+	  the query part of the URL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725137
+
+2014-02-18 10:19:52 +0000  Chris Bass <floobleflam@gmail.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: initialise demux->last_manifest_update
+	  demux->last_manifest_update is not initialised at startup, with the
+	  effect that live manifests are reloaded immediately after the download
+	  loop begins. This patch fixes this.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724790
+
+2013-04-08 14:04:10 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* ext/hls/gsthlsdemux.c:
+	  hlsdemux: fix update interval with respect of the spec
+
+2014-02-14 12:39:06 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcaudiodec.h:
+	  amcaudiodec: Calculate number of samples per frame for MP3 and use that
+	  Some audio decoders (at least the MP3 decoder on MTK based devices) outputs
+	  raw audio in batches of multiple audio frames. We need to handle that
+	  properly, otherwise the base class will be kind of unhappy.
+
+2014-02-14 12:33:08 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  amcaudiodec: Error out if we get an invalid raw audio buffer size
+
+2014-02-14 12:32:31 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  amcvideodec: Store return value of gst_caps_merge_structure()
+	  The inputs are both invalid afterwards.
+
+2014-02-14 12:31:29 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  amcvideodec: Release buffer to Android if allocating output failed
+
+2014-02-14 12:28:50 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  amcaudiodec: Release buffer back to Android if allocating output fails
+
+2014-02-11 18:15:45 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/hls/m3u8.c:
+	  hlsdemux: Don't try decryption if an unsupported method is found
+
+2014-02-11 18:15:07 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/hls/m3u8.c:
+	  hlsdemux: Properly parse IV from the playlist
+	  Without this every fragment's first 16 bytes will be corrupted
+	  if not the fallback IV is used by the playlist.
+
+2014-02-10 18:21:38 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/hls/gsthlsdemux.c:
+	  hlsdemux: Fix bitrate calculation
+	  g_get_monotonic_time() returns microseconds, not nanoseconds.
+
+2014-02-10 17:26:27 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/hls/m3u8.c:
+	  hlsdemux: Actually store doubles as such and don't truncate them to ints
+	  Fixes broken duration reporting.
+
+2014-02-10 17:25:57 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/hls/m3u8.c:
+	  hlsdemux: Use locale-independent int/float parsing functions from GLib
+
+2014-02-10 14:34:40 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* ext/fluidsynth/gstfluiddec.c:
+	  fluiddec: add more soundfont search paths
+	  Fedora installs the soundfonts in /usr/share/soundfonts/ so make sure we
+	  look there as well.
+
+2014-02-10 08:19:52 +0000  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* ext/fluidsynth/gstfluiddec.c:
+	  Change soundfont file search path for fluiddec
+	  Use glib to get a list of system "share" directories, then go through that
+	  list, appending 'sounds/sf2/' to each directory to get a soundfont directory,
+	  and looking for .sf2 files there.
+	  This way fluiddec is able to load sf2 files on W32, because otherwise the
+	  path '/usr/share/sounds/sf2' makes no sense there.
+	  Fixes #724013
+
+2013-11-19 00:38:33 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/daala/gstdaaladec.c:
+	* ext/daala/gstdaalaenc.c:
+	  daala: Fix compilation
+
+=== release 1.2.3 ===
+
+2014-02-08 12:49:35 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/inspect/plugin-accurip.xml:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-eglglessink.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-ofa.xml:
+	* docs/plugins/inspect/plugin-openal.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rfbsrc.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 1.2.3
+
+2014-02-08 12:48:37 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2014-02-04 12:52:25 +0100  Duncan Palmer <dpalmer@digisoft.tv>
 
