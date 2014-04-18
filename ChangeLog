@@ -1,9 +1,39 @@
-=== release 1.2.3 ===
+=== release 1.2.4 ===
 
-2014-02-08  Sebastian Dröge <slomo@coaxion.net>
+2014-04-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.3
+	  releasing 1.2.4
+
+2014-04-15 21:32:07 +0200  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: guard against invalid libav opaque
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=727779
+
+2014-04-14 09:59:17 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: update to v9.12
+
+2014-02-23 11:40:14 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: make all properties work again
+	  ... as previously broken due to additional compliance property
+	  (see 13ffed87b1597fa60ccee293f71c3993ec59d1b2).
+
+=== release 1.2.3 ===
+
+2014-02-08 12:58:28 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.2.3
 
 2014-02-04 18:17:32 +0200  Dmitry Melnichenko <dmitry.m@samsung.com>
 

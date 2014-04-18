@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plugins 1.2.3
+Release notes for GStreamer libav Plugins 1.2.4
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -38,9 +38,7 @@ contains a set of less supported plugins that haven't passed the
 
 Bugs fixed in this release
      
-      * 696495 : gst-libav: context leak
-      * 722672 : avmux_dv reports invalid audio caps
-      * 723615 : SIGSEGV when setting preload option in gst_ffmpegmux_setcaps
+      * 727779 : avdec_h264, matroskademux: crash while seeking (1.2 regression)
 
 ==== Download ====
 
@@ -77,10 +75,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Dmitry Melnichenko
-      * Sebastian Dröge
-      * Tim 'mithro' Ansell
+      * Mark Nauwelaerts
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Wim Taymans
  
