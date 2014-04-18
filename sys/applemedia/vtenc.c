@@ -780,10 +780,10 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
 
     {
       const size_t num_planes = GST_VIDEO_FRAME_N_PLANES (&frame->videoframe);
-      void *plane_base_addresses[num_planes];
-      size_t plane_widths[num_planes];
-      size_t plane_heights[num_planes];
-      size_t plane_bytes_per_row[num_planes];
+      void *plane_base_addresses[GST_VIDEO_MAX_PLANES];
+      size_t plane_widths[GST_VIDEO_MAX_PLANES];
+      size_t plane_heights[GST_VIDEO_MAX_PLANES];
+      size_t plane_bytes_per_row[GST_VIDEO_MAX_PLANES];
       OSType pixel_format_type;
       size_t i;
 
