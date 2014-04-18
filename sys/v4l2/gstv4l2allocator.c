@@ -141,7 +141,7 @@ _v4l2mem_dispose (GstV4l2Memory * mem)
 static void
 _v4l2mem_free (GstV4l2Memory * mem)
 {
-  if (mem->dmafd > 0)
+  if (mem->dmafd >= 0)
     close (mem->dmafd);
   g_slice_free (GstV4l2Memory, mem);
 }
