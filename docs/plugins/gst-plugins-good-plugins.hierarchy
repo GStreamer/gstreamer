@@ -304,6 +304,7 @@ GObject
 GInterface
   GIcon
   GInitable
+  GLoadableIcon
   GTypePlugin
   GstChildProxy
   GstColorBalance

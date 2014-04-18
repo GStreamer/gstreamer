@@ -1,9 +1,341 @@
-=== release 1.2.3 ===
+=== release 1.2.4 ===
 
-2014-02-08  Sebastian Dröge <slomo@coaxion.net>
+2014-04-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.3
+	  releasing 1.2.4
+
+2014-04-18 04:23:26 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  jitterbuffer: assume a full buffer when eos
+	  Rework the logic to make buffering messages a little, make sure we
+	  don't make the same message multiple times.
+	  Consider the buffer full when EOS was received.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=728017
+	  Conflicts:
+	  gst/rtpmanager/gstrtpjitterbuffer.c
+
+2014-04-11 18:19:49 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/rtp/gstrtph264depay.c:
+	  rtph264depay: only guess AU boundaries when aren't indicated by marker
+	  The marker bit isn't mandatory and we had in place code to guess AU
+	  boundaries by detecting a new picture start. This guessing code
+	  didn't work with interlaced content that has proper marker bits
+	  to indicate the AU boundaries. It was leaking the first field buffer
+	  and producing a corrupted output.
+	  fixes: https://bugzilla.gnome.org/show_bug.cgi?id=728041
+
+2014-04-06 18:03:11 -0300  Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
+
+	* tests/check/elements/souphttpsrc.c:
+	  tests: souphttpsrc: use SoupKnownStatusCode if needed
+	  From libsoup docs:
+	  Prior to 2.44 SoupStatus was called SoupKnownStatusCode,
+	  but the individual values have always had the names they
+	  have now.
+	  Fixes:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727329
+
+2013-12-02 15:26:50 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Don't validate dimension for encoded format
+	  We set the dimensions just in case but don't validate them
+	  afterwards. For some codecs the dimensions are *not* in the
+	  bitstream, IIRC VC1 in ASF mode for example.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720568
+	  Conflicts:
+	  sys/v4l2/gstv4l2object.c
+
+2014-03-29 19:13:06 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2src.c:
+	  v4l2: Fix support for caps without width, height, framerate or format
+	  For format like mpegts, width and height is rarely in the negotiated caps. This
+	  patch fixes failure when setting format, and prevent introducing width, height,
+	  framerate and format to the caps when fixating.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725860
+	  Conflicts:
+	  sys/v4l2/gstv4l2object.c
+
+2014-03-06 19:52:36 +0000  William Manley <will@williammanley.net>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2src: Fix support for mpegts streams
+	  It seems that GStreamer's mpegts elements (tsdemux, tsparse) require caps
+	  `video/mpegts,systemstream=true`.  As far as I can see the significance
+	  of systemstream is to indicate that this is a container format rather than
+	  an elementary stream.  As this is the case (and I can't understand how it
+	  could not be the case with mpegts) I add systemstream=true to v4l2src's
+	  caps.
+	  This allows v4l2src to be linked with tsdemux for playback from my
+	  Hauppauge HD-PVR with the pipeline:
+	  v4l2src ! queue ! tsdemux ! video/x-h264 ! decodebin ! xvimagesink
+	  In combination with the next commit this fixes using Hauppauge HD-PVR with
+	  GStreamer 1.0+.
+
+2014-03-20 15:28:26 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtp/gstrtpjpegpay.c:
+	  jpegpay: consider header len when calculating payload len
+	  Fixed https://bugzilla.gnome.org/show_bug.cgi?id=726777
+
+2014-03-06 12:06:43 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtp/gstrtpamrdepay.c:
+	* gst/rtp/gstrtpilbcdepay.c:
+	* gst/rtp/gstrtpsirendepay.c:
+	* gst/rtp/gstrtpspeexdepay.c:
+	  rtp: Remove caps restrictions from RTP depayloader sink caps
+	  Remove caps restrictions that correspond to the default and are not
+	  required in SDP. With the new usage of having pads require a subset
+	  of the caps, they will make the negotiation fail.
+
+2014-03-06 11:02:09 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtp/gstrtpspeexdepay.c:
+	  rtpspeexdepay: Remove caps restrictions for depayloader
+	  The "encoding-params" is optional in the SDP, because we now require
+	  a subset of the caps, it would fail caps negotiatioin if it wasn't present.
+	  So removed it from the template caps.
+
+2014-03-05 14:26:02 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: handle unknown SSRC in FIR
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725712
+
+2014-03-01 01:14:35 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: prevent segfault after seeking with negative rate
+	  After a seek, the position and segments info of qtdemux are
+	  reset to null or invalid values. For reverse playback, qtdemux
+	  will seek to a keyframe and play until the next keyframe, then
+	  seek to another previous keyframe. This seeking function requires
+	  the position and segments info of qtdemux to be properly initialized.
+	  Due to a missing check for segment.rate in the movie demuxing loop
+	  it would consider the current segment to have ended without having
+	  it initialized, leading qtdemux to attempt to do a previous keyframe
+	  seek without proper position and segment info data. This would cause
+	  a segfault. This patch fixes it by correctly checking for segment
+	  boundaries taking the segment.rate into consideration.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725104
+
+2014-02-27 18:55:04 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: mark all parsed frames as sync points
+	  all jpeg frames are sync points, so mark them as such so
+	  reverse playback can properly work with the video decoder
+	  base class
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725104
+
+2014-02-25 09:00:45 +0100  Santiago Carot-Nemesio <sancane@gmail.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Fix deadlock when task creation is no successful
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725124
+
+2014-02-22 21:31:21 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* sys/v4l2/v4l2_calls.c:
+	  v4l2src: handle old and odd driver behaviour when listing controls
+
+2013-11-28 16:54:58 -0800  Darryl Gamroth <dgamroth@uvic.ca>
+
+	* gst/audiofx/audiofxbaseiirfilter.c:
+	  audiofxbaseiirfilter: check if coefficients are provided inside filter lock
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719524
+
+2014-02-19 13:35:59 -0300  Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: make sure we have enough ADTS data
+	  We need at least 6 bytes to pass over to _get_frame_len()
+	  but we were just checking for a minimum of 2 bytes for the
+	  syncword.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724638
+
+2014-02-19 15:19:30 +0100  Branislav Katreniak <bkatreniak@nuvotechnologies.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: do not emit error when connection with unknown size ends
+	  Commit 46fd12ae5ec53200b16dfd7f17048d6bc60fbfbc introduced connection
+	  recovery. But when server does not specify content-size,
+	  souphttpsrc tries to reconnect even after regular end of stream.
+	  Http server replies  with SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE
+	  but souphttpsrc still emits error instead of EOS.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724717
+	  Signed-off-by: Branislav Katreniak <bkatreniak@nuvotechnologies.com>
+
+2014-02-18 22:54:45 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/audiofx/audiofirfilter.c:
+	* gst/audiofx/audioiirfilter.c:
+	* gst/level/gstlevel.c:
+	* gst/spectrum/gstspectrum.c:
+	  docs: use docbook markup for xi:include
+	  It turns out that the change in gtk-doc-1.20 which wraps the |[]| content in
+	  CDATA break xi:inlcude examples. As in a whole jhbuild checkout these where
+	  the only 4, we're fixing them instead.
+
+2014-02-18 11:28:18 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: fix crash when getting the current-device in NULL->READY
+	  The "goto unlock" is wrong as in this code path we haven't take the lock yet.
+	  Fixes #724619
+
+2014-02-14 15:27:20 -0500  William Jon McCann <william.jon.mccann@gmail.com>
+
+	* gst/audiofx/audiocheblimit.c:
+	* gst/udp/gstudpsrc.c:
+	  docs: fix mismatched para tags
+	  newer gtkdoc is more sensitive to mismatched docbook tags.
+	  This fixes the build in master.
+
+2014-02-12 12:39:10 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: Retry connection if we're finished before the content size only if we actually have a content size
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722185
+
+2014-02-11 13:25:46 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: Add mapping for NOT_FOUND and NOT_AUTHORIZED errors
+
+2014-02-11 13:25:22 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: Don't duplicate status_code to GStreamer error mapping
+
+=== release 1.2.3 ===
+
+2014-02-08 12:47:26 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.2.3
+
+2014-02-08 12:25:59 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-02-06 12:21:07 +0100  Wim Taymans <wtaymans@redhat.com>
 

@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.2.3</version>
+  <version>1.2.4</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -167,7 +167,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)AMR, encoding-params=(string)1, octet-align=(string)1; application/x-rtp, media=(string)audio, clock-rate=(int)16000, encoding-name=(string)AMR-WB, encoding-params=(string)1, octet-align=(string)1</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)AMR, octet-align=(string)1; application/x-rtp, media=(string)audio, clock-rate=(int)16000, encoding-name=(string)AMR-WB, octet-align=(string)1</details>
         </caps>
         <caps>
           <name>src</name>
@@ -713,7 +713,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)ILBC, mode=(string){ 20, 30 }</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)ILBC</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1301,7 +1301,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, clock-rate=(int)16000, encoding-name=(string)SIREN, dct-length=(int)320</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)16000, encoding-name=(string)SIREN</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1343,7 +1343,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, clock-rate=(int)[ 6000, 48000 ], encoding-name=(string)SPEEX, encoding-params=(string)1</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)[ 6000, 48000 ], encoding-name=(string)SPEEX</details>
         </caps>
         <caps>
           <name>src</name>
