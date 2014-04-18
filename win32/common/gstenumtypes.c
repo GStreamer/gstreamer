@@ -508,6 +508,8 @@ gst_resource_error_get_type (void)
         "settings"},
     {C_ENUM (GST_RESOURCE_ERROR_NO_SPACE_LEFT),
         "GST_RESOURCE_ERROR_NO_SPACE_LEFT", "no-space-left"},
+    {C_ENUM (GST_RESOURCE_ERROR_NOT_AUTHORIZED),
+        "GST_RESOURCE_ERROR_NOT_AUTHORIZED", "not-authorized"},
     {C_ENUM (GST_RESOURCE_ERROR_NUM_ERRORS), "GST_RESOURCE_ERROR_NUM_ERRORS",
         "num-errors"},
     {0, NULL, NULL}

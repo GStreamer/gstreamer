@@ -1,9 +1,171 @@
-=== release 1.2.3 ===
+=== release 1.2.4 ===
 
-2014-02-08  Sebastian Dröge <slomo@coaxion.net>
+2014-04-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.3
+	  releasing 1.2.4
+
+2014-04-09 17:01:01 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/gststructure.c:
+	  structure: error out when trying to fixate a fraction near an invalid target
+
+2014-04-09 10:15:33 +0200  Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Fix memory leak
+	  Queued frames were not released after being pushed, this
+	  caused a leak of the GstBaseParseFrame structure.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727883
+
+2014-04-03 07:36:03 +0200  Edward Hervey <edward@collabora.com>
+
+	* tools/gst-launch.1.in:
+	  gst-launch.1: Playbin2 is dead, long live playbin
+	  Looks like that was the last remaining mention in core ...
+
+2014-03-29 10:18:34 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Include event type in debug output when delaying a sticky event because of not-linked
+
+2014-03-25 12:38:07 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* tools/gst-launch.c:
+	  launch: place the deep-notify on the right pipeline
+	  If the toplevel bin is not not a pipeline, we place the bin in a
+	  pipeline. Also make sure that we connect to the deep-notify of this new
+	  pipeline because we will g_signal_handler_disconnect() from it later.
+
+2014-03-14 18:40:31 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  docs: fix multiqueue docs for new template names foo_%d -> foo_%u
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726358
+
+2014-03-06 13:01:40 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* gst/gstghostpad.c:
+	  ghostpad: use gst_pad_get_peer to acquire a reference to the target pad
+	  This ensures that the lock of the internal pad is held while referencing
+	  it's peer (= the target pad), which ensures that the peer is not
+	  going to be unlinked/destroyed in the meantime.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725809
+
+2014-03-06 12:40:23 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* gst/gstghostpad.c:
+	  ghostpad: hold a reference to the target pad while unlinking it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725809
+
+2014-02-26 15:36:42 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstbuffer.c:
+	  buffer: remove wrong comment
+	  Refcount and writability are not related for memory objects.
+
+2014-04-07 11:36:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/parse/Makefile.am:
+	  parse: Don't dist the bison and flex generated headers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727253
+
+2014-03-02 17:55:45 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/gstbufferpool.c:
+	* gst/gstmeta.c:
+	* libs/gst/base/gstbaseparse.h:
+	  docs: Fix typos and remove unknown annotations
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=725517
+
+2014-02-18 15:46:32 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: don't truncate the temp file on shutdown
+	  We want to keep the downloaded file untruncated so that we can use it
+	  again later.
+	  Fixes: https://bugzilla.gnome.org/show_bug.cgi?id=724373
+
+2014-02-18 14:21:20 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Fix merging of ranges
+	  Make a method to get the seeking threshold. If data is further away from
+	  this threshold we want to perform a seek upstream.
+	  When the current downloaded range can merge with the next range,
+	  actually include the data of the next range into the current range
+	  instead of discarding it. Also decide if we seek to the write position
+	  of the merged range or continue reading.
+
+2014-02-11 13:27:25 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gsterror.h:
+	  error: GST_RESOURCE_ERROR_NOT_AUTHORIZED will be available since 1.2.4
+
+2014-02-11 13:09:11 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gsterror.c:
+	* gst/gsterror.h:
+	  error: Add RESOURCE_NOT_AUTHORIZED error
+	  This allows to distinguish normal read failures from read failures
+	  where we miss authorization.
+
+=== release 1.2.3 ===
+
+2014-02-08 11:36:27 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.2.3
+
+2014-02-08 11:35:15 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-01-24 19:19:08 +0100  Arnaud Vrac <avrac@freebox.fr>
 
