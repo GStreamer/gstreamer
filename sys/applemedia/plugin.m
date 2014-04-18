@@ -32,9 +32,12 @@
 #include "avfassetsrc.h"
 #endif
 #ifndef HAVE_IOS
+#define AV_RANK GST_RANK_SECONDARY
 #include "vth264decbin.h"
 #include "vth264encbin.h"
 #include "vtdec.h"
+#else
+#define AV_RANK GST_RANK_PRIMARY
 #endif
 #include "atdec.h"
 
@@ -67,9 +70,9 @@ plugin_init (GstPlugin * plugin)
 #endif
 
 #ifdef HAVE_AVFOUNDATION
-  res &= gst_element_register (plugin, "avfvideosrc", GST_RANK_PRIMARY,
+  res &= gst_element_register (plugin, "avfvideosrc", AV_RANK,
       GST_TYPE_AVF_VIDEO_SRC);
-  res &= gst_element_register (plugin, "avfassetsrc", GST_RANK_PRIMARY,
+  res &= gst_element_register (plugin, "avfassetsrc", AV_RANK,
       GST_TYPE_AVF_ASSET_SRC);
 #endif
 
