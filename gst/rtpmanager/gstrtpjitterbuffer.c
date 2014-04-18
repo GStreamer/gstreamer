@@ -250,6 +250,7 @@ struct _GstRtpJitterBufferPrivate
 
   /* state */
   gboolean eos;
+  guint last_percent;
 
   /* clock rate and rtp timestamp offset */
   gint last_pt;
@@ -1472,31 +1473,32 @@ parse_failed:
 }
 
 /* call with jbuf lock held */
-static void
-check_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint * percent)
+static GstMessage *
+check_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint percent)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  GstMessage *message = NULL;
 
-  /* too short a stream, or too close to EOS will never really fill buffer */
-  if (*percent != -1 && priv->npt_stop != -1 &&
-      priv->npt_stop - priv->npt_start <=
-      rtp_jitter_buffer_get_delay (priv->jbuf)) {
+  if (percent == -1)
+    return NULL;
+
+  if (priv->eos || (priv->npt_stop != -1 &&
+          priv->npt_stop - priv->npt_start <=
+          rtp_jitter_buffer_get_delay (priv->jbuf))) {
     GST_DEBUG_OBJECT (jitterbuffer, "short stream; faking full buffer");
     rtp_jitter_buffer_set_buffering (priv->jbuf, FALSE);
-    *percent = 100;
+    percent = 100;
   }
-}
-
-static void
-post_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint percent)
-{
-  GstMessage *message;
 
   /* Post a buffering message */
-  message = gst_message_new_buffering (GST_OBJECT_CAST (jitterbuffer), percent);
-  gst_message_set_buffering_stats (message, GST_BUFFERING_LIVE, -1, -1, -1);
+  if (priv->last_percent != percent) {
+    priv->last_percent = percent;
+    message =
+        gst_message_new_buffering (GST_OBJECT_CAST (jitterbuffer), percent);
+    gst_message_set_buffering_stats (message, GST_BUFFERING_LIVE, -1, -1, -1);
+  }
 
-  gst_element_post_message (GST_ELEMENT_CAST (jitterbuffer), message);
+  return message;
 }
 
 static GstClockTime
@@ -1916,6 +1918,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   gboolean do_next_seqnum = FALSE;
   RTPJitterBufferItem *item;
+  GstMessage *msg = NULL;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
 
@@ -2117,13 +2120,13 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   GST_DEBUG_OBJECT (jitterbuffer, "Pushed packet #%d, now %d packets, tail: %d",
       seqnum, rtp_jitter_buffer_num_packets (priv->jbuf), tail);
 
-  check_buffering_percent (jitterbuffer, &percent);
+  msg = check_buffering_percent (jitterbuffer, percent);
 
 finished:
   JBUF_UNLOCK (priv);
 
-  if (percent != -1)
-    post_buffering_percent (jitterbuffer, percent);
+  if (msg)
+    gst_element_post_message (GST_ELEMENT_CAST (jitterbuffer), msg);
 
   return ret;
 
@@ -2261,6 +2264,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
   GstClockTime dts, pts;
   gint percent = -1;
   gboolean is_buffer, do_push = TRUE;
+  GstMessage *msg;
 
   /* when we get here we are ready to pop and push the buffer */
   item = rtp_jitter_buffer_pop (priv->jbuf, &percent);
@@ -2268,8 +2272,6 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
   is_buffer = GST_IS_BUFFER (item->data);
 
   if (is_buffer) {
-    check_buffering_percent (jitterbuffer, &percent);
-
     /* we need to make writable to change the flags and timestamps */
     outbuf = gst_buffer_make_writable (item->data);
 
@@ -2309,16 +2311,18 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
    * so the other end can push stuff in the queue again. */
   priv->last_popped_seqnum = seqnum;
   priv->next_seqnum = (seqnum + item->count) & 0xffff;
+
+  msg = check_buffering_percent (jitterbuffer, percent);
   JBUF_UNLOCK (priv);
 
   item->data = NULL;
   free_item (item);
 
+  if (msg)
+    gst_element_post_message (GST_ELEMENT_CAST (jitterbuffer), msg);
+
   if (is_buffer) {
     /* push buffer */
-    if (percent != -1)
-      post_buffering_percent (jitterbuffer, percent);
-
     GST_DEBUG_OBJECT (jitterbuffer,
         "Pushing buffer %d, dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT,
         seqnum, GST_TIME_ARGS (GST_BUFFER_DTS (outbuf)),
