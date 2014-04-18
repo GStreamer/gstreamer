@@ -3,7 +3,7 @@
   <description>Encode MP2s with TwoLAME</description>
   <filename>../../ext/twolame/.libs/libgsttwolame.so</filename>
   <basename>libgsttwolame.so</basename>
-  <version>1.2.3</version>
+  <version>1.2.4</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>

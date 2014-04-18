@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.2.3
+Release notes for GStreamer Ugly Plugins 1.2.4
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -94,5 +94,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Sebastian Dröge
+      * Edward Hervey
+      * Rico Tzschichholz
+      * Vincent Penquerc'h
  
