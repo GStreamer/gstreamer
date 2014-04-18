@@ -52,9 +52,8 @@ struct _GstIvfParse
 
   GstIvfParseState state;
 
-  /* framerate */
-  guint rate_num;
-  guint rate_den;
+  guint fps_n;
+  guint fps_d;
 };
 
 struct _GstIvfParseClass

@@ -116,8 +116,8 @@ static void
 gst_ivf_parse_reset (GstIvfParse * ivf)
 {
   ivf->state = GST_IVF_PARSE_START;
-  ivf->rate_num = 0;
-  ivf->rate_den = 0;
+  ivf->fps_n = 0;
+  ivf->fps_d = 0;
 }
 
 /* initialize the new element
@@ -185,8 +185,8 @@ gst_ivf_parse_handle_frame_start (GstIvfParse * ivf, GstBaseParseFrame * frame,
     guint32 fourcc = GST_READ_UINT32_LE (map.data + 8);
     guint16 width = GST_READ_UINT16_LE (map.data + 12);
     guint16 height = GST_READ_UINT16_LE (map.data + 14);
-    guint32 rate_num = GST_READ_UINT32_LE (map.data + 16);
-    guint32 rate_den = GST_READ_UINT32_LE (map.data + 20);
+    guint32 fps_n = GST_READ_UINT32_LE (map.data + 16);
+    guint32 fps_d = GST_READ_UINT32_LE (map.data + 20);
 #ifndef GST_DISABLE_GST_DEBUG
     guint32 num_frames = GST_READ_UINT32_LE (map.data + 24);
 #endif
@@ -199,10 +199,15 @@ gst_ivf_parse_handle_frame_start (GstIvfParse * ivf, GstBaseParseFrame * frame,
       goto end;
     }
 
+    ivf->fps_n = fps_n;
+    ivf->fps_d = fps_d;
+    gst_base_parse_set_frame_rate (GST_BASE_PARSE_CAST (ivf),
+        ivf->fps_n, ivf->fps_d, 0, 0);
+
     /* create src pad caps */
     caps = gst_caps_new_simple ("video/x-vp8",
         "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, rate_num, rate_den, NULL);
+        "framerate", GST_TYPE_FRACTION, ivf->fps_n, ivf->fps_d, NULL);
 
     GST_INFO_OBJECT (ivf, "Found stream: %" GST_PTR_FORMAT, caps);
 
@@ -210,10 +215,6 @@ gst_ivf_parse_handle_frame_start (GstIvfParse * ivf, GstBaseParseFrame * frame,
 
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (ivf), caps);
     gst_caps_unref (caps);
-
-    /* keep framerate in instance for convenience */
-    ivf->rate_num = rate_num;
-    ivf->rate_den = rate_den;
 
     /* move along */
     ivf->state = GST_IVF_PARSE_DATA;
@@ -272,19 +273,11 @@ gst_ivf_parse_handle_frame_data (GstIvfParse * ivf, GstBaseParseFrame * frame,
     gst_buffer_replace (&frame->out_buffer, out_buffer);
     gst_buffer_unref (out_buffer);
 
-    GST_BUFFER_TIMESTAMP (out_buffer) =
-        gst_util_uint64_scale_int (GST_SECOND * frame_pts, ivf->rate_den,
-        ivf->rate_num);
-    GST_BUFFER_DURATION (out_buffer) =
-        gst_util_uint64_scale_int (GST_SECOND, ivf->rate_den, ivf->rate_num);
-
-    GST_DEBUG_OBJECT (ivf, "Pushing frame of size %u, ts %"
-        GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", off %"
-        G_GUINT64_FORMAT ", off_end %" G_GUINT64_FORMAT,
-        frame_size,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out_buffer)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (out_buffer)),
-        GST_BUFFER_OFFSET (out_buffer), GST_BUFFER_OFFSET_END (out_buffer));
+    if (ivf->fps_n > 0) {
+      GST_BUFFER_TIMESTAMP (out_buffer) =
+          gst_util_uint64_scale_int (GST_SECOND * frame_pts, ivf->fps_d,
+          ivf->fps_n);
+    }
 
     ret = gst_base_parse_finish_frame (GST_BASE_PARSE_CAST (ivf), frame,
         IVF_FRAME_HEADER_SIZE + frame_size);
