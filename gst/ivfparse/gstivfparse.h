@@ -52,8 +52,11 @@ struct _GstIvfParse
 
   GstIvfParseState state;
 
+  guint width;
+  guint height;
   guint fps_n;
   guint fps_d;
+  gboolean update_caps;
 };
 
 struct _GstIvfParseClass

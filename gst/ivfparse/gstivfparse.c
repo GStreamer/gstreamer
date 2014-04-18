@@ -116,8 +116,11 @@ static void
 gst_ivf_parse_reset (GstIvfParse * ivf)
 {
   ivf->state = GST_IVF_PARSE_START;
+  ivf->width = 0;
+  ivf->height = 0;
   ivf->fps_n = 0;
   ivf->fps_d = 0;
+  ivf->update_caps = FALSE;
 }
 
 /* initialize the new element
@@ -168,6 +171,53 @@ gst_ivf_parse_stop (GstBaseParse * parse)
   return TRUE;
 }
 
+static void
+gst_ivf_parse_set_size (GstIvfParse * ivf, guint width, guint height)
+{
+  if (ivf->width != width || ivf->height != height) {
+    GST_INFO_OBJECT (ivf, "resolution changed to %ux%u", width, height);
+    ivf->width = width;
+    ivf->height = height;
+    ivf->update_caps = TRUE;
+  }
+}
+
+static void
+gst_ivf_parse_set_framerate (GstIvfParse * ivf, guint fps_n, guint fps_d)
+{
+  if (ivf->fps_n != fps_n || ivf->fps_d != fps_d) {
+    GST_INFO_OBJECT (ivf, "framerate changed to %u/%u", fps_n, fps_d);
+    ivf->fps_n = fps_n;
+    ivf->fps_d = fps_d;
+    ivf->update_caps = TRUE;
+  }
+}
+
+static void
+gst_ivf_parse_update_src_caps (GstIvfParse * ivf)
+{
+  GstCaps *caps;
+
+  if (!ivf->update_caps &&
+      G_LIKELY (gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (ivf))))
+    return;
+  ivf->update_caps = FALSE;
+
+  /* Create src pad caps */
+  caps = gst_caps_new_simple ("video/x-vp8", "width", G_TYPE_INT, ivf->width,
+      "height", G_TYPE_INT, ivf->height, NULL);
+
+  if (ivf->fps_n > 0 && ivf->fps_d > 0) {
+    gst_base_parse_set_frame_rate (GST_BASE_PARSE_CAST (ivf),
+        ivf->fps_n, ivf->fps_d, 0, 0);
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, ivf->fps_n,
+        ivf->fps_d, NULL);
+  }
+
+  gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (ivf), caps);
+  gst_caps_unref (caps);
+}
+
 static GstFlowReturn
 gst_ivf_parse_handle_frame_start (GstIvfParse * ivf, GstBaseParseFrame * frame,
     gint * skipsize)
@@ -175,7 +225,6 @@ gst_ivf_parse_handle_frame_start (GstIvfParse * ivf, GstBaseParseFrame * frame,
   GstBuffer *const buffer = frame->buffer;
   GstMapInfo map;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstCaps *caps;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   if (map.size >= IVF_FILE_HEADER_SIZE) {
@@ -199,22 +248,10 @@ gst_ivf_parse_handle_frame_start (GstIvfParse * ivf, GstBaseParseFrame * frame,
       goto end;
     }
 
-    ivf->fps_n = fps_n;
-    ivf->fps_d = fps_d;
-    gst_base_parse_set_frame_rate (GST_BASE_PARSE_CAST (ivf),
-        ivf->fps_n, ivf->fps_d, 0, 0);
-
-    /* create src pad caps */
-    caps = gst_caps_new_simple ("video/x-vp8",
-        "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, ivf->fps_n, ivf->fps_d, NULL);
-
-    GST_INFO_OBJECT (ivf, "Found stream: %" GST_PTR_FORMAT, caps);
+    gst_ivf_parse_set_size (ivf, width, height);
+    gst_ivf_parse_set_framerate (ivf, fps_n, fps_d);
 
     GST_LOG_OBJECT (ivf, "Stream has %d frames", num_frames);
-
-    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (ivf), caps);
-    gst_caps_unref (caps);
 
     /* move along */
     ivf->state = GST_IVF_PARSE_DATA;
@@ -273,11 +310,28 @@ gst_ivf_parse_handle_frame_data (GstIvfParse * ivf, GstBaseParseFrame * frame,
     gst_buffer_replace (&frame->out_buffer, out_buffer);
     gst_buffer_unref (out_buffer);
 
+    /* Detect resolution changes on key frames */
+    if (gst_buffer_map (frame->out_buffer, &map, GST_MAP_READ)) {
+      guint32 frame_tag, width, height;
+
+      frame_tag = GST_READ_UINT24_LE (map.data);
+      if (!(frame_tag & 0x01) && map.size >= 10) {      /* key frame */
+        GST_DEBUG_OBJECT (ivf, "key frame detected");
+
+        width = GST_READ_UINT16_LE (map.data + 6) & 0x3fff;
+        height = GST_READ_UINT16_LE (map.data + 8) & 0x3fff;
+        gst_ivf_parse_set_size (ivf, width, height);
+      }
+      gst_buffer_unmap (frame->out_buffer, &map);
+    }
+
     if (ivf->fps_n > 0) {
       GST_BUFFER_TIMESTAMP (out_buffer) =
           gst_util_uint64_scale_int (GST_SECOND * frame_pts, ivf->fps_d,
           ivf->fps_n);
     }
+
+    gst_ivf_parse_update_src_caps (ivf);
 
     ret = gst_base_parse_finish_frame (GST_BASE_PARSE_CAST (ivf), frame,
         IVF_FRAME_HEADER_SIZE + frame_size);
