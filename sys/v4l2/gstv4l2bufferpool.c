@@ -1334,8 +1334,12 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
             GST_LOG_OBJECT (pool, "buffer %u not queued, putting on free list",
                 index);
 
+            /* Remove qdata, this will unmap any map data in userptr */
+            gst_mini_object_set_qdata (GST_MINI_OBJECT (buffer),
+                GST_V4L2_IMPORT_QUARK, NULL, NULL);
+
             /* reset to default size */
-            gst_v4l2_allocator_reset_size (pool->vallocator, group);
+            gst_v4l2_allocator_reset_group (pool->vallocator, group);
 
             /* playback, put the buffer back in the queue to refill later. */
             GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool,

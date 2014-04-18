@@ -489,9 +489,110 @@ gst_v4l2_allocator_probe (GstV4l2Allocator * allocator, guint32 memory,
   return flags;
 }
 
+static GstV4l2MemoryGroup *
+gst_v4l2_allocator_create_buf (GstV4l2Allocator * allocator)
+{
+  struct v4l2_create_buffers bcreate = { 0 };
+  GstV4l2MemoryGroup *group = NULL;
+
+  GST_OBJECT_LOCK (allocator);
+
+  if (!allocator->active)
+    goto done;
+
+  bcreate.memory = allocator->memory;
+  bcreate.format = allocator->format;
+  bcreate.count = 1;
+
+  if (!allocator->can_allocate)
+    goto done;
+
+  if (v4l2_ioctl (allocator->video_fd, VIDIOC_CREATE_BUFS, &bcreate) < 0)
+    goto create_bufs_failed;
+
+  group = gst_v4l2_memory_group_new (allocator, bcreate.index);
+
+  if (group) {
+    allocator->groups[bcreate.index] = group;
+    allocator->count++;
+  }
+
+done:
+  GST_OBJECT_UNLOCK (allocator);
+  return group;
+
+create_bufs_failed:
+  {
+    GST_WARNING_OBJECT (allocator, "error creating a new buffer: %s",
+        g_strerror (errno));
+    goto done;
+  }
+}
+
+static GstV4l2MemoryGroup *
+gst_v4l2_allocator_alloc (GstV4l2Allocator * allocator)
+{
+  GstV4l2MemoryGroup *group;
+
+  if (!g_atomic_int_get (&allocator->active))
+    return NULL;
+
+  group = gst_atomic_queue_pop (allocator->free_queue);
+
+  if (group == NULL) {
+    if (allocator->can_allocate) {
+      group = gst_v4l2_allocator_create_buf (allocator);
+
+      /* Don't hammer on CREATE_BUFS */
+      if (group == NULL)
+        allocator->can_allocate = FALSE;
+    }
+  }
+
+  return group;
+}
+
+static void
+gst_v4l2_allocator_reset_size (GstV4l2Allocator * allocator,
+    GstV4l2MemoryGroup * group)
+{
+  gsize size;
+
+  if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+    gint i;
+
+    for (i = 0; i < group->n_mem; i++) {
+      size = allocator->format.fmt.pix_mp.plane_fmt[i].sizeimage;
+      gst_memory_resize (group->mem[i], 0, size);
+    }
+
+  } else {
+    size = allocator->format.fmt.pix.sizeimage;
+    gst_memory_resize (group->mem[0], 0, size);
+  }
+}
+
+static void
+_cleanup_failed_alloc (GstV4l2Allocator * allocator, GstV4l2MemoryGroup * group)
+{
+  if (group->mems_allocated > 0) {
+    gint i;
+    /* If one or more mmap worked, we need to unref the memory, otherwise
+     * they will keep a ref on the allocator and leak it. This will put back
+     * the group into the free_queue */
+    for (i = 0; i < group->n_mem; i++)
+      gst_memory_unref (group->mem[i]);
+  } else {
+    /* Otherwise, group has to be on free queue for _stop() to work */
+    gst_atomic_queue_push (allocator->free_queue, group);
+  }
+}
+
+
+
 GstV4l2Allocator *
 gst_v4l2_allocator_new (GstObject * parent, gint video_fd,
-    struct v4l2_format * format)
+    struct v4l2_format *format)
 {
   GstV4l2Allocator *allocator;
   guint32 flags = 0;
@@ -658,85 +759,6 @@ reqbufs_failed:
   }
 }
 
-static GstV4l2MemoryGroup *
-gst_v4l2_allocator_create_buf (GstV4l2Allocator * allocator)
-{
-  struct v4l2_create_buffers bcreate = { 0 };
-  GstV4l2MemoryGroup *group = NULL;
-
-  GST_OBJECT_LOCK (allocator);
-
-  if (!allocator->active)
-    goto done;
-
-  bcreate.memory = allocator->memory;
-  bcreate.format = allocator->format;
-  bcreate.count = 1;
-
-  if (!allocator->can_allocate)
-    goto done;
-
-  if (v4l2_ioctl (allocator->video_fd, VIDIOC_CREATE_BUFS, &bcreate) < 0)
-    goto create_bufs_failed;
-
-  group = gst_v4l2_memory_group_new (allocator, bcreate.index);
-
-  if (group) {
-    allocator->groups[bcreate.index] = group;
-    allocator->count++;
-  }
-
-done:
-  GST_OBJECT_UNLOCK (allocator);
-  return group;
-
-create_bufs_failed:
-  {
-    GST_WARNING_OBJECT (allocator, "error creating a new buffer: %s",
-        g_strerror (errno));
-    goto done;
-  }
-}
-
-static GstV4l2MemoryGroup *
-gst_v4l2_allocator_alloc (GstV4l2Allocator * allocator)
-{
-  GstV4l2MemoryGroup *group;
-
-  if (!g_atomic_int_get (&allocator->active))
-    return NULL;
-
-  group = gst_atomic_queue_pop (allocator->free_queue);
-
-  if (group == NULL) {
-    if (allocator->can_allocate) {
-      group = gst_v4l2_allocator_create_buf (allocator);
-
-      /* Don't hammer on CREATE_BUFS */
-      if (group == NULL)
-        allocator->can_allocate = FALSE;
-    }
-  }
-
-  return group;
-}
-
-static void
-_cleanup_failed_alloc (GstV4l2Allocator * allocator, GstV4l2MemoryGroup * group)
-{
-  if (group->mems_allocated > 0) {
-    gint i;
-    /* If one or more mmap worked, we need to unref the memory, otherwise
-     * they will keep a ref on the allocator and leak it. This will put back
-     * the group into the free_queue */
-    for (i = 0; i < group->n_mem; i++)
-      gst_memory_unref (group->mem[i]);
-  } else {
-    /* Otherwise, group has to be on free queue for _stop() to work */
-    gst_atomic_queue_push (allocator->free_queue, group);
-  }
-}
-
 GstV4l2MemoryGroup *
 gst_v4l2_allocator_alloc_mmap (GstV4l2Allocator * allocator)
 {
@@ -869,6 +891,45 @@ cleanup:
   }
 }
 
+static void
+gst_v4l2_allocator_clear_dmabufin (GstV4l2Allocator * allocator,
+    GstV4l2MemoryGroup * group)
+{
+  GstV4l2Memory *mem;
+  gint i;
+
+  g_return_if_fail (allocator->memory == V4L2_MEMORY_DMABUF);
+
+  for (i = 0; i < group->n_mem; i++) {
+
+    mem = (GstV4l2Memory *) group->mem[i];
+
+    GST_LOG_OBJECT (allocator, "clearing DMABUF import, fd %i plane %d",
+        mem->dmafd, i);
+
+    if (mem->dmafd >= 0)
+      close (mem->dmafd);
+
+    /* Update memory */
+    mem->mem.maxsize = 0;
+    mem->mem.offset = 0;
+    mem->mem.size = 0;
+    mem->dmafd = -1;
+
+    /* Update v4l2 structure */
+    group->planes[i].length = 0;
+    group->planes[i].bytesused = 0;
+    group->planes[i].m.fd = -1;
+    group->planes[i].data_offset = 0;
+  }
+
+  if (!V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+    group->buffer.bytesused = 0;
+    group->buffer.length = 0;
+    group->buffer.m.fd = -1;
+  }
+}
+
 GstV4l2MemoryGroup *
 gst_v4l2_allocator_alloc_dmabufin (GstV4l2Allocator * allocator)
 {
@@ -899,6 +960,37 @@ gst_v4l2_allocator_alloc_dmabufin (GstV4l2Allocator * allocator)
   gst_v4l2_allocator_clear_dmabufin (allocator, group);
 
   return group;
+}
+
+static void
+gst_v4l2_allocator_clear_userptr (GstV4l2Allocator * allocator,
+    GstV4l2MemoryGroup * group)
+{
+  GstV4l2Memory *mem;
+  gint i;
+
+  g_return_if_fail (allocator->memory == V4L2_MEMORY_USERPTR);
+
+  for (i = 0; i < group->n_mem; i++) {
+    mem = (GstV4l2Memory *) group->mem[i];
+
+    GST_LOG_OBJECT (allocator, "clearing USERPTR %p plane %d size %"
+        G_GSIZE_FORMAT, mem->data, i, mem->mem.size);
+
+    mem->mem.maxsize = 0;
+    mem->mem.size = 0;
+    mem->data = NULL;
+
+    group->planes[i].length = 0;
+    group->planes[i].bytesused = 0;
+    group->planes[i].m.userptr = 0;
+  }
+
+  if (!V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+    group->buffer.bytesused = 0;
+    group->buffer.length = 0;
+    group->buffer.m.userptr = 0;
+  }
 }
 
 GstV4l2MemoryGroup *
@@ -1005,46 +1097,6 @@ dup_failed:
   }
 }
 
-void
-gst_v4l2_allocator_clear_dmabufin (GstV4l2Allocator * allocator,
-    GstV4l2MemoryGroup * group)
-{
-  GstV4l2Memory *mem;
-  gint i;
-
-  g_return_if_fail (allocator->memory == V4L2_MEMORY_DMABUF);
-
-  for (i = 0; i < group->n_mem; i++) {
-
-    mem = (GstV4l2Memory *) group->mem[i];
-
-    GST_LOG_OBJECT (allocator, "clearing DMABUF import, fd %i plane %d",
-        mem->dmafd, i);
-
-    if (mem->dmafd >= 0)
-      close (mem->dmafd);
-
-    /* Update memory */
-    mem->mem.maxsize = 0;
-    mem->mem.offset = 0;
-    mem->mem.size = 0;
-    mem->dmafd = -1;
-
-    /* Update v4l2 structure */
-    group->planes[i].length = 0;
-    group->planes[i].bytesused = 0;
-    group->planes[i].m.fd = -1;
-    group->planes[i].data_offset = 0;
-  }
-
-  if (!V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
-    group->buffer.bytesused = 0;
-    group->buffer.length = 0;
-    group->buffer.m.fd = -1;
-  }
-}
-
-
 gboolean
 gst_v4l2_allocator_import_userptr (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group, gsize img_size, int n_planes,
@@ -1108,37 +1160,6 @@ n_mem_missmatch:
     GST_ERROR_OBJECT (allocator, "Got %i userptr plane while driver need %i",
         n_planes, group->n_mem);
     return FALSE;
-  }
-}
-
-void
-gst_v4l2_allocator_clear_userptr (GstV4l2Allocator * allocator,
-    GstV4l2MemoryGroup * group)
-{
-  GstV4l2Memory *mem;
-  gint i;
-
-  g_return_if_fail (allocator->memory == V4L2_MEMORY_USERPTR);
-
-  for (i = 0; i < group->n_mem; i++) {
-    mem = (GstV4l2Memory *) group->mem[i];
-
-    GST_LOG_OBJECT (allocator, "clearing USERPTR %p plane %d size %"
-        G_GSIZE_FORMAT, mem->data, i, mem->mem.size);
-
-    mem->mem.maxsize = 0;
-    mem->mem.size = 0;
-    mem->data = NULL;
-
-    group->planes[i].length = 0;
-    group->planes[i].bytesused = 0;
-    group->planes[i].m.userptr = 0;
-  }
-
-  if (!V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
-    group->buffer.bytesused = 0;
-    group->buffer.length = 0;
-    group->buffer.m.userptr = 0;
   }
 }
 
@@ -1322,21 +1343,21 @@ error:
 }
 
 void
-gst_v4l2_allocator_reset_size (GstV4l2Allocator * allocator,
+gst_v4l2_allocator_reset_group (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group)
 {
-  gsize size;
-
-  if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
-    gint i;
-
-    for (i = 0; i < group->n_mem; i++) {
-      size = allocator->format.fmt.pix_mp.plane_fmt[i].sizeimage;
-      gst_memory_resize (group->mem[i], 0, size);
-    }
-
-  } else {
-    size = allocator->format.fmt.pix.sizeimage;
-    gst_memory_resize (group->mem[0], 0, size);
+  switch (allocator->memory) {
+    case V4L2_MEMORY_USERPTR:
+      gst_v4l2_allocator_clear_userptr (allocator, group);
+      break;
+    case V4L2_MEMORY_DMABUF:
+      gst_v4l2_allocator_clear_dmabufin (allocator, group);
+      break;
+    case V4L2_MEMORY_MMAP:
+      gst_v4l2_allocator_reset_size (allocator, group);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
 }
