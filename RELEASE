@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.2.3
+Release notes for GStreamer Base Plugins 1.2.4
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,20 +60,16 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 603921 : resindvd: DVD menus not working
-      * 697665 : Add format=WMV3 for WMV 3 video
-      * 711816 : audiobasesrc: Avoid unnecessary configuration if caps don't change
-      * 712367 : Prevent the NEON check in configure from passing under aarch64.
-      * 715138 : xvimagesink 1.2 ignores resize events when used on a QWidget
-      * 719615 : oggdemux: slow seeking on some ogg files
-      * 719684 : videodecoder: Allocation query is always at least sent twice
-      * 720015 : docs: add missing files for distribution
-      * 720661 : audiobasesink: Fix locking bug accessing ring buffer time
-      * 721078 : videodecoder: cannot call gst_video_decoder_negotiate without output_state
-      * 721666 : videodecoder: push newsegment earlier for reverse playback
-      * 721835 : videodecoder: do not drop events when releasing frames
-      * 722144 : audiodecoder: do not negotiate caps with rate=1 and channels=1 for gap
-      * 722656 : videoconvert: scoring system ranks colour loss very low
+      * 693263 : typefinding: MPEG-2 video ES detected as H.263
+      * 683504 : playsink: deadlock when disabling subtitles and suboptimal disabling of subtitles
+      * 700770 : typefinding: mp3 file mis-detected as h263 video
+      * 723597 : tagdemux: Seek event in GST_FORMAT_TIME are converted to BYTES to early
+      * 724633 : oggdemux: ignores last page in push mode
+      * 724720 : rtspconnection: not possible to disconnect/reconnect read connection in tunneled mode
+      * 725313 : rtspconnection: closed() callback is never called in tunneled mode
+      * 725644 : typefinding: mp3 file is misdetected as H.263
+      * 726642 : rtspconnection: minor memory leak in error handling
+      * 727025 : adder: rework the logic to check if eos has to be sent.
 
 ==== Download ====
 
@@ -110,15 +106,13 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Holger Kaelberer
+      * Eric Trousset
       * Jan Schmidt
-      * Julien Isorce
+      * Mathieu Duponchelle
+      * Ognyan Tonchev
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Stéphane Cerveau
       * Thiago Santos
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * William Grant
       * Wim Taymans
  
