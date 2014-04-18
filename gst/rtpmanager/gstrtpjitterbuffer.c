@@ -1125,6 +1125,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->ext_timestamp = -1;
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf, (GFunc) free_item, NULL);
+  rtp_jitter_buffer_disable_buffering (priv->jbuf, FALSE);
   rtp_jitter_buffer_reset_skew (priv->jbuf);
   remove_all_timers (jitterbuffer);
   JBUF_UNLOCK (priv);
@@ -1355,6 +1356,7 @@ gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstObject * parent,
       if (ret && !priv->eos) {
         GST_INFO_OBJECT (jitterbuffer, "queuing EOS");
         priv->eos = TRUE;
+        rtp_jitter_buffer_disable_buffering (priv->jbuf, TRUE);
         JBUF_SIGNAL_EVENT (priv);
       } else if (priv->eos) {
         GST_DEBUG_OBJECT (jitterbuffer, "dropping EOS, we are already EOS");
@@ -1481,14 +1483,6 @@ check_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint percent)
 
   if (percent == -1)
     return NULL;
-
-  if (priv->eos || (priv->npt_stop != -1 &&
-          priv->npt_stop - priv->npt_start <=
-          rtp_jitter_buffer_get_delay (priv->jbuf))) {
-    GST_DEBUG_OBJECT (jitterbuffer, "short stream; faking full buffer");
-    rtp_jitter_buffer_set_buffering (priv->jbuf, FALSE);
-    percent = 100;
-  }
 
   /* Post a buffering message */
   if (priv->last_percent != percent) {
@@ -2210,45 +2204,61 @@ static void
 update_estimated_eos (GstRtpJitterBuffer * jitterbuffer,
     RTPJitterBufferItem * item)
 {
+  guint64 total, elapsed, left, estimated;
+  GstClockTime out_time;
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
 
-  if (priv->npt_stop != -1 && priv->ext_timestamp != -1
-      && priv->clock_base != -1 && priv->clock_rate > 0) {
-    guint64 elapsed, estimated;
+  if (priv->npt_stop == -1 || priv->ext_timestamp == -1
+      || priv->clock_base == -1 || priv->clock_rate <= 0)
+    return;
 
-    elapsed = compute_elapsed (jitterbuffer, item);
+  /* compute the elapsed time */
+  elapsed = compute_elapsed (jitterbuffer, item);
 
-    if (elapsed > priv->last_elapsed || !priv->last_elapsed) {
-      guint64 left;
-      GstClockTime out_time;
+  /* do nothing if elapsed time doesn't increment */
+  if (priv->last_elapsed && elapsed <= priv->last_elapsed)
+    return;
 
-      priv->last_elapsed = elapsed;
+  priv->last_elapsed = elapsed;
 
-      left = priv->npt_stop - priv->npt_start;
-      GST_LOG_OBJECT (jitterbuffer, "left %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (left));
+  /* this is the total time we need to play */
+  total = priv->npt_stop - priv->npt_start;
+  GST_LOG_OBJECT (jitterbuffer, "total %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (total));
 
-      out_time = item->dts;
+  /* this is how much time there is left */
+  if (total > elapsed)
+    left = total - elapsed;
+  else
+    left = 0;
 
-      if (elapsed > 0)
-        estimated = gst_util_uint64_scale (out_time, left, elapsed);
-      else {
-        /* if there is almost nothing left,
-         * we may never advance enough to end up in the above case */
-        if (left < GST_SECOND)
-          estimated = GST_SECOND;
-        else
-          estimated = -1;
-      }
+  /* if we have less time left that the size of the buffer, we will not
+   * be able to keep it filled, disabled buffering then */
+  if (left < rtp_jitter_buffer_get_delay (priv->jbuf)) {
+    GST_DEBUG_OBJECT (jitterbuffer, "left %" GST_TIME_FORMAT
+        ", disable buffering close to EOS", GST_TIME_ARGS (left));
+    rtp_jitter_buffer_disable_buffering (priv->jbuf, TRUE);
+  }
 
-      GST_LOG_OBJECT (jitterbuffer, "elapsed %" GST_TIME_FORMAT ", estimated %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (elapsed), GST_TIME_ARGS (estimated));
+  /* this is the current time as running-time */
+  out_time = item->dts;
 
-      if (estimated != -1 && priv->estimated_eos != estimated) {
-        set_timer (jitterbuffer, TIMER_TYPE_EOS, -1, estimated);
-        priv->estimated_eos = estimated;
-      }
-    }
+  if (elapsed > 0)
+    estimated = gst_util_uint64_scale (out_time, total, elapsed);
+  else {
+    /* if there is almost nothing left,
+     * we may never advance enough to end up in the above case */
+    if (total < GST_SECOND)
+      estimated = GST_SECOND;
+    else
+      estimated = -1;
+  }
+  GST_LOG_OBJECT (jitterbuffer, "elapsed %" GST_TIME_FORMAT ", estimated %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (elapsed), GST_TIME_ARGS (estimated));
+
+  if (estimated != -1 && priv->estimated_eos != estimated) {
+    set_timer (jitterbuffer, TIMER_TYPE_EOS, -1, estimated);
+    priv->estimated_eos = estimated;
   }
 }
 
@@ -2541,6 +2551,11 @@ do_eos_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   GST_INFO_OBJECT (jitterbuffer, "got the NPT timeout");
   remove_timer (jitterbuffer, timer);
+  if (!priv->eos) {
+    /* there was no EOS in the buffer, assume there is now */
+    priv->eos = TRUE;
+    rtp_jitter_buffer_disable_buffering (priv->jbuf, TRUE);
+  }
   JBUF_SIGNAL_EVENT (priv);
 
   return TRUE;
