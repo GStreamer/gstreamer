@@ -497,12 +497,6 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
       gst_buffer_pool_config_has_option (config,
       GST_V4L2_BUFFER_POOL_OPTION_CROP_META);
 
-  if (!pool->add_videometa && obj->need_video_meta)
-    goto missing_video_api;
-
-  if (!pool->add_cropmeta && obj->need_crop_meta)
-    goto missing_crop_api;
-
   /* parse the config and keep around */
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
           &max_buffers))
@@ -567,6 +561,20 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
     }
   }
 
+  if (!pool->add_videometa && obj->need_video_meta) {
+    GST_INFO_OBJECT (pool, "adding needed video meta");
+    updated = TRUE;
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+
+  if (!pool->add_cropmeta && obj->need_crop_meta) {
+    GST_INFO_OBJECT (pool, "adding needed crop meta");
+    updated = TRUE;
+    gst_buffer_pool_config_add_option (config,
+        GST_V4L2_BUFFER_POOL_OPTION_CROP_META);
+  }
+
   if (updated)
     gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
         max_buffers);
@@ -578,16 +586,6 @@ done:
   return !updated && ret;
 
   /* ERRORS */
-missing_video_api:
-  {
-    GST_ERROR_OBJECT (pool, "missing GstVideoMeta API in config");
-    return FALSE;
-  }
-missing_crop_api:
-  {
-    GST_ERROR_OBJECT (pool, "missing GstVideoCropMeta API");
-    return FALSE;
-  }
 wrong_config:
   {
     GST_ERROR_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
