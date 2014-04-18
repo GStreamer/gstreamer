@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-02-08 11:32+0100\n"
+"POT-Creation-Date: 2014-04-18 11:15+0200\n"
 "PO-Revision-Date: 2013-12-08 12:44+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -205,6 +205,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Не удалось получить/установить параметры ресурса."
 
 msgid "No space left on the resource."
+msgstr "В ресурсе нет свободного места."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "В ресурсе нет свободного места."
 
 msgid "GStreamer encountered a general stream error."
