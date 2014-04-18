@@ -274,6 +274,7 @@ static GstClockTime gst_rtp_session_request_time (RTPSession * session,
     gpointer user_data);
 static void gst_rtp_session_notify_nack (RTPSession * sess,
     guint16 seqnum, guint16 blp, guint32 ssrc, gpointer user_data);
+static void gst_rtp_session_reconfigure (RTPSession * sess, gpointer user_data);
 
 static RTPSessionCallbacks callbacks = {
   gst_rtp_session_process_rtp,
@@ -284,7 +285,8 @@ static RTPSessionCallbacks callbacks = {
   gst_rtp_session_reconsider,
   gst_rtp_session_request_key_unit,
   gst_rtp_session_request_time,
-  gst_rtp_session_notify_nack
+  gst_rtp_session_notify_nack,
+  gst_rtp_session_reconfigure
 };
 
 /* GObject vmethods */
@@ -2473,6 +2475,23 @@ gst_rtp_session_notify_nack (RTPSession * sess, guint16 seqnum,
       }
       blp >>= 1;
     }
+    gst_object_unref (send_rtp_sink);
+  }
+}
+
+static void
+gst_rtp_session_reconfigure (RTPSession * sess, gpointer user_data)
+{
+  GstRtpSession *rtpsession = GST_RTP_SESSION (user_data);
+  GstPad *send_rtp_sink;
+
+  GST_RTP_SESSION_LOCK (rtpsession);
+  if ((send_rtp_sink = rtpsession->send_rtp_sink))
+    gst_object_ref (send_rtp_sink);
+  GST_RTP_SESSION_UNLOCK (rtpsession);
+
+  if (send_rtp_sink) {
+    gst_pad_push_event (send_rtp_sink, gst_event_new_reconfigure ());
     gst_object_unref (send_rtp_sink);
   }
 }
