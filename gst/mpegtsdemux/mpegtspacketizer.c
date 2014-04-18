@@ -2211,6 +2211,7 @@ mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
   guint64 res;
   PCROffsetGroup *nextgroup = NULL, *prevgroup = NULL;
   guint64 querypcr, firstpcr, lastpcr, firstoffset, lastoffset;
+  PCROffsetCurrent *current;
   GList *tmp;
 
   if (!packetizer->calculate_offset)
@@ -2224,6 +2225,16 @@ mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
   querypcr = GSTTIME_TO_PCRTIME (ts);
 
   GST_DEBUG ("Searching offset for ts %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+
+  /* First check if we're within the current pending group */
+  current = pcrtable->current;
+  if (current && current->group && (querypcr >= current->group->pcr_offset) &&
+      querypcr - current->group->pcr_offset <=
+      current->pending[current->last].pcr) {
+    GST_DEBUG ("pcr is in current group");
+    nextgroup = current->group;
+    goto calculate_points;
+  }
 
   /* Find the neighbouring groups */
   for (tmp = pcrtable->groups; tmp; tmp = tmp->next) {
@@ -2256,15 +2267,25 @@ mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
     }
   }
 
-  if (nextgroup == prevgroup) {
-    GST_DEBUG ("In group");
-    firstoffset = prevgroup->first_offset;
-    firstpcr = prevgroup->pcr_offset;
-    lastoffset =
-        prevgroup->values[prevgroup->last_value].offset +
-        prevgroup->first_offset;
-    lastpcr =
-        prevgroup->values[prevgroup->last_value].pcr + prevgroup->pcr_offset;
+calculate_points:
+
+  GST_DEBUG ("nextgroup:%p, prevgroup:%p", nextgroup, prevgroup);
+
+  if (nextgroup == prevgroup || prevgroup == NULL) {
+    /* We use the current group to calculate position:
+     * * if the PCR is within this group
+     * * if there is only one group to use for calculation
+     */
+    GST_DEBUG ("In group or after last one");
+    lastoffset = firstoffset = nextgroup->first_offset;
+    lastpcr = firstpcr = nextgroup->pcr_offset;
+    if (current && nextgroup == current->group) {
+      lastoffset += current->pending[current->last].offset;
+      lastpcr += current->pending[current->last].pcr;
+    } else {
+      lastoffset += nextgroup->values[nextgroup->last_value].offset;
+      lastpcr += nextgroup->values[nextgroup->last_value].pcr;
+    }
   } else if (prevgroup) {
     GST_DEBUG ("Between group");
     lastoffset = nextgroup->first_offset;
@@ -2284,8 +2305,10 @@ mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
   GST_DEBUG ("Using last PCR %" G_GUINT64_FORMAT " offset %" G_GUINT64_FORMAT,
       lastpcr, lastoffset);
 
-  res = firstoffset + gst_util_uint64_scale (querypcr - firstpcr,
-      lastoffset - firstoffset, lastpcr - firstpcr);
+  res = firstoffset;
+  if (lastpcr != firstpcr)
+    res += gst_util_uint64_scale (querypcr - firstpcr,
+        lastoffset - firstoffset, lastpcr - firstpcr);
 
   GST_DEBUG ("Returning offset %" G_GUINT64_FORMAT " for ts %"
       GST_TIME_FORMAT, res, GST_TIME_ARGS (ts));
