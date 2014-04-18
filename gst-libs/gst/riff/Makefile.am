@@ -49,7 +49,7 @@ libgstriff_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) 
 #		--include=GstAudio-@GST_API_VERSION@ \
 #		--include=GstTag-@GST_API_VERSION@ \
 #		--include=Gst-@GST_API_VERSION@ \
-#		--libtool="$(top_builddir)/libtool" \
+#		--libtool="${LIBTOOL}" \
 #		--pkg gstreamer-@GST_API_VERSION@ \
 #		--pkg gstreamer-tag-@GST_API_VERSION@ \
 #		--pkg gstreamer-audio-@GST_API_VERSION@ \

@@ -76,7 +76,7 @@ GstRtsp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_API_VERS
 		--include=Gio-2.0 \
 		--include=Gst-@GST_API_VERSION@ \
 		--include=GstSdp-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gio-2.0 \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-sdp-@GST_API_VERSION@ \

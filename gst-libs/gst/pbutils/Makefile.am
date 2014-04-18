@@ -103,7 +103,7 @@ GstPbutils-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_AP
 		--include=GstTag-@GST_API_VERSION@ \
 		--include=GstVideo-@GST_API_VERSION@ \
 		--include=GstAudio-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-tag-@GST_API_VERSION@ \
 		--pkg gstreamer-video-@GST_API_VERSION@ \
