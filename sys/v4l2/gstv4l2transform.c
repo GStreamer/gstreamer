@@ -597,6 +597,8 @@ static void
 gst_v4l2_transform_init (GstV4l2Transform * self)
 {
   /* V4L2 object are created in subinstance_init */
+  /* enable QoS */
+  gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (self), TRUE);
 }
 
 static void
