@@ -96,6 +96,7 @@ $(top_builddir)/ext/libvpx/libgstcodecparsers_vpx.la:
 
 EXTRA_DIST = \
 	$(add_source_c) \
+	$(add_source_h) \
 	$(NULL)
 
 DISTCLEANFILES = $(GENFILES) .timestamp.symlinks

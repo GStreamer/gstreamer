@@ -1,29 +1,22 @@
 # Makefile.am - Rules for the built-in libvpx sources
 #
-# INTEL CONFIDENTIAL, FOR INTERNAL USE ONLY
 # Copyright (C) 2014 Intel Corporation
 #   Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 #
-# @BEGIN_LICENSE@
-# The source code contained or described herein and all documents
-# related to the source code ("Material") are owned by Intel
-# Corporation or its suppliers or licensors. Title to the Material
-# remains with Intel Corporation or its suppliers and licensors. The
-# Material contains trade secrets and proprietary and confidential
-# information of Intel or its suppliers and licensors. The Material
-# is protected by worldwide copyright and trade secret laws and
-# treaty provisions. No part of the Material may be used, copied,
-# reproduced, modified, published, uploaded, posted, transmitted,
-# distributed, or disclosed in any way without Intel’s prior express
-# written permission.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
 #
-# No license under any patent, copyright, trade secret or other
-# intellectual property right is granted to or conferred upon you by
-# disclosure or delivery of the Materials, either expressly, by
-# implication, inducement, estoppel or otherwise. Any license under
-# such intellectual property rights must be express and approved by
-# Intel in writing.
-# @END_LICENSE@
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this library; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+# Boston, MA 02110-1301, USA.
 
 lib_LTLIBRARIES =
 if USE_LOCAL_CODEC_PARSERS_VP8
@@ -102,6 +95,8 @@ vpx.configure.stamp:
 	cd ..								&& \
 	touch $@
 
+$(gst_vpx_source_c): vpx.build
+
 CLEANFILES = vpx.build.stamp
 
 # Files for packaging
@@ -127,7 +122,6 @@ vpx_sources = \
 	$(vpx_source_mak:%.mk=$(vpx_srcdir)/%.mk) \
 	$(vpx_source_c:%.c=$(vpx_srcdir)/%.c) \
 	$(vpx_source_h:%.h=$(vpx_srcdir)/%.h) \
-	$(vpx_source_asm:%.asm=$(vpx_srcdir)/%.asm) \
 	$(NULL)
 
 EXTRA_DIST = \
@@ -136,6 +130,13 @@ EXTRA_DIST = \
 	$(vpx_sources)		\
 	$(vpx_versions)		\
 	$(NULL)
+
+# Avoid implicit rule that tries to compile .asm.o to .asm
+dist-hook:
+	for f in $(vpx_source_asm); do					\
+	  mkdir -p $(distdir)/$(vpx_upstream)/$$(dirname $$f);		\
+	  cp -fpR $(vpx_srcdir)/$$f $(distdir)/$(vpx_upstream)/$$f;	\
+	done
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in vpx.configure.stamp
