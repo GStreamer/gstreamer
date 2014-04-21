@@ -2664,7 +2664,7 @@ gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
         if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           break;
 
-        if (num > 7 && num == 0) {
+        if (num > 7 || num == 0) {
           GST_ERROR_OBJECT (common, "Invalid ContentEncodingScope %"
               G_GUINT64_FORMAT, num);
           ret = GST_FLOW_ERROR;
