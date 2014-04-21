@@ -412,7 +412,6 @@ gst_rtp_mux_chain_list (GstPad * pad, GstObject * parent,
   GstRTPMux *rtp_mux;
   GstFlowReturn ret;
   GstRTPMuxPadPrivate *padpriv;
-  gboolean drop = TRUE;
   struct BufferListData bd;
 
   rtp_mux = GST_RTP_MUX (parent);
@@ -436,7 +435,7 @@ gst_rtp_mux_chain_list (GstPad * pad, GstObject * parent,
 
   GST_OBJECT_UNLOCK (rtp_mux);
 
-  if (drop) {
+  if (bd.drop) {
     gst_buffer_list_unref (bufferlist);
     ret = GST_FLOW_OK;
   } else {
