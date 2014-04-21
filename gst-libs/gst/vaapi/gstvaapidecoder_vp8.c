@@ -57,7 +57,6 @@ struct _GstVaapiDecoderVp8Private
   GstVaapiPicture *golden_ref_picture;
   GstVaapiPicture *alt_ref_picture;
   GstVaapiPicture *current_picture;
-  GstClockTime pts;
   guint size_changed:1;
 };
 
@@ -143,7 +142,6 @@ gst_vaapi_decoder_vp8_create (GstVaapiDecoder * base_decoder)
     return FALSE;
 
   priv->profile = GST_VAAPI_PROFILE_UNKNOWN;
-  priv->pts = GST_CLOCK_TIME_NONE;
   return TRUE;
 }
 
@@ -261,7 +259,7 @@ init_picture (GstVaapiDecoderVp8 * decoder, GstVaapiPicture * picture)
   picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
   picture->type = frame_hdr->key_frame ? GST_VAAPI_PICTURE_TYPE_I :
       GST_VAAPI_PICTURE_TYPE_P;
-  picture->pts = priv->pts;
+  picture->pts = GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts;
 
   if (!frame_hdr->show_frame)
     GST_VAAPI_PICTURE_FLAG_SET (picture, GST_VAAPI_PICTURE_FLAG_SKIPPED);
@@ -547,11 +545,8 @@ static GstVaapiDecoderStatus
 gst_vaapi_decoder_vp8_parse (GstVaapiDecoder * base_decoder,
     GstAdapter * adapter, gboolean at_eos, GstVaapiDecoderUnit * unit)
 {
-  GstVaapiDecoderVp8 *const decoder = GST_VAAPI_DECODER_VP8_CAST (base_decoder);
-  GstVaapiDecoderVp8Private *const priv = &decoder->priv;
   guint flags = 0;
 
-  priv->pts = gst_adapter_prev_pts (adapter, NULL);
   unit->size = gst_adapter_available (adapter);
 
   /* The whole frame is available */
