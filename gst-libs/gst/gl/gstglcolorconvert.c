@@ -84,7 +84,7 @@ static const gfloat from_yuv_bt601_bcoeff[] = {1.164, 2.018, 0.000};
 static const gfloat from_yuv_bt709_offset[] = {-0.0625, -0.5, -0.5};
 static const gfloat from_yuv_bt709_rcoeff[] = {1.164, 0.000, 1.787};
 static const gfloat from_yuv_bt709_gcoeff[] = {1.164,-0.213,-0.531};
-static const gfloat from_yuv_bt709_bcoeff[] = {1.164,-2.112, 0.000};
+static const gfloat from_yuv_bt709_bcoeff[] = {1.164,2.112, 0.000};
 
 #define RGB_TO_YUV_COEFFICIENTS \
       "uniform vec3 offset;\n" \
@@ -107,9 +107,10 @@ static const gfloat from_rgb_bt601_vcoeff[] = {0.439271, -0.367833, -0.071438};
  * Cb/Cr = [16..240] (of 255)
  */
 static const gfloat from_rgb_bt709_offset[] = {0.0625, 0.5, 0.5};
-static const gfloat from_rgb_bt709_ycoeff[] = {0.213392, 0.718140,-0.072426};
-static const gfloat from_rgb_bt709_ucoeff[] = {0.117608, 0.395793,-0.513401};
-static const gfloat from_rgb_bt709_vcoeff[] = {0.420599,-0.467775, 0.047176};
+static const gfloat from_rgb_bt709_ycoeff[] = { 0.182604, 0.614526, 0.061976 };
+static const gfloat from_rgb_bt709_ucoeff[] = { -0.100640, -0.338688, 0.439327 };
+static const gfloat from_rgb_bt709_vcoeff[] = { 0.440654, -0.400285, -0.040370 };
+
 
 /** GRAY16 to RGB conversion 
  *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
