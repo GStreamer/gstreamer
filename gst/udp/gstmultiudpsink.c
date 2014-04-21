@@ -1139,12 +1139,18 @@ gst_multiudpsink_start (GstBaseSink * bsink)
 #ifdef SO_BINDTODEVICE
   if (sink->multi_iface) {
     if (sink->used_socket) {
-      setsockopt (g_socket_get_fd (sink->used_socket), SOL_SOCKET,
-          SO_BINDTODEVICE, sink->multi_iface, strlen (sink->multi_iface));
+      if (setsockopt (g_socket_get_fd (sink->used_socket), SOL_SOCKET,
+              SO_BINDTODEVICE, sink->multi_iface,
+              strlen (sink->multi_iface)) < 0)
+        GST_WARNING_OBJECT (sink, "setsockopt SO_BINDTODEVICE failed: %s",
+            strerror (errno));
     }
     if (sink->used_socket_v6) {
-      setsockopt (g_socket_get_fd (sink->used_socket_v6), SOL_SOCKET,
-          SO_BINDTODEVICE, sink->multi_iface, strlen (sink->multi_iface));
+      if (setsockopt (g_socket_get_fd (sink->used_socket_v6), SOL_SOCKET,
+              SO_BINDTODEVICE, sink->multi_iface,
+              strlen (sink->multi_iface)) < 0)
+        GST_WARNING_OBJECT (sink, "setsockopt SO_BINDTODEVICE failed (v6): %s",
+            strerror (errno));
     }
   }
 #endif
