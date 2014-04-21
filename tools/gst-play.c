@@ -217,20 +217,19 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       gst_message_parse_buffering (msg, &percent);
       g_print ("%s %d%%  \r", _("Buffering..."), percent);
 
-      /* no state management needed for live pipelines */
-      if (play->is_live)
-        break;
-
       if (percent == 100) {
         /* a 100% message means buffering is done */
         if (play->buffering) {
           play->buffering = FALSE;
-          gst_element_set_state (play->playbin, play->desired_state);
+          /* no state management needed for live pipelines */
+          if (!play->is_live)
+            gst_element_set_state (play->playbin, play->desired_state);
         }
       } else {
         /* buffering... */
         if (!play->buffering) {
-          gst_element_set_state (play->playbin, GST_STATE_PAUSED);
+          if (!play->is_live)
+            gst_element_set_state (play->playbin, GST_STATE_PAUSED);
           play->buffering = TRUE;
         }
       }
