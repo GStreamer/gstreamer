@@ -517,6 +517,58 @@ detected:
   return GST_FLOW_OK;
 }
 
+static int
+gst_vc1_parse_get_max_framerate (GstVC1Parse * vc1parse)
+{
+  /* http://wiki.multimedia.cx/index.php?title=VC-1#Setup_Data_.2F_Sequence_Layer */
+  switch (vc1parse->profile) {
+    case GST_VC1_PROFILE_SIMPLE:
+      switch (vc1parse->level) {
+        case GST_VC1_LEVEL_LOW:
+          return 15;
+        case GST_VC1_LEVEL_MEDIUM:
+          return 30;
+        default:
+          g_assert_not_reached ();
+          return 0;
+      }
+      break;
+    case GST_VC1_PROFILE_MAIN:
+      switch (vc1parse->level) {
+        case GST_VC1_LEVEL_LOW:
+          return 24;
+        case GST_VC1_LEVEL_MEDIUM:
+          return 30;
+        case GST_VC1_LEVEL_HIGH:
+          return 30;
+        default:
+          g_assert_not_reached ();
+          return 0;
+      }
+      break;
+    case GST_VC1_PROFILE_ADVANCED:
+      switch (vc1parse->level) {
+        case GST_VC1_LEVEL_L0:
+          return 30;
+        case GST_VC1_LEVEL_L1:
+          return 30;
+        case GST_VC1_LEVEL_L2:
+          return 60;
+        case GST_VC1_LEVEL_L3:
+          return 60;
+        case GST_VC1_LEVEL_L4:
+          return 60;
+        default:
+          g_assert_not_reached ();
+          return 0;
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      return 0;
+  }
+}
+
 static gboolean
 gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
 {
@@ -756,9 +808,18 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
         /* Unknown HRD_RATE */
         GST_WRITE_UINT32_BE (data + 28, 0);
         /* Framerate */
-        GST_WRITE_UINT32_BE (data + 32,
-            ((guint32) (((gdouble) vc1parse->fps_n) /
-                    ((gdouble) vc1parse->fps_d) + 0.5)));
+        if (vc1parse->fps_d == 0) {
+          /* If not known, it seems we need to put in the maximum framerate
+             possible for the profile/level used (this is for RTP
+             (https://tools.ietf.org/html/draft-ietf-avt-rtp-vc1-06#section-6.1),
+             so likely elsewhere too */
+          GST_WRITE_UINT32_BE (data + 32,
+              gst_vc1_parse_get_max_framerate (vc1parse));
+        } else {
+          GST_WRITE_UINT32_BE (data + 32,
+              ((guint32) (((gdouble) vc1parse->fps_n) /
+                      ((gdouble) vc1parse->fps_d) + 0.5)));
+        }
         gst_buffer_unmap (codec_data, &minfo);
 
         gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
