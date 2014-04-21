@@ -396,7 +396,7 @@ play_uri (GstPlay * play, const gchar * next_uri)
 
   g_object_set (play->playbin, "uri", next_uri, NULL);
 
-  sret = gst_element_set_state (play->playbin, play->desired_state);
+  sret = gst_element_set_state (play->playbin, GST_STATE_PAUSED);
   switch (sret) {
     case GST_STATE_CHANGE_FAILURE:
       /* ignore, we should get an error message posted on the bus */
@@ -411,6 +411,8 @@ play_uri (GstPlay * play, const gchar * next_uri)
     default:
       break;
   }
+  if (play->desired_state != GST_STATE_PAUSED)
+    sret = gst_element_set_state (play->playbin, play->desired_state);
 }
 
 /* returns FALSE if we have reached the end of the playlist */
