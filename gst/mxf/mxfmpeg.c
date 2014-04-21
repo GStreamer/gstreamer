@@ -988,7 +988,7 @@ mxf_mpeg_audio_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 
       if (layer == 1)
         md->spf = 384;
-      else if (layer == 2 || mpegversion == 1)
+      else if (layer == 2 || mpegaudioversion == 1)
         md->spf = 1152;
       else
         md->spf = 576;          /* MPEG-2 or 2.5 */
