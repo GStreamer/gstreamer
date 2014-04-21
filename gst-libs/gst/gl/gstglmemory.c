@@ -350,7 +350,11 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
   gl_mem->unpack_length = 1;
 
   n_gl_bytes = _gl_texture_type_n_bytes (gl_mem->tex_type);
-
+  if (n_gl_bytes == 0) {
+    GST_CAT_ERROR (GST_CAT_GL_MEMORY, "Unsupported texture type %d",
+        gl_mem->tex_type);
+    return;
+  }
 #if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
   if (USING_OPENGL (gl_mem->context) || USING_GLES3 (gl_mem->context)) {
     gl_mem->unpack_length = gl_mem->stride / n_gl_bytes;
