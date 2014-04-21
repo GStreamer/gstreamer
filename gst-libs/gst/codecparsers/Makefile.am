@@ -45,8 +45,8 @@ endif
 if USE_LOCAL_CODEC_PARSERS_VP8
 gen_source_c += gstvp8parser.c
 gen_source_h += gstvp8parser.h gstvp8rangedecoder.h vp8utils.h
-#gen_source_c += dboolhuff.c gstvp8rangedecoder.c vp8utils.c
-#gen_source_h += dboolhuff.h
+
+if USE_BUILTIN_LIBVPX
 add_source_c += gstvaapilibvpx.c
 
 libgstvaapi_codecparsers_cflags += \
@@ -56,6 +56,10 @@ libgstvaapi_codecparsers_cflags += \
 
 libgstvaapi_codecparsers_libs += \
 	$(top_builddir)/ext/libvpx/libgstcodecparsers_vpx.la
+else
+gen_source_c += dboolhuff.c gstvp8rangedecoder.c vp8utils.c
+gen_source_h += dboolhuff.h
+endif
 endif
 
 GENFILES = \

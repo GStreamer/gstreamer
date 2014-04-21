@@ -97,7 +97,7 @@ AM_CONDITIONAL([HAVE_GIT], [test -n "$GIT"])
 
 AC_ARG_VAR([YASM], [Path to yasm program, if any])
 AC_PATH_PROG([YASM], [yasm])
-if test -z "$YASM"; then
+if test -z "$YASM" -a "$enable_builtin_libvpx" = "yes"; then
     AC_MSG_ERROR([yasm is needed to build libvpx sources])
 fi
 
@@ -109,6 +109,11 @@ AC_ARG_ENABLE(builtin_codecparsers,
     AS_HELP_STRING([--enable-builtin-codecparsers],
                    [enable built-in codecparsers @<:@default=yes@:>@]),
     [], [enable_builtin_codecparsers="yes"])
+
+AC_ARG_ENABLE(builtin_libvpx,
+    AS_HELP_STRING([--enable-builtin-libvpx],
+                   [enable built-in libvpx @<:@default=yes@:>@]),
+    [], [enable_builtin_libvpx="yes"])
 
 AC_ARG_ENABLE([encoders],
     AS_HELP_STRING([--enable-encoders],
@@ -421,6 +426,9 @@ AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_JPEG],
     [test "$ac_cv_have_gst_jpeg_parser" != "yes"])
 
 dnl ... VP8 parser, not upstream yet
+if test "$enable_builtin_libvpx" = "yes"; then
+    ac_cv_have_gst_vp8_parser="no"
+fi
 AC_CACHE_CHECK([for VP8 parser],
     ac_cv_have_gst_vp8_parser, [
     saved_CPPFLAGS="$CPPFLAGS"
@@ -439,6 +447,7 @@ AC_CACHE_CHECK([for VP8 parser],
 ])
 AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_VP8],
     [test "$ac_cv_have_gst_vp8_parser" != "yes"])
+AM_CONDITIONAL([USE_BUILTIN_LIBVPX], [test "$enable_builtin_libvpx" = "yes"])
 
 case $GST_API_VERSION in
 0.10)   lt_bias=gst0_vaapi_lt_current_bias;;

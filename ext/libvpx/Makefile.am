@@ -19,7 +19,7 @@
 # Boston, MA 02110-1301, USA.
 
 lib_LTLIBRARIES =
-if USE_LOCAL_CODEC_PARSERS_VP8
+if USE_BUILTIN_LIBVPX
 lib_LTLIBRARIES += libgstcodecparsers_vpx.la
 endif
 
