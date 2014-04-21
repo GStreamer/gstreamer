@@ -1212,8 +1212,8 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
     }
 #endif
 
-    /* Drawing is asynchrone: gst_gl_window_draw is not blocking
-     * It means that it does not wait for stuff being executed in other threads
+    /* Drawing is asynchronous: gst_gl_window_draw is not blocking
+     * It means that it does not wait for stuff to be executed in other threads
      */
     gst_gl_window_draw (window, GST_VIDEO_SINK_WIDTH (gl_sink),
         GST_VIDEO_SINK_HEIGHT (gl_sink));
