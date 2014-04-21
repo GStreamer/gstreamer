@@ -284,18 +284,22 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
   self->srcpads = g_list_reverse (self->srcpads);
 }
 
-static void
+static gboolean
 gst_deinterleave_set_pads_caps (GstDeinterleave * self, GstCaps * caps)
 {
   GList *l;
   gint i;
+  gboolean ret = TRUE;
 
   for (l = self->srcpads, i = 0; l; l = l->next, i++) {
     GstPad *pad = GST_PAD (l->data);
     GstCaps *srccaps;
     GstAudioInfo info;
 
-    gst_audio_info_from_caps (&info, caps);
+    if (!gst_audio_info_from_caps (&info, caps)) {
+      ret = FALSE;
+      continue;
+    }
     if (self->keep_positions)
       GST_AUDIO_INFO_POSITION (&info, 0) =
           GST_AUDIO_INFO_POSITION (&self->audio_info, i);
@@ -305,6 +309,7 @@ gst_deinterleave_set_pads_caps (GstDeinterleave * self, GstCaps * caps)
     gst_pad_set_caps (pad, srccaps);
     gst_caps_unref (srccaps);
   }
+  return ret;
 }
 
 static void
@@ -376,7 +381,8 @@ gst_deinterleave_sink_setcaps (GstDeinterleave * self, GstCaps * caps)
     GstAudioInfo old_info;
 
     gst_audio_info_init (&old_info);
-    gst_audio_info_from_caps (&old_info, self->sinkcaps);
+    if (!gst_audio_info_from_caps (&old_info, self->sinkcaps))
+      goto info_from_caps_failed;
     was_unpositioned = GST_AUDIO_INFO_IS_UNPOSITIONED (&old_info);
     old_channels = GST_AUDIO_INFO_CHANNELS (&old_info);
 
@@ -424,7 +430,8 @@ gst_deinterleave_sink_setcaps (GstDeinterleave * self, GstCaps * caps)
   /* If we already have pads, update the caps otherwise
    * add new pads */
   if (self->srcpads) {
-    gst_deinterleave_set_pads_caps (self, srccaps);
+    if (!gst_deinterleave_set_pads_caps (self, srccaps))
+      goto set_caps_failed;
   } else {
     gst_deinterleave_add_new_pads (self, srccaps);
   }
@@ -448,6 +455,17 @@ unsupported_caps:
 invalid_caps:
   {
     GST_ERROR_OBJECT (self, "invalid caps");
+    return FALSE;
+  }
+set_caps_failed:
+  {
+    GST_ERROR_OBJECT (self, "set_caps failed");
+    gst_caps_unref (srccaps);
+    return FALSE;
+  }
+info_from_caps_failed:
+  {
+    GST_ERROR_OBJECT (self, "coud not get info from caps");
     return FALSE;
   }
 }
