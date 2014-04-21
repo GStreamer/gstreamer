@@ -269,7 +269,7 @@ GetSirenCodecInfo (int flag, int sample_rate, int *number_of_coefs,
 
       if (sample_rate == 24000)
         *sample_rate_code = 1;
-      else if (sample_rate == 24000)
+      else if (sample_rate == 32000)
         *sample_rate_code = 2;
       else if (sample_rate == 48000)
         *sample_rate_code = 3;
