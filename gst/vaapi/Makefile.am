@@ -123,7 +123,6 @@ libgstvaapi_source_c += $(libgstvaapi_1_0p_source_c)
 libgstvaapi_source_h += $(libgstvaapi_1_0p_source_h)
 endif
 
-if USE_GST_API_0_10
 libgstvaapi_0_10_source_c = \
 	gstvaapidownload.c	\
 	gstvaapiupload.c	\
@@ -133,7 +132,6 @@ libgstvaapi_0_10_source_h = \
 	gstvaapidownload.h	\
 	gstvaapiupload.h	\
 	$(NULL)
-endif
 
 if USE_GST_API_0_10
 libgstvaapi_source_c += $(libgstvaapi_0_10_source_c)
@@ -166,6 +164,10 @@ libgstvaapi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvaapi_la_LIBTOOLFLAGS = --tag=disable-static
 
 EXTRA_DIST = \
+	$(libgstvaapi_enc_source_c)	\
+	$(libgstvaapi_enc_source_h)	\
+	$(libgstvaapi_x11_source_c)	\
+	$(libgstvaapi_x11_source_h)	\
 	$(libgstvaapi_glx_source_c)	\
 	$(libgstvaapi_glx_source_h)	\
 	$(libgstvaapi_1_2p_source_c)	\
