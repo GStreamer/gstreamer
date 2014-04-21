@@ -42,6 +42,7 @@ videoutils_srcdir = \
 
 videoutils_source_c = \
 	gstvideodecoder.c	\
+	gstvideoencoder.c	\
 	gstvideoutils.c		\
 	video.c			\
 	$(NULL)
@@ -50,6 +51,7 @@ EXTRA_DIST += $(videoutils_source_c:%.c=$(videoutils_srcdir)/%.c)
 
 videoutils_source_h = \
 	gstvideodecoder.h	\
+	gstvideoencoder.h	\
 	gstvideoutils.h		\
 	video.h			\
 	$(NULL)
