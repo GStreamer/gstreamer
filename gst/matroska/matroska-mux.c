@@ -1416,7 +1416,7 @@ theora_streamheader_to_codecdata (const GValue * streamheader,
     hdr += 4 + 4;
     par_num = GST_READ_UINT32_BE (hdr) >> 8;
     par_denom = GST_READ_UINT32_BE (hdr + 3) >> 8;
-    if (par_num > 0 && par_num > 0) {
+    if (par_num > 0 && par_denom > 0) {
       if (par_num > par_denom) {
         videocontext->display_width =
             videocontext->pixel_width * par_num / par_denom;
