@@ -1198,8 +1198,10 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
   gboolean alive;
 
   window = gst_gl_context_get_window (gl_sink->context);
+  if (!window)
+    return FALSE;
 
-  if (window && gst_gl_window_is_running (window)) {
+  if (gst_gl_window_is_running (window)) {
 
 #if GST_GL_HAVE_GLES2
     if (USING_GLES2 (gl_sink->context)) {
