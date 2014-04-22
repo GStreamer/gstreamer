@@ -153,6 +153,17 @@ _structure_is_raw_audio (GstStructure * structure)
   return gst_structure_has_name (structure, "audio/x-raw");
 }
 
+static gchar *
+_get_event_string (GstEvent *event)
+{
+  const GstStructure *st;
+
+  if ((st = gst_event_get_structure (event)))
+    return gst_structure_to_string (st);
+  else
+    return g_strdup_printf ("%s", GST_EVENT_TYPE_NAME (event));
+}
+
 static void
 _check_field_type (GstValidatePadMonitor * monitor, GstStructure * structure,
     const gchar * field, ...)
@@ -162,14 +173,14 @@ _check_field_type (GstValidatePadMonitor * monitor, GstStructure * structure,
   gchar *joined_types = NULL;
   const gchar *rejected_types[5];
   gint rejected_types_index = 0;
+  gchar *struct_str;
 
   if (!gst_structure_has_field (structure, field)) {
     gchar *str = gst_structure_to_string (structure);
 
     GST_VALIDATE_REPORT (monitor, CAPS_IS_MISSING_FIELD,
-        "Field '%s' is missing from structure: %" GST_PTR_FORMAT, field,
-        str);
-    g_free(str);
+        "Field '%s' is missing from structure: %s", field, str);
+    g_free (str);
     return;
   }
 
@@ -185,12 +196,13 @@ _check_field_type (GstValidatePadMonitor * monitor, GstStructure * structure,
   va_end (var_args);
 
   joined_types = g_strjoinv (" / ", (gchar **) rejected_types);
+  struct_str = gst_structure_to_string (structure);
   GST_VALIDATE_REPORT (monitor, CAPS_FIELD_HAS_BAD_TYPE,
-      "Field '%s' has wrong type %s in structure '%" GST_PTR_FORMAT
-      "'. Expected: %s", field,
-      g_type_name (gst_structure_get_field_type (structure, field)), structure,
+      "Field '%s' has wrong type %s in structure '%s'. Expected: %s", field,
+      g_type_name (gst_structure_get_field_type (structure, field)), struct_str,
       joined_types);
   g_free (joined_types);
+  g_free (struct_str);
 }
 
 static void
@@ -222,7 +234,7 @@ gst_validate_pad_monitor_check_raw_audio_caps_complete (GstValidatePadMonitor *
       GST_TYPE_INT_RANGE, 0);
   _check_field_type (monitor, structure, "channels", G_TYPE_INT, GST_TYPE_LIST,
       GST_TYPE_INT_RANGE, 0);
-  if (gst_structure_get_int(structure, "channels", &channels)) {
+  if (gst_structure_get_int (structure, "channels", &channels)) {
     if (channels > 2)
       _check_field_type (monitor, structure, "channel-mask", GST_TYPE_BITMASK,
           GST_TYPE_LIST, 0);
@@ -466,9 +478,15 @@ gst_validate_pad_monitor_check_caps_fields_proxied (GstValidatePadMonitor *
     }
 
     if (type_match && !found) {
+      gchar *otherstruct_str = gst_structure_to_string (otherstructure),
+          *caps_str = gst_caps_to_string (caps);
+
       GST_VALIDATE_REPORT (monitor, GET_CAPS_NOT_PROXYING_FIELDS,
-          "Peer pad structure '%" GST_PTR_FORMAT "' has no similar version "
-          "on pad's caps '%" GST_PTR_FORMAT "'", otherstructure, caps);
+          "Peer pad structure '%s' has no similar version "
+          "on pad's caps '%s'", otherstruct_str, caps_str);
+
+      g_free (otherstruct_str);
+      g_free (caps_str);
     }
   }
 }
@@ -493,11 +511,15 @@ gst_validate_pad_monitor_check_late_serialized_events (GstValidatePadMonitor *
         i, GST_EVENT_TYPE_NAME (data->event), GST_TIME_ARGS (data->timestamp));
 
     if (GST_CLOCK_TIME_IS_VALID (data->timestamp) && data->timestamp < ts) {
+      gchar *event_str = _get_event_string (data->event);
+
       GST_VALIDATE_REPORT (monitor, SERIALIZED_EVENT_WASNT_PUSHED_IN_TIME,
-          "Serialized event %" GST_PTR_FORMAT " wasn't pushed before expected "
-          "timestamp %" GST_TIME_FORMAT " on pad %s:%s", data->event,
+          "Serialized event %s wasn't pushed before expected " "timestamp %"
+          GST_TIME_FORMAT " on pad %s:%s", event_str,
           GST_TIME_ARGS (data->timestamp),
           GST_DEBUG_PAD_NAME (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor)));
+
+      g_free (event_str);
     } else {
       /* events should be ordered by ts */
       break;
@@ -1194,8 +1216,11 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
       }
 
       if (!pad_monitor->pending_flush_stop) {
+        gchar *event_str = _get_event_string (event);
+
         GST_VALIDATE_REPORT (pad_monitor, EVENT_FLUSH_STOP_UNEXPECTED,
-            "Unexpected flush-stop %p" GST_PTR_FORMAT, event);
+            "Unexpected flush-stop %s", event_str);
+        g_free (event_str);
       }
       pad_monitor->pending_flush_stop = FALSE;
 
@@ -1684,11 +1709,14 @@ gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
      */
 
     if (g_list_find (monitor->expired_events, event)) {
+      gchar *event_str = _get_event_string (event);
       /* If it's the expired events, we've failed */
       GST_WARNING_OBJECT (pad, "Did not expect event %p %s", event,
           GST_EVENT_TYPE_NAME (event));
       GST_VALIDATE_REPORT (monitor, EVENT_SERIALIZED_OUT_OF_ORDER,
-          "Serialized event was pushed out of order: %" GST_PTR_FORMAT, event);
+          "Serialized event was pushed out of order: %s", event_str);
+
+      g_free (event_str);
       monitor->expired_events = g_list_remove (monitor->expired_events, event);
       gst_event_unref (event);  /* remove the ref that was on the list */
     } else if (monitor->serialized_events->len) {
@@ -1783,8 +1811,11 @@ gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
   if (GST_PAD_IS_SINK (GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor)) &&
       pad_monitor->last_caps
       && gst_caps_is_equal (caps, pad_monitor->last_caps)) {
-    GST_VALIDATE_REPORT (pad_monitor, EVENT_CAPS_DUPLICATE, "%" GST_PTR_FORMAT,
-        caps);
+    gchar *caps_str = gst_caps_to_string (caps);
+
+    GST_VALIDATE_REPORT (pad_monitor, EVENT_CAPS_DUPLICATE, "%s", caps_str);
+    g_free (caps_str);
+
   }
 
   gst_validate_pad_monitor_check_caps_complete (pad_monitor, caps);
@@ -1804,14 +1835,24 @@ gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
             gst_structure_get_value (pad_monitor->pending_setcaps_fields, name);
 
         if (v == NULL) {
+          gchar *caps_str = gst_caps_to_string (caps);
+
           GST_VALIDATE_REPORT (pad_monitor, CAPS_EXPECTED_FIELD_NOT_FOUND,
-              "Field %s is missing from setcaps caps '%" GST_PTR_FORMAT "'",
-              name, caps);
+              "Field %s is missing from setcaps caps '%s'", name, caps_str);
+          g_free (caps_str);
         } else if (gst_value_compare (v, otherv) != GST_VALUE_EQUAL) {
+          gchar *caps_str = gst_caps_to_string (caps),
+              *pending_setcaps_fields_str =
+              gst_structure_to_string (pad_monitor->pending_setcaps_fields);
+
+
           GST_VALIDATE_REPORT (pad_monitor, CAPS_FIELD_UNEXPECTED_VALUE,
-              "Field %s from setcaps caps '%" GST_PTR_FORMAT "' is different "
-              "from expected value in caps '%" GST_PTR_FORMAT "'", name, caps,
-              pad_monitor->pending_setcaps_fields);
+              "Field %s from setcaps caps '%s' is different "
+              "from expected value in caps '%s'", name, caps_str,
+              pending_setcaps_fields_str);
+
+          g_free (pending_setcaps_fields_str);
+          g_free (caps_str);
         }
       }
     }
