@@ -165,8 +165,8 @@ _get_event_string (GstEvent *event)
 }
 
 static void
-_check_field_type (GstValidatePadMonitor * monitor, GstStructure * structure,
-    const gchar * field, ...)
+_check_field_type (GstValidatePadMonitor * monitor,
+    GstStructure * structure, gboolean mandatory, const gchar * field, ...)
 {
   va_list var_args;
   GType type;
@@ -176,11 +176,16 @@ _check_field_type (GstValidatePadMonitor * monitor, GstStructure * structure,
   gchar *struct_str;
 
   if (!gst_structure_has_field (structure, field)) {
-    gchar *str = gst_structure_to_string (structure);
+    if (mandatory) {
+      gchar *str = gst_structure_to_string (structure);
 
-    GST_VALIDATE_REPORT (monitor, CAPS_IS_MISSING_FIELD,
-        "Field '%s' is missing from structure: %s", field, str);
-    g_free (str);
+      GST_VALIDATE_REPORT (monitor, CAPS_IS_MISSING_FIELD,
+          "Field '%s' is missing from structure: %s", field, str);
+      g_free (str);
+    } else {
+      GST_DEBUG_OBJECT (monitor, "Field %s is missing but is not mandatory",
+          field);
+    }
     return;
   }
 
@@ -209,15 +214,15 @@ static void
 gst_validate_pad_monitor_check_raw_video_caps_complete (GstValidatePadMonitor *
     monitor, GstStructure * structure)
 {
-  _check_field_type (monitor, structure, "width", G_TYPE_INT,
+  _check_field_type (monitor, structure, TRUE, "width", G_TYPE_INT,
       GST_TYPE_INT_RANGE, 0);
-  _check_field_type (monitor, structure, "height", G_TYPE_INT,
+  _check_field_type (monitor, structure, TRUE, "height", G_TYPE_INT,
       GST_TYPE_INT_RANGE, 0);
-  _check_field_type (monitor, structure, "framerate", GST_TYPE_FRACTION,
+  _check_field_type (monitor, structure, TRUE, "framerate", GST_TYPE_FRACTION,
       GST_TYPE_FRACTION_RANGE, 0);
-  _check_field_type (monitor, structure, "pixel-aspect-ratio",
+  _check_field_type (monitor, structure, FALSE, "pixel-aspect-ratio",
       GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE, 0);
-  _check_field_type (monitor, structure, "format", G_TYPE_STRING,
+  _check_field_type (monitor, structure, TRUE, "format", G_TYPE_STRING,
       GST_TYPE_LIST);
 }
 
@@ -226,18 +231,18 @@ gst_validate_pad_monitor_check_raw_audio_caps_complete (GstValidatePadMonitor *
     monitor, GstStructure * structure)
 {
   gint channels;
-  _check_field_type (monitor, structure, "format", G_TYPE_STRING, GST_TYPE_LIST,
-      0);
-  _check_field_type (monitor, structure, "layout", G_TYPE_STRING, GST_TYPE_LIST,
-      0);
-  _check_field_type (monitor, structure, "rate", G_TYPE_INT, GST_TYPE_LIST,
-      GST_TYPE_INT_RANGE, 0);
-  _check_field_type (monitor, structure, "channels", G_TYPE_INT, GST_TYPE_LIST,
-      GST_TYPE_INT_RANGE, 0);
+  _check_field_type (monitor, structure, TRUE, "format", G_TYPE_STRING,
+      GST_TYPE_LIST, 0);
+  _check_field_type (monitor, structure, TRUE, "layout", G_TYPE_STRING,
+      GST_TYPE_LIST, 0);
+  _check_field_type (monitor, structure, TRUE, "rate", G_TYPE_INT,
+      GST_TYPE_LIST, GST_TYPE_INT_RANGE, 0);
+  _check_field_type (monitor, structure, TRUE, "channels", G_TYPE_INT,
+      GST_TYPE_LIST, GST_TYPE_INT_RANGE, 0);
   if (gst_structure_get_int (structure, "channels", &channels)) {
     if (channels > 2)
-      _check_field_type (monitor, structure, "channel-mask", GST_TYPE_BITMASK,
-          GST_TYPE_LIST, 0);
+      _check_field_type (monitor, structure, TRUE, "channel-mask",
+          GST_TYPE_BITMASK, GST_TYPE_LIST, 0);
   }
 }
 
@@ -349,7 +354,7 @@ gst_validate_pad_monitor_pad_should_proxy_othercaps (GstValidatePadMonitor *
  */
 static gboolean
 _structures_field_is_contained (GstStructure * s1, GstStructure * s2,
-    const gchar * f)
+    gboolean mandatory, const gchar * f)
 {
   const GValue *v1;
   const GValue *v2;
@@ -360,7 +365,7 @@ _structures_field_is_contained (GstStructure * s1, GstStructure * s2,
 
   v1 = gst_structure_get_value (s1, f);
   if (!v1)
-    return FALSE;
+    return !mandatory;
 
   if (!gst_value_is_fixed (v1) && !gst_value_is_fixed (v2))
     return TRUE;
@@ -449,14 +454,14 @@ gst_validate_pad_monitor_check_caps_fields_proxied (GstValidatePadMonitor *
         structure = gst_caps_get_structure (caps, j);
         if (_structure_is_video (structure)) {
           type_match = TRUE;
-          if (_structures_field_is_contained (structure, otherstructure,
+          if (_structures_field_is_contained (structure, otherstructure, TRUE,
                   "width")
               && _structures_field_is_contained (structure, otherstructure,
-                  "height")
+                  TRUE, "height")
               && _structures_field_is_contained (structure, otherstructure,
-                  "framerate")
+                  TRUE, "framerate")
               && _structures_field_is_contained (structure, otherstructure,
-                  "pixel-aspect-ratio")) {
+                  FALSE, "pixel-aspect-ratio")) {
             found = TRUE;
             break;
           }
@@ -467,9 +472,10 @@ gst_validate_pad_monitor_check_caps_fields_proxied (GstValidatePadMonitor *
         structure = gst_caps_get_structure (caps, j);
         if (_structure_is_audio (structure)) {
           type_match = TRUE;
-          if (_structures_field_is_contained (structure, otherstructure, "rate")
+          if (_structures_field_is_contained (structure, otherstructure, TRUE,
+                  "rate")
               && _structures_field_is_contained (structure, otherstructure,
-                  "channels")) {
+                  TRUE, "channels")) {
             found = TRUE;
             break;
           }
