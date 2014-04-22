@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstbaseparse.h>
 
 #include "gstjpegformat.h"
 
@@ -40,18 +41,19 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_JPEG_PARSE))
 #define GST_IS_JPEG_PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JPEG_PARSE))
+#define GST_JPEG_PARSE_CAST(obj) ((GstJpegParse *)obj)
 
 typedef struct _GstJpegParse           GstJpegParse;
 typedef struct _GstJpegParsePrivate    GstJpegParsePrivate;
 typedef struct _GstJpegParseClass      GstJpegParseClass;
 
 struct _GstJpegParse {
-  GstElement element;
+  GstBaseParse parse;
   GstJpegParsePrivate *priv;
 };
 
 struct _GstJpegParseClass {
-  GstElementClass  parent_class;
+  GstBaseParseClass  parent_class;
 };
 
 GType gst_jpeg_parse_get_type (void);
