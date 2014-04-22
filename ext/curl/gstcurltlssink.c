@@ -125,7 +125,7 @@ gst_curl_tls_sink_class_init (GstCurlTlsSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_CRYPTO_ENGINE,
       g_param_spec_string ("crypto-engine",
           "OpenSSL crypto engine",
-          "OpenSSL crytpo engine to use for cipher operations",
+          "OpenSSL crypto engine to use for cipher operations",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INSECURE,
       g_param_spec_boolean ("insecure",
@@ -254,7 +254,7 @@ gst_curl_tls_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
   }
 
   /* note that, using ca-path can allow libcurl to make SSL-connections much
-   * more efficiently than using ca-cert if the ca-cert ile contains many CA
+   * more efficiently than using ca-cert if the ca-cert file contains many CA
    * certificates. */
   if (sink->ca_cert != NULL && strlen (sink->ca_cert)) {
     GST_DEBUG ("setting ca cert");

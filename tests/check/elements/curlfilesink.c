@@ -19,7 +19,7 @@ static GstElement *sink;
 static GstElement *
 setup_curlfilesink (void)
 {
-  GST_DEBUG ("setup_curlfielsink");
+  GST_DEBUG ("setup_curlfilesink");
   sink = gst_check_setup_element ("curlfilesink");
   srcpad = gst_check_setup_src_pad (sink, &srctemplate);
   gst_pad_set_active (srcpad, TRUE);
@@ -152,7 +152,7 @@ GST_START_TEST (test_properties)
   g_object_set (G_OBJECT (sink), "location", "newlocation", NULL);
   g_object_get (sink, "location", &res_location, NULL);
 
-  /* verify that locaiton has not been altered */
+  /* verify that location has not been altered */
   fail_unless (strncmp (res_location, location, strlen (location))
       == 0);
   g_free (res_location);

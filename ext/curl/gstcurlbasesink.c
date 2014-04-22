@@ -372,7 +372,7 @@ gst_curl_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   /* wait for the transfer thread to send the data. This will be notified
    * either when transfer is completed by the curl read callback or by
-   * the thread function if an error has occured. */
+   * the thread function if an error has occurred. */
   gst_curl_base_sink_wait_for_transfer_thread_to_send_unlocked (sink);
 
 done:
@@ -603,7 +603,7 @@ gst_curl_base_sink_transfer_set_common_options_unlocked (GstCurlBaseSink * sink)
 
   curl_easy_setopt (sink->curl, CURLOPT_CONNECTTIMEOUT, sink->timeout);
 
-  /* using signals in a multithreaded application is dangeous */
+  /* using signals in a multi-threaded application is dangerous */
   curl_easy_setopt (sink->curl, CURLOPT_NOSIGNAL, 1);
 
   /* socket settings */
@@ -978,7 +978,7 @@ gst_curl_base_sink_transfer_thread_func (gpointer data)
     sink->new_file = FALSE;
 
     /* wait for data to arrive for this new file, if we get a new file name
-     * again before getting data we will simply skip transfering anything
+     * again before getting data we will simply skip transferring anything
      * for this file and go directly to the new file */
     data_available = gst_curl_base_sink_wait_for_data_unlocked (sink);
     if (data_available) {
@@ -1068,7 +1068,7 @@ gst_curl_base_sink_transfer_setup_unlocked (GstCurlBaseSink * sink)
     return FALSE;
   }
 
-  /* init a multi stack (non-blocking interface to liburl) */
+  /* init a multi stack (non-blocking interface to libcurl) */
   if (sink->multi_handle == NULL) {
     if ((sink->multi_handle = curl_multi_init ()) == NULL) {
       return FALSE;
@@ -1133,7 +1133,7 @@ static void
   GST_LOG ("waiting for buffer send to complete");
 
   /* this function should not check if the transfer thread is set to be closed
-   * since that flag only can be set by the EoS event (by the pipeline thread).
+   * since that flag only can be set by the EOS event (by the pipeline thread).
    * This can therefore never happen while this function is running since this
    * function also is called by the pipeline thread (in the render function) */
   while (!sink->transfer_cond->data_sent) {
