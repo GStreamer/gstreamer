@@ -73,6 +73,7 @@ struct _GstValidatePadMonitor {
   GstCaps *last_caps;
   gboolean caps_is_audio;
   gboolean caps_is_video;
+  gboolean caps_is_raw;
 
   /* FIXME : Let's migrate all those booleans into a 32 (or 64) bit flag */
   gboolean first_buffer;

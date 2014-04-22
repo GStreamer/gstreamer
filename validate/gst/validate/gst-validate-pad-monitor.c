@@ -1169,7 +1169,7 @@ gst_validate_pad_monitor_flush (GstValidatePadMonitor * pad_monitor)
   pad_monitor->is_eos = FALSE;
   pad_monitor->last_flow_return = GST_FLOW_OK;
   gst_caps_replace (&pad_monitor->last_caps, NULL);
-  pad_monitor->caps_is_audio = pad_monitor->caps_is_video = FALSE;
+  pad_monitor->caps_is_audio = pad_monitor->caps_is_video = pad_monitor->caps_is_raw = FALSE;
 
   g_list_free_full (pad_monitor->expired_events,
       (GDestroyNotify) gst_event_unref);
@@ -1650,9 +1650,14 @@ gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
     /* should not push out of segment data */
     if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)) &&
         GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)) &&
-        !gst_segment_clip (&monitor->segment, monitor->segment.format,
+        ((!gst_segment_clip (&monitor->segment, monitor->segment.format,
             GST_BUFFER_TIMESTAMP (buffer), GST_BUFFER_TIMESTAMP (buffer) +
-            GST_BUFFER_DURATION (buffer), NULL, NULL)) {
+            GST_BUFFER_DURATION (buffer), NULL, NULL)) ||
+         /* In the case of raw data, buffers should be strictly contained inside the
+          * segment */
+         (monitor->caps_is_raw &&
+          GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer) < monitor->segment.start))
+         ) {
       /* TODO is this a timestamp issue? */
       GST_VALIDATE_REPORT (monitor, BUFFER_IS_OUT_OF_SEGMENT,
           "buffer is out of segment and shouldn't be pushed. Timestamp: %"
@@ -1802,6 +1807,13 @@ gst_validate_pad_monitor_update_caps_info (GstValidatePadMonitor * pad_monitor,
     pad_monitor->caps_is_audio = TRUE;
   } else if (g_str_has_prefix (gst_structure_get_name (structure), "video/")) {
     pad_monitor->caps_is_video = TRUE;
+  }
+
+  if (g_str_has_prefix (gst_structure_get_name (structure), "audio/x-raw") ||
+      g_str_has_prefix (gst_structure_get_name (structure), "video/x-raw")) {
+    pad_monitor->caps_is_raw = TRUE;
+  } else {
+    pad_monitor->caps_is_raw = FALSE;
   }
 }
 
