@@ -367,7 +367,7 @@ gst_curl_http_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
   GstCurlTlsSinkClass *parent_class;
 
   /* proxy settings */
-  if (sink->proxy != NULL && strlen (sink->proxy)) {
+  if (sink->proxy != NULL) {
     if (!proxy_setup (bcsink)) {
       return FALSE;
     }
