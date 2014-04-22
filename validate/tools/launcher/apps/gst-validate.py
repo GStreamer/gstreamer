@@ -51,7 +51,7 @@ class PlaybinDescriptor(PipelineDescriptor):
     def get_pipeline(self, options, protocol, scenario, uri):
         pipe = self._pipeline
         if options.mute:
-            fakesink = "fakesink sync=true"
+            fakesink = "'fakesink sync=true'"
             pipe += " audio-sink=%s video-sink=%s" %(fakesink, fakesink)
 
         pipe += " uri=%s" % uri

@@ -24,6 +24,7 @@ import sys
 import re
 import time
 import utils
+import signal
 import urlparse
 import subprocess
 import reporters
@@ -199,18 +200,18 @@ class Test(Loggable):
         printc(message, Colors.OKBLUE)
 
         try:
-            self.process = subprocess.Popen(self.command,
+            self.process = subprocess.Popen("exec " + self.command,
                                             stderr=self.reporter.out,
                                             stdout=self.reporter.out,
                                             shell=True,
                                             env=proc_env)
             self.wait_process()
         except KeyboardInterrupt:
-            self.process.kill()
+            self.process.send_signal(signal.SIGINT)
             raise
 
         try:
-            self.process.terminate()
+            self.process.send_signal(signal.SIGINT)
         except OSError:
             pass
 
