@@ -1175,6 +1175,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->packet_spacing = 0;
   priv->next_in_seqnum = -1;
   priv->clock_rate = -1;
+  priv->last_pt = -1;
   priv->eos = FALSE;
   priv->estimated_eos = -1;
   priv->last_elapsed = 0;
