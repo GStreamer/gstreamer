@@ -1497,6 +1497,8 @@ gst_deinterlace_output_frame (GstDeinterlace * self, gboolean flushing)
   guint8 phase, count;
   const GstDeinterlaceLocking locking = self->locking;
 
+  memset (&pattern, 0, sizeof (pattern));
+
 restart:
   ret = GST_FLOW_OK;
   fields_required = 0;
