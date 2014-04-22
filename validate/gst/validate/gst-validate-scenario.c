@@ -84,6 +84,7 @@ struct _GstValidateScenarioPrivate
   guint num_actions;
 
   guint get_pos_id;
+  guint wait_id;
 };
 
 typedef struct KeyFileGroupName
@@ -97,6 +98,7 @@ static GType gst_validate_action_get_type (void);
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
 static GstValidateAction *gst_validate_action_new (void);
+static gboolean get_position (GstValidateScenario * scenario);
 
 static GstValidateAction *
 _action_copy (GstValidateAction * act)
@@ -578,6 +580,22 @@ _set_rank (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 static gboolean
+_add_get_position_source (GstValidateScenario * scenario)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
+  if (priv->get_pos_id == 0 && priv->wait_id == 0) {
+    priv->get_pos_id = g_timeout_add (50, (GSourceFunc) get_position, scenario);
+
+    GST_DEBUG_OBJECT (scenario, "Start checking position again");
+    return TRUE;
+  }
+
+  GST_DEBUG_OBJECT (scenario, "No need to start a new gsource");
+  return FALSE;
+}
+
+static gboolean
 get_position (GstValidateScenario * scenario)
 {
   GList *tmp;
@@ -673,6 +691,45 @@ get_position (GstValidateScenario * scenario)
   return TRUE;
 }
 
+static gboolean
+stop_waiting (GstValidateScenario * scenario)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
+  priv->wait_id = 0;
+  _add_get_position_source (scenario);
+
+  g_print ("\n==== Stop waiting ===\n");
+
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
+_execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+  GstClockTime duration;
+
+  if (!gst_validate_action_get_clocktime (scenario, action,
+          "duration", &duration)) {
+    GST_DEBUG_OBJECT (scenario, "Duration could not be parsed");
+    return FALSE;
+  }
+
+  gst_validate_action_print (action, "Waiting for %" GST_TIME_FORMAT "\n",
+      GST_TIME_ARGS (duration));
+  if (priv->get_pos_id) {
+    g_source_remove (priv->get_pos_id);
+    priv->get_pos_id = 0;
+  }
+
+  priv->wait_id = g_timeout_add (duration / G_USEC_PER_SEC,
+      (GSourceFunc) stop_waiting, scenario);
+
+  return TRUE;
+}
+
+
 static void
 gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
     GstEvent * seek)
@@ -745,11 +802,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         priv->needs_parsing = NULL;
       }
 
-      if (priv->get_pos_id == 0) {
-        get_position (scenario);
-        priv->get_pos_id =
-            g_timeout_add (50, (GSourceFunc) get_position, scenario);
-      }
+      _add_get_position_source (scenario);
       break;
     case GST_MESSAGE_ERROR:
     case GST_MESSAGE_EOS:
@@ -795,6 +848,11 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
   if (priv->get_pos_id) {
     g_source_remove (priv->get_pos_id);
     priv->get_pos_id = 0;
+  }
+
+  if (priv->wait_id) {
+    g_source_remove (priv->wait_id);
+    priv->wait_id = 0;
   }
   scenario->pipeline = NULL;
 
@@ -969,7 +1027,7 @@ _load_scenario_file (GstValidateScenario * scenario,
             gst_structure_get_string (structure, "playback_time"))) {
       priv->needs_parsing = g_list_append (priv->needs_parsing, action);
     } else
-      GST_WARNING_OBJECT (scenario,
+      GST_INFO_OBJECT (scenario,
           "No playback time for action %" GST_PTR_FORMAT, structure);
 
     if (!(action->name = gst_structure_get_string (structure, "name")))
@@ -1399,6 +1457,7 @@ void
 init_scenarios (void)
 {
   const gchar *seek_mandatory_fields[] = { "start", NULL };
+  const gchar *wait_mandatory_fields[] = { "wait", NULL };
 
   _gst_validate_action_type = gst_validate_action_get_type ();
 
@@ -1422,6 +1481,8 @@ init_scenarios (void)
       " a relative change (eg, '+1' means 'next track', '-1' means 'previous"
       " track'), note that you need to state that it is a string in the scenario file"
       " prefixing it with (string).", FALSE);
+  gst_validate_add_action_type ("wait", _execute_wait, wait_mandatory_fields,
+      "Action to wait during 'duration' seconds", FALSE);
   gst_validate_add_action_type ("set-feature-rank", _set_rank, NULL,
       "Allows you to change the ranking of a particular plugin feature", TRUE);
 }
