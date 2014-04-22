@@ -888,8 +888,8 @@ find_message (GstBin * bin, GstObject * src, GstMessageType types)
       guint i;
 
       for (i = 0; i < 32; i++)
-        if (types & (1 << i))
-          GST_DEBUG_OBJECT (bin, "  %s", gst_message_type_get_name (1 << i));
+        if (types & (1U << i))
+          GST_DEBUG_OBJECT (bin, "  %s", gst_message_type_get_name (1U << i));
     }
 #endif
   }
