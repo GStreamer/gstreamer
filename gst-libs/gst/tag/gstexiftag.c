@@ -1285,8 +1285,9 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
       GST_WARNING ("Failed to parse %s into a datetime tag", utfstr);
     }
   } else if (tagtype == G_TYPE_STRING) {
-    gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
-        utfstr, NULL);
+    if (utfstr[0] != '\0')
+      gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
+          utfstr, NULL);
   } else {
     GST_WARNING ("No parsing function associated to %x(%s)", tag->exif_tag,
         tag->gst_tag);
@@ -1373,8 +1374,9 @@ parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
     gst_sample_unref (sample);
     gst_buffer_unref (buf);
   } else if (tagtype == G_TYPE_STRING) {
-    gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
-        data, NULL);
+    if (data[0] != '\0')
+      gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
+          data, NULL);
   } else {
     GST_WARNING ("No parsing function associated to %x(%s)", tag->exif_tag,
         tag->gst_tag);
