@@ -2286,7 +2286,7 @@ calculate_points:
       lastoffset += nextgroup->values[nextgroup->last_value].offset;
       lastpcr += nextgroup->values[nextgroup->last_value].pcr;
     }
-  } else if (prevgroup) {
+  } else {
     GST_DEBUG ("Between group");
     lastoffset = nextgroup->first_offset;
     lastpcr = nextgroup->pcr_offset;
@@ -2295,9 +2295,6 @@ calculate_points:
         prevgroup->first_offset;
     firstpcr =
         prevgroup->values[prevgroup->last_value].pcr + prevgroup->pcr_offset;
-  } else {
-    GST_WARNING ("Not enough information to calculate offset");
-    return -1;
   }
 
   GST_DEBUG ("Using prev PCR %" G_GUINT64_FORMAT " offset %" G_GUINT64_FORMAT,
