@@ -315,12 +315,14 @@ fill_picture (GstVaapiDecoderVp8 * decoder, GstVaapiPicture * picture)
     pic_param->mb_segment_tree_probs[i] = seg->segment_prob[i];
 
   for (i = 0; i < 4; i++) {
+    gint8 level;
     if (seg->segmentation_enabled) {
-      pic_param->loop_filter_level[i] = seg->lf_update_value[i];
-      if (!seg->segment_feature_mode)
-        pic_param->loop_filter_level[i] += frame_hdr->loop_filter_level;
+      level = seg->lf_update_value[i];
+      if (!seg->segment_feature_mode)   // 0 means delta update
+        level += frame_hdr->loop_filter_level;
     } else
-      pic_param->loop_filter_level[i] = frame_hdr->loop_filter_level;
+      level = frame_hdr->loop_filter_level;
+    pic_param->loop_filter_level[i] = CLAMP (level, 0, 63);
 
     pic_param->loop_filter_deltas_ref_frame[i] =
         parser->mb_lf_adjust.ref_frame_delta[i];
