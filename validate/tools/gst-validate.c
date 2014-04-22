@@ -266,26 +266,27 @@ main (int argc, gchar ** argv)
   }
   if (!GST_IS_PIPELINE (pipeline)) {
     GstElement *new_pipeline = gst_pipeline_new ("");
+
     gst_bin_add (GST_BIN (new_pipeline), pipeline);
     pipeline = new_pipeline;
   }
+
 #ifdef G_OS_UNIX
   signal_watch_id =
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
 #endif
 
   runner = gst_validate_runner_new ();
-  monitor =
-      gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
-      NULL);
-  gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
-  mainloop = g_main_loop_new (NULL, FALSE);
-
   if (!runner) {
     g_printerr ("Failed to setup Validate Runner\n");
     exit (1);
   }
 
+  monitor = gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline),
+      runner, NULL);
+  gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
+
+  mainloop = g_main_loop_new (NULL, FALSE);
   bus = gst_element_get_bus (pipeline);
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", (GCallback) bus_callback, mainloop);
