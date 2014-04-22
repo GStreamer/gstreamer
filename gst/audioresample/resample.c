@@ -1046,7 +1046,7 @@ speex_resampler_init_frac (spx_uint32_t nb_channels, spx_uint32_t ratio_num,
       unsigned int flags = orc_target_get_default_flags (target);
       check_insn_set (st, orc_target_get_name (target));
       for (i = 0; i < 32; ++i) {
-        if (flags & (1 << i)) {
+        if (flags & (1U << i)) {
           check_insn_set (st, orc_target_get_flag_name (target, i));
         }
       }
