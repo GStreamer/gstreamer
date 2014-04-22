@@ -22,7 +22,7 @@ setup_curlfilesink (void)
   GST_DEBUG ("setup_curlfilesink");
   sink = gst_check_setup_element ("curlfilesink");
   srcpad = gst_check_setup_src_pad (sink, &srctemplate);
-  gst_pad_set_active (srcpad, TRUE);
+  fail_unless (gst_pad_set_active (srcpad, TRUE));
 
   return sink;
 }
@@ -74,7 +74,7 @@ test_set_and_play_buffer (const gchar * _data)
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           data, num_bytes, 0, num_bytes, data, NULL));
 
-  fail_unless (gst_pad_push (srcpad, buffer) == GST_FLOW_OK);
+  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
 }
 
 static void
@@ -90,7 +90,7 @@ test_set_and_fail_to_play_buffer (const gchar * _data)
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           data, num_bytes, 0, num_bytes, data, NULL));
 
-  fail_unless (gst_pad_push (srcpad, buffer) == GST_FLOW_ERROR);
+  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_ERROR);
 }
 
 GST_START_TEST (test_properties)

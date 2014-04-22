@@ -21,7 +21,7 @@ setup_curlsmtpsink (void)
   GST_DEBUG ("setup_curlsmtpsink");
   sink = gst_check_setup_element ("curlsmtpsink");
   srcpad = gst_check_setup_src_pad (sink, &srctemplate);
-  gst_pad_set_active (srcpad, TRUE);
+  fail_unless (gst_pad_set_active (srcpad, TRUE));
 
   return sink;
 }

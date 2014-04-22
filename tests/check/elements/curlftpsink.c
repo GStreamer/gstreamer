@@ -21,7 +21,7 @@ setup_curlftpsink (void)
   GST_DEBUG ("setup_curlftpsink");
   sink = gst_check_setup_element ("curlftpsink");
   srcpad = gst_check_setup_src_pad (sink, &srctemplate);
-  gst_pad_set_active (srcpad, TRUE);
+  fail_unless (gst_pad_set_active (srcpad, TRUE));
 
   return sink;
 }
