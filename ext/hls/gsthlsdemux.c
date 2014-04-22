@@ -312,7 +312,6 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_element_set_state (demux->src, GST_STATE_NULL);
       gst_hls_demux_stop (demux);
       gst_task_join (demux->updates_task);
       gst_task_join (demux->stream_task);
@@ -1235,6 +1234,10 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
     demux->srcpad = NULL;
   }
 
+  if (demux->src) {
+    gst_element_set_state (demux->src, GST_STATE_NULL);
+  }
+
   if (demux->adapter)
     gst_adapter_clear (demux->adapter);
   if (demux->pending_buffer)
@@ -1715,7 +1718,8 @@ decrypt_error:
 }
 
 static void
-gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri)
+gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri,
+    const gchar * referer)
 {
   if (!gst_uri_is_valid (uri))  /* TODO error out */
     return;
@@ -1729,6 +1733,7 @@ gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri)
     new_protocol = gst_uri_get_protocol (uri);
 
     if (!g_str_equal (old_protocol, new_protocol)) {
+      gst_element_set_state (demux->src, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (demux), demux->src);
       demux->src = NULL;
       GST_DEBUG_OBJECT (demux, "Can't re-use old source element");
@@ -1740,6 +1745,7 @@ gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri)
         GST_DEBUG_OBJECT (demux, "Failed to re-use old source element: %s",
             err->message);
         g_clear_error (&err);
+        gst_element_set_state (demux->src, GST_STATE_NULL);
         gst_bin_remove (GST_BIN_CAST (demux), demux->src);
         demux->src = NULL;
       }
@@ -1750,7 +1756,30 @@ gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri)
   }
 
   if (demux->src == NULL) {
+    GObjectClass *gobject_class;
+
     demux->src = gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
+
+    gobject_class = G_OBJECT_GET_CLASS (demux->src);
+
+    if (g_object_class_find_property (gobject_class, "compress"))
+      g_object_set (demux->src, "compress", FALSE, NULL);
+    if (g_object_class_find_property (gobject_class, "keep-alive"))
+      g_object_set (demux->src, "keep-alive", TRUE, NULL);
+    if (g_object_class_find_property (gobject_class, "extra-headers")) {
+      if (referer) {
+        GstStructure *extra_headers =
+            gst_structure_new ("headers", "Referer", G_TYPE_STRING, referer,
+            NULL);
+
+        g_object_set (demux->src, "extra-headers", extra_headers, NULL);
+
+        gst_structure_free (extra_headers);
+      } else {
+        g_object_set (demux->src, "extra-headers", NULL, NULL);
+      }
+    }
+
     gst_element_set_locked_state (demux->src, TRUE);
     gst_bin_add (GST_BIN_CAST (demux), demux->src);
   }
@@ -1788,7 +1817,8 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   demux->current_key = key;
   demux->current_iv = iv;
 
-  gst_hls_demux_update_source (demux, next_fragment_uri);
+  gst_hls_demux_update_source (demux, next_fragment_uri,
+      demux->client->main ? demux->client->main->uri : NULL);
   if (!gst_hls_demux_configure_src_pad (demux, NULL)) {
     *end_of_playlist = FALSE;
     return FALSE;
@@ -1806,7 +1836,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   g_cond_wait (&demux->fragment_download_cond, &demux->fragment_download_lock);
 
   g_mutex_unlock (&demux->fragment_download_lock);
-  gst_element_set_state (demux->src, GST_STATE_NULL);
+  gst_element_set_state (demux->src, GST_STATE_READY);
 
   return TRUE;
 }
