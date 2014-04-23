@@ -1031,8 +1031,8 @@ gst_glimage_sink_on_resize (const GstGLImageSink * gl_sink, gint width,
 
       src.x = 0;
       src.y = 0;
-      src.w = GST_VIDEO_INFO_WIDTH (&gl_sink->info);
-      src.h = GST_VIDEO_INFO_HEIGHT (&gl_sink->info);
+      src.w = GST_VIDEO_SINK_WIDTH (gl_sink);
+      src.h = GST_VIDEO_SINK_HEIGHT (gl_sink);
 
       dst.x = 0;
       dst.y = 0;
