@@ -1,9 +1,82 @@
-=== release 1.2.0 ===
+=== release 1.2.1 ===
 
-2014-03-16  Thibault Saunier <tsaunier@gnome.org>
+2014-04-23  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.2.1
+
+2014-04-17 13:04:26 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-uri-asset.c:
+	  uri-asset: Check return value of gst_tag_list_copy_value
+	  CID 1139597
+
+2014-04-10 18:03:55 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/gstframepositionner.c:
+	  framepositioner: Set the proper default value
+	  Most likely a copy/paste error.
+	  CID #1139646
+
+2014-04-10 18:01:03 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Use proper value for string extraction
+	  The pass would be filled with some bogus (pointer) numerical value
+	  CID #1139652
+
+2014-04-10 17:52:20 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  base-xml-formatter: Don't attempt to use NULL entry
+	  Instead return straight away
+	  CID #1139739
+
+2014-04-06 16:39:33 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/Makefile.am:
+	  build: Add reference to GstVideo in gir file
+
+2014-03-26 23:47:03 +0100  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* ges/Makefile.am:
+	  build: install ges-version.h
+
+2014-03-26 11:45:07 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	  ges-launch: Not being able to load an asset is an error
+
+2014-03-21 10:22:52 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Do not set EncodingProfile.presence when we have no track for the type
+	  That leads to freeze as encodebin will be waiting for a pad and EOS
+	  forever
+
+2014-01-09 16:31:01 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Format the position printing as in gst-validate and friends
+
+2013-10-12 10:07:28 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Properly handle project loading
+	  So we start the pipeline only when the project is done loading, and we save it when it is
+	  loaded, taking into account possible media URI updates.
+
+=== release 1.2.0 ===
+
+2014-03-16 12:46:26 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* ges/ges.c:
+	* gst-editing-services.doap:
+	  Release 1.2.0
 
 2014-03-15 10:34:17 +0100  Thibault Saunier <thibault.saunier@collabora.com>
 
