@@ -396,9 +396,9 @@ gst_validate_printf_valist (gpointer source,
           action->action_number, GST_TIME_ARGS (action->playback_time),
           action->repeat);
     } else if (GST_IS_OBJECT (source)) {
-      g_string_printf (string, "%s:    ", GST_OBJECT_NAME (source));
+      g_string_printf (string, "\n%s --> ", GST_OBJECT_NAME (source));
     } else if (G_IS_OBJECT (source)) {
-      g_string_printf (string, "<%s@%p>:    ", G_OBJECT_TYPE_NAME (source), source);
+      g_string_printf (string, "\n<%s@%p> --> ", G_OBJECT_TYPE_NAME (source), source);
     }
   }
 
