@@ -89,6 +89,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstCaps *caps;
   GstAllocator *allocator;
   GstAllocationParams alloc_params;
+  gboolean reset = TRUE;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
     goto wrong_config;
@@ -118,8 +119,9 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     goto unknown_format;
 
   if (priv->caps)
-    gst_caps_unref (priv->caps);
-  priv->caps = gst_caps_ref (caps);
+    reset = !gst_caps_is_equal (priv->caps, caps);
+
+  gst_caps_replace (&priv->caps, caps);
   priv->info = info;
 
   priv->add_videometa = gst_buffer_pool_config_has_option (config,
@@ -130,11 +132,13 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       && g_strcmp0 (priv->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
 #endif
 
-  if (priv->upload)
-    gst_object_unref (priv->upload);
-  priv->upload = gst_gl_upload_new (glpool->context);
+  if (reset) {
+    if (priv->upload)
+      gst_object_unref (priv->upload);
 
-  gst_gl_upload_init_format (priv->upload, &priv->info);
+    priv->upload = gst_gl_upload_new (glpool->context);
+    gst_gl_upload_init_format (priv->upload, &priv->info);
+  }
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
