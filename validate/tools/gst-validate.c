@@ -42,7 +42,6 @@ static GstElement *pipeline;
 
 static gboolean buffering = FALSE;
 static gboolean is_live = FALSE;
-static guint print_pos_srcid = 0;
 
 #ifdef G_OS_UNIX
 static gboolean
@@ -56,32 +55,6 @@ intr_handler (gpointer user_data)
   return FALSE;
 }
 #endif /* G_OS_UNIX */
-
-static gboolean
-print_position (void)
-{
-  GstQuery *query;
-  gint64 position, duration;
-
-  gdouble rate = 1.0;
-  GstFormat format = GST_FORMAT_TIME;
-
-  gst_element_query_position (pipeline, format, &position);
-
-  format = GST_FORMAT_TIME;
-  gst_element_query_duration (pipeline, format, &duration);
-
-  query = gst_query_new_segment (GST_FORMAT_DEFAULT);
-  if (gst_element_query (pipeline, query))
-    gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
-  gst_query_unref (query);
-
-  g_print ("<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-      " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
-      rate);
-
-  return TRUE;
-}
 
 static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
@@ -105,9 +78,6 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       g_main_loop_quit (loop);
       break;
     case GST_MESSAGE_ASYNC_DONE:
-      if (print_pos_srcid == 0)
-        print_pos_srcid =
-            g_timeout_add (50, (GSourceFunc) print_position, NULL);
       break;
     case GST_MESSAGE_STATE_CHANGED:
       if (GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline)) {
@@ -152,10 +122,6 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         /* buffering... */
         if (!buffering) {
           gst_element_set_state (pipeline, GST_STATE_PAUSED);
-          if (print_pos_srcid) {
-            if (g_source_remove (print_pos_srcid))
-              print_pos_srcid = 0;
-          }
           buffering = TRUE;
         }
       }

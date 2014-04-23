@@ -61,6 +61,11 @@ gst_validate_bin_monitor_dispose (GObject * object)
   if (monitor->scenario)
     g_object_unref (monitor->scenario);
 
+  if (monitor->print_pos_srcid) {
+    if (g_source_remove (monitor->print_pos_srcid))
+      monitor->print_pos_srcid = 0;
+  }
+
   g_list_free_full (monitor->element_monitors, g_object_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -86,12 +91,43 @@ gst_validate_bin_monitor_init (GstValidateBinMonitor * bin_monitor)
 {
 }
 
+static gboolean
+print_position (GstValidateMonitor *monitor)
+{
+  GstQuery *query;
+  gint64 position, duration;
+  GstElement *pipeline = GST_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
+
+  gdouble rate = 1.0;
+  GstFormat format = GST_FORMAT_TIME;
+
+  gst_element_query_position (pipeline, format, &position);
+
+  format = GST_FORMAT_TIME;
+  gst_element_query_duration (pipeline, format, &duration);
+
+  query = gst_query_new_segment (GST_FORMAT_DEFAULT);
+  if (gst_element_query (pipeline, query))
+    gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
+  gst_query_unref (query);
+
+  gst_validate_printf (NULL,
+      "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
+      " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
+      rate);
+
+  return TRUE;
+}
+
 static void
 gst_validate_bin_monitor_create_scenarios (GstValidateBinMonitor * monitor)
 {
   /* scenarios currently only make sense for pipelines */
   if (GST_IS_PIPELINE (GST_VALIDATE_MONITOR_GET_OBJECT (monitor))) {
     const gchar *scenario_name;
+
+    monitor->print_pos_srcid =
+        g_timeout_add (500, (GSourceFunc) print_position, monitor);
 
     if ((scenario_name = g_getenv ("GST_VALIDATE_SCENARIO"))) {
       gchar **scenario_v = g_strsplit (scenario_name, "->", 2);

@@ -47,7 +47,6 @@ static GstEncodingProfile *encoding_profile = NULL;
 static gboolean eos_on_shutdown = FALSE;
 static gboolean force_reencoding = FALSE;
 static GList *all_raw_caps = NULL;
-static guint print_pos_srcid = 0;
 
 static gboolean buffering = FALSE;
 static gboolean is_live = FALSE;
@@ -423,32 +422,6 @@ _execute_set_restriction (GstValidateScenario * scenario,
 }
 
 static gboolean
-print_position (void)
-{
-  GstQuery *query;
-  gint64 position, duration;
-
-  gdouble rate = 1.0;
-  GstFormat format = GST_FORMAT_TIME;
-
-  gst_element_query_position (pipeline, format, &position);
-
-  format = GST_FORMAT_TIME;
-  gst_element_query_duration (pipeline, format, &duration);
-
-  query = gst_query_new_segment (GST_FORMAT_DEFAULT);
-  if (gst_element_query (pipeline, query))
-    gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
-  gst_query_unref (query);
-
-  g_print ("<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-      " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
-      rate);
-
-  return TRUE;
-}
-
-static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   GMainLoop *loop = data;
@@ -462,9 +435,6 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         gst_message_parse_state_changed (message, &old, &new, &pending);
 
         if (new == GST_STATE_PLAYING) {
-          if (print_pos_srcid == 0)
-            print_pos_srcid =
-                g_timeout_add (50, (GSourceFunc) print_position, NULL);
           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
               GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate-transcode.playing");
         }
@@ -520,10 +490,6 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         /* buffering... */
         if (!buffering) {
           gst_element_set_state (pipeline, GST_STATE_PAUSED);
-          if (print_pos_srcid) {
-            if (g_source_remove (print_pos_srcid))
-              print_pos_srcid = 0;
-          }
           buffering = TRUE;
         }
       }

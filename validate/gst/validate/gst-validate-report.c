@@ -215,15 +215,13 @@ gst_validate_report_load_issues (void)
       _("Query position reported a value outside of the current expected "
           "segment"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_NOT_ENDED,
-      _("All the actions were not executed before the program stoped"),
-        NULL);
+      _("All the actions were not executed before the program stoped"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_EXECUTION_ERROR,
-      _("The execution of an action did not properly happen"),
-        NULL);
+      _("The execution of an action did not properly happen"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_WARNING, _("We got a g_log warning"),
-        NULL);
+      NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_CRITICAL,
-          _("We got a g_log critical issue"), NULL);
+      _("We got a g_log critical issue"), NULL);
   REGISTER_VALIDATE_ISSUE (ISSUE, G_LOG_ISSUE, _("We got a g_log issue"), NULL);
 }
 
