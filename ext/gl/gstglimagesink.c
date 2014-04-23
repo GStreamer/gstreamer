@@ -243,23 +243,23 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
-          "When enabled, scaling will respect original aspect ratio", FALSE,
+          "When enabled, scaling will respect original aspect ratio", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PIXEL_ASPECT_RATIO,
       gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
-          "The pixel aspect ratio of the device", 0, 1, G_MAXINT, 1, 0, 1,
+          "The pixel aspect ratio of the device", 0, 1, G_MAXINT, 1, 1, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  gst_element_class_set_metadata (element_class, "OpenGL video sink",
-      "Sink/Video", "A videosink based on OpenGL",
-      "Julien Isorce <julien.isorce@gmail.com>");
 
   g_object_class_install_property (gobject_class, PROP_OTHER_CONTEXT,
       g_param_spec_object ("other-context",
           "External OpenGL context",
           "Give an external OpenGL context with which to share textures",
           GST_GL_TYPE_CONTEXT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_metadata (element_class, "OpenGL video sink",
+      "Sink/Video", "A videosink based on OpenGL",
+      "Julien Isorce <julien.isorce@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_glimage_sink_template));
@@ -288,8 +288,8 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->clientReshapeCallback = NULL;
   glimage_sink->clientDrawCallback = NULL;
   glimage_sink->client_data = NULL;
-  glimage_sink->keep_aspect_ratio = FALSE;
-  glimage_sink->par_n = 0;
+  glimage_sink->keep_aspect_ratio = TRUE;
+  glimage_sink->par_n = 1;
   glimage_sink->par_d = 1;
   glimage_sink->pool = NULL;
   glimage_sink->redisplay_texture = 0;
