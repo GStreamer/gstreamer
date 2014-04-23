@@ -537,7 +537,7 @@ static gboolean
 gst_gl_display_found (GstElement * element, GstGLDisplay * display)
 {
   if (display) {
-    GST_INFO_OBJECT (element, "already have a display (%p)", display);
+    GST_LOG_OBJECT (element, "already have a display (%p)", display);
     return TRUE;
   }
 
