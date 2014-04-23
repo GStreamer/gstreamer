@@ -566,7 +566,7 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
 }
 
 /* Called in the gl thread */
-void
+static void
 _init_upload (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
