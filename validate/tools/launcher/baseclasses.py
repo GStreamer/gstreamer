@@ -82,6 +82,17 @@ class Test(Loggable):
 
         return string
 
+    def get_extra_log_content(self, extralog):
+        if extralog not in self.extra_logfiles:
+            return ""
+
+        f = open(extralog, 'r+')
+        value = f.read()
+        f.close()
+
+        return value
+
+
     def get_classname(self):
         name = self.classname.split('.')[-1]
         classname = self.classname.replace('.%s' % name, '')
@@ -247,6 +258,7 @@ class GstValidateTest(Test):
         # segment / seek
         self._sent_eos_pos = None
 
+        self.validatelogs = None
         if scenario is None or scenario.name.lower() == "none":
             self.scenario = None
         else:
@@ -254,6 +266,11 @@ class GstValidateTest(Test):
 
     def get_subproc_env(self):
         subproc_env = os.environ.copy()
+
+        self.validatelogs = self.logfile + '.validate.logs'
+        utils.touch(self.validatelogs)
+        subproc_env["GST_VALIDATE_FILE"] = self.validatelogs
+        self.extra_logfiles.append(self.validatelogs)
 
         if 'GST_DEBUG' in os.environ:
             gstlogsfile = self.logfile + '.gstdebug'
@@ -270,10 +287,18 @@ class GstValidateTest(Test):
         if self.scenario is not None:
             self.add_arguments("--set-scenario", self.scenario.name)
 
+    def get_extra_log_content(self, extralog):
+        value = Test.get_extra_log_content(self, extralog)
+
+        if extralog == self.validatelogs:
+            value = re.sub("<position:.*/>\r", "", value)
+
+        return value
+
     def get_validate_criticals_errors(self):
         ret = "["
         errors = []
-        for l in open(self.logfile, 'r').readlines():
+        for l in open(self.validatelogs, 'r').readlines():
             if "critical : " in l:
                 if ret != "[":
                     ret += ", "
@@ -330,7 +355,7 @@ class GstValidateTest(Test):
 
         self.debug("Getting position")
         m = None
-        for l in reversed(open(self.logfile, 'r').readlines()):
+        for l in reversed(open(self.validatelogs, 'r').readlines()):
             l = l.lower()
             if "<position:" in l or "buffering" in l:
                 m = l
@@ -355,7 +380,7 @@ class GstValidateTest(Test):
         m = None
         rate = start = stop = None
 
-        for l in reversed(open(self.logfile, 'r').readlines()):
+        for l in reversed(open(self.validatelogs, 'r').readlines()):
             l = l.lower()
             if "seeking to: " in l:
                 m = l
@@ -383,7 +408,7 @@ class GstValidateTest(Test):
         m = None
         rate = start = stop = None
 
-        for l in reversed(open(self.logfile, 'r').readlines()):
+        for l in reversed(open(self.validatelogs, 'r').readlines()):
             l = l.lower()
             if "sending eos" in l:
                 m = l

@@ -132,13 +132,22 @@ class XunitReporter(Reporter):
         super(XunitReporter, self).final_report()
 
     def _get_captured(self):
+        captured = ""
         if self.out:
             self.out.seek(0)
             value = self.out.read()
             if value:
-                return '<system-out><![CDATA[%s]]></system-out>' % \
+                captured += '<system-out><![CDATA[%s' % \
                     escape_cdata(value)
-        return ''
+
+            for extralog in self._current_test.extra_logfiles:
+                captured += "\n\n===== %s =====\n\n" % escape_cdata(os.path.basename(extralog))
+                value = self._current_test.get_extra_log_content(extralog)
+                captured += escape_cdata(value)
+
+            captured += "]]></system-out>"
+
+        return captured
 
     def _quoteattr(self, attr):
         """Escape an XML attribute. Value can be unicode."""

@@ -147,6 +147,9 @@ def isuri(string):
 
     return False
 
+def touch(fname, times=None):
+    with open(fname, 'a'):
+        os.utime(fname, times)
 
 ##############################
 #    Encoding related utils  #
