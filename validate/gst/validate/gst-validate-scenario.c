@@ -335,6 +335,20 @@ _execute_play (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 static gboolean
+_execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GstBus *bus = gst_element_get_bus (scenario->pipeline);
+
+  gst_validate_printf (action, "Stoping pipeline");
+
+  gst_bus_post (bus,
+      gst_message_new_request_state (GST_OBJECT_CAST (scenario),
+        GST_STATE_NULL));
+
+  return TRUE;
+}
+
+static gboolean
 _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
 {
   gst_validate_printf (action, "sending EOS at %" GST_TIME_FORMAT,
@@ -1448,6 +1462,8 @@ init_scenarios (void)
       " (in second)", FALSE);
   gst_validate_add_action_type ("play", _execute_play, NULL,
       "Make it possible to set the pipeline state to PLAYING", FALSE);
+  gst_validate_add_action_type ("stop", _execute_stop, NULL,
+      "Make it possible to set the pipeline state to NULL", FALSE);
   gst_validate_add_action_type ("eos", _execute_eos, NULL,
       "Make it possible to send an EOS to the pipeline", FALSE);
   gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,

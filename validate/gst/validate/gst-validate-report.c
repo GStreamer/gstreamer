@@ -218,6 +218,8 @@ gst_validate_report_load_issues (void)
       _("All the actions were not executed before the program stoped"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_EXECUTION_ERROR,
       _("The execution of an action did not properly happen"), NULL);
+  REGISTER_VALIDATE_ISSUE (ISSUE, SCENARIO_ACTION_EXECUTION_ISSUE,
+      _("An issue happend during the execution of a scenario"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_WARNING, _("We got a g_log warning"),
       NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_CRITICAL,
