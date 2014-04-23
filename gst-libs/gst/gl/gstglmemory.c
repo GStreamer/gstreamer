@@ -527,7 +527,7 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
 
   GST_CAT_TRACE (GST_CAT_GL_MEMORY, "created texture %u", data.result);
 
-  mem = g_slice_alloc (sizeof (GstGLMemory));
+  mem = g_slice_new0 (GstGLMemory);
   _gl_mem_init (mem, allocator, parent, context, tex_type, width, height,
       stride, user_data, notify);
 
@@ -758,7 +758,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
 
     gst_gl_context_thread_add (src->context, _gl_mem_copy_thread, &copy_params);
 
-    dest = g_slice_alloc (sizeof (GstGLMemory));
+    dest = g_slice_new0 (GstGLMemory);
     _gl_mem_init (dest, src->mem.allocator, NULL, src->context, src->tex_type,
         src->width, src->height, src->stride, NULL, NULL);
 
@@ -887,7 +887,7 @@ gst_gl_memory_wrapped_texture (GstGLContext * context, guint texture_id,
   GstGLMemory *mem;
   guint n_gl_bytes = _gl_texture_type_n_bytes (tex_type);
 
-  mem = g_slice_alloc (sizeof (GstGLMemory));
+  mem = g_slice_new0 (GstGLMemory);
   _gl_mem_init (mem, _gl_allocator, NULL, context, tex_type, width, height,
       width * n_gl_bytes, NULL, NULL);
 
