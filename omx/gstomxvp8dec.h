@@ -27,7 +27,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_OMX_VP8_DEC \
-  (gst_omx_VP8_dec_get_type())
+  (gst_omx_vp8_dec_get_type())
 #define GST_OMX_VP8_DEC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OMX_VP8_DEC,GstOMXVP8Dec))
 #define GST_OMX_VP8_DEC_CLASS(klass) \
