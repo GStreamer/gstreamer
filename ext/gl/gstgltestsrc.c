@@ -440,7 +440,7 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   src = GST_GL_TEST_SRC (psrc);
 
-  if (G_UNLIKELY (!src->negotiated))
+  if (G_UNLIKELY (!src->negotiated || !src->context))
     goto not_negotiated;
 
   width = GST_VIDEO_INFO_WIDTH (&src->out_info);
@@ -692,6 +692,8 @@ context_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("%s", error->message),
         (NULL));
+    gst_object_unref (src->context);
+    src->context = NULL;
     return FALSE;
   }
 }
