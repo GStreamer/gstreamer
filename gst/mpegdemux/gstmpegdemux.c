@@ -3160,6 +3160,9 @@ gst_flups_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         ret = gst_flups_demux_parse_sys_head (demux);
         break;
       case ID_PS_END_CODE:
+        /* Skip final 4 bytes */
+        gst_adapter_flush (demux->adapter, 4);
+        ADAPTER_OFFSET_FLUSH (4);
         ret = GST_FLOW_OK;
         goto done;
       case ID_PS_PROGRAM_STREAM_MAP:
