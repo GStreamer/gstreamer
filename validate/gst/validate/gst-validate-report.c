@@ -25,6 +25,10 @@
 #  include "config.h"
 #endif
 
+#include <stdio.h>              /* fprintf */
+#include <glib/gstdio.h>
+#include <errno.h>
+
 #include <string.h>
 #include "gst-validate-i18n-lib.h"
 #include "gst-validate-internal.h"
@@ -32,10 +36,13 @@
 #include "gst-validate-report.h"
 #include "gst-validate-reporter.h"
 #include "gst-validate-monitor.h"
+#include "gst-validate-scenario.h"
 
 static GstClockTime _gst_validate_report_start_time = 0;
 static GstValidateDebugFlags _gst_validate_flags = 0;
 static GHashTable *_gst_validate_issues = NULL;
+
+static FILE *log_file;
 
 G_DEFINE_BOXED_TYPE (GstValidateReport, gst_validate_report,
     (GBoxedCopyFunc) gst_validate_report_ref,
@@ -223,7 +230,7 @@ gst_validate_report_load_issues (void)
 void
 gst_validate_report_init (void)
 {
-  const gchar *var;
+  const gchar *var, *file_env;
   const GDebugKey keys[] = {
     {"fatal_criticals", GST_VALIDATE_FATAL_CRITICALS},
     {"fatal_warnings", GST_VALIDATE_FATAL_WARNINGS},
@@ -240,6 +247,18 @@ gst_validate_report_init (void)
     }
 
     gst_validate_report_load_issues ();
+  }
+
+  file_env = g_getenv ("GST_VALIDATE_FILE");
+  if (file_env != NULL && *file_env != '\0') {
+      log_file = g_fopen (file_env, "w");
+      if (log_file == NULL) {
+        g_printerr ("Could not open log file '%s' for writing: %s\n", file_env,
+            g_strerror (errno));
+        log_file = stderr;
+    }
+  } else {
+    log_file = stdout;
   }
 }
 
@@ -352,16 +371,56 @@ gst_validate_report_ref (GstValidateReport * report)
 }
 
 void
+gst_validate_printf (gpointer source, const gchar * format, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, format);
+  gst_validate_printf_valist (source, format, var_args);
+  va_end (var_args);
+}
+
+void
+gst_validate_printf_valist (gpointer source,
+    const gchar * format, va_list args)
+{
+  GString *string = g_string_new (NULL);
+
+  if (source) {
+    if (*(GType *) source == GST_TYPE_VALIDATE_ACTION) {
+      GstValidateAction *action = (GstValidateAction*) source;
+
+      g_string_printf (string, "\n(Executing action: %s, number: %u at position: %"
+          GST_TIME_FORMAT " repeat: %i) | ", g_strcmp0 (action->name, "") == 0 ?
+          "Unnamed" : action->name,
+          action->action_number, GST_TIME_ARGS (action->playback_time),
+          action->repeat);
+    } else if (GST_IS_OBJECT (source)) {
+      g_string_printf (string, "%s:    ", GST_OBJECT_NAME (source));
+    } else if (G_IS_OBJECT (source)) {
+      g_string_printf (string, "<%s@%p>:    ", G_OBJECT_TYPE_NAME (source), source);
+    }
+  }
+
+  g_string_append_vprintf (string, format, args);
+
+  fprintf (log_file, "%s", string->str);
+  fflush (log_file);
+
+  g_string_free (string, TRUE);
+}
+
+void
 gst_validate_report_printf (GstValidateReport * report)
 {
-  g_print ("%10s : %s\n", gst_validate_report_level_get_name (report->level),
+  gst_validate_printf (NULL, "%10s : %s\n", gst_validate_report_level_get_name (report->level),
       report->issue->summary);
-  g_print ("%*s Detected on <%s> at %" GST_TIME_FORMAT "\n", 12, "",
+  gst_validate_printf (NULL, "%*s Detected on <%s> at %" GST_TIME_FORMAT "\n", 12, "",
       gst_validate_reporter_get_name (report->reporter),
       GST_TIME_ARGS (report->timestamp));
   if (report->message)
-    g_print ("%*s Details : %s\n", 12, "", report->message);
+    gst_validate_printf (NULL, "%*s Details : %s\n", 12, "", report->message);
   if (report->issue->description)
-    g_print ("%*s Description : %s\n", 12, "", report->issue->description);
-  g_print ("\n");
+    gst_validate_printf (NULL, "%*s Description : %s\n", 12, "", report->issue->description);
+  gst_validate_printf (NULL, "\n");
 }

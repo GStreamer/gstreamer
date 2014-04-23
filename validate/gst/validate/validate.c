@@ -36,11 +36,11 @@ gst_validate_init (void)
   GST_DEBUG_CATEGORY_INIT (gstvalidate_debug, "validate", 0,
       "Validation library");
 
-  /* init the report system (can be called multiple times) */
-  gst_validate_report_init ();
-
   /* Init the scenario system */
   init_scenarios ();
+
+  /* init the report system (can be called multiple times) */
+  gst_validate_report_init ();
 
   /* Ensure we load overrides before any use of a monitor */
   gst_validate_override_registry_preload ();

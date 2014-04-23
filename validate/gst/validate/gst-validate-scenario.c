@@ -94,7 +94,6 @@ typedef struct KeyFileGroupName
 } KeyFileGroupName;
 
 GType _gst_validate_action_type;
-static GType gst_validate_action_get_type (void);
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
 static GstValidateAction *gst_validate_action_new (void);
@@ -142,28 +141,6 @@ gst_validate_action_new (void)
   gst_validate_action_init (action);
 
   return action;
-}
-
-static void
-gst_validate_action_print (GstValidateAction * action, const gchar * format,
-    ...)
-{
-  va_list var_args;
-  GString *string = g_string_new (NULL);
-
-  g_string_printf (string, "(Executing action: %s, number: %u at position: %"
-      GST_TIME_FORMAT " repeat: %i) | ", g_strcmp0 (action->name, "") == 0 ?
-      "Unnamed" : action->name,
-      action->action_number, GST_TIME_ARGS (action->playback_time),
-      action->repeat);
-
-  va_start (var_args, format);
-  g_string_append_vprintf (string, format, var_args);
-  va_end (var_args);
-
-  g_print ("%s\n", string->str);
-
-  g_string_free (string, TRUE);
 }
 
 static gboolean
@@ -270,7 +247,7 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 
   gst_validate_action_get_clocktime (scenario, action, "stop", &stop);
 
-  gst_validate_action_print (action, "seeking to: %" GST_TIME_FORMAT
+  gst_validate_printf (action, "seeking to: %" GST_TIME_FORMAT
       " stop: %" GST_TIME_FORMAT " Rate %lf",
       GST_TIME_ARGS (start), GST_TIME_ARGS (stop), rate);
 
@@ -301,7 +278,7 @@ _pause_action_restore_playing (GstValidateScenario * scenario)
   GstElement *pipeline = scenario->pipeline;
 
 
-  g_print ("\n==== Back to playing ===\n");
+  gst_validate_printf (scenario, "\n==== Back to playing ===\n");
 
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -319,7 +296,7 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
   gdouble duration = 0;
 
   gst_structure_get_double (action->structure, "duration", &duration);
-  gst_validate_action_print (action, "pausing for %" GST_TIME_FORMAT,
+  gst_validate_printf (action, "pausing for %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration * GST_SECOND));
 
   GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
@@ -342,7 +319,7 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _execute_play (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  gst_validate_action_print (action, "Playing back");
+  gst_validate_printf (action, "Playing back");
 
   GST_DEBUG ("Playing back");
 
@@ -360,7 +337,7 @@ _execute_play (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  gst_validate_action_print (action, "sending EOS at %" GST_TIME_FORMAT,
+  gst_validate_printf (action, "sending EOS at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (action->playback_time));
 
   GST_DEBUG ("Sending eos to pipeline at %" GST_TIME_FORMAT,
@@ -532,7 +509,7 @@ _execute_switch_track (GstValidateScenario * scenario,
       }
     }
 
-    gst_validate_action_print (action, "Switching to track number: %i", index);
+    gst_validate_printf (action, "Switching to track number: %i", index);
     pad = find_nth_sink_pad (input_selector, index);
     g_object_set (input_selector, "active-pad", pad, NULL);
     gst_object_unref (pad);
@@ -699,7 +676,7 @@ stop_waiting (GstValidateScenario * scenario)
   priv->wait_id = 0;
   _add_get_position_source (scenario);
 
-  g_print ("\n==== Stop waiting ===\n");
+  gst_validate_printf (scenario, "\n==== Stop waiting ===\n");
 
   return G_SOURCE_REMOVE;
 }
@@ -716,7 +693,7 @@ _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
     return FALSE;
   }
 
-  gst_validate_action_print (action, "Waiting for %" GST_TIME_FORMAT "\n",
+  gst_validate_printf (action, "Waiting for %" GST_TIME_FORMAT "\n",
       GST_TIME_ARGS (duration));
   if (priv->get_pos_id) {
     g_source_remove (priv->get_pos_id);
@@ -1286,7 +1263,8 @@ gst_validate_scenario_factory_create (GstValidateRunner *
   g_signal_connect (bus, "message", (GCallback) message_cb, scenario);
   gst_object_unref (bus);
 
-  g_print ("\n=========================================\n"
+  gst_validate_printf (NULL,
+      "\n=========================================\n"
       "Running scenario %s on pipeline %s"
       "\n=========================================\n", scenario_name,
       GST_OBJECT_NAME (pipeline));

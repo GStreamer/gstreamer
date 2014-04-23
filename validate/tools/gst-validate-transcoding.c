@@ -290,7 +290,7 @@ _execute_request_key_unit (GstValidateScenario * scenario,
     goto fail;
   }
 
-  g_print ("Sendings a \"force key unit\" event %s\n", direction);
+  gst_validate_printf (action, "Sendings a \"force key unit\" event %s\n", direction);
 
   segment_query = gst_query_new_segment (GST_FORMAT_TIME);
   gst_pad_query (encoder_srcpad, segment_query);
@@ -409,12 +409,12 @@ _execute_set_restriction (GstValidateScenario * scenario,
   }
 
   if (profile_type != G_TYPE_NONE) {
-    g_print ("\n%s (num %u), setting caps to %s on profiles of type %s\n",
-        action->name, action->action_number, restriction_caps,
-        g_type_name (profile_type));
+    gst_validate_printf (action,
+        "setting caps to %s on profiles of type %s\n",
+        restriction_caps, g_type_name (profile_type));
   } else {
-    g_print ("\n%s (num %u), setting caps to %s on profile %s\n",
-        action->name, action->action_number, restriction_caps, profile_name);
+    gst_validate_printf (action, "setting caps to %s on profile %s\n",
+        restriction_caps, profile_name);
 
   }
 

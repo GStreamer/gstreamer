@@ -134,6 +134,6 @@ gst_validate_runner_printf (GstValidateRunner * runner)
     }
     count++;
   }
-  g_print ("Pipeline finished, issues found: %u\n", count);
+  gst_validate_printf (NULL, "Pipeline finished, issues found: %u\n", count);
   return ret;
 }

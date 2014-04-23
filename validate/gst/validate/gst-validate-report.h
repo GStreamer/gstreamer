@@ -196,6 +196,13 @@ const gchar *      gst_validate_report_level_get_name (GstValidateReportLevel le
 const gchar *      gst_validate_report_area_get_name (GstValidateReportArea area);
 const gchar *      gst_validate_report_subarea_get_name (GstValidateReportArea area, gint subarea);
 
+void               gst_validate_printf        (gpointer source,
+                                               const gchar      * format,
+                                               ...) G_GNUC_PRINTF (2, 3) G_GNUC_NO_INSTRUMENT;
+void               gst_validate_printf_valist (gpointer source,
+                                               const gchar      * format,
+                                               va_list            args) G_GNUC_NO_INSTRUMENT;
+
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_REPORT_H__ */
