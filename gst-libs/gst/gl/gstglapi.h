@@ -54,7 +54,7 @@
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
 #endif
-# if __APPLE__
+# ifdef __APPLE__
 #  include <OpenGLES/ES2/gl.h>
 #  include <OpenGLES/ES2/glext.h>
 # else
@@ -68,7 +68,7 @@
 
 /* OpenGL for desktop systems */
 #if GST_GL_HAVE_OPENGL
-# if __APPLE__
+# ifdef __APPLE__
 #  include <OpenGL/OpenGL.h>
 #  include <OpenGL/gl.h>
 #  include <OpenGL/glu.h>
