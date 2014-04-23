@@ -422,8 +422,10 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
     }
 
     if (!gst_gl_context_create (gl_sink->context, gl_sink->other_context,
-            &error))
+            &error)) {
+      g_object_unref (window);
       goto context_error;
+    }
 
     /* setup callbacks */
     gst_gl_window_set_resize_callback (window,
@@ -436,7 +438,7 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
         GST_GL_WINDOW_CB (gst_glimage_sink_on_close),
         gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
 
-    gst_object_unref (window);
+    g_object_unref (window);
   }
 
   if (!gl_sink->upload) {
@@ -451,12 +453,16 @@ upload_error:
   {
     GST_ELEMENT_ERROR (gl_sink, RESOURCE, NOT_FOUND, ("Failed to init upload"),
         (NULL));
+    g_object_unref (gl_sink->upload);
+    gl_sink->upload = NULL;
     return FALSE;
   }
 context_error:
   {
     GST_ELEMENT_ERROR (gl_sink, RESOURCE, NOT_FOUND, ("%s", error->message),
         (NULL));
+    g_object_unref (gl_sink->context);
+    gl_sink->context = NULL;
     return FALSE;
   }
 }
