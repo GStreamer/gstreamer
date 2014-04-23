@@ -3807,7 +3807,7 @@ timeout:
  *
  * When @flushing is %TRUE, abort a call to gst_rtsp_watch_wait_backlog()
  * and make sure gst_rtsp_watch_write_data() returns immediately with
- * #GST_RTSP_EINTR.
+ * #GST_RTSP_EINTR. And empty the queue.
  *
  * Since: 1.4
  */
@@ -3819,5 +3819,9 @@ gst_rtsp_watch_set_flushing (GstRTSPWatch * watch, gboolean flushing)
   g_mutex_lock (&watch->mutex);
   watch->flushing = flushing;
   g_cond_signal (&watch->queue_not_full);
+  if (flushing == TRUE) {
+    g_queue_foreach (watch->messages, (GFunc) gst_rtsp_rec_free, NULL);
+    g_queue_clear (watch->messages);
+  }
   g_mutex_unlock (&watch->mutex);
 }
