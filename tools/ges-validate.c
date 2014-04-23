@@ -94,12 +94,37 @@ ges_validate_clean (GstPipeline * pipeline)
 }
 
 #else
+static gboolean
+_print_position (GstElement * pipeline)
+{
+  gint64 position, duration;
+
+  if (pipeline) {
+    gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+        &position);
+    gst_element_query_duration (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+        &duration);
+
+    g_print ("<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
+        "/>\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
+  }
+
+  return TRUE;
+}
+
 gboolean
 ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
 {
-  if (scenario)
+  if (scenario) {
     GST_WARNING ("Trying to run scenario %s, but gst-validate not supported",
         scenario);
+
+    return FALSE;
+  }
+
+  g_object_set_data (G_OBJECT (pipeline), "pposition-id",
+      GUINT_TO_POINTER (g_timeout_add (200,
+              (GSourceFunc) _print_position, pipeline)));
 
   return TRUE;
 }
@@ -107,7 +132,11 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
 gint
 ges_validate_clean (GstPipeline * pipeline)
 {
+  g_source_remove (GPOINTER_TO_INT (g_object_get_data (G_OBJECT (pipeline),
+              "pposition-id")));
+
   gst_object_unref (pipeline);
+
   return 0;
 }
 

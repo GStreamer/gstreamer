@@ -506,24 +506,6 @@ print_pattern_list (void)
   print_enum (GES_VIDEO_TEST_PATTERN_TYPE);
 }
 
-static gboolean
-_print_position (void)
-{
-  gint64 position, duration;
-
-  if (pipeline) {
-    gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
-        &position);
-    gst_element_query_duration (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
-        &duration);
-
-    g_print ("<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-        "/>\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
-  }
-
-  return TRUE;
-}
-
 static GstEncodingProfile *
 _parse_encoding_profile (const gchar * format)
 {
@@ -833,7 +815,6 @@ main (int argc, gchar ** argv)
     g_error ("Failed to start the pipeline\n");
     return 1;
   }
-  g_timeout_add (100, (GSourceFunc) _print_position, NULL);
   g_main_loop_run (mainloop);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
