@@ -213,8 +213,6 @@ gst_gl_window_cocoa_draw (GstGLWindow * window, guint width, guint height)
   GSRegisterCurrentThread();
 
   app_thread_performer = [[AppThreadPerformer alloc] init:window_cocoa];
-  [app_thread_performer performSelector:@selector(updateWindow) 
-      onThread:priv->thread withObject:nil waitUntilDone:YES];
 
   /* useful when set_window_handle is called before
    * the internal NSWindow */
@@ -257,6 +255,9 @@ gst_gl_window_cocoa_draw (GstGLWindow * window, guint width, guint height)
     /*[priv->internal_win_id setViewsNeedDisplay:YES]; */
     priv->visible = TRUE;
   }
+
+  [app_thread_performer performSelector:@selector(updateWindow)
+      onThread:priv->thread withObject:nil waitUntilDone:YES];
 
   [pool release];
 }
