@@ -30,6 +30,9 @@
 
 #include <gst/gst.h>
 #include <gst/validate/validate.h>
+#include <gst/validate/media-descriptor-writer.h>
+#include <gst/validate/media-descriptor-parser.h>
+#include <gst/validate/media-descriptor.h>
 #include <gst/pbutils/encoding-profile.h>
 
 /* move this into some utils file */
@@ -164,14 +167,15 @@ int
 main (int argc, gchar ** argv)
 {
   GOptionContext *ctx;
-  GstValidateMediaInfo mi;
 
   GError *err = NULL;
+  guint ret = 0;
   gchar *output_file = NULL;
   gchar *expected_file = NULL;
   gchar *output = NULL;
-  gsize outputlength;
-  gboolean ret, discover_only;
+  GstMediaDescriptorWriter *writer;
+  GstValidateRunner *runner;
+  GstMediaDescriptorParser * reference = NULL;
 
   GOptionEntry options[] = {
     {"output-file", 'o', 0, G_OPTION_ARG_FILENAME,
@@ -180,9 +184,6 @@ main (int argc, gchar ** argv)
     {"expected-results", 'e', 0, G_OPTION_ARG_FILENAME,
           &expected_file, "Path to file containing the expected results "
           "(or the last results found) for comparison with new results",
-        NULL},
-    {"discover-only", 'e', 0, G_OPTION_ARG_NONE,
-          &discover_only, "Only discover files, no other playback tests",
         NULL},
     {NULL}
   };
@@ -215,50 +216,46 @@ main (int argc, gchar ** argv)
   }
   g_option_context_free (ctx);
 
-  gst_validate_media_info_init (&mi);
-  ret = gst_validate_media_info_inspect_uri (&mi, argv[1], discover_only, NULL);
-  output = gst_validate_media_info_to_string (&mi, &outputlength);
-
-  if (output_file)
-    gst_validate_media_info_save (&mi, output_file, NULL);
-
-  if (expected_file) {
-    GstValidateMediaInfo *expected_mi;
-    GError *err = NULL;
-
-    ret = TRUE;
-    if (!g_path_is_absolute (expected_file)) {
-      gchar *cdir = g_get_current_dir ();
-      gchar *absolute = g_build_filename (cdir, expected_file, NULL);
-
-      g_free (expected_file);
-      g_free (cdir);
-
-      expected_file = absolute;
-    }
-
-    expected_mi = gst_validate_media_info_load (expected_file, &err);
-    if (err) {
-        g_print ("Error loading %s: %s", expected_file, err->message);
-        ret = FALSE;
-    } else if (expected_mi) {
-      if (!gst_validate_media_info_compare (expected_mi, &mi)) {
-        g_print ("Expected results didn't match\n");
-        ret = FALSE;
-      }
-      gst_validate_media_info_free (expected_mi);
-    } else {
-      g_print ("Failed to load expected results file: %s\n", err->message);
-      g_error_free (err);
-      ret = FALSE;
-    }
+  runner = gst_validate_runner_new ();
+  writer = gst_media_descriptor_writer_new_discover (runner, argv[1], NULL);
+  if (writer == NULL) {
+    g_print ("Could not discover file: %s", argv[1]);
+    return 1;
   }
 
-  gst_validate_media_info_clear (&mi);
+  if (output_file)
+    gst_media_descriptor_writer_write (writer, output_file);
 
-  g_print ("Media info:\n%s\n", output);
-  g_free (output);
-  if (!ret)
-    return 1;
-  return 0;
+  if (expected_file) {
+    reference = gst_media_descriptor_parser_new (runner,
+        expected_file, NULL);
+
+    if (reference == NULL) {
+      g_print ("Could not parse file: %s", expected_file);
+      gst_object_unref (writer);
+
+      return 1;
+    }
+
+    gst_media_descriptors_compare (GST_MEDIA_DESCRIPTOR (reference),
+        GST_MEDIA_DESCRIPTOR (writer));
+  } else {
+    output = gst_media_descriptor_writer_serialize (writer);
+    g_print ("Media info:\n%s\n", output);
+    g_free (output);
+  }
+
+  ret = gst_validate_runner_printf (runner);
+  if (ret && expected_file) {
+    output = gst_media_descriptor_writer_serialize (writer);
+    g_print ("Media info:\n%s\n", output);
+    g_free (output);
+  }
+
+  if (reference)
+    gst_object_unref (reference);
+  gst_object_unref (writer);
+  gst_object_unref (runner);
+
+  return ret;
 }

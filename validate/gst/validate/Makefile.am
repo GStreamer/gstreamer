@@ -11,8 +11,11 @@ libgstvalidate_@GST_API_VERSION@_la_SOURCES = \
 	gst-validate-override.c \
 	gst-validate-utils.c \
 	gst-validate-override-registry.c \
+	media-descriptor.c \
+	media-descriptor-writer.c \
+	media-descriptor-parser.c \
 	gst-validate-media-info.c \
-        validate.c
+    validate.c
 
 libgstvalidate_@GST_API_VERSION@include_HEADERS = \
     validate.h \
@@ -31,6 +34,9 @@ libgstvalidate_@GST_API_VERSION@include_HEADERS = \
 	gst-validate-runner.h \
 	gst-validate-scenario.h \
 	gst-validate-utils.h \
+	media-descriptor.h \
+	media-descriptor-writer.h \
+	media-descriptor-parser.h \
 	gst-validate-media-info.h
 
 

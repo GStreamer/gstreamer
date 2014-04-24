@@ -202,6 +202,8 @@ gst_validate_report_load_issues (void)
       _("an error occured while starting playback of the test file"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_PLAYBACK_ERROR,
       _("an error during playback of the file"), NULL);
+  REGISTER_VALIDATE_ISSUE (WARNING, FILE_NO_STREAM_ID,
+      _("the discoverer found a stream that had no stream ID"), NULL);
 
   REGISTER_VALIDATE_ISSUE (CRITICAL, ALLOCATION_FAILURE,
       _("a memory allocation failed during Validate run"), NULL);

@@ -69,8 +69,9 @@ _free_priv (GstValidateReporterPrivate * priv)
 static GstValidateReporterPrivate *
 gst_validate_reporter_get_priv (GstValidateReporter * reporter)
 {
-  GstValidateReporterPrivate *priv =
-      g_object_get_data (G_OBJECT (reporter), REPORTER_PRIVATE);
+  GstValidateReporterPrivate *priv;
+
+  priv = g_object_get_data (G_OBJECT (reporter), REPORTER_PRIVATE);
 
   if (priv == NULL) {
     priv = g_slice_new0 (GstValidateReporterPrivate);
