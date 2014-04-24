@@ -79,12 +79,7 @@ void gst_gl_window_x11_close (GstGLWindow * window);
 static void
 gst_gl_window_x11_finalize (GObject * object)
 {
-  GstGLWindowX11 *window_x11;
-
   g_return_if_fail (GST_GL_IS_WINDOW_X11 (object));
-
-  window_x11 = GST_GL_WINDOW_X11 (object);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
