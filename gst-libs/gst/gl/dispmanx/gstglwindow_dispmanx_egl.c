@@ -263,18 +263,20 @@ window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height)
     dispman_update = vc_dispmanx_update_start (0);
 
     if (window_egl->native.element) {
-      vc_dispmanx_element_remove (dispman_update, window_egl->native.element);
+      vc_dispmanx_element_change_attributes (dispman_update,
+          window_egl->native.element, 0x00000110, 0, 0, &dst_rect, &src_rect, 0,
+          0);
+    } else {
+      window_egl->native.element = vc_dispmanx_element_add (dispman_update,
+          window_egl->display, 0, &dst_rect, 0, &src_rect,
+          DISPMANX_PROTECTION_NONE, &alpha, 0, 0);
     }
-
-    window_egl->native.element = vc_dispmanx_element_add (dispman_update,
-        window_egl->display, 0, &dst_rect, 0, &src_rect,
-        DISPMANX_PROTECTION_NONE, &alpha, 0, 0);
 
     vc_dispmanx_update_submit_sync (dispman_update);
 
     if (GST_GL_WINDOW (window_egl)->resize)
-      GST_GL_WINDOW (window_egl)->
-          resize (GST_GL_WINDOW (window_egl)->resize_data, width, height);
+      GST_GL_WINDOW (window_egl)->resize (GST_GL_WINDOW (window_egl)->
+          resize_data, width, height);
   }
 
   window_egl->native.width = width;
