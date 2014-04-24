@@ -367,43 +367,36 @@ gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
 
   if (g_main_loop_is_running (window_x11->loop)
       && window_x11->allow_extra_expose_events) {
-    XEvent event;
-    XWindowAttributes attr;
+    if (window->draw) {
+      GstGLContext *context = gst_gl_window_get_context (window);
+      GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
-    XGetWindowAttributes (window_x11->device, window_x11->internal_win_id,
-        &attr);
+      window->draw (window->draw_data);
+      context_class->swap_buffers (context);
 
-    event.xexpose.type = Expose;
-    event.xexpose.send_event = TRUE;
-    event.xexpose.display = window_x11->device;
-    event.xexpose.window = window_x11->internal_win_id;
-    event.xexpose.x = attr.x;
-    event.xexpose.y = attr.y;
-    event.xexpose.width = attr.width;
-    event.xexpose.height = attr.height;
-    event.xexpose.count = 0;
-
-    XSendEvent (window_x11->device, window_x11->internal_win_id, FALSE,
-        ExposureMask, &event);
-    XSync (window_x11->device, FALSE);
+      gst_object_unref (context);
+    }
   }
 }
 
-/* Not called by the gl thread */
-void
-gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height)
+struct draw
 {
-  GstGLWindowX11 *window_x11;
+  GstGLWindowX11 *window;
+  guint width, height;
+};
 
-  window_x11 = GST_GL_WINDOW_X11 (window);
+static void
+draw_cb (gpointer data)
+{
+  struct draw *draw_data = data;
+  GstGLWindowX11 *window_x11 = draw_data->window;
+  guint width = draw_data->width;
+  guint height = draw_data->height;
 
   if (g_main_loop_is_running (window_x11->loop)) {
-    XEvent event;
     XWindowAttributes attr;
 
-    g_mutex_lock (&window_x11->disp_send_lock);
-
-    XGetWindowAttributes (window_x11->disp_send, window_x11->internal_win_id,
+    XGetWindowAttributes (window_x11->device, window_x11->internal_win_id,
         &attr);
 
     if (!window_x11->visible) {
@@ -411,24 +404,24 @@ gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height)
       if (!window_x11->parent_win) {
         attr.width = width;
         attr.height = height;
-        XResizeWindow (window_x11->disp_send, window_x11->internal_win_id,
+        XResizeWindow (window_x11->device, window_x11->internal_win_id,
             attr.width, attr.height);
-        XSync (window_x11->disp_send, FALSE);
+        XSync (window_x11->device, FALSE);
       }
 
-      XMapWindow (window_x11->disp_send, window_x11->internal_win_id);
+      XMapWindow (window_x11->device, window_x11->internal_win_id);
       window_x11->visible = TRUE;
     }
 
     if (window_x11->parent_win) {
       XWindowAttributes attr_parent;
-      XGetWindowAttributes (window_x11->disp_send, window_x11->parent_win,
+      XGetWindowAttributes (window_x11->device, window_x11->parent_win,
           &attr_parent);
 
       if (attr.width != attr_parent.width || attr.height != attr_parent.height) {
-        XMoveResizeWindow (window_x11->disp_send, window_x11->internal_win_id,
+        XMoveResizeWindow (window_x11->device, window_x11->internal_win_id,
             0, 0, attr_parent.width, attr_parent.height);
-        XSync (window_x11->disp_send, FALSE);
+        XSync (window_x11->device, FALSE);
 
         attr.width = attr_parent.width;
         attr.height = attr_parent.height;
@@ -438,22 +431,22 @@ gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height)
       }
     }
 
-    event.xexpose.type = Expose;
-    event.xexpose.send_event = TRUE;
-    event.xexpose.display = window_x11->disp_send;
-    event.xexpose.window = window_x11->internal_win_id;
-    event.xexpose.x = attr.x;
-    event.xexpose.y = attr.y;
-    event.xexpose.width = attr.width;
-    event.xexpose.height = attr.height;
-    event.xexpose.count = 0;
-
-    XSendEvent (window_x11->disp_send, window_x11->internal_win_id, FALSE,
-        ExposureMask, &event);
-    XSync (window_x11->disp_send, FALSE);
-
-    g_mutex_unlock (&window_x11->disp_send_lock);
+    gst_gl_window_x11_draw_unlocked (GST_GL_WINDOW (window_x11), width, height);
   }
+}
+
+/* Not called by the gl thread */
+void
+gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height)
+{
+  struct draw draw_data;
+
+  draw_data.window = GST_GL_WINDOW_X11 (window);
+  draw_data.width = width;
+  draw_data.height = height;
+
+  /* Call from the GL thread */
+  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, &draw_data);
 }
 
 void
@@ -568,6 +561,7 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
         if (!event.xexpose.send_event)
           break;
 
+        /* We need to redraw on expose */
         if (window->draw) {
           context = gst_gl_window_get_context (window);
           context_class = GST_GL_CONTEXT_GET_CLASS (context);
@@ -586,7 +580,6 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
       default:
         GST_DEBUG ("unknown XEvent type: %u", event.type);
         break;
-
     }                           // switch
   }                             // while running
 
