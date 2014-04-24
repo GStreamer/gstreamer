@@ -248,7 +248,7 @@ window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height)
     dst.w = window_egl->dp_width;
     dst.h = window_egl->dp_height;
     dst.x = dst.y = 0;
-    gst_video_sink_center_rect (src, dst, &res, TRUE);
+    gst_video_sink_center_rect (src, dst, &res, FALSE);
 
     dst_rect.x = res.x;
     dst_rect.y = res.y;
