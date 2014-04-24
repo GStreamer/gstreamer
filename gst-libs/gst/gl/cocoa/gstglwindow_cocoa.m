@@ -81,8 +81,8 @@ static void gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 struct _GstGLWindowCocoaPrivate
 {
   GstGLNSWindow *internal_win_id;
+  NSView *external_view;
   gboolean visible;
-  NSWindow *parent;
   NSThread *thread;
   gboolean running;
 };
@@ -179,11 +179,11 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
     }
 
     if (handle) {
-      priv->parent = (NSWindow*) handle;
+      priv->external_view = (NSView *) handle;
       priv->visible = TRUE;
     } else {
       /* bring back our internal window */
-      priv->parent = priv->internal_win_id;
+      priv->external_view = 0;
       priv->visible = FALSE;
     }
    
@@ -193,7 +193,7 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
     [pool release];
   } else {
     /* not internal window yet so delay it to the next drawing */
-    priv->parent = (NSWindow*) handle;
+    priv->external_view = (NSView*) handle;
     priv->visible = FALSE;
   }
 }
@@ -216,12 +216,12 @@ gst_gl_window_cocoa_draw (GstGLWindow * window, guint width, guint height)
 
   /* useful when set_window_handle is called before
    * the internal NSWindow */
-  if (priv->parent && !priv->visible) {
-    gst_gl_window_cocoa_set_window_handle (window, (guintptr) priv->parent);
+  if (priv->external_view && !priv->visible) {
+    gst_gl_window_cocoa_set_window_handle (window, (guintptr) priv->external_view);
     priv->visible = TRUE;
   }
 
-  if (!priv->parent && !priv->visible) {
+  if (!priv->external_view && !priv->visible) {
     static gint x = 0;
     static gint y = 0;
 
@@ -383,9 +383,15 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 
   [self orderOut:m_cocoa->priv->internal_win_id];
 
-  if (m_cocoa->priv->parent) {
-    NSWindow *window = m_cocoa->priv->parent;
-    [window setContentView: [m_cocoa->priv->internal_win_id contentView]];
+  if (m_cocoa->priv->external_view) {
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSView *view = [m_cocoa->priv->internal_win_id contentView];
+
+    [m_cocoa->priv->external_view addSubview: view];
+    [view setFrame: [m_cocoa->priv->external_view bounds]];
+    [view setAutoresizingMask: NSViewWidthSizable|NSViewHeightSizable];
+
+    [pool release];
   }
 
   return self;
@@ -581,11 +587,14 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 
 - (void) setWindow {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  NSWindow *window = m_cocoa->priv->parent;
+  NSView *view = [m_cocoa->priv->internal_win_id contentView];
 
   [m_cocoa->priv->internal_win_id orderOut:m_cocoa->priv->internal_win_id];
 
-  [window setContentView: [m_cocoa->priv->internal_win_id contentView]];
+  [m_cocoa->priv->external_view addSubview: view];
+
+  [view setFrame: [m_cocoa->priv->external_view bounds]];
+  [view setAutoresizingMask: NSViewWidthSizable|NSViewHeightSizable];
 
   [pool release];
 }
