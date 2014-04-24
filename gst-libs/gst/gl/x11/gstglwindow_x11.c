@@ -85,8 +85,6 @@ gst_gl_window_x11_finalize (GObject * object)
 
   window_x11 = GST_GL_WINDOW_X11 (object);
 
-  g_mutex_clear (&window_x11->disp_send_lock);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -120,8 +118,6 @@ static void
 gst_gl_window_x11_init (GstGLWindowX11 * window)
 {
   window->priv = GST_GL_WINDOW_X11_GET_PRIVATE (window);
-
-  g_mutex_init (&window->disp_send_lock);
 }
 
 /* Must be called in the gl thread */
@@ -159,13 +155,6 @@ gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
   XSynchronize (window_x11->device, FALSE);
 
   GST_LOG ("gl device id: %ld", (gulong) window_x11->device);
-
-//  window_x11->disp_send = XOpenDisplay (DisplayString (display_x11->display));
-  window_x11->disp_send = XOpenDisplay (display_x11->name);
-
-  XSynchronize (window_x11->disp_send, FALSE);
-
-  GST_LOG ("gl display sender: %ld", (gulong) window_x11->disp_send);
 
   window_x11->screen = DefaultScreenOfDisplay (window_x11->device);
   window_x11->screen_num = DefaultScreen (window_x11->device);
@@ -276,8 +265,6 @@ gst_gl_window_x11_close (GstGLWindow * window)
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
   XEvent event;
 
-  g_mutex_lock (&window_x11->disp_send_lock);
-
   if (window_x11->device) {
     if (window_x11->internal_win_id)
       XUnmapWindow (window_x11->device, window_x11->internal_win_id);
@@ -296,9 +283,6 @@ gst_gl_window_x11_close (GstGLWindow * window)
 
     XCloseDisplay (window_x11->device);
     GST_DEBUG ("display receiver closed");
-
-    XCloseDisplay (window_x11->disp_send);
-    GST_DEBUG ("display sender closed");
   }
 
   g_source_destroy (window_x11->x11_source);
@@ -310,8 +294,23 @@ gst_gl_window_x11_close (GstGLWindow * window)
   window_x11->main_context = NULL;
 
   window_x11->running = FALSE;
+}
 
-  g_mutex_unlock (&window_x11->disp_send_lock);
+static void
+set_window_handle_cb (gpointer data)
+{
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (data);
+  XWindowAttributes attr;
+
+  XGetWindowAttributes (window_x11->device, window_x11->parent_win, &attr);
+
+  XResizeWindow (window_x11->device, window_x11->internal_win_id,
+      attr.width, attr.height);
+
+  XReparentWindow (window_x11->device, window_x11->internal_win_id,
+      window_x11->parent_win, 0, 0);
+
+  XSync (window_x11->device, FALSE);
 }
 
 /* Not called by the gl thread */
@@ -319,7 +318,6 @@ void
 gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
 {
   GstGLWindowX11 *window_x11;
-  XWindowAttributes attr;
 
   window_x11 = GST_GL_WINDOW_X11 (window);
 
@@ -332,17 +330,8 @@ gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
   if (window_x11->loop && g_main_loop_is_running (window_x11->loop)) {
     GST_LOG ("set parent window id: %" G_GUINTPTR_FORMAT, id);
 
-    g_mutex_lock (&window_x11->disp_send_lock);
-    XGetWindowAttributes (window_x11->disp_send, window_x11->parent_win, &attr);
-
-    XResizeWindow (window_x11->disp_send, window_x11->internal_win_id,
-        attr.width, attr.height);
-
-    XReparentWindow (window_x11->disp_send, window_x11->internal_win_id,
-        window_x11->parent_win, 0, 0);
-
-    XSync (window_x11->disp_send, FALSE);
-    g_mutex_unlock (&window_x11->disp_send_lock);
+    gst_gl_window_send_message (window, (GstGLWindowCB) set_window_handle_cb,
+        window_x11);
   }
 }
 
