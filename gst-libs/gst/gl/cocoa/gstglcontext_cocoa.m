@@ -261,6 +261,8 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
 
   context_cocoa->priv->gl_context = glContext;
 
+  [glContext setView:glView];
+
   [glView setOpenGLContext:glContext];
 
 #else
