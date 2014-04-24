@@ -238,6 +238,8 @@ window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height)
     VC_RECT_T src_rect;
     GstVideoRectangle src, dst, res;
     DISPMANX_UPDATE_HANDLE_T dispman_update;
+    VC_DISPMANX_ALPHA_T alpha =
+        { DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS, 255, 0 };
 
     /* Center width*height frame inside dp_width*dp_height */
     src.w = width;
@@ -266,13 +268,13 @@ window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height)
 
     window_egl->native.element = vc_dispmanx_element_add (dispman_update,
         window_egl->display, 0, &dst_rect, 0, &src_rect,
-        DISPMANX_PROTECTION_NONE, 0, 0, 0);
+        DISPMANX_PROTECTION_NONE, &alpha, 0, 0);
 
     vc_dispmanx_update_submit_sync (dispman_update);
 
     if (GST_GL_WINDOW (window_egl)->resize)
-      GST_GL_WINDOW (window_egl)->resize (GST_GL_WINDOW (window_egl)->
-          resize_data, width, height);
+      GST_GL_WINDOW (window_egl)->
+          resize (GST_GL_WINDOW (window_egl)->resize_data, width, height);
   }
 
   window_egl->native.width = width;
