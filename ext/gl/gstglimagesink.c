@@ -998,6 +998,7 @@ gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
     g_error_free (error);
     error = NULL;
     gst_gl_context_clear_shader (gl_sink->context);
+    gst_glimage_sink_cleanup_glthread (gl_sink);
   } else {
     gl_sink->redisplay_attr_position_loc =
         gst_gl_shader_get_attribute_location (gl_sink->redisplay_shader,
@@ -1214,9 +1215,15 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
 
 #if GST_GL_HAVE_GLES2
     if (USING_GLES2 (gl_sink->context)) {
-      if (!gl_sink->redisplay_shader) {
+      if (G_UNLIKELY (!gl_sink->redisplay_shader)) {
         gst_gl_window_send_message (window,
             GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay), gl_sink);
+
+        /* if the shader is still null it means it failed to be useable */
+        if (G_UNLIKELY (!gl_sink->redisplay_shader)) {
+          gst_object_unref (window);
+          return FALSE;
+        }
       }
     }
 #endif
