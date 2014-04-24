@@ -1,6 +1,6 @@
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst
+libdir=${pcfiledir}/../gst-libs/gst/gl
 includedir=${pcfiledir}/../gst-libs
 pluginsdir=${pcfiledir}/..
 
@@ -9,7 +9,7 @@ Description: Streaming media framework, OpenGL plugins libraries, uninstalled
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
 
-Libs: -L${libdir}/gl
+Libs: -L${libdir} ${libdir}/libgstgl-@GST_API_VERSION@.la
 Cflags: -I${includedir} -I@srcdir@/..
 
 libraries=gl
