@@ -1124,6 +1124,8 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
         0.0f, 1.0f,
         1.0f, 1.0f
       };
+
+      gl->ClearColor (0.0, 0.0, 0.0, 0.0);
       gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       gl->MatrixMode (GL_PROJECTION);
@@ -1159,6 +1161,7 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
 
       GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
+      gl->ClearColor (0.0, 0.0, 0.0, 0.0);
       gl->Clear (GL_COLOR_BUFFER_BIT);
 
       gst_gl_shader_use (gl_sink->redisplay_shader);
