@@ -68,10 +68,6 @@ struct _GstGLWindowX11
   XVisualInfo  *visual_info;
   Window        parent_win;
 
-  /* We use a specific connection to send events */
-  Display      *disp_send;
-  GMutex        disp_send_lock;
-
   /* X window */
   Window        internal_win_id;
 
