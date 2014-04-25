@@ -10456,7 +10456,7 @@ static GstCaps *
 qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     guint32 fourcc, const guint8 * stsd_data, gchar ** codec_name)
 {
-  GstCaps *caps;
+  GstCaps *caps = NULL;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
 
   switch (fourcc) {
