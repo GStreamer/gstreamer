@@ -82,7 +82,7 @@ GST_START_TEST (test_basic)
 
     /* copy the memory */
     mem2 = gst_memory_copy (mem, 0, -1);
-    fail_if (mem == NULL);
+    fail_if (mem2 == NULL);
     gl_mem2 = (GstGLMemory *) mem2;
 
     /* test params */
