@@ -66,17 +66,31 @@ struct _GstVaapiParserInfoH264 {
     union {
         GstH264SPS      sps;
         GstH264PPS      pps;
+        GArray         *sei;
         GstH264SliceHdr slice_hdr;
     }                   data;
     guint               state;
 };
 
+static void
+gst_vaapi_parser_info_h264_finalize(GstVaapiParserInfoH264 *pi)
+{
+    switch (pi->nalu.type) {
+    case GST_H264_NAL_SEI:
+        if (pi->data.sei) {
+            g_array_unref(pi->data.sei);
+            pi->data.sei = NULL;
+        }
+        break;
+    }
+}
+
 static inline const GstVaapiMiniObjectClass *
 gst_vaapi_parser_info_h264_class(void)
 {
     static const GstVaapiMiniObjectClass GstVaapiParserInfoH264Class = {
-        sizeof(GstVaapiParserInfoH264),
-        NULL
+        .size = sizeof(GstVaapiParserInfoH264),
+        .finalize = (GDestroyNotify)gst_vaapi_parser_info_h264_finalize
     };
     return &GstVaapiParserInfoH264Class;
 }
@@ -1057,19 +1071,16 @@ parse_sei(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiParserInfoH264 * const pi = unit->parsed_info;
-    GArray *sei_messages = NULL;
+    GArray ** const sei_ptr = &pi->data.sei;
     GstH264ParserResult result;
 
     GST_DEBUG("parse SEI");
 
-    result = gst_h264_parser_parse_sei(priv->parser, &pi->nalu, &sei_messages);
+    result = gst_h264_parser_parse_sei(priv->parser, &pi->nalu, sei_ptr);
     if (result != GST_H264_PARSER_OK) {
         GST_WARNING("failed to parse SEI messages");
-        g_array_unref(sei_messages);
         return get_status(result);
     }
-
-    g_array_unref(sei_messages);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
