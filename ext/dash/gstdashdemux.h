@@ -81,6 +81,17 @@ struct _GstDashDemuxStream
   GstUriDownloader *downloader;
 
   GstDownloadRate dnl_rate;
+
+  /* download tooling */
+  GstElement *src;
+  GstPad *src_srcpad;
+  GMutex fragment_download_lock;
+  GCond fragment_download_cond;
+  GstMediaFragmentInfo current_fragment;
+  gboolean starting_fragment;
+  gint64 download_start_time;
+  gint64 download_total_time;
+  gint64 download_total_bytes;
 };
 
 /**
@@ -90,7 +101,7 @@ struct _GstDashDemuxStream
  */
 struct _GstDashDemux
 {
-  GstElement parent;
+  GstBin parent;
   GstPad *sinkpad;
 
   gboolean have_group_id;
@@ -123,7 +134,7 @@ struct _GstDashDemux
 
 struct _GstDashDemuxClass
 {
-  GstElementClass parent_class;
+  GstBinClass parent_class;
 };
 
 GType gst_dash_demux_get_type (void);
