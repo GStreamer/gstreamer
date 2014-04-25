@@ -675,6 +675,9 @@ gst_hls_demux_pause_tasks (GstHLSDemux * demux)
     demux->stop_stream_task = TRUE;
     g_cond_signal (&demux->download_cond);
     g_mutex_unlock (&demux->download_lock);
+    g_mutex_lock (&demux->fragment_download_lock);
+    g_cond_signal (&demux->fragment_download_cond);
+    g_mutex_unlock (&demux->fragment_download_lock);
     gst_task_pause (demux->stream_task);
   }
 }
@@ -1839,8 +1842,8 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   /* wait for the fragment to be completely downloaded */
   g_cond_wait (&demux->fragment_download_cond, &demux->fragment_download_lock);
 
-  g_mutex_unlock (&demux->fragment_download_lock);
   gst_element_set_state (demux->src, GST_STATE_READY);
+  g_mutex_unlock (&demux->fragment_download_lock);
 
   return TRUE;
 }
