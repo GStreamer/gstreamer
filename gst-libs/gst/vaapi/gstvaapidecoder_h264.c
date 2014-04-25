@@ -851,7 +851,7 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     }
 
     chroma_type = gst_vaapi_utils_h264_get_chroma_type(sps->chroma_format_idc);
-    if (!chroma_type || chroma_type != GST_VAAPI_CHROMA_TYPE_YUV420) {
+    if (!chroma_type) {
         GST_ERROR("unsupported chroma_format_idc %u", sps->chroma_format_idc);
         return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
     }
