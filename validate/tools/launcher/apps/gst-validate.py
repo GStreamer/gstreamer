@@ -505,5 +505,6 @@ class GstValidateManager(TestsManager, Loggable):
 
     def set_settings(self, options, args, reporter):
         TestsManager.set_settings(self, options, args, reporter)
-        if options.wanted_tests:
+        if options.wanted_tests and not [d for d in options.wanted_tests
+                                         if "defaults_only" in d]:
             self._run_defaults = False

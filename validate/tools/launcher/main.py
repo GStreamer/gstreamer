@@ -47,7 +47,9 @@ def main():
     parser.add_option("-t", "--wanted-tests", dest="wanted_tests",
                       default=[],
                       action="append",
-                      help="Define the tests to execute, it can be a regex")
+                      help="Define the tests to execute, it can be a regex"
+                           " if it contains defaults_only, only default scenarios"
+                           " will be executed")
     parser.add_option("-b", "--blacklisted-tests", dest="blacklisted_tests",
                       default=[],
                       action="append",
