@@ -44,6 +44,9 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+/* Define default VA surface chroma format to YUV 4:2:0 */
+#define DEFAULT_CHROMA_TYPE (GST_VAAPI_CHROMA_TYPE_YUV420)
+
 static void
 unref_surface_cb (GstVaapiSurface * surface)
 {
@@ -136,7 +139,7 @@ context_create_surfaces (GstVaapiContext * context)
 
   for (i = context->surfaces->len; i < num_surfaces; i++) {
     surface = gst_vaapi_surface_new (GST_VAAPI_OBJECT_DISPLAY (context),
-        GST_VAAPI_CHROMA_TYPE_YUV420, cip->width, cip->height);
+        cip->chroma_type, cip->width, cip->height);
     if (!surface)
       return FALSE;
     gst_vaapi_surface_set_parent_context (surface, context);
@@ -158,7 +161,7 @@ context_create (GstVaapiContext * context)
   VAStatus status;
   GArray *surfaces = NULL;
   gboolean success = FALSE;
-  guint i, value;
+  guint i, value, va_chroma_format;
 
   if (!context->surfaces && !context_create_surfaces (context))
     goto cleanup;
@@ -186,12 +189,15 @@ context_create (GstVaapiContext * context)
       gst_vaapi_entrypoint_get_va_entrypoint (cip->entrypoint);
 
   /* Validate VA surface format */
+  va_chroma_format = from_GstVaapiChromaType (cip->chroma_type);
+  if (!va_chroma_format)
+    goto cleanup;
   attrib->type = VAConfigAttribRTFormat;
   if (!context_get_attribute (context, attrib->type, &value))
     goto cleanup;
-  if (!(value & VA_RT_FORMAT_YUV420))
+  if (!(value & va_chroma_format))
     goto cleanup;
-  attrib->value = VA_RT_FORMAT_YUV420;
+  attrib->value = va_chroma_format;
   attrib++;
 
   switch (cip->usage) {
@@ -286,9 +292,14 @@ context_update_config_encoder (GstVaapiContext * context,
 
 static inline void
 gst_vaapi_context_init (GstVaapiContext * context,
-    const GstVaapiContextInfo * cip)
+    const GstVaapiContextInfo * new_cip)
 {
-  context->info = *cip;
+  GstVaapiContextInfo *const cip = &context->info;
+
+  *cip = *new_cip;
+  if (!cip->chroma_type)
+    cip->chroma_type = DEFAULT_CHROMA_TYPE;
+
   context->va_config = VA_INVALID_ID;
   gst_vaapi_context_overlay_init (context);
 }
@@ -355,38 +366,46 @@ gst_vaapi_context_reset (GstVaapiContext * context,
     const GstVaapiContextInfo * new_cip)
 {
   GstVaapiContextInfo *const cip = &context->info;
-  gboolean size_changed, config_changed;
+  gboolean reset_surfaces = FALSE, reset_config = FALSE;
+  GstVaapiChromaType chroma_type;
 
-  size_changed = cip->width != new_cip->width || cip->height != new_cip->height;
-  if (size_changed) {
-    cip->width = new_cip->width;
-    cip->height = new_cip->height;
+  chroma_type = new_cip->chroma_type ? new_cip->chroma_type :
+      DEFAULT_CHROMA_TYPE;
+  if (cip->chroma_type != chroma_type) {
+    cip->chroma_type = chroma_type;
+    reset_surfaces = TRUE;
   }
 
-  config_changed = cip->profile != new_cip->profile ||
-      cip->entrypoint != new_cip->entrypoint;
-  if (config_changed) {
+  if (cip->width != new_cip->width || cip->height != new_cip->height) {
+    cip->width = new_cip->width;
+    cip->height = new_cip->height;
+    reset_surfaces = TRUE;
+  }
+
+  if (cip->profile != new_cip->profile ||
+      cip->entrypoint != new_cip->entrypoint) {
     cip->profile = new_cip->profile;
     cip->entrypoint = new_cip->entrypoint;
+    reset_config = TRUE;
   }
 
   if (cip->usage != new_cip->usage) {
     cip->usage = new_cip->usage;
-    config_changed = TRUE;
+    reset_config = TRUE;
     memcpy (&cip->config, &new_cip->config, sizeof (cip->config));
   } else if (new_cip->usage == GST_VAAPI_CONTEXT_USAGE_ENCODE) {
     if (context_update_config_encoder (context, &new_cip->config.encoder))
-      config_changed = TRUE;
+      reset_config = TRUE;
   }
 
-  if (size_changed)
+  if (reset_surfaces)
     context_destroy_surfaces (context);
-  if (config_changed)
+  if (reset_config)
     context_destroy (context);
 
-  if (size_changed && !context_create_surfaces (context))
+  if (reset_surfaces && !context_create_surfaces (context))
     return FALSE;
-  if (config_changed && !context_create (context))
+  if (reset_config && !context_create (context))
     return FALSE;
   return TRUE;
 }

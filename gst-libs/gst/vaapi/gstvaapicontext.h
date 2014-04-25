@@ -81,6 +81,7 @@ struct _GstVaapiContextInfo
   GstVaapiContextUsage usage;
   GstVaapiProfile profile;
   GstVaapiEntrypoint entrypoint;
+  GstVaapiChromaType chroma_type;
   guint width;
   guint height;
   guint ref_frames;
