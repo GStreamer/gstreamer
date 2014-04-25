@@ -543,22 +543,37 @@ get_packed_headers (GstVaapiEncoder * encoder)
 }
 
 /* Updates video context */
-static void
+static gboolean
 set_context_info (GstVaapiEncoder * encoder)
 {
   GstVaapiContextInfo *const cip = &encoder->context_info;
   GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
+  const GstVideoFormat format =
+    GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
 
   cip->usage = GST_VAAPI_CONTEXT_USAGE_ENCODE;
   cip->profile = encoder->profile;
   cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  cip->chroma_type = gst_vaapi_video_format_get_chroma_type (format);
   cip->width = GST_VAAPI_ENCODER_WIDTH (encoder);
   cip->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
   cip->ref_frames = encoder->num_ref_frames;
 
+  if (!cip->chroma_type)
+    goto error_unsupported_format;
+
   memset (config, 0, sizeof (*config));
   config->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
   config->packed_headers = get_packed_headers (encoder);
+  return TRUE;
+
+  /* ERRORS */
+error_unsupported_format:
+  {
+    GST_ERROR ("failed to determine chroma type for format %s",
+        gst_vaapi_video_format_to_string (format));
+    return FALSE;
+  }
 }
 
 /* Ensures the underlying VA context for encoding is created */
@@ -567,7 +582,8 @@ gst_vaapi_encoder_ensure_context (GstVaapiEncoder * encoder)
 {
   GstVaapiContextInfo *const cip = &encoder->context_info;
 
-  set_context_info (encoder);
+  if (!set_context_info (encoder))
+    return FALSE;
 
   if (encoder->context) {
     if (!gst_vaapi_context_reset (encoder->context, cip))
