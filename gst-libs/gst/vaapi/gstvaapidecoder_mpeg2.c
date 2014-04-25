@@ -435,6 +435,7 @@ ensure_context(GstVaapiDecoderMpeg2 *decoder)
 
         info.profile    = priv->hw_profile;
         info.entrypoint = entrypoint;
+        info.chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
         info.width      = priv->width;
         info.height     = priv->height;
         info.ref_frames = 2;
