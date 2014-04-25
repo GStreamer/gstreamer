@@ -343,7 +343,7 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
 
   gst_bus_post (bus,
       gst_message_new_request_state (GST_OBJECT_CAST (scenario),
-        GST_STATE_NULL));
+          GST_STATE_NULL));
 
   return TRUE;
 }
@@ -721,13 +721,13 @@ _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 static gboolean
-_execute_dot_pipeline (GstValidateScenario * scenario, GstValidateAction * action)
+_execute_dot_pipeline (GstValidateScenario * scenario,
+    GstValidateAction * action)
 {
   gchar *dotname;
   gint details = GST_DEBUG_GRAPH_SHOW_ALL;
 
-  const gchar *name =
-      gst_structure_get_string (action->structure, "name");
+  const gchar *name = gst_structure_get_string (action->structure, "name");
 
   gst_structure_get_int (action->structure, "details", &details);
   if (name)
@@ -1469,6 +1469,7 @@ gst_validate_add_action_type (const gchar * type_name,
   g_hash_table_insert (action_types_table, g_strdup (type_name), type);
 }
 
+
 void
 init_scenarios (void)
 {
@@ -1502,7 +1503,8 @@ init_scenarios (void)
   gst_validate_add_action_type ("wait", _execute_wait, wait_mandatory_fields,
       "Action to wait during 'duration' seconds", FALSE);
   gst_validate_add_action_type ("dot-pipeline", _execute_dot_pipeline, NULL,
-      "Action to wait during 'duration' seconds", FALSE);
+      "Action to wait dot the pipeline (the 'name' property will be included in the"
+      " dot filename. Also the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set", FALSE);
   gst_validate_add_action_type ("set-feature-rank", _set_rank, NULL,
       "Allows you to change the ranking of a particular plugin feature", TRUE);
 }
