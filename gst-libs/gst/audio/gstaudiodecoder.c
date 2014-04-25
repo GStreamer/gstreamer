@@ -1833,11 +1833,13 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
 
   caps = gst_pad_get_current_caps (dec->srcpad);
   if (caps && !gst_audio_info_from_caps (&dec->priv->ctx.info, caps))
-    return FALSE;
+    goto caps_error;
+  if (caps)
+    gst_caps_unref (caps);
 
   caps = gst_pad_get_allowed_caps (dec->srcpad);
   if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
-    return FALSE;
+    goto caps_error;
 
   /* before fixating, try to use whatever upstream provided */
   caps_size = gst_caps_get_size (caps);
@@ -1896,7 +1898,7 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
   }
 
   if (!caps || !gst_audio_info_from_caps (&dec->priv->ctx.info, caps))
-    return FALSE;
+    goto caps_error;
 
   GST_INFO_OBJECT (dec,
       "Chose default caps %" GST_PTR_FORMAT " for initial gap", caps);
@@ -1909,6 +1911,13 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
   }
 
   return TRUE;
+
+caps_error:
+  {
+    if (caps)
+      gst_caps_unref (caps);
+    return FALSE;
+  }
 }
 
 static gboolean
