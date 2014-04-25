@@ -668,7 +668,24 @@ class Scenario(object):
         self.name = name
 
         for prop, value in props:
-            setattr(self, prop, value)
+            setattr(self, prop.replace("-", "_"), value)
+
+    def seeks(self):
+        if hasattr(self, "seek"):
+            return bool(self.seek)
+
+        return False
+
+    def does_reverse_playback(self):
+        if hasattr(self, "reverse_playback"):
+            return bool(self.seek)
+
+
+    def get_min_audio_tracks(self):
+        if hasattr(self, "min_audio_track"):
+            return int(self.min_audio_track)
+        return 0
+
 
 class ScenarioManager(Loggable):
     _instance = None

@@ -29,8 +29,9 @@ from utils import MediaFormatCombination, get_profile,\
     path2url, DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
     compare_rendered_with_original, Protocols
 
-class MediaDescriptor(object):
+class MediaDescriptor(Loggable):
     def __init__(self, xml_path):
+        Loggable.__init__(self)
         self.media_xml = ET.parse(xml_path).getroot()
 
         # Sanity checks
@@ -61,13 +62,27 @@ class MediaDescriptor(object):
                 return True
         return False
 
-    def num_audio_tracks(media_xml):
+    def get_num_audio_tracks(self):
         naudio = 0
-        for stream in media_xml.findall("streams")[0].findall("stream"):
+        for stream in self.media_xml.findall("streams")[0].findall("stream"):
             if stream.attrib["type"] == "audio":
                 naudio += 1
 
         return naudio
+
+    def is_compatible(self, scenario):
+        if scenario.seeks() and (not self.is_seekable() or self.is_image()):
+            self.debug("Do not run %s as %s does not support seeking",
+                       scenario, self.get_uri())
+            return False
+
+        if self.get_num_audio_tracks() < scenario.get_min_audio_tracks():
+            self.debug("%s -- %s | At least %s audio track needed  < %s"
+                       % (scenario, self.get_uri(),
+                          scenario.get_min_audio_tracks(), self.get_num_audio_tracks()))
+            return False
+
+        return True
 
 class PipelineDescriptor(object):
     def __init__(self, name, pipeline):
@@ -96,7 +111,7 @@ class PlaybinDescriptor(PipelineDescriptor):
 
         pipe += " uri=%s" % uri
 
-        if hasattr(scenario, "reverse-playback") and protocol == Protocols.HTTP:
+        if scenario.does_reverse_playback() and protocol == Protocols.HTTP:
             # 10MB so we can reverse playback
             pipe += " ring-buffer-max-size=10485760"
 
@@ -164,7 +179,7 @@ G_V_BLACKLISTED_TESTS = \
   "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
  ("validate.*.reverse_playback.*webm$",
   "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
- ("validate.*.playback.reverse_playback.*\.ts|validate.*.playback.reverse_playback.*\.MTS",
+ ("validate.*.playback.reverse_playback.*ts|validate.*.playback.reverse_playback.*MTS",
   "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
  ("validate.http.playback.seek_with_stop.*webm",
   "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
@@ -351,8 +366,6 @@ class GstValidateManager(TestsManager, Loggable):
                                                     timeout=timeout))
 
         for uri, mediainfo in self._list_uris():
-
-
             if mediainfo.media_descriptor.is_image():
                 continue
             for comb in G_V_ENCODING_TARGET_COMBINATIONS:
@@ -449,14 +462,13 @@ class GstValidateManager(TestsManager, Loggable):
                     scenarios = self._scenarios.get_scenario(None)
 
                 for scenario in scenarios:
+                    if not minfo.media_descriptor.is_compatible(scenario):
+                        continue
+
                     npipe = pipe_descriptor.get_pipeline(self.options,
                                                          protocol,
                                                          scenario,
                                                          uri)
-                    if not minfo.media_descriptor.is_seekable() or minfo.media_descriptor.is_image():
-                        self.debug("Do not run %s as %s does not support seeking",
-                                   scenario, uri)
-                        continue
 
                     fname = "%s.%s" % (self._get_fname(scenario,
                                        protocol),
