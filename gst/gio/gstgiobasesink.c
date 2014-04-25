@@ -343,6 +343,15 @@ gst_gio_base_sink_query (GstBaseSink * bsink, GstQuery * query)
         return TRUE;
       }
       return FALSE;
+    case GST_QUERY_SEEKING:
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      if (format == GST_FORMAT_BYTES || format == GST_FORMAT_DEFAULT) {
+        gst_query_set_seeking (query, GST_FORMAT_BYTES,
+            GST_GIO_STREAM_IS_SEEKABLE (sink->stream), 0, -1);
+      } else {
+        gst_query_set_seeking (query, format, FALSE, 0, -1);
+      }
+      return TRUE;
     default:
       return GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
   }
