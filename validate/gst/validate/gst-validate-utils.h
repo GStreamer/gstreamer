@@ -36,7 +36,7 @@ gdouble gst_validate_utils_parse_expression (const gchar *expr,
                                              gpointer user_data,
                                              gchar **error);
 guint gst_validate_utils_flags_from_str     (GType type, const gchar * str_flags);
-void gst_validate_utils_enum_from_str       (GType type,
+gboolean gst_validate_utils_enum_from_str   (GType type,
                                              const gchar * str_enum,
                                              guint * enum_value);
 #endif

@@ -484,18 +484,21 @@ gst_validate_utils_flags_from_str (GType type, const gchar * str_flags)
   return flags;
 }
 
-void
+gboolean
 gst_validate_utils_enum_from_str (GType type, const gchar * str_enum, guint * enum_value)
 {
   guint i;
   GEnumClass *class = g_type_class_ref (type);
+  gboolean ret = FALSE;
 
   for (i = 0; i < class->n_values; i++) {
     if (g_strrstr (str_enum, class->values[i].value_nick)) {
       *enum_value = class->values[i].value;
-      break;
+      ret = TRUE;
     }
   }
 
   g_type_class_unref (class);
+
+  return ret;
 }
