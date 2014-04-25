@@ -39,503 +39,503 @@
 #include "gstvaapidebug.h"
 
 static void
-drop_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame);
+drop_frame (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame);
 
 static void
-parser_state_finalize(GstVaapiParserState *ps)
+parser_state_finalize (GstVaapiParserState * ps)
 {
-    if (ps->input_adapter) {
-        gst_adapter_clear(ps->input_adapter);
-        g_object_unref(ps->input_adapter);
-        ps->input_adapter = NULL;
-    }
+  if (ps->input_adapter) {
+    gst_adapter_clear (ps->input_adapter);
+    g_object_unref (ps->input_adapter);
+    ps->input_adapter = NULL;
+  }
 
-    if (ps->output_adapter) {
-        gst_adapter_clear(ps->output_adapter);
-        g_object_unref(ps->output_adapter);
-        ps->output_adapter = NULL;
-    }
+  if (ps->output_adapter) {
+    gst_adapter_clear (ps->output_adapter);
+    g_object_unref (ps->output_adapter);
+    ps->output_adapter = NULL;
+  }
 
-    if (ps->next_unit_pending) {
-        gst_vaapi_decoder_unit_clear(&ps->next_unit);
-        ps->next_unit_pending = FALSE;
-    }
+  if (ps->next_unit_pending) {
+    gst_vaapi_decoder_unit_clear (&ps->next_unit);
+    ps->next_unit_pending = FALSE;
+  }
 }
 
 static gboolean
-parser_state_init(GstVaapiParserState *ps)
+parser_state_init (GstVaapiParserState * ps)
 {
-    memset(ps, 0, sizeof(*ps));
+  memset (ps, 0, sizeof (*ps));
 
-    ps->input_adapter = gst_adapter_new();
-    if (!ps->input_adapter)
-        return FALSE;
+  ps->input_adapter = gst_adapter_new ();
+  if (!ps->input_adapter)
+    return FALSE;
 
-    ps->output_adapter = gst_adapter_new();
-    if (!ps->output_adapter)
-        return FALSE;
-    return TRUE;
+  ps->output_adapter = gst_adapter_new ();
+  if (!ps->output_adapter)
+    return FALSE;
+  return TRUE;
 }
 
 static void
-parser_state_prepare(GstVaapiParserState *ps, GstAdapter *adapter)
+parser_state_prepare (GstVaapiParserState * ps, GstAdapter * adapter)
 {
-    /* XXX: check we really have a continuity from the previous call */
-    if (ps->current_adapter != adapter)
-        goto reset;
-    return;
+  /* XXX: check we really have a continuity from the previous call */
+  if (ps->current_adapter != adapter)
+    goto reset;
+  return;
 
 reset:
-    ps->current_adapter = adapter;
-    ps->input_offset1 = -1;
-    ps->input_offset2 = -1;
+  ps->current_adapter = adapter;
+  ps->input_offset1 = -1;
+  ps->input_offset2 = -1;
 }
 
 static gboolean
-push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
+push_buffer (GstVaapiDecoder * decoder, GstBuffer * buffer)
 {
-    if (!buffer) {
-        buffer = gst_buffer_new();
-        if (!buffer)
-            return FALSE;
-        GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_FLAG_EOS);
-    }
+  if (!buffer) {
+    buffer = gst_buffer_new ();
+    if (!buffer)
+      return FALSE;
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_EOS);
+  }
 
-    GST_DEBUG("queue encoded data buffer %p (%zu bytes)",
-              buffer, gst_buffer_get_size(buffer));
+  GST_DEBUG ("queue encoded data buffer %p (%zu bytes)",
+      buffer, gst_buffer_get_size (buffer));
 
-    g_async_queue_push(decoder->buffers, buffer);
-    return TRUE;
+  g_async_queue_push (decoder->buffers, buffer);
+  return TRUE;
 }
 
 static GstBuffer *
-pop_buffer(GstVaapiDecoder *decoder)
+pop_buffer (GstVaapiDecoder * decoder)
 {
-    GstBuffer *buffer;
+  GstBuffer *buffer;
 
-    buffer = g_async_queue_try_pop(decoder->buffers);
-    if (!buffer)
-        return NULL;
+  buffer = g_async_queue_try_pop (decoder->buffers);
+  if (!buffer)
+    return NULL;
 
-    GST_DEBUG("dequeue buffer %p for decoding (%zu bytes)",
-              buffer, gst_buffer_get_size(buffer));
+  GST_DEBUG ("dequeue buffer %p for decoding (%zu bytes)",
+      buffer, gst_buffer_get_size (buffer));
 
-    return buffer;
+  return buffer;
 }
 
 static GstVaapiDecoderStatus
-do_parse(GstVaapiDecoder *decoder,
-    GstVideoCodecFrame *base_frame, GstAdapter *adapter, gboolean at_eos,
-    guint *got_unit_size_ptr, gboolean *got_frame_ptr)
+do_parse (GstVaapiDecoder * decoder,
+    GstVideoCodecFrame * base_frame, GstAdapter * adapter, gboolean at_eos,
+    guint * got_unit_size_ptr, gboolean * got_frame_ptr)
 {
-    GstVaapiParserState * const ps = &decoder->parser_state;
-    GstVaapiParserFrame *frame;
-    GstVaapiDecoderUnit *unit;
-    GstVaapiDecoderStatus status;
+  GstVaapiParserState *const ps = &decoder->parser_state;
+  GstVaapiParserFrame *frame;
+  GstVaapiDecoderUnit *unit;
+  GstVaapiDecoderStatus status;
 
-    *got_unit_size_ptr = 0;
-    *got_frame_ptr = FALSE;
+  *got_unit_size_ptr = 0;
+  *got_frame_ptr = FALSE;
 
-    frame = gst_video_codec_frame_get_user_data(base_frame);
-    if (!frame) {
-        GstVideoCodecState * const codec_state = decoder->codec_state;
-        frame = gst_vaapi_parser_frame_new(codec_state->info.width,
-            codec_state->info.height);
-        if (!frame)
-            return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-        gst_video_codec_frame_set_user_data(base_frame,
-            frame, (GDestroyNotify)gst_vaapi_mini_object_unref);
+  frame = gst_video_codec_frame_get_user_data (base_frame);
+  if (!frame) {
+    GstVideoCodecState *const codec_state = decoder->codec_state;
+    frame = gst_vaapi_parser_frame_new (codec_state->info.width,
+        codec_state->info.height);
+    if (!frame)
+      return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    gst_video_codec_frame_set_user_data (base_frame,
+        frame, (GDestroyNotify) gst_vaapi_mini_object_unref);
+  }
+
+  parser_state_prepare (ps, adapter);
+
+  unit = &ps->next_unit;
+  if (ps->next_unit_pending) {
+    ps->next_unit_pending = FALSE;
+    goto got_unit;
+  }
+  gst_vaapi_decoder_unit_init (unit);
+
+  ps->current_frame = base_frame;
+  status = GST_VAAPI_DECODER_GET_CLASS (decoder)->parse (decoder,
+      adapter, at_eos, unit);
+  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
+    if (at_eos && frame->units->len > 0 &&
+        status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA) {
+      /* XXX: assume the frame is complete at <EOS> */
+      *got_frame_ptr = TRUE;
+      return GST_VAAPI_DECODER_STATUS_SUCCESS;
     }
+    return status;
+  }
 
-    parser_state_prepare(ps, adapter);
-
-    unit = &ps->next_unit;
-    if (ps->next_unit_pending) {
-        ps->next_unit_pending = FALSE;
-        goto got_unit;
-    }
-    gst_vaapi_decoder_unit_init(unit);
-
-    ps->current_frame = base_frame;
-    status = GST_VAAPI_DECODER_GET_CLASS(decoder)->parse(decoder,
-        adapter, at_eos, unit);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
-        if (at_eos && frame->units->len > 0 &&
-            status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA) {
-            /* XXX: assume the frame is complete at <EOS> */
-            *got_frame_ptr = TRUE;
-            return GST_VAAPI_DECODER_STATUS_SUCCESS;
-        }
-        return status;
-    }
-
-    if (GST_VAAPI_DECODER_UNIT_IS_FRAME_START(unit) && frame->units->len > 0) {
-        ps->next_unit_pending = TRUE;
-        *got_frame_ptr = TRUE;
-        return GST_VAAPI_DECODER_STATUS_SUCCESS;
-    }
+  if (GST_VAAPI_DECODER_UNIT_IS_FRAME_START (unit) && frame->units->len > 0) {
+    ps->next_unit_pending = TRUE;
+    *got_frame_ptr = TRUE;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+  }
 
 got_unit:
-    gst_vaapi_parser_frame_append_unit(frame, unit);
-    *got_unit_size_ptr = unit->size;
-    *got_frame_ptr = GST_VAAPI_DECODER_UNIT_IS_FRAME_END(unit);
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+  gst_vaapi_parser_frame_append_unit (frame, unit);
+  *got_unit_size_ptr = unit->size;
+  *got_frame_ptr = GST_VAAPI_DECODER_UNIT_IS_FRAME_END (unit);
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static GstVaapiDecoderStatus
-do_decode_units(GstVaapiDecoder *decoder, GArray *units)
+do_decode_units (GstVaapiDecoder * decoder, GArray * units)
 {
-    GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
-    GstVaapiDecoderStatus status;
-    guint i;
+  GstVaapiDecoderClass *const klass = GST_VAAPI_DECODER_GET_CLASS (decoder);
+  GstVaapiDecoderStatus status;
+  guint i;
 
-    for (i = 0; i < units->len; i++) {
-        GstVaapiDecoderUnit * const unit =
-            &g_array_index(units, GstVaapiDecoderUnit, i);
-        if (GST_VAAPI_DECODER_UNIT_IS_SKIPPED(unit))
-            continue;
-        status = klass->decode(decoder, unit);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
-    }
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
-}
-
-static GstVaapiDecoderStatus
-do_decode_1(GstVaapiDecoder *decoder, GstVaapiParserFrame *frame)
-{
-    GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
-    GstVaapiDecoderStatus status;
-
-    if (frame->pre_units->len > 0) {
-        status = do_decode_units(decoder, frame->pre_units);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
-    }
-
-    if (frame->units->len > 0) {
-        if (klass->start_frame) {
-            GstVaapiDecoderUnit * const unit =
-                &g_array_index(frame->units, GstVaapiDecoderUnit, 0);
-            status = klass->start_frame(decoder, unit);
-            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-                return status;
-        }
-
-        status = do_decode_units(decoder, frame->units);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
-
-        if (klass->end_frame) {
-            status = klass->end_frame(decoder);
-            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-                return status;
-        }
-    }
-
-    if (frame->post_units->len > 0) {
-        status = do_decode_units(decoder, frame->post_units);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
-    }
-
-    /* Drop frame if there is no slice data unit in there */
-    if (G_UNLIKELY(frame->units->len == 0))
-        return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
-}
-
-static inline GstVaapiDecoderStatus
-do_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *base_frame)
-{
-    GstVaapiParserState * const ps = &decoder->parser_state;
-    GstVaapiParserFrame * const frame = base_frame->user_data;
-    GstVaapiDecoderStatus status;
-
-    ps->current_frame = base_frame;
-
-    gst_vaapi_parser_frame_ref(frame);
-    status = do_decode_1(decoder, frame);
-    gst_vaapi_parser_frame_unref(frame);
-
-    switch ((guint)status) {
-    case GST_VAAPI_DECODER_STATUS_DROP_FRAME:
-        drop_frame(decoder, base_frame);
-        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-        break;
-    }
-    return status;
-}
-
-static inline GstVaapiDecoderStatus
-do_flush(GstVaapiDecoder *decoder)
-{
-    GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
-
-    if (klass->flush)
-        return klass->flush(decoder);
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
-}
-
-static GstVaapiDecoderStatus
-decode_step(GstVaapiDecoder *decoder)
-{
-    GstVaapiParserState * const ps = &decoder->parser_state;
-    GstVaapiDecoderStatus status;
-    GstBuffer *buffer;
-    gboolean got_frame;
-    guint got_unit_size, input_size;
-
-    status = gst_vaapi_decoder_check_status(decoder);
+  for (i = 0; i < units->len; i++) {
+    GstVaapiDecoderUnit *const unit =
+        &g_array_index (units, GstVaapiDecoderUnit, i);
+    if (GST_VAAPI_DECODER_UNIT_IS_SKIPPED (unit))
+      continue;
+    status = klass->decode (decoder, unit);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+      return status;
+  }
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+do_decode_1 (GstVaapiDecoder * decoder, GstVaapiParserFrame * frame)
+{
+  GstVaapiDecoderClass *const klass = GST_VAAPI_DECODER_GET_CLASS (decoder);
+  GstVaapiDecoderStatus status;
+
+  if (frame->pre_units->len > 0) {
+    status = do_decode_units (decoder, frame->pre_units);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+      return status;
+  }
+
+  if (frame->units->len > 0) {
+    if (klass->start_frame) {
+      GstVaapiDecoderUnit *const unit =
+          &g_array_index (frame->units, GstVaapiDecoderUnit, 0);
+      status = klass->start_frame (decoder, unit);
+      if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
-
-    /* Fill adapter with all buffers we have in the queue */
-    for (;;) {
-        buffer = pop_buffer(decoder);
-        if (!buffer)
-            break;
-
-        ps->at_eos = GST_BUFFER_IS_EOS(buffer);
-        if (!ps->at_eos)
-            gst_adapter_push(ps->input_adapter, buffer);
     }
 
-    /* Parse and decode all decode units */
-    input_size = gst_adapter_available(ps->input_adapter);
-    if (input_size == 0) {
-        if (ps->at_eos)
-            return GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
-        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    status = do_decode_units (decoder, frame->units);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+      return status;
+
+    if (klass->end_frame) {
+      status = klass->end_frame (decoder);
+      if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        return status;
     }
+  }
 
-    do {
-        if (!ps->current_frame) {
-            ps->current_frame = g_slice_new0(GstVideoCodecFrame);
-            if (!ps->current_frame)
-                return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-            ps->current_frame->ref_count = 1;
-            ps->current_frame->system_frame_number = ps->current_frame_number++;
-        }
+  if (frame->post_units->len > 0) {
+    status = do_decode_units (decoder, frame->post_units);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+      return status;
+  }
 
-        status = do_parse(decoder, ps->current_frame, ps->input_adapter,
-            ps->at_eos, &got_unit_size, &got_frame);
-        GST_DEBUG("parse frame (status = %d)", status);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
-            if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA && ps->at_eos)
-                status = GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
-            break;
-        }
+  /* Drop frame if there is no slice data unit in there */
+  if (G_UNLIKELY (frame->units->len == 0))
+    return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
 
-        if (got_unit_size > 0) {
-            buffer = gst_adapter_take_buffer(ps->input_adapter, got_unit_size);
-            input_size -= got_unit_size;
+static inline GstVaapiDecoderStatus
+do_decode (GstVaapiDecoder * decoder, GstVideoCodecFrame * base_frame)
+{
+  GstVaapiParserState *const ps = &decoder->parser_state;
+  GstVaapiParserFrame *const frame = base_frame->user_data;
+  GstVaapiDecoderStatus status;
 
-            if (gst_adapter_available(ps->output_adapter) == 0) {
-                ps->current_frame->pts =
-                    gst_adapter_prev_timestamp(ps->input_adapter, NULL);
-            }
-            gst_adapter_push(ps->output_adapter, buffer);
-        }
+  ps->current_frame = base_frame;
 
-        if (got_frame) {
-            ps->current_frame->input_buffer = gst_adapter_take_buffer(
-                ps->output_adapter,
-                gst_adapter_available(ps->output_adapter));
+  gst_vaapi_parser_frame_ref (frame);
+  status = do_decode_1 (decoder, frame);
+  gst_vaapi_parser_frame_unref (frame);
 
-            status = do_decode(decoder, ps->current_frame);
-            GST_DEBUG("decode frame (status = %d)", status);
+  switch ((guint) status) {
+    case GST_VAAPI_DECODER_STATUS_DROP_FRAME:
+      drop_frame (decoder, base_frame);
+      status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+      break;
+  }
+  return status;
+}
 
-            gst_video_codec_frame_unref(ps->current_frame);
-            ps->current_frame = NULL;
-            break;
-        }
-    } while (input_size > 0);
+static inline GstVaapiDecoderStatus
+do_flush (GstVaapiDecoder * decoder)
+{
+  GstVaapiDecoderClass *const klass = GST_VAAPI_DECODER_GET_CLASS (decoder);
+
+  if (klass->flush)
+    return klass->flush (decoder);
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_step (GstVaapiDecoder * decoder)
+{
+  GstVaapiParserState *const ps = &decoder->parser_state;
+  GstVaapiDecoderStatus status;
+  GstBuffer *buffer;
+  gboolean got_frame;
+  guint got_unit_size, input_size;
+
+  status = gst_vaapi_decoder_check_status (decoder);
+  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
     return status;
+
+  /* Fill adapter with all buffers we have in the queue */
+  for (;;) {
+    buffer = pop_buffer (decoder);
+    if (!buffer)
+      break;
+
+    ps->at_eos = GST_BUFFER_IS_EOS (buffer);
+    if (!ps->at_eos)
+      gst_adapter_push (ps->input_adapter, buffer);
+  }
+
+  /* Parse and decode all decode units */
+  input_size = gst_adapter_available (ps->input_adapter);
+  if (input_size == 0) {
+    if (ps->at_eos)
+      return GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
+    return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+  }
+
+  do {
+    if (!ps->current_frame) {
+      ps->current_frame = g_slice_new0 (GstVideoCodecFrame);
+      if (!ps->current_frame)
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+      ps->current_frame->ref_count = 1;
+      ps->current_frame->system_frame_number = ps->current_frame_number++;
+    }
+
+    status = do_parse (decoder, ps->current_frame, ps->input_adapter,
+        ps->at_eos, &got_unit_size, &got_frame);
+    GST_DEBUG ("parse frame (status = %d)", status);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
+      if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA && ps->at_eos)
+        status = GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
+      break;
+    }
+
+    if (got_unit_size > 0) {
+      buffer = gst_adapter_take_buffer (ps->input_adapter, got_unit_size);
+      input_size -= got_unit_size;
+
+      if (gst_adapter_available (ps->output_adapter) == 0) {
+        ps->current_frame->pts =
+            gst_adapter_prev_timestamp (ps->input_adapter, NULL);
+      }
+      gst_adapter_push (ps->output_adapter, buffer);
+    }
+
+    if (got_frame) {
+      ps->current_frame->input_buffer =
+          gst_adapter_take_buffer (ps->output_adapter,
+          gst_adapter_available (ps->output_adapter));
+
+      status = do_decode (decoder, ps->current_frame);
+      GST_DEBUG ("decode frame (status = %d)", status);
+
+      gst_video_codec_frame_unref (ps->current_frame);
+      ps->current_frame = NULL;
+      break;
+    }
+  } while (input_size > 0);
+  return status;
 }
 
 static void
-drop_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
+drop_frame (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame)
 {
-    GST_DEBUG("drop frame %d", frame->system_frame_number);
+  GST_DEBUG ("drop frame %d", frame->system_frame_number);
 
-    /* no surface proxy */
-    gst_video_codec_frame_set_user_data(frame, NULL, NULL);
+  /* no surface proxy */
+  gst_video_codec_frame_set_user_data (frame, NULL, NULL);
 
-    frame->pts = GST_CLOCK_TIME_NONE;
-    GST_VIDEO_CODEC_FRAME_FLAG_SET(frame,
-        GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+  frame->pts = GST_CLOCK_TIME_NONE;
+  GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
+      GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
 
-    g_async_queue_push(decoder->frames, gst_video_codec_frame_ref(frame));
+  g_async_queue_push (decoder->frames, gst_video_codec_frame_ref (frame));
 }
 
 static inline void
-push_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
+push_frame (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame)
 {
-    GstVaapiSurfaceProxy * const proxy = frame->user_data;
+  GstVaapiSurfaceProxy *const proxy = frame->user_data;
 
-    GST_DEBUG("push frame %d (surface 0x%08x)", frame->system_frame_number,
-        (guint32) GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy));
+  GST_DEBUG ("push frame %d (surface 0x%08x)", frame->system_frame_number,
+      (guint32) GST_VAAPI_SURFACE_PROXY_SURFACE_ID (proxy));
 
-    g_async_queue_push(decoder->frames, gst_video_codec_frame_ref(frame));
+  g_async_queue_push (decoder->frames, gst_video_codec_frame_ref (frame));
 }
 
 static inline GstVideoCodecFrame *
-pop_frame(GstVaapiDecoder *decoder, guint64 timeout)
+pop_frame (GstVaapiDecoder * decoder, guint64 timeout)
 {
-    GstVideoCodecFrame *frame;
-    GstVaapiSurfaceProxy *proxy;
+  GstVideoCodecFrame *frame;
+  GstVaapiSurfaceProxy *proxy;
 
-    if (G_LIKELY(timeout > 0))
-        frame = g_async_queue_timeout_pop(decoder->frames, timeout);
-    else
-        frame = g_async_queue_try_pop(decoder->frames);
-    if (!frame)
-        return NULL;
+  if (G_LIKELY (timeout > 0))
+    frame = g_async_queue_timeout_pop (decoder->frames, timeout);
+  else
+    frame = g_async_queue_try_pop (decoder->frames);
+  if (!frame)
+    return NULL;
 
-    proxy = frame->user_data;
-    GST_DEBUG("pop frame %d (surface 0x%08x)", frame->system_frame_number,
-        (proxy ? (guint32) GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy) :
-         VA_INVALID_ID));
+  proxy = frame->user_data;
+  GST_DEBUG ("pop frame %d (surface 0x%08x)", frame->system_frame_number,
+      (proxy ? (guint32) GST_VAAPI_SURFACE_PROXY_SURFACE_ID (proxy) :
+          VA_INVALID_ID));
 
-    return frame;
+  return frame;
 }
 
 static gboolean
-set_caps(GstVaapiDecoder *decoder, const GstCaps *caps)
+set_caps (GstVaapiDecoder * decoder, const GstCaps * caps)
 {
-    GstVideoCodecState * const codec_state = decoder->codec_state;
-    GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    GstVaapiProfile profile;
-    const GValue *v_codec_data;
+  GstVideoCodecState *const codec_state = decoder->codec_state;
+  GstStructure *const structure = gst_caps_get_structure (caps, 0);
+  GstVaapiProfile profile;
+  const GValue *v_codec_data;
 
-    profile = gst_vaapi_profile_from_caps(caps);
-    if (!profile)
-        return FALSE;
+  profile = gst_vaapi_profile_from_caps (caps);
+  if (!profile)
+    return FALSE;
 
-    decoder->codec = gst_vaapi_profile_get_codec(profile);
-    if (!decoder->codec)
-        return FALSE;
+  decoder->codec = gst_vaapi_profile_get_codec (profile);
+  if (!decoder->codec)
+    return FALSE;
 
-    if (!gst_video_info_from_caps(&codec_state->info, caps))
-        return FALSE;
+  if (!gst_video_info_from_caps (&codec_state->info, caps))
+    return FALSE;
 
-    codec_state->caps = gst_caps_copy(caps);
+  codec_state->caps = gst_caps_copy (caps);
 
-    v_codec_data = gst_structure_get_value(structure, "codec_data");
-    if (v_codec_data)
-        gst_buffer_replace(&codec_state->codec_data,
-            gst_value_get_buffer(v_codec_data));
-    return TRUE;
+  v_codec_data = gst_structure_get_value (structure, "codec_data");
+  if (v_codec_data)
+    gst_buffer_replace (&codec_state->codec_data,
+        gst_value_get_buffer (v_codec_data));
+  return TRUE;
 }
 
 static inline GstCaps *
-get_caps(GstVaapiDecoder *decoder)
+get_caps (GstVaapiDecoder * decoder)
 {
-    return GST_VAAPI_DECODER_CODEC_STATE(decoder)->caps;
+  return GST_VAAPI_DECODER_CODEC_STATE (decoder)->caps;
 }
 
 static void
-notify_codec_state_changed(GstVaapiDecoder *decoder)
+notify_codec_state_changed (GstVaapiDecoder * decoder)
 {
-    if (decoder->codec_state_changed_func)
-        decoder->codec_state_changed_func(decoder, decoder->codec_state,
-            decoder->codec_state_changed_data);
+  if (decoder->codec_state_changed_func)
+    decoder->codec_state_changed_func (decoder, decoder->codec_state,
+        decoder->codec_state_changed_data);
 }
 
 void
-gst_vaapi_decoder_finalize(GstVaapiDecoder *decoder)
+gst_vaapi_decoder_finalize (GstVaapiDecoder * decoder)
 {
-    const GstVaapiDecoderClass * const klass =
-        GST_VAAPI_DECODER_GET_CLASS(decoder);
+  const GstVaapiDecoderClass *const klass =
+      GST_VAAPI_DECODER_GET_CLASS (decoder);
 
-    if (klass->destroy)
-        klass->destroy(decoder);
+  if (klass->destroy)
+    klass->destroy (decoder);
 
-    gst_video_codec_state_unref(decoder->codec_state);
-    decoder->codec_state = NULL;
+  gst_video_codec_state_unref (decoder->codec_state);
+  decoder->codec_state = NULL;
 
-    parser_state_finalize(&decoder->parser_state);
- 
-    if (decoder->buffers) {
-        g_async_queue_unref(decoder->buffers);
-        decoder->buffers = NULL;
-    }
+  parser_state_finalize (&decoder->parser_state);
 
-    if (decoder->frames) {
-        g_async_queue_unref(decoder->frames);
-        decoder->frames = NULL;
-    }
+  if (decoder->buffers) {
+    g_async_queue_unref (decoder->buffers);
+    decoder->buffers = NULL;
+  }
 
-    gst_vaapi_object_replace(&decoder->context, NULL);
-    decoder->va_context = VA_INVALID_ID;
+  if (decoder->frames) {
+    g_async_queue_unref (decoder->frames);
+    decoder->frames = NULL;
+  }
 
-    gst_vaapi_display_replace(&decoder->display, NULL);
-    decoder->va_display = NULL;
+  gst_vaapi_object_replace (&decoder->context, NULL);
+  decoder->va_context = VA_INVALID_ID;
+
+  gst_vaapi_display_replace (&decoder->display, NULL);
+  decoder->va_display = NULL;
 }
 
 static gboolean
-gst_vaapi_decoder_init(GstVaapiDecoder *decoder, GstVaapiDisplay *display,
-    GstCaps *caps)
+gst_vaapi_decoder_init (GstVaapiDecoder * decoder, GstVaapiDisplay * display,
+    GstCaps * caps)
 {
-    const GstVaapiDecoderClass * const klass =
-        GST_VAAPI_DECODER_GET_CLASS(decoder);
-    GstVideoCodecState *codec_state;
-    guint sub_size;
+  const GstVaapiDecoderClass *const klass =
+      GST_VAAPI_DECODER_GET_CLASS (decoder);
+  GstVideoCodecState *codec_state;
+  guint sub_size;
 
-    parser_state_init(&decoder->parser_state);
+  parser_state_init (&decoder->parser_state);
 
-    codec_state = g_slice_new0(GstVideoCodecState);
-    codec_state->ref_count = 1;
-    gst_video_info_init(&codec_state->info);
+  codec_state = g_slice_new0 (GstVideoCodecState);
+  codec_state->ref_count = 1;
+  gst_video_info_init (&codec_state->info);
 
-    decoder->user_data   = NULL;
-    decoder->display     = gst_vaapi_display_ref(display);
-    decoder->va_display  = GST_VAAPI_DISPLAY_VADISPLAY(display);
-    decoder->context     = NULL;
-    decoder->va_context  = VA_INVALID_ID;
-    decoder->codec       = 0;
-    decoder->codec_state = codec_state;
-    decoder->codec_state_changed_func = NULL;
-    decoder->codec_state_changed_data = NULL;
+  decoder->user_data = NULL;
+  decoder->display = gst_vaapi_display_ref (display);
+  decoder->va_display = GST_VAAPI_DISPLAY_VADISPLAY (display);
+  decoder->context = NULL;
+  decoder->va_context = VA_INVALID_ID;
+  decoder->codec = 0;
+  decoder->codec_state = codec_state;
+  decoder->codec_state_changed_func = NULL;
+  decoder->codec_state_changed_data = NULL;
 
-    decoder->buffers = g_async_queue_new_full((GDestroyNotify)gst_buffer_unref);
-    decoder->frames  = g_async_queue_new_full((GDestroyNotify)
-        gst_video_codec_frame_unref);
+  decoder->buffers = g_async_queue_new_full ((GDestroyNotify) gst_buffer_unref);
+  decoder->frames = g_async_queue_new_full ((GDestroyNotify)
+      gst_video_codec_frame_unref);
 
-    if (!set_caps(decoder, caps))
-        return FALSE;
+  if (!set_caps (decoder, caps))
+    return FALSE;
 
-    sub_size = GST_VAAPI_MINI_OBJECT_CLASS(klass)->size - sizeof(*decoder);
-    if (sub_size > 0)
-        memset(((guchar *)decoder) + sizeof(*decoder), 0, sub_size);
+  sub_size = GST_VAAPI_MINI_OBJECT_CLASS (klass)->size - sizeof (*decoder);
+  if (sub_size > 0)
+    memset (((guchar *) decoder) + sizeof (*decoder), 0, sub_size);
 
-    if (klass->create && !klass->create(decoder))
-        return FALSE;
-    return TRUE;
+  if (klass->create && !klass->create (decoder))
+    return FALSE;
+  return TRUE;
 }
 
 GstVaapiDecoder *
-gst_vaapi_decoder_new(const GstVaapiDecoderClass *klass,
-    GstVaapiDisplay *display, GstCaps *caps)
+gst_vaapi_decoder_new (const GstVaapiDecoderClass * klass,
+    GstVaapiDisplay * display, GstCaps * caps)
 {
-    GstVaapiDecoder *decoder;
+  GstVaapiDecoder *decoder;
 
-    g_return_val_if_fail(display != NULL, NULL);
-    g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
+  g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
-    decoder = (GstVaapiDecoder *)
-        gst_vaapi_mini_object_new(GST_VAAPI_MINI_OBJECT_CLASS(klass));
-    if (!decoder)
-        return NULL;
+  decoder = (GstVaapiDecoder *)
+      gst_vaapi_mini_object_new (GST_VAAPI_MINI_OBJECT_CLASS (klass));
+  if (!decoder)
+    return NULL;
 
-    if (!gst_vaapi_decoder_init(decoder, display, caps))
-        goto error;
-    return decoder;
+  if (!gst_vaapi_decoder_init (decoder, display, caps))
+    goto error;
+  return decoder;
 
 error:
-    gst_vaapi_decoder_unref(decoder);
-    return NULL;
+  gst_vaapi_decoder_unref (decoder);
+  return NULL;
 }
 
 /**
@@ -547,9 +547,9 @@ error:
  * Returns: The same @decoder argument
  */
 GstVaapiDecoder *
-gst_vaapi_decoder_ref(GstVaapiDecoder *decoder)
+gst_vaapi_decoder_ref (GstVaapiDecoder * decoder)
 {
-    return gst_vaapi_object_ref(decoder);
+  return gst_vaapi_object_ref (decoder);
 }
 
 /**
@@ -560,9 +560,9 @@ gst_vaapi_decoder_ref(GstVaapiDecoder *decoder)
  * the reference count reaches zero, the decoder will be free'd.
  */
 void
-gst_vaapi_decoder_unref(GstVaapiDecoder *decoder)
+gst_vaapi_decoder_unref (GstVaapiDecoder * decoder)
 {
-    gst_vaapi_object_unref(decoder);
+  gst_vaapi_object_unref (decoder);
 }
 
 /**
@@ -575,10 +575,10 @@ gst_vaapi_decoder_unref(GstVaapiDecoder *decoder)
  * a valid decoder. However, @new_decoder can be NULL.
  */
 void
-gst_vaapi_decoder_replace(GstVaapiDecoder **old_decoder_ptr,
-    GstVaapiDecoder *new_decoder)
+gst_vaapi_decoder_replace (GstVaapiDecoder ** old_decoder_ptr,
+    GstVaapiDecoder * new_decoder)
 {
-    gst_vaapi_object_replace(old_decoder_ptr, new_decoder);
+  gst_vaapi_object_replace (old_decoder_ptr, new_decoder);
 }
 
 /**
@@ -590,11 +590,11 @@ gst_vaapi_decoder_replace(GstVaapiDecoder **old_decoder_ptr,
  * Return value: the user-defined data associated with the @decoder
  */
 gpointer
-gst_vaapi_decoder_get_user_data(GstVaapiDecoder *decoder)
+gst_vaapi_decoder_get_user_data (GstVaapiDecoder * decoder)
 {
-    g_return_val_if_fail(decoder != NULL, NULL);
+  g_return_val_if_fail (decoder != NULL, NULL);
 
-    return decoder->user_data;
+  return decoder->user_data;
 }
 
 /**
@@ -606,11 +606,11 @@ gst_vaapi_decoder_get_user_data(GstVaapiDecoder *decoder)
  * attached value with gst_vaapi_decoder_get_user_data() function.
  */
 void
-gst_vaapi_decoder_set_user_data(GstVaapiDecoder *decoder, gpointer user_data)
+gst_vaapi_decoder_set_user_data (GstVaapiDecoder * decoder, gpointer user_data)
 {
-    g_return_if_fail(decoder != NULL);
+  g_return_if_fail (decoder != NULL);
 
-    decoder->user_data = user_data;
+  decoder->user_data = user_data;
 }
 
 /**
@@ -622,11 +622,11 @@ gst_vaapi_decoder_set_user_data(GstVaapiDecoder *decoder, gpointer user_data)
  * Return value: the #GstVaapiCodec type for @decoder
  */
 GstVaapiCodec
-gst_vaapi_decoder_get_codec(GstVaapiDecoder *decoder)
+gst_vaapi_decoder_get_codec (GstVaapiDecoder * decoder)
 {
-    g_return_val_if_fail(decoder != NULL, (GstVaapiCodec)0);
+  g_return_val_if_fail (decoder != NULL, (GstVaapiCodec) 0);
 
-    return decoder->codec;
+  return decoder->codec;
 }
 
 /**
@@ -640,11 +640,11 @@ gst_vaapi_decoder_get_codec(GstVaapiDecoder *decoder)
  * Return value: the #GstVideoCodecState object for @decoder
  */
 GstVideoCodecState *
-gst_vaapi_decoder_get_codec_state(GstVaapiDecoder *decoder)
+gst_vaapi_decoder_get_codec_state (GstVaapiDecoder * decoder)
 {
-    g_return_val_if_fail(decoder != NULL, NULL);
+  g_return_val_if_fail (decoder != NULL, NULL);
 
-    return GST_VAAPI_DECODER_CODEC_STATE(decoder);
+  return GST_VAAPI_DECODER_CODEC_STATE (decoder);
 }
 
 /**
@@ -657,13 +657,13 @@ gst_vaapi_decoder_get_codec_state(GstVaapiDecoder *decoder)
  * state changes.
  */
 void
-gst_vaapi_decoder_set_codec_state_changed_func(GstVaapiDecoder *decoder,
+gst_vaapi_decoder_set_codec_state_changed_func (GstVaapiDecoder * decoder,
     GstVaapiDecoderStateChangedFunc func, gpointer user_data)
 {
-    g_return_if_fail(decoder != NULL);
+  g_return_if_fail (decoder != NULL);
 
-    decoder->codec_state_changed_func = func;
-    decoder->codec_state_changed_data = user_data;
+  decoder->codec_state_changed_func = func;
+  decoder->codec_state_changed_data = user_data;
 }
 
 /**
@@ -676,9 +676,9 @@ gst_vaapi_decoder_set_codec_state_changed_func(GstVaapiDecoder *decoder,
  * Return value: the @decoder caps
  */
 GstCaps *
-gst_vaapi_decoder_get_caps(GstVaapiDecoder *decoder)
+gst_vaapi_decoder_get_caps (GstVaapiDecoder * decoder)
 {
-    return get_caps(decoder);
+  return get_caps (decoder);
 }
 
 /**
@@ -697,16 +697,16 @@ gst_vaapi_decoder_get_caps(GstVaapiDecoder *decoder)
  * Return value: %TRUE on success
  */
 gboolean
-gst_vaapi_decoder_put_buffer(GstVaapiDecoder *decoder, GstBuffer *buf)
+gst_vaapi_decoder_put_buffer (GstVaapiDecoder * decoder, GstBuffer * buf)
 {
-    g_return_val_if_fail(decoder != NULL, FALSE);
+  g_return_val_if_fail (decoder != NULL, FALSE);
 
-    if (buf) {
-        if (gst_buffer_get_size(buf) == 0)
-            return TRUE;
-        buf = gst_buffer_ref(buf);
-    }
-    return push_buffer(decoder, buf);
+  if (buf) {
+    if (gst_buffer_get_size (buf) == 0)
+      return TRUE;
+    buf = gst_buffer_ref (buf);
+  }
+  return push_buffer (decoder, buf);
 }
 
 /**
@@ -724,36 +724,36 @@ gst_vaapi_decoder_put_buffer(GstVaapiDecoder *decoder, GstBuffer *buf)
  * Return value: a #GstVaapiDecoderStatus
  */
 GstVaapiDecoderStatus
-gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
-    GstVaapiSurfaceProxy **out_proxy_ptr)
+gst_vaapi_decoder_get_surface (GstVaapiDecoder * decoder,
+    GstVaapiSurfaceProxy ** out_proxy_ptr)
 {
-    GstVideoCodecFrame *frame;
-    GstVaapiDecoderStatus status;
+  GstVideoCodecFrame *frame;
+  GstVaapiDecoderStatus status;
 
-    g_return_val_if_fail(decoder != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(out_proxy_ptr != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (decoder != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (out_proxy_ptr != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
-    do {
-        frame = pop_frame(decoder, 0);
-        while (frame) {
-            if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY(frame)) {
-                GstVaapiSurfaceProxy * const proxy = frame->user_data;
-                proxy->timestamp = frame->pts;
-                proxy->duration = frame->duration;
-                *out_proxy_ptr = gst_vaapi_surface_proxy_ref(proxy);
-                gst_video_codec_frame_unref(frame);
-                return GST_VAAPI_DECODER_STATUS_SUCCESS;
-            }
-            gst_video_codec_frame_unref(frame);
-            frame = pop_frame(decoder, 0);
-        }
-        status = decode_step(decoder);
-    } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
+  do {
+    frame = pop_frame (decoder, 0);
+    while (frame) {
+      if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (frame)) {
+        GstVaapiSurfaceProxy *const proxy = frame->user_data;
+        proxy->timestamp = frame->pts;
+        proxy->duration = frame->duration;
+        *out_proxy_ptr = gst_vaapi_surface_proxy_ref (proxy);
+        gst_video_codec_frame_unref (frame);
+        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+      }
+      gst_video_codec_frame_unref (frame);
+      frame = pop_frame (decoder, 0);
+    }
+    status = decode_step (decoder);
+  } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
 
-    *out_proxy_ptr = NULL;
-    return status;
+  *out_proxy_ptr = NULL;
+  return status;
 }
 
 /**
@@ -777,10 +777,10 @@ gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
  * Return value: a #GstVaapiDecoderStatus
  */
 GstVaapiDecoderStatus
-gst_vaapi_decoder_get_frame(GstVaapiDecoder *decoder,
-    GstVideoCodecFrame **out_frame_ptr)
+gst_vaapi_decoder_get_frame (GstVaapiDecoder * decoder,
+    GstVideoCodecFrame ** out_frame_ptr)
 {
-    return gst_vaapi_decoder_get_frame_with_timeout(decoder, out_frame_ptr, 0);
+  return gst_vaapi_decoder_get_frame_with_timeout (decoder, out_frame_ptr, 0);
 }
 
 /**
@@ -802,262 +802,252 @@ gst_vaapi_decoder_get_frame(GstVaapiDecoder *decoder,
  * Return value: a #GstVaapiDecoderStatus
  */
 GstVaapiDecoderStatus
-gst_vaapi_decoder_get_frame_with_timeout(GstVaapiDecoder *decoder,
-    GstVideoCodecFrame **out_frame_ptr, guint64 timeout)
+gst_vaapi_decoder_get_frame_with_timeout (GstVaapiDecoder * decoder,
+    GstVideoCodecFrame ** out_frame_ptr, guint64 timeout)
 {
-    GstVideoCodecFrame *out_frame;
+  GstVideoCodecFrame *out_frame;
 
-    g_return_val_if_fail(decoder != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(out_frame_ptr != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (decoder != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (out_frame_ptr != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
-    out_frame = pop_frame(decoder, timeout);
-    if (!out_frame)
-        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+  out_frame = pop_frame (decoder, timeout);
+  if (!out_frame)
+    return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
 #if !GST_CHECK_VERSION(1,0,0)
-    if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY(out_frame)) {
-        const guint flags = GST_VAAPI_SURFACE_PROXY_FLAGS(out_frame->user_data);
-        guint out_flags = 0;
+  if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (out_frame)) {
+    const guint flags = GST_VAAPI_SURFACE_PROXY_FLAGS (out_frame->user_data);
+    guint out_flags = 0;
 
-        if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_TFF)
-            out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_TFF;
-        if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_RFF)
-            out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_RFF;
-        if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD)
-            out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD;
-        GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame, out_flags);
-    }
+    if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_TFF)
+      out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_TFF;
+    if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_RFF)
+      out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_RFF;
+    if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD)
+      out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD;
+    GST_VIDEO_CODEC_FRAME_FLAG_SET (out_frame, out_flags);
+  }
 #endif
 
-    *out_frame_ptr = out_frame;
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+  *out_frame_ptr = out_frame;
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 void
-gst_vaapi_decoder_set_picture_size(
-    GstVaapiDecoder    *decoder,
-    guint               width,
-    guint               height
-)
+gst_vaapi_decoder_set_picture_size (GstVaapiDecoder * decoder,
+    guint width, guint height)
 {
-    GstVideoCodecState * const codec_state = decoder->codec_state;
-    gboolean size_changed = FALSE;
+  GstVideoCodecState *const codec_state = decoder->codec_state;
+  gboolean size_changed = FALSE;
 
-    if (codec_state->info.width != width) {
-        GST_DEBUG("picture width changed to %d", width);
-        codec_state->info.width = width;
-        gst_caps_set_simple(codec_state->caps,
-            "width", G_TYPE_INT, width, NULL);
-        size_changed = TRUE;
-    }
+  if (codec_state->info.width != width) {
+    GST_DEBUG ("picture width changed to %d", width);
+    codec_state->info.width = width;
+    gst_caps_set_simple (codec_state->caps, "width", G_TYPE_INT, width, NULL);
+    size_changed = TRUE;
+  }
 
-    if (codec_state->info.height != height) {
-        GST_DEBUG("picture height changed to %d", height);
-        codec_state->info.height = height;
-        gst_caps_set_simple(codec_state->caps,
-            "height", G_TYPE_INT, height, NULL);
-        size_changed = TRUE;
-    }
+  if (codec_state->info.height != height) {
+    GST_DEBUG ("picture height changed to %d", height);
+    codec_state->info.height = height;
+    gst_caps_set_simple (codec_state->caps, "height", G_TYPE_INT, height, NULL);
+    size_changed = TRUE;
+  }
 
-    if (size_changed)
-        notify_codec_state_changed(decoder);
+  if (size_changed)
+    notify_codec_state_changed (decoder);
 }
 
 void
-gst_vaapi_decoder_set_framerate(
-    GstVaapiDecoder    *decoder,
-    guint               fps_n,
-    guint               fps_d
-)
+gst_vaapi_decoder_set_framerate (GstVaapiDecoder * decoder,
+    guint fps_n, guint fps_d)
 {
-    GstVideoCodecState * const codec_state = decoder->codec_state;
+  GstVideoCodecState *const codec_state = decoder->codec_state;
 
-    if (!fps_n || !fps_d)
-        return;
+  if (!fps_n || !fps_d)
+    return;
 
-    if (codec_state->info.fps_n != fps_n || codec_state->info.fps_d != fps_d) {
-        GST_DEBUG("framerate changed to %u/%u", fps_n, fps_d);
-        codec_state->info.fps_n = fps_n;
-        codec_state->info.fps_d = fps_d;
-        gst_caps_set_simple(codec_state->caps,
-            "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-        notify_codec_state_changed(decoder);
-    }
+  if (codec_state->info.fps_n != fps_n || codec_state->info.fps_d != fps_d) {
+    GST_DEBUG ("framerate changed to %u/%u", fps_n, fps_d);
+    codec_state->info.fps_n = fps_n;
+    codec_state->info.fps_d = fps_d;
+    gst_caps_set_simple (codec_state->caps,
+        "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+    notify_codec_state_changed (decoder);
+  }
 }
 
 void
-gst_vaapi_decoder_set_pixel_aspect_ratio(
-    GstVaapiDecoder    *decoder,
-    guint               par_n,
-    guint               par_d
-)
+gst_vaapi_decoder_set_pixel_aspect_ratio (GstVaapiDecoder * decoder,
+    guint par_n, guint par_d)
 {
-    GstVideoCodecState * const codec_state = decoder->codec_state;
+  GstVideoCodecState *const codec_state = decoder->codec_state;
 
-    if (!par_n || !par_d)
-        return;
+  if (!par_n || !par_d)
+    return;
 
-    if (codec_state->info.par_n != par_n || codec_state->info.par_d != par_d) {
-        GST_DEBUG("pixel-aspect-ratio changed to %u/%u", par_n, par_d);
-        codec_state->info.par_n = par_n;
-        codec_state->info.par_d = par_d;
-        gst_caps_set_simple(codec_state->caps,
-            "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
-        notify_codec_state_changed(decoder);
-    }
+  if (codec_state->info.par_n != par_n || codec_state->info.par_d != par_d) {
+    GST_DEBUG ("pixel-aspect-ratio changed to %u/%u", par_n, par_d);
+    codec_state->info.par_n = par_n;
+    codec_state->info.par_d = par_d;
+    gst_caps_set_simple (codec_state->caps,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+    notify_codec_state_changed (decoder);
+  }
 }
 
 static const gchar *
-gst_interlace_mode_to_string(GstVideoInterlaceMode mode)
+gst_interlace_mode_to_string (GstVideoInterlaceMode mode)
 {
-    switch (mode) {
-    case GST_VIDEO_INTERLACE_MODE_PROGRESSIVE:  return "progressive";
-    case GST_VIDEO_INTERLACE_MODE_INTERLEAVED:  return "interleaved";
-    case GST_VIDEO_INTERLACE_MODE_MIXED:        return "mixed";
-    }
-    return "<unknown>";
+  switch (mode) {
+    case GST_VIDEO_INTERLACE_MODE_PROGRESSIVE:
+      return "progressive";
+    case GST_VIDEO_INTERLACE_MODE_INTERLEAVED:
+      return "interleaved";
+    case GST_VIDEO_INTERLACE_MODE_MIXED:
+      return "mixed";
+  }
+  return "<unknown>";
 }
 
 void
-gst_vaapi_decoder_set_interlace_mode(GstVaapiDecoder *decoder,
+gst_vaapi_decoder_set_interlace_mode (GstVaapiDecoder * decoder,
     GstVideoInterlaceMode mode)
 {
-    GstVideoCodecState * const codec_state = decoder->codec_state;
+  GstVideoCodecState *const codec_state = decoder->codec_state;
 
-    if (codec_state->info.interlace_mode != mode) {
-        GST_DEBUG("interlace mode changed to %s",
-                  gst_interlace_mode_to_string(mode));
-        codec_state->info.interlace_mode = mode;
-        gst_caps_set_simple(codec_state->caps, "interlaced",
-            G_TYPE_BOOLEAN, mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE, NULL);
-        notify_codec_state_changed(decoder);
-    }
+  if (codec_state->info.interlace_mode != mode) {
+    GST_DEBUG ("interlace mode changed to %s",
+        gst_interlace_mode_to_string (mode));
+    codec_state->info.interlace_mode = mode;
+    gst_caps_set_simple (codec_state->caps, "interlaced",
+        G_TYPE_BOOLEAN, mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE, NULL);
+    notify_codec_state_changed (decoder);
+  }
 }
 
 void
-gst_vaapi_decoder_set_interlaced(GstVaapiDecoder *decoder, gboolean interlaced)
+gst_vaapi_decoder_set_interlaced (GstVaapiDecoder * decoder,
+    gboolean interlaced)
 {
-    gst_vaapi_decoder_set_interlace_mode(decoder,
-        (interlaced ?
-         GST_VIDEO_INTERLACE_MODE_INTERLEAVED :
-         GST_VIDEO_INTERLACE_MODE_PROGRESSIVE));
+  gst_vaapi_decoder_set_interlace_mode (decoder,
+      (interlaced ?
+          GST_VIDEO_INTERLACE_MODE_INTERLEAVED :
+          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE));
 }
 
 gboolean
-gst_vaapi_decoder_ensure_context(
-    GstVaapiDecoder     *decoder,
-    GstVaapiContextInfo *cip
-)
+gst_vaapi_decoder_ensure_context (GstVaapiDecoder * decoder,
+    GstVaapiContextInfo * cip)
 {
-    gst_vaapi_decoder_set_picture_size(decoder, cip->width, cip->height);
+  gst_vaapi_decoder_set_picture_size (decoder, cip->width, cip->height);
 
-    cip->usage = GST_VAAPI_CONTEXT_USAGE_DECODE;
-    if (decoder->context) {
-        if (!gst_vaapi_context_reset(decoder->context, cip))
-            return FALSE;
-    }
-    else {
-        decoder->context = gst_vaapi_context_new(decoder->display, cip);
-        if (!decoder->context)
-            return FALSE;
-    }
-    decoder->va_context = gst_vaapi_context_get_id(decoder->context);
-    return TRUE;
+  cip->usage = GST_VAAPI_CONTEXT_USAGE_DECODE;
+  if (decoder->context) {
+    if (!gst_vaapi_context_reset (decoder->context, cip))
+      return FALSE;
+  } else {
+    decoder->context = gst_vaapi_context_new (decoder->display, cip);
+    if (!decoder->context)
+      return FALSE;
+  }
+  decoder->va_context = gst_vaapi_context_get_id (decoder->context);
+  return TRUE;
 }
 
 void
-gst_vaapi_decoder_push_frame(GstVaapiDecoder *decoder,
-    GstVideoCodecFrame *frame)
+gst_vaapi_decoder_push_frame (GstVaapiDecoder * decoder,
+    GstVideoCodecFrame * frame)
 {
-    push_frame(decoder, frame);
+  push_frame (decoder, frame);
 }
 
 GstVaapiDecoderStatus
-gst_vaapi_decoder_check_status(GstVaapiDecoder *decoder)
+gst_vaapi_decoder_check_status (GstVaapiDecoder * decoder)
 {
-    if (decoder->context &&
-        gst_vaapi_context_get_surface_count(decoder->context) < 1)
-        return GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE;
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+  if (decoder->context &&
+      gst_vaapi_context_get_surface_count (decoder->context) < 1)
+    return GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE;
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 GstVaapiDecoderStatus
-gst_vaapi_decoder_parse(GstVaapiDecoder *decoder,
-    GstVideoCodecFrame *base_frame, GstAdapter *adapter, gboolean at_eos,
-    guint *got_unit_size_ptr, gboolean *got_frame_ptr)
+gst_vaapi_decoder_parse (GstVaapiDecoder * decoder,
+    GstVideoCodecFrame * base_frame, GstAdapter * adapter, gboolean at_eos,
+    guint * got_unit_size_ptr, gboolean * got_frame_ptr)
 {
-    g_return_val_if_fail(decoder != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(base_frame != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(adapter != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(got_unit_size_ptr != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(got_frame_ptr != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (decoder != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (base_frame != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (adapter != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (got_unit_size_ptr != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (got_frame_ptr != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
-    return do_parse(decoder, base_frame, adapter, at_eos,
-        got_unit_size_ptr, got_frame_ptr);
+  return do_parse (decoder, base_frame, adapter, at_eos,
+      got_unit_size_ptr, got_frame_ptr);
 }
 
 GstVaapiDecoderStatus
-gst_vaapi_decoder_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
+gst_vaapi_decoder_decode (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame)
 {
-    GstVaapiDecoderStatus status;
+  GstVaapiDecoderStatus status;
 
-    g_return_val_if_fail(decoder != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(frame != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(frame->user_data != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (decoder != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (frame != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (frame->user_data != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
-    status = gst_vaapi_decoder_check_status(decoder);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        return status;
-    return do_decode(decoder, frame);
-}
-
-GstVaapiDecoderStatus
-gst_vaapi_decoder_flush(GstVaapiDecoder *decoder)
-{
-    g_return_val_if_fail(decoder != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-
-    return do_flush(decoder);
-}
-
-GstVaapiDecoderStatus
-gst_vaapi_decoder_decode_codec_data(GstVaapiDecoder *decoder)
-{
-    GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
-    GstBuffer * const codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
-    GstVaapiDecoderStatus status;
-    GstMapInfo map_info;
-    const guchar *buf;
-    guint buf_size;
-
-    if (!codec_data)
-        return GST_VAAPI_DECODER_STATUS_SUCCESS;
-
-    /* FIXME: add a meaningful error code? */
-    if (!klass->decode_codec_data)
-        return GST_VAAPI_DECODER_STATUS_SUCCESS;
-
-    if (!gst_buffer_map(codec_data, &map_info, GST_MAP_READ)) {
-        GST_ERROR("failed to map buffer");
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-    }
-
-    buf      = map_info.data;
-    buf_size = map_info.size;
-    if (G_LIKELY(buf && buf_size > 0))
-        status = klass->decode_codec_data(decoder, buf, buf_size);
-    else
-        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-    gst_buffer_unmap(codec_data, &map_info);
+  status = gst_vaapi_decoder_check_status (decoder);
+  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
     return status;
+  return do_decode (decoder, frame);
+}
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_flush (GstVaapiDecoder * decoder)
+{
+  g_return_val_if_fail (decoder != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+
+  return do_flush (decoder);
+}
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_decode_codec_data (GstVaapiDecoder * decoder)
+{
+  GstVaapiDecoderClass *const klass = GST_VAAPI_DECODER_GET_CLASS (decoder);
+  GstBuffer *const codec_data = GST_VAAPI_DECODER_CODEC_DATA (decoder);
+  GstVaapiDecoderStatus status;
+  GstMapInfo map_info;
+  const guchar *buf;
+  guint buf_size;
+
+  if (!codec_data)
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+  /* FIXME: add a meaningful error code? */
+  if (!klass->decode_codec_data)
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+  if (!gst_buffer_map (codec_data, &map_info, GST_MAP_READ)) {
+    GST_ERROR ("failed to map buffer");
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  }
+
+  buf = map_info.data;
+  buf_size = map_info.size;
+  if (G_LIKELY (buf && buf_size > 0))
+    status = klass->decode_codec_data (decoder, buf, buf_size);
+  else
+    status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+  gst_buffer_unmap (codec_data, &map_info);
+  return status;
 }

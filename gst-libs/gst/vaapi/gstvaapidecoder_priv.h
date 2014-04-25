@@ -45,8 +45,8 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DECODER_GET_CLASS(obj) \
     GST_VAAPI_DECODER_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
 
-typedef struct _GstVaapiDecoderClass            GstVaapiDecoderClass;
-        struct _GstVaapiDecoderUnit;
+typedef struct _GstVaapiDecoderClass GstVaapiDecoderClass;
+struct _GstVaapiDecoderUnit;
 
 /**
  * GST_VAAPI_PARSER_STATE:
@@ -162,21 +162,22 @@ typedef struct _GstVaapiDecoderClass            GstVaapiDecoderClass;
                                  GstVaapiDecoderPrivate))
 
 typedef enum {
-    GST_VAAPI_DECODER_STATUS_DROP_FRAME = -2
+  GST_VAAPI_DECODER_STATUS_DROP_FRAME = -2
 } GstVaapiDecoderStatusPrivate;
 
 typedef struct _GstVaapiParserState GstVaapiParserState;
-struct _GstVaapiParserState {
-    GstVideoCodecFrame *current_frame;
-    guint32             current_frame_number;
-    GstAdapter         *current_adapter;
-    GstAdapter         *input_adapter;
-    gint                input_offset1;
-    gint                input_offset2;
-    GstAdapter         *output_adapter;
-    GstVaapiDecoderUnit next_unit;
-    guint               next_unit_pending       : 1;
-    guint               at_eos                  : 1;
+struct _GstVaapiParserState
+{
+  GstVideoCodecFrame *current_frame;
+  guint32 current_frame_number;
+  GstAdapter *current_adapter;
+  GstAdapter *input_adapter;
+  gint input_offset1;
+  gint input_offset2;
+  GstAdapter *output_adapter;
+  GstVaapiDecoderUnit next_unit;
+  guint next_unit_pending:1;
+  guint at_eos:1;
 };
 
 /**
@@ -184,22 +185,23 @@ struct _GstVaapiParserState {
  *
  * A VA decoder base instance.
  */
-struct _GstVaapiDecoder {
-    /*< private >*/
-    GstVaapiMiniObject  parent_instance;
+struct _GstVaapiDecoder
+{
+  /*< private >*/
+  GstVaapiMiniObject parent_instance;
 
-    gpointer            user_data;
-    GstVaapiDisplay    *display;
-    VADisplay           va_display;
-    GstVaapiContext    *context;
-    VAContextID         va_context;
-    GstVaapiCodec       codec;
-    GstVideoCodecState *codec_state;
-    GAsyncQueue        *buffers;
-    GAsyncQueue        *frames;
-    GstVaapiParserState parser_state;
-    GstVaapiDecoderStateChangedFunc codec_state_changed_func;
-    gpointer            codec_state_changed_data;
+  gpointer user_data;
+  GstVaapiDisplay *display;
+  VADisplay va_display;
+  GstVaapiContext *context;
+  VAContextID va_context;
+  GstVaapiCodec codec;
+  GstVideoCodecState *codec_state;
+  GAsyncQueue *buffers;
+  GAsyncQueue *frames;
+  GstVaapiParserState parser_state;
+  GstVaapiDecoderStateChangedFunc codec_state_changed_func;
+  gpointer codec_state_changed_data;
 };
 
 /**
@@ -207,86 +209,77 @@ struct _GstVaapiDecoder {
  *
  * A VA decoder base class.
  */
-struct _GstVaapiDecoderClass {
-    /*< private >*/
-    GstVaapiMiniObjectClass parent_class;
+struct _GstVaapiDecoderClass
+{
+  /*< private >*/
+  GstVaapiMiniObjectClass parent_class;
 
-    gboolean              (*create)(GstVaapiDecoder *decoder);
-    void                  (*destroy)(GstVaapiDecoder *decoder);
-    GstVaapiDecoderStatus (*parse)(GstVaapiDecoder *decoder,
-        GstAdapter *adapter, gboolean at_eos,
-        struct _GstVaapiDecoderUnit *unit);
-    GstVaapiDecoderStatus (*decode)(GstVaapiDecoder *decoder,
-        struct _GstVaapiDecoderUnit *unit);
-    GstVaapiDecoderStatus (*start_frame)(GstVaapiDecoder *decoder,
-        struct _GstVaapiDecoderUnit *unit);
-    GstVaapiDecoderStatus (*end_frame)(GstVaapiDecoder *decoder);
-    GstVaapiDecoderStatus (*flush)(GstVaapiDecoder *decoder);
-    GstVaapiDecoderStatus (*decode_codec_data)(GstVaapiDecoder *decoder,
-        const guchar *buf, guint buf_size);
+  gboolean (*create) (GstVaapiDecoder * decoder);
+  void (*destroy) (GstVaapiDecoder * decoder);
+  GstVaapiDecoderStatus (*parse) (GstVaapiDecoder * decoder,
+      GstAdapter * adapter, gboolean at_eos,
+      struct _GstVaapiDecoderUnit * unit);
+  GstVaapiDecoderStatus (*decode) (GstVaapiDecoder * decoder,
+      struct _GstVaapiDecoderUnit * unit);
+  GstVaapiDecoderStatus (*start_frame) (GstVaapiDecoder * decoder,
+      struct _GstVaapiDecoderUnit * unit);
+  GstVaapiDecoderStatus (*end_frame) (GstVaapiDecoder * decoder);
+  GstVaapiDecoderStatus (*flush) (GstVaapiDecoder * decoder);
+  GstVaapiDecoderStatus (*decode_codec_data) (GstVaapiDecoder * decoder,
+      const guchar * buf, guint buf_size);
 };
 
 G_GNUC_INTERNAL
 GstVaapiDecoder *
-gst_vaapi_decoder_new(const GstVaapiDecoderClass *klass,
-    GstVaapiDisplay *display, GstCaps *caps);
+gst_vaapi_decoder_new (const GstVaapiDecoderClass * klass,
+    GstVaapiDisplay * display, GstCaps * caps);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_finalize(GstVaapiDecoder *decoder);
+gst_vaapi_decoder_finalize (GstVaapiDecoder * decoder);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_set_picture_size(
-    GstVaapiDecoder    *decoder,
-    guint               width,
-    guint               height
-);
+gst_vaapi_decoder_set_picture_size (GstVaapiDecoder * decoder,
+    guint width, guint height);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_set_framerate(
-    GstVaapiDecoder    *decoder,
-    guint               fps_n,
-    guint               fps_d
-);
+gst_vaapi_decoder_set_framerate (GstVaapiDecoder * decoder,
+    guint fps_n, guint fps_d);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_set_pixel_aspect_ratio(
-    GstVaapiDecoder    *decoder,
-    guint               par_n,
-    guint               par_d
-);
+gst_vaapi_decoder_set_pixel_aspect_ratio (GstVaapiDecoder * decoder,
+    guint par_n, guint par_d);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_set_interlace_mode(GstVaapiDecoder *decoder,
+gst_vaapi_decoder_set_interlace_mode (GstVaapiDecoder * decoder,
     GstVideoInterlaceMode mode);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_set_interlaced(GstVaapiDecoder *decoder, gboolean interlaced);
+gst_vaapi_decoder_set_interlaced (GstVaapiDecoder * decoder,
+    gboolean interlaced);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_decoder_ensure_context(
-    GstVaapiDecoder     *decoder,
-    GstVaapiContextInfo *cip
-);
+gst_vaapi_decoder_ensure_context (GstVaapiDecoder * decoder,
+    GstVaapiContextInfo * cip);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_push_frame(GstVaapiDecoder *decoder,
-    GstVideoCodecFrame *frame);
+gst_vaapi_decoder_push_frame (GstVaapiDecoder * decoder,
+    GstVideoCodecFrame * frame);
 
 G_GNUC_INTERNAL
 GstVaapiDecoderStatus
-gst_vaapi_decoder_check_status(GstVaapiDecoder *decoder);
+gst_vaapi_decoder_check_status (GstVaapiDecoder * decoder);
 
 G_GNUC_INTERNAL
 GstVaapiDecoderStatus
-gst_vaapi_decoder_decode_codec_data(GstVaapiDecoder *decoder);
+gst_vaapi_decoder_decode_codec_data (GstVaapiDecoder * decoder);
 
 G_END_DECLS
 
