@@ -164,10 +164,12 @@ G_V_BLACKLISTED_TESTS = \
   "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
  ("validate.*.reverse_playback.*webm$",
   "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
+ ("validate.*.playback.reverse_playback.*\.ts|validate.*.playback.reverse_playback.*\.MTS",
+  "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
  ("validate.http.playback.seek_with_stop.*webm",
   "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
  ("validate.http.playback.seek_with_stop.*mkv",
-  "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode")
+  "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
  ]
 
 class GstValidateLaunchTest(GstValidateTest):
