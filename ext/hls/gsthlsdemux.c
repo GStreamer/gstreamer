@@ -776,7 +776,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
       gst_buffer_unmap (key_buffer, &key_info);
       gst_buffer_unref (key_buffer);
-      gst_object_unref (key_fragment);
+      g_object_unref (key_fragment);
     }
 
     gst_adapter_push (demux->adapter, buffer);
@@ -1703,6 +1703,10 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   gst_buffer_unmap (decrypted_buffer, &decrypted_info);
   gst_buffer_unmap (encrypted_buffer, &encrypted_info);
 
+  gst_buffer_unref (encrypted_buffer);
+
+  return decrypted_buffer;
+
 decrypt_error:
   GST_ERROR_OBJECT (demux, "Failed to decrypt fragment");
   g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_DECRYPT,
@@ -1714,7 +1718,7 @@ decrypt_error:
   gst_buffer_unref (encrypted_buffer);
   gst_buffer_unref (decrypted_buffer);
 
-  return decrypted_buffer;
+  return NULL;
 }
 
 static void
