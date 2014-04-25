@@ -518,7 +518,10 @@ quit:
 
       /* set the element state to NULL */
       GST_OBJECT_UNLOCK (downloader);
-      gst_element_set_state (urisrc, GST_STATE_READY);
+      if (download == NULL)
+        gst_element_set_state (urisrc, GST_STATE_NULL);
+      else
+        gst_element_set_state (urisrc, GST_STATE_READY);
       GST_OBJECT_LOCK (downloader);
       gst_element_set_bus (urisrc, NULL);
 
