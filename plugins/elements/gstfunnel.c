@@ -263,7 +263,7 @@ gst_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     if ((GST_EVENT_TYPE (event) == GST_EVENT_EOS) &&
         (!gst_funnel_all_sinkpads_eos_unlocked (funnel, pad))) {
       forward = FALSE;
-    } else if (pad != funnel->last_sinkpad) {
+    } else if (funnel->last_sinkpad && (pad != funnel->last_sinkpad)) {
       forward = FALSE;
     }
   }
