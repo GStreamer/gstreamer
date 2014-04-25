@@ -720,6 +720,30 @@ _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
   return TRUE;
 }
 
+static gboolean
+_execute_dot_pipeline (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  gchar *dotname;
+  gint details = GST_DEBUG_GRAPH_SHOW_ALL;
+
+  const gchar *name =
+      gst_structure_get_string (action->structure, "name");
+
+  gst_structure_get_int (action->structure, "details", &details);
+  if (name)
+    dotname = g_strdup_printf ("validate.action.%s", name);
+  else
+    dotname = g_strdup ("validate.action.unnamed");
+
+  gst_validate_printf (action, "Doting pipeline (name %s)\n", dotname);
+  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (scenario->pipeline),
+      details, dotname);
+
+  g_free (dotname);
+
+  return TRUE;
+}
+
 
 static void
 gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
@@ -1476,6 +1500,8 @@ init_scenarios (void)
       " track'), note that you need to state that it is a string in the scenario file"
       " prefixing it with (string).", FALSE);
   gst_validate_add_action_type ("wait", _execute_wait, wait_mandatory_fields,
+      "Action to wait during 'duration' seconds", FALSE);
+  gst_validate_add_action_type ("dot-pipeline", _execute_dot_pipeline, NULL,
       "Action to wait during 'duration' seconds", FALSE);
   gst_validate_add_action_type ("set-feature-rank", _set_rank, NULL,
       "Allows you to change the ranking of a particular plugin feature", TRUE);
