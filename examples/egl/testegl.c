@@ -5,6 +5,7 @@ Copyright (C) 2013, Fluendo S.A.
    @author: Josep Torra <josep@fluendo.com>
 Copyright (C) 2013, Video Experts Group LLC.
    @author: Ilya Smelykh <ilya@videoexpertsgroup.com>
+Copyright (C) 2014 Julien Isorce <julien.isorce@collabora.co.uk>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -47,38 +48,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <gst/gst.h>
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL) && defined (__GNUC__)
+#if defined (USE_OMX_TARGET_RPI) && defined (__GNUC__)
 #ifndef __VCCOREVER__
 #define __VCCOREVER__ 0x04000000
 #endif
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #pragma GCC optimize ("gnu89-inline")
-#endif
-
-#include "bcm_host.h"
-
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL) && defined (__GNUC__)
-#pragma GCC reset_options
-#pragma GCC diagnostic pop
 #endif
 
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL) && defined (__GNUC__)
-#ifndef __VCCOREVER__
-#define __VCCOREVER__ 0x04000000
-#endif
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#pragma GCC optimize ("gnu89-inline")
+#include <gst/gl/gl.h>
+#include <gst/gl/egl/gstgldisplay_egl.h>
+
+#if defined (USE_OMX_TARGET_RPI)
+#include <bcm_host.h>
 #endif
 
-#define EGL_EGLEXT_PROTOTYPES
-#include <gst/egl/egl.h>
-
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL) && defined (__GNUC__)
+#if defined (USE_OMX_TARGET_RPI) && defined (__GNUC__)
 #pragma GCC reset_options
 #pragma GCC diagnostic pop
 #endif
@@ -93,7 +82,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define TRACE_VC_MEMORY_ENABLED 0
 
-#if TRACE_VC_MEMORY_ENABLED
+#if defined (USE_OMX_TARGET_RPI) && TRACE_VC_MEMORY_ENABLED
 #define TRACE_VC_MEMORY(str)                 \
   fprintf (stderr, "\n\n" str "\n");         \
   system ("vcdbg reloc >&2")
@@ -135,8 +124,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef struct
 {
+#if defined (USE_OMX_TARGET_RPI)
   DISPMANX_DISPLAY_HANDLE_T dispman_display;
   DISPMANX_ELEMENT_HANDLE_T dispman_element;
+#endif
 
   uint32_t screen_width;
   uint32_t screen_height;
@@ -165,17 +156,16 @@ typedef struct
   /* GStreamer related resources */
   GstElement *pipeline;
   GstElement *vsink;
-  GstEGLDisplay *gst_display;
+  GstGLDisplayEGL *gst_display;
 
   /* Interthread comunication */
   GAsyncQueue *queue;
-  GMutex *queue_lock;
-  GCond *cond;
+  GMutex queue_lock;
+  GCond cond;
   gboolean flushing;
   GstMiniObject *popped_obj;
   GstBuffer *current_buffer;
 
-  GstBufferPool *pool;
   /* GLib mainloop */
   GMainLoop *main_loop;
   GstBuffer *last_buffer;
@@ -190,37 +180,6 @@ typedef struct
   guint64 dropped;
 } APP_STATE_T;
 
-typedef struct
-{
-  GThread *thread;
-  EGLImageKHR image;
-  GLuint texture;
-  APP_STATE_T *state;
-} GstEGLGLESImageData;
-
-/* EGLImage memory, buffer pool, etc */
-typedef struct
-{
-  GstVideoBufferPool parent;
-
-  APP_STATE_T *state;
-  GstAllocator *allocator;
-  GstAllocationParams params;
-  GstVideoInfo info;
-  gboolean add_metavideo;
-  gboolean want_eglimage;
-  GstEGLDisplay *display;
-} GstCustomEGLImageBufferPool;
-
-typedef GstVideoBufferPoolClass GstCustomEGLImageBufferPoolClass;
-
-#define GST_CUSTOM_EGL_IMAGE_BUFFER_POOL(p) ((GstCustomEGLImageBufferPool*)(p))
-
-GType gst_custom_egl_image_buffer_pool_get_type (void);
-
-G_DEFINE_TYPE (GstCustomEGLImageBufferPool, gst_custom_egl_image_buffer_pool,
-    GST_TYPE_VIDEO_BUFFER_POOL);
-
 static void init_ogl (APP_STATE_T * state);
 static void init_model_proj (APP_STATE_T * state);
 static void reset_model (APP_STATE_T * state);
@@ -230,8 +189,6 @@ static void redraw_scene (APP_STATE_T * state);
 static void update_model (APP_STATE_T * state);
 static void init_textures (APP_STATE_T * state);
 static APP_STATE_T _state, *state = &_state;
-static GstBufferPool *gst_custom_egl_image_buffer_pool_new (APP_STATE_T * state,
-    GstEGLDisplay * display);
 static gboolean queue_object (APP_STATE_T * state, GstMiniObject * obj,
     gboolean synchronous);
 
@@ -254,371 +211,6 @@ typedef enum
   GST_PLAY_FLAG_SOFT_COLORBALANCE = (1 << 10)
 } GstPlayFlags;
 
-static gboolean
-got_gl_error (const char *wtf)
-{
-  GLuint error = GL_NO_ERROR;
-
-  if ((error = glGetError ()) != GL_NO_ERROR) {
-    GST_CAT_ERROR (GST_CAT_DEFAULT, "GL ERROR: %s returned 0x%04x", wtf, error);
-    return TRUE;
-  }
-  return FALSE;
-}
-
-static gboolean
-got_egl_error (const char *wtf)
-{
-  EGLint error;
-
-  if ((error = eglGetError ()) != EGL_SUCCESS) {
-    GST_CAT_DEBUG (GST_CAT_DEFAULT, "EGL ERROR: %s returned 0x%04x", wtf,
-        error);
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-static void
-image_data_free (GstEGLGLESImageData * data)
-{
-  if (data->thread == g_thread_self ()) {
-    eglDestroyImageKHR (state->display, data->image);
-    glDeleteTextures (1, &data->texture);
-  } else {
-    GstQuery *query;
-    GstStructure *s;
-    s = gst_structure_new ("eglglessink-deallocate-eglimage",
-        "EGLImage", G_TYPE_POINTER, data->image,
-        "GLTexture", G_TYPE_POINTER, data->texture, NULL);
-    query = gst_query_new_custom (GST_QUERY_CUSTOM, s);
-    queue_object (state, GST_MINI_OBJECT_CAST (query), FALSE);
-  }
-  g_slice_free (GstEGLGLESImageData, data);
-}
-
-static GstBuffer *
-gst_egl_allocate_eglimage (APP_STATE_T * ctx,
-    GstAllocator * allocator, GstVideoFormat format, gint width, gint height)
-{
-  GstEGLGLESImageData *data = NULL;
-  GstBuffer *buffer;
-  GstVideoInfo info;
-  gint i;
-  gint stride[3];
-  gsize offset[3];
-  GstMemory *mem[3] = { NULL, NULL, NULL };
-  guint n_mem;
-  GstMemoryFlags flags = 0;
-
-  memset (stride, 0, sizeof (stride));
-  memset (offset, 0, sizeof (offset));
-
-  if (!gst_egl_image_memory_is_mappable ())
-    flags |= GST_MEMORY_FLAG_NOT_MAPPABLE;
-  /* See https://bugzilla.gnome.org/show_bug.cgi?id=695203 */
-  flags |= GST_MEMORY_FLAG_NO_SHARE;
-
-  gst_video_info_set_format (&info, format, width, height);
-
-  GST_DEBUG ("Allocating EGL Image format %s width %d height %d",
-      gst_video_format_to_string (format), width, height);
-  switch (format) {
-    case GST_VIDEO_FORMAT_RGBA:{
-      gsize size;
-
-      mem[0] =
-          gst_egl_image_allocator_alloc (allocator, ctx->gst_display,
-          GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&info),
-          GST_VIDEO_INFO_HEIGHT (&info), &size);
-
-      if (mem[0]) {
-        stride[0] = size / GST_VIDEO_INFO_HEIGHT (&info);
-        n_mem = 1;
-        GST_MINI_OBJECT_FLAG_SET (mem[0], GST_MEMORY_FLAG_NO_SHARE);
-      } else {
-        data = g_slice_new0 (GstEGLGLESImageData);
-        data->thread = g_thread_self ();
-        data->state = ctx;
-
-        stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (&info) * 4);
-        size = stride[0] * GST_VIDEO_INFO_HEIGHT (&info);
-
-        glGenTextures (1, &data->texture);
-        if (got_gl_error ("glGenTextures"))
-          goto mem_error;
-
-        glBindTexture (GL_TEXTURE_2D, data->texture);
-        if (got_gl_error ("glBindTexture"))
-          goto mem_error;
-
-        /* Set 2D resizing params */
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        /* If these are not set the texture image unit will return
-         * * (R, G, B, A) = black on glTexImage2D for non-POT width/height
-         * * frames. For a deeper explanation take a look at the OpenGL ES
-         * * documentation for glTexParameter */
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        if (got_gl_error ("glTexParameteri"))
-          goto mem_error;
-
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA,
-            GST_VIDEO_INFO_WIDTH (&info),
-            GST_VIDEO_INFO_HEIGHT (&info), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        if (got_gl_error ("glTexImage2D"))
-          goto mem_error;
-
-        data->image =
-            eglCreateImageKHR (gst_egl_display_get (ctx->gst_display),
-            ctx->context, EGL_GL_TEXTURE_2D_KHR,
-            (EGLClientBuffer) (guintptr) data->texture, NULL);
-        if (got_egl_error ("eglCreateImageKHR"))
-          goto mem_error;
-
-        mem[0] =
-            gst_egl_image_allocator_wrap (allocator, ctx->gst_display,
-            data->image, GST_VIDEO_GL_TEXTURE_TYPE_RGBA, flags, size, data,
-            (GDestroyNotify) image_data_free);
-
-        n_mem = 1;
-      }
-    }
-      break;
-    default:
-      goto mem_error;
-      break;
-  }
-
-  buffer = gst_buffer_new ();
-  gst_buffer_add_video_meta_full (buffer, 0, format, width, height,
-      GST_VIDEO_INFO_N_PLANES (&info), offset, stride);
-
-  /* n_mem could be reused for planar colorspaces, for now its == 1 for RGBA */
-  for (i = 0; i < n_mem; i++)
-    gst_buffer_append_memory (buffer, mem[i]);
-
-  return buffer;
-mem_error:
-  {
-    GST_ERROR ("Failed to create EGLImage");
-
-    if (data)
-      image_data_free (data);
-
-    if (mem[0])
-      gst_memory_unref (mem[0]);
-
-    return NULL;
-  }
-
-}
-
-static const gchar **
-gst_custom_egl_image_buffer_pool_get_options (GstBufferPool * bpool)
-{
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL
-  };
-
-  return options;
-}
-
-static gboolean
-gst_custom_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
-    GstStructure * config)
-{
-  GstCustomEGLImageBufferPool *pool = GST_CUSTOM_EGL_IMAGE_BUFFER_POOL (bpool);
-  GstCaps *caps;
-  GstVideoInfo info;
-
-  if (pool->allocator)
-    gst_object_unref (pool->allocator);
-  pool->allocator = NULL;
-
-  if (!GST_BUFFER_POOL_CLASS
-      (gst_custom_egl_image_buffer_pool_parent_class)->set_config (bpool,
-          config))
-    return FALSE;
-
-  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL)
-      || !caps)
-    return FALSE;
-
-  if (!gst_video_info_from_caps (&info, caps))
-    return FALSE;
-
-  if (!gst_buffer_pool_config_get_allocator (config, &pool->allocator,
-          &pool->params))
-    return FALSE;
-  if (pool->allocator)
-    gst_object_ref (pool->allocator);
-
-  pool->add_metavideo =
-      gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  pool->want_eglimage = (pool->allocator
-      && g_strcmp0 (pool->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
-
-  pool->info = info;
-
-  return TRUE;
-}
-
-static GstFlowReturn
-gst_custom_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
-    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
-{
-  GstCustomEGLImageBufferPool *pool = GST_CUSTOM_EGL_IMAGE_BUFFER_POOL (bpool);
-  *buffer = NULL;
-
-  if (!pool->add_metavideo || !pool->want_eglimage)
-    return
-        GST_BUFFER_POOL_CLASS
-        (gst_custom_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
-        buffer, params);
-
-  if (!pool->allocator)
-    return GST_FLOW_NOT_NEGOTIATED;
-
-  switch (pool->info.finfo->format) {
-    case GST_VIDEO_FORMAT_RGBA:{
-      GstFlowReturn ret;
-      GstQuery *query;
-      GstStructure *s;
-      const GValue *v;
-
-      s = gst_structure_new ("eglglessink-allocate-eglimage",
-          "format", GST_TYPE_VIDEO_FORMAT, pool->info.finfo->format,
-          "width", G_TYPE_INT, pool->info.width,
-          "height", G_TYPE_INT, pool->info.height, NULL);
-      query = gst_query_new_custom (GST_QUERY_CUSTOM, s);
-
-      ret = queue_object (state, GST_MINI_OBJECT_CAST (query), TRUE);
-
-      if (ret != TRUE || !gst_structure_has_field (s, "buffer")) {
-        GST_WARNING ("Fallback memory allocation");
-        gst_query_unref (query);
-        return
-            GST_BUFFER_POOL_CLASS
-            (gst_custom_egl_image_buffer_pool_parent_class)->alloc_buffer
-            (bpool, buffer, params);
-      }
-
-      v = gst_structure_get_value (s, "buffer");
-      *buffer = GST_BUFFER_CAST (g_value_get_pointer (v));
-      gst_query_unref (query);
-
-      if (!*buffer) {
-        GST_WARNING ("Fallback memory allocation");
-        return
-            GST_BUFFER_POOL_CLASS
-            (gst_custom_egl_image_buffer_pool_parent_class)->alloc_buffer
-            (bpool, buffer, params);
-      }
-
-      return GST_FLOW_OK;
-      break;
-    }
-    default:
-      return
-          GST_BUFFER_POOL_CLASS
-          (gst_custom_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
-          buffer, params);
-      break;
-  }
-
-  return GST_FLOW_ERROR;
-}
-
-static GstFlowReturn
-gst_custom_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
-    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
-{
-  GstFlowReturn ret;
-  GstCustomEGLImageBufferPool *pool;
-
-  ret =
-      GST_BUFFER_POOL_CLASS
-      (gst_custom_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
-      buffer, params);
-  if (ret != GST_FLOW_OK || !*buffer)
-    return ret;
-
-  pool = GST_CUSTOM_EGL_IMAGE_BUFFER_POOL (bpool);
-
-  /* XXX: Don't return the memory we just rendered, glEGLImageTargetTexture2DOES()
-   * keeps the EGLImage unmappable until the next one is uploaded
-   */
-  if (*buffer && *buffer == pool->state->current_buffer) {
-    GstBuffer *oldbuf = *buffer;
-
-    ret =
-        GST_BUFFER_POOL_CLASS
-        (gst_custom_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
-        buffer, params);
-    gst_object_replace ((GstObject **) & oldbuf->pool, (GstObject *) pool);
-    gst_buffer_unref (oldbuf);
-  }
-
-  return ret;
-}
-
-static void
-gst_custom_egl_image_buffer_pool_finalize (GObject * object)
-{
-  GstCustomEGLImageBufferPool *pool = GST_CUSTOM_EGL_IMAGE_BUFFER_POOL (object);
-
-  if (pool->allocator)
-    gst_object_unref (pool->allocator);
-  pool->allocator = NULL;
-
-  if (pool->display)
-    gst_egl_display_unref (pool->display);
-  pool->display = NULL;
-
-  G_OBJECT_CLASS (gst_custom_egl_image_buffer_pool_parent_class)->finalize
-      (object);
-}
-
-static void
-gst_custom_egl_image_buffer_pool_class_init (GstCustomEGLImageBufferPoolClass *
-    klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
-
-  gobject_class->finalize = gst_custom_egl_image_buffer_pool_finalize;
-  gstbufferpool_class->get_options =
-      gst_custom_egl_image_buffer_pool_get_options;
-  gstbufferpool_class->set_config = gst_custom_egl_image_buffer_pool_set_config;
-  gstbufferpool_class->alloc_buffer =
-      gst_custom_egl_image_buffer_pool_alloc_buffer;
-  gstbufferpool_class->acquire_buffer =
-      gst_custom_egl_image_buffer_pool_acquire_buffer;
-}
-
-static void
-gst_custom_egl_image_buffer_pool_init (GstCustomEGLImageBufferPool * pool)
-{
-}
-
-static GstBufferPool *
-gst_custom_egl_image_buffer_pool_new (APP_STATE_T * state,
-    GstEGLDisplay * display)
-{
-  GstCustomEGLImageBufferPool *pool;
-
-  pool = g_object_new (gst_custom_egl_image_buffer_pool_get_type (), NULL);
-  pool->display = gst_egl_display_ref (state->gst_display);
-  pool->state = state;
-
-  return (GstBufferPool *) pool;
-}
-
 /***********************************************************
  * Name: init_ogl
  *
@@ -636,13 +228,17 @@ init_ogl (APP_STATE_T * state)
   int32_t success = 0;
   EGLBoolean result;
   EGLint num_config;
+  EGLNativeWindowType window_handle = (EGLNativeWindowType) 0;
 
+#if defined (USE_OMX_TARGET_RPI)
   static EGL_DISPMANX_WINDOW_T nativewindow;
 
   DISPMANX_UPDATE_HANDLE_T dispman_update;
   VC_RECT_T dst_rect;
   VC_RECT_T src_rect;
+#endif
 
+  //FIXME
   static const EGLint attribute_list[] = {
     EGL_RED_SIZE, 8,
     EGL_GREEN_SIZE, 8,
@@ -664,6 +260,7 @@ init_ogl (APP_STATE_T * state)
   result = eglInitialize (state->display, NULL, NULL);
   assert (EGL_FALSE != result);
 
+#if defined (USE_OMX_TARGET_RPI)
   /* get an appropriate EGL frame buffer configuration
    * this uses a BRCM extension that gets the closest match, rather
    * than standard which returns anything that matches. */
@@ -671,12 +268,17 @@ init_ogl (APP_STATE_T * state)
       eglSaneChooseConfigBRCM (state->display, attribute_list, &config, 1,
       &num_config);
   assert (EGL_FALSE != result);
+#else
+  result =
+      eglChooseConfig (state->display, attribute_list, &config, 1, &num_config);
+#endif
 
   /* create an EGL rendering context */
   state->context =
       eglCreateContext (state->display, config, EGL_NO_CONTEXT, NULL);
   assert (state->context != EGL_NO_CONTEXT);
 
+#if defined (USE_OMX_TARGET_RPI)
   /* create an EGL window surface */
   success = graphics_get_display_size (0 /* LCD */ , &state->screen_width,
       &state->screen_height);
@@ -706,8 +308,11 @@ init_ogl (APP_STATE_T * state)
   nativewindow.height = state->screen_height;
   vc_dispmanx_update_submit_sync (dispman_update);
 
+  window_handle = &nativewindow;
+#endif
+
   state->surface =
-      eglCreateWindowSurface (state->display, config, &nativewindow, NULL);
+      eglCreateWindowSurface (state->display, config, window_handle, NULL);
   assert (state->surface != EGL_NO_SURFACE);
 
   /* connect the context to the surface */
@@ -976,22 +581,20 @@ render_scene (APP_STATE_T * state)
 static void
 update_image (APP_STATE_T * state, GstBuffer * buffer)
 {
-  GstMemory *mem = NULL;
+  GstVideoGLTextureUploadMeta *meta = NULL;
 
-  if (state->current_buffer) {
-    gst_buffer_unref (state->current_buffer);
+  TRACE_VC_MEMORY_ONCE_FOR_ID ("before GstVideoGLTextureUploadMeta", gid0);
+
+  if ((meta = gst_buffer_get_video_gl_texture_upload_meta (buffer))) {
+    if (meta->n_textures == 1) {
+      guint ids[4] = { state->tex, 0, 0, 0 };
+      if (!gst_video_gl_texture_upload_meta_upload (meta, ids)) {
+        GST_WARNING ("failed to upload eglimage to texture");
+      }
+    }
   }
-  state->current_buffer = gst_buffer_ref (buffer);
 
-  mem = gst_buffer_peek_memory (buffer, 0);
-
-  TRACE_VC_MEMORY_ONCE_FOR_ID ("before glEGLImageTargetTexture2DOES", gid0);
-
-  glBindTexture (GL_TEXTURE_2D, state->tex);
-  glEGLImageTargetTexture2DOES (GL_TEXTURE_2D,
-      gst_egl_image_memory_get_image (mem));
-
-  TRACE_VC_MEMORY_ONCE_FOR_ID ("after glEGLImageTargetTexture2DOES", gid1);
+  TRACE_VC_MEMORY_ONCE_FOR_ID ("after GstVideoGLTextureUploadMeta", gid1);
 }
 
 static void
@@ -999,8 +602,8 @@ init_intercom (APP_STATE_T * state)
 {
   state->queue =
       g_async_queue_new_full ((GDestroyNotify) gst_mini_object_unref);
-  state->queue_lock = g_mutex_new ();
-  state->cond = g_cond_new ();
+  g_mutex_init (&state->queue_lock);
+  g_cond_init (&state->cond);
 }
 
 static void
@@ -1011,22 +614,13 @@ terminate_intercom (APP_STATE_T * state)
     g_async_queue_unref (state->queue);
   }
 
-  if (state->queue_lock) {
-    g_mutex_free (state->queue_lock);
-  }
-
-  if (state->cond) {
-    g_cond_free (state->cond);
-  }
+  g_mutex_clear (&state->queue_lock);
+  g_cond_clear (&state->cond);
 }
 
 static void
 flush_internal (APP_STATE_T * state)
 {
-  if (state->current_buffer) {
-    gst_buffer_unref (state->current_buffer);
-  }
-  state->current_buffer = NULL;
 }
 
 static void
@@ -1034,18 +628,18 @@ flush_start (APP_STATE_T * state)
 {
   GstMiniObject *object = NULL;
 
-  g_mutex_lock (state->queue_lock);
+  g_mutex_lock (&state->queue_lock);
   state->flushing = TRUE;
-  g_cond_broadcast (state->cond);
-  g_mutex_unlock (state->queue_lock);
+  g_cond_broadcast (&state->cond);
+  g_mutex_unlock (&state->queue_lock);
 
   while ((object = g_async_queue_try_pop (state->queue))) {
     gst_mini_object_unref (object);
   }
-  g_mutex_lock (state->queue_lock);
+  g_mutex_lock (&state->queue_lock);
   flush_internal (state);
   state->popped_obj = NULL;
-  g_mutex_unlock (state->queue_lock);
+  g_mutex_unlock (&state->queue_lock);
 }
 
 static void
@@ -1053,14 +647,14 @@ flush_stop (APP_STATE_T * state)
 {
   GstMiniObject *object = NULL;
 
-  g_mutex_lock (state->queue_lock);
+  g_mutex_lock (&state->queue_lock);
   while ((object = GST_MINI_OBJECT_CAST (g_async_queue_try_pop (state->queue)))) {
     gst_mini_object_unref (object);
   }
   flush_internal (state);
   state->popped_obj = NULL;
   state->flushing = FALSE;
-  g_mutex_unlock (state->queue_lock);
+  g_mutex_unlock (&state->queue_lock);
 }
 
 static void
@@ -1118,9 +712,9 @@ handle_queued_objects (APP_STATE_T * state)
 {
   GstMiniObject *object = NULL;
 
-  g_mutex_lock (state->queue_lock);
+  g_mutex_lock (&state->queue_lock);
   if (state->flushing) {
-    g_cond_broadcast (state->cond);
+    g_cond_broadcast (&state->cond);
     goto beach;
   } else if (g_async_queue_length (state->queue) == 0) {
     goto beach;
@@ -1139,38 +733,8 @@ handle_queued_objects (APP_STATE_T * state)
       GstQuery *query = GST_QUERY_CAST (object);
       GstStructure *s = (GstStructure *) gst_query_get_structure (query);
 
-      if (gst_structure_has_name (s, "eglglessink-allocate-eglimage")) {
-        GstBuffer *buffer;
-        GstVideoFormat format;
-        gint width, height;
-        GValue v = { 0, };
-
-        if (!gst_structure_get_enum (s, "format", GST_TYPE_VIDEO_FORMAT,
-                (gint *) & format)
-            || !gst_structure_get_int (s, "width", &width)
-            || !gst_structure_get_int (s, "height", &height)) {
-          g_assert_not_reached ();
-        }
-
-        buffer =
-            gst_egl_allocate_eglimage (state,
-            GST_CUSTOM_EGL_IMAGE_BUFFER_POOL (state->pool)->allocator, format,
-            width, height);
-        g_value_init (&v, G_TYPE_POINTER);
-        g_value_set_pointer (&v, buffer);
-
-        gst_structure_set_value (s, "buffer", &v);
-        g_value_unset (&v);
-      } else if (gst_structure_has_name (s, "eglglessink-deallocate-eglimage")) {
-        gpointer _image, _texture;
-        EGLImageKHR image;
-        GLuint texture;
-        gst_structure_get (s, "EGLImage", G_TYPE_POINTER, &_image, "GLTexture",
-            G_TYPE_POINTER, &_texture, NULL);
-        image = (EGLImageKHR) _image;
-        texture = (GLuint) _texture;
-        eglDestroyImageKHR (state->display, image);
-        glDeleteTextures (1, &texture);
+      if (gst_structure_has_name (s, "not-used")) {
+        g_assert_not_reached ();
       } else {
         g_assert_not_reached ();
       }
@@ -1193,11 +757,11 @@ handle_queued_objects (APP_STATE_T * state)
 
   if (object) {
     state->popped_obj = object;
-    g_cond_broadcast (state->cond);
+    g_cond_broadcast (&state->cond);
   }
 
 beach:
-  g_mutex_unlock (state->queue_lock);
+  g_mutex_unlock (&state->queue_lock);
 
   return FALSE;
 }
@@ -1207,7 +771,7 @@ queue_object (APP_STATE_T * state, GstMiniObject * obj, gboolean synchronous)
 {
   gboolean res = TRUE;
 
-  g_mutex_lock (state->queue_lock);
+  g_mutex_lock (&state->queue_lock);
   if (state->flushing) {
     gst_mini_object_unref (obj);
     res = FALSE;
@@ -1219,12 +783,12 @@ queue_object (APP_STATE_T * state, GstMiniObject * obj, gboolean synchronous)
   if (synchronous) {
     /* Waiting for object to be handled */
     do {
-      g_cond_wait (state->cond, state->queue_lock);
+      g_cond_wait (&state->cond, &state->queue_lock);
     } while (!state->flushing && state->popped_obj != obj);
   }
 
 beach:
-  g_mutex_unlock (state->queue_lock);
+  g_mutex_unlock (&state->queue_lock);
   return res;
 }
 
@@ -1273,117 +837,38 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   APP_STATE_T *state = (APP_STATE_T *) user_data;
   GstQuery *query = GST_PAD_PROBE_INFO_QUERY (info);
+  GstStructure *external_gl_context_desc = NULL;
+  gchar *platform = NULL;
+  gchar *gl_apis = NULL;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
     {
-      GstBufferPool *pool;
-      GstStructure *config;
-      GstCaps *caps;
-      GstVideoInfo info;
-      gboolean need_pool;
-      guint size;
-      GstAllocator *allocator;
-      GstAllocationParams params;
+      platform = gst_gl_platform_to_string (GST_GL_PLATFORM_EGL);
+      gl_apis = gst_gl_api_to_string (GST_GL_API_GLES1);
 
-      gst_allocation_params_init (&params);
-
-      gst_query_parse_allocation (query, &caps, &need_pool);
-
-      if (!caps) {
-        GST_ERROR ("allocation query without caps");
-        return GST_PAD_PROBE_OK;
-      }
-
-      if (!gst_video_info_from_caps (&info, caps)) {
-        GST_ERROR ("allocation query with invalid caps");
-        return GST_PAD_PROBE_OK;
-      }
-
-      g_mutex_lock (state->queue_lock);
-      pool = state->pool ? gst_object_ref (state->pool) : NULL;
-      g_mutex_unlock (state->queue_lock);
-
-      if (pool) {
-        GstCaps *pcaps;
-
-        /* we had a pool, check caps */
-
-        config = gst_buffer_pool_get_config (pool);
-        gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
-        GST_DEBUG ("check existing pool caps %" GST_PTR_FORMAT
-            " with new caps %" GST_PTR_FORMAT, pcaps, caps);
-
-        if (!gst_caps_is_equal (caps, pcaps)) {
-          GST_DEBUG ("pool has different caps");
-          /* different caps, we can't use this pool */
-          gst_object_unref (pool);
-          pool = NULL;
-        }
-        gst_structure_free (config);
-      }
-
-      GST_DEBUG ("pool %p", pool);
-      if (pool == NULL && need_pool) {
-        GstVideoInfo info;
-
-        if (!gst_video_info_from_caps (&info, caps)) {
-          GST_ERROR ("allocation query has invalid caps %"
-              GST_PTR_FORMAT, caps);
-          return GST_PAD_PROBE_OK;
-        }
-
-        GST_DEBUG ("create new pool");
-        state->pool = pool =
-            gst_custom_egl_image_buffer_pool_new (state, state->display);
-        GST_DEBUG ("done create new pool %p", pool);
-        /* the normal size of a frame */
-        size = info.size;
-
-        config = gst_buffer_pool_get_config (pool);
-        /* we need at least 2 buffer because we hold on to the last one */
-        gst_buffer_pool_config_set_params (config, caps, size, 2, 0);
-        gst_buffer_pool_config_set_allocator (config, NULL, &params);
-        if (!gst_buffer_pool_set_config (pool, config)) {
-          gst_object_unref (pool);
-          GST_ERROR ("failed to set pool configuration");
-          return GST_PAD_PROBE_OK;
-        }
-      }
-
-      if (pool) {
-        /* we need at least 2 buffer because we hold on to the last one */
-        gst_query_add_allocation_pool (query, pool, size, 2, 0);
-        gst_object_unref (pool);
-      }
-
-      /* First the default allocator */
-      if (!gst_egl_image_memory_is_mappable ()) {
-        allocator = gst_allocator_find (NULL);
-        gst_query_add_allocation_param (query, allocator, &params);
-        gst_object_unref (allocator);
-      }
-
-      allocator = gst_egl_image_allocator_obtain ();
-      GST_WARNING ("Allocator obtained %p", allocator);
-
-      if (!gst_egl_image_memory_is_mappable ())
-        params.flags |= GST_MEMORY_FLAG_NOT_MAPPABLE;
-      gst_query_add_allocation_param (query, allocator, &params);
-      gst_object_unref (allocator);
-
-      gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-      gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
+      external_gl_context_desc =
+          gst_structure_new ("GstVideoGLTextureUploadMeta",
+          "gst.gl.context.handle", G_TYPE_POINTER, state->context,
+          "gst.gl.context.type", G_TYPE_STRING, platform,
+          "gst.gl.context.apis", G_TYPE_STRING, gl_apis, NULL);
       gst_query_add_allocation_meta (query,
-          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
+          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE,
+          NULL /*external_gl_context_desc */ );
+      gst_structure_free (external_gl_context_desc);
+
+      g_free (gl_apis);
+      g_free (platform);
 
       GST_DEBUG ("done alocation");
       return GST_PAD_PROBE_OK;
       break;
     }
-    case GST_QUERY_DRAIN:
+
+    case GST_QUERY_CONTEXT:
     {
-      flush_internal (state);
+      return gst_gl_handle_context_query (state->pipeline, query,
+          (GstGLDisplay **) & state->gst_display);
       break;
     }
     default:
@@ -1396,9 +881,12 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 static gboolean
 init_playbin_player (APP_STATE_T * state, const gchar * uri)
 {
-  GstElement *vsink;
-
-  vsink = gst_element_factory_make ("fakesink", "vsink");
+  GstPad *pad = NULL;
+  GstPad *ghostpad = NULL;
+  GstElement *vbin = gst_bin_new ("vbin");
+  /* FIXME replace it by glcolorscale */
+  GstElement *glfilter = gst_element_factory_make ("gleffects", "glfilter");
+  GstElement *vsink = gst_element_factory_make ("fakesink", "vsink");
   g_object_set (vsink, "sync", TRUE, "silent", TRUE, "qos", TRUE,
       "enable-last-sample", FALSE,
       "max-lateness", 20 * GST_MSECOND, "signal-handoffs", TRUE, NULL);
@@ -1406,18 +894,29 @@ init_playbin_player (APP_STATE_T * state, const gchar * uri)
   g_signal_connect (vsink, "preroll-handoff", G_CALLBACK (preroll_cb), state);
   g_signal_connect (vsink, "handoff", G_CALLBACK (buffers_cb), state);
 
-  gst_pad_add_probe (gst_element_get_static_pad (vsink, "sink"),
-      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, events_cb, state, NULL);
-  gst_pad_add_probe (gst_element_get_static_pad (vsink, "sink"),
-      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM, query_cb, state, NULL);
+  gst_bin_add_many (GST_BIN (vbin), glfilter, vsink, NULL);
+
+  pad = gst_element_get_static_pad (glfilter, "sink");
+  ghostpad = gst_ghost_pad_new ("sink", pad);
+  gst_object_unref (pad);
+  gst_element_add_pad (vbin, ghostpad);
+
+  gst_pad_add_probe (ghostpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, events_cb,
+      state, NULL);
+  gst_pad_add_probe (ghostpad, GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM, query_cb,
+      state, NULL);
+
+  gst_element_link (glfilter, vsink);
+
+  // FIXME unref ghostpad ?
 
   /* Instantiate and configure playbin */
   state->pipeline = gst_element_factory_make ("playbin", "player");
   g_object_set (state->pipeline, "uri", uri,
-      "video-sink", vsink, "flags",
+      "video-sink", vbin, "flags",
       GST_PLAY_FLAG_NATIVE_VIDEO | GST_PLAY_FLAG_AUDIO, NULL);
 
-  state->vsink = gst_object_ref (vsink);
+  state->vsink = gst_object_ref (vsink);        // FIXME vbin ?
   return TRUE;
 }
 
@@ -1426,6 +925,8 @@ init_parse_launch_player (APP_STATE_T * state, const gchar * spipeline)
 {
   GstElement *vsink;
   GError *error = NULL;
+
+  // FIXME handle parse
 
   state->pipeline = gst_parse_launch (spipeline, &error);
 
@@ -1650,7 +1151,9 @@ qos_cb (GstBus * bus, GstMessage * msg, APP_STATE_T * state)
 static void
 close_ogl (void)
 {
+#if defined (USE_OMX_TARGET_RPI)
   DISPMANX_UPDATE_HANDLE_T dispman_update;
+#endif
 
   /* clear screen */
   glClear (GL_COLOR_BUFFER_BIT);
@@ -1661,12 +1164,14 @@ close_ogl (void)
       EGL_NO_CONTEXT);
   eglDestroySurface (state->display, state->surface);
   eglDestroyContext (state->display, state->context);
-  gst_egl_display_unref (state->gst_display);
+  gst_object_unref (state->gst_display);
 
+#if defined (USE_OMX_TARGET_RPI)
   dispman_update = vc_dispmanx_update_start (0);
   vc_dispmanx_element_remove (dispman_update, state->dispman_element);
   vc_dispmanx_update_submit_sync (dispman_update);
   vc_dispmanx_display_close (state->dispman_display);
+#endif
 }
 
 //==============================================================================
@@ -1676,7 +1181,7 @@ open_ogl (void)
 {
   TRACE_VC_MEMORY ("state 0");
 
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_EGL)
+#if defined (USE_OMX_TARGET_RPI)
   bcm_host_init ();
   TRACE_VC_MEMORY ("after bcm_host_init");
 #endif
@@ -1685,8 +1190,8 @@ open_ogl (void)
   init_ogl (state);
   TRACE_VC_MEMORY ("after init_ogl");
 
-  /* Wrap the EGL display */
-  state->gst_display = gst_egl_display_new (state->display, NULL);
+  /* Wrap the EGLDisplay to GstGLDisplayEGL */
+  state->gst_display = gst_gl_display_egl_new_with_egl_display (state->display);
 
   /* Setup the model world */
   init_model_proj (state);
@@ -1730,9 +1235,11 @@ main (int argc, char **argv)
   state->animate = TRUE;
   state->current_buffer = NULL;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   /* must initialise the threading system before using any other GLib funtion */
   if (!g_thread_supported ())
     g_thread_init (NULL);
+#endif
 
   ctx = g_option_context_new ("[ADDITIONAL ARGUMENTS]");
   g_option_context_add_main_entries (ctx, options, NULL);
