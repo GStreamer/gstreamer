@@ -57,9 +57,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma GCC optimize ("gnu89-inline")
 #endif
 
-#include <GLES/gl.h>
-#include <GLES/glext.h>
-
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gstgldisplay_egl.h>
 
@@ -122,6 +119,187 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TRACE_VC_MEMORY_ONCE(str,id) while(0)
 #endif
 
+/* some helpers that we should provide in libgstgl */
+
+typedef struct
+{
+  GLfloat m[4][4];
+} GstGLMatrix;
+
+static void
+gst_gl_matrix_load_identity (GstGLMatrix * matrix)
+{
+  memset (matrix, 0x0, sizeof (GstGLMatrix));
+  matrix->m[0][0] = 1.0f;
+  matrix->m[1][1] = 1.0f;
+  matrix->m[2][2] = 1.0f;
+  matrix->m[3][3] = 1.0f;
+}
+
+static void
+gst_gl_matrix_multiply (GstGLMatrix * matrix, GstGLMatrix * srcA,
+    GstGLMatrix * srcB)
+{
+  GstGLMatrix tmp;
+  int i;
+
+  for (i = 0; i < 4; i++) {
+    tmp.m[i][0] = (srcA->m[i][0] * srcB->m[0][0]) +
+        (srcA->m[i][1] * srcB->m[1][0]) +
+        (srcA->m[i][2] * srcB->m[2][0]) + (srcA->m[i][3] * srcB->m[3][0]);
+
+    tmp.m[i][1] = (srcA->m[i][0] * srcB->m[0][1]) +
+        (srcA->m[i][1] * srcB->m[1][1]) +
+        (srcA->m[i][2] * srcB->m[2][1]) + (srcA->m[i][3] * srcB->m[3][1]);
+
+    tmp.m[i][2] = (srcA->m[i][0] * srcB->m[0][2]) +
+        (srcA->m[i][1] * srcB->m[1][2]) +
+        (srcA->m[i][2] * srcB->m[2][2]) + (srcA->m[i][3] * srcB->m[3][2]);
+
+    tmp.m[i][3] = (srcA->m[i][0] * srcB->m[0][3]) +
+        (srcA->m[i][1] * srcB->m[1][3]) +
+        (srcA->m[i][2] * srcB->m[2][3]) + (srcA->m[i][3] * srcB->m[3][3]);
+  }
+
+  memcpy (matrix, &tmp, sizeof (GstGLMatrix));
+}
+
+static void
+gst_gl_matrix_translate (GstGLMatrix * matrix, GLfloat tx, GLfloat ty,
+    GLfloat tz)
+{
+  matrix->m[3][0] +=
+      (matrix->m[0][0] * tx + matrix->m[1][0] * ty + matrix->m[2][0] * tz);
+  matrix->m[3][1] +=
+      (matrix->m[0][1] * tx + matrix->m[1][1] * ty + matrix->m[2][1] * tz);
+  matrix->m[3][2] +=
+      (matrix->m[0][2] * tx + matrix->m[1][2] * ty + matrix->m[2][2] * tz);
+  matrix->m[3][3] +=
+      (matrix->m[0][3] * tx + matrix->m[1][3] * ty + matrix->m[2][3] * tz);
+}
+
+static void
+gst_gl_matrix_rotate (GstGLMatrix * matrix, GLfloat angle, GLfloat x, GLfloat y,
+    GLfloat z)
+{
+  GLfloat sinAngle, cosAngle;
+  GLfloat mag = sqrtf (x * x + y * y + z * z);
+
+  sinAngle = sinf (angle * M_PI / 180.0f);
+  cosAngle = cosf (angle * M_PI / 180.0f);
+
+  if (mag > 0.0f) {
+    GLfloat xx, yy, zz, xy, yz, zx, xs, ys, zs;
+    GLfloat oneMinusCos;
+    GstGLMatrix rotMat;
+
+    x /= mag;
+    y /= mag;
+    z /= mag;
+
+    xx = x * x;
+    yy = y * y;
+    zz = z * z;
+    xy = x * y;
+    yz = y * z;
+    zx = z * x;
+    xs = x * sinAngle;
+    ys = y * sinAngle;
+    zs = z * sinAngle;
+    oneMinusCos = 1.0f - cosAngle;
+
+    rotMat.m[0][0] = (oneMinusCos * xx) + cosAngle;
+    rotMat.m[0][1] = (oneMinusCos * xy) - zs;
+    rotMat.m[0][2] = (oneMinusCos * zx) + ys;
+    rotMat.m[0][3] = 0.0f;
+
+    rotMat.m[1][0] = (oneMinusCos * xy) + zs;
+    rotMat.m[1][1] = (oneMinusCos * yy) + cosAngle;
+    rotMat.m[1][2] = (oneMinusCos * yz) - xs;
+    rotMat.m[1][3] = 0.0f;
+
+    rotMat.m[2][0] = (oneMinusCos * zx) - ys;
+    rotMat.m[2][1] = (oneMinusCos * yz) + xs;
+    rotMat.m[2][2] = (oneMinusCos * zz) + cosAngle;
+    rotMat.m[2][3] = 0.0f;
+
+    rotMat.m[3][0] = 0.0f;
+    rotMat.m[3][1] = 0.0f;
+    rotMat.m[3][2] = 0.0f;
+    rotMat.m[3][3] = 1.0f;
+
+    gst_gl_matrix_multiply (matrix, &rotMat, matrix);
+  }
+}
+
+static void
+gst_gl_matrix_frustum (GstGLMatrix * matrix, GLfloat left, GLfloat right,
+    GLfloat bottom, GLfloat top, GLfloat nearZ, GLfloat farZ)
+{
+  GLfloat deltaX = right - left;
+  GLfloat deltaY = top - bottom;
+  GLfloat deltaZ = farZ - nearZ;
+  GstGLMatrix frust;
+
+  if ((nearZ <= 0.0f) || (farZ <= 0.0f) ||
+      (deltaX <= 0.0f) || (deltaY <= 0.0f) || (deltaZ <= 0.0f))
+    return;
+
+  frust.m[0][0] = 2.0f * nearZ / deltaX;
+  frust.m[0][1] = frust.m[0][2] = frust.m[0][3] = 0.0f;
+
+  frust.m[1][1] = 2.0f * nearZ / deltaY;
+  frust.m[1][0] = frust.m[1][2] = frust.m[1][3] = 0.0f;
+
+  frust.m[2][0] = (right + left) / deltaX;
+  frust.m[2][1] = (top + bottom) / deltaY;
+  frust.m[2][2] = -(nearZ + farZ) / deltaZ;
+  frust.m[2][3] = -1.0f;
+
+  frust.m[3][2] = -2.0f * nearZ * farZ / deltaZ;
+  frust.m[3][0] = frust.m[3][1] = frust.m[3][3] = 0.0f;
+
+  gst_gl_matrix_multiply (matrix, &frust, matrix);
+}
+
+static void
+gst_gl_matrix_perspective (GstGLMatrix * matrix, GLfloat fovy, GLfloat aspect,
+    GLfloat nearZ, GLfloat farZ)
+{
+  GLfloat frustumW, frustumH;
+
+  frustumH = tanf (fovy / 360.0f * M_PI) * nearZ;
+  frustumW = frustumH * aspect;
+
+  gst_gl_matrix_frustum (matrix, -frustumW, frustumW, -frustumH, frustumH,
+      nearZ, farZ);
+}
+
+/* *INDENT-OFF* */
+
+/* vertex source */
+static const gchar *cube_v_src =
+    "attribute vec4 a_position;                          \n"
+    "attribute vec2 a_texCoord;                          \n"
+    "uniform mat4 u_matrix;                              \n"
+    "varying vec2 v_texCoord;                            \n"
+    "void main()                                         \n"
+    "{                                                   \n"
+    "   gl_Position = u_matrix * a_position;             \n"
+    "   v_texCoord = a_texCoord;                         \n"
+    "}                                                   \n";
+
+/* fragment source */
+static const gchar *cube_f_src =
+    "precision mediump float;                            \n"
+    "varying vec2 v_texCoord;                            \n"
+    "uniform sampler2D s_texture;                        \n"
+    "void main()                                         \n"
+    "{                                                   \n"
+    "  gl_FragColor = texture2D (s_texture, v_texCoord); \n"
+    "}                                                   \n";
+/* *INDENT-ON* */
+
 typedef struct
 {
 #if defined (USE_OMX_TARGET_RPI)
@@ -133,11 +311,25 @@ typedef struct
   uint32_t screen_height;
   gboolean animate;
 
+  GstCaps *caps;
+
   /* OpenGL|ES objects */
   EGLDisplay display;
   EGLSurface surface;
   EGLContext context;
   GLuint tex;
+
+  GLint vshader;
+  GLint fshader;
+  GLint program;
+
+  GLint u_modelviewprojectionmatrix;
+  GLint s_texture;
+
+  GstGLMatrix modelview;
+  GstGLMatrix projection;
+  GLfloat fov;
+  GLfloat aspect;
 
   /* model rotation vector and direction */
   GLfloat rot_angle_x_inc;
@@ -157,6 +349,7 @@ typedef struct
   GstElement *pipeline;
   GstElement *vsink;
   GstGLDisplayEGL *gst_display;
+  gboolean can_avoid_upload;
 
   /* Interthread comunication */
   GAsyncQueue *queue;
@@ -170,8 +363,6 @@ typedef struct
   GMainLoop *main_loop;
   GstBuffer *last_buffer;
 
-  GstCaps *current_caps;
-
   /* Rendering thread state */
   gboolean running;
 
@@ -184,10 +375,9 @@ static void init_ogl (APP_STATE_T * state);
 static void init_model_proj (APP_STATE_T * state);
 static void reset_model (APP_STATE_T * state);
 static GLfloat inc_and_wrap_angle (GLfloat angle, GLfloat angle_inc);
-static GLfloat inc_and_clip_distance (GLfloat distance, GLfloat distance_inc);
 static void redraw_scene (APP_STATE_T * state);
 static void update_model (APP_STATE_T * state);
-static void init_textures (APP_STATE_T * state);
+static void init_textures (APP_STATE_T * state, GstBuffer * buffer);
 static APP_STATE_T _state, *state = &_state;
 static gboolean queue_object (APP_STATE_T * state, GstMiniObject * obj,
     gboolean synchronous);
@@ -236,17 +426,19 @@ init_ogl (APP_STATE_T * state)
   DISPMANX_UPDATE_HANDLE_T dispman_update;
   VC_RECT_T dst_rect;
   VC_RECT_T src_rect;
+
+  VC_DISPMANX_ALPHA_T alpha = { DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS, 255, 0 };
 #endif
 
-  //FIXME
   static const EGLint attribute_list[] = {
-    EGL_RED_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 8,
     EGL_DEPTH_SIZE, 16,
-    //EGL_SAMPLES, 4,
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_NONE
+  };
+
+  static const EGLint context_attributes[] = {
+    EGL_CONTEXT_CLIENT_VERSION, 2,
     EGL_NONE
   };
 
@@ -275,7 +467,8 @@ init_ogl (APP_STATE_T * state)
 
   /* create an EGL rendering context */
   state->context =
-      eglCreateContext (state->display, config, EGL_NO_CONTEXT, NULL);
+      eglCreateContext (state->display, config, EGL_NO_CONTEXT,
+      context_attributes);
   assert (state->context != EGL_NO_CONTEXT);
 
 #if defined (USE_OMX_TARGET_RPI)
@@ -300,7 +493,7 @@ init_ogl (APP_STATE_T * state)
   state->dispman_element =
       vc_dispmanx_element_add (dispman_update, state->dispman_display,
       0 /*layer */ , &dst_rect, 0 /*src */ ,
-      &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha */ , 0 /*clamp */ ,
+      &src_rect, DISPMANX_PROTECTION_NONE, &alpha, 0 /*clamp */ ,
       0 /*transform */ );
 
   nativewindow.element = state->dispman_element;
@@ -320,14 +513,6 @@ init_ogl (APP_STATE_T * state)
       eglMakeCurrent (state->display, state->surface, state->surface,
       state->context);
   assert (EGL_FALSE != result);
-
-  /* Set background color and clear buffers */
-  glClearColor (0.15f, 0.25f, 0.35f, 1.0f);
-
-  /* Enable back face culling. */
-  glEnable (GL_CULL_FACE);
-
-  glMatrixMode (GL_MODELVIEW);
 }
 
 /***********************************************************
@@ -344,26 +529,54 @@ init_ogl (APP_STATE_T * state)
 static void
 init_model_proj (APP_STATE_T * state)
 {
-  float nearp = 1.0f;
-  float farp = 500.0f;
-  float hht;
-  float hwd;
+  GLint ret = 0;
 
-  glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+  state->vshader = glCreateShader (GL_VERTEX_SHADER);
+
+  glShaderSource (state->vshader, 1, &cube_v_src, NULL);
+  glCompileShader (state->vshader);
+  assert (glGetError () == GL_NO_ERROR);
+
+  state->fshader = glCreateShader (GL_FRAGMENT_SHADER);
+
+  glShaderSource (state->fshader, 1, &cube_f_src, NULL);
+  glCompileShader (state->fshader);
+  assert (glGetError () == GL_NO_ERROR);
+
+  state->program = glCreateProgram ();
+
+  glAttachShader (state->program, state->vshader);
+  glAttachShader (state->program, state->fshader);
+
+  glBindAttribLocation (state->program, 0, "a_position");
+  glBindAttribLocation (state->program, 1, "a_texCoord");
+
+  glLinkProgram (state->program);
+
+  glGetProgramiv (state->program, GL_LINK_STATUS, &ret);
+  assert (ret == GL_TRUE);
+
+  glUseProgram (state->program);
+
+  state->u_modelviewprojectionmatrix =
+      glGetUniformLocation (state->program, "u_matrix");
+
+  state->s_texture = glGetUniformLocation (state->program, "s_texture");
 
   glViewport (0, 0, (GLsizei) state->screen_width,
       (GLsizei) state->screen_height);
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  state->fov = 45.0f;
+  state->distance = 5.0f;
+  state->aspect =
+      (GLfloat) state->screen_width / (GLfloat) state->screen_height;
 
-  hht = nearp * (float) tan (45.0 / 2.0 / 180.0 * M_PI);
-  hwd = hht * (float) state->screen_width / (float) state->screen_height;
+  gst_gl_matrix_load_identity (&state->projection);
+  gst_gl_matrix_perspective (&state->projection, state->fov, state->aspect,
+      1.0f, 100.0f);
 
-  glFrustumf (-hwd, hwd, -hht, hht, nearp, farp);
-
-  glEnableClientState (GL_VERTEX_ARRAY);
-  glVertexPointer (3, GL_BYTE, 0, quadx);
+  gst_gl_matrix_load_identity (&state->modelview);
+  gst_gl_matrix_translate (&state->modelview, 0.0f, 0.0f, -state->distance);
 
   reset_model (state);
 }
@@ -382,11 +595,6 @@ init_model_proj (APP_STATE_T * state)
 static void
 reset_model (APP_STATE_T * state)
 {
-  /* reset model position */
-  glMatrixMode (GL_MODELVIEW);
-  glLoadIdentity ();
-  glTranslatef (0.f, 0.f, -50.f);
-
   /* reset model rotation */
   state->rot_angle_x = 45.f;
   state->rot_angle_y = 30.f;
@@ -394,7 +602,6 @@ reset_model (APP_STATE_T * state)
   state->rot_angle_x_inc = 0.5f;
   state->rot_angle_y_inc = 0.5f;
   state->rot_angle_z_inc = 0.f;
-  state->distance = 40.f;
 }
 
 /***********************************************************
@@ -419,18 +626,7 @@ update_model (APP_STATE_T * state)
         inc_and_wrap_angle (state->rot_angle_y, state->rot_angle_y_inc);
     state->rot_angle_z =
         inc_and_wrap_angle (state->rot_angle_z, state->rot_angle_z_inc);
-    state->distance =
-        inc_and_clip_distance (state->distance, state->distance_inc);
   }
-
-  glLoadIdentity ();
-  /* move camera back to see the cube */
-  glTranslatef (0.f, 0.f, -state->distance);
-
-  /* Rotate model to new position */
-  glRotatef (state->rot_angle_x, 1.f, 0.f, 0.f);
-  glRotatef (state->rot_angle_y, 0.f, 1.f, 0.f);
-  glRotatef (state->rot_angle_z, 0.f, 0.f, 1.f);
 }
 
 /***********************************************************
@@ -460,32 +656,6 @@ inc_and_wrap_angle (GLfloat angle, GLfloat angle_inc)
 }
 
 /***********************************************************
- * Name: inc_and_clip_distance
- *
- * Arguments:
- *       GLfloat distance     current distance
- *       GLfloat distance_inc distance increment
- *
- * Description:   Increments or decrements distance by distance_inc units
- *                Clips to range
- *
- * Returns: new value of angle
- *
- ***********************************************************/
-static GLfloat
-inc_and_clip_distance (GLfloat distance, GLfloat distance_inc)
-{
-  distance += distance_inc;
-
-  if (distance >= 120.0f)
-    distance = 120.f;
-  else if (distance <= 40.0f)
-    distance = 40.0f;
-
-  return distance;
-}
-
-/***********************************************************
  * Name: redraw_scene
  *
  * Arguments:
@@ -500,32 +670,53 @@ inc_and_clip_distance (GLfloat distance, GLfloat distance_inc)
 static void
 redraw_scene (APP_STATE_T * state)
 {
-  /* Start with a clear screen */
+  GstGLMatrix modelview;
+  GstGLMatrix modelviewprojection;
+
+  glBindFramebuffer (GL_FRAMEBUFFER, 0);
+
+  glEnable (GL_CULL_FACE);
+  glEnable (GL_DEPTH_TEST);
+
+  /* Set background color and clear buffers */
+  glClearColor (0.15f, 0.25f, 0.35f, 1.0f);
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  /* Need to rotate textures - do this by rotating each cube face */
-  glRotatef (270.f, 0.f, 0.f, 1.f);     /* front face normal along z axis */
+  glUseProgram (state->program);
+
+  glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, quadx);
+  glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 0, texCoords);
+
+  glEnableVertexAttribArray (0);
+  glEnableVertexAttribArray (1);
+
+  glActiveTexture (GL_TEXTURE0);
+  glBindTexture (GL_TEXTURE_2D, state->tex);
+  glUniform1i (state->s_texture, 0);
+
+  memcpy (&modelview, &state->modelview, sizeof (GstGLMatrix));
+  gst_gl_matrix_rotate (&modelview, state->rot_angle_x, 1.0f, 0.0f, 0.0f);
+  gst_gl_matrix_rotate (&modelview, state->rot_angle_y, 0.0f, 1.0f, 0.0f);
+  gst_gl_matrix_rotate (&modelview, state->rot_angle_z, 0.0f, 0.0f, 1.0f);
+
+  gst_gl_matrix_load_identity (&modelviewprojection);
+  gst_gl_matrix_multiply (&modelviewprojection, &modelview, &state->projection);
+
+  glUniformMatrix4fv (state->u_modelviewprojectionmatrix, 1, GL_FALSE,
+      &modelviewprojection.m[0][0]);
 
   /* draw first 4 vertices */
   glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
-
-  /* same pattern for other 5 faces - rotation chosen to make image orientation 'nice' */
-  glRotatef (90.f, 0.f, 0.f, 1.f);      /* back face normal along z axis */
   glDrawArrays (GL_TRIANGLE_STRIP, 4, 4);
-
-  glRotatef (90.f, 1.f, 0.f, 0.f);      /* left face normal along x axis */
   glDrawArrays (GL_TRIANGLE_STRIP, 8, 4);
-
-  glRotatef (90.f, 1.f, 0.f, 0.f);      /* right face normal along x axis */
   glDrawArrays (GL_TRIANGLE_STRIP, 12, 4);
-
-  glRotatef (270.f, 0.f, 1.f, 0.f);     /* top face normal along y axis */
   glDrawArrays (GL_TRIANGLE_STRIP, 16, 4);
-
-  glRotatef (90.f, 0.f, 1.f, 0.f);      /* bottom face normal along y axis */
   glDrawArrays (GL_TRIANGLE_STRIP, 20, 4);
 
   eglSwapBuffers (state->display, state->surface);
+
+  glDisable (GL_DEPTH_TEST);
+  glDisable (GL_CULL_FACE);
 }
 
 /***********************************************************
@@ -541,11 +732,33 @@ redraw_scene (APP_STATE_T * state)
  *
  ***********************************************************/
 static void
-init_textures (APP_STATE_T * state)
+init_textures (APP_STATE_T * state, GstBuffer * buffer)
 {
-  glGenTextures (1, &state->tex);
+  GstCapsFeatures *feature = gst_caps_get_features (state->caps, 0);
 
-  glBindTexture (GL_TEXTURE_2D, state->tex);
+  if (gst_caps_features_contains (feature, "memory:EGLImage")) {
+    /* nothing special to do */
+    g_print ("Prepare texture for EGLImage\n");
+    state->can_avoid_upload = FALSE;
+    glGenTextures (1, &state->tex);
+    glBindTexture (GL_TEXTURE_2D, state->tex);
+  } else if (gst_caps_features_contains (feature, "memory:GLMemory")) {
+    g_print ("Prepare texture for GLMemory\n");
+    state->can_avoid_upload = TRUE;
+    state->tex = 0;
+  } else if (gst_caps_features_contains (feature,
+          "meta:GstVideoGLTextureUploadMeta")) {
+    GstVideoMeta *meta = NULL;
+    g_print ("Prepare texture for GstVideoGLTextureUploadMeta\n");
+    meta = gst_buffer_get_video_meta (buffer);
+    state->can_avoid_upload = FALSE;
+    glGenTextures (1, &state->tex);
+    glBindTexture (GL_TEXTURE_2D, state->tex);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, meta->width, meta->height, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  } else {
+    g_assert_not_reached ();
+  }
 
 #if 0
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -558,14 +771,7 @@ init_textures (APP_STATE_T * state)
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  /* setup overall texture environment */
-  glTexCoordPointer (2, GL_FLOAT, 0, texCoords);
-  glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-  glEnable (GL_TEXTURE_2D);
-
-  /* Bind texture surface to current vertices */
-  glBindTexture (GL_TEXTURE_2D, state->tex);
+  assert (glGetError () == GL_NO_ERROR);
 }
 
 static void
@@ -574,8 +780,6 @@ render_scene (APP_STATE_T * state)
   update_model (state);
   redraw_scene (state);
   TRACE_VC_MEMORY_ONCE_FOR_ID ("after render_scene", gid2);
-
-  return;
 }
 
 static void
@@ -583,13 +787,30 @@ update_image (APP_STATE_T * state, GstBuffer * buffer)
 {
   GstVideoGLTextureUploadMeta *meta = NULL;
 
+  if (state->current_buffer) {
+    gst_buffer_unref (state->current_buffer);
+  } else {
+    /* Setup the model world */
+    init_model_proj (state);
+    TRACE_VC_MEMORY ("after init_model_proj");
+
+    /* initialize the OGLES texture(s) */
+    init_textures (state, buffer);
+    TRACE_VC_MEMORY ("after init_textures");
+  }
+  state->current_buffer = gst_buffer_ref (buffer);
+
   TRACE_VC_MEMORY_ONCE_FOR_ID ("before GstVideoGLTextureUploadMeta", gid0);
 
-  if ((meta = gst_buffer_get_video_gl_texture_upload_meta (buffer))) {
+  if (state->can_avoid_upload) {
+    GstMemory *mem = gst_buffer_peek_memory (state->current_buffer, 0);
+    g_assert (gst_is_gl_memory (mem));
+    state->tex = ((GstGLMemory *) mem)->tex_id;
+  } else if ((meta = gst_buffer_get_video_gl_texture_upload_meta (buffer))) {
     if (meta->n_textures == 1) {
       guint ids[4] = { state->tex, 0, 0, 0 };
       if (!gst_video_gl_texture_upload_meta_upload (meta, ids)) {
-        GST_WARNING ("failed to upload eglimage to texture");
+        GST_WARNING ("failed to upload to texture");
       }
     }
   }
@@ -621,6 +842,10 @@ terminate_intercom (APP_STATE_T * state)
 static void
 flush_internal (APP_STATE_T * state)
 {
+  if (state->current_buffer) {
+    gst_buffer_unref (state->current_buffer);
+  }
+  state->current_buffer = NULL;
 }
 
 static void
@@ -816,6 +1041,17 @@ events_cb (GstPad * pad, GstPadProbeInfo * probe_info, gpointer user_data)
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (probe_info);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      if (state->caps) {
+        gst_caps_unref (state->caps);
+        state->caps = NULL;
+      }
+      gst_event_parse_caps (event, &state->caps);
+      if (state->caps)
+        gst_caps_ref (state->caps);
+      break;
+    }
     case GST_EVENT_FLUSH_START:
       flush_start (state);
       break;
@@ -845,7 +1081,7 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     case GST_QUERY_ALLOCATION:
     {
       platform = gst_gl_platform_to_string (GST_GL_PLATFORM_EGL);
-      gl_apis = gst_gl_api_to_string (GST_GL_API_GLES1);
+      gl_apis = gst_gl_api_to_string (GST_GL_API_GLES2);
 
       external_gl_context_desc =
           gst_structure_new ("GstVideoGLTextureUploadMeta",
@@ -853,8 +1089,7 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
           "gst.gl.context.type", G_TYPE_STRING, platform,
           "gst.gl.context.apis", G_TYPE_STRING, gl_apis, NULL);
       gst_query_add_allocation_meta (query,
-          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE,
-          NULL /*external_gl_context_desc */ );
+          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, external_gl_context_desc);
       gst_structure_free (external_gl_context_desc);
 
       g_free (gl_apis);
@@ -864,11 +1099,15 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       return GST_PAD_PROBE_OK;
       break;
     }
-
     case GST_QUERY_CONTEXT:
     {
       return gst_gl_handle_context_query (state->pipeline, query,
           (GstGLDisplay **) & state->gst_display);
+      break;
+    }
+    case GST_QUERY_DRAIN:
+    {
+      flush_internal (state);
       break;
     }
     default:
@@ -884,8 +1123,10 @@ init_playbin_player (APP_STATE_T * state, const gchar * uri)
   GstPad *pad = NULL;
   GstPad *ghostpad = NULL;
   GstElement *vbin = gst_bin_new ("vbin");
-  /* FIXME replace it by glcolorscale */
-  GstElement *glfilter = gst_element_factory_make ("gleffects", "glfilter");
+
+  /* insert a gl filter so that the GstGLBufferPool
+   * is managed automatically */
+  GstElement *glfilter = gst_element_factory_make ("glcolorscale", "glfilter");
   GstElement *vsink = gst_element_factory_make ("fakesink", "vsink");
   g_object_set (vsink, "sync", TRUE, "silent", TRUE, "qos", TRUE,
       "enable-last-sample", FALSE,
@@ -901,14 +1142,14 @@ init_playbin_player (APP_STATE_T * state, const gchar * uri)
   gst_object_unref (pad);
   gst_element_add_pad (vbin, ghostpad);
 
-  gst_pad_add_probe (ghostpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, events_cb,
-      state, NULL);
-  gst_pad_add_probe (ghostpad, GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM, query_cb,
-      state, NULL);
+  pad = gst_element_get_static_pad (vsink, "sink");
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, events_cb, state,
+      NULL);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM, query_cb, state,
+      NULL);
+  gst_object_unref (pad);
 
   gst_element_link (glfilter, vsink);
-
-  // FIXME unref ghostpad ?
 
   /* Instantiate and configure playbin */
   state->pipeline = gst_element_factory_make ("playbin", "player");
@@ -916,7 +1157,7 @@ init_playbin_player (APP_STATE_T * state, const gchar * uri)
       "video-sink", vbin, "flags",
       GST_PLAY_FLAG_NATIVE_VIDEO | GST_PLAY_FLAG_AUDIO, NULL);
 
-  state->vsink = gst_object_ref (vsink);        // FIXME vbin ?
+  state->vsink = gst_object_ref (vsink);
   return TRUE;
 }
 
@@ -926,7 +1167,7 @@ init_parse_launch_player (APP_STATE_T * state, const gchar * spipeline)
   GstElement *vsink;
   GError *error = NULL;
 
-  // FIXME handle parse
+  // TODO handle parse
 
   state->pipeline = gst_parse_launch (spipeline, &error);
 
@@ -1155,6 +1396,22 @@ close_ogl (void)
   DISPMANX_UPDATE_HANDLE_T dispman_update;
 #endif
 
+  if (state->fshader) {
+    glDeleteShader (state->fshader);
+    glDetachShader (state->program, state->fshader);
+  }
+
+  if (state->vshader) {
+    glDeleteShader (state->vshader);
+    glDetachShader (state->program, state->vshader);
+  }
+
+  if (state->program)
+    glDeleteProgram (state->program);
+
+  if (state->tex)
+    glDeleteTextures (1, &state->tex);
+
   /* clear screen */
   glClear (GL_COLOR_BUFFER_BIT);
   eglSwapBuffers (state->display, state->surface);
@@ -1186,20 +1443,12 @@ open_ogl (void)
   TRACE_VC_MEMORY ("after bcm_host_init");
 #endif
 
-  /* Start OpenGLES */
+  /* Create surface and gl context */
   init_ogl (state);
   TRACE_VC_MEMORY ("after init_ogl");
 
   /* Wrap the EGLDisplay to GstGLDisplayEGL */
   state->gst_display = gst_gl_display_egl_new_with_egl_display (state->display);
-
-  /* Setup the model world */
-  init_model_proj (state);
-  TRACE_VC_MEMORY ("after init_model_proj");
-
-  /* initialize the OGLES texture(s) */
-  init_textures (state);
-  TRACE_VC_MEMORY ("after init_textures");
 }
 
 static gpointer
@@ -1234,6 +1483,7 @@ main (int argc, char **argv)
   memset (state, 0, sizeof (*state));
   state->animate = TRUE;
   state->current_buffer = NULL;
+  state->caps = NULL;
 
 #if !GLIB_CHECK_VERSION (2, 31, 0)
   /* must initialise the threading system before using any other GLib funtion */
@@ -1343,6 +1593,11 @@ done:
   /* Stop rendering thread */
   state->running = FALSE;
   g_thread_join (rthread);
+
+  if (state->caps) {
+    gst_caps_unref (state->caps);
+    state->caps = NULL;
+  }
 
   terminate_intercom (state);
 

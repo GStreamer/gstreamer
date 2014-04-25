@@ -13,7 +13,8 @@ testegl_LDADD = \
   -lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	$(GST_GL_LIBS)
+	$(GST_GL_LIBS) \
+	-lm
 
 testegl_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
