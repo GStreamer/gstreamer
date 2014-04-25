@@ -715,26 +715,6 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstFlowReturn ret;
   GstCaps *caps;
 
-  /* We actually need to do this every time we switch bitrate */
-  if (G_UNLIKELY (demux->do_typefind)) {
-    caps = gst_type_find_helper_for_buffer (NULL, buffer, NULL);
-    if (G_UNLIKELY (!caps)) {
-      GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
-          ("Could not determine type of stream"), (NULL));
-      gst_buffer_unref (buffer);
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-
-    if (!demux->input_caps || !gst_caps_is_equal (caps, demux->input_caps)) {
-      gst_caps_replace (&demux->input_caps, caps);
-      GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
-          demux->input_caps);
-    }
-    gst_pad_set_caps (srcpad, caps);
-    demux->do_typefind = FALSE;
-    gst_caps_unref (caps);
-  }
-
   /* Is it encrypted? */
   if (demux->current_key) {
     GError *err = NULL;
@@ -815,6 +795,33 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     return GST_FLOW_OK;
   }
 
+  GST_LOG_OBJECT (demux, "set buffer pts=%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (demux->current_timestamp));
+
+  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_PTS (buffer) = demux->current_timestamp;
+
+  /* We actually need to do this every time we switch bitrate */
+  if (G_UNLIKELY (demux->do_typefind)) {
+    caps = gst_type_find_helper_for_buffer (NULL, buffer, NULL);
+    if (G_UNLIKELY (!caps)) {
+      GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
+          ("Could not determine type of stream"), (NULL));
+      gst_buffer_unref (buffer);
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+
+    if (!demux->input_caps || !gst_caps_is_equal (caps, demux->input_caps)) {
+      gst_caps_replace (&demux->input_caps, caps);
+      GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
+          demux->input_caps);
+    }
+    gst_pad_set_caps (srcpad, caps);
+    demux->do_typefind = FALSE;
+    gst_caps_unref (caps);
+  }
+
   if (demux->discont) {
     GST_DEBUG_OBJECT (demux, "Marking fragment as discontinuous");
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
@@ -824,13 +831,6 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   demux->starting_fragment = FALSE;
-
-  GST_DEBUG_OBJECT (demux, "set fragment pts=%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (demux->current_timestamp));
-
-  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_PTS (buffer) = demux->current_timestamp;
 
   demux->segment.position = GST_BUFFER_TIMESTAMP (buffer);
 #if 0
