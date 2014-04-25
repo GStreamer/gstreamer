@@ -318,6 +318,7 @@ class GstValidateManager(TestsManager, Loggable):
         TestsManager.__init__(self)
         Loggable.__init__(self)
         self._uris = []
+        self._run_defaults = True
 
     def init(self):
         if which(GST_VALIDATE_COMMAND) and which(GST_VALIDATE_TRANSCODING_COMMAND):
@@ -489,3 +490,8 @@ class GstValidateManager(TestsManager, Loggable):
 
     def get_blacklisted(self):
         return G_V_BLACKLISTED_TESTS
+
+    def set_settings(self, options, args, reporter):
+        TestsManager.set_settings(self, options, args, reporter)
+        if options.wanted_tests:
+            self._run_defaults = False

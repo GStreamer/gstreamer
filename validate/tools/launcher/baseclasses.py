@@ -709,6 +709,9 @@ class ScenarioManager(Loggable):
         if self.discovered is False:
             self._discover_scenarios()
 
+        if name is None:
+            return self.all_scenarios
+
         try:
             return [scenario for scenario in self.all_scenarios if scenario.name == name][0]
         except IndexError:
