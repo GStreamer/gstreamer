@@ -191,6 +191,8 @@ def main():
         l.sort()
         for test in l:
             printc(test)
+
+        printc("\nNumber of tests: %d" % len (l), Colors.OKGREEN)
         return 0
 
     httpsrv = HTTPServer(options)
