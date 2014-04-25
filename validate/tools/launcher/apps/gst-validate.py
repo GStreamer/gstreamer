@@ -220,6 +220,8 @@ class GstValidateLaunchTest(GstValidateTest):
                                         https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
                         return Result.KNOWN_ERROR
 
+                    self.set_result(Result.FAILED, "Pipeline did not stop 30 Seconds after sending EOS")
+
                     return Result.FAILED
 
         return self.get_current_position()
@@ -309,6 +311,7 @@ class GstValidateTranscodingTest(GstValidateTest):
                                         https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
                         return Result.KNOWN_ERROR
 
+                    self.set_result(Result.FAILED, "Pipeline did not stop 30 Seconds after sending EOS")
 
                     return Result.FAILED
 

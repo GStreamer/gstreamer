@@ -169,7 +169,6 @@ class Test(Loggable):
                     break
                 continue
             elif val is Result.FAILED:
-                self.set_result(Result.FAILED)
                 break
             elif val is Result.KNOWN_ERROR:
                 break
@@ -183,7 +182,7 @@ class Test(Loggable):
                     self.set_result(Result.TIMEOUT)
                     break
             elif self.hard_timeout and time.time() - start_ts > self.hard_timeout:
-                self.set_result(Result.TIMEOUT)
+                self.set_result(Result.TIMEOUT, "Hard timeout reached: %d", self.hard_timeout)
                 break
             else:
                 last_change_ts = time.time()
@@ -703,6 +702,7 @@ class ScenarioManager(Loggable):
             Loggable.__init__(cls._instance)
 
         return cls._instance
+
     def _discover_scenarios(self):
         scenario_defs = os.path.join(self.config.main_dir, "scenarios.def")
         try:
