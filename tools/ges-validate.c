@@ -43,6 +43,16 @@ _validate_report_added_cb (GstValidateRunner * runner,
   }
 }
 
+static GESTimeline *
+get_timeline (GstValidateScenario * scenario)
+{
+  GESTimeline *timeline;
+
+  g_object_get (scenario->pipeline, "timeline", &timeline, NULL);
+
+  return timeline;
+}
+
 static gboolean
 _set_child_property (GstValidateScenario * scenario, GstValidateAction * action)
 {
@@ -53,7 +63,7 @@ _set_child_property (GstValidateScenario * scenario, GstValidateAction * action)
 
   element_name = gst_structure_get_string (action->structure, "element-name");
 
-  g_object_get (scenario->pipeline, "timeline", &timeline, NULL);
+  timeline = get_timeline (scenario);
   g_return_val_if_fail (timeline, FALSE);
 
   element = ges_timeline_get_element (timeline, element_name);
@@ -73,10 +83,14 @@ _set_child_property (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
 {
+  gint64 cpos;
+  gdouble rate;
   GList *layers = NULL;
-  GstClockTime position;
   GESTimeline *timeline;
+  GstQuery *query_segment;
   GESTimelineElement *clip;
+  GstClockTime position;
+  gint64 stop_value;
 
   gint new_layer_priority = -1;
   GESEditMode edge = GES_EDGE_NONE;
@@ -87,7 +101,7 @@ _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
 
   clip_name = gst_structure_get_string (action->structure, "clip-name");
 
-  g_object_get (scenario->pipeline, "timeline", &timeline, NULL);
+  timeline = get_timeline (scenario);
   g_return_val_if_fail (timeline, FALSE);
 
   clip = ges_timeline_get_element (timeline, clip_name);
@@ -101,20 +115,19 @@ _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
 
   if ((edit_mode_str =
           gst_structure_get_string (action->structure, "edit-mode")))
-    gst_validate_utils_enum_from_str (GES_TYPE_EDIT_MODE, edit_mode_str, &mode);
+    g_return_val_if_fail (gst_validate_utils_enum_from_str (GES_TYPE_EDIT_MODE,
+            edit_mode_str, &mode), FALSE);
 
   if ((edge_str = gst_structure_get_string (action->structure, "edge")))
-    gst_validate_utils_enum_from_str (GES_TYPE_EDGE, edge_str, &edge);
+    g_return_val_if_fail (gst_validate_utils_enum_from_str (GES_TYPE_EDGE,
+            edge_str, &edge), FALSE);
 
   gst_structure_get_int (action->structure, "new-layer-priority",
       &new_layer_priority);
 
-  g_print ("\n\n(position %" GST_TIME_FORMAT
-      "), %s (num %u, missing repeat: %i), "
-      "Editing %s to %" GST_TIME_FORMAT " in %s mode, edge: %s "
+  gst_validate_printf (action, "Editing %s to %" GST_TIME_FORMAT
+      " in %s mode, edge: %s "
       "with new layer prio: %d \n\n",
-      GST_TIME_ARGS (action->playback_time), action->name,
-      action->action_number, action->repeat,
       clip_name, GST_TIME_ARGS (position),
       edit_mode_str ? edit_mode_str : "normal",
       edge_str ? edge_str : "None", new_layer_priority);
@@ -126,7 +139,28 @@ _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
   }
   gst_object_unref (clip);
 
-  return ges_timeline_commit (timeline);
+  query_segment = gst_query_new_segment (GST_FORMAT_TIME);
+  if (!gst_element_query (scenario->pipeline, query_segment)) {
+    GST_ERROR_OBJECT (scenario, "Could not query segment");
+    return FALSE;
+  }
+
+  if (!gst_element_query_position (scenario->pipeline, GST_FORMAT_TIME, &cpos)) {
+    GST_ERROR_OBJECT (scenario, "Could not query position");
+    return FALSE;
+  }
+
+  if (!ges_timeline_commit (timeline)) {
+    GST_DEBUG_OBJECT (scenario, "nothing changed, no need to seek");
+    return TRUE;
+  }
+
+
+  gst_query_parse_segment (query_segment, &rate, NULL, NULL, &stop_value);
+
+  return gst_validate_scenario_execute_seek (scenario, action,
+      rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+      GST_SEEK_TYPE_SET, cpos, GST_SEEK_TYPE_SET, stop_value);
 }
 
 gboolean
