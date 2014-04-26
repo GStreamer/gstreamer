@@ -36,8 +36,6 @@
  * gst-launch -v filesrc location=Hawkeye.sid ! siddec ! audioconvert ! alsasink
  * ]| Decode a sid file and play back the audio using alsasink.
  * </refsect2>
- *
- * Last reviewed on 2006-12-30 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -22,8 +22,6 @@
  * SECTION:element-rtspwms
  *
  * A WMS RTSP extension
- *
- * Last reviewed on 2007-07-25 (0.10.14)
  */
 
 #include <string.h>

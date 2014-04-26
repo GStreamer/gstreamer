@@ -33,8 +33,6 @@
  * ]| Stream RealAudio data containing AC3 (dnet) compressed audio and decode it
  * and output it to the soundcard using the ALSA element.
  * </refsect2>
- *
- * Last reviewed on 2006-10-24 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H

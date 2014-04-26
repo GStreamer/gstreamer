@@ -47,8 +47,6 @@
  * @see_also: GstRtspSrc
  *
  * A simple RTP session manager used internally by rtspsrc.
- *
- * Last reviewed on 2006-06-20 (0.10.4)
  */
 
 /* #define HAVE_RTCP */
