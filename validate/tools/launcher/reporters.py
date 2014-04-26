@@ -21,6 +21,7 @@
 
 import os
 import re
+import sys
 import codecs
 from loggable import Loggable
 from xml.sax import saxutils
@@ -139,13 +140,17 @@ class XunitReporter(Reporter):
             if value:
                 captured += '<system-out><![CDATA[%s' % \
                     escape_cdata(value)
+            captured += "]]></system-out>\n"
 
             for extralog in self._current_test.extra_logfiles:
-                captured += "\n\n===== %s =====\n\n" % escape_cdata(os.path.basename(extralog))
-                value = self._current_test.get_extra_log_content(extralog)
-                captured += escape_cdata(value)
-
-            captured += "]]></system-out>"
+                value, stdo = self._current_test.get_extra_log_content(extralog)
+                if stdo == sys.stdout:
+                    out = 'system-out'
+                else:
+                    out = 'system-err'
+                captured += '<%s><![CDATA[%s%s]]></%s>\n' % (out,
+                    "\n\n===== %s =====\n\n" % escape_cdata(os.path.basename(extralog)),
+                    escape_cdata(value), out)
 
         return captured
 

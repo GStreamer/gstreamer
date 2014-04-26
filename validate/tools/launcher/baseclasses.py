@@ -90,7 +90,7 @@ class Test(Loggable):
         value = f.read()
         f.close()
 
-        return value
+        return value, sys.stdout
 
 
     def get_classname(self):
@@ -287,12 +287,13 @@ class GstValidateTest(Test):
             self.add_arguments("--set-scenario", self.scenario.name)
 
     def get_extra_log_content(self, extralog):
-        value = Test.get_extra_log_content(self, extralog)
+        value, stdo = Test.get_extra_log_content(self, extralog)
 
         if extralog == self.validatelogs:
             value = re.sub("<position:.*/>\r", "", value)
+            stdo = sys.stderr
 
-        return value
+        return value, stdo
 
     def get_validate_criticals_errors(self):
         ret = "["

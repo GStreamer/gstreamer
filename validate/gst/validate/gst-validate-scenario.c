@@ -1504,7 +1504,8 @@ init_scenarios (void)
       "Action to wait during 'duration' seconds", FALSE);
   gst_validate_add_action_type ("dot-pipeline", _execute_dot_pipeline, NULL,
       "Action to wait dot the pipeline (the 'name' property will be included in the"
-      " dot filename. Also the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set", FALSE);
+      " dot filename. Also the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set",
+      FALSE);
   gst_validate_add_action_type ("set-feature-rank", _set_rank, NULL,
       "Allows you to change the ranking of a particular plugin feature", TRUE);
 }
