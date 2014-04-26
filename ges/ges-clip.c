@@ -356,9 +356,9 @@ _child_removed (GESContainer * container, GESTimelineElement * element)
 }
 
 static void
-add_tlobj_to_list (gpointer key, gpointer tlobj, GList ** list)
+add_clip_to_list (gpointer key, gpointer clip, GList ** list)
 {
-  *list = g_list_prepend (*list, gst_object_ref (tlobj));
+  *list = g_list_prepend (*list, gst_object_ref (clip));
 }
 
 static GList *
@@ -417,7 +417,7 @@ _ungroup (GESContainer * container, gboolean recursive)
     }
   }
   g_list_free_full (children, gst_object_unref);
-  g_hash_table_foreach (_tracktype_clip, (GHFunc) add_tlobj_to_list, &ret);
+  g_hash_table_foreach (_tracktype_clip, (GHFunc) add_clip_to_list, &ret);
   g_hash_table_unref (_tracktype_clip);
 
   return ret;
