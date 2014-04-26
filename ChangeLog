@@ -1,9 +1,50 @@
-=== release 1.2.0 ===
+=== release 1.2.1 ===
 
-2014-03-15  Thibault Saunier <tsaunier@gnome.org>
+2014-04-26  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.2.1
+
+2014-04-26 11:03:57 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.2.1
+
+2014-03-23 10:34:10 +0100  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  python3: apply pep 238 for division overload
+	  Python 3 needs an __truediv__ operator method, used in GstFraction.
+	  see: http://legacy.python.org/dev/peps/pep-0238/
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726920
+
+2014-04-01 09:53:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* gi/overrides/Gst.py:
+	  overrides: Import the _gi_gst module relative
+	  We always expect it to be in the same directory and it fixes its import
+	  with python3
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726921
+
+2014-03-29 14:51:39 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* gi/overrides/Makefile.am:
+	  Fix extension of native Python module
+	  When building debug modules this e.g. has to be _d.so instead of just .so
+
+2014-03-15 18:02:45 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.2.0
 
 2014-03-15 12:40:32 +0100  Thibault Saunier <tsaunier@gnome.org>
 

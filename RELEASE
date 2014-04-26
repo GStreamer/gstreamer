@@ -1,19 +1,20 @@
 
-Release notes for GStreamer Python bindings 1.2
+Release notes for GStreamer Python bindings 1.2.1
 
 
-  The GStreamer team is proud to announce the first stable release
-  of the 1.X serie of the gst-python overrides for the PyGObject
-  runtime bindings.
+The GStreamer team is proud to announce a new bug-fix release
+in the 1.x stable series of the GStreamer Python Bindings.
 
   
 
 Features of this release
     
-      * Python 3.3 support
+      * Work with python 3.3
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+
+      * 726920 : Apply pep 238 for division overload for Python 3
+      * 726921 : Python 3: Fraction cannot be set as value in Caps
 
 ==== Download ====
 
@@ -52,15 +53,7 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Andoni Morales Alastruey
-      * George McCollister
-      * Mark Nauwelaerts
-      * Olivier Crête
-      * René Stadler
+      * Lubosz Sarnecki
       * Sebastian Dröge
-      * Simon Farnsworth
-      * Stefan Sauer
       * Thibault Saunier
-      * Tim-Philipp Müller
  
