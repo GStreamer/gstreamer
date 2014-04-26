@@ -209,12 +209,41 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
   return TRUE;
 }
 
+gboolean
+gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
+    GstValidateAction * action, gdouble rate, GstFormat format,
+    GstSeekFlags flags, GstSeekType start_type, GstClockTime start,
+    GstSeekType stop_type, GstClockTime stop)
+{
+  gboolean ret = TRUE;
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
+  GstEvent *seek = gst_event_new_seek (rate, format, flags, start_type, start,
+      stop_type, stop);
+
+  gst_event_ref (seek);
+  if (gst_element_send_event (scenario->pipeline, seek)) {
+    gst_event_replace (&priv->last_seek, seek);
+    priv->seek_flags = flags;
+  } else {
+    GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
+        "Could not execute seek: '(position %" GST_TIME_FORMAT
+        "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
+        " stop: %" GST_TIME_FORMAT " Rate %lf'",
+        GST_TIME_ARGS (action->playback_time), action->name,
+        action->action_number, action->repeat, GST_TIME_ARGS (start),
+        GST_TIME_ARGS (stop), rate);
+    ret = FALSE;
+  }
+  gst_event_unref (seek);
+
+  return ret;
+}
+
 static gboolean
 _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  GstValidateScenarioPrivate *priv = scenario->priv;
   const char *str_format, *str_flags, *str_start_type, *str_stop_type;
-  gboolean ret = TRUE;
 
   gdouble rate = 1.0;
   GstFormat format = GST_FORMAT_TIME;
@@ -223,7 +252,6 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   GstClockTime start;
   GstSeekType stop_type = GST_SEEK_TYPE_SET;
   GstClockTime stop = GST_CLOCK_TIME_NONE;
-  GstEvent *seek;
 
   if (!gst_validate_action_get_clocktime (scenario, action, "start", &start))
     return FALSE;
@@ -251,25 +279,8 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
       " stop: %" GST_TIME_FORMAT " Rate %lf\n",
       GST_TIME_ARGS (start), GST_TIME_ARGS (stop), rate);
 
-  seek = gst_event_new_seek (rate, format, flags, start_type, start,
-      stop_type, stop);
-  gst_event_ref (seek);
-  if (gst_element_send_event (scenario->pipeline, seek)) {
-    gst_event_replace (&priv->last_seek, seek);
-    priv->seek_flags = flags;
-  } else {
-    GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
-        "Could not execute seek: '(position %" GST_TIME_FORMAT
-        "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
-        " stop: %" GST_TIME_FORMAT " Rate %lf'",
-        GST_TIME_ARGS (action->playback_time), action->name,
-        action->action_number, action->repeat, GST_TIME_ARGS (start),
-        GST_TIME_ARGS (stop), rate);
-    ret = FALSE;
-  }
-  gst_event_unref (seek);
-
-  return ret;
+  return gst_validate_scenario_execute_seek (scenario, action, rate, format,
+      flags, start_type, start, stop_type, stop);
 }
 
 static gboolean

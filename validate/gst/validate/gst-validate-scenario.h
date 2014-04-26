@@ -86,6 +86,16 @@ gboolean gst_validate_action_get_clocktime (GstValidateScenario * scenario,
                                             const gchar * name,
                                             GstClockTime * retval);
 
+gboolean gst_validate_scenario_execute_seek (GstValidateScenario *scenario,
+                                             GstValidateAction *action,
+                                             gdouble rate,
+                                             GstFormat format,
+                                             GstSeekFlags flags,
+                                             GstSeekType start_type,
+                                             GstClockTime start,
+                                             GstSeekType stop_type,
+                                             GstClockTime stop);
+
 #define GST_TYPE_VALIDATE_ACTION            (gst_validate_action_get_type ())
 #define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))
 GType gst_validate_action_get_type (void);
