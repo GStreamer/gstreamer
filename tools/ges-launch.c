@@ -682,9 +682,11 @@ main (int argc, gchar ** argv)
         "Defines the track types to be created"},
     {"mute", 0, 0, G_OPTION_ARG_NONE, &mute,
         "Mute playback output, which means that we use faksinks"},
+#ifdef HAVE_GST_VALIDATE
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &scenario,
         "Specify a GstValidate scenario to run, 'none' means load gst-validate"
           " but run no scenario on it", "<scenario_name>"},
+#endif
     {NULL}
   };
 
