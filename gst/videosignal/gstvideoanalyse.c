@@ -75,8 +75,6 @@
  * gst-launch -m videotestsrc ! videoanalyse ! videoconvert ! ximagesink
  * ]| This pipeline emits messages to the console for each frame that has been analysed. 
  * </refsect2>
- *
- * Last reviewed on 2007-05-30 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -39,8 +39,6 @@
  * gst-launch videotestsrc ! simplevideomark ! ximagesink
  * ]| Add the default black/white squares at the bottom left of the video frames.
  * </refsect2>
- *
- * Last reviewed on 2007-06-01 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H

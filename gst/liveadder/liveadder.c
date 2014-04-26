@@ -34,8 +34,6 @@
  *
  * Unlike the adder, the liveadder mixes the streams according the their
  * timestamps and waits for some milli-seconds before trying doing the mixing.
- *
- * Last reviewed on 2008-02-10 (0.10.11)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -34,8 +34,6 @@
  * gst-launch filesrc location=test.ogg ! decodebin ! audioconvert ! speed speed=1.5 ! audioconvert ! audioresample ! autoaudiosink
  * ]| Plays an .ogg file at 1.5x speed.
  * </refsect2>
- *
- * Last reviewed on 2007-02-26 (0.10.4.1)
  */
 
 #ifdef HAVE_CONFIG_H

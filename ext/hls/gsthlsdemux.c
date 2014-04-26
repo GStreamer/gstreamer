@@ -34,8 +34,6 @@
  * gst-launch souphttpsrc location=http://devimages.apple.com/iphone/samples/bipbop/gear4/prog_index.m3u8 ! hlsdemux ! decodebin2 ! videoconvert ! videoscale ! autovideosink
  * ]|
  * </refsect2>
- *
- * Last reviewed on 2010-10-07
  */
 
 #ifdef HAVE_CONFIG_H

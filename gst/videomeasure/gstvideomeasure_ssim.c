@@ -43,8 +43,6 @@
  * decodebin2 ! ssim.modified0
  * ]| This pipeline produces a video stream that consists of SSIM frames.
  * </refsect2>
- *
- * Last reviewed on 2009-09-06 (0.10.?)
  */
 /* Element-Checklist-Version: 5 */
 

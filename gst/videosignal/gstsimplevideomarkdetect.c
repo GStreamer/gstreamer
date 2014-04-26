@@ -90,8 +90,6 @@
  * gst-launch videotestsrc ! simplevideomarkdetect ! videoconvert ! ximagesink
  * ]|
  * </refsect2>
- *
- * Last reviewed on 2007-05-30 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H

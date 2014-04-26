@@ -23,9 +23,6 @@
  * This plugin collects measurements from measuring elemtns and calculates
  * total measure for the whole sequence and also outputs measurements to a file
  * <classname>&quot;GstMeasureCollector&quot;</classname>.
- *
- *
- * Last reviewed on 2009-03-15 (0.10.?)
  */
 
 #ifdef HAVE_CONFIG_H
