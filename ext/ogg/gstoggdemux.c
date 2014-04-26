@@ -31,8 +31,6 @@
  * gst-launch -v filesrc location=test.ogg ! oggdemux ! vorbisdec ! audioconvert ! alsasink
  * ]| Decodes the vorbis audio stored inside an ogg container.
  * </refsect2>
- *
- * Last reviewed on 2006-12-30 (0.10.5)
  */
 
 

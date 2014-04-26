@@ -26,8 +26,6 @@
  * <para>
  * </para>
  * </refsect2>
- *
- * Last reviewed on 2012-09-24 (1.0)
  */
 
 #include "gstrtphdrext.h"

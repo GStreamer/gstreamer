@@ -31,8 +31,6 @@
  * ]| Encodes a video stream captured from a v4l2-compatible camera to Ogg/Theora
  * (the encoding will stop automatically after 500 frames)
  * </refsect2>
- *
- * Last reviewed on 2008-02-06 (0.10.17)
  */
 
 #ifdef HAVE_CONFIG_H

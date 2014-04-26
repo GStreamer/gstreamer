@@ -46,8 +46,6 @@
  * @see_also: gstrtspurl, gstrtspconnection
  *  
  * Provides common defines for the RTSP library. 
- *  
- * Last reviewed on 2007-07-24 (0.10.14)
  */
 
 #include <errno.h>

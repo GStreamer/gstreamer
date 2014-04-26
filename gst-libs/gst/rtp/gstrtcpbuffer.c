@@ -40,8 +40,6 @@
  * gst_rtcp_packet_move_to_next().
  * </para>
  * </refsect2>
- *
- * Last reviewed on 2007-03-26 (0.10.13)
  */
 
 #include <string.h>

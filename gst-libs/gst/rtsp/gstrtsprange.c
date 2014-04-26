@@ -45,8 +45,6 @@
  * @short_description: dealing with time ranges
  *  
  * Provides helper functions to deal with time ranges.
- *  
- * Last reviewed on 2007-07-25 (0.10.14)
  */
 
 #include <math.h>

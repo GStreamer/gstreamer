@@ -45,8 +45,6 @@
  * @short_description: handling RTSP urls
  *  
  * Provides helper functions to handle RTSP urls.
- *  
- * Last reviewed on 2007-07-25 (0.10.14)
  */
 
 #include <stdlib.h>

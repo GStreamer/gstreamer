@@ -84,8 +84,6 @@
  * gst_app_src_end_of_stream() or emit the end-of-stream action signal. After
  * this call, no more buffers can be pushed into appsrc until a flushing seek
  * happened or the state of the appsrc has gone through READY.
- *
- * Last reviewed on 2008-12-17 (0.10.10)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -63,8 +63,6 @@
  * All scheduling of samples and timestamps is done in this base class
  * together with #GstAudioBaseSrc using a default implementation of a
  * #GstAudioRingBuffer that uses threads.
- *
- * Last reviewed on 2006-09-27 (0.10.12)
  */
 
 #include <string.h>

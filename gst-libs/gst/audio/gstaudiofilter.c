@@ -36,8 +36,6 @@
  * #GstBaseTransformClass.transform_ip() and/or
  * #GstBaseTransformClass.transform()
  * virtual functions in their class_init function.
- *
- * Last reviewed on 2007-02-03 (0.10.11.1)
  */
 
 #ifdef HAVE_CONFIG_H

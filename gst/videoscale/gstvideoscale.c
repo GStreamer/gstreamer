@@ -44,8 +44,6 @@
  * ]| Decode an Ogg/Theora and display the video using xvimagesink with a width
  * of 50.
  * </refsect2>
- *
- * Last reviewed on 2006-03-02 (0.10.4)
  */
 
 /* 

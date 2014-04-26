@@ -50,8 +50,6 @@
  * ogg container. Refer to the theoradec documentation to decode the create
  * stream.
  * </refsect2>
- *
- * Last reviewed on 2006-03-01 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -29,8 +29,6 @@
  * messages.
  * </para>
  * </refsect2>
- *
- * Last reviewed on 2014-03-20 (1.3.0)
  */
 
 #include <string.h>

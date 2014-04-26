@@ -28,8 +28,6 @@
  * This is the base class for audio sources. Subclasses need to implement the
  * ::create_ringbuffer vmethod. This base class will then take care of
  * reading samples from the ringbuffer, synchronisation and flushing.
- *
- * Last reviewed on 2006-09-27 (0.10.12)
  */
 
 #ifdef HAVE_CONFIG_H

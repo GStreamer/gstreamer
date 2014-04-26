@@ -32,8 +32,6 @@
  * and get session bandwidth information.
  * </para>
  * </refsect2>
- *
- * Last reviewed on 2007-10-01 (0.10.15)
  */
 
 #include <string.h>

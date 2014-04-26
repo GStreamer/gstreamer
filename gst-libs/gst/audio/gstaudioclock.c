@@ -29,8 +29,6 @@
  * simply need to provide a function that returns the current clock time.
  *
  * This object is internally used to implement the clock in #GstAudioBaseSink.
- *
- * Last reviewed on 2006-09-27 (0.10.12)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -28,8 +28,6 @@
  * This is the base class for audio sinks. Subclasses need to implement the
  * ::create_ringbuffer vmethod. This base class will then take care of
  * writing samples to the ringbuffer, synchronisation, clipping and flushing.
- *
- * Last reviewed on 2006-09-27 (0.10.12)
  */
 
 #include <string.h>

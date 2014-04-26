@@ -47,8 +47,6 @@
  * @see_also: gstrtspconnection
  *  
  * Provides methods for creating and parsing request, response and data messages.
- *  
- * Last reviewed on 2007-07-25 (0.10.14)
  */
 
 #include <string.h>

@@ -36,8 +36,6 @@
  * ]| This example pipeline will decode an ogg stream and decodes the theora video. Refer to
  * the theoraenc example to create the ogg file.
  * </refsect2>
- *
- * Last reviewed on 2006-03-01 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H

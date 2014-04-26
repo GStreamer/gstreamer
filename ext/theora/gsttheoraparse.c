@@ -52,8 +52,6 @@
  * ]| This pipeline shows remuxing. video-remuxed.ogg might not be exactly the same
  * as video.ogg, but they should produce exactly the same decoded data.
  * </refsect2>
- *
- * Last reviewed on 2008-05-28 (0.10.20)
  */
 
 /* FIXME 0.11: suppress warnings for deprecated API such as GValueArray

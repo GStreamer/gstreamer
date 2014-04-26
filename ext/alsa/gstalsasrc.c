@@ -31,8 +31,6 @@
  * gst-launch -v alsasrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=alsasrc.ogg
  * ]| Record from a sound card using ALSA and encode to Ogg/Vorbis.
  * </refsect2>
- *
- * Last reviewed on 2006-03-01 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H

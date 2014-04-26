@@ -30,8 +30,6 @@
  * 'application/x-rtp' #GstCaps.
  * </para>
  * </refsect2>
- *
- * Last reviewed on 2006-07-17 (0.10.10)
  */
 
 #include "gstrtpbuffer.h"

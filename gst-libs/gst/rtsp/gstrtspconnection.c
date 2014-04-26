@@ -47,8 +47,6 @@
  *
  * This object manages the RTSP connection to the server. It provides function
  * to receive and send bytes and messages.
- *
- * Last reviewed on 2007-07-24 (0.10.14)
  */
 
 #ifdef HAVE_CONFIG_H

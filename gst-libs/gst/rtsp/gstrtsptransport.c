@@ -46,8 +46,6 @@
  * @short_description: dealing with RTSP transports
  *  
  * Provides helper functions to deal with RTSP transport strings.
- *  
- * Last reviewed on 2007-07-25 (0.10.14)
  */
 
 #include <string.h>

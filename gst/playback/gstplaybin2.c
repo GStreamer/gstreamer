@@ -3790,7 +3790,7 @@ avelements_create (GstPlayBin * playbin, gboolean isaudioelement)
   }
 
   /* create a list of audio/video elements. Each element in the list
-   * is holding an audio/video decoder and an auido/video sink in which
+   * is holding an audio/video decoder and an audio/video sink in which
    * the decoders srcpad template caps and sink element's sinkpad template
    * caps are compatible */
   dl = dec_list;

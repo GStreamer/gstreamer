@@ -63,8 +63,6 @@
  * ]| Capture video from a V4L device, and adjust the stream to 12.5 fps before
  * encoding to Ogg/Theora.
  * </refsect2>
- *
- * Last reviewed on 2006-09-02 (0.10.11)
  */
 
 #ifdef HAVE_CONFIG_H

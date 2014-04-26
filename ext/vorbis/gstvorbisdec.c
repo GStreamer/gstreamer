@@ -32,8 +32,6 @@
  * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! alsasink
  * ]| Decode an Ogg/Vorbis. To create an Ogg/Vorbis file refer to the documentation of vorbisenc.
  * </refsect2>
- *
- * Last reviewed on 2006-03-01 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H

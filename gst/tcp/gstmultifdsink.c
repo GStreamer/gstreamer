@@ -97,8 +97,6 @@
  * buffers to the clients. This behaviour can be disabled by setting the sync 
  * property to FALSE. Multifdsink will by default not do QoS and will never
  * drop late buffers.
- *
- * Last reviewed on 2006-09-12 (0.10.10)
  */
 
 #ifdef HAVE_CONFIG_H

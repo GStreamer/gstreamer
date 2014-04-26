@@ -35,8 +35,6 @@
  * gst-launch audiotestsrc freq=100 ! adder name=mix ! audioconvert ! alsasink audiotestsrc freq=500 ! mix.
  * ]| This pipeline produces two sine waves mixed together.
  * </refsect2>
- *
- * Last reviewed on 2006-05-09 (0.10.7)
  */
 /* Element-Checklist-Version: 5 */
 

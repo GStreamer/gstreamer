@@ -29,8 +29,6 @@
  *  exentension (rtspwms) and the RealMedia RTSP extension (rtspreal).
  * </para>
  * </refsect2>
- *
- * Last reviewed on 2007-07-25 (0.10.14)
  */
 
 #ifdef HAVE_CONFIG_H

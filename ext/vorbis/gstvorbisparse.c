@@ -45,8 +45,6 @@
  * ]| This pipeline shows remuxing. sine-remuxed.ogg might not be exactly the same
  * as sine.ogg, but they should produce exactly the same decoded data.
  * </refsect2>
- *
- * Last reviewed on 2006-04-01 (0.10.4.1)
  */
 
 #ifdef HAVE_CONFIG_H

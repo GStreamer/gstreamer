@@ -35,8 +35,6 @@
  * implementations.
  * </para>
  * </refsect2>
- *
- * Last reviewed on 2006-02-02 (0.10.4)
  */
 
 #include <string.h>
