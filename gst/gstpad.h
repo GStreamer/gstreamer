@@ -611,9 +611,9 @@ typedef gboolean  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent **
  *                            The flag has to be unset manually after
  *                            reconfiguration happened.
  * @GST_PAD_FLAG_PENDING_EVENTS: the pad has pending events
- * @GST_PAD_FLAG_FIXED_CAPS: the pad is using fixed caps. This means that
- *     once the caps are set on the pad, the default caps query function
- *     will only return those caps.
+ * @GST_PAD_FLAG_FIXED_CAPS: the pad is using fixed caps this means that once the
+ *                      caps are set on the pad, the caps query function will only
+ *                      return those caps.
  * @GST_PAD_FLAG_PROXY_CAPS: the default event and query handler will forward
  *                      all events and queries to the internally linked pads
  *                      instead of discarding them.
@@ -743,401 +743,92 @@ struct _GstPadClass {
 
 /***** helper macros *****/
 /* GstPad */
-
-/**
- * GST_PAD_NAME:
- * @pad: a #GstPad
- *
- * Get name of the given pad.
- * No locking is performed in this function, use gst_pad_get_name() instead.
- */
 #define GST_PAD_NAME(pad)		(GST_OBJECT_NAME(pad))
-/**
- * GST_PAD_PARENT:
- * @pad: a #GstPad
- *
- * Get the @pad parent.
- * No locking is performed in this function, use gst_pad_get_parent() instead.
- */
 #define GST_PAD_PARENT(pad)		(GST_ELEMENT_CAST(GST_OBJECT_PARENT(pad)))
-/**
- * GST_PAD_ELEMENT_PRIVATE:
- * @pad: a #GstPad
- *
- * Get the private data of @pad, which is usually some pad- or stream-specific
- * structure created by the element and set on the pad when creating it.
- * No locking is performed in this function.
- */
 #define GST_PAD_ELEMENT_PRIVATE(pad)    (GST_PAD_CAST(pad)->element_private)
-/**
- * GST_PAD_PAD_TEMPLATE:
- * @pad: a #GstPad
- *
- * Get the @pad #GstPadTemplate. It describes the possible media types
- * a @pad or an element factory can handle.
- */
 #define GST_PAD_PAD_TEMPLATE(pad)	(GST_PAD_CAST(pad)->padtemplate)
-/**
- * GST_PAD_DIRECTION:
- * @pad: a #GstPad
- *
- * Get the #GstPadDirection of the given @pad. Accessor macro, use
- * gst_pad_get_direction() instead.
- */
 #define GST_PAD_DIRECTION(pad)		(GST_PAD_CAST(pad)->direction)
-/**
- * GST_PAD_TASK:
- * @pad: a #GstPad
- *
- * Get the #GstTask of @pad. Accessor macro used by GStreamer. Use the
- * gst_pad_start_task(), gst_pad_stop_task() and gst_pad_pause_task()
- * functions instead.
- */
 #define GST_PAD_TASK(pad)		(GST_PAD_CAST(pad)->task)
-/**
- * GST_PAD_MODE:
- * @pad: a #GstPad
- *
- * Get the #GstPadMode of pad, which will be GST_PAD_MODE_NONE if the pad
- * has not been activated yet, and otherwise either GST_PAD_MODE_PUSH or
- * GST_PAD_MODE_PULL depending on which mode the pad was activated in.
- */
 #define GST_PAD_MODE(pad)	        (GST_PAD_CAST(pad)->mode)
-/**
- * GST_PAD_ACTIVATEFUNC:
- * @pad: a #GstPad
- *
- * Get the #GstPadActivateFunction from @pad.
- */
+
 #define GST_PAD_ACTIVATEFUNC(pad)	(GST_PAD_CAST(pad)->activatefunc)
-/**
- * GST_PAD_ACTIVATEMODEFUNC:
- * @pad: a #GstPad
- *
- * Get the #GstPadActivateModeFunction from the given @pad.
- */
 #define GST_PAD_ACTIVATEMODEFUNC(pad)	(GST_PAD_CAST(pad)->activatemodefunc)
-/**
- * GST_PAD_CHAINFUNC:
- * @pad: a #GstPad
- *
- * Get the #GstPadChainFunction from the given @pad.
- */
 #define GST_PAD_CHAINFUNC(pad)		(GST_PAD_CAST(pad)->chainfunc)
-/**
- * GST_PAD_CHAINLISTFUNC:
- * @pad: a #GstPad
- *
- * Get the #GstPadChainListFunction from the given @pad.
- */
 #define GST_PAD_CHAINLISTFUNC(pad)      (GST_PAD_CAST(pad)->chainlistfunc)
-/**
- * GST_PAD_GETRANGEFUNC:
- * @pad: a #GstPad
- *
- * Get the #GstPadGetRangeFunction from the given @pad.
- */
 #define GST_PAD_GETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->getrangefunc)
-/**
- * GST_PAD_EVENTFUNC:
- * @pad: a #GstPad
- *
- * Get the #GstPadEventFunction from the given @pad, which
- * is the function that handles events on the pad. You can
- * use this to set your own event handling function on a pad
- * after you create it.  If your element derives from a base
- * class, use the base class's virtual functions instead.
- */
 #define GST_PAD_EVENTFUNC(pad)		(GST_PAD_CAST(pad)->eventfunc)
-/**
- * GST_PAD_QUERYFUNC:
- * @pad: a #GstPad
- *
- * Get the #GstPadQueryFunction from @pad, which is the function
- * that handles queries on the pad. You can  use this to set your
- * own query handling function on a pad after you create it. If your
- * element derives from a base class, use the base class's virtual
- * functions instead.
- */
 #define GST_PAD_QUERYFUNC(pad)		(GST_PAD_CAST(pad)->queryfunc)
-/**
- * GST_PAD_ITERINTLINKFUNC:
- * @pad: a #GstPad
- *
- * Get the #GstPadIterIntLinkFunction from the given @pad.
- */
 #define GST_PAD_ITERINTLINKFUNC(pad)    (GST_PAD_CAST(pad)->iterintlinkfunc)
-/**
- * GST_PAD_PEER:
- * @pad: a #GstPad
- *
- * Return the pad's peer member. This member is a pointer to the linked @pad.
- * No locking is performed in this function, use gst_pad_get_peer() instead.
- */
+
 #define GST_PAD_PEER(pad)		(GST_PAD_CAST(pad)->peer)
-/**
- * GST_PAD_LINKFUNC:
- * @pad: a #GstPad
- *
- * Get the #GstPadLinkFunction for the given @pad.
- */
 #define GST_PAD_LINKFUNC(pad)		(GST_PAD_CAST(pad)->linkfunc)
-/**
- * GST_PAD_UNLINKFUNC:
- * @pad: a #GstPad
- *
- * Get the #GstPadUnlinkFunction from the given @pad.
- */
 #define GST_PAD_UNLINKFUNC(pad)		(GST_PAD_CAST(pad)->unlinkfunc)
-/**
- * GST_PAD_IS_SRC:
- * @pad: a #GstPad
- *
- * Returns: TRUE if the pad is a source pad (i.e. produces data).
- */
+
 #define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
-/**
- * GST_PAD_IS_SINK:
- * @pad: a #GstPad
- *
- * Returns: TRUE if the pad is a sink pad (i.e. consumes data).
- */
 #define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
-/**
- * GST_PAD_IS_LINKED:
- * @pad: a #GstPad
- *
- * Returns: TRUE if the pad is linked to another pad. Use gst_pad_is_linked()
- * instead.
- */
+
 #define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
-/**
- * GST_PAD_IS_ACTIVE:
- * @pad: a #GstPad
- *
- * Returns: TRUE if the pad has been activated.
- */
+
 #define GST_PAD_IS_ACTIVE(pad)          (GST_PAD_MODE(pad) != GST_PAD_MODE_NONE)
-/**
- * GST_PAD_IS_BLOCKED:
- * @pad: a #GstPad
- *
- * Check if the dataflow on a @pad is blocked. Use gst_pad_is_blocked() instead.
- */
+
 #define GST_PAD_IS_BLOCKED(pad)		(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_BLOCKED))
-/**
- * GST_PAD_IS_BLOCKING:
- * @pad: a #GstPad
- *
- * Check if the @pad is currently blocking on a buffer or event. Use
- * gst_pad_is_blocking() instead.
- */
 #define GST_PAD_IS_BLOCKING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_BLOCKING))
-/**
- * GST_PAD_IS_FLUSHING:
- * @pad: a #GstPad
- *
- * Check if the given @pad is flushing.
- */
+
 #define GST_PAD_IS_FLUSHING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_FLUSHING))
-/**
- * GST_PAD_SET_FLUSHING:
- * @pad: a #GstPad
- *
- * Set the given @pad to flushing state, which means it will not accept any
- * more events, queries or buffers, and return GST_FLOW_FLUSHING if any buffers
- * are pushed on it. This usually happens when the pad is shut down or when
- * a flushing seek happens. This is used inside GStreamer when flush start/stop
- * events pass through pads, or when an element state is changed and pads are
- * activated or deactivated.
- */
 #define GST_PAD_SET_FLUSHING(pad)	(GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_FLUSHING))
-/**
- * GST_PAD_UNSET_FLUSHING:
- * @pad: a #GstPad
- *
- * Unset the flushing flag.
- */
 #define GST_PAD_UNSET_FLUSHING(pad)	(GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_FLUSHING))
-/**
- * GST_PAD_IS_EOS:
- * @pad: a #GstPad
- *
- * Check if the @pad is in EOS state.
- */
+
 #define GST_PAD_IS_EOS(pad)	        (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_EOS))
-/**
- * GST_PAD_NEEDS_RECONFIGURE:
- * @pad: a #GstPad
- *
- * Check if the @pad should be reconfigured/renegotiated.
- * The flag has to be unset manually after reconfiguration happened.
- * Use gst_pad_needs_reconfigure() or gst_pad_check_reconfigure() instead.
- */
+
 #define GST_PAD_NEEDS_RECONFIGURE(pad)  (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE))
-/**
- * GST_PAD_HAS_PENDING_EVENTS:
- * @pad: a #GstPad
- *
- * Check if the given @pad has pending events. This is used internally by
- * GStreamer.
- */
 #define GST_PAD_HAS_PENDING_EVENTS(pad) (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PENDING_EVENTS))
-/**
- * GST_PAD_IS_FIXED_CAPS:
- * @pad: a #GstPad
- *
- * Check if the given @pad is using fixed caps, which means that
- * once the caps are set on the @pad, the caps query function will
- * only return those caps. See gst_pad_use_fixed_caps().
- */
 #define GST_PAD_IS_FIXED_CAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_FIXED_CAPS))
-/**
- * GST_PAD_NEEDS_PARENT:
- * @pad: a #GstPad
- *
- * Check if there is a parent object before calling into the @pad callbacks.
- * This is used internally by GStreamer.
- */
 #define GST_PAD_NEEDS_PARENT(pad)       (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_NEED_PARENT))
-/**
- * GST_PAD_IS_PROXY_CAPS:
- * @pad: a #GstPad
- *
- * Check if the given @pad is set to proxy caps. This means that the default
- * event and query handler will forward all events and queries to the
- * internally linked @pads instead of discarding them.
- */
+
 #define GST_PAD_IS_PROXY_CAPS(pad)      (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PROXY_CAPS))
-/**
- * GST_PAD_SET_PROXY_CAPS:
- * @pad: a #GstPad
- *
- * Set @pad to proxy caps, so that all caps-related events and queries are
- * proxied down- or upstream to the other side of the element automatically.
- * Set this if the element always outputs data in the exact same format as it
- * receives as input. This is just for convenience to avoid implementing some
- * standard event and query handling code in an element.
- */
 #define GST_PAD_SET_PROXY_CAPS(pad)     (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PROXY_CAPS))
-/**
- * GST_PAD_UNSET_PROXY_CAPS:
- * @pad: a #GstPad
- *
- * Unset proxy caps flag.
- */
 #define GST_PAD_UNSET_PROXY_CAPS(pad)   (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PROXY_CAPS))
-/**
- * GST_PAD_IS_PROXY_ALLOCATION:
- * @pad: a #GstPad
- *
- * Check if the given @pad is set as proxy allocation which means
- * that the default query handler will forward allocation queries to the
- * internally linked @pads instead of discarding them.
- */
+
 #define GST_PAD_IS_PROXY_ALLOCATION(pad)    (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PROXY_ALLOCATION))
-/**
- * GST_PAD_SET_PROXY_ALLOCATION:
- * @pad: a #GstPad
- *
- * Set @pad to proxy allocation queries, which means that the default query
- * handler will forward allocation queries to the internally linked @pads
- * instead of discarding them.
- * Set this if the element always outputs data in the exact same format as it
- * receives as input. This is just for convenience to avoid implementing some
- * standard query handling code in an element.
- */
 #define GST_PAD_SET_PROXY_ALLOCATION(pad)   (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PROXY_ALLOCATION))
-/**
- * GST_PAD_UNSET_PROXY_ALLOCATION:
- * @pad: a #GstPad
- *
- * Unset proxy allocation flag.
- */
 #define GST_PAD_UNSET_PROXY_ALLOCATION(pad) (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PROXY_ALLOCATION))
-/**
- * GST_PAD_IS_PROXY_SCHEDULING:
- * @pad: a #GstPad
- *
- * Check if the given @pad is set to proxy scheduling queries, which means that
- * the default query handler will forward scheduling queries to the internally
- * linked @pads instead of discarding them.
- */
+
 #define GST_PAD_IS_PROXY_SCHEDULING(pad)    (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PROXY_SCHEDULING))
-/**
- * GST_PAD_SET_PROXY_SCHEDULING:
- * @pad: a #GstPad
- *
- * Set @pad to proxy scheduling queries, which means that the default query
- * handler will forward scheduling queries to the internally linked @pads
- * instead of discarding them. You will usually want to handle scheduling
- * queries explicitly if your element supports multiple scheduling modes.
- */
 #define GST_PAD_SET_PROXY_SCHEDULING(pad)   (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PROXY_SCHEDULING))
-/**
- * GST_PAD_UNSET_PROXY_SCHEDULING:
- * @pad: a #GstPad
- *
- * Unset proxy scheduling flag.
- */
 #define GST_PAD_UNSET_PROXY_SCHEDULING(pad) (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PROXY_SCHEDULING))
-/**
- * GST_PAD_IS_ACCEPT_INTERSECT:
- * @pad: a #GstPad
- *
- * Check if the pad's accept intersect flag is set. The default accept-caps
- * handler will check it the caps intersect the query-caps result instead of
- * checking for a subset. This is interesting for parser elements that can
- * accept incompletely specified caps.
- */
+
 #define GST_PAD_IS_ACCEPT_INTERSECT(pad)    (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_ACCEPT_INTERSECT))
-/**
- * GST_PAD_SET_ACCEPT_INTERSECT:
- * @pad: a #GstPad
- *
- * Set @pad to by default accept caps by intersecting the result instead of
- * checking for a subset. This is interesting for parser elements that can
- * accept incompletely specified caps.
- */
 #define GST_PAD_SET_ACCEPT_INTERSECT(pad)   (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_ACCEPT_INTERSECT))
-/**
- * GST_PAD_UNSET_ACCEPT_INTERSECT:
- * @pad: a #GstPad
- *
- * Unset accept intersect flag.
- */
 #define GST_PAD_UNSET_ACCEPT_INTERSECT(pad) (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_ACCEPT_INTERSECT))
+
 /**
  * GST_PAD_GET_STREAM_LOCK:
  * @pad: a #GstPad
  *
  * Get the stream lock of @pad. The stream lock is protecting the
- * resources used in the data processing functions of @pad. Accessor
- * macro, use GST_PAD_STREAM_LOCK() and GST_PAD_STREAM_UNLOCK() instead
- * to take/release the pad's stream lock.
+ * resources used in the data processing functions of @pad.
  */
 #define GST_PAD_GET_STREAM_LOCK(pad)    (&(GST_PAD_CAST(pad)->stream_rec_lock))
 /**
  * GST_PAD_STREAM_LOCK:
  * @pad: a #GstPad
  *
- * Take the pad's stream lock. The stream lock is recursive and will be taken
- * when buffers or serialized downstream events are pushed on a pad.
+ * Lock the stream lock of @pad.
  */
 #define GST_PAD_STREAM_LOCK(pad)        g_rec_mutex_lock(GST_PAD_GET_STREAM_LOCK(pad))
 /**
  * GST_PAD_STREAM_TRYLOCK:
  * @pad: a #GstPad
  *
- * Try to take the pad's stream lock, and return TRUE if the lock could be
- * taken, and otherwise FALSE.
+ * Try to Lock the stream lock of the pad, return TRUE if the lock could be
+ * taken.
  */
 #define GST_PAD_STREAM_TRYLOCK(pad)     g_rec_mutex_trylock(GST_PAD_GET_STREAM_LOCK(pad))
 /**
  * GST_PAD_STREAM_UNLOCK:
  * @pad: a #GstPad
  *
- * Release the pad's stream lock.
+ * Unlock the stream lock of @pad.
  */
 #define GST_PAD_STREAM_UNLOCK(pad)      g_rec_mutex_unlock(GST_PAD_GET_STREAM_LOCK(pad))
 
