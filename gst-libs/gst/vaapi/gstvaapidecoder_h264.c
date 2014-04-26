@@ -2033,7 +2033,6 @@ init_picture_refs(
 )
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
-    GstVaapiPicture * const base_picture = &picture->base;
     guint i, num_refs;
 
     init_picture_ref_lists(decoder);
@@ -2042,12 +2041,12 @@ init_picture_refs(
     priv->RefPicList0_count = 0;
     priv->RefPicList1_count = 0;
 
-    switch (base_picture->type) {
-    case GST_VAAPI_PICTURE_TYPE_P:
-    case GST_VAAPI_PICTURE_TYPE_SP:
+    switch (slice_hdr->type % 5) {
+    case GST_H264_P_SLICE:
+    case GST_H264_SP_SLICE:
         init_picture_refs_p_slice(decoder, picture, slice_hdr);
         break;
-    case GST_VAAPI_PICTURE_TYPE_B:
+    case GST_H264_B_SLICE:
         init_picture_refs_b_slice(decoder, picture, slice_hdr);
         break;
     default:
@@ -2056,16 +2055,16 @@ init_picture_refs(
 
     exec_picture_refs_modification(decoder, picture, slice_hdr);
 
-    switch (base_picture->type) {
-    case GST_VAAPI_PICTURE_TYPE_B:
+    switch (slice_hdr->type % 5) {
+    case GST_H264_B_SLICE:
         num_refs = 1 + slice_hdr->num_ref_idx_l1_active_minus1;
         for (i = priv->RefPicList1_count; i < num_refs; i++)
             priv->RefPicList1[i] = NULL;
         priv->RefPicList1_count = num_refs;
 
         // fall-through
-    case GST_VAAPI_PICTURE_TYPE_P:
-    case GST_VAAPI_PICTURE_TYPE_SP:
+    case GST_H264_P_SLICE:
+    case GST_H264_SP_SLICE:
         num_refs = 1 + slice_hdr->num_ref_idx_l0_active_minus1;
         for (i = priv->RefPicList0_count; i < num_refs; i++)
             priv->RefPicList0[i] = NULL;
@@ -2091,31 +2090,13 @@ init_picture(
     picture->frame_num_wrap     = priv->frame_num;
     picture->output_flag        = TRUE; /* XXX: conformant to Annex A only */
     base_picture->pts           = GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts;
+    base_picture->type          = GST_VAAPI_PICTURE_TYPE_NONE;
 
     /* Reset decoder state for IDR pictures */
     if (pi->nalu.type == GST_H264_NAL_SLICE_IDR) {
         GST_DEBUG("<IDR>");
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_IDR);
         dpb_flush(decoder);
-    }
-
-    /* Initialize slice type */
-    switch (slice_hdr->type % 5) {
-    case GST_H264_P_SLICE:
-        base_picture->type = GST_VAAPI_PICTURE_TYPE_P;
-        break;
-    case GST_H264_B_SLICE:
-        base_picture->type = GST_VAAPI_PICTURE_TYPE_B;
-        break;
-    case GST_H264_I_SLICE:
-        base_picture->type = GST_VAAPI_PICTURE_TYPE_I;
-        break;
-    case GST_H264_SP_SLICE:
-        base_picture->type = GST_VAAPI_PICTURE_TYPE_SP;
-        break;
-    case GST_H264_SI_SLICE:
-        base_picture->type = GST_VAAPI_PICTURE_TYPE_SI;
-        break;
     }
 
     /* Initialize picture structure */
@@ -2145,7 +2126,6 @@ init_picture(
     }
 
     init_picture_poc(decoder, picture, slice_hdr);
-    init_picture_refs(decoder, picture, slice_hdr);
     return TRUE;
 }
 
@@ -2860,6 +2840,7 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
 
+    init_picture_refs(decoder, picture, slice_hdr);
     if (!fill_slice(decoder, slice, pi)) {
         gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(slice));
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
