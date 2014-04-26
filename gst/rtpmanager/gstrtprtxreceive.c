@@ -109,8 +109,6 @@
  * You can play with the drop-probability value for one or both streams.
  * You should hear a clear sound. (after a few seconds the two streams wave feel synchronized)
  * </refsect2>
- *
- * Last reviewed on 2013-11-08 (1.x)
  */
 
 #ifdef HAVE_CONFIG_H

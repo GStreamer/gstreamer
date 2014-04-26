@@ -36,8 +36,6 @@
  * ]| This pipeline converts the image to black and white by setting the
  * saturation to 0.0.
  * </refsect2>
- *
- * Last reviewed on 2010-04-18 (0.10.22)
  */
 
 #ifdef HAVE_CONFIG_H

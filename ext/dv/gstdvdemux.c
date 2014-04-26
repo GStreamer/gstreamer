@@ -44,8 +44,6 @@
  * gst-launch-1.0 filesrc location=test.dv ! dvdemux name=demux ! queue ! audioconvert ! alsasink demux. ! queue ! dvdec ! xvimagesink
  * ]| This pipeline decodes and renders the raw DV stream to an audio and a videosink.
  * </refsect2>
- *
- * Last reviewed on 2006-02-27 (0.10.3)
  */
 
 /* DV output has two modes, normal and wide. The resolution is the same in both

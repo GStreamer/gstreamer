@@ -106,8 +106,6 @@
  * packets are sent in the PAUSED state). Applications should manually set and
  * keep (see gst_element_set_locked_state()) the RTCP udpsink to the PLAYING state.
  * </refsect2>
- *
- * Last reviewed on 2007-05-28 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H

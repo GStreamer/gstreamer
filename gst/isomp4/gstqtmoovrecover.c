@@ -57,8 +57,6 @@
  * </programlisting>
  * </para>
  * </refsect2>
- *
- * Documentation last reviewed on 2011-04-21
  */
 
 #ifdef HAVE_CONFIG_H

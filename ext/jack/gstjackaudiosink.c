@@ -51,8 +51,6 @@
  * gst-launch-1.0 audiotestsrc ! jackaudiosink
  * ]| Play a sine wave to using jack.
  * </refsect2>
- *
- * Last reviewed on 2006-11-30 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H

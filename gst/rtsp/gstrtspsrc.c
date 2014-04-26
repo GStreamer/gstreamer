@@ -73,8 +73,6 @@
  * ]| Establish a connection to an RTSP server and send the raw RTP packets to a
  * fakesink.
  * </refsect2>
- *
- * Last reviewed on 2006-08-18 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H

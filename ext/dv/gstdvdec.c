@@ -34,8 +34,6 @@
  * gst-launch-1.0 filesrc location=test.dv ! dvdemux name=demux ! dvdec ! xvimagesink
  * ]| This pipeline decodes and renders the raw DV stream to a videosink.
  * </refsect2>
- *
- * Last reviewed on 2006-02-28 (0.10.3)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -35,8 +35,6 @@
  * gst-launch-1.0 videotestsrc ! videoflip method=clockwise ! videoconvert ! ximagesink
  * ]| This pipeline flips the test image 90 degrees clockwise.
  * </refsect2>
- *
- * Last reviewed on 2010-04-18 (0.10.22)
  */
 
 

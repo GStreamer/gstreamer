@@ -37,8 +37,6 @@
  * gst-launch-1.0 gnomevfssrc location=http://www.example.org/sine.wav ! queue ! wavparse ! audioconvert ! alsasink
  * ]| Stream data from a network url.
  * </refsect2>
- *
- * Last reviewed on 2007-02-14 (0.10.6)
  */
 
 /*

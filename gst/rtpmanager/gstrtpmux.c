@@ -46,8 +46,6 @@
  * generated, both are encoded into different payload types and muxed together
  * so they can be sent on the same port.
  * </refsect2>
- *
- * Last reviewed on 2010-09-30 (0.10.21)
  */
 
 #ifdef HAVE_CONFIG_H

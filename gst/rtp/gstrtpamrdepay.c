@@ -31,8 +31,6 @@
  * ]| This example pipeline will depayload and decode an RTP AMR stream. Refer to
  * the rtpamrpay example to create the RTP stream.
  * </refsect2>
- *
- * Last reviewed on 2013-04-25 (1.1.0)
  */
 
 /*

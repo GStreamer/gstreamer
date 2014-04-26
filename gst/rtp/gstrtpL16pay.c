@@ -31,8 +31,6 @@
  * ]| This example pipeline will payload raw audio. Refer to
  * the rtpL16depay example to depayload and play the RTP stream.
  * </refsect2>
- *
- * Last reviewed on 2013-04-25 (1.1.0)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -34,8 +34,6 @@
  * ]| Decode an Ogg/Speex file. To create an Ogg/Speex file refer to the
  * documentation of speexenc.
  * </refsect2>
- *
- * Last reviewed on 2006-04-05 (0.10.2)
  */
 
 #ifdef HAVE_CONFIG_H

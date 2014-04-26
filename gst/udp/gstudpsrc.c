@@ -100,8 +100,6 @@
  * gst-launch-1.0 -v udpsrc port=0 ! fakesink
  * ]| read udp packets from a free port.
  * </refsect2>
- *
- * Last reviewed on 2007-09-20 (0.10.7)
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

@@ -31,8 +31,6 @@
  * ]| This example pipeline will encode and payload AC3 stream. Refer to
  * the rtpac3depay example to depayload and decode the RTP stream.
  * </refsect2>
- *
- * Last reviewed on 2013-04-25 (1.1.0)
  */
 
 #ifdef HAVE_CONFIG_H

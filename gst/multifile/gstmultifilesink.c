@@ -103,8 +103,6 @@
  * gst-launch-1.0 videotestsrc ! multifilesink post-messages=true filename="frame%d"
  * ]|
  * </refsect2>
- *
- * Last reviewed on 2009-09-11 (0.10.17)
  */
 
 #ifdef HAVE_CONFIG_H

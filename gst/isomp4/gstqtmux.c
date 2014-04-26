@@ -87,8 +87,6 @@
  * ]|
  * Records a video stream captured from a v4l2 device and muxes it into a qt file.
  * </refsect2>
- *
- * Last reviewed on 2010-12-03
  */
 
 /*

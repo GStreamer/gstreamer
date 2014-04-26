@@ -70,8 +70,6 @@
  * gst-launch-1.0 jackaudiosrc connect=0 ! jackaudiosink connect=0
  * ]| Get audio input into gstreamer from jack.
  * </refsect2>
- *
- * Last reviewed on 2008-07-22 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H

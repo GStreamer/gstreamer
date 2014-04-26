@@ -46,8 +46,6 @@
  * ]| Takes an RTP stream and send the RTP packets with the first detected
  * payload type to fakesink, discarding the other payload types.
  * </refsect2>
- *
- * Last reviewed on 2007-05-28 (0.10.5)
  */
 
 /*

@@ -89,8 +89,6 @@
  * Records a video stream captured from a v4l2 device, encodes it into H.264
  * and muxes it into an mp4 file.
  * </refsect2>
- *
- * Documentation last reviewed on 2011-04-21
  */
 
 /* ============================= 3gppmux ==================================== */

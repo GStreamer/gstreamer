@@ -33,8 +33,6 @@
  * This plays an avi file with a video and subtitle stream.
  * </para>
  * </refsect2>
- *
- * Last reviewed on 2008-02-01
  */
 
 /* example of a subtitle chunk in an avi file

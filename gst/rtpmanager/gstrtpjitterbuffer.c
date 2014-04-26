@@ -91,8 +91,6 @@
  * inserted into the pipeline to smooth out network jitter and to reorder the
  * out-of-order RTP packets.
  * </refsect2>
- *
- * Last reviewed on 2007-05-28 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H

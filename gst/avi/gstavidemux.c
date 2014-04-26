@@ -37,8 +37,6 @@
  * compressed audio or video data, this will only work if you have the
  * right decoder elements/plugins installed.
  * </refsect2>
- *
- * Last reviewed on 2006-12-29 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -132,8 +132,6 @@
  * Send RTCP reports for session 0 on port 5005 and RTCP reports for session 1
  * on port 5007.
  * </refsect2>
- *
- * Last reviewed on 2007-08-30 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H
