@@ -325,7 +325,7 @@ gst_gio_base_sink_query (GstBaseSink * bsink, GstQuery * query)
       switch (format) {
         case GST_FORMAT_BYTES:
         case GST_FORMAT_DEFAULT:
-          gst_query_set_position (query, GST_FORMAT_BYTES, sink->position);
+          gst_query_set_position (query, format, sink->position);
           return TRUE;
         default:
           return FALSE;
@@ -346,7 +346,7 @@ gst_gio_base_sink_query (GstBaseSink * bsink, GstQuery * query)
     case GST_QUERY_SEEKING:
       gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
       if (format == GST_FORMAT_BYTES || format == GST_FORMAT_DEFAULT) {
-        gst_query_set_seeking (query, GST_FORMAT_BYTES,
+        gst_query_set_seeking (query, format,
             GST_GIO_STREAM_IS_SEEKABLE (sink->stream), 0, -1);
       } else {
         gst_query_set_seeking (query, format, FALSE, 0, -1);
