@@ -91,8 +91,6 @@
  * The gst_deinit() call is used to clean up all internal resources used
  * by <application>GStreamer</application>. It is mostly used in unit tests 
  * to check for leaks.
- *
- * Last reviewed on 2006-08-11 (0.10.10)
  */
 
 #include "gst_private.h"

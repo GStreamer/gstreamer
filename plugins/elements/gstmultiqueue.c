@@ -101,8 +101,6 @@
  *   Both signals are emitted from the context of the streaming thread.
  * </para>
  * </refsect2>
- *
- * Last reviewed on 2008-01-25 (0.10.17)
  */
 
 #ifdef HAVE_CONFIG_H

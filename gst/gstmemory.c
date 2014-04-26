@@ -60,8 +60,6 @@
  * size.
  *
  * Memory can be efficiently merged when gst_memory_is_span() returns TRUE.
- *
- * Last reviewed on 2012-03-28 (0.11.3)
  */
 
 #ifdef HAVE_CONFIG_H

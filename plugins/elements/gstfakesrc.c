@@ -36,8 +36,6 @@
  * ]| This pipeline will push 5 empty buffers to the fakesink element and then
  * sends an EOS.
  * </refsect2>
- *
- * Last reviewed on 2008-06-20 (0.10.21)
  */
 
 /* FIXME: this ignores basesrc::blocksize property, which could be used as an

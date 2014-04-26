@@ -150,8 +150,6 @@
  * After the EOS has been sent to the element, the application should wait for
  * an EOS message to be posted on the pipeline's bus. Once this EOS message is
  * received, it may safely shut down the entire pipeline.
- *
- * Last reviewed on 2007-12-19 (0.10.16)
  * </para>
  * </refsect2>
  */

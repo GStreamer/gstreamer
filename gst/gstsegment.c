@@ -79,8 +79,6 @@
  * For elements that need to perform operations on media data in stream_time,
  * gst_segment_to_stream_time() can be used to convert a timestamp and the segment
  * info to stream time (which is always between 0 and the duration of the stream).
- *
- * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 /**

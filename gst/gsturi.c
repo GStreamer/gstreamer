@@ -33,8 +33,6 @@
  * (gst_element_make_from_uri()).
  *
  * Source and Sink plugins should implement this interface when possible.
- *
- * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #ifdef HAVE_CONFIG_H

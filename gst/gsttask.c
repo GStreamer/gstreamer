@@ -64,8 +64,6 @@
  * name on Linux. Please note that the object name should be configured before the
  * task is started; changing the object name after the task has been started, has
  * no effect on the thread name.
- *
- * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #include "gst_private.h"

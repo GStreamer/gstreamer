@@ -51,8 +51,6 @@
  * ]| A simple pipeline to read from the standard input and dump the data
  * with a fakesink as hex ascii block.
  * </refsect2>
- *
- * Last reviewed on 2008-06-20 (0.10.21)
  */
 
 #ifdef HAVE_CONFIG_H

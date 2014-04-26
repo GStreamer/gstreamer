@@ -202,9 +202,6 @@ STYLE GUIDE FOR GTK-DOC
     about threadsafety and related issues
 - link to signals from the description like this:
   * The <link linkend="GstBin-element-added">element-added</link> signal
-- the bottom of the description should say when the doc was last reviewed
-  (version and date)
-   * Last reviewed on 2005-10-28 (0.9.4)
 
 WEBSITE DOCUMENTATION
 =====================

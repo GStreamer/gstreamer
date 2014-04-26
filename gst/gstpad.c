@@ -84,8 +84,6 @@
  * Convenience functions exist to start, pause and stop the task on a pad with
  * gst_pad_start_task(), gst_pad_pause_task() and gst_pad_stop_task()
  * respectively.
- *
- * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #include "gst_private.h"

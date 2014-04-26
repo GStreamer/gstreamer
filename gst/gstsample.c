@@ -26,8 +26,6 @@
  *
  * A #GstSample is a small object containing data, a type, timing and
  * extra arbitrary information.
- *
- * Last reviewed on 2012-03-29 (0.11.3)
  */
 #include "gst_private.h"
 

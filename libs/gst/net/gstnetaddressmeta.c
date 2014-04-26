@@ -24,8 +24,6 @@
  * #GstNetAddress can be used to store a network address. #GstNetAddressMeta can
  * be used to store a network address in a #GstBuffer so that it network
  * elements can track the to and from address of the buffer.
- *
- * Last reviewed on 2011-11-03 (0.11.2)
  */
 
 #include <string.h>

@@ -68,8 +68,6 @@
  *     g_warning ("seek failed");
  *   ...
  * ]|
- *
- * Last reviewed on 2012-03-28 (0.11.3)
  */
 
 

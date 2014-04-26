@@ -86,8 +86,6 @@
  *         gst_static_pad_template_get (&amp;my_template));
  *   }
  * ]|
- *
- * Last reviewed on 2006-02-14 (0.10.3)
  */
 
 #include "gst_private.h"

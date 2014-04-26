@@ -109,8 +109,6 @@
  * gst_buffer_ref() before pushing it into the adapter if you still want to
  * access the buffer later. The adapter will never modify the data in the
  * buffer pushed in it.
- *
- * Last reviewed on 2009-05-13 (0.10.24).
  */
 
 #include <gst/gst_private.h>

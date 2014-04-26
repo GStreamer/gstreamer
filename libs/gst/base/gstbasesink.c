@@ -138,8 +138,6 @@
  * The #GstBaseSink:async property can be used to instruct the sink to never
  * perform an ASYNC state change. This feature is mostly usable when dealing
  * with non-synchronized streams or sparse streams.
- *
- * Last reviewed on 2007-08-29 (0.10.15)
  */
 
 #ifdef HAVE_CONFIG_H

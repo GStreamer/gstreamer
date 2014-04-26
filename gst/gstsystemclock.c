@@ -34,8 +34,6 @@
  * Subclasses can however override all of the important methods for sync and
  * async notifications to implement their own callback methods or blocking
  * wait operations.
- *
- * Last reviewed on 2006-03-08 (0.10.4)
  */
 
 #include "gst_private.h"

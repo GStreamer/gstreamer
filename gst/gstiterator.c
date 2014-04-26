@@ -62,8 +62,6 @@
  *   g_value_unset (&amp;item);
  *   gst_iterator_free (it);
  * ]|
- *
- * Last reviewed on 2009-06-16 (0.10.24)
  */
 
 #include "gst_private.h"

@@ -35,8 +35,6 @@
  *
  * New memory can be created with gst_memory_new_wrapped() that wraps the memory
  * allocated elsewhere.
- *
- * Last reviewed on 2012-07-09 (0.11.3)
  */
 
 #ifdef HAVE_CONFIG_H

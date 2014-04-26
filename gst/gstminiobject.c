@@ -47,8 +47,6 @@
  *
  * A weak reference can be added and remove with gst_mini_object_weak_ref()
  * and gst_mini_object_weak_unref() respectively.
- *
- * Last reviewed on 2012-06-15 (0.11.93)
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

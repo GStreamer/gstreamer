@@ -104,8 +104,6 @@
  * stored in the default registry, and plugins not relevant to the current
  * process are marked with the %GST_PLUGIN_FLAG_CACHED bit. These plugins are
  * removed at the end of initialization.
- *
- * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #ifdef HAVE_CONFIG_H

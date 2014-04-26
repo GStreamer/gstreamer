@@ -71,8 +71,6 @@
  *     All pads are in waiting mode by default.
  *   </para></listitem>
  * </itemizedlist>
- *
- * Last reviewed on 2011-10-28 (0.10.36)
  */
 
 #ifdef HAVE_CONFIG_H

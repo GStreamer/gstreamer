@@ -26,8 +26,6 @@
  *
  * Note that operations on the same #GValue from multiple threads may lead to
  * undefined behaviour.
- *
- * Last reviewed on 2008-03-11 (0.10.18)
  */
 
 #ifdef HAVE_CONFIG_H

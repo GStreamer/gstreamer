@@ -40,8 +40,6 @@
  * association later on.
  *
  * Note that GhostPads add overhead to the data processing of a pipeline.
- *
- * Last reviewed on 2005-11-18 (0.9.5)
  */
 
 #include "gst_private.h"

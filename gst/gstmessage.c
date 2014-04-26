@@ -40,8 +40,6 @@
  *
  * A #GstElement usually posts messages on the bus provided by the parent
  * container using gst_element_post_message().
- *
- * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 

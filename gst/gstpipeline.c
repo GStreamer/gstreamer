@@ -71,8 +71,6 @@
  * between the clock time and the base time) will count how much time was spent
  * in the PLAYING state. This default behaviour can be changed with the
  * gst_element_set_start_time() method.
- *
- * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #include "gst_private.h"

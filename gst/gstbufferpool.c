@@ -61,8 +61,6 @@
  *
  * Use gst_object_unref() to release the reference to a bufferpool. If the
  * refcount of the pool reaches 0, the pool will be freed.
- *
- * Last reviewed on 2014-01-30 (1.3.0)
  */
 
 #include "gst_private.h"

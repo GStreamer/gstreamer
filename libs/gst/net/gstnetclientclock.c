@@ -45,8 +45,6 @@
  *
  * A #GstNetClientClock is typically set on a #GstPipeline with 
  * gst_pipeline_use_clock().
- *
- * Last reviewed on 2005-11-23 (0.9.5)
  */
 
 #ifdef HAVE_CONFIG_H

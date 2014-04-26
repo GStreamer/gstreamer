@@ -22,8 +22,6 @@
  * to GStreamer
  *
  * GParamSpec implementations specific to GStreamer.
- *
- * Last reviewed on 2008-03-11 (0.10.18)
  */
 
 #ifdef HAVE_CONFIG_H

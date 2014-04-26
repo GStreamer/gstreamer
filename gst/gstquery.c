@@ -50,8 +50,6 @@
  *   }
  *   gst_query_unref (query);
  * ]|
- *
- * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 

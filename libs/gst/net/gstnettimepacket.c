@@ -26,8 +26,6 @@
  *
  * Various functions for receiving, sending an serializing #GstNetTimePacket
  * structures.
- *
- * Last reviewed on 2005-11-23 (0.9.5)
  */
 
 #ifdef HAVE_CONFIG_H

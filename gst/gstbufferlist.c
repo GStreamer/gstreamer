@@ -33,8 +33,6 @@
  * Buffer lists can be pushed on a srcpad with gst_pad_push_list(). This is
  * interesting when multiple buffers need to be pushed in one go because it
  * can reduce the amount of overhead for pushing each buffer individually.
- *
- * Last reviewed on 2012-03-28 (0.11.3)
  */
 #include "gst_private.h"
 

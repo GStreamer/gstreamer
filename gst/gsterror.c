@@ -94,8 +94,6 @@
  *     passed.  #GST_ERROR_SYSTEM can be used as a shortcut to give
  *     debug information on a system call error.</para></listitem>
  * </itemizedlist>
- *
- * Last reviewed on 2006-09-15 (0.10.10)
  */
 
 /* FIXME 0.11: the entire error system needs an overhaul - it's not very

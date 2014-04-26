@@ -64,8 +64,6 @@
  *  
  * GST_LOG_OBJECT (tagsetter, "final tags: %" GST_PTR_FORMAT, result);
  * ]|
- * 
- * Last reviewed on 2006-05-18 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H

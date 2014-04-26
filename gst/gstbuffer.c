@@ -104,8 +104,6 @@
  * the refcount drops to 0, any memory and metadata pointed to by the buffer is
  * unreffed as well. Buffers allocated from a #GstBufferPool will be returned to
  * the pool when the refcount drops to 0.
- *
- * Last reviewed on 2012-03-28 (0.11.3)
  */
 #include "gst_private.h"
 

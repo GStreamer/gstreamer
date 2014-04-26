@@ -29,11 +29,6 @@
  * Any downstream error received while the #GstValve:drop property is %FALSE
  * is ignored. So downstream element can be set to  %GST_STATE_NULL and removed,
  * without using pad blocking.
- *
- * This element was previously part of gst-plugins-farsight, and then
- * gst-plugins-bad.
- *
- * Documentation last reviewed on 2010-12-30 (0.10.31)
  */
 
 #ifdef HAVE_CONFIG_H

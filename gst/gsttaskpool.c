@@ -28,8 +28,6 @@
  * implementation uses a regular GThreadPool to start tasks.
  *
  * Subclasses can be made to create custom threads.
- *
- * Last reviewed on 2009-04-23 (0.10.24)
  */
 
 #include "gst_private.h"

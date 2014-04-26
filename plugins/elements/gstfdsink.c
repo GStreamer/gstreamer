@@ -29,8 +29,6 @@
  * This element will synchronize on the clock before writing the data on the
  * socket. For file descriptors where this does not make sense (files, ...) the
  * #GstBaseSink:sync property can be used to disable synchronisation.
- *
- * Last reviewed on 2006-04-28 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H

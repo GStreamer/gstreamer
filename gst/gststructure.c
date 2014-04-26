@@ -58,8 +58,6 @@
  * support one level of nesting. Using more levels will lead to unexpected
  * behavior when using serialization features, such as gst_caps_to_string() or
  * gst_value_serialize() and their counterparts.
- *
- * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #ifdef HAVE_CONFIG_H

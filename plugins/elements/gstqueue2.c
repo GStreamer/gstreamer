@@ -48,8 +48,6 @@
  *
  * The temp-location property will be used to notify the application of the
  * allocated filename.
- *
- * Last reviewed on 2009-07-10 (0.10.24)
  */
 
 #ifdef HAVE_CONFIG_H

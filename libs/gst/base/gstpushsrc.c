@@ -44,8 +44,6 @@
  *
  * Seeking, flushing, scheduling and sync is all handled by this
  * base class.
- *
- * Last reviewed on 2006-07-04 (0.10.9)
  */
 
 #ifdef HAVE_CONFIG_H

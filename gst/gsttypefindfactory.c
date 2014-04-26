@@ -72,8 +72,6 @@
  *     return find.caps;
  *   };
  * ]|
- *
- * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #include "gst_private.h"
