@@ -1466,7 +1466,7 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
     } else if (pps->slice_group_map_type == 2) {
       gint i;
 
-      for (i = 0; i <= pps->num_slice_groups_minus1; i++) {
+      for (i = 0; i < pps->num_slice_groups_minus1; i++) {
         READ_UE (&nr, pps->top_left[i]);
         READ_UE (&nr, pps->bottom_right[i]);
       }
