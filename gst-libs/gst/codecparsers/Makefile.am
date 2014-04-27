@@ -98,40 +98,7 @@ $(gen_source_h): %.h: $(local_codecparsers_srcdir)/%.h
 $(top_builddir)/ext/libvpx/libgstcodecparsers_vpx.la:
 	$(MAKE) -C $(top_builddir)/ext/libvpx
 
-# All sources and headers that could be used here
-all_source_c = \
-	dboolhuff.c				\
-	gsth264parser.c				\
-	gstjpegparser.c				\
-	gstmpeg4parser.c			\
-	gstmpegvideoparser.c			\
-	gstvaapilibvpx.c			\
-	gstvc1parser.c				\
-	gstvp8parser.c				\
-	gstvp8rangedecoder.c			\
-	nalutils.c				\
-	parserutils.c				\
-	vp8utils.c				\
-	$(NULL)
-
-all_source_h = \
-	dboolhuff.h				\
-	gsth264parser.h				\
-	gstjpegparser.h				\
-	gstmpeg4parser.h			\
-	gstmpegvideoparser.h			\
-	gstvc1parser.h				\
-	gstvp8parser.h				\
-	gstvp8rangedecoder.h			\
-	nalutils.h				\
-	parserutils.h				\
-	vp8utils.h				\
-	$(NULL)
-
-EXTRA_DIST = \
-	$(all_source_c) \
-	$(all_source_h) \
-	$(NULL)
+EXTRA_DIST = gstvaapilibvpx.c
 
 DISTCLEANFILES = $(GENFILES) .timestamp.symlinks
 
