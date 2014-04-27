@@ -731,7 +731,7 @@ generatePrecalCoef (int precalCoef[16][16])
       if (!(coefh || coefv)) {
         i = 255;
       } else {
-        uint i1, i2, i3, i4;
+        Uint i1, i2, i3, i4;
 
         i1 = diffcoeffh * diffcoeffv;
         i2 = coefh * diffcoeffv;
