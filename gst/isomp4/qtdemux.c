@@ -7477,6 +7477,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     stream->caps =
         qtdemux_video_caps (qtdemux, stream, fourcc, stsd_data, &codec);
+    if (G_UNLIKELY (!stream->caps))
+      goto unknown_stream;
+
     if (codec) {
       list = gst_tag_list_new_empty ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
