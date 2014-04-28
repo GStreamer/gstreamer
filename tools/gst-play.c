@@ -658,6 +658,7 @@ main (int argc, char **argv)
   guint num, i;
   GError *err = NULL;
   GOptionContext *ctx;
+  gchar *playlist_file = NULL;
   GOptionEntry options[] = {
     {"version", 0, 0, G_OPTION_ARG_NONE, &print_version,
         N_("Print version information and exit"), NULL},
@@ -673,6 +674,8 @@ main (int argc, char **argv)
         N_("Interactive control via keyboard"), NULL},
     {"volume", 0, 0, G_OPTION_ARG_DOUBLE, &volume,
         N_("Volume"), NULL},
+    {"playlist", 0, 0, G_OPTION_ARG_FILENAME, &playlist_file,
+        N_("Playlist file containing input media files"), NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
     {NULL}
   };
@@ -709,24 +712,51 @@ main (int argc, char **argv)
     return 0;
   }
 
-  if (filenames == NULL || *filenames == NULL) {
+  playlist = g_ptr_array_new ();
+
+  if (playlist_file != NULL) {
+    gchar *playlist_contents = NULL;
+    gchar **lines = NULL;
+
+    if (g_file_get_contents (playlist_file, &playlist_contents, NULL, &err)) {
+      lines = g_strsplit (playlist_contents, "\n", 0);
+      num = g_strv_length (lines);
+
+      for (i = 0; i < num; i++) {
+        if (lines[i][0] != '\0') {
+          GST_LOG ("Playlist[%d]: %s", i + 1, lines[i]);
+          add_to_playlist (playlist, lines[i]);
+        }
+      }
+      g_strfreev (lines);
+      g_free (playlist_contents);
+    } else {
+      g_printerr ("Could not read playlist: %s\n", err->message);
+      g_clear_error (&err);
+    }
+    g_free (playlist_file);
+  }
+
+  if (playlist->len == 0 && (filenames == NULL || *filenames == NULL)) {
     g_printerr (_("Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."),
         "gst-play-" GST_API_VERSION);
     g_printerr ("\n\n"),
         g_printerr ("%s\n\n",
         _("You must provide at least one filename or URI to play."));
+    /* No input provided. Free array */
+    g_ptr_array_free (playlist, TRUE);
     return 1;
   }
 
-  playlist = g_ptr_array_new ();
-
   /* fill playlist */
-  num = g_strv_length (filenames);
-  for (i = 0; i < num; ++i) {
-    GST_LOG ("command line argument: %s", filenames[i]);
-    add_to_playlist (playlist, filenames[i]);
+  if (filenames != NULL && *filenames != NULL) {
+    num = g_strv_length (filenames);
+    for (i = 0; i < num; ++i) {
+      GST_LOG ("command line argument: %s", filenames[i]);
+      add_to_playlist (playlist, filenames[i]);
+    }
+    g_strfreev (filenames);
   }
-  g_strfreev (filenames);
 
   num = playlist->len;
   g_ptr_array_add (playlist, NULL);
