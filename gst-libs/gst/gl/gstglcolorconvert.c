@@ -122,7 +122,7 @@ static const gfloat from_rgb_bt709_vcoeff[] = { 0.440654, -0.400285, -0.040370 }
     "const vec2 compose_weight = vec2(0.996109, 0.003891);\n"
 
 /* Channel reordering for XYZ <-> ZYX conversion */
-static const char *frag_REORDER =
+static const gchar frag_REORDER[] =
       "#ifdef GL_ES\n"
       "precision mediump float;\n"
       "#endif\n"
@@ -143,7 +143,7 @@ static const char *frag_REORDER =
  *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
  *  low byte weight as : 255/65535 (similar)
  * */
-static const char *frag_COMPOSE =
+static const gchar frag_COMPOSE[] =
       "#ifdef GL_ES\n"
       "precision mediump float;\n"
       "#endif\n"
@@ -164,7 +164,7 @@ static const char *frag_COMPOSE =
       " gl_FragColor = vec4(%c, %c, %c, %c);\n"
       "}";
 
-static const char *frag_AYUV_to_RGB =
+static const char frag_AYUV_to_RGB[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -186,7 +186,7 @@ static const char *frag_AYUV_to_RGB =
     "  gl_FragColor=vec4(%c,%c,%c,%c);\n"
     "}";
 
-static const gchar *frag_RGB_to_AYUV =
+static const gchar frag_RGB_to_AYUV[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -207,7 +207,7 @@ static const gchar *frag_RGB_to_AYUV =
     "}\n";
 
 /** YUV to RGB conversion */
-static const char *frag_PLANAR_YUV_to_RGB =
+static const char frag_PLANAR_YUV_to_RGB[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -231,7 +231,7 @@ static const char *frag_PLANAR_YUV_to_RGB =
     "  gl_FragColor = vec4(%c, %c, %c, %c);\n"
     "}\n";
 
-static const gchar *frag_RGB_to_PLANAR_YUV =
+static const gchar frag_RGB_to_PLANAR_YUV[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -255,7 +255,7 @@ static const gchar *frag_RGB_to_PLANAR_YUV =
     "}\n";
 
 /** NV12/NV21 to RGB conversion */
-static const char *frag_NV12_NV21_to_RGB = {
+static const char frag_NV12_NV21_to_RGB[] = {
       "#ifdef GL_ES\n"
       "precision mediump float;\n"
       "#endif\n"
@@ -281,7 +281,7 @@ static const char *frag_NV12_NV21_to_RGB = {
 
 /* YUY2:r,g,a
    UYVY:a,b,r */
-static const gchar *frag_YUY2_UYVY_to_RGB =
+static const gchar frag_YUY2_UYVY_to_RGB[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -304,7 +304,7 @@ static const gchar *frag_YUY2_UYVY_to_RGB =
     "  gl_FragColor = vec4(%c, %c, %c, %c);\n"
     "}\n";
 
-static const gchar *frag_RGB_to_YUY2_UYVY =
+static const gchar frag_RGB_to_YUY2_UYVY[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -330,7 +330,7 @@ static const gchar *frag_RGB_to_YUY2_UYVY =
     "  gl_FragColor = vec4(%s);\n"
     "}\n";
 
-static const gchar *text_vertex_shader =
+static const gchar text_vertex_shader[] =
     "attribute vec4 a_position;   \n"
     "attribute vec2 a_texcoord;   \n"
     "varying vec2 v_texcoord;     \n"
