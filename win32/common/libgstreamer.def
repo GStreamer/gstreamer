@@ -1023,6 +1023,7 @@ EXPORTS
 	gst_query_parse_segment
 	gst_query_parse_uri
 	gst_query_parse_uri_redirection
+	gst_query_parse_uri_redirection_permanent
 	gst_query_remove_nth_allocation_meta
 	gst_query_remove_nth_allocation_param
 	gst_query_remove_nth_allocation_pool
@@ -1045,6 +1046,7 @@ EXPORTS
 	gst_query_set_segment
 	gst_query_set_uri
 	gst_query_set_uri_redirection
+	gst_query_set_uri_redirection_permanent
 	gst_query_type_flags_get_type
 	gst_query_type_get_flags
 	gst_query_type_get_name

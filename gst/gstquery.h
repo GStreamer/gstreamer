@@ -399,6 +399,8 @@ void            gst_query_parse_uri                  (GstQuery *query, gchar **u
 void            gst_query_set_uri                    (GstQuery *query, const gchar *uri);
 void            gst_query_parse_uri_redirection      (GstQuery *query, gchar **uri);
 void            gst_query_set_uri_redirection        (GstQuery *query, const gchar *uri);
+void            gst_query_parse_uri_redirection_permanent (GstQuery *query, gboolean * permanent);
+void            gst_query_set_uri_redirection_permanent (GstQuery *query, gboolean permanent);
 
 /* allocation query */
 GstQuery *      gst_query_new_allocation             (GstCaps *caps, gboolean need_pool) G_GNUC_MALLOC;

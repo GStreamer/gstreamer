@@ -2372,6 +2372,8 @@ gst_query_parse_uri
 gst_query_set_uri
 gst_query_parse_uri_redirection
 gst_query_set_uri_redirection
+gst_query_parse_uri_redirection_permanent
+gst_query_set_uri_redirection_permanent
 
 gst_query_new_allocation
 gst_query_parse_allocation

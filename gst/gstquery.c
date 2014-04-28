@@ -1462,6 +1462,58 @@ gst_query_parse_uri_redirection (GstQuery * query, gchar ** uri)
 }
 
 /**
+ * gst_query_set_uri_redirection_permanent:
+ * @query: a #GstQuery with query type GST_QUERY_URI
+ * @permanent: whether the redirect is permanent or not
+ *
+ * Answer a URI query by setting the requested URI redirection
+ * to permanent or not.
+ *
+ * Since: 1.4
+ */
+void
+gst_query_set_uri_redirection_permanent (GstQuery * query, gboolean permanent)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_URI);
+  g_return_if_fail (gst_query_is_writable (query));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  gst_structure_id_set (structure, GST_QUARK (URI_REDIRECTION_PERMANENT),
+      G_TYPE_BOOLEAN, permanent, NULL);
+}
+
+/**
+ * gst_query_parse_uri_redirection_permanent:
+ * @query: a #GstQuery
+ * @permanent: (out) (allow-none): if the URI redirection is permanent
+ *     (may be NULL)
+ *
+ * Parse an URI query, and set @permanent to %TRUE if there is a redirection
+ * and it should be considered permanent. If a redirection is permanent,
+ * applications should update their internal storage of the URI, otherwise
+ * they should make all future requests to the original URI.
+ *
+ * Since: 1.4
+ */
+void
+gst_query_parse_uri_redirection_permanent (GstQuery * query,
+    gboolean * permanent)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_URI);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  if (permanent) {
+    if (!gst_structure_id_get (structure, GST_QUARK (URI_REDIRECTION_PERMANENT),
+            G_TYPE_BOOLEAN, permanent, NULL))
+      *permanent = FALSE;
+  }
+}
+
+/**
  * gst_query_new_allocation:
  * @caps: the negotiated caps
  * @need_pool: return a pool
