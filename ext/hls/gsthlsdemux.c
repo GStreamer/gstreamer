@@ -912,6 +912,8 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         demux->pending_buffer = NULL;
       }
 
+      if (demux->segment.rate > 0)
+        demux->segment.position += demux->current_duration;
       g_cond_signal (&demux->fragment_download_cond);
       break;
     default:
@@ -1815,11 +1817,13 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
 
   g_mutex_lock (&demux->fragment_download_lock);
   GST_DEBUG_OBJECT (demux,
-      "Fetching next fragment %s (range=%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT
-      ")", next_fragment_uri, range_start, range_end);
+      "Fetching next fragment %s %" GST_TIME_FORMAT "(range=%" G_GINT64_FORMAT
+      "-%" G_GINT64_FORMAT ")", next_fragment_uri, GST_TIME_ARGS (timestamp),
+      range_start, range_end);
 
   /* set up our source for download */
   demux->current_timestamp = timestamp;
+  demux->current_duration = duration;
   demux->starting_fragment = TRUE;
   demux->current_key = key;
   demux->current_iv = iv;

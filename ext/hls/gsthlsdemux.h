@@ -115,6 +115,7 @@ struct _GstHLSDemux
   GMutex fragment_download_lock;
   GCond fragment_download_cond;
   GstClockTime current_timestamp;
+  GstClockTime current_duration;
   gboolean starting_fragment;
   gint64 download_start_time;
   gint64 download_total_time;
