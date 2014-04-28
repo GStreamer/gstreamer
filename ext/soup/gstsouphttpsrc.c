@@ -965,8 +965,10 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
   if (src->automatic_redirect && SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
     src->redirection_uri = g_strdup (soup_message_headers_get_one
         (msg->response_headers, "Location"));
-    GST_DEBUG_OBJECT (src, "%u redirect to \"%s\"", msg->status_code,
-        src->redirection_uri);
+    src->redirection_permanent =
+        (msg->status_code == SOUP_STATUS_MOVED_PERMANENTLY);
+    GST_DEBUG_OBJECT (src, "%u redirect to \"%s\" (permanent %d)",
+        msg->status_code, src->redirection_uri, src->redirection_permanent);
     return;
   }
 
@@ -1793,8 +1795,11 @@ gst_soup_http_src_query (GstBaseSrc * bsrc, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_URI:
       gst_query_set_uri (query, src->location);
-      if (src->redirection_uri != NULL)
+      if (src->redirection_uri != NULL) {
         gst_query_set_uri_redirection (query, src->redirection_uri);
+        gst_query_set_uri_redirection_permanent (query,
+            src->redirection_permanent);
+      }
       ret = TRUE;
       break;
     default:
