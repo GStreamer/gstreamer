@@ -388,6 +388,16 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       g_rec_mutex_lock (&demux->stream_lock);
 
+      /* properly cleanup pending decryption status */
+      if (flags & GST_SEEK_FLAG_FLUSH) {
+        if (demux->adapter)
+          gst_adapter_clear (demux->adapter);
+        if (demux->pending_buffer)
+          gst_buffer_unref (demux->pending_buffer);
+        demux->pending_buffer = NULL;
+        gst_hls_demux_decrypt_end (demux);
+      }
+
       /* Use I-frame variants for trick modes */
       if ((rate > 1.0 || rate < -1.0) && demux->segment.rate >= -1.0
           && demux->segment.rate <= 1.0) {
@@ -1250,6 +1260,7 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
   demux->pending_buffer = NULL;
   demux->current_key = NULL;
   demux->current_iv = NULL;
+  gst_hls_demux_decrypt_end (demux);
 
   demux->current_download_rate = -1;
 }
@@ -1681,8 +1692,10 @@ decrypt_fragment (GstHLSDemux * demux, gsize length,
 static void
 gst_hls_demux_decrypt_end (GstHLSDemux * demux)
 {
-  if (demux->aes_ctx)
+  if (demux->aes_ctx) {
     gcry_cipher_close (demux->aes_ctx);
+    demux->aes_ctx = NULL;
+  }
 }
 #endif
 
