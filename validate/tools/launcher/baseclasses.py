@@ -612,7 +612,6 @@ class _TestsLauncher(Loggable):
         total_num_tests = 0
         for tester in self.testers:
             total_num_tests += len(tester.list_tests())
-            print total_num_tests
 
         for tester in self.testers:
             res = tester.run_tests(cur_test_num, total_num_tests)

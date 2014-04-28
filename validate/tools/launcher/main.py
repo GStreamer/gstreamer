@@ -107,7 +107,8 @@ def main():
 
     assets_group = OptionGroup(parser, "Handle remote assets")
     assets_group.add_option("-u", "--update-assets-command", dest="update_assets_command",
-                      default="git pull --rebase",
+                      default="git fetch %s && git checkout FETCH_HEAD && git annex get ."
+                            % (DEFAULT_GST_QA_ASSETS_REPO, ),
                       help="Command to update assets")
     assets_group.add_option("", "--get-assets-command", dest="get_assets_command",
                       default="git clone",
@@ -178,11 +179,16 @@ def main():
     if options.remote_assets_url and options.sync:
         if os.path.exists(options.clone_dir):
             launch_command("cd %s && %s" % (options.clone_dir,
-                                            options.update_assets_command))
+                                            options.update_assets_command),
+                           fails=True)
         else:
             launch_command("%s %s %s" % (options.get_assets_command,
                                          options.remote_assets_url,
-                                         options.clone_dir))
+                                         options.clone_dir),
+                           fails=True)
+            launch_command("cd %s && %s" % (options.clone_dir,
+                                            options.update_assets_command),
+                           fails=True)
 
     # Ensure that the scenario manager singleton is ready to be used
     ScenarioManager().config = options

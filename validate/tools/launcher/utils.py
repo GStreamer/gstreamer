@@ -123,9 +123,11 @@ def printc(message, color="", title=False):
     sys.stdout.flush()
 
 
-def launch_command(command, color=None):
+def launch_command(command, color=None, fails=False):
     printc(command, Colors.OKGREEN, True)
-    os.system(command)
+    res = os.system(command)
+    if res != 0 and fails is True:
+        raise subprocess.CalledProcessError(res, "%s failed" % command)
 
 
 def path2url(path):
