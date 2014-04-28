@@ -929,9 +929,7 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
         GST_DEBUG ("got GL context handle 0x%p with type %s and apis %s",
             handle, type, apis);
 
-        if (g_strcmp0 (type, "glx") == 0)
-          platform = GST_GL_PLATFORM_GLX;
-
+        platform = gst_gl_platform_from_string (type);
         gl_apis = gst_gl_api_from_string (apis);
 
         if (gl_apis && platform)
