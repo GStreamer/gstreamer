@@ -163,6 +163,73 @@ libgstvaapi_la_LIBADD =	\
 libgstvaapi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvaapi_la_LIBTOOLFLAGS = --tag=disable-static
 
+BUILT_SOURCES =
+
+if USE_LOCAL_VIDEO_PARSERS
+plugin_LTLIBRARIES += libgstvaapi_parse.la
+
+libgstvaapi_parse_gen_source_c = \
+	gsth264parse.c		\
+	$(NULL)
+
+libgstvaapi_parse_gen_source_h = \
+	gsth264parse.h		\
+	$(NULL)
+
+libgstvaapi_parse_gen_sources = \
+	$(libgstvaapi_parse_gen_source_c) \
+	$(libgstvaapi_parse_gen_source_h) \
+	$(NUL)
+
+libgstvaapi_parse_source_c = gstvaapiparse.c $(libgstvaapi_parse_gen_source_c)
+libgstvaapi_parse_source_h = gstvaapiparse.h $(libgstvaapi_parse_gen_source_h)
+
+libgstvaapi_parse_la_SOURCES		= $(libgstvaapi_parse_source_c)
+noinst_HEADERS			       += $(libgstvaapi_parse_source_h)
+
+libgstvaapi_parse_la_CFLAGS = \
+	-DGST_USE_UNSTABLE_API			\
+	-I$(top_srcdir)/gst-libs		\
+	-I$(top_builddir)/gst-libs		\
+	$(GST_CFLAGS)				\
+	$(GST_BASE_CFLAGS)			\
+	$(GST_PLUGINS_BASE_CFLAGS)		\
+	$(GST_VIDEO_CFLAGS)
+
+libgstvaapi_parse_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstvaapi-codecparsers.la \
+	$(GST_LIBS)				\
+	$(GST_BASE_LIBS)			\
+	$(GST_PLUGINS_BASE_LIBS)		\
+	$(GST_VIDEO_LIBS) -lgstpbutils-$(GST_PKG_VERSION)
+
+libgstvaapi_parse_la_LDFLAGS		= $(GST_PLUGIN_LDFLAGS)
+libgstvaapi_parse_la_LIBTOOLFLAGS	= --tag=disable-static
+
+videoparsers_sources_dir = \
+	$(top_srcdir)/ext/codecparsers/gst/videoparsers
+videoparsers_patches_dir = \
+	$(top_srcdir)/patches/videoparsers
+include $(videoparsers_patches_dir)/series.frag
+videoparsers_patches = \
+	$(videoparsers_patches_base:%=$(top_srcdir)/patches/videoparsers/%)
+
+videoparsers.prepare.stamp: $(videoparsers_patches)
+	@for f in $(libgstvaapi_parse_gen_sources); do	\
+	  cp -f $(videoparsers_sources_dir)/$$f $$f;	\
+	done
+	@for f in $(videoparsers_patches); do		\
+	  patch -p3 < $$f;				\
+	done
+	@touch $@
+
+BUILT_SOURCES += videoparsers.prepare.stamp
+endif
+
+CLEANFILES = \
+	videoparsers.prepare.stamp	\
+	$(libgstvaapi_parse_gen_sources)
+
 EXTRA_DIST = \
 	$(libgstvaapi_enc_source_c)	\
 	$(libgstvaapi_enc_source_h)	\
@@ -176,6 +243,8 @@ EXTRA_DIST = \
 	$(libgstvaapi_1_0p_source_h)	\
 	$(libgstvaapi_0_10_source_c)	\
 	$(libgstvaapi_0_10_source_h)	\
+	$(libgstvaapi_parse_source_c)	\
+	$(libgstvaapi_parse_source_h)	\
 	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*

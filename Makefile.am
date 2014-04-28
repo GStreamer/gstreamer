@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = debian.upstream ext gst-libs gst pkgconfig tests docs
+SUBDIRS = debian.upstream ext gst-libs gst pkgconfig tests docs patches
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = \

@@ -1,0 +1,99 @@
+From 3ef58fae7a578f72c4607b57434ed54a0ee9ee1d Mon Sep 17 00:00:00 2001
+From: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+Date: Tue, 19 Mar 2013 14:23:00 +0200
+Subject: [PATCH 3/3] h264parse: add initial support for MVC NAL units.
+
+Initial support for MVC NAL units. It is only needed to propagate the
+complete set of NAL units downstream at this time.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=696135
+
+Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+---
+ gst/vaapi/gsth264parse.c |   20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
+index 7c970ee..e9b9481 100644
+--- a/gst/vaapi/gsth264parse.c
++++ b/gst/vaapi/gsth264parse.c
+@@ -415,7 +415,7 @@ gst_h264_parser_store_nal (GstH264Parse * h264parse, guint id,
+   GstBuffer *buf, **store;
+   guint size = nalu->size, store_size;
+ 
+-  if (naltype == GST_H264_NAL_SPS) {
++  if (naltype == GST_H264_NAL_SPS || naltype == GST_H264_NAL_SUBSET_SPS) {
+     store_size = GST_H264_MAX_SPS_COUNT;
+     store = h264parse->sps_nals;
+     GST_DEBUG_OBJECT (h264parse, "storing sps %u", id);
+@@ -534,6 +534,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+ 
+   switch (nal_type) {
+     case GST_H264_NAL_SPS:
++    case GST_H264_NAL_SUBSET_SPS:
+       pres = gst_h264_parser_parse_sps (nalparser, nalu, &sps, TRUE);
+       /* arranged for a fallback sps.id, so use that one and only warn */
+       if (pres != GST_H264_PARSER_OK)
+@@ -594,14 +595,17 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+     case GST_H264_NAL_SLICE_DPB:
+     case GST_H264_NAL_SLICE_DPC:
+     case GST_H264_NAL_SLICE_IDR:
++    case GST_H264_NAL_SLICE_EXT:
+       /* don't need to parse the whole slice (header) here */
+-      if (*(nalu->data + nalu->offset + 1) & 0x80) {
++      if (*(nalu->data + nalu->offset + nalu->header_bytes) & 0x80) {
+         /* means first_mb_in_slice == 0 */
+         /* real frame data */
+         GST_DEBUG_OBJECT (h264parse, "first_mb_in_slice = 0");
+         h264parse->frame_start = TRUE;
+       }
+       GST_DEBUG_OBJECT (h264parse, "frame start: %i", h264parse->frame_start);
++      if (nal_type == GST_H264_NAL_SLICE_EXT && !GST_H264_IS_MVC_NALU (nalu))
++        break;
+       {
+         GstH264SliceHdr slice;
+ 
+@@ -677,7 +681,8 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
+   /* coded slice NAL starts a picture,
+    * i.e. other types become aggregated in front of it */
+   h264parse->picture_start |= (nal_type == GST_H264_NAL_SLICE ||
+-      nal_type == GST_H264_NAL_SLICE_DPA || nal_type == GST_H264_NAL_SLICE_IDR);
++      nal_type == GST_H264_NAL_SLICE_DPA || nal_type == GST_H264_NAL_SLICE_IDR
++      || nal_type == GST_H264_NAL_SLICE_EXT);
+ 
+   /* consider a coded slices (IDR or not) to start a picture,
+    * (so ending the previous one) if first_mb_in_slice == 0
+@@ -687,16 +692,18 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
+    * and also works with broken frame_num in NAL
+    * (where spec-wise would fail) */
+   nal_type = nnalu.type;
+-  complete = h264parse->picture_start && (nal_type >= GST_H264_NAL_SEI &&
+-      nal_type <= GST_H264_NAL_AU_DELIMITER);
++  complete = h264parse->picture_start && ((nal_type >= GST_H264_NAL_SEI &&
++          nal_type <= GST_H264_NAL_AU_DELIMITER) ||
++      (nal_type >= 14 && nal_type <= 18));
+ 
+   GST_LOG_OBJECT (h264parse, "next nal type: %d %s", nal_type,
+       _nal_name (nal_type));
+   complete |= h264parse->picture_start && (nal_type == GST_H264_NAL_SLICE
+       || nal_type == GST_H264_NAL_SLICE_DPA
++      || nal_type == GST_H264_NAL_SLICE_EXT
+       || nal_type == GST_H264_NAL_SLICE_IDR) &&
+       /* first_mb_in_slice == 0 considered start of frame */
+-      (nnalu.data[nnalu.offset + 1] & 0x80);
++      (nnalu.data[nnalu.offset + nnalu.header_bytes] & 0x80);
+ 
+   GST_LOG_OBJECT (h264parse, "au complete: %d", complete);
+ 
+@@ -960,6 +967,7 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
+     }
+ 
+     if (nalu.type == GST_H264_NAL_SPS ||
++        nalu.type == GST_H264_NAL_SUBSET_SPS ||
+         nalu.type == GST_H264_NAL_PPS ||
+         (h264parse->have_sps && h264parse->have_pps)) {
+       gst_h264_parse_process_nal (h264parse, &nalu);
+-- 
+1.7.9.5
+

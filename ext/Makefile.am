@@ -37,6 +37,21 @@ codecparsers_source_h = \
 
 EXTRA_DIST += $(codecparsers_source_h:%.h=$(codecparsers_srcdir)/%.h)
 
+videoparsers_srcdir = \
+	$(top_srcdir)/ext/codecparsers/gst/videoparsers
+
+videoparsers_source_c = \
+	gsth264parse.c		\
+	$(NULL)
+
+EXTRA_DIST += $(videoparsers_source_c:%.c=$(videoparsers_srcdir)/%.c)
+
+videoparsers_source_h = \
+	gsth264parse.h		\
+	$(NULL)
+
+EXTRA_DIST += $(videoparsers_source_h:%.h=$(videoparsers_srcdir)/%.h)
+
 videoutils_srcdir = \
 	$(top_srcdir)/ext/videoutils/gst-libs/gst/video
 

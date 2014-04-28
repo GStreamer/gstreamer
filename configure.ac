@@ -105,6 +105,11 @@ dnl Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT
 
+AC_ARG_ENABLE(builtin_videoparsers,
+    AS_HELP_STRING([--enable-builtin-videoparsers],
+                   [enable built-in videoparsers @<:@default=yes@:>@]),
+    [], [enable_builtin_videoparsers="yes"])
+
 AC_ARG_ENABLE(builtin_codecparsers,
     AS_HELP_STRING([--enable-builtin-codecparsers],
                    [enable built-in codecparsers @<:@default=yes@:>@]),
@@ -448,6 +453,10 @@ AC_CACHE_CHECK([for VP8 parser],
 AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_VP8],
     [test "$ac_cv_have_gst_vp8_parser" != "yes"])
 AM_CONDITIONAL([USE_BUILTIN_LIBVPX], [test "$enable_builtin_libvpx" = "yes"])
+
+dnl ... video parsers
+AM_CONDITIONAL([USE_LOCAL_VIDEO_PARSERS],
+    [test "$enable_builtin_videoparsers" = "yes"])
 
 case $GST_API_VERSION in
 0.10)   lt_bias=gst0_vaapi_lt_current_bias;;
@@ -868,6 +877,8 @@ debian.upstream/libgstvaapi-x11.install.in
     gst-libs/gst/video/Makefile
     gst/Makefile
     gst/vaapi/Makefile
+    patches/Makefile
+    patches/videoparsers/Makefile
     pkgconfig/Makefile
     pkgconfig/gstreamer-vaapi-$GST_PKG_VERSION.pc:\
 pkgconfig/gstreamer-vaapi.pc.in
