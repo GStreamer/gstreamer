@@ -515,9 +515,17 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       query = gst_query_new_uri ();
       ret = gst_pad_peer_query (demux->sinkpad, query);
       if (ret) {
+        gboolean permanent;
+
         gst_query_parse_uri_redirection (query, &uri);
-        if (uri == NULL)
+        gst_query_parse_uri_redirection_permanent (query, &permanent);
+
+        /* Only use the redirect target for permanent redirects */
+        if (!permanent || uri == NULL) {
+          g_free (uri);
           gst_query_parse_uri (query, &uri);
+        }
+
         gst_hls_demux_set_location (demux, uri);
         g_free (uri);
       }
@@ -1211,7 +1219,9 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
 
   const gchar *uri = gst_m3u8_client_get_current_uri (demux->client);
 
-  download = gst_uri_downloader_fetch_uri (demux->downloader, uri, TRUE, err);
+  download =
+      gst_uri_downloader_fetch_uri_with_referer (demux->downloader, uri,
+      demux->client->main ? demux->client->main->uri : NULL, TRUE, err);
   if (download == NULL)
     return FALSE;
 
@@ -1477,7 +1487,8 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
 
     GST_INFO_OBJECT (demux, "Fetching key %s", key);
     key_fragment =
-        gst_uri_downloader_fetch_uri (demux->downloader, key, FALSE, err);
+        gst_uri_downloader_fetch_uri_with_referer (demux->downloader, key,
+        demux->client->main ? demux->client->main->uri : NULL, FALSE, err);
     if (key_fragment == NULL)
       goto key_failed;
     demux->key_url = g_strdup (key);
@@ -1566,8 +1577,10 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
       "Fetching next fragment %s (range=%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT
       ")", next_fragment_uri, range_start, range_end);
 
-  download = gst_uri_downloader_fetch_uri_with_range (demux->downloader,
-      next_fragment_uri, FALSE, range_start, range_end, err);
+  download =
+      gst_uri_downloader_fetch_uri_with_range_and_referer (demux->downloader,
+      next_fragment_uri, demux->client->main ? demux->client->main->uri : NULL,
+      FALSE, range_start, range_end, err);
 
   if (download == NULL)
     goto error;

@@ -65,6 +65,7 @@ struct _GstHLSDemux
   GstBuffer *playlist;
   GstCaps *input_caps;
   GstUriDownloader *downloader;
+  gchar *uri;                   /* Original playlist URI */
   GstM3U8Client *client;        /* M3U8 client */
   gboolean do_typefind;         /* Whether we need to typefind the next buffer */
 
