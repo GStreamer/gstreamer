@@ -461,8 +461,8 @@ gst_v4l2_allocator_init (GstV4l2Allocator * allocator)
 
 #define GST_V4L2_ALLOCATOR_PROBE(obj,type) \
     gst_v4l2_allocator_probe ((obj), V4L2_MEMORY_ ## type, \
-        GST_V4L2_ALLOCATOR_FLAG_ ## type ## _REQBUF, \
-        GST_V4L2_ALLOCATOR_FLAG_ ## type ## _CREATE_BUF)
+        GST_V4L2_ALLOCATOR_FLAG_ ## type ## _REQBUFS, \
+        GST_V4L2_ALLOCATOR_FLAG_ ## type ## _CREATE_BUFS)
 static guint32
 gst_v4l2_allocator_probe (GstV4l2Allocator * allocator, guint32 memory,
     guint32 breq_flag, guint32 bcreate_flag)
