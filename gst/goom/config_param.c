@@ -20,8 +20,6 @@
 #include "goom_config_param.h"
 #include <string.h>
 
-/* TODO: Ajouter goom_ devant ces fonctions */
-
 static void
 empty_fct (PluginParam * dummy)
 {
