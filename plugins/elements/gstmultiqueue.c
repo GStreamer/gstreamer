@@ -144,6 +144,9 @@ struct _GstSingleQueue
   /* segments */
   GstSegment sink_segment;
   GstSegment src_segment;
+  gboolean has_src_segment;     /* preferred over initializing the src_segment to
+                                 * UNDEFINED as this doesn't requires adding ifs
+                                 * in every segment usage */
 
   /* position of src/sink */
   GstClockTime sinktime, srctime;
@@ -826,6 +829,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
     gst_single_queue_flush_queue (sq, full);
     gst_segment_init (&sq->sink_segment, GST_FORMAT_TIME);
     gst_segment_init (&sq->src_segment, GST_FORMAT_TIME);
+    sq->has_src_segment = FALSE;
     /* All pads start off not-linked for a smooth kick-off */
     sq->srcresult = GST_FLOW_OK;
     sq->pushed = FALSE;
@@ -945,9 +949,27 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
     sink_time = sq->sinktime;
 
   if (sq->src_tainted) {
+    GstSegment *segment;
+    gint64 position;
+
+    if (sq->has_src_segment) {
+      segment = &sq->src_segment;
+      position = sq->src_segment.position;
+    } else {
+      /*
+       * If the src pad had no segment yet, use the sink segment
+       * to avoid signalling overrun if the received sink segment has a
+       * a position > max-size-time while the src pad time would be the default=0
+       *
+       * This can happen when switching pads on chained/adaptive streams and the
+       * new chain has a segment with a much larger position
+       */
+      segment = &sq->sink_segment;
+      position = sq->sink_segment.position;
+    }
+
     src_time = sq->srctime =
-        gst_segment_to_running_time (&sq->src_segment, GST_FORMAT_TIME,
-        sq->src_segment.position);
+        gst_segment_to_running_time (segment, GST_FORMAT_TIME, position);
     /* if we have a time, we become untainted and use the time */
     if (G_UNLIKELY (src_time != GST_CLOCK_TIME_NONE))
       sq->src_tainted = FALSE;
@@ -993,8 +1015,10 @@ apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
 
   if (segment == &sq->sink_segment)
     sq->sink_tainted = TRUE;
-  else
+  else {
+    sq->has_src_segment = TRUE;
     sq->src_tainted = TRUE;
+  }
 
   GST_DEBUG_OBJECT (mq,
       "queue %d, configured SEGMENT %" GST_SEGMENT_FORMAT, sq->id, segment);
