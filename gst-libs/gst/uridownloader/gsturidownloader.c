@@ -378,14 +378,19 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
     g_object_set (downloader->priv->urisrc, "compress", compress, NULL);
   if (g_object_class_find_property (gobject_class, "keep-alive"))
     g_object_set (downloader->priv->urisrc, "keep-alive", TRUE, NULL);
-  if (referer && g_object_class_find_property (gobject_class, "extra-headers")) {
-    GstStructure *extra_headers =
-        gst_structure_new ("headers", "Referer", G_TYPE_STRING, referer, NULL);
+  if (g_object_class_find_property (gobject_class, "extra-headers")) {
+    if (referer) {
+      GstStructure *extra_headers =
+          gst_structure_new ("headers", "Referer", G_TYPE_STRING, referer,
+          NULL);
 
-    g_object_set (downloader->priv->urisrc, "extra-headers", extra_headers,
-        NULL);
+      g_object_set (downloader->priv->urisrc, "extra-headers", extra_headers,
+          NULL);
 
-    gst_structure_free (extra_headers);
+      gst_structure_free (extra_headers);
+    } else {
+      g_object_set (downloader->priv->urisrc, "extra-headers", NULL, NULL);
+    }
   }
 
   /* add a sync handler for the bus messages to detect errors in the download */
