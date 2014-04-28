@@ -716,6 +716,11 @@ CHANGES
         garbled). Since 1.0.7 the "iradio-mode" property has been re-added
         to allow users to switch off the default behaviour of requesting
         icecast metadata.
+      - fakesink, identity and fakesrc's "silent" property default value
+        changed from FALSE to TRUE. This means that "gst-launch-1.0 -v" will
+        not show messages from any of these elements unless you explicitly
+        request them with "silent=false". This change was made for efficiency
+        reasons.
 
  * decoders now require parsers in front of them
 
@@ -739,6 +744,13 @@ CHANGES
 
           playbin uri=file:///path/to/foo.flac audio-sink=pulsesink
 
+ * non-time-based sources do not provide presentation timestamps anymore
+
+      - Sources based on BYTEs instead of TIME (like filesrc or souphttpsrc)
+        do not provide PTS anymore. In the 0.10 API they provided a PTS with
+        value 0 for the first buffer. This was needed for legacy operation but
+        has been removed in the 1.0 API. These sources will usually still put
+        a 0 DTS (decoding timestamp) on the first buffer even if PTS is unset.
 
 =============================================================================
   Troubleshooting
