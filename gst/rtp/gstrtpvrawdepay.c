@@ -309,7 +309,7 @@ static GstBuffer *
 gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpVRawDepay *rtpvrawdepay;
-  guint8 *payload, *yp, *up, *vp, *headers;
+  guint8 *payload, *p0, *yp, *up, *vp, *headers;
   guint32 timestamp;
   guint cont, ystride, uvstride, pgroup, payload_len;
   gint width, height, xinc, yinc;
@@ -361,6 +361,7 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     goto invalid_frame;
 
   /* get pointer and strides of the planes */
+  p0 = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
   yp = GST_VIDEO_FRAME_COMP_DATA (&frame, 0);
   up = GST_VIDEO_FRAME_COMP_DATA (&frame, 1);
   vp = GST_VIDEO_FRAME_COMP_DATA (&frame, 2);
@@ -452,7 +453,7 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       case GST_VIDEO_FORMAT_UYVP:
         /* samples are packed just like gstreamer packs them */
         offs /= xinc;
-        datap = yp + (line * ystride) + (offs * pgroup);
+        datap = p0 + (line * ystride) + (offs * pgroup);
 
         memcpy (datap, payload, plen);
         break;
@@ -461,7 +462,7 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         gint i;
         guint8 *p;
 
-        datap = yp + (line * ystride) + (offs * 4);
+        datap = p0 + (line * ystride) + (offs * 4);
         p = payload;
 
         /* samples are packed in order Cb-Y-Cr for both interlaced and
