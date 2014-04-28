@@ -323,7 +323,7 @@ gst_uri_downloader_set_range (GstUriDownloader * downloader,
 
 static gboolean
 gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
-    gboolean compress)
+    const gchar * referer, gboolean compress)
 {
   GstPad *pad;
   GObjectClass *gobject_class;
@@ -378,6 +378,15 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
     g_object_set (downloader->priv->urisrc, "compress", compress, NULL);
   if (g_object_class_find_property (gobject_class, "keep-alive"))
     g_object_set (downloader->priv->urisrc, "keep-alive", TRUE, NULL);
+  if (referer && g_object_class_find_property (gobject_class, "extra-headers")) {
+    GstStructure *extra_headers =
+        gst_structure_new ("headers", "Referer", G_TYPE_STRING, referer, NULL);
+
+    g_object_set (downloader->priv->urisrc, "extra-headers", extra_headers,
+        NULL);
+
+    gst_structure_free (extra_headers);
+  }
 
   /* add a sync handler for the bus messages to detect errors in the download */
   gst_element_set_bus (GST_ELEMENT (downloader->priv->urisrc),
@@ -397,12 +406,29 @@ GstFragment *
 gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri,
     gboolean compress, GError ** err)
 {
-  return gst_uri_downloader_fetch_uri_with_range (downloader, uri, compress, 0,
-      -1, err);
+  return gst_uri_downloader_fetch_uri_with_range_and_referer (downloader, uri,
+      NULL, compress, 0, -1, err);
+}
+
+GstFragment *
+gst_uri_downloader_fetch_uri_with_referer (GstUriDownloader * downloader,
+    const gchar * uri, const gchar * referer, gboolean compress, GError ** err)
+{
+  return gst_uri_downloader_fetch_uri_with_range_and_referer (downloader, uri,
+      referer, compress, 0, -1, err);
+}
+
+GstFragment *
+gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
+    const gchar * uri, gboolean compress, gint64 range_start, gint64 range_end,
+    GError ** err)
+{
+  return gst_uri_downloader_fetch_uri_with_range_and_referer (downloader, uri,
+      NULL, compress, range_start, range_end, err);
 }
 
 /**
- * gst_uri_downloader_fetch_uri_with_range:
+ * gst_uri_downloader_fetch_uri_with_range_and_referer:
  * @downloader: the #GstUriDownloader
  * @uri: the uri
  * @range_start: the starting byte index
@@ -411,9 +437,9 @@ gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri,
  * Returns the downloaded #GstFragment
  */
 GstFragment *
-gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
-    const gchar * uri, gboolean compress, gint64 range_start,
-    gint64 range_end, GError ** err)
+gst_uri_downloader_fetch_uri_with_range_and_referer (GstUriDownloader *
+    downloader, const gchar * uri, const gchar * referer, gboolean compress,
+    gint64 range_start, gint64 range_end, GError ** err)
 {
   GstStateChangeReturn ret;
   GstFragment *download = NULL;
@@ -430,7 +456,7 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
     goto quit;
   }
 
-  if (!gst_uri_downloader_set_uri (downloader, uri, compress)) {
+  if (!gst_uri_downloader_set_uri (downloader, uri, referer, compress)) {
     GST_WARNING_OBJECT (downloader, "Failed to set URI");
     goto quit;
   }
