@@ -1334,11 +1334,6 @@ error:
       break;
   }
 
-  if (!IS_QUEUED (group->buffer)) {
-    GST_DEBUG_OBJECT (allocator,
-        "driver pretends buffer is dequeued even if dequeue failed");
-    SET_QUEUED (group->buffer);
-  }
   return NULL;
 }
 
