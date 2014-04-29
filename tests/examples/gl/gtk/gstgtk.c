@@ -29,7 +29,6 @@
 #endif
 #if GST_GL_HAVE_WINDOW_X11 && defined(GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
-#include <gdk/x11/gdkx11display.h>
 #endif
 #if GST_GL_HAVE_WINDOW_COCOA && defined(GDK_WINDOWING_QUARTZ)
 #include <gdk/gdkquartz.h>
