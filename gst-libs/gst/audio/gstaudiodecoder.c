@@ -1842,6 +1842,7 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
     goto caps_error;
 
   /* before fixating, try to use whatever upstream provided */
+  caps = gst_caps_make_writable (caps);
   caps_size = gst_caps_get_size (caps);
   if (dec->priv->ctx.input_caps) {
     GstCaps *sinkcaps = dec->priv->ctx.input_caps;
