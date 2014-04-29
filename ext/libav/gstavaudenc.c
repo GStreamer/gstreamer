@@ -406,6 +406,12 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   return TRUE;
 }
 
+static void
+gst_ffmpegaudenc_free_avpacket (gpointer pkt)
+{
+  av_packet_unref ((AVPacket *) pkt);
+  g_slice_free (AVPacket, pkt);
+}
 
 static GstFlowReturn
 gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
@@ -416,7 +422,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   gint res;
   GstFlowReturn ret;
   GstAudioInfo *info;
-  AVPacket pkt;
+  AVPacket *pkt;
   AVFrame frame;
   gboolean planar;
 
@@ -427,7 +433,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   GST_LOG_OBJECT (ffmpegaudenc, "encoding buffer %p size:%u", audio_in,
       in_size);
 
-  memset (&pkt, 0, sizeof (pkt));
+  pkt = g_slice_new0 (AVPacket);
 
   if (audio_in != NULL) {
     memset (&frame, 0, sizeof (frame));
@@ -514,7 +520,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
     }
 
     /* we have a frame to feed the encoder */
-    res = avcodec_encode_audio2 (ctx, &pkt, &frame, have_data);
+    res = avcodec_encode_audio2 (ctx, pkt, &frame, have_data);
 
     if (planar && info->channels > 1)
       g_free (frame.data[0]);
@@ -523,12 +529,13 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
   } else {
     /* flushing the encoder */
-    res = avcodec_encode_audio2 (ctx, &pkt, NULL, have_data);
+    res = avcodec_encode_audio2 (ctx, pkt, NULL, have_data);
   }
 
   if (res < 0) {
     char error_str[128] = { 0, };
 
+    g_slice_free (AVPacket, pkt);
     av_strerror (res, error_str, sizeof (error_str));
     GST_ERROR_OBJECT (enc, "Failed to encode buffer: %d - %s", res, error_str);
     return GST_FLOW_OK;
@@ -539,11 +546,11 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
     GstBuffer *outbuf;
     const AVCodec *codec;
 
-    GST_LOG_OBJECT (ffmpegaudenc, "pushing size %d", pkt.size);
+    GST_LOG_OBJECT (ffmpegaudenc, "pushing size %d", pkt->size);
 
     outbuf =
-        gst_buffer_new_wrapped_full (0, pkt.data, pkt.size, 0, pkt.size,
-        pkt.data, av_free);
+        gst_buffer_new_wrapped_full (0, pkt->data, pkt->size, 0, pkt->size,
+        pkt, gst_ffmpegaudenc_free_avpacket);
 
     codec = ffmpegaudenc->context->codec;
     if ((codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)) {
@@ -553,6 +560,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
     }
   } else {
     GST_LOG_OBJECT (ffmpegaudenc, "no output produced");
+    g_slice_free (AVPacket, pkt);
     ret = GST_FLOW_OK;
   }
 
