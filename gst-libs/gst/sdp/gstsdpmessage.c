@@ -2934,7 +2934,7 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
 
 /**
  * gst_sdp_message_parse_buffer:
- * @data: the start of the buffer
+ * @data: (array length=size): the start of the buffer
  * @size: the size of the buffer
  * @msg: the result #GstSDPMessage
  *
