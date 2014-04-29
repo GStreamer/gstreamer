@@ -1,0 +1,2 @@
+
+#SUBDIRS = videooverlay qglwidgetvideooverlay mousevideooverlay

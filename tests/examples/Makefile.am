@@ -18,7 +18,13 @@ endif
 
 OPENCV_EXAMPLES=opencv
 
-SUBDIRS= mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES)
-DIST_SUBDIRS= mpegts camerabin2 directfb mxf opencv uvch264
+if USE_OPENGL
+GL_DIR=gl
+else
+GL_DIR=
+endif
+
+SUBDIRS= mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES) $(GL_DIR)
+DIST_SUBDIRS= mpegts camerabin2 directfb mxf opencv uvch264 gl
 
 include $(top_srcdir)/common/parallel-subdirs.mak

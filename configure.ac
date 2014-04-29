@@ -235,6 +235,65 @@ fi
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
 
+dnl GTK is optional and used in examples
+HAVE_GTK3=NO
+if test "x$BUILD_EXAMPLES" = "xyes"; then
+  PKG_CHECK_MODULES(GTK3, gtk+-3.0 >= 3.4, HAVE_GTK3=yes, HAVE_GTK3=no)
+  if test "x$HAVE_GTK3" = "xyes"; then
+    HAVE_GTK=yes
+    GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-3.0`
+    AC_SUBST(GTK_VERSION)
+    GTK_PREFIX=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
+    AC_SUBST(GTK_BASE_DIR)
+  fi
+fi
+AC_SUBST(GTK3_LIBS)
+AC_SUBST(GTK3_CFLAGS)
+AC_SUBST(HAVE_GTK3)
+AM_CONDITIONAL(HAVE_GTK3, test "x$HAVE_GTK3" = "xyes")
+
+dnl clutter is optional and used in examples
+HAVE_CLUTTER=no
+HAVE_CLUTTER_X11=no
+HAVE_CLUTTER_GLX=no
+if test "x$BUILD_EXAMPLES" = "xyes"; then
+  PKG_CHECK_MODULES(CLUTTER, clutter-1.0 >= 1.8, HAVE_CLUTTER=yes, HAVE_CLUTTER=no)
+  AC_SUBST(CLUTTER_LIBS)
+  AC_SUBST(CLUTTER_CFLAGS)
+  AC_SUBST(HAVE_CLUTTER)
+
+  PKG_CHECK_MODULES(CLUTTER_GLX, clutter-glx-1.0 >= 1.8, HAVE_CLUTTER_GLX=yes, HAVE_CLUTTER_GLX=no)
+  AC_SUBST(CLUTTER_GLX_LIBS)
+  AC_SUBST(CLUTTER_GLX_CFLAGS)
+  AC_SUBST(HAVE_CLUTTER_GLX)
+
+  PKG_CHECK_MODULES(CLUTTER_X11, clutter-x11-1.0 >= 1.8, HAVE_CLUTTER_X11=yes, HAVE_CLUTTER_X11=no)
+  AC_SUBST(CLUTTER_X11_LIBS)
+  AC_SUBST(CLUTTER_X11_CFLAGS)
+  AC_SUBST(HAVE_CLUTTER_X11)
+fi
+AM_CONDITIONAL(HAVE_CLUTTER, test "x$HAVE_CLUTTER" = "xyes")
+AM_CONDITIONAL(HAVE_CLUTTER_GLX, test "x$HAVE_CLUTTER_GLX" = "xyes")
+AM_CONDITIONAL(HAVE_CLUTTER_X11, test "x$HAVE_CLUTTER_X11" = "xyes")
+
+dnl used in the gl/clutteractor example
+if test "x$BUILD_EXAMPLES" = "xyes"; then
+  PKG_CHECK_MODULES(XCOMPOSITE, xcomposite, HAVE_XCOMPOSITE=yes, HAVE_XCOMPOSITE=no)
+  AC_SUBST(XCOMPOSITE_CFLAGS)
+  AC_SUBST(XCOMPOSITE_LIBS)
+fi
+AM_CONDITIONAL(HAVE_XCOMPOSITE, test "x$HAVE_XCOMPOSITE" = "xyes")
+
+dnl sdl is optional and used in examples
+HAVE_SDL=NO
+if test "x$BUILD_EXAMPLES" = "xyes"; then
+  PKG_CHECK_MODULES(SDL, sdl >= 1.2.0, HAVE_SDL=yes, HAVE_SDL=no)
+  AC_SUBST(SDL_LIBS)
+  AC_SUBST(SDL_CFLAGS)
+  AC_SUBST(SDL_CLUTTER)
+fi
+AM_CONDITIONAL(HAVE_SDL, test "x$HAVE_SDL" = "xyes")
+
 
 dnl Needed for GtkBuilder to autoconnect signals
 PKG_CHECK_MODULES(GMODULE_EXPORT, gmodule-export-2.0, HAVE_GMODULE_EXPORT=yes, HAVE_GMODULE_EXPORT=no)
@@ -3161,6 +3220,23 @@ tests/files/Makefile
 tests/examples/Makefile
 tests/examples/camerabin2/Makefile
 tests/examples/directfb/Makefile
+tests/examples/gl/Makefile
+tests/examples/gl/cocoa/Makefile
+tests/examples/gl/cocoa/videooverlay/Makefile
+tests/examples/gl/clutter/Makefile
+tests/examples/gl/generic/Makefile
+tests/examples/gl/generic/cube/Makefile
+tests/examples/gl/generic/cubeyuv/Makefile
+tests/examples/gl/generic/doublecube/Makefile
+tests/examples/gl/generic/recordgraphic/Makefile
+tests/examples/gl/gtk/Makefile
+tests/examples/gl/gtk/gtkvideooverlay/Makefile
+tests/examples/gl/gtk/filternovideooverlay/Makefile
+tests/examples/gl/gtk/filtervideooverlay/Makefile
+tests/examples/gl/gtk/fxtest/Makefile
+tests/examples/gl/gtk/switchvideooverlay/Makefile
+tests/examples/gl/qt/Makefile
+tests/examples/gl/sdl/Makefile
 tests/examples/mpegts/Makefile
 tests/examples/mxf/Makefile
 tests/examples/opencv/Makefile
