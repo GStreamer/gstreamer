@@ -74,6 +74,7 @@ struct _GstHLSDemux
   gchar *uri;                   /* Original playlist URI */
   GstM3U8Client *client;        /* M3U8 client */
   gboolean do_typefind;         /* Whether we need to typefind the next buffer */
+  gboolean new_playlist;        /* Whether a new playlist is about to start and pads should be switched */
 
   /* Properties */
   guint fragments_cache;        /* number of fragments needed to be cached to start playing */

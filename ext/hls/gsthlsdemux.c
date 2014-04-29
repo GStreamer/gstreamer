@@ -421,6 +421,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           return FALSE;
         }
         demux->discont = TRUE;
+        demux->new_playlist = TRUE;
         demux->do_typefind = TRUE;
 
         gst_hls_demux_change_playlist (demux,
@@ -449,6 +450,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           return FALSE;
         }
         demux->discont = TRUE;
+        demux->new_playlist = TRUE;
         demux->do_typefind = TRUE;
 
         gst_hls_demux_change_playlist (demux,
@@ -948,7 +950,7 @@ _src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static void
-switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
+switch_pads (GstHLSDemux * demux)
 {
   GstPad *oldpad = demux->srcpad;
   GstEvent *event;
@@ -958,9 +960,7 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
   GstPadTemplate *tmpl;
   GstProxyPad *internal_pad;
 
-  GST_DEBUG_OBJECT (demux,
-      "Switching pads (oldpad:%p) with caps: %" GST_PTR_FORMAT, oldpad,
-      newcaps);
+  GST_DEBUG_OBJECT (demux, "Switching pad (oldpad:%p)", oldpad);
 
   target = gst_element_get_static_pad (demux->src, "src");
   if (oldpad) {
@@ -1014,12 +1014,11 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
   gst_pad_push_event (demux->srcpad, event);
   g_free (stream_id);
 
-  if (newcaps != NULL)
-    gst_pad_set_caps (demux->srcpad, newcaps);
-
   gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad);
 
   gst_element_no_more_pads (GST_ELEMENT (demux));
+
+  demux->new_playlist = FALSE;
 
   if (oldpad) {
     /* Push out EOS */
@@ -1030,21 +1029,12 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
 }
 
 static gboolean
-gst_hls_demux_configure_src_pad (GstHLSDemux * demux, GstCaps * bufcaps)
+gst_hls_demux_configure_src_pad (GstHLSDemux * demux)
 {
-  GstCaps *srccaps = NULL;
-  /* Figure out if we need to create/switch pads */
-  if (G_LIKELY (demux->srcpad))
-    srccaps = gst_pad_get_current_caps (demux->srcpad);
-
-  if (G_UNLIKELY (!srccaps || demux->discont)) {
-    switch_pads (demux, bufcaps);
+  if (G_UNLIKELY (!demux->srcpad || demux->new_playlist)) {
+    switch_pads (demux);
     demux->need_segment = TRUE;
   }
-  if (bufcaps)
-    gst_caps_unref (bufcaps);
-  if (G_LIKELY (srccaps))
-    gst_caps_unref (srccaps);
 
   return TRUE;
 }
@@ -1185,7 +1175,7 @@ end_of_playlist:
   {
     GST_DEBUG_OBJECT (demux, "Reached end of playlist, sending EOS");
 
-    gst_hls_demux_configure_src_pad (demux, NULL);
+    gst_hls_demux_configure_src_pad (demux);
 
     gst_pad_push_event (demux->srcpad, gst_event_new_eos ());
     gst_hls_demux_pause_tasks (demux);
@@ -1542,6 +1532,7 @@ retry_failover_protection:
   GST_INFO_OBJECT (demux, "Client was on %dbps, max allowed is %dbps, switching"
       " to bitrate %dbps", old_bandwidth, max_bitrate, new_bandwidth);
   demux->discont = TRUE;
+  demux->new_playlist = TRUE;
 
   if (gst_hls_demux_update_playlist (demux, FALSE, NULL)) {
     GstStructure *s;
@@ -1843,7 +1834,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
 
   gst_hls_demux_update_source (demux, next_fragment_uri,
       demux->client->main ? demux->client->main->uri : NULL);
-  if (!gst_hls_demux_configure_src_pad (demux, NULL)) {
+  if (!gst_hls_demux_configure_src_pad (demux)) {
     *end_of_playlist = FALSE;
     return FALSE;
   }
