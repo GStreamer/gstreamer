@@ -33,23 +33,11 @@
 #ifndef WIN32
 #include <GL/glx.h>
 #include "SDL/SDL_syswm.h"
+#include <gst/gl/x11/gstgldisplay_x11.h>
 #endif
 
 #include <gst/gst.h>
-
-
-/* hack */
-typedef struct _GstGLBuffer GstGLBuffer;
-struct _GstGLBuffer
-{
-  GstBuffer buffer;
-
-  GObject *obj;
-
-  gint width;
-  gint height;
-  GLuint texture;
-};
+#include <gst/gl/gl.h>
 
 /* rotation angle for the triangle. */
 float rtri = 0.0f;
@@ -78,11 +66,20 @@ InitGL (int Width, int Height)  // We call this right after our OpenGL window is
 
 /* The main drawing function. */
 static void
-DrawGLScene (GstGLBuffer * gst_gl_buf)
+DrawGLScene (GstBuffer * buf)
 {
-  GLuint texture = gst_gl_buf->texture;
-  GLfloat width = (GLfloat) gst_gl_buf->width;
-  GLfloat height = (GLfloat) gst_gl_buf->height;
+  GstVideoFrame v_frame;
+  GstVideoInfo v_info;
+  guint texture;
+
+  gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 320, 240);
+
+  if (!gst_video_frame_map (&v_frame, &v_info, buf, GST_MAP_READ | GST_MAP_GL)) {
+    g_warning ("Failed to map the video buffer");
+    return;
+  }
+
+  texture = *(guint *) v_frame.data[0];
 
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clear The Screen And The Depth Buffer
   glLoadIdentity ();            // Reset The View
@@ -115,11 +112,11 @@ DrawGLScene (GstGLBuffer * gst_gl_buf)
   // draw a square (quadrilateral)
   glColor3f (0.5f, 0.5f, 1.0f); // set color to a blue shade.
   glBegin (GL_QUADS);           // start drawing a polygon (4 sided)
-  glTexCoord3f (0.0f, height, 0.0f);
+  glTexCoord3f (0.0f, 1.0f, 0.0f);
   glVertex3f (-1.0f, 1.0f, 0.0f);       // Top Left
-  glTexCoord3f (width, height, 0.0f);
+  glTexCoord3f (1.0f, 1.0f, 0.0f);
   glVertex3f (1.0f, 1.0f, 0.0f);        // Top Right
-  glTexCoord3f (width, 0.0f, 0.0f);
+  glTexCoord3f (1.0f, 0.0f, 0.0f);
   glVertex3f (1.0f, -1.0f, 0.0f);       // Bottom Right
   glTexCoord3f (0.0f, 0.0f, 0.0f);
   glVertex3f (-1.0f, -1.0f, 0.0f);      // Bottom Left  
@@ -146,7 +143,7 @@ update_sdl_scene (void *fk)
   GAsyncQueue *queue_output_buf =
       (GAsyncQueue *) g_object_get_data (G_OBJECT (fakesink),
       "queue_output_buf");
-  GstGLBuffer *gst_gl_buf = (GstGLBuffer *) g_async_queue_pop (queue_input_buf);
+  GstBuffer *buf = (GstBuffer *) g_async_queue_pop (queue_input_buf);
 
   SDL_Event event;
   while (SDL_PollEvent (&event)) {
@@ -160,10 +157,10 @@ update_sdl_scene (void *fk)
     }
   }
 
-  DrawGLScene (gst_gl_buf);
+  DrawGLScene (buf);
 
   /* push buffer so it can be unref later */
-  g_async_queue_push (queue_output_buf, gst_gl_buf);
+  g_async_queue_push (queue_output_buf, buf);
 
   return FALSE;
 }
@@ -204,7 +201,7 @@ end_stream_cb (GstBus * bus, GstMessage * msg, GMainLoop * loop)
     case GST_MESSAGE_EOS:
       g_print ("End-of-stream\n");
       g_print
-          ("For more information, try to run: GST_DEBUG=gldisplay:2 ./sdlshare\n");
+          ("For more information, try to run: GST_DEBUG=gl*:3 ./sdlshare\n");
       break;
 
     case GST_MESSAGE_ERROR:
@@ -254,6 +251,9 @@ main (int argc, char **argv)
   GstState state;
   GAsyncQueue *queue_input_buf = NULL;
   GAsyncQueue *queue_output_buf = NULL;
+  GstGLDisplay *display;
+  GstGLContext *sdl_context;
+  const gchar *platform;
 
   /* Initialize SDL for video output */
   if (SDL_Init (SDL_INIT_VIDEO) < 0) {
@@ -283,14 +283,24 @@ main (int argc, char **argv)
   sdl_gl_context = wglGetCurrentContext ();
   sdl_dc = wglGetCurrentDC ();
   wglMakeCurrent (0, 0);
+  platform = "wgl";
+  display = gst_gl_display_new ();
 #else
   SDL_VERSION (&info.version);
   SDL_GetWMInfo (&info);
+  /* FIXME: This display is different to the one that SDL uses to create the
+   * GL context inside SDL_SetVideoMode() above which fails on Intel hardware
+   */
   sdl_display = info.info.x11.display;
   sdl_win = info.info.x11.window;
   sdl_gl_context = glXGetCurrentContext ();
   glXMakeCurrent (sdl_display, None, 0);
+  platform = "glx";
+  display = (GstGLDisplay *) gst_gl_display_x11_new_with_display (sdl_display);
 #endif
+
+  sdl_context = gst_gl_context_new_wrapped (display, (guintptr) sdl_gl_context,
+      gst_gl_platform_from_string (platform), GST_GL_API_OPENGL);
 
   pipeline =
       GST_PIPELINE (gst_parse_launch
@@ -306,8 +316,7 @@ main (int argc, char **argv)
 
   /* sdl_gl_context is an external OpenGL context with which gst-plugins-gl want to share textures */
   glfilter = gst_bin_get_by_name (GST_BIN (pipeline), "gleffects0");
-  g_object_set (G_OBJECT (glfilter), "external-opengl-context",
-      sdl_gl_context, NULL);
+  g_object_set (G_OBJECT (glfilter), "other-context", sdl_context, NULL);
   gst_object_unref (glfilter);
 
   /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
