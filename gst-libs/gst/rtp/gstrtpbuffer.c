@@ -403,11 +403,11 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
       goto map_failed;
 
     padding = rtp->map[3].data[skip];
-    if (skip + 1 < padding)
-      goto wrong_length;
-
     rtp->data[3] = rtp->map[3].data + skip + 1 - padding;
     rtp->size[3] = padding;
+
+    if (skip + 1 < padding)
+      goto wrong_length;
   } else {
     rtp->data[3] = NULL;
     rtp->size[3] = 0;
