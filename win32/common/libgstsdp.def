@@ -1,4 +1,48 @@
 EXPORTS
+	gst_mikey_message_add_cs_srtp
+	gst_mikey_message_add_payload
+	gst_mikey_message_add_pke
+	gst_mikey_message_add_rand
+	gst_mikey_message_add_rand_len
+	gst_mikey_message_add_t
+	gst_mikey_message_add_t_now_ntp_utc
+	gst_mikey_message_find_payload
+	gst_mikey_message_free
+	gst_mikey_message_get_cs_srtp
+	gst_mikey_message_get_n_cs
+	gst_mikey_message_get_n_payloads
+	gst_mikey_message_get_payload
+	gst_mikey_message_insert_cs_srtp
+	gst_mikey_message_insert_payload
+	gst_mikey_message_new
+	gst_mikey_message_new_from_bytes
+	gst_mikey_message_new_from_data
+	gst_mikey_message_remove_cs_srtp
+	gst_mikey_message_remove_payload
+	gst_mikey_message_replace_cs_srtp
+	gst_mikey_message_replace_payload
+	gst_mikey_message_set_info
+	gst_mikey_message_to_bytes
+	gst_mikey_payload_copy
+	gst_mikey_payload_free
+	gst_mikey_payload_kemac_add_sub
+	gst_mikey_payload_kemac_get_n_sub
+	gst_mikey_payload_kemac_get_sub
+	gst_mikey_payload_kemac_remove_sub
+	gst_mikey_payload_kemac_set
+	gst_mikey_payload_key_data_set_interval
+	gst_mikey_payload_key_data_set_key
+	gst_mikey_payload_key_data_set_salt
+	gst_mikey_payload_key_data_set_spi
+	gst_mikey_payload_new
+	gst_mikey_payload_pke_set
+	gst_mikey_payload_rand_set
+	gst_mikey_payload_sp_add_param
+	gst_mikey_payload_sp_get_n_params
+	gst_mikey_payload_sp_get_param
+	gst_mikey_payload_sp_remove_param
+	gst_mikey_payload_sp_set
+	gst_mikey_payload_t_set
 	gst_sdp_address_is_multicast
 	gst_sdp_attribute_clear
 	gst_sdp_attribute_set
