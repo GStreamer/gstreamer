@@ -927,7 +927,8 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   return ret;
 
 key_failed:
-  /* TODO ERROR here */
+  /* TODO Raise this error to the user */
+  GST_WARNING_OBJECT (demux, "Failed to decrypt data");
   demux->last_ret = GST_FLOW_ERROR;
   return GST_FLOW_ERROR;
 }
@@ -1071,15 +1072,13 @@ switch_pads (GstHLSDemux * demux)
   }
 }
 
-static gboolean
+static void
 gst_hls_demux_configure_src_pad (GstHLSDemux * demux)
 {
   if (G_UNLIKELY (!demux->srcpad || demux->new_playlist)) {
     switch_pads (demux);
     demux->need_segment = TRUE;
   }
-
-  return TRUE;
 }
 
 static void
@@ -1773,12 +1772,12 @@ decrypt_error:
   return NULL;
 }
 
-static void
+static gboolean
 gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri,
     const gchar * referer)
 {
-  if (!gst_uri_is_valid (uri))  /* TODO error out */
-    return;
+  if (!gst_uri_is_valid (uri))
+    return FALSE;
 
   if (demux->src != NULL) {
     gchar *old_protocol, *new_protocol;
@@ -1815,6 +1814,10 @@ gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri,
     GObjectClass *gobject_class;
 
     demux->src = gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
+    if (demux->src == NULL) {
+      GST_WARNING_OBJECT (demux, "No element to handle uri: %s", uri);
+      return FALSE;
+    }
 
     gobject_class = G_OBJECT_GET_CLASS (demux->src);
 
@@ -1839,6 +1842,7 @@ gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri,
     gst_element_set_locked_state (demux->src, TRUE);
     gst_bin_add (GST_BIN_CAST (demux), demux->src);
   }
+  return TRUE;
 }
 
 static gboolean
@@ -1875,23 +1879,31 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   demux->current_key = key;
   demux->current_iv = iv;
 
-  gst_hls_demux_update_source (demux, next_fragment_uri,
-      demux->client->main ? demux->client->main->uri : NULL);
-  if (!gst_hls_demux_configure_src_pad (demux)) {
-    *end_of_playlist = FALSE;
+  if (!gst_hls_demux_update_source (demux, next_fragment_uri,
+          demux->client->main ? demux->client->main->uri : NULL)) {
+    *err = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN,
+        "Missing plugin to handle URI: '%s'", next_fragment_uri);
+    g_mutex_unlock (&demux->fragment_download_lock);
     return FALSE;
   }
 
-  gst_element_set_state (demux->src, GST_STATE_READY);  /* TODO check return */
-  gst_element_send_event (demux->src, gst_event_new_seek (1.0, GST_FORMAT_BYTES,
-          (GstSeekFlags) GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, range_start,
-          GST_SEEK_TYPE_SET, range_end));
+  gst_hls_demux_configure_src_pad (demux);
 
-  demux->download_start_time = g_get_monotonic_time ();
-  gst_element_sync_state_with_parent (demux->src);
+  if (gst_element_set_state (demux->src,
+          GST_STATE_READY) != GST_STATE_CHANGE_FAILURE) {
+    gst_element_send_event (demux->src, gst_event_new_seek (1.0,
+            GST_FORMAT_BYTES, (GstSeekFlags) GST_SEEK_FLAG_FLUSH,
+            GST_SEEK_TYPE_SET, range_start, GST_SEEK_TYPE_SET, range_end));
 
-  /* wait for the fragment to be completely downloaded */
-  g_cond_wait (&demux->fragment_download_cond, &demux->fragment_download_lock);
+    demux->download_start_time = g_get_monotonic_time ();
+    gst_element_sync_state_with_parent (demux->src);
+
+    /* wait for the fragment to be completely downloaded */
+    g_cond_wait (&demux->fragment_download_cond,
+        &demux->fragment_download_lock);
+  } else {
+    demux->last_ret = GST_FLOW_CUSTOM_ERROR;
+  }
   g_mutex_unlock (&demux->fragment_download_lock);
 
   if (demux->last_ret != GST_FLOW_OK) {
