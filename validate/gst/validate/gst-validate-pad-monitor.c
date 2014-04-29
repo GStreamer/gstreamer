@@ -1095,6 +1095,13 @@ gst_validate_pad_monitor_otherpad_clear_pending_fields (GstValidatePadMonitor *
   iter =
       gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
       (monitor));
+
+  if (iter == NULL) {
+    GST_DEBUG_OBJECT (monitor, "No internally linked pad");
+
+    return;
+  }
+
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -1140,6 +1147,12 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
   iter =
       gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
       (monitor));
+
+  if (iter == NULL) {
+    GST_DEBUG_OBJECT (monitor, "No internally linked pad");
+    return;
+  }
+
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
