@@ -824,7 +824,7 @@ gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad, GstObject * parent)
   GstIterator *it;
   GValue val = { 0, };
 
-  jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
+  jitterbuffer = GST_RTP_JITTER_BUFFER_CAST (parent);
 
   if (pad == jitterbuffer->priv->sinkpad) {
     otherpad = jitterbuffer->priv->srcpad;
@@ -893,7 +893,7 @@ gst_rtp_jitter_buffer_request_new_pad (GstElement * element,
   g_return_val_if_fail (templ != NULL, NULL);
   g_return_val_if_fail (GST_IS_RTP_JITTER_BUFFER (element), NULL);
 
-  jitterbuffer = GST_RTP_JITTER_BUFFER (element);
+  jitterbuffer = GST_RTP_JITTER_BUFFER_CAST (element);
   priv = jitterbuffer->priv;
   klass = GST_ELEMENT_GET_CLASS (element);
 
@@ -932,7 +932,7 @@ gst_rtp_jitter_buffer_release_pad (GstElement * element, GstPad * pad)
   g_return_if_fail (GST_IS_RTP_JITTER_BUFFER (element));
   g_return_if_fail (GST_IS_PAD (pad));
 
-  jitterbuffer = GST_RTP_JITTER_BUFFER (element);
+  jitterbuffer = GST_RTP_JITTER_BUFFER_CAST (element);
   priv = jitterbuffer->priv;
 
   GST_DEBUG_OBJECT (element, "releasing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
@@ -1313,7 +1313,7 @@ gst_rtp_jitter_buffer_src_event (GstPad * pad, GstObject * parent,
   GstRtpJitterBuffer *jitterbuffer;
   GstRtpJitterBufferPrivate *priv;
 
-  jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
+  jitterbuffer = GST_RTP_JITTER_BUFFER_CAST (parent);
   priv = jitterbuffer->priv;
 
   GST_DEBUG_OBJECT (jitterbuffer, "received %s", GST_EVENT_TYPE_NAME (event));
@@ -1682,8 +1682,9 @@ add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
   gint len;
 
   GST_DEBUG_OBJECT (jitterbuffer,
-      "add timer for seqnum %d to %" GST_TIME_FORMAT ", delay %"
-      GST_TIME_FORMAT, seqnum, GST_TIME_ARGS (timeout), GST_TIME_ARGS (delay));
+      "add timer %d for seqnum %d to %" GST_TIME_FORMAT ", delay %"
+      GST_TIME_FORMAT, type, seqnum, GST_TIME_ARGS (timeout),
+      GST_TIME_ARGS (delay));
 
   len = priv->timers->len;
   g_array_set_size (priv->timers, len + 1);
@@ -1815,8 +1816,8 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
 
     gap = gst_rtp_buffer_compare_seqnum (test->seqnum, seqnum);
 
-    GST_DEBUG_OBJECT (jitterbuffer, "%d, #%d<->#%d gap %d", i,
-        test->seqnum, seqnum, gap);
+    GST_DEBUG_OBJECT (jitterbuffer, "%d, %d, #%d<->#%d gap %d", i,
+        test->type, test->seqnum, seqnum, gap);
 
     if (gap == 0) {
       GST_DEBUG ("found timer for current seqnum");
@@ -2085,7 +2086,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   RTPJitterBufferItem *item;
   GstMessage *msg = NULL;
 
-  jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
+  jitterbuffer = GST_RTP_JITTER_BUFFER_CAST (parent);
 
   priv = jitterbuffer->priv;
 
@@ -2281,9 +2282,9 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   if (priv->last_sr)
     do_handle_sync (jitterbuffer);
 
-  if (head) {
+  if (G_UNLIKELY (head)) {
     /* signal addition of new buffer when the _loop is waiting. */
-    if (priv->active)
+    if (G_LIKELY (priv->active))
       JBUF_SIGNAL_EVENT (priv);
 
     /* let's unschedule and unblock any waiting buffers. We only want to do this

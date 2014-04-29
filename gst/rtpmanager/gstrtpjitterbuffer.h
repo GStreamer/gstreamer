@@ -44,6 +44,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_JITTER_BUFFER))
 #define GST_IS_RTP_JITTER_BUFFER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_JITTER_BUFFER))
+#define GST_RTP_JITTER_BUFFER_CAST(obj) \
+  ((GstRtpJitterBuffer *)(obj))
 
 typedef struct _GstRtpJitterBuffer GstRtpJitterBuffer;
 typedef struct _GstRtpJitterBufferClass GstRtpJitterBufferClass;
