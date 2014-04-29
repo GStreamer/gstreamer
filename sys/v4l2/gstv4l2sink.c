@@ -568,8 +568,8 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
       goto activate_failed;
   }
 
-  ret =
-      gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL_CAST (obj->pool), buf);
+  ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL_CAST (obj->pool),
+      &buf);
 
   return ret;
 

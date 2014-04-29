@@ -84,7 +84,7 @@ GType gst_v4l2_buffer_pool_get_type (void);
 
 GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj, GstCaps *caps);
 
-GstFlowReturn       gst_v4l2_buffer_pool_process (GstV4l2BufferPool * bpool, GstBuffer * buf);
+GstFlowReturn       gst_v4l2_buffer_pool_process (GstV4l2BufferPool * bpool, GstBuffer ** buf);
 
 gboolean            gst_v4l2_buffer_pool_flush   (GstV4l2BufferPool * pool);
 

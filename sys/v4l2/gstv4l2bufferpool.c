@@ -1160,48 +1160,16 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
             GST_LOG_OBJECT (pool, "copy buffer %p->%p", *buffer, copy);
 
             /* and requeue so that we can continue capturing */
-            ret = gst_v4l2_buffer_pool_qbuf (pool, *buffer);
+            gst_v4l2_buffer_pool_release_buffer (bpool, *buffer);
             *buffer = copy;
           }
           break;
         }
         case GST_V4L2_IO_USERPTR:
-        {
-          struct UserPtrData *data;
-
-          /* dequeue filled userptr */
-          ret = gst_v4l2_buffer_pool_dqbuf (pool, buffer);
-          if (G_UNLIKELY (ret != GST_FLOW_OK))
-            goto done;
-
-          data = gst_mini_object_steal_qdata (GST_MINI_OBJECT (*buffer),
-              GST_V4L2_IMPORT_QUARK);
-
-          /* and requeue so that we can continue capturing */
-          gst_v4l2_buffer_pool_prepare_buffer (pool, *buffer, NULL);
-          ret = gst_v4l2_buffer_pool_qbuf (pool, *buffer);
-          *buffer = data->buffer;
-
-          data->buffer = NULL;
-          _unmap_userptr_frame (data);
-          break;
-        }
         case GST_V4L2_IO_DMABUF_IMPORT:
         {
-          GstBuffer *tmp;
-
-          /* dequeue filled dmabuf */
+          /* dequeue filled buffer */
           ret = gst_v4l2_buffer_pool_dqbuf (pool, buffer);
-          if (G_UNLIKELY (ret != GST_FLOW_OK))
-            goto done;
-
-          tmp = gst_mini_object_steal_qdata (GST_MINI_OBJECT (*buffer),
-              GST_V4L2_IMPORT_QUARK);
-
-          /* and requeue so that we can continue capturing */
-          gst_v4l2_buffer_pool_prepare_buffer (pool, *buffer, NULL);
-          ret = gst_v4l2_buffer_pool_qbuf (pool, *buffer);
-          *buffer = tmp;
           break;
         }
         default:
@@ -1342,10 +1310,8 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
             GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool,
                 buffer);
           } else {
-            /* the buffer is queued in the device but maybe not played yet. We just
-             * leave it there and not make it available for future calls to acquire
-             * for now. The buffer will be dequeued and reused later. */
-            GST_LOG_OBJECT (pool, "buffer %u is queued", index);
+            /* We keep a ref on queued buffer, so this should never happen */
+            g_assert_not_reached ();
           }
           break;
         }
@@ -1533,7 +1499,7 @@ cleanup:
 /**
  * gst_v4l2_buffer_pool_process:
  * @bpool: a #GstBufferPool
- * @buf: a #GstBuffer
+ * @buf: a #GstBuffer, maybe be replaced
  *
  * Process @buf in @bpool. For capture devices, this functions fills @buf with
  * data from the device. For output devices, this functions send the contents of
@@ -1542,7 +1508,7 @@ cleanup:
  * Returns: %GST_FLOW_OK on success.
  */
 GstFlowReturn
-gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
+gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBufferPool *bpool = GST_BUFFER_POOL_CAST (pool);
@@ -1559,7 +1525,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
       switch (obj->mode) {
         case GST_V4L2_IO_RW:
           /* capture into the buffer */
-          ret = gst_v4l2_do_read (pool, buf);
+          ret = gst_v4l2_do_read (pool, *buf);
           break;
 
         case GST_V4L2_IO_MMAP:
@@ -1567,8 +1533,8 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
         {
           GstBuffer *tmp;
 
-          if (buf->pool == bpool) {
-            if (gst_buffer_get_size (buf) == 0)
+          if ((*buf)->pool == bpool) {
+            if (gst_buffer_get_size (*buf) == 0)
               goto eos;
             else
               /* nothing, data was inside the buffer when we did _acquire() */
@@ -1596,9 +1562,26 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
         }
 
         case GST_V4L2_IO_USERPTR:
+        {
+          struct UserPtrData *data;
+
+          /* Replace our buffer with downstream allocated buffer */
+          data = gst_mini_object_steal_qdata (GST_MINI_OBJECT (*buf),
+              GST_V4L2_IMPORT_QUARK);
+          gst_buffer_replace (buf, data->buffer);
+          _unmap_userptr_frame (data);
+          break;
+        }
+
         case GST_V4L2_IO_DMABUF_IMPORT:
         {
-          /* Nothing to do buffer is from the other pool */
+          GstBuffer *tmp;
+
+          /* Replace our buffer with downstream allocated buffer */
+          tmp = gst_mini_object_steal_qdata (GST_MINI_OBJECT (*buf),
+              GST_V4L2_IMPORT_QUARK);
+          gst_buffer_replace (buf, tmp);
+          gst_buffer_unref (tmp);
           break;
         }
 
@@ -1624,9 +1607,9 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
         {
           GstBuffer *to_queue;
 
-          if (buf->pool == bpool) {
+          if ((*buf)->pool == bpool) {
             /* nothing, we can queue directly */
-            to_queue = gst_buffer_ref (buf);
+            to_queue = gst_buffer_ref (*buf);
             GST_LOG_OBJECT (pool, "processing buffer from our pool");
           } else {
             GstBufferPoolAcquireParams params = { 0 };
@@ -1641,7 +1624,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
             if (ret != GST_FLOW_OK)
               goto acquire_failed;
 
-            ret = gst_v4l2_buffer_pool_prepare_buffer (pool, to_queue, buf);
+            ret = gst_v4l2_buffer_pool_prepare_buffer (pool, to_queue, *buf);
             if (ret != GST_FLOW_OK) {
               gst_buffer_unref (to_queue);
               goto prepare_failed;

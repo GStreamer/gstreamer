@@ -313,7 +313,7 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
     buffer = gst_buffer_new ();
     ret =
         gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->
-            v4l2output->pool), buffer);
+            v4l2output->pool), &buffer);
     gst_buffer_unref (buffer);
   }
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
@@ -396,7 +396,7 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
   GST_LOG_OBJECT (decoder, "Process output buffer");
   ret =
       gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->
-          v4l2capture->pool), buffer);
+          v4l2capture->pool), &buffer);
 
   if (ret != GST_FLOW_OK)
     goto beach;
@@ -485,7 +485,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     gst_v4l2_object_unlock_stop (self->v4l2output);
     ret =
         gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->
-            v4l2output->pool), codec_data);
+            v4l2output->pool), &codec_data);
     gst_v4l2_object_unlock (self->v4l2output);
     GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
@@ -538,7 +538,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     ret =
         gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->v4l2output->
-            pool), frame->input_buffer);
+            pool), &frame->input_buffer);
     GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
     if (ret == GST_FLOW_FLUSHING) {

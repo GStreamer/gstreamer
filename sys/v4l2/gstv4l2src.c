@@ -112,7 +112,7 @@ static GstCaps *gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter);
 static gboolean gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query);
 static gboolean gst_v4l2src_decide_allocation (GstBaseSrc * src,
     GstQuery * query);
-static GstFlowReturn gst_v4l2src_fill (GstPushSrc * src, GstBuffer * out);
+static GstFlowReturn gst_v4l2src_create (GstPushSrc * src, GstBuffer ** out);
 static GstCaps *gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 static gboolean gst_v4l2src_negotiate (GstBaseSrc * basesrc);
 
@@ -185,7 +185,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   basesrc_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2src_decide_allocation);
 
-  pushsrc_class->fill = GST_DEBUG_FUNCPTR (gst_v4l2src_fill);
+  pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_v4l2src_create);
 
   klass->v4l2_class_devices = NULL;
 
@@ -612,7 +612,7 @@ gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstFlowReturn
-gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
+gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
   GstV4l2Object *obj = v4l2src->v4l2object;
@@ -621,14 +621,19 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
   GstClockTime abs_time, base_time, timestamp, duration;
   GstClockTime delay;
 
+  ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (src), 0,
+      obj->sizeimage, buf);
+
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto alloc_failed;
+
   ret =
       gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL_CAST (obj->pool), buf);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto error;
 
-
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  timestamp = GST_BUFFER_TIMESTAMP (*buf);
   duration = obj->duration;
 
   /* timestamps, LOCK to get clock and base time. */
@@ -688,8 +693,8 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
   }
 
   /* set buffer metadata */
-  GST_BUFFER_OFFSET (buf) = v4l2src->offset++;
-  GST_BUFFER_OFFSET_END (buf) = v4l2src->offset;
+  GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
+  GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
 
   if (G_LIKELY (abs_time != GST_CLOCK_TIME_NONE)) {
     /* the time now is the time of the clock minus the base time */
@@ -718,12 +723,19 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
   GST_INFO_OBJECT (src, "sync to %" GST_TIME_FORMAT " out ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (v4l2src->ctrl_time), GST_TIME_ARGS (timestamp));
 
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
-  GST_BUFFER_DURATION (buf) = duration;
+  GST_BUFFER_TIMESTAMP (*buf) = timestamp;
+  GST_BUFFER_DURATION (*buf) = duration;
 
   return ret;
 
   /* ERROR */
+alloc_failed:
+  {
+    if (ret != GST_FLOW_FLUSHING)
+      GST_ELEMENT_ERROR (src, RESOURCE, NO_SPACE_LEFT,
+          ("Failed to allocate a buffer"), (NULL));
+    return ret;
+  }
 error:
   {
     GST_DEBUG_OBJECT (src, "error processing buffer %d (%s)", ret,
