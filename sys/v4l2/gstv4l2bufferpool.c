@@ -602,10 +602,34 @@ start_streaming (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_USERPTR:
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_DMABUF_IMPORT:
+    {
+      /* For capture device, we need to re-enqueue buffers before be can let
+       * the driver stream again */
+      if (!V4L2_TYPE_IS_OUTPUT (obj->type)) {
+        GstBufferPool *bpool = GST_BUFFER_POOL (pool);
+        GstBufferPoolAcquireParams params = { 0 };
+        GstFlowReturn ret;
+
+        while (pool->num_queued < pool->num_allocated) {
+          GstBuffer *buf;
+
+          params.flags = GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
+          ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool,
+              &buf, &params);
+
+          if (ret != GST_FLOW_OK)
+            goto requeue_failed;
+
+          gst_v4l2_buffer_pool_release_buffer (bpool, buf);
+        }
+      }
+
       GST_DEBUG_OBJECT (pool, "STREAMON");
+
       if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMON, &obj->type) < 0)
         goto start_failed;
       break;
+    }
     default:
       g_assert_not_reached ();
       break;
@@ -620,6 +644,11 @@ start_failed:
   {
     GST_ERROR_OBJECT (pool, "error with STREAMON %d (%s)", errno,
         g_strerror (errno));
+    return FALSE;
+  }
+requeue_failed:
+  {
+    GST_ERROR_OBJECT (pool, "failed to re-enqueue buffers");
     return FALSE;
   }
 }
