@@ -189,11 +189,13 @@ check_time (char *time)
 static guint64
 str_to_time (char *time)
 {
-  if (check_time (time)) {
-    return (guint64) (atof (time) * GST_SECOND);
-  }
-  GST_ERROR ("%s not a valid time", time);
-  return 0;
+  gdouble nsecs;
+
+  g_return_val_if_fail (check_time (time), 0);
+
+  nsecs = g_ascii_strtod (time, NULL);
+
+  return nsecs * GST_SECOND;
 }
 
 static GESTimeline *
@@ -250,6 +252,9 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
     char *source = argv[i * 3];
     char *arg0 = argv[(i * 3) + 1];
     guint64 duration = str_to_time (argv[(i * 3) + 2]);
+
+    if (duration == 0)
+      duration = GST_CLOCK_TIME_NONE;
 
     if (!g_strcmp0 ("+pattern", source)) {
       clip = GES_CLIP (ges_test_clip_new_for_nick (arg0));
@@ -320,6 +325,10 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
 
         return NULL;
       }
+
+      if (!GST_CLOCK_TIME_IS_VALID (duration))
+        duration =
+            GES_TIMELINE_ELEMENT_DURATION (clip) - (GstClockTime) inpoint;
 
       g_object_set (clip,
           "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
