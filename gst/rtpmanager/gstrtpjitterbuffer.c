@@ -1823,6 +1823,10 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
       GST_DEBUG ("found timer for current seqnum");
       /* the timer for the current seqnum */
       timer = test;
+      /* when no retransmission, we can stop now, we only need to find the
+       * timer for the current seqnum */
+      if (!priv->do_retransmission)
+        break;
     } else if (gap > priv->rtx_delay_reorder) {
       /* max gap, we exceeded the max reorder distance and we don't expect the
        * missing packet to be this reordered */
