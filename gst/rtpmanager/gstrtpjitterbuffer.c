@@ -1098,8 +1098,10 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
     /* first expected seqnum, only update when we didn't have a previous base. */
     if (priv->next_in_seqnum == -1)
       priv->next_in_seqnum = val;
-    if (priv->next_seqnum == -1)
+    if (priv->next_seqnum == -1) {
       priv->next_seqnum = val;
+      JBUF_SIGNAL_EVENT (priv);
+    }
   }
 
   GST_DEBUG_OBJECT (jitterbuffer, "got seqnum-base %d", priv->next_in_seqnum);
@@ -1871,9 +1873,6 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
        * spacing. */
       do_next_seqnum = FALSE;
     }
-    /* we signal the _loop function because this new packet could be the one
-     * it was waiting for */
-    JBUF_SIGNAL_EVENT (priv);
   }
 
   if (do_next_seqnum) {
@@ -2205,6 +2204,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         priv->last_popped_seqnum = -1;
         priv->next_seqnum = seqnum;
         do_next_seqnum = TRUE;
+        JBUF_SIGNAL_EVENT (priv);
       }
       /* reset spacing estimation when gap */
       priv->ips_rtptime = -1;
@@ -2259,6 +2259,9 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         priv->next_seqnum = (old_item->seqnum + 1) & 0xffff;
         free_item (old_item);
       }
+      /* we might have removed some head buffers, signal the pushing thread to
+       * see if it can push now */
+      JBUF_SIGNAL_EVENT (priv);
     }
   }
 
