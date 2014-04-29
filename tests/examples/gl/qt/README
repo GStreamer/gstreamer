@@ -1,0 +1,23 @@
+--- Description of the Qt examples ---
+
+- mousevideooverlay:
+Show how to use the videooverlay interface through Qt.
+The cube is rotating when moving the mouse (+ click maintained)
+
+- qglvideooverlay:
+Show how to use the videooverlay interface through Qt.
+The cube is rotating automatically into a QGLWidget
+
+- videovdieooverlay:
+Show how to use the videooverlay interface through Qt.
+The video is displayed as normal 2D scene.
+The window is dynamically resized to have the same size as the original video.
+
+--- How to build the Qt examples ---
+
+sudo apt-get install g++
+sudo apt-get install libqt4-dev
+cd qglvideooverlay
+qmake
+make
+./debug/qglvideooverlay

@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "filtervideooverlay", "filtervideooverlay\filtervideooverlay.vcproj", "{F9CC027E-CC9F-4B34-AA8F-58852EC32CD0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtkvideooverlay", "gtkvideooverlay\gtkvideooverlay.vcproj", "{E83070C2-58E4-48AE-AEB3-A4580EDE1212}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fxtest", "fxtest\fxtest.vcproj", "{59075FDD-68CD-4F1A-948B-46D142800798}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pixbufdrop", "pixbufdrop\pixbufdrop.vcproj", "{09F68B62-1D4C-4C24-A6AD-AA76A9F3237C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "filternovideooverlay", "filternovideooverlay\filternovideooverlay.vcproj", "{F41F3034-3E0B-4630-8D1E-35E14C606863}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "switchvideooverlay", "switchvideooverlay\switchvideooverlay.vcproj", "{BA78B4B4-3268-483E-9676-911E29FD2C69}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F9CC027E-CC9F-4B34-AA8F-58852EC32CD0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F9CC027E-CC9F-4B34-AA8F-58852EC32CD0}.Debug|Win32.Build.0 = Debug|Win32
+		{F9CC027E-CC9F-4B34-AA8F-58852EC32CD0}.Release|Win32.ActiveCfg = Release|Win32
+		{F9CC027E-CC9F-4B34-AA8F-58852EC32CD0}.Release|Win32.Build.0 = Release|Win32
+		{E83070C2-58E4-48AE-AEB3-A4580EDE1212}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E83070C2-58E4-48AE-AEB3-A4580EDE1212}.Debug|Win32.Build.0 = Debug|Win32
+		{E83070C2-58E4-48AE-AEB3-A4580EDE1212}.Release|Win32.ActiveCfg = Release|Win32
+		{E83070C2-58E4-48AE-AEB3-A4580EDE1212}.Release|Win32.Build.0 = Release|Win32
+		{59075FDD-68CD-4F1A-948B-46D142800798}.Debug|Win32.ActiveCfg = Debug|Win32
+		{59075FDD-68CD-4F1A-948B-46D142800798}.Debug|Win32.Build.0 = Debug|Win32
+		{59075FDD-68CD-4F1A-948B-46D142800798}.Release|Win32.ActiveCfg = Release|Win32
+		{59075FDD-68CD-4F1A-948B-46D142800798}.Release|Win32.Build.0 = Release|Win32
+		{09F68B62-1D4C-4C24-A6AD-AA76A9F3237C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{09F68B62-1D4C-4C24-A6AD-AA76A9F3237C}.Debug|Win32.Build.0 = Debug|Win32
+		{09F68B62-1D4C-4C24-A6AD-AA76A9F3237C}.Release|Win32.ActiveCfg = Release|Win32
+		{09F68B62-1D4C-4C24-A6AD-AA76A9F3237C}.Release|Win32.Build.0 = Release|Win32
+		{F41F3034-3E0B-4630-8D1E-35E14C606863}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F41F3034-3E0B-4630-8D1E-35E14C606863}.Debug|Win32.Build.0 = Debug|Win32
+		{F41F3034-3E0B-4630-8D1E-35E14C606863}.Release|Win32.ActiveCfg = Release|Win32
+		{F41F3034-3E0B-4630-8D1E-35E14C606863}.Release|Win32.Build.0 = Release|Win32
+		{BA78B4B4-3268-483E-9676-911E29FD2C69}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BA78B4B4-3268-483E-9676-911E29FD2C69}.Debug|Win32.Build.0 = Debug|Win32
+		{BA78B4B4-3268-483E-9676-911E29FD2C69}.Release|Win32.ActiveCfg = Release|Win32
+		{BA78B4B4-3268-483E-9676-911E29FD2C69}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
