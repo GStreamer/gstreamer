@@ -317,6 +317,8 @@ gst_v4l2_transform_decide_allocation (GstBaseTransform * trans,
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
   gboolean ret = FALSE;
 
+  GST_DEBUG_OBJECT (self, "called");
+
   if (gst_v4l2_object_decide_allocation (self->v4l2capture, query)) {
     GstBufferPool *pool = GST_BUFFER_POOL (self->v4l2capture->pool);
 
@@ -341,6 +343,8 @@ gst_v4l2_transform_propose_allocation (GstBaseTransform * trans,
 {
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
   gboolean ret = FALSE;
+
+  GST_DEBUG_OBJECT (self, "called");
 
   if (decide_query == NULL)
     ret = TRUE;
@@ -470,7 +474,7 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
   }
 
   GST_DEBUG_OBJECT (self, "Queue input buffer");
-  ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool), inbuf);
+  ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool), &inbuf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
 
@@ -487,7 +491,7 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
     goto alloc_failed;
 
   pool = self->v4l2capture->pool;
-  ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool), *outbuf);
+  ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool), outbuf);
 
   if (ret != GST_FLOW_OK) {
     gst_buffer_unref (*outbuf);
