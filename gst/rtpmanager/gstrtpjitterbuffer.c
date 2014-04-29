@@ -1354,6 +1354,7 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   RTPJitterBufferItem *item;
+  gboolean head;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -1387,8 +1388,9 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
 
   GST_DEBUG_OBJECT (jitterbuffer, "adding event");
   item = alloc_item (event, ITEM_TYPE_EVENT, -1, -1, -1, 0, -1);
-  rtp_jitter_buffer_insert (priv->jbuf, item, NULL, NULL);
-  JBUF_SIGNAL_EVENT (priv);
+  rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL);
+  if (head)
+    JBUF_SIGNAL_EVENT (priv);
 
   return TRUE;
 
@@ -2076,7 +2078,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime dts, pts;
   guint64 latency_ts;
-  gboolean tail;
+  gboolean head;
   gint percent = -1;
   guint8 pt;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -2266,7 +2268,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
    * have a duplicate. */
   if (G_UNLIKELY (!rtp_jitter_buffer_insert (priv->jbuf, item,
-              &tail, &percent)))
+              &head, &percent)))
     goto duplicate;
 
   /* update timers */
@@ -2276,19 +2278,21 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   if (priv->last_sr)
     do_handle_sync (jitterbuffer);
 
-  /* signal addition of new buffer when the _loop is waiting. */
-  if (priv->active)
-    JBUF_SIGNAL_EVENT (priv);
+  if (head) {
+    /* signal addition of new buffer when the _loop is waiting. */
+    if (priv->active)
+      JBUF_SIGNAL_EVENT (priv);
 
-  /* let's unschedule and unblock any waiting buffers. We only want to do this
-   * when the tail buffer changed */
-  if (G_UNLIKELY (priv->clock_id && tail)) {
-    GST_DEBUG_OBJECT (jitterbuffer, "Unscheduling waiting new buffer");
-    unschedule_current_timer (jitterbuffer);
+    /* let's unschedule and unblock any waiting buffers. We only want to do this
+     * when the head buffer changed */
+    if (G_UNLIKELY (priv->clock_id)) {
+      GST_DEBUG_OBJECT (jitterbuffer, "Unscheduling waiting new buffer");
+      unschedule_current_timer (jitterbuffer);
+    }
   }
 
-  GST_DEBUG_OBJECT (jitterbuffer, "Pushed packet #%d, now %d packets, tail: %d",
-      seqnum, rtp_jitter_buffer_num_packets (priv->jbuf), tail);
+  GST_DEBUG_OBJECT (jitterbuffer, "Pushed packet #%d, now %d packets, head: %d",
+      seqnum, rtp_jitter_buffer_num_packets (priv->jbuf), head);
 
   msg = check_buffering_percent (jitterbuffer, percent);
 
@@ -2746,7 +2750,7 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstClockTime duration, timestamp;
   guint seqnum, lost_packets, num_rtx_retry;
-  gboolean late;
+  gboolean late, head;
   GstEvent *event;
   RTPJitterBufferItem *item;
 
@@ -2779,11 +2783,12 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
           "retry", G_TYPE_UINT, num_rtx_retry, NULL));
 
   item = alloc_item (event, ITEM_TYPE_LOST, -1, -1, seqnum, lost_packets, -1);
-  rtp_jitter_buffer_insert (priv->jbuf, item, NULL, NULL);
+  rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL);
 
   /* remove timer now */
   remove_timer (jitterbuffer, timer);
-  JBUF_SIGNAL_EVENT (priv);
+  if (head)
+    JBUF_SIGNAL_EVENT (priv);
 
   return TRUE;
 }
@@ -3215,14 +3220,16 @@ gst_rtp_jitter_buffer_sink_query (GstPad * pad, GstObject * parent,
     default:
       if (GST_QUERY_IS_SERIALIZED (query)) {
         RTPJitterBufferItem *item;
+        gboolean head;
 
         JBUF_LOCK_CHECK (priv, out_flushing);
         if (rtp_jitter_buffer_get_mode (priv->jbuf) !=
             RTP_JITTER_BUFFER_MODE_BUFFER) {
           GST_DEBUG_OBJECT (jitterbuffer, "adding serialized query");
           item = alloc_item (query, ITEM_TYPE_QUERY, -1, -1, -1, 0, -1);
-          rtp_jitter_buffer_insert (priv->jbuf, item, NULL, NULL);
-          JBUF_SIGNAL_EVENT (priv);
+          rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL);
+          if (head)
+            JBUF_SIGNAL_EVENT (priv);
           JBUF_WAIT_QUERY (priv, out_flushing);
           res = priv->last_query;
         } else {
