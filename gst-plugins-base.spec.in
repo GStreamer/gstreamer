@@ -234,6 +234,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/allocators.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstdmabuf.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-chroma.h
+%{_includedir}/gstreamer-%{majorminor}/gst/sdp/gstmikey.h
 %{_libdir}/girepository-1.0/GstAllocators-1.0.typelib
 %{_libdir}/libgstallocators-1.0.so
 %{_libdir}/pkgconfig/gstreamer-allocators-1.0.pc
