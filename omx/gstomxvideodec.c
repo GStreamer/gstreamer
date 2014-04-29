@@ -124,7 +124,12 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_decide_allocation);
 
   klass->cdata.type = GST_OMX_COMPONENT_TYPE_FILTER;
-  klass->cdata.default_src_template_caps = "video/x-raw, "
+  klass->cdata.default_src_template_caps =
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
+      GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
+      "RGBA") "; "
+#endif
+      "video/x-raw, "
       "width = " GST_VIDEO_SIZE_RANGE ", "
       "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE;
 }
@@ -921,11 +926,30 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
           GST_VIDEO_FORMAT_RGBA, port_def.format.video.nFrameWidth,
           port_def.format.video.nFrameHeight, self->input_state);
 
+      /* at this point state->caps is NULL */
+      if (state->caps)
+        gst_caps_unref (state->caps);
+      state->caps = gst_video_info_to_caps (&state->info);
+      gst_caps_set_features (state->caps, 0,
+          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE, NULL));
+
+      /* try to negotiate with caps feature */
       if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
-        gst_video_codec_state_unref (state);
-        GST_ERROR_OBJECT (self, "Failed to negotiate RGBA for EGLImage");
-        GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-        goto no_egl;
+
+        GST_DEBUG_OBJECT (self,
+            "Failed to negotiate with feature %s",
+            GST_CAPS_FEATURE_MEMORY_EGL_IMAGE);
+
+        if (state->caps)
+          gst_caps_replace (&state->caps, NULL);
+
+        /* fallback: try to use EGLImage even if it is not in the caps feature */
+        if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
+          gst_video_codec_state_unref (state);
+          GST_ERROR_OBJECT (self, "Failed to negotiate RGBA for EGLImage");
+          GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+          goto no_egl;
+        }
       }
 
       gst_video_codec_state_unref (state);
@@ -2371,6 +2395,8 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
     gst_query_parse_allocation (query, &caps, NULL);
     if (caps && gst_video_info_from_caps (&info, caps)
         && info.finfo->format == GST_VIDEO_FORMAT_RGBA) {
+      gboolean found = FALSE;
+      GstCapsFeatures *feature = gst_caps_get_features (caps, 0);
       /* Prefer an EGLImage allocator if available and we want to use it */
       n = gst_query_get_n_allocation_params (query);
       for (i = 0; i < n; i++) {
@@ -2381,11 +2407,20 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
         if (allocator
             && g_strcmp0 (allocator->mem_type,
                 GST_EGL_IMAGE_MEMORY_TYPE) == 0) {
+          found = TRUE;
           gst_query_set_nth_allocation_param (query, 0, allocator, &params);
           while (gst_query_get_n_allocation_params (query) > 1)
             gst_query_remove_nth_allocation_param (query, 1);
           break;
         }
+      }
+
+      /* if try to negotiate with caps feature memory:EGLImage
+       * and if allocator is not of type memory EGLImage then fails */
+      if (feature
+          && gst_caps_features_contains (feature,
+              GST_CAPS_FEATURE_MEMORY_EGL_IMAGE) && !found) {
+        return FALSE;
       }
     }
   }
