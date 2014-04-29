@@ -15,6 +15,7 @@ scenarios_DATA = simple_seeks.scenario \
                  force_key_unit.scenario\
                  seek_with_stop.scenario\
                  switch_audio_track_while_paused.scenario\
+                 switch_subtitle_track.scenario\
                  switch_audio_track.scenario
 
 EXTRA_DIST = simple_seeks.scenario \
@@ -33,4 +34,5 @@ EXTRA_DIST = simple_seeks.scenario \
              force_key_unit.scenario\
              seek_with_stop.scenario\
              switch_audio_track_while_paused.scenario\
+             switch_subtitle_track.scenario\
              switch_audio_track.scenario

@@ -62,13 +62,13 @@ class MediaDescriptor(Loggable):
                 return True
         return False
 
-    def get_num_audio_tracks(self):
-        naudio = 0
+    def get_num_tracks(self, track_type):
+        n = 0
         for stream in self.media_xml.findall("streams")[0].findall("stream"):
-            if stream.attrib["type"] == "audio":
-                naudio += 1
+            if stream.attrib["type"] == track_type:
+                n += 1
 
-        return naudio
+        return n
 
     def is_compatible(self, scenario):
         if scenario.seeks() and (not self.is_seekable() or self.is_image()):
@@ -76,11 +76,13 @@ class MediaDescriptor(Loggable):
                        scenario, self.get_uri())
             return False
 
-        if self.get_num_audio_tracks() < scenario.get_min_audio_tracks():
-            self.debug("%s -- %s | At least %s audio track needed  < %s"
-                       % (scenario, self.get_uri(),
-                          scenario.get_min_audio_tracks(), self.get_num_audio_tracks()))
-            return False
+        for track_type in ['audio', 'subtitle']:
+            if self.get_num_tracks(track_type) < scenario.get_min_tracks(track_type):
+                self.debug("%s -- %s | At least %s %s track needed  < %s"
+                           % (scenario, self.get_uri(), track_type,
+                              scenario.get_min_tracks(track_type),
+                              self.get_num_tracks(track_type)))
+                return False
 
         return True
 
@@ -155,6 +157,7 @@ G_V_SCENARIOS = {Protocols.FILE: ["play_15s",
                                   "seek_with_stop",
                                   "switch_audio_track",
                                   "switch_audio_track_while_paused",
+                                  "switch_subtitle_track",
                                   "scrub_forward_seeking"],
                  Protocols.HTTP: ["play_15s",
                                   "fast_forward",
@@ -163,6 +166,7 @@ G_V_SCENARIOS = {Protocols.FILE: ["play_15s",
                                   "seek_with_stop",
                                   "switch_audio_track",
                                   "switch_audio_track_while_paused",
+                                  "switch_subtitle_track",
                                   "reverse_playback"],
                  Protocols.HLS: ["play_15s",
                                  "fast_forward",
@@ -170,6 +174,7 @@ G_V_SCENARIOS = {Protocols.FILE: ["play_15s",
                                  "seek_with_stop",
                                   "switch_audio_track",
                                   "switch_audio_track_while_paused",
+                                  "switch_subtitle_track",
                                  "seek_backward"],
                  }
 

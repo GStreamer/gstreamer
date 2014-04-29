@@ -678,11 +678,14 @@ class Scenario(object):
         if hasattr(self, "reverse_playback"):
             return bool(self.seek)
 
+        return False
 
-    def get_min_audio_tracks(self):
-        if hasattr(self, "min_audio_track"):
-            return int(self.min_audio_track)
-        return 0
+
+    def get_min_tracks(self, track_type):
+        try:
+            return int(getattr(self, "min_%s_track" % track_type))
+        except AttributeError:
+            return 0
 
 
 class ScenarioManager(Loggable):
