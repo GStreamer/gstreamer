@@ -943,7 +943,12 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_EOS:
       if (demux->current_key)
         gst_hls_demux_decrypt_end (demux);
-      /* TODO adapter should be empty */
+
+      /* ideally this should be empty, but this eos might have been
+       * caused by an error on the source element */
+      GST_DEBUG_OBJECT (demux, "Data still on the adapter when EOS was received"
+          ": %" G_GSIZE_FORMAT, gst_adapter_available (demux->adapter));
+      gst_adapter_clear (demux->adapter);
 
       /* pending buffer is only used for encrypted streams */
       if (demux->pending_buffer) {
