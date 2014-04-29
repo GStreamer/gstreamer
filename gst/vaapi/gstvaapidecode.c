@@ -633,9 +633,11 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
         decode->decoder = gst_vaapi_decoder_jpeg_new(dpy, caps);
         break;
 #endif
+#if USE_VP8_DECODER
     case GST_VAAPI_CODEC_VP8:
         decode->decoder = gst_vaapi_decoder_vp8_new(dpy, caps);
         break;
+#endif
     default:
         decode->decoder = NULL;
         break;

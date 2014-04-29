@@ -701,6 +701,12 @@ AC_CACHE_CHECK([for JPEG decoding API],
     LIBS="$saved_LIBS"
 ])
 
+dnl Check for va_dec_vp8.h header
+saved_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+AC_CHECK_HEADERS([va/va_dec_vp8.h], [], [], [#include <va/va.h>])
+CPPFLAGS="$saved_CPPFLAGS"
+
 dnl Check for VP8 decoding API (0.34+)
 USE_VP8_DECODER=0
 AC_CACHE_CHECK([for VP8 decoding API],
@@ -712,12 +718,16 @@ AC_CACHE_CHECK([for VP8 decoding API],
     AC_COMPILE_IFELSE(
         [AC_LANG_PROGRAM(
             [[#include <va/va.h>
+              #ifdef HAVE_VA_VA_DEC_VP8_H
               #include <va/va_dec_vp8.h>
+              #endif
             ]],
             [[VAPictureParameterBufferVP8 pic_param;
               VASliceParameterBufferVP8 slice_param;
               VAProbabilityDataBufferVP8 prob_data;
-              VAIQMatrixBufferVP8 iq_matrix;]])],
+              VAIQMatrixBufferVP8 iq_matrix;
+              slice_param.slice_data_offset = 0;
+              slice_param.slice_data_flag = 0;]])],
         [ac_cv_have_vp8_decoding_api="yes" USE_VP8_DECODER=1],
         [ac_cv_have_vp8_decoding_api="no"]
     )
@@ -799,7 +809,7 @@ AC_DEFINE_UNQUOTED(USE_JPEG_DECODER, $USE_JPEG_DECODER,
 AM_CONDITIONAL(USE_JPEG_DECODER, test $USE_JPEG_DECODER -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_VP8_DECODER, $USE_VP8_DECODER,
-    [Defined to 1 if JPEG decoder is used])
+    [Defined to 1 if VP8 decoder is used])
 AM_CONDITIONAL(USE_VP8_DECODER, test $USE_VP8_DECODER -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_DRM, $USE_DRM,

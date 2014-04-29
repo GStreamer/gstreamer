@@ -56,7 +56,6 @@ libgstvaapi_source_c =				\
 	gstvaapidecoder_objects.c		\
 	gstvaapidecoder_unit.c			\
 	gstvaapidecoder_vc1.c			\
-	gstvaapidecoder_vp8.c			\
 	gstvaapidisplay.c			\
 	gstvaapidisplaycache.c			\
 	gstvaapifilter.c			\
@@ -87,7 +86,6 @@ libgstvaapi_source_h =				\
 	gstvaapidecoder_mpeg2.h			\
 	gstvaapidecoder_mpeg4.h			\
 	gstvaapidecoder_vc1.h			\
-	gstvaapidecoder_vp8.h			\
 	gstvaapidisplay.h			\
 	gstvaapifilter.h			\
 	gstvaapiimage.h				\
@@ -146,6 +144,13 @@ libgstvaapi_jpegdec_source_h = gstvaapidecoder_jpeg.h
 if USE_JPEG_DECODER
 libgstvaapi_source_c += $(libgstvaapi_jpegdec_source_c)
 libgstvaapi_source_h += $(libgstvaapi_jpegdec_source_h)
+endif
+
+libgstvaapi_vp8dec_source_c = gstvaapidecoder_vp8.c
+libgstvaapi_vp8dec_source_h = gstvaapidecoder_vp8.h
+if USE_VP8_DECODER
+libgstvaapi_source_c += $(libgstvaapi_vp8dec_source_c)
+libgstvaapi_source_h += $(libgstvaapi_vp8dec_source_h)
 endif
 
 libgstvaapi_enc_source_c =			\
@@ -472,6 +477,8 @@ EXTRA_DIST += \
 	$(libgstvaapi_enc_source_priv_h)	\
 	$(libgstvaapi_jpegdec_source_c)		\
 	$(libgstvaapi_jpegdec_source_h)		\
+	$(libgstvaapi_vp8dec_source_c)		\
+	$(libgstvaapi_vp8dec_source_h)		\
 	$(NULL)
 
 CLEANFILES = \
