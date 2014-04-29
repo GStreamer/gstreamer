@@ -49,6 +49,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_HLS_DEMUX))
 #define GST_HLS_DEMUX_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_HLS_DEMUX,GstHLSDemuxClass))
+#define GST_HLS_DEMUX_CAST(obj) \
+  ((GstHLSDemux *)obj)
 typedef struct _GstHLSDemux GstHLSDemux;
 typedef struct _GstHLSDemuxClass GstHLSDemuxClass;
 
@@ -121,6 +123,7 @@ struct _GstHLSDemux
   gint64 download_start_time;
   gint64 download_total_time;
   gint64 download_total_bytes;
+  GstFlowReturn last_ret;
 
   /* decryption tooling */
 #ifdef HAVE_NETTLE

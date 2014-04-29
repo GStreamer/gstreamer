@@ -83,6 +83,8 @@ static void gst_hls_demux_dispose (GObject * obj);
 static GstStateChangeReturn
 gst_hls_demux_change_state (GstElement * element, GstStateChange transition);
 
+static void gst_hls_demux_handle_message (GstBin * bin, GstMessage * msg);
+
 /* GstHLSDemux */
 static GstFlowReturn gst_hls_demux_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
@@ -157,9 +159,11 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
+  GstBinClass *bin_class;
 
   gobject_class = (GObjectClass *) klass;
   element_class = (GstElementClass *) klass;
+  bin_class = (GstBinClass *) klass;
 
   gobject_class->set_property = gst_hls_demux_set_property;
   gobject_class->get_property = gst_hls_demux_get_property;
@@ -199,6 +203,8 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
       "HTTP Live Streaming demuxer",
       "Marc-Andre Lureau <marcandre.lureau@gmail.com>\n"
       "Andoni Morales Alastruey <ylatuya@gmail.com>");
+
+  bin_class->handle_message = gst_hls_demux_handle_message;
 
   GST_DEBUG_CATEGORY_INIT (gst_hls_demux_debug, "hlsdemux", 0,
       "hlsdemux element");
@@ -325,6 +331,41 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return ret;
+}
+
+static void
+gst_hls_demux_handle_message (GstBin * bin, GstMessage * msg)
+{
+  GstHLSDemux *demux = GST_HLS_DEMUX_CAST (bin);
+
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_ERROR:{
+      GError *err = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_error (msg, &err, &debug);
+
+      GST_WARNING_OBJECT (demux, "Source posted error: %d:%d %s (%s)",
+          err->domain, err->code, err->message, debug);
+
+      /* error, but ask to retry */
+      g_mutex_lock (&demux->fragment_download_lock);
+      demux->last_ret = GST_FLOW_CUSTOM_ERROR;
+      g_cond_signal (&demux->fragment_download_cond);
+      g_mutex_unlock (&demux->fragment_download_lock);
+
+      g_error_free (err);
+      g_free (debug);
+      gst_message_unref (msg);
+      msg = NULL;
+    }
+      break;
+    default:
+      break;
+  }
+
+  if (msg)
+    GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
 }
 
 static gboolean
@@ -790,6 +831,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           ("decryption failed %s", err->message));
       g_error_free (err);
 
+      demux->last_ret = GST_FLOW_ERROR;
       return GST_FLOW_ERROR;
     }
 
@@ -824,6 +866,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
           ("Could not determine type of stream"), (NULL));
       gst_buffer_unref (buffer);
+      demux->last_ret = GST_FLOW_NOT_NEGOTIATED;
       return GST_FLOW_NOT_NEGOTIATED;
     }
 
@@ -848,10 +891,6 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   demux->starting_fragment = FALSE;
 
   demux->segment.position = GST_BUFFER_TIMESTAMP (buffer);
-#if 0
-  if (demux->segment.rate > 0)
-    demux->segment.position += GST_BUFFER_DURATION (buf);
-#endif
 
   if (demux->need_segment) {
     /* And send a newsegment */
@@ -882,12 +921,14 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   /* avoid having the source handle the same error again */
+  demux->last_ret = ret;
   ret = GST_FLOW_OK;
 
   return ret;
 
 key_failed:
   /* TODO ERROR here */
+  demux->last_ret = GST_FLOW_ERROR;
   return GST_FLOW_ERROR;
 }
 
@@ -924,9 +965,11 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         demux->pending_buffer = NULL;
       }
 
-      if (demux->segment.rate > 0)
-        demux->segment.position += demux->current_duration;
+      GST_DEBUG_OBJECT (demux, "Fragment download finished");
+
+      g_mutex_lock (&demux->fragment_download_lock);
       g_cond_signal (&demux->fragment_download_cond);
+      g_mutex_unlock (&demux->fragment_download_lock);
       break;
     default:
       break;
@@ -1849,9 +1892,20 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
 
   /* wait for the fragment to be completely downloaded */
   g_cond_wait (&demux->fragment_download_cond, &demux->fragment_download_lock);
-
-  gst_element_set_state (demux->src, GST_STATE_READY);
   g_mutex_unlock (&demux->fragment_download_lock);
+
+  if (demux->last_ret != GST_FLOW_OK) {
+    gst_element_set_state (demux->src, GST_STATE_NULL);
+    *err = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Failed to download fragment");
+  } else {
+    gst_element_set_state (demux->src, GST_STATE_READY);
+    if (demux->segment.rate > 0)
+      demux->segment.position += demux->current_duration;
+  }
+
+  if (demux->last_ret != GST_FLOW_OK)
+    return FALSE;
 
   return TRUE;
 }
