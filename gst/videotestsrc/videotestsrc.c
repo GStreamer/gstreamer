@@ -1134,9 +1134,9 @@ paint_tmpline_AYUV (paintinfo * p, int x, int w)
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   value = (p->color->A << 0) | (p->color->Y << 8) |
-      (p->color->U << 16) | (p->color->V << 24);
+      (p->color->U << 16) | ((guint32) p->color->V << 24);
 #else
-  value = (p->color->A << 24) | (p->color->Y << 16) |
+  value = ((guint32) p->color->A << 24) | (p->color->Y << 16) |
       (p->color->U << 8) | (p->color->V << 0);
 #endif
 
