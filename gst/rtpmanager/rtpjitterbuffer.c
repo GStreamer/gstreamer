@@ -626,23 +626,20 @@ queue_do_insert (RTPJitterBuffer * jbuf, GList * list, GList * item)
 {
   GQueue *queue = jbuf->packets;
 
-  /* It's more likely that the packet was inserted in the front of the buffer */
+  /* It's more likely that the packet was inserted at the tail of the queue */
   if (G_LIKELY (list)) {
-    item->prev = list->prev;
-    item->next = list;
-    list->prev = item;
-    if (item->prev) {
-      item->prev->next = item;
-    } else {
-      queue->head = item;
-    }
+    item->prev = list;
+    item->next = list->next;
+    list->next = item;
   } else {
-    queue->tail = g_list_concat (queue->tail, item);
-    if (queue->tail->next)
-      queue->tail = queue->tail->next;
-    else
-      queue->head = queue->tail;
+    item->prev = NULL;
+    item->next = queue->head;
+    queue->head = item;
   }
+  if (item->next)
+    item->next->prev = item;
+  else
+    queue->tail = item;
   queue->length++;
 }
 
@@ -650,20 +647,24 @@ queue_do_insert (RTPJitterBuffer * jbuf, GList * list, GList * item)
  * rtp_jitter_buffer_insert:
  * @jbuf: an #RTPJitterBuffer
  * @item: an #RTPJitterBufferItem to insert
- * @tail: TRUE when the tail element changed.
+ * @head: TRUE when the head element changed.
  * @percent: the buffering percent after insertion
  *
  * Inserts @item into the packet queue of @jbuf. The sequence number of the
  * packet will be used to sort the packets. This function takes ownerhip of
  * @buf when the function returns %TRUE.
  *
+ * When @head is %TRUE, the new packet was added at the head of the queue and
+ * will be available with the next call to rtp_jitter_buffer_pop() and
+ * rtp_jitter_buffer_peek().
+ *
  * Returns: %FALSE if a packet with the same number already existed.
  */
 gboolean
 rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
-    gboolean * tail, gint * percent)
+    gboolean * head, gint * percent)
 {
-  GList *list = NULL;
+  GList *list;
   guint32 rtptime;
   guint16 seqnum;
   GstClockTime dts;
@@ -671,21 +672,22 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
   g_return_val_if_fail (jbuf != NULL, FALSE);
   g_return_val_if_fail (item != NULL, FALSE);
 
+  list = jbuf->packets->tail;
+
   /* no seqnum, simply append then */
-  if (item->seqnum == -1) {
+  if (item->seqnum == -1)
     goto append;
-  }
 
   seqnum = item->seqnum;
 
-  /* loop the list to skip strictly smaller seqnum buffers */
-  for (list = jbuf->packets->head; list; list = g_list_next (list)) {
+  /* loop the list to skip strictly larger seqnum buffers */
+  for (; list; list = g_list_previous (list)) {
     guint16 qseq;
     gint gap;
     RTPJitterBufferItem *qitem = (RTPJitterBufferItem *) list;
 
     if (qitem->seqnum == -1)
-      continue;
+      break;
 
     qseq = qitem->seqnum;
 
@@ -696,8 +698,8 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     if (G_UNLIKELY (gap == 0))
       goto duplicate;
 
-    /* seqnum < qseq, we can stop looking */
-    if (G_LIKELY (gap > 0))
+    /* seqnum > qseq, we can stop looking */
+    if (G_LIKELY (gap < 0))
       break;
   }
 
@@ -762,10 +764,10 @@ append:
   else if (percent)
     *percent = -1;
 
-  /* tail was changed when we did not find a previous packet, we set the return
+  /* head was changed when we did not find a previous packet, we set the return
    * flag when requested. */
-  if (G_LIKELY (tail))
-    *tail = (list == NULL);
+  if (G_LIKELY (head))
+    *head = (list == NULL);
 
   return TRUE;
 
@@ -821,9 +823,10 @@ rtp_jitter_buffer_pop (RTPJitterBuffer * jbuf, gint * percent)
  * rtp_jitter_buffer_peek:
  * @jbuf: an #RTPJitterBuffer
  *
- * Peek the oldest buffer from the packet queue of @jbuf. Register a callback
- * with rtp_jitter_buffer_set_tail_changed() to be notified when an older packet
- * was inserted in the queue.
+ * Peek the oldest buffer from the packet queue of @jbuf.
+ *
+ * See rtp_jitter_buffer_insert() to check when an older packet was
+ * added.
  *
  * Returns: a #GstBuffer or %NULL when there was no packet in the queue.
  */
