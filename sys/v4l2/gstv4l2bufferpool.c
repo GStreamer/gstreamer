@@ -194,14 +194,6 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
   if (!gst_v4l2_is_buffer_valid (dest, &group))
     goto not_our_buffer;
 
-  /* ensure we have a src */
-  if (src == NULL) {
-    g_return_val_if_fail (pool->other_pool != NULL, GST_FLOW_ERROR);
-    ret = gst_buffer_pool_acquire_buffer (pool->other_pool, &src, NULL);
-    if (ret != GST_FLOW_OK)
-      goto done;
-  }
-
   if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type))
     flags = GST_MAP_READ;
   else
@@ -241,7 +233,6 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
   gst_mini_object_set_qdata (GST_MINI_OBJECT (dest), GST_V4L2_IMPORT_QUARK,
       data, (GDestroyNotify) _unmap_userptr_frame);
 
-done:
   return ret;
 
 not_our_buffer:
