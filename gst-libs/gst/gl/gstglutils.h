@@ -25,6 +25,8 @@
 
 #include <gst/gl/gstgl_fwd.h>
 
+G_BEGIN_DECLS
+
 /**
  * GstGLContextProjection:
  *
@@ -110,5 +112,7 @@ gboolean gst_gl_handle_set_context (GstElement * element, GstContext * context,
     GstGLDisplay ** display);
 gboolean gst_gl_handle_context_query (GstElement * element, GstQuery * query, 
     GstGLDisplay ** display);
+
+G_END_DECLS
 
 #endif /* __GST_GL_UTILS_H__ */
