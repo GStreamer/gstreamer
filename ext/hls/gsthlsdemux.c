@@ -951,23 +951,28 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_adapter_clear (demux->adapter);
 
       /* pending buffer is only used for encrypted streams */
-      if (demux->pending_buffer) {
-        GstMapInfo info;
-        gsize unpadded_size;
+      if (demux->last_ret == GST_FLOW_OK) {
+        if (demux->pending_buffer) {
+          GstMapInfo info;
+          gsize unpadded_size;
 
-        /* Handle pkcs7 unpadding here */
-        gst_buffer_map (demux->pending_buffer, &info, GST_MAP_READ);
-        unpadded_size = info.size - info.data[info.size - 1];
-        gst_buffer_unmap (demux->pending_buffer, &info);
+          /* Handle pkcs7 unpadding here */
+          gst_buffer_map (demux->pending_buffer, &info, GST_MAP_READ);
+          unpadded_size = info.size - info.data[info.size - 1];
+          gst_buffer_unmap (demux->pending_buffer, &info);
 
-        gst_buffer_resize (demux->pending_buffer, 0, unpadded_size);
+          gst_buffer_resize (demux->pending_buffer, 0, unpadded_size);
 
-        /* TODO check return */
-        demux->download_total_time +=
-            g_get_monotonic_time () - demux->download_start_time;
-        demux->download_total_bytes +=
-            gst_buffer_get_size (demux->pending_buffer);
-        gst_pad_push (demux->srcpad, demux->pending_buffer);
+          demux->download_total_time +=
+              g_get_monotonic_time () - demux->download_start_time;
+          demux->download_total_bytes +=
+              gst_buffer_get_size (demux->pending_buffer);
+          demux->last_ret = gst_pad_push (demux->srcpad, demux->pending_buffer);
+
+          demux->pending_buffer = NULL;
+        }
+      } else {
+        gst_buffer_unref (demux->pending_buffer);
         demux->pending_buffer = NULL;
       }
 
