@@ -213,6 +213,10 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (CRITICAL, MISSING_PLUGIN,
       _("a gstreamer plugin is missing and prevented Validate from running"),
       NULL);
+  REGISTER_VALIDATE_ISSUE (WARNING, WARNING_ON_BUS,
+      _("We got a WARNING message on the bus"), NULL);
+  REGISTER_VALIDATE_ISSUE (CRITICAL, ERROR_ON_BUS,
+      _("We got an ERROR message on the bus"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, QUERY_POSITION_SUPERIOR_DURATION,
       _("Query position reported a value superior than what query duration "
           "returned"), NULL);

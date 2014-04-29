@@ -29,6 +29,8 @@
 #include "gst-validate-bin-monitor.h"
 #include "gst-validate-monitor-factory.h"
 
+#define PRINT_POSITION_TIMEOUT 250
+
 /**
  * SECTION:gst-validate-bin-monitor
  * @short_description: Class that wraps a #GstBin for Validate checks
@@ -120,14 +122,34 @@ print_position (GstValidateMonitor *monitor)
 }
 
 static void
+_bus_handler (GstBus * bus, GstMessage * message, GstValidateBinMonitor *monitor)
+{
+  GError *err;
+  gchar *debug;
+
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
+    gst_message_parse_error (message, &err, &debug);
+    GST_VALIDATE_REPORT (monitor, ERROR_ON_BUS,
+        "Got error: %s -- Debug message: %s", err->message, debug);
+    g_error_free (err);
+    g_free (debug);
+  } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING) {
+    gst_message_parse_warning (message, &err, &debug);
+    GST_VALIDATE_REPORT (monitor, WARNING_ON_BUS,
+        "Got warning: %s -- Debug message: %s", err->message, debug);
+    g_error_free (err);
+    g_free (debug);
+  }
+}
+
+static void
 gst_validate_bin_monitor_create_scenarios (GstValidateBinMonitor * monitor)
 {
-  /* scenarios currently only make sense for pipelines */
-  if (GST_IS_PIPELINE (GST_VALIDATE_MONITOR_GET_OBJECT (monitor))) {
-    const gchar *scenario_name;
+  GstElement *bin = GST_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
 
-    monitor->print_pos_srcid =
-        g_timeout_add (500, (GSourceFunc) print_position, monitor);
+  /* scenarios currently only make sense for pipelines */
+  if (GST_IS_PIPELINE (bin)) {
+    const gchar *scenario_name;
 
     if ((scenario_name = g_getenv ("GST_VALIDATE_SCENARIO"))) {
       gchar **scenario_v = g_strsplit (scenario_name, "->", 2);
@@ -171,6 +193,19 @@ gst_validate_bin_monitor_new (GstBin * bin, GstValidateRunner * runner,
   }
 
   gst_validate_bin_monitor_create_scenarios (monitor);
+
+  if (GST_IS_PIPELINE (bin)) {
+    GstBus *bus;
+
+    monitor->print_pos_srcid =
+        g_timeout_add (PRINT_POSITION_TIMEOUT, (GSourceFunc) print_position, monitor);
+
+    bus = gst_element_get_bus (GST_ELEMENT (bin));
+    gst_bus_enable_sync_message_emission(bus);
+    g_signal_connect (bus, "sync-message", (GCallback) _bus_handler, monitor);
+
+    gst_object_unref (bus);
+  }
 
   return monitor;
 }

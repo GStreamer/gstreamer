@@ -66,13 +66,6 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
     {
-      GError *err;
-      gchar *debug;
-      ret = -1;
-      gst_message_parse_error (message, &err, &debug);
-      g_print ("Error: %s -- Setting returncode to -1\n", err->message);
-      g_error_free (err);
-      g_free (debug);
       g_main_loop_quit (loop);
       break;
     }
