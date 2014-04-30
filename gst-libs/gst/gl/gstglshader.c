@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
+ * Copyright (C) 2014 Julien Isorce <julien.isorce@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,6 +25,29 @@
 
 #include "gl.h"
 #include "gstglshader.h"
+
+#if GST_GL_HAVE_GLES2
+/* *INDENT-OFF* */
+static const gchar *simple_vertex_shader_str_gles2 =
+      "attribute vec4 a_position;   \n"
+      "attribute vec2 a_texCoord;   \n"
+      "varying vec2 v_texCoord;     \n"
+      "void main()                  \n"
+      "{                            \n"
+      "   gl_Position = a_position; \n"
+      "   v_texCoord = a_texCoord;  \n"
+      "}                            \n";
+
+static const gchar *simple_fragment_shader_str_gles2 =
+      "precision mediump float;                            \n"
+      "varying vec2 v_texCoord;                            \n"
+      "uniform sampler2D tex;                              \n"
+      "void main()                                         \n"
+      "{                                                   \n"
+      "  gl_FragColor = texture2D( tex, v_texCoord );      \n"
+      "}                                                   \n";
+/* *INDENT-ON* */
+#endif
 
 #ifndef GL_COMPILE_STATUS
 #define GL_COMPILE_STATUS             0x8B81
@@ -574,6 +598,72 @@ gst_gl_shader_compile_and_check (GstGLShader * shader,
   }
   return TRUE;
 }
+
+gboolean
+gst_gl_shader_compile_all_with_attribs_and_check (GstGLShader * shader,
+    const gchar * v_src, const gchar * f_src, const gint n_attribs,
+    const gchar * attrib_names[], GLint attrib_locs[])
+{
+  gint i = 0;
+  GError *error = NULL;
+
+  gst_gl_shader_set_vertex_source (shader, v_src);
+  gst_gl_shader_set_fragment_source (shader, f_src);
+
+  gst_gl_shader_compile (shader, &error);
+  if (error) {
+    gst_gl_context_set_error (shader->context, "%s", error->message);
+    g_error_free (error);
+    gst_gl_context_clear_shader (shader->context);
+
+    return FALSE;
+  }
+
+  for (i = 0; i < n_attribs; i++)
+    attrib_locs[i] =
+        gst_gl_shader_get_attribute_location (shader, attrib_names[i]);
+
+  return TRUE;
+}
+
+#if GST_GL_HAVE_GLES2
+gboolean
+gst_gl_shader_compile_with_default_f_and_check (GstGLShader * shader,
+    const gchar * v_src, const gint n_attribs, const gchar * attrib_names[],
+    GLint attrib_locs[])
+{
+  return gst_gl_shader_compile_all_with_attribs_and_check (shader, v_src,
+      simple_fragment_shader_str_gles2, n_attribs, attrib_names, attrib_locs);
+}
+
+gboolean
+gst_gl_shader_compile_with_default_v_and_check (GstGLShader * shader,
+    const gchar * f_src, GLint * pos_loc, GLint * tex_loc)
+{
+  const gchar *attrib_names[2] = { "a_position", "a_texCoord" };
+  GLint attrib_locs[2] = { 0 };
+  gboolean ret = TRUE;
+
+  ret =
+      gst_gl_shader_compile_all_with_attribs_and_check (shader,
+      simple_vertex_shader_str_gles2, f_src, 2, attrib_names, attrib_locs);
+
+  if (ret) {
+    *pos_loc = attrib_locs[0];
+    *tex_loc = attrib_locs[1];
+  }
+
+  return ret;
+}
+
+gboolean
+gst_gl_shader_compile_with_default_vf_and_check (GstGLShader * shader,
+    GLint * pos_loc, GLint * tex_loc)
+{
+  return gst_gl_shader_compile_with_default_v_and_check (shader,
+      simple_fragment_shader_str_gles2, pos_loc, tex_loc);
+}
+#endif
 
 void
 gst_gl_shader_set_uniform_1f (GstGLShader * shader, const gchar * name,
