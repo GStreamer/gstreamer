@@ -204,6 +204,10 @@ G_V_BLACKLISTED_TESTS = \
   "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
  ("validate.http.playback.seek_with_stop.*mkv",
   "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
+ ("validate.*Sintel.*reverse.*mkv",
+  "TODO in matroskademux: FIXME: We should build an index during playback or "
+  "when scanning that can be used here. The reverse playback code requires "
+  " seek_index and seek_entry to be set!")
  ]
 
 class GstValidateLaunchTest(GstValidateTest):

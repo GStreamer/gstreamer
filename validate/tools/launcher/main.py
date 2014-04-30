@@ -91,7 +91,7 @@ def main():
     dir_group.add_option("-p", "--medias-paths", dest="paths", action="append",
                       default=None,
                       help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets/media")
-    dir_group.add_option("", "--clone-dir", dest="clone_dir",
+    dir_group.add_option("-a", "--clone-dir", dest="clone_dir",
                       default=None,
                       help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets")
     parser.add_option_group(dir_group)
