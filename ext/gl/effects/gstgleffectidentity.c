@@ -54,23 +54,14 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
       g_hash_table_insert (effects->shaderstable, (gchar *) "identity0",
           shader);
 
-      if (shader) {
-        GError *error = NULL;
-        gst_gl_shader_set_vertex_source (shader, vertex_shader_source);
-        gst_gl_shader_set_fragment_source (shader, identity_fragment_source);
-
-        gst_gl_shader_compile (shader, &error);
-        if (error) {
-          GST_ERROR ("%s", error->message);
-          g_error_free (error);
-          error = NULL;
-          gst_gl_shader_use (NULL);
-        } else {
-          filter->draw_attr_position_loc =
-              gst_gl_shader_get_attribute_location (shader, "a_position");
-          filter->draw_attr_texture_loc =
-              gst_gl_shader_get_attribute_location (shader, "a_texCoord");
-        }
+      if (!gst_gl_shader_compile_with_default_vf_and_check (shader,
+              &filter->draw_attr_position_loc,
+              &filter->draw_attr_texture_loc)) {
+        /* gst gl context error is already set */
+        GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+            ("Failed to initialize identity shader, %s",
+                gst_gl_context_get_error ()), (NULL));
+        return;
       }
     }
     gst_gl_shader_use (shader);
