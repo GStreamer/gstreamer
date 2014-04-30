@@ -222,7 +222,12 @@ _uri_missing_accumulator (GSignalInvocationHint * ihint, GValue * return_accu,
 {
   const gchar *ret = g_value_get_string (handler_return);
 
-  if (ret && gst_uri_is_valid (ret)) {
+  if (ret) {
+    if (!gst_uri_is_valid (ret)) {
+      GST_INFO ("The uri %s was not valid, can not work with it!", ret);
+      return TRUE;
+    }
+
     g_value_set_string (return_accu, ret);
     return FALSE;
   }
@@ -483,6 +488,8 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
       g_free (new_id);
       new_id = NULL;
     }
+  } else {
+    GST_DEBUG_OBJECT (project, "No new id found for %s", id);
   }
 
   g_hash_table_remove (project->priv->loading_assets, id);
