@@ -284,7 +284,8 @@ class GstValidateTest(Test):
 
     def build_arguments(self):
         if self.scenario is not None:
-            self.add_arguments("--set-scenario", self.scenario.name)
+            self.add_arguments("--set-scenario",
+                               self.scenario.get_execution_name())
 
     def get_extra_log_content(self, extralog):
         value = Test.get_extra_log_content(self, extralog)
@@ -662,11 +663,18 @@ class NamedDic(object):
                 setattr(self, name, value)
 
 class Scenario(object):
-    def __init__(self, name, props):
+    def __init__(self, name, props, path=None):
         self.name = name
+        self.path = path
 
         for prop, value in props:
             setattr(self, prop.replace("-", "_"), value)
+
+    def get_execution_name(self):
+        if self.path is not None:
+            return self.path
+        else:
+            return self.name
 
     def seeks(self):
         if hasattr(self, "seek"):
@@ -691,6 +699,8 @@ class Scenario(object):
 class ScenarioManager(Loggable):
     _instance = None
     all_scenarios = []
+
+    FILE_EXTENDION = "scenario"
     GST_VALIDATE_COMMAND = "gst-validate-1.0"
     if "win32" in sys.platform:
         GST_VALIDATE_COMMAND += ".exe"
@@ -705,12 +715,31 @@ class ScenarioManager(Loggable):
 
         return cls._instance
 
-    def _discover_scenarios(self):
+    def find_special_scenarios(self, mfile):
+        scenarios = []
+        mfile_bname = os.path.basename(mfile)
+        for f in os.listdir(os.path.dirname(mfile)):
+            if re.findall("%s\..*\.%s$" % (mfile_bname, self.FILE_EXTENDION),
+                          f):
+                scenarios.append(os.path.join(os.path.dirname(mfile), f))
+
+        if scenarios:
+            scenarios = self.discover_scenarios(scenarios, mfile)
+
+
+        return scenarios
+
+    def discover_scenarios(self, scenario_paths=[], mfile=None):
+        """
+        Discover scenarios specified in scenario_paths or the default ones
+        if nothing specified there
+        """
+        scenarios = []
         scenario_defs = os.path.join(self.config.main_dir, "scenarios.def")
         try:
-            subprocess.check_output([self.GST_VALIDATE_COMMAND,
-                                     "--scenarios-defs-output-file",
-                                     scenario_defs])
+            command = [self.GST_VALIDATE_COMMAND, "--scenarios-defs-output-file", scenario_defs]
+            command.extend(scenario_paths)
+            subprocess.check_output(command)
         except subprocess.CalledProcessError:
             pass
 
@@ -719,14 +748,28 @@ class ScenarioManager(Loggable):
         config.readfp(f)
 
         for section in config.sections():
-            self.all_scenarios.append(Scenario(section,
-                                               config.items(section)))
+            if scenario_paths:
+                for scenario_path in scenario_paths:
+                    if section in scenario_path:
+                        # The real name of the scenario is:
+                        # filename.REALNAME.scenario
+                        name = scenario_path.replace(mfile + ".", "").replace("." + self.FILE_EXTENDION, "")
+                        path = scenario_path
+            else:
+                name = section
+                path = None
 
-        self.discovered = True
+            scenarios.append(Scenario(name, config.items(section), path))
+
+        if not scenario_paths:
+            self.discovered = True
+            self.all_scenarios.extend(scenarios)
+
+        return scenarios
 
     def get_scenario(self, name):
         if self.discovered is False:
-            self._discover_scenarios()
+            self.discover_scenarios()
 
         if name is None:
             return self.all_scenarios

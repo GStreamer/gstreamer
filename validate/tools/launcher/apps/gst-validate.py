@@ -32,11 +32,19 @@ from utils import MediaFormatCombination, get_profile,\
 class MediaDescriptor(Loggable):
     def __init__(self, xml_path):
         Loggable.__init__(self)
+        self._xml_path = xml_path
         self.media_xml = ET.parse(xml_path).getroot()
 
         # Sanity checks
         self.media_xml.attrib["duration"]
         self.media_xml.attrib["seekable"]
+
+    def get_media_filepath(self):
+        if self.get_protocol() == Protocols.FILE:
+            return self._xml_path.replace("." + G_V_MEDIA_INFO_EXT, "")
+        else:
+            return self._xml_path.replace("." + G_V_STREAM_INFO_EXT, "")
+
 
     def get_caps(self):
         return self.media_xml.findall("streams")[0].attrib["caps"]
@@ -362,7 +370,7 @@ class GstValidateManager(TestsManager, Loggable):
         for test_pipeline in G_V_PLAYBACK_TESTS:
             self._add_playback_test(test_pipeline)
 
-        for uri, mediainfo in self._list_uris():
+        for uri, mediainfo, special_scenarios in self._list_uris():
             protocol = mediainfo.media_descriptor.get_protocol()
             try:
                 timeout = G_V_PROTOCOL_TIMEOUTS[protocol]
@@ -379,7 +387,7 @@ class GstValidateManager(TestsManager, Loggable):
                                                     mediainfo.path,
                                                     timeout=timeout))
 
-        for uri, mediainfo in self._list_uris():
+        for uri, mediainfo, special_scenarios in self._list_uris():
             if mediainfo.media_descriptor.is_image():
                 continue
             for comb in G_V_ENCODING_TARGET_COMBINATIONS:
@@ -407,9 +415,13 @@ class GstValidateManager(TestsManager, Loggable):
                 if caps2 == caps:
                     media_descriptor.set_protocol(prot)
                     break
+
+            scenario_bname = media_descriptor.get_media_filepath()
+            special_scenarios = self._scenarios.find_special_scenarios(scenario_bname)
             self._uris.append((uri,
                                NamedDic({"path": media_info,
-                                         "media_descriptor": media_descriptor})))
+                                         "media_descriptor": media_descriptor}),
+                               special_scenarios))
         except ConfigParser.NoOptionError as e:
             self.debug("Exception: %s for %s", e, media_info)
 
@@ -450,7 +462,9 @@ class GstValidateManager(TestsManager, Loggable):
                 for root, dirs, files in os.walk(path):
                     for f in files:
                         fpath = os.path.join(path, root, f)
-                        if os.path.isdir(fpath) or fpath.endswith(G_V_MEDIA_INFO_EXT):
+                        if os.path.isdir(fpath) or \
+                                fpath.endswith(G_V_MEDIA_INFO_EXT) or\
+                                fpath.endswith(ScenarioManager.FILE_EXTENDION):
                             continue
                         else:
                             self._discover_file(path2url(fpath), fpath)
@@ -467,7 +481,7 @@ class GstValidateManager(TestsManager, Loggable):
 
     def _add_playback_test(self, pipe_descriptor):
         if pipe_descriptor.needs_uri():
-            for uri, minfo in self._list_uris():
+            for uri, minfo, special_scenarios in self._list_uris():
                 protocol = minfo.media_descriptor.get_protocol()
                 if self._run_defaults:
                     scenarios = [self._scenarios.get_scenario(scenario_name)
@@ -475,6 +489,7 @@ class GstValidateManager(TestsManager, Loggable):
                 else:
                     scenarios = self._scenarios.get_scenario(None)
 
+                scenarios.extend(special_scenarios)
                 for scenario in scenarios:
                     if not minfo.media_descriptor.is_compatible(scenario):
                         continue
