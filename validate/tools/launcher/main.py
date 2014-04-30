@@ -21,19 +21,133 @@ import sys
 import utils
 import urlparse
 import loggable
-from argparse import ArgumentParser
+import argparse
+import textwrap
+import reporters
+
 
 from httpserver import HTTPServer
 from baseclasses import _TestsLauncher, ScenarioManager
-from utils import printc, path2url, DEFAULT_MAIN_DIR, DEFAULT_GST_QA_ASSETS, launch_command, Colors
+from utils import printc, path2url, DEFAULT_MAIN_DIR, DEFAULT_GST_QA_ASSETS, launch_command, Colors, Protocols
 
+
+HELP = '''
+
+===============================================================================
+                       gst-validate-launcher
+===============================================================================
+
+1. Introduction
+----------------
+
+gst-validate-launcher is a test launcher tool, it has been designed to
+launch the various tools included in GstValidate running tests on real
+media files. This means that with gst-validate-launcher, you can launch
+many tests automatically in one simple command. It then permits to
+aggregate results and print them in a human readable way on stdout
+and serializing them in the following implemented formats:
+
+ * %s
+
+We support all the tools provided in GstValidate in the launcher, but
+we also support ges-launch when the GStreamer Editing Services have
+been compiled against GstValidate.
+
+2. Default test suite
+---------------------
+
+A default suite of tests is provided and you can run it pretty simply doing:
+
+.    $gst-validate-launch --sync
+
+That will download Gstreamer upstream default assets into the
+default folder (%s) and run all currently
+activated tests. Note that we use git-annex https://git-annex.branchable.com/ so
+you will need that tool to get started.
+
+3. Implement your own tests
+---------------------------
+
+To implement new tests, you will just need to set the media path using the
+--medias-paths argument. If you want to run all avalaible scenarios on all the
+file present in that folder, you should run the first time:
+
+.    $gst-validate-launch --medias-paths /path/to/media/files --generate-media-info
+
+That will generate the .media_info files that contain informations about the media
+files present in that folder. Those media_info file are simple XML file describing
+the topology of the media files. You should not reuse the --generate-media-info
+next times. The generated media files will be used as a reference for following
+runs. You might want to check that they contain the right informations yourself
+the first time.
+
+Those .media_info are the files that are used by gst-validate-launcher to know
+what media files can be used for the different scenarios. For example if a
+file is not seekable, seeking scenarios will not be run on it etc...
+
+3.1 Scenarios specific to a media file/stream:
+----------------------------------------------
+
+It is possible that some scenarios are very specific to one media file, in that case,
+the .scenario file should be present in the same folder as the .media_info file and
+be called similarly. For example for a file called /some/media/file.mp4, the media_info
+file will be called /some/media/file.mp4 and a scenario that will seek to a position that
+is known to fail would be called: /some/media/file.mp4.seek_to_failing_pos.scenario and
+gst-validate-launcher will run that scenario only on that media file.
+
+3.2 Test media accessible through other protocols:
+--------------------------------------------------
+
+Currently gst-validate-launcher supports the following protocols:
+
+  * %s
+
+It does not mean you can not test other protocols but it means that it has not been
+properly tested.
+
+To test medias that use those protocols, you should simply make sure that there
+is a media descriptor file with .stream_info as an extension in your --media-paths.
+You can generate such a file doing:
+
+.   $gst-validate-media-check-1.0 http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8 --output-file /somewhere/in/you/media/path/bipbop.stream_info
+
+Once this is done, gst-validate-launcher will run the scenarios on those media files the
+same way as if they were local files.
+
+
+4. Debug gst-validate-launcher execution
+----------------------------------------
+
+You can activate debug logs setting the environment variable GST_VALIDATE_LAUNCHER_DEBUG.
+It uses the same synthax as PITIVI_DEBUG (more information at:
+http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
+''' % ("\n  * ".join([reporter.name for reporter in
+                      utils.get_subclasses(reporters.Reporter, reporters.__dict__)]
+                     ),
+       DEFAULT_MAIN_DIR,
+       "\n  * ".join([getattr(Protocols, att) for att in
+                     dir(Protocols) if not att.startswith("_")]))
 
 QA_ASSETS = "gst-qa-assets"
 MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
 
+class Formatter(argparse.RawDescriptionHelpFormatter):
+    def _format_usage(self, usage, actions, groups, prefix):
+        pass
+
+class PrintUsage(argparse.Action):
+    def __init__(self, option_strings, dest=argparse.SUPPRESS, default=argparse.SUPPRESS, help=None):
+        super(PrintUsage, self).__init__( option_strings=option_strings, dest=dest,
+                                          default=default, nargs=0, help=help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print(HELP)
+        parser.exit()
+
 def main():
-    parser = ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=Formatter, prog='gst-validate-launcher',
+                                     description=HELP)
     parser.add_argument("-d", "--debug", dest="debug",
                       action="store_true",
                       default=False,
@@ -116,6 +230,8 @@ def main():
                             help="Url to the remote assets (default:%s)" % DEFAULT_GST_QA_ASSETS_REPO)
     assets_group.add_argument("-S", "--sync", dest="sync", action="store_true",
                             default=False, help="Synchronize asset repository")
+    assets_group.add_argument("--usage", dest="sync", action=PrintUsage,
+                            help="Print usage documentation")
 
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 

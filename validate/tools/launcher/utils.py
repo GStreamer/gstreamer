@@ -153,6 +153,17 @@ def touch(fname, times=None):
     with open(fname, 'a'):
         os.utime(fname, times)
 
+def get_subclasses(klass, env):
+    subclasses = []
+    for symb in env.iteritems():
+        try:
+            if issubclass(symb[1], klass) and not symb[1] is klass:
+                subclasses.append(symb[1])
+        except TypeError:
+            pass
+
+    return subclasses
+
 ##############################
 #    Encoding related utils  #
 ##############################

@@ -185,7 +185,18 @@ class GESTestsManager(TestsManager):
         except OSError as e:
             self.warning("Can not use ges-launch: %s" % e)
 
-    def add_options(self, group):
+    def add_options(self, parser):
+        group = parser.add_argument_group("GStreamer Editing Services specific option"
+                            " and behaviours",
+                            description="""
+The GStreamer Editing Services launcher will be usable only if GES has been compiled against GstValidate
+You can simply run scenarios specifying project as args. For example the following will run all available
+and activated scenarios on project.xges:
+
+    $gst-validate-launcher ges /some/ges/project.xges
+
+
+Available options:""")
         group.add_argument("-P", "--projects-paths", dest="projects_paths",
                          default=os.path.join(utils.DEFAULT_GST_QA_ASSETS,
                                               "ges-projects"),

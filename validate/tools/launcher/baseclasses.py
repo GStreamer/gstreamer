@@ -548,24 +548,13 @@ class _TestsLauncher(Loggable):
         self.wanted_tests_patterns = []
 
     def _list_testers(self):
-        def get_subclasses(c, env):
-            subclasses = []
-            for symb in env.iteritems():
-                try:
-                    if issubclass(symb[1], c) and not symb[1] is c:
-                        subclasses.append(symb[1])
-                except TypeError:
-                    pass
-
-            return subclasses
-
         env = globals().copy()
         d = os.path.dirname(__file__)
         for f in os.listdir(os.path.join(d, "apps")):
             if f.endswith(".py"):
                 execfile(os.path.join(d, "apps", f), env)
 
-        testers = [i() for i in get_subclasses(TestsManager, env)]
+        testers = [i() for i in utils.get_subclasses(TestsManager, env)]
         for tester in testers:
             if tester.init() is True:
                 self.testers.append(tester)
@@ -575,10 +564,7 @@ class _TestsLauncher(Loggable):
 
     def add_options(self, parser):
         for tester in self.testers:
-            group = parser.add_argument_group("%s options" % tester.name,
-                                "Options specific to the %s test manager"
-                                % tester.name)
-            tester.add_options(group)
+            tester.add_options(parser)
 
     def set_settings(self, options, args):
         self.reporter = reporters.XunitReporter(options)

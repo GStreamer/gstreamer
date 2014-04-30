@@ -364,8 +364,15 @@ class GstValidateManager(TestsManager, Loggable):
     def init(self):
         if which(GST_VALIDATE_COMMAND) and which(GST_VALIDATE_TRANSCODING_COMMAND):
             return True
-
         return False
+
+    def add_options(self, parser):
+        group = parser.add_argument_group("GstValidate tools specific options"
+                            " and behaviours",
+                            description="""
+When using --wanted-tests, all the scenarios can be used, even those which have
+not been tested and explicitely activated, in order to only use those, you should
+use --wanted-tests defaults_only""")
 
     def list_tests(self):
         if self.tests:
