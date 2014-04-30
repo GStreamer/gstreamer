@@ -79,7 +79,7 @@ gst_kate_spu_decode_pixaddr (GstKateEnc * ke, const guint8 * ptr)
 
 /* heavily inspired from dvdspudec */
 static guint16
-gst_kate_spu_decode_colcon (GstKateEnc * ke, const guint8 * ptr)
+gst_kate_spu_decode_colcon (GstKateEnc * ke, const guint8 * ptr, guint16 sz)
 {
   guint16 nbytes = GST_KATE_UINT16_BE (ptr + 0);
   guint16 nbytes_left = nbytes;
@@ -90,6 +90,12 @@ gst_kate_spu_decode_colcon (GstKateEnc * ke, const guint8 * ptr)
     GST_WARNING_OBJECT (ke,
         "Number of bytes in color/contrast change command is %u, should be at least 2",
         nbytes);
+    return 0;
+  }
+  if (G_UNLIKELY (nbytes > sz)) {
+    GST_WARNING_OBJECT (ke,
+        "Number of bytes in color/contrast change command is %u, but the buffer "
+        "only contains %u byte(s)", nbytes, sz);
     return 0;
   }
 
@@ -348,7 +354,7 @@ gst_kate_spu_decode_command_sequence (GstKateEnc * ke, GstBuffer * buf,
       case SPU_CMD_CHG_COLCON: /* 0x07 */
         GST_DEBUG_OBJECT (ke, "[7] CHANGE COLOR/CONTRAST");
         CHECK (2);
-        ADVANCE (gst_kate_spu_decode_colcon (ke, ptr));
+        ADVANCE (gst_kate_spu_decode_colcon (ke, ptr, sz));
         break;
       case SPU_CMD_END:        /* 0xff */
         GST_DEBUG_OBJECT (ke, "[0xff] END");
