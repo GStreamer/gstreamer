@@ -352,6 +352,11 @@ read_packet_header (GstRTCPPacket * packet)
   packet->item_count = 0;
   packet->entry_offset = 4;
 
+  /* Ensure no overread from the claimed data size. The packet length
+     is expressed in multiple of 32 bits, to make things obvious. */
+  if (offset + 4 + packet->length * 4 > maxsize)
+    return FALSE;
+
   return TRUE;
 }
 
