@@ -70,10 +70,17 @@ static void gst_gl_colorscale_set_property (GObject * object, guint prop_id,
 static void gst_gl_colorscale_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+#if GST_GL_HAVE_GLES2
+static gboolean gst_gl_colorscale_gen_gl_resources (GstGLFilter * filter);
+static void gst_gl_colorscale_del_gl_resources (GstGLFilter * filter);
+#endif
+
 static gboolean gst_gl_colorscale_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
+#if GST_GL_HAVE_OPENGL
 static void gst_gl_colorscale_callback (gint width, gint height,
     guint texture, gpointer stuff);
+#endif
 
 static void
 gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
@@ -93,12 +100,21 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
       "Filter/Effect/Video", "Colorspace converter and video scaler",
       "Julien Isorce <julien.isorce@gmail.com>");
 
+#if GST_GL_HAVE_GLES2
+  filter_class->onInitFBO =
+      GST_DEBUG_FUNCPTR (gst_gl_colorscale_gen_gl_resources);
+  filter_class->onStop = GST_DEBUG_FUNCPTR (gst_gl_colorscale_del_gl_resources);
+#endif
+
   filter_class->filter_texture = gst_gl_colorscale_filter_texture;
 }
 
 static void
 gst_gl_colorscale_init (GstGLColorscale * colorscale)
 {
+#if GST_GL_HAVE_GLES2
+  colorscale->shader = NULL;
+#endif
 }
 
 static void
@@ -123,6 +139,53 @@ gst_gl_colorscale_get_property (GObject * object, guint prop_id,
   }
 }
 
+#if GST_GL_HAVE_GLES2
+static void
+_compile_identity_shader (GstGLContext * context, GstGLColorscale * colorscale)
+{
+  GstGLFilter *filter = GST_GL_FILTER (colorscale);
+
+  colorscale->shader = gst_gl_shader_new (context);
+
+  if (!gst_gl_shader_compile_with_default_vf_and_check (colorscale->shader,
+          &filter->draw_attr_position_loc, &filter->draw_attr_texture_loc)) {
+    gst_gl_context_clear_shader (context);
+    gst_object_unref (colorscale->shader);
+    colorscale->shader = NULL;
+  }
+}
+
+static gboolean
+gst_gl_colorscale_gen_gl_resources (GstGLFilter * filter)
+{
+  GstGLColorscale *colorscale = GST_GL_COLORSCALE (filter);
+
+  gst_gl_context_thread_add (filter->context,
+      (GstGLContextThreadFunc) _compile_identity_shader, colorscale);
+
+  if (!colorscale->shader) {
+    gst_gl_context_set_error (filter->context,
+        "Failed to initialize identity shader");
+    GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND, ("%s",
+            gst_gl_context_get_error ()), (NULL));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+gst_gl_colorscale_del_gl_resources (GstGLFilter * filter)
+{
+  GstGLColorscale *colorscale = GST_GL_COLORSCALE (filter);
+
+  if (colorscale->shader) {
+    gst_gl_context_del_shader (filter->context, colorscale->shader);
+    colorscale->shader = NULL;
+  }
+}
+#endif
+
 static gboolean
 gst_gl_colorscale_filter_texture (GstGLFilter * filter, guint in_tex,
     guint out_tex)
@@ -131,26 +194,33 @@ gst_gl_colorscale_filter_texture (GstGLFilter * filter, guint in_tex,
 
   colorscale = GST_GL_COLORSCALE (filter);
 
+#if GST_GL_HAVE_GLES2
+  gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex, out_tex,
+      colorscale->shader);
+#endif
+
+#if GST_GL_HAVE_OPENGL
   gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
       gst_gl_colorscale_callback, colorscale);
+#endif
 
   return TRUE;
 }
 
+#if GST_GL_HAVE_OPENGL
 static void
 gst_gl_colorscale_callback (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
 
-#if GST_GL_HAVE_OPENGL
   if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
     const GstGLFuncs *gl = filter->context->gl_vtable;
 
     gl->MatrixMode (GL_PROJECTION);
     gl->LoadIdentity ();
   }
-#endif
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
+#endif
