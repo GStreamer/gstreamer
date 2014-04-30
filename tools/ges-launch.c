@@ -35,6 +35,7 @@
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
 static gboolean mute = FALSE;
+static gboolean disable_mixing = FALSE;
 static GESPipeline *pipeline = NULL;
 static gboolean seenerrors = FALSE;
 static gchar *save_path = NULL;
@@ -232,12 +233,18 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
 
   if (track_types & GES_TRACK_TYPE_AUDIO) {
     tracka = GES_TRACK (ges_audio_track_new ());
+    if (disable_mixing)
+      ges_track_set_mixing (tracka, FALSE);
+
     if (!(ges_timeline_add_track (timeline, tracka)))
       goto build_failure;
   }
 
   if (track_types & GES_TRACK_TYPE_VIDEO) {
     trackv = GES_TRACK (ges_video_track_new ());
+
+    if (disable_mixing)
+      ges_track_set_mixing (trackv, FALSE);
 
     if (!(ges_timeline_add_track (timeline, trackv)))
       goto build_failure;
@@ -691,6 +698,8 @@ main (int argc, gchar ** argv)
         "Defines the track types to be created"},
     {"mute", 0, 0, G_OPTION_ARG_NONE, &mute,
         "Mute playback output, which means that we use faksinks"},
+    {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &disable_mixing,
+        "Do not use mixing element in the tracks"},
 #ifdef HAVE_GST_VALIDATE
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &scenario,
         "Specify a GstValidate scenario to run, 'none' means load gst-validate"

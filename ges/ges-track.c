@@ -83,6 +83,7 @@ enum
   ARG_RESTRICTION_CAPS,
   ARG_TYPE,
   ARG_DURATION,
+  ARG_MIXING,
   ARG_LAST,
   TRACK_ELEMENT_ADDED,
   TRACK_ELEMENT_REMOVED,
@@ -386,6 +387,9 @@ ges_track_get_property (GObject * object, guint property_id,
     case ARG_RESTRICTION_CAPS:
       gst_value_set_caps (value, track->priv->restriction_caps);
       break;
+    case ARG_MIXING:
+      g_value_set_boolean (value, track->priv->mixing);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -406,6 +410,9 @@ ges_track_set_property (GObject * object, guint property_id,
       break;
     case ARG_RESTRICTION_CAPS:
       ges_track_set_restriction_caps (track, gst_value_get_caps (value));
+      break;
+    case ARG_MIXING:
+      ges_track_set_mixing (track, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -471,6 +478,7 @@ ges_track_constructed (GObject * object)
     gnlobject = gst_element_factory_make ("gnloperation", "mixing-operation");
     if (!gst_bin_add (GST_BIN (gnlobject), mixer)) {
       GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
+      gst_object_unref (gnlobject);
 
       return;
     }
@@ -561,6 +569,17 @@ ges_track_class_init (GESTrackClass * klass)
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
   g_object_class_install_property (object_class, ARG_TYPE,
       properties[ARG_TYPE]);
+
+  /**
+   * GESTrack:mixing:
+   *
+   * Whether layer mixing is activated or not on the track.
+   */
+  properties[ARG_MIXING] = g_param_spec_boolean ("mixing", "Mixing",
+      "Whether layer mixing is activated on the track or not",
+      TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+  g_object_class_install_property (object_class, ARG_MIXING,
+      properties[ARG_MIXING]);
 
   /**
    * GESTrack::track-element-added:
@@ -759,7 +778,7 @@ ges_track_set_mixing (GESTrack * track, gboolean mixing)
   }
 
   if (mixing) {
-    // increase ref count to hold the object
+    /* increase ref count to hold the object */
     gst_object_ref (track->priv->mixing_operation);
     if (!gst_bin_add (GST_BIN (track->priv->composition),
             track->priv->mixing_operation)) {
