@@ -144,6 +144,11 @@ gst_hls_demux_dispose (GObject * obj)
 
   gst_hls_demux_reset (demux, TRUE);
 
+  if (demux->src_srcpad) {
+    gst_object_unref (demux->src_srcpad);
+    demux->src_srcpad = NULL;
+  }
+
   g_mutex_clear (&demux->download_lock);
   g_cond_clear (&demux->download_cond);
   g_mutex_clear (&demux->updates_timed_lock);
@@ -1011,13 +1016,11 @@ switch_pads (GstHLSDemux * demux)
   GstEvent *event;
   gchar *stream_id;
   gchar *name;
-  GstPad *target;
   GstPadTemplate *tmpl;
   GstProxyPad *internal_pad;
 
   GST_DEBUG_OBJECT (demux, "Switching pad (oldpad:%p)", oldpad);
 
-  target = gst_element_get_static_pad (demux->src, "src");
   if (oldpad) {
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (oldpad), NULL);
   }
@@ -1025,10 +1028,10 @@ switch_pads (GstHLSDemux * demux)
   /* First create and activate new pad */
   name = g_strdup_printf ("src_%u", demux->srcpad_counter++);
   tmpl = gst_static_pad_template_get (&srctemplate);
-  demux->srcpad = gst_ghost_pad_new_from_template (name, target, tmpl);
+  demux->srcpad =
+      gst_ghost_pad_new_from_template (name, demux->src_srcpad, tmpl);
   gst_object_unref (tmpl);
   g_free (name);
-  gst_object_unref (target);
 
   /* set up our internal pad to drop all events from
    * the http src we don't care about. On the chain function
@@ -1799,9 +1802,11 @@ gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri,
     new_protocol = gst_uri_get_protocol (uri);
 
     if (!g_str_equal (old_protocol, new_protocol)) {
+      gst_object_unref (demux->src_srcpad);
       gst_element_set_state (demux->src, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (demux), demux->src);
       demux->src = NULL;
+      demux->src_srcpad = NULL;
       GST_DEBUG_OBJECT (demux, "Can't re-use old source element");
     } else {
       GError *err = NULL;
@@ -1852,6 +1857,7 @@ gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri,
 
     gst_element_set_locked_state (demux->src, TRUE);
     gst_bin_add (GST_BIN_CAST (demux), demux->src);
+    demux->src_srcpad = gst_element_get_static_pad (demux->src, "src");
   }
   return TRUE;
 }
@@ -1902,16 +1908,33 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
 
   if (gst_element_set_state (demux->src,
           GST_STATE_READY) != GST_STATE_CHANGE_FAILURE) {
-    gst_element_send_event (demux->src, gst_event_new_seek (1.0,
-            GST_FORMAT_BYTES, (GstSeekFlags) GST_SEEK_FLAG_FLUSH,
-            GST_SEEK_TYPE_SET, range_start, GST_SEEK_TYPE_SET, range_end));
+    if (range_start != 0 || range_end != -1) {
+      if (!gst_element_send_event (demux->src, gst_event_new_seek (1.0,
+                  GST_FORMAT_BYTES, (GstSeekFlags) GST_SEEK_FLAG_FLUSH,
+                  GST_SEEK_TYPE_SET, range_start, GST_SEEK_TYPE_SET,
+                  range_end))) {
 
-    demux->download_start_time = g_get_monotonic_time ();
-    gst_element_sync_state_with_parent (demux->src);
+        /* looks like the source can't handle seeks in READY */
+        *err = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_NOT_IMPLEMENTED,
+            "Source element can't handle range requests");
+        demux->last_ret = GST_FLOW_ERROR;
+      }
+    }
 
-    /* wait for the fragment to be completely downloaded */
-    g_cond_wait (&demux->fragment_download_cond,
-        &demux->fragment_download_lock);
+    if (G_LIKELY (demux->last_ret == GST_FLOW_OK)) {
+      /* flush the proxypads so that the EOS state is reset */
+      gst_pad_push_event (demux->src_srcpad, gst_event_new_flush_start ());
+      gst_pad_push_event (demux->src_srcpad, gst_event_new_flush_stop (TRUE));
+
+      demux->download_start_time = g_get_monotonic_time ();
+      gst_element_sync_state_with_parent (demux->src);
+
+      /* wait for the fragment to be completely downloaded */
+      GST_DEBUG_OBJECT (demux, "Waiting for fragment download to finish: %s",
+          next_fragment_uri);
+      g_cond_wait (&demux->fragment_download_cond,
+          &demux->fragment_download_lock);
+    }
   } else {
     demux->last_ret = GST_FLOW_CUSTOM_ERROR;
   }
@@ -1919,8 +1942,9 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
 
   if (demux->last_ret != GST_FLOW_OK) {
     gst_element_set_state (demux->src, GST_STATE_NULL);
-    *err = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-        "Failed to download fragment");
+    if (*err == NULL)
+      *err = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+          "Failed to download fragment");
   } else {
     gst_element_set_state (demux->src, GST_STATE_READY);
     if (demux->segment.rate > 0)
