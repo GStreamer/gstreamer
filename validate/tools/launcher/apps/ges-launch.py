@@ -74,7 +74,7 @@ class GESTest(GstValidateTest):
 
     def set_sample_paths(self):
         if not self.options.paths:
-            if not self.options.recurse_paths:
+            if self.options.disable_recurse:
                 return
             paths = [os.path.dirname(utils.url2path(self.project_uri))]
         else:
@@ -86,19 +86,10 @@ class GESTest(GstValidateTest):
         for path in paths:
             # We always want paths separator to be cut with '/' for ges-launch
             path = path.replace("\\", "/")
-            quote_uri(path)
-            if self.options.recurse_paths:
-                self.add_arguments("--sample-paths", path)
-                for root, dirs, files in os.walk(path):
-                    for directory in dirs:
-                        self.add_arguments("--sample-paths",
-                                           quote_uri(os.path.join(path,
-                                                                  root,
-                                                                  directory)
-                                                     )
-                                           )
+            if not self.options.disable_recurse:
+                self.add_arguments("--sample-path-recurse", quote_uri(path))
             else:
-                self.add_arguments("--sample-paths", utils.path2url(path))
+                self.add_arguments("--sample-path", quote_uri(path))
 
     def build_arguments(self):
         GstValidateTest.build_arguments(self)
@@ -201,7 +192,7 @@ Available options:""")
                          default=os.path.join(utils.DEFAULT_GST_QA_ASSETS,
                                               "ges-projects"),
                          help="Paths in which to look for moved medias")
-        group.add_argument("-r", "--recurse-paths", dest="recurse_paths",
+        group.add_argument("-r", "--disable-recurse-paths", dest="disable_recurse",
                          default=False, action="store_true",
                          help="Whether to recurse into paths to find medias")
 
