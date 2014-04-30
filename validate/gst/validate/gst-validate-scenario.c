@@ -1340,6 +1340,46 @@ _add_description (GQuark field_id, const GValue * value, KeyFileGroupName * kfg)
 }
 
 
+static gboolean
+_parse_scenario (GFile *f, GKeyFile * kf)
+{
+  gboolean ret = FALSE;
+  gchar *fname = g_file_get_basename (f);
+
+  if (g_str_has_suffix (fname, GST_VALIDATE_SCENARIO_SUFFIX)) {
+    GstStructure *desc = NULL;
+
+    gchar **name = g_strsplit (fname, GST_VALIDATE_SCENARIO_SUFFIX, 0);
+    GList *tmp, *structures = _scenario_file_get_structures (f);
+
+    for (tmp = structures; tmp; tmp = tmp->next) {
+      if (gst_structure_has_name (tmp->data, "description")) {
+        desc = tmp->data;
+        break;
+      }
+    }
+
+    if (desc) {
+      KeyFileGroupName kfg;
+
+      kfg.group_name = name[0];
+      kfg.kf = kf;
+
+      gst_structure_foreach (desc,
+          (GstStructureForeachFunc) _add_description, &kfg);
+    } else {
+      g_key_file_set_string (kf, name[0], "noinfo", "nothing");
+    }
+    g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
+    g_strfreev (name);
+
+    ret = TRUE;
+  }
+
+  g_free (fname);
+  return ret;
+}
+
 static void
 _list_scenarios_in_dir (GFile * dir, GKeyFile * kf)
 {
@@ -1354,49 +1394,23 @@ _list_scenarios_in_dir (GFile * dir, GKeyFile * kf)
 
   for (info = g_file_enumerator_next_file (fenum, NULL, NULL);
       info; info = g_file_enumerator_next_file (fenum, NULL, NULL)) {
-    if (g_str_has_suffix (g_file_info_get_name (info),
-            GST_VALIDATE_SCENARIO_SUFFIX)) {
-      gchar **name = g_strsplit (g_file_info_get_name (info),
-          GST_VALIDATE_SCENARIO_SUFFIX, 0);
+    GFile *f = g_file_enumerator_get_child (fenum, info);
 
-
-      GstStructure *desc = NULL;
-      GFile *f = g_file_enumerator_get_child (fenum, info);
-      GList *tmp, *structures = _scenario_file_get_structures (f);
-
-      gst_object_unref (f);
-      for (tmp = structures; tmp; tmp = tmp->next) {
-        if (gst_structure_has_name (tmp->data, "description")) {
-          desc = tmp->data;
-          break;
-        }
-      }
-
-      if (desc) {
-        KeyFileGroupName kfg;
-
-        kfg.group_name = name[0];
-        kfg.kf = kf;
-
-        gst_structure_foreach (desc,
-            (GstStructureForeachFunc) _add_description, &kfg);
-      } else {
-        g_key_file_set_string (kf, name[0], "noinfo", "nothing");
-      }
-      g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
-      g_strfreev (name);
-    }
+    _parse_scenario (f, kf);
+    gst_object_unref (f);
   }
 }
 
 gboolean
-gst_validate_list_scenarios (gchar * output_file)
+gst_validate_list_scenarios (gchar **scenarios, gint num_scenarios,
+    gchar * output_file)
 {
   gchar *result;
-
   gsize datalength;
+
   GError *err = NULL;
   GKeyFile *kf = NULL;
+  gint res = 0;
   const gchar *envvar;
   gchar **env_scenariodir = NULL;
   gchar *tldir = g_build_filename (g_get_user_data_dir (),
@@ -1404,11 +1418,28 @@ gst_validate_list_scenarios (gchar * output_file)
       NULL);
   GFile *dir = g_file_new_for_path (tldir);
 
+  kf = g_key_file_new ();
+  if (num_scenarios > 0) {
+    gint i;
+    GFile *file;
+
+    for (i = 0; i < num_scenarios; i++) {
+      file = g_file_new_for_path (scenarios[i]);
+      if (!_parse_scenario (file, kf)) {
+        GST_ERROR ("Could not parser scenario: %s", scenarios[i]);
+
+        gst_object_unref (file);
+        res = 1;
+      }
+    }
+
+    goto done;
+  }
+
   envvar = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
   if (envvar)
     env_scenariodir = g_strsplit (envvar, ":", 0);
 
-  kf = g_key_file_new ();
   _list_scenarios_in_dir (dir, kf);
   g_object_unref (dir);
   g_free (tldir);
@@ -1435,6 +1466,7 @@ gst_validate_list_scenarios (gchar * output_file)
   _list_scenarios_in_dir (dir, kf);
   g_object_unref (dir);
 
+done:
   result = g_key_file_to_data (kf, &datalength, &err);
   g_print ("All scenarios avalaible:\n%s", result);
 
@@ -1448,10 +1480,12 @@ gst_validate_list_scenarios (gchar * output_file)
     GST_WARNING ("Got error '%s' listing scenarios", err->message);
     g_clear_error (&err);
 
-    return FALSE;
+    res = FALSE;
   }
 
-  return TRUE;
+  g_key_file_free (kf);
+
+  return res;
 }
 
 static void

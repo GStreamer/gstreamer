@@ -76,7 +76,11 @@ GType gst_validate_scenario_get_type (void);
 GstValidateScenario * gst_validate_scenario_factory_create (GstValidateRunner *runner,
                                                 GstElement *pipeline,
                                                 const gchar *scenario_name);
-gboolean gst_validate_list_scenarios (gchar *output_file);
+gboolean
+gst_validate_list_scenarios       (gchar **scenarios,
+                                   gint num_scenarios,
+                                   gchar * output_file);
+
 void gst_validate_add_action_type (const gchar *type_name, GstValidateExecuteAction function,
                                    const gchar * const * mandatory_fields, const gchar *description,
                                    gboolean is_config);
