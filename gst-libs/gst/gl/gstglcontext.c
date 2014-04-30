@@ -412,17 +412,18 @@ gst_gl_context_default_get_proc_address (GstGLContext * context,
     const gchar * name)
 {
   gpointer ret = NULL;
+  static GModule *module = NULL;
 
-#ifdef USE_EGL_RPI
-
-  //FIXME: Can't understand why default does not work
-  // so for now retrieve proc addressed manually
-
+#if GST_GL_HAVE_PLATFORM_EGL
   static GModule *module_egl = NULL;
-  static GModule *module_glesv2 = NULL;
 
-  if (!module_egl)
-    module_egl = g_module_open ("/opt/vc/lib/libEGL.so", G_MODULE_BIND_LAZY);
+  if (!module_egl) {
+    module_egl = g_module_open ("libEGL.so.1", G_MODULE_BIND_LAZY);
+
+    /* fallback */
+    if (!module_egl)
+      module_egl = g_module_open (NULL, G_MODULE_BIND_LAZY);
+  }
 
   if (module_egl) {
     if (!g_module_symbol (module_egl, name, &ret)) {
@@ -432,28 +433,25 @@ gst_gl_context_default_get_proc_address (GstGLContext * context,
 
   if (ret)
     return ret;
+#endif
 
-  if (!module_glesv2)
-    module_glesv2 =
-        g_module_open ("/opt/vc/lib/libGLESv2.so", G_MODULE_BIND_LAZY);
+  if (!module) {
+    const gchar *name = NULL;
+#if GST_GL_HAVE_GLES2
+    name = "libGLESv2.so.2";
+#endif
+    module = g_module_open (name, G_MODULE_BIND_LAZY);
 
-  if (module_glesv2) {
-    if (!g_module_symbol (module_glesv2, name, &ret)) {
-      return NULL;
-    }
+    /* fallback */
+    if (!module)
+      module = g_module_open (NULL, G_MODULE_BIND_LAZY);
   }
-#else
-  static GModule *module = NULL;
-
-  if (!module)
-    module = g_module_open (NULL, G_MODULE_BIND_LAZY);
 
   if (module) {
     if (!g_module_symbol (module, name, &ret)) {
       return NULL;
     }
   }
-#endif
 
   return ret;
 }
