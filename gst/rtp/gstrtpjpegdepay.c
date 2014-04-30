@@ -665,6 +665,12 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           goto no_qtable;
       }
     }
+
+    /* I think we can get here with a NULL qtable, so make sure we don't
+       go dereferencing it in MakeHeaders if we do */
+    if (!qtable)
+      goto no_qtable;
+
     /* max header length, should be big enough */
     outbuf = gst_buffer_new_and_alloc (1000);
     gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
