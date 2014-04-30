@@ -2379,26 +2379,43 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
   fps = gst_structure_get_value (structure, "framerate");
   if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
 
-    /* somehow these seem mixed up.. */
-    context->time_base.den = gst_value_get_fraction_numerator (fps);
-    context->time_base.num = gst_value_get_fraction_denominator (fps);
-    context->ticks_per_frame = 1;
+    int num = gst_value_get_fraction_numerator (fps);
+    int den = gst_value_get_fraction_denominator (fps);
 
-    GST_DEBUG ("setting framerate %d/%d = %lf",
-        context->time_base.den, context->time_base.num,
-        1. * context->time_base.den / context->time_base.num);
+    if (num > 0 && den > 0) {
+      /* somehow these seem mixed up.. */
+      /* they're fine, this is because it does period=1/frequency */
+      context->time_base.den = gst_value_get_fraction_numerator (fps);
+      context->time_base.num = gst_value_get_fraction_denominator (fps);
+      context->ticks_per_frame = 1;
+
+      GST_DEBUG ("setting framerate %d/%d = %lf",
+          context->time_base.den, context->time_base.num,
+          1. * context->time_base.den / context->time_base.num);
+    } else {
+      GST_WARNING ("ignoring insane framerate %d/%d",
+          context->time_base.den, context->time_base.num);
+    }
   }
 
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
   if (par && GST_VALUE_HOLDS_FRACTION (par)) {
 
-    context->sample_aspect_ratio.num = gst_value_get_fraction_numerator (par);
-    context->sample_aspect_ratio.den = gst_value_get_fraction_denominator (par);
+    int num = gst_value_get_fraction_numerator (par);
+    int den = gst_value_get_fraction_denominator (par);
 
-    GST_DEBUG ("setting pixel-aspect-ratio %d/%d = %lf",
-        context->sample_aspect_ratio.den, context->sample_aspect_ratio.num,
-        1. * context->sample_aspect_ratio.den /
-        context->sample_aspect_ratio.num);
+    if (num > 0 && den > 0) {
+      context->sample_aspect_ratio.num = num;
+      context->sample_aspect_ratio.den = den;
+
+      GST_DEBUG ("setting pixel-aspect-ratio %d/%d = %lf",
+          context->sample_aspect_ratio.num, context->sample_aspect_ratio.den,
+          1. * context->sample_aspect_ratio.num /
+          context->sample_aspect_ratio.den);
+    } else {
+      GST_WARNING ("ignoring insane pixel-aspect-ratio %d/%d",
+          context->sample_aspect_ratio.num, context->sample_aspect_ratio.den);
+    }
   }
 
   if (!raw)
