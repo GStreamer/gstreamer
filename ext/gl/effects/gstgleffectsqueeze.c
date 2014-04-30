@@ -47,27 +47,14 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
 
 #if GST_GL_HAVE_GLES2
     if (USING_GLES2 (context)) {
-      if (shader) {
-        GError *error = NULL;
-        gst_gl_shader_set_vertex_source (shader, vertex_shader_source);
-        gst_gl_shader_set_fragment_source (shader,
-            squeeze_fragment_source_gles2);
-
-        gst_gl_shader_compile (shader, &error);
-        if (error) {
-          gst_gl_context_set_error (context,
-              "Failed to initialize squeeze shader, %s", error->message);
-          g_error_free (error);
-          error = NULL;
-          gst_gl_shader_use (NULL);
-          GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-              ("%s", gst_gl_context_get_error ()), (NULL));
-        } else {
-          filter->draw_attr_position_loc =
-              gst_gl_shader_get_attribute_location (shader, "a_position");
-          filter->draw_attr_texture_loc =
-              gst_gl_shader_get_attribute_location (shader, "a_texCoord");
-        }
+      if (!gst_gl_shader_compile_with_default_v_and_check (shader,
+              squeeze_fragment_source_gles2, &filter->draw_attr_position_loc,
+              &filter->draw_attr_texture_loc)) {
+        /* gst gl context error is already set */
+        GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+            ("Failed to initialize squeeze shader, %s",
+                gst_gl_context_get_error ()), (NULL));
+        return;
       }
     }
 #endif
