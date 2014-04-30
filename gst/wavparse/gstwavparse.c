@@ -1775,10 +1775,33 @@ gst_wavparse_have_dts_caps (const GstCaps * caps, GstTypeFindProbability prob)
   return gst_structure_has_field (s, "rate");
 }
 
+static GstTagList *
+gst_wavparse_get_upstream_tags (GstWavParse * wav, GstTagScope scope)
+{
+  GstTagList *tags = NULL;
+  GstEvent *ev;
+  gint i;
+
+  i = 0;
+  while ((ev = gst_pad_get_sticky_event (wav->sinkpad, GST_EVENT_TAG, i++))) {
+    gst_event_parse_tag (ev, &tags);
+    if (tags != NULL && gst_tag_list_get_scope (tags) == scope) {
+      tags = gst_tag_list_copy (tags);
+      gst_tag_list_remove_tag (tags, GST_TAG_CONTAINER_FORMAT);
+      gst_event_unref (ev);
+      break;
+    }
+    tags = NULL;
+    gst_event_unref (ev);
+  }
+  return tags;
+}
+
 static void
 gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
 {
   GstStructure *s;
+  GstTagList *tags, *utags;
 
   GST_DEBUG_OBJECT (wav, "adding src pad");
 
@@ -1816,10 +1839,27 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
     wav->start_segment = NULL;
   }
 
-  if (wav->tags) {
-    gst_pad_push_event (wav->srcpad, gst_event_new_tag (wav->tags));
+  /* upstream tags, e.g. from id3/ape tag before the wav file; assume for now
+   * that there'll be only one scope/type of tag list from upstream, if any */
+  utags = gst_wavparse_get_upstream_tags (wav, GST_TAG_SCOPE_GLOBAL);
+  if (utags == NULL)
+    utags = gst_wavparse_get_upstream_tags (wav, GST_TAG_SCOPE_STREAM);
+
+  /* if there's a tag upstream it's probably been added to override the
+   * tags from inside the wav header, so keep upstream tags if in doubt */
+  tags = gst_tag_list_merge (utags, wav->tags, GST_TAG_MERGE_KEEP);
+
+  if (wav->tags != NULL) {
+    gst_tag_list_unref (wav->tags);
     wav->tags = NULL;
   }
+
+  if (utags != NULL)
+    gst_tag_list_unref (utags);
+
+  /* send tags downstream, if any */
+  if (tags != NULL)
+    gst_pad_push_event (wav->srcpad, gst_event_new_tag (tags));
 }
 
 static GstFlowReturn
