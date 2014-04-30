@@ -1088,13 +1088,6 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
         goto out_vbri;
       }
 
-      if (avail < offset_vbri + 26) {
-        GST_DEBUG_OBJECT (mp3parse,
-            "Not enough data to read VBRI header (need %d)",
-            offset_vbri + 26 + nseek_points * seek_bytes);
-        goto cleanup;
-      }
-
       data = map.data;
       data += offset_vbri + 26;
 
