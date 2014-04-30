@@ -553,7 +553,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
         pkt, gst_ffmpegaudenc_free_avpacket);
 
     codec = ffmpegaudenc->context->codec;
-    if ((codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)) {
+    if ((codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE) || !audio_in) {
       ret = gst_audio_encoder_finish_frame (enc, outbuf, -1);
     } else {
       ret = gst_audio_encoder_finish_frame (enc, outbuf, frame.nb_samples);
