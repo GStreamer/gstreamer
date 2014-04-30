@@ -972,7 +972,8 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           demux->pending_buffer = NULL;
         }
       } else {
-        gst_buffer_unref (demux->pending_buffer);
+        if (demux->pending_buffer)
+          gst_buffer_unref (demux->pending_buffer);
         demux->pending_buffer = NULL;
       }
 
