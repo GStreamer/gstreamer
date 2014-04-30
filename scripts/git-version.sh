@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# update all known gstreamer modules
-# build them one by one
-# report failures at the end
+# display the latest commit in each branch of all gstreamer modules.
 # run this from a directory that contains the checkouts for each of the
 # modules
 
