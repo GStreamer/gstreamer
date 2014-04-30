@@ -181,7 +181,7 @@ of the sender.
 
 Some pipelines to illustrate the process:
 
-    gst-launch-1.0 v4l2src ! ffenc_h263p ! rtph263ppay ! udpsink
+    gst-launch-1.0 v4l2src ! videoconvert ! avenc_h263p ! rtph263ppay ! udpsink
 
   v4l2src puts a GStreamer timestamp on the video frames base on the current
   running_time. The encoder encodes and passed the timestamp on. The payloader
@@ -206,7 +206,7 @@ following pipeline:
 
     gst-launch-1.0 udpsrc caps="application/x-rtp, media=(string)video,
       clock-rate=(int)90000, encoding-name=(string)H263-1998" ! rtph263pdepay !
-      ffdec_h263 ! xvimagesink
+      avdec_h263 ! autovideosink
 
 It is important that the depayloader copies the incomming GStreamer timestamp
 directly to the depayloaded output buffer. It should never attempt to perform
@@ -239,7 +239,7 @@ The following pipeline illustrates a receiver with a jitterbuffer.
 
     gst-launch-1.0 udpsrc caps="application/x-rtp, media=(string)video,
       clock-rate=(int)90000, encoding-name=(string)H263-1998" !
-      gstrtpjitterbuffer latency=100 ! rtph263pdepay !  ffdec_h263 ! xvimagesink
+      rtpjitterbuffer latency=100 ! rtph263pdepay !  avdec_h263 ! autovideosink
 
 The latency property on the jitterbuffer controls the amount of delay (in
 milliseconds) to apply to the outgoing packets. A higher latency will produce
@@ -271,7 +271,7 @@ for example).
 
 Some gst-launch-1.0 lines:
 
-  gst-launch-0.10 -v videotestsrc ! ffenc_h263p ! rtph263ppay ! udpsink
+  gst-launch-1.0 -v videotestsrc ! videoconvert ! avenc_h263p ! rtph263ppay ! udpsink
 
    Setting pipeline to PAUSED ...
    /pipeline0/videotestsrc0.src: caps = video/x-raw, format=(string)I420,
@@ -289,10 +289,10 @@ Some gst-launch-1.0 lines:
  Write down the caps on the udpsink and set them as the caps of the UDP 
  receiver:
 
-  gst-launch-0.10 -v udpsrc caps="application/x-rtp, media=(string)video,
+  gst-launch-1.0 -v udpsrc caps="application/x-rtp, media=(string)video,
   payload=(int)96, clock-rate=(int)90000, encoding-name=(string)H263-1998,
   ssrc=(guint)527842345, clock-base=(guint)1150776941, seqnum-base=(guint)30982"
-  ! rtph263pdepay ! ffdec_h263 ! xvimagesink 
+  ! rtph263pdepay ! avdec_h263 ! autovideosink
 
  The receiver now displays an h263 image. Since there is no jitterbuffer in the
  pipeline, frames will be displayed at the time when they are received. This can
@@ -302,7 +302,7 @@ Some gst-launch-1.0 lines:
  Stream a quicktime file with mpeg4 video and AAC audio on port 5000 and port
  5002.
 
-  gst-launch-0.10 -v filesrc location=~/data/sincity.mp4 ! qtdemux name=d ! queue ! rtpmp4vpay ! udpsink port=5000  
+  gst-launch-1.0 -v filesrc location=~/data/sincity.mp4 ! qtdemux name=d ! queue ! rtpmp4vpay ! udpsink port=5000
                          d. ! queue ! rtpmp4gpay ! udpsink port=5002
     ....
     /pipeline0/udpsink0.sink: caps = application/x-rtp, media=(string)video,
@@ -324,7 +324,7 @@ Some gst-launch-1.0 lines:
       clock-rate=(int)90000, encoding-name=(string)MP4V-ES, ssrc=(guint)1162703703,
       clock-base=(guint)816135835, seqnum-base=(guint)9294, profile-level-id=(string)3,
       config=(string)000001b003000001b50900000100000001200086c5d4c307d314043c1463000001b25876694430303334"
-      ! rtpmp4vdepay ! ffdec_mpeg4 ! xvimagesink sync=false 
+      ! rtpmp4vdepay ! ffdec_mpeg4 ! autovideosink sync=false
      udpsrc port=5002 caps="application/x-rtp, media=(string)audio, payload=(int)96,
       clock-rate=(int)44100, encoding-name=(string)MPEG4-GENERIC, ssrc=(guint)3246149898,
       clock-base=(guint)4134514058, seqnum-base=(guint)57633, encoding-params=(string)2,
