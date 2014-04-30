@@ -670,18 +670,10 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     gint8 *outbuffer = (gint8 *) map.data;
     gint *reorder_map = flacdec->channel_reorder_map;
 
-    if (gdepth != depth) {
-      for (i = 0; i < samples; i++) {
-        for (j = 0; j < channels; j++) {
-          *outbuffer++ =
-              (gint8) (buffer[reorder_map[j]][i] << (gdepth - depth));
-        }
-      }
-    } else {
-      for (i = 0; i < samples; i++) {
-        for (j = 0; j < channels; j++) {
-          *outbuffer++ = (gint8) buffer[reorder_map[j]][i];
-        }
+    g_assert (gdepth == 8 && depth == 8);
+    for (i = 0; i < samples; i++) {
+      for (j = 0; j < channels; j++) {
+        *outbuffer++ = (gint8) buffer[reorder_map[j]][i];
       }
     }
   } else if (width == 16) {
