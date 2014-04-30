@@ -21,7 +21,7 @@ import sys
 import utils
 import urlparse
 import loggable
-from optparse import OptionParser, OptionGroup
+from argparse import ArgumentParser
 
 from httpserver import HTTPServer
 from baseclasses import _TestsLauncher, ScenarioManager
@@ -33,99 +33,96 @@ MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
 
 def main():
-    parser = OptionParser()
-    parser.add_option("-d", "--debug", dest="debug",
+    parser = ArgumentParser()
+    parser.add_argument("-d", "--debug", dest="debug",
                       action="store_true",
                       default=False,
                       help="Let user debug the process on timeout")
-    parser.add_option("-f", "--forever", dest="forever",
+    parser.add_argument("-f", "--forever", dest="forever",
                       action="store_true", default=False,
                       help="Keep running tests until one fails")
-    parser.add_option("-F", "--fatal-error", dest="fatal_error",
+    parser.add_argument("-F", "--fatal-error", dest="fatal_error",
                       action="store_true", default=False,
                       help="Stop on first fail")
-    parser.add_option("-t", "--wanted-tests", dest="wanted_tests",
+    parser.add_argument("-t", "--wanted-tests", dest="wanted_tests",
                       default=[],
                       action="append",
                       help="Define the tests to execute, it can be a regex"
                            " if it contains defaults_only, only default scenarios"
                            " will be executed")
-    parser.add_option("-b", "--blacklisted-tests", dest="blacklisted_tests",
+    parser.add_argument("-b", "--blacklisted-tests", dest="blacklisted_tests",
                       default=[],
                       action="append",
                       help="Define the tests not to execute, it can be a regex.")
-    parser.add_option("-L", "--list-tests",
+    parser.add_argument("-L", "--list-tests",
                       dest="list_tests",
                       action="store_true",
                       default=False,
                       help="List tests and exit")
-    parser.add_option("-m", "--mute", dest="mute",
+    parser.add_argument("-m", "--mute", dest="mute",
                       action="store_true", default=False,
                       help="Mute playback output, which mean that we use "
                       "a fakesink")
-    parser.add_option("-n", "--no-color", dest="no_color",
+    parser.add_argument("-n", "--no-color", dest="no_color",
                      action="store_true", default=False,
                      help="Set it to output no colored text in the terminal")
-    parser.add_option("-g", "--generate-media-info", dest="generate_info",
+    parser.add_argument("-g", "--generate-media-info", dest="generate_info",
                      action="store_true", default=False,
                      help="Set it in order to generate the missing .media_infos files")
 
-    dir_group = OptionGroup(parser, "Directories and files to be used by the launcher")
-    parser.add_option('--xunit-file', action='store',
+    dir_group = parser.add_argument_group("Directories and files to be used by the launcher")
+    parser.add_argument('--xunit-file', action='store',
                       dest='xunit_file', metavar="FILE",
                       default=None,
                       help=("Path to xml file to store the xunit report in. "
                       "Default is LOGSDIR/xunit.xml"))
-    dir_group.add_option("-M", "--main-dir", dest="main_dir",
+    dir_group.add_argument("-M", "--main-dir", dest="main_dir",
                       default=DEFAULT_MAIN_DIR,
                          help="Main directory where to put files. Default is %s" % DEFAULT_MAIN_DIR)
-    dir_group.add_option("-o", "--output-dir", dest="output_dir",
+    dir_group.add_argument("-o", "--output-dir", dest="output_dir",
                          default=None,
                          help="Directory where to store logs and rendered files. Default is MAIN_DIR")
-    dir_group.add_option("-l", "--logs-dir", dest="logsdir",
+    dir_group.add_argument("-l", "--logs-dir", dest="logsdir",
                       default=None,
                       help="Directory where to store logs, default is OUTPUT_DIR/logs")
-    dir_group.add_option("-R", "--render-path", dest="dest",
+    dir_group.add_argument("-R", "--render-path", dest="dest",
                      default=None,
                      help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
-    dir_group.add_option("-p", "--medias-paths", dest="paths", action="append",
+    dir_group.add_argument("-p", "--medias-paths", dest="paths", action="append",
                       default=None,
                       help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets/media")
-    dir_group.add_option("-a", "--clone-dir", dest="clone_dir",
+    dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
                       default=None,
                       help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets")
-    parser.add_option_group(dir_group)
 
-    http_server_group = OptionGroup(parser, "Handle the HTTP server to be created")
-    http_server_group.add_option("", "--http-server-port", dest="http_server_port",
+    http_server_group = parser.add_argument_group("Handle the HTTP server to be created")
+    http_server_group.add_argument("--http-server-port", dest="http_server_port",
                       default=8079,
                       help="Port on which to run the http server on localhost")
-    http_server_group.add_option("-s", "--folder-for-http-server", dest="http_server_dir",
+    http_server_group.add_argument("-s", "--folder-for-http-server", dest="http_server_dir",
                       default=None,
                       help="Folder in which to create an http server on localhost. Default is PATHS")
-    parser.add_option_group(http_server_group)
 
-    assets_group = OptionGroup(parser, "Handle remote assets")
-    assets_group.add_option("-u", "--update-assets-command", dest="update_assets_command",
+    assets_group = parser.add_argument_group("Handle remote assets")
+    assets_group.add_argument("-u", "--update-assets-command", dest="update_assets_command",
                       default="git fetch %s && git checkout FETCH_HEAD && git annex get ."
                             % (DEFAULT_GST_QA_ASSETS_REPO, ),
                       help="Command to update assets")
-    assets_group.add_option("", "--get-assets-command", dest="get_assets_command",
+    assets_group.add_argument("--get-assets-command", dest="get_assets_command",
                       default="git clone",
                       help="Command to get assets")
-    assets_group.add_option("", "--remote-assets-url", dest="remote_assets_url",
+    assets_group.add_argument("--remote-assets-url", dest="remote_assets_url",
                       default=DEFAULT_GST_QA_ASSETS_REPO,
                             help="Url to the remote assets (default:%s)" % DEFAULT_GST_QA_ASSETS_REPO)
-    assets_group.add_option("-S", "--sync", dest="sync", action="store_true",
+    assets_group.add_argument("-S", "--sync", dest="sync", action="store_true",
                             default=False, help="Synchronize asset repository")
-    parser.add_option_group(assets_group)
 
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 
     tests_launcher = _TestsLauncher()
     tests_launcher.add_options(parser)
 
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_known_args()
 
     # Get absolute path for main_dir and base everything on that
     options.main_dir = os.path.abspath(options.main_dir)

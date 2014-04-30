@@ -186,11 +186,11 @@ class GESTestsManager(TestsManager):
             self.warning("Can not use ges-launch: %s" % e)
 
     def add_options(self, group):
-        group.add_option("-P", "--projects-paths", dest="projects_paths",
+        group.add_argument("-P", "--projects-paths", dest="projects_paths",
                          default=os.path.join(utils.DEFAULT_GST_QA_ASSETS,
                                               "ges-projects"),
                          help="Paths in which to look for moved medias")
-        group.add_option("-r", "--recurse-paths", dest="recurse_paths",
+        group.add_argument("-r", "--recurse-paths", dest="recurse_paths",
                          default=False, action="store_true",
                          help="Whether to recurse into paths to find medias")
 

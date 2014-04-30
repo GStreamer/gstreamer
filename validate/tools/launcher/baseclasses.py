@@ -575,12 +575,10 @@ class _TestsLauncher(Loggable):
 
     def add_options(self, parser):
         for tester in self.testers:
-            group = OptionGroup(parser, "%s options" % tester.name,
+            group = parser.add_argument_group("%s options" % tester.name,
                                 "Options specific to the %s test manager"
                                 % tester.name)
             tester.add_options(group)
-            if group.option_list:
-                parser.add_option_group(group)
 
     def set_settings(self, options, args):
         self.reporter = reporters.XunitReporter(options)
