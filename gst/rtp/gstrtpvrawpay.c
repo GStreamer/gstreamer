@@ -331,6 +331,13 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
       /* the headers start here */
       headers = outdata;
 
+      /* make sure we can fit at least *one* header and pixel */
+      if (!(left > (6 + pgroup))) {
+        gst_rtp_buffer_unmap (&rtp);
+        gst_buffer_unref (out);
+        goto too_small;
+      }
+
       /* while we can fit at least one header and one pixel */
       while (left > (6 + pgroup)) {
         /* we need a 6 bytes header */
@@ -512,6 +519,14 @@ unknown_sampling:
   {
     GST_ELEMENT_ERROR (payload, STREAM, FORMAT,
         (NULL), ("unimplemented sampling"));
+    gst_video_frame_unmap (&frame);
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_SUPPORTED;
+  }
+too_small:
+  {
+    GST_ELEMENT_ERROR (payload, RESOURCE, NO_SPACE_LEFT,
+        (NULL), ("not enough space to send at least one pixel"));
     gst_video_frame_unmap (&frame);
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_SUPPORTED;
