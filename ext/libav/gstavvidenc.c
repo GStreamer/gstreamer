@@ -381,6 +381,11 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   /* fetch pix_fmt, fps, par, width, height... */
   gst_ffmpeg_videoinfo_to_context (&state->info, ffmpegenc->context);
 
+  /* sanitize time base */
+  if (ffmpegenc->context->time_base.num <= 0
+      || ffmpegenc->context->time_base.den <= 0)
+    goto insane_timebase;
+
   if ((oclass->in_plugin->id == AV_CODEC_ID_MPEG4)
       && (ffmpegenc->context->time_base.den > 65535)) {
     /* MPEG4 Standards do not support time_base denominator greater than
@@ -527,6 +532,13 @@ unsupported_codec:
             oclass->in_plugin) < 0)
       GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
     GST_DEBUG ("Unsupported codec - no caps found");
+    return FALSE;
+  }
+
+insane_timebase:
+  {
+    GST_ERROR_OBJECT (ffmpegenc, "Rejecting time base %d/%d",
+        ffmpegenc->context->time_base.den, ffmpegenc->context->time_base.num);
     return FALSE;
   }
 }
