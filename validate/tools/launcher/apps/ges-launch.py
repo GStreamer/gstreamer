@@ -216,10 +216,12 @@ class GESTestsManager(TestsManager):
                     projects.append(utils.path2url(os.path.join(path, root, f)))
         else:
             for proj in self.args:
-                if utils.isuri(proj):
+                if not utils.isuri(proj):
+                    proj = utils.path2url(proj)
+
+                if os.path.exists(proj):
                     projects.append(proj)
-                else:
-                    projects.append(utils.path2url(proj))
+
         SCENARIOS = ["play_15s",
                      "seek_forward",
                      "seek_backward",
