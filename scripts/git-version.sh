@@ -4,8 +4,6 @@
 # run this from a directory that contains the checkouts for each of the
 # modules
 
-FAILURE=
-
 for m in \
   gstreamer gst-plugins-base \
   gst-plugins-good gst-plugins-ugly gst-plugins-bad \
