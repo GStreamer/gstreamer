@@ -147,30 +147,6 @@ static void gst_glimage_sink_set_window_handle (GstVideoOverlay * overlay,
     guintptr id);
 static void gst_glimage_sink_expose (GstVideoOverlay * overlay);
 
-
-#if GST_GL_HAVE_GLES2
-/* *INDENT-OFF* */
-static const gchar *redisplay_vertex_shader_str_gles2 =
-      "attribute vec4 a_position;   \n"
-      "attribute vec2 a_texCoord;   \n"
-      "varying vec2 v_texCoord;     \n"
-      "void main()                  \n"
-      "{                            \n"
-      "   gl_Position = a_position; \n"
-      "   v_texCoord = a_texCoord;  \n"
-      "}                            \n";
-
-static const gchar *redisplay_fragment_shader_str_gles2 =
-      "precision mediump float;                            \n"
-      "varying vec2 v_texCoord;                            \n"
-      "uniform sampler2D s_texture;                        \n"
-      "void main()                                         \n"
-      "{                                                   \n"
-      "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
-      "}                                                   \n";
-/* *INDENT-ON* */
-#endif
-
 static GstStaticPadTemplate gst_glimage_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -984,29 +960,12 @@ config_failed:
 static void
 gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
 {
-  GError *error = NULL;
   gl_sink->redisplay_shader = gst_gl_shader_new (gl_sink->context);
 
-  gst_gl_shader_set_vertex_source (gl_sink->redisplay_shader,
-      redisplay_vertex_shader_str_gles2);
-  gst_gl_shader_set_fragment_source (gl_sink->redisplay_shader,
-      redisplay_fragment_shader_str_gles2);
-
-  gst_gl_shader_compile (gl_sink->redisplay_shader, &error);
-  if (error) {
-    gst_gl_context_set_error (gl_sink->context, "%s", error->message);
-    g_error_free (error);
-    error = NULL;
-    gst_gl_context_clear_shader (gl_sink->context);
+  if (!gst_gl_shader_compile_with_default_vf_and_check
+      (gl_sink->redisplay_shader, &gl_sink->redisplay_attr_position_loc,
+          &gl_sink->redisplay_attr_texture_loc))
     gst_glimage_sink_cleanup_glthread (gl_sink);
-  } else {
-    gl_sink->redisplay_attr_position_loc =
-        gst_gl_shader_get_attribute_location (gl_sink->redisplay_shader,
-        "a_position");
-    gl_sink->redisplay_attr_texture_loc =
-        gst_gl_shader_get_attribute_location (gl_sink->redisplay_shader,
-        "a_texCoord");
-  }
 }
 #endif
 
@@ -1180,7 +1139,7 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
 
       gl->ActiveTexture (GL_TEXTURE0);
       gl->BindTexture (GL_TEXTURE_2D, gl_sink->redisplay_texture);
-      gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "s_texture", 0);
+      gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "tex", 0);
 
       gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
     }
