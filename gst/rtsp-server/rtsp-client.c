@@ -114,6 +114,7 @@ enum
   SIGNAL_SET_PARAMETER_REQUEST,
   SIGNAL_GET_PARAMETER_REQUEST,
   SIGNAL_HANDLE_RESPONSE,
+  SIGNAL_SEND_MESSAGE,
   SIGNAL_LAST
 };
 
@@ -246,6 +247,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
           handle_response), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
       G_TYPE_NONE, 1, G_TYPE_POINTER);
+
+  gst_rtsp_client_signals[SIGNAL_SEND_MESSAGE] =
+      g_signal_new ("send-message", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+      G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_POINTER);
 
   tunnels =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
@@ -472,6 +478,9 @@ send_message (GstRTSPClient * client, GstRTSPContext * ctx,
 
   if (close)
     gst_rtsp_message_add_header (message, GST_RTSP_HDR_CONNECTION, "close");
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_SEND_MESSAGE],
+      0, ctx, message);
 
   g_mutex_lock (&priv->send_lock);
   if (priv->send_func)
