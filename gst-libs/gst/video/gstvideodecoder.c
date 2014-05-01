@@ -1014,9 +1014,6 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     }
     case GST_EVENT_CAPS:
     {
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
       ret = TRUE;
       decoder->priv->do_caps = TRUE;
       gst_event_unref (event);
