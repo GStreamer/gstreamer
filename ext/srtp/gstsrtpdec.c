@@ -1091,10 +1091,10 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_srtp_dec_clear_streams (filter);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
       g_hash_table_unref (filter->streams);
       filter->streams = NULL;
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
