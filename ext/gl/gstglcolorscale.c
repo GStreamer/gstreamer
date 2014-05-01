@@ -160,15 +160,17 @@ gst_gl_colorscale_gen_gl_resources (GstGLFilter * filter)
 {
   GstGLColorscale *colorscale = GST_GL_COLORSCALE (filter);
 
-  gst_gl_context_thread_add (filter->context,
-      (GstGLContextThreadFunc) _compile_identity_shader, colorscale);
+  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_GLES2) {
+    gst_gl_context_thread_add (filter->context,
+        (GstGLContextThreadFunc) _compile_identity_shader, colorscale);
 
-  if (!colorscale->shader) {
-    gst_gl_context_set_error (filter->context,
-        "Failed to initialize identity shader");
-    GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND, ("%s",
-            gst_gl_context_get_error ()), (NULL));
-    return FALSE;
+    if (!colorscale->shader) {
+      gst_gl_context_set_error (filter->context,
+          "Failed to initialize identity shader");
+      GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND, ("%s",
+              gst_gl_context_get_error ()), (NULL));
+      return FALSE;
+    }
   }
 
   return TRUE;
@@ -195,13 +197,15 @@ gst_gl_colorscale_filter_texture (GstGLFilter * filter, guint in_tex,
   colorscale = GST_GL_COLORSCALE (filter);
 
 #if GST_GL_HAVE_GLES2
-  gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex, out_tex,
-      colorscale->shader);
+  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_GLES2)
+    gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex, out_tex,
+        colorscale->shader);
 #endif
 
 #if GST_GL_HAVE_OPENGL
-  gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
-      gst_gl_colorscale_callback, colorscale);
+  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL)
+    gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
+        gst_gl_colorscale_callback, colorscale);
 #endif
 
   return TRUE;
