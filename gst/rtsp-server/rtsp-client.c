@@ -1173,7 +1173,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   send_message (client, session, ctx->response, FALSE);
 
-  /* start playing after sending the request */
+  /* start playing after sending the response */
   gst_rtsp_session_media_set_state (sessmedia, GST_STATE_PLAYING);
 
   gst_rtsp_session_media_set_rtsp_state (sessmedia, GST_RTSP_STATE_PLAYING);
