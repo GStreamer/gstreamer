@@ -57,6 +57,27 @@ typedef struct _GstVaapiPictureH264             GstVaapiPictureH264;
 /* --- H.264 Parser Info                                                 --- */
 /* ------------------------------------------------------------------------- */
 
+/*
+ * Extended decoder unit flags:
+ *
+ * @GST_VAAPI_DECODER_UNIT_AU_START: marks the start of an access unit.
+ * @GST_VAAPI_DECODER_UNIT_AU_END: marks the end of an access unit.
+ */
+enum {
+    /* This flag does not strictly follow the definitions (7.4.1.2.3)
+       for detecting the start of an access unit as we are only
+       interested in knowing if the current slice is the first one or
+       the last one in the current access unit */
+    GST_VAAPI_DECODER_UNIT_FLAG_AU_START = (
+        GST_VAAPI_DECODER_UNIT_FLAG_LAST << 0),
+    GST_VAAPI_DECODER_UNIT_FLAG_AU_END = (
+        GST_VAAPI_DECODER_UNIT_FLAG_LAST << 1),
+
+    GST_VAAPI_DECODER_UNIT_FLAGS_AU = (
+        GST_VAAPI_DECODER_UNIT_FLAG_AU_START |
+        GST_VAAPI_DECODER_UNIT_FLAG_AU_END),
+};
+
 #define GST_VAAPI_PARSER_INFO_H264(obj) \
     ((GstVaapiParserInfoH264 *)(obj))
 
@@ -70,6 +91,7 @@ struct _GstVaapiParserInfoH264 {
         GstH264SliceHdr slice_hdr;
     }                   data;
     guint               state;
+    guint               flags; // Same as decoder unit flags (persistent)
 };
 
 static void
@@ -124,6 +146,10 @@ gst_vaapi_parser_info_h264_new(void)
  * Extended picture flags:
  *
  * @GST_VAAPI_PICTURE_FLAG_IDR: flag that specifies an IDR picture
+ * @GST_VAAPI_PICTURE_FLAG_AU_START: flag that marks the start of an
+ *   access unit (AU)
+ * @GST_VAAPI_PICTURE_FLAG_AU_END: flag that marks the end of an
+ *   access unit (AU)
  * @GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE: flag that specifies
  *     "used for short-term reference"
  * @GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE: flag that specifies
@@ -134,6 +160,8 @@ gst_vaapi_parser_info_h264_new(void)
 enum {
     GST_VAAPI_PICTURE_FLAG_IDR          = (GST_VAAPI_PICTURE_FLAG_LAST << 0),
     GST_VAAPI_PICTURE_FLAG_REFERENCE2   = (GST_VAAPI_PICTURE_FLAG_LAST << 1),
+    GST_VAAPI_PICTURE_FLAG_AU_START     = (GST_VAAPI_PICTURE_FLAG_LAST << 4),
+    GST_VAAPI_PICTURE_FLAG_AU_END       = (GST_VAAPI_PICTURE_FLAG_LAST << 5),
 
     GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE = (
         GST_VAAPI_PICTURE_FLAG_REFERENCE),
@@ -452,6 +480,25 @@ struct _GstVaapiDecoderH264Class {
 
 static gboolean
 exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture);
+
+/* Determines the view order index (VOIdx) from the supplied view_id */
+static gint
+get_view_order_index(GstH264SPS *sps, guint16 view_id)
+{
+    GstH264SPSExtMVC *mvc;
+    gint i;
+
+    if (!sps || sps->extension_type != GST_H264_NAL_EXTENSION_MVC)
+        return 0;
+
+    mvc = &sps->extension.mvc;
+    for (i = 0; i <= mvc->num_views_minus1; i++) {
+        if (mvc->view[i].view_id == view_id)
+            return i;
+    }
+    GST_ERROR("failed to find VOIdx from view_id (%d)", view_id);
+    return -1;
+}
 
 /* Get number of reference frames to use */
 static guint
@@ -2698,6 +2745,33 @@ is_new_picture(GstVaapiParserInfoH264 *pi, GstVaapiParserInfoH264 *prev_pi)
     return FALSE;
 }
 
+/* Detection of a new access unit, assuming we are already in presence
+   of a new picture */
+static gboolean
+is_new_access_unit(GstVaapiParserInfoH264 *pi, GstVaapiParserInfoH264 *prev_pi)
+{
+    GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
+    GstH264SliceHdr *prev_slice_hdr;
+    GstH264NalUnitExtensionMVC *mvc, *prev_mvc;
+    gint voc, prev_voc;
+
+    g_return_val_if_fail(is_new_picture(pi, prev_pi), FALSE);
+
+    if (!prev_pi)
+        return TRUE;
+    prev_slice_hdr = &prev_pi->data.slice_hdr;
+
+    mvc = &pi->nalu.extension.mvc;
+    prev_mvc = &prev_pi->nalu.extension.mvc;
+    if (mvc->view_id == prev_mvc->view_id)
+        return TRUE;
+
+    voc = get_view_order_index(slice_hdr->pps->sequence, mvc->view_id);
+    prev_voc = get_view_order_index(prev_slice_hdr->pps->sequence,
+        prev_mvc->view_id);
+    return voc < prev_voc;
+}
+
 static GstVaapiDecoderStatus
 decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
@@ -2953,6 +3027,12 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
         GST_ERROR("failed to map buffer");
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     }
+
+    /* Check wether this is the first/last slice in the current access unit */
+    if (pi->flags & GST_VAAPI_DECODER_UNIT_FLAG_AU_START)
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_AU_START);
+    if (pi->flags & GST_VAAPI_DECODER_UNIT_FLAG_AU_END)
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_AU_END);
 
     slice = GST_VAAPI_SLICE_NEW(H264, decoder,
         (map_info.data + unit->offset + pi->nalu.offset), pi->nalu.size);
@@ -3259,6 +3339,7 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     flags = 0;
     switch (pi->nalu.type) {
     case GST_H264_NAL_AU_DELIMITER:
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_AU_START;
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         /* fall-through */
     case GST_H264_NAL_FILLER_DATA:
@@ -3269,11 +3350,13 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
         /* fall-through */
     case GST_H264_NAL_SEQ_END:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END;
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_AU_END;
         break;
     case GST_H264_NAL_SPS:
     case GST_H264_NAL_SUBSET_SPS:
     case GST_H264_NAL_PPS:
     case GST_H264_NAL_SEI:
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_AU_START;
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         break;
     case GST_H264_NAL_SLICE_EXT:
@@ -3285,8 +3368,11 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     case GST_H264_NAL_SLICE_IDR:
     case GST_H264_NAL_SLICE:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
-        if (is_new_picture(pi, priv->prev_slice_pi))
+        if (is_new_picture(pi, priv->prev_slice_pi)) {
             flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
+            if (is_new_access_unit(pi, priv->prev_slice_pi))
+                flags |= GST_VAAPI_DECODER_UNIT_FLAG_AU_START;
+        }
         gst_vaapi_parser_info_h264_replace(&priv->prev_slice_pi, pi);
         break;
     case GST_H264_NAL_SPS_EXT:
@@ -3297,17 +3383,22 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     case GST_H264_NAL_PREFIX_UNIT:
         /* skip Prefix NAL units for now */
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_SKIP |
+            GST_VAAPI_DECODER_UNIT_FLAG_AU_START |
             GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         break;
     default:
         if (pi->nalu.type >= 14 && pi->nalu.type <= 18)
-            flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
+            flags |= GST_VAAPI_DECODER_UNIT_FLAG_AU_START |
+                GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         break;
     }
+    if ((flags & GST_VAAPI_DECODER_UNIT_FLAGS_AU) && priv->prev_slice_pi)
+        priv->prev_slice_pi->flags |= GST_VAAPI_DECODER_UNIT_FLAG_AU_END;
     GST_VAAPI_DECODER_UNIT_FLAG_SET(unit, flags);
 
     pi->nalu.data = NULL;
     pi->state = priv->parser_state;
+    pi->flags = flags;
     gst_vaapi_parser_info_h264_replace(&priv->prev_pi, pi);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
