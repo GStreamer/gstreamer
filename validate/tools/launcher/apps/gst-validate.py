@@ -167,6 +167,7 @@ G_V_SCENARIOS = ["play_15s",
                  "switch_audio_track_while_paused",
                  "switch_subtitle_track",
                  "switch_subtitle_track_while_paused",
+                 "disable_subtitle_track_while_paused",
                  "scrub_forward_seeking"]
 
 G_V_PROTOCOL_VIDEO_RESTRICTION_CAPS = {

@@ -196,9 +196,9 @@ static gboolean
 _execute_switch_track (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
-  guint index, n;
+  gint index, n;
   GstPad *oldpad, *newpad;
-  gboolean relative = FALSE;
+  gboolean relative = FALSE, disabling = FALSE;
   const gchar *type, *str_index;
 
   gint flags, current, tflag;
@@ -216,8 +216,12 @@ _execute_switch_track (GstValidateScenario * scenario,
 
   g_free (tmp);
 
-  if ((str_index = gst_structure_get_string (action->structure, "index"))) {
-    if (!gst_structure_get_uint (action->structure, "index", &index)) {
+  if (gst_structure_has_field (action->structure, "disable")) {
+    disabling = TRUE;
+    flags &= ~tflag;
+    index = -1;
+  } else if (!(str_index = gst_structure_get_string (action->structure, "index"))) {
+    if (!gst_structure_get_int (action->structure, "index", &index)) {
       GST_WARNING ("No index given, defaulting to +1");
       index = 1;
       relative = TRUE;
@@ -233,21 +237,18 @@ _execute_switch_track (GstValidateScenario * scenario,
       index = -2;
   }
 
-  if (index == -2) {
-    flags &= ~tflag;
-    index = -1;
-  } else {
+  if (!disabling) {
+    tmp = g_strdup_printf ("get-%s-pad", type);
+    g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, current, &oldpad);
+    g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, index, &newpad);
+
+    gst_validate_printf (action, "Switching to track number: %i,"
+        " (from %s:%s to %s:%s)\n", index, GST_DEBUG_PAD_NAME (oldpad),
+        GST_DEBUG_PAD_NAME (newpad));
     flags |= tflag;
+  } else {
+    gst_validate_printf (action, "Disabling track type %s", type);
   }
-
-  tmp = g_strdup_printf ("get-%s-pad", type);
-  g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, current, &oldpad);
-  g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, index, &newpad);
-
-
-  gst_validate_printf (action, "Switching to track number: %i,"
-      " (from %s:%s to %s:%s)\n", index, GST_DEBUG_PAD_NAME (oldpad),
-      GST_DEBUG_PAD_NAME (newpad));
 
   g_object_set (scenario->pipeline, "flags", flags, current_txt, index, NULL);
   g_free (current_txt);
@@ -386,7 +387,8 @@ main (int argc, gchar ** argv)
         " the given type, or a number with a '+' or '-' prefix, which means"
         " a relative change (eg, '+1' means 'next track', '-1' means 'previous"
         " track'), note that you need to state that it is a string in the scenario file"
-        " prefixing it with (string).", FALSE);
+        " prefixing it with (string). You can also disable the track type"
+        " setting the 'disable' field (to anything)", FALSE);
   }
 
   runner = gst_validate_runner_new ();
