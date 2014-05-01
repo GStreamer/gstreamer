@@ -425,7 +425,7 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
   }
 
   if (gst_structure_get (s, "srtp-key", GST_TYPE_BUFFER, &buf, NULL) || !buf) {
-    GST_DEBUG ("Got key [%p]", buf);
+    GST_DEBUG_OBJECT (filter, "Got key [%p] for SSRC %u", buf, ssrc);
     stream->key = buf;
   } else if (STREAM_HAS_CRYPTO (stream)) {
     goto error;
