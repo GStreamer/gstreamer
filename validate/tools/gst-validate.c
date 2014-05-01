@@ -31,6 +31,7 @@
 #include <gst/gst.h>
 #include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-scenario.h>
+#include <gst/validate/gst-validate-utils.h>
 
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
@@ -148,6 +149,83 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   return TRUE;
 }
 
+static gboolean
+_is_playbin_pipeline (int argc, gchar **argv)
+{
+  gint i;
+
+  for (i = 0; i < argc; i++) {
+    if (g_strcmp0 (argv[i], "playbin") == 0) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static gboolean
+_execute_switch_track (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  guint index, n;
+  GstPad *oldpad, *newpad;
+  gboolean relative = FALSE;
+  const gchar *type, *str_index;
+
+  gint flags, current, tflag;
+  gchar *tmp, *current_txt;
+
+  if (!(type = gst_structure_get_string (action->structure, "type")))
+    type = "audio";
+
+  tflag = gst_validate_utils_flags_from_str (g_type_from_name ("GstPlayFlags"), type);
+  current_txt = g_strdup_printf ("current-%s", type);
+
+  tmp = g_strdup_printf ("n-%s", type);
+  g_object_get (scenario->pipeline, "flags", &flags, tmp, &n,
+     current_txt, &current, NULL);
+
+  g_free (tmp);
+
+  if ((str_index = gst_structure_get_string (action->structure, "index"))) {
+    if (!gst_structure_get_uint (action->structure, "index", &index)) {
+      GST_WARNING ("No index given, defaulting to +1");
+      index = 1;
+      relative = TRUE;
+    }
+  } else {
+    relative = strchr ("+-", str_index[0]) != NULL;
+    index = g_ascii_strtoll (str_index, NULL, 10);
+  }
+
+  if (relative) {             /* We are changing track relatively to current track */
+    index = current + index;
+    if (current >= n)
+      index = -2;
+  }
+
+  if (index == -2) {
+    flags &= ~tflag;
+    index = -1;
+  } else {
+    flags |= tflag;
+  }
+
+  tmp = g_strdup_printf ("get-%s-pad", type);
+  g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, current, &oldpad);
+  g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, index, &newpad);
+
+
+  gst_validate_printf (action, "Switching to track number: %i,"
+      " (from %s:%s to %s:%s)\n", index, GST_DEBUG_PAD_NAME (oldpad),
+      GST_DEBUG_PAD_NAME (newpad));
+
+  g_object_set (scenario->pipeline, "flags", flags, current_txt, index, NULL);
+  g_free (current_txt);
+
+  return TRUE;
+}
+
 int
 main (int argc, gchar ** argv)
 {
@@ -255,6 +333,19 @@ main (int argc, gchar ** argv)
   signal_watch_id =
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
 #endif
+
+  if (_is_playbin_pipeline (argc, argv + 1)) {
+    /* Overriding default implementation */
+   gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
+        "The 'switch-track' command can be used to switch tracks.\n"
+        "The 'type' argument selects which track type to change (can be 'audio', 'video',"
+        " or 'text'). The 'index' argument selects which track of this type"
+        " to use: it can be either a number, which will be the Nth track of"
+        " the given type, or a number with a '+' or '-' prefix, which means"
+        " a relative change (eg, '+1' means 'next track', '-1' means 'previous"
+        " track'), note that you need to state that it is a string in the scenario file"
+        " prefixing it with (string).", FALSE);
+  }
 
   runner = gst_validate_runner_new ();
   if (!runner) {
