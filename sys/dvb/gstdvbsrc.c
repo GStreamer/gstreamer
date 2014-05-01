@@ -1625,7 +1625,8 @@ gst_dvbsrc_tune (GstDvbSrc * object)
   props.props = dvb_prop;
 
   if (ioctl (object->fd_frontend, FE_GET_PROPERTY, &props) < 0) {
-    g_warning ("Error enumarating delsys: %s", strerror (errno));
+    GST_WARNING_OBJECT (object, "Error enumerating delsys: %s",
+        g_strerror (errno));
 
     return FALSE;
   }
@@ -1640,7 +1641,8 @@ gst_dvbsrc_tune (GstDvbSrc * object)
     props.num = 1;
     props.props = dvb_prop;
     if (ioctl (object->fd_frontend, FE_SET_PROPERTY, &props) < 0) {
-      g_warning ("Error resetting tuner: %s", strerror (errno));
+      GST_WARNING_OBJECT (object, "Error resetting tuner: %s",
+          g_strerror (errno));
     }
     /* First three entries are reserved */
     n = 3;
@@ -1730,7 +1732,7 @@ gst_dvbsrc_tune (GstDvbSrc * object)
         set_prop (dvb_prop, &n, DTV_MODULATION, object->modulation);
         break;
       default:
-        g_error ("Unknown frontend type: %d", object->delsys);
+        GST_ERROR_OBJECT (object, "Unknown frontend type %u", object->delsys);
         return FALSE;
     }
     g_usleep (100000);
@@ -1746,7 +1748,8 @@ gst_dvbsrc_tune (GstDvbSrc * object)
 
     GST_DEBUG_OBJECT (object, "Setting %d properties", props.num);
     if (ioctl (object->fd_frontend, FE_SET_PROPERTY, &props) < 0) {
-      g_warning ("Error tuning channel: %s", strerror (errno));
+      GST_WARNING_OBJECT (object, "Error tuning channel: %s",
+          g_strerror (errno));
     }
     for (i = 0; i < 50; i++) {
       g_usleep (100000);
@@ -1805,7 +1808,8 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
 
     close (*fd);
     if ((*fd = open (demux_dev, O_RDWR)) < 0) {
-      g_error ("Error opening demuxer: %s (%s)", strerror (errno), demux_dev);
+      GST_ERROR_OBJECT (object, "Error opening demuxer: %s (%s)",
+          g_strerror (errno), demux_dev);
       g_free (demux_dev);
     }
     g_return_if_fail (*fd != -1);
@@ -1821,7 +1825,7 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
 
     if (ioctl (*fd, DMX_SET_PES_FILTER, &pes_filter) < 0)
       GST_WARNING_OBJECT (object, "Error setting PES filter on %s: %s",
-          demux_dev, strerror (errno));
+          demux_dev, g_strerror (errno));
   }
 
   g_free (demux_dev);
