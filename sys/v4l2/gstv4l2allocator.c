@@ -614,6 +614,8 @@ gst_v4l2_allocator_new (GstObject * parent, gint video_fd,
   flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, USERPTR);
   flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, DMABUF);
 
+  GST_OBJECT_FLAG_SET (allocator, flags);
+
   if (flags == 0)
     goto not_supported;
 
