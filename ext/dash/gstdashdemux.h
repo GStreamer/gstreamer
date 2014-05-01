@@ -34,7 +34,6 @@
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstdataqueue.h>
 #include "gstmpdparser.h"
-#include "gstdownloadrate.h"
 #include <gst/uridownloader/gsturidownloader.h>
 
 G_BEGIN_DECLS
@@ -80,8 +79,6 @@ struct _GstDashDemuxStream
   GRecMutex download_task_lock;
   GstUriDownloader *downloader;
 
-  GstDownloadRate dnl_rate;
-
   /* download tooling */
   GstElement *src;
   GstPad *src_srcpad;
@@ -92,6 +89,7 @@ struct _GstDashDemuxStream
   gint64 download_start_time;
   gint64 download_total_time;
   gint64 download_total_bytes;
+  gint current_download_rate;
 };
 
 /**

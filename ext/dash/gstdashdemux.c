@@ -180,7 +180,6 @@ enum
 #define DEFAULT_MAX_BITRATE        24000000     /* in bit/s  */
 
 #define DEFAULT_FAILED_COUNT 3
-#define DOWNLOAD_RATE_HISTORY_MAX 3
 
 #define GST_DASH_DEMUX_CLIENT_LOCK(d) g_mutex_lock (&d->client_lock)
 #define GST_DASH_DEMUX_CLIENT_UNLOCK(d) g_mutex_unlock (&d->client_lock)
@@ -656,13 +655,12 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     g_cond_init (&stream->download_cond);
     g_mutex_init (&stream->download_mutex);
     stream->downloader = gst_uri_downloader_new ();
+    stream->download_total_time = 0;
+    stream->download_total_bytes = 0;
 
     stream->index = i;
     stream->input_caps = caps;
     stream->need_header = TRUE;
-    gst_download_rate_init (&stream->dnl_rate);
-    gst_download_rate_set_max_length (&stream->dnl_rate,
-        DOWNLOAD_RATE_HISTORY_MAX);
 
     GST_LOG_OBJECT (demux, "Creating stream %d %" GST_PTR_FORMAT, i, caps);
     streams = g_slist_prepend (streams, stream);
@@ -1096,7 +1094,6 @@ gst_dash_demux_advance_period (GstDashDemux * demux)
 static void
 gst_dash_demux_stream_free (GstDashDemuxStream * stream)
 {
-  gst_download_rate_deinit (&stream->dnl_rate);
   if (stream->input_caps) {
     gst_caps_unref (stream->input_caps);
     stream->input_caps = NULL;
@@ -1593,7 +1590,7 @@ gst_dash_demux_stream_select_representation_unlocked (GstDashDemuxStream *
   GList *rep_list = NULL;
   gint new_index;
   GstDashDemux *demux = stream->demux;
-  guint64 bitrate;
+  guint64 bitrate = 0;
 
   active_stream = stream->active_stream;
   if (active_stream == NULL)
@@ -1605,11 +1602,29 @@ gst_dash_demux_stream_select_representation_unlocked (GstDashDemuxStream *
   if (!rep_list)
     return FALSE;
 
-  bitrate =
-      gst_download_rate_get_current_rate (&stream->dnl_rate) *
-      demux->bandwidth_usage;
-  GST_DEBUG_OBJECT (demux, "Trying to change to bitrate: %" G_GUINT64_FORMAT,
-      bitrate);
+  /* compare the time when the fragment was downloaded with the time when it was
+   * scheduled */
+  if (stream->download_total_time)
+    bitrate =
+        (stream->download_total_bytes * 8) /
+        ((double) stream->download_total_time / G_GUINT64_CONSTANT (1000000));
+
+  GST_DEBUG_OBJECT (stream->pad,
+      "Downloaded %u bytes in %" GST_TIME_FORMAT ". Bitrate is : %d",
+      (guint) stream->download_total_bytes,
+      GST_TIME_ARGS (stream->download_total_time * GST_USECOND),
+      (gint) bitrate);
+
+  /* Take old rate into account too */
+  if (stream->current_download_rate != -1)
+    bitrate = (stream->current_download_rate + bitrate * 3) / 4;
+  if (bitrate > G_MAXINT)
+    bitrate = G_MAXINT;
+  stream->current_download_rate = bitrate;
+  bitrate *= demux->bandwidth_usage;
+
+  GST_DEBUG_OBJECT (stream->pad,
+      "Trying to change to bitrate: %" G_GUINT64_FORMAT, bitrate);
 
   /* get representation index with current max_bandwidth */
   new_index = gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list, bitrate);
@@ -2266,23 +2281,6 @@ gst_dash_demux_stream_get_next_fragment (GstDashDemuxStream * stream,
     GST_WARNING_OBJECT (stream->pad, "Failed to download fragment");
     return GST_FLOW_ERROR;
   }
-#if 0
-  if (buffer_size > 0 && diff > 0) {
-#ifndef GST_DISABLE_GST_DEBUG
-    guint64 brate;
-#endif
-
-    gst_download_rate_add_rate (&stream->dnl_rate, buffer_size, diff);
-
-#ifndef GST_DISABLE_GST_DEBUG
-    brate = (buffer_size * 8) / ((double) diff / GST_SECOND);
-#endif
-    GST_INFO_OBJECT (demux,
-        "Stream: %d Download rate = %" G_GUINT64_FORMAT " Kbits/s (%"
-        G_GUINT64_FORMAT " Ko in %.2f s)", stream->index, brate / 1000,
-        buffer_size / 1024, ((double) diff / GST_SECOND));
-  }
-#endif
   return ret;
 }
 
