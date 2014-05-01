@@ -85,6 +85,8 @@ struct _GstValidateScenarioPrivate
 
   guint get_pos_id;
   guint wait_id;
+
+  gboolean buffering;
 };
 
 typedef struct KeyFileGroupName
@@ -615,6 +617,13 @@ get_position (GstValidateScenario * scenario)
   GstValidateScenarioPrivate *priv = scenario->priv;
   GstElement *pipeline = scenario->pipeline;
 
+  if (priv->buffering) {
+    GST_DEBUG_OBJECT (scenario,
+        "Buffering not executing any action");
+
+    return TRUE;
+  }
+
   query = gst_query_new_segment (GST_FORMAT_DEFAULT);
   if (gst_element_query (GST_ELEMENT (scenario->pipeline), query))
     gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
@@ -862,6 +871,22 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
               "%i actions were not executed: %s", nb_actions, actions);
         g_free (actions);
       }
+
+      break;
+    }
+    case GST_MESSAGE_BUFFERING:
+    {
+      gint percent;
+
+      gst_message_parse_buffering (message, &percent);
+
+      if (percent == 100)
+        priv->buffering = FALSE;
+      else
+        priv->buffering = TRUE;
+
+      g_print ("%s %d%%  \r", "Buffering...", percent);
+      break;
     }
     default:
       break;
