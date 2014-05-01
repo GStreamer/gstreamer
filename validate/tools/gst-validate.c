@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gio/gio.h>
 #include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-scenario.h>
 #include <gst/validate/gst-validate-utils.h>
@@ -161,6 +162,41 @@ _is_playbin_pipeline (int argc, gchar **argv)
   }
 
   return FALSE;
+}
+
+static gboolean
+_execute_set_subtitles (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  gchar *uri, *fname;
+  GFile * tmpfile, *folder;
+  const gchar *subtitle_file, *subtitle_dir;
+
+  subtitle_file = gst_structure_get_string (action->structure, "subtitle-file");
+  g_return_val_if_fail (subtitle_file != NULL, FALSE);
+  subtitle_dir = gst_structure_get_string (action->structure, "subtitle-dir");
+
+  g_object_get (scenario->pipeline, "current-uri", &uri, NULL);
+  tmpfile = g_file_new_for_uri (uri);
+  g_free (uri);
+
+  folder = g_file_get_parent (tmpfile);
+
+  fname = g_strdup_printf ("%s%s%s%s",
+      subtitle_dir ? subtitle_dir : "",
+      subtitle_dir ? G_DIR_SEPARATOR_S : "",
+      g_file_get_basename (tmpfile),
+      subtitle_file);
+  gst_object_unref (tmpfile);
+
+  tmpfile = g_file_get_child (folder, fname);
+  g_free (fname);
+  gst_object_unref (folder);
+
+  uri = g_file_get_uri (tmpfile);
+  g_object_set (scenario->pipeline, "suburi", uri, NULL);
+  g_free (uri);
+
+  return TRUE;
 }
 
 static gboolean
@@ -335,6 +371,19 @@ main (int argc, gchar ** argv)
 #endif
 
   if (_is_playbin_pipeline (argc, argv + 1)) {
+    const gchar *sub_mandatory_fields[] = { "subtitle-file", NULL };
+
+    gst_validate_add_action_type ("set-subtitle", _execute_set_subtitles,
+        sub_mandatory_fields,
+        "Action to wait set the subtitle file to use on a playbin pipeline. "
+        "The subtitles file that will be use should will be specified "
+        "relatively to the playbin URI in use thanks to the subtitle-file "
+        " action property. You can also specify a folder with subtitle-dir\n"
+        "For example if playbin.uri='file://some/uri.mov"
+        " and action looks like 'set-subtitle, subtitle-file=en.srt'"
+        " the subtitle URI will be set to 'file:///some/uri.mov.en.srt'",
+        FALSE);
+
     /* Overriding default implementation */
    gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
         "The 'switch-track' command can be used to switch tracks.\n"
