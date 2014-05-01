@@ -3273,7 +3273,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   GstSegment *segment;
   GstBuffer *sync_buf;
   gint do_qos;
-  gboolean late, step_end;
+  gboolean late, step_end, prepared = FALSE;
 
   if (G_UNLIKELY (basesink->flushing))
     goto flushing;
@@ -3347,11 +3347,15 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
         gst_base_sink_get_sync_times (basesink, obj, &sstart, &sstop, &rstart,
         &rstop, &rnext, &do_sync, &stepped, current, &step_end);
 
-    if (!stepped && syncable && do_sync)
+    if (G_UNLIKELY (stepped))
+      goto dropped;
+
+    if (syncable && do_sync)
       late =
           gst_base_sink_is_too_late (basesink, obj, rstart, rstop,
           GST_CLOCK_EARLY, 0, FALSE);
-    if (late)
+
+    if (G_UNLIKELY (late))
       goto dropped;
 
     if (!is_list) {
@@ -3367,6 +3371,8 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
           goto prepare_failed;
       }
     }
+
+    prepared = TRUE;
   }
 
 again:
@@ -3379,6 +3385,9 @@ again:
       &late, &step_end);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto sync_failed;
+
+  /* Don't skip if prepare() was called on time */
+  late = late && !prepared;
 
   /* drop late buffers unconditionally, let's hope it's unlikely */
   if (G_UNLIKELY (late))
