@@ -1399,6 +1399,8 @@ _list_scenarios_in_dir (GFile * dir, GKeyFile * kf)
     _parse_scenario (f, kf);
     gst_object_unref (f);
   }
+
+  gst_object_unref (fenum);
 }
 
 gboolean
