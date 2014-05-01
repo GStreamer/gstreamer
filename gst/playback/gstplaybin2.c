@@ -2018,6 +2018,20 @@ gst_play_bin_suburidecodebin_seek_to_start (GstSourceGroup * group)
     gst_iterator_free (it);
 }
 
+
+static GstPadProbeReturn
+block_serialized_data_cb (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  if (GST_IS_EVENT (info->data) && !GST_EVENT_IS_SERIALIZED (info->data)) {
+    GST_DEBUG_OBJECT (pad, "Letting non-serialized event %s pass",
+        GST_EVENT_TYPE_NAME (info->data));
+    return GST_PAD_PROBE_PASS;
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
 static void
 gst_play_bin_suburidecodebin_block (GstSourceGroup * group,
     GstElement * suburidecodebin, gboolean block)
@@ -2039,7 +2053,7 @@ gst_play_bin_suburidecodebin_block (GstSourceGroup * group,
         if (block) {
           group->block_id =
               gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-              NULL, NULL, NULL);
+              block_serialized_data_cb, NULL, NULL);
         } else if (group->block_id) {
           gst_pad_remove_probe (sinkpad, group->block_id);
           group->block_id = 0;
@@ -3126,7 +3140,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     GST_DEBUG_OBJECT (playbin, "blocking %" GST_PTR_FORMAT, combine->srcpad);
     combine->block_id =
         gst_pad_add_probe (combine->srcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-        NULL, NULL, NULL);
+        block_serialized_data_cb, NULL, NULL);
   }
 
   /* get sinkpad for the new stream */
