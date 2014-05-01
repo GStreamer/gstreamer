@@ -1188,7 +1188,7 @@ gst_sdp_message_add_bandwidth (GstSDPMessage * msg, const gchar * bwtype,
  * @t: a #GstSDPTime
  * @start: the start time
  * @stop: the stop time
- * @repeat: (array): the repeat times
+ * @repeat: (array zero-terminated=1): the repeat times
  *
  * Set time information @start, @stop and @repeat in @t.
  *
@@ -1309,7 +1309,7 @@ DEFINE_ARRAY_REMOVE (time, times, GstSDPTime, FREE_TIME);
  * @msg: a #GstSDPMessage
  * @start: the start time
  * @stop: the stop time
- * @repeat: (array): the repeat times
+ * @repeat: (array zero-terminated=1): the repeat times
  *
  * Add time information @start and @stop to @msg.
  *
@@ -1715,7 +1715,7 @@ gst_sdp_message_add_media (GstSDPMessage * msg, GstSDPMedia * media)
 
 /**
  * gst_sdp_media_new:
- * @media: (out): pointer to new #GstSDPMedia
+ * @media: (out) (transfer full): pointer to new #GstSDPMedia
  *
  * Allocate a new GstSDPMedia and store the result in @media.
  *
