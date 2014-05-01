@@ -157,34 +157,16 @@ G_V_ENCODING_TARGET_COMBINATIONS = [
 
 
 # List of scenarios to run depending on the protocol in use
-G_V_SCENARIOS = {Protocols.FILE: ["play_15s",
-                                  "reverse_playback",
-                                  "fast_forward",
-                                  "seek_forward",
-                                  "seek_backward",
-                                  "seek_with_stop",
-                                  "switch_audio_track",
-                                  "switch_audio_track_while_paused",
-                                  "switch_subtitle_track",
-                                  "scrub_forward_seeking"],
-                 Protocols.HTTP: ["play_15s",
-                                  "fast_forward",
-                                  "seek_forward",
-                                  "seek_backward",
-                                  "seek_with_stop",
-                                  "switch_audio_track",
-                                  "switch_audio_track_while_paused",
-                                  "switch_subtitle_track",
-                                  "reverse_playback"],
-                 Protocols.HLS: ["play_15s",
-                                 "fast_forward",
-                                 "seek_forward",
-                                 "seek_with_stop",
-                                  "switch_audio_track",
-                                  "switch_audio_track_while_paused",
-                                  "switch_subtitle_track",
-                                 "seek_backward"],
-                 }
+G_V_SCENARIOS = ["play_15s",
+                 "reverse_playback",
+                 "fast_forward",
+                 "seek_forward",
+                 "seek_backward",
+                 "seek_with_stop",
+                 "switch_audio_track",
+                 "switch_audio_track_while_paused",
+                 "switch_subtitle_track",
+                 "scrub_forward_seeking"]
 
 G_V_PROTOCOL_VIDEO_RESTRICTION_CAPS = {
     # Handle the unknown framerate in HLS samples
@@ -192,23 +174,34 @@ G_V_PROTOCOL_VIDEO_RESTRICTION_CAPS = {
 }
 
 G_V_BLACKLISTED_TESTS = \
-[("validate.hls.playback.fast_forward.*",
+[# HLS known issues:
+ ("validate.hls.playback.fast_forward.*",
   "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
  ("validate.hls.playback.seek_with_stop.*",
   "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
+ ("validate.hls.playback.reverse_playback.*",
+  "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
+ ("validate.hls.*scrub_forward_seeking.*", "This is not stable enough for now."),
+
+ # Matroska/WEBM known issues:
  ("validate.*.reverse_playback.*webm$",
   "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
- ("validate.*.playback.reverse_playback.*ts|validate.*.playback.reverse_playback.*MTS",
-  "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
+ ("validate.*Sintel.*reverse.*mkv",
+  "TODO in matroskademux: FIXME: We should build an index during playback or "
+  "when scanning that can be used here. The reverse playback code requires "
+  " seek_index and seek_entry to be set!"),
  ("validate.http.playback.seek_with_stop.*webm",
   "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
  ("validate.http.playback.seek_with_stop.*mkv",
   "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
- ("validate.*Sintel.*reverse.*mkv",
-  "TODO in matroskademux: FIXME: We should build an index during playback or "
-  "when scanning that can be used here. The reverse playback code requires "
-  " seek_index and seek_entry to be set!")
- ]
+
+ # MPEG TS known issues:
+ ('(?i)validate.*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
+  "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
+
+ # HTTP known issues:
+ ("validate.http.*scrub_forward_seeking.*", "This is not stable enough for now."),
+]
 
 class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
@@ -496,7 +489,7 @@ use --wanted-tests defaults_only""")
                 protocol = minfo.media_descriptor.get_protocol()
                 if self._run_defaults:
                     scenarios = [self._scenarios.get_scenario(scenario_name)
-                                 for scenario_name in G_V_SCENARIOS[protocol]]
+                                 for scenario_name in G_V_SCENARIOS]
                 else:
                     scenarios = self._scenarios.get_scenario(None)
 
