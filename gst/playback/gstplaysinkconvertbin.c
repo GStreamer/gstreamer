@@ -188,6 +188,12 @@ pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstCaps *caps;
   gboolean raw;
 
+  if (GST_IS_EVENT (info->data) && !GST_EVENT_IS_SERIALIZED (info->data)) {
+    GST_DEBUG_OBJECT (self, "Letting non-serialized event %s pass",
+        GST_EVENT_TYPE_NAME (info->data));
+    return GST_PAD_PROBE_PASS;
+  }
+
   GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
   GST_DEBUG_OBJECT (self, "Pad blocked");
 
