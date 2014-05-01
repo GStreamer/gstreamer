@@ -424,9 +424,11 @@ struct _GstVaapiDecoderH264Private {
     GstVaapiParserInfoH264     *prev_pi;
     GstVaapiParserInfoH264     *prev_slice_pi;
     GstVaapiFrameStore         *prev_frame;
-    GstVaapiFrameStore         *dpb[16];
+    GstVaapiFrameStore        **dpb;
     guint                       dpb_count;
     guint                       dpb_size;
+    guint                       dpb_size_max;
+    guint                       max_views;
     GstVaapiProfile             profile;
     GstVaapiEntrypoint          entrypoint;
     GstVaapiChromaType          chroma_type;
@@ -481,6 +483,14 @@ struct _GstVaapiDecoderH264Class {
 static gboolean
 exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture);
 
+/* Determines if the supplied profile is one of the MVC set */
+static gboolean
+is_mvc_profile(GstH264Profile profile)
+{
+    return profile == GST_H264_PROFILE_MULTIVIEW_HIGH ||
+        profile == GST_H264_PROFILE_STEREO_HIGH;
+}
+
 /* Determines the view order index (VOIdx) from the supplied view_id */
 static gint
 get_view_order_index(GstH264SPS *sps, guint16 view_id)
@@ -500,10 +510,19 @@ get_view_order_index(GstH264SPS *sps, guint16 view_id)
     return -1;
 }
 
+/* Determines NumViews */
+static guint
+get_num_views(GstH264SPS *sps)
+{
+    return 1 + (sps->extension_type == GST_H264_NAL_EXTENSION_MVC ?
+        sps->extension.mvc.num_views_minus1 : 0);
+}
+
 /* Get number of reference frames to use */
 static guint
 get_max_dec_frame_buffering(GstH264SPS *sps)
 {
+    guint num_views, max_dpb_frames;
     guint max_dec_frame_buffering, PicSizeMbs;
     GstVaapiLevelH264 level;
     const GstVaapiH264LevelLimits *level_limits;
@@ -514,13 +533,18 @@ get_max_dec_frame_buffering(GstH264SPS *sps)
     else
         level = gst_vaapi_utils_h264_get_level(sps->level_idc);
     level_limits = gst_vaapi_utils_h264_get_level_limits(level);
-    if (!level_limits)
-        return 16;
-
-    PicSizeMbs = ((sps->pic_width_in_mbs_minus1 + 1) *
-                  (sps->pic_height_in_map_units_minus1 + 1) *
-                  (sps->frame_mbs_only_flag ? 1 : 2));
-    max_dec_frame_buffering = level_limits->MaxDpbMbs / PicSizeMbs;
+    if (G_UNLIKELY(!level_limits)) {
+        GST_FIXME("unsupported level_idc value (%d)", sps->level_idc);
+        max_dec_frame_buffering = 16;
+    }
+    else {
+        PicSizeMbs = ((sps->pic_width_in_mbs_minus1 + 1) *
+                      (sps->pic_height_in_map_units_minus1 + 1) *
+                      (sps->frame_mbs_only_flag ? 1 : 2));
+        max_dec_frame_buffering = level_limits->MaxDpbMbs / PicSizeMbs;
+    }
+    if (is_mvc_profile(sps->profile_idc))
+        max_dec_frame_buffering <<= 1;
 
     /* VUI parameters */
     if (sps->vui_parameters_present_flag) {
@@ -542,8 +566,10 @@ get_max_dec_frame_buffering(GstH264SPS *sps)
         }
     }
 
-    if (max_dec_frame_buffering > 16)
-        max_dec_frame_buffering = 16;
+    num_views = get_num_views(sps);
+    max_dpb_frames = 16 * (num_views > 1 ? g_bit_storage(num_views - 1) : 1);
+    if (max_dec_frame_buffering > max_dpb_frames)
+        max_dec_frame_buffering = max_dpb_frames;
     else if (max_dec_frame_buffering < sps->num_ref_frames)
         max_dec_frame_buffering = sps->num_ref_frames;
     return MAX(1, max_dec_frame_buffering);
@@ -760,13 +786,30 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     return TRUE;
 }
 
-static inline void
-dpb_reset(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
+static gboolean
+dpb_reset(GstVaapiDecoderH264 *decoder, guint dpb_size)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
 
-    priv->dpb_size = get_max_dec_frame_buffering(sps);
+    if (dpb_size < priv->dpb_count)
+        return FALSE;
+
+    if (dpb_size > priv->dpb_size_max) {
+        priv->dpb = g_try_realloc_n(priv->dpb, dpb_size, sizeof(*priv->dpb));
+        if (!priv->dpb)
+            return FALSE;
+        memset(&priv->dpb[priv->dpb_size_max], 0,
+            (dpb_size - priv->dpb_size_max) * sizeof(*priv->dpb));
+        priv->dpb_size_max = dpb_size;
+    }
+
+    if (priv->dpb_size < dpb_size)
+        priv->dpb_size = dpb_size;
+    else if (dpb_size < priv->dpb_count)
+        return FALSE;
+
     GST_DEBUG("DPB size %u", priv->dpb_size);
+    return TRUE;
 }
 
 static GstVaapiDecoderStatus
@@ -830,6 +873,10 @@ gst_vaapi_decoder_h264_destroy(GstVaapiDecoder *base_decoder)
     guint i;
 
     gst_vaapi_decoder_h264_close(decoder);
+
+    g_free(priv->dpb);
+    priv->dpb = NULL;
+    priv->dpb_size = 0;
 
     for (i = 0; i < G_N_ELEMENTS(priv->pps); i++)
         gst_vaapi_parser_info_h264_replace(&priv->pps[i], NULL);
@@ -965,7 +1012,13 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     GstVaapiProfile profile;
     GstVaapiChromaType chroma_type;
     gboolean reset_context = FALSE;
-    guint mb_width, mb_height;
+    guint mb_width, mb_height, dpb_size;
+
+    dpb_size = get_max_dec_frame_buffering(sps);
+    if (priv->dpb_size < dpb_size) {
+        GST_DEBUG("DPB size increased");
+        reset_context = TRUE;
+    }
 
     profile = get_profile(decoder, sps);
     if (!profile) {
@@ -1022,14 +1075,15 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     info.chroma_type = priv->chroma_type;
     info.width      = sps->width;
     info.height     = sps->height;
-    info.ref_frames = get_max_dec_frame_buffering(sps);
+    info.ref_frames = dpb_size;
 
     if (!gst_vaapi_decoder_ensure_context(GST_VAAPI_DECODER(decoder), &info))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     priv->has_context = TRUE;
 
     /* Reset DPB */
-    dpb_reset(decoder, sps);
+    if (!dpb_reset(decoder, dpb_size))
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -1153,6 +1207,9 @@ parse_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
+    /* Reset defaults */
+    priv->max_views = 1;
+
     priv->parser_state |= GST_H264_VIDEO_STATE_GOT_SPS;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -1231,6 +1288,7 @@ parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstH264NalUnit * const nalu = &pi->nalu;
     GstH264ParserResult result;
+    guint num_views;
 
     GST_DEBUG("parse slice");
 
@@ -1274,6 +1332,12 @@ parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
         slice_hdr, TRUE, TRUE);
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
+
+    num_views = get_num_views(slice_hdr->pps->sequence);
+    if (priv->max_views < num_views) {
+        priv->max_views = num_views;
+        GST_DEBUG("maximum number of views changed to %u", num_views);
+    }
 
     priv->parser_state |= GST_H264_VIDEO_STATE_GOT_SLICE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
