@@ -100,6 +100,8 @@ struct _GstGLMemory
   gpointer              user_data;
   guint                 pbo;
   guint                 unpack_length;
+
+  gpointer              _gst_reserved[GST_PADDING];
 };
 
 /**
