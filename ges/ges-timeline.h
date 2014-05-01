@@ -50,11 +50,11 @@ G_BEGIN_DECLS
 
 /**
  * ges_timeline_get_project:
- * @obj: The #GESClip from which to retrieve the project
+ * @obj: The #GESTimeline from which to retrieve the project
  *
  * Helper macro to retrieve the project from which a #GESTimeline as been extracted
  */
-#define ges_timeline_get_project(obj) (GES_TIMELINE (ges_extractable_get_asset (obj))
+#define ges_timeline_get_project(obj) (GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE(obj))))
 
 typedef struct _GESTimelinePrivate GESTimelinePrivate;
 
