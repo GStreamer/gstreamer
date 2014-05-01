@@ -196,6 +196,7 @@ struct _GstBinPrivate
   gboolean message_forward;
 
   gboolean posted_eos;
+  gboolean posted_playing;
 
   GList *contexts;
 };
@@ -216,8 +217,7 @@ static void gst_bin_get_property (GObject * object, guint prop_id,
 
 static GstStateChangeReturn gst_bin_change_state_func (GstElement * element,
     GstStateChange transition);
-static void gst_bin_state_changed (GstElement * element, GstState oldstate,
-    GstState newstate, GstState pending);
+static gboolean gst_bin_post_message (GstElement * element, GstMessage * msg);
 static GstStateChangeReturn gst_bin_get_state_func (GstElement * element,
     GstState * state, GstState * pending, GstClockTime timeout);
 static void bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
@@ -450,7 +450,7 @@ gst_bin_class_init (GstBinClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_bin_change_state_func);
-  gstelement_class->state_changed = GST_DEBUG_FUNCPTR (gst_bin_state_changed);
+  gstelement_class->post_message = GST_DEBUG_FUNCPTR (gst_bin_post_message);
   gstelement_class->get_state = GST_DEBUG_FUNCPTR (gst_bin_get_state_func);
 #if 0
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_bin_get_index_func);
@@ -2509,17 +2509,30 @@ gst_bin_do_latency_func (GstBin * bin)
   return res;
 }
 
-static void
-gst_bin_state_changed (GstElement * element, GstState oldstate,
-    GstState newstate, GstState pending)
+static gboolean
+gst_bin_post_message (GstElement * element, GstMessage * msg)
 {
   GstElementClass *pklass = (GstElementClass *) parent_class;
+  gboolean ret;
 
-  if (newstate == GST_STATE_PLAYING && pending == GST_STATE_VOID_PENDING)
-    bin_do_eos (GST_BIN_CAST (element));
+  ret = pklass->post_message (element, gst_message_ref (msg));
 
-  if (pklass->state_changed)
-    pklass->state_changed (element, oldstate, newstate, pending);
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STATE_CHANGED &&
+      GST_MESSAGE_SRC (msg) == GST_OBJECT_CAST (element)) {
+    GstState newstate, pending;
+
+    gst_message_parse_state_changed (msg, NULL, &newstate, &pending);
+    if (newstate == GST_STATE_PLAYING && pending == GST_STATE_VOID_PENDING) {
+      GST_BIN_CAST (element)->priv->posted_playing = TRUE;
+      bin_do_eos (GST_BIN_CAST (element));
+    } else {
+      GST_BIN_CAST (element)->priv->posted_playing = FALSE;
+    }
+  }
+
+  gst_message_unref (msg);
+
+  return ret;
 }
 
 static GstStateChangeReturn
@@ -3213,7 +3226,7 @@ bin_do_eos (GstBin * bin)
    */
   eos = GST_STATE (bin) == GST_STATE_PLAYING
       && GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING
-      && is_eos (bin, &seqnum);
+      && bin->priv->posted_playing && is_eos (bin, &seqnum);
   GST_OBJECT_UNLOCK (bin);
 
   if (eos
