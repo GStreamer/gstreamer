@@ -1,0 +1,7 @@
+description, summary="Change subtitle track while pipeline is PAUSED", min-subtitle-track=2, duration=5.0
+pause;
+wait, duration=0.5
+switch-track, type=text, index=(string)+1
+wait, duration=0.5
+play;
+stop, playback_time=5.0

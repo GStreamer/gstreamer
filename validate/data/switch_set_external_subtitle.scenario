@@ -1,0 +1,1 @@
+description, summary="Change subtitle track at 1 second while paused", duration=5.0, needs-ext-file="subtitles/%s.1.srt:subtitles/%s.1.srt"
