@@ -527,6 +527,12 @@ AC_ARG_ENABLE([opengl],
        *) AC_MSG_ERROR([bad value ${enableval} for --enable-opengl]) ;;
      esac],[NEED_GL=auto])
 
+AC_ARG_WITH([opengl-module-name],
+  AS_HELP_STRING([--with-opengl-module-name],[library module name for OpenGL (default: libGL)]))
+if test x$with_opengl_module_name != x; then
+  AC_DEFINE_UNQUOTED(GST_GL_LIBGL_MODULE_NAME, "$with_opengl_module_name", [OpenGL module name])
+fi
+
 AC_ARG_ENABLE([gles2],
      [  --enable-gles2          Enable OpenGL|ES 2.0 support @<:@default=auto@:>@],
      [case "${enableval}" in
@@ -536,6 +542,12 @@ AC_ARG_ENABLE([gles2],
        *) AC_MSG_ERROR([bad value ${enableval} for --enable-gles2]) ;;
      esac],[NEED_GLES2=auto])
 
+AC_ARG_WITH([gles2-module-name],
+  AS_HELP_STRING([--with-gles2-module-name],[library module name for GLES2 (default: libGLESv2)]))
+if test x$with_gles2_module_name != x; then
+  AC_DEFINE_UNQUOTED(GST_GL_LIBGLESV2_MODULE_NAME, "$with_gles2_module_name", [GLES2 module name])
+fi
+
 AC_ARG_ENABLE([egl],
      [  --enable-egl            Enable EGL support @<:@default=auto@:>@],
      [case "${enableval}" in
@@ -544,6 +556,12 @@ AC_ARG_ENABLE([egl],
        auto) NEED_EGL=auto ;;
        *) AC_MSG_ERROR([bad value ${enableval} for --enable-egl]) ;;
      esac],[NEED_EGL=auto])
+
+AC_ARG_WITH([egl-module-name],
+  AS_HELP_STRING([--with-egl-module-name],[library module name for EGL (default: libEGL)]))
+if test x$with_egl_module_name != x; then
+  AC_DEFINE_UNQUOTED(GST_GL_LIBEGL_MODULE_NAME, "$with_egl_module_name", [EGL module name])
+fi
 
 AC_ARG_ENABLE([wgl],
      [  --enable-wgl            Enable WGL support @<:@default=auto@:>@],

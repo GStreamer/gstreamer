@@ -290,8 +290,8 @@ gst_gl_context_wgl_get_proc_address (GstGLContext * context, const gchar * name)
 {
   gpointer result;
 
-  if (!(result = wglGetProcAddress ((LPCSTR) name))) {
-    result = gst_gl_context_default_get_proc_address (context, name);
+  if (!(result = gst_gl_context_default_get_proc_address (context, name))) {
+    result = wglGetProcAddress ((LPCSTR) name);
   }
 
   return result;

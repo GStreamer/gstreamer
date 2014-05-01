@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#include <gmodule.h>
+
 /* FIXME: Sharing contexts requires the EGLDisplay to be the same
  * may need to box it.
  */
@@ -478,22 +480,48 @@ gst_gl_context_egl_get_gl_platform (GstGLContext * context)
   return GST_GL_PLATFORM_EGL;
 }
 
+static GModule *module_egl;
+
+static gpointer
+load_egl_module (gpointer user_data)
+{
+#ifdef GST_GL_LIBEGL_MODULE_NAME
+  module_egl = g_module_open (GST_GL_LIBEGL_MODULE_NAME, G_MODULE_BIND_LAZY);
+#else
+  /* This automatically handles the suffix and even .la files */
+  module_egl = g_module_open ("libEGL", G_MODULE_BIND_LAZY);
+
+  /* On Linux the .so is only in -dev packages, try with a real soname
+   * Proper compilers will optimize away the strcmp */
+  if (!module_egl && strcmp (G_MODULE_SUFFIX, "so") == 0)
+    module_egl = g_module_open ("libEGL.so.1", G_MODULE_BIND_LAZY);
+#endif
+
+  return NULL;
+}
+
 static gpointer
 gst_gl_context_egl_get_proc_address (GstGLContext * context, const gchar * name)
 {
   gpointer result = NULL;
+  static GOnce g_once = G_ONCE_INIT;
+
+  result = gst_gl_context_default_get_proc_address (context, name);
+
+  g_once (&g_once, load_egl_module, NULL);
+
+  if (!result && module_egl) {
+    g_module_symbol (module_egl, name, &result);
+  }
 
   /* FIXME: On Android this returns wrong addresses for non-EGL functions */
 #if GST_GL_HAVE_WINDOW_ANDROID
-  if (!(result = gst_gl_context_default_get_proc_address (context, name))) {
-    if (g_str_has_prefix (name, "egl"))
-      result = eglGetProcAddress (name);
-  }
+  if (!result && g_str_has_prefix (name, "egl")) {
 #else
-  if (!(result = eglGetProcAddress (name))) {
-    result = gst_gl_context_default_get_proc_address (context, name);
-  }
+  if (!result) {
+    result = eglGetProcAddress (name);
 #endif
+  }
 
   return result;
 }
