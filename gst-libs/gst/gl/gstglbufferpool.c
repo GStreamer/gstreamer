@@ -50,7 +50,6 @@ struct _GstGLBufferPoolPrivate
   GstCaps *caps;
   gint im_format;
   GstVideoInfo info;
-  GstGLUpload *upload;
   gboolean add_videometa;
 #if GST_GL_HAVE_PLATFORM_EGL
   gboolean want_eglimage;
@@ -133,11 +132,10 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 #endif
 
   if (reset) {
-    if (priv->upload)
-      gst_object_unref (priv->upload);
+    if (glpool->upload)
+      gst_object_unref (glpool->upload);
 
-    priv->upload = gst_gl_upload_new (glpool->context);
-    gst_gl_upload_init_format (priv->upload, &priv->info);
+    glpool->upload = gst_gl_upload_new (glpool->context);
   }
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
@@ -167,7 +165,25 @@ unknown_format:
         ("Failed to create output image buffer of %dx%d pixels",
             priv->info.width, priv->info.height),
         ("Invalid input caps %" GST_PTR_FORMAT, caps));
-    return FALSE;;
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_gl_buffer_pool_start (GstBufferPool * pool)
+{
+  GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
+  GstGLBufferPoolPrivate *priv = glpool->priv;
+
+  if (!gst_gl_upload_init_format (glpool->upload, &priv->info))
+    goto upload_error;
+
+  return GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
+
+upload_error:
+  {
+    GST_WARNING_OBJECT (glpool, "Failed to initialize upload");
+    return FALSE;
   }
 }
 
@@ -202,7 +218,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   if (!gst_gl_memory_setup_buffer (glpool->context, info, buf))
     goto mem_create_failed;
 
-  gst_gl_upload_add_video_gl_texture_upload_meta (glpool->priv->upload, buf);
+  gst_gl_upload_add_video_gl_texture_upload_meta (glpool->upload, buf);
 
   *buffer = buf;
 
@@ -311,6 +327,7 @@ gst_gl_buffer_pool_class_init (GstGLBufferPoolClass * klass)
   gstbufferpool_class->set_config = gst_gl_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_gl_buffer_pool_alloc;
   gstbufferpool_class->acquire_buffer = gst_gl_buffer_pool_acquire_buffer;
+  gstbufferpool_class->start = gst_gl_buffer_pool_start;
 }
 
 static void
@@ -349,8 +366,8 @@ gst_gl_buffer_pool_finalize (GObject * object)
   if (priv->caps)
     gst_caps_unref (priv->caps);
 
-  if (priv->upload)
-    gst_object_unref (priv->upload);
+  if (pool->upload)
+    gst_object_unref (pool->upload);
 
   G_OBJECT_CLASS (gst_gl_buffer_pool_parent_class)->finalize (object);
 
