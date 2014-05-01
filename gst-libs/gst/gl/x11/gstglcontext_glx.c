@@ -421,8 +421,8 @@ gst_gl_context_glx_get_proc_address (GstGLContext * context, const gchar * name)
 {
   gpointer result;
 
-  if (!(result = glXGetProcAddressARB ((const GLubyte *) name))) {
-    result = gst_gl_context_default_get_proc_address (context, name);
+  if (!(result = gst_gl_context_default_get_proc_address (context, name))) {
+    result = glXGetProcAddressARB ((const GLubyte *) name);
   }
 
   return result;

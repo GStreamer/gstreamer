@@ -71,6 +71,59 @@
 #define USING_GLES2(display) (display->gl_api & GST_GL_API_GLES2)
 #define USING_GLES3(display) (display->gl_api & GST_GL_API_GLES3)
 
+static GModule *module_self;
+
+#if GST_GL_HAVE_OPENGL
+static GOnce module_opengl_gonce = G_ONCE_INIT;
+static GModule *module_opengl;
+
+static gpointer
+load_opengl_module (gpointer user_data)
+{
+#ifdef GST_GL_LIBGL_MODULE_NAME
+  module_opengl = g_module_open (GST_GL_LIBGL_MODULE_NAME, G_MODULE_BIND_LAZY);
+#else
+  /* This automatically handles the suffix and even .la files */
+  module_opengl = g_module_open ("libGL", G_MODULE_BIND_LAZY);
+
+  /* On Linux the .so is only in -dev packages, try with a real soname
+   * Proper compilers will optimize away the strcmp */
+  if (!module_opengl && strcmp (G_MODULE_SUFFIX, "so") == 0)
+    module_opengl = g_module_open ("libGL.so.1", G_MODULE_BIND_LAZY);
+#endif
+
+  return NULL;
+}
+#endif
+
+#if GST_GL_HAVE_GLES2
+static GOnce module_gles2_gonce = G_ONCE_INIT;
+static GModule *module_gles2;
+
+static gpointer
+load_gles2_module (gpointer user_data)
+{
+#ifdef GST_GL_LIBGLESV2_MODULE_NAME
+  module_gles2 =
+      g_module_open (GST_GL_LIBGLESV2_MODULE_NAME, G_MODULE_BIND_LAZY);
+#else
+  /* This automatically handles the suffix and even .la files */
+  module_gles2 = g_module_open ("libGLESv2", G_MODULE_BIND_LAZY);
+
+  /* On Linux the .so is only in -dev packages, try with a real soname
+   * Proper compilers will optimize away the strcmp */
+  if (!module_gles2 && strcmp (G_MODULE_SUFFIX, "so") == 0)
+    module_gles2 = g_module_open ("libGLESv2.so.2", G_MODULE_BIND_LAZY);
+#endif
+
+  return NULL;
+}
+#endif
+
+#if GST_GL_HAVE_GLES3
+#error "Add module loading support for GLES3"
+#endif
+
 #define GST_CAT_DEFAULT gst_gl_context_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
@@ -98,7 +151,6 @@ struct _GstGLContextPrivate
   gboolean alive;
 
   GstGLContext *other_context;
-  GstGLAPI gl_api;
   GError **error;
 
   gint gl_major;
@@ -170,6 +222,8 @@ static void
 gst_gl_context_class_init (GstGLContextClass * klass)
 {
   g_type_class_add_private (klass, sizeof (GstGLContextPrivate));
+
+  module_self = g_module_open (NULL, G_MODULE_BIND_LAZY);
 
   klass->get_proc_address =
       GST_DEBUG_FUNCPTR (gst_gl_context_default_get_proc_address);
@@ -412,46 +466,28 @@ gst_gl_context_default_get_proc_address (GstGLContext * context,
     const gchar * name)
 {
   gpointer ret = NULL;
-  static GModule *module = NULL;
+  GstGLAPI gl_api = gst_gl_context_get_gl_api (context);
 
-#if GST_GL_HAVE_PLATFORM_EGL
-  static GModule *module_egl = NULL;
-
-  if (!module_egl) {
-    module_egl = g_module_open ("libEGL.so.1", G_MODULE_BIND_LAZY);
-
-    /* fallback */
-    if (!module_egl)
-      module_egl = g_module_open (NULL, G_MODULE_BIND_LAZY);
-  }
-
-  if (module_egl) {
-    if (!g_module_symbol (module_egl, name, &ret)) {
-      ret = NULL;
-    }
-  }
-
-  if (ret)
-    return ret;
-#endif
-
-  if (!module) {
-    const gchar *name = NULL;
+  /* First try to load symbol from the selected GL API for this context */
 #if GST_GL_HAVE_GLES2
-    name = "libGLESv2.so.2";
+  if (!ret && (gl_api & GST_GL_API_GLES2)) {
+    g_once (&module_gles2_gonce, load_gles2_module, NULL);
+    if (module_gles2)
+      g_module_symbol (module_gles2, name, &ret);
+  }
 #endif
-    module = g_module_open (name, G_MODULE_BIND_LAZY);
 
-    /* fallback */
-    if (!module)
-      module = g_module_open (NULL, G_MODULE_BIND_LAZY);
+#if GST_GL_HAVE_OPENGL
+  if (!ret && (gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3))) {
+    g_once (&module_opengl_gonce, load_opengl_module, NULL);
+    if (module_opengl)
+      g_module_symbol (module_opengl, name, &ret);
   }
+#endif
 
-  if (module) {
-    if (!g_module_symbol (module, name, &ret)) {
-      return NULL;
-    }
-  }
+  /* Otherwise fall back to the current module */
+  if (!ret)
+    g_module_symbol (module_self, name, &ret);
 
   return ret;
 }
