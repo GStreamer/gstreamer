@@ -1004,6 +1004,12 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstCaps *subcaps;
   GList *l, *factories = NULL;
 
+  if (GST_IS_EVENT (info->data) && !GST_EVENT_IS_SERIALIZED (info->data)) {
+    GST_DEBUG_OBJECT (pad, "Letting non-serialized event %s pass",
+        GST_EVENT_TYPE_NAME (info->data));
+    return GST_PAD_PROBE_PASS;
+  }
+
   GST_DEBUG_OBJECT (pad, "Pad blocked");
 
   GST_SUBTITLE_OVERLAY_LOCK (self);
