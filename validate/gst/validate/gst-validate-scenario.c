@@ -509,7 +509,7 @@ _execute_switch_track (GstValidateScenario * scenario,
   input_selector =
       find_input_selector_with_type (GST_BIN (scenario->pipeline), type);
   if (input_selector) {
-    GstPad *pad;
+    GstPad *pad, *cpad;
 
     if ((str_index = gst_structure_get_string (action->structure, "index"))) {
       if (!gst_structure_get_uint (action->structure, "index", &index)) {
@@ -534,10 +534,15 @@ _execute_switch_track (GstValidateScenario * scenario,
       }
     }
 
-    gst_validate_printf (action, "Switching to track number: %i\n", index);
     pad = find_nth_sink_pad (input_selector, index);
+    g_object_get (input_selector, "active-pad", &cpad, NULL);
+    gst_validate_printf (action, "Switching to track number: %i,"
+        " (from %s:%s to %s:%s)\n",
+        index, GST_DEBUG_PAD_NAME (cpad),
+        GST_DEBUG_PAD_NAME (pad));
     g_object_set (input_selector, "active-pad", pad, NULL);
     gst_object_unref (pad);
+    gst_object_unref (cpad);
     gst_object_unref (input_selector);
 
     return TRUE;
@@ -1452,10 +1457,9 @@ gst_validate_list_scenarios (gchar * output_file)
 static void
 _free_action_type (GstValidateActionType * type)
 {
-  g_free (type->description);
-
   if (type->mandatory_fields)
     g_strfreev (type->mandatory_fields);
+
   g_free (type->description);
 
   g_slice_free (GstValidateActionType, type);
@@ -1470,7 +1474,7 @@ gst_validate_add_action_type (const gchar * type_name,
 
   if (action_types_table == NULL)
     action_types_table = g_hash_table_new_full (g_str_hash, g_str_equal,
-        (GDestroyNotify) _free_action_type, NULL);
+        g_free, (GDestroyNotify) _free_action_type);
 
   type->execute = function;
   type->mandatory_fields = g_strdupv ((gchar **) mandatory_fields);
