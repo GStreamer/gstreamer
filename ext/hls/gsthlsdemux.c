@@ -845,24 +845,26 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     buffer = tmp_buffer;
   }
 
+  if (!buffer) {
+    return GST_FLOW_OK;
+  }
+
   if (demux->starting_fragment) {
+    GST_LOG_OBJECT (demux, "set buffer pts=%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (demux->current_timestamp));
+    GST_BUFFER_PTS (buffer) = demux->current_timestamp;
+
     if (demux->segment.rate < 0)
       /* Set DISCONT flag for every first buffer in reverse playback mode
        * as each fragment for its own has to be reversed */
       demux->discont = TRUE;
     demux->starting_fragment = FALSE;
+  } else {
+    GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
   }
-
-  if (!buffer) {
-    return GST_FLOW_OK;
-  }
-
-  GST_LOG_OBJECT (demux, "set buffer pts=%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (demux->current_timestamp));
 
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_PTS (buffer) = demux->current_timestamp;
 
   /* We actually need to do this every time we switch bitrate */
   if (G_UNLIKELY (demux->do_typefind)) {
