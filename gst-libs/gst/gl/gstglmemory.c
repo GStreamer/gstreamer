@@ -76,6 +76,7 @@ typedef struct
   GstGLMemory *src;
   GstVideoGLTextureType out_format;
   guint out_width, out_height;
+  guint out_stride;
   gboolean respecify;
   /* inout */
   guint tex_id;
@@ -603,7 +604,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   GstGLMemory *src;
   guint tex_id;
   GLuint fboId;
-  gsize out_width, out_height;
+  gsize out_width, out_height, out_stride;
   GLuint out_gl_format, out_gl_type;
   GLuint in_gl_format, in_gl_type;
   gsize in_size, out_size;
@@ -613,6 +614,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   tex_id = copy_params->tex_id;
   out_width = copy_params->out_width;
   out_height = copy_params->out_height;
+  out_stride = copy_params->out_stride;
 
   gl = src->context->gl_vtable;
   out_gl_format = _gst_gl_format_from_gl_texture_type (copy_params->out_format);
@@ -630,10 +632,8 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
     goto error;
   }
 
-  in_size = _gl_format_type_n_bytes (in_gl_format, in_gl_type) * src->width *
-      src->height;
-  out_size = _gl_format_type_n_bytes (out_gl_format, out_gl_type) * out_width *
-      out_height;
+  in_size = src->height * src->stride;
+  out_size = out_height * out_stride;
 
   if (copy_params->respecify) {
     if (in_size != out_size) {
@@ -754,6 +754,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     copy_params.out_format = src->tex_type;
     copy_params.out_width = src->width;
     copy_params.out_height = src->height;
+    copy_params.out_stride = src->height;
     copy_params.respecify = FALSE;
 
     gst_gl_context_thread_add (src->context, _gl_mem_copy_thread, &copy_params);
@@ -839,9 +840,10 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
  * gst_gl_memory_copy_into_texture:
  * @gl_mem:a #GstGLMemory
  * @tex_id:OpenGL texture id
- * @tex_type: a #GstVIdeoGLTextureType
+ * @tex_type: a #GstVideoGLTextureType
  * @width: width of @tex_id
  * @height: height of @tex_id
+ * @stride: stride of the backing texture data
  * @respecify: whether to copy the data or copy per texel
  *
  * Copies @gl_mem into the texture specfified by @tex_id.  The format of @tex_id
@@ -862,7 +864,8 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
  */
 gboolean
 gst_gl_memory_copy_into_texture (GstGLMemory * gl_mem, guint tex_id,
-    GstVideoGLTextureType tex_type, gint width, gint height, gboolean respecify)
+    GstVideoGLTextureType tex_type, gint width, gint height, gint stride,
+    gboolean respecify)
 {
   GstGLMemoryCopyParams copy_params;
 
@@ -871,6 +874,7 @@ gst_gl_memory_copy_into_texture (GstGLMemory * gl_mem, guint tex_id,
   copy_params.out_format = tex_type;
   copy_params.out_width = width;
   copy_params.out_height = height;
+  copy_params.out_stride = stride;
   copy_params.respecify = respecify;
 
   gst_gl_context_thread_add (gl_mem->context, _gl_mem_copy_thread,

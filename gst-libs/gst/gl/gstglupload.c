@@ -237,7 +237,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
       upload->out_tex = (GstGLMemory *) gst_gl_memory_alloc (upload->context,
           GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
           GST_VIDEO_INFO_HEIGHT (&upload->in_info),
-          GST_VIDEO_INFO_WIDTH (&upload->in_info));
+          GST_VIDEO_INFO_PLANE_STRIDE (&upload->in_info, 0));
 
     GST_LOG_OBJECT (upload, "Attempting upload with GstGLMemory");
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {

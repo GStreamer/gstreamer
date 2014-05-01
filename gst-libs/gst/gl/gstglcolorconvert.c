@@ -775,7 +775,7 @@ _YUV_to_RGB (GstGLContext * context, GstGLColorConvert * convert)
           GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA,
           GST_VIDEO_INFO_WIDTH (&convert->in_info),
           GST_VIDEO_INFO_HEIGHT (&convert->in_info),
-          GST_VIDEO_INFO_WIDTH (&convert->in_info));
+          GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0));
       break;
     case GST_VIDEO_FORMAT_NV12:
       info->frag_prog = g_strdup_printf (frag_NV12_NV21_to_RGB, 'r', 'a',
@@ -801,7 +801,7 @@ _YUV_to_RGB (GstGLContext * context, GstGLColorConvert * convert)
           GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA,
           GST_VIDEO_INFO_WIDTH (&convert->in_info),
           GST_VIDEO_INFO_HEIGHT (&convert->in_info),
-          GST_VIDEO_INFO_WIDTH (&convert->in_info));
+          GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0));
       break;
     default:
       break;
@@ -1238,7 +1238,7 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
           GST_MAP_WRITE | GST_MAP_GL);
       gst_gl_memory_copy_into_texture (convert->priv->out_temp[i],
           gl_mem->tex_id, gl_mem->tex_type, gl_mem->width, gl_mem->height,
-          FALSE);
+          gl_mem->stride, FALSE);
       gst_memory_unmap ((GstMemory *) gl_mem, &to_info);
       gst_memory_unmap ((GstMemory *) convert->priv->out_temp[i], &from_info);
     } else {
@@ -1287,7 +1287,8 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   if (convert->priv->scratch) {
     gst_gl_memory_copy_into_texture (convert->in_tex[0],
         convert->priv->scratch->tex_id, convert->priv->scratch->tex_type,
-        convert->priv->scratch->width, convert->priv->scratch->height, TRUE);
+        convert->priv->scratch->width, convert->priv->scratch->height,
+        convert->priv->scratch->stride, TRUE);
   }
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, convert->fbo);

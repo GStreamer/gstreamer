@@ -162,7 +162,8 @@ GstGLMemory * gst_gl_memory_wrapped_texture (GstGLContext * context, guint textu
 
 gboolean      gst_gl_memory_copy_into_texture (GstGLMemory *gl_mem, guint tex_id,
                                                GstVideoGLTextureType tex_type, 
-                                               gint width, gint height, gboolean respecify);
+                                               gint width, gint height, gint stride,
+                                               gboolean respecify);
 
 gboolean      gst_gl_memory_setup_buffer  (GstGLContext * context, GstVideoInfo * info,
                                            GstBuffer * buffer);
