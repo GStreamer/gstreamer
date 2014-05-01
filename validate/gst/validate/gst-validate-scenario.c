@@ -841,9 +841,19 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         g_list_free (priv->needs_parsing);
         priv->needs_parsing = NULL;
       }
-
       _add_get_position_source (scenario);
       break;
+    case GST_MESSAGE_STATE_CHANGED:
+      {
+        if (GST_MESSAGE_SRC (message) == GST_OBJECT (scenario->pipeline)) {
+          GstState nstate;
+
+          gst_message_parse_state_changed (message,
+              NULL, &nstate, NULL);
+          _add_get_position_source (scenario);
+        }
+        break;
+      }
     case GST_MESSAGE_ERROR:
     case GST_MESSAGE_EOS:
     {
