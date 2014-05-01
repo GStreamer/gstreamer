@@ -475,6 +475,9 @@ gst_validate_utils_flags_from_str (GType type, const gchar * str_flags)
   GFlagsClass *class = g_type_class_ref (type);
 
   for (i = 0; i < class->n_values; i++) {
+    if (class->values[i].value_nick == NULL)
+      continue;
+
     if (g_strrstr (str_flags, class->values[i].value_nick)) {
       flags |= class->values[i].value;
     }
