@@ -808,7 +808,7 @@ main (int argc, gchar ** argv)
   }
 
   tried_uris = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
-  if (((!load_path && (argc < 4)))) {
+  if (((!load_path && !scenario && (argc < 4)))) {
     g_printf ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
     exit (1);
