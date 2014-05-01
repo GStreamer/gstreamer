@@ -92,6 +92,43 @@ _serialize_project (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 static gboolean
+_add_asset (GstValidateScenario *scenario, GstValidateAction *action)
+{
+  const gchar *id = NULL;
+  const gchar *type_string = NULL;
+  GType type;
+  GESTimeline *timeline = get_timeline(scenario);
+  GESProject *project = ges_timeline_get_project(timeline);
+  GESAsset *asset;
+  GError *error = NULL;
+
+  id = gst_structure_get_string (action->structure, "id");
+  type_string = gst_structure_get_string (action->structure, "type");
+
+  if (!type_string || !id) {
+    GST_ERROR("Missing parameters, we got type %s and id %s", type_string, id);
+    return FALSE;
+  }
+
+  if (!(type = g_type_from_name(type_string))) {
+    GST_ERROR("This type doesn't exist : %s", type_string);
+    return FALSE;
+  }
+
+  if (type == GES_TYPE_URI_CLIP)
+    asset = (GESAsset *) ges_uri_clip_asset_request_sync(id, &error);
+  else
+    asset = ges_asset_request(type, id, &error);
+
+  if (!asset || error) {
+    GST_ERROR("There was an error requesting the asset with id %s and type %s", id, type_string);
+    return FALSE;
+  }
+
+  return ges_project_add_asset(project, asset);
+}
+
+static gboolean
 _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
 {
   gint64 cpos;
@@ -191,6 +228,10 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
     NULL
   };
 
+  const gchar *add_asset_mandatory_fields[] = { "id", "type",
+    NULL
+  };
+
   gst_validate_init ();
 
   if (scenario) {
@@ -203,7 +244,8 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
 
   gst_validate_add_action_type ("edit-clip", _edit_clip,
       move_clip_mandatory_fields, "Allows to seek into the files", FALSE);
-
+  gst_validate_add_action_type ("add-asset", _add_asset,
+      add_asset_mandatory_fields, "Allows to add an asset to the current project", FALSE);
   gst_validate_add_action_type ("serialize-project", _serialize_project,
       serialize_project_mandatory_fields, "serializes a project", FALSE);
 
