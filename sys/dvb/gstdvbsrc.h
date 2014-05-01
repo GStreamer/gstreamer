@@ -45,6 +45,7 @@ struct _GstDvbSrc
   gboolean need_tune;
 
   guchar delsys;
+  guchar best_guess_delsys;
 
   int adapter_number;           /* the device directory with the sub-devices */
   int frontend_number;
@@ -74,6 +75,7 @@ struct _GstDvbSrc
   int rolloff;
   int stream_id;
   guint64 timeout;
+  guint64 tuning_timeout;
 
   GstDvbSrcPol pol;
   guint stats_interval;
