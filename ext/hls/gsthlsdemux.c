@@ -1898,6 +1898,9 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   demux->current_key = key;
   demux->current_iv = iv;
 
+  /* Reset last flow return */
+  demux->last_ret = GST_FLOW_OK;
+
   if (!gst_hls_demux_update_source (demux, next_fragment_uri,
           demux->client->main ? demux->client->main->uri : NULL)) {
     *err = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN,
