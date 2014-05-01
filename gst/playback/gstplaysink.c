@@ -1013,6 +1013,12 @@ gst_play_sink_vis_blocked (GstPad * tee_pad, GstPadProbeInfo * info,
 
   playsink = GST_PLAY_SINK (user_data);
 
+  if (GST_IS_EVENT (info->data) && !GST_EVENT_IS_SERIALIZED (info->data)) {
+    GST_DEBUG_OBJECT (playsink, "Letting non-serialized event %s pass",
+        GST_EVENT_TYPE_NAME (info->data));
+    return GST_PAD_PROBE_PASS;
+  }
+
   GST_PLAY_SINK_LOCK (playsink);
   GST_DEBUG_OBJECT (playsink, "vis pad blocked");
   /* now try to change the plugin in the running vis chain */
@@ -4126,6 +4132,12 @@ sinkpad_blocked_cb (GstPad * blockedpad, GstPadProbeInfo * info,
 {
   GstPlaySink *playsink = (GstPlaySink *) user_data;
   GstPad *pad;
+
+  if (GST_IS_EVENT (info->data) && !GST_EVENT_IS_SERIALIZED (info->data)) {
+    GST_DEBUG_OBJECT (playsink, "Letting non-serialized event %s pass",
+        GST_EVENT_TYPE_NAME (info->data));
+    return GST_PAD_PROBE_PASS;
+  }
 
   GST_PLAY_SINK_LOCK (playsink);
 
