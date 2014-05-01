@@ -1308,7 +1308,6 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
   object = GST_DVBSRC (element);
   GST_LOG ("fd_dvr: %d", object->fd_dvr);
 
-  //g_object_get(G_OBJECT(object), "blocksize", &buffer_size, NULL);
   buffer_size = DEFAULT_BUFFER_SIZE;
 
   /* device can not be tuned during read */
@@ -1652,7 +1651,7 @@ gst_dvbsrc_tune (GstDvbSrc * object)
       case SYS_TURBO:
         object->tone = SEC_TONE_OFF;
         if (freq > 2200000) {
-          // this must be an absolute frequency
+          /* this must be an absolute frequency */
           if (freq < SLOF) {
             freq -= LOF1;
           } else {
@@ -1678,15 +1677,15 @@ gst_dvbsrc_tune (GstDvbSrc * object)
         if (object->diseqc_src == -1 || object->send_diseqc == FALSE) {
           set_prop (dvb_prop, &n, DTV_VOLTAGE, voltage);
 
-          // DTV_TONE not yet implemented
-          // set_prop (fe_props_array, &n, DTV_TONE, object->tone)
+          /* DTV_TONE not yet implemented
+           * set_prop (fe_props_array, &n, DTV_TONE, object->tone) */
         } else {
           GST_DEBUG_OBJECT (object, "Sending DISEqC");
           diseqc (object->fd_frontend, object->diseqc_src, voltage,
               object->tone);
           /* Once diseqc source is set, do not set it again until
-           * app decides to change it */
-          //object->send_diseqc = FALSE;
+           * app decides to change it
+           * object->send_diseqc = FALSE; */
         }
 
         if ((object->delsys == SYS_DVBS2) || (object->delsys == SYS_TURBO))
