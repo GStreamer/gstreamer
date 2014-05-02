@@ -221,8 +221,6 @@ static void gst_srtp_enc_release_pad (GstElement * element, GstPad * pad);
 
 struct GstSrtpEncPads
 {
-  guint ssrc;
-
   GstPad *sinkpad;
   GstPad *srcpad;
 };
@@ -906,7 +904,6 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
   gint size_max, size;
   GstBuffer *bufout = NULL;
   struct GstSrtpEncPads *priv = gst_pad_get_element_private (pad);
-  guint32 ssrc;
   gboolean do_setcaps = FALSE;
   GstMapInfo mapin, mapout;
 
@@ -923,14 +920,17 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
       goto out;
     }
 
-    ssrc = gst_rtp_buffer_get_ssrc (&rtpbuf);
-
     gst_rtp_buffer_unmap (&rtpbuf);
-  } else if (!rtcp_buffer_get_ssrc (buf, &ssrc)) {
-    GST_ELEMENT_ERROR (filter, STREAM, WRONG_TYPE, (NULL),
-        ("No SSRC found in buffer, dropping"));
-    ret = GST_FLOW_ERROR;
-    goto out;
+  } else {
+    GstRTCPBuffer rtcpbuf = GST_RTCP_BUFFER_INIT;
+
+    if (!gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcpbuf)) {
+      GST_ELEMENT_ERROR (filter, STREAM, WRONG_TYPE, (NULL),
+          ("Could not map RTCP buffer"));
+      ret = GST_FLOW_ERROR;
+      goto out;
+    }
+    gst_rtcp_buffer_unmap (&rtcpbuf);
   }
 
   do_setcaps = filter->key_changed;
@@ -946,8 +946,6 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
       goto out;
     }
   }
-  priv->ssrc = ssrc;
-
   GST_OBJECT_LOCK (filter);
 
   /* Update source caps if asked */
