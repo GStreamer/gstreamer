@@ -879,7 +879,7 @@ gst_matroska_mux_handle_sink_event (GstCollectPads * pads,
           if (!gst_structure_get_int (structure, name, &value)) {
             GST_ERROR_OBJECT (mux, "dvd-spu-clut-change event did not "
                 "contain %s field", name);
-            break;
+            goto break_hard;
           }
           clut[i] = value;
         }
@@ -893,6 +893,7 @@ gst_matroska_mux_handle_sink_event (GstCollectPads * pads,
       break;
   }
 
+break_hard:
   if (event != NULL)
     return gst_collect_pads_event_default (pads, data, event, FALSE);
 
