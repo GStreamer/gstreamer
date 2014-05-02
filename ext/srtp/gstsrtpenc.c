@@ -295,7 +295,6 @@ gst_srtp_enc_class_init (GstSrtpEncClass * klass)
   /**
    * GstSrtpEnc::soft-limit:
    * @gstsrtpenc: the element on which the signal is emitted
-   * @ssrc: The unique SSRC of the stream
    *
    * Signal emited when the stream with @ssrc has reached the soft
    * limit of utilisation of it's master encryption key. User should
@@ -303,7 +302,7 @@ gst_srtp_enc_class_init (GstSrtpEncClass * klass)
    */
   gst_srtp_enc_signals[SIGNAL_SOFT_LIMIT] =
       g_signal_new ("soft-limit", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 }
 
 
@@ -1030,7 +1029,7 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
   }
 
   if (gst_srtp_get_soft_limit_reached ()) {
-    g_signal_emit (filter, gst_srtp_enc_signals[SIGNAL_SOFT_LIMIT], 0, ssrc);
+    g_signal_emit (filter, gst_srtp_enc_signals[SIGNAL_SOFT_LIMIT], 0);
     if (filter->random_key && !filter->key_changed)
       gst_srtp_enc_replace_random_key (filter);
   }
