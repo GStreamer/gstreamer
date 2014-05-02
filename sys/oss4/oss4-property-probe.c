@@ -114,17 +114,6 @@ gst_oss4_property_probe_needs_probe (GstPropertyProbe * probe,
 
 #endif
 
-static gint
-oss4_mixerinfo_priority_cmp (struct oss_mixerinfo *mi1,
-    struct oss_mixerinfo *mi2)
-{
-  /* return negative vaue if mi1 comes before mi2 */
-  if (mi1->priority != mi2->priority)
-    return mi2->priority - mi1->priority;
-
-  return strcmp (mi1->devnode, mi2->devnode);
-}
-
 /* caller must ensure LOCK is taken (e.g. if ioctls need to be serialised) */
 gboolean
 gst_oss4_property_probe_find_device_name (GstObject * obj, int fd,
@@ -187,65 +176,6 @@ gst_oss4_property_probe_find_device_name_nofd (GstObject * obj,
 
   close (fd);
   return res;
-}
-
-static GList *
-gst_oss4_property_probe_get_mixer_devices (GstObject * obj, int fd,
-    struct oss_sysinfo *si)
-{
-  GList *m, *mixers = NULL;
-  GList *devices = NULL;
-
-  int i;
-
-  GST_LOG_OBJECT (obj, "%d mixer devices", si->nummixers);
-
-  /* first, find suitable mixer devices and sort by priority */
-  for (i = 0; i < si->nummixers; ++i) {
-    struct oss_mixerinfo mi = { 0, };
-
-    mi.dev = i;
-    if (ioctl (fd, SNDCTL_MIXERINFO, &mi) == -1) {
-      GST_DEBUG_OBJECT (obj, "MIXERINFO ioctl for device %d failed", i);
-      continue;
-    }
-
-    GST_INFO_OBJECT (obj, "mixer device %d:", i);
-    GST_INFO_OBJECT (obj, "  enabled  : %s", (mi.enabled) ? "yes" :
-        "no (powered off or unplugged)");
-    GST_INFO_OBJECT (obj, "  priority : %d", mi.priority);
-    GST_INFO_OBJECT (obj, "  devnode  : %s", mi.devnode);
-    GST_INFO_OBJECT (obj, "  handle   : %s", mi.handle);
-    GST_INFO_OBJECT (obj, "  caps     : 0x%02x", mi.caps);
-    GST_INFO_OBJECT (obj, "  name     : %s", mi.name);
-
-    if (!mi.enabled) {
-      GST_DEBUG_OBJECT (obj, "mixer device is not usable/enabled, skipping");
-      continue;
-    }
-
-    /* only want mixers that control hardware directly */
-    if ((mi.caps & MIXER_CAP_VIRTUAL)) {
-      GST_DEBUG_OBJECT (obj, "mixer device is a virtual device, skipping");
-      continue;
-    }
-
-    mixers = g_list_insert_sorted (mixers, g_memdup (&mi, sizeof (mi)),
-        (GCompareFunc) oss4_mixerinfo_priority_cmp);
-  }
-
-  /* then create device list according to priority */
-  for (m = mixers; m != NULL; m = m->next) {
-    struct oss_mixerinfo *mi = (struct oss_mixerinfo *) m->data;
-
-    GST_LOG_OBJECT (obj, "mixer device: '%s'", mi->devnode);
-    devices = g_list_prepend (devices, g_strdup (mi->devnode));
-    g_free (m->data);
-  }
-  g_list_free (mixers);
-  mixers = NULL;
-
-  return g_list_reverse (devices);
 }
 
 static GList *
@@ -335,12 +265,7 @@ gst_oss4_property_probe_get_values (GstObject * probe, const gchar * pname)
   if (ioctl (fd, SNDCTL_SYSINFO, &si) == -1)
     goto no_sysinfo;
 
-  if (cap_mask != 0) {
-    devices =
-        gst_oss4_property_probe_get_audio_devices (obj, fd, &si, cap_mask);
-  } else {
-    devices = gst_oss4_property_probe_get_mixer_devices (obj, fd, &si);
-  }
+  devices = gst_oss4_property_probe_get_audio_devices (obj, fd, &si, cap_mask);
 
   if (devices == NULL) {
     GST_OBJECT_UNLOCK (obj);
