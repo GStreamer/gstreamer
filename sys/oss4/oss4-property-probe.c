@@ -315,7 +315,8 @@ gst_oss4_property_probe_get_values (GstObject * probe, const gchar * pname)
     fd = GST_OSS4_SOURCE (probe)->fd;
   } else {
     GST_OBJECT_UNLOCK (obj);
-    g_return_val_if_reached (NULL);
+    g_assert_not_reached ();
+    return NULL;
   }
 
   /* copy fd if it's open, so we can just unconditionally close() later */
@@ -342,6 +343,7 @@ gst_oss4_property_probe_get_values (GstObject * probe, const gchar * pname)
   }
 
   if (devices == NULL) {
+    GST_OBJECT_UNLOCK (obj);
     GST_DEBUG_OBJECT (obj, "No devices found");
     goto done;
   }
