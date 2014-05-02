@@ -20,6 +20,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <gst/validate/validate.h>
 #include "media-descriptor-writer.h"
 #include <string.h>
 
@@ -47,13 +48,22 @@ enum
 
 struct _GstMediaDescriptorWriterPrivate
 {
-  GList *serialized_string;
-  guint stream_id;
+  GstElement *pipeline;
+  GstCaps *raw_caps;
+  GMainLoop *loop;
+
+  GList *parsers;
 };
 
 static void
 finalize (GstMediaDescriptorWriter * writer)
 {
+  if (writer->priv->raw_caps)
+    gst_caps_unref (writer->priv->raw_caps);
+
+  if (writer->priv->parsers)
+    gst_plugin_feature_list_free (writer->priv->parsers);
+
   G_OBJECT_CLASS (gst_media_descriptor_writer_parent_class)->
       finalize (G_OBJECT (writer));
 }
@@ -84,11 +94,13 @@ gst_media_descriptor_writer_init (GstMediaDescriptorWriter * writer)
 {
   GstMediaDescriptorWriterPrivate *priv;
 
+
   writer->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (writer,
       GST_TYPE_MEDIA_DESCRIPTOR_WRITER, GstMediaDescriptorWriterPrivate);
 
-  priv->serialized_string = NULL;
-  priv->stream_id = 0;
+  writer->priv->parsers =
+      gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_PARSER,
+      GST_RANK_MARGINAL);
 }
 
 static void
@@ -249,16 +261,245 @@ gst_media_descriptor_writer_add_stream (GstMediaDescriptorWriter * writer,
         gst_discoverer_stream_info_get_tags (info));
   }
 
-  if (caps != NULL)
-    gst_caps_unref (caps);
+  if (writer->priv->raw_caps == NULL)
+    writer->priv->raw_caps = gst_caps_copy (caps);
+  else {
+    writer->priv->raw_caps = gst_caps_merge (writer->priv->raw_caps,
+        gst_caps_copy (caps));
+  }
+  gst_caps_unref (caps);
   g_free (capsstr);
 
   return ret;
 }
 
+static GstPadProbeReturn
+_uridecodebin_probe (GstPad * pad, GstPadProbeInfo * info, GstMediaDescriptorWriter *writer)
+{
+  gst_media_descriptor_writer_add_frame (writer, pad, info->data);
+
+  return GST_PAD_PROBE_OK;
+}
+
+static gboolean
+_find_stream_id (GstPad *pad, GstEvent **event, GstMediaDescriptorWriter *writer)
+{
+  if (GST_EVENT_TYPE (*event) == GST_EVENT_STREAM_START) {
+    GList *tmp;
+    StreamNode *snode = NULL;
+    const gchar *stream_id;
+
+    gst_event_parse_stream_start (*event, &stream_id);
+    for (tmp = ((GstMediaDescriptor *) writer)->filenode->streams; tmp;
+        tmp = tmp->next) {
+      if (g_strcmp0 (((StreamNode *) tmp->data)->id, stream_id) == 0) {
+        snode = tmp->data;
+
+        break;
+      }
+    }
+
+    if (!snode || snode->pad) {
+      GST_VALIDATE_REPORT (writer, FILE_CHECK_FAILURE,
+          "Got pad %s:%s where Discoverer found no stream ID",
+          GST_DEBUG_PAD_NAME (pad));
+
+      return TRUE;
+    }
+
+    snode->pad = gst_object_ref (pad);
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static inline GstElement *
+_get_parser (GstMediaDescriptorWriter *writer, GstPad *pad)
+{
+  GList *parsers1, *parsers;
+  GstElement *parser = NULL;
+  GstElementFactory *parserfact = NULL;
+  GstCaps *format;
+
+  format = gst_pad_get_current_caps (pad);
+
+  GST_DEBUG ("Getting list of parsers for format %" GST_PTR_FORMAT, format);
+  parsers1 =
+      gst_element_factory_list_filter (writer->priv->parsers, format,
+      GST_PAD_SRC, FALSE);
+  parsers =
+      gst_element_factory_list_filter (parsers1, format, GST_PAD_SINK, FALSE);
+  gst_plugin_feature_list_free (parsers1);
+
+  if (G_UNLIKELY (parsers == NULL)) {
+    GST_DEBUG ("Couldn't find any compatible parsers");
+    goto beach;
+  }
+
+  /* Just pick the first one */
+  parserfact = parsers->data;
+  if (parserfact)
+    parser = gst_element_factory_create (parserfact, NULL);
+
+  gst_plugin_feature_list_free (parsers);
+
+beach:
+  if (format)
+    gst_caps_unref (format);
+
+  return parser;
+}
+
+static void
+pad_added_cb (GstElement * decodebin, GstPad * pad, GstMediaDescriptorWriter *writer)
+{
+  GList *tmp;
+  StreamNode *snode = NULL;
+  GstPad *sinkpad, *srcpad;
+
+  /*  Try to plug a parser so we have as much info as possible
+   *  about the encoded stream. */
+  GstElement *parser = _get_parser (writer, pad);
+  GstElement *fakesink = gst_element_factory_make ("fakesink", NULL);
+
+  if (parser) {
+    sinkpad = gst_element_get_static_pad (parser, "sink");
+    gst_bin_add (GST_BIN (writer->priv->pipeline), parser);
+    gst_element_sync_state_with_parent (parser);
+    gst_pad_link (pad, sinkpad);
+
+    srcpad = gst_element_get_static_pad (parser, "src");
+  } else {
+    srcpad = pad;
+  }
+
+  sinkpad = gst_element_get_static_pad (fakesink, "sink");
+  gst_bin_add (GST_BIN (writer->priv->pipeline), fakesink);
+  gst_element_sync_state_with_parent (fakesink);
+  gst_pad_link (srcpad, sinkpad);
+  gst_pad_sticky_events_foreach (pad, (GstPadStickyEventsForeachFunction) _find_stream_id,
+      writer);
+
+  for (tmp = ((GstMediaDescriptor *) writer)->filenode->streams; tmp; tmp = tmp->next) {
+    snode = tmp->data;
+    if (snode->pad == pad && srcpad != pad) {
+      gst_object_unref (pad);
+      snode->pad = gst_object_ref (srcpad);
+      break;
+    }
+  }
+
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) _uridecodebin_probe, writer, NULL);
+}
+
+static gboolean
+bus_callback (GstBus * bus, GstMessage * message, GstMediaDescriptorWriter *writer)
+{
+  GMainLoop *loop = writer->priv->loop;
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+    {
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (writer->priv->pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate-media-check.error");
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      GST_INFO ("Got EOS!");
+      g_main_loop_quit (loop);
+      break;
+    case GST_MESSAGE_STATE_CHANGED:
+      if (GST_MESSAGE_SRC (message) == GST_OBJECT (writer->priv->pipeline)) {
+        GstState oldstate, newstate, pending;
+
+        gst_message_parse_state_changed (message, &oldstate, &newstate,
+            &pending);
+
+        GST_DEBUG ("State changed (old: %s, new: %s, pending: %s)",
+            gst_element_state_get_name (oldstate),
+            gst_element_state_get_name (newstate),
+            gst_element_state_get_name (pending));
+
+        if (newstate == GST_STATE_PLAYING) {
+          GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (writer->priv->pipeline),
+              GST_DEBUG_GRAPH_SHOW_ALL,
+              "gst-validate-media-descriptor-writer.playing");
+        }
+      }
+
+      break;
+    case GST_MESSAGE_BUFFERING:{
+      gint percent;
+
+      gst_message_parse_buffering (message, &percent);
+      g_print ("%s %d%%  \r", "Buffering...", percent);
+
+      /* no state management needed for live pipelines */
+      if (percent == 100) {
+        gst_element_set_state (writer->priv->pipeline, GST_STATE_PLAYING);
+      } else {
+        gst_element_set_state (writer->priv->pipeline, GST_STATE_PAUSED);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_run_frame_analisis (GstMediaDescriptorWriter *writer, GstValidateRunner *runner,
+    const gchar *uri)
+{
+  GstBus *bus;
+  GstStateChangeReturn sret;
+  GstValidateMonitor *monitor;
+
+  GstElement *uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
+
+  writer->priv->pipeline = gst_pipeline_new ("frame-analisis");
+
+  monitor = gst_validate_monitor_factory_create (
+      GST_OBJECT_CAST (writer->priv->pipeline), runner, NULL);
+  gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
+
+  g_object_set (uridecodebin, "uri", uri, "caps", writer->priv->raw_caps, NULL);
+  g_signal_connect (uridecodebin, "pad-added", G_CALLBACK (pad_added_cb), writer);
+  gst_bin_add (GST_BIN (writer->priv->pipeline), uridecodebin);
+
+  writer->priv->loop = g_main_loop_new (NULL, FALSE);
+  bus = gst_element_get_bus (writer->priv->pipeline);
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message", (GCallback) bus_callback, writer);
+  sret = gst_element_set_state (writer->priv->pipeline, GST_STATE_PLAYING);
+  switch (sret) {
+    case GST_STATE_CHANGE_FAILURE:
+      /* ignore, we should get an error message posted on the bus */
+      g_print ("Pipeline failed to go to PLAYING state\n");
+      return FALSE;
+    default:
+      break;
+  }
+
+  g_main_loop_run (writer->priv->loop);
+  sret = gst_element_set_state (writer->priv->pipeline, GST_STATE_NULL);
+  gst_object_unref (writer->priv->pipeline);
+  writer->priv->pipeline = NULL;
+  g_main_loop_unref (writer->priv->loop);
+  writer->priv->loop = NULL;
+
+  return TRUE;
+}
+
 GstMediaDescriptorWriter *
 gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
-    const gchar * uri, GError ** err)
+    const gchar * uri, gboolean full, GError ** err)
 {
   GList *tmp, *streams;
   GstDiscovererInfo *info;
@@ -299,10 +540,17 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
       (streaminfo));
 
   streams = gst_discoverer_info_get_stream_list (info);
-  for (tmp = streams; tmp; tmp = tmp->next)
+  for (tmp = streams; tmp; tmp = tmp->next) {
     gst_media_descriptor_writer_add_stream (writer, tmp->data);
+  }
+
+  if (streams == NULL)
+      writer->priv->raw_caps = gst_caps_copy (((GstMediaDescriptor *) writer)->filenode->caps);
   gst_discoverer_stream_info_list_free(streams);
 
+
+  if (full == TRUE)
+    _run_frame_analisis (writer, runner, uri);
 
   return writer;
 }
@@ -466,7 +714,7 @@ gst_media_descriptor_writer_add_frame (GstMediaDescriptorWriter
   g_return_val_if_fail (((GstMediaDescriptor *) writer)->filenode, FALSE);
 
   ((GstMediaDescriptor *) writer)->filenode->frame_detection = TRUE;
-
+  GST_MEDIA_DESCRIPTOR_LOCK (writer);
   for (tmp = ((GstMediaDescriptor *) writer)->filenode->streams; tmp;
       tmp = tmp->next) {
     StreamNode *streamnode = (StreamNode *) tmp->data;
@@ -495,9 +743,11 @@ gst_media_descriptor_writer_add_frame (GstMediaDescriptorWriter
       fnode->str_close = NULL;
 
       streamnode->frames = g_list_append (streamnode->frames, fnode);
+      GST_MEDIA_DESCRIPTOR_UNLOCK (writer);
       return TRUE;
     }
   }
+  GST_MEDIA_DESCRIPTOR_UNLOCK (writer);
 
   return FALSE;
 }

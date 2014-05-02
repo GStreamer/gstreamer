@@ -58,6 +58,7 @@ typedef struct {
 
 GstMediaDescriptorWriter * gst_media_descriptor_writer_new_discover (GstValidateRunner *runner,
                                                                      const gchar *uri,
+                                                                     gboolean full,
                                                                      GError **err);
 
 GstMediaDescriptorWriter * gst_media_descriptor_writer_new          (GstValidateRunner *runner,

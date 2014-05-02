@@ -124,12 +124,18 @@ GType gst_media_descriptor_get_type (void);
 #define GST_IS_MEDIA_DESCRIPTOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MEDIA_DESCRIPTOR))
 #define GST_MEDIA_DESCRIPTOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MEDIA_DESCRIPTOR, GstMediaDescriptorClass))
 
+#define GST_MEDIA_DESCRIPTOR_GET_LOCK(obj)               (&GST_MEDIA_DESCRIPTOR(obj)->lock)
+#define GST_MEDIA_DESCRIPTOR_LOCK(obj)                   g_mutex_lock(GST_MEDIA_DESCRIPTOR_GET_LOCK(obj))
+#define GST_MEDIA_DESCRIPTOR_UNLOCK(obj)                 g_mutex_unlock(GST_MEDIA_DESCRIPTOR_GET_LOCK(obj))
+
 typedef struct _GstMediaDescriptorPrivate GstMediaDescriptorPrivate;
 
 typedef struct {
   GObject parent;
 
   FileNode *filenode;
+
+  GMutex         lock;
 
   GstMediaDescriptorPrivate *priv;
 } GstMediaDescriptor;
