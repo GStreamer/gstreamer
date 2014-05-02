@@ -1938,8 +1938,10 @@ iterate_adapter:
 
       GST_LOG_OBJECT (wav, "Got only %" G_GSIZE_FORMAT " bytes of data", size);
       if (size >= wav->blockalign) {
-        buf = gst_buffer_make_writable (buf);
-        gst_buffer_resize (buf, 0, size - (size % wav->blockalign));
+        if (wav->blockalign > 0) {
+          buf = gst_buffer_make_writable (buf);
+          gst_buffer_resize (buf, 0, size - (size % wav->blockalign));
+        }
       } else {
         gst_buffer_unref (buf);
         goto found_eos;
