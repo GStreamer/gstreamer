@@ -254,7 +254,7 @@ str_to_time (char *time)
 static GESTimeline *
 create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
 {
-  GESLayer *layer;
+  GESLayer *layer = NULL;
   GESTrack *tracka = NULL, *trackv = NULL;
   GESTimeline *timeline;
   guint i;
@@ -275,13 +275,6 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
 
   if (proj_uri)
     return timeline;
-
-  /* We are only going to be doing one layer of clips */
-  layer = (GESLayer *) ges_layer_new ();
-
-  /* Add the tracks and the layer to the timeline */
-  if (!ges_timeline_add_layer (timeline, layer))
-    goto build_failure;
 
   if (track_types & GES_TRACK_TYPE_AUDIO) {
     tracka = GES_TRACK (ges_audio_track_new ());
@@ -311,6 +304,15 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
     char *source = argv[i * 3];
     char *arg0 = argv[(i * 3) + 1];
     guint64 duration = str_to_time (argv[(i * 3) + 2]);
+
+    if (i == 0) {
+      /* We are only going to be doing one layer of clips */
+      layer = (GESLayer *) ges_layer_new ();
+
+      /* Add the tracks and the layer to the timeline */
+      if (!ges_timeline_add_layer (timeline, layer))
+        goto build_failure;
+    }
 
     if (duration == 0)
       duration = GST_CLOCK_TIME_NONE;
