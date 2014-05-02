@@ -294,6 +294,10 @@ gst_rtp_buffer_calc_payload_len (guint packet_len, guint8 pad_len,
 {
   g_return_val_if_fail (csrc_count <= 15, 0);
 
+  if (packet_len <
+      GST_RTP_HEADER_LEN + (csrc_count * sizeof (guint32)) + pad_len)
+    return 0;
+
   return packet_len - GST_RTP_HEADER_LEN - (csrc_count * sizeof (guint32))
       - pad_len;
 }
