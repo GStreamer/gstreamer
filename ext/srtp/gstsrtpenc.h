@@ -81,6 +81,8 @@ struct _GstSrtpEnc
   srtp_t session;
   gboolean first_session;
   gboolean key_changed;
+
+  guint replay_window_size;
 };
 
 struct _GstSrtpEncClass
