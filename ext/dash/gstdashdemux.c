@@ -2170,11 +2170,22 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
         GST_TIME_ARGS (fragment->duration),
         fragment->range_start, fragment->range_end);
 
+    /* Reset last flow return */
+    stream->last_ret = GST_FLOW_OK;
+
     if (stream->need_header) {
       /* We need to fetch a new header */
       gst_dash_demux_get_next_header (demux, stream);
       stream->need_header = FALSE;
     }
+
+    if (stream->last_ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (stream->pad, "Failed to download headers");
+      goto exit;
+    }
+
+    if (demux->cancelled)
+      goto exit;
 
     /* it is possible to have an index per fragment, so check and download */
     if (fragment->index_uri || fragment->index_range_start
@@ -2190,6 +2201,11 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
           fragment->index_range_end);
       gst_dash_demux_stream_download_uri (demux, stream, uri,
           fragment->index_range_start, fragment->index_range_end);
+    }
+
+    if (stream->last_ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (stream->pad, "Failed to download fragment headers");
+      goto exit;
     }
 
     if (demux->cancelled)
