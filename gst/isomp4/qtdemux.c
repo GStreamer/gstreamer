@@ -3853,7 +3853,7 @@ done:
 }
 
 /* the input buffer metadata must be writable. Returns NULL when the buffer is
- * completely cliped
+ * completely clipped
  *
  * Should be used only with raw buffers */
 static GstBuffer *
