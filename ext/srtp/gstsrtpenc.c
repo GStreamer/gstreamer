@@ -219,13 +219,6 @@ static GstPad *gst_srtp_enc_request_new_pad (GstElement * element,
 
 static void gst_srtp_enc_release_pad (GstElement * element, GstPad * pad);
 
-struct GstSrtpEncPads
-{
-  GstPad *sinkpad;
-  GstPad *srcpad;
-};
-
-
 /* initialize the srtpenc's class
  */
 static void
@@ -422,45 +415,42 @@ gst_srtp_enc_reset (GstSrtpEnc * filter)
 static GstPad *
 create_rtp_sink (GstSrtpEnc * filter, const gchar * name)
 {
+  GstPad *sinkpad, *srcpad;
   gchar *sinkpadname, *srcpadname;
-  struct GstSrtpEncPads *priv;
   gint nb = 0;
 
-  priv = g_slice_new0 (struct GstSrtpEncPads);
-
   GST_DEBUG_OBJECT (filter, "creating RTP sink pad");
-  priv->sinkpad = gst_pad_new_from_static_template (&rtp_sink_template, name);
+  sinkpad = gst_pad_new_from_static_template (&rtp_sink_template, name);
 
-  sinkpadname = gst_pad_get_name (priv->sinkpad);
+  sinkpadname = gst_pad_get_name (sinkpad);
   sscanf (sinkpadname, "rtp_sink_%d", &nb);
   srcpadname = g_strdup_printf ("rtp_src_%d", nb);
 
   GST_DEBUG_OBJECT (filter, "creating RTP source pad");
-  priv->srcpad =
-      gst_pad_new_from_static_template (&rtp_src_template, srcpadname);
+  srcpad = gst_pad_new_from_static_template (&rtp_src_template, srcpadname);
   g_free (srcpadname);
   g_free (sinkpadname);
 
-  gst_pad_set_element_private (priv->sinkpad, priv);
-  gst_pad_set_element_private (priv->srcpad, priv);
+  gst_pad_set_element_private (sinkpad, srcpad);
+  gst_pad_set_element_private (srcpad, sinkpad);
 
-  gst_pad_set_query_function (priv->sinkpad,
+  gst_pad_set_query_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_sink_query_rtp));
-  gst_pad_set_iterate_internal_links_function (priv->sinkpad,
+  gst_pad_set_iterate_internal_links_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_iterate_internal_links_rtp));
-  gst_pad_set_chain_function (priv->sinkpad,
+  gst_pad_set_chain_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_chain_rtp));
-  gst_pad_set_event_function (priv->sinkpad,
+  gst_pad_set_event_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_sink_event_rtp));
-  gst_pad_set_active (priv->sinkpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (filter), priv->sinkpad);
+  gst_pad_set_active (sinkpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (filter), sinkpad);
 
-  gst_pad_set_iterate_internal_links_function (priv->srcpad,
+  gst_pad_set_iterate_internal_links_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_iterate_internal_links_rtp));
-  gst_pad_set_active (priv->srcpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (filter), priv->srcpad);
+  gst_pad_set_active (srcpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (filter), srcpad);
 
-  return priv->sinkpad;
+  return sinkpad;
 }
 
 /* Create sinkpad to receive RTCP packets from encers
@@ -469,45 +459,42 @@ create_rtp_sink (GstSrtpEnc * filter, const gchar * name)
 static GstPad *
 create_rtcp_sink (GstSrtpEnc * filter, const gchar * name)
 {
+  GstPad *srcpad, *sinkpad;
   gchar *sinkpadname, *srcpadname;
-  struct GstSrtpEncPads *priv;
   gint nb = 0;
 
-  priv = g_slice_new0 (struct GstSrtpEncPads);
-
   GST_DEBUG_OBJECT (filter, "creating RTCP sink pad");
-  priv->sinkpad = gst_pad_new_from_static_template (&rtcp_sink_template, name);
+  sinkpad = gst_pad_new_from_static_template (&rtcp_sink_template, name);
 
-  sinkpadname = gst_pad_get_name (priv->sinkpad);
+  sinkpadname = gst_pad_get_name (sinkpad);
   sscanf (sinkpadname, "rtcp_sink_%d", &nb);
   srcpadname = g_strdup_printf ("rtcp_src_%d", nb);
 
   GST_DEBUG_OBJECT (filter, "creating RTCP source pad");
-  priv->srcpad =
-      gst_pad_new_from_static_template (&rtcp_src_template, srcpadname);
+  srcpad = gst_pad_new_from_static_template (&rtcp_src_template, srcpadname);
   g_free (srcpadname);
   g_free (sinkpadname);
 
-  gst_pad_set_element_private (priv->sinkpad, priv);
-  gst_pad_set_element_private (priv->srcpad, priv);
+  gst_pad_set_element_private (sinkpad, srcpad);
+  gst_pad_set_element_private (srcpad, sinkpad);
 
-  gst_pad_set_query_function (priv->sinkpad,
+  gst_pad_set_query_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_sink_query_rtcp));
-  gst_pad_set_iterate_internal_links_function (priv->sinkpad,
+  gst_pad_set_iterate_internal_links_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_iterate_internal_links_rtcp));
-  gst_pad_set_chain_function (priv->sinkpad,
+  gst_pad_set_chain_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_chain_rtcp));
-  gst_pad_set_event_function (priv->sinkpad,
+  gst_pad_set_event_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_sink_event_rtcp));
-  gst_pad_set_active (priv->sinkpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (filter), priv->sinkpad);
+  gst_pad_set_active (sinkpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (filter), sinkpad);
 
-  gst_pad_set_iterate_internal_links_function (priv->srcpad,
+  gst_pad_set_iterate_internal_links_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_iterate_internal_links_rtcp));
-  gst_pad_set_active (priv->srcpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (filter), priv->srcpad);
+  gst_pad_set_active (srcpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (filter), srcpad);
 
-  return priv->sinkpad;
+  return sinkpad;
 }
 
 /* Handling new pad request
@@ -651,18 +638,7 @@ gst_srtp_enc_get_property (GObject * object, guint prop_id,
 static GstPad *
 get_rtp_other_pad (GstPad * pad)
 {
-  struct GstSrtpEncPads *priv = gst_pad_get_element_private (pad);
-
-  if (!priv)
-    return NULL;
-
-  if (pad == priv->srcpad)
-    return priv->sinkpad;
-  else if (pad == priv->sinkpad)
-    return priv->srcpad;
-
-  g_assert_not_reached ();
-  return NULL;
+  return GST_PAD (gst_pad_get_element_private (pad));
 }
 
 /* Release a sink pad and it's linked source pad
@@ -670,25 +646,22 @@ get_rtp_other_pad (GstPad * pad)
 static void
 gst_srtp_enc_release_pad (GstElement * element, GstPad * sinkpad)
 {
-  struct GstSrtpEncPads *priv;
+  GstPad *srcpad;
 
   GST_INFO_OBJECT (element, "Releasing pad %s:%s",
       GST_DEBUG_PAD_NAME (sinkpad));
 
-  priv = gst_pad_get_element_private (sinkpad);
+  srcpad = GST_PAD (gst_pad_get_element_private (sinkpad));
   gst_pad_set_element_private (sinkpad, NULL);
-
-  g_assert (priv);
+  gst_pad_set_element_private (srcpad, NULL);
 
   /* deactivate from source to sink */
-  gst_pad_set_active (priv->srcpad, FALSE);
-  gst_pad_set_active (priv->sinkpad, FALSE);
+  gst_pad_set_active (srcpad, FALSE);
+  gst_pad_set_active (sinkpad, FALSE);
 
   /* remove pads */
-  gst_element_remove_pad (element, priv->srcpad);
-  gst_element_remove_pad (element, priv->sinkpad);
-
-  g_slice_free (struct GstSrtpEncPads, priv);
+  gst_element_remove_pad (element, srcpad);
+  gst_element_remove_pad (element, sinkpad);
 }
 
 /* Common setcaps function
@@ -701,7 +674,6 @@ gst_srtp_enc_sink_setcaps (GstPad * pad, GstSrtpEnc * filter,
   GstPad *otherpad = NULL;
   GstStructure *ps = NULL;
   gboolean ret = FALSE;
-  struct GstSrtpEncPads *priv = gst_pad_get_element_private (pad);
 
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
@@ -737,7 +709,7 @@ gst_srtp_enc_sink_setcaps (GstPad * pad, GstSrtpEnc * filter,
   GST_DEBUG_OBJECT (pad, "Source caps: %" GST_PTR_FORMAT, caps);
 
   /* Set caps on source pad */
-  otherpad = priv->srcpad;
+  otherpad = get_rtp_other_pad (pad);
 
   ret = gst_pad_set_caps (otherpad, caps);
 
@@ -903,12 +875,8 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
   err_status_t err = err_status_ok;
   gint size_max, size;
   GstBuffer *bufout = NULL;
-  struct GstSrtpEncPads *priv = gst_pad_get_element_private (pad);
   gboolean do_setcaps = FALSE;
   GstMapInfo mapin, mapout;
-
-  if (!priv)
-    goto fail;
 
   if (!is_rtcp) {
     GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
