@@ -3885,6 +3885,9 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   } else
     goto wrong_type;
 
+  if (frame_size <= 0)
+    goto bad_frame_size;
+
   /* we can only clip if we have a valid pts */
   pts = GST_BUFFER_PTS (buf);
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (pts)))
@@ -3951,6 +3954,11 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 wrong_type:
   {
     GST_DEBUG_OBJECT (qtdemux, "unknown stream type");
+    return buf;
+  }
+bad_frame_size:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "bad frame size");
     return buf;
   }
 no_pts:
