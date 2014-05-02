@@ -195,6 +195,9 @@ static void gst_dash_demux_dispose (GObject * obj);
 static GstStateChangeReturn
 gst_dash_demux_change_state (GstElement * element, GstStateChange transition);
 
+/* GstBin */
+static void gst_dash_demux_handle_message (GstBin * bin, GstMessage * msg);
+
 /* GstDashDemux */
 static GstFlowReturn gst_dash_demux_pad (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
@@ -258,9 +261,11 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBinClass *gstbin_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbin_class = (GstBinClass *) klass;
 
   gobject_class->set_property = gst_dash_demux_set_property;
   gobject_class->get_property = gst_dash_demux_get_property;
@@ -301,6 +306,8 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
       "David Corvoysier <david.corvoysier@orange.com>\n\
                 Hamid Zakari <hamid.zakari@gmail.com>\n\
                 Gianluca Gennari <gennarone@gmail.com>");
+
+  gstbin_class->handle_message = gst_dash_demux_handle_message;
 }
 
 static void
@@ -397,6 +404,48 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return ret;
+}
+
+static void
+gst_dash_demux_handle_message (GstBin * bin, GstMessage * msg)
+{
+  GstDashDemux *demux = GST_DASH_DEMUX_CAST (bin);
+
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_ERROR:{
+      GSList *iter;
+      GstDashDemuxStream *stream;
+      GError *err = NULL;
+      gchar *debug = NULL;
+
+      for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+        stream = iter->data;
+        if (GST_OBJECT_CAST (stream->src) == GST_MESSAGE_SRC (msg)) {
+          gst_message_parse_error (msg, &err, &debug);
+
+          GST_WARNING_OBJECT (stream->pad, "Source posted error: %d:%d %s (%s)",
+              err->domain, err->code, err->message, debug);
+
+          /* error, but ask to retry */
+          stream->last_ret = GST_FLOW_CUSTOM_ERROR;
+          g_cond_signal (&stream->fragment_download_cond);
+
+          g_error_free (err);
+          g_free (debug);
+          break;
+        }
+      }
+
+      gst_message_unref (msg);
+      msg = NULL;
+    }
+      break;
+    default:
+      break;
+  }
+
+  if (msg)
+    GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
 }
 
 static gboolean
