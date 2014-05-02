@@ -248,7 +248,7 @@ _fail_unless (int result, const char *file, int line, const char *expr, ...)
     send_failure_info (buf);
     if (cur_fork_status () == CK_FORK) {
 #ifdef _POSIX_VERSION
-      exit (1);
+      _exit (1);
 #endif /* _POSIX_VERSION */
     }
   }
