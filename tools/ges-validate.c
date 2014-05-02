@@ -81,6 +81,17 @@ _set_child_property (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 static gboolean
+_serialize_project (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  const gchar *uri = gst_structure_get_string (action->structure, "uri");
+  GESTimeline *timeline = get_timeline (scenario);
+
+  gst_validate_printf (action, "Saving project to %s", uri);
+
+  return ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL);
+}
+
+static gboolean
 _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
 {
   gint64 cpos;
@@ -177,6 +188,10 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
     const gchar *set_child_property_mandatory_fields[] =
         { "element-name", "property", "value", NULL };
 
+    const gchar *serialize_project_mandatory_fields[] = { "uri",
+      NULL
+    };
+
     gst_validate_init ();
 
     if (g_strcmp0 (scenario, "none")) {
@@ -187,6 +202,8 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
 
     gst_validate_add_action_type ("edit-clip", _edit_clip,
         move_clip_mandatory_fields, "Allows to seek into the files", FALSE);
+    gst_validate_add_action_type ("serialize-project", _serialize_project,
+        serialize_project_mandatory_fields, "serializes a project", FALSE);
 
     gst_validate_add_action_type ("set-child-property", _set_child_property,
         set_child_property_mandatory_fields,
