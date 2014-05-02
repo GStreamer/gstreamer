@@ -69,7 +69,7 @@ static GstStaticPadTemplate gst_rtp_dummy_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
+    GST_STATIC_CAPS ("application/x-rtp"));
 
 static void
 gst_rtp_dummy_pay_class_init (GstRtpDummyPayClass * klass)
@@ -1006,7 +1006,7 @@ GST_START_TEST (rtp_base_payload_reconfigure_test)
 
   validate_buffer (1, "pts", 1 * GST_SECOND, NULL);
 
-  validate_events_received (3);
+  validate_events_received (4);
 
   validate_normal_start_events (0);
 

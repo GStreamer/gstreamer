@@ -56,6 +56,8 @@ struct _GstRTPBasePayloadPrivate
 
   gboolean delay_segment;
   GstEvent *pending_segment;
+
+  GstCaps *subclass_srccaps;
 };
 
 /* RTPBasePayload signals and args */
@@ -130,6 +132,9 @@ static void gst_rtp_base_payload_get_property (GObject * object, guint prop_id,
 
 static GstStateChangeReturn gst_rtp_base_payload_change_state (GstElement *
     element, GstStateChange transition);
+
+static gboolean gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload);
+
 
 static GstElementClass *parent_class = NULL;
 
@@ -394,6 +399,8 @@ gst_rtp_base_payload_finalize (GObject * object)
   g_free (rtpbasepayload->encoding_name);
   rtpbasepayload->encoding_name = NULL;
 
+  gst_caps_replace (&rtpbasepayload->priv->subclass_srccaps, NULL);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -444,7 +451,7 @@ gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
       if (rtpbasepayload_class->set_caps)
         res = rtpbasepayload_class->set_caps (rtpbasepayload, caps);
       else
-        res = TRUE;
+        res = gst_rtp_base_payload_negotiate (rtpbasepayload);
 
       rtpbasepayload->priv->negotiated = res;
 
@@ -640,6 +647,9 @@ gst_rtp_base_payload_chain (GstPad * pad, GstObject * parent,
   if (!rtpbasepayload->priv->negotiated)
     goto not_negotiated;
 
+  if (gst_pad_check_reconfigure (GST_RTP_BASE_PAYLOAD_SRCPAD (rtpbasepayload)))
+    gst_rtp_base_payload_negotiate (rtpbasepayload);
+
   ret = rtpbasepayload_class->handle_buffer (rtpbasepayload, buffer);
 
   return ret;
@@ -731,8 +741,7 @@ gboolean
 gst_rtp_base_payload_set_outcaps (GstRTPBasePayload * payload,
     const gchar * fieldname, ...)
 {
-  GstCaps *srccaps, *peercaps;
-  gboolean res;
+  GstCaps *srccaps;
 
   /* fill in the defaults, their properties cannot be negotiated. */
   srccaps = gst_caps_new_simple ("application/x-rtp",
@@ -753,13 +762,39 @@ gst_rtp_base_payload_set_outcaps (GstRTPBasePayload * payload,
     GST_DEBUG_OBJECT (payload, "custom added: %" GST_PTR_FORMAT, srccaps);
   }
 
+  gst_caps_replace (&payload->priv->subclass_srccaps, srccaps);
+  gst_caps_unref (srccaps);
+
+  return gst_rtp_base_payload_negotiate (payload);
+}
+
+static gboolean
+gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
+{
+  GstCaps *peercaps, *filter, *srccaps;
+  gboolean res;
+
   payload->priv->caps_max_ptime = DEFAULT_MAX_PTIME;
   payload->ptime = 0;
 
-  /* the peer caps can override some of the defaults */
-  peercaps = gst_pad_peer_query_caps (payload->srcpad, srccaps);
+  gst_pad_check_reconfigure (payload->srcpad);
+
+  filter = gst_pad_get_pad_template_caps (payload->srcpad);
+
+  if (payload->priv->subclass_srccaps) {
+    GstCaps *tmp = gst_caps_intersect (payload->priv->subclass_srccaps,
+        filter);
+    gst_caps_unref (filter);
+    filter = tmp;
+  }
+
+  peercaps = gst_pad_peer_query_caps (payload->srcpad, filter);
+  gst_caps_unref (filter);
+
   if (peercaps == NULL) {
     /* no peer caps, just add the other properties */
+
+    srccaps = gst_caps_copy (payload->priv->subclass_srccaps);
     gst_caps_set_simple (srccaps,
         "payload", G_TYPE_INT, GST_RTP_BASE_PAYLOAD_PT (payload),
         "ssrc", G_TYPE_UINT, payload->current_ssrc,
@@ -777,7 +812,6 @@ gst_rtp_base_payload_set_outcaps (GstRTPBasePayload * payload,
     /* peer provides caps we can use to fixate. They are already intersected
      * with our srccaps, just make them writable */
     temp = gst_caps_make_writable (peercaps);
-    gst_caps_unref (srccaps);
 
     if (gst_caps_is_empty (temp)) {
       gst_caps_unref (temp);
@@ -1328,6 +1362,7 @@ gst_rtp_base_payload_change_state (GstElement * element,
       g_atomic_int_set (&rtpbasepayload->priv->notified_first_timestamp, 1);
       priv->base_offset = GST_BUFFER_OFFSET_NONE;
       priv->negotiated = FALSE;
+      gst_caps_replace (&rtpbasepayload->priv->subclass_srccaps, NULL);
       break;
     default:
       break;
