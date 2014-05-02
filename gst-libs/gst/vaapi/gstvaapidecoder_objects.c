@@ -104,6 +104,8 @@ gst_vaapi_picture_create (GstVaapiPicture * picture,
     picture->type = parent_picture->type;
     picture->pts = parent_picture->pts;
     picture->poc = parent_picture->poc;
+    picture->voc = parent_picture->voc;
+    picture->view_id = parent_picture->view_id;
 
     // Copy all picture flags but "output"
     GST_VAAPI_PICTURE_FLAG_SET (picture,
@@ -111,7 +113,8 @@ gst_vaapi_picture_create (GstVaapiPicture * picture,
         (GST_VAAPI_PICTURE_FLAG_SKIPPED |
             GST_VAAPI_PICTURE_FLAG_REFERENCE |
             GST_VAAPI_PICTURE_FLAG_INTERLACED |
-            GST_VAAPI_PICTURE_FLAG_FF | GST_VAAPI_PICTURE_FLAG_TFF));
+            GST_VAAPI_PICTURE_FLAG_FF | GST_VAAPI_PICTURE_FLAG_TFF |
+            GST_VAAPI_PICTURE_FLAG_MVC));
 
     picture->structure = parent_picture->structure;
     if ((args->flags & GST_VAAPI_CREATE_PICTURE_FLAG_FIELD) &&

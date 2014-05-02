@@ -65,6 +65,7 @@ typedef enum
  * @GST_VAAPI_PICTURE_FLAG_INTERLACED: interlaced frame
  * @GST_VAAPI_PICTURE_FLAG_FF: first-field
  * @GST_VAAPI_PICTURE_FLAG_TFF: top-field-first
+ * @GST_VAAPI_PICTURE_FLAG_MVC: multiview component
  * @GST_VAAPI_PICTURE_FLAG_LAST: first flag that can be used by subclasses
  *
  * Enum values used for #GstVaapiPicture flags.
@@ -77,7 +78,8 @@ typedef enum
   GST_VAAPI_PICTURE_FLAG_INTERLACED = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 3),
   GST_VAAPI_PICTURE_FLAG_FF         = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 4),
   GST_VAAPI_PICTURE_FLAG_TFF        = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 5),
-  GST_VAAPI_PICTURE_FLAG_LAST       = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 6),
+  GST_VAAPI_PICTURE_FLAG_MVC        = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 6),
+  GST_VAAPI_PICTURE_FLAG_LAST       = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 7),
 } GstVaapiPictureFlags;
 
 #define GST_VAAPI_PICTURE_FLAGS         GST_VAAPI_MINI_OBJECT_FLAGS
@@ -110,6 +112,9 @@ typedef enum
   (GST_VAAPI_PICTURE_IS_FRAME (picture) ||              \
       !GST_VAAPI_PICTURE_IS_FIRST_FIELD (picture))
 
+#define GST_VAAPI_PICTURE_IS_MVC(picture) \
+  (GST_VAAPI_PICTURE_FLAG_IS_SET (picture, GST_VAAPI_PICTURE_FLAG_MVC))
+
 /**
  * GstVaapiPicture:
  *
@@ -137,6 +142,8 @@ struct _GstVaapiPicture
   GstVaapiProbabilityTable *prob_table;
   GstClockTime pts;
   gint32 poc;
+  guint16 voc;
+  guint16 view_id;
   guint structure;
   GstVaapiRectangle crop_rect;
   guint has_crop_rect:1;

@@ -146,6 +146,11 @@ gst_vaapi_parser_info_h264_new(void)
  * Extended picture flags:
  *
  * @GST_VAAPI_PICTURE_FLAG_IDR: flag that specifies an IDR picture
+ * @GST_VAAPI_PICTURE_FLAG_INTER_VIEW: flag that indicates the picture
+ *   may be used for inter-view prediction
+ * @GST_VAAPI_PICTURE_FLAG_ANCHOR: flag that specifies an anchor picture,
+ *   i.e. a picture that is decoded with only inter-view prediction,
+ *   and not inter prediction
  * @GST_VAAPI_PICTURE_FLAG_AU_START: flag that marks the start of an
  *   access unit (AU)
  * @GST_VAAPI_PICTURE_FLAG_AU_END: flag that marks the end of an
@@ -160,6 +165,8 @@ gst_vaapi_parser_info_h264_new(void)
 enum {
     GST_VAAPI_PICTURE_FLAG_IDR          = (GST_VAAPI_PICTURE_FLAG_LAST << 0),
     GST_VAAPI_PICTURE_FLAG_REFERENCE2   = (GST_VAAPI_PICTURE_FLAG_LAST << 1),
+    GST_VAAPI_PICTURE_FLAG_INTER_VIEW   = (GST_VAAPI_PICTURE_FLAG_LAST << 2),
+    GST_VAAPI_PICTURE_FLAG_ANCHOR       = (GST_VAAPI_PICTURE_FLAG_LAST << 3),
     GST_VAAPI_PICTURE_FLAG_AU_START     = (GST_VAAPI_PICTURE_FLAG_LAST << 4),
     GST_VAAPI_PICTURE_FLAG_AU_END       = (GST_VAAPI_PICTURE_FLAG_LAST << 5),
 
@@ -184,6 +191,12 @@ enum {
     ((GST_VAAPI_PICTURE_FLAGS(picture) &                        \
       GST_VAAPI_PICTURE_FLAGS_REFERENCE) ==                     \
      GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE)
+
+#define GST_VAAPI_PICTURE_IS_INTER_VIEW(picture) \
+    (GST_VAAPI_PICTURE_FLAGS(picture) & GST_VAAPI_PICTURE_FLAG_INTER_VIEW)
+
+#define GST_VAAPI_PICTURE_IS_ANCHOR(picture) \
+    (GST_VAAPI_PICTURE_FLAGS(picture) & GST_VAAPI_PICTURE_FLAG_ANCHOR)
 
 #define GST_VAAPI_PICTURE_H264(picture) \
     ((GstVaapiPictureH264 *)(picture))
@@ -271,6 +284,7 @@ struct _GstVaapiFrameStore {
     /*< private >*/
     GstVaapiMiniObject          parent_instance;
 
+    guint                       view_id;
     guint                       structure;
     GstVaapiPictureH264        *buffers[2];
     guint                       num_buffers;
@@ -302,6 +316,7 @@ gst_vaapi_frame_store_new(GstVaapiPictureH264 *picture)
     if (!fs)
         return NULL;
 
+    fs->view_id         = picture->base.view_id;
     fs->structure       = picture->structure;
     fs->buffers[0]      = gst_vaapi_picture_ref(picture);
     fs->buffers[1]      = NULL;
@@ -382,6 +397,18 @@ gst_vaapi_frame_store_has_reference(GstVaapiFrameStore *fs)
     return FALSE;
 }
 
+static gboolean
+gst_vaapi_frame_store_has_inter_view(GstVaapiFrameStore *fs)
+{
+    guint i;
+
+    for (i = 0; i < fs->num_buffers; i++) {
+        if (GST_VAAPI_PICTURE_IS_INTER_VIEW(fs->buffers[i]))
+            return TRUE;
+    }
+    return FALSE;
+}
+
 #define gst_vaapi_frame_store_ref(fs) \
     gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(fs))
 
@@ -432,6 +459,7 @@ struct _GstVaapiDecoderH264Private {
     GstVaapiProfile             profile;
     GstVaapiEntrypoint          entrypoint;
     GstVaapiChromaType          chroma_type;
+    GPtrArray                  *inter_views;
     GstVaapiPictureH264        *short_ref[32];
     guint                       short_ref_count;
     GstVaapiPictureH264        *long_ref[32];
@@ -670,11 +698,42 @@ dpb_find_lowest_poc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
         GstVaapiFrameStore * const fs = priv->dpb[i];
         if (!fs->output_needed)
             continue;
+        if (picture && picture->base.view_id != fs->view_id)
+            continue;
         for (j = 0; j < fs->num_buffers; j++) {
             GstVaapiPictureH264 * const pic = fs->buffers[j];
             if (!pic->output_needed)
                 continue;
-            if (!found_picture || found_picture->base.poc > pic->base.poc)
+            if (!found_picture || found_picture->base.poc > pic->base.poc ||
+                (found_picture->base.poc == pic->base.poc &&
+                 found_picture->base.voc > pic->base.voc))
+                found_picture = pic, found_index = i;
+        }
+    }
+
+    if (found_picture_ptr)
+        *found_picture_ptr = found_picture;
+    return found_picture ? found_index : -1;
+}
+
+/* Finds the picture with the lowest VOC that needs to be output */
+static gint
+dpb_find_lowest_voc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
+    GstVaapiPictureH264 **found_picture_ptr)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiPictureH264 *found_picture = NULL;
+    guint i, j, found_index;
+
+    for (i = 0; i < priv->dpb_count; i++) {
+        GstVaapiFrameStore * const fs = priv->dpb[i];
+        if (!fs->output_needed || fs->view_id == picture->base.view_id)
+            continue;
+        for (j = 0; j < fs->num_buffers; j++) {
+            GstVaapiPictureH264 * const pic = fs->buffers[j];
+            if (!pic->output_needed || pic->base.poc != picture->base.poc)
+                continue;
+            if (!found_picture || found_picture->base.voc > pic->base.voc)
                 found_picture = pic, found_index = i;
         }
     }
@@ -698,6 +757,19 @@ dpb_bump(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 
     success = dpb_output(decoder, priv->dpb[found_index], found_picture);
     dpb_evict(decoder, found_picture, found_index);
+    if (priv->max_views == 1)
+        return success;
+
+    /* Emit all other view components that were in the same access
+       unit than the picture we have just found */
+    for (;;) {
+        found_index = dpb_find_lowest_voc(decoder, found_picture,
+            &found_picture);
+        if (found_index < 0)
+            break;
+        dpb_output(decoder, priv->dpb[found_index], found_picture);
+        dpb_evict(decoder, found_picture, found_index);
+    }
     return success;
 }
 
@@ -705,11 +777,19 @@ static void
 dpb_clear(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
-    guint i;
+    guint i, n;
 
-    for (i = 0; i < priv->dpb_count; i++)
+    for (i = 0; i < priv->dpb_count; i++) {
+        if (picture && picture->base.view_id != priv->dpb[i]->view_id)
+            continue;
         gst_vaapi_frame_store_replace(&priv->dpb[i], NULL);
-    priv->dpb_count = 0;
+    }
+
+    for (i = 0, n = 0; i < priv->dpb_count; i++) {
+        if (priv->dpb[i])
+            priv->dpb[n++] = priv->dpb[i];
+    }
+    priv->dpb_count = n;
 
     gst_vaapi_frame_store_replace(&priv->prev_frame, NULL);
 }
@@ -722,6 +802,26 @@ dpb_flush(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     dpb_clear(decoder, picture);
 }
 
+static void
+dpb_prune_mvc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    guint i;
+
+    // Remove all unused inter-view pictures
+    if (GST_VAAPI_PICTURE_FLAG_IS_SET(picture, GST_VAAPI_PICTURE_FLAG_AU_END)) {
+        i = 0;
+        while (i < priv->dpb_count) {
+            GstVaapiFrameStore * const fs = priv->dpb[i];
+            if (fs->view_id != picture->base.view_id &&
+                !fs->output_needed && !gst_vaapi_frame_store_has_reference(fs))
+                dpb_remove_index(decoder, i);
+            else
+                i++;
+        }
+    }
+}
+
 static gboolean
 dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
@@ -729,12 +829,16 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     GstVaapiFrameStore *fs;
     guint i;
 
+    if (priv->max_views > 1)
+        dpb_prune_mvc(decoder, picture);
+
     // Remove all unused pictures
     if (!GST_VAAPI_PICTURE_IS_IDR(picture)) {
         i = 0;
         while (i < priv->dpb_count) {
             GstVaapiFrameStore * const fs = priv->dpb[i];
-            if (!fs->output_needed && !gst_vaapi_frame_store_has_reference(fs))
+            if (fs->view_id == picture->base.view_id &&
+                !fs->output_needed && !gst_vaapi_frame_store_has_reference(fs))
                 dpb_remove_index(decoder, i);
             else
                 i++;
@@ -768,11 +872,18 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 
     // C.4.5.2 - Storage and marking of a non-reference decoded picture into the DPB
     else {
-        if (!picture->output_flag)
+        const gboolean StoreInterViewOnlyRefFlag =
+            !GST_VAAPI_PICTURE_FLAG_IS_SET(picture,
+                GST_VAAPI_PICTURE_FLAG_AU_END) &&
+            GST_VAAPI_PICTURE_FLAG_IS_SET(picture,
+                GST_VAAPI_PICTURE_FLAG_INTER_VIEW);
+        if (!picture->output_flag && !StoreInterViewOnlyRefFlag)
             return TRUE;
         while (priv->dpb_count == priv->dpb_size) {
-            if (dpb_find_lowest_poc(decoder, picture, NULL) < 0)
-                return dpb_output(decoder, NULL, picture);
+            if (!StoreInterViewOnlyRefFlag) {
+                if (dpb_find_lowest_poc(decoder, picture, NULL) < 0)
+                    return dpb_output(decoder, NULL, picture);
+            }
             if (!dpb_bump(decoder, picture))
                 return FALSE;
         }
@@ -812,6 +923,33 @@ dpb_reset(GstVaapiDecoderH264 *decoder, guint dpb_size)
     return TRUE;
 }
 
+static void
+unref_inter_view(GstVaapiPictureH264 *picture)
+{
+    if (!picture)
+        return;
+    GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAG_INTER_VIEW);
+    gst_vaapi_picture_unref(picture);
+}
+
+/* Resets MVC resources */
+static gboolean
+mvc_reset(GstVaapiDecoderH264 *decoder)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+
+    // Resize array of inter-view references
+    if (priv->inter_views)
+        g_ptr_array_set_size(priv->inter_views, priv->max_views);
+    else {
+        priv->inter_views = g_ptr_array_new_full(priv->max_views,
+            (GDestroyNotify)unref_inter_view);
+        if (!priv->inter_views)
+            return FALSE;
+    }
+    return TRUE;
+}
+
 static GstVaapiDecoderStatus
 get_status(GstH264ParserResult result)
 {
@@ -844,6 +982,11 @@ gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
     gst_vaapi_parser_info_h264_replace(&priv->prev_pi, NULL);
 
     dpb_clear(decoder, NULL);
+
+    if (priv->inter_views) {
+        g_ptr_array_unref(priv->inter_views);
+        priv->inter_views = NULL;
+    }
 
     if (priv->parser) {
         gst_h264_nal_parser_free(priv->parser);
@@ -1083,6 +1226,10 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
 
     /* Reset DPB */
     if (!dpb_reset(decoder, dpb_size))
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+
+    /* Reset MVC data */
+    if (!mvc_reset(decoder))
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -1684,6 +1831,10 @@ init_picture_refs_pic_num(
     for (i = 0; i < priv->short_ref_count; i++) {
         GstVaapiPictureH264 * const pic = priv->short_ref[i];
 
+        // (H.8.2)
+        if (pic->base.view_id != picture->base.view_id)
+            continue;
+
         // (8-27)
         if (pic->frame_num > priv->frame_num)
             pic->frame_num_wrap = pic->frame_num - MaxFrameNum;
@@ -1703,6 +1854,10 @@ init_picture_refs_pic_num(
 
     for (i = 0; i < priv->long_ref_count; i++) {
         GstVaapiPictureH264 * const pic = priv->long_ref[i];
+
+        // (H.8.2)
+        if (pic->base.view_id != picture->base.view_id)
+            continue;
 
         // (8-29, 8-32, 8-33)
         if (GST_VAAPI_PICTURE_IS_FRAME(picture))
@@ -1772,6 +1927,81 @@ init_picture_refs_fields(
     *RefPicList_count = n;
 }
 
+/* Finds the inter-view reference picture with the supplied view id */
+static GstVaapiPictureH264 *
+find_inter_view_reference(GstVaapiDecoderH264 *decoder, guint16 view_id)
+{
+    GPtrArray * const inter_views = decoder->priv.inter_views;
+    guint i;
+
+    for (i = 0; i < inter_views->len; i++) {
+        GstVaapiPictureH264 * const picture = g_ptr_array_index(inter_views, i);
+        if (picture->base.view_id == view_id)
+            return picture;
+    }
+
+    GST_WARNING("failed to find inter-view reference picture for view_id: %d",
+        view_id);
+    return NULL;
+}
+
+/* H.8.2.1 - Initialization process for inter-view prediction references */
+static void
+init_picture_refs_mvc_1(GstVaapiDecoderH264 *decoder,
+    GstVaapiPictureH264 **ref_list, guint *ref_list_count_ptr, guint num_refs,
+    const guint16 *view_ids, guint num_view_ids)
+{
+    guint j, n;
+
+    n = *ref_list_count_ptr;
+    for (j = 0; j < num_view_ids && n < num_refs; j++) {
+        GstVaapiPictureH264 * const pic =
+            find_inter_view_reference(decoder, view_ids[j]);
+        if (pic)
+            ref_list[n++] = pic;
+    }
+    *ref_list_count_ptr = n;
+}
+
+static inline void
+init_picture_refs_mvc(GstVaapiDecoderH264 *decoder,
+    GstVaapiPictureH264 *picture, GstH264SliceHdr *slice_hdr, guint list)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    const GstH264SPS * const sps = get_sps(decoder);
+    const GstH264SPSExtMVCView *view;
+
+    GST_DEBUG("initialize reference picture list for inter-view prediction");
+
+    if (sps->extension_type != GST_H264_NAL_EXTENSION_MVC)
+        return;
+    view = &sps->extension.mvc.view[picture->base.voc];
+
+#define INVOKE_INIT_PICTURE_REFS_MVC(ref_list, view_list) do {          \
+        init_picture_refs_mvc_1(decoder,                                \
+            priv->RefPicList##ref_list,                                 \
+            &priv->RefPicList##ref_list##_count,                        \
+            slice_hdr->num_ref_idx_l##ref_list##_active_minus1 + 1,     \
+            view->view_list##_l##ref_list,                              \
+            view->num_##view_list##s_l##ref_list);                      \
+    } while (0)
+
+    if (list == 0) {
+        if (GST_VAAPI_PICTURE_IS_ANCHOR(picture))
+            INVOKE_INIT_PICTURE_REFS_MVC(0, anchor_ref);
+        else
+            INVOKE_INIT_PICTURE_REFS_MVC(0, non_anchor_ref);
+    }
+    else {
+        if (GST_VAAPI_PICTURE_IS_ANCHOR(picture))
+            INVOKE_INIT_PICTURE_REFS_MVC(1, anchor_ref);
+        else
+            INVOKE_INIT_PICTURE_REFS_MVC(1, non_anchor_ref);
+    }
+
+#undef INVOKE_INIT_PICTURE_REFS_MVC
+}
+
 static void
 init_picture_refs_p_slice(
     GstVaapiDecoderH264 *decoder,
@@ -1830,6 +2060,11 @@ init_picture_refs_p_slice(
             short_ref,          short_ref_count,
             long_ref,           long_ref_count
         );
+    }
+
+    if (GST_VAAPI_PICTURE_IS_MVC(picture)) {
+        /* RefPicList0 */
+        init_picture_refs_mvc(decoder, picture, slice_hdr, 0);
     }
 }
 
@@ -1987,6 +2222,14 @@ init_picture_refs_b_slice(
         priv->RefPicList1[0] = priv->RefPicList1[1];
         priv->RefPicList1[1] = tmp;
     }
+
+    if (GST_VAAPI_PICTURE_IS_MVC(picture)) {
+        /* RefPicList0 */
+        init_picture_refs_mvc(decoder, picture, slice_hdr, 0);
+
+        /* RefPicList1 */
+        init_picture_refs_mvc(decoder, picture, slice_hdr, 1);
+    }
 }
 
 #undef SORT_REF_LIST
@@ -2035,9 +2278,10 @@ exec_picture_refs_modification_1(
     guint num_ref_pic_list_modifications;
     GstVaapiPictureH264 **ref_list;
     guint *ref_list_count_ptr, ref_list_count, ref_list_idx = 0;
-    guint i, j, n, num_refs;
+    const guint16 *view_ids = NULL;
+    guint i, j, n, num_refs, num_view_ids = 0;
     gint found_ref_idx;
-    gint32 MaxPicNum, CurrPicNum, picNumPred;
+    gint32 MaxPicNum, CurrPicNum, picNumPred, picViewIdxPred;
 
     GST_DEBUG("modification process of reference picture list %u", list);
 
@@ -2047,6 +2291,20 @@ exec_picture_refs_modification_1(
         ref_list                       = priv->RefPicList0;
         ref_list_count_ptr             = &priv->RefPicList0_count;
         num_refs                       = slice_hdr->num_ref_idx_l0_active_minus1 + 1;
+
+        if (GST_VAAPI_PICTURE_IS_MVC(picture) &&
+            sps->extension_type == GST_H264_NAL_EXTENSION_MVC) {
+            const GstH264SPSExtMVCView * const view =
+                &sps->extension.mvc.view[picture->base.voc];
+            if (GST_VAAPI_PICTURE_IS_ANCHOR(picture)) {
+                view_ids = view->anchor_ref_l0;
+                num_view_ids = view->num_anchor_refs_l0;
+            }
+            else {
+                view_ids = view->non_anchor_ref_l0;
+                num_view_ids = view->num_non_anchor_refs_l0;
+            }
+        }
     }
     else {
         ref_pic_list_modification      = slice_hdr->ref_pic_list_modification_l1;
@@ -2054,6 +2312,20 @@ exec_picture_refs_modification_1(
         ref_list                       = priv->RefPicList1;
         ref_list_count_ptr             = &priv->RefPicList1_count;
         num_refs                       = slice_hdr->num_ref_idx_l1_active_minus1 + 1;
+
+        if (GST_VAAPI_PICTURE_IS_MVC(picture) &&
+            sps->extension_type == GST_H264_NAL_EXTENSION_MVC) {
+            const GstH264SPSExtMVCView * const view =
+                &sps->extension.mvc.view[picture->base.voc];
+            if (GST_VAAPI_PICTURE_IS_ANCHOR(picture)) {
+                view_ids = view->anchor_ref_l1;
+                num_view_ids = view->num_anchor_refs_l1;
+            }
+            else {
+                view_ids = view->non_anchor_ref_l1;
+                num_view_ids = view->num_non_anchor_refs_l1;
+            }
+        }
     }
     ref_list_count = *ref_list_count_ptr;
 
@@ -2067,6 +2339,7 @@ exec_picture_refs_modification_1(
     }
 
     picNumPred = CurrPicNum;
+    picViewIdxPred = -1;
 
     for (i = 0; i < num_ref_pic_list_modifications; i++) {
         GstH264RefPicListModification * const l = &ref_pic_list_modification[i];
@@ -2112,7 +2385,8 @@ exec_picture_refs_modification_1(
                 PicNumF =
                     GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(ref_list[j]) ?
                     ref_list[j]->pic_num : MaxPicNum;
-                if (PicNumF != picNum)
+                if (PicNumF != picNum ||
+                    ref_list[j]->base.view_id != picture->base.view_id)
                     ref_list[n++] = ref_list[j];
             }
         }
@@ -2134,7 +2408,49 @@ exec_picture_refs_modification_1(
                 LongTermPicNumF =
                     GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(ref_list[j]) ?
                     ref_list[j]->long_term_pic_num : INT_MAX;
-                if (LongTermPicNumF != l->value.long_term_pic_num)
+                if (LongTermPicNumF != l->value.long_term_pic_num ||
+                    ref_list[j]->base.view_id != picture->base.view_id)
+                    ref_list[n++] = ref_list[j];
+            }
+        }
+
+        /* H.8.2.2.3 - Inter-view prediction reference pictures */
+        else if ((GST_VAAPI_PICTURE_IS_MVC(picture) &&
+                  sps->extension_type == GST_H264_NAL_EXTENSION_MVC) &&
+                 (l->modification_of_pic_nums_idc == 4 ||
+                  l->modification_of_pic_nums_idc == 5)) {
+            gint32 abs_diff_view_idx = l->value.abs_diff_view_idx_minus1 + 1;
+            gint32 picViewIdx, targetViewId;
+
+            // (H-6)
+            if (l->modification_of_pic_nums_idc == 4) {
+                picViewIdx = picViewIdxPred - abs_diff_view_idx;
+                if (picViewIdx < 0)
+                    picViewIdx += num_view_ids;
+            }
+
+            // (H-7)
+            else {
+                picViewIdx = picViewIdxPred + abs_diff_view_idx;
+                if (picViewIdx >= num_view_ids)
+                    picViewIdx -= num_view_ids;
+            }
+            picViewIdxPred = picViewIdx;
+
+            // (H-8, H-9)
+            targetViewId = view_ids[picViewIdx];
+
+            // (H-10)
+            for (j = num_refs; j > ref_list_idx; j--)
+                ref_list[j] = ref_list[j - 1];
+            ref_list[ref_list_idx++] =
+                find_inter_view_reference(decoder, targetViewId);
+            n = ref_list_idx;
+            for (j = ref_list_idx; j <= num_refs; j++) {
+                if (!ref_list[j])
+                    continue;
+                if (ref_list[j]->base.view_id != targetViewId ||
+                    ref_list[j]->base.poc != picture->base.poc)
                     ref_list[n++] = ref_list[j];
             }
         }
@@ -2185,6 +2501,8 @@ init_picture_ref_lists(GstVaapiDecoderH264 *decoder,
             if (!gst_vaapi_frame_store_has_frame(fs))
                 continue;
             pic = fs->buffers[0];
+            if (pic->base.view_id != picture->base.view_id)
+                continue;
             if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(pic))
                 priv->short_ref[short_ref_count++] = pic;
             else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(pic))
@@ -2198,6 +2516,8 @@ init_picture_ref_lists(GstVaapiDecoderH264 *decoder,
             GstVaapiFrameStore * const fs = priv->dpb[i];
             for (j = 0; j < fs->num_buffers; j++) {
                 GstVaapiPictureH264 * const pic = fs->buffers[j];
+                if (pic->base.view_id != picture->base.view_id)
+                    continue;
                 if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(pic))
                     priv->short_ref[short_ref_count++] = pic;
                 else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(pic))
@@ -2284,8 +2604,27 @@ init_picture(
     base_picture->pts           = GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts;
     base_picture->type          = GST_VAAPI_PICTURE_TYPE_NONE;
 
+    /* Initialize extensions */
+    switch (pi->nalu.extension_type) {
+    case GST_H264_NAL_EXTENSION_MVC: {
+        GstH264NalUnitExtensionMVC * const mvc = &pi->nalu.extension.mvc;
+        base_picture->view_id = mvc->view_id;
+        base_picture->voc = get_view_order_index(get_sps(decoder),
+            base_picture->view_id);
+
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_MVC);
+        if (mvc->inter_view_flag)
+            GST_VAAPI_PICTURE_FLAG_SET(picture,
+                GST_VAAPI_PICTURE_FLAG_INTER_VIEW);
+        if (mvc->anchor_pic_flag)
+            GST_VAAPI_PICTURE_FLAG_SET(picture,
+                GST_VAAPI_PICTURE_FLAG_ANCHOR);
+        break;
+    }
+    }
+
     /* Reset decoder state for IDR pictures */
-    if (pi->nalu.type == GST_H264_NAL_SLICE_IDR) {
+    if (pi->nalu.idr_pic_flag) {
         GST_DEBUG("<IDR>");
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_IDR);
         dpb_flush(decoder, picture);
@@ -2600,6 +2939,9 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     priv->prev_pic_has_mmco5 = FALSE;
     priv->prev_pic_structure = picture->structure;
 
+    if (GST_VAAPI_PICTURE_IS_INTER_VIEW(picture))
+        g_ptr_array_add(priv->inter_views, gst_vaapi_picture_ref(picture));
+
     if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture))
         return TRUE;
 
@@ -2681,9 +3023,13 @@ fill_picture(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 
     for (i = 0, n = 0; i < priv->dpb_count; i++) {
         GstVaapiFrameStore * const fs = priv->dpb[i];
-        if (gst_vaapi_frame_store_has_reference(fs))
+        if ((gst_vaapi_frame_store_has_reference(fs) &&
+             fs->view_id == picture->base.view_id) ||
+            gst_vaapi_frame_store_has_inter_view(fs))
             vaapi_fill_picture(&pic_param->ReferenceFrames[n++],
                 fs->buffers[0], fs->structure);
+        if (n >= G_N_ELEMENTS(pic_param->ReferenceFrames))
+            break;
     }
     for (; n < G_N_ELEMENTS(pic_param->ReferenceFrames); n++)
         vaapi_init_picture(&pic_param->ReferenceFrames[n]);
@@ -2854,7 +3200,7 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     switch (sps->profile_idc) {
     case GST_H264_PROFILE_MULTIVIEW_HIGH:
     case GST_H264_PROFILE_STEREO_HIGH:
-        if (1) {
+        if (0) {
             GST_DEBUG("drop picture from substream");
             return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
         }
@@ -2885,6 +3231,11 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     }
     gst_vaapi_picture_replace(&priv->current_picture, picture);
     gst_vaapi_picture_unref(picture);
+
+    /* Clear inter-view references list if this is the primary coded
+       picture of the current access unit */
+    if (pi->flags & GST_VAAPI_DECODER_UNIT_FLAG_AU_START)
+        g_ptr_array_set_size(priv->inter_views, 0);
 
     /* Update cropping rectangle */
     if (sps->frame_cropping_flag) {
