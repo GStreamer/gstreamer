@@ -520,7 +520,7 @@ gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         GST_LOG ("(FLC) oframe2   :  0x%08x", flxh->oframe2);
       }
 
-      flxdec->size = (flxh->width * flxh->height);
+      flxdec->size = ((guint) flxh->width * (guint) flxh->height);
 
       /* create delta and output frame */
       flxdec->frame_data = g_malloc (flxdec->size);
