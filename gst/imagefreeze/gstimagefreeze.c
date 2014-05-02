@@ -695,6 +695,13 @@ gst_image_freeze_src_loop (GstPad * pad)
   gboolean in_seg, eos;
 
   g_mutex_lock (&self->lock);
+  if (!gst_pad_has_current_caps (pad)) {
+    GST_ERROR_OBJECT (pad, "Not negotiated yet");
+    g_mutex_unlock (&self->lock);
+    gst_pad_pause_task (self->srcpad);
+    return;
+  }
+
   if (!self->buffer) {
     GST_ERROR_OBJECT (pad, "Have no buffer yet");
     g_mutex_unlock (&self->lock);
