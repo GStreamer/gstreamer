@@ -957,7 +957,7 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
 
       memset (&gst_vp8_enc->cfg.ts_layer_id, 0,
           sizeof (gst_vp8_enc->cfg.ts_layer_id));
-      if (va->n_values > VPX_TS_MAX_PERIODICITY) {
+      if (va && va->n_values > VPX_TS_MAX_PERIODICITY) {
         g_warning ("%s: Only %d sized layer sequences allowed at maximum",
             GST_ELEMENT_NAME (gst_vp8_enc), VPX_TS_MAX_PERIODICITY);
       } else if (va) {
