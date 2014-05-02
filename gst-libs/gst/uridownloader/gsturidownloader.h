@@ -56,10 +56,8 @@ struct _GstUriDownloaderClass
 GType gst_uri_downloader_get_type (void);
 
 GstUriDownloader * gst_uri_downloader_new (void);
-GstFragment * gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri, gboolean compress, GError ** err);
-GstFragment * gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader, const gchar * uri, gboolean compress, gint64 range_start, gint64 range_end, GError ** err);
-GstFragment * gst_uri_downloader_fetch_uri_with_referer (GstUriDownloader * downloader, const gchar * uri, const gchar * referer, gboolean compress, GError ** err);
-GstFragment * gst_uri_downloader_fetch_uri_with_range_and_referer (GstUriDownloader * downloader, const gchar * uri, const gchar * referer, gboolean compress, gint64 range_start, gint64 range_end, GError ** err);
+GstFragment * gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri, const gchar * referer, gboolean compress, gboolean refresh, GError ** err);
+GstFragment * gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader, const gchar * uri, const gchar * referer, gboolean compress, gboolean refresh, gint64 range_start, gint64 range_end, GError ** err);
 void gst_uri_downloader_reset (GstUriDownloader *downloader);
 void gst_uri_downloader_cancel (GstUriDownloader *downloader);
 void gst_uri_downloader_free (GstUriDownloader *downloader);
