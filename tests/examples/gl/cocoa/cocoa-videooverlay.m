@@ -111,7 +111,7 @@ static GstBusSyncReply create_window (GstBus* bus, GstMessage* message, MainWind
 
   g_print ("setting window handle %lud\n", (gulong) window);
 
-  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message)), (guintptr) window);
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message)), (guintptr) [window contentView]);
 
   gst_message_unref (message);
 
