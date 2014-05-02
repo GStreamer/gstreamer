@@ -961,10 +961,6 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
 
-  if (!filter->upload) {
-    filter->upload = gst_gl_upload_new (filter->context);
-    gst_gl_upload_init_format (filter->upload, &filter->in_info);
-  }
   //blocking call, generate a FBO
   if (!gst_gl_context_gen_fbo (filter->context, out_width, out_height,
           &filter->fbo, &filter->depthbuffer))
@@ -992,6 +988,11 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_set_config (pool, config);
+
+  if (filter->upload) {
+    gst_object_unref (filter->upload);
+    filter->upload = NULL;
+  }
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
@@ -1103,12 +1104,33 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 {
   GstGLFilter *filter;
   GstGLFilterClass *filter_class;
+  GstCaps *in_caps, *out_caps;
+  GstBufferPool *pool;
 
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (bt);
 
   if (!gst_gl_ensure_display (filter, &filter->display))
     return GST_FLOW_NOT_NEGOTIATED;
+
+  if (!filter->upload) {
+    in_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SINK_PAD (filter));
+    out_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SRC_PAD (filter));
+    pool = gst_base_transform_get_buffer_pool (bt);
+
+    if (GST_IS_GL_BUFFER_POOL (pool)
+        && gst_caps_is_equal_fixed (in_caps, out_caps)) {
+      filter->upload = gst_object_ref (GST_GL_BUFFER_POOL (pool)->upload);
+    } else {
+      filter->upload = gst_gl_upload_new (filter->context);
+      if (!gst_gl_upload_init_format (filter->upload, &filter->in_info))
+        goto upload_error;
+    }
+
+    gst_caps_unref (in_caps);
+    gst_caps_unref (out_caps);
+    gst_object_unref (pool);
+  }
 
   g_assert (filter_class->filter || filter_class->filter_texture);
 
@@ -1118,6 +1140,15 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     gst_gl_filter_filter_texture (filter, inbuf, outbuf);
 
   return GST_FLOW_OK;
+
+upload_error:
+  {
+    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND, ("Failed to init upload"),
+        (NULL));
+    gst_object_unref (filter->upload);
+    filter->upload = NULL;
+    return GST_FLOW_ERROR;
+  }
 }
 
 /* convenience functions to simplify filter development */
