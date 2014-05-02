@@ -43,8 +43,7 @@
  *
  * An existing pad of an element can be retrieved by name with
  * gst_element_get_static_pad(). A new dynamic pad can be created using
- * gst_element_request_pad() with a #GstPadTemplate or 
- * gst_element_get_request_pad() with the template name such as "src_\%u".
+ * gst_element_request_pad() with a #GstPadTemplate.
  * An iterator of all pads can be retrieved with gst_element_iterate_pads().
  *
  * Elements can be linked through their pads.
@@ -306,10 +305,10 @@ gst_element_init (GstElement * element)
  * @pad: the #GstPad to release.
  *
  * Makes the element free the previously requested pad as obtained
- * with gst_element_get_request_pad().
+ * with gst_element_request_pad().
  *
  * This does not unref the pad. If the pad was created by using
- * gst_element_get_request_pad(), gst_element_release_request_pad() needs to be
+ * gst_element_request_pad(), gst_element_release_request_pad() needs to be
  * followed by gst_object_unref() to free the @pad.
  *
  * MT safe.
@@ -733,7 +732,7 @@ no_direction:
  *
  * This function is used by plugin developers and should not be used
  * by applications. Pads that were dynamically requested from elements
- * with gst_element_get_request_pad() should be released with the
+ * with gst_element_request_pad() should be released with the
  * gst_element_release_request_pad() function instead.
  *
  * Pads are not automatically deactivated so elements should perform the needed

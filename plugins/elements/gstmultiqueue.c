@@ -38,7 +38,7 @@
  *     achieve such a feature it has request sink pads (sink&percnt;u) and
  *     'sometimes' src pads (src&percnt;u).
  *   </para><para>
- *     When requesting a given sinkpad with gst_element_get_request_pad(),
+ *     When requesting a given sinkpad with gst_element_request_pad(),
  *     the associated srcpad for that stream will be created.
  *     Example: requesting sink1 will generate src1.
  *   </para></listitem>
