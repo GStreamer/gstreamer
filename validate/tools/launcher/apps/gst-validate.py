@@ -188,7 +188,7 @@ G_V_BLACKLISTED_TESTS = \
  # Matroska/WEBM known issues:
  ("validate.*.reverse_playback.*webm$",
   "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
- ("validate.*Sintel.*reverse.*mkv",
+ ("validate.*reverse.*Sintel_2010_720p_mkv",
   "TODO in matroskademux: FIXME: We should build an index during playback or "
   "when scanning that can be used here. The reverse playback code requires "
   " seek_index and seek_entry to be set!"),
