@@ -128,12 +128,13 @@ gst_vaapi_parser_info_h264_new(void)
  *     reference picture (short-term reference or long-term reference)
  */
 enum {
-    GST_VAAPI_PICTURE_FLAG_IDR = (GST_VAAPI_PICTURE_FLAG_LAST << 0),
+    GST_VAAPI_PICTURE_FLAG_IDR          = (GST_VAAPI_PICTURE_FLAG_LAST << 0),
+    GST_VAAPI_PICTURE_FLAG_REFERENCE2   = (GST_VAAPI_PICTURE_FLAG_LAST << 1),
 
     GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE = (
         GST_VAAPI_PICTURE_FLAG_REFERENCE),
     GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE = (
-        GST_VAAPI_PICTURE_FLAG_REFERENCE | (GST_VAAPI_PICTURE_FLAG_LAST << 1)),
+        GST_VAAPI_PICTURE_FLAG_REFERENCE | GST_VAAPI_PICTURE_FLAG_REFERENCE2),
     GST_VAAPI_PICTURE_FLAGS_REFERENCE = (
         GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE |
         GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE),
@@ -151,6 +152,9 @@ enum {
     ((GST_VAAPI_PICTURE_FLAGS(picture) &                        \
       GST_VAAPI_PICTURE_FLAGS_REFERENCE) ==                     \
      GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE)
+
+#define GST_VAAPI_PICTURE_H264(picture) \
+    ((GstVaapiPictureH264 *)(picture))
 
 struct _GstVaapiPictureH264 {
     GstVaapiPicture             base;
@@ -1927,7 +1931,7 @@ exec_picture_refs_modification_1(
         }
 
         /* 8.2.4.3.2 - Long-term reference pictures */
-        else {
+        else if (l->modification_of_pic_nums_idc == 2) {
 
             for (j = num_refs; j > ref_list_idx; j--)
                 ref_list[j] = ref_list[j - 1];
@@ -1979,39 +1983,40 @@ exec_picture_refs_modification(
 }
 
 static void
-init_picture_ref_lists(GstVaapiDecoderH264 *decoder)
+init_picture_ref_lists(GstVaapiDecoderH264 *decoder,
+    GstVaapiPictureH264 *picture)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     guint i, j, short_ref_count, long_ref_count;
 
     short_ref_count = 0;
     long_ref_count  = 0;
-    if (GST_VAAPI_PICTURE_IS_FRAME(priv->current_picture)) {
+    if (GST_VAAPI_PICTURE_IS_FRAME(picture)) {
         for (i = 0; i < priv->dpb_count; i++) {
             GstVaapiFrameStore * const fs = priv->dpb[i];
-            GstVaapiPictureH264 *picture;
+            GstVaapiPictureH264 *pic;
             if (!gst_vaapi_frame_store_has_frame(fs))
                 continue;
-            picture = fs->buffers[0];
-            if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(picture))
-                priv->short_ref[short_ref_count++] = picture;
-            else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture))
-                priv->long_ref[long_ref_count++] = picture;
-            picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-            picture->other_field = fs->buffers[1];
+            pic = fs->buffers[0];
+            if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(pic))
+                priv->short_ref[short_ref_count++] = pic;
+            else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(pic))
+                priv->long_ref[long_ref_count++] = pic;
+            pic->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+            pic->other_field = fs->buffers[1];
         }
     }
     else {
         for (i = 0; i < priv->dpb_count; i++) {
             GstVaapiFrameStore * const fs = priv->dpb[i];
             for (j = 0; j < fs->num_buffers; j++) {
-                GstVaapiPictureH264 * const picture = fs->buffers[j];
-                if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(picture))
-                    priv->short_ref[short_ref_count++] = picture;
-                else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture))
-                    priv->long_ref[long_ref_count++] = picture;
-                picture->structure = picture->base.structure;
-                picture->other_field = fs->buffers[j ^ 1];
+                GstVaapiPictureH264 * const pic = fs->buffers[j];
+                if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(pic))
+                    priv->short_ref[short_ref_count++] = pic;
+                else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(pic))
+                    priv->long_ref[long_ref_count++] = pic;
+                pic->structure = pic->base.structure;
+                pic->other_field = fs->buffers[j ^ 1];
             }
         }
     }
@@ -2035,7 +2040,7 @@ init_picture_refs(
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     guint i, num_refs;
 
-    init_picture_ref_lists(decoder);
+    init_picture_ref_lists(decoder, picture);
     init_picture_refs_pic_num(decoder, picture, slice_hdr);
 
     priv->RefPicList0_count = 0;
@@ -2351,7 +2356,7 @@ exec_ref_pic_marking_adaptive_mmco_6(
 
     /* Assign LongTermFrameIdx to the other field if it was also
        marked as "used for long-term reference */
-    other_field = (GstVaapiPictureH264 *)picture->base.parent_picture;
+    other_field = GST_VAAPI_PICTURE_H264(picture->base.parent_picture);
     if (other_field && GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(other_field))
         other_field->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
 }
