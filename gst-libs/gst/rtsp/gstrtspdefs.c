@@ -131,14 +131,12 @@ static struct rtsp_header rtsp_headers[] = {
   {"Language", FALSE},
   {"PlayerStarttime", FALSE},
 
-  /* Since 0.10.16 */
   {"Location", FALSE},
 
-  /* Since 0.10.23 */
   {"ETag", FALSE},
   {"If-Match", TRUE},
 
-  /* WM extensions [MS-RTSP] Since 0.10.23 */
+  /* WM extensions [MS-RTSP] */
   {"Accept-Charset", TRUE},
   {"Supported", TRUE},
   {"Vary", TRUE},
@@ -159,17 +157,14 @@ static struct rtsp_header rtsp_headers[] = {
   {"X-RTP-Info", FALSE},
   {"X-StartupProfile", FALSE},
 
-  /* Since 0.10.24 */
   {"Timestamp", FALSE},
 
-  /* Since 0.10.25 */
   {"Authentication-Info", FALSE},
   {"Host", FALSE},
   {"Pragma", TRUE},
   {"X-Server-IP-Address", FALSE},
   {"X-Sessioncookie", FALSE},
 
-  /* Since 0.10.36 */
   {"RTCP-Interval", FALSE},
 
   /* Since 1.4 */
