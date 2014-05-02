@@ -58,6 +58,7 @@ stamp-h.in
 /tests/check/gst/permissions
 /tests/check/gst/rtspserver
 /tests/check/gst/sessionmedia
+/tests/check/gst/sessionpool
 /tests/check/gst/stream
 /tests/check/gst/threadpool
 /tests/check/gst/token
