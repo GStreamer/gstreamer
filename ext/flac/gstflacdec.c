@@ -421,7 +421,7 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
   }
 
   if (flacdec->min_blocksize == flacdec->max_blocksize) {
-    *last_sample_num = (val + 1) * flacdec->min_blocksize;
+    *last_sample_num = ((guint64) val + 1) * flacdec->min_blocksize;
   } else {
     *last_sample_num = 0;       /* FIXME: + length of last block in samples */
   }
