@@ -596,6 +596,7 @@ gst_video_flip_semi_planar_yuv (GstVideoFlip * videoflip, GstVideoFrame * dest,
           d[d_off + 1] = s[s_off + 1];
         }
       }
+      break;
     case GST_VIDEO_FLIP_METHOD_OTHER:
       /* Flip Y */
       s = GST_VIDEO_FRAME_PLANE_DATA (src, 0);
