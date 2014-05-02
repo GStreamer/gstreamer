@@ -2005,8 +2005,11 @@ gst_dash_demux_stream_update_source (GstDashDemuxStream * stream,
 {
   GstDashDemux *demux = stream->demux;
 
-  if (!gst_uri_is_valid (uri))
+  if (!gst_uri_is_valid (uri)) {
+    GST_WARNING_OBJECT (stream->pad, "Invalid URI: %s", uri);
+    stream->last_ret = GST_FLOW_ERROR;
     return FALSE;
+  }
 
   if (stream->src != NULL) {
     gchar *old_protocol, *new_protocol;
@@ -2047,7 +2050,8 @@ gst_dash_demux_stream_update_source (GstDashDemuxStream * stream,
 
     stream->src = gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
     if (stream->src == NULL) {
-      GST_WARNING_OBJECT (demux, "No element to handle uri: %s", uri);
+      GST_ELEMENT_ERROR (demux, CORE, MISSING_PLUGIN,
+          ("Missing plugin to handle URI: '%s'", uri), (NULL));
       return FALSE;
     }
 
@@ -2110,8 +2114,10 @@ gst_dash_demux_stream_download_uri (GstDashDemux * demux,
   GST_DEBUG_OBJECT (stream->pad, "Downloading uri: %s, range:%" G_GINT64_FORMAT
       " - %" G_GINT64_FORMAT, uri, start, end);
 
-  /* TODO check return */
-  gst_dash_demux_stream_update_source (stream, uri, NULL, FALSE, TRUE);
+  if (!gst_dash_demux_stream_update_source (stream, uri, NULL, FALSE, TRUE)) {
+    return;
+  }
+
   if (gst_element_set_state (stream->src,
           GST_STATE_READY) != GST_STATE_CHANGE_FAILURE) {
     if (start != 0 || end != -1) {
@@ -2290,8 +2296,10 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
 exit:
   g_mutex_unlock (&stream->fragment_download_lock);
 
-  /* TODO a race can set it to READY after it was set to NULL */
-  gst_element_set_state (stream->src, GST_STATE_READY);
+  if (stream->last_ret == GST_FLOW_OK)
+    gst_element_set_state (stream->src, GST_STATE_READY);
+  else
+    gst_element_set_state (stream->src, GST_STATE_NULL);
 }
 
 /* gst_dash_demux_stream_get_next_fragment:
