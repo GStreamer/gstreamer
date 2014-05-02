@@ -185,9 +185,7 @@ flush_data (GstRtpQDM2Depay * depay)
 
     gst_adapter_push (depay->adapter, buf);
 
-    if (pack->data) {
-      pack->data = NULL;
-    }
+    pack->data = NULL;
   }
 }
 
