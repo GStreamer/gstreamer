@@ -81,11 +81,6 @@ struct _GstSrtpEnc
   srtp_t session;
   gboolean first_session;
   gboolean key_changed;
-
-  gboolean hard_limit_reached;
-  gboolean soft_limit_reached;
-
-  GType key_type;
 };
 
 struct _GstSrtpEncClass
