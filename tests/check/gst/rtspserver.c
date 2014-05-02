@@ -269,11 +269,12 @@ read_response (GstRTSPConnection * conn)
 /* send an rtsp request and receive response. gchar** parameters are out
  * parameters that have to be freed by the caller */
 static GstRTSPStatusCode
-do_request (GstRTSPConnection * conn, GstRTSPMethod method,
+do_request_full (GstRTSPConnection * conn, GstRTSPMethod method,
     const gchar * control, const gchar * session_in, const gchar * transport_in,
-    const gchar * range_in,
+    const gchar * range_in, const gchar * require_in,
     gchar ** content_type, gchar ** content_base, gchar ** body,
-    gchar ** session_out, gchar ** transport_out, gchar ** range_out)
+    gchar ** session_out, gchar ** transport_out, gchar ** range_out,
+    gchar ** unsupported_out)
 {
   GstRTSPMessage *request;
   GstRTSPMessage *response;
@@ -293,6 +294,9 @@ do_request (GstRTSPConnection * conn, GstRTSPMethod method,
   if (range_in) {
     gst_rtsp_message_add_header (request, GST_RTSP_HDR_RANGE, range_in);
   }
+  if (require_in) {
+    gst_rtsp_message_add_header (request, GST_RTSP_HDR_REQUIRE, require_in);
+  }
 
   /* send request */
   fail_unless (send_request (conn, request));
@@ -306,6 +310,11 @@ do_request (GstRTSPConnection * conn, GstRTSPMethod method,
   /* check status line */
   gst_rtsp_message_parse_response (response, &code, NULL, NULL);
   if (code != GST_RTSP_STS_OK) {
+    if (unsupported_out != NULL && code == GST_RTSP_STS_OPTION_NOT_SUPPORTED) {
+      gst_rtsp_message_get_header (response, GST_RTSP_HDR_UNSUPPORTED,
+          &value, 0);
+      *unsupported_out = g_strdup (value);
+    }
     gst_rtsp_message_free (response);
     return code;
   }
@@ -353,6 +362,20 @@ do_request (GstRTSPConnection * conn, GstRTSPMethod method,
 
   gst_rtsp_message_free (response);
   return code;
+}
+
+/* send an rtsp request and receive response. gchar** parameters are out
+ * parameters that have to be freed by the caller */
+static GstRTSPStatusCode
+do_request (GstRTSPConnection * conn, GstRTSPMethod method,
+    const gchar * control, const gchar * session_in,
+    const gchar * transport_in, const gchar * range_in,
+    gchar ** content_type, gchar ** content_base, gchar ** body,
+    gchar ** session_out, gchar ** transport_out, gchar ** range_out)
+{
+  return do_request_full (conn, method, control, session_in, transport_in,
+      range_in, NULL, content_type, content_base, body, session_out,
+      transport_out, range_out, NULL);
 }
 
 /* send an rtsp request with a method and a session, and receive response */
@@ -408,9 +431,9 @@ do_describe (GstRTSPConnection * conn, const gchar * mount_point)
  * session string that must be freed by the caller. the returned
  * transport must be freed by the caller. */
 static GstRTSPStatusCode
-do_setup (GstRTSPConnection * conn, const gchar * control,
-    const GstRTSPRange * client_ports, gchar ** session,
-    GstRTSPTransport ** transport)
+do_setup_full (GstRTSPConnection * conn, const gchar * control,
+    const GstRTSPRange * client_ports, const gchar * require, gchar ** session,
+    GstRTSPTransport ** transport, gchar ** unsupported)
 {
   GstRTSPStatusCode code;
   gchar *session_in = NULL;
@@ -430,9 +453,9 @@ do_setup (GstRTSPConnection * conn, const gchar * control,
       g_strdup_printf (TEST_PROTO ";unicast;client_port=%d-%d",
       client_ports->min, client_ports->max);
   code =
-      do_request (conn, GST_RTSP_SETUP, control, session_in,
-      transport_string_in, NULL, NULL, NULL, NULL, session_out,
-      &transport_string_out, NULL);
+      do_request_full (conn, GST_RTSP_SETUP, control, session_in,
+      transport_string_in, NULL, require, NULL, NULL, NULL, session_out,
+      &transport_string_out, NULL, unsupported);
   g_free (transport_string_in);
 
   if (transport_string_out) {
@@ -442,8 +465,21 @@ do_setup (GstRTSPConnection * conn, const gchar * control,
             *transport) == GST_RTSP_OK);
     g_free (transport_string_out);
   }
-
+  GST_INFO ("code=%d", code);
   return code;
+}
+
+/* send a SETUP request and receive response. if *session is not NULL,
+ * it is used in the request. otherwise, *session is set to a returned
+ * session string that must be freed by the caller. the returned
+ * transport must be freed by the caller. */
+static GstRTSPStatusCode
+do_setup (GstRTSPConnection * conn, const gchar * control,
+    const GstRTSPRange * client_ports, gchar ** session,
+    GstRTSPTransport ** transport)
+{
+  return do_setup_full (conn, control, client_ports, NULL, session, transport,
+      NULL);
 }
 
 /* fixture setup function */
@@ -610,6 +646,69 @@ GST_START_TEST (test_setup)
   fail_unless (audio_transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP);
   fail_unless (audio_transport->mode_play);
   gst_rtsp_transport_free (audio_transport);
+
+  /* clean up and iterate so the clean-up can finish */
+  g_free (session);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_setup_with_require_header)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  GstRTSPRange client_ports;
+  gchar *session = NULL;
+  gchar *unsupported = NULL;
+  GstRTSPTransport *video_transport = NULL;
+
+  start_server ();
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports (&client_ports);
+
+  /* send SETUP request for video, with single Require header */
+  fail_unless_equals_int (do_setup_full (conn, video_control, &client_ports,
+          "funky-feature", &session, &video_transport, &unsupported),
+      GST_RTSP_STS_OPTION_NOT_SUPPORTED);
+  fail_unless_equals_string (unsupported, "funky-feature");
+  g_free (unsupported);
+  unsupported = NULL;
+
+  /* send SETUP request for video, with multiple Require headers */
+  fail_unless_equals_int (do_setup_full (conn, video_control, &client_ports,
+          "funky-feature, foo-bar, superburst", &session, &video_transport,
+          &unsupported), GST_RTSP_STS_OPTION_NOT_SUPPORTED);
+  fail_unless_equals_string (unsupported, "funky-feature, foo-bar, superburst");
+  g_free (unsupported);
+  unsupported = NULL;
+
+  /* ok, just do a normal setup then (make sure that still works) */
+  fail_unless_equals_int (do_setup (conn, video_control, &client_ports,
+          &session, &video_transport), GST_RTSP_STS_OK);
+
+  GST_DEBUG ("set up video %s, got session '%s'", video_control, session);
+
+  /* check response from SETUP */
+  fail_unless (video_transport->trans == GST_RTSP_TRANS_RTP);
+  fail_unless (video_transport->profile == GST_RTSP_PROFILE_AVP);
+  fail_unless (video_transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP);
+  fail_unless (video_transport->mode_play);
+  gst_rtsp_transport_free (video_transport);
 
   /* clean up and iterate so the clean-up can finish */
   g_free (session);
@@ -1329,6 +1428,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_describe);
   tcase_add_test (tc, test_describe_non_existing_mount_point);
   tcase_add_test (tc, test_setup);
+  tcase_add_test (tc, test_setup_with_require_header);
   tcase_add_test (tc, test_setup_non_existing_stream);
   tcase_add_test (tc, test_play);
   tcase_add_test (tc, test_play_without_session);
