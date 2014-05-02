@@ -425,6 +425,8 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   GstVideoInfo vinfo;
   GstVideoFormat vformat;
   guint32 red_mask, green_mask, blue_mask;
+  gchar *stream_id = NULL;
+  GstEvent *stream_start = NULL;
 
   decoder = src->decoder;
 
@@ -457,6 +459,12 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
       return FALSE;
     }
   }
+
+  stream_id = gst_pad_create_stream_id_printf (GST_BASE_SRC_PAD (bsrc),
+      GST_ELEMENT (src), "%s:%d", src->host, src->port);
+  stream_start = gst_event_new_stream_start (stream_id);
+  g_free (stream_id);
+  gst_pad_push_event (GST_BASE_SRC_PAD (bsrc), stream_start);
 
   decoder->rect_width =
       (decoder->rect_width ? decoder->rect_width : decoder->width);
