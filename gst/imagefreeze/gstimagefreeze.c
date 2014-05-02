@@ -764,8 +764,11 @@ gst_image_freeze_src_loop (GstPad * pad)
         gst_segment_clip (&self->segment, GST_FORMAT_TIME, timestamp,
         timestamp_end, &cstart, &cstop);
 
-  if (in_seg)
+  if (in_seg) {
     self->segment.position = cstart;
+    if (self->segment.rate >= 0)
+      self->segment.position = cstop;
+  }
 
   if (self->segment.rate >= 0)
     self->offset++;
