@@ -1046,7 +1046,8 @@ gst_matroska_parse_query (GstMatroskaParse * parse, GstPad * pad,
       break;
     }
     default:
-      res = gst_pad_query_default (pad, (GstObject *) parse, query);
+      if (pad)
+        res = gst_pad_query_default (pad, (GstObject *) parse, query);
       break;
   }
 
