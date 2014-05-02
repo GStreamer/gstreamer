@@ -161,6 +161,58 @@ _add_asset (GstValidateScenario *scenario, GstValidateAction *action)
 }
 
 static gboolean
+_add_layer (GstValidateScenario *scenario, GstValidateAction *action)
+{
+  GESTimeline *timeline = get_timeline(scenario);
+  GESLayer *layer;
+  gint priority;
+
+  if (!gst_structure_get_int(action->structure, "priority", &priority)) {
+    GST_ERROR("priority is needed when adding a layer");
+    return FALSE;
+  }
+
+  layer = ges_layer_new();
+  g_object_set(layer, "priority", priority, NULL);
+  return ges_timeline_add_layer(timeline, layer);
+}
+
+static gboolean
+_remove_layer (GstValidateScenario *scenario, GstValidateAction *action)
+{
+  GESTimeline *timeline = get_timeline(scenario);
+  GESLayer *layer = NULL;
+  gint priority;
+  GList *layers, *tmp;
+  gboolean res = FALSE;
+
+  if (!gst_structure_get_int(action->structure, "priority", &priority)) {
+    GST_ERROR("priority is needed when removing a layer");
+    return res;
+  }
+
+  layers = ges_timeline_get_layers(timeline);
+  for (tmp = layers; tmp; tmp = tmp->next) {
+    GESLayer *tmp_layer = GES_LAYER(tmp->data);
+    guint tmp_priority;
+    g_object_get(tmp_layer, "priority", &tmp_priority, NULL);
+    if ((gint) tmp_priority == priority) {
+      layer = tmp_layer;
+      break;
+    }
+  }
+
+  if (layer) {
+    res = ges_timeline_remove_layer(timeline, layer);
+  } else {
+    GST_ERROR("No layer with priority %d", priority);
+  }
+
+  g_list_free_full(layers, gst_object_unref);
+  return res;
+}
+
+static gboolean
 _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
 {
   gint64 cpos;
@@ -268,6 +320,14 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
     NULL
   };
 
+  const gchar *add_layer_mandatory_fields[] = { "priority",
+    NULL
+  };
+
+  const gchar *remove_layer_mandatory_fields[] = { "priority",
+    NULL
+  };
+
   gst_validate_init ();
 
   if (scenario) {
@@ -284,6 +344,10 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
       add_asset_mandatory_fields, "Allows to add an asset to the current project", FALSE);
   gst_validate_add_action_type ("remove-asset", _remove_asset,
       remove_asset_mandatory_fields, "Allows to remove an asset from the current project", FALSE);
+  gst_validate_add_action_type ("add-layer", _add_layer,
+      add_layer_mandatory_fields, "Allows to add a layer to the current timeline", FALSE);
+  gst_validate_add_action_type ("remove-layer", _remove_layer,
+      remove_layer_mandatory_fields, "Allows to remove a layer from the current timeline", FALSE);
   gst_validate_add_action_type ("serialize-project", _serialize_project,
       serialize_project_mandatory_fields, "serializes a project", FALSE);
 
