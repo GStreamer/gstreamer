@@ -2282,6 +2282,8 @@ gst_matroska_parse_take (GstMatroskaParse * parse, guint64 bytes,
     gst_ebml_read_init (ebml, GST_ELEMENT_CAST (parse), buffer,
         parse->common.offset);
     parse->common.offset += bytes;
+  } else {
+    ret = GST_FLOW_ERROR;
   }
 exit:
   return ret;
