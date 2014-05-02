@@ -319,8 +319,6 @@ gst_srtp_enc_init (GstSrtpEnc * filter)
   filter->rtp_auth = DEFAULT_RTP_AUTH;
   filter->rtcp_cipher = DEFAULT_RTCP_CIPHER;
   filter->rtcp_auth = DEFAULT_RTCP_AUTH;
-
-  filter->ssrcs_set = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 static guint
@@ -336,8 +334,8 @@ max_cipher_key_size (GstSrtpEnc * filter)
 
 /* Create stream
  */
-static gboolean
-check_new_stream_locked (GstSrtpEnc * filter, guint32 ssrc)
+static err_status_t
+gst_srtp_enc_create_session (GstSrtpEnc * filter)
 {
   err_status_t ret;
   srtp_policy_t policy;
@@ -345,10 +343,6 @@ check_new_stream_locked (GstSrtpEnc * filter, guint32 ssrc)
   guchar tmp[1];
 
   memset (&policy, 0, sizeof (srtp_policy_t));
-
-  /* check if we already have that stream */
-  if (g_hash_table_lookup (filter->ssrcs_set, GUINT_TO_POINTER (ssrc)))
-    return TRUE;
 
   GST_OBJECT_LOCK (filter);
 
@@ -391,29 +385,22 @@ check_new_stream_locked (GstSrtpEnc * filter, guint32 ssrc)
     policy.key = tmp;
   }
 
-  policy.ssrc.value = ssrc;
-  policy.ssrc.type = ssrc_specific;
+  policy.ssrc.value = 0;
+  policy.ssrc.type = ssrc_any_outbound;
   policy.next = NULL;
 
   /* If it is the first stream, create the session
    * If not, add the stream to the session
    */
-  if (filter->first_session)
-    ret = srtp_create (&filter->session, &policy);
-  else
-    ret = srtp_add_stream (filter->session, &policy);
-
+  ret = srtp_create (&filter->session, &policy);
   filter->first_session = FALSE;
 
   if (HAS_CRYPTO (filter))
     gst_buffer_unmap (filter->key, &map);
 
-  g_hash_table_insert (filter->ssrcs_set, GUINT_TO_POINTER (ssrc),
-      GUINT_TO_POINTER (1));
-
   GST_OBJECT_UNLOCK (filter);
 
-  return ret == err_status_ok;
+  return ret;
 }
 
 /* Release ressources and set default values
@@ -428,8 +415,6 @@ gst_srtp_enc_reset (GstSrtpEnc * filter)
 
   filter->first_session = TRUE;
   filter->key_changed = FALSE;
-
-  g_hash_table_remove_all (filter->ssrcs_set);
 
   GST_OBJECT_UNLOCK (filter);
 }
@@ -575,10 +560,6 @@ gst_srtp_enc_dispose (GObject * object)
   if (filter->key)
     gst_buffer_unref (filter->key);
   filter->key = NULL;
-
-  if (filter->ssrcs_set)
-    g_hash_table_unref (filter->ssrcs_set);
-  filter->ssrcs_set = NULL;
 
   G_OBJECT_CLASS (gst_srtp_enc_parent_class)->dispose (object);
 }
@@ -956,13 +937,15 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
   do_setcaps = filter->key_changed;
   if (filter->key_changed)
     gst_srtp_enc_reset (filter);
-
-  if (!check_new_stream_locked (filter, ssrc)) {
-    GST_ELEMENT_ERROR (filter, LIBRARY, INIT,
-        ("Could not initialize SRTP encoder"),
-        ("Failed to add stream to SRTP encoder"));
-    ret = GST_FLOW_ERROR;
-    goto out;
+  if (filter->first_session) {
+    err_status_t status = gst_srtp_enc_create_session (filter);
+    if (status != err_status_ok) {
+      GST_ELEMENT_ERROR (filter, LIBRARY, INIT,
+          ("Could not initialize SRTP encoder"),
+          ("Failed to add stream to SRTP encoder (err: %d)", status));
+      ret = GST_FLOW_ERROR;
+      goto out;
+    }
   }
   priv->ssrc = ssrc;
 

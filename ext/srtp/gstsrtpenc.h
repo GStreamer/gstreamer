@@ -85,8 +85,6 @@ struct _GstSrtpEnc
   gboolean hard_limit_reached;
   gboolean soft_limit_reached;
 
-  GHashTable *ssrcs_set;
-
   GType key_type;
 };
 
