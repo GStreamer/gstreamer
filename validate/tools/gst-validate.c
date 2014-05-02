@@ -38,11 +38,9 @@
 #include <glib-unix.h>
 #endif
 
-static gint ret = 0;
 static GMainLoop *mainloop;
 static GstElement *pipeline;
 
-static gboolean buffering = FALSE;
 static gboolean is_live = FALSE;
 
 #ifdef G_OS_UNIX
@@ -62,6 +60,7 @@ static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   GMainLoop *loop = data;
+  gboolean buffering = FALSE;
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
@@ -264,6 +263,7 @@ main (int argc, gchar ** argv)
   gboolean list_scenarios = FALSE;
   GstStateChangeReturn sret;
   gchar *output_file = NULL;
+  gint ret = 0;
 
 #ifdef G_OS_UNIX
   guint signal_watch_id;
