@@ -107,12 +107,12 @@ gst_rtp_dummy_pay_handle_buffer (GstRTPBasePayload * pay, GstBuffer * buffer)
   GstBuffer *paybuffer;
 
   GST_LOG ("payloading buffer pts=%" GST_TIME_FORMAT " offset=%"
-  G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
-  GST_BUFFER_OFFSET(buffer));
+      G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+      GST_BUFFER_OFFSET (buffer));
 
   if (!gst_pad_has_current_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (pay))) {
     if (!gst_rtp_base_payload_set_outcaps (GST_RTP_BASE_PAYLOAD (pay),
-        "custom-caps", G_TYPE_UINT, DEFAULT_CLOCK_RATE, NULL)) {
+            "custom-caps", G_TYPE_UINT, DEFAULT_CLOCK_RATE, NULL)) {
       gst_buffer_unref (buffer);
       return GST_FLOW_NOT_NEGOTIATED;
     }
@@ -126,12 +126,12 @@ gst_rtp_dummy_pay_handle_buffer (GstRTPBasePayload * pay, GstBuffer * buffer)
   gst_buffer_append (paybuffer, buffer);
 
   GST_LOG ("payloaded buffer pts=%" GST_TIME_FORMAT " offset=%"
-  G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (paybuffer)),
-  GST_BUFFER_OFFSET(paybuffer));
+      G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (paybuffer)),
+      GST_BUFFER_OFFSET (paybuffer));
 
   if (GST_BUFFER_PTS (paybuffer) < BUFFER_BEFORE_LIST) {
     return gst_rtp_base_payload_push (pay, paybuffer);
-  } else  {
+  } else {
     GstBufferList *list = gst_buffer_list_new ();
     gst_buffer_list_add (list, paybuffer);
     return gst_rtp_base_payload_push_list (pay, list);
@@ -154,11 +154,12 @@ static GstStaticPadTemplate special_sinktmpl = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, payload=(int)98, ssrc=(uint)24, "
-      "timestamp-offset=(uint)212, seqnum-offset=(uint)2424"));
+        "timestamp-offset=(uint)212, seqnum-offset=(uint)2424"));
 
 typedef struct State State;
 
-struct State {
+struct State
+{
   GstElement *element;
   GstPad *sinkpad;
   GstPad *srcpad;
@@ -173,7 +174,8 @@ event_func (GstPad * pad, GstObject * noparent, GstEvent * event)
   return gst_pad_event_default (pad, noparent, event);
 }
 
-static void drop_events (void)
+static void
+drop_events (void)
 {
   while (events != NULL) {
     gst_event_unref (GST_EVENT (events->data));
@@ -181,13 +183,14 @@ static void drop_events (void)
   }
 }
 
-static void validate_events_received (guint received)
+static void
+validate_events_received (guint received)
 {
   fail_unless_equals_int (g_list_length (events), received);
 }
 
-static void validate_event (guint index, const gchar *name,
-    const gchar *field, ...)
+static void
+validate_event (guint index, const gchar * name, const gchar * field, ...)
 {
   GstEvent *event;
   va_list var_args;
@@ -249,40 +252,40 @@ static void validate_event (guint index, const gchar *name,
       GstCaps *caps;
       GstClockTime start;
       gst_event_parse_caps (event, &caps);
-      fail_unless (gst_structure_get_clock_time (
-            gst_caps_get_structure (caps, 0), "npt-start", &start));
+      fail_unless (gst_structure_get_clock_time (gst_caps_get_structure (caps,
+                  0), "npt-start", &start));
       fail_unless_equals_uint64 (start, expected);
     } else if (!g_strcmp0 (field, "npt-stop")) {
       GstClockTime expected = va_arg (var_args, GstClockTime);
       GstCaps *caps;
       GstClockTime stop;
       gst_event_parse_caps (event, &caps);
-      fail_unless (gst_structure_get_clock_time (
-            gst_caps_get_structure (caps, 0), "npt-stop", &stop));
+      fail_unless (gst_structure_get_clock_time (gst_caps_get_structure (caps,
+                  0), "npt-stop", &stop));
       fail_unless_equals_uint64 (stop, expected);
     } else if (!g_strcmp0 (field, "play-speed")) {
       gdouble expected = va_arg (var_args, gdouble);
       GstCaps *caps;
       gdouble speed;
       gst_event_parse_caps (event, &caps);
-      fail_unless (gst_structure_get_double (
-            gst_caps_get_structure (caps, 0), "play-speed", &speed));
+      fail_unless (gst_structure_get_double (gst_caps_get_structure (caps, 0),
+              "play-speed", &speed));
       fail_unless (speed == expected);
     } else if (!g_strcmp0 (field, "play-scale")) {
       gdouble expected = va_arg (var_args, gdouble);
       GstCaps *caps;
       gdouble scale;
       gst_event_parse_caps (event, &caps);
-      fail_unless (gst_structure_get_double (
-            gst_caps_get_structure (caps, 0), "play-scale", &scale));
+      fail_unless (gst_structure_get_double (gst_caps_get_structure (caps, 0),
+              "play-scale", &scale));
       fail_unless (scale == expected);
     } else if (!g_strcmp0 (field, "ssrc")) {
       guint expected = va_arg (var_args, guint);
       GstCaps *caps;
       guint ssrc;
       gst_event_parse_caps (event, &caps);
-      fail_unless (gst_structure_get_uint (
-            gst_caps_get_structure (caps, 0), "ssrc", &ssrc));
+      fail_unless (gst_structure_get_uint (gst_caps_get_structure (caps, 0),
+              "ssrc", &ssrc));
       fail_unless_equals_int (ssrc, expected);
     } else {
       fail ("test cannot validate unknown event field '%s'", field);
@@ -292,20 +295,16 @@ static void validate_event (guint index, const gchar *name,
   va_end (var_args);
 }
 
-static void validate_normal_start_events (uint index)
+static void
+validate_normal_start_events (uint index)
 {
-  validate_event (index, "stream-start",
-      NULL);
+  validate_event (index, "stream-start", NULL);
 
-  validate_event (index + 1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (index + 1, "caps", "media-type", "application/x-rtp", NULL);
 
   validate_event (index + 2, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      NULL);
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
 }
 
 #define push_buffer(state, field, ...) \
@@ -313,8 +312,9 @@ static void validate_normal_start_events (uint index)
 #define push_buffer_fails(state, field, ...) \
 	push_buffer_full ((state), GST_FLOW_FLUSHING, (field), __VA_ARGS__)
 
-static void push_buffer_full (State *state, GstFlowReturn expected,
-    const gchar *field, ...)
+static void
+push_buffer_full (State * state, GstFlowReturn expected,
+    const gchar * field, ...)
 {
   GstBuffer *buf = gst_rtp_buffer_new_allocate (0, 0, 0);
   GstRTPBuffer rtp = { NULL };
@@ -368,7 +368,8 @@ static void push_buffer_full (State *state, GstFlowReturn expected,
   fail_unless_equals_int (gst_pad_push (state->srcpad, buf), expected);
 }
 
-static void push_buffer_list (State *state, const gchar *field, ...)
+static void
+push_buffer_list (State * state, const gchar * field, ...)
 {
   GstBuffer *buf = gst_rtp_buffer_new_allocate (0, 0, 0);
   GstRTPBuffer rtp = { NULL };
@@ -425,12 +426,14 @@ static void push_buffer_list (State *state, const gchar *field, ...)
   fail_unless_equals_int (gst_pad_push_list (state->srcpad, list), GST_FLOW_OK);
 }
 
-static void validate_buffers_received (guint received_buffers)
+static void
+validate_buffers_received (guint received_buffers)
 {
   fail_unless_equals_int (g_list_length (buffers), received_buffers);
 }
 
-static void validate_buffer (guint index, const gchar *field, ...)
+static void
+validate_buffer (guint index, const gchar * field, ...)
 {
   GstBuffer *buf;
   GstRTPBuffer rtp = { NULL };
@@ -450,7 +453,7 @@ static void validate_buffer (guint index, const gchar *field, ...)
       fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), pts);
     } else if (!g_strcmp0 (field, "offset")) {
       guint64 offset = va_arg (var_args, guint64);
-      fail_unless_equals_uint64 (GST_BUFFER_OFFSET(buf), offset);
+      fail_unless_equals_uint64 (GST_BUFFER_OFFSET (buf), offset);
     } else if (!g_strcmp0 (field, "discont")) {
       gboolean discont = va_arg (var_args, gboolean);
       if (discont) {
@@ -488,7 +491,8 @@ static void validate_buffer (guint index, const gchar *field, ...)
   }
 }
 
-static void get_buffer_field (guint index, const gchar *field, ...)
+static void
+get_buffer_field (guint index, const gchar * field, ...)
 {
   GstBuffer *buf;
   GstRTPBuffer rtp = { NULL };
@@ -508,7 +512,7 @@ static void get_buffer_field (guint index, const gchar *field, ...)
       guint64 *offset = va_arg (var_args, guint64 *);
       *offset = GST_BUFFER_OFFSET (buf);
     } else if (!g_strcmp0 (field, "discont")) {
-      gboolean *discont = va_arg (var_args, gboolean*);
+      gboolean *discont = va_arg (var_args, gboolean *);
       *discont = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT);
     } else {
       if (!mapped) {
@@ -539,8 +543,9 @@ static void get_buffer_field (guint index, const gchar *field, ...)
     gst_rtp_buffer_unmap (&rtp);
 }
 
-static State *create_payloader (const gchar *caps_str,
-  GstStaticPadTemplate *sinktmpl, const gchar *property, ...)
+static State *
+create_payloader (const gchar * caps_str,
+    GstStaticPadTemplate * sinktmpl, const gchar * property, ...)
 {
   va_list var_args;
   GstCaps *caps;
@@ -571,29 +576,31 @@ static State *create_payloader (const gchar *caps_str,
   return state;
 }
 
-static void set_state (State *state, GstState new_state)
+static void
+set_state (State * state, GstState new_state)
 {
   fail_unless_equals_int (gst_element_set_state (state->element, new_state),
       GST_STATE_CHANGE_SUCCESS);
 }
 
-static void validate_would_not_be_filled (State *state, guint size,
-    GstClockTime duration)
+static void
+validate_would_not_be_filled (State * state, guint size, GstClockTime duration)
 {
   GstRTPBasePayload *basepay;
   basepay = GST_RTP_BASE_PAYLOAD (state->element);
   fail_if (gst_rtp_base_payload_is_filled (basepay, size, duration));
 }
 
-static void validate_would_be_filled (State *state, guint size,
-    GstClockTime duration)
+static void
+validate_would_be_filled (State * state, guint size, GstClockTime duration)
 {
   GstRTPBasePayload *basepay;
   basepay = GST_RTP_BASE_PAYLOAD (state->element);
   fail_unless (gst_rtp_base_payload_is_filled (basepay, size, duration));
 }
 
-static void ssrc_collision (State *state, guint ssrc,
+static void
+ssrc_collision (State * state, guint ssrc,
     gboolean have_new_ssrc, guint new_ssrc)
 {
   GstStructure *s;
@@ -601,48 +608,44 @@ static void ssrc_collision (State *state, guint ssrc,
   if (have_new_ssrc) {
     s = gst_structure_new ("GstRTPCollision",
         "ssrc", G_TYPE_UINT, ssrc,
-        "suggested-ssrc", G_TYPE_UINT, new_ssrc,
-        NULL);
+        "suggested-ssrc", G_TYPE_UINT, new_ssrc, NULL);
   } else {
-    s = gst_structure_new ("GstRTPCollision",
-        "ssrc", G_TYPE_UINT, ssrc,
-        NULL);
+    s = gst_structure_new ("GstRTPCollision", "ssrc", G_TYPE_UINT, ssrc, NULL);
   }
   event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, s);
   fail_unless (gst_pad_push_event (state->sinkpad, event));
 }
 
-static void reconfigure (State *state)
+static void
+reconfigure (State * state)
 {
   GstEvent *event;
   event = gst_event_new_reconfigure ();
   fail_unless (gst_pad_push_event (state->sinkpad, event));
 }
 
-static void validate_stats (State *state, guint clock_rate,
+static void
+validate_stats (State * state, guint clock_rate,
     GstClockTime running_time, guint16 seq, guint32 rtptime)
 {
   GstStructure *stats;
 
   g_object_get (state->element, "stats", &stats, NULL);
 
-  fail_unless_equals_int (
-    g_value_get_uint (gst_structure_get_value (stats, "clock-rate")),
-    clock_rate);
-  fail_unless_equals_uint64 (
-    g_value_get_uint64 (gst_structure_get_value (stats, "running-time")),
-    running_time);
-  fail_unless_equals_int (
-    g_value_get_uint (gst_structure_get_value (stats, "seqnum")),
-    seq);
-  fail_unless_equals_int (
-    g_value_get_uint (gst_structure_get_value (stats, "timestamp")),
-    rtptime);
+  fail_unless_equals_int (g_value_get_uint (gst_structure_get_value (stats,
+              "clock-rate")), clock_rate);
+  fail_unless_equals_uint64 (g_value_get_uint64 (gst_structure_get_value (stats,
+              "running-time")), running_time);
+  fail_unless_equals_int (g_value_get_uint (gst_structure_get_value (stats,
+              "seqnum")), seq);
+  fail_unless_equals_int (g_value_get_uint (gst_structure_get_value (stats,
+              "timestamp")), rtptime);
 
   gst_structure_free (stats);
 }
 
-static void destroy_payloader (State *state)
+static void
+destroy_payloader (State * state)
 {
   gst_check_teardown_sink_pad (state->element);
   gst_check_teardown_src_pad (state->element);
@@ -671,36 +674,24 @@ GST_START_TEST (rtp_base_payload_buffer_test)
   guint16 seq;
 
   state = create_payloader ("application/x-rtp", &sinktmpl,
-      "perfect-rtptime", FALSE,
-      NULL);
+      "perfect-rtptime", FALSE, NULL);
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      NULL);
-  get_buffer_field (0,
-      "rtptime", &rtptime,
-      "seq", &seq,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+  get_buffer_field (0, "rtptime", &rtptime, "seq", &seq, NULL);
 
   validate_buffer (1,
       "pts", 1 * GST_SECOND,
-      "rtptime", rtptime + 1 * DEFAULT_CLOCK_RATE,
-      "seq", seq + 1,
-      NULL);
+      "rtptime", rtptime + 1 * DEFAULT_CLOCK_RATE, "seq", seq + 1, NULL);
 
   validate_events_received (3);
 
@@ -729,29 +720,20 @@ GST_START_TEST (rtp_base_payload_buffer_list_test)
   set_state (state, GST_STATE_PLAYING);
 
   for (i = 0; i < BUFFER_BEFORE_LIST + 1; i++) {
-    push_buffer_list (state,
-        "pts", i * GST_SECOND,
-        NULL);
+    push_buffer_list (state, "pts", i * GST_SECOND, NULL);
   }
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (11);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      NULL);
-  get_buffer_field (0,
-      "rtptime", &rtptime,
-      "seq", &seq,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+  get_buffer_field (0, "rtptime", &rtptime, "seq", &seq, NULL);
 
   for (i = 1; i < BUFFER_BEFORE_LIST + 1; i++) {
     validate_buffer (i,
         "pts", i * GST_SECOND,
-        "rtptime", rtptime + i * DEFAULT_CLOCK_RATE,
-        "seq", seq + i,
-        NULL);
+        "rtptime", rtptime + i * DEFAULT_CLOCK_RATE, "seq", seq + i, NULL);
   }
 
   validate_events_received (3);
@@ -773,38 +755,28 @@ GST_START_TEST (rtp_base_payload_normal_rtptime_test)
   State *state;
 
   state = create_payloader ("application/x-rtp", &sinktmpl,
-      "perfect-rtptime", FALSE,
-      NULL);
+      "perfect-rtptime", FALSE, NULL);
 
   set_state (state, GST_STATE_PLAYING);
 
   push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      "offset", GST_BUFFER_OFFSET_NONE,
-      NULL);
+      "pts", 0 * GST_SECOND, "offset", GST_BUFFER_OFFSET_NONE, NULL);
 
   push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      "offset", GST_BUFFER_OFFSET_NONE,
-      NULL);
+      "pts", 1 * GST_SECOND, "offset", GST_BUFFER_OFFSET_NONE, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
   validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "offset", GST_BUFFER_OFFSET_NONE,
-      NULL);
-  get_buffer_field (0,
-      "rtptime", &rtptime,
-      NULL);
+      "pts", 0 * GST_SECOND, "offset", GST_BUFFER_OFFSET_NONE, NULL);
+  get_buffer_field (0, "rtptime", &rtptime, NULL);
 
   validate_buffer (1,
       "pts", 1 * GST_SECOND,
       "offset", GST_BUFFER_OFFSET_NONE,
-      "rtptime", rtptime + DEFAULT_CLOCK_RATE,
-      NULL);
+      "rtptime", rtptime + DEFAULT_CLOCK_RATE, NULL);
 
   validate_events_received (3);
 
@@ -826,38 +798,23 @@ GST_START_TEST (rtp_base_payload_perfect_rtptime_test)
   State *state;
 
   state = create_payloader ("application/x-rtp", &sinktmpl,
-      "perfect-rtptime", TRUE,
-      NULL);
+      "perfect-rtptime", TRUE, NULL);
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      "offset", 0,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, "offset", 0, NULL);
 
-  push_buffer (state,
-      "pts", GST_CLOCK_TIME_NONE,
-      "offset", 21,
-      NULL);
+  push_buffer (state, "pts", GST_CLOCK_TIME_NONE, "offset", 21, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "offset", 0,
-      NULL);
-  get_buffer_field (0,
-      "rtptime", &rtptime,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "offset", 0, NULL);
+  get_buffer_field (0, "rtptime", &rtptime, NULL);
 
   validate_buffer (1,
-      "pts", GST_CLOCK_TIME_NONE,
-      "offset", 21,
-      "rtptime", rtptime + 21,
-      NULL);
+      "pts", GST_CLOCK_TIME_NONE, "offset", 21, "rtptime", rtptime + 21, NULL);
 
   validate_events_received (3);
 
@@ -883,25 +840,18 @@ GST_START_TEST (rtp_base_payload_no_pts_no_offset_test)
   State *state;
 
   state = create_payloader ("application/x-rtp", &sinktmpl,
-      "timestamp-offset", 0x42,
-      NULL);
+      "timestamp-offset", 0x42, NULL);
 
   set_state (state, GST_STATE_PLAYING);
 
   push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      "offset", GST_BUFFER_OFFSET_NONE,
-      NULL);
+      "pts", 0 * GST_SECOND, "offset", GST_BUFFER_OFFSET_NONE, NULL);
 
   push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      "offset", GST_BUFFER_OFFSET_NONE,
-      NULL);
+      "pts", 1 * GST_SECOND, "offset", GST_BUFFER_OFFSET_NONE, NULL);
 
   push_buffer (state,
-      "pts", GST_CLOCK_TIME_NONE,
-      "offset", GST_BUFFER_OFFSET_NONE,
-      NULL);
+      "pts", GST_CLOCK_TIME_NONE, "offset", GST_BUFFER_OFFSET_NONE, NULL);
 
   set_state (state, GST_STATE_NULL);
 
@@ -909,21 +859,17 @@ GST_START_TEST (rtp_base_payload_no_pts_no_offset_test)
 
   validate_buffer (0,
       "pts", 0 * GST_SECOND,
-      "offset", GST_BUFFER_OFFSET_NONE,
-      "rtptime", 0x42,
-      NULL);
+      "offset", GST_BUFFER_OFFSET_NONE, "rtptime", 0x42, NULL);
 
   validate_buffer (1,
       "pts", 1 * GST_SECOND,
       "offset", GST_BUFFER_OFFSET_NONE,
-      "rtptime", 0x42 + 1 * DEFAULT_CLOCK_RATE,
-      NULL);
+      "rtptime", 0x42 + 1 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_buffer (2,
       "pts", GST_CLOCK_TIME_NONE,
       "offset", GST_BUFFER_OFFSET_NONE,
-      "rtptime", 0x42 + 1 * DEFAULT_CLOCK_RATE,
-      NULL);
+      "rtptime", 0x42 + 1 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_events_received (3);
 
@@ -949,9 +895,7 @@ GST_START_TEST (rtp_base_payload_downstream_caps_test)
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
 
@@ -959,11 +903,7 @@ GST_START_TEST (rtp_base_payload_downstream_caps_test)
 
   validate_buffer (0,
       "pts", 0 * GST_SECOND,
-      "seq", 2424,
-      "payload-type", 98,
-      "ssrc", 24,
-      "rtptime", 212,
-      NULL);
+      "seq", 2424, "payload-type", 98, "ssrc", 24, "rtptime", 212, NULL);
 
   validate_events_received (3);
 
@@ -995,8 +935,7 @@ GST_START_TEST (rtp_base_payload_ssrc_collision_test)
   State *state;
   guint32 ssrc;
 
-  state = create_payloader ("application/x-rtp", &sinktmpl,
-      NULL);
+  state = create_payloader ("application/x-rtp", &sinktmpl, NULL);
 
   g_object_set (state->element, "ssrc", 0x4242, NULL);
   g_object_get (state->element, "ssrc", &ssrc, NULL);
@@ -1004,42 +943,26 @@ GST_START_TEST (rtp_base_payload_ssrc_collision_test)
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
   ssrc_collision (state, 0x4242, TRUE, 0x4343);
 
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
 
   ssrc_collision (state, 0x4343, FALSE, 0);
 
-  push_buffer (state,
-      "pts", 2 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 2 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (3);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "ssrc", 0x4242,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "ssrc", 0x4242, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "ssrc", 0x4343,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "ssrc", 0x4343, NULL);
 
-  validate_buffer (2,
-      "pts", 2 * GST_SECOND,
-      NULL);
-  get_buffer_field (2,
-      "ssrc", &ssrc,
-      NULL);
+  validate_buffer (2, "pts", 2 * GST_SECOND, NULL);
+  get_buffer_field (2, "ssrc", &ssrc, NULL);
   fail_if (ssrc == 0x4343);
 
   validate_events_received (5);
@@ -1047,14 +970,10 @@ GST_START_TEST (rtp_base_payload_ssrc_collision_test)
   validate_normal_start_events (0);
 
   validate_event (3, "caps",
-      "media-type", "application/x-rtp",
-      "ssrc", 0x4343,
-      NULL);
+      "media-type", "application/x-rtp", "ssrc", 0x4343, NULL);
 
   validate_event (4, "caps",
-      "media-type", "application/x-rtp",
-      "ssrc", ssrc,
-      NULL);
+      "media-type", "application/x-rtp", "ssrc", ssrc, NULL);
 
   destroy_payloader (state);
 }
@@ -1073,27 +992,19 @@ GST_START_TEST (rtp_base_payload_reconfigure_test)
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
   reconfigure (state);
 
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, NULL);
 
   validate_events_received (3);
 
@@ -1163,54 +1074,36 @@ GST_START_TEST (rtp_base_payload_property_pt_test)
   set_state (state, GST_STATE_PLAYING);
 
   g_object_get (state->element, "pt", &payload_type, NULL);
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
   g_object_set (state->element, "pt", payload_type + 1, NULL);
   g_object_get (state->element, "pt", &check, NULL);
   fail_unless_equals_int (check, payload_type + 1);
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
 
   g_object_set (state->element, "pt", 0, NULL);
   g_object_get (state->element, "pt", &check, NULL);
   fail_unless_equals_int (check, 0);
-  push_buffer (state,
-      "pts", 2 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 2 * GST_SECOND, NULL);
 
   g_object_set (state->element, "pt", 0x7f, NULL);
   g_object_get (state->element, "pt", &check, NULL);
   fail_unless_equals_int (check, 0x7f);
-  push_buffer (state,
-      "pts", 3 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 3 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (4);
 
   validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "payload-type", payload_type,
-      NULL);
+      "pts", 0 * GST_SECOND, "payload-type", payload_type, NULL);
 
   validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "payload-type", payload_type + 1,
-      NULL);
+      "pts", 1 * GST_SECOND, "payload-type", payload_type + 1, NULL);
 
-  validate_buffer (2,
-      "pts", 2 * GST_SECOND,
-      "payload-type", 0,
-      NULL);
+  validate_buffer (2, "pts", 2 * GST_SECOND, "payload-type", 0, NULL);
 
-  validate_buffer (3,
-      "pts", 3 * GST_SECOND,
-      "payload-type", 0x7f,
-      NULL);
+  validate_buffer (3, "pts", 3 * GST_SECOND, "payload-type", 0x7f, NULL);
 
   validate_events_received (3);
 
@@ -1241,13 +1134,9 @@ GST_START_TEST (rtp_base_payload_property_ssrc_test)
   g_object_get (state->element, "ssrc", &ssrc, NULL);
   fail_unless_equals_int (ssrc, -1);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
   g_object_set (state->element, "ssrc", 0x4242, NULL);
@@ -1255,9 +1144,7 @@ GST_START_TEST (rtp_base_payload_property_ssrc_test)
   fail_unless_equals_int (ssrc, 0x4242);
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 2 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 2 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
   g_object_set (state->element, "ssrc", 0, NULL);
@@ -1265,9 +1152,7 @@ GST_START_TEST (rtp_base_payload_property_ssrc_test)
   fail_unless_equals_int (ssrc, 0);
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 3 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 3 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
   g_object_set (state->element, "ssrc", G_MAXUINT32, NULL);
@@ -1275,40 +1160,22 @@ GST_START_TEST (rtp_base_payload_property_ssrc_test)
   fail_unless_equals_int (ssrc, G_MAXUINT32);
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 4 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 4 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (5);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      NULL);
-  get_buffer_field (0,
-      "ssrc", &ssrc,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+  get_buffer_field (0, "ssrc", &ssrc, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "ssrc", ssrc,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "ssrc", ssrc, NULL);
 
-  validate_buffer (2,
-      "pts", 2 * GST_SECOND,
-      "ssrc", 0x4242,
-      NULL);
+  validate_buffer (2, "pts", 2 * GST_SECOND, "ssrc", 0x4242, NULL);
 
-  validate_buffer (3,
-      "pts", 3 * GST_SECOND,
-      "ssrc", 0,
-      NULL);
+  validate_buffer (3, "pts", 3 * GST_SECOND, "ssrc", 0, NULL);
 
-  validate_buffer (4,
-      "pts", 4 * GST_SECOND,
-      "ssrc", G_MAXUINT32,
-      NULL);
+  validate_buffer (4, "pts", 4 * GST_SECOND, "ssrc", G_MAXUINT32, NULL);
 
   validate_events_received (12);
 
@@ -1357,16 +1224,12 @@ GST_START_TEST (rtp_base_payload_property_timestamp_offset_test)
   g_object_get (state->element, "timestamp-offset", &offset, NULL);
   fail_unless_equals_int (offset, -1);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
   g_object_set (state->element, "timestamp-offset", 0x42, NULL);
   g_object_get (state->element, "timestamp-offset", &offset, NULL);
   fail_unless_equals_int (offset, 0x42);
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
   g_object_set (state->element, "timestamp-offset", 0x4242, NULL);
@@ -1374,83 +1237,54 @@ GST_START_TEST (rtp_base_payload_property_timestamp_offset_test)
   fail_unless_equals_int (offset, 0x4242);
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 2 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 2 * GST_SECOND, NULL);
 
-  push_buffer (state,
-      "pts", 3 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 3 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
   g_object_set (state->element, "timestamp-offset", 0, NULL);
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 4 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 4 * GST_SECOND, NULL);
 
-  push_buffer (state,
-      "pts", 5 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 5 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
   g_object_set (state->element, "timestamp-offset", G_MAXUINT32, NULL);
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 6 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 6 * GST_SECOND, NULL);
 
-  push_buffer (state,
-      "pts", 7 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 7 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (8);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      NULL);
-  get_buffer_field (0,
-      "rtptime", &rtptime,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+  get_buffer_field (0, "rtptime", &rtptime, NULL);
 
   validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "rtptime", rtptime + 1 * DEFAULT_CLOCK_RATE,
-      NULL);
+      "pts", 1 * GST_SECOND, "rtptime", rtptime + 1 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_buffer (2,
-      "pts", 2 * GST_SECOND,
-      "rtptime", 0x4242 + 2 * DEFAULT_CLOCK_RATE,
-      NULL);
+      "pts", 2 * GST_SECOND, "rtptime", 0x4242 + 2 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_buffer (3,
-      "pts", 3 * GST_SECOND,
-      "rtptime", 0x4242 + 3 * DEFAULT_CLOCK_RATE,
-      NULL);
+      "pts", 3 * GST_SECOND, "rtptime", 0x4242 + 3 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_buffer (4,
-      "pts", 4 * GST_SECOND,
-      "rtptime", 0 + 4 * DEFAULT_CLOCK_RATE,
-      NULL);
+      "pts", 4 * GST_SECOND, "rtptime", 0 + 4 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_buffer (5,
-      "pts", 5 * GST_SECOND,
-      "rtptime", 0 + 5 * DEFAULT_CLOCK_RATE,
-      NULL);
+      "pts", 5 * GST_SECOND, "rtptime", 0 + 5 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_buffer (6,
       "pts", 6 * GST_SECOND,
-      "rtptime", G_MAXUINT32 + 6 * DEFAULT_CLOCK_RATE,
-      NULL);
+      "rtptime", G_MAXUINT32 + 6 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_buffer (7,
-      "pts", 7 * GST_SECOND,
-      "rtptime", 7 * DEFAULT_CLOCK_RATE - 1,
-      NULL);
+      "pts", 7 * GST_SECOND, "rtptime", 7 * DEFAULT_CLOCK_RATE - 1, NULL);
 
   validate_events_received (12);
 
@@ -1497,16 +1331,12 @@ GST_START_TEST (rtp_base_payload_property_seqnum_offset_test)
   g_object_get (state->element, "seqnum-offset", &offset, NULL);
   fail_unless_equals_int (offset, -1);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
   g_object_set (state->element, "seqnum-offset", 0x42, NULL);
   g_object_get (state->element, "seqnum-offset", &offset, NULL);
   fail_unless_equals_int (offset, 0x42);
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
   g_object_set (state->element, "seqnum-offset", 0x4242, NULL);
@@ -1514,85 +1344,47 @@ GST_START_TEST (rtp_base_payload_property_seqnum_offset_test)
   fail_unless_equals_int (offset, 0x4242);
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 2 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 2 * GST_SECOND, NULL);
 
-  push_buffer (state,
-      "pts", 3 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 3 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
   g_object_set (state->element, "seqnum-offset", -1, NULL);
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 4 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 4 * GST_SECOND, NULL);
 
-  push_buffer (state,
-      "pts", 5 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 5 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
   g_object_set (state->element, "seqnum-offset", G_MAXUINT16, NULL);
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 6 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 6 * GST_SECOND, NULL);
 
-  push_buffer (state,
-      "pts", 7 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 7 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (8);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      NULL);
-  get_buffer_field (0,
-      "seq", &seq,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+  get_buffer_field (0, "seq", &seq, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "seq", seq + 1,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "seq", seq + 1, NULL);
 
-  validate_buffer (2,
-      "pts", 2 * GST_SECOND,
-      "seq", 0x4242,
-      NULL);
+  validate_buffer (2, "pts", 2 * GST_SECOND, "seq", 0x4242, NULL);
 
-  validate_buffer (3,
-      "pts", 3 * GST_SECOND,
-      "seq", 0x4242 + 1,
-      NULL);
+  validate_buffer (3, "pts", 3 * GST_SECOND, "seq", 0x4242 + 1, NULL);
 
-  validate_buffer (4,
-      "pts", 4 * GST_SECOND,
-      NULL);
-  get_buffer_field (4,
-      "seq", &seq,
-      NULL);
+  validate_buffer (4, "pts", 4 * GST_SECOND, NULL);
+  get_buffer_field (4, "seq", &seq, NULL);
 
-  validate_buffer (5,
-      "pts", 5 * GST_SECOND,
-      "seq", seq + 1,
-      NULL);
+  validate_buffer (5, "pts", 5 * GST_SECOND, "seq", seq + 1, NULL);
 
-  validate_buffer (6,
-      "pts", 6 * GST_SECOND,
-      "seq", G_MAXUINT16,
-      NULL);
+  validate_buffer (6, "pts", 6 * GST_SECOND, "seq", G_MAXUINT16, NULL);
 
-  validate_buffer (7,
-      "pts", 7 * GST_SECOND,
-      "seq", 0,
-      NULL);
+  validate_buffer (7, "pts", 7 * GST_SECOND, "seq", 0, NULL);
 
   validate_events_received (12);
 
@@ -1707,20 +1499,15 @@ GST_START_TEST (rtp_base_payload_property_timestamp_test)
   guint32 timestamp;
 
   state = create_payloader ("application/x-rtp", &sinktmpl,
-      "timestamp-offset", 0,
-      NULL);
+      "timestamp-offset", 0, NULL);
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
   g_object_get (state->element, "timestamp", &timestamp, NULL);
   fail_unless_equals_int (timestamp, 0);
 
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
   g_object_get (state->element, "timestamp", &timestamp, NULL);
   fail_unless_equals_int (timestamp, DEFAULT_CLOCK_RATE);
 
@@ -1728,15 +1515,10 @@ GST_START_TEST (rtp_base_payload_property_timestamp_test)
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "rtptime", 0,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "rtptime", 0, NULL);
 
   validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "rtptime", DEFAULT_CLOCK_RATE,
-      NULL);
+      "pts", 1 * GST_SECOND, "rtptime", DEFAULT_CLOCK_RATE, NULL);
 
   validate_events_received (3);
 
@@ -1765,15 +1547,11 @@ GST_START_TEST (rtp_base_payload_property_seqnum_test)
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
   g_object_get (state->element, "seqnum", &seq, NULL);
   fail_unless_equals_int (seq, 0);
 
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
   g_object_get (state->element, "seqnum", &seq, NULL);
   fail_unless_equals_int (seq, 1);
 
@@ -1781,15 +1559,9 @@ GST_START_TEST (rtp_base_payload_property_seqnum_test)
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "seq", 0,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "seq", 0, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "seq", 1,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "seq", 1, NULL);
 
   validate_events_received (3);
 
@@ -1825,8 +1597,7 @@ GST_START_TEST (rtp_base_payload_property_perfect_rtptime_test)
   gboolean perfect;
 
   state = create_payloader ("application/x-rtp", &sinktmpl,
-      "timestamp-offset", timestamp_base,
-      NULL);
+      "timestamp-offset", timestamp_base, NULL);
 
   set_state (state, GST_STATE_PLAYING);
 
@@ -1834,57 +1605,38 @@ GST_START_TEST (rtp_base_payload_property_perfect_rtptime_test)
   g_object_get (state->element, "perfect-rtptime", &perfect, NULL);
   fail_unless (!perfect);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      "offset", 0,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, "offset", 0, NULL);
 
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      "offset", 17,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, "offset", 17, NULL);
 
   g_object_set (state->element, "perfect-rtptime", TRUE, NULL);
   g_object_get (state->element, "perfect-rtptime", &perfect, NULL);
   fail_unless (perfect);
 
-  push_buffer (state,
-      "pts", 2 * GST_SECOND,
-      "offset", 31,
-      NULL);
+  push_buffer (state, "pts", 2 * GST_SECOND, "offset", 31, NULL);
 
-  push_buffer (state,
-      "pts", 3 * GST_SECOND,
-      "offset", 67,
-      NULL);
+  push_buffer (state, "pts", 3 * GST_SECOND, "offset", 67, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (4);
 
   validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "offset", 0,
-      "rtptime", timestamp_base,
-      NULL);
+      "pts", 0 * GST_SECOND, "offset", 0, "rtptime", timestamp_base, NULL);
 
   validate_buffer (1,
       "pts", 1 * GST_SECOND,
-      "offset", 17,
-      "rtptime", timestamp_base + 1 * DEFAULT_CLOCK_RATE,
-      NULL);
+      "offset", 17, "rtptime", timestamp_base + 1 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_buffer (2,
       "pts", 2 * GST_SECOND,
       "offset", 31,
-      "rtptime", timestamp_base + 1 * DEFAULT_CLOCK_RATE + (31 - 17),
-      NULL);
+      "rtptime", timestamp_base + 1 * DEFAULT_CLOCK_RATE + (31 - 17), NULL);
 
   validate_buffer (3,
       "pts", 3 * GST_SECOND,
       "offset", 67,
-      "rtptime", timestamp_base + 1 * DEFAULT_CLOCK_RATE + (67 - 17),
-      NULL);
+      "rtptime", timestamp_base + 1 * DEFAULT_CLOCK_RATE + (67 - 17), NULL);
 
   validate_events_received (3);
 
@@ -1956,71 +1708,40 @@ GST_START_TEST (rtp_base_payload_property_stats_test)
   State *state;
 
   state = create_payloader ("application/x-rtp", &sinktmpl,
-      "perfect-rtptime", TRUE,
-      "seqnum-offset", 0,
-      "timestamp-offset", 0,
-      NULL);
+      "perfect-rtptime", TRUE, "seqnum-offset", 0, "timestamp-offset", 0, NULL);
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
   validate_stats (state,
-      DEFAULT_CLOCK_RATE,
-      0 * GST_SECOND,
-      0,
-      0 * DEFAULT_CLOCK_RATE);
+      DEFAULT_CLOCK_RATE, 0 * GST_SECOND, 0, 0 * DEFAULT_CLOCK_RATE);
 
-  push_buffer (state,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
   validate_stats (state,
-      DEFAULT_CLOCK_RATE,
-      1 * DEFAULT_CLOCK_RATE,
-      1,
-      1 * DEFAULT_CLOCK_RATE);
+      DEFAULT_CLOCK_RATE, 1 * DEFAULT_CLOCK_RATE, 1, 1 * DEFAULT_CLOCK_RATE);
 
   set_state (state, GST_STATE_NULL);
   g_object_set (state->element, "perfect-rtptime", FALSE, NULL);
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 2 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 2 * GST_SECOND, NULL);
   validate_stats (state,
-      DEFAULT_CLOCK_RATE,
-      2 * GST_SECOND,
-      0,
-      2 * DEFAULT_CLOCK_RATE);
+      DEFAULT_CLOCK_RATE, 2 * GST_SECOND, 0, 2 * DEFAULT_CLOCK_RATE);
 
-  push_buffer (state,
-      "pts", 3 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 3 * GST_SECOND, NULL);
   validate_stats (state,
-      DEFAULT_CLOCK_RATE,
-      3 * GST_SECOND,
-      1,
-      3 * DEFAULT_CLOCK_RATE);
+      DEFAULT_CLOCK_RATE, 3 * GST_SECOND, 1, 3 * DEFAULT_CLOCK_RATE);
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (4);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, NULL);
 
-  validate_buffer (2,
-      "pts", 2 * GST_SECOND,
-      NULL);
+  validate_buffer (2, "pts", 2 * GST_SECOND, NULL);
 
-  validate_buffer (3,
-      "pts", 3 * GST_SECOND,
-      NULL);
+  validate_buffer (3, "pts", 3 * GST_SECOND, NULL);
 
   validate_events_received (6);
 
