@@ -1899,6 +1899,24 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         GST_TIME_ARGS (stream->current_fragment.timestamp));
 
     GST_BUFFER_PTS (buffer) = stream->current_fragment.timestamp;
+
+    if (stream->pending_segment) {
+      if (demux->timestamp_offset == -1)
+        demux->timestamp_offset = GST_BUFFER_PTS (buffer);
+      else
+        demux->timestamp_offset =
+            MIN (GST_BUFFER_PTS (buffer), demux->timestamp_offset);
+
+      /* And send a newsegment */
+      gst_pad_push_event (stream->pad, stream->pending_segment);
+      stream->pending_segment = NULL;
+    }
+
+    /* make timestamp start from 0 by subtracting the offset */
+    GST_BUFFER_PTS (buffer) -= demux->timestamp_offset;
+
+    stream->position = demux->segment.position = GST_BUFFER_PTS (buffer);
+
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
   }
@@ -1910,28 +1928,10 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
   }
 
-
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) =
       gst_mpd_client_get_segment_index (stream->active_stream) - 1;
-
-  if (stream->pending_segment) {
-    if (demux->timestamp_offset == -1)
-      demux->timestamp_offset = GST_BUFFER_PTS (buffer);
-    else
-      demux->timestamp_offset =
-          MIN (GST_BUFFER_PTS (buffer), demux->timestamp_offset);
-
-    /* And send a newsegment */
-    gst_pad_push_event (stream->pad, stream->pending_segment);
-    stream->pending_segment = NULL;
-  }
-
-  /* make timestamp start from 0 by subtracting the offset */
-  GST_BUFFER_PTS (buffer) -= demux->timestamp_offset;
-
-  stream->position = demux->segment.position = GST_BUFFER_PTS (buffer);
 
   /* accumulate time and size to get this chunk */
   stream->download_total_time +=
