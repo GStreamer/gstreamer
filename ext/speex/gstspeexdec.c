@@ -419,13 +419,7 @@ gst_speex_dec_parse_data (GstSpeexDec * dec, GstBuffer * buf)
 
     if (ret == -1) {
       /* uh? end of stream */
-      if (fpp == 0 && speex_bits_remaining (bits) < 8) {
-        /* if we did not know how many frames to expect, then we get this
-           at the end if there are leftover bits to pad to the next byte */
-        GST_DEBUG_OBJECT (dec, "Discarding leftover bits");
-      } else {
-        GST_WARNING_OBJECT (dec, "Unexpected end of stream found");
-      }
+      GST_WARNING_OBJECT (dec, "Unexpected end of stream found");
       corrupted = TRUE;
     } else if (ret == -2) {
       GST_WARNING_OBJECT (dec, "Decoding error: corrupted stream?");
