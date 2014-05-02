@@ -3240,7 +3240,6 @@ tests/examples/camerabin2/Makefile
 tests/examples/directfb/Makefile
 tests/examples/gl/Makefile
 tests/examples/gl/cocoa/Makefile
-tests/examples/gl/cocoa/videooverlay/Makefile
 tests/examples/gl/clutter/Makefile
 tests/examples/gl/generic/Makefile
 tests/examples/gl/generic/cube/Makefile
