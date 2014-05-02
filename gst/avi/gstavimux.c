@@ -434,6 +434,8 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
 
   avipad->parent.hdr.rate = gst_value_get_fraction_numerator (fps);
   avipad->parent.hdr.scale = gst_value_get_fraction_denominator (fps);
+  if (avipad->parent.hdr.rate <= 0 || avipad->parent.hdr.scale <= 0)
+    goto refuse_caps;
 
   /* (pixel) aspect ratio data, if any */
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
