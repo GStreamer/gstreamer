@@ -996,6 +996,9 @@ ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
+  if (name != NULL && !g_strcmp0(name, self->name))
+    return TRUE;
+
   /* parented objects cannot be renamed */
   if (self->timeline != NULL) {
     GESTimelineElement *tmp = ges_timeline_get_element (self->timeline, name);
