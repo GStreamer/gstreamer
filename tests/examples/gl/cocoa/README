@@ -1,9 +1,0 @@
---- Description of the Cocoa examples ---
-
-- videooverlay:
-Show how to use the videooverlay interface through Cocoa.
-For now, the source is videotestsrc. (not yet a video file)
-
---- How to build the Cocoa examples on GNUstep environnements ---
-
-make clean all -f GNUmakefile.gnustep
