@@ -807,6 +807,7 @@ gst_rtp_base_payload_set_outcaps (GstRTPBasePayload * payload,
             GST_RTP_BASE_PAYLOAD_PT (payload));
         gst_structure_get_int (s, "payload", &pt);
         GST_LOG_OBJECT (payload, "using peer pt %d", pt);
+        GST_RTP_BASE_PAYLOAD_PT (payload) = pt;
       } else {
         /* no pt field, use the internal pt */
         pt = GST_RTP_BASE_PAYLOAD_PT (payload);
