@@ -619,9 +619,9 @@ gst_ebml_write_sint (GstEbmlWrite * ebml, guint32 id, gint64 num)
   if (num >= 0) {
     unum = num;
   } else {
-    unum = ((guint64) 0x80) << (size - 1);
+    unum = ((guint64) 0x80) << ((size - 1) * 8);
     unum += num;
-    unum |= ((guint64) 0x80) << (size - 1);
+    unum |= ((guint64) 0x80) << ((size - 1) * 8);
   }
 
   /* write */
