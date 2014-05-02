@@ -314,6 +314,7 @@ GST_START_TEST (test_time_and_rtpinfo)
   rtpinfo = gst_rtsp_session_media_get_rtpinfo (sm);
   fail_unless (rtpinfo == NULL);
 
+  gst_rtsp_url_free (setup_url);
   gst_rtsp_url_free (url);
 
   g_object_unref (sm);
