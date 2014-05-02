@@ -180,42 +180,43 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
 
+  const gchar *move_clip_mandatory_fields[] = { "clip-name", "position",
+    NULL
+  };
+
+  const gchar *set_child_property_mandatory_fields[] =
+      { "element-name", "property", "value", NULL };
+
+  const gchar *serialize_project_mandatory_fields[] = { "uri",
+    NULL
+  };
+
+  gst_validate_init ();
+
   if (scenario) {
-    const gchar *move_clip_mandatory_fields[] = { "clip-name", "position",
-      NULL
-    };
-
-    const gchar *set_child_property_mandatory_fields[] =
-        { "element-name", "property", "value", NULL };
-
-    const gchar *serialize_project_mandatory_fields[] = { "uri",
-      NULL
-    };
-
-    gst_validate_init ();
-
     if (g_strcmp0 (scenario, "none")) {
       gchar *scenario_name = g_strconcat (scenario, "->gespipeline*", NULL);
       g_setenv ("GST_VALIDATE_SCENARIO", scenario_name, TRUE);
       g_free (scenario_name);
     }
-
-    gst_validate_add_action_type ("edit-clip", _edit_clip,
-        move_clip_mandatory_fields, "Allows to seek into the files", FALSE);
-    gst_validate_add_action_type ("serialize-project", _serialize_project,
-        serialize_project_mandatory_fields, "serializes a project", FALSE);
-
-    gst_validate_add_action_type ("set-child-property", _set_child_property,
-        set_child_property_mandatory_fields,
-        "Allows to change child property of an object", FALSE);
-
-    runner = gst_validate_runner_new ();
-    g_signal_connect (runner, "report-added",
-        G_CALLBACK (_validate_report_added_cb), pipeline);
-    monitor =
-        gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
-        NULL);
   }
+
+  gst_validate_add_action_type ("edit-clip", _edit_clip,
+      move_clip_mandatory_fields, "Allows to seek into the files", FALSE);
+
+  gst_validate_add_action_type ("serialize-project", _serialize_project,
+      serialize_project_mandatory_fields, "serializes a project", FALSE);
+
+  gst_validate_add_action_type ("set-child-property", _set_child_property,
+      set_child_property_mandatory_fields,
+      "Allows to change child property of an object", FALSE);
+
+  runner = gst_validate_runner_new ();
+  g_signal_connect (runner, "report-added",
+      G_CALLBACK (_validate_report_added_cb), pipeline);
+  monitor =
+      gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
+      NULL);
 
   g_object_set_data (G_OBJECT (pipeline), MONITOR_ON_PIPELINE, monitor);
   g_object_set_data (G_OBJECT (pipeline), RUNNER_ON_PIPELINE, runner);
