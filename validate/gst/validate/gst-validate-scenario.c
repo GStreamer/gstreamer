@@ -846,11 +846,12 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
     case GST_MESSAGE_STATE_CHANGED:
       {
         if (GST_MESSAGE_SRC (message) == GST_OBJECT (scenario->pipeline)) {
-          GstState nstate;
+          GstState nstate, pstate;
 
           gst_message_parse_state_changed (message,
-              NULL, &nstate, NULL);
-          _add_get_position_source (scenario);
+              &pstate, &nstate, NULL);
+          if (pstate == GST_STATE_READY && nstate == GST_STATE_PAUSED)
+            _add_get_position_source (scenario);
         }
         break;
       }
