@@ -808,9 +808,9 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
         GST_INFO_OBJECT (demux, "Fetching key %s", demux->current_key);
         key_fragment =
-            gst_uri_downloader_fetch_uri_with_referer (demux->downloader,
+            gst_uri_downloader_fetch_uri (demux->downloader,
             demux->current_key, demux->client->main ?
-            demux->client->main->uri : NULL, FALSE, &err);
+            demux->client->main->uri : NULL, FALSE, FALSE, &err);
         if (key_fragment == NULL)
           goto key_failed;
         demux->key_url = g_strdup (demux->current_key);
@@ -1490,8 +1490,8 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
   const gchar *uri = gst_m3u8_client_get_current_uri (demux->client);
 
   download =
-      gst_uri_downloader_fetch_uri_with_referer (demux->downloader, uri,
-      demux->client->main ? demux->client->main->uri : NULL, TRUE, err);
+      gst_uri_downloader_fetch_uri (demux->downloader, uri,
+      demux->client->main ? demux->client->main->uri : NULL, TRUE, TRUE, err);
   if (download == NULL)
     return FALSE;
 
