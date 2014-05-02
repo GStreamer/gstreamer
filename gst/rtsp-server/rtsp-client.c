@@ -502,6 +502,25 @@ send_generic_response (GstRTSPClient * client, GstRTSPStatusCode code,
   send_message (client, ctx, ctx->response, FALSE);
 }
 
+static void
+send_option_not_supported_response (GstRTSPClient * client,
+    GstRTSPContext * ctx, const gchar * unsupported_options)
+{
+  GstRTSPStatusCode code = GST_RTSP_STS_OPTION_NOT_SUPPORTED;
+
+  gst_rtsp_message_init_response (ctx->response, code,
+      gst_rtsp_status_as_text (code), ctx->request);
+
+  if (unsupported_options != NULL) {
+    gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_UNSUPPORTED,
+        unsupported_options);
+  }
+
+  ctx->session = NULL;
+
+  send_message (client, ctx, ctx->response, FALSE);
+}
+
 static gboolean
 paths_are_equal (const gchar * path1, const gchar * path2, gint len2)
 {
@@ -2169,6 +2188,55 @@ client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
   }
 }
 
+/* Returns TRUE if there are no Require headers, otherwise returns FALSE
+ * and also returns a newly-allocated string of (comma-separated) unsupported
+ * options in the unsupported_reqs variable .
+ *
+ * There may be multiple Require headers, but we must send one single
+ * Unsupported header with all the unsupported options as response. If
+ * an incoming Require header contained a comma-separated list of options
+ * GstRtspConnection will already have split that list up into multiple
+ * headers.
+ *
+ * TODO: allow the application to decide what features are supported
+ */
+static gboolean
+check_request_requirements (GstRTSPMessage * msg, gchar ** unsupported_reqs)
+{
+  GstRTSPResult res;
+  GPtrArray *arr = NULL;
+  gchar *reqs = NULL;
+  gint i;
+
+  i = 0;
+  do {
+    res = gst_rtsp_message_get_header (msg, GST_RTSP_HDR_REQUIRE, &reqs, i++);
+
+    if (res == GST_RTSP_ENOTIMPL)
+      break;
+
+    if (arr == NULL)
+      arr = g_ptr_array_new_with_free_func ((GDestroyNotify) g_free);
+
+    g_ptr_array_add (arr, g_strdup (reqs));
+  }
+  while (TRUE);
+
+  /* if we don't have any Require headers at all, all is fine */
+  if (i == 1)
+    return TRUE;
+
+  /* otherwise we've now processed at all the Require headers */
+  g_ptr_array_add (arr, NULL);
+
+  /* for now we don't commit to supporting anything, so will just report
+   * all of the required options as unsupported */
+  *unsupported_reqs = g_strjoinv (", ", (gchar **) arr->pdata);
+
+  g_ptr_array_unref (arr);
+  return FALSE;
+}
+
 static void
 handle_request (GstRTSPClient * client, GstRTSPMessage * request)
 {
@@ -2181,6 +2249,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   GstRTSPSession *session = NULL;
   GstRTSPContext sctx = { NULL }, *ctx;
   GstRTSPMessage response = { 0 };
+  gchar *unsupported_reqs = NULL;
   gchar *sessid;
 
   if (!(ctx = gst_rtsp_context_get_current ())) {
@@ -2268,6 +2337,10 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   if (!gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_URL))
     goto not_authorized;
 
+  /* handle any 'Require' headers */
+  if (!check_request_requirements (ctx->request, &unsupported_reqs))
+    goto unsupported_requirement;
+
   /* now see what is asked and dispatch to a dedicated handler */
   switch (method) {
     case GST_RTSP_OPTIONS:
@@ -2342,6 +2415,14 @@ not_authorized:
   {
     GST_ERROR ("client %p: not allowed", client);
     /* error reply is already sent */
+    goto done;
+  }
+unsupported_requirement:
+  {
+    GST_ERROR ("client %p: Required option is not supported (%s)", client,
+        unsupported_reqs);
+    send_option_not_supported_response (client, ctx, unsupported_reqs);
+    g_free (unsupported_reqs);
     goto done;
   }
 not_implemented:
