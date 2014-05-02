@@ -693,20 +693,21 @@ gst_image_freeze_src_loop (GstPad * pad)
   GstClockTime timestamp, timestamp_end;
   guint64 cstart, cstop;
   gboolean in_seg, eos;
+  GstFlowReturn flow_ret = GST_FLOW_OK;
 
   g_mutex_lock (&self->lock);
-  if (!gst_pad_has_current_caps (pad)) {
+  if (!gst_pad_has_current_caps (self->srcpad)) {
     GST_ERROR_OBJECT (pad, "Not negotiated yet");
+    flow_ret = GST_FLOW_NOT_NEGOTIATED;
     g_mutex_unlock (&self->lock);
-    gst_pad_pause_task (self->srcpad);
-    return;
+    goto pause_task;
   }
 
   if (!self->buffer) {
     GST_ERROR_OBJECT (pad, "Have no buffer yet");
+    flow_ret = GST_FLOW_ERROR;
     g_mutex_unlock (&self->lock);
-    gst_pad_pause_task (self->srcpad);
-    return;
+    goto pause_task;
   }
   buffer = gst_buffer_ref (self->buffer);
   buffer = gst_buffer_make_writable (buffer);
@@ -776,44 +777,62 @@ gst_image_freeze_src_loop (GstPad * pad)
       GST_TIME_ARGS (timestamp));
 
   if (in_seg) {
-    GstFlowReturn ret;
-
     GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_PTS (buffer) = cstart;
     GST_BUFFER_DURATION (buffer) = cstop - cstart;
     GST_BUFFER_OFFSET (buffer) = offset;
     GST_BUFFER_OFFSET_END (buffer) = offset + 1;
-    ret = gst_pad_push (self->srcpad, buffer);
+    flow_ret = gst_pad_push (self->srcpad, buffer);
     GST_DEBUG_OBJECT (pad, "Pushing buffer resulted in %s",
-        gst_flow_get_name (ret));
-    if (ret != GST_FLOW_OK)
-      gst_pad_pause_task (self->srcpad);
+        gst_flow_get_name (flow_ret));
+    if (flow_ret != GST_FLOW_OK)
+      goto pause_task;
   } else {
     gst_buffer_unref (buffer);
   }
 
   if (eos) {
-    if ((self->segment.flags & GST_SEEK_FLAG_SEGMENT)) {
-      GstMessage *m;
-      GstEvent *e;
+    flow_ret = GST_FLOW_EOS;
+    goto pause_task;
+  }
 
-      GST_DEBUG_OBJECT (pad, "Sending segment done at end of segment");
-      if (self->segment.rate >= 0) {
-        m = gst_message_new_segment_done (GST_OBJECT_CAST (self),
-            GST_FORMAT_TIME, self->segment.stop);
-        e = gst_event_new_segment_done (GST_FORMAT_TIME, self->segment.stop);
+  return;
+
+pause_task:
+  {
+    const gchar *reason = gst_flow_get_name (flow_ret);
+
+    GST_LOG_OBJECT (self, "pausing task, reason %s", reason);
+    gst_pad_pause_task (pad);
+
+    if (flow_ret == GST_FLOW_EOS) {
+      if ((self->segment.flags & GST_SEEK_FLAG_SEGMENT)) {
+        GstMessage *m;
+        GstEvent *e;
+
+        GST_DEBUG_OBJECT (pad, "Sending segment done at end of segment");
+        if (self->segment.rate >= 0) {
+          m = gst_message_new_segment_done (GST_OBJECT_CAST (self),
+              GST_FORMAT_TIME, self->segment.stop);
+          e = gst_event_new_segment_done (GST_FORMAT_TIME, self->segment.stop);
+        } else {
+          m = gst_message_new_segment_done (GST_OBJECT_CAST (self),
+              GST_FORMAT_TIME, self->segment.start);
+          e = gst_event_new_segment_done (GST_FORMAT_TIME, self->segment.start);
+        }
+        gst_element_post_message (GST_ELEMENT_CAST (self), m);
+        gst_pad_push_event (self->srcpad, e);
       } else {
-        m = gst_message_new_segment_done (GST_OBJECT_CAST (self),
-            GST_FORMAT_TIME, self->segment.start);
-        e = gst_event_new_segment_done (GST_FORMAT_TIME, self->segment.start);
+        GST_DEBUG_OBJECT (pad, "Sending EOS at end of segment");
+        gst_pad_push_event (self->srcpad, gst_event_new_eos ());
       }
-      gst_element_post_message (GST_ELEMENT_CAST (self), m);
-      gst_pad_push_event (self->srcpad, e);
-    } else {
-      GST_DEBUG_OBJECT (pad, "Sending EOS at end of segment");
+    } else if (flow_ret == GST_FLOW_NOT_LINKED || flow_ret < GST_FLOW_EOS) {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED,
+          ("Internal data stream error."),
+          ("stream stopped, reason %s", reason));
       gst_pad_push_event (self->srcpad, gst_event_new_eos ());
     }
-    gst_pad_pause_task (self->srcpad);
+    return;
   }
 }
 
