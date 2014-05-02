@@ -628,7 +628,7 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 }
 
 - (void) orderFront {
-  [m_cocoa->priv->internal_win_id orderFront:m_cocoa->priv->internal_win_id];
+  [m_cocoa->priv->internal_win_id orderFrontRegardless];
 }
 
 @end
