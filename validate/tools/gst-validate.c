@@ -299,7 +299,7 @@ main (int argc, gchar ** argv)
   g_option_context_set_summary (ctx, "Runs a gst launch pipeline, adding "
       "monitors to it to identify issues in the used elements. At the end"
       " a report will be printed. To view issues as they are created, set"
-      "the env var GST_DEBUG=validate:2 and it will be printed "
+      " the env var GST_DEBUG=validate:2 and it will be printed "
       "as gstreamer debugging");
 
   if (argc == 1) {
