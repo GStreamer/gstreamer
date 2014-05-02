@@ -2387,7 +2387,10 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     } else {
       nsamples = gst_buffer_get_size (last_buf) / sample_size;
     }
-    duration = GST_BUFFER_DURATION (last_buf) / nsamples;
+    if (nsamples > 0)
+      duration = GST_BUFFER_DURATION (last_buf) / nsamples;
+    else
+      duration = 0;
 
     /* timescale = samplerate */
     scaled_duration = 1;
