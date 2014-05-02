@@ -417,22 +417,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
     gst_object_unref (window);
   }
 
-  if (!gl_sink->upload) {
-    gl_sink->upload = gst_gl_upload_new (gl_sink->context);
-    if (!gst_gl_upload_init_format (gl_sink->upload, &gl_sink->info))
-      goto upload_error;
-  }
-
   return TRUE;
 
-upload_error:
-  {
-    GST_ELEMENT_ERROR (gl_sink, RESOURCE, NOT_FOUND, ("Failed to init upload"),
-        (NULL));
-    gst_object_unref (gl_sink->upload);
-    gl_sink->upload = NULL;
-    return FALSE;
-  }
 context_error:
   {
     GST_ELEMENT_ERROR (gl_sink, RESOURCE, NOT_FOUND, ("%s", error->message),
@@ -700,6 +686,8 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
      * be deactivated when the last ref is gone */
     gst_object_unref (oldpool);
   }
+
+  glimage_sink->upload = gst_object_ref (GST_GL_BUFFER_POOL (newpool)->upload);
 
   return TRUE;
 }
