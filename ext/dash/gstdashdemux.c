@@ -1240,7 +1240,7 @@ gst_dash_demux_refresh_mpd (GstDashDemux * demux)
     GST_DEBUG_OBJECT (demux, "Updating manifest file from URL %s",
         demux->client->mpd_uri);
     download = gst_uri_downloader_fetch_uri (demux->downloader,
-        demux->client->mpd_uri, TRUE, NULL);
+        demux->client->mpd_uri, NULL, TRUE, TRUE, NULL);
     if (download) {
       GstMpdClient *new_client = NULL;
 
@@ -1674,7 +1674,8 @@ gst_dash_demux_download_header_fragment (GstDashDemux * demux,
   }
 
   fragment = gst_uri_downloader_fetch_uri_with_range (stream->downloader,
-      next_header_uri, FALSE, range_start, range_end, NULL);
+      next_header_uri, demux->client->mpd_uri, FALSE, FALSE, range_start,
+      range_end, NULL);
   g_free (next_header_uri);
   if (fragment) {
     buffer = gst_fragment_get_buffer (fragment);
@@ -1923,7 +1924,8 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
         fragment.range_start, fragment.range_end);
 
     download = gst_uri_downloader_fetch_uri_with_range (stream->downloader,
-        fragment.uri, FALSE, fragment.range_start, fragment.range_end, NULL);
+        fragment.uri, demux->client->mpd_uri, FALSE, FALSE,
+        fragment.range_start, fragment.range_end, NULL);
 
     if (download == NULL) {
       gst_media_fragment_info_clear (&fragment);
@@ -1955,7 +1957,8 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
           fragment.index_range_end);
       download =
           gst_uri_downloader_fetch_uri_with_range (stream->downloader, uri,
-          FALSE, fragment.index_range_start, fragment.index_range_end, NULL);
+          demux->client->mpd_uri, FALSE, FALSE, fragment.index_range_start,
+          fragment.index_range_end, NULL);
       if (download) {
         index_buffer = gst_fragment_get_buffer (download);
         if (index_buffer)
