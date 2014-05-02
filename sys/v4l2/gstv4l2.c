@@ -35,9 +35,6 @@
 #include "gstv4l2radio.h"
 #include "gstv4l2videodec.h"
 #include "gstv4l2devicemonitor.h"
-/* #include "gstv4l2jpegsrc.h" */
-/* #include "gstv4l2mjpegsrc.h" */
-/* #include "gstv4l2mjpegsink.h" */
 
 /* used in v4l2_calls.c and v4l2src_calls.c */
 GST_DEBUG_CATEGORY (v4l2_debug);
@@ -56,12 +53,7 @@ plugin_init (GstPlugin * plugin)
       !gst_v4l2_video_dec_register (plugin) ||
       !gst_device_monitor_register (plugin, "v4l2monitor",
           GST_RANK_PRIMARY, GST_TYPE_V4L2_DEVICE_MONITOR) ||
-      /*       !gst_element_register (plugin, "v4l2jpegsrc", */
-      /*           GST_RANK_NONE, GST_TYPE_V4L2JPEGSRC) || */
-      /*       !gst_element_register (plugin, "v4l2mjpegsrc", */
-      /*           GST_RANK_NONE, GST_TYPE_V4L2MJPEGSRC) || */
-      /*       !gst_element_register (plugin, "v4l2mjpegsink", */
-      /*           GST_RANK_NONE, GST_TYPE_V4L2MJPEGSINK)) */
+      /* etc. */
       FALSE)
     return FALSE;
 
