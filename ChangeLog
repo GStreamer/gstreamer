@@ -1,9 +1,557 @@
-=== release 1.2.0 ===
+=== release 1.3.1 ===
 
-2013-09-24  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2014-05-03  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.3.1
+
+2014-05-03 10:17:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From bcb1518 to 211fa5f
+
+2014-04-30 16:14:50 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  libav: avoid dividing by zero on insane fps/par
+	  While there, fix mixup in num/den with par (copied from fps,
+	  apparently, and fps inverts fps to time base).
+	  Coverity 1139696
+
+2014-04-30 15:59:04 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: guard against division by zero
+	  and other nonsensical time base values while we're at it.
+	  Coverity 1139699
+
+2014-04-29 09:13:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Fix leak of AVBufferRef
+	  AVPacket contains AVBufferRef which may leak unless unreffed properly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726814
+
+2014-03-21 10:10:14 +0100  Stian Selnes <stian@pexip.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Fix leak of AVBufferRef
+	  AVPacket contains AVBufferRef which may leak unless unreffed properly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726814
+
+2014-04-14 13:37:02 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Fix compile without gst debug
+	  We can just re-use the encoder variable
+
+2014-04-08 08:05:24 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Remove unused variable
+	  CID #1139943
+
+2014-04-08 08:00:55 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  codecmap: Add missing break
+	  CID #1139752
+
+2014-04-06 09:02:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add mapping for Apple Intermediate Codec
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727673
+
+2014-03-29 10:45:16 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  Update to libav v10
+
+2014-03-22 17:10:24 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: discard input frame upon encoding error
+
+2014-03-05 17:40:13 +0100  Christian Fredrik Kalager Schaller <uraeus@linuxrising.org>
+
+	* gst-libav.spec.in:
+	  add docs directory to spec file
+
+2014-02-28 09:36:02 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From fe1672e to bcb1518
+
+2014-02-27 21:49:42 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/Makefile.am:
+	  docs: also reactivate make dist for the docs
+
+2014-02-26 22:14:28 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1a07da9 to fe1672e
+
+2014-02-26 22:05:23 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-libav-plugins-docs.sgml:
+	* docs/plugins/gst-libav-plugins-sections.txt:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	  docs: try to make the generated docs more useful
+	  Generate the section.txt file. Update the -docs.sgml file with the new sections.
+	  If we want to actually see the baseclasses, we should define them with a _get_type() function
+	  and have the wrapped types subclass them.
+
+2014-02-26 19:13:01 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/plugins/inspect/plugin-libav.xml:
+	  docs: add the inspected data
+	  Not even this file was previously in the repo.
+
+2014-02-26 12:01:52 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-libav-plugins-docs.sgml:
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/gst-libav-plugins.interfaces:
+	* docs/plugins/gst-libav-plugins.prerequisites:
+	  docs: make the docs build again
+	  They are still bad, but if we don't want to have them, we should rather remove this totally.
+
+2014-02-26 11:52:07 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* configure.ac:
+	  configure: add missing docs/plugins/Makefile
+
+2014-02-26 11:40:08 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/Makefile.am:
+	  docs: install prebuilt plugin docs if gtk-doc is disabled
+	  Sync to the Makefile.am from gst-plugin-base where it is done right.
+	  Fixes #725034
+
+2014-02-23 11:40:14 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: make all properties work again
+	  ... as previously broken due to additional compliance property
+	  (see 13ffed87b1597fa60ccee293f71c3993ec59d1b2).
+
+2014-02-22 21:54:08 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavmux.c:
+	  avmux: stream-start and segment event before data-flow
+
+2014-02-20 20:39:29 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: rename hevc decoder element to h265 for consistency
+	  We use h265 for the parser, typefinder, caps, etc. everywhere.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724823
+
+2014-02-21 13:18:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avvidec: don't crash on EOS when no buffers have been received
+	  Fixes crash on EOS when no buffers have been received for some
+	  reason, e.g. because the parser didn't output any.
+	  fakesrc num-buffers=0 format=time ! avdec_h264 ! fakesink
+
+2014-02-21 09:28:16 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v10 beta1
+
+2014-02-20 17:25:35 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: fix audio encoder flushing according to libav docs
+	  * @param[in] frame AVFrame containing the raw audio data to be encoded.
+	  *                  May be NULL when flushing an encoder that has the
+	  *                  CODEC_CAP_DELAY capability set.
+	  The AVFrame itself should be null, not the frame.data pointer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724536
+
+2014-02-16 15:58:15 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst-libs/ext/Makefile.am:
+	  gst-libs: handle make dist for out-of-tree build
+
+2014-02-04 18:17:32 +0200  Dmitry Melnichenko <dmitry.m@samsung.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Fix invalid address passing to av_opt_set_int()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=723615
+
+2014-02-01 14:40:24 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: avoid busy-looping when flushing frames
+	  ... such as when receiving EOS event.
+
+2014-01-30 10:45:05 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d48bed3 to 1a07da9
+
+2014-01-24 21:58:35 +0100  Sjoerd Simons <sjoerd@luon.net>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Don't go into pull mode when the sequential flag is set
+	  When the scheduling query results has GST_SCHEDULING_FLAG_SEQUENTIAL set
+	  in its flags don't go into pull mode to prevent over-eager seeking.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722935
+
+2014-01-21 22:58:42 +1100  Tim 'mithro' Ansell <mithro@mithis.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Force DV audio input format to 48kHz, 2 channels
+	  libavformat only supports muxing 16bit, 48kHz stereo into DV containers.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=722672
+
+2014-01-19 10:33:01 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to version 10_alpha2
+
+2014-01-17 12:38:23 -0800  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: Add output-corrupt property
+	  The output-corrupt property will set the CODEC_FLAG_OUTPUT_CORRUPT flag
+	  in the codec context. The user can now decide whether libav outputs
+	  corrupt frames or not.
+	  Previous libav versions had this flag always set.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722453
+
+2014-01-16 13:45:58 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Mark frames as corrupted if libav tells us they are
+	  This is currently only implemented by the h264 codec and no audio codec.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722290
+
+2014-01-16 13:44:56 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Mark frames as corrupted if libav tells us they are
+	  This is currently only implemented by the h264 codec.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722290
+
+2014-01-15 09:02:33 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavdeinterlace.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  gst-libav: fix context leaks
+	  A AVCodecContext needs cleaning up before being freed.
+	  Go through all of the allocations/setups to ensure none of them
+	  can leak a context or its contents.
+
+2014-01-13 16:31:05 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: set output chroma-site
+	  Use libav provided chroma-site and place it on the output caps.
+
+2014-01-10 17:18:53 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: release buffers when not direct rendering
+	  New libav will not call the release_buffer callback anymore when
+	  avcodec_default_get_buffer() is called from get_buffer. Releasing of the
+	  memory in a picture should now be done by registering a callback to the
+	  avbuffer objects in the picture. There is some compatibility code to
+	  wrap the memory we provide in get_buffer in avbuffer with a callback to
+	  release_buffer but that is not done when avcodec_default_get_buffer()
+	  is called.
+	  Work around this by adding a dummy avbuffer object to the picture that
+	  will release the frame.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=721077
+
+2014-01-10 13:16:20 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Give MP3 decoder a MARGINAL rank too
+	  There's no reason why this decoder should not be autoplugged
+
+2014-01-06 13:36:39 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavviddec.c:
+	  av: Enable HEVC / h265 support
+
+2014-01-06 13:02:07 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v10_alpha1 tag
+
+2014-01-03 15:58:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: fix regression with wmv3 video in WMVA format
+	  The VC-1 decoder should handle that. Before avdec_wmv3 handled
+	  it, but then we added format=WMV3 to its sink pad template
+	  caps, at which point nothing handled WMVA any longer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697665
+
+2014-01-03 16:28:44 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavutils.h:
+	  av: Update for CodecID -> AVCodecID related changes
+
+2014-01-03 16:28:02 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: Update config parameters a bit to fix compilation
+	  This needs a major rework and should use the new configuration
+	  interface where useful.
+
+2014-01-03 16:27:34 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavvidenc.c:
+	  avenc: Stop using the removed inter_threshold field
+
+2014-01-03 16:27:11 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avviddec rebase
+
+2014-01-03 16:26:10 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Stop using AVCODEC_MAX_AUDIO_FRAME_SIZE
+	  And properly use the have_data variable. It's a boolean.
+
+2014-01-03 16:25:39 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Stop using r_frame_rate field
+	  It was removed and quite meaningless anyway.
+	  Use the average framerate instead.
+
+2014-01-03 16:24:28 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Port to av_encode_video2()
+	  av_encode_video() is deprecated and an ugly API anyway.
+
+2014-01-03 16:23:26 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to libav master (libav 10 API)
+
+2013-12-27 12:06:28 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure.ac: Remove warning when building against a system version of libav
+	  Nowadays libav has proper releases and API/ABI guarantees.
+	  We're not living in last decade.
+
+2013-12-22 22:35:12 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From dbedaa0 to d48bed3
+
+2013-12-15 21:17:26 -0800  Todd Agulnick <todd@agulnick.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavdeinterlace.c:
+	  Some compiler warning fixes to satisfy XCode compiler
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720513
+
+2013-12-07 11:35:09 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: improve buffer handling and semantics
+	  ... so as to focus on providing *a* buffer rather than one (too) tied
+	  to a frame, in particular allowing multiple allocations related to a frame.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=697806
+
+2013-12-07 12:10:13 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: plug input_state leak
+
+2013-12-05 11:51:27 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Use new gst_video_decoder_set_needs_format() API
+
+2013-12-03 13:16:49 +0100  Christian Fredrik Kalager Schaller <uraeus@linuxrising.org>
+
+	* gst-libav.spec.in:
+	  Update spec file with latest changes
+
+2013-12-02 20:21:34 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: only use upstream framerate if really specified
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=704161
+
+2013-11-26 20:57:37 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: discard unused input frames
+	  ... to avoid these piling up in list of pending frames.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=693772
+
+2013-11-26 20:55:43 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: really release frame at proper time
+	  ... by also removing it from the pending list of frames,
+	  where it may still be in if it has never been submitted to _finish.
+	  This could happen if is a decode-only frame, or in skipped decoding
+	  situation, ...
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=693772
+
+2013-11-05 11:21:43 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 865aa20 to dbedaa0
+
+2013-11-04 23:20:17 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avaudec: don't put bogus 0 channel-mask on output caps for mono audio
+
+2013-10-26 09:34:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: post better error message if experimental codecs don't work
+	  https://bugzilla.gnome.org/show_bug.cgi?id=691617
+
+2013-10-26 09:09:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  codecmap: use TRUE for boolean fields in caps
+
+2013-10-15 09:28:08 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v9.10
+
+2013-10-14 14:50:57 -0600  Greg Rutz <greg@gsr-tek.com>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	  avenc: Add compliance property
+	  Add a new property to GstFFMpegVidEnc and GstFFMpegAudEnc to supply
+	  the "strict compliance" value to AVCodecContext
+	  https://bugzilla.gnome.org/show_bug.cgi?id=691617
+
+2013-10-03 15:25:30 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Make avdec_mjpeg requires a parsed input
+	  Actually avdec_mjpeg does not deal well with incomplete buffers and try
+	  to decode incomplete frames. A parser which will also acts as
+	  an accumulator needs to be inserted before it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709352
+
+2013-10-02 13:59:04 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: gst_value_can_intersect() does not do what you would think
+	  Check for uniqueness differently now.
+
+2013-10-02 12:57:36 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Only append values to the video/audio format lists if we don't have them already
+
+2013-10-02 12:52:35 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Reset some more fields in ::stop()
+
+2013-10-02 12:51:40 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Don't believe we're negotiated if negotiation failed
+	  It can happen that negotiation fails during get_buffer(), but then
+	  we don't retry later and never return NOT_NEGOTIATED upstream...
+	  and instead run into assertions.
+
+2013-10-02 12:45:44 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Don't believe we're negotiated if negotiation failed
+	  It can happen that negotiation fails during get_buffer(), but then
+	  we don't retry later and never return NOT_NEGOTIATED upstream...
+	  and instead run into assertions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708769
+
+2013-10-01 22:38:32 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavcodecmap.c:
+	  avenc: Choose 25 fps if we don't have any in the caps
+	  Some encoders require a non-zero framerate to be configured properly
+	  and just choosing something will make them not fail completely at
+	  least.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708732
+
+2013-09-23 15:19:51 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Fix boolean expression to fix uninitialized usage of variables
+
+2013-09-23 15:08:18 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Chose right target-os for iOS
+
+2013-09-24 18:34:20 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6b03ba7 to 865aa20
+
+2013-09-24 15:06:03 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Actually use 1.3.0.1 as version to make configure happy
+
+2013-09-24 15:00:34 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.2.0 ===
+
+2013-09-24 14:42:30 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.2.0
 
 2013-09-20 16:18:03 +0200  Edward Hervey <edward@collabora.com>
 
