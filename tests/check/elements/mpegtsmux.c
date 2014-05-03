@@ -51,13 +51,13 @@ static GstPad *mysrcpad, *mysinkpad;
                         "parsed = (boolean) true "
 #define VIDEO_CAPS_STRING "video/x-h264, " \
                           "stream-format = (string) byte-stream, " \
+                          "alignment = (string) nal, " \
                           "parsed = (boolean) true "
 
 /* setup and teardown needs some special handling for muxer */
 static GstPad *
 setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * template, const gchar * sinkname,
-    gchar ** padname)
+    GstStaticPadTemplate * template, const gchar * sinkname, gchar ** padname)
 {
   GstPad *srcpad, *sinkpad;
 
@@ -427,7 +427,8 @@ setup_caps (GstElement * mpegtsmux, GstPad * src1, GstPad * src2, GstPad * src3)
   gst_segment_init (&segment, GST_FORMAT_TIME);
 
   caps = gst_caps_new_simple ("video/x-h264",
-      "stream-format", G_TYPE_STRING, "byte-stream", NULL);
+      "stream-format", G_TYPE_STRING, "byte-stream",
+      "alignment", G_TYPE_STRING, "nal", NULL);
   gst_pad_push_event (src1, gst_event_new_stream_start ("1"));
   gst_pad_push_event (src1, gst_event_new_caps (caps));
   gst_pad_push_event (src1, gst_event_new_segment (&segment));
@@ -436,7 +437,8 @@ setup_caps (GstElement * mpegtsmux, GstPad * src1, GstPad * src2, GstPad * src3)
   gst_pad_push_event (src2, gst_event_new_segment (&segment));
   gst_caps_unref (caps);
   caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 4,
-      "stream-format", G_TYPE_STRING, "raw", NULL);
+      "stream-format", G_TYPE_STRING, "raw", "framed", G_TYPE_BOOLEAN, TRUE,
+      NULL);
   gst_pad_push_event (src3, gst_event_new_stream_start ("3"));
   gst_pad_push_event (src3, gst_event_new_caps (caps));
   gst_pad_push_event (src3, gst_event_new_segment (&segment));
@@ -541,7 +543,7 @@ GST_START_TEST (test_force_key_unit_event_upstream)
   gint count = 0;
   TestData test_data = { 0, };
   ThreadData *thread_data_1, *thread_data_2, *thread_data_3, *thread_data_4;
-  GstEvent * event;
+  GstEvent *event;
 
   mpegtsmux = gst_check_setup_element ("mpegtsmux");
 
