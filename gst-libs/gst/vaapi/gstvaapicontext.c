@@ -399,6 +399,9 @@ gst_vaapi_context_reset (GstVaapiContext * context,
   } else if (new_cip->usage == GST_VAAPI_CONTEXT_USAGE_ENCODE) {
     if (context_update_config_encoder (context, &new_cip->config.encoder))
       reset_config = TRUE;
+  } else if (new_cip->usage == GST_VAAPI_CONTEXT_USAGE_DECODE) {
+    if (reset_surfaces)
+      reset_config = TRUE;
   }
 
   if (reset_surfaces)
