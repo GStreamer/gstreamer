@@ -941,7 +941,7 @@
 <ARG>
 <NAME>GstX264Enc::qp-max</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[1,51]</RANGE>
+<RANGE><= 51</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum Quantizer</NICK>
 <BLURB>Maximum quantizer.</BLURB>
@@ -951,7 +951,7 @@
 <ARG>
 <NAME>GstX264Enc::qp-min</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[1,51]</RANGE>
+<RANGE><= 51</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Minimum Quantizer</NICK>
 <BLURB>Minimum quantizer.</BLURB>
@@ -961,7 +961,7 @@
 <ARG>
 <NAME>GstX264Enc::qp-step</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[1,50]</RANGE>
+<RANGE><= 50</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum Quantizer Difference</NICK>
 <BLURB>Maximum quantizer difference between frames.</BLURB>
@@ -971,7 +971,7 @@
 <ARG>
 <NAME>GstX264Enc::quantizer</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[1,50]</RANGE>
+<RANGE><= 50</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Constant Quantizer</NICK>
 <BLURB>Constant quantizer or quality to apply.</BLURB>

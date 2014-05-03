@@ -1,9 +1,397 @@
-=== release 1.2.0 ===
+=== release 1.3.1 ===
 
-2013-09-24  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2014-05-03  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.3.1
+
+2014-05-03 18:21:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
+
+2014-05-03 17:23:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/de.po:
+	* po/id.po:
+	* po/lv.po:
+	* po/sk.po:
+	* po/sr.po:
+	  po: Update translations
+
+2014-05-03 10:15:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From bcb1518 to 211fa5f
+
+2014-04-27 00:29:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/sidplay/gstsiddec.cc:
+	* gst/asfdemux/gstrtspwms.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rtspreal.c:
+	  docs: remove outdated and pointless 'Last reviewed' lines from docs
+	  They are very confusing for people, and more often than not
+	  also just not very accurate. Seeing 'last reviewed: 2005' in
+	  your docs is not very confidence-inspiring. Let's just remove
+	  those comments.
+
+2014-04-10 17:29:30 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: fix spurious rejection of 0 time offset commands
+	  Coverity 206168
+
+2014-04-10 16:53:25 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdread: avoid intermediate promotion to signed
+	  We should not reach the dangerous range here, though.
+	  Coverity 206491, 206492, 1139856
+
+2014-01-17 10:46:50 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: do not reset the whole video info when setting size
+	  New changes to gstvideo will reset all the video info state
+	  when calling _set_format, overwriting what was previously set
+	  in the preceding code.
+	  The comment says the following code is meant to preserve the
+	  pre-crop size, so let's just keep the size and related data
+	  as this does not seem to break anything else (this is what
+	  the _set_format call would have set before the change that
+	  reset all data, except the colorimetry).
+
+2014-04-03 15:06:22 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Fix payloads check
+	  Don't iterate stream->payloads if ... it doesn't exist
+	  CID #1139846
+
+2014-03-02 05:11:10 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* .gitignore:
+	  .gitignore: Ignore gcov intermediate files
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725483
+
+2014-02-28 09:35:10 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From fe1672e to bcb1518
+
+2014-02-26 22:12:50 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1a07da9 to fe1672e
+
+2014-02-26 11:31:03 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/Makefile.am:
+	  docs: install prebuilt plugin docs if gtk-doc is disabled
+	  Sync to the Makefile.am from gst-plugin-base where it is done right.
+	  Fixes #725034
+
+2014-02-13 09:39:04 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/xingmux/gstxingmux.c:
+	* gst/xingmux/plugin.c:
+	  xingmux: add muxer category and make element plugable
+	  This is required to make encodebin consider the element. Yet it is not enough to
+	  have it plugged it has a lower priority than most mp3encoders and no different
+	  caps.
+
+2014-02-24 11:42:00 +0100  Dirk Van Haerenborgh <vhdirk@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: allow lossless compression (qp=0)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725051
+
+2014-02-20 21:08:08 +0100  Edward Hervey <edward@collabora.com>
+
+	* m4/a52.m4:
+	  m4: Remove extra check for 11+ year old a52 release
+	  You deserve a build failure if you still have that version
+	  If someone wants to completely remove this m4 to replace it with the
+	  generic AS_GST_CHECK_LIBHEADER() it would be appreciated.
+
+2014-02-19 21:11:55 +0100  Rico Tzschichholz <ricotz@ubuntu.com>
+
+	* m4/a52.m4:
+	  m4: Fix multiple tests in AC_CHECK_A52DEC
+
+2014-02-09 23:41:36 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Remove unused function
+
+2014-02-06 19:22:47 +0100  Edward Hervey <edward@collabora.com>
+
+	* tests/check/Makefile.am:
+	  check: Fix test location
+
+2014-02-03 02:06:11 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* tests/check/Makefile.am:
+	  tests: Don't build disabled plugins' check tests
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=723505
+
+2014-01-30 10:44:29 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d48bed3 to 1a07da9
+
+2014-01-03 16:20:11 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: only add "format" field with fourcc to WMV caps
+	  Doesn't make sense for e.g. H264 or MJPEG.
+
+2013-12-22 22:34:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From dbedaa0 to d48bed3
+
+2013-12-22 21:56:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/Makevars:
+	  po: set gettext domain in Makevars so we don't have to patch the generated Makefile.in.in
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705455
+
+2013-12-05 12:16:45 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/amrwbdec/amrwbdec.c:
+	  amrwbdec: Remove some dead code
+
+2013-12-05 12:16:38 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/amrnb/amrnbdec.c:
+	  amrnbdec: Remove some dead code
+
+2013-12-05 12:09:04 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/amrnb/amrnbdec.c:
+	  amrnbdec: Use gst_audio_decoder_set_needs_format() instead of custom code
+
+2013-12-05 12:08:46 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/amrwbdec/amrwbdec.c:
+	  amrwbdec: Use gst_audio_decoder_set_needs_format() instead of custom code
+
+2013-12-05 11:44:10 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Use new gst_video_decoder_set_needs_format() API
+
+2013-11-29 15:51:49 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix compiler warning
+	  Compiler warns rightly about possibly uninitialized variable.
+
+2013-11-29 15:49:29 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix crash on NULL caps when negotiation happens without a downstream peer
+	  gst-launch-1.0 videotestsrc ! x264enc
+
+2013-11-11 13:15:54 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: graceful degradation for badly parsed input
+
+2013-11-05 11:20:20 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 865aa20 to dbedaa0
+
+2013-10-22 16:02:04 +0900  HyeJin Choi <meeshel@meeshel78@hotmail.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: mo_size check bug fix. mo_size is not mandatory field.
+	  So, don't need to check previous payload's mo_size and current
+	  payload's mo_size when merging it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710609
+
+2013-10-22 15:03:15 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Keep audio error checking fields only for audio
+	  Video shouldn't need to be descrambled, this can cause frames data
+	  to be corrupted
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684942
+
+2013-10-22 00:56:29 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: really copy the buffer data
+	  Pass the copy-memory flag to copy the memory for the output buffer,
+	  otherwise we end with 0-sized buffers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684942
+
+2013-09-27 08:05:25 -0700  Michael Esemplare <michael.esemplare@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: If FPS is available, set VFR to false
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708940
+
+2013-09-24 10:08:10 -0700  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Only use segment.start as seek_time if it is relative
+	  Relying on the gst_segment_do_seek results for getting the
+	  seeking time should not be used if seek type is SET because the
+	  do_seek function makes the 'cur` position of the seek normalized
+	  on the segment range. This means that seeking beyond the end of the
+	  file might not result in instant EOS as it will end up seeking to
+	  the final ts of the file.
+	  In asf seeking to the final timestamp can lead to seeking to the last
+	  keyframe, meaning a few seconds of video will still be played, which should
+	  not be the desired behavior when seeking beyong file limits.
+
+2013-09-24 10:07:25 -0700  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Parse last simple index entry
+	  The entry size is fixed at 6, fix typo to finish parsing the index
+	  correctly until the last sample
+
+2013-09-24 18:32:31 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 6b03ba7 to 865aa20
+
+2013-09-24 15:05:36 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Actually use 1.3.0.1 as version to make configure happy
+
+2013-09-24 15:00:30 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.2.0 ===
+
+2013-09-24 14:27:45 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.2.0
+
+2013-09-24 14:27:39 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-09-18 11:34:56 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
 
