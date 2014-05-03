@@ -47,6 +47,9 @@
 /* Define default VA surface chroma format to YUV 4:2:0 */
 #define DEFAULT_CHROMA_TYPE (GST_VAAPI_CHROMA_TYPE_YUV420)
 
+/* Number of scratch surfaces beyond those used as reference */
+#define SCRATCH_SURFACES_COUNT (4)
+
 static void
 unref_surface_cb (GstVaapiSurface * surface)
 {
@@ -106,15 +109,33 @@ context_destroy (GstVaapiContext * context)
 }
 
 static gboolean
+context_ensure_surfaces (GstVaapiContext * context)
+{
+  const GstVaapiContextInfo *const cip = &context->info;
+  const guint num_surfaces = cip->ref_frames + SCRATCH_SURFACES_COUNT;
+  GstVaapiSurface *surface;
+  guint i;
+
+  for (i = context->surfaces->len; i < num_surfaces; i++) {
+    surface = gst_vaapi_surface_new (GST_VAAPI_OBJECT_DISPLAY (context),
+        cip->chroma_type, cip->width, cip->height);
+    if (!surface)
+      return FALSE;
+    gst_vaapi_surface_set_parent_context (surface, context);
+    g_ptr_array_add (context->surfaces, surface);
+    if (!gst_vaapi_video_pool_add_object (context->surfaces_pool, surface))
+      return FALSE;
+  }
+  gst_vaapi_video_pool_set_capacity (context->surfaces_pool, num_surfaces);
+  return TRUE;
+}
+
+static gboolean
 context_create_surfaces (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
   GstVideoInfo vi;
-  GstVaapiSurface *surface;
-  guint i, num_surfaces;
-
-  /* Number of scratch surfaces beyond those used as reference */
-  const guint SCRATCH_SURFACES_COUNT = 4;
+  guint num_surfaces;
 
   if (!gst_vaapi_context_overlay_reset (context))
     return FALSE;
@@ -135,19 +156,7 @@ context_create_surfaces (GstVaapiContext * context)
     if (!context->surfaces_pool)
       return FALSE;
   }
-  gst_vaapi_video_pool_set_capacity (context->surfaces_pool, num_surfaces);
-
-  for (i = context->surfaces->len; i < num_surfaces; i++) {
-    surface = gst_vaapi_surface_new (GST_VAAPI_OBJECT_DISPLAY (context),
-        cip->chroma_type, cip->width, cip->height);
-    if (!surface)
-      return FALSE;
-    gst_vaapi_surface_set_parent_context (surface, context);
-    g_ptr_array_add (context->surfaces, surface);
-    if (!gst_vaapi_video_pool_add_object (context->surfaces_pool, surface))
-      return FALSE;
-  }
-  return TRUE;
+  return context_ensure_surfaces (context);
 }
 
 static gboolean
@@ -370,6 +379,7 @@ gst_vaapi_context_reset (GstVaapiContext * context,
 {
   GstVaapiContextInfo *const cip = &context->info;
   gboolean reset_surfaces = FALSE, reset_config = FALSE;
+  gboolean grow_surfaces = FALSE;
   GstVaapiChromaType chroma_type;
 
   chroma_type = new_cip->chroma_type ? new_cip->chroma_type :
@@ -392,6 +402,11 @@ gst_vaapi_context_reset (GstVaapiContext * context,
     reset_config = TRUE;
   }
 
+  if (cip->ref_frames < new_cip->ref_frames) {
+    cip->ref_frames = new_cip->ref_frames;
+    grow_surfaces = TRUE;
+  }
+
   if (cip->usage != new_cip->usage) {
     cip->usage = new_cip->usage;
     reset_config = TRUE;
@@ -400,7 +415,7 @@ gst_vaapi_context_reset (GstVaapiContext * context,
     if (context_update_config_encoder (context, &new_cip->config.encoder))
       reset_config = TRUE;
   } else if (new_cip->usage == GST_VAAPI_CONTEXT_USAGE_DECODE) {
-    if (reset_surfaces)
+    if (reset_surfaces || grow_surfaces)
       reset_config = TRUE;
   }
 
@@ -410,6 +425,8 @@ gst_vaapi_context_reset (GstVaapiContext * context,
     context_destroy (context);
 
   if (reset_surfaces && !context_create_surfaces (context))
+    return FALSE;
+  else if (grow_surfaces && !context_ensure_surfaces (context))
     return FALSE;
   if (reset_config && !context_create (context))
     return FALSE;
