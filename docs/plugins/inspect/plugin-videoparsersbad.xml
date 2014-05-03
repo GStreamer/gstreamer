@@ -3,7 +3,7 @@
   <description>videoparsers</description>
   <filename>../../gst/videoparsers/.libs/libgstvideoparsersbad.so</filename>
   <basename>libgstvideoparsersbad.so</basename>
-  <version>1.2.0</version>
+  <version>1.3.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -69,6 +69,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-h264, parsed=(boolean)true, stream-format=(string){ avc, avc3, byte-stream }, alignment=(string){ au, nal }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>h265parse</name>
+      <longname>H.265 parser</longname>
+      <class>Codec/Parser/Converter/Video</class>
+      <description>Parses H.265 streams</description>
+      <author>Sreerenj Balachandran &lt;sreerenj.balachandran@intel.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-h265</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-h265, parsed=(boolean)true, stream-format=(string){ hvc1, hev1, byte-stream }, alignment=(string){ au, nal }</details>
         </caps>
       </pads>
     </element>

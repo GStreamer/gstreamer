@@ -548,7 +548,6 @@ gpointer  arg4
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
 GstSrtpEnc *gstsrtpenc
-guint  arg1
 </SIGNAL>
 
 <SIGNAL>

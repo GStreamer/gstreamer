@@ -1,5 +1,7 @@
 EXPORTS
 	gst_buffer_add_mpeg_video_meta
+	gst_codecparsers_vp8dx_bool_decoder_fill
+	gst_codecparsers_vp8dx_start_decode
 	gst_h263_parse
 	gst_h264_nal_parser_free
 	gst_h264_nal_parser_new
@@ -80,3 +82,15 @@ EXPORTS
 	gst_vc1_parse_sequence_header_struct_c
 	gst_vc1_parse_sequence_layer
 	gst_vc1_parse_slice_header
+	gst_vp8_mode_probs_init_defaults
+	gst_vp8_mv_probs_init_defaults
+	gst_vp8_mv_update_probs_init
+	gst_vp8_parser_init
+	gst_vp8_parser_parse_frame_header
+	gst_vp8_range_decoder_get_pos
+	gst_vp8_range_decoder_get_state
+	gst_vp8_range_decoder_init
+	gst_vp8_range_decoder_read
+	gst_vp8_range_decoder_read_literal
+	gst_vp8_token_probs_init_defaults
+	gst_vp8_token_update_probs_init

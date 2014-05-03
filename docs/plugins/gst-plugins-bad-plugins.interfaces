@@ -25,6 +25,10 @@ GstFPSDisplaySink GstChildProxy
 GstFaac GstPreset
 GstFaceOverlay GstChildProxy
 GstFreeverb GstPreset
+GstGLImageSink GstVideoOverlay
+GstGLMixer GstChildProxy
+GstGLMosaic GstChildProxy
+GstGLVideoMixer GstChildProxy
 GstGSMEnc GstPreset
 GstGSettingsAudioSink GstChildProxy
 GstGSettingsAudioSrc GstChildProxy
@@ -32,6 +36,7 @@ GstGSettingsSwitchSink GstChildProxy
 GstGSettingsSwitchSrc GstChildProxy
 GstGSettingsVideoSink GstChildProxy
 GstGSettingsVideoSrc GstChildProxy
+GstHLSDemux GstChildProxy
 GstHanddetect GstNavigation
 GstHlsSink GstChildProxy
 GstId3BaseMux GstTagSetter

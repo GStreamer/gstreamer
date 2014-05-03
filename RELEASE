@@ -1,16 +1,29 @@
 
-Release notes for GStreamer Bad Plugins 1.2.0
+Release notes for GStreamer Bad Plugins 1.3.1
 
 
-The GStreamer team is proud to announce a new feature release
-in the 1.x stable series of the
-core of the GStreamer streaming media framework.
+The GStreamer team is pleased to announce the first release of the unstable
+1.3 release series. The 1.3 release series is adding new features on top of
+the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.3 release series
+will lead to the stable 1.4 release series in the next weeks, and newly added
+API can still change until that point.
 
 
-The 1.x series is a stable series targeted at end users.
-It is not API or ABI compatible with the stable 0.10.x series.
-It is, however, parallel installable with the 0.10.x series and
-will not affect an existing 0.10.x installation.
+
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately
+during the unstable 1.3 release series.
+
+
+
+The versioning scheme that is used in general is that 1.x.y is API and
+ABI backwards compatible with previous 1.x.y releases. If x is an even
+number it is a stable release series and all releases in this series
+will only contain important bugfixes, e.g. the 1.0 series with 1.0.7. If
+x is odd it is a development release series that will lead to the next
+stable release series 1.x+1 and contains new features and bigger
+changes. During the development release series, new API can still
+change.
 
 
 
@@ -60,8 +73,140 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 709414 : dvbsrc: Uses deprecated field frontend type and add DVB S2/T2 support
+      * 723670 : Move  VideoToolBox elements from applemedia to a different plugin
+      * 728514 : glimagesink fails with gst-sdk android tutorial-5 / tutorial-4
+      * 728356 : jpegparse: Does not passthrough timestamps depending on downstream elements
+      * 519220 : Add W64/R64 support
+      * 574408 : audiomixer: Need an element to do synchronized audio mixing
+      * 628055 : tsdemux: Handle PCR/PTS/DTS discont/gaps
+      * 644395 : mpegtsdemux / mpegtsmux: data flow error
+      * 664443 : h264parse: Parsing shifts timestamps between frames
+      * 671136 : mpegtsmux: add support for SDT and NIT tables for DVB-S/DVB-T
+      * 675869 : hlsdemux: potential dead-lock using GstTask
+      * 695846 : hlsdemux: No longer switches pads on playlist changes
+      * 698748 : mpegtsmux: improper timestamping of output packets
+      * 699924 : smoothstreaming: no audio with BBC bigbuckbunny stream
+      * 701404 : dashdemux: should not buffer the entire Period
+      * 703342 : gl: implement support for DispManX (Raspberry Pi)
+      * 703343 : Add EGLImage support (consume and provide buffer pool)
+      * 706054 : move GstEGLImageBufferPool and allocator from eglglessink to gstegl lib
+      * 708345 : liveadder: round when calculation length from duration
+      * 708438 : codecparsers: HEVC bitstream parser
+      * 708629 : codecparsers: Fix the quantization matrix scan order for h264
+      * 708688 : Message EISS and SCTE signaling sections on bus similar to PSI
+      * 708914 : Add openni2 plugin and openni2src element
+      * 709174 : Add avfvideosrc to the OS X build in applemedia
+      * 709180 : mpegts: Return GstMpegTsDescriptor in mpegts_get_descriptor_from_*
+      * 709454 : dvdspu: make palette change event sticky
+      * 709795 : curlsftpsink - new libcurl-based sink element for SFTP
+      * 710391 : geometrictransform: rotate: fix angle property help text
+      * 710759 : mpegts: fix uninitialized variable warnings
+      * 710810 : geometrictransform: Add a plugin for a 2D perspective transform
+      * 710855 : ivfparse: Port to 1.0
+      * 711009 : h264parse: Remove explicit PAR calculation and use the values provided by h264 codecparser
+      * 711086 : hlssink: doesn't have the sink flag set
+      * 711140 : vtenc: use proper release callback type in CVPixelBufferCreateWithPlanarBytes
+      * 711159 : eglglessink: remove unused functions in the eagl backend
+      * 711223 : Port cdaudio element to 1.
+      * 711606 : applemedia: coremediabuffer: use correct retain/release functions on CMSampleBufferRef buffer
+      * 711614 : avfvideosrc: set rank to GST_PRIMARY
+      * 711620 : curlftpsink: Create a temporary file during FTP transfer/upload
+      * 711844 : avfvideosrc: build failure
+      * 711849 : smoothstreaming: Better handling of multi audio tracks
+      * 714998 : d3dvideosink: force-aspect-ratio=false causes errors due to usage of uninitialised destination rectangle
+      * 719519 : mpegtsmux: Does not prevent plugging unparsed stream
+      * 720382 : dvbsuboverlay: fix reading of display window in display definition segment
+      * 720434 : srtp: add 256-bit keys support
+      * 721027 : mfcdec: doesn't work in odroid with kernel 3.8: dequeueing failed in input_dqbuf
+      * 721073 : shm: test_shm_sysmem_alloc unit test fails with timeout after some time
+      * 721293 : POTFILES.in is out of date
+      * 721682 : examples: tsparser: Add DVB teletext/subtitling parsing
+      * 721950 : assrender: handle video/x-raw(ANY) if downstream supports the GstVideoOverlayCompositionMeta API
+      * 722078 : schroenc: oggmux drops buffers from schroenc because of unset buffer offsets
+      * 722081 : h265parse: Fix segfault when parsing VPS
+      * 722101 : h265parser: fix a trivial overrun in a loop
+      * 722145 : tsdemux: fix memleak of PCROffsetCurrent
+      * 722240 : h265parse: update caps when receive VPS/SPS
+      * 722462 : tsdemux: Fix leak of PCROffsetGroup
+      * 722590 : applemedia: Fails to build on iOS: 'VideoToolbox/VideoToolbox.h' file not found
+      * 722669 : h265parser: Crashes on broken streams because of freeing uninitialized pointer
+      * 722699 : mpegtsmux: don't leak pad name when treating events
+      * 722934 : mxfdemux: don't use pull mode when the sequential scheduler flag is set
+      * 723243 : h264parse: Default framerate to 25/1 when no informations found
+      * 723268 : hlsdemux: Does not take into account stop time of seek events
+      * 723508 : applemedia: Fails to build on Mac OS X 10.7: 'VideoToolbox/VideoToolbox.h' file not found
+      * 723892 : mpegts: Some bugfixes regarding packetizing
+      * 723953 : mpegts: Unit test for library RFC
+      * 723995 : winks: configure test is broken - missing braces
+      * 724003 : winks: headers are not mentioned in Makefile.am
+      * 724034 : mpegts: parse extended event, component and content descriptors
+      * 724069 : mpegts: add terrestrial delivery system descriptor
+      * 724077 : shm: use shutdown() instead of close()
+      * 724100 : error: unknown type name 'gst_ks_clock'
+      * 724125 : curlsmtpsink: Timezone information is missed out in the sending out smtp email header
+      * 724255 : mpegts: Provide original binary data in the public API
+      * 724464 : mpegts: does not check data sizes when parsing descriptors
+      * 724699 : katedec: Katedec overwrites tags from oggdemux
+      * 724716 : tsparse: setting pipeline to PLAYING - > READY - > PLAYING is broken
+      * 724790 : dashdemux: live MPDs are immediately reloaded
+      * 724875 : dashdemux: attempts to fetch fragments before they're available.
+      * 724981 : mpegts: Add support for creation of SDT and service descriptor
+      * 725090 : debugutilsbad: fails gst-indent check
+      * 725134 : hlsdemux: null pointer deref if media playlist contains no media
+      * 725278 : add missed dvbsrc, mpegts docs
+      * 725412 : srtpenc: unref caps in sink query
+      * 725463 : change bandwidth to DVBv5-API
+      * 725481 : gst-plugins-bad: Ignore gcov intermediate files
+      * 725563 : tsdemux: Support DTS/DTS-HD bluray streams
+      * 725659 : wininetsrc: " iradio-mode " to default to TRUE
+      * 725893 : dvdspu: set proxy allocation flag on video sink pad
+      * 726028 : mpegvideoparse: Differentiate the mpeg-2 stream from mpeg-1 based on pic_ext also
+      * 726069 : frei0rfilter: memory corruption when the size of the incoming buffers change
+      * 726098 : sbcenc: Allow user to set channel-mode
+      * 726156 : watchdog: Add handling of paused state
+      * 726463 : dvbsuboverlay: handle video/x-raw(ANY) if downstream supports the GstVideoOverlayCompositionMeta API
+      * 726572 : fatal error: bcm_host.h: No such file or directory
+      * 726591 : W32: GL plugins can't be built in -bad
+      * 726752 : h264parser: should also expose a framerate in the case of interlaced samples
+      * 726802 : rfbsrc: doesn't send stream start event
+      * 726979 : mpegts: bugfix delivery system descriptor parsing
+      * 727104 : configure.ac: fix OSX host check
+      * 727125 : fatal error: GL/wglext.h: No such file or directory
+      * 727159 : mpegts: use g_slice_new0 and g_slice_free
+      * 727187 : mpegts: add data broadcast descriptor, stream indentifier descriptor
+      * 727306 : Decklinksrc won't initialize some models of capture cards (Patch included!)
+      * 727356 : mpegts: add dvb-t2 delivery system descriptor and typo fix
+      * 727385 : dashdemux: use correct print format for gint64
+      * 727403 : mpegts: add linkage, data_broadcast_id, private_data_specifier and parental_rating descriptors
+      * 727460 : mpegts: add atsc terrestrial virtual channel table
+      * 727512 : srtpdec: assertion when checking rtcp ssrc
+      * 727560 : mpegts: add frequency list, scrambling and dvb ca indentifier descriptor
+      * 727812 : directsoundsrc: CRITICAL, debug category not defined
+      * 727843 : glimagesink: shows only a black screen
+      * 727855 : camerabin: does not send an error if linking vfsrc pad to viewfinder queue fails
+      * 727857 : camerabin: allow " ANY " feature in viewfinderbin static pad templates
+      * 727885 : coremediabuffer: handle stride alignment
+      * 727889 : mxf: avoid dereferencing NULL pointer and leak fixes
+      * 727894 : liveadder: fix minor memory leak in caps query handler
+      * 727906 : smoothstreaming: using manifest before we have it in seeking query
+      * 727953 : avfvideosrc: check if downstream supports the video meta API
+      * 727977 : dvb: Protect against symbols added in DVB_API v5 minor version > 5
+      * 728107 : gl: No surface resizing logic on Android/iOS
+      * 728127 : glimagesink: fails to create window from gst-launch process if OS X terminal is fullscreen
+      * 728128 : glimagesink: swapped UV on OS X with avdec_h264
+      * 728249 : iosavassetsrc: port to 1.0
+      * 728439 : glimagesink: does not takes in account strides
+      * 728451 : glimagesink: expects a NSWindow instead of a NSView as the window handle
+      * 728761 : glimagesink: Deadlock on errors
+      * 728815 : GstGLMemory mix stride and width
+      * 728872 : GstGLBufferPool should avoid to allocate upload resources that are not going to be used for sure
+      * 728947 : glcolorscale: only black frames on GLESv2
+      * 726255 : y4mdec: Should check for VIDEO_META_API not CROP_META_API
+      * 711232 : Remove cdaudio
+      * 702041 : winks: Port to 1.0
 
 ==== Download ====
 
@@ -98,7 +243,123 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Adrien SCH
+      * Aleix Conchillo Flaqué
+      * Alessandro Decina
+      * Alex Ashley
+      * Alexey Chernov
+      * Amaury Medeiros
+      * Andoni Morales Alastruey
+      * Andres Gomez
+      * Andrey Utkin
+      * Andy Wingo
+      * Anthony Violo
+      * Antoni Silvestre
+      * Antonio Ospite
+      * Arnaud Vrac
+      * Aurélien Zanelli
+      * Benjamin Gaignard
+      * Blake Tregre
+      * Brendan Long
+      * Carlos Rafael Giani
+      * Chen Jie
+      * Chris Bass
+      * Chris Paulson-Ellis
+      * Christian Fredrik Kalager Schaller
+      * Christian Schaller
+      * Colin Macdonald
+      * Cong Zhong
+      * Dan Kegel
+      * David Hoyt
+      * David Schleef
+      * Davide Bertola
+      * Dominik Röttsches
+      * Duncan Palmer
       * Edward Hervey
+      * Eric Anholt
+      * Filippo Argiolas
+      * Gil Pedersen
+      * Gilles Dartiguelongue
+      * Greg Rutz
+      * Guillaume Desmottes
+      * Gwenole Beauchesne
+      * Haakon Sporsheim (ieei)
+      * Halley Zhao
+      * Haridass Selvaraj
+      * Jan Schmidt
+      * Javier Jardón
+      * Jesper Larsen
+      * Johan Dahlin
+      * Jonathan Matthew
+      * Jorge Zapata
+      * Josep Torra
+      * Julien
+      * Julien Isorce
+      * Julien Moutte
+      * Justin Joy
+      * Kipp Cannon
+      * L. Sorin
+      * LRN
+      * Li Xiaowei
+      * Lihua Liu
+      * Lubosz Sarnecki
+      * Luc Deschenaux
+      * Luis de Bethencourt
+      * Mariusz Buras
+      * Mark Nauwelaerts
+      * Matej Knopp
+      * Mathieu Duponchelle
+      * Matthew
+      * Matthew Waters
+      * Matthieu Bouron
+      * Michael Olbrich
+      * Miguel Casas-Sanchez
+      * Miguel París Díaz
+      * Miquel Àngel Farré
+      * Mohammed Sameer
+      * Nicholas Panayis
+      * Nicola Murino
+      * Nicolas Dufresne
+      * Olivier Crête
+      * Per x Johansson
+      * Philippe Normand
+      * Pierre Pouzol
+      * Piotr Drąg
+      * Pratheesh Gangadhar
+      * Raimo Järvi
+      * Reynaldo H. Verdejo Pinochet
+      * Rico Tzschichholz
+      * Roland Peffer
+      * Ronald S. Bultje
+      * Santiago Carot-Nemesio
       * Sebastian Dröge
+      * Sebastian Rasmussen
+      * Sjoerd Simons
+      * Sreerenj Balachandran
+      * Stefan Kost
+      * Stefan Ringel
+      * Stefan Sauer
+      * Steve Maynard
+      * Thiago Santos
+      * Thibault Saunier
+      * Thijs Vermeir
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Todd Agulnick
+      * Tonu Jaansoo
+      * Vincent Penquerc'h
+      * Vinson Lee
+      * Víctor Manuel Jáquez Leal
+      * Wang Xin-yu (王昕宇)
+      * Wei Feng
+      * Wim Taymans
+      * Xavi Artigas
+      * Zallesov
+      * Zhao, Halley
+      * duhui.lee
+      * julien
+      * julien User
+      * madmac
+      * unknown
+      * Руслан Ижбулатов
  
