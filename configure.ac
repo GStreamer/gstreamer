@@ -1691,55 +1691,6 @@ AG_GST_CHECK_FEATURE(SHM, [POSIX shared memory source and sink], shm, [
     fi
 ])
 
-dnl *** Video 4 Linux 2 ***
-dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
-dnl renamed to GST_V4L2 because of some conflict with kernel headers
-translit(dnm, m, l) AM_CONDITIONAL(USE_MFC, true)
-AG_GST_CHECK_FEATURE(MFC, [Multi Format Codec], mfc, [
-  AC_MSG_CHECKING([Checking for up to date v4l2 installation])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <sys/types.h>
-#ifdef __sun /* Solaris */
-#include <sys/types.h>
-#include <sys/videodev2.h>
-#elif __FreeBSD__
-#include <linux/videodev2.h>
-#else /* Linux */
-#include <linux/types.h>
-#define _LINUX_TIME_H
-#define __user
-#include <linux/videodev2.h>
-#endif
-#if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
-#error too early v4l2 version or no v4l2 at all
-#endif
-#if !defined(V4L2_PIX_FMT_H264)
-#error v4l2 version too old
-#endif
-    ]], [[
-return 0;
-    ]])],[
-      HAVE_MFC="yes"
-      AC_MSG_RESULT(yes)
-    ],[
-      HAVE_MFC="no"
-      AC_MSG_RESULT(no)
-
-      HAVE_VIDEODEV=no
-      AC_CHECK_HEADER(linux/videodev2.h, [ HAVE_VIDEODEV=yes ],
-      [
-        AC_CHECK_HEADER(sys/videodev2.h, [ HAVE_VIDEODEV=yes ])
-      ])
-
-      if test "x$HAVE_VIDEODEV" = "xyes"; then
-        AC_MSG_WARN([video4linux2 headers were found, but they're old.])
-        AC_MSG_WARN([Please update v4l2 to compile the MFC plugins])
-      else
-        AC_MSG_WARN([v4l2 was not found])
-      fi
-    ])
-])
-
 dnl check for Video CD
 translit(dnm, m, l) AM_CONDITIONAL(USE_VCD, true)
 AG_GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
@@ -3222,7 +3173,6 @@ sys/linsys/Makefile
 sys/opensles/Makefile
 sys/osxvideo/Makefile
 sys/qtwrapper/Makefile
-sys/mfc/Makefile
 sys/shm/Makefile
 sys/uvch264/Makefile
 sys/vcd/Makefile

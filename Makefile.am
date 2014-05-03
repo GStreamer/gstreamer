@@ -117,7 +117,8 @@ CRUFT_DIRS = \
 	$(top_srcdir)/ext/swfdec \
 	$(top_srcdir)/ext/tarkin \
 	$(top_srcdir)/ext/theora \
-	$(top_srcdir)/ext/vp8
+	$(top_srcdir)/ext/vp8 \
+	$(top_srcdir)/sys/mfc
 
 include $(top_srcdir)/common/cruft.mak
 
