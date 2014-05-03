@@ -1,23 +1,24 @@
 # Vietnamese Translation for GST Plugins Base.
-# Copyright © 2012 Free Software Foundation, Inc.
+# Bản dịch tiếng Việt dành cho GST Plugins Base.
+# Copyright © 2013 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
-# Trần Ngọc Quân <vnwildman@gmail.com>, 2012.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-20013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.1.4\n"
+"Project-Id-Version: gst-plugins-base-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2013-09-16 14:15+0700\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2013-12-11 07:50+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Team-Website: <http://translationproject.org/team/vi.html>\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Language-Team-Website: <http://translationproject.org/team/vi.html>\n"
 "X-Generator: LocFactoryEditor 1.8\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-Language: Vietnamese\n"
@@ -147,7 +148,7 @@ msgid "No decoder available for type '%s'."
 msgstr "Không có bộ giải mã sẵn sàng cho kiểu “%s”."
 
 msgid "No URI specified to play from."
-msgstr "Chưa ghi rõ URI từ đó cần phát."
+msgstr "Chưa chỉ định URI cần phát."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
@@ -208,6 +209,9 @@ msgstr "MSZH không mất gì (Lossless MSZH)"
 msgid "Run-length encoding"
 msgstr "Mã hoá độ dài chạy (Run-Length Encoding: RLE)"
 
+msgid "Timed Text"
+msgstr "Chữ được định thời"
+
 msgid "Subtitle"
 msgstr "Phụ đề"
 
@@ -233,27 +237,27 @@ msgid "Uncompressed video"
 msgstr "Video không nén"
 
 msgid "Uncompressed gray"
-msgstr "Màu xám không nén"
+msgstr "Đen trắng không nén"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "YUV 4:2:2 đóng gói không nén"
+msgstr "YUV %s đóng gói không nén"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "YUV 4:2:0 phẳng không nén"
+msgstr "%s YUV nửa phẳng không nén"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "YUV 4:2:0 phẳng không nén"
+msgstr "%s YUV phẳng không nén"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "%s %d-bit %s không nén"
+msgstr "﻿%2$s %1$d-bit pha màu không nén"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "%s %d-bit %s không nén"
+msgstr "﻿%2$s %1$d-bit không nén"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -264,7 +268,7 @@ msgstr "Âm thanh không nén"
 
 #, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Âm thanh %d-bit %s thô"
+msgstr "Âm thanh ﻿%2$s %1$d-bit thô"
 
 msgid "Audio CD source"
 msgstr "Nguồn đĩa CD âm thanh"
@@ -287,15 +291,15 @@ msgstr "Nguồn giao thức %s"
 
 #, c-format
 msgid "%s video RTP depayloader"
-msgstr "depayloader (bộ trừ trọng tải?) RTP phim %s"
+msgstr "phần mang trọng tải RTP phim %s"
 
 #, c-format
 msgid "%s audio RTP depayloader"
-msgstr "depayloader (bộ trừ trọng tải?) RTP âm thanh %s"
+msgstr "phần mang trọng tải RTP âm thanh %s"
 
 #, c-format
 msgid "%s RTP depayloader"
-msgstr "depayloader (bộ trừ trọng tải?) RTP %s"
+msgstr "phần mang trọng tải RTP %s"
 
 #, c-format
 msgid "%s demuxer"
@@ -307,15 +311,15 @@ msgstr "bộ giải mã %s"
 
 #, c-format
 msgid "%s video RTP payloader"
-msgstr "payloader (bộ cộng trọng tải?) RTP phim %s"
+msgstr "phần trọng tải RTP phim %s"
 
 #, c-format
 msgid "%s audio RTP payloader"
-msgstr "payloader (bộ cộng trọng tải?) RTP âm thanh %s"
+msgstr "phần trọng tải RTP âm thanh %s"
 
 #, c-format
 msgid "%s RTP payloader"
-msgstr "payloader (bộ cộng trọng tải?) RTP %s"
+msgstr "phần trọng tải RTP %s"
 
 #, c-format
 msgid "%s muxer"
@@ -516,26 +520,41 @@ msgid "Initial key in which the sound starts"
 msgstr "Khóa khởi tạo trong cái mà âm thanh khởi chạy"
 
 msgid "Buffering..."
+msgstr "Đang đệm..."
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "In ra thông tin phiên bản và thoát"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Bộ chứa video được dùng (mặc định là autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Bộ chứa âm thanh được dùng (mặc định là autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Bật phát lại không khe"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Cách dùng: %s TẬP-TIN1|URI1 [TẬP-TIN2|URI2] [TẬP-TIN3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "Bạn phải cung cấp ít nhất là một tên tập tin hay URI để phát."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "%s YUV %s không nén"

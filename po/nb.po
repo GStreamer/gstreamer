@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.0.3\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2012-12-21 21:43+0100\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2014-01-22 17:42+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "Language: nb_NO\n"
@@ -40,7 +40,7 @@ msgid "Could not open audio device for playback."
 msgstr "Kunne ikke åpne lydenheten for avspilling."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "Feil ved sending til lydenhet. Enheten er frakoblet."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Kunne ikke åpne enhet for opptak i monomodus."
@@ -62,7 +62,7 @@ msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åpne lydenheten for opptak."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "Feil ved opptak fra lydenhet. Enheten er frakoblet."
 
 msgid "Could not open CD device for reading."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
@@ -92,9 +92,8 @@ msgstr "Kunne ikke bestemme type strøm."
 msgid "This appears to be a text file"
 msgstr "Dette ser ut som en tekstfil"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Kunne ikke opprette elementet «decodebin»"
+msgstr "Kunne ikke opprette elementet «uridecodebin»"
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -205,6 +204,9 @@ msgstr "Tapsfritt MSZH"
 msgid "Run-length encoding"
 msgstr "Kjørelengde-koding"
 
+msgid "Timed Text"
+msgstr "Tidsbestemt tekst"
+
 msgid "Subtitle"
 msgstr "Undertekst"
 
@@ -232,25 +234,25 @@ msgstr "Ukomprimert video"
 msgid "Uncompressed gray"
 msgstr "Ukomprimert grå"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Ukomprimert pakket YUV 4:2:2"
+msgstr "Ukomprimert pakket YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Ukomprimert pakket YUV 4:2:0"
+msgstr "Ukomprimert semi-planar YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Ukomprimert pakket YUV 4:2:0"
+msgstr "Ukomprimert planar YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Ukomprimert %s%d-bit %s"
+msgstr "Ukomprimert palettopmimert %d-bit %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Ukomprimert %s%d-bit %s"
+msgstr "Ukomprimert %d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -503,32 +505,47 @@ msgid "unparsed id3v2 tag frame"
 msgstr "Utolket id3v2 merkeramme"
 
 msgid "musical-key"
-msgstr ""
+msgstr "musikal-tast"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Innledende tast der lyden begynner"
 
 msgid "Buffering..."
+msgstr "Bufrer ..."
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Skriv ut versjonsinformasjon og avslutt"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Video-sink som skal brukes (standard er autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Lyd-sink som skal brukes (standard er autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Aktiver sømløs avspilling"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Bruk: %s FIL1|URI1 [FILE|URI2] [FILE|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "Du må ha med minst ett filnavn eller nettadresse å spille."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "Ukomprimert %s YUV %s"

@@ -4,14 +4,14 @@
 #
 # Miloslav Trmac <mitr@volny.cz>, 2004.
 # Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010, 2011.
-# Marek Černocký <marek@manet.cz>, 2013.
+# Marek Černocký <marek@manet.cz>, 2013, 2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.1.4\n"
+"Project-Id-Version: gst-plugins-base-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2013-09-18 09:38+0200\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2014-03-09 12:37+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -207,6 +207,9 @@ msgstr "Bezeztrátové MSZH"
 msgid "Run-length encoding"
 msgstr "RLE (Run-Length Encoding)"
 
+msgid "Timed Text"
+msgstr "Timed Text"
+
 msgid "Subtitle"
 msgstr "Titulek"
 
@@ -234,25 +237,25 @@ msgstr "Nekomprimované video"
 msgid "Uncompressed gray"
 msgstr "Nekomprimované stupně šedi"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Nekomprimovaný %s YUV %s"
+msgstr "Nekomprimovaný zabalený YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Nekomprimovaný %s YUV %s"
+msgstr "Nekomprimovaný poloplanární YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Nekomprimovaný %s YUV %s"
+msgstr "Nekomprimovaný planární YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Nekomprimovaný %s %dbitový %s"
+msgstr "Nekomprimovaný %dbitový %s s paletou"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Nekomprimovaný %s %dbitový %s"
+msgstr "Nekomprimovaný %dbitový %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -513,23 +516,38 @@ msgid "Initial key in which the sound starts"
 msgstr "Počáteční klíčové místo, od kterého se má zvuk spouštět"
 
 msgid "Buffering..."
+msgstr "Ukládá se do vyrovnávací paměti…"
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Vypsat informace o verzi a skončit"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Spotřebič videa, který se má použít (výchozí je autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Spotřebič zvuku, který se má použít (výchozí je autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Zapnout přehrávání bez mezer"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Použítí: %s SOUBOR1|URI1 [SOUBOR2|URI2] [SOUBOR3|URI3] …"
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "Musíte zadat minimálně jeden název souboru nebo adresu URI k přehrání."

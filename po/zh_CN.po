@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
 "PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -201,6 +201,9 @@ msgstr "无损 MSZH"
 
 msgid "Run-length encoding"
 msgstr "Run-length 编码"
+
+msgid "Timed Text"
+msgstr ""
 
 msgid "Subtitle"
 msgstr ""
@@ -513,6 +516,9 @@ msgstr ""
 msgid "Buffering..."
 msgstr ""
 
+msgid "Clock lost, selecting a new one\n"
+msgstr ""
+
 msgid "Print version information and exit"
 msgstr ""
 
@@ -523,6 +529,18 @@ msgid "Audio sink to use (default is autoaudiosink)"
 msgstr ""
 
 msgid "Enable gapless playback"
+msgstr ""
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format

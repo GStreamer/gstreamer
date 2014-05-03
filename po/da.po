@@ -31,10 +31,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.0.3\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2013-01-01 16:38+0100\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2013-12-08 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -63,7 +63,7 @@ msgid "Could not open audio device for playback."
 msgstr "Kunne ikke åbne lydenhed til afspilning."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "Kunne ikke sende til lydenhed. Enheden er blevet frakoblet."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Kunne ikke optage fra enheden i mono-tilstand."
@@ -85,7 +85,7 @@ msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åbne lydenhed til optagelse."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "Kunne ikke optage fra lydenhed. Enheden er blevet frakoblet."
 
 msgid "Could not open CD device for reading."
 msgstr "Kunne ikke læse fra cd-enhed."
@@ -101,7 +101,7 @@ msgstr "Intern datastrømsfejl."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "'%s' elementet mangler - check din GStreamer installation."
+msgstr "Elementet »%s« mangler - kontroller din GStreamer-installation."
 
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
@@ -116,7 +116,7 @@ msgid "This appears to be a text file"
 msgstr "Denne fremstår som en tekstfil"
 
 msgid "Could not create \"uridecodebin\" element."
-msgstr ""
+msgstr "Kunne ikke oprette elementet »uridecodebin«."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -165,14 +165,14 @@ msgstr "Kan ikke afspille en tekstfil uden video eller visualiseringer."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Ingen dekoder tilgængelig for type '%s'."
+msgstr "Ingen dekoder tilgængelig for type »%s«."
 
 msgid "No URI specified to play from."
 msgstr "Ingen angivet URI til afspilning."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "Ugyldig URI \"%s\"."
+msgstr "Ugyldig URI »%s«."
 
 msgid "This stream type cannot be played yet."
 msgstr "Denne type lydstrøm kan ikke afspilles endnu."
@@ -180,14 +180,14 @@ msgstr "Denne type lydstrøm kan ikke afspilles endnu."
 # har beholdt »er«
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Ingen URI-håndtering er implementeret for \"%s\"."
+msgstr "Ingen URI-håndtering er implementeret for »%s«."
 
 msgid "Source element is invalid."
 msgstr "Kildeelement er ugyldigt."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Der opstod en fejl under data-overførsel til \"%s:%d\"."
+msgstr "Der opstod en fejl under data-overførsel til »%s:%d«."
 
 msgid "Can't record audio fast enough"
 msgstr "Kan ikke optage lyd hurtigt nok"
@@ -228,6 +228,9 @@ msgstr "Lossless MSZH"
 msgid "Run-length encoding"
 msgstr "Kørsels-længde indkodning"
 
+msgid "Timed Text"
+msgstr "Tidsplanlagt tekst"
+
 msgid "Subtitle"
 msgstr "Undertekst"
 
@@ -255,25 +258,27 @@ msgstr "Ukomprimeret video"
 msgid "Uncompressed gray"
 msgstr "Ukomprimeret gråtone"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Ukomprimeret %s YUV %s"
+msgstr "Ukomprimeret pakket YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Ukomprimeret %s YUV %s"
+msgstr "Ukomprimeret semi-planar YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Ukomprimeret %s YUV %s"
+msgstr "Ukomprimeret planar YUV %s"
 
-#, fuzzy, c-format
+# (transitive, computer graphics) To encode (an image) efficiently by mapping its pixels to a palette
+# containing only those colours that are actually present in the image.
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Ukomprimeret %s%d-bit %s"
+msgstr "Ukomprimeret paletoptimeret %d-bit %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Ukomprimeret %s%d-bit %s"
+msgstr "Ukomprimeret %d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -541,29 +546,44 @@ msgid "unparsed id3v2 tag frame"
 msgstr "ufortolket id3v2-mærkeramme"
 
 msgid "musical-key"
-msgstr ""
+msgstr "musik-nøgle"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Oprindelig nøgle hvor musikken starter"
 
 msgid "Buffering..."
+msgstr "Mellemlagrer ..."
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Vis versionsinformation og afslut"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Brug denne videokanal (standard er autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Brud denne lydkanal (standard er autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Aktiver afspilning uden huller"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Brug: %s FIL1|URI1 [FIL2|URI2] [FIL3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "Du skal angive mindst et filnavn eller en adresse for at afspille."

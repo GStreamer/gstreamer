@@ -4,13 +4,15 @@
 # Fabrício Godoy <skarllot@gmail.com>, 2008-2013.
 #
 # PCM -> PCM
+# buffering -> preenchendo buffer
+# sink -> consumidor
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.0.3\n"
+"Project-Id-Version: gst-plugins-base-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2013-08-20 00:39-0300\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2013-12-29 17:33-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -42,6 +44,7 @@ msgstr "Não foi possível abrir o dispositivo de áudio para reprodução."
 
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr ""
+"Erro de saída para o dispositivo de áudio. O dispositivo foi desconectado."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Não foi possível abrir o dispositivo para gravação em mono."
@@ -65,6 +68,7 @@ msgstr "Não foi possível abrir o dispositivo de áudio para gravação."
 
 msgid "Error recording from audio device. The device has been disconnected."
 msgstr ""
+"Erro de gravação para o dispositivo de áudio. O dispositivo foi desconectado."
 
 msgid "Could not open CD device for reading."
 msgstr "Não foi possível abrir o dispositivo de CD para leitura."
@@ -94,9 +98,8 @@ msgstr "Não foi possível determinar o tipo de fluxo"
 msgid "This appears to be a text file"
 msgstr "Este parece ser um arquivo de texto"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Não foi possível criar o elemento \"decodebin\"."
+msgstr "Não foi possível criar o elemento \"uridecodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -208,6 +211,9 @@ msgstr "MSZH Sem Perdas"
 msgid "Run-length encoding"
 msgstr "Codificação Run-length"
 
+msgid "Timed Text"
+msgstr "Texto Temporizado"
+
 msgid "Subtitle"
 msgstr "Legenda"
 
@@ -235,25 +241,25 @@ msgstr "Vídeo sem compressão"
 msgid "Uncompressed gray"
 msgstr "Arquivo monocromático sem compressão"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "YUV 4:2:2 empacotado sem compressão"
+msgstr "YUV %s empacotado sem compressão"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "YUV 4:2:0 plano sem compressão"
+msgstr "YUV %s semi-plano sem compressão"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "YUV 4:2:0 plano sem compressão"
+msgstr "YUV %s plano sem compressão"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "%1$s de %2$d bits %3$s sem compressão"
+msgstr "%2$s de %1$d bits sem compressão com paletas"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "%1$s de %2$d bits %3$s sem compressão"
+msgstr "%2$s de %1$d bits sem compressão"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -512,32 +518,49 @@ msgid "unparsed id3v2 tag frame"
 msgstr "quadro com etiqueta ID3v2 sem análise"
 
 msgid "musical-key"
-msgstr ""
+msgstr "acorde musical"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Nota ou acorde inicial da música"
 
 msgid "Buffering..."
+msgstr "Preenchendo buffer..."
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Exibe informações de versão e sai"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr ""
+"Elemento consumidor de vídeo utilizado (predefinido para autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
 msgstr ""
+"Elemento consumidor de áudio utilizado (predefinido para autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Ativar reprodução sem intervalos"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Uso: %s ARQ1|URI1 [ARQ2|URI2] [ARQ3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "Você deve fornecer ao menos um nome de arquivo ou URI para reproduzir."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "%2$s YUV %1$s sem compressão"

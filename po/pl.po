@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.1.4\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2013-09-15 10:32+0200\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2013-12-08 08:58+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -212,6 +212,9 @@ msgstr "Lossless MSZH"
 msgid "Run-length encoding"
 msgstr "Kodowanie RLE"
 
+msgid "Timed Text"
+msgstr "Tekst w czasie"
+
 msgid "Subtitle"
 msgstr "Podpisy"
 
@@ -239,25 +242,25 @@ msgstr "Nieskompresowany obraz"
 msgid "Uncompressed gray"
 msgstr "Nieskompresowane szarości"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Nieskompresowany %s YUV %s"
+msgstr "Nieskompresowany upakowany YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Nieskompresowany %s YUV %s"
+msgstr "Nieskompresowany dwuwarstwowy YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Nieskompresowany %s YUV %s"
+msgstr "Nieskompresowany warstwowy YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Nieskompresowany %s%d-bitowy %s"
+msgstr "Nieskompresowany z paletą %d-bitowy %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Nieskompresowany %s%d-bitowy %s"
+msgstr "Nieskompresowany %d-bitowy %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -515,23 +518,38 @@ msgid "Initial key in which the sound starts"
 msgstr "Początkowy klucz, w którym zaczyna się dźwięk"
 
 msgid "Buffering..."
+msgstr "Buforowanie..."
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Wypisanie informacji o wersji i zakończenie"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Element pochłaniający obraz (domyślny to autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Element pochłaniający dźwięk (domyślny to autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Włączenie odtwarzania bez przerw"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Składnia: %s PLIK1|URI1 [PLIK2|URI2] [PLIK3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "Trzeba podać przynajmniej jedną nazwę pliku lub URI do odtworzenia."

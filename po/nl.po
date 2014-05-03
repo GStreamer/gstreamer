@@ -1,13 +1,13 @@
-# translation of gst-plugins-base-1.1.4.po to Dutch
+# translation of gst-plugins-base-1.2.1.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.1.4\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2013-09-15 13:29+0200\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2014-01-09 13:01+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -205,6 +205,9 @@ msgstr "Lossless MSZH"
 msgid "Run-length encoding"
 msgstr "Run-length encoding (RLE)"
 
+msgid "Timed Text"
+msgstr "Van tijd voorziene tekst"
+
 msgid "Subtitle"
 msgstr "Ondertitel"
 
@@ -232,25 +235,25 @@ msgstr "Niet-gecomprimeerde video"
 msgid "Uncompressed gray"
 msgstr "Niet-gecomprimeerd grijs"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Niet-gecomprimeerde packed YUV 4:2:2"
+msgstr "Niet-gecomprimeerde packed YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Niet-gecomprimeerde planar YUV 4:2:0"
+msgstr "Niet-gecomprimeerde planar YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Niet-gecomprimeerde planar YUV 4:2:0"
+msgstr "Niet-gecomprimeerde planar YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Niet-gecomprimeerd %s%d-bits %s"
+msgstr "Niet-gecomprimeerd gepalletteerd %d-bits %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Niet-gecomprimeerd %s%d-bits %s"
+msgstr "Niet-gecomprimeerd %d-bits %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -517,26 +520,41 @@ msgid "Initial key in which the sound starts"
 msgstr "Initiële sleutel waarin het geluid begint"
 
 msgid "Buffering..."
+msgstr "In buffer opslaan..."
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Versie-informatie afdrukken en sluiten"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Te gebruiken video-sink (standaard is autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Te gebruiken audio-sink (standaard is autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Afspelen activeren zonder gaten"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Gebruik: %s BESTAND1|URI1 [BESTAND2|URI2] [BESTAND3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "U moet minstens één bestandsnaam of URI leveren om af te spelen."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "Niet-gecomprimeerd %s YUV %s"

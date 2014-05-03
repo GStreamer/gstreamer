@@ -1,16 +1,16 @@
-# German messages for gst-plugins-base 1.0.3
+# German messages for gst-plugins-base 1.2.1
 # Copyright © 2006 Karl Eichwalder
 # This file is distributed under the same license as the gst-plugins-base package.
 # Karl Eichwalder <ke@suse.de>, 2006.
 # Mario Blättermann <mariobl@gnome.org>, 2010.
-# Christian Kirbach <christian.kirbach@gmail.com>, 2009, 2010, 2011, 2012.
+# Christian Kirbach <christian.kirbach@gmail.com>, 2009, 2010, 2011, 2012, 2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.0.3\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2012-11-28 19:39+0100\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2013-12-16 00:25+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -18,6 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.5.4\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Gerät konnte nicht zur Wiedergabe in Mono geöffnet werden."
@@ -40,7 +41,7 @@ msgid "Could not open audio device for playback."
 msgstr "Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "Fehler bei Ausgabe aus dem Audio-Gerät. Das Gerät wurde getrennt."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Gerät konnte nicht zur Aufnahme in Mono geöffnet werden."
@@ -63,7 +64,7 @@ msgid "Could not open audio device for recording."
 msgstr "Audio-Gerät konnte nicht zur Aufnahme geöffnet werden."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "Fehler bei Aufnahme vom Audio-Gerät. Das Gerät wurde getrennt."
 
 msgid "Could not open CD device for reading."
 msgstr "Das CD-Laufwerk konnte nicht zum Lesen geöffnet werden."
@@ -94,9 +95,8 @@ msgstr "Der Typ des Datenstroms konnte nicht bestimmt werden"
 msgid "This appears to be a text file"
 msgstr "Dies scheint eine Textdatei zu sein"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Das Element »decodebin« konnte nicht erstellt werden."
+msgstr "Das Element »uridecodebin« konnte nicht erstellt werden."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -208,6 +208,9 @@ msgstr "verlustloses MSZH"
 msgid "Run-length encoding"
 msgstr "RLE-Codierung"
 
+msgid "Timed Text"
+msgstr "Zeitlich abgepasster Text"
+
 msgid "Subtitle"
 msgstr "Untertitel"
 
@@ -235,25 +238,25 @@ msgstr "Unkomprimiertes Video"
 msgid "Uncompressed gray"
 msgstr "Unkomprimiertes Grau"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Unkomprimiertes gepacktes YUV 4:2:2"
+msgstr "Unkomprimiertes gepacktes YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Unkomprimiertes ungepacktes YUV 4:2:0"
+msgstr "Unkomprimiertes halbflaches YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Unkomprimiertes ungepacktes YUV 4:2:0"
+msgstr "Unkomprimiertes flaches YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Unkomprimiertes %s%d-Bit %s"
+msgstr "Unkomprimiertes palletiertes %d-Bit %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Unkomprimiertes %s%d-Bit %s"
+msgstr "Unkomprimiertes %d-Bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -510,32 +513,49 @@ msgid "unparsed id3v2 tag frame"
 msgstr "unverarbeiteter ID3v2-Kennzeichnungsrahmen"
 
 msgid "musical-key"
-msgstr ""
+msgstr "musical-key"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Anfänglicher Schlüssel, in dem der Ton startet"
 
 msgid "Buffering..."
+msgstr "Zwischenspeichern …"
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Versionsinformationen ausgeben und beenden"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Zu verwendende Video-Ziel (Voreinstellung ist »autovideosink«)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Zu verwendende Audio-Ziel (Voreinstellung ist »autoaudiosink«)"
 
 msgid "Enable gapless playback"
+msgstr "Lückenlose Wiedergabe einschalten"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Aufruf: %s DATEI1|URI1 [DATEI2|URI2] [DATEI3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
 msgstr ""
+"Sie müssen mindestens einen Dateinamen oder eine Adresse zur Wiedergabe "
+"angeben."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "Unkomprimiertes %s YUV %s"

@@ -6,10 +6,10 @@
 # Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.1.4\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2013-09-14 22:27+0300\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2013-12-07 22:59+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -209,6 +209,9 @@ msgstr "MSZH без втрат"
 msgid "Run-length encoding"
 msgstr "Кодування Run-length"
 
+msgid "Timed Text"
+msgstr "Timed Text"
+
 msgid "Subtitle"
 msgstr "Субтитри"
 
@@ -236,25 +239,25 @@ msgstr "Нестиснене відео"
 msgid "Uncompressed gray"
 msgstr "Нестиснене сіре зображення"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Нестиснений пакетний YUV 4:2:2"
+msgstr "Нестиснений пакетний YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Нестиснений планарний YUV 4:2:0"
+msgstr "Нестиснений напівпланарний YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Нестиснений планарний YUV 4:2:0"
+msgstr "Нестиснений планарний YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Нестиснене %s%d-бітове %s"
+msgstr "Нестиснений пакетний %d-бітовий %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Нестиснене %s%d-бітове %s"
+msgstr "Нестиснений %d-бітовий %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -523,26 +526,42 @@ msgid "Initial key in which the sound starts"
 msgstr "Початкова тональність, якою розпочинається звук"
 
 msgid "Buffering..."
+msgstr "Буферизація…"
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Показати дані щодо версії і завершити роботу"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Приймач відеоданих, яким слід скористатися (типовим є autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Приймач аудіоданих, яким слід скористатися (типовим є autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Увімкнути неперервне відтворення"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Користування: %s ФАЙЛ1|АДРЕСА1 [ФАЙЛ2|АДРЕСА2] [ФАЙЛ3|АДРЕСА3] ..."
 
 msgid "You must provide at least one filename or URI to play."
 msgstr ""
+"Вам слід вказати принаймні одну назву файла або адресу для відтворення."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "Нестиснене %s, YUV %s"

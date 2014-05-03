@@ -1,14 +1,14 @@
 # Slovak translations for gst-plugins-base.
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2010-11-08 15:34+0100\n"
-"Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2014-01-30 10:57+0100\n"
+"Last-Translator: Peter Tuharsky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
@@ -41,7 +41,7 @@ msgid "Could not open audio device for playback."
 msgstr "Nepodarilo sa otvoriť zvukové zariadenie pre prehrávanie."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "Chýba výstupu na zvukové zariadenie. Toto zariadenie bolo odpojené."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Nepodarilo sa otvoriť zariadenie pre nahrávanie v režime mono."
@@ -64,7 +64,7 @@ msgid "Could not open audio device for recording."
 msgstr "Nepodarilo sa otvoriť zvukové zariadenie pre nahrávanie."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "Chýba záznamu zo zvukového zariadenia. Toto zariadenie bolo odpojené."
 
 msgid "Could not open CD device for reading."
 msgstr "Nepodarilo sa otvoriť zariadenie CD na čítanie."
@@ -89,14 +89,13 @@ msgstr ""
 "nainštalovaný."
 
 msgid "Could not determine type of stream"
-msgstr "Nepodarilo sa zistiť typ prádu údajov"
+msgstr "Nepodarilo sa zistiť typ prúdu údajov"
 
 msgid "This appears to be a text file"
 msgstr "Tento súbor je asi textový"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Nepodarilo sa vytvoriť prvok \"decodebin\""
+msgstr "Nepodarilo sa vytvoriť prvok \"uridecodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -120,7 +119,7 @@ msgid "Custom text sink element is not usable."
 msgstr "Používateľský textový prvok sink nie je použiteľný."
 
 msgid "No volume control found"
-msgstr "+Ziadny ovl8da4 hlasitosti sa nena3iel"
+msgstr "Žiadny ovládač hlasitosti sa nenašiel"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
@@ -207,69 +206,66 @@ msgstr "Bezstratové MSZH"
 msgid "Run-length encoding"
 msgstr "Kódovanie počas prehrávania"
 
+msgid "Timed Text"
+msgstr "Časovaný text"
+
 msgid "Subtitle"
-msgstr ""
+msgstr "Titulky"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "Titulkový formát TMPlayer"
+msgstr "Formát titulkov MPL2"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Formát titulkov sami"
+msgstr "Formát titulkov DKS"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Formát titulkov Kate"
+msgstr "Formát titulkov QTtext"
 
 msgid "Sami subtitle format"
 msgstr "Formát titulkov sami"
 
 msgid "TMPlayer subtitle format"
-msgstr "Titulkový formát TMPlayer"
+msgstr "Formát titulkov TMPlayer"
 
 msgid "Kate subtitle format"
 msgstr "Formát titulkov Kate"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "Nekomprimovaný YUV"
+msgstr "Nekomprimované video"
 
-#, fuzzy
 msgid "Uncompressed gray"
 msgstr "Nekomprimovaný šedotónový obrázok"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Nekomprimovaný pakovaný YUV 4:2:2"
+msgstr "Nekomprimovaný pakovaný YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Nekomprimovaný planar YUV 4:2:0"
+msgstr "Nekomprimovaný semi-planár YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Nekomprimovaný planar YUV 4:2:0"
+msgstr "Nekomprimovaný planár YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Nekomprimovaný paletizovaný %d-bit %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Nekomprimovaný paletizovaný %d-bit %s"
+msgstr "Nekomprimovaný %d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Verzie %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "Nekomprimovaný YUV"
+msgstr "Nekomprimovaný zvuk"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Surový %d-bit PCM zvuk"
+msgstr "Surový %d-bit %s zvuk"
 
 msgid "Audio CD source"
 msgstr "Zdroj zvukové CD"
@@ -383,112 +379,110 @@ msgid "MusicBrainz TRM ID"
 msgstr "ID TRM MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr "zachytávacia rýchlosť uzávierky"
+msgstr "rýchlosť uzávierky"
 
 msgid "Shutter speed used when capturing an image, in seconds"
 msgstr "Rýchlosť uzávierky použitá pri zachytávaní obrázku, v sekundách"
 
 msgid "capturing focal ratio"
-msgstr "zachytávacií pomer F"
+msgstr "pomer F"
 
 msgid "Focal ratio (f-number) used when capturing the image"
 msgstr "Pomer (číslo F) použitý pri zachytávaní obrázku"
 
 msgid "capturing focal length"
-msgstr "zachytávacia ohnisková vzdialenosť"
+msgstr "ohnisková vzdialenosť"
 
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Ohnisková vzdialenosť objektívu pri zachytávaní obrázku, v mm"
 
 msgid "capturing digital zoom ratio"
-msgstr "zachytávací pomer digitálneho priblíženia"
+msgstr "pomer digitálneho priblíženia"
 
 msgid "Digital zoom ratio used when capturing an image"
 msgstr "Pomer digitálneho priblíženia použitý pri zachytávaní obrázku"
 
 msgid "capturing iso speed"
-msgstr "zachytávacia rýchlosť ISO"
+msgstr "rýchlosť ISO"
 
 msgid "The ISO speed used when capturing an image"
-msgstr "Rýchlosť ISO použítá pri zachytávaní obrázku"
+msgstr "Rýchlosť ISO použitá pri zachytávaní obrázku"
 
 msgid "capturing exposure program"
-msgstr "zachytávací program expozície"
+msgstr "program expozície"
 
 msgid "The exposure program used when capturing an image"
-msgstr "Program expozície použitý pri zachytávaní obrázko"
+msgstr "Program expozície použitý pri zachytávaní obrázku"
 
 msgid "capturing exposure mode"
-msgstr "zachytávací režim expozície"
+msgstr "režim expozície"
 
 msgid "The exposure mode used when capturing an image"
 msgstr "Režim expozície použitý pri zachytávaní obrázku"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "zachytávací režim expozície"
+msgstr "kompenzácia expozície"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "Režim expozície použitý pri zachytávaní obrázku"
+msgstr "Režim kompenzácie expozície použitý pri zachytávaní obrázku"
 
 msgid "capturing scene capture type"
-msgstr "zachytávací typ zachytenia scény"
+msgstr "scénický režim"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr "Režim zachytenia scény použitý pri zachytávaní obrázku"
+msgstr "Scénický režim použitý pri zachytávaní obrázku"
 
 msgid "capturing gain adjustment"
-msgstr "zachytávacie nastavenie zisku"
+msgstr "nastavenie zisku"
 
 msgid "The overall gain adjustment applied on an image"
 msgstr "Celkové nastavenie zisku aplikovaného na obrázok"
 
 msgid "capturing white balance"
-msgstr "zachytávacie vyváženie bielej"
+msgstr "vyváženie bielej"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Režim vyváženia bielej nastavený pri zachytávaní obrázku"
 
 msgid "capturing contrast"
-msgstr "zachytávací kontrast"
+msgstr "kontrast"
 
 msgid "The direction of contrast processing applied when capturing an image"
 msgstr "Smerovanie spracovania kontrastu použitého pri zachytávaní obrázku"
 
 msgid "capturing saturation"
-msgstr "zachytávacia sýtosť"
+msgstr "sýtosť"
 
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr "Smerovanie spracovania sýtosti použitého pri zachytávaní obrázku"
 
 msgid "capturing sharpness"
-msgstr "zachytávacia ostrosť"
+msgstr "ostrosť"
 
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr "Smerovanie spracovania ostrosti použitého pri zachytávaní obrázku"
 
 msgid "capturing flash fired"
-msgstr "zachytávací blesk"
+msgstr "blesk"
 
 msgid "If the flash fired while capturing an image"
 msgstr "Bol alebo nebol použitý blesk pri zachytávaní obrázku"
 
 msgid "capturing flash mode"
-msgstr "zachytávací režim blesku"
+msgstr "režim blesku"
 
 msgid "The selected flash mode while capturing an image"
 msgstr "Vybraný režim blesku pri zachytávaní obrázku"
 
 msgid "capturing metering mode"
-msgstr "zachytávacie meranie blesku"
+msgstr "meranie blesku"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr "Režim merania blesku pri zisťovaní expozície pre zachytenie obrázku"
 
 msgid "capturing source"
-msgstr "zachytávací zdroj"
+msgstr "zdroj"
 
 msgid "The source or type of device used for the capture"
 msgstr "Zdroj alebo typ zariadenia použitý na zachytenie"
@@ -506,22 +500,25 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Cieľová zvislá hustota pixlov média (obrázku/videa) v ppi"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "ID3v2 rámec"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "nespracovaný id3v2 značkovací rámec"
 
 msgid "musical-key"
-msgstr ""
+msgstr "hudobný-kľúč"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Úvodný kľúč v ktorom zvuk začína"
 
 msgid "Buffering..."
+msgstr "Napĺňam vyrovnávaciu pamäť..."
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Zobraziť informáciu o verzii a skončiť"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr ""
@@ -530,18 +527,26 @@ msgid "Audio sink to use (default is autoaudiosink)"
 msgstr ""
 
 msgid "Enable gapless playback"
+msgstr "Povoliť plynulé prehrávanie"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Použitie: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
-
-#, fuzzy
-#~ msgid "Uncompressed %s YUV %s"
-#~ msgstr "Nekomprimovaný YUV"
+msgstr "Ak chcete prehrávať, musíte zadať aspoň jeden názov súboru alebo URI."
 
 #~ msgid "Master"
 #~ msgstr "Hlavný"
@@ -575,42 +580,6 @@ msgstr ""
 
 #~ msgid "Capture"
 #~ msgstr "Zachytávanie"
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Spojenie s %s:%d bolo odmietnuté."
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Nekomprimovaný planar YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Nekomprimovaný pakovaný YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Nekomprimovaný pakovaný YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Nekomprimovaný pakovaný YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Nekomprimovaný pakovaný YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Nekomprimovaný planar YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Nekomprimovaný planar YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Nekomprimovaný čierno-biely Y-plane"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Surový PCM zvuk"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Surový %d-bit zvuk s pohyblivou desatinnou čiarkou"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Surový zvuk s pohyblivou desatinnou čiarkou"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Nepodarilo sa otvoriť vfs súbor \"%s\" pre zápis: %s."
@@ -658,6 +627,48 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Chýbajú prvky autoaudiosink aj alsasink."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Chyba pri posielaní hlavičky gdp údajov do \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Chyba pri posielaní gdp záťažových údajov do \"%s:%d\"."
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Spojenie s %s:%d bolo odmietnuté."
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Nekomprimovaný planar YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Nekomprimovaný pakovaný YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Nekomprimovaný pakovaný YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Nekomprimovaný pakovaný YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Nekomprimovaný pakovaný YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Nekomprimovaný planar YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Nekomprimovaný planar YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Nekomprimovaný čierno-biely Y-plane"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Surový PCM zvuk"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Surový %d-bit zvuk s pohyblivou desatinnou čiarkou"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Surový zvuk s pohyblivou desatinnou čiarkou"
+
 #~ msgid "No device specified."
 #~ msgstr "Nebolo zadané zariadenie."
 
@@ -669,12 +680,6 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Nepodarilo sa otvoriť zariadenie  \"%s\" pre čítanie a zápis."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Chyba pri posielaní hlavičky gdp údajov do \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Chyba pri posielaní gdp záťažových údajov do \"%s:%d\"."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Nemôžem zobrazovať naraz textové titulky aj podobrázky."

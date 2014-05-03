@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -204,6 +204,9 @@ msgid "Lossless MSZH"
 msgstr ""
 
 msgid "Run-length encoding"
+msgstr ""
+
+msgid "Timed Text"
 msgstr ""
 
 msgid "Subtitle"
@@ -511,6 +514,9 @@ msgstr ""
 msgid "Buffering..."
 msgstr ""
 
+msgid "Clock lost, selecting a new one\n"
+msgstr ""
+
 msgid "Print version information and exit"
 msgstr ""
 
@@ -521,6 +527,18 @@ msgid "Audio sink to use (default is autoaudiosink)"
 msgstr ""
 
 msgid "Enable gapless playback"
+msgstr ""
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr "Volumi"
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
@@ -672,9 +690,6 @@ msgstr ""
 
 #~ msgid "Your OSS device could not be probed correctly"
 #~ msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
-
-#~ msgid "Volume"
-#~ msgstr "Volumi"
 
 #~ msgid "Speaker"
 #~ msgstr "Zë folës"

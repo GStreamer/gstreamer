@@ -4,20 +4,21 @@
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
 # Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2012.
+# Balázs Úr <urbalazs@gmail.com>, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.0.3\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2012-11-29 14:05+0100\n"
-"Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2014-03-20 18:47+0100\n"
+"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Rosetta-Export-Date: 2007-03-10 00:18+0000\n"
-"X-Generator: Lokalize 1.4\n"
+"X-Generator: Lokalize 1.2\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -41,7 +42,7 @@ msgid "Could not open audio device for playback."
 msgstr "Nem lehet lejátszásra megnyitni a hangeszközt."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "Hiba a hangeszközre való kimenetküldéskor. Az eszközt leválasztották."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Nem lehet felvételre megnyitni az eszközt mono módban."
@@ -64,7 +65,7 @@ msgid "Could not open audio device for recording."
 msgstr "Nem lehet felvételre megnyitni a hangeszközt."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "Hiba a hangeszközről való felvételkor. Az eszközt leválasztották."
 
 msgid "Could not open CD device for reading."
 msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."
@@ -94,9 +95,8 @@ msgstr "Nem határozható meg az adatfolyam típusa"
 msgid "This appears to be a text file"
 msgstr "Ez egy szövegfájlnak tűnik"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Nem hozható létre „decodebin” elem"
+msgstr "Nem hozható létre „uridecodebin” elem."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -207,6 +207,9 @@ msgstr "Veszteségmentes MSZH"
 msgid "Run-length encoding"
 msgstr "Műsorhossz-kódolás"
 
+msgid "Timed Text"
+msgstr "Időzített szöveg"
+
 msgid "Subtitle"
 msgstr "Felirat"
 
@@ -234,25 +237,25 @@ msgstr "Tömörítetlen videó"
 msgid "Uncompressed gray"
 msgstr "Tömörítetlen szürke"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Tömörítetlen pakolt YUV 4:2:2"
+msgstr "Tömörítetlen csomagolt YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Tömörítetlen síkbeli YUV 4:2:0"
+msgstr "Tömörítetlen félig síkbeli YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Tömörítetlen síkbeli YUV 4:2:0"
+msgstr "Tömörítetlen síkbeli YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Tömörítetlen, %s%d bites %s"
+msgstr "Tömörítetlen, %d-bites palettázott %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Tömörítetlen, %s%d bites %s"
+msgstr "Tömörítetlen, %d-bites %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -504,32 +507,47 @@ msgid "unparsed id3v2 tag frame"
 msgstr "feldolgozatlan id3v2 címke keret"
 
 msgid "musical-key"
-msgstr ""
+msgstr "zenei kulcs"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Kezdeti kulcs, amelyben a hang indul"
 
 msgid "Buffering..."
+msgstr "Pufferelés…"
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Verzióinformációk kiírása és kilépés"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Használandó videosüllyesztés (az alapértelmezett az autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Használandó hangsüllyesztés (az alapértelmezett az autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Szünetmentes lejátszás bekapcsolása"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Használat: %s FÁJL1|URI1 [FÁJL2|URI2] [FÁJL3|URI3] …"
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "Meg kell adnia legalább egy fájlnevet vagy URI-t a lejátszáshoz."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "Tömörítetlen %s YUV %s"

@@ -6,10 +6,10 @@
 # Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.1.4\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2013-09-15 08:46+0400\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2013-12-08 12:52+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
@@ -207,6 +207,9 @@ msgstr "Lossless MSZH"
 msgid "Run-length encoding"
 msgstr "RLE-сжатие"
 
+msgid "Timed Text"
+msgstr "Timed Text"
+
 msgid "Subtitle"
 msgstr "Субтитры"
 
@@ -234,25 +237,25 @@ msgstr "Несжатое видео"
 msgid "Uncompressed gray"
 msgstr "Несжатый серый"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Несжатый смешанный YUV 4:2:2"
+msgstr "Несжатый смешанный YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Несжатый планарный YUV 4:2:0"
+msgstr "Несжатый полу-планарный YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Несжатый планарный YUV 4:2:0"
+msgstr "Несжатый планарный YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Несжатое %s%d-битное %s"
+msgstr "Несжатое %d-битное %s с палитрой"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Несжатое %s%d-битное %s"
+msgstr "Несжатое %d-битное %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -512,26 +515,41 @@ msgid "Initial key in which the sound starts"
 msgstr "Начальный ключ, с которого начинается звук"
 
 msgid "Buffering..."
+msgstr "Буферизация…"
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Вывод информации о версии и выход из программы"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Используемый приёмник видео (по умолчанию autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Используемый приёмник аудио (по умолчанию autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Включить непрерывное воспроизведение"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Использование: %s ФАЙЛ1|URI1 [ФАЙЛ2|URI2] [ФАЙЛ3|URI3] …"
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "Вы должны указать не менее одного имени файла или URI."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "Несжатый %s YUV %s"

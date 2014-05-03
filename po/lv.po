@@ -4,13 +4,14 @@
 # Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
 # Rihards Priedītis <rprieditis@gmail.com>, 2010.
 # Rihards Priedītis <rprieditis@gmail.com>, 2011.
+# Rūdolfs Mazurs <rudolfs.mazurs@gmail.com>, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2011-09-02 12:02-0000\n"
-"Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2014-04-20 16:15+0300\n"
+"Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
 "MIME-Version: 1.0\n"
@@ -20,7 +21,7 @@ msgstr ""
 "X-Poedit-Country: LATVIA\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
 "2);\n"
-"X-Generator: Lokalize 1.0\n"
+"X-Generator: Lokalize 1.5\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Nevarēja atvērt ierīci atskaņošanai mono režīmā."
@@ -30,7 +31,7 @@ msgstr "Nevarēja atvērt ierīci atskaņošanai stereo režīmā."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Nevarēja atvērt ierīci atskaņošanai %d-kanāla režīmā."
+msgstr "Nevarēja atvērt ierīci atskaņošanai %d-kanālu režīmā."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -43,7 +44,7 @@ msgid "Could not open audio device for playback."
 msgstr "Nevarēja atvērt audio ierīci atskaņošanai."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "Kļūda, izvadot audio ierīcē. Ierīce tika atvienota."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Nevarēja atvērt ierīci ierakstīšanai mono režīmā."
@@ -53,7 +54,7 @@ msgstr "Nevarēja atvērt ierīci ierakstīšanai stereo režīmā."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Nevarēja atvērt ierīci ierakstīšanai %d-kanāla režīmā"
+msgstr "Nevarēja atvērt ierīci ierakstīšanai %d-kanālu režīmā"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
@@ -66,7 +67,7 @@ msgid "Could not open audio device for recording."
 msgstr "Nevarēja atvērt audio ierīci ierakstīšanai."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "Kļūda, rakstot audio ierīcē. Ierīce tika atvienota."
 
 msgid "Could not open CD device for reading."
 msgstr "Nevarēja atvērt CD ierīci lasīšanai."
@@ -82,7 +83,7 @@ msgstr "Iekšējās datu plūsmas kļūda."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Trūkst elements \"%s\" - pārbaudiet savu GStreamer instalāciju."
+msgstr "Trūkst elements “%s” - pārbaudiet savu GStreamer instalāciju."
 
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
@@ -90,14 +91,13 @@ msgstr ""
 "Nepieciešamas %s spraudnis, lai atskaņotu šo plūsmu, bet tas nav instalēts."
 
 msgid "Could not determine type of stream"
-msgstr "Nevarēja noteikts straumes tipu"
+msgstr "Nevarēja noteikt straumes tipu"
 
 msgid "This appears to be a text file"
-msgstr "Tiek atpazīts kā teksta fails"
+msgstr "Tiek atpazīts kā teksta datne"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Nevarēja izveidot \"decodebin\" elementu."
+msgstr "Nevarēja izveidot “uridecodebin” elementu."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -118,10 +118,10 @@ msgid "The autovideosink element is not working."
 msgstr "autovideosink elements nedarbojas."
 
 msgid "Custom text sink element is not usable."
-msgstr "Pielāgots teksta iegremdēšanas elements nav lietojams."
+msgstr "Pielāgots teksta uztveršanas elements nav lietojams."
 
 msgid "No volume control found"
-msgstr "Netika atrasta neviena skaļuma kontrole"
+msgstr "Netika atrasta neviena skaļuma vadīkla"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
@@ -142,32 +142,32 @@ msgid "The autoaudiosink element is not working."
 msgstr "autoaudiosink elements nedarbojas."
 
 msgid "Can't play a text file without video or visualizations."
-msgstr "Nevar atskaņot teksta failu bez video vai vizualizācijas."
+msgstr "Nevar atskaņot teksta datni bez video vai vizualizācijas."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Nav pieejams neviens atkodētājs failu veidam \"%s\"."
+msgstr "Nav pieejams neviens atkodētājs datnes veidam “%s”."
 
 msgid "No URI specified to play from."
-msgstr "Nav norādīts neviens URI, no kā varētu spēlēt. "
+msgstr "Nav norādīts neviens URI, no kā varētu atskaņot. "
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "Nederīgs URI \"%s\"."
+msgstr "Nederīgs URI “%s”."
 
 msgid "This stream type cannot be played yet."
-msgstr "Šī plūsma pagaidām nevar tikt atskaņota."
+msgstr "Šo plūsmu pagaidām nevar atskaņot."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Nav izstrādāts neviens URI apstrādātājs priekš \"%s\"."
+msgstr "Nav izstrādāts neviens “%s” URI apstrādātājs."
 
 msgid "Source element is invalid."
 msgstr "Avota elements ir nederīgs."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Radās kļūda nosūtot datus uz \"%s:%d\"."
+msgstr "Radās kļūda, nosūtot datus uz “%s:%d”."
 
 msgid "Can't record audio fast enough"
 msgstr "Nevar ierakstīt audio pietiekami ātri"
@@ -176,10 +176,10 @@ msgid "This CD has no audio tracks"
 msgstr "Šajā CD nav neviena audio celiņa"
 
 msgid "ID3 tag"
-msgstr "ID3 atzīme"
+msgstr "ID3 iezīme"
 
 msgid "APE tag"
-msgstr "APE atzīme"
+msgstr "APE iezīme"
 
 msgid "ICY internet radio"
 msgstr "ICY interneta radio"
@@ -191,37 +191,37 @@ msgid "Free Lossless Audio Codec (FLAC)"
 msgstr "Free Lossless Audio Codec (FLAC)"
 
 msgid "Lossless True Audio (TTA)"
-msgstr "Bez zudumu True Audio (TTA)"
+msgstr "Bezzudumu True Audio (TTA)"
 
 msgid "Windows Media Speech"
 msgstr "Windows mediju runa"
 
 msgid "CYUV Lossless"
-msgstr "CYUV bez zudumu"
+msgstr "CYUV bezzudumu"
 
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
 msgid "Lossless MSZH"
-msgstr "Bez zudumu MSZH"
+msgstr "Bezzudumu MSZH"
 
 msgid "Run-length encoding"
-msgstr "Sērijas garuma kodēšana"
+msgstr "Secīgo atkārtojumu kodēšana"
+
+msgid "Timed Text"
+msgstr "Teksts laikā"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Subtitri"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "TMPlayer subtitru formāts"
+msgstr "MPL2 subtitru formāts"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Sami subtitru formāts"
+msgstr "DKS subtitru formāts"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Kate subtitru formāts"
+msgstr "QTtext subtitru formāts"
 
 msgid "Sami subtitle format"
 msgstr "Sami subtitru formāts"
@@ -232,45 +232,42 @@ msgstr "TMPlayer subtitru formāts"
 msgid "Kate subtitle format"
 msgstr "Kate subtitru formāts"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "Nesaspiests YUV"
+msgstr "Nesaspiests video"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Neatspiests Pelēks attēls"
+msgstr "Neatspiests pelēks"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Nesaspiests pakots YUV 4:2:2"
+msgstr "Nesaspiests pakots YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Nesaspiesta plakne YUV 4:2:0"
+msgstr "Nesaspiests pus-plaknes YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Nesaspiesta plakne YUV 4:2:0"
+msgstr "Nesaspiests plaknes YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Nesaspiests paletizēts %d-bitu %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Nesaspiests paletizēts %d-bitu %s"
+msgstr "Nesaspiests %d-bitu %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 versija %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "Nesaspiests YUV"
+msgstr "Nesaspiests audio"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Jēls %d-bitu PCM audio"
+msgstr "Jēls %d-bitu %s audio"
 
 msgid "Audio CD source"
 msgstr "Audio CD avots"
@@ -279,10 +276,10 @@ msgid "DVD source"
 msgstr "DVD avots"
 
 msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Tiešās straumēšanas protokola (RTSP) avots"
+msgstr "Reālā laika straumēšanas protokola (RTSP) avots"
 
 msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Microsoft Mediju Servera (MMS) protokola avots"
+msgstr "Microsoft mediju servera (MMS) protokola avots"
 
 #, c-format
 msgid "%s protocol source"
@@ -294,7 +291,7 @@ msgstr "%s video RTP izkrāvējs"
 
 #, c-format
 msgid "%s audio RTP depayloader"
-msgstr "%s audio RTP izskrāvējs"
+msgstr "%s audio RTP izkrāvējs"
 
 #, c-format
 msgid "%s RTP depayloader"
@@ -336,7 +333,7 @@ msgid "Unknown source element"
 msgstr "Nezināms avota elements"
 
 msgid "Unknown sink element"
-msgstr "Nezināms iegremdēšanas elements"
+msgstr "Nezināms uztveršanas elements"
 
 msgid "Unknown element"
 msgstr "Nezināms elements"
@@ -351,7 +348,7 @@ msgid "Plugin or element of unknown type"
 msgstr "Nezināma veida spraudnis vai elements"
 
 msgid "Failed to read tag: not enough data"
-msgstr "Neizdevās nolasīt atzīmi: nepietiek datu"
+msgstr "Neizdevās nolasīt iezīmi: nepietiek datu"
 
 msgid "track ID"
 msgstr "celiņa ID"
@@ -384,110 +381,110 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
 msgid "capturing shutter speed"
-msgstr "Tveršanā aizvara ātrums"
+msgstr "tveršanas slēdža ātrums"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Attēla tveršanā izmantotais aizvara ātrums sekundēs"
+msgstr "Attēla tveršanā izmantotais slēdža ātrums sekundēs"
 
 msgid "capturing focal ratio"
-msgstr "tveršanā fokusa attiecība"
+msgstr "tveršanas fokusa attiecība"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Attēla tveršanā izmantotā fokusa attiecība (f-cipars)"
+msgstr "Attēla tveršanā izmantotā fokusa attiecība (f-skaitlis)"
 
 msgid "capturing focal length"
-msgstr "tveršanā fokusa attālums"
+msgstr "tveršanas fokusa attālums"
 
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Attēla tveršanā izmantotā lēcas fokusa attālums milimetros"
 
 msgid "capturing digital zoom ratio"
-msgstr "tveršanā digitālais tālummaiņas attiecība"
+msgstr "tveršanas digitālais mērogs"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr "Attēla tveršanā izmantotais digitālās tālummaiņas attiecība"
+msgstr "Attēla tveršanā izmantotais digitālais mērogs"
 
 msgid "capturing iso speed"
-msgstr "tveršanā iso ātrums"
+msgstr "tveršanas iso ātrums"
 
 msgid "The ISO speed used when capturing an image"
 msgstr "Attēla tveršanā izmantotais ISO ātrums"
 
 msgid "capturing exposure program"
-msgstr "tveršanā atseguma programma"
+msgstr "tveršanas eksponēšanas programma"
 
 msgid "The exposure program used when capturing an image"
-msgstr "Attēla tveršanā izmantotā atseguma programma"
+msgstr "Attēla tveršanā izmantotā eksponēšanas programma"
 
 msgid "capturing exposure mode"
-msgstr "tveršanā atseguma režīms"
+msgstr "tveršanas eksponēšanas režīms"
 
 msgid "The exposure mode used when capturing an image"
-msgstr "Attēla tveršanā izmantotais atseguma režīms"
+msgstr "Attēla tveršanā izmantotais eksponēšanas režīms"
 
 msgid "capturing exposure compensation"
-msgstr "tveršanā atseguma kompensācija"
+msgstr "tveršanas ekspozīcijas kompensācija"
 
 msgid "The exposure compensation used when capturing an image"
-msgstr "Attēla tveršanā izmantotais atseguma kompensācija"
+msgstr "Attēla tveršanā izmantotais ekspozīcijas kompensācija"
 
 msgid "capturing scene capture type"
-msgstr "tveršanā ainas tveršanas tips"
+msgstr "tveršanas ainas tveršanas tips"
 
 msgid "The scene capture mode used when capturing an image"
 msgstr "Attēla tveršanā izmantotas ainas tveršanas režīms"
 
 msgid "capturing gain adjustment"
-msgstr "tveršanā pieaguma korekcija"
+msgstr "tveršanas pieauguma korekcija"
 
 msgid "The overall gain adjustment applied on an image"
 msgstr "Attēla tveršanā izmantotais vispārējā pieauguma korekcija"
 
 msgid "capturing white balance"
-msgstr "tveršanas baltais balanss"
+msgstr "tveršanas baltā līdzsvars"
 
 msgid "The white balance mode set when capturing an image"
-msgstr "Lietotais baltais balanss virziens attēla tveršanā"
+msgstr "Lietotais baltās krāsas līdzsvara virziens attēla tveršanā"
 
 msgid "capturing contrast"
-msgstr "tveršanā kontrasts"
+msgstr "tveršanas kontrasts"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Lietotais kontrasts virziens attēla tveršanā"
+msgstr "Lietotais kontrasta virziens attēla tveršanā"
 
 msgid "capturing saturation"
-msgstr "tveršanā piesātinājums"
+msgstr "tveršanas piesātinājums"
 
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr "Lietotais piesātinājuma virziens attēla tveršanā"
 
 msgid "capturing sharpness"
-msgstr "tveršanā asumss"
+msgstr "tveršanas asums"
 
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr "Lietotais asuma virziens attēla tveršanā"
 
 msgid "capturing flash fired"
-msgstr "tveršanā zibsnis palaists"
+msgstr "tveršanas zibsnis palaists"
 
 msgid "If the flash fired while capturing an image"
 msgstr "Ja zibsnis palaists attēla tveršanā"
 
 msgid "capturing flash mode"
-msgstr "tveršanā zibšņa režīms"
+msgstr "tveršanas zibšņa režīms"
 
 msgid "The selected flash mode while capturing an image"
-msgstr "Atlasītais zibšņa režīms priekš attēla tveršanas"
+msgstr "Atlasītais zibšņa režīms attēla tveršanai"
 
 msgid "capturing metering mode"
-msgstr "tveršanā mērīšanas režīms"
+msgstr "tveršanas mērīšanas režīms"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr "Mērīšanas režīms, lai noteiktu atsegumu attēla tveršanai"
+msgstr "Mērīšanas režīms, lai noteiktu ekspozīciju attēla tveršanai"
 
 msgid "capturing source"
-msgstr "tveršanā avots"
+msgstr "tveršanas avots"
 
 msgid "The source or type of device used for the capture"
 msgstr "Tveršanas avots vai iekārtas tips"
@@ -505,42 +502,53 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Medija (attēls/video) domātā vertikālā pikseļu blīvums ppi"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "ID3v2 kadrs"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "neparsēts id3v2 iezīmes kadrs"
 
 msgid "musical-key"
-msgstr ""
+msgstr "mūzikas-kadrs"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Sākotnējais kadrs, kurā sākas mūzika"
 
 msgid "Buffering..."
+msgstr "Buferē..."
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Parādīt informāciju par versiju un iziet"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Izmantojamais video uztvērējs (pēc noklusējuma autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Izmantojamais audio uztvērējs (pēc noklusējuma autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Aktivēt atskaņošanu bez pauzēm"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Lietojums: %s DATNE1|URI1 [DATNE2|URI2] [DATNE3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
-
-#, fuzzy
-#~ msgid "Uncompressed %s YUV %s"
-#~ msgstr "Nesaspiests YUV"
+msgstr "Jums jānorāda vismaz viens datnes nosaukums vai atskaņojamais URI."
 
 #~ msgid "Master"
 #~ msgstr "Galvenais"
@@ -574,9 +582,6 @@ msgstr ""
 
 #~ msgid "Capture"
 #~ msgstr "Tveršana"
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Savienojums ar %s:%d noraidīts."
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Nevarēja atvērt vfs failu \"%s\" rakstīšanai: %s."
@@ -628,6 +633,9 @@ msgstr ""
 
 #~ msgid "Error while sending gdp payload data to \"%s:%d\"."
 #~ msgstr "Kļūda sūtot gdp iekrāvēja datus uz \"%s:%d\""
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Savienojums ar %s:%d noraidīts."
 
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "Nesaspiesta plakne YVU 4:2:0"

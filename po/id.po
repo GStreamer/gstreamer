@@ -1,18 +1,19 @@
 # Indonesian translations for gst-plugins-base package.
 # This file is put in the public domain.
-# Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2012.
+# Andika Triwidada <andika@gmail.com>, 2013.
+# Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
-"PO-Revision-Date: 2012-01-28 11:31+0700\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
+"PO-Revision-Date: 2014-01-28 18:53+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -36,7 +37,7 @@ msgid "Could not open audio device for playback."
 msgstr "Tak dapat membuka divais audio untuk putar kembali."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "Galat saat mengarahkan keluaran ke divais audio. Divais telah diputus."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Tak dapat membuka divais untuk merekam dalam mode mono."
@@ -59,7 +60,7 @@ msgid "Could not open audio device for recording."
 msgstr "Tak dapat membuka divais audio untuk merekam."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "Galat saat merekam dari divais audio. Divais telah diputus."
 
 msgid "Could not open CD device for reading."
 msgstr "Tak dapat membuka divais CD untuk dibaca."
@@ -87,9 +88,8 @@ msgstr "Tak dapat menentukan tipe arus"
 msgid "This appears to be a text file"
 msgstr "Ini kelihatannya merupakan berkas teks"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Tak dapat membuat elemen \"decodebin\""
+msgstr "Tak dapat membuat elemen \"uridecodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -200,20 +200,20 @@ msgstr "Lossless MSZH"
 msgid "Run-length encoding"
 msgstr "Penyandian sepanjang-jalan"
 
+msgid "Timed Text"
+msgstr "Teks Waktu"
+
 msgid "Subtitle"
-msgstr ""
+msgstr "Subjudul"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "Format subjudul TMPlayer"
+msgstr "Format subjudul MPL2"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Format subjudul Sami"
+msgstr "Format subjudul DKS"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Format subjudul Kate"
+msgstr "Format subjudul QTtext"
 
 msgid "Sami subtitle format"
 msgstr "Format subjudul Sami"
@@ -224,45 +224,42 @@ msgstr "Format subjudul TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Format subjudul Kate"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "YUV tak dikompresi"
+msgstr "Video tak dikompresi"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Citra Abu-abu Tak Dikompres"
+msgstr "Citra abu-abu tak dikompresi"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "YUV 4:2:2 terkemas tak dikompresi"
+msgstr "YUV terkemas tak dikompresi %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "YUV 4:2:0 planar tak dikompresi"
+msgstr "YUV semi-planar tak dikompresi %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "YUV 4:2:0 planar tak dikompresi"
+msgstr "YUV palanar tak dikompresi %s"
 
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Terpalet dan tak dikompresi dari %d-bit %s"
+msgstr "%d-bit terpalet tak dikompresi %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Terpalet dan tak dikompresi dari %d-bit %s"
+msgstr "%d tak dikompresi %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versi %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "YUV tak dikompresi"
+msgstr "Audio tak dikompresi"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Audio PCM %d-bita mentah"
+msgstr "Audio %d-bita %s mentah"
 
 msgid "Audio CD source"
 msgstr "Sumber CD audio"
@@ -499,194 +496,51 @@ msgstr ""
 "Kerapatan pixel vertikal yang diinginkan media (gambar/video) dalam ppi"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "Rangka ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "rangka tag id3v3 tak diurai"
 
 msgid "musical-key"
-msgstr ""
+msgstr "kunci-musik"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Kunci awal dimana suara dimulai"
 
 msgid "Buffering..."
+msgstr "Menyangga..."
+
+msgid "Clock lost, selecting a new one\n"
 msgstr ""
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Cetak informasi versi lalu keluar"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Sink video yang digunakan (standar adalah autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Sink audio yang digunakan (standar adalah autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Aktifkan putar balik tanpa jeda"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Penggunaan: %s BERKAS1|URI1 [BERKAS2|URI2] [BERKAS3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
 msgstr ""
-
-#~ msgid "Master"
-#~ msgstr "Utama"
-
-#~ msgid "Bass"
-#~ msgstr "Bas"
-
-#~ msgid "Treble"
-#~ msgstr "Treble"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Synth"
-#~ msgstr "Synth"
-
-#~ msgid "Line-in"
-#~ msgstr "Jalur masuk"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofon"
-
-#~ msgid "PC Speaker"
-#~ msgstr "Pengeras Suara PC"
-
-#~ msgid "Playback"
-#~ msgstr "Putar kembali"
-
-#~ msgid "Capture"
-#~ msgstr "Tangkap"
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Tak dapat membuka berkas vfs \"%s\" untuk ditulis: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Tak ada nama berkas yang diberikan"
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Tak dapat menutup berkas vfs \"%s\"."
-
-#~ msgid "Error while writing to file \"%s\"."
-#~ msgstr "Galat ketika menulis ke berkas \"%s\"."
-
-#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-#~ msgstr "URI subjudul \"%s\" tidak sah, subjudul dinonaktifkan."
-
-#~ msgid "RTSP streams cannot be played yet."
-#~ msgstr "Arus RTSP belum dapat dimainkan."
-
-#~ msgid ""
-#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
-#~ "file or some other type of text file, or the media file was not "
-#~ "recognized."
-#~ msgstr ""
-#~ "Hanya arus subjudul yang terdeteksi. Mungkin anda memuat berkas subjudul "
-#~ "atau tipe lain dari berkas teks, atau berkas media yang tidak dikenal."
-
-#~ msgid ""
-#~ "You do not have a decoder installed to handle this file. You might need "
-#~ "to install the necessary plugins."
-#~ msgstr ""
-#~ "Anda tidak memiliki pengawasandi terinstal untuk menangani berkas ini. "
-#~ "Anda mungkin harus menginstal plugin yang diperlukan."
-
-#~ msgid "This is not a media file"
-#~ msgstr "Ini bukan berkas media"
-
-#~ msgid "A subtitle stream was detected, but no video stream."
-#~ msgstr "Arus subjudul terdeteksi, tapi bukan arus video."
-
-#~ msgid "Both autovideosink and xvimagesink elements are missing."
-#~ msgstr "Baik elemen autovideosink maupun xvimagesink hilang."
-
-#~ msgid "Both autoaudiosink and alsasink elements are missing."
-#~ msgstr "Baik elemen autoaudiosink maupun alsasink hilang."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Galat ketika mengirim data tajuk gdp ke \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Galat ketika mengirim data pemuat gdp ke \"%s:%d\"."
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Koneksi ke %s:%d ditolak."
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "YVU 4:2:0 planar tak dikompresi"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "YUV 4:1:0 terkemas tak dikompresi"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "YVU 4:1:0 terkemas tak dikompresi"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "YUV 4:1:1 terkemas tak dikompresi"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "YUV 4:4:4 terkemas tak dikompresi"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "YUV 4:2:2 planar tak dikompresi"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "YUV 4:1:1 planar tak dikompresi"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Y-plane hitam dan putih tak dikompresi"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Audio PCM mentah"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Audio titik-apung %d-bita mentah"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Audio titik-apung mentah"
-
-#~ msgid "No device specified."
-#~ msgstr "Tak ada divais yang ditentukan."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Divais \"%s\" tak ada."
-
-#~ msgid "Device \"%s\" is already being used."
-#~ msgstr "Divais \"%s\" telah digunakan."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Tak dapat membuka divaus \"%s\" untuk dibaca dan ditulis."
-
-#~ msgid "Can't display both text subtitles and subpictures."
-#~ msgstr "Tak dapat menampilkan baik teks subjudul dan subgambar."
-
-#~ msgid "No Temp directory specified."
-#~ msgstr "Tak ada direktori Temp yang ditentukan."
-
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Tak dapat membuat berkas temp \"%s\"."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Tak dapat membuka berkas \"%s\" untuk dibaca."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Galat arus data internal."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Tak dapat membuat elemen \"decodebin2\"."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Tak dapat membuat elemen \"queue2\"."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Tak dapat membuat elemen \"typefind\"."
-
-#~ msgid "No file name specified."
-#~ msgstr "Tak ada nama berkas yang ditentukan."
+"Anda harus menyediakan setidaknya satu nama berkas atau URI untuk diputar."

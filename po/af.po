@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
+"POT-Creation-Date: 2014-05-03 17:21+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -205,6 +205,9 @@ msgid "Lossless MSZH"
 msgstr ""
 
 msgid "Run-length encoding"
+msgstr ""
+
+msgid "Timed Text"
 msgstr ""
 
 msgid "Subtitle"
@@ -512,6 +515,9 @@ msgstr ""
 msgid "Buffering..."
 msgstr ""
 
+msgid "Clock lost, selecting a new one\n"
+msgstr ""
+
 msgid "Print version information and exit"
 msgstr ""
 
@@ -522,6 +528,18 @@ msgid "Audio sink to use (default is autoaudiosink)"
 msgstr ""
 
 msgid "Enable gapless playback"
+msgstr ""
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Interactive control via keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr "Volume"
+
+msgid "Playlist file containing input media files"
 msgstr ""
 
 #, c-format
@@ -650,9 +668,6 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading."
 #~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees nie."
-
-#~ msgid "Volume"
-#~ msgstr "Volume"
 
 #~ msgid "Speaker"
 #~ msgstr "Luidspreker"
