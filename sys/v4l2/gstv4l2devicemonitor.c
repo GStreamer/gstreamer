@@ -32,6 +32,7 @@
 
 #include "gstv4l2object.h"
 #include "v4l2_calls.h"
+#include "v4l2-utils.h"
 
 #ifdef HAVE_GUDEV
 #include <gudev/gudev.h>
@@ -162,28 +163,23 @@ static GList *
 gst_v4l2_device_monitor_probe (GstDeviceMonitor * monitor)
 {
   GstV4l2DeviceMonitor *self = GST_V4L2_DEVICE_MONITOR (monitor);
+  GstV4l2Iterator *it;
   GList *devices = NULL;
-  const gchar *dev_base[] = { "/dev/video", "/dev/v4l2/video", NULL };
-  gint base, n;
 
-  /*
-   * detect /dev entries
-   */
-  for (n = 0; n < 64; n++) {
-    for (base = 0; dev_base[base] != NULL; base++) {
-      gchar *dev = g_strdup_printf ("%s%d", dev_base[base], n);
-      GstV4l2Device *device;
+  it = gst_v4l2_iterator_new ();
 
-      device = gst_v4l2_device_monitor_probe_device (self, dev, NULL);
+  while (gst_v4l2_iterator_next (it)) {
+    GstV4l2Device *device;
 
-      if (device) {
-        gst_object_ref_sink (device);
-        devices = g_list_prepend (devices, device);
-      }
+    device = gst_v4l2_device_monitor_probe_device (self, it->device_path, NULL);
 
-      g_free (dev);
+    if (device) {
+      gst_object_ref_sink (device);
+      devices = g_list_prepend (devices, device);
     }
   }
+
+  gst_v4l2_iterator_free (it);
 
   return devices;
 }
