@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2012-05-05 19:17+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -49,8 +49,15 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+msgid "Internal data stream error."
+msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
+
 msgid "Couldn't download fragments"
 msgstr ""
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Αδυναμία ανοίγματος αρχείου \"%s\" για ανάγνωση."
 
 msgid "No file name specified for writing."
 msgstr "Δεν έχει καθορισθεί όνομα αρχείου για εγγραφή."
@@ -58,9 +65,6 @@ msgstr "Δεν έχει καθορισθεί όνομα αρχείου για ε
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Αδυναμία ανοίγματος αρχείου \"%s\" για εγγραφή."
-
-msgid "Internal data stream error."
-msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -110,6 +114,10 @@ msgstr "Αδυναμία ανοίγματος συσκευής frontend \"%s\"."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Αδυναμία λήψης ρυθμίσεων από τη συσκευή frontend \"%s\"."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Αδυναμία λήψης ρυθμίσεων από τη συσκευή frontend \"%s\"."
 
 #, c-format

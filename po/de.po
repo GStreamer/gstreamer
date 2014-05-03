@@ -1,22 +1,23 @@
-# German po for gst-plugins-bad 0.10.21.2
+# German po for gst-plugins-bad 1.1.4
 # Copyright (C) 2007 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Andre Klapper <ak-47@gmx.net>, 2008.
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2011.
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2011, 2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
+"Project-Id-Version: gst-plugins-bad 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
-"PO-Revision-Date: 2011-04-28 00:04+0200\n"
-"Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
+"PO-Revision-Date: 2013-09-21 13:34+0100\n"
+"Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.5.4\n"
 
 msgid "Could not read title information for DVD."
 msgstr "Die Titelinformationen der DVD konnten nicht gelesen werden."
@@ -40,16 +41,23 @@ msgid "Could not read DVD."
 msgstr "DVD konnten nicht gelesen werden."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Diese Datei enthält keine abspielbaren Ströme."
 
 msgid "Couldn't get the Manifest's URI"
-msgstr ""
+msgstr "Adresse der Frachtliste konnte nicht ermittelt werden"
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Ermitteln der Fragment-Adresse schlug fehl."
+
+msgid "Internal data stream error."
+msgstr "Interner Datenstromfehler."
 
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Fragmente konnten nicht heruntergeladen werden"
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Datei »%s« konnte nicht zum Lesen geöffnet werden."
 
 msgid "No file name specified for writing."
 msgstr "Kein Dateiname zum Schreiben angegeben."
@@ -58,46 +66,48 @@ msgstr "Kein Dateiname zum Schreiben angegeben."
 msgid "Could not open file \"%s\" for writing."
 msgstr "Datei »%s« konnte nicht zum Schreiben geöffnet werden."
 
-msgid "Internal data stream error."
-msgstr "Interner Datenstromfehler."
-
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Es konnte nicht in Datei »%s« geschrieben werden."
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Es konnte keine Verbindung zu sndio hergestellt werden"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Abfragen der sndio-Fähigkeiten schlug fehl"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "Datei »%s« konnte nicht zum Lesen geöffnet werden."
+msgstr "sndio konnte nicht eingestellt werden"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "DVD konnten nicht gelesen werden."
+msgstr "sndio konnten nicht gestartet werden"
 
 msgid "Internal data flow error."
 msgstr "Interner Datenstromfehler."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"Die erzeugte Datei hat eine größere Vorlaufzeit als die Dauer ihres "
+"Datenstroms"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
+"Das Element »%s« fehlt - überprüfen Sie Ihre Installation von GStreamer."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
+"Dateiort ist als NULL festgelegt. Bitte legen Sie einen gültigen Dateinamen "
+"fest"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "Format des Unterbilds wurde nicht vor dem Datenfluss konfiguriert"
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+"Der gegebene Dateiname »%s« kann nicht in lokale Dateinamen-Kodierung "
+"umgewandelt werden."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -112,24 +122,28 @@ msgid "Could not get settings from frontend device \"%s\"."
 msgstr ""
 "Einstellungen des Frontend-Geräts »%s« konnten nicht aufgerufen werden."
 
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
+msgstr ""
+"Einstellungen des Frontend-Geräts »%s« konnten nicht aufgerufen werden."
+
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Datei »%s« konnte nicht zum Lesen geöffnet werden."
 
-#, fuzzy
 msgid "Couldn't find DVB channel configuration file"
-msgstr "Konfiguration des virtuellen Mischers"
+msgstr "DVB Kanal-Konfigurationsdatei konnte nicht gefunden werden"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
-msgstr "Konfiguration des virtuellen Mischers"
+msgstr "DVB Kanal-Konfigurationsdatei konnte nicht geladen werden: %s"
 
 msgid "DVB channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "DVB Kanal-Konfigurationsdatei enthält keine Kanäle"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
+msgstr "Details zu DVB-Kanal %s konnten nicht gefunden werden"
 
 #~ msgid "Internal clock error."
 #~ msgstr "Interner Zeitfehler."
@@ -428,125 +442,3 @@ msgstr ""
 
 #~ msgid "Spread Output"
 #~ msgstr "Verteilter Ausgang"
-
-# Als Downmix wird im Bereich der Tontechnik ein manuelles oder automatisches Verfahren bezeichnet, bei dem der Ton eines Mehrkanal-Tonformats zu einer Fassung mit weniger unabhängigen Kanälen zusammengefasst wird. In den meisten Fällen ist dies eine Stereo-Fassung.
-#~ msgid "Downmix"
-#~ msgstr "Downmix"
-
-#~ msgid "Virtual Mixer Input"
-#~ msgstr "Eingang des virtuellen Mischers"
-
-#~ msgid "Virtual Mixer Output"
-#~ msgstr "Ausgang des virtuellen Mischers"
-
-#~ msgid "Virtual Mixer Channels"
-#~ msgstr "Kanäle des virtuellen Mischers"
-
-#~ msgid "%s Function"
-#~ msgstr "%s-Funktion"
-
-#~ msgid "%s %d"
-#~ msgstr "%s %d"
-
-#~ msgid ""
-#~ "Could not open audio device for playback. Device is being used by another "
-#~ "application."
-#~ msgstr ""
-#~ "Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Das Gerät "
-#~ "wird von einer anderen Anwendung verwendet."
-
-#~ msgid ""
-#~ "Could not open audio device for playback. You don't have permission to "
-#~ "open the device."
-#~ msgstr ""
-#~ "Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden.  Sie haben "
-#~ "nicht die Berechtigungen zum Öffnen des Gerätes."
-
-#~ msgid "Could not open audio device for playback."
-#~ msgstr "Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. "
-
-#~ msgid ""
-#~ "Could not open audio device for playback. This version of the Open Sound "
-#~ "System is not supported by this element."
-#~ msgstr ""
-#~ "Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Diese "
-#~ "Version des Open Sound System (OSS) wird nicht von diesem Element "
-#~ "unterstützt."
-
-#~ msgid "Playback is not supported by this audio device."
-#~ msgstr "Die Wiedergabe wird nicht von diesem Audio-Gerät unterstützt."
-
-#~ msgid "Audio playback error."
-#~ msgstr "Fehler bei Audio-Wiedergabe."
-
-#~ msgid "Recording is not supported by this audio device."
-#~ msgstr "Die Aufnahme wird nicht von diesem Audio-Gerät unterstützt."
-
-#~ msgid "Error recording from audio device."
-#~ msgstr "Fehler bei der Aufnahme vom Audio-Gerät."
-
-#~ msgid "PCM 1"
-#~ msgstr "PCM 1"
-
-#~ msgid "PCM 2"
-#~ msgstr "PCM 2"
-
-#~ msgid "PCM 3"
-#~ msgstr "PCM 3"
-
-#~ msgid "PCM 4"
-#~ msgstr "PCM 4"
-
-#~ msgid "Green connector function"
-#~ msgstr "Funktion des grünen Steckers"
-
-#~ msgid "Green front panel connector function"
-#~ msgstr "Funktion des grünen Frontsteckers"
-
-#~ msgid "Pink connector function"
-#~ msgstr "Funktion des rosa Steckers"
-
-#~ msgid "Pink front panel connector function"
-#~ msgstr "Funktion des rosa Frontsteckers"
-
-#~ msgid "Blue connector function"
-#~ msgstr "Funktion des blauen Steckers"
-
-#~ msgid "Blue front panel connector function"
-#~ msgstr "Funktion des blauen Frontsteckers"
-
-#~ msgid "Orange connector function"
-#~ msgstr "Funktion des orangen Steckers"
-
-#~ msgid "Orange front panel connector function"
-#~ msgstr "Funktion des orangen Frontsteckers"
-
-#~ msgid "Black connector function"
-#~ msgstr "Funktion des schwarzen Steckers"
-
-#~ msgid "Black front panel connector function"
-#~ msgstr "Funktion des schwarzen Frontsteckers"
-
-#~ msgid "Gray connector function"
-#~ msgstr "Funktion des grauen Steckers"
-
-#~ msgid "Gray front panel connector function"
-#~ msgstr "Funktion des grauen Frontsteckers"
-
-#~ msgid "White connector function"
-#~ msgstr "Funktion des weißen Steckers"
-
-#~ msgid "White front panel connector function"
-#~ msgstr "Funktion des weißen Frontsteckers"
-
-#~ msgid "Red connector function"
-#~ msgstr "Funktion des roten Steckers"
-
-#~ msgid "Red front panel connector function"
-#~ msgstr "Funktion des roten Frontsteckers"
-
-#~ msgid "Yellow connector function"
-#~ msgstr "Funktion des gelben Steckers"
-
-#~ msgid "Yellow front panel connector function"
-#~ msgstr "Funktion des gelben Frontsteckers"

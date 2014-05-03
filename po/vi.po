@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2013-09-16 14:18+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -52,8 +52,15 @@ msgstr "Không thể lấy URI của Manifest"
 msgid "Failed to get fragment URL."
 msgstr "Gặp lỗi khi lấy URL phân mảnh."
 
+msgid "Internal data stream error."
+msgstr "Lỗi luồng dữ liệu nội bộ."
+
 msgid "Couldn't download fragments"
 msgstr "Không thể tải về các phân mảnh"
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Không thể mở tập tin “%s” để đọc."
 
 msgid "No file name specified for writing."
 msgstr "Chưa chỉ định tên tập tin để ghi vào."
@@ -61,9 +68,6 @@ msgstr "Chưa chỉ định tên tập tin để ghi vào."
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Không thể mở tập tin “%s” để ghi."
-
-msgid "Internal data stream error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -114,6 +118,10 @@ msgstr "Không thể mở thiết bị giao diện “%s”."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Không thể lấy các cài đặt từ thiết bị giao diện “%s”."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Không thể lấy các cài đặt từ thiết bị giao diện “%s”."
 
 #, c-format

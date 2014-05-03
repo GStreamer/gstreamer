@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2007-11-13 17:16+0600\n"
 "Last-Translator: Ilyas Bakirov <just_ilyas@yahoo.com>\n"
 "Language-Team: Kirghiz <i18n-team-ky-kyrgyz@lists.sourceforge.net>\n"
@@ -44,8 +44,15 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+msgid "Internal data stream error."
+msgstr ""
+
 msgid "Couldn't download fragments"
 msgstr ""
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "\"%s\"  файлы окууга ачылган жок."
 
 msgid "No file name specified for writing."
 msgstr ""
@@ -53,9 +60,6 @@ msgstr ""
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "\"%s\"  файлы окууга ачылган жок."
-
-msgid "Internal data stream error."
-msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not write to file \"%s\"."
@@ -104,6 +108,10 @@ msgstr "Алдын \"%s\" жабдыкты ачалган жок."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Алдын \"%s\" жабдыктан ырастоолор алынган жок."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Алдын \"%s\" жабдыктан ырастоолор алынган жок."
 
 #, c-format

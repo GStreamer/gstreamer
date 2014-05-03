@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2010-03-25 12:30+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -47,8 +47,15 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+msgid "Internal data stream error."
+msgstr "Datu-korrontearen barne-errorea."
+
 msgid "Couldn't download fragments"
 msgstr ""
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Ezin izan da \"%s\" fitxategia ireki irakurtzeko."
 
 msgid "No file name specified for writing."
 msgstr "Ez da fitxategi-izenik zehaztu idazteko."
@@ -56,9 +63,6 @@ msgstr "Ez da fitxategi-izenik zehaztu idazteko."
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Ezin izan da \"%s\" fitxategia ireki idazteko."
-
-msgid "Internal data stream error."
-msgstr "Datu-korrontearen barne-errorea."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -108,6 +112,10 @@ msgstr "Ezin izan da \"%s\" kontrol-gailua ireki."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Ezin izan dira \"%s\" kontrol-gailuaren ezarpenak eskuratu."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Ezin izan dira \"%s\" kontrol-gailuaren ezarpenak eskuratu."
 
 #, c-format

@@ -3,19 +3,20 @@
 # Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
 #
 # Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2012.
+# Balázs Úr <urbalazs at gmail dot com>, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.0.3\n"
+"Project-Id-Version: gst-plugins-bad 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
-"PO-Revision-Date: 2012-11-30 15:02+0100\n"
-"Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
+"PO-Revision-Date: 2014-03-16 12:02+0100\n"
+"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.4\n"
+"X-Generator: Lokalize 1.2\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Could not read title information for DVD."
@@ -39,16 +40,23 @@ msgid "Could not read DVD."
 msgstr "Nem olvasható a DVD."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Ez a fájl nem tartalmaz lejátszható folyamokat."
 
 msgid "Couldn't get the Manifest's URI"
-msgstr ""
+msgstr "Nem kérhető le a Manifest URL-e"
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Nem sikerült lekérni a töredék URL-t."
+
+msgid "Internal data stream error."
+msgstr "Belső adatfolyamhiba."
 
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Nem sikerült letölteni a töredékeket"
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "A fájl („%s”) nem nyitható meg olvasásra."
 
 msgid "No file name specified for writing."
 msgstr "Nincs megadva fájlnév az íráshoz."
@@ -57,46 +65,46 @@ msgstr "Nincs megadva fájlnév az íráshoz."
 msgid "Could not open file \"%s\" for writing."
 msgstr "A fájl („%s”) nem nyitható meg írásra."
 
-msgid "Internal data stream error."
-msgstr "Belső adatfolyamhiba."
-
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Nem lehet írni a fájlba („%s”)."
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Nem hozható létre kapcsolat az sndio programmal"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Nem sikerült lekérdezni az sndio képességeit"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "A fájl („%s”) nem nyitható meg olvasásra."
+msgstr "Nem sikerült az sndio beállítása"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "Nem olvasható a DVD."
+msgstr "Nem sikerült az sndio indítása"
 
 msgid "Internal data flow error."
 msgstr "Belső adatfolyamhiba."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"Az előállított fájlnak nagyobb előtekerési ideje van, mint a folyamának "
+"időtartama"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Hiányzó „%s” elem - ellenőrizze a GStreamer telepítését."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
+"A fájl helye NULL értékre lett állítva, kérjük állítsa be egy érvényes "
+"fájlnévre"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "A részkép formátuma nem lett beállítva az adatfolyam előtt"
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+"A kapott „%s” fájlnevet nem lehet átalakítani a helyi fájlnév kódolásra."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -110,23 +118,27 @@ msgstr "Nem nyitható meg az előtéteszköz („%s”)."
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nem kérhetők le a beállítások az előtéteszköztől („%s”)."
 
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
+msgstr "Nem kérhetők le a beállítások az előtéteszköztől („%s”)."
+
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "A fájl („%s”) nem nyitható meg olvasásra."
 
 msgid "Couldn't find DVB channel configuration file"
-msgstr ""
+msgstr "Nem található DVB-csatorna beállítófájl"
 
 #, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
-msgstr ""
+msgstr "Nem sikerült betölteni a DVB-csatorna beállítófájlt: %s"
 
 msgid "DVB channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "A DVB-csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
+msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
 
 #~ msgid "Internal clock error."
 #~ msgstr "Belső órahiba."

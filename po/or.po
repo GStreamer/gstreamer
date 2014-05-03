@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -46,8 +46,15 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+msgid "Internal data stream error."
+msgstr ""
+
 msgid "Couldn't download fragments"
 msgstr ""
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
 #, fuzzy
 msgid "No file name specified for writing."
@@ -56,9 +63,6 @@ msgstr "କୌଣସି ଫାଇଲନାମ ଉଲ୍ଲେଖିତ ହୋଇ
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "\"%s\" ଫାଇଲ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
-
-msgid "Internal data stream error."
-msgstr ""
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -108,6 +112,10 @@ msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କ�
 
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
 
 #, c-format

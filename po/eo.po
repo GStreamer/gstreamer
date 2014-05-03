@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2011-06-04 22:18+0200\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -46,8 +46,15 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+msgid "Internal data stream error."
+msgstr "Interna datum-flu-eraro."
+
 msgid "Couldn't download fragments"
 msgstr ""
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Ne eblis malfermi la dosieron \"%s\" por legi."
 
 msgid "No file name specified for writing."
 msgstr "Neniu dosiernomo estas specifite por skribi."
@@ -55,9 +62,6 @@ msgstr "Neniu dosiernomo estas specifite por skribi."
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Ne eblis malfermi la dosieron \"%s\" por skribi."
-
-msgid "Internal data stream error."
-msgstr "Interna datum-flu-eraro."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -107,6 +111,10 @@ msgstr "Ne eblis malfermi la \"Frontend\"-aparaton \"%s\"."
 
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Ne eblis akiri la agordojn de la \"Frontend\"-aparato \"%s\"."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Ne eblis akiri la agordojn de la \"Frontend\"-aparato \"%s\"."
 
 #, c-format

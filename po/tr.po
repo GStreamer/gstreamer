@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2011-04-26 19:21+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -45,8 +45,15 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+msgid "Internal data stream error."
+msgstr "İç veri akım hatası."
+
 msgid "Couldn't download fragments"
 msgstr ""
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Dosyayı \"%s\" okumak için açamıyor."
 
 msgid "No file name specified for writing."
 msgstr "Yazmak için dosya adı belirtilmedi."
@@ -54,9 +61,6 @@ msgstr "Yazmak için dosya adı belirtilmedi."
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Dosyayı \"%s\" yazmak için açamıyor."
-
-msgid "Internal data stream error."
-msgstr "İç veri akım hatası."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -106,6 +110,10 @@ msgstr "Aygıt açılamaz durumda \"%s\"."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Aygıt ayarları bulunamadı \"%s\"."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Aygıt ayarları bulunamadı \"%s\"."
 
 #, c-format

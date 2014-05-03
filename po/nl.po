@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2013-09-15 13:26+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -48,8 +48,15 @@ msgstr "De URI van het manifest verkrijgen lukt niet"
 msgid "Failed to get fragment URL."
 msgstr "Verkrijgen van de URL van het fragment is mislukt."
 
+msgid "Internal data stream error."
+msgstr "Interne fout in gegevensstroom."
+
 msgid "Couldn't download fragments"
 msgstr "Kan fragmenten niet downloaden"
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Kan bestand \"%s\" niet openen om te lezen."
 
 msgid "No file name specified for writing."
 msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
@@ -57,9 +64,6 @@ msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
-
-msgid "Internal data stream error."
-msgstr "Interne fout in gegevensstroom."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -113,6 +117,10 @@ msgstr "Kan het frontend-apparaat \"%s\" niet openen."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Kan de instellingen van het frontend-apparaat \"%s\" niet verkrijgen."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Kan de instellingen van het frontend-apparaat \"%s\" niet verkrijgen."
 
 #, c-format

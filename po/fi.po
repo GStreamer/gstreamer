@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2009-08-12 22:13+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -50,8 +50,15 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+msgid "Internal data stream error."
+msgstr "Sisäisen tietovirran virhe."
+
 msgid "Couldn't download fragments"
 msgstr ""
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Tiedostoa \"%s\" ei voi avata luettavaksi."
 
 msgid "No file name specified for writing."
 msgstr "Kirjoitettavaa tiedostonimeä ei annettu."
@@ -59,9 +66,6 @@ msgstr "Kirjoitettavaa tiedostonimeä ei annettu."
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Tiedostoa \"%s\" ei voi avata kirjoitettavaksi."
-
-msgid "Internal data stream error."
-msgstr "Sisäisen tietovirran virhe."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -111,6 +115,10 @@ msgstr "Edustalaitetta \"%s\" ei voitu avata."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Edustalaitteen \"%s\" asetuksia ei saatu."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Edustalaitteen \"%s\" asetuksia ei saatu."
 
 #, c-format

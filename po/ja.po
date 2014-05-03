@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2011-04-26 19:38+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -46,8 +46,15 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+msgid "Internal data stream error."
+msgstr "内部データストリームエラー。"
+
 msgid "Couldn't download fragments"
 msgstr ""
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "読み込み用にファイル \"%s\" を開くことができません。"
 
 msgid "No file name specified for writing."
 msgstr "書き込み用にファイル名が指定されていません。"
@@ -55,9 +62,6 @@ msgstr "書き込み用にファイル名が指定されていません。"
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "書き込み用にファイル \"%s\" を開くことができませんでした。"
-
-msgid "Internal data stream error."
-msgstr "内部データストリームエラー。"
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -107,6 +111,10 @@ msgstr "フロントエンドデバイス \"%s\" を開くことができませ�
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "フロントエンドデバイス \"%s\" から設定を取得できませんでした。"
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "フロントエンドデバイス \"%s\" から設定を取得できませんでした。"
 
 #, c-format

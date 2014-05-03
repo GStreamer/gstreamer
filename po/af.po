@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -45,8 +45,15 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+msgid "Internal data stream error."
+msgstr ""
+
 msgid "Couldn't download fragments"
 msgstr ""
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
 
 #, fuzzy
 msgid "No file name specified for writing."
@@ -55,9 +62,6 @@ msgstr "Geen lêernaam gespesifiseer."
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
-
-msgid "Internal data stream error."
-msgstr ""
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -107,6 +111,10 @@ msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
 
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
 
 #, c-format

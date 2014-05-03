@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:34+0200\n"
+"POT-Creation-Date: 2014-05-03 17:24+0200\n"
 "PO-Revision-Date: 2013-09-15 08:26+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -49,8 +49,15 @@ msgstr "Не удалось получить URI манифеста"
 msgid "Failed to get fragment URL."
 msgstr "Ошибка при получении URL фрагмента."
 
+msgid "Internal data stream error."
+msgstr "Внутренняя ошибка потока данных."
+
 msgid "Couldn't download fragments"
 msgstr "Не удалось скачать фрагменты"
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Не удалось открыть для чтения файл «%s»."
 
 msgid "No file name specified for writing."
 msgstr "Не указано имя файла для записи."
@@ -58,9 +65,6 @@ msgstr "Не указано имя файла для записи."
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не удалось открыть для записи файл «%s»."
-
-msgid "Internal data stream error."
-msgstr "Внутренняя ошибка потока данных."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -112,6 +116,10 @@ msgstr "Не удалось открыть DVB-декодер «%s»."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Не удалось получить параметры DVB-декодера «%s»."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Не удалось получить параметры DVB-декодера «%s»."
 
 #, c-format
