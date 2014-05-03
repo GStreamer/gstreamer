@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-03-15 13:34+0100\n"
+"POT-Creation-Date: 2014-05-03 17:22+0200\n"
 "PO-Revision-Date: 2012-05-05 19:05+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -244,9 +244,9 @@ msgstr "Η συσκευή '%s' δεν είναι μια συσκευή λήψη�
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Η συσκευή '%s' δεν είναι μια συσκευή λήψης."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Η συσκευή '%s' δεν είναι συσκευή εξόδου."
+msgstr ""
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -266,9 +266,8 @@ msgstr "Η συσκευή εισόδου βίντεο δεν αποδέχθηκ�
 msgid "Video device returned invalid dimensions."
 msgstr ""
 
-#, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr "Ο οδηγός της συσκευής '%s' δεν υποστηρίζει κάποια γνωστή μέθοδο λήψης."
+msgstr ""
 
 msgid "Video devices uses an unsupported pixel format."
 msgstr ""

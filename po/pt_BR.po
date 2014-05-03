@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.0.3\n"
+"Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-03-15 13:34+0100\n"
-"PO-Revision-Date: 2013-08-21 00:12-0300\n"
+"POT-Creation-Date: 2014-05-03 17:22+0200\n"
+"PO-Revision-Date: 2013-12-29 17:48-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -23,7 +23,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Servidor Jack não encontrado"
 
 msgid "Failed to decode JPEG image"
 msgstr "Falha ao decodificar a imagem JPEG"
@@ -73,6 +73,8 @@ msgstr "Este arquivo é inválido e não pôde ser reproduzido."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
+"Não foi possível reproduzir o fluxo por estar criptografado com PlayReady "
+"DRM."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Este arquivo está corrompido e não pôde ser reproduzido."
@@ -176,13 +178,11 @@ msgstr "Entrada aux. 1"
 msgid "AUX 2 In"
 msgstr "Entrada aux. 2"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Loopback"
+msgstr "CODEC Loopback"
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Loopback"
+msgstr "SunVTS Loopback"
 
 msgid "Volume"
 msgstr "Volume"

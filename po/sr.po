@@ -2,26 +2,25 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.28.2\n"
+"Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-03-15 13:34+0100\n"
-"PO-Revision-Date: 2011-12-04 16:44+0200\n"
+"POT-Creation-Date: 2014-05-03 17:22+0200\n"
+"PO-Revision-Date: 2013-10-04 12:15+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
-"Language-Team: Serbian <gnu@prevod.org>\n"
+"Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Virtaal 0.7.0\n"
 "X-Project-Style: gnome\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Нисам пронашао сервер утичнице"
 
 msgid "Failed to decode JPEG image"
 msgstr "Нисам успео да декодирам ЈПЕГ слику"
@@ -70,6 +69,7 @@ msgstr "Ова датотека је неисправна и не може би�
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
+"Не могу да пустим ток зато што је шифрован УДП-ом „Спреман за пуштање“."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Ова датотека је оштећена и не може бити пуштена."
@@ -173,13 +173,11 @@ msgstr "АУХ 1 улаз"
 msgid "AUX 2 In"
 msgstr "АУХ 2 улаз"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Повратна петља"
+msgstr "Повратна петља кодека"
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Повратна петља"
+msgstr "Повратна петља СанВТС-а"
 
 msgid "Volume"
 msgstr "Јачина звука"
@@ -215,90 +213,88 @@ msgstr "Грешка приликом читања %d бајтова са уре
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
+"Нисам успео да нумеришем могући уређај записа снимка „%s“ са којим може да "
+"ради"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Не могу да мапирам помоћне меморије са уређаја „%s“"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
-"Управљачки програм уређаја „%s“ не подржава ниједан познати начин снимања."
+msgstr "Управљачки програм уређаја „%s“ не подржава УИ начин %d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr ""
-"Управљачки програм уређаја „%s“ не подржава ниједан познати начин снимања."
+msgstr "Управљачки програм уређаја „%s“ не подржава ниједан познати УИ начин."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Уређај „%s“ није излазни уређај."
+msgstr "Уређај „%s“ не подржава видео снимање"
 
 #, c-format
 msgid "Device '%s' is busy"
-msgstr ""
+msgstr "Уређај „%s“ је заузет"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Уређај „%s“ није уређај за снимање."
+msgstr "Уређај „%s“ не може да снима на %dx%d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Уређај „%s“ није уређај за снимање."
+msgstr "Уређај „%s“ не може да снима у наведеном запису"
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Уређај „%s“ није излазни уређај."
+msgstr "Уређај „%s“ не подржава видео снимање"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Не могу да добавим параметре на уређају „%s“"
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr "Улазни видео уређај не прихвата нове поставке протока кадрова."
+msgstr "Видео уређај не прихвата нове поставке протока кадрова."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "Видео уређај не може да направи смештај међумеморије."
 
 #, fuzzy
 msgid "Video device did not provide output format."
-msgstr "Улазни видео уређај не прихвата нове поставке протока кадрова."
+msgstr "Видео уређај не прихвата нове поставке протока кадрова."
 
 msgid "Video device returned invalid dimensions."
 msgstr ""
 
 #, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr ""
-"Управљачки програм уређаја „%s“ не подржава ниједан познати начин снимања."
+msgstr "Управљачки програм уређаја „%s“ не подржава УИ начин %d"
 
 msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Нисам успео да добавим подешавања тјунера %d на уређају „%s“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Грешка приликом читања %d бајтова са уређаја „%s“."
+msgstr "Грешка добављања могућности за уређај „%s“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Уређај „%s“ није излазни уређај."
+msgstr "Уређај „%s“ није тјунер."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Нисам успео да подесим улаз %d на уређају %s."
+msgstr "Нисам успео да добавим радио улаз на уређају „%s“."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Нисам успео да подесим улаз %d на уређају %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Нисам успео да добавим јачину сигнала за уређај „%s“."
+msgstr "Нисам успео да изменим стање утишаности за уређај „%s“."
 
 #, c-format
 msgid ""
@@ -398,422 +394,3 @@ msgstr "Промена резолуције приликом извршавањ�
 
 msgid "Cannot operate without a clock"
 msgstr "Не могу да радим без сата"
-
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Добих неочекивану величину кадра, %u уместо %u."
-
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Нисам успео да добавим видео кадрове са уређаја „%s“."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Нисам успео након %d покушаја. уређај %s. системска грешка: %s"
-
-#~ msgid "Bass"
-#~ msgstr "Бас"
-
-#~ msgid "Treble"
-#~ msgstr "Високотонац"
-
-#~ msgid "Synth"
-#~ msgstr "Синтисајзер"
-
-#~ msgid "PCM"
-#~ msgstr "ПЦМ"
-
-#~ msgid "Speaker"
-#~ msgstr "Звучник"
-
-#~ msgid "Line-in"
-#~ msgstr "Линијски улаз"
-
-#~ msgid "CD"
-#~ msgstr "ЦД"
-
-#~ msgid "Mixer"
-#~ msgstr "Мешач"
-
-#~ msgid "PCM-2"
-#~ msgstr "ПЦМ-2"
-
-#~ msgid "Record"
-#~ msgstr "Снимање"
-
-#~ msgid "In-gain"
-#~ msgstr "Улазно појачање"
-
-#~ msgid "Out-gain"
-#~ msgstr "Излазно појачање"
-
-#~ msgid "Line-1"
-#~ msgstr "Линија 1"
-
-#~ msgid "Line-2"
-#~ msgstr "Линија 2"
-
-#~ msgid "Line-3"
-#~ msgstr "Линија 3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Дигитални 1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Дигитални 2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Дигитални 3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Телефонски улаз"
-
-#~ msgid "Phone-out"
-#~ msgstr "Телефонски излаз"
-
-#~ msgid "Video"
-#~ msgstr "Видео"
-
-#~ msgid "Radio"
-#~ msgstr "Радио"
-
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Не могу да покренем звучни уређај за руковање управљањем мешача."
-
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Не могу да покренем звучни уређај за руковање управљањем мешача. Ово "
-#~ "издање система отвореног звука није подржано овим елементом."
-
-#~ msgid "Master"
-#~ msgstr "Главни"
-
-#~ msgid "Front"
-#~ msgstr "Предњи"
-
-#~ msgid "Rear"
-#~ msgstr "Задњи"
-
-#~ msgid "Headphones"
-#~ msgstr "Слушалице"
-
-#~ msgid "Center"
-#~ msgstr "Средињи"
-
-#~ msgid "LFE"
-#~ msgstr "ЛФЕ"
-
-#~ msgid "Surround"
-#~ msgstr "Окружење"
-
-#~ msgid "Side"
-#~ msgstr "Са стране"
-
-#~ msgid "AUX Out"
-#~ msgstr "АУХ излаз"
-
-#~ msgid "3D Depth"
-#~ msgstr "3Д дубина"
-
-#~ msgid "3D Center"
-#~ msgstr "3Д средиште"
-
-#~ msgid "3D Enhance"
-#~ msgstr "3Д побољшање"
-
-#~ msgid "Telephone"
-#~ msgstr "Телефон"
-
-#~ msgid "Video In"
-#~ msgstr "Видео улаз"
-
-#~ msgid "AUX In"
-#~ msgstr "АУХ улаз"
-
-#~ msgid "Record Gain"
-#~ msgstr "Појачање снимања"
-
-#~ msgid "Output Gain"
-#~ msgstr "Појачање излаза"
-
-#~ msgid "Microphone Boost"
-#~ msgstr "Појачање микрофона"
-
-#~ msgid "Diagnostic"
-#~ msgstr "Дијагностика"
-
-#~ msgid "Bass Boost"
-#~ msgstr "Појачање баса"
-
-#~ msgid "Playback Ports"
-#~ msgstr "Портови пуштања"
-
-#~ msgid "Input"
-#~ msgstr "Улаз"
-
-#~ msgid "Monitor Source"
-#~ msgstr "Извор праћења"
-
-#~ msgid "Keyboard Beep"
-#~ msgstr "Звук тастатуре"
-
-#~ msgid "Simulate Stereo"
-#~ msgstr "Лажни стерео"
-
-#~ msgid "Stereo"
-#~ msgstr "Стерео"
-
-#~ msgid "Surround Sound"
-#~ msgstr "Звук окружења"
-
-#~ msgid "Microphone Gain"
-#~ msgstr "Појачање микрофона"
-
-#~ msgid "Speaker Source"
-#~ msgstr "Извор звучника"
-
-#~ msgid "Microphone Source"
-#~ msgstr "Извор микрофона"
-
-#~ msgid "Jack"
-#~ msgstr "Утичница"
-
-#~ msgid "Center / LFE"
-#~ msgstr "Средиште / ЛФЕ"
-
-#~ msgid "Stereo Mix"
-#~ msgstr "Стерео микс"
-
-#~ msgid "Mono Mix"
-#~ msgstr "Моно микс"
-
-#~ msgid "Input Mix"
-#~ msgstr "Улазни микс"
-
-#~ msgid "Microphone 1"
-#~ msgstr "Микрофон 1"
-
-#~ msgid "Microphone 2"
-#~ msgstr "Микрофон 2"
-
-#~ msgid "Digital Out"
-#~ msgstr "Дигитални излаз"
-
-#~ msgid "Digital In"
-#~ msgstr "Дигитални улаз"
-
-#~ msgid "HDMI"
-#~ msgstr "ХДМИ"
-
-#~ msgid "Modem"
-#~ msgstr "Модем"
-
-#~ msgid "Handset"
-#~ msgstr "Слушалица"
-
-#~ msgid "Other"
-#~ msgstr "Остало"
-
-#~ msgid "None"
-#~ msgstr "Ништа"
-
-#~ msgid "On"
-#~ msgstr "Укљ."
-
-#~ msgid "Off"
-#~ msgstr "Искљ."
-
-#~ msgid "Mute"
-#~ msgstr "Без звука"
-
-#~ msgid "Fast"
-#~ msgstr "Брзо"
-
-#~ msgid "Very Low"
-#~ msgstr "Врло низак"
-
-#~ msgid "Low"
-#~ msgstr "Низак"
-
-#~ msgid "Medium"
-#~ msgstr "Средњи"
-
-#~ msgid "High"
-#~ msgstr "Висок"
-
-#~ msgid "Very High"
-#~ msgstr "Врло висок"
-
-#~ msgid "Production"
-#~ msgstr "Производни"
-
-#~ msgid "Front Panel Microphone"
-#~ msgstr "Микрофон предње површи"
-
-#~ msgid "Front Panel Line In"
-#~ msgstr "Линијски улаз предње површи"
-
-#~ msgid "Front Panel Headphones"
-#~ msgstr "Слушалице предње површи"
-
-#~ msgid "Front Panel Line Out"
-#~ msgstr "Линијски излаз предње површи"
-
-#~ msgid "Green Connector"
-#~ msgstr "Зелени прикључак"
-
-#~ msgid "Pink Connector"
-#~ msgstr "Ружичаст прикључак"
-
-#~ msgid "Blue Connector"
-#~ msgstr "Плави прикључак"
-
-#~ msgid "White Connector"
-#~ msgstr "Бели прикључак"
-
-#~ msgid "Black Connector"
-#~ msgstr "Црни прикључак"
-
-#~ msgid "Gray Connector"
-#~ msgstr "Сиви прикључак"
-
-#~ msgid "Orange Connector"
-#~ msgstr "Наранџасти прикључак"
-
-#~ msgid "Red Connector"
-#~ msgstr "Црвени прикључак"
-
-#~ msgid "Yellow Connector"
-#~ msgstr "Жути прикључак"
-
-#~ msgid "Green Front Panel Connector"
-#~ msgstr "Зелени прикључак на предњој површи"
-
-#~ msgid "Pink Front Panel Connector"
-#~ msgstr "Ружичасти прикључак на предњој површи"
-
-#~ msgid "Blue Front Panel Connector"
-#~ msgstr "Плави прикључак на предњој површи"
-
-#~ msgid "White Front Panel Connector"
-#~ msgstr "Бели прикључак на предњој површи"
-
-#~ msgid "Black Front Panel Connector"
-#~ msgstr "Црни прикључак на предњој површи"
-
-#~ msgid "Gray Front Panel Connector"
-#~ msgstr "Сиви прикључак на предњој површи"
-
-#~ msgid "Orange Front Panel Connector"
-#~ msgstr "Наранџасти прикључак на предњој површи"
-
-#~ msgid "Red Front Panel Connector"
-#~ msgstr "Црвени прикључак на предњој површи"
-
-#~ msgid "Yellow Front Panel Connector"
-#~ msgstr "Жути прикључак на предњој површи"
-
-#~ msgid "Spread Output"
-#~ msgstr "Излаз ширења"
-
-#~ msgid "Downmix"
-#~ msgstr "Сабирни мешач"
-
-#~ msgid "Virtual Mixer Input"
-#~ msgstr "Улаз виртуелног мешача"
-
-#~ msgid "Virtual Mixer Output"
-#~ msgstr "Излаз виртуелног мешача"
-
-#~ msgid "Virtual Mixer Channels"
-#~ msgstr "Канали виртуелног мешача"
-
-#~ msgid "%s %d Function"
-#~ msgstr "%s %d функција"
-
-#~ msgid "%s Function"
-#~ msgstr "%s функција"
-
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Не могу да успоставим везу са сервером звука"
-
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Нисам успео да испитам могућности сервера звука"
-
-#~ msgid "Error reading %d bytes on device '%s'."
-#~ msgstr "Грешка приликом читања %d бајтова на уређају „%s“."
-
-#~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Не могу да додам помоћне меморије у уређају „%s“."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Не могу да отворим датотеку „%s“ ради уписа."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Грешка при затварању датотеке „%s“."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Не могу да отворим датотеку „%s“ ради читања."
-
-#~ msgid "No filename specified."
-#~ msgstr "Име датотеке није задато."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Не могу да пишем у датотеку „%s“."
-
-#~ msgid "Could not open control device \"%s\" for writing."
-#~ msgstr "Не могу да отворим управљачки уређај „%s“ ради уписа."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "Не могу да подесим звучни уређај „%s“."
-
-#~ msgid "Could not set audio device \"%s\" to %d Hz."
-#~ msgstr "Не могу да поставим звучни уређај „%s“ на %d Hz."
-
-#~ msgid "Could not open video device \"%s\" for writing."
-#~ msgstr "Не могу да отворим видео уређај „%s“ ради уписа."
-
-#~ msgid "Could not close video device \"%s\"."
-#~ msgstr "Не могу да затворим видео уређај „%s“."
-
-#~ msgid "OSS device \"%s\" is already in use by another program."
-#~ msgstr "OSS уређај „%s“ већ користи неки програм."
-
-#~ msgid "Could not access device \"%s\", check its permissions."
-#~ msgstr "Не могу да приступим уређају „%s“, проверите његова овлашћења."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Не постоји уређај „%s“."
-
-#~ msgid "Could not open device \"%s\" for writing."
-#~ msgstr "Не могу да отворим уређај „%s“ ради уписа."
-
-#~ msgid "Could not open device \"%s\" for reading."
-#~ msgstr "Не могу да отворим уређај „%s“ ради читања."
-
-# Виртуелни Систем Датотека
-#~ msgid "Could not open vfs file \"%s\" for reading."
-#~ msgstr "Не могу да отворим ВСД датотеку „%s“ ради читања."
-
-#, fuzzy
-#~ msgid "No filename given."
-#~ msgstr "Име датотеке није задато."
-
-#, fuzzy
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Не могу да отворим ВСД датотеку „%s“ ради уписа."
-
-#, fuzzy
-#~ msgid "No filename given"
-#~ msgstr "Име датотеке није задато."
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Не могу да затворим ВСД датотеку „%s“."
-
-#~ msgid "No device specified."
-#~ msgstr "Уређај није наведен."
-
-#~ msgid "Device is not open."
-#~ msgstr "Уређај није отворен."
-
-#~ msgid "Device is open."
-#~ msgstr "Уређај је отворен."

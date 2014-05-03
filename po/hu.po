@@ -4,25 +4,26 @@
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
 # Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2010, 2012.
+# Balázs Úr <urbalazs@gmail.com>, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.0.3\n"
+"Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-03-15 13:34+0100\n"
-"PO-Revision-Date: 2012-11-30 15:05+0100\n"
-"Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
+"POT-Creation-Date: 2014-05-03 17:22+0200\n"
+"PO-Revision-Date: 2014-03-20 18:55+0100\n"
+"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
-"X-Generator: Lokalize 1.4\n"
+"X-Generator: Lokalize 1.2\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Jack kiszolgáló nem található"
 
 msgid "Failed to decode JPEG image"
 msgstr "A JPEG kép visszafejtése meghiúsult"
@@ -72,6 +73,7 @@ msgstr "A fájl nem érvényes és nem játszható le."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
+"Nem lehet lejátszani a folyamot, mert PlayReady DRM titkosítás van rajta."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "A fájl sérült és nem játszható le."
@@ -175,13 +177,11 @@ msgstr "1. AUX be"
 msgid "AUX 2 In"
 msgstr "2. AUX be"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Visszacsatolás"
+msgstr "Kodek visszacsatolás"
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Visszacsatolás"
+msgstr "SunVTS visszacsatolás"
 
 msgid "Volume"
 msgstr "Hangerő"

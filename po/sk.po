@@ -1,14 +1,14 @@
 # Slovak translations for gst-plugins-good.
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-03-15 13:34+0100\n"
-"PO-Revision-Date: 2010-11-08 15:48+0100\n"
-"Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
+"POT-Creation-Date: 2014-05-03 17:22+0200\n"
+"PO-Revision-Date: 2014-01-30 11:08+0100\n"
+"Last-Translator: Peter Tuharsky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
@@ -19,7 +19,7 @@ msgstr ""
 "X-Poedit-Country: SLOVAKIA\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Jack server sa nenašiel"
 
 msgid "Failed to decode JPEG image"
 msgstr "Nepodarilo sa dekódovať obrázok JPEG"
@@ -42,14 +42,14 @@ msgid "Could not resolve server name."
 msgstr "Nepodarilo sa preložiť názov servera."
 
 msgid "Could not establish connection to server."
-msgstr "Nepodarilo sa nadviazať spojenie so serverom"
+msgstr "Nepodarilo sa nadviazať spojenie so serverom."
 
 msgid "Secure connection setup failed."
 msgstr "Nastavenie bezpečného pripojenia zlyhalo."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr "Vyskytla sa sieťová chyba, alebo server neočakávane uzavrel spojenie."
+msgstr "Vyskytla sa sieťová chyba, alebo server nečakane uzavrel spojenie."
 
 msgid "Server sent bad data."
 msgstr "Server odoslal chybné údaje."
@@ -68,12 +68,13 @@ msgstr "Tento súbor je chybný a nedá sa prehrať."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
+"Prúd údajov sa nedá prehrať pretože je šifrovaný pomocou PlayReady DRM."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Tento súbor je poškodený a nedá sa prehrať."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Nesprávna atomická veľkosť."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Tento súbor je neúplný a nedá sa prehrať."
@@ -125,30 +126,30 @@ msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Táto verzia "
-"Open Sound System nie je podporovaná týmto prvkom."
+"Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Tento prvok "
+"nepodporuje túto verziu Open Sound System."
 
 msgid "Playback is not supported by this audio device."
-msgstr "Prehrávanie nie je podporované týmto zvukovým zariadením"
+msgstr "Toto zvukové zariadenie nepodporuje prehrávanie."
 
 msgid "Audio playback error."
 msgstr "Chyba prehrávania zvuku."
 
 msgid "Recording is not supported by this audio device."
-msgstr "Záznam nie je podporovaný týmto zvukovým zariadením."
+msgstr "Toto zvukové zariadenie nepodporuje nahrávanie."
 
 msgid "Error recording from audio device."
-msgstr "Chyba pri zázname zo zvukového zariadenia."
+msgstr "Chyba pri nahrávaní zo zvukového zariadenia."
 
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
-"Nepodarilo sa otvoriť zvukové zariadenie v režime záznamu. Nemáte oprávnenie "
-"na otvorenie tohto zariadenia."
+"Nepodarilo sa otvoriť zvukové zariadenie v režime nahrávania. Nemáte "
+"oprávnenie na otvorenie tohto zariadenia."
 
 msgid "Could not open audio device for recording."
-msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime záznamu."
+msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime nahrávania."
 
 msgid "Record Source"
 msgstr "Zdroj záznamu"
@@ -171,13 +172,11 @@ msgstr "AUX 1 vstup"
 msgid "AUX 2 In"
 msgstr "AUX 2 vstup"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Spätná slučka"
+msgstr "Spätná slučka kodeku"
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Spätná slučka"
+msgstr "Spätná slučka SunVTS"
 
 msgid "Volume"
 msgstr "Hlasitosť"
@@ -208,99 +207,93 @@ msgstr "AUX 2 výstup"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."
+msgstr "Chyba pri čítaní %d bajtov zo zariadenia '%s'."
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
-"Nepodarilo sa zistiť možné video formáty, '%s' s ktorými vie zariadenie "
-"pracovať"
+"Nepodarilo sa zistiť možné video formáty s ktorými by vedelo pracovať "
+"zariadenie '%s'"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Nepodarilo sa namapovať vyrovnávaciu pamäť zariadenia '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
-"Tento ovládač zariadenia '%s' nepodporuje žiadnu známu metódu nahrávania."
+msgstr "Tento ovládač zariadenia '%s' nepodporuje IO metódu %d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr ""
-"Tento ovládač zariadenia '%s' nepodporuje žiadnu známu metódu nahrávania."
+msgstr "Tento ovládač zariadenia '%s' nepodporuje žiadnu známu IO metódu."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Zariadenie '%s' nie je určené pre výstup."
+msgstr "Zariadenie '%s' nie je určené pre nahrávanie videa"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Zariadenie '%s' nie je určené pre výstup."
+msgstr "Zariadenie '%s' je zaneprázdnené"
 
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Zariadenie '%s' nevie zachytávať na %dx%d"
+msgstr "Zariadenie '%s' nevie nahrávať na %dx%d"
 
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Zariadenie '%s' nedokáže zachytávať v uvedenom formáte"
+msgstr "Zariadenie '%s' nedokáže nahrávať v uvedenom formáte"
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Zariadenie '%s' nie je určené pre výstup."
+msgstr "Zariadenie '%s' nie je určené pre nahrávanie videa"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Nepodarilo sa získať parametre zariadenia '%s'"
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr ""
-"Zariadenie video vstupu neakceptovalo nové nastavenie frekvencie snímok."
+msgstr "Video zariadenie odmietlo nové nastavenie frekvencie snímok."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "Video zariadenie nemohlo vytvoriť oblasť vyrovnávacej pamäte."
 
 #, fuzzy
 msgid "Video device did not provide output format."
-msgstr ""
-"Zariadenie video vstupu neakceptovalo nové nastavenie frekvencie snímok."
+msgstr "Video zariadenie odmietlo nové nastavenie frekvencie snímok."
 
 msgid "Video device returned invalid dimensions."
 msgstr ""
 
 #, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr ""
-"Tento ovládač zariadenia '%s' nepodporuje žiadnu známu metódu nahrávania."
+msgstr "Tento ovládač zariadenia '%s' nepodporuje IO metódu %d"
 
 msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Nepodarilo sa získať nastavenie prijímača %d od zariadenia '%s'."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."
+msgstr "Chyba pri načítaní možností zariadena '%s'."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Zariadenie '%s' nie je určené pre výstup."
+msgstr "Zariadenie '%s' nie je prijímač."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Nepodarilo sa nastaviť vstup %d na zariadení %s."
+msgstr "Nepodarilo sa získať rozhlasový vstup na zariadení '%s'."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Nepodarilo sa nastaviť vstup %d na zariadení %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Nepodarilo sa zistiť silu signálu pre zariadenie '%s'."
+msgstr "Nepodarilo sa zmeniť stav stlmenia pre zariadenie '%s'."
 
 #, c-format
 msgid ""
@@ -340,7 +333,7 @@ msgstr "Nepodarilo sa otvoriť zariadenie '%s' pre čítanie a zápis."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Zariadenie '%s' nie je určené pre zachytávanie."
+msgstr "Zariadenie '%s' nie je určené pre nahrávanie."
 
 #, c-format
 msgid "Device '%s' is not a output device."
@@ -387,15 +380,15 @@ msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Nepodarilo sa zistiť súčasný vstup na zariadení '%s'. Možno je to rádio."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Nepodarilo sa zistiť súčasný vstup na zariadení '%s'. Možno je to rádio."
+"Nepodarilo sa zistiť súčasný výstup na zariadení '%s'. Možno je to rádio."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Nepodarilo sa nastaviť vstup %d na zariadení %s."
+msgstr "Nepodarilo sa nastaviť výstup %d na zariadení %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
@@ -403,14 +396,11 @@ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Nastala neočakávaná veľkosť snímky %u namiesto %u."
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"
 
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Nepodarilo sa získať videosnímky zo zariadenia '%s'."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Nepodarilo sa po %d pokusoch. Zariadenie %s. Systémová chyba: %s"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Nepodarilo sa zistiť schopnosti zvukového servera"
 
 #~ msgid "Bass"
 #~ msgstr "Basy"
@@ -734,17 +724,20 @@ msgstr "Nemôžem fungovať bez hodín"
 #~ msgid "%s Function"
 #~ msgstr "%s funkcia"
 
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Nastala neočakávaná veľkosť snímky %u namiesto %u."
+
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."
 
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr "Nepodarilo sa zaradiť vyrovnávaciu pamäť na zariadení '%s'."
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Nepodarilo sa získať videosnímky zo zariadenia '%s'."
 
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Nepodarilo sa zistiť schopnosti zvukového servera"
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Nepodarilo sa po %d pokusoch. Zariadenie %s. Systémová chyba: %s"
 
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr "Nepodarilo sa získať atribúty ovládacích prvkov na zariadení '%s.'"

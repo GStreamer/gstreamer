@@ -1,19 +1,19 @@
 # Danish translation of gst-plugins-good.
-# Copyright (C) 2010 gst.
+# Copyright (C) 2013 gst.
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2010, 2011, 2012.
+# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2010, 2011, 2012, 2013.
 #
 # gain -> forhøjelse
 # boost -> øgning?
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.0.3\n"
+"Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-03-15 13:34+0100\n"
-"PO-Revision-Date: 2012-12-13 23:54+0200\n"
+"POT-Creation-Date: 2014-05-03 17:22+0200\n"
+"PO-Revision-Date: 2013-12-08 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -22,7 +22,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Jack-server blev ikke fundet"
 
 msgid "Failed to decode JPEG image"
 msgstr "Mislykkedes i at afkode JPEG-billede"
@@ -30,7 +30,7 @@ msgstr "Mislykkedes i at afkode JPEG-billede"
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr "'%s' af '%s'"
+msgstr "»%s« af »%s«"
 
 msgid "Could not connect to server"
 msgstr "Kunne ikke forbinde til server"
@@ -71,7 +71,7 @@ msgid "This file is invalid and cannot be played."
 msgstr "Denne fil er ufuldstændig og kan ikke afspilles."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
-msgstr ""
+msgstr "Kan ikke afspille strøm, da den er krypteret med PlayReady DRM."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Denne fil er ødelagt og kan ikke afspilles."
@@ -158,35 +158,31 @@ msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åbne lydenhed til optagelse."
 
 msgid "Record Source"
-msgstr ""
+msgstr "Optagelseskilde"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Mikrofon"
 
-#, fuzzy
 msgid "Line In"
-msgstr "Linje ud"
+msgstr "Linje ind"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Intern cd"
 
-#, fuzzy
 msgid "SPDIF In"
-msgstr "SPDIF ud"
+msgstr "SPDIF ind"
 
-#, fuzzy
 msgid "AUX 1 In"
-msgstr "AUX 1 ud"
+msgstr "AUX 1 ind"
 
-#, fuzzy
 msgid "AUX 2 In"
-msgstr "AUX 2 ud"
+msgstr "AUX 2 ind"
 
 msgid "Codec Loopback"
-msgstr ""
+msgstr "Codec-loopback"
 
 msgid "SunVTS Loopback"
-msgstr ""
+msgstr "SunVTS-loopback"
 
 msgid "Volume"
 msgstr "Lydstyrke"
@@ -217,7 +213,7 @@ msgstr "AUX 2 ud"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Fejl ved læsning af %d byte på enhed '%s'."
+msgstr "Fejl ved læsning af %d byte på enhed »%s«."
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
@@ -226,7 +222,7 @@ msgstr ""
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Kunne ikke afbilde mellemlager fra enhed '%s'"
+msgstr "Kunne ikke afbilde mellemlager fra enhed »%s«"
 
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
@@ -258,7 +254,7 @@ msgstr "Enheden »%s« understøtter ikke videooptagelse"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "Kunne ikke hente parametre fra enhed '%s'"
+msgstr "Kunne ikke hente parametre fra enhed »%s«"
 
 msgid "Video device did not accept new frame rate setting."
 msgstr "Videoenheden accepterede ikke ny indstilling for billedrate."
@@ -309,7 +305,7 @@ msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Fejl ved hentning af egenskaber for enhed '%s': Det er ikke en v412 driver. "
+"Fejl ved hentning af egenskaber for enhed »%s«: Det er ikke en v412 driver. "
 "Kontroller om det er en v411 driver."
 
 #, c-format
@@ -318,78 +314,78 @@ msgstr "Listning af inddata-attributter for %d i enhed %s fejlede"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Hentning af indstillinger for tuner %d på enhed '%s' fejlede."
+msgstr "Hentning af indstillinger for tuner %d på enhed »%s« fejlede."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Listning af standard på enhed '%s' fejlede."
+msgstr "Listning af standard på enhed »%s« fejlede."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Hentning af kontrolattributter for enhed '%s' fejlede."
+msgstr "Hentning af kontrolattributter for enhed »%s« fejlede."
 
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr "Kan ikke identificere enhed '%s'."
+msgstr "Kan ikke identificere enhed »%s«."
 
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr "Dette er ikke en enheds '%s'."
+msgstr "Dette er ikke en enheds »%s«."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "Kunne ikke tilgå enhed '%s'."
+msgstr "Kunne ikke tilgå enhed »%s«."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Enhed '%s' er ikke en optageenhed."
+msgstr "Enhed »%s« er ikke en optageenhed."
 
 #, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Enhed '%s' er ikke en uddataenhed."
+msgstr "Enhed »%s« er ikke en uddataenhed."
 
 #, fuzzy, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "Enhed '%s' er ikke en uddataenhed."
+msgstr "Enhed »%s« er ikke en uddataenhed."
 
 #, fuzzy, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr "Kunne ikke tilgå enhed '%s'."
+msgstr "Kunne ikke tilgå enhed »%s«."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Indstilling af standard for enhed '%s' fejlede."
+msgstr "Indstilling af standard for enhed »%s« fejlede."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Kunne ikke hente nuværende tuner-frekvens for enhed '%s'."
+msgstr "Kunne ikke hente nuværende tuner-frekvens for enhed »%s«."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr "Kunne ikke sætte nuværende tuner-frekvens for enhed '%s' til %lu Hz."
+msgstr "Kunne ikke sætte nuværende tuner-frekvens for enhed »%s« til %lu Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Kunne ikke hente signalstyrke for enhed '%s'."
+msgstr "Kunne ikke hente signalstyrke for enhed »%s«."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Kunne ikke hente værdi af kontrol %d for enhed '%s'."
+msgstr "Kunne ikke hente værdi af kontrol %d for enhed »%s«."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr "Kunne ikke sætte værdi %d på kontrol %d for enhed '%s'."
+msgstr "Kunne ikke sætte værdi %d på kontrol %d for enhed »%s«."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Kunne ikke hente nuværende inddata for enhed '%s'. Måske er det en radioenhed"
+"Kunne ikke hente nuværende inddata for enhed »%s«. Måske er det en radioenhed"
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Kunne ikke hente nuværende uddata for enhed '%s'. Måske er det en radioenhed"
+"Kunne ikke hente nuværende uddata for enhed »%s«. Måske er det en radioenhed"
 
 #, c-format
 msgid "Failed to set output %d on device %s."

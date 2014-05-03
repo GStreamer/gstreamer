@@ -4,13 +4,14 @@
 # Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
 # Rihards Prieditis <rprieditis@gmail.com>, 2010.
 # Rihards Prieditis <rprieditis@gmail.com>, 2011.
+# Rūdolfs Mazurs <rudolfs.mazurs@gmail.com>, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-03-15 13:34+0100\n"
-"PO-Revision-Date: 2011-09-02 11:23-0000\n"
-"Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
+"POT-Creation-Date: 2014-05-03 17:22+0200\n"
+"PO-Revision-Date: 2014-04-20 16:38+0300\n"
+"Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
 "MIME-Version: 1.0\n"
@@ -18,10 +19,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
 "2);\n"
-"X-Generator: Lokalize 1.0\n"
+"X-Generator: Lokalize 1.5\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Nav atrasts Jack serveris"
 
 msgid "Failed to decode JPEG image"
 msgstr "Neizdevās atkodēt JPEG attēlu"
@@ -29,105 +30,105 @@ msgstr "Neizdevās atkodēt JPEG attēlu"
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr "\"%s\"ko \"%s\""
+msgstr "“%s” izpilda “%s”"
 
 msgid "Could not connect to server"
-msgstr "Nevar savienoties ar serveri"
+msgstr "Nevarēja savienoties ar serveri"
 
 msgid "No URL set."
-msgstr "URL nav uzstādīts."
+msgstr "URL nav iestatīts."
 
 msgid "Server does not support seeking."
 msgstr "Serveris neatbalsta meklēšanu."
 
 msgid "Could not resolve server name."
-msgstr "Nevar atpazīt servera nosaukumu."
+msgstr "Nevar atrast servera nosaukumu."
 
 msgid "Could not establish connection to server."
 msgstr "Nevar izveidot savienojumu ar serveri."
 
 msgid "Secure connection setup failed."
-msgstr "Drošā savienojuma izveidošana neizdevās."
+msgstr "Neizdevās izveidot drošo savienojumu."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr "Notika tīkla kļūda, vai serveris negaidīti aizvēra savienojumu."
 
 msgid "Server sent bad data."
-msgstr "Serveris nosūtija sliktus datus."
+msgstr "Serveris nosūtīja sliktus datus."
 
 msgid "Internal data stream error."
-msgstr "Iekšējās datu plūsmas kļūda."
+msgstr "Iekšēja datu plūsmas kļūda."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Nav neviena vai nederīgs ievades audio, AVI straume tiks bojāta."
+msgstr "Nav vai nederīgs ievades audio, AVI straume tiks bojāta."
 
 msgid "This file contains no playable streams."
-msgstr "Šis fails nesatur nevienu atskaņojamu straumi."
+msgstr "Šī datne nesatur nevienu atskaņojamu straumi."
 
 msgid "This file is invalid and cannot be played."
-msgstr "Šis fails ir nederīgs un nevar tikt atskaņots."
+msgstr "Šī datne ir nederīga un to nevar atskaņot."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
-msgstr ""
+msgstr "Nevar atskaņot straumi, jo tā ir šifrēta ar PlayReady DRM."
 
 msgid "This file is corrupt and cannot be played."
-msgstr "Šis fails ir bojāts un nevar tikt atskaņots."
+msgstr "Šī datne ir bojāta un to nevar atskaņot."
 
 msgid "Invalid atom size."
 msgstr "Nederīgs atoma izmērs."
 
 msgid "This file is incomplete and cannot be played."
-msgstr "Šis pails ir nepabeigts un nevar tikt atskaņots."
+msgstr "Šī datne ir nepabeigta un to nevar atskaņot."
 
 msgid "The video in this file might not play correctly."
-msgstr "Video šajā failā var tikt atskaņots nepareizi."
+msgstr "Video šajā datnē varētu tikt atskaņots nepareizi."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr "Šis fails satur pārāk daudz straumes. Tiek atskaņota tikai pirmā %d"
+msgstr "Šī datne satur pārāk daudz straumju. Tiek atskaņota tikai pirmā %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
-"Netika atrasta atbalstīta straume. Iespējams jums jāinstalē GStreamer RTSP "
-"paplašinājuma spraudni priekš Real media straumēm."
+"Netika atrasta atbalstīta straume. Iespējams, jums jāinstalē GStreamer RTSP "
+"paplašinājuma spraudni Real media straumēm."
 
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Netika atrasta atbalstīta straume. Jums iespējams jāatļauj vairāk transporta "
-"protokoli vai arī trūkst GStreamer RTSP paplašinājuma spraudnis. "
+"Netika atrasta atbalstīta straume. Iespējams, jums jāatļauj vairāk "
+"transporta protokoli vai arī trūkst GStreamer RTSP paplašinājuma spraudnis. "
 
 msgid "Internal data flow error."
-msgstr "Iekšējā datu plūsmas kļūda."
+msgstr "Iekšēja datu plūsmas kļūda."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Nav iespējams atvērt audio ierīci atskaņošanai. Ierīci pašlaik izmanto cita "
-"programma."
+"Nevarēja atvērt audio ierīci atskaņošanai. Ierīci pašlaik izmanto cita "
+"lietotne."
 
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
-"Nav iespējams atvērt audio ierīci atskaņošanai. Jums nav nepieciešamās "
-"atļaujas, lai atvērtu ierīci."
+"Nevar atvērt audio ierīci atskaņošanai. Jums nav nepieciešamās atļaujas, lai "
+"atvērtu ierīci."
 
 msgid "Could not open audio device for playback."
-msgstr "Nav iespējams atvērt audio ierīci atskaņošanai."
+msgstr "Nevarēja atvērt audio ierīci atskaņošanai."
 
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Nav iespējams atvērt audio ierīci atskaņošanai. Šī Atvērtās Skaņas Sistemas "
-"versija neatbalsta šo elementu."
+"Nevar atvērt audio ierīci atskaņošanai. Šī Atvērtās Skaņas Sistēmas versija "
+"neatbalsta šo elementu."
 
 msgid "Playback is not supported by this audio device."
 msgstr "Šī audio ierīce neatbalsta atskaņošanu."
@@ -136,10 +137,10 @@ msgid "Audio playback error."
 msgstr "Audio atskaņošanas kļūda."
 
 msgid "Recording is not supported by this audio device."
-msgstr "Šī audio ierīce neatablsta ierkastīšanu."
+msgstr "Šī audio ierīce neatbalsta ierakstīšanu."
 
 msgid "Error recording from audio device."
-msgstr "Kļūda ierakstot no audio iekārtas."
+msgstr "Kļūda, ierakstot no audio ierīces."
 
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
@@ -158,7 +159,7 @@ msgid "Microphone"
 msgstr "Mikrofons"
 
 msgid "Line In"
-msgstr "Līnijas ieeja"
+msgstr "Skaņas ieeja"
 
 msgid "Internal CD"
 msgstr "Iekšējais CD"
@@ -172,13 +173,11 @@ msgstr "AUX 1 ieeja"
 msgid "AUX 2 In"
 msgstr "AUX 2 ieeja"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Atpakaļcikls"
+msgstr "Kodeka atgriezeniskais cikls"
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Atpakaļcikls"
+msgstr "SunVTS atgriezeniskais cikls"
 
 msgid "Volume"
 msgstr "Skaļums"
@@ -209,102 +208,98 @@ msgstr "AUX 2 izeja"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Radās kļūda nolasot %d baitus no ierīces \"%s\"."
+msgstr "Radās kļūda, nolasot %d baitus no ierīces “%s”."
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
+msgstr "Neizdevās uzskaitīt iespējamos video formātus, ar ko var strādāt “%s”"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Nevar izvietot buferus no ierīces \"%s\""
+msgstr "Nevar izvietot buferus no ierīces “%s”"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
-"Ierīces \"%s\" draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
+msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr ""
-"Ierīces \"%s\" draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
+msgstr "Ierīces “%s” draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Ierīce \"%s\" nav izvades ierīce."
+msgstr "Ierīce “%s” neatbalsta video tveršanu"
 
 #, c-format
 msgid "Device '%s' is busy"
-msgstr ""
+msgstr "Ierīce “%s” ir aizņemta"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Ierīce \"%s\" nav ierakstīšanas ierīce."
+msgstr "Ierīce “%s” nevar tvert ar %dx%d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Ierīce \"%s\" nav ierakstīšanas ierīce."
+msgstr "Ierīce “%s” nevar tvert norādītajā formātā"
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Ierīce \"%s\" nav izvades ierīce."
+msgstr "Ierīce “%s” neatbalsta video tveršanu"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "Nevar nolasīt parametrus no ierīces \"%s\""
+msgstr "Nevar nolasīt parametrus no ierīces “%s”"
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr "Video ievades ierīce nepieņem jaunos kadra frekvences uzstādījumus."
+msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "Video ierīce nevarēja izveidot bufera pūlu."
 
 #, fuzzy
 msgid "Video device did not provide output format."
-msgstr "Video ievades ierīce nepieņem jaunos kadra frekvences uzstādījumus."
+msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
 
 msgid "Video device returned invalid dimensions."
 msgstr ""
 
 #, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr ""
-"Ierīces \"%s\" draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
+msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
 msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Neizdevās saņemt skaņotāja %d uzstādījumus no ierīces \"%s\"."
+msgstr "Neizdevās saņemt skaņotāja %d iestatījumus no ierīces “%s”."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Radās kļūda nolasot %d baitus no ierīces \"%s\"."
+msgstr "Kļūda, saņemot iespējas no ierīces “%s”."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Ierīce \"%s\" nav izvades ierīce."
+msgstr "Ierīce “%s” nav skaņotājs."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Neizdevās uzstādīt ievadi %d uz ierīces %s."
+msgstr "Neizdevās saņemt radio ievadi uz ierīces “%s”."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Neizdevās uzstādīt ievadi %d uz ierīces %s."
+msgstr "Neizdevās iestatīt ievadi %d uz ierīces %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Neizdevās saņemt signāla stiprumu no ierīces \"%s\"."
+msgstr "Neizdevās mainīt apklusināšanas stāvokli ierīcei “%s”."
 
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Radās kļūda saņemot ierīces \"%s\" iespējas: Iespējams tas nav v4I2 "
+"Radās kļūda, saņemot ierīces “%s” iespējas: iespējams tas nav v4I2 "
 "draiveris. Pārbaudiet vai tas ir v4I1 draiveris."
 
 #, c-format
@@ -313,100 +308,97 @@ msgstr "Neizdevās noteikt atribūtus ievadei %d no ierīces %s"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Neizdevās saņemt skaņotāja %d uzstādījumus no ierīces \"%s\"."
+msgstr "Neizdevās saņemt skaņotāja %d iestatījumus no ierīces “%s”."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Neizdevās noskaidrot normu ierīcei \"%s\"."
+msgstr "Neizdevās noskaidrot normu ierīcei “%s”."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Neizdevās iegūt kontroles atribūtus ierīcei \"%s\"."
+msgstr "Neizdevās iegūt kontroles atribūtus ierīcei “%s”."
 
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr "Nevar atpazīt ierīci \"%s\""
+msgstr "Nevar atpazīt ierīci “%s”."
 
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr "Šī nav ierīce \"%s\""
+msgstr "Šī nav ierīce “%s”."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
+msgstr "Nevarēja atvērt ierīci “%s” lasīšanai vai rakstīšanai."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Ierīce \"%s\" nav ierakstīšanas ierīce."
+msgstr "Ierīce “%s” nav ierakstīšanas ierīce."
 
 #, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Ierīce \"%s\" nav izvades ierīce."
+msgstr "Ierīce “%s” nav izvades ierīce."
 
 #, fuzzy, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "Ierīce \"%s\" nav izvades ierīce."
+msgstr "Ierīce “%s” nav izvades ierīce."
 
 #, fuzzy, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
+msgstr "Nevarēja atvērt ierīci “%s” lasīšanai vai rakstīšanai."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Neizdevās uzstādīt normu ierīcei \"%s\"."
+msgstr "Neizdevās iestatīt normu ierīcei “%s”."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Neizdevās saņemt pašreizējo atkaņošanas frekvenci no ierīces \"%s\"."
+msgstr "Neizdevās saņemt pašreizējo atskaņošanas frekvenci no ierīces “%s”."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
-"Neizdevās uzstādīt ierīces \"%s\" pašreizējo atkaļošanas frekvenci uz %lu Hz."
+"Neizdevās iestatīt ierīces “%s” pašreizējo skaņotāja frekvenci uz %lu Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Neizdevās saņemt signāla stiprumu no ierīces \"%s\"."
+msgstr "Neizdevās saņemt signāla stiprumu no ierīces “%s”."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Neizdevās saņemt kontroles vērtību %d ierīcei \"%s\"."
+msgstr "Neizdevās saņemt vadīklas vērtību %d ierīcei “%s”."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr "Neizdevās uzstādīt vērtību %d kontrolei %d no ierīces \"%s\"."
+msgstr "Neizdevās iestatīt vērtību %d vadīklai %d no ierīces “%s”."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Neizdevās saņemt pašreizējo ievadi no ierīces \"%s\". Iespējams tā ir radio "
+"Neizdevās saņemt pašreizējo ievadi no ierīces “%s”. Iespējams tā ir radio "
 "ierīce"
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Neizdevās saņemt pašreizējo izvadu no ierīces \"%s\". Iespējams tā ir radio "
+"Neizdevās saņemt pašreizējo izvadu no ierīces “%s”. Iespējams tā ir radio "
 "ierīce"
 
 #, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Neizdevās uzstādīt izvadu %d uz ierīces %s."
+msgstr "Neizdevās iestatīt izvadi %d uz ierīces %s."
 
 msgid "Changing resolution at runtime is not yet supported."
-msgstr "Izšķirtspējas mainīšana izpildlaikā pašalik netiek atbalstīta."
+msgstr "Izšķirtspējas mainīšana izpildlaikā pašlaik netiek atbalstīta."
 
 msgid "Cannot operate without a clock"
 msgstr "Nevar veikt darbības bez pulksteņa"
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Saņēmu negaidītu kadra izmēru %u, nevis %u."
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Nevar izveidot savienojumu ar skaņas serveri"
 
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Neizdevās saņemt video kadrus no ierīces \"%s\"."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Neveiksme pēc %d mēģinājumiem. ierīce %s. sistēmas kļūda: %s"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Neizdevās noskaidrot skaņas servera iespējas"
 
 #~ msgid "Bass"
 #~ msgstr "Basi"
@@ -733,14 +725,17 @@ msgstr "Nevar veikt darbības bez pulksteņa"
 #~ msgid "%s Function"
 #~ msgstr "%s funkcija"
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Nevar izveidot savienojumu ar skaņas serveri"
-
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Neizdevās noskaidrot skaņas servera iespējas"
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Saņēmu negaidītu kadra izmēru %u, nevis %u."
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Radās kļūda nolasot %d baitus no ierīces \"%s\"."
 
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr "Nevar ierindod buferus ierīcē \"%s\"."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Neizdevās saņemt video kadrus no ierīces \"%s\"."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Neveiksme pēc %d mēģinājumiem. ierīce %s. sistēmas kļūda: %s"

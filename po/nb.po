@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2012.
+# Johnny A. Solbu <johnny@solbu.net>, 2012-2014
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.0.3\n"
+"Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-03-15 13:34+0100\n"
-"PO-Revision-Date: 2012-12-21 22:13+0100\n"
+"POT-Creation-Date: 2014-05-03 17:22+0200\n"
+"PO-Revision-Date: 2014-01-22 17:49+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "Language: nb_NO\n"
@@ -19,7 +19,7 @@ msgstr ""
 "X-Generator: Poedit 1.5.4\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Jack-server ikke funnet"
 
 msgid "Failed to decode JPEG image"
 msgstr "Klarte ikke å dekode JPEG-bilde"
@@ -67,7 +67,7 @@ msgid "This file is invalid and cannot be played."
 msgstr "Filen er ugyldig og kan ikke spilles."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
-msgstr ""
+msgstr "Kan ikke spille av strømmen fordi den er kryptert med PlayReady DRM."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Filen er skadet og kan ikke spilles."
@@ -171,13 +171,11 @@ msgstr "AUX 1 inn"
 msgid "AUX 2 In"
 msgstr "AUX 2 inn"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Loopback"
+msgstr "Kodek-Loopback"
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Loopback"
+msgstr "SunVTS-Loopback"
 
 msgid "Volume"
 msgstr "Volum"

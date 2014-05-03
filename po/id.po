@@ -2,22 +2,25 @@
 # This file is put in the public domain.
 #
 # Andhika Padmawan <andhika.padmawan@gmail.com>, 2011.
+# Andika Triwidada <andika@gmail.com>, 2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.26.2\n"
+"Project-Id-Version: gst-plugins-good 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-03-15 13:34+0100\n"
-"PO-Revision-Date: 2011-02-26 18:09+0700\n"
-"Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
+"POT-Creation-Date: 2014-05-03 17:22+0200\n"
+"PO-Revision-Date: 2013-10-15 16:26+0700\n"
+"Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.7\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Server Jack tak ditemukan"
 
 msgid "Failed to decode JPEG image"
 msgstr "Gagal untuk mengawasandi citra JPEG"
@@ -66,7 +69,7 @@ msgid "This file is invalid and cannot be played."
 msgstr "Berkas ini tidak sah dan tak dapat diputar."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
-msgstr ""
+msgstr "Tak bisa memainkan stream karena dienkripsi memakai DRM PlayReady."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Berkas ini rusak dan tak dapat diputar."
@@ -170,13 +173,11 @@ msgstr "AUX 1 Masuk"
 msgid "AUX 2 In"
 msgstr "AUX 2 Masuk"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Loopback"
+msgstr "Loopback Kodek"
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Loopback"
+msgstr "Loopback SunVTS"
 
 msgid "Volume"
 msgstr "Volume"
@@ -219,23 +220,21 @@ msgstr ""
 msgid "Could not map buffers from device '%s'"
 msgstr "Tak dapat memetakan penyangga dari divais '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
-"Driver dari divais '%s' tak mendukung metode penangkap apapun yang dikenal."
+msgstr "Driver dari divais '%s' tak mendukung metode IO %d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr ""
-"Driver dari divais '%s' tak mendukung metode penangkap apapun yang dikenal."
+msgstr "Driver dari divais '%s' tak mendukung metode IO apapun yang dikenal."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Divais '%s' bukan divais keluaran."
+msgstr "Divais '%s' tak mendukung penangkapan video"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Divais '%s' bukan divais keluaran."
+msgstr "Divais '%s' sibuk"
 
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
@@ -247,57 +246,55 @@ msgstr "Divais '%s' tak dapat menangkap dalam format yang ditentukan"
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Divais '%s' bukan divais keluaran."
+msgstr "Divais '%s' tak mendukung penangkapan video"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Tak bisa mendapatkan parameter di divais '%s'"
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr "Divais masukan video tak menerima pengaturan rasio bingkai baru."
+msgstr "Divais video tak menerima pengaturan laju bingkai baru."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "Divais video tak bisa membuat pul singgahan."
 
 #, fuzzy
 msgid "Video device did not provide output format."
-msgstr "Divais masukan video tak menerima pengaturan rasio bingkai baru."
+msgstr "Divais video tak menerima pengaturan laju bingkai baru."
 
 msgid "Video device returned invalid dimensions."
 msgstr ""
 
 #, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr ""
-"Driver dari divais '%s' tak mendukung metode penangkap apapun yang dikenal."
+msgstr "Driver dari divais '%s' tak mendukung metode IO %d"
 
 msgid "Video devices uses an unsupported pixel format."
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Gagal mendapatkan pengaturan tuner %d di divais '%s'."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Galat membaca %d bita dari divais '%s'."
+msgstr "Galat saat mengambil kapabilitas bagi divais '%s'."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Divais '%s' bukan divais keluaran."
+msgstr "Divais '%s' bukan tuner."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Gagal mengatur masukan %d di divais %s."
+msgstr "Gagal mendapat masukan radio pada divais '%s'."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Gagal mengatur masukan %d di divais %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Gagal mendapatkan kekuatan sinyal untuk divais '%s'."
+msgstr "Gagal mengubah keadaan bisu untuk divais '%s'."
 
 #, c-format
 msgid ""
@@ -395,387 +392,3 @@ msgstr "Mengubah resolusi saat waktu berjalan belum didukung."
 
 msgid "Cannot operate without a clock"
 msgstr "Tak dapat beroperasi tanpa jam"
-
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Mendapatkan ukuran bingkai %u ketimbang %u yang tak diharapkan."
-
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Gagal mencoba untuk mendapatkan bingkai video dari divais '%s'."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Gagal setelah %d percobaan. divais %s. galat sistem: %s"
-
-#~ msgid "Bass"
-#~ msgstr "Bas"
-
-#~ msgid "Treble"
-#~ msgstr "Treble"
-
-#~ msgid "Synth"
-#~ msgstr "Synth"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Speaker"
-#~ msgstr "Pengeras Suara"
-
-#~ msgid "Line-in"
-#~ msgstr "Jalur masuk"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Mixer"
-#~ msgstr "Mixer"
-
-#~ msgid "PCM-2"
-#~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Rekam"
-
-#~ msgid "In-gain"
-#~ msgstr "Masukan-gain"
-
-#~ msgid "Out-gain"
-#~ msgstr "Keluaran-gain"
-
-#~ msgid "Line-1"
-#~ msgstr "Jalur-1"
-
-#~ msgid "Line-2"
-#~ msgstr "Jalur-2"
-
-#~ msgid "Line-3"
-#~ msgstr "Jalur-3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Digital-1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Digital-2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Digital-3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Telepon-masuk"
-
-#~ msgid "Phone-out"
-#~ msgstr "Telepon-keluar"
-
-#~ msgid "Video"
-#~ msgstr "Video"
-
-#~ msgid "Radio"
-#~ msgstr "Radio"
-
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Tak dapat membuka divais audio untuk menangani kontrol mixer."
-
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Tak dapat membuka divais audio untuk menangani kontrol mixer. Versi Open "
-#~ "Sound System ini tidak didukung oleh elemen ini."
-
-#~ msgid "Master"
-#~ msgstr "Master"
-
-#~ msgid "Front"
-#~ msgstr "Depan"
-
-#~ msgid "Rear"
-#~ msgstr "Belakang"
-
-#~ msgid "Headphones"
-#~ msgstr "Headphone"
-
-#~ msgid "Center"
-#~ msgstr "Tengah"
-
-#~ msgid "LFE"
-#~ msgstr "LFE"
-
-#~ msgid "Surround"
-#~ msgstr "Sekeliling"
-
-#~ msgid "Side"
-#~ msgstr "Sisi"
-
-#~ msgid "AUX Out"
-#~ msgstr "AUX Keluaran"
-
-#~ msgid "3D Depth"
-#~ msgstr "Kedalaman 3D"
-
-#~ msgid "3D Center"
-#~ msgstr "3D Tengah"
-
-#~ msgid "3D Enhance"
-#~ msgstr "Dipercanggih 3D"
-
-#~ msgid "Telephone"
-#~ msgstr "Telepon"
-
-#~ msgid "Video In"
-#~ msgstr "Video Masuk"
-
-#~ msgid "AUX In"
-#~ msgstr "AUX Masuk"
-
-#~ msgid "Record Gain"
-#~ msgstr "Rekam Gain"
-
-#~ msgid "Output Gain"
-#~ msgstr "Keluaran Gain"
-
-#~ msgid "Microphone Boost"
-#~ msgstr "Mikrofon Boost"
-
-#~ msgid "Diagnostic"
-#~ msgstr "Diagnosis"
-
-#~ msgid "Bass Boost"
-#~ msgstr "Bass Boost"
-
-#~ msgid "Playback Ports"
-#~ msgstr "Pangkalan Putar"
-
-#~ msgid "Input"
-#~ msgstr "Masukan"
-
-#~ msgid "Monitor Source"
-#~ msgstr "Sumber Monitor"
-
-#~ msgid "Keyboard Beep"
-#~ msgstr "Bip Papan Ketik"
-
-#~ msgid "Simulate Stereo"
-#~ msgstr "Simulasi Stereo"
-
-#~ msgid "Stereo"
-#~ msgstr "Stereo"
-
-#~ msgid "Surround Sound"
-#~ msgstr "Suara Sekeliling"
-
-#~ msgid "Microphone Gain"
-#~ msgstr "Mikrofon Gain"
-
-#~ msgid "Speaker Source"
-#~ msgstr "Sumber Pengeras Suara"
-
-#~ msgid "Microphone Source"
-#~ msgstr "Sumber Mikrofon"
-
-#~ msgid "Jack"
-#~ msgstr "Jack"
-
-#~ msgid "Center / LFE"
-#~ msgstr "Tengah / LFE"
-
-#~ msgid "Stereo Mix"
-#~ msgstr "Mix Stereo"
-
-#~ msgid "Mono Mix"
-#~ msgstr "Mix Mono"
-
-#~ msgid "Input Mix"
-#~ msgstr "Mix Masukan"
-
-#~ msgid "Microphone 1"
-#~ msgstr "Mikrofon 1"
-
-#~ msgid "Microphone 2"
-#~ msgstr "Mikrofon 2"
-
-#~ msgid "Digital Out"
-#~ msgstr "Digital Keluar"
-
-#~ msgid "Digital In"
-#~ msgstr "Digital Masuk"
-
-#~ msgid "HDMI"
-#~ msgstr "HDMI"
-
-#~ msgid "Modem"
-#~ msgstr "Modem"
-
-#~ msgid "Handset"
-#~ msgstr "Handset"
-
-#~ msgid "Other"
-#~ msgstr "Lainnya"
-
-#~ msgid "None"
-#~ msgstr "Tidak Ada"
-
-#~ msgid "On"
-#~ msgstr "Hidup"
-
-#~ msgid "Off"
-#~ msgstr "Mati"
-
-#~ msgid "Mute"
-#~ msgstr "Diam"
-
-#~ msgid "Fast"
-#~ msgstr "Cepat"
-
-#~ msgid "Very Low"
-#~ msgstr "Sangat Rendah"
-
-#~ msgid "Low"
-#~ msgstr "Rendah"
-
-#~ msgid "Medium"
-#~ msgstr "Sedang"
-
-#~ msgid "High"
-#~ msgstr "Tinggi"
-
-#~ msgid "Very High"
-#~ msgstr "Sangat Tinggi"
-
-#~ msgid "Production"
-#~ msgstr "Produksi"
-
-#~ msgid "Front Panel Microphone"
-#~ msgstr "Mikrofon Panel Depan"
-
-#~ msgid "Front Panel Line In"
-#~ msgstr "Masukan Jalur Panel Depan"
-
-#~ msgid "Front Panel Headphones"
-#~ msgstr "Headphone Panel Depan"
-
-#~ msgid "Front Panel Line Out"
-#~ msgstr "Keluaran Jalur Panel Depan"
-
-#~ msgid "Green Connector"
-#~ msgstr "Konektor Hijau"
-
-#~ msgid "Pink Connector"
-#~ msgstr "Konektor Merah Jambu"
-
-#~ msgid "Blue Connector"
-#~ msgstr "Konektor Biru"
-
-#~ msgid "White Connector"
-#~ msgstr "Konektor Putih"
-
-#~ msgid "Black Connector"
-#~ msgstr "Konektor Hitam"
-
-#~ msgid "Gray Connector"
-#~ msgstr "Konektor Abu-Abu"
-
-#~ msgid "Orange Connector"
-#~ msgstr "Konektor Jingga"
-
-#~ msgid "Red Connector"
-#~ msgstr "Konektor Merah"
-
-#~ msgid "Yellow Connector"
-#~ msgstr "Konektor Kuning"
-
-#~ msgid "Green Front Panel Connector"
-#~ msgstr "Konektor Panel Depan Hijau"
-
-#~ msgid "Pink Front Panel Connector"
-#~ msgstr "Konektor Panel Depan Merah Jambu"
-
-#~ msgid "Blue Front Panel Connector"
-#~ msgstr "Konektor Panel Depan Biru"
-
-#~ msgid "White Front Panel Connector"
-#~ msgstr "Konektor Panel Depan Putih"
-
-#~ msgid "Black Front Panel Connector"
-#~ msgstr "Konektor Panel Depan Hitam"
-
-#~ msgid "Gray Front Panel Connector"
-#~ msgstr "Konektor Panel Depan Abu-Abu"
-
-#~ msgid "Orange Front Panel Connector"
-#~ msgstr "Konektor Panel Depan Jingga"
-
-#~ msgid "Red Front Panel Connector"
-#~ msgstr "Konektor Panel Depan Merah"
-
-#~ msgid "Yellow Front Panel Connector"
-#~ msgstr "Konektor Panel Depan Kuning"
-
-#~ msgid "Spread Output"
-#~ msgstr "Keluaran Sebar"
-
-#~ msgid "Downmix"
-#~ msgstr "Downmix"
-
-#~ msgid "Virtual Mixer Input"
-#~ msgstr "Masukan Mixer Virtual"
-
-#~ msgid "Virtual Mixer Output"
-#~ msgstr "Keluaran Mixer Virtual"
-
-#~ msgid "Virtual Mixer Channels"
-#~ msgstr "Kanal Mixer Virtual"
-
-#~ msgid "%s %d Function"
-#~ msgstr "Fungsi %s %d"
-
-#~ msgid "%s Function"
-#~ msgstr "Fungsi %s"
-
-#~ msgid "Error reading %d bytes on device '%s'."
-#~ msgstr "Galat membaca %d bita pada divais '%s'."
-
-#~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Tak dapat mengantrekan penyangga di divais '%s'."
-
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Tak dapat membangun koneksi ke server suara"
-
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Gagal untuk kueri kemampuan server suara"
-
-#~ msgid ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
-#~ msgstr ""
-#~ "Tipe penyangga tidak didukung, atau indeks di luar batas, atau tak ada "
-#~ "penyangga yang telah dialokasikan, atau userptr atau panjang tidak sah. "
-#~ "divais %s"
-
-#~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Gagal mencoba untuk mendapatkan bingkai video dari divais '%s'. Tak cukup "
-#~ "memori."
-
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "kekurangan memori untuk mengantrekan penyangga penunjuk pengguna. divais "
-#~ "%s."
-
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Tak ada penyangga bebas ditemukan di lubuk pada indeks %d."
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Tak bisa mendapatkan penyangga dari divais '%s'."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Tak bisa mendapatkan penyangga yang cukup dari divais '%s'."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Galat memulai penangkapan arus dari divais '%s'."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Galat menghentikan penangkapan arus dari divais '%s'."
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "Gagal mendapatkan kendali atribut di divais '%s.'"
