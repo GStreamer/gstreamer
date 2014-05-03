@@ -207,6 +207,8 @@ GType gst_toc_scope_get_type (void);
 #define GST_TYPE_TOC_SCOPE (gst_toc_scope_get_type())
 GType gst_toc_entry_type_get_type (void);
 #define GST_TYPE_TOC_ENTRY_TYPE (gst_toc_entry_type_get_type())
+GType gst_toc_loop_type_get_type (void);
+#define GST_TYPE_TOC_LOOP_TYPE (gst_toc_loop_type_get_type())
 
 /* enumerations from "gsttypefind.h" */
 GType gst_type_find_probability_get_type (void);

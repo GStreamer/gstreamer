@@ -84,6 +84,8 @@ gst_buffer_flags_get_type (void)
         "droppable"},
     {C_FLAGS (GST_BUFFER_FLAG_DELTA_UNIT), "GST_BUFFER_FLAG_DELTA_UNIT",
         "delta-unit"},
+    {C_FLAGS (GST_BUFFER_FLAG_TAG_MEMORY), "GST_BUFFER_FLAG_TAG_MEMORY",
+        "tag-memory"},
     {C_FLAGS (GST_BUFFER_FLAG_LAST), "GST_BUFFER_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -508,6 +510,8 @@ gst_resource_error_get_type (void)
         "settings"},
     {C_ENUM (GST_RESOURCE_ERROR_NO_SPACE_LEFT),
         "GST_RESOURCE_ERROR_NO_SPACE_LEFT", "no-space-left"},
+    {C_ENUM (GST_RESOURCE_ERROR_NOT_AUTHORIZED),
+        "GST_RESOURCE_ERROR_NOT_AUTHORIZED", "not-authorized"},
     {C_ENUM (GST_RESOURCE_ERROR_NUM_ERRORS), "GST_RESOURCE_ERROR_NUM_ERRORS",
         "num-errors"},
     {0, NULL, NULL}
@@ -865,6 +869,11 @@ gst_message_type_get_type (void)
         "need-context"},
     {C_FLAGS (GST_MESSAGE_HAVE_CONTEXT), "GST_MESSAGE_HAVE_CONTEXT",
         "have-context"},
+    {C_FLAGS (GST_MESSAGE_EXTENDED), "GST_MESSAGE_EXTENDED", "extended"},
+    {C_FLAGS (GST_MESSAGE_DEVICE_ADDED), "GST_MESSAGE_DEVICE_ADDED",
+        "device-added"},
+    {C_FLAGS (GST_MESSAGE_DEVICE_REMOVED), "GST_MESSAGE_DEVICE_REMOVED",
+        "device-removed"},
     {C_FLAGS (GST_MESSAGE_ANY), "GST_MESSAGE_ANY", "any"},
     {0, NULL, NULL}
   };
@@ -1288,6 +1297,8 @@ gst_pad_flags_get_type (void)
         "proxy-allocation"},
     {C_FLAGS (GST_PAD_FLAG_PROXY_SCHEDULING), "GST_PAD_FLAG_PROXY_SCHEDULING",
         "proxy-scheduling"},
+    {C_FLAGS (GST_PAD_FLAG_ACCEPT_INTERSECT), "GST_PAD_FLAG_ACCEPT_INTERSECT",
+        "accept-intersect"},
     {C_FLAGS (GST_PAD_FLAG_LAST), "GST_PAD_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -1759,6 +1770,26 @@ gst_toc_entry_type_get_type (void)
 
   if (g_once_init_enter (&id)) {
     GType tmp = g_enum_register_static ("GstTocEntryType", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
+gst_toc_loop_type_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_TOC_LOOP_NONE), "GST_TOC_LOOP_NONE", "none"},
+    {C_ENUM (GST_TOC_LOOP_FORWARD), "GST_TOC_LOOP_FORWARD", "forward"},
+    {C_ENUM (GST_TOC_LOOP_REVERSE), "GST_TOC_LOOP_REVERSE", "reverse"},
+    {C_ENUM (GST_TOC_LOOP_PING_PONG), "GST_TOC_LOOP_PING_PONG", "ping-pong"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstTocLoopType", values);
     g_once_init_leave (&id, tmp);
   }
 
