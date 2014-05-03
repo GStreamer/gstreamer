@@ -9,9 +9,9 @@ else
 
 SUBDIRS += generic qt
 
-#if HAVE_CLUTTER
-#SUBDIRS += clutter
-#endif
+if HAVE_CLUTTER
+SUBDIRS += clutter
+endif
 
 if HAVE_SDL
 SUBDIRS += sdl
@@ -24,3 +24,5 @@ endif
 endif
 
 endif
+
+DIST_SUBDIRS=cocoa generic qt clutter sdl gtk
