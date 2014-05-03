@@ -3,7 +3,7 @@ AC_PREREQ([2.68])
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT([GStreamer Bad Plug-ins],[1.3.1],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gst-plugins-bad])
+AC_INIT([GStreamer Bad Plug-ins],[1.3.1.1],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gst-plugins-bad])
 
 AG_GST_INIT
 
@@ -51,8 +51,8 @@ dnl sets GST_LT_LDFLAGS
 AS_LIBTOOL(GST, 301, 0, 301)
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=1.3.1
-GSTPB_REQ=1.3.1
+GST_REQ=1.3.1.1
+GSTPB_REQ=1.3.1.1
 
 dnl *** autotools stuff ****
 
