@@ -720,6 +720,9 @@ gst_v4l2_video_dec_class_init (GstV4l2VideoDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   video_decoder_class = (GstVideoDecoderClass *) klass;
 
+  GST_DEBUG_CATEGORY_INIT (gst_v4l2_video_dec_debug, "v4l2videodec", 0,
+      "V4L2 Video Decoder");
+
   gst_element_class_set_static_metadata (element_class,
       "V4L2 Video Decoder",
       "Codec/Decoder/Video",
@@ -794,121 +797,48 @@ gst_v4l2_video_dec_subclass_init (gpointer g_class, gpointer data)
 }
 
 /* Probing functions */
-static GstCaps *
-gst_v4l2_video_dec_probe_caps (gchar * device, gint video_fd,
-    enum v4l2_buf_type type, GstCaps * filter)
+gboolean
+gst_v4l2_is_video_dec (GstCaps * sink_caps, GstCaps * src_caps)
 {
-  gint n;
-  struct v4l2_fmtdesc format;
-  GstCaps *ret, *caps;
+  gboolean ret = FALSE;
 
-  GST_DEBUG ("Getting %s format enumerations", device);
-  caps = gst_caps_new_empty ();
-
-  for (n = 0;; n++) {
-    GstStructure *template;
-
-    memset (&format, 0, sizeof (format));
-
-    format.index = n;
-    format.type = type;
-
-    if (v4l2_ioctl (video_fd, VIDIOC_ENUM_FMT, &format) < 0)
-      break;                    /* end of enumeration */
-
-    GST_LOG ("index:       %u", format.index);
-    GST_LOG ("type:        %d", format.type);
-    GST_LOG ("flags:       %08x", format.flags);
-    GST_LOG ("description: '%s'", format.description);
-    GST_LOG ("pixelformat: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (format.pixelformat));
-
-    template = gst_v4l2_object_v4l2fourcc_to_structure (format.pixelformat);
-
-    if (template)
-      gst_caps_append_structure (caps, template);
-  }
-
-  caps = gst_caps_simplify (caps);
-
-  ret = gst_caps_intersect (filter, caps);
-  gst_caps_unref (filter);
-  gst_caps_unref (caps);
+  if (gst_caps_is_subset (sink_caps, gst_v4l2_object_get_codec_caps ())
+      && gst_caps_is_subset (src_caps, gst_v4l2_object_get_raw_caps ()))
+    ret = TRUE;
 
   return ret;
 }
 
 gboolean
-gst_v4l2_video_dec_register (GstPlugin * plugin)
+gst_v4l2_video_dec_register (GstPlugin * plugin, const gchar * basename,
+    const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps)
 {
-  gint i = -1;
-  gchar *device = NULL;
+  GTypeQuery type_query;
+  GTypeInfo type_info = { 0, };
+  GType type, subtype;
+  gchar *type_name;
+  GstV4l2VideoDecCData *cdata;
 
-  GST_DEBUG_CATEGORY_INIT (gst_v4l2_video_dec_debug, "v4l2videodec", 0,
-      "V4L2 Video Decoder");
+  cdata = g_new0 (GstV4l2VideoDecCData, 1);
+  cdata->device = g_strdup (device_path);
+  cdata->sink_caps = gst_caps_ref (sink_caps);
+  cdata->src_caps = gst_caps_ref (src_caps);
 
-  while (TRUE) {
-    GstCaps *src_caps, *sink_caps;
-    gint video_fd;
+  type = gst_v4l2_video_dec_get_type ();
+  g_type_query (type, &type_query);
+  memset (&type_info, 0, sizeof (type_info));
+  type_info.class_size = type_query.class_size;
+  type_info.instance_size = type_query.instance_size;
+  type_info.class_init = gst_v4l2_video_dec_subclass_init;
+  type_info.class_data = cdata;
+  type_info.instance_init = gst_v4l2_video_dec_subinstance_init;
 
-    g_free (device);
-    device = g_strdup_printf ("/dev/video%d", ++i);
+  type_name = g_strdup_printf ("v4l2%sdec", basename);
+  subtype = g_type_register_static (type, type_name, &type_info, 0);
 
-    if (!g_file_test (device, G_FILE_TEST_EXISTS))
-      break;
+  gst_element_register (plugin, type_name, GST_RANK_PRIMARY + 1, subtype);
 
-    video_fd = open (device, O_RDWR);
-    if (video_fd == -1) {
-      GST_WARNING ("Failed to open %s", device);
-      continue;
-    }
-
-    /* get sink supported format (no MPLANE for codec) */
-    sink_caps = gst_v4l2_video_dec_probe_caps (device, video_fd,
-        V4L2_BUF_TYPE_VIDEO_OUTPUT, gst_v4l2_object_get_codec_caps ());
-
-    /* get src supported format */
-    src_caps = gst_caps_merge (gst_v4l2_video_dec_probe_caps (device, video_fd,
-            V4L2_BUF_TYPE_VIDEO_CAPTURE, gst_v4l2_object_get_raw_caps ()),
-        gst_v4l2_video_dec_probe_caps (device, video_fd,
-            V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
-            gst_v4l2_object_get_raw_caps ()));
-
-    if (!gst_caps_is_empty (sink_caps) && !gst_caps_is_empty (src_caps)) {
-      GTypeQuery type_query;
-      GTypeInfo type_info = { 0, };
-      GType type, subtype;
-      gchar *type_name;
-      GstV4l2VideoDecCData *cdata;
-
-      cdata = g_new0 (GstV4l2VideoDecCData, 1);
-      cdata->device = g_strdup (device);
-      cdata->sink_caps = gst_caps_ref (sink_caps);
-      cdata->src_caps = gst_caps_ref (src_caps);
-
-      type = gst_v4l2_video_dec_get_type ();
-      g_type_query (type, &type_query);
-      memset (&type_info, 0, sizeof (type_info));
-      type_info.class_size = type_query.class_size;
-      type_info.instance_size = type_query.instance_size;
-      type_info.class_init = gst_v4l2_video_dec_subclass_init;
-      type_info.class_data = cdata;
-      type_info.instance_init = gst_v4l2_video_dec_subinstance_init;
-
-      type_name = g_strdup_printf ("v4l2video%ddec", i);
-      subtype = g_type_register_static (type, type_name, &type_info, 0);
-
-      gst_element_register (plugin, type_name, GST_RANK_PRIMARY + 1, subtype);
-
-      g_free (type_name);
-    }
-
-    close (video_fd);
-    gst_caps_unref (src_caps);
-    gst_caps_unref (sink_caps);
-  }
-
-  g_free (device);
+  g_free (type_name);
 
   return TRUE;
 }

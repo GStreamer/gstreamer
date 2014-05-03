@@ -1150,8 +1150,8 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
   return format;
 }
 
-GstStructure *
-gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
+static GstStructure *
+gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
 {
   GstStructure *structure = NULL;
 
@@ -1258,6 +1258,34 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
   return structure;
 }
 
+GstStructure *
+gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
+{
+  GstStructure *template;
+  gint i;
+
+  template = gst_v4l2_object_v4l2fourcc_to_bare_struct (fourcc);
+
+  if (template == NULL)
+    goto done;
+
+  for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
+    if (gst_v4l2_formats[i].format != fourcc)
+      continue;
+
+    if (gst_v4l2_formats[i].dimensions) {
+      gst_structure_set (template,
+          "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
+          "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
+          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
+    }
+    break;
+  }
+
+done:
+  return template;
+}
+
 
 static GstCaps *
 gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
@@ -1273,7 +1301,7 @@ gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
       continue;
 
     structure =
-        gst_v4l2_object_v4l2fourcc_to_structure (gst_v4l2_formats[i].format);
+        gst_v4l2_object_v4l2fourcc_to_bare_struct (gst_v4l2_formats[i].format);
     if (structure) {
       if (gst_v4l2_formats[i].dimensions) {
         gst_structure_set (structure,
@@ -2873,7 +2901,8 @@ gst_v4l2_object_get_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 
       format = (struct v4l2_fmtdesc *) walk->data;
 
-      template = gst_v4l2_object_v4l2fourcc_to_structure (format->pixelformat);
+      template =
+          gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat);
 
       if (template) {
         GstCaps *tmp;
