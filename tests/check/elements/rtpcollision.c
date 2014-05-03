@@ -76,10 +76,10 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
 }
 
 static GstBuffer *
-create_rtcp_app (guint32 ssrc)
+create_rtcp_app (guint32 ssrc, guint count)
 {
   GInetAddress *inet_addr_0;
-  guint16 port = 5678;
+  guint16 port = 5678 + count;
   GSocketAddress *socket_addr_0;
   GstBuffer *rtcp_buffer;
   GstRTCPPacket *rtcp_packet = NULL;
@@ -140,7 +140,7 @@ rtpsession_sinkpad_probe (GstPad * pad, GstPadProbeInfo * info,
      * (note that after being marked as collied the rtpsession ignores
      * all non bye packets)
      */
-    rtcp_buffer = create_rtcp_app (ssrc);
+    rtcp_buffer = create_rtcp_app (ssrc, nb_ssrc_changes);
 
     /* push collied packet on recv_rtcp_sink */
     gst_pad_push (srcpad, rtcp_buffer);
@@ -313,7 +313,7 @@ rtpsession_sinkpad_probe2 (GstPad * pad, GstPadProbeInfo * info,
      * all non bye packets)
      */
     if (i == 2) {
-      GstBuffer *rtcp_buffer = create_rtcp_app (rtx_ssrc_before);
+      GstBuffer *rtcp_buffer = create_rtcp_app (rtx_ssrc_before, 0);
 
       /* push collied packet on recv_rtcp_sink */
       gst_pad_push (srcpad, rtcp_buffer);

@@ -204,6 +204,7 @@ typedef struct {
  * @callbacks: callbacks
  * @user_data: user data passed in callbacks
  * @stats: session statistics
+ * @conflicting_addresses: GList of conflicting addresses
  *
  * The RTP session manager object
  */
@@ -269,6 +270,8 @@ struct _RTPSession {
   gboolean     last_keyframe_all_headers;
 
   gboolean      is_doing_ptp;
+
+  GList         *conflicting_addresses;
 };
 
 /**

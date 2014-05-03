@@ -100,11 +100,6 @@ enum
    (avg) = ((val) + (15 * (avg))) >> 4;
 
 
-/* The number RTCP intervals after which to timeout entries in the
- * collision table
- */
-#define RTCP_INTERVAL_COLLISION_TIMEOUT 10
-
 /* GObject vmethods */
 static void rtp_session_finalize (GObject * object);
 static void rtp_session_set_property (GObject * object, guint prop_id,
@@ -545,6 +540,9 @@ rtp_session_finalize (GObject * object)
   sess = RTP_SESSION_CAST (object);
 
   gst_structure_free (sess->sdes);
+
+  g_list_free_full (sess->conflicting_addresses,
+      (GDestroyNotify) rtp_conflicting_address_free);
 
   for (i = 0; i < 32; i++)
     g_hash_table_destroy (sess->ssrcs[i]);
@@ -1207,6 +1205,43 @@ static RTPSourceCallbacks callbacks = {
   (RTPSourceClockRate) source_clock_rate,
 };
 
+
+/**
+ * rtp_session_find_conflicting_address:
+ * @session: The session the packet came in
+ * @address: address to check for
+ * @time: The time when the packet that is possibly in conflict arrived
+ *
+ * Checks if an address which has a conflict is already known. If it is
+ * a known conflict, remember the time
+ *
+ * Returns: TRUE if it was a known conflict, FALSE otherwise
+ */
+static gboolean
+rtp_session_find_conflicting_address (RTPSession * session,
+    GSocketAddress * address, GstClockTime time)
+{
+  return find_conflicting_address (session->conflicting_addresses, address,
+      time);
+}
+
+/**
+ * rtp_session_add_conflicting_address:
+ * @session: The session the packet came in
+ * @address: address to remember
+ * @time: The time when the packet that is in conflict arrived
+ *
+ * Adds a new conflict address
+ */
+static void
+rtp_session_add_conflicting_address (RTPSession * sess,
+    GSocketAddress * address, GstClockTime time)
+{
+  sess->conflicting_addresses =
+      add_conflicting_address (sess->conflicting_addresses, address, time);
+}
+
+
 static gboolean
 check_collision (RTPSession * sess, RTPSource * source,
     RTPPacketInfo * pinfo, gboolean rtp)
@@ -1292,7 +1327,7 @@ check_collision (RTPSession * sess, RTPSource * source,
      */
   } else {
     /* This is sending with our ssrc, is it an address we already know */
-    if (rtp_source_find_conflicting_address (source, pinfo->address,
+    if (rtp_session_find_conflicting_address (sess, pinfo->address,
             pinfo->current_time)) {
       /* Its a known conflict, its probably a loop, not a collision
        * lets just drop the incoming packet
@@ -1300,7 +1335,7 @@ check_collision (RTPSession * sess, RTPSource * source,
       GST_DEBUG ("Our packets are being looped back to us, dropping");
     } else {
       /* Its a new collision, lets change our SSRC */
-      rtp_source_add_conflicting_address (source, pinfo->address,
+      rtp_session_add_conflicting_address (sess, pinfo->address,
           pinfo->current_time);
 
       GST_DEBUG ("Collision for SSRC %x", ssrc);
@@ -3179,8 +3214,6 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
   if (source->internal) {
     GST_DEBUG ("Timing out collisions for %x", source->ssrc);
     rtp_source_timeout (source, data->current_time,
-        /* "a relatively long time" -- RFC 3550 section 8.2 */
-        RTP_STATS_MIN_INTERVAL * GST_SECOND * 10,
         data->running_time - sess->rtcp_feedback_retention_window);
   }
 
@@ -3621,6 +3654,9 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     source = obtain_internal_source (sess, sess->suggested_ssrc, &created);
     g_object_unref (source);
   }
+
+  sess->conflicting_addresses =
+      timeout_conflicting_addresses (sess->conflicting_addresses, current_time);
 
   /* Make a local copy of the hashtable. We need to do this because the
    * cleanup stage below releases the session lock. */
