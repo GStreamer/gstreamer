@@ -1,13 +1,13 @@
 # Indonesian translations for gst-plugins-ugly package.
 # This file is put in the public domain.
-# Andhika Padmawan <andhika.padmawan@gmail.com>, 2009-2012.
+# Andhika Padmawan <andhika.padmawan@gmail.com>, 2009-2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-ugly 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:26+0200\n"
-"PO-Revision-Date: 2012-01-28 11:39+0700\n"
+"POT-Creation-Date: 2014-05-03 17:23+0200\n"
+"PO-Revision-Date: 2014-01-27 20:04+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
@@ -53,10 +53,9 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Tak dapat membaca DVD."
 
-#, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr "Gagal mengatur penyandi LAME. Cek parameter penyandian anda."
+msgstr "Gagal mengatur penyandi audio mp3 LAME. Cek parameter penyandian anda."
 
 #, c-format
 msgid ""

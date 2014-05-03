@@ -2,23 +2,25 @@
 # This file is put in the public domain.
 # Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
 # Rihards Prieditis <rprieditis@gmail.com>, 2011.
+# Rūdolfs Mazurs <rudolfs.mazurs@gmail.com>, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-ugly 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:26+0200\n"
-"PO-Revision-Date: 2011-09-02 12:04-0000\n"
-"Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
+"POT-Creation-Date: 2014-05-03 17:23+0200\n"
+"PO-Revision-Date: 2014-04-20 16:24+0300\n"
+"Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
 "2);\n"
+"X-Generator: Lokalize 1.5\n"
 
 msgid "Could not read from CD."
-msgstr "Nevar nolasīt no CD."
+msgstr "Nevarēja nolasīt no CD."
 
 msgid "Could not open CD device for reading."
 msgstr "Nevarēja atvērt CD ierīci lasīšanai."
@@ -27,23 +29,23 @@ msgid "Disc is not an Audio CD."
 msgstr "Disks nav Audio CD."
 
 msgid "Could not open DVD"
-msgstr "Nevar atvērt DVD"
+msgstr "Nevarēja atvērt DVD"
 
 #, c-format
 msgid "Could not open DVD title %d"
-msgstr "Nevar atvērt DVD virsrakstu %d"
+msgstr "Nevarēja atvērt DVD nosaukumu %d"
 
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr "Neizdevās pāriet uz %d nodaļu DVD virsrakstā %d"
+msgstr "Neizdevās pāriet uz %d nodaļu DVD nosaukumā %d"
 
 #, c-format
 msgid ""
 "Could not open DVD title %d. Interactive titles are not supported by this "
 "element"
 msgstr ""
-"Nevar atvērt DVD virsrakstu %d. Šis elements nenodrošina interaktīvos "
-"virsrakstus."
+"Nevarēja atvērt DVD nosaukumu %d. Šis elements nenodrošina interaktīvos "
+"nosaukumus."
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
@@ -53,30 +55,31 @@ msgstr ""
 "bibliotēka nav instalēta."
 
 msgid "Could not read DVD."
-msgstr "Nevar nolasīt  DVD."
+msgstr "Nevarēja nolasīt DVD."
 
-#, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr "Neizdevās uzstādīt LAME kodētāju. Pārbaudiet jūsu kodējuma parametrus."
+msgstr ""
+"Neizdevās konfigurēt LAME mp3 audio kodētāju. Pārbaudiet savus kodēšanas "
+"parametrus."
 
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
-"Pieprasītais straumēšanas ātrums %d kbiti/s nepieciešamajai īpašībai \"%s\" "
+"Pieprasītais straumēšanas ātrums %d kbiti/s nepieciešamajai īpašībai “%s” "
 "nav atļauts. Straumēšanas ātrums tika mainīts uz %d kbitiem/s."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
-"Nezidevās uzstādīt TwoLAME kodētāju. Pārbaudiet jūsu kodējuma parametrus."
+"Neizdevās konfigurēt TwoLAME kodētāju. Pārbaudiet savus kodēšanas parametrus."
 
 msgid "This stream contains no data."
 msgstr "Šī straume nesatur datus."
 
 msgid "Internal data stream error."
-msgstr "Iekšējās datu plūsmas kļūda."
+msgstr "Iekšēja datu plūsmas kļūda."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Nederīga DVD virsraksta informācija."
