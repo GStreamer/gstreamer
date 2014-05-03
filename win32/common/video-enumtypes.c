@@ -10,6 +10,7 @@
 #include "colorbalance.h"
 #include "navigation.h"
 #include "video-chroma.h"
+#include "video-tile.h"
 
 /* enumerations from "video-format.h" */
 GType
@@ -71,6 +72,8 @@ gst_video_format_get_type (void)
       {GST_VIDEO_FORMAT_GBR_10LE, "GST_VIDEO_FORMAT_GBR_10LE", "gbr-10le"},
       {GST_VIDEO_FORMAT_NV16, "GST_VIDEO_FORMAT_NV16", "nv16"},
       {GST_VIDEO_FORMAT_NV24, "GST_VIDEO_FORMAT_NV24", "nv24"},
+      {GST_VIDEO_FORMAT_NV12_64Z32, "GST_VIDEO_FORMAT_NV12_64Z32",
+          "nv12-64z32"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstVideoFormat", values);
@@ -95,6 +98,7 @@ gst_video_format_flags_get_type (void)
       {GST_VIDEO_FORMAT_FLAG_COMPLEX, "GST_VIDEO_FORMAT_FLAG_COMPLEX",
           "complex"},
       {GST_VIDEO_FORMAT_FLAG_UNPACK, "GST_VIDEO_FORMAT_FLAG_UNPACK", "unpack"},
+      {GST_VIDEO_FORMAT_FLAG_TILED, "GST_VIDEO_FORMAT_FLAG_TILED", "tiled"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -451,6 +455,41 @@ gst_video_chroma_flags_get_type (void)
     };
     GType g_define_type_id =
         g_flags_register_static ("GstVideoChromaFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "video-tile.h" */
+GType
+gst_video_tile_type_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_TILE_TYPE_INDEXED, "GST_VIDEO_TILE_TYPE_INDEXED", "indexed"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoTileType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_tile_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_TILE_MODE_UNKNOWN, "GST_VIDEO_TILE_MODE_UNKNOWN", "unknown"},
+      {GST_VIDEO_TILE_MODE_ZFLIPZ_2X2, "GST_VIDEO_TILE_MODE_ZFLIPZ_2X2",
+          "zflipz-2x2"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoTileMode", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

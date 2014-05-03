@@ -237,8 +237,8 @@ void video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
 #define ORC_CLAMP_UW(x) ORC_CLAMP(x,ORC_UW_MIN,ORC_UW_MAX)
 #define ORC_CLAMP_SL(x) ORC_CLAMP(x,ORC_SL_MIN,ORC_SL_MAX)
 #define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)
-#define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
-#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
+#define ORC_SWAP_W(x) ((((x)&0xffU)<<8) | (((x)&0xff00U)>>8))
+#define ORC_SWAP_L(x) ((((x)&0xffU)<<24) | (((x)&0xff00U)<<8) | (((x)&0xff0000U)>>8) | (((x)&0xff000000U)>>24))
 #define ORC_SWAP_Q(x) ((((x)&ORC_UINT64_C(0xff))<<56) | (((x)&ORC_UINT64_C(0xff00))<<40) | (((x)&ORC_UINT64_C(0xff0000))<<24) | (((x)&ORC_UINT64_C(0xff000000))<<8) | (((x)&ORC_UINT64_C(0xff00000000))>>8) | (((x)&ORC_UINT64_C(0xff0000000000))>>24) | (((x)&ORC_UINT64_C(0xff000000000000))>>40) | (((x)&ORC_UINT64_C(0xff00000000000000))>>56))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
 #define ORC_DENORMAL(x) ((x) & ((((x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))
@@ -8582,18 +8582,14 @@ video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
     var54 = var42 - var43;
     /* 3: splatbw */
     var55.i = ((var54 & 0xff) << 8) | (var54 & 0xff);
-    /* 4: loadupib */
-    var56 =
-        (i & 1) ? ((orc_uint8) ptr5[i >> 1] + (orc_uint8) ptr5[(i >> 1) + 1] +
-        1) >> 1 : ptr5[i >> 1];
+    /* 4: loadupdb */
+    var56 = ptr5[i >> 1];
     /* 6: subb */
     var57 = var56 - var44;
     /* 7: splatbw */
     var58.i = ((var57 & 0xff) << 8) | (var57 & 0xff);
-    /* 8: loadupib */
-    var59 =
-        (i & 1) ? ((orc_uint8) ptr6[i >> 1] + (orc_uint8) ptr6[(i >> 1) + 1] +
-        1) >> 1 : ptr6[i >> 1];
+    /* 8: loadupdb */
+    var59 = ptr6[i >> 1];
     /* 10: subb */
     var60 = var59 - var45;
     /* 11: splatbw */
@@ -8756,18 +8752,14 @@ _backup_video_convert_orc_convert_I420_BGRA (OrcExecutor * ORC_RESTRICT ex)
     var54 = var42 - var43;
     /* 3: splatbw */
     var55.i = ((var54 & 0xff) << 8) | (var54 & 0xff);
-    /* 4: loadupib */
-    var56 =
-        (i & 1) ? ((orc_uint8) ptr5[i >> 1] + (orc_uint8) ptr5[(i >> 1) + 1] +
-        1) >> 1 : ptr5[i >> 1];
+    /* 4: loadupdb */
+    var56 = ptr5[i >> 1];
     /* 6: subb */
     var57 = var56 - var44;
     /* 7: splatbw */
     var58.i = ((var57 & 0xff) << 8) | (var57 & 0xff);
-    /* 8: loadupib */
-    var59 =
-        (i & 1) ? ((orc_uint8) ptr6[i >> 1] + (orc_uint8) ptr6[(i >> 1) + 1] +
-        1) >> 1 : ptr6[i >> 1];
+    /* 8: loadupdb */
+    var59 = ptr6[i >> 1];
     /* 10: subb */
     var60 = var59 - var45;
     /* 11: splatbw */
@@ -8852,7 +8844,7 @@ video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
         1, 1, 14, 1, 128, 0, 0, 0, 14, 4, 127, 0, 0, 0, 16, 2,
         16, 2, 16, 2, 16, 2, 16, 2, 20, 2, 20, 2, 20, 2, 20, 2,
         20, 2, 20, 2, 20, 1, 20, 1, 20, 1, 20, 4, 65, 38, 4, 16,
-        151, 32, 38, 46, 38, 5, 65, 38, 38, 16, 151, 33, 38, 46, 38, 6,
+        151, 32, 38, 45, 38, 5, 65, 38, 38, 16, 151, 33, 38, 45, 38, 6,
         65, 38, 38, 16, 151, 34, 38, 90, 32, 32, 24, 90, 35, 34, 25, 71,
         35, 32, 35, 90, 37, 33, 26, 71, 37, 32, 37, 90, 36, 33, 27, 71,
         36, 32, 36, 90, 32, 34, 28, 71, 36, 36, 32, 159, 38, 35, 159, 39,
@@ -8893,13 +8885,13 @@ video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "splatbw", 0, ORC_VAR_T1, ORC_VAR_T7, ORC_VAR_D1,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "loadupib", 0, ORC_VAR_T7, ORC_VAR_S2,
+      orc_program_append_2 (p, "loadupdb", 0, ORC_VAR_T7, ORC_VAR_S2,
           ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "subb", 0, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_C1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "splatbw", 0, ORC_VAR_T2, ORC_VAR_T7, ORC_VAR_D1,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "loadupib", 0, ORC_VAR_T7, ORC_VAR_S3,
+      orc_program_append_2 (p, "loadupdb", 0, ORC_VAR_T7, ORC_VAR_S3,
           ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "subb", 0, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_C1,
           ORC_VAR_D1);

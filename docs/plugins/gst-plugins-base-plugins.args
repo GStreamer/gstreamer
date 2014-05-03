@@ -339,6 +339,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstPlaySink::audio-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio filter</NICK>
+<BLURB>the audio filter(s) to apply, if possible.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlaySink::video-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video filter</NICK>
+<BLURB>the video filter(s) to apply, if possible.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstPlayBin::audio-sink</NAME>
 <TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
@@ -636,6 +656,26 @@
 <NICK>Volume</NICK>
 <BLURB>The audio volume, 1.0=100%.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::audio-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio filter</NICK>
+<BLURB>the audio filter(s) to apply, if possible.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::video-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video filter</NICK>
+<BLURB>the video filter(s) to apply, if possible.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>

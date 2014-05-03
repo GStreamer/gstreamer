@@ -53,6 +53,12 @@ GType gst_video_chroma_method_get_type (void);
 #define GST_TYPE_VIDEO_CHROMA_METHOD (gst_video_chroma_method_get_type())
 GType gst_video_chroma_flags_get_type (void);
 #define GST_TYPE_VIDEO_CHROMA_FLAGS (gst_video_chroma_flags_get_type())
+
+/* enumerations from "video-tile.h" */
+GType gst_video_tile_type_get_type (void);
+#define GST_TYPE_VIDEO_TILE_TYPE (gst_video_tile_type_get_type())
+GType gst_video_tile_mode_get_type (void);
+#define GST_TYPE_VIDEO_TILE_MODE (gst_video_tile_mode_get_type())
 G_END_DECLS
 
 #endif /* __GST_VIDEO_ENUM_TYPES_H__ */
