@@ -1,16 +1,29 @@
 
-Release notes for GStreamer Good Plugins 1.2.0
+Release notes for GStreamer Good Plugins 1.3.1
 
 
-The GStreamer team is proud to announce a new feature release
-in the 1.x stable series of the
-core of the GStreamer streaming media framework.
+The GStreamer team is pleased to announce the first release of the unstable
+1.3 release series. The 1.3 release series is adding new features on top of
+the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.3 release series
+will lead to the stable 1.4 release series in the next weeks, and newly added
+API can still change until that point.
 
 
-The 1.x series is a stable series targeted at end users.
-It is not API or ABI compatible with the stable 0.10.x series.
-It is, however, parallel installable with the 0.10.x series and
-will not affect an existing 0.10.x installation.
+
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately
+during the unstable 1.3 release series.
+
+
+
+The versioning scheme that is used in general is that 1.x.y is API and
+ABI backwards compatible with previous 1.x.y releases. If x is an even
+number it is a stable release series and all releases in this series
+will only contain important bugfixes, e.g. the 1.0 series with 1.0.7. If
+x is odd it is a development release series that will lead to the next
+stable release series 1.x+1 and contains new features and bigger
+changes. During the development release series, new API can still
+change.
 
 
 
@@ -57,11 +70,101 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 706083 : v4l2src: UVC Allocated buffers wrapped in GstBuffer get orphaned by GstBuffer API
-      * 707242 : qtmux: streamable and faststart property have no effect
-      * 707933 : matroskademux: Wrong UTF8 detection causes wrong detection of subtitle encoding
-      * 708501 : osxvideosink: fix segfault releasing the element
-      * 708622 : rtpjitterbuffer: fix various regressions
+      * 728501 : rtpaux/rtprtx: Unit tests are racy and take very long sometimes
+      * 719636 : deinterlace: alters caps in passthrough mode preventing hardware decode
+      * 727305 : matroskademux: Add support for A_OPUS
+      * 725632 : v4l2: Normalise control names in the same way as v4l2-ctl
+      * 345830 : qtdemux: better edit lists handling
+      * 636143 : avidemux: report creation date/time via GST_TAG_DATE_TIME
+      * 652986 : rtpjitterbuffer: events are not serialized
+      * 664339 : matroskamux: support for audio/x-adpcm
+      * 691570 : [isomp4/qtdemux] lots of critical warnings on this sample file
+      * 692787 : rtph264pay: No way to clear SPS and PPS in case of a new stream
+      * 705024 : aacparse: does not propagate downstream sample rate restriction upstream
+      * 705982 : mp4mux: HDLR box name string is not NULL terminated
+      * 708165 : videomixer: Store and forward tag events
+      * 709079 : rtpgstpay: Leaks memory
+      * 709093 : qtdemux: add HEVC support
+      * 709266 : matroska-demux leaks memory
+      * 709312 : videoflip: Add an automatic method that flip base on image-orientation tag
+      * 710415 : hdv1394src: Not possible to select a HDV camera from GUID
+      * 710762 : qtdemux: fails reading some MOV files with problematic jpeg frames
+      * 711010 : videomixer: remove unneeded guint comparison
+      * 711011 : y4mencode: fix uninitialized variable warning
+      * 711013 : osxvideosink: fix missing selector name warning
+      * 711084 : rtpmanager: add new rtprtxsend and rtprtxreceive elements for retransmission
+      * 711087 : rtpbin: Support Auxiliary streams
+      * 711270 : check: add rtpsession test
+      * 711411 : rtpjitterbuffer: implement RTX statistics
+      * 711412 : rtpjitterbuffer: Automatically calculate RTX properties based on RTT
+      * 711560 : rtpsession: ssrc collision improvements
+      * 711693 : rtpsession: Implement various session statistics
+      * 712206 : v4l2: print FOURCC before enumerating
+      * 712254 : multifilesrc: Implement seeking in case of multiple images
+      * 712303 : qtdemux: playback regression after commit ae1150e85cf99d7482933aa6f7e4f012fe45a3ec
+      * 712567 : rtpsession: RBs are not included in SRs after the first RTCP timeout when there are multiple internal senders
+      * 712612 : v4l2bufferpool: take over the floating reference for the new allocator
+      * 712754 : v4l2: add support for multi-planar V4L2 API
+      * 719434 : rtph264pay maps and unmaps inbuffer twice
+      * 719497 : videoflip: crashes on tag list without orientation tag in git master
+      * 719783 : qtdemux: regression with mp4-main-multi-mpd-AV-NBS.mpd
+      * 719829 : rtp: Add RFC4571 framing/de-framing element
+      * 719938 : rtpbin: allow dynamic RTP/RTCP encoders and decoders
+      * 720371 : rtpbin: Impossible to set jitterbuffer rtx-* properties when using rtpbin
+      * 720512 : flacparse: Doesn't set the codec tag
+      * 720568 : v4l2: Various changes to allow using M2M decoders
+      * 720995 : matroskamux: add g726 adpcm support
+      * 721245 : osxvideosink: Fails to build on OS X Leopard 10.5.8
+      * 721342 : shout2send: Some minor cleanups
+      * 722175 : rtpmanager: improve code of rtprtx* elements
+      * 722370 : rtprtxsend: push rtx buffers from a different thread to avoid long retransmission delays
+      * 722372 : rtpjitterbuffer: Got data flow before stream-start event
+      * 722394 : v4l2: set GST_BUFFER_FLAG_DELTA_UNIT when appropriate
+      * 722396 : avimux: don't make the buffer writable unless absolutely necessary
+      * 722866 : rtspsrc: add rtpjitterbuffer do-retransmission property
+      * 722981 : autodetect elements have inconsistent handling of autoplugin
+      * 723166 : qtdemux: incorrect tag character
+      * 723269 : matroskamux: used uid list grows forever
+      * 723289 : cairooverlay: add RGB16 support
+      * 723502 : gst-plugins-good: Do not build check tests for disabled plugins
+      * 723849 : matroska: add support for GRAY8, BGR and RGB video  colourspaces in V_UNCOMPRESSED codec
+      * 724085 : gst-plugins-good/docs: Rebalance docbook < para > tags in comments
+      * 724213 : rtph264pay: shouldn't update time for sending SPS and PPS if we failed to send SPS or PPS
+      * 724396 : rtspsrc: add tls-database property
+      * 724636 : v4l2videodec: VP8 KO with playbin
+      * 724705 : videomixer: Port to new collectpads API
+      * 724712 : rtspsrc doesn't set caps on pads before adding them
+      * 724899 : v4l2src does not set interlaced flag on buffers
+      * 725008 : matroskademux: crash with 24bit raw audio
+      * 725159 : rtpjitterbuffer: RTP sequence number rollover problems
+      * 725361 : [regression] rtpsession: setting the " internal-ssrc " property does nothing
+      * 725480 : gst-plugins-good: Ignore gcov intermediate files
+      * 725723 : osxvideo: GetCurrentProcess not available on Mavericks
+      * 725948 : videomixer2: crash after renegotiating with different resolution
+      * 726106 : matroskademux: does not handle fps lower than 1
+      * 726161 : png plugin handles interlaced png files incorrectly
+      * 726696 : rtspsrc memleaks
+      * 726737 : osxvideosink: advertize for the video meta API support
+      * 726738 : osxvideosink: use the video frame API instead of the video meta API
+      * 726833 : ximagesrc: Add alpha channel support
+      * 726837 : rtspsrc segfault
+      * 727821 : souphttpsrc: Regression in push mode
+      * 727867 : qtdemux: Does not return stream flags from trex atom
+      * 727878 : qtdemux: replace duplicated variable when parsing trex atom
+      * 729223 : wavparse: drops upstream tags for .wav files that are ID3 tagged
+      * 728987 : qtdemux: 'caps' may be used uninitialized in this function.
+      * 729067 : goom filter: left shift of 24 places cannot be represented in type 'int'
+      * 712333 : regression: videoflip: aborts with gst_video_flip_transform_caps: code should not be reached
+      * 722077 : v4l2: compile error - 'V4L2_CAP_VIDEO_M2M_MPLANE' undeclared
+      * 722127 : v4l2: Add NV12_64Z32 support
+      * 722128 : v4l2: Implement video decoder
+      * 723446 : v4l2src: Should detect support for mplanar formats during runtime
+      * 726453 : v4l2 plugin broken due to bundeling of videodev2.h
+      * 721764 : souphttpsrc: Add ability to do HTTP session logging
+      * 722311 : matroskaparse: should try to identify data on stream header before going with a blind
+      * 722705 : Factor out common init/reset code from matroska parse/demux
+      * 712643 : qtdemux: couple of issues with vobsub
+      * 581295 : mp4mux:  Add support for embedded subtitles
 
 ==== Download ====
 
@@ -98,11 +201,70 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Akihiro Tsukada
+      * Aleix Conchillo Flaque
+      * Aleix Conchillo Flaqué
+      * Alessandro Decina
+      * Alexander Zallesov
       * Andoni Morales Alastruey
+      * Benjamin Gaignard
+      * Branislav Katreniak
+      * Brendan Long
+      * Christian Fredrik Kalager Schaller
+      * Dan Kegel
+      * Darryl Gamroth
+      * Djalma Lúcio Soares da Silva
       * Edward Hervey
+      * George Kiagiadakis
+      * Göran Jönsson
+      * Hans Månsson
+      * Hugues Fruchet
+      * Jake Foytik
+      * Jan Schmidt
+      * Jeremy Huddleston
+      * Jeremy Huddleston Sequoia
+      * Jimmy Ohn
+      * Jonas Holmberg
+      * Josep Torra
+      * Julien Isorce
+      * Justin Joy
+      * Luis de Bethencourt
+      * Marc Leeman
+      * Mark Nauwelaerts
+      * Matej Knopp
+      * Mathieu Duponchelle
+      * MathieuDuponchelle
+      * Matthieu Bouron
+      * Michael Olbrich
+      * Mike Sheldon
+      * Nicola Murino
+      * Nicolas Dufresne
+      * Ognyan Tonchev
       * Olivier Crête
-      * Robert Krakora
+      * Paul HENRYS
+      * Per x Johansson
+      * Peter Korsgaard
+      * Philippe Normand
+      * Rafał Mużyło
+      * Reynaldo H. Verdejo Pinochet
+      * Rico Tzschichholz
+      * Ryan Lortie
+      * Santiago Carot-Nemesio
       * Sebastian Dröge
+      * Sebastian Rasmussen
+      * Simon Farnsworth
+      * Sreerenj Balachandran
+      * Stefan Sauer
+      * Stéphane Cerveau
+      * Thiago Santos
+      * Thibault Saunier
+      * Thijs Vermeir
       * Tim-Philipp Müller
+      * Todd Agulnick
+      * Torrie Fischer
+      * Vincent Penquerc'h
+      * William Jon McCann
+      * William Manley
       * Wim Taymans
+      * divhaere
  

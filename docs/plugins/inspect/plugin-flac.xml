@@ -3,7 +3,7 @@
   <description>The FLAC Lossless compressor Codec</description>
   <filename>../../ext/flac/.libs/libgstflac.so</filename>
   <basename>libgstflac.so</basename>
-  <version>1.2.0</version>
+  <version>1.3.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string){ S8LE, S16LE, S24_32LE, S32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)[ 1, 8 ]</details>
+          <details>audio/x-raw, format=(string){ S8, S16LE, S24_32LE, S32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)[ 1, 8 ]</details>
         </caps>
       </pads>
     </element>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string){ S8LE, S16LE, S24LE, S24_32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)[ 1, 8 ]</details>
+          <details>audio/x-raw, format=(string){ S24LE, S24_32LE, S16LE, S8 }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)[ 1, 8 ]</details>
         </caps>
         <caps>
           <name>src</name>

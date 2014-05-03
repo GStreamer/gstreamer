@@ -14,6 +14,9 @@ GObject
           GstAudioClock
       GstControlBinding
       GstControlSource
+      GstDeviceMonitor
+        GstPulseDeviceMonitor
+        GstV4l2DeviceMonitor
       GstElement
         Gst3GPPMux
         GstALawDec
@@ -40,6 +43,7 @@ GObject
           GstDcaParse
           GstFlacParse
           GstMpegAudioParse
+          GstRtpStreamDepay
           GstSbcParse
           GstWavpackParse
         GstBaseSink
@@ -137,10 +141,11 @@ GObject
             GstWarpTV
         GstBin
           GstAspectRatioCrop
-          GstAutoAudioSink
-          GstAutoAudioSrc
-          GstAutoVideoSink
-          GstAutoVideoSrc
+          GstAutoDetect
+            GstAutoAudioSink
+            GstAutoAudioSrc
+            GstAutoVideoSink
+            GstAutoVideoSrc
           GstPipeline
             GstQTMoovRecover
           GstPushFileSrc
@@ -258,10 +263,11 @@ GObject
         GstRndBufferSize
         GstRtpJitterBuffer
         GstRtpPtDemux
+        GstRtpRtxReceive
+        GstRtpRtxSend
         GstRtpSession
         GstRtpSsrcDemux
-        GstRtpRtxSend
-        GstRtpRtxReceive
+        GstRtpStreamPay
         GstSMPTE
         GstShapeWipe
         GstTagDemux
@@ -275,10 +281,12 @@ GObject
           GstJpegDec
           GstPngDec
           GstVP8Dec
+          GstVP9Dec
         GstVideoEncoder
           GstJpegEnc
           GstPngEnc
           GstVP8Enc
+          GstVP9Enc
         GstVideoMixer2
         GstWavEnc
         GstWavParse
@@ -289,12 +297,14 @@ GObject
       GstPadTemplate
       GstPlugin
       GstPluginFeature
+        GstDeviceMonitorFactory
         GstElementFactory
         GstTypeFindFactory
       GstRegistry
       GstTask
       GstTaskPool
   GSocket
+  GTlsDatabase
   GdkPixbuf
   GstColorBalanceChannel
   GstTunerChannel
@@ -304,10 +314,10 @@ GObject
 GInterface
   GIcon
   GInitable
+  GLoadableIcon
   GTypePlugin
   GstChildProxy
   GstColorBalance
-  GstNavigation
   GstPreset
   GstStreamVolume
   GstTagSetter
@@ -316,4 +326,3 @@ GInterface
   GstTuner
   GstURIHandler
   GstVideoOrientation
-  GstVideoOverlay

@@ -58,16 +58,10 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2013-09-24"
+#define GST_PACKAGE_RELEASE_DATETIME "2014-05-03"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
-
-/* struct v4l2_buffer missing */
-#undef GST_V4L2_MISSING_BUFDECL
-
-/* I know the API is subject to change. */
-#undef G_UDEV_API_IS_SUBJECT_TO_CHANGE
 
 /* Define to enable aalib ASCII Art library (used by aasink). */
 #undef HAVE_AALIB
@@ -142,10 +136,6 @@
    */
 #undef HAVE_DCGETTEXT
 
-/* Define to 1 if you have the declaration of `V4L2_MEMORY_DMABUF', and to 0
-   if you don't. */
-#undef HAVE_DECL_V4L2_MEMORY_DMABUF
-
 /* Define to enable DirectSound plug-in (used by directsoundsink). */
 #undef HAVE_DIRECTSOUND
 
@@ -191,7 +181,7 @@
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #undef HAVE_GETTEXT
 
-/* Define to enable Video 4 Linux 2 (used by v4l2src). */
+/* Define to enable Video 4 Linux 2 (used by video4linux2). */
 #undef HAVE_GST_V4L2
 
 /* Whether gudev is available for device detection */
@@ -359,9 +349,6 @@
 /* Define to enable X Shared Memory extension. */
 #undef HAVE_XSHM
 
-/* Define to enable X11 XVideo extensions. */
-#undef HAVE_XVIDEO
-
 /* Define to enable zlib support for qtdemux/matroska. */
 #undef HAVE_ZLIB
 
@@ -385,7 +372,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 1.2.0"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 1.3.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -394,7 +381,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.2.0"
+#define PACKAGE_VERSION "1.3.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -428,7 +415,7 @@
 #undef TARGET_CPU
 
 /* Version number of package */
-#define VERSION "1.2.0"
+#define VERSION "1.3.1"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API

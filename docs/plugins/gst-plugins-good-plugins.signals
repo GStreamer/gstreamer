@@ -479,6 +479,64 @@ guint  arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::new-jitterbuffer</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+GstElement *arg1
+guint  arg2
+guint  arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::request-aux-receiver</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::request-aux-sender</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::request-rtcp-decoder</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::request-rtcp-encoder</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::request-rtp-decoder</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::request-rtp-encoder</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
@@ -713,5 +771,13 @@ GstSDPMessage *arg1
 GstRTSPSrc *gstrtspsrc
 guint  arg1
 GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTSPSrc::new-manager</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>fc</FLAGS>
+GstRTSPSrc *gstrtspsrc
+GstElement *arg1
 </SIGNAL>
 

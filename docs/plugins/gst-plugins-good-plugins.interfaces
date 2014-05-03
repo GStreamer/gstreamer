@@ -1,11 +1,13 @@
 GSocket GInitable
 GdkPixbuf GIcon
+GdkPixbuf GIcon GLoadableIcon
 Gst3GPPMux GstTagSetter GstTagXmpWriter
 GstApev2Mux GstTagSetter
 GstAspectRatioCrop GstChildProxy
 GstAudioEncoder GstPreset
 GstAutoAudioSink GstChildProxy
 GstAutoAudioSrc GstChildProxy
+GstAutoDetect GstChildProxy
 GstAutoVideoSink GstChildProxy
 GstAutoVideoSrc GstChildProxy
 GstAviMux GstTagSetter
@@ -78,10 +80,12 @@ GstUDPSrc GstURIHandler
 GstV4l2Radio GstURIHandler GstImplementsInterface GstTuner GstPropertyProbe
 GstV4l2Radio GstURIHandler GstTuner
 GstV4l2Sink GstImplementsInterface GstXOverlay GstNavigation GstColorBalance GstVideoOrientation GstPropertyProbe
+GstV4l2Sink GstTuner GstColorBalance GstVideoOrientation
 GstV4l2Sink GstTuner GstVideoOverlay GstNavigation GstColorBalance GstVideoOrientation
 GstV4l2Src GstURIHandler GstImplementsInterface GstTuner GstColorBalance GstVideoOrientation GstPropertyProbe
 GstV4l2Src GstURIHandler GstTuner GstColorBalance GstVideoOrientation
 GstVP8Enc GstPreset GstTagSetter
+GstVP9Enc GstPreset GstTagSetter
 GstVideoBalance GstColorBalance
 GstVideoBalance GstImplementsInterface GstColorBalance
 GstVideoEncoder GstPreset

@@ -3,7 +3,7 @@
   <description>VP8 plugin</description>
   <filename>../../ext/vpx/.libs/libgstvpx.so</filename>
   <basename>libgstvpx.so</basename>
-  <version>1.2.0</version>
+  <version>1.3.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -48,6 +48,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-vp8, profile=(string){ 0, 1, 2, 3 }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vp9dec</name>
+      <longname>On2 VP9 Decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Decode VP9 video streams</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-vp9</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12, Y42B, Y444 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vp9enc</name>
+      <longname>On2 VP9 Encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>Encode VP9 video streams</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-vp9, profile=(string){ 0, 1, 2, 3 }</details>
         </caps>
       </pads>
     </element>

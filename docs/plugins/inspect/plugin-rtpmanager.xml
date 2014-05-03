@@ -3,7 +3,7 @@
   <description>RTP session management plugin library</description>
   <filename>../../gst/rtpmanager/.libs/libgstrtpmanager.so</filename>
   <basename>libgstrtpmanager.so</basename>
-  <version>1.2.0</version>
+  <version>1.3.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -20,13 +20,13 @@
           <name>recv_rtcp_sink_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>application/x-rtcp</details>
+          <details>application/x-rtcp; application/x-srtcp</details>
         </caps>
         <caps>
           <name>recv_rtp_sink_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>application/x-rtp</details>
+          <details>application/x-rtp; application/x-srtp</details>
         </caps>
         <caps>
           <name>send_rtp_sink_%u</name>
@@ -44,13 +44,13 @@
           <name>send_rtp_src_%u</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>application/x-rtp</details>
+          <details>application/x-rtp; application/x-srtp</details>
         </caps>
         <caps>
           <name>send_rtcp_src_%u</name>
           <direction>source</direction>
           <presence>request</presence>
-          <details>application/x-rtcp</details>
+          <details>application/x-rtcp; application/x-srtcp</details>
         </caps>
       </pads>
     </element>
@@ -172,6 +172,48 @@
       </pads>
     </element>
     <element>
+      <name>rtprtxreceive</name>
+      <longname>RTP Retransmission receiver</longname>
+      <class>Codec</class>
+      <description>Receive retransmitted RTP packets according to RFC4588</description>
+      <author>Julien Isorce &lt;julien.isorce@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtprtxsend</name>
+      <longname>RTP Retransmission Sender</longname>
+      <class>Codec</class>
+      <description>Retransmit RTP packets when needed, according to RFC4588</description>
+      <author>Julien Isorce &lt;julien.isorce@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, clock-rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpsession</name>
       <longname>RTP Session</longname>
       <class>Filter/Network/RTP</class>
@@ -251,48 +293,6 @@
           <name>src_%u</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>application/x-rtp</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>rtprtxsend</name>
-      <longname>RTP Retransmission Sender</longname>
-      <class>Codec</class>
-      <description>Retransmit RTP packets when needed, according to RFC4588</description>
-      <author>Julien Isorce &lt;julien.isorce@gmail.com&gt;</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>rtprtxreceive</name>
-      <longname>RTP Retransmission Receiver</longname>
-      <class>Codec</class>
-      <description>Receive retransmitted RTP packets according to RFC4588</description>
-      <author>Julien Isorce &lt;julien.isorce@gmail.com&gt;</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
           <details>application/x-rtp</details>
         </caps>
       </pads>
