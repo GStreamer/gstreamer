@@ -1,4 +1,5 @@
 # Vietnamese Translation for GStreamer.
+# Bản dịch tiếng Việt dành cho GStreamer.
 # Copyright © 2013 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
@@ -6,18 +7,18 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.1.4\n"
+"Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
-"PO-Revision-Date: 2013-09-16 13:53+0700\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
+"PO-Revision-Date: 2013-12-11 08:08+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Team-Website: <http://translationproject.org/team/vi.html>\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Language-Team-Website: <http://translationproject.org/team/vi.html>\n"
 "X-Generator: LocFactoryEditor 1.8\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-Language: Vietnamese\n"
@@ -30,13 +31,12 @@ msgid "Make all warnings fatal"
 msgstr "Đặt mọi cảnh báo là nghiêm trọng"
 
 msgid "Print available debug categories and exit"
-msgstr "Hiển thị tất cả các loại gỡ lỗi sẵn sàng rồi thoát"
+msgstr "Hiển thị tất cả các loại gỡ lỗi sẵn có rồi thoát"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 5 (mọi thứ) hay 0 (không xuất gì)"
+"Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 9 (mọi thứ) hay 0 (không xuất gì)"
 
 msgid "LEVEL"
 msgstr "MỨC"
@@ -45,8 +45,8 @@ msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"Danh sách định giới bằng dấu phẩy của đôi “tên_loại:cấp” để đặt cấp dứt "
-"khoát cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+"Danh sách định giới bằng dấu phẩy của đôi “tên_loại:cấp” để đặt cấp rõ ràng "
+"cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
 msgstr "DANH SÁCH"
@@ -71,7 +71,7 @@ msgid "Colon-separated paths containing plugins"
 msgstr "Các đường dẫn định giới bằng dấu hai chấm mà chứa phần bổ sung"
 
 msgid "PATHS"
-msgstr "ĐƯỜNG DẪN"
+msgstr "ĐƯỜNG_DẪN"
 
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -123,7 +123,7 @@ msgid "Internal GStreamer error: pad problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề đệm."
 
 msgid "Internal GStreamer error: thread problem."
-msgstr "Lỗi nội bộ GStreamer: vấn đề về tuyến."
+msgstr "Lỗi nội bộ GStreamer: vấn đề về tuyến trình."
 
 msgid "GStreamer error: negotiation problem."
 msgstr "Lỗi GStreamer: vấn đề thỏa thuận."
@@ -194,15 +194,19 @@ msgid "Could not write to resource."
 msgstr "Không thể ghi vào tài nguyên."
 
 msgid "Could not perform seek on resource."
-msgstr "Không thể thi hành việc tim nơi trên tài nguyên."
+msgstr "Không thể thi hành việc di chuyển vị trí đọc trên tài nguyên."
 
 msgid "Could not synchronize on resource."
 msgstr "Không thể đồng bộ trên tài nguyên."
 
 msgid "Could not get/set settings from/on resource."
-msgstr "Không thể lấy/đặt cài đặt từ/vào tài nguyên."
+msgstr "Không thể lấy/đặt cài đặt từ/trên tài nguyên."
 
 msgid "No space left on the resource."
+msgstr "Không còn không gian trống trên tài nguyên đó."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "Không còn không gian trống trên tài nguyên đó."
 
 msgid "GStreamer encountered a general stream error."
@@ -344,25 +348,25 @@ msgid "track number"
 msgstr "số rãnh"
 
 msgid "track number inside a collection"
-msgstr "số thứ tự rãnh ở trong tập hợp"
+msgstr "số thứ tự rãnh ở trong bộ sưu tập"
 
 msgid "track count"
 msgstr "đếm rãnh"
 
 msgid "count of tracks inside collection this track belongs to"
-msgstr "số đếm rãnh ở trong tập hợp"
+msgstr "số đếm rãnh ở trong bộ sưu tập"
 
 msgid "disc number"
 msgstr "số đĩa"
 
 msgid "disc number inside a collection"
-msgstr "số thứ tự đĩa ở trong tập hợp"
+msgstr "số thứ tự đĩa ở trong bộ sưu tập"
 
 msgid "disc count"
 msgstr "đếm đĩa"
 
 msgid "count of discs inside collection this disc belongs to"
-msgstr "số đếm đĩa ở trong tập hợp"
+msgstr "số đếm đĩa ở trong bộ sưu tập"
 
 msgid "location"
 msgstr "địa điểm"
@@ -671,7 +675,7 @@ msgstr ""
 "xuất (v.d. hàng xóm)"
 
 msgid "geo location horizontal error"
-msgstr "lỗi thanh ngang vị trí theo Trái Đất"
+msgstr "lỗi vị trí đường chân trời theo Trái Đất"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr "chờ đợi một lỗi của đo lường vị trí đường nằm ngang (tính bằng mét)"
@@ -813,6 +817,12 @@ msgstr "biên-dịch-bởi"
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Thông tin về người đứng sau phối và biên tập lại"
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -822,7 +832,7 @@ msgstr "Không tìm thấy bộ tiếp hợp với URI dành cho giao thức %s"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr "Không hỗ trợ lược đồ URI '%s'"
+msgstr "Không hỗ trợ lược đồ URI “%s”"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -837,12 +847,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "không cho phép nhị phân trống được ghi rõ “%s”"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "không có nhị phân “%s” nên bỏ qua"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -861,23 +871,16 @@ msgid "no element \"%s\""
 msgstr "không có phần tử “%s”"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "không thể phân tách caps “%s”"
-
-msgid "link without source element"
-msgstr "liên kết không có phần tử nguồn"
-
-msgid "link without sink element"
-msgstr ""
-"liên kết không có phần tử quản lý việc phân phối dữ liệu vào đệm khác nhau"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "không có phần tử nguồn cho URI “%s”"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "không có phần tử đến đó cần liên kết URI “%s”"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
@@ -886,10 +889,22 @@ msgstr ""
 "điểm “%s”"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
+msgid "no source element for URI \"%s\""
+msgstr "không có phần tử nguồn cho URI “%s”"
+
+msgid "syntax error"
 msgstr ""
-"không thể kết hợp phần tử quản lý việc phân phối dữ liệu vào đệm khác nhau, "
-"cho URI “%s”"
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "không cho phép nhị phân trống được ghi rõ “%s”"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "không có nhị phân “%s” nên bỏ qua"
 
 msgid "empty pipeline not allowed"
 msgstr "không cho phép đường ống trống"
@@ -936,7 +951,7 @@ msgstr "Gặp lỗi khi đóng tập tin “%s”."
 
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Gặp lỗi khi tìm trong tập tin “%s”."
+msgstr "Gặp lỗi khi di chuyển vị trí đọc trong tập tin “%s”."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
@@ -1017,7 +1032,7 @@ msgid "Blacklisted files:"
 msgstr "Tập tin bị cấm:"
 
 msgid "Total count: "
-msgstr "Đếm tổng: "
+msgstr "Số lượng tổng cộng: "
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1173,9 +1188,9 @@ msgstr "Tiến trình: (%s) %s\n"
 msgid "Missing element: %s\n"
 msgstr "Thiếu phần tử: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Đã nhận nội dung từ phần tử '%s': %s\n"
+msgstr "Đã nhận nội dung từ phần tử “%s”: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Thể xuất (cũng được biết là siêu dữ liệu)"
@@ -1276,6 +1291,21 @@ msgstr "Đang đặt đường ống thành VÔ GIÁ TRỊ ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Đang giải phóng đường ống ...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "liên kết không có phần tử nguồn"
+
+#~ msgid "link without sink element"
+#~ msgstr ""
+#~ "liên kết không có phần tử quản lý việc phân phối dữ liệu vào đệm khác nhau"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "không có phần tử đến đó cần liên kết URI “%s”"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr ""
+#~ "không thể kết hợp phần tử quản lý việc phân phối dữ liệu vào đệm khác "
+#~ "nhau, cho URI “%s”"
 
 #~ msgid "maximum"
 #~ msgstr "tối đa"

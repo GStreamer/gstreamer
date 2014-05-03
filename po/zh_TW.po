@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -207,6 +207,9 @@ msgid "Could not get/set settings from/on resource."
 msgstr ""
 
 msgid "No space left on the resource."
+msgstr ""
+
+msgid "Not authorized to access resource."
 msgstr ""
 
 #, fuzzy
@@ -810,6 +813,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ""
 
@@ -834,11 +843,11 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
+msgid "link has no source [sink=%s@%p]"
 msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
+msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
 #, c-format
@@ -858,21 +867,15 @@ msgid "no element \"%s\""
 msgstr "“%s” 元件不存在"
 
 #, c-format
-msgid "could not parse caps \"%s\""
+msgid "unexpected reference \"%s\" - ignoring"
 msgstr ""
 
-msgid "link without source element"
-msgstr "管線中沒有來源元件"
-
-msgid "link without sink element"
-msgstr "管線中沒有輸出元件"
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
 
 #, c-format
-msgid "no source element for URI \"%s\""
-msgstr "URI “%s” 沒有來源元件"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
+msgid "could not parse caps \"%s\""
 msgstr ""
 
 #, c-format
@@ -880,8 +883,22 @@ msgid "no sink element for URI \"%s\""
 msgstr "URI “%s” 沒有輸出元件"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
+msgid "no source element for URI \"%s\""
+msgstr "URI “%s” 沒有來源元件"
+
+msgid "syntax error"
 msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "“%2$s” 元件沒有 “%1$s” 屬性"
 
 msgid "empty pipeline not allowed"
 msgstr "不允許使用沒有內容的管線"
@@ -1264,6 +1281,12 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "執行管線 ...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "管線中沒有來源元件"
+
+#~ msgid "link without sink element"
+#~ msgstr "管線中沒有輸出元件"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "印出 alloc 追蹤訊息 (如果編譯程式時有啟用這項功能)"

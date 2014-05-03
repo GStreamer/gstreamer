@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2010-10-25 10:03+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -319,6 +319,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Impossibile ottenere/regolare le impostazioni della risorsa."
 
 msgid "No space left on the resource."
+msgstr "Niente spazio sulla risorsa."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "Niente spazio sulla risorsa."
 
 msgid "GStreamer encountered a general stream error."
@@ -963,6 +967,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -987,12 +997,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "specificato il bin vuoto «%s», non consentito"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "nessun bin «%s», omesso"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -1011,30 +1021,38 @@ msgid "no element \"%s\""
 msgstr "nessun elemento «%s»"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "impossibile analizzare i caps «%s»"
-
-msgid "link without source element"
-msgstr "collegamento senza elemento sorgente"
-
-msgid "link without sink element"
-msgstr "collegamento senza elemento sink"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "elemento sorgente mancante per l'URI «%s»"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "elemento mancante per collegare l'URI «%s» a"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "elemento sink mancante per l'URI «%s»"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "impossibile collegare l'elemento sink per l'URI «%s»"
+msgid "no source element for URI \"%s\""
+msgstr "elemento sorgente mancante per l'URI «%s»"
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "specificato il bin vuoto «%s», non consentito"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "nessun bin «%s», omesso"
 
 msgid "empty pipeline not allowed"
 msgstr "pipeline vuota non consentito"
@@ -1460,6 +1478,18 @@ msgstr "Impostazione della pipeline a NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Esecuzione di free sulla pipeline...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "collegamento senza elemento sorgente"
+
+#~ msgid "link without sink element"
+#~ msgstr "collegamento senza elemento sink"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "elemento mancante per collegare l'URI «%s» a"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "impossibile collegare l'elemento sink per l'URI «%s»"
 
 # -T, --trace
 #~ msgid "Print alloc trace (if enabled at compile time)"

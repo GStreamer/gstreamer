@@ -7,10 +7,10 @@
 # Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.1.4\n"
+"Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
-"PO-Revision-Date: 2013-09-15 08:55+0400\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
+"PO-Revision-Date: 2013-12-08 12:44+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
@@ -30,11 +30,10 @@ msgstr "Сделать все предупреждения фатальными"
 msgid "Print available debug categories and exit"
 msgstr "Вывести доступные категории отладки и выйти"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Уровень отладки по умолчанию: от 1 (только ошибки) до 5 (всё), или 0 (ничего "
+"Уровень отладки по умолчанию: от 1 (только ошибки) до 9 (всё), или 0 (ничего "
 "не печатать)"
 
 msgid "LEVEL"
@@ -206,6 +205,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Не удалось получить/установить параметры ресурса."
 
 msgid "No space left on the resource."
+msgstr "В ресурсе нет свободного места."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "В ресурсе нет свободного места."
 
 msgid "GStreamer encountered a general stream error."
@@ -811,6 +814,12 @@ msgstr "в обработке"
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Информация о людях, которые сделали ремикс или подобные обработки"
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -835,12 +844,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "указанный пустой контейнер «%s» недопустим"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "не найден контейнер «%s», пропуск"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -859,30 +868,38 @@ msgid "no element \"%s\""
 msgstr "элемент «%s» не найден"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "не удалось обработать возможности «%s»"
-
-msgid "link without source element"
-msgstr "попытка соединения без элемента-источника"
-
-msgid "link without sink element"
-msgstr "попытка соединения без элемента-приёмника"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "нет элемента-источника для URI «%s»"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "нет элемента, который можно было бы присоединить к URI «%s»"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "нет элемента-приёмника для URI «%s»"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "не удалось соединить элемент-приёмник для URI «%s»"
+msgid "no source element for URI \"%s\""
+msgstr "нет элемента-источника для URI «%s»"
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "указанный пустой контейнер «%s» недопустим"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "не найден контейнер «%s», пропуск"
 
 msgid "empty pipeline not allowed"
 msgstr "пустой конвейер недопустим"
@@ -1174,9 +1191,9 @@ msgstr "Ход выполнения: (%s) %s\n"
 msgid "Missing element: %s\n"
 msgstr "Элемент отсутствует: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Получен контекст из элемента «%s»: %s\n"
+msgstr "Получен контекст из элемента «%s»: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Выводить теги (метаданные)"
@@ -1275,6 +1292,18 @@ msgstr "Установка конвейера в состояние NULL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Освобождение конвейера…\n"
+
+#~ msgid "link without source element"
+#~ msgstr "попытка соединения без элемента-источника"
+
+#~ msgid "link without sink element"
+#~ msgstr "попытка соединения без элемента-приёмника"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "нет элемента, который можно было бы присоединить к URI «%s»"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "не удалось соединить элемент-приёмник для URI «%s»"
 
 #~ msgid "maximum"
 #~ msgstr "максимум"

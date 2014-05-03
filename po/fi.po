@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -206,6 +206,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Resurssin asetuksia ei saatu/voitu asettaa."
 
 msgid "No space left on the resource."
+msgstr "Resurssilla ei ole tilaa jäljellä."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "Resurssilla ei ole tilaa jäljellä."
 
 msgid "GStreamer encountered a general stream error."
@@ -816,6 +820,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -840,12 +850,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "määritetty tyhjä säiliö ”%s”, ei sallittu"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "ei säiliötä ”%s”, ohitetaan"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -864,30 +874,38 @@ msgid "no element \"%s\""
 msgstr "ei elementtiä ”%s”"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kykyjä ”%s” ei voitu jäsentää"
-
-msgid "link without source element"
-msgstr "linkki ilman lähde-elementtiä"
-
-msgid "link without sink element"
-msgstr "linkki ilman nieluelementtiä"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "ei lähde-elementtiä URI:lle ”%s”"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "ei elementtiä, jota linkittää URIin ”%s”"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "ei nieluelementtiä URIlle ”%s”"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "nieluelementtiä ei voitu linkittää URIlle ”%s”"
+msgid "no source element for URI \"%s\""
+msgstr "ei lähde-elementtiä URI:lle ”%s”"
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "määritetty tyhjä säiliö ”%s”, ei sallittu"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "ei säiliötä ”%s”, ohitetaan"
 
 msgid "empty pipeline not allowed"
 msgstr "tyhjää liukuhihnaa ei sallita"
@@ -1283,6 +1301,18 @@ msgstr "Asetetaan liukuhihna tilaan TYHJÄ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Vapautetaan liukuhihna...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "linkki ilman lähde-elementtiä"
+
+#~ msgid "link without sink element"
+#~ msgstr "linkki ilman nieluelementtiä"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "ei elementtiä, jota linkittää URIin ”%s”"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "nieluelementtiä ei voitu linkittää URIlle ”%s”"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Tulosta varausjälki (jos valittu käännöksen yhteydessä)"

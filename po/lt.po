@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -200,6 +200,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Nepavyko gauti/nustatyti ištekliaus parametrų."
 
 msgid "No space left on the resource."
+msgstr "Ištekliuje nebėra vietos."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "Ištekliuje nebėra vietos."
 
 msgid "GStreamer encountered a general stream error."
@@ -814,6 +818,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -838,12 +848,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "nurodytas tuščias dėklas „%s“, neleidžiama"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "nėra dėklo „%s“, praleidžiama"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -862,30 +872,38 @@ msgid "no element \"%s\""
 msgstr "nėra elemento „%s“"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "nepavyko perskaityti galimybių „%s“"
-
-msgid "link without source element"
-msgstr "saitas be šaltinio elemento"
-
-msgid "link without sink element"
-msgstr "saitas be išvesties elemento"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "nėra šaltinio elemento URI „%s“"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "nėra elemento, su kuriuo susieti URI „%s“"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "nėra išvesties elemento URI „%s“"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "nepavyko susieti išvesties elemento URI „%s“"
+msgid "no source element for URI \"%s\""
+msgstr "nėra šaltinio elemento URI „%s“"
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "nurodytas tuščias dėklas „%s“, neleidžiama"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "nėra dėklo „%s“, praleidžiama"
 
 msgid "empty pipeline not allowed"
 msgstr "tuščias konvejeris neleidžiamas"
@@ -1280,6 +1298,18 @@ msgstr "Nustatomas konvejeris į NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Atlaisvinamas konvejeris...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "saitas be šaltinio elemento"
+
+#~ msgid "link without sink element"
+#~ msgstr "saitas be išvesties elemento"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "nėra elemento, su kuriuo susieti URI „%s“"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "nepavyko susieti išvesties elemento URI „%s“"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Išvesti alloc sekimą (jei įjungta kompiliavimo metu)"

@@ -3,13 +3,13 @@
 # Copyright (C) 2004, 2005 gstreamer's COPYRIGHT HOLDER
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.30.3\n"
+"Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
-"PO-Revision-Date: 2010-11-08 16:13+0100\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
+"PO-Revision-Date: 2014-01-30 10:24+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
@@ -31,11 +31,10 @@ msgstr "Chápať všetky varovania ako závažné"
 msgid "Print available debug categories and exit"
 msgstr "Vypísať dostupné ladiace kategórie a skončiť"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Predvolená úroveň ladenia od 1 (len chyby) po 5 (všetko) alebo 0 (bez "
+"Predvolená úroveň ladenia od 1 (len chyby) po 9 (všetko) alebo 0 (bez "
 "výstupu)"
 
 msgid "LEVEL"
@@ -59,6 +58,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Zmení farebný režim ladiaceho výstupu. Dostupné režimy: zapnutý, vypnutý, "
+"zakázaný, automatický, unix"
 
 msgid "Disable debugging"
 msgstr "Zakázať ladenie"
@@ -106,13 +107,10 @@ msgstr "GStreamer narazil na všeobecnú chybu hlavnej knižnice."
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
-"Vývojári GStreamer boli príliš leniví na to, aby tejto chybe priradili kód. "
-"Ohláste prosím túto chybu."
+"Vývojári GStreamer boli príliš leniví na to, aby tejto chybe priradili kód."
 
 msgid "Internal GStreamer error: code not implemented."
-msgstr ""
-"Vnútorná chyba GStreamer: kód nebol implementovaný. Ohláste prosím túto "
-"chybu."
+msgstr "Vnútorná chyba GStreamer: kód nebol implementovaný."
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
@@ -122,42 +120,31 @@ msgstr ""
 "patričné hlásenie o chybe s dôvodom zlyhania."
 
 msgid "Internal GStreamer error: pad problem."
-msgstr ""
-"Vnútorná chyba GStreamer: problém pri vyplňovaní. Ohláste prosím túto chybu."
+msgstr "Vnútorná chyba GStreamer: problém pri vyplňovaní."
 
 msgid "Internal GStreamer error: thread problem."
-msgstr ""
-"Vnútorná chyba GStreamer: problém s vláknami. Ohláste prosím túto chybu."
+msgstr "Vnútorná chyba GStreamer: problém s vláknami."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr ""
-"Vnútorná chyba GStreamer: problém pri vyjednávaní. Ohláste prosím túto chybu."
+msgstr "Vnútorná chyba GStreamer: problém pri vyjednávaní."
 
 msgid "Internal GStreamer error: event problem."
-msgstr ""
-"Vnútorná chyba GStreamer: problém s udalosťami. Ohláste prosím túto chybu."
+msgstr "Vnútorná chyba GStreamer: problém s udalosťami."
 
 msgid "Internal GStreamer error: seek problem."
-msgstr ""
-"Vnútorná chyba GStreamer: problém s nastavením pozície. Ohláste prosím túto "
-"chybu."
+msgstr "Vnútorná chyba GStreamer: problém s nastavením pozície."
 
 msgid "Internal GStreamer error: caps problem."
-msgstr ""
-"Vnútorná chyba GStreamer: problém schopností. Ohláste prosím túto chybu."
+msgstr "Vnútorná chyba GStreamer: problém schopností."
 
 msgid "Internal GStreamer error: tag problem."
-msgstr ""
-"Vnútorná chyba GStreamer: problém so značkami. Ohláste prosím túto chybu."
+msgstr "Vnútorná chyba GStreamer: problém so značkami."
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr "Vašej inštalácii GStreamer chýba zásuvný modul."
+msgstr "Vašej inštalácii GStreamer chýba nejaký zásuvný modul."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr ""
-"Vnútorná chyba GStreamer: problém s časovaním. Ohláste prosím túto chybu."
+msgstr "Vnútorná chyba GStreamer: problém s časovaním."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -218,6 +205,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Nepodarilo sa získať/upraviť nastavenia zdroja."
 
 msgid "No space left on the resource."
+msgstr "Na zdroji už nezostalo miesto."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "Na zdroji už nezostalo miesto."
 
 msgid "GStreamer encountered a general stream error."
@@ -432,12 +423,11 @@ msgstr "uri pre copyright"
 msgid "URI to the copyright notice of the data"
 msgstr "URI pre poznámku o autorských právach údajov"
 
-#, fuzzy
 msgid "encoded by"
 msgstr "kodér"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "meno kódujúcej osoby alebo organizácie"
 
 msgid "contact"
 msgstr "kontakt"
@@ -580,13 +570,12 @@ msgstr "Referenčná úroveň zisku pre stopu a pre album"
 msgid "language code"
 msgstr "jazykový kód"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "jazykový kód pre tento prúd údajov, v súlade s ISO-639-1"
+msgstr ""
+"Jazykový kód pre tento prúd údajov, v súlade s ISO-639-1 alebo ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "jazykový kód"
+msgstr "názov jazyku"
 
 msgid "freeform name of the language this stream is in"
 msgstr ""
@@ -623,7 +612,7 @@ msgid "comma separated keywords describing the content"
 msgstr "kľúčové slová, opisujúce obsah, oddelené čiarkou"
 
 msgid "geo location name"
-msgstr "geografická poloha"
+msgstr "zemepisná poloha - názov"
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
@@ -655,7 +644,7 @@ msgstr ""
 "pre západné dĺžky)"
 
 msgid "geo location elevation"
-msgstr "zemepisná nadmorská výška"
+msgstr "nadmorská výška"
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
@@ -665,21 +654,20 @@ msgstr ""
 "produkované, v metroch podľa WGS84 (0 je priemerná hladina mora)"
 
 msgid "geo location country"
-msgstr "zemepisná poloha krajina"
+msgstr "zemepisná poloha - krajina"
 
 msgid "country (english name) where the media has been recorded or produced"
 msgstr "krajina (v angličtine), kde bolo toto médium nahraté alebo produkované"
 
 msgid "geo location city"
-msgstr "zemepisná poloha mesto"
+msgstr "zemepisná poloha - mesto"
 
 msgid "city (english name) where the media has been recorded or produced"
 msgstr "mesto (v angličtine), kde bolo toto médium nahraté alebo produkované"
 
 msgid "geo location sublocation"
-msgstr "zemepisná poloha upresnenie"
+msgstr "zemepisná poloha - upresnenie"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
@@ -688,20 +676,20 @@ msgstr ""
 "vytvorené (napr. v susedstve)"
 
 msgid "geo location horizontal error"
-msgstr "geografická poloha vodorovná odchýlka"
+msgstr "geografická poloha - vodorovná odchýlka"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr "očakávaná odchýlka vodorovného umiestnenia (v metroch)"
 
 msgid "geo location movement speed"
-msgstr "zemepisná poloha rýchlosť pohybu"
+msgstr "zemepisná poloha - rýchlosť pohybu"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr "rýchlosť pohybu zachytávajúceho zariadenia počas zachytávania v m/s"
 
 msgid "geo location movement direction"
-msgstr "zemepisná poloha smer pohybu"
+msgstr "zemepisná poloha - smer pohybu"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
@@ -713,7 +701,7 @@ msgstr ""
 "geografický sever, a zvyšuje sa v smere hodinových ručičiek"
 
 msgid "geo location capture direction"
-msgstr "zemepisná poloha smer zachytávania"
+msgstr "zemepisná poloha - smer zachytávania"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
@@ -815,15 +803,21 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Ako má byť obrázok otočený alebo prevrátený pred jeho zobrazením"
 
 msgid "publisher"
-msgstr ""
+msgstr "vydavateľ"
 
 msgid "Name of the label or publisher"
 msgstr ""
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "interpret"
 
 msgid "Information about the people behind a remix and similar interpretations"
+msgstr "Informácie o ľuďoch v pozadí remixovania a podobných interpretácií"
+
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
 msgstr ""
 
 msgid ", "
@@ -831,11 +825,11 @@ msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Nenašla sa obsluha URI pre protokol %s"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "URI schéma '%s' nie je podporovaná"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -850,12 +844,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "bol zadaný prázdny zásobník \"%s\", čo nie je dovolené"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "neexistuje zásobník \"%s\", preskakujem"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -874,30 +868,38 @@ msgid "no element \"%s\""
 msgstr "prvok \"%s\" neexistuje"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "nepodarilo sa analyzovať schopnosti \"%s\""
-
-msgid "link without source element"
-msgstr "pripojenie bez zdrojového prvku"
-
-msgid "link without sink element"
-msgstr "odkaz bez prvku sink"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "neexistuje zdrojový prvok pre URI \"%s\""
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "neexistuje prvok, ku ktorému sa má pripojiť URI \"%s\""
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "neexistuje prvok sink pre URI \"%s\""
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "nepodarilo sa pripojiť prvok sink pre URI \"%s\""
+msgid "no source element for URI \"%s\""
+msgstr "neexistuje zdrojový prvok pre URI \"%s\""
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "bol zadaný prázdny zásobník \"%s\", čo nie je dovolené"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "neexistuje zásobník \"%s\", preskakujem"
 
 msgid "empty pipeline not allowed"
 msgstr "prázdna rúra sa nepripúšťa"
@@ -918,7 +920,7 @@ msgid "Internal clock error."
 msgstr "Vnútorná chyba časovača."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Zlyhalo vytváranie vyrovnávacej pamäte."
 
 msgid "Filter caps"
 msgstr "Filtrovať schopnosti"
@@ -927,7 +929,7 @@ msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
-"Obmedziť možné povolené schopnosti (NULL znamená ĽUBOVOĽNÉ). Nastavenie "
+"Obmedziť možné povolené schopnosti (NULOVÉ znamená ĽUBOVOĽNÉ). Nastavenie "
 "tejto vlastnosti berie referenciu na zadaný objekt GstCaps."
 
 msgid "No file name specified for writing."
@@ -1012,13 +1014,13 @@ msgid "controllable"
 msgstr "ovládateľné"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "meniteľné v stave NULOVÝ, PRIPRAVENÝ, POZASTAVENÝ alebo HRAJÚCI"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "meniteľné v iba stave NULOVÝ, PRIPRAVENÝ alebo POZASTAVENÝ"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "meniteľné iba v stave NULOVÝ alebo PRIPRAVENÝ"
 
 msgid "Blacklisted files:"
 msgstr "Zakázané súbory:"
@@ -1075,12 +1077,14 @@ msgid "List the plugin contents"
 msgstr "Vypísať zoznam zásuvných modulov"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Skontrolovať, či existuje vybraný prvok alebo zásuvný modul"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Pri kontrole, či existuje daný prvok alebo zásuvný modul, skontrolovať aj či "
+"je jeho verzia aspoň na určenej úrovni"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
@@ -1095,7 +1099,7 @@ msgid "No such element or plugin '%s'\n"
 msgstr "Takýto prvok alebo zásuvný modul neexistuje '%s'\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Štatistika indexu"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1132,17 +1136,16 @@ msgstr "NAŠLA SA ZNAČKA    : našiel ju objekt \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr "NAŠLA SA ZNAČKA\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "NAŠLA SA ZNAČKA    : našiel ju prvok \"%s\".\n"
+msgstr "NAŠLA SA TABUĽKA    : našiel ju prvok \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "NAŠLA SA ZNAČKA    : našiel ju objekt \"%s\".\n"
+msgstr "NAŠLA SA TABUĽKA    : našiel ju objekt \"%s\".\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "NAŠLA SA ZNAČKA\n"
+msgstr "NAŠLA SA TABUĽKA\n"
 
 #, c-format
 msgid ""
@@ -1159,15 +1162,14 @@ msgstr "VAROVANIE: z prvku %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Predčítané, čakám na dokončenie napĺňania vyrovnávacej pamäte...\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Predčítané, čakám na dokončenie napĺňania vyrovnávacej pamäte...\n"
+msgstr "Predčítané, čakám na dokončenie...\n"
 
 msgid "buffering..."
 msgstr "Ukladám do vyrovnávacej pamäte..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "Vyrovnávacia pamäť je naplnená, nastavujem rúru na PREHRÁVA ...\n"
+msgstr "Vyrovnávacia pamäť je naplnená, nastavujem rúru na HRAJÚCU ...\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Napĺňa sa vyrovnávacia pamäť, nastavujem rúru na POZASTAVENÚ ...\n"
@@ -1184,21 +1186,21 @@ msgstr "Prerušenie: Zastavujem rúru ...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Priebeh: (%s) %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "prvok \"%s\" neexistuje"
+msgstr "Chýba prvok %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "VAROVANIE: z prvku %s: %s\n"
+msgstr "Získal som kontext z prvku '%s': %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Vypísať značky (známe tiež ako metadáta)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Výstupná tabuľka obsahu (kapitoly a vydania)"
 
 msgid "Output status information and property notifications"
 msgstr "Vypísať informácie o stave a upozornenia o vlastnostiach"
@@ -1222,7 +1224,7 @@ msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Vynútiť EOS na zdrojoch pred vypnutím rúry"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Zozbierať a zobraziť štatistiku indexu"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1259,7 +1261,7 @@ msgid "Pipeline is PREROLLED ...\n"
 msgstr "Rúra je v stave PREROLLED ...\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Nastavujem rúru na PREHRÁVA ...\n"
+msgstr "Nastavujem rúru na HRAJÚCU ...\n"
 
 # On strike?
 msgid "ERROR: pipeline doesn't want to play.\n"
@@ -1268,9 +1270,8 @@ msgstr "CHYBA: Rúra nechce hrať.\n"
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "EOS pri vypnutí je povolený -- Vynucujem EOS pre rúru\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS pri vypnutí je povolený -- Vynucujem EOS pre rúru\n"
+msgstr "EOS pri vypnutí je povolený -- čakám na EOS po chybe\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Čakám na EOS...\n"
@@ -1278,9 +1279,8 @@ msgstr "Čakám na EOS...\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Prijatý EOS - zastavujem rúru ...\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Prerušenie: Zastavujem rúru ...\n"
+msgstr "Prerušenie počas čakania na EOS - zastavujem rúru ...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Počas čakania na EOS nastala chyba\n"
@@ -1297,8 +1297,20 @@ msgstr "Nastavujem rúru na NULOVÚ ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Uvoľňujem rúru ...\n"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Vypisovať stopu alokácie (ak je to povolené pri kompilácii)"
+#~ msgid "link without source element"
+#~ msgstr "pripojenie bez zdrojového prvku"
+
+#~ msgid "link without sink element"
+#~ msgstr "odkaz bez prvku sink"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "neexistuje prvok, ku ktorému sa má pripojiť URI \"%s\""
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "nepodarilo sa pripojiť prvok sink pre URI \"%s\""
+
+#~ msgid "maximum"
+#~ msgstr "maximum"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
@@ -1329,6 +1341,9 @@ msgstr "Uvoľňujem rúru ...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Neinštalovať obsluhu signálov SIGUSR1 a SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Vypisovať stopu alokácie (ak je to povolené pri kompilácii)"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Chyba pri opätovnom skenovaní registrov %s: %s"

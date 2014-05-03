@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -266,6 +266,10 @@ msgstr "OYA Kubona Gushyiraho Amagenamiterere Bivuye ku"
 
 msgid "No space left on the resource."
 msgstr ""
+
+#, fuzzy
+msgid "Not authorized to access resource."
+msgstr "OYA Kwandika Kuri"
 
 #, fuzzy
 msgid "GStreamer encountered a general stream error."
@@ -974,6 +978,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -995,13 +1005,13 @@ msgid ""
 "%s\n"
 msgstr "Kosora amakosa Ibisobanuro"
 
-#, fuzzy, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "ubusa OYA"
+#, c-format
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
-#, fuzzy, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "Oya Gusimbuka: %s%s"
+#, c-format
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -1019,33 +1029,39 @@ msgstr "OYA Ihuza Kuri"
 msgid "no element \"%s\""
 msgstr "Oya Ikigize:"
 
+#, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
 #, fuzzy, c-format
 msgid "could not parse caps \"%s\""
 msgstr "OYA Inyuguti nkuru"
-
-#, fuzzy
-msgid "link without source element"
-msgstr "Ihuza Inkomoko Ikigize:"
-
-#, fuzzy
-msgid "link without sink element"
-msgstr "Ihuza Ikigize:"
-
-#, fuzzy, c-format
-msgid "no source element for URI \"%s\""
-msgstr "Oya Inkomoko Ikigize: kugirango"
-
-#, fuzzy, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "Oya Ikigize: Kuri Ihuza Kuri"
 
 #, fuzzy, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "Oya Ikigize: kugirango"
 
 #, fuzzy, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "OYA Ihuza Ikigize: kugirango"
+msgid "no source element for URI \"%s\""
+msgstr "Oya Inkomoko Ikigize: kugirango"
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "ubusa OYA"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "Oya Gusimbuka: %s%s"
 
 #, fuzzy
 msgid "empty pipeline not allowed"
@@ -1453,6 +1469,22 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "link without source element"
+#~ msgstr "Ihuza Inkomoko Ikigize:"
+
+#, fuzzy
+#~ msgid "link without sink element"
+#~ msgstr "Ihuza Ikigize:"
+
+#, fuzzy
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "Oya Ikigize: Kuri Ihuza Kuri"
+
+#, fuzzy
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "OYA Ihuza Ikigize: kugirango"
 
 #, fuzzy
 #~ msgid "Print alloc trace (if enabled at compile time)"

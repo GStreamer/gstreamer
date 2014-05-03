@@ -1,18 +1,19 @@
 # Indonesian translations for gstreamer package.
 # This file is put in the public domain.
-# Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2012.
+# Andika Triwidada <andika@gmail.com>, 2013.
+# Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.32.2\n"
+"Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
-"PO-Revision-Date: 2012-01-28 11:44+0700\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
+"PO-Revision-Date: 2014-01-27 20:09+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
@@ -25,11 +26,10 @@ msgstr "Buat semua peringatan fatal"
 msgid "Print available debug categories and exit"
 msgstr "Cetak kategori awakutu yang tersedia lalu keluar"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Level awakutu standar dari 1 (hanya galat) ke 5 (apapun) atau 0 untuk tak "
+"Level awakutu standar dari 1 (hanya galat) ke 9 (apapun) atau 0 untuk tak "
 "ada keluaran"
 
 msgid "LEVEL"
@@ -53,6 +53,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Mengubah mode pewarnaan dari log awakutu. Mode yang mungkin: off (mati), on "
+"(nyala), disable (dinonaktifkan), auto (otomatis), unix"
 
 msgid "Disable debugging"
 msgstr "Nonaktifkan awakutu"
@@ -118,9 +120,8 @@ msgstr "Galat GStreamer internal: masalah landasan."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Galat GStreamer internal: masalah benang."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Galat GStreamer internal: masalah negosiasi."
+msgstr "Galat GStreamer: masalah negosiasi."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Galat GStreamer internal: masalah event."
@@ -137,9 +138,8 @@ msgstr "Galat GStreamer internal: masalah tag."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Instalasi GStreamer anda kehilangan plug-in."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Galat GStreamer internal: masalah jam."
+msgstr "Galat GStreamer: masalah jam."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -200,6 +200,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Tak bisa mendapatkan/mengatur pengaturan dari/di sumber daya."
 
 msgid "No space left on the resource."
+msgstr "Tak ada ruang tersisa di sumber daya."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "Tak ada ruang tersisa di sumber daya."
 
 msgid "GStreamer encountered a general stream error."
@@ -562,16 +566,14 @@ msgstr "level referensi nilai peraihan jalur dan album"
 msgid "language code"
 msgstr "kode bahasa"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "kode bahasa arus ini, mengubahnya ke ISO-639-1"
+msgstr "kode bahasa arus ini, menganut ke ISO-639-1 atau ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "kode bahasa"
+msgstr "nama bahasa"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "nama bebas dari bahasa tempat arus ini berada"
 
 msgid "image"
 msgstr "gambar"
@@ -663,13 +665,11 @@ msgstr "kota (dalam bahasa Inggris) tempat media telah direkam atau dihasilkan"
 msgid "geo location sublocation"
 msgstr "sublokasi lokasi geografis"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
-"lokasi di dalam kota tempat media dihasilkan atau dibuat (misalnya "
-"lingkungan)"
+"lokasi di dalam kota tempat media dihasilkan atau dibuat (mis. lingkungan)"
 
 msgid "geo location horizontal error"
 msgstr "galat horizontal lokasi geografis"
@@ -801,15 +801,22 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Bagaimana gambar harus diputar atau dibalik sebelum ditampilkan"
 
 msgid "publisher"
-msgstr ""
+msgstr "penerbit"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Nama label atau penerbit"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "diinterpretasi-oleh"
 
 msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
+"Informasi tentang orang di belakang suatu remix dan interpretasi yang serupa"
+
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
 msgstr ""
 
 msgid ", "
@@ -817,11 +824,11 @@ msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Tak ditemukan penangan URI bagi protokol %s"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "Skema URI '%s' tak didukung"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -836,12 +843,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "menentukan kotak sampah kosong \"%s\", tak diizinkan"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "tak ada tempat sampah \"%s\", dilewati"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -860,30 +867,38 @@ msgid "no element \"%s\""
 msgstr "tak ada elemen \"%s\""
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "tak dapat menguraikan huruf \"%s\""
-
-msgid "link without source element"
-msgstr "taut tanpa elemen sumber"
-
-msgid "link without sink element"
-msgstr "taut tanpa elemen buang"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "tak ada elemen sumber untuk URI \"%s\""
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "tak ada elemen ke taut URI \"%s\""
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "tak ada elemen buang untuk URI \"%s\""
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "tak dapat menautkan elemen buang untuk URI \"%s\""
+msgid "no source element for URI \"%s\""
+msgstr "tak ada elemen sumber untuk URI \"%s\""
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "menentukan kotak sampah kosong \"%s\", tak diizinkan"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "tak ada tempat sampah \"%s\", dilewati"
 
 msgid "empty pipeline not allowed"
 msgstr "baris pipa kosong tak diizinkan"
@@ -904,7 +919,7 @@ msgid "Internal clock error."
 msgstr "Galat jam internal."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Gagal memetakan penyangga."
 
 msgid "Filter caps"
 msgstr "Filter huruf"
@@ -1053,12 +1068,14 @@ msgid "List the plugin contents"
 msgstr "Tampilkan isi plugin"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Klik bila elemen atau plugin yang dinyatakan ada"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Ketika memeriksa apakah suatu elemen atau plugin ada, juga periksa versinya "
+"paling tidak adalah versi yang dinyatakan"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
@@ -1110,17 +1127,16 @@ msgstr "MENEMUKAN TAG      : ditemukan oleh objek \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr "MENEMUKAN TAG\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
+msgstr "MENEMUKAN TOC      : ditemukan oleh elemen \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "MENEMUKAN TAG      : ditemukan oleh objek \"%s\".\n"
+msgstr "MENEMUKAN TOC      : ditemukan oleh objek \"%s\".\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "MENEMUKAN TAG\n"
+msgstr "MENEMUKAN TOC\n"
 
 #, c-format
 msgid ""
@@ -1137,9 +1153,8 @@ msgstr "PERINGATAN: dari elemen %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pragulung, menunggu hingga penyangga selesai...\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Pragulung, menunggu hingga penyangga selesai...\n"
+msgstr "Pragulung, menunggu kemajuan selesai...\n"
 
 msgid "buffering..."
 msgstr "menyangga..."
@@ -1162,21 +1177,21 @@ msgstr "Interupsi: Menghentikan baris pipa ...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Kemajuan: (%s) %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "tak ada elemen \"%s\""
+msgstr "Elemen kurang: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "PERINGATAN: dari elemen %s: %s\n"
+msgstr "Mendapat konteks dari elemen '%s': %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tag keluaran (juga dikenal sebagai metadata)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "TOC keluaran (bab dan edisi)"
 
 msgid "Output status information and property notifications"
 msgstr "Informasi status keluaran dan pemberitahuan properti"
@@ -1243,9 +1258,8 @@ msgstr "GALAT: baris pipa tidak ingin diputar.\n"
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "EOS pada matikan diaktifkan -- Paksa EOS pada pemipaan\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS pada matikan diaktifkan -- Paksa EOS pada pemipaan\n"
+msgstr "EOS pada matikan diaktifkan -- menunggu EOS setelah Galat\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Menunggu untuk EOS...\n"
@@ -1253,9 +1267,8 @@ msgstr "Menunggu untuk EOS...\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "EOS diterima - menghentikan baris pipa...\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interupsi: Menghentikan baris pipa ...\n"
+msgstr "Interupsi saat menunggu EOS - menghentikan baris pipa...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Galat terjadi ketika menunggu EOS\n"
@@ -1272,58 +1285,14 @@ msgstr "Mengatur baris pipa ke KOSONG ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Membebaskan baris pipa ...\n"
 
-#~ msgid "maximum"
-#~ msgstr "maksimum"
+#~ msgid "link without source element"
+#~ msgstr "taut tanpa elemen sumber"
 
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr ""
-#~ "Penggunaan: gst-xmllaunch <berkas.xml> [ elemen.properti=nilai ... ]\n"
+#~ msgid "link without sink element"
+#~ msgstr "taut tanpa elemen buang"
 
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "GALAT: penguraian berkas xml '%s' gagal.\n"
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "tak ada elemen ke taut URI \"%s\""
 
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "GALAT: tak ada elemen baris pipa level atas di berkas '%s'.\n"
-
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr ""
-#~ "PERINGATAN: hanya satu elemen level atas yang didukung pada saat ini.\n"
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "GALAT: tak dapat menguraikan argumen baris perintah %d: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "GALAT: elemen yang dinamakan '%s' tak ditemukan.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Simpan perwakilan xml baris pipa ke BERKAS lalu keluar"
-
-#~ msgid "FILE"
-#~ msgstr "BERKAS"
-
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Jangan instal penanganan sinyal untuk SIGUSR1 dan SIGUSR2"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Cetak jejak alokasi (jika diaktifkan sewaktu kompilasi)"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Galat memindai ulang registry %s: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Galat memindai ulang registry %s"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Galat GStreamer internal: mengubah kondisi gagal."
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Galat ketika menulis ke penjelas berkas \"%d\"."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Penjelas berkas \"%d\" tidak sah."
-
-#~ msgid "FREEING pipeline ...\n"
-#~ msgstr "MEMBEBASKAN baris pipa...\n"
-
-#~ msgid "original location of file as a URI"
-#~ msgstr "lokasi asli berkas dalam bentuk URI"
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "tak dapat menautkan elemen buang untuk URI \"%s\""

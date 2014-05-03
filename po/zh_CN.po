@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -193,6 +193,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "无法从资源获得设置或在资源上设定设置。"
 
 msgid "No space left on the resource."
+msgstr "资源上无剩余空间。"
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "资源上无剩余空间。"
 
 msgid "GStreamer encountered a general stream error."
@@ -792,6 +796,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -815,13 +825,13 @@ msgstr ""
 "额外的调试信息：\n"
 "%s\n"
 
-#, fuzzy, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "不允许指定空储仓“%s”"
+#, c-format
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
-#, fuzzy, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "找不到储仓“%s”，跳过"
+#, c-format
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -840,30 +850,38 @@ msgid "no element \"%s\""
 msgstr "无组件“%s”"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "无法解析分析器“%s”"
-
-msgid "link without source element"
-msgstr "不带源组件的链接"
-
-msgid "link without sink element"
-msgstr "不带消音组件的链接"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "URI“%s”无源组件"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "无组件让 URI“%s”来连接"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "URI“%s”上无消音组件"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "无法连接 URI“%s”的消音组件"
+msgid "no source element for URI \"%s\""
+msgstr "URI“%s”无源组件"
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "不允许指定空储仓“%s”"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "找不到储仓“%s”，跳过"
 
 msgid "empty pipeline not allowed"
 msgstr "不允许空管道"
@@ -1250,6 +1268,18 @@ msgstr "设置 NULL 管道 ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "释放管道资源 ...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "不带源组件的链接"
+
+#~ msgid "link without sink element"
+#~ msgstr "不带消音组件的链接"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "无组件让 URI“%s”来连接"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "无法连接 URI“%s”的消音组件"
 
 #~ msgid "maximum"
 #~ msgstr "最大"

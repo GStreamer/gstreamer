@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -199,6 +199,10 @@ msgstr "Kon nie hulpbronstellings verkry/verander nie."
 
 msgid "No space left on the resource."
 msgstr ""
+
+#, fuzzy
+msgid "Not authorized to access resource."
+msgstr "Kon nie na hulpbron skryf nie."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer het 'n algemene stroomfout teëgekom."
@@ -817,6 +821,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -841,12 +851,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "gespesifiseerde leë houer \"%s\" is ontoelaatbaar"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "geen houer \"%s\", dit word oorgeslaan"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -865,30 +875,38 @@ msgid "no element \"%s\""
 msgstr "geen element \"%s\""
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kon nie caps \"%s\" ontleed nie"
-
-msgid "link without source element"
-msgstr "verbinding sonder bron-element"
-
-msgid "link without sink element"
-msgstr "verbinding sonder bestemming-element"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "geen bronelement vir URI \"%s\""
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "geen element vir URI \"%s\" om heen te skakel nie"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "geen bestemming-element vir URI \"%s\""
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "kon nie aan bestemming-element vir  URI \"%s\" verbind nie"
+msgid "no source element for URI \"%s\""
+msgstr "geen bronelement vir URI \"%s\""
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "gespesifiseerde leë houer \"%s\" is ontoelaatbaar"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "geen houer \"%s\", dit word oorgeslaan"
 
 msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
@@ -1280,6 +1298,18 @@ msgstr "Pyplyn word gestel na NULL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "verbinding sonder bron-element"
+
+#~ msgid "link without sink element"
+#~ msgstr "verbinding sonder bestemming-element"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "geen element vir URI \"%s\" om heen te skakel nie"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "kon nie aan bestemming-element vir  URI \"%s\" verbind nie"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Druk \"alloc trace\" (indien aangeskakel tydens kompilering)"

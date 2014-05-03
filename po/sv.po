@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2011-01-09 19:46+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -206,6 +206,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Kunde inte hämta/ställa in inställningar från/på resursen."
 
 msgid "No space left on the resource."
+msgstr "Inget ledigt utrymme på resursen."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "Inget ledigt utrymme på resursen."
 
 msgid "GStreamer encountered a general stream error."
@@ -820,6 +824,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -843,14 +853,13 @@ msgstr ""
 "Ytterligare felsökningsinformation:\n"
 "%s\n"
 
-# Osäker.
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "angav tom korg \"%s\", inte tillåtet"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "ingen korg \"%s\", hoppar över"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -868,32 +877,41 @@ msgstr "kunde inte länka %s till %s"
 msgid "no element \"%s\""
 msgstr "inget \"%s\"-element"
 
+#, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
 # Osäker. Jag tror "caps" är kort för "capabilities".
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kunde inte tolka förmågorna \"%s\""
-
-msgid "link without source element"
-msgstr "länk utan källelement"
-
-msgid "link without sink element"
-msgstr "länk utan utgångselement"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "inget källelement för URI:n \"%s\""
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "inget element att länka URI:n \"%s\" till"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "inget utgångselement för URI:n \"%s\""
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
+msgid "no source element for URI \"%s\""
+msgstr "inget källelement för URI:n \"%s\""
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+# Osäker.
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "angav tom korg \"%s\", inte tillåtet"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "ingen korg \"%s\", hoppar över"
 
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
@@ -1292,6 +1310,18 @@ msgstr "Ställer in rörledningen till NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Frigör rörledning ...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "länk utan källelement"
+
+#~ msgid "link without sink element"
+#~ msgstr "länk utan utgångselement"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "inget element att länka URI:n \"%s\" till"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"

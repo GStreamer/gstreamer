@@ -1,17 +1,17 @@
 # Slovenian translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Copyright (C) 2005 - 2013 Free Software Foundation, Inc.
+# Copyright (C) 2005 - 2014 Free Software Foundation, Inc.
 #
 # Matej Urbančič <matej.urban@gmail.com>, 2010 - 2011.
 # Martin Srebotnjak <miles@filmsi.net>, 2011.
-# Klemen Košir <klemen913@gmail.com>, 2011 - 2013.
+# Klemen Košir <klemen913@gmail.com>, 2011 - 2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.0.3\n"
+"Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
-"PO-Revision-Date: 2013-01-05 10:16+0100\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
+"PO-Revision-Date: 2014-04-09 22:38+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
 "%100==4 ? 3 : 0);\n"
-"X-Generator: Poedit 1.5.4\n"
+"X-Generator: Poedit 1.6.4\n"
 
 msgid "Print the GStreamer version"
 msgstr "Izpiše različico programa GStreamer"
@@ -31,11 +31,10 @@ msgstr "Izpiši vsa opozorila kot usodna"
 msgid "Print available debug categories and exit"
 msgstr "Izpiše razpoložljive kategorije razhroščevanja in se konča"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Privzeta raven razhroščevanja od 1 (le napake) do 5 (karkoli). Vrednost 0 "
+"Privzeta raven razhroščevanja od 1 (le napake) do 9 (karkoli). Vrednost 0 "
 "pomeni brez izpisa."
 
 msgid "LEVEL"
@@ -58,6 +57,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Spremeni način barvanja dnevnika razhroščevanja. Razpoložljive možnosti so: "
+"off, on, disable, auto, unix"
 
 msgid "Disable debugging"
 msgstr "Onemogoči razhroščevanje"
@@ -202,6 +203,10 @@ msgstr "Nastavitev vira ni mogoče pridobiti ali določiti."
 msgid "No space left on the resource."
 msgstr "Na viru ni prostora."
 
+#, fuzzy
+msgid "Not authorized to access resource."
+msgstr "Na viru ni prostora."
+
 msgid "GStreamer encountered a general stream error."
 msgstr "V programu GStreamer je prišlo do splošne napake pretakanja."
 
@@ -257,7 +262,7 @@ msgstr "Izbrane ure ni mogoče uporabiti v cevovodu."
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "Med zapisovanjem predpomnilnika vpisnika v %s je prišlo do napake: %s"
 
 msgid "title"
 msgstr "naslov"
@@ -794,15 +799,21 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Kako naj bo slika zavrti ali zrcali pred prikazom"
 
 msgid "publisher"
-msgstr ""
+msgstr "založba"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Ime založbe"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "avtorji-predelave"
 
 msgid "Information about the people behind a remix and similar interpretations"
+msgstr "Podatki o avtorjih predelav in drugih različic"
+
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
 msgstr ""
 
 msgid ", "
@@ -810,11 +821,11 @@ msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Ročnika URI za protokol %s ni mogoče najti"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "Shema URI \"%s\" ni podprta"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -829,12 +840,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "določena je prazna dvojiška datoteka \"%s\", kar ni dovoljeno"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "dvojiška datoteka \"%s\" ne obstaja, zato bo dejanje izpuščeno"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -854,30 +865,38 @@ msgid "no element \"%s\""
 msgstr "predmet \"%s\" ne obstaja"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "velikih črk \"%s\" ni mogoče razčleniti"
-
-msgid "link without source element"
-msgstr "povezava brez predmeta vira"
-
-msgid "link without sink element"
-msgstr "povezava brez predmeta ponora"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "izvorni predmet za naslov URI \"%s\" ne obstaja"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "ni predmeta za povezovanje naslova \"%s\" na"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "predmet ponora za naslov URI \"%s\" ne obstaja"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "predmeta korita za naslov URI \"%s\" ni mogoče povezati"
+msgid "no source element for URI \"%s\""
+msgstr "izvorni predmet za naslov URI \"%s\" ne obstaja"
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "določena je prazna dvojiška datoteka \"%s\", kar ni dovoljeno"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "dvojiška datoteka \"%s\" ne obstaja, zato bo dejanje izpuščeno"
 
 msgid "empty pipeline not allowed"
 msgstr "cevovod brez vsebine ni dovoljen"
@@ -898,7 +917,7 @@ msgid "Internal clock error."
 msgstr "Notranja napaka ure."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Medpomnilnika ni mogoče preslikati."
 
 msgid "Filter caps"
 msgstr "Filtriraj velikost črk"
@@ -1143,9 +1162,8 @@ msgstr "OPOZORILO: predmet %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pripravljeno, čakanje na zaključek polnjenja medpomnilnika ...\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Pripravljeno, čakanje na zaključek polnjenja medpomnilnika ...\n"
+msgstr "Pripravljeno, čakanje na zaključek opravila ...\n"
 
 msgid "buffering..."
 msgstr "polnjenje medpomnilnika ..."
@@ -1169,15 +1187,15 @@ msgstr "Prekinitev: zaustavljanje cevovoda ... \n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Napredek: (%s) %s\n"
 
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Manjkajoči element: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "OPOZORILO: predmet %s: %s\n"
+msgstr "Vsebina je bila pridobljena iz elementa \"%s\": %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Izhodne oznake (znane tudi kot metapodatki)"
@@ -1276,3 +1294,15 @@ msgstr "Nastavljanje cevovoda na NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Sproščanje cevovoda ...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "povezava brez predmeta vira"
+
+#~ msgid "link without sink element"
+#~ msgstr "povezava brez predmeta ponora"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "ni predmeta za povezovanje naslova \"%s\" na"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "predmeta korita za naslov URI \"%s\" ni mogoče povezati"

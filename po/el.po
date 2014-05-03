@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -205,6 +205,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Αδυναμία λήψης/ορισμού ρυθμίσεων από τον/στον πόρο."
 
 msgid "No space left on the resource."
+msgstr "Δεν έχει μείνει χώρος στον πόρο."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "Δεν έχει μείνει χώρος στον πόρο."
 
 msgid "GStreamer encountered a general stream error."
@@ -830,6 +834,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -854,12 +864,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "ο καθορισμένος άδειος περιέκτης «%s», δεν επιτρέπεται"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "δεν υπάρχει περιέκτης «%s», παράβλεψη"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -878,30 +888,38 @@ msgid "no element \"%s\""
 msgstr "δεν υπάρχει στοιχείο «%s»"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "αδυναμία ανάλυσης δυνατοτήτων «%s»"
-
-msgid "link without source element"
-msgstr "σύνδεση χωρίς στοιχείο προέλευσης"
-
-msgid "link without sink element"
-msgstr "σύνδεση χωρίς στοιχείο προορισμού"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "δεν υπάρχει στοιχείο προέλευσης για το URI «%s»"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "δεν υπάρχει στοιχείο για τη σύνδεση του URI «%s» σε"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "δεν υπάρχει στοιχείο προορισμού για το URI «%s»"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "αδυναμία σύνδεσης στοιχείου προορισμού για το URI «%s»"
+msgid "no source element for URI \"%s\""
+msgstr "δεν υπάρχει στοιχείο προέλευσης για το URI «%s»"
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "ο καθορισμένος άδειος περιέκτης «%s», δεν επιτρέπεται"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "δεν υπάρχει περιέκτης «%s», παράβλεψη"
 
 msgid "empty pipeline not allowed"
 msgstr "δεν επιτρέπεται κενή διασωλήνωση"
@@ -1295,6 +1313,18 @@ msgstr "Ορισμός διασωλήνωσης σε NULL …\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Αποδέσμευση της διασωλήνωσης …\n"
+
+#~ msgid "link without source element"
+#~ msgstr "σύνδεση χωρίς στοιχείο προέλευσης"
+
+#~ msgid "link without sink element"
+#~ msgstr "σύνδεση χωρίς στοιχείο προορισμού"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "δεν υπάρχει στοιχείο για τη σύνδεση του URI «%s» σε"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "αδυναμία σύνδεσης στοιχείου προορισμού για το URI «%s»"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr ""

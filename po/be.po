@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2006-01-18 22:26+0200\n"
 "Last-Translator: Ales Nyakhaychyk <nab@mail.by>\n"
 "Language-Team: Belarusian <i18n@mova.org>\n"
@@ -192,6 +192,10 @@ msgstr ""
 
 msgid "No space left on the resource."
 msgstr ""
+
+#, fuzzy
+msgid "Not authorized to access resource."
+msgstr "Немагчыма запісаць у расурс."
 
 msgid "GStreamer encountered a general stream error."
 msgstr ""
@@ -776,6 +780,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ""
 
@@ -800,11 +810,11 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
+msgid "link has no source [sink=%s@%p]"
 msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
+msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
 #, c-format
@@ -824,21 +834,15 @@ msgid "no element \"%s\""
 msgstr ""
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
-msgstr ""
-
-msgid "link without source element"
-msgstr ""
-
-msgid "link without sink element"
-msgstr ""
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr ""
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
 msgstr ""
 
 #, c-format
@@ -846,7 +850,21 @@ msgid "no sink element for URI \"%s\""
 msgstr ""
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
+msgid "no source element for URI \"%s\""
+msgstr ""
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr ""
+
+#, c-format
+msgid "no bin \"%s\", unpacking elements"
 msgstr ""
 
 msgid "empty pipeline not allowed"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -205,6 +205,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "No s'ha pogut obtenir/establir els paràmetres des del/al recurs."
 
 msgid "No space left on the resource."
+msgstr "No resta espai al recurs."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "No resta espai al recurs."
 
 msgid "GStreamer encountered a general stream error."
@@ -818,6 +822,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -842,12 +852,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "el binari especificat «%s» és buit, no es permet"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "el binari «%s» no existeix, es descarta"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -866,30 +876,38 @@ msgid "no element \"%s\""
 msgstr "no hi ha cap element «%s»"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "no s'han pogut analitzar les capacitats «%s»"
-
-msgid "link without source element"
-msgstr "l'enllaç no té un element font"
-
-msgid "link without sink element"
-msgstr "l'enllaç no té un element sortida"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "no hi ha cap element font per a l'URI «%s»"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "no hi ha cap element el qual enllaçar a l'URI «%s»"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "no hi ha cap element de sortida per a l'URI «%s»"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "No s'ha pogut enllaçar l'element de sortida per a l'URI «%s»"
+msgid "no source element for URI \"%s\""
+msgstr "no hi ha cap element font per a l'URI «%s»"
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "el binari especificat «%s» és buit, no es permet"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "el binari «%s» no existeix, es descarta"
 
 msgid "empty pipeline not allowed"
 msgstr "no es permet un conducte buit"
@@ -1291,6 +1309,18 @@ msgstr "S'està establint el conducte a NUL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "S'està alliberant el conducte…\n"
+
+#~ msgid "link without source element"
+#~ msgstr "l'enllaç no té un element font"
+
+#~ msgid "link without sink element"
+#~ msgstr "l'enllaç no té un element sortida"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "no hi ha cap element el qual enllaçar a l'URI «%s»"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "No s'ha pogut enllaçar l'element de sortida per a l'URI «%s»"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Imprimeix una traça d'alloc (si s'ha habilitat al compilar)"

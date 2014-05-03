@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -208,6 +208,10 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Ezin izan dira ezarpenak eskuratu/ezarri baliabidetik/baliabidean."
 
 msgid "No space left on the resource."
+msgstr "Ez da lekurik geratzen baliabidean."
+
+#, fuzzy
+msgid "Not authorized to access resource."
 msgstr "Ez da lekurik geratzen baliabidean."
 
 msgid "GStreamer encountered a general stream error."
@@ -819,6 +823,12 @@ msgstr ""
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -843,12 +853,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "\"%s\" zehaztutako ontzi hutsa, ez da onartzen"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "ez dago \"%s\" ontzirik, saltatzen"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -868,30 +878,38 @@ msgid "no element \"%s\""
 msgstr "ez dago \"%s\" elementua"
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "ezin izan da \"%s\" edukiera analizatu"
-
-msgid "link without source element"
-msgstr "iturburu-elementurik gabeko esteka"
-
-msgid "link without sink element"
-msgstr "kolektore-elementurik gabeko esteka"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "ez da iturburu-elementurik ezarri \"%s\" URIarentzat"
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "ez dago elementurik \"%s\" URIa hona estekatzeko:"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "ez da kolektore-elementurik ezarri \"%s\" URIarentzat"
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "ezin izan da kolektore-elementua estekatu \"%s\" URIarentzat"
+msgid "no source element for URI \"%s\""
+msgstr "ez da iturburu-elementurik ezarri \"%s\" URIarentzat"
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "\"%s\" zehaztutako ontzi hutsa, ez da onartzen"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "ez dago \"%s\" ontzirik, saltatzen"
 
 msgid "empty pipeline not allowed"
 msgstr "ez dira onartzen kanalizazio hutsak"
@@ -1285,6 +1303,18 @@ msgstr "Kanalizazioa NULUA gisa ezartzen... \n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Kanalizazioa askatzen...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "iturburu-elementurik gabeko esteka"
+
+#~ msgid "link without sink element"
+#~ msgstr "kolektore-elementurik gabeko esteka"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "ez dago elementurik \"%s\" URIa hona estekatzeko:"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "ezin izan da kolektore-elementua estekatu \"%s\" URIarentzat"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Inprimatu esleipenen segimendua (konpilatzean gaitu bada)"

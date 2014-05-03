@@ -15,10 +15,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.0.3\n"
+"Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-12-22 22:01+0000\n"
-"PO-Revision-Date: 2013-08-20 23:59-0300\n"
+"POT-Creation-Date: 2014-05-03 17:20+0200\n"
+"PO-Revision-Date: 2013-12-29 18:20-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -37,11 +37,10 @@ msgstr "Tratar todos avisos como fatais"
 msgid "Print available debug categories and exit"
 msgstr "Exibir as categorias de depuração disponíveis e sair"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Níveis de depuração predefinidos de 1 (apenas erros) até 5 (tudo) ou 0 para "
+"Níveis de depuração predefinidos de 1 (apenas erros) até 9 (tudo) ou 0 para "
 "nenhuma saída"
 
 msgid "LEVEL"
@@ -65,6 +64,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Altera o modo de cor do log de depuração. Modos possíveis: off (desligado), "
+"on (ligado), disable (desabilitado), auto (automático) e unix"
 
 msgid "Disable debugging"
 msgstr "Desabilitar depuração"
@@ -216,6 +217,10 @@ msgstr "Não foi possível obter/definir configurações para/do recurso."
 msgid "No space left on the resource."
 msgstr "Não foi deixado espaço no recurso."
 
+#, fuzzy
+msgid "Not authorized to access resource."
+msgstr "Não foi deixado espaço no recurso."
+
 msgid "GStreamer encountered a general stream error."
 msgstr "O GStreamer encontrou um erro geral no fluxo."
 
@@ -272,7 +277,7 @@ msgstr ""
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "Erro ao escrever o cache de registro em %s: %s"
 
 msgid "title"
 msgstr "título"
@@ -812,15 +817,22 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Como a imagem deveria ser rotacionada ou invertida antes da exibição"
 
 msgid "publisher"
-msgstr ""
+msgstr "editora"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Nome da gravadora ou editora"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "interpretado por"
 
 msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
+"Informações sobre a pessoa detrás de um remix ou interpretações similares"
+
+msgid "midi-base-note"
+msgstr ""
+
+msgid "Midi note number of the audio track."
 msgstr ""
 
 msgid ", "
@@ -828,11 +840,11 @@ msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Nenhum manipulador URI para o protocolo %s foi encontrado"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "Não há suporte para o esquema URI \"%s\""
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -847,12 +859,12 @@ msgstr ""
 "%s\n"
 
 #, c-format
-msgid "specified empty bin \"%s\", not allowed"
-msgstr "o arquivo \"%s\" está vazio, operação não permitida"
+msgid "link has no source [sink=%s@%p]"
+msgstr ""
 
 #, c-format
-msgid "no bin \"%s\", skipping"
-msgstr "nenhum arquivo \"%s\", cancelando"
+msgid "link has no sink [source=%s@%p]"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -873,30 +885,38 @@ msgid "no element \"%s\""
 msgstr "nenhum elemento \"%s\""
 
 #, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr ""
+
+#, c-format
 msgid "could not parse caps \"%s\""
 msgstr "não foi possível analisar o Caps \"%s\""
-
-msgid "link without source element"
-msgstr "vínculo sem o elemento fonte"
-
-msgid "link without sink element"
-msgstr "vínculo sem o elemento consumidor"
-
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr "nenhum elemento fonte para o URI \"%s\""
-
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr "nenhum elemento para vincular o URI \"%s\" para"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "nenhum elemento consumidor para o URI \"%s\""
 
 #, c-format
-msgid "could not link sink element for URI \"%s\""
-msgstr "não foi possível vincular o elemento consumidor para o URI \"%s\""
+msgid "no source element for URI \"%s\""
+msgstr "nenhum elemento fonte para o URI \"%s\""
+
+msgid "syntax error"
+msgstr ""
+
+msgid "bin"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "o arquivo \"%s\" está vazio, operação não permitida"
+
+#, fuzzy, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "nenhum arquivo \"%s\", cancelando"
 
 msgid "empty pipeline not allowed"
 msgstr "não é permitido que a fila de processamento seja vazia"
@@ -917,7 +937,7 @@ msgid "Internal clock error."
 msgstr "Erro interno no temporizador."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Falha ao mapear o buffer."
 
 msgid "Filter caps"
 msgstr "Caps do filtro"
@@ -1154,9 +1174,8 @@ msgstr "AVISO: do elemento %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preparado, esperando o preenchimento do buffer para finalizar...\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Preparado, esperando o preenchimento do buffer para finalizar...\n"
+msgstr "Preparado, esperando o progresso para finalizar...\n"
 
 msgid "buffering..."
 msgstr "preenchendo buffer..."
@@ -1182,15 +1201,15 @@ msgstr "Interrupção: Parando a fila de processamento...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Progresso: (%s) %s\n"
 
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Elemento faltando: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "AVISO: do elemento %s: %s\n"
+msgstr "Contexto obtido do elemento \"%s\": %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Exibir etiquetas (metadados)"
@@ -1297,6 +1316,18 @@ msgstr "Definindo a fila de processamento para NULO...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a fila de processamento...\n"
+
+#~ msgid "link without source element"
+#~ msgstr "vínculo sem o elemento fonte"
+
+#~ msgid "link without sink element"
+#~ msgstr "vínculo sem o elemento consumidor"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "nenhum elemento para vincular o URI \"%s\" para"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "não foi possível vincular o elemento consumidor para o URI \"%s\""
 
 #~ msgid "maximum"
 #~ msgstr "máximo"
