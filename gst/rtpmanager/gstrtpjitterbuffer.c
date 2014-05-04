@@ -2826,7 +2826,10 @@ do_deadline_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   GST_INFO_OBJECT (jitterbuffer, "got deadline timeout");
 
-  priv->next_seqnum = timer->seqnum;
+  /* timer seqnum might have been obsoleted by caps seqnum-base,
+   * only mess with current ongoing seqnum if still unknown */
+  if (priv->next_seqnum == -1)
+    priv->next_seqnum = timer->seqnum;
   remove_timer (jitterbuffer, timer);
   JBUF_SIGNAL_EVENT (priv);
 
