@@ -257,22 +257,24 @@ context_subscribe_cb (pa_context * context, pa_subscription_event_type_t type,
 {
   GstPulseDeviceMonitor *self = userdata;
   GstDeviceMonitor *monitor = userdata;
+  pa_subscription_event_type_t facility =
+      type & PA_SUBSCRIPTION_EVENT_FACILITY_MASK;
+  pa_subscription_event_type_t event_type =
+      type & PA_SUBSCRIPTION_EVENT_TYPE_MASK;
 
-
-  if (!(type & (PA_SUBSCRIPTION_EVENT_SOURCE | PA_SUBSCRIPTION_EVENT_SINK)))
+  if (facility != PA_SUBSCRIPTION_EVENT_SOURCE &&
+      facility != PA_SUBSCRIPTION_EVENT_SINK)
     return;
 
-
-  if ((type & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW) {
+  if (event_type == PA_SUBSCRIPTION_EVENT_NEW) {
     /* Microphone in the source output has changed */
 
-    if (type & PA_SUBSCRIPTION_EVENT_SOURCE)
+    if (facility == PA_SUBSCRIPTION_EVENT_SOURCE)
       pa_context_get_source_info_by_index (context, idx, get_source_info_cb,
           self);
-    else if (type & PA_SUBSCRIPTION_EVENT_SINK)
+    else if (facility == PA_SUBSCRIPTION_EVENT_SINK)
       pa_context_get_sink_info_by_index (context, idx, get_sink_info_cb, self);
-  } else if ((type & PA_SUBSCRIPTION_EVENT_TYPE_MASK) ==
-      PA_SUBSCRIPTION_EVENT_REMOVE) {
+  } else if (event_type == PA_SUBSCRIPTION_EVENT_REMOVE) {
     GstPulseDevice *dev = NULL;
     GList *item;
 
