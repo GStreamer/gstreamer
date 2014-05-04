@@ -19,6 +19,8 @@
  *
  */
 
+#include "config.h"
+
 #include "ext/videodev2.h"
 #include "gstv4l2allocator.h"
 #include "v4l2_calls.h"
@@ -29,6 +31,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 
 #define GST_V4L2_MEMORY_TYPE "V4l2Memory"
 
@@ -375,7 +378,7 @@ gst_v4l2_allocator_free (GstAllocator * gallocator, GstMemory * gmem)
   switch (allocator->memory) {
     case V4L2_MEMORY_MMAP:
       if (mem->data) {
-        munmap (mem->data, group->planes[mem->plane].length);
+        v4l2_munmap (mem->data, group->planes[mem->plane].length);
       } else if (group->planes[mem->plane].m.fd > 0) {
         close (group->planes[mem->plane].m.fd);
       }
