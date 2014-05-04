@@ -180,6 +180,14 @@ AC_CHECK_HEADERS([sys/socket.h],
   [HAVE_SYS_SOCKET_H="yes"], [HAVE_SYS_SOCKET_H="no"], [AC_INCLUDES_DEFAULT])
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 
+dnl used in gst-libs/gst/rtsp
+AC_CHECK_HEADERS([winsock2.h], [HAVE_WINSOCK2_H=yes], [HAVE_WINSOCK2_H=no], [AC_INCLUDES_DEFAULT])
+AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
+if test "x$HAVE_WINSOCK2_H" = "xyes"; then
+  WIN32_LIBS="-lws2_32"
+  AC_SUBST(WIN32_LIBS)
+fi
+
 dnl used in gst-libs/gst/pbutils and associated unit test
 AC_CHECK_HEADERS([process.h sys/types.h sys/wait.h sys/stat.h], [], [], [AC_INCLUDES_DEFAULT])
 

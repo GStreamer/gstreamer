@@ -35,7 +35,7 @@ nodist_libgstrtspinclude_HEADERS = gstrtsp-enumtypes.h
 
 libgstrtsp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
 libgstrtsp_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) $(GIO_LIBS) $(LIBM)
-libgstrtsp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+libgstrtsp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS) $(WIN32_LIBS)
 
 BUILT_SOURCES = $(built_headers) $(built_sources)
 EXTRA_DIST = gstrtsp-marshal.list
