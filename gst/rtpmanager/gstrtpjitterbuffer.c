@@ -2299,8 +2299,9 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     }
   }
 
-  GST_DEBUG_OBJECT (jitterbuffer, "Pushed packet #%d, now %d packets, head: %d",
-      seqnum, rtp_jitter_buffer_num_packets (priv->jbuf), head);
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "Pushed packet #%d, now %d packets, head: %d, " "percent %d", seqnum,
+      rtp_jitter_buffer_num_packets (priv->jbuf), head, percent);
 
   msg = check_buffering_percent (jitterbuffer, percent);
 
