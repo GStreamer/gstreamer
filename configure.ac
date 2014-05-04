@@ -1225,8 +1225,16 @@ dnl Check for some types that are not always present
 GL_INCLUDES=""
 if test "x$USE_GLES2" = "xyes"; then
   GL_INCLUDES="$GL_INCLUDES
-# include <GLES2/gl2.h>
-# include <GLES2/gl2ext.h>
+#ifndef GL_GLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES 1
+#endif
+# ifdef __APPLE__
+#  include <OpenGLES/ES2/gl.h>
+#  include <OpenGLES/ES2/glext.h>
+# else
+#  include <GLES2/gl2.h>
+#  include <GLES2/gl2ext.h>
+# endif
 "
 fi
 
@@ -1235,9 +1243,10 @@ if test "x$USE_OPENGL" = "xyes"; then
 # if __APPLE__
 #  include <OpenGL/OpenGL.h>
 #  include <OpenGL/gl.h>
+#  include <OpenGL/glu.h>
 # else
-#  include <GL/glu.h>
 #  include <GL/gl.h>
+#  include <GL/glu.h>
 #  if __WIN32__ || _WIN32
 #   include <GL/glext.h>
 #  endif
