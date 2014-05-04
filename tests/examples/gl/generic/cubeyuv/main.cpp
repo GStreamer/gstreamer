@@ -33,13 +33,13 @@ static gboolean bus_call (GstBus *bus, GstMessage *msg, gpointer data)
 {
     GMainLoop *loop = (GMainLoop*)data;
 
-    switch (GST_MESSAGE_TYPE (msg)) 
+    switch (GST_MESSAGE_TYPE (msg))
     {
         case GST_MESSAGE_EOS:
               g_print ("End-of-stream\n");
               g_main_loop_quit (loop);
               break;
-        case GST_MESSAGE_ERROR: 
+        case GST_MESSAGE_ERROR:
           {
               gchar *debug = NULL;
               GError *err = NULL;
@@ -49,7 +49,7 @@ static gboolean bus_call (GstBus *bus, GstMessage *msg, gpointer data)
               g_print ("Error: %s\n", err->message);
               g_error_free (err);
 
-              if (debug) 
+              if (debug)
               {
                   g_print ("Debug deails: %s\n", debug);
                   g_free (debug);
@@ -57,7 +57,7 @@ static gboolean bus_call (GstBus *bus, GstMessage *msg, gpointer data)
 
               g_main_loop_quit (loop);
               break;
-          } 
+          }
         default:
           break;
     }
@@ -72,7 +72,7 @@ static void identityCallback (GstElement *src, GstBuffer  *buffer, GstElement* t
     static GstClockTime last_timestamp = 0;
     static gint nbFrames = 0 ;
 
-    //display estimated video FPS 
+    //display estimated video FPS
     nbFrames++ ;
     if (GST_BUFFER_TIMESTAMP(buffer) - last_timestamp >= 1000000000)
     {
@@ -81,7 +81,7 @@ static void identityCallback (GstElement *src, GstBuffer  *buffer, GstElement* t
         std::string s(oss.str()) ;
         g_object_set(G_OBJECT(textoverlay), "text", s.c_str(), NULL);
         last_timestamp = GST_BUFFER_TIMESTAMP(buffer) ;
-        nbFrames = 0 ; 
+        nbFrames = 0 ;
     }
 }
 
@@ -92,32 +92,31 @@ static void reshapeCallback (GLuint width, GLuint height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);  
-    glMatrixMode(GL_MODELVIEW);	
+    gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);
+    glMatrixMode(GL_MODELVIEW);
 }
 
 
 //client draw callback
 static gboolean drawCallback (GLuint texture, GLuint width, GLuint height)
 {
-    
     static GLfloat	xrot = 0;
-    static GLfloat	yrot = 0;				
+    static GLfloat	yrot = 0;
     static GLfloat	zrot = 0;
     static GTimeVal current_time;
     static glong last_sec = current_time.tv_sec;
-    static gint nbFrames = 0;  
+    static gint nbFrames = 0;
 
     g_get_current_time (&current_time);
     nbFrames++ ;
-    
+
     if ((current_time.tv_sec - last_sec) >= 1)
     {
         std::cout << "GRPHIC FPS = " << nbFrames << std::endl;
         nbFrames = 0;
         last_sec = current_time.tv_sec;
     }
-  
+
     glEnable(GL_DEPTH_TEST);
 
     glEnable (GL_TEXTURE_2D);
@@ -131,7 +130,7 @@ static gboolean drawCallback (GLuint texture, GLuint width, GLuint height)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-	
+
     glTranslatef(0.0f,0.0f,-5.0f);
 
     glRotatef(xrot,1.0f,0.0f,0.0f);
@@ -169,7 +168,7 @@ static gboolean drawCallback (GLuint texture, GLuint width, GLuint height)
 	      glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
 	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f(-1.0f,  1.0f,  1.0f);
 	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f(-1.0f,  1.0f, -1.0f);
-    glEnd(); 
+    glEnd();
 
 	xrot+=0.03f;
     yrot+=0.02f;
@@ -192,9 +191,9 @@ static gboolean drawCallback (GLuint texture, GLuint width, GLuint height)
 static void cb_new_pad (GstElement* decodebin, GstPad* pad, GstElement* identity)
 {
     GstPad* identity_pad = gst_element_get_static_pad (identity, "sink");
-    
-    //only link once 
-    if (GST_PAD_IS_LINKED (identity_pad)) 
+
+    //only link once
+    if (GST_PAD_IS_LINKED (identity_pad))
     {
         gst_object_unref (identity_pad);
         return;
@@ -202,7 +201,7 @@ static void cb_new_pad (GstElement* decodebin, GstPad* pad, GstElement* identity
 
     GstCaps* caps = gst_pad_get_current_caps (pad);
     GstStructure* str = gst_caps_get_structure (caps, 0);
-    if (!g_strrstr (gst_structure_get_name (str), "video")) 
+    if (!g_strrstr (gst_structure_get_name (str), "video"))
     {
         gst_caps_unref (caps);
         gst_object_unref (identity_pad);
@@ -211,8 +210,8 @@ static void cb_new_pad (GstElement* decodebin, GstPad* pad, GstElement* identity
     gst_caps_unref (caps);
 
     GstPadLinkReturn ret = gst_pad_link (pad, identity_pad);
-    if (ret != GST_PAD_LINK_OK) 
-        g_warning ("Failed to link with decodebin!\n");   
+    if (ret != GST_PAD_LINK_OK)
+        g_warning ("Failed to link with decodebin!\n");
 }
 
 
@@ -223,9 +222,9 @@ gint main (gint argc, gchar *argv[])
         g_warning ("usage: cubeyuv.exe videolocation\n");
         return -1;
     }
-    
+
     std::string video_location(argv[1]);
-    
+
     /* initialization */
     gst_init (&argc, &argv);
     GMainLoop* loop = g_main_loop_new (NULL, FALSE);
@@ -267,7 +266,7 @@ gint main (gint argc, gchar *argv[])
     g_object_set(G_OBJECT(textoverlay), "font_desc", "Ahafoni CLM Bold 30", NULL);
     g_object_set(G_OBJECT(glimagesink), "client-reshape-callback", reshapeCallback, NULL);
     g_object_set(G_OBJECT(glimagesink), "client-draw-callback", drawCallback, NULL);
-    
+
     /* add elements */
     gst_bin_add_many (GST_BIN (pipeline), videosrc, decodebin, identity,
         textoverlay, glcolorscale, glimagesink, NULL);
@@ -277,7 +276,7 @@ gint main (gint argc, gchar *argv[])
 
     g_signal_connect (decodebin, "pad-added", G_CALLBACK (cb_new_pad), identity);
 
-    if (!gst_element_link_pads(identity, "src", textoverlay, "video_sink")) 
+    if (!gst_element_link_pads(identity, "src", textoverlay, "video_sink"))
     {
         g_print ("Failed to link identity to textoverlay!\n");
         return -1;
@@ -292,16 +291,16 @@ gint main (gint argc, gchar *argv[])
         g_warning("Failed to link textoverlay to glimagesink!\n") ;
         return -1 ;
     }
-    
+
     /* run */
     GstStateChangeReturn ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    if (ret == GST_STATE_CHANGE_FAILURE) 
+    if (ret == GST_STATE_CHANGE_FAILURE)
     {
         g_print ("Failed to start up pipeline!\n");
 
         /* check if there is an error message with details on the bus */
         GstMessage* msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, 0);
-        if (msg) 
+        if (msg)
         {
           GError *err = NULL;
 
@@ -320,6 +319,4 @@ gint main (gint argc, gchar *argv[])
     gst_object_unref (pipeline);
 
     return 0;
-
 }
-    

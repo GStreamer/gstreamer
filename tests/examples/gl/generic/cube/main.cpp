@@ -75,7 +75,6 @@ static void reshapeCallback (GLuint width, GLuint height, gpointer data)
 }
 
 //client draw callback
-
 static gboolean drawCallback (GLuint texture, GLuint width, GLuint height, gpointer data)
 {
     static GLfloat	xrot = 0;
@@ -244,5 +243,4 @@ gint main (gint argc, gchar *argv[])
     gst_object_unref (pipeline);
 
     return 0;
-
 }
