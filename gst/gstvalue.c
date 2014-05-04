@@ -2530,7 +2530,7 @@ gst_value_deserialize_int_helper (gint64 * to, const gchar * s,
 {
   gboolean ret = FALSE;
   gchar *end;
-  guint64 mask = -1;
+  guint64 mask = ~0;
 
   errno = 0;
   *to = g_ascii_strtoull (s, &end, 0);
