@@ -40,6 +40,7 @@
 
 static GMainLoop *mainloop;
 static GstElement *pipeline;
+static gboolean buffering = FALSE;
 
 static gboolean is_live = FALSE;
 
@@ -60,7 +61,6 @@ static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   GMainLoop *loop = data;
-  gboolean buffering = FALSE;
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
