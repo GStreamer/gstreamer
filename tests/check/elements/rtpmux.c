@@ -226,7 +226,7 @@ basic_check_cb (GstPad * pad, int i)
   fail_unless (buffers && g_list_length (buffers) == 1);
 
   gst_rtp_buffer_map (buffers->data, GST_MAP_READ, &rtpbuffer);
-  fail_unless (gst_rtp_buffer_get_ssrc (&rtpbuffer) == 55);
+  fail_unless (gst_rtp_buffer_get_ssrc (&rtpbuffer) == 66);
   fail_unless (gst_rtp_buffer_get_timestamp (&rtpbuffer) ==
       200 - 57 + 1000 + i);
   fail_unless (gst_rtp_buffer_get_seq (&rtpbuffer) == 100 + 1 + i);
@@ -260,7 +260,7 @@ lock_check_cb (GstPad * pad, int i)
 
     fail_unless (buffers && g_list_length (buffers) == 1);
     gst_rtp_buffer_map (buffers->data, GST_MAP_READ, &rtpbuffer);
-    fail_unless (gst_rtp_buffer_get_ssrc (&rtpbuffer) == 55);
+    fail_unless (gst_rtp_buffer_get_ssrc (&rtpbuffer) == 66);
     fail_unless (gst_rtp_buffer_get_timestamp (&rtpbuffer) ==
         200 - 57 + 1000 + i);
     fail_unless (gst_rtp_buffer_get_seq (&rtpbuffer) == 100 + 1 + i);
