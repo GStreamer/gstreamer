@@ -282,7 +282,11 @@ context_subscribe_cb (pa_context * context, pa_subscription_event_type_t type,
     for (item = monitor->devices; item; item = item->next) {
       dev = item->data;
 
-      if (dev->device_index == idx) {
+      if (((facility == PA_SUBSCRIPTION_EVENT_SOURCE &&
+                  dev->type == GST_PULSE_DEVICE_TYPE_SOURCE) ||
+              (facility == PA_SUBSCRIPTION_EVENT_SINK &&
+                  dev->type == GST_PULSE_DEVICE_TYPE_SINK)) &&
+          dev->device_index == idx) {
         gst_object_ref (dev);
         break;
       }
@@ -629,6 +633,7 @@ gst_pulse_device_new (guint device_index, const gchar * device_name,
       "display-name", device_name, "caps", caps, "klass", klass,
       "internal-name", internal_name, NULL);
 
+  gstdev->type = type;
   gstdev->device_index = device_index;
   gstdev->element = element;
 

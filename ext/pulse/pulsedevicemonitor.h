@@ -83,6 +83,7 @@ typedef struct _GstPulseDeviceClass GstPulseDeviceClass;
 struct _GstPulseDevice {
   GstDevice         parent;
 
+  GstPulseDeviceType type;
   guint             device_index;
   gchar            *internal_name;
   const gchar      *element;
