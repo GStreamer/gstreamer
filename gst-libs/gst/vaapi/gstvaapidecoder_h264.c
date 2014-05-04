@@ -579,27 +579,43 @@ dpb_evict(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture, guint i)
         dpb_remove_index(decoder, i);
 }
 
-static gboolean
-dpb_bump(GstVaapiDecoderH264 *decoder)
+/* Finds the picture with the lowest POC that needs to be output */
+static gint
+dpb_find_lowest_poc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
+    GstVaapiPictureH264 **found_picture_ptr)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiPictureH264 *found_picture = NULL;
     guint i, j, found_index;
-    gboolean success;
 
     for (i = 0; i < priv->dpb_count; i++) {
         GstVaapiFrameStore * const fs = priv->dpb[i];
         if (!fs->output_needed)
             continue;
         for (j = 0; j < fs->num_buffers; j++) {
-            GstVaapiPictureH264 * const picture = fs->buffers[j];
-            if (!picture->output_needed)
+            GstVaapiPictureH264 * const pic = fs->buffers[j];
+            if (!pic->output_needed)
                 continue;
-            if (!found_picture || found_picture->base.poc > picture->base.poc)
-                found_picture = picture, found_index = i;
+            if (!found_picture || found_picture->base.poc > pic->base.poc)
+                found_picture = pic, found_index = i;
         }
     }
-    if (!found_picture)
+
+    if (found_picture_ptr)
+        *found_picture_ptr = found_picture;
+    return found_picture ? found_index : -1;
+}
+
+static gboolean
+dpb_bump(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiPictureH264 *found_picture;
+    gint found_index;
+    gboolean success;
+
+    found_index = dpb_find_lowest_poc(decoder, picture, &found_picture);
+    if (found_index < 0)
         return FALSE;
 
     success = dpb_output(decoder, priv->dpb[found_index], found_picture);
@@ -608,7 +624,7 @@ dpb_bump(GstVaapiDecoderH264 *decoder)
 }
 
 static void
-dpb_clear(GstVaapiDecoderH264 *decoder)
+dpb_clear(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     guint i;
@@ -621,11 +637,11 @@ dpb_clear(GstVaapiDecoderH264 *decoder)
 }
 
 static void
-dpb_flush(GstVaapiDecoderH264 *decoder)
+dpb_flush(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
-    while (dpb_bump(decoder))
+    while (dpb_bump(decoder, picture))
         ;
-    dpb_clear(decoder);
+    dpb_clear(decoder, picture);
 }
 
 static gboolean
@@ -633,7 +649,7 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiFrameStore *fs;
-    guint i, j;
+    guint i;
 
     // Remove all unused pictures
     if (!GST_VAAPI_PICTURE_IS_IDR(picture)) {
@@ -667,13 +683,8 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     // C.4.5.1 - Storage and marking of a reference decoded picture into the DPB
     if (GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
         while (priv->dpb_count == priv->dpb_size) {
-            if (!dpb_bump(decoder))
+            if (!dpb_bump(decoder, picture))
                 return FALSE;
-        }
-        gst_vaapi_frame_store_replace(&priv->dpb[priv->dpb_count++], fs);
-        if (picture->output_flag) {
-            picture->output_needed = TRUE;
-            fs->output_needed++;
         }
     }
 
@@ -682,21 +693,15 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         if (!picture->output_flag)
             return TRUE;
         while (priv->dpb_count == priv->dpb_size) {
-            gboolean found_picture = FALSE;
-            for (i = 0; !found_picture && i < priv->dpb_count; i++) {
-                GstVaapiFrameStore * const fs = priv->dpb[i];
-                if (!fs->output_needed)
-                    continue;
-                for (j = 0; !found_picture && j < fs->num_buffers; j++)
-                    found_picture = fs->buffers[j]->output_needed &&
-                        fs->buffers[j]->base.poc < picture->base.poc;
-            }
-            if (!found_picture)
+            if (dpb_find_lowest_poc(decoder, picture, NULL) < 0)
                 return dpb_output(decoder, NULL, picture);
-            if (!dpb_bump(decoder))
+            if (!dpb_bump(decoder, picture))
                 return FALSE;
         }
-        gst_vaapi_frame_store_replace(&priv->dpb[priv->dpb_count++], fs);
+    }
+
+    gst_vaapi_frame_store_replace(&priv->dpb[priv->dpb_count++], fs);
+    if (picture->output_flag) {
         picture->output_needed = TRUE;
         fs->output_needed++;
     }
@@ -742,7 +747,7 @@ gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
     gst_vaapi_parser_info_h264_replace(&priv->prev_slice_pi, NULL);
 
-    dpb_clear(decoder);
+    dpb_clear(decoder, NULL);
 
     if (priv->parser) {
         gst_h264_nal_parser_free(priv->parser);
@@ -1206,7 +1211,7 @@ decode_sequence_end(GstVaapiDecoderH264 *decoder)
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    dpb_flush(decoder);
+    dpb_flush(decoder, NULL);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -2101,7 +2106,7 @@ init_picture(
     if (pi->nalu.type == GST_H264_NAL_SLICE_IDR) {
         GST_DEBUG("<IDR>");
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_IDR);
-        dpb_flush(decoder);
+        dpb_flush(decoder, picture);
     }
 
     /* Initialize picture structure */
@@ -2311,7 +2316,7 @@ exec_ref_pic_marking_adaptive_mmco_5(
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
 
-    dpb_flush(decoder);
+    dpb_flush(decoder, picture);
 
     priv->prev_pic_has_mmco5 = TRUE;
 
@@ -3234,7 +3239,7 @@ gst_vaapi_decoder_h264_flush(GstVaapiDecoder *base_decoder)
     GstVaapiDecoderH264 * const decoder =
         GST_VAAPI_DECODER_H264_CAST(base_decoder);
 
-    dpb_flush(decoder);
+    dpb_flush(decoder, NULL);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
