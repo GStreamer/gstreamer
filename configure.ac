@@ -541,7 +541,9 @@ AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
   CPPFLAGS="$CPPFLAGS $X_CFLAGS"
 
   dnl now try to find the HEADER
-  AC_CHECK_HEADER([X11/Xlib.h], [HAVE_X="yes"], [HAVE_X="no"], [AC_INCLUDES_DEFAULT])
+  HAVE_X="yes"
+  AC_CHECK_HEADER([X11/Xlib.h], [], [HAVE_X="no"], [AC_INCLUDES_DEFAULT])
+  AC_CHECK_HEADER([X11/XKBlib.h], [], [HAVE_X="no"], [AC_INCLUDES_DEFAULT])
 
   if test "x$HAVE_X" = "xno"
   then
