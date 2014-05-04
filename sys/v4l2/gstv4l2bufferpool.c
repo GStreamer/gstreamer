@@ -595,6 +595,9 @@ start_streaming (GstV4l2BufferPool * pool)
 {
   GstV4l2Object *obj = pool->obj;
 
+  if (pool->streaming)
+    return TRUE;
+
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
       break;
@@ -608,9 +611,10 @@ start_streaming (GstV4l2BufferPool * pool)
       if (!V4L2_TYPE_IS_OUTPUT (obj->type)) {
         GstBufferPool *bpool = GST_BUFFER_POOL (pool);
         GstBufferPoolAcquireParams params = { 0 };
+        gint n_to_q = pool->num_allocated - pool->num_queued;
         GstFlowReturn ret;
 
-        while (pool->num_queued < pool->num_allocated) {
+        while (n_to_q > 0) {
           GstBuffer *buf;
 
           params.flags = GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
@@ -621,7 +625,11 @@ start_streaming (GstV4l2BufferPool * pool)
             goto requeue_failed;
 
           gst_v4l2_buffer_pool_release_buffer (bpool, buf);
+          n_to_q--;
         }
+
+        if (pool->num_allocated != pool->num_queued)
+          goto requeue_failed;
       }
 
       GST_DEBUG_OBJECT (pool, "STREAMON");
@@ -863,6 +871,8 @@ stop_streaming (GstV4l2BufferPool * pool)
     return TRUE;
   }
 
+  pool->flushing = TRUE;
+
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
       break;
@@ -904,6 +914,7 @@ stop_streaming (GstV4l2BufferPool * pool)
       break;
   }
 
+  pool->flushing = FALSE;
   pool->streaming = FALSE;
 
   if (pool->other_pool)
@@ -1275,7 +1286,11 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
         case GST_V4L2_IO_USERPTR:
         case GST_V4L2_IO_DMABUF_IMPORT:
         {
-          if (gst_v4l2_is_buffer_valid (buffer, NULL)) {
+          if (pool->flushing) {
+            /* put back on outstanding list */
+            GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool,
+                buffer);
+          } else if (gst_v4l2_is_buffer_valid (buffer, NULL)) {
             /* queue back in the device */
             if (pool->other_pool)
               gst_v4l2_buffer_pool_prepare_buffer (pool, buffer, NULL);

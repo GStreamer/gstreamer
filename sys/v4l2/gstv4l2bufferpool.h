@@ -68,6 +68,7 @@ struct _GstV4l2BufferPool
   guint copy_threshold;      /* when our pool runs lower, start handing out copies */
 
   gboolean streaming;
+  gboolean flushing;
 
   GstBuffer *buffers[VIDEO_MAX_FRAME];
 
