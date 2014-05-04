@@ -630,7 +630,7 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
    * form. Correct this.
    */
   if (location[0] == '\\' && location[1] == '\\' && location[2] == '\\')
-    g_memmove (location, location + 1, strlen (location + 1) + 1);
+    memmove (location, location + 1, strlen (location + 1) + 1);
 #endif
 
   ret = gst_file_src_set_location (src, location);
