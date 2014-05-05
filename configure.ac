@@ -815,14 +815,23 @@ fi
 dnl check if we can include both GL and GLES2 at the same time
 if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
   GL_INCLUDES="
-# include <GLES2/gl2.h>
-# include <GLES2/gl2ext.h>
+#ifndef GL_GLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES 1
+#endif
+# ifdef __APPLE__
+#  include <OpenGLES/ES2/gl.h>
+#  include <OpenGLES/ES2/glext.h>
+# else
+#  include <GLES2/gl2.h>
+#  include <GLES2/gl2ext.h>
+# endif
 # if __APPLE__
 #  include <OpenGL/OpenGL.h>
 #  include <OpenGL/gl.h>
+#  include <OpenGL/glu.h>
 # else
-#  include <GL/glu.h>
 #  include <GL/gl.h>
+#  include <GL/glu.h>
 #  if __WIN32__ || _WIN32
 #   include <GL/glext.h>
 #  endif
