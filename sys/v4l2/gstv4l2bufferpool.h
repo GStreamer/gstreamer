@@ -63,7 +63,6 @@ struct _GstV4l2BufferPool
   gboolean add_cropmeta;
 
   guint num_buffers;         /* number of buffers we use */
-  guint num_allocated;       /* number of buffers allocated by the driver */
   guint num_queued;          /* number of buffers queued in the driver */
   guint copy_threshold;      /* when our pool runs lower, start handing out copies */
 

@@ -460,7 +460,6 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
     crop->width = info->height;
   }
 
-  pool->num_allocated++;
   *buffer = newbuf;
 
   return GST_FLOW_OK;
@@ -610,13 +609,16 @@ start_streaming (GstV4l2BufferPool * pool)
     {
       /* For capture device, we need to re-enqueue buffers before be can let
        * the driver stream again */
-      if (!V4L2_TYPE_IS_OUTPUT (obj->type)) {
+      if (!V4L2_TYPE_IS_OUTPUT (obj->type) && pool->vallocator) {
         GstBufferPool *bpool = GST_BUFFER_POOL (pool);
         GstBufferPoolAcquireParams params = { 0 };
-        gint n_to_q = pool->num_allocated - pool->num_queued;
+        gsize num_allocated, num_to_queue;
         GstFlowReturn ret;
 
-        while (n_to_q > 0) {
+        num_allocated = gst_v4l2_allocator_num_allocated (pool->vallocator);
+        num_to_queue = num_allocated - pool->num_queued;
+
+        while (num_to_queue > 0) {
           GstBuffer *buf;
 
           params.flags = GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
@@ -627,10 +629,10 @@ start_streaming (GstV4l2BufferPool * pool)
             goto requeue_failed;
 
           gst_v4l2_buffer_pool_release_buffer (bpool, buf);
-          n_to_q--;
+          num_to_queue--;
         }
 
-        if (pool->num_allocated != pool->num_queued)
+        if (num_allocated != pool->num_queued)
           goto requeue_failed;
       }
 
@@ -799,7 +801,6 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   pool->size = size;
   pool->copy_threshold = copy_threshold;
   pool->num_buffers = num_buffers;
-  pool->num_allocated = 0;
   pool->num_queued = 0;
 
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
@@ -883,6 +884,9 @@ stop_streaming (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_USERPTR:
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_DMABUF_IMPORT:
+    {
+      gsize num_allocated;
+
       if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMOFF, &obj->type) < 0)
         goto stop_failed;
 
@@ -890,7 +894,9 @@ stop_streaming (GstV4l2BufferPool * pool)
 
       gst_v4l2_allocator_flush (pool->vallocator);
 
-      for (i = 0; i < pool->num_allocated; i++) {
+      num_allocated = gst_v4l2_allocator_num_allocated (pool->vallocator);
+
+      for (i = 0; i < num_allocated; i++) {
         if (pool->buffers[i]) {
           GstBufferPool *bpool = (GstBufferPool *) pool;
           GstBuffer *buffer = pool->buffers[i];
@@ -913,6 +919,7 @@ stop_streaming (GstV4l2BufferPool * pool)
       g_return_val_if_fail (pool->num_queued == 0, FALSE);
 
       break;
+    }
     default:
       g_return_val_if_reached (FALSE);
       break;
@@ -1691,7 +1698,8 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
             }
           }
 
-          if (pool->num_queued == pool->num_allocated) {
+          if (pool->num_queued ==
+              gst_v4l2_allocator_num_allocated (pool->vallocator)) {
             GstBuffer *out;
             /* all buffers are queued, try to dequeue one and release it back
              * into the pool so that _acquire can get to it again. */
