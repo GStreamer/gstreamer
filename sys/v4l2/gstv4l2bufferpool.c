@@ -595,6 +595,8 @@ start_streaming (GstV4l2BufferPool * pool)
 {
   GstV4l2Object *obj = pool->obj;
 
+  GST_DEBUG_OBJECT (pool, "start streaming");
+
   if (pool->streaming)
     return TRUE;
 
@@ -632,10 +634,11 @@ start_streaming (GstV4l2BufferPool * pool)
           goto requeue_failed;
       }
 
-      GST_DEBUG_OBJECT (pool, "STREAMON");
-
       if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMON, &obj->type) < 0)
         goto start_failed;
+
+      GST_DEBUG_OBJECT (pool, "STREAMON");
+
       break;
     }
     default:
@@ -880,9 +883,10 @@ stop_streaming (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_USERPTR:
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_DMABUF_IMPORT:
-      GST_DEBUG_OBJECT (pool, "STREAMOFF");
       if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMOFF, &obj->type) < 0)
         goto stop_failed;
+
+      GST_DEBUG_OBJECT (pool, "STREAMOFF");
 
       gst_v4l2_allocator_flush (pool->vallocator);
 
