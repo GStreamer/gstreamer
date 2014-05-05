@@ -87,6 +87,9 @@ struct _GstValidateScenarioPrivate
   guint wait_id;
 
   gboolean buffering;
+
+  gboolean changing_state;
+  GstState target_state;
 };
 
 typedef struct KeyFileGroupName
@@ -132,7 +135,6 @@ gst_validate_action_init (GstValidateAction * action)
   gst_mini_object_init (((GstMiniObject *) action), 0,
       _gst_validate_action_type, (GstMiniObjectCopyFunction) _action_copy, NULL,
       (GstMiniObjectFreeFunction) _action_free);
-
 }
 
 static GstValidateAction *
@@ -307,6 +309,7 @@ static gboolean
 _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
 {
   gdouble duration = 0;
+  GstStateChangeReturn ret;
 
   gst_structure_get_double (action->structure, "duration", &duration);
   gst_validate_printf (action, "pausing for %" GST_TIME_FORMAT "\n",
@@ -315,13 +318,20 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
   GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration * GST_SECOND));
 
-  if (gst_element_set_state (scenario->pipeline, GST_STATE_PAUSED) ==
-      GST_STATE_CHANGE_FAILURE) {
+  scenario->priv->target_state = GST_STATE_PAUSED;
+  scenario->priv->changing_state = TRUE;
+
+  ret = gst_element_set_state (scenario->pipeline, GST_STATE_PAUSED);
+
+  if (ret == GST_STATE_CHANGE_FAILURE) {
     GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
         "Failed to set state to paused");
 
     return FALSE;
+  } else if (ret == GST_STATE_CHANGE_SUCCESS) {
+    scenario->priv->changing_state = FALSE;
   }
+
   if (duration)
     g_timeout_add (duration * 1000,
         (GSourceFunc) _pause_action_restore_playing, scenario);
@@ -332,17 +342,25 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _execute_play (GstValidateScenario * scenario, GstValidateAction * action)
 {
+  GstStateChangeReturn ret;
   gst_validate_printf (action, "Playing back\n");
 
   GST_DEBUG ("Playing back");
 
-  if (gst_element_set_state (scenario->pipeline, GST_STATE_PLAYING) ==
-      GST_STATE_CHANGE_FAILURE) {
+  scenario->priv->target_state = GST_STATE_PLAYING;
+  scenario->priv->changing_state = TRUE;
+
+  ret = gst_element_set_state (scenario->pipeline, GST_STATE_PAUSED);
+
+  if (ret == GST_STATE_CHANGE_FAILURE) {
     GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
         "Failed to set state to playing");
 
     return FALSE;
+  } else if (ret == GST_STATE_CHANGE_SUCCESS) {
+    scenario->priv->changing_state = FALSE;
   }
+
   gst_element_get_state (scenario->pipeline, NULL, NULL, -1);
   return TRUE;
 }
@@ -624,6 +642,12 @@ get_position (GstValidateScenario * scenario)
     return TRUE;
   }
 
+  if (priv->changing_state) {
+    GST_DEBUG_OBJECT (scenario,
+        "Changing state, not executing any action");
+    return TRUE;
+  }
+
   query = gst_query_new_segment (GST_FORMAT_DEFAULT);
   if (gst_element_query (GST_ELEMENT (scenario->pipeline), query))
     gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
@@ -852,6 +876,11 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
               &pstate, &nstate, NULL);
           if (pstate == GST_STATE_READY && nstate == GST_STATE_PAUSED)
             _add_get_position_source (scenario);
+
+          if (GST_MESSAGE_SRC (message) == GST_OBJECT(scenario->pipeline)) {
+            if (scenario->priv->target_state == nstate)
+              scenario->priv->changing_state = FALSE;
+          }
         }
         break;
       }
