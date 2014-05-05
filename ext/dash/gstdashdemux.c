@@ -2227,6 +2227,7 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
 
     /* Reset last flow return */
     stream->last_ret = GST_FLOW_OK;
+    stream->starting_fragment = TRUE;
 
     if (stream->need_header) {
       /* We need to fetch a new header */
