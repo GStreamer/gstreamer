@@ -124,6 +124,7 @@ enum
   SIGNAL_CLEAR_KEYS,
   SIGNAL_SOFT_LIMIT,
   SIGNAL_HARD_LIMIT,
+  SIGNAL_REMOVE_KEY,
   LAST_SIGNAL
 };
 
@@ -169,6 +170,7 @@ static guint gst_srtp_dec_signals[LAST_SIGNAL] = { 0 };
 G_DEFINE_TYPE (GstSrtpDec, gst_srtp_dec, GST_TYPE_ELEMENT);
 
 static void gst_srtp_dec_clear_streams (GstSrtpDec * filter);
+static void gst_srtp_dec_remove_stream (GstSrtpDec * filter, guint ssrc);
 
 static gboolean gst_srtp_dec_sink_event_rtp (GstPad * pad, GstObject * parent,
     GstEvent * event);
@@ -239,6 +241,7 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_srtp_dec_change_state);
   klass->clear_streams = GST_DEBUG_FUNCPTR (gst_srtp_dec_clear_streams);
+  klass->remove_stream = GST_DEBUG_FUNCPTR (gst_srtp_dec_remove_stream);
 
   /**
    * GstSrtpDec::request-key:
@@ -296,6 +299,20 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
   gst_srtp_dec_signals[SIGNAL_HARD_LIMIT] =
       g_signal_new ("hard-limit", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_CAPS, 1, G_TYPE_UINT);
+
+  /**
+   * GstSrtpDec::remove-key:
+   * @gstsrtpdec: the element on which the signal is emitted
+   * @ssrc: The SSRC for which to remove the key.
+   *
+   * Removes keys for a specific SSRC
+   */
+  gst_srtp_dec_signals[SIGNAL_REMOVE_KEY] =
+      g_signal_new ("remove-key", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstSrtpDecClass, remove_stream), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, G_TYPE_UINT);
+
 }
 
 /* initialize the new element
@@ -355,9 +372,12 @@ gst_srtp_dec_init (GstSrtpDec * filter)
 }
 
 static void
-remove_stream_by_ssrc (GstSrtpDec * filter, guint32 ssrc)
+gst_srtp_dec_remove_stream (GstSrtpDec * filter, guint ssrc)
 {
   GstSrtpDecSsrcStream *stream = NULL;
+
+  if (filter->streams == NULL)
+    return;
 
   stream = g_hash_table_lookup (filter->streams, GUINT_TO_POINTER (ssrc));
 
@@ -559,7 +579,7 @@ update_session_stream_from_caps (GstSrtpDec * filter, guint32 ssrc,
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
   /* Remove existing stream, if any */
-  remove_stream_by_ssrc (filter, ssrc);
+  gst_srtp_dec_remove_stream (filter, ssrc);
   stream = get_stream_from_caps (filter, caps, ssrc);
 
   if (stream) {

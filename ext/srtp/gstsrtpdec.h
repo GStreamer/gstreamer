@@ -88,6 +88,7 @@ struct _GstSrtpDecClass
   GstElementClass parent_class;
 
   void (*clear_streams) (GstSrtpDec * filter);
+  void (*remove_stream) (GstSrtpDec * filter, guint ssrc);
 };
 
 GType gst_srtp_dec_get_type (void);
