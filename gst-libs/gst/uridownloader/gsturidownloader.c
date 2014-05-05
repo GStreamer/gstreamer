@@ -323,7 +323,8 @@ gst_uri_downloader_set_range (GstUriDownloader * downloader,
 
 static gboolean
 gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
-    const gchar * referer, gboolean compress, gboolean refresh)
+    const gchar * referer, gboolean compress, gboolean refresh,
+    gboolean allow_cache)
 {
   GstPad *pad;
   GObjectClass *gobject_class;
@@ -379,13 +380,17 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
   if (g_object_class_find_property (gobject_class, "keep-alive"))
     g_object_set (downloader->priv->urisrc, "keep-alive", TRUE, NULL);
   if (g_object_class_find_property (gobject_class, "extra-headers")) {
-    if (referer || refresh) {
+    if (referer || refresh || !allow_cache) {
       GstStructure *extra_headers = gst_structure_new_empty ("headers");
 
       if (referer)
         gst_structure_set (extra_headers, "Referer", G_TYPE_STRING, referer,
             NULL);
-      if (refresh)
+
+      if (!allow_cache)
+        gst_structure_set (extra_headers, "Cache-Control", G_TYPE_STRING,
+            "no-cache", NULL);
+      else if (refresh)
         gst_structure_set (extra_headers, "Cache-Control", G_TYPE_STRING,
             "max-age=0", NULL);
 
@@ -415,10 +420,10 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
 GstFragment *
 gst_uri_downloader_fetch_uri (GstUriDownloader * downloader,
     const gchar * uri, const gchar * referer, gboolean compress,
-    gboolean refresh, GError ** err)
+    gboolean refresh, gboolean allow_cache, GError ** err)
 {
   return gst_uri_downloader_fetch_uri_with_range (downloader, uri,
-      referer, compress, refresh, 0, -1, err);
+      referer, compress, refresh, allow_cache, 0, -1, err);
 }
 
 /**
@@ -433,7 +438,8 @@ gst_uri_downloader_fetch_uri (GstUriDownloader * downloader,
 GstFragment *
 gst_uri_downloader_fetch_uri_with_range (GstUriDownloader *
     downloader, const gchar * uri, const gchar * referer, gboolean compress,
-    gboolean refresh, gint64 range_start, gint64 range_end, GError ** err)
+    gboolean refresh, gboolean allow_cache,
+    gint64 range_start, gint64 range_end, GError ** err)
 {
   GstStateChangeReturn ret;
   GstFragment *download = NULL;
@@ -450,7 +456,8 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader *
     goto quit;
   }
 
-  if (!gst_uri_downloader_set_uri (downloader, uri, referer, compress, refresh)) {
+  if (!gst_uri_downloader_set_uri (downloader, uri, referer, compress, refresh,
+          allow_cache)) {
     GST_WARNING_OBJECT (downloader, "Failed to set URI");
     goto quit;
   }
