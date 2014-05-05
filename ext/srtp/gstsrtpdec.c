@@ -566,6 +566,14 @@ have_ssrc:
   return request_key_with_signal (filter, *ssrc, SIGNAL_REQUEST_KEY);
 }
 
+static void
+free_stream (GstSrtpDecSsrcStream * stream)
+{
+  if (stream->key)
+    gst_buffer_unref (stream->key);
+  g_slice_free (GstSrtpDecSsrcStream, stream);
+}
+
 /* Create new stream from params in caps
  */
 static GstSrtpDecSsrcStream *
@@ -573,14 +581,40 @@ update_session_stream_from_caps (GstSrtpDec * filter, guint32 ssrc,
     GstCaps * caps)
 {
   GstSrtpDecSsrcStream *stream = NULL;
+  GstSrtpDecSsrcStream *old_stream = NULL;
   err_status_t err;
 
   g_return_val_if_fail (GST_IS_SRTP_DEC (filter), NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
+  stream = get_stream_from_caps (filter, caps, ssrc);
+
+  old_stream = find_stream_by_ssrc (filter, ssrc);
+  if (stream && old_stream &&
+      stream->rtp_cipher == old_stream->rtp_cipher &&
+      stream->rtcp_cipher == old_stream->rtcp_cipher &&
+      stream->rtp_auth == old_stream->rtp_auth &&
+      stream->rtcp_auth == old_stream->rtcp_auth &&
+      stream->key && old_stream->key &&
+      gst_buffer_get_size (stream->key) ==
+      gst_buffer_get_size (old_stream->key)) {
+    GstMapInfo info;
+
+    if (gst_buffer_map (old_stream->key, &info, GST_MAP_READ)) {
+      gboolean equal;
+
+      equal = (gst_buffer_memcmp (stream->key, 0, info.data, info.size) == 0);
+      gst_buffer_unmap (old_stream->key, &info);
+
+      if (equal) {
+        free_stream (stream);
+        return old_stream;
+      }
+    }
+  }
+
   /* Remove existing stream, if any */
   gst_srtp_dec_remove_stream (filter, ssrc);
-  stream = get_stream_from_caps (filter, caps, ssrc);
 
   if (stream) {
     /* Create new session stream */
@@ -595,14 +629,6 @@ update_session_stream_from_caps (GstSrtpDec * filter, guint32 ssrc,
   }
 
   return stream;
-}
-
-static void
-clear_stream (GstSrtpDecSsrcStream * stream)
-{
-  if (stream->key)
-    gst_buffer_unref (stream->key);
-  g_slice_free (GstSrtpDecSsrcStream, stream);
 }
 
 static gboolean
@@ -1090,7 +1116,7 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       filter->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-          NULL, (GDestroyNotify) clear_stream);
+          NULL, (GDestroyNotify) free_stream);
       filter->rtp_has_segment = FALSE;
       filter->rtcp_has_segment = FALSE;
       break;
