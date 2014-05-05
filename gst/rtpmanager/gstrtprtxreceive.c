@@ -122,6 +122,8 @@
 
 #include "gstrtprtxreceive.h"
 
+#define ASSOC_TIMEOUT (GST_SECOND)
+
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_rtx_receive_debug);
 #define GST_CAT_DEFAULT gst_rtp_rtx_receive_debug
 
@@ -237,6 +239,29 @@ gst_rtp_rtx_receive_finalize (GObject * object)
   G_OBJECT_CLASS (gst_rtp_rtx_receive_parent_class)->finalize (object);
 }
 
+typedef struct
+{
+  guint32 ssrc;
+  GstClockTime time;
+} SsrcAssoc;
+
+static SsrcAssoc *
+ssrc_assoc_new (guint32 ssrc, GstClockTime time)
+{
+  SsrcAssoc *assoc = g_slice_new (SsrcAssoc);
+
+  assoc->ssrc = ssrc;
+  assoc->time = time;
+
+  return assoc;
+}
+
+static void
+ssrc_assoc_free (SsrcAssoc * assoc)
+{
+  g_slice_free (SsrcAssoc, assoc);
+}
+
 static void
 gst_rtp_rtx_receive_init (GstRtpRtxReceive * rtx)
 {
@@ -261,7 +286,8 @@ gst_rtp_rtx_receive_init (GstRtpRtxReceive * rtx)
   gst_element_add_pad (GST_ELEMENT (rtx), rtx->sinkpad);
 
   rtx->ssrc2_ssrc1_map = g_hash_table_new (g_direct_hash, g_direct_equal);
-  rtx->seqnum_ssrc1_map = g_hash_table_new (g_direct_hash, g_direct_equal);
+  rtx->seqnum_ssrc1_map = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      NULL, (GDestroyNotify) ssrc_assoc_free);
 
   rtx->rtx_pt_map = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
@@ -282,7 +308,6 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
       if (gst_structure_has_name (s, "GstRTPRetransmissionRequest")) {
         guint seqnum = 0;
         guint ssrc = 0;
-        gpointer ssrc1 = 0;
         gpointer ssrc2 = 0;
 
         /* retrieve seqnum of the packet that need to be restransmisted */
@@ -314,12 +339,14 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
           GST_DEBUG_OBJECT (rtx, "Retransmited stream %" G_GUINT32_FORMAT
               " already associated to its master", GPOINTER_TO_UINT (ssrc2));
         } else {
+          SsrcAssoc *assoc;
+
           /* not already associated but also we have to check that we have not
            * already considered this request.
            */
           if (g_hash_table_lookup_extended (rtx->seqnum_ssrc1_map,
-                  GUINT_TO_POINTER (seqnum), NULL, &ssrc1)) {
-            if (GPOINTER_TO_UINT (ssrc1) == ssrc) {
+                  GUINT_TO_POINTER (seqnum), NULL, (gpointer *) & assoc)) {
+            if (assoc->ssrc == ssrc) {
               /* do nothing because we have already considered this request
                * The jitter may be too impatient of the rtx packet has been
                * lost too.
@@ -329,34 +356,45 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
               GST_DEBUG_OBJECT (rtx, "Duplicated request seqnum: %"
                   G_GUINT32_FORMAT ", ssrc1: %" G_GUINT32_FORMAT, seqnum, ssrc);
             } else {
-              /* From RFC 4588:
-               * the receiver MUST NOT have two outstanding requests for the
-               * same packet sequence number in two different original streams
-               * before the association is resolved. Otherwise it's impossible
-               * to associate a rtx stream and its master stream
+
+              /* If the association attempt is larger than ASSOC_TIMEOUT,
+               * then we give up on it, and try this one.
                */
-              GST_DEBUG_OBJECT (rtx,
-                  "reject request for seqnum %" G_GUINT32_FORMAT
-                  "of master stream %" G_GUINT32_FORMAT, seqnum, ssrc);
-              res = TRUE;
+              if (!GST_CLOCK_TIME_IS_VALID (rtx->last_time) ||
+                  !GST_CLOCK_TIME_IS_VALID (assoc->time) ||
+                  assoc->time + ASSOC_TIMEOUT < rtx->last_time) {
+                /* From RFC 4588:
+                 * the receiver MUST NOT have two outstanding requests for the
+                 * same packet sequence number in two different original streams
+                 * before the association is resolved. Otherwise it's impossible
+                 * to associate a rtx stream and its master stream
+                 */
 
-              /* remove seqnum in order to reuse the spot */
-              g_hash_table_remove (rtx->seqnum_ssrc1_map,
-                  GUINT_TO_POINTER (seqnum));
+                /* remove seqnum in order to reuse the spot */
+                g_hash_table_remove (rtx->seqnum_ssrc1_map,
+                    GUINT_TO_POINTER (seqnum));
+                goto retransmit;
+              } else {
+                GST_DEBUG_OBJECT (rtx,
+                    "reject request for seqnum %" G_GUINT32_FORMAT
+                    " of master stream %" G_GUINT32_FORMAT, seqnum, ssrc);
 
-              /* do not forward the event as we are rejecting this request */
-              GST_OBJECT_UNLOCK (rtx);
-              gst_event_unref (event);
-              return res;
+                /* do not forward the event as we are rejecting this request */
+                GST_OBJECT_UNLOCK (rtx);
+                gst_event_unref (event);
+                return TRUE;
+              }
             }
           } else {
+          retransmit:
             /* the request has not been already considered
              * insert it for the first time */
             GST_DEBUG_OBJECT (rtx,
                 "packet number %" G_GUINT32_FORMAT " of master stream %"
                 G_GUINT32_FORMAT " needs to be retransmited", seqnum, ssrc);
             g_hash_table_insert (rtx->seqnum_ssrc1_map,
-                GUINT_TO_POINTER (seqnum), GUINT_TO_POINTER (ssrc));
+                GUINT_TO_POINTER (seqnum),
+                ssrc_assoc_new (ssrc, rtx->last_time));
           }
         }
 
@@ -463,6 +501,8 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   /* check if we have a retransmission packet (this information comes from SDP) */
   GST_OBJECT_LOCK (rtx);
 
+  rtx->last_time = GST_BUFFER_PTS (buffer);
+
   is_rtx =
       g_hash_table_lookup_extended (rtx->rtx_pt_map,
       GUINT_TO_POINTER (payload_type), NULL, NULL);
@@ -488,16 +528,24 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           GPOINTER_TO_UINT (ssrc1));
       ssrc2 = ssrc;
     } else {
+      SsrcAssoc *assoc;
+
       /* the current retransmisted packet has its rtx stream not already
        * associated to a master stream, so retrieve it from our request
        * history */
       if (g_hash_table_lookup_extended (rtx->seqnum_ssrc1_map,
-              GUINT_TO_POINTER (orign_seqnum), NULL, &ssrc1)) {
+              GUINT_TO_POINTER (orign_seqnum), NULL, (gpointer *) & assoc)) {
         GST_DEBUG_OBJECT (rtx,
             "associate retransmisted stream %" G_GUINT32_FORMAT
             " to master stream %" G_GUINT32_FORMAT " thanks to packet %"
-            G_GUINT16_FORMAT "", ssrc, GPOINTER_TO_UINT (ssrc1), orign_seqnum);
+            G_GUINT16_FORMAT "", ssrc, assoc->ssrc, orign_seqnum);
+        ssrc1 = GUINT_TO_POINTER (assoc->ssrc);
         ssrc2 = ssrc;
+
+        /* just put a guard */
+        if (GPOINTER_TO_UINT (ssrc1) == ssrc2)
+          GST_WARNING_OBJECT (rtx, "RTX receiver ssrc2_ssrc1_map bad state, "
+              "ssrc %" G_GUINT32_FORMAT " are the same\n", ssrc);
 
         /* free the spot so that this seqnum can be used to do another
          * association */
@@ -508,17 +556,13 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         g_hash_table_insert (rtx->ssrc2_ssrc1_map, GUINT_TO_POINTER (ssrc2),
             ssrc1);
 
-        /* just put a guard */
-        if (GPOINTER_TO_UINT (ssrc1) == ssrc2)
-          GST_WARNING_OBJECT (rtx, "RTX receiver ssrc2_ssrc1_map bad state, "
-              "ssrc %" G_GUINT32_FORMAT " are the same\n", ssrc);
-
         /* also do the association between master stream and rtx stream
          * every ssrc are unique so we can use the same hash table
          * for both retrieving the ssrc1 from ssrc2 and also ssrc2 from ssrc1
          */
         g_hash_table_insert (rtx->ssrc2_ssrc1_map, ssrc1,
             GUINT_TO_POINTER (ssrc2));
+
       } else {
         /* we are not able to associate this rtx packet with a master stream */
         GST_DEBUG_OBJECT (rtx,

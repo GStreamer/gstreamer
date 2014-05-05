@@ -63,6 +63,8 @@ struct _GstRtpRtxReceive
   guint num_rtx_requests;
   guint num_rtx_packets;
   guint num_rtx_assoc_packets;
+
+  GstClockTime last_time;
 };
 
 struct _GstRtpRtxReceiveClass
