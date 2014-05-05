@@ -868,6 +868,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
        * as each fragment for its own has to be reversed */
       demux->discont = TRUE;
     demux->starting_fragment = FALSE;
+    demux->segment.position = GST_BUFFER_PTS (buffer);
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
   }
@@ -905,8 +906,6 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   demux->starting_fragment = FALSE;
-
-  demux->segment.position = GST_BUFFER_TIMESTAMP (buffer);
 
   if (demux->need_segment) {
     /* And send a newsegment */
