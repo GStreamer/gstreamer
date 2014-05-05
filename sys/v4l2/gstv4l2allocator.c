@@ -1361,3 +1361,17 @@ gst_v4l2_allocator_reset_group (GstV4l2Allocator * allocator,
       break;
   }
 }
+
+gsize
+gst_v4l2_allocator_num_allocated (GstV4l2Allocator * allocator)
+{
+  gsize num_allocated;
+
+  GST_OBJECT_LOCK (allocator);
+
+  num_allocated = allocator->count;
+
+  GST_OBJECT_UNLOCK (allocator);
+
+  return num_allocated;
+}

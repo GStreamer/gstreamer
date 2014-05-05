@@ -149,6 +149,8 @@ GstV4l2MemoryGroup*  gst_v4l2_allocator_dqbuf          (GstV4l2Allocator * alloc
 void                 gst_v4l2_allocator_reset_group    (GstV4l2Allocator * allocator,
                                                         GstV4l2MemoryGroup * group);
 
+gsize                gst_v4l2_allocator_num_allocated  (GstV4l2Allocator * allocator);
+
 G_END_DECLS
 
 #endif /* __GST_V4L2_ALLOCATOR_H__ */
