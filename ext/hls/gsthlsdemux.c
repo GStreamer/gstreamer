@@ -810,7 +810,9 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         key_fragment =
             gst_uri_downloader_fetch_uri (demux->downloader,
             demux->current_key, demux->client->main ?
-            demux->client->main->uri : NULL, FALSE, FALSE, &err);
+            demux->client->main->uri : NULL, FALSE, FALSE,
+            demux->client->current ? demux->client->current->allowcache : TRUE,
+            &err);
         if (key_fragment == NULL)
           goto key_failed;
         demux->key_url = g_strdup (demux->current_key);
@@ -1491,7 +1493,8 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
 
   download =
       gst_uri_downloader_fetch_uri (demux->downloader, uri,
-      demux->client->main ? demux->client->main->uri : NULL, TRUE, TRUE, err);
+      demux->client->main ? demux->client->main->uri : NULL, TRUE, TRUE, TRUE,
+      err);
   if (download == NULL)
     return FALSE;
 
@@ -1797,7 +1800,7 @@ decrypt_error:
 
 static gboolean
 gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri,
-    const gchar * referer)
+    const gchar * referer, gboolean refresh, gboolean allow_cache)
 {
   if (!gst_uri_is_valid (uri))
     return FALSE;
@@ -1851,10 +1854,19 @@ gst_hls_demux_update_source (GstHLSDemux * demux, const gchar * uri,
     if (g_object_class_find_property (gobject_class, "keep-alive"))
       g_object_set (demux->src, "keep-alive", TRUE, NULL);
     if (g_object_class_find_property (gobject_class, "extra-headers")) {
-      if (referer) {
-        GstStructure *extra_headers =
-            gst_structure_new ("headers", "Referer", G_TYPE_STRING, referer,
-            NULL);
+      if (referer || refresh || !allow_cache) {
+        GstStructure *extra_headers = gst_structure_new_empty ("headers");
+
+        if (referer)
+          gst_structure_set (extra_headers, "Referer", G_TYPE_STRING, referer,
+              NULL);
+
+        if (!allow_cache)
+          gst_structure_set (extra_headers, "Cache-Control", G_TYPE_STRING,
+              "no-cache", NULL);
+        else if (refresh)
+          gst_structure_set (extra_headers, "Cache-Control", G_TYPE_STRING,
+              "max-age=0", NULL);
 
         g_object_set (demux->src, "extra-headers", extra_headers, NULL);
 
@@ -1909,8 +1921,11 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   demux->last_ret = GST_FLOW_OK;
 
   if (!gst_hls_demux_update_source (demux, next_fragment_uri,
-          demux->client->main ? demux->client->main->uri : NULL)) {
-    *err = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN,
+          demux->client->main ? demux->client->main->uri : NULL,
+          FALSE,
+          demux->client->current ? demux->client->current->allowcache : TRUE)) {
+    *err =
+        g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN,
         "Missing plugin to handle URI: '%s'", next_fragment_uri);
     g_mutex_unlock (&demux->fragment_download_lock);
     return FALSE;
