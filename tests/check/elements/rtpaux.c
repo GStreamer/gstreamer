@@ -24,7 +24,8 @@
 #include <gst/check/gsttestclock.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
-static GMainLoop *main_loop;
+static gboolean send_pipeline_eos = FALSE;
+static gboolean receive_pipeline_eos = FALSE;
 
 static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
@@ -34,7 +35,15 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
 
   switch (message->type) {
     case GST_MESSAGE_EOS:
-      g_main_loop_quit (main_loop);
+      if (!strcmp ("pipeline_send",
+              GST_OBJECT_NAME (GST_MESSAGE_SRC (message))))
+        send_pipeline_eos = TRUE;
+      else if (!strcmp ("pipeline_receive",
+              GST_OBJECT_NAME (GST_MESSAGE_SRC (message))))
+        receive_pipeline_eos = TRUE;
+      else
+        fail ("Unknown pipeline: %s",
+            GST_OBJECT_NAME (GST_MESSAGE_SRC (message)));
       break;
     case GST_MESSAGE_WARNING:{
       GError *gerror;
@@ -54,7 +63,7 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
       gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
       g_error_free (gerror);
       g_free (debug);
-      g_main_loop_quit (main_loop);
+      fail ("Error!");
       break;
     }
     default:
@@ -334,7 +343,6 @@ GST_START_TEST (test_simple_rtpbin_aux)
       recvrtcp_udpsink, "sink", GST_PAD_LINK_CHECK_NOTHING);
   fail_unless (res == TRUE, NULL);
 
-  main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bussend, "message::error", (GCallback) message_received,
       binsend);
   g_signal_connect (bussend, "message::warning", (GCallback) message_received,
@@ -359,8 +367,8 @@ GST_START_TEST (test_simple_rtpbin_aux)
   g_timeout_add (5000, on_timeout, binreceive);
 
   GST_INFO ("enter mainloop");
-  g_main_loop_run (main_loop);
-  g_main_loop_run (main_loop);
+  while (!send_pipeline_eos && !receive_pipeline_eos)
+    g_main_context_iteration (NULL, TRUE);
   GST_INFO ("exit mainloop");
 
   /* check that FB NACK is working */
@@ -381,8 +389,6 @@ GST_START_TEST (test_simple_rtpbin_aux)
   fail_if (nb_rtx_recv_packets < 1);
 
   /* cleanup */
-  g_main_loop_unref (main_loop);
-
   gst_bus_remove_signal_watch (bussend);
   gst_object_unref (bussend);
   gst_object_unref (binsend);
