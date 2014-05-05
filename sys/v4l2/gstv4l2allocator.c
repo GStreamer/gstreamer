@@ -560,17 +560,33 @@ gst_v4l2_allocator_reset_size (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group)
 {
   gsize size;
+  gboolean imported = FALSE;
+
+  switch (allocator->memory) {
+    case V4L2_MEMORY_USERPTR:
+    case V4L2_MEMORY_DMABUF:
+      imported = TRUE;
+      break;
+  }
 
   if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
     gint i;
 
     for (i = 0; i < group->n_mem; i++) {
       size = allocator->format.fmt.pix_mp.plane_fmt[i].sizeimage;
+
+      if (imported)
+        group->mem[i]->maxsize = size;
+
       gst_memory_resize (group->mem[i], 0, size);
     }
 
   } else {
     size = allocator->format.fmt.pix.sizeimage;
+
+    if (imported)
+      group->mem[0]->maxsize = size;
+
     gst_memory_resize (group->mem[0], 0, size);
   }
 }
@@ -1356,12 +1372,13 @@ gst_v4l2_allocator_reset_group (GstV4l2Allocator * allocator,
       gst_v4l2_allocator_clear_dmabufin (allocator, group);
       break;
     case V4L2_MEMORY_MMAP:
-      gst_v4l2_allocator_reset_size (allocator, group);
       break;
     default:
       g_assert_not_reached ();
       break;
   }
+
+  gst_v4l2_allocator_reset_size (allocator, group);
 }
 
 gsize
