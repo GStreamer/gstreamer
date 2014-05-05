@@ -812,6 +812,42 @@ else
   fi
 fi
 
+dnl check if we can include both GL and GLES2 at the same time
+if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
+  GL_INCLUDES="
+# include <GLES2/gl2.h>
+# include <GLES2/gl2ext.h>
+# if __APPLE__
+#  include <OpenGL/OpenGL.h>
+#  include <OpenGL/gl.h>
+# else
+#  include <GL/glu.h>
+#  include <GL/gl.h>
+#  if __WIN32__ || _WIN32
+#   include <GL/glext.h>
+#  endif
+# endif
+"
+  AC_MSG_CHECKING([whether it is possible to include both GL and GLES2 headers])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[$GL_INCLUDES]], [[
+    #if !defined(GL_FALSE)
+    #error Failed to include GL headers
+    #endif
+    ]])],[ AC_MSG_RESULT(yes)
+    ],[AC_MSG_RESULT(no)
+    if test "x$NEED_GLES2" = "xyes"; then
+      if test "x$NEED_OPENGL" = "xyes"; then
+        AC_MSG_ERROR([Cannot seem to include both GL and GLES2 headers. Try disabling one API])
+      fi
+      AC_MSG_WARN([Disabling Desktop GL support])
+      HAVE_OPENGL=no
+    else
+      AC_MSG_WARN([Disabling GL|ES 2.0 support])
+      HAVE_GLES2=no
+    fi
+  ])
+fi
+
 #dnl Check for OpenGL, GLU
 echo host is $host
 case $host in
