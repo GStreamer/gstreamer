@@ -1185,6 +1185,8 @@ gst_v4l2_allocator_flush (GstV4l2Allocator * allocator)
     if (IS_QUEUED (group->buffer)) {
       UNSET_QUEUED (group->buffer);
 
+      gst_v4l2_allocator_reset_group (allocator, group);
+
       for (n = 0; n < group->n_mem; n++)
         gst_memory_unref (group->mem[n]);
     }
