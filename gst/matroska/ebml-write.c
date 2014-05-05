@@ -349,7 +349,7 @@ gst_ebml_write_element_size (guint8 ** data_inout, guint64 size)
 
   if (size != GST_EBML_SIZE_UNKNOWN) {
     /* how many bytes? - use mask-1 because an all-1 bitset is not allowed */
-    while ((size >> ((bytes - 1) * 8)) >= (mask - 1) && bytes <= 8) {
+    while (bytes <= 8 && (size >> ((bytes - 1) * 8)) >= (mask - 1)) {
       mask >>= 1;
       bytes++;
     }
@@ -530,7 +530,7 @@ gst_ebml_write_get_uint_size (guint64 num)
   guint size = 1;
 
   /* get size */
-  while (num >= (G_GINT64_CONSTANT (1) << (size * 8)) && size < 8) {
+  while (size < 8 && num >= (G_GINT64_CONSTANT (1) << (size * 8))) {
     size++;
   }
 
