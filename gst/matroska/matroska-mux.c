@@ -1022,14 +1022,16 @@ skip_details:
     gst_matroska_mux_set_codec_id (context,
         GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED);
     fstr = gst_structure_get_string (structure, "format");
-    if (fstr && strlen (fstr) == 4)
-      videocontext->fourcc = GST_STR_FOURCC (fstr);
-    else if (!strcmp (fstr, "GRAY8"))
-      videocontext->fourcc = GST_MAKE_FOURCC ('Y', '8', '0', '0');
-    else if (!strcmp (fstr, "BGR"))
-      videocontext->fourcc = GST_MAKE_FOURCC ('B', 'G', 'R', 24);
-    else if (!strcmp (fstr, "RGB"))
-      videocontext->fourcc = GST_MAKE_FOURCC ('R', 'G', 'B', 24);
+    if (fstr) {
+      if (strlen (fstr) == 4)
+        videocontext->fourcc = GST_STR_FOURCC (fstr);
+      else if (!strcmp (fstr, "GRAY8"))
+        videocontext->fourcc = GST_MAKE_FOURCC ('Y', '8', '0', '0');
+      else if (!strcmp (fstr, "BGR"))
+        videocontext->fourcc = GST_MAKE_FOURCC ('B', 'G', 'R', 24);
+      else if (!strcmp (fstr, "RGB"))
+        videocontext->fourcc = GST_MAKE_FOURCC ('R', 'G', 'B', 24);
+    }
   } else if (!strcmp (mimetype, "video/x-huffyuv")      /* MS/VfW compatibility cases */
       ||!strcmp (mimetype, "video/x-divx")
       || !strcmp (mimetype, "video/x-dv")
