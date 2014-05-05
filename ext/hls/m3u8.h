@@ -42,7 +42,7 @@ struct _GstM3U8
   gboolean endlist;             /* if ENDLIST has been reached */
   gint version;                 /* last EXT-X-VERSION */
   GstClockTime targetduration;  /* last EXT-X-TARGETDURATION */
-  gchar *allowcache;            /* last EXT-X-ALLOWCACHE */
+  gboolean allowcache;          /* last EXT-X-ALLOWCACHE */
   gchar *key;
 
   gint bandwidth;

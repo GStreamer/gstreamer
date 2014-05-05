@@ -65,7 +65,6 @@ gst_m3u8_free (GstM3U8 * self)
   g_return_if_fail (self != NULL);
 
   g_free (self->uri);
-  g_free (self->allowcache);
   g_free (self->codecs);
   g_free (self->key);
 
@@ -299,6 +298,9 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
     self->files = NULL;
   }
 
+  /* By default, allow caching */
+  self->allowcache = TRUE;
+
   list = NULL;
   duration = 0;
   title = NULL;
@@ -461,8 +463,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       /* <YYYY-MM-DDThh:mm:ssZ> */
       GST_DEBUG ("FIXME parse date");
     } else if (g_str_has_prefix (data, "#EXT-X-ALLOW-CACHE:")) {
-      g_free (self->allowcache);
-      self->allowcache = g_strdup (data + 19);
+      self->allowcache = g_ascii_strcasecmp (data + 19, "YES") == 0;
     } else if (g_str_has_prefix (data, "#EXT-X-KEY:")) {
       gchar *v, *a;
 
