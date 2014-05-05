@@ -329,11 +329,6 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
     }
 
     else if (!g_strcmp0 ("+transition", source)) {
-      if (duration <= 0) {
-        g_error ("durations must be greater than 0");
-        goto build_failure;
-      }
-
       clip = GES_CLIP (ges_transition_clip_new_for_nick (arg0));
 
       if (!clip) {
