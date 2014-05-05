@@ -102,7 +102,7 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
     GstCaps *src_caps, *sink_caps;
     gchar *basename;
 
-    if (video_fd > 0)
+    if (video_fd >= 0)
       close (video_fd);
 
     video_fd = open (it->device_path, O_RDWR);
@@ -158,7 +158,7 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
       break;
   }
 
-  if (video_fd > 0)
+  if (video_fd >= 0)
     close (video_fd);
 
   gst_v4l2_iterator_free (it);
