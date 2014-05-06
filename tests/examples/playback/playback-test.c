@@ -2422,8 +2422,8 @@ buffer_size_activate_cb (GtkEntry * entry, PlaybackApp * app)
     gchar *endptr;
 
     v = g_ascii_strtoll (text, &endptr, 10);
-    if (endptr != text && v != G_MAXINT64 && v != G_MININT64) {
-      g_object_set (app->pipeline, "buffer-size", v, NULL);
+    if (endptr != text && v >= G_MININT && v <= G_MAXINT) {
+      g_object_set (app->pipeline, "buffer-size", (gint) v, NULL);
     }
   }
 }
