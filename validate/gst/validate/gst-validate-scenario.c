@@ -47,6 +47,7 @@ enum
 {
   PROP_0,
   PROP_RUNNER,
+  PROP_STATELESS,
   PROP_LAST
 };
 
@@ -82,6 +83,8 @@ struct _GstValidateScenarioPrivate
   GstClockTime seek_pos_tol;
 
   guint num_actions;
+
+  gboolean stateless;
 
   guint get_pos_id;
   guint wait_id;
@@ -874,13 +877,12 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
           gst_message_parse_state_changed (message,
               &pstate, &nstate, NULL);
+
+          if (scenario->priv->target_state == nstate)
+            scenario->priv->changing_state = FALSE;
+
           if (pstate == GST_STATE_READY && nstate == GST_STATE_PAUSED)
             _add_get_position_source (scenario);
-
-          if (GST_MESSAGE_SRC (message) == GST_OBJECT(scenario->pipeline)) {
-            if (scenario->priv->target_state == nstate)
-              scenario->priv->changing_state = FALSE;
-          }
         }
         break;
       }
@@ -1276,12 +1278,19 @@ static void
 gst_validate_scenario_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstValidateScenario *self = GST_VALIDATE_SCENARIO (object);
+
   switch (prop_id) {
     case PROP_RUNNER:
       /* we assume the runner is valid as long as this scenario is,
        * no ref taken */
       gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (object),
           g_value_get_object (value));
+      break;
+    case PROP_STATELESS:
+      self->priv->stateless = g_value_get_boolean (value);
+      if (self->priv->stateless)
+        _add_get_position_source (self);
       break;
     default:
       break;
@@ -1292,12 +1301,17 @@ static void
 gst_validate_scenario_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstValidateScenario *self = GST_VALIDATE_SCENARIO (object);
+
   switch (prop_id) {
     case PROP_RUNNER:
       /* we assume the runner is valid as long as this scenario is,
        * no ref taken */
       g_value_set_object (value,
           gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (object)));
+      break;
+    case PROP_STATELESS:
+      g_value_set_boolean(value, self->priv->stateless);
       break;
     default:
       break;
@@ -1322,6 +1336,11 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
           "The Validate runner to " "report errors to",
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+
+  g_object_class_install_property (object_class, PROP_STATELESS,
+      g_param_spec_boolean ("stateless", "Stateless", "True to execute actions as soon as possible, regardless "
+        "of the initial state of the pipeline",
+          FALSE, G_PARAM_READWRITE));
 }
 
 static void

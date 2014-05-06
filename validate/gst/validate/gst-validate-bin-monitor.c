@@ -38,10 +38,23 @@
  * TODO
  */
 
+enum
+{
+  PROP_0,
+  PROP_STATELESS,
+  PROP_LAST
+};
+
 #define gst_validate_bin_monitor_parent_class parent_class
 G_DEFINE_TYPE (GstValidateBinMonitor, gst_validate_bin_monitor,
     GST_TYPE_VALIDATE_ELEMENT_MONITOR);
 
+static void
+gst_validate_bin_monitor_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void
+gst_validate_bin_monitor_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 static void
 gst_validate_bin_monitor_wrap_element (GstValidateBinMonitor * monitor,
     GstElement * element);
@@ -50,6 +63,44 @@ static gboolean gst_validate_bin_monitor_setup (GstValidateMonitor * monitor);
 static void
 _validate_bin_element_added (GstBin * bin, GstElement * pad,
     GstValidateBinMonitor * monitor);
+
+static void
+gst_validate_bin_monitor_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstValidateBinMonitor *monitor;
+
+  monitor = GST_VALIDATE_BIN_MONITOR_CAST (object);
+
+  switch (prop_id) {
+    case PROP_STATELESS:
+      monitor->stateless = g_value_get_boolean(value);
+      if (monitor->scenario != NULL)
+        g_object_set(monitor->scenario, "stateless", monitor->stateless, NULL);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_validate_bin_monitor_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstValidateBinMonitor *monitor;
+
+  monitor = GST_VALIDATE_BIN_MONITOR_CAST (object);
+
+  switch (prop_id) {
+    case PROP_STATELESS:
+      g_value_set_boolean (value, monitor->stateless);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_validate_bin_monitor_dispose (GObject * object)
@@ -83,7 +134,14 @@ gst_validate_bin_monitor_class_init (GstValidateBinMonitorClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   validatemonitor_class = GST_VALIDATE_MONITOR_CLASS_CAST (klass);
 
+  gobject_class->get_property = gst_validate_bin_monitor_get_property;
+  gobject_class->set_property = gst_validate_bin_monitor_set_property;
   gobject_class->dispose = gst_validate_bin_monitor_dispose;
+
+  g_object_class_install_property (gobject_class, PROP_STATELESS,
+      g_param_spec_boolean ("stateless", "Stateless", "True to execute actions as soon as possible, regardless "
+        "of the initial state of the pipeline",
+          FALSE, G_PARAM_READWRITE));
 
   validatemonitor_class->setup = gst_validate_bin_monitor_setup;
 }
