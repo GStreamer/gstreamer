@@ -69,7 +69,8 @@
 /* Supported set of VA packed headers, within this implementation */
 #define SUPPORTED_PACKED_HEADERS                \
   (VA_ENC_PACKED_HEADER_SEQUENCE |              \
-   VA_ENC_PACKED_HEADER_PICTURE)
+   VA_ENC_PACKED_HEADER_PICTURE  |              \
+   VA_ENC_PACKED_HEADER_SLICE)
 
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_NONE        0
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_LOW         1
@@ -711,6 +712,8 @@ struct _GstVaapiEncoderH264
   guint32 max_pic_order_cnt;
   guint32 log2_max_pic_order_cnt;
   guint32 idr_num;
+  guint8 pic_order_cnt_type;
+  guint8 delta_pic_order_always_zero_flag;
 
   GstBuffer *sps_data;
   GstBuffer *subset_sps_data;
@@ -727,6 +730,124 @@ struct _GstVaapiEncoderH264
   GstVaapiH264ViewRefPool ref_pools[MAX_NUM_VIEWS];
   GstVaapiH264ViewReorderPool reorder_pools[MAX_NUM_VIEWS];
 };
+
+/* Write a Slice NAL unit */
+static gboolean
+bs_write_slice (GstBitWriter * bs,
+    const VAEncSliceParameterBufferH264 * slice_param,
+    GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
+{
+  const VAEncPictureParameterBufferH264 *const pic_param = picture->param;
+  guint32 field_pic_flag = 0;
+  guint32 ref_pic_list_modification_flag_l0 = 0;
+  guint32 ref_pic_list_modification_flag_l1 = 0;
+  guint32 no_output_of_prior_pics_flag = 0;
+  guint32 long_term_reference_flag = 0;
+  guint32 adaptive_ref_pic_marking_mode_flag = 0;
+
+  /* first_mb_in_slice */
+  WRITE_UE (bs, slice_param->macroblock_address);
+  /* slice_type */
+  WRITE_UE (bs, slice_param->slice_type);
+  /* pic_parameter_set_id */
+  WRITE_UE (bs, slice_param->pic_parameter_set_id);
+  /* frame_num */
+  WRITE_UINT32 (bs, picture->frame_num, encoder->log2_max_frame_num);
+
+  /* XXX: only frames (i.e. non-interlaced) are supported for now */
+  /* frame_mbs_only_flag == 0 */
+
+  /* idr_pic_id */
+  if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture))
+    WRITE_UE (bs, slice_param->idr_pic_id);
+
+  /* XXX: only POC type 0 is supported */
+  if (!encoder->pic_order_cnt_type) {
+    WRITE_UINT32 (bs, slice_param->pic_order_cnt_lsb,
+        encoder->log2_max_pic_order_cnt);
+    /* bottom_field_pic_order_in_frame_present_flag is FALSE */
+    if (pic_param->pic_fields.bits.pic_order_present_flag && !field_pic_flag)
+      WRITE_SE (bs, slice_param->delta_pic_order_cnt_bottom);
+  } else if (encoder->pic_order_cnt_type == 1 &&
+      !encoder->delta_pic_order_always_zero_flag) {
+    WRITE_SE (bs, slice_param->delta_pic_order_cnt[0]);
+    if (pic_param->pic_fields.bits.pic_order_present_flag && !field_pic_flag)
+      WRITE_SE (bs, slice_param->delta_pic_order_cnt[1]);
+  }
+  /* redundant_pic_cnt_present_flag is FALSE, no redundant coded pictures */
+
+  /* only works for B-frames */
+  if (slice_param->slice_type == 1)
+    WRITE_UINT32 (bs, slice_param->direct_spatial_mv_pred_flag, 1);
+
+  /* not supporting SP slices */
+  if (slice_param->slice_type == 0 || slice_param->slice_type == 1) {
+    WRITE_UINT32 (bs, slice_param->num_ref_idx_active_override_flag, 1);
+    if (slice_param->num_ref_idx_active_override_flag) {
+      WRITE_UE (bs, slice_param->num_ref_idx_l0_active_minus1);
+      if (slice_param->slice_type == 1)
+        WRITE_UE (bs, slice_param->num_ref_idx_l1_active_minus1);
+    }
+  }
+  /* XXX: not supporting custom reference picture list modifications */
+  if ((slice_param->slice_type != 2) && (slice_param->slice_type != 4))
+    WRITE_UINT32 (bs, ref_pic_list_modification_flag_l0, 1);
+  if (slice_param->slice_type == 1)
+    WRITE_UINT32 (bs, ref_pic_list_modification_flag_l1, 1);
+
+  /* we have: weighted_pred_flag == FALSE and */
+  /*        : weighted_bipred_idc == FALSE */
+  if ((pic_param->pic_fields.bits.weighted_pred_flag &&
+          (slice_param->slice_type == 0)) ||
+      ((pic_param->pic_fields.bits.weighted_bipred_idc == 1) &&
+          (slice_param->slice_type == 1))) {
+    /* XXXX: add pred_weight_table() */
+  }
+
+  /* dec_ref_pic_marking() */
+  if (slice_param->slice_type == 0 || slice_param->slice_type == 2) {
+    if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture)) {
+      /* no_output_of_prior_pics_flag = 0 */
+      WRITE_UINT32 (bs, no_output_of_prior_pics_flag, 1);
+      /* long_term_reference_flag = 0 */
+      WRITE_UINT32 (bs, long_term_reference_flag, 1);
+    } else {
+      /* only sliding_window reference picture marking mode is supported */
+      /* adpative_ref_pic_marking_mode_flag = 0 */
+      WRITE_UINT32 (bs, adaptive_ref_pic_marking_mode_flag, 1);
+    }
+  }
+
+  /* cabac_init_idc */
+  if (pic_param->pic_fields.bits.entropy_coding_mode_flag &&
+      slice_param->slice_type != 2)
+    WRITE_UE (bs, slice_param->cabac_init_idc);
+  /*slice_qp_delta */
+  WRITE_SE (bs, slice_param->slice_qp_delta);
+
+  /* XXX: only supporting I, P and B type slices */
+  /* no sp_for_switch_flag and no slice_qs_delta */
+
+  if (pic_param->pic_fields.bits.deblocking_filter_control_present_flag) {
+    /* disable_deblocking_filter_idc */
+    WRITE_UE (bs, slice_param->disable_deblocking_filter_idc);
+    if (slice_param->disable_deblocking_filter_idc != 1) {
+      WRITE_SE (bs, slice_param->slice_alpha_c0_offset_div2);
+      WRITE_SE (bs, slice_param->slice_beta_offset_div2);
+    }
+  }
+
+  /* XXX: unsupported arbitrary slice ordering (ASO) */
+  /* num_slic_groups_minus1 should be zero */
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write Slice NAL unit");
+    return FALSE;
+  }
+}
 
 static inline void
 _check_sps_pps_status (GstVaapiEncoderH264 * encoder,
@@ -1235,6 +1356,81 @@ bs_error:
   }
 }
 
+static gboolean
+get_nal_hdr_attributes (GstVaapiEncPicture * picture,
+    guint8 * nal_ref_idc, guint8 * nal_unit_type)
+{
+  switch (picture->type) {
+    case GST_VAAPI_PICTURE_TYPE_I:
+      *nal_ref_idc = GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH;
+      if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture))
+        *nal_unit_type = GST_VAAPI_ENCODER_H264_NAL_IDR;
+      else
+        *nal_unit_type = GST_VAAPI_ENCODER_H264_NAL_NON_IDR;
+      break;
+    case GST_VAAPI_PICTURE_TYPE_P:
+      *nal_ref_idc = GST_VAAPI_ENCODER_H264_NAL_REF_IDC_MEDIUM;
+      *nal_unit_type = GST_VAAPI_ENCODER_H264_NAL_NON_IDR;
+      break;
+    case GST_VAAPI_PICTURE_TYPE_B:
+      *nal_ref_idc = GST_VAAPI_ENCODER_H264_NAL_REF_IDC_NONE;
+      *nal_unit_type = GST_VAAPI_ENCODER_H264_NAL_NON_IDR;
+      break;
+    default:
+      return FALSE;
+  }
+  return TRUE;
+}
+
+/* Adds the supplied slice header to the list of packed
+   headers to pass down as-is to the encoder */
+static gboolean
+add_packed_slice_header (GstVaapiEncoderH264 * encoder,
+    GstVaapiEncPicture * picture, GstVaapiEncSlice * slice)
+{
+  GstVaapiEncPackedHeader *packed_slice;
+  GstBitWriter bs;
+  VAEncPackedHeaderParameterBuffer packed_slice_param = { 0 };
+  const VAEncSliceParameterBufferH264 *const slice_param = slice->param;
+  guint32 data_bit_size;
+  guint8 *data;
+  guint8 nal_ref_idc, nal_unit_type;
+
+  gst_bit_writer_init (&bs, 128 * 8);
+  WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
+
+  if (!get_nal_hdr_attributes (picture, &nal_ref_idc, &nal_unit_type))
+    goto bs_error;
+  bs_write_nal_header (&bs, nal_ref_idc, nal_unit_type);
+
+  bs_write_slice (&bs, slice_param, encoder, picture);
+  data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
+  data = GST_BIT_WRITER_DATA (&bs);
+
+  packed_slice_param.type = VAEncPackedHeaderSlice;
+  packed_slice_param.bit_length = data_bit_size;
+  packed_slice_param.has_emulation_bytes = 0;
+
+  packed_slice = gst_vaapi_enc_packed_header_new (GST_VAAPI_ENCODER (encoder),
+      &packed_slice_param, sizeof (packed_slice_param),
+      data, (data_bit_size + 7) / 8);
+  g_assert (packed_slice);
+
+  gst_vaapi_enc_picture_add_packed_header (picture, packed_slice);
+  gst_vaapi_codec_object_replace (&packed_slice, NULL);
+
+  gst_bit_writer_clear (&bs, TRUE);
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write Slice NAL unit header");
+    gst_bit_writer_clear (&bs, TRUE);
+    return FALSE;
+  }
+}
+
 /* Reference picture management */
 static void
 reference_pic_free (GstVaapiEncoderH264 * encoder, GstVaapiEncoderH264Ref * ref)
@@ -1369,7 +1565,8 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
   seq_param->seq_fields.bits.log2_max_frame_num_minus4 =
       encoder->log2_max_frame_num - 4;
   /* picture order count */
-  seq_param->seq_fields.bits.pic_order_cnt_type = 0;
+  encoder->pic_order_cnt_type = seq_param->seq_fields.bits.pic_order_cnt_type =
+      0;
   g_assert (encoder->log2_max_pic_order_cnt >= 4);
   seq_param->seq_fields.bits.log2_max_pic_order_cnt_lsb_minus4 =
       encoder->log2_max_pic_order_cnt - 4;
@@ -1379,7 +1576,8 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
 
   /* not used if pic_order_cnt_type == 0 */
   if (seq_param->seq_fields.bits.pic_order_cnt_type == 1) {
-    seq_param->seq_fields.bits.delta_pic_order_always_zero_flag = TRUE;
+    encoder->delta_pic_order_always_zero_flag =
+        seq_param->seq_fields.bits.delta_pic_order_always_zero_flag = TRUE;
     seq_param->num_ref_frames_in_pic_order_cnt_cycle = 0;
     seq_param->offset_for_non_ref_pic = 0;
     seq_param->offset_for_top_to_bottom_field = 0;
@@ -1750,11 +1948,23 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     /* set calculation for next slice */
     last_mb_index += cur_slice_mbs;
 
+    if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+            VAEncPackedHeaderH264_Slice)
+        && !add_packed_slice_header (encoder, picture, slice))
+      goto error_create_packed_slice_hdr;
+
     gst_vaapi_enc_picture_add_slice (picture, slice);
     gst_vaapi_codec_object_replace (&slice, NULL);
   }
   g_assert (last_mb_index == mb_size);
   return TRUE;
+
+error_create_packed_slice_hdr:
+  {
+    GST_ERROR ("failed to create packed slice header buffer");
+    gst_vaapi_codec_object_replace (&slice, NULL);
+    return FALSE;
+  }
 }
 
 /* Generates and submits SPS header accordingly into the bitstream */
