@@ -713,6 +713,7 @@ struct _GstVaapiEncoderH264
   guint32 idr_num;
 
   GstBuffer *sps_data;
+  GstBuffer *subset_sps_data;
   GstBuffer *pps_data;
 
   guint bitrate_bits;           // bitrate (bits)
@@ -733,10 +734,12 @@ _check_sps_pps_status (GstVaapiEncoderH264 * encoder,
 {
   guint8 nal_type;
   gsize ret;
+  gboolean has_subset_sps;
 
   g_assert (size);
 
-  if (encoder->sps_data && encoder->pps_data)
+  has_subset_sps = !encoder->is_mvc || (encoder->subset_sps_data != NULL);
+  if (encoder->sps_data && encoder->pps_data && has_subset_sps)
     return;
 
   nal_type = nal[0] & 0x1F;
@@ -744,6 +747,11 @@ _check_sps_pps_status (GstVaapiEncoderH264 * encoder,
     case GST_VAAPI_ENCODER_H264_NAL_SPS:
       encoder->sps_data = gst_buffer_new_allocate (NULL, size, NULL);
       ret = gst_buffer_fill (encoder->sps_data, 0, nal, size);
+      g_assert (ret == size);
+      break;
+    case GST_VAAPI_ENCODER_H264_NAL_SUBSET_SPS:
+      encoder->subset_sps_data = gst_buffer_new_allocate (NULL, size, NULL);
+      ret = gst_buffer_fill (encoder->subset_sps_data, 0, nal, size);
       g_assert (ret == size);
       break;
     case GST_VAAPI_ENCODER_H264_NAL_PPS:
@@ -1164,6 +1172,9 @@ add_packed_sequence_header_mvc (GstVaapiEncoderH264 * encoder,
 
   gst_vaapi_enc_picture_add_packed_header (picture, packed_seq);
   gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & packed_seq, NULL);
+
+  /* store subset sps data */
+  _check_sps_pps_status (encoder, data + 4, data_bit_size / 8 - 4);
   gst_bit_writer_clear (&bs, TRUE);
   return TRUE;
 
@@ -2409,6 +2420,7 @@ gst_vaapi_encoder_h264_finalize (GstVaapiEncoder * base_encoder)
   guint32 i;
 
   gst_buffer_replace (&encoder->sps_data, NULL);
+  gst_buffer_replace (&encoder->subset_sps_data, NULL);
   gst_buffer_replace (&encoder->pps_data, NULL);
 
   /* reference list info de-init */
