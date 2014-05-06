@@ -1136,8 +1136,11 @@ gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
     flacparse->tags = gst_tag_list_new_empty ();
 
   GST_INFO_OBJECT (flacparse, "Got image of %d bytes", img_len);
-  gst_tag_list_add_id3_image (flacparse->tags,
-      map.data + gst_byte_reader_get_pos (&reader), img_len, img_type);
+
+  if (img_len > 0) {
+    gst_tag_list_add_id3_image (flacparse->tags,
+        map.data + gst_byte_reader_get_pos (&reader), img_len, img_type);
+  }
 
   if (gst_tag_list_is_empty (flacparse->tags)) {
     gst_tag_list_unref (flacparse->tags);
