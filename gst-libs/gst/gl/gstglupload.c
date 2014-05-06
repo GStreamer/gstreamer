@@ -107,6 +107,7 @@ gst_gl_upload_init (GstGLUpload * upload)
   upload->priv = GST_GL_UPLOAD_GET_PRIVATE (upload);
 
   upload->context = NULL;
+  upload->priv->tex_id = 0;
 
   g_mutex_init (&upload->lock);
 }
@@ -136,6 +137,11 @@ gst_gl_upload_finalize (GObject * object)
   GstGLUpload *upload;
 
   upload = GST_GL_UPLOAD (object);
+
+  if (upload->priv->tex_id) {
+    gst_gl_context_del_texture (upload->context, &upload->priv->tex_id);
+    upload->priv->tex_id = 0;
+  }
 
   if (upload->convert) {
     gst_object_unref (upload->convert);
