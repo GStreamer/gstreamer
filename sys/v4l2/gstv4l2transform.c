@@ -463,7 +463,7 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
   if (!gst_buffer_pool_is_active (pool)) {
     GstStructure *config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, self->incaps,
-        self->v4l2output->sizeimage, 2, 2);
+        self->v4l2output->info.size, 2, 2);
 
     /* There is no reason to refuse this config */
     if (!gst_buffer_pool_set_config (pool, config))

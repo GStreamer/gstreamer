@@ -102,7 +102,6 @@ struct _GstV4l2Object {
 
   /* Features */
   gboolean need_video_meta;
-  gboolean need_crop_meta;
   gboolean has_alpha_component;
 
   /* only used if the device supports MPLANE
@@ -111,8 +110,7 @@ struct _GstV4l2Object {
    */
   gint n_v4l2_planes;
 
-  guint32 bytesperline[GST_VIDEO_MAX_PLANES];
-  guint32 sizeimage;
+  /* We cache the frame duration if known */
   GstClockTime duration;
 
   /* if the MPLANE device support both contiguous and non contiguous

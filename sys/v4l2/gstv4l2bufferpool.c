@@ -353,11 +353,9 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   GstBuffer *newbuf = NULL;
   GstV4l2Object *obj;
   GstVideoInfo *info;
-  GstVideoAlignment *align;
 
   obj = pool->obj;
   info = &obj->info;
-  align = &obj->align;
 
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
@@ -394,71 +392,11 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   }
 
   /* add metadata to raw video buffers */
-  if (pool->add_videometa && info->finfo) {
-    const GstVideoFormatInfo *finfo = info->finfo;
-    gsize offset[GST_VIDEO_MAX_PLANES];
-    gint width, height, n_gst_planes, offs, i, stride[GST_VIDEO_MAX_PLANES];
-
-    width = GST_VIDEO_INFO_WIDTH (info);
-    height = GST_VIDEO_INFO_HEIGHT (info);
-
-    /* n_gst_planes is the number of planes
-     * (RGB: 1, YUY2: 1, NV12: 2, I420: 3)
-     * It's greater or equal than the number of v4l2 planes. */
-    n_gst_planes = GST_VIDEO_INFO_N_PLANES (info);
-
-    /* the basic are common between MPLANE mode and non MPLANE mode
-     * except a special case inside the loop at the end
-     */
-    offs = 0;
-    for (i = 0; i < n_gst_planes; i++) {
-      GST_DEBUG_OBJECT (pool, "adding video meta, bytesperline %d",
-          obj->bytesperline[i]);
-
-      offset[i] = offs;
-
-      if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
-        guint x_tiles, y_tiles, ws, hs, tile_height;
-
-        ws = GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
-        hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
-        tile_height = 1 << hs;
-
-        x_tiles = obj->bytesperline[i] >> ws;
-        y_tiles = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i,
-            GST_ROUND_UP_N (height, tile_height) >> hs);
-        stride[i] = GST_VIDEO_TILE_MAKE_STRIDE (x_tiles, y_tiles);
-      } else {
-        stride[i] = obj->bytesperline[i];
-      }
-
-      /* when using multiplanar mode and if there is more then one v4l
-       * plane for each gst plane
-       */
-      if (V4L2_TYPE_IS_MULTIPLANAR (obj->type) && group->n_mem > 1)
-        /* non_contiguous case here so we have to make sure that gst goes to the
-         * next plane (using default gstvideometa.c::default_map).
-         * And the next plane is after length bytes of the previous one from
-         * the gst buffer point of view. */
-        offs += gst_memory_get_sizes (group->mem[i], NULL, NULL);
-      else
-        offs += obj->bytesperline[i] *
-            GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i, height);
-    }
-
+  if (pool->add_videometa)
     gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_FRAME_FLAG_NONE,
-        GST_VIDEO_INFO_FORMAT (info), width, height, n_gst_planes,
-        offset, stride);
-  }
-
-  if (pool->add_cropmeta) {
-    GstVideoCropMeta *crop;
-    crop = gst_buffer_add_video_crop_meta (newbuf);
-    crop->x = align->padding_left;
-    crop->y = align->padding_top;
-    crop->width = info->width;
-    crop->width = info->height;
-  }
+        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+        info->offset, info->stride);
 
   *buffer = newbuf;
 
@@ -488,10 +426,6 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   pool->add_videometa =
       gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  pool->add_cropmeta =
-      gst_buffer_pool_config_has_option (config,
-      GST_V4L2_BUFFER_POOL_OPTION_CROP_META);
 
   /* parse the config and keep around */
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
@@ -562,13 +496,6 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
     updated = TRUE;
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
-  }
-
-  if (!pool->add_cropmeta && obj->need_crop_meta) {
-    GST_INFO_OBJECT (pool, "adding needed crop meta");
-    updated = TRUE;
-    gst_buffer_pool_config_add_option (config,
-        GST_V4L2_BUFFER_POOL_OPTION_CROP_META);
   }
 
   if (updated)
@@ -1474,7 +1401,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   gst_object_ref (obj->element);
 
   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
-  gst_buffer_pool_config_set_params (config, caps, obj->sizeimage, 0, 0);
+  gst_buffer_pool_config_set_params (config, caps, obj->info.size, 0, 0);
   /* This will simply set a default config, but will not configure the pool
    * because min and max are not valid */
   gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), config);
@@ -1498,7 +1425,7 @@ gst_v4l2_do_read (GstV4l2BufferPool * pool, GstBuffer * buf)
   GstMapInfo map;
   gint toread;
 
-  toread = obj->sizeimage;
+  toread = obj->info.size;
 
   GST_LOG_OBJECT (pool, "reading %d bytes into buffer %p", toread, buf);
 

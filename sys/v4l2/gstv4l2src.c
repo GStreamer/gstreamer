@@ -622,7 +622,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   GstClockTime delay;
 
   ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (src), 0,
-      obj->sizeimage, buf);
+      obj->info.size, buf);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;

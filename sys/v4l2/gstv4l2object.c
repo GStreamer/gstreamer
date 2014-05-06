@@ -2245,32 +2245,68 @@ no_supported_capture_method:
 }
 
 static void
-gst_v4l2_object_extrapolate_stride (GstV4l2Object * v4l2object,
-    struct v4l2_format *format, const GstVideoFormatInfo * finfo, guint stride)
+gst_v4l2_object_set_stride (GstVideoInfo * info, GstVideoAlignment * align,
+    gint plane, gint stride)
 {
-  gint i;
+  const GstVideoFormatInfo *finfo = info->finfo;
+
+  if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
+    gint x_tiles, y_tiles, ws, hs, tile_height, padded_height;
+
+
+    ws = GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
+    hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
+    tile_height = 1 << hs;
+
+    padded_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
+        info->height + align->padding_top + align->padding_bottom);
+    padded_height = GST_ROUND_UP_N (padded_height, tile_height);
+
+    x_tiles = stride >> ws;
+    y_tiles = padded_height >> hs;
+    info->stride[plane] = GST_VIDEO_TILE_MAKE_STRIDE (x_tiles, y_tiles);
+  } else {
+    info->stride[plane] = stride;
+  }
+}
+
+static void
+gst_v4l2_object_extrapolate_info (GstV4l2Object * v4l2object,
+    GstVideoInfo * info, GstVideoAlignment * align, gint stride)
+{
+  const GstVideoFormatInfo *finfo = info->finfo;
+  gint i, estride, padded_height;
+  gsize offs = 0;
 
   g_return_if_fail (v4l2object->n_v4l2_planes == 1);
 
-  /* figure out the frame layout */
+  padded_height = info->height + align->padding_top + align->padding_bottom;
+
   for (i = 0; i < finfo->n_planes; i++) {
     switch (finfo->format) {
       case GST_VIDEO_FORMAT_NV12:
+      case GST_VIDEO_FORMAT_NV12_64Z32:
       case GST_VIDEO_FORMAT_NV21:
       case GST_VIDEO_FORMAT_NV16:
       case GST_VIDEO_FORMAT_NV24:
-        v4l2object->bytesperline[i] = (i == 0 ? 1 : 2) *
+        estride = (i == 0 ? 1 : 2) *
             GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
         break;
       default:
-        v4l2object->bytesperline[i] =
-            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
+        estride = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
         break;
     }
 
+    gst_v4l2_object_set_stride (info, align, i, estride);
+
+    info->offset[i] = offs;
+    offs += stride *
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i, padded_height);
+
     GST_DEBUG_OBJECT (v4l2object->element,
-        "Extrapolated stride for plane %d from %d to %d", i, stride,
-        v4l2object->bytesperline[i]);
+        "Extrapolated for plane %d with base stride %d: "
+        "stride %d, offset %" G_GSIZE_FORMAT, i, stride, info->stride[i],
+        info->offset[i]);
   }
 }
 
@@ -2280,60 +2316,114 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
     GstVideoInfo * info, GstVideoAlignment * align)
 {
   const GstVideoFormatInfo *finfo = info->finfo;
-  guint stride;
-  gint i;
+  gboolean standard_stride = TRUE;
+  gint stride, padded_width, padded_height, i;
 
+  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_ENCODED) {
+    v4l2object->n_v4l2_planes = 1;
+    info->size = format->fmt.pix.sizeimage;
+    goto store_info;
+  }
+
+  /* adjust right padding */
+  if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type))
+    stride = format->fmt.pix_mp.plane_fmt[0].bytesperline;
+  else
+    stride = format->fmt.pix.bytesperline;
+
+  padded_width = stride / GST_VIDEO_FORMAT_INFO_PSTRIDE (finfo, 0);
+
+  if (padded_width < format->fmt.pix.width)
+    GST_WARNING_OBJECT (v4l2object->element,
+        "Driver bug detected, stride is too small for the width");
+
+  align->padding_right = padded_width - info->width - align->padding_left;
+
+  /* adjust bottom padding */
+  padded_height = format->fmt.pix.height;
+
+  if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
+    guint hs, tile_height;
+
+    hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
+    tile_height = 1 << hs;
+
+    padded_height = GST_ROUND_UP_N (padded_height, tile_height);
+  }
+
+  align->padding_bottom = padded_height - info->height - align->padding_top;
+
+  /* setup the strides and offset */
   if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
+    struct v4l2_pix_format_mplane *pix_mp = &format->fmt.pix_mp;
+
     /* figure out the frame layout */
-    v4l2object->n_v4l2_planes = MAX (1, format->fmt.pix_mp.num_planes);
-    v4l2object->sizeimage = 0;
+    v4l2object->n_v4l2_planes = MAX (1, pix_mp->num_planes);
+    info->size = 0;
     for (i = 0; i < v4l2object->n_v4l2_planes; i++) {
-      v4l2object->bytesperline[i] =
-          format->fmt.pix_mp.plane_fmt[i].bytesperline;
-      v4l2object->sizeimage += format->fmt.pix_mp.plane_fmt[i].sizeimage;
+      stride = pix_mp->plane_fmt[i].bytesperline;
+
+      if (info->stride[i] != stride)
+        standard_stride = FALSE;
+
+      gst_v4l2_object_set_stride (info, align, i, stride);
+      info->offset[i] = info->size;
+      info->size += pix_mp->plane_fmt[i].sizeimage;
     }
 
     /* Extrapolate stride if planar format are being set in 1 v4l2 plane */
     if (v4l2object->n_v4l2_planes < finfo->n_planes) {
       stride = format->fmt.pix_mp.plane_fmt[0].bytesperline;
-      gst_v4l2_object_extrapolate_stride (v4l2object, format, finfo, stride);
+      gst_v4l2_object_extrapolate_info (v4l2object, info, align, stride);
     }
   } else {
     /* only one plane in non-MPLANE mode */
     v4l2object->n_v4l2_planes = 1;
-    v4l2object->sizeimage = format->fmt.pix.sizeimage;
+    info->size = format->fmt.pix.sizeimage;
     stride = format->fmt.pix.bytesperline;
-    gst_v4l2_object_extrapolate_stride (v4l2object, format, finfo, stride);
+
+    if (info->stride[0] != stride)
+      standard_stride = FALSE;
+
+    gst_v4l2_object_extrapolate_info (v4l2object, info, align, stride);
   }
 
-  GST_DEBUG_OBJECT (v4l2object->element, "Got sizeimage %u",
-      v4l2object->sizeimage);
+  /* adjust the offset to take into account left and top */
+  if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
+    if ((align->padding_left + align->padding_top) > 0)
+      GST_WARNING_OBJECT (v4l2object->element,
+          "Left and top padding is not permitted for tiled formats");
+  } else {
+    for (i = 0; i < finfo->n_planes; i++) {
+      gint vedge, hedge;
 
-  /* To avoid copies, we need crop_meta if top or left padding is set */
-  v4l2object->need_crop_meta =
+      /* FIXME we assume plane as component as this is true for all supported
+       * format we support. */
+
+      hedge = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, align->padding_left);
+      vedge = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i, align->padding_top);
+
+      info->offset[i] += (vedge * info->stride[i]) +
+          (hedge * GST_VIDEO_INFO_COMP_PSTRIDE (info, i));
+    }
+  }
+
+store_info:
+  GST_DEBUG_OBJECT (v4l2object->element, "Got sizeimage %" G_GSIZE_FORMAT,
+      info->size);
+
+  /* to avoid copies we need video meta if top or left padding */
+  v4l2object->need_video_meta =
       ((align->padding_top + align->padding_left) != 0);
 
-  /* ... or video meta if bottom or right padding is set */
-  v4l2object->need_video_meta = (v4l2object->need_crop_meta ||
-      ((align->padding_bottom + align->padding_right) != 0));
-
-  /* ... or also video meta if stride is non "standard" */
-  for (i = 0; i < v4l2object->n_v4l2_planes; i++) {
-    gint stride = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
-
-    if (GST_VIDEO_FORMAT_INFO_IS_TILED (info->finfo))
-      stride = GST_VIDEO_TILE_X_TILES (stride) <<
-          GST_VIDEO_FORMAT_INFO_TILE_WS (info->finfo);
-
-    if (stride != v4l2object->bytesperline[i])
-      v4l2object->need_video_meta = TRUE;
-  }
+  /* ... or if stride is non "standard" */
+  if (!standard_stride)
+    v4l2object->need_video_meta = TRUE;
 
   /* ... or also video meta if we use multiple, non-contiguous, planes */
   if (v4l2object->n_v4l2_planes > 1)
     v4l2object->need_video_meta = TRUE;
 
-  gst_video_info_align (info, align);
   v4l2object->info = *info;
   v4l2object->align = *align;
   v4l2object->format = *format;
@@ -2622,10 +2712,8 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   }
 
 done:
+  /* add boolean return, so we can fail on drivers bugs */
   gst_v4l2_object_save_format (v4l2object, fmtdesc, &format, &info, &align);
-
-  if (v4l2object->sizeimage < GST_VIDEO_INFO_SIZE (&info))
-    goto short_allocation;
 
   /* now configure the pool */
   if (!gst_v4l2_object_setup_pool (v4l2object, caps))
@@ -2711,14 +2799,6 @@ set_parm_failed:
         GST_ERROR_SYSTEM);
     goto done;
   }
-short_allocation:
-  {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Video device provided a image size that is too short.")),
-        ("Expected at least %" G_GSIZE_FORMAT " but got %u", info.size,
-            v4l2object->sizeimage));
-    return FALSE;
-  }
 pool_failed:
   {
     /* setup_pool already send the error */
@@ -2801,9 +2881,6 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
 
   gst_v4l2_object_save_format (v4l2object, fmtdesc, &fmt, info, &align);
 
-  if (v4l2object->sizeimage < GST_VIDEO_INFO_SIZE (info))
-    goto short_allocation;
-
   /* Shall we setup the pool ? */
 
   return TRUE;
@@ -2835,14 +2912,6 @@ unsupported_format:
         (_("Video devices uses an unsupported pixel format.")),
         ("V4L2 format %" GST_FOURCC_FORMAT " not supported",
             GST_FOURCC_ARGS (fmt.fmt.pix.pixelformat)));
-    return FALSE;
-  }
-short_allocation:
-  {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Video device provided a image size that is too short.")),
-        ("Expected at least %" G_GSIZE_FORMAT " but got %u", info->size,
-            v4l2object->sizeimage));
     return FALSE;
   }
 }
@@ -2995,7 +3064,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   GstStructure *config;
   guint size, min, max, own_min = 0;
   gboolean update;
-  gboolean has_video_meta, has_crop_meta;
+  gboolean has_video_meta;
   gboolean can_share_own_pool, pushing_from_our_pool = FALSE;
   struct v4l2_control ctl = { 0, };
 
@@ -3026,12 +3095,8 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 
   has_video_meta =
       gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-  has_crop_meta =
-      gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
-      NULL);
 
-  can_share_own_pool = ((has_crop_meta || !obj->need_crop_meta) &&
-      (has_video_meta || !obj->need_video_meta));
+  can_share_own_pool = (has_video_meta || !obj->need_video_meta);
 
   /* select a pool */
   switch (obj->mode) {
@@ -3044,13 +3109,13 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
         /* use the bigest size, when we use our own pool we can't really do any
          * other size than what the hardware gives us but for downstream pools
          * we can try */
-        size = MAX (size, obj->sizeimage);
+        size = MAX (size, obj->info.size);
       } else if (can_share_own_pool) {
         /* no downstream pool, use our own then */
         GST_DEBUG_OBJECT (obj->element,
             "read/write mode: no downstream pool, using our own");
         pool = gst_object_ref (obj->pool);
-        size = obj->sizeimage;
+        size = obj->info.size;
         pushing_from_our_pool = TRUE;
       }
       break;
@@ -3066,7 +3131,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       other_pool = pool;
       gst_object_unref (pool);
       pool = gst_object_ref (obj->pool);
-      size = obj->sizeimage;
+      size = obj->info.size;
       break;
 
     case GST_V4L2_IO_MMAP:
@@ -3077,7 +3142,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
         if (pool)
           gst_object_unref (pool);
         pool = gst_object_ref (obj->pool);
-        size = obj->sizeimage;
+        size = obj->info.size;
         GST_DEBUG_OBJECT (obj->element,
             "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
         pushing_from_our_pool = TRUE;
@@ -3088,7 +3153,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       } else {
         GST_DEBUG_OBJECT (obj->element,
             "streaming mode: no usable pool, copying to generic pool");
-        size = MAX (size, obj->sizeimage);
+        size = MAX (size, obj->info.size);
       }
       break;
     case GST_V4L2_IO_AUTO:
@@ -3150,12 +3215,6 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     GST_DEBUG_OBJECT (obj->element, "activate Video Meta");
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
-  }
-
-  if (obj->need_crop_meta) {
-    GST_DEBUG_OBJECT (obj->element, "activate VideoCrop Meta");
-    gst_buffer_pool_config_add_option (config,
-        GST_V4L2_BUFFER_POOL_OPTION_CROP_META);
   }
 
   gst_buffer_pool_config_set_params (config, caps, size, own_min, 0);
@@ -3256,7 +3315,7 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
   gboolean need_pool;
 
   /* Set defaults allocation parameters */
-  size = obj->sizeimage;
+  size = obj->info.size;
   min = GST_V4L2_MIN_BUFFERS;
   max = VIDEO_MAX_FRAME;
 
