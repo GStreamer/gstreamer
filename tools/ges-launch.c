@@ -252,11 +252,12 @@ str_to_time (char *time)
 }
 
 static GESTimeline *
-create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
+create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri, const gchar *scenario)
 {
   GESLayer *layer = NULL;
   GESTrack *tracka = NULL, *trackv = NULL;
   GESTimeline *timeline;
+  gboolean activate_before_paused = TRUE;
   guint i;
   GESProject *project = ges_project_new (proj_uri);
 
@@ -273,8 +274,10 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
 
   timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
 
-  if (proj_uri)
-    return timeline;
+  if (proj_uri) {
+    activate_before_paused = FALSE;
+    goto activate_validate;
+  }
 
   if (track_types & GES_TRACK_TYPE_AUDIO) {
     tracka = GES_TRACK (ges_audio_track_new ());
@@ -308,6 +311,7 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
     if (i == 0) {
       /* We are only going to be doing one layer of clips */
       layer = (GESLayer *) ges_layer_new ();
+      activate_before_paused = FALSE;
 
       /* Add the tracks and the layer to the timeline */
       if (!ges_timeline_add_layer (timeline, layer))
@@ -401,6 +405,11 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
     ges_layer_add_clip (layer, clip);
   }
 
+activate_validate:
+  if (ges_validate_activate (GST_PIPELINE (pipeline), scenario, activate_before_paused) == FALSE) {
+    g_error ("Could not activate scenario %s", scenario);
+    return NULL;
+  }
   return timeline;
 
 build_failure:
@@ -412,10 +421,9 @@ build_failure:
 
 static GESPipeline *
 create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
-    int argc, char **argv)
+    int argc, char **argv, const gchar *scenario)
 {
   gchar *uri = NULL;
-  GESPipeline *pipeline = NULL;
   GESTimeline *timeline = NULL;
 
   /* Timeline creation */
@@ -427,7 +435,10 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
       goto failure;
     }
   }
-  if (!(timeline = create_timeline (argc, argv, uri)))
+
+  pipeline = ges_pipeline_new ();
+
+  if (!(timeline = create_timeline (argc, argv, uri, scenario)))
     goto failure;
 
   ges_timeline_commit (timeline);
@@ -449,7 +460,6 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
 
   /* In order to view our timeline, let's grab a convenience pipeline to put
    * our timeline in. */
-  pipeline = ges_pipeline_new ();
 
   if (mute) {
     GstElement *sink = gst_element_factory_make ("fakesink", NULL);
@@ -819,14 +829,9 @@ main (int argc, gchar ** argv)
   g_option_context_free (ctx);
 
   /* Create the pipeline */
-  pipeline = create_pipeline (&timeline, load_path, argc - 1, argv + 1);
+  create_pipeline (&timeline, load_path, argc - 1, argv + 1, scenario);
   if (!pipeline)
     exit (1);
-
-  if (ges_validate_activate (GST_PIPELINE (pipeline), scenario) == FALSE) {
-    g_error ("Could not activate scenario %s", scenario);
-    return 1;
-  }
 
   /* Setup profile/encoding if needed */
   if (smartrender || outputuri) {

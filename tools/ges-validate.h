@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 gboolean
-ges_validate_activate (GstPipeline *pipeline, const gchar *scenario);
+ges_validate_activate (GstPipeline *pipeline, const gchar *scenario, gboolean activate_before_paused);
 
 gint
 ges_validate_clean (GstPipeline *pipeline);

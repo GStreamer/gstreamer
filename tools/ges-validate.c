@@ -398,7 +398,7 @@ _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 gboolean
-ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
+ges_validate_activate (GstPipeline * pipeline, const gchar * scenario, gboolean activate_before_paused)
 {
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
@@ -477,6 +477,7 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
       NULL);
 
+  g_object_set (monitor, "stateless", activate_before_paused, NULL);
   g_object_set_data (G_OBJECT (pipeline), MONITOR_ON_PIPELINE, monitor);
   g_object_set_data (G_OBJECT (pipeline), RUNNER_ON_PIPELINE, runner);
 
