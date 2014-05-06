@@ -120,7 +120,7 @@ GstGLDisplay *
 gst_gl_display_new (void)
 {
   GstGLDisplay *display = NULL;
-  const gchar *user_choice;
+  const gchar *user_choice, *platform_choice;
   static volatile gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
@@ -130,6 +130,7 @@ gst_gl_display_new (void)
   }
 
   user_choice = g_getenv ("GST_GL_WINDOW");
+  platform_choice = g_getenv ("GST_GL_PLATFORM");
   GST_INFO ("creating a window, user choice:%s", user_choice);
 
 #if GST_GL_HAVE_WINDOW_X11
@@ -137,7 +138,8 @@ gst_gl_display_new (void)
     display = GST_GL_DISPLAY (gst_gl_display_x11_new (NULL));
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL
-  if (!display && (!user_choice || g_strstr_len (user_choice, 3, "egl")))
+  if (!display && (!platform_choice
+          || g_strstr_len (platform_choice, 3, "egl")))
     display = GST_GL_DISPLAY (gst_gl_display_egl_new ());
 #endif
   if (!display) {
