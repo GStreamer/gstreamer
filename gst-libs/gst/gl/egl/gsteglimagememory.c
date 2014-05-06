@@ -563,7 +563,7 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
 
 mem_error:
   {
-    GST_ERROR_OBJECT (GST_CAT_DEFAULT, "Failed to create EGLImage");
+    GST_CAT_ERROR (GST_CAT_DEFAULT, "Failed to create EGLImage");
 
     for (i = 0; i < 3; i++) {
       if (client_buffer_tex[i])
