@@ -1002,6 +1002,8 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
   }
 
+  gst_event_unref (event);
+
   return TRUE;
 }
 
