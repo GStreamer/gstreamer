@@ -70,7 +70,8 @@
 #define SUPPORTED_PACKED_HEADERS                \
   (VA_ENC_PACKED_HEADER_SEQUENCE |              \
    VA_ENC_PACKED_HEADER_PICTURE  |              \
-   VA_ENC_PACKED_HEADER_SLICE)
+   VA_ENC_PACKED_HEADER_SLICE    |              \
+   VA_ENC_PACKED_HEADER_RAW_DATA)
 
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_NONE        0
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_LOW         1
@@ -255,6 +256,44 @@ bs_write_nal_header (GstBitWriter * bs, guint32 nal_ref_idc,
   WRITE_UINT32 (bs, 0, 1);
   WRITE_UINT32 (bs, nal_ref_idc, 2);
   WRITE_UINT32 (bs, nal_unit_type, 5);
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write NAL unit header");
+    return FALSE;
+  }
+}
+
+/* Write the MVC NAL unit header extension */
+static gboolean
+bs_write_nal_header_mvc_extension (GstBitWriter * bs,
+    GstVaapiEncPicture * picture, guint32 view_id)
+{
+  guint32 svc_extension_flag = 0;
+  guint32 non_idr_flag = 1;
+  guint32 priority_id = 0;
+  guint32 temporal_id = 0;
+  guint32 anchor_pic_flag = 0;
+  guint32 inter_view_flag = 0;
+
+  if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture))
+    non_idr_flag = 0;
+
+  if (picture->type == GST_VAAPI_PICTURE_TYPE_I)
+    anchor_pic_flag = 1;
+  /* svc_extension_flag == 0 for mvc stream */
+  WRITE_UINT32 (bs, svc_extension_flag, 1);
+
+  WRITE_UINT32 (bs, non_idr_flag, 1);
+  WRITE_UINT32 (bs, priority_id, 6);
+  WRITE_UINT32 (bs, view_id, 10);
+  WRITE_UINT32 (bs, temporal_id, 3);
+  WRITE_UINT32 (bs, anchor_pic_flag, 1);
+  WRITE_UINT32 (bs, inter_view_flag, 1);
+  WRITE_UINT32 (bs, 1, 1);
+
   return TRUE;
 
   /* ERRORS */
@@ -517,74 +556,75 @@ bs_write_sps (GstBitWriter * bs,
 
 static gboolean
 bs_write_subset_sps (GstBitWriter * bs,
-    const VAEncSequenceParameterBufferH264_MVC * seq_param,
-    GstVaapiProfile profile, const VAEncMiscParameterHRD * hrd_params)
+    const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile,
+    guint num_views, const VAEncMiscParameterHRD * hrd_params)
 {
   guint32 i, j, k;
 
-  if (!bs_write_sps_data (bs, &seq_param->base, profile, hrd_params))
+  if (!bs_write_sps_data (bs, seq_param, profile, hrd_params))
     return FALSE;
 
   if (profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH ||
       profile == GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH) {
+    guint32 num_views_minus1, num_level_values_signalled_minus1;
 
-    guint32 num_views_minus1 = seq_param->num_views_minus1;
+    num_views_minus1 = num_views - 1;
+    g_assert (num_views_minus1 < 1024);
 
     /* bit equal to one */
     WRITE_UINT32 (bs, 1, 1);
 
-    WRITE_UE (bs, seq_param->num_views_minus1);
+    WRITE_UE (bs, num_views_minus1);
 
     for (i = 0; i <= num_views_minus1; i++)
-      WRITE_UE (bs, seq_param->view_list[i].view_id);
+      WRITE_UE (bs, i);
 
     for (i = 1; i <= num_views_minus1; i++) {
-      guint num_anchor_refs_l0 = seq_param->view_list[i].num_anchor_refs_l0;
+      guint32 num_anchor_refs_l0 = 15;
       WRITE_UE (bs, num_anchor_refs_l0);
       for (j = 0; j < num_anchor_refs_l0; j++)
-        WRITE_UE (bs, seq_param->view_list[i].anchor_ref_l0[j]);
+        WRITE_UE (bs, 0);
 
-      guint num_anchor_refs_l1 = seq_param->view_list[i].num_anchor_refs_l1;
+      guint32 num_anchor_refs_l1 = 15;
       WRITE_UE (bs, num_anchor_refs_l1);
       for (j = 0; j < num_anchor_refs_l1; j++)
-        WRITE_UE (bs, seq_param->view_list[i].anchor_ref_l1[j]);
+        WRITE_UE (bs, 0);
     }
 
     for (i = 1; i <= num_views_minus1; i++) {
-      guint num_non_anchor_refs_l0 =
-          seq_param->view_list[i].num_non_anchor_refs_l0;
+      guint num_non_anchor_refs_l0 = 15;
       WRITE_UE (bs, num_non_anchor_refs_l0);
       for (j = 0; j < num_non_anchor_refs_l0; j++)
-        WRITE_UE (bs, seq_param->view_list[i].non_anchor_ref_l0[i]);
+        WRITE_UE (bs, 0);
 
-      guint num_non_anchor_refs_l1 =
-          seq_param->view_list[i].num_non_anchor_refs_l1;
+      guint num_non_anchor_refs_l1 = 15;
       WRITE_UE (bs, num_non_anchor_refs_l1);
       for (j = 0; j < num_non_anchor_refs_l1; j++)
-        WRITE_UE (bs, seq_param->view_list[i].non_anchor_ref_l1[j]);
+        WRITE_UE (bs, 0);
     }
 
     /* num level values signalled minus1 */
-    WRITE_UE (bs, seq_param->num_level_values_signalled_minus1);
+    num_level_values_signalled_minus1 = 0;
+    g_assert (num_level_values_signalled_minus1 < 64);
 
-    for (i = 0; i <= seq_param->num_level_values_signalled_minus1; i++) {
-      struct H264SPSExtMVCLevelValue *level_value =
-          &(seq_param->level_value_list[i]);
+    for (i = 0; i <= num_level_values_signalled_minus1; i++) {
+      guint16 num_applicable_ops_minus1 = 0;
+      g_assert (num_applicable_ops_minus1 < 1024);
 
-      WRITE_UINT32 (bs, level_value->level_idc, 8);
-      WRITE_UE (bs, level_value->num_applicable_ops_minus1);
+      WRITE_UINT32 (bs, seq_param->level_idc, 8);
+      WRITE_UE (bs, num_applicable_ops_minus1);
 
-      for (j = 0; j <= level_value->num_applicable_ops_minus1; j++) {
-        struct H264SPSExtMVCLevelValueOps *level_value_ops =
-            &(level_value->level_value_ops_list[j]);
+      for (j = 0; j <= num_applicable_ops_minus1; j++) {
+        guint8 temporal_id = 0;
+        guint16 num_target_views_minus1 = 1;
 
-        WRITE_UINT32 (bs, level_value_ops->temporal_id, 3);
-        WRITE_UE (bs, level_value_ops->num_target_views_minus1);
+        WRITE_UINT32 (bs, temporal_id, 3);
+        WRITE_UE (bs, num_target_views_minus1);
 
-        for (k = 0; k <= level_value_ops->num_target_views_minus1; k++)
-          WRITE_UE (bs, level_value_ops->target_view_id_list[k]);
+        for (k = 0; k <= num_target_views_minus1; k++)
+          WRITE_UE (bs, k);
 
-        WRITE_UE (bs, level_value_ops->num_views_minus1);
+        WRITE_UE (bs, num_views_minus1);
       }
     }
 
@@ -1262,7 +1302,7 @@ add_packed_sequence_header_mvc (GstVaapiEncoderH264 * encoder,
   GstVaapiEncPackedHeader *packed_seq;
   GstBitWriter bs;
   VAEncPackedHeaderParameterBuffer packed_header_param_buffer = { 0 };
-  VAEncSequenceParameterBufferH264_MVC *mvc_seq_param = sequence->param;
+  const VAEncSequenceParameterBufferH264 *const seq_param = sequence->param;
   VAEncMiscParameterHRD hrd_params;
   guint32 data_bit_size;
   guint8 *data;
@@ -1276,7 +1316,8 @@ add_packed_sequence_header_mvc (GstVaapiEncoderH264 * encoder,
       GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH,
       GST_VAAPI_ENCODER_H264_NAL_SUBSET_SPS);
 
-  bs_write_subset_sps (&bs, mvc_seq_param, encoder->profile, &hrd_params);
+  bs_write_subset_sps (&bs, seq_param, encoder->profile, encoder->num_views,
+      &hrd_params);
 
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
@@ -1380,6 +1421,58 @@ get_nal_hdr_attributes (GstVaapiEncPicture * picture,
       return FALSE;
   }
   return TRUE;
+}
+
+/* Adds the supplied prefix nal header to the list of packed
+   headers to pass down as-is to the encoder */
+static gboolean
+add_packed_prefix_nal_header (GstVaapiEncoderH264 * encoder,
+    GstVaapiEncPicture * picture)
+{
+  GstVaapiEncPackedHeader *packed_prefix_nal;
+  GstBitWriter bs;
+  VAEncPackedHeaderParameterBuffer packed_prefix_nal_param = { 0 };
+  guint32 data_bit_size;
+  guint8 *data;
+  guint8 nal_ref_idc, nal_unit_type;
+
+  gst_bit_writer_init (&bs, 128 * 8);
+  WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
+
+  if (!get_nal_hdr_attributes (picture, &nal_ref_idc, &nal_unit_type))
+    goto bs_error;
+  nal_unit_type = GST_VAAPI_ENCODER_H264_NAL_PREFIX;
+
+  bs_write_nal_header (&bs, nal_ref_idc, nal_unit_type);
+  bs_write_nal_header_mvc_extension (&bs, picture, encoder->view_idx);
+  g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
+  data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
+  data = GST_BIT_WRITER_DATA (&bs);
+
+  packed_prefix_nal_param.type = VAEncPackedHeaderRawData;
+  packed_prefix_nal_param.bit_length = data_bit_size;
+  packed_prefix_nal_param.has_emulation_bytes = 0;
+
+  packed_prefix_nal =
+      gst_vaapi_enc_packed_header_new (GST_VAAPI_ENCODER (encoder),
+      &packed_prefix_nal_param, sizeof (packed_prefix_nal_param), data,
+      (data_bit_size + 7) / 8);
+  g_assert (packed_prefix_nal);
+
+  gst_vaapi_enc_picture_add_packed_header (picture, packed_prefix_nal);
+  gst_vaapi_codec_object_replace (&packed_prefix_nal, NULL);
+
+  gst_bit_writer_clear (&bs, TRUE);
+
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write Prefix NAL unit header");
+    gst_bit_writer_clear (&bs, TRUE);
+    return FALSE;
+  }
 }
 
 /* Adds the supplied slice header to the list of packed
@@ -1621,125 +1714,6 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
   return TRUE;
 }
 
-/* Free MVC sequence parameters used for encoding */
-static void
-free_sequence_mvc (GstVaapiEncSequence * sequence)
-{
-  guint i, j;
-  VAEncSequenceParameterBufferH264_MVC *mvc_seq = sequence->param;
-
-  if (mvc_seq->view_list) {
-    g_free (mvc_seq->view_list);
-    mvc_seq->view_list = NULL;
-  }
-
-  if (mvc_seq->level_value_list) {
-    for (i = 0; i <= mvc_seq->num_level_values_signalled_minus1; i++) {
-      struct H264SPSExtMVCLevelValue *level_value =
-          &(mvc_seq->level_value_list[i]);
-      for (j = 0; j < level_value->num_applicable_ops_minus1 + 1; j++) {
-        struct H264SPSExtMVCLevelValueOps *level_value_ops =
-            &(level_value->level_value_ops_list[j]);
-        if (level_value_ops->target_view_id_list) {
-          g_free (level_value_ops->target_view_id_list);
-          level_value_ops->target_view_id_list = NULL;
-        }
-      }
-
-      g_free (level_value->level_value_ops_list);
-      level_value->level_value_ops_list = NULL;
-    }
-
-    g_free (mvc_seq->level_value_list);
-    mvc_seq->level_value_list = NULL;
-  }
-}
-
-/* Fills in VA sequence parameter buffer for MVC encoding */
-static gboolean
-fill_sequence_mvc (GstVaapiEncoderH264 * encoder,
-    GstVaapiEncSequence * sequence)
-{
-  guint i, j, k;
-  VAEncSequenceParameterBufferH264_MVC *mvc_seq = sequence->param;
-  guint16 num_views_minus1, num_level_values_signalled_minus1;
-  struct H264SPSExtMVCViewInfo *view = NULL;
-  struct H264SPSExtMVCLevelValue *level_value = NULL;
-  struct H264SPSExtMVCLevelValueOps *level_value_ops = NULL;
-
-  memset (mvc_seq, 0, sizeof (VAEncSequenceParameterBufferH264_MVC));
-
-  if (!fill_sequence (encoder, sequence))
-    return FALSE;
-
-  num_views_minus1 = encoder->num_views - 1;
-  g_assert (num_views_minus1 < 1024);
-  mvc_seq->num_views_minus1 = num_views_minus1;
-
-  if (!mvc_seq->view_list)
-    mvc_seq->view_list =
-        g_new0 (struct H264SPSExtMVCViewInfo, num_views_minus1 + 1);
-
-  for (i = 0; i <= num_views_minus1; i++) {
-    view = &(mvc_seq->view_list[i]);
-    view->view_id = i;
-
-    view->num_anchor_refs_l0 = 15;
-    for (j = 0; j < view->num_anchor_refs_l0; j++)
-      view->anchor_ref_l0[j] = 0;
-
-    view->num_anchor_refs_l1 = 15;
-    for (j = 0; j < view->num_anchor_refs_l1; j++)
-      view->anchor_ref_l1[j] = 0;
-
-    view->num_non_anchor_refs_l0 = 15;
-    for (j = 0; j < view->num_non_anchor_refs_l0; j++)
-      view->non_anchor_ref_l0[j] = 0;
-
-    view->num_non_anchor_refs_l1 = 15;
-    for (j = 0; j < view->num_non_anchor_refs_l1; j++)
-      view->non_anchor_ref_l1[j] = 0;
-  }
-
-  num_level_values_signalled_minus1 = 0;
-  g_assert (num_level_values_signalled_minus1 < 64);
-  mvc_seq->num_level_values_signalled_minus1 =
-      num_level_values_signalled_minus1;
-
-  if (!mvc_seq->level_value_list)
-    mvc_seq->level_value_list = g_new0 (struct H264SPSExtMVCLevelValue,
-        num_level_values_signalled_minus1 + 1);
-
-  for (i = 0; i <= num_level_values_signalled_minus1; i++) {
-    level_value = &(mvc_seq->level_value_list[i]);
-
-    guint16 num_applicable_ops_minus1 = 0;
-    g_assert (num_applicable_ops_minus1 < 1024);
-    level_value->num_applicable_ops_minus1 = num_applicable_ops_minus1;
-    level_value->level_idc = encoder->level;
-
-    if (!level_value->level_value_ops_list)
-      level_value->level_value_ops_list =
-          g_new0 (struct H264SPSExtMVCLevelValueOps,
-          num_applicable_ops_minus1 + 1);
-    for (j = 0; j <= num_applicable_ops_minus1; j++) {
-      level_value_ops = &(level_value->level_value_ops_list[j]);
-
-      guint16 num_target_views_minus1 = 1;
-      level_value_ops->num_target_views_minus1 = num_target_views_minus1;
-      level_value_ops->num_views_minus1 = num_views_minus1;
-
-      if (!level_value_ops->target_view_id_list)
-        level_value_ops->target_view_id_list =
-            g_new0 (guint16, num_views_minus1 + 1);
-
-      for (k = 0; k <= num_target_views_minus1; k++)
-        level_value_ops->target_view_id_list[k] = k;
-    }
-  }
-  return TRUE;
-}
-
 /* Fills in VA picture parameter buffer */
 static gboolean
 fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
@@ -1805,25 +1779,6 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
   /* bottom_field_pic_order_in_frame_present_flag */
   pic_param->pic_fields.bits.pic_order_present_flag = FALSE;
   pic_param->pic_fields.bits.pic_scaling_matrix_present_flag = FALSE;
-
-  return TRUE;
-}
-
-static gboolean
-fill_mvc_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
-    GstVaapiCodedBuffer * codedbuf, GstVaapiSurfaceProxy * surface)
-{
-  VAEncPictureParameterBufferH264_MVC *const mvc_pic = picture->param;
-
-  if (!fill_picture (encoder, picture, codedbuf, surface))
-    return FALSE;
-
-  mvc_pic->view_id = encoder->view_idx;
-  mvc_pic->inter_view_flag = 0;
-  if (picture->type == GST_VAAPI_PICTURE_TYPE_I)
-    mvc_pic->anchor_pic_flag = 1;
-  else
-    mvc_pic->anchor_pic_flag = 0;
 
   return TRUE;
 }
@@ -1948,6 +1903,10 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     /* set calculation for next slice */
     last_mb_index += cur_slice_mbs;
 
+    if (encoder->is_mvc &&
+        (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderRawData)
+        && !add_packed_prefix_nal_header (encoder, picture))
+      goto error_create_packed_prefix_nal_hdr;
     if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
             VAEncPackedHeaderH264_Slice)
         && !add_packed_slice_header (encoder, picture, slice))
@@ -1965,6 +1924,12 @@ error_create_packed_slice_hdr:
     gst_vaapi_codec_object_replace (&slice, NULL);
     return FALSE;
   }
+error_create_packed_prefix_nal_hdr:
+  {
+    GST_ERROR ("failed to create packed prefix nal header buffer");
+    gst_vaapi_codec_object_replace (&slice, NULL);
+    return FALSE;
+  }
 }
 
 /* Generates and submits SPS header accordingly into the bitstream */
@@ -1977,23 +1942,16 @@ ensure_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
   if (picture->type != GST_VAAPI_PICTURE_TYPE_I)
     return TRUE;
 
+  sequence = GST_VAAPI_ENC_SEQUENCE_NEW (H264, encoder);
+  if (!sequence || !fill_sequence (encoder, sequence))
+    goto error_create_seq_param;
+
   /* add subset sps for non-base view and sps for base view */
   if (encoder->is_mvc && encoder->view_idx) {
-    sequence = GST_VAAPI_ENC_SEQUENCE_NEW (H264_MVC, encoder);
-    if (!sequence || !fill_sequence_mvc (encoder, sequence))
-      goto error_create_seq_param;
-
     if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderH264_SPS)
         && !add_packed_sequence_header_mvc (encoder, picture, sequence))
       goto error_create_packed_seq_hdr;
-
-    free_sequence_mvc (sequence);
-
   } else {
-    sequence = GST_VAAPI_ENC_SEQUENCE_NEW (H264, encoder);
-    if (!sequence || !fill_sequence (encoder, sequence))
-      goto error_create_seq_param;
-
     if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderH264_SPS)
         && !add_packed_sequence_header (encoder, picture, sequence))
       goto error_create_packed_seq_hdr;
@@ -2066,10 +2024,7 @@ ensure_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
       GST_VAAPI_CODED_BUFFER_PROXY_BUFFER (codedbuf_proxy);
   gboolean res = FALSE;
 
-  if (encoder->is_mvc)
-    res = fill_mvc_picture (encoder, picture, codedbuf, surface);
-  else
-    res = fill_picture (encoder, picture, codedbuf, surface);
+  res = fill_picture (encoder, picture, codedbuf, surface);
 
   if (!res)
     return FALSE;
@@ -2443,11 +2398,7 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
   }
 
   /* new frame coming */
-  if (encoder->is_mvc)
-    picture = GST_VAAPI_ENC_PICTURE_NEW (H264_MVC, encoder, frame);
-  else
-    picture = GST_VAAPI_ENC_PICTURE_NEW (H264, encoder, frame);
-
+  picture = GST_VAAPI_ENC_PICTURE_NEW (H264, encoder, frame);
   if (!picture) {
     GST_WARNING ("create H264 picture failed, frame timestamp:%"
         GST_TIME_FORMAT, GST_TIME_ARGS (frame->pts));
