@@ -2184,8 +2184,7 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
     }
 
     GST_DEBUG_OBJECT (stream->pad, "Restarting stream at "
-        "position %" GST_TIME_FORMAT ", current catch up %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (ts), GST_TIME_ARGS (demux->segment.position));
+        "position %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
 
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
       gst_mpd_client_stream_seek (demux->client, stream->active_stream, ts);
@@ -2195,23 +2194,6 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
         gst_pad_push_event (stream->pad, gap);
       }
     }
-
-    /* This stream might be entering into catching up mode,
-     * meaning that it will push buffers from this same download thread
-     * until it reaches 'catch_up_timestamp'.
-     *
-     * The reason for this is that in case of stream switching, the other
-     * stream that was previously active might be blocking the stream_loop
-     * in case it is ahead enough that all queues are filled.
-     * In this case, it is possible that a downstream input-selector is
-     * blocking waiting for the currently active stream to reach the
-     * same position of the old linked stream because of the 'sync-streams'
-     * behavior.
-     *
-     * We can push from this thread up to 'catch_up_timestamp' as all other
-     * streams should be around the same timestamp.
-     */
-    stream->last_ret = GST_FLOW_CUSTOM_SUCCESS;
 
     stream->restart_download = FALSE;
   }
