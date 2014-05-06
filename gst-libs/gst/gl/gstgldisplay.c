@@ -149,14 +149,6 @@ gst_gl_display_new (void)
   return display;
 }
 
-GstGLAPI
-gst_gl_display_get_gl_api (GstGLDisplay * display)
-{
-  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), GST_GL_API_NONE);
-
-  return display->gl_api;
-}
-
 guintptr
 gst_gl_display_get_handle (GstGLDisplay * display)
 {
