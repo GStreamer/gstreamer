@@ -26,9 +26,11 @@ create_pool (guint size, guint min_buf, guint max_buf)
 {
   GstBufferPool *pool = gst_buffer_pool_new ();
   GstStructure *conf = gst_buffer_pool_get_config (pool);
+  GstCaps *caps = gst_caps_new_empty_simple ("test/data");
 
-  gst_buffer_pool_config_set_params (conf, NULL, size, min_buf, max_buf);
+  gst_buffer_pool_config_set_params (conf, caps, size, min_buf, max_buf);
   gst_buffer_pool_set_config (pool, conf);
+  gst_caps_unref (caps);
 
   return pool;
 }
@@ -172,6 +174,52 @@ GST_START_TEST (test_buffer_modify_discard)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pool_activation_and_config)
+{
+  GstBufferPool *pool = gst_buffer_pool_new ();
+  GstStructure *config = gst_buffer_pool_get_config (pool);
+  GstCaps *caps = gst_caps_new_empty_simple ("test/data");
+  GstBuffer *buffer = NULL;
+
+  /* unconfigured pool cannot be activated */
+  fail_if (gst_buffer_pool_set_active (pool, TRUE));
+
+  gst_buffer_pool_config_set_params (config, caps, 10, 10, 0);
+  fail_unless (gst_buffer_pool_set_config (pool, config));
+  fail_unless (gst_buffer_pool_set_active (pool, TRUE));
+
+  /* setting the same config on an active pool is ok */
+  config = gst_buffer_pool_get_config (pool);
+  fail_unless (gst_buffer_pool_set_config (pool, config));
+
+  /* setting a different config should deactivate the pool */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, 12, 10, 0);
+  fail_unless (gst_buffer_pool_set_config (pool, config));
+  fail_if (gst_buffer_pool_is_active (pool));
+
+  /* though it should fail if there is outstanding buffers */
+  gst_buffer_pool_set_active (pool, TRUE);
+  gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
+  fail_if (buffer == NULL);
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, 10, 10, 0);
+  fail_if (gst_buffer_pool_set_config (pool, config));
+
+  /* and work when last buffer is back */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, 10, 10, 0);
+  gst_buffer_unref (buffer);
+  fail_unless (gst_buffer_pool_set_config (pool, config));
+  fail_unless (gst_buffer_pool_set_active (pool, TRUE));
+
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_pool_suite (void)
 {
@@ -187,6 +235,7 @@ gst_buffer_pool_suite (void)
   tcase_add_test (tc_chain, test_pool_config_buffer_size);
   tcase_add_test (tc_chain, test_inactive_pool_returns_flushing);
   tcase_add_test (tc_chain, test_buffer_modify_discard);
+  tcase_add_test (tc_chain, test_pool_activation_and_config);
 
   return s;
 }
