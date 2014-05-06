@@ -5840,6 +5840,33 @@ gst_value_compare_bitmask (const GValue * value1, const GValue * value2)
   return GST_VALUE_UNORDERED;
 }
 
+
+/***********************
+ * GstAllocationParams *
+ ***********************/
+static gint
+gst_value_compare_allocation_params (const GValue * value1,
+    const GValue * value2)
+{
+  GstAllocationParams *v1, *v2;
+
+  v1 = value1->data[0].v_pointer;
+  v2 = value2->data[0].v_pointer;
+
+  if (v1 == NULL && v1 == v2)
+    return GST_VALUE_EQUAL;
+
+  if (v1 == NULL || v2 == NULL)
+    return GST_VALUE_UNORDERED;
+
+  if (v1->flags == v2->flags && v1->align == v2->align &&
+      v1->prefix == v2->prefix && v1->padding == v2->padding)
+    return GST_VALUE_EQUAL;
+
+  return GST_VALUE_UNORDERED;
+}
+
+
 /************
  * GObject *
  ************/
@@ -6254,6 +6281,18 @@ _priv_gst_value_initialize (void)
     };
 
     gst_value.type = gst_bitmask_get_type ();
+    gst_value_register (&gst_value);
+  }
+
+  {
+    static GstValueTable gst_value = {
+      0,
+      gst_value_compare_allocation_params,
+      NULL,
+      NULL,
+    };
+
+    gst_value.type = gst_allocation_params_get_type ();
     gst_value_register (&gst_value);
   }
 

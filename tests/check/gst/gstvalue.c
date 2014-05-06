@@ -584,6 +584,7 @@ GST_START_TEST (test_value_compare)
   GValue value1 = { 0 };
   GValue value2 = { 0 };
   GValue tmp = { 0 };
+  GstAllocationParams alloc_params = { 0 };
 
   g_value_init (&value1, G_TYPE_INT);
   g_value_set_int (&value1, 10);
@@ -777,6 +778,17 @@ GST_START_TEST (test_value_compare)
   g_value_take_object (&value1, gst_bin_new (NULL));
   g_value_init (&value2, GST_TYPE_BIN);
   g_value_take_object (&value2, gst_bin_new (NULL));
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_UNORDERED);
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  /* Check that we can compare allocation params */
+  g_value_init (&value1, GST_TYPE_ALLOCATION_PARAMS);
+  g_value_set_boxed (&value1, &alloc_params);
+  g_value_init (&value2, GST_TYPE_ALLOCATION_PARAMS);
+  alloc_params.align = 1;
+  g_value_set_boxed (&value2, &alloc_params);
   fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_UNORDERED);
   fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
   g_value_unset (&value1);
