@@ -2553,7 +2553,18 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_OPENJPEG, true)
 AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
   HAVE_OPENJPEG="no"
 
-  AG_GST_CHECK_LIBHEADER(OPENJPEG, openjp2, opj_version, ,openjpeg-2.0/openjpeg.h, OPENJPEG_LIBS="-lopenjp2")
+  save_LIBS="$LIBS"
+  save_CFLAGS="$CFLAGS"
+  OPENJPEG_LIBS="-lopenjp2"
+  LIBS="$LIBS $OPENJPEG_LIBS"
+  CFLAGS="$CFLAGS $OPENJPEG_CFLAGS"
+  AC_LINK_IFELSE([
+    AC_LANG_PROGRAM([#include <openjpeg-2.0/openjpeg.h>],
+                    [return (int) *opj_version ();])
+                 ], [HAVE_OPENJPEG=yes], [HAVE_OPENJPEG=no])
+  LIBS="$save_LIBS"
+  CFLAGS="$save_CFLAGS"
+
   if test x"$HAVE_OPENJPEG" = x"no"; then
     PKG_CHECK_MODULES(OPENJPEG, libopenjpeg1,
       HAVE_OPENJPEG="yes",
