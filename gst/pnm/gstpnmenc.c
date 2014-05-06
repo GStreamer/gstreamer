@@ -111,7 +111,6 @@ gst_pnmenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   gchar *header;
   GstBuffer *out;
 
-
   if (s->info.width == 0 || s->info.height == 0 || s->info.fields == 0)
     goto not_negotiated;
 
