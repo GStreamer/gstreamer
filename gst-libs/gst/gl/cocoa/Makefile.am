@@ -22,11 +22,10 @@ libgstgl_cocoa_la_CFLAGS = \
 libgstgl_cocoa_la_OBJCFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
-	$(GL_CFLAGS) \
 	$(GL_OBJCFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS)
+	$(GST_OBJCFLAGS)
 
 libgstgl_cocoa_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \
