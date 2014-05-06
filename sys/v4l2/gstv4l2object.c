@@ -3204,12 +3204,14 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 
   /* First step, configure our own pool */
 
+  config = gst_buffer_pool_get_config (obj->pool);
+
   /* If already configured/active, skip it */
   /* FIXME not entirely correct, See bug 728268 */
-  if (gst_buffer_pool_is_active (obj->pool))
+  if (gst_buffer_pool_is_active (obj->pool)) {
+    gst_buffer_pool_config_get_params (config, NULL, &size, &min, &max);
     goto setup_other_pool;
-
-  config = gst_buffer_pool_get_config (obj->pool);
+  }
 
   if (obj->need_video_meta) {
     GST_DEBUG_OBJECT (obj->element, "activate Video Meta");
@@ -3230,6 +3232,8 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
         GST_PTR_FORMAT, config);
 
     /* our pool will adjust the maximum buffer, which we are fine with */
+    if (obj->pool == pool)
+      gst_buffer_pool_config_get_params (config, NULL, &size, &min, &max);
 
     if (!gst_buffer_pool_set_config (obj->pool, config))
       goto config_failed;
