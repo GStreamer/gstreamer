@@ -175,6 +175,11 @@ gst_gl_buffer_pool_start (GstBufferPool * pool)
   GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
   GstGLBufferPoolPrivate *priv = glpool->priv;
 
+#if GST_GL_HAVE_PLATFORM_EGL
+  if (priv->want_eglimage)
+    return GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
+#endif
+
   if (!gst_gl_upload_init_format (glpool->upload, &priv->info))
     goto upload_error;
 
