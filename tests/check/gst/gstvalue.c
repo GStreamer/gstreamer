@@ -771,6 +771,16 @@ GST_START_TEST (test_value_compare)
   fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
   g_value_unset (&value1);
   g_value_unset (&value2);
+
+  /* Check that we can compare objects */
+  g_value_init (&value1, GST_TYPE_BIN);
+  g_value_take_object (&value1, gst_bin_new (NULL));
+  g_value_init (&value2, GST_TYPE_BIN);
+  g_value_take_object (&value2, gst_bin_new (NULL));
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_UNORDERED);
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
 }
 
 GST_END_TEST;
