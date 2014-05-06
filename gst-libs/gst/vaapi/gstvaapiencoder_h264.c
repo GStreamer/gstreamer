@@ -2321,7 +2321,7 @@ set_context_info (GstVaapiEncoder * base_encoder)
 
   base_encoder->num_ref_frames =
       ((encoder->num_bframes ? 2 : 1) + DEFAULT_SURFACES_COUNT)
-      * encoder->view_idx;
+      * encoder->num_views;
 
   /* Only YUV 4:2:0 formats are supported for now. This means that we
      have a limit of 3200 bits per macroblock. */
