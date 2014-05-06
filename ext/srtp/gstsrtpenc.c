@@ -155,28 +155,28 @@ enum
  * describe the real formats here.
  */
 static GstStaticPadTemplate rtp_sink_template =
-GST_STATIC_PAD_TEMPLATE ("rtp_sink_%d",
+GST_STATIC_PAD_TEMPLATE ("rtp_sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
 static GstStaticPadTemplate rtp_src_template =
-GST_STATIC_PAD_TEMPLATE ("rtp_src_%d",
+GST_STATIC_PAD_TEMPLATE ("rtp_src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-srtp")
     );
 
 static GstStaticPadTemplate rtcp_sink_template =
-GST_STATIC_PAD_TEMPLATE ("rtcp_sink_%d",
+GST_STATIC_PAD_TEMPLATE ("rtcp_sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
 static GstStaticPadTemplate rtcp_src_template =
-GST_STATIC_PAD_TEMPLATE ("rtcp_src_%d",
+GST_STATIC_PAD_TEMPLATE ("rtcp_src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-srtcp")
@@ -427,14 +427,14 @@ create_rtp_sink (GstSrtpEnc * filter, const gchar * name)
 {
   GstPad *sinkpad, *srcpad;
   gchar *sinkpadname, *srcpadname;
-  gint nb = 0;
+  guint nb = 0;
 
   GST_DEBUG_OBJECT (filter, "creating RTP sink pad");
   sinkpad = gst_pad_new_from_static_template (&rtp_sink_template, name);
 
   sinkpadname = gst_pad_get_name (sinkpad);
-  sscanf (sinkpadname, "rtp_sink_%d", &nb);
-  srcpadname = g_strdup_printf ("rtp_src_%d", nb);
+  sscanf (sinkpadname, "rtp_sink_%u", &nb);
+  srcpadname = g_strdup_printf ("rtp_src_%u", nb);
 
   GST_DEBUG_OBJECT (filter, "creating RTP source pad");
   srcpad = gst_pad_new_from_static_template (&rtp_src_template, srcpadname);
@@ -471,14 +471,14 @@ create_rtcp_sink (GstSrtpEnc * filter, const gchar * name)
 {
   GstPad *srcpad, *sinkpad;
   gchar *sinkpadname, *srcpadname;
-  gint nb = 0;
+  guint nb = 0;
 
   GST_DEBUG_OBJECT (filter, "creating RTCP sink pad");
   sinkpad = gst_pad_new_from_static_template (&rtcp_sink_template, name);
 
   sinkpadname = gst_pad_get_name (sinkpad);
-  sscanf (sinkpadname, "rtcp_sink_%d", &nb);
-  srcpadname = g_strdup_printf ("rtcp_src_%d", nb);
+  sscanf (sinkpadname, "rtcp_sink_%u", &nb);
+  srcpadname = g_strdup_printf ("rtcp_src_%u", nb);
 
   GST_DEBUG_OBJECT (filter, "creating RTCP source pad");
   srcpad = gst_pad_new_from_static_template (&rtcp_src_template, srcpadname);
@@ -521,10 +521,10 @@ gst_srtp_enc_request_new_pad (GstElement * element,
 
   GST_INFO_OBJECT (element, "New pad requested");
 
-  if (templ == gst_element_class_get_pad_template (klass, "rtp_sink_%d"))
+  if (templ == gst_element_class_get_pad_template (klass, "rtp_sink_%u"))
     return create_rtp_sink (filter, name);
 
-  if (templ == gst_element_class_get_pad_template (klass, "rtcp_sink_%d"))
+  if (templ == gst_element_class_get_pad_template (klass, "rtcp_sink_%u"))
     return create_rtcp_sink (filter, name);
 
   GST_ERROR_OBJECT (element, "Could not find specified template");
