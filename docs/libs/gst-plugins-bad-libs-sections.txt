@@ -826,8 +826,10 @@ gst_gl_context_wgl_get_type
 <SECTION>
 <FILE>gstgldisplay</FILE>
 <TITLE>GstGLDisplay</TITLE>
+GstGLDisplayType
 GstGLDisplay
 gst_gl_display_new
+gst_gl_display_get_handle_type
 gst_context_get_gl_display
 gst_context_set_gl_display
 <SUBSECTION Standard>

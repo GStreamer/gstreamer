@@ -84,7 +84,6 @@ gst_gl_display_init (GstGLDisplay * display)
 {
   display->priv = GST_GL_DISPLAY_GET_PRIVATE (display);
 
-  display->gl_api = GST_GL_API_ANY;
   display->type = GST_GL_DISPLAY_TYPE_ANY;
 
   GST_TRACE ("init %p", display);
@@ -99,13 +98,6 @@ gst_gl_display_init (GstGLDisplay * display)
 static void
 gst_gl_display_finalize (GObject * object)
 {
-  GstGLDisplay *display = GST_GL_DISPLAY (object);
-
-  if (display->context) {
-    gst_object_unref (display->context);
-    display->context = NULL;
-  }
-
   GST_TRACE ("finalize %p", object);
 
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
@@ -181,6 +173,20 @@ static guintptr
 gst_gl_display_default_get_handle (GstGLDisplay * display)
 {
   return 0;
+}
+
+/**
+ * gst_gl_display_get_handle_type:
+ * @display: a #GstGLDisplay
+ *
+ * Returns: the #GstGLDisplayType of @display
+ */
+GstGLDisplayType
+gst_gl_display_get_handle_type (GstGLDisplay * display)
+{
+  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), GST_GL_DISPLAY_TYPE_NONE);
+
+  return display->type;
 }
 
 /**
