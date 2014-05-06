@@ -115,7 +115,7 @@ struct _GstV4l2Object {
   guint32 sizeimage;
   GstClockTime duration;
 
-  /* if the MPLANE device support both contiguous and non contiguous 
+  /* if the MPLANE device support both contiguous and non contiguous
    * it allows to select which one we want. But we prefered_non_contiguous
    * non contiguous mode.
    */
@@ -260,7 +260,7 @@ gboolean      gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object,
                                               GstVideoInfo * info);
 
 gboolean      gst_v4l2_object_set_crop    (GstV4l2Object * obj);
- 
+
 gboolean      gst_v4l2_object_decide_allocation (GstV4l2Object * v4l2object,
                                                  GstQuery * query);
 
