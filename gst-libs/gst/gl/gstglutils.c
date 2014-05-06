@@ -111,8 +111,10 @@ _gen_texture (GstGLContext * context, GenTexture * data)
 
   gl->GenTextures (1, &data->result);
   gl->BindTexture (GL_TEXTURE_2D, data->result);
-  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, data->width,
-      data->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+  if (data->width > 0 && data->height > 0)
+    gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, data->width,
+        data->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
