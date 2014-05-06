@@ -554,27 +554,10 @@ dnl Check for X11
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesrc], [
-  AC_PATH_XTRA
+  AG_GST_CHECK_X
 
-  dnl now try to find the HEADER
-  ac_cflags_save="$CFLAGS"
-  ac_cppflags_save="$CPPFLAGS"
-  CFLAGS="$CFLAGS $X_CFLAGS"
-  CPPFLAGS="$CPPFLAGS $X_CFLAGS"
-  AC_CHECK_HEADER(X11/Xlib.h, HAVE_X="yes", HAVE_X="no")
-
-  if test "x$HAVE_X" = "xno"
+  if test "x$HAVE_X" = "xyes"
   then
-    AC_MSG_NOTICE([cannot find X11 development files])
-  else
-    dnl this is much more than we want
-    X_LIBS="$X_LIBS $X_PRE_LIBS $X_EXTRA_LIBS"
-    dnl AC_PATH_XTRA only defines the path needed to find the X libs,
-    dnl it does not add the libs; therefore we add them here
-    X_LIBS="$X_LIBS -lX11"
-    AC_SUBST(X_CFLAGS)
-    AC_SUBST(X_LIBS)
-
     dnl check for Xfixes
     PKG_CHECK_MODULES(XFIXES, xfixes, HAVE_XFIXES="yes", HAVE_XFIXES="no")
     if test "x$HAVE_XFIXES" = "xyes"
@@ -593,9 +576,6 @@ AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
     AC_SUBST(XDAMAGE_LIBS)
     AC_SUBST(XDAMAGE_CFLAGS)
   fi
-  AC_SUBST(HAVE_X)
-  CFLAGS="$ac_cflags_save"
-  CPPFLAGS="$ac_cppflags_save"
 ])
 
 dnl FIXME: this should be rolled into the test above, it's just an additional
