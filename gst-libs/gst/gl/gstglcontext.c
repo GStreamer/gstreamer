@@ -65,12 +65,6 @@
 #include "eagl/gstglcontext_eagl.h"
 #endif
 
-#define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (display->gl_api & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (display->gl_api & GST_GL_API_GLES)
-#define USING_GLES2(display) (display->gl_api & GST_GL_API_GLES2)
-#define USING_GLES3(display) (display->gl_api & GST_GL_API_GLES3)
-
 static GModule *module_self;
 
 #if GST_GL_HAVE_OPENGL
@@ -726,10 +720,9 @@ gst_gl_context_create_thread (GstGLContext * context)
 {
   GstGLContextClass *context_class;
   GstGLWindowClass *window_class;
-  GstGLDisplay *display;
   GstGLFuncs *gl;
   gboolean ret = FALSE;
-  GstGLAPI compiled_api, user_api;
+  GstGLAPI compiled_api, user_api, gl_api;
   gchar *api_string;
   gchar *compiled_api_s;
   gchar *user_api_string;
@@ -752,7 +745,6 @@ gst_gl_context_create_thread (GstGLContext * context)
       goto failure;
   }
 
-  display = context->priv->display;
   gl = context->gl_vtable;
   compiled_api = _compiled_api ();
 
@@ -801,14 +793,13 @@ gst_gl_context_create_thread (GstGLContext * context)
     goto failure;
   }
 
-  display->gl_api = gst_gl_context_get_gl_api (context);
-  g_assert (display->gl_api != GST_GL_API_NONE
-      && display->gl_api != GST_GL_API_ANY);
+  gl_api = gst_gl_context_get_gl_api (context);
+  g_assert (gl_api != GST_GL_API_NONE && gl_api != GST_GL_API_ANY);
 
-  api_string = gst_gl_api_to_string (display->gl_api);
+  api_string = gst_gl_api_to_string (gl_api);
   GST_INFO ("available GL APIs: %s", api_string);
 
-  if (((compiled_api & display->gl_api) & user_api) == GST_GL_API_NONE) {
+  if (((compiled_api & gl_api) & user_api) == GST_GL_API_NONE) {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_API,
         "failed to create context, context "
         "could not provide correct api. user (%s), compiled (%s), context (%s)",
@@ -835,10 +826,10 @@ gst_gl_context_create_thread (GstGLContext * context)
   }
 
   /* gl api specific code */
-  if (!ret && USING_OPENGL (display))
+  if (!ret && gl_api & GST_GL_API_OPENGL)
     ret = _create_context_opengl (context, &context->priv->gl_major,
         &context->priv->gl_minor, error);
-  if (!ret && USING_GLES2 (display))
+  if (!ret && gl_api & GST_GL_API_GLES2)
     ret =
         _create_context_gles2 (context, &context->priv->gl_major,
         &context->priv->gl_minor, error);
