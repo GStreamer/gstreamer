@@ -223,6 +223,7 @@ check_PROGRAMS = \
 	elements/audiomixer \
 	elements/asfmux \
 	elements/baseaudiovisualizer \
+	elements/camerabin \
 	elements/dataurisrc \
 	elements/gdppay \
 	elements/gdpdepay \
