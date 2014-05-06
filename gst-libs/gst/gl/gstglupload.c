@@ -27,6 +27,10 @@
 #include "gl.h"
 #include "gstglupload.h"
 
+#if GST_GL_HAVE_PLATFORM_EGL
+#include "egl/gsteglimagememory.h"
+#endif
+
 /**
  * SECTION:gstglupload
  * @short_description: an object that uploads to GL textures
@@ -255,6 +259,12 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
     *tex_id = upload->out_tex->tex_id;
     return TRUE;
   }
+
+#if GST_GL_HAVE_PLATFORM_EGL
+  if (!upload->priv->tex_id && gst_is_egl_image_memory (mem))
+    gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
+          GST_VIDEO_FORMAT_RGBA, 0, 0);
+#endif
 
   if (!upload->priv->tex_id)
     gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
