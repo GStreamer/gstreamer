@@ -2131,8 +2131,7 @@ realize_cb (GtkWidget * widget, PlaybackApp * app)
 
 #if defined (GDK_WINDOWING_WIN32)
   app->embed_xid = (guintptr) GDK_WINDOW_HWND (window);
-  g_print ("Window realize: video window HWND = %" G_GUINTPTR_FORMAT "\n",
-      app->embed_xid);
+  g_print ("Window realize: video window HWND = %" G_GUINTPTR_FORMAT "\n", app->embed_xid);
 #elif defined (GDK_WINDOWING_QUARTZ)
   app->embed_xid = (guintptr) gdk_quartz_window_get_nsview (window);
   g_print ("Window realize: video window NSView = %p\n", app->embed_xid);
@@ -2422,7 +2421,7 @@ buffer_size_activate_cb (GtkEntry * entry, PlaybackApp * app)
     gchar *endptr;
 
     v = g_ascii_strtoll (text, &endptr, 10);
-    if (endptr != text && v != G_MAXINT64 && v != G_MININT64 && v >= 0) {
+    if (endptr != text && v != G_MAXINT64 && v != G_MININT64) {
       g_object_set (app->pipeline, "buffer-size", v, NULL);
     }
   }
