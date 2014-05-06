@@ -273,7 +273,8 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MAX_BUFFERING_TIME,
       g_param_spec_uint ("max-buffering-time", "Maximum buffering time",
-          "Maximum number of seconds of buffer accumulated during playback",
+          "Maximum number of seconds of buffer accumulated during playback"
+          "(deprecated)",
           2, G_MAXUINT, DEFAULT_MAX_BUFFERING_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
