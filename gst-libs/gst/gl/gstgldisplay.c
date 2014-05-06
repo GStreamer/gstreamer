@@ -133,6 +133,10 @@ gst_gl_display_new (void)
   platform_choice = g_getenv ("GST_GL_PLATFORM");
   GST_INFO ("creating a window, user choice:%s", user_choice);
 
+#if GST_GL_HAVE_WINDOW_COCOA
+  if (!display && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
+    display = GST_GL_DISPLAY (gst_gl_display_new ());
+#endif
 #if GST_GL_HAVE_WINDOW_X11
   if (!display && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
     display = GST_GL_DISPLAY (gst_gl_display_x11_new (NULL));
