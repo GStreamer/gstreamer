@@ -596,34 +596,6 @@ _gst_gl_color_convert_perform_unlocked (GstGLColorConvert * convert,
   return TRUE;
 }
 
-static gboolean
-_create_shader (GstGLContext * context, const gchar * vertex_src,
-    const gchar * fragment_src, GstGLShader ** out_shader)
-{
-  GstGLShader *shader;
-  GError *error = NULL;
-
-  g_return_val_if_fail (vertex_src != NULL || fragment_src != NULL, FALSE);
-
-  shader = gst_gl_shader_new (context);
-
-  if (vertex_src)
-    gst_gl_shader_set_vertex_source (shader, vertex_src);
-  if (fragment_src)
-    gst_gl_shader_set_fragment_source (shader, fragment_src);
-
-  if (!gst_gl_shader_compile (shader, &error)) {
-    gst_gl_context_set_error (context, "%s", error->message);
-    g_error_free (error);
-    gst_gl_context_clear_shader (context);
-    gst_object_unref (shader);
-    return FALSE;
-  }
-
-  *out_shader = shader;
-  return TRUE;
-}
-
 static inline gchar
 _index_to_shader_swizzle (int idx)
 {
@@ -1021,7 +993,7 @@ _init_convert (GstGLContext * context, GstGLColorConvert * convert)
   }
 
   res =
-      _create_shader (context, text_vertex_shader, info->frag_prog,
+      gst_gl_context_gen_shader (context, text_vertex_shader, info->frag_prog,
       &convert->shader);
   g_free (info->frag_prog);
   if (!res)
