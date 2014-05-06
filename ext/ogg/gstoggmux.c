@@ -2028,20 +2028,27 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
   if (popped)
     return GST_FLOW_OK;
 
-  if (best == NULL || best->buffer == NULL) {
-    /* This is not supposed to happen */
-    return GST_FLOW_ERROR;
+  if (best == NULL) {
+    /* No data, assume EOS */
+    goto eos;
   }
+
+  /* This is not supposed to happen */
+  g_return_val_if_fail (best->buffer != NULL, GST_FLOW_ERROR);
 
   ret = gst_ogg_mux_process_best_pad (ogg_mux, best);
 
-  if (best->eos && all_pads_eos (pads)) {
-    GST_LOG_OBJECT (ogg_mux->srcpad, "sending EOS");
+  if (best->eos && all_pads_eos (pads))
+    goto eos;
+
+  return ret;
+
+eos:
+  {
+    GST_DEBUG_OBJECT (ogg_mux, "no data available, must be EOS");
     gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
     return GST_FLOW_EOS;
   }
-
-  return ret;
 }
 
 static void
