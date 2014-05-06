@@ -182,7 +182,7 @@ gst_gl_window_new (GstGLDisplay * display)
     window = GST_GL_WINDOW (gst_gl_window_android_egl_new ());
 #endif
 #if GST_GL_HAVE_WINDOW_EAGL
-  if (!window && (!user_choice || g_strstr_len (user_choice, 7, "eagl")))
+  if (!window && (!user_choice || g_strstr_len (user_choice, 4, "eagl")))
     window = GST_GL_WINDOW (gst_gl_window_eagl_new ());
 #endif
   if (!window) {
