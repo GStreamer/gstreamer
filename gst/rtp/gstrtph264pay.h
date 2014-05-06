@@ -74,6 +74,9 @@ struct _GstRtpH264Pay
   guint spspps_interval;
   gboolean send_spspps;
   GstClockTime last_spspps;
+
+  /* TRUE if the next NALU processed should have the DELTA_UNIT flag */
+  gboolean delta_unit;
 };
 
 struct _GstRtpH264PayClass
