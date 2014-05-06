@@ -201,7 +201,6 @@ struct _GstSrtpDecSsrcStream
 {
   guint32 ssrc;
 
-  GstCaps *caps;
   GstBuffer *key;
   GstSrtpCipherType rtp_cipher;
   GstSrtpAuthType rtp_auth;
