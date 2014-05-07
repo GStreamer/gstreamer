@@ -746,7 +746,7 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
   GstGLFilter *filter = GST_GL_FILTER (trans);
   GstBufferPool *pool;
   GstStructure *config;
-  GstCaps *caps;
+  GstCaps *caps, *decide_caps;
   guint size;
   gboolean need_pool;
   GError *error = NULL;
@@ -792,20 +792,28 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
 
   if (pool == NULL && need_pool) {
     GstVideoInfo info;
+    GstBufferPool *decide_pool;
 
     if (!gst_video_info_from_caps (&info, caps))
       goto invalid_caps;
 
-    GST_DEBUG_OBJECT (filter, "create new pool");
-    pool = gst_gl_buffer_pool_new (filter->context);
+    gst_query_parse_allocation (decide_query, &decide_caps, NULL);
+    decide_pool = gst_base_transform_get_buffer_pool (trans);
+    if (gst_caps_is_equal_fixed (decide_caps, caps)) {
+      pool = decide_pool;
+    } else {
+      GST_DEBUG_OBJECT (filter, "create new pool");
+      gst_object_unref (decide_pool);
+      pool = gst_gl_buffer_pool_new (filter->context);
 
-    /* the normal size of a frame */
-    size = info.size;
+      /* the normal size of a frame */
+      size = info.size;
 
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-    if (!gst_buffer_pool_set_config (pool, config))
-      goto config_failed;
+      config = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+      if (!gst_buffer_pool_set_config (pool, config))
+        goto config_failed;
+    }
   }
   /* we need at least 2 buffer because we hold on to the last one */
   if (pool) {
