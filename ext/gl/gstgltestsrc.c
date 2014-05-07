@@ -47,6 +47,10 @@
 #include "gltestsrc.h"
 #include <gst/gst-i18n-plugin.h>
 
+#if GST_GL_HAVE_PLATFORM_EGL
+#include <gst/gl/egl/gsteglimagememory.h>
+#endif
+
 #define USE_PEER_BUFFERALLOC
 
 GST_DEBUG_CATEGORY_STATIC (gl_test_src_debug);
@@ -60,6 +64,21 @@ enum
   PROP_IS_LIVE
       /* FILL ME */
 };
+
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+            "RGBA") "; "
+#if GST_GL_HAVE_PLATFORM_EGL
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
+            "RGBA") "; "
+#endif
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
+            "RGBA") "; " GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS))
+    );
 
 #define gst_gl_test_src_parent_class parent_class
 G_DEFINE_TYPE (GstGLTestSrc, gst_gl_test_src, GST_TYPE_PUSH_SRC);
@@ -159,8 +178,7 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
       "David A. Schleef <ds@schleef.org>");
 
   gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_from_string (GST_GL_COLOR_CONVERT_VIDEO_CAPS)));
+      gst_static_pad_template_get (&src_factory));
 
   element_class->set_context = gst_gl_test_src_set_context;
 
