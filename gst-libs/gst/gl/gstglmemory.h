@@ -104,6 +104,8 @@ struct _GstGLMemory
   gpointer              _gst_reserved[GST_PADDING];
 };
 
+#define GST_CAPS_FEATURE_MEMORY_GL_MEMORY "memory:GLMemory"
+
 /**
  * GST_GL_MEMORY_ALLOCATOR:
  *
