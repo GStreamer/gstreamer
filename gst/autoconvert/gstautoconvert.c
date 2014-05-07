@@ -719,7 +719,6 @@ static gboolean
 gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
 {
   GList *elem;
-  GstElement *subelement;
   GstCaps *other_caps = NULL;
   GList *factories;
   GstCaps *current_caps;
@@ -735,9 +734,7 @@ gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
     gst_caps_unref (current_caps);
   }
 
-  subelement = gst_auto_convert_get_subelement (autoconvert);
-
-  if (subelement) {
+  if (autoconvert->current_subelement) {
     if (gst_pad_peer_query_accept_caps (autoconvert->current_internal_srcpad,
             caps)) {
       /* If we can set the new caps on the current element,
@@ -745,20 +742,16 @@ gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
        */
       GST_DEBUG_OBJECT (autoconvert, "Could set %s:%s to %" GST_PTR_FORMAT,
           GST_DEBUG_PAD_NAME (autoconvert->current_internal_srcpad), caps);
-      gst_object_unref (subelement);
       goto get_out;
     } else {
       /* If the current element doesn't work,
        * then we remove the current element before finding a new one.
        */
       GST_AUTOCONVERT_LOCK (autoconvert);
-      if (autoconvert->current_subelement == subelement) {
-        g_clear_object (&autoconvert->current_subelement);
-        g_clear_object (&autoconvert->current_internal_sinkpad);
-        g_clear_object (&autoconvert->current_internal_srcpad);
-      }
+      g_clear_object (&autoconvert->current_subelement);
+      g_clear_object (&autoconvert->current_internal_sinkpad);
+      g_clear_object (&autoconvert->current_internal_srcpad);
       GST_AUTOCONVERT_UNLOCK (autoconvert);
-      gst_object_unref (subelement);
     }
   }
 
@@ -939,20 +932,13 @@ gst_auto_convert_sink_chain (GstPad * pad, GstObject * parent,
 {
   GstFlowReturn ret = GST_FLOW_NOT_NEGOTIATED;
   GstAutoConvert *autoconvert = GST_AUTO_CONVERT (parent);
-  GstPad *internal_srcpad;
 
-  internal_srcpad = gst_auto_convert_get_internal_srcpad (autoconvert);
-  if (internal_srcpad) {
-    ret = gst_pad_push (internal_srcpad, buffer);
-    gst_object_unref (internal_srcpad);
-    if (ret != GST_FLOW_OK) {
-      GstElement *child = gst_auto_convert_get_subelement (autoconvert);
+  if (autoconvert->current_internal_srcpad) {
+    ret = gst_pad_push (autoconvert->current_internal_srcpad, buffer);
+    if (ret != GST_FLOW_OK)
       GST_DEBUG_OBJECT (autoconvert,
-          "Child element %" GST_PTR_FORMAT "returned flow %s", child,
-          gst_flow_get_name (ret));
-      if (child)
-        gst_object_unref (child);
-    }
+          "Child element %" GST_PTR_FORMAT "returned flow %s",
+          autoconvert->current_subelement, gst_flow_get_name (ret));
   } else {
     GST_ERROR_OBJECT (autoconvert, "Got buffer without an negotiated element,"
         " returning not-negotiated");
