@@ -27,17 +27,10 @@
 
 #include <glib.h>
 #include <glib/gprintf.h>
-#include <libsoup/soup-address.h>
-#include <libsoup/soup-message.h>
-#include <libsoup/soup-misc.h>
-#include <libsoup/soup-server.h>
-#include <libsoup/soup-auth-domain.h>
-#include <libsoup/soup-auth-domain-basic.h>
-#include <libsoup/soup-auth-domain-digest.h>
-#include <libsoup/soup-version.h>
+#include <libsoup/soup.h>
 #include <gst/check/gstcheck.h>
 
-#if !(SOUP_CHECK_VERSION(2, 44, 0))
+#if !defined(SOUP_CHECK_VERSION) || !SOUP_CHECK_VERSION(2, 44, 0)
 #define SoupStatus SoupKnownStatusCode
 #endif
 
