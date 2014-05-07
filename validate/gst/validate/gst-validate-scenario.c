@@ -307,6 +307,39 @@ _pause_action_restore_playing (GstValidateScenario * scenario)
   return FALSE;
 }
 
+static gboolean
+_execute_set_state (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GstState state;
+  const gchar *str_state;
+
+  GstStateChangeReturn ret;
+
+  g_return_val_if_fail ((str_state =
+          gst_structure_get_string (action->structure, "state")), FALSE);
+
+  g_return_val_if_fail (gst_validate_utils_enum_from_str (GST_TYPE_STATE,
+          str_state, &state), FALSE);
+
+  scenario->priv->target_state = state;
+  scenario->priv->changing_state = TRUE;
+
+  gst_validate_printf (action, "Setting state to %s\n", str_state);
+
+  ret = gst_element_set_state (scenario->pipeline, state);
+
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
+        "Failed to set state to %s", str_state);
+
+    return FALSE;
+  } else if (ret == GST_STATE_CHANGE_SUCCESS) {
+    scenario->priv->changing_state = FALSE;
+  }
+
+
+  return TRUE;
+}
 
 static gboolean
 _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
@@ -318,54 +351,31 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
   gst_validate_printf (action, "pausing for %" GST_TIME_FORMAT "\n",
       GST_TIME_ARGS (duration * GST_SECOND));
 
+  gst_structure_set (action->structure, "state", G_TYPE_STRING, "paused", NULL);
+
   GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration * GST_SECOND));
 
-  scenario->priv->target_state = GST_STATE_PAUSED;
-  scenario->priv->changing_state = TRUE;
 
-  ret = gst_element_set_state (scenario->pipeline, GST_STATE_PAUSED);
+  ret = _execute_set_state (scenario, action);
 
-  if (ret == GST_STATE_CHANGE_FAILURE) {
-    GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
-        "Failed to set state to paused");
-
-    return FALSE;
-  } else if (ret == GST_STATE_CHANGE_SUCCESS) {
-    scenario->priv->changing_state = FALSE;
-  }
-
-  if (duration)
+  if (ret && duration)
     g_timeout_add (duration * 1000,
         (GSourceFunc) _pause_action_restore_playing, scenario);
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
 _execute_play (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  GstStateChangeReturn ret;
-  gst_validate_printf (action, "Playing back\n");
-
   GST_DEBUG ("Playing back");
 
-  scenario->priv->target_state = GST_STATE_PLAYING;
-  scenario->priv->changing_state = TRUE;
+  gst_structure_set (action->structure, "state", G_TYPE_STRING,
+      "playing", NULL);
 
-  ret = gst_element_set_state (scenario->pipeline, GST_STATE_PAUSED);
 
-  if (ret == GST_STATE_CHANGE_FAILURE) {
-    GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
-        "Failed to set state to playing");
-
-    return FALSE;
-  } else if (ret == GST_STATE_CHANGE_SUCCESS) {
-    scenario->priv->changing_state = FALSE;
-  }
-
-  gst_element_get_state (scenario->pipeline, NULL, NULL, -1);
-  return TRUE;
+  return _execute_set_state (scenario, action);
 }
 
 static gboolean
@@ -1655,6 +1665,7 @@ init_scenarios (void)
       FALSE);
   gst_validate_add_action_type ("set-feature-rank", _set_rank, NULL,
       "Allows you to change the ranking of a particular plugin feature", TRUE);
-  gst_validate_add_action_type ("set-state", _execute_set_state, set_state_mandatory_fields,
+  gst_validate_add_action_type ("set-state", _execute_set_state,
+      set_state_mandatory_fields,
       "Allows to change the state of the pipeline to any GstState", FALSE);
 }
