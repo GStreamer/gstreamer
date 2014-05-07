@@ -91,7 +91,7 @@ static void gst_auto_convert_get_property (GObject * object,
 static void gst_auto_convert_dispose (GObject * object);
 
 static GstElement *gst_auto_convert_get_subelement (GstAutoConvert *
-    autoconvert, gboolean query_only);
+    autoconvert);
 static GstPad *gst_auto_convert_get_internal_sinkpad (GstAutoConvert *
     autoconvert);
 static GstPad *gst_auto_convert_get_internal_srcpad (GstAutoConvert *
@@ -390,8 +390,7 @@ get_pad_by_direction (GstElement * element, GstPadDirection direction)
 }
 
 static GstElement *
-gst_auto_convert_get_subelement (GstAutoConvert * autoconvert,
-    gboolean query_only)
+gst_auto_convert_get_subelement (GstAutoConvert * autoconvert)
 {
   GstElement *element = NULL;
 
@@ -737,7 +736,7 @@ gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
     gst_caps_unref (current_caps);
   }
 
-  subelement = gst_auto_convert_get_subelement (autoconvert, TRUE);
+  subelement = gst_auto_convert_get_subelement (autoconvert);
 
   if (subelement) {
     if (gst_pad_peer_query_accept_caps (autoconvert->current_internal_srcpad,
@@ -949,7 +948,7 @@ gst_auto_convert_sink_chain (GstPad * pad, GstObject * parent,
     ret = gst_pad_push (internal_srcpad, buffer);
     gst_object_unref (internal_srcpad);
     if (ret != GST_FLOW_OK) {
-      GstElement *child = gst_auto_convert_get_subelement (autoconvert, TRUE);
+      GstElement *child = gst_auto_convert_get_subelement (autoconvert);
       GST_DEBUG_OBJECT (autoconvert,
           "Child element %" GST_PTR_FORMAT "returned flow %s", child,
           gst_flow_get_name (ret));
@@ -1021,7 +1020,7 @@ gst_auto_convert_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
     return TRUE;
   }
 
-  subelement = gst_auto_convert_get_subelement (autoconvert, TRUE);
+  subelement = gst_auto_convert_get_subelement (autoconvert);
   if (subelement) {
     GstPad *sub_sinkpad = get_pad_by_direction (subelement, GST_PAD_SINK);
 
@@ -1223,7 +1222,7 @@ gst_auto_convert_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     return TRUE;
   }
 
-  subelement = gst_auto_convert_get_subelement (autoconvert, TRUE);
+  subelement = gst_auto_convert_get_subelement (autoconvert);
   if (subelement) {
     GstPad *sub_srcpad = get_pad_by_direction (subelement, GST_PAD_SRC);
 
