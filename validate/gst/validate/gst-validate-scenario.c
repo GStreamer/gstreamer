@@ -1623,7 +1623,7 @@ void
 init_scenarios (void)
 {
   const gchar *seek_mandatory_fields[] = { "start", NULL };
-  const gchar *wait_mandatory_fields[] = { "wait", NULL };
+  const gchar *wait_mandatory_fields[] = { "duration", NULL };
 
   _gst_validate_action_type = gst_validate_action_get_type ();
 
