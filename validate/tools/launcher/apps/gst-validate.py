@@ -332,12 +332,17 @@ class GstValidateTranscodingTest(GstValidateTest):
         return self.get_current_size()
 
     def check_results(self):
-        if self.result is Result.PASSED and not self.scenario:
-            orig_duration = long(self.media_descriptor.get_duration())
-            res, msg = compare_rendered_with_original(orig_duration, self.dest_file)
-            self.set_result(res, msg)
-        elif self.message == "":
+        if self.result in [Result.FAILED, Result.TIMEOUT]:
             GstValidateTest.check_results(self)
+            return
+
+        if self.scenario:
+            orig_duration = min(long(self.scenario.get_duration()),
+                                long(self.media_descriptor.get_duration()))
+        else:
+            orig_duration = long(self.media_descriptor.get_duration())
+        res, msg = compare_rendered_with_original(orig_duration, self.dest_file)
+        self.set_result(res, msg)
 
 
 class GstValidateManager(TestsManager, Loggable):
