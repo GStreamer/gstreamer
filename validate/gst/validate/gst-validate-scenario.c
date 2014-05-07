@@ -561,8 +561,7 @@ _execute_switch_track (GstValidateScenario * scenario,
     g_object_get (input_selector, "active-pad", &cpad, NULL);
     gst_validate_printf (action, "Switching to track number: %i,"
         " (from %s:%s to %s:%s)\n",
-        index, GST_DEBUG_PAD_NAME (cpad),
-        GST_DEBUG_PAD_NAME (pad));
+        index, GST_DEBUG_PAD_NAME (cpad), GST_DEBUG_PAD_NAME (pad));
     g_object_set (input_selector, "active-pad", pad, NULL);
     gst_object_unref (pad);
     gst_object_unref (cpad);
@@ -639,15 +638,13 @@ get_position (GstValidateScenario * scenario)
   GstElement *pipeline = scenario->pipeline;
 
   if (priv->buffering) {
-    GST_DEBUG_OBJECT (scenario,
-        "Buffering not executing any action");
+    GST_DEBUG_OBJECT (scenario, "Buffering not executing any action");
 
     return TRUE;
   }
 
   if (priv->changing_state) {
-    GST_DEBUG_OBJECT (scenario,
-        "Changing state, not executing any action");
+    GST_DEBUG_OBJECT (scenario, "Changing state, not executing any action");
     return TRUE;
   }
 
@@ -871,21 +868,20 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       _add_get_position_source (scenario);
       break;
     case GST_MESSAGE_STATE_CHANGED:
-      {
-        if (GST_MESSAGE_SRC (message) == GST_OBJECT (scenario->pipeline)) {
-          GstState nstate, pstate;
+    {
+      if (GST_MESSAGE_SRC (message) == GST_OBJECT (scenario->pipeline)) {
+        GstState nstate, pstate;
 
-          gst_message_parse_state_changed (message,
-              &pstate, &nstate, NULL);
+        gst_message_parse_state_changed (message, &pstate, &nstate, NULL);
 
-          if (scenario->priv->target_state == nstate)
-            scenario->priv->changing_state = FALSE;
+        if (scenario->priv->target_state == nstate)
+          scenario->priv->changing_state = FALSE;
 
-          if (pstate == GST_STATE_READY && nstate == GST_STATE_PAUSED)
-            _add_get_position_source (scenario);
-        }
-        break;
+        if (pstate == GST_STATE_READY && nstate == GST_STATE_PAUSED)
+          _add_get_position_source (scenario);
       }
+      break;
+    }
     case GST_MESSAGE_ERROR:
     case GST_MESSAGE_EOS:
     {
@@ -1119,11 +1115,12 @@ _load_scenario_file (GstValidateScenario * scenario,
     if (action_type->mandatory_fields) {
       guint i;
 
-      for (i =0; action_type->mandatory_fields[i]; i++) {
-        if (gst_structure_has_field (structure, action_type->mandatory_fields[i]) == FALSE) {
+      for (i = 0; action_type->mandatory_fields[i]; i++) {
+        if (gst_structure_has_field (structure,
+                action_type->mandatory_fields[i]) == FALSE) {
           GST_ERROR_OBJECT (scenario,
-              "Mandatory field '%s' not present in structure: %"
-              GST_PTR_FORMAT, action_type->mandatory_fields[i], structure);
+              "Mandatory field '%s' not present in structure: %" GST_PTR_FORMAT,
+              action_type->mandatory_fields[i], structure);
           goto failed;
         }
       }
@@ -1271,7 +1268,7 @@ done:
 invalid_name:
   {
     GST_ERROR ("Invalid name for scenario '%s'", scenario_name);
-error:
+  error:
     ret = FALSE;
     goto done;
   }
@@ -1325,7 +1322,7 @@ gst_validate_scenario_get_property (GObject * object, guint prop_id,
           gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (object)));
       break;
     case PROP_STATELESS:
-      g_value_set_boolean(value, self->priv->stateless);
+      g_value_set_boolean (value, self->priv->stateless);
       break;
     default:
       break;
@@ -1352,9 +1349,9 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class, PROP_STATELESS,
-      g_param_spec_boolean ("stateless", "Stateless", "True to execute actions as soon as possible, regardless "
-        "of the initial state of the pipeline",
-          FALSE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("stateless", "Stateless",
+          "True to execute actions as soon as possible, regardless "
+          "of the initial state of the pipeline", FALSE, G_PARAM_READWRITE));
 }
 
 static void
@@ -1439,7 +1436,7 @@ _add_description (GQuark field_id, const GValue * value, KeyFileGroupName * kfg)
 
 
 static gboolean
-_parse_scenario (GFile *f, GKeyFile * kf)
+_parse_scenario (GFile * f, GKeyFile * kf)
 {
   gboolean ret = FALSE;
   gchar *fname = g_file_get_basename (f);
@@ -1502,7 +1499,7 @@ _list_scenarios_in_dir (GFile * dir, GKeyFile * kf)
 }
 
 gboolean
-gst_validate_list_scenarios (gchar **scenarios, gint num_scenarios,
+gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
     gchar * output_file)
 {
   gchar *result;
@@ -1624,6 +1621,7 @@ init_scenarios (void)
 {
   const gchar *seek_mandatory_fields[] = { "start", NULL };
   const gchar *wait_mandatory_fields[] = { "duration", NULL };
+  const gchar *set_state_mandatory_fields[] = { "state", NULL };
 
   _gst_validate_action_type = gst_validate_action_get_type ();
 
@@ -1653,7 +1651,10 @@ init_scenarios (void)
       "Action to wait during 'duration' seconds", FALSE);
   gst_validate_add_action_type ("dot-pipeline", _execute_dot_pipeline, NULL,
       "Action to wait dot the pipeline (the 'name' property will be included in the"
-      " dot filename. Also the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set", FALSE);
+      " dot filename. Also the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set",
+      FALSE);
   gst_validate_add_action_type ("set-feature-rank", _set_rank, NULL,
       "Allows you to change the ranking of a particular plugin feature", TRUE);
+  gst_validate_add_action_type ("set-state", _execute_set_state, set_state_mandatory_fields,
+      "Allows to change the state of the pipeline to any GstState", FALSE);
 }
