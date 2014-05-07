@@ -1116,6 +1116,19 @@ _load_scenario_file (GstValidateScenario * scenario,
       goto failed;
     }
 
+    if (action_type->mandatory_fields) {
+      guint i;
+
+      for (i =0; action_type->mandatory_fields[i]; i++) {
+        if (gst_structure_has_field (structure, action_type->mandatory_fields[i]) == FALSE) {
+          GST_ERROR_OBJECT (scenario,
+              "Mandatory field '%s' not present in structure: %"
+              GST_PTR_FORMAT, action_type->mandatory_fields[i], structure);
+          goto failed;
+        }
+      }
+    }
+
     action = gst_validate_action_new ();
     action->type = type;
     action->repeat = -1;
@@ -1227,7 +1240,7 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
           GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
 
       if (!(ret = _load_scenario_file (scenario, tldir, &is_config))) {
-        goto invalid_name;
+        goto error;
       }
     }
     /* else check scenario */
@@ -1258,6 +1271,7 @@ done:
 invalid_name:
   {
     GST_ERROR ("Invalid name for scenario '%s'", scenario_name);
+error:
     ret = FALSE;
     goto done;
   }
