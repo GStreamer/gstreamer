@@ -1191,11 +1191,14 @@ gst_auto_convert_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstAutoConvert *autoconvert = GST_AUTO_CONVERT (parent);
   GstPad *internal_sinkpad;
 
+  if (GST_EVENT_TYPE (event) == GST_EVENT_RECONFIGURE)
+    gst_pad_push_event (autoconvert->sinkpad, gst_event_ref (event));
+
   internal_sinkpad = gst_auto_convert_get_internal_sinkpad (autoconvert);
   if (internal_sinkpad) {
     ret = gst_pad_push_event (internal_sinkpad, event);
     gst_object_unref (internal_sinkpad);
-  } else {
+  } else if (GST_EVENT_TYPE (event) != GST_EVENT_RECONFIGURE) {
     GST_WARNING_OBJECT (autoconvert,
         "Got upstream event while no element was selected," "forwarding.");
     ret = gst_pad_push_event (autoconvert->sinkpad, event);
