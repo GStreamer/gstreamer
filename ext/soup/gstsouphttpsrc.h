@@ -108,6 +108,8 @@ struct _GstSoupHTTPSrc {
 
   GMutex mutex;
   GCond request_finished_cond;
+
+  GstEvent *http_headers_event;
 };
 
 struct _GstSoupHTTPSrcClass {

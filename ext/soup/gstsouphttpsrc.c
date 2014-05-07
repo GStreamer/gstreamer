@@ -991,6 +991,40 @@ gst_soup_http_src_authenticate_cb (SoupSession * session, SoupMessage * msg,
 }
 
 static void
+insert_http_header (const gchar * name, const gchar * value, gpointer user_data)
+{
+  GstStructure *headers = user_data;
+  const GValue *gv;
+
+  gv = gst_structure_get_value (headers, name);
+  if (gv && GST_VALUE_HOLDS_ARRAY (gv)) {
+    GValue v = G_VALUE_INIT;
+
+    g_value_init (&v, G_TYPE_STRING);
+    g_value_set_string (&v, value);
+    gst_value_array_append_value ((GValue *) gv, &v);
+    g_value_unset (&v);
+  } else if (gv && G_VALUE_HOLDS_STRING (gv)) {
+    GValue arr = G_VALUE_INIT;
+    GValue v = G_VALUE_INIT;
+    const gchar *old_value = g_value_get_string (gv);
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+    g_value_init (&v, G_TYPE_STRING);
+    g_value_set_string (&v, old_value);
+    gst_value_array_append_value (&arr, &v);
+    g_value_set_string (&v, value);
+    gst_value_array_append_value (&arr, &v);
+
+    gst_structure_set_value (headers, name, &arr);
+    g_value_unset (&v);
+    g_value_unset (&arr);
+  } else {
+    gst_structure_set (headers, name, G_TYPE_STRING, value, NULL);
+  }
+}
+
+static void
 gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 {
   const char *value;
@@ -998,6 +1032,8 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
   GstBaseSrc *basesrc;
   guint64 newsize;
   GHashTable *params = NULL;
+  GstEvent *http_headers_event;
+  GstStructure *http_headers, *headers;
 
   GST_INFO_OBJECT (src, "got headers");
 
@@ -1020,6 +1056,29 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 
   src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING;
   src->got_headers = TRUE;
+
+  http_headers = gst_structure_new_empty ("http-headers");
+  gst_structure_set (http_headers, "uri", G_TYPE_STRING, src->location, NULL);
+  if (src->redirection_uri)
+    gst_structure_set (http_headers, "redirection-uri", G_TYPE_STRING,
+        src->redirection_uri, NULL);
+  headers = gst_structure_new_empty ("request-headers");
+  soup_message_headers_foreach (msg->request_headers, insert_http_header,
+      headers);
+  gst_structure_set (http_headers, "request-headers", GST_TYPE_STRUCTURE,
+      headers, NULL);
+  gst_structure_free (headers);
+  headers = gst_structure_new_empty ("response-headers");
+  soup_message_headers_foreach (msg->response_headers, insert_http_header,
+      headers);
+  gst_structure_set (http_headers, "response-headers", GST_TYPE_STRUCTURE,
+      headers, NULL);
+  gst_structure_free (headers);
+
+  http_headers_event =
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY, http_headers);
+  gst_event_replace (&src->http_headers_event, http_headers_event);
+  gst_event_unref (http_headers_event);
 
   /* Parse Content-Length. */
   if (soup_message_headers_get_encoding (msg->response_headers) ==
@@ -1644,13 +1703,20 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstSoupHTTPSrc *src;
   GstFlowReturn ret;
+  GstEvent *http_headers_event;
 
   src = GST_SOUP_HTTP_SRC (psrc);
 
   g_mutex_lock (&src->mutex);
   *outbuf = NULL;
   ret = gst_soup_http_src_do_request (src, SOUP_METHOD_GET, outbuf);
+  http_headers_event = src->http_headers_event;
+  src->http_headers_event = NULL;
   g_mutex_unlock (&src->mutex);
+
+  if (http_headers_event)
+    gst_pad_push_event (GST_BASE_SRC_PAD (src), http_headers_event);
+
   return ret;
 }
 
