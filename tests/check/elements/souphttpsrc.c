@@ -30,7 +30,7 @@
 #include <libsoup/soup.h>
 #include <gst/check/gstcheck.h>
 
-#if !defined(SOUP_CHECK_VERSION) || !SOUP_CHECK_VERSION(2, 44, 0)
+#if !defined(SOUP_MINOR_VERSION) || SOUP_MINOR_VERSION < 44
 #define SoupStatus SoupKnownStatusCode
 #endif
 
