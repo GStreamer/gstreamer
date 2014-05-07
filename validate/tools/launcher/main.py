@@ -288,7 +288,7 @@ def main():
         msg = "Currently 'hardcoded' blacklisted tests:\n"
         for name, bug in blacklisted:
             options.blacklisted_tests.append(name)
-            msg += "    + %s -- bug: %s\n" % (name, bug)
+            msg += "  + %s \n   --> bug: %s\n\n" % (name, bug)
 
         printc(msg, Colors.FAIL, True)
 
