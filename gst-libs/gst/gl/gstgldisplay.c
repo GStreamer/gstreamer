@@ -127,7 +127,7 @@ gst_gl_display_new (void)
 
 #if GST_GL_HAVE_WINDOW_COCOA
   if (!display && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
-    display = GST_GL_DISPLAY (gst_gl_display_new ());
+    display = g_object_new (GST_TYPE_GL_DISPLAY, NULL);
 #endif
 #if GST_GL_HAVE_WINDOW_X11
   if (!display && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
