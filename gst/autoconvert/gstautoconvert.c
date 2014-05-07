@@ -212,12 +212,9 @@ gst_auto_convert_dispose (GObject * object)
   GstAutoConvert *autoconvert = GST_AUTO_CONVERT (object);
 
   GST_AUTOCONVERT_LOCK (autoconvert);
-  if (autoconvert->current_subelement) {
-    gst_object_unref (autoconvert->current_subelement);
-    autoconvert->current_subelement = NULL;
-    autoconvert->current_internal_sinkpad = NULL;
-    autoconvert->current_internal_srcpad = NULL;
-  }
+  g_clear_object (&autoconvert->current_subelement);
+  g_clear_object (&autoconvert->current_internal_sinkpad);
+  g_clear_object (&autoconvert->current_internal_srcpad);
 
   gst_plugin_feature_list_free (autoconvert->factories);
   autoconvert->factories = NULL;
@@ -664,9 +661,12 @@ gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
   }
 
   GST_AUTOCONVERT_LOCK (autoconvert);
-  autoconvert->current_subelement = element;
-  autoconvert->current_internal_srcpad = internal_srcpad;
-  autoconvert->current_internal_sinkpad = internal_sinkpad;
+  gst_object_replace ((GstObject **) & autoconvert->current_subelement,
+      GST_OBJECT (element));
+  gst_object_replace ((GstObject **) & autoconvert->current_internal_srcpad,
+      GST_OBJECT (internal_srcpad));
+  gst_object_replace ((GstObject **) & autoconvert->current_internal_sinkpad,
+      GST_OBJECT (internal_sinkpad));
   GST_AUTOCONVERT_UNLOCK (autoconvert);
 
   gst_pad_sticky_events_foreach (autoconvert->sinkpad, sticky_event_push,
@@ -674,9 +674,10 @@ gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
 
   gst_pad_push_event (autoconvert->sinkpad, gst_event_new_reconfigure ());
 
-  GST_INFO_OBJECT (autoconvert,
-      "Selected element %s",
-      GST_OBJECT_NAME (GST_OBJECT (autoconvert->current_subelement)));
+  GST_INFO_OBJECT (autoconvert, "Selected element %s",
+      GST_OBJECT_NAME (GST_OBJECT (element)));
+
+  gst_object_unref (element);
 
   return TRUE;
 }
@@ -752,10 +753,9 @@ gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
        */
       GST_AUTOCONVERT_LOCK (autoconvert);
       if (autoconvert->current_subelement == subelement) {
-        gst_object_unref (autoconvert->current_subelement);
-        autoconvert->current_subelement = NULL;
-        autoconvert->current_internal_srcpad = NULL;
-        autoconvert->current_internal_sinkpad = NULL;
+        g_clear_object (&autoconvert->current_subelement);
+        g_clear_object (&autoconvert->current_internal_sinkpad);
+        g_clear_object (&autoconvert->current_internal_srcpad);
       }
       GST_AUTOCONVERT_UNLOCK (autoconvert);
       gst_object_unref (subelement);
