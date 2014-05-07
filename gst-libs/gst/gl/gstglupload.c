@@ -215,6 +215,26 @@ gst_gl_upload_init_format (GstGLUpload * upload, GstVideoInfo * in_info)
 }
 
 /**
+ * gst_gl_upload_get_format:
+ * @upload: a #GstGLUpload
+ *
+ * Returns: (transfer none): The #GstVideoInfo set by gst_gl_upload_init_format()
+ */
+GstVideoInfo *
+gst_gl_upload_get_format (GstGLUpload * upload)
+{
+  GstVideoInfo *ret;
+
+  g_mutex_lock (&upload->lock);
+
+  ret = &upload->in_info;
+
+  g_mutex_unlock (&upload->lock);
+
+  return ret;
+}
+
+/**
  * gst_gl_upload_perform_with_buffer:
  * @upload: a #GstGLUpload
  * @buffer: a #GstBuffer

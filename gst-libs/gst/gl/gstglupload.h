@@ -78,6 +78,7 @@ struct _GstGLUploadClass
 GstGLUpload * gst_gl_upload_new            (GstGLContext * context);
 
 gboolean gst_gl_upload_init_format         (GstGLUpload * upload, GstVideoInfo * in_info);
+GstVideoInfo * gst_gl_upload_get_format    (GstGLUpload * upload);
 
 gboolean gst_gl_upload_add_video_gl_texture_upload_meta (GstGLUpload * upload, GstBuffer * buffer);
 
