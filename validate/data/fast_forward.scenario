@@ -3,4 +3,5 @@ seek, name=Fast-forward-seek, playback_time=0.0, rate=2.0,  start=0.0, flags=acc
 seek, name=Fast-forward-seek, playback_time="min(10.0, duration*0.25)", rate=4.0,  start=0.0, flags=accurate+flush
 seek, name=Fast-forward-seek, playback_time="min(20.0, duration*0.50)", rate=8.0,  start=0.0, flags=accurate+flush
 seek, name=Fast-forward-seek, playback_time="min(40.0, duration*0.75)", rate=16.0, start=0.0, flags=accurate+flush
-seek, name=Fast-forward-seek, playback_time="min(50.0, duration*0.75)", rate=32.0, start=0.0, stop="min(60.0, -1)", flags=accurate+flush
+seek, name=Fast-forward-seek, playback_time="min(50.0, duration*0.75)", rate=32.0, start=0.0, flags=accurate+flush
+stop, playback_time="min(duration - 0.3, 60.0)"
