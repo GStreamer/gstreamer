@@ -160,23 +160,6 @@ _add_asset (GstValidateScenario *scenario, GstValidateAction *action)
   return ges_project_add_asset(project, asset);
 }
 
-static gboolean
-_add_layer (GstValidateScenario *scenario, GstValidateAction *action)
-{
-  GESTimeline *timeline = get_timeline(scenario);
-  GESLayer *layer;
-  gint priority;
-
-  if (!gst_structure_get_int(action->structure, "priority", &priority)) {
-    GST_ERROR("priority is needed when adding a layer");
-    return FALSE;
-  }
-
-  layer = ges_layer_new();
-  g_object_set(layer, "priority", priority, NULL);
-  return ges_timeline_add_layer(timeline, layer);
-}
-
 /* Unref after usage */
 static GESLayer *
 _get_layer_by_priority(GESTimeline *timeline, gint priority)
@@ -197,6 +180,31 @@ _get_layer_by_priority(GESTimeline *timeline, gint priority)
 
   g_list_free_full(layers, gst_object_unref);
   return layer;
+}
+
+static gboolean
+_add_layer (GstValidateScenario *scenario, GstValidateAction *action)
+{
+  GESTimeline *timeline = get_timeline(scenario);
+  GESLayer *layer;
+  gint priority;
+
+  if (!gst_structure_get_int(action->structure, "priority", &priority)) {
+    GST_ERROR("priority is needed when adding a layer");
+    return FALSE;
+  }
+
+  layer = _get_layer_by_priority(timeline, priority);
+
+  if (layer != NULL) {
+    GST_ERROR("A layer with priority %d already exists, not creating a new one", priority);
+    gst_object_unref(layer);
+    return FALSE;
+  }
+
+  layer = ges_layer_new();
+  g_object_set(layer, "priority", priority, NULL);
+  return ges_timeline_add_layer(timeline, layer);
 }
 
 static gboolean
