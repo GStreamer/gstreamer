@@ -40,7 +40,8 @@ class Test(Loggable):
     """ A class representing a particular test. """
 
     def __init__(self, application_name, classname, options,
-                 reporter, timeout=DEFAULT_TIMEOUT, hard_timeout=None):
+                 reporter, duration=0, timeout=DEFAULT_TIMEOUT,
+                 hard_timeout=None):
         """
         @timeout: The timeout during which the value return by get_current_value
                   keeps being exactly equal
@@ -55,6 +56,7 @@ class Test(Loggable):
         self.command = ""
         self.reporter = reporter
         self.process = None
+        self.duration = duration
 
         self.clean()
 
@@ -247,11 +249,12 @@ class GstValidateTest(Test):
     findlastseek_regex = re.compile('seeking to.*(\d+):(\d+):(\d+).(\d+).*stop.*(\d+):(\d+):(\d+).(\d+).*rate.*(\d+)\.(\d+)')
 
     def __init__(self, application_name, classname,
-                 options, reporter, timeout=DEFAULT_TIMEOUT,
-                 scenario=None, hard_timeout=None):
+                 options, reporter, duration=0,
+                 timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None):
 
         super(GstValidateTest, self).__init__(application_name, classname, options,
-                                              reporter, timeout=timeout, hard_timeout=hard_timeout)
+                                              reporter, duration=duration,
+                                              timeout=timeout, hard_timeout=hard_timeout)
 
         # defines how much the process can be outside of the configured
         # segment / seek
@@ -504,6 +507,13 @@ class TestsManager(Loggable):
         if self._check_blacklisted(test):
             return False
 
+        if test.duration > 0 and int(self.options.long_limit) < int(test.duration):
+            self.info("Not activating test as it duration (%d) is superior"
+                      " than the long limit (%d)" % (test.duration,
+                                                     int(self.options.long_limit)))
+            return False
+
+
         if not self.wanted_tests_patterns:
             return True
 
@@ -672,6 +682,11 @@ class Scenario(object):
 
         return False
 
+    def get_duration(self):
+        try:
+            return float(getattr(self, "duration"))
+        except AttributeError:
+            return 0
 
     def get_min_tracks(self, track_type):
         try:

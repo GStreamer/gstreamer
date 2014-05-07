@@ -53,7 +53,7 @@ class MediaDescriptor(Loggable):
         return self.media_xml.attrib["uri"]
 
     def get_duration(self):
-        return self.media_xml.attrib["duration"]
+        return long(self.media_xml.attrib["duration"])
 
     def set_protocol(self, protocol):
         self.media_xml.attrib["protocol"] = protocol
@@ -213,8 +213,14 @@ class GstValidateLaunchTest(GstValidateTest):
         except KeyError:
             pass
 
+        duration = 0
+        if scenario:
+            duration = scenario.get_duration()
+        elif media_descriptor:
+            duration = media_descriptor.get_duration() / GST_SECOND
         super(GstValidateLaunchTest, self).__init__(GST_VALIDATE_COMMAND, classname,
                                               options, reporter,
+                                              duration=duration,
                                               scenario=scenario,
                                               timeout=timeout)
 
@@ -263,32 +269,22 @@ class GstValidateMediaCheckTest(Test):
 class GstValidateTranscodingTest(GstValidateTest):
     _scenarios = ScenarioManager()
     def __init__(self, classname, options, reporter,
-                 combination, uri, media_descriptor, timeout=DEFAULT_TIMEOUT,
-                 scenario_name="play_15s"):
+                 combination, uri, media_descriptor,
+                 timeout=DEFAULT_TIMEOUT,
+                 scenario=None):
 
         Loggable.__init__(self)
 
         file_dur = long(media_descriptor.get_duration()) / GST_SECOND
-        if  file_dur < 30:
-            self.debug("%s is short (%ds< 30 secs) playing it all" % (uri, file_dur))
-            scenario = None
-        else:
-            self.debug("%s is long (%ds > 30 secs) playing it all" % (uri, file_dur))
-            scenario = self._scenarios.get_scenario(scenario_name)
         try:
             timeout = G_V_PROTOCOL_TIMEOUTS[media_descriptor.get_protocol()]
         except KeyError:
             pass
 
-        try:
-            hard_timeout = 4 * int(scenario.duration) + timeout
-        except AttributeError:
-            hard_timeout = None
-
         super(GstValidateTranscodingTest, self).__init__(
             GST_VALIDATE_TRANSCODING_COMMAND, classname,
-            options, reporter, scenario=scenario, timeout=timeout,
-            hard_timeout=hard_timeout)
+            options, reporter, duration=file_dur,
+            timeout=timeout, scenario=scenario)
 
         self.media_descriptor = media_descriptor
         self.uri = uri

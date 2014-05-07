@@ -183,7 +183,9 @@ def main():
     parser.add_argument("-g", "--generate-media-info", dest="generate_info",
                      action="store_true", default=False,
                      help="Set it in order to generate the missing .media_infos files")
-
+    parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
+                     default=utils.LONG_TEST, action='store',
+                     help="Defines the limite from which a test is concidered as long (is seconds)"),
     dir_group = parser.add_argument_group("Directories and files to be used by the launcher")
     parser.add_argument('--xunit-file', action='store',
                       dest='xunit_file', metavar="FILE",
