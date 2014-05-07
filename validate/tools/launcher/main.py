@@ -218,6 +218,9 @@ def main():
     http_server_group.add_argument("-s", "--folder-for-http-server", dest="http_server_dir",
                       default=None,
                       help="Folder in which to create an http server on localhost. Default is PATHS")
+    http_server_group.add_argument("--http-only", dest="httponly",
+                      default=False, action='store_true',
+                      help="Start the http server and quit")
 
     assets_group = parser.add_argument_group("Handle remote assets")
     assets_group.add_argument("-u", "--update-assets-command", dest="update_assets_command",
@@ -319,8 +322,12 @@ def main():
         return 0
 
     httpsrv = HTTPServer(options)
-    if tests_launcher.needs_http_server():
+    if tests_launcher.needs_http_server() or options.httponly is True:
         httpsrv.start()
+
+    if options.httponly is True:
+        print "Running HTTP server only"
+        return
 
     e = None
     try:
