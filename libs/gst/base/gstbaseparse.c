@@ -1012,6 +1012,8 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
 
       gst_event_parse_segment (event, &in_segment);
       gst_segment_init (&out_segment, GST_FORMAT_TIME);
+      out_segment.rate = in_segment->rate;
+      out_segment.applied_rate = in_segment->applied_rate;
 
       GST_DEBUG_OBJECT (parse, "segment %" GST_SEGMENT_FORMAT, in_segment);
 
