@@ -735,10 +735,11 @@ class ScenarioManager(Loggable):
         """
         scenarios = []
         scenario_defs = os.path.join(self.config.main_dir, "scenarios.def")
+        logs = open(os.path.join(self.config.logsdir, "scenarios_discovery.log"), 'w')
         try:
             command = [self.GST_VALIDATE_COMMAND, "--scenarios-defs-output-file", scenario_defs]
             command.extend(scenario_paths)
-            subprocess.check_output(command)
+            subprocess.check_call(command, stdout=logs, stderr=logs)
         except subprocess.CalledProcessError:
             pass
 
