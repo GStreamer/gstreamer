@@ -53,7 +53,7 @@ create_actor (GstGLClutterActor * actor)
 {
   static gint xpos = 0;
   static gint ypos = 0;
-  actor->texture = g_object_new (CLUTTER_GLX_TYPE_TEXTURE_PIXMAP,
+  actor->texture = g_object_new (CLUTTER_X11_TYPE_TEXTURE_PIXMAP,
       "window", actor->win, "automatic-updates", TRUE, NULL);
   clutter_container_add_actor (CLUTTER_CONTAINER (actor->stage),
       actor->texture);
