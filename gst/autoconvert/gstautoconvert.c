@@ -219,10 +219,8 @@ gst_auto_convert_dispose (GObject * object)
     autoconvert->current_internal_srcpad = NULL;
   }
 
-  if (autoconvert->factories) {
-    gst_plugin_feature_list_free (autoconvert->factories);
-    autoconvert->factories = NULL;
-  }
+  gst_plugin_feature_list_free (autoconvert->factories);
+  autoconvert->factories = NULL;
   GST_AUTOCONVERT_UNLOCK (autoconvert);
 
   G_OBJECT_CLASS (gst_auto_convert_parent_class)->dispose (object);
