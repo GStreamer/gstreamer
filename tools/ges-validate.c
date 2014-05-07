@@ -92,6 +92,38 @@ _serialize_project (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 static gboolean
+_remove_asset (GstValidateScenario *scenario, GstValidateAction *action)
+{
+  const gchar *id = NULL;
+  const gchar *type_string = NULL;
+  GType type;
+  GESTimeline *timeline = get_timeline(scenario);
+  GESProject *project = ges_timeline_get_project(timeline);
+  GESAsset *asset;
+
+  id = gst_structure_get_string (action->structure, "id");
+  type_string = gst_structure_get_string (action->structure, "type");
+
+  if (!type_string || !id) {
+    GST_ERROR("Missing parameters, we got type %s and id %s", type_string, id);
+    return FALSE;
+  }
+
+  if (!(type = g_type_from_name(type_string))) {
+    GST_ERROR("This type doesn't exist : %s", type_string);
+    return FALSE;
+  }
+
+  asset = ges_project_get_asset(project, id, type);
+
+  if (!asset) {
+    GST_ERROR("No asset with id %s and type %s", id, type_string);
+  }
+
+  return ges_project_remove_asset(project, asset);
+}
+
+static gboolean
 _add_asset (GstValidateScenario *scenario, GstValidateAction *action)
 {
   const gchar *id = NULL;
@@ -232,6 +264,10 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
     NULL
   };
 
+  const gchar *remove_asset_mandatory_fields[] = { "id", "type",
+    NULL
+  };
+
   gst_validate_init ();
 
   if (scenario) {
@@ -246,6 +282,8 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
       move_clip_mandatory_fields, "Allows to seek into the files", FALSE);
   gst_validate_add_action_type ("add-asset", _add_asset,
       add_asset_mandatory_fields, "Allows to add an asset to the current project", FALSE);
+  gst_validate_add_action_type ("remove-asset", _remove_asset,
+      remove_asset_mandatory_fields, "Allows to remove an asset from the current project", FALSE);
   gst_validate_add_action_type ("serialize-project", _serialize_project,
       serialize_project_mandatory_fields, "serializes a project", FALSE);
 
