@@ -1127,9 +1127,9 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       filter->upload = gst_object_ref (GST_GL_BUFFER_POOL (pool)->upload);
     } else {
       filter->upload = gst_gl_upload_new (filter->context);
-      if (!gst_gl_upload_init_format (filter->upload, &filter->in_info))
-        goto upload_error;
     }
+    if (!gst_gl_upload_init_format (filter->upload, &filter->in_info))
+      goto upload_error;
 
     gst_caps_unref (in_caps);
     gst_caps_unref (out_caps);
