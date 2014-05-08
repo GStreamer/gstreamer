@@ -252,7 +252,8 @@ str_to_time (char *time)
 }
 
 static GESTimeline *
-create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri, const gchar *scenario)
+create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
+    const gchar * scenario)
 {
   GESLayer *layer = NULL;
   GESTrack *tracka = NULL, *trackv = NULL;
@@ -406,7 +407,8 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri, const gchar 
   }
 
 activate_validate:
-  if (ges_validate_activate (GST_PIPELINE (pipeline), scenario, activate_before_paused) == FALSE) {
+  if (ges_validate_activate (GST_PIPELINE (pipeline), scenario,
+          activate_before_paused) == FALSE) {
     g_error ("Could not activate scenario %s", scenario);
     return NULL;
   }
@@ -421,7 +423,7 @@ build_failure:
 
 static GESPipeline *
 create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
-    int argc, char **argv, const gchar *scenario)
+    int argc, char **argv, const gchar * scenario)
 {
   gchar *uri = NULL;
   GESTimeline *timeline = NULL;
@@ -720,7 +722,7 @@ main (int argc, gchar ** argv)
   static gdouble thumbinterval = 0;
   static gboolean verbose = FALSE;
   gchar *load_path = NULL;
-  gchar *videosink = NULL;
+  gchar *videosink = NULL, *audiosink = NULL;
   const gchar *scenario = NULL;
 
   GOptionEntry options[] = {
@@ -765,7 +767,9 @@ main (int argc, gchar ** argv)
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &disable_mixing,
         "Do not use mixing element in the tracks"},
     {"videosink", 'v', 0, G_OPTION_ARG_STRING, &videosink,
-      "The video sink used for playing back", "<videosink>"},
+        "The video sink used for playing back", "<videosink>"},
+    {"audiosink", 'a', 0, G_OPTION_ARG_STRING, &audiosink,
+        "The audio sink used for playing back", "<audiosink>"},
 #ifdef HAVE_GST_VALIDATE
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &scenario,
         "Specify a GstValidate scenario to run, 'none' means load gst-validate"
@@ -838,12 +842,25 @@ main (int argc, gchar ** argv)
     exit (1);
 
   if (videosink != NULL) {
-    GstElement *sink = gst_element_factory_make (videosink, "custom-videosink");
+    GError *err = NULL;
+    GstElement *sink = gst_parse_bin_from_description (videosink, TRUE, &err);
     if (sink == NULL) {
-      GST_ERROR ("could not create the requested videosink %s, exiting", videosink);
+      GST_ERROR ("could not create the requested videosink %s (err: %s), "
+          "exiting", err ? err->message : "", videosink);
       exit (1);
     }
     ges_pipeline_preview_set_video_sink (pipeline, sink);
+  }
+
+  if (audiosink != NULL) {
+    GError *err = NULL;
+    GstElement *sink = gst_parse_bin_from_description (audiosink, TRUE, &err);
+    if (sink == NULL) {
+      GST_ERROR ("could not create the requested audiosink %s (err: %s), "
+          "exiting", err ? err->message : "", audiosink);
+      exit (1);
+    }
+    ges_pipeline_preview_set_audio_sink (pipeline, sink);
   }
 
   /* Setup profile/encoding if needed */
