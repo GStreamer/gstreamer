@@ -28,9 +28,7 @@ G_DEFINE_TYPE (GstMediaDescriptorWriter,
     gst_media_descriptor_writer, GST_TYPE_MEDIA_DESCRIPTOR);
 
 #define STR_APPEND(arg, nb_white)  \
-  tmpstr = res; \
-  res = g_strdup_printf ("%s%*s%s%s", res, (nb_white), " ", (arg), "\n"); \
-  g_free (tmpstr);
+  g_string_append_printf (res, "%*s%s%s", (nb_white), " ", (arg), "\n"); \
 
 #define STR_APPEND0(arg) STR_APPEND((arg), 0)
 #define STR_APPEND1(arg) STR_APPEND((arg), 2)
@@ -64,8 +62,8 @@ finalize (GstMediaDescriptorWriter * writer)
   if (writer->priv->parsers)
     gst_plugin_feature_list_free (writer->priv->parsers);
 
-  G_OBJECT_CLASS (gst_media_descriptor_writer_parent_class)->
-      finalize (G_OBJECT (writer));
+  G_OBJECT_CLASS (gst_media_descriptor_writer_parent_class)->finalize (G_OBJECT
+      (writer));
 }
 
 static void
@@ -120,12 +118,13 @@ static void
 static gchar *
 serialize_filenode (GstMediaDescriptorWriter * writer)
 {
-  gchar *res, *tmpstr, *caps_str, *tmpnode;
+  GString *res;
+  gchar *tmpstr, *caps_str;
   GList *tmp, *tmp2;
   TagsNode *tagsnode;
   FileNode *filenode = ((GstMediaDescriptor *) writer)->filenode;
 
-  res = g_markup_printf_escaped ("<file duration=\"%" G_GUINT64_FORMAT
+  tmpstr = g_markup_printf_escaped ("<file duration=\"%" G_GUINT64_FORMAT
       "\" frame-detection=\"%i\" uri=\"%s\" seekable=\"%s\">\n",
       filenode->duration, filenode->frame_detection, filenode->uri,
       filenode->seekable ? "true" : "false");
@@ -135,11 +134,8 @@ serialize_filenode (GstMediaDescriptorWriter * writer)
   else
     caps_str = g_strdup ("");
 
-  tmpnode = g_strdup_printf ("<streams caps=\"%s\">", caps_str);
-  STR_APPEND1 (tmpnode);
-  g_free (caps_str);
-  g_free (tmpnode);
-
+  res = g_string_new (tmpstr);
+  g_string_append_printf (res, "  <streams caps=\"%s\">", caps_str);
   for (tmp = filenode->streams; tmp; tmp = tmp->next) {
     GList *tmp3;
     StreamNode *snode = ((StreamNode *) tmp->data);
@@ -168,11 +164,9 @@ serialize_filenode (GstMediaDescriptorWriter * writer)
   }
   STR_APPEND1 (tagsnode->str_close);
 
-  tmpstr = res;
-  res = g_strdup_printf ("%s%s", res, filenode->str_close);
-  g_free (tmpstr);
+  g_string_append (res, filenode->str_close);
 
-  return res;
+  return g_string_free (res, FALSE);
 }
 
 /* Public methods */
@@ -222,8 +216,7 @@ gst_media_descriptor_writer_add_stream (GstMediaDescriptorWriter * writer,
 
     g_slice_free (StreamNode, snode);
     GST_VALIDATE_REPORT (writer, FILE_NO_STREAM_ID,
-        "Stream with caps: %s has no stream ID",
-        capsstr);
+        "Stream with caps: %s has no stream ID", capsstr);
     gst_caps_unref (caps);
     g_free (capsstr);
 
@@ -274,7 +267,8 @@ gst_media_descriptor_writer_add_stream (GstMediaDescriptorWriter * writer,
 }
 
 static GstPadProbeReturn
-_uridecodebin_probe (GstPad * pad, GstPadProbeInfo * info, GstMediaDescriptorWriter *writer)
+_uridecodebin_probe (GstPad * pad, GstPadProbeInfo * info,
+    GstMediaDescriptorWriter * writer)
 {
   gst_media_descriptor_writer_add_frame (writer, pad, info->data);
 
@@ -282,7 +276,8 @@ _uridecodebin_probe (GstPad * pad, GstPadProbeInfo * info, GstMediaDescriptorWri
 }
 
 static gboolean
-_find_stream_id (GstPad *pad, GstEvent **event, GstMediaDescriptorWriter *writer)
+_find_stream_id (GstPad * pad, GstEvent ** event,
+    GstMediaDescriptorWriter * writer)
 {
   if (GST_EVENT_TYPE (*event) == GST_EVENT_STREAM_START) {
     GList *tmp;
@@ -316,7 +311,7 @@ _find_stream_id (GstPad *pad, GstEvent **event, GstMediaDescriptorWriter *writer
 }
 
 static inline GstElement *
-_get_parser (GstMediaDescriptorWriter *writer, GstPad *pad)
+_get_parser (GstMediaDescriptorWriter * writer, GstPad * pad)
 {
   GList *parsers1, *parsers;
   GstElement *parser = NULL;
@@ -353,7 +348,8 @@ beach:
 }
 
 static void
-pad_added_cb (GstElement * decodebin, GstPad * pad, GstMediaDescriptorWriter *writer)
+pad_added_cb (GstElement * decodebin, GstPad * pad,
+    GstMediaDescriptorWriter * writer)
 {
   GList *tmp;
   StreamNode *snode = NULL;
@@ -379,10 +375,11 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstMediaDescriptorWriter *wr
   gst_bin_add (GST_BIN (writer->priv->pipeline), fakesink);
   gst_element_sync_state_with_parent (fakesink);
   gst_pad_link (srcpad, sinkpad);
-  gst_pad_sticky_events_foreach (pad, (GstPadStickyEventsForeachFunction) _find_stream_id,
-      writer);
+  gst_pad_sticky_events_foreach (pad,
+      (GstPadStickyEventsForeachFunction) _find_stream_id, writer);
 
-  for (tmp = ((GstMediaDescriptor *) writer)->filenode->streams; tmp; tmp = tmp->next) {
+  for (tmp = ((GstMediaDescriptor *) writer)->filenode->streams; tmp;
+      tmp = tmp->next) {
     snode = tmp->data;
     if (snode->pad == pad && srcpad != pad) {
       gst_object_unref (pad);
@@ -396,7 +393,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstMediaDescriptorWriter *wr
 }
 
 static gboolean
-bus_callback (GstBus * bus, GstMessage * message, GstMediaDescriptorWriter *writer)
+bus_callback (GstBus * bus, GstMessage * message,
+    GstMediaDescriptorWriter * writer)
 {
   GMainLoop *loop = writer->priv->loop;
 
@@ -454,8 +452,8 @@ bus_callback (GstBus * bus, GstMessage * message, GstMediaDescriptorWriter *writ
 }
 
 static gboolean
-_run_frame_analisis (GstMediaDescriptorWriter *writer, GstValidateRunner *runner,
-    const gchar *uri)
+_run_frame_analisis (GstMediaDescriptorWriter * writer,
+    GstValidateRunner * runner, const gchar * uri)
 {
   GstBus *bus;
   GstStateChangeReturn sret;
@@ -465,12 +463,14 @@ _run_frame_analisis (GstMediaDescriptorWriter *writer, GstValidateRunner *runner
 
   writer->priv->pipeline = gst_pipeline_new ("frame-analisis");
 
-  monitor = gst_validate_monitor_factory_create (
-      GST_OBJECT_CAST (writer->priv->pipeline), runner, NULL);
+  monitor =
+      gst_validate_monitor_factory_create (GST_OBJECT_CAST (writer->priv->
+          pipeline), runner, NULL);
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
 
   g_object_set (uridecodebin, "uri", uri, "caps", writer->priv->raw_caps, NULL);
-  g_signal_connect (uridecodebin, "pad-added", G_CALLBACK (pad_added_cb), writer);
+  g_signal_connect (uridecodebin, "pad-added", G_CALLBACK (pad_added_cb),
+      writer);
   gst_bin_add (GST_BIN (writer->priv->pipeline), uridecodebin);
 
   writer->priv->loop = g_main_loop_new (NULL, FALSE);
@@ -545,8 +545,9 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   }
 
   if (streams == NULL)
-      writer->priv->raw_caps = gst_caps_copy (((GstMediaDescriptor *) writer)->filenode->caps);
-  gst_discoverer_stream_info_list_free(streams);
+    writer->priv->raw_caps =
+        gst_caps_copy (((GstMediaDescriptor *) writer)->filenode->caps);
+  gst_discoverer_stream_info_list_free (streams);
 
 
   if (full == TRUE)
@@ -735,10 +736,10 @@ gst_media_descriptor_writer_add_frame (GstMediaDescriptorWriter
       fnode->str_open =
           g_markup_printf_escaped (" <frame duration=\"%" G_GUINT64_FORMAT
           "\" id=\"%i\" is-keyframe=\"%i\" offset=\"%" G_GUINT64_FORMAT
-          "\" offset-end=\"%" G_GUINT64_FORMAT "\" pts=\"%"
-          G_GUINT64_FORMAT "\"  dts=\"%" G_GUINT64_FORMAT "\" />",
-          fnode->duration, id, fnode->is_keyframe,
-          fnode->offset, fnode->offset_end, fnode->pts, fnode->dts);
+          "\" offset-end=\"%" G_GUINT64_FORMAT "\" pts=\"%" G_GUINT64_FORMAT
+          "\"  dts=\"%" G_GUINT64_FORMAT "\" />", fnode->duration, id,
+          fnode->is_keyframe, fnode->offset, fnode->offset_end, fnode->pts,
+          fnode->dts);
 
       fnode->str_close = NULL;
 
