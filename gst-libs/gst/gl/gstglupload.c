@@ -629,6 +629,8 @@ _init_upload (GstGLUpload * upload)
         &out_info))
     goto error;
 
+  upload->initted = TRUE;
+
   return TRUE;
 
 error:
