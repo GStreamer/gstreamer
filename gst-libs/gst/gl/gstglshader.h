@@ -48,7 +48,7 @@ typedef enum {
 
 struct _GstGLShader {
   /*< private >*/
-  GObject parent;
+  GstObject parent;
 
   GstGLContext *context;
 
@@ -57,7 +57,7 @@ struct _GstGLShader {
 
 struct _GstGLShaderClass {
   /*< private >*/
-  GObjectClass parent_class;
+  GstObjectClass parent_class;
 };
 
 /* methods */

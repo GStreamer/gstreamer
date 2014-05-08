@@ -374,8 +374,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_color_convert_debug);
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_color_convert_debug, "glconvert", 0, "convert");
 
-G_DEFINE_TYPE_WITH_CODE (GstGLColorConvert, gst_gl_color_convert, G_TYPE_OBJECT,
-    DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLColorConvert, gst_gl_color_convert,
+    GST_TYPE_OBJECT, DEBUG_INIT);
 static void gst_gl_color_convert_finalize (GObject * object);
 
 #define GST_GL_COLOR_CONVERT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \

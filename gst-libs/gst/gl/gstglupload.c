@@ -92,7 +92,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_upload_debug, "glupload", 0, "upload");
 
-G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, G_TYPE_OBJECT, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, GST_TYPE_OBJECT, DEBUG_INIT);
 static void gst_gl_upload_finalize (GObject * object);
 
 

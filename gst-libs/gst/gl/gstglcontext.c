@@ -122,7 +122,7 @@ load_gles2_module (gpointer user_data)
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 #define gst_gl_context_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstGLContext, gst_gl_context, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GstGLContext, gst_gl_context, GST_TYPE_OBJECT);
 
 #define GST_GL_CONTEXT_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_CONTEXT, GstGLContextPrivate))

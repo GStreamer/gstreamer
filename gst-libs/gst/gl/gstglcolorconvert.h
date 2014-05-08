@@ -44,7 +44,7 @@ GType gst_gl_color_convert_get_type (void);
 struct _GstGLColorConvert
 {
   /* <private> */
-  GObject          parent;
+  GstObject        parent;
 
   GMutex           lock;
 
@@ -79,7 +79,7 @@ struct _GstGLColorConvert
  */
 struct _GstGLColorConvertClass
 {
-  GObjectClass object_class;
+  GstObjectClass object_class;
 };
 
 /**

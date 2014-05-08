@@ -72,7 +72,7 @@
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 #define gst_gl_window_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GstGLWindow, gst_gl_window, GST_TYPE_OBJECT);
 
 #define GST_GL_WINDOW_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW, GstGLWindowPrivate))

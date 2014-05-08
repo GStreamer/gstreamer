@@ -115,7 +115,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_shader_debug);
 
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_shader_debug, "glshader", 0, "shader");
-G_DEFINE_TYPE_WITH_CODE (GstGLShader, gst_gl_shader, G_TYPE_OBJECT, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLShader, gst_gl_shader, GST_TYPE_OBJECT,
+    DEBUG_INIT);
 
 static void
 _cleanup_shader (GstGLContext * context, GstGLShader * shader)

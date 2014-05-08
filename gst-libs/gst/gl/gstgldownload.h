@@ -44,7 +44,7 @@ GType gst_gl_download_get_type (void);
 struct _GstGLDownload
 {
   /* <private> */
-  GObject          parent;
+  GstObject        parent;
 
   GMutex           lock;
 
@@ -74,7 +74,7 @@ struct _GstGLDownload
 struct _GstGLDownloadClass
 {
   /* <private> */
-  GObjectClass object_class;
+  GstObjectClass object_class;
 };
 
 GstGLDownload * gst_gl_download_new          (GstGLContext * context);
