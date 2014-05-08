@@ -22,13 +22,28 @@
 /**
  * SECTION:element-downloadbuffer
  *
- * If you set temp-template to a value such as /tmp/gstreamer-XXXXXX, the element
- * will allocate a random free filename and buffer data in the file.
- * By using this, it will buffer the entire stream data on the file independently
- * of the size limits, they will only be used for buffering statistics.
+ * The downloadbuffer element provides on-disk buffering and caching of, typically,
+ * a network file. temp-template should be set to a value such as
+ * /tmp/gstreamer-XXXXXX and the element will allocate a random free filename and
+ * buffer the data in the file.
+ *
+ * With max-size-bytes and max-size-time you can configure the buffering limits.
+ * The downloadbuffer element will try to read-ahead these amounts of data. When
+ * the amount of read-ahead data drops below low-percent of the configured max,
+ * the element will start emiting BUFFERING messages until high-percent of max is
+ * reached again.
+ *
+ * The downloadbuffer provides push and pull based scheduling on its source pad
+ * and will efficiently seek in the upstream element when needed.
  *
  * The temp-location property will be used to notify the application of the
  * allocated filename.
+ *
+ * When the downloadbuffer has completely downloaded the media, it will
+ * post an application message named  <classname>&quot;GstCacheDownloadComplete&quot;</classname>
+ * with the following information:
+ *
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -998,3 +998,73 @@
 <DEFAULT></DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstDownloadBuffer::high-percent</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>High percent</NICK>
+<BLURB>High threshold for buffering to finish. Only used if use-buffering is True.</BLURB>
+<DEFAULT>99</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDownloadBuffer::low-percent</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low percent</NICK>
+<BLURB>Low threshold for buffering to start. Only used if use-buffering is True.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDownloadBuffer::max-size-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (kB)</NICK>
+<BLURB>Max. amount of data to buffer (bytes, 0=disable).</BLURB>
+<DEFAULT>2097152</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDownloadBuffer::max-size-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (ns)</NICK>
+<BLURB>Max. amount of data to buffer (in ns, 0=disable).</BLURB>
+<DEFAULT>2000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDownloadBuffer::temp-location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Temporary File Location</NICK>
+<BLURB>Location to store temporary files in (Only read this property, use temp-template to configure the name template).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDownloadBuffer::temp-remove</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Remove the Temporary File</NICK>
+<BLURB>Remove the temp-location after use.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDownloadBuffer::temp-template</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporary File Template</NICK>
+<BLURB>File template to store temporary files in, should contain directory and XXXXXX. (NULL == disabled).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+

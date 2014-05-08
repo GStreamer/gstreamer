@@ -126,6 +126,21 @@ gst_capsfilter_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-downloadbuffer</FILE>
+<TITLE>downloadbuffer</TITLE>
+GstDownloadBuffer
+<SUBSECTION Standard>
+GstDownloadBufferSize
+GstDownloadBufferClass
+GST_DOWNLOAD_BUFFER_CAST
+GST_DOWNLOAD_BUFFER
+GST_DOWNLOAD_BUFFER_CLASS
+GST_IS_DOWNLOAD_BUFFER
+GST_IS_DOWNLOAD_BUFFER_CLASS
+GST_TYPE_DOWNLOAD_BUFFER
+</SECTION>
+
+<SECTION>
 <FILE>element-identity</FILE>
 <TITLE>identity</TITLE>
 GstIdentity

@@ -18,6 +18,7 @@
   <chapter>
     <title>gstreamer Elements</title>
     <xi:include href="xml/element-capsfilter.xml" />
+    <xi:include href="xml/element-downloadbuffer.xml" />
     <xi:include href="xml/element-fakesrc.xml" />
     <xi:include href="xml/element-fakesink.xml" />
     <xi:include href="xml/element-fdsink.xml" />

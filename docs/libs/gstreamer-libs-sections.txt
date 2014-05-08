@@ -840,6 +840,22 @@ gst_queue_array_drop_element
 gst_queue_array_find
 </SECTION>
 
+<SECTION>
+<FILE>gstsparsefile</FILE>
+<TITLE>GstSparseFile</TITLE>
+<INCLUDE>gst/base/gstsparsefile.h</INCLUDE>
+GstSparseFile
+gst_sparse_file_new
+gst_sparse_file_free
+gst_sparse_file_set_fd
+gst_sparse_file_clear
+gst_sparse_file_write
+gst_sparse_file_read
+gst_sparse_file_n_ranges
+gst_sparse_file_get_range_before
+gst_sparse_file_get_range_after
+</SECTION>
+
 # net
 
 <SECTION>
