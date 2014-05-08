@@ -657,6 +657,9 @@ static GMutex gst_plugin_loading_mutex;
 #define CHECK_PLUGIN_DESC_FIELD(desc,field,fn)                               \
   if (G_UNLIKELY ((desc)->field == NULL || *(desc)->field == '\0')) {        \
     g_warning ("Plugin description for '%s' has no valid %s field", fn, G_STRINGIFY (field)); \
+    g_set_error (error, GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE, \
+        "Plugin %s has invalid plugin description field '%s'", \
+        filename, G_STRINGIFY (field)); \
     goto return_error;                                                       \
   }
 
