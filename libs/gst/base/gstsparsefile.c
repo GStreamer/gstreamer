@@ -137,6 +137,8 @@ get_read_range (GstSparseFile * file, gsize offset, gsize count)
  * Make a new #GstSparseFile backed by the file represented with @fd.
  *
  * Returns: a new #GstSparseFile, gst_sparse_file_free() after usage.
+ *
+ * Since: 1.4
  */
 GstSparseFile *
 gst_sparse_file_new (void)
@@ -159,6 +161,8 @@ gst_sparse_file_new (void)
  * Store the data for @file in the file represented with @fd.
  *
  * Returns: %TRUE when @fd could be set
+ *
+ * Since: 1.4
  */
 gboolean
 gst_sparse_file_set_fd (GstSparseFile * file, gint fd)
@@ -198,6 +202,8 @@ gst_sparse_file_clear (GstSparseFile * file)
  * @file: a #GstSparseFile
  *
  * Free the memory used by @file.
+ *
+ * Since: 1.4
  */
 void
 gst_sparse_file_free (GstSparseFile * file)
@@ -227,6 +233,8 @@ gst_sparse_file_free (GstSparseFile * file)
  * data already available after the last written byte.
  *
  * Returns: The number of bytes written of 0 on error.
+ *
+ * Since: 1.4
  */
 gsize
 gst_sparse_file_write (GstSparseFile * file, gsize offset, gconstpointer data,
@@ -306,6 +314,8 @@ error:
  * range.
  *
  * Returns: The number of bytes read of 0 on error.
+ *
+ * Since: 1.4
  */
 gsize
 gst_sparse_file_read (GstSparseFile * file, gsize offset, gpointer data,
@@ -366,6 +376,8 @@ error:
  * Get the number of ranges that are written in @file.
  *
  * Returns: the number of written ranges.
+ *
+ * Since: 1.4
  */
 guint
 gst_sparse_file_n_ranges (GstSparseFile * file)
@@ -386,6 +398,8 @@ gst_sparse_file_n_ranges (GstSparseFile * file)
  * including @offset.
  *
  * Returns: %TRUE if the range with data before @offset exists.
+ *
+ * Since: 1.4
  */
 gboolean
 gst_sparse_file_get_range_before (GstSparseFile * file, gsize offset,
@@ -425,6 +439,8 @@ gst_sparse_file_get_range_before (GstSparseFile * file, gsize offset,
  * including @offset.
  *
  * Returns: %TRUE if the range with data after @offset exists.
+ *
+ * Since: 1.4
  */
 gboolean
 gst_sparse_file_get_range_after (GstSparseFile * file, gsize offset,
