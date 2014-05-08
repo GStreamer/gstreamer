@@ -1209,7 +1209,7 @@ mpegts_base_scan (MpegTSBase * base)
   GST_DEBUG ("Scanning for initial sync point");
 
   /* Find initial sync point and at least 5 PCR values */
-  for (i = 0; i < 10 && !done; i++) {
+  for (i = 0; i < 20 && !done; i++) {
     GST_DEBUG ("Grabbing %d => %d", i * 65536, 65536);
 
     ret = gst_pad_pull_range (base->sinkpad, i * 65536, 65536, &buf);
