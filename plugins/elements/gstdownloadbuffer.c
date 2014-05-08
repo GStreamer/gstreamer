@@ -1510,8 +1510,8 @@ gst_download_buffer_handle_src_query (GstPad * pad, GstObject * parent,
           if (range_start == range_stop)
             continue;
           GST_DEBUG_OBJECT (dlbuf,
-              "range starting at %" G_GINT64_FORMAT " and finishing at %"
-              G_GINT64_FORMAT, range_start, range_stop);
+              "range starting at %" G_GSIZE_FORMAT " and finishing at %"
+              G_GSIZE_FORMAT, range_start, range_stop);
           gst_query_add_buffering_range (query, range_start, range_stop);
         }
       }
