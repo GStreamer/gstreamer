@@ -50,7 +50,7 @@
 static gboolean _upload_memory (GstGLUpload * upload);
 //static gboolean _do_upload_fill (GstGLContext * context, GstGLUpload * upload);
 //static gboolean _do_upload_make (GstGLContext * context, GstGLUpload * upload);
-static void _init_upload (GstGLUpload * upload);
+static gboolean _init_upload (GstGLUpload * upload);
 //static gboolean _init_upload_fbo (GstGLContext * context, GstGLUpload * upload);
 static gboolean _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
@@ -601,7 +601,7 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
 }
 
 /* Called in the gl thread */
-static void
+static gboolean
 _init_upload (GstGLUpload * upload)
 {
   GstGLFuncs *gl;
@@ -629,11 +629,10 @@ _init_upload (GstGLUpload * upload)
         &out_info))
     goto error;
 
-  upload->priv->result = TRUE;
-  return;
+  return TRUE;
 
 error:
-  upload->priv->result = FALSE;
+  return FALSE;
 }
 
 static gboolean
@@ -649,8 +648,11 @@ _upload_memory (GstGLUpload * upload)
   in_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
   in_height = GST_VIDEO_INFO_HEIGHT (&upload->in_info);
 
-  if (!upload->initted)
-    _init_upload (upload);
+  if (!upload->initted) {
+    if (!_init_upload (upload)) {
+      return FALSE;
+    }
+  }
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
     if (!gst_memory_map ((GstMemory *) upload->in_tex[i], &map_infos[i],
