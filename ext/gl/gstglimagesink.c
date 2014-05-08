@@ -693,17 +693,9 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     gst_object_unref (glimage_sink->upload);
   glimage_sink->upload = gst_object_ref (GST_GL_BUFFER_POOL (newpool)->upload);
 
-  if (!gst_gl_upload_init_format (glimage_sink->upload, &vinfo))
-    goto upload_error;
+  gst_gl_upload_set_format (glimage_sink->upload, &vinfo);
 
   return TRUE;
-
-upload_error:
-  {
-    GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-        ("%s", "Failed to initialize upload resources"), (NULL));
-    return FALSE;
-  }
 }
 
 static GstFlowReturn

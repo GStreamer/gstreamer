@@ -1685,12 +1685,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
       if (!pad->upload) {
         pad->upload = gst_gl_upload_new (mix->context);
 
-        if (!gst_gl_upload_init_format (pad->upload, &pad->in_info)) {
-          GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s",
-                  "Failed to init upload format"), (NULL));
-          res = FALSE;
-          goto out;
-        }
+        gst_gl_upload_set_format (pad->upload, &pad->in_info);
       }
 
       if (!gst_gl_upload_perform_with_buffer (pad->upload, mixcol->buffer,
