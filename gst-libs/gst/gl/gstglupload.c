@@ -50,11 +50,12 @@
 static gboolean _upload_memory (GstGLUpload * upload);
 //static gboolean _do_upload_fill (GstGLContext * context, GstGLUpload * upload);
 //static gboolean _do_upload_make (GstGLContext * context, GstGLUpload * upload);
-static void _init_upload (GstGLContext * context, GstGLUpload * upload);
+static void _init_upload (GstGLUpload * upload);
 //static gboolean _init_upload_fbo (GstGLContext * context, GstGLUpload * upload);
 static gboolean _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 static void _do_upload_with_meta (GstGLContext * context, GstGLUpload * upload);
+static void gst_gl_upload_reset (GstGLUpload * upload);
 
 /* *INDENT-OFF* */
 
@@ -94,6 +95,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
 G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, G_TYPE_OBJECT, DEBUG_INIT);
 static void gst_gl_upload_finalize (GObject * object);
 
+
 #define GST_GL_UPLOAD_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
     GST_TYPE_GL_UPLOAD, GstGLUploadPrivate))
 
@@ -112,6 +114,8 @@ gst_gl_upload_init (GstGLUpload * upload)
 
   upload->context = NULL;
   upload->priv->tex_id = 0;
+
+  gst_video_info_set_format (&upload->in_info, GST_VIDEO_FORMAT_ENCODED, 0, 0);
 
   g_mutex_init (&upload->lock);
 }
@@ -142,19 +146,7 @@ gst_gl_upload_finalize (GObject * object)
 
   upload = GST_GL_UPLOAD (object);
 
-  if (upload->priv->tex_id) {
-    gst_gl_context_del_texture (upload->context, &upload->priv->tex_id);
-    upload->priv->tex_id = 0;
-  }
-
-  if (upload->convert) {
-    gst_object_unref (upload->convert);
-  }
-
-  if (upload->out_tex) {
-    gst_memory_unref ((GstMemory *) upload->out_tex);
-    upload->out_tex = NULL;
-  }
+  gst_gl_upload_reset (upload);
 
   if (upload->context) {
     gst_object_unref (upload->context);
@@ -166,8 +158,27 @@ gst_gl_upload_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_upload_parent_class)->finalize (object);
 }
 
-static gboolean
-_gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
+static void
+gst_gl_upload_reset (GstGLUpload * upload)
+{
+  if (upload->priv->tex_id) {
+    gst_gl_context_del_texture (upload->context, &upload->priv->tex_id);
+    upload->priv->tex_id = 0;
+  }
+
+  if (upload->convert) {
+    gst_object_unref (upload->convert);
+    upload->convert = NULL;
+  }
+
+  if (upload->out_tex) {
+    gst_memory_unref ((GstMemory *) upload->out_tex);
+    upload->out_tex = NULL;
+  }
+}
+
+static void
+_gst_gl_upload_set_format_unlocked (GstGLUpload * upload,
     GstVideoInfo *in_info)
 {
   g_return_val_if_fail (upload != NULL, FALSE);
@@ -176,49 +187,38 @@ _gst_gl_upload_init_format_unlocked (GstGLUpload * upload,
   g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
       GST_VIDEO_FORMAT_ENCODED, FALSE);
 
-  if (upload->initted) {
-    return TRUE;
-  }
+  if (gst_video_info_is_equal (&upload->in_info, in_info))
+    return;
 
+  gst_gl_upload_reset (upload);
+  upload->convert = gst_gl_color_convert_new (upload->context);
   upload->in_info = *in_info;
-
-  gst_gl_context_thread_add (upload->context,
-      (GstGLContextThreadFunc) _init_upload, upload);
-
-  upload->initted = upload->priv->result;
-
-  return upload->initted;
+  upload->initted = FALSE;
 }
 
 
 /**
- * gst_gl_upload_init_format:
+ * gst_gl_upload_set_format:
  * @upload: a #GstGLUpload
  * @in_info: input #GstVideoInfo
  *
  * Initializes @upload with the information required for upload.
- *
- * Returns: whether the initialization was successful
  */
-gboolean
-gst_gl_upload_init_format (GstGLUpload * upload, GstVideoInfo * in_info)
+void
+gst_gl_upload_set_format (GstGLUpload * upload, GstVideoInfo * in_info)
 {
-  gboolean ret;
-
   g_mutex_lock (&upload->lock);
 
-  ret = _gst_gl_upload_init_format_unlocked (upload, in_info);
+  _gst_gl_upload_set_format_unlocked (upload, in_info);
 
   g_mutex_unlock (&upload->lock);
-
-  return ret;
 }
 
 /**
  * gst_gl_upload_get_format:
  * @upload: a #GstGLUpload
  *
- * Returns: (transfer none): The #GstVideoInfo set by gst_gl_upload_init_format()
+ * Returns: (transfer none): The #GstVideoInfo set by gst_gl_upload_set_format()
  */
 GstVideoInfo *
 gst_gl_upload_get_format (GstGLUpload * upload)
@@ -367,8 +367,7 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
 
     gst_video_info_set_format (&in_info, v_format, width, height);
 
-    if (!_gst_gl_upload_init_format_unlocked (upload, &in_info))
-      return FALSE;
+    _gst_gl_upload_set_format_unlocked (upload, &in_info);
   }
 
   /* GstGLMemory */
@@ -549,7 +548,7 @@ gst_gl_upload_add_video_gl_texture_upload_meta (GstGLUpload * upload,
  * @data: where the downloaded data should go
  *
  * Uploads @data into @texture_id. data size and format is specified by
- * the #GstVideoInfo<!--  -->s passed to gst_gl_upload_init_format() 
+ * the #GstVideoInfo<!--  -->s passed to gst_gl_upload_set_format() 
  *
  * Returns: whether the upload was successful
  */
@@ -603,13 +602,13 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
 
 /* Called in the gl thread */
 static void
-_init_upload (GstGLContext * context, GstGLUpload * upload)
+_init_upload (GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
   GstVideoInfo out_info;
 
-  gl = context->gl_vtable;
+  gl = upload->context->gl_vtable;
 
   v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
 
@@ -617,7 +616,7 @@ _init_upload (GstGLContext * context, GstGLUpload * upload)
       gst_video_format_to_string (v_format));
 
   if (!gl->CreateProgramObject && !gl->CreateProgram) {
-    gst_gl_context_set_error (context,
+    gst_gl_context_set_error (upload->context,
         "Cannot upload YUV formats without OpenGL shaders");
     goto error;
   }
@@ -649,6 +648,9 @@ _upload_memory (GstGLUpload * upload)
 
   in_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
   in_height = GST_VIDEO_INFO_HEIGHT (&upload->in_info);
+
+  if (!upload->initted)
+    _init_upload (upload);
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
     if (!gst_memory_map ((GstMemory *) upload->in_tex[i], &map_infos[i],

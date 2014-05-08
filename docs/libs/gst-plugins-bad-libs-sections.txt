@@ -1010,7 +1010,7 @@ GST_GL_SHADER_GET_CLASS
 <TITLE>GstGLUpload</TITLE>
 GstGLUpload
 gst_gl_upload_new
-gst_gl_upload_init_format
+gst_gl_upload_set_format
 gst_gl_upload_get_format
 gst_gl_upload_add_video_gl_texture_upload_meta
 gst_gl_upload_perform_with_data

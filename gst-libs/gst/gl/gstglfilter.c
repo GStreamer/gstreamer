@@ -1136,8 +1136,7 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     } else {
       filter->upload = gst_gl_upload_new (filter->context);
     }
-    if (!gst_gl_upload_init_format (filter->upload, &filter->in_info))
-      goto upload_error;
+    gst_gl_upload_set_format (filter->upload, &filter->in_info);
 
     gst_caps_unref (in_caps);
     gst_caps_unref (out_caps);
@@ -1152,15 +1151,6 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     gst_gl_filter_filter_texture (filter, inbuf, outbuf);
 
   return GST_FLOW_OK;
-
-upload_error:
-  {
-    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND, ("Failed to init upload"),
-        (NULL));
-    gst_object_unref (filter->upload);
-    filter->upload = NULL;
-    return GST_FLOW_ERROR;
-  }
 }
 
 /* convenience functions to simplify filter development */

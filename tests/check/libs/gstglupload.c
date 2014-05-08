@@ -224,34 +224,6 @@ draw_render (gpointer data)
   context_class->swap_buffers (context);
 }
 
-GST_START_TEST (test_shader_compile)
-{
-  const gchar *formats[] = { "RGB", "RGBx", "RGBA", "BGR", "BGRx", "BGRA",
-    "xRGB", "xBGR", "ARGB", "ABGR", "Y444", "I420", "YV12", "Y42B", "Y41B",
-    "NV12", "NV21", "YUY2", "UYVY", "AYUV", "GRAY8", "GRAY16_LE", "GRAY16_BE"
-  };
-  guint i;
-  gboolean res;
-
-  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-    GstVideoInfo info;
-    GstVideoFormat v_format;
-
-    v_format = gst_video_format_from_string (formats[i]);
-
-    gst_video_info_set_format (&info, v_format, 320, 240);
-
-    res = gst_gl_upload_init_format (upload, &info);
-    fail_if (res == FALSE, "Failed to init upload for video format %s\n",
-        formats[i]);
-
-    gst_object_unref (upload);
-    upload = gst_gl_upload_new (context);
-  }
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_upload_data)
 {
   gpointer data[GST_VIDEO_MAX_PLANES] = { rgba_data, NULL, NULL, NULL };
@@ -264,7 +236,7 @@ GST_START_TEST (test_upload_data)
   gst_gl_context_gen_texture (context, &tex_id, GST_VIDEO_FORMAT_RGBA, WIDTH,
       HEIGHT);
 
-  gst_gl_upload_init_format (upload, &in_info);
+  gst_gl_upload_set_format (upload, &in_info);
 
   res = gst_gl_upload_perform_with_data (upload, tex_id, data);
   fail_if (res == FALSE, "Failed to upload buffer: %s\n",
@@ -301,7 +273,7 @@ GST_START_TEST (test_upload_buffer)
       rgba_data, NULL, NULL);
   gst_buffer_append_memory (buffer, (GstMemory *) gl_mem);
 
-  gst_gl_upload_init_format (upload, &in_info);
+  gst_gl_upload_set_format (upload, &in_info);
 
   res = gst_gl_upload_perform_with_buffer (upload, buffer, &tex_id);
   fail_if (res == FALSE, "Failed to upload buffer: %s\n",
@@ -343,7 +315,7 @@ GST_START_TEST (test_upload_meta_producer)
   gst_gl_context_gen_texture (context, &tex_ids[0], GST_VIDEO_FORMAT_RGBA,
       WIDTH, HEIGHT);
 
-  gst_gl_upload_init_format (upload, &in_info);
+  gst_gl_upload_set_format (upload, &in_info);
   gst_buffer_add_video_meta_full (buffer, 0, GST_VIDEO_FORMAT_RGBA, WIDTH,
       HEIGHT, 1, in_info.offset, in_info.stride);
   gst_gl_upload_add_video_gl_texture_upload_meta (upload, buffer);
@@ -379,7 +351,6 @@ gst_gl_upload_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, teardown);
-  tcase_add_test (tc_chain, test_shader_compile);
   tcase_add_test (tc_chain, test_upload_data);
   tcase_add_test (tc_chain, test_upload_buffer);
   tcase_add_test (tc_chain, test_upload_meta_producer);

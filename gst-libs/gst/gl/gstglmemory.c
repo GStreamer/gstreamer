@@ -673,8 +673,8 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_TEXTURE_2D, src->tex_id, 0);
 
-  if (!gst_gl_context_check_framebuffer_status (src->context))
-    goto fbo_error;
+//  if (!gst_gl_context_check_framebuffer_status (src->context))
+//    goto fbo_error;
 
   gl->BindTexture (GL_TEXTURE_2D, tex_id);
   if (copy_params->respecify) {
