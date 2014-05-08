@@ -193,19 +193,20 @@ static void
 gst_gl_effects_init_gl_resources (GstGLFilter * filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
-  gint i;
+  GstGLFuncs *gl = filter->context->gl_vtable;
+  gint i = 0;
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
-    glGenTextures (1, &effects->midtexture[i]);
-    glBindTexture (GL_TEXTURE_2D, effects->midtexture[i]);
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
+    gl->GenTextures (1, &effects->midtexture[i]);
+    gl->BindTexture (GL_TEXTURE_2D, effects->midtexture[i]);
+    gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
         GST_VIDEO_INFO_HEIGHT (&filter->out_info),
         0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
 }
 
@@ -214,14 +215,15 @@ static void
 gst_gl_effects_reset_gl_resources (GstGLFilter * filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
-  gint i;
+  GstGLFuncs *gl = filter->context->gl_vtable;
+  gint i = 0;
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
-    glDeleteTextures (1, &effects->midtexture[i]);
+    gl->DeleteTextures (1, &effects->midtexture[i]);
     effects->midtexture[i] = 0;
   }
   for (i = 0; i < GST_GL_EFFECTS_N_CURVES; i++) {
-    glDeleteTextures (1, &effects->curve[i]);
+    gl->DeleteTextures (1, &effects->curve[i]);
     effects->curve[i] = 0;
   }
 }
