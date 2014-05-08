@@ -55,7 +55,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
   GST_DEBUG_CATEGORY_INIT (gst_gl_display_debug, "gldisplay", 0, "opengl display"); \
   GST_DEBUG_CATEGORY_GET (gst_context, "GST_CONTEXT");
 
-G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, G_TYPE_OBJECT,
+G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, GST_TYPE_OBJECT,
     DEBUG_INIT);
 
 #define GST_GL_DISPLAY_GET_PRIVATE(o) \

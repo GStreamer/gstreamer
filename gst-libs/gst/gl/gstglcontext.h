@@ -68,7 +68,7 @@ typedef enum
  */
 struct _GstGLContext {
   /*< private >*/
-  GObject parent;
+  GstObject parent;
 
   GstGLWindow  *window;
 
@@ -91,7 +91,7 @@ struct _GstGLContext {
  * @swap_buffers: swap the default framebuffer's front/back buffers
  */
 struct _GstGLContextClass {
-  GObjectClass parent_class;
+  GstObjectClass parent_class;
 
   guintptr      (*get_gl_context)     (GstGLContext *context);
   GstGLAPI      (*get_gl_api)         (GstGLContext *context);

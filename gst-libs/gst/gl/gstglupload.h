@@ -44,7 +44,7 @@ GType gst_gl_upload_get_type (void);
 struct _GstGLUpload
 {
   /* <private> */
-  GObject          parent;
+  GstObject        parent;
 
   GMutex           lock;
 
@@ -72,7 +72,7 @@ struct _GstGLUpload
  */
 struct _GstGLUploadClass
 {
-  GObjectClass object_class;
+  GstObjectClass object_class;
 };
 
 GstGLUpload * gst_gl_upload_new            (GstGLContext * context);

@@ -64,7 +64,7 @@ typedef void (*GstGLWindowResizeCB) (gpointer data, guint width, guint height);
  */
 struct _GstGLWindow {
   /*< private >*/
-  GObject parent;
+  GstObject parent;
 
   GMutex        lock;
 
@@ -109,7 +109,7 @@ struct _GstGLWindow {
  * @close: close the connection to the display
  */
 struct _GstGLWindowClass {
-  GObjectClass parent_class;
+  GstObjectClass parent_class;
 
   guintptr (*get_display)        (GstGLWindow *window);
   void     (*set_window_handle)  (GstGLWindow *window, guintptr id);
