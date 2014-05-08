@@ -42,8 +42,15 @@
  * When the downloadbuffer has completely downloaded the media, it will
  * post an application message named  <classname>&quot;GstCacheDownloadComplete&quot;</classname>
  * with the following information:
- *
- *
+ * <itemizedlist>
+ * <listitem>
+ *   <para>
+ *   G_TYPE_STRING
+ *   <classname>&quot;location&quot;</classname>:
+ *   the location of the completely downloaded file.
+ *   </para>
+ * </listitem>
+ * </itemizedlist>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1032,6 +1039,8 @@ gst_download_buffer_handle_sink_event (GstPad * pad, GstObject * parent,
              * filled and we can read all data from the dlbuf. */
             /* update the buffering status */
             update_levels (dlbuf, dlbuf->max_level.bytes);
+            /* wakeup the waiter and let it recheck */
+            GST_DOWNLOAD_BUFFER_SIGNAL_ADD (dlbuf, -1);
             break;
           case GST_EVENT_SEGMENT:
             gst_event_replace (&dlbuf->segment_event, event);
@@ -1137,6 +1146,9 @@ gst_download_buffer_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (res == 0)
     goto write_error;
 
+  gst_buffer_unmap (buffer, &info);
+  gst_buffer_unref (buffer);
+
   dlbuf->write_pos = offset + info.size;
   dlbuf->bytes_in += info.size;
 
@@ -1152,13 +1164,8 @@ gst_download_buffer_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         /* a hole to fill, seek to its end */
         perform_seek_to_offset (dlbuf, stop);
       } else {
-        /* we filled all the holes, post a message */
-        dlbuf->filling = FALSE;
-        update_levels (dlbuf, dlbuf->max_level.bytes);
-        gst_element_post_message (GST_ELEMENT_CAST (dlbuf),
-            gst_message_new_element (GST_OBJECT_CAST (dlbuf),
-                gst_structure_new ("GstCacheDownloadComplete",
-                    "location", G_TYPE_STRING, dlbuf->temp_location, NULL)));
+        /* we filled all the holes, we are done */
+        goto completed;
       }
     }
   } else {
@@ -1180,9 +1187,6 @@ gst_download_buffer_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   GST_DOWNLOAD_BUFFER_MUTEX_UNLOCK (dlbuf);
-
-  gst_buffer_unmap (buffer, &info);
-  gst_buffer_unref (buffer);
 
   return GST_FLOW_OK;
 
@@ -1218,6 +1222,20 @@ write_error:
         (_("Error while writing to download file.")), ("%s", error->message));
     g_clear_error (&error);
     return GST_FLOW_ERROR;
+  }
+completed:
+  {
+    GST_LOG_OBJECT (dlbuf, "we completed the download");
+    dlbuf->write_pos = dlbuf->upstream_size;
+    dlbuf->filling = FALSE;
+    update_levels (dlbuf, dlbuf->max_level.bytes);
+    gst_element_post_message (GST_ELEMENT_CAST (dlbuf),
+        gst_message_new_element (GST_OBJECT_CAST (dlbuf),
+            gst_structure_new ("GstCacheDownloadComplete",
+                "location", G_TYPE_STRING, dlbuf->temp_location, NULL)));
+    GST_DOWNLOAD_BUFFER_MUTEX_UNLOCK (dlbuf);
+
+    return GST_FLOW_EOS;
   }
 }
 
