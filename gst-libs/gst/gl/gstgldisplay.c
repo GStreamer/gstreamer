@@ -123,7 +123,8 @@ gst_gl_display_new (void)
 
   user_choice = g_getenv ("GST_GL_WINDOW");
   platform_choice = g_getenv ("GST_GL_PLATFORM");
-  GST_INFO ("creating a window, user choice:%s", user_choice);
+  GST_INFO ("creating a display, user choice:%s (platform: %s)",
+      GST_STR_NULL (user_choice), GST_STR_NULL (platform_choice));
 
 #if GST_GL_HAVE_WINDOW_COCOA
   if (!display && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
@@ -140,8 +141,9 @@ gst_gl_display_new (void)
 #endif
   if (!display) {
     /* subclass returned a NULL window */
-    GST_WARNING ("Could not create display. user specified %s, creating dummy",
-        user_choice ? user_choice : "(null)");
+    GST_WARNING ("Could not create display. user specified %s "
+        "(platform: %s), creating dummy",
+        GST_STR_NULL (user_choice), GST_STR_NULL (platform_choice));
 
     return g_object_new (GST_TYPE_GL_DISPLAY, NULL);
   }
