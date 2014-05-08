@@ -720,7 +720,9 @@ main (int argc, gchar ** argv)
   static gdouble thumbinterval = 0;
   static gboolean verbose = FALSE;
   gchar *load_path = NULL;
+  gchar *videosink = NULL;
   const gchar *scenario = NULL;
+
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
         "Take thumbnails every n seconds (saved in current directory)", "N"},
@@ -762,6 +764,8 @@ main (int argc, gchar ** argv)
         "Mute playback output, which means that we use faksinks"},
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &disable_mixing,
         "Do not use mixing element in the tracks"},
+    {"videosink", 'v', 0, G_OPTION_ARG_STRING, &videosink,
+      "The video sink used for playing back", "<videosink>"},
 #ifdef HAVE_GST_VALIDATE
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &scenario,
         "Specify a GstValidate scenario to run, 'none' means load gst-validate"
@@ -832,6 +836,15 @@ main (int argc, gchar ** argv)
   create_pipeline (&timeline, load_path, argc - 1, argv + 1, scenario);
   if (!pipeline)
     exit (1);
+
+  if (videosink != NULL) {
+    GstElement *sink = gst_element_factory_make (videosink, "custom-videosink");
+    if (sink == NULL) {
+      GST_ERROR ("could not create the requested videosink %s, exiting", videosink);
+      exit (1);
+    }
+    ges_pipeline_preview_set_video_sink (pipeline, sink);
+  }
 
   /* Setup profile/encoding if needed */
   if (smartrender || outputuri) {
