@@ -567,7 +567,7 @@ _print_position (GstElement * pipeline)
 }
 
 gboolean
-ges_validate_activate (GstPipeline * pipeline, const gchar * scenario)
+ges_validate_activate (GstPipeline * pipeline, const gchar * scenario, gboolean activate_before_paused)
 {
   if (scenario) {
     GST_WARNING ("Trying to run scenario %s, but gst-validate not supported",
