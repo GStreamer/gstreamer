@@ -41,8 +41,7 @@ struct _GstAutoConvert
   /*< private >*/
   GstBin bin;                   /* we extend GstBin */
 
-  /* Protected by the object lock too */
-  GList *factories;
+  volatile GList *factories;
 
   GstPad *sinkpad;
   GstPad *srcpad;

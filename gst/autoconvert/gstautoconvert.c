@@ -211,14 +211,19 @@ gst_auto_convert_dispose (GObject * object)
 {
   GstAutoConvert *autoconvert = GST_AUTO_CONVERT (object);
 
-  GST_AUTOCONVERT_LOCK (autoconvert);
   g_clear_object (&autoconvert->current_subelement);
   g_clear_object (&autoconvert->current_internal_sinkpad);
   g_clear_object (&autoconvert->current_internal_srcpad);
 
-  gst_plugin_feature_list_free (autoconvert->factories);
-  autoconvert->factories = NULL;
-  GST_AUTOCONVERT_UNLOCK (autoconvert);
+  for (;;) {
+    GList *factories = g_atomic_pointer_get (&autoconvert->factories);
+
+    if (g_atomic_pointer_compare_and_exchange (&autoconvert->factories,
+            factories, NULL)) {
+      gst_plugin_feature_list_free (factories);
+      break;
+    }
+  }
 
   G_OBJECT_CLASS (gst_auto_convert_parent_class)->dispose (object);
 }
@@ -234,15 +239,18 @@ gst_auto_convert_set_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     case PROP_FACTORIES:
-      GST_AUTOCONVERT_LOCK (autoconvert);
-      if (autoconvert->factories == NULL) {
+      if (g_atomic_pointer_get (&autoconvert->factories) == NULL) {
         GList *factories = g_value_get_pointer (value);
-        autoconvert->factories = g_list_copy (factories);
-        g_list_foreach (autoconvert->factories, (GFunc) g_object_ref, NULL);
-      } else
+        factories = g_list_copy (factories);
+        if (g_atomic_pointer_compare_and_exchange (&autoconvert->factories,
+                NULL, factories))
+          g_list_foreach (factories, (GFunc) g_object_ref, NULL);
+        else
+          g_list_free (factories);
+      } else {
         GST_WARNING_OBJECT (object, "Can not reset factories after they"
             " have been set or auto-discovered");
-      GST_AUTOCONVERT_UNLOCK (autoconvert);
+      }
       break;
   }
 }
@@ -258,9 +266,8 @@ gst_auto_convert_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     case PROP_FACTORIES:
-      GST_AUTOCONVERT_LOCK (autoconvert);
-      g_value_set_pointer (value, autoconvert->factories);
-      GST_AUTOCONVERT_UNLOCK (autoconvert);
+      g_value_set_pointer (value,
+          g_atomic_pointer_get (&autoconvert->factories));
       break;
   }
 }
@@ -735,9 +742,7 @@ gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
 
   other_caps = gst_pad_peer_query_caps (autoconvert->srcpad, NULL);
 
-  GST_AUTOCONVERT_LOCK (autoconvert);
-  factories = autoconvert->factories;
-  GST_AUTOCONVERT_UNLOCK (autoconvert);
+  factories = g_atomic_pointer_get (&autoconvert->factories);
 
   if (!factories)
     factories = gst_auto_convert_load_factories (autoconvert);
@@ -874,7 +879,6 @@ static GList *
 gst_auto_convert_load_factories (GstAutoConvert * autoconvert)
 {
   GList *all_factories;
-  GList *out_factories;
 
   all_factories =
       gst_registry_feature_filter (gst_registry_get (),
@@ -884,20 +888,12 @@ gst_auto_convert_load_factories (GstAutoConvert * autoconvert)
 
   g_assert (all_factories);
 
-  GST_AUTOCONVERT_LOCK (autoconvert);
-  if (autoconvert->factories == NULL) {
-    autoconvert->factories = all_factories;
-    all_factories = NULL;
-  }
-  out_factories = autoconvert->factories;
-  GST_AUTOCONVERT_UNLOCK (autoconvert);
-
-  if (all_factories) {
-    /* In this case, someone set the property while we were looking! */
+  if (g_atomic_pointer_compare_and_exchange (&autoconvert->factories, NULL,
+          all_factories)) {
     gst_plugin_feature_list_free (all_factories);
   }
 
-  return out_factories;
+  return g_atomic_pointer_get (&autoconvert->factories);
 }
 
 /* In this case, we should almost always have an internal element, because
@@ -1057,9 +1053,7 @@ gst_auto_convert_getcaps (GstAutoConvert * autoconvert, GstCaps * filter,
     goto out;
   }
 
-  GST_AUTOCONVERT_LOCK (autoconvert);
-  factories = autoconvert->factories;
-  GST_AUTOCONVERT_UNLOCK (autoconvert);
+  factories = g_atomic_pointer_get (&autoconvert->factories);
 
   if (!factories)
     factories = gst_auto_convert_load_factories (autoconvert);
