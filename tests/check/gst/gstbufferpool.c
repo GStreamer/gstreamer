@@ -220,6 +220,28 @@ GST_START_TEST (test_pool_activation_and_config)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pool_config_validate)
+{
+  GstBufferPool *pool = create_pool (5, 4, 30);
+  GstStructure *config = gst_buffer_pool_get_config (pool);
+  GstCaps *caps = gst_caps_new_empty_simple ("test/data");
+
+  fail_unless (gst_buffer_pool_config_validate_params (config, caps, 5, 4, 0));
+  fail_unless (gst_buffer_pool_config_validate_params (config, caps, 5, 2, 0));
+  fail_if (gst_buffer_pool_config_validate_params (config, caps, 5, 6, 0));
+  fail_if (gst_buffer_pool_config_validate_params (config, caps, 4, 4, 0));
+
+  gst_caps_unref (caps);
+  caps = gst_caps_new_empty_simple ("test/data2");
+  fail_if (gst_buffer_pool_config_validate_params (config, caps, 5, 4, 0));
+
+  gst_caps_unref (caps);
+  gst_structure_free (config);
+  gst_object_unref (pool);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_pool_suite (void)
 {
@@ -236,6 +258,7 @@ gst_buffer_pool_suite (void)
   tcase_add_test (tc_chain, test_inactive_pool_returns_flushing);
   tcase_add_test (tc_chain, test_buffer_modify_discard);
   tcase_add_test (tc_chain, test_pool_activation_and_config);
+  tcase_add_test (tc_chain, test_pool_config_validate);
 
   return s;
 }

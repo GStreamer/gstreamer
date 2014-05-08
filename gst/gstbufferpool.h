@@ -201,6 +201,8 @@ guint            gst_buffer_pool_config_n_options   (GstStructure *config);
 void             gst_buffer_pool_config_add_option  (GstStructure *config, const gchar *option);
 const gchar *    gst_buffer_pool_config_get_option  (GstStructure *config, guint index);
 gboolean         gst_buffer_pool_config_has_option  (GstStructure *config, const gchar *option);
+gboolean         gst_buffer_pool_config_validate_params (GstStructure *config, GstCaps *caps,
+                                                         guint size, guint min_buffers, guint max_buffers);
 
 /* buffer management */
 GstFlowReturn    gst_buffer_pool_acquire_buffer  (GstBufferPool *pool, GstBuffer **buffer,

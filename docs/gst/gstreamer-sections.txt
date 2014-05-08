@@ -308,6 +308,7 @@ gst_buffer_pool_new
 
 gst_buffer_pool_config_get_params
 gst_buffer_pool_config_set_params
+gst_buffer_pool_config_validate_params
 gst_buffer_pool_config_get_allocator
 gst_buffer_pool_config_set_allocator
 

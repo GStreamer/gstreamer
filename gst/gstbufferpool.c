@@ -1006,6 +1006,44 @@ gst_buffer_pool_config_get_allocator (GstStructure * config,
   return TRUE;
 }
 
+/**
+ * gst_buffer_pool_config_validate_params:
+ * @config: (transfer none): a #GstBufferPool configuration
+ * @caps: (transfer none): the excepted caps of buffers
+ * @size: the expected size of each buffer, not including prefix and padding
+ * @min_buffers: the expected minimum amount of buffers to allocate.
+ * @max_buffers: the expect maximum amount of buffers to allocate or 0 for unlimited.
+ *
+ * Validate that changes made to @config are still valid in the context of the
+ * expected parameters. This function is a helper that can be used to validate
+ * changes made by a pool to a config when gst_buffer_pool_set_config()
+ * returns %FALSE. This expects that @caps and @size haven't changed, and that
+ * @min_buffers aren't lower then what we initially expected. This does not check
+ * if options or allocator parameters.
+ *
+ * Since: 1.4
+ *
+ * Returns: %TRUE, if the parameters are valid in this context.
+ */
+gboolean
+gst_buffer_pool_config_validate_params (GstStructure * config, GstCaps * caps,
+    guint size, guint min_buffers, G_GNUC_UNUSED guint max_buffers)
+{
+  GstCaps *newcaps;
+  guint newsize, newmin;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (config != NULL, FALSE);
+
+  gst_buffer_pool_config_get_params (config, &newcaps, &newsize, &newmin, NULL);
+
+  if (gst_caps_is_equal (caps, newcaps) && (size == newsize)
+      && (newmin >= min_buffers))
+    ret = TRUE;
+
+  return ret;
+}
+
 static GstFlowReturn
 default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     GstBufferPoolAcquireParams * params)

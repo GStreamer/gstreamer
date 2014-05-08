@@ -148,6 +148,7 @@ EXPORTS
 	gst_buffer_pool_config_n_options
 	gst_buffer_pool_config_set_allocator
 	gst_buffer_pool_config_set_params
+	gst_buffer_pool_config_validate_params
 	gst_buffer_pool_get_config
 	gst_buffer_pool_get_options
 	gst_buffer_pool_get_type
