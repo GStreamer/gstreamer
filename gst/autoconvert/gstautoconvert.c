@@ -259,7 +259,7 @@ gst_auto_convert_get_property (GObject * object,
       break;
     case PROP_FACTORIES:
       GST_AUTOCONVERT_LOCK (autoconvert);
-      g_value_set_pointer (value, &autoconvert->factories);
+      g_value_set_pointer (value, autoconvert->factories);
       GST_AUTOCONVERT_UNLOCK (autoconvert);
       break;
   }
