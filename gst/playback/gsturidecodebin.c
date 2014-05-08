@@ -1880,7 +1880,7 @@ type_found (GstElement * typefind, guint probability,
 {
   GstElement *src_elem, *dec_elem, *queue = NULL;
   GstStructure *s;
-  const gchar *media_type;
+  const gchar *media_type, *elem_name;
   gboolean do_download = FALSE;
 
   GST_DEBUG_OBJECT (decoder, "typefind found caps %" GST_PTR_FORMAT, caps);
@@ -1905,13 +1905,15 @@ type_found (GstElement * typefind, guint probability,
   if (decoder->is_adaptive) {
     src_elem = typefind;
   } else {
-    queue = gst_element_factory_make ("queue2", NULL);
+    if (do_download) {
+      elem_name = "downloadbuffer";
+    } else {
+      elem_name = "queue2";
+    }
+    queue = gst_element_factory_make (elem_name, NULL);
     if (!queue)
-      goto no_queue2;
+      goto no_buffer_element;
 
-    g_object_set (queue, "use-buffering", TRUE, NULL);
-    g_object_set (queue, "ring-buffer-max-size", decoder->ring_buffer_max_size,
-        NULL);
     decoder->queue = queue;
 
     GST_DEBUG_OBJECT (decoder, "check media-type %s, %d", media_type,
@@ -1939,12 +1941,15 @@ type_found (GstElement * typefind, guint probability,
 
       g_free (filename);
       g_free (temp_template);
+    } else {
+      g_object_set (queue, "use-buffering", TRUE, NULL);
+      g_object_set (queue, "ring-buffer-max-size",
+          decoder->ring_buffer_max_size, NULL);
+      /* Disable max-size-buffers */
+      g_object_set (queue, "max-size-buffers", 0, NULL);
     }
 
-    /* Disable max-size-buffers */
-    g_object_set (queue, "max-size-buffers", 0, NULL);
-
-    /* If buffer size or duration are set, set them on the queue2 element */
+    /* If buffer size or duration are set, set them on the element */
     if (decoder->buffer_size != -1)
       g_object_set (queue, "max-size-bytes", decoder->buffer_size, NULL);
     if (decoder->buffer_duration != -1)
@@ -1987,9 +1992,9 @@ could_not_link:
         (NULL), ("Can't link typefind to decodebin element"));
     return;
   }
-no_queue2:
+no_buffer_element:
   {
-    post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "queue2");
+    post_missing_plugin_error (GST_ELEMENT_CAST (decoder), elem_name);
     return;
   }
 }
