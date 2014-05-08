@@ -1,8 +1,6 @@
 /* GStreamer
  * Copyright (C) 2014 Wim Taymans <wtaymans@redhat.com>
  *
- * gstcahcefile.h:
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -23,6 +21,8 @@
 
 #ifndef __GST_SPARSE_FILE_H__
 #define __GST_SPARSE_FILE_H__
+
+G_BEGIN_DECLS
 
 typedef struct _GstSparseFile GstSparseFile;
 
@@ -47,11 +47,13 @@ gsize           gst_sparse_file_read         (GstSparseFile *file,
                                               GError **error);
 
 guint           gst_sparse_file_n_ranges         (GstSparseFile *file);
+
 gboolean        gst_sparse_file_get_range_before (GstSparseFile *file, gsize offset,
                                                   gsize *start, gsize *stop);
+
 gboolean        gst_sparse_file_get_range_after  (GstSparseFile *file, gsize offset,
                                                   gsize *start, gsize *stop);
 
-
+G_END_DECLS
 
 #endif /* __GST_SPARSE_FILE_H__ */

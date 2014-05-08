@@ -17,6 +17,7 @@ gstnetclientclock
 gstnettimeprovider
 gsttestclock
 libsabi
+sparsefile
 transform1
 typefindhelper
 queuearray
