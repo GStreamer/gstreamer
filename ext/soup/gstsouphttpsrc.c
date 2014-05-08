@@ -81,6 +81,15 @@
 #include "gstsouphttpsrc.h"
 #include "gstsouputils.h"
 
+/* libsoup before 2.47.0 was stealing our main context from us,
+ * so we can't reliable use it to clean up all pending resources
+ * once we're done... let's just continue leaking on old versions.
+ * https://bugzilla.gnome.org/show_bug.cgi?id=663944
+ */
+#if defined(SOUP_MINOR_VERSION) && SOUP_MINOR_VERSION >= 47
+#define LIBSOUP_DOES_NOT_STEAL_OUR_CONTEXT 1
+#endif
+
 #include <gst/tag/tag.h>
 
 GST_DEBUG_CATEGORY_STATIC (souphttpsrc_debug);
@@ -912,11 +921,23 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
   return TRUE;
 }
 
+#ifdef LIBSOUP_DOES_NOT_STEAL_OUR_CONTEXT
+static gboolean
+dummy_idle_cb (gpointer data)
+{
+  return FALSE /* Idle source is removed */ ;
+}
+#endif
+
 static void
 gst_soup_http_src_session_close (GstSoupHTTPSrc * src)
 {
   GST_DEBUG_OBJECT (src, "Closing session");
 
+  if (src->loop)
+    g_main_loop_quit (src->loop);
+
+  g_mutex_lock (&src->mutex);
   if (src->session) {
     soup_session_abort (src->session);  /* This unrefs the message. */
     g_object_unref (src->session);
@@ -924,11 +945,33 @@ gst_soup_http_src_session_close (GstSoupHTTPSrc * src)
     src->msg = NULL;
   }
   if (src->loop) {
+#ifdef LIBSOUP_DOES_NOT_STEAL_OUR_CONTEXT
+    GSource *idle_source;
+
+    /* Iterating the main context to give GIO cancellables a chance
+     * to initiate cleanups. Wihout this, resources allocated by
+     * libsoup for the connection are not released and socket fd is
+     * leaked. */
+    idle_source = g_idle_source_new ();
+    /* Suppressing "idle souce without callback" warning */
+    g_source_set_callback (idle_source, dummy_idle_cb, NULL, NULL);
+    g_source_set_priority (idle_source, G_PRIORITY_LOW);
+    g_source_attach (idle_source, src->context);
+    /* Acquiring the context. Idle source guarantees that we'll not block. */
+    g_main_context_push_thread_default (src->context);
+    g_main_context_iteration (src->context, TRUE);
+    /* Ensuring that there's no unhandled pending events left. */
+    while (g_main_context_iteration (src->context, FALSE));
+    g_main_context_pop_thread_default (src->context);
+    g_source_unref (idle_source);
+#endif
+
     g_main_loop_unref (src->loop);
     g_main_context_unref (src->context);
     src->loop = NULL;
     src->context = NULL;
   }
+  g_mutex_unlock (&src->mutex);
 }
 
 static void
@@ -1565,8 +1608,11 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
         break;
     }
 
-    if (src->ret == GST_FLOW_CUSTOM_ERROR)
+    if (src->ret == GST_FLOW_CUSTOM_ERROR) {
+      g_main_context_push_thread_default (src->context);
       g_main_loop_run (src->loop);
+      g_main_context_pop_thread_default (src->context);
+    }
 
   } while (src->ret == GST_FLOW_CUSTOM_ERROR);
 
@@ -1575,7 +1621,9 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
       && src->read_position >= src->stop_position) {
     src->outbuf = NULL;
     gst_soup_http_src_session_unpause_message (src);
+    g_main_context_push_thread_default (src->context);
     g_main_loop_run (src->loop);
+    g_main_context_pop_thread_default (src->context);
 
     g_cond_signal (&src->request_finished_cond);
     /* Return OK unconditionally here, src->ret will
