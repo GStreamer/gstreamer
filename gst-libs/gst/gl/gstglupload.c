@@ -181,11 +181,11 @@ static void
 _gst_gl_upload_set_format_unlocked (GstGLUpload * upload,
     GstVideoInfo *in_info)
 {
-  g_return_val_if_fail (upload != NULL, FALSE);
-  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
-      GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
-      GST_VIDEO_FORMAT_ENCODED, FALSE);
+  g_return_if_fail (upload != NULL);
+  g_return_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
+      GST_VIDEO_FORMAT_UNKNOWN);
+  g_return_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
+      GST_VIDEO_FORMAT_ENCODED);
 
   if (gst_video_info_is_equal (&upload->in_info, in_info))
     return;
