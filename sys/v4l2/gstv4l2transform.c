@@ -276,7 +276,7 @@ gst_v4l2_transform_query (GstBaseTransform * trans, GstPadDirection direction,
       } else {
         pad = GST_BASE_TRANSFORM_SINK_PAD (trans);
         otherpad = GST_BASE_TRANSFORM_SRC_PAD (trans);
-        if (self->probed_srccaps)
+        if (self->probed_sinkcaps)
           caps = gst_caps_ref (self->probed_sinkcaps);
       }
 
