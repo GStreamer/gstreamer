@@ -427,12 +427,12 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
           if (uri[0] == '"')
             uri += 1;
 
-          data = uri_join (self->uri, uri);
+          uri = uri_join (self->uri, uri);
           g_free (urip);
 
-          if (data == NULL)
+          if (uri == NULL)
             continue;
-          gst_m3u8_set_uri (new_list, data);
+          gst_m3u8_set_uri (new_list, uri);
         }
       }
 
@@ -441,7 +441,6 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
                 (GCompareFunc) _m3u8_compare_uri)) {
           GST_DEBUG ("Already have a list with this URI");
           gst_m3u8_free (new_list);
-          g_free (data);
         } else {
           self->iframe_lists = g_list_append (self->iframe_lists, new_list);
         }
