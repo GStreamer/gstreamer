@@ -214,17 +214,24 @@ static void
 on_notify_caps (GstPad * pad, GParamSpec * pspec, GstElement * pay)
 {
   GstCaps *caps;
+  static gboolean have_caps = FALSE;
 
   g_object_get (pad, "caps", &caps, NULL);
 
   GST_DEBUG ("notify %" GST_PTR_FORMAT, caps);
 
   if (caps) {
-    g_signal_emit_by_name (pay, "pad-added", pad);
-    g_signal_emit_by_name (pay, "no-more-pads", NULL);
+    if (!have_caps) {
+      g_signal_emit_by_name (pay, "pad-added", pad);
+      g_signal_emit_by_name (pay, "no-more-pads", NULL);
+      have_caps = TRUE;
+    }
     gst_caps_unref (caps);
   } else {
-    g_signal_emit_by_name (pay, "pad-removed", pad);
+    if (have_caps) {
+      g_signal_emit_by_name (pay, "pad-removed", pad);
+      have_caps = FALSE;
+    }
   }
 }
 
