@@ -1661,6 +1661,7 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegTsDescriptor
         GstMpegTsT2DeliverySystemCellExtension *cell_ext;
         cell_ext = g_slice_new0 (GstMpegTsT2DeliverySystemCellExtension);
 
+        g_ptr_array_add (cell->sub_cells, cell_ext);
         cell_ext->cell_id_extension = *data;
         data += 1;
 
