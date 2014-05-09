@@ -808,6 +808,7 @@ invalid_size:
 negotiation_fail:
   {
     GST_WARNING_OBJECT (mpeg2dec, "Failed to negotiate with downstream");
+    gst_video_codec_state_unref (state);
     return GST_FLOW_ERROR;
   }
 }
