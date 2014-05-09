@@ -175,13 +175,13 @@ static const char frag_AYUV_to_RGB[] =
     YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
     "  float r,g,b,a;\n"
-    "  vec3 yuv;\n"
-    "  yuv  = texture2D(tex,v_texcoord * tex_scale0).gba;\n"
-    "  yuv += offset;\n"
-    "  r = dot(yuv, coeff1);\n"
-    "  g = dot(yuv, coeff2);\n"
-    "  b = dot(yuv, coeff3);\n"
-    "  a = 1.0;\n"
+    "  vec4 texel;\n"
+    "  texel = texture2D(tex, v_texcoord * tex_scale0);\n"
+    "  texel.gba += offset;\n"
+    "  r = dot(texel.gba, coeff1);\n"
+    "  g = dot(texel.gba, coeff2);\n"
+    "  b = dot(texel.gba, coeff3);\n"
+    "  a = texel.a;\n"
     "  gl_FragColor=vec4(%c,%c,%c,%c);\n"
     "}";
 
@@ -194,7 +194,7 @@ static const gchar frag_RGB_to_AYUV[] =
     RGB_TO_YUV_COEFFICIENTS
     "void main(void) {\n"
     "  vec4 texel;\n"
-    "  float y, u, v;\n"
+    "  float y, u, v, a;\n"
     "  texel = texture2D(tex, v_texcoord).%c%c%c%c;\n"
     "  y = dot(texel.rgb, coeff1);\n"
     "  u = dot(texel.rgb, coeff2);\n"
@@ -202,7 +202,8 @@ static const gchar frag_RGB_to_AYUV[] =
     "  y += offset.x;\n"
     "  u += offset.y;\n"
     "  v += offset.z;\n"
-    "  gl_FragColor = vec4(1.0,y,u,v);\n"
+    "  a = %s;\n"
+    "  gl_FragColor = vec4(a,y,u,v);\n"
     "}\n";
 
 /** YUV to RGB conversion */
@@ -595,6 +596,20 @@ _gst_gl_color_convert_perform_unlocked (GstGLColorConvert * convert,
   return TRUE;
 }
 
+static inline gboolean
+_is_RGBx (GstVideoFormat v_format)
+{
+  switch (v_format) {
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xBGR:
+      return TRUE;
+    default:
+      return FALSE;
+  }
+}
+
 static inline gchar
 _index_to_shader_swizzle (int idx)
 {
@@ -804,6 +819,7 @@ _RGB_to_YUV (GstGLColorConvert * convert)
   GstVideoFormat in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
   const gchar *in_format_str = gst_video_format_to_string (in_format);
   gchar *pixel_order = _RGB_pixel_order (in_format_str, "rgba");
+  const gchar *alpha;
 
   info->frag_prog = NULL;
   info->in_n_textures = 1;
@@ -819,8 +835,9 @@ _RGB_to_YUV (GstGLColorConvert * convert)
 
   switch (GST_VIDEO_INFO_FORMAT (&convert->out_info)) {
     case GST_VIDEO_FORMAT_AYUV:
+      alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
       info->frag_prog = g_strdup_printf (frag_RGB_to_AYUV, pixel_order[0],
-          pixel_order[1], pixel_order[2], pixel_order[3]);
+          pixel_order[1], pixel_order[2], pixel_order[3], alpha);
       info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_I420:
