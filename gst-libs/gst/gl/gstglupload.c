@@ -253,6 +253,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   GstVideoGLTextureUploadMeta *gl_tex_upload_meta;
   guint texture_ids[] = { 0, 0, 0, 0 };
   gint i;
+  gboolean ret;
 
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (buffer != NULL, FALSE);
@@ -274,10 +275,10 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
       upload->in_tex[i] = (GstGLMemory *) gst_buffer_peek_memory (buffer, i);
     }
 
-    _upload_memory (upload);
+    ret = _upload_memory (upload);
 
     *tex_id = upload->out_tex->tex_id;
-    return TRUE;
+    return ret;
   }
 
 #if GST_GL_HAVE_PLATFORM_EGL
@@ -380,10 +381,10 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
     GstGLMemory *gl_mem = (GstGLMemory *) mem;
 
     upload->in_tex[0] = gl_mem;
-    _upload_memory (upload);
+    ret = _upload_memory (upload);
     upload->in_tex[0] = NULL;
 
-    if (upload->priv->result)
+    if (ret)
       return TRUE;
   }
 
@@ -584,6 +585,7 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
 {
   guint i;
+  gboolean ret;
 
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (texture_id > 0, FALSE);
@@ -593,14 +595,14 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
 
   GST_LOG ("Uploading data into texture %u", texture_id);
 
-  _upload_memory (upload);
+  ret = _upload_memory (upload);
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
     gst_memory_unref ((GstMemory *) upload->in_tex[i]);
     upload->in_tex[i] = NULL;
   }
 
-  return upload->priv->result;
+  return ret;
 }
 
 /* Called in the gl thread */
@@ -672,7 +674,7 @@ _upload_memory (GstGLUpload * upload)
       out_texture[0]->tex_id, in_texture[0], in_texture[1], in_texture[2],
       in_width, in_height);
 
-  gst_gl_color_convert_perform (upload->convert, upload->in_tex, out_texture);
+  res = gst_gl_color_convert_perform (upload->convert, upload->in_tex, out_texture);
 
 out:
   for (i--; i >= 0; i--) {
