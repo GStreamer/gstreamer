@@ -911,6 +911,8 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
 
         gst_object_unref (pool);
         pool = gst_buffer_pool_new ();
+        gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+        gst_buffer_pool_config_set_allocator (config, allocator, &params);
       }
 
       if (!gst_buffer_pool_set_config (pool, config))
