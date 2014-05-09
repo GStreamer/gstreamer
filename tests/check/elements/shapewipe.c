@@ -95,16 +95,13 @@ GST_START_TEST (test_general)
   myvideosrcpad =
       gst_pad_new_from_static_template (&videosrctemplate, "videosrc");
   gst_element_add_pad (videosrc, myvideosrcpad);
-  gst_pad_set_active (myvideosrcpad, TRUE);
 
   mymasksrcpad = gst_pad_new_from_static_template (&masksrctemplate, "masksrc");
   gst_element_add_pad (masksrc, mymasksrcpad);
-  gst_pad_set_active (mymasksrcpad, TRUE);
 
   mysinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   gst_element_add_pad (sink, mysinkpad);
   gst_pad_set_chain_function (mysinkpad, on_chain);
-  gst_pad_set_active (mysinkpad, TRUE);
 
   p = gst_element_get_static_pad (shapewipe, "video_sink");
   fail_unless (gst_pad_link (myvideosrcpad, p) == GST_PAD_LINK_OK);
