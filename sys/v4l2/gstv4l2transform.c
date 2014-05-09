@@ -536,6 +536,7 @@ gst_v4l2_transform_sink_event (GstBaseTransform * trans, GstEvent * event)
       GST_DEBUG_OBJECT (self, "flush start");
       gst_v4l2_object_unlock (self->v4l2output);
       gst_v4l2_object_unlock (self->v4l2capture);
+      break;
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (self, "flush stop");
       gst_v4l2_object_unlock_stop (self->v4l2output);
