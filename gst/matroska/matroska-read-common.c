@@ -1213,7 +1213,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
         if (num != GST_EBML_VERSION) {
           GST_ERROR_OBJECT (ebml, "Unsupported EBML version %" G_GUINT64_FORMAT,
               num);
-          return GST_FLOW_ERROR;
+          goto exit_error;
         }
 
         GST_DEBUG_OBJECT (ebml, "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
