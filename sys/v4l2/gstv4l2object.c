@@ -2994,7 +2994,7 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
 
   if (v4l2object->pool) {
     GST_DEBUG_OBJECT (v4l2object->element, "deactivating pool");
-    gst_buffer_pool_set_active (GST_BUFFER_POOL_CAST (v4l2object->pool), FALSE);
+    gst_buffer_pool_set_active (v4l2object->pool, FALSE);
     gst_object_unref (v4l2object->pool);
     v4l2object->pool = NULL;
   }
