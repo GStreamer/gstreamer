@@ -317,6 +317,9 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
     return FALSE;
   }
 
+  /* update the video info from the one updated by frame_map using video meta */
+  upload->in_info = upload->priv->frame.info;
+
   if (!gst_gl_upload_perform_with_data (upload, upload->priv->tex_id,
           upload->priv->frame.data)) {
     return FALSE;
