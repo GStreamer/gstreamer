@@ -325,7 +325,8 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
     GST_DEBUG_OBJECT (self, "notifying port %d", port);
     g_object_notify (G_OBJECT (self), "port");
   }
-  GST_DEBUG_OBJECT (self, "bound on UDP address %s, port %d", address, port);
+  GST_DEBUG_OBJECT (self, "bound on UDP address %s, port %d",
+      self->priv->address, port);
   g_object_unref (bound_addr);
 
   self->priv->socket = socket;
