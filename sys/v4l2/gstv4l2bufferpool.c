@@ -762,6 +762,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 wrong_config:
   {
     GST_ERROR_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
+    gst_structure_free (config);
     return FALSE;
   }
 no_buffers:
@@ -769,6 +770,7 @@ no_buffers:
     GST_ERROR_OBJECT (pool,
         "we received %d buffer from device '%s', we want at least %d",
         num_buffers, obj->videodev, GST_V4L2_MIN_BUFFERS);
+    gst_structure_free (config);
     return FALSE;
   }
 start_failed:
