@@ -3060,7 +3060,7 @@ gboolean
 gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 {
   GstCaps *caps;
-  GstBufferPool *pool, *other_pool = NULL;
+  GstBufferPool *pool = NULL, *other_pool = NULL;
   GstStructure *config;
   guint size, min, max, own_min = 0;
   gboolean update;
