@@ -2952,16 +2952,21 @@ gst_v4l2_object_set_crop (GstV4l2Object * obj)
 gboolean
 gst_v4l2_object_caps_equal (GstV4l2Object * v4l2object, GstCaps * caps)
 {
-  GstStructure *s;
+  GstStructure *config;
   GstCaps *oldcaps;
+  gboolean ret;
 
   if (!v4l2object->pool)
     return FALSE;
 
-  s = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (v4l2object->pool));
-  gst_buffer_pool_config_get_params (s, &oldcaps, NULL, NULL, NULL);
+  config = gst_buffer_pool_get_config (v4l2object->pool);
+  gst_buffer_pool_config_get_params (config, &oldcaps, NULL, NULL, NULL);
 
-  return oldcaps && gst_caps_is_equal (caps, oldcaps);
+  ret = oldcaps && gst_caps_is_equal (caps, oldcaps);
+
+  gst_structure_free (config);
+
+  return ret;
 }
 
 gboolean
