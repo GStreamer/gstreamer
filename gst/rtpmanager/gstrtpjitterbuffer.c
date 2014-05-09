@@ -2758,7 +2758,7 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstClockTime duration, timestamp;
-  guint seqnum, lost_packets, num_rtx_retry;
+  guint seqnum, lost_packets, num_rtx_retry, next_in_seqnum;
   gboolean late, head;
   GstEvent *event;
   RTPJitterBufferItem *item;
@@ -2781,6 +2781,12 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   priv->num_late += lost_packets;
   priv->num_rtx_failed += num_rtx_retry;
+
+  next_in_seqnum = (seqnum + lost_packets) & 0xffff;
+
+  /* we now only accept seqnum bigger than this */
+  if (gst_rtp_buffer_compare_seqnum (priv->next_in_seqnum, next_in_seqnum) > 0)
+    priv->next_in_seqnum = next_in_seqnum;
 
   /* create paket lost event */
   event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
