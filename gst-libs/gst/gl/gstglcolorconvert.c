@@ -593,7 +593,7 @@ _gst_gl_color_convert_perform_unlocked (GstGLColorConvert * convert,
   gst_gl_context_thread_add (convert->context,
       (GstGLContextThreadFunc) _do_convert, convert);
 
-  return TRUE;
+  return convert->priv->result;
 }
 
 static inline gboolean
