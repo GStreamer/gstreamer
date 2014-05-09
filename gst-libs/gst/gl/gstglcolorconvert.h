@@ -101,9 +101,9 @@ struct _GstGLColorConvertClass
 
 GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
 
-gboolean gst_gl_color_convert_init_format    (GstGLColorConvert * convert,
-                                              GstVideoInfo * in_info,
-                                              GstVideoInfo * out_info);
+void     gst_gl_color_convert_set_format    (GstGLColorConvert * convert,
+                                             GstVideoInfo * in_info,
+                                             GstVideoInfo * out_info);
 
 void     gst_gl_color_convert_set_texture_scaling (GstGLColorConvert * convert,
                                                    gfloat scaling[GST_VIDEO_MAX_PLANES][2]);
