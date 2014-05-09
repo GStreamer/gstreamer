@@ -1200,7 +1200,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
   while (gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
     ret = gst_ebml_peek_id (ebml, &id);
     if (ret != GST_FLOW_OK)
-      return ret;
+      goto exit_error;
 
     switch (id) {
         /* is our read version uptodate? */
@@ -1209,7 +1209,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
 
         ret = gst_ebml_read_uint (ebml, &id, &num);
         if (ret != GST_FLOW_OK)
-          return ret;
+          goto exit_error;
         if (num != GST_EBML_VERSION) {
           GST_ERROR_OBJECT (ebml, "Unsupported EBML version %" G_GUINT64_FORMAT,
               num);
@@ -1226,7 +1226,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
 
         ret = gst_ebml_read_uint (ebml, &id, &num);
         if (ret != GST_FLOW_OK)
-          return ret;
+          goto exit_error;
         if (num > sizeof (guint64)) {
           GST_ERROR_OBJECT (ebml,
               "Unsupported EBML maximum size %" G_GUINT64_FORMAT, num);
@@ -1242,7 +1242,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
 
         ret = gst_ebml_read_uint (ebml, &id, &num);
         if (ret != GST_FLOW_OK)
-          return ret;
+          goto exit_error;
         if (num > sizeof (guint32)) {
           GST_ERROR_OBJECT (ebml,
               "Unsupported EBML maximum ID %" G_GUINT64_FORMAT, num);
@@ -1257,7 +1257,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
 
         ret = gst_ebml_read_ascii (ebml, &id, &text);
         if (ret != GST_FLOW_OK)
-          return ret;
+          goto exit_error;
 
         GST_DEBUG_OBJECT (ebml, "EbmlDocType: %s", GST_STR_NULL (text));
 
@@ -1272,7 +1272,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
 
         ret = gst_ebml_read_uint (ebml, &id, &num);
         if (ret != GST_FLOW_OK)
-          return ret;
+          goto exit_error;
         version = num;
         GST_DEBUG_OBJECT (ebml, "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
         break;
@@ -1282,7 +1282,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
         ret = gst_matroska_read_common_parse_skip (common, ebml,
             "EBML header", id);
         if (ret != GST_FLOW_OK)
-          return ret;
+          goto exit_error;
         break;
 
         /* we ignore these two, as they don't tell us anything we care about */
@@ -1290,7 +1290,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
       case GST_EBML_ID_DOCTYPEVERSION:
         ret = gst_ebml_read_skip (ebml);
         if (ret != GST_FLOW_OK)
-          return ret;
+          goto exit_error;
         break;
     }
   }
@@ -1316,13 +1316,15 @@ exit:
               GST_STR_NULL (doctype), version));
       ret = GST_FLOW_ERROR;
     }
-    g_free (doctype);
   } else {
     GST_ELEMENT_ERROR (common, STREAM, WRONG_TYPE, (NULL),
         ("Input is not a matroska stream (doctype=%s)", doctype));
     ret = GST_FLOW_ERROR;
-    g_free (doctype);
   }
+
+exit_error:
+
+  g_free (doctype);
 
   return ret;
 }
