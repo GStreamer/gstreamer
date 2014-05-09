@@ -269,48 +269,24 @@ gst_auto_convert_get_property (GObject * object,
 static GstElement *
 gst_auto_convert_get_element_by_type (GstAutoConvert * autoconvert, GType type)
 {
-  GstIterator *iter = NULL;
-  gboolean done;
-  GValue item = { 0, };
+  GList *item;
+  GstBin *bin = GST_BIN (autoconvert);
+  GstElement *element = NULL;
 
   g_return_val_if_fail (type != 0, NULL);
 
-  iter = gst_bin_iterate_elements (GST_BIN (autoconvert));
+  GST_OBJECT_LOCK (autoconvert);
 
-  if (!iter)
-    return NULL;
-
-  done = FALSE;
-  while (!done) {
-    switch (gst_iterator_next (iter, &item)) {
-      case GST_ITERATOR_OK:
-        if (G_TYPE_CHECK_VALUE_TYPE (&item, type))
-          done = TRUE;
-        else
-          g_value_unset (&item);
-        break;
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (iter);
-        g_value_unset (&item);
-        break;
-      case GST_ITERATOR_ERROR:
-        GST_ERROR ("Error iterating elements in bin");
-        g_value_unset (&item);
-        done = TRUE;
-        break;
-      case GST_ITERATOR_DONE:
-        g_value_unset (&item);
-        done = TRUE;
-        break;
+  for (item = bin->children; item; item = item->next) {
+    if (G_TYPE_CHECK_INSTANCE_TYPE (item->data, type)) {
+      element = gst_object_ref (item->data);
+      break;
     }
   }
-  gst_iterator_free (iter);
 
-  /* Don't need to dup, the value on the stack has a ref, we steal it */
-  if (G_VALUE_HOLDS_OBJECT (&item))
-    return g_value_get_object (&item);
-  else
-    return NULL;
+  GST_OBJECT_UNLOCK (autoconvert);
+
+  return element;
 }
 
 /**
