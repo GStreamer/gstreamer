@@ -625,9 +625,7 @@ _init_upload (GstGLUpload * upload)
       GST_VIDEO_INFO_WIDTH (&upload->in_info),
       GST_VIDEO_INFO_HEIGHT (&upload->in_info));
 
-  if (!gst_gl_color_convert_init_format (upload->convert, &upload->in_info,
-        &out_info))
-    goto error;
+  gst_gl_color_convert_set_format (upload->convert, &upload->in_info, &out_info);
 
   upload->initted = TRUE;
 
