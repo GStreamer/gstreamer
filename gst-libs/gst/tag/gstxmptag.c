@@ -1181,7 +1181,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
   gchar *xps, *xp1, *xp2, *xpe, *ns, *ne;
   gsize len, max_ft_len;
   gboolean in_tag;
-  gchar *part, *pp;
+  gchar *part = NULL, *pp;
   guint i;
   XmpTag *last_xmp_tag = NULL;
   GSList *pending_tags = NULL;
@@ -1249,7 +1249,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
   while (*xp1 != '<' && xp1 < xpe)
     xp1++;
 
-  /* no tag can be longer that the whole buffer */
+  /* no tag can be longer than the whole buffer */
   part = g_malloc (xp2 - xp1);
   list = gst_tag_list_new_empty ();
 
@@ -1477,12 +1477,15 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
 
   GST_INFO ("xmp packet parsed, %d entries", gst_tag_list_n_tags (list));
 
+out:
+
   /* free resources */
   i = 0;
   while (ns_map[i].original_ns) {
     g_free (ns_map[i].gstreamer_ns);
     i++;
   }
+
   g_free (part);
 
   gst_buffer_unmap (buffer, &info);
@@ -1492,13 +1495,15 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
   /* Errors */
 missing_header:
   GST_WARNING ("malformed xmp packet header");
-  return NULL;
+  goto out;
 missing_footer:
   GST_WARNING ("malformed xmp packet footer");
-  return NULL;
+  goto out;
 broken_xml:
   GST_WARNING ("malformed xml tag: %s", part);
-  return NULL;
+  gst_tag_list_unref (list);
+  list = NULL;
+  goto out;
 }
 
 
