@@ -598,6 +598,8 @@ _parse_effect (GMarkupParseContext * context, const gchar * element_name,
       type, asset_id, track_id, clip_id, children_props, props, metadatas,
       error);
 
+out:
+
   if (props)
     gst_structure_free (props);
   if (children_props)
@@ -617,7 +619,7 @@ wrong_children_properties:
       G_MARKUP_ERROR_INVALID_CONTENT,
       "element '%s', Effect %s children properties '%s', could no be deserialized",
       element_name, asset_id, children_properties);
-  return;
+  goto out;
 
 wrong_type:
   g_set_error (error, G_MARKUP_ERROR,
