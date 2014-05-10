@@ -231,7 +231,7 @@ _can_write_value (GESMetaContainer * container, const gchar * item_name,
 
   data = g_object_get_qdata (G_OBJECT (container), ges_meta_key);
   if (!data) {
-    data = _create_container_data (container);
+    _create_container_data (container);
     return TRUE;
   }
 
