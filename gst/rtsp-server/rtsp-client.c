@@ -250,7 +250,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 
   gst_rtsp_client_signals[SIGNAL_SEND_MESSAGE] =
       g_signal_new ("send-message", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_POINTER);
 
   tunnels =
