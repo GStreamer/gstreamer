@@ -482,7 +482,8 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
   gst_pad_set_query_function (internal_srcpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_src_query));
 
-  padlinkret = gst_pad_link (internal_srcpad, sinkpad);
+  padlinkret = gst_pad_link_full (internal_srcpad, sinkpad,
+      GST_PAD_LINK_CHECK_NOTHING);
   if (GST_PAD_LINK_FAILED (padlinkret)) {
     GST_WARNING_OBJECT (autoconvert, "Could not links pad %s:%s to %s:%s"
         " for reason %d",
@@ -491,7 +492,8 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
     goto error;
   }
 
-  padlinkret = gst_pad_link (srcpad, internal_sinkpad);
+  padlinkret = gst_pad_link_full (srcpad, internal_sinkpad,
+      GST_PAD_LINK_CHECK_NOTHING);
   if (GST_PAD_LINK_FAILED (padlinkret)) {
     GST_WARNING_OBJECT (autoconvert, "Could not links pad %s:%s to %s:%s"
         " for reason %d",
