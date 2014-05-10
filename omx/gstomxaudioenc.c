@@ -846,8 +846,6 @@ gst_omx_audio_enc_flush (GstAudioEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Resetting encoder");
 
-  gst_omx_audio_enc_drain (self);
-
   gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, TRUE);
   gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, TRUE);
 
@@ -893,7 +891,7 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
   }
 
   if (inbuf == NULL)
-    return GST_FLOW_OK;
+    return gst_omx_audio_enc_drain (self);
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
