@@ -882,7 +882,7 @@ _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
             get_auto_transition (timeline, layer, ctrack, prev, next,
             transition_duration);
         if (!transition)
-          transition = create_transition (timeline, prev, next, NULL, layer,
+          create_transition (timeline, prev, next, NULL, layer,
               _START (next), transition_duration);
       }
     }
