@@ -86,6 +86,7 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   infos->adder_pad = gst_element_request_pad (self->adder, templ, NULL, caps);
   if (infos->adder_pad == NULL) {
     GST_WARNING_OBJECT (element, "Could not get any pad from GstAdder");
+    g_slice_free (PadInfos, infos);
 
     return NULL;
   }
