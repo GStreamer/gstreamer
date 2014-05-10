@@ -1408,8 +1408,7 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
 
       /* Calculate new values */
       position = MIN (position, start + duration);
-      inpoint =
-          MAX (0, inpoint + position > start ? inpoint + position - start : 0);
+      inpoint = inpoint + position > start ? inpoint + position - start : 0;
 
       real_dur = _END (element) - position;
       /* FIXME: Why CLAMP (0, real_dur, max_duration) doesn't work? */
