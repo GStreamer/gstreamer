@@ -239,7 +239,7 @@ gst_omx_audio_sink_volume_set (GstOMXAudioSink * self, gdouble volume)
         OMX_IndexConfigAudioVolume, &param);
     if (err != OMX_ErrorNone) {
       GST_ERROR_OBJECT (self, "Failed to set volume to %d: %s (0x%08x)",
-          param.sVolume.nValue, gst_omx_error_to_string (err), err);
+          (gint) param.sVolume.nValue, gst_omx_error_to_string (err), err);
     }
   }
   self->volume = volume;
@@ -518,14 +518,14 @@ gst_omx_audio_sink_configure_pcm (GstOMXAudioSink * self,
   }
 
   GST_DEBUG_OBJECT (self, "Setting PCM parameters");
-  GST_DEBUG_OBJECT (self, "  nChannels: %d", param.nChannels);
+  GST_DEBUG_OBJECT (self, "  nChannels: %u", (guint) param.nChannels);
   GST_DEBUG_OBJECT (self, "  eNumData: %s",
       (param.eNumData == OMX_NumericalDataSigned ? "signed" : "unsigned"));
   GST_DEBUG_OBJECT (self, "  eEndian: %s",
       (param.eEndian == OMX_EndianLittle ? "little endian" : "big endian"));
   GST_DEBUG_OBJECT (self, "  bInterleaved: %d", param.bInterleaved);
-  GST_DEBUG_OBJECT (self, "  nBitPerSample: %d", param.nBitPerSample);
-  GST_DEBUG_OBJECT (self, "  nSamplingRate: %d", param.nSamplingRate);
+  GST_DEBUG_OBJECT (self, "  nBitPerSample: %u", (guint) param.nBitPerSample);
+  GST_DEBUG_OBJECT (self, "  nSamplingRate: %u", (guint) param.nSamplingRate);
   GST_DEBUG_OBJECT (self, "  ePCMMode: %04x", param.ePCMMode);
   GST_DEBUG_OBJECT (self, "  eChannelMapping: {%s, %s, %s, %s, %s, %s, %s, %s}",
       ch2str (param.eChannelMapping[0]), ch2str (param.eChannelMapping[1]),
@@ -565,8 +565,8 @@ gst_omx_audio_sink_prepare (GstAudioSink * audiosink,
   port_def.format.audio.eEncoding = OMX_AUDIO_CodingPCM;
 
   GST_DEBUG_OBJECT (self, "Updating outport port definition");
-  GST_DEBUG_OBJECT (self, "  nBufferSize: %d", port_def.nBufferSize);
-  GST_DEBUG_OBJECT (self, "  nBufferCountActual: %d",
+  GST_DEBUG_OBJECT (self, "  nBufferSize: %u", (guint) port_def.nBufferSize);
+  GST_DEBUG_OBJECT (self, "  nBufferCountActual: %u", (guint)
       port_def.nBufferCountActual);
   GST_DEBUG_OBJECT (self, "  audio.eEncoding: 0x%08x",
       port_def.format.audio.eEncoding);
@@ -901,7 +901,7 @@ gst_omx_audio_sink_delay (GstAudioSink * audiosink)
     param.nU32 = 0;
   }
 
-  GST_DEBUG_OBJECT (self, "reported delay %d samples", param.nU32);
+  GST_DEBUG_OBJECT (self, "reported delay %u samples", (guint) param.nU32);
   return param.nU32;
 }
 
