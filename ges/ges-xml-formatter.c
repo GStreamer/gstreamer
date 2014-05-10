@@ -326,6 +326,9 @@ _parse_track (GMarkupParseContext * context, const gchar * element_name,
   ges_base_xml_formatter_add_track (GES_BASE_XML_FORMATTER (self), track_type,
       caps, strtrack_id, props, metadatas, error);
 
+  if (props)
+    gst_structure_free (props);
+
   return;
 
 wrong_caps:
