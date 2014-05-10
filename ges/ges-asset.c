@@ -637,8 +637,8 @@ ges_asset_set_id (GESAsset * asset, const gchar * id)
   entries = g_hash_table_lookup (type_entries_table,
       _extractable_type_name (asset->priv->extractable_type));
 
-  g_hash_table_lookup_extended (entries, priv->id, &orig_id,
-      (gpointer *) & entry);
+  g_return_if_fail (g_hash_table_lookup_extended (entries, priv->id, &orig_id,
+          (gpointer *) & entry));
 
   g_hash_table_steal (entries, priv->id);
   g_hash_table_insert (entries, g_strdup (id), entry);
