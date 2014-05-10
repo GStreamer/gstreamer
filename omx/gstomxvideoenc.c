@@ -1501,9 +1501,10 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     duration = frame->duration;
     if (duration != GST_CLOCK_TIME_NONE) {
       buf->omx_buf->nTickCount =
-          gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration,
-          gst_buffer_get_size (frame->input_buffer));
+          gst_util_uint64_scale (duration, OMX_TICKS_PER_SECOND, GST_SECOND);
       self->last_upstream_ts += duration;
+    } else {
+      buf->omx_buf->nTickCount = 0;
     }
 
     self->started = TRUE;
