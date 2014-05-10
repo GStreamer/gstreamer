@@ -161,6 +161,8 @@ gst_gl_upload_finalize (GObject * object)
 static void
 gst_gl_upload_reset (GstGLUpload * upload)
 {
+  guint i;
+
   if (upload->priv->tex_id) {
     gst_gl_context_del_texture (upload->context, &upload->priv->tex_id);
     upload->priv->tex_id = 0;
@@ -174,6 +176,13 @@ gst_gl_upload_reset (GstGLUpload * upload)
   if (upload->out_tex) {
     gst_memory_unref ((GstMemory *) upload->out_tex);
     upload->out_tex = NULL;
+  }
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    if (upload->in_tex[i]) {
+      gst_memory_unref ((GstMemory *) upload->in_tex[i]);
+      upload->in_tex[i] = NULL;
+    }
   }
 }
 
@@ -278,6 +287,9 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
     ret = _upload_memory (upload);
 
     *tex_id = upload->out_tex->tex_id;
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
+      upload->in_tex[i] = NULL;
+    }
     return ret;
   }
 
@@ -586,25 +598,16 @@ static gboolean
 _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
 {
-  guint i;
-  gboolean ret;
-
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (texture_id > 0, FALSE);
 
-  gst_gl_memory_setup_wrapped (upload->context, &upload->in_info, data,
-      upload->in_tex);
+  if (!upload->in_tex[0])
+    gst_gl_memory_setup_wrapped (upload->context, &upload->in_info, data,
+        upload->in_tex);
 
   GST_LOG ("Uploading data into texture %u", texture_id);
 
-  ret = _upload_memory (upload);
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
-    gst_memory_unref ((GstMemory *) upload->in_tex[i]);
-    upload->in_tex[i] = NULL;
-  }
-
-  return ret;
+  return _upload_memory (upload);
 }
 
 /* Called in the gl thread */
@@ -648,8 +651,6 @@ _upload_memory (GstGLUpload * upload)
   guint in_width, in_height;
   guint in_texture[GST_VIDEO_MAX_PLANES];
   GstGLMemory *out_texture[GST_VIDEO_MAX_PLANES] = {upload->out_tex, 0, 0, 0};
-  GstMapInfo map_infos[GST_VIDEO_MAX_PLANES];
-  gboolean res = TRUE;
   gint i;
 
   in_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
@@ -662,13 +663,6 @@ _upload_memory (GstGLUpload * upload)
   }
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
-    if (!gst_memory_map ((GstMemory *) upload->in_tex[i], &map_infos[i],
-          GST_MAP_READ | GST_MAP_GL)) {
-      gst_gl_context_set_error (upload->context, "Failed to map GL memory %u", i);
-      res = FALSE;
-      goto out;
-    }
-
     in_texture[i] = upload->in_tex[i]->tex_id;
   }
 
@@ -676,12 +670,5 @@ _upload_memory (GstGLUpload * upload)
       out_texture[0]->tex_id, in_texture[0], in_texture[1], in_texture[2],
       in_width, in_height);
 
-  res = gst_gl_color_convert_perform (upload->convert, upload->in_tex, out_texture);
-
-out:
-  for (i--; i >= 0; i--) {
-    gst_memory_unmap ((GstMemory *) upload->in_tex[i], &map_infos[i]);
-  }
-
-  return res;
+  return gst_gl_color_convert_perform (upload->convert, upload->in_tex, out_texture);
 }
