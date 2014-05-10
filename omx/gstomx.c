@@ -39,6 +39,7 @@
 #include "gstomxmpeg4videoenc.h"
 #include "gstomxh264enc.h"
 #include "gstomxh263enc.h"
+#include "gstomxmp3dec.h"
 #include "gstomxaacenc.h"
 #include "gstomxanalogaudiosink.h"
 #include "gstomxhdmiaudiosink.h"
@@ -2244,7 +2245,8 @@ static const GGetTypeFunction types[] = {
   gst_omx_h264_dec_get_type, gst_omx_h263_dec_get_type,
   gst_omx_wmv_dec_get_type, gst_omx_mpeg4_video_enc_get_type,
   gst_omx_h264_enc_get_type, gst_omx_h263_enc_get_type,
-  gst_omx_aac_enc_get_type, gst_omx_mjpeg_dec_get_type
+  gst_omx_aac_enc_get_type, gst_omx_mjpeg_dec_get_type,
+  gst_omx_mp3_dec_get_type
 #ifdef HAVE_VP8
       , gst_omx_vp8_dec_get_type
 #endif
@@ -2263,6 +2265,7 @@ static const struct TypeOffest base_types[] = {
   {gst_omx_audio_sink_get_type, G_STRUCT_OFFSET (GstOMXAudioSinkClass, cdata)},
   {gst_omx_video_dec_get_type, G_STRUCT_OFFSET (GstOMXVideoDecClass, cdata)},
   {gst_omx_video_enc_get_type, G_STRUCT_OFFSET (GstOMXVideoEncClass, cdata)},
+  {gst_omx_audio_dec_get_type, G_STRUCT_OFFSET (GstOMXAudioDecClass, cdata)},
   {gst_omx_audio_enc_get_type, G_STRUCT_OFFSET (GstOMXAudioEncClass, cdata)},
 };
 
