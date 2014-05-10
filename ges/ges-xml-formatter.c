@@ -394,6 +394,8 @@ _parse_layer (GMarkupParseContext * context, const gchar * element_name,
 
   ges_base_xml_formatter_add_layer (GES_BASE_XML_FORMATTER (self),
       extractable_type, priority, props, metadatas, error);
+
+done:
   if (props)
     gst_structure_free (props);
 
@@ -404,7 +406,7 @@ convertion_failed:
       G_MARKUP_ERROR_INVALID_CONTENT,
       "element '%s', Wrong property type, error: %s'", element_name,
       g_strerror (errno));
-  return;
+  goto done;
 
 wrong_properties:
   g_set_error (error, G_MARKUP_ERROR,
