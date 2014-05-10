@@ -195,8 +195,11 @@ context_create (GstVaapiContext * context)
   attrib->type = VAConfigAttribRTFormat;
   if (!context_get_attribute (context, attrib->type, &value))
     goto cleanup;
-  if (!(value & va_chroma_format))
+  if (!(value & va_chroma_format)) {
+    GST_ERROR ("unsupported chroma format (%s)",
+        string_of_va_chroma_format (va_chroma_format));
     goto cleanup;
+  }
   attrib->value = va_chroma_format;
   attrib++;
 

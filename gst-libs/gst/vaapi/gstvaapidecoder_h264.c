@@ -957,7 +957,7 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     /* XXX: fix surface size when cropping is implemented */
     info.profile    = priv->profile;
     info.entrypoint = priv->entrypoint;
-    info.chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+    info.chroma_type = priv->chroma_type;
     info.width      = sps->width;
     info.height     = sps->height;
     info.ref_frames = get_max_dec_frame_buffering(sps);

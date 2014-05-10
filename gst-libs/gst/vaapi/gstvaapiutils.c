@@ -208,6 +208,29 @@ string_of_VADisplayAttributeType (VADisplayAttribType attribute_type)
   return "<unknown>";
 }
 
+/* Return a string representation of a VA chroma format */
+const gchar *
+string_of_va_chroma_format (guint chroma_format)
+{
+  switch (chroma_format) {
+#define MAP(value) \
+        STRCASEP(VA_RT_FORMAT_, value)
+      MAP (YUV420);
+      MAP (YUV422);
+      MAP (YUV444);
+#if VA_CHECK_VERSION(0,34,0)
+      MAP (YUV400);
+      MAP (RGB16);
+      MAP (RGB32);
+      MAP (RGBP);
+#endif
+#undef MAP
+    default:
+      break;
+  }
+  return "<unknown>";
+}
+
 const gchar *
 string_of_VARateControl (guint rate_control)
 {

@@ -71,6 +71,11 @@ G_GNUC_INTERNAL
 const gchar *
 string_of_VADisplayAttributeType (VADisplayAttribType attribute_type);
 
+/* Return a string representation of a VA chroma format */
+G_GNUC_INTERNAL
+const gchar *
+string_of_va_chroma_format (guint chroma_format);
+
 G_GNUC_INTERNAL
 const gchar *
 string_of_VARateControl (guint rate_control);
