@@ -1284,15 +1284,5 @@ gst_auto_convert_internal_src_query (GstPad * pad, GstObject * parent,
       GST_AUTO_CONVERT (g_object_get_qdata (G_OBJECT (pad),
           parent_quark));
 
-  if (GST_QUERY_TYPE (query) == GST_QUERY_CAPS) {
-    GstCaps *caps;
-
-    caps = gst_caps_new_any ();
-    gst_query_set_caps_result (query, caps);
-    gst_caps_unref (caps);
-
-    return TRUE;
-  }
-
   return gst_pad_peer_query (autoconvert->sinkpad, query);
 }
