@@ -786,14 +786,23 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 {
   guint8 *bdata = NULL, *data, *mdata = NULL;
   gsize bsize, size;
-  gsize bytes = enc->frame_samples * enc->n_channels * 2;
+  gsize bytes;
   gint ret = GST_FLOW_OK;
   GstMapInfo map;
   GstMapInfo omap;
   gint outsize;
   GstBuffer *outbuf;
 
+  guint max_payload_size;
+  gint frame_samples;
+
   g_mutex_lock (&enc->property_lock);
+
+  bytes = enc->frame_samples * enc->n_channels * 2;
+  max_payload_size = enc->max_payload_size;
+  frame_samples = enc->frame_samples;
+
+  g_mutex_unlock (&enc->property_lock);
 
   if (G_LIKELY (buf)) {
     gst_buffer_map (buf, &map, GST_MAP_READ);
@@ -818,21 +827,21 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 
   g_assert (size == bytes);
 
-  outbuf = gst_buffer_new_and_alloc (enc->max_payload_size * enc->n_channels);
+  outbuf = gst_buffer_new_and_alloc (max_payload_size * enc->n_channels);
   if (!outbuf)
     goto done;
 
   GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
-      enc->frame_samples, (int) bytes);
+      frame_samples, (int) bytes);
 
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
 
   GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
-      enc->frame_samples, (int) bytes);
+      frame_samples, (int) bytes);
 
   outsize =
       opus_multistream_encode (enc->state, (const gint16 *) data,
-      enc->frame_samples, omap.data, enc->max_payload_size * enc->n_channels);
+      frame_samples, omap.data, max_payload_size * enc->n_channels);
 
   gst_buffer_unmap (outbuf, &omap);
 
@@ -840,10 +849,10 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
     GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
     ret = GST_FLOW_ERROR;
     goto done;
-  } else if (outsize > enc->max_payload_size) {
+  } else if (outsize > max_payload_size) {
     GST_WARNING_OBJECT (enc,
         "Encoded size %d is higher than max payload size (%d bytes)",
-        outsize, enc->max_payload_size);
+        outsize, max_payload_size);
     ret = GST_FLOW_ERROR;
     goto done;
   }
@@ -853,13 +862,12 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 
   ret =
       gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (enc), outbuf,
-      enc->frame_samples);
+      frame_samples);
 
 done:
 
   if (bdata)
     gst_buffer_unmap (buf, &map);
-  g_mutex_unlock (&enc->property_lock);
 
   if (mdata)
     g_free (mdata);
