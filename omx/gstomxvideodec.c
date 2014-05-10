@@ -2193,7 +2193,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     if (duration != GST_CLOCK_TIME_NONE && offset == 0) {
       buf->omx_buf->nTickCount =
-          gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration, size);
+          gst_util_uint64_scale (duration, OMX_TICKS_PER_SECOND, GST_SECOND);
       self->last_upstream_ts += duration;
     } else {
       buf->omx_buf->nTickCount = 0;
