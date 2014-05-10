@@ -445,9 +445,6 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
 
   ges_timeline_commit (timeline);
 
-  if (uri)
-    g_free (uri);
-
   /* save project if path is given. we do this now in case GES crashes or
    * hangs during playback. */
   if (save_path && !load_path) {
@@ -457,7 +454,6 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
       goto failure;
     }
     ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL);
-    g_free (uri);
   }
 
   /* In order to view our timeline, let's grab a convenience pipeline to put
@@ -479,17 +475,23 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
     goto failure;
 
   *ret_timeline = timeline;
+
+done:
+  if (uri)
+    g_free (uri);
+
   return pipeline;
 
 failure:
   {
-    if (uri)
-      g_free (uri);
     if (timeline)
       gst_object_unref (timeline);
     if (pipeline)
       gst_object_unref (pipeline);
-    return NULL;
+    pipeline = NULL;
+    timeline = NULL;
+
+    goto done;
   }
 }
 
@@ -587,7 +589,6 @@ static GstEncodingProfile *
 _parse_encoding_profile (const gchar * format)
 {
   GstCaps *caps;
-  char *preset_name = NULL;
   GstEncodingProfile *encoding_profile;
   gchar **restriction_format, **preset_v;
 
@@ -610,8 +611,9 @@ _parse_encoding_profile (const gchar * format)
   }
 
   for (i = 1; strcaps_v[i]; i++) {
-    GstEncodingProfile *profile = NULL;
     gchar *strcaps, *strpresence;
+    char *preset_name = NULL;
+    GstEncodingProfile *profile = NULL;
 
     restriction_format = g_strsplit (strcaps_v[i], "->", 0);
     if (restriction_format[1]) {

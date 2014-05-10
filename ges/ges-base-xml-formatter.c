@@ -555,9 +555,9 @@ _free_pending_asset (GESBaseXmlFormatterPrivate * priv, PendingAsset * passet)
     g_free (passet->metadatas);
   if (passet->properties)
     gst_structure_free (passet->properties);
-  g_slice_free (PendingAsset, passet);
 
   priv->pending_assets = g_list_remove (priv->pending_assets, passet);
+  g_slice_free (PendingAsset, passet);
 }
 
 static void
