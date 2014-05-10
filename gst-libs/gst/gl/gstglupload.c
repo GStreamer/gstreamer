@@ -491,18 +491,19 @@ _gst_gl_upload_perform_for_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
 
   g_mutex_lock (&upload->lock);
 
-  upload->out_tex = gst_gl_memory_wrapped_texture (upload->context,
-      texture_id[0], GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
-      GST_VIDEO_INFO_WIDTH (&upload->in_info),
-      GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);;
+  if (!upload->out_tex)
+    upload->out_tex = gst_gl_memory_wrapped_texture (upload->context,
+        texture_id[0], GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
+        GST_VIDEO_INFO_WIDTH (&upload->in_info),
+        GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);;
+
+  /* FIXME: kinda breaks the abstraction */
+  upload->out_tex->tex_id = texture_id[0];
 
   GST_LOG ("Uploading for meta with textures %i,%i,%i,%i", texture_id[0],
       texture_id[1], texture_id[2], texture_id[3]);
 
   ret = _do_upload_for_meta (upload, meta);
-
-  gst_memory_unref ((GstMemory *) upload->out_tex);
-  upload->out_tex = NULL;
 
   g_mutex_unlock (&upload->lock);
 
@@ -566,14 +567,15 @@ gst_gl_upload_perform_with_data (GstGLUpload * upload, GLuint texture_id,
 
   g_mutex_lock (&upload->lock);
 
-  upload->out_tex = gst_gl_memory_wrapped_texture (upload->context, texture_id,
-      GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
-      GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);
+  if (!upload->out_tex)
+    upload->out_tex = gst_gl_memory_wrapped_texture (upload->context, texture_id,
+        GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
+        GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);
+
+  /* FIXME: kinda breaks the abstraction */
+  upload->out_tex->tex_id = texture_id;
 
   ret = _gst_gl_upload_perform_with_data_unlocked (upload, texture_id, data);
-
-  gst_memory_unref ((GstMemory *) upload->out_tex);
-  upload->out_tex = NULL;
 
   g_mutex_unlock (&upload->lock);
 
