@@ -1102,16 +1102,14 @@ gst_auto_convert_getcaps (GstAutoConvert * autoconvert, GstCaps * filter,
 
       element_caps = gst_pad_peer_query_caps (internal_pad, filter);
 
-      if (element_caps) {
-        if (!gst_caps_is_any (element_caps) &&
-            !gst_caps_is_empty (element_caps)) {
-          caps = gst_caps_merge (caps, element_caps);
-        } else {
-          gst_caps_unref (element_caps);
-        }
-      }
+      if (element_caps)
+        caps = gst_caps_merge (caps, element_caps);
 
       gst_object_unref (element);
+
+      /* Early out, any is absorbing */
+      if (gst_caps_is_any (caps))
+        goto out;
     } else {
       const GList *tmp;
 
@@ -1122,10 +1120,13 @@ gst_auto_convert_getcaps (GstAutoConvert * autoconvert, GstCaps * filter,
         if (GST_PAD_TEMPLATE_DIRECTION (template) == dir) {
           GstCaps *static_caps = gst_static_pad_template_get_caps (template);
 
-          if (static_caps && !gst_caps_is_any (static_caps) &&
-              !gst_caps_is_empty (static_caps)) {
+          if (static_caps) {
             caps = gst_caps_merge (caps, static_caps);
           }
+
+          /* Early out, any is absorbing */
+          if (gst_caps_is_any (caps))
+            goto out;
         }
       }
     }
