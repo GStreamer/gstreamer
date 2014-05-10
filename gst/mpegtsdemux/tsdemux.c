@@ -937,7 +937,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         case DRF_ID_DTS2:
         case DRF_ID_DTS3:
           /* SMPTE registered DTS */
-          GST_LOG ("subtitling");
           template = gst_static_pad_template_get (&private_template);
           name = g_strdup_printf ("private_%04x", bstream->pid);
           caps = gst_caps_new_empty_simple ("audio/x-dts");
