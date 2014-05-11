@@ -521,7 +521,9 @@ gst_ass_render_add_feature_and_intersect (GstCaps * caps,
   caps_size = gst_caps_get_size (new_caps);
   for (i = 0; i < caps_size; i++) {
     GstCapsFeatures *features = gst_caps_get_features (new_caps, i);
-    gst_caps_features_add (features, feature);
+    if (!gst_caps_features_is_any (features)) {
+      gst_caps_features_add (features, feature);
+    }
   }
 
   gst_caps_append (new_caps, gst_caps_intersect_full (caps,
