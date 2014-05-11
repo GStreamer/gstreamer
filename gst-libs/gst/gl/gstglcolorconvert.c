@@ -181,7 +181,7 @@ static const char frag_AYUV_to_RGB[] =
     "  r = dot(texel.gba, coeff1);\n"
     "  g = dot(texel.gba, coeff2);\n"
     "  b = dot(texel.gba, coeff3);\n"
-    "  a = texel.a;\n"
+    "  a = texel.r;\n"
     "  gl_FragColor=vec4(%c,%c,%c,%c);\n"
     "}";
 
