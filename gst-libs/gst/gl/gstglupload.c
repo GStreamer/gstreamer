@@ -510,7 +510,10 @@ _gst_gl_upload_perform_for_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
         GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);;
 
   /* FIXME: kinda breaks the abstraction */
-  upload->out_tex->tex_id = texture_id[0];
+  if (upload->out_tex->tex_id != texture_id[0]) {
+    upload->out_tex->tex_id = texture_id[0];
+    GST_GL_MEMORY_FLAG_SET (upload->out_tex, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
+  }
 
   GST_LOG ("Uploading for meta with textures %i,%i,%i,%i", texture_id[0],
       texture_id[1], texture_id[2], texture_id[3]);
@@ -585,7 +588,10 @@ gst_gl_upload_perform_with_data (GstGLUpload * upload, GLuint texture_id,
         GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);
 
   /* FIXME: kinda breaks the abstraction */
-  upload->out_tex->tex_id = texture_id;
+  if (upload->out_tex->tex_id != texture_id) {
+    upload->out_tex->tex_id = texture_id;
+    GST_GL_MEMORY_FLAG_SET (upload->out_tex, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
+  }
 
   ret = _gst_gl_upload_perform_with_data_unlocked (upload, texture_id, data);
 
@@ -598,12 +604,21 @@ static gboolean
 _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
 {
+  guint i;
+
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (texture_id > 0, FALSE);
 
   if (!upload->in_tex[0])
     gst_gl_memory_setup_wrapped (upload->context, &upload->in_info, data,
         upload->in_tex);
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    if (upload->in_tex[i] && upload->in_tex[i]->data != data[i]) {
+      upload->in_tex[i]->data = data[i];
+      GST_GL_MEMORY_FLAG_SET (upload->in_tex[i], GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+    }
+  }
 
   GST_LOG ("Uploading data into texture %u", texture_id);
 
