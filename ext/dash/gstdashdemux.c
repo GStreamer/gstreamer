@@ -580,7 +580,6 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
           GstDashDemuxStream *stream = iter->data;
           stream->last_ret = GST_FLOW_OK;
-          gst_uri_downloader_reset (stream->downloader);
         }
         demux->timestamp_offset = 0;
         gst_uri_downloader_reset (demux->downloader);
@@ -711,7 +710,6 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     gst_task_set_lock (stream->download_task, &stream->download_task_lock);
     g_cond_init (&stream->download_cond);
     g_mutex_init (&stream->download_mutex);
-    stream->downloader = gst_uri_downloader_new ();
     stream->download_total_time = 0;
     stream->download_total_bytes = 0;
 
@@ -1040,7 +1038,6 @@ gst_dash_demux_stop (GstDashDemux * demux)
     GST_TASK_SIGNAL (stream->download_task);
     gst_element_set_state (stream->src, GST_STATE_READY);
     g_cond_signal (&stream->fragment_download_cond);
-    gst_uri_downloader_cancel (stream->downloader);
   }
 }
 
@@ -1183,10 +1180,6 @@ gst_dash_demux_stream_free (GstDashDemuxStream * stream)
 
   g_cond_clear (&stream->fragment_download_cond);
   g_mutex_clear (&stream->fragment_download_lock);
-
-  if (stream->downloader != NULL) {
-    g_object_unref (stream->downloader);
-  }
 
   g_free (stream);
 }
