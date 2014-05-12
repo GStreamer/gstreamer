@@ -95,7 +95,7 @@ static GstFlowReturn
 gst_v4l2_buffer_pool_copy_buffer (GstV4l2BufferPool * pool, GstBuffer * dest,
     GstBuffer * src)
 {
-  const GstVideoFormatInfo *finfo = pool->obj->info.finfo;
+  const GstVideoFormatInfo *finfo = pool->caps_info.finfo;
 
   GST_LOG_OBJECT (pool, "copying buffer");
 
@@ -106,10 +106,10 @@ gst_v4l2_buffer_pool_copy_buffer (GstV4l2BufferPool * pool, GstBuffer * dest,
     GST_DEBUG_OBJECT (pool, "copy video frame");
 
     /* we have raw video, use videoframe copy to get strides right */
-    if (!gst_video_frame_map (&src_frame, &pool->obj->info, src, GST_MAP_READ))
+    if (!gst_video_frame_map (&src_frame, &pool->caps_info, src, GST_MAP_READ))
       goto invalid_buffer;
 
-    if (!gst_video_frame_map (&dest_frame, &pool->obj->info, dest,
+    if (!gst_video_frame_map (&dest_frame, &pool->caps_info, dest,
             GST_MAP_WRITE)) {
       gst_video_frame_unmap (&src_frame);
       goto invalid_buffer;
@@ -185,7 +185,7 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
   GstFlowReturn ret = GST_FLOW_OK;
   GstV4l2MemoryGroup *group = NULL;
   GstMapFlags flags;
-  const GstVideoFormatInfo *finfo = pool->obj->info.finfo;
+  const GstVideoFormatInfo *finfo = pool->caps_info.finfo;
   struct UserPtrData *data = NULL;
 
   GST_LOG_OBJECT (pool, "importing userptr");
@@ -205,7 +205,7 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
           finfo->format != GST_VIDEO_FORMAT_ENCODED)) {
     data->is_frame = TRUE;
 
-    if (!gst_video_frame_map (&data->frame, &pool->obj->info, src, flags))
+    if (!gst_video_frame_map (&data->frame, &pool->caps_info, src, flags))
       goto invalid_buffer;
 
     if (!gst_v4l2_allocator_import_userptr (pool->vallocator, group,
@@ -501,6 +501,9 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   if (updated)
     gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
         max_buffers);
+
+  /* keep a GstVideoInfo with defaults for the when we need to copy */
+  gst_video_info_from_caps (&pool->caps_info, caps);
 
 done:
   ret = GST_BUFFER_POOL_CLASS (parent_class)->set_config (bpool, config);

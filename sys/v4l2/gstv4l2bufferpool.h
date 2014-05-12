@@ -56,6 +56,7 @@ struct _GstV4l2BufferPool
   GstAllocationParams params;
   GstBufferPool *other_pool;
   guint size;
+  GstVideoInfo caps_info;   /* Default video information */
 
   gboolean add_videometa;    /* set if video meta should be added */
 
