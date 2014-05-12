@@ -369,7 +369,6 @@ gst_gl_upload_release_buffer (GstGLUpload * upload)
 static gboolean
 _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
 {
-  GstVideoMeta *v_meta;
   GstVideoInfo in_info;
   GstVideoFrame frame;
   GstMemory *mem;
@@ -392,19 +391,14 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
       return TRUE;
   }
 
-  v_meta = gst_buffer_get_video_meta (upload->priv->buffer);
-
-  if (v_meta == NULL)
-    return FALSE;
-
-  gst_video_info_set_format (&in_info, v_meta->format, v_meta->width,
-      v_meta->height);
-
   if (!gst_video_frame_map (&frame, &in_info, upload->priv->buffer,
           GST_MAP_READ)) {
     GST_ERROR ("failed to map video frame");
     return FALSE;
   }
+
+  /* update the video info from the one updated by frame_map using video meta */
+  gst_gl_upload_set_format (upload, &upload->priv->frame.info);
 
   ret = _gst_gl_upload_perform_with_data_unlocked (upload,
       upload->out_tex->tex_id, frame.data);
