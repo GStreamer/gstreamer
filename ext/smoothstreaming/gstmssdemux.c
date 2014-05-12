@@ -122,6 +122,7 @@ static void gst_mss_demux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstStateChangeReturn gst_mss_demux_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_mss_demux_handle_message (GstBin * bin, GstMessage * msg);
 static GstFlowReturn gst_mss_demux_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 static GstFlowReturn gst_mss_demux_event (GstPad * pad, GstObject * parent,
@@ -143,9 +144,11 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBinClass *gstbin_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbin_class = (GstBinClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_mss_demux_sink_template));
@@ -184,6 +187,8 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_mss_demux_change_state);
+
+  gstbin_class->handle_message = gst_mss_demux_handle_message;
 
   GST_DEBUG_CATEGORY_INIT (mssdemux_debug, "mssdemux", 0, "mssdemux plugin");
 }
@@ -393,6 +398,49 @@ gst_mss_demux_change_state (GstElement * element, GstStateChange transition)
 
   return result;
 }
+
+static void
+gst_mss_demux_handle_message (GstBin * bin, GstMessage * msg)
+{
+  GstMssDemux *demux = GST_MSS_DEMUX_CAST (bin);
+
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_ERROR:{
+      GSList *iter;
+      GstMssDemuxStream *stream;
+      GError *err = NULL;
+      gchar *debug = NULL;
+
+      for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+        stream = iter->data;
+        if (GST_OBJECT_CAST (stream->src) == GST_MESSAGE_SRC (msg)) {
+          gst_message_parse_error (msg, &err, &debug);
+
+          GST_WARNING_OBJECT (stream->pad, "Source posted error: %d:%d %s (%s)",
+              err->domain, err->code, err->message, debug);
+
+          /* error, but ask to retry */
+          stream->last_ret = GST_FLOW_CUSTOM_ERROR;
+          g_cond_signal (&stream->fragment_download_cond);
+
+          g_error_free (err);
+          g_free (debug);
+          break;
+        }
+      }
+
+      gst_message_unref (msg);
+      msg = NULL;
+    }
+      break;
+    default:
+      break;
+  }
+
+  if (msg)
+    GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+}
+
 
 static GstFlowReturn
 gst_mss_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
@@ -1305,7 +1353,6 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream)
       break;                    /* all is good, let's go */
     case GST_FLOW_EOS:
       g_free (path);
-      g_free (url);
       if (gst_mss_manifest_is_live (mssdemux->manifest)) {
         gst_mss_demux_reload_manifest (mssdemux);
         g_mutex_unlock (&stream->fragment_download_lock);
@@ -1316,7 +1363,6 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream)
     case GST_FLOW_ERROR:
       g_mutex_unlock (&stream->fragment_download_lock);
       g_free (path);
-      g_free (url);
       goto error;
     default:
       break;
@@ -1347,7 +1393,6 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream)
        * Have to assume we are falling behind and cause a manifest reload */
       return GST_FLOW_OK;
     }
-    return stream->last_ret;
   }
 
   return stream->last_ret;
@@ -1428,12 +1473,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
   GST_OBJECT_LOCK (mssdemux);
   if (stream->cancelled) {
     GST_OBJECT_UNLOCK (mssdemux);
-    goto cancelled;
-  }
-  stream->last_ret = ret;
-
-  if (stream->cancelled) {
-    GST_OBJECT_UNLOCK (mssdemux);
+    stream->last_ret = GST_FLOW_FLUSHING;
     goto cancelled;
   }
 
