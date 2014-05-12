@@ -1035,9 +1035,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       gst_pad_push_event (stream->pad, stream->pending_segment);
       stream->pending_segment = NULL;
     }
-#if 0
-    stream->position = demux->segment.position = GST_BUFFER_PTS (buffer);
-#endif
+    stream->segment.position = GST_BUFFER_PTS (buffer);
 
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
@@ -1050,10 +1048,6 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
   }
 
-#if 0
-  GST_BUFFER_DURATION (buffer) =
-      gst_mss_stream_get_fragment_gst_duration (stream->manifest_stream);
-#endif
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
 
@@ -1061,6 +1055,8 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   stream->download_total_time +=
       g_get_monotonic_time () - stream->download_start_time;
   stream->download_total_bytes += gst_buffer_get_size (buffer);
+
+  stream->have_data = TRUE;
 
   ret = gst_proxy_pad_chain_default (pad, parent, buffer);
   stream->download_start_time = g_get_monotonic_time ();
@@ -1383,8 +1379,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
     GST_DEBUG_OBJECT (stream->pad,
         "Activating stream due to reconfigure event");
 
-    cur = GST_CLOCK_TIME_IS_VALID (stream->next_timestamp) ?
-        stream->next_timestamp : 0;
+    cur = stream->segment.position;
 
     if (gst_pad_peer_query_position (stream->pad, GST_FORMAT_TIME, &pos)) {
       ts = (GstClockTime) pos;
@@ -1397,7 +1392,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
     }
 
     /* we might have already pushed this data */
-    ts = MAX (ts, stream->next_timestamp);
+    ts = MAX (ts, cur);
 
     GST_DEBUG_OBJECT (stream->pad, "Restarting stream at "
         "position %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
@@ -1438,6 +1433,8 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
   switch (ret) {
     case GST_FLOW_OK:
       stream->download_error_count = 0;
+      stream->segment.position +=
+          gst_mss_stream_get_fragment_gst_duration (stream->manifest_stream);
       gst_mss_stream_advance_fragment (stream->manifest_stream);
       break;                    /* all is good, let's go */
 
@@ -1516,46 +1513,6 @@ gst_mss_demux_combine_flows (GstMssDemux * mssdemux)
     return GST_FLOW_NOT_LINKED;
   return GST_FLOW_OK;
 }
-
-#if 0
-static gboolean
-gst_mss_demux_stream_push (GstMssDemuxStream * stream, GstBuffer * buf)
-{
-  GstFlowReturn ret;
-
-  if (G_UNLIKELY (stream->pending_segment)) {
-    gst_pad_push_event (stream->pad, stream->pending_segment);
-    stream->pending_segment = NULL;
-  }
-
-  if (GST_BUFFER_TIMESTAMP (buf) != stream->next_timestamp) {
-    GST_DEBUG_OBJECT (stream->pad, "Marking buffer %p as discont buffer:%"
-        GST_TIME_FORMAT " != expected:%" GST_TIME_FORMAT, buf,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-        GST_TIME_ARGS (stream->next_timestamp));
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-  }
-
-  GST_DEBUG_OBJECT (stream->pad,
-      "Pushing buffer %p %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
-      " discont:%d", buf,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
-      GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT));
-
-  stream->next_timestamp =
-      GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
-
-  stream->have_data = TRUE;
-  stream->segment.position = GST_BUFFER_TIMESTAMP (buf);
-
-  ret = gst_pad_push (stream->pad, GST_BUFFER_CAST (buf));
-  GST_DEBUG_OBJECT (stream->pad, "Pushed. result: %d (%s)",
-      ret, gst_flow_get_name (ret));
-
-  return ret;
-}
-#endif
 
 static gboolean
 gst_mss_demux_stream_push_event (GstMssDemuxStream * stream, GstEvent * event)

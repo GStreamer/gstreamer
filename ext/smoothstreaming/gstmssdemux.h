@@ -66,7 +66,6 @@ struct _GstMssDemuxStream {
 
   GstEvent *pending_segment;
 
-  GstClockTime next_timestamp;
   GstSegment segment;
 
   /* Downloading task */
