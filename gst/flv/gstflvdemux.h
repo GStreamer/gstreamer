@@ -47,6 +47,7 @@ typedef enum
   FLV_STATE_TAG_SCRIPT,
   FLV_STATE_SEEK,
   FLV_STATE_DONE,
+  FLV_STATE_SKIP,
   FLV_STATE_NONE
 } GstFlvDemuxState;
 

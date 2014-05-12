@@ -1683,6 +1683,16 @@ gst_flv_demux_parse_tag_type (GstFlvDemux * demux, GstBuffer * buffer)
 
   tag_type = map.data[0];
 
+  /* Tag size is 1 byte of type + 3 bytes of size + 7 bytes + tag data size +
+   * 4 bytes of previous tag size */
+  demux->tag_data_size = GST_READ_UINT24_BE (map.data + 1);
+  demux->tag_size = demux->tag_data_size + 11;
+
+  GST_LOG_OBJECT (demux, "tag data size is %" G_GUINT64_FORMAT,
+      demux->tag_data_size);
+
+  gst_buffer_unmap (buffer, &map);
+
   switch (tag_type) {
     case 9:
       demux->state = FLV_STATE_TAG_VIDEO;
@@ -1697,17 +1707,8 @@ gst_flv_demux_parse_tag_type (GstFlvDemux * demux, GstBuffer * buffer)
       break;
     default:
       GST_WARNING_OBJECT (demux, "unsupported tag type %u", tag_type);
+      demux->state = FLV_STATE_SKIP;
   }
-
-  /* Tag size is 1 byte of type + 3 bytes of size + 7 bytes + tag data size +
-   * 4 bytes of previous tag size */
-  demux->tag_data_size = GST_READ_UINT24_BE (map.data + 1);
-  demux->tag_size = demux->tag_data_size + 11;
-
-  GST_LOG_OBJECT (demux, "tag data size is %" G_GUINT64_FORMAT,
-      demux->tag_data_size);
-
-  gst_buffer_unmap (buffer, &map);
 
   return ret;
 }
@@ -2111,6 +2112,16 @@ parse:
       demux->state = FLV_STATE_TAG_TYPE;
       goto beach;
     }
+    case FLV_STATE_SKIP:
+      /* Skip unknown tags (set in _parse_tag_type()) */
+      if (gst_adapter_available (demux->adapter) >= demux->tag_size) {
+        gst_adapter_flush (demux->adapter, demux->tag_size);
+        demux->offset += demux->tag_size;
+        demux->state = FLV_STATE_TAG_TYPE;
+        goto parse;
+      } else {
+        goto beach;
+      }
     default:
       GST_DEBUG_OBJECT (demux, "unexpected demuxer state");
   }
