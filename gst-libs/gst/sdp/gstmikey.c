@@ -1301,8 +1301,10 @@ gst_mikey_message_add_rand (GstMIKEYMessage * msg, guint8 len,
   g_return_val_if_fail (len != 0 && rand != NULL, FALSE);
 
   p = gst_mikey_payload_new (GST_MIKEY_PT_RAND);
-  if (!gst_mikey_payload_rand_set (p, len, rand))
+  if (!gst_mikey_payload_rand_set (p, len, rand)) {
+    gst_mikey_payload_free (p);
     return FALSE;
+  }
 
   return gst_mikey_message_insert_payload (msg, -1, p);
 }
