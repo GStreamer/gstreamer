@@ -1767,8 +1767,7 @@ return_data:
     gst_v4l2src_value_simplify (&rates);
     /* only change the framerate on the template when we have a valid probed new
      * value */
-    gst_structure_set_value (s, "framerate", &rates);
-    g_value_unset (&rates);
+    gst_structure_take_value (s, "framerate", &rates);
   } else if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
       v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
     gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1,
