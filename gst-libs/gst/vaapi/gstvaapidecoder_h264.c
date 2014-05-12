@@ -2240,7 +2240,7 @@ exec_ref_pic_marking_adaptive_mmco_3(
 )
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
-    GstVaapiPictureH264 *ref_picture;
+    GstVaapiPictureH264 *ref_picture, *other_field;
     gint32 i, picNumX;
 
     for (i = 0; i < priv->long_ref_count; i++) {
@@ -2265,6 +2265,12 @@ exec_ref_pic_marking_adaptive_mmco_3(
     gst_vaapi_picture_h264_set_reference(ref_picture,
         GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE,
         GST_VAAPI_PICTURE_IS_COMPLETE(picture));
+
+    /* Assign LongTermFrameIdx to the other field if it was also
+       marked as "used for long-term reference */
+    other_field = ref_picture->other_field;
+    if (other_field && GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(other_field))
+        other_field->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
 }
 
 /* 8.2.5.4.4. Mark pictures with LongTermFramIdx > max_long_term_frame_idx
@@ -2326,6 +2332,7 @@ exec_ref_pic_marking_adaptive_mmco_6(
 )
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiPictureH264 *other_field;
     guint i;
 
     for (i = 0; i < priv->long_ref_count; i++) {
@@ -2341,6 +2348,12 @@ exec_ref_pic_marking_adaptive_mmco_6(
     gst_vaapi_picture_h264_set_reference(picture,
         GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE,
         GST_VAAPI_PICTURE_IS_COMPLETE(picture));
+
+    /* Assign LongTermFrameIdx to the other field if it was also
+       marked as "used for long-term reference */
+    other_field = (GstVaapiPictureH264 *)picture->base.parent_picture;
+    if (other_field && GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(other_field))
+        other_field->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
 }
 
 /* 8.2.5.4. Adaptive memory control decoded reference picture marking process */
