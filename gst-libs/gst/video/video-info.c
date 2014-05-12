@@ -280,6 +280,8 @@ no_height:
 gboolean
 gst_video_info_is_equal (const GstVideoInfo * info, const GstVideoInfo * other)
 {
+  gint i;
+
   if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_INFO_FORMAT (other))
     return FALSE;
   if (GST_VIDEO_INFO_INTERLACE_MODE (info) !=
@@ -301,6 +303,14 @@ gst_video_info_is_equal (const GstVideoInfo * info, const GstVideoInfo * other)
     return FALSE;
   if (GST_VIDEO_INFO_FPS_D (info) != GST_VIDEO_INFO_FPS_D (other))
     return FALSE;
+
+  for (i = 0; i < info->finfo->n_planes; i++) {
+    if (info->stride[i] != other->stride[i])
+      return FALSE;
+    if (info->offset[i] != other->offset[i])
+      return FALSE;
+  }
+
   return TRUE;
 }
 
