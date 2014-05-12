@@ -716,6 +716,8 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     stream->index = i;
     stream->input_caps = caps;
     stream->need_header = TRUE;
+    g_cond_init (&stream->fragment_download_cond);
+    g_mutex_init (&stream->fragment_download_lock);
 
     GST_LOG_OBJECT (demux, "Creating stream %d %" GST_PTR_FORMAT, i, caps);
     streams = g_slist_prepend (streams, stream);
