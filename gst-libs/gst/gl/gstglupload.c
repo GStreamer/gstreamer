@@ -494,11 +494,20 @@ _gst_gl_upload_perform_for_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
   if (!upload->initted) {
     GstVideoInfo in_info;
     GstVideoMeta *v_meta = gst_buffer_get_video_meta (upload->priv->buffer);
+    gint i;
 
     if (v_meta == NULL)
       return FALSE;
 
-    gst_video_info_set_format (&in_info, v_meta->format, v_meta->width, v_meta->height);
+    gst_video_info_init (&in_info);
+    in_info.finfo = gst_video_format_get_info (v_meta->format);
+    in_info.width = v_meta->width;
+    in_info.height = v_meta->height;
+
+    for (i = 0; i < in_info.finfo->n_planes; i++) {
+      in_info.offset[i] = v_meta->offset[i];
+      in_info.stride[i] = v_meta->stride[i];
+    }
 
     _gst_gl_upload_set_format_unlocked (upload, &in_info);
 
