@@ -133,6 +133,7 @@ static const gchar frag_REORDER[] =
       "void main(void)\n"
       "{\n"
       " vec4 t = texture2D(tex, v_texcoord * tex_scale0);\n"
+      " %s;\n" /* clobber alpha channel? */
       " gl_FragColor = vec4(t.%c, t.%c, t.%c, t.%c);\n"
       "}";
 
@@ -698,10 +699,13 @@ _RGB_to_RGB (GstGLColorConvert * convert)
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
   const gchar *out_format_str = gst_video_format_to_string (out_format);
   gchar *pixel_order = _RGB_pixel_order (in_format_str, out_format_str);
+  const gchar *alpha = "";
 
   info->in_n_textures = 1;
   info->out_n_textures = 1;
-  info->frag_prog = g_strdup_printf (frag_REORDER, pixel_order[0],
+  if (_is_RGBx (in_format))
+    alpha = "t.a = 1.0";
+  info->frag_prog = g_strdup_printf (frag_REORDER, alpha, pixel_order[0],
       pixel_order[1], pixel_order[2], pixel_order[3]);
   info->shader_tex_names[0] = "tex";
   info->shader_scaling[0][0] = 1.0f;
@@ -892,6 +896,7 @@ _RGB_to_GRAY (GstGLColorConvert * convert)
   GstVideoFormat in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
   const gchar *in_format_str = gst_video_format_to_string (in_format);
   gchar *pixel_order = _RGB_pixel_order (in_format_str, "rgba");
+  const gchar *alpha = "";
 
   info->in_n_textures = 1;
   info->out_n_textures = 1;
@@ -903,9 +908,12 @@ _RGB_to_GRAY (GstGLColorConvert * convert)
   info->shader_scaling[2][0] = 1.0f;
   info->shader_scaling[2][1] = 1.0f;
 
+  if (_is_RGBx (in_format))
+    alpha = "t.a = 1.0";
+
   switch (GST_VIDEO_INFO_FORMAT (&convert->out_info)) {
     case GST_VIDEO_FORMAT_GRAY8:
-      info->frag_prog = g_strdup_printf (frag_REORDER, pixel_order[0],
+      info->frag_prog = g_strdup_printf (frag_REORDER, alpha, pixel_order[0],
           pixel_order[0], pixel_order[0], pixel_order[3]);
       break;
     default:
@@ -933,7 +941,7 @@ _GRAY_to_RGB (GstGLColorConvert * convert)
 
   switch (GST_VIDEO_INFO_FORMAT (&convert->in_info)) {
     case GST_VIDEO_FORMAT_GRAY8:
-      info->frag_prog = g_strdup_printf (frag_REORDER, pixel_order[0],
+      info->frag_prog = g_strdup_printf (frag_REORDER, "", pixel_order[0],
           pixel_order[1], pixel_order[2], pixel_order[3]);
       break;
     case GST_VIDEO_FORMAT_GRAY16_LE:
