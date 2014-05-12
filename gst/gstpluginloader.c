@@ -528,6 +528,7 @@ plugin_loader_cleanup_child (GstPluginLoader * l)
 gboolean
 _gst_plugin_loader_client_run (void)
 {
+  gboolean res = TRUE;
   GstPluginLoader *l;
 
   l = plugin_loader_new (NULL);
@@ -544,7 +545,8 @@ _gst_plugin_loader_client_run (void)
     dup_fd = dup (0);           /* STDIN */
     if (dup_fd == -1) {
       GST_ERROR ("Failed to start. Could no dup STDIN, errno %d", errno);
-      return FALSE;
+      res = FALSE;
+      goto beach;
     }
     l->fd_r.fd = dup_fd;
     close (0);
@@ -552,7 +554,8 @@ _gst_plugin_loader_client_run (void)
     dup_fd = dup (1);           /* STDOUT */
     if (dup_fd == -1) {
       GST_ERROR ("Failed to start. Could no dup STDOUT, errno %d", errno);
-      return FALSE;
+      res = FALSE;
+      goto beach;
     }
     l->fd_w.fd = dup_fd;
     close (1);
@@ -578,9 +581,10 @@ _gst_plugin_loader_client_run (void)
   /* Loop, listening for incoming packets on the fd and writing responses */
   while (!l->rx_done && exchange_packets (l));
 
+beach:
   plugin_loader_free (l);
 
-  return TRUE;
+  return res;
 }
 
 static void
