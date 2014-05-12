@@ -343,6 +343,11 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   /* update the video info from the one updated by frame_map using video meta */
   gst_gl_upload_set_format (upload, &upload->priv->frame.info);
 
+  if (!upload->priv->tex_id)
+    gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
+        GST_VIDEO_FORMAT_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
+        GST_VIDEO_INFO_HEIGHT (&upload->in_info));
+
   if (!gst_gl_upload_perform_with_data (upload, upload->priv->tex_id,
           upload->priv->frame.data)) {
     return FALSE;
@@ -399,6 +404,11 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
 
   /* update the video info from the one updated by frame_map using video meta */
   gst_gl_upload_set_format (upload, &upload->priv->frame.info);
+
+  if (!upload->priv->tex_id)
+    gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
+        GST_VIDEO_FORMAT_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
+        GST_VIDEO_INFO_HEIGHT (&upload->in_info));
 
   ret = _gst_gl_upload_perform_with_data_unlocked (upload,
       upload->out_tex->tex_id, frame.data);
