@@ -378,24 +378,6 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (meta != NULL, FALSE);
 
-  v_meta = gst_buffer_get_video_meta (upload->priv->buffer);
-
-  if (!upload->initted) {
-    GstVideoFormat v_format;
-    guint width, height;
-
-    if (v_meta == NULL)
-      return FALSE;
-
-    v_format = v_meta->format;
-    width = v_meta->width;
-    height = v_meta->height;
-
-    gst_video_info_set_format (&in_info, v_format, width, height);
-
-    _gst_gl_upload_set_format_unlocked (upload, &in_info);
-  }
-
   /* GstGLMemory */
   mem = gst_buffer_peek_memory (upload->priv->buffer, 0);
 
@@ -409,6 +391,8 @@ _do_upload_for_meta (GstGLUpload * upload, GstVideoGLTextureUploadMeta * meta)
     if (ret)
       return TRUE;
   }
+
+  v_meta = gst_buffer_get_video_meta (upload->priv->buffer);
 
   if (v_meta == NULL)
     return FALSE;
@@ -513,11 +497,22 @@ _gst_gl_upload_perform_for_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
 
   g_mutex_lock (&upload->lock);
 
-  if (!upload->out_tex)
+  if (!upload->initted) {
+    GstVideoInfo in_info;
+    GstVideoMeta *v_meta = gst_buffer_get_video_meta (upload->priv->buffer);
+
+    if (v_meta == NULL)
+      return FALSE;
+
+    gst_video_info_set_format (&in_info, v_meta->format, v_meta->width, v_meta->height);
+
+    _gst_gl_upload_set_format_unlocked (upload, &in_info);
+
     upload->out_tex = gst_gl_memory_wrapped_texture (upload->context,
         texture_id[0], GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
         GST_VIDEO_INFO_WIDTH (&upload->in_info),
-        GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);;
+        GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);
+  }
 
   /* FIXME: kinda breaks the abstraction */
   if (upload->out_tex->tex_id != texture_id[0]) {
