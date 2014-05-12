@@ -13,13 +13,11 @@ libgstsmoothstreaming_la_LIBADD = \
 libgstsmoothstreaming_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS}
 libgstsmoothstreaming_la_SOURCES = gstsmoothstreaming-plugin.c \
 	gstmssdemux.c \
-	gstmssmanifest.c \
-	gstdownloadrate.c
+	gstmssmanifest.c
 libgstsmoothstreaming_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstmssdemux.h \
-	gstmssmanifest.h \
-	gstdownloadrate.h
+	gstmssmanifest.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

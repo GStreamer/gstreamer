@@ -28,7 +28,6 @@
 #include <gst/base/gstdataqueue.h>
 #include "gstmssmanifest.h"
 #include <gst/uridownloader/gsturidownloader.h>
-#include "gstdownloadrate.h"
 
 G_BEGIN_DECLS
 
@@ -79,8 +78,6 @@ struct _GstMssDemuxStream {
   gboolean have_data;
   gboolean cancelled;
   gboolean restart_download;
-
-  GstDownloadRate download_rate;
 
   guint download_error_count;
 

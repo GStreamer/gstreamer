@@ -81,7 +81,6 @@ GST_DEBUG_CATEGORY (mssdemux_debug);
 #define DEFAULT_MAX_QUEUE_SIZE_BUFFERS 0
 #define DEFAULT_BITRATE_LIMIT 0.8
 
-#define DOWNLOAD_RATE_MAX_HISTORY_LENGTH 5
 #define MAX_DOWNLOAD_ERROR_COUNT 3
 
 enum
@@ -224,9 +223,6 @@ gst_mss_demux_stream_new (GstMssDemux * mssdemux,
   stream->pad = srcpad;
   stream->manifest_stream = manifeststream;
   stream->parent = mssdemux;
-  gst_download_rate_init (&stream->download_rate);
-  gst_download_rate_set_max_length (&stream->download_rate,
-      DOWNLOAD_RATE_MAX_HISTORY_LENGTH);
 
   gst_segment_init (&stream->segment, GST_FORMAT_TIME);
   g_cond_init (&stream->fragment_download_cond);
@@ -253,7 +249,6 @@ gst_mss_demux_stream_free (GstMssDemuxStream * stream)
     stream->download_task = NULL;
   }
 
-  gst_download_rate_deinit (&stream->download_rate);
   if (stream->pending_segment) {
     gst_event_unref (stream->pending_segment);
     stream->pending_segment = NULL;
@@ -966,19 +961,28 @@ gst_mss_demux_reconfigure_stream (GstMssDemuxStream * stream)
 {
   GstEvent *capsevent = NULL;
   GstMssDemux *mssdemux = stream->parent;
-  guint64 new_bitrate;
+  guint64 bitrate = 0;
 
-  new_bitrate =
-      mssdemux->bitrate_limit *
-      gst_download_rate_get_current_rate (&stream->download_rate);
+  if (stream->download_total_time)
+    bitrate =
+        (stream->download_total_bytes * 8) /
+        ((double) stream->download_total_time / G_GUINT64_CONSTANT (1000000));
+
+  if (stream->current_download_rate != -1)
+    bitrate = (stream->current_download_rate + bitrate * 3) / 4;
+  if (bitrate > G_MAXINT)
+    bitrate = G_MAXINT;
+  stream->current_download_rate = bitrate;
+  bitrate *= mssdemux->bitrate_limit;
+
   if (mssdemux->connection_speed) {
-    new_bitrate = MIN (mssdemux->connection_speed, new_bitrate);
+    bitrate = MIN (mssdemux->connection_speed, bitrate);
   }
 
   GST_DEBUG_OBJECT (stream->pad,
-      "Current stream download bitrate %" G_GUINT64_FORMAT, new_bitrate);
+      "Current stream download bitrate %" G_GUINT64_FORMAT, bitrate);
 
-  if (gst_mss_stream_select_bitrate (stream->manifest_stream, new_bitrate)) {
+  if (gst_mss_stream_select_bitrate (stream->manifest_stream, bitrate)) {
     GstCaps *caps;
     caps = gst_mss_stream_get_caps (stream->manifest_stream);
 
@@ -1281,9 +1285,6 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream)
   gchar *path = NULL;
   gchar *url = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-#if 0
-  guint64 before_download, after_download;
-#endif
 
   /* special case for not-linked streams */
   if (stream->last_ret == GST_FLOW_NOT_LINKED) {
@@ -1291,9 +1292,6 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream)
         stream);
     return GST_FLOW_NOT_LINKED;
   }
-#if 0
-  before_download = g_get_real_time ();
-#endif
 
   g_mutex_lock (&stream->fragment_download_lock);
   GST_DEBUG_OBJECT (stream->pad, "Getting url for stream");
@@ -1347,22 +1345,6 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream)
     }
     return stream->last_ret;
   }
-#if 0
-  after_download = g_get_real_time ();
-  {
-#ifndef GST_DISABLE_GST_DEBUG
-    guint64 bitrate = (8 * gst_buffer_get_size (buffer) * 1000000LLU) /
-        (after_download - before_download);
-#endif
-
-    GST_DEBUG_OBJECT (mssdemux,
-        "Measured download bitrate: %s %" G_GUINT64_FORMAT " bps",
-        GST_PAD_NAME (stream->pad), bitrate);
-    gst_download_rate_add_rate (&stream->download_rate,
-        gst_buffer_get_size (buffer),
-        1000 * (after_download - before_download));
-  }
-#endif
 
   return stream->last_ret;
 
@@ -1489,7 +1471,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
     default:
       if (ret <= GST_FLOW_ERROR) {
         GST_WARNING_OBJECT (mssdemux, "Error while downloading fragment");
-        if (++stream->download_error_count >= DOWNLOAD_RATE_MAX_HISTORY_LENGTH) {
+        if (++stream->download_error_count >= MAX_DOWNLOAD_ERROR_COUNT) {
           GST_ELEMENT_ERROR (mssdemux, RESOURCE, NOT_FOUND,
               (_("Couldn't download fragments")),
               ("fragment downloading has failed too much consecutive times"));
