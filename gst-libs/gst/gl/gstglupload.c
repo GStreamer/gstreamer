@@ -273,6 +273,16 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   mem = gst_buffer_peek_memory (buffer, 0);
 
   if (gst_is_gl_memory (mem)) {
+    if (GST_VIDEO_INFO_FORMAT (&upload->in_info) == GST_VIDEO_FORMAT_RGBA) {
+      GstMapInfo map_info;
+
+      gst_memory_map (mem, &map_info, GST_MAP_READ | GST_MAP_GL);
+      gst_memory_unmap (mem, &map_info);
+
+      *tex_id = ((GstGLMemory *) mem)->tex_id;
+      return TRUE;
+    }
+
     if (!upload->out_tex)
       upload->out_tex = (GstGLMemory *) gst_gl_memory_alloc (upload->context,
           GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
