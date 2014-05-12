@@ -1809,7 +1809,7 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
     if ((*fd = open (demux_dev, O_RDWR)) < 0) {
       GST_ERROR_OBJECT (object, "Error opening demuxer: %s (%s)",
           g_strerror (errno), demux_dev);
-      g_free (demux_dev);
+      continue;
     }
     g_return_if_fail (*fd != -1);
 
