@@ -1557,6 +1557,25 @@ cropcap_failed:
   goto done;
 }
 
+/* returns TRUE if the value was changed in place, otherwise FALSE */
+static gboolean
+gst_v4l2src_value_simplify (GValue * val)
+{
+  /* simplify list of one value to one value */
+  if (GST_VALUE_HOLDS_LIST (val) && gst_value_list_get_size (val) == 1) {
+    const GValue *list_val;
+    GValue new_val = G_VALUE_INIT;
+
+    list_val = gst_value_list_get_value (val, 0);
+    g_value_init (&new_val, G_VALUE_TYPE (list_val));
+    g_value_copy (list_val, &new_val);
+    g_value_unset (val);
+    *val = new_val;
+    return TRUE;
+  }
+
+  return FALSE;
+}
 
 /* The frame interval enumeration code first appeared in Linux 2.6.19. */
 static GstStructure *
@@ -1745,6 +1764,7 @@ return_data:
         (interlaced ? "mixed" : "progressive"), NULL);
 
   if (G_IS_VALUE (&rates)) {
+    gst_v4l2src_value_simplify (&rates);
     /* only change the framerate on the template when we have a valid probed new
      * value */
     gst_structure_set_value (s, "framerate", &rates);
