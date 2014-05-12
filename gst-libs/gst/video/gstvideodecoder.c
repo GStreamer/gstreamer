@@ -1660,9 +1660,9 @@ gst_video_decoder_get_timestamp_at_offset (GstVideoDecoder *
       *pts = ts->pts;
       *dts = ts->dts;
       *duration = ts->duration;
-      timestamp_free (ts);
       g = g->next;
       decoder->priv->timestamps = g_list_remove (decoder->priv->timestamps, ts);
+      timestamp_free (ts);
     } else {
       break;
     }
