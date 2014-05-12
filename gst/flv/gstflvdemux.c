@@ -1180,12 +1180,12 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
       demux->audio_done = TRUE;
       ret = GST_FLOW_OK;
     } else {
-      GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
-          " bytes audio buffer: %s", demux->tag_data_size,
-          gst_flow_get_name (ret));
       if (ret == GST_FLOW_NOT_LINKED) {
         demux->audio_linked = FALSE;
-      }
+      } else
+        GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
+            " bytes audio buffer: %s", demux->tag_data_size,
+            gst_flow_get_name (ret));
       goto beach;
     }
   }
@@ -1574,12 +1574,12 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
       demux->video_done = TRUE;
       ret = GST_FLOW_OK;
     } else {
-      GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
-          " bytes video buffer: %s", demux->tag_data_size,
-          gst_flow_get_name (ret));
-      if (ret == GST_FLOW_NOT_LINKED) {
+      if (ret == GST_FLOW_NOT_LINKED)
         demux->video_linked = FALSE;
-      }
+      else
+        GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
+            " bytes video buffer: %s", demux->tag_data_size,
+            gst_flow_get_name (ret));
       goto beach;
     }
   }
