@@ -1007,6 +1007,9 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
     if (duration != GST_CLOCK_TIME_NONE) {
       buf->omx_buf->nTickCount =
           gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration, size);
+      buf->omx_buf->nTickCount =
+          gst_util_uint64_scale (buf->omx_buf->nTickCount,
+          OMX_TICKS_PER_SECOND, GST_SECOND);
       self->last_upstream_ts += duration;
     }
 
