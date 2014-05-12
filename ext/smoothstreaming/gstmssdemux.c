@@ -171,7 +171,8 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_MAX_QUEUE_SIZE_BUFFERS,
       g_param_spec_uint ("max-queue-size-buffers", "Max queue size in buffers",
           "Maximum buffers that can be stored in each internal stream queue "
-          "(0 = infinite)", 0, G_MAXUINT, DEFAULT_MAX_QUEUE_SIZE_BUFFERS,
+          "(0 = infinite) (deprecated)", 0, G_MAXUINT,
+          DEFAULT_MAX_QUEUE_SIZE_BUFFERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BITRATE_LIMIT,
