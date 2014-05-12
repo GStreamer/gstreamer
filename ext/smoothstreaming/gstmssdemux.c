@@ -883,6 +883,8 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
     g_free (name);
 
     gst_pad_set_caps (pad, caps);
+    if (stream->caps)
+      gst_caps_unref (stream->caps);
     stream->caps = caps;
 
     lang = gst_mss_stream_get_lang (stream->manifest_stream);
