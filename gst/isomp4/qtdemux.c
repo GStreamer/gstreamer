@@ -7490,8 +7490,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     stream->caps =
         qtdemux_video_caps (qtdemux, stream, fourcc, stsd_data, &codec);
-    if (G_UNLIKELY (!stream->caps))
+    if (G_UNLIKELY (!stream->caps)) {
+      g_free (palette_data);
       goto unknown_stream;
+    }
 
     if (codec) {
       list = gst_tag_list_new_empty ();
