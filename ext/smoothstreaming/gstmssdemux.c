@@ -605,6 +605,13 @@ gst_mss_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
     }
       break;
+    case GST_EVENT_LATENCY:{
+      /* Upstream and our internal source are irrelevant
+       * for latency, and we should not fail here to
+       * configure the latency */
+      gst_event_unref (event);
+      return TRUE;
+    }
     default:
       break;
   }
