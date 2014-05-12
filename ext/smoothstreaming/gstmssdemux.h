@@ -61,9 +61,11 @@ struct _GstMssDemuxStream {
 
   GstMssStream *manifest_stream;
 
+#if 0
   GstUriDownloader *downloader;
+#endif
 
-  GstEvent *pending_newsegment;
+  GstEvent *pending_segment;
 
   GstClockTime next_timestamp;
   GstSegment segment;
@@ -81,10 +83,21 @@ struct _GstMssDemuxStream {
   GstDownloadRate download_rate;
 
   guint download_error_count;
+
+  /* download tooling */
+  GstElement *src;
+  GstPad *src_srcpad;
+  GMutex fragment_download_lock;
+  GCond fragment_download_cond;
+  gboolean starting_fragment;
+  gint64 download_start_time;
+  gint64 download_total_time;
+  gint64 download_total_bytes;
+  gint current_download_rate;
 };
 
 struct _GstMssDemux {
-  GstElement element;
+  GstBin bin;
 
   /* pads */
   GstPad *sinkpad;
@@ -111,7 +124,7 @@ struct _GstMssDemux {
 };
 
 struct _GstMssDemuxClass {
-  GstElementClass parent_class;
+  GstBinClass parent_class;
 };
 
 GType gst_mss_demux_get_type (void);
