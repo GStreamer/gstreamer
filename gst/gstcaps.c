@@ -2299,12 +2299,15 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
 
     if (!priv_gst_structure_parse_fields (s, &s, structure)) {
       gst_structure_free (structure);
+      if (features)
+        gst_caps_features_free (features);
       g_free (copy);
       return FALSE;
     }
 
   append:
     gst_caps_append_structure_unchecked (caps, structure, features);
+    features = NULL;
     if (*s == '\0')
       break;
   } while (TRUE);
