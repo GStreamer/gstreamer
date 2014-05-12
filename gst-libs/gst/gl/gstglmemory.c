@@ -400,6 +400,7 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
           gl_mem->unpack_length = j;
           gl_mem->tex_scaling[0] =
               (gfloat) (gl_mem->width * n_gl_bytes) / (gfloat) gl_mem->stride;
+          gl_mem->width = gl_mem->stride / n_gl_bytes;
           break;
         }
         j >>= 1;
@@ -511,9 +512,12 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
 {
   GstGLMemory *mem;
   GenTexture data = { 0, };
+  mem = g_slice_new0 (GstGLMemory);
+  _gl_mem_init (mem, allocator, parent, context, tex_type, width, height,
+      stride, user_data, notify);
 
-  data.width = width;
-  data.height = height;
+  data.width = mem->width;
+  data.height = mem->height;
   data.gl_format = _gst_gl_format_from_gl_texture_type (tex_type);
   data.gl_type = GL_UNSIGNED_BYTE;
   if (tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
@@ -527,10 +531,6 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
   }
 
   GST_CAT_TRACE (GST_CAT_GL_MEMORY, "created texture %u", data.result);
-
-  mem = g_slice_new0 (GstGLMemory);
-  _gl_mem_init (mem, allocator, parent, context, tex_type, width, height,
-      stride, user_data, notify);
 
   mem->tex_id = data.result;
 
