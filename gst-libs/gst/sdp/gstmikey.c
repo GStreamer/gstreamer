@@ -1216,8 +1216,10 @@ gst_mikey_message_add_pke (GstMIKEYMessage * msg, GstMIKEYCacheType C,
   g_return_val_if_fail (msg != NULL, FALSE);
 
   p = gst_mikey_payload_new (GST_MIKEY_PT_PKE);
-  if (!gst_mikey_payload_pke_set (p, C, data_len, data))
+  if (!gst_mikey_payload_pke_set (p, C, data_len, data)) {
+    gst_mikey_payload_free (p);
     return FALSE;
+  }
 
   return gst_mikey_message_insert_payload (msg, -1, p);
 }
@@ -1241,8 +1243,10 @@ gst_mikey_message_add_t (GstMIKEYMessage * msg, GstMIKEYTSType type,
   g_return_val_if_fail (msg != NULL, FALSE);
 
   p = gst_mikey_payload_new (GST_MIKEY_PT_T);
-  if (!gst_mikey_payload_t_set (p, type, ts_value))
+  if (!gst_mikey_payload_t_set (p, type, ts_value)) {
+    gst_mikey_payload_free (p);
     return FALSE;
+  }
 
   return gst_mikey_message_insert_payload (msg, -1, p);
 }
@@ -1662,6 +1666,7 @@ payloads_from_bytes (ParseState state, GArray * payloads, const guint8 * d,
   GstMIKEYPayload *p;
 
   while (next_payload != GST_MIKEY_PT_LAST) {
+    p = NULL;
     switch (next_payload) {
       case GST_MIKEY_PT_KEMAC:
       {
@@ -1773,7 +1778,6 @@ payloads_from_bytes (ParseState state, GArray * payloads, const guint8 * d,
         break;
       case GST_MIKEY_PT_SP:
       {
-        GstMIKEYPayload *p;
         guint8 policy;
         GstMIKEYSecProto proto;
         guint16 plen;
@@ -1937,11 +1941,15 @@ payloads_from_bytes (ParseState state, GArray * payloads, const guint8 * d,
 short_data:
   {
     GST_DEBUG ("not enough data");
+    if (p)
+      gst_mikey_payload_free (p);
     return FALSE;
   }
 invalid_data:
   {
     GST_DEBUG ("invalid data");
+    if (p)
+      gst_mikey_payload_free (p);
     return FALSE;
   }
 }
