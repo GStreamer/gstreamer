@@ -1414,6 +1414,7 @@ serialize_error:
   {
     GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
         ("Failed to serialize mdat"));
+    g_free (node_header);
     return GST_FLOW_ERROR;
   }
 }
