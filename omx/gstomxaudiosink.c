@@ -886,6 +886,7 @@ release_error:
 static guint
 gst_omx_audio_sink_delay (GstAudioSink * audiosink)
 {
+#if defined (USE_OMX_TARGET_RPI)
   GstOMXAudioSink *self = GST_OMX_AUDIO_SINK (audiosink);
   OMX_PARAM_U32TYPE param;
   OMX_ERRORTYPE err;
@@ -903,6 +904,9 @@ gst_omx_audio_sink_delay (GstAudioSink * audiosink)
 
   GST_DEBUG_OBJECT (self, "reported delay %u samples", (guint) param.nU32);
   return param.nU32;
+#else
+  return 0;
+#endif
 }
 
 static void
