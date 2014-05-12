@@ -1519,9 +1519,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
       if (ret <= GST_FLOW_ERROR) {
         GST_WARNING_OBJECT (mssdemux, "Error while downloading fragment");
         if (++stream->download_error_count >= MAX_DOWNLOAD_ERROR_COUNT) {
-          GST_ELEMENT_ERROR (mssdemux, RESOURCE, NOT_FOUND,
-              (_("Couldn't download fragments")),
-              ("fragment downloading has failed too much consecutive times"));
+          goto download_error;
         }
       }
       break;
@@ -1532,13 +1530,22 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
     gst_mss_demux_stream_push_event (stream, gst_event_new_eos ());
   }
 
+end:
   GST_LOG_OBJECT (stream->pad, "download loop end");
   return;
 
 cancelled:
   {
     GST_DEBUG_OBJECT (stream->pad, "Stream has been cancelled");
-    return;
+    goto end;
+  }
+download_error:
+  {
+    GST_OBJECT_UNLOCK (mssdemux);
+    GST_ELEMENT_ERROR (mssdemux, RESOURCE, NOT_FOUND,
+        (_("Couldn't download fragments")),
+        ("fragment downloading has failed too much consecutive times"));
+    goto end;
   }
 }
 
