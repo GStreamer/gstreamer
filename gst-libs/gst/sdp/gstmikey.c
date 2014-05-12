@@ -1191,7 +1191,7 @@ gst_mikey_message_replace_payload (GstMIKEYMessage * msg, guint idx,
 
   p = g_array_index (msg->payloads, GstMIKEYPayload *, idx);
   gst_mikey_payload_free (p);
-  g_array_index (msg->payloads, GstMIKEYPayload *, idx) = p;
+  g_array_index (msg->payloads, GstMIKEYPayload *, idx) = payload;
 
   return TRUE;
 }
