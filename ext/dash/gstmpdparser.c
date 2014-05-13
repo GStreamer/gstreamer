@@ -1357,10 +1357,7 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentTimeline") == 0) {
-        if (mult_seg_base_type->SegmentTimeline) {
-          gst_mpdparser_free_segment_timeline_node
-              (mult_seg_base_type->SegmentTimeline);
-        }
+        /* parse frees the segmenttimeline if any */
         gst_mpdparser_parse_segment_timeline_node
             (&mult_seg_base_type->SegmentTimeline, cur_node);
       } else if (xmlStrcmp (cur_node->name,
