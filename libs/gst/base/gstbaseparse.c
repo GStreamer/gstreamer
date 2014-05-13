@@ -355,6 +355,9 @@ struct _GstBaseParsePrivate
 
   /* if TRUE, a STREAM_START event needs to be pushed */
   gboolean push_stream_start;
+
+  /* When we need to skip more data than we have currently */
+  guint skip;
 };
 
 typedef struct _GstBaseParseSeek
@@ -840,6 +843,8 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->last_pts = GST_CLOCK_TIME_NONE;
   parse->priv->last_offset = 0;
 
+  parse->priv->skip = 0;
+
   g_list_foreach (parse->priv->pending_events, (GFunc) gst_mini_object_unref,
       NULL);
   g_list_free (parse->priv->pending_events);
@@ -1144,6 +1149,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->new_frame = TRUE;
+      parse->priv->skip = 0;
 
       forward_immediate = TRUE;
       break;
@@ -1993,7 +1999,20 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
           g_slist_prepend (parse->priv->buffers_head, outbuf);
       outbuf = NULL;
     } else {
-      gst_adapter_flush (parse->priv->adapter, *skip);
+      /* If we're asked to skip more than is available in the adapter,
+         we need to remember what we need to skip for next iteration */
+      gsize av = gst_adapter_available (parse->priv->adapter);
+      GST_DEBUG ("Asked to skip %u (%" G_GSIZE_FORMAT " available)", *skip, av);
+      if (av >= *skip) {
+        gst_adapter_flush (parse->priv->adapter, *skip);
+      } else {
+        GST_DEBUG
+            ("This is more than available, flushing %" G_GSIZE_FORMAT
+            ", storing %u to skip", av, (guint) (*skip - av));
+        parse->priv->skip = *skip - av;
+        gst_adapter_flush (parse->priv->adapter, av);
+        *skip = av;
+      }
     }
     if (!parse->priv->discont)
       parse->priv->sync_offset = parse->priv->offset;
@@ -2787,6 +2806,28 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   parse = GST_BASE_PARSE (parent);
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
+  GST_DEBUG_OBJECT (parent, "chain");
+
+  /* early out for speed, if we need to skip */
+  if (parse->priv->skip > 0) {
+    gsize bsize = gst_buffer_get_size (buffer);
+    GST_DEBUG ("Got %" G_GSIZE_FORMAT " buffer, need to skip %u", bsize,
+        parse->priv->skip);
+    if (parse->priv->skip >= bsize) {
+      parse->priv->skip -= bsize;
+      GST_DEBUG ("All the buffer is skipped");
+      parse->priv->offset += bsize;
+      parse->priv->sync_offset = parse->priv->offset;
+      return GST_FLOW_OK;
+    }
+    buffer = gst_buffer_make_writable (buffer);
+    gst_buffer_resize (buffer, parse->priv->skip, bsize - parse->priv->skip);
+    parse->priv->offset += parse->priv->skip;
+    GST_DEBUG ("Done skipping, we have %u left on this buffer",
+        (unsigned) (bsize - parse->priv->skip));
+    parse->priv->skip = 0;
+    parse->priv->discont = TRUE;
+  }
 
   if (G_UNLIKELY (parse->priv->first_buffer)) {
     parse->priv->first_buffer = FALSE;
