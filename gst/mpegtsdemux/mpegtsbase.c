@@ -1194,12 +1194,10 @@ mpegts_base_scan (MpegTSBase * base)
     GST_DEBUG ("Grabbing %d => %d", i * 65536, 65536);
 
     ret = gst_pad_pull_range (base->sinkpad, i * 65536, 65536, &buf);
-    if (G_UNLIKELY (ret == GST_FLOW_EOS)) {
-      done = TRUE;
+    if (G_UNLIKELY (ret == GST_FLOW_EOS))
       break;
-    } else if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto beach;
-    }
 
     /* Push to packetizer */
     mpegts_packetizer_push (base->packetizer, buf);
@@ -1247,12 +1245,10 @@ mpegts_base_scan (MpegTSBase * base)
     GST_DEBUG ("Grabbing %" G_GUINT64_FORMAT " => %d", seek_pos, 65536);
 
     ret = gst_pad_pull_range (base->sinkpad, seek_pos, 65536, &buf);
-    if (G_UNLIKELY (ret == GST_FLOW_EOS)) {
-      done = TRUE;
+    if (G_UNLIKELY (ret == GST_FLOW_EOS))
       break;
-    } else if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto beach;
-    }
 
     /* Push to packetizer */
     mpegts_packetizer_push (base->packetizer, buf);
