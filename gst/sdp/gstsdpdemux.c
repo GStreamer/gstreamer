@@ -1397,6 +1397,7 @@ gst_sdp_demux_start (GstSDPDemux * demux)
   }
   GST_SDP_STREAM_UNLOCK (demux);
   gst_sdp_message_uninit (&sdp);
+  g_free (data);
 
   return TRUE;
 
@@ -1405,6 +1406,7 @@ done:
   {
     GST_SDP_STREAM_UNLOCK (demux);
     gst_sdp_message_uninit (&sdp);
+    g_free (data);
     return FALSE;
   }
 transport_failed:
