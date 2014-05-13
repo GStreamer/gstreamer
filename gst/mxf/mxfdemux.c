@@ -861,12 +861,19 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
         caps = NULL;
       }
 
+      if (etrack->handler != NULL) {
+        MXFEssenceWrapping track_wrapping;
 
-      if (etrack->handler
-          && etrack->handler->get_track_wrapping (track) !=
-          MXF_ESSENCE_WRAPPING_FRAME_WRAPPING) {
-        GST_ERROR_OBJECT (demux, "Only frame wrapping currently supported");
-        return GST_FLOW_ERROR;
+        track_wrapping = etrack->handler->get_track_wrapping (track);
+        if (track_wrapping == MXF_ESSENCE_WRAPPING_CLIP_WRAPPING) {
+          GST_ELEMENT_ERROR (demux, STREAM, NOT_IMPLEMENTED, (NULL),
+              ("Clip essence wrapping is not implemented yet."));
+          return GST_FLOW_ERROR;
+        } else if (track_wrapping == MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING) {
+          GST_ELEMENT_ERROR (demux, STREAM, NOT_IMPLEMENTED, (NULL),
+              ("Custom essence wrappings are not supported."));
+          return GST_FLOW_ERROR;
+        }
       }
 
       etrack->source_package = package;
