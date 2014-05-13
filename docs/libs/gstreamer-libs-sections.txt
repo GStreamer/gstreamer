@@ -764,8 +764,8 @@ gst_collect_pads_get_type
 <TITLE>GstPushSrc</TITLE>
 <INCLUDE>gst/base/gstpushsrc.h</INCLUDE>
 GstPushSrc
-<SUBSECTION Standard>
 GstPushSrcClass
+<SUBSECTION Standard>
 GST_PUSH_SRC
 GST_IS_PUSH_SRC
 GST_TYPE_PUSH_SRC
