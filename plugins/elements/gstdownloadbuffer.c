@@ -60,12 +60,21 @@
 #include "gstdownloadbuffer.h"
 
 #include <glib/gstdio.h>
-#include <gio/gio.h>
 
 #include "gst/gst-i18n-lib.h"
 #include "gst/glib-compat-private.h"
 
 #include <string.h>
+
+#ifdef G_OS_WIN32
+#include <io.h>                 /* lseek, open, close, read */
+#undef lseek
+#define lseek _lseeki64
+#undef off_t
+#define off_t guint64
+#else
+#include <unistd.h>
+#endif
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -778,7 +787,7 @@ gst_download_buffer_read_buffer (GstDownloadBuffer * dlbuf, guint64 offset,
         &remaining, &error);
     if (G_UNLIKELY (res == 0)) {
       switch (error->code) {
-        case G_IO_ERROR_WOULD_BLOCK:
+        case GST_SPARSE_FILE_IO_ERROR_WOULD_BLOCK:
           /* we don't have the requested data in the file, decide what to
            * do next. */
           ret = gst_download_buffer_wait_for_data (dlbuf, offset, length);

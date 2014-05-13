@@ -23,7 +23,6 @@
 
 #include <gst/gst.h>
 #include <glib/gstdio.h>
-#include <gio/gio.h>
 
 #include "gstsparsefile.h"
 
@@ -45,6 +44,11 @@
 #define FSEEK_FILE(file,offset)  (fseek (file, offset, SEEK_SET) != 0)
 #endif
 
+#define GST_SPARSE_FILE_IO_ERROR \
+    g_quark_from_static_string("gst-sparse-file-io-error-quark")
+
+static GstSparseFileIOErrorEnum
+gst_sparse_file_io_error_from_errno (gint err_no);
 
 typedef struct _GstSparseRange GstSparseRange;
 
@@ -290,8 +294,9 @@ gst_sparse_file_write (GstSparseFile * file, gsize offset, gconstpointer data,
   /* ERRORS */
 error:
   {
-    g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
-        "Error writing file: %s", g_strerror (errno));
+    g_set_error (error, GST_SPARSE_FILE_IO_ERROR,
+        gst_sparse_file_io_error_from_errno (errno), "Error writing file: %s",
+        g_strerror (errno));
     return 0;
   }
 }
@@ -308,7 +313,7 @@ error:
  * Read @count bytes from @file at @offset into @data.
  *
  * On error, @error will be set. If there are no @count bytes available
- * at @offset, %G_IO_ERROR_WOULD_BLOCK is returned.
+ * at @offset, %GST_SPARSE_FILE_IO_ERROR_WOULD_BLOCK is returned.
  *
  * @remaining will be set to the amount of bytes remaining in the read
  * range.
@@ -353,15 +358,16 @@ gst_sparse_file_read (GstSparseFile * file, gsize offset, gpointer data,
   /* ERRORS */
 no_range:
   {
-    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK,
-        "Offset not written to file yet");
+    g_set_error_literal (error, GST_SPARSE_FILE_IO_ERROR,
+        GST_SPARSE_FILE_IO_ERROR_WOULD_BLOCK, "Offset not written to file yet");
     return 0;
   }
 error:
   {
     if (ferror (file->file)) {
-      g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
-          "Error reading file: %s", g_strerror (errno));
+      g_set_error (error, GST_SPARSE_FILE_IO_ERROR,
+          gst_sparse_file_io_error_from_errno (errno), "Error reading file: %s",
+          g_strerror (errno));
     } else if (feof (file->file)) {
       return res;
     }
@@ -465,4 +471,198 @@ gst_sparse_file_get_range_after (GstSparseFile * file, gsize offset,
       *stop = result->stop;
   }
   return result != NULL;
+}
+
+/* we don't want to rely on libgio just for g_io_error_from_errno() */
+static GstSparseFileIOErrorEnum
+gst_sparse_file_io_error_from_errno (gint err_no)
+{
+  switch (err_no) {
+#ifdef EEXIST
+    case EEXIST:
+      return GST_SPARSE_FILE_IO_ERROR_EXISTS;
+      break;
+#endif
+
+#ifdef EISDIR
+    case EISDIR:
+      return GST_SPARSE_FILE_IO_ERROR_IS_DIRECTORY;
+      break;
+#endif
+
+#ifdef EACCES
+    case EACCES:
+      return GST_SPARSE_FILE_IO_ERROR_PERMISSION_DENIED;
+      break;
+#endif
+
+#ifdef ENAMETOOLONG
+    case ENAMETOOLONG:
+      return GST_SPARSE_FILE_IO_ERROR_FILENAME_TOO_LONG;
+      break;
+#endif
+
+#ifdef ENOENT
+    case ENOENT:
+      return GST_SPARSE_FILE_IO_ERROR_NOT_FOUND;
+      break;
+#endif
+
+#ifdef ENOTDIR
+    case ENOTDIR:
+      return GST_SPARSE_FILE_IO_ERROR_NOT_DIRECTORY;
+      break;
+#endif
+
+#ifdef EROFS
+    case EROFS:
+      return GST_SPARSE_FILE_IO_ERROR_READ_ONLY;
+      break;
+#endif
+
+#ifdef ELOOP
+    case ELOOP:
+      return GST_SPARSE_FILE_IO_ERROR_TOO_MANY_LINKS;
+      break;
+#endif
+
+#ifdef ENOSPC
+    case ENOSPC:
+      return GST_SPARSE_FILE_IO_ERROR_NO_SPACE;
+      break;
+#endif
+
+#ifdef ENOMEM
+    case ENOMEM:
+      return GST_SPARSE_FILE_IO_ERROR_NO_SPACE;
+      break;
+#endif
+
+#ifdef EINVAL
+    case EINVAL:
+      return GST_SPARSE_FILE_IO_ERROR_INVALID_ARGUMENT;
+      break;
+#endif
+
+#ifdef EPERM
+    case EPERM:
+      return GST_SPARSE_FILE_IO_ERROR_PERMISSION_DENIED;
+      break;
+#endif
+
+#ifdef ECANCELED
+    case ECANCELED:
+      return GST_SPARSE_FILE_IO_ERROR_CANCELLED;
+      break;
+#endif
+
+      /* ENOTEMPTY == EEXIST on AIX for backward compatibility reasons */
+#if defined (ENOTEMPTY) && (!defined (EEXIST) || (ENOTEMPTY != EEXIST))
+    case ENOTEMPTY:
+      return GST_SPARSE_FILE_IO_ERROR_NOT_EMPTY;
+      break;
+#endif
+
+#ifdef ENOTSUP
+    case ENOTSUP:
+      return GST_SPARSE_FILE_IO_ERROR_NOT_SUPPORTED;
+      break;
+#endif
+
+      /* EOPNOTSUPP == ENOTSUP on Linux, but POSIX considers them distinct */
+#if defined (EOPNOTSUPP) && (!defined (ENOTSUP) || (EOPNOTSUPP != ENOTSUP))
+    case EOPNOTSUPP:
+      return GST_SPARSE_FILE_IO_ERROR_NOT_SUPPORTED;
+      break;
+#endif
+
+#ifdef EPROTONOSUPPORT
+    case EPROTONOSUPPORT:
+      return GST_SPARSE_FILE_IO_ERROR_NOT_SUPPORTED;
+      break;
+#endif
+
+#ifdef ESOCKTNOSUPPORT
+    case ESOCKTNOSUPPORT:
+      return GST_SPARSE_FILE_IO_ERROR_NOT_SUPPORTED;
+      break;
+#endif
+
+#ifdef EPFNOSUPPORT
+    case EPFNOSUPPORT:
+      return GST_SPARSE_FILE_IO_ERROR_NOT_SUPPORTED;
+      break;
+#endif
+
+#ifdef EAFNOSUPPORT
+    case EAFNOSUPPORT:
+      return GST_SPARSE_FILE_IO_ERROR_NOT_SUPPORTED;
+      break;
+#endif
+
+#ifdef ETIMEDOUT
+    case ETIMEDOUT:
+      return GST_SPARSE_FILE_IO_ERROR_TIMED_OUT;
+      break;
+#endif
+
+#ifdef EBUSY
+    case EBUSY:
+      return GST_SPARSE_FILE_IO_ERROR_BUSY;
+      break;
+#endif
+
+#ifdef EWOULDBLOCK
+    case EWOULDBLOCK:
+      return GST_SPARSE_FILE_IO_ERROR_WOULD_BLOCK;
+      break;
+#endif
+
+      /* EWOULDBLOCK == EAGAIN on most systems, but POSIX considers them distinct */
+#if defined (EAGAIN) && (!defined (EWOULDBLOCK) || (EWOULDBLOCK != EAGAIN))
+    case EAGAIN:
+      return GST_SPARSE_FILE_IO_ERROR_WOULD_BLOCK;
+      break;
+#endif
+
+#ifdef EMFILE
+    case EMFILE:
+      return GST_SPARSE_FILE_IO_ERROR_TOO_MANY_OPEN_FILES;
+      break;
+#endif
+
+#ifdef EADDRINUSE
+    case EADDRINUSE:
+      return GST_SPARSE_FILE_IO_ERROR_ADDRESS_IN_USE;
+      break;
+#endif
+
+#ifdef EHOSTUNREACH
+    case EHOSTUNREACH:
+      return GST_SPARSE_FILE_IO_ERROR_HOST_UNREACHABLE;
+      break;
+#endif
+
+#ifdef ENETUNREACH
+    case ENETUNREACH:
+      return GST_SPARSE_FILE_IO_ERROR_NETWORK_UNREACHABLE;
+      break;
+#endif
+
+#ifdef ECONNREFUSED
+    case ECONNREFUSED:
+      return GST_SPARSE_FILE_IO_ERROR_CONNECTION_REFUSED;
+      break;
+#endif
+
+#ifdef EPIPE
+    case EPIPE:
+      return GST_SPARSE_FILE_IO_ERROR_BROKEN_PIPE;
+      break;
+#endif
+
+    default:
+      return GST_SPARSE_FILE_IO_ERROR_FAILED;
+      break;
+  }
 }
