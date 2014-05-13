@@ -617,7 +617,7 @@ wrong_properties:
       G_MARKUP_ERROR_INVALID_CONTENT,
       "element '%s', Effect %s properties '%s', could no be deserialized",
       element_name, asset_id, properties);
-  return;
+  goto out;
 
 wrong_children_properties:
   g_set_error (error, G_MARKUP_ERROR,
