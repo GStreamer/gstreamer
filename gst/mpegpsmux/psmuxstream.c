@@ -147,6 +147,7 @@ psmux_stream_new (PsMux * mux, PsMuxStreamType stream_type)
   if (stream->stream_id == 0) {
     g_critical ("Number of elementary streams of type %04x exceeds maximum",
         stream->stream_type);
+    g_slice_free (PsMuxStream, stream);
     return NULL;
   }
 
