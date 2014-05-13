@@ -349,7 +349,6 @@ struct ConvertInfo
   gint out_n_textures;
   gchar *frag_prog;
   const gchar *shader_tex_names[GST_VIDEO_MAX_PLANES];
-  gfloat shader_scaling[GST_VIDEO_MAX_PLANES][2];
   gfloat *cms_offset;
   gfloat *cms_coeff1;           /* r,y */
   gfloat *cms_coeff2;           /* g,u */
@@ -543,30 +542,6 @@ gst_gl_color_convert_perform (GstGLColorConvert * convert,
   return ret;
 }
 
-/**
- * gst_gl_color_convert_set_texture_scaling:
- * @convert: a #GstGLColorConvert
- * @scaling: array of texture scaling coefficients stored in width, height
- *           order per texture being converted.
- *
- * Scales the input textures by the given amount.  Useful for performing stride
- * scaling in a shader on OpenGL platforms that do not support
- * GL_PIXEL_[UN]PACK_LENGTH such as GL|ES 2.0.
- */
-void
-gst_gl_color_convert_set_texture_scaling (GstGLColorConvert * convert,
-    gfloat scaling[GST_VIDEO_MAX_PLANES][2])
-{
-  guint i;
-
-  g_return_if_fail (convert != NULL);
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    convert->priv->convert_info.shader_scaling[i][0] = scaling[i][0];
-    convert->priv->convert_info.shader_scaling[i][1] = scaling[i][1];
-  }
-}
-
 static gboolean
 _gst_gl_color_convert_perform_unlocked (GstGLColorConvert * convert,
     GstGLMemory * in_tex[GST_VIDEO_MAX_PLANES],
@@ -708,8 +683,6 @@ _RGB_to_RGB (GstGLColorConvert * convert)
   info->frag_prog = g_strdup_printf (frag_REORDER, alpha, pixel_order[0],
       pixel_order[1], pixel_order[2], pixel_order[3]);
   info->shader_tex_names[0] = "tex";
-  info->shader_scaling[0][0] = 1.0f;
-  info->shader_scaling[0][1] = 1.0f;
 }
 
 static void
@@ -721,13 +694,6 @@ _YUV_to_RGB (GstGLColorConvert * convert)
   gchar *pixel_order = _RGB_pixel_order ("rgba", out_format_str);
 
   info->out_n_textures = 1;
-
-  info->shader_scaling[0][0] = 1.0f;
-  info->shader_scaling[0][1] = 1.0f;
-  info->shader_scaling[1][0] = 1.0f;
-  info->shader_scaling[1][1] = 1.0f;
-  info->shader_scaling[2][0] = 1.0f;
-  info->shader_scaling[2][1] = 1.0f;
 
   switch (GST_VIDEO_INFO_FORMAT (&convert->in_info)) {
     case GST_VIDEO_FORMAT_AYUV:
@@ -830,13 +796,6 @@ _RGB_to_YUV (GstGLColorConvert * convert)
 
   info->shader_tex_names[0] = "tex";
 
-  info->shader_scaling[0][0] = 1.0f;
-  info->shader_scaling[0][1] = 1.0f;
-  info->shader_scaling[1][0] = 1.0f;
-  info->shader_scaling[1][1] = 1.0f;
-  info->shader_scaling[2][0] = 1.0f;
-  info->shader_scaling[2][1] = 1.0f;
-
   switch (GST_VIDEO_INFO_FORMAT (&convert->out_info)) {
     case GST_VIDEO_FORMAT_AYUV:
       alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
@@ -901,12 +860,6 @@ _RGB_to_GRAY (GstGLColorConvert * convert)
   info->in_n_textures = 1;
   info->out_n_textures = 1;
   info->shader_tex_names[0] = "tex";
-  info->shader_scaling[0][0] = 1.0f;
-  info->shader_scaling[0][1] = 1.0f;
-  info->shader_scaling[1][0] = 1.0f;
-  info->shader_scaling[1][1] = 1.0f;
-  info->shader_scaling[2][0] = 1.0f;
-  info->shader_scaling[2][1] = 1.0f;
 
   if (_is_RGBx (in_format))
     alpha = "t.a = 1.0";
@@ -932,12 +885,6 @@ _GRAY_to_RGB (GstGLColorConvert * convert)
   info->in_n_textures = 1;
   info->out_n_textures = 1;
   info->shader_tex_names[0] = "tex";
-  info->shader_scaling[0][0] = 1.0f;
-  info->shader_scaling[0][1] = 1.0f;
-  info->shader_scaling[1][0] = 1.0f;
-  info->shader_scaling[1][1] = 1.0f;
-  info->shader_scaling[2][0] = 1.0f;
-  info->shader_scaling[2][1] = 1.0f;
 
   switch (GST_VIDEO_INFO_FORMAT (&convert->in_info)) {
     case GST_VIDEO_FORMAT_GRAY8:
@@ -1049,15 +996,9 @@ _init_convert (GstGLColorConvert * convert)
   }
 
   for (i = info->in_n_textures; i >= 0; i--) {
-    gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
-
     if (info->shader_tex_names[i])
       gst_gl_shader_set_uniform_1i (convert->shader, info->shader_tex_names[i],
           i);
-    gst_gl_shader_set_uniform_2fv (convert->shader, scale_name, 1,
-        info->shader_scaling[i]);
-
-    g_free (scale_name);
   }
 
   gst_gl_shader_set_uniform_1f (convert->shader, "width",
@@ -1334,11 +1275,20 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   gl->EnableVertexAttribArray (convert->shader_attr_texture_loc);
 
   if (convert->priv->scratch) {
+    gchar *scale_name = g_strdup_printf ("tex_scale%u", c_info->in_n_textures);
+
     gl->ActiveTexture (GL_TEXTURE0 + c_info->in_n_textures);
     gl->BindTexture (GL_TEXTURE_2D, convert->priv->scratch->tex_id);
+
+    gst_gl_shader_set_uniform_2fv (convert->shader, scale_name, 1,
+        convert->priv->scratch->tex_scaling);
+
+    g_free (scale_name);
   }
 
   for (i = c_info->in_n_textures - 1; i >= 0; i--) {
+    gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
+
     gl->ActiveTexture (GL_TEXTURE0 + i);
     gl->BindTexture (GL_TEXTURE_2D, convert->in_tex[i]->tex_id);
 
@@ -1346,6 +1296,11 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    gst_gl_shader_set_uniform_2fv (convert->shader, scale_name, 1,
+        convert->in_tex[i]->tex_scaling);
+
+    g_free (scale_name);
   }
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
