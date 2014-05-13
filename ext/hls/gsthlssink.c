@@ -100,6 +100,8 @@ gst_hls_sink_finalize (GObject * object)
   g_free (sink->location);
   g_free (sink->playlist_location);
   g_free (sink->playlist_root);
+  if (sink->playlist)
+    gst_m3u8_playlist_free (sink->playlist);
 
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) sink);
 }
