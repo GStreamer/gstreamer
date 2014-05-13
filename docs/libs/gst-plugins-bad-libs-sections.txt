@@ -711,7 +711,6 @@ GstGLColorConvert
 GstGLColorConvertClass
 gst_gl_color_convert_new
 gst_gl_color_convert_init_format
-gst_gl_color_convert_set_texture_scaling
 gst_gl_color_convert_perform
 <SUBSECTION Standard>
 GstGLColorConvertPrivate
