@@ -597,7 +597,7 @@ gst_asf_parse_packet_from_data (guint8 * data, gsize size, GstBuffer * buffer,
     if (first & 0x60) {
       GST_ERROR ("Error correction data length should be "
           "set to 0 and is reserved for future use.");
-      return FALSE;
+      goto error;
     }
     err_cor_len = (first & 0x0F);
     err_length += err_cor_len;
