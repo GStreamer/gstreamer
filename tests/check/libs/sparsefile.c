@@ -28,7 +28,8 @@
 
 #include <gst/check/gstcheck.h>
 
-#include <gst/base/gstsparsefile.h>
+/* not public API for now */
+#include "../../../plugins/elements/gstsparsefile.c"
 
 static void
 expect_range_before (GstSparseFile * file, gsize offset, gsize start,

@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <stdio.h>
 
-#include <gst/base/gstsparsefile.h>
+#include "gstsparsefile.h"
 
 G_BEGIN_DECLS
 
