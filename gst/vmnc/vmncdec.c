@@ -156,6 +156,7 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   gint bpp, tc;
   guint32 redmask, greenmask, bluemask;
   guint32 endianness, dataendianness;
+  GstVideoCodecState *state;
 
   /* A WMVi rectangle has a 16byte payload */
   if (len < 16) {
@@ -249,8 +250,9 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   }
 
 
-  gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec), format,
+  state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec), format,
       rect->width, rect->height, dec->input_state);
+  gst_video_codec_state_unref (state);
 
   g_free (dec->imagedata);
   dec->imagedata = g_malloc (dec->format.width * dec->format.height *
