@@ -697,15 +697,19 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
   if (direction == GST_PAD_SINK) {
     GstCaps *glcaps = gst_gl_filter_set_caps_features (caps,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+#if GST_GL_HAVE_PLATFORM_EGL
     GstCaps *eglcaps = gst_gl_filter_set_caps_features (caps,
         GST_CAPS_FEATURE_MEMORY_EGL_IMAGE);
+#endif
     GstCaps *uploadcaps = gst_gl_filter_set_caps_features (caps,
         GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
 
     tmp = gst_caps_new_empty ();
 
     tmp = gst_caps_merge (tmp, glcaps);
+#if GST_GL_HAVE_PLATFORM_EGL
     tmp = gst_caps_merge (tmp, eglcaps);
+#endif
     tmp = gst_caps_merge (tmp, uploadcaps);
     tmp = gst_caps_merge (tmp, gst_caps_copy (caps));
   } else {
