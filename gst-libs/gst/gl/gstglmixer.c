@@ -1638,19 +1638,10 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
     out_tex = mix->out_tex_id;;
 
-    if (!mix->download) {
+    if (!mix->download)
       mix->download = gst_gl_download_new (mix->context);
-      if (!gst_gl_download_init_format (mix->download,
-              GST_VIDEO_FRAME_FORMAT (&out_frame),
-              GST_VIDEO_FRAME_WIDTH (&out_frame),
-              GST_VIDEO_FRAME_HEIGHT (&out_frame))) {
-        GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-            ("%s", "Failed to init upload format"), (NULL));
-        res = FALSE;
-        goto out;
-      }
-    }
 
+    gst_gl_download_set_format (mix->download, &out_frame.info);
     out_gl_wrapped = TRUE;
   }
 

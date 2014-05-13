@@ -847,9 +847,8 @@ gst_gl_display_get_type
 <TITLE>GstGLDownload</TITLE>
 GstGLDownload
 gst_gl_download_new
-gst_gl_download_init_format
+gst_gl_download_set_format
 gst_gl_download_perform_with_data
-gst_gl_download_perform_with_memory
 <SUBSECTION Standard>
 GST_GL_DOWNLOAD
 GST_GL_DOWNLOAD_CAST
