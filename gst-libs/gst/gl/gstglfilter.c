@@ -660,31 +660,68 @@ done:
   return othercaps;
 }
 
+
+static GstCaps *
+gst_gl_filter_set_caps_features (const GstCaps * caps,
+    const gchar * feature_name)
+{
+  GstCaps *tmp = gst_caps_copy (caps);
+  guint n = gst_caps_get_size (tmp);
+  guint i = 0;
+
+  for (i = 0; i < n; i++) {
+    GstCapsFeatures *features = gst_caps_get_features (tmp, i);
+    if (features) {
+      guint n_f = gst_caps_features_get_size (features);
+      guint j = 0;
+      for (j = 0; j < n_f; j++) {
+        gst_caps_features_remove_id (features,
+            gst_caps_features_get_nth_id (features, j));
+      }
+    }
+
+    gst_caps_features_add (features, feature_name);
+    gst_caps_set_simple (tmp, "format", G_TYPE_STRING, "RGBA", NULL);
+  }
+
+  return tmp;
+}
+
 static GstCaps *
 gst_gl_filter_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstCaps *newcaps, *result;
+  GstCaps *tmp = NULL;
+  GstCaps *result = NULL;
 
-  if (direction == GST_PAD_SINK)
-    newcaps =
-        gst_static_pad_template_get_caps (&gst_gl_filter_src_pad_template);
-  else if (direction == GST_PAD_SRC)
-    newcaps =
-        gst_static_pad_template_get_caps (&gst_gl_filter_sink_pad_template);
-  else
-    newcaps = gst_caps_new_any ();
+  if (direction == GST_PAD_SINK) {
+    GstCaps *glcaps = gst_gl_filter_set_caps_features (caps,
+        GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+    GstCaps *eglcaps = gst_gl_filter_set_caps_features (caps,
+        GST_CAPS_FEATURE_MEMORY_EGL_IMAGE);
+    GstCaps *uploadcaps = gst_gl_filter_set_caps_features (caps,
+        GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
 
-  if (filter) {
-    result =
-        gst_caps_intersect_full (filter, newcaps, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (newcaps);
-    newcaps = result;
+    tmp = gst_caps_new_empty ();
+
+    tmp = gst_caps_merge (tmp, glcaps);
+    tmp = gst_caps_merge (tmp, eglcaps);
+    tmp = gst_caps_merge (tmp, uploadcaps);
+    tmp = gst_caps_merge (tmp, gst_caps_copy (caps));
+  } else {
+    tmp = gst_caps_copy (caps);
   }
 
-  GST_DEBUG_OBJECT (bt, "returning caps: %" GST_PTR_FORMAT, newcaps);
+  if (filter) {
+    result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  } else {
+    result = tmp;
+  }
 
-  return newcaps;
+  GST_DEBUG_OBJECT (bt, "returning caps: %" GST_PTR_FORMAT, result);
+
+  return result;
 }
 
 
