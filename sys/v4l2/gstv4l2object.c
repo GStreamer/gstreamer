@@ -2319,7 +2319,7 @@ gst_v4l2_object_extrapolate_info (GstV4l2Object * v4l2object,
     gst_v4l2_object_set_stride (info, align, i, estride);
 
     info->offset[i] = offs;
-    offs += stride *
+    offs += estride *
         GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i, padded_height);
 
     GST_DEBUG_OBJECT (v4l2object->element,
