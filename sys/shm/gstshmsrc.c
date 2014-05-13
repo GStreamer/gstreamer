@@ -214,16 +214,17 @@ gst_shm_src_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_shm_src_start_reading (GstShmSrc * self)
 {
-  GstShmPipe *gstpipe = g_slice_new0 (GstShmPipe);
-
-  gstpipe->use_count = 1;
-  gstpipe->src = gst_object_ref (self);
+  GstShmPipe *gstpipe;
 
   if (!self->socket_path) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
         ("No path specified for socket."), (NULL));
     return FALSE;
   }
+
+  gstpipe = g_slice_new0 (GstShmPipe);
+  gstpipe->use_count = 1;
+  gstpipe->src = gst_object_ref (self);
 
   GST_DEBUG_OBJECT (self, "Opening socket %s", self->socket_path);
 
