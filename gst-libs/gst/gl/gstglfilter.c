@@ -1111,19 +1111,10 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     GST_LOG ("Output Buffer does not contain correct memory, "
         "attempting to wrap for download");
 
-    if (!filter->download) {
+    if (!filter->download)
       filter->download = gst_gl_download_new (filter->context);
 
-      if (!gst_gl_download_init_format (filter->download,
-              GST_VIDEO_FRAME_FORMAT (&out_frame),
-              GST_VIDEO_FRAME_WIDTH (&out_frame),
-              GST_VIDEO_FRAME_HEIGHT (&out_frame))) {
-        GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-            ("%s", "Failed to init download format"), (NULL));
-        ret = FALSE;
-        goto error;
-      }
-    }
+    gst_gl_download_set_format (filter->download, &out_frame.info);
     out_tex = filter->out_tex_id;
   }
 

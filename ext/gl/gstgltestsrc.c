@@ -494,19 +494,10 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     }
     out_tex = src->out_tex_id;
 
-    if (!src->download) {
+    if (!src->download)
       src->download = gst_gl_download_new (src->context);
 
-      if (!gst_gl_download_init_format (src->download,
-              GST_VIDEO_FRAME_FORMAT (&out_frame),
-              GST_VIDEO_FRAME_WIDTH (&out_frame),
-              GST_VIDEO_FRAME_HEIGHT (&out_frame))) {
-        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-            ("%s", "Failed to init download format"), (NULL));
-        return FALSE;
-      }
-    }
-
+    gst_gl_download_set_format (src->download, &out_frame.info);
     out_gl_wrapped = TRUE;
   }
 
