@@ -636,6 +636,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
   GError *error = NULL;
   GSocketConnection *connection;
   GSocket *socket;
+  gchar *luri = NULL;
 
   memset (&response, 0, sizeof (response));
   gst_rtsp_message_init (&response);
@@ -689,7 +690,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
   }
 
   gst_rtsp_url_get_port (url, &url_port);
-  uri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
+  luri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
       url->abspath, url->query ? "?" : "", url->query ? url->query : "");
 
   /* connect to the host/port */
@@ -698,7 +699,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
         conn->proxy_host, conn->proxy_port, conn->cancellable, &error);
   } else {
     connection = g_socket_client_connect_to_uri (conn->client,
-        uri, 0, conn->cancellable, &error);
+        luri, 0, conn->cancellable, &error);
   }
   if (connection == NULL)
     goto connect_failed;
@@ -720,7 +721,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
   conn->control_stream = NULL;
 
   /* create the POST request for the write connection */
-  GST_RTSP_CHECK (gst_rtsp_message_new_request (&msg, GST_RTSP_POST, uri),
+  GST_RTSP_CHECK (gst_rtsp_message_new_request (&msg, GST_RTSP_POST, luri),
       no_message);
   msg->type = GST_RTSP_MESSAGE_HTTP_REQUEST;
 
@@ -743,7 +744,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
 
 exit:
   gst_rtsp_message_unset (&response);
-  g_free (uri);
+  g_free (luri);
 
   return res;
 
