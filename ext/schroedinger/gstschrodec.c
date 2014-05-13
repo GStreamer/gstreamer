@@ -573,7 +573,7 @@ gst_schro_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
-
+  gst_buffer_pool_set_config (pool, config);
   gst_object_unref (pool);
 
   return TRUE;
