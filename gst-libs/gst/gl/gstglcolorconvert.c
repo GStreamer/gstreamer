@@ -133,7 +133,7 @@ static const gchar frag_REORDER[] =
       "void main(void)\n"
       "{\n"
       " vec4 t = texture2D(tex, v_texcoord * tex_scale0);\n"
-      " %s;\n" /* clobber alpha channel? */
+      " %s\n" /* clobber alpha channel? */
       " gl_FragColor = vec4(t.%c, t.%c, t.%c, t.%c);\n"
       "}";
 
@@ -674,15 +674,17 @@ _RGB_to_RGB (GstGLColorConvert * convert)
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
   const gchar *out_format_str = gst_video_format_to_string (out_format);
   gchar *pixel_order = _RGB_pixel_order (in_format_str, out_format_str);
-  const gchar *alpha = "";
+  gchar *alpha = NULL;
 
   info->in_n_textures = 1;
   info->out_n_textures = 1;
   if (_is_RGBx (in_format))
-    alpha = "t.a = 1.0";
-  info->frag_prog = g_strdup_printf (frag_REORDER, alpha, pixel_order[0],
-      pixel_order[1], pixel_order[2], pixel_order[3]);
+    alpha = g_strdup_printf ("t.%c = 1.0;", pixel_order[3]);
+  info->frag_prog = g_strdup_printf (frag_REORDER, alpha ? alpha : "",
+      pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
   info->shader_tex_names[0] = "tex";
+
+  g_free (alpha);
 }
 
 static void
@@ -855,23 +857,25 @@ _RGB_to_GRAY (GstGLColorConvert * convert)
   GstVideoFormat in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
   const gchar *in_format_str = gst_video_format_to_string (in_format);
   gchar *pixel_order = _RGB_pixel_order (in_format_str, "rgba");
-  const gchar *alpha = "";
+  gchar *alpha = NULL;
 
   info->in_n_textures = 1;
   info->out_n_textures = 1;
   info->shader_tex_names[0] = "tex";
 
   if (_is_RGBx (in_format))
-    alpha = "t.a = 1.0";
+    alpha = g_strdup_printf ("t.%c = 1.0;", pixel_order[3]);
 
   switch (GST_VIDEO_INFO_FORMAT (&convert->out_info)) {
     case GST_VIDEO_FORMAT_GRAY8:
-      info->frag_prog = g_strdup_printf (frag_REORDER, alpha, pixel_order[0],
-          pixel_order[0], pixel_order[0], pixel_order[3]);
+      info->frag_prog = g_strdup_printf (frag_REORDER, alpha ? alpha : "",
+          pixel_order[0], pixel_order[0], pixel_order[0], pixel_order[3]);
       break;
     default:
       break;
   }
+
+  g_free (alpha);
 }
 
 static void
