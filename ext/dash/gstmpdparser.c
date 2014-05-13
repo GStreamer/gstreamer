@@ -3370,6 +3370,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 
   if (!representation) {
     GST_WARNING ("No valid representation in the MPD file, aborting...");
+    g_slice_free (GstActiveStream, stream);
     return FALSE;
   }
   stream->mimeType =
