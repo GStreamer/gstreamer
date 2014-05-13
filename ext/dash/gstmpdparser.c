@@ -1213,16 +1213,12 @@ gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType ** pointer,
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "Initialization") == 0 ||
           xmlStrcmp (cur_node->name, (xmlChar *) "Initialisation") == 0) {
-        if (seg_base_type->Initialization) {
-          gst_mpdparser_free_url_type_node (seg_base_type->Initialization);
-        }
+        /* parse will free the previous pointer to create a new one */
         gst_mpdparser_parse_url_type_node (&seg_base_type->Initialization,
             cur_node);
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "RepresentationIndex") == 0) {
-        if (seg_base_type->RepresentationIndex) {
-          gst_mpdparser_free_url_type_node (seg_base_type->RepresentationIndex);
-        }
+        /* parse will free the previous pointer to create a new one */
         gst_mpdparser_parse_url_type_node (&seg_base_type->RepresentationIndex,
             cur_node);
       }
@@ -1369,10 +1365,7 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
             (&mult_seg_base_type->SegmentTimeline, cur_node);
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "BitstreamSwitching") == 0) {
-        if (mult_seg_base_type->BitstreamSwitching) {
-          gst_mpdparser_free_url_type_node
-              (mult_seg_base_type->BitstreamSwitching);
-        }
+        /* parse frees the old url before setting the new one */
         gst_mpdparser_parse_url_type_node
             (&mult_seg_base_type->BitstreamSwitching, cur_node);
       }
