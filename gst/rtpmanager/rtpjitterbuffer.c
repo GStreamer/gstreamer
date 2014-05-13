@@ -664,7 +664,7 @@ gboolean
 rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     gboolean * head, gint * percent)
 {
-  GList *list;
+  GList *list, *event = NULL;
   guint32 rtptime;
   guint16 seqnum;
   GstClockTime dts;
@@ -686,8 +686,14 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     gint gap;
     RTPJitterBufferItem *qitem = (RTPJitterBufferItem *) list;
 
-    if (qitem->seqnum == -1)
-      break;
+    if (qitem->seqnum == -1) {
+      /* keep a pointer to the first consecutive event if not already
+       * set. we will insert the packet after the event if we can't find
+       * a packet with lower sequence number before the event. */
+      if (event == NULL)
+        event = list;
+      continue;
+    }
 
     qseq = qitem->seqnum;
 
@@ -701,7 +707,16 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     /* seqnum > qseq, we can stop looking */
     if (G_LIKELY (gap < 0))
       break;
+
+    /* if we've found a packet with greater sequence number, cleanup the
+     * event pointer as the packet will be inserted before the event */
+    event = NULL;
   }
+
+  /* if event is set it means that packets before the event had smaller
+   * sequence number, so we will insert our packet after the event */
+  if (event)
+    list = event;
 
   dts = item->dts;
   if (item->rtptime == -1)
