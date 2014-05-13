@@ -1066,10 +1066,8 @@ negotiate_failed:
  * Sets the skip_frame flag and if things are really bad, skips to the next
  * keyframe.
  *
- * Returns TRUE if the frame should be decoded, FALSE if the frame can be dropped
- * entirely.
  */
-static gboolean
+static void
 gst_ffmpegviddec_do_qos (GstFFMpegVidDec * ffmpegdec,
     GstVideoCodecFrame * frame, gboolean * mode_switch)
 {
@@ -1078,47 +1076,29 @@ gst_ffmpegviddec_do_qos (GstFFMpegVidDec * ffmpegdec,
   *mode_switch = FALSE;
 
   if (frame == NULL)
-    goto no_qos;
+    return;
 
   diff =
       gst_video_decoder_get_max_decode_time (GST_VIDEO_DECODER (ffmpegdec),
       frame);
 
   /* if we don't have timing info, then we don't do QoS */
-  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (diff)))
-    goto no_qos;
+  if (G_UNLIKELY(diff == G_MAXINT64))
+    return;
 
-  GST_DEBUG_OBJECT (ffmpegdec, "decoding time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (diff));
+  GST_DEBUG_OBJECT (ffmpegdec, "decoding time %" G_GINT64_FORMAT, diff);
 
-  if (diff > 0)
-    goto normal_mode;
-
-  if (diff <= 0) {
-    goto skip_frame;
+  if (diff > 0 && ffmpegdec->context->skip_frame != AVDISCARD_DEFAULT) {
+    ffmpegdec->context->skip_frame = AVDISCARD_DEFAULT;
+    *mode_switch = TRUE;
+    GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode");
   }
 
-no_qos:
-  return TRUE;
-
-normal_mode:
-  {
-    if (ffmpegdec->context->skip_frame != AVDISCARD_DEFAULT) {
-      ffmpegdec->context->skip_frame = AVDISCARD_DEFAULT;
-      *mode_switch = TRUE;
-      GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode");
-    }
-    return TRUE;
-  }
-skip_frame:
-  {
-    if (ffmpegdec->context->skip_frame != AVDISCARD_NONREF) {
-      ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
-      *mode_switch = TRUE;
-      GST_DEBUG_OBJECT (ffmpegdec,
-          "QOS: hurry up, diff %" G_GINT64_FORMAT " >= 0", diff);
-    }
-    return FALSE;
+  else if (diff <= 0 && ffmpegdec->context->skip_frame != AVDISCARD_NONREF) {
+    ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
+    *mode_switch = TRUE;
+    GST_DEBUG_OBJECT (ffmpegdec,
+        "QOS: hurry up, diff %" G_GINT64_FORMAT " >= 0", diff);
   }
 }
 
@@ -1206,8 +1186,6 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   gint len = -1;
   gint have_data;
   gboolean mode_switch;
-  gboolean decode;
-  gint skip_frame = AVDISCARD_DEFAULT;
   GstVideoCodecFrame *out_frame;
   GstFFMpegVidDecVideoFrame *out_dframe;
   AVPacket packet;
@@ -1219,7 +1197,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   /* run QoS code, we don't stop decoding the frame when we are late because
    * else we might skip a reference frame */
-  decode = gst_ffmpegviddec_do_qos (ffmpegdec, frame, &mode_switch);
+  gst_ffmpegviddec_do_qos (ffmpegdec, frame, &mode_switch);
 
   if (ffmpegdec->is_realvideo && data != NULL) {
     gint slice_count;
@@ -1237,13 +1215,6 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       ffmpegdec->context->slice_offset[i] = GST_READ_UINT32_LE (data);
       data += 4;
     }
-  }
-
-  if (!decode) {
-    /* no decoding needed, save previous skip_frame value and brutely skip
-     * decoding everything */
-    skip_frame = ffmpegdec->context->skip_frame;
-    ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
   }
 
   if (frame) {
@@ -1269,10 +1240,6 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   len = avcodec_decode_video2 (ffmpegdec->context,
       ffmpegdec->picture, &have_data, &packet);
-
-  /* restore previous state */
-  if (!decode)
-    ffmpegdec->context->skip_frame = skip_frame;
 
   GST_DEBUG_OBJECT (ffmpegdec, "after decode: len %d, have_data %d",
       len, have_data);
