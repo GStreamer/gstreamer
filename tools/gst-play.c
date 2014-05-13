@@ -709,6 +709,10 @@ main (int argc, char **argv)
     g_print ("%s\n", version_str);
     g_print ("%s\n", GST_PACKAGE_ORIGIN);
     g_free (version_str);
+
+    g_free (audio_sink);
+    g_free (video_sink);
+
     return 0;
   }
 
@@ -745,6 +749,10 @@ main (int argc, char **argv)
         _("You must provide at least one filename or URI to play."));
     /* No input provided. Free array */
     g_ptr_array_free (playlist, TRUE);
+
+    g_free (audio_sink);
+    g_free (video_sink);
+
     return 1;
   }
 
@@ -782,6 +790,9 @@ main (int argc, char **argv)
 
   /* clean up */
   play_free (play);
+
+  g_free (audio_sink);
+  g_free (video_sink);
 
   g_print ("\n");
   return 0;
