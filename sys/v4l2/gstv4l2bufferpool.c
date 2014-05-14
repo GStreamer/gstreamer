@@ -696,6 +696,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
         goto no_buffers;
       }
 
+      num_buffers = count;
       break;
     }
     case GST_V4L2_IO_DMABUF_IMPORT:
@@ -719,6 +720,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
         goto no_buffers;
       }
 
+      num_buffers = count;
       break;
     }
     default:
