@@ -862,9 +862,6 @@ stop_streaming (GstV4l2BufferPool * pool)
   pool->flushing = FALSE;
   pool->streaming = FALSE;
 
-  if (pool->other_pool)
-    gst_buffer_pool_set_active (pool->other_pool, FALSE);
-
   return TRUE;
 
   /* ERRORS */
