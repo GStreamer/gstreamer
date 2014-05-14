@@ -344,9 +344,9 @@ gst_avdtp_util_parse_sbc_raw (void *config)
     gst_value_list_prepend_value (list, value);
   }
   if (gst_value_list_get_size (list) == 1)
-    gst_structure_set_value (structure, "mode", value);
+    gst_structure_set_value (structure, "channel-mode", value);
   else
-    gst_structure_take_value (structure, "mode", list);
+    gst_structure_take_value (structure, "channel-mode", list);
 
   g_value_unset (value);
   g_value_reset (list);
@@ -406,9 +406,9 @@ gst_avdtp_util_parse_sbc_raw (void *config)
     gst_value_list_prepend_value (list, value);
   }
   if (gst_value_list_get_size (list) == 1)
-    gst_structure_set_value (structure, "allocation", value);
+    gst_structure_set_value (structure, "allocation-method", value);
   else
-    gst_structure_take_value (structure, "allocation", list);
+    gst_structure_take_value (structure, "allocation-method", list);
 
   g_value_unset (value);
   g_value_reset (list);
