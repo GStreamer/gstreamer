@@ -258,14 +258,15 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   klass->trim = NULL;
 }
 
-static gboolean
-_set_name_default (GESTimelineElement * self)
+static void
+_set_name (GESTimelineElement * self, const gchar * wanted_name)
 {
   const gchar *type_name;
+  gchar *lowcase_type;
   gint count;
-  gchar *name;
   GQuark q;
   guint i, l;
+  gchar *name = NULL;
 
   if (!object_name_counts) {
     g_datalist_init (&object_name_counts);
@@ -273,38 +274,57 @@ _set_name_default (GESTimelineElement * self)
 
   q = g_type_qname (G_OBJECT_TYPE (self));
   count = GPOINTER_TO_INT (g_datalist_id_get_data (&object_name_counts, q));
-  g_datalist_id_set_data (&object_name_counts, q, GINT_TO_POINTER (count + 1));
 
   /* GstFooSink -> foosink<N> */
   type_name = g_quark_to_string (q);
   if (strncmp (type_name, "GES", 3) == 0)
     type_name += 3;
-  /* give the 20th "uriclip" element and the first "uriclip2" (if needed in the future)
-   * different names */
-  l = strlen (type_name);
-  if (l > 0 && g_ascii_isdigit (type_name[l - 1])) {
-    name = g_strdup_printf ("%s-%d", type_name, count);
+
+  lowcase_type = g_strdup (type_name);
+  l = strlen (lowcase_type);
+  for (i = 0; i < l; i++)
+    lowcase_type[i] = g_ascii_tolower (lowcase_type[i]);
+
+  if (wanted_name == NULL) {
+    /* give the 20th "uriclip" element and the first "uriclip2" (if needed in the future)
+     * different names */
+    l = strlen (type_name);
+    if (l > 0 && g_ascii_isdigit (type_name[l - 1])) {
+      name = g_strdup_printf ("%s-%d", lowcase_type, count++);
+    } else {
+      name = g_strdup_printf ("%s%d", lowcase_type, count++);
+    }
   } else {
-    name = g_strdup_printf ("%s%d", type_name, count);
+    /* If the wanted name uses the same 'namespace' as default, make
+     * sure it does not badly interfere with our counting system */
+
+    if (g_str_has_prefix (wanted_name, lowcase_type)) {
+      guint64 tmpcount =
+          g_ascii_strtoull (&wanted_name[strlen (lowcase_type)], NULL, 10);
+
+      if (tmpcount > count) {
+        count = tmpcount + 1;
+        GST_DEBUG_OBJECT (self, "Using same naming %s but updated count to %i",
+            name, count);
+      } else if (tmpcount < count) {
+        name = g_strdup_printf ("%s%d", lowcase_type, count);
+        GST_DEBUG_OBJECT (self, "Name %s already allocated, giving: %s instead",
+            wanted_name, name);
+      } else {
+        count++;
+        GST_DEBUG_OBJECT (self, "Perfect name, just bumping object count");
+      }
+    }
+
+    if (name == NULL)
+      name = g_strdup (wanted_name);
   }
 
-  l = strlen (name);
-  for (i = 0; i < l; i++)
-    name[i] = g_ascii_tolower (name[i]);
+  g_free (lowcase_type);
+  g_datalist_id_set_data (&object_name_counts, q, GINT_TO_POINTER (count));
 
   g_free (self->name);
-  if (G_UNLIKELY (self->parent != NULL))
-    goto had_parent;
-
   self->name = name;
-
-  return TRUE;
-
-had_parent:
-  {
-    GST_WARNING ("parented objects can't be renamed");
-    return FALSE;
-  }
 }
 
 /*********************************************
@@ -408,12 +428,18 @@ ges_timeline_element_set_timeline (GESTimelineElement * self,
 
   if (timeline == NULL) {
     if (self->timeline) {
-      if (!timeline_remove_element (self->timeline, self))
+      if (!timeline_remove_element (self->timeline, self)) {
+        GST_INFO_OBJECT (self, "Could not remove from"
+            " currently set timeline %" GST_PTR_FORMAT, self->timeline);
         return FALSE;
+      }
     }
   } else {
-    if (!timeline_add_element (timeline, self))
+    if (!timeline_add_element (timeline, self)) {
+      GST_INFO_OBJECT (self, "Could not add to timeline %" GST_PTR_FORMAT,
+          self);
       return FALSE;
+    }
   }
 
   self->timeline = timeline;
@@ -992,12 +1018,14 @@ ges_timeline_element_get_name (GESTimelineElement * self)
 gboolean
 ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
 {
-  gboolean result, readd_to_timeline = FALSE;
+  gboolean result = TRUE, readd_to_timeline = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
-  if (name != NULL && !g_strcmp0(name, self->name))
+  if (name != NULL && !g_strcmp0 (name, self->name)) {
+    GST_DEBUG_OBJECT (self, "Same name!");
     return TRUE;
+  }
 
   /* parented objects cannot be renamed */
   if (self->timeline != NULL) {
@@ -1012,13 +1040,7 @@ ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
     readd_to_timeline = TRUE;
   }
 
-  if (name != NULL) {
-    g_free (self->name);
-    self->name = g_strdup (name);
-    result = TRUE;
-  } else {
-    result = _set_name_default (self);
-  }
+  _set_name (self, name);
 
   if (readd_to_timeline)
     timeline_add_element (self->timeline, self);

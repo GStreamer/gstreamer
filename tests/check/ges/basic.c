@@ -708,7 +708,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_ges_timeline_element_name)
 {
-  GESClip *clip;
+  GESClip *clip, *clip1, *clip2, *clip3;
   GESAsset *asset;
   GESTimeline *timeline;
   GESLayer *layer;
@@ -721,9 +721,40 @@ GST_START_TEST (test_ges_timeline_element_name)
 
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   clip = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip), "testclip0");
+
+
+  clip1 = GES_CLIP (ges_test_clip_new ());
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip1), "testclip1");
+
+  ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip1), "testclip1");
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip1), "testclip1");
+
+  /* Check that trying to set to a name that is already used leads to
+   * a change in the name */
+  ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip), "testclip1");
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip), "testclip2");
+
+  ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip1), "testclip4");
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip1), "testclip4");
+
+  clip2 = GES_CLIP (ges_test_clip_new ());
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip2), "testclip5");
+  ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip2), NULL);
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip2), "testclip6");
+
+  clip3 = GES_CLIP (ges_test_clip_new ());
+  ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip3),
+      "Something I want!");
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip3),
+      "Something I want!");
+
   gst_object_unref (asset);
 
-  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip), "testclip0");
+  gst_object_unref (clip1);
+  gst_object_unref (clip2);
+  gst_object_unref (clip3);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
