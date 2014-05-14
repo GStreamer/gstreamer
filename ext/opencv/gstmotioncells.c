@@ -879,215 +879,223 @@ gst_motion_cells_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     motioncellidx *motioncellsidx;
 
     buf = gst_buffer_make_writable (buf);
-    gst_buffer_map (buf, &info, GST_MAP_WRITE);
-    filter->cvImage->imageData = (char *) info.data;
-    if (filter->firstframe) {
-      setPrevFrame (filter->cvImage, filter->id);
-      filter->firstframe = FALSE;
-    }
-    minimum_motion_frames = filter->minimum_motion_frames;
-    postnomotion = filter->postnomotion;
-    sensitivity = filter->sensitivity;
-    framerate = filter->framerate;
-    gridx = filter->gridx;
-    gridy = filter->gridy;
-    display = filter->display;
-    motionmaskcoord_count = filter->motionmaskcoord_count;
-    motionmaskcoords =
-        g_new0 (motionmaskcoordrect, filter->motionmaskcoord_count);
-    for (i = 0; i < filter->motionmaskcoord_count; i++) {       //we need divide 2 because we use gauss pyramid in C++ side
-      motionmaskcoords[i].upper_left_x =
-          filter->motionmaskcoords[i].upper_left_x / 2;
-      motionmaskcoords[i].upper_left_y =
-          filter->motionmaskcoords[i].upper_left_y / 2;
-      motionmaskcoords[i].lower_right_x =
-          filter->motionmaskcoords[i].lower_right_x / 2;
-      motionmaskcoords[i].lower_right_y =
-          filter->motionmaskcoords[i].lower_right_y / 2;
-    }
-
-    motioncellscolor.R_channel_value =
-        filter->motioncellscolor->R_channel_value;
-    motioncellscolor.G_channel_value =
-        filter->motioncellscolor->G_channel_value;
-    motioncellscolor.B_channel_value =
-        filter->motioncellscolor->B_channel_value;
-
-    if ((filter->changed_gridx || filter->changed_gridy
-            || filter->changed_startime)) {
-      if ((g_strcmp0 (filter->cur_datafile, NULL) != 0)) {
-        GFREE (filter->cur_datafile);
-        filter->datafileidx++;
-        filter->cur_datafile =
-            g_strdup_printf ("%s-%d.%s", filter->basename_datafile,
-            filter->datafileidx, filter->datafile_extension);
-        filter->changed_datafile = TRUE;
-        motion_cells_free_resources (filter->id);
+    if (gst_buffer_map (buf, &info, GST_MAP_WRITE)) {
+      filter->cvImage->imageData = (char *) info.data;
+      if (filter->firstframe) {
+        setPrevFrame (filter->cvImage, filter->id);
+        filter->firstframe = FALSE;
       }
-      if (filter->motioncells_count > 0)
-        gst_motioncells_update_motion_cells (filter);
-      if (filter->motionmaskcells_count > 0)
-        gst_motioncells_update_motion_masks (filter);
-      filter->changed_gridx = FALSE;
-      filter->changed_gridy = FALSE;
-      filter->changed_startime = FALSE;
-    }
-    datafile = g_strdup (filter->cur_datafile);
-    filter->cur_buff_timestamp = (GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
-    filter->starttime +=
-        (filter->cur_buff_timestamp - filter->prev_buff_timestamp);
-    starttime = filter->starttime;
-    if (filter->changed_datafile || filter->diff_timestamp < 0)
-      filter->diff_timestamp =
-          (gint64) (GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
-    changed_datafile = filter->changed_datafile;
-    motionmaskcells_count = filter->motionmaskcells_count;
-    motionmaskcellsidx = g_new0 (motioncellidx, filter->motionmaskcells_count);
-    for (i = 0; i < filter->motionmaskcells_count; i++) {
-      motionmaskcellsidx[i].lineidx = filter->motionmaskcellsidx[i].lineidx;
-      motionmaskcellsidx[i].columnidx = filter->motionmaskcellsidx[i].columnidx;
-    }
-    motioncells_count = filter->motioncells_count;
-    motioncellsidx = g_new0 (motioncellidx, filter->motioncells_count);
-    for (i = 0; i < filter->motioncells_count; i++) {
-      motioncellsidx[i].lineidx = filter->motioncellsidx[i].lineidx;
-      motioncellsidx[i].columnidx = filter->motioncellsidx[i].columnidx;
-    }
-    useAlpha = filter->usealpha;
-    thickness = filter->thickness;
-    success =
-        perform_detection_motion_cells (filter->cvImage, sensitivity, framerate,
-        gridx, gridy,
-        (gint64) (GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND) -
-        filter->diff_timestamp, display, useAlpha, motionmaskcoord_count,
-        motionmaskcoords, motionmaskcells_count, motionmaskcellsidx,
-        motioncellscolor, motioncells_count, motioncellsidx, starttime,
-        datafile, changed_datafile, thickness, filter->id);
+      minimum_motion_frames = filter->minimum_motion_frames;
+      postnomotion = filter->postnomotion;
+      sensitivity = filter->sensitivity;
+      framerate = filter->framerate;
+      gridx = filter->gridx;
+      gridy = filter->gridy;
+      display = filter->display;
+      motionmaskcoord_count = filter->motionmaskcoord_count;
+      motionmaskcoords =
+          g_new0 (motionmaskcoordrect, filter->motionmaskcoord_count);
+      for (i = 0; i < filter->motionmaskcoord_count; i++) {     //we need divide 2 because we use gauss pyramid in C++ side
+        motionmaskcoords[i].upper_left_x =
+            filter->motionmaskcoords[i].upper_left_x / 2;
+        motionmaskcoords[i].upper_left_y =
+            filter->motionmaskcoords[i].upper_left_y / 2;
+        motionmaskcoords[i].lower_right_x =
+            filter->motionmaskcoords[i].lower_right_x / 2;
+        motionmaskcoords[i].lower_right_y =
+            filter->motionmaskcoords[i].lower_right_y / 2;
+      }
 
-    if ((success == 1) && (filter->sent_init_error_msg == false)) {
-      char *initfailedreason;
-      int initerrorcode;
-      GstStructure *s;
-      GstMessage *m;
-      initfailedreason = getInitDataFileFailed (filter->id);
-      initerrorcode = getInitErrorCode (filter->id);
-      s = gst_structure_new ("motion", "init_error_code", G_TYPE_INT,
-          initerrorcode, "details", G_TYPE_STRING, initfailedreason, NULL);
-      m = gst_message_new_element (GST_OBJECT (filter), s);
-      gst_element_post_message (GST_ELEMENT (filter), m);
-      filter->sent_init_error_msg = TRUE;
-    }
-    if ((success == -1) && (filter->sent_save_error_msg == false)) {
-      char *savefailedreason;
-      int saveerrorcode;
-      GstStructure *s;
-      GstMessage *m;
-      savefailedreason = getSaveDataFileFailed (filter->id);
-      saveerrorcode = getSaveErrorCode (filter->id);
-      s = gst_structure_new ("motion", "save_error_code", G_TYPE_INT,
-          saveerrorcode, "details", G_TYPE_STRING, savefailedreason, NULL);
-      m = gst_message_new_element (GST_OBJECT (filter), s);
-      gst_element_post_message (GST_ELEMENT (filter), m);
-      filter->sent_save_error_msg = TRUE;
-    }
-    if (success == -2) {        //frame dropped
+      motioncellscolor.R_channel_value =
+          filter->motioncellscolor->R_channel_value;
+      motioncellscolor.G_channel_value =
+          filter->motioncellscolor->G_channel_value;
+      motioncellscolor.B_channel_value =
+          filter->motioncellscolor->B_channel_value;
+
+      if ((filter->changed_gridx || filter->changed_gridy
+              || filter->changed_startime)) {
+        if ((g_strcmp0 (filter->cur_datafile, NULL) != 0)) {
+          GFREE (filter->cur_datafile);
+          filter->datafileidx++;
+          filter->cur_datafile =
+              g_strdup_printf ("%s-%d.%s", filter->basename_datafile,
+              filter->datafileidx, filter->datafile_extension);
+          filter->changed_datafile = TRUE;
+          motion_cells_free_resources (filter->id);
+        }
+        if (filter->motioncells_count > 0)
+          gst_motioncells_update_motion_cells (filter);
+        if (filter->motionmaskcells_count > 0)
+          gst_motioncells_update_motion_masks (filter);
+        filter->changed_gridx = FALSE;
+        filter->changed_gridy = FALSE;
+        filter->changed_startime = FALSE;
+      }
+      datafile = g_strdup (filter->cur_datafile);
+      filter->cur_buff_timestamp = (GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
+      filter->starttime +=
+          (filter->cur_buff_timestamp - filter->prev_buff_timestamp);
+      starttime = filter->starttime;
+      if (filter->changed_datafile || filter->diff_timestamp < 0)
+        filter->diff_timestamp =
+            (gint64) (GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
+      changed_datafile = filter->changed_datafile;
+      motionmaskcells_count = filter->motionmaskcells_count;
+      motionmaskcellsidx =
+          g_new0 (motioncellidx, filter->motionmaskcells_count);
+      for (i = 0; i < filter->motionmaskcells_count; i++) {
+        motionmaskcellsidx[i].lineidx = filter->motionmaskcellsidx[i].lineidx;
+        motionmaskcellsidx[i].columnidx =
+            filter->motionmaskcellsidx[i].columnidx;
+      }
+      motioncells_count = filter->motioncells_count;
+      motioncellsidx = g_new0 (motioncellidx, filter->motioncells_count);
+      for (i = 0; i < filter->motioncells_count; i++) {
+        motioncellsidx[i].lineidx = filter->motioncellsidx[i].lineidx;
+        motioncellsidx[i].columnidx = filter->motioncellsidx[i].columnidx;
+      }
+      useAlpha = filter->usealpha;
+      thickness = filter->thickness;
+      success =
+          perform_detection_motion_cells (filter->cvImage, sensitivity,
+          framerate, gridx, gridy,
+          (gint64) (GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND) -
+          filter->diff_timestamp, display, useAlpha, motionmaskcoord_count,
+          motionmaskcoords, motionmaskcells_count, motionmaskcellsidx,
+          motioncellscolor, motioncells_count, motioncellsidx, starttime,
+          datafile, changed_datafile, thickness, filter->id);
+
+      if ((success == 1) && (filter->sent_init_error_msg == false)) {
+        char *initfailedreason;
+        int initerrorcode;
+        GstStructure *s;
+        GstMessage *m;
+        initfailedreason = getInitDataFileFailed (filter->id);
+        initerrorcode = getInitErrorCode (filter->id);
+        s = gst_structure_new ("motion", "init_error_code", G_TYPE_INT,
+            initerrorcode, "details", G_TYPE_STRING, initfailedreason, NULL);
+        m = gst_message_new_element (GST_OBJECT (filter), s);
+        gst_element_post_message (GST_ELEMENT (filter), m);
+        filter->sent_init_error_msg = TRUE;
+      }
+      if ((success == -1) && (filter->sent_save_error_msg == false)) {
+        char *savefailedreason;
+        int saveerrorcode;
+        GstStructure *s;
+        GstMessage *m;
+        savefailedreason = getSaveDataFileFailed (filter->id);
+        saveerrorcode = getSaveErrorCode (filter->id);
+        s = gst_structure_new ("motion", "save_error_code", G_TYPE_INT,
+            saveerrorcode, "details", G_TYPE_STRING, savefailedreason, NULL);
+        m = gst_message_new_element (GST_OBJECT (filter), s);
+        gst_element_post_message (GST_ELEMENT (filter), m);
+        filter->sent_save_error_msg = TRUE;
+      }
+      if (success == -2) {      //frame dropped
+        gst_buffer_unmap (buf, &info);
+        filter->prev_buff_timestamp = filter->cur_buff_timestamp;
+        //free
+        GFREE (datafile);
+        GFREE (motionmaskcoords);
+        GFREE (motionmaskcellsidx);
+        GFREE (motioncellsidx);
+        GST_OBJECT_UNLOCK (filter);
+        return gst_pad_push (filter->srcpad, buf);
+      }
+      filter->changed_datafile = getChangedDataFile (filter->id);
+      motioncellsidxcnt = getMotionCellsIdxCnt (filter->id);
+      numberOfCells = filter->gridx * filter->gridy;
+      motioncellsnumber = motioncellsidxcnt / MSGLEN;
+      cellsOfInterestNumber = (filter->motioncells_count > 0) ? //how many cells interest for us
+          (filter->motioncells_count) : (numberOfCells);
+      mincellsOfInterestNumber =
+          floor ((double) cellsOfInterestNumber * filter->threshold);
+      GST_OBJECT_UNLOCK (filter);
+      motiondetect = (motioncellsnumber >= mincellsOfInterestNumber) ? 1 : 0;
+      if ((motioncellsidxcnt > 0) && (motiondetect == 1)) {
+        char *detectedmotioncells;
+        filter->last_motion_timestamp = GST_BUFFER_TIMESTAMP (buf);
+        detectedmotioncells = getMotionCellsIdx (filter->id);
+        if (detectedmotioncells) {
+          filter->consecutive_motion++;
+          if ((filter->previous_motion == false)
+              && (filter->consecutive_motion >= minimum_motion_frames)) {
+            GstStructure *s;
+            GstMessage *m;
+            filter->previous_motion = true;
+            filter->motion_begin_timestamp = GST_BUFFER_TIMESTAMP (buf);
+            s = gst_structure_new ("motion", "motion_cells_indices",
+                G_TYPE_STRING, detectedmotioncells, "motion_begin",
+                G_TYPE_UINT64, filter->motion_begin_timestamp, NULL);
+            m = gst_message_new_element (GST_OBJECT (filter), s);
+            gst_element_post_message (GST_ELEMENT (filter), m);
+          } else if (filter->postallmotion) {
+            GstStructure *s;
+            GstMessage *m;
+            filter->motion_timestamp = GST_BUFFER_TIMESTAMP (buf);
+            s = gst_structure_new ("motion", "motion_cells_indices",
+                G_TYPE_STRING, detectedmotioncells, "motion", G_TYPE_UINT64,
+                filter->motion_timestamp, NULL);
+            m = gst_message_new_element (GST_OBJECT (filter), s);
+            gst_element_post_message (GST_ELEMENT (filter), m);
+          }
+        } else {
+          GstStructure *s;
+          GstMessage *m;
+          s = gst_structure_new ("motion", "motion_cells_indices",
+              G_TYPE_STRING, "error", NULL);
+          m = gst_message_new_element (GST_OBJECT (filter), s);
+          gst_element_post_message (GST_ELEMENT (filter), m);
+        }
+      } else {
+        filter->consecutive_motion = 0;
+        if ((((GST_BUFFER_TIMESTAMP (buf) -
+                        filter->last_motion_timestamp) / 1000000000l) >=
+                filter->gap)
+            && (filter->last_motion_timestamp > 0)) {
+          GST_DEBUG ("POST MOTION FINISHED MSG\n");
+          if (filter->previous_motion) {
+            GstStructure *s;
+            GstMessage *m;
+            filter->previous_motion = false;
+            s = gst_structure_new ("motion", "motion_finished", G_TYPE_UINT64,
+                filter->last_motion_timestamp, NULL);
+            m = gst_message_new_element (GST_OBJECT (filter), s);
+            gst_element_post_message (GST_ELEMENT (filter), m);
+          }
+        }
+      }
+      if (postnomotion > 0) {
+        guint64 last_buf_timestamp = GST_BUFFER_TIMESTAMP (buf) / 1000000000l;
+        if ((last_buf_timestamp -
+                (filter->last_motion_timestamp / 1000000000l)) >=
+            filter->postnomotion) {
+          GST_DEBUG ("POST NO MOTION MSG\n");
+          if ((last_buf_timestamp -
+                  (filter->last_nomotion_notified / 1000000000l)) >=
+              filter->postnomotion) {
+            GstStructure *s;
+            GstMessage *m;
+            filter->last_nomotion_notified = GST_BUFFER_TIMESTAMP (buf);
+            s = gst_structure_new ("motion", "no_motion", G_TYPE_UINT64,
+                filter->last_motion_timestamp, NULL);
+            m = gst_message_new_element (GST_OBJECT (filter), s);
+            gst_element_post_message (GST_ELEMENT (filter), m);
+          }
+        }
+      }
+      gst_buffer_unmap (buf, &info);
       filter->prev_buff_timestamp = filter->cur_buff_timestamp;
       //free
       GFREE (datafile);
       GFREE (motionmaskcoords);
       GFREE (motionmaskcellsidx);
       GFREE (motioncellsidx);
-      GST_OBJECT_UNLOCK (filter);
-      return gst_pad_push (filter->srcpad, buf);
-    }
-    filter->changed_datafile = getChangedDataFile (filter->id);
-    motioncellsidxcnt = getMotionCellsIdxCnt (filter->id);
-    numberOfCells = filter->gridx * filter->gridy;
-    motioncellsnumber = motioncellsidxcnt / MSGLEN;
-    cellsOfInterestNumber = (filter->motioncells_count > 0) ?   //how many cells interest for us
-        (filter->motioncells_count) : (numberOfCells);
-    mincellsOfInterestNumber =
-        floor ((double) cellsOfInterestNumber * filter->threshold);
-    GST_OBJECT_UNLOCK (filter);
-    motiondetect = (motioncellsnumber >= mincellsOfInterestNumber) ? 1 : 0;
-    if ((motioncellsidxcnt > 0) && (motiondetect == 1)) {
-      char *detectedmotioncells;
-      filter->last_motion_timestamp = GST_BUFFER_TIMESTAMP (buf);
-      detectedmotioncells = getMotionCellsIdx (filter->id);
-      if (detectedmotioncells) {
-        filter->consecutive_motion++;
-        if ((filter->previous_motion == false)
-            && (filter->consecutive_motion >= minimum_motion_frames)) {
-          GstStructure *s;
-          GstMessage *m;
-          filter->previous_motion = true;
-          filter->motion_begin_timestamp = GST_BUFFER_TIMESTAMP (buf);
-          s = gst_structure_new ("motion", "motion_cells_indices",
-              G_TYPE_STRING, detectedmotioncells, "motion_begin", G_TYPE_UINT64,
-              filter->motion_begin_timestamp, NULL);
-          m = gst_message_new_element (GST_OBJECT (filter), s);
-          gst_element_post_message (GST_ELEMENT (filter), m);
-        } else if (filter->postallmotion) {
-          GstStructure *s;
-          GstMessage *m;
-          filter->motion_timestamp = GST_BUFFER_TIMESTAMP (buf);
-          s = gst_structure_new ("motion", "motion_cells_indices",
-              G_TYPE_STRING, detectedmotioncells, "motion", G_TYPE_UINT64,
-              filter->motion_timestamp, NULL);
-          m = gst_message_new_element (GST_OBJECT (filter), s);
-          gst_element_post_message (GST_ELEMENT (filter), m);
-        }
-      } else {
-        GstStructure *s;
-        GstMessage *m;
-        s = gst_structure_new ("motion", "motion_cells_indices", G_TYPE_STRING,
-            "error", NULL);
-        m = gst_message_new_element (GST_OBJECT (filter), s);
-        gst_element_post_message (GST_ELEMENT (filter), m);
-      }
     } else {
-      filter->consecutive_motion = 0;
-      if ((((GST_BUFFER_TIMESTAMP (buf) -
-                      filter->last_motion_timestamp) / 1000000000l) >=
-              filter->gap)
-          && (filter->last_motion_timestamp > 0)) {
-        GST_DEBUG ("POST MOTION FINISHED MSG\n");
-        if (filter->previous_motion) {
-          GstStructure *s;
-          GstMessage *m;
-          filter->previous_motion = false;
-          s = gst_structure_new ("motion", "motion_finished", G_TYPE_UINT64,
-              filter->last_motion_timestamp, NULL);
-          m = gst_message_new_element (GST_OBJECT (filter), s);
-          gst_element_post_message (GST_ELEMENT (filter), m);
-        }
-      }
+      GST_WARNING_OBJECT (filter, "error mapping input buffer");
+      GST_OBJECT_UNLOCK (filter);
     }
-    if (postnomotion > 0) {
-      guint64 last_buf_timestamp = GST_BUFFER_TIMESTAMP (buf) / 1000000000l;
-      if ((last_buf_timestamp -
-              (filter->last_motion_timestamp / 1000000000l)) >=
-          filter->postnomotion) {
-        GST_DEBUG ("POST NO MOTION MSG\n");
-        if ((last_buf_timestamp -
-                (filter->last_nomotion_notified / 1000000000l)) >=
-            filter->postnomotion) {
-          GstStructure *s;
-          GstMessage *m;
-          filter->last_nomotion_notified = GST_BUFFER_TIMESTAMP (buf);
-          s = gst_structure_new ("motion", "no_motion", G_TYPE_UINT64,
-              filter->last_motion_timestamp, NULL);
-          m = gst_message_new_element (GST_OBJECT (filter), s);
-          gst_element_post_message (GST_ELEMENT (filter), m);
-        }
-      }
-    }
-    filter->prev_buff_timestamp = filter->cur_buff_timestamp;
-    //free
-    GFREE (datafile);
-    GFREE (motionmaskcoords);
-    GFREE (motionmaskcellsidx);
-    GFREE (motioncellsidx);
   } else {
     GST_OBJECT_UNLOCK (filter);
   }
