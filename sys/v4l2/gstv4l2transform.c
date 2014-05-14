@@ -539,6 +539,12 @@ gst_v4l2_transform_sink_event (GstBaseTransform * trans, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (self, "flush stop");
+      if (self->v4l2output->pool)
+        gst_v4l2_buffer_pool_flush (GST_V4L2_BUFFER_POOL (self->v4l2output->
+                pool));
+      if (self->v4l2capture->pool)
+        gst_v4l2_buffer_pool_flush (GST_V4L2_BUFFER_POOL (self->v4l2capture->
+                pool));
       gst_v4l2_object_unlock_stop (self->v4l2output);
       gst_v4l2_object_unlock_stop (self->v4l2capture);
     default:
