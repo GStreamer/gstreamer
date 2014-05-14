@@ -110,6 +110,12 @@ struct _GstRTSPMedia {
  *           in case of NO_PREROLL elements).
  * @unprepare: the default implementation sets the pipeline's state
  *             to GST_STATE_NULL and removes all elements.
+ * @suspend: the default implementation sets the pipeline's state to
+ *           GST_STATE_NULL GST_STATE_PAUSED depending on the selected
+ *           suspend mode.
+ * @unsuspend: the default implementation reverts the suspend operation.
+ *             The pipeline will be prerolled again if it's state was
+ *             set to GST_STATE_NULL in suspend.
  * @convert_range: convert a range to the given unit
  * @query_position: query the current posision in the pipeline
  * @query_stop: query when playback will stop
@@ -123,6 +129,8 @@ struct _GstRTSPMediaClass {
   gboolean        (*handle_message)  (GstRTSPMedia *media, GstMessage *message);
   gboolean        (*prepare)         (GstRTSPMedia *media, GstRTSPThread *thread);
   gboolean        (*unprepare)       (GstRTSPMedia *media);
+  gboolean        (*suspend)         (GstRTSPMedia *media);
+  gboolean        (*unsuspend)       (GstRTSPMedia *media);
   gboolean        (*convert_range)   (GstRTSPMedia *media, GstRTSPTimeRange *range,
                                       GstRTSPRangeUnit unit);
   gboolean        (*query_position)  (GstRTSPMedia *media, gint64 *position);

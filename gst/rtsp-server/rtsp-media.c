@@ -176,6 +176,8 @@ static gboolean default_handle_message (GstRTSPMedia * media,
 static void finish_unprepare (GstRTSPMedia * media);
 static gboolean default_prepare (GstRTSPMedia * media, GstRTSPThread * thread);
 static gboolean default_unprepare (GstRTSPMedia * media);
+static gboolean default_suspend (GstRTSPMedia * media);
+static gboolean default_unsuspend (GstRTSPMedia * media);
 static gboolean default_convert_range (GstRTSPMedia * media,
     GstRTSPTimeRange * range, GstRTSPRangeUnit unit);
 static gboolean default_query_position (GstRTSPMedia * media,
@@ -308,6 +310,8 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   klass->handle_message = default_handle_message;
   klass->prepare = default_prepare;
   klass->unprepare = default_unprepare;
+  klass->suspend = default_suspend;
+  klass->unsuspend = default_unsuspend;
   klass->convert_range = default_convert_range;
   klass->query_position = default_query_position;
   klass->query_stop = default_query_stop;
@@ -2661,35 +2665,12 @@ no_setup_sdp:
   }
 }
 
-/**
- * gst_rtsp_media_suspend:
- * @media: a #GstRTSPMedia
- *
- * Suspend @media. The state of the pipeline managed by @media is set to
- * GST_STATE_NULL but all streams are kept. @media can be prepared again
- * with gst_rtsp_media_unsuspend()
- *
- * @media must be prepared with gst_rtsp_media_prepare();
- *
- * Returns: %TRUE on success.
- */
+/* call with state_lock */
 gboolean
-gst_rtsp_media_suspend (GstRTSPMedia * media)
+default_suspend (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
   GstStateChangeReturn ret;
-
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
-
-  GST_FIXME ("suspend for dynamic pipelines needs fixing");
-
-  g_rec_mutex_lock (&priv->state_lock);
-  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
-    goto not_prepared;
-
-  /* don't attempt to suspend when something is busy */
-  if (priv->n_active > 0)
-    goto done;
 
   switch (priv->suspend_mode) {
     case GST_RTSP_SUSPEND_MODE_NONE:
@@ -2710,8 +2691,56 @@ gst_rtsp_media_suspend (GstRTSPMedia * media)
     default:
       break;
   }
+
   /* let the streams do the state changes freely, if any */
   media_streams_set_blocked (media, FALSE);
+
+  return TRUE;
+
+  /* ERRORS */
+state_failed:
+  {
+    GST_WARNING ("failed changing pipeline's state for media %p", media);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_rtsp_media_suspend:
+ * @media: a #GstRTSPMedia
+ *
+ * Suspend @media. The state of the pipeline managed by @media is set to
+ * GST_STATE_NULL but all streams are kept. @media can be prepared again
+ * with gst_rtsp_media_unsuspend()
+ *
+ * @media must be prepared with gst_rtsp_media_prepare();
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_media_suspend (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  GstRTSPMediaClass *klass;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  GST_FIXME ("suspend for dynamic pipelines needs fixing");
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+    goto not_prepared;
+
+  /* don't attempt to suspend when something is busy */
+  if (priv->n_active > 0)
+    goto done;
+
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+  if (klass->suspend) {
+    if (!klass->suspend (media))
+      goto suspend_failed;
+  }
+
   gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_SUSPENDED);
 done:
   g_rec_mutex_unlock (&priv->state_lock);
@@ -2725,34 +2754,20 @@ not_prepared:
     GST_WARNING ("media %p was not prepared", media);
     return FALSE;
   }
-state_failed:
+suspend_failed:
   {
     g_rec_mutex_unlock (&priv->state_lock);
     gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
-    GST_WARNING ("failed changing pipeline's state for media %p", media);
+    GST_WARNING ("failed to suspend media %p", media);
     return FALSE;
   }
 }
 
-/**
- * gst_rtsp_media_unsuspend:
- * @media: a #GstRTSPMedia
- *
- * Unsuspend @media if it was in a suspended state. This method does nothing
- * when the media was not in the suspended state.
- *
- * Returns: %TRUE on success.
- */
+/* call with state_lock */
 gboolean
-gst_rtsp_media_unsuspend (GstRTSPMedia * media)
+default_unsuspend (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
-
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
-
-  g_rec_mutex_lock (&priv->state_lock);
-  if (priv->status != GST_RTSP_MEDIA_STATUS_SUSPENDED)
-    goto done;
 
   switch (priv->suspend_mode) {
     case GST_RTSP_SUSPEND_MODE_NONE:
@@ -2776,22 +2791,60 @@ gst_rtsp_media_unsuspend (GstRTSPMedia * media)
     default:
       break;
   }
-done:
-  g_rec_mutex_unlock (&priv->state_lock);
 
   return TRUE;
 
   /* ERRORS */
 start_failed:
   {
-    g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("failed to preroll pipeline");
-    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
     return FALSE;
   }
 preroll_failed:
   {
     GST_WARNING ("failed to preroll pipeline");
+    return FALSE;
+  }
+}
+
+/**
+ * gst_rtsp_media_unsuspend:
+ * @media: a #GstRTSPMedia
+ *
+ * Unsuspend @media if it was in a suspended state. This method does nothing
+ * when the media was not in the suspended state.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_media_unsuspend (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  GstRTSPMediaClass *klass;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status != GST_RTSP_MEDIA_STATUS_SUSPENDED)
+    goto done;
+
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+  if (klass->unsuspend) {
+    if (!klass->unsuspend (media))
+      goto unsuspend_failed;
+  }
+
+done:
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  return TRUE;
+
+  /* ERRORS */
+unsuspend_failed:
+  {
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_WARNING ("failed to unsuspend media %p", media);
+    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
     return FALSE;
   }
 }
