@@ -67,7 +67,7 @@
  * #GstRtpBin::request-rtp-decoder, #GstRtpBin::request-rtcp-encoder and
  * #GstRtpBin::request-rtp-decoder) to dynamically request for RTP and RTCP encoders
  * and decoders in order to support SRTP. The encoders must provide the pads
- * rtp_sink_\%d and rtp_src_\%d for RTP and rtcp_sink_\%d and rtcp_src_\%d for
+ * rtp_sink_\%u and rtp_src_\%u for RTP and rtcp_sink_\%u and rtcp_src_\%u for
  * RTCP. The session number will be used in the pad name. The decoders must provide
  * rtp_sink and rtp_src for RTP and rtcp_sink and rtcp_src for RTCP. The decoders will
  * be placed before the #GstRtpSession element, thus they must support SSRC demuxing
