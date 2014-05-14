@@ -511,6 +511,7 @@ beach:
 activate_failed:
   GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
       ("failed to activate bufferpool"), ("failed to activate bufferpool"));
+  g_object_unref (pool);
   return GST_FLOW_ERROR;
 
 alloc_failed:
