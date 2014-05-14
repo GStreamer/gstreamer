@@ -500,7 +500,7 @@ gst_v4l2_allocator_create_buf (GstV4l2Allocator * allocator)
 
   GST_OBJECT_LOCK (allocator);
 
-  if (!allocator->active)
+  if (!g_atomic_int_get (&allocator->active))
     goto done;
 
   bcreate.memory = allocator->memory;
@@ -661,7 +661,7 @@ gst_v4l2_allocator_start (GstV4l2Allocator * allocator, guint32 count,
 
   GST_OBJECT_LOCK (allocator);
 
-  if (allocator->active)
+  if (g_atomic_int_get (&allocator->active))
     goto already_active;
 
   if (v4l2_ioctl (allocator->video_fd, VIDIOC_REQBUFS, &breq) < 0)
@@ -742,7 +742,7 @@ gst_v4l2_allocator_stop (GstV4l2Allocator * allocator)
 
   GST_OBJECT_LOCK (allocator);
 
-  if (!allocator->active)
+  if (!g_atomic_int_get (&allocator->active))
     goto done;
 
   if (gst_atomic_queue_length (allocator->free_queue) != allocator->count) {
@@ -1191,7 +1191,7 @@ gst_v4l2_allocator_flush (GstV4l2Allocator * allocator)
 
   GST_OBJECT_LOCK (allocator);
 
-  if (!allocator->active)
+  if (!g_atomic_int_get (&allocator->active))
     goto done;
 
   for (i = 0; i < allocator->count; i++) {
