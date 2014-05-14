@@ -1690,31 +1690,40 @@ start_failed:
 
 
 /**
- * gst_v4l2_buffer_pool_flush:
+ * gst_v4l2_buffer_pool_stop_streaming:
  * @bpool: a #GstBufferPool
  *
  * First, set obj->poll to be flushing
  * Call STREAMOFF to clear QUEUED flag on every driver buffers.
  * Then release all buffers that are in pool->buffers array.
- * Finally call STREAMON if CAPTURE type
- * The caller is responsible to unset flushing on obj->pool
  *
  * Returns: TRUE on success.
  */
 gboolean
-gst_v4l2_buffer_pool_flush (GstV4l2BufferPool * pool)
+gst_v4l2_buffer_pool_stop_streaming (GstV4l2BufferPool * pool)
 {
-  GstV4l2Object *obj = pool->obj;
+  GST_DEBUG_OBJECT (pool, "stop streaming");
 
-  GST_DEBUG_OBJECT (pool, "flush");
+  if (!stop_streaming (pool))
+    goto stop_failed;
 
-  stop_streaming (pool);
+  return TRUE;
 
-  /* we can start capturing now, we wait for the playback
-   * case until we queued the first buffer */
-  if (!V4L2_TYPE_IS_OUTPUT (obj->type))
-    if (!start_streaming (pool))
-      goto start_failed;
+  /* ERRORS */
+stop_failed:
+  {
+    GST_ERROR_OBJECT (pool, "failed to stop streaming");
+    return FALSE;
+  }
+}
+
+gboolean
+gst_v4l2_buffer_pool_start_streaming (GstV4l2BufferPool * pool)
+{
+  GST_DEBUG_OBJECT (pool, "start straming");
+
+  if (!start_streaming (pool))
+    goto start_failed;
 
   return TRUE;
 

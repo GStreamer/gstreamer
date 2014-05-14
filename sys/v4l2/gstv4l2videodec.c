@@ -277,13 +277,12 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
   self->output_flow = GST_FLOW_OK;
 
   if (self->v4l2output->pool)
-    gst_v4l2_buffer_pool_flush (GST_V4L2_BUFFER_POOL (self->v4l2output->pool));
+    gst_v4l2_buffer_pool_stop_streaming (GST_V4L2_BUFFER_POOL
+        (self->v4l2output->pool));
 
   if (self->v4l2capture->pool)
-    gst_v4l2_buffer_pool_flush (GST_V4L2_BUFFER_POOL (self->v4l2capture->pool));
-
-  /* Output will remain flushing until new frame comes in */
-  gst_v4l2_object_unlock_stop (self->v4l2capture);
+    gst_v4l2_buffer_pool_stop_streaming (GST_V4L2_BUFFER_POOL
+        (self->v4l2capture->pool));
 
   return TRUE;
 }
@@ -525,7 +524,10 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     GST_DEBUG_OBJECT (self, "Starting decoding thread");
 
     /* Enable processing input */
+    gst_v4l2_buffer_pool_start_streaming (GST_V4L2_BUFFER_POOL
+        (self->v4l2capture->pool));
     gst_v4l2_object_unlock_stop (self->v4l2output);
+    gst_v4l2_object_unlock_stop (self->v4l2capture);
 
     /* Start the processing task, when it quits, the task will disable input
      * processing to unlock input if draining, or prevent potential block */

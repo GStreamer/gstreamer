@@ -530,6 +530,11 @@ static gboolean
 gst_v4l2_transform_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
+  gboolean ret;
+
+  /* Nothing to flush in passthrough */
+  if (gst_base_transform_is_passthrough (trans))
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -539,19 +544,38 @@ gst_v4l2_transform_sink_event (GstBaseTransform * trans, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (self, "flush stop");
-      if (self->v4l2output->pool)
-        gst_v4l2_buffer_pool_flush (GST_V4L2_BUFFER_POOL (self->v4l2output->
-                pool));
+
+      if (self->v4l2output->pool) {
+        gst_v4l2_buffer_pool_stop_streaming (GST_V4L2_BUFFER_POOL
+            (self->v4l2output->pool));
+        gst_v4l2_buffer_pool_start_streaming (GST_V4L2_BUFFER_POOL
+            (self->v4l2capture->pool));
+        gst_v4l2_object_unlock_stop (self->v4l2output);
+      }
       if (self->v4l2capture->pool)
-        gst_v4l2_buffer_pool_flush (GST_V4L2_BUFFER_POOL (self->v4l2capture->
-                pool));
-      gst_v4l2_object_unlock_stop (self->v4l2output);
-      gst_v4l2_object_unlock_stop (self->v4l2capture);
+        gst_v4l2_buffer_pool_stop_streaming (GST_V4L2_BUFFER_POOL
+            (self->v4l2capture->pool));
     default:
       break;
   }
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      /* Buffer should be back now */
+      if (self->v4l2capture->pool) {
+        gst_v4l2_buffer_pool_start_streaming (GST_V4L2_BUFFER_POOL
+            (self->v4l2capture->pool));
+        gst_v4l2_object_unlock_stop (self->v4l2capture);
+      }
+      GST_DEBUG_OBJECT (self, "flush stop done");
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static GstStateChangeReturn

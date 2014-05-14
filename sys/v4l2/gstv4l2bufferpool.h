@@ -84,7 +84,8 @@ GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj, GstCaps *c
 
 GstFlowReturn       gst_v4l2_buffer_pool_process (GstV4l2BufferPool * bpool, GstBuffer ** buf);
 
-gboolean            gst_v4l2_buffer_pool_flush   (GstV4l2BufferPool * pool);
+gboolean            gst_v4l2_buffer_pool_stop_streaming   (GstV4l2BufferPool * pool);
+gboolean            gst_v4l2_buffer_pool_start_streaming  (GstV4l2BufferPool * pool);
 
 void                gst_v4l2_buffer_pool_set_other_pool (GstV4l2BufferPool * pool,
                                                          GstBufferPool * other_pool);
