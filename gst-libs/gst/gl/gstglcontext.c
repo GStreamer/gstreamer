@@ -1032,6 +1032,31 @@ gst_gl_context_get_gl_version (GstGLContext * context, gint * maj, gint * min)
     *min = context->priv->gl_minor;
 }
 
+/**
+ * gst_gl_context_check_feature:
+ * @context: a #GstGLContext
+ * @feature: a platform specific feature
+ *
+ * Some features require that the context be created before it is possible to
+ * determine their existence and so will fail if that is not the case.
+ *
+ * Returns: Whether @feature is supported by @context
+ */
+gboolean
+gst_gl_context_check_feature (GstGLContext * context, const gchar * feature)
+{
+  GstGLContextClass *context_class;
+
+  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (feature != NULL, FALSE);
+
+  context_class = GST_GL_CONTEXT_GET_CLASS (context);
+  if (!context_class->check_feature)
+    return FALSE;
+
+  return context_class->check_feature (context, feature);
+}
+
 static GstGLAPI
 gst_gl_wrapped_context_get_gl_api (GstGLContext * context)
 {

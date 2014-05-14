@@ -742,6 +742,7 @@ gst_gl_context_get_display
 gst_gl_context_get_gl_api
 gst_gl_context_get_gl_context
 gst_gl_context_get_platform
+gst_gl_context_check_feature
 <SUBSECTION Standard>
 GST_GL_CONTEXT
 GST_GL_IS_CONTEXT
