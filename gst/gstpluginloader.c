@@ -581,7 +581,10 @@ _gst_plugin_loader_client_run (void)
   /* Loop, listening for incoming packets on the fd and writing responses */
   while (!l->rx_done && exchange_packets (l));
 
+#ifndef G_OS_WIN32
 beach:
+#endif
+
   plugin_loader_free (l);
 
   return res;
