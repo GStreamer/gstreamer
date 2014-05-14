@@ -890,9 +890,11 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
   gst_object_unref (allocator);
 
 #if GST_GL_HAVE_PLATFORM_EGL
-  allocator = gst_allocator_find (GST_EGL_IMAGE_MEMORY_TYPE);
-  gst_query_add_allocation_param (query, allocator, &params);
-  gst_object_unref (allocator);
+  if (gst_gl_context_check_feature (filter->context, "EGL_KHR_image_base")) {
+    allocator = gst_allocator_find (GST_EGL_IMAGE_MEMORY_TYPE);
+    gst_query_add_allocation_param (query, allocator, &params);
+    gst_object_unref (allocator);
+  }
 #endif
 
   return TRUE;

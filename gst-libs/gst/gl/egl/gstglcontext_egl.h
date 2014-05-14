@@ -45,6 +45,10 @@ struct _GstGLContextEGL {
   EGLConfig  egl_config;
 
   GstGLAPI gl_api;
+
+  EGLImageKHR (*eglCreateImage) (EGLDisplay dpy, EGLContext ctx, EGLenum target,
+      EGLClientBuffer buffer, const EGLint *attrib_list);
+  EGLBoolean (*eglDestroyImage) (EGLDisplay dpy, EGLImageKHR image);
 };
 
 struct _GstGLContextEGLClass {

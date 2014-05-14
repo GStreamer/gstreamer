@@ -122,7 +122,7 @@ gst_egl_image_allocator_free_vfunc (GstAllocator * allocator, GstMemory * mem)
 
   /* Shared memory should not destroy all the data */
   if (!mem->parent) {
-    eglDestroyImageKHR (emem->context->egl_display, emem->image);
+    emem->context->eglDestroyImage (emem->context->egl_display, emem->image);
 
     if (emem->user_data_destroy)
       emem->user_data_destroy (emem->context, emem->user_data);
@@ -163,8 +163,18 @@ gst_egl_image_mem_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
   return FALSE;
 }
 
-typedef GstAllocator GstEGLImageAllocator;
-typedef GstAllocatorClass GstEGLImageAllocatorClass;
+typedef struct _GstEGLImageAllocator GstEGLImageAllocator;
+typedef struct _GstEGLImageAllocatorClass GstEGLImageAllocatorClass;
+
+struct _GstEGLImageAllocator
+{
+  GstAllocator parent;
+};
+
+struct _GstEGLImageAllocatorClass
+{
+  GstAllocatorClass parent_class;
+};
 
 GType gst_egl_image_allocator_get_type (void);
 G_DEFINE_TYPE (GstEGLImageAllocator, gst_egl_image_allocator,
@@ -212,7 +222,7 @@ gst_egl_image_allocator_init_instance (gpointer data)
   return allocator;
 }
 
-static GstAllocator *
+static GstEGLImageAllocator *
 gst_egl_image_allocator_obtain (void)
 {
   static GOnce once = G_ONCE_INIT;
@@ -221,7 +231,7 @@ gst_egl_image_allocator_obtain (void)
 
   g_return_val_if_fail (once.retval != NULL, NULL);
 
-  return GST_ALLOCATOR (g_object_ref (once.retval));
+  return (GstEGLImageAllocator *) (g_object_ref (once.retval));
 }
 
 void
@@ -239,7 +249,7 @@ gst_egl_image_memory_del_gl_texture (GstGLContext * context, gpointer tex)
 }
 
 static GstMemory *
-gst_egl_image_allocator_wrap (GstAllocator * allocator,
+gst_egl_image_allocator_wrap (GstEGLImageAllocator * allocator,
     GstGLContextEGL * context, EGLImageKHR image, GstVideoGLTextureType type,
     GstMemoryFlags flags, gsize size, gpointer user_data,
     GstEGLImageDestroyNotify user_data_destroy)
@@ -255,7 +265,7 @@ gst_egl_image_allocator_wrap (GstAllocator * allocator,
 
   mem = g_slice_new (GstEGLImageMemory);
   gst_memory_init (GST_MEMORY_CAST (mem), flags,
-      allocator, NULL, size, 0, 0, size);
+      GST_ALLOCATOR (allocator), NULL, size, 0, 0, size);
 
   gst_object_unref (allocator);
 
@@ -339,12 +349,14 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
   EGLImageKHR image = EGL_NO_IMAGE_KHR;
   EGLClientBuffer client_buffer_tex[3] = { 0, 0, 0 };
   GstVideoGLTextureType texture_types[] = { 0, 0, 0, 0 };
-  GstAllocator *allocator = gst_egl_image_allocator_obtain ();
+  GstEGLImageAllocator *allocator = gst_egl_image_allocator_obtain ();
   GstGLContextEGL *context = GST_GL_CONTEXT_EGL (ctx);
 
   g_return_val_if_fail (ctx, FALSE);
   g_return_val_if_fail (info, FALSE);
   g_return_val_if_fail (buffer, FALSE);
+  g_return_val_if_fail (gst_gl_context_check_feature (ctx,
+          "EGL_KHR_image_base"), FALSE);
 
   memset (stride, 0, sizeof (stride));
   memset (offset, 0, sizeof (offset));
@@ -408,7 +420,7 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
         gst_gl_generate_texture_full (GST_GL_CONTEXT (context), info, 0, stride,
             offset, &size, (GLuint *) & client_buffer_tex[0]);
 
-        image = eglCreateImageKHR (context->egl_display,
+        image = context->eglCreateImage (context->egl_display,
             context->egl_context, EGL_GL_TEXTURE_2D_KHR, client_buffer_tex[0],
             NULL);
         if (eglGetError () != EGL_SUCCESS)
@@ -461,7 +473,7 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
           gst_gl_generate_texture_full (GST_GL_CONTEXT (context), info, 0,
               stride, offset, size, (GLuint *) & client_buffer_tex[i]);
 
-          image = eglCreateImageKHR (context->egl_display,
+          image = context->eglCreateImage (context->egl_display,
               context->egl_context, EGL_GL_TEXTURE_2D_KHR, client_buffer_tex[i],
               NULL);
           if (eglGetError () != EGL_SUCCESS)
@@ -527,7 +539,7 @@ gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
           gst_gl_generate_texture_full (GST_GL_CONTEXT (context), info, i,
               stride, offset, size, (GLuint *) & client_buffer_tex[i]);
 
-          image = eglCreateImageKHR (context->egl_display,
+          image = context->eglCreateImage (context->egl_display,
               context->egl_context, EGL_GL_TEXTURE_2D_KHR, client_buffer_tex[i],
               NULL);
           if (eglGetError () != EGL_SUCCESS)

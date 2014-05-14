@@ -53,6 +53,8 @@ static GstGLPlatform gst_gl_context_egl_get_gl_platform (GstGLContext *
     context);
 static gpointer gst_gl_context_egl_get_proc_address (GstGLContext * context,
     const gchar * name);
+static gboolean gst_gl_context_egl_check_feature (GstGLContext * context,
+    const gchar * feature);
 
 G_DEFINE_TYPE (GstGLContextEGL, gst_gl_context_egl, GST_GL_TYPE_CONTEXT);
 
@@ -78,6 +80,8 @@ gst_gl_context_egl_class_init (GstGLContextEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_egl_get_gl_platform);
   context_class->get_proc_address =
       GST_DEBUG_FUNCPTR (gst_gl_context_egl_get_proc_address);
+  context_class->check_feature =
+      GST_DEBUG_FUNCPTR (gst_gl_context_egl_check_feature);
 }
 
 static void
@@ -404,6 +408,23 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     }
   }
 
+  /* EGLImage functions */
+  if (GST_GL_CHECK_GL_VERSION (majorVersion, minorVersion, 1, 5)) {
+    egl->eglCreateImage = gst_gl_context_get_proc_address (context,
+        "eglCreateImage");
+    egl->eglDestroyImage = gst_gl_context_get_proc_address (context,
+        "eglDestroyImage");
+  } else if (gst_gl_check_extension ("EGL_KHR_image_base", egl_exts)) {
+    egl->eglCreateImage = gst_gl_context_get_proc_address (context,
+        "eglCreateImageKHR");
+    egl->eglDestroyImage = gst_gl_context_get_proc_address (context,
+        "eglDestroyImageKHR");
+  }
+  if (egl->eglCreateImage == NULL || egl->eglDestroyImage == NULL) {
+    egl->eglCreateImage = NULL;
+    egl->eglDestroyImage = NULL;
+  }
+
   if (window)
     gst_object_unref (window);
 
@@ -524,4 +545,17 @@ gst_gl_context_egl_get_proc_address (GstGLContext * context, const gchar * name)
   }
 
   return result;
+}
+
+static gboolean
+gst_gl_context_egl_check_feature (GstGLContext * context, const gchar * feature)
+{
+  GstGLContextEGL *context_egl = GST_GL_CONTEXT_EGL (context);
+
+  if (g_strcmp0 (feature, "EGL_KHR_image_base") == 0) {
+    return context_egl->eglCreateImage != NULL &&
+        context_egl->eglDestroyImage != NULL;
+  }
+
+  return FALSE;
 }
