@@ -190,6 +190,8 @@ GType gst_v4l2_object_get_type (void);
     PROP_HUE,                 \
     PROP_TV_NORM,             \
     PROP_IO_MODE,             \
+    PROP_OUTPUT_IO_MODE,      \
+    PROP_CAPTURE_IO_MODE,     \
     PROP_EXTRA_CONTROLS,      \
     PROP_PIXEL_ASPECT_RATIO,  \
     PROP_FORCE_ASPECT_RATIO
@@ -208,6 +210,8 @@ void            gst_v4l2_object_destroy   (GstV4l2Object * v4l2object);
 
 void         gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
                                                         const char * default_device);
+
+void         gst_v4l2_object_install_m2m_properties_helper (GObjectClass * gobject_class);
 
 gboolean     gst_v4l2_object_set_property_helper       (GstV4l2Object * v4l2object,
                                                         guint prop_id,

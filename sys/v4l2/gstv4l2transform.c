@@ -47,8 +47,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_v4l2_transform_debug);
 enum
 {
   PROP_0,
-  V4L2_STD_OBJECT_PROPS,
-  PROP_CAPTURE_IO_MODE,
+  V4L2_STD_OBJECT_PROPS
 };
 
 typedef struct
@@ -69,22 +68,13 @@ gst_v4l2_transform_set_property (GObject * object,
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (object);
 
   switch (prop_id) {
-      /* Split IO mode so output is configure through 'io-mode' and capture
-       * through 'capture-io-mode' */
-    case PROP_IO_MODE:
+    case PROP_OUTPUT_IO_MODE:
       gst_v4l2_object_set_property_helper (self->v4l2output, prop_id, value,
           pspec);
       break;
     case PROP_CAPTURE_IO_MODE:
       gst_v4l2_object_set_property_helper (self->v4l2capture, PROP_IO_MODE,
           value, pspec);
-      break;
-
-    case PROP_DEVICE:
-      gst_v4l2_object_set_property_helper (self->v4l2output, prop_id, value,
-          pspec);
-      gst_v4l2_object_set_property_helper (self->v4l2capture, prop_id, value,
-          pspec);
       break;
 
       /* By default, only set on output */
@@ -104,13 +94,13 @@ gst_v4l2_transform_get_property (GObject * object,
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (object);
 
   switch (prop_id) {
-    case PROP_IO_MODE:
+    case PROP_OUTPUT_IO_MODE:
       gst_v4l2_object_get_property_helper (self->v4l2output, prop_id, value,
           pspec);
       break;
     case PROP_CAPTURE_IO_MODE:
-      gst_v4l2_object_get_property_helper (self->v4l2output, PROP_IO_MODE,
-          value, pspec);
+      gst_v4l2_object_get_property_helper (self->v4l2capture, prop_id, value,
+          pspec);
       break;
 
       /* By default read from output */
@@ -659,8 +649,6 @@ gst_v4l2_transform_subinstance_init (GTypeInstance * instance, gpointer g_class)
       gst_v4l2_get_input, gst_v4l2_set_input, NULL);
   self->v4l2capture->no_initial_format = TRUE;
   self->v4l2output->keep_aspect = FALSE;
-
-  g_object_set (self, "device", klass->default_device, NULL);
 }
 
 static void
@@ -711,23 +699,10 @@ gst_v4l2_transform_class_init (GstV4l2TransformClass * klass)
 
   base_transform_class->passthrough_on_same_caps = TRUE;
 
-  /* FIXME need this ? */
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_v4l2_transform_change_state);
 
-  gst_v4l2_object_install_properties_helper (gobject_class,
-      DEFAULT_PROP_DEVICE);
-
-  /**
-   * GstV4l2Transform:capture-io-mode
-   *
-   * Capture IO Mode
-   */
-  g_object_class_install_property (gobject_class, PROP_CAPTURE_IO_MODE,
-      g_param_spec_enum ("capture-io-mode", "Capture IO mode",
-          "Capture I/O mode",
-          GST_TYPE_V4L2_IO_MODE, GST_V4L2_IO_AUTO,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  gst_v4l2_object_install_m2m_properties_helper (gobject_class);
 }
 
 static void

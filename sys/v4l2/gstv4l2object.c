@@ -372,6 +372,41 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
 
 }
 
+void
+gst_v4l2_object_install_m2m_properties_helper (GObjectClass * gobject_class)
+{
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_string ("device", "Device", "Device location",
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Device name",
+          "Name of the device", DEFAULT_PROP_DEVICE_NAME,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE_FD,
+      g_param_spec_int ("device-fd", "File descriptor",
+          "File descriptor of the device", -1, G_MAXINT, DEFAULT_PROP_DEVICE_FD,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_OUTPUT_IO_MODE,
+      g_param_spec_enum ("output-io-mode", "Output IO mode",
+          "Output side I/O mode (matches sink pad)",
+          GST_TYPE_V4L2_IO_MODE, DEFAULT_PROP_IO_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_CAPTURE_IO_MODE,
+      g_param_spec_enum ("capture-io-mode", "Capture IO mode",
+          "Capture I/O mode (matches src pad)",
+          GST_TYPE_V4L2_IO_MODE, DEFAULT_PROP_IO_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_EXTRA_CONTROLS,
+      g_param_spec_boxed ("extra-controls", "Extra Controls",
+          "Extra v4l2 controls (CIDs) for the device",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
+
 GstV4l2Object *
 gst_v4l2_object_new (GstElement * element,
     enum v4l2_buf_type type,
@@ -541,7 +576,16 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
       }
       break;
 #endif
+
     case PROP_IO_MODE:
+      v4l2object->req_mode = g_value_get_enum (value);
+      break;
+    case PROP_CAPTURE_IO_MODE:
+      g_return_val_if_fail (!V4L2_TYPE_IS_OUTPUT (v4l2object->type), FALSE);
+      v4l2object->req_mode = g_value_get_enum (value);
+      break;
+    case PROP_OUTPUT_IO_MODE:
+      g_return_val_if_fail (V4L2_TYPE_IS_OUTPUT (v4l2object->type), FALSE);
       v4l2object->req_mode = g_value_get_enum (value);
       break;
     case PROP_EXTRA_CONTROLS:{
@@ -650,6 +694,14 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       g_value_set_enum (value, v4l2object->tv_norm);
       break;
     case PROP_IO_MODE:
+      g_value_set_enum (value, v4l2object->req_mode);
+      break;
+    case PROP_CAPTURE_IO_MODE:
+      g_return_val_if_fail (!V4L2_TYPE_IS_OUTPUT (v4l2object->type), FALSE);
+      g_value_set_enum (value, v4l2object->req_mode);
+      break;
+    case PROP_OUTPUT_IO_MODE:
+      g_return_val_if_fail (V4L2_TYPE_IS_OUTPUT (v4l2object->type), FALSE);
       g_value_set_enum (value, v4l2object->req_mode);
       break;
     case PROP_EXTRA_CONTROLS:
