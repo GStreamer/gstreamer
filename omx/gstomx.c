@@ -2458,6 +2458,8 @@ gst_omx_parse_hacks (gchar ** hacks)
       hacks_flags |= GST_OMX_HACK_DRAIN_MAY_NOT_RETURN;
     else if (g_str_equal (*hacks, "no-component-role"))
       hacks_flags |= GST_OMX_HACK_NO_COMPONENT_ROLE;
+    else if (g_str_equal (*hacks, "no-disable-outport"))
+      hacks_flags |= GST_OMX_HACK_NO_DISABLE_OUTPORT;
     else
       GST_WARNING ("Unknown hack: %s", *hacks);
     hacks++;
