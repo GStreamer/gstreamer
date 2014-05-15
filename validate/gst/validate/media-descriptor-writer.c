@@ -464,8 +464,8 @@ _run_frame_analisis (GstMediaDescriptorWriter * writer,
   writer->priv->pipeline = gst_pipeline_new ("frame-analisis");
 
   monitor =
-      gst_validate_monitor_factory_create (GST_OBJECT_CAST (writer->priv->
-          pipeline), runner, NULL);
+      gst_validate_monitor_factory_create (GST_OBJECT_CAST (writer->
+          priv->pipeline), runner, NULL);
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
 
   g_object_set (uridecodebin, "uri", uri, "caps", writer->priv->raw_caps, NULL);
@@ -735,11 +735,11 @@ gst_media_descriptor_writer_add_frame (GstMediaDescriptorWriter
 
       fnode->str_open =
           g_markup_printf_escaped (" <frame duration=\"%" G_GUINT64_FORMAT
-          "\" id=\"%i\" is-keyframe=\"%i\" offset=\"%" G_GUINT64_FORMAT
+          "\" id=\"%i\" is-keyframe=\"%s\" offset=\"%" G_GUINT64_FORMAT
           "\" offset-end=\"%" G_GUINT64_FORMAT "\" pts=\"%" G_GUINT64_FORMAT
           "\"  dts=\"%" G_GUINT64_FORMAT "\" />", fnode->duration, id,
-          fnode->is_keyframe, fnode->offset, fnode->offset_end, fnode->pts,
-          fnode->dts);
+          fnode->is_keyframe ? "true" : "false",
+          fnode->offset, fnode->offset_end, fnode->pts, fnode->dts);
 
       fnode->str_close = NULL;
 

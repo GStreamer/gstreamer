@@ -55,7 +55,7 @@ compare_frames (FrameNode * frm, FrameNode * frm1)
 }
 
 static void
-deserialize_filenode (FileNode *filenode,
+deserialize_filenode (FileNode * filenode,
     const gchar ** names, const gchar ** values)
 {
   gint i;
@@ -134,8 +134,12 @@ deserialize_framenode (const gchar ** names, const gchar ** values)
       framenode->pts = g_ascii_strtoull (values[i], NULL, 0);
     else if (g_strcmp0 (names[i], "dts") == 0)
       framenode->dts = g_ascii_strtoull (values[i], NULL, 0);
-    else if (g_strcmp0 (names[i], "is-keyframe") == 0)
-      framenode->is_keyframe = g_ascii_strtoull (values[i], NULL, 0);
+    else if (g_strcmp0 (names[i], "is-keyframe") == 0) {
+      if (g_ascii_strcasecmp (values[i], "true"))
+        framenode->is_keyframe = TRUE;
+      else
+        framenode->is_keyframe = FALSE;
+    }
   }
 
   framenode->buf = gst_buffer_new ();
