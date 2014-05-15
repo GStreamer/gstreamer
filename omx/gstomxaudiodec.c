@@ -842,26 +842,51 @@ gst_omx_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
       return FALSE;
     if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
       return FALSE;
+
+    if ((klass->cdata.hacks & GST_OMX_HACK_NO_DISABLE_OUTPORT)) {
+      if (gst_omx_port_set_enabled (self->dec_out_port, TRUE) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_allocate_buffers (self->dec_out_port) != OMX_ErrorNone)
+        return FALSE;
+
+      if (gst_omx_port_wait_enabled (self->dec_out_port,
+              5 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
+    }
+
     if (gst_omx_port_wait_enabled (self->dec_in_port,
             5 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
     if (gst_omx_port_mark_reconfigured (self->dec_in_port) != OMX_ErrorNone)
       return FALSE;
   } else {
-    /* Disable output port */
-    if (gst_omx_port_set_enabled (self->dec_out_port, FALSE) != OMX_ErrorNone)
-      return FALSE;
+    if (!(klass->cdata.hacks & GST_OMX_HACK_NO_DISABLE_OUTPORT)) {
+      /* Disable output port */
+      if (gst_omx_port_set_enabled (self->dec_out_port, FALSE) != OMX_ErrorNone)
+        return FALSE;
 
-    if (gst_omx_port_wait_enabled (self->dec_out_port,
-            1 * GST_SECOND) != OMX_ErrorNone)
-      return FALSE;
+      if (gst_omx_port_wait_enabled (self->dec_out_port,
+              1 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
 
-    if (gst_omx_component_set_state (self->dec, OMX_StateIdle) != OMX_ErrorNone)
-      return FALSE;
+      if (gst_omx_component_set_state (self->dec,
+              OMX_StateIdle) != OMX_ErrorNone)
+        return FALSE;
 
-    /* Need to allocate buffers to reach Idle state */
-    if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
-      return FALSE;
+      /* Need to allocate buffers to reach Idle state */
+      if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
+        return FALSE;
+    } else {
+      if (gst_omx_component_set_state (self->dec,
+              OMX_StateIdle) != OMX_ErrorNone)
+        return FALSE;
+
+      /* Need to allocate buffers to reach Idle state */
+      if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_allocate_buffers (self->dec_out_port) != OMX_ErrorNone)
+        return FALSE;
+    }
 
     if (gst_omx_component_get_state (self->dec,
             GST_CLOCK_TIME_NONE) != OMX_StateIdle)
