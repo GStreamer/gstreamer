@@ -213,9 +213,10 @@ gst_v4l2_video_dec_stop (GstVideoDecoder * decoder)
   gst_v4l2_object_unlock (self->v4l2output);
   gst_v4l2_object_unlock (self->v4l2capture);
 
-  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
   /* Wait for capture thread to stop */
   gst_pad_stop_task (decoder->srcpad);
+
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
   self->output_flow = GST_FLOW_OK;
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
@@ -273,7 +274,9 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
   GST_DEBUG_OBJECT (self, "Flushing");
 
   /* Wait for capture thread to stop */
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
   gst_pad_stop_task (decoder->srcpad);
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
   self->output_flow = GST_FLOW_OK;
 
   if (self->v4l2output->pool)
