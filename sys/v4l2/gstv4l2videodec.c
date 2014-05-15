@@ -420,7 +420,8 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
   return;
 
 beach:
-  GST_DEBUG_OBJECT (decoder, "Leaving output thread");
+  GST_DEBUG_OBJECT (decoder, "Leaving output thread: %s",
+      gst_flow_get_name (ret));
 
   gst_buffer_replace (&buffer, NULL);
   self->output_flow = ret;
