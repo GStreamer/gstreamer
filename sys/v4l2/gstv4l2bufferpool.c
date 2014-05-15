@@ -668,9 +668,9 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
         copy_threshold =
             MAX (GST_V4L2_MIN_BUFFERS, obj->min_buffers_for_capture);
 
-        /* Ensure GstBufferPool don't expect initial minimum */
-        if (min_buffers > count)
-          min_buffers = count;
+        /* The initial minimum could be provide either by GstBufferPool or
+         * driver needs. */
+        min_buffers = count;
       }
 
       break;
@@ -696,7 +696,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
         goto no_buffers;
       }
 
-      num_buffers = count;
+      min_buffers = num_buffers = count;
       break;
     }
     case GST_V4L2_IO_DMABUF_IMPORT:
@@ -720,7 +720,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
         goto no_buffers;
       }
 
-      num_buffers = count;
+      min_buffers = num_buffers = count;
       break;
     }
     default:
@@ -734,6 +734,9 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   pool->copy_threshold = copy_threshold;
   pool->num_buffers = num_buffers;
   pool->num_queued = 0;
+
+  if (max_buffers < min_buffers)
+    max_buffers = min_buffers;
 
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
       max_buffers);
