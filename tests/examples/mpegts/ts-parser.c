@@ -703,6 +703,26 @@ dump_tot (GstMpegTsSection * section)
 }
 
 static void
+dump_mgt (GstMpegTsSection * section)
+{
+  const GstMpegTsAtscMGT *mgt = gst_mpegts_section_get_atsc_mgt (section);
+  gint i;
+
+  g_printf ("     protocol_version    : %u\n", mgt->protocol_version);
+  g_printf ("     tables number       : %d\n", mgt->tables->len);
+  for (i = 0; i < mgt->tables->len; i++) {
+    GstMpegTsAtscMGTTable *table = g_ptr_array_index (mgt->tables, i);
+    g_printf ("     table %d)\n", i);
+    g_printf ("       table_type    : %u\n", table->table_type);
+    g_printf ("       pid           : 0x%x\n", table->pid);
+    g_printf ("       version_number: %u\n", table->version_number);
+    g_printf ("       number_bytes  : %u\n", table->number_bytes);
+    dump_descriptors (table->descriptors, 9);
+  }
+  dump_descriptors (mgt->descriptors, 7);
+}
+
+static void
 dump_vct (GstMpegTsSection * section)
 {
   const GstMpegTsAtscVCT *vct;
@@ -772,6 +792,9 @@ dump_section (GstMpegTsSection * section)
       break;
     case GST_MPEGTS_SECTION_EIT:
       dump_eit (section);
+      break;
+    case GST_MPEGTS_SECTION_ATSC_MGT:
+      dump_mgt (section);
       break;
     case GST_MPEGTS_SECTION_ATSC_CVCT:
     case GST_MPEGTS_SECTION_ATSC_TVCT:

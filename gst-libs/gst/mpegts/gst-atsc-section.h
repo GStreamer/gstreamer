@@ -122,6 +122,53 @@ GType gst_mpegts_atsc_vct_source_get_type (void);
 const GstMpegTsAtscVCT * gst_mpegts_section_get_atsc_tvct (GstMpegTsSection * section);
 const GstMpegTsAtscVCT * gst_mpegts_section_get_atsc_cvct (GstMpegTsSection * section);
 
+/* MGT */
+#define GST_TYPE_MPEGTS_ATSC_MGT (gst_mpegts_atsc_mgt_get_type ())
+#define GST_TYPE_MPEGTS_ATSC_MGT_TABLE (gst_mpegts_atsc_mgt_table_get_type ())
+
+typedef struct _GstMpegTsAtscMGTTable GstMpegTsAtscMGTTable;
+typedef struct _GstMpegTsAtscMGT GstMpegTsAtscMGT;
+
+typedef enum {
+  GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_EIT0 = 0x0100,
+  GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_EIT127 = 0x017F,
+  GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_ETT0 = 0x0200,
+  GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_ETT127 = 0x027F
+} GstMpegTsAtscMGTTableType;
+
+/**
+ * GstMpegTsAtscMGTTable:
+ *
+ * Source from a @GstMpegTsAtscMGT
+ */
+struct _GstMpegTsAtscMGTTable
+{
+  guint16 table_type;
+  guint16 pid;
+  guint8  version_number;
+  guint32 number_bytes;
+  GPtrArray *descriptors;
+};
+
+/**
+ * GstMpegTsAtscMGT:
+ *
+ * Terrestrial Virtual Channel Table (A65)
+ *
+ */
+struct _GstMpegTsAtscMGT
+{
+  guint8  protocol_version;
+  guint16 tables_defined;
+  GPtrArray *tables;
+  GPtrArray *descriptors;
+};
+
+GType gst_mpegts_atsc_mgt_get_type (void);
+GType gst_mpegts_atsc_mgt_table_get_type (void);
+
+const GstMpegTsAtscMGT * gst_mpegts_section_get_atsc_mgt (GstMpegTsSection * section);
+
 G_END_DECLS
 
 #endif				/* GST_MPEGTS_SECTION_H */

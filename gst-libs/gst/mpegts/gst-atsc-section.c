@@ -250,3 +250,149 @@ gst_mpegts_section_get_atsc_cvct (GstMpegTsSection * section)
 
   return (const GstMpegTsAtscVCT *) section->cached_parsed;
 }
+
+/* MGT */
+
+static GstMpegTsAtscMGTTable *
+_gst_mpegts_atsc_mgt_table_copy (GstMpegTsAtscMGTTable * mgt_table)
+{
+  GstMpegTsAtscMGTTable *copy;
+
+  copy = g_slice_dup (GstMpegTsAtscMGTTable, mgt_table);
+  copy->descriptors = g_ptr_array_ref (mgt_table->descriptors);
+
+  return copy;
+}
+
+static void
+_gst_mpegts_atsc_mgt_table_free (GstMpegTsAtscMGTTable * mgt_table)
+{
+  g_ptr_array_unref (mgt_table->descriptors);
+  g_slice_free (GstMpegTsAtscMGTTable, mgt_table);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegTsAtscMGTTable, gst_mpegts_atsc_mgt_table,
+    (GBoxedCopyFunc) _gst_mpegts_atsc_mgt_table_copy,
+    (GFreeFunc) _gst_mpegts_atsc_mgt_table_free);
+
+static GstMpegTsAtscMGT *
+_gst_mpegts_atsc_mgt_copy (GstMpegTsAtscMGT * mgt)
+{
+  GstMpegTsAtscMGT *copy;
+
+  copy = g_slice_dup (GstMpegTsAtscMGT, mgt);
+  copy->tables = g_ptr_array_ref (mgt->tables);
+  copy->descriptors = g_ptr_array_ref (mgt->descriptors);
+
+  return copy;
+}
+
+static void
+_gst_mpegts_atsc_mgt_free (GstMpegTsAtscMGT * mgt)
+{
+  g_ptr_array_unref (mgt->tables);
+  g_ptr_array_unref (mgt->descriptors);
+  g_slice_free (GstMpegTsAtscMGT, mgt);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegTsAtscMGT, gst_mpegts_atsc_mgt,
+    (GBoxedCopyFunc) _gst_mpegts_atsc_mgt_copy,
+    (GFreeFunc) _gst_mpegts_atsc_mgt_free);
+
+static gpointer
+_parse_atsc_mgt (GstMpegTsSection * section)
+{
+  GstMpegTsAtscMGT *mgt = NULL;
+  guint i = 0;
+  guint8 *data, *end;
+  guint16 descriptors_loop_length;
+
+  mgt = g_slice_new0 (GstMpegTsAtscMGT);
+
+  data = section->data;
+  end = data + section->section_length;
+
+  /* Skip already parsed data */
+  data += 8;
+
+  mgt->protocol_version = GST_READ_UINT8 (data);
+  data += 1;
+  mgt->tables_defined = GST_READ_UINT16_BE (data);
+  data += 2;
+  mgt->tables = g_ptr_array_new_full (mgt->tables_defined,
+      (GDestroyNotify) _gst_mpegts_atsc_mgt_table_free);
+  for (i = 0; i < mgt->tables_defined && data + 11 < end; i++) {
+    GstMpegTsAtscMGTTable *mgt_table;
+
+    if (data + 11 >= end) {
+      GST_WARNING ("MGT data too short to parse inner table num %d", i);
+      goto error;
+    }
+
+    mgt_table = g_slice_new0 (GstMpegTsAtscMGTTable);
+    g_ptr_array_add (mgt->tables, mgt_table);
+
+    mgt_table->table_type = GST_READ_UINT16_BE (data);
+    data += 2;
+    mgt_table->pid = GST_READ_UINT16_BE (data) & 0x1FFF;
+    data += 2;
+    mgt_table->version_number = GST_READ_UINT8 (data) & 0x1F;
+    data += 1;
+    mgt_table->number_bytes = GST_READ_UINT32_BE (data);
+    data += 4;
+    descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x0FFF;
+    data += 2;
+
+    if (data + descriptors_loop_length >= end) {
+      GST_WARNING ("MGT data too short to parse inner table descriptors (table "
+          "num %d", i);
+      goto error;
+    }
+    mgt_table->descriptors =
+        gst_mpegts_parse_descriptors (data, descriptors_loop_length);
+    data += descriptors_loop_length;
+  }
+
+  descriptors_loop_length = GST_READ_UINT16_BE (data) & 0xFFF;
+  data += 2;
+  if (data + descriptors_loop_length >= end) {
+    GST_WARNING ("MGT data too short to parse descriptors");
+    goto error;
+  }
+  mgt->descriptors =
+      gst_mpegts_parse_descriptors (data, descriptors_loop_length);
+  data += descriptors_loop_length;
+
+  return (gpointer) mgt;
+
+error:
+  if (mgt)
+    _gst_mpegts_atsc_mgt_free (mgt);
+
+  return NULL;
+}
+
+
+/**
+ * gst_mpegts_section_get_atsc_mgt:
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_ATSC_MGT
+ *
+ * Returns the #GstMpegTsAtscMGT contained in the @section.
+ *
+ * Returns: The #GstMpegTsAtscMGT contained in the section, or %NULL if an error
+ * happened.
+ */
+const GstMpegTsAtscMGT *
+gst_mpegts_section_get_atsc_mgt (GstMpegTsSection * section)
+{
+  g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_ATSC_MGT,
+      NULL);
+  g_return_val_if_fail (section->cached_parsed || section->data, NULL);
+
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_section_checks (section, 17, _parse_atsc_mgt,
+        (GDestroyNotify) _gst_mpegts_atsc_mgt_free);
+
+  return (const GstMpegTsAtscMGT *) section->cached_parsed;
+}
