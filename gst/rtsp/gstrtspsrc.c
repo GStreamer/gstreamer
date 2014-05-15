@@ -1427,6 +1427,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
   stream->discont = TRUE;
   stream->seqbase = -1;
   stream->timebase = -1;
+  stream->send_ssrc = g_random_int ();
   stream->profile = GST_RTSP_PROFILE_AVP;
   stream->ptmap = g_array_new (FALSE, FALSE, sizeof (PtMapItem));
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
@@ -5838,7 +5839,6 @@ gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
   gst_mikey_message_set_info (msg, GST_MIKEY_VERSION, GST_MIKEY_TYPE_PSK_INIT,
       FALSE, GST_MIKEY_PRF_MIKEY_1, g_random_int (), GST_MIKEY_MAP_TYPE_SRTP);
   /* add policy '0' for our SSRC */
-  stream->send_ssrc = g_random_int ();
   gst_mikey_message_add_cs_srtp (msg, 0, stream->send_ssrc, 0);
   /* timestamp is now */
   gst_mikey_message_add_t_now_ntp_utc (msg);
