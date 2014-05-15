@@ -279,7 +279,7 @@ _encode_control_codes (gchar * text, gsize length, gboolean is_multibyte)
 /**
  * dvb_text_from_utf8:
  * @text: The text to convert. This should be in UTF-8 format
- * @out_size: (out) the byte length of the new text
+ * @out_size: (out): the byte length of the new text
  *
  * Converts UTF-8 strings to text characters compliant with EN 300 468.
  * The converted text can be used directly in DVB #GstMpegTsDescriptor
@@ -292,7 +292,7 @@ _encode_control_codes (gchar * text, gsize length, gboolean is_multibyte)
  * If no character map that contains all characters could be found, the
  * string is converted to ISO 6937 with unknown characters set to `?`.
  *
- * Returns: (transfer full) byte array of size @out_size
+ * Returns: (transfer full): byte array of size @out_size
  */
 guint8 *
 dvb_text_from_utf8 (const gchar * text, gsize * out_size)
