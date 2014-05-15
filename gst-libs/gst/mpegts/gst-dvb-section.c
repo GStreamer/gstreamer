@@ -112,7 +112,8 @@ _gst_mpegts_eit_event_free (GstMpegTsEITEvent * eit)
 {
   if (eit->start_time)
     gst_date_time_unref (eit->start_time);
-  g_ptr_array_unref (eit->descriptors);
+  if (eit->descriptors)
+    g_ptr_array_unref (eit->descriptors);
   g_slice_free (GstMpegTsEITEvent, eit);
 }
 
@@ -140,7 +141,6 @@ _gst_mpegts_eit_free (GstMpegTsEIT * eit)
 
 G_DEFINE_BOXED_TYPE (GstMpegTsEIT, gst_mpegts_eit,
     (GBoxedCopyFunc) _gst_mpegts_eit_copy, (GFreeFunc) _gst_mpegts_eit_free);
-
 
 static gpointer
 _parse_eit (GstMpegTsSection * section)
@@ -267,7 +267,8 @@ _gst_mpegts_bat_stream_copy (GstMpegTsBATStream * bat)
 static void
 _gst_mpegts_bat_stream_free (GstMpegTsBATStream * bat)
 {
-  g_ptr_array_unref (bat->descriptors);
+  if (bat->descriptors)
+    g_ptr_array_unref (bat->descriptors);
   g_slice_free (GstMpegTsBATStream, bat);
 }
 
@@ -290,8 +291,10 @@ _gst_mpegts_bat_copy (GstMpegTsBAT * bat)
 static void
 _gst_mpegts_bat_free (GstMpegTsBAT * bat)
 {
-  g_ptr_array_unref (bat->descriptors);
-  g_ptr_array_unref (bat->streams);
+  if (bat->descriptors)
+    g_ptr_array_unref (bat->descriptors);
+  if (bat->streams)
+    g_ptr_array_unref (bat->streams);
   g_slice_free (GstMpegTsBAT, bat);
 }
 
@@ -443,7 +446,8 @@ _gst_mpegts_nit_stream_copy (GstMpegTsNITStream * nit)
 static void
 _gst_mpegts_nit_stream_free (GstMpegTsNITStream * nit)
 {
-  g_ptr_array_unref (nit->descriptors);
+  if (nit->descriptors)
+    g_ptr_array_unref (nit->descriptors);
   g_slice_free (GstMpegTsNITStream, nit);
 }
 
@@ -465,7 +469,8 @@ _gst_mpegts_nit_copy (GstMpegTsNIT * nit)
 static void
 _gst_mpegts_nit_free (GstMpegTsNIT * nit)
 {
-  g_ptr_array_unref (nit->descriptors);
+  if (nit->descriptors)
+    g_ptr_array_unref (nit->descriptors);
   g_ptr_array_unref (nit->streams);
   g_slice_free (GstMpegTsNIT, nit);
 }
@@ -786,7 +791,8 @@ _gst_mpegts_sdt_service_copy (GstMpegTsSDTService * sdt)
 static void
 _gst_mpegts_sdt_service_free (GstMpegTsSDTService * sdt)
 {
-  g_ptr_array_unref (sdt->descriptors);
+  if (sdt->descriptors)
+    g_ptr_array_unref (sdt->descriptors);
   g_slice_free (GstMpegTsSDTService, sdt);
 }
 
@@ -1142,7 +1148,8 @@ _gst_mpegts_tot_free (GstMpegTsTOT * tot)
 {
   if (tot->utc_time)
     gst_date_time_unref (tot->utc_time);
-  g_ptr_array_unref (tot->descriptors);
+  if (tot->descriptors)
+    g_ptr_array_unref (tot->descriptors);
   g_slice_free (GstMpegTsTOT, tot);
 }
 

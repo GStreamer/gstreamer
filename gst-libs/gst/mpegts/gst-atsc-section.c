@@ -49,7 +49,8 @@ _gst_mpegts_atsc_tvct_source_copy (GstMpegTsAtscTVCTSource * source)
 static void
 _gst_mpegts_atsc_tvct_source_free (GstMpegTsAtscTVCTSource * source)
 {
-  g_ptr_array_unref (source->descriptors);
+  if (source->descriptors)
+    g_ptr_array_unref (source->descriptors);
   g_slice_free (GstMpegTsAtscTVCTSource, source);
 }
 
@@ -73,7 +74,8 @@ static void
 _gst_mpegts_atsc_tvct_free (GstMpegTsAtscTVCT * tvct)
 {
   g_ptr_array_unref (tvct->sources);
-  g_ptr_array_unref (tvct->descriptors);
+  if (tvct->descriptors)
+    g_ptr_array_unref (tvct->descriptors);
   g_slice_free (GstMpegTsAtscTVCT, tvct);
 }
 

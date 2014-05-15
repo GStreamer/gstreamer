@@ -606,7 +606,8 @@ _gst_mpegts_pmt_stream_copy (GstMpegTsPMTStream * pmt)
 static void
 _gst_mpegts_pmt_stream_free (GstMpegTsPMTStream * pmt)
 {
-  g_ptr_array_unref (pmt->descriptors);
+  if (pmt->descriptors)
+    g_ptr_array_unref (pmt->descriptors);
   g_slice_free (GstMpegTsPMTStream, pmt);
 }
 
@@ -620,7 +621,8 @@ _gst_mpegts_pmt_copy (GstMpegTsPMT * pmt)
   GstMpegTsPMT *copy;
 
   copy = g_slice_dup (GstMpegTsPMT, pmt);
-  copy->descriptors = g_ptr_array_ref (pmt->descriptors);
+  if (pmt->descriptors)
+    copy->descriptors = g_ptr_array_ref (pmt->descriptors);
   copy->streams = g_ptr_array_ref (pmt->streams);
 
   return copy;
@@ -629,7 +631,8 @@ _gst_mpegts_pmt_copy (GstMpegTsPMT * pmt)
 static void
 _gst_mpegts_pmt_free (GstMpegTsPMT * pmt)
 {
-  g_ptr_array_unref (pmt->descriptors);
+  if (pmt->descriptors)
+    g_ptr_array_unref (pmt->descriptors);
   g_ptr_array_unref (pmt->streams);
   g_slice_free (GstMpegTsPMT, pmt);
 }
