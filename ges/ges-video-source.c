@@ -90,6 +90,7 @@ ges_video_source_create_element (GESTrackElement * trksrc)
 {
   GstElement *topbin;
   GstElement *sub_element;
+  GstElement *queue = gst_element_factory_make ("queue", NULL);
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
   GESVideoSource *self;
   GstElement *positionner, *videoscale, *videorate, *capsfilter, *videoconvert,
@@ -132,12 +133,13 @@ ges_video_source_create_element (GESTrackElement * trksrc)
         ("Missing element '%s' - check your GStreamer installation.",
             "deinterlace"), ("deinterlacing won't work"));
     topbin =
-        ges_source_create_topbin ("videosrcbin", sub_element, videoconvert,
-        positionner, videoscale, videorate, capsfilter, NULL);
+        ges_source_create_topbin ("videosrcbin", sub_element, queue,
+        videoconvert, positionner, videoscale, videorate, capsfilter, NULL);
   } else {
     topbin =
-        ges_source_create_topbin ("videosrcbin", sub_element, videoconvert,
-        deinterlace, positionner, videoscale, videorate, capsfilter, NULL);
+        ges_source_create_topbin ("videosrcbin", sub_element, queue,
+        videoconvert, deinterlace, positionner, videoscale, videorate,
+        capsfilter, NULL);
   }
 
   parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
