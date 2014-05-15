@@ -305,11 +305,12 @@ _set_name (GESTimelineElement * self, const gchar * wanted_name)
       if (tmpcount > count) {
         count = tmpcount + 1;
         GST_DEBUG_OBJECT (self, "Using same naming %s but updated count to %i",
-            name, count);
+            wanted_name, count);
       } else if (tmpcount < count) {
         name = g_strdup_printf ("%s%d", lowcase_type, count);
-        GST_DEBUG_OBJECT (self, "Name %s already allocated, giving: %s instead",
-            wanted_name, name);
+        count++;
+        GST_DEBUG_OBJECT (self, "Name %s already allocated, giving: %s instead"
+            " New count is %i", wanted_name, name, count);
       } else {
         count++;
         GST_DEBUG_OBJECT (self, "Perfect name, just bumping object count");

@@ -708,7 +708,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_ges_timeline_element_name)
 {
-  GESClip *clip, *clip1, *clip2, *clip3;
+  GESClip *clip, *clip1, *clip2, *clip3, *clip4, *clip5;
   GESAsset *asset;
   GESTimeline *timeline;
   GESLayer *layer;
@@ -744,9 +744,18 @@ GST_START_TEST (test_ges_timeline_element_name)
   fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip2), "testclip6");
 
   clip3 = GES_CLIP (ges_test_clip_new ());
-  ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip3),
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip3), "testclip7");
+  ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip3), "testclip5");
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip3), "testclip8");
+
+  clip4 = GES_CLIP (ges_test_clip_new ());
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip4), "testclip9");
+
+
+  clip5 = GES_CLIP (ges_test_clip_new ());
+  ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip5),
       "Something I want!");
-  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip3),
+  fail_unless_equals_string (GES_TIMELINE_ELEMENT_NAME (clip5),
       "Something I want!");
 
   gst_object_unref (asset);
@@ -754,6 +763,8 @@ GST_START_TEST (test_ges_timeline_element_name)
   gst_object_unref (clip1);
   gst_object_unref (clip2);
   gst_object_unref (clip3);
+  gst_object_unref (clip4);
+  gst_object_unref (clip5);
   gst_object_unref (timeline);
 }
 
