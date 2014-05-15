@@ -528,8 +528,10 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     GST_DEBUG_OBJECT (self, "Starting decoding thread");
 
     /* Enable processing input */
-    gst_v4l2_buffer_pool_start_streaming (GST_V4L2_BUFFER_POOL
-        (self->v4l2capture->pool));
+    if (!gst_v4l2_buffer_pool_start_streaming (GST_V4L2_BUFFER_POOL
+            (self->v4l2capture->pool)))
+      goto start_streaming_failed;
+
     gst_v4l2_object_unlock_stop (self->v4l2output);
     gst_v4l2_object_unlock_stop (self->v4l2capture);
 
@@ -565,6 +567,13 @@ not_negotiated:
     GST_ERROR_OBJECT (self, "not negotiated");
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto drop;
+  }
+start_streaming_failed:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+        (_("Failed to re-enabled decoder.")),
+        ("Could not re-enqueue and start streaming on decide."));
+    return GST_FLOW_ERROR;
   }
 activate_failed:
   {
