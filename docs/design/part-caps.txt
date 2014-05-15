@@ -134,7 +134,7 @@ be accepted, for example if the buffer memory is not touched at all.
 
 Compatibility of caps
 ---------------------
-Pads can be linked when the caps of both caps are compatible. This is
+Pads can be linked when the caps of both pads are compatible. This is
 the case when their intersection is not empty.
 
 For checking if a pad actually supports a fixed caps an intersection is
