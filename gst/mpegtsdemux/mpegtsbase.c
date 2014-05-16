@@ -88,6 +88,8 @@ static GstStateChangeReturn mpegts_base_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean mpegts_base_get_tags_from_eit (MpegTSBase * base,
     GstMpegTsSection * section);
+static gboolean mpegts_base_parse_atsc_mgt (MpegTSBase * base,
+    GstMpegTsSection * section);
 static gboolean remove_each_program (gpointer key, MpegTSBaseProgram * program,
     MpegTSBase * base);
 
@@ -915,6 +917,9 @@ mpegts_base_handle_psi (MpegTSBase * base, GstMpegTsSection * section)
       /* some tag xtraction + posting */
       post_message = mpegts_base_get_tags_from_eit (base, section);
       break;
+    case GST_MPEGTS_SECTION_ATSC_MGT:
+      post_message = mpegts_base_parse_atsc_mgt (base, section);
+      break;
     default:
       break;
   }
@@ -926,6 +931,29 @@ mpegts_base_handle_psi (MpegTSBase * base, GstMpegTsSection * section)
   gst_mpegts_section_unref (section);
 }
 
+static gboolean
+mpegts_base_parse_atsc_mgt (MpegTSBase * base, GstMpegTsSection * section)
+{
+  const GstMpegTsAtscMGT *mgt;
+  gint i;
+
+  mgt = gst_mpegts_section_get_atsc_mgt (section);
+  if (G_UNLIKELY (mgt == NULL))
+    return FALSE;
+
+  for (i = 0; i < mgt->tables->len; ++i) {
+    GstMpegTsAtscMGTTable *table = g_ptr_array_index (mgt->tables, i);
+
+    if ((table->table_type >= GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_EIT0 &&
+            table->table_type <= GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_EIT127) ||
+        (table->table_type >= GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_ETT0 &&
+            table->table_type <= GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_ETT127)) {
+      MPEGTS_BIT_SET (base->known_psi, table->pid);
+    }
+  }
+
+  return TRUE;
+}
 
 static gboolean
 mpegts_base_get_tags_from_eit (MpegTSBase * base, GstMpegTsSection * section)
