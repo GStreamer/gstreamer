@@ -117,7 +117,7 @@ static guint32 rtp_session_create_new_ssrc (RTPSession * sess);
 static RTPSource *obtain_source (RTPSession * sess, guint32 ssrc,
     gboolean * created, RTPPacketInfo * pinfo, gboolean rtp);
 static RTPSource *obtain_internal_source (RTPSession * sess,
-    guint32 ssrc, gboolean * created);
+    guint32 ssrc, gboolean * created, GstClockTime current_time);
 static GstFlowReturn rtp_session_schedule_bye_locked (RTPSession * sess,
     GstClockTime current_time);
 static GstClockTime calculate_rtcp_interval (RTPSession * sess,
@@ -1526,7 +1526,8 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
 /* must be called with the session lock, the returned source needs to be
  * unreffed after usage. */
 static RTPSource *
-obtain_internal_source (RTPSession * sess, guint32 ssrc, gboolean * created)
+obtain_internal_source (RTPSession * sess, guint32 ssrc, gboolean * created,
+    GstClockTime current_time)
 {
   RTPSource *source;
 
@@ -1547,6 +1548,11 @@ obtain_internal_source (RTPSession * sess, guint32 ssrc, gboolean * created)
     *created = TRUE;
   } else {
     *created = FALSE;
+  }
+  /* update last activity */
+  if (current_time != GST_CLOCK_TIME_NONE) {
+    source->last_activity = current_time;
+    source->last_rtp_activity = current_time;
   }
   g_object_ref (source);
 
@@ -2637,7 +2643,7 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
     gboolean created;
 
     RTP_SESSION_LOCK (sess);
-    source = obtain_internal_source (sess, ssrc, &created);
+    source = obtain_internal_source (sess, ssrc, &created, GST_CLOCK_TIME_NONE);
     if (source) {
       rtp_source_update_caps (source, caps);
       g_object_unref (source);
@@ -2680,10 +2686,7 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
           current_time, running_time, -1))
     goto invalid_packet;
 
-  source = obtain_internal_source (sess, pinfo.ssrc, &created);
-
-  /* update last activity */
-  source->last_rtp_activity = current_time;
+  source = obtain_internal_source (sess, pinfo.ssrc, &created, current_time);
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
   oldrate = source->bitrate;
@@ -3659,7 +3662,8 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     RTPSource *source;
     gboolean created;
 
-    source = obtain_internal_source (sess, sess->suggested_ssrc, &created);
+    source = obtain_internal_source (sess, sess->suggested_ssrc, &created,
+        current_time);
     g_object_unref (source);
   }
 
