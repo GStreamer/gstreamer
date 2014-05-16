@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 #
 # Copyright (c) 2013,Thibault Saunier <thibault.saunier@collabora.com>
 #

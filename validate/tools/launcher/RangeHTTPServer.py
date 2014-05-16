@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 #Portions Copyright (C) 2009,2010  Xyne
 #Portions Copyright (C) 2011 Sean Goller
