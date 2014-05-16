@@ -964,9 +964,9 @@ gst_v4l2_allocator_alloc_dmabufin (GstV4l2Allocator * allocator)
   if (group == NULL)
     return NULL;
 
-  for (i = 0; i < group->n_mem; i++) {
-    GST_LOG_OBJECT (allocator, "allocation empty DMABUF import group");
+  GST_LOG_OBJECT (allocator, "allocating empty DMABUF import group");
 
+  for (i = 0; i < group->n_mem; i++) {
     if (group->mem[i] == NULL) {
       group->mem[i] = (GstMemory *) _v4l2mem_new (0, GST_ALLOCATOR (allocator),
           NULL, 0, 0, 0, 0, i, NULL, -1, group);
@@ -1027,9 +1027,9 @@ gst_v4l2_allocator_alloc_userptr (GstV4l2Allocator * allocator)
   if (group == NULL)
     return NULL;
 
-  for (i = 0; i < group->n_mem; i++) {
+  GST_LOG_OBJECT (allocator, "allocating empty USERPTR group");
 
-    GST_LOG_OBJECT (allocator, "allocating empty USERPTR group");
+  for (i = 0; i < group->n_mem; i++) {
 
     if (group->mem[i] == NULL) {
       group->mem[i] = (GstMemory *) _v4l2mem_new (0, GST_ALLOCATOR (allocator),
