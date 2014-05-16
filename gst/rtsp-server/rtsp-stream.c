@@ -148,6 +148,13 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  SIGNAL_NEW_RTP_ENCODER,
+  SIGNAL_NEW_RTCP_ENCODER,
+  SIGNAL_LAST
+};
+
 GST_DEBUG_CATEGORY_STATIC (rtsp_stream_debug);
 #define GST_CAT_DEFAULT rtsp_stream_debug
 
@@ -159,6 +166,8 @@ static void gst_rtsp_stream_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 
 static void gst_rtsp_stream_finalize (GObject * obj);
+
+static guint gst_rtsp_stream_signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE (GstRTSPStream, gst_rtsp_stream, G_TYPE_OBJECT);
 
@@ -189,6 +198,16 @@ gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
       g_param_spec_flags ("protocols", "Protocols",
           "Allowed lower transport protocols", GST_TYPE_RTSP_LOWER_TRANS,
           DEFAULT_PROTOCOLS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_rtsp_stream_signals[SIGNAL_NEW_RTP_ENCODER] =
+      g_signal_new ("new-rtp-encoder", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+
+  gst_rtsp_stream_signals[SIGNAL_NEW_RTCP_ENCODER] =
+      g_signal_new ("new-rtcp-encoder", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   GST_DEBUG_CATEGORY_INIT (rtsp_stream_debug, "rtspstream", 0, "GstRTSPStream");
 
@@ -1534,7 +1553,7 @@ static GstElement *
 request_rtp_encoder (GstElement * rtpbin, guint session, GstRTSPStream * stream)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
-  GstElement *enc;
+  GstElement *oldenc, *enc;
   GstPad *pad;
   gchar *name;
 
@@ -1543,11 +1562,16 @@ request_rtp_encoder (GstElement * rtpbin, guint session, GstRTSPStream * stream)
 
   GST_DEBUG_OBJECT (stream, "make RTP encoder for session %u", session);
 
+  oldenc = priv->srtpenc;
   enc = get_rtp_encoder (stream, session);
   name = g_strdup_printf ("rtp_sink_%d", session);
   pad = gst_element_get_request_pad (enc, name);
   g_free (name);
   gst_object_unref (pad);
+
+  if (oldenc == NULL)
+    g_signal_emit (stream, gst_rtsp_stream_signals[SIGNAL_NEW_RTP_ENCODER], 0,
+        enc);
 
   return enc;
 }
@@ -1557,7 +1581,7 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
     GstRTSPStream * stream)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
-  GstElement *enc;
+  GstElement *oldenc, *enc;
   GstPad *pad;
   gchar *name;
 
@@ -1566,11 +1590,16 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
 
   GST_DEBUG_OBJECT (stream, "make RTCP encoder for session %u", session);
 
+  oldenc = priv->srtpenc;
   enc = get_rtp_encoder (stream, session);
   name = g_strdup_printf ("rtcp_sink_%d", session);
   pad = gst_element_get_request_pad (enc, name);
   g_free (name);
   gst_object_unref (pad);
+
+  if (oldenc == NULL)
+    g_signal_emit (stream, gst_rtsp_stream_signals[SIGNAL_NEW_RTCP_ENCODER], 0,
+        enc);
 
   return enc;
 }
