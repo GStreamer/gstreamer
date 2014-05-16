@@ -801,8 +801,39 @@ gst_opensles_ringbuffer_release (GstAudioRingBuffer * rb)
 
   thiz = GST_OPENSLES_RING_BUFFER (rb);
 
+  /* XXX: We need to sleep a bit before destroying the player object
+   * because of a bug in Android in versions < 4.2.
+   *
+   * OpenSLES is using AudioTrack for rendering the sound. AudioTrack
+   * has a thread that pulls raw audio from the buffer queue and then
+   * passes it forward to AudioFlinger (AudioTrack::processAudioBuffer()).
+   * This thread is calling various callbacks on events, e.g. when
+   * an underrun happens or to request data. OpenSLES sets this callback
+   * on AudioTrack (audioTrack_callBack_pullFromBuffQueue() from
+   * android_AudioPlayer.cpp). Among other things this is taking a lock
+   * on the player interface.
+   *
+   * Now if we destroy the player interface object, it will first of all
+   * take the player interface lock (IObject_Destroy()). Then it destroys
+   * the audio player instance (android_audioPlayer_destroy()) which then
+   * calls stop() on the AudioTrack and deletes it. Now the destructor of
+   * AudioTrack will wait until the rendering thread (AudioTrack::processAudioBuffer())
+   * has finished.
+   *
+   * If all this happens with bad timing it can happen that the rendering
+   * thread is currently e.g. handling underrun but did not lock the player
+   * interface object yet. Then destroying happens and takes the lock and waits
+   * for the thread to finish. Then the thread tries to take the lock and waits
+   * forever.
+   *
+   * We wait a bit before destroying the player object to make sure that
+   * the rendering thread finished whatever it was doing, and then stops
+   * (note: we called gst_opensles_ringbuffer_stop() before this already).
+   */
+
   /* Destroy audio player object, and invalidate all associated interfaces */
   if (thiz->playerObject) {
+    g_usleep (50000);
     (*thiz->playerObject)->Destroy (thiz->playerObject);
     thiz->playerObject = NULL;
     thiz->playerPlay = NULL;
@@ -811,6 +842,7 @@ gst_opensles_ringbuffer_release (GstAudioRingBuffer * rb)
 
   /* Destroy audio recorder object, and invalidate all associated interfaces */
   if (thiz->recorderObject) {
+    g_usleep (50000);
     (*thiz->recorderObject)->Destroy (thiz->recorderObject);
     thiz->recorderObject = NULL;
     thiz->recorderRecord = NULL;
