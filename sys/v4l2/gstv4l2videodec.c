@@ -263,8 +263,10 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
 
   /* Wait for capture thread to stop */
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+  gst_v4l2_object_unlock (self->v4l2capture);
   gst_pad_stop_task (decoder->srcpad);
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+
   self->output_flow = GST_FLOW_OK;
 
   if (self->v4l2output->pool)
@@ -309,7 +311,7 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
   /* Ensure the processing thread has stopped */
-  if (self->processing) {
+  if (g_atomic_int_get (&self->processing)) {
     gst_v4l2_object_unlock (self->v4l2capture);
     gst_pad_stop_task (decoder->srcpad);
     g_assert (g_atomic_int_get (&self->processing) == FALSE);
