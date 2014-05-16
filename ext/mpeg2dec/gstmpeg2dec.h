@@ -59,9 +59,6 @@ struct _GstMpeg2dec {
   mpeg2dec_t    *decoder;
   const mpeg2_info_t *info;
 
-  gboolean       closed;
-  gboolean       have_fbuf;
-
   /* Buffer lifetime management */
   GList         *buffers;
 
