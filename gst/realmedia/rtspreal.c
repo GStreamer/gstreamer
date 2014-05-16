@@ -595,6 +595,10 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   /* ERRORS */
 strange_opaque_data:
   {
+    g_string_free (rules, TRUE);
+    g_hash_table_destroy (vars);
+    g_free (data);
+
     GST_ELEMENT_ERROR (ctx, RESOURCE, WRITE, ("Strange opaque data."), (NULL));
     return FALSE;
   }
