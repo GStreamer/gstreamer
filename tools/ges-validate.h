@@ -31,6 +31,8 @@ ges_validate_activate (GstPipeline *pipeline, const gchar *scenario, gboolean ac
 gint
 ges_validate_clean (GstPipeline *pipeline);
 
+void ges_validate_handle_request_state_change (GstMessage *message, GMainLoop *mainloop);
+
 G_END_DECLS
 
 #endif  /* _GES_VALIDATE */

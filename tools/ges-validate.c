@@ -77,7 +77,7 @@ _set_child_property (GstValidateScenario * scenario, GstValidateAction * action)
   ges_track_element_set_child_property (GES_TRACK_ELEMENT (element),
       property_name, (GValue *) value);
 
-  g_object_unref(timeline);
+  g_object_unref (timeline);
 
   return TRUE;
 }
@@ -93,18 +93,18 @@ _serialize_project (GstValidateScenario * scenario, GstValidateAction * action)
 
   res = ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL);
 
-  g_object_unref(timeline);
+  g_object_unref (timeline);
   return res;
 }
 
 static gboolean
-_remove_asset (GstValidateScenario *scenario, GstValidateAction *action)
+_remove_asset (GstValidateScenario * scenario, GstValidateAction * action)
 {
   const gchar *id = NULL;
   const gchar *type_string = NULL;
   GType type;
-  GESTimeline *timeline = get_timeline(scenario);
-  GESProject *project = ges_timeline_get_project(timeline);
+  GESTimeline *timeline = get_timeline (scenario);
+  GESProject *project = ges_timeline_get_project (timeline);
   GESAsset *asset;
   gboolean res = FALSE;
 
@@ -112,37 +112,37 @@ _remove_asset (GstValidateScenario *scenario, GstValidateAction *action)
   type_string = gst_structure_get_string (action->structure, "type");
 
   if (!type_string || !id) {
-    GST_ERROR("Missing parameters, we got type %s and id %s", type_string, id);
+    GST_ERROR ("Missing parameters, we got type %s and id %s", type_string, id);
     goto beach;
   }
 
-  if (!(type = g_type_from_name(type_string))) {
-    GST_ERROR("This type doesn't exist : %s", type_string);
+  if (!(type = g_type_from_name (type_string))) {
+    GST_ERROR ("This type doesn't exist : %s", type_string);
     goto beach;
   }
 
-  asset = ges_project_get_asset(project, id, type);
+  asset = ges_project_get_asset (project, id, type);
 
   if (!asset) {
-    GST_ERROR("No asset with id %s and type %s", id, type_string);
+    GST_ERROR ("No asset with id %s and type %s", id, type_string);
     goto beach;
   }
 
-  res = ges_project_remove_asset(project, asset);
+  res = ges_project_remove_asset (project, asset);
 
 beach:
-  g_object_unref(timeline);
+  g_object_unref (timeline);
   return res;
 }
 
 static gboolean
-_add_asset (GstValidateScenario *scenario, GstValidateAction *action)
+_add_asset (GstValidateScenario * scenario, GstValidateAction * action)
 {
   const gchar *id = NULL;
   const gchar *type_string = NULL;
   GType type;
-  GESTimeline *timeline = get_timeline(scenario);
-  GESProject *project = ges_timeline_get_project(timeline);
+  GESTimeline *timeline = get_timeline (scenario);
+  GESProject *project = ges_timeline_get_project (timeline);
   GESAsset *asset;
   GError *error = NULL;
   gboolean res = FALSE;
@@ -151,115 +151,118 @@ _add_asset (GstValidateScenario *scenario, GstValidateAction *action)
   type_string = gst_structure_get_string (action->structure, "type");
 
   if (!type_string || !id) {
-    GST_ERROR("Missing parameters, we got type %s and id %s", type_string, id);
+    GST_ERROR ("Missing parameters, we got type %s and id %s", type_string, id);
     goto beach;
   }
 
-  if (!(type = g_type_from_name(type_string))) {
-    GST_ERROR("This type doesn't exist : %s", type_string);
+  if (!(type = g_type_from_name (type_string))) {
+    GST_ERROR ("This type doesn't exist : %s", type_string);
     goto beach;
   }
 
   if (type == GES_TYPE_URI_CLIP)
-    asset = (GESAsset *) ges_uri_clip_asset_request_sync(id, &error);
+    asset = (GESAsset *) ges_uri_clip_asset_request_sync (id, &error);
   else
-    asset = ges_asset_request(type, id, &error);
+    asset = ges_asset_request (type, id, &error);
 
   if (!asset || error) {
-    GST_ERROR("There was an error requesting the asset with id %s and type %s", id, type_string);
+    GST_ERROR ("There was an error requesting the asset with id %s and type %s",
+        id, type_string);
     goto beach;
   }
 
-  res = ges_project_add_asset(project, asset);
+  res = ges_project_add_asset (project, asset);
 
 beach:
-  g_object_unref(timeline);
+  g_object_unref (timeline);
   return res;
 }
 
 /* Unref after usage */
 static GESLayer *
-_get_layer_by_priority(GESTimeline *timeline, gint priority)
+_get_layer_by_priority (GESTimeline * timeline, gint priority)
 {
   GList *layers, *tmp;
   GESLayer *layer = NULL;
 
-  layers = ges_timeline_get_layers(timeline);
+  layers = ges_timeline_get_layers (timeline);
   for (tmp = layers; tmp; tmp = tmp->next) {
-    GESLayer *tmp_layer = GES_LAYER(tmp->data);
+    GESLayer *tmp_layer = GES_LAYER (tmp->data);
     guint tmp_priority;
-    g_object_get(tmp_layer, "priority", &tmp_priority, NULL);
+    g_object_get (tmp_layer, "priority", &tmp_priority, NULL);
     if ((gint) tmp_priority == priority) {
-      layer = gst_object_ref(tmp_layer);
+      layer = gst_object_ref (tmp_layer);
       break;
     }
   }
 
-  g_list_free_full(layers, gst_object_unref);
+  g_list_free_full (layers, gst_object_unref);
   return layer;
 }
 
 static gboolean
-_add_layer (GstValidateScenario *scenario, GstValidateAction *action)
+_add_layer (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  GESTimeline *timeline = get_timeline(scenario);
+  GESTimeline *timeline = get_timeline (scenario);
   GESLayer *layer;
   gint priority;
   gboolean res = FALSE;
 
-  if (!gst_structure_get_int(action->structure, "priority", &priority)) {
-    GST_ERROR("priority is needed when adding a layer");
+  if (!gst_structure_get_int (action->structure, "priority", &priority)) {
+    GST_ERROR ("priority is needed when adding a layer");
     goto beach;
   }
 
-  layer = _get_layer_by_priority(timeline, priority);
+  layer = _get_layer_by_priority (timeline, priority);
 
   if (layer != NULL) {
-    GST_ERROR("A layer with priority %d already exists, not creating a new one", priority);
-    gst_object_unref(layer);
+    GST_ERROR
+        ("A layer with priority %d already exists, not creating a new one",
+        priority);
+    gst_object_unref (layer);
     goto beach;
   }
 
-  layer = ges_layer_new();
-  g_object_set(layer, "priority", priority, NULL);
-  res = ges_timeline_add_layer(timeline, layer);
+  layer = ges_layer_new ();
+  g_object_set (layer, "priority", priority, NULL);
+  res = ges_timeline_add_layer (timeline, layer);
 
 beach:
-  g_object_unref(timeline);
+  g_object_unref (timeline);
   return res;
 }
 
 static gboolean
-_remove_layer (GstValidateScenario *scenario, GstValidateAction *action)
+_remove_layer (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  GESTimeline *timeline = get_timeline(scenario);
+  GESTimeline *timeline = get_timeline (scenario);
   GESLayer *layer;
   gint priority;
   gboolean res = FALSE;
 
-  if (!gst_structure_get_int(action->structure, "priority", &priority)) {
-    GST_ERROR("priority is needed when removing a layer");
+  if (!gst_structure_get_int (action->structure, "priority", &priority)) {
+    GST_ERROR ("priority is needed when removing a layer");
     goto beach;
   }
 
-  layer = _get_layer_by_priority(timeline, priority);
+  layer = _get_layer_by_priority (timeline, priority);
 
   if (layer) {
-    res = ges_timeline_remove_layer(timeline, layer);
-    gst_object_unref(layer);
+    res = ges_timeline_remove_layer (timeline, layer);
+    gst_object_unref (layer);
   } else {
-    GST_ERROR("No layer with priority %d", priority);
+    GST_ERROR ("No layer with priority %d", priority);
   }
 
 beach:
-  g_object_unref(timeline);
+  g_object_unref (timeline);
   return res;
 }
 
 static gboolean
-_remove_clip(GstValidateScenario *scenario, GstValidateAction * action)
+_remove_clip (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  GESTimeline *timeline = get_timeline(scenario);
+  GESTimeline *timeline = get_timeline (scenario);
   GESTimelineElement *clip;
   GESLayer *layer;
   const gchar *name;
@@ -268,24 +271,24 @@ _remove_clip(GstValidateScenario *scenario, GstValidateAction * action)
   name = gst_structure_get_string (action->structure, "name");
   clip = ges_timeline_get_element (timeline, name);
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
-  
-  layer = ges_clip_get_layer(GES_CLIP(clip));
+
+  layer = ges_clip_get_layer (GES_CLIP (clip));
 
   if (layer) {
-    res = ges_layer_remove_clip(layer, GES_CLIP(clip));
-    gst_object_unref(layer);
+    res = ges_layer_remove_clip (layer, GES_CLIP (clip));
+    gst_object_unref (layer);
   } else {
-    GST_ERROR("No layer for clip %s", ges_timeline_element_get_name(clip));
+    GST_ERROR ("No layer for clip %s", ges_timeline_element_get_name (clip));
   }
 
-  g_object_unref(timeline);
+  g_object_unref (timeline);
   return res;
 }
 
 static gboolean
-_add_clip(GstValidateScenario *scenario, GstValidateAction * action)
+_add_clip (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  GESTimeline *timeline = get_timeline(scenario);
+  GESTimeline *timeline = get_timeline (scenario);
   GESAsset *asset;
   GESLayer *layer;
   GESClip *clip;
@@ -298,28 +301,29 @@ _add_clip(GstValidateScenario *scenario, GstValidateAction * action)
   gboolean res = FALSE;
   GstClockTime duration = 1 * GST_SECOND;
 
-  gst_structure_get_int(action->structure, "layer-priority", &layer_priority);
-  name = gst_structure_get_string(action->structure, "name");
-  asset_id = gst_structure_get_string(action->structure, "asset-id");
-  type_string = gst_structure_get_string(action->structure, "type");
+  gst_structure_get_int (action->structure, "layer-priority", &layer_priority);
+  name = gst_structure_get_string (action->structure, "name");
+  asset_id = gst_structure_get_string (action->structure, "asset-id");
+  type_string = gst_structure_get_string (action->structure, "type");
 
-  if (!(type = g_type_from_name(type_string))) {
-    GST_ERROR("This type doesn't exist : %s", type_string);
+  if (!(type = g_type_from_name (type_string))) {
+    GST_ERROR ("This type doesn't exist : %s", type_string);
     goto beach;
   }
 
-  asset = ges_asset_request(type, asset_id, &error);
+  asset = ges_asset_request (type, asset_id, &error);
 
   if (!asset || error) {
-    GST_ERROR("There was an error requesting the asset with id %s and type %s (%s)",
+    GST_ERROR
+        ("There was an error requesting the asset with id %s and type %s (%s)",
         asset_id, type_string, error->message);
     goto beach;
   }
 
-  layer = _get_layer_by_priority(timeline, layer_priority);
+  layer = _get_layer_by_priority (timeline, layer_priority);
 
   if (!layer) {
-    GST_ERROR("No layer with priority %d", layer_priority);
+    GST_ERROR ("No layer with priority %d", layer_priority);
     goto beach;
   }
 
@@ -327,25 +331,26 @@ _add_clip(GstValidateScenario *scenario, GstValidateAction * action)
     duration = GST_CLOCK_TIME_NONE;
   }
 
-  clip = ges_layer_add_asset(layer, asset, GST_CLOCK_TIME_NONE, 0, duration,
+  clip = ges_layer_add_asset (layer, asset, GST_CLOCK_TIME_NONE, 0, duration,
       GES_TRACK_TYPE_UNKNOWN);
 
   if (clip) {
     res = TRUE;
-    if (!ges_timeline_element_set_name(GES_TIMELINE_ELEMENT(clip), name)) {
+    if (!ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip), name)) {
       res = FALSE;
-      GST_ERROR("couldn't set name %s on clip with id %s", name, asset_id);
+      GST_ERROR ("couldn't set name %s on clip with id %s", name, asset_id);
     }
   } else {
-    GST_ERROR("Couldn't add clip with id %s to layer with priority %d", asset_id, layer_priority);
+    GST_ERROR ("Couldn't add clip with id %s to layer with priority %d",
+        asset_id, layer_priority);
   }
 
-  gst_object_unref (layer); 
+  gst_object_unref (layer);
 
-  ges_timeline_commit(timeline);
+  ges_timeline_commit (timeline);
 
 beach:
-  g_object_unref(timeline);
+  g_object_unref (timeline);
   return res;
 }
 
@@ -434,12 +439,13 @@ _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
       GST_SEEK_TYPE_SET, cpos, GST_SEEK_TYPE_SET, stop_value);
 
 beach:
-  g_object_unref(timeline);
+  g_object_unref (timeline);
   return res;
 }
 
 gboolean
-ges_validate_activate (GstPipeline * pipeline, const gchar * scenario, gboolean activate_before_paused)
+ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
+    gboolean activate_before_paused)
 {
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
@@ -493,17 +499,23 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario, gboolean 
   gst_validate_add_action_type ("edit-clip", _edit_clip,
       move_clip_mandatory_fields, "Allows to seek into the files", FALSE);
   gst_validate_add_action_type ("add-asset", _add_asset,
-      add_asset_mandatory_fields, "Allows to add an asset to the current project", FALSE);
+      add_asset_mandatory_fields,
+      "Allows to add an asset to the current project", FALSE);
   gst_validate_add_action_type ("remove-asset", _remove_asset,
-      remove_asset_mandatory_fields, "Allows to remove an asset from the current project", FALSE);
+      remove_asset_mandatory_fields,
+      "Allows to remove an asset from the current project", FALSE);
   gst_validate_add_action_type ("add-layer", _add_layer,
-      add_layer_mandatory_fields, "Allows to add a layer to the current timeline", FALSE);
+      add_layer_mandatory_fields,
+      "Allows to add a layer to the current timeline", FALSE);
   gst_validate_add_action_type ("remove-layer", _remove_layer,
-      remove_layer_mandatory_fields, "Allows to remove a layer from the current timeline", FALSE);
+      remove_layer_mandatory_fields,
+      "Allows to remove a layer from the current timeline", FALSE);
   gst_validate_add_action_type ("add-clip", _add_clip,
-      add_clip_mandatory_fields, "Allows to add a clip to a given layer", FALSE);
+      add_clip_mandatory_fields, "Allows to add a clip to a given layer",
+      FALSE);
   gst_validate_add_action_type ("remove-clip", _remove_clip,
-      remove_clip_mandatory_fields, "Allows to remove a clip from a given layer", FALSE);
+      remove_clip_mandatory_fields,
+      "Allows to remove a clip from a given layer", FALSE);
   gst_validate_add_action_type ("serialize-project", _serialize_project,
       serialize_project_mandatory_fields, "serializes a project", FALSE);
 
@@ -547,6 +559,22 @@ ges_validate_clean (GstPipeline * pipeline)
   return res;
 }
 
+void
+ges_validate_handle_request_state_change (GstMessage * message,
+    GMainLoop * mainloop)
+{
+  GstState state;
+
+  gst_message_parse_request_state (message, &state);
+
+  if (GST_IS_VALIDATE_SCENARIO (GST_MESSAGE_SRC (message))
+      && state == GST_STATE_NULL) {
+    gst_validate_printf (GST_MESSAGE_SRC (message),
+        "State change request NULL, " "quiting mainloop\n");
+    g_main_loop_quit (mainloop);
+  }
+}
+
 #else
 static gboolean
 _print_position (GstElement * pipeline)
@@ -567,7 +595,8 @@ _print_position (GstElement * pipeline)
 }
 
 gboolean
-ges_validate_activate (GstPipeline * pipeline, const gchar * scenario, gboolean activate_before_paused)
+ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
+    gboolean activate_before_paused)
 {
   if (scenario) {
     GST_WARNING ("Trying to run scenario %s, but gst-validate not supported",
@@ -592,6 +621,13 @@ ges_validate_clean (GstPipeline * pipeline)
   gst_object_unref (pipeline);
 
   return 0;
+}
+
+void
+ges_validate_handle_request_state_change (GstMessage * message,
+    GMainLoop * mainloop)
+{
+  return;
 }
 
 #endif

@@ -555,6 +555,9 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
         g_free (state_transition_name);
       }
       break;
+    case GST_MESSAGE_REQUEST_STATE:
+      ges_validate_handle_request_state_change (message, mainloop);
+      break;
     default:
       break;
   }
