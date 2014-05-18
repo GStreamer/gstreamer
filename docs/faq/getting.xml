@@ -113,15 +113,14 @@ before building gst-plugins.
 
       <answer>
         <para>
-	Yes, we currently provide precompiled packages for Red Hat, Debian and Linux Mandrake. </para>
-
-<para>We provide RPMS for Red Hat and Fedora Core through our <ulink url="http://gstreamer.freedesktop.org/pkg/">Apt for rpm page.</ulink> We usually support the last 2-3 releases of Red Hat. (RH9 and FC1)
+	Yes we currently provide <ulink url="http://gstreamer.freedesktop.org/pkg/">precompiled packages for Windows, OS/X, Android and iOS</ulink>.
         </para>
-	<para>GStreamer is already in Debian experimental, so if you are a debian user you should be able to get the Debian packages from there.</para>
-	<para>GStreamer is also in Mandrake Cooker so if you are using a recent release of Linux Mandrake you should be able to get GStreamer from there. To learn howto get packages from Mandrake cooker <ulink url="http://www.mandrakelinux.com/en/cookerdevel.php3">the Mandrake cooker page has more info</ulink>
-	</para>
-<para>For other RPM based distributions we recommend getting the source tarball and doing 'rpm -ta gstreamer-0.X.X' to create rpms. We keep our SPEC file constantly up to date so you should always be able to build GStreamer rpms from a tarball. The SPEC file is aimed at Red Hat however, so there might be some need for you to edit the Requirements list if your distribution name these packages differently.</para>
-      </answer>
+        <para>
+	We currently do not provide packages for Linux distributions, but
+        rather rely on the distributions for that. GStreamer packages should
+        be available for all major (and minor) distributions.
+        </para>
+     </answer>
     </qandaentry>
 
  <qandaentry>
