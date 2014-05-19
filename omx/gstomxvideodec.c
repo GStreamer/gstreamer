@@ -561,8 +561,16 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
     GstAllocator *allocator;
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &caps, NULL, &min, &max);
-    gst_buffer_pool_config_get_allocator (config, &allocator, NULL);
+    if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min, &max)) {
+      GST_ERROR_OBJECT (self, "Can't get buffer pool params");
+      err = OMX_ErrorUndefined;
+      goto done;
+    }
+    if (!gst_buffer_pool_config_get_allocator (config, &allocator, NULL)) {
+      GST_ERROR_OBJECT (self, "Can't get buffer pool allocator");
+      err = OMX_ErrorUndefined;
+      goto done;
+    }
 
     /* Need at least 2 buffers for anything meaningful */
     min = MAX (MAX (min, port->port_def.nBufferCountMin), 4);
