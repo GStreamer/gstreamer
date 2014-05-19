@@ -787,8 +787,15 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
           min);
       min = port->port_def.nBufferCountMin;
 
-      if (!was_enabled)
-        gst_omx_port_set_enabled (port, FALSE);
+      if (!was_enabled) {
+        err = gst_omx_port_set_enabled (port, FALSE);
+        if (err != OMX_ErrorNone) {
+          GST_INFO_OBJECT (self,
+              "Failed to disable port again: %s (0x%08x)",
+              gst_omx_error_to_string (err), err);
+          goto done;
+        }
+      }
 
       if (min != port->port_def.nBufferCountActual) {
         err = gst_omx_port_update_port_definition (port, NULL);
