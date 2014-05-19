@@ -605,9 +605,10 @@ gst_v4l2_buffer_pool_group_released (GstV4l2BufferPool * pool)
 
   GST_DEBUG_OBJECT (pool, "A buffer was lost, reallocating it");
 
-  params.flags = GST_V4L2_POOL_ACQUIRE_FLAG_RESURECT;
-  ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (pool), &buffer,
-      &params);
+  params.flags =
+      (GstBufferPoolAcquireFlags) GST_V4L2_POOL_ACQUIRE_FLAG_RESURECT;
+  ret =
+      gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (pool), &buffer, &params);
 
   if (ret == GST_FLOW_OK)
     gst_buffer_unref (buffer);
