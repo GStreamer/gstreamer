@@ -1173,6 +1173,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     caps = gst_caps_copy (sink_caps);
   } else {
     gint crop_width, crop_height;
+    gint fps_num, fps_den;
 
     if (sps->frame_cropping_flag) {
       crop_width = sps->crop_rect_width;
@@ -1193,12 +1194,13 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 
     /* 0/1 is set as the default in the codec parser, we will set
      * it in case we have no info */
-    if (G_UNLIKELY (h264parse->fps_num != sps->fps_num
-            || h264parse->fps_den != sps->fps_den)) {
-      GST_DEBUG_OBJECT (h264parse, "framerate changed %d/%d",
-          sps->fps_num, sps->fps_den);
-      h264parse->fps_num = sps->fps_num;
-      h264parse->fps_den = sps->fps_den;
+    gst_h264_video_calculate_framerate (sps, h264parse->field_pic_flag,
+        h264parse->sei_pic_struct, &fps_num, &fps_den);
+    if (G_UNLIKELY (h264parse->fps_num != fps_num
+            || h264parse->fps_den != fps_den)) {
+      GST_DEBUG_OBJECT (h264parse, "framerate changed %d/%d", fps_num, fps_den);
+      h264parse->fps_num = fps_num;
+      h264parse->fps_den = fps_den;
       modified = TRUE;
     }
 
@@ -1213,10 +1215,11 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     }
 
     if (G_UNLIKELY (modified || h264parse->update_caps)) {
-      gint fps_num = h264parse->fps_num;
-      gint fps_den = h264parse->fps_den;
       gint width, height;
       GstClockTime latency;
+
+      fps_num = h264parse->fps_num;
+      fps_den = h264parse->fps_den;
 
       caps = gst_caps_copy (sink_caps);
 
