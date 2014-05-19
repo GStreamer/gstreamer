@@ -147,6 +147,8 @@ void              ges_clip_set_supported_formats  (GESClip *clip, GESTrackType  
 GESTrackElement*  ges_clip_add_asset              (GESClip *clip, GESAsset *asset);
 GESTrackElement*  ges_clip_find_track_element     (GESClip *clip, GESTrack *track,
                                                    GType type);
+GList *           ges_clip_find_track_elements    (GESClip * clip, GESTrack * track,
+                                                   GESTrackType track_type, GType type);
 
 /****************************************************
  *                     Layer                        *

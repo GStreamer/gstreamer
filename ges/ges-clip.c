@@ -1424,4 +1424,58 @@ ges_clip_add_asset (GESClip * clip, GESAsset * asset)
     return NULL;
 
   return element;
+
+}
+
+/**
+ * ges_clip_find_track_elements:
+ * @clip: a #GESClip
+ * @track: (allow-none): a #GESTrack or NULL
+ * @track_type: a #GESTrackType indicating the type of tracks in which elements
+ * should be searched.
+ * @type: a #GType indicating the type of track element you are looking
+ * for or %G_TYPE_NONE if you do not care about the track type.
+ *
+ * Finds all the #GESTrackElement controlled by @clip that is used in @track. You
+ * may optionally specify a GType to further narrow search criteria.
+ *
+ * Returns: (transfer full) (element-type GESTrackElement): a #GList of the
+ * #GESTrackElement contained in @clip.
+ * The refcount of the objects will be increased. The user will have to
+ * unref each #GESTrackElement and free the #GList.
+ */
+
+GList *
+ges_clip_find_track_elements (GESClip * clip, GESTrack * track,
+    GESTrackType track_type, GType type)
+{
+  GList *tmp;
+  GESTrack *tmptrack;
+  GESTrackElement *otmp;
+  GESTrackElement *foundElement;
+
+  GList *ret = NULL;
+
+  g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
+  g_return_val_if_fail (!(track == NULL && type == G_TYPE_NONE &&
+          track_type == GES_TRACK_TYPE_UNKNOWN), NULL);
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = g_list_next (tmp)) {
+    otmp = (GESTrackElement *) tmp->data;
+
+    if ((type != G_TYPE_NONE) && !G_TYPE_CHECK_INSTANCE_TYPE (tmp->data, type))
+      continue;
+
+    tmptrack = ges_track_element_get_track (otmp);
+    if (((track != NULL && tmptrack == track)) ||
+        (track_type != GES_TRACK_TYPE_UNKNOWN
+            && tmptrack->type == track_type)) {
+
+      foundElement = GES_TRACK_ELEMENT (tmp->data);
+
+      ret = g_list_append (ret, gst_object_ref (foundElement));
+    }
+  }
+
+  return ret;
 }

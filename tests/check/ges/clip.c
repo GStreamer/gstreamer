@@ -361,6 +361,72 @@ GST_START_TEST (test_clip_refcount_remove_child)
 
 GST_END_TEST;
 
+GST_START_TEST (test_clip_find_track_element)
+{
+  GESClip *clip;
+  GList *foundelements;
+  GESTimeline *timeline;
+  GESTrack *track, *track1, *track2;
+
+  GESTrackElement *effect, *effect1, *effect2, *foundelem;
+
+  ges_init ();
+
+  clip = GES_CLIP (ges_test_clip_new ());
+  track = GES_TRACK (ges_audio_track_new ());
+  track1 = GES_TRACK (ges_audio_track_new ());
+  track2 = GES_TRACK (ges_video_track_new ());
+
+  timeline = ges_timeline_new ();
+  fail_unless (ges_timeline_add_track (timeline, track));
+  fail_unless (ges_timeline_add_track (timeline, track1));
+  fail_unless (ges_timeline_add_track (timeline, track2));
+
+  effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
+  fail_unless (ges_track_add_element (track, effect));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect)));
+
+  effect1 = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
+  fail_unless (ges_track_add_element (track1, effect1));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect1)));
+
+  effect2 = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
+  fail_unless (ges_track_add_element (track2, effect2));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect2)));
+
+  foundelem = ges_clip_find_track_element (clip, track, G_TYPE_NONE);
+  fail_unless (foundelem == effect);
+  gst_object_unref (foundelem);
+
+  foundelem = ges_clip_find_track_element (clip, NULL, GES_TYPE_SOURCE);
+  fail_unless (foundelem == NULL);
+
+  foundelements = ges_clip_find_track_elements (clip, NULL,
+      GES_TRACK_TYPE_AUDIO, G_TYPE_NONE);
+  fail_unless_equals_int (g_list_length (foundelements), 2);
+  g_list_free_full (foundelements, gst_object_unref);
+
+  foundelements = ges_clip_find_track_elements (clip, NULL,
+      GES_TRACK_TYPE_VIDEO, G_TYPE_NONE);
+  fail_unless_equals_int (g_list_length (foundelements), 1);
+  g_list_free_full (foundelements, gst_object_unref);
+
+  foundelements = ges_clip_find_track_elements (clip, track,
+      GES_TRACK_TYPE_VIDEO, G_TYPE_NONE);
+  fail_unless_equals_int (g_list_length (foundelements), 2);
+  fail_unless (g_list_find (foundelements, effect2) != NULL,
+      "In the video track");
+  fail_unless (g_list_find (foundelements, effect2) != NULL, "In 'track'");
+  g_list_free_full (foundelements, gst_object_unref);
+
+  gst_object_unref (timeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -373,6 +439,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_split_object);
   tcase_add_test (tc_chain, test_clip_group_ungroup);
   tcase_add_test (tc_chain, test_clip_refcount_remove_child);
+  tcase_add_test (tc_chain, test_clip_find_track_element);
 
   return s;
 }
