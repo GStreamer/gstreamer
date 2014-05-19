@@ -741,8 +741,10 @@ gst_gl_context_create_thread (GstGLContext * context)
   window_class = GST_GL_WINDOW_GET_CLASS (context->window);
 
   if (window_class->open) {
-    if (!window_class->open (context->window, error))
+    if (!window_class->open (context->window, error)) {
+      g_assert (error == NULL || *error != NULL);
       goto failure;
+    }
   }
 
   gl = context->gl_vtable;
@@ -834,8 +836,10 @@ gst_gl_context_create_thread (GstGLContext * context)
         _create_context_gles2 (context, &context->priv->gl_major,
         &context->priv->gl_minor, error);
 
-  if (!ret)
+  if (!ret) {
+    g_assert (error == NULL || *error != NULL);
     goto failure;
+  }
 
   /* GL core contexts and GLES3 */
   if (gl->GetIntegerv && gl->GetStringi && context->priv->gl_major >= 3)
