@@ -21,6 +21,7 @@ import os
 import time
 import loggable
 import subprocess
+import sys
 
 logcat = "httpserver"
 
@@ -63,7 +64,7 @@ class HTTPServer(loggable.Loggable):
             print "Starting Server"
             try:
                 self.debug("Lunching twistd server")
-                cmd = "python %s %d" % (os.path.join(os.path.dirname(__file__),
+                cmd = "%s %s %d" % (sys.executable, os.path.join(os.path.dirname(__file__),
                                                      "RangeHTTPServer.py"),
                                         self.options.http_server_port)
                 curdir = os.path.abspath(os.curdir)
