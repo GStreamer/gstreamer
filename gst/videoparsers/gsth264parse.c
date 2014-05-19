@@ -609,6 +609,8 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         if (pres == GST_H264_PARSER_OK) {
           if (GST_H264_IS_I_SLICE (&slice) || GST_H264_IS_SI_SLICE (&slice))
             h264parse->keyframe |= TRUE;
+
+          h264parse->field_pic_flag = slice.field_pic_flag;
         }
       }
       if (G_LIKELY (nal_type != GST_H264_NAL_SLICE_IDR &&
