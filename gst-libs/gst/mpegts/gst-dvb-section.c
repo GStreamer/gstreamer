@@ -82,7 +82,7 @@ _parse_utc_time (guint8 * data)
 
   utc_ptr = data + 2;
 
-  /* First digit of hours cannot exceeed 2 (max: 23 hours) */
+  /* First digit of hours cannot exceed 1 (max: 23 hours) */
   hour = ((utc_ptr[0] & 0x30) >> 4) * 10 + (utc_ptr[0] & 0x0F);
   /* First digit of minutes cannot exced 5 (max: 59 mins) */
   minute = ((utc_ptr[1] & 0x70) >> 4) * 10 + (utc_ptr[1] & 0x0F);
@@ -90,8 +90,15 @@ _parse_utc_time (guint8 * data)
   second = ((utc_ptr[2] & 0x70) >> 4) * 10 + (utc_ptr[2] & 0x0F);
 
   /* Time is UTC */
-  return gst_date_time_new (0.0, year, month, day, hour, minute,
-      (gdouble) second);
+  if (hour >= 0 && hour < 24 && minute >= 0 && minute < 60 && second >= 0
+      && second < 60) {
+    return gst_date_time_new (0.0, year, month, day, hour, minute,
+        (gdouble) second);
+  } else if (utc_ptr[0] == 0xFF && utc_ptr[1] == 0xFF && utc_ptr[2] == 0xFF) {
+    return gst_date_time_new (0.0, year, month, day, -1, -1, -1);
+  }
+
+  return NULL;
 }
 
 /* Event Information Table */
