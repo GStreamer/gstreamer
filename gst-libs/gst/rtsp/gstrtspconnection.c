@@ -3131,6 +3131,16 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
       /* and signal that we lost our tunnel */
       if (watch->funcs.tunnel_lost)
         res = watch->funcs.tunnel_lost (watch, watch->user_data);
+      /* we add read source on the write socket able to detect when client closes get channel in tunneled mode */
+      if (watch->conn->control_stream && !watch->controlsrc) {
+        watch->controlsrc =
+            g_pollable_input_stream_create_source (G_POLLABLE_INPUT_STREAM
+            (watch->conn->control_stream), NULL);
+        g_source_set_callback (watch->controlsrc,
+            (GSourceFunc) gst_rtsp_source_dispatch_read_get_channel, watch,
+            NULL);
+        g_source_add_child_source ((GSource *) watch, watch->controlsrc);
+      }        
       goto read_done;
     } else
       goto eof;
