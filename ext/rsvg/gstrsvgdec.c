@@ -191,6 +191,7 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, GstBuffer * buffer,
 
   if (ret != GST_FLOW_OK) {
     g_object_unref (handle);
+    gst_video_codec_state_unref (output_state);
     GST_ERROR_OBJECT (rsvg, "Buffer allocation failed %s",
         gst_flow_get_name (ret));
     return ret;
@@ -205,6 +206,8 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, GstBuffer * buffer,
           &gst_video_decoder_get_output_state (decoder)->info,
           frame->output_buffer, GST_MAP_READWRITE)) {
     GST_ERROR_OBJECT (rsvg, "Failed to get SVG image");
+    g_object_unref (handle);
+    gst_video_codec_state_unref (output_state);
     return GST_FLOW_ERROR;
   }
   surface =
