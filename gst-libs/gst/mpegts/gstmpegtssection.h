@@ -54,6 +54,7 @@ GType gst_mpegts_section_get_type (void);
  * @GST_MPEGTS_SECTION_ATSC_TVCT: ATSC Terrestrial Virtual Channel Table (A65)
  * @GST_MPEGTS_SECTION_ATSC_CVCT: ATSC Cable Virtual Channel Table (A65)
  * @GST_MPEGTS_SECTION_ATSC_MGT: ATSC Master Guide Table (A65)
+ * @GST_MPEGTS_SECTION_ATSC_ETT: ATSC Extended Text Table (A65)
  *
  * Types of #GstMpegTsSection that the library handles.
  */
@@ -71,7 +72,8 @@ typedef enum {
   GST_MPEGTS_SECTION_TOT,
   GST_MPEGTS_SECTION_ATSC_TVCT,
   GST_MPEGTS_SECTION_ATSC_CVCT,
-  GST_MPEGTS_SECTION_ATSC_MGT
+  GST_MPEGTS_SECTION_ATSC_MGT,
+  GST_MPEGTS_SECTION_ATSC_ETT
 } GstMpegTsSectionType;
 
 /**
