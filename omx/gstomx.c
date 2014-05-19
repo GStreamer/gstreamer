@@ -2285,7 +2285,9 @@ gst_omx_get_configuration (void)
 const gchar *
 gst_omx_error_to_string (OMX_ERRORTYPE err)
 {
-  switch (err) {
+  guint err_u = (guint) err;
+
+  switch (err_u) {
     case OMX_ErrorNone:
       return "None";
     case OMX_ErrorInsufficientResources:
@@ -2363,11 +2365,11 @@ gst_omx_error_to_string (OMX_ERRORTYPE err)
     case OMX_ErrorTunnelingUnsupported:
       return "Tunneling unsupported";
     default:
-      if (err >= (guint32) OMX_ErrorKhronosExtensions
-          && err < (guint32) OMX_ErrorVendorStartUnused) {
+      if (err_u >= (guint) OMX_ErrorKhronosExtensions
+          && err_u < (guint) OMX_ErrorVendorStartUnused) {
         return "Khronos extension error";
-      } else if (err >= (guint32) OMX_ErrorVendorStartUnused
-          && err < (guint32) OMX_ErrorMax) {
+      } else if (err_u >= (guint) OMX_ErrorVendorStartUnused
+          && err_u < (guint) OMX_ErrorMax) {
         return "Vendor specific error";
       } else {
         return "Unknown error";
