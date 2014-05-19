@@ -1303,7 +1303,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     flow_ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
     frame = NULL;
   } else if (!frame && (buf->omx_buf->nFilledLen > 0 || buf->eglimage)) {
-    GstBuffer *outbuf;
+    GstBuffer *outbuf = NULL;
 
     /* This sometimes happens at EOS or if the input is not properly framed,
      * let's handle it gracefully by allocating a new buffer for the current
