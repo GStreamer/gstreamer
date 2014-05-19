@@ -604,6 +604,42 @@ dump_eit (GstMpegTsSection * section)
 }
 
 static void
+dump_ett (GstMpegTsSection * section)
+{
+  const GstMpegTsAtscETT *ett = gst_mpegts_section_get_atsc_ett (section);
+  guint i, len;
+
+  g_assert (ett);
+
+  g_printf ("     service_id          : 0x%04x\n", section->subtable_extension);
+  g_printf ("     protocol_version    : 0x%04x\n", ett->protocol_version);
+  g_printf ("     etm_id              : 0x%04x\n", ett->etm_id);
+
+  len = ett->messages->len;
+  g_printf ("     %d Messages(s):\n", len);
+  for (i = 0; i < len; i++) {
+    gint j, n;
+    GstMpegTsAtscMultString *mstring = g_ptr_array_index (ett->messages, i);
+
+    n = mstring->segments->len;
+    g_printf ("       iso_639_langcode:%s\n", mstring->iso_639_langcode);
+    g_printf ("               segments:%d\n", n);
+    for (j = 0; j < n; j++) {
+      GstMpegTsAtscStringSegment *segment =
+          g_ptr_array_index (mstring->segments, j);
+
+      g_printf ("                 Compression:0x%x\n",
+          segment->compression_type);
+      g_printf ("                        Mode:0x%x\n", segment->mode);
+      g_printf ("                         Len:%u\n",
+          segment->compressed_data_size);
+      g_printf ("                 %s\n",
+          gst_mpegts_atsc_string_segment_get_string (segment));
+    }
+  }
+}
+
+static void
 dump_nit (GstMpegTsSection * section)
 {
   const GstMpegTsNIT *nit = gst_mpegts_section_get_nit (section);
@@ -799,6 +835,9 @@ dump_section (GstMpegTsSection * section)
     case GST_MPEGTS_SECTION_ATSC_CVCT:
     case GST_MPEGTS_SECTION_ATSC_TVCT:
       dump_vct (section);
+      break;
+    case GST_MPEGTS_SECTION_ATSC_ETT:
+      dump_ett (section);
       break;
     default:
       g_printf ("     Unknown section type\n");
