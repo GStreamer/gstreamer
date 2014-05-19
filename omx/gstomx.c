@@ -2029,9 +2029,6 @@ gst_omx_port_populate_unlocked (GstOMXPort * port)
   if (port->port_def.eDir == OMX_DirOutput && port->buffers && !port->tunneled) {
     /* Enqueue all buffers for the component to fill */
     while ((buf = g_queue_pop_head (&port->pending_buffers))) {
-      if (!buf)
-        continue;
-
       g_assert (!buf->used);
 
       /* Reset all flags, some implementations don't
