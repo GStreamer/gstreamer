@@ -701,7 +701,6 @@ gst_freeverb_transform_m2s_int (GstFreeverb * filter,
   gboolean drained = TRUE;
 
   for (k = 0; k < num_samples; k++) {
-
     out_l1 = out_r1 = 0.0;
 
     /* The original Freeverb code expects a stereo signal and 'input_1'
@@ -729,10 +728,12 @@ gst_freeverb_transform_m2s_int (GstFreeverb * filter,
     /* Calculate output */
     out_l2 = out_l1 * priv->wet1 + out_r1 * priv->wet2 + input_2 * priv->dry;
     out_r2 = out_r1 * priv->wet1 + out_l1 * priv->wet2 + input_2 * priv->dry;
-    *odata++ = (gint16) CLAMP (out_l2, G_MININT16, G_MAXINT16);
-    *odata++ = (gint16) CLAMP (out_r2, G_MININT16, G_MAXINT16);
+    out_l2 = CLAMP (out_l2, G_MININT16, G_MAXINT16);
+    out_r2 = CLAMP (out_r2, G_MININT16, G_MAXINT16);
+    *odata++ = (gint16) out_l2;
+    *odata++ = (gint16) out_r2;
 
-    if (abs (out_l2) > 0 || abs (out_r2) > 0)
+    if (abs ((gint16) out_l2) > 0 || abs ((gint16) out_r2) > 0)
       drained = FALSE;
   }
   return drained;
@@ -749,7 +750,6 @@ gst_freeverb_transform_s2s_int (GstFreeverb * filter,
   gboolean drained = TRUE;
 
   for (k = 0; k < num_samples; k++) {
-
     out_l1 = out_r1 = 0.0;
 
     input_2l = (gfloat) * idata++;
@@ -775,10 +775,12 @@ gst_freeverb_transform_s2s_int (GstFreeverb * filter,
     /* Calculate output */
     out_l2 = out_l1 * priv->wet1 + out_r1 * priv->wet2 + input_2l * priv->dry;
     out_r2 = out_r1 * priv->wet1 + out_l1 * priv->wet2 + input_2r * priv->dry;
-    *odata++ = (gint16) CLAMP (out_l2, G_MININT16, G_MAXINT16);
-    *odata++ = (gint16) CLAMP (out_r2, G_MININT16, G_MAXINT16);
+    out_l2 = CLAMP (out_l2, G_MININT16, G_MAXINT16);
+    out_r2 = CLAMP (out_r2, G_MININT16, G_MAXINT16);
+    *odata++ = (gint16) out_l2;
+    *odata++ = (gint16) out_r2;
 
-    if (abs (out_l2) > 0 || abs (out_r2) > 0)
+    if (abs ((gint16) out_l2) > 0 || abs ((gint16) out_r2) > 0)
       drained = FALSE;
   }
   return drained;
@@ -795,7 +797,6 @@ gst_freeverb_transform_m2s_float (GstFreeverb * filter,
   gboolean drained = TRUE;
 
   for (k = 0; k < num_samples; k++) {
-
     out_l1 = out_r1 = 0.0;
 
     /* The original Freeverb code expects a stereo signal and 'input_1'
@@ -843,7 +844,6 @@ gst_freeverb_transform_s2s_float (GstFreeverb * filter,
   gboolean drained = TRUE;
 
   for (k = 0; k < num_samples; k++) {
-
     out_l1 = out_r1 = 0.0;
 
     input_2l = *idata++;
