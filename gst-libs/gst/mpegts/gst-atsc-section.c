@@ -418,16 +418,42 @@ _gst_mpegts_atsc_string_segment_free (GstMpegTsAtscStringSegment * seg)
 static void
 _gst_mpegts_atsc_string_segment_decode_string (GstMpegTsAtscStringSegment * seg)
 {
+  const gchar *from_encoding;
+
   g_return_if_fail (seg->cached_string == NULL);
 
   if (seg->compression_type != 0) {
     GST_FIXME ("Compressed strings not yet supported");
     return;
   }
-  /* FIXME check encoding */
 
-  seg->cached_string =
-      g_strndup ((gchar *) seg->compressed_data, seg->compressed_data_size);
+  /* FIXME add more encodings */
+  switch (seg->mode) {
+    case 0x3F:
+      from_encoding = "UTF-16BE";
+      break;
+    default:
+      from_encoding = NULL;
+      break;
+  }
+
+  if (from_encoding != NULL) {
+    GError *err = NULL;
+
+    seg->cached_string =
+        g_convert ((gchar *) seg->compressed_data,
+        (gssize) seg->compressed_data_size, "UTF-8", from_encoding, NULL, NULL,
+        &err);
+
+    if (err) {
+      GST_WARNING ("Failed to convert input string from codeset %s",
+          from_encoding);
+      g_error_free (err);
+    }
+  } else {
+    seg->cached_string =
+        g_strndup ((gchar *) seg->compressed_data, seg->compressed_data_size);
+  }
 }
 
 const gchar *
