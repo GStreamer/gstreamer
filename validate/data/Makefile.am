@@ -9,6 +9,7 @@ scenarios_DATA = simple_seeks.scenario \
                  alternate_fast_backward_forward.scenario \
                  pause_resume.scenario \
                  scrub_forward_seeking.scenario \
+                 scrub_backward_seeking.scenario \
                  adaptive_video_size.scenario \
                  adaptive_video_framerate.scenario \
                  adaptive_video_framerate_size.scenario\
@@ -31,6 +32,7 @@ EXTRA_DIST = simple_seeks.scenario \
              alternate_fast_backward_forward.scenario \
              pause_resume.scenario \
              scrub_forward_seeking.scenario \
+             scrub_backward_seeking.scenario \
              adaptive_video_size.scenario \
              adaptive_video_framerate.scenario \
              adaptive_video_framerate_size.scenario\

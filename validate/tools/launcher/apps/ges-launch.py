@@ -225,9 +225,8 @@ Available options:""")
                     projects.append(proj)
 
         SCENARIOS = ["play_15s",
-                     "seek_forward",
-                     "seek_backward",
-                     "scrub_forward_seeking"]
+                     "scrub_forward_seeking",
+                     "scrub_backward_seeking"]
         for proj in projects:
             # First playback casses
             for scenario_name in SCENARIOS:
