@@ -712,6 +712,7 @@ main (int argc, char **argv)
 
     g_free (audio_sink);
     g_free (video_sink);
+    g_free (playlist_file);
 
     return 0;
   }
@@ -739,6 +740,7 @@ main (int argc, char **argv)
       g_clear_error (&err);
     }
     g_free (playlist_file);
+    playlist_file = NULL;
   }
 
   if (playlist->len == 0 && (filenames == NULL || *filenames == NULL)) {
