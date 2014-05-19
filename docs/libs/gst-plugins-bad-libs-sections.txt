@@ -44,6 +44,7 @@ gst_h264_video_quant_matrix_8x8_get_zigzag_from_raster
 gst_h264_video_quant_matrix_8x8_get_raster_from_zigzag
 gst_h264_video_quant_matrix_4x4_get_zigzag_from_raster
 gst_h264_video_quant_matrix_4x4_get_raster_from_zigzag
+gst_h264_video_calculate_framerate
 <SUBSECTION Standard>
 <SUBSECTION Private>
 </SECTION>

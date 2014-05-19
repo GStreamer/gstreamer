@@ -781,6 +781,9 @@ void    gst_h264_video_quant_matrix_4x4_get_zigzag_from_raster (guint8 out_quant
 void    gst_h264_video_quant_matrix_4x4_get_raster_from_zigzag (guint8 out_quant[16],
                                                                 const guint8 quant[16]);
 
+void gst_h264_video_calculate_framerate (const GstH264SPS * sps, guint field_pic_flag,
+    guint pic_struct, gint * fps_num, gint * fps_den);
+
 G_END_DECLS
 
 #endif
