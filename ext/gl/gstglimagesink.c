@@ -388,6 +388,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
     GstGLWindow *window;
 
     gl_sink->context = gst_gl_context_new (gl_sink->display);
+    if (!gl_sink->context)
+      goto context_creation_error;
 
     window = gst_gl_context_get_window (gl_sink->context);
 
@@ -420,6 +422,13 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
   }
 
   return TRUE;
+
+context_creation_error:
+  {
+    GST_ELEMENT_ERROR (gl_sink, RESOURCE, NOT_FOUND,
+        ("Failed to create GL context"), (NULL));
+    return FALSE;
+  }
 
 context_error:
   {
