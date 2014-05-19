@@ -568,6 +568,7 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
         gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self), caps,
         self->input_state);
     state->codec_data = codec_data;
+    gst_video_codec_state_unref (state);
     if (!gst_video_encoder_negotiate (GST_VIDEO_ENCODER (self))) {
       gst_video_codec_frame_unref (frame);
       return GST_FLOW_NOT_NEGOTIATED;
