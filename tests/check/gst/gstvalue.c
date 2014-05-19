@@ -538,6 +538,10 @@ GST_START_TEST (test_deserialize_string)
     const gchar *to;
   } tests[] = {
     {
+    "\"foo\"", "foo"}, {
+    "\"foo\\%\"", "foo%"}, {
+    "\"0123456789_-+/:.\"", "0123456789_-+/:."}, {
+    "\"Hello\\ World\"", "Hello World"}, {
     "", ""},                    /* empty strings */
     {
     "\"\"", ""},                /* quoted empty string -> empty string */
