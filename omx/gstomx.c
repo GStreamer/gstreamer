@@ -2394,9 +2394,10 @@ gst_omx_state_to_string (OMX_STATETYPE state)
     case OMX_StateWaitForResources:
       return "WaitForResources";
     default:
-      if (state >= OMX_StateKhronosExtensions)
+      if (state >= OMX_StateKhronosExtensions
+          && state < OMX_StateVendorStartUnused)
         return "KhronosExtensionState";
-      else if (state >= OMX_StateVendorStartUnused)
+      else if (state >= OMX_StateVendorStartUnused && state < OMX_StateMax)
         return "CustomVendorState";
       break;
   }
