@@ -2416,9 +2416,10 @@ gst_omx_command_to_string (OMX_COMMANDTYPE cmd)
     case OMX_CommandMarkBuffer:
       return "MarkBuffer";
     default:
-      if (cmd >= OMX_CommandKhronosExtensions)
+      if (cmd >= OMX_CommandKhronosExtensions
+          && cmd < OMX_CommandVendorStartUnused)
         return "KhronosExtensionCommand";
-      else if (cmd >= OMX_CommandVendorStartUnused)
+      if (cmd >= OMX_CommandVendorStartUnused && cmd < OMX_CommandMax)
         return "VendorExtensionCommand";
       break;
   }
