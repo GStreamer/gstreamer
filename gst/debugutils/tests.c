@@ -158,7 +158,8 @@ timedur_add (gpointer test, GstBuffer * buffer)
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
       GST_CLOCK_TIME_IS_VALID (t->expected)) {
-    t->diff += labs (GST_BUFFER_TIMESTAMP (buffer) - t->expected);
+    t->diff +=
+        ABS (GST_CLOCK_DIFF (t->expected, GST_BUFFER_TIMESTAMP (buffer)));
     t->count++;
   }
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
