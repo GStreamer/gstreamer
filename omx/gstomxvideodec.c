@@ -432,7 +432,11 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
   if (gst_buffer_get_size (outbuf) == inbuf->omx_buf->nFilledLen) {
     GstMapInfo map = GST_MAP_INFO_INIT;
 
-    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+    if (!gst_buffer_map (outbuf, &map, GST_MAP_WRITE)) {
+      GST_ERROR_OBJECT (self, "Failed to map output buffer");
+      goto done;
+    }
+
     memcpy (map.data,
         inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset,
         inbuf->omx_buf->nFilledLen);
