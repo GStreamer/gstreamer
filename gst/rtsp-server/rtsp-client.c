@@ -1394,6 +1394,33 @@ default_configure_client_transport (GstRTSPClient * client,
     ct->destination = g_strdup (url->host);
 
     if (ct->lower_transport & GST_RTSP_LOWER_TRANS_TCP) {
+      GSocket *sock;
+      GSocketAddress *addr;
+
+      sock = gst_rtsp_connection_get_read_socket (priv->connection);
+      if ((addr = g_socket_get_remote_address (sock, NULL))) {
+        /* our read port is the sender port of client */
+        ct->client_port.min =
+            g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (addr));
+        g_object_unref (addr);
+      }
+      if ((addr = g_socket_get_local_address (sock, NULL))) {
+        ct->server_port.max =
+            g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (addr));
+        g_object_unref (addr);
+      }
+      sock = gst_rtsp_connection_get_write_socket (priv->connection);
+      if ((addr = g_socket_get_remote_address (sock, NULL))) {
+        /* our write port is the receiver port of client */
+        ct->client_port.max =
+            g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (addr));
+        g_object_unref (addr);
+      }
+      if ((addr = g_socket_get_local_address (sock, NULL))) {
+        ct->server_port.min =
+            g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (addr));
+        g_object_unref (addr);
+      }
       /* check if the client selected channels for TCP */
       if (ct->interleaved.min == -1 || ct->interleaved.max == -1) {
         gst_rtsp_session_media_alloc_channels (ctx->sessmedia,
@@ -1449,6 +1476,8 @@ make_server_transport (GstRTSPClient * client, GstRTSPContext * ctx,
       break;
     case GST_RTSP_LOWER_TRANS_TCP:
       st->interleaved = ct->interleaved;
+      st->client_port = ct->client_port;
+      st->server_port = ct->server_port;
     default:
       break;
   }
