@@ -167,6 +167,7 @@ gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay)
   rtph264pay->last_spspps = -1;
   rtph264pay->spspps_interval = DEFAULT_CONFIG_INTERVAL;
   rtph264pay->delta_unit = FALSE;
+  rtph264pay->discont = FALSE;
 
   rtph264pay->adapter = gst_adapter_new ();
 }
@@ -706,7 +707,7 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
 static GstFlowReturn
 gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     GstBuffer * paybuf, GstClockTime dts, GstClockTime pts, gboolean end_of_au,
-    gboolean delta_unit);
+    gboolean delta_unit, gboolean discont);
 
 static GstFlowReturn
 gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
@@ -723,7 +724,7 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     GST_DEBUG_OBJECT (rtph264pay, "inserting SPS in the stream");
     /* resend SPS */
     ret = gst_rtp_h264_pay_payload_nal (basepayload, gst_buffer_ref (sps_buf),
-        dts, pts, FALSE, FALSE);
+        dts, pts, FALSE, FALSE, FALSE);
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK) {
       sent_all_sps_pps = FALSE;
@@ -737,7 +738,7 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     GST_DEBUG_OBJECT (rtph264pay, "inserting PPS in the stream");
     /* resend PPS */
     ret = gst_rtp_h264_pay_payload_nal (basepayload, gst_buffer_ref (pps_buf),
-        dts, pts, FALSE, FALSE);
+        dts, pts, FALSE, FALSE, FALSE);
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK) {
       sent_all_sps_pps = FALSE;
@@ -752,11 +753,14 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
 }
 
 /* @delta_unit: if %FALSE the first packet sent won't have the
- * GST_BUFFER_FLAG_DELTA_UNIT flag. */
+ * GST_BUFFER_FLAG_DELTA_UNIT flag.
+ * @discont: if %TRUE the first packet sent will have the
+ * GST_BUFFER_FLAG_DISCONT flag.
+ */
 static GstFlowReturn
 gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     GstBuffer * paybuf, GstClockTime dts, GstClockTime pts, gboolean end_of_au,
-    gboolean delta_unit)
+    gboolean delta_unit, gboolean discont)
 {
   GstRtpH264Pay *rtph264pay;
   GstFlowReturn ret;
@@ -854,6 +858,12 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     else
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
+    if (discont) {
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      /* Only the first packet sent should have the flag */
+      discont = FALSE;
+    }
+
     gst_rtp_buffer_unmap (&rtp);
 
     /* insert payload memory block */
@@ -926,6 +936,12 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
       else
         GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
+      if (discont) {
+        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+        /* Only the first packet sent should have the flag */
+        discont = FALSE;
+      }
+
       /* add the buffer to the buffer list */
       gst_buffer_list_add (list, outbuf);
 
@@ -958,6 +974,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GstBuffer *paybuf = NULL;
   gsize skip;
   gboolean delayed_not_delta_unit = FALSE;
+  gboolean delayed_discont = FALSE;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
 
@@ -976,6 +993,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
     dts = GST_BUFFER_DTS (buffer);
     rtph264pay->delta_unit = GST_BUFFER_FLAG_IS_SET (buffer,
         GST_BUFFER_FLAG_DELTA_UNIT);
+    rtph264pay->discont = GST_BUFFER_IS_DISCONT (buffer);
     GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
   } else {
     dts = gst_adapter_prev_dts (rtph264pay->adapter, NULL);
@@ -989,6 +1007,16 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
            * we'll purge it first by sending a first packet and then the second
            * one won't have the DELTA_UNIT flag. */
           delayed_not_delta_unit = TRUE;
+      }
+
+      if (GST_BUFFER_IS_DISCONT (buffer)) {
+        if (gst_adapter_available (rtph264pay->adapter) == 0)
+          rtph264pay->discont = TRUE;
+        else
+          /* This buffer has the DISCONT flag but the adapter isn't empty. So
+           * we'll purge it first by sending a first packet and then the second
+           * one will have the DISCONT flag set. */
+          delayed_discont = TRUE;
       }
 
       if (!GST_CLOCK_TIME_IS_VALID (dts))
@@ -1054,11 +1082,15 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
           nal_len);
       ret =
           gst_rtp_h264_pay_payload_nal (basepayload, paybuf, dts, pts,
-          end_of_au, rtph264pay->delta_unit);
+          end_of_au, rtph264pay->delta_unit, rtph264pay->discont);
 
       if (!rtph264pay->delta_unit)
         /* Only the first outgoing packet doesn't have the DELTA_UNIT flag */
         rtph264pay->delta_unit = TRUE;
+
+      if (rtph264pay->discont)
+        /* Only the first outgoing packet have the DISCONT flag */
+        rtph264pay->discont = FALSE;
 
       if (ret != GST_FLOW_OK)
         break;
@@ -1190,7 +1222,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
       /* put the data in one or more RTP packets */
       ret =
           gst_rtp_h264_pay_payload_nal (basepayload, paybuf, dts, pts,
-          end_of_au, rtph264pay->delta_unit);
+          end_of_au, rtph264pay->delta_unit, rtph264pay->discont);
 
       if (delayed_not_delta_unit) {
         rtph264pay->delta_unit = FALSE;
@@ -1198,6 +1230,14 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
       } else {
         /* Only the first outgoing packet doesn't have the DELTA_UNIT flag */
         rtph264pay->delta_unit = TRUE;
+      }
+
+      if (delayed_discont) {
+        rtph264pay->discont = TRUE;
+        delayed_discont = FALSE;
+      } else {
+        /* Only the first outgoing packet have the DISCONT flag */
+        rtph264pay->discont = FALSE;
       }
 
       if (ret != GST_FLOW_OK) {
