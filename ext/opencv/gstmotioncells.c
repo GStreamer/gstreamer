@@ -992,7 +992,8 @@ gst_motion_cells_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         gst_element_post_message (GST_ELEMENT (filter), m);
         filter->sent_save_error_msg = TRUE;
       }
-      if (success == -2) {      //frame dropped
+      if (success == -2) {
+        GST_LOG_OBJECT (filter, "frame dropped");
         gst_buffer_unmap (buf, &info);
         filter->prev_buff_timestamp = filter->cur_buff_timestamp;
         //free
@@ -1023,6 +1024,7 @@ gst_motion_cells_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
               && (filter->consecutive_motion >= minimum_motion_frames)) {
             GstStructure *s;
             GstMessage *m;
+            GST_DEBUG_OBJECT (filter, "motion started, post msg on the bus");
             filter->previous_motion = TRUE;
             filter->motion_begin_timestamp = GST_BUFFER_TIMESTAMP (buf);
             s = gst_structure_new ("motion", "motion_cells_indices",
@@ -1033,6 +1035,7 @@ gst_motion_cells_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
           } else if (filter->postallmotion) {
             GstStructure *s;
             GstMessage *m;
+            GST_DEBUG_OBJECT (filter, "motion, post msg on the bus");
             filter->motion_timestamp = GST_BUFFER_TIMESTAMP (buf);
             s = gst_structure_new ("motion", "motion_cells_indices",
                 G_TYPE_STRING, detectedmotioncells, "motion", G_TYPE_UINT64,
@@ -1054,10 +1057,10 @@ gst_motion_cells_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
                         filter->last_motion_timestamp) / 1000000000l) >=
                 filter->gap)
             && (filter->last_motion_timestamp > 0)) {
-          GST_DEBUG ("POST MOTION FINISHED MSG\n");
           if (filter->previous_motion) {
             GstStructure *s;
             GstMessage *m;
+            GST_DEBUG_OBJECT (filter, "motion finished, post msg on the bus");
             filter->previous_motion = FALSE;
             s = gst_structure_new ("motion", "motion_finished", G_TYPE_UINT64,
                 filter->last_motion_timestamp, NULL);
@@ -1071,7 +1074,7 @@ gst_motion_cells_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         if ((last_buf_timestamp -
                 (filter->last_motion_timestamp / 1000000000l)) >=
             filter->postnomotion) {
-          GST_DEBUG ("POST NO MOTION MSG\n");
+          GST_DEBUG_OBJECT (filter, "post no motion msg on the bus");
           if ((last_buf_timestamp -
                   (filter->last_nomotion_notified / 1000000000l)) >=
               filter->postnomotion) {

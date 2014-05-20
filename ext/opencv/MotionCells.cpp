@@ -200,7 +200,6 @@ MotionCells::performDetectionMotionCells (IplImage * p_frame,
     if (motionmaskcells_count > 0)
       performMotionMask (motionmaskcellsidx, motionmaskcells_count);
     if (getIsNonZero (m_pbwImage)) {    //detect Motion
-      GST_DEBUG ("DETECT MOTION \n");
       if (m_MotionCells.size () > 0)    //it contains previous motioncells what we used when frames dropped
         m_MotionCells.clear ();
       if (transparencyimg)
