@@ -123,6 +123,7 @@ enum
   SIGNAL_ON_SDP,
   SIGNAL_SELECT_STREAM,
   SIGNAL_NEW_MANAGER,
+  SIGNAL_REQUEST_RTCP_KEY,
   LAST_SIGNAL
 };
 
@@ -162,6 +163,12 @@ gst_rtsp_src_buffer_mode_get_type (void)
   }
   return buffer_mode_type;
 }
+
+#define AES_128_KEY_LEN 16
+#define AES_256_KEY_LEN 32
+
+#define HMAC_32_KEY_LEN 4
+#define HMAC_80_KEY_LEN 10
 
 #define DEFAULT_LOCATION         NULL
 #define DEFAULT_PROTOCOLS        GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP
@@ -682,6 +689,20 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_signal_new_class_handler ("new-manager", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+
+  /**
+   * GstRTSPSrc::request-rtcp-key:
+   * @rtspsrc: a #GstRTSPSrc
+   *
+   * Signal emited to get the crypto parameters relevant to the RTCP
+   * stream. User should provide the key and the RTCP encryption ciphers
+   * and authentication, and return them wrapped in a GstCaps.
+   *
+   * Since: 1.4
+   */
+  gst_rtspsrc_signals[SIGNAL_REQUEST_RTCP_KEY] =
+      g_signal_new ("request-rtcp-key", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_CAPS, 0, G_TYPE_NONE);
 
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
@@ -1537,8 +1558,8 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
     gst_object_unref (stream->srtpenc);
   if (stream->srtpdec)
     gst_object_unref (stream->srtpdec);
-  if (stream->key)
-    gst_buffer_unref (stream->key);
+  if (stream->srtcpparams)
+    gst_caps_unref (stream->srtcpparams);
   if (stream->rtcppad)
     gst_object_unref (stream->rtcppad);
   if (stream->session)
@@ -1738,6 +1759,18 @@ parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
               break;
           }
           break;
+        case GST_MIKEY_SP_SRTP_ENC_KEY_LEN:
+          switch (param->val[0]) {
+            case AES_128_KEY_LEN:
+              srtp_cipher = "aes-128-icm";
+              break;
+            case AES_256_KEY_LEN:
+              srtp_cipher = "aes-256-icm";
+              break;
+            default:
+              break;
+          }
+          break;
         case GST_MIKEY_SP_SRTP_AUTH_ALG:
           switch (param->val[0]) {
             case 0:
@@ -1745,6 +1778,18 @@ parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
               break;
             case 2:
             case 1:
+              srtp_auth = "hmac-sha1-80";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_AUTH_KEY_LEN:
+          switch (param->val[0]) {
+            case HMAC_32_KEY_LEN:
+              srtp_auth = "hmac-sha1-32";
+              break;
+            case HMAC_80_KEY_LEN:
               srtp_auth = "hmac-sha1-80";
               break;
             default:
@@ -3006,12 +3051,40 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
     return NULL;
 
   if (stream->srtpenc == NULL) {
+    GstStructure *s;
+
     name = g_strdup_printf ("srtpenc_%u", session);
     stream->srtpenc = gst_element_factory_make ("srtpenc", name);
     g_free (name);
 
-    /* key has been made before */
-    g_object_set (stream->srtpenc, "key", stream->key, NULL);
+    /* get RTCP crypto parameters from caps */
+    s = gst_caps_get_structure (stream->srtcpparams, 0);
+    if (s) {
+      GstBuffer *buf;
+      const gchar *str;
+      GType ciphertype, authtype;
+      GValue rtcp_cipher = G_VALUE_INIT, rtcp_auth = G_VALUE_INIT;
+
+      ciphertype = g_type_from_name ("GstSrtpCipherType");
+      authtype = g_type_from_name ("GstSrtpAuthType");
+      g_value_init (&rtcp_cipher, ciphertype);
+      g_value_init (&rtcp_auth, authtype);
+
+      str = gst_structure_get_string (s, "srtcp-cipher");
+      gst_value_deserialize (&rtcp_cipher, str);
+      str = gst_structure_get_string (s, "srtcp-auth");
+      gst_value_deserialize (&rtcp_auth, str);
+      gst_structure_get (s, "srtp-key", GST_TYPE_BUFFER, &buf, NULL);
+
+      g_object_set_property (G_OBJECT (stream->srtpenc), "rtcp-cipher",
+          &rtcp_cipher);
+      g_object_set_property (G_OBJECT (stream->srtpenc), "rtcp-auth",
+          &rtcp_auth);
+      g_object_set (stream->srtpenc, "key", buf, NULL);
+
+      g_value_unset (&rtcp_cipher);
+      g_value_unset (&rtcp_auth);
+    }
   }
   name = g_strdup_printf ("rtcp_sink_%d", session);
   pad = gst_element_get_request_pad (stream->srtpenc, name);
@@ -5812,27 +5885,101 @@ failed:
   }
 }
 
+static guint8
+enc_key_length_from_cipher_name (const gchar * cipher)
+{
+  if (g_strcmp0 (cipher, "aes-128-icm") == 0)
+    return AES_128_KEY_LEN;
+  else if (g_strcmp0 (cipher, "aes-256-icm") == 0)
+    return AES_256_KEY_LEN;
+  else {
+    GST_ERROR ("encryption algorithm '%s' not supported", cipher);
+    return 0;
+  }
+}
+
+static guint8
+auth_key_length_from_auth_name (const gchar * auth)
+{
+  if (g_strcmp0 (auth, "hmac-sha1-32") == 0)
+    return HMAC_32_KEY_LEN;
+  else if (g_strcmp0 (auth, "hmac-sha1-80") == 0)
+    return HMAC_80_KEY_LEN;
+  else {
+    GST_ERROR ("authentication algorithm '%s' not supported", auth);
+    return 0;
+  }
+}
+
+static GstCaps *
+signal_get_srtcp_params (GstRTSPSrc * src)
+{
+  GstCaps *caps = NULL;
+
+  g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_REQUEST_RTCP_KEY], 0, &caps);
+
+  if (caps != NULL)
+    GST_DEBUG_OBJECT (src, "SRTP parameters received");
+
+  return caps;
+}
+
+static GstCaps *
+default_srtcp_params (void)
+{
+  guint i;
+  GstCaps *caps;
+  GstBuffer *buf;
+  guint8 *key_data;
+#define KEY_SIZE 30
+
+  /* create a random key */
+  key_data = g_malloc (KEY_SIZE);
+  for (i = 0; i < KEY_SIZE; i += 4)
+    GST_WRITE_UINT32_BE (key_data + i, g_random_int ());
+
+  buf = gst_buffer_new_wrapped (key_data, KEY_SIZE);
+
+  caps = gst_caps_new_simple ("application/x-srtp",
+      "srtp-key", GST_TYPE_BUFFER, buf,
+      "srtcp-cipher", G_TYPE_STRING, "aes-128-icm",
+      "srtcp-auth", G_TYPE_STRING, "hmac-sha1-80", NULL);
+
+  return caps;
+}
+
 static gchar *
 gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
 {
   GBytes *bytes;
   gchar *result, *base64;
-  guint8 *key_data;
   const guint8 *data;
   gsize size;
-  guint i;
   GstMIKEYMessage *msg;
   GstMIKEYPayload *payload, *pkd;
   guint8 byte;
-#define KEY_SIZE 30
+  GstStructure *s;
+  GstMapInfo info;
+  GstBuffer *srtpkey;
+  const GValue *val;
+  const gchar *srtcpcipher, *srtcpauth;
 
-  key_data = g_malloc (KEY_SIZE);
-  for (i = 0; i < KEY_SIZE; i += 4)
-    GST_WRITE_UINT32_BE (key_data + i, g_random_int ());
+  stream->srtcpparams = signal_get_srtcp_params (src);
+  if (stream->srtcpparams == NULL)
+    stream->srtcpparams = default_srtcp_params ();
 
-  if (stream->key)
-    gst_buffer_unref (stream->key);
-  stream->key = gst_buffer_new_wrapped (key_data, KEY_SIZE);
+  s = gst_caps_get_structure (stream->srtcpparams, 0);
+
+  srtcpcipher = gst_structure_get_string (s, "srtcp-cipher");
+  srtcpauth = gst_structure_get_string (s, "srtcp-auth");
+  val = gst_structure_get_value (s, "srtp-key");
+
+  if (srtcpcipher == NULL || srtcpauth == NULL || val == NULL) {
+    GST_ERROR_OBJECT (src, "could not find the right SRTP parameters in caps");
+    return NULL;
+  }
+
+  srtpkey = gst_value_get_buffer (val);
 
   msg = gst_mikey_message_new ();
   /* unencrypted MIKEY message, we send this over TLS so this is allowed */
@@ -5852,8 +5999,16 @@ gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
   /* only AES-CM is supported */
   byte = 1;
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_ALG, 1, &byte);
+  /* encryption key length */
+  byte = enc_key_length_from_cipher_name (srtcpcipher);
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_KEY_LEN, 1,
+      &byte);
   /* only HMAC-SHA1 */
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_ALG, 1,
+      &byte);
+  /* authentication key length */
+  byte = auth_key_length_from_auth_name (srtcpauth);
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_KEY_LEN, 1,
       &byte);
   /* we enable encryption on RTP and RTCP */
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTP_ENC, 1,
@@ -5870,8 +6025,10 @@ gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
   gst_mikey_payload_kemac_set (payload, GST_MIKEY_ENC_NULL, GST_MIKEY_MAC_NULL);
   /* add the key in KEMAC */
   pkd = gst_mikey_payload_new (GST_MIKEY_PT_KEY_DATA);
-  gst_mikey_payload_key_data_set_key (pkd, GST_MIKEY_KD_TEK, KEY_SIZE,
-      key_data);
+  gst_buffer_map (srtpkey, &info, GST_MAP_READ);
+  gst_mikey_payload_key_data_set_key (pkd, GST_MIKEY_KD_TEK, info.size,
+      info.data);
+  gst_buffer_unmap (srtpkey, &info);
   gst_mikey_payload_kemac_add_sub (payload, pkd);
   gst_mikey_message_add_payload (msg, payload);
 

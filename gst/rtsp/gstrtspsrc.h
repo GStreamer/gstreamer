@@ -137,7 +137,7 @@ struct _GstRTSPStream {
   guint32       seqbase;
   guint64       timebase;
   GstElement   *srtpdec;
-  GstBuffer    *key;
+  GstCaps      *srtcpparams;
   GstElement   *srtpenc;
   guint32       send_ssrc;
 
