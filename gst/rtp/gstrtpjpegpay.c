@@ -688,6 +688,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   gboolean sos_found, sof_found, dqt_found, dri_found;
   gint i;
   GstBufferList *list = NULL;
+  gboolean discont;
 
   pay = GST_RTP_JPEG_PAY (basepayload);
   mtu = GST_RTP_BASE_PAYLOAD_MTU (pay);
@@ -697,6 +698,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   size = map.size;
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   offset = 0;
+  discont = GST_BUFFER_IS_DISCONT (buffer);
 
   GST_LOG_OBJECT (pay, "got buffer size %" G_GSIZE_FORMAT
       " , timestamp %" GST_TIME_FORMAT, size, GST_TIME_ARGS (timestamp));
@@ -894,6 +896,12 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
     outbuf = gst_buffer_append (outbuf, paybuf);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+
+    if (discont) {
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      /* Only the first outputted buffer has the DISCONT flag */
+      discont = FALSE;
+    }
 
     /* and add to list */
     gst_buffer_list_insert (list, -1, outbuf);
