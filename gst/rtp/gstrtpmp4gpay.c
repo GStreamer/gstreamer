@@ -543,6 +543,12 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
       rtpmp4gpay->offset += rtpmp4gpay->frame_len;
     }
 
+    if (rtpmp4gpay->discont) {
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      /* Only the first outputted buffer has the DISCONT flag */
+      rtpmp4gpay->discont = FALSE;
+    }
+
     ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmp4gpay), outbuf);
 
     avail -= payload_len;
@@ -563,6 +569,7 @@ gst_rtp_mp4g_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   rtpmp4gpay->first_timestamp = GST_BUFFER_TIMESTAMP (buffer);
   rtpmp4gpay->first_duration = GST_BUFFER_DURATION (buffer);
+  rtpmp4gpay->discont = GST_BUFFER_IS_DISCONT (buffer);
 
   /* we always encode and flush a full AU */
   gst_adapter_push (rtpmp4gpay->adapter, buffer);

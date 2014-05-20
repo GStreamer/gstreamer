@@ -47,6 +47,7 @@ struct _GstRtpMP4GPay
   GstAdapter   *adapter;
   GstClockTime  first_timestamp;
   GstClockTime  first_duration;
+  gboolean      discont;
   GstClockTime  duration;
   guint64       offset;
 
