@@ -1102,8 +1102,39 @@ fill_profiles(GstVaapiProfile profiles[16], guint *n_profiles_ptr,
     *n_profiles_ptr = n_profiles;
 }
 
+/* Fills in compatible profiles for MVC decoding */
+static void
+fill_profiles_mvc(GstVaapiDecoderH264 *decoder, GstVaapiProfile profiles[16],
+    guint *n_profiles_ptr, guint dpb_size)
+{
+    const gchar * const vendor_string =
+        gst_vaapi_display_get_vendor_string(GST_VAAPI_DECODER_DISPLAY(decoder));
+
+    gboolean add_high_profile = FALSE;
+    struct map {
+        const gchar *str;
+        guint str_len;
+    };
+    const struct map *m;
+
+    // Drivers that support slice level decoding
+    if (vendor_string && dpb_size <= 16) {
+        static const struct map drv_names[] = {
+            { "Intel i965 driver", 17 },
+            { NULL, 0 }
+        };
+        for (m = drv_names; m->str != NULL && !add_high_profile; m++) {
+            if (g_ascii_strncasecmp(vendor_string, m->str, m->str_len) == 0)
+                add_high_profile = TRUE;
+        }
+    }
+
+    if (add_high_profile)
+        fill_profiles(profiles, n_profiles_ptr, GST_VAAPI_PROFILE_H264_HIGH);
+}
+
 static GstVaapiProfile
-get_profile(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
+get_profile(GstVaapiDecoderH264 *decoder, GstH264SPS *sps, guint dpb_size)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiDisplay * const display = GST_VAAPI_DECODER_DISPLAY(decoder);
@@ -1129,6 +1160,20 @@ get_profile(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
             fill_profiles(profiles, &n_profiles,
                 GST_VAAPI_PROFILE_H264_MAIN);
         }
+        break;
+    case GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH:
+        if (priv->max_views == 2) {
+            fill_profiles(profiles, &n_profiles,
+                GST_VAAPI_PROFILE_H264_STEREO_HIGH);
+        }
+        fill_profiles_mvc(decoder, profiles, &n_profiles, dpb_size);
+        break;
+    case GST_VAAPI_PROFILE_H264_STEREO_HIGH:
+        if (sps->frame_mbs_only_flag) {
+            fill_profiles(profiles, &n_profiles,
+                GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH);
+        }
+        fill_profiles_mvc(decoder, profiles, &n_profiles, dpb_size);
         break;
     default:
         break;
@@ -1163,7 +1208,7 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
         reset_context = TRUE;
     }
 
-    profile = get_profile(decoder, sps);
+    profile = get_profile(decoder, sps, dpb_size);
     if (!profile) {
         GST_ERROR("unsupported profile_idc %u", sps->profile_idc);
         return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
