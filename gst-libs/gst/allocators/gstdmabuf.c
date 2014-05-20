@@ -53,7 +53,6 @@ typedef struct
   gpointer data;
   gint mmapping_flags;
   gint mmap_count;
-  gsize mmap_size;
   GMutex lock;
 } GstDmaBufMemory;
 
@@ -68,9 +67,10 @@ gst_dmabuf_allocator_free (GstAllocator * allocator, GstMemory * gmem)
 
   if (mem->data) {
     g_warning (G_STRLOC ":%s: Freeing memory %p still mapped", G_STRFUNC, mem);
-    munmap ((void *) mem->data, mem->mmap_size);
+    munmap ((void *) mem->data, gmem->maxsize);
   }
-  close (mem->fd);
+  if (mem->fd >= 0)
+    close (mem->fd);
   g_mutex_clear (&mem->lock);
   g_slice_free (GstDmaBufMemory, mem);
   GST_DEBUG ("%p: freed", mem);
@@ -85,6 +85,9 @@ gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
   gint prot;
   gpointer ret = NULL;
 
+  if (gmem->parent)
+    return gst_dmabuf_mem_map (gmem->parent, maxsize, flags);
+
   g_mutex_lock (&mem->lock);
 
   prot = flags & GST_MAP_READ ? PROT_READ : 0;
@@ -94,7 +97,7 @@ gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
   if (mem->data) {
     /* only return address if mapping flags are a subset
      * of the previous flags */
-    if ((mem->mmapping_flags & prot) && (mem->mmap_size >= maxsize)) {
+    if (mem->mmapping_flags & prot) {
       ret = mem->data;
       mem->mmap_count++;
     }
@@ -103,7 +106,7 @@ gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
   }
 
   if (mem->fd != -1) {
-    mem->data = mmap (0, maxsize, prot, MAP_SHARED, mem->fd, 0);
+    mem->data = mmap (0, gmem->maxsize, prot, MAP_SHARED, mem->fd, 0);
     if (mem->data == MAP_FAILED) {
       mem->data = NULL;
       GST_ERROR ("%p: fd %d: mmap failed: %s", mem, mem->fd,
@@ -116,7 +119,6 @@ gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
 
   if (mem->data) {
     mem->mmapping_flags = prot;
-    mem->mmap_size = maxsize;
     mem->mmap_count++;
     ret = mem->data;
   }
@@ -134,12 +136,15 @@ gst_dmabuf_mem_unmap (GstMemory * gmem)
 {
 #ifdef HAVE_MMAP
   GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
+
+  if (gmem->parent)
+    return gst_dmabuf_mem_unmap (gmem->parent);
+
   g_mutex_lock (&mem->lock);
 
   if (mem->data && !(--mem->mmap_count)) {
-    munmap ((void *) mem->data, mem->mmap_size);
+    munmap ((void *) mem->data, gmem->maxsize);
     mem->data = NULL;
-    mem->mmap_size = 0;
     mem->mmapping_flags = 0;
     GST_DEBUG ("%p: fd %d unmapped", mem, mem->fd);
   }
@@ -171,7 +176,7 @@ gst_dmabuf_mem_share (GstMemory * gmem, gssize offset, gssize size)
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->mem.allocator, parent,
       mem->mem.maxsize, mem->mem.align, mem->mem.offset + offset, size);
 
-  sub->fd = dup (mem->fd);
+  sub->fd = -1;
   g_mutex_init (&sub->lock);
 
   return GST_MEMORY_CAST (sub);
