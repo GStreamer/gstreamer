@@ -146,7 +146,8 @@ MotionCells::performDetectionMotionCells (IplImage * p_frame,
       : p_framerate <= 10 ? sumframecnt = 2
       : p_framerate <= 15 ? sumframecnt = 3
       : p_framerate <= 20 ? sumframecnt = 4
-      : p_framerate <= 25 ? sumframecnt = 5 : sumframecnt = 0 : sumframecnt = 0;
+      : p_framerate <= 25 ? sumframecnt = 5
+      : p_framerate <= 30 ? sumframecnt = 6 : sumframecnt = 0 : sumframecnt = 0;
 
   m_framecnt++;
   m_changed_datafile = p_changed_datafile;
