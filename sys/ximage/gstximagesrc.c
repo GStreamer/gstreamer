@@ -460,13 +460,15 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
     meta = GST_META_XIMAGE_GET (ximage);
 
-    if ((meta->width != ximagesrc->width) ||
-        (meta->height != ximagesrc->height)) {
-      gst_ximage_buffer_free (ximage);
-    }
-
     ximagesrc->buffer_pool = g_slist_delete_link (ximagesrc->buffer_pool,
         ximagesrc->buffer_pool);
+
+    if ((meta->width == ximagesrc->width) ||
+        (meta->height == ximagesrc->height))
+      break;
+
+    gst_ximage_buffer_free (ximage);
+    ximage = NULL;
   }
   g_mutex_unlock (&ximagesrc->pool_lock);
 
