@@ -54,7 +54,7 @@
 #include "motioncells_wrapper.h"
 
 static int instanceCounter = 0;
-static gboolean element_id_was_max = false;
+static bool element_id_was_max = false;
 
 MotionCells *mc;
 char p_str[] = "idx failed";
