@@ -24,18 +24,16 @@ mergebw d1, b, d
 .dest 2 d1 guint8
 .source 2 s guint8
 .temp 2 t
-.temp 1 a
 .temp 1 b
 .temp 1 c
 .temp 1 d
 .temp 1 e
-.temp 1 f
 
 loadoffw t, s, -1
-splitwb b, a, t
+select1wb b, t
 splitwb d, c, s
 loadoffw t, s, 1
-splitwb f, e, t
+select0wb e, t
 avgub e, c, e
 mergebw d0, c, e
 avgub b, b, d
