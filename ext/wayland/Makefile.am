@@ -34,3 +34,11 @@ CLEANFILES = scaler-protocol.c scaler-client-protocol.h
 
 %-client-protocol.h : %.xml
 	$(wayland_scanner) client-header < $< > $@
+
+gstwaylandsink.c: scaler-client-protocol.h
+
+waylandpool.c: scaler-client-protocol.h
+
+wldisplay.c: scaler-client-protocol.h
+
+wlwindow.c: scaler-client-protocol.h
