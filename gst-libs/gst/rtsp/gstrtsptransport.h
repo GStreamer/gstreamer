@@ -136,8 +136,12 @@ struct _GstRTSPRange {
  * @interleaved: the interleave range
  * @ttl: the time to live for multicast UDP
  * @port: the port pair for multicast sessions
- * @client_port: the client port pair for receiving data
- * @server_port: the server port pair for receiving data
+ * @client_port: the client port pair for receiving data. For TCP
+ *   based transports, applications can use this field to store the
+ *   sender and receiver ports of the client.
+ * @server_port: the server port pair for receiving data. For TCP
+ *   based transports, applications can use this field to store the
+ *   sender and receiver ports of the server.
  * @ssrc: the ssrc that the sender/receiver will use
  *
  * A structure holding the RTSP transport values.
@@ -158,9 +162,9 @@ struct _GstRTSPTransport {
 
   /* multicast specific */
   guint  ttl;
-
-  /* UDP specific */
   GstRTSPRange   port;
+
+  /* UDP/TCP specific */
   GstRTSPRange   client_port;
   GstRTSPRange   server_port;
   /* RTP specific */
