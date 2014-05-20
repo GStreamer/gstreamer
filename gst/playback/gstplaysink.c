@@ -4388,6 +4388,8 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
      * element is 'running' */
     gst_pad_set_active (res, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (playsink), res);
+
+    GST_PLAY_SINK_LOCK (playsink);
     if (block_id && *block_id == 0) {
       GstPad *blockpad =
           GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (res)));
@@ -4403,6 +4405,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       PENDING_FLAG_SET (playsink, type);
       gst_object_unref (blockpad);
     }
+    GST_PLAY_SINK_UNLOCK (playsink);
     if (!activate)
       gst_pad_set_active (res, activate);
   }
