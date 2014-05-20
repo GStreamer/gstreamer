@@ -14,7 +14,8 @@ libgstwayland_@GST_API_VERSION@_la_CFLAGS = \
 
 libgstwayland_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_LIBS) \
-	$(WAYLAND_LIBS)
+	$(WAYLAND_LIBS) \
+	-lgstvideo-$(GST_API_VERSION)
 
 libgstwayland_@GST_API_VERSION@_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \
