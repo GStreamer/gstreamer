@@ -198,6 +198,9 @@ gboolean
 gst_vaapi_display_set_rotation (GstVaapiDisplay * display,
     GstVaapiRotation rotation);
 
+const gchar *
+gst_vaapi_display_get_vendor_string (GstVaapiDisplay * display);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DISPLAY_H */

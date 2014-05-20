@@ -854,6 +854,9 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
       klass->close_display (display);
   }
 
+  g_free (priv->vendor_string);
+  priv->vendor_string = NULL;
+
   gst_vaapi_display_replace_internal (&priv->parent, NULL);
 
   g_mutex_lock (&g_display_cache_lock);
@@ -2030,4 +2033,42 @@ set_color_balance (GstVaapiDisplay * display, guint prop_id, gfloat v)
   if (!set_attribute (display, attr->type, value))
     return FALSE;
   return TRUE;
+}
+
+/* Ensures the VA driver vendor string was copied */
+static gboolean
+ensure_vendor_string (GstVaapiDisplay * display)
+{
+  GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
+  const gchar *vendor_string;
+
+  GST_VAAPI_DISPLAY_LOCK (display);
+  if (!priv->vendor_string) {
+    vendor_string = vaQueryVendorString (priv->display);
+    if (vendor_string)
+      priv->vendor_string = g_strdup (vendor_string);
+  }
+  GST_VAAPI_DISPLAY_UNLOCK (display);
+  return priv->vendor_string != NULL;
+}
+
+/**
+ * gst_vaapi_display_get_vendor_string:
+ * @display: a #GstVaapiDisplay
+ *
+ * Returns the VA driver vendor string attached to the supplied VA @display.
+ * The @display owns the vendor string, do *not* de-allocate it.
+ *
+ * This function is thread safe.
+ *
+ * Return value: the current #GstVaapiRotation value
+ */
+const gchar *
+gst_vaapi_display_get_vendor_string (GstVaapiDisplay * display)
+{
+  g_return_val_if_fail (display != NULL, NULL);
+
+  if (!ensure_vendor_string (display))
+    return NULL;
+  return display->priv.vendor_string;
 }

@@ -156,6 +156,7 @@ struct _GstVaapiDisplayPrivate
   GArray *image_formats;
   GArray *subpicture_formats;
   GArray *properties;
+  gchar *vendor_string;
   guint use_foreign_display:1;
   guint has_vpp:1;
   guint has_profiles:1;
