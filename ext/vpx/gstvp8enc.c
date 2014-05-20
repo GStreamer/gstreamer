@@ -911,18 +911,18 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
 
       memset (&gst_vp8_enc->cfg.ts_target_bitrate, 0,
           sizeof (gst_vp8_enc->cfg.ts_target_bitrate));
-      if (va->n_values > VPX_TS_MAX_LAYERS) {
+      if (va == NULL) {
+        gst_vp8_enc->n_ts_target_bitrate = 0;
+      } else if (va->n_values > VPX_TS_MAX_LAYERS) {
         g_warning ("%s: Only %d layers allowed at maximum",
             GST_ELEMENT_NAME (gst_vp8_enc), VPX_TS_MAX_LAYERS);
-      } else if (va) {
+      } else {
         gint i;
 
         for (i = 0; i < va->n_values; i++)
           gst_vp8_enc->cfg.ts_target_bitrate[i] =
               g_value_get_int (g_value_array_get_nth (va, i));
         gst_vp8_enc->n_ts_target_bitrate = va->n_values;
-      } else {
-        gst_vp8_enc->n_ts_target_bitrate = 0;
       }
       global = TRUE;
       break;
