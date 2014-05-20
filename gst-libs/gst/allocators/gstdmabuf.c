@@ -97,7 +97,7 @@ gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
   if (mem->data) {
     /* only return address if mapping flags are a subset
      * of the previous flags */
-    if (mem->mmapping_flags & prot) {
+    if ((mem->mmapping_flags & prot) == prot) {
       ret = mem->data;
       mem->mmap_count++;
     }
