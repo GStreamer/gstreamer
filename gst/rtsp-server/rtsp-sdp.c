@@ -72,6 +72,32 @@ update_sdp_from_tags (GstRTSPStream * stream, GstSDPMedia * stream_media)
   gst_object_unref (src_pad);
 }
 
+static guint8
+enc_key_length_from_cipher_name (const gchar * cipher)
+{
+  if (g_strcmp0 (cipher, "aes-128-icm") == 0)
+    return AES_128_KEY_LEN;
+  else if (g_strcmp0 (cipher, "aes-256-icm") == 0)
+    return AES_256_KEY_LEN;
+  else {
+    GST_ERROR ("encryption algorithm '%s' not supported", cipher);
+    return 0;
+  }
+}
+
+static guint8
+auth_key_length_from_auth_name (const gchar * auth)
+{
+  if (g_strcmp0 (auth, "hmac-sha1-32") == 0)
+    return HMAC_32_KEY_LEN;
+  else if (g_strcmp0 (auth, "hmac-sha1-80") == 0)
+    return HMAC_80_KEY_LEN;
+  else {
+    GST_ERROR ("authentication algorithm '%s' not supported", auth);
+    return 0;
+  }
+}
+
 static void
 make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
     GstRTSPStream * stream, GstStructure * s, GstRTSPProfile profile)
@@ -226,8 +252,16 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
     byte = 1;
     gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_ALG, 1,
         &byte);
+    /* Encryption key length */
+    byte = enc_key_length_from_cipher_name (srtpcipher);
+    gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_KEY_LEN, 1,
+        &byte);
     /* only HMAC-SHA1 */
     gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_ALG, 1,
+        &byte);
+    /* Authentication key length */
+    byte = auth_key_length_from_auth_name (srtpauth);
+    gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_KEY_LEN, 1,
         &byte);
     /* we enable encryption on RTP and RTCP */
     gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTP_ENC, 1,

@@ -1545,6 +1545,18 @@ mikey_apply_policy (GstCaps * caps, GstMIKEYMessage * msg, guint8 policy)
               break;
           }
           break;
+        case GST_MIKEY_SP_SRTP_ENC_KEY_LEN:
+          switch (param->val[0]) {
+            case AES_128_KEY_LEN:
+              srtp_cipher = "aes-128-icm";
+              break;
+            case AES_256_KEY_LEN:
+              srtp_cipher = "aes-256-icm";
+              break;
+            default:
+              break;
+          }
+          break;
         case GST_MIKEY_SP_SRTP_AUTH_ALG:
           switch (param->val[0]) {
             case 0:
@@ -1552,6 +1564,18 @@ mikey_apply_policy (GstCaps * caps, GstMIKEYMessage * msg, guint8 policy)
               break;
             case 2:
             case 1:
+              srtp_auth = "hmac-sha1-80";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_AUTH_KEY_LEN:
+          switch (param->val[0]) {
+            case HMAC_32_KEY_LEN:
+              srtp_auth = "hmac-sha1-32";
+              break;
+            case HMAC_80_KEY_LEN:
               srtp_auth = "hmac-sha1-80";
               break;
             default:

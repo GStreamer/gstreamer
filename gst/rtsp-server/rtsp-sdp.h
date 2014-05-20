@@ -27,6 +27,12 @@
 
 G_BEGIN_DECLS
 
+#define AES_128_KEY_LEN 16
+#define AES_256_KEY_LEN 32
+
+#define HMAC_32_KEY_LEN 4
+#define HMAC_80_KEY_LEN 10
+
 typedef struct {
   gboolean is_ipv6;
   const gchar *server_ip;
