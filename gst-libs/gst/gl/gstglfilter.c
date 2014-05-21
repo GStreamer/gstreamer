@@ -840,7 +840,8 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
 
     gst_query_parse_allocation (decide_query, &decide_caps, NULL);
     decide_pool = gst_base_transform_get_buffer_pool (trans);
-    if (gst_caps_is_equal_fixed (decide_caps, caps)) {
+    if (GST_IS_GL_BUFFER_POOL (decide_pool)
+        && gst_caps_is_equal_fixed (decide_caps, caps)) {
       pool = decide_pool;
     } else {
       GST_DEBUG_OBJECT (filter, "create new pool");
