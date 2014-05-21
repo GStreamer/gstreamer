@@ -173,7 +173,7 @@ gboolean      gst_gl_memory_setup_wrapped (GstGLContext * context, GstVideoInfo 
                                            gpointer data[GST_VIDEO_MAX_PLANES],
                                            GstGLMemory *textures[GST_VIDEO_MAX_PLANES]);
 
-GstVideoGLTextureType gst_gl_texture_type_from_format (GstVideoFormat v_format, guint plane);
+GstVideoGLTextureType gst_gl_texture_type_from_format (GstGLContext *context, GstVideoFormat v_format, guint plane);
 
 /**
  * GstGLAllocator

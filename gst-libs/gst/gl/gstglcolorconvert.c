@@ -694,6 +694,9 @@ _YUV_to_RGB (GstGLColorConvert * convert)
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
   const gchar *out_format_str = gst_video_format_to_string (out_format);
   gchar *pixel_order = _RGB_pixel_order ("rgba", out_format_str);
+  gboolean texture_rg =
+      gst_gl_context_check_feature (convert->context, "GL_EXT_texture_rg")
+      || gst_gl_context_check_feature (convert->context, "GL_ARB_texture_rg");
 
   info->out_n_textures = 1;
 
@@ -737,21 +740,29 @@ _YUV_to_RGB (GstGLColorConvert * convert)
           GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0));
       break;
     case GST_VIDEO_FORMAT_NV12:
-      info->frag_prog = g_strdup_printf (frag_NV12_NV21_to_RGB, 'r', 'a',
+    {
+      char val2 = texture_rg ? 'g' : 'a';
+      info->frag_prog = g_strdup_printf (frag_NV12_NV21_to_RGB, 'r', val2,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
       info->in_n_textures = 2;
       info->shader_tex_names[0] = "Ytex";
       info->shader_tex_names[1] = "UVtex";
       break;
+    }
     case GST_VIDEO_FORMAT_NV21:
-      info->frag_prog = g_strdup_printf (frag_NV12_NV21_to_RGB, 'a', 'r',
+    {
+      char val2 = texture_rg ? 'g' : 'a';
+      info->frag_prog = g_strdup_printf (frag_NV12_NV21_to_RGB, val2, 'r',
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
       info->in_n_textures = 2;
       info->shader_tex_names[0] = "Ytex";
       info->shader_tex_names[1] = "UVtex";
       break;
+    }
     case GST_VIDEO_FORMAT_UYVY:
-      info->frag_prog = g_strdup_printf (frag_YUY2_UYVY_to_RGB, 'a', 'r', 'b',
+    {
+      char y_val = texture_rg ? 'g' : 'a';
+      info->frag_prog = g_strdup_printf (frag_YUY2_UYVY_to_RGB, y_val, 'r', 'b',
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
       info->in_n_textures = 1;
       info->shader_tex_names[0] = "Ytex";
@@ -763,6 +774,7 @@ _YUV_to_RGB (GstGLColorConvert * convert)
           GST_VIDEO_INFO_HEIGHT (&convert->in_info),
           GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0));
       break;
+    }
     default:
       break;
   }
@@ -885,6 +897,9 @@ _GRAY_to_RGB (GstGLColorConvert * convert)
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
   const gchar *out_format_str = gst_video_format_to_string (out_format);
   gchar *pixel_order = _RGB_pixel_order ("rgba", out_format_str);
+  gboolean texture_rg =
+      gst_gl_context_check_feature (convert->context, "GL_EXT_texture_rg")
+      || gst_gl_context_check_feature (convert->context, "GL_ARB_texture_rg");
 
   info->in_n_textures = 1;
   info->out_n_textures = 1;
@@ -893,16 +908,22 @@ _GRAY_to_RGB (GstGLColorConvert * convert)
   switch (GST_VIDEO_INFO_FORMAT (&convert->in_info)) {
     case GST_VIDEO_FORMAT_GRAY8:
       info->frag_prog = g_strdup_printf (frag_REORDER, "", pixel_order[0],
-          pixel_order[1], pixel_order[2], pixel_order[3]);
+          pixel_order[0], pixel_order[0], pixel_order[3]);
       break;
     case GST_VIDEO_FORMAT_GRAY16_LE:
-      info->frag_prog = g_strdup_printf (frag_COMPOSE, 'a', 'r',
+    {
+      char val2 = texture_rg ? 'g' : 'a';
+      info->frag_prog = g_strdup_printf (frag_COMPOSE, val2, 'r',
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
       break;
+    }
     case GST_VIDEO_FORMAT_GRAY16_BE:
-      info->frag_prog = g_strdup_printf (frag_COMPOSE, 'r', 'a',
+    {
+      char val2 = texture_rg ? 'g' : 'a';
+      info->frag_prog = g_strdup_printf (frag_COMPOSE, 'r', val2,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
       break;
+    }
     default:
       break;
   }

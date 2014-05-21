@@ -181,8 +181,14 @@ _gl_texture_type_n_bytes (GstVideoGLTextureType tex_format)
 }
 
 GstVideoGLTextureType
-gst_gl_texture_type_from_format (GstVideoFormat v_format, guint plane)
+gst_gl_texture_type_from_format (GstGLContext * context,
+    GstVideoFormat v_format, guint plane)
 {
+  gboolean texture_rg =
+      gst_gl_context_check_feature (context, "GL_EXT_texture_rg")
+      || gst_gl_context_check_feature (context, "GL_ARB_texture_rg");
+  guint n_plane_components;
+
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
@@ -193,40 +199,56 @@ gst_gl_texture_type_from_format (GstVideoFormat v_format, guint plane)
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_AYUV:
-      return GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+      n_plane_components = 4;
       break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-      return GST_VIDEO_GL_TEXTURE_TYPE_RGB;
-      break;
-    case GST_VIDEO_FORMAT_GRAY8:
-      return GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
+      n_plane_components = 3;
       break;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
-      return GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA;
-      break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
-      return GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA;
+      n_plane_components = 2;
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
-      if (plane == 0)
-        return GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
-      return GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA;
+      n_plane_components = plane == 0 ? 1 : 2;
       break;
+    case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-      return GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
+      n_plane_components = 1;
+      break;
+    default:
+      n_plane_components = 4;
+      g_assert_not_reached ();
+      break;
+  }
+
+  switch (n_plane_components) {
+    case 4:
+      return GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+      break;
+    case 3:
+      return GST_VIDEO_GL_TEXTURE_TYPE_RGB;
+      break;
+    case 2:
+      return texture_rg ? GST_VIDEO_GL_TEXTURE_TYPE_RG :
+          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA;
+      break;
+    case 1:
+      return texture_rg ? GST_VIDEO_GL_TEXTURE_TYPE_R :
+          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
       break;
     default:
       g_assert_not_reached ();
       break;
   }
+
   return GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
 }
 
@@ -1041,7 +1063,8 @@ gst_gl_memory_setup_buffer (GstGLContext * context, GstVideoInfo * info,
 
   for (i = 0; i < n_mem; i++) {
     tex_type =
-        gst_gl_texture_type_from_format (GST_VIDEO_INFO_FORMAT (info), i);
+        gst_gl_texture_type_from_format (context, GST_VIDEO_INFO_FORMAT (info),
+        i);
     gl_mem[i] =
         (GstGLMemory *) gst_gl_memory_alloc (context, tex_type,
         _get_plane_width (info, i), _get_plane_height (info, i),
@@ -1079,7 +1102,8 @@ gst_gl_memory_setup_wrapped (GstGLContext * context, GstVideoInfo * info,
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
     tex_type =
-        gst_gl_texture_type_from_format (GST_VIDEO_INFO_FORMAT (info), i);
+        gst_gl_texture_type_from_format (context, GST_VIDEO_INFO_FORMAT (info),
+        i);
 
     textures[i] = (GstGLMemory *) gst_gl_memory_wrapped (context, tex_type,
         _get_plane_width (info, i), _get_plane_height (info, i),
