@@ -14409,6 +14409,16 @@
 </ARG>
 
 <ARG>
+<NAME>avenc_prores::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum encode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>avenc_ppm::bitrate</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -16619,6 +16629,16 @@
 </ARG>
 
 <ARG>
+<NAME>avenc_mpeg4::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum encode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>avenc_mpeg2video::b-quant-factor</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[-31,31]</RANGE>
@@ -17209,6 +17229,16 @@
 </ARG>
 
 <ARG>
+<NAME>avenc_mpeg2video::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum encode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>avenc_mpeg1video::b-quant-factor</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[-31,31]</RANGE>
@@ -17796,6 +17826,16 @@
 <NICK>Trellis Quantization</NICK>
 <BLURB>Trellis RD quantization.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_mpeg1video::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum encode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18656,6 +18696,16 @@
 <NICK>Trellis Quantization</NICK>
 <BLURB>Trellis RD quantization.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_h263p::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum encode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20129,6 +20179,16 @@
 </ARG>
 
 <ARG>
+<NAME>avenc_ffv1::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum encode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>avenc_eac3::bitrate</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -20205,6 +20265,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_dvvideo::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum encode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -20325,6 +20395,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_dnxhd::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum encode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 

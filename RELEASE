@@ -1,7 +1,8 @@
-Release notes for GStreamer libav Plugins 1.3.1
+
+Release notes for GStreamer libav Plugins 1.3.2
 
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.3 release series. The 1.3 release series is adding new features on top of
 the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.3 release series
@@ -45,19 +46,15 @@ contains a set of less supported plugins that haven't passed the
     rigorous quality testing we expect, or are still missing documentation
     and/or unit tests
 
+
+
+  
+
 Bugs fixed in this release
      
-      * 689936 : avdec: leak when skipping frames while Video Decoding
-      * 696770 : avdec_h264: Memory leak when processing h.264 field pictures
-      * 719923 : Port to libav 10 API
-      * 722290 : avviddec: mark buffers as corrupted if libav tells us so
-      * 722453 : avviddec: add output-corrupt property
-      * 722598 : gas-preprocessor: libav 10alpha2 fails to build on iOS: libavcodec/arm/vc1dsp_neon.S:2810:14: error: invalid operand
-      * 722935 : avdemux: Don't go into pull mode when the sequential scheduling flag is set
-      * 724536 : Infinite loop while encoding audio to aac
-      * 724823 : hevc: rename plugin to avdec_h265 for consistency
-      * 726814 : avvidenc: Fix leak of AVBufferRef
-      * 727673 : avdec_aic sink missing caps
+      * 726299 : avvideodec: Should reject buffer pools that cannot grow
+      * 726612 : avvidenc: add 'max-threads' property to control max. number of threads used when encoding video
+      * 730075 : avviddec: QoS handling causes decoding artefacts
 
 ==== Download ====
 
@@ -94,22 +91,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Christian Fredrik Kalager Schaller
-      * Dmitry Melnichenko
-      * Edward Hervey
-      * Greg Rutz
-      * Mark Nauwelaerts
-      * Matthieu Bouron
+      * Gavin Hurlbut
+      * Mathieu Duponchelle
+      * Nicolas Dufresne
       * Sebastian Dröge
-      * Sjoerd Simons
-      * Stefan Sauer
-      * Stian Selnes
-      * Thiago Santos
-      * Thijs Vermeir
-      * Tim 'mithro' Ansell
-      * Tim-Philipp Müller
-      * Todd Agulnick
-      * Vincent Penquerc'h
-      * Wim Taymans
  

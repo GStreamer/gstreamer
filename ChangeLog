@@ -1,9 +1,73 @@
-=== release 1.3.1 ===
+=== release 1.3.2 ===
 
-2014-05-03  Sebastian Dröge <slomo@coaxion.net>
+2014-05-21  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.1
+	  releasing 1.3.2
+
+2014-05-21 10:53:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 211fa5f to 1f5d3c3
+
+2014-03-17 22:26:52 -0700  Gavin Hurlbut <gjhurlbu@gmail.com>
+
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	  avvidenc: Add thread-count parameter for libav encoders
+	  As some libav encoders (such as MPEG2) use a thread_count parameter to control
+	  how many threads to use, and since it was always being set to 0 (which uses
+	  the default), suboptimal threading can sometimes be chosen.  This extends the
+	  libav encoders to allow for a max-threads parameter which is passed into
+	  the internal structure to control this knob if applicable to the encoder.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726612
+
+2014-05-13 20:17:17 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ext/libav/gstavviddec.c:
+	  gstavviddec: Sanitize and fix qos handling.
+	  gst_video_decoder_get_max_decding_time doesn't return a GstClockTime
+	  but a GstClockTimeDiff, and thus one needs to compare it against
+	  G_MAXINT_64.
+	  The returning of a boolean and the extra subsequent code in _video_frame
+	  was uselessly complicated.
+	  The previous behaviour led to artefacts when the decoder tried to
+	  hurry up.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730075
+
+2014-05-14 10:19:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  Update to libav 10.1
+
+2014-03-27 18:53:53 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  videodec: Don't use non-growable pool
+	  As we don't know how many output buffers we need to operate, we need to
+	  avoid pool that can't grow. Otherwise the pipeline may stall, waiting
+	  for buffers. For now, we require it to be able to grow to at least
+	  32 buffers, which I think is a fair amount of buffers for decoders.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726299
+
+2014-05-03 20:48:40 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.3.1 ===
+
+2014-05-03 18:34:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.3.1
 
 2014-05-03 10:17:23 +0200  Sebastian Dröge <sebastian@centricular.com>
 
