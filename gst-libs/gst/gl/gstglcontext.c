@@ -149,6 +149,8 @@ struct _GstGLContextPrivate
 
   gint gl_major;
   gint gl_minor;
+
+  gchar *gl_exts;
 };
 
 typedef struct
@@ -372,6 +374,8 @@ gst_gl_context_finalize (GObject * object)
 
   g_cond_clear (&context->priv->destroy_cond);
   g_cond_clear (&context->priv->create_cond);
+
+  g_free (context->priv->gl_exts);
 
   G_OBJECT_CLASS (gst_gl_context_parent_class)->finalize (object);
 }
@@ -849,17 +853,19 @@ gst_gl_context_create_thread (GstGLContext * context)
     GST_DEBUG_OBJECT (context, "GL_EXTENSIONS: %s", ext_g_str->str);
     _gst_gl_feature_check_ext_functions (context, context->priv->gl_major,
         context->priv->gl_minor, ext_g_str->str);
+
+    context->priv->gl_exts = g_string_free (ext_g_str, FALSE);
   } else {
     ext_const_c_str = (const gchar *) gl->GetString (GL_EXTENSIONS);
     if (!ext_const_c_str)
       ext_const_c_str = "";
+
     GST_DEBUG_OBJECT (context, "GL_EXTENSIONS: %s", ext_const_c_str);
     _gst_gl_feature_check_ext_functions (context, context->priv->gl_major,
         context->priv->gl_minor, ext_const_c_str);
-  }
 
-  if (ext_g_str)
-    g_string_free (ext_g_str, TRUE);
+    context->priv->gl_exts = g_strdup (ext_const_c_str);
+  }
 
   context->priv->alive = TRUE;
 
@@ -1051,6 +1057,10 @@ gst_gl_context_check_feature (GstGLContext * context, const gchar * feature)
   g_return_val_if_fail (feature != NULL, FALSE);
 
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
+
+  if (g_strstr_len (feature, 3, "GL_"))
+    return gst_gl_check_extension (feature, context->priv->gl_exts);
+
   if (!context_class->check_feature)
     return FALSE;
 
