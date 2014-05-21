@@ -537,7 +537,7 @@ GST_START_TEST (test_video_formats)
         fail_unless_equals_int (GST_VIDEO_INFO_COMP_STRIDE (&vinfo, 0),
             paintinfo.ystride);
         if (!gst_video_format_is_packed (fmt)
-            && !GST_VIDEO_INFO_N_PLANES (&vinfo) > 2) {
+            && GST_VIDEO_INFO_N_PLANES (&vinfo) > 2) {
           /* planar */
           fail_unless_equals_int (GST_VIDEO_INFO_COMP_STRIDE (&vinfo, 1),
               paintinfo.ustride);
