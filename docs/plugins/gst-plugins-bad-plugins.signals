@@ -581,3 +581,11 @@ GstSrtpDec *gstsrtpdec
 guint  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstSrtpDec::remove-key</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstSrtpDec *gstsrtpdec
+guint  arg1
+</SIGNAL>
+

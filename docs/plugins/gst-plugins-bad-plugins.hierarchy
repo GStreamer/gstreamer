@@ -64,8 +64,6 @@ GObject
           GstChecksumSink
           GstCurlBaseSink
             GstCurlFileSink
-            GstCurlSshSink
-              GstCurlSftpSink
             GstCurlTlsSink
               GstCurlFtpSink
               GstCurlHttpSink
@@ -202,9 +200,11 @@ GObject
           GstBaseCameraSrc
             GstUvcH264Src
             GstWrapperCameraBinSrc
+          GstDashDemux
           GstFPSDisplaySink
           GstHLSDemux
           GstHlsSink
+          GstMssDemux
           GstPipeline
             GstCameraBin
           GstSDPDemux
@@ -216,7 +216,6 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
-        GstDashDemux
         GstDecklinkSink
         GstDecklinkSrc
         GstDisparity
@@ -249,7 +248,6 @@ GObject
         GstMpeg2enc
         GstMpegPSDemux
         GstMplex
-        GstMssDemux
         GstOpencvTextOverlay
         GstPcapParse
         GstPitch
@@ -298,6 +296,7 @@ GObject
           GstTSDemux
           MpegTSParse2
         MpegTsMux
+      GstGLContext
       GstPad
         GstGLMixerPad
       GstPadTemplate
@@ -311,7 +310,6 @@ GObject
       GstTaskPool
   GstColorBalanceChannel
   GstEncodingProfile
-  GstGLContext
   GstVdpDevice
   MXFMetadataBase
     MXFDescriptiveMetadata

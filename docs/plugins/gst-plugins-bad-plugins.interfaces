@@ -16,6 +16,7 @@ GstCameraBin GstChildProxy GstTagSetter
 GstCameraBin2 GstChildProxy GstTagSetter
 GstCeltEnc GstPreset GstTagSetter
 GstDaalaEnc GstPreset
+GstDashDemux GstChildProxy
 GstDataURISrc GstURIHandler
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 GstDfbVideoSink GstNavigation GstColorBalance
@@ -46,6 +47,7 @@ GstKateEnc GstTagSetter
 GstKateTag GstTagSetter
 GstMMS GstURIHandler
 GstMpeg2enc GstPreset
+GstMssDemux GstChildProxy
 GstMythtvSrc GstURIHandler
 GstNeonhttpSrc GstURIHandler
 GstOpenJPEGEnc GstPreset

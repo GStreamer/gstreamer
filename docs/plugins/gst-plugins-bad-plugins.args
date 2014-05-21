@@ -60359,7 +60359,7 @@
 <RANGE>>= 2</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum buffering time</NICK>
-<BLURB>Maximum number of seconds of buffer accumulated during playback.</BLURB>
+<BLURB>Maximum number of seconds of buffer accumulated during playback(deprecated).</BLURB>
 <DEFAULT>30</DEFAULT>
 </ARG>
 
@@ -60613,7 +60613,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max queue size in buffers</NICK>
-<BLURB>Maximum buffers that can be stored in each internal stream queue (0 = infinite).</BLURB>
+<BLURB>Maximum buffers that can be stored in each internal stream queue (0 = infinite) (deprecated).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
