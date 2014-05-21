@@ -26,21 +26,9 @@
 
 G_BEGIN_DECLS
 
-/**
- * GstWaylandWindowHandle:
- *
- * Window handle structure to pass to the GstVideoOverlay set_window_handle
- * method.
- */
-typedef struct _GstWaylandWindowHandle GstWaylandWindowHandle;
-
-struct _GstWaylandWindowHandle {
-  struct wl_display *display;
-  struct wl_surface *surface;
-  gint width;
-  gint height;
-};
-
+/* The type of GstContext used to pass the wl_display pointer
+ * from the application to the sink */
+#define GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE "GstWaylandDisplayHandleContextType"
 
 #define GST_TYPE_WAYLAND_VIDEO \
     (gst_wayland_video_get_type ())

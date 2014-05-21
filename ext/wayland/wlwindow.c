@@ -134,6 +134,9 @@ gst_wl_window_new_from_surface (GstWlDisplay * display,
   window->surface = surface;
   window->own_surface = FALSE;
 
+  /* make sure the surface runs on our local queue */
+  wl_proxy_set_queue ((struct wl_proxy *) surface, display->queue);
+
   window->viewport = wl_scaler_get_viewport (display->scaler, window->surface);
 
   /* do not accept input */

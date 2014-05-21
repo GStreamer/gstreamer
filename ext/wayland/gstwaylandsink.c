@@ -82,6 +82,8 @@ static void gst_wayland_sink_finalize (GObject * object);
 
 static GstStateChangeReturn gst_wayland_sink_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_wayland_sink_set_context (GstElement * element,
+    GstContext * context);
 
 static GstCaps *gst_wayland_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
@@ -141,6 +143,8 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_wayland_sink_change_state);
+  gstelement_class->set_context =
+      GST_DEBUG_FUNCPTR (gst_wayland_sink_set_context);
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_get_caps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_set_caps);
@@ -151,7 +155,7 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
       g_param_spec_string ("display", "Wayland Display name", "Wayland "
-          "display name to connect to, if not supplied with GstVideoOverlay",
+          "display name to connect to, if not supplied via the GstContext",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -223,6 +227,57 @@ gst_wayland_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gboolean
+gst_wayland_sink_find_display (GstWaylandSink * sink)
+{
+  GstQuery *query;
+  GstMessage *msg;
+  GstContext *context = NULL;
+  GError *error = NULL;
+  gboolean ret = TRUE;
+
+  if (!sink->display) {
+    /* first query upstream for the needed display handle */
+    query = gst_query_new_context (GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE);
+    if (gst_pad_peer_query (GST_VIDEO_SINK_PAD (sink), query)) {
+      gst_query_parse_context (query, &context);
+      gst_wayland_sink_set_context (GST_ELEMENT (sink), context);
+    }
+    gst_query_unref (query);
+
+    if (G_LIKELY (!sink->display)) {
+      /* now ask the application to set the display handle */
+      msg = gst_message_new_need_context (GST_OBJECT_CAST (sink),
+          GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE);
+      gst_element_post_message (GST_ELEMENT_CAST (sink), msg);
+      /* at this point we expect gst_wayland_sink_set_context
+       * to get called and fill sink->display */
+
+      if (!sink->display) {
+        /* if the application didn't set a display, let's create it ourselves */
+        sink->display = gst_wl_display_new (sink->display_name, &error);
+        if (error) {
+          GST_ELEMENT_WARNING (sink, RESOURCE, OPEN_READ_WRITE,
+              ("Could not initialise Wayland output"),
+              ("Failed to create GstWlDisplay: '%s'", error->message));
+          g_error_free (error);
+          ret = FALSE;
+        } else {
+          /* inform the world about the new display */
+          context =
+              gst_context_new (GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE, FALSE);
+          gst_structure_set (gst_context_writable_structure (context),
+              "handle", G_TYPE_POINTER, sink->display->display, NULL);
+          msg = gst_message_new_have_context (GST_OBJECT_CAST (sink), context);
+          gst_element_post_message (GST_ELEMENT_CAST (sink), msg);
+        }
+      }
+    }
+  }
+
+  return ret;
+}
+
 static GstStateChangeReturn
 gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
 {
@@ -231,23 +286,8 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!sink->window)
-        gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (sink));
-
-      /* if nobody set a window handle, create at least a display */
-      if (!sink->display) {
-        GError *error = NULL;
-
-        sink->display = gst_wl_display_new (sink->display_name, &error);
-
-        if (sink->display == NULL) {
-          GST_ELEMENT_WARNING (sink, RESOURCE, OPEN_READ_WRITE,
-              ("Could not initialise Wayland output"),
-              ("Failed to create GstWlDisplay: '%s'", error->message));
-          g_error_free (error);
-          return GST_STATE_CHANGE_FAILURE;
-        }
-      }
+      if (!gst_wayland_sink_find_display (sink))
+        return GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
@@ -265,6 +305,10 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      /* We don't need to keep the display around, unless we are embedded
+       * in another window as a subsurface, in which case we should continue
+       * to respond to expose() and therefore both the window and the display
+       * are kept alive */
       if (sink->display && !sink->window) {     /* -> the window was toplevel */
         /* Force all buffers to return to the pool, regardless of
          * whether the compositor has released them or not. We are
@@ -292,6 +336,32 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+}
+
+static void
+gst_wayland_sink_set_context (GstElement * element, GstContext * context)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (element);
+
+  if (gst_context_has_context_type (context,
+          GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE)) {
+    const GstStructure *s;
+    struct wl_display *display;
+    GError *error = NULL;
+
+    s = gst_context_get_structure (context);
+    gst_structure_get (s, "handle", G_TYPE_POINTER, &display, NULL);
+    sink->display = gst_wl_display_new_existing (display, FALSE, &error);
+    if (error) {
+      GST_ELEMENT_WARNING (sink, RESOURCE, OPEN_READ_WRITE,
+          ("Could not set display handle"),
+          ("Failed to use the external wayland display: '%s'", error->message));
+      g_error_free (error);
+    }
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->set_context)
+    GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static GstCaps *
@@ -567,13 +637,21 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstWlMeta *meta;
   GstFlowReturn ret = GST_FLOW_OK;
 
+  /* ask for window handle. do that before locking the sink, because
+   * set_window_handle & friends will lock it in this context */
+  if (!sink->window)
+    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (sink));
+
   GST_OBJECT_LOCK (sink);
 
   GST_LOG_OBJECT (sink, "render buffer %p", buffer);
 
+  /* if we were not provided a window, create one ourselves */
   if (!sink->window)
     sink->window = gst_wl_window_new_toplevel (sink->display, sink->video_width,
         sink->video_height);
+  else if (sink->window->width == 0 || sink->window->height == 0)
+    goto no_window_size;
 
   /* surface is resizing - drop buffers until finished */
   if (sink->drawing_frozen)
@@ -618,6 +696,14 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     gst_buffer_unref (to_render);
   goto done;
 
+no_window_size:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
+        ("Window has no size set"),
+        ("Make sure you set the size after calling set_window_handle"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 no_buffer:
   {
     GST_WARNING_OBJECT (sink, "could not create image");
@@ -655,11 +741,9 @@ static void
 gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (overlay);
-  GstWaylandWindowHandle *whandle = (GstWaylandWindowHandle *) handle;
-  GError *error = NULL;
+  struct wl_surface *surface = (struct wl_surface *) handle;
 
   g_return_if_fail (sink != NULL);
-  g_return_if_fail (GST_STATE (sink) < GST_STATE_PAUSED);
 
   GST_OBJECT_LOCK (sink);
 
@@ -667,34 +751,22 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
       (void *) handle);
 
   g_clear_object (&sink->window);
-  g_clear_object (&sink->display);
 
   if (handle) {
-    sink->display =
-        gst_wl_display_new_existing (whandle->display, FALSE, &error);
-    if (error) {
-      GST_ELEMENT_WARNING (sink, RESOURCE, OPEN_READ_WRITE,
-          ("Could not set window handle"),
-          ("Failed to use the external wayland display: '%s'", error->message));
-      g_error_free (error);
+    if (G_LIKELY (gst_wayland_sink_find_display (sink))) {
+      /* we cannot use our own display with an external window handle */
+      if (G_UNLIKELY (sink->display->own_display)) {
+        GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ_WRITE,
+            ("Application did not provide a wayland display handle"),
+            ("waylandsink cannot use an externally-supplied surface without "
+                "an externally-supplied display handle. Consider providing a "
+                "display handle from your application with GstContext"));
+      } else {
+        sink->window = gst_wl_window_new_from_surface (sink->display, surface);
+      }
     } else {
-      wl_proxy_set_queue ((struct wl_proxy *) whandle->surface,
-          sink->display->queue);
-      sink->window = gst_wl_window_new_from_surface (sink->display,
-          whandle->surface);
-      gst_wl_window_set_size (sink->window, whandle->width, whandle->height);
-    }
-  }
-
-  if (!sink->display && GST_STATE (sink) == GST_STATE_READY) {
-    /* we need a display to be in READY */
-    sink->display = gst_wl_display_new (sink->display_name, &error);
-
-    if (sink->display == NULL) {
-      GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ_WRITE,
-          ("Could not initialise Wayland output"),
-          ("Failed to create GstWlDisplay: '%s'", error->message));
-      g_error_free (error);
+      GST_ERROR_OBJECT (sink, "Failed to find display handle, "
+          "ignoring window handle");
     }
   }
 
