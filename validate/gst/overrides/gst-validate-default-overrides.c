@@ -24,9 +24,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include "gst-validate-override.h"
-#include "gst-validate-override-registry.h"
-#include "gst-validate-report.h"
+#include <gst/validate/gst-validate-override.h>
+#include <gst/validate/gst-validate-override-registry.h>
+#include <gst/validate/gst-validate-report.h>
 
 /* public symbol */
 int gst_validate_create_overrides (void);

@@ -268,6 +268,8 @@ common/m4/Makefile
 data/Makefile
 gst/Makefile
 gst/validate/Makefile
+gst/preload/Makefile
+gst/overrides/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-validate-uninstalled.pc
 pkgconfig/gst-validate.pc
