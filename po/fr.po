@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2011-04-28 09:22+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -264,9 +264,6 @@ msgstr ""
 "Le périphérique d'entrée vidéo n'a pas accepté le nouveau paramètre de "
 "fréquence d'image."
 
-msgid "Video device could not create buffer pool."
-msgstr ""
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr ""
@@ -283,6 +280,18 @@ msgstr ""
 "d'enregistrement connue."
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+msgid "Failed to configure internal buffer pool."
+msgstr ""
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr ""
+"Le périphérique d'entrée vidéo n'a pas accepté le nouveau paramètre de "
+"fréquence d'image."
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, fuzzy, c-format

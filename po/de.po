@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2013-09-21 12:39+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -270,9 +270,6 @@ msgstr ""
 "Das Video-Eingabegerät akzeptierte nicht die neue Einstellung zur "
 "Bildwiederholungsrate."
 
-msgid "Video device could not create buffer pool."
-msgstr "Das Videogerät konnte keinen Puffer-Pool erstellen"
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr ""
@@ -287,6 +284,17 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr "Der Treiber von Gerät »%s« unterstützt nicht die EA-Methode %d"
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to configure internal buffer pool."
+msgstr "Das Videogerät konnte keinen Puffer-Pool erstellen"
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "Das Videogerät konnte keinen Puffer-Pool erstellen"
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, c-format

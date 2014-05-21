@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2014-04-09 22:52+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -256,9 +256,6 @@ msgstr "Ni mogoče pridobiti parametrov na napravi '%s'."
 msgid "Video device did not accept new frame rate setting."
 msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
 
-msgid "Video device could not create buffer pool."
-msgstr "Naprava ne more ustvariti zaloge medpomnilnika."
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
@@ -271,6 +268,17 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr "Gonilnik naprave \"%s\" ne podpira nobenega načina I/O %d."
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to configure internal buffer pool."
+msgstr "Naprava ne more ustvariti zaloge medpomnilnika."
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "Naprava ne more ustvariti zaloge medpomnilnika."
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, c-format

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2014-01-22 17:49+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -251,9 +251,6 @@ msgstr "Kunne ikke få parametere på enheten «%s»."
 msgid "Video device did not accept new frame rate setting."
 msgstr "Videoenheten aksepterte ikke ny bildefrekvensinnstilling."
 
-msgid "Video device could not create buffer pool."
-msgstr "Videoenhet kan ikke opprette bufferkø"
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr "Videoenheten aksepterte ikke ny bildefrekvensinnstilling."
@@ -266,6 +263,17 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr "Driveren av enheten «%s» støtter ikke IO metoden %d"
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to configure internal buffer pool."
+msgstr "Videoenhet kan ikke opprette bufferkø"
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "Videoenhet kan ikke opprette bufferkø"
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, c-format

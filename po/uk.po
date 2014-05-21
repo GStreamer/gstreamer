@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2013-09-14 22:23+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -263,9 +263,6 @@ msgid "Video device did not accept new frame rate setting."
 msgstr ""
 "Відеопристроєм не підтримується нове значення параметра частоти кадрів."
 
-msgid "Video device could not create buffer pool."
-msgstr "Відеопристрою не вдалося створити сховище буферизованих даних."
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr ""
@@ -279,6 +276,17 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr "Драйвер пристрою «%s» не підтримує метод введення-виведення даних %d"
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to configure internal buffer pool."
+msgstr "Відеопристрою не вдалося створити сховище буферизованих даних."
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "Відеопристрою не вдалося створити сховище буферизованих даних."
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, c-format

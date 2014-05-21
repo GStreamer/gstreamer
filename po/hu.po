@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2014-03-20 18:55+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -260,9 +260,6 @@ msgstr "Nem kérhetők le a(z) „%s” eszköz paraméterei"
 msgid "Video device did not accept new frame rate setting."
 msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
 
-msgid "Video device could not create buffer pool."
-msgstr "A videoeszköz nem tudott létrehozni puffertárolót."
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
@@ -275,6 +272,17 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr "A(z) „%s” eszköz illesztőprogramja nem támogatja a(z) %d. IO módot"
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to configure internal buffer pool."
+msgstr "A videoeszköz nem tudott létrehozni puffertárolót."
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "A videoeszköz nem tudott létrehozni puffertárolót."
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, c-format

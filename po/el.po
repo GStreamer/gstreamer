@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2012-05-05 19:05+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -256,9 +256,6 @@ msgstr "Δεν ήταν δυνατή η ανάγνωση των παραμέτρ
 msgid "Video device did not accept new frame rate setting."
 msgstr "Η συσκευή εισόδου βίντεο δεν αποδέχθηκε τη νέα ρύθμιση ταχύτητας καρέ."
 
-msgid "Video device could not create buffer pool."
-msgstr ""
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr "Η συσκευή εισόδου βίντεο δεν αποδέχθηκε τη νέα ρύθμιση ταχύτητας καρέ."
@@ -270,6 +267,16 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr ""
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+msgid "Failed to configure internal buffer pool."
+msgstr ""
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "Η συσκευή εισόδου βίντεο δεν αποδέχθηκε τη νέα ρύθμιση ταχύτητας καρέ."
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, fuzzy, c-format

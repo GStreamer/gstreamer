@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2013-09-15 13:31+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -254,9 +254,6 @@ msgstr "Kan de parameters op apparaat '%s' niet verkrijgen"
 msgid "Video device did not accept new frame rate setting."
 msgstr "Videoapparaat heeft de nieuwe frame-snelheid niet geaccepteerd."
 
-msgid "Video device could not create buffer pool."
-msgstr "Videoapparaat kon geen bufferpool aanmaken."
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr "Videoapparaat heeft de nieuwe frame-snelheid niet geaccepteerd."
@@ -269,6 +266,17 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr "Het stuurprogramma van apparaat '%s' ondersteunt de IO-methode %d niet"
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to configure internal buffer pool."
+msgstr "Videoapparaat kon geen bufferpool aanmaken."
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "Videoapparaat kon geen bufferpool aanmaken."
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, c-format

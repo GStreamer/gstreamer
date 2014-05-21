@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2009-11-13 22:20+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -251,9 +251,6 @@ msgstr "无法获取设备‘%s’的参数"
 msgid "Video device did not accept new frame rate setting."
 msgstr "视频输入设备不接受新的帧率设置。"
 
-msgid "Video device could not create buffer pool."
-msgstr ""
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr "视频输入设备不接受新的帧率设置。"
@@ -265,6 +262,16 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr ""
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+msgid "Failed to configure internal buffer pool."
+msgstr ""
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "视频输入设备不接受新的帧率设置。"
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, fuzzy, c-format

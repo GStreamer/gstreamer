@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2013-09-16 14:36+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -259,9 +259,6 @@ msgstr "Không thể lấy các tham số về thiết bị “%s”."
 msgid "Video device did not accept new frame rate setting."
 msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khung hình mới."
 
-msgid "Video device could not create buffer pool."
-msgstr "Thiết bị video không thể tạo kho đệm."
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khung hình mới."
@@ -274,6 +271,17 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr "Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR %d"
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to configure internal buffer pool."
+msgstr "Thiết bị video không thể tạo kho đệm."
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "Thiết bị video không thể tạo kho đệm."
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, c-format

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2013-09-18 19:18+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -256,9 +256,6 @@ msgstr "Nezdařilo se zjištění parametrů na zařízení „%s“"
 msgid "Video device did not accept new frame rate setting."
 msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
 
-msgid "Video device could not create buffer pool."
-msgstr "Videozařízení se nezdařilo vytvořit společnou vyrovnávací paměť."
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
@@ -271,6 +268,17 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr "Ovladač zařízení „%s“ nepodporuje V/V metodu %d"
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to configure internal buffer pool."
+msgstr "Videozařízení se nezdařilo vytvořit společnou vyrovnávací paměť."
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "Videozařízení se nezdařilo vytvořit společnou vyrovnávací paměť."
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, c-format

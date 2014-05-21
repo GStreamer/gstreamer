@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-03 18:00+0200\n"
+"POT-Creation-Date: 2014-05-21 12:10+0200\n"
 "PO-Revision-Date: 2013-10-15 16:26+0700\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -255,9 +255,6 @@ msgstr "Tak bisa mendapatkan parameter di divais '%s'"
 msgid "Video device did not accept new frame rate setting."
 msgstr "Divais video tak menerima pengaturan laju bingkai baru."
 
-msgid "Video device could not create buffer pool."
-msgstr "Divais video tak bisa membuat pul singgahan."
-
 #, fuzzy
 msgid "Video device did not provide output format."
 msgstr "Divais video tak menerima pengaturan laju bingkai baru."
@@ -270,6 +267,17 @@ msgid "Video devices uses an unsupported interlacing method."
 msgstr "Driver dari divais '%s' tak mendukung metode IO %d"
 
 msgid "Video devices uses an unsupported pixel format."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to configure internal buffer pool."
+msgstr "Divais video tak bisa membuat pul singgahan."
+
+#, fuzzy
+msgid "Video device did not suggest any buffer size."
+msgstr "Divais video tak bisa membuat pul singgahan."
+
+msgid "No downstream pool to import from."
 msgstr ""
 
 #, c-format
