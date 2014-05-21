@@ -727,12 +727,12 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       info->frag_prog = g_strdup_printf (frag_YUY2_UYVY_to_RGB, 'r', 'g', 'a',
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
       info->in_n_textures = 1;
-      info->shader_tex_names[1] = "Ytex";
-      info->shader_tex_names[0] = "UVtex";
+      info->shader_tex_names[0] = "Ytex";
+      info->shader_tex_names[1] = "UVtex";
       convert->priv->scratch =
           (GstGLMemory *) gst_gl_memory_alloc (convert->context,
-          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA,
-          GST_VIDEO_INFO_WIDTH (&convert->in_info),
+          GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
+          GST_VIDEO_INFO_COMP_WIDTH (&convert->in_info, 1),
           GST_VIDEO_INFO_HEIGHT (&convert->in_info),
           GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0));
       break;
@@ -754,12 +754,12 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       info->frag_prog = g_strdup_printf (frag_YUY2_UYVY_to_RGB, 'a', 'r', 'b',
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
       info->in_n_textures = 1;
-      info->shader_tex_names[1] = "Ytex";
-      info->shader_tex_names[0] = "UVtex";
+      info->shader_tex_names[0] = "Ytex";
+      info->shader_tex_names[1] = "UVtex";
       convert->priv->scratch =
           (GstGLMemory *) gst_gl_memory_alloc (convert->context,
-          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA,
-          GST_VIDEO_INFO_WIDTH (&convert->in_info),
+          GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
+          GST_VIDEO_INFO_COMP_WIDTH (&convert->in_info, 1),
           GST_VIDEO_INFO_HEIGHT (&convert->in_info),
           GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0));
       break;
