@@ -1,8 +1,8 @@
 
-Release notes for GStreamer RTSP Server Library 1.3.1
+Release notes for GStreamer RTSP Server Library 1.3.2
 
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.3 release series. The 1.3 release series is adding new features on top of
 the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.3 release series
@@ -28,24 +28,16 @@ change.
 
   
 
+Features of this release
+    
+
 Bugs fixed in this release
      
-      * 725484 : gst-rtsp-server: Ignore gcov intermediate files
-      * 725528 : rtspserver: Enable and fix gtk-doc warnings
-      * 725879 : rtsp-client: headers in GET response not configurable for tunnels
-      * 726362 : rtsp-stream: fix a typo where IPv4 and IPv6 addresses were confused.
-      * 726470 : tests: Add unit tests for sessionpool
-      * 726873 : rtsp-threadpool: Improve code coverage of check tests
-      * 726940 : rtsp-session-media: add more tests to improve code coverage
-      * 726941 : docs: Add annotations to support language bindings
-      * 727102 : rtsp-media: deadlock with dynamic pipelines when preroll fails
-      * 727231 : rtsp-server: The media streams leak
-      * 727376 : crash if media_prepare() fails to allocate UDP ports
-      * 727488 : There is a race when disconnecting POST channel in tunneled mode
-      * 728029 : rtsp-media: Make media_prepare() virtual
-      * 728060 : rtsp-session-pool: Incorrect annotation and leak in unit test
-      * 728153 : Problem with send_lock when data in backlog and recive a teardown request.
-      * 728970 : rtsp-client: add signal before sending response
+      * 729426 : Should respond " 551 Option not supported " in case a Require header is received
+      * 729776 : Set client port from URL
+      * 729900 : rtsp-client: wrong marshalling in send-message signal
+      * 730109 : media: Make suspend()/unsuspend() virtual
+      * 730228 : stream: add signals for new RTP/RTCP encoders
 
 ==== Download ====
 
@@ -84,41 +76,9 @@ Applications
   
 Contributors to this release
     
-      * Aleix Conchillo Flaque
       * Aleix Conchillo Flaqué
-      * Alessandro Decina
-      * Alexander Schrab
-      * Andrey Utkin
-      * Branko Subasic
-      * David Schleef
-      * David Svensson Fors
-      * Edward Hervey
-      * Emmanuel Pacaud
-      * Fabian Deutsch
-      * George McCollister
-      * Göran Jönsson
-      * Jonas Holmberg
-      * Linus Svensson
-      * Lubosz Sarnecki
-      * Luis de Bethencourt
-      * Mark Nauwelaerts
-      * Miguel Angel Cabrera Moya
       * Ognyan Tonchev
-      * Olivier Crête
-      * Patricia Muscalu
-      * Patrick Radizi
-      * Robert Krakora
       * Sebastian Dröge
-      * Sebastian Pölsterl
-      * Sebastian Rasmussen
-      * Stefan Kost
-      * Stefan Sauer
-      * Thijs Vermeir
-      * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Victor Gottardi
-      * Vincent Penquerc'h
       * Wim Taymans
-      * Youness Alaoui
-      * mat
  

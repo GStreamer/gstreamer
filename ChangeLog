@@ -1,9 +1,86 @@
-=== release 1.3.1 ===
+=== release 1.3.2 ===
 
-2014-05-03  Sebastian Dröge <slomo@coaxion.net>
+2014-05-21  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.1
+	  releasing 1.3.2
+
+2014-05-21 10:54:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 211fa5f to 1f5d3c3
+
+2014-05-20 15:57:30 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: store TCP ports in transport
+	  Store the TCP ports in the transport when we are doing RTSP over TCP.
+	  This way, we can easily get to the ports from the transport.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=729776
+
+2014-05-15 18:15:04 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: add signals for new RTP/RTCP encoders
+	  New signals to allow the user to configure the dynamically created
+	  encoders.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730228
+
+2014-05-14 09:31:31 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media: Make suspend()/unsuspend() virtual
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=730109
+
+2014-05-09 17:25:07 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: fix send-message signal marshaller
+	  Use generic marshalling for the send-message signal. It has
+	  two POINTER arguments, not just one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729900
+
+2014-05-09 15:08:48 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* tests/check/gst/media.c:
+	  tests: add and remove pads only once
+	  In this test we simulate a dynamic pad by watching the caps event.
+	  Because of renegotiation in the base payloader now, this caps is sent
+	  multiple times but we can only deal with 1 invocation, use a variable to
+	  only 'add and remove' the pad once.
+
+2014-05-02 20:06:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: add unit test for correct handling of Require headers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729426
+
+2014-05-02 19:59:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: handle Require headers and respond with OPTION_NOT_SUPPORTED
+	  Servers must handle Require headers and must report a failure
+	  if they don't handle any of the Required options, see RFC 2326,
+	  section 12.32: https://tools.ietf.org/html/rfc2326#page-54
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729426
+
+2014-05-03 20:48:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.3.1 ===
+
+2014-05-03 18:40:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.3.1
 
 2014-05-03 10:18:00 +0200  Sebastian Dröge <sebastian@centricular.com>
 
