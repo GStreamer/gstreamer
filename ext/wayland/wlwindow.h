@@ -57,7 +57,7 @@ GType gst_wl_window_get_type (void);
 GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
         gint width, gint height);
 GstWlWindow *gst_wl_window_new_from_surface (GstWlDisplay * display,
-        struct wl_surface * surface, gint width, gint height);
+        struct wl_surface * surface);
 
 GstWlDisplay *gst_wl_window_get_display (GstWlWindow * window);
 struct wl_surface *gst_wl_window_get_wl_surface (GstWlWindow * window);

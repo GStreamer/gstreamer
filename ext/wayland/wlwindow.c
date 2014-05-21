@@ -95,8 +95,10 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, gint width, gint height)
   GstWlWindow *window;
 
   window = gst_wl_window_new_from_surface (display,
-      wl_compositor_create_surface (display->compositor), width, height);
+      wl_compositor_create_surface (display->compositor));
   window->own_surface = TRUE;
+
+  gst_wl_window_set_size (window, width, height);
 
   window->shell_surface = wl_shell_get_shell_surface (display->shell,
       window->surface);
@@ -117,7 +119,7 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, gint width, gint height)
 
 GstWlWindow *
 gst_wl_window_new_from_surface (GstWlDisplay * display,
-    struct wl_surface * surface, gint width, gint height)
+    struct wl_surface * surface)
 {
   GstWlWindow *window;
   struct wl_region *region;
@@ -126,8 +128,8 @@ gst_wl_window_new_from_surface (GstWlDisplay * display,
 
   window = g_object_new (GST_TYPE_WL_WINDOW, NULL);
   window->display = g_object_ref (display);
-  window->width = width;
-  window->height = height;
+  window->width = 0;
+  window->height = 0;
 
   window->surface = surface;
   window->own_surface = FALSE;

@@ -681,7 +681,8 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
       wl_proxy_set_queue ((struct wl_proxy *) whandle->surface,
           sink->display->queue);
       sink->window = gst_wl_window_new_from_surface (sink->display,
-          whandle->surface, whandle->width, whandle->height);
+          whandle->surface);
+      gst_wl_window_set_size (sink->window, whandle->width, whandle->height);
     }
   }
 
