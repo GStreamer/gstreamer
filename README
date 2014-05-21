@@ -151,7 +151,7 @@ INSTALLING FROM PACKAGES
 
 You should always prefer installing from packages first.  GStreamer is
 well-maintained for a number of distributions, including Fedora, Debian,
-Ubuntu, Gentoo, ...
+Ubuntu, Mandrake, Gentoo, ...
 
 Only in cases where you:
 - want to hack on GStreamer
