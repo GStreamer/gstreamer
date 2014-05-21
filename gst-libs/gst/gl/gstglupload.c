@@ -568,7 +568,7 @@ gst_gl_upload_add_video_gl_texture_upload_meta (GstGLUpload * upload,
   upload->priv->buffer = buffer;
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    texture_types[i] = gst_gl_texture_type_from_format (v_meta->format, i);
+    texture_types[i] = gst_gl_texture_type_from_format (upload->context, v_meta->format, i);
   }
 
   gst_buffer_add_video_gl_texture_upload_meta (buffer,
