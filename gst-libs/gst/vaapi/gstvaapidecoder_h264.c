@@ -450,7 +450,8 @@ struct _GstVaapiDecoderH264Private {
     GstVaapiParserInfoH264     *active_pps;
     GstVaapiParserInfoH264     *prev_pi;
     GstVaapiParserInfoH264     *prev_slice_pi;
-    GstVaapiFrameStore         *prev_frame;
+    GstVaapiFrameStore        **prev_frames;
+    guint                       prev_frames_alloc;
     GstVaapiFrameStore        **dpb;
     guint                       dpb_count;
     guint                       dpb_size;
@@ -517,6 +518,13 @@ is_mvc_profile(GstH264Profile profile)
 {
     return profile == GST_H264_PROFILE_MULTIVIEW_HIGH ||
         profile == GST_H264_PROFILE_STEREO_HIGH;
+}
+
+/* Determines the view_id from the supplied NAL unit */
+static inline guint
+get_view_id(GstH264NalUnit *nalu)
+{
+    return GST_H264_IS_MVC_NALU(nalu) ? nalu->extension.mvc.view_id : 0;
 }
 
 /* Determines the view order index (VOIdx) from the supplied view_id */
@@ -685,6 +693,23 @@ dpb_evict(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture, guint i)
         dpb_remove_index(decoder, i);
 }
 
+/* Finds the frame store holding the supplied picture */
+static gint
+dpb_find_picture(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    gint i, j;
+
+    for (i = 0; i < priv->dpb_count; i++) {
+        GstVaapiFrameStore * const fs = priv->dpb[i];
+        for (j = 0; j < fs->num_buffers; j++) {
+            if (fs->buffers[j] == picture)
+                return i;
+        }
+    }
+    return -1;
+}
+
 /* Finds the picture with the lowest POC that needs to be output */
 static gint
 dpb_find_lowest_poc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
@@ -791,7 +816,13 @@ dpb_clear(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     }
     priv->dpb_count = n;
 
-    gst_vaapi_frame_store_replace(&priv->prev_frame, NULL);
+    /* Clear previous frame buffers only if this is a "flush-all" operation,
+       or if the picture is the first one in the access unit */
+    if (!picture || GST_VAAPI_PICTURE_FLAG_IS_SET(picture,
+            GST_VAAPI_PICTURE_FLAG_AU_START)) {
+        for (i = 0; i < priv->max_views; i++)
+            gst_vaapi_picture_replace(&priv->prev_frames[i], NULL);
+    }
 }
 
 static void
@@ -846,15 +877,19 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     }
 
     // Check if picture is the second field and the first field is still in DPB
-    fs = priv->prev_frame;
-    if (fs && !gst_vaapi_frame_store_has_frame(fs))
-        return gst_vaapi_frame_store_add(fs, picture);
+    if (GST_VAAPI_PICTURE_IS_INTERLACED(picture) &&
+        !GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture)) {
+        const gint found_index = dpb_find_picture(decoder,
+            GST_VAAPI_PICTURE_H264(picture->base.parent_picture));
+        if (found_index >= 0)
+            return gst_vaapi_frame_store_add(priv->dpb[found_index], picture);
+    }
 
     // Create new frame store, and split fields if necessary
     fs = gst_vaapi_frame_store_new(picture);
     if (!fs)
         return FALSE;
-    gst_vaapi_frame_store_replace(&priv->prev_frame, fs);
+    gst_vaapi_frame_store_replace(&priv->prev_frames[picture->base.voc], fs);
     gst_vaapi_frame_store_unref(fs);
 
     if (!priv->progressive_sequence && gst_vaapi_frame_store_has_frame(fs)) {
@@ -937,6 +972,7 @@ static gboolean
 mvc_reset(GstVaapiDecoderH264 *decoder)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    guint i;
 
     // Resize array of inter-view references
     if (priv->inter_views)
@@ -947,6 +983,20 @@ mvc_reset(GstVaapiDecoderH264 *decoder)
         if (!priv->inter_views)
             return FALSE;
     }
+
+    // Resize array of previous frame buffers
+    for (i = priv->max_views; i < priv->prev_frames_alloc; i++)
+        gst_vaapi_picture_replace(&priv->prev_frames[i], NULL);
+
+    priv->prev_frames = g_try_realloc_n(priv->prev_frames, priv->max_views,
+        sizeof(*priv->prev_frames));
+    if (!priv->prev_frames) {
+        priv->prev_frames_alloc = 0;
+        return FALSE;
+    }
+    for (i = priv->prev_frames_alloc; i < priv->max_views; i++)
+        priv->prev_frames[i] = NULL;
+    priv->prev_frames_alloc = priv->max_views;
     return TRUE;
 }
 
@@ -1020,6 +1070,10 @@ gst_vaapi_decoder_h264_destroy(GstVaapiDecoder *base_decoder)
     g_free(priv->dpb);
     priv->dpb = NULL;
     priv->dpb_size = 0;
+
+    g_free(priv->prev_frames);
+    priv->prev_frames = NULL;
+    priv->prev_frames_alloc = 0;
 
     for (i = 0; i < G_N_ELEMENTS(priv->pps); i++)
         gst_vaapi_parser_info_h264_replace(&priv->pps[i], NULL);
@@ -1365,8 +1419,7 @@ decode_current_picture(GstVaapiDecoderH264 *decoder)
         goto error;
     if (!gst_vaapi_picture_decode(GST_VAAPI_PICTURE_CAST(picture)))
         goto error;
-    if (priv->prev_frame && gst_vaapi_frame_store_has_frame(priv->prev_frame))
-        gst_vaapi_picture_replace(&priv->current_picture, NULL);
+    gst_vaapi_picture_replace(&priv->current_picture, NULL);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
 error:
@@ -3227,6 +3280,31 @@ is_new_access_unit(GstVaapiParserInfoH264 *pi, GstVaapiParserInfoH264 *prev_pi)
     return voc < prev_voc;
 }
 
+/* Finds the first field picture corresponding to the supplied picture */
+static GstVaapiPictureH264 *
+find_first_field(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu,
+    GstH264SliceHdr *slice_hdr)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiFrameStore *fs;
+    gint voc;
+
+    if (!slice_hdr->field_pic_flag)
+        return NULL;
+
+    voc = get_view_order_index(get_sps(decoder), get_view_id(nalu));
+    if (voc < 0)
+        return NULL;
+
+    fs = priv->prev_frames[voc];
+    if (!fs || gst_vaapi_frame_store_has_frame(fs))
+        return NULL;
+
+    if (fs->buffers[0]->frame_num == slice_hdr->frame_num)
+        return fs->buffers[0];
+    return NULL;
+}
+
 static GstVaapiDecoderStatus
 decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
@@ -3235,7 +3313,7 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstH264PPS * const pps = ensure_pps(decoder, slice_hdr->pps);
     GstH264SPS * const sps = ensure_sps(decoder, slice_hdr->pps->sequence);
-    GstVaapiPictureH264 *picture;
+    GstVaapiPictureH264 *picture, *first_field;
     GstVaapiDecoderStatus status;
 
     g_return_val_if_fail(pps != NULL, GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN);
@@ -3258,9 +3336,10 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 
     priv->decoder_state = 0;
 
-    if (priv->current_picture) {
+    first_field = find_first_field(decoder, &pi->nalu, slice_hdr);
+    if (first_field) {
         /* Re-use current picture where the first field was decoded */
-        picture = gst_vaapi_picture_h264_new_field(priv->current_picture);
+        picture = gst_vaapi_picture_h264_new_field(first_field);
         if (!picture) {
             GST_ERROR("failed to allocate field picture");
             return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
