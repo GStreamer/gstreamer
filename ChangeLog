@@ -1,9 +1,362 @@
-=== release 1.3.1 ===
+=== release 1.3.2 ===
 
-2014-05-03  Sebastian Dröge <slomo@coaxion.net>
+2014-05-21  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.1
+	  releasing 1.3.2
+
+2014-05-21 10:50:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 211fa5f to 1f5d3c3
+
+2014-05-21 10:43:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/libs/video.c:
+	  video: And check comparison for real
+
+2014-05-21 10:40:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/libs/video.c:
+	  video: Fix broken comparison in unit test
+	  libs/video.c:540:50: error: comparison of constant 2 with boolean expression is always false
+	  [-Werror,-Wtautological-constant-out-of-range-compare]
+	  && !GST_VIDEO_INFO_N_PLANES (&vinfo) > 2) {
+	  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^ ~
+
+2014-05-20 15:59:53 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/rtsp/gstrtsptransport.h:
+	  rtsp-transport: clarify port usage
+	  Comment in the docs what the client_port and server_port fields are used
+	  for in TCP mode (if the application wants to set those values).
+
+2014-05-20 11:18:56 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/allocators/gstdmabuf.c:
+	  dmabuf: share the mapping with shared copies of the memory
+	  With lots of shared memory instances (e.g. created by a RTP payloader) the
+	  overhead of duplicating the file descriptor and creating extra mappings is
+	  significant. To avoid this, the parent memory maps the whole region and the
+	  shared copies just reuse the same mapping.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730441
+
+2014-05-19 13:28:52 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: Add read source on write socket.
+	  Add a read source on write socket when lost tunnel.
+	  To be able to detect when clint closes get channel.
+	  This is already done in gst_rtsp_source_dispatch_write but
+	  only when the queue is empty.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=730368
+
+2014-05-20 09:48:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Always take the playsink lock when adding or removing pad probes
+	  Otherwise we might end up inside the callback without having stored
+	  the probe id... then try to remove that probe (not!) from the callback
+	  and wait forever for the pad to unblock.
+
+2014-05-19 13:57:41 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/alsa/gstalsasink.c:
+	  alsasink: pass correct error to g_strerror
+	  The error we get is a negated errno.
+	  While there, fix a couple typos in messages.
+
+2014-05-19 11:17:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tools/gst-play.c:
+	  gst-play: Free playlist_file string if only printing the version
+
+2014-05-13 14:08:20 +0600  Anuj Jaiswal <anuj.jaiswal@samsung.com>
+
+	* tools/gst-play.c:
+	  audio_sink and video_sink leakage fixed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730010
+
+2014-05-13 11:51:55 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: Don't use argument for local storage
+	  By re-using the uri argument for storing local data, we could end up in
+	  a situation where we would free uri ... which would actually be the
+	  string passed in argument.
+	  Instead explicitely use a local variable. Fixes double-free issues.
+	  CID #1212176
+
+2014-05-12 13:18:50 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/video/video-info.c:
+	  video-info: Also check the stride and offset are equal
+	  gst_video_info_is_equal() was not checking if stride and offset
+	  had changed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729896
+
+2014-05-12 17:17:07 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Free data after removing it from the list
+	  While it wouldn't have caused any failures (g_list_remove doesn't dereference
+	  the provided pointer), it does make the code cleaner.
+	  CID #1212174
+
+2014-05-12 17:15:17 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/sdp/gstmikey.c:
+	  mikey: Actually replace payload ...
+	  This function is intented to replace the payload, let's actually do that
+	  instead of putting back the same (freed) payload
+	  CID #1212175
+
+2014-05-12 17:13:50 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/sdp/gstmikey.c:
+	  mikey: Free MikeyPayload in error cases
+	  CID #1212135
+	  CID #1212136
+	  CID #1212137
+	  CID #1212138
+
+2014-05-10 23:50:44 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  pango: Do not try to add a feature to a caps features ANY
+	  It does not makes sense and asserts
+
+2014-05-09 15:32:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/tag/gstxmptag.c:
+	  tag: xmp: fix leaks in error code paths
+	  CID 1212133
+
+2014-05-06 11:12:19 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: Reset control_stream.
+	  Reset control_stream when gst_rtsp_connection_close.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=729632
+
+2014-04-15 14:51:46 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Retry setting configuration with modified config
+	  Buffer pool set_config() may return FALSE if requested configuration needed small
+	  changes. Reget the config and try setting it again. This ensure we have a configured
+	  pool if possible.
+
+2014-05-08 17:10:26 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: use downloadbuffer for download buffering
+	  Use the new downloadbuffer element to implement the download buffering
+	  feature
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680183
+
+2014-05-06 13:01:32 -0400  Luis de Bethencourt <luis@debethencourt.com>
+
+	* ext/ogg/gstoggmux.c:
+	  oggmux: push eos event when empty pad data
+	  If gst_ogg_mux_queue_pads returns NULL it means we are at EOS, because we get a
+	  NULL buffer and this function never sets bestpad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729315
+
+2014-05-06 08:07:38 +0000  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* configure.ac:
+	  configure: Use X11 detection macro from common
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729621
+
+2014-05-06 07:51:11 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/examples/playback/playback-test.c:
+	  examples: playback-test: fix crashes when setting buffer-size
+	  playbin's buffer-size property takes a gint, not a gint64,
+	  so only pass the bits expected to the vararg function, or
+	  the terminator might not be found, leading to crashes, esp.
+	  with negative numbers.
+	  Spotted by Ravi Kiran K N <ravi.kiran@samsung.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729617
+
+2014-05-06 07:50:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/examples/playback/playback-test.c:
+	  examples: fix indentation of playback-test
+
+2014-05-06 08:13:24 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/examples/playback/playback-test.c:
+	  Revert "playback-test: Set buffer-size only for non-negative size"
+	  This reverts commit 07a637e2847d56d0f2b0c0ac9095bf37dd324e26.
+
+2014-05-06 11:31:18 +0530  Ravi Kiran K N <ravi.kiran@samsung.com>
+
+	* tests/examples/playback/playback-test.c:
+	  playback-test: Set buffer-size only for non-negative size
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729617
+
+2014-05-05 23:29:44 -0400  Luis de Bethencourt <luis@debethencourt.com>
+
+	* win32/common/libgstpbutils.def:
+	  win32: Update defs file
+	  commit 622007e7db7e3d32bf8e04e673e057897b646220 added the function
+	  gst_discoverer_info_get_missing_elements_installer_details (). It needs to be
+	  added to the defs file.
+
+2014-05-04 15:54:54 +0000  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* configure.ac:
+	* gst-libs/gst/rtsp/Makefile.am:
+	  rtsp: Link to ws2_32 on Windows
+	  Needed for getsockname and setsockopt
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729514
+
+2014-05-04 15:54:06 +0000  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* configure.ac:
+	  Make X11 detection more precise
+	  Don't be content with just X11/Xlib.h, check for X11/XKBlib.h as well.
+	  This prevents false positives (for example, from partial X11 headers
+	  installed by tcl/tk).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729513
+
+2014-05-04 15:57:35 +0000  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* tests/examples/playback/playback-test.c:
+	  tests: fix printf format compiler warning in playback test on win32
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729515
+
+2014-05-04 18:14:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/libs/.gitignore:
+	  Add new unit test binary to .gitignore
+
+2014-01-14 15:39:55 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/pbutils/gstdiscoverer-types.c:
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	* gst-libs/gst/pbutils/gstdiscoverer.h:
+	* gst-libs/gst/pbutils/pbutils-private.h:
+	* tools/gst-discoverer.c:
+	  discoverer: Add APIs to simply get installer details for missing plugins
+	  Currently the API is far from optimal and the user has to work around
+	  our badly defined API to simply install missing plugins.
+	  API:
+	  new:
+	  gst_discoverer_info_get_missing_elements_installer_details
+	  deprecated:
+	  gst_discoverer_info_get_misc
+	  gst_discoverer_stream_info_get_misc
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720596
+
+2014-05-03 20:48:27 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+2014-05-03 18:57:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/Makefile.am:
+	  textoverlay: Link unit test with the local version of the library, not an installed one
+
+=== release 1.3.1 ===
+
+2014-05-03 17:50:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-libs/gst/audio/gstaudiopack-dist.c:
+	* gst-libs/gst/video/video-orc-dist.c:
+	* gst-plugins-base.doap:
+	* gst/adder/gstadderorc-dist.c:
+	* gst/audioconvert/gstaudioconvertorc-dist.c:
+	* gst/videoconvert/gstvideoconvertorc-dist.c:
+	* gst/videoscale/gstvideoscaleorc-dist.c:
+	* gst/videotestsrc/gstvideotestsrcorc-dist.c:
+	* gst/volume/gstvolumeorc-dist.c:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	* win32/common/gstrtsp-enumtypes.c:
+	* win32/common/video-enumtypes.c:
+	* win32/common/video-enumtypes.h:
+	  Release 1.3.1
+
+2014-05-03 17:48:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2014-05-03 17:22:10 +0200  Sebastian Dröge <sebastian@centricular.com>
 

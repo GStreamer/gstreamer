@@ -1,7 +1,8 @@
-Release notes for GStreamer Base Plugins 1.3.1
+
+Release notes for GStreamer Base Plugins 1.3.2
 
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.3 release series. The 1.3 release series is adding new features on top of
 the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.3 release series
@@ -66,80 +67,21 @@ contains a set of less supported plugins that haven't passed the
 gst-libav
 contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
+
+
+  
+
 Bugs fixed in this release
      
-      * 684030 : typefinding: mp4 with video and dts ES detected as DTS audio
-      * 725078 : audiobasesink: clip start samples to match clipped timestamp from skew algorithm
-      * 708633 : adder: Should not take channel mask in consideration when in mono or stereo
-      * 540941 : v4l2: RGB32 should be mapped to xRGB instead of RGBx
-      * 646577 : rtppayload: Make RTP time information accessible
-      * 670690 : audioresample: missing configure checks for SSE / SSE2
-      * 678402 : Device discovery/listing replacement for GstPropertyProbe
-      * 678590 : subparse: Add support for LRC subtitles
-      * 679031 : playbin/playsink: Add support for audio and video filters
-      * 687183 : videodecoder: Allow to negotiate a buffer pool before output format is known
-      * 702230 : audioringbuffer: Don't access timestamps array if not acquired
-      * 707361 : video: Add support for 64x32 tiled NV12 color format
-      * 707636 : dashdemux: offline playback not buffering correctly
-      * 708680 : typefind: Add typefind function for H265
-      * 708921 : pbutils: Add codec-utility functions to support h265
-      * 708991 : audiocdsrc: invalid musicbrainz discids because of trailing data tracks
-      * 709588 : encodebin: Handle changes in encoding_profile::restriction during playback
-      * 709646 : videotestsrc: Could implement duration query when num-buffers is set
-      * 709755 : alsa: add channel map API support
-      * 709814 : [examples/overlay] avoid to unref sink if not found. Also fix logic to find a sink in one of the example.
-      * 709858 : theoraenc: Do nothing when flushing the encoder when no caps were set
-      * 710760 : videoconvert: remove unneeded guint comparison
-      * 711094 : videodecoder: improve max-error handling
-      * 711258 : sdp: fix duplicate 'const' declaration warnings
-      * 712798 : videometa: add GstVideoGLTextureUploadMeta buffer pool option
-      * 719383 : rtpbasepayload: Perfect timestamps confusingly explained
-      * 719415 : rtpbasepayload: Expose running time of last processed buffer
-      * 719850 : convertframe: remove trivial memory leak
-      * 719890 : videodecoder: Add API to get the currently pending, parsed frame size
-      * 720103 : videodecoder: Introduce sink_query/src_query
-      * 720124 : tests/examples/overlay/qt-videooverlay.cpp has incorrect include from Qt
-      * 720162 : tests: Add test for rtpbasepayload/-depayload
-      * 720205 : playback: add video/x-raw(ANY) to default raw caps
-      * 720215 : sdp: parse encryption key field
-      * 720219 : rtsptransport: allow getting mime type by profile
-      * 720389 : videodecoder: should release buffer pool sooner
-      * 720810 : audio/video: Initialize all {audio|video}info fields
-      * 720999 : Missing annotation for GstColorBalance interface
-      * 721103 : test-effect-switch errors out with not-negotiated after a while
-      * 721701 : videoconvert: I420 to BGRA conversion is slower than in 0.10
-      * 721953 : pango: basetextoverlay: handle video/x-raw(ANY) if downstream supports the GstVideoOverlayCompositionMeta API
-      * 722330 : streamsplitter: negotiation problems with parsers
-      * 722491 : playbin: remove duplicate assignment
-      * 722682 : oggmux: problems with vp8 stream
-      * 723096 : decodebin: Make it possible to register multiple handlers to decodebin's autoplug-select signal
-      * 723271 : videotestsrc: fix a warning if downstream does not propose a buffer pool
-      * 723328 : gstrtpbase(|de)payload: add more unit tests and fix bugs
-      * 723492 : gst-plugins-base: Do not build check tests for disabled plugins
-      * 723507 : jsseek: Add missing HAVE_X check
-      * 724393 : rtspconnection: allow specifying an anchor certificate database
-      * 724509 : audioconvert: outputs silence when converting certain mono caps to certain other mono caps
-      * 724828 : playbin: improve autoplug_query_caps return
-      * 724893 : playsinkconvertbin: improve gst_play_sink_convert_bin_getcaps return
-      * 725034 : all plugin sets but -base don't install gtk-doc docs without '--enable-gtk-doc'
-      * 725206 : rtspconnection: Missing include file
-      * 725479 : gst-plugins-base: Ignore gcov intermediate files
-      * 725521 : docs: Fix argument and annotation typos, add missing annotations and remove duplicate section
-      * 725658 : Removing some GnomeVFS left bits
-      * 725837 : pango: textoverlay: lot of warnings in debug log with framerate=0/1
-      * 725878 : rtspconnection: headers in GET response not configurable for tunnels
-      * 725898 : Lose data when producing data faster than sendt during tunneling rtps/rtp(TCP)
-      * 726433 : rtspconnection: setsockopt() argument 4 is not properly casted for W32
-      * 726641 : rtspconnection: connection_poll() not working correctly
-      * 727498 : videodecoder: deactivates downstream bufferpool
-      * 728772 : rtspconnection: stuck in teardown
-      * 728845 : gst-play: add option to supply input media-files from a playlist file
-      * 728907 : rtspconnection: add more tests
-      * 729114 : audiodecoder: default caps nego will manually fixate non-mutable caps
-      * 729117 : rtpbuffer: fix memory leak when gst_rtp_buffer_map fails
-      * 729195 : videotestsrc: undefined behaviour in left-shift
-      * 729321 : playbin/subtitleoverlay: Deadlock when changing subtitle track while PAUSED
-      * 704933 : uridecodebin: allow progressive buffering with more media types
+      * 720596 : discoverer: Rework the API to make " install missing plugin " feature cleaner
+      * 729514 : rtsp: fails to build on Windows, undefined refs to getsockname and setsockopt
+      * 729515 : W32: playback-test fails to build due to warnings
+      * 729617 : playback-test: crash when setting buffer-size property on playbin
+      * 729632 : rtspconnection: crashing sometimes when addinging a read source
+      * 730010 : gst-play: audio_sink and video_sink strings are not freed
+      * 730368 : Add a read source on write socket when tunnel lost.
+      * 730441 : dmabuf: shared the mapping with shared copies of the memory
+      * 729513 : W32: -base erroneously detects X11 headers from tcl/tk
 
 ==== Download ====
 
@@ -176,63 +118,17 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Adrien Schwartzentruber
-      * Aleix Conchillo Flaque
-      * Aleix Conchillo Flaqué
-      * Alessandro Decina
-      * Andres Gomez
-      * Antoine Jacoutot
-      * Antonio Ospite
-      * Arun Raghavan
-      * Bastien Nocera
-      * Christian Fredrik Kalager Schaller
-      * David Svensson Fors
+      * Anuj Jaiswal
       * Edward Hervey
-      * Eric Trousset
-      * George Kiagiadakis
       * Göran Jönsson
-      * Haakon Sporsheim
-      * Hans Månsson
-      * Holger Kaelberer
-      * Jan Schmidt
-      * Jihyun Cho
-      * Johannes Dewender
-      * John Bassett
-      * Josep Torra
-      * Julien Isorce
-      * Justin Joy
-      * Lionel Landwerlin
       * Luis de Bethencourt
-      * Mark Nauwelaerts
-      * Matej Knopp
-      * Mathieu Duponchelle
-      * MathieuDuponchelle
-      * Matthew Waters
-      * Matthieu Bouron
-      * Nicola Murino
+      * Michael Olbrich
       * Nicolas Dufresne
-      * Ognyan Tonchev
-      * Olivier Crête
-      * Rafał Mużyło
       * Ravi Kiran K N
-      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Sjoerd Simons
-      * Sreerenj Balachandran
-      * Stefan Sauer
-      * Stephan Sundermann
-      * Stian Selnes
-      * Stéphane Cerveau
-      * Takashi Iwai
-      * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
-      * Todd Agulnick
-      * Tom Greenwood
       * Vincent Penquerc'h
-      * William Grant
       * Wim Taymans
-      * Wonchul Lee
       * Руслан Ижбулатов
  

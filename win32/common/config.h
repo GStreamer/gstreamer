@@ -84,7 +84,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2014-05-03"
+#define GST_PACKAGE_RELEASE_DATETIME "2014-05-21"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -278,6 +278,9 @@
 /* Defined if compiling for Windows */
 #define HAVE_WIN32 1
 
+/* Define to 1 if you have the <winsock2.h> header file. */
+#undef HAVE_WINSOCK2_H
+
 /* Define to enable X libraries and plugins (used by ximagesink). */
 #undef HAVE_X
 
@@ -322,7 +325,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 1.3.1"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 1.3.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -331,7 +334,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.3.1"
+#define PACKAGE_VERSION "1.3.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -365,7 +368,7 @@
 #undef USE_TREMOLO
 
 /* Version number of package */
-#define VERSION "1.3.1"
+#define VERSION "1.3.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
