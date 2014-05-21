@@ -208,7 +208,7 @@ gst_gl_texture_type_from_format (GstVideoFormat v_format, guint plane)
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
-      return GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+      return GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA;
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
@@ -233,11 +233,6 @@ gst_gl_texture_type_from_format (GstVideoFormat v_format, guint plane)
 static inline guint
 _get_plane_width (GstVideoInfo * info, guint plane)
 {
-  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_YUY2
-      || GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_UYVY) {
-    return GST_VIDEO_INFO_COMP_WIDTH (info, 1);
-  }
-
   if (GST_VIDEO_INFO_IS_YUV (info))
     /* For now component width and plane width are the same and the
      * plane-component mapping matches
