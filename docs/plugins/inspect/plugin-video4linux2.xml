@@ -3,7 +3,7 @@
   <description>elements for Video 4 Linux</description>
   <filename>../../sys/v4l2/.libs/libgstvideo4linux2.so</filename>
   <basename>libgstvideo4linux2.so</basename>
-  <version>1.3.1</version>
+  <version>1.3.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -29,7 +29,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>image/jpeg; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/mpeg, mpegversion=(int)2; video/mpegts, systemstream=(boolean)true; video/x-bayer, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-dv, systemstream=(boolean)true; video/x-h263, variant=(string)itu; video/x-h264, stream-format=(string)byte-stream, alignment=(string)au; video/x-pwc1, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-pwc2, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-raw, format=(string){ RGB15, RGB16, BGR, RGB, BGRx, xRGB, GRAY8, YVU9, YV12, YUY2, UYVY, Y42B, Y41B, NV12_64Z32, YUV9, I420, YVYU, NV21, NV12 }, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-sonix, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-vp8</details>
+          <details>image/jpeg; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/mpeg, mpegversion=(int)2; video/mpegts, systemstream=(boolean)true; video/x-bayer, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-dv, systemstream=(boolean)true; video/x-h263, variant=(string)itu; video/x-h264, stream-format=(string)byte-stream, alignment=(string)au; video/x-pwc1, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-pwc2, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-raw, format=(string){ RGB15, RGB16, BGR, RGB, BGRx, BGRA, xRGB, ARGB, GRAY8, YVU9, YV12, YUY2, UYVY, Y42B, Y41B, NV12_64Z32, YUV9, I420, YVYU, NV21, NV12 }, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-sonix, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-vp8</details>
         </caps>
       </pads>
     </element>
@@ -44,7 +44,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>image/jpeg; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/mpeg, mpegversion=(int)2; video/mpegts, systemstream=(boolean)true; video/x-bayer, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-dv, systemstream=(boolean)true; video/x-h263, variant=(string)itu; video/x-h264, stream-format=(string)byte-stream, alignment=(string)au; video/x-pwc1, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-pwc2, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-raw, format=(string){ RGB15, RGB16, BGR, RGB, BGRx, xRGB, GRAY8, YVU9, YV12, YUY2, UYVY, Y42B, Y41B, NV12_64Z32, YUV9, I420, YVYU, NV21, NV12 }, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-sonix, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-vp8</details>
+          <details>image/jpeg; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/mpeg, mpegversion=(int)2; video/mpegts, systemstream=(boolean)true; video/x-bayer, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-dv, systemstream=(boolean)true; video/x-h263, variant=(string)itu; video/x-h264, stream-format=(string)byte-stream, alignment=(string)au; video/x-pwc1, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-pwc2, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-raw, format=(string){ RGB15, RGB16, BGR, RGB, BGRx, BGRA, xRGB, ARGB, GRAY8, YVU9, YV12, YUY2, UYVY, Y42B, Y41B, NV12_64Z32, YUV9, I420, YVYU, NV21, NV12 }, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-sonix, width=(int)[ 1, 32768 ], height=(int)[ 1, 32768 ], framerate=(fraction)[ 0/1, 100/1 ]; video/x-vp8</details>
         </caps>
       </pads>
     </element>

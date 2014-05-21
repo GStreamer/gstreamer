@@ -305,6 +305,8 @@ GObject
       GstTaskPool
   GSocket
   GTlsDatabase
+  GUdevClient
+  GUdevDevice
   GdkPixbuf
   GstColorBalanceChannel
   GstTunerChannel

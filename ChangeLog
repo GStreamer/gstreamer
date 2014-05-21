@@ -1,9 +1,1265 @@
-=== release 1.3.1 ===
+=== release 1.3.2 ===
 
-2014-05-03  Sebastian Dröge <slomo@coaxion.net>
+2014-05-21  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.1
+	  releasing 1.3.2
+
+2014-05-21 10:51:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 211fa5f to 1f5d3c3
+
+2014-05-20 08:23:06 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: Don't dereference NULL variable
+	  CID #1139838
+
+2014-05-20 08:20:42 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/vpx/gstvp9enc.c:
+	  vp9enc: Don't dereference NULL checks
+	  CID #1197703
+
+2014-05-19 11:26:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Explicitly cast enum "subtype" to its "supertype"
+	  gstv4l2bufferpool.c:608:18: error: implicit conversion from enumeration type
+	  'enum _GstV4l2BufferPoolAcquireFlags' to different enumeration type
+	  'GstBufferPoolAcquireFlags' [-Werror,-Wenum-conversion]
+	  params.flags = GST_V4L2_POOL_ACQUIRE_FLAG_RESURECT;
+	  ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+2014-05-19 11:24:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/goom/tentacle3d.c:
+	  goom: Use fabs() instead of abs() to calculate the floating point absolute value
+	  tentacle3d.c:268:7: error: using integer absolute value function 'abs' when
+	  argument is of floating point type [-Werror,-Wabsolute-value]
+	  if (abs (tmp - fx_data->rot) > abs (tmp - (fx_data->rot + 2.0 * G_PI))) {
+	  ^
+
+2014-05-19 11:21:36 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/debugutils/tests.c:
+	  debugutils: Properly calculate the difference with unsigned types
+	  tests.c:161:16: error: taking the absolute value of unsigned type
+	  'unsigned long' has no effect [-Werror,-Wabsolute-value]
+	  t->diff += labs (GST_BUFFER_TIMESTAMP (buffer) - t->expected);
+
+2014-05-16 17:46:30 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Handle flush while in start_streaming
+	  We need to handle the case where a flush occure while the streaming
+	  thread is being brought up. In this case, the flushing state of the poll
+	  object is cleared. To solve this, we simply set the capture poll to flushing
+	  again, this way we know the thread will exit. The decoder streamlock
+	  is used to synchronize with handle frame.
+
+2014-05-16 16:44:37 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Don't trace twice the same message
+
+2014-05-15 11:25:50 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: always use a random ssrc for the internal session
+	  Use a random SSRC different than 0 for the internal session SSRC.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730212
+
+2014-05-16 16:52:25 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtpsession: update last_activity when sending RTP
+	  Also update last_activity when doing something with the internal
+	  source to make sure don't timeout early.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=730217
+
+2014-05-15 18:08:53 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2transform.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2: Cleanup M2M properties
+	  M2M devices were sharing the same properties as src and sink. Most of
+	  these made no sense. This patch reduces the number of propeties and
+	  makes io-mode clearer by having capture-io-mode and output-io-mode. This
+	  also accidently fixed a bug in gstv4l2transform io-mode code, where the
+	  capture io-mode could not be set.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729591
+
+2014-05-15 17:39:39 +0200  Benjamin Gaignard <benjamin.gaignard@linaro.org>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Update pool limit with hardware requiremenst
+	  If the driver need more buffers than requested by the config,
+	  update the pool min/max values. The minimum value for the pool
+	  could be provided either by the driver or by the pool. This is
+	  best effort for drivers that don't support
+	  CID V4L2_CID_MIN_BUFFERS_FOR_CAPTURE.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730200
+
+2014-05-15 10:44:29 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Handle start_streaming error
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730207
+
+2014-05-15 10:39:40 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Print the flow return causing the loop to leave
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730207
+
+2014-05-15 10:31:40 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Don't lock the decoder when stopping task
+	  That src pad task may need to take the lock when being pulled
+	  down. takeing that lock can lead to a deadlock.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730207
+
+2014-05-14 17:18:52 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Don't leak pool if activation failed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730207
+
+2014-05-14 17:18:35 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2transform.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2: Split flush in start/stop_streaming
+	  This allow calling start streaming later for capture device. Currently it breaks
+	  in dmabuf-import because downstream is holding a buffer that will only be
+	  released after stream-start.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730207
+
+2014-05-14 15:12:26 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Flush buffer pools on flush stop
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730207
+
+2014-05-14 13:28:31 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Fix use of atomic active marker
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730207
+
+2014-05-14 13:05:42 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Don't deactivate otherpool
+	  We should not stop the otherpool unless we also stop our own
+	  pool, otherwise it will never get restarted.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730207
+
+2014-05-14 12:33:58 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Also update num_buffers for import cases
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730207
+
+2014-05-14 13:42:25 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: update rtp encoder/decoder docs
+	  Use %u in RTP encoder/decoder pads to match other rtpbin pads.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730146
+
+2013-12-27 11:55:18 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* tests/check/elements/rtpsession.c:
+	  tests/check: rtpsession: test internal sources timing out
+
+2013-12-26 17:30:42 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtpsession: remove unused if branch
+	  1) sources that have sent BYE in the past cannot be senders, since
+	  they would have timed out to being receivers in the meantime...
+	  2) sources that have sent BYE are now being removed earlier inside
+	  this function
+
+2013-12-26 17:29:42 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtpsession: cleanup sources that have sent BYE
+
+2013-12-26 17:24:51 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtpsession: unify nested if clauses
+
+2013-12-26 17:21:44 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtpsession: timeout internal sources that are inactive for a long time and send BYE
+
+2014-05-13 12:25:04 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  rtpjitterbuffer: don't stop looping if event found in the queue
+	  If we are inserting a packet into the jitter queue we need to keep
+	  looping through the items until the right position is found. Currently,
+	  the code stops as soon as an event is found in the queue.
+	  Regarding events, we should only move packets before an event if there
+	  is another packet before the event that has a larger seqnum.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=730078
+
+2014-04-17 13:04:00 +0000  Adrien SCH <adrien.schwartzentruber@gmail.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: fix the memory leak of language attribute
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728418
+
+2014-05-13 13:44:20 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Fix regression in offset extrapolation
+	  When extrapolating the offset, we need to use the extrapolate
+	  stride rather then the base stride. This should fix support for format
+	  with more then two planes (I420, Y42B, etc).
+
+2014-05-12 18:03:18 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	  v4l2bufferpool: Use default VideoInfo for frame operation
+	  When doing frame operation, we need to use the default VideoInfo
+	  and let the frame API read the video meta in order to get the stride
+	  and offset right. Currently we where using the specialized VideoInfo
+	  which reflects what the HW is setup to.
+
+2014-05-12 17:23:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2src: minor GValue handling optimisation in probing code
+
+2014-05-12 17:20:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2src: avoid lists with one single framerate in probed caps
+	  Simplify framerate field if possible, so we don't end up with
+	  e.g. framerate = (fraction) { 30/1 }. Maybe the helper function
+	  should be moved to core, but we can do this later.
+
+2014-05-12 16:56:35 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Fix leak of palette_data in error cases
+	  CID #1212151
+
+2014-05-12 16:53:32 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: Free node_header in error cases
+	  CID #1212134
+
+2014-05-12 13:46:01 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Don't use WARNING for not-linked flow return
+	  Pollutes debug logs for no reason. It's only an error if all pads
+	  return not-linked
+
+2014-05-12 13:45:06 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvdemux.h:
+	  flvdemux: Skip unknown tags in push-mode
+	  We add a new mode (SKIP) in push-mode to skip tags that we don't known about
+	  Partially fixes https://bugzilla.gnome.org/show_bug.cgi?id=670712
+
+2014-05-10 09:14:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/flac/gstflacdec.c:
+	  flacdec: Add support for variable block size files and remove dead code
+	  This dead code wasn't used since the 1.0 port and would need to
+	  be modified heavily for variable block size support.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729894
+
+2014-05-09 12:14:23 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Fix NULL check copy paste error
+	  CID 1212129
+
+2014-05-09 12:11:54 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Fix potential deadlock due to missing break
+	  CID 1212131
+
+2014-05-09 18:01:28 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* tests/check/elements/rtpjitterbuffer.c:
+	  rtpjitterbuffer: increment accepted packets after loss
+	  When we detect a lost packet, expect packets with higher
+	  seqnum on the input.
+	  Also update the unit test.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=729524
+
+2014-05-04 11:12:54 -0600  Jason Litzinger <jlitzingerdev@gmail.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* tests/check/elements/rtpjitterbuffer.c:
+	  Add new test case.
+
+2014-05-09 16:14:21 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* tests/check/elements/shapewipe.c:
+	  shapewipe: no need to activate pads
+	  Activation will happen in the state change
+
+2014-05-09 12:10:04 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Don't leak config structure
+	  this fixes a leak of the config structure and take care of making sure
+	  caps can't reach ref 0 before we are done doing our check.
+	  CID 1212144
+
+2014-05-09 12:08:11 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Remove uneeded cast for code clarity
+
+2014-05-09 11:56:52 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2pool: Fix leak of config structure in error case
+	  CIDs 1212167 and  1212167
+
+2014-05-09 11:51:26 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Fix use of unitilized pool pointer
+	  CID #1212173
+
+2014-05-09 16:48:58 +0200  Eric Trousset <etrousset@awox.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: don't respond to a position query in BYTE format with a TIME position
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729553
+
+2014-05-09 14:22:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/matroska/matroska-read-common.c:
+	  matroskademux: don't leak doctype string in error code path
+	  CID 1212145.
+
+2014-05-06 13:37:47 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Readback pool config if used within the baseclass
+
+2014-05-06 12:58:59 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2transform.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2: Replace miss-use of crop meta in favour of proper offset
+	  This moves away from copying information and store everything inside
+	  the GstVideoInfo structure. The alignement exposed by v4l2 api
+	  is now handled using proper offset.
+
+2014-05-06 12:55:30 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.h:
+	  v4l2object: Style fix
+
+2014-05-05 12:38:33 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Reset imported buffer size with expected size
+	  This ensure that the buffer pool won't always discard buffer with these
+	  memory when they are released.
+
+2014-05-05 12:37:43 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Reset flushed group
+	  This ensure that a flushed group memory are the same size as when they
+	  where originally allocated / imported.
+
+2014-05-05 12:07:31 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	  v4l2bufferpool: Get number of allocated buffers from allocator
+	  The value of num_allocated buffer would get confused when
+	  buffer are being discarded.
+
+2014-05-05 12:06:44 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	* sys/v4l2/gstv4l2allocator.h:
+	  v4l2allocator: Add a method to read number of allocated group
+
+2014-05-04 20:23:42 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Improve debugging
+
+2014-05-04 19:51:48 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	  v4l2bufferpool: Ensure we don't re-enqueue buffer during flush
+
+2014-05-04 19:13:37 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Initilialize debug category
+
+2014-05-04 16:11:09 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Fix libv4l2 support
+	  Need to include config.h, otherwise we endup directly using the
+	  ioct/mmap/munmap calls and need to vall v4l2_munmap.
+
+2014-05-01 13:04:08 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Set the flags on the object
+	  We where not setting the probed flags on the allocator, which mean even if
+	  CREATE_BUFS was supported on some driver, it would endup being ignored.
+
+2014-04-29 16:49:52 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Re-enqueue buffer at stream start
+
+2014-04-29 16:06:00 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: There is not group on error
+
+2014-04-29 14:56:31 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Handle FLUSH_STOP event
+
+2014-04-29 13:05:41 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2sink.c:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2bufferpool: Acquire cannot return a buffer from another pool
+	  Return a buffer from an otherpool has unwanted side effects that lead to leaks and
+	  prevents deactivating the pool. Instead, we change the _process() API so it can
+	  replace the internal buffer with the buffer from the downstream pool. This implied
+	  moving from _fill() to _create() method in the src.
+
+2014-04-29 13:00:32 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Remove unreached acquire code
+	  The acquire is done in _prepare now.
+
+2014-04-29 12:57:08 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Sanetize buffer refount handling
+	  Buffer refcounting is a bit hard, because of the duality between CAPTURE and
+	  OUTPUT mode. In the long term, we should consider having two seperate pool
+	  instead of this mess. At least state should be better kept this way.
+
+2014-04-29 12:48:04 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Add more traces
+
+2014-04-28 08:48:26 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	* sys/v4l2/gstv4l2allocator.h:
+	  v4l2-allocator: Add S to REQBUFS/CREATE_BUFS enum
+	  All enum that has REQBUFS and CREATE_BUFS where missing S, which was
+	  confusing since they are supposed to match with associcated ioctl name. This
+	  also fixes the yet unused CAN_REQUEST flag check.
+
+2014-04-18 17:51:07 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Enabled QoS
+
+2014-04-18 17:02:50 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	* sys/v4l2/gstv4l2allocator.h:
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: Fixup USERPTR/DMABUF capture support
+
+2014-04-18 14:45:00 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Improve selecton of min/max in decide allocation
+
+2014-04-18 13:09:00 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Update config if meta is missing
+	  Rather then hard failure, we should update the config with the meta option we
+	  need and return false.
+
+2014-04-11 17:10:11 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	* sys/v4l2/gstv4l2allocator.h:
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	  v4l2: Add DMABUF and USERPTR importation
+
+2014-04-17 21:45:58 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Valid FD are bigger or equal to zero
+
+2014-04-16 17:04:42 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Don't leak downstream pool in propose_allocation
+	  parse_nth_allocation_pool() give a ref on the pool, we need to unref it
+	  when done.
+
+2014-04-14 12:19:39 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	  v4l2: Introduce DMABUF_IMPORT IO mode
+
+2014-04-10 16:26:34 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	* sys/v4l2/gstv4l2allocator.h:
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: Add dmabuf export support
+	  This can be enabled sing io-mode=dmabuf. This will enabled mmap base
+	  drivers to export the buffers as dmabuf.
+
+2014-04-16 15:51:03 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Guaranty queued state integrety
+	  Because of the buf in videobuf2, dqbuf may leave the DONE flag being,
+	  which would implied that the buffer is queued. As this has been broken
+	  for 4 years, simply guaranty the state flags integrity when doing
+	  qbuf/dqbuf.
+	  See https://patchwork.linuxtv.org/patch/23641/
+
+2014-04-15 17:31:42 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Implement open/close
+
+2014-04-15 16:43:41 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Ensure output pool is configured
+
+2014-04-15 16:43:15 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	* sys/v4l2/gstv4l2transform.h:
+	  v4l2transform: Check if caps have changes before asserting
+	  In set_caps, now checks if caps actually changed and succeed if they didn't
+	  change.
+
+2014-04-15 16:41:46 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Ensure pool is configured
+
+2014-04-08 18:54:09 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Always set a size when deciding allocation
+
+2014-04-08 18:20:25 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Improved decide allocation
+	  Improve decide allocation so it properly configure both local and downstream
+	  buffer pools. Also read back the pool config if it was changed to to driver
+	  limitations.
+
+2014-04-15 13:30:02 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Do not pre-configure the pool
+	  Pre-configuring the pool is error prone, since it may hide a configuration failure and
+	  endup with a pool that is not configured the way it should (e.g. no video meta, wrong
+	  queue size, etc.)
+
+2014-04-15 13:23:33 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Preserve downstream minimum even in RW
+
+2014-04-15 13:20:12 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	  v4l2bufferpool: Turn cropmeta into a custom option
+	  Turn crop meta into a custom option and make sure it's there is needed.
+
+2014-04-09 12:53:19 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2bufferpool: Early catch short allocation
+	  Catch short allocation after saving the format. This is not a catch all, but should catch
+	  most of the miss-behaving drivers when doing S_FMT/G_FMT and avoid potential crash.
+
+2014-04-04 22:46:40 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	  v4l2bufferpool: Port to use GstV4l2Allocator
+
+2014-04-04 22:35:48 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/Makefile.am:
+	* sys/v4l2/gstv4l2allocator.c:
+	* sys/v4l2/gstv4l2allocator.h:
+	* sys/v4l2/v4l2_calls.h:
+	  Implement V4l2 Allocator
+	  This goal of this allocator is mainly to allow tracking the memory.
+	  Currently, when a buffer memory has been modified, the buffer and it's
+	  memory is disposed and lost until the stream is restarted.
+
+2014-04-16 16:35:49 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Don't advertise crop meta
+	  Currently we advertise crop meta, but not element handle support this meta.
+
+2014-04-08 18:18:57 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Setup pool already send element error
+
+2014-04-08 18:17:31 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Workaround decoder that set num_planes to 0 in the format
+	  Some well known decoder wrongly set num_planes to 0 in their format instead of
+	  one. In this case we would endup with no size when deciding buffer allocation.
+
+2014-04-08 17:34:19 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Ensure size before configuring the pool
+
+2014-04-04 22:38:05 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.h:
+	  v4l2object: Set minimum buffers to 2
+	  All the element requires at least two buffers. This is not used for RW mode.
+
+2014-04-04 22:37:14 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.h:
+	  v4l2object: Remove unused MAX_BUFFERS define
+
+2014-04-04 22:36:37 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Don't hardcode min/max use default instead
+
+2014-04-10 17:49:41 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Install PROP_CAPTURE_IO_MODE with right ID
+
+2014-04-08 18:54:50 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: decide_allocation returns a boolean
+
+2014-04-10 17:49:29 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Install PROP_CAPTURE_IO_MODE with right ID
+
+2014-03-27 13:21:25 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Add propose_allocation
+	  This should remove 1 copy between the decoder and the transform.
+
+2014-03-27 13:20:53 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2sink.c:
+	  v4l2: Move propose allocation to v4l2object
+
+2014-03-20 17:26:05 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Fixup caps query
+
+2014-03-20 15:31:22 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Setup cropping if needed
+
+2014-03-19 17:25:16 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2.c:
+	  v4l2transform: Expose BGRA and ARGB formats
+
+2014-03-18 17:33:38 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Ensure output pool is activated
+	  That pool may be different then the internal pool.
+
+2014-03-16 19:11:16 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Ensure internal buffer pools actication
+
+2014-03-16 11:36:19 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Move subinstance subclass init near other init
+
+2014-03-15 18:56:51 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Stop stream before closing the devices.
+
+2014-03-15 16:53:54 +0000  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: copy metdata
+
+2014-03-04 18:31:27 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/Makefile.am:
+	* sys/v4l2/gstv4l2.c:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2transform.c:
+	* sys/v4l2/gstv4l2transform.h:
+	  Implement GstV4l2Transform
+	  Implement a v4l2 element that wraps HW video converters.
+
+2014-03-27 18:41:07 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	  v4l2: Probe for CREATE_BUFS in order to correctly set pool min/max
+	  In order to correctly set the pool min/max, we need to probe for CREATE_BUFS
+	  ioctl. This can be done as soon as the format has been negotiated using a
+	  count of 0.
+
+2014-03-25 15:21:03 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2: Move capture eos handling in _process()
+	  Now that we might be copying out buffer (e.g. downstream don't support video
+	  meta bug we need it) we need to move the EOS handling inside the process
+	  method.
+
+2014-03-25 10:49:39 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Fix support for planar format in 1 v4l2 mplane
+	  So far we where only setting saving the first plane stride in the meta. This was
+	  leading to wrong values in GstVideoMeta.
+
+2014-03-19 17:52:08 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Cleanly fail if set_format is never called
+
+2014-03-19 17:00:56 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/v4l2_calls.c:
+	  v4l2: Expose RGB32 formats with and without alpha
+	  As soon a the alpha component can be set, we can expose the RGB32 and BGR32
+	  format as ARGB and BGRA as long we can deterministically set the alpha padding
+	  value.
+
+2014-03-18 15:49:49 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: Correctly check if video meta is needed
+	  Correctly check if video meta is needed. In buffer pool, trust need_video_meta
+	  flag in order to decide if configuration should succeed.
+
+2014-03-18 15:45:18 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Fix tiled stride request
+	  Fix stride request for tiled format and improve logging.
+
+2014-03-18 11:53:57 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Ensure video and crop meta are enabled if needed
+	  In certain cases we cannot live without video meta and/or crop meta
+	  being enabled in our internal buffer pool. Ensure this is always the case,
+	  regardless of having support for allocation query.
+
+2014-03-16 18:39:32 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Ensure internal pool are activated
+
+2014-03-16 17:01:10 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Check that pool where allocated before flushing them
+	  Upon error, the pools might not have been allocated yet, hence we should not
+	  try and flush them (even though we still want to make sure the processing thread
+	  is fully stopped).
+
+2014-03-16 16:55:43 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2sink.c:
+	  v4l2bufferpool: Enforce activation outside of process
+	  Enforce pool being activate from before calling pool process. This should
+	  help catching basic errors in the usage of buffer pool.
+
+2014-03-16 12:44:14 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: don't use own pool if downstream don't support video meta
+
+2014-03-14 00:31:32 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Use obj->n_v4l2_planes for correct number of planes
+	  Buffer pool was guessing wrongly the number of planes rather
+	  then reading the value from obj->n_v4l2_planes. This was causing
+	  format YU12 (I420) to fail upon check.
+
+2014-03-07 16:39:29 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Fix handling of contiuous vs non-contiguous support
+	  The complex mechanic to try and choose the right thing did not work. Instead,
+	  simply probe the non-contiguous format first and then the contiguous one.
+	  This is in fact very low overhead, as there is a relatively small number of
+	  pixel format supported by each devices.
+
+2014-04-15 15:07:23 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2videodec.h:
+	  v4l2: Add initial support for alignment and cropping
+
+2014-03-13 19:24:51 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2object: Rename setup_format() method into acquire_format()
+	  The setup_format() was confusing since it does not set anything, in fact
+	  it reads the setup from the driver and save it.
+
+2014-03-13 18:21:41 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Move type declaration to the top
+
+2014-03-12 18:07:38 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Protect NULL pool while going to READY
+	  When the pipeline fails early, the pool might be unset before the processing
+	  thread has run once. Add protection against that.
+
+2014-03-12 18:01:09 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Fail cleanly if pixel format is unkown or not raw video
+	  Certain decoder has been found to not choose a format automatically. Running
+	  v4l2videodec on these would assert. This patch will make it fail cleanly
+	  instead.
+
+2014-03-12 17:56:18 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Clear the input state pointer after unref
+	  If caps are set again, we have a risk od returning from set_format with a
+	  input_state pointing to dead memory. Clearing the pointer after unref fix
+	  this issue.
+
+2014-03-12 17:11:16 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: handle stop being called without flush
+	  Uppon certain downstream error, stop() is called without a flush(). This mean that
+	  the streaming thread may still be running even though unlock has been called.
+	  Now calling flush to reset the decoder state if we are processing.
+
+2014-03-06 18:13:14 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Default to template in caps query
+
+2014-03-11 14:23:32 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Ensure processing thread has stopped when draining
+
+2014-03-11 14:01:27 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Don't drain if processing thread is inactive
+
+2014-05-08 09:49:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: Clean up all pending operations from libsoup before unreffing our context
+	  When we cancel connection attempts and similar things, there are still
+	  some operations pending on our main context from the GCancellables. We
+	  should let them all run before unreffing our context, otherwise we leak
+	  file descriptors.
+	  Unfortunately this requires libsoup 2.47.0 or newer as earlier versions
+	  steal our main context from us and we can't use it for cleanup later
+	  without assertions and funny crashes.
+	  Based on a patch by Dmitry Shatrov <shatrov@gmail.com>.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=663944
+
+2014-05-07 15:49:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/souphttpsrc.c:
+	  tests: fix compilation of souphttpsrc test for libsoup 2.40 for real
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727329
+
+2014-05-07 13:23:50 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/souphttpsrc.c:
+	  tests: fix compilation of souphttpsrc test for libsoup 2.40
+	  SOUP_CHECK_VERSION was only added in 2.41, but we only
+	  depend on 2.40.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727329
+
+2014-05-07 00:58:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: skip PICTURE headers without any image data
+	  Fixes warning if the image length is 0.
+
+2014-05-06 09:22:18 +0000  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* configure.ac:
+	  configure: use X11 detection macro from common
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729621
+
+2014-04-30 11:13:12 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/rtp/README:
+	  rtp/README: update pipelines to work with 1.0
+	  - Use gst-libav encoders/decoders instead of gst-ffmpeg
+	  - gstrtpjitterbuffer -> rtpjitterbuffer
+	  - gst-launch-0.10 -> gst-launch-1.0
+	  - Add 'videoconvert' element
+	  - xvimagesink -> autovideosink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729247
+
+2014-05-05 14:41:05 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/matroska/ebml-write.c:
+	  matroska: rejig test to avoid undefined shift behavior
+	  Coverity 1195121, 1195120
+
+2014-05-05 14:33:38 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vpx/gstvp9enc.c:
+	  vp9enc: do not dereference NULL pointer
+	  Coverity 1197703
+
+2014-05-05 14:32:06 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: ensure we don't dereference a NULL pointer
+	  while working out the codec ID.
+	  Coverity 1195148
+
+2014-05-05 12:07:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* sys/v4l2/gstv4l2.c:
+	  v4l2: minor fix for closing the fd
+	  The fd returned by open() could theoretically be 0 as well.
+	  Coverity CID 1211823.
+
+2014-05-04 20:23:29 -0400  Olivier Crête <olivier.crete@ocrete.ca>
+
+	* tests/check/elements/rtpaux.c:
+	* tests/check/elements/rtprtx.c:
+	  rtpaux/rtprtx: Make tests non-racy
+	  Fix the raciness by iterating on a condition instead of using the gmainloop.
+	  Don't use the EOS as the target, otherwise the retransmission of the last
+	  packets are lost. Also count the retranmissions requests that are dropped.
+	  Check the condition before blocking on the GCond
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728501
+
+2014-05-04 22:32:54 -0400  Olivier Crête <olivier.crete@ocrete.ca>
+
+	* gst/rtpmanager/gstrtprtxreceive.c:
+	* gst/rtpmanager/gstrtprtxreceive.h:
+	  rtprtxreceive: Wait until timeout to clear association requests
+	  If two streams request a retranmission for the same SSRC, ignore the second
+	  one if the first oen is less than one second old, otherwise time out the first
+	  one and ignore the second.
+
+2014-05-04 18:59:33 -0400  Olivier Crête <olivier.crete@ocrete.ca>
+
+	* gst/rtpmanager/gstrtpmux.c:
+	* tests/check/elements/rtpmux.c:
+	  rtpmux: Always let upstream chose the ssrc if it wishes
+
+2014-05-04 13:37:46 +0200  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: avoid stall by corrupted seqnum accounting
+
+2014-05-04 01:14:33 -0400  Olivier Crête <olivier.crete@ocrete.ca>
+
+	* ext/pulse/pulsedevicemonitor.c:
+	* ext/pulse/pulsedevicemonitor.h:
+	  pulsedevicemonitor: Index are per facility, not global
+	  So need to keep the type of device in the device object
+
+2014-05-04 01:13:24 -0400  Olivier Crête <olivier.crete@ocrete.ca>
+
+	* ext/pulse/pulsedevicemonitor.c:
+	  pulsedevicemonitor: pa_subscription_event_t are enums, not flags
+	  Coverity 1195132
+
+2014-05-02 22:42:54 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2devicemonitor.c:
+	  v4l2devicemonitor: Port to use GstV4l2Iterator
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727925
+
+2014-05-02 21:38:30 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2.c:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	* sys/v4l2/gstv4l2videodec.h:
+	  v4l2: Use single pass iterator for M2M probe
+	  Instead of having each M2M class do their own probing, use the
+	  GstV4l2Iterator and probe all devices in a single pass.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727925
+
+2014-05-02 16:55:05 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/Makefile.am:
+	* sys/v4l2/v4l2-utils.c:
+	* sys/v4l2/v4l2-utils.h:
+	  v4l2: Add a common device enumerator
+	  This will allow removing code duplication (hence bugs duplication).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727925
+
+2014-03-16 11:38:07 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	* sys/v4l2/gstv4l2videodec.h:
+	  v4l2videodec: Simplify sub-instanciation mechanism
+	  Simplify sub-instanciation by defining an absract type and using subtype
+	  class and instance init callback. This also fixes a bug where the template
+	  pads get initialized too late.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727925
+
+2014-05-02 18:18:26 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2.c:
+	  v4l2: Cleanup plugin registration
+	  There is no plan to introduce special sources for jpeg, te v4l2src works fine
+	  for this.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727925
+
+2014-05-03 18:30:20 -0400  Olivier Crête <olivier.crete@ocrete.ca>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpsource.c:
+	* gst/rtpmanager/rtpsource.h:
+	* tests/check/elements/rtpcollision.c:
+	  rtpsession: Keep local conflicting addresses in the session
+	  As we now replace the local RTPSource on a conflict, it's no longer possible
+	  to keep local conflicts in the RTPSource, so they instead need to be kept
+	  in the RTPSession.
+	  Also fix the rtpcollision test to generate multiple collisions instead of
+	  one by change the address, as otherwise we detected that it was a single one.
+
+2014-05-03 20:48:30 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.3.1 ===
+
+2014-05-03 18:02:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/gst-plugins-good-plugins.prerequisites:
+	* docs/plugins/gst-plugins-good-plugins.signals:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* gst/audiofx/audiopanoramaorc-dist.c:
+	* gst/deinterlace/tvtime-dist.c:
+	* gst/videobox/gstvideoboxorc-dist.c:
+	* gst/videomixer/videomixerorc-dist.c:
+	* win32/common/config.h:
+	  Release 1.3.1
+
+2014-05-03 18:02:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-05-03 17:22:45 +0200  Sebastian Dröge <sebastian@centricular.com>
 
