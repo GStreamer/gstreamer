@@ -561,7 +561,8 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         break;
       case GST_FACEDETECT_UPDATES_ON_CHANGE:
         if (faces && faces->total > 0) {
-          post_msg = TRUE;
+          if (!filter->face_detected)
+            post_msg = TRUE;
         } else {
           if (filter->face_detected) {
             post_msg = TRUE;
