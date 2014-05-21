@@ -90,8 +90,7 @@ _parse_utc_time (guint8 * data)
   second = ((utc_ptr[2] & 0x70) >> 4) * 10 + (utc_ptr[2] & 0x0F);
 
   /* Time is UTC */
-  if (hour >= 0 && hour < 24 && minute >= 0 && minute < 60 && second >= 0
-      && second < 60) {
+  if (hour < 24 && minute < 60 && second < 60) {
     return gst_date_time_new (0.0, year, month, day, hour, minute,
         (gdouble) second);
   } else if (utc_ptr[0] == 0xFF && utc_ptr[1] == 0xFF && utc_ptr[2] == 0xFF) {
