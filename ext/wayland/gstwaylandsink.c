@@ -259,7 +259,7 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (gst_wl_window_is_toplevel (sink->window)) {
+      if (sink->window && gst_wl_window_is_toplevel (sink->window)) {
         gst_buffer_replace (&sink->last_buffer, NULL);
         g_clear_object (&sink->window);
       }
