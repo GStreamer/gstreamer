@@ -2,7 +2,7 @@
 <protocol name="scaler">
 
   <copyright>
-    Copyright © 2013 Collabora, Ltd.
+    Copyright © 2013-2014 Collabora, Ltd.
 
     Permission to use, copy, modify, distribute, and sell this
     software and its documentation for any purpose is hereby granted
@@ -26,7 +26,7 @@
     THIS SOFTWARE.
   </copyright>
 
-  <interface name="wl_scaler" version="1">
+  <interface name="wl_scaler" version="2">
     <description summary="surface cropping and scaling">
       The global interface exposing surface cropping and scaling
       capabilities is used to instantiate an interface extension for a
@@ -64,7 +64,7 @@
     </request>
   </interface>
 
-  <interface name="wl_viewport" version="1">
+  <interface name="wl_viewport" version="2">
     <description summary="crop and scale interface to a wl_surface">
       An additional interface to a wl_surface object, which allows the
       client to specify the cropping and scaling of the surface
@@ -76,20 +76,30 @@
       dst_height). This state is double-buffered, and is applied on the
       next wl_surface.commit.
 
-      Before the first set request, the wl_surface still behaves as if
-      there was no crop and scale state. That is, no scaling is applied,
-      and the surface size is as defined in wl_surface.attach.
+      The two parts of crop and scale state are independent: the source
+      rectangle, and the destination size. Initially both are unset, that
+      is, no scaling is applied. The whole of the current wl_buffer is
+      used as the source, and the surface size is as defined in
+      wl_surface.attach.
 
-      The crop and scale state causes the surface size to become
-      dst_width, dst_height. This overrides whatever the attached
-      wl_buffer size is, unless the wl_buffer is NULL. If the wl_buffer is
-      NULL, the surface has no content and therefore no size.
+      If the destination size is set, it causes the surface size to become
+      dst_width, dst_height. The source (rectangle) is scaled to exactly
+      this size. This overrides whatever the attached wl_buffer size is,
+      unless the wl_buffer is NULL. If the wl_buffer is NULL, the surface
+      has no content and therefore no size. Otherwise, the size is always
+      at least 1x1 in surface coordinates.
+
+      If the source rectangle is set, it defines what area of the
+      wl_buffer is taken as the source. If the source rectangle is set and
+      the destination size is not set, the surface size becomes the source
+      rectangle size rounded up to the nearest integer. If the source size
+      is already exactly integers, this results in cropping without scaling.
 
       The coordinate transformations from buffer pixel coordinates up to
       the surface-local coordinates happen in the following order:
         1. buffer_transform (wl_surface.set_buffer_transform)
         2. buffer_scale (wl_surface.set_buffer_scale)
-        3. crop and scale (wl_viewport.set)
+        3. crop and scale (wl_viewport.set*)
       This means, that the source rectangle coordinates of crop and scale
       are given in the coordinates after the buffer transform and scale,
       i.e. in the coordinates that would be the surface-local coordinates
@@ -122,14 +132,14 @@
 
     <enum name="error">
       <entry name="bad_value" value="0"
-             summary="negative values in width or height"/>
+             summary="negative or zero values in width or height"/>
     </enum>
 
     <request name="set">
       <description summary="set the crop and scale state">
-	Set the crop and scale state of the associated wl_surface. See
-	wl_viewport for the description, and relation to the wl_buffer
-	size.
+	Set both source rectangle and destination size of the associated
+	wl_surface. See wl_viewport for the description, and relation to
+	the wl_buffer size.
 
 	The bad_value protocol error is raised if src_width or
 	src_height is negative, or if dst_width or dst_height is not
@@ -152,5 +162,49 @@
       <arg name="dst_height" type="int" summary="surface height"/>
     </request>
 
+    <request name="set_source" since="2">
+      <description summary="set the source rectangle for cropping">
+	Set the source rectangle of the associated wl_surface. See
+	wl_viewport for the description, and relation to the wl_buffer
+	size.
+
+	If width is -1.0 and height is -1.0, the destination size is unset
+	instead. Any other pair of values for width and height that
+	contains zero or negative values raises the bad_value protocol
+	error.
+
+	The crop and scale state is double-buffered state, and will be
+	applied on the next wl_surface.commit.
+      </description>
+
+      <arg name="x" type="fixed" summary="source rectangle x"/>
+      <arg name="y" type="fixed" summary="source rectangle y"/>
+      <arg name="width" type="fixed" summary="source rectangle width"/>
+      <arg name="height" type="fixed" summary="source rectangle height"/>
+    </request>
+
+    <request name="set_destination" since="2">
+      <description summary="set the surface size for scaling">
+	Set the destination size of the associated wl_surface. See
+	wl_viewport for the description, and relation to the wl_buffer
+	size.
+
+	If width is -1 and height is -1, the destination size is unset
+	instead. Any other pair of values for width and height that
+	contains zero or negative values raises the bad_value protocol
+	error.
+
+	The crop and scale state is double-buffered state, and will be
+	applied on the next wl_surface.commit.
+
+	Arguments x and y do not exist here, use the x and y arguments to
+	wl_surface.attach. The x, y, width, and height define the
+	surface-local coordinate system irrespective of the attached
+	wl_buffer size.
+      </description>
+
+      <arg name="width" type="int" summary="surface width"/>
+      <arg name="height" type="int" summary="surface height"/>
+    </request>
   </interface>
 </protocol>

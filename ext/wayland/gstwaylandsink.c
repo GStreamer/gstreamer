@@ -550,9 +550,7 @@ render_last_buffer (GstWaylandSink * sink)
   dst.h = sink->window->height;
   gst_video_sink_center_rect (src, dst, &res, FALSE);
 
-  wl_viewport_set (sink->window->viewport, wl_fixed_from_int (0),
-      wl_fixed_from_int (0), wl_fixed_from_int (src.w),
-      wl_fixed_from_int (src.h), res.w, res.h);
+  wl_viewport_set_destination (sink->window->viewport, res.w, res.h);
 
   wl_surface_attach (surface, meta->wbuffer, 0, 0);
   wl_surface_damage (surface, 0, 0, res.w, res.h);

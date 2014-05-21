@@ -141,7 +141,7 @@ registry_handle_global (void *data, struct wl_registry *registry,
     self->shm = wl_registry_bind (registry, id, &wl_shm_interface, 1);
     wl_shm_add_listener (self->shm, &shm_listener, self);
   } else if (g_strcmp0 (interface, "wl_scaler") == 0) {
-    self->scaler = wl_registry_bind (registry, id, &wl_scaler_interface, 1);
+    self->scaler = wl_registry_bind (registry, id, &wl_scaler_interface, 2);
   }
 }
 
