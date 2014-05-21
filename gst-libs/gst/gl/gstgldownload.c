@@ -245,8 +245,18 @@ _gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
   download->in_tex[0]->tex_id = texture_id;
 
   if (!download->out_tex[0]) {
-    gst_gl_memory_setup_wrapped (download->context, &download->info,
-        data, download->out_tex);
+    if (GST_VIDEO_INFO_FORMAT (&download->info) == GST_VIDEO_FORMAT_YUY2
+        || GST_VIDEO_INFO_FORMAT (&download->info) == GST_VIDEO_FORMAT_UYVY) {
+      download->out_tex[0] = gst_gl_memory_wrapped (download->context,
+          GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
+          GST_VIDEO_INFO_COMP_WIDTH (&download->info, 1),
+          GST_VIDEO_INFO_HEIGHT (&download->info),
+          GST_VIDEO_INFO_PLANE_STRIDE (&download->info, 0), data[0], NULL,
+          NULL);
+    } else {
+      gst_gl_memory_setup_wrapped (download->context, &download->info,
+          data, download->out_tex);
+    }
   }
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&download->info); i++) {
