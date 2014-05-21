@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Ugly Plugins 1.3.1
+Release notes for GStreamer Ugly Plugins 1.3.2
 
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.3 release series. The 1.3 release series is adding new features on top of
 the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.3 release series
@@ -70,13 +70,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 708598 : asfdemux: when seek to end of file, some asf recieve EOS and then finished. But some asf file play from beginning.
-      * 722291 : mpeg2dec: deinterlace no longer automatically deinterlaces mpeg2dec output
-      * 723505 : gst-plugins-ugly: Do not build check tests for disabled plugins
-      * 725051 : x264enc: allow lossless compression (qp=0)
-      * 725483 : gst-plugins-ugly: Ignore gcov intermediate files
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -113,16 +108,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Dirk Van Haerenborgh
       * Edward Hervey
-      * HyeJin Choi
-      * Mark Nauwelaerts
-      * Michael Esemplare
-      * Rico Tzschichholz
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Stefan Sauer
-      * Thiago Santos
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
  

@@ -1,4 +1,4 @@
-This is GStreamer Ugly Plugins 1.3.1
+This is GStreamer Ugly Plugins 1.3.2
 
 Changes since 1.2:
 
@@ -45,6 +45,8 @@ New API:
    events and merge custom tags into them consistently.
  • playbin/playsink has support for application provided audio and video
    filters.
+ • GstDiscoverer has new and simplified API to get details about missing
+   plugins and information to pass to the plugin installer.
  • The GL library was merged from gst-plugins-gl to gst-plugins-bad,
    providing a generic infrastructure for handling GL inside GStreamer
    pipelines and a plugin with some elements using these, especially
@@ -62,6 +64,14 @@ Major changes:
      of the existing V4L2 elements and the corresponding
      infrastructure.
      The v4l2videodec element replaces the mfcdec element.
+   ∘ New downloadbuffer element that replaces the download
+     buffering feature of queue2. Compared to queue2's code
+     it is much simpler and only for this single use case.
+     A noteworthy new feature is that it's downloading gaps
+     in the already downloaded stream parts when nothing else
+     is to be downloaded.
+     This is now used by playbin when download buffering is
+     enabled.
    ∘ rtpstreampay and rtpstreamdepay elements for transmitting
      RTP packets over a stream API (e.g. TCP) according to
      RFC 4571.
@@ -78,7 +88,7 @@ Major changes:
      are available on OS X and iOS now.
 
  • Other changes:
-   ∘ gst-libav now uses libav 10, and gained support for H265/HEVC.
+   ∘ gst-libav now uses libav 10.1, and gained support for H265/HEVC.
    ∘ Support for hardware codecs and special memory types has been
      improved with bugfixes and feature additions in various plugins
      and base classes.
@@ -95,6 +105,9 @@ Major changes:
      reliable now and supports more HLS features like trick modes.
      Also fragments are pushed downstream while they're downloaded
      now instead of waiting for each fragment to finish.
+   ∘ dashdemux and mssdemux are now also pushing fragments downstream
+     while they're downloaded instead of waiting for each fragment to
+     finish.
    ∘ videoflip can automatically flip based on the orientation tag.
    ∘ openjpeg supports the OpenJPEG2 API.
    ∘ gst-rtsp-server supports SRTP and MIKEY now.
@@ -107,4 +120,3 @@ Things to look out for:
    element.
  • The mfcdec element was removed and replaced by v4l2videodec.
  • osxvideosink is only available in OS X 10.6 or newer.
-

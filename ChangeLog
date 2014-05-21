@@ -1,9 +1,68 @@
-=== release 1.3.1 ===
+=== release 1.3.2 ===
 
-2014-05-03  Sebastian Dröge <slomo@coaxion.net>
+2014-05-21  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.1
+	  releasing 1.3.2
+
+2014-05-21 10:51:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 211fa5f to 1f5d3c3
+
+2014-05-16 16:24:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  mpeg2dec: remove unused struct members
+
+2014-05-16 12:21:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/realmedia/rtspreal.c:
+	  rtspreal: Fix some memory leaks in an error path
+	  CID 1212165.
+
+2014-05-09 14:54:54 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Release codec state on negotiation failures
+	  Else it leaks
+	  CID #1212169
+
+2014-05-03 20:48:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.3.1 ===
+
+2014-05-03 18:29:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.3.1
 
 2014-05-03 18:21:01 +0200  Sebastian Dröge <sebastian@centricular.com>
 
