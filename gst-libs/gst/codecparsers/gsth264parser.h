@@ -485,7 +485,6 @@ struct _GstH264SPS
   gint width, height;
   gint crop_rect_width, crop_rect_height;
   gint crop_rect_x, crop_rect_y;
-  gint fps_num, fps_den;
   gboolean valid;
 };
 
