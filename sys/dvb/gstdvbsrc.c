@@ -99,16 +99,6 @@
 #define HAVE_V5_MINOR(minor) ((DVB_API_VERSION > 5) || \
 			      (DVB_API_VERSION_MINOR >= (minor)))
 
-/* NO_STREAM_ID_FILTER introduced in minor 8 */
-#ifndef NO_STREAM_ID_FILTER
-#define NO_STREAM_ID_FILTER    (~0U)
-#endif
-
-/* DTV_STREAM_ID introduced in minor 8 (redefine) */
-#ifndef DTV_STREAM_ID
-#define DTV_STREAM_ID DTV_ISDBS_TS_ID
-#endif
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -132,6 +122,16 @@
 #include <linux/dvb/dmx.h>
 
 #include <gst/gst-i18n-plugin.h>
+
+/* NO_STREAM_ID_FILTER introduced in minor 8 */
+#ifndef NO_STREAM_ID_FILTER
+#define NO_STREAM_ID_FILTER    (~0U)
+#endif
+
+/* DTV_STREAM_ID introduced in minor 8 (redefine) */
+#ifndef DTV_STREAM_ID
+#define DTV_STREAM_ID DTV_ISDBS_TS_ID
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gstdvbsrc_debug);
 #define GST_CAT_DEFAULT (gstdvbsrc_debug)
