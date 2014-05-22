@@ -57,6 +57,12 @@
       <xi:include href="xml/gstinsertbin.xml" />
     </chapter>
 
+    <chapter id="base">
+      <title>GStreamer Base classes from gst-plugins-bad</title>
+      <xi:include href="xml/gstaggregator.xml" />
+      <xi:include href="xml/gstaggregatorpad.xml" />
+    </chapter>
+
     <chapter id="gl">
       <title>OpenGL Helper Library</title>
       <xi:include href="xml/gstglapi.xml"/>

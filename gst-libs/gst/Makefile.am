@@ -11,8 +11,8 @@ WAYLAND_DIR=wayland
 endif
 
 SUBDIRS = interfaces basecamerabinsrc codecparsers \
-	 insertbin uridownloader mpegts $(GL_DIR) $(WAYLAND_DIR)
+	 insertbin uridownloader mpegts base $(GL_DIR) $(WAYLAND_DIR)
 
 noinst_HEADERS = gst-i18n-plugin.h gettext.h glib-compat-private.h
 DIST_SUBDIRS = interfaces gl basecamerabinsrc codecparsers \
-	insertbin uridownloader mpegts wayland
+	insertbin uridownloader mpegts wayland base

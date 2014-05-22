@@ -244,6 +244,7 @@ check_PROGRAMS = \
 	libs/mpegts \
 	libs/h264parser \
 	libs/vp8parser \
+	libs/aggregator \
 	$(check_uvch264) \
 	libs/vc1parser \
 	$(check_schro) \
@@ -454,6 +455,16 @@ libs_gstglupload_LDADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+libs_aggregator_LDADD = \
+	$(top_builddir)/gst-libs/gst/base/libgstbadbase-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+libs_aggregator_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 
 distclean-local-orc:
 	rm -rf orc

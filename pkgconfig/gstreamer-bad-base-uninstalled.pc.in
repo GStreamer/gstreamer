@@ -1,0 +1,15 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/base
+includedir=${pcfiledir}/../gst-libs
+pluginsdir=${pcfiledir}/..
+
+Name: GStreamer bad base classes, uninstalled
+Description: Bad base classes for GStreamer elements, Not Installed
+Version: @VERSION@
+Requires: gstreamer-@GST_API_VERSION@
+
+Libs: -L${libdir} ${libdir}/libgstbadbase-@GST_API_VERSION@.la @BADBASE_LIBS@
+Cflags: -I${includedir} -I@srcdir@/.. @BADBASE_CFLAGS@
+
+libraries=badbase
