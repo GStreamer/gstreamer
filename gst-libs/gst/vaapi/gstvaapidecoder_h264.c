@@ -91,7 +91,9 @@ struct _GstVaapiParserInfoH264 {
         GstH264SliceHdr slice_hdr;
     }                   data;
     guint               state;
-    guint               flags; // Same as decoder unit flags (persistent)
+    guint               flags;      // Same as decoder unit flags (persistent)
+    guint               view_id;    // View ID of slice
+    guint               voc;        // View order index (VOIdx) of slice
 };
 
 static void
@@ -1532,6 +1534,7 @@ parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     GstVaapiParserInfoH264 * const pi = unit->parsed_info;
     GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstH264NalUnit * const nalu = &pi->nalu;
+    GstH264SPS *sps;
     GstH264ParserResult result;
     guint num_views;
 
@@ -1578,11 +1581,16 @@ parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
-    num_views = get_num_views(slice_hdr->pps->sequence);
+    sps = slice_hdr->pps->sequence;
+
+    /* Update MVC data */
+    num_views = get_num_views(sps);
     if (priv->max_views < num_views) {
         priv->max_views = num_views;
         GST_DEBUG("maximum number of views changed to %u", num_views);
     }
+    pi->view_id = get_view_id(&pi->nalu);
+    pi->voc = get_view_order_index(sps, pi->view_id);
 
     priv->parser_state |= GST_H264_VIDEO_STATE_GOT_SLICE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -2701,14 +2709,13 @@ init_picture(
     picture->output_flag        = TRUE; /* XXX: conformant to Annex A only */
     base_picture->pts           = GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts;
     base_picture->type          = GST_VAAPI_PICTURE_TYPE_NONE;
+    base_picture->view_id       = pi->view_id;
+    base_picture->voc           = pi->voc;
 
     /* Initialize extensions */
     switch (pi->nalu.extension_type) {
     case GST_H264_NAL_EXTENSION_MVC: {
         GstH264NalUnitExtensionMVC * const mvc = &pi->nalu.extension.mvc;
-        base_picture->view_id = mvc->view_id;
-        base_picture->voc = get_view_order_index(get_sps(decoder),
-            base_picture->view_id);
 
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_MVC);
         if (mvc->inter_view_flag)
@@ -3207,7 +3214,7 @@ is_new_picture(GstVaapiParserInfoH264 *pi, GstVaapiParserInfoH264 *prev_pi)
 
     /* view_id differs in value and VOIdx of current slice_hdr is less
        than the VOIdx of the prev_slice_hdr */
-    CHECK_VALUE(&pi->nalu.extension.mvc, &prev_pi->nalu.extension.mvc, view_id);
+    CHECK_VALUE(pi, prev_pi, view_id);
 
     /* frame_num differs in value, regardless of inferred values to 0 */
     CHECK_VALUE(slice_hdr, prev_slice_hdr, frame_num);
@@ -3255,48 +3262,26 @@ is_new_picture(GstVaapiParserInfoH264 *pi, GstVaapiParserInfoH264 *prev_pi)
 
 /* Detection of a new access unit, assuming we are already in presence
    of a new picture */
-static gboolean
+static inline gboolean
 is_new_access_unit(GstVaapiParserInfoH264 *pi, GstVaapiParserInfoH264 *prev_pi)
 {
-    GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
-    GstH264SliceHdr *prev_slice_hdr;
-    GstH264NalUnitExtensionMVC *mvc, *prev_mvc;
-    gint voc, prev_voc;
-
-    g_return_val_if_fail(is_new_picture(pi, prev_pi), FALSE);
-
-    if (!prev_pi)
+    if (!prev_pi || prev_pi->view_id == pi->view_id)
         return TRUE;
-    prev_slice_hdr = &prev_pi->data.slice_hdr;
-
-    mvc = &pi->nalu.extension.mvc;
-    prev_mvc = &prev_pi->nalu.extension.mvc;
-    if (mvc->view_id == prev_mvc->view_id)
-        return TRUE;
-
-    voc = get_view_order_index(slice_hdr->pps->sequence, mvc->view_id);
-    prev_voc = get_view_order_index(prev_slice_hdr->pps->sequence,
-        prev_mvc->view_id);
-    return voc < prev_voc;
+    return pi->voc < prev_pi->voc;
 }
 
 /* Finds the first field picture corresponding to the supplied picture */
 static GstVaapiPictureH264 *
-find_first_field(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu,
-    GstH264SliceHdr *slice_hdr)
+find_first_field(GstVaapiDecoderH264 *decoder, GstVaapiParserInfoH264 *pi)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstVaapiFrameStore *fs;
-    gint voc;
 
     if (!slice_hdr->field_pic_flag)
         return NULL;
 
-    voc = get_view_order_index(get_sps(decoder), get_view_id(nalu));
-    if (voc < 0)
-        return NULL;
-
-    fs = priv->prev_frames[voc];
+    fs = priv->prev_frames[pi->voc];
     if (!fs || gst_vaapi_frame_store_has_frame(fs))
         return NULL;
 
@@ -3336,7 +3321,7 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 
     priv->decoder_state = 0;
 
-    first_field = find_first_field(decoder, &pi->nalu, slice_hdr);
+    first_field = find_first_field(decoder, pi);
     if (first_field) {
         /* Re-use current picture where the first field was decoded */
         picture = gst_vaapi_picture_h264_new_field(first_field);
