@@ -408,7 +408,8 @@ static gdouble
 _read_unary (MathParser * parser)
 {
   gchar c;
-  gdouble v0;
+  gdouble v0 = 0.0;
+
   c = _peek (parser);
   if (c == '!') {
     _error (parser, "Expected '+' or '-' for unary expression, got '!'");
