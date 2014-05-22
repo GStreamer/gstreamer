@@ -350,7 +350,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
             memcpy (file->iv, iv, sizeof (iv));
           } else {
             guint8 *iv = file->iv + 12;
-            GST_WRITE_UINT32_BE (iv + 12, file->sequence);
+            GST_WRITE_UINT32_BE (iv, file->sequence);
           }
         }
 
