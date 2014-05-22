@@ -23,6 +23,8 @@
 
 #include "wldisplay.h"
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_WL_WINDOW                  (gst_wl_window_get_type ())
 #define GST_WL_WINDOW(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_WL_WINDOW, GstWlWindow))
 #define GST_IS_WL_WINDOW(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WL_WINDOW))
@@ -62,5 +64,7 @@ struct wl_surface *gst_wl_window_get_wl_surface (GstWlWindow * window);
 gboolean gst_wl_window_is_toplevel (GstWlWindow *window);
 
 void gst_wl_window_set_size (GstWlWindow * window, gint w, gint h);
+
+G_END_DECLS
 
 #endif /* __GST_WL_WINDOW_H__ */

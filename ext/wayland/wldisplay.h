@@ -25,6 +25,8 @@
 #include <wayland-client.h>
 #include "scaler-client-protocol.h"
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_WL_DISPLAY                  (gst_wl_display_get_type ())
 #define GST_WL_DISPLAY(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_WL_DISPLAY, GstWlDisplay))
 #define GST_IS_WL_DISPLAY(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WL_DISPLAY))
@@ -67,5 +69,7 @@ GType gst_wl_display_get_type (void);
 GstWlDisplay *gst_wl_display_new (const gchar * name, GError ** error);
 GstWlDisplay *gst_wl_display_new_existing (struct wl_display * display,
     gboolean take_ownership, GError ** error);
+
+G_END_DECLS
 
 #endif /* __GST_WL_DISPLAY_H__ */
