@@ -78,6 +78,9 @@ class Caps(Gst.Caps):
 
         raise TypeError("wrong arguments when creating GstCaps object")
 
+    def __init__(self, *args, **kwargs):
+        return super(Caps, self).__init__()
+
     def __str__(self):
         return self.to_string()
 
