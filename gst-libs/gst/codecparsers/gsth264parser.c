@@ -226,7 +226,11 @@ gst_h264_parse_nalu_header (GstH264NalUnit * nalu)
           nalu->size - nalu->header_bytes);
 
       svc_extension_flag = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-      if (!svc_extension_flag) {        /* MVC */
+      if (svc_extension_flag) { /* SVC */
+
+        nalu->extension_type = GST_H264_NAL_EXTENSION_SVC;
+
+      } else {                  /* MVC */
         GstH264NalUnitExtensionMVC *const mvc = &nalu->extension.mvc;
 
         nalu->extension_type = GST_H264_NAL_EXTENSION_MVC;
@@ -2137,6 +2141,12 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
     GST_WARNING ("couldn't find associated sequence parameter set with id: %d",
         pps->id);
     return GST_H264_PARSER_BROKEN_LINK;
+  }
+
+  /* Check we can actually parse this slice (AVC, MVC headers only) */
+  if (sps->extension_type && sps->extension_type != GST_H264_NAL_EXTENSION_MVC) {
+    GST_WARNING ("failed to parse unsupported slice header");
+    return GST_H264_PARSER_BROKEN_DATA;
   }
 
   /* set default values for fields that might not be present in the bitstream
