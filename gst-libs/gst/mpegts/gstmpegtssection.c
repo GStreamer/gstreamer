@@ -1067,6 +1067,10 @@ _identify_section (guint16 pid, guint8 table_id)
       /* FIXME check pids reported on the MGT to confirm expectations */
       return GST_MPEGTS_SECTION_ATSC_ETT;
       /* FIXME : FILL */
+    case GST_MTS_TABLE_ID_ATSC_SYSTEM_TIME:
+      if (pid == 0x1ffb)
+        return GST_MPEGTS_SECTION_ATSC_STT;
+      break;
     default:
       /* Handle ranges */
       if (table_id >= GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_PRESENT &&

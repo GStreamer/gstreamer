@@ -216,6 +216,36 @@ GType gst_mpegts_atsc_ett_get_type (void);
 
 const GstMpegTsAtscETT *gst_mpegts_section_get_atsc_ett (GstMpegTsSection *section);
 
+/* STT */
+#define GST_TYPE_MPEGTS_ATSC_STT (gst_mpegts_atsc_stt_get_type ())
+
+typedef struct _GstMpegTsAtscSTT GstMpegTsAtscSTT;
+
+/**
+ * GstMpegTsAtscSTT:
+ *
+ * System Time Table (A65)
+ *
+ */
+struct _GstMpegTsAtscSTT
+{
+  guint8     protocol_version;
+  guint32    system_time;
+  guint8     gps_utc_offset;
+  gboolean   ds_status;
+  guint8     ds_dayofmonth;
+  guint8     ds_hour;
+  GPtrArray *descriptors;
+
+  GstDateTime *utc_datetime;
+};
+
+GType gst_mpegts_atsc_stt_get_type (void);
+
+const GstMpegTsAtscSTT * gst_mpegts_section_get_atsc_stt (GstMpegTsSection * section);
+/* FIXME receive a non-const parameter but we only provide a const getter */
+GstDateTime * gst_mpegts_atsc_stt_get_datetime_utc (GstMpegTsAtscSTT * stt);
+
 G_END_DECLS
 
 #endif				/* GST_MPEGTS_SECTION_H */

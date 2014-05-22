@@ -641,3 +641,114 @@ gst_mpegts_section_get_atsc_ett (GstMpegTsSection * section)
 
   return (const GstMpegTsAtscETT *) section->cached_parsed;
 }
+
+/* STT */
+
+static GstMpegTsAtscSTT *
+_gst_mpegts_atsc_stt_copy (GstMpegTsAtscSTT * stt)
+{
+  GstMpegTsAtscSTT *copy;
+
+  copy = g_slice_dup (GstMpegTsAtscSTT, stt);
+  copy->descriptors = g_ptr_array_ref (stt->descriptors);
+
+  return copy;
+}
+
+static void
+_gst_mpegts_atsc_stt_free (GstMpegTsAtscSTT * stt)
+{
+  if (stt->descriptors)
+    g_ptr_array_unref (stt->descriptors);
+  g_slice_free (GstMpegTsAtscSTT, stt);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegTsAtscSTT, gst_mpegts_atsc_stt,
+    (GBoxedCopyFunc) _gst_mpegts_atsc_stt_copy,
+    (GFreeFunc) _gst_mpegts_atsc_stt_free);
+
+static gpointer
+_parse_atsc_stt (GstMpegTsSection * section)
+{
+  GstMpegTsAtscSTT *stt = NULL;
+  guint8 *data, *end;
+  guint16 daylight_saving;
+
+  stt = g_slice_new0 (GstMpegTsAtscSTT);
+
+  data = section->data;
+  end = data + section->section_length;
+
+  /* Skip already parsed data */
+  data += 8;
+
+  stt->protocol_version = GST_READ_UINT8 (data);
+  data += 1;
+  stt->system_time = GST_READ_UINT32_BE (data);
+  data += 4;
+  stt->gps_utc_offset = GST_READ_UINT8 (data);
+  data += 1;
+
+  daylight_saving = GST_READ_UINT16_BE (data);
+  data += 2;
+  stt->ds_status = daylight_saving >> 15;
+  stt->ds_dayofmonth = (daylight_saving >> 8) & 0x1F;
+  stt->ds_hour = daylight_saving & 0xFF;
+
+  stt->descriptors = gst_mpegts_parse_descriptors (data, end - data - 4);
+  if (stt->descriptors == NULL)
+    goto error;
+
+  return (gpointer) stt;
+
+error:
+  if (stt)
+    _gst_mpegts_atsc_stt_free (stt);
+
+  return NULL;
+}
+
+
+/**
+ * gst_mpegts_section_get_atsc_stt:
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_ATSC_STT
+ *
+ * Returns the #GstMpegTsAtscSTT contained in the @section.
+ *
+ * Returns: The #GstMpegTsAtscSTT contained in the section, or %NULL if an error
+ * happened.
+ */
+const GstMpegTsAtscSTT *
+gst_mpegts_section_get_atsc_stt (GstMpegTsSection * section)
+{
+  g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_ATSC_STT,
+      NULL);
+  g_return_val_if_fail (section->cached_parsed || section->data, NULL);
+
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_section_checks (section, 20, _parse_atsc_stt,
+        (GDestroyNotify) _gst_mpegts_atsc_stt_free);
+
+  return (const GstMpegTsAtscSTT *) section->cached_parsed;
+}
+
+#define GPS_TO_UTC_TICKS G_GINT64_CONSTANT(315964800)
+static GstDateTime *
+_gst_mpegts_atsc_gps_time_to_datetime (guint32 systemtime, guint8 gps_offset)
+{
+  return gst_date_time_new_from_unix_epoch_utc (systemtime - gps_offset +
+      GPS_TO_UTC_TICKS);
+}
+
+GstDateTime *
+gst_mpegts_atsc_stt_get_datetime_utc (GstMpegTsAtscSTT * stt)
+{
+  if (stt->utc_datetime == NULL)
+    stt->utc_datetime = _gst_mpegts_atsc_gps_time_to_datetime (stt->system_time,
+        stt->gps_utc_offset);
+
+  if (stt->utc_datetime)
+    return gst_date_time_ref (stt->utc_datetime);
+  return NULL;
+}

@@ -640,6 +640,30 @@ dump_ett (GstMpegTsSection * section)
 }
 
 static void
+dump_stt (GstMpegTsSection * section)
+{
+  const GstMpegTsAtscSTT *stt = gst_mpegts_section_get_atsc_stt (section);
+  GstDateTime *dt;
+  gchar *dt_str = NULL;
+
+  g_assert (stt);
+
+  dt = gst_mpegts_atsc_stt_get_datetime_utc ((GstMpegTsAtscSTT *) stt);
+  if (dt)
+    dt_str = gst_date_time_to_iso8601_string (dt);
+
+  g_printf ("     protocol_version    : 0x%04x\n", stt->protocol_version);
+  g_printf ("     system_time         : 0x%08x\n", stt->system_time);
+  g_printf ("     gps_utc_offset      : %d\n", stt->gps_utc_offset);
+  g_printf ("     daylight saving     : %d day:%d hour:%d\n", stt->ds_status,
+      stt->ds_dayofmonth, stt->ds_hour);
+  g_printf ("     utc datetime        : %s", dt_str);
+
+  g_free (dt_str);
+  gst_date_time_unref (dt);
+}
+
+static void
 dump_nit (GstMpegTsSection * section)
 {
   const GstMpegTsNIT *nit = gst_mpegts_section_get_nit (section);
@@ -838,6 +862,9 @@ dump_section (GstMpegTsSection * section)
       break;
     case GST_MPEGTS_SECTION_ATSC_ETT:
       dump_ett (section);
+      break;
+    case GST_MPEGTS_SECTION_ATSC_STT:
+      dump_stt (section);
       break;
     default:
       g_printf ("     Unknown section type\n");
