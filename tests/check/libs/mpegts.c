@@ -62,6 +62,12 @@ static const guint8 sdt_data_check[] = {
   0xe5, 0x02, 0xd9
 };
 
+static const guint8 stt_data_check[] = {
+  0xcd, 0xf0, 0x11, 0x00, 0x00, 0xc1, 0x00,
+  0x00, 0x00, 0x23, 0xb4, 0xe6, 0x5C, 0x0c,
+  0xc0, 0x00, 0xc4, 0x86, 0x56, 0xa5
+};
+
 GST_START_TEST (test_mpegts_pat)
 {
   GstMpegTsPatProgram *program;
@@ -381,6 +387,41 @@ GST_START_TEST (test_mpegts_sdt)
 
 GST_END_TEST;
 
+GST_START_TEST (test_mpegts_atsc_stt)
+{
+  const GstMpegTsAtscSTT *stt;
+  GstMpegTsSection *section;
+  guint8 *data;
+  GstDateTime *dt;
+
+  data = g_memdup (stt_data_check, 20);
+
+  section = gst_mpegts_section_new (0x1ffb, data, 20);
+  stt = gst_mpegts_section_get_atsc_stt (section);
+  fail_if (stt == NULL);
+
+  fail_unless (stt->protocol_version == 0);
+  fail_unless (stt->system_time == 0x23b4e65c);
+  fail_unless (stt->gps_utc_offset == 12);
+  fail_unless (stt->ds_status == 1);
+  fail_unless (stt->ds_dayofmonth == 0);
+  fail_unless (stt->ds_hour == 0);
+
+  dt = gst_mpegts_atsc_stt_get_datetime_utc ((GstMpegTsAtscSTT *) stt);
+  fail_unless (gst_date_time_get_day (dt) == 30);
+  fail_unless (gst_date_time_get_month (dt) == 12);
+  fail_unless (gst_date_time_get_year (dt) == 1998);
+  fail_unless (gst_date_time_get_hour (dt) == 13);
+  fail_unless (gst_date_time_get_minute (dt) == 0);
+  fail_unless (gst_date_time_get_second (dt) == 0);
+
+  gst_date_time_unref (dt);
+  gst_mpegts_section_unref (section);
+}
+
+GST_END_TEST;
+
+
 static const guint8 registration_descriptor[] = {
   0x05, 0x04, 0x48, 0x44, 0x4d, 0x56
 };
@@ -514,6 +555,7 @@ mpegts_suite (void)
   tcase_add_test (tc_chain, test_mpegts_pmt);
   tcase_add_test (tc_chain, test_mpegts_nit);
   tcase_add_test (tc_chain, test_mpegts_sdt);
+  tcase_add_test (tc_chain, test_mpegts_atsc_stt);
   tcase_add_test (tc_chain, test_mpegts_descriptors);
   tcase_add_test (tc_chain, test_mpegts_dvb_descriptors);
 
