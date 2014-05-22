@@ -26,6 +26,7 @@
     <xi:include href="xml/element-chromium.xml" />
     <xi:include href="xml/element-circle.xml" />
     <xi:include href="xml/element-coloreffects.xml" />
+    <xi:include href="xml/element-compositor.xml" />
     <xi:include href="xml/element-cvdilate.xml" />
     <xi:include href="xml/element-cverode.xml" />
     <xi:include href="xml/element-cvequalizehist.xml" />

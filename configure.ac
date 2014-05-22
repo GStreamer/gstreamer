@@ -430,6 +430,7 @@ AG_GST_CHECK_PLUGIN(aiff)
 AG_GST_CHECK_PLUGIN(asfmux)
 AG_GST_CHECK_PLUGIN(audiofxbad)
 AG_GST_CHECK_PLUGIN(audiomixer)
+AG_GST_CHECK_PLUGIN(compositor)
 AG_GST_CHECK_PLUGIN(audiovisualizers)
 AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(bayer)
@@ -3202,6 +3203,7 @@ gst/videosignal/Makefile
 gst/vmnc/Makefile
 gst/y4m/Makefile
 gst/yadif/Makefile
+gst/compositor/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/basecamerabinsrc/Makefile
