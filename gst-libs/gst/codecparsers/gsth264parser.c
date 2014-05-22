@@ -1347,7 +1347,26 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps,
     GST_LOG ("crop_rectangle x=%u y=%u width=%u, height=%u", sps->crop_rect_x,
         sps->crop_rect_y, width, height);
   }
+  sps->fps_num = 0;
+  sps->fps_den = 1;
 
+  if (vui && vui->timing_info_present_flag) {
+    /* derive framerate */
+    /* FIXME verify / also handle other cases */
+    GST_LOG ("Framerate: %u %u %u %u", parse_vui_params,
+        vui->fixed_frame_rate_flag, sps->frame_mbs_only_flag,
+        vui->pic_struct_present_flag);
+
+    if (parse_vui_params && vui->fixed_frame_rate_flag) {
+      sps->fps_num = vui->time_scale;
+      sps->fps_den = vui->num_units_in_tick;
+      /* picture is a frame = 2 fields */
+      sps->fps_den *= 2;
+      GST_LOG ("framerate %d/%d", sps->fps_num, sps->fps_den);
+    }
+  } else {
+    GST_LOG ("No VUI, unknown framerate");
+  }
   return TRUE;
 
 error:
