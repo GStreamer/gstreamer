@@ -151,11 +151,9 @@ gst_amc_get_jni_env (void)
 }
 
 static gboolean
-initialize_java_vm (void)
+load_java_module (const gchar * name)
 {
-  jsize n_vms;
-
-  java_module = g_module_open ("libdvm", G_MODULE_BIND_LOCAL);
+  java_module = g_module_open (name, G_MODULE_BIND_LOCAL);
   if (!java_module)
     goto load_failed;
 
@@ -167,6 +165,34 @@ initialize_java_vm (void)
           (gpointer *) & get_created_java_vms))
     goto symbol_error;
 
+  return TRUE;
+
+load_failed:
+  {
+    GST_ERROR ("Failed to load Java module '%s': %s", GST_STR_NULL (name),
+        g_module_error ());
+    return FALSE;
+  }
+symbol_error:
+  {
+    GST_ERROR ("Failed to locate required JNI symbols in '%s': %s",
+        GST_STR_NULL (name), g_module_error ());
+    g_module_close (java_module);
+    java_module = NULL;
+    return FALSE;
+  }
+}
+
+static gboolean
+initialize_java_vm (void)
+{
+  jsize n_vms;
+
+  if (!load_java_module (NULL)) {
+    if (!load_java_module ("libdvm"))
+      return FALSE;
+  }
+
   n_vms = 0;
   if (get_created_java_vms (&java_vm, 1, &n_vms) < 0)
     goto get_created_failed;
@@ -177,6 +203,8 @@ initialize_java_vm (void)
     JNIEnv *env;
     JavaVMInitArgs vm_args;
     JavaVMOption options[4];
+
+    GST_DEBUG ("Found no existing Java VM, trying to start one");
 
     options[0].optionString = "-verbose:jni";
     options[1].optionString = "-verbose:gc";
@@ -196,19 +224,6 @@ initialize_java_vm (void)
 
   return java_vm != NULL;
 
-load_failed:
-  {
-    GST_ERROR ("Failed to load libdvm: %s", g_module_error ());
-    return FALSE;
-  }
-symbol_error:
-  {
-    GST_ERROR ("Failed to locate required JNI symbols in libdvm: %s",
-        g_module_error ());
-    g_module_close (java_module);
-    java_module = NULL;
-    return FALSE;
-  }
 get_created_failed:
   {
     GST_ERROR ("Failed to get already created VMs");
