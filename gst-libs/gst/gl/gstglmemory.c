@@ -60,6 +60,12 @@ static GstAllocator *_gl_allocator;
 #ifndef GL_RG
 #define GL_RG 0x8227
 #endif
+#ifndef GL_R8
+#define GL_R8 0x8229
+#endif
+#ifndef GL_RG8
+#define GL_RG8 0x822B
+#endif
 #ifndef GL_PIXEL_PACK_BUFFER
 #define GL_PIXEL_PACK_BUFFER 0x88EB
 #endif
@@ -269,7 +275,7 @@ _sized_gl_format_from_gl_format_type (GLenum format, GLenum type)
           return GL_RGB8;
           break;
         case GL_UNSIGNED_SHORT_5_6_5:
-          return GL_RGB565;
+          return GL_RGB;
           break;
       }
       break;
