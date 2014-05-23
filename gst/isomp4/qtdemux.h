@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstflowcombiner.h>
 
 G_BEGIN_DECLS
 
@@ -63,6 +64,8 @@ struct _GstQTDemux {
   gint     n_video_streams;
   gint     n_audio_streams;
   gint     n_sub_streams;
+
+  GstFlowCombiner *flowcombiner;
 
   gboolean have_group_id;
   guint group_id;

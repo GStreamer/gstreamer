@@ -467,7 +467,8 @@ static gboolean qtdemux_parse_samples (GstQTDemux * qtdemux,
 static GstFlowReturn qtdemux_expose_streams (GstQTDemux * qtdemux);
 static void gst_qtdemux_stream_free (GstQTDemux * qtdemux,
     QtDemuxStream * stream);
-static void gst_qtdemux_stream_clear (QtDemuxStream * stream);
+static void gst_qtdemux_stream_clear (GstQTDemux * qtdemux,
+    QtDemuxStream * stream);
 static void gst_qtdemux_remove_stream (GstQTDemux * qtdemux, int index);
 static GstFlowReturn qtdemux_prepare_streams (GstQTDemux * qtdemux);
 static void qtdemux_do_allocation (GstQTDemux * qtdemux,
@@ -546,6 +547,7 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->have_group_id = FALSE;
   qtdemux->group_id = G_MAXUINT;
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
+  qtdemux->flowcombiner = gst_flow_combiner_new ();
 
   GST_OBJECT_FLAG_SET (qtdemux, GST_ELEMENT_FLAG_INDEXABLE);
 }
@@ -559,6 +561,7 @@ gst_qtdemux_dispose (GObject * object)
     g_object_unref (G_OBJECT (qtdemux->adapter));
     qtdemux->adapter = NULL;
   }
+  gst_flow_combiner_free (qtdemux->flowcombiner);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1505,8 +1508,9 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   }
 
   /* restart streaming, NEWSEGMENT will be sent from the streaming thread. */
-  for (i = 0; i < qtdemux->n_streams; i++)
+  for (i = 0; i < qtdemux->n_streams; i++) {
     qtdemux->streams[i]->last_ret = GST_FLOW_OK;
+  }
 
   gst_pad_start_task (qtdemux->sinkpad, (GstTaskFunction) gst_qtdemux_loop,
       qtdemux->sinkpad, NULL);
@@ -1879,7 +1883,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->got_moov = FALSE;
   } else if (qtdemux->mss_mode) {
     for (n = 0; n < qtdemux->n_streams; n++)
-      gst_qtdemux_stream_clear (qtdemux->streams[n]);
+      gst_qtdemux_stream_clear (qtdemux, qtdemux->streams[n]);
   } else {
     for (n = 0; n < qtdemux->n_streams; n++) {
       qtdemux->streams[n]->last_ret = GST_FLOW_OK;
@@ -2130,7 +2134,7 @@ gst_qtdemux_stbl_free (QtDemuxStream * stream)
 }
 
 static void
-gst_qtdemux_stream_clear (QtDemuxStream * stream)
+gst_qtdemux_stream_clear (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
   if (stream->allocator)
     gst_object_unref (stream->allocator);
@@ -2167,12 +2171,14 @@ gst_qtdemux_stream_clear (QtDemuxStream * stream)
 static void
 gst_qtdemux_stream_free (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
-  gst_qtdemux_stream_clear (stream);
+  gst_qtdemux_stream_clear (qtdemux, stream);
   if (stream->caps)
     gst_caps_unref (stream->caps);
   stream->caps = NULL;
-  if (stream->pad)
+  if (stream->pad) {
     gst_element_remove_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
+    gst_flow_combiner_remove_pad (qtdemux->flowcombiner, stream->pad);
+  }
   g_free (stream);
 }
 
@@ -3820,39 +3826,12 @@ static GstFlowReturn
 gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
     GstFlowReturn ret)
 {
-  gint i;
-  gboolean unexpected = FALSE, not_linked = TRUE;
-
   GST_LOG_OBJECT (demux, "flow return: %s", gst_flow_get_name (ret));
 
   /* store the value */
   stream->last_ret = ret;
+  ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
 
-  /* any other error that is not-linked or eos can be returned right away */
-  if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
-    goto done;
-
-  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
-  for (i = 0; i < demux->n_streams; i++) {
-    QtDemuxStream *ostream = demux->streams[i];
-
-    ret = ostream->last_ret;
-
-    /* no unexpected or unlinked, return */
-    if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
-      goto done;
-
-    /* we check to see if we have at least 1 unexpected or all unlinked */
-    unexpected |= (ret == GST_FLOW_EOS);
-    not_linked &= (ret == GST_FLOW_NOT_LINKED);
-  }
-
-  /* when we get here, we all have unlinked or unexpected */
-  if (not_linked)
-    ret = GST_FLOW_NOT_LINKED;
-  else if (unexpected)
-    ret = GST_FLOW_EOS;
-done:
   GST_LOG_OBJECT (demux, "combined flow return: %s", gst_flow_get_name (ret));
   return ret;
 }
@@ -6020,6 +5999,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     GST_DEBUG_OBJECT (qtdemux, "adding pad %s %p to qtdemux %p",
         GST_OBJECT_NAME (stream->pad), stream->pad, qtdemux);
     gst_element_add_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
+    gst_flow_combiner_add_pad (qtdemux->flowcombiner, stream->pad);
 
     if (stream->pending_tags)
       gst_tag_list_unref (stream->pending_tags);
@@ -8983,6 +8963,7 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     gst_pad_push_event (oldpad, gst_event_new_eos ());
     gst_pad_set_active (oldpad, FALSE);
     gst_element_remove_pad (GST_ELEMENT (qtdemux), oldpad);
+    gst_flow_combiner_remove_pad (qtdemux->flowcombiner, oldpad);
     gst_object_unref (oldpad);
   }
 
