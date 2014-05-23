@@ -614,6 +614,8 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   guint size, min_buffers, max_buffers;
   guint num_buffers = 0, copy_threshold = 0;
 
+  GST_DEBUG_OBJECT (pool, "activating pool");
+
   config = gst_buffer_pool_get_config (bpool);
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
           &max_buffers))
