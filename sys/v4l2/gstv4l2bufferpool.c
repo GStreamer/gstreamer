@@ -406,7 +406,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 allocation_failed:
   {
     GST_ERROR_OBJECT (pool, "failed to allocate buffer");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 }
 
