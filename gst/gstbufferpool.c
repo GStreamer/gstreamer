@@ -357,7 +357,6 @@ do_start (GstBufferPool * pool)
   return TRUE;
 }
 
-
 static void
 default_free_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
@@ -417,6 +416,33 @@ do_stop (GstBufferPool * pool)
   return TRUE;
 }
 
+/* must be called with the lock */
+static void
+do_set_flushing (GstBufferPool * pool, gboolean flushing)
+{
+  GstBufferPoolPrivate *priv = pool->priv;
+  GstBufferPoolClass *pclass;
+
+  pclass = GST_BUFFER_POOL_GET_CLASS (pool);
+
+  if (GST_BUFFER_POOL_IS_FLUSHING (pool) == flushing)
+    return;
+
+  if (flushing) {
+    g_atomic_int_set (&pool->flushing, 1);
+    gst_poll_write_control (priv->poll);
+
+    if (pclass->flush_start)
+      pclass->flush_start (pool);
+  } else {
+    if (pclass->flush_stop)
+      pclass->flush_stop (pool);
+
+    gst_poll_read_control (priv->poll);
+    g_atomic_int_set (&pool->flushing, 0);
+  }
+}
+
 /**
  * gst_buffer_pool_set_active:
  * @pool: a #GstBufferPool
@@ -460,15 +486,17 @@ gst_buffer_pool_set_active (GstBufferPool * pool, gboolean active)
     if (!do_start (pool))
       goto start_failed;
 
+    /* flush_stop my release buffers, setting to active to avoid running
+     * do_stop while activating the pool */
+    priv->active = TRUE;
+
     /* unset the flushing state now */
-    gst_poll_read_control (priv->poll);
-    g_atomic_int_set (&pool->flushing, 0);
+    do_set_flushing (pool, FALSE);
   } else {
     gint outstanding;
 
     /* set to flushing first */
-    g_atomic_int_set (&pool->flushing, 1);
-    gst_poll_write_control (priv->poll);
+    do_set_flushing (pool, TRUE);
 
     /* when all buffers are in the pool, free them. Else they will be
      * freed when they are released */
@@ -478,8 +506,9 @@ gst_buffer_pool_set_active (GstBufferPool * pool, gboolean active)
       if (!do_stop (pool))
         goto stop_failed;
     }
+
+    priv->active = FALSE;
   }
-  priv->active = active;
   GST_BUFFER_POOL_UNLOCK (pool);
 
   return res;
@@ -1107,9 +1136,9 @@ dec_outstanding (GstBufferPool * pool)
     if (GST_BUFFER_POOL_IS_FLUSHING (pool)) {
       /* take the lock so that set_active is not run concurrently */
       GST_BUFFER_POOL_LOCK (pool);
-      /* recheck the flushing state in the lock, the pool could have been
-       * set to active again */
-      if (GST_BUFFER_POOL_IS_FLUSHING (pool))
+      /* now that we have the lock, check if we have been de-activated with
+       * outstanding buffers */
+      if (!pool->priv->active)
         do_stop (pool);
 
       GST_BUFFER_POOL_UNLOCK (pool);
@@ -1258,4 +1287,38 @@ gst_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 
   /* decrease the refcount that the buffer had to us */
   gst_object_unref (pool);
+}
+
+/**
+ * gst_buffer_pool_set_flushing:
+ * @pool: a #GstBufferPool
+ * @flushing: whether to start or stop flushing
+ *
+ * Enabled or disable the flushing state of a @pool without freeing or
+ * allocating buffers.
+ *
+ * Since: 1.4
+ */
+void
+gst_buffer_pool_set_flushing (GstBufferPool * pool, gboolean flushing)
+{
+  GstBufferPoolPrivate *priv;
+
+  g_return_if_fail (GST_IS_BUFFER_POOL (pool));
+
+  GST_LOG_OBJECT (pool, "flushing %d", flushing);
+
+  priv = pool->priv;
+
+  GST_BUFFER_POOL_LOCK (pool);
+
+  if (!priv->active) {
+    GST_WARNING_OBJECT (pool, "can't change flushing state of inactive pool");
+    goto done;
+  }
+
+  do_set_flushing (pool, flushing);
+
+done:
+  GST_BUFFER_POOL_UNLOCK (pool);
 }

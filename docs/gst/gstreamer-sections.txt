@@ -325,6 +325,7 @@ gst_buffer_pool_set_config
 
 gst_buffer_pool_set_active
 gst_buffer_pool_is_active
+gst_buffer_pool_set_flushing
 
 GstBufferPoolAcquireFlags
 GstBufferPoolAcquireParams

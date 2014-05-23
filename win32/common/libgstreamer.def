@@ -158,6 +158,7 @@ EXPORTS
 	gst_buffer_pool_release_buffer
 	gst_buffer_pool_set_active
 	gst_buffer_pool_set_config
+	gst_buffer_pool_set_flushing
 	gst_buffer_prepend_memory
 	gst_buffer_remove_all_memory
 	gst_buffer_remove_memory

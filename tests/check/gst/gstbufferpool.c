@@ -242,6 +242,28 @@ GST_START_TEST (test_pool_config_validate)
 
 GST_END_TEST;
 
+GST_START_TEST (test_flushing_pool_returns_flushing)
+{
+  GstBufferPool *pool = create_pool (10, 0, 0);
+  GstFlowReturn ret;
+  GstBuffer *buf = NULL;
+
+  gst_buffer_pool_set_active (pool, TRUE);
+  gst_buffer_pool_set_flushing (pool, TRUE);
+
+  ret = gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  ck_assert_int_eq (ret, GST_FLOW_FLUSHING);
+
+  gst_buffer_pool_set_flushing (pool, FALSE);
+  ret = gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
+
+  gst_buffer_unref (buf);
+  gst_object_unref (pool);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_pool_suite (void)
 {
@@ -259,6 +281,7 @@ gst_buffer_pool_suite (void)
   tcase_add_test (tc_chain, test_buffer_modify_discard);
   tcase_add_test (tc_chain, test_pool_activation_and_config);
   tcase_add_test (tc_chain, test_pool_config_validate);
+  tcase_add_test (tc_chain, test_flushing_pool_returns_flushing);
 
   return s;
 }
