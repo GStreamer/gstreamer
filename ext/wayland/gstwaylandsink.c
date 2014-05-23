@@ -265,9 +265,7 @@ gst_wayland_sink_find_display (GstWaylandSink * sink)
         } else {
           /* inform the world about the new display */
           context =
-              gst_context_new (GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE, FALSE);
-          gst_structure_set (gst_context_writable_structure (context),
-              "handle", G_TYPE_POINTER, sink->display->display, NULL);
+              gst_wayland_display_handle_context_new (sink->display->display);
           msg = gst_message_new_have_context (GST_OBJECT_CAST (sink), context);
           gst_element_post_message (GST_ELEMENT_CAST (sink), msg);
         }
@@ -345,13 +343,13 @@ gst_wayland_sink_set_context (GstElement * element, GstContext * context)
 
   if (gst_context_has_context_type (context,
           GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE)) {
-    const GstStructure *s;
     struct wl_display *display;
     GError *error = NULL;
 
-    s = gst_context_get_structure (context);
-    gst_structure_get (s, "handle", G_TYPE_POINTER, &display, NULL);
+    g_clear_object (&sink->display);
+    display = gst_wayland_display_handle_context_get_handle (context);
     sink->display = gst_wl_display_new_existing (display, FALSE, &error);
+
     if (error) {
       GST_ELEMENT_WARNING (sink, RESOURCE, OPEN_READ_WRITE,
           ("Could not set display handle"),

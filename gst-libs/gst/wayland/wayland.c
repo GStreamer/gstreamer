@@ -25,6 +25,45 @@
 #include <gst/wayland/wayland.h>
 #include <gst/video/videooverlay.h>
 
+gboolean
+gst_is_wayland_display_handle_need_context_message (GstMessage * msg)
+{
+  const gchar *type = NULL;
+
+  g_return_val_if_fail (GST_IS_MESSAGE (msg), FALSE);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_NEED_CONTEXT &&
+      gst_message_parse_context_type (msg, &type)) {
+    return !g_strcmp0 (type, GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE);
+  }
+
+  return FALSE;
+}
+
+GstContext *
+gst_wayland_display_handle_context_new (struct wl_display * display)
+{
+  GstContext *context =
+      gst_context_new (GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE, TRUE);
+  gst_structure_set (gst_context_writable_structure (context),
+      "handle", G_TYPE_POINTER, display, NULL);
+  return context;
+}
+
+struct wl_display *
+gst_wayland_display_handle_context_get_handle (GstContext * context)
+{
+  const GstStructure *s;
+  struct wl_display *display;
+
+  g_return_val_if_fail (GST_IS_CONTEXT (context), NULL);
+
+  s = gst_context_get_structure (context);
+  gst_structure_get (s, "handle", G_TYPE_POINTER, &display, NULL);
+  return display;
+}
+
+
 G_DEFINE_INTERFACE (GstWaylandVideo, gst_wayland_video, GST_TYPE_VIDEO_OVERLAY);
 
 static void
