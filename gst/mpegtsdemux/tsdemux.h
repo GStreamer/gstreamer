@@ -29,6 +29,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbytereader.h>
+#include <gst/base/gstflowcombiner.h>
 #include "mpegtsbase.h"
 #include "mpegtspacketizer.h"
 
@@ -82,6 +83,8 @@ struct _GstTSDemux
 
   /* Pending seek rate (default 1.0) */
   gdouble rate;
+
+  GstFlowCombiner *flowcombiner;
 };
 
 struct _GstTSDemuxClass

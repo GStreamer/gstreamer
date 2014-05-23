@@ -262,7 +262,8 @@ static void gst_ts_demux_get_property (GObject * object, guint prop_id,
 static void gst_ts_demux_flush_streams (GstTSDemux * tsdemux);
 static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream);
-static void gst_ts_demux_stream_flush (TSDemuxStream * stream);
+static void gst_ts_demux_stream_flush (TSDemuxStream * stream,
+    GstTSDemux * demux);
 
 static gboolean push_event (MpegTSBase * base, GstEvent * event);
 
@@ -283,6 +284,16 @@ G_DEFINE_TYPE_WITH_CODE (GstTSDemux, gst_ts_demux, GST_TYPE_MPEGTS_BASE,
     _extra_init ());
 
 static void
+gst_ts_demux_dispose (GObject * object)
+{
+  GstTSDemux *demux = GST_TS_DEMUX_CAST (object);
+
+  gst_flow_combiner_free (demux->flowcombiner);
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+}
+
+static void
 gst_ts_demux_class_init (GstTSDemuxClass * klass)
 {
   GObjectClass *gobject_class;
@@ -292,6 +303,7 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->set_property = gst_ts_demux_set_property;
   gobject_class->get_property = gst_ts_demux_get_property;
+  gobject_class->dispose = gst_ts_demux_dispose;
 
   g_object_class_install_property (gobject_class, PROP_PROGRAM_NUMBER,
       g_param_spec_int ("program-number", "Program number",
@@ -371,6 +383,7 @@ gst_ts_demux_init (GstTSDemux * demux)
   /* We are not interested in sections (all handled by mpegtsbase) */
   base->push_section = FALSE;
 
+  demux->flowcombiner = gst_flow_combiner_new ();
   demux->requested_program_number = -1;
   demux->program_number = -1;
   gst_ts_demux_reset (base);
@@ -692,31 +705,9 @@ static GstFlowReturn
 tsdemux_combine_flows (GstTSDemux * demux, TSDemuxStream * stream,
     GstFlowReturn ret)
 {
-  GList *tmp;
-
   /* Store the value */
   stream->flow_return = ret;
-
-  /* any other error that is not-linked can be returned right away */
-  if (ret != GST_FLOW_NOT_LINKED)
-    goto done;
-
-  /* Only return NOT_LINKED if all other pads returned NOT_LINKED */
-  for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
-    stream = (TSDemuxStream *) tmp->data;
-    if (stream->pad) {
-      ret = stream->flow_return;
-      /* some other return value (must be SUCCESS but we can return
-       * other values as well) */
-      if (ret != GST_FLOW_NOT_LINKED)
-        goto done;
-    }
-    /* if we get here, all other pads were unlinked and we return
-     * NOT_LINKED then */
-  }
-
-done:
-  return ret;
+  return gst_flow_combiner_update_flow (demux->flowcombiner, ret);
 }
 
 static inline void
@@ -1189,11 +1180,13 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
       GST_DEBUG_OBJECT (stream->pad, "Deactivating and removing pad");
       gst_pad_set_active (stream->pad, FALSE);
       gst_element_remove_pad (GST_ELEMENT_CAST (base), stream->pad);
+      gst_flow_combiner_remove_pad (GST_TS_DEMUX_CAST (base)->flowcombiner,
+          stream->pad);
       stream->active = FALSE;
     }
     stream->pad = NULL;
   }
-  gst_ts_demux_stream_flush (stream);
+  gst_ts_demux_stream_flush (stream, GST_TS_DEMUX_CAST (base));
   stream->flow_return = GST_FLOW_NOT_LINKED;
 }
 
@@ -1207,6 +1200,7 @@ activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
     GST_DEBUG_OBJECT (tsdemux, "Activating pad %s:%s for stream %p",
         GST_DEBUG_PAD_NAME (stream->pad), stream);
     gst_element_add_pad ((GstElement *) tsdemux, stream->pad);
+    gst_flow_combiner_add_pad (tsdemux->flowcombiner, stream->pad);
     stream->active = TRUE;
     GST_DEBUG_OBJECT (stream->pad, "done adding pad");
 
@@ -1228,7 +1222,7 @@ activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
 }
 
 static void
-gst_ts_demux_stream_flush (TSDemuxStream * stream)
+gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux)
 {
   GST_DEBUG ("flushing stream %p", stream);
 
@@ -1259,7 +1253,7 @@ gst_ts_demux_flush_streams (GstTSDemux * demux)
     return;
 
   g_list_foreach (demux->program->stream_list,
-      (GFunc) gst_ts_demux_stream_flush, NULL);
+      (GFunc) gst_ts_demux_stream_flush, demux);
 }
 
 static void
