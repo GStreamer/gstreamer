@@ -291,12 +291,23 @@ static const gchar frag_YUY2_UYVY_to_RGB[] =
     "uniform vec2 tex_scale0;\n"
     "uniform vec2 tex_scale1;\n"
     "uniform vec2 tex_scale2;\n"
+    "uniform float width;\n"
     YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
     "  vec3 yuv;\n"
+    "  vec4 uv_texel;\n"
     "  float r, g, b, a;\n"
+    "  float dx = 1.0 / width;\n"
     "  yuv.x = texture2D(Ytex, v_texcoord * tex_scale0).%c;\n"
-    "  yuv.yz = texture2D(UVtex, v_texcoord * tex_scale1).%c%c;\n"
+    "  float inorder = mod (v_texcoord.x * width, 2.0);"
+    "  if (inorder < 1.0) {"
+    "    uv_texel.rg = texture2D(Ytex, v_texcoord * tex_scale0).rg;"
+    "    uv_texel.ba = texture2D(Ytex, v_texcoord * tex_scale0 + dx).rg;"
+    "  } else {"
+    "    uv_texel.rg = texture2D(Ytex, v_texcoord * tex_scale0 - dx).rg;"
+    "    uv_texel.ba = texture2D(Ytex, v_texcoord * tex_scale0).rg;"
+    "  }"
+    "  yuv.yz = uv_texel.%c%c;\n"
     "  yuv += offset;\n"
     "  r = dot(yuv, coeff1);\n"
     "  g = dot(yuv, coeff2);\n"
@@ -364,7 +375,6 @@ struct _GstGLColorConvertPrivate
 
   struct ConvertInfo convert_info;
 
-  GstGLMemory *scratch;
   GstGLMemory *out_temp[GST_VIDEO_MAX_PLANES];
 };
 
@@ -463,11 +473,6 @@ gst_gl_color_convert_reset (GstGLColorConvert * convert)
   if (convert->shader) {
     gst_object_unref (convert->shader);
     convert->shader = NULL;
-  }
-
-  if (convert->priv->scratch) {
-    gst_memory_unref ((GstMemory *) convert->priv->scratch);
-    convert->priv->scratch = NULL;
   }
 }
 
@@ -731,13 +736,6 @@ _YUV_to_RGB (GstGLColorConvert * convert)
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
       info->in_n_textures = 1;
       info->shader_tex_names[0] = "Ytex";
-      info->shader_tex_names[1] = "UVtex";
-      convert->priv->scratch =
-          (GstGLMemory *) gst_gl_memory_alloc (convert->context,
-          GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
-          GST_VIDEO_INFO_COMP_WIDTH (&convert->in_info, 1),
-          GST_VIDEO_INFO_HEIGHT (&convert->in_info),
-          GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0));
       break;
     case GST_VIDEO_FORMAT_NV12:
     {
@@ -766,13 +764,6 @@ _YUV_to_RGB (GstGLColorConvert * convert)
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
       info->in_n_textures = 1;
       info->shader_tex_names[0] = "Ytex";
-      info->shader_tex_names[1] = "UVtex";
-      convert->priv->scratch =
-          (GstGLMemory *) gst_gl_memory_alloc (convert->context,
-          GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
-          GST_VIDEO_INFO_COMP_WIDTH (&convert->in_info, 1),
-          GST_VIDEO_INFO_HEIGHT (&convert->in_info),
-          GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0));
       break;
     }
     default:
@@ -1258,14 +1249,6 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   out_width = GST_VIDEO_INFO_WIDTH (&convert->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&convert->out_info);
 
-  /* two sources of the same data */
-  if (convert->priv->scratch) {
-    gst_gl_memory_copy_into_texture (convert->in_tex[0],
-        convert->priv->scratch->tex_id, convert->priv->scratch->tex_type,
-        convert->priv->scratch->width, convert->priv->scratch->height,
-        convert->priv->scratch->stride, TRUE);
-  }
-
   gl->BindFramebuffer (GL_FRAMEBUFFER, convert->fbo);
 
   /* attach the texture to the FBO to renderer to */
@@ -1298,18 +1281,6 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   gl->EnableVertexAttribArray (convert->shader_attr_position_loc);
   gl->EnableVertexAttribArray (convert->shader_attr_texture_loc);
-
-  if (convert->priv->scratch) {
-    gchar *scale_name = g_strdup_printf ("tex_scale%u", c_info->in_n_textures);
-
-    gl->ActiveTexture (GL_TEXTURE0 + c_info->in_n_textures);
-    gl->BindTexture (GL_TEXTURE_2D, convert->priv->scratch->tex_id);
-
-    gst_gl_shader_set_uniform_2fv (convert->shader, scale_name, 1,
-        convert->priv->scratch->tex_scaling);
-
-    g_free (scale_name);
-  }
 
   for (i = c_info->in_n_textures - 1; i >= 0; i--) {
     gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
