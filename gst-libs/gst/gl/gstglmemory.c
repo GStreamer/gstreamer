@@ -758,6 +758,14 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
       goto fbo_error;
     }
 
+    if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2
+        && (in_gl_format != GL_RGBA || in_gl_type != GL_UNSIGNED_BYTE)) {
+      gst_gl_context_set_error (context, "Cannot copy non RGBA/UNSIGNED_BYTE "
+          "textures on GLES2");
+      gl->BindTexture (GL_TEXTURE_2D, 0);
+      goto fbo_error;
+    }
+
     if (!src->pbo)
       gl->GenBuffers (1, &src->pbo);
 
