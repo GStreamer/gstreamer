@@ -259,23 +259,23 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
 {
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
 
-  GST_DEBUG_OBJECT (self, "Flushing");
+  GST_DEBUG_OBJECT (self, "Flushed");
 
-  /* Wait for capture thread to stop */
-  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-  gst_v4l2_object_unlock (self->v4l2capture);
-  gst_pad_stop_task (decoder->srcpad);
-  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+  /* Ensure the processing thread has stopped for the reverse playback
+   * discount case */
+  if (g_atomic_int_get (&self->processing)) {
+    GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+    gst_v4l2_object_unlock (self->v4l2output);
+    gst_v4l2_object_unlock (self->v4l2capture);
+    gst_pad_stop_task (decoder->srcpad);
+    GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+  }
 
   self->output_flow = GST_FLOW_OK;
 
-  if (self->v4l2output->pool)
-    gst_v4l2_buffer_pool_stop_streaming (GST_V4L2_BUFFER_POOL
-        (self->v4l2output->pool));
-
-  if (self->v4l2capture->pool)
-    gst_v4l2_buffer_pool_stop_streaming (GST_V4L2_BUFFER_POOL
-        (self->v4l2capture->pool));
+  gst_v4l2_object_unlock_stop (self->v4l2output);
+  gst_v4l2_object_unlock_stop (self->v4l2capture);
 
   return TRUE;
 }
@@ -308,14 +308,12 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
             v4l2output->pool), &buffer);
     gst_buffer_unref (buffer);
   }
-  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
-  /* Ensure the processing thread has stopped */
-  if (g_atomic_int_get (&self->processing)) {
-    gst_v4l2_object_unlock (self->v4l2capture);
-    gst_pad_stop_task (decoder->srcpad);
-    g_assert (g_atomic_int_get (&self->processing) == FALSE);
-  }
+  /* and ensure the processing thread has stopped in case another error
+   * occured. */
+  gst_v4l2_object_unlock (self->v4l2capture);
+  gst_pad_stop_task (decoder->srcpad);
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
   if (ret == GST_FLOW_FLUSHING)
     ret = self->output_flow;
@@ -475,11 +473,9 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     }
 
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-    gst_v4l2_object_unlock_stop (self->v4l2output);
     ret =
         gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->
             v4l2output->pool), &codec_data);
-    gst_v4l2_object_unlock (self->v4l2output);
     GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
     gst_buffer_unref (codec_data);
@@ -517,14 +513,6 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     GST_DEBUG_OBJECT (self, "Starting decoding thread");
 
-    /* Enable processing input */
-    if (!gst_v4l2_buffer_pool_start_streaming (GST_V4L2_BUFFER_POOL
-            (self->v4l2capture->pool)))
-      goto start_streaming_failed;
-
-    gst_v4l2_object_unlock_stop (self->v4l2output);
-    gst_v4l2_object_unlock_stop (self->v4l2capture);
-
     /* Start the processing task, when it quits, the task will disable input
      * processing to unlock input if draining, or prevent potential block */
     g_atomic_int_set (&self->processing, TRUE);
@@ -557,13 +545,6 @@ not_negotiated:
     GST_ERROR_OBJECT (self, "not negotiated");
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto drop;
-  }
-start_streaming_failed:
-  {
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
-        (_("Failed to re-enabled decoder.")),
-        ("Could not re-enqueue and start streaming on decide."));
-    return GST_FLOW_ERROR;
   }
 activate_failed:
   {
@@ -686,16 +667,29 @@ static gboolean
 gst_v4l2_video_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
 {
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
+  gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       gst_v4l2_object_unlock (self->v4l2output);
       gst_v4l2_object_unlock (self->v4l2capture);
+      break;
     default:
       break;
   }
 
-  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
+  ret = GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      /* The processing thread should stop now, wait for it */
+      gst_pad_stop_task (decoder->srcpad);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static GstStateChangeReturn
@@ -703,11 +697,13 @@ gst_v4l2_video_dec_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (element);
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER (element);
 
   if (transition == GST_STATE_CHANGE_PAUSED_TO_READY) {
     g_atomic_int_set (&self->active, FALSE);
     gst_v4l2_object_unlock (self->v4l2output);
     gst_v4l2_object_unlock (self->v4l2capture);
+    gst_pad_stop_task (decoder->srcpad);
   }
 
   return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
