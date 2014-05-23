@@ -990,11 +990,11 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 
   GST_LOG_OBJECT (pool, "queuing buffer %i", index);
 
+  g_atomic_int_inc (&pool->num_queued);
+  pool->buffers[index] = buf;
+
   if (!gst_v4l2_allocator_qbuf (pool->vallocator, group))
     goto queue_failed;
-
-  pool->buffers[index] = buf;
-  g_atomic_int_inc (&pool->num_queued);
 
   return GST_FLOW_OK;
 
@@ -1008,6 +1008,8 @@ queue_failed:
     GST_ERROR_OBJECT (pool, "could not queue a buffer %i", index);
     /* Mark broken buffer to the allocator */
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_TAG_MEMORY);
+    g_atomic_int_add (&pool->num_queued, -1);
+    pool->buffers[index] = NULL;
     return GST_FLOW_ERROR;
   }
 }
