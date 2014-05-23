@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstflowcombiner.h>
 
 #include "asfheaders.h"
 
@@ -106,7 +107,6 @@ typedef struct
   guint16              ds_data_size;
 
   /* for new parsing code */
-  GstFlowReturn   last_flow; /* last flow return */
   GArray         *payloads;  /* pending payloads */
 
   /* Video stream PAR & interlacing */
@@ -168,6 +168,7 @@ struct _GstASFDemux {
   guint32              num_streams;
   AsfStream            stream[GST_ASF_DEMUX_NUM_STREAMS];
   gboolean             activated_streams;
+  GstFlowCombiner     *flowcombiner;
 
   /* for chained asf handling, we need to hold the old asf streams until
    * we detect the new ones */

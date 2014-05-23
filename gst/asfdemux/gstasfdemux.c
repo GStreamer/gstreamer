@@ -148,9 +148,10 @@ gst_asf_demux_free_stream (GstASFDemux * demux, AsfStream * stream)
     stream->pending_tags = NULL;
   }
   if (stream->pad) {
-    if (stream->active)
+    if (stream->active) {
       gst_element_remove_pad (GST_ELEMENT_CAST (demux), stream->pad);
-    else
+      gst_flow_combiner_remove_pad (demux->flowcombiner, stream->pad);
+    } else
       gst_object_unref (stream->pad);
     stream->pad = NULL;
   }
@@ -524,7 +525,6 @@ gst_asf_demux_reset_stream_state_after_discont (GstASFDemux * demux)
 
   for (n = 0; n < demux->num_streams; n++) {
     demux->stream[n].discont = TRUE;
-    demux->stream[n].last_flow = GST_FLOW_OK;
 
     while (demux->stream[n].payloads->len > 0) {
       AsfPayload *payload;
@@ -963,36 +963,6 @@ parse_failed:
     g_free (data);
     return GST_FLOW_ERROR;
   }
-}
-
-static GstFlowReturn
-gst_asf_demux_aggregate_flow_return (GstASFDemux * demux, AsfStream * stream,
-    GstFlowReturn flow)
-{
-  int i;
-
-  GST_DEBUG_OBJECT (demux, "Aggregating");
-
-  /* Store the value */
-  stream->last_flow = flow;
-
-  /* any other error that is not not-linked can be returned right away */
-  if (flow != GST_FLOW_NOT_LINKED)
-    goto done;
-
-  for (i = 0; i < demux->num_streams; i++) {
-    if (demux->stream[i].active) {
-      flow = demux->stream[i].last_flow;
-      GST_DEBUG_OBJECT (demux, "Aggregating: flow %i return %s", i,
-          gst_flow_get_name (flow));
-      if (flow != GST_FLOW_NOT_LINKED)
-        goto done;
-    }
-  }
-
-  /* If we got here, then all our active streams are not linked */
-done:
-  return flow;
 }
 
 static gboolean
@@ -1741,7 +1711,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 
     if (stream->active) {
       ret = gst_pad_push (stream->pad, payload->buf);
-      ret = gst_asf_demux_aggregate_flow_return (demux, stream, ret);
+      ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
     } else {
       gst_buffer_unref (payload->buf);
       ret = GST_FLOW_OK;
@@ -2602,6 +2572,7 @@ gst_asf_demux_activate_stream (GstASFDemux * demux, AsfStream * stream)
     gst_pad_set_caps (stream->pad, stream->caps);
 
     gst_element_add_pad (GST_ELEMENT_CAST (demux), stream->pad);
+    gst_flow_combiner_add_pad (demux->flowcombiner, stream->pad);
     stream->active = TRUE;
   }
 }
@@ -4363,6 +4334,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       demux->data_offset = 0;
       demux->index_offset = 0;
       demux->base_offset = 0;
+      demux->flowcombiner = gst_flow_combiner_new ();
       break;
     }
     default:
@@ -4375,8 +4347,13 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_asf_demux_reset (demux, FALSE);
+      break;
+
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_asf_demux_reset (demux, FALSE);
+      gst_flow_combiner_free (demux->flowcombiner);
+      demux->flowcombiner = NULL;
       break;
     default:
       break;
