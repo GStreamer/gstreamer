@@ -1221,6 +1221,8 @@ gst_v4l2_allocator_qbuf (GstV4l2Allocator * allocator,
   gboolean ret = TRUE;
   gint i;
 
+  g_return_val_if_fail (g_atomic_int_get (&allocator->active), FALSE);
+
   /* Buffer already queued */
   if (IS_QUEUED (group->buffer))
     return TRUE;
@@ -1271,6 +1273,8 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator)
   gint i;
 
   GstV4l2MemoryGroup *group = NULL;
+
+  g_return_val_if_fail (g_atomic_int_get (&allocator->active), FALSE);
 
   buffer.type = allocator->type;
   buffer.memory = allocator->memory;
