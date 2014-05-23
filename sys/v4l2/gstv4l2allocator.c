@@ -765,6 +765,8 @@ gst_v4l2_allocator_stop (GstV4l2Allocator * allocator)
   if (v4l2_ioctl (allocator->video_fd, VIDIOC_REQBUFS, &breq) < 0)
     goto reqbufs_failed;
 
+  allocator->count = 0;
+
   g_atomic_int_set (&allocator->active, FALSE);
 
 done:
