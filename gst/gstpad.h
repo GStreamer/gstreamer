@@ -726,7 +726,12 @@ struct _GstPad {
 
   GstPadPrivate                 *priv;
 
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    gpointer _gst_reserved[GST_PADDING];
+    struct {
+      GstFlowReturn last_flowret;
+    } abi;
+  } ABI;
 };
 
 struct _GstPadClass {
@@ -1140,6 +1145,13 @@ struct _GstPadClass {
  * Release the pad's stream lock.
  */
 #define GST_PAD_STREAM_UNLOCK(pad)      g_rec_mutex_unlock(GST_PAD_GET_STREAM_LOCK(pad))
+/**
+ * GST_PAD_LAST_FLOW_RETURN:
+ * @pad: a #GstPad
+ *
+ * Gets the last flow return on this pad
+ */
+#define GST_PAD_LAST_FLOW_RETURN(pad)   (GST_PAD_CAST(pad)->ABI.abi.last_flowret)
 
 #define GST_PAD_BLOCK_GET_COND(pad)     (&GST_PAD_CAST(pad)->block_cond)
 #define GST_PAD_BLOCK_WAIT(pad)         (g_cond_wait(GST_PAD_BLOCK_GET_COND (pad), GST_OBJECT_GET_LOCK (pad)))
@@ -1282,6 +1294,7 @@ GstFlowReturn		gst_pad_pull_range			(GstPad *pad, guint64 offset, guint size,
 gboolean		gst_pad_push_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_event_default			(GstPad *pad, GstObject *parent,
                                                                  GstEvent *event);
+GstFlowReturn           gst_pad_get_last_flow_return            (GstPad *pad);
 
 /* data passing functions on pad */
 GstFlowReturn		gst_pad_chain				(GstPad *pad, GstBuffer *buffer);

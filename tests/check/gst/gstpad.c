@@ -1813,6 +1813,169 @@ GST_START_TEST (test_sticky_events)
 
 GST_END_TEST;
 
+static GstFlowReturn next_return;
+
+static GstFlowReturn
+test_lastflow_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  gst_buffer_unref (buffer);
+  return next_return;
+}
+
+GST_START_TEST (test_last_flow_return_push)
+{
+  GstPad *srcpad, *sinkpad;
+  GstSegment seg;
+
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_unless (sinkpad != NULL);
+  gst_pad_set_chain_function (sinkpad, test_lastflow_chain);
+  gst_pad_link (srcpad, sinkpad);
+
+  /* initial value is flushing */
+  fail_unless (gst_pad_get_last_flow_return (srcpad) == GST_FLOW_FLUSHING);
+
+  /* when active it goes to ok */
+  gst_pad_set_active (srcpad, TRUE);
+  fail_unless (gst_pad_get_last_flow_return (srcpad) == GST_FLOW_OK);
+  gst_pad_set_active (sinkpad, TRUE);
+
+  /* startup events */
+  gst_pad_push_event (srcpad, gst_event_new_stream_start ("test"));
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  gst_pad_push_event (srcpad, gst_event_new_segment (&seg));
+
+
+  /* push Ok */
+  next_return = GST_FLOW_OK;
+  fail_unless (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_OK);
+  fail_unless (gst_pad_get_last_flow_return (srcpad) == GST_FLOW_OK);
+
+  /* push not-linked */
+  next_return = GST_FLOW_NOT_LINKED;
+  fail_unless (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_NOT_LINKED);
+  fail_unless (gst_pad_get_last_flow_return (srcpad) == GST_FLOW_NOT_LINKED);
+
+  /* push not-linked */
+  next_return = GST_FLOW_NOT_NEGOTIATED;
+  fail_unless (gst_pad_push (srcpad,
+          gst_buffer_new ()) == GST_FLOW_NOT_NEGOTIATED);
+  fail_unless (gst_pad_get_last_flow_return (srcpad) ==
+      GST_FLOW_NOT_NEGOTIATED);
+
+  /* push error */
+  next_return = GST_FLOW_ERROR;
+  fail_unless (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_ERROR);
+  fail_unless (gst_pad_get_last_flow_return (srcpad) == GST_FLOW_ERROR);
+
+  /* back to ok */
+  next_return = GST_FLOW_OK;
+  fail_unless (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_OK);
+  fail_unless (gst_pad_get_last_flow_return (srcpad) == GST_FLOW_OK);
+
+  /* unlinked push */
+  gst_pad_unlink (srcpad, sinkpad);
+  fail_unless (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_NOT_LINKED);
+  fail_unless (gst_pad_get_last_flow_return (srcpad) == GST_FLOW_NOT_LINKED);
+
+  gst_pad_link (srcpad, sinkpad);
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_eos ()));
+  fail_unless (gst_pad_get_last_flow_return (srcpad) == GST_FLOW_EOS);
+
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+}
+
+GST_END_TEST;
+
+static GstFlowReturn
+test_lastflow_getrange (GstPad * pad, GstObject * parent, guint64 offset,
+    guint length, GstBuffer ** buf)
+{
+  if (next_return == GST_FLOW_OK)
+    *buf = gst_buffer_new ();
+  else
+    *buf = NULL;
+  return next_return;
+}
+
+static gboolean
+test_lastflow_activate_pull_func (GstPad * pad, GstObject * object)
+{
+  return gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, TRUE);
+}
+
+GST_START_TEST (test_last_flow_return_pull)
+{
+  GstPad *srcpad, *sinkpad;
+  GstBuffer *buf = NULL;
+
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_unless (sinkpad != NULL);
+  gst_pad_set_getrange_function (srcpad, test_lastflow_getrange);
+  gst_pad_set_activate_function (sinkpad, test_lastflow_activate_pull_func);
+  gst_pad_link (srcpad, sinkpad);
+
+  /* initial value is flushing */
+  fail_unless (gst_pad_get_last_flow_return (sinkpad) == GST_FLOW_FLUSHING);
+
+  /* when active it goes to ok */
+  gst_pad_set_active (sinkpad, TRUE);
+  fail_unless (gst_pad_get_last_flow_return (sinkpad) == GST_FLOW_OK);
+  gst_pad_set_active (srcpad, TRUE);
+
+  /* pull Ok */
+  next_return = GST_FLOW_OK;
+  fail_unless (gst_pad_pull_range (sinkpad, 0, 1, &buf) == GST_FLOW_OK);
+  fail_unless (gst_pad_get_last_flow_return (sinkpad) == GST_FLOW_OK);
+  gst_buffer_unref (buf);
+  buf = NULL;
+
+  /* pull not-linked */
+  next_return = GST_FLOW_NOT_LINKED;
+  fail_unless (gst_pad_pull_range (sinkpad, 0, 1, &buf) == GST_FLOW_NOT_LINKED);
+  fail_unless (gst_pad_get_last_flow_return (sinkpad) == GST_FLOW_NOT_LINKED);
+
+  /* pull error */
+  next_return = GST_FLOW_ERROR;
+  fail_unless (gst_pad_pull_range (sinkpad, 0, 1, &buf) == GST_FLOW_ERROR);
+  fail_unless (gst_pad_get_last_flow_return (sinkpad) == GST_FLOW_ERROR);
+
+  /* pull not-nego */
+  next_return = GST_FLOW_NOT_NEGOTIATED;
+  fail_unless (gst_pad_pull_range (sinkpad, 0, 1,
+          &buf) == GST_FLOW_NOT_NEGOTIATED);
+  fail_unless (gst_pad_get_last_flow_return (sinkpad) ==
+      GST_FLOW_NOT_NEGOTIATED);
+
+  /* pull ok again */
+  next_return = GST_FLOW_OK;
+  fail_unless (gst_pad_pull_range (sinkpad, 0, 1, &buf) == GST_FLOW_OK);
+  fail_unless (gst_pad_get_last_flow_return (sinkpad) == GST_FLOW_OK);
+  gst_buffer_unref (buf);
+  buf = NULL;
+
+  /* unlinked pads */
+  gst_pad_unlink (srcpad, sinkpad);
+  fail_unless (gst_pad_pull_range (sinkpad, 0, 1, &buf) == GST_FLOW_NOT_LINKED);
+  fail_unless (gst_pad_get_last_flow_return (sinkpad) == GST_FLOW_NOT_LINKED);
+
+  /* eos */
+  gst_pad_link (srcpad, sinkpad);
+  next_return = GST_FLOW_EOS;
+  fail_unless (gst_pad_pull_range (sinkpad, 0, 1, &buf) == GST_FLOW_EOS);
+  fail_unless (gst_pad_get_last_flow_return (sinkpad) == GST_FLOW_EOS);
+
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_pad_suite (void)
 {
@@ -1856,6 +2019,8 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_block_async_full_destroy_dispose);
   tcase_add_test (tc_chain, test_block_async_replace_callback_no_flush);
   tcase_add_test (tc_chain, test_sticky_events);
+  tcase_add_test (tc_chain, test_last_flow_return_push);
+  tcase_add_test (tc_chain, test_last_flow_return_pull);
 
   return s;
 }
