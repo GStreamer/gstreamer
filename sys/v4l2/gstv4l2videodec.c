@@ -516,8 +516,9 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     /* Start the processing task, when it quits, the task will disable input
      * processing to unlock input if draining, or prevent potential block */
     g_atomic_int_set (&self->processing, TRUE);
-    gst_pad_start_task (decoder->srcpad,
-        (GstTaskFunction) gst_v4l2_video_dec_loop, self, NULL);
+    if (!gst_pad_start_task (decoder->srcpad,
+            (GstTaskFunction) gst_v4l2_video_dec_loop, self, NULL))
+      goto start_task_failed;
   }
 
   if (frame->input_buffer) {
@@ -560,6 +561,15 @@ activate_failed:
 flushing:
   {
     ret = GST_FLOW_FLUSHING;
+    goto drop;
+  }
+
+start_task_failed:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
+        (_("Failed to start decoding thread.")), (NULL));
+    g_atomic_int_set (&self->processing, FALSE);
+    ret = GST_FLOW_ERROR;
     goto drop;
   }
 process_failed:
