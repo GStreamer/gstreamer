@@ -169,13 +169,13 @@ play_set_relative_volume (GstPlay * play, gdouble volume_step)
   gdouble volume;
 
   volume = gst_stream_volume_get_volume (GST_STREAM_VOLUME (play->playbin),
-      GST_STREAM_VOLUME_FORMAT_LINEAR);
+      GST_STREAM_VOLUME_FORMAT_CUBIC);
 
   volume = round ((volume + volume_step) * VOLUME_STEPS) / VOLUME_STEPS;
   volume = CLAMP (volume, 0.0, 10.0);
 
   gst_stream_volume_set_volume (GST_STREAM_VOLUME (play->playbin),
-      GST_STREAM_VOLUME_FORMAT_LINEAR, volume);
+      GST_STREAM_VOLUME_FORMAT_CUBIC, volume);
 
   g_print ("Volume: %.0f%%                  \n", volume * 100);
 }
