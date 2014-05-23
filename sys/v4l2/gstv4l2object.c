@@ -3290,6 +3290,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   /* FIXME not entirely correct, See bug 728268 */
   if (gst_buffer_pool_is_active (obj->pool)) {
     gst_buffer_pool_config_get_params (config, NULL, &size, &min, &max);
+    gst_structure_free (config);
     goto setup_other_pool;
   }
 
