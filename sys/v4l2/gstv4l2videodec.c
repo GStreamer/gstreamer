@@ -518,8 +518,9 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
   }
 
   if (g_atomic_int_get (&self->processing) == FALSE) {
-    /* It possible that the processing thread stopped due to an error */
-    if (self->output_flow != GST_FLOW_OK) {
+    /* It's possible that the processing thread stopped due to an error */
+    if (self->output_flow != GST_FLOW_OK &&
+        self->output_flow != GST_FLOW_FLUSHING) {
       GST_DEBUG_OBJECT (self, "Processing loop stopped with error, leaving");
       ret = self->output_flow;
       goto drop;
