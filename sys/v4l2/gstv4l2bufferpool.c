@@ -1668,33 +1668,36 @@ done:
   /* ERRORS */
 copy_failed:
   {
-    GST_ERROR_OBJECT (obj->element, "failed to copy buffer");
+    GST_ERROR_OBJECT (pool, "failed to copy buffer");
     return ret;
   }
 eos:
   {
-    GST_DEBUG_OBJECT (obj->element, "end of stream reached");
+    GST_DEBUG_OBJECT (pool, "end of stream reached");
     return GST_FLOW_EOS;
   }
 acquire_failed:
   {
-    GST_WARNING_OBJECT (obj->element, "failed to acquire a buffer: %s",
-        gst_flow_get_name (ret));
+    if (ret == GST_FLOW_FLUSHING)
+      GST_DEBUG_OBJECT (pool, "flushing");
+    else
+      GST_WARNING_OBJECT (pool, "failed to acquire a buffer: %s",
+          gst_flow_get_name (ret));
     return ret;
   }
 prepare_failed:
   {
-    GST_ERROR_OBJECT (obj->element, "failed to prepare data");
+    GST_ERROR_OBJECT (pool, "failed to prepare data");
     return ret;
   }
 queue_failed:
   {
-    GST_ERROR_OBJECT (obj->element, "failed to queue buffer");
+    GST_ERROR_OBJECT (pool, "failed to queue buffer");
     return ret;
   }
 start_failed:
   {
-    GST_ERROR_OBJECT (obj->element, "failed to start streaming");
+    GST_ERROR_OBJECT (pool, "failed to start streaming");
     return GST_FLOW_ERROR;
   }
 }
