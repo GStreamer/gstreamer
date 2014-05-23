@@ -418,6 +418,20 @@ beach:
   gst_pad_pause_task (decoder->srcpad);
 }
 
+static void
+gst_v4l2_video_dec_loop_stopped (GstV4l2VideoDec * self)
+{
+  /* When flushing, decoding thread may never run */
+  if (g_atomic_int_get (&self->processing)) {
+    GST_DEBUG_OBJECT (self, "Early stop of decoding thread");
+    self->output_flow = GST_FLOW_FLUSHING;
+    g_atomic_int_set (&self->processing, FALSE);
+  }
+
+  GST_DEBUG_OBJECT (self, "Decoding task destroyed: %s",
+      gst_flow_get_name (self->output_flow));
+}
+
 static GstFlowReturn
 gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
@@ -517,7 +531,8 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
      * processing to unlock input if draining, or prevent potential block */
     g_atomic_int_set (&self->processing, TRUE);
     if (!gst_pad_start_task (decoder->srcpad,
-            (GstTaskFunction) gst_v4l2_video_dec_loop, self, NULL))
+            (GstTaskFunction) gst_v4l2_video_dec_loop, self,
+            (GDestroyNotify) gst_v4l2_video_dec_loop_stopped))
       goto start_task_failed;
   }
 
