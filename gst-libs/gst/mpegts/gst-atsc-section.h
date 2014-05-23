@@ -66,21 +66,21 @@ typedef enum {
   GST_MTS_TABLE_ID_ATSC_SATELLITE_VIRTUAL_CHANNEL       = 0xDA,
 } GstMpegTsSectionATSCTableID;
 
-/* TVCT */
-#define GST_TYPE_MPEGTS_ATSC_TVCT (gst_mpegts_atsc_tvct_get_type ())
-#define GST_TYPE_MPEGTS_ATSC_TVCT_SOURCE (gst_mpegts_atsc_tvct_source_get_type ())
+/* TVCT/CVCT */
+#define GST_TYPE_MPEGTS_ATSC_VCT (gst_mpegts_atsc_vct_get_type ())
+#define GST_TYPE_MPEGTS_ATSC_VCT_SOURCE (gst_mpegts_atsc_vct_source_get_type ())
 
-typedef struct _GstMpegTsAtscTVCTSource GstMpegTsAtscTVCTSource;
-typedef struct _GstMpegTsAtscTVCT GstMpegTsAtscTVCT;
+typedef struct _GstMpegTsAtscVCTSource GstMpegTsAtscVCTSource;
+typedef struct _GstMpegTsAtscVCT GstMpegTsAtscVCT;
 
 /**
- * GstMpegTsAtscTVCTSource:
+ * GstMpegTsAtscVCTSource:
  *
- * Source from a @GstMpegTsAtscTVCT
+ * Source from a @GstMpegTsAtscVCT, can be used both for TVCT and CVCT tables
  */
-struct _GstMpegTsAtscTVCTSource
+struct _GstMpegTsAtscVCTSource
 {
-  gunichar2 *short_name;
+  gchar    *short_name;
   guint16   major_channel_number;
   guint16   minor_channel_number;
   guint8    modulation_mode;
@@ -91,6 +91,8 @@ struct _GstMpegTsAtscTVCTSource
   guint8    ETM_location;
   gboolean  access_controlled;
   gboolean  hidden;
+  gboolean  path_select; /* CVCT only - reserved bit in TVCT */
+  gboolean  out_of_band; /* CVCT only - reserved bit in TVCT */
   gboolean  hide_guide;
   /* FIXME: */
   guint8    service_type;
@@ -99,12 +101,14 @@ struct _GstMpegTsAtscTVCTSource
 };
 
 /**
- * GstMpegTsAtscTVCT:
+ * GstMpegTsAtscVCT:
  *
- * Terrestrial Virtual Channel Table (A65)
+ * Represents both:
+ *   Terrestrial Virtual Channel Table (A65)
+ *   Cable Virtual Channel Table (A65)
  *
  */
-struct _GstMpegTsAtscTVCT
+struct _GstMpegTsAtscVCT
 {
   guint16   transport_stream_id;
   guint8    protocol_version;
@@ -112,10 +116,11 @@ struct _GstMpegTsAtscTVCT
   GPtrArray *descriptors;
 };
 
-GType gst_mpegts_atsc_tvct_get_type (void);
-GType gst_mpegts_atsc_tvct_source_get_type (void);
+GType gst_mpegts_atsc_vct_get_type (void);
+GType gst_mpegts_atsc_vct_source_get_type (void);
 
-const GstMpegTsAtscTVCT * gst_mpegts_section_get_atsc_tvct (GstMpegTsSection * section);
+const GstMpegTsAtscVCT * gst_mpegts_section_get_atsc_tvct (GstMpegTsSection * section);
+const GstMpegTsAtscVCT * gst_mpegts_section_get_atsc_cvct (GstMpegTsSection * section);
 
 G_END_DECLS
 

@@ -1048,6 +1048,14 @@ _identify_section (guint16 pid, guint8 table_id)
       if (pid == 0x0014)
         return GST_MPEGTS_SECTION_TOT;
       break;
+    case GST_MTS_TABLE_ID_ATSC_TERRESTRIAL_VIRTUAL_CHANNEL:
+      if (pid == 0x1ffb)
+        return GST_MPEGTS_SECTION_ATSC_TVCT;
+      break;
+    case GST_MTS_TABLE_ID_ATSC_CABLE_VIRTUAL_CHANNEL:
+      if (pid == 0x1ffb)
+        return GST_MPEGTS_SECTION_ATSC_CVCT;
+      break;
       /* FIXME : FILL */
     default:
       /* Handle ranges */
