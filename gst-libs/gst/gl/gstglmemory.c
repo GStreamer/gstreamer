@@ -252,6 +252,58 @@ gst_gl_texture_type_from_format (GstGLContext * context,
   return GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
 }
 
+static inline GLenum
+_sized_gl_format_from_gl_format_type (GLenum format, GLenum type)
+{
+  switch (format) {
+    case GL_RGBA:
+      switch (type) {
+        case GL_UNSIGNED_BYTE:
+          return GL_RGBA8;
+          break;
+      }
+      break;
+    case GL_RGB:
+      switch (type) {
+        case GL_UNSIGNED_BYTE:
+          return GL_RGB8;
+          break;
+        case GL_UNSIGNED_SHORT_5_6_5:
+          return GL_RGB565;
+          break;
+      }
+      break;
+    case GL_RG:
+      switch (type) {
+        case GL_UNSIGNED_BYTE:
+          return GL_RG8;
+          break;
+      }
+      break;
+    case GL_RED:
+      switch (type) {
+        case GL_UNSIGNED_BYTE:
+          return GL_R8;
+          break;
+      }
+      break;
+    case GL_LUMINANCE:
+      return GL_LUMINANCE;
+      break;
+    case GL_LUMINANCE_ALPHA:
+      return GL_LUMINANCE_ALPHA;
+      break;
+    case GL_ALPHA:
+      return GL_ALPHA;
+      break;
+    default:
+      break;
+  }
+
+  g_assert_not_reached ();
+  return 0;
+}
+
 static inline guint
 _get_plane_width (GstVideoInfo * info, guint plane)
 {
@@ -288,14 +340,18 @@ static void
 _generate_texture (GstGLContext * context, GenTexture * data)
 {
   const GstGLFuncs *gl = context->gl_vtable;
+  GLenum internal_format;
 
   GST_CAT_TRACE (GST_CAT_GL_MEMORY,
       "Generating texture format:%u type:%u dimensions:%ux%u", data->gl_format,
       data->gl_type, data->width, data->height);
 
+  internal_format =
+      _sized_gl_format_from_gl_format_type (data->gl_format, data->gl_type);
+
   gl->GenTextures (1, &data->result);
   gl->BindTexture (GL_TEXTURE_2D, data->result);
-  gl->TexImage2D (GL_TEXTURE_2D, 0, data->gl_format, data->width,
+  gl->TexImage2D (GL_TEXTURE_2D, 0, internal_format, data->width,
       data->height, 0, data->gl_format, data->gl_type, NULL);
 
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
