@@ -48,6 +48,7 @@ struct _GstWlDisplay
   /* globals */
   struct wl_registry *registry;
   struct wl_compositor *compositor;
+  struct wl_subcompositor *subcompositor;
   struct wl_shell *shell;
   struct wl_shm *shm;
   struct wl_scaler *scaler;

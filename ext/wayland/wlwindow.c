@@ -84,6 +84,10 @@ gst_wl_window_finalize (GObject * gobject)
     wl_surface_destroy (self->surface);
   }
 
+  if (self->subsurface) {
+    wl_subsurface_destroy (self->subsurface);
+  }
+
   g_clear_object (&self->display);
 
   G_OBJECT_CLASS (gst_wl_window_parent_class)->finalize (gobject);
@@ -98,7 +102,7 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, gint width, gint height)
       wl_compositor_create_surface (display->compositor));
   window->own_surface = TRUE;
 
-  gst_wl_window_set_size (window, width, height);
+  gst_wl_window_set_size (window, 0, 0, width, height);
 
   window->shell_surface = wl_shell_get_shell_surface (display->shell,
       window->surface);
@@ -118,6 +122,23 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, gint width, gint height)
 }
 
 GstWlWindow *
+gst_wl_window_new_in_surface (GstWlDisplay * display,
+    struct wl_surface * parent)
+{
+  GstWlWindow *window;
+
+  window = gst_wl_window_new_from_surface (display,
+      wl_compositor_create_surface (display->compositor));
+  window->own_surface = TRUE;
+
+  window->subsurface = wl_subcompositor_get_subsurface (display->subcompositor,
+      window->surface, parent);
+  wl_subsurface_set_desync (window->subsurface);
+
+  return window;
+}
+
+GstWlWindow *
 gst_wl_window_new_from_surface (GstWlDisplay * display,
     struct wl_surface * surface)
 {
@@ -128,6 +149,8 @@ gst_wl_window_new_from_surface (GstWlDisplay * display,
 
   window = g_object_new (GST_TYPE_WL_WINDOW, NULL);
   window->display = g_object_ref (display);
+  window->x = 0;
+  window->y = 0;
   window->width = 0;
   window->height = 0;
 
@@ -172,10 +195,12 @@ gst_wl_window_is_toplevel (GstWlWindow * window)
 }
 
 void
-gst_wl_window_set_size (GstWlWindow * window, gint w, gint h)
+gst_wl_window_set_size (GstWlWindow * window, gint x, gint y, gint w, gint h)
 {
   g_return_if_fail (window != NULL);
 
+  window->x = x;
+  window->y = y;
   window->width = w;
   window->height = h;
 }

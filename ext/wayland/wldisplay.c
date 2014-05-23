@@ -69,6 +69,9 @@ gst_wl_display_finalize (GObject * gobject)
   if (self->compositor)
     wl_compositor_destroy (self->compositor);
 
+  if (self->subcompositor)
+    wl_subcompositor_destroy (self->subcompositor);
+
   if (self->registry)
     wl_registry_destroy (self->registry);
 
@@ -135,6 +138,9 @@ registry_handle_global (void *data, struct wl_registry *registry,
   if (g_strcmp0 (interface, "wl_compositor") == 0) {
     self->compositor = wl_registry_bind (registry, id, &wl_compositor_interface,
         MIN (version, 3));
+  } else if (g_strcmp0 (interface, "wl_subcompositor") == 0) {
+    self->subcompositor =
+        wl_registry_bind (registry, id, &wl_subcompositor_interface, 1);
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
     self->shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
   } else if (g_strcmp0 (interface, "wl_shm") == 0) {

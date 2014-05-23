@@ -100,13 +100,13 @@ static void gst_wayland_sink_videooverlay_init (GstVideoOverlayInterface *
     iface);
 static void gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay,
     guintptr handle);
+static void gst_wayland_sink_set_render_rectangle (GstVideoOverlay * overlay,
+    gint x, gint y, gint w, gint h);
 static void gst_wayland_sink_expose (GstVideoOverlay * overlay);
 
 /* WaylandVideo interface */
 static void gst_wayland_sink_waylandvideo_init (GstWaylandVideoInterface *
     iface);
-static void gst_wayland_sink_set_surface_size (GstWaylandVideo * video,
-    gint w, gint h);
 static void gst_wayland_sink_pause_rendering (GstWaylandVideo * video);
 static void gst_wayland_sink_resume_rendering (GstWaylandVideo * video);
 
@@ -616,12 +616,15 @@ render_last_buffer (GstWaylandSink * sink)
   src.h = sink->video_height;
   dst.w = sink->window->width;
   dst.h = sink->window->height;
-  gst_video_sink_center_rect (src, dst, &res, FALSE);
+  gst_video_sink_center_rect (src, dst, &res, TRUE);
 
+  if (sink->window->subsurface)
+    wl_subsurface_set_position (sink->window->subsurface,
+        sink->window->x + res.x, sink->window->y + res.y);
   wl_viewport_set_destination (sink->window->viewport, res.w, res.h);
 
   wl_surface_attach (surface, meta->wbuffer, 0, 0);
-  wl_surface_damage (surface, 0, 0, res.w, res.h);
+  wl_surface_damage (surface, 0, 0, dst.w, dst.h);
 
   wl_surface_commit (surface);
   wl_display_flush (sink->display->display);
@@ -732,6 +735,7 @@ static void
 gst_wayland_sink_videooverlay_init (GstVideoOverlayInterface * iface)
 {
   iface->set_window_handle = gst_wayland_sink_set_window_handle;
+  iface->set_render_rectangle = gst_wayland_sink_set_render_rectangle;
   iface->expose = gst_wayland_sink_expose;
 }
 
@@ -760,7 +764,7 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
                 "an externally-supplied display handle. Consider providing a "
                 "display handle from your application with GstContext"));
       } else {
-        sink->window = gst_wl_window_new_from_surface (sink->display, surface);
+        sink->window = gst_wl_window_new_in_surface (sink->display, surface);
       }
     } else {
       GST_ERROR_OBJECT (sink, "Failed to find display handle, "
@@ -768,6 +772,28 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
     }
   }
 
+  GST_OBJECT_UNLOCK (sink);
+}
+
+static void
+gst_wayland_sink_set_render_rectangle (GstVideoOverlay * overlay,
+    gint x, gint y, gint w, gint h)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (overlay);
+
+  g_return_if_fail (sink != NULL);
+
+  GST_OBJECT_LOCK (sink);
+  if (!sink->window) {
+    GST_OBJECT_UNLOCK (sink);
+    GST_WARNING_OBJECT (sink,
+        "set_render_rectangle called without window, ignoring");
+    return;
+  }
+
+  GST_DEBUG_OBJECT (sink, "window geometry changed to (%d, %d) %d x %d",
+      x, y, w, h);
+  gst_wl_window_set_size (sink->window, x, y, w, h);
   GST_OBJECT_UNLOCK (sink);
 }
 
@@ -791,30 +817,8 @@ gst_wayland_sink_expose (GstVideoOverlay * overlay)
 static void
 gst_wayland_sink_waylandvideo_init (GstWaylandVideoInterface * iface)
 {
-  iface->set_surface_size = gst_wayland_sink_set_surface_size;
   iface->pause_rendering = gst_wayland_sink_pause_rendering;
   iface->resume_rendering = gst_wayland_sink_resume_rendering;
-}
-
-static void
-gst_wayland_sink_set_surface_size (GstWaylandVideo * video, gint w, gint h)
-{
-  GstWaylandSink *sink = GST_WAYLAND_SINK (video);
-
-  g_return_if_fail (sink != NULL);
-  g_return_if_fail (sink->window != NULL);
-
-  GST_OBJECT_LOCK (sink);
-  if (!sink->window) {
-    GST_OBJECT_UNLOCK (sink);
-    GST_WARNING_OBJECT (sink,
-        "set_surface_size called without window, ignoring");
-    return;
-  }
-
-  GST_DEBUG_OBJECT (sink, "changing window size to %d x %d", w, h);
-  gst_wl_window_set_size (sink->window, w, h);
-  GST_OBJECT_UNLOCK (sink);
 }
 
 static void

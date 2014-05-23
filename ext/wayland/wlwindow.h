@@ -41,9 +41,10 @@ struct _GstWlWindow
 
   GstWlDisplay *display;
   struct wl_surface *surface;
+  struct wl_subsurface *subsurface;
   struct wl_viewport *viewport;
   struct wl_shell_surface *shell_surface;
-  gint width, height;
+  gint x, y, width, height;
   gboolean own_surface;
 };
 
@@ -56,6 +57,8 @@ GType gst_wl_window_get_type (void);
 
 GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
         gint width, gint height);
+GstWlWindow *gst_wl_window_new_in_surface (GstWlDisplay * display,
+        struct wl_surface * parent);
 GstWlWindow *gst_wl_window_new_from_surface (GstWlDisplay * display,
         struct wl_surface * surface);
 
@@ -63,7 +66,8 @@ GstWlDisplay *gst_wl_window_get_display (GstWlWindow * window);
 struct wl_surface *gst_wl_window_get_wl_surface (GstWlWindow * window);
 gboolean gst_wl_window_is_toplevel (GstWlWindow *window);
 
-void gst_wl_window_set_size (GstWlWindow * window, gint w, gint h);
+void gst_wl_window_set_size (GstWlWindow * window, gint x, gint y, gint w,
+        gint h);
 
 G_END_DECLS
 
