@@ -1229,6 +1229,7 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux)
   stream->first_dts = GST_CLOCK_TIME_NONE;
   stream->raw_pts = -1;
   stream->raw_dts = -1;
+  stream->pending_ts = TRUE;
   stream->continuity_counter = CONTINUITY_UNSET;
 }
 
