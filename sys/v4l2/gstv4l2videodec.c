@@ -530,6 +530,9 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     if (ret == GST_FLOW_FLUSHING) {
       if (g_atomic_int_get (&self->processing) == FALSE)
         ret = self->output_flow;
+      goto drop;
+    } else if (ret != GST_FLOW_OK) {
+      goto process_failed;
     }
 
     /* No need to keep input arround */
@@ -551,11 +554,20 @@ activate_failed:
     GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
         (_("Failed to allocate required memory.")),
         ("Buffer pool activation failed"));
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto drop;
   }
 flushing:
   {
     ret = GST_FLOW_FLUSHING;
+    goto drop;
+  }
+process_failed:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
+        (_("Failed to process frame.")),
+        ("Maybe be due to not enough memory or failing driver"));
+    ret = GST_FLOW_ERROR;
     goto drop;
   }
 drop:
