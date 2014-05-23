@@ -304,6 +304,11 @@ G_BEGIN_DECLS
 /* ilst metatags */
 #define FOURCC__cmt     GST_MAKE_FOURCC(0xa9, 'c','m','t')
 
+/* apple tags */
+#define FOURCC__mak     GST_MAKE_FOURCC(0xa9, 'm','a','k')
+#define FOURCC__mod     GST_MAKE_FOURCC(0xa9, 'm','o','d')
+#define FOURCC__swr     GST_MAKE_FOURCC(0xa9, 's','w','r')
+
 /* Chapters reference */
 #define FOURCC_chap     GST_MAKE_FOURCC('c','h','a','p')
 

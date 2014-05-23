@@ -9728,6 +9728,9 @@ static const struct
   FOURCC_loci, GST_TAG_GEO_LOCATION_NAME, NULL, qtdemux_tag_add_location}, {
   FOURCC_clsf, GST_QT_DEMUX_CLASSIFICATION_TAG, NULL,
         qtdemux_tag_add_classification}, {
+  FOURCC__mak, GST_TAG_DEVICE_MANUFACTURER, NULL, qtdemux_tag_add_str}, {
+  FOURCC__mod, GST_TAG_DEVICE_MODEL, NULL, qtdemux_tag_add_str}, {
+  FOURCC__swr, GST_TAG_APPLICATION_NAME, NULL, qtdemux_tag_add_str}, {
 
     /* This is a special case, some tags are stored in this
      * 'reverse dns naming', according to:
