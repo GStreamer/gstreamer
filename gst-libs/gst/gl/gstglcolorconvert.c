@@ -297,16 +297,16 @@ static const gchar frag_YUY2_UYVY_to_RGB[] =
     "  vec3 yuv;\n"
     "  vec4 uv_texel;\n"
     "  float r, g, b, a;\n"
-    "  float dx = 1.0 / width;\n"
+    "  float dx1 = -1.0 / width;\n"
+    "  float dx2 = 0.0;\n"
     "  yuv.x = texture2D(Ytex, v_texcoord * tex_scale0).%c;\n"
-    "  float inorder = mod (v_texcoord.x * width, 2.0);"
-    "  if (inorder < 1.0) {"
-    "    uv_texel.rg = texture2D(Ytex, v_texcoord * tex_scale0).rg;"
-    "    uv_texel.ba = texture2D(Ytex, v_texcoord * tex_scale0 + dx).rg;"
-    "  } else {"
-    "    uv_texel.rg = texture2D(Ytex, v_texcoord * tex_scale0 - dx).rg;"
-    "    uv_texel.ba = texture2D(Ytex, v_texcoord * tex_scale0).rg;"
-    "  }"
+    "  float inorder = mod (v_texcoord.x * width, 2.0);\n"
+    "  if (inorder < 1.0) {\n"
+    "    dx2 = -dx1;\n"
+    "    dx1 = 0.0;\n"
+    "  }\n"
+    "  uv_texel.rg = texture2D(Ytex, v_texcoord * tex_scale0 + dx1).r%c;\n"
+    "  uv_texel.ba = texture2D(Ytex, v_texcoord * tex_scale0 + dx2).r%c;\n"
     "  yuv.yz = uv_texel.%c%c;\n"
     "  yuv += offset;\n"
     "  r = dot(yuv, coeff1);\n"
@@ -732,11 +732,15 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       info->shader_tex_names[2] = "Utex";
       break;
     case GST_VIDEO_FORMAT_YUY2:
-      info->frag_prog = g_strdup_printf (frag_YUY2_UYVY_to_RGB, 'r', 'g', 'a',
-          pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
+    {
+      char uv_val = texture_rg ? 'g' : 'a';
+      info->frag_prog = g_strdup_printf (frag_YUY2_UYVY_to_RGB, 'r', uv_val,
+          uv_val, 'g', 'a', pixel_order[0], pixel_order[1], pixel_order[2],
+          pixel_order[3]);
       info->in_n_textures = 1;
       info->shader_tex_names[0] = "Ytex";
       break;
+    }
     case GST_VIDEO_FORMAT_NV12:
     {
       char val2 = texture_rg ? 'g' : 'a';
@@ -760,8 +764,9 @@ _YUV_to_RGB (GstGLColorConvert * convert)
     case GST_VIDEO_FORMAT_UYVY:
     {
       char y_val = texture_rg ? 'g' : 'a';
-      info->frag_prog = g_strdup_printf (frag_YUY2_UYVY_to_RGB, y_val, 'r', 'b',
-          pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
+      info->frag_prog = g_strdup_printf (frag_YUY2_UYVY_to_RGB, y_val, 'g',
+          'g', 'r', 'b', pixel_order[0], pixel_order[1], pixel_order[2],
+          pixel_order[3]);
       info->in_n_textures = 1;
       info->shader_tex_names[0] = "Ytex";
       break;
