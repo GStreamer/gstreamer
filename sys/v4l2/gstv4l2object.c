@@ -3288,15 +3288,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     max = MAX (min, max);
 
   /* First step, configure our own pool */
-
   config = gst_buffer_pool_get_config (obj->pool);
-
-  /* If already configured/active, skip it */
-  /* FIXME not entirely correct, See bug 728268 */
-  if (gst_buffer_pool_is_active (obj->pool)) {
-    gst_structure_free (config);
-    goto setup_other_pool;
-  }
 
   if (obj->need_video_meta || has_video_meta) {
     GST_DEBUG_OBJECT (obj->element, "activate Video Meta");
@@ -3322,16 +3314,11 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       goto config_failed;
   }
 
-setup_other_pool:
-
   /* Now configure the other pool if different */
   if (obj->pool != pool)
     other_pool = pool;
 
   if (other_pool) {
-    if (gst_buffer_pool_is_active (other_pool))
-      goto done;
-
     config = gst_buffer_pool_get_config (other_pool);
     gst_buffer_pool_config_set_allocator (config, allocator, &params);
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
@@ -3368,7 +3355,6 @@ setup_other_pool:
     gst_structure_free (config);
   }
 
-done:
   if (update)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
