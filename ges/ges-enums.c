@@ -159,366 +159,222 @@ ges_edge_get_type (void)
 }
 
 static GEnumValue transition_types[] = {
-  {
-        0,
-        "Transition has not been set",
-      "none"}
-  ,
-  {
-        1,
-        "A bar moves from left to right",
-      "bar-wipe-lr"}
-  ,
-  {
-        2,
-        "A bar moves from top to bottom",
-      "bar-wipe-tb"}
-  ,
-  {
-        3,
-        "A box expands from the upper-left corner to the lower-right corner",
-      "box-wipe-tl"}
-  ,
-  {
-        4,
-        "A box expands from the upper-right corner to the lower-left corner",
-      "box-wipe-tr"}
-  ,
-  {
-        5,
-        "A box expands from the lower-right corner to the upper-left corner",
-      "box-wipe-br"}
-  ,
-  {
-        6,
-        "A box expands from the lower-left corner to the upper-right corner",
-      "box-wipe-bl"}
-  ,
-  {
-        7,
-        "A box shape expands from each of the four corners toward the center",
-      "four-box-wipe-ci"}
-  ,
-  {
-        8,
-        "A box shape expands from the center of each quadrant toward the corners of each quadrant",
-      "four-box-wipe-co"}
-  ,
-  {
-        21,
-        "A central, vertical line splits and expands toward the left and right edges",
-      "barndoor-v"}
-  ,
-  {
-        22,
-        "A central, horizontal line splits and expands toward the top and bottom edges",
-      "barndoor-h"}
-  ,
-  {
-        23,
-        "A box expands from the top edge's midpoint to the bottom corners",
-      "box-wipe-tc"}
-  ,
-  {
-        24,
-        "A box expands from the right edge's midpoint to the left corners",
-      "box-wipe-rc"}
-  ,
-  {
-        25,
-        "A box expands from the bottom edge's midpoint to the top corners",
-      "box-wipe-bc"}
-  ,
-  {
-        26,
-        "A box expands from the left edge's midpoint to the right corners",
-      "box-wipe-lc"}
-  ,
-  {
-        41,
-        "A diagonal line moves from the upper-left corner to the lower-right corner",
-      "diagonal-tl"}
-  ,
-  {
-        42,
-        "A diagonal line moves from the upper right corner to the lower-left corner",
-      "diagonal-tr"}
-  ,
-  {
-        43,
-        "Two wedge shapes slide in from the top and bottom edges toward the center",
-      "bowtie-v"}
-  ,
-  {
-        44,
-        "Two wedge shapes slide in from the left and right edges toward the center",
-      "bowtie-h"}
-  ,
-  {
-        45,
-        "A diagonal line from the lower-left to upper-right corners splits and expands toward the opposite corners",
-      "barndoor-dbl"}
-  ,
-  {
-        46,
-        "A diagonal line from upper-left to lower-right corners splits and expands toward the opposite corners",
-      "barndoor-dtl"}
-  ,
-  {
-        47,
-        "Four wedge shapes split from the center and retract toward the four edges",
-      "misc-diagonal-dbd"}
-  ,
-  {
-        48,
-        "A diamond connecting the four edge midpoints simultaneously contracts toward the center and expands toward the edges",
-      "misc-diagonal-dd"}
-  ,
-  {
-        61,
-        "A wedge shape moves from top to bottom",
-      "vee-d"}
-  ,
-  {
-        62,
-        "A wedge shape moves from right to left",
-      "vee-l"}
-  ,
-  {
-        63,
-        "A wedge shape moves from bottom to top",
-      "vee-u"}
-  ,
-  {
-        64,
-        "A wedge shape moves from left to right",
-      "vee-r"}
-  ,
-  {
-        65,
-        "A 'V' shape extending from the bottom edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-      "barnvee-d"}
-  ,
-  {
-        66,
-        "A 'V' shape extending from the left edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-      "barnvee-l"}
-  ,
-  {
-        67,
-        "A 'V' shape extending from the top edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-      "barnvee-u"}
-  ,
-  {
-        68,
-        "A 'V' shape extending from the right edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-      "barnvee-r"}
-  ,
-  {
-        101,
-        "A rectangle expands from the center.",
-      "iris-rect"}
-  ,
-  {
-        201,
-        "A radial hand sweeps clockwise from the twelve o'clock position",
-      "clock-cw12"}
-  ,
-  {
-        202,
-        "A radial hand sweeps clockwise from the three o'clock position",
-      "clock-cw3"}
-  ,
-  {
-        203,
-        "A radial hand sweeps clockwise from the six o'clock position",
-      "clock-cw6"}
-  ,
-  {
-        204,
-        "A radial hand sweeps clockwise from the nine o'clock position",
-      "clock-cw9"}
-  ,
-  {
-        205,
-        "Two radial hands sweep clockwise from the twelve and six o'clock positions",
-      "pinwheel-tbv"}
-  ,
-  {
-        206,
-        "Two radial hands sweep clockwise from the nine and three o'clock positions",
-      "pinwheel-tbh"}
-  ,
-  {
-        207,
-        "Four radial hands sweep clockwise",
-      "pinwheel-fb"}
-  ,
-  {
-        211,
-        "A fan unfolds from the top edge, the fan axis at the center",
-      "fan-ct"}
-  ,
-  {
-        212,
-        "A fan unfolds from the right edge, the fan axis at the center",
-      "fan-cr"}
-  ,
-  {
-        213,
-        "Two fans, their axes at the center, unfold from the top and bottom",
-      "doublefan-fov"}
-  ,
-  {
-        214,
-        "Two fans, their axes at the center, unfold from the left and right",
-      "doublefan-foh"}
-  ,
-  {
-        221,
-        "A radial hand sweeps clockwise from the top edge's midpoint",
-      "singlesweep-cwt"}
-  ,
-  {
-        222,
-        "A radial hand sweeps clockwise from the right edge's midpoint",
-      "singlesweep-cwr"}
-  ,
-  {
-        223,
-        "A radial hand sweeps clockwise from the bottom edge's midpoint",
-      "singlesweep-cwb"}
-  ,
-  {
-        224,
-        "A radial hand sweeps clockwise from the left edge's midpoint",
-      "singlesweep-cwl"}
-  ,
-  {
-        225,
-        "Two radial hands sweep clockwise and counter-clockwise from the top and bottom edges' midpoints",
-      "doublesweep-pv"}
-  ,
-  {
-        226,
-        "Two radial hands sweep clockwise and counter-clockwise from the left and right edges' midpoints",
-      "doublesweep-pd"}
-  ,
-  {
-        227,
-        "Two radial hands attached at the top and bottom edges' midpoints sweep from right to left",
-      "doublesweep-ov"}
-  ,
-  {
-        228,
-        "Two radial hands attached at the left and right edges' midpoints sweep from top to bottom",
-      "doublesweep-oh"}
-  ,
-  {
-        231,
-        "A fan unfolds from the bottom, the fan axis at the top edge's midpoint",
-      "fan-t"}
-  ,
-  {
-        232,
-        "A fan unfolds from the left, the fan axis at the right edge's midpoint",
-      "fan-r"}
-  ,
-  {
-        233,
-        "A fan unfolds from the top, the fan axis at the bottom edge's midpoint",
-      "fan-b"}
-  ,
-  {
-        234,
-        "A fan unfolds from the right, the fan axis at the left edge's midpoint",
-      "fan-l"}
-  ,
-  {
-        235,
-        "Two fans, their axes at the top and bottom, unfold from the center",
-      "doublefan-fiv"}
-  ,
-  {
-        236,
-        "Two fans, their axes at the left and right, unfold from the center",
-      "doublefan-fih"}
-  ,
-  {
-        241,
-        "A radial hand sweeps clockwise from the upper-left corner",
-      "singlesweep-cwtl"}
-  ,
-  {
-        242,
-        "A radial hand sweeps counter-clockwise from the lower-left corner.",
-      "singlesweep-cwbl"}
-  ,
-  {
-        243,
-        "A radial hand sweeps clockwise from the lower-right corner",
-      "singlesweep-cwbr"}
-  ,
-  {
-        244,
-        "A radial hand sweeps counter-clockwise from the upper-right corner",
-      "singlesweep-cwtr"}
-  ,
-  {
-        245,
-        "Two radial hands attached at the upper-left and lower-right corners sweep down and up",
-      "doublesweep-pdtl"}
-  ,
-  {
-        246,
-        "Two radial hands attached at the lower-left and upper-right corners sweep down and up",
-      "doublesweep-pdbl"}
-  ,
-  {
-        251,
-        "Two radial hands attached at the upper-left and upper-right corners sweep down",
-      "saloondoor-t"}
-  ,
-  {
-        252,
-        "Two radial hands attached at the upper-left and lower-left corners sweep to the right",
-      "saloondoor-l"}
-  ,
-  {
-        253,
-        "Two radial hands attached at the lower-left and lower-right corners sweep up",
-      "saloondoor-b"}
-  ,
-  {
-        254,
-        "Two radial hands attached at the upper-right and lower-right corners sweep to the left",
-      "saloondoor-r"}
-  ,
-  {
-        261,
-        "Two radial hands attached at the midpoints of the top and bottom halves sweep from right to left",
-      "windshield-r"}
-  ,
-  {
-        262,
-        "Two radial hands attached at the midpoints of the left and right halves sweep from top to bottom",
-      "windshield-u"}
-  ,
-  {
-        263,
-        "Two sets of radial hands attached at the midpoints of the top and bottom halves sweep from top to bottom and bottom to top",
-      "windshield-v"}
-  ,
-  {
-        264,
-        "Two sets of radial hands attached at the midpoints of the left and right halves sweep from left to right and right to left",
-      "windshield-h"}
-  ,
-  {
-        GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE,
-        "Crossfade between two clips",
-      "crossfade"}
-  ,
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE",
+      "none"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR",
+      "bar-wipe-lr"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_TB,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_TB",
+      "bar-wipe-tb"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TL,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TL",
+      "box-wipe-tl"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TR,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TR",
+      "box-wipe-tr"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BR,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BR",
+      "box-wipe-br"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BL,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BL",
+      "box-wipe-bl"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_FOUR_BOX_WIPE_CI,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_FOUR_BOX_WIPE_CI",
+      "four-box-wipe-ci"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_FOUR_BOX_WIPE_CO,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_FOUR_BOX_WIPE_CO",
+      "four-box-wipe-co"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_V,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_V",
+      "barndoor-v"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_H,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_H",
+      "barndoor-h"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TC,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TC",
+      "box-wipe-tc"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_RC,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_RC",
+      "box-wipe-rc"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BC,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BC",
+      "box-wipe-bc"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_LC,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_LC",
+      "box-wipe-lc"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DIAGONAL_TL,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DIAGONAL_TL",
+      "diagonal-tl"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DIAGONAL_TR,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DIAGONAL_TR",
+      "diagonal-tr"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BOWTIE_V,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOWTIE_V",
+      "bowtie-v"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BOWTIE_H,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOWTIE_H",
+      "bowtie-h"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_DBL,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_DBL",
+      "barndoor-dbl"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_DTL,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_DTL",
+      "barndoor-dtl"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_MISC_DIAGONAL_DBD,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_MISC_DIAGONAL_DBD",
+      "misc-diagonal-dbd"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_MISC_DIAGONAL_DD,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_MISC_DIAGONAL_DD",
+      "misc-diagonal-dd"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_D,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_D",
+      "vee-d"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_L,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_L",
+      "vee-l"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_U,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_U",
+      "vee-u"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_R,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_R",
+      "vee-r"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_D,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_D",
+      "barnvee-d"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_L,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_L",
+      "barnvee-l"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_U,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_U",
+      "barnvee-u"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_R,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_R",
+      "barnvee-r"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_IRIS_RECT,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_IRIS_RECT",
+      "iris-rect"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW12,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW12",
+      "clock-cw12"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW3,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW3",
+      "clock-cw3"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW6,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW6",
+      "clock-cw6"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW9,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW9",
+      "clock-cw9"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_TBV,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_TBV",
+      "pinwheel-tbv"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_TBH,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_TBH",
+      "pinwheel-tbh"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_FB,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_FB",
+      "pinwheel-fb"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_CT,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_CT",
+      "fan-ct"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_CR,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_CR",
+      "fan-cr"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FOV,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FOV",
+      "doublefan-fov"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FOH,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FOH",
+      "doublefan-foh"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWT,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWT",
+      "singlesweep-cwt"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWR,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWR",
+      "singlesweep-cwr"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWB,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWB",
+      "singlesweep-cwb"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWL,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWL",
+      "singlesweep-cwl"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PV,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PV",
+      "doublesweep-pv"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PD,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PD",
+      "doublesweep-pd"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_OV,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_OV",
+      "doublesweep-ov"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_OH,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_OH",
+      "doublesweep-oh"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_T,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_T",
+      "fan-t"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_R,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_R",
+      "fan-r"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_B,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_B",
+      "fan-b"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_L,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_L",
+      "fan-l"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FIV,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FIV",
+      "doublefan-fiv"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FIH,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FIH",
+      "doublefan-fih"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWTL,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWTL",
+      "singlesweep-cwtl"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWBL,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWBL",
+      "singlesweep-cwbl"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWBR,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWBR",
+      "singlesweep-cwbr"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWTR,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWTR",
+      "singlesweep-cwtr"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PDTL,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PDTL",
+      "doublesweep-pdtl"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PDBL,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PDBL",
+      "doublesweep-pdbl"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_T,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_T",
+      "saloondoor-t"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_L,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_L",
+      "saloondoor-l"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_B,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_B",
+      "saloondoor-b"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_R,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_R",
+      "saloondoor-r"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_R,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_R",
+      "windshield-r"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_U,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_U",
+      "windshield-u"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_V,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_V",
+      "windshield-v"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_H,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_H",
+      "windshield-h"},
+  {GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE,
+        "GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE",
+      "crossfade"},
   {0, NULL, NULL}
 };
 
@@ -561,11 +417,11 @@ ges_text_valign_get_type (void)
   static GType text_overlay_valign_type = 0;
   static gsize initialized = 0;
   static const GEnumValue text_overlay_valign[] = {
-    {GES_TEXT_VALIGN_BASELINE, "baseline", "baseline"},
-    {GES_TEXT_VALIGN_BOTTOM, "bottom", "bottom"},
-    {GES_TEXT_VALIGN_TOP, "top", "top"},
-    {GES_TEXT_VALIGN_POSITION, "position", "position"},
-    {GES_TEXT_VALIGN_CENTER, "center", "center"},
+    {GES_TEXT_VALIGN_BASELINE, "GES_TEXT_VALIGN_BASELINE", "baseline"},
+    {GES_TEXT_VALIGN_BOTTOM, "GES_TEXT_VALIGN_BOTTOM", "bottom"},
+    {GES_TEXT_VALIGN_TOP, "GES_TEXT_VALIGN_TOP", "top"},
+    {GES_TEXT_VALIGN_POSITION, "GES_TEXT_VALIGN_POSITION", "position"},
+    {GES_TEXT_VALIGN_CENTER, "GES_TEXT_VALIGN_CENTER", "center"},
     {0, NULL, NULL},
   };
 
@@ -583,10 +439,10 @@ ges_text_halign_get_type (void)
   static GType text_overlay_halign_type = 0;
   static gsize initialized = 0;
   static const GEnumValue text_overlay_halign[] = {
-    {GES_TEXT_HALIGN_LEFT, "left", "left"},
-    {GES_TEXT_HALIGN_CENTER, "center", "center"},
-    {GES_TEXT_HALIGN_RIGHT, "right", "right"},
-    {GES_TEXT_HALIGN_POSITION, "position", "position"},
+    {GES_TEXT_HALIGN_LEFT, "GES_TEXT_HALIGN_LEFT", "left"},
+    {GES_TEXT_HALIGN_CENTER, "GES_TEXT_HALIGN_CENTER", "center"},
+    {GES_TEXT_HALIGN_RIGHT, "GES_TEXT_HALIGN_RIGHT", "right"},
+    {GES_TEXT_HALIGN_POSITION, "GES_TEXT_HALIGN_POSITION", "position"},
     {0, NULL, NULL},
   };
 
@@ -600,42 +456,47 @@ ges_text_halign_get_type (void)
 
 /* table more-or-less copied from gstvideotestsrc.c */
 static GEnumValue vpattern_enum_values[] = {
-  {GES_VIDEO_TEST_PATTERN_SMPTE, "SMPTE 100% color bars", "smpte"}
+  {GES_VIDEO_TEST_PATTERN_SMPTE, "GES_VIDEO_TEST_PATTERN_SMPTE", "smpte"}
   ,
-  {GES_VIDEO_TEST_PATTERN_SNOW, "Random (television snow)", "snow"}
+  {GES_VIDEO_TEST_PATTERN_SNOW, "GES_VIDEO_TEST_PATTERN_SNOW", "snow"}
   ,
-  {GES_VIDEO_TEST_PATTERN_BLACK, "100% Black", "black"}
+  {GES_VIDEO_TEST_PATTERN_BLACK, "GES_VIDEO_TEST_PATTERN_BLACK", "black"}
   ,
-  {GES_VIDEO_TEST_PATTERN_WHITE, "100% White", "white"}
+  {GES_VIDEO_TEST_PATTERN_WHITE, "GES_VIDEO_TEST_PATTERN_WHITE", "white"}
   ,
-  {GES_VIDEO_TEST_PATTERN_RED, "Red", "red"}
+  {GES_VIDEO_TEST_PATTERN_RED, "GES_VIDEO_TEST_PATTERN_RED", "red"}
   ,
-  {GES_VIDEO_TEST_PATTERN_GREEN, "Green", "green"}
+  {GES_VIDEO_TEST_PATTERN_GREEN, "GES_VIDEO_TEST_PATTERN_GREEN", "green"}
   ,
-  {GES_VIDEO_TEST_PATTERN_BLUE, "Blue", "blue"}
+  {GES_VIDEO_TEST_PATTERN_BLUE, "GES_VIDEO_TEST_PATTERN_BLUE", "blue"}
   ,
-  {GES_VIDEO_TEST_PATTERN_CHECKERS1, "Checkers 1px", "checkers-1"}
+  {GES_VIDEO_TEST_PATTERN_CHECKERS1,
+      "GES_VIDEO_TEST_PATTERN_CHECKERS1", "checkers-1"}
   ,
-  {GES_VIDEO_TEST_PATTERN_CHECKERS2, "Checkers 2px", "checkers-2"}
+  {GES_VIDEO_TEST_PATTERN_CHECKERS2,
+      "GES_VIDEO_TEST_PATTERN_CHECKERS2", "checkers-2"}
   ,
-  {GES_VIDEO_TEST_PATTERN_CHECKERS4, "Checkers 4px", "checkers-4"}
+  {GES_VIDEO_TEST_PATTERN_CHECKERS4,
+      "GES_VIDEO_TEST_PATTERN_CHECKERS4", "checkers-4"}
   ,
-  {GES_VIDEO_TEST_PATTERN_CHECKERS8, "Checkers 8px", "checkers-8"}
+  {GES_VIDEO_TEST_PATTERN_CHECKERS8,
+      "GES_VIDEO_TEST_PATTERN_CHECKERS8", "checkers-8"}
   ,
-  {GES_VIDEO_TEST_PATTERN_CIRCULAR, "Circular", "circular"}
+  {GES_VIDEO_TEST_PATTERN_CIRCULAR,
+      "GES_VIDEO_TEST_PATTERN_CIRCULAR", "circular"}
   ,
-  {GES_VIDEO_TEST_PATTERN_BLINK, "Blink", "blink"}
+  {GES_VIDEO_TEST_PATTERN_BLINK, "GES_VIDEO_TEST_PATTERN_BLINK", "blink"}
   ,
-  {GES_VIDEO_TEST_PATTERN_SMPTE75, "SMPTE 75% color bars", "smpte75"}
+  {GES_VIDEO_TEST_PATTERN_SMPTE75, "GES_VIDEO_TEST_PATTERN_SMPTE75", "smpte75"}
   ,
-  {GES_VIDEO_TEST_ZONE_PLATE, "Zone plate", "zone-plate"}
+  {GES_VIDEO_TEST_ZONE_PLATE, "GES_VIDEO_TEST_ZONE_PLATE", "zone-plate"}
   ,
-  {GES_VIDEO_TEST_GAMUT, "Gamut checkers", "gamut"}
+  {GES_VIDEO_TEST_GAMUT, "GES_VIDEO_TEST_GAMUT", "gamut"}
   ,
-  {GES_VIDEO_TEST_CHROMA_ZONE_PLATE, "Chroma zone plate",
+  {GES_VIDEO_TEST_CHROMA_ZONE_PLATE, "GES_VIDEO_TEST_CHROMA_ZONE_PLATE",
       "chroma-zone-plate"}
   ,
-  {GES_VIDEO_TEST_PATTERN_SOLID, "Solid color", "solid-color"}
+  {GES_VIDEO_TEST_PATTERN_SOLID, "GES_VIDEO_TEST_PATTERN_SOLID", "solid-color"}
   ,
   {0, NULL, NULL}
 };
