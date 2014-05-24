@@ -194,7 +194,7 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
   if (!gst_v4l2_is_buffer_valid (dest, &group))
     goto not_our_buffer;
 
-  if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type))
+  if (V4L2_TYPE_IS_OUTPUT (pool->obj->type))
     flags = GST_MAP_READ;
   else
     flags = GST_MAP_WRITE;
