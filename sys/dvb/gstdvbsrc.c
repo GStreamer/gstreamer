@@ -671,6 +671,7 @@ gst_dvbsrc_init (GstDvbSrc * object)
   object->frontend_number = DEFAULT_FRONTEND;
   object->diseqc_src = DEFAULT_DISEQC_SRC;
   object->send_diseqc = (DEFAULT_DISEQC_SRC != -1);
+  object->tone = SEC_TONE_OFF;
   /* object->pol = DVB_POL_H; *//* set via G_PARAM_CONSTRUCT */
   object->sym_rate = DEFAULT_SYMBOL_RATE;
   object->bandwidth = DEFAULT_BANDWIDTH;
@@ -1649,11 +1650,11 @@ gst_dvbsrc_tune (GstDvbSrc * object)
       case SYS_DVBS:
       case SYS_DVBS2:
       case SYS_TURBO:
-        object->tone = SEC_TONE_OFF;
         if (freq > 2200000) {
           /* this must be an absolute frequency */
           if (freq < SLOF) {
             freq -= LOF1;
+            object->tone = SEC_TONE_OFF;
           } else {
             freq -= LOF2;
             object->tone = SEC_TONE_ON;
@@ -1679,6 +1680,10 @@ gst_dvbsrc_tune (GstDvbSrc * object)
 
           /* DTV_TONE not yet implemented
            * set_prop (fe_props_array, &n, DTV_TONE, object->tone) */
+          if (ioctl (object->fd_frontend, FE_SET_TONE, object->tone) < 0) {
+            GST_WARNING_OBJECT (object, "Could'nt set tone: %s",
+                g_strerror (errno));
+          }
         } else {
           GST_DEBUG_OBJECT (object, "Sending DISEqC");
           diseqc (object->fd_frontend, object->diseqc_src, voltage,
