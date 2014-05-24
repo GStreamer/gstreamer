@@ -3147,6 +3147,8 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   gboolean has_video_meta;
   gboolean can_share_own_pool, pushing_from_our_pool = FALSE;
   struct v4l2_control ctl = { 0, };
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params = { 0 };
 
   GST_DEBUG_OBJECT (obj->element, "decide allocation");
 
@@ -3159,6 +3161,9 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     if (!gst_v4l2_object_setup_pool (obj, caps))
       goto pool_failed;
   }
+
+  if (gst_query_get_n_allocation_params (query) > 0)
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
@@ -3300,6 +3305,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
         GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
 
+  gst_buffer_pool_config_set_allocator (config, allocator, &params);
   gst_buffer_pool_config_set_params (config, caps, size, own_min, 0);
 
   GST_DEBUG_OBJECT (obj->element, "setting own pool config to %"
@@ -3331,6 +3337,7 @@ setup_other_pool:
       goto done;
 
     config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
     GST_DEBUG_OBJECT (obj->element, "setting other pool config to %"
@@ -3352,6 +3359,9 @@ done:
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (allocator)
+    gst_object_unref (allocator);
 
   if (pool)
     gst_object_unref (pool);
@@ -3377,6 +3387,9 @@ no_size:
   }
 cleanup:
   {
+    if (allocator)
+      gst_object_unref (allocator);
+
     if (pool)
       gst_object_unref (pool);
     return FALSE;
