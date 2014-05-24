@@ -7170,6 +7170,93 @@ bad_data:
   return 0;
 }
 
+static gboolean
+qtdemux_parse_transformation_matrix (GstQTDemux * qtdemux,
+    GstByteReader * reader, guint32 * matrix, const gchar * atom)
+{
+  /*
+   * 9 values of 32 bits (fixed point 16.16, except 2 5 and 8 that are 2.30)
+   * [0 1 2]
+   * [3 4 5]
+   * [6 7 8]
+   */
+
+  if (gst_byte_reader_get_remaining (reader) < 36)
+    return FALSE;
+
+  matrix[0] = gst_byte_reader_get_uint32_be_unchecked (reader);
+  matrix[1] = gst_byte_reader_get_uint32_be_unchecked (reader);
+  matrix[2] = gst_byte_reader_get_uint32_be_unchecked (reader);
+  matrix[3] = gst_byte_reader_get_uint32_be_unchecked (reader);
+  matrix[4] = gst_byte_reader_get_uint32_be_unchecked (reader);
+  matrix[5] = gst_byte_reader_get_uint32_be_unchecked (reader);
+  matrix[6] = gst_byte_reader_get_uint32_be_unchecked (reader);
+  matrix[7] = gst_byte_reader_get_uint32_be_unchecked (reader);
+  matrix[8] = gst_byte_reader_get_uint32_be_unchecked (reader);
+
+  GST_DEBUG_OBJECT (qtdemux, "Transformation matrix from atom %s", atom);
+  GST_DEBUG_OBJECT (qtdemux, "%u.%u %u.%u %u.%u", matrix[0] >> 16,
+      matrix[0] & 0xFFFF, matrix[1] >> 16, matrix[1] & 0xFF, matrix[2] >> 16,
+      matrix[2] & 0xFF);
+  GST_DEBUG_OBJECT (qtdemux, "%u.%u %u.%u %u.%u", matrix[3] >> 16,
+      matrix[3] & 0xFFFF, matrix[4] >> 16, matrix[4] & 0xFF, matrix[5] >> 16,
+      matrix[5] & 0xFF);
+  GST_DEBUG_OBJECT (qtdemux, "%u.%u %u.%u %u.%u", matrix[6] >> 16,
+      matrix[6] & 0xFFFF, matrix[7] >> 16, matrix[7] & 0xFF, matrix[8] >> 16,
+      matrix[8] & 0xFF);
+
+  return TRUE;
+}
+
+static void
+qtdemux_inspect_transformation_matrix (GstQTDemux * qtdemux,
+    QtDemuxStream * stream, guint32 * matrix, GstTagList ** taglist)
+{
+
+/* [a b c]
+ * [d e f]
+ * [g h i]
+ *
+ * This macro will only compare value abdegh, it expects cfi to have already
+ * been checked
+ */
+#define QTCHECK_MATRIX(m,a,b,d,e,g,h) ((m)[0] == (a << 16) && (m)[1] == (b << 16) && \
+                                       (m)[3] == (d << 16) && (m)[4] == (e << 16) && \
+                                       (m)[6] == (g << 16) && (m)[7] == (h << 16))
+
+  /* only handle the cases where the last column has standard values */
+  if (matrix[2] == 0 && matrix[5] == 0 && matrix[8] == 1 << 30) {
+    const gchar *rotation_tag = NULL;
+
+    /* no rotation needed */
+    if (QTCHECK_MATRIX (matrix, 1, 0, 0, 1, 0, 0)) {
+      /* NOP */
+    } else if (QTCHECK_MATRIX (matrix, 0, 1, G_MAXUINT16, 0,
+            stream->display_height, 0)) {
+      rotation_tag = "rotate-90";
+    } else if (QTCHECK_MATRIX (matrix, G_MAXUINT16, 0, 0, G_MAXUINT16,
+            stream->display_width, stream->display_height)) {
+      rotation_tag = "rotate-180";
+    } else if (QTCHECK_MATRIX (matrix, 0, G_MAXUINT16, 1, 0, 0,
+            stream->display_width)) {
+      rotation_tag = "rotate-270";
+    } else {
+      GST_FIXME_OBJECT (qtdemux, "Unhandled transformation matrix values");
+    }
+
+    GST_DEBUG_OBJECT (qtdemux, "Transformation matrix rotation %s",
+        rotation_tag);
+    if (rotation_tag != NULL) {
+      if (*taglist == NULL)
+        *taglist = gst_tag_list_new_empty ();
+      gst_tag_list_add (*taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_IMAGE_ORIENTATION, rotation_tag, NULL);
+    }
+  } else {
+    GST_FIXME_OBJECT (qtdemux, "Unhandled transformation matrix values");
+  }
+}
+
 /* parse the traks.
  * With each track we associate a new QtDemuxStream that contains all the info
  * about the trak.
@@ -7380,18 +7467,26 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     guint32 w = 0, h = 0;
     gboolean gray;
     gint depth, palette_size, palette_count;
+    guint32 matrix[9];
     guint32 *palette_data = NULL;
 
     stream->sampled = TRUE;
 
     /* version 1 uses some 64-bit ints */
-    if (!gst_byte_reader_skip (&tkhd, 56 + value_size)
-        || !gst_byte_reader_get_uint32_be (&tkhd, &w)
+    if (!gst_byte_reader_skip (&tkhd, 20 + value_size))
+      goto corrupt_file;
+
+    if (!qtdemux_parse_transformation_matrix (qtdemux, &tkhd, matrix, "tkhd"))
+      goto corrupt_file;
+
+    if (!gst_byte_reader_get_uint32_be (&tkhd, &w)
         || !gst_byte_reader_get_uint32_be (&tkhd, &h))
       goto corrupt_file;
 
     stream->display_width = w >> 16;
     stream->display_height = h >> 16;
+
+    qtdemux_inspect_transformation_matrix (qtdemux, stream, matrix, &list);
 
     offset = 16;
     if (len < 86)
@@ -7496,7 +7591,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     if (codec) {
-      list = gst_tag_list_new_empty ();
+      if (list == NULL)
+        list = gst_tag_list_new_empty ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_VIDEO_CODEC, codec, NULL);
       g_free (codec);
@@ -8276,7 +8372,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GstStructure *s;
       gint bitrate = 0;
 
-      list = gst_tag_list_new_empty ();
+      if (list == NULL)
+        list = gst_tag_list_new_empty ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_AUDIO_CODEC, codec, NULL);
       g_free (codec);
