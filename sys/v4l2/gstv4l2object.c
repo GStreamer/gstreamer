@@ -3276,11 +3276,16 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     /* In this case we'll have to configure two buffer pool. For our buffer
      * pool, we'll need what the driver one, and one more, so we can dequeu */
     own_min = obj->min_buffers_for_capture + 1;
+    own_min = MAX (own_min, GST_V4L2_MIN_BUFFERS);
 
     /* for the downstream pool, we keep what downstream wants, though ensure
      * at least a minimum if downstream didn't suggest anything (we are
      * expecting the base class to create a default one for the context) */
     min = MAX (min, GST_V4L2_MIN_BUFFERS);
+
+    /* To import we need the other pool to hold at least own_min */
+    if (obj->pool == pool)
+      min += own_min;
   }
 
   /* Request a bigger max, if one was suggested but it's too small */
@@ -3294,12 +3299,11 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   /* If already configured/active, skip it */
   /* FIXME not entirely correct, See bug 728268 */
   if (gst_buffer_pool_is_active (obj->pool)) {
-    gst_buffer_pool_config_get_params (config, NULL, &size, &min, &max);
     gst_structure_free (config);
     goto setup_other_pool;
   }
 
-  if (obj->need_video_meta) {
+  if (obj->need_video_meta || has_video_meta) {
     GST_DEBUG_OBJECT (obj->element, "activate Video Meta");
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -3319,9 +3323,6 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
         GST_PTR_FORMAT, config);
 
     /* our pool will adjust the maximum buffer, which we are fine with */
-    if (obj->pool == pool)
-      gst_buffer_pool_config_get_params (config, NULL, &size, &min, &max);
-
     if (!gst_buffer_pool_set_config (obj->pool, config))
       goto config_failed;
   }
@@ -3333,10 +3334,10 @@ setup_other_pool:
     other_pool = pool;
 
   if (other_pool) {
-    if (gst_buffer_pool_is_active (obj->pool))
+    if (gst_buffer_pool_is_active (other_pool))
       goto done;
 
-    config = gst_buffer_pool_get_config (pool);
+    config = gst_buffer_pool_get_config (other_pool);
     gst_buffer_pool_config_set_allocator (config, allocator, &params);
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
@@ -3350,8 +3351,18 @@ setup_other_pool:
           GST_BUFFER_POOL_OPTION_VIDEO_META);
     }
 
-    /* TODO check return value, validate changes and confirm */
-    gst_buffer_pool_set_config (pool, config);
+    if (!gst_buffer_pool_set_config (other_pool, config)) {
+      config = gst_buffer_pool_get_config (other_pool);
+
+      if (!gst_buffer_pool_config_validate_params (config, caps, size, min,
+              max)) {
+        gst_structure_free (config);
+        goto config_failed;
+      }
+
+      if (!gst_buffer_pool_set_config (other_pool, config))
+        goto config_failed;
+    }
   }
 
 done:
