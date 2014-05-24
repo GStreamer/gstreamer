@@ -1191,10 +1191,10 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   guint i;
   gchar *lfilename = NULL, *tldir = NULL;
   gboolean found_actions = FALSE, is_config, ret = TRUE;
+  const gchar *scenarios_path = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
 
   gchar **env_scenariodir =
-      g_strsplit (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"), ":",
-      0);
+      scenarios_path ? g_strsplit (scenarios_path, ":", 0) : NULL;
 
   if (!scenario_name)
     goto invalid_name;
