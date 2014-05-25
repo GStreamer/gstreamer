@@ -87,7 +87,7 @@ static GstFlowReturn gst_amc_video_enc_finish (GstVideoEncoder * encoder);
 
 static GstFlowReturn gst_amc_video_enc_drain (GstAmcVideoEnc * self);
 
-#define BIT_RATE_DEFAULT (2 * 1024)
+#define BIT_RATE_DEFAULT (2 * 1024 * 1024)
 #define I_FRAME_INTERVAL_DEFAULT 0
 enum
 {
@@ -514,7 +514,7 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
   if (color_format == -1)
     goto video_format_failed_to_convert;
 
-  gst_amc_format_set_int (format, "bitrate", encoder->bitrate * 1024);
+  gst_amc_format_set_int (format, "bitrate", encoder->bitrate);
   gst_amc_format_set_int (format, "color-format", color_format);
   stride = GST_ROUND_UP_4 (info->width);        /* safe (?) */
   gst_amc_format_set_int (format, "stride", stride);
@@ -818,8 +818,8 @@ gst_amc_video_enc_class_init (GstAmcVideoEncClass * klass)
   videoenc_class->finish = GST_DEBUG_FUNCPTR (gst_amc_video_enc_finish);
 
   g_object_class_install_property (gobject_class, PROP_BIT_RATE,
-      g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in kbit/sec", 1,
-          100 * 1024, BIT_RATE_DEFAULT,
+      g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in bit/sec", 1,
+          G_MAXINT, BIT_RATE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_I_FRAME_INTERVAL,
