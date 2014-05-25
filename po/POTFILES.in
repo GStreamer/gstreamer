@@ -14,6 +14,7 @@ gst/parse/grammar.y
 libs/gst/base/gstbasesink.c
 libs/gst/base/gstbasesrc.c
 plugins/elements/gstcapsfilter.c
+plugins/elements/gstdownloadbuffer.c
 plugins/elements/gstfakesink.c
 plugins/elements/gstfdsink.c
 plugins/elements/gstfilesink.c
