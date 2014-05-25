@@ -563,7 +563,7 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
 {
   gsize maxsize;
 
-  maxsize = _gl_texture_type_n_bytes (tex_type) * stride * height;
+  maxsize = stride * height;
 
   gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
       allocator, parent, maxsize, 0, 0, maxsize);
