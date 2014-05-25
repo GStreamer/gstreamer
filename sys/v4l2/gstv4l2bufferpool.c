@@ -622,7 +622,8 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   GstStructure *config;
   GstCaps *caps;
   guint size, min_buffers, max_buffers;
-  guint num_buffers = 0, copy_threshold = 0;
+  guint max_latency, min_latency, copy_threshold = 0;
+  gboolean can_allocate = FALSE;
 
   GST_DEBUG_OBJECT (pool, "activating pool");
 
@@ -631,31 +632,28 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
           &max_buffers))
     goto wrong_config;
 
+  /* TODO Also consider min_buffers_for_output when implemented */
+  min_latency = MAX (GST_V4L2_MIN_BUFFERS, obj->min_buffers_for_capture);
+
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
-      /* this value also instructs the latency calculation to have min_buffers
-       * frame latency max */
-      num_buffers = min_buffers;
+      can_allocate = TRUE;
       break;
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_MMAP:
     {
       guint count;
 
-      if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP)) {
-        num_buffers = min_buffers;
-      } else {
-        num_buffers = max_buffers;
-      }
+      can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP);
 
       /* first, lets request buffers, and see how many we can get: */
-      GST_DEBUG_OBJECT (pool, "requesting %d MMAP buffers", num_buffers);
+      GST_DEBUG_OBJECT (pool, "requesting %d MMAP buffers", min_buffers);
 
-      count = gst_v4l2_allocator_start (pool->vallocator, num_buffers,
+      count = gst_v4l2_allocator_start (pool->vallocator, min_buffers,
           V4L2_MEMORY_MMAP);
 
       if (count < GST_V4L2_MIN_BUFFERS) {
-        num_buffers = count;
+        min_buffers = count;
         goto no_buffers;
       }
 
@@ -664,12 +662,11 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
        * falling back to copy if the pipeline needed more buffers. This also
        * prevent having to do REQBUFS(N)/REQBUFS(0) everytime configure is
        * called. */
-      if (count != num_buffers) {
+      if (count != min_buffers) {
         GST_WARNING_OBJECT (pool, "using %u buffers instead of %u",
-            count, num_buffers);
-        num_buffers = count;
-        copy_threshold =
-            MAX (GST_V4L2_MIN_BUFFERS, obj->min_buffers_for_capture);
+            count, min_buffers);
+        min_buffers = count;
+        copy_threshold = min_latency;
 
         /* The initial minimum could be provide either by GstBufferPool or
          * driver needs. */
@@ -682,60 +679,59 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
     {
       guint count;
 
-      if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, USERPTR)) {
-        num_buffers = min_buffers;
-      } else {
-        num_buffers = max_buffers;
-      }
+      can_allocate =
+          GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, USERPTR);
 
-      GST_DEBUG_OBJECT (pool, "requesting %d USERPTR buffers", num_buffers);
+      GST_DEBUG_OBJECT (pool, "requesting %d USERPTR buffers", min_buffers);
 
-      count = gst_v4l2_allocator_start (pool->vallocator, num_buffers,
+      count = gst_v4l2_allocator_start (pool->vallocator, min_buffers,
           V4L2_MEMORY_USERPTR);
 
       /* There is no rational to not get what we asked */
-      if (count < num_buffers) {
-        num_buffers = count;
+      if (count < min_buffers) {
+        min_buffers = count;
         goto no_buffers;
       }
 
-      min_buffers = num_buffers = count;
+      min_buffers = count;
       break;
     }
     case GST_V4L2_IO_DMABUF_IMPORT:
     {
       guint count;
 
-      if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, DMABUF)) {
-        num_buffers = min_buffers;
-      } else {
-        num_buffers = max_buffers;
-      }
+      can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, DMABUF);
 
-      GST_DEBUG_OBJECT (pool, "requesting %d DMABUF buffers", num_buffers);
+      GST_DEBUG_OBJECT (pool, "requesting %d DMABUF buffers", min_buffers);
 
-      count = gst_v4l2_allocator_start (pool->vallocator, num_buffers,
+      count = gst_v4l2_allocator_start (pool->vallocator, min_buffers,
           V4L2_MEMORY_DMABUF);
 
       /* There is no rational to not get what we asked */
-      if (count < num_buffers) {
-        num_buffers = count;
+      if (count < min_buffers) {
+        min_buffers = count;
         goto no_buffers;
       }
 
-      min_buffers = num_buffers = count;
+      min_buffers = count;
       break;
     }
     default:
-      num_buffers = 0;
+      min_buffers = 0;
       copy_threshold = 0;
       g_assert_not_reached ();
       break;
   }
 
+  if (can_allocate)
+    max_latency = max_buffers;
+  else
+    max_latency = min_buffers;
+
   pool->size = size;
   pool->copy_threshold = copy_threshold;
-  pool->num_buffers = num_buffers;
+  pool->max_latency = max_latency;
+  pool->min_latency = min_latency;
   pool->num_queued = 0;
 
   if (max_buffers < min_buffers)
@@ -780,7 +776,7 @@ no_buffers:
   {
     GST_ERROR_OBJECT (pool,
         "we received %d buffer from device '%s', we want at least %d",
-        num_buffers, obj->videodev, GST_V4L2_MIN_BUFFERS);
+        min_buffers, obj->videodev, GST_V4L2_MIN_BUFFERS);
     gst_structure_free (config);
     return FALSE;
   }

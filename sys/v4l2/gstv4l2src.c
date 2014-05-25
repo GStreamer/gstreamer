@@ -505,7 +505,7 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
 
       /* max latency is total duration of the frame buffer */
       if (obj->pool != NULL)
-        num_buffers = GST_V4L2_BUFFER_POOL_CAST (obj->pool)->num_buffers;
+        num_buffers = GST_V4L2_BUFFER_POOL_CAST (obj->pool)->max_latency;
 
       if (num_buffers == 0)
         max_latency = -1;

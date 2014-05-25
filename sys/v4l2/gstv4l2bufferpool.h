@@ -60,7 +60,8 @@ struct _GstV4l2BufferPool
 
   gboolean add_videometa;    /* set if video meta should be added */
 
-  guint num_buffers;         /* number of buffers we use */
+  guint min_latency;         /* number of buffers we will hold */
+  guint max_latency;         /* number of buffers we can hold */
   guint num_queued;          /* number of buffers queued in the driver */
   guint copy_threshold;      /* when our pool runs lower, start handing out copies */
 
