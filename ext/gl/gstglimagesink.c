@@ -507,7 +507,9 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
   GstGLImageSink *glimage_sink;
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
-  GST_DEBUG ("change state");
+  GST_DEBUG ("changing state: %s => %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   glimage_sink = GST_GLIMAGE_SINK (element);
 
