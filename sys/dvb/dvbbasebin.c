@@ -434,8 +434,12 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin)
       G_CALLBACK (tuning_fail_signal_cb), dvbbasebin);
 
   /* Expose tsparse source pad */
-  pad = gst_element_get_static_pad (dvbbasebin->tsparse, "src");
-  ghost = gst_ghost_pad_new ("src", pad);
+  if (dvbbasebin->tsparse != NULL) {
+    pad = gst_element_get_static_pad (dvbbasebin->tsparse, "src");
+    ghost = gst_ghost_pad_new ("src", pad);
+  } else {
+    ghost = gst_ghost_pad_new_no_target ("src", GST_PAD_SRC);
+  }
   gst_element_add_pad (GST_ELEMENT (dvbbasebin), ghost);
 
   dvbbasebin->programs = g_hash_table_new_full (g_direct_hash, g_direct_equal,
@@ -474,7 +478,8 @@ dvb_base_bin_dispose (GObject * object)
     /* remove mpegtsparse BEFORE dvbsrc, since the mpegtsparse::pad-removed
      * signal handler uses dvbsrc */
     dvb_base_bin_reset (dvbbasebin);
-    gst_bin_remove (GST_BIN (dvbbasebin), dvbbasebin->tsparse);
+    if (dvbbasebin->tsparse != NULL)
+      gst_bin_remove (GST_BIN (dvbbasebin), dvbbasebin->tsparse);
     gst_bin_remove (GST_BIN (dvbbasebin), dvbbasebin->dvbsrc);
     gst_bin_remove (GST_BIN (dvbbasebin), dvbbasebin->buffer_queue);
     dvbbasebin->disposed = TRUE;
@@ -609,16 +614,20 @@ static GstPad *
 dvb_base_bin_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
+  DvbBaseBin *dvbbasebin = GST_DVB_BASE_BIN (element);
   GstPad *pad;
   GstPad *ghost;
   gchar *pad_name;
 
-  GST_DEBUG ("New pad requested %s", name);
+  GST_DEBUG_OBJECT (dvbbasebin, "New pad requested %s", GST_STR_NULL (name));
+
+  if (dvbbasebin->tsparse == NULL)
+    return NULL;
 
   if (name == NULL)
     name = GST_PAD_TEMPLATE_NAME_TEMPLATE (templ);
 
-  pad = gst_element_get_request_pad (GST_DVB_BASE_BIN (element)->tsparse, name);
+  pad = gst_element_get_request_pad (dvbbasebin->tsparse, name);
   if (pad == NULL)
     return NULL;
 
@@ -708,6 +717,19 @@ dvb_base_bin_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
 
   dvbbasebin = GST_DVB_BASE_BIN (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (dvbbasebin->tsparse == NULL) {
+        GST_ELEMENT_ERROR (dvbbasebin, CORE, MISSING_PLUGIN, (NULL),
+            ("No 'tsparse' element, check your GStreamer installation."));
+        return GST_STATE_CHANGE_FAILURE;
+      }
+      break;
+    default:
+      break;
+  }
+
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
@@ -891,7 +913,7 @@ dvb_base_bin_handle_message (GstBin * bin, GstMessage * message)
   dvbbasebin = GST_DVB_BASE_BIN (bin);
 
   /* note: message->src might be a GstPad, so use element cast w/o typecheck */
-  if (GST_ELEMENT_CAST (message->src) == GST_ELEMENT (dvbbasebin->tsparse)) {
+  if (GST_ELEMENT_CAST (message->src) == dvbbasebin->tsparse) {
     GstMpegTsSection *section = gst_message_parse_mpegts_section (message);
 
     if (section) {
