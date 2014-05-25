@@ -514,7 +514,6 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
 {
   struct stat st;
   int libv4l2_fd;
-  GstPollFD pollfd = GST_POLL_FD_INIT;
 
   GST_DEBUG_OBJECT (v4l2object->element, "Trying to open device %s",
       v4l2object->videodev);
@@ -551,8 +550,6 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
   if (libv4l2_fd != -1)
     v4l2object->video_fd = libv4l2_fd;
 
-  v4l2object->can_poll_device = TRUE;
-
   /* get capabilities, error will be posted */
   if (!gst_v4l2_get_capabilities (v4l2object))
     goto error;
@@ -588,14 +585,6 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
   GST_INFO_OBJECT (v4l2object->element,
       "Opened device '%s' (%s) successfully",
       v4l2object->vcap.card, v4l2object->videodev);
-
-  pollfd.fd = v4l2object->video_fd;
-  gst_poll_add_fd (v4l2object->poll, &pollfd);
-  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
-      || v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)
-    gst_poll_fd_ctl_read (v4l2object->poll, &pollfd, TRUE);
-  else
-    gst_poll_fd_ctl_write (v4l2object->poll, &pollfd, TRUE);
 
   if (v4l2object->extra_controls)
     gst_v4l2_set_controls (v4l2object, v4l2object->extra_controls);
@@ -672,8 +661,6 @@ error:
 gboolean
 gst_v4l2_dup (GstV4l2Object * v4l2object, GstV4l2Object * other)
 {
-  GstPollFD pollfd = GST_POLL_FD_INIT;
-
   GST_DEBUG_OBJECT (v4l2object->element, "Trying to dup device %s",
       other->videodev);
 
@@ -696,16 +683,7 @@ gst_v4l2_dup (GstV4l2Object * v4l2object, GstV4l2Object * other)
       "Cloned device '%s' (%s) successfully",
       v4l2object->vcap.card, v4l2object->videodev);
 
-  pollfd.fd = v4l2object->video_fd;
-  gst_poll_add_fd (v4l2object->poll, &pollfd);
-  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
-      || v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)
-    gst_poll_fd_ctl_read (v4l2object->poll, &pollfd, TRUE);
-  else
-    gst_poll_fd_ctl_write (v4l2object->poll, &pollfd, TRUE);
-
   v4l2object->never_interlaced = other->never_interlaced;
-  v4l2object->can_poll_device = TRUE;
 
   return TRUE;
 
@@ -728,7 +706,6 @@ not_open:
 gboolean
 gst_v4l2_close (GstV4l2Object * v4l2object)
 {
-  GstPollFD pollfd = GST_POLL_FD_INIT;
   GST_DEBUG_OBJECT (v4l2object->element, "Trying to close %s",
       v4l2object->videodev);
 
@@ -737,8 +714,6 @@ gst_v4l2_close (GstV4l2Object * v4l2object)
 
   /* close device */
   v4l2_close (v4l2object->video_fd);
-  pollfd.fd = v4l2object->video_fd;
-  gst_poll_remove_fd (v4l2object->poll, &pollfd);
   v4l2object->video_fd = -1;
 
   /* empty lists */
