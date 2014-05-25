@@ -3264,10 +3264,6 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
      * driver and 1 more, so we don't endup up with everything downstream or
      * held by the decoder. */
     own_min = min + obj->min_buffers_for_capture + 1;
-
-    /* Update min/max so the base class does not reset our settings */
-    min = own_min;
-    max = 0;
   } else {
     /* In this case we'll have to configure two buffer pool. For our buffer
      * pool, we'll need what the driver one, and one more, so we can dequeu */
@@ -3360,6 +3356,12 @@ setup_other_pool:
         goto config_failed;
     }
   }
+
+  /* For simplicity, simply read back the active configuration, so our base
+   * class get the right information */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, NULL, &size, &min, &max);
+  gst_structure_free (config);
 
 done:
   if (update)
