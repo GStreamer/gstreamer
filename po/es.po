@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2011-02-12 18:30+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -320,6 +320,46 @@ msgstr "Falló al establecer la entrada %d en el dispositivo %s."
 #, fuzzy, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Falló al obtener la potencia de la señal para el dispositivo «%s»."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr ""
+"El controlador del dispositivo «%s» no soporta ningún método de captura "
+"conocido."
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr ""
+"El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
+"fotogramas."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+"El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
+"fotogramas."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+"El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
+"fotogramas."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Falló al decodificar la imagen JPEG"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2012-12-15 03:46+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -313,6 +313,41 @@ msgstr "Produciuse un fallo ao estabelecer a entrada %d no dispositivo %s."
 msgid "Failed to change mute state for device '%s'."
 msgstr ""
 "Produciuse un erro ao cambiar o estado de enmudecido para o dispositivo «%s»."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "O controlador do dispositivo «%s» non admite o método IO %d"
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr ""
+"O dispositivo de vídeo non acepta a nova configuración de taxa de marcos."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+"O dispositivo de vídeo non acepta a nova configuración de taxa de marcos."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+"O dispositivo de vídeo non acepta a nova configuración de taxa de marcos."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Produciuse un erro ao descodificar a imaxe JPEG"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

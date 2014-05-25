@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2010-03-25 12:37+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -317,6 +317,45 @@ msgstr "Huts egin du '%2$s' gailuko %1$d. sarrera ezartzean."
 #, fuzzy, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Huts egin du '%s' gailuaren seinalearen indarra eskuratzean."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr ""
+"'%s' gailuaren kontrolatzaileak ez du onartzen kaptura-metodo ezagunik."
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr ""
+"Bideoaren sarrerako gailuak ez du fotograma-tamainaren ezarpen berria "
+"onartzen."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+"Bideoaren sarrerako gailuak ez du fotograma-tamainaren ezarpen berria "
+"onartzen."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+"Bideoaren sarrerako gailuak ez du fotograma-tamainaren ezarpen berria "
+"onartzen."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Huts egin du JPEG irudia deskodetzean"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

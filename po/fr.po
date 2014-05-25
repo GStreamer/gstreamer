@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2011-04-28 09:22+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -318,6 +318,46 @@ msgstr "Impossible de définir l'entrée %d du périphérique %s."
 #, fuzzy, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Impossible d'obtenir la force du signal du périphérique « %s »."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr ""
+"Le pilote du périphérique « %s » ne prend en charge aucune méthode "
+"d'enregistrement connue."
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr ""
+"Le périphérique d'entrée vidéo n'a pas accepté le nouveau paramètre de "
+"fréquence d'image."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+"Le périphérique d'entrée vidéo n'a pas accepté le nouveau paramètre de "
+"fréquence d'image."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+"Le périphérique d'entrée vidéo n'a pas accepté le nouveau paramètre de "
+"fréquence d'image."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Échec de décodage de l'image JPEG"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

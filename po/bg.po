@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2011-04-26 22:35+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -302,6 +302,41 @@ msgstr "Неуспешно задаване на вход %d на устройс
 #, fuzzy, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Неуспешно получаване на силата на сигнала на устройство „%s“."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr ""
+"Устройството за видео вход не приема новите настройки за честотата на кадри."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+"Устройството за видео вход не приема новите настройки за честотата на кадри."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+"Устройството за видео вход не приема новите настройки за честотата на кадри."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Неуспешно декодиране на изображение, формат JPEG."
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

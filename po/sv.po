@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2011-01-09 19:36+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -305,6 +305,38 @@ msgstr "Kunde inte ställa in ingång %d på enheten %s."
 #, fuzzy, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Misslyckades med att få tag på signalstyrka för enheten \"%s\"."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "Drivrutinen för enheten \"%s\" saknar stöd för någon känd fångstmetod."
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "Videoingångsenheten accepterade inte ny inställning för bildfrekvens."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Videoingångsenheten accepterade inte ny inställning för bildfrekvens."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Videoingångsenheten accepterade inte ny inställning för bildfrekvens."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Misslyckades med att avkoda JPEG-bild"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

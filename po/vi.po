@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2013-09-16 14:36+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -308,6 +308,38 @@ msgstr "Gặp lỗi khi đặt dữ liệu nhập %d vào thiết bị “%s”.
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Gặp lỗi khi thay đổi trạng thái ngắt tiếng cho thiết bị “%s”."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR %d"
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khung hình mới."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khung hình mới."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khung hình mới."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Gặp lỗi khi giải mã ảnh JPEG"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

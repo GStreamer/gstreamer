@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -306,6 +306,38 @@ msgstr "Sisääntuloa %d ei voitu asettaa laitteelle %s."
 #, fuzzy, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Laitteelta ”%s” ei saatu signaalinvoimakkuutta."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "Laitteen ”%s” ajuri ei tue mitään tunnettua kaappaustapaa."
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "JPEG-kuvan purku epäonnistui"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2014-03-20 18:55+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -308,6 +308,38 @@ msgstr "A(z) %d. bemenet beállítása meghiúsult a(z) „%s” eszközön."
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "A némítási állapot módosítása meghiúsult a(z) „%s” eszközön."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "A(z) „%s” eszköz illesztőprogramja nem támogatja a(z) %d. IO módot"
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "A JPEG kép visszafejtése meghiúsult"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

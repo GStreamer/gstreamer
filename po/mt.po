@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -301,6 +301,42 @@ msgstr "Problema biex nissettja input %d fuq apparat %s."
 #, fuzzy, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Problema biex inġib signal strength fuq l-apparat '%s'."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr ""
+"Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr ""
+"Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+"Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+"Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Problem fid-decoding tal-istampa JPEG"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

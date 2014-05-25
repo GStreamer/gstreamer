@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2014-01-30 11:08+0100\n"
 "Last-Translator: Peter Tuharsky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -302,6 +302,38 @@ msgstr "Nepodarilo sa nastaviť vstup %d na zariadení %s."
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Nepodarilo sa zmeniť stav stlmenia pre zariadenie '%s'."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "Tento ovládač zariadenia '%s' nepodporuje IO metódu %d"
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "Video zariadenie odmietlo nové nastavenie frekvencie snímok."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Video zariadenie odmietlo nové nastavenie frekvencie snímok."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Video zariadenie odmietlo nové nastavenie frekvencie snímok."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Nepodarilo sa dekódovať obrázok JPEG"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2013-10-04 12:15+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -303,6 +303,38 @@ msgstr "Нисам успео да подесим улаз %d на уређај�
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Нисам успео да изменим стање утишаности за уређај „%s“."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "Управљачки програм уређаја „%s“ не подржава УИ начин %d"
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "Видео уређај не прихвата нове поставке протока кадрова."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Видео уређај не прихвата нове поставке протока кадрова."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Видео уређај не прихвата нове поставке протока кадрова."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Нисам успео да декодирам ЈПЕГ слику"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2014-04-09 22:52+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -307,6 +307,38 @@ msgstr "Napaka med določanjem vhoda %d naprave %s."
 msgid "Failed to change mute state for device '%s'."
 msgstr ""
 "Med nastavljanjem stanja glasnosti na napravi \"%s\" je prišlo do napake."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "Gonilnik naprave \"%s\" ne podpira nobenega načina I/O %d."
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Napaka med dekodiranjem JPEG slike"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -288,6 +288,37 @@ msgstr "Could not close audio device \"%s\"."
 #, fuzzy, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Could not get buffers from device \"%s\"."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr ""
+
+#, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr ""
+
+#, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+
+#, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+msgid "Failed to start decoding thread."
+msgstr ""
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

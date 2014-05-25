@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2012-04-16 03:04+0200\n"
 "Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -300,6 +300,38 @@ msgstr "Nisam uspio postaviti ulaz %d na uređaj %s."
 #, fuzzy, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Nisam uspio dobiti snagu signala za uređaj „%s”."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "Upravljački program uređaja „%s” ne podržava poznate metode snimanja."
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "Ulazni video uređaj nije prihvatio nove postavke broja okvira."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Ulazni video uređaj nije prihvatio nove postavke broja okvira."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Ulazni video uređaj nije prihvatio nove postavke broja okvira."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Nisam uspio dekodirati JPEG sliku"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""

@@ -3,21 +3,21 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012, 2013.
+# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012, 2013, 2014.
 # Pavel Maryanov <acid@jack.kiev.ua>, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.2.1\n"
+"Project-Id-Version: gst-plugins-good 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
-"PO-Revision-Date: 2013-12-08 12:55+0400\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
+"PO-Revision-Date: 2014-05-22 19:53+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.4\n"
+"X-Generator: Lokalize 1.5\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
@@ -251,9 +251,10 @@ msgstr "Устройство «%s» не может осуществлять з�
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Устройство «%s» не может осуществлять захват в указанном формате"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Устройство «%s» не поддерживает захват видео"
+msgstr ""
+"Устройство «%s» поддерживает прерывистые матрицы (non-contiguous planes)"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -262,30 +263,26 @@ msgstr "Не удалось получить параметры устройст
 msgid "Video device did not accept new frame rate setting."
 msgstr "Видео-устройство не приняло новое значение настройки кадровой частоты."
 
-#, fuzzy
 msgid "Video device did not provide output format."
-msgstr "Видео-устройство не приняло новое значение настройки кадровой частоты."
+msgstr "Видео-устройство не предоставило выходной формат."
 
 msgid "Video device returned invalid dimensions."
-msgstr ""
+msgstr "Видео-устройство вернуло некорректные размеры."
 
-#, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr "Драйвер устройства «%s» не поддерживает метод ввода-вывода %d"
+msgstr "Видео-устройства используют неподдерживаемый метод черезстрочности."
 
 msgid "Video devices uses an unsupported pixel format."
-msgstr ""
+msgstr "Видео-устройства используют неподдерживаемый формат пикселей."
 
-#, fuzzy
 msgid "Failed to configure internal buffer pool."
-msgstr "Видео-устройство не может создать буферный пул."
+msgstr "Ошибка при настройке внутреннего буферного пула."
 
-#, fuzzy
 msgid "Video device did not suggest any buffer size."
-msgstr "Видео-устройство не может создать буферный пул."
+msgstr "Видео-устройство не предложило какой-либо размер буфера."
 
 msgid "No downstream pool to import from."
-msgstr ""
+msgstr "Неоткуда импортировать пул нисходящего потока."
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -310,6 +307,38 @@ msgstr "Не удалось выбрать вход %d для устройств
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Не удалось изменить состояние приглушения для устройства «%s»."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "Видео-устройства используют неподдерживаемый формат пикселей."
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "Видео-устройства используют неподдерживаемый формат пикселей."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Видео-устройства используют неподдерживаемый формат пикселей."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Видео-устройства используют неподдерживаемый формат пикселей."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Не удалось декодировать JPEG-изображение"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""
@@ -355,13 +384,13 @@ msgstr "Устройство «%s» не является устройством
 msgid "Device '%s' is not a output device."
 msgstr "Устройство «%s» не является устройством вывода."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "Устройство «%s» не является устройством вывода."
+msgstr "Устройство «%s» не является устройством M2M."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr "Не удалось открыть устройство «%s» для чтения и записи."
+msgstr "Не удалось сделать дубликат устройства «%s» для чтения и записи."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

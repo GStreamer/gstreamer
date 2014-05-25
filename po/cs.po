@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:10+0200\n"
+"POT-Creation-Date: 2014-05-25 17:40+0100\n"
 "PO-Revision-Date: 2013-09-18 19:18+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -304,6 +304,38 @@ msgstr "Nezdařilo se nastavení vstupu %d u zařízení „%s“."
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Selhala změna stavu zapnutí/vypnutí zvuku u zařízení „%s“."
+
+msgid "Failed to allocated required memory."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "Ovladač zařízení „%s“ nepodporuje V/V metodu %d"
+
+#, fuzzy, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
+
+msgid "Failed to re-enabled decoder."
+msgstr ""
+
+msgid "Failed to allocate required memory."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to start decoding thread."
+msgstr "Selhalo dekódování obrázku JPEG"
+
+msgid "Failed to process frame."
+msgstr ""
 
 #, c-format
 msgid ""
