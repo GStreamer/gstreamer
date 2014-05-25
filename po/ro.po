@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -954,6 +954,20 @@ msgstr ""
 "Restricționează capacitățile permise (NULL înseamnă ORICE). Definirea "
 "acestei proprietăți preia o referință către obiectul GstCaps furnizat."
 
+msgid "No Temp directory specified."
+msgstr "Niciun director temporar specificat."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Nu am putut crea fișierul temporar „%s”."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Nu se poate deschide fișierul „%s” pentru citire."
+
+msgid "Error while writing to download file."
+msgstr "Eroare la scrierea în fișierul descărcat."
+
 msgid "No file name specified for writing."
 msgstr "Niciun nume de fișier specificat pentru scriere."
 
@@ -977,10 +991,6 @@ msgid "No file name specified for reading."
 msgstr "Niciun nume de fișier specificat pentru citire."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Nu se poate deschide fișierul „%s” pentru citire."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Nu se pot obține informații despre „%s”."
 
@@ -994,16 +1004,6 @@ msgstr "Fișierul „%s” este un socket."
 
 msgid "Failed after iterations as requested."
 msgstr "Eșec după numărul de iterații care a fost cerut."
-
-msgid "No Temp directory specified."
-msgstr "Niciun director temporar specificat."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Nu am putut crea fișierul temporar „%s”."
-
-msgid "Error while writing to download file."
-msgstr "Eroare la scrierea în fișierul descărcat."
 
 msgid "caps"
 msgstr "majuscule"

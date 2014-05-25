@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -953,6 +953,20 @@ msgstr ""
 "ρύθμιση αυτής της ιδιότητας απαιτεί μια αναφορά στο παρεχόμενο αντικείμενο "
 "GstCaps."
 
+msgid "No Temp directory specified."
+msgstr "Δεν ορίσθηκε προσωρινός κατάλογος (Temp)."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Αδυναμία δημιουργίας προσωρινού αρχείου (temp) «%s»."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Αδυναμία ανοίγματος αρχείου «%s» για ανάγνωση."
+
+msgid "Error while writing to download file."
+msgstr "Σφάλμα κατά την εγγραφή στο αρχείο μεταφόρτωσης."
+
 msgid "No file name specified for writing."
 msgstr "Δεν έχει καθορισθεί όνομα αρχείου για εγγραφή."
 
@@ -976,10 +990,6 @@ msgid "No file name specified for reading."
 msgstr "Δεν καθορίσθηκε όνομα αρχείου για ανάγνωση."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Αδυναμία ανοίγματος αρχείου «%s» για ανάγνωση."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Αδυναμία λήψης πληροφοριών για «%s»."
 
@@ -993,16 +1003,6 @@ msgstr "Το αρχείο «%s» είναι μια υποδοχή."
 
 msgid "Failed after iterations as requested."
 msgstr "Αποτυχία κατόπιν επαναλήψεων ως ζητήθηκε."
-
-msgid "No Temp directory specified."
-msgstr "Δεν ορίσθηκε προσωρινός κατάλογος (Temp)."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Αδυναμία δημιουργίας προσωρινού αρχείου (temp) «%s»."
-
-msgid "Error while writing to download file."
-msgstr "Σφάλμα κατά την εγγραφή στο αρχείο μεταφόρτωσης."
 
 msgid "caps"
 msgstr "δυνατότητες"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2014-03-20 19:07+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -928,6 +928,20 @@ msgstr ""
 "Az engedélyezhető képességek korlátozása (a NULL, ANY-t jelent). Ezen "
 "tulajdonság beállítása a biztosított GstCaps objektumra hivatkozik."
 
+msgid "No Temp directory specified."
+msgstr "Nincs megadva ideiglenes könyvtár."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Nem hozható létre a következő ideiglenes fájl: „%s”."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Nem nyitható meg a(z) „%s” fájl olvasásra."
+
+msgid "Error while writing to download file."
+msgstr "Hiba a letöltési fájl írása közben."
+
 msgid "No file name specified for writing."
 msgstr "Nincs fájlnév megadva az íráshoz."
 
@@ -951,10 +965,6 @@ msgid "No file name specified for reading."
 msgstr "Nincs megadva fájlnév az olvasáshoz."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Nem nyitható meg a(z) „%s” fájl olvasásra."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Nem kérhetők le információk a következőkről: „%s”."
 
@@ -968,16 +978,6 @@ msgstr "A(z) „%s” fájl egy foglalat."
 
 msgid "Failed after iterations as requested."
 msgstr "Ismétlések után kérésére meghiúsult."
-
-msgid "No Temp directory specified."
-msgstr "Nincs megadva ideiglenes könyvtár."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Nem hozható létre a következő ideiglenes fájl: „%s”."
-
-msgid "Error while writing to download file."
-msgstr "Hiba a letöltési fájl írása közben."
 
 msgid "caps"
 msgstr "képességek"

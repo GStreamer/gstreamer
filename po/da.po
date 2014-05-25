@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2013-12-08 12:41+0100\n"
 "Last-Translator: Mogens Jaeger <mogensjaeger@gmail.com>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -929,6 +929,20 @@ msgstr ""
 "Begræns den mulige tilladte kapabilitet (NUL betyder ALT). Sættes denne "
 "egenskab gives en reference til det leverede GstCaps objekt."
 
+msgid "No Temp directory specified."
+msgstr "Der er ikke angivet en mappe til midlertidige filer."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Kunne ikke oprette den midlertidige fil \"%s\"."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Kunne ikke åbne filen \"%s\" for læsning."
+
+msgid "Error while writing to download file."
+msgstr "Fejl under skrivning til downloadfilen."
+
 msgid "No file name specified for writing."
 msgstr "Intet filnavn specificeret for skrivning."
 
@@ -952,10 +966,6 @@ msgid "No file name specified for reading."
 msgstr "Intet filnavn specificeret for læsning."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kunne ikke åbne filen \"%s\" for læsning."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Kunne ikke hente info til \"%s\"."
 
@@ -969,16 +979,6 @@ msgstr "Filen \"%s\" er en sokkel."
 
 msgid "Failed after iterations as requested."
 msgstr "Fejlede efter iterationer som forespurgt."
-
-msgid "No Temp directory specified."
-msgstr "Der er ikke angivet en mappe til midlertidige filer."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Kunne ikke oprette den midlertidige fil \"%s\"."
-
-msgid "Error while writing to download file."
-msgstr "Fejl under skrivning til downloadfilen."
 
 msgid "caps"
 msgstr "kapabiliteter"

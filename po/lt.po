@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -936,6 +936,20 @@ msgstr ""
 "Riboti galimas leidžiamas galimybes (NULL – BET KOKIAS). Nustatant šią "
 "savybę nurodoma į pateiktą GstCaps objektą."
 
+msgid "No Temp directory specified."
+msgstr "Nenurodytas laikinas katalogas."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Nepavyko sukurti laikino failo „%s“."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Nepavyko atverti failo „%s“ skaitymui."
+
+msgid "Error while writing to download file."
+msgstr "Klaida rašant į atsiuntimo failą."
+
 msgid "No file name specified for writing."
 msgstr "Nenurodytas failo pavadinimas rašymui."
 
@@ -959,10 +973,6 @@ msgid "No file name specified for reading."
 msgstr "Nenurodytas failo pavadinimas skaitymui."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Nepavyko atverti failo „%s“ skaitymui."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Nepavyko gauti duomenų apie „%s“."
 
@@ -976,16 +986,6 @@ msgstr "Failas „%s“ yra lizdas."
 
 msgid "Failed after iterations as requested."
 msgstr "Nesėkmė po iteracijų kaip ir reikalauta."
-
-msgid "No Temp directory specified."
-msgstr "Nenurodytas laikinas katalogas."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Nepavyko sukurti laikino failo „%s“."
-
-msgid "Error while writing to download file."
-msgstr "Klaida rašant į atsiuntimo failą."
 
 msgid "caps"
 msgstr "galimybės"

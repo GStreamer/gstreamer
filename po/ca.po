@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -941,6 +941,20 @@ msgstr ""
 "Restringeix les capacitats que es poden permetre (NUL vol dir QUALSEVOL). "
 "Establir aquesta propietat pren una referència a l'objecte GstCaps proveït."
 
+msgid "No Temp directory specified."
+msgstr "No s'ha especificat un directori temporal."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "No s'ha pogut crear el fitxer temporal «%s»."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
+
+msgid "Error while writing to download file."
+msgstr "S'ha produït un error en escriure al fitxer de baixada."
+
 msgid "No file name specified for writing."
 msgstr "No s'ha especificat cap nom de fitxer per a l'escriptura."
 
@@ -964,10 +978,6 @@ msgid "No file name specified for reading."
 msgstr "No s'ha especificat cap fitxer per a llegir."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "No s'ha pogut obtenir informació sobre «%s»."
 
@@ -981,16 +991,6 @@ msgstr "El fitxer «%s» és un sòcol."
 
 msgid "Failed after iterations as requested."
 msgstr "Ha fallat després de les iteracions com s'ha demanat."
-
-msgid "No Temp directory specified."
-msgstr "No s'ha especificat un directori temporal."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "No s'ha pogut crear el fitxer temporal «%s»."
-
-msgid "Error while writing to download file."
-msgstr "S'ha produït un error en escriure al fitxer de baixada."
 
 msgid "caps"
 msgstr "capacitats"

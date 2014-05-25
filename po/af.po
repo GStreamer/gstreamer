@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -939,6 +939,21 @@ msgid ""
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 
+msgid "No Temp directory specified."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "kon nie inligting oor \"%s\" kry nie."
+
+#, fuzzy, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie. %s."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Fout tydens skryf na lêer \"%s\"."
+
 msgid "No file name specified for writing."
 msgstr "Geen lêernaam om heen te skryf nie."
 
@@ -962,10 +977,6 @@ msgid "No file name specified for reading."
 msgstr "Geen lêernaam om uit te lees nie."
 
 #, fuzzy, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie. %s."
-
-#, fuzzy, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "kon nie inligting oor \"%s\" kry nie."
 
@@ -979,17 +990,6 @@ msgstr "Lêer \"%s\" is 'n sok."
 
 msgid "Failed after iterations as requested."
 msgstr "Mislukking na die vasgestelde aantal probeerslae."
-
-msgid "No Temp directory specified."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "kon nie inligting oor \"%s\" kry nie."
-
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Fout tydens skryf na lêer \"%s\"."
 
 msgid "caps"
 msgstr "caps"

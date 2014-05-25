@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -947,6 +947,21 @@ msgid ""
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 
+msgid "No Temp directory specified."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "E pamundur marrja/vendosja e rregullimeve nga/në burim."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "E pamundur hapja e file \"%s\" për lexim."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Gabim gjatë shkrimit tek file \"%s\"."
+
 msgid "No file name specified for writing."
 msgstr "Nuk është përcaktuar asnjë emër file për tu shkruar."
 
@@ -969,10 +984,6 @@ msgstr "Gabim gjatë shkrimit tek file \"%s\"."
 msgid "No file name specified for reading."
 msgstr "Nuk është përcaktuar asnjë emër file për tu lexuar."
 
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "E pamundur hapja e file \"%s\" për lexim."
-
 #, fuzzy, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "E pamundur marrja/vendosja e rregullimeve nga/në burim."
@@ -987,17 +998,6 @@ msgstr "File \"%s\" është një socket."
 
 msgid "Failed after iterations as requested."
 msgstr "Dështoi mbas përsëritjeve sikurse të kërkuara."
-
-msgid "No Temp directory specified."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "E pamundur marrja/vendosja e rregullimeve nga/në burim."
-
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Gabim gjatë shkrimit tek file \"%s\"."
 
 msgid "caps"
 msgstr "mbrojtëse"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2010-10-24 21:36+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -899,6 +899,21 @@ msgid ""
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 
+msgid "No Temp directory specified."
+msgstr ""
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Kunne ikke lage midlertidig fil «%s»."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Kunne ikke åpne fil «%s» for lesing."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Feil ved skriving til fil «%s»."
+
 msgid "No file name specified for writing."
 msgstr "Ingen filnavn oppgitt for skriving."
 
@@ -922,10 +937,6 @@ msgid "No file name specified for reading."
 msgstr "Ingen filnavn oppgitt for lesing."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kunne ikke åpne fil «%s» for lesing."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Kunne ikke hente informasjon om «%s»."
 
@@ -939,17 +950,6 @@ msgstr "Fil «%s» er en plugg."
 
 msgid "Failed after iterations as requested."
 msgstr ""
-
-msgid "No Temp directory specified."
-msgstr ""
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Kunne ikke lage midlertidig fil «%s»."
-
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Feil ved skriving til fil «%s»."
 
 msgid "caps"
 msgstr ""

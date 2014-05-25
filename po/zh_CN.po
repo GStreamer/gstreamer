@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -914,6 +914,21 @@ msgstr ""
 "限制所允许的功能 (NULL 表示无限制)。此属性可以为所提供的 GstCaps 对象设置一个"
 "关联应用。"
 
+msgid "No Temp directory specified."
+msgstr "未指定临时目录。"
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "无法创建临时文件“%s”。"
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "无法打开文件“%s”读取。"
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "写入文件“%s”时出错。"
+
 msgid "No file name specified for writing."
 msgstr "未指定写入的文件名。"
 
@@ -937,10 +952,6 @@ msgid "No file name specified for reading."
 msgstr "未指定读取的文件名。"
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "无法打开文件“%s”读取。"
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "无法在“%s”上获得信息。"
 
@@ -954,17 +965,6 @@ msgstr "文件“%s”是套接字。"
 
 msgid "Failed after iterations as requested."
 msgstr "在完成所要求的迭代操作后出错。"
-
-msgid "No Temp directory specified."
-msgstr "未指定临时目录。"
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "无法创建临时文件“%s”。"
-
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "写入文件“%s”时出错。"
 
 msgid "caps"
 msgstr "分析器"

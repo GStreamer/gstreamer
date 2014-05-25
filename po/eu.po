@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -942,6 +942,21 @@ msgstr ""
 "Mugatu onar daitezkeen ahalmenak (NULLek EDOZER adierazten du). Propietate "
 "hori ezartzen bada, emandako GstCaps objektuaren erreferentzia hartzen du."
 
+msgid "No Temp directory specified."
+msgstr "Ez da aldi baterako direktoriorik zehaztu."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Ezin izan da \"%s\" aldi baterako fitxategia sortu."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Ezin izan da \"%s\" fitxategia ireki irakurtzeko."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Errorea gertatu da \"%s\" fitxategian idaztean."
+
 msgid "No file name specified for writing."
 msgstr "Ez da fitxategi-izenik zehaztu idazteko."
 
@@ -965,10 +980,6 @@ msgid "No file name specified for reading."
 msgstr "Ez da fitxategi-izenik zehaztu irakurtzeko."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Ezin izan da \"%s\" fitxategia ireki irakurtzeko."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Ezin izan da \"%s\"(e)ko informazioa eskuratu."
 
@@ -982,17 +993,6 @@ msgstr "\"%s\" fitxategia socket-a da."
 
 msgid "Failed after iterations as requested."
 msgstr "Huts egin du eskatutako iterazioak egin ondoren."
-
-msgid "No Temp directory specified."
-msgstr "Ez da aldi baterako direktoriorik zehaztu."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Ezin izan da \"%s\" aldi baterako fitxategia sortu."
-
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Errorea gertatu da \"%s\" fitxategian idaztean."
 
 msgid "caps"
 msgstr "ahalmenak"

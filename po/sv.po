@@ -1,16 +1,17 @@
 # Swedish messages for gstreamer.
-# Copyright (C) 2004-2011 Free Software Foundation, Inc.
+# Copyright © 2004-2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010, 2011.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.31.2\n"
+"Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
-"PO-Revision-Date: 2011-01-09 19:46+0100\n"
-"Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
+"PO-Revision-Date: 2014-05-04 12:11+0100\n"
+"Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
@@ -27,11 +28,10 @@ msgstr "Gör alla varningar ödesdigra"
 msgid "Print available debug categories and exit"
 msgstr "Skriv ut tillgängliga felsökningskategorier och avsluta"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för "
+"Standardfelsökningsnivå från 1 (endast fel) till 9 (allting) eller 0 för "
 "ingen utmatning"
 
 msgid "LEVEL"
@@ -54,6 +54,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Ändrar färgläggning av felsökningsutskrifter. Möjliga alternativ: off, on, "
+"disable, auto, unix"
 
 msgid "Disable debugging"
 msgstr "Inaktivera felsökning"
@@ -115,17 +117,14 @@ msgstr ""
 "GStreamer-fel: tillståndsändring misslyckades och några element misslyckades "
 "med att skicka ett korrekt felmeddelande med anledningen till felet."
 
-# Richard Hult säger: "Pad" i gstreamer betyder ungefär "kontakt", man
-# kopplar ihop två element via deras "pads".
 msgid "Internal GStreamer error: pad problem."
 msgstr "Internt GStreamer-fel: kontaktproblem."
 
 msgid "Internal GStreamer error: thread problem."
 msgstr "Internt GStreamer-fel: trådproblem."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Internt GStreamer-fel: förhandlingsproblem."
+msgstr "GStreamer-fel: förhandlingsproblem."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Internt GStreamer-fel: händelseproblem."
@@ -133,7 +132,6 @@ msgstr "Internt GStreamer-fel: händelseproblem."
 msgid "Internal GStreamer error: seek problem."
 msgstr "Internt GStreamer-fel: spolningsproblem."
 
-# Osäker. Jag tror "caps" är kort för "capabilities".
 msgid "Internal GStreamer error: caps problem."
 msgstr "Internt GStreamer-fel: förmågeproblem."
 
@@ -143,9 +141,8 @@ msgstr "Internt GStreamer-fel: taggproblem."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Din GStreamer-installation saknar en insticksmodul."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Internt GStreamer-fel: klockproblem."
+msgstr "GStreamer-fel: klockproblem."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -422,12 +419,11 @@ msgstr "Uri till copyrightnotis"
 msgid "URI to the copyright notice of the data"
 msgstr "Uri till copyrightnotis för datat"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "kodare"
+msgstr "kodat av"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "namn på den person eller organisation som kodat"
 
 msgid "contact"
 msgstr "kontakt"
@@ -575,16 +571,14 @@ msgstr "referensnivå för förstärkningsvärden för spår och album"
 msgid "language code"
 msgstr "språkkod"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "språkkod för detta ström, enligt ISO-639-1"
+msgstr "språkkod för denna ström, enligt ISO-639-1 eller ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "språkkod"
+msgstr "språknamn"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "namn på det språk som denna ström använder"
 
 msgid "image"
 msgstr "bild"
@@ -676,7 +670,6 @@ msgstr "stad (engelskt namn) där mediet har spelats in eller producerats"
 msgid "geo location sublocation"
 msgstr "specifik plats för geografisk plats"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
@@ -813,16 +806,16 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Hur bilden ska roteras eller vändas före visning"
 
 msgid "publisher"
-msgstr ""
+msgstr "utgivare"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Namn på förlag eller utgivare"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "tolkad av"
 
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr ""
+msgstr "Information om människorna bakom en remix eller liknande tolkning"
 
 msgid "midi-base-note"
 msgstr ""
@@ -835,11 +828,11 @@ msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Ingen uri-hanterare hittades för %s-protokollet"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "Uri-schema \"%s\" saknar stöd"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -885,7 +878,6 @@ msgstr ""
 msgid "unexpected pad-reference \"%s\" - ignoring"
 msgstr ""
 
-# Osäker. Jag tror "caps" är kort för "capabilities".
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kunde inte tolka förmågorna \"%s\""
@@ -904,7 +896,6 @@ msgstr ""
 msgid "bin"
 msgstr ""
 
-# Osäker.
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "angav tom korg \"%s\", inte tillåtet"
@@ -932,7 +923,7 @@ msgid "Internal clock error."
 msgstr "Internt klockfel."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Misslyckades med att mappa buffert."
 
 msgid "Filter caps"
 msgstr "Filtrera förmågor"
@@ -943,6 +934,20 @@ msgid ""
 msgstr ""
 "Begränsa de möjliga tillåtna förmågorna (NULL betyder ANY). Inställning av "
 "egenskapen tar en referens till det angivna GstCaps-objektet."
+
+msgid "No Temp directory specified."
+msgstr "Ingen temporärkatalog angiven."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Kunde inte skapa temporärfilen \"%s\"."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Kunde inte öppna filen \"%s\" för läsning."
+
+msgid "Error while writing to download file."
+msgstr "Fel vid skrivning till hämtningsfilen."
 
 msgid "No file name specified for writing."
 msgstr "Inget filnamn angivet för skrivning."
@@ -967,10 +972,6 @@ msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kunde inte öppna filen \"%s\" för läsning."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Kunde inte få information om \"%s\"."
 
@@ -985,17 +986,6 @@ msgstr "Filen \"%s\" är ett uttag."
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
-msgid "No Temp directory specified."
-msgstr "Ingen temporärkatalog angiven."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Kunde inte skapa temporärfilen \"%s\"."
-
-msgid "Error while writing to download file."
-msgstr "Fel vid skrivning till hämtningsfilen."
-
-# Osäker. Jag tror "caps" är kort för "capabilities".
 msgid "caps"
 msgstr "förmågor"
 
@@ -1088,12 +1078,14 @@ msgid "List the plugin contents"
 msgstr "Lista insticksmodulens innehåll"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Kontrollera om det angivna elementet eller insticksmodulen existerar"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"När existensen av ett element eller insticksmodul kontrolleras, kontrollera "
+"även att dess version åtminstone är den angivna"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
@@ -1109,7 +1101,7 @@ msgid "No such element or plugin '%s'\n"
 msgstr "Inget sådant element eller insticksmodul \"%s\"\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Indexstatistik"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1146,17 +1138,16 @@ msgstr "HITTADE TAGG   : hittat av objektet \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr "HITTADE TAGG\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
+msgstr "HITTADE INNEHÅLL : hittat av elementet \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "HITTADE TAGG   : hittat av objektet \"%s\".\n"
+msgstr "HITTADE INNEHÅLL : hittat av objektet \"%s\".\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "HITTADE TAGG\n"
+msgstr "HITTADE INNEHÅLL\n"
 
 #, c-format
 msgid ""
@@ -1173,9 +1164,8 @@ msgstr "VARNING: från elementet %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Förinläst, väntar på att buffringen ska bli färdig...\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Förinläst, väntar på att buffringen ska bli färdig...\n"
+msgstr "Förinläst, väntar på att förloppet ska avslutas...\n"
 
 msgid "buffering..."
 msgstr "buffrar..."
@@ -1198,21 +1188,21 @@ msgstr "Avbrott: Stoppar rörledningen ...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Förlopp: (%s) %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "inget \"%s\"-element"
+msgstr "Element saknas: \"%s\"\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "VARNING: från elementet %s: %s\n"
+msgstr "Fick kontext från elementet '%s': %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Utmatningstaggar (även känt som metadata)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Skriv ut INNEHÅLL (kapitel och utgåvor)"
 
 msgid "Output status information and property notifications"
 msgstr "Skriv ut statusinformation och egenskapsnotifieringar"
@@ -1236,7 +1226,7 @@ msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Tvinga EOS på källor innan rörledningen stängs av"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Samla och skriv ut indexstatistik"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1278,11 +1268,10 @@ msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS vid avständning aktiverad -- Tvingar EOS på rörledningen\n"
+msgstr "EOS vid avstängning aktiverad -- Tvingar EOS på rörledningen\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS vid avständning aktiverad -- Tvingar EOS på rörledningen\n"
+msgstr "EOS vid avstängning aktiverad -- Väntar på EOS efter fel\n"
 
 # EOS = End Of Stream
 msgid "Waiting for EOS...\n"
@@ -1291,9 +1280,8 @@ msgstr "Väntar på EOS...\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "EOS togs emot - stoppar rörledning...\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Avbrott: Stoppar rörledningen ...\n"
+msgstr "Avbrott medan EOS väntades på: Stoppar rörledningen...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Ett fel inträffade vid väntan på EOS\n"
@@ -1323,8 +1311,8 @@ msgstr "Frigör rörledning ...\n"
 #~ msgid "could not link sink element for URI \"%s\""
 #~ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"
+#~ msgid "maximum"
+#~ msgstr "maximum"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
@@ -1353,6 +1341,9 @@ msgstr "Frigör rörledning ...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Installera inte signalhanterare för SIGUSR1 och SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Fel vid återsökning av registret %s: %s"

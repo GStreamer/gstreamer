@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2014-01-13 17:53+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -932,6 +932,20 @@ msgstr ""
 "Умањује могуће допуштене могућности (НИШТА значи БИЛО КОЈА). Постављање овог "
 "својства поставља као орјентир придодати објекат Гст могућности."
 
+msgid "No Temp directory specified."
+msgstr "Није наведен привремени директоријум."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Не могу да створим привремену датотеку „%s“."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Не могу да отворим датотеку „%s“ ради читања."
+
+msgid "Error while writing to download file."
+msgstr "Грешка при упису у датотеку преузимања."
+
 msgid "No file name specified for writing."
 msgstr "Није наведен назив датотеке за упис."
 
@@ -955,10 +969,6 @@ msgid "No file name specified for reading."
 msgstr "Није наведен назив датотеке за читање."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Не могу да отворим датотеку „%s“ ради читања."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Не могу да добавим податке на „%s“."
 
@@ -972,16 +982,6 @@ msgstr "Датотека „%s“ је прикључница."
 
 msgid "Failed after iterations as requested."
 msgstr "Неуспех након траженог броја покушаја."
-
-msgid "No Temp directory specified."
-msgstr "Није наведен привремени директоријум."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Не могу да створим привремену датотеку „%s“."
-
-msgid "Error while writing to download file."
-msgstr "Грешка при упису у датотеку преузимања."
 
 # bug: this should be full word
 msgid "caps"

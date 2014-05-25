@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2013-12-11 08:08+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -938,6 +938,20 @@ msgstr ""
 "Đặt thuộc tính này thì chấp nhận tham chiếu đến đối tượng GstCaps đã cung "
 "cấp."
 
+msgid "No Temp directory specified."
+msgstr "Chưa xác định thư mục tạm thời."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Không thể tạo tập tin tạm thời “%s”."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Không thể mở tập tin “%s” để đọc."
+
+msgid "Error while writing to download file."
+msgstr "Gặp lỗi khi ghi vào tập tin tải về."
+
 msgid "No file name specified for writing."
 msgstr "Chưa ghi rõ tên tập tin để ghi vào."
 
@@ -961,10 +975,6 @@ msgid "No file name specified for reading."
 msgstr "Chưa ghi rõ tên tập tin để đọc."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Không thể mở tập tin “%s” để đọc."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Không thể lấy thông tin về “%s”."
 
@@ -978,16 +988,6 @@ msgstr "Tập tin “%s” là ổ cắm."
 
 msgid "Failed after iterations as requested."
 msgstr "Lỗi sau số lần lặp lại được chọn."
-
-msgid "No Temp directory specified."
-msgstr "Chưa xác định thư mục tạm thời."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Không thể tạo tập tin tạm thời “%s”."
-
-msgid "Error while writing to download file."
-msgstr "Gặp lỗi khi ghi vào tập tin tải về."
 
 msgid "caps"
 msgstr "khả năng"

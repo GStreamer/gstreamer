@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -1093,6 +1093,21 @@ msgid ""
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 
+msgid "No Temp directory specified."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "OYA Kubona Gushyiraho Amagenamiterere Bivuye ku"
+
+#, fuzzy, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "OYA Gufungura IDOSIYE kugirango"
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Kuri IDOSIYE"
+
 #, fuzzy
 msgid "No file name specified for writing."
 msgstr "IDOSIYE Izina: kugirango"
@@ -1118,10 +1133,6 @@ msgid "No file name specified for reading."
 msgstr "IDOSIYE Izina: kugirango"
 
 #, fuzzy, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "OYA Gufungura IDOSIYE kugirango"
-
-#, fuzzy, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "OYA Kubona Gushyiraho Amagenamiterere Bivuye ku"
 
@@ -1136,17 +1147,6 @@ msgstr "Idosiye ni a"
 #, fuzzy
 msgid "Failed after iterations as requested."
 msgstr "Nyuma Amasubiramo Nka"
-
-msgid "No Temp directory specified."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "OYA Kubona Gushyiraho Amagenamiterere Bivuye ku"
-
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Kuri IDOSIYE"
 
 # #-#-#-#-#  officecfg.pot (PACKAGE VERSION)  #-#-#-#-#
 # officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....Revision.TextDisplay.Insert.Attribute..5.text

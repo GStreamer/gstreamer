@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2014-04-09 22:38+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -929,6 +929,20 @@ msgstr ""
 "Omeji možne dovoljene zmožnosti (NULL pomeni ANY, vse). S tem naslavljate "
 "priloženi predmet GstCaps."
 
+msgid "No Temp directory specified."
+msgstr "Začasna mapa ni določena."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Začasne datoteke \"%s\" ni mogoče ustvariti."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Datoteke \"%s\" ni mogoče odpreti za branje."
+
+msgid "Error while writing to download file."
+msgstr "Napaka med zapisovanjem v prejeto datoteko."
+
 msgid "No file name specified for writing."
 msgstr "Ime datoteke za pisanje ni določeno."
 
@@ -952,10 +966,6 @@ msgid "No file name specified for reading."
 msgstr "Ime datoteke za branje ni določeno."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Datoteke \"%s\" ni mogoče odpreti za branje."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Podatkov o \"%s\" ni mogče pridobiti."
 
@@ -969,16 +979,6 @@ msgstr "Datoteka \"%s\" je vtič."
 
 msgid "Failed after iterations as requested."
 msgstr "Po več ponovitvah je bilo (po zahtevi) opravilo neuspešno prekinjeno."
-
-msgid "No Temp directory specified."
-msgstr "Začasna mapa ni določena."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Začasne datoteke \"%s\" ni mogoče ustvariti."
-
-msgid "Error while writing to download file."
-msgstr "Napaka med zapisovanjem v prejeto datoteko."
 
 msgid "caps"
 msgstr "velike črke"

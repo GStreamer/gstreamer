@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2012-12-15 03:29+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -932,6 +932,20 @@ msgstr ""
 "estabelecer esta propiedade obtense unha referencia do obxecto GstCaps "
 "fornecido."
 
+msgid "No Temp directory specified."
+msgstr "Non se especificou un directorio temporal."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Non foi posíbel crear o ficheiro temporal «%s»."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Non foi posíbel abrir o ficheiro «%s» para ler."
+
+msgid "Error while writing to download file."
+msgstr "Produciuse un erro de escritura ao descargar o ficheiro."
+
 msgid "No file name specified for writing."
 msgstr "Non se especificou un nome de ficheiro para escritura."
 
@@ -955,10 +969,6 @@ msgid "No file name specified for reading."
 msgstr "Non se especificou un nome de ficheiro para a lectura."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Non foi posíbel abrir o ficheiro «%s» para ler."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Non foi posíbel obter a información de «%s»."
 
@@ -972,16 +982,6 @@ msgstr "O ficheiro «%s» é un socket."
 
 msgid "Failed after iterations as requested."
 msgstr "Produciuse un fallo despois das iteracións que se solicitaron."
-
-msgid "No Temp directory specified."
-msgstr "Non se especificou un directorio temporal."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Non foi posíbel crear o ficheiro temporal «%s»."
-
-msgid "Error while writing to download file."
-msgstr "Produciuse un erro de escritura ao descargar o ficheiro."
 
 msgid "caps"
 msgstr "capacidades"

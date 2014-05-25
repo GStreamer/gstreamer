@@ -1,13 +1,13 @@
 # Polish translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2013.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.2.1\n"
+"Project-Id-Version: gstreamer 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
-"PO-Revision-Date: 2013-12-08 08:57+0100\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
+"PO-Revision-Date: 2014-05-22 18:22+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -204,9 +204,8 @@ msgstr "Nie udało się pobrać/ustawić ustawień zasobu."
 msgid "No space left on the resource."
 msgstr "Brak wolnego miejsca w zasobie."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Brak wolnego miejsca w zasobie."
+msgstr "Brak autoryzacji dostępu do zasobu."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer napotkał ogólny błąd strumieni."
@@ -816,10 +815,10 @@ msgstr ""
 "Informacja o osobach odpowiedzialnych za remix lub podobne interpretacje"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "dźwięk-podstawowy-midi"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Numer dźwięku MIDI ścieżki dźwiękowej."
 
 msgid ", "
 msgstr ", "
@@ -846,11 +845,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "dowiązanie nie ma źródła [cel=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "dowiązanie nie ma celu [źródło=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -870,11 +869,11 @@ msgstr "brak elementu \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "nieoczekiwane odniesienie \"%s\" - zignorowano"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "nieoczekiwane odniesienie dopełniające \"%s\" - zignorowano"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -889,18 +888,18 @@ msgid "no source element for URI \"%s\""
 msgstr "brak elementu źródłowego dla URI \"%s\""
 
 msgid "syntax error"
-msgstr ""
+msgstr "błąd składni"
 
 msgid "bin"
-msgstr ""
+msgstr "kontener"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "podano pusty kontener \"%s\", nie jest to dozwolone"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "brak kontenera \"%s\", pominięto"
+msgstr "brak kontenera \"%s\", rozpakowywanie elementów"
 
 msgid "empty pipeline not allowed"
 msgstr "pusty potok nie jest dozwolony"
@@ -933,6 +932,20 @@ msgstr ""
 "Ograniczenie możliwych dozwolonych możliwości (NULL oznacza WSZYSTKIE). "
 "Ustawienie tej właściwości odwołuje się do przekazanego obiektu GstCaps."
 
+msgid "No Temp directory specified."
+msgstr "Nie podano katalogu tymczasowego."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Nie udało się utworzyć pliku tymczasowego \"%s\"."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
+
+msgid "Error while writing to download file."
+msgstr "Błąd podczas zapisu do ściąganego pluku."
+
 msgid "No file name specified for writing."
 msgstr "Nie podano nazwy pliku do zapisu."
 
@@ -956,10 +969,6 @@ msgid "No file name specified for reading."
 msgstr "Nie podano nazwy pliku do odczytu."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Nie udało się uzyskać informacji o \"%s\"."
 
@@ -973,16 +982,6 @@ msgstr "Plik \"%s\" jest gniazdem."
 
 msgid "Failed after iterations as requested."
 msgstr "Niepowodzenie po iteracjach jak żądano."
-
-msgid "No Temp directory specified."
-msgstr "Nie podano katalogu tymczasowego."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Nie udało się utworzyć pliku tymczasowego \"%s\"."
-
-msgid "Error while writing to download file."
-msgstr "Błąd podczas zapisu do ściąganego pluku."
 
 msgid "caps"
 msgstr "możliwości"
@@ -1294,15 +1293,3 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
-
-#~ msgid "link without source element"
-#~ msgstr "dowiązanie bez elementu źródłowego"
-
-#~ msgid "link without sink element"
-#~ msgstr "dowiązanie bez elementu osadzającego"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "brak elementu do dowiązania URI \"%s\""
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "nie udało się dowiązać elementu osadzającego dla URI \"%s\""

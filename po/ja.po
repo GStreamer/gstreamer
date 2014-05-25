@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2013-08-20 14:56+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -894,6 +894,20 @@ msgid ""
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 
+msgid "No Temp directory specified."
+msgstr ""
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "一時ファイル \"%s\" を作成できません"
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "読み込み用にファイル \"%s\" を開くことができません"
+
+msgid "Error while writing to download file."
+msgstr "ファイルの書き込み中にエラーが発生しました"
+
 msgid "No file name specified for writing."
 msgstr "書き込み用のファイル名が指定されていません"
 
@@ -917,10 +931,6 @@ msgid "No file name specified for reading."
 msgstr "読み込み用のファイル名が指定されていません"
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "読み込み用にファイル \"%s\" を開くことができません"
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "\"%s\" 上の情報を取得できません"
 
@@ -934,16 +944,6 @@ msgstr "ファイル \"%s\" はソケットです"
 
 msgid "Failed after iterations as requested."
 msgstr ""
-
-msgid "No Temp directory specified."
-msgstr ""
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "一時ファイル \"%s\" を作成できません"
-
-msgid "Error while writing to download file."
-msgstr "ファイルの書き込み中にエラーが発生しました"
 
 msgid "caps"
 msgstr ""

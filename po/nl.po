@@ -1,4 +1,4 @@
-# translation of gstreamer-1.2.1.po to Dutch
+# translation of gstreamer-1.3.2.po to Dutch
 # Dutch translation of gstreamer
 # Copyright (C) 2003-2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
@@ -8,10 +8,10 @@
 # Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.2.1\n"
+"Project-Id-Version: gstreamer 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
-"PO-Revision-Date: 2014-01-09 12:55+0100\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
+"PO-Revision-Date: 2014-05-22 00:46+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -210,9 +210,8 @@ msgstr "Kan geen instellingen lezen/schrijven van/naar bron."
 msgid "No space left on the resource."
 msgstr "Er is geen ruimte meer in de bron."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Er is geen ruimte meer in de bron."
+msgstr "Niet geautoriseerd voor toegang tot hulpbron."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer kwam een algemene stroomfout tegen."
@@ -823,10 +822,10 @@ msgstr ""
 "Informatie over de mensen achter een remix en soortgelijke interpretaties"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "midi-base-note"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Midi notitienummer van de geluidstrack"
 
 msgid ", "
 msgstr ", "
@@ -853,11 +852,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "link heeft geen bron [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "link heeft geen sink [bron=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -877,11 +876,11 @@ msgstr "geen element \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "onverwachte referentie \"%s\" - wordt genegeerd"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "onverwachte pad-referentie \"%s\" - wordt genegeerd"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -896,18 +895,18 @@ msgid "no source element for URI \"%s\""
 msgstr "geen bronelement voor URI \"%s\""
 
 msgid "syntax error"
-msgstr ""
+msgstr "syntaxisfout"
 
 msgid "bin"
-msgstr ""
+msgstr "bin"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "lege ton \"%s\" opgegeven, niet toegelaten"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "geen ton \"%s\", overgeslagen"
+msgstr "geen bin \"%s\", elementen uitpakken"
 
 msgid "empty pipeline not allowed"
 msgstr "lege pijplijn niet toegelaten"
@@ -941,6 +940,20 @@ msgstr ""
 "instellen  van deze eigenschap vereist een referentie naar het gegeven "
 "GstCaps-object."
 
+msgid "No Temp directory specified."
+msgstr "Geen tijdelijke map opgegeven."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Kon geen tijdelijk bestand \"%s\" aanmaken."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Kan bestand \"%s\" niet openen om te lezen."
+
+msgid "Error while writing to download file."
+msgstr "Fout bij het schrijven om bestand te downloaden."
+
 msgid "No file name specified for writing."
 msgstr "Geen bestandsnaam gegeven om te schrijven."
 
@@ -964,10 +977,6 @@ msgid "No file name specified for reading."
 msgstr "Geen bestandsnaam gegeven om te lezen."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kan bestand \"%s\" niet openen om te lezen."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Kan geen info over \"%s\" krijgen."
 
@@ -981,16 +990,6 @@ msgstr "Bestand \"%s\" is een socket."
 
 msgid "Failed after iterations as requested."
 msgstr "Mislukt na iteraties zoals gevraagd."
-
-msgid "No Temp directory specified."
-msgstr "Geen tijdelijke map opgegeven."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Kon geen tijdelijk bestand \"%s\" aanmaken."
-
-msgid "Error while writing to download file."
-msgstr "Fout bij het schrijven om bestand te downloaden."
 
 msgid "caps"
 msgstr "mogelijkheden"

@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gstreamer package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.2.1\n"
+"Project-Id-Version: gstreamer 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
-"PO-Revision-Date: 2013-12-07 22:49+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
+"PO-Revision-Date: 2014-05-22 07:45+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -203,9 +203,8 @@ msgstr ""
 msgid "No space left on the resource."
 msgstr "На ресурсі не залишилось місця."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "На ресурсі не залишилось місця."
+msgstr "Не уповноважено на доступ до ресурсу."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer перехопив загальну помилку потоку."
@@ -812,10 +811,10 @@ msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Дані щодо тих, ким було виконано ремікс або подібну інтерпретацію"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "базова-нота-midi"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Номер ноти MIDI звукової доріжки."
 
 msgid ", "
 msgstr ", "
@@ -842,11 +841,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "у посилання немає джерела [приймач=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "у посилання немає приймача [джерело=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -866,11 +865,11 @@ msgstr "немає елемента «%s»"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "неочікуване посилання «%s» — ігноруємо"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "неочікуване посилання-підкладка «%s» — ігноруємо"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -885,18 +884,18 @@ msgid "no source element for URI \"%s\""
 msgstr "відсутній елемент-джерело для URI «%s»"
 
 msgid "syntax error"
-msgstr ""
+msgstr "синтаксична помилка"
 
 msgid "bin"
-msgstr ""
+msgstr "фрагмент"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "вказано порожній контейнер «%s», не допускається"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "немає контейнера «%s», пропущено"
+msgstr "немає фрагмента «%s», розпаковуємо елементи"
 
 msgid "empty pipeline not allowed"
 msgstr "не можна використовувати порожній канал"
@@ -929,6 +928,20 @@ msgstr ""
 "Обмежити допустимі можливості (NULL означає ANY). Встановлення цієї "
 "властивості призводить до посилання на поставлений об'єкт GstCaps."
 
+msgid "No Temp directory specified."
+msgstr "Не вказано каталог тимчасових даних."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Не вдалося створити тимчасовий файл даних «%s»."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Не вдалося відкрити файл «%s» для читання."
+
+msgid "Error while writing to download file."
+msgstr "Помилка під час запису до файла отриманих даних."
+
 msgid "No file name specified for writing."
 msgstr "Не вказано назви файла для запису."
 
@@ -952,10 +965,6 @@ msgid "No file name specified for reading."
 msgstr "Не вказано назву файла для читання."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Не вдалося відкрити файл «%s» для читання."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Не вдалося отримати інформацію щодо «%s»."
 
@@ -969,16 +978,6 @@ msgstr "Файл «%s» є сокетом."
 
 msgid "Failed after iterations as requested."
 msgstr "Помилка після ітерацій у запитаному порядку."
-
-msgid "No Temp directory specified."
-msgstr "Не вказано каталог тимчасових даних."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Не вдалося створити тимчасовий файл даних «%s»."
-
-msgid "Error while writing to download file."
-msgstr "Помилка під час запису до файла отриманих даних."
 
 msgid "caps"
 msgstr "можливості"

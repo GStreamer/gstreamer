@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2011-06-04 21:11+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -878,6 +878,20 @@ msgid ""
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 
+msgid "No Temp directory specified."
+msgstr ""
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr ""
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr ""
+
+msgid "Error while writing to download file."
+msgstr ""
+
 msgid "No file name specified for writing."
 msgstr ""
 
@@ -901,10 +915,6 @@ msgid "No file name specified for reading."
 msgstr ""
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr ""
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr ""
 
@@ -917,16 +927,6 @@ msgid "File \"%s\" is a socket."
 msgstr ""
 
 msgid "Failed after iterations as requested."
-msgstr ""
-
-msgid "No Temp directory specified."
-msgstr ""
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr ""
-
-msgid "Error while writing to download file."
 msgstr ""
 
 msgid "caps"

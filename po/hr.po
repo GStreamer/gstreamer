@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
 "PO-Revision-Date: 2012-05-25 16:47+0200\n"
 "Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -925,6 +925,20 @@ msgstr ""
 "Ograniči dozvoljene mogućnosti (NULL znači ANY). Postavljanje ovog svojstva "
 "prosljeđuje referencu navedenom GstCaps objektu."
 
+msgid "No Temp directory specified."
+msgstr "Nije naveden privremeni direktorij."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Ne mogu napraviti privremenu datoteku „%s”."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Ne mogu otvoriti datoteku „%s” za čitanje."
+
+msgid "Error while writing to download file."
+msgstr "Greška pri pisanju u preuzetu datoteku."
+
 msgid "No file name specified for writing."
 msgstr "Nije navedena datoteka za pisanje."
 
@@ -948,10 +962,6 @@ msgid "No file name specified for reading."
 msgstr "Nije navedena datoteka za čitanje."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Ne mogu otvoriti datoteku „%s” za čitanje."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Ne mogu dobiti podatke o „%s”."
 
@@ -965,16 +975,6 @@ msgstr "Datoteka „%s” je utičnica."
 
 msgid "Failed after iterations as requested."
 msgstr "Neuspjeh nakon iteracija kao što je traženo."
-
-msgid "No Temp directory specified."
-msgstr "Nije naveden privremeni direktorij."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Ne mogu napraviti privremenu datoteku „%s”."
-
-msgid "Error while writing to download file."
-msgstr "Greška pri pisanju u preuzetu datoteku."
 
 msgid "caps"
 msgstr "mogućnosti"

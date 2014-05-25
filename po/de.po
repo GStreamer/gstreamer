@@ -1,4 +1,4 @@
-# German translation for gstreamer 1.2.1
+# German translation for gstreamer 1.3.2
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.2.1\n"
+"Project-Id-Version: gstreamer 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:18+0200\n"
-"PO-Revision-Date: 2013-12-16 00:01+0100\n"
+"POT-Creation-Date: 2014-05-25 16:08+0100\n"
+"PO-Revision-Date: 2014-05-22 20:48+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -213,9 +213,8 @@ msgstr ""
 msgid "No space left on the resource."
 msgstr "Kein Platz in der Ressource übrig."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Kein Platz in der Ressource übrig."
+msgstr "Keine Berechtigung zum Zugriff auf die Ressource."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer hat einen allgemeinen Datenstromfehler festgestellt."
@@ -839,10 +838,10 @@ msgstr ""
 "Interpretationen"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "midi-base-note"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Midi-Notenzahl der Tonspur."
 
 msgid ", "
 msgstr ", "
@@ -869,11 +868,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "Verknüpfung hat keine Quelle [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "Verknüpfung hat kein Ziel [sink=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -894,11 +893,11 @@ msgstr "Kein Element »%s«"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "unerwartete Referenz »%s« - wird ignoriert"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "unerwartete pad-Referenz »%s« - wird ignoriert"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -913,18 +912,18 @@ msgid "no source element for URI \"%s\""
 msgstr "Kein Quellelement für URI »%s«"
 
 msgid "syntax error"
-msgstr ""
+msgstr "Syntaxfehler"
 
 msgid "bin"
-msgstr ""
+msgstr "Behälter"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "Leeren Behälter »%s« angegeben -- nicht erlaubt"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "Kein Behälter »%s« -- überspringen"
+msgstr "Kein Behälter »%s« - Elemente werden entpackt"
 
 msgid "empty pipeline not allowed"
 msgstr "Leere Leitung ist nicht erlaubt"
@@ -957,6 +956,20 @@ msgstr ""
 "Beschränkt die möglichen Filterfähigkeiten (NULL bedeutet ALLE). Setzen "
 "dieser Eigenschaft referenziert ein hinzugefügtes GstCaps-Objekt."
 
+msgid "No Temp directory specified."
+msgstr "Kein temporärer Ordner angegeben."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Die temporäre Datei »%s« konnte nicht angelegt werden."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Die Datei »%s« konnte nicht zum Lesen geöffnet werden."
+
+msgid "Error while writing to download file."
+msgstr "Fehler beim Schreiben in die Download-Datei."
+
 msgid "No file name specified for writing."
 msgstr "Kein Dateiname zum Schreiben angegeben."
 
@@ -980,10 +993,6 @@ msgid "No file name specified for reading."
 msgstr "Kein Dateiname zum Lesen angegeben."
 
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Die Datei »%s« konnte nicht zum Lesen geöffnet werden."
-
-#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Informationen zu »%s« konnten nicht gelesen werden."
 
@@ -997,16 +1006,6 @@ msgstr "Die Datei »%s« ist ein Socket."
 
 msgid "Failed after iterations as requested."
 msgstr "Nach dem Durchlaufen fehlgeschlagen. Wie gewünscht."
-
-msgid "No Temp directory specified."
-msgstr "Kein temporärer Ordner angegeben."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Die temporäre Datei »%s« konnte nicht angelegt werden."
-
-msgid "Error while writing to download file."
-msgstr "Fehler beim Schreiben in die Download-Datei."
 
 msgid "caps"
 msgstr "Fähigkeiten"
