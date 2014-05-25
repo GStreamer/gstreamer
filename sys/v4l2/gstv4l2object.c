@@ -431,6 +431,7 @@ gst_v4l2_object_new (GstElement * element,
   v4l2object->update_fps_func = update_fps_func;
 
   v4l2object->video_fd = -1;
+  v4l2object->poll = gst_poll_new (TRUE);
   v4l2object->active = FALSE;
   v4l2object->videodev = g_strdup (default_device);
 
@@ -459,6 +460,9 @@ gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
 
   if (v4l2object->videodev)
     g_free (v4l2object->videodev);
+
+  if (v4l2object->poll)
+    gst_poll_free (v4l2object->poll);
 
   if (v4l2object->channel)
     g_free (v4l2object->channel);
@@ -3039,27 +3043,19 @@ gst_v4l2_object_caps_equal (GstV4l2Object * v4l2object, GstCaps * caps)
 gboolean
 gst_v4l2_object_unlock (GstV4l2Object * v4l2object)
 {
-  gboolean ret = TRUE;
+  GST_LOG_OBJECT (v4l2object->element, "flush poll");
+  gst_poll_set_flushing (v4l2object->poll, TRUE);
 
-  GST_LOG_OBJECT (v4l2object->element, "start flushing");
-
-  if (v4l2object->pool && gst_buffer_pool_is_active (v4l2object->pool))
-    gst_buffer_pool_set_flushing (v4l2object->pool, TRUE);
-
-  return ret;
+  return TRUE;
 }
 
 gboolean
 gst_v4l2_object_unlock_stop (GstV4l2Object * v4l2object)
 {
-  gboolean ret = TRUE;
+  GST_LOG_OBJECT (v4l2object->element, "flush stop poll");
+  gst_poll_set_flushing (v4l2object->poll, FALSE);
 
-  GST_LOG_OBJECT (v4l2object->element, "stop flushing");
-
-  if (v4l2object->pool && gst_buffer_pool_is_active (v4l2object->pool))
-    gst_buffer_pool_set_flushing (v4l2object->pool, FALSE);
-
-  return ret;
+  return TRUE;
 }
 
 gboolean

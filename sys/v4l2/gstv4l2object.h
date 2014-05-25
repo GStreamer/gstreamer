@@ -88,6 +88,8 @@ struct _GstV4l2Object {
   /* the video-device's file descriptor */
   gint video_fd;
   GstV4l2IOMode mode;
+  GstPoll * poll;
+  gboolean can_poll_device;
 
   gboolean active;
   gboolean streaming;

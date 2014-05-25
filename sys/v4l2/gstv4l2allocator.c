@@ -1221,12 +1221,6 @@ gst_v4l2_allocator_qbuf (GstV4l2Allocator * allocator,
   gboolean ret = TRUE;
   gint i;
 
-  g_return_val_if_fail (g_atomic_int_get (&allocator->active), FALSE);
-
-  /* Buffer already queued */
-  if (IS_QUEUED (group->buffer))
-    return TRUE;
-
   /* update sizes */
   if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
     for (i = 0; i < group->n_mem; i++)

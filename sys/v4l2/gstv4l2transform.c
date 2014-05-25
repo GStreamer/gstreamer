@@ -533,6 +533,19 @@ gst_v4l2_transform_sink_event (GstBaseTransform * trans, GstEvent * event)
       gst_v4l2_object_unlock (self->v4l2output);
       gst_v4l2_object_unlock (self->v4l2capture);
       break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_DEBUG_OBJECT (self, "flush stop");
+
+      if (self->v4l2output->pool) {
+        gst_v4l2_buffer_pool_stop_streaming (GST_V4L2_BUFFER_POOL
+            (self->v4l2output->pool));
+        gst_v4l2_buffer_pool_start_streaming (GST_V4L2_BUFFER_POOL
+            (self->v4l2capture->pool));
+        gst_v4l2_object_unlock_stop (self->v4l2output);
+      }
+      if (self->v4l2capture->pool)
+        gst_v4l2_buffer_pool_stop_streaming (GST_V4L2_BUFFER_POOL
+            (self->v4l2capture->pool));
     default:
       break;
   }
@@ -542,9 +555,12 @@ gst_v4l2_transform_sink_event (GstBaseTransform * trans, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       /* Buffer should be back now */
-      GST_DEBUG_OBJECT (self, "flush stop");
-      gst_v4l2_object_unlock_stop (self->v4l2capture);
-      gst_v4l2_object_unlock_stop (self->v4l2output);
+      if (self->v4l2capture->pool) {
+        gst_v4l2_buffer_pool_start_streaming (GST_V4L2_BUFFER_POOL
+            (self->v4l2capture->pool));
+        gst_v4l2_object_unlock_stop (self->v4l2capture);
+      }
+      GST_DEBUG_OBJECT (self, "flush stop done");
       break;
     default:
       break;
