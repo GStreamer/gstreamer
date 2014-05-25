@@ -1633,8 +1633,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
             }
           }
 
-          if (g_atomic_int_get (&pool->num_queued) ==
-              gst_v4l2_allocator_num_allocated (pool->vallocator)) {
+          if (g_atomic_int_get (&pool->num_queued) >= pool->min_latency) {
             GstBuffer *out;
             /* all buffers are queued, try to dequeue one and release it back
              * into the pool so that _acquire can get to it again. */
