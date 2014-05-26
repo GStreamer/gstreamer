@@ -45,7 +45,6 @@ struct _GstWlWindow
   struct wl_viewport *viewport;
   struct wl_shell_surface *shell_surface;
   gint x, y, width, height;
-  gboolean own_surface;
 };
 
 struct _GstWlWindowClass
@@ -59,8 +58,6 @@ GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
         gint width, gint height);
 GstWlWindow *gst_wl_window_new_in_surface (GstWlDisplay * display,
         struct wl_surface * parent);
-GstWlWindow *gst_wl_window_new_from_surface (GstWlDisplay * display,
-        struct wl_surface * surface);
 
 GstWlDisplay *gst_wl_window_get_display (GstWlWindow * window);
 struct wl_surface *gst_wl_window_get_wl_surface (GstWlWindow * window);

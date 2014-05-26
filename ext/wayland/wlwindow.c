@@ -74,23 +74,45 @@ gst_wl_window_finalize (GObject * gobject)
 {
   GstWlWindow *self = GST_WL_WINDOW (gobject);
 
-  wl_viewport_destroy (self->viewport);
-
   if (self->shell_surface) {
     wl_shell_surface_destroy (self->shell_surface);
-  }
-
-  if (self->own_surface) {
-    wl_surface_destroy (self->surface);
   }
 
   if (self->subsurface) {
     wl_subsurface_destroy (self->subsurface);
   }
 
+  wl_viewport_destroy (self->viewport);
+  wl_surface_destroy (self->surface);
+
   g_clear_object (&self->display);
 
   G_OBJECT_CLASS (gst_wl_window_parent_class)->finalize (gobject);
+}
+
+static GstWlWindow *
+gst_wl_window_new_internal (GstWlDisplay * display, struct wl_surface *surface)
+{
+  GstWlWindow *window;
+  struct wl_region *region;
+
+  g_return_val_if_fail (surface != NULL, NULL);
+
+  window = g_object_new (GST_TYPE_WL_WINDOW, NULL);
+  window->display = g_object_ref (display);
+  window->surface = surface;
+
+  /* make sure the surface runs on our local queue */
+  wl_proxy_set_queue ((struct wl_proxy *) surface, display->queue);
+
+  window->viewport = wl_scaler_get_viewport (display->scaler, window->surface);
+
+  /* do not accept input */
+  region = wl_compositor_create_region (display->compositor);
+  wl_surface_set_input_region (surface, region);
+  wl_region_destroy (region);
+
+  return window;
 }
 
 GstWlWindow *
@@ -98,9 +120,8 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, gint width, gint height)
 {
   GstWlWindow *window;
 
-  window = gst_wl_window_new_from_surface (display,
+  window = gst_wl_window_new_internal (display,
       wl_compositor_create_surface (display->compositor));
-  window->own_surface = TRUE;
 
   gst_wl_window_set_size (window, 0, 0, width, height);
 
@@ -127,45 +148,12 @@ gst_wl_window_new_in_surface (GstWlDisplay * display,
 {
   GstWlWindow *window;
 
-  window = gst_wl_window_new_from_surface (display,
+  window = gst_wl_window_new_internal (display,
       wl_compositor_create_surface (display->compositor));
-  window->own_surface = TRUE;
 
   window->subsurface = wl_subcompositor_get_subsurface (display->subcompositor,
       window->surface, parent);
   wl_subsurface_set_desync (window->subsurface);
-
-  return window;
-}
-
-GstWlWindow *
-gst_wl_window_new_from_surface (GstWlDisplay * display,
-    struct wl_surface * surface)
-{
-  GstWlWindow *window;
-  struct wl_region *region;
-
-  g_return_val_if_fail (surface != NULL, NULL);
-
-  window = g_object_new (GST_TYPE_WL_WINDOW, NULL);
-  window->display = g_object_ref (display);
-  window->x = 0;
-  window->y = 0;
-  window->width = 0;
-  window->height = 0;
-
-  window->surface = surface;
-  window->own_surface = FALSE;
-
-  /* make sure the surface runs on our local queue */
-  wl_proxy_set_queue ((struct wl_proxy *) surface, display->queue);
-
-  window->viewport = wl_scaler_get_viewport (display->scaler, window->surface);
-
-  /* do not accept input */
-  region = wl_compositor_create_region (display->compositor);
-  wl_surface_set_input_region (surface, region);
-  wl_region_destroy (region);
 
   return window;
 }
