@@ -416,6 +416,69 @@ GST_START_TEST (audiodecoder_delayed_negotiation_with_gap_event)
 GST_END_TEST;
 
 
+GST_START_TEST (audiodecoder_buffer_after_segment)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint64 i;
+  GstClockTime pos;
+
+  setup_audiodecodertester ();
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.stop = GST_SECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push buffers, the data is actually a number so we can track them */
+  i = 0;
+  pos = 0;
+  while (pos < GST_SECOND) {
+    GstMapInfo map;
+    guint64 num;
+
+    buffer = create_test_buffer (i);
+    pos = GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+    /* check that buffer was received by our source pad */
+    buffer = buffers->data;
+
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+    num = *(guint64 *) map.data;
+    fail_unless_equals_uint64 (i, num);
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer),
+        gst_util_uint64_scale_round (i, GST_SECOND, TEST_MSECS_PER_SAMPLE));
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buffer),
+        gst_util_uint64_scale_round (1, GST_SECOND, TEST_MSECS_PER_SAMPLE));
+
+    gst_buffer_unmap (buffer, &map);
+
+    gst_buffer_unref (buffer);
+    buffers = g_list_delete_link (buffers, buffers);
+    i++;
+  }
+
+  /* this buffer is after the segment */
+  buffer = create_test_buffer (i++);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_EOS);
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless (buffers == NULL);
+
+  cleanup_audiodecodertest ();
+}
+
+GST_END_TEST;
 static Suite *
 gst_audiodecoder_suite (void)
 {
@@ -427,6 +490,7 @@ gst_audiodecoder_suite (void)
   tcase_add_test (tc, audiodecoder_negotiation_with_buffer);
   tcase_add_test (tc, audiodecoder_negotiation_with_gap_event);
   tcase_add_test (tc, audiodecoder_delayed_negotiation_with_gap_event);
+  tcase_add_test (tc, audiodecoder_buffer_after_segment);
 
   return s;
 }
