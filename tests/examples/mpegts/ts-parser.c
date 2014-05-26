@@ -247,6 +247,16 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
       case GST_MTS_DESC_DVB_CABLE_DELIVERY_SYSTEM:
         dump_cable_delivery_descriptor (desc, spacing + 2);
         break;
+      case GST_MTS_DESC_DVB_BOUQUET_NAME:
+      {
+        gchar *bouquet_name;
+        if (gst_mpegts_descriptor_parse_dvb_bouquet_name (desc, &bouquet_name)) {
+          g_printf ("%*s   Bouquet Name Descriptor, bouquet_name:%s\n", spacing,
+              "", bouquet_name);
+          g_free (bouquet_name);
+        }
+        break;
+      }
       case GST_MTS_DESC_DTG_LOGICAL_CHANNEL:
         dump_logical_channel_descriptor (desc, spacing + 2);
         break;
