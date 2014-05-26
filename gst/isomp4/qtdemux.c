@@ -294,9 +294,6 @@ struct _QtDemuxStream
   GstSegment segment;
   guint32 segment_seqnum;       /* segment event seqnum obtained from seek */
 
-  /* last GstFlowReturn */
-  GstFlowReturn last_ret;
-
   /* quicktime segments */
   guint32 n_segments;
   QtDemuxSegment *segments;
@@ -1400,7 +1397,6 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
     stream->sample_index = -1;
     stream->offset_in_sample = 0;
     stream->segment_index = -1;
-    stream->last_ret = GST_FLOW_OK;
     stream->sent_eos = FALSE;
     stream->segment_seqnum = seqnum;
 
@@ -1430,7 +1426,6 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   gboolean flush;
   gboolean update;
   GstSegment seeksegment;
-  int i;
   guint32 seqnum = 0;
   GstEvent *flush_event;
 
@@ -1505,11 +1500,6 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
     if (seqnum)
       gst_message_set_seqnum (msg, seqnum);
     gst_element_post_message (GST_ELEMENT_CAST (qtdemux), msg);
-  }
-
-  /* restart streaming, NEWSEGMENT will be sent from the streaming thread. */
-  for (i = 0; i < qtdemux->n_streams; i++) {
-    qtdemux->streams[i]->last_ret = GST_FLOW_OK;
   }
 
   gst_pad_start_task (qtdemux->sinkpad, (GstTaskFunction) gst_qtdemux_loop,
@@ -1719,7 +1709,6 @@ _create_stream (void)
   stream->time_position = 0;
   stream->sample_index = -1;
   stream->offset_in_sample = 0;
-  stream->last_ret = GST_FLOW_OK;
   stream->new_stream = TRUE;
   return stream;
 }
@@ -1886,7 +1875,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       gst_qtdemux_stream_clear (qtdemux, qtdemux->streams[n]);
   } else {
     for (n = 0; n < qtdemux->n_streams; n++) {
-      qtdemux->streams[n]->last_ret = GST_FLOW_OK;
       qtdemux->streams[n]->sent_eos = FALSE;
       qtdemux->streams[n]->segment_seqnum = 0;
       qtdemux->streams[n]->time_position = 0;
@@ -2158,7 +2146,6 @@ gst_qtdemux_stream_clear (GstQTDemux * qtdemux, QtDemuxStream * stream)
   /* free stbl sub-atoms */
   gst_qtdemux_stbl_free (stream);
 
-  stream->last_ret = GST_FLOW_OK;
   stream->sent_eos = FALSE;
   stream->segment_index = -1;
   stream->time_position = 0;
@@ -3517,8 +3504,6 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
       stream->segment_seqnum = 0;
     }
     gst_pad_push_event (stream->pad, event);
-    /* assume we can send more data now */
-    stream->last_ret = GST_FLOW_OK;
     /* clear to send tags on this pad now */
     gst_qtdemux_push_tags (qtdemux, stream);
   }
@@ -3823,13 +3808,10 @@ gst_qtdemux_sync_streams (GstQTDemux * demux)
  *  GST_FLOW_EOS: when all pads EOS or NOT_LINKED.
  */
 static GstFlowReturn
-gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
-    GstFlowReturn ret)
+gst_qtdemux_combine_flows (GstQTDemux * demux, GstFlowReturn ret)
 {
   GST_LOG_OBJECT (demux, "flow return: %s", gst_flow_get_name (ret));
 
-  /* store the value */
-  stream->last_ret = ret;
   ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
 
   GST_LOG_OBJECT (demux, "combined flow return: %s", gst_flow_get_name (ret));
@@ -4266,7 +4248,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     goto next;
 
   /* last pushed sample was out of boundary, goto next sample */
-  if (G_UNLIKELY (stream->last_ret == GST_FLOW_EOS))
+  if (G_UNLIKELY (GST_PAD_LAST_FLOW_RETURN (stream->pad) == GST_FLOW_EOS))
     goto next;
 
   if (stream->max_buffer_size == 0 || sample_size <= stream->max_buffer_size) {
@@ -4325,7 +4307,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   }
 
   /* combine flows */
-  ret = gst_qtdemux_combine_flows (qtdemux, stream, ret);
+  ret = gst_qtdemux_combine_flows (qtdemux, ret);
   /* ignore unlinked, we will not push on the pad anymore and we will EOS when
    * we have no more data for the pad to push */
   if (ret == GST_FLOW_EOS)
@@ -5100,7 +5082,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
           }
 
           /* combine flows */
-          ret = gst_qtdemux_combine_flows (demux, stream, ret);
+          ret = gst_qtdemux_combine_flows (demux, ret);
         } else {
           /* skip this data, stream is EOS */
           gst_adapter_flush (demux->adapter, demux->neededbytes);
