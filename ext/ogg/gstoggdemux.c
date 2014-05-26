@@ -144,7 +144,6 @@ static GstOggPad *gst_ogg_chain_get_stream (GstOggChain * chain,
 static GstFlowReturn gst_ogg_demux_combine_flows (GstOggDemux * ogg,
     GstOggPad * pad, GstFlowReturn ret);
 static void gst_ogg_demux_sync_streams (GstOggDemux * ogg);
-static gboolean gst_ogg_demux_check_eos (GstOggDemux * ogg);
 
 static GstCaps *gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg,
     GstCaps * caps, GList * headers);
@@ -498,11 +497,17 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   gboolean delta_unit = FALSE;
   gboolean is_header;
 
-  cret = GST_FLOW_OK;
-
+  ret = cret = GST_FLOW_OK;
   GST_DEBUG_OBJECT (pad, "Chaining %d %d %" GST_TIME_FORMAT " %d %p",
       ogg->pullmode, ogg->push_state, GST_TIME_ARGS (ogg->push_time_length),
       ogg->push_disable_seeking, ogg->building_chain);
+
+  if (G_UNLIKELY (pad->is_eos)) {
+    GST_DEBUG_OBJECT (pad, "Skipping packet on pad that is eos");
+    ret = GST_FLOW_EOS;
+    goto combine;
+  }
+
   GST_PUSH_LOCK (ogg);
   if (!ogg->pullmode && ogg->push_state == PUSH_PLAYING
       && ogg->push_time_length == GST_CLOCK_TIME_NONE
@@ -697,21 +702,18 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       gst_buffer_unref (buf);
     }
     buf = NULL;
-
-    /* combine flows */
-    cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
   }
 
   /* we're done with skeleton stuff */
   if (pad->map.is_skeleton)
-    goto done;
+    goto combine;
 
   /* check if valid granulepos, then we can calculate the current
    * position. We know the granule for each packet but we only want to update
    * the position when we have a valid granulepos on the packet because else
    * our time jumps around for the different streams. */
   if (packet->granulepos < 0)
-    goto done;
+    goto combine;
 
   /* convert to time */
   current_time = gst_ogg_stream_get_end_time_for_granulepos (&pad->map,
@@ -734,7 +736,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       GST_TIME_ARGS (current_time));
 
   /* check stream eos */
-  if (!delta_unit &&
+  if (!pad->is_eos && !delta_unit &&
       ((ogg->segment.rate > 0.0 &&
               ogg->segment.stop != GST_CLOCK_TIME_NONE &&
               current_time >= ogg->segment.stop) ||
@@ -742,10 +744,14 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     GST_DEBUG_OBJECT (ogg, "marking pad %p EOS", pad);
     pad->is_eos = TRUE;
 
-    if (cret == GST_FLOW_OK && gst_ogg_demux_check_eos (ogg)) {
-      cret = GST_FLOW_EOS;
+    if (ret == GST_FLOW_OK) {
+      ret = GST_FLOW_EOS;
     }
   }
+
+combine:
+  /* combine flows */
+  cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
 
 done:
   if (buf)
@@ -2072,6 +2078,7 @@ gst_ogg_demux_init (GstOggDemux * ogg)
   ogg->newsegment = NULL;
 
   ogg->chunk_size = CHUNKSIZE;
+  ogg->flowcombiner = gst_flow_combiner_new ();
 }
 
 static void
@@ -2088,6 +2095,8 @@ gst_ogg_demux_finalize (GObject * object)
 
   if (ogg->newsegment)
     gst_event_unref (ogg->newsegment);
+
+  gst_flow_combiner_free (ogg->flowcombiner);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2540,6 +2549,8 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
     /* deactivate first */
     gst_pad_set_active (GST_PAD_CAST (pad), FALSE);
 
+    gst_flow_combiner_remove_pad (ogg->flowcombiner, GST_PAD_CAST (pad));
+
     gst_element_remove_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
 
     pad->added = FALSE;
@@ -2692,6 +2703,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
     gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
     pad->added = TRUE;
+    gst_flow_combiner_add_pad (ogg->flowcombiner, GST_PAD_CAST (pad));
   }
   /* prefer the index bitrate over the ones encoded in the streams */
   ogg->bitrate = (idx_bitrate ? idx_bitrate : bitrate);
@@ -4322,58 +4334,11 @@ static GstFlowReturn
 gst_ogg_demux_combine_flows (GstOggDemux * ogg, GstOggPad * pad,
     GstFlowReturn ret)
 {
-  GstOggChain *chain;
-
   /* store the value */
   pad->last_ret = ret;
+  pad->is_eos = (ret == GST_FLOW_EOS);
 
-  /* any other error that is not-linked can be returned right
-   * away */
-  if (ret != GST_FLOW_NOT_LINKED)
-    goto done;
-
-  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
-  chain = ogg->current_chain;
-  if (chain) {
-    gint i;
-
-    for (i = 0; i < chain->streams->len; i++) {
-      GstOggPad *opad = g_array_index (chain->streams, GstOggPad *, i);
-
-      ret = opad->last_ret;
-      /* some other return value (must be SUCCESS but we can return
-       * other values as well) */
-      if (ret != GST_FLOW_NOT_LINKED)
-        goto done;
-    }
-    /* if we get here, all other pads were unlinked and we return
-     * NOT_LINKED then */
-  }
-done:
-  return ret;
-}
-
-/* returns TRUE if all streams in current chain reached EOS, FALSE otherwise */
-static gboolean
-gst_ogg_demux_check_eos (GstOggDemux * ogg)
-{
-  GstOggChain *chain;
-  gboolean eos = TRUE;
-
-  chain = ogg->current_chain;
-  if (G_LIKELY (chain)) {
-    gint i;
-
-    for (i = 0; i < chain->streams->len; i++) {
-      GstOggPad *opad = g_array_index (chain->streams, GstOggPad *, i);
-
-      eos = eos && opad->is_eos;
-    }
-  } else {
-    eos = FALSE;
-  }
-
-  return eos;
+  return gst_flow_combiner_update_flow (ogg->flowcombiner, ret);
 }
 
 static GstFlowReturn
@@ -4405,17 +4370,10 @@ gst_ogg_demux_loop_forward (GstOggDemux * ogg)
   }
 
   ret = gst_ogg_demux_chain (ogg->sinkpad, GST_OBJECT_CAST (ogg), buffer);
-  if (ret != GST_FLOW_OK) {
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
     GST_LOG_OBJECT (ogg, "Failed demux_chain");
-    goto done;
   }
 
-  /* check for the end of the segment */
-  if (gst_ogg_demux_check_eos (ogg)) {
-    GST_LOG_OBJECT (ogg, "got EOS");
-    ret = GST_FLOW_EOS;
-    goto done;
-  }
 done:
   return ret;
 }
@@ -4455,15 +4413,7 @@ gst_ogg_demux_loop_reverse (GstOggDemux * ogg)
   }
 
   ret = gst_ogg_demux_handle_page (ogg, &page);
-  if (ret != GST_FLOW_OK)
-    goto done;
 
-  /* check for the end of the segment */
-  if (gst_ogg_demux_check_eos (ogg)) {
-    GST_LOG_OBJECT (ogg, "got EOS");
-    ret = GST_FLOW_EOS;
-    goto done;
-  }
 done:
   return ret;
 }

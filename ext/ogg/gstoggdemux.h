@@ -25,6 +25,7 @@
 #include <ogg/ogg.h>
 
 #include <gst/gst.h>
+#include <gst/base/gstflowcombiner.h>
 
 #include "gstoggstream.h"
 
@@ -126,6 +127,8 @@ struct _GstOggDemux
   GstElement element;
 
   GstPad *sinkpad;
+
+  GstFlowCombiner *flowcombiner;
 
   gint64 length;
   gint64 read_offset;
