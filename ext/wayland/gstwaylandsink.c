@@ -597,7 +597,6 @@ render_last_buffer (GstWaylandSink * sink)
   GstWlMeta *meta;
   struct wl_surface *surface;
   struct wl_callback *callback;
-  GstVideoRectangle src, dst, res;
 
   meta = gst_buffer_get_wl_meta (sink->last_buffer);
   surface = gst_wl_window_get_wl_surface (sink->window);
@@ -612,19 +611,9 @@ render_last_buffer (GstWaylandSink * sink)
    * releases it. The release is handled internally in the pool */
   gst_wayland_compositor_acquire_buffer (meta->pool, sink->last_buffer);
 
-  src.w = sink->video_width;
-  src.h = sink->video_height;
-  dst.w = sink->window->width;
-  dst.h = sink->window->height;
-  gst_video_sink_center_rect (src, dst, &res, TRUE);
-
-  if (sink->window->subsurface)
-    wl_subsurface_set_position (sink->window->subsurface,
-        sink->window->x + res.x, sink->window->y + res.y);
-  wl_viewport_set_destination (sink->window->viewport, res.w, res.h);
-
   wl_surface_attach (surface, meta->wbuffer, 0, 0);
-  wl_surface_damage (surface, 0, 0, dst.w, dst.h);
+  wl_surface_damage (surface, 0, 0, sink->window->surface_width,
+      sink->window->surface_height);
 
   wl_surface_commit (surface);
   wl_display_flush (sink->display->display);
@@ -647,13 +636,6 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   GST_LOG_OBJECT (sink, "render buffer %p", buffer);
 
-  /* if we were not provided a window, create one ourselves */
-  if (!sink->window)
-    sink->window = gst_wl_window_new_toplevel (sink->display, sink->video_width,
-        sink->video_height);
-  else if (sink->window->width == 0 || sink->window->height == 0)
-    goto no_window_size;
-
   /* surface is resizing - drop buffers until finished */
   if (sink->drawing_frozen)
     goto done;
@@ -661,6 +643,17 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   /* drop buffers until we get a frame callback */
   if (g_atomic_int_get (&sink->redraw_pending) == TRUE)
     goto done;
+
+  /* if we were not provided a window, create one ourselves */
+  if (!sink->window) {
+    sink->window = gst_wl_window_new_toplevel (sink->display, sink->video_width,
+        sink->video_height);
+  } else {
+    gst_wl_window_set_video_size (sink->window, sink->video_width,
+        sink->video_height);
+    if (sink->window->surface_width == 0 || sink->window->surface_height == 0)
+      goto no_window_size;
+  }
 
   meta = gst_buffer_get_wl_meta (buffer);
 
@@ -793,7 +786,8 @@ gst_wayland_sink_set_render_rectangle (GstVideoOverlay * overlay,
 
   GST_DEBUG_OBJECT (sink, "window geometry changed to (%d, %d) %d x %d",
       x, y, w, h);
-  gst_wl_window_set_size (sink->window, x, y, w, h);
+  gst_wl_window_set_render_rectangle (sink->window, x, y, w, h);
+
   GST_OBJECT_UNLOCK (sink);
 }
 

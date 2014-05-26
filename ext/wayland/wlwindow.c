@@ -116,14 +116,16 @@ gst_wl_window_new_internal (GstWlDisplay * display, struct wl_surface *surface)
 }
 
 GstWlWindow *
-gst_wl_window_new_toplevel (GstWlDisplay * display, gint width, gint height)
+gst_wl_window_new_toplevel (GstWlDisplay * display, gint video_width,
+    gint video_height)
 {
   GstWlWindow *window;
 
   window = gst_wl_window_new_internal (display,
       wl_compositor_create_surface (display->compositor));
 
-  gst_wl_window_set_size (window, 0, 0, width, height);
+  gst_wl_window_set_video_size (window, video_width, video_height);
+  gst_wl_window_set_render_rectangle (window, 0, 0, video_width, video_height);
 
   window->shell_surface = wl_shell_get_shell_surface (display->shell,
       window->surface);
@@ -182,13 +184,53 @@ gst_wl_window_is_toplevel (GstWlWindow * window)
   return (window->shell_surface != NULL);
 }
 
+static void
+gst_wl_window_resize_internal (GstWlWindow * window)
+{
+  GstVideoRectangle src, res;
+
+  src.w = window->video_width;
+  src.h = window->video_height;
+  gst_video_sink_center_rect (src, window->render_rectangle, &res, TRUE);
+
+  if (window->subsurface)
+    wl_subsurface_set_position (window->subsurface,
+        window->render_rectangle.x + res.x, window->render_rectangle.y + res.y);
+  wl_viewport_set_destination (window->viewport, res.w, res.h);
+
+  wl_surface_damage (window->surface, 0, 0, res.w, res.h);
+  wl_surface_commit (window->surface);
+
+  /* this is saved for use in wl_surface_damage */
+  window->surface_width = res.w;
+  window->surface_height = res.h;
+}
+
 void
-gst_wl_window_set_size (GstWlWindow * window, gint x, gint y, gint w, gint h)
+gst_wl_window_set_video_size (GstWlWindow * window, gint w, gint h)
 {
   g_return_if_fail (window != NULL);
 
-  window->x = x;
-  window->y = y;
-  window->width = w;
-  window->height = h;
+  if (w != window->video_width || h != window->video_height) {
+    window->video_width = w;
+    window->video_height = h;
+
+    if (window->render_rectangle.w != 0)
+      gst_wl_window_resize_internal (window);
+  }
+}
+
+void
+gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
+    gint w, gint h)
+{
+  g_return_if_fail (window != NULL);
+
+  window->render_rectangle.x = x;
+  window->render_rectangle.y = y;
+  window->render_rectangle.w = w;
+  window->render_rectangle.h = h;
+
+  if (window->video_width != 0)
+    gst_wl_window_resize_internal (window);
 }
