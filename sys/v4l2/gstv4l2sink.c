@@ -114,10 +114,6 @@ static gboolean gst_v4l2sink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
 static GstCaps *gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter);
 static gboolean gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
-#if 0
-static GstFlowReturn gst_v4l2sink_buffer_alloc (GstBaseSink * bsink,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
-#endif
 static GstFlowReturn gst_v4l2sink_show_frame (GstBaseSink * bsink,
     GstBuffer * buf);
 
