@@ -901,6 +901,7 @@ gst_audio_decoder_push_forward (GstAudioDecoder * dec, GstBuffer * buf)
   GstAudioDecoderPrivate *priv;
   GstAudioDecoderContext *ctx;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime ts;
 
   klass = GST_AUDIO_DECODER_GET_CLASS (dec);
   priv = dec->priv;
@@ -914,6 +915,7 @@ gst_audio_decoder_push_forward (GstAudioDecoder * dec, GstBuffer * buf)
   }
 
   ctx->had_output_data = TRUE;
+  ts = GST_BUFFER_TIMESTAMP (buf);
 
   GST_LOG_OBJECT (dec,
       "clipping buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
@@ -926,6 +928,12 @@ gst_audio_decoder_push_forward (GstAudioDecoder * dec, GstBuffer * buf)
       ctx->info.bpf);
   if (G_UNLIKELY (!buf)) {
     GST_DEBUG_OBJECT (dec, "no data after clipping to segment");
+    if (dec->output_segment.rate >= 0) {
+      if (ts >= dec->output_segment.stop)
+        ret = GST_FLOW_EOS;
+    } else if (ts < dec->output_segment.start) {
+      ret = GST_FLOW_EOS;
+    }
     goto exit;
   }
 
