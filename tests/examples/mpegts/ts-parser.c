@@ -192,6 +192,23 @@ dump_logical_channel_descriptor (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
+dump_multiligual_network_name (GstMpegTsDescriptor * desc, guint spacing)
+{
+  GPtrArray *items;
+  if (gst_mpegts_descriptor_parse_dvb_multilingual_network_name (desc, &items)) {
+    guint i;
+    for (i = 0; i < items->len; i++) {
+      GstMpegTsDvbMultilingualNetworkNameItem *item =
+          g_ptr_array_index (items, i);
+      g_printf ("%*s item : %u\n", spacing, "", i);
+      g_printf ("%*s   language_code : %s\n", spacing, "", item->language_code);
+      g_printf ("%*s   network_name  : %s\n", spacing, "", item->network_name);
+    }
+    g_ptr_array_unref (items);
+  }
+}
+
+static void
 dump_iso_639_language (GstMpegTsDescriptor * desc, guint spacing)
 {
   guint i;
@@ -276,6 +293,11 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
           g_free (provider_name);
 
         }
+        break;
+      }
+      case GST_MTS_DESC_DVB_MULTILINGUAL_NETWORK_NAME:
+      {
+        dump_multiligual_network_name (desc, spacing + 2);
         break;
       }
       case GST_MTS_DESC_ISO_639_LANGUAGE:
