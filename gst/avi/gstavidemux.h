@@ -27,6 +27,7 @@
 #include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-read.h"
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstflowcombiner.h>
 
 G_BEGIN_DECLS
 
@@ -164,6 +165,8 @@ typedef struct _GstAviDemux {
   guint          num_sp_streams;  /* subpicture streams */
 
   guint          main_stream; /* used for seeking */
+
+  GstFlowCombiner *flowcombiner;
 
   gboolean       have_group_id;
   guint          group_id;

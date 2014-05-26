@@ -196,6 +196,7 @@ gst_avi_demux_init (GstAviDemux * avi)
   gst_element_add_pad (GST_ELEMENT_CAST (avi), avi->sinkpad);
 
   avi->adapter = gst_adapter_new ();
+  avi->flowcombiner = gst_flow_combiner_new ();
 
   gst_avi_demux_reset (avi);
 
@@ -232,6 +233,7 @@ gst_avi_demux_reset_stream (GstAviDemux * avi, GstAviStream * stream)
     if (stream->exposed) {
       gst_pad_set_active (stream->pad, FALSE);
       gst_element_remove_pad (GST_ELEMENT_CAST (avi), stream->pad);
+      gst_flow_combiner_remove_pad (avi->flowcombiner, stream->pad);
     } else
       gst_object_unref (stream->pad);
   }
@@ -1886,6 +1888,7 @@ gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
     if (force || stream->idx_n != 0) {
       GST_LOG_OBJECT (avi, "Adding pad %s", GST_PAD_NAME (stream->pad));
       gst_element_add_pad ((GstElement *) avi, stream->pad);
+      gst_flow_combiner_add_pad (avi->flowcombiner, stream->pad);
 
 #if 0
       if (avi->element_index)
@@ -5003,35 +5006,9 @@ static GstFlowReturn
 gst_avi_demux_combine_flows (GstAviDemux * avi, GstAviStream * stream,
     GstFlowReturn ret)
 {
-  guint i;
-  gboolean unexpected = FALSE, not_linked = TRUE;
-
   /* store the value */
   stream->last_flow = ret;
-
-  /* any other error that is not-linked or eos can be returned right away */
-  if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
-    goto done;
-
-  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
-  for (i = 0; i < avi->num_streams; i++) {
-    GstAviStream *ostream = &avi->stream[i];
-
-    ret = ostream->last_flow;
-    /* no unexpected or unlinked, return */
-    if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
-      goto done;
-
-    /* we check to see if we have at least 1 unexpected or all unlinked */
-    unexpected |= (ret == GST_FLOW_EOS);
-    not_linked &= (ret == GST_FLOW_NOT_LINKED);
-  }
-  /* when we get here, we all have unlinked or unexpected */
-  if (not_linked)
-    ret = GST_FLOW_NOT_LINKED;
-  else if (unexpected)
-    ret = GST_FLOW_EOS;
-done:
+  ret = gst_flow_combiner_update_flow (avi->flowcombiner, ret);
   GST_LOG_OBJECT (avi, "combined %s to return %s",
       gst_flow_get_name (stream->last_flow), gst_flow_get_name (ret));
   return ret;
