@@ -969,7 +969,6 @@ select_error:
 static GstFlowReturn
 gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 {
-  GstFlowReturn ret;
   GstV4l2MemoryGroup *group = NULL;
   gint index;
 
@@ -981,22 +980,8 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 
   index = group->buffer.index;
 
-  if (V4L2_TYPE_IS_OUTPUT (pool->obj->type)) {
-    /* If already queued, dequeue it, so we keep the render order */
-    while (pool->buffers[index]) {
-      GstBuffer *tmp;
-
-      ret = gst_v4l2_buffer_pool_dqbuf (pool, &tmp);
-
-      if (ret != GST_FLOW_OK)
-        goto already_queued;
-
-      gst_buffer_unref (tmp);
-    }
-  } else {
-    /* Should never happen, would mean a buffer got freed twice */
-    g_return_val_if_fail (pool->buffers[index] == NULL, GST_FLOW_ERROR);
-  }
+  if (pool->buffers[index] != NULL)
+    goto already_queued;
 
   GST_LOG_OBJECT (pool, "queuing buffer %i", index);
 
@@ -1010,10 +995,8 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 
 already_queued:
   {
-    if (ret != GST_FLOW_FLUSHING)
-      GST_ERROR_OBJECT (pool,
-          "buffer %i was already queued and we could not dequeue it", index);
-    return ret;
+    GST_ERROR_OBJECT (pool, "the buffer %i was already queued", index);
+    return GST_FLOW_ERROR;
   }
 queue_failed:
   {
@@ -1618,13 +1601,31 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
         case GST_V4L2_IO_DMABUF:
         case GST_V4L2_IO_MMAP:
         {
-          GstBuffer *to_queue;
+          GstBuffer *to_queue = NULL;
+          GstV4l2MemoryGroup *group;
+          gint index;
 
-          if ((*buf)->pool == bpool) {
-            /* nothing, we can queue directly */
-            to_queue = gst_buffer_ref (*buf);
-            GST_LOG_OBJECT (pool, "processing buffer from our pool");
-          } else {
+          if ((*buf)->pool != bpool)
+            goto copying;
+
+          if (!gst_v4l2_is_buffer_valid (*buf, &group))
+            goto copying;
+
+          index = group->buffer.index;
+
+          GST_LOG_OBJECT (pool, "processing buffer %i from our pool", index);
+
+          index = group->buffer.index;
+          if (pool->buffers[index] != NULL) {
+            GST_LOG_OBJECT (pool, "buffer %i already queued, copying", index);
+            goto copying;
+          }
+
+          /* we can queue directly */
+          to_queue = gst_buffer_ref (*buf);
+
+        copying:
+          if (to_queue == NULL) {
             GstBufferPoolAcquireParams params = { 0 };
 
             GST_LOG_OBJECT (pool, "alloc buffer from our pool");

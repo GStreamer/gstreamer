@@ -536,7 +536,28 @@ static gboolean
 gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
-  return gst_v4l2_object_propose_allocation (v4l2sink->v4l2object, query);
+  gboolean last_sample_enabled;
+
+  if (!gst_v4l2_object_propose_allocation (v4l2sink->v4l2object, query))
+    return FALSE;
+
+  g_object_get (bsink, "enable-last-sample", &last_sample_enabled, NULL);
+
+  if (last_sample_enabled) {
+    GstBufferPool *pool;
+    guint size, min, max;
+
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    /* we need 1 more, otherwise we'll run out of buffers at preroll */
+    min++;
+    if (max < min)
+      max = min;
+
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  }
+
+  return TRUE;
 }
 
 /* called after A/V sync to render frame */
