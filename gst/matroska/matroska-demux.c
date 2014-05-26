@@ -190,6 +190,7 @@ gst_matroska_demux_finalize (GObject * object)
   GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (object);
 
   gst_matroska_read_common_finalize (&demux->common);
+  gst_flow_combiner_free (demux->flowcombiner);
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -266,44 +267,7 @@ gst_matroska_demux_init (GstMatroskaDemux * demux)
 
   /* finish off */
   gst_matroska_demux_reset (GST_ELEMENT (demux));
-}
-
-/*
- * Returns the aggregated GstFlowReturn.
- */
-static GstFlowReturn
-gst_matroska_demux_combine_flows (GstMatroskaDemux * demux,
-    GstMatroskaTrackContext * track, GstFlowReturn ret)
-{
-  guint i;
-
-  /* store the value */
-  track->last_flow = ret;
-
-  /* any other error that is not-linked can be returned right away */
-  if (ret != GST_FLOW_NOT_LINKED)
-    goto done;
-
-  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
-  g_assert (demux->common.src->len == demux->common.num_streams);
-  for (i = 0; i < demux->common.src->len; i++) {
-    GstMatroskaTrackContext *ostream = g_ptr_array_index (demux->common.src,
-        i);
-
-    if (ostream == NULL)
-      continue;
-
-    ret = ostream->last_flow;
-    /* some other return value (must be SUCCESS but we can return
-     * other values as well) */
-    if (ret != GST_FLOW_NOT_LINKED)
-      goto done;
-  }
-  /* if we get here, all other pads were unlinked and we return
-   * NOT_LINKED then */
-done:
-  GST_LOG_OBJECT (demux, "combined return %s", gst_flow_get_name (ret));
-  return ret;
+  demux->flowcombiner = gst_flow_combiner_new ();
 }
 
 static void
@@ -459,7 +423,6 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   context->flags =
       GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT |
       GST_MATROSKA_TRACK_LACING;
-  context->last_flow = GST_FLOW_OK;
   context->from_time = GST_CLOCK_TIME_NONE;
   context->from_offset = -1;
   context->to_offset = G_MAXINT64;
@@ -1271,6 +1234,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   gst_pad_set_caps (context->pad, context->caps);
 
   gst_element_add_pad (GST_ELEMENT (demux), context->pad);
+  gst_flow_combiner_add_pad (demux->flowcombiner, context->pad);
 
   g_free (padname);
 
@@ -2555,7 +2519,7 @@ gst_matroska_demux_push_stream_headers (GstMatroskaDemux * demux,
   stream->stream_headers = NULL;
 
   /* combine flows */
-  ret = gst_matroska_demux_combine_flows (demux, stream, ret);
+  ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
 
   return ret;
 }
@@ -3657,7 +3621,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         }
       }
       /* combine flows */
-      ret = gst_matroska_demux_combine_flows (demux, stream, ret);
+      ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
 
     next_lace:
       size -= lace_size[n];
@@ -3683,7 +3647,7 @@ eos:
     stream->eos = TRUE;
     ret = GST_FLOW_OK;
     /* combine flows */
-    ret = gst_matroska_demux_combine_flows (demux, stream, ret);
+    ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
     goto done;
   }
 invalid_lacing:

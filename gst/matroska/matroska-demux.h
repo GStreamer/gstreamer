@@ -24,6 +24,7 @@
 #define __GST_MATROSKA_DEMUX_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstflowcombiner.h>
 
 #include "ebml-read.h"
 #include "matroska-ids.h"
@@ -57,6 +58,8 @@ typedef struct _GstMatroskaDemux {
 
   guint                    group_id;
   gboolean                 have_group_id;
+
+  GstFlowCombiner         *flowcombiner;
 
   /* state */
   gboolean                 streaming;

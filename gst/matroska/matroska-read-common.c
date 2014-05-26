@@ -2959,8 +2959,6 @@ gst_matroska_read_common_reset_streams (GstMatroskaReadCommon * common,
     context->set_discont = TRUE;
     context->eos = FALSE;
     context->from_time = GST_CLOCK_TIME_NONE;
-    if (full)
-      context->last_flow = GST_FLOW_OK;
     if (context->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
       GstMatroskaTrackVideoContext *videocontext =
           (GstMatroskaTrackVideoContext *) context;
