@@ -1031,6 +1031,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     /* We need to set caps before adding */
     gst_element_add_pad (GST_ELEMENT (demux),
         gst_object_ref (demux->audio_pad));
+    gst_flow_combiner_add_pad (demux->flowcombiner, demux->audio_pad);
 
     /* We only emit no more pads when we have audio and video. Indeed we can
      * not trust the FLV header to tell us if there will be only audio or
@@ -1170,27 +1171,20 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* Push downstream */
   ret = gst_pad_push (demux->audio_pad, outbuf);
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    if (demux->segment.rate < 0.0 && ret == GST_FLOW_EOS &&
-        demux->segment.position > demux->segment.stop) {
-      /* In reverse playback we can get a GST_FLOW_EOS when
-       * we are at the end of the segment, so we just need to jump
-       * back to the previous section. */
-      GST_DEBUG_OBJECT (demux, "downstream has reached end of segment");
-      demux->audio_done = TRUE;
-      ret = GST_FLOW_OK;
-    } else {
-      if (ret == GST_FLOW_NOT_LINKED) {
-        demux->audio_linked = FALSE;
-      } else
-        GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
-            " bytes audio buffer: %s", demux->tag_data_size,
-            gst_flow_get_name (ret));
-      goto beach;
-    }
+
+  if (G_UNLIKELY (ret != GST_FLOW_OK) &&
+      demux->segment.rate < 0.0 && ret == GST_FLOW_EOS &&
+      demux->segment.position > demux->segment.stop) {
+    /* In reverse playback we can get a GST_FLOW_EOS when
+     * we are at the end of the segment, so we just need to jump
+     * back to the previous section. */
+    GST_DEBUG_OBJECT (demux, "downstream has reached end of segment");
+    demux->audio_done = TRUE;
+    ret = GST_FLOW_OK;
+    goto beach;
   }
 
-  demux->audio_linked = TRUE;
+  ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
 
 beach:
   gst_buffer_unmap (buffer, &map);
@@ -1420,6 +1414,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     /* We need to set caps before adding */
     gst_element_add_pad (GST_ELEMENT (demux),
         gst_object_ref (demux->video_pad));
+    gst_flow_combiner_add_pad (demux->flowcombiner, demux->video_pad);
 
     /* We only emit no more pads when we have audio and video. Indeed we can
      * not trust the FLV header to tell us if there will be only audio or
@@ -1564,27 +1559,19 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   /* Push downstream */
   ret = gst_pad_push (demux->video_pad, outbuf);
 
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    if (demux->segment.rate < 0.0 && ret == GST_FLOW_EOS &&
-        demux->segment.position > demux->segment.stop) {
-      /* In reverse playback we can get a GST_FLOW_EOS when
-       * we are at the end of the segment, so we just need to jump
-       * back to the previous section. */
-      GST_DEBUG_OBJECT (demux, "downstream has reached end of segment");
-      demux->video_done = TRUE;
-      ret = GST_FLOW_OK;
-    } else {
-      if (ret == GST_FLOW_NOT_LINKED)
-        demux->video_linked = FALSE;
-      else
-        GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
-            " bytes video buffer: %s", demux->tag_data_size,
-            gst_flow_get_name (ret));
-      goto beach;
-    }
+  if (G_UNLIKELY (ret != GST_FLOW_OK) &&
+      demux->segment.rate < 0.0 && ret == GST_FLOW_EOS &&
+      demux->segment.position > demux->segment.stop) {
+    /* In reverse playback we can get a GST_FLOW_EOS when
+     * we are at the end of the segment, so we just need to jump
+     * back to the previous section. */
+    GST_DEBUG_OBJECT (demux, "downstream has reached end of segment");
+    demux->video_done = TRUE;
+    ret = GST_FLOW_OK;
+    goto beach;
   }
 
-  demux->video_linked = TRUE;
+  ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
 
 beach:
   gst_buffer_unmap (buffer, &map);
@@ -1811,10 +1798,6 @@ gst_flv_demux_cleanup (GstFlvDemux * demux)
   demux->audio_need_discont = TRUE;
   demux->video_need_discont = TRUE;
 
-  /* By default we consider them as linked */
-  demux->audio_linked = TRUE;
-  demux->video_linked = TRUE;
-
   demux->has_audio = FALSE;
   demux->has_video = FALSE;
   demux->push_tags = FALSE;
@@ -1862,12 +1845,14 @@ gst_flv_demux_cleanup (GstFlvDemux * demux)
   }
 
   if (demux->audio_pad) {
+    gst_flow_combiner_remove_pad (demux->flowcombiner, demux->audio_pad);
     gst_element_remove_pad (GST_ELEMENT (demux), demux->audio_pad);
     gst_object_unref (demux->audio_pad);
     demux->audio_pad = NULL;
   }
 
   if (demux->video_pad) {
+    gst_flow_combiner_remove_pad (demux->flowcombiner, demux->video_pad);
     gst_element_remove_pad (GST_ELEMENT (demux), demux->video_pad);
     gst_object_unref (demux->video_pad);
     demux->video_pad = NULL;
@@ -1947,13 +1932,8 @@ gst_flv_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
 parse:
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    if (ret == GST_FLOW_NOT_LINKED && (demux->audio_linked
-            || demux->video_linked)) {
-      ret = GST_FLOW_OK;
-    } else {
-      GST_DEBUG_OBJECT (demux, "got flow return %s", gst_flow_get_name (ret));
-      goto beach;
-    }
+    GST_DEBUG_OBJECT (demux, "got flow return %s", gst_flow_get_name (ret));
+    goto beach;
   }
 
   if (G_UNLIKELY (demux->flushing)) {
@@ -2127,13 +2107,6 @@ parse:
   }
 
 beach:
-  if (G_UNLIKELY (ret == GST_FLOW_NOT_LINKED)) {
-    /* If either audio or video is linked we return GST_FLOW_OK */
-    if (demux->audio_linked || demux->video_linked) {
-      ret = GST_FLOW_OK;
-    }
-  }
-
   return ret;
 
 /* ERRORS */
@@ -2242,13 +2215,8 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFlvDemux * demux)
   demux->state = FLV_STATE_TAG_TYPE;
 
   if (G_UNLIKELY (ret == GST_FLOW_NOT_LINKED)) {
-    /* If either audio or video is linked we return GST_FLOW_OK */
-    if (demux->audio_linked || demux->video_linked) {
-      ret = GST_FLOW_OK;
-    } else {
-      GST_WARNING_OBJECT (demux, "parsing this tag returned not-linked and "
-          "neither video nor audio are linked");
-    }
+    GST_WARNING_OBJECT (demux, "parsing this tag returned not-linked and "
+        "neither video nor audio are linked");
   }
 
 beach:
@@ -3382,6 +3350,11 @@ gst_flv_demux_dispose (GObject * object)
     demux->taglist = NULL;
   }
 
+  if (demux->flowcombiner) {
+    gst_flow_combiner_free (demux->flowcombiner);
+    demux->flowcombiner = NULL;
+  }
+
   if (demux->new_seg_event) {
     gst_event_unref (demux->new_seg_event);
     demux->new_seg_event = NULL;
@@ -3472,6 +3445,7 @@ gst_flv_demux_init (GstFlvDemux * demux)
 
   demux->adapter = gst_adapter_new ();
   demux->taglist = gst_tag_list_new_empty ();
+  demux->flowcombiner = gst_flow_combiner_new ();
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
   demux->own_index = FALSE;

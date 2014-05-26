@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstflowcombiner.h>
 #include "gstindex.h"
 
 G_BEGIN_DECLS
@@ -73,6 +74,8 @@ struct _GstFlvDemux
   GArray * filepositions;
 
   GstAdapter *adapter;
+
+  GstFlowCombiner *flowcombiner;
 
   GstSegment segment;
 
