@@ -143,6 +143,7 @@ check_PROGRAMS =				\
 	libs/bitreader-noinline		\
 	libs/bytereader-noinline	\
 	libs/bytewriter-noinline	\
+	libs/flowcombiner			\
 	libs/sparsefile				\
 	libs/collectpads			\
 	libs/gstnetclientclock			\

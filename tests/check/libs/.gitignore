@@ -12,6 +12,7 @@ bytewriter-noinline
 gdp
 collectpads
 controller
+flowcombiner
 gstlibscpp
 gstnetclientclock
 gstnettimeprovider
