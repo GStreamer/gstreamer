@@ -157,6 +157,24 @@ dump_cable_delivery_descriptor (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
+dump_dvb_service_list (GstMpegTsDescriptor * desc, guint spacing)
+{
+  GPtrArray *res;
+
+  if (gst_mpegts_descriptor_parse_dvb_service_list (desc, &res)) {
+    guint i;
+    g_printf ("%*s DVB Service List Descriptor\n", spacing, "");
+    for (i = 0; i < res->len; i++) {
+      GstMpegTsDVBServiceListItem *item = g_ptr_array_index (res, i);
+      g_printf ("%*s   Service #%d, id:0x%04x, type:0x%x (%s)\n",
+          spacing, "", i, item->service_id, item->type,
+          enum_name (GST_TYPE_MPEG_TS_DVB_SERVICE_TYPE, item->type));
+    }
+    g_ptr_array_unref (res);
+  }
+}
+
+static void
 dump_logical_channel_descriptor (GstMpegTsDescriptor * desc, guint spacing)
 {
   GstMpegTsLogicalChannelDescriptor res;
@@ -219,6 +237,11 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
           g_printf ("%*s   Network Name : %s\n", spacing, "", network_name);
           g_free (network_name);
         }
+        break;
+      }
+      case GST_MTS_DESC_DVB_SERVICE_LIST:
+      {
+        dump_dvb_service_list (desc, spacing + 2);
         break;
       }
       case GST_MTS_DESC_DVB_CABLE_DELIVERY_SYSTEM:
