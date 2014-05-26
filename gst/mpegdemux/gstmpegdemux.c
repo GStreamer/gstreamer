@@ -274,6 +274,7 @@ gst_flups_demux_init (GstFluPSDemux * demux)
 
   demux->adapter = gst_adapter_new ();
   demux->rev_adapter = gst_adapter_new ();
+  demux->flowcombiner = gst_flow_combiner_new ();
 
   gst_flups_demux_reset (demux);
 }
@@ -285,6 +286,7 @@ gst_flups_demux_finalize (GstFluPSDemux * demux)
   g_free (demux->streams);
   g_free (demux->streams_found);
 
+  gst_flow_combiner_free (demux->flowcombiner);
   g_object_unref (demux->adapter);
   g_object_unref (demux->rev_adapter);
 
@@ -301,8 +303,10 @@ gst_flups_demux_reset (GstFluPSDemux * demux)
     GstFluPSStream *stream = demux->streams[i];
 
     if (stream != NULL) {
-      if (stream->pad && GST_PAD_PARENT (stream->pad))
+      if (stream->pad && GST_PAD_PARENT (stream->pad)) {
+        gst_flow_combiner_remove_pad (demux->flowcombiner, stream->pad);
         gst_element_remove_pad (GST_ELEMENT_CAST (demux), stream->pad);
+      }
 
       if (stream->pending_tags)
         gst_tag_list_unref (stream->pending_tags);
@@ -455,7 +459,6 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   stream->discont = TRUE;
   stream->need_segment = TRUE;
   stream->notlinked = FALSE;
-  stream->last_flow = GST_FLOW_OK;
   stream->type = stream_type;
   stream->pending_tags = NULL;
   stream->pad = gst_pad_new_from_template (template, name);
@@ -522,6 +525,7 @@ gst_flups_demux_get_stream (GstFluPSDemux * demux, gint id, gint type)
 
     if (demux->need_no_more_pads) {
       gst_element_add_pad (GST_ELEMENT (demux), stream->pad);
+      gst_flow_combiner_add_pad (demux->flowcombiner, stream->pad);
     } else {
       /* only likely to confuse decodebin etc, so discard */
       /* FIXME should perform full switch protocol:
@@ -662,7 +666,7 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   GST_LOG_OBJECT (demux, "pushing stream id 0x%02x type 0x%02x, pts time: %"
       GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT,
       stream->id, stream->type, GST_TIME_ARGS (pts), gst_buffer_get_size (buf));
-  stream->last_flow = result = gst_pad_push (stream->pad, buf);
+  result = gst_pad_push (stream->pad, buf);
   GST_LOG_OBJECT (demux, "result: %s", gst_flow_get_name (result));
 
   return result;
@@ -887,7 +891,6 @@ gst_flups_demux_clear_times (GstFluPSDemux * demux)
 
     if (G_LIKELY (stream)) {
       stream->last_ts = GST_CLOCK_TIME_NONE;
-      stream->last_flow = GST_FLOW_OK;
     }
   }
 }
@@ -2259,7 +2262,6 @@ gst_flups_demux_data_cb (GstPESFilter * filter, gboolean first,
     ret = gst_flups_demux_send_data (demux, demux->current_stream, out_buf);
     if (ret == GST_FLOW_NOT_LINKED) {
       demux->current_stream->notlinked = TRUE;
-      ret = GST_FLOW_OK;
     }
   }
 
@@ -3028,42 +3030,13 @@ gst_flups_demux_sink_activate_mode (GstPad * pad, GstObject * parent,
 static GstFlowReturn
 gst_flups_demux_combine_flows (GstFluPSDemux * demux, GstFlowReturn ret)
 {
-  gint i, count = demux->found_count, streams = 0;
-  gboolean unexpected = FALSE, not_linked = TRUE;
-
   GST_LOG_OBJECT (demux, "flow return: %s", gst_flow_get_name (ret));
 
-  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
-  for (i = 0; i < count; i++) {
-    GstFluPSStream *stream = demux->streams_found[i];
+  ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
 
-    if (G_UNLIKELY (!stream))
-      continue;
+  if (G_UNLIKELY (demux->need_no_more_pads && ret == GST_FLOW_NOT_LINKED))
+    ret = GST_FLOW_OK;
 
-    ret = stream->last_flow;
-    streams++;
-
-    /* some streams may still have to appear,
-     * and only those ones may end up linked */
-    if (G_UNLIKELY (demux->need_no_more_pads && ret == GST_FLOW_NOT_LINKED))
-      ret = GST_FLOW_OK;
-
-    /* no unexpected or unlinked, return */
-    if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
-      goto done;
-
-    /* we check to see if we have at least 1 unexpected or all unlinked */
-    unexpected |= (ret == GST_FLOW_EOS);
-    not_linked &= (ret == GST_FLOW_NOT_LINKED);
-  }
-
-  /* when we get here, we all have unlinked or unexpected */
-  if (not_linked && streams)
-    ret = GST_FLOW_NOT_LINKED;
-  else if (unexpected)
-    ret = GST_FLOW_EOS;
-
-done:
   GST_LOG_OBJECT (demux, "combined flow return: %s", gst_flow_get_name (ret));
   return ret;
 }

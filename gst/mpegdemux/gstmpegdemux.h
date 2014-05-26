@@ -47,6 +47,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstflowcombiner.h>
 
 #include "gstpesfilter.h"
 
@@ -93,7 +94,6 @@ struct _GstFluPSStream
 
   GstClockTime segment_thresh;
   GstClockTime last_ts;
-  GstFlowReturn last_flow;
 
   gboolean discont;
   gboolean notlinked;
@@ -151,6 +151,8 @@ struct _GstFluPSDemux
   GstFluPSStream **streams_found;
   gint found_count;
   gboolean need_no_more_pads;
+
+  GstFlowCombiner *flowcombiner;
 
   /* Indicates an MPEG-2 stream */
   gboolean is_mpeg2_pack;
