@@ -567,11 +567,13 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
     config = gst_buffer_pool_get_config (pool);
     if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min, &max)) {
       GST_ERROR_OBJECT (self, "Can't get buffer pool params");
+      gst_structure_free (config);
       err = OMX_ErrorUndefined;
       goto done;
     }
     if (!gst_buffer_pool_config_get_allocator (config, &allocator, NULL)) {
       GST_ERROR_OBJECT (self, "Can't get buffer pool allocator");
+      gst_structure_free (config);
       err = OMX_ErrorUndefined;
       goto done;
     }
