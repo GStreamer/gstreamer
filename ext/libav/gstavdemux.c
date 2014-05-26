@@ -1430,9 +1430,6 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
 
   outbuf = gst_buffer_new_and_alloc (outsize);
 
-  if ((ret = gst_ffmpegdemux_aggregated_flow (demux)) != GST_FLOW_OK)
-    goto no_buffer;
-
   /* copy the data from packet into the target buffer
    * and do conversions for raw video packets */
   if (rawvideo) {
@@ -1581,11 +1578,6 @@ drop:
       GST_DEBUG_OBJECT (demux, "some streams are not yet eos");
       goto done;
     }
-  }
-no_buffer:
-  {
-    av_free_packet (&pkt);
-    goto pause;
   }
 }
 
