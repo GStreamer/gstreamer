@@ -409,7 +409,8 @@ gst_mpegts_descriptor_parse_dvb_bouquet_name (const GstMpegTsDescriptor *
 
   data = (guint8 *) descriptor->data + 2;
 
-  *bouquet_name = get_encoding_and_convert ((const gchar *) data + 1, *data);
+  *bouquet_name =
+      get_encoding_and_convert ((const gchar *) data, descriptor->length);
 
   return TRUE;
 }
