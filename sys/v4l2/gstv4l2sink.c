@@ -114,7 +114,7 @@ static gboolean gst_v4l2sink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
 static GstCaps *gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter);
 static gboolean gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
-static GstFlowReturn gst_v4l2sink_show_frame (GstBaseSink * bsink,
+static GstFlowReturn gst_v4l2sink_show_frame (GstVideoSink * bsink,
     GstBuffer * buf);
 
 static void
@@ -123,10 +123,12 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstBaseSinkClass *basesink_class;
+  GstVideoSinkClass *videosink_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
   basesink_class = GST_BASE_SINK_CLASS (klass);
+  videosink_class = GST_VIDEO_SINK_CLASS (klass);
 
   gobject_class->finalize = (GObjectFinalizeFunc) gst_v4l2sink_finalize;
   gobject_class->set_property = gst_v4l2sink_set_property;
@@ -183,7 +185,8 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_set_caps);
   basesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2sink_propose_allocation);
-  basesink_class->render = GST_DEBUG_FUNCPTR (gst_v4l2sink_show_frame);
+
+  videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_v4l2sink_show_frame);
 
   klass->v4l2_class_devices = NULL;
 
@@ -558,10 +561,10 @@ gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
 /* called after A/V sync to render frame */
 static GstFlowReturn
-gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+gst_v4l2sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
+  GstV4l2Sink *v4l2sink = GST_V4L2SINK (vsink);
   GstV4l2Object *obj = v4l2sink->v4l2object;
   GstBufferPool *bpool = GST_BUFFER_POOL (obj->pool);
 
@@ -574,7 +577,7 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     GstStructure *config;
 
     /* this pool was not activated, configure and activate */
-    GST_DEBUG_OBJECT (bsink, "activating pool");
+    GST_DEBUG_OBJECT (v4l2sink, "activating pool");
 
     config = gst_buffer_pool_get_config (bpool);
     gst_buffer_pool_config_add_option (config,
@@ -593,12 +596,12 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   /* ERRORS */
 not_negotiated:
   {
-    GST_ERROR_OBJECT (bsink, "not negotiated");
+    GST_ERROR_OBJECT (v4l2sink, "not negotiated");
     return GST_FLOW_NOT_NEGOTIATED;
   }
 activate_failed:
   {
-    GST_ELEMENT_ERROR (bsink, RESOURCE, SETTINGS,
+    GST_ELEMENT_ERROR (v4l2sink, RESOURCE, SETTINGS,
         (_("Failed to allocated required memory.")),
         ("Buffer pool activation failed"));
     return GST_FLOW_ERROR;
