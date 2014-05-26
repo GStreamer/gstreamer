@@ -65,7 +65,6 @@ struct _GstWaylandVideoInterface {
   GTypeInterface iface;
 
   /* virtual functions */
-  void (*set_surface_size)     (GstWaylandVideo *video, gint w, gint h);
   void (*pause_rendering)      (GstWaylandVideo *video);
   void (*resume_rendering)     (GstWaylandVideo *video);
 };
@@ -73,10 +72,6 @@ struct _GstWaylandVideoInterface {
 GType   gst_wayland_video_get_type (void);
 
 /* virtual function wrappers */
-
-void gst_wayland_video_set_surface_size (GstWaylandVideo * video,
-        gint w, gint h);
-
 void gst_wayland_video_pause_rendering (GstWaylandVideo * video);
 void gst_wayland_video_resume_rendering (GstWaylandVideo * video);
 

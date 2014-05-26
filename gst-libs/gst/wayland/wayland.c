@@ -73,29 +73,6 @@ gst_wayland_video_default_init (GstWaylandVideoInterface * klass)
 }
 
 /**
- * gst_wayland_video_set_surface_size:
- *
- * This tells the video sink to change the size of its drawing
- * surface. The caller must call gst_wayland_video_pause_rendering
- * before calling this method and gst_wayland_video_resume_rendering
- * later, on the next redraw request.
- */
-void
-gst_wayland_video_set_surface_size (GstWaylandVideo * video, gint w, gint h)
-{
-  GstWaylandVideoInterface *iface;
-
-  g_return_if_fail (video != NULL);
-  g_return_if_fail (GST_IS_WAYLAND_VIDEO (video));
-
-  iface = GST_WAYLAND_VIDEO_GET_INTERFACE (video);
-
-  if (iface->set_surface_size) {
-    iface->set_surface_size (video, w, h);
-  }
-}
-
-/**
  * gst_wayland_video_pause_rendering:
  *
  * This tells the video sink to stop rendering on the surface,
