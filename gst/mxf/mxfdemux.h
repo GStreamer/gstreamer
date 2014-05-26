@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstflowcombiner.h>
 
 #include "mxfessence.h"
 
@@ -130,6 +131,8 @@ struct _GstMXFDemux
   guint group_id;
 
   GstAdapter *adapter;
+
+  GstFlowCombiner *flowcombiner;
 
   GstSegment segment;
   guint32 seqnum;

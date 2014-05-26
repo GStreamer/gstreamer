@@ -128,7 +128,8 @@ G_DEFINE_TYPE (GstMXFDemux, gst_mxf_demux, GST_TYPE_ELEMENT);
 static void
 gst_mxf_demux_remove_pad (GstMXFDemuxPad * pad, GstMXFDemux * demux)
 {
-  gst_element_remove_pad (GST_ELEMENT (demux), GST_PAD (pad));
+  gst_flow_combiner_remove_pad (demux->flowcombiner, GST_PAD_CAST (pad));
+  gst_element_remove_pad (GST_ELEMENT (demux), GST_PAD_CAST (pad));
 }
 
 static void
@@ -286,31 +287,11 @@ static GstFlowReturn
 gst_mxf_demux_combine_flows (GstMXFDemux * demux,
     GstMXFDemuxPad * pad, GstFlowReturn ret)
 {
-  guint i;
-
   /* store the value */
   pad->last_flow = ret;
 
-  /* any other error that is not-linked can be returned right away */
-  if (ret != GST_FLOW_NOT_LINKED)
-    goto done;
+  ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
 
-  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
-  for (i = 0; i < demux->src->len; i++) {
-    GstMXFDemuxPad *opad = g_ptr_array_index (demux->src, i);
-
-    if (opad == NULL)
-      continue;
-
-    ret = opad->last_flow;
-    /* some other return value (must be SUCCESS but we can return
-     * other values as well) */
-    if (ret != GST_FLOW_NOT_LINKED)
-      goto done;
-  }
-  /* if we get here, all other pads were unlinked and we return
-   * NOT_LINKED then */
-done:
   GST_LOG_OBJECT (demux, "combined return %s", gst_flow_get_name (ret));
   return ret;
 }
@@ -1271,8 +1252,10 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
   g_rw_lock_writer_unlock (&demux->metadata_lock);
 
-  for (l = pads; l; l = l->next)
+  for (l = pads; l; l = l->next) {
+    gst_flow_combiner_add_pad (demux->flowcombiner, l->data);
     gst_element_add_pad (GST_ELEMENT_CAST (demux), l->data);
+  }
   g_list_free (pads);
 
   if (first_run)
@@ -4106,6 +4089,11 @@ gst_mxf_demux_finalize (GObject * object)
     demux->adapter = NULL;
   }
 
+  if (demux->flowcombiner) {
+    gst_flow_combiner_free (demux->flowcombiner);
+    demux->flowcombiner = NULL;
+  }
+
   if (demux->close_seg_event) {
     gst_event_unref (demux->close_seg_event);
     demux->close_seg_event = NULL;
@@ -4191,6 +4179,7 @@ gst_mxf_demux_init (GstMXFDemux * demux)
   demux->max_drift = 500 * GST_MSECOND;
 
   demux->adapter = gst_adapter_new ();
+  demux->flowcombiner = gst_flow_combiner_new ();
   g_rw_lock_init (&demux->metadata_lock);
 
   demux->src = g_ptr_array_new ();

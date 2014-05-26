@@ -121,9 +121,6 @@ struct _TSDemuxStream
   /* TRUE if we are waiting for a valid timestamp */
   gboolean pending_ts;
 
-  /* the return of the latest push */
-  GstFlowReturn flow_return;
-
   /* Output data */
   PendingPacketState state;
 
@@ -701,15 +698,6 @@ push_event (MpegTSBase * base, GstEvent * event)
   return TRUE;
 }
 
-static GstFlowReturn
-tsdemux_combine_flows (GstTSDemux * demux, TSDemuxStream * stream,
-    GstFlowReturn ret)
-{
-  /* Store the value */
-  stream->flow_return = ret;
-  return gst_flow_combiner_update_flow (demux->flowcombiner, ret);
-}
-
 static inline void
 add_iso639_language_to_tags (TSDemuxStream * stream, gchar * lang_code)
 {
@@ -1161,7 +1149,6 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     stream->first_dts = GST_CLOCK_TIME_NONE;
     stream->continuity_counter = CONTINUITY_UNSET;
   }
-  stream->flow_return = GST_FLOW_OK;
 }
 
 static void
@@ -1187,7 +1174,6 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
     stream->pad = NULL;
   }
   gst_ts_demux_stream_flush (stream, GST_TS_DEMUX_CAST (base));
-  stream->flow_return = GST_FLOW_NOT_LINKED;
 }
 
 static void
@@ -1240,9 +1226,6 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux)
   stream->first_dts = GST_CLOCK_TIME_NONE;
   stream->raw_pts = -1;
   stream->raw_dts = -1;
-  if (stream->flow_return == GST_FLOW_FLUSHING) {
-    stream->flow_return = GST_FLOW_OK;
-  }
   stream->continuity_counter = CONTINUITY_UNSET;
 }
 
@@ -1834,7 +1817,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
 
   res = gst_pad_push (stream->pad, buffer);
   GST_DEBUG_OBJECT (stream->pad, "Returned %s", gst_flow_get_name (res));
-  res = tsdemux_combine_flows (demux, stream, res);
+  res = gst_flow_combiner_update_flow (demux->flowcombiner, res);
   GST_DEBUG_OBJECT (stream->pad, "combined %s", gst_flow_get_name (res));
 
 beach:
