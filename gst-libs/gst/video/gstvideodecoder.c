@@ -2721,6 +2721,12 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
         GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
         GST_TIME_ARGS (segment->start),
         GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time));
+    if (segment->rate >= 0) {
+      if (GST_BUFFER_PTS (buf) >= segment->stop)
+        ret = GST_FLOW_EOS;
+    } else if (GST_BUFFER_PTS (buf) < segment->start) {
+      ret = GST_FLOW_EOS;
+    }
     gst_buffer_unref (buf);
     goto done;
   }
