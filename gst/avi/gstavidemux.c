@@ -900,7 +900,6 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       gst_adapter_clear (avi->adapter);
       avi->have_eos = FALSE;
       for (i = 0; i < avi->num_streams; i++) {
-        avi->stream[i].last_flow = GST_FLOW_OK;
         avi->stream[i].discont = TRUE;
       }
       /* fall through to default case so that the event gets passed downstream */
@@ -2407,7 +2406,6 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   stream->current_entry = -1;
   stream->current_total = 0;
 
-  stream->last_flow = GST_FLOW_OK;
   stream->discont = TRUE;
 
   stream->total_bytes = 0;
@@ -4641,7 +4639,6 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   /* reset the last flow and mark discont, seek is always DISCONT */
   for (i = 0; i < avi->num_streams; i++) {
     GST_DEBUG_OBJECT (avi, "marking DISCONT");
-    avi->stream[i].last_flow = GST_FLOW_OK;
     avi->stream[i].discont = TRUE;
   }
   GST_PAD_STREAM_UNLOCK (avi->sinkpad);
@@ -5006,11 +5003,11 @@ static GstFlowReturn
 gst_avi_demux_combine_flows (GstAviDemux * avi, GstAviStream * stream,
     GstFlowReturn ret)
 {
-  /* store the value */
-  stream->last_flow = ret;
+  GST_LOG_OBJECT (avi, "Stream %s:%s flow return: %s",
+      GST_DEBUG_PAD_NAME (stream->pad), gst_flow_get_name (ret));
   ret = gst_flow_combiner_update_flow (avi->flowcombiner, ret);
-  GST_LOG_OBJECT (avi, "combined %s to return %s",
-      gst_flow_get_name (stream->last_flow), gst_flow_get_name (ret));
+  GST_LOG_OBJECT (avi, "combined to return %s", gst_flow_get_name (ret));
+
   return ret;
 }
 
@@ -5069,7 +5066,6 @@ gst_avi_demux_advance (GstAviDemux * avi, GstAviStream * stream,
           &stream->current_timestamp, &stream->current_ts_end,
           &stream->current_offset, &stream->current_offset_end);
       /* and MARK discont for this stream */
-      stream->last_flow = GST_FLOW_OK;
       stream->discont = TRUE;
       GST_DEBUG_OBJECT (avi, "Moved from %u to %u, ts %" GST_TIME_FORMAT
           ", ts_end %" GST_TIME_FORMAT ", off %" G_GUINT64_FORMAT
@@ -5111,7 +5107,7 @@ gst_avi_demux_find_next (GstAviDemux * avi, gfloat rate)
     stream = &avi->stream[i];
 
     /* ignore streams that finished */
-    if (stream->last_flow == GST_FLOW_EOS)
+    if (GST_PAD_LAST_FLOW_RETURN (stream->pad) == GST_FLOW_EOS)
       continue;
 
     position = stream->current_timestamp;

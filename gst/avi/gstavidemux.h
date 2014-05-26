@@ -91,7 +91,6 @@ typedef struct {
   guint64        current_offset;
   guint64        current_offset_end;
 
-  GstFlowReturn  last_flow;
   gboolean       discont;
 
   /* stream length */
