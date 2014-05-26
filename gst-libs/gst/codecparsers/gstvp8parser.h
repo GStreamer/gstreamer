@@ -26,6 +26,8 @@
 
 #include <gst/gst.h>
 
+G_BEGIN_DECLS
+
 typedef struct _GstVp8FrameHdr          GstVp8FrameHdr;
 typedef struct _GstVp8QuantIndices      GstVp8QuantIndices;
 typedef struct _GstVp8Segmentation      GstVp8Segmentation;
@@ -330,5 +332,7 @@ gst_vp8_parser_init (GstVp8Parser * parser);
 GstVp8ParserResult
 gst_vp8_parser_parse_frame_header (GstVp8Parser * parser,
     GstVp8FrameHdr * frame_hdr, const guint8 * data, gsize size);
+
+G_END_DECLS
 
 #endif /* GST_VP8_PARSER_H */

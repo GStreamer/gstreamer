@@ -32,6 +32,7 @@
 #endif
 
 #include <string.h>
+#include <gst/base/gstbitreader.h>
 #include <gst/base/gstbytereader.h>
 
 
