@@ -2393,9 +2393,9 @@ gst_amc_color_format_info_set (GstAmcColorFormatInfo * color_format_info,
  * platform/frameworks/media/libstagefright/colorconversion/ColorConversion.cpp
  */
 gboolean
-gst_amc_color_format_copy (GstAmcColorFormatInfo * cinfo,
+gst_amc_color_format_copy (const GstAmcColorFormatInfo * cinfo,
     GstAmcBuffer * cbuffer, const GstAmcBufferInfo * cbuffer_info,
-    GstVideoInfo * vinfo, GstBuffer * vbuffer,
+    const GstVideoInfo * vinfo, GstBuffer * vbuffer,
     GstAmcColorFormatCopyDirection direction)
 {
   gboolean ret = FALSE;

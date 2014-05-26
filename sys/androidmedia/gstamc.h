@@ -143,8 +143,8 @@ typedef enum
 } GstAmcColorFormatCopyDirection;
 
 gboolean gst_amc_color_format_copy (
-    GstAmcColorFormatInfo * cinfo, GstAmcBuffer * cbuffer, const GstAmcBufferInfo * cbuffer_info,
-    GstVideoInfo * vinfo, GstBuffer * vbuffer, GstAmcColorFormatCopyDirection direction);
+    const GstAmcColorFormatInfo * cinfo, GstAmcBuffer * cbuffer, const GstAmcBufferInfo * cbuffer_info,
+    const GstVideoInfo * vinfo, GstBuffer * vbuffer, GstAmcColorFormatCopyDirection direction);
 
 const gchar * gst_amc_avc_profile_to_string (gint profile, const gchar **alternative);
 gint gst_amc_avc_profile_from_string (const gchar *profile);
