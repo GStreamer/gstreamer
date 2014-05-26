@@ -1457,16 +1457,15 @@ gst_base_transform_default_query (GstBaseTransform * trans,
     case GST_QUERY_ALLOCATION:
     {
       GstQuery *decide_query = NULL;
-      gboolean negotiated;
 
       /* can only be done on the sinkpad */
       if (direction != GST_PAD_SINK)
         goto done;
 
       GST_OBJECT_LOCK (trans);
-      if (G_UNLIKELY (!(negotiated = priv->negotiated))) {
+      if (!priv->negotiated && !priv->passthrough && (klass->set_caps != NULL)) {
         GST_DEBUG_OBJECT (trans,
-            "not negotiated yet, can't answer ALLOCATION query");
+            "not negotiated yet but need negotiation, can't answer ALLOCATION query");
         GST_OBJECT_UNLOCK (trans);
         goto done;
       }
