@@ -15,6 +15,7 @@ EXPORTS
 	gst_h264_parser_parse_sei
 	gst_h264_parser_parse_slice_hdr
 	gst_h264_parser_parse_sps
+	gst_h264_video_calculate_framerate
 	gst_h264_video_quant_matrix_4x4_get_raster_from_zigzag
 	gst_h264_video_quant_matrix_4x4_get_zigzag_from_raster
 	gst_h264_video_quant_matrix_8x8_get_raster_from_zigzag
