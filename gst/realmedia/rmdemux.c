@@ -55,7 +55,6 @@ struct _GstRMDemuxStream
 
   int id;
   GstPad *pad;
-  GstFlowReturn last_flow;
   gboolean discont;
   int timescale;
 
@@ -238,6 +237,10 @@ gst_rmdemux_finalize (GObject * object)
     g_object_unref (rmdemux->adapter);
     rmdemux->adapter = NULL;
   }
+  if (rmdemux->flowcombiner) {
+    gst_flow_combiner_free (rmdemux->flowcombiner);
+    rmdemux->flowcombiner = NULL;
+  }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
@@ -264,6 +267,7 @@ gst_rmdemux_init (GstRMDemux * rmdemux)
   rmdemux->need_newsegment = TRUE;
   rmdemux->have_group_id = FALSE;
   rmdemux->group_id = G_MAXUINT;
+  rmdemux->flowcombiner = gst_flow_combiner_new ();
 
   gst_rm_utils_run_tests ();
 }
@@ -688,6 +692,7 @@ gst_rmdemux_reset (GstRMDemux * rmdemux)
 
     g_object_unref (stream->adapter);
     gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+    gst_flow_combiner_remove_pad (rmdemux->flowcombiner, stream->pad);
     gst_element_remove_pad (GST_ELEMENT (rmdemux), stream->pad);
     if (stream->pending_tags)
       gst_tag_list_unref (stream->pending_tags);
@@ -1294,7 +1299,6 @@ gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event)
         stream->next_ts = -1;
         stream->last_seq = -1;
         stream->next_seq = -1;
-        stream->last_flow = GST_FLOW_OK;
         break;
       default:
         break;
@@ -1557,6 +1561,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
       g_free (codec_name);
     }
     gst_element_add_pad (GST_ELEMENT_CAST (rmdemux), stream->pad);
+    gst_flow_combiner_add_pad (rmdemux->flowcombiner, stream->pad);
   }
 
 beach:
@@ -1627,7 +1632,6 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
   stream->seek_offset = 0;
   stream->last_ts = -1;
   stream->next_ts = -1;
-  stream->last_flow = GST_FLOW_OK;
   stream->discont = TRUE;
   stream->adapter = gst_adapter_new ();
   GST_LOG_OBJECT (rmdemux, "stream_number=%d", stream->id);
@@ -1924,39 +1928,6 @@ gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const guint8 * data, int length)
       gst_tag_list_merge (rmdemux->pending_tags, tags, GST_TAG_MERGE_APPEND);
 }
 
-static GstFlowReturn
-gst_rmdemux_combine_flows (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
-    GstFlowReturn ret)
-{
-  GSList *cur;
-
-  /* store the value */
-  stream->last_flow = ret;
-
-  /* if it's success we can return the value right away */
-  if (ret == GST_FLOW_OK)
-    goto done;
-
-  /* any other error that is not-linked can be returned right
-   * away */
-  if (ret != GST_FLOW_NOT_LINKED)
-    goto done;
-
-  for (cur = rmdemux->streams; cur; cur = cur->next) {
-    GstRMDemuxStream *ostream = cur->data;
-
-    ret = ostream->last_flow;
-    /* some other return value (must be SUCCESS but we can return
-     * other values as well) */
-    if (ret != GST_FLOW_NOT_LINKED)
-      goto done;
-  }
-  /* if we get here, all other pads were unlinked and we return
-   * NOT_LINKED then */
-done:
-  return ret;
-}
-
 static void
 gst_rmdemux_stream_clear_cached_subpackets (GstRMDemux * rmdemux,
     GstRMDemuxStream * stream)
@@ -2238,7 +2209,7 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
 
   /* if size <= 2, we want this method to return the same GstFlowReturn as it
    * was previously for that given stream. */
-  ret = stream->last_flow;
+  ret = GST_PAD_LAST_FLOW_RETURN (stream->pad);
 
   while (size > 2) {
     guint8 pkg_header;
@@ -2404,7 +2375,7 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
       }
 
       ret = gst_pad_push (stream->pad, out);
-      ret = gst_rmdemux_combine_flows (rmdemux, stream, ret);
+      ret = gst_flow_combiner_update_flow (rmdemux->flowcombiner, ret);
       if (ret != GST_FLOW_OK)
         break;
 
@@ -2591,7 +2562,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
     ret = GST_FLOW_OK;
   }
 
-  cret = gst_rmdemux_combine_flows (rmdemux, stream, ret);
+  cret = gst_flow_combiner_update_flow (rmdemux->flowcombiner, ret);
 
 beach:
   return cret;

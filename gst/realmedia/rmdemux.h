@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstflowcombiner.h>
 #include <gst/pbutils/descriptions.h>
 
 G_BEGIN_DECLS
@@ -90,6 +91,8 @@ struct _GstRMDemux {
   guint n_audio_streams;
   GstAdapter *adapter;
   gboolean have_pads;
+
+  GstFlowCombiner *flowcombiner;
 
   guint32 timescale;
   guint64 duration;
