@@ -103,7 +103,6 @@ gst_mxf_demux_pad_class_init (GstMXFDemuxPadClass * klass)
 static void
 gst_mxf_demux_pad_init (GstMXFDemuxPad * pad)
 {
-  pad->last_flow = GST_FLOW_OK;
   pad->position = 0;
 }
 
@@ -281,19 +280,6 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
 
   demux->have_group_id = FALSE;
   demux->group_id = G_MAXUINT;
-}
-
-static GstFlowReturn
-gst_mxf_demux_combine_flows (GstMXFDemux * demux,
-    GstMXFDemuxPad * pad, GstFlowReturn ret)
-{
-  /* store the value */
-  pad->last_flow = ret;
-
-  ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
-
-  GST_LOG_OBJECT (demux, "combined return %s", gst_flow_get_name (ret));
-  return ret;
 }
 
 static GstFlowReturn
@@ -1839,7 +1825,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
     ret = gst_pad_push (GST_PAD_CAST (pad), outbuf);
     outbuf = NULL;
-    ret = gst_mxf_demux_combine_flows (demux, pad, ret);
+    ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
+    GST_LOG_OBJECT (demux, "combined return %s", gst_flow_get_name (ret));
 
     if (pad->position > demux->segment.position)
       demux->segment.position = pad->position;
@@ -3239,7 +3226,6 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
 
       /* Reset EOS flag on all pads */
       p->eos = FALSE;
-      p->last_flow = GST_FLOW_OK;
       gst_mxf_demux_pad_set_position (demux, p, start);
 
       position = p->current_essence_track_position;
@@ -3403,7 +3389,6 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 
       /* Reset EOS flag on all pads */
       p->eos = FALSE;
-      p->last_flow = GST_FLOW_OK;
       gst_mxf_demux_pad_set_position (demux, p, start);
 
       /* we always want to send data starting with a key unit */

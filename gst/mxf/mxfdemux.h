@@ -96,7 +96,6 @@ struct _GstMXFDemuxPad
 
   GstClockTime position;
   gdouble position_accumulated_error;
-  GstFlowReturn last_flow;
   gboolean eos, discont;
 
   GstTagList *tags;
