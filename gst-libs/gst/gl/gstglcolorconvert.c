@@ -1130,7 +1130,7 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   struct ConvertInfo *c_info = &convert->priv->convert_info;
   GstMapInfo out_info[GST_VIDEO_MAX_PLANES], in_info[GST_VIDEO_MAX_PLANES];
   gboolean res = TRUE;
-  gint i, j;
+  gint i, j = 0;
 
   out_width = GST_VIDEO_INFO_WIDTH (&convert->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&convert->out_info);
