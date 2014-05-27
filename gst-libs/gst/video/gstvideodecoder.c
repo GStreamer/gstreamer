@@ -2051,7 +2051,7 @@ gst_video_decoder_chain_reverse (GstVideoDecoder * dec, GstBuffer * buf)
     GST_DEBUG_OBJECT (dec, "received discont");
 
     /* parse and decode stuff in the gather and parse queues */
-    gst_video_decoder_flush_parse (dec, FALSE);
+    result = gst_video_decoder_flush_parse (dec, FALSE);
   }
 
   if (G_LIKELY (buf)) {
