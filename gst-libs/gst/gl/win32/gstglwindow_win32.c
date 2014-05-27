@@ -43,7 +43,7 @@ enum
 
 struct _GstGLWindowWin32Private
 {
-  gint dummy;
+  GThread *thread;
 };
 
 #define GST_CAT_DEFAULT gst_gl_window_win32_debug
@@ -88,6 +88,7 @@ static void
 gst_gl_window_win32_init (GstGLWindowWin32 * window)
 {
   window->priv = GST_GL_WINDOW_WIN32_GET_PRIVATE (window);
+  window->priv->thread = NULL;
 }
 
 /* Must be called in the gl thread */
@@ -288,10 +289,13 @@ gst_gl_window_win32_draw (GstGLWindow * window, guint width, guint height)
 static void
 gst_gl_window_win32_run (GstGLWindow * window)
 {
+  GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
   gint bRet;
   MSG msg;
 
   GST_INFO ("begin message loop");
+
+  window_win32->priv->thread = g_thread_self ();
 
   while (TRUE) {
     bRet = GetMessage (&msg, NULL, 0, 0);
@@ -318,6 +322,7 @@ gst_gl_window_win32_quit (GstGLWindow * window)
   GstGLWindowWin32 *window_win32;
 
   window_win32 = GST_GL_WINDOW_WIN32 (window);
+  window_win32->priv->thread = NULL;
 
   if (window_win32 && window_win32->internal_win_id) {
     LRESULT res =
@@ -358,6 +363,16 @@ gst_gl_window_win32_send_message_async (GstGLWindow * window,
   GstGLMessage *message;
 
   window_win32 = GST_GL_WINDOW_WIN32 (window);
+
+  if (window_win32->priv->thread == g_thread_self ()) {
+    /* re-entracy... */
+    if (callback)
+      callback (data);
+    if (destroy)
+      destroy (data);
+    return;
+  }
+
   message = g_slice_new (GstGLMessage);
 
   if (window_win32) {
