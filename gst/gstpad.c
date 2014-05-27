@@ -5714,7 +5714,7 @@ gst_pad_probe_info_get_buffer_list (GstPadProbeInfo * info)
 }
 
 /**
- * gst_pad_get_last_flowreturn:
+ * gst_pad_get_last_flow_return:
  * @pad: the #GstPad
  *
  * Gets the #GstFlowReturn return from the last data passed by this pad.

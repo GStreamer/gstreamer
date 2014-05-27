@@ -1150,6 +1150,8 @@ struct _GstPadClass {
  * @pad: a #GstPad
  *
  * Gets the last flow return on this pad
+ *
+ * Since: 1.4
  */
 #define GST_PAD_LAST_FLOW_RETURN(pad)   (GST_PAD_CAST(pad)->ABI.abi.last_flowret)
 
