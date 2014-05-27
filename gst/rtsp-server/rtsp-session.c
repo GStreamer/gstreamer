@@ -56,6 +56,7 @@ struct _GstRTSPSessionPrivate
   gchar *sessionid;
 
   guint timeout;
+  gboolean timeout_always_visible;
   GTimeVal create_time;         /* immutable */
   GTimeVal last_access;
   gint expire_count;
@@ -65,13 +66,15 @@ struct _GstRTSPSessionPrivate
 
 #undef DEBUG
 
-#define DEFAULT_TIMEOUT	60
+#define DEFAULT_TIMEOUT	       60
+#define DEFAULT_ALWAYS_VISIBLE  FALSE
 
 enum
 {
   PROP_0,
   PROP_SESSIONID,
   PROP_TIMEOUT,
+  PROP_TIMEOUT_ALWAYS_VISIBLE,
   PROP_LAST
 };
 
@@ -108,6 +111,11 @@ gst_rtsp_session_class_init (GstRTSPSessionClass * klass)
       g_param_spec_uint ("timeout", "timeout",
           "the timeout of the session (0 = never)", 0, G_MAXUINT,
           DEFAULT_TIMEOUT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TIMEOUT_ALWAYS_VISIBLE,
+      g_param_spec_boolean ("timeout-always-visible", "Timeout Always Visible ",
+          "timeout always visible in header",
+          DEFAULT_ALWAYS_VISIBLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (rtsp_session_debug, "rtspsession", 0,
       "GstRTSPSession");
@@ -161,6 +169,9 @@ gst_rtsp_session_get_property (GObject * object, guint propid,
     case PROP_TIMEOUT:
       g_value_set_uint (value, gst_rtsp_session_get_timeout (session));
       break;
+    case PROP_TIMEOUT_ALWAYS_VISIBLE:
+      g_value_set_boolean (value, priv->timeout_always_visible);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -180,6 +191,11 @@ gst_rtsp_session_set_property (GObject * object, guint propid,
       break;
     case PROP_TIMEOUT:
       gst_rtsp_session_set_timeout (session, g_value_get_uint (value));
+      break;
+    case PROP_TIMEOUT_ALWAYS_VISIBLE:
+      g_mutex_lock (&priv->lock);
+      priv->timeout_always_visible = g_value_get_boolean (value);
+      g_mutex_unlock (&priv->lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -433,8 +449,9 @@ gst_rtsp_session_get_header (GstRTSPSession * session)
 
   priv = session->priv;
 
+
   g_mutex_lock (&priv->lock);
-  if (priv->timeout != 60)
+  if (priv->timeout_always_visible || priv->timeout != 60)
     result = g_strdup_printf ("%s; timeout=%d", priv->sessionid, priv->timeout);
   else
     result = g_strdup (priv->sessionid);
