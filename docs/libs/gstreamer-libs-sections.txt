@@ -760,6 +760,19 @@ gst_collect_pads_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstflowcombiner</FILE>
+<TITLE>GstFlowCombiner</TITLE>
+<INCLUDE>gst/base/gstflowcombiner.h</INCLUDE>
+gst_flow_combiner_new
+gst_flow_combiner_free
+gst_flow_combiner_update_flow
+gst_flow_combiner_add_pad
+gst_flow_combiner_remove_pad
+<SUBSECTION Standard>
+<SUBSECTION Private>
+</SECTION>
+
+<SECTION>
 <FILE>gstpushsrc</FILE>
 <TITLE>GstPushSrc</TITLE>
 <INCLUDE>gst/base/gstpushsrc.h</INCLUDE>

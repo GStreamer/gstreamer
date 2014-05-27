@@ -1,5 +1,4 @@
 /* GStreamer
- * Copyright
  *
  * Copyright (C) 2014 Samsung Electronics. All rights reserved.
  *   Author: Thiago Santos <ts.santos@sisa.samsung.com>
@@ -31,6 +30,13 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstFlowCombiner:
+ *
+ * Opaque helper structure to aggregate flow returns.
+ *
+ * Since: 1.4
+ */
 typedef struct _GstFlowCombiner GstFlowCombiner;
 
 GstFlowCombiner * gst_flow_combiner_new (void);
