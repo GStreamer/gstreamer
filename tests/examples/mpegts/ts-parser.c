@@ -160,6 +160,45 @@ dump_cable_delivery_descriptor (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
+dump_terrestrial_delivery (GstMpegTsDescriptor * desc, guint spacing)
+{
+  GstMpegTsTerrestrialDeliverySystemDescriptor res;
+
+  if (gst_mpegts_descriptor_parse_terrestrial_delivery_system (desc, &res)) {
+    g_printf ("%*s Terrestrial Delivery Descriptor\n", spacing, "");
+    g_printf ("%*s   Frequency         : %d Hz\n", spacing, "", res.frequency);
+    g_printf ("%*s   Bandwidth         : %d Hz\n", spacing, "", res.bandwidth);
+    g_printf ("%*s   Priority          : %s\n", spacing, "",
+        res.priority ? "TRUE" : "FALSE");
+    g_printf ("%*s   Time slicing      : %s\n", spacing, "",
+        res.time_slicing ? "TRUE" : "FALSE");
+    g_printf ("%*s   MPE FEC           : %s\n", spacing, "",
+        res.mpe_fec ? "TRUE" : "FALSE");
+    g_printf ("%*s   Constellation     : %d (%s)\n", spacing, "",
+        res.constellation, enum_name (GST_TYPE_MPEG_TS_MODULATION_TYPE,
+            res.constellation));
+    g_printf ("%*s   Hierarchy         : %d (%s)\n", spacing, "", res.hierarchy,
+        enum_name (GST_TYPE_MPEG_TS_TERRESTRIAL_HIERARCHY, res.hierarchy));
+    g_printf ("%*s   Code Rate HP      : %d (%s)\n", spacing, "",
+        res.code_rate_hp, enum_name (GST_TYPE_MPEG_TS_DVB_CODE_RATE,
+            res.code_rate_hp));
+    g_printf ("%*s   Code Rate LP      : %d (%s)\n", spacing, "",
+        res.code_rate_lp, enum_name (GST_TYPE_MPEG_TS_DVB_CODE_RATE,
+            res.code_rate_lp));
+    g_printf ("%*s   Guard Interval    : %d (%s)\n", spacing, "",
+        res.guard_interval,
+        enum_name (GST_TYPE_MPEG_TS_TERRESTRIAL_GUARD_INTERVAL,
+            res.guard_interval));
+    g_printf ("%*s   Transmission Mode : %d (%s)\n", spacing, "",
+        res.transmission_mode,
+        enum_name (GST_TYPE_MPEG_TS_TERRESTRIAL_TRANSMISSION_MODE,
+            res.transmission_mode));
+    g_printf ("%*s   Other Frequency   : %s\n", spacing, "",
+        res.other_frequency ? "TRUE" : "FALSE");
+  }
+}
+
+static void
 dump_dvb_service_list (GstMpegTsDescriptor * desc, guint spacing)
 {
   GPtrArray *res;
@@ -341,6 +380,9 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
       }
       case GST_MTS_DESC_DVB_CABLE_DELIVERY_SYSTEM:
         dump_cable_delivery_descriptor (desc, spacing + 2);
+        break;
+      case GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM:
+        dump_terrestrial_delivery (desc, spacing + 2);
         break;
       case GST_MTS_DESC_DVB_BOUQUET_NAME:
       {
@@ -752,6 +794,9 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEG_TS_MODULATION_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_DVB_CODE_RATE);
   g_type_class_ref (GST_TYPE_MPEG_TS_CABLE_OUTER_FEC_SCHEME);
+  g_type_class_ref (GST_TYPE_MPEG_TS_TERRESTRIAL_TRANSMISSION_MODE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_TERRESTRIAL_GUARD_INTERVAL);
+  g_type_class_ref (GST_TYPE_MPEG_TS_TERRESTRIAL_HIERARCHY);
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
