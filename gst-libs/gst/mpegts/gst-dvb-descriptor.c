@@ -924,10 +924,9 @@ gboolean
 gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescriptor
     * descriptor, GstMpegTsExtendedEventDescriptor * res)
 {
-  guint8 *data, *desc_data;
+  guint8 *data, *pdata;
   guint8 tmp, len_item;
   GstMpegTsExtendedEventItem *item;
-  guint i;
 
   g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
   /* Need at least 6 bytes (1 for desc number, 3 for language code, 2 for the loop length) */
@@ -946,32 +945,30 @@ gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescriptor
   data += 3;
 
   len_item = *data;
+  if (len_item > descriptor->length - 5)
+    return FALSE;
 
   data += 1;
 
-  res->nb_items = 0;
   res->items = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_extended_event_item_free);
 
-  for (i = 0; i < len_item;) {
-    desc_data = data;
+  pdata = data + len_item;
+  while (data < pdata) {
     item = g_slice_new0 (GstMpegTsExtendedEventItem);
     item->item_description =
-        get_encoding_and_convert ((const gchar *) desc_data + 1, *desc_data);
+        get_encoding_and_convert ((const gchar *) data + 1, *data);
 
-    desc_data += *desc_data + 1;
-    i += *desc_data + 1;
+    data += *data + 1;
 
-    item->item =
-        get_encoding_and_convert ((const gchar *) desc_data + 1, *desc_data);
+    item->item = get_encoding_and_convert ((const gchar *) data + 1, *data);
 
-    desc_data += *desc_data + 1;
-    i += *desc_data + 1;
+    data += *data + 1;
 
     g_ptr_array_add (res->items, item);
-    res->nb_items += 1;
   }
-  data += len_item;
+  if (pdata != data)
+    return FALSE;
   res->text = get_encoding_and_convert ((const gchar *) data + 1, *data);
 
   return TRUE;
