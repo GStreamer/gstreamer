@@ -110,11 +110,11 @@ cam_device_open (CamDevice * device, const char *filename)
   g_return_val_if_fail (device->state == CAM_DEVICE_STATE_CLOSED, FALSE);
   g_return_val_if_fail (filename != NULL, FALSE);
 
-  GST_INFO ("opening ca device %s", filename);
+  GST_INFO ("opening CA device %s", filename);
 
   ret = open (filename, O_RDWR);
   if (ret == -1) {
-    GST_ERROR ("can't open ca device: %s", strerror (errno));
+    GST_ERROR ("can't open CA device: %s", g_strerror (errno));
     return FALSE;
   }
 
@@ -130,7 +130,7 @@ cam_device_open (CamDevice * device, const char *filename)
     /* get the capabilities of the CA */
     ret = ioctl (device->fd, CA_GET_CAP, &ca_caps);
     if (ret == -1) {
-      GST_ERROR ("CA_GET_CAP ioctl failed: %s", strerror (errno));
+      GST_ERROR ("CA_GET_CAP ioctl failed: %s", g_strerror (errno));
       reset_state (device);
       return FALSE;
     }
@@ -193,7 +193,7 @@ cam_device_close (CamDevice * device)
   g_return_if_fail (device != NULL);
   g_return_if_fail (device->state == CAM_DEVICE_STATE_OPEN);
 
-  GST_INFO ("closing ca device %s", device->filename);
+  GST_INFO ("closing CA device %s", device->filename);
   reset_state (device);
 }
 

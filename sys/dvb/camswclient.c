@@ -84,7 +84,7 @@ cam_sw_client_open (CamSwClient * client, const char *sock_path)
 
   GST_INFO ("connecting to softcam socket: %s", sock_path);
   if ((client->sock = socket (PF_UNIX, SOCK_STREAM, 0)) < 0) {
-    GST_ERROR ("Failed to create a socket, error : %s", strerror (errno));
+    GST_ERROR ("Failed to create a socket, error: %s", g_strerror (errno));
     return FALSE;
   }
   ret =
@@ -92,7 +92,7 @@ cam_sw_client_open (CamSwClient * client, const char *sock_path)
       sizeof (struct sockaddr_un));
   if (ret != 0) {
     GST_ERROR ("error opening softcam socket %s, error: %s",
-        sock_path, strerror (errno));
+        sock_path, g_strerror (errno));
 
     return FALSE;
   }
@@ -141,7 +141,8 @@ send_ca_pmt (CamSwClient * client, GstMpegTsPMT * pmt,
   cam_write_length_field (&buffer[3], ca_pmt_size);
 
   if (write (client->sock, buffer, buffer_size) == -1) {
-    GST_WARNING ("write failed when sending pmt with errno: %d", errno);
+    GST_WARNING ("write failed when sending PMT with error: %s (%d)",
+        g_strerror (errno), errno);
   }
 
   g_free (ca_pmt);

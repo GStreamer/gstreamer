@@ -137,7 +137,7 @@ static CamReturn
 send_conditional_access_enquiry (CamConditionalAccess * cas,
     CamSLSession * session)
 {
-  GST_DEBUG ("sending application cas enquiry");
+  GST_DEBUG ("sending application CAS enquiry");
   return send_simple (cas, session, TAG_CONDITIONAL_ACCESS_INFO_ENQUIRY);
 }
 
