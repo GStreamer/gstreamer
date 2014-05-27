@@ -258,9 +258,14 @@ void
 gst_gl_window_x11_close (GstGLWindow * window)
 {
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
+  GstGLDisplay *display = window->display;
   XEvent event;
 
   if (window_x11->device) {
+    /* Avoid BadDrawable Errors... */
+    if (gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_X11)
+      XSync (GST_GL_DISPLAY_X11 (display)->display, FALSE);
+
     if (window_x11->internal_win_id)
       XUnmapWindow (window_x11->device, window_x11->internal_win_id);
 
