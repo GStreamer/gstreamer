@@ -149,10 +149,13 @@ dump_cable_delivery_descriptor (GstMpegTsDescriptor * desc, guint spacing)
   if (gst_mpegts_descriptor_parse_cable_delivery_system (desc, &res)) {
     g_printf ("%*s Cable Delivery Descriptor\n", spacing, "");
     g_printf ("%*s   Frequency   : %d Hz\n", spacing, "", res.frequency);
-    g_printf ("%*s   Outer FEC   : %d\n", spacing, "", res.outer_fec);
-    g_printf ("%*s   modulation  : %d\n", spacing, "", res.modulation);
+    g_printf ("%*s   Outer FEC   : %d (%s)\n", spacing, "", res.outer_fec,
+        enum_name (GST_TYPE_MPEG_TS_CABLE_OUTER_FEC_SCHEME, res.outer_fec));
+    g_printf ("%*s   modulation  : %d (%s)\n", spacing, "", res.modulation,
+        enum_name (GST_TYPE_MPEG_TS_MODULATION_TYPE, res.modulation));
     g_printf ("%*s   Symbol rate : %d sym/s\n", spacing, "", res.symbol_rate);
-    g_printf ("%*s   Inner FEC   : %d\n", spacing, "", res.fec_inner);
+    g_printf ("%*s   Inner FEC   : %d (%s)\n", spacing, "", res.fec_inner,
+        enum_name (GST_TYPE_MPEG_TS_DVB_CODE_RATE, res.fec_inner));
   }
 }
 
@@ -746,6 +749,9 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_DVB_TABLE_ID);
   g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_ATSC_TABLE_ID);
   g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_SCTE_TABLE_ID);
+  g_type_class_ref (GST_TYPE_MPEG_TS_MODULATION_TYPE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_CODE_RATE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_CABLE_OUTER_FEC_SCHEME);
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
