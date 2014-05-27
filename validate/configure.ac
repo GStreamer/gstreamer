@@ -117,7 +117,7 @@ dnl *** checks for library functions ***
 dnl *** checks for dependancy libraries ***
 
 dnl GLib is required
-GLIB_REQ=2.32.0
+GLIB_REQ=2.36.0
 AC_SUBST([GLIB_REQ])
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
@@ -164,7 +164,7 @@ AC_SUBST(GST_PREFIX)
 GST_DATADIR="$GST_PREFIX/share"
 AC_DEFINE_UNQUOTED(GST_DATADIR, "$GST_DATADIR", [system wide data directory])
 
-PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.16, HAVE_GIO=yes, HAVE_GIO=no)
+PKG_CHECK_MODULES(GIO, gio-2.0, HAVE_GIO=yes, HAVE_GIO=no)
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
 
