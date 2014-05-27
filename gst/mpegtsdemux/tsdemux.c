@@ -1131,12 +1131,16 @@ static void
 gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     MpegTSBaseProgram * program)
 {
+  GstTSDemux *demux = (GstTSDemux *) base;
   TSDemuxStream *stream = (TSDemuxStream *) bstream;
 
   if (!stream->pad) {
     /* Create the pad */
-    if (bstream->stream_type != 0xff)
+    if (bstream->stream_type != 0xff) {
       stream->pad = create_pad_for_stream (base, bstream, program);
+      if (stream->pad)
+        gst_flow_combiner_add_pad (demux->flowcombiner, stream->pad);
+    }
     stream->active = FALSE;
 
     stream->need_newsegment = TRUE;
@@ -1157,6 +1161,8 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
   TSDemuxStream *stream = (TSDemuxStream *) bstream;
 
   if (stream->pad) {
+    gst_flow_combiner_remove_pad (GST_TS_DEMUX_CAST (base)->flowcombiner,
+        stream->pad);
     if (stream->active && gst_pad_is_active (stream->pad)) {
       /* Flush out all data */
       GST_DEBUG_OBJECT (stream->pad, "Flushing out pending data");
@@ -1167,8 +1173,6 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
       GST_DEBUG_OBJECT (stream->pad, "Deactivating and removing pad");
       gst_pad_set_active (stream->pad, FALSE);
       gst_element_remove_pad (GST_ELEMENT_CAST (base), stream->pad);
-      gst_flow_combiner_remove_pad (GST_TS_DEMUX_CAST (base)->flowcombiner,
-          stream->pad);
       stream->active = FALSE;
     }
     stream->pad = NULL;
@@ -1186,7 +1190,6 @@ activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
     GST_DEBUG_OBJECT (tsdemux, "Activating pad %s:%s for stream %p",
         GST_DEBUG_PAD_NAME (stream->pad), stream);
     gst_element_add_pad ((GstElement *) tsdemux, stream->pad);
-    gst_flow_combiner_add_pad (tsdemux->flowcombiner, stream->pad);
     stream->active = TRUE;
     GST_DEBUG_OBJECT (stream->pad, "done adding pad");
 
