@@ -62,8 +62,8 @@ QGLRenderer::initializeGL()
     /* FIXME: Allow the choice at runtime */
 #if defined(GST_GL_HAVE_PLATFORM_WGL)
     context = gst_gl_context_new_wrapped (display, (guintptr) wglGetCurrentContext (), GST_GL_PLATFORM_WGL, GST_GL_API_OPENGL);
-#elif defined (GST_GL_HAVE_PLATFORM_COCOA)
-    context = gst_gl_context_new_wrapped (display, (guintptr) qt_current_nsopengl_context(), GST_GL_PLATFORM_COCOA, GST_GL_API_OPENGL);
+#elif defined (GST_GL_HAVE_PLATFORM_CGL)
+    context = gst_gl_context_new_wrapped (display, (guintptr) qt_current_nsopengl_context(), GST_GL_PLATFORM_CGL, GST_GL_API_OPENGL);
 #elif defined(GST_GL_HAVE_PLATFORM_GLX)
     context = gst_gl_context_new_wrapped (display, (guintptr) glXGetCurrentContext (), GST_GL_PLATFORM_GLX, GST_GL_API_OPENGL);
 #endif

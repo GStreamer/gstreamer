@@ -30,7 +30,7 @@
     #include <windows.h>
     #include <Wingdi.h>
     #include <GL/gl.h>
-#elif defined (GST_GL_HAVE_PLATFORM_COCOA)
+#elif defined (GST_GL_HAVE_PLATFORM_CGL)
     #include <OpenGL/OpenGL.h>
     class NSOpenGLContext;
 #else
@@ -47,7 +47,7 @@
         HGLRC contextId;
         HDC dc;
     } GLContextID;
-#elif  defined(GST_GL_HAVE_PLATFORM_COCOA)
+#elif  defined(GST_GL_HAVE_PLATFORM_CGL)
     typedef struct _tagGLContextID
     {
         NSOpenGLContext* contextId;
