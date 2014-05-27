@@ -40,11 +40,14 @@ G_BEGIN_DECLS
 typedef struct _GstFlowCombiner GstFlowCombiner;
 
 GstFlowCombiner * gst_flow_combiner_new (void);
-void gst_flow_combiner_free (GstFlowCombiner * combiner);
-GstFlowReturn gst_flow_combiner_update_flow (GstFlowCombiner * combiner,
-    GstFlowReturn fret);
-void gst_flow_combiner_add_pad (GstFlowCombiner * combiner, GstPad * pad);
-void gst_flow_combiner_remove_pad (GstFlowCombiner * combiner, GstPad * pad);
+
+void              gst_flow_combiner_free (GstFlowCombiner * combiner);
+
+GstFlowReturn     gst_flow_combiner_update_flow (GstFlowCombiner * combiner, GstFlowReturn fret);
+
+void              gst_flow_combiner_add_pad    (GstFlowCombiner * combiner, GstPad * pad);
+
+void              gst_flow_combiner_remove_pad (GstFlowCombiner * combiner, GstPad * pad);
 
 G_END_DECLS
 
