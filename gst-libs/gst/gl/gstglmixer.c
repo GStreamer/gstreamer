@@ -1648,6 +1648,11 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
   while (walk) {                /* We walk with this list because it's ordered */
     GstGLMixerPad *pad = GST_GL_MIXER_PAD (walk->data);
     GstGLMixerCollect *mixcol = pad->mixcol;
+    GstGLMixerFrameData *frame;
+
+    frame = g_ptr_array_index (mix->frames, array_index);
+    frame->pad = pad;
+    frame->texture = 0;
 
     walk = g_slist_next (walk);
 
@@ -1656,11 +1661,6 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
       gint64 stream_time;
       GstSegment *seg;
       guint in_tex;
-      GstGLMixerFrameData *frame;
-
-      frame = g_ptr_array_index (mix->frames, array_index);
-      frame->pad = pad;
-      frame->texture = 0;
 
       seg = &mixcol->collect.segment;
 
