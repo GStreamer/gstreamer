@@ -51,8 +51,7 @@ static void _do_convert (GstGLContext * context, GstGLColorConvert * convert);
 static gboolean _init_convert (GstGLColorConvert * convert);
 static gboolean _init_convert_fbo (GstGLColorConvert * convert);
 static gboolean _gst_gl_color_convert_perform_unlocked (GstGLColorConvert *
-    convert, GstGLMemory * in_tex[GST_VIDEO_MAX_PLANES],
-    GstGLMemory * out_tex[GST_VIDEO_MAX_PLANES]);
+    convert, GstBuffer * inbuf, GstBuffer * outbuf);
 
 static gboolean _do_convert_draw (GstGLContext * context,
     GstGLColorConvert * convert);
@@ -375,7 +374,8 @@ struct _GstGLColorConvertPrivate
 
   struct ConvertInfo convert_info;
 
-  GstGLMemory *out_temp[GST_VIDEO_MAX_PLANES];
+  GstGLMemory *in_tex[GST_VIDEO_MAX_PLANES];
+  GstGLMemory *out_tex[GST_VIDEO_MAX_PLANES];
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_color_convert_debug);
@@ -465,9 +465,9 @@ gst_gl_color_convert_reset (GstGLColorConvert * convert)
   }
 
   for (i = 0; i < convert->priv->convert_info.out_n_textures; i++) {
-    if (convert->priv->out_temp[i])
-      gst_memory_unref ((GstMemory *) convert->priv->out_temp[i]);
-    convert->priv->out_temp[i] = NULL;
+    if (convert->priv->out_tex[i])
+      gst_memory_unref ((GstMemory *) convert->priv->out_tex[i]);
+    convert->priv->out_tex[i] = NULL;
   }
 
   if (convert->shader) {
@@ -522,8 +522,8 @@ gst_gl_color_convert_set_format (GstGLColorConvert * convert,
 /**
  * gst_gl_color_convert_perform:
  * @convert: a #GstGLColorConvert
- * @in_tex: the texture ids for input formatted according to in_info
- * @out_tex: the texture ids for output formatted according to out_info
+ * @inbuf: the texture ids for input formatted according to in_info
+ * @outbuf: the texture ids for output formatted according to out_info
  *
  * Converts the data contained in in_tex into out_tex using the formats
  * specified by the #GstVideoInfo<!--  -->s passed to
@@ -532,16 +532,15 @@ gst_gl_color_convert_set_format (GstGLColorConvert * convert,
  * Returns: whether the conversion was successful
  */
 gboolean
-gst_gl_color_convert_perform (GstGLColorConvert * convert,
-    GstGLMemory * in_tex[GST_VIDEO_MAX_PLANES],
-    GstGLMemory * out_tex[GST_VIDEO_MAX_PLANES])
+gst_gl_color_convert_perform (GstGLColorConvert * convert, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   gboolean ret;
 
   g_return_val_if_fail (convert != NULL, FALSE);
 
   g_mutex_lock (&convert->lock);
-  ret = _gst_gl_color_convert_perform_unlocked (convert, in_tex, out_tex);
+  ret = _gst_gl_color_convert_perform_unlocked (convert, inbuf, outbuf);
   g_mutex_unlock (&convert->lock);
 
   return ret;
@@ -549,27 +548,14 @@ gst_gl_color_convert_perform (GstGLColorConvert * convert,
 
 static gboolean
 _gst_gl_color_convert_perform_unlocked (GstGLColorConvert * convert,
-    GstGLMemory * in_tex[GST_VIDEO_MAX_PLANES],
-    GstGLMemory * out_tex[GST_VIDEO_MAX_PLANES])
+    GstBuffer * inbuf, GstBuffer * outbuf)
 {
   g_return_val_if_fail (convert != NULL, FALSE);
-  g_return_val_if_fail (in_tex, FALSE);
-  g_return_val_if_fail (out_tex, FALSE);
+  g_return_val_if_fail (inbuf, FALSE);
+  g_return_val_if_fail (outbuf, FALSE);
 
-  convert->in_tex[0] = in_tex[0];
-  convert->in_tex[1] = in_tex[1];
-  convert->in_tex[2] = in_tex[2];
-  convert->in_tex[3] = in_tex[3];
-  convert->out_tex[0] = out_tex[0];
-  convert->out_tex[1] = out_tex[1];
-  convert->out_tex[2] = out_tex[2];
-  convert->out_tex[3] = out_tex[3];
-
-  GST_LOG ("Converting %s from %p,%p,%p,%p into %s using %p,%p,%p,%p",
-      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&convert->in_info)),
-      in_tex[0], in_tex[1], in_tex[2], in_tex[3],
-      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&convert->out_info)),
-      out_tex[0], out_tex[1], out_tex[2], out_tex[3]);
+  convert->inbuf = inbuf;
+  convert->outbuf = outbuf;
 
   gst_gl_context_thread_add (convert->context,
       (GstGLContextThreadFunc) _do_convert, convert);
@@ -1142,9 +1128,9 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
 {
   guint in_width, in_height, out_width, out_height;
   struct ConvertInfo *c_info = &convert->priv->convert_info;
-  GstMapInfo in_infos[GST_VIDEO_MAX_PLANES], out_infos[GST_VIDEO_MAX_PLANES];
+  GstMapInfo out_info[GST_VIDEO_MAX_PLANES], in_info[GST_VIDEO_MAX_PLANES];
   gboolean res = TRUE;
-  gint i = 0;
+  gint i, j;
 
   out_width = GST_VIDEO_INFO_WIDTH (&convert->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&convert->out_info);
@@ -1156,65 +1142,98 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
     return;
   }
 
-  GST_TRACE ("converting to textures:%p,%p,%p,%p dimensions:%ux%u, "
-      "from textures:%p,%p,%p,%p dimensions:%ux%u", convert->out_tex[0],
-      convert->out_tex[1], convert->out_tex[2], convert->out_tex[3],
-      out_width, out_height, convert->in_tex[0], convert->in_tex[1],
-      convert->in_tex[2], convert->in_tex[3], in_width, in_height);
-
   for (i = 0; i < c_info->in_n_textures; i++) {
-    gst_memory_map ((GstMemory *) convert->in_tex[i], &in_infos[i],
-        GST_MAP_READ | GST_MAP_GL);
+    convert->priv->in_tex[i] =
+        (GstGLMemory *) gst_buffer_peek_memory (convert->inbuf, i);
+    if (!gst_is_gl_memory ((GstMemory *) convert->priv->in_tex[i])) {
+      res = FALSE;
+      goto out;
+    }
+    if (!gst_memory_map ((GstMemory *) convert->priv->in_tex[i], &in_info[i],
+            GST_MAP_READ | GST_MAP_GL)) {
+      res = FALSE;
+      goto out;
+    }
   }
-  for (i = 0; i < c_info->out_n_textures; i++) {
-    if (convert->out_tex[i]->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
-        || convert->out_tex[i]->tex_type ==
-        GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
-        || out_width != convert->out_tex[i]->width
-        || out_height != convert->out_tex[i]->height) {
+
+  for (j = 0; j < c_info->out_n_textures; j++) {
+    GstGLMemory *out_tex =
+        (GstGLMemory *) gst_buffer_peek_memory (convert->outbuf, j);
+    if (!gst_is_gl_memory ((GstMemory *) out_tex)) {
+      res = FALSE;
+      goto out;
+    }
+
+    if (out_tex->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
+        || out_tex->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
+        || out_width != out_tex->width || out_height != out_tex->height) {
       /* Luminance formats are not color renderable */
       /* renderering to a framebuffer only renders the intersection of all
        * the attachments i.e. the smallest attachment size */
-      if (!convert->priv->out_temp[i])
-        convert->priv->out_temp[i] =
+      if (!convert->priv->out_tex[j])
+        convert->priv->out_tex[j] =
             (GstGLMemory *) gst_gl_memory_alloc (context,
             GST_VIDEO_GL_TEXTURE_TYPE_RGBA, out_width, out_height, out_width);
     } else {
-      convert->priv->out_temp[i] = convert->out_tex[i];
+      convert->priv->out_tex[j] = out_tex;
     }
-    gst_memory_map ((GstMemory *) convert->priv->out_temp[i], &out_infos[i],
-        GST_MAP_WRITE | GST_MAP_GL);
+
+    if (!gst_memory_map ((GstMemory *) convert->priv->out_tex[j], &out_info[j],
+            GST_MAP_WRITE | GST_MAP_GL)) {
+      res = FALSE;
+      goto out;
+    }
   }
+
+  GST_LOG_OBJECT (convert, "converting to textures:%p,%p,%p,%p "
+      "dimensions:%ux%u, from textures:%p,%p,%p,%p dimensions:%ux%u",
+      convert->priv->out_tex[0], convert->priv->out_tex[1],
+      convert->priv->out_tex[2], convert->priv->out_tex[3], out_width,
+      out_height, convert->priv->in_tex[0], convert->priv->in_tex[1],
+      convert->priv->in_tex[2], convert->priv->in_tex[3], in_width, in_height);
 
   if (!convert->priv->draw (context, convert))
     res = FALSE;
 
-  for (i = 0; i < c_info->in_n_textures; i++) {
-    gst_memory_unmap ((GstMemory *) convert->in_tex[i], &in_infos[i]);
-  }
-  for (i = 0; i < c_info->out_n_textures; i++) {
-    gst_memory_unmap ((GstMemory *) convert->priv->out_temp[i], &out_infos[i]);
+out:
+  for (j--; j >= 0; j--) {
+    GstGLMemory *out_tex =
+        (GstGLMemory *) gst_buffer_peek_memory (convert->outbuf, j);
+    gst_memory_unmap ((GstMemory *) convert->priv->out_tex[j], &out_info[j]);
 
-    if (convert->out_tex[i]->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
-        || convert->out_tex[i]->tex_type ==
-        GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
-        || out_width != convert->out_tex[i]->width
-        || out_height != convert->out_tex[i]->height) {
-      GstGLMemory *gl_mem = convert->out_tex[i];
-      GstMapInfo from_info, to_info;
+    if (out_tex->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
+        || out_tex->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
+        || out_width != out_tex->width || out_height != out_tex->height) {
+      GstMapInfo to_info, from_info;
 
-      gst_memory_map ((GstMemory *) convert->priv->out_temp[i], &from_info,
-          GST_MAP_READ | GST_MAP_GL);
-      gst_memory_map ((GstMemory *) gl_mem, &to_info,
-          GST_MAP_WRITE | GST_MAP_GL);
-      gst_gl_memory_copy_into_texture (convert->priv->out_temp[i],
-          gl_mem->tex_id, gl_mem->tex_type, gl_mem->width, gl_mem->height,
-          gl_mem->stride, FALSE);
-      gst_memory_unmap ((GstMemory *) gl_mem, &to_info);
-      gst_memory_unmap ((GstMemory *) convert->priv->out_temp[i], &from_info);
+      gst_memory_unmap ((GstMemory *) convert->priv->out_tex[j], &out_info[j]);
+
+      if (!gst_memory_map ((GstMemory *) convert->priv->out_tex[j], &from_info,
+              GST_MAP_READ | GST_MAP_GL)) {
+        gst_gl_context_set_error (convert->context, "Failed to map "
+            "intermediate memory");
+        res = FALSE;
+        continue;
+      }
+      if (!gst_memory_map ((GstMemory *) out_tex, &to_info,
+              GST_MAP_WRITE | GST_MAP_GL)) {
+        gst_gl_context_set_error (convert->context, "Failed to map "
+            "intermediate memory");
+        res = FALSE;
+        continue;
+      }
+      gst_gl_memory_copy_into_texture (convert->priv->out_tex[j],
+          out_tex->tex_id, out_tex->tex_type, out_tex->width, out_tex->height,
+          out_tex->stride, FALSE);
+      gst_memory_unmap ((GstMemory *) convert->priv->out_tex[j], &from_info);
+      gst_memory_unmap ((GstMemory *) out_tex, &to_info);
     } else {
-      convert->priv->out_temp[i] = NULL;
+      convert->priv->out_tex[j] = NULL;
     }
+  }
+
+  for (i--; i >= 0; i--) {
+    gst_memory_unmap ((GstMemory *) convert->priv->in_tex[i], &in_info[i]);
   }
 
   convert->priv->result = res;
@@ -1259,10 +1278,10 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   /* attach the texture to the FBO to renderer to */
   for (i = 0; i < c_info->out_n_textures; i++) {
     /* needed? */
-    gl->BindTexture (GL_TEXTURE_2D, convert->out_tex[i]->tex_id);
+    gl->BindTexture (GL_TEXTURE_2D, convert->priv->out_tex[i]->tex_id);
 
     gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
-        GL_TEXTURE_2D, convert->priv->out_temp[i]->tex_id, 0);
+        GL_TEXTURE_2D, convert->priv->out_tex[i]->tex_id, 0);
   }
 
   if (gl->DrawBuffers)
@@ -1291,7 +1310,7 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
     gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
 
     gl->ActiveTexture (GL_TEXTURE0 + i);
-    gl->BindTexture (GL_TEXTURE_2D, convert->in_tex[i]->tex_id);
+    gl->BindTexture (GL_TEXTURE_2D, convert->priv->in_tex[i]->tex_id);
 
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1299,7 +1318,7 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     gst_gl_shader_set_uniform_2fv (convert->shader, scale_name, 1,
-        convert->in_tex[i]->tex_scaling);
+        convert->priv->in_tex[i]->tex_scaling);
 
     g_free (scale_name);
   }
