@@ -447,7 +447,7 @@ gst_gl_context_egl_destroy_context (GstGLContext * context)
   gst_gl_context_egl_activate (context, FALSE);
 
   if (egl->egl_surface)
-    eglDestroySurface (egl->egl_surface, egl->egl_display);
+    eglDestroySurface (egl->egl_display, egl->egl_surface);
 
   if (egl->egl_context)
     eglDestroyContext (egl->egl_display, egl->egl_context);
