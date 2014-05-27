@@ -2324,6 +2324,14 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_FLAGS:
       gst_play_bin_set_flags (playbin, g_value_get_flags (value));
+      if (playbin->curr_group) {
+        GST_SOURCE_GROUP_LOCK (playbin->curr_group);
+        if (playbin->curr_group->uridecodebin) {
+          g_object_set (playbin->curr_group->uridecodebin, "download",
+              (g_value_get_flags (value) & GST_PLAY_FLAG_DOWNLOAD) != 0, NULL);
+        }
+        GST_SOURCE_GROUP_UNLOCK (playbin->curr_group);
+      }
       break;
     case PROP_CURRENT_VIDEO:
       gst_play_bin_set_current_video_stream (playbin, g_value_get_int (value));
@@ -2400,6 +2408,14 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
       playbin->ring_buffer_max_size = g_value_get_uint64 (value);
+      if (playbin->curr_group) {
+        GST_SOURCE_GROUP_LOCK (playbin->curr_group);
+        if (playbin->curr_group->uridecodebin) {
+          g_object_set (playbin->curr_group->uridecodebin,
+              "ring-buffer-max-size", playbin->ring_buffer_max_size, NULL);
+        }
+        GST_SOURCE_GROUP_UNLOCK (playbin->curr_group);
+      }
       break;
     case PROP_FORCE_ASPECT_RATIO:
       g_object_set (playbin->playsink, "force-aspect-ratio",
