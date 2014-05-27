@@ -48,6 +48,9 @@
 #include "gstglfiltercube.h"
 #include "gstgleffects.h"
 #include "gstglcolorscale.h"
+#if HAVE_GRAPHENE
+#include "gstgltransformation.h"
+#endif
 
 #if GST_GL_HAVE_OPENGL
 #include "gstgltestsrc.h"
@@ -97,7 +100,12 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE)) {
     return FALSE;
   }
-
+#if HAVE_GRAPHENE
+  if (!gst_element_register (plugin, "gltransformation",
+          GST_RANK_NONE, GST_TYPE_GL_TRANSFORMATION)) {
+    return FALSE;
+  }
+#endif
   if (!gst_element_register (plugin, "gleffects",
           GST_RANK_NONE, gst_gl_effects_get_type ())) {
     return FALSE;

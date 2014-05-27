@@ -76,6 +76,12 @@ libgstopengl_la_SOURCES = \
 	gstglcolorscale.h \
 	$(OPENGL_SOURCES)
 
+if HAVE_GRAPHENE
+libgstopengl_la_SOURCES += \
+	gstgltransformation.c \
+	gstgltransformation.h
+endif
+
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
 # (like in AM_CFLAGS)?
 libgstopengl_la_CFLAGS = \
@@ -85,7 +91,8 @@ libgstopengl_la_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GL_CFLAGS) \
-	$(LIBPNG_CFLAGS)
+	$(LIBPNG_CFLAGS) \
+	$(GRAPHENE_CFLAGS)
 
 libgstopengl_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la \
@@ -94,8 +101,9 @@ libgstopengl_la_LIBADD = \
 	-lgstpbutils-$(GST_API_VERSION) \
 	$(GL_LIBS) \
 	$(LIBPNG_LIBS) \
-        $(JPEG_LIBS) \
-	$(LIBM)
+	$(JPEG_LIBS) \
+	$(LIBM) \
+	$(GRAPHENE_LIBS)
 
 libgstopengl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstopengl_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
