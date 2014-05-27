@@ -47,9 +47,11 @@ GQuark gst_gl_context_error_quark (void);
  */
 typedef void (*GstGLContextThreadFunc) (GstGLContext * context, gpointer data);
 
+#define GST_GL_CONTEXT_TYPE_CGL "gst.gl.context.CGL"
 #define GST_GL_CONTEXT_TYPE_GLX "gst.gl.context.GLX"
 #define GST_GL_CONTEXT_TYPE_EGL "gst.gl.context.EGL"
 #define GST_GL_CONTEXT_TYPE_WGL "gst.gl.context.WGL"
+#define GST_GL_CONTEXT_TYPE_EAGL "gst.gl.context.EAGL"
 
 typedef enum
 {
