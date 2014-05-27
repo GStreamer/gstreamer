@@ -473,6 +473,7 @@ struct _GstMpegTsExtendedEventItem
  * GstMpegTsExtendedEventDescriptor:
  * @desctiptor_number:
  * @last_descriptor_number:
+ * @language_code: NULL terminated language code.
  * @items: (element-type GstMpegTsExtendedEventItem): the #GstMpegTsExtendedEventItem
  * @text:
  *
@@ -482,7 +483,7 @@ struct _GstMpegTsExtendedEventDescriptor
 {
   guint8 descriptor_number;
   guint8 last_descriptor_number;
-  gchar  language_code[3];
+  gchar  language_code[4];
   GPtrArray *items;
   gchar *text;
 };
@@ -498,7 +499,7 @@ struct _GstMpegTsComponentDescriptor
   guint8 component_type;
   guint8 component_tag;
   /* FIXME : Make it a separate (allocated, null-terminated) return value  */
-  gchar  language_code[3];
+  gchar  language_code[4];
   gchar *text;
 };
 
@@ -536,7 +537,7 @@ typedef struct _GstMpegTsDVBParentalRatingItem GstMpegTsDVBParentalRatingItem;
  */
 struct _GstMpegTsDVBParentalRatingItem
 {
-  gchar  country_code[3];
+  gchar  country_code[4];
   guint8 rating;
 };
 
@@ -665,7 +666,7 @@ typedef struct _GstMpegTsDvbMultilingualNetworkNameItem GstMpegTsDvbMultilingual
  */
 struct _GstMpegTsDvbMultilingualNetworkNameItem
 {
-  gchar language_code[3];
+  gchar language_code[4];
   gchar *network_name;
 };
 
@@ -684,7 +685,7 @@ typedef struct _GstMpegTsDvbMultilingualBouquetNameItem GstMpegTsDvbMultilingual
  */
 struct _GstMpegTsDvbMultilingualBouquetNameItem
 {
-  gchar language_code[3];
+  gchar language_code[4];
   gchar *bouquet_name;
 };
 
@@ -704,7 +705,7 @@ typedef struct _GstMpegTsDvbMultilingualServiceNameItem GstMpegTsDvbMultilingual
  */
 struct _GstMpegTsDvbMultilingualServiceNameItem
 {
-  gchar language_code[3];
+  gchar language_code[4];
   gchar *provider_name;
   gchar *service_name;
 };
@@ -722,7 +723,7 @@ typedef struct _GstMpegTsDvbMultilingualComponentItem GstMpegTsDvbMultilingualCo
  */
 struct _GstMpegTsDvbMultilingualComponentItem
 {
-  gchar language_code[3];
+  gchar language_code[4];
   gchar *description;
 };
 
@@ -754,7 +755,7 @@ struct _GstMpegTsDataBroadcastDescriptor
   guint16     data_broadcast_id;
   guint8      component_tag;
   guint8      *selector_bytes;
-  gchar       language_code[3];
+  gchar       language_code[4];
   gchar       *text;
 };
 

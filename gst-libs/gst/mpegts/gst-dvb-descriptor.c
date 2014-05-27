@@ -941,6 +941,7 @@ gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescriptor
   data += 1;
 
   memcpy (res->language_code, data, 3);
+  res->language_code[3] = 0;
 
   data += 3;
 
