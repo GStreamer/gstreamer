@@ -2131,6 +2131,8 @@ gst_single_queue_flush_queue (GstSingleQueue * sq, gboolean full)
   gst_data_queue_flush (sq->queue);
   if (was_flushing)
     gst_data_queue_set_flushing (sq->queue, TRUE);
+
+  update_buffering (sq->mqueue, sq);
 }
 
 static void
