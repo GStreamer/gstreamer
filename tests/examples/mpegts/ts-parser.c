@@ -280,6 +280,25 @@ dump_iso_639_language (GstMpegTsDescriptor * desc, guint spacing)
   }
 }
 
+static void
+dump_dvb_extended_event (GstMpegTsDescriptor * desc, guint spacing)
+{
+  GstMpegTsExtendedEventDescriptor res;
+
+  if (gst_mpegts_descriptor_parse_dvb_extended_event (desc, &res)) {
+    guint i;
+    g_printf ("%*s DVB Extended Event\n", spacing, "");
+    g_printf ("%*s   descriptor_number:%d, last_descriptor_number:%d\n",
+        spacing, "", res.descriptor_number, res.last_descriptor_number);
+    g_printf ("%*s   language_code:%s\n", spacing, "", res.language_code);
+    g_printf ("%*s   text : %s\n", spacing, "", res.text);
+    for (i = 0; i < res.items->len; i++) {
+      GstMpegTsExtendedEventItem *item = g_ptr_array_index (res.items, i);
+      g_printf ("%*s     #%d [description:item]  %s : %s\n",
+          spacing, "", i, item->item_description, item->item);
+    }
+  }
+}
 
 static void
 dump_descriptors (GPtrArray * descriptors, guint spacing)
@@ -389,6 +408,11 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
         }
       }
         break;
+      case GST_MTS_DESC_DVB_EXTENDED_EVENT:
+      {
+        dump_dvb_extended_event (desc, spacing + 2);
+        break;
+      }
       case GST_MTS_DESC_DVB_SUBTITLING:
       {
         gchar lang[4];
