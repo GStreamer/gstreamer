@@ -136,7 +136,7 @@ static void gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
 static gboolean gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstFlowReturn gst_glimage_sink_prepare (GstBaseSink * bsink,
     GstBuffer * buf);
-static GstFlowReturn gst_glimage_sink_render (GstBaseSink * bsink,
+static GstFlowReturn gst_glimage_sink_show_frame (GstVideoSink * bsink,
     GstBuffer * buf);
 static gboolean gst_glimage_sink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
@@ -188,11 +188,13 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
+  GstVideoSinkClass *gstvideosink_class;
   GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
+  gstvideosink_class = (GstVideoSinkClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->set_property = gst_glimage_sink_set_property;
@@ -249,11 +251,12 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_glimage_sink_query);
   gstbasesink_class->set_caps = gst_glimage_sink_set_caps;
   gstbasesink_class->get_times = gst_glimage_sink_get_times;
-  gstbasesink_class->preroll = gst_glimage_sink_render;
-  gstbasesink_class->render = gst_glimage_sink_render;
   gstbasesink_class->prepare = gst_glimage_sink_prepare;
   gstbasesink_class->propose_allocation = gst_glimage_sink_propose_allocation;
   gstbasesink_class->stop = gst_glimage_sink_stop;
+
+  gstvideosink_class->show_frame =
+      GST_DEBUG_FUNCPTR (gst_glimage_sink_show_frame);
 }
 
 static void
@@ -748,13 +751,13 @@ upload_failed:
 }
 
 static GstFlowReturn
-gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
+gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
 
   GST_TRACE ("rendering buffer:%p", buf);
 
-  glimage_sink = GST_GLIMAGE_SINK (bsink);
+  glimage_sink = GST_GLIMAGE_SINK (vsink);
 
   GST_TRACE ("redisplay texture:%u of size:%ux%u, window size:%ux%u",
       glimage_sink->next_tex, GST_VIDEO_INFO_WIDTH (&glimage_sink->info),
