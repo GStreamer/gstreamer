@@ -56,8 +56,8 @@ struct _GstGLColorConvert
 
   gboolean         initted;
 
-  GstGLMemory *    in_tex[GST_VIDEO_MAX_PLANES];
-  GstGLMemory *    out_tex[GST_VIDEO_MAX_PLANES];
+  GstBuffer *    inbuf;
+  GstBuffer *    outbuf;
 
   /* used for the conversion */
   GLuint           fbo;
@@ -106,8 +106,7 @@ void     gst_gl_color_convert_set_format    (GstGLColorConvert * convert,
                                              GstVideoInfo * out_info);
 
 gboolean gst_gl_color_convert_perform        (GstGLColorConvert * convert,
-                                              GstGLMemory * in_tex[GST_VIDEO_MAX_PLANES],
-                                              GstGLMemory * out_tex[GST_VIDEO_MAX_PLANES]);
+                                              GstBuffer * inbuf, GstBuffer * outbuf);
 
 G_END_DECLS
 

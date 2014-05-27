@@ -279,7 +279,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
       gst_memory_map (mem, &map_info, GST_MAP_READ | GST_MAP_GL);
       gst_memory_unmap (mem, &map_info);
 
-      *tex_id = ((GstGLMemory *) mem)->tex_id;
+      *tex_id = ((GstGLMemory *)mem)->tex_id;
       return TRUE;
     }
 
@@ -684,6 +684,8 @@ _upload_memory (GstGLUpload * upload)
   guint in_width, in_height;
   guint in_texture[GST_VIDEO_MAX_PLANES];
   GstGLMemory *out_texture[GST_VIDEO_MAX_PLANES] = {upload->out_tex, 0, 0, 0};
+  GstBuffer *inbuf, *outbuf;
+  gboolean ret;
   gint i;
 
   in_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
@@ -695,13 +697,22 @@ _upload_memory (GstGLUpload * upload)
     }
   }
 
+  inbuf = gst_buffer_new ();
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
     in_texture[i] = upload->in_tex[i]->tex_id;
+    gst_buffer_append_memory (inbuf, gst_memory_ref ((GstMemory *) upload->in_tex[i]));
   }
+  outbuf = gst_buffer_new ();
+  gst_buffer_append_memory (outbuf, gst_memory_ref ((GstMemory *) upload->out_tex));
 
   GST_TRACE ("uploading to texture:%u with textures:%u,%u,%u dimensions:%ux%u", 
       out_texture[0]->tex_id, in_texture[0], in_texture[1], in_texture[2],
       in_width, in_height);
 
-  return gst_gl_color_convert_perform (upload->convert, upload->in_tex, out_texture);
+  ret = gst_gl_color_convert_perform (upload->convert, inbuf, outbuf);
+
+  gst_buffer_unref (inbuf);
+  gst_buffer_unref (outbuf);
+
+  return ret;
 }
