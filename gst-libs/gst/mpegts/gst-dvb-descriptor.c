@@ -941,7 +941,7 @@ gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescriptor
 
   data += 1;
 
-  memcpy (data, res->language_code, 3);
+  memcpy (res->language_code, data, 3);
 
   data += 3;
 
@@ -1010,7 +1010,7 @@ gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor
   res->component_tag = *data;
   data += 1;
 
-  memcpy (data, res->language_code, 3);
+  memcpy (res->language_code, data, 3);
   data += 3;
 
   len = descriptor->length - 6;
@@ -1167,7 +1167,7 @@ gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegTsDescriptor
         g_slice_new0 (GstMpegTsDVBParentalRatingItem);
     g_ptr_array_add (*rating, item);
 
-    memcpy (data, item->country_code, 3);
+    memcpy (item->country_code, data, 3);
     data += 3;
 
     if (g_strcmp0 (item->country_code, "BRA") == 0) {
@@ -1420,7 +1420,7 @@ gst_mpegts_descriptor_parse_dvb_multilingual_network_name (const
   for (i = 0; i < descriptor->length - 3;) {
     item = g_slice_new0 (GstMpegTsDvbMultilingualNetworkNameItem);
     g_ptr_array_add (*network_name_items, item);
-    memcpy (data, item->language_code, 3);
+    memcpy (item->language_code, data, 3);
     data += 3;
     i += 3;
 
@@ -1473,7 +1473,7 @@ gst_mpegts_descriptor_parse_dvb_multilingual_bouquet_name (const
   for (i = 0; i < descriptor->length - 3;) {
     item = g_slice_new0 (GstMpegTsDvbMultilingualBouquetNameItem);
     g_ptr_array_add (*bouquet_name_items, item);
-    memcpy (data, item->language_code, 3);
+    memcpy (item->language_code, data, 3);
     data += 3;
     i += 3;
 
@@ -1526,7 +1526,7 @@ gst_mpegts_descriptor_parse_dvb_multilingual_service_name (const
   for (i = 0; i < descriptor->length - 3;) {
     item = g_slice_new0 (GstMpegTsDvbMultilingualServiceNameItem);
     g_ptr_array_add (*service_name_items, item);
-    memcpy (data, item->language_code, 3);
+    memcpy (item->language_code, data, 3);
     data += 3;
     i += 3;
 
@@ -1591,7 +1591,7 @@ gst_mpegts_descriptor_parse_dvb_multilingual_component (const
   for (i = 0; i < descriptor->length - 3;) {
     item = g_slice_new0 (GstMpegTsDvbMultilingualComponentItem);
     g_ptr_array_add (*component_description_items, item);
-    memcpy (data, item->language_code, 3);
+    memcpy (item->language_code, data, 3);
     data += 3;
     i += 3;
 
@@ -1737,7 +1737,7 @@ gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegTsDescriptor
   res->selector_bytes = g_memdup (data, len);
   data += len;
 
-  memcpy (data, res->language_code, 3);
+  memcpy (res->language_code, data, 3);
   data += 3;
 
   res->text = get_encoding_and_convert ((const gchar *) data + 1, *data);
