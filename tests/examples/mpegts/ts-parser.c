@@ -427,6 +427,28 @@ dump_component (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
+dump_content (GstMpegTsDescriptor * desc, guint spacing)
+{
+  GPtrArray *contents;
+  guint i;
+
+  if (gst_mpegts_descriptor_parse_dvb_content (desc, &contents)) {
+    for (i = 0; i < contents->len; i++) {
+      GstMpegTsContent *item = g_ptr_array_index (contents, i);
+      g_printf ("%*s content nibble 1 : 0x%01x (%s)\n", spacing, "",
+          item->content_nibble_1,
+          enum_name (GST_TYPE_MPEG_TS_CONTENT_NIBBLE_HI,
+              item->content_nibble_1));
+      g_printf ("%*s content nibble 2 : 0x%01x\n", spacing, "",
+          item->content_nibble_2);
+      g_printf ("%*s user_byte        : 0x%02x\n", spacing, "",
+          item->user_byte);
+    }
+    g_ptr_array_unref (contents);
+  }
+}
+
+static void
 dump_iso_639_language (GstMpegTsDescriptor * desc, guint spacing)
 {
   guint i;
@@ -582,6 +604,9 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
         break;
       case GST_MTS_DESC_DVB_COMPONENT:
         dump_component (desc, spacing + 2);
+        break;
+      case GST_MTS_DESC_DVB_CONTENT:
+        dump_content (desc, spacing + 2);
         break;
       case GST_MTS_DESC_ISO_639_LANGUAGE:
         dump_iso_639_language (desc, spacing + 2);
@@ -1123,6 +1148,7 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEG_TS_DVB_LINKAGE_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_DVB_LINKAGE_HAND_OVER_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_COMPONENT_STREAM_CONTENT);
+  g_type_class_ref (GST_TYPE_MPEG_TS_CONTENT_NIBBLE_HI);
 
   mainloop = g_main_loop_new (NULL, FALSE);
 

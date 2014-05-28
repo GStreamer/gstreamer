@@ -526,6 +526,20 @@ gboolean gst_mpegts_descriptor_parse_dvb_ca_identifier (const GstMpegTsDescripto
                                                         GArray ** list);
 
 /* GST_MTS_DESC_DVB_CONTENT (0x54) */
+typedef enum {
+  GST_MPEGTS_CONTENT_MOVIE_DRAMA                = 0x01,
+  GST_MPEGTS_CONTENT_NEWS_CURRENT_AFFAIRS       = 0x02,
+  GST_MPEGTS_CONTENT_SHOW_GAME_SHOW             = 0x03,
+  GST_MPEGTS_CONTENT_SPORTS                     = 0x04,
+  GST_MPEGTS_CONTENT_CHILDREN_YOUTH_PROGRAM     = 0x05,
+  GST_MPEGTS_CONTENT_MUSIC_BALLET_DANCE         = 0x06,
+  GST_MPEGTS_CONTENT_ARTS_CULTURE               = 0x07,
+  GST_MPEGTS_CONTENT_SOCIAL_POLITICAL_ECONOMICS = 0x08,
+  GST_MPEGTS_CONTENT_EDUCATION_SCIENCE_FACTUAL  = 0x09,
+  GST_MPEGTS_CONTENT_LEISURE_HOBBIES            = 0x0A,
+  GST_MPEGTS_CONTENT_SPECIAL_CHARACTERISTICS    = 0x0B
+} GstMpegTsContentNibbleHi;
+
 typedef struct _GstMpegTsContent GstMpegTsContent;
 struct _GstMpegTsContent
 {
