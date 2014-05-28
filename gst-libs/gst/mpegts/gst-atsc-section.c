@@ -776,6 +776,8 @@ _parse_ett (GstMpegTsSection * section)
   data = section->data;
   end = data + section->section_length;
 
+  ett->ett_table_id_extension = section->subtable_extension;
+
   /* Skip already parsed data */
   data += 8;
 

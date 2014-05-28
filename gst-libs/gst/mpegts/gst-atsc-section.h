@@ -249,6 +249,7 @@ typedef struct _GstMpegTsAtscETT GstMpegTsAtscETT;
  */
 struct _GstMpegTsAtscETT
 {
+  guint16        ett_table_id_extension;
   guint16        protocol_version;
   guint32        etm_id;
 

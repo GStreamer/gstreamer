@@ -666,7 +666,7 @@ dump_ett (GstMpegTsSection * section)
 
   g_assert (ett);
 
-  g_printf ("     service_id          : 0x%04x\n", section->subtable_extension);
+  g_printf ("     ett_table_id_ext    : 0x%04x\n", ett->ett_table_id_extension);
   g_printf ("     protocol_version    : 0x%04x\n", ett->protocol_version);
   g_printf ("     etm_id              : 0x%04x\n", ett->etm_id);
 
