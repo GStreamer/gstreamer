@@ -915,7 +915,6 @@ static gboolean
 gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
 {
   GstQuery *query;
-  gchar *uri = NULL;
   gboolean ret;
   GSList *iter;
 
@@ -925,15 +924,24 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
   query = gst_query_new_uri ();
   ret = gst_pad_peer_query (mssdemux->sinkpad, query);
   if (ret) {
+    gchar *uri, *redirect_uri;
+    gboolean permanent;
     gchar *baseurl_end;
-    gst_query_parse_uri (query, &uri);
-    GST_INFO_OBJECT (mssdemux, "Upstream is using URI: %s", uri);
 
-    mssdemux->manifest_uri = g_strdup (uri);
-    baseurl_end = g_strrstr (uri, "/Manifest");
+    gst_query_parse_uri (query, &uri);
+    gst_query_parse_uri_redirection (query, &redirect_uri);
+    gst_query_parse_uri_redirection_permanent (query, &permanent);
+
+    GST_INFO_OBJECT (mssdemux, "Upstream is using URI: %s (redirect: %s)", uri,
+        GST_STR_NULL (redirect_uri));
+
+    mssdemux->manifest_uri = g_strdup ((permanent
+            && redirect_uri) ? redirect_uri : uri);
+    mssdemux->base_url = g_strdup (redirect_uri ? redirect_uri : uri);
+    baseurl_end = g_strrstr (mssdemux->base_url, "/Manifest");
     if (baseurl_end == NULL) {
       /* second try */
-      baseurl_end = g_strrstr (uri, "/manifest");
+      baseurl_end = g_strrstr (mssdemux->base_url, "/manifest");
     }
 
     if (baseurl_end) {
@@ -943,7 +951,8 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
       GST_WARNING_OBJECT (mssdemux, "Stream's URI didn't end with /manifest");
     }
 
-    mssdemux->base_url = uri;
+    g_free (uri);
+    g_free (redirect_uri);
   }
   gst_query_unref (query);
 
@@ -998,12 +1007,35 @@ gst_mss_demux_reload_manifest (GstMssDemux * mssdemux)
   GstUriDownloader *downloader;
   GstFragment *manifest_data;
   GstBuffer *manifest_buffer;
+  gchar *baseurl_end;
 
   downloader = gst_uri_downloader_new ();
 
   manifest_data =
       gst_uri_downloader_fetch_uri (downloader, mssdemux->manifest_uri, NULL,
       TRUE, TRUE, TRUE, NULL);
+
+  g_free (mssdemux->manifest_uri);
+  g_free (mssdemux->base_url);
+  mssdemux->manifest_uri = g_strdup ((manifest_data->redirect_permanent
+          && manifest_data->
+          redirect_uri) ? manifest_data->redirect_uri : manifest_data->uri);
+  mssdemux->base_url =
+      g_strdup (manifest_data->
+      redirect_uri ? manifest_data->redirect_uri : manifest_data->uri);
+  baseurl_end = g_strrstr (mssdemux->base_url, "/Manifest");
+  if (baseurl_end == NULL) {
+    /* second try */
+    baseurl_end = g_strrstr (mssdemux->base_url, "/manifest");
+  }
+
+  if (baseurl_end) {
+    /* set the new end of the string */
+    baseurl_end[0] = '\0';
+  } else {
+    GST_WARNING_OBJECT (mssdemux, "Stream's URI didn't end with /manifest");
+  }
+
   manifest_buffer = gst_fragment_get_buffer (manifest_data);
   g_object_unref (manifest_data);
 
