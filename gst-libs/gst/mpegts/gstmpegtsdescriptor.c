@@ -968,7 +968,7 @@ gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *
   /* This descriptor loop can be empty, no size check required */
   __common_desc_checks (descriptor, GST_MTS_DESC_DTG_LOGICAL_CHANNEL, 0, FALSE);
 
-  data = (guint8 *) descriptor->data;
+  data = (guint8 *) descriptor->data + 2;
   res->nb_channels = descriptor->length / 4;
 
   for (i = 0; i < res->nb_channels; i++) {
