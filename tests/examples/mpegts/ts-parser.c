@@ -630,6 +630,23 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
       case GST_MTS_DESC_DVB_CONTENT:
         dump_content (desc, spacing + 2);
         break;
+      case GST_MTS_DESC_DVB_PARENTAL_RATING:
+      {
+        GPtrArray *ratings;
+        guint j;
+
+        if (gst_mpegts_descriptor_parse_dvb_parental_rating (desc, &ratings)) {
+          for (j = 0; j < ratings->len; j++) {
+            GstMpegTsDVBParentalRatingItem *item =
+                g_ptr_array_index (ratings, j);
+            g_printf ("%*s   country_code : %s\n", spacing, "",
+                item->country_code);
+            g_printf ("%*s   rating age   : %d\n", spacing, "", item->rating);
+          }
+          g_ptr_array_unref (ratings);
+        }
+        break;
+      }
       case GST_MTS_DESC_ISO_639_LANGUAGE:
         dump_iso_639_language (desc, spacing + 2);
         break;

@@ -1166,6 +1166,7 @@ gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegTsDescriptor
     g_ptr_array_add (*rating, item);
 
     memcpy (item->country_code, data, 3);
+    item->country_code[3] = 0;
     data += 3;
 
     if (g_strcmp0 (item->country_code, "BRA") == 0) {
