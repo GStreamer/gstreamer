@@ -486,11 +486,11 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
         guint8 type;
         guint16 composition;
         guint16 ancillary;
-        guint i;
+        guint j;
 
-        for (i = 0;
-            gst_mpegts_descriptor_parse_dvb_subtitling_idx (desc, i, &lang,
-                &type, &composition, &ancillary); i++) {
+        for (j = 0;
+            gst_mpegts_descriptor_parse_dvb_subtitling_idx (desc, j, &lang,
+                &type, &composition, &ancillary); j++) {
           g_printf ("%*s   Subtitling, language_code:%s\n", spacing, "", lang);
           g_printf ("%*s      type                : %u\n", spacing, "", type);
           g_printf ("%*s      composition page id : %u\n", spacing, "",
@@ -505,11 +505,11 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
         GstMpegTsDVBTeletextType type;
         gchar lang[4];
         guint8 magazine, page_number;
-        guint i;
+        guint j;
 
-        for (i = 0;
-            gst_mpegts_descriptor_parse_dvb_teletext_idx (desc, i, &lang, &type,
-                &magazine, &page_number); i++) {
+        for (j = 0;
+            gst_mpegts_descriptor_parse_dvb_teletext_idx (desc, j, &lang, &type,
+                &magazine, &page_number); j++) {
           g_printf ("%*s   Teletext, type:0x%02x (%s)\n", spacing, "", type,
               enum_name (GST_TYPE_MPEG_TS_DVB_TELETEXT_TYPE, type));
           g_printf ("%*s      language    : %s\n", spacing, "", lang);
