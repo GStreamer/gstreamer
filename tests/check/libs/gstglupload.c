@@ -301,6 +301,7 @@ GST_START_TEST (test_upload_meta_producer)
   GstVideoInfo in_info;
   GstVideoGLTextureUploadMeta *gl_upload_meta;
   guint tex_ids[] = { 0, 0, 0, 0 };
+  GstGLUploadMeta *upload_meta;
   gboolean res;
   gint i = 0;
 
@@ -315,10 +316,13 @@ GST_START_TEST (test_upload_meta_producer)
   gst_gl_context_gen_texture (context, &tex_ids[0], GST_VIDEO_FORMAT_RGBA,
       WIDTH, HEIGHT);
 
+  upload_meta = gst_gl_upload_meta_new (context);
+  gst_gl_upload_meta_set_format (upload_meta, &in_info);
+
   gst_gl_upload_set_format (upload, &in_info);
   gst_buffer_add_video_meta_full (buffer, 0, GST_VIDEO_FORMAT_RGBA, WIDTH,
       HEIGHT, 1, in_info.offset, in_info.stride);
-  gst_gl_upload_add_video_gl_texture_upload_meta (upload, buffer);
+  gst_gl_upload_meta_add_to_buffer (upload_meta, buffer);
 
   gl_upload_meta = gst_buffer_get_video_gl_texture_upload_meta (buffer);
   fail_if (gl_upload_meta == NULL, "Failed to add GstVideoGLTextureUploadMeta"
@@ -337,6 +341,7 @@ GST_START_TEST (test_upload_meta_producer)
     i++;
   }
 
+  gst_object_unref (upload_meta);
   gst_gl_context_del_texture (context, &tex_ids[0]);
 }
 
