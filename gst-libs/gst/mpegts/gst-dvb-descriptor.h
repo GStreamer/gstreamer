@@ -492,6 +492,17 @@ gboolean gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescript
 							  GstMpegTsExtendedEventDescriptor *res);
 
 /* GST_MTS_DESC_DVB_COMPONENT (0x50) */
+typedef enum {
+  GST_MPEGTS_STREAM_CONTENT_MPEG2_VIDEO          = 0x01,
+  GST_MPEGTS_STREAM_CONTENT_MPEG1_LAYER2_AUDIO   = 0x02,
+  GST_MPEGTS_STREAM_CONTENT_TELETEXT_OR_SUBTITLE = 0x03,
+  GST_MPEGTS_STREAM_CONTENT_AC_3                 = 0x04,
+  GST_MPEGTS_STREAM_CONTENT_AVC                  = 0x05,
+  GST_MPEGTS_STREAM_CONTENT_AAC                  = 0x06,
+  GST_MPEGTS_STREAM_CONTENT_DTS                  = 0x07,
+  GST_MPEGTS_STREAM_CONTENT_SRM_CPCM             = 0x08
+} GstMpegTsComponentStreamContent;
+
 typedef struct _GstMpegTsComponentDescriptor GstMpegTsComponentDescriptor;
 struct _GstMpegTsComponentDescriptor
 {
