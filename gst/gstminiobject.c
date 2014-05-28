@@ -469,9 +469,9 @@ gst_mini_object_unref (GstMiniObject * mini_object)
 
 /**
  * gst_mini_object_replace:
- * @olddata: (inout) (transfer full): pointer to a pointer to a mini-object to
- *     be replaced
- * @newdata: pointer to new mini-object
+ * @olddata: (inout) (transfer full) (nullable): pointer to a pointer to a
+ *     mini-object to be replaced
+ * @newdata: (nullable): pointer to new mini-object
  *
  * Atomically modifies a pointer to point to a new mini-object.
  * The reference count of @olddata is decreased and the reference count of
