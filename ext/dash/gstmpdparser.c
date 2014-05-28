@@ -2653,6 +2653,7 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
 {
   GstStreamPeriod *stream_period;
   GstBaseURL *baseURL;
+  gchar *mpd_uri;
   GList *list;
   static gchar *baseURL_array[5];
   static gchar empty[] = "";
@@ -2704,7 +2705,8 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
   ret = g_strjoinv (NULL, baseURL_array);
 
   /* get base URI from MPD file URI, if the "http" scheme is missing */
-  if (client->mpd_uri != NULL && strncmp (ret, "http://", 7) != 0) {
+  mpd_uri = client->mpd_base_uri ? client->mpd_base_uri : client->mpd_uri;
+  if (mpd_uri != NULL && strncmp (ret, "http://", 7) != 0) {
     gchar *last_sep, *tmp1, *tmp2;
 
     if (ret[0] == '?') {
@@ -2717,9 +2719,9 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
         *query = NULL;
     }
 
-    last_sep = strrchr (client->mpd_uri, '/');
+    last_sep = strrchr (mpd_uri, '/');
     if (last_sep) {
-      tmp1 = g_strndup (client->mpd_uri, last_sep - client->mpd_uri + 1);
+      tmp1 = g_strndup (mpd_uri, last_sep - mpd_uri + 1);
       if (ret) {
         tmp2 = ret;
         ret = g_strconcat (tmp1, tmp2, NULL);
@@ -2819,10 +2821,10 @@ gst_mpd_client_free (GstMpdClient * client)
 
   g_mutex_clear (&client->lock);
 
-  if (client->mpd_uri) {
-    g_free (client->mpd_uri);
-    client->mpd_uri = NULL;
-  }
+  g_free (client->mpd_uri);
+  client->mpd_uri = NULL;
+  g_free (client->mpd_base_uri);
+  client->mpd_base_uri = NULL;
 
   g_free (client);
 }

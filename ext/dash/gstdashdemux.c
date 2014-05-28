@@ -787,9 +787,24 @@ gst_dash_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       query = gst_query_new_uri ();
       query_res = gst_pad_peer_query (pad, query);
       if (query_res) {
-        gst_query_parse_uri (query, &demux->client->mpd_uri);
-        GST_DEBUG_OBJECT (demux, "Fetched MPD file at URI: %s",
-            demux->client->mpd_uri);
+        gchar *uri, *redirect_uri;
+        gboolean permanent;
+
+        gst_query_parse_uri (query, &uri);
+        gst_query_parse_uri_redirection (query, &redirect_uri);
+        gst_query_parse_uri_redirection_permanent (query, &permanent);
+
+        if (permanent && redirect_uri) {
+          demux->client->mpd_uri = redirect_uri;
+          demux->client->mpd_base_uri = NULL;
+          g_free (uri);
+        } else {
+          demux->client->mpd_uri = uri;
+          demux->client->mpd_base_uri = redirect_uri;
+        }
+
+        GST_DEBUG_OBJECT (demux, "Fetched MPD file at URI: %s (base: %s)",
+            demux->client->mpd_uri, GST_STR_NULL (demux->client->mpd_base_uri));
       } else {
         GST_WARNING_OBJECT (demux, "MPD URI query failed.");
       }
@@ -1282,7 +1297,14 @@ gst_dash_demux_refresh_mpd (GstDashDemux * demux)
         GstMapInfo mapinfo;
 
         new_client = gst_mpd_client_new ();
-        new_client->mpd_uri = g_strdup (demux->client->mpd_uri);
+
+        if (download->redirect_permanent && download->redirect_uri) {
+          new_client->mpd_uri = g_strdup (download->redirect_uri);
+          new_client->mpd_base_uri = NULL;
+        } else {
+          new_client->mpd_uri = g_strdup (download->uri);
+          new_client->mpd_base_uri = g_strdup (download->redirect_uri);
+        }
 
         gst_buffer_map (buffer, &mapinfo, GST_MAP_READ);
 

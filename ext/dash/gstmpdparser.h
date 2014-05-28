@@ -469,6 +469,8 @@ struct _GstMpdClient
 
   guint update_failed_count;
   gchar *mpd_uri;                             /* manifest file URI */
+  gchar *mpd_base_uri;                        /* base URI for resolving relative URIs.
+                                               * this will be different for redirects */
   GMutex lock;
 };
 
