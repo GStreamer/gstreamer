@@ -1608,8 +1608,8 @@ gst_mpegts_descriptor_parse_dvb_multilingual_component (const
  * @descriptor: a %GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER #GstMpegTsDescriptor
  * @private_data_specifier: (out): the private data specifier id
  * registered by http://www.dvbservices.com/
- * @private_data: (out): additional data or NULL
- * @length: (out): length of %private_data
+ * @private_data: (out) (allow-none): additional data or NULL
+ * @length: (out) (allow-none): length of %private_data
  *
  * Parses out the private data specifier from the @descriptor.
  *
@@ -1631,10 +1631,11 @@ gst_mpegts_descriptor_parse_dvb_private_data_specifier (const
 
   *private_data_specifier = GST_READ_UINT32_BE (data);
 
-  *length = descriptor->length - 4;
+  if (length && private_data) {
+    *length = descriptor->length - 4;
 
-  *private_data = g_memdup (data + 4, *length);
-
+    *private_data = g_memdup (data + 4, *length);
+  }
   return TRUE;
 }
 
