@@ -25,7 +25,7 @@
 #define __GST_AUDIO_MIXER_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstaggregator.h>
 #include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
@@ -49,12 +49,7 @@ typedef struct _GstAudioMixerPadClass GstAudioMixerPadClass;
  * The audiomixer object structure.
  */
 struct _GstAudioMixer {
-  GstElement      element;
-
-  GstPad         *srcpad;
-  GstCollectPads *collect;
-  /* pad counter, used for creating unique request pads */
-  gint            padcount;
+  GstAggregator      element;
 
   /* the next are valid for both int and float */
   GstAudioInfo    info;
@@ -64,13 +59,9 @@ struct _GstAudioMixer {
   /* Buffer starting at offset containing block_size samples */
   GstBuffer      *current_buffer;
 
-  /* sink event handling */
-  GstSegment      segment;
-  volatile gboolean segment_pending;
-  volatile gboolean flush_stop_pending;
-
   /* current caps */
   GstCaps *current_caps;
+  gboolean send_caps;
 
   /* target caps (set via property) */
   GstCaps *filter_caps;
@@ -83,16 +74,10 @@ struct _GstAudioMixer {
 
   /* Size in samples that is output per buffer */
   guint blocksize;
-
-  /* Pending inline events */
-  GList *pending_events;
-  
-  gboolean send_stream_start;
-  gboolean send_caps;
 };
 
 struct _GstAudioMixerClass {
-  GstElementClass parent_class;
+  GstAggregatorClass parent_class;
 };
 
 GType    gst_audiomixer_get_type (void);
@@ -105,17 +90,30 @@ GType    gst_audiomixer_get_type (void);
 #define GST_AUDIO_MIXER_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_MIXER_PAD,GstAudioMixerPadClass))
 
 struct _GstAudioMixerPad {
-  GstPad parent;
+  GstAggregatorPad parent;
 
   gdouble volume;
   gint volume_i32;
   gint volume_i16;
   gint volume_i8;
   gboolean mute;
+
+  /* < private > */
+  GstBuffer *buffer;            /* current buffer we're mixing,
+                                   for comparison with collect.buffer
+                                   to see if we need to update our
+                                   cached values. */
+  guint position, size;
+
+  guint64 output_offset;        /* Offset in output segment that
+                                   collect.pos refers to in the
+                                   current buffer. */
+
+  guint64 next_offset;          /* Next expected offset in the input segment */
 };
 
 struct _GstAudioMixerPadClass {
-  GstPadClass parent_class;
+  GstAggregatorPadClass parent_class;
 };
 
 GType gst_audiomixer_pad_get_type (void);
