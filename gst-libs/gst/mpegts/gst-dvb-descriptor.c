@@ -44,7 +44,6 @@
  *   handled in mpegtsbase:
  *   * GST_MTS_DESC_DVB_DATA_BROADCAST_ID
  *   * GST_MTS_DESC_DVB_CAROUSEL_IDENTIFIER
- *   * GST_MTS_DESC_DVB_FREQUENCY_LIST
  */
 
 #define BCD_UN(a) ((a) & 0x0f)
@@ -1644,7 +1643,8 @@ gst_mpegts_descriptor_parse_dvb_private_data_specifier (const
  * gst_mpegts_descriptor_parse_dvb_frequency_list:
  * @descriptor: a %GST_MTS_DESC_DVB_FREQUENCY_LIST #GstMpegTsDescriptor
  * @offset: (out): %FALSE in Hz, %TRUE in kHz
- * @list: (out): a list of all frequencies in Hz/kHz depending from %offset
+ * @list: (out) (element-type guint32): a list of all frequencies in Hz/kHz
+ * depending on %offset
  *
  * Parses out a list of frequencies from the @descriptor.
  *
