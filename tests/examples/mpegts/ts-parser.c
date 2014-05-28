@@ -605,6 +605,14 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
       case GST_MTS_DESC_DVB_COMPONENT:
         dump_component (desc, spacing + 2);
         break;
+      case GST_MTS_DESC_DVB_STREAM_IDENTIFIER:
+      {
+        guint8 tag;
+        if (gst_mpegts_descriptor_parse_dvb_stream_identifier (desc, &tag)) {
+          g_printf ("%*s   Component Tag : 0x%02x\n", spacing, "", tag);
+        }
+        break;
+      }
       case GST_MTS_DESC_DVB_CONTENT:
         dump_content (desc, spacing + 2);
         break;
