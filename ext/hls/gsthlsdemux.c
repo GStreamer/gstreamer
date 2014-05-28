@@ -597,8 +597,8 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_query_parse_uri_redirection (query, &redirect_uri);
         gst_query_parse_uri_redirection_permanent (query, &permanent);
 
-        if (permanent) {
-          gst_hls_demux_set_location (demux, redirect_uri, redirect_uri);
+        if (permanent && redirect_uri) {
+          gst_hls_demux_set_location (demux, redirect_uri, NULL);
         } else {
           gst_hls_demux_set_location (demux, uri, redirect_uri);
         }
@@ -1504,7 +1504,7 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
   GST_M3U8_CLIENT_LOCK (demux->client);
   g_free (demux->client->current->uri);
   g_free (demux->client->current->base_uri);
-  if (download->redirect_permanent) {
+  if (download->redirect_permanent && download->redirect_uri) {
     demux->client->current->uri = g_strdup (download->redirect_uri);
     demux->client->current->base_uri = NULL;
   } else {
