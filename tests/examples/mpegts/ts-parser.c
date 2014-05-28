@@ -613,6 +613,20 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
         }
         break;
       }
+      case GST_MTS_DESC_DVB_CA_IDENTIFIER:
+      {
+        GArray *list;
+        guint j;
+        guint16 ca_id;
+        if (gst_mpegts_descriptor_parse_dvb_ca_identifier (desc, &list)) {
+          for (j = 0; j < list->len; j++) {
+            ca_id = g_array_index (list, guint16, j);
+            g_printf ("%*s   CA Identifier : 0x%04x\n", spacing, "", ca_id);
+          }
+          g_array_unref (list);
+        }
+        break;
+      }
       case GST_MTS_DESC_DVB_CONTENT:
         dump_content (desc, spacing + 2);
         break;
