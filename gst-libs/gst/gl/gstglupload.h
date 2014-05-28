@@ -80,8 +80,6 @@ GstGLUpload * gst_gl_upload_new            (GstGLContext * context);
 void           gst_gl_upload_set_format    (GstGLUpload * upload, GstVideoInfo * in_info);
 GstVideoInfo * gst_gl_upload_get_format    (GstGLUpload * upload);
 
-gboolean gst_gl_upload_add_video_gl_texture_upload_meta (GstGLUpload * upload, GstBuffer * buffer);
-
 gboolean gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer, guint * tex_id);
 void gst_gl_upload_release_buffer (GstGLUpload * upload);
 gboolean gst_gl_upload_perform_with_data          (GstGLUpload * upload, GLuint texture_id,

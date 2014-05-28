@@ -135,7 +135,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     if (glpool->upload)
       gst_object_unref (glpool->upload);
 
-    glpool->upload = gst_gl_upload_new (glpool->context);
+    glpool->upload = gst_gl_upload_meta_new (glpool->context);
   }
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
@@ -175,7 +175,7 @@ gst_gl_buffer_pool_start (GstBufferPool * pool)
   GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
   GstGLBufferPoolPrivate *priv = glpool->priv;
 
-  gst_gl_upload_set_format (glpool->upload, &priv->info);
+  gst_gl_upload_meta_set_format (glpool->upload, &priv->info);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
 }
@@ -211,7 +211,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   if (!gst_gl_memory_setup_buffer (glpool->context, info, buf))
     goto mem_create_failed;
 
-  gst_gl_upload_add_video_gl_texture_upload_meta (glpool->upload, buf);
+  gst_gl_upload_meta_add_to_buffer (glpool->upload, buf);
 
   *buffer = buf;
 

@@ -20,6 +20,7 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
         gstglcolorconvert.c \
         gstgldownload.c \
         gstglupload.c \
+        gstgluploadmeta.c \
         gstglwindow.c \
         gstglapi.c \
         gstglfeature.c \
@@ -41,6 +42,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglshader.h \
 	gstglcolorconvert.h \
 	gstgldownload.h \
+	gstgluploadmeta.h \
 	gstglupload.h \
 	gstglapi.h \
 	gstglfeature.h \

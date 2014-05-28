@@ -703,7 +703,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   if (glimage_sink->upload)
     gst_object_unref (glimage_sink->upload);
-  glimage_sink->upload = gst_object_ref (GST_GL_BUFFER_POOL (newpool)->upload);
+  glimage_sink->upload = gst_gl_upload_new (glimage_sink->context);
 
   gst_gl_upload_set_format (glimage_sink->upload, &vinfo);
 

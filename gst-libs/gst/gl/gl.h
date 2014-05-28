@@ -32,6 +32,7 @@
 #include <gst/gl/gstglshader.h>
 #include <gst/gl/gstglcolorconvert.h>
 #include <gst/gl/gstglupload.h>
+#include <gst/gl/gstgluploadmeta.h>
 #include <gst/gl/gstgldownload.h>
 #include <gst/gl/gstglmemory.h>
 #include <gst/gl/gstglbufferpool.h>
