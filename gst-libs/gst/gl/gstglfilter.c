@@ -1185,8 +1185,6 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 {
   GstGLFilter *filter;
   GstGLFilterClass *filter_class;
-  GstCaps *in_caps, *out_caps;
-  GstBufferPool *pool;
 
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (bt);
@@ -1195,21 +1193,8 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     return GST_FLOW_NOT_NEGOTIATED;
 
   if (!filter->upload) {
-    in_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SINK_PAD (filter));
-    out_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SRC_PAD (filter));
-    pool = gst_base_transform_get_buffer_pool (bt);
-
-    if (GST_IS_GL_BUFFER_POOL (pool)
-        && gst_caps_is_equal_fixed (in_caps, out_caps)) {
-      filter->upload = gst_object_ref (GST_GL_BUFFER_POOL (pool)->upload);
-    } else {
-      filter->upload = gst_gl_upload_new (filter->context);
-    }
+    filter->upload = gst_gl_upload_new (filter->context);
     gst_gl_upload_set_format (filter->upload, &filter->in_info);
-
-    gst_caps_unref (in_caps);
-    gst_caps_unref (out_caps);
-    gst_object_unref (pool);
   }
 
   g_assert (filter_class->filter || filter_class->filter_texture);
