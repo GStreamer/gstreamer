@@ -572,8 +572,8 @@ gst_mpegts_descriptor_parse_dvb_linkage (const GstMpegTsDescriptor * descriptor,
       hand_over = g_slice_new0 (GstMpegTsDVBLinkageMobileHandOver);
       res->linkage_data = (gpointer) hand_over;
 
-      hand_over->origin_type = (*data >> 7) & 0x01;
-      hand_over->hand_over_type = *data & 0x0f;
+      hand_over->origin_type = (*data) & 0x01;
+      hand_over->hand_over_type = (*data >> 4) & 0x0f;
       data += 1;
 
       if (hand_over->hand_over_type ==
