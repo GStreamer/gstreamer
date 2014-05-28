@@ -1,4 +1,12 @@
-// Copyright (C) 2013  Stephan Sundermann <stephansundermann@gmail.com>
+//
+// Authors:
+//     Andrés G. Aragoneses <knocte@gmail.com>
+//     Sebastian Dröge <slomo@circular-chaos.org>
+//     Stephan Sundermann <stephansundermann@gmail.com>
+//
+// Copyright (c) 2009 Sebastian Dröge
+// Copyright (c) 2013 Andrés G. Aragoneses
+// Copyright (C) 2013 Stephan Sundermann
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as

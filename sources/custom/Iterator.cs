@@ -1,11 +1,13 @@
 // Iterator.cs - Custom iterator wrapper for IEnumerable
 //
 // Authors:
+//     Maarten Bosmans <mkbosmans@gmail.com>
 //     Sebastian Dröge <slomo@circular-chaos.org>
 //     Stephan Sundermann <stephansundermann@gmail.com>
 //
-// Copyright (c) 2013 Stephan Sundermann
+// Copyright (c) 2009 Maarten Bosmans
 // Copyright (c) 2009 Sebastian Dröge
+// Copyright (c) 2013 Stephan Sundermann
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of version 2 of the Lesser GNU General 
