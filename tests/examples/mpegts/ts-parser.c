@@ -435,6 +435,28 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
         dump_multiligual_component (desc, spacing + 2);
         break;
       }
+      case GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER:
+      {
+        if (!DUMP_DESCRIPTORS)
+          dump_memory_content (desc, spacing + 2);
+        break;
+      }
+      case GST_MTS_DESC_DVB_FREQUENCY_LIST:
+      {
+        gboolean offset;
+        GArray *list;
+        if (gst_mpegts_descriptor_parse_dvb_frequency_list (desc, &offset,
+                &list)) {
+          guint j;
+          for (j = 0; j < list->len; j++) {
+            guint32 freq = g_array_index (list, guint32, j);
+            g_printf ("%*s   Frequency : %u %s\n", spacing, "", freq,
+                offset ? "kHz" : "Hz");
+          }
+          g_array_unref (list);
+        }
+        break;
+      }
       case GST_MTS_DESC_ISO_639_LANGUAGE:
         dump_iso_639_language (desc, spacing + 2);
         break;
