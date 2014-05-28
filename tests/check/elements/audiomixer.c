@@ -870,12 +870,35 @@ GST_END_TEST;
 
 
 static GstBuffer *handoff_buffer = NULL;
+static gboolean
+_quit (GMainLoop * ml)
+{
+  g_main_loop_quit (ml);
+
+  return G_SOURCE_REMOVE;
+}
+
 static void
 handoff_buffer_cb (GstElement * fakesink, GstBuffer * buffer, GstPad * pad,
-    gpointer user_data)
+    GstClockTime * wanted_end)
 {
-  GST_DEBUG ("got buffer %p", buffer);
+  GST_DEBUG ("got buffer -- SIZE: %ld -- %p DURATION is %" GST_TIME_FORMAT
+      " -- WANTED END %" GST_TIME_FORMAT, gst_buffer_get_size (buffer), buffer,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer)),
+      GST_TIME_ARGS (*wanted_end));
+
   gst_buffer_replace (&handoff_buffer, buffer);
+
+
+  /* Buffers we push in will be 'cut' into different smaller buffers,
+   * we make sure that the last chunck was pushes before we concider the buffer
+   * we pushed as being done */
+  if (main_loop && *wanted_end
+      && *wanted_end <=
+      GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer)) {
+    *wanted_end = 0;
+    g_idle_add ((GSourceFunc) _quit, main_loop);
+  }
 }
 
 /* check if clipping works as expected */
@@ -891,8 +914,13 @@ GST_START_TEST (test_clip)
   GstEvent *event;
   GstBuffer *buffer;
   GstCaps *caps;
+  GMainLoop *local_mainloop;
+  GstClockTime wanted_end = 0;
 
   GST_INFO ("preparing test");
+
+  local_mainloop = g_main_loop_new (NULL, FALSE);
+  main_loop = NULL;
 
   /* build pipeline */
   bin = gst_pipeline_new ("pipeline");
@@ -907,7 +935,8 @@ GST_START_TEST (test_clip)
   audiomixer = gst_element_factory_make ("audiomixer", "audiomixer");
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
-  g_signal_connect (sink, "handoff", (GCallback) handoff_buffer_cb, NULL);
+  g_signal_connect (sink, "handoff", (GCallback) handoff_buffer_cb,
+      &wanted_end);
   gst_bin_add_many (GST_BIN (bin), audiomixer, sink, NULL);
 
   res = gst_element_link (audiomixer, sink);
@@ -948,8 +977,19 @@ GST_START_TEST (test_clip)
   buffer = gst_buffer_new_and_alloc (44100);
   GST_BUFFER_TIMESTAMP (buffer) = 0;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  GST_DEBUG ("pushing buffer %p END is %" GST_TIME_FORMAT,
+      buffer,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer)));
   ret = gst_pad_chain (sinkpad, buffer);
+  main_loop = local_mainloop;
+
+  /* The aggregation is done in a dedicated thread, so we can't
+   * not know when it is actually going to happen, so we just add\
+   * a 100 ms timeout to be able to then check that the aggregation
+   * did happen as we do not have much other choice.
+   */
+  g_timeout_add (100, (GSourceFunc) _quit, main_loop);
+  g_main_loop_run (main_loop);
   ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer == NULL);
 
@@ -957,9 +997,16 @@ GST_START_TEST (test_clip)
   buffer = gst_buffer_new_and_alloc (44100);
   GST_BUFFER_TIMESTAMP (buffer) = 900 * GST_MSECOND;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+
+  wanted_end = 135 * GST_MSECOND;
+  GST_DEBUG ("pushing buffer %p START %" GST_TIME_FORMAT " -- DURATION is %"
+      GST_TIME_FORMAT, buffer, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
+
+  main_loop = local_mainloop;
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
+  g_main_loop_run (main_loop);
   fail_unless (handoff_buffer != NULL);
   gst_buffer_replace (&handoff_buffer, NULL);
 
@@ -967,18 +1014,28 @@ GST_START_TEST (test_clip)
   buffer = gst_buffer_new_and_alloc (44100);
   GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+
+  wanted_end = 390 * GST_MSECOND;
+  GST_DEBUG ("pushing buffer %p END is %" GST_TIME_FORMAT,
+      buffer,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer)));
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
+  g_main_loop_run (main_loop);
   fail_unless (handoff_buffer != NULL);
   gst_buffer_replace (&handoff_buffer, NULL);
+  fail_unless (handoff_buffer == NULL);
 
   /* should be clipped and ok */
   buffer = gst_buffer_new_and_alloc (44100);
   GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  GST_DEBUG ("pushing buffer %p END is %" GST_TIME_FORMAT,
+      buffer,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer)));
   ret = gst_pad_chain (sinkpad, buffer);
+  g_timeout_add (100, (GSourceFunc) _quit, main_loop);
+  g_main_loop_run (main_loop);
   ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer == NULL);
 
@@ -1245,9 +1302,11 @@ GST_START_TEST (test_flush_start_flush_stop)
   audiomixer_src = gst_element_get_static_pad (audiomixer, "src");
   fail_if (GST_PAD_IS_FLUSHING (audiomixer_src));
   gst_pad_send_event (sinkpad1, gst_event_new_flush_start ());
-  fail_unless (GST_PAD_IS_FLUSHING (audiomixer_src));
+  fail_if (GST_PAD_IS_FLUSHING (audiomixer_src));
+  fail_unless (GST_PAD_IS_FLUSHING (sinkpad1));
   gst_pad_send_event (sinkpad1, gst_event_new_flush_stop (TRUE));
   fail_if (GST_PAD_IS_FLUSHING (audiomixer_src));
+  fail_if (GST_PAD_IS_FLUSHING (sinkpad1));
   gst_object_unref (audiomixer_src);
 
   gst_element_release_request_pad (audiomixer, sinkpad1);

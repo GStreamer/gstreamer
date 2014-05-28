@@ -51,24 +51,6 @@
 #define GST_CAT_DEFAULT gst_audiomixer_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-typedef struct _GstAudioMixerCollect GstAudioMixerCollect;
-struct _GstAudioMixerCollect
-{
-  GstCollectData collect;       /* we extend the CollectData */
-
-  GstBuffer *buffer;            /* current buffer we're mixing,
-                                   for comparison with collect.buffer
-                                   to see if we need to update our
-                                   cached values. */
-  guint position, size;
-
-  guint64 output_offset;        /* Offset in output segment that
-                                   collect.pos refers to in the
-                                   current buffer. */
-
-  guint64 next_offset;          /* Next expected offset in the input segment */
-};
-
 #define DEFAULT_PAD_VOLUME (1.0)
 #define DEFAULT_PAD_MUTE (FALSE)
 
@@ -92,7 +74,7 @@ enum
   PROP_PAD_MUTE
 };
 
-G_DEFINE_TYPE (GstAudioMixerPad, gst_audiomixer_pad, GST_TYPE_PAD);
+G_DEFINE_TYPE (GstAudioMixerPad, gst_audiomixer_pad, GST_TYPE_AGGREGATOR_PAD);
 
 static void
 gst_audiomixer_pad_get_property (GObject * object, guint prop_id,
@@ -139,10 +121,26 @@ gst_audiomixer_pad_set_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+gst_audiomixer_pad_flush_pad (GstAggregatorPad * aggpad,
+    GstAggregator * aggregator)
+{
+  GstAudioMixerPad *pad = GST_AUDIO_MIXER_PAD (aggpad);
+
+  GST_OBJECT_LOCK (aggpad);
+  pad->position = pad->size = 0;
+  pad->output_offset = pad->next_offset = -1;
+  gst_buffer_replace (&pad->buffer, NULL);
+  GST_OBJECT_UNLOCK (aggpad);
+
+  return TRUE;
+}
+
 static void
 gst_audiomixer_pad_class_init (GstAudioMixerPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstAggregatorPadClass *aggpadclass = (GstAggregatorPadClass *) klass;
 
   gobject_class->set_property = gst_audiomixer_pad_set_property;
   gobject_class->get_property = gst_audiomixer_pad_get_property;
@@ -155,6 +153,8 @@ gst_audiomixer_pad_class_init (GstAudioMixerPadClass * klass)
       g_param_spec_boolean ("mute", "Mute", "Mute this pad",
           DEFAULT_PAD_MUTE,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
+  aggpadclass->flush = GST_DEBUG_FUNCPTR (gst_audiomixer_pad_flush_pad);
 }
 
 static void
@@ -162,6 +162,13 @@ gst_audiomixer_pad_init (GstAudioMixerPad * pad)
 {
   pad->volume = DEFAULT_PAD_VOLUME;
   pad->mute = DEFAULT_PAD_MUTE;
+
+  pad->buffer = NULL;
+  pad->position = 0;
+  pad->size = 0;
+  pad->output_offset = -1;
+  pad->next_offset = -1;
+
 }
 
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
@@ -207,7 +214,7 @@ static void gst_audiomixer_child_proxy_init (gpointer g_iface,
     gpointer iface_data);
 
 #define gst_audiomixer_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstAudioMixer, gst_audiomixer, GST_TYPE_ELEMENT,
+G_DEFINE_TYPE_WITH_CODE (GstAudioMixer, gst_audiomixer, GST_TYPE_AGGREGATOR,
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_audiomixer_child_proxy_init));
 
@@ -219,27 +226,14 @@ static void gst_audiomixer_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_audiomixer_setcaps (GstAudioMixer * audiomixer,
     GstPad * pad, GstCaps * caps);
-static gboolean gst_audiomixer_src_query (GstPad * pad, GstObject * parent,
-    GstQuery * query);
-static gboolean gst_audiomixer_sink_query (GstCollectPads * pads,
-    GstCollectData * pad, GstQuery * query, gpointer user_data);
-static gboolean gst_audiomixer_src_event (GstPad * pad, GstObject * parent,
-    GstEvent * event);
-static gboolean gst_audiomixer_sink_event (GstCollectPads * pads,
-    GstCollectData * pad, GstEvent * event, gpointer user_data);
-
 static GstPad *gst_audiomixer_request_new_pad (GstElement * element,
-    GstPadTemplate * temp, const gchar * unused, const GstCaps * caps);
+    GstPadTemplate * temp, const gchar * req_name, const GstCaps * caps);
 static void gst_audiomixer_release_pad (GstElement * element, GstPad * pad);
 
-static GstStateChangeReturn gst_audiomixer_change_state (GstElement * element,
-    GstStateChange transition);
-
-static GstFlowReturn gst_audiomixer_do_clip (GstCollectPads * pads,
-    GstCollectData * data, GstBuffer * buffer, GstBuffer ** out,
-    gpointer user_data);
-static GstFlowReturn gst_audiomixer_collected (GstCollectPads * pads,
-    gpointer user_data);
+static GstFlowReturn
+gst_audiomixer_do_clip (GstAggregator * agg,
+    GstAggregatorPad * bpad, GstBuffer * buffer, GstBuffer ** outbuf);
+static GstFlowReturn gst_audiomixer_aggregate (GstAggregator * agg);
 
 /* we can only accept caps that we and downstream can handle.
  * if we have filtercaps set, use those to constrain the target caps.
@@ -247,12 +241,14 @@ static GstFlowReturn gst_audiomixer_collected (GstCollectPads * pads,
 static GstCaps *
 gst_audiomixer_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
+  GstAggregator *agg;
   GstAudioMixer *audiomixer;
   GstCaps *result, *peercaps, *current_caps, *filter_caps;
   GstStructure *s;
   gint i, n;
 
   audiomixer = GST_AUDIO_MIXER (GST_PAD_PARENT (pad));
+  agg = GST_AGGREGATOR (audiomixer);
 
   GST_OBJECT_LOCK (audiomixer);
   /* take filter */
@@ -274,7 +270,7 @@ gst_audiomixer_sink_getcaps (GstPad * pad, GstCaps * filter)
   }
 
   /* get the downstream possible caps */
-  peercaps = gst_pad_peer_query_caps (audiomixer->srcpad, filter_caps);
+  peercaps = gst_pad_peer_query_caps (agg->srcpad, filter_caps);
 
   /* get the allowed caps on this sinkpad */
   GST_OBJECT_LOCK (audiomixer);
@@ -337,8 +333,8 @@ gst_audiomixer_sink_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_audiomixer_sink_query (GstCollectPads * pads, GstCollectData * pad,
-    GstQuery * query, gpointer user_data)
+gst_audiomixer_sink_query (GstAggregator * agg, GstAggregatorPad * aggpad,
+    GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -348,14 +344,15 @@ gst_audiomixer_sink_query (GstCollectPads * pads, GstCollectData * pad,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_audiomixer_sink_getcaps (pad->pad, filter);
+      caps = gst_audiomixer_sink_getcaps (GST_PAD (aggpad), filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       res = TRUE;
       break;
     }
     default:
-      res = gst_collect_pads_query_default (pads, pad, query, FALSE);
+      res =
+          GST_AGGREGATOR_CLASS (parent_class)->sink_query (agg, aggpad, query);
       break;
   }
 
@@ -600,9 +597,9 @@ gst_audiomixer_query_latency (GstAudioMixer * audiomixer, GstQuery * query)
 }
 
 static gboolean
-gst_audiomixer_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_audiomixer_src_query (GstAggregator * agg, GstQuery * query)
 {
-  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (parent);
+  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -615,7 +612,7 @@ gst_audiomixer_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       switch (format) {
         case GST_FORMAT_TIME:
           /* FIXME, bring to stream time, might be tricky */
-          gst_query_set_position (query, format, audiomixer->segment.position);
+          gst_query_set_position (query, format, agg->segment.position);
           res = TRUE;
           break;
         case GST_FORMAT_DEFAULT:
@@ -636,7 +633,8 @@ gst_audiomixer_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     default:
       /* FIXME, needs a custom query handler because we have multiple
        * sinkpads */
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (GST_PAD (agg->srcpad), GST_OBJECT (agg),
+          query);
       break;
   }
 
@@ -651,105 +649,25 @@ typedef struct
   gboolean flush;
 } EventData;
 
-/* FIXME: What is this supposed to solve? */
 static gboolean
-forward_event_func (const GValue * val, GValue * ret, EventData * data)
+gst_audiomixer_src_event (GstAggregator * agg, GstEvent * event)
 {
-  GstPad *pad = g_value_get_object (val);
-  GstEvent *event = data->event;
-  GstPad *peer;
-
-  gst_event_ref (event);
-  GST_LOG_OBJECT (pad, "About to send event %s", GST_EVENT_TYPE_NAME (event));
-  peer = gst_pad_get_peer (pad);
-  /* collect pad might have been set flushing,
-   * so bypass core checking that and send directly to peer */
-  if (!peer || !gst_pad_send_event (peer, event)) {
-    if (!peer)
-      gst_event_unref (event);
-    GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
-        event, GST_EVENT_TYPE_NAME (event));
-    /* quick hack to unflush the pads, ideally we need a way to just unflush
-     * this single collect pad */
-    if (data->flush)
-      gst_pad_send_event (pad, gst_event_new_flush_stop (TRUE));
-  } else {
-    g_value_set_boolean (ret, TRUE);
-    GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
-        event, GST_EVENT_TYPE_NAME (event));
-  }
-  if (peer)
-    gst_object_unref (peer);
-
-  /* continue on other pads, even if one failed */
-  return TRUE;
-}
-
-/* forwards the event to all sinkpads, takes ownership of the
- * event
- *
- * Returns: TRUE if the event could be forwarded on all
- * sinkpads.
- */
-static gboolean
-forward_event (GstAudioMixer * audiomixer, GstEvent * event, gboolean flush)
-{
-  gboolean ret;
-  GstIterator *it;
-  GstIteratorResult ires;
-  GValue vret = { 0 };
-  EventData data;
-
-  GST_LOG_OBJECT (audiomixer, "Forwarding event %p (%s)", event,
-      GST_EVENT_TYPE_NAME (event));
-
-  data.event = event;
-  data.flush = flush;
-
-  g_value_init (&vret, G_TYPE_BOOLEAN);
-  g_value_set_boolean (&vret, FALSE);
-  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (audiomixer));
-  while (TRUE) {
-    ires =
-        gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func,
-        &vret, &data);
-    switch (ires) {
-      case GST_ITERATOR_RESYNC:
-        GST_WARNING ("resync");
-        gst_iterator_resync (it);
-        g_value_set_boolean (&vret, TRUE);
-        break;
-      case GST_ITERATOR_OK:
-      case GST_ITERATOR_DONE:
-        ret = g_value_get_boolean (&vret);
-        goto done;
-      default:
-        ret = FALSE;
-        goto done;
-    }
-  }
-done:
-  gst_iterator_free (it);
-  GST_LOG_OBJECT (audiomixer, "Forwarded event %p (%s), ret=%d", event,
-      GST_EVENT_TYPE_NAME (event), ret);
-  gst_event_unref (event);
-
-  return ret;
-}
-
-static gboolean
-gst_audiomixer_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
-{
-  GstAudioMixer *audiomixer;
   gboolean result;
 
-  audiomixer = GST_AUDIO_MIXER (parent);
-
-  GST_DEBUG_OBJECT (pad, "Got %s event on src pad",
+  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
+  GST_DEBUG_OBJECT (agg->srcpad, "Got %s event on src pad",
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-      /* TODO: Update from videomixer */
+    case GST_EVENT_QOS:
+      /* QoS might be tricky */
+      gst_event_unref (event);
+      return FALSE;
+    case GST_EVENT_NAVIGATION:
+      /* navigation is rather pointless. */
+      gst_event_unref (event);
+      return FALSE;
+      break;
     case GST_EVENT_SEEK:
     {
       GstSeekFlags flags;
@@ -757,12 +675,12 @@ gst_audiomixer_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstSeekType start_type, stop_type;
       gint64 start, stop;
       GstFormat seek_format, dest_format;
-      gboolean flush;
 
       /* parse the seek parameters */
       gst_event_parse_seek (event, &rate, &seek_format, &flags, &start_type,
           &start, &stop_type, &stop);
 
+      /* Check the seeking parametters before linking up */
       if ((start_type != GST_SEEK_TYPE_NONE)
           && (start_type != GST_SEEK_TYPE_SET)) {
         result = FALSE;
@@ -777,7 +695,7 @@ gst_audiomixer_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         goto done;
       }
 
-      dest_format = audiomixer->segment.format;
+      dest_format = agg->segment.format;
       if (seek_format != dest_format) {
         result = FALSE;
         GST_DEBUG_OBJECT (audiomixer,
@@ -785,107 +703,30 @@ gst_audiomixer_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         goto done;
       }
 
-      flush = (flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH;
+      /* Link up */
+      result = GST_AGGREGATOR_CLASS (parent_class)->src_event (agg, event);
 
-      /* check if we are flushing */
-      if (flush) {
-        /* flushing seek, start flush downstream, the flush will be done
-         * when all pads received a FLUSH_STOP.
-         * Make sure we accept nothing anymore and return WRONG_STATE.
-         * We send a flush-start before, to ensure no streaming is done
-         * as we need to take the stream lock.
-         */
-        gst_pad_push_event (audiomixer->srcpad, gst_event_new_flush_start ());
-        gst_collect_pads_set_flushing (audiomixer->collect, TRUE);
-
-        /* We can't send FLUSH_STOP here since upstream could start pushing data
-         * after we unlock audiomixer->collect.
-         * We set flush_stop_pending to TRUE instead and send FLUSH_STOP after
-         * forwarding the seek upstream or from gst_audiomixer_collected,
-         * whichever happens first.
-         */
-        GST_COLLECT_PADS_STREAM_LOCK (audiomixer->collect);
-        audiomixer->flush_stop_pending = TRUE;
-        GST_COLLECT_PADS_STREAM_UNLOCK (audiomixer->collect);
-        GST_DEBUG_OBJECT (audiomixer, "mark pending flush stop event");
-      }
-      GST_DEBUG_OBJECT (audiomixer, "handling seek event: %" GST_PTR_FORMAT,
-          event);
-
-      /* now wait for the collected to be finished and mark a new
-       * segment. After we have the lock, no collect function is running and no
-       * new collect function will be called for as long as we're flushing. */
-      GST_COLLECT_PADS_STREAM_LOCK (audiomixer->collect);
-      /* clip position and update our segment */
-      if (audiomixer->segment.stop != -1) {
-        audiomixer->segment.position = audiomixer->segment.stop;
-      }
-      gst_segment_do_seek (&audiomixer->segment, rate, seek_format, flags,
-          start_type, start, stop_type, stop, NULL);
-
-      if (flush) {
-        /* Yes, we need to call _set_flushing again *WHEN* the streaming threads
-         * have stopped so that the cookie gets properly updated. */
-        gst_collect_pads_set_flushing (audiomixer->collect, TRUE);
-      }
-      GST_COLLECT_PADS_STREAM_UNLOCK (audiomixer->collect);
-      GST_DEBUG_OBJECT (audiomixer, "forwarding seek event: %" GST_PTR_FORMAT,
-          event);
-      GST_DEBUG_OBJECT (audiomixer, "updated segment: %" GST_SEGMENT_FORMAT,
-          &audiomixer->segment);
-
-      /* we're forwarding seek to all upstream peers and wait for one to reply
-       * with a newsegment-event before we send a newsegment-event downstream */
-      g_atomic_int_set (&audiomixer->segment_pending, TRUE);
-      result = forward_event (audiomixer, event, flush);
-      /* FIXME: We should use the seek segment and forward that downstream next time
-       * not any upstream segment event */
-      if (!result) {
-        /* seek failed. maybe source is a live source. */
-        GST_DEBUG_OBJECT (audiomixer, "seeking failed");
-      }
-      if (g_atomic_int_compare_and_exchange (&audiomixer->flush_stop_pending,
-              TRUE, FALSE)) {
-        GST_DEBUG_OBJECT (audiomixer, "pending flush stop");
-        if (!gst_pad_push_event (audiomixer->srcpad,
-                gst_event_new_flush_stop (TRUE))) {
-          GST_WARNING_OBJECT (audiomixer, "Sending flush stop event failed");
-        }
-      }
-      break;
+      goto done;
     }
-    case GST_EVENT_QOS:
-      /* QoS might be tricky */
-      result = FALSE;
-      gst_event_unref (event);
-      break;
-    case GST_EVENT_NAVIGATION:
-      /* navigation is rather pointless. */
-      result = FALSE;
-      gst_event_unref (event);
       break;
     default:
-      /* just forward the rest for now */
-      GST_DEBUG_OBJECT (audiomixer, "forward unhandled event: %s",
-          GST_EVENT_TYPE_NAME (event));
-      result = forward_event (audiomixer, event, FALSE);
       break;
   }
 
-done:
+  return GST_AGGREGATOR_CLASS (parent_class)->src_event (agg, event);
 
+done:
   return result;
 }
 
 static gboolean
-gst_audiomixer_sink_event (GstCollectPads * pads, GstCollectData * pad,
-    GstEvent * event, gpointer user_data)
+gst_audiomixer_sink_event (GstAggregator * agg, GstAggregatorPad * aggpad,
+    GstEvent * event)
 {
-  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (user_data);
-  GstAudioMixerCollect *adata = (GstAudioMixerCollect *) pad;
-  gboolean res = TRUE, discard = FALSE;
+  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
+  gboolean res = TRUE;
 
-  GST_DEBUG_OBJECT (pad->pad, "Got %s event on sink pad",
+  GST_DEBUG_OBJECT (aggpad, "Got %s event on sink pad",
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
@@ -894,90 +735,100 @@ gst_audiomixer_sink_event (GstCollectPads * pads, GstCollectData * pad,
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      res = gst_audiomixer_setcaps (audiomixer, pad->pad, caps);
+      res = gst_audiomixer_setcaps (audiomixer, GST_PAD_CAST (aggpad), caps);
       gst_event_unref (event);
       event = NULL;
       break;
     }
-      /* FIXME: Who cares about flushes from upstream? We should
-       * not forward them at all */
-    case GST_EVENT_FLUSH_START:
-      /* ensure that we will send a flush stop */
-      GST_COLLECT_PADS_STREAM_LOCK (audiomixer->collect);
-      audiomixer->flush_stop_pending = TRUE;
-      res = gst_collect_pads_event_default (pads, pad, event, discard);
-      event = NULL;
-      GST_COLLECT_PADS_STREAM_UNLOCK (audiomixer->collect);
-      break;
-    case GST_EVENT_FLUSH_STOP:
-      /* we received a flush-stop. We will only forward it when
-       * flush_stop_pending is set, and we will unset it then.
-       */
-      g_atomic_int_set (&audiomixer->segment_pending, TRUE);
-      GST_COLLECT_PADS_STREAM_LOCK (audiomixer->collect);
-      if (audiomixer->flush_stop_pending) {
-        GST_DEBUG_OBJECT (pad->pad, "forwarding flush stop");
-        res = gst_collect_pads_event_default (pads, pad, event, discard);
-        audiomixer->flush_stop_pending = FALSE;
-        event = NULL;
-        gst_buffer_replace (&audiomixer->current_buffer, NULL);
-        audiomixer->discont_time = GST_CLOCK_TIME_NONE;
-      } else {
-        discard = TRUE;
-        GST_DEBUG_OBJECT (pad->pad, "eating flush stop");
-      }
-      GST_COLLECT_PADS_STREAM_UNLOCK (audiomixer->collect);
-      /* Clear pending tags */
-      if (audiomixer->pending_events) {
-        g_list_foreach (audiomixer->pending_events, (GFunc) gst_event_unref,
-            NULL);
-        g_list_free (audiomixer->pending_events);
-        audiomixer->pending_events = NULL;
-      }
-      adata->position = adata->size = 0;
-      adata->output_offset = adata->next_offset = -1;
-      gst_buffer_replace (&adata->buffer, NULL);
-      break;
-    case GST_EVENT_TAG:
-      /* collect tags here so we can push them out when we collect data */
-      audiomixer->pending_events =
-          g_list_append (audiomixer->pending_events, event);
-      event = NULL;
-      break;
-    case GST_EVENT_SEGMENT:{
+    case GST_EVENT_SEGMENT:
+    {
       const GstSegment *segment;
       gst_event_parse_segment (event, &segment);
-      if (segment->rate != audiomixer->segment.rate) {
-        GST_ERROR_OBJECT (pad->pad,
+      if (segment->rate != agg->segment.rate) {
+        GST_ERROR_OBJECT (aggpad,
             "Got segment event with wrong rate %lf, expected %lf",
-            segment->rate, audiomixer->segment.rate);
+            segment->rate, agg->segment.rate);
         res = FALSE;
         gst_event_unref (event);
         event = NULL;
       } else if (segment->rate < 0.0) {
-        GST_ERROR_OBJECT (pad->pad, "Negative rates not supported yet");
+        GST_ERROR_OBJECT (aggpad, "Negative rates not supported yet");
         res = FALSE;
         gst_event_unref (event);
         event = NULL;
       }
-      discard = TRUE;
+
+      if (event) {
+        res =
+            GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, aggpad,
+            event);
+
+        if (res)
+          aggpad->segment.position = segment->start + segment->offset;
+
+        event = NULL;
+      }
       break;
     }
     default:
       break;
   }
 
-  if (G_LIKELY (event))
-    return gst_collect_pads_event_default (pads, pad, event, discard);
-  else
-    return res;
+  if (event != NULL)
+    return GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, aggpad, event);
+
+  return res;
 }
+
+static void
+gst_audiomixer_reset (GstAudioMixer *audiomixer)
+{
+  audiomixer->offset = 0;
+  gst_caps_replace (&audiomixer->current_caps, NULL);
+  audiomixer->discont_time = GST_CLOCK_TIME_NONE;
+}
+
+static gboolean
+gst_audiomixer_start (GstAggregator * agg)
+{
+  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
+
+  if (!GST_AGGREGATOR_CLASS (parent_class)->start (agg))
+    return FALSE;
+
+  gst_audiomixer_reset (audiomixer);
+
+  return TRUE;
+}
+
+static gboolean
+gst_audiomixer_stop (GstAggregator * agg)
+{
+  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
+
+  if (!GST_AGGREGATOR_CLASS (parent_class)->stop (agg))
+    return FALSE;
+
+  gst_audiomixer_reset (audiomixer);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_audiomixer_flush (GstAggregator * agg)
+{
+  gst_audiomixer_reset (GST_AUDIO_MIXER (agg));
+
+  return GST_FLOW_OK;
+}
+
 
 static void
 gst_audiomixer_class_init (GstAudioMixerClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstAggregatorClass *agg_class = (GstAggregatorClass *) klass;
 
   gobject_class->set_property = gst_audiomixer_set_property;
   gobject_class->get_property = gst_audiomixer_get_property;
@@ -1021,45 +872,33 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
       GST_DEBUG_FUNCPTR (gst_audiomixer_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_audiomixer_release_pad);
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_audiomixer_change_state);
+
+  agg_class->sinkpads_type = GST_TYPE_AUDIO_MIXER_PAD;
+  agg_class->start = gst_audiomixer_start;
+  agg_class->stop = gst_audiomixer_stop;
+
+  agg_class->sink_query = GST_DEBUG_FUNCPTR (gst_audiomixer_sink_query);
+  agg_class->sink_event = GST_DEBUG_FUNCPTR (gst_audiomixer_sink_event);
+
+  agg_class->aggregate = GST_DEBUG_FUNCPTR (gst_audiomixer_aggregate);
+  agg_class->clip = GST_DEBUG_FUNCPTR (gst_audiomixer_do_clip);
+
+  agg_class->src_event = GST_DEBUG_FUNCPTR (gst_audiomixer_src_event);
+  agg_class->src_query = GST_DEBUG_FUNCPTR (gst_audiomixer_src_query);
+
+  agg_class->flush = GST_DEBUG_FUNCPTR (gst_audiomixer_flush);
 }
 
 static void
 gst_audiomixer_init (GstAudioMixer * audiomixer)
 {
-  GstPadTemplate *template;
-
-  template = gst_static_pad_template_get (&gst_audiomixer_src_template);
-  audiomixer->srcpad = gst_pad_new_from_template (template, "src");
-  gst_object_unref (template);
-
-  gst_pad_set_query_function (audiomixer->srcpad,
-      GST_DEBUG_FUNCPTR (gst_audiomixer_src_query));
-  gst_pad_set_event_function (audiomixer->srcpad,
-      GST_DEBUG_FUNCPTR (gst_audiomixer_src_event));
-  GST_PAD_SET_PROXY_CAPS (audiomixer->srcpad);
-  gst_element_add_pad (GST_ELEMENT (audiomixer), audiomixer->srcpad);
-
   audiomixer->current_caps = NULL;
   gst_audio_info_init (&audiomixer->info);
-  audiomixer->padcount = 0;
 
   audiomixer->filter_caps = NULL;
   audiomixer->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
   audiomixer->discont_wait = DEFAULT_DISCONT_WAIT;
   audiomixer->blocksize = DEFAULT_BLOCKSIZE;
-
-  /* keep track of the sinkpads requested */
-  audiomixer->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (audiomixer->collect,
-      GST_DEBUG_FUNCPTR (gst_audiomixer_collected), audiomixer);
-  gst_collect_pads_set_clip_function (audiomixer->collect,
-      GST_DEBUG_FUNCPTR (gst_audiomixer_do_clip), audiomixer);
-  gst_collect_pads_set_event_function (audiomixer->collect,
-      GST_DEBUG_FUNCPTR (gst_audiomixer_sink_event), audiomixer);
-  gst_collect_pads_set_query_function (audiomixer->collect,
-      GST_DEBUG_FUNCPTR (gst_audiomixer_sink_query), audiomixer);
 }
 
 static void
@@ -1067,18 +906,8 @@ gst_audiomixer_dispose (GObject * object)
 {
   GstAudioMixer *audiomixer = GST_AUDIO_MIXER (object);
 
-  if (audiomixer->collect) {
-    gst_object_unref (audiomixer->collect);
-    audiomixer->collect = NULL;
-  }
   gst_caps_replace (&audiomixer->filter_caps, NULL);
   gst_caps_replace (&audiomixer->current_caps, NULL);
-
-  if (audiomixer->pending_events) {
-    g_list_foreach (audiomixer->pending_events, (GFunc) gst_event_unref, NULL);
-    g_list_free (audiomixer->pending_events);
-    audiomixer->pending_events = NULL;
-  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1153,69 +982,27 @@ gst_audiomixer_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static void
-free_pad (GstCollectData * data)
-{
-  GstAudioMixerCollect *adata = (GstAudioMixerCollect *) data;
-
-  gst_buffer_replace (&adata->buffer, NULL);
-}
-
 static GstPad *
 gst_audiomixer_request_new_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * unused, const GstCaps * caps)
+    const gchar * req_name, const GstCaps * caps)
 {
-  gchar *name;
-  GstAudioMixer *audiomixer;
-  GstPad *newpad;
-  gint padcount;
-  GstCollectData *cdata;
-  GstAudioMixerCollect *adata;
+  GstAudioMixerPad *newpad;
 
-  if (templ->direction != GST_PAD_SINK)
-    goto not_sink;
+  newpad = (GstAudioMixerPad *)
+      GST_ELEMENT_CLASS (parent_class)->request_new_pad (element,
+      templ, req_name, caps);
 
-  audiomixer = GST_AUDIO_MIXER (element);
+  if (newpad == NULL)
+    goto could_not_create;
 
-  /* increment pad counter */
-  padcount = g_atomic_int_add (&audiomixer->padcount, 1);
-
-  name = g_strdup_printf ("sink_%u", padcount);
-  newpad = g_object_new (GST_TYPE_AUDIO_MIXER_PAD, "name", name, "direction",
-      templ->direction, "template", templ, NULL);
-  GST_DEBUG_OBJECT (audiomixer, "request new pad %s", name);
-  g_free (name);
-
-  cdata =
-      gst_collect_pads_add_pad (audiomixer->collect, newpad,
-      sizeof (GstAudioMixerCollect), free_pad, TRUE);
-  adata = (GstAudioMixerCollect *) cdata;
-  adata->buffer = NULL;
-  adata->position = 0;
-  adata->size = 0;
-  adata->output_offset = -1;
-  adata->next_offset = -1;
-
-  /* takes ownership of the pad */
-  if (!gst_element_add_pad (GST_ELEMENT (audiomixer), newpad))
-    goto could_not_add;
-
-  gst_child_proxy_child_added (GST_CHILD_PROXY (audiomixer), G_OBJECT (newpad),
+  gst_child_proxy_child_added (GST_CHILD_PROXY (element), G_OBJECT (newpad),
       GST_OBJECT_NAME (newpad));
 
-  return newpad;
+  return GST_PAD_CAST (newpad);
 
-  /* errors */
-not_sink:
+could_not_create:
   {
-    g_warning ("gstaudiomixer: request new pad that is not a SINK pad\n");
-    return NULL;
-  }
-could_not_add:
-  {
-    GST_DEBUG_OBJECT (audiomixer, "could not add pad");
-    gst_collect_pads_remove_pad (audiomixer->collect, newpad);
-    gst_object_unref (newpad);
+    GST_DEBUG_OBJECT (element, "could not create/add  pad");
     return NULL;
   }
 }
@@ -1231,30 +1018,28 @@ gst_audiomixer_release_pad (GstElement * element, GstPad * pad)
 
   gst_child_proxy_child_removed (GST_CHILD_PROXY (audiomixer), G_OBJECT (pad),
       GST_OBJECT_NAME (pad));
-  if (audiomixer->collect)
-    gst_collect_pads_remove_pad (audiomixer->collect, pad);
-  gst_element_remove_pad (element, pad);
+
+  GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
 }
 
 static GstFlowReturn
-gst_audiomixer_do_clip (GstCollectPads * pads, GstCollectData * data,
-    GstBuffer * buffer, GstBuffer ** out, gpointer user_data)
+gst_audiomixer_do_clip (GstAggregator * agg,
+    GstAggregatorPad * bpad, GstBuffer * buffer, GstBuffer ** out)
 {
-  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (user_data);
+  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
   gint rate, bpf;
 
   rate = GST_AUDIO_INFO_RATE (&audiomixer->info);
   bpf = GST_AUDIO_INFO_BPF (&audiomixer->info);
 
-  buffer = gst_audio_buffer_clip (buffer, &data->segment, rate, bpf);
+  buffer = gst_audio_buffer_clip (buffer, &bpad->segment, rate, bpf);
 
   *out = buffer;
   return GST_FLOW_OK;
 }
 
 static gboolean
-gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
-    GstCollectData * collect_data, GstAudioMixerCollect * adata,
+gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
     GstBuffer * inbuf)
 {
   GstClockTime start_time, end_time;
@@ -1263,44 +1048,46 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
   GstClockTime timestamp, stream_time;
   gint rate, bpf;
 
-  g_assert (adata->buffer == NULL);
+  GstAggregator *agg = GST_AGGREGATOR (audiomixer);
+  GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
+
+  g_assert (pad->buffer == NULL);
 
   rate = GST_AUDIO_INFO_RATE (&audiomixer->info);
   bpf = GST_AUDIO_INFO_BPF (&audiomixer->info);
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
-  stream_time =
-      gst_segment_to_stream_time (&collect_data->segment, GST_FORMAT_TIME,
+  stream_time = gst_segment_to_stream_time (&agg->segment, GST_FORMAT_TIME,
       timestamp);
 
   /* sync object properties on stream time */
   /* TODO: Ideally we would want to do that on every sample */
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (GST_OBJECT (collect_data->pad), stream_time);
+    gst_object_sync_values (GST_OBJECT (pad), stream_time);
 
-  adata->position = 0;
-  adata->size = gst_buffer_get_size (inbuf);
+  pad->position = 0;
+  pad->size = gst_buffer_get_size (inbuf);
 
-  start_time = GST_BUFFER_TIMESTAMP (inbuf);
+  start_time = GST_BUFFER_PTS (inbuf);
   end_time =
-      start_time + gst_util_uint64_scale_ceil (adata->size / bpf,
+      start_time + gst_util_uint64_scale_ceil (pad->size / bpf,
       GST_SECOND, rate);
 
   start_offset = gst_util_uint64_scale (start_time, rate, GST_SECOND);
-  end_offset = start_offset + adata->size / bpf;
+  end_offset = start_offset + pad->size / bpf;
 
   if (GST_BUFFER_IS_DISCONT (inbuf)
       || GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_RESYNC)
-      || adata->next_offset == -1) {
+      || pad->next_offset == -1) {
     discont = TRUE;
   } else {
     guint64 diff, max_sample_diff;
 
     /* Check discont, based on audiobasesink */
-    if (start_offset <= adata->next_offset)
-      diff = adata->next_offset - start_offset;
+    if (start_offset <= pad->next_offset)
+      diff = pad->next_offset - start_offset;
     else
-      diff = start_offset - adata->next_offset;
+      diff = start_offset - pad->next_offset;
 
     max_sample_diff =
         gst_util_uint64_scale_int (audiomixer->alignment_threshold, rate,
@@ -1327,28 +1114,28 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
 
   if (discont) {
     /* Have discont, need resync */
-    if (adata->next_offset != -1)
-      GST_INFO_OBJECT (collect_data->pad, "Have discont. Expected %"
+    if (pad->next_offset != -1)
+      GST_INFO_OBJECT (pad, "Have discont. Expected %"
           G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
-          adata->next_offset, start_offset);
-    adata->output_offset = -1;
+          pad->next_offset, start_offset);
+    pad->output_offset = -1;
   } else {
     audiomixer->discont_time = GST_CLOCK_TIME_NONE;
   }
 
-  adata->next_offset = end_offset;
+  pad->next_offset = end_offset;
 
-  if (adata->output_offset == -1) {
+  if (pad->output_offset == -1) {
     GstClockTime start_running_time;
     GstClockTime end_running_time;
     guint64 start_running_time_offset;
     guint64 end_running_time_offset;
 
     start_running_time =
-        gst_segment_to_running_time (&collect_data->segment,
+        gst_segment_to_running_time (&aggpad->segment,
         GST_FORMAT_TIME, start_time);
     end_running_time =
-        gst_segment_to_running_time (&collect_data->segment,
+        gst_segment_to_running_time (&aggpad->segment,
         GST_FORMAT_TIME, end_time);
     start_running_time_offset =
         gst_util_uint64_scale (start_running_time, rate, GST_SECOND);
@@ -1356,33 +1143,40 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
         gst_util_uint64_scale (end_running_time, rate, GST_SECOND);
 
     if (end_running_time_offset < audiomixer->offset) {
+      GstBuffer *buf;
+
       /* Before output segment, drop */
       gst_buffer_unref (inbuf);
-      adata->buffer = NULL;
-      gst_buffer_unref (gst_collect_pads_pop (pads, collect_data));
-      adata->position = 0;
-      adata->size = 0;
-      adata->output_offset = -1;
-      GST_DEBUG_OBJECT (collect_data->pad,
+      pad->buffer = NULL;
+      buf = gst_aggregator_pad_steal_buffer (aggpad);
+      if (buf)
+        gst_buffer_unref (buf);
+      pad->position = 0;
+      pad->size = 0;
+      pad->output_offset = -1;
+      GST_DEBUG_OBJECT (pad,
           "Buffer before segment or current position: %" G_GUINT64_FORMAT " < %"
           G_GUINT64_FORMAT, end_running_time_offset, audiomixer->offset);
       return FALSE;
     }
 
     if (start_running_time_offset < audiomixer->offset) {
+      GstBuffer *buf;
       guint diff = (audiomixer->offset - start_running_time_offset) * bpf;
-      adata->position += diff;
-      adata->size -= diff;
+      pad->position += diff;
+      pad->size -= diff;
       /* FIXME: This could only happen due to rounding errors */
-      if (adata->size == 0) {
+      if (pad->size == 0) {
         /* Empty buffer, drop */
         gst_buffer_unref (inbuf);
-        adata->buffer = NULL;
-        gst_buffer_unref (gst_collect_pads_pop (pads, collect_data));
-        adata->position = 0;
-        adata->size = 0;
-        adata->output_offset = -1;
-        GST_DEBUG_OBJECT (collect_data->pad,
+        pad->buffer = NULL;
+        buf = gst_aggregator_pad_steal_buffer (aggpad);
+        if (buf)
+          gst_buffer_unref (buf);
+        pad->position = 0;
+        pad->size = 0;
+        pad->output_offset = -1;
+        GST_DEBUG_OBJECT (pad,
             "Buffer before segment or current position: %" G_GUINT64_FORMAT
             " < %" G_GUINT64_FORMAT, end_running_time_offset,
             audiomixer->offset);
@@ -1390,118 +1184,125 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
       }
     }
 
-    adata->output_offset = MAX (start_running_time_offset, audiomixer->offset);
-    GST_DEBUG_OBJECT (collect_data->pad,
+    pad->output_offset = MAX (start_running_time_offset, audiomixer->offset);
+    GST_DEBUG_OBJECT (pad,
         "Buffer resynced: Pad offset %" G_GUINT64_FORMAT
-        ", current mixer offset %" G_GUINT64_FORMAT, adata->output_offset,
+        ", current mixer offset %" G_GUINT64_FORMAT, pad->output_offset,
         audiomixer->offset);
   }
 
-  GST_LOG_OBJECT (collect_data->pad,
-      "Queued new buffer at offset %" G_GUINT64_FORMAT, adata->output_offset);
-  adata->buffer = inbuf;
+  GST_LOG_OBJECT (pad,
+      "Queued new buffer at offset %" G_GUINT64_FORMAT, pad->output_offset);
+  pad->buffer = inbuf;
 
   return TRUE;
 }
 
 static void
-gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
-    GstCollectData * collect_data, GstAudioMixerCollect * adata,
+gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
     GstMapInfo * outmap)
 {
-  GstAudioMixerPad *pad = GST_AUDIO_MIXER_PAD (adata->collect.pad);
   guint overlap;
   guint out_start;
   GstBuffer *inbuf;
   GstMapInfo inmap;
   gint bpf;
 
+  GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
+
   bpf = GST_AUDIO_INFO_BPF (&audiomixer->info);
 
   /* Overlap => mix */
-  if (audiomixer->offset < adata->output_offset)
-    out_start = adata->output_offset - audiomixer->offset;
+  if (audiomixer->offset < pad->output_offset)
+    out_start = pad->output_offset - audiomixer->offset;
   else
     out_start = 0;
 
-  overlap = adata->size / bpf - adata->position / bpf;
+  overlap = pad->size / bpf - pad->position / bpf;
   if (overlap > audiomixer->blocksize - out_start)
     overlap = audiomixer->blocksize - out_start;
 
-  inbuf = gst_collect_pads_peek (pads, collect_data);
-  g_assert (inbuf != NULL && inbuf == adata->buffer);
+  inbuf = gst_aggregator_pad_get_buffer (aggpad);
+  if (inbuf == NULL)
+    return;
 
   GST_OBJECT_LOCK (pad);
   if (pad->mute || pad->volume < G_MINDOUBLE) {
     GST_DEBUG_OBJECT (pad, "Skipping muted pad");
     gst_buffer_unref (inbuf);
-    adata->position += overlap * bpf;
-    adata->output_offset += overlap;
-    if (adata->position >= adata->size) {
+    pad->position += overlap * bpf;
+    pad->output_offset += overlap;
+    if (pad->position >= pad->size) {
+      GstBuffer *buf;
       /* Buffer done, drop it */
-      gst_buffer_replace (&adata->buffer, NULL);
-      gst_buffer_unref (gst_collect_pads_pop (pads, collect_data));
+      gst_buffer_replace (&pad->buffer, NULL);
+      buf = gst_aggregator_pad_steal_buffer (aggpad);
+      if (buf)
+        gst_buffer_unref (buf);
     }
     GST_OBJECT_UNLOCK (pad);
     return;
   }
 
   if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
+    GstBuffer *aggpadbuf = gst_aggregator_pad_steal_buffer (aggpad);
+
     /* skip gap buffer */
     GST_LOG_OBJECT (pad, "skipping GAP buffer");
     gst_buffer_unref (inbuf);
-    adata->output_offset += adata->size / bpf;
+    pad->output_offset += pad->size / bpf;
     /* Buffer done, drop it */
-    gst_buffer_replace (&adata->buffer, NULL);
-    gst_buffer_unref (gst_collect_pads_pop (pads, collect_data));
+    gst_buffer_replace (&pad->buffer, NULL);
+    if (aggpadbuf)
+      gst_buffer_unref (aggpadbuf);
     GST_OBJECT_UNLOCK (pad);
     return;
   }
 
   gst_buffer_map (inbuf, &inmap, GST_MAP_READ);
   GST_LOG_OBJECT (pad, "mixing %u bytes at offset %u from offset %u",
-      overlap * bpf, out_start * bpf, adata->position);
+      overlap * bpf, out_start * bpf, pad->position);
   /* further buffers, need to add them */
   if (pad->volume == 1.0) {
     switch (audiomixer->info.finfo->format) {
       case GST_AUDIO_FORMAT_U8:
         audiomixer_orc_add_u8 ((gpointer) (outmap->data + out_start * bpf),
-            (gpointer) (inmap.data + adata->position),
+            (gpointer) (inmap.data + pad->position),
             overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_S8:
         audiomixer_orc_add_s8 ((gpointer) (outmap->data + out_start * bpf),
-            (gpointer) (inmap.data + adata->position),
+            (gpointer) (inmap.data + pad->position),
             overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_U16:
         audiomixer_orc_add_u16 ((gpointer) (outmap->data + out_start * bpf),
-            (gpointer) (inmap.data + adata->position),
+            (gpointer) (inmap.data + pad->position),
             overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_S16:
         audiomixer_orc_add_s16 ((gpointer) (outmap->data + out_start * bpf),
-            (gpointer) (inmap.data + adata->position),
+            (gpointer) (inmap.data + pad->position),
             overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_U32:
         audiomixer_orc_add_u32 ((gpointer) (outmap->data + out_start * bpf),
-            (gpointer) (inmap.data + adata->position),
+            (gpointer) (inmap.data + pad->position),
             overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_S32:
         audiomixer_orc_add_s32 ((gpointer) (outmap->data + out_start * bpf),
-            (gpointer) (inmap.data + adata->position),
+            (gpointer) (inmap.data + pad->position),
             overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_F32:
         audiomixer_orc_add_f32 ((gpointer) (outmap->data + out_start * bpf),
-            (gpointer) (inmap.data + adata->position),
+            (gpointer) (inmap.data + pad->position),
             overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_F64:
         audiomixer_orc_add_f64 ((gpointer) (outmap->data + out_start * bpf),
-            (gpointer) (inmap.data + adata->position),
+            (gpointer) (inmap.data + pad->position),
             overlap * audiomixer->info.channels);
         break;
       default:
@@ -1512,42 +1313,42 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
     switch (audiomixer->info.finfo->format) {
       case GST_AUDIO_FORMAT_U8:
         audiomixer_orc_add_volume_u8 ((gpointer) (outmap->data +
-                out_start * bpf), (gpointer) (inmap.data + adata->position),
+                out_start * bpf), (gpointer) (inmap.data + pad->position),
             pad->volume_i8, overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_S8:
         audiomixer_orc_add_volume_s8 ((gpointer) (outmap->data +
-                out_start * bpf), (gpointer) (inmap.data + adata->position),
+                out_start * bpf), (gpointer) (inmap.data + pad->position),
             pad->volume_i8, overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_U16:
         audiomixer_orc_add_volume_u16 ((gpointer) (outmap->data +
-                out_start * bpf), (gpointer) (inmap.data + adata->position),
+                out_start * bpf), (gpointer) (inmap.data + pad->position),
             pad->volume_i16, overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_S16:
         audiomixer_orc_add_volume_s16 ((gpointer) (outmap->data +
-                out_start * bpf), (gpointer) (inmap.data + adata->position),
+                out_start * bpf), (gpointer) (inmap.data + pad->position),
             pad->volume_i16, overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_U32:
         audiomixer_orc_add_volume_u32 ((gpointer) (outmap->data +
-                out_start * bpf), (gpointer) (inmap.data + adata->position),
+                out_start * bpf), (gpointer) (inmap.data + pad->position),
             pad->volume_i32, overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_S32:
         audiomixer_orc_add_volume_s32 ((gpointer) (outmap->data +
-                out_start * bpf), (gpointer) (inmap.data + adata->position),
+                out_start * bpf), (gpointer) (inmap.data + pad->position),
             pad->volume_i32, overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_F32:
         audiomixer_orc_add_volume_f32 ((gpointer) (outmap->data +
-                out_start * bpf), (gpointer) (inmap.data + adata->position),
+                out_start * bpf), (gpointer) (inmap.data + pad->position),
             pad->volume, overlap * audiomixer->info.channels);
         break;
       case GST_AUDIO_FORMAT_F64:
         audiomixer_orc_add_volume_f64 ((gpointer) (outmap->data +
-                out_start * bpf), (gpointer) (inmap.data + adata->position),
+                out_start * bpf), (gpointer) (inmap.data + pad->position),
             pad->volume, overlap * audiomixer->info.channels);
         break;
       default:
@@ -1558,13 +1359,17 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
   gst_buffer_unmap (inbuf, &inmap);
   gst_buffer_unref (inbuf);
 
-  adata->position += overlap * bpf;
-  adata->output_offset += overlap;
+  pad->position += overlap * bpf;
+  pad->output_offset += overlap;
 
-  if (adata->position == adata->size) {
+  if (pad->position == pad->size) {
+    GstBuffer *buf;
+
     /* Buffer done, drop it */
-    gst_buffer_replace (&adata->buffer, NULL);
-    gst_buffer_unref (gst_collect_pads_pop (pads, collect_data));
+    gst_buffer_replace (&pad->buffer, NULL);
+    buf = gst_aggregator_pad_steal_buffer (aggpad);
+    if (buf)
+      gst_buffer_unref (buf);
     GST_DEBUG_OBJECT (pad, "Finished mixing buffer, waiting for next");
   }
 
@@ -1572,7 +1377,7 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
 }
 
 static GstFlowReturn
-gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
+gst_audiomixer_aggregate (GstAggregator * agg)
 {
   /* Get all pads that have data for us and store them in a
    * new list.
@@ -1603,7 +1408,7 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
    *    output offset/offset_end.
    */
   GstAudioMixer *audiomixer;
-  GSList *collected;
+  GList *iter;
   GstFlowReturn ret;
   GstBuffer *outbuf = NULL;
   GstMapInfo outmap;
@@ -1614,112 +1419,34 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
   gboolean is_eos = TRUE;
   gboolean is_done = TRUE;
 
-  audiomixer = GST_AUDIO_MIXER (user_data);
+  audiomixer = GST_AUDIO_MIXER (agg);
 
   /* this is fatal */
   if (G_UNLIKELY (audiomixer->info.finfo->format == GST_AUDIO_FORMAT_UNKNOWN))
     goto not_negotiated;
 
-  if (audiomixer->flush_stop_pending == TRUE) {
-    GST_INFO_OBJECT (audiomixer->srcpad, "send pending flush stop event");
-    if (!gst_pad_push_event (audiomixer->srcpad,
-            gst_event_new_flush_stop (TRUE))) {
-      GST_WARNING_OBJECT (audiomixer->srcpad,
-          "Sending flush stop event failed");
-    }
-
-    audiomixer->flush_stop_pending = FALSE;
-    gst_buffer_replace (&audiomixer->current_buffer, NULL);
-    audiomixer->discont_time = GST_CLOCK_TIME_NONE;
-  }
-
-  if (audiomixer->send_stream_start) {
-    gchar s_id[32];
-    GstEvent *event;
-
-    GST_INFO_OBJECT (audiomixer->srcpad, "send pending stream start event");
-    /* FIXME: create id based on input ids, we can't use 
-     * gst_pad_create_stream_id() though as that only handles 0..1 sink-pad
-     */
-    g_snprintf (s_id, sizeof (s_id), "audiomixer-%08x", g_random_int ());
-    event = gst_event_new_stream_start (s_id);
-    gst_event_set_group_id (event, gst_util_group_id_next ());
-
-    if (!gst_pad_push_event (audiomixer->srcpad, event)) {
-      GST_WARNING_OBJECT (audiomixer->srcpad,
-          "Sending stream start event failed");
-    }
-    audiomixer->send_stream_start = FALSE;
-  }
-
   if (audiomixer->send_caps) {
-    GstEvent *caps_event;
+    gst_aggregator_set_src_caps (agg, audiomixer->current_caps);
 
-    caps_event = gst_event_new_caps (audiomixer->current_caps);
-    GST_INFO_OBJECT (audiomixer->srcpad,
-        "send pending caps event %" GST_PTR_FORMAT, caps_event);
-    if (!gst_pad_push_event (audiomixer->srcpad, caps_event)) {
-      GST_WARNING_OBJECT (audiomixer->srcpad, "Sending caps event failed");
-    }
+    if (agg->segment.rate > 0.0)
+      agg->segment.position = agg->segment.start;
+    else
+      agg->segment.position = agg->segment.stop;
+
+    audiomixer->offset = gst_util_uint64_scale (agg->segment.position,
+        GST_AUDIO_INFO_RATE (&audiomixer->info), GST_SECOND);
+
     audiomixer->send_caps = FALSE;
   }
 
   rate = GST_AUDIO_INFO_RATE (&audiomixer->info);
   bpf = GST_AUDIO_INFO_BPF (&audiomixer->info);
 
-  if (g_atomic_int_compare_and_exchange (&audiomixer->segment_pending, TRUE,
-          FALSE)) {
-    GstEvent *event;
-
-    /* 
-     * When seeking we set the start and stop positions as given in the seek
-     * event. We also adjust offset & timestamp accordingly.
-     * This basically ignores all newsegments sent by upstream.
-     *
-     * FIXME: We require that all inputs have the same rate currently
-     * as we do no rate conversion!
-     */
-    event = gst_event_new_segment (&audiomixer->segment);
-    if (audiomixer->segment.rate > 0.0) {
-      audiomixer->segment.position = audiomixer->segment.start;
-    } else {
-      audiomixer->segment.position = audiomixer->segment.stop;
-    }
-    audiomixer->offset = gst_util_uint64_scale (audiomixer->segment.position,
-        rate, GST_SECOND);
-
-    GST_INFO_OBJECT (audiomixer->srcpad, "sending pending new segment event %"
-        GST_SEGMENT_FORMAT, &audiomixer->segment);
-    if (event) {
-      if (!gst_pad_push_event (audiomixer->srcpad, event)) {
-        GST_WARNING_OBJECT (audiomixer->srcpad,
-            "Sending new segment event failed");
-      }
-    } else {
-      GST_WARNING_OBJECT (audiomixer->srcpad, "Creating new segment event for "
-          "start:%" G_GINT64_FORMAT "  end:%" G_GINT64_FORMAT " failed",
-          audiomixer->segment.start, audiomixer->segment.stop);
-    }
-  }
-
-  if (G_UNLIKELY (audiomixer->pending_events)) {
-    GList *tmp = audiomixer->pending_events;
-
-    while (tmp) {
-      GstEvent *ev = (GstEvent *) tmp->data;
-
-      gst_pad_push_event (audiomixer->srcpad, ev);
-      tmp = g_list_next (tmp);
-    }
-    g_list_free (audiomixer->pending_events);
-    audiomixer->pending_events = NULL;
-  }
-
   /* for the next timestamp, use the sample counter, which will
    * never accumulate rounding errors */
 
   /* FIXME: Reverse mixing does not work at all yet */
-  if (audiomixer->segment.rate > 0.0) {
+  if (agg->segment.rate > 0.0) {
     next_offset = audiomixer->offset + audiomixer->blocksize;
   } else {
     next_offset = audiomixer->offset - audiomixer->blocksize;
@@ -1738,30 +1465,28 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
     audiomixer->current_buffer = outbuf;
   }
 
-  GST_LOG_OBJECT (audiomixer,
+  GST_LOG_OBJECT (agg,
       "Starting to mix %u samples for offset %" G_GUINT64_FORMAT
       " with timestamp %" GST_TIME_FORMAT, audiomixer->blocksize,
-      audiomixer->offset, GST_TIME_ARGS (audiomixer->segment.position));
+      audiomixer->offset, GST_TIME_ARGS (agg->segment.position));
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_READWRITE);
 
-  for (collected = pads->data; collected; collected = collected->next) {
-    GstCollectData *collect_data;
-    GstAudioMixerCollect *adata;
+  GST_OBJECT_LOCK (agg);
+  for (iter = GST_ELEMENT (agg)->sinkpads; iter; iter = iter->next) {
     GstBuffer *inbuf;
+    GstAudioMixerPad *pad = GST_AUDIO_MIXER_PAD (iter->data);
+    GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (iter->data);
 
-    collect_data = (GstCollectData *) collected->data;
-    adata = (GstAudioMixerCollect *) collect_data;
 
-    inbuf = gst_collect_pads_peek (pads, collect_data);
+    inbuf = gst_aggregator_pad_get_buffer (aggpad);
     if (!inbuf)
       continue;
 
     /* New buffer? */
-    if (!adata->buffer || adata->buffer != inbuf) {
+    if (!pad->buffer || pad->buffer != inbuf) {
       /* Takes ownership of buffer */
-      if (!gst_audio_mixer_fill_buffer (audiomixer, pads, collect_data, adata,
-              inbuf)) {
+      if (!gst_audio_mixer_fill_buffer (audiomixer, pad, inbuf)) {
         dropped = TRUE;
         continue;
       }
@@ -1769,43 +1494,41 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
       gst_buffer_unref (inbuf);
     }
 
-    if (!adata->buffer && !dropped
-        && GST_COLLECT_PADS_STATE_IS_SET (&adata->collect,
-            GST_COLLECT_PADS_STATE_EOS)) {
-      GST_DEBUG_OBJECT (collect_data->pad, "Pad is in EOS state");
+    if (!pad->buffer && !dropped && GST_AGGREGATOR_PAD (pad)->eos) {
+      GST_DEBUG_OBJECT (aggpad, "Pad is in EOS state");
     } else {
       is_eos = FALSE;
     }
 
     /* At this point adata->output_offset >= audiomixer->offset or we have no buffer anymore */
-    if (adata->output_offset >= audiomixer->offset
-        && adata->output_offset <
-        audiomixer->offset + audiomixer->blocksize && adata->buffer) {
-      GST_LOG_OBJECT (collect_data->pad, "Mixing buffer for current offset");
-      gst_audio_mixer_mix_buffer (audiomixer, pads, collect_data, adata,
-          &outmap);
-      if (adata->output_offset >= next_offset) {
-        GST_DEBUG_OBJECT (collect_data->pad,
+    if (pad->output_offset >= audiomixer->offset
+        && pad->output_offset <
+        audiomixer->offset + audiomixer->blocksize && pad->buffer) {
+      GST_LOG_OBJECT (aggpad, "Mixing buffer for current offset");
+      gst_audio_mixer_mix_buffer (audiomixer, pad, &outmap);
+      if (pad->output_offset >= next_offset) {
+        GST_DEBUG_OBJECT (pad,
             "Pad is after current offset: %" G_GUINT64_FORMAT " >= %"
-            G_GUINT64_FORMAT, adata->output_offset, next_offset);
+            G_GUINT64_FORMAT, pad->output_offset, next_offset);
       } else {
         is_done = FALSE;
       }
     }
   }
+  GST_OBJECT_UNLOCK (agg);
 
   gst_buffer_unmap (outbuf, &outmap);
 
   if (dropped) {
     /* We dropped a buffer, retry */
-    GST_DEBUG_OBJECT (audiomixer,
+    GST_INFO_OBJECT (audiomixer,
         "A pad dropped a buffer, wait for the next one");
     return GST_FLOW_OK;
   }
 
   if (!is_done && !is_eos) {
     /* Get more buffers */
-    GST_DEBUG_OBJECT (audiomixer,
+    GST_INFO_OBJECT (audiomixer,
         "We're not done yet for the current offset," " waiting for more data");
     return GST_FLOW_OK;
   }
@@ -1817,17 +1540,15 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
     GST_DEBUG_OBJECT (audiomixer, "We're EOS");
 
 
-    for (collected = pads->data; collected; collected = collected->next) {
-      GstCollectData *collect_data;
-      GstAudioMixerCollect *adata;
+    GST_OBJECT_LOCK (agg);
+    for (iter = GST_ELEMENT (agg)->sinkpads; iter; iter = iter->next) {
+      GstAudioMixerPad *pad = GST_AUDIO_MIXER_PAD (iter->data);
 
-      collect_data = (GstCollectData *) collected->data;
-      adata = (GstAudioMixerCollect *) collect_data;
-
-      max_offset = MAX (max_offset, adata->output_offset);
-      if (adata->output_offset > audiomixer->offset)
+      max_offset = MAX ((gint64) max_offset, (gint64) pad->output_offset);
+      if (pad->output_offset > audiomixer->offset)
         empty_buffer = FALSE;
     }
+    GST_OBJECT_UNLOCK (agg);
 
     /* This means EOS or no pads at all */
     if (empty_buffer) {
@@ -1847,22 +1568,20 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
   }
 
   /* set timestamps on the output buffer */
-  if (audiomixer->segment.rate > 0.0) {
-    GST_BUFFER_TIMESTAMP (outbuf) = audiomixer->segment.position;
+  if (agg->segment.rate > 0.0) {
+    GST_BUFFER_TIMESTAMP (outbuf) = agg->segment.position;
     GST_BUFFER_OFFSET (outbuf) = audiomixer->offset;
     GST_BUFFER_OFFSET_END (outbuf) = next_offset;
-    GST_BUFFER_DURATION (outbuf) =
-        next_timestamp - audiomixer->segment.position;
+    GST_BUFFER_DURATION (outbuf) = next_timestamp - agg->segment.position;
   } else {
     GST_BUFFER_TIMESTAMP (outbuf) = next_timestamp;
     GST_BUFFER_OFFSET (outbuf) = next_offset;
     GST_BUFFER_OFFSET_END (outbuf) = audiomixer->offset;
-    GST_BUFFER_DURATION (outbuf) =
-        audiomixer->segment.position - next_timestamp;
+    GST_BUFFER_DURATION (outbuf) = agg->segment.position - next_timestamp;
   }
 
   audiomixer->offset = next_offset;
-  audiomixer->segment.position = next_timestamp;
+  agg->segment.position = next_timestamp;
 
   /* send it out */
   GST_LOG_OBJECT (audiomixer,
@@ -1870,7 +1589,7 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
       G_GINT64_FORMAT, outbuf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_BUFFER_OFFSET (outbuf));
 
-  ret = gst_pad_push (audiomixer->srcpad, outbuf);
+  ret = gst_aggregator_finish_buffer (agg, audiomixer->current_buffer);
   audiomixer->current_buffer = NULL;
 
   GST_LOG_OBJECT (audiomixer, "pushed outbuf, result = %s",
@@ -1891,55 +1610,8 @@ not_negotiated:
 eos:
   {
     GST_DEBUG_OBJECT (audiomixer, "EOS");
-    gst_pad_push_event (audiomixer->srcpad, gst_event_new_eos ());
     return GST_FLOW_EOS;
   }
-}
-
-static GstStateChangeReturn
-gst_audiomixer_change_state (GstElement * element, GstStateChange transition)
-{
-  GstAudioMixer *audiomixer;
-  GstStateChangeReturn ret;
-
-  audiomixer = GST_AUDIO_MIXER (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      audiomixer->offset = 0;
-      audiomixer->flush_stop_pending = FALSE;
-      audiomixer->segment_pending = TRUE;
-      audiomixer->send_stream_start = TRUE;
-      audiomixer->send_caps = TRUE;
-      gst_caps_replace (&audiomixer->current_caps, NULL);
-      gst_segment_init (&audiomixer->segment, GST_FORMAT_TIME);
-      gst_collect_pads_start (audiomixer->collect);
-      audiomixer->discont_time = GST_CLOCK_TIME_NONE;
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      /* need to unblock the collectpads before calling the
-       * parent change_state so that streaming can finish */
-      gst_collect_pads_stop (audiomixer->collect);
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_buffer_replace (&audiomixer->current_buffer, NULL);
-      break;
-    default:
-      break;
-  }
-
-  return ret;
 }
 
 /* GstChildProxy implementation */
