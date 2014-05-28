@@ -479,13 +479,25 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
         if (g_str_equal (a, "URI")) {
           gchar *key = g_strdup (v);
           gchar *keyp = key;
-          int len = strlen (key);
+          gchar *key_ret;
 
-          /* handle the \"key\" case */
-          if (key[len - 1] == '"')
-            key[len - 1] = '\0';
-          if (key[0] == '"')
-            key += 1;
+          /* handle the \"key\" case *
+           * there are sometimes situations where we have white signs
+           * before or after \" sign of URL therefore we are using for loops 
+           * in order to remove first and last \" sign from decryption key URI */
+          key_ret = strchr (key, '"');
+          if (key_ret != NULL) {
+            /* found initialization quotation mark key URI */
+            key = key_ret + 1;
+            key_ret = strchr (key, '"');
+            if (key_ret != NULL) {
+              /* found finalizing quotation mark inside key URI */
+              key_ret[0] = '\0';
+            } else {
+              GST_WARNING
+                  ("Decryption key URL parsing - cannot find finalizing quotation mark");
+            }
+          }
 
           self->key =
               uri_join (self->base_uri ? self->base_uri : self->uri, key);
