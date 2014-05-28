@@ -404,6 +404,8 @@ gst_audio_format_from_string (const gchar * format)
 {
   guint i;
 
+  g_return_val_if_fail (format != NULL, GST_AUDIO_FORMAT_UNKNOWN);
+
   for (i = 0; i < G_N_ELEMENTS (formats); i++) {
     if (strcmp (GST_AUDIO_FORMAT_INFO_NAME (&formats[i]), format) == 0)
       return GST_AUDIO_FORMAT_INFO_FORMAT (&formats[i]);
