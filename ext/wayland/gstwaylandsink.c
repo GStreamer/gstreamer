@@ -162,6 +162,7 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
 static void
 gst_wayland_sink_init (GstWaylandSink * sink)
 {
+  g_mutex_init (&sink->render_lock);
   g_cond_init (&sink->render_cond);
 }
 
@@ -222,6 +223,7 @@ gst_wayland_sink_finalize (GObject * object)
   if (sink->display_name)
     g_free (sink->display_name);
 
+  g_mutex_clear (&sink->render_lock);
   g_cond_clear (&sink->render_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -590,7 +592,7 @@ static const struct wl_callback_listener frame_callback_listener = {
   frame_redraw_callback
 };
 
-/* must be called with the object lock */
+/* must be called with the render lock */
 static void
 render_last_buffer (GstWaylandSink * sink)
 {
@@ -632,7 +634,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   if (!sink->window)
     gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (sink));
 
-  GST_OBJECT_LOCK (sink);
+  g_mutex_lock (&sink->render_lock);
 
   GST_LOG_OBJECT (sink, "render buffer %p", buffer);
 
@@ -719,7 +721,7 @@ activate_failed:
   }
 done:
   {
-    GST_OBJECT_UNLOCK (sink);
+    g_mutex_unlock (&sink->render_lock);
     return ret;
   }
 }
@@ -740,7 +742,7 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
 
   g_return_if_fail (sink != NULL);
 
-  GST_OBJECT_LOCK (sink);
+  g_mutex_lock (&sink->render_lock);
 
   GST_DEBUG_OBJECT (sink, "Setting window handle %" GST_PTR_FORMAT,
       (void *) handle);
@@ -765,7 +767,7 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
     }
   }
 
-  GST_OBJECT_UNLOCK (sink);
+  g_mutex_unlock (&sink->render_lock);
 }
 
 static void
@@ -776,9 +778,9 @@ gst_wayland_sink_set_render_rectangle (GstVideoOverlay * overlay,
 
   g_return_if_fail (sink != NULL);
 
-  GST_OBJECT_LOCK (sink);
+  g_mutex_lock (&sink->render_lock);
   if (!sink->window) {
-    GST_OBJECT_UNLOCK (sink);
+    g_mutex_unlock (&sink->render_lock);
     GST_WARNING_OBJECT (sink,
         "set_render_rectangle called without window, ignoring");
     return;
@@ -788,7 +790,7 @@ gst_wayland_sink_set_render_rectangle (GstVideoOverlay * overlay,
       x, y, w, h);
   gst_wl_window_set_render_rectangle (sink->window, x, y, w, h);
 
-  GST_OBJECT_UNLOCK (sink);
+  g_mutex_unlock (&sink->render_lock);
 }
 
 static void
@@ -800,12 +802,12 @@ gst_wayland_sink_expose (GstVideoOverlay * overlay)
 
   GST_DEBUG_OBJECT (sink, "expose");
 
-  GST_OBJECT_LOCK (sink);
+  g_mutex_lock (&sink->render_lock);
   if (sink->last_buffer && g_atomic_int_get (&sink->redraw_pending) == FALSE) {
     GST_DEBUG_OBJECT (sink, "redrawing last buffer");
     render_last_buffer (sink);
   }
-  GST_OBJECT_UNLOCK (sink);
+  g_mutex_unlock (&sink->render_lock);
 }
 
 static void
@@ -821,9 +823,9 @@ gst_wayland_sink_pause_rendering (GstWaylandVideo * video)
   GstWaylandSink *sink = GST_WAYLAND_SINK (video);
   g_return_if_fail (sink != NULL);
 
-  GST_OBJECT_LOCK (sink);
+  g_mutex_lock (&sink->render_lock);
   sink->drawing_frozen = TRUE;
-  GST_OBJECT_UNLOCK (sink);
+  g_mutex_unlock (&sink->render_lock);
 }
 
 static void
@@ -834,13 +836,13 @@ gst_wayland_sink_resume_rendering (GstWaylandVideo * video)
 
   GST_DEBUG_OBJECT (sink, "resuming rendering");
 
-  GST_OBJECT_LOCK (sink);
+  g_mutex_lock (&sink->render_lock);
   sink->drawing_frozen = FALSE;
 
   if (GST_STATE (sink) == GST_STATE_PLAYING) {
     sink->rendered = FALSE;
     while (sink->rendered == FALSE)
-      g_cond_wait (&sink->render_cond, GST_OBJECT_GET_LOCK (sink));
+      g_cond_wait (&sink->render_cond, &sink->render_lock);
     GST_DEBUG_OBJECT (sink, "synchronized with render()");
   } else if (sink->window && sink->last_buffer &&
       g_atomic_int_get (&sink->redraw_pending) == FALSE) {
@@ -848,7 +850,7 @@ gst_wayland_sink_resume_rendering (GstWaylandVideo * video)
     GST_DEBUG_OBJECT (sink, "last buffer redrawn");
   }
 
-  GST_OBJECT_UNLOCK (sink);
+  g_mutex_unlock (&sink->render_lock);
 }
 
 static gboolean
