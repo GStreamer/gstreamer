@@ -50,13 +50,15 @@ gst_m3u8_new (void)
 }
 
 static void
-gst_m3u8_set_uri (GstM3U8 * self, gchar * uri)
+gst_m3u8_set_uri (GstM3U8 * self, gchar * uri, gchar * base_uri)
 {
   g_return_if_fail (self != NULL);
 
-  if (self->uri)
-    g_free (self->uri);
+  g_free (self->uri);
   self->uri = uri;
+
+  g_free (self->base_uri);
+  self->base_uri = base_uri;
 }
 
 static void
@@ -65,6 +67,7 @@ gst_m3u8_free (GstM3U8 * self)
   g_return_if_fail (self != NULL);
 
   g_free (self->uri);
+  g_free (self->base_uri);
   g_free (self->codecs);
   g_free (self->key);
 
@@ -322,7 +325,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
         goto next_line;
       }
 
-      data = uri_join (self->uri, data);
+      data = uri_join (self->base_uri ? self->base_uri : self->uri, data);
       if (data == NULL)
         goto next_line;
 
@@ -333,7 +336,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
           gst_m3u8_free (list);
           g_free (data);
         } else {
-          gst_m3u8_set_uri (list, data);
+          gst_m3u8_set_uri (list, data, NULL);
           self->lists = g_list_append (self->lists, list);
         }
         list = NULL;
@@ -427,12 +430,12 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
           if (uri[0] == '"')
             uri += 1;
 
-          uri = uri_join (self->uri, uri);
+          uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
           g_free (urip);
 
           if (uri == NULL)
             continue;
-          gst_m3u8_set_uri (new_list, uri);
+          gst_m3u8_set_uri (new_list, uri, NULL);
         }
       }
 
@@ -484,7 +487,8 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
           if (key[0] == '"')
             key += 1;
 
-          self->key = uri_join (self->uri, key);
+          self->key =
+              uri_join (self->base_uri ? self->base_uri : self->uri, key);
           g_free (keyp);
         } else if (g_str_equal (a, "IV")) {
           gchar *ivp = v;
@@ -591,7 +595,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
 }
 
 GstM3U8Client *
-gst_m3u8_client_new (const gchar * uri)
+gst_m3u8_client_new (const gchar * uri, const gchar * base_uri)
 {
   GstM3U8Client *client;
 
@@ -604,7 +608,7 @@ gst_m3u8_client_new (const gchar * uri)
   client->sequence_position = 0;
   client->update_failed_count = 0;
   g_mutex_init (&client->lock);
-  gst_m3u8_set_uri (client->main, g_strdup (uri));
+  gst_m3u8_set_uri (client->main, g_strdup (uri), g_strdup (base_uri));
 
   return client;
 }

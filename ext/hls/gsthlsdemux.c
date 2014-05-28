@@ -105,7 +105,7 @@ static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux,
     gboolean update, GError ** err);
 static void gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose);
 static gboolean gst_hls_demux_set_location (GstHLSDemux * demux,
-    const gchar * uri);
+    const gchar * uri, const gchar * base_uri);
 static gchar *gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf);
 
 static gboolean gst_hls_demux_change_playlist (GstHLSDemux * demux,
@@ -572,7 +572,6 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstHLSDemux *demux;
   GstQuery *query;
   gboolean ret;
-  gchar *uri;
 
   demux = GST_HLS_DEMUX (parent);
 
@@ -592,18 +591,19 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       ret = gst_pad_peer_query (demux->sinkpad, query);
       if (ret) {
         gboolean permanent;
+        gchar *uri, *redirect_uri;
 
-        gst_query_parse_uri_redirection (query, &uri);
+        gst_query_parse_uri (query, &uri);
+        gst_query_parse_uri_redirection (query, &redirect_uri);
         gst_query_parse_uri_redirection_permanent (query, &permanent);
 
-        /* Only use the redirect target for permanent redirects */
-        if (!permanent || uri == NULL) {
-          g_free (uri);
-          gst_query_parse_uri (query, &uri);
+        if (permanent) {
+          gst_hls_demux_set_location (demux, redirect_uri, redirect_uri);
+        } else {
+          gst_hls_demux_set_location (demux, uri, redirect_uri);
         }
-
-        gst_hls_demux_set_location (demux, uri);
         g_free (uri);
+        g_free (redirect_uri);
       }
       gst_query_unref (query);
 
@@ -1291,7 +1291,7 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
   }
 
   if (!dispose) {
-    demux->client = gst_m3u8_client_new ("");
+    demux->client = gst_m3u8_client_new ("", NULL);
   }
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
@@ -1324,12 +1324,14 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
 }
 
 static gboolean
-gst_hls_demux_set_location (GstHLSDemux * demux, const gchar * uri)
+gst_hls_demux_set_location (GstHLSDemux * demux, const gchar * uri,
+    const gchar * base_uri)
 {
   if (demux->client)
     gst_m3u8_client_free (demux->client);
-  demux->client = gst_m3u8_client_new (uri);
-  GST_INFO_OBJECT (demux, "Changed location: %s", uri);
+  demux->client = gst_m3u8_client_new (uri, base_uri);
+  GST_INFO_OBJECT (demux, "Changed location: %s (base uri: %s)", uri,
+      GST_STR_NULL (base_uri));
   return TRUE;
 }
 
@@ -1489,7 +1491,6 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
   GstBuffer *buf;
   gchar *playlist;
   gboolean updated = FALSE;
-
   const gchar *uri = gst_m3u8_client_get_current_uri (demux->client);
 
   download =
@@ -1498,6 +1499,19 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
       err);
   if (download == NULL)
     return FALSE;
+
+  /* Set the base URI of the playlist to the redirect target if any */
+  GST_M3U8_CLIENT_LOCK (demux->client);
+  g_free (demux->client->current->uri);
+  g_free (demux->client->current->base_uri);
+  if (download->redirect_permanent) {
+    demux->client->current->uri = g_strdup (download->redirect_uri);
+    demux->client->current->base_uri = NULL;
+  } else {
+    demux->client->current->uri = g_strdup (download->uri);
+    demux->client->current->base_uri = g_strdup (download->redirect_uri);
+  }
+  GST_M3U8_CLIENT_UNLOCK (demux->client);
 
   buf = gst_fragment_get_buffer (download);
   playlist = gst_hls_src_buf_to_utf8_playlist (buf);
