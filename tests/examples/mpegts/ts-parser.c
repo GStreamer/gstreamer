@@ -703,6 +703,49 @@ dump_tot (GstMpegTsSection * section)
 }
 
 static void
+dump_vct (GstMpegTsSection * section)
+{
+  const GstMpegTsAtscVCT *vct;
+  gint i;
+
+  if (GST_MPEGTS_SECTION_TYPE (section) == GST_MPEGTS_SECTION_ATSC_CVCT) {
+    vct = gst_mpegts_section_get_atsc_cvct (section);
+  } else {
+    /* GST_MPEGTS_SECTION_ATSC_TVCT */
+    vct = gst_mpegts_section_get_atsc_tvct (section);
+  }
+
+  g_assert (vct);
+
+  g_printf ("     transport_stream_id : 0x%04x\n", vct->transport_stream_id);
+  g_printf ("     protocol_version    : %u\n", vct->protocol_version);
+  g_printf ("     %d Sources:\n", vct->sources->len);
+  for (i = 0; i < vct->sources->len; i++) {
+    GstMpegTsAtscVCTSource *source = g_ptr_array_index (vct->sources, i);
+    g_print ("       short_name: %s\n", source->short_name);
+    g_print ("       major_channel_number: %u, minor_channel_number: %u\n",
+        source->major_channel_number, source->minor_channel_number);
+    g_print ("       modulation_mode: %u\n", source->modulation_mode);
+    g_print ("       carrier_frequency: %u\n", source->carrier_frequency);
+    g_print ("       channel_tsid: %u\n", source->channel_TSID);
+    g_print ("       program_number: %u\n", source->program_number);
+    g_print ("       ETM_location: %u\n", source->ETM_location);
+    g_print ("       access_controlled: %u\n", source->access_controlled);
+    g_print ("       hidden: %u\n", source->hidden);
+    if (section->table_id == GST_MPEGTS_SECTION_ATSC_CVCT) {
+      g_print ("       path_select: %u\n", source->path_select);
+      g_print ("       out_of_band: %u\n", source->out_of_band);
+    }
+    g_print ("       hide_guide: %u\n", source->hide_guide);
+    g_print ("       service_type: %u\n", source->service_type);
+    g_print ("       source_id: %u\n", source->source_id);
+
+    dump_descriptors (source->descriptors, 9);
+  }
+  dump_descriptors (vct->descriptors, 7);
+}
+
+static void
 dump_section (GstMpegTsSection * section)
 {
   switch (GST_MPEGTS_SECTION_TYPE (section)) {
@@ -729,6 +772,10 @@ dump_section (GstMpegTsSection * section)
       break;
     case GST_MPEGTS_SECTION_EIT:
       dump_eit (section);
+      break;
+    case GST_MPEGTS_SECTION_ATSC_CVCT:
+    case GST_MPEGTS_SECTION_ATSC_TVCT:
+      dump_vct (section);
       break;
     default:
       g_printf ("     Unknown section type\n");
