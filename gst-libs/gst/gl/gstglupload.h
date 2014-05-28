@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 GType gst_gl_upload_get_type (void);
 #define GST_TYPE_GL_UPLOAD (gst_gl_upload_get_type())
 #define GST_GL_UPLOAD(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_UPLOAD,GstGLUpload))
-#define GST_GL_UPLOAD_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GL_DISPLAY,GstGLUploadClass))
+#define GST_GL_UPLOAD_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GL_UPLOAD,GstGLUploadClass))
 #define GST_IS_GL_UPLOAD(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_UPLOAD))
 #define GST_IS_GL_UPLOAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_UPLOAD))
 #define GST_GL_UPLOAD_CAST(obj) ((GstGLUpload*)(obj))
