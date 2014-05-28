@@ -545,10 +545,22 @@ quit:
 
       /* set the element state to NULL */
       GST_OBJECT_UNLOCK (downloader);
-      if (download == NULL)
+      if (download == NULL) {
         gst_element_set_state (urisrc, GST_STATE_NULL);
-      else
+      } else {
+        GstQuery *query;
+
+        /* Download successfull, let's query the URI */
+        query = gst_query_new_uri ();
+        if (gst_element_query (urisrc, query)) {
+          gst_query_parse_uri (query, &download->uri);
+          gst_query_parse_uri_redirection (query, &download->redirect_uri);
+          gst_query_parse_uri_redirection_permanent (query,
+              &download->redirect_permanent);
+        }
+        gst_query_unref (query);
         gst_element_set_state (urisrc, GST_STATE_READY);
+      }
       GST_OBJECT_LOCK (downloader);
       gst_element_set_bus (urisrc, NULL);
 

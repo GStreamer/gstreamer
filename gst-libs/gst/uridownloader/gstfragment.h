@@ -41,6 +41,10 @@ struct _GstFragment
 {
   GObject parent;
 
+  gchar * uri;                  /* URI of the fragment */
+  gchar * redirect_uri;         /* Redirect target if any */
+  gboolean redirect_permanent;  /* If the redirect is permanent */
+
   gchar * name;                 /* Name of the fragment */
   gboolean completed;           /* Whether the fragment is complete or not */
   guint64 download_start_time;  /* Epoch time when the download started */

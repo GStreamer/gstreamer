@@ -180,6 +180,8 @@ gst_fragment_finalize (GObject * gobject)
 {
   GstFragment *fragment = GST_FRAGMENT (gobject);
 
+  g_free (fragment->uri);
+  g_free (fragment->redirect_uri);
   g_free (fragment->name);
   g_mutex_clear (&fragment->priv->lock);
 
