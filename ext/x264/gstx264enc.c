@@ -1804,6 +1804,7 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
 
     if (gst_caps_is_empty (allowed_caps)) {
       gst_caps_unref (allowed_caps);
+      gst_caps_unref (template_caps);
       return FALSE;
     }
 
