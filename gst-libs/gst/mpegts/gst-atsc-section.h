@@ -169,15 +169,13 @@ GType gst_mpegts_atsc_mgt_table_get_type (void);
 
 const GstMpegTsAtscMGT * gst_mpegts_section_get_atsc_mgt (GstMpegTsSection * section);
 
-/* ETT */
+/* Multiple string structure (used in ETT and EIT */
 
 #define GST_TYPE_MPEGTS_ATSC_STRING_SEGMENT (gst_mpegts_atsc_string_segment_get_type())
 #define GST_TYPE_MPEGTS_ATSC_MULT_STRING (gst_mpegts_atsc_mult_string_get_type())
-#define GST_TYPE_MPEGTS_ATSC_ETT (gst_mpegts_atsc_ett_get_type())
 
 typedef struct _GstMpegTsAtscStringSegment GstMpegTsAtscStringSegment;
 typedef struct _GstMpegTsAtscMultString GstMpegTsAtscMultString;
-typedef struct _GstMpegTsAtscETT GstMpegTsAtscETT;
 
 struct _GstMpegTsAtscStringSegment {
   guint8 compression_type;
@@ -195,9 +193,56 @@ struct _GstMpegTsAtscMultString {
   GPtrArray *segments;
 };
 
+GType gst_mpegts_atsc_string_segment_get_type (void);
+GType gst_mpegts_atsc_mult_string_get_type (void);
+
+/* EIT */
+
+#define GST_TYPE_MPEGTS_ATSC_EIT_EVENT (gst_mpegts_atsc_eit_event_get_type())
+#define GST_TYPE_MPEGTS_ATSC_EIT (gst_mpegts_atsc_eit_get_type())
+
+typedef struct _GstMpegTsAtscEITEvent GstMpegTsAtscEITEvent;
+typedef struct _GstMpegTsAtscEIT GstMpegTsAtscEIT;
+
+struct _GstMpegTsAtscEITEvent {
+  guint16        event_id;
+  guint32        start_time;
+  guint8         etm_location;
+  guint32        length_in_seconds;
+  GPtrArray     *titles;
+
+  GPtrArray *descriptors;
+};
+
+/**
+ * GstMpegTsAtscEIT:
+ * @events: (element-type FIXME): Events
+ *
+ * Event Information Table (ATSC)
+ *
+ */
+struct _GstMpegTsAtscEIT
+{
+  guint16        source_id;
+  guint8         protocol_version;
+
+  GPtrArray     *events;
+};
+
+GType gst_mpegts_atsc_eit_event_get_type (void);
+GType gst_mpegts_atsc_eit_get_type (void);
+
+const GstMpegTsAtscEIT *gst_mpegts_section_get_atsc_eit (GstMpegTsSection *section);
+
+/* ETT */
+
+#define GST_TYPE_MPEGTS_ATSC_ETT (gst_mpegts_atsc_ett_get_type())
+
+typedef struct _GstMpegTsAtscETT GstMpegTsAtscETT;
+
 /**
  * GstMpegTsAtscETT:
- * @events: (element-type FIXME): List of texts
+ * @messages: (element-type FIXME): List of texts
  *
  * Extended Text Table (ATSC)
  *
@@ -210,8 +255,6 @@ struct _GstMpegTsAtscETT
   GPtrArray     *messages;
 };
 
-GType gst_mpegts_atsc_string_segment_get_type (void);
-GType gst_mpegts_atsc_mult_string_get_type (void);
 GType gst_mpegts_atsc_ett_get_type (void);
 
 const GstMpegTsAtscETT *gst_mpegts_section_get_atsc_ett (GstMpegTsSection *section);

@@ -604,10 +604,65 @@ dump_eit (GstMpegTsSection * section)
 }
 
 static void
+dump_atsc_mult_string (GPtrArray * mstrings, guint spacing)
+{
+  guint i;
+
+  for (i = 0; i < mstrings->len; i++) {
+    GstMpegTsAtscMultString *mstring = g_ptr_array_index (mstrings, i);
+    gint j, n;
+
+    n = mstring->segments->len;
+
+    g_printf ("%*s [multstring entry (%d) iso_639 langcode: %s]\n", spacing, "",
+        i, mstring->iso_639_langcode);
+    g_printf ("%*s   segments:%d\n", spacing, "", n);
+    for (j = 0; j < n; j++) {
+      GstMpegTsAtscStringSegment *segment =
+          g_ptr_array_index (mstring->segments, j);
+
+      g_printf ("%*s    Compression:0x%x\n", spacing, "",
+          segment->compression_type);
+      g_printf ("%*s    Mode:0x%x\n", spacing, "", segment->mode);
+      g_printf ("%*s    Len:%u\n", spacing, "", segment->compressed_data_size);
+      g_printf ("%*s    %s\n", spacing, "",
+          gst_mpegts_atsc_string_segment_get_string (segment));
+    }
+  }
+}
+
+static void
+dump_atsc_eit (GstMpegTsSection * section)
+{
+  const GstMpegTsAtscEIT *eit = gst_mpegts_section_get_atsc_eit (section);
+  guint i, len;
+
+  g_assert (eit);
+
+  g_printf ("     event_id            : 0x%04x\n", eit->source_id);
+  g_printf ("     protocol_version    : %u\n", eit->protocol_version);
+
+  len = eit->events->len;
+  g_printf ("     %d Event(s):\n", len);
+  for (i = 0; i < len; i++) {
+    GstMpegTsAtscEITEvent *event = g_ptr_array_index (eit->events, i);
+
+    g_printf ("     %d)\n", i);
+    g_printf ("       event_id: 0x%04x\n", event->event_id);
+    g_printf ("       start_time: %u\n", event->start_time);
+    g_printf ("       etm_location: 0x%x\n", event->etm_location);
+    g_printf ("       length_in_seconds: %u\n", event->length_in_seconds);
+    g_printf ("       Title(s):\n");
+    dump_atsc_mult_string (event->titles, 9);
+    dump_descriptors (event->descriptors, 9);
+  }
+}
+
+static void
 dump_ett (GstMpegTsSection * section)
 {
   const GstMpegTsAtscETT *ett = gst_mpegts_section_get_atsc_ett (section);
-  guint i, len;
+  guint len;
 
   g_assert (ett);
 
@@ -617,26 +672,7 @@ dump_ett (GstMpegTsSection * section)
 
   len = ett->messages->len;
   g_printf ("     %d Messages(s):\n", len);
-  for (i = 0; i < len; i++) {
-    gint j, n;
-    GstMpegTsAtscMultString *mstring = g_ptr_array_index (ett->messages, i);
-
-    n = mstring->segments->len;
-    g_printf ("       iso_639_langcode:%s\n", mstring->iso_639_langcode);
-    g_printf ("               segments:%d\n", n);
-    for (j = 0; j < n; j++) {
-      GstMpegTsAtscStringSegment *segment =
-          g_ptr_array_index (mstring->segments, j);
-
-      g_printf ("                 Compression:0x%x\n",
-          segment->compression_type);
-      g_printf ("                        Mode:0x%x\n", segment->mode);
-      g_printf ("                         Len:%u\n",
-          segment->compressed_data_size);
-      g_printf ("                 %s\n",
-          gst_mpegts_atsc_string_segment_get_string (segment));
-    }
-  }
+  dump_atsc_mult_string (ett->messages, 9);
 }
 
 static void
@@ -859,6 +895,9 @@ dump_section (GstMpegTsSection * section)
     case GST_MPEGTS_SECTION_ATSC_CVCT:
     case GST_MPEGTS_SECTION_ATSC_TVCT:
       dump_vct (section);
+      break;
+    case GST_MPEGTS_SECTION_ATSC_EIT:
+      dump_atsc_eit (section);
       break;
     case GST_MPEGTS_SECTION_ATSC_ETT:
       dump_ett (section);

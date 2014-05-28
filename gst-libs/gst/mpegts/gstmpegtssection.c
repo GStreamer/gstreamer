@@ -1062,7 +1062,7 @@ _identify_section (guint16 pid, guint8 table_id)
       break;
     case GST_MTS_TABLE_ID_ATSC_EVENT_INFORMATION:
       /* FIXME check pids reported on the MGT to confirm expectations */
-      return GST_MPEGTS_SECTION_EIT;
+      return GST_MPEGTS_SECTION_ATSC_EIT;
     case GST_MTS_TABLE_ID_ATSC_CHANNEL_OR_EVENT_EXTENDED_TEXT:
       /* FIXME check pids reported on the MGT to confirm expectations */
       return GST_MPEGTS_SECTION_ATSC_ETT;
