@@ -62,6 +62,8 @@ struct _GstGLUploadPrivate
   gboolean mapped;
   GstVideoFrame frame;
 
+  GstVideoGLTextureUploadMeta *meta;
+
   GstBuffer *outbuf;
 };
 
