@@ -46,8 +46,6 @@ struct _GstGLColorConvert
   /* <private> */
   GstObject        parent;
 
-  GMutex           lock;
-
   GstGLContext    *context;
 
   /* input data */
