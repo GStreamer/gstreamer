@@ -50,8 +50,8 @@
 static void _do_convert (GstGLContext * context, GstGLColorConvert * convert);
 static gboolean _init_convert (GstGLColorConvert * convert);
 static gboolean _init_convert_fbo (GstGLColorConvert * convert);
-static gboolean _gst_gl_color_convert_perform_unlocked (GstGLColorConvert *
-    convert, GstBuffer * inbuf, GstBuffer * outbuf);
+static GstBuffer *_gst_gl_color_convert_perform_unlocked (GstGLColorConvert *
+    convert, GstBuffer * inbuf);
 
 static gboolean _do_convert_draw (GstGLContext * context,
     GstGLColorConvert * convert);
@@ -523,44 +523,46 @@ gst_gl_color_convert_set_format (GstGLColorConvert * convert,
  * gst_gl_color_convert_perform:
  * @convert: a #GstGLColorConvert
  * @inbuf: the texture ids for input formatted according to in_info
- * @outbuf: the texture ids for output formatted according to out_info
  *
- * Converts the data contained in in_tex into out_tex using the formats
- * specified by the #GstVideoInfo<!--  -->s passed to
- * gst_gl_color_convert_set_format() 
+ * Converts the data contained by @inbuf using the formats specified by the
+ * #GstVideoInfo<!--  -->s passed to gst_gl_color_convert_set_format() 
  *
- * Returns: whether the conversion was successful
+ * Returns: a converted #GstBuffer or %NULL%
  */
-gboolean
-gst_gl_color_convert_perform (GstGLColorConvert * convert, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+GstBuffer *
+gst_gl_color_convert_perform (GstGLColorConvert * convert, GstBuffer * inbuf)
 {
-  gboolean ret;
+  GstBuffer *ret;
 
   g_return_val_if_fail (convert != NULL, FALSE);
 
   g_mutex_lock (&convert->lock);
-  ret = _gst_gl_color_convert_perform_unlocked (convert, inbuf, outbuf);
+  ret = _gst_gl_color_convert_perform_unlocked (convert, inbuf);
   g_mutex_unlock (&convert->lock);
 
   return ret;
 }
 
-static gboolean
+static GstBuffer *
 _gst_gl_color_convert_perform_unlocked (GstGLColorConvert * convert,
-    GstBuffer * inbuf, GstBuffer * outbuf)
+    GstBuffer * inbuf)
 {
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (inbuf, FALSE);
-  g_return_val_if_fail (outbuf, FALSE);
 
   convert->inbuf = inbuf;
-  convert->outbuf = outbuf;
 
   gst_gl_context_thread_add (convert->context,
       (GstGLContextThreadFunc) _do_convert, convert);
 
-  return convert->priv->result;
+  if (!convert->priv->result) {
+    if (convert->outbuf)
+      gst_object_unref (convert->outbuf);
+    convert->outbuf = NULL;
+    return NULL;
+  }
+
+  return convert->outbuf;
 }
 
 static inline gboolean
@@ -1137,10 +1139,26 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   in_width = GST_VIDEO_INFO_WIDTH (&convert->in_info);
   in_height = GST_VIDEO_INFO_HEIGHT (&convert->in_info);
 
+  convert->outbuf = NULL;
+
   if (!_init_convert (convert)) {
     convert->priv->result = FALSE;
     return;
   }
+
+  convert->outbuf = gst_buffer_new ();
+  if (!gst_gl_memory_setup_buffer (convert->context, &convert->out_info,
+          convert->outbuf)) {
+    convert->priv->result = FALSE;
+    return;
+  }
+
+  gst_buffer_add_video_meta_full (convert->outbuf, 0,
+      GST_VIDEO_INFO_FORMAT (&convert->out_info),
+      GST_VIDEO_INFO_WIDTH (&convert->out_info),
+      GST_VIDEO_INFO_HEIGHT (&convert->out_info),
+      GST_VIDEO_INFO_N_PLANES (&convert->out_info),
+      convert->out_info.offset, convert->out_info.stride);
 
   for (i = 0; i < c_info->in_n_textures; i++) {
     convert->priv->in_tex[i] =
@@ -1206,8 +1224,6 @@ out:
         || out_width != out_tex->width || out_height != out_tex->height) {
       GstMapInfo to_info, from_info;
 
-      gst_memory_unmap ((GstMemory *) convert->priv->out_tex[j], &out_info[j]);
-
       if (!gst_memory_map ((GstMemory *) convert->priv->out_tex[j], &from_info,
               GST_MAP_READ | GST_MAP_GL)) {
         gst_gl_context_set_error (convert->context, "Failed to map "
@@ -1232,8 +1248,22 @@ out:
     }
   }
 
+  /* YV12 the same as I420 except planes 1+2 swapped */
+  if (GST_VIDEO_INFO_FORMAT (&convert->out_info) == GST_VIDEO_FORMAT_YV12) {
+    GstMemory *mem1 = gst_buffer_get_memory (convert->outbuf, 1);
+    GstMemory *mem2 = gst_buffer_get_memory (convert->outbuf, 2);
+
+    gst_buffer_replace_memory (convert->outbuf, 1, mem2);
+    gst_buffer_replace_memory (convert->outbuf, 2, mem1);
+  }
+
   for (i--; i >= 0; i--) {
     gst_memory_unmap ((GstMemory *) convert->priv->in_tex[i], &in_info[i]);
+  }
+
+  if (!res) {
+    gst_buffer_unref (convert->outbuf);
+    convert->outbuf = NULL;
   }
 
   convert->priv->result = res;
