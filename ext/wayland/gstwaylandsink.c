@@ -164,7 +164,6 @@ gst_wayland_sink_init (GstWaylandSink * sink)
 {
   g_mutex_init (&sink->display_lock);
   g_mutex_init (&sink->render_lock);
-  g_cond_init (&sink->render_cond);
 }
 
 static void
@@ -230,7 +229,6 @@ gst_wayland_sink_finalize (GObject * object)
 
   g_mutex_clear (&sink->display_lock);
   g_mutex_clear (&sink->render_lock);
-  g_cond_clear (&sink->render_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -665,10 +663,6 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   GST_LOG_OBJECT (sink, "render buffer %p", buffer);
 
-  /* surface is resizing - drop buffers until finished */
-  if (sink->drawing_frozen)
-    goto done;
-
   /* drop buffers until we get a frame callback */
   if (g_atomic_int_get (&sink->redraw_pending) == TRUE)
     goto done;
@@ -710,10 +704,6 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   gst_buffer_replace (&sink->last_buffer, to_render);
   render_last_buffer (sink);
-
-  /* notify _resume_rendering() in case it's waiting */
-  sink->rendered = TRUE;
-  g_cond_broadcast (&sink->render_cond);
 
   if (buffer != to_render)
     gst_buffer_unref (to_render);
@@ -851,7 +841,13 @@ gst_wayland_sink_pause_rendering (GstWaylandVideo * video)
   g_return_if_fail (sink != NULL);
 
   g_mutex_lock (&sink->render_lock);
-  sink->drawing_frozen = TRUE;
+  if (!sink->window || !sink->window->subsurface) {
+    g_mutex_unlock (&sink->render_lock);
+    GST_INFO_OBJECT (sink, "pause_rendering called without window, ignoring");
+    return;
+  }
+
+  wl_subsurface_set_sync (sink->window->subsurface);
   g_mutex_unlock (&sink->render_lock);
 }
 
@@ -864,19 +860,13 @@ gst_wayland_sink_resume_rendering (GstWaylandVideo * video)
   GST_DEBUG_OBJECT (sink, "resuming rendering");
 
   g_mutex_lock (&sink->render_lock);
-  sink->drawing_frozen = FALSE;
-
-  if (GST_STATE (sink) == GST_STATE_PLAYING) {
-    sink->rendered = FALSE;
-    while (sink->rendered == FALSE)
-      g_cond_wait (&sink->render_cond, &sink->render_lock);
-    GST_DEBUG_OBJECT (sink, "synchronized with render()");
-  } else if (sink->window && sink->last_buffer &&
-      g_atomic_int_get (&sink->redraw_pending) == FALSE) {
-    render_last_buffer (sink);
-    GST_DEBUG_OBJECT (sink, "last buffer redrawn");
+  if (!sink->window || !sink->window->subsurface) {
+    g_mutex_unlock (&sink->render_lock);
+    GST_INFO_OBJECT (sink, "resume_rendering called without window, ignoring");
+    return;
   }
 
+  wl_subsurface_set_desync (sink->window->subsurface);
   g_mutex_unlock (&sink->render_lock);
 }
 
