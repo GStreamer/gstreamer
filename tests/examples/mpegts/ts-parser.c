@@ -62,22 +62,6 @@ gst_info_dump_mem_line (gchar * linebuf, gsize linebuf_size,
 }
 
 static void
-dump_memory_content (GstMpegTsDescriptor * desc, guint spacing)
-{
-  gsize off = 0;
-
-  while (off < desc->length) {
-    gchar buf[128];
-
-    /* gst_info_dump_mem_line will process 16 bytes at most */
-    gst_info_dump_mem_line (buf, sizeof (buf), desc->data, off + 2,
-        desc->length - off);
-    g_printf ("%*s  %s\n", spacing, "", buf);
-    off += 16;
-  }
-}
-
-static void
 dump_memory_bytes (guint8 * data, guint len, guint spacing)
 {
   gsize off = 0;
@@ -91,6 +75,8 @@ dump_memory_bytes (guint8 * data, guint len, guint spacing)
     off += 16;
   }
 }
+
+#define dump_memory_content(desc, spacing) dump_memory_bytes((desc)->data + 2, (desc)->length, spacing)
 
 static const gchar *
 descriptor_name (gint val)
