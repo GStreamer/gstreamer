@@ -433,24 +433,6 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
         : ffmpegenc->max_key_interval;
   }
 
-  /* open codec */
-  if (gst_ffmpeg_avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0)
-    goto open_codec_fail;
-
-  /* second pass stats buffer no longer needed */
-  if (ffmpegenc->context->stats_in)
-    g_free (ffmpegenc->context->stats_in);
-
-  /* is the colourspace correct? */
-  if (pix_fmt != ffmpegenc->context->pix_fmt)
-    goto pix_fmt_err;
-
-  /* we may have failed mapping caps to a pixfmt,
-   * and quite some codecs do not make up their own mind about that
-   * in any case, _NONE can never work out later on */
-  if (pix_fmt == PIX_FMT_NONE)
-    goto bad_input_fmt;
-
   /* some codecs support more than one format, first auto-choose one */
   GST_DEBUG_OBJECT (ffmpegenc, "picking an output format ...");
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
@@ -479,9 +461,29 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   gst_caps_unref (other_caps);
   if (gst_caps_is_empty (icaps)) {
     gst_caps_unref (icaps);
-    return FALSE;
+    goto unsupported_codec;
   }
   icaps = gst_caps_truncate (icaps);
+
+  GST_DEBUG_OBJECT (ffmpegenc, "codec flags 0x%08x", ffmpegenc->context->flags);
+
+  /* open codec */
+  if (gst_ffmpeg_avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0)
+    goto open_codec_fail;
+
+  /* is the colourspace correct? */
+  if (pix_fmt != ffmpegenc->context->pix_fmt)
+    goto pix_fmt_err;
+
+  /* we may have failed mapping caps to a pixfmt,
+   * and quite some codecs do not make up their own mind about that
+   * in any case, _NONE can never work out later on */
+  if (pix_fmt == PIX_FMT_NONE)
+    goto bad_input_fmt;
+
+  /* second pass stats buffer no longer needed */
+  if (ffmpegenc->context->stats_in)
+    g_free (ffmpegenc->context->stats_in);
 
   /* Store input state and set output state */
   if (ffmpegenc->input_state)
@@ -512,52 +514,47 @@ file_read_err:
     return FALSE;
   }
 
+insane_timebase:
+  {
+    GST_ERROR_OBJECT (ffmpegenc, "Rejecting time base %d/%d",
+        ffmpegenc->context->time_base.den, ffmpegenc->context->time_base.num);
+    goto cleanup_stats_in;
+  }
+unsupported_codec:
+  {
+    GST_DEBUG ("Unsupported codec - no caps found");
+    goto cleanup_stats_in;
+  }
 open_codec_fail:
   {
-    gst_ffmpeg_avcodec_close (ffmpegenc->context);
-    if (avcodec_get_context_defaults3 (ffmpegenc->context,
-            oclass->in_plugin) < 0)
-      GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
-    if (ffmpegenc->context->stats_in)
-      g_free (ffmpegenc->context->stats_in);
     GST_DEBUG_OBJECT (ffmpegenc, "avenc_%s: Failed to open libav codec",
         oclass->in_plugin->name);
-    return FALSE;
+    goto close_codec;
   }
 
 pix_fmt_err:
   {
-    gst_ffmpeg_avcodec_close (ffmpegenc->context);
-    if (avcodec_get_context_defaults3 (ffmpegenc->context,
-            oclass->in_plugin) < 0)
-      GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
     GST_DEBUG_OBJECT (ffmpegenc,
         "avenc_%s: AV wants different colourspace (%d given, %d wanted)",
         oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
-    return FALSE;
+    goto close_codec;
   }
 
 bad_input_fmt:
   {
     GST_DEBUG_OBJECT (ffmpegenc, "avenc_%s: Failed to determine input format",
         oclass->in_plugin->name);
-    return FALSE;
+    goto close_codec;
   }
-
-unsupported_codec:
   {
+  close_codec:
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
     if (avcodec_get_context_defaults3 (ffmpegenc->context,
             oclass->in_plugin) < 0)
       GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
-    GST_DEBUG ("Unsupported codec - no caps found");
-    return FALSE;
-  }
-
-insane_timebase:
-  {
-    GST_ERROR_OBJECT (ffmpegenc, "Rejecting time base %d/%d",
-        ffmpegenc->context->time_base.den, ffmpegenc->context->time_base.num);
+  cleanup_stats_in:
+    if (ffmpegenc->context->stats_in)
+      g_free (ffmpegenc->context->stats_in);
     return FALSE;
   }
 }
