@@ -233,12 +233,9 @@ GST_START_TEST (test_upload_data)
 
   gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_RGBA, WIDTH, HEIGHT);
 
-  gst_gl_context_gen_texture (context, &tex_id, GST_VIDEO_FORMAT_RGBA, WIDTH,
-      HEIGHT);
-
   gst_gl_upload_set_format (upload, &in_info);
 
-  res = gst_gl_upload_perform_with_data (upload, tex_id, data);
+  res = gst_gl_upload_perform_with_data (upload, &tex_id, data);
   fail_if (res == FALSE, "Failed to upload buffer: %s\n",
       gst_gl_context_get_error ());
 
@@ -251,8 +248,6 @@ GST_START_TEST (test_upload_data)
         context);
     i++;
   }
-
-  gst_gl_context_del_texture (context, &tex_id);
 }
 
 GST_END_TEST;
