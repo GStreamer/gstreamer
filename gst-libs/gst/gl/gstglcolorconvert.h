@@ -105,8 +105,7 @@ void     gst_gl_color_convert_set_format    (GstGLColorConvert * convert,
                                              GstVideoInfo * in_info,
                                              GstVideoInfo * out_info);
 
-gboolean gst_gl_color_convert_perform        (GstGLColorConvert * convert,
-                                              GstBuffer * inbuf, GstBuffer * outbuf);
+GstBuffer * gst_gl_color_convert_perform    (GstGLColorConvert * convert, GstBuffer * inbuf);
 
 G_END_DECLS
 

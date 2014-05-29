@@ -82,7 +82,7 @@ GstVideoInfo * gst_gl_upload_get_format    (GstGLUpload * upload);
 
 gboolean gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer, guint * tex_id);
 void gst_gl_upload_release_buffer (GstGLUpload * upload);
-gboolean gst_gl_upload_perform_with_data          (GstGLUpload * upload, GLuint texture_id,
+gboolean gst_gl_upload_perform_with_data          (GstGLUpload * upload, GLuint * texture_id,
                                                    gpointer data[GST_VIDEO_MAX_PLANES]);
 
 gboolean gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload *upload, GstVideoGLTextureUploadMeta *meta, guint texture_id[4]);
