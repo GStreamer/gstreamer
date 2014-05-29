@@ -90,8 +90,6 @@ gst_gl_download_init (GstGLDownload * download)
 
   download->priv = GST_GL_DOWNLOAD_GET_PRIVATE (download);
 
-  g_mutex_init (&download->lock);
-
   gst_video_info_init (&download->info);
 }
 
@@ -133,8 +131,6 @@ gst_gl_download_finalize (GObject * object)
     download->context = NULL;
   }
 
-  g_mutex_clear (&download->lock);
-
   G_OBJECT_CLASS (gst_gl_download_parent_class)->finalize (object);
 }
 
@@ -169,10 +165,10 @@ gst_gl_download_set_format (GstGLDownload * download, GstVideoInfo * out_info)
   g_return_if_fail (GST_VIDEO_INFO_FORMAT (out_info) !=
       GST_VIDEO_FORMAT_ENCODED);
 
-  g_mutex_lock (&download->lock);
+  GST_OBJECT_LOCK (download);
 
   if (gst_video_info_is_equal (&download->info, out_info)) {
-    g_mutex_unlock (&download->lock);
+    GST_OBJECT_UNLOCK (download);
     return;
   }
 
@@ -180,7 +176,7 @@ gst_gl_download_set_format (GstGLDownload * download, GstVideoInfo * out_info)
   download->initted = FALSE;
   download->info = *out_info;
 
-  g_mutex_unlock (&download->lock);
+  GST_OBJECT_UNLOCK (download);
 }
 
 /**
@@ -202,12 +198,10 @@ gst_gl_download_perform_with_data (GstGLDownload * download, GLuint texture_id,
 
   g_return_val_if_fail (download != NULL, FALSE);
 
-  g_mutex_lock (&download->lock);
-
+  GST_OBJECT_LOCK (download);
   ret =
       _gst_gl_download_perform_with_data_unlocked (download, texture_id, data);
-
-  g_mutex_unlock (&download->lock);
+  GST_OBJECT_UNLOCK (download);
 
   return ret;
 }
