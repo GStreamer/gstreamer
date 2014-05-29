@@ -50,6 +50,40 @@ GST_START_TEST (test_add_remove_pad)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_add_remove_readd_pad)
+{
+  GstElement *e;
+  GstPad *p;
+
+  /* getting an existing element class is cheating, but easier */
+  e = gst_element_factory_make ("fakesrc", "source");
+
+  /* create a new floating pad with refcount 1 */
+  p = gst_pad_new ("source", GST_PAD_SRC);
+
+  gst_object_ref (p);
+
+  /* simulate a real scenario where the pad is activated before added */
+  fail_unless (gst_pad_set_active (p, TRUE));
+  gst_element_add_pad (e, p);
+
+  /* now remove and deactivate it */
+  fail_unless (gst_pad_set_active (p, FALSE));
+  gst_element_remove_pad (e, p);
+
+  /* should be able to reuse the same pad */
+  fail_unless (gst_pad_set_active (p, TRUE));
+  fail_unless (gst_element_add_pad (e, p));
+
+  /* clean up our own reference */
+  gst_object_unref (p);
+  gst_object_unref (e);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_add_pad_unref_element)
 {
   GstElement *e;
@@ -355,6 +389,7 @@ gst_element_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_add_remove_pad);
+  tcase_add_test (tc_chain, test_add_remove_readd_pad);
   tcase_add_test (tc_chain, test_add_pad_unref_element);
   tcase_add_test (tc_chain, test_error_no_bus);
   tcase_add_test (tc_chain, test_link);
