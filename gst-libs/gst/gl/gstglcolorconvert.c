@@ -559,6 +559,9 @@ _gst_gl_color_convert_perform_unlocked (GstGLColorConvert * convert,
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (inbuf, FALSE);
 
+  if (gst_video_info_is_equal (&convert->in_info, &convert->out_info))
+    return gst_buffer_ref (inbuf);
+
   convert->inbuf = inbuf;
 
   gst_gl_context_thread_add (convert->context,
