@@ -435,7 +435,7 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
   guint i;
 
   g_return_val_if_fail (upload != NULL, FALSE);
-  g_return_val_if_fail (texture_id > 0, FALSE);
+  g_return_val_if_fail (texture_id != NULL, FALSE);
 
   if (!upload->in_tex[0])
     gst_gl_memory_setup_wrapped (upload->context, &upload->in_info, data,
