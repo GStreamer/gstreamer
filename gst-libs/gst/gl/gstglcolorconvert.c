@@ -376,10 +376,7 @@ struct ConvertInfo
 
 struct _GstGLColorConvertPrivate
 {
-  int n_textures;
   gboolean result;
-
-    gboolean (*draw) (GstGLContext * context, GstGLColorConvert * download);
 
   struct ConvertInfo convert_info;
 
@@ -412,8 +409,6 @@ gst_gl_color_convert_class_init (GstGLColorConvertClass * klass)
 static void
 gst_gl_color_convert_init (GstGLColorConvert * convert)
 {
-  convert->priv = GST_GL_COLOR_CONVERT_GET_PRIVATE (convert);
-
   g_mutex_init (&convert->lock);
 }
 
@@ -427,14 +422,11 @@ GstGLColorConvert *
 gst_gl_color_convert_new (GstGLContext * context)
 {
   GstGLColorConvert *convert;
-  GstGLColorConvertPrivate *priv;
 
   convert = g_object_new (GST_TYPE_GL_COLOR_CONVERT, NULL);
 
   convert->context = gst_object_ref (context);
-  priv = convert->priv;
 
-  priv->draw = _do_convert_draw;
   gst_video_info_set_format (&convert->in_info, GST_VIDEO_FORMAT_ENCODED, 0, 0);
   gst_video_info_set_format (&convert->out_info, GST_VIDEO_FORMAT_ENCODED, 0,
       0);
@@ -1232,7 +1224,7 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
       out_height, convert->priv->in_tex[0], convert->priv->in_tex[1],
       convert->priv->in_tex[2], convert->priv->in_tex[3], in_width, in_height);
 
-  if (!convert->priv->draw (context, convert))
+  if (!_do_convert_draw (context, convert))
     res = FALSE;
 
 out:
