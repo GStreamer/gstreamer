@@ -325,11 +325,13 @@ static const gchar frag_RGB_to_YUY2_UYVY[] =
     RGB_TO_YUV_COEFFICIENTS
     "void main(void) {\n"
     "  vec4 texel1, texel2;\n"
+    "  vec2 texel3;\n"
     "  float fx, fy, y1, y2, u, v;\n"
     "  fx = v_texcoord.x;\n"
     "  fy = v_texcoord.y;\n"
-    "  texel1 = texture2D(tex, vec2(fx*2.0,     fy)).%c%c%c%c;\n"
-    "  texel2 = texture2D(tex, vec2(fx*2.0+1.0 / width, fy)).%c%c%c%c;\n"
+    "  float inorder = mod (v_texcoord.x * width, 2.0);\n"
+    "  texel1 = texture2D(tex, vec2(fx,     fy)).%c%c%c%c;\n"
+    "  texel2 = texture2D(tex, vec2(fx+1.0 / width, fy)).%c%c%c%c;\n"
     "  y1 = dot(texel1.rgb, coeff1);\n"
     "  y2 = dot(texel2.rgb, coeff1);\n"
     "  u = dot(texel1.rgb, coeff2);\n"
@@ -338,7 +340,14 @@ static const gchar frag_RGB_to_YUY2_UYVY[] =
     "  y2 += offset.x;\n"
     "  u += offset.y;\n"
     "  v += offset.z;\n"
-    "  gl_FragColor = vec4(%s);\n"
+    "  if (inorder < 1.0) {\n"
+    "    texel3.r = %s;\n"
+    "    texel3.g = %s;\n"
+    "  } else {\n"
+    "    texel3.r = %s;\n"
+    "    texel3.g = %s;\n"
+    "  }\n"
+    "  gl_FragColor = vec4(texel3.r, texel3.g, 0.0, 0.0);\n"
     "}\n";
 
 static const gchar text_vertex_shader[] =
@@ -815,14 +824,14 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       info->frag_prog = g_strdup_printf (frag_RGB_to_YUY2_UYVY,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
-          "y1,u,y2,v");
+          "y1", "u", "y2", "v");
       info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_UYVY:
       info->frag_prog = g_strdup_printf (frag_RGB_to_YUY2_UYVY,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
-          "u,y1,v,y2");
+          "u", "y1", "v", "y2");
       info->out_n_textures = 1;
       break;
     default:
@@ -975,6 +984,16 @@ _init_convert (GstGLColorConvert * convert)
           USING_GLES2 (convert->context))) {
     g_free (info->frag_prog);
     GST_ERROR ("Conversion requires output to multiple draw buffers");
+    goto incompatible_api;
+  }
+
+  /* Requires reading from a RG/LA framebuffer... */
+  if (USING_GLES2 (convert->context) &&
+      (GST_VIDEO_INFO_FORMAT (&convert->out_info) == GST_VIDEO_FORMAT_YUY2 ||
+          GST_VIDEO_INFO_FORMAT (&convert->out_info) ==
+          GST_VIDEO_FORMAT_UYVY)) {
+    g_free (info->frag_prog);
+    GST_ERROR ("Conversion requires reading with an unsupported format");
     goto incompatible_api;
   }
 
