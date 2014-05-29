@@ -775,7 +775,7 @@ invalid_result:
  *
  * Check if the bufferpool supports @option.
  *
- * Returns: a %NULL terminated array of strings.
+ * Returns: %TRUE if the buffer pool contains @option.
  */
 gboolean
 gst_buffer_pool_has_option (GstBufferPool * pool, const gchar * option)
