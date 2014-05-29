@@ -60,8 +60,8 @@
  *   <listitem><para>
  *     when processing data (get, chain, loop function) at the beginning call
  *     gst_object_sync_values(element,timestamp).
- *     This will make the controller to update all gobject properties that are under
- *     control with the current values based on timestamp.
+ *     This will make the controller update all GObject properties that are
+ *     under its control with the current values based on the timestamp.
  *   </para></listitem>
  * </orderedlist>
  *
