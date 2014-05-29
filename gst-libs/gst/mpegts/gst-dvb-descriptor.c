@@ -1530,13 +1530,13 @@ gst_mpegts_descriptor_parse_dvb_multilingual_service_name (const
     i += 3;
 
     len = *data;
-    item->service_name =
+    item->provider_name =
         get_encoding_and_convert ((const gchar *) data + 1, len);
     data += len + 1;
     i += len + 1;
 
     len = *data;
-    item->provider_name =
+    item->service_name =
         get_encoding_and_convert ((const gchar *) data + 1, len);
     data += len + 1;
     i += len + 1;
