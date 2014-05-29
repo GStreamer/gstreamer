@@ -409,7 +409,6 @@ gst_gl_color_convert_class_init (GstGLColorConvertClass * klass)
 static void
 gst_gl_color_convert_init (GstGLColorConvert * convert)
 {
-  g_mutex_init (&convert->lock);
 }
 
 /**
@@ -447,8 +446,6 @@ gst_gl_color_convert_finalize (GObject * object)
     gst_object_unref (convert->context);
     convert->context = NULL;
   }
-
-  g_mutex_clear (&convert->lock);
 
   G_OBJECT_CLASS (gst_gl_color_convert_parent_class)->finalize (object);
 }
@@ -515,9 +512,9 @@ void
 gst_gl_color_convert_set_format (GstGLColorConvert * convert,
     GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
-  g_mutex_lock (&convert->lock);
+  GST_OBJECT_LOCK (convert);
   _gst_gl_color_convert_set_format_unlocked (convert, in_info, out_info);
-  g_mutex_unlock (&convert->lock);
+  GST_OBJECT_UNLOCK (convert);
 }
 
 /**
@@ -537,9 +534,9 @@ gst_gl_color_convert_perform (GstGLColorConvert * convert, GstBuffer * inbuf)
 
   g_return_val_if_fail (convert != NULL, FALSE);
 
-  g_mutex_lock (&convert->lock);
+  GST_OBJECT_LOCK (convert);
   ret = _gst_gl_color_convert_perform_unlocked (convert, inbuf);
-  g_mutex_unlock (&convert->lock);
+  GST_OBJECT_UNLOCK (convert);
 
   return ret;
 }
