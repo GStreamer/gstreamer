@@ -409,6 +409,7 @@ gst_gl_color_convert_class_init (GstGLColorConvertClass * klass)
 static void
 gst_gl_color_convert_init (GstGLColorConvert * convert)
 {
+  convert->priv = GST_GL_COLOR_CONVERT_GET_PRIVATE (convert);
 }
 
 /**
