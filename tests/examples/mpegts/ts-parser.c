@@ -77,6 +77,21 @@ dump_memory_content (GstMpegTsDescriptor * desc, guint spacing)
   }
 }
 
+static void
+dump_memory_bytes (guint8 * data, guint len, guint spacing)
+{
+  gsize off = 0;
+
+  while (off < len) {
+    gchar buf[128];
+
+    /* gst_info_dump_mem_line will process 16 bytes at most */
+    gst_info_dump_mem_line (buf, sizeof (buf), data, off, len - off);
+    g_printf ("%*s   %s\n", spacing, "", buf);
+    off += 16;
+  }
+}
+
 static const gchar *
 descriptor_name (gint val)
 {
@@ -307,6 +322,105 @@ dump_multiligual_component (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
+dump_linkage (GstMpegTsDescriptor * desc, guint spacing)
+{
+  GstMpegTsDVBLinkageDescriptor res;
+
+  res.private_data_length = 0;
+  res.private_data_bytes = NULL;
+
+  if (gst_mpegts_descriptor_parse_dvb_linkage (desc, &res)) {
+    g_printf ("%*s Linkage Descriptor : 0x%02x (%s)\n", spacing, "",
+        res.linkage_type, enum_name (GST_TYPE_MPEG_TS_DVB_LINKAGE_TYPE,
+            res.linkage_type));
+
+    g_printf ("%*s   Transport Stream ID : 0x%04x\n", spacing, "",
+        res.transport_stream_id);
+    g_printf ("%*s   Original Network ID : 0x%04x\n", spacing, "",
+        res.original_network_id);
+    g_printf ("%*s   Service ID          : 0x%04x\n", spacing, "",
+        res.service_id);
+
+    switch (res.linkage_type) {
+      case GST_MPEGTS_DVB_LINKAGE_MOBILE_HAND_OVER:
+      {
+        GstMpegTsDVBLinkageMobileHandOver *linkage =
+            (GstMpegTsDVBLinkageMobileHandOver *) res.linkage_data;
+        g_printf ("%*s   hand_over_type    : 0x%02x (%s)\n", spacing,
+            "", linkage->hand_over_type,
+            enum_name (GST_TYPE_MPEG_TS_DVB_LINKAGE_HAND_OVER_TYPE,
+                linkage->hand_over_type));
+        g_printf ("%*s   origin_type       : %s\n", spacing, "",
+            linkage->origin_type ? "SDT" : "NIT");
+        g_printf ("%*s   network_id        : 0x%04x\n", spacing, "",
+            linkage->network_id);
+        g_printf ("%*s   initial_service_id: 0x%04x\n", spacing, "",
+            linkage->initial_service_id);
+        break;
+      }
+      case GST_MPEGTS_DVB_LINKAGE_EVENT:
+      {
+        GstMpegTsDVBLinkageEvent *linkage =
+            (GstMpegTsDVBLinkageEvent *) res.linkage_data;
+        g_printf ("%*s   target_event_id   : 0x%04x\n", spacing, "",
+            linkage->target_event_id);
+        g_printf ("%*s   target_listed     : %s\n", spacing, "",
+            linkage->target_listed ? "TRUE" : "FALSE");
+        g_printf ("%*s   event_simulcast   : %s\n", spacing, "",
+            linkage->event_simulcast ? "TRUE" : "FALSE");
+        break;
+      }
+      case GST_MPEGTS_DVB_LINKAGE_EXTENDED_EVENT:
+      {
+        guint i;
+        GPtrArray *items = (GPtrArray *) res.linkage_data;
+
+        for (i = 0; i < items->len; i++) {
+          GstMpegTsDVBLinkageExtendedEvent *linkage =
+              g_ptr_array_index (items, i);
+          g_printf ("%*s   target_event_id   : 0x%04x\n", spacing, "",
+              linkage->target_event_id);
+          g_printf ("%*s   target_listed     : %s\n", spacing, "",
+              linkage->target_listed ? "TRUE" : "FALSE");
+          g_printf ("%*s   event_simulcast   : %s\n", spacing, "",
+              linkage->event_simulcast ? "TRUE" : "FALSE");
+          g_printf ("%*s   link_type         : 0x%01x\n", spacing, "",
+              linkage->link_type);
+          g_printf ("%*s   target_id_type    : 0x%01x\n", spacing, "",
+              linkage->target_id_type);
+          g_printf ("%*s   original_network_id_flag : %s\n", spacing, "",
+              linkage->original_network_id_flag ? "TRUE" : "FALSE");
+          g_printf ("%*s   service_id_flag   : %s\n", spacing, "",
+              linkage->service_id_flag ? "TRUE" : "FALSE");
+          if (linkage->target_id_type == 3) {
+            g_printf ("%*s   user_defined_id   : 0x%02x\n", spacing, "",
+                linkage->user_defined_id);
+          } else {
+            if (linkage->target_id_type == 1)
+              g_printf ("%*s   target_transport_stream_id : 0x%04x\n",
+                  spacing, "", linkage->target_transport_stream_id);
+            if (linkage->original_network_id_flag)
+              g_printf ("%*s   target_original_network_id : 0x%04x\n",
+                  spacing, "", linkage->target_original_network_id);
+            if (linkage->service_id_flag)
+              g_printf ("%*s   target_service_id          : 0x%04x\n",
+                  spacing, "", linkage->target_service_id);
+          }
+        }
+        break;
+      }
+      default:
+        break;
+    }
+    if (res.private_data_length > 0) {
+      dump_memory_bytes (res.private_data_bytes, res.private_data_length,
+          spacing + 2);
+      g_free ((gpointer) res.private_data_bytes);
+    }
+  }
+}
+
+static void
 dump_iso_639_language (GstMpegTsDescriptor * desc, guint spacing)
 {
   guint i;
@@ -457,6 +571,9 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
         }
         break;
       }
+      case GST_MTS_DESC_DVB_LINKAGE:
+        dump_linkage (desc, spacing + 2);
+        break;
       case GST_MTS_DESC_ISO_639_LANGUAGE:
         dump_iso_639_language (desc, spacing + 2);
         break;
@@ -994,6 +1111,8 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEG_TS_TERRESTRIAL_TRANSMISSION_MODE);
   g_type_class_ref (GST_TYPE_MPEG_TS_TERRESTRIAL_GUARD_INTERVAL);
   g_type_class_ref (GST_TYPE_MPEG_TS_TERRESTRIAL_HIERARCHY);
+  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_LINKAGE_TYPE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_LINKAGE_HAND_OVER_TYPE);
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
