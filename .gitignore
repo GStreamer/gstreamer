@@ -55,3 +55,4 @@ Build
 *.trs
 .dirstamp
 *.gc??
+*.swp
