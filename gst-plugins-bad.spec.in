@@ -178,10 +178,8 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmplex.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmfc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegpsmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdecklink.so
-%{_libdir}/gstreamer-%{majorminor}/libgsteglglessink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstopenal.so
 %{_libdir}/gstreamer-%{majorminor}/libgstopenjpeg.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwaylandsink.so
@@ -276,11 +274,19 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiomixer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstopencv.so
+%{_libdir}/gstreamer-%{majorminor}/libgstivfparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstjp2kdecimator.so
+%{_libdir}/gstreamer-%{majorminor}/libgstopengl.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
+%{_libdir}/gstreamer-%{majorminor}/libgststereo.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideosignal.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvmnc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstwebp.so
+
 %{_datadir}/gst-plugins-bad/1.0/opencv_haarcascades/fist.xml
 %{_datadir}/gst-plugins-bad/1.0/opencv_haarcascades/palm.xml
 
 %{_libdir}/libgstbasecamerabinsrc-*
-%{_libdir}/libgstegl-*
 %{_libdir}/libgstmpegts-*
 %{_libdir}/libgsturidownloader*
 
@@ -317,7 +323,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_includedir}/gstreamer-%{majorminor}/gst/basecamerabinsrc/gstbasecamerasrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/basecamerabinsrc/gstcamerabin-enum.h
 %{_includedir}/gstreamer-%{majorminor}/gst/basecamerabinsrc/gstcamerabinpreview.h
-%{_includedir}/gstreamer-%{majorminor}/gst/egl/egl.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gst-atsc-section.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gst-dvb-descriptor.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gst-dvb-section.h
@@ -328,20 +333,55 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_includedir}/gstreamer-%{majorminor}/gst/uridownloader/gstfragment.h
 %{_includedir}/gstreamer-%{majorminor}/gst/uridownloader/gsturidownloader.h
 %{_includedir}/gstreamer-%{majorminor}/gst/uridownloader/gsturidownloader_debug.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/egl/gsteglimagememory.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/egl/gstgldisplay_egl.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gl.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/glprototypes/all_functions.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/glprototypes/base.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/glprototypes/blending.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/glprototypes/eglimage.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/glprototypes/fbo.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/glprototypes/fixedfunction.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/glprototypes/gles.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/glprototypes/gstgl_compat.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/glprototypes/opengl.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/glprototypes/shaders.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstgl_fwd.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglapi.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglbufferpool.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglcolorconvert.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglconfig.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglcontext.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstgldisplay.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstgldownload.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstgles2.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglfeature.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglfilter.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglframebuffer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglmemory.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglmixer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglmixerpad.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglshader.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglshadervariables.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglupload.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstgluploadmeta.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglutils.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/gstglwindow.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gl/x11/gstgldisplay_x11.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gstmpegts-enumtypes.h
+
+%{_libdir}/libgstgl-1.0.so*
 
 # pkg-config files
 %{_libdir}/pkgconfig/gstreamer-plugins-bad-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-codecparsers-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-insertbin-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-egl-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-mpegts-%{majorminor}.pc
+%{_libdir}/pkgconfig//gstreamer-gl-1.0.pc
 
-
-%{_libdir}/girepository-%{majorminor}/GstEGL-1.0.typelib
 %{_libdir}/girepository-%{majorminor}/GstInsertBin-1.0.typelib
 %{_libdir}/girepository-%{majorminor}/GstMpegts-1.0.typelib
 
-%{_datadir}/gir-%{majorminor}/GstEGL-1.0.gir
 %{_datadir}/gir-%{majorminor}/GstInsertBin-1.0.gir
 %{_datadir}/gir-%{majorminor}/GstMpegts-1.0.gir
 
