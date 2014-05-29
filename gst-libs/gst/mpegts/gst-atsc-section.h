@@ -216,7 +216,7 @@ struct _GstMpegTsAtscEITEvent {
 
 /**
  * GstMpegTsAtscEIT:
- * @events: (element-type FIXME): Events
+ * @events: (element-type GstMpegTsAtscEITEvent): Events
  *
  * Event Information Table (ATSC)
  *
@@ -242,7 +242,7 @@ typedef struct _GstMpegTsAtscETT GstMpegTsAtscETT;
 
 /**
  * GstMpegTsAtscETT:
- * @messages: (element-type FIXME): List of texts
+ * @messages: (element-type GstMpegTsAtscMultString): List of texts
  *
  * Extended Text Table (ATSC)
  *
