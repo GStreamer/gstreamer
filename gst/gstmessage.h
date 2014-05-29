@@ -412,9 +412,9 @@ gst_message_copy (const GstMessage * msg)
  * in some cases), and the reference counts are updated appropriately (the old
  * message is unreffed, the new one is reffed).
  *
- * Either @new_message or the #GstMessage pointed to by @old_message may be NULL.
+ * Either @new_message or the #GstMessage pointed to by @old_message may be %NULL.
  *
- * Returns: TRUE if @new_message was different from @old_message
+ * Returns: %TRUE if @new_message was different from @old_message
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC gboolean gst_message_replace (GstMessage **old_message, GstMessage *new_message);

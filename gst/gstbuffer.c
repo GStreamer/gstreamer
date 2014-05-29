@@ -635,22 +635,22 @@ gst_buffer_new (void)
 
 /**
  * gst_buffer_new_allocate:
- * @allocator: (transfer none) (allow-none): the #GstAllocator to use, or NULL to use the
+ * @allocator: (transfer none) (allow-none): the #GstAllocator to use, or %NULL to use the
  *     default allocator
  * @size: the size in bytes of the new buffer's data.
  * @params: (transfer none) (allow-none): optional parameters
  *
  * Tries to create a newly allocated buffer with data of the given size and
  * extra parameters from @allocator. If the requested amount of memory can't be
- * allocated, NULL will be returned. The allocated buffer memory is not cleared.
+ * allocated, %NULL will be returned. The allocated buffer memory is not cleared.
  *
- * When @allocator is NULL, the default memory allocator will be used.
+ * When @allocator is %NULL, the default memory allocator will be used.
  *
  * Note that when @size == 0, the buffer will not have memory associated with it.
  *
  * MT safe.
  *
- * Returns: (transfer full): a new #GstBuffer, or NULL if the memory couldn't
+ * Returns: (transfer full): a new #GstBuffer, or %NULL if the memory couldn't
  *     be allocated.
  */
 GstBuffer *
@@ -1842,7 +1842,7 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
  *
  * MT safe.
  *
- * Returns: (transfer full): the new #GstBuffer or NULL if the arguments were
+ * Returns: (transfer full): the new #GstBuffer or %NULL if the arguments were
  *     invalid.
  */
 GstBuffer *
@@ -1932,7 +1932,7 @@ gst_buffer_append_region (GstBuffer * buf1, GstBuffer * buf2, gssize offset,
  * @api: the #GType of an API
  *
  * Get the metadata for @api on buffer. When there is no such
- * metadata, NULL is returned.
+ * metadata, %NULL is returned.
  *
  * Returns: (transfer none): the metadata for @api on @buffer.
  */

@@ -200,7 +200,7 @@ gst_tag_setter_merge_tags (GstTagSetter * setter, const GstTagList * list,
  * @...: more tag / value pairs to set
  *
  * Adds the given tag / value pairs on the setter using the given merge mode.
- * The list must be terminated with NULL.
+ * The list must be terminated with %NULL.
  */
 void
 gst_tag_setter_add_tags (GstTagSetter * setter, GstTagMergeMode mode,
@@ -224,7 +224,7 @@ gst_tag_setter_add_tags (GstTagSetter * setter, GstTagMergeMode mode,
  * @...: more tag / GValue pairs to set
  *
  * Adds the given tag / GValue pairs on the setter using the given merge mode.
- * The list must be terminated with NULL.
+ * The list must be terminated with %NULL.
  */
 void
 gst_tag_setter_add_tag_values (GstTagSetter * setter, GstTagMergeMode mode,
@@ -248,7 +248,7 @@ gst_tag_setter_add_tag_values (GstTagSetter * setter, GstTagMergeMode mode,
  * @var_args: tag / value pairs to set
  *
  * Adds the given tag / value pairs on the setter using the given merge mode.
- * The list must be terminated with NULL.
+ * The list must be terminated with %NULL.
  */
 void
 gst_tag_setter_add_tag_valist (GstTagSetter * setter, GstTagMergeMode mode,
@@ -278,7 +278,7 @@ gst_tag_setter_add_tag_valist (GstTagSetter * setter, GstTagMergeMode mode,
  * @var_args: tag / GValue pairs to set
  *
  * Adds the given tag / GValue pairs on the setter using the given merge mode.
- * The list must be terminated with NULL.
+ * The list must be terminated with %NULL.
  */
 void
 gst_tag_setter_add_tag_valist_values (GstTagSetter * setter,
@@ -341,7 +341,7 @@ gst_tag_setter_add_tag_value (GstTagSetter * setter,
  * This function is not thread-safe.
  *
  * Returns: (transfer none): a current snapshot of the taglist used in the
- *          setter or NULL if none is used.
+ *          setter or %NULL if none is used.
  */
 const GstTagList *
 gst_tag_setter_get_tag_list (GstTagSetter * setter)

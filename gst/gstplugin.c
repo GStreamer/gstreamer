@@ -193,7 +193,7 @@ gst_plugin_error_quark (void)
  * You must make sure that GStreamer has been initialised (with gst_init() or
  * via gst_init_get_option_group()) before calling this function.
  *
- * Returns: TRUE if the plugin was registered correctly, otherwise FALSE.
+ * Returns: %TRUE if the plugin was registered correctly, otherwise %FALSE.
  */
 gboolean
 gst_plugin_register_static (gint major_version, gint minor_version,
@@ -258,7 +258,7 @@ gst_plugin_register_static (gint major_version, gint minor_version,
  * You must make sure that GStreamer has been initialised (with gst_init() or
  * via gst_init_get_option_group()) before calling this function.
  *
- * Returns: TRUE if the plugin was registered correctly, otherwise FALSE.
+ * Returns: %TRUE if the plugin was registered correctly, otherwise %FALSE.
  */
 gboolean
 gst_plugin_register_static_full (gint major_version, gint minor_version,
@@ -666,12 +666,12 @@ static GMutex gst_plugin_loading_mutex;
 /**
  * gst_plugin_load_file:
  * @filename: the plugin filename to load
- * @error: pointer to a NULL-valued GError
+ * @error: pointer to a %NULL-valued GError
  *
  * Loads the given plugin and refs it.  Caller needs to unref after use.
  *
  * Returns: (transfer full): a reference to the existing loaded GstPlugin, a 
- * reference to the newly-loaded GstPlugin, or NULL if an error occurred.
+ * reference to the newly-loaded GstPlugin, or %NULL if an error occurred.
  */
 GstPlugin *
 gst_plugin_load_file (const gchar * filename, GError ** error)
@@ -1022,7 +1022,7 @@ gst_plugin_get_release_date_string (GstPlugin * plugin)
  *
  * queries if the plugin is loaded into memory
  *
- * Returns: TRUE is loaded, FALSE otherwise
+ * Returns: %TRUE is loaded, %FALSE otherwise
  */
 gboolean
 gst_plugin_is_loaded (GstPlugin * plugin)
@@ -1165,7 +1165,7 @@ gst_plugin_list_feature_filter (GList * list,
  *
  * Find a feature of the given name and type in the given plugin.
  *
- * Returns: a GstPluginFeature or NULL if the feature was not found.
+ * Returns: a GstPluginFeature or %NULL if the feature was not found.
  */
 GstPluginFeature *
 gst_plugin_find_feature (GstPlugin * plugin, const gchar * name, GType type)
@@ -1209,7 +1209,7 @@ gst_plugin_feature_name_filter (GstPluginFeature * feature, const gchar * name)
  *
  * Find a feature of the given name in the given plugin.
  *
- * Returns: a GstPluginFeature or NULL if the feature was not found.
+ * Returns: a GstPluginFeature or %NULL if the feature was not found.
  */
 GstPluginFeature *
 gst_plugin_find_feature_by_name (GstPlugin * plugin, const gchar * name)
@@ -1239,7 +1239,7 @@ gst_plugin_find_feature_by_name (GstPlugin * plugin, const gchar * name)
  *
  * Load the named plugin. Refs the plugin.
  *
- * Returns: (transfer full): a reference to a loaded plugin, or NULL on error.
+ * Returns: (transfer full): a reference to a loaded plugin, or %NULL on error.
  */
 GstPlugin *
 gst_plugin_load_by_name (const gchar * name)
@@ -1282,7 +1282,7 @@ gst_plugin_load_by_name (const gchar * name)
  * plugin = loaded_plugin;
  * </programlisting>
  *
- * Returns: (transfer full): a reference to a loaded plugin, or NULL on error.
+ * Returns: (transfer full): a reference to a loaded plugin, or %NULL on error.
  */
 GstPlugin *
 gst_plugin_load (GstPlugin * plugin)
@@ -1711,18 +1711,18 @@ gst_plugin_ext_dep_equals (GstPluginDep * dep, const gchar ** env_vars,
 /**
  * gst_plugin_add_dependency:
  * @plugin: a #GstPlugin
- * @env_vars: (allow-none): NULL-terminated array of environment variables affecting the
+ * @env_vars: (allow-none): %NULL-terminated array of environment variables affecting the
  *     feature set of the plugin (e.g. an environment variable containing
  *     paths where to look for additional modules/plugins of a library),
- *     or NULL. Environment variable names may be followed by a path component
+ *     or %NULL. Environment variable names may be followed by a path component
  *      which will be added to the content of the environment variable, e.g.
  *      "HOME/.mystuff/plugins".
- * @paths: (allow-none): NULL-terminated array of directories/paths where dependent files
- *     may be, or NULL.
- * @names: (allow-none): NULL-terminated array of file names (or file name suffixes,
+ * @paths: (allow-none): %NULL-terminated array of directories/paths where dependent files
+ *     may be, or %NULL.
+ * @names: (allow-none): %NULL-terminated array of file names (or file name suffixes,
  *     depending on @flags) to be used in combination with the paths from
  *     @paths and/or the paths extracted from the environment variables in
- *     @env_vars, or NULL.
+ *     @env_vars, or %NULL.
  * @flags: optional flags, or #GST_PLUGIN_DEPENDENCY_FLAG_NONE
  *
  * Make GStreamer aware of external dependencies which affect the feature
@@ -1783,13 +1783,13 @@ gst_plugin_add_dependency (GstPlugin * plugin, const gchar ** env_vars,
  * gst_plugin_add_dependency_simple:
  * @plugin: the #GstPlugin
  * @env_vars: (allow-none): one or more environment variables (separated by ':', ';' or ','),
- *      or NULL. Environment variable names may be followed by a path component
+ *      or %NULL. Environment variable names may be followed by a path component
  *      which will be added to the content of the environment variable, e.g.
  *      "HOME/.mystuff/plugins:MYSTUFF_PLUGINS_PATH"
  * @paths: (allow-none): one ore more directory paths (separated by ':' or ';' or ','),
- *      or NULL. Example: "/usr/lib/mystuff/plugins"
+ *      or %NULL. Example: "/usr/lib/mystuff/plugins"
  * @names: (allow-none): one or more file names or file name suffixes (separated by commas),
- *      or NULL
+ *      or %NULL
  * @flags: optional flags, or #GST_PLUGIN_DEPENDENCY_FLAG_NONE
  *
  * Make GStreamer aware of external dependencies which affect the feature

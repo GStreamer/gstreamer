@@ -38,7 +38,7 @@
  * application requests.
  *
  * Pads without pad templates can be created with gst_pad_new(),
- * which takes a direction and a name as an argument.  If the name is NULL,
+ * which takes a direction and a name as an argument.  If the name is %NULL,
  * then a guaranteed unique name will be assigned to it.
  *
  * A #GstElement creating a pad will typically use the various
@@ -123,7 +123,7 @@ enum
 
 /* we have a pending and an active event on the pad. On source pads only the
  * active event is used. On sinkpads, events are copied to the pending entry and
- * moved to the active event when the eventfunc returned TRUE. */
+ * moved to the active event when the eventfunc returned %TRUE. */
 typedef struct
 {
   gboolean received;
@@ -504,7 +504,7 @@ remove_event_by_type (GstPad * pad, GstEventType type)
 }
 
 /* check all events on srcpad against those on sinkpad. All events that are not
- * on sinkpad are marked as received=FALSE and the PENDING_EVENTS is set on the
+ * on sinkpad are marked as received=%FALSE and the PENDING_EVENTS is set on the
  * srcpad so that the events will be sent next time */
 /* should be called with srcpad and sinkpad LOCKS */
 static void
@@ -770,11 +770,11 @@ gst_pad_get_property (GObject * object, guint prop_id,
  * @direction: the #GstPadDirection of the pad.
  *
  * Creates a new pad with the given name in the given direction.
- * If name is NULL, a guaranteed unique name (across all pads)
+ * If name is %NULL, a guaranteed unique name (across all pads)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer floating): a new #GstPad, or NULL in case of an error.
+ * Returns: (transfer floating): a new #GstPad, or %NULL in case of an error.
  *
  * MT safe.
  */
@@ -791,11 +791,11 @@ gst_pad_new (const gchar * name, GstPadDirection direction)
  * @name: the name of the element
  *
  * Creates a new pad with the given name from the given template.
- * If name is NULL, a guaranteed unique name (across all pads)
+ * If name is %NULL, a guaranteed unique name (across all pads)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer floating): a new #GstPad, or NULL in case of an error.
+ * Returns: (transfer floating): a new #GstPad, or %NULL in case of an error.
  */
 GstPad *
 gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
@@ -812,11 +812,11 @@ gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
  * @name: the name of the element
  *
  * Creates a new pad with the given name from the given static template.
- * If name is NULL, a guaranteed unique name (across all pads)
+ * If name is %NULL, a guaranteed unique name (across all pads)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer floating): a new #GstPad, or NULL in case of an error.
+ * Returns: (transfer floating): a new #GstPad, or %NULL in case of an error.
  */
 GstPad *
 gst_pad_new_from_static_template (GstStaticPadTemplate * templ,
@@ -981,9 +981,9 @@ post_activate (GstPad * pad, GstPadMode new_mode)
  * function to perform the actual activation.
  *
  * If not @active, calls gst_pad_activate_mode() with the pad's current mode
- * and a FALSE argument.
+ * and a %FALSE argument.
  *
- * Returns: #TRUE if the operation was successful.
+ * Returns: %TRUE if the operation was successful.
  *
  * MT safe.
  */
@@ -1064,7 +1064,7 @@ failed:
  *
  * If you don't know what this is, you probably don't want to call it.
  *
- * Returns: TRUE if the operation was successful.
+ * Returns: %TRUE if the operation was successful.
  *
  * MT safe.
  */
@@ -1216,7 +1216,7 @@ failure:
  *
  * Query if a pad is active
  *
- * Returns: TRUE if the pad is active.
+ * Returns: %TRUE if the pad is active.
  *
  * MT safe.
  */
@@ -1436,7 +1436,7 @@ not_found:
  * last requested state of the pad. It is not certain that the pad
  * is actually blocking at this point (see gst_pad_is_blocking()).
  *
- * Returns: TRUE if the pad is blocked.
+ * Returns: %TRUE if the pad is blocked.
  *
  * MT safe.
  */
@@ -1461,7 +1461,7 @@ gst_pad_is_blocked (GstPad * pad)
  * Checks if the pad is blocking or not. This is a guaranteed state
  * of whether the pad is actually blocking on a #GstBuffer or a #GstEvent.
  *
- * Returns: TRUE if the pad is blocking.
+ * Returns: %TRUE if the pad is blocking.
  *
  * MT safe.
  */
@@ -1553,7 +1553,7 @@ gst_pad_mark_reconfigure (GstPad * pad)
  * @p: a #GstPad.
  * @f: the #GstPadActivateFunction to set.
  *
- * Calls gst_pad_set_activate_function_full() with NULL for the user_data and
+ * Calls gst_pad_set_activate_function_full() with %NULL for the user_data and
  * notify.
  */
 /**
@@ -1590,7 +1590,7 @@ gst_pad_set_activate_function_full (GstPad * pad,
  * @p: a #GstPad.
  * @f: the #GstPadActivateModeFunction to set.
  *
- * Calls gst_pad_set_activatemode_function_full() with NULL for the user_data and
+ * Calls gst_pad_set_activatemode_function_full() with %NULL for the user_data and
  * notify.
  */
 /**
@@ -1625,7 +1625,7 @@ gst_pad_set_activatemode_function_full (GstPad * pad,
  * @p: a sink #GstPad.
  * @f: the #GstPadChainFunction to set.
  *
- * Calls gst_pad_set_chain_function_full() with NULL for the user_data and
+ * Calls gst_pad_set_chain_function_full() with %NULL for the user_data and
  * notify.
  */
 /**
@@ -1660,7 +1660,7 @@ gst_pad_set_chain_function_full (GstPad * pad, GstPadChainFunction chain,
  * @p: a sink #GstPad.
  * @f: the #GstPadChainListFunction to set.
  *
- * Calls gst_pad_set_chain_list_function_full() with NULL for the user_data and
+ * Calls gst_pad_set_chain_list_function_full() with %NULL for the user_data and
  * notify.
  */
 /**
@@ -1697,7 +1697,7 @@ gst_pad_set_chain_list_function_full (GstPad * pad,
  * @p: a source #GstPad.
  * @f: the #GstPadGetRangeFunction to set.
  *
- * Calls gst_pad_set_getrange_function_full() with NULL for the user_data and
+ * Calls gst_pad_set_getrange_function_full() with %NULL for the user_data and
  * notify.
  */
 /**
@@ -1733,7 +1733,7 @@ gst_pad_set_getrange_function_full (GstPad * pad, GstPadGetRangeFunction get,
  * @p: a #GstPad of either direction.
  * @f: the #GstPadEventFunction to set.
  *
- * Calls gst_pad_set_event_function_full() with NULL for the user_data and
+ * Calls gst_pad_set_event_function_full() with %NULL for the user_data and
  * notify.
  */
 /**
@@ -1766,7 +1766,7 @@ gst_pad_set_event_function_full (GstPad * pad, GstPadEventFunction event,
  * @p: a #GstPad of either direction.
  * @f: the #GstPadQueryFunction to set.
  *
- * Calls gst_pad_set_query_function_full() with NULL for the user_data and
+ * Calls gst_pad_set_query_function_full() with %NULL for the user_data and
  * notify.
  */
 /**
@@ -1799,7 +1799,7 @@ gst_pad_set_query_function_full (GstPad * pad, GstPadQueryFunction query,
  * @p: a #GstPad of either direction.
  * @f: the #GstPadIterIntLinkFunction to set.
  *
- * Calls gst_pad_set_iterate_internal_links_function_full() with NULL
+ * Calls gst_pad_set_iterate_internal_links_function_full() with %NULL
  * for the user_data and notify.
  */
 /**
@@ -1833,7 +1833,7 @@ gst_pad_set_iterate_internal_links_function_full (GstPad * pad,
  * @p: a #GstPad.
  * @f: the #GstPadLinkFunction to set.
  *
- * Calls gst_pad_set_link_function_full() with NULL
+ * Calls gst_pad_set_link_function_full() with %NULL
  * for the user_data and notify.
  */
 /**
@@ -1876,7 +1876,7 @@ gst_pad_set_link_function_full (GstPad * pad, GstPadLinkFunction link,
  * @p: a #GstPad.
  * @f: the #GstPadUnlinkFunction to set.
  *
- * Calls gst_pad_set_unlink_function_full() with NULL
+ * Calls gst_pad_set_unlink_function_full() with %NULL
  * for the user_data and notify.
  */
 /**
@@ -1913,7 +1913,7 @@ gst_pad_set_unlink_function_full (GstPad * pad, GstPadUnlinkFunction unlink,
  * Unlinks the source pad from the sink pad. Will emit the #GstPad::unlinked
  * signal on both pads.
  *
- * Returns: TRUE if the pads were unlinked. This function returns FALSE if
+ * Returns: %TRUE if the pads were unlinked. This function returns %FALSE if
  * the pads were not linked together.
  *
  * MT safe.
@@ -2015,7 +2015,7 @@ not_linked_together:
  *
  * Checks if a @pad is linked to another pad or not.
  *
- * Returns: TRUE if the pad is linked, FALSE otherwise.
+ * Returns: %TRUE if the pad is linked, %FALSE otherwise.
  *
  * MT safe.
  */
@@ -2079,7 +2079,7 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink,
       sinkcaps);
 
   /* if we have caps on both pads we can check the intersection. If one
-   * of the caps is NULL, we return TRUE. */
+   * of the caps is %NULL, we return %TRUE. */
   if (G_UNLIKELY (srccaps == NULL || sinkcaps == NULL)) {
     if (srccaps)
       gst_caps_unref (srccaps);
@@ -2245,7 +2245,7 @@ no_format:
  * Checks if the source pad and the sink pad are compatible so they can be
  * linked.
  *
- * Returns: TRUE if the pads can be linked.
+ * Returns: %TRUE if the pads can be linked.
  */
 gboolean
 gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
@@ -2480,7 +2480,7 @@ gst_pad_get_pad_template (GstPad * pad)
  *
  * Check if @pad has caps set on it with a #GST_EVENT_CAPS event.
  *
- * Returns: TRUE when @pad has caps associated with it.
+ * Returns: %TRUE when @pad has caps associated with it.
  */
 gboolean
 gst_pad_has_current_caps (GstPad * pad)
@@ -2585,7 +2585,7 @@ gst_pad_get_peer (GstPad * pad)
  * on the resulting caps.
  *
  * Returns: (transfer full): the allowed #GstCaps of the pad link. Unref the
- *     caps when you no longer need it. This function returns NULL when @pad
+ *     caps when you no longer need it. This function returns %NULL when @pad
  *     has no peer.
  *
  * MT safe.
@@ -2632,7 +2632,7 @@ no_peer:
 /**
  * gst_pad_iterate_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
- * @parent: (allow-none): the parent of @pad or NULL
+ * @parent: (allow-none): the parent of @pad or %NULL
  *
  * Iterate the list of pads to which the given pad is linked to inside of
  * the parent element.
@@ -2641,7 +2641,7 @@ no_peer:
  *
  * The caller must free this iterator after use with gst_iterator_free().
  *
- * Returns: a #GstIterator of #GstPad, or NULL if @pad has no parent. Unref each
+ * Returns: a #GstIterator of #GstPad, or %NULL if @pad has no parent. Unref each
  * returned pad with gst_object_unref().
  */
 GstIterator *
@@ -2749,9 +2749,9 @@ no_parent:
  * dynamically changing internal pads and will make sure that the @forward
  * function is only called once for each pad.
  *
- * When @forward returns TRUE, no further pads will be processed.
+ * When @forward returns %TRUE, no further pads will be processed.
  *
- * Returns: TRUE if one of the dispatcher functions returned TRUE.
+ * Returns: %TRUE if one of the dispatcher functions returned %TRUE.
  */
 gboolean
 gst_pad_forward (GstPad * pad, GstPadForwardFunction forward,
@@ -2841,7 +2841,7 @@ event_forward_func (GstPad * pad, EventData * data)
 /**
  * gst_pad_event_default:
  * @pad: a #GstPad to call the default event handler on.
- * @parent: (allow-none): the parent of @pad or NULL
+ * @parent: (allow-none): the parent of @pad or %NULL
  * @event: (transfer full): the #GstEvent to handle.
  *
  * Invokes the default event handler for the given pad.
@@ -2852,7 +2852,7 @@ event_forward_func (GstPad * pad, EventData * data)
  * The the event is sent to all pads internally linked to @pad. This function
  * takes ownership of @event.
  *
- * Returns: TRUE if the event was sent successfully.
+ * Returns: %TRUE if the event was sent successfully.
  */
 gboolean
 gst_pad_event_default (GstPad * pad, GstObject * parent, GstEvent * event)
@@ -3039,7 +3039,7 @@ query_forward_func (GstPad * pad, QueryData * data)
 /**
  * gst_pad_query_default:
  * @pad: a #GstPad to call the default query handler on.
- * @parent: (allow-none): the parent of @pad or NULL
+ * @parent: (allow-none): the parent of @pad or %NULL
  * @query: (transfer none): the #GstQuery to handle.
  *
  * Invokes the default query handler for the given pad.
@@ -3048,7 +3048,7 @@ query_forward_func (GstPad * pad, QueryData * data)
  * @pad, only one will be sent the query.
  * Multi-sinkpad elements should implement custom query handlers.
  *
- * Returns: TRUE if the query was performed successfully.
+ * Returns: %TRUE if the query was performed successfully.
  */
 gboolean
 gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
@@ -3529,7 +3529,7 @@ check_sticky (GstPad * pad, GstEvent * event)
  *
  * Please also note that some queries might need a running pipeline to work.
  *
- * Returns: TRUE if the query could be performed.
+ * Returns: %TRUE if the query could be performed.
  */
 gboolean
 gst_pad_query (GstPad * pad, GstQuery * query)
@@ -3654,7 +3654,7 @@ probe_stopped:
  * The caller is responsible for both the allocation and deallocation of
  * the query structure.
  *
- * Returns: TRUE if the query could be performed. This function returns %FALSE
+ * Returns: %TRUE if the query could be performed. This function returns %FALSE
  * if @pad has no peer.
  */
 gboolean
@@ -4380,7 +4380,7 @@ get_range_failed:
  * installed (see gst_pad_set_getrange_function()) this function returns
  * #GST_FLOW_NOT_SUPPORTED.
  *
- * If @buffer points to a variable holding NULL, a valid new #GstBuffer will be
+ * If @buffer points to a variable holding %NULL, a valid new #GstBuffer will be
  * placed in @buffer when this function returns #GST_FLOW_OK. The new buffer
  * must be freed with gst_buffer_unref() after usage.
  *
@@ -4434,10 +4434,10 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
  * See gst_pad_get_range() for a list of return values and for the
  * semantics of the arguments of this function.
  *
- * If @buffer points to a variable holding NULL, a valid new #GstBuffer will be
+ * If @buffer points to a variable holding %NULL, a valid new #GstBuffer will be
  * placed in @buffer when this function returns #GST_FLOW_OK. The new buffer
  * must be freed with gst_buffer_unref() after usage. When this function
- * returns any other result value, @buffer will still point to NULL.
+ * returns any other result value, @buffer will still point to %NULL.
  *
  * When @buffer points to a variable that points to a valid #GstBuffer, the
  * buffer will be filled with the result data when this function returns
@@ -4900,7 +4900,7 @@ idle_probe_stopped:
  * This function takes ownership of the provided event so you should
  * gst_event_ref() it if you want to reuse the event after this call.
  *
- * Returns: TRUE if the event was handled.
+ * Returns: %TRUE if the event was handled.
  *
  * MT safe.
  */
@@ -5264,7 +5264,7 @@ precheck_failed:
  * This function takes ownership of the provided event so you should
  * gst_event_ref() it if you want to reuse the event after this call.
  *
- * Returns: TRUE if the event was handled.
+ * Returns: %TRUE if the event was handled.
  */
 gboolean
 gst_pad_send_event (GstPad * pad, GstEvent * event)
@@ -5348,7 +5348,7 @@ gst_pad_get_element_private (GstPad * pad)
  * Returns a new reference of the sticky event of type @event_type
  * from the event.
  *
- * Returns: (transfer full): a #GstEvent of type @event_type or NULL when no
+ * Returns: (transfer full): a #GstEvent of type @event_type or %NULL when no
  * event of @event_type was on @pad. Unref after usage.
  */
 GstEvent *
@@ -5544,7 +5544,7 @@ concurrent_stop:
  * function executed by the task is finished if this function is not
  * called from the task function.
  *
- * Returns: a TRUE if the task could be paused or FALSE when the pad
+ * Returns: a %TRUE if the task could be paused or %FALSE when the pad
  * has no task.
  */
 gboolean
@@ -5593,7 +5593,7 @@ no_task:
  * Regardless of whether the pad has a task, the stream lock is acquired and
  * released so as to ensure that streaming through this pad has finished.
  *
- * Returns: a TRUE if the task could be stopped or FALSE on error.
+ * Returns: a %TRUE if the task could be stopped or %FALSE on error.
  */
 gboolean
 gst_pad_stop_task (GstPad * pad)

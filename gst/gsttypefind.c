@@ -40,7 +40,7 @@ G_DEFINE_POINTER_TYPE (GstTypeFind, gst_type_find);
 
 /**
  * gst_type_find_register:
- * @plugin: (allow-none): A #GstPlugin, or NULL for a static typefind function
+ * @plugin: (allow-none): A #GstPlugin, or %NULL for a static typefind function
  * @name: The name for registering
  * @rank: The rank (or importance) of this typefind function
  * @func: The #GstTypeFindFunction to use
@@ -57,7 +57,7 @@ G_DEFINE_POINTER_TYPE (GstTypeFind, gst_type_find);
  * registering this function will be available for typefinding.
  * This function is typically called during an element's plugin initialization.
  *
- * Returns: TRUE on success, FALSE otherwise
+ * Returns: %TRUE on success, %FALSE otherwise
  */
 gboolean
 gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
@@ -119,7 +119,7 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
  * the stream. The returned memory is valid until the typefinding function
  * returns and must not be freed.
  *
- * Returns: (transfer none) (array length=size): the requested data, or NULL
+ * Returns: (transfer none) (array length=size): the requested data, or %NULL
  *     if that data is not available.
  */
 const guint8 *
@@ -157,7 +157,7 @@ gst_type_find_suggest (GstTypeFind * find, guint probability, GstCaps * caps)
  * @find: The #GstTypeFind object the function was called with
  * @probability: The probability in percent that the suggestion is right
  * @media_type: the media type of the suggested caps
- * @fieldname: (allow-none): first field of the suggested caps, or NULL
+ * @fieldname: (allow-none): first field of the suggested caps, or %NULL
  * @...: additional arguments to the suggested caps in the same format as the
  *     arguments passed to gst_structure_new() (ie. triplets of field name,
  *     field GType and field value)
@@ -171,7 +171,7 @@ gst_type_find_suggest (GstTypeFind * find, guint probability, GstCaps * caps)
  * passing a #GstCaps argument you can create the caps on the fly in the same
  * way as you can with gst_caps_new_simple().
  *
- * Make sure you terminate the list of arguments with a NULL argument and that
+ * Make sure you terminate the list of arguments with a %NULL argument and that
  * the values passed have the correct type (in terms of width in bytes when
  * passed to the vararg function - this applies particularly to gdouble and
  * guint64 arguments).

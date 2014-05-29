@@ -105,7 +105,7 @@ gst_device_monitor_factory_finalize (GObject * object)
  * Search for an device monitor factory of the given name. Refs the returned
  * device monitor factory; caller is responsible for unreffing.
  *
- * Returns: (transfer full): #GstDeviceMonitorFactory if found, NULL otherwise
+ * Returns: (transfer full): #GstDeviceMonitorFactory if found, %NULL otherwise
  *
  * Since: 1.4
  */
@@ -151,7 +151,7 @@ gst_device_monitor_factory_cleanup (GstDeviceMonitorFactory * factory)
 
 /**
  * gst_device_monitor_register:
- * @plugin: (allow-none): #GstPlugin to register the device monitor with, or NULL for
+ * @plugin: (allow-none): #GstPlugin to register the device monitor with, or %NULL for
  *     a static device monitor.
  * @name: name of device monitors of this type
  * @rank: rank of device monitor (higher rank means more importance when autoplugging)
@@ -160,7 +160,7 @@ gst_device_monitor_factory_cleanup (GstDeviceMonitorFactory * factory)
  * Create a new device monitorfactory capable of instantiating objects of the
  * @type and add the factory to @plugin.
  *
- * Returns: TRUE, if the registering succeeded, FALSE on error
+ * Returns: %TRUE, if the registering succeeded, %FALSE on error
  *
  * Since: 1.4
  */
@@ -244,7 +244,7 @@ detailserror:
  * Returns the device monitor of the type defined by the given device
  * monitorfactory.
  *
- * Returns: (transfer full): the #GstDeviceMonitor or NULL if the
+ * Returns: (transfer full): the #GstDeviceMonitor or %NULL if the
  *     device monitor couldn't be created
  *
  * Since: 1.4
@@ -336,7 +336,7 @@ no_device_monitor:
  * Returns the device monitor of the type defined by the given device
  * monitor factory.
  *
- * Returns: (transfer full): a #GstDeviceMonitor or NULL if unable to
+ * Returns: (transfer full): a #GstDeviceMonitor or %NULL if unable to
  * create device monitor
  *
  * Since: 1.4

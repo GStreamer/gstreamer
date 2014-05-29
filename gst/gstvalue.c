@@ -63,8 +63,8 @@ typedef gboolean (*GstValueUnionFunc) (GValue * dest,
  *
  * Used by gst_value_intersect() to perform intersection for a specific #GValue
  * type. If the intersection is non-empty, the result is
- * placed in @dest and TRUE is returned.  If the intersection is
- * empty, @dest is unmodified and FALSE is returned.
+ * placed in @dest and %TRUE is returned.  If the intersection is
+ * empty, @dest is unmodified and %FALSE is returned.
  * Register a new implementation with gst_value_register_intersect_func().
  *
  * Returns: %TRUE if the values can intersect
@@ -2893,7 +2893,7 @@ gst_string_take_and_wrap (gchar * s)
  * 0->3, y is copied unescaped.
  *
  * If \xyy is found where x is an octal number but y is not, an
- * error is encountered and NULL is returned.
+ * error is encountered and %NULL is returned.
  *
  * the input string must be \0 terminated.
  */
@@ -4387,7 +4387,7 @@ gst_value_get_compare_func (const GValue * value1)
  *
  * Determines if @value1 and @value2 can be compared.
  *
- * Returns: TRUE if the values can be compared
+ * Returns: %TRUE if the values can be compared
  */
 gboolean
 gst_value_can_compare (const GValue * value1, const GValue * value2)
@@ -4579,13 +4579,13 @@ gst_value_compare_with_func (const GValue * value1, const GValue * value2,
  *
  * Determines if @value1 and @value2 can be non-trivially unioned.
  * Any two values can be trivially unioned by adding both of them
- * to a GstValueList.  However, certain types have the possibility
+ * to a #GstValueList.  However, certain types have the possibility
  * to be unioned in a simpler way.  For example, an integer range
  * and an integer can be unioned if the integer is a subset of the
  * integer range.  If there is the possibility that two values can
- * be unioned, this function returns TRUE.
+ * be unioned, this function returns %TRUE.
  *
- * Returns: TRUE if there is a function allowing the two values to
+ * Returns: %TRUE if there is a function allowing the two values to
  * be unioned.
  */
 gboolean
@@ -4620,7 +4620,7 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
  *
  * Creates a GValue corresponding to the union of @value1 and @value2.
  *
- * Returns: TRUE if the union succeeded.
+ * Returns: %TRUE if the union succeeded.
  */
 gboolean
 gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
@@ -4688,7 +4688,7 @@ gst_value_register_union_func (GType type1, GType type2, GstValueUnionFunc func)
  * Two values will produce a valid intersection if they have the same
  * type.
  *
- * Returns: TRUE if the values can intersect
+ * Returns: %TRUE if the values can intersect
  */
 gboolean
 gst_value_can_intersect (const GValue * value1, const GValue * value2)
@@ -4730,16 +4730,16 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 /**
  * gst_value_intersect:
  * @dest: (out caller-allocates) (transfer full): a uninitialized #GValue that will hold the calculated
- * intersection value. May be NULL if the resulting set if not needed.
+ * intersection value. May be %NULL if the resulting set if not needed.
  * @value1: a value to intersect
  * @value2: another value to intersect
  *
  * Calculates the intersection of two values.  If the values have
  * a non-empty intersection, the value representing the intersection
- * is placed in @dest, unless NULL.  If the intersection is non-empty,
+ * is placed in @dest, unless %NULL.  If the intersection is non-empty,
  * @dest is not modified.
  *
- * Returns: TRUE if the intersection is non-empty
+ * Returns: %TRUE if the intersection is non-empty
  */
 gboolean
 gst_value_intersect (GValue * dest, const GValue * value1,
@@ -4817,7 +4817,7 @@ gst_value_register_intersect_func (GType type1, GType type2,
 /**
  * gst_value_subtract:
  * @dest: (out caller-allocates): the destination value for the result if the
- *     subtraction is not empty. May be NULL, in which case the resulting set
+ *     subtraction is not empty. May be %NULL, in which case the resulting set
  *     will not be computed, which can give a fair speedup.
  * @minuend: the value to subtract from
  * @subtrahend: the value to subtract
@@ -4887,7 +4887,7 @@ gst_value_subtract (GValue * dest, const GValue * minuend,
  *
  * Checks if it's possible to subtract @subtrahend from @minuend.
  *
- * Returns: TRUE if a subtraction is possible
+ * Returns: %TRUE if a subtraction is possible
  */
 gboolean
 gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
@@ -5009,7 +5009,7 @@ gst_value_move (GValue * dest, GValue * src)
  *
  * Free-function: g_free
  *
- * Returns: (transfer full): the serialization for @value or NULL if none exists
+ * Returns: (transfer full): the serialization for @value or %NULL if none exists
  */
 gchar *
 gst_value_serialize (const GValue * value)
@@ -5058,9 +5058,9 @@ gst_value_serialize (const GValue * value)
  * @src: string to deserialize
  *
  * Tries to deserialize a string into the type specified by the given GValue.
- * If the operation succeeds, TRUE is returned, FALSE otherwise.
+ * If the operation succeeds, %TRUE is returned, %FALSE otherwise.
  *
- * Returns: TRUE on success
+ * Returns: %TRUE on success
  */
 gboolean
 gst_value_deserialize (GValue * dest, const gchar * src)
@@ -5142,9 +5142,9 @@ gst_value_is_fixed (const GValue * value)
  * Fixate @src into a new value @dest.
  * For ranges, the first element is taken. For lists and arrays, the
  * first item is fixated and returned.
- * If @src is already fixed, this function returns FALSE.
+ * If @src is already fixed, this function returns %FALSE.
  *
- * Returns: true if @dest contains a fixated version of @src.
+ * Returns: %TRUE if @dest contains a fixated version of @src.
  */
 gboolean
 gst_value_fixate (GValue * dest, const GValue * src)
@@ -5348,7 +5348,7 @@ gst_value_get_fraction_denominator (const GValue * value)
  * Multiplies the two #GValue items containing a #GST_TYPE_FRACTION and sets
  * @product to the product of the two fractions.
  *
- * Returns: FALSE in case of an error (like integer overflow), TRUE otherwise.
+ * Returns: %FALSE in case of an error (like integer overflow), %TRUE otherwise.
  */
 gboolean
 gst_value_fraction_multiply (GValue * product, const GValue * factor1,
@@ -5382,7 +5382,7 @@ gst_value_fraction_multiply (GValue * product, const GValue * factor1,
  *
  * Subtracts the @subtrahend from the @minuend and sets @dest to the result.
  *
- * Returns: FALSE in case of an error (like integer overflow), TRUE otherwise.
+ * Returns: %FALSE in case of an error (like integer overflow), %TRUE otherwise.
  */
 gboolean
 gst_value_fraction_subtract (GValue * dest,

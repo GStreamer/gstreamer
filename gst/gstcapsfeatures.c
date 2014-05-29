@@ -203,7 +203,7 @@ gst_caps_features_new_any (void)
  * @...: additional features
  *
  * Creates a new #GstCapsFeatures with the given features.
- * The last argument must be NULL.
+ * The last argument must be %NULL.
  *
  * Free-function: gst_caps_features_free
  *
@@ -471,7 +471,7 @@ priv_gst_caps_features_append_to_gstring (const GstCapsFeatures * features,
  *
  * Free-function: gst_caps_features_free
  *
- * Returns: (transfer full): a new #GstCapsFeatures or NULL when the string could
+ * Returns: (transfer full): a new #GstCapsFeatures or %NULL when the string could
  *     not be parsed. Free with gst_caps_features_free() after use.
  *
  * Since: 1.2

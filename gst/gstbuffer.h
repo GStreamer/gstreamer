@@ -467,9 +467,9 @@ gboolean        gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src
  * in some cases), and the reference counts are updated appropriately (the old
  * buffer is unreffed, the new is reffed).
  *
- * Either @nbuf or the #GstBuffer pointed to by @obuf may be NULL.
+ * Either @nbuf or the #GstBuffer pointed to by @obuf may be %NULL.
  *
- * Returns: TRUE when @obuf was different from @nbuf.
+ * Returns: %TRUE when @obuf was different from @nbuf.
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC gboolean gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf);
@@ -507,7 +507,7 @@ GstBuffer*      gst_buffer_append               (GstBuffer *buf1, GstBuffer *buf
  * When this function returns %TRUE, the next meta will be
  * returned. When %FALSE is returned, gst_buffer_foreach_meta() will return.
  *
- * When @meta is set to NULL, the item will be removed from the buffer.
+ * When @meta is set to %NULL, the item will be removed from the buffer.
  *
  * Returns: %FALSE when gst_buffer_foreach_meta() should stop
  */

@@ -96,7 +96,7 @@ gst_control_source_constructor (GType type, guint n_construct_params,
  *
  * Gets the value for this #GstControlSource at a given timestamp.
  *
- * Returns: FALSE if the value couldn't be returned, TRUE otherwise.
+ * Returns: %FALSE if the value couldn't be returned, %TRUE otherwise.
  */
 gboolean
 gst_control_source_get_value (GstControlSource * self, GstClockTime timestamp,

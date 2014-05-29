@@ -123,7 +123,7 @@ gst_element_factory_finalize (GObject * object)
  * Search for an element factory of the given name. Refs the returned
  * element factory; caller is responsible for unreffing.
  *
- * Returns: (transfer full): #GstElementFactory if found, NULL otherwise
+ * Returns: (transfer full): #GstElementFactory if found, %NULL otherwise
  */
 GstElementFactory *
 gst_element_factory_find (const gchar * name)
@@ -186,7 +186,7 @@ gst_element_factory_cleanup (GstElementFactory * factory)
 
 /**
  * gst_element_register:
- * @plugin: (allow-none): #GstPlugin to register the element with, or NULL for
+ * @plugin: (allow-none): #GstPlugin to register the element with, or %NULL for
  *     a static element.
  * @name: name of elements of this type
  * @rank: rank of element (higher rank means more importance when autoplugging)
@@ -195,7 +195,7 @@ gst_element_factory_cleanup (GstElementFactory * factory)
  * Create a new elementfactory capable of instantiating objects of the
  * @type and add the factory to @plugin.
  *
- * Returns: TRUE, if the registering succeeded, FALSE on error
+ * Returns: %TRUE, if the registering succeeded, %FALSE on error
  */
 gboolean
 gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
@@ -328,14 +328,14 @@ detailserror:
 /**
  * gst_element_factory_create:
  * @factory: factory to instantiate
- * @name: (allow-none): name of new element, or NULL to automatically create
+ * @name: (allow-none): name of new element, or %NULL to automatically create
  *    a unique name
  *
  * Create a new element of the type defined by the given elementfactory.
  * It will be given the name supplied, since all elements require a name as
  * their first argument.
  *
- * Returns: (transfer floating): new #GstElement or NULL if the element couldn't
+ * Returns: (transfer floating): new #GstElement or %NULL if the element couldn't
  *     be created
  */
 GstElement *
@@ -414,15 +414,15 @@ no_element:
 /**
  * gst_element_factory_make:
  * @factoryname: a named factory to instantiate
- * @name: (allow-none): name of new element, or NULL to automatically create
+ * @name: (allow-none): name of new element, or %NULL to automatically create
  *    a unique name
  *
  * Create a new element of the type defined by the given element factory.
- * If name is NULL, then the element will receive a guaranteed unique name,
+ * If name is %NULL, then the element will receive a guaranteed unique name,
  * consisting of the element factory name and a number.
  * If name is given, it will be given the name supplied.
  *
- * Returns: (transfer floating): new #GstElement or NULL if unable to create element
+ * Returns: (transfer floating): new #GstElement or %NULL if unable to create element
  */
 GstElement *
 gst_element_factory_make (const gchar * factoryname, const gchar * name)
@@ -619,13 +619,13 @@ gst_element_factory_get_uri_type (GstElementFactory * factory)
  * gst_element_factory_get_uri_protocols:
  * @factory: a #GstElementFactory
  *
- * Gets a NULL-terminated array of protocols this element supports or NULL if
+ * Gets a %NULL-terminated array of protocols this element supports or %NULL if
  * no protocols are supported. You may not change the contents of the returned
  * array, as it is still owned by the element factory. Use g_strdupv() to
  * make a copy of the protocol string array if you need to.
  *
  * Returns: (transfer none) (array zero-terminated=1): the supported protocols
- *     or NULL
+ *     or %NULL
  */
 const gchar *const *
 gst_element_factory_get_uri_protocols (GstElementFactory * factory)
@@ -642,7 +642,7 @@ gst_element_factory_get_uri_protocols (GstElementFactory * factory)
  *
  * Check if @factory implements the interface with name @interfacename.
  *
- * Returns: #TRUE when @factory implement the interface.
+ * Returns: %TRUE when @factory implement the interface.
  */
 gboolean
 gst_element_factory_has_interface (GstElementFactory * factory,

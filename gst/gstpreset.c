@@ -956,7 +956,7 @@ no_presets:
  * gst_preset_get_preset_names:
  * @preset: a #GObject that implements #GstPreset
  *
- * Get a copy of preset names as a NULL terminated string array.
+ * Get a copy of preset names as a %NULL terminated string array.
  *
  * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*):
  *     list with names, use g_strfreev() after usage.

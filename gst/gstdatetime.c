@@ -70,7 +70,7 @@ struct _GstDateTime
  *
  * Free-function: gst_date_time_unref
  *
- * Returns: (transfer full): a newly created #GstDateTime, or NULL on error
+ * Returns: (transfer full): a newly created #GstDateTime, or %NULL on error
  */
 GstDateTime *
 gst_date_time_new_from_g_date_time (GDateTime * dt)
@@ -95,7 +95,7 @@ gst_date_time_new_from_g_date_time (GDateTime * dt)
  *
  * Free-function: g_date_time_unref
  *
- * Returns: (transfer full): a newly created #GDateTime, or NULL on error
+ * Returns: (transfer full): a newly created #GDateTime, or %NULL on error
  */
 GDateTime *
 gst_date_time_to_g_date_time (GstDateTime * datetime)
@@ -112,8 +112,8 @@ gst_date_time_to_g_date_time (GstDateTime * datetime)
  * gst_date_time_has_year:
  * @datetime: a #GstDateTime
  *
- * Returns: TRUE if @datetime<!-- -->'s year field is set (which should always
- *     be the case), otherwise FALSE
+ * Returns: %TRUE if @datetime<!-- -->'s year field is set (which should always
+ *     be the case), otherwise %FALSE
  */
 gboolean
 gst_date_time_has_year (const GstDateTime * datetime)
@@ -127,7 +127,7 @@ gst_date_time_has_year (const GstDateTime * datetime)
  * gst_date_time_has_month:
  * @datetime: a #GstDateTime
  *
- * Returns: TRUE if @datetime<!-- -->'s month field is set, otherwise FALSE
+ * Returns: %TRUE if @datetime<!-- -->'s month field is set, otherwise %FALSE
  */
 gboolean
 gst_date_time_has_month (const GstDateTime * datetime)
@@ -141,7 +141,7 @@ gst_date_time_has_month (const GstDateTime * datetime)
  * gst_date_time_has_day:
  * @datetime: a #GstDateTime
  *
- * Returns: TRUE if @datetime<!-- -->'s day field is set, otherwise FALSE
+ * Returns: %TRUE if @datetime<!-- -->'s day field is set, otherwise %FALSE
  */
 gboolean
 gst_date_time_has_day (const GstDateTime * datetime)
@@ -155,8 +155,8 @@ gst_date_time_has_day (const GstDateTime * datetime)
  * gst_date_time_has_time:
  * @datetime: a #GstDateTime
  *
- * Returns: TRUE if @datetime<!-- -->'s hour and minute fields are set,
- *     otherwise FALSE
+ * Returns: %TRUE if @datetime<!-- -->'s hour and minute fields are set,
+ *     otherwise %FALSE
  */
 gboolean
 gst_date_time_has_time (const GstDateTime * datetime)
@@ -170,7 +170,7 @@ gst_date_time_has_time (const GstDateTime * datetime)
  * gst_date_time_has_second:
  * @datetime: a #GstDateTime
  *
- * Returns: TRUE if @datetime<!-- -->'s second field is set, otherwise FALSE
+ * Returns: %TRUE if @datetime<!-- -->'s second field is set, otherwise %FALSE
  */
 gboolean
 gst_date_time_has_second (const GstDateTime * datetime)
@@ -717,7 +717,7 @@ done:
  * 2012-06-23T23:30+0100, 2012-06-23T23:30:59Z, 2012-06-23T23:30:59+0100
  *
  * Returns: a newly allocated string formatted according to ISO 8601 and
- *     only including the datetime fields that are valid, or NULL in case
+ *     only including the datetime fields that are valid, or %NULL in case
  *     there was an error. The string should be freed with g_free().
  */
 gchar *
@@ -740,7 +740,7 @@ gst_date_time_to_iso8601_string (GstDateTime * datetime)
  *
  * Free-function: gst_date_time_unref
  *
- * Returns: (transfer full): a newly created #GstDateTime, or NULL on error
+ * Returns: (transfer full): a newly created #GstDateTime, or %NULL on error
  */
 GstDateTime *
 gst_date_time_new_from_iso8601_string (const gchar * string)

@@ -318,9 +318,9 @@ gst_object_ref_sink (gpointer object)
  * The reference count of @oldobj is decreased and the reference count of
  * @newobj is increased.
  *
- * Either @newobj and the value pointed to by @oldobj may be NULL.
+ * Either @newobj and the value pointed to by @oldobj may be %NULL.
  *
- * Returns: TRUE if @newobj was different from @oldobj
+ * Returns: %TRUE if @newobj was different from @oldobj
  */
 gboolean
 gst_object_replace (GstObject ** oldobj, GstObject * newobj)
@@ -481,7 +481,7 @@ gst_object_dispatch_properties_changed (GObject * object,
  * @orig: a #GstObject that initiated the notify.
  * @pspec: a #GParamSpec of the property.
  * @excluded_props: (array zero-terminated=1) (element-type gchar*) (allow-none):
- *     a set of user-specified properties to exclude or NULL to show
+ *     a set of user-specified properties to exclude or %NULL to show
  *     all changes.
  *
  * A default deep_notify signal callback for an object. The user data
@@ -591,12 +591,12 @@ had_parent:
  * @name:   new name of object
  *
  * Sets the name of @object, or gives @object a guaranteed unique
- * name (if @name is NULL).
+ * name (if @name is %NULL).
  * This function makes a copy of the provided name, so the caller
  * retains ownership of the name it sent.
  *
- * Returns: TRUE if the name could be set. Since Objects that have
- * a parent cannot be renamed, this function returns FALSE in those
+ * Returns: %TRUE if the name could be set. Since Objects that have
+ * a parent cannot be renamed, this function returns %FALSE in those
  * cases.
  *
  * MT safe.  This function grabs and releases @object's LOCK.
@@ -644,7 +644,7 @@ had_parent:
  *
  * Returns a copy of the name of @object.
  * Caller should g_free() the return value after usage.
- * For a nameless object, this returns NULL, which you can safely g_free()
+ * For a nameless object, this returns %NULL, which you can safely g_free()
  * as well.
  *
  * Free-function: g_free
@@ -675,7 +675,7 @@ gst_object_get_name (GstObject * object)
  * Sets the parent of @object to @parent. The object's reference count will
  * be incremented, and any floating reference will be removed (see gst_object_ref_sink()).
  *
- * Returns: TRUE if @parent could be set or FALSE when @object
+ * Returns: %TRUE if @parent could be set or %FALSE when @object
  * already had a parent or @object and @parent are the same.
  *
  * MT safe. Grabs and releases @object's LOCK.
@@ -724,7 +724,7 @@ had_parent:
  * Returns the parent of @object. This function increases the refcount
  * of the parent object so you should gst_object_unref() it after usage.
  *
- * Returns: (transfer full): parent of @object, this can be NULL if @object
+ * Returns: (transfer full): parent of @object, this can be %NULL if @object
  *   has no parent. unref after usage.
  *
  * MT safe. Grabs and releases @object's LOCK.
@@ -785,7 +785,7 @@ gst_object_unparent (GstObject * object)
  * Check if @object has an ancestor @ancestor somewhere up in
  * the hierarchy. One can e.g. check if a #GstElement is inside a #GstPipeline.
  *
- * Returns: TRUE if @ancestor is an ancestor of @object.
+ * Returns: %TRUE if @ancestor is an ancestor of @object.
  *
  * MT safe. Grabs and releases @object's locks.
  */
@@ -824,8 +824,8 @@ gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
  * will lock each #GstObject in the list to compare the name, so be
  * careful when passing a list with a locked object.
  *
- * Returns: TRUE if a #GstObject named @name does not appear in @list,
- * FALSE if it does.
+ * Returns: %TRUE if a #GstObject named @name does not appear in @list,
+ * %FALSE if it does.
  *
  * MT safe. Grabs and releases the LOCK of each object in the list.
  */

@@ -146,7 +146,7 @@ typedef gboolean (*GstPluginInitFullFunc) (GstPlugin *plugin, gpointer user_data
  * @package: shipped package plugin belongs to
  * @origin: URL to provider of plugin
  * @release_datetime: date time string in ISO 8601 format (or rather, a
- *     subset thereof), or NULL. Allowed are the following formats:
+ *     subset thereof), or %NULL. Allowed are the following formats:
  *     "YYYY-MM-DD" and "YYY-MM-DDTHH:MMZ" (with 'T' a separator and 'Z'
  *     indicating UTC/Zulu time). This field should be set via the
  *     GST_PACKAGE_RELEASE_DATETIME preprocessor macro.
@@ -291,7 +291,7 @@ G_END_DECLS
  * A function that can be used with e.g. gst_registry_plugin_filter()
  * to get a list of plugins that match certain criteria.
  *
- * Returns: TRUE for a positive match, FALSE otherwise
+ * Returns: %TRUE for a positive match, %FALSE otherwise
  */
 typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
                                                          gpointer user_data);

@@ -691,7 +691,7 @@ GType                   gst_element_get_type            (void);
  *
  * Returns a copy of the name of @elem.
  * Caller should g_free() the return value after usage.
- * For a nameless element, this returns NULL, which you can safely g_free()
+ * For a nameless element, this returns %NULL, which you can safely g_free()
  * as well.
  *
  * Returns: (transfer full): the name of @elem. g_free() after usage. MT safe.

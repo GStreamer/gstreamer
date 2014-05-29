@@ -429,7 +429,7 @@ _priv_gst_debug_init (void)
  * @function: the function that emitted the message
  * @line: the line from that the message was emitted, usually __LINE__
  * @object: (transfer none) (allow-none): the object this message relates to,
- *     or NULL if none
+ *     or %NULL if none
  * @format: a printf style format string
  * @...: optional arguments for the format
  *
@@ -481,7 +481,7 @@ gst_path_basename (const gchar * file_name)
  * @function: the function that emitted the message
  * @line: the line from that the message was emitted, usually __LINE__
  * @object: (transfer none) (allow-none): the object this message relates to,
- *     or NULL if none
+ *     or %NULL if none
  * @format: a printf style format string
  * @args: optional arguments for the format
  *
@@ -961,7 +961,7 @@ static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
  * @line: the line from that the message was emitted, usually __LINE__
  * @message: the actual message
  * @object: (transfer none) (allow-none): the object this message relates to,
- *     or NULL if none
+ *     or %NULL if none
  * @unused: an unused variable, reserved for some user_data.
  *
  * The default logging handler used by GStreamer. Logging functions get called
@@ -1318,7 +1318,7 @@ gst_debug_set_color_mode_from_string (const gchar * mode)
  *
  * Checks if the debugging output should be colored.
  *
- * Returns: TRUE, if the debug output should be colored.
+ * Returns: %TRUE, if the debug output should be colored.
  */
 gboolean
 gst_debug_is_colored (void)
@@ -1367,7 +1367,7 @@ gst_debug_set_active (gboolean active)
  *
  * Checks if debugging output is activated.
  *
- * Returns: TRUE, if debugging is activated
+ * Returns: %TRUE, if debugging is activated
  */
 gboolean
 gst_debug_is_active (void)

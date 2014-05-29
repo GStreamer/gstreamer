@@ -104,9 +104,9 @@ _priv_gst_mini_object_initialize (void)
  * @mini_object: a #GstMiniObject
  * @flags: initial #GstMiniObjectFlags
  * @type: the #GType of the mini-object to create
- * @copy_func: (allow-none): the copy function, or NULL
- * @dispose_func: (allow-none): the dispose function, or NULL
- * @free_func: (allow-none): the free function or NULL
+ * @copy_func: (allow-none): the copy function, or %NULL
+ * @dispose_func: (allow-none): the dispose function, or %NULL
+ * @free_func: (allow-none): the free function or %NULL
  *
  * Initializes a mini-object with the desired type and copy/dispose/free
  * functions.
@@ -279,7 +279,7 @@ gst_mini_object_unlock (GstMiniObject * object, GstLockFlags flags)
  * Modification of a mini-object should only be done after verifying that it
  * is writable.
  *
- * Returns: TRUE if the object is writable.
+ * Returns: %TRUE if the object is writable.
  */
 gboolean
 gst_mini_object_is_writable (const GstMiniObject * mini_object)
@@ -477,9 +477,9 @@ gst_mini_object_unref (GstMiniObject * mini_object)
  * The reference count of @olddata is decreased and the reference count of
  * @newdata is increased.
  *
- * Either @newdata and the value pointed to by @olddata may be NULL.
+ * Either @newdata and the value pointed to by @olddata may be %NULL.
  *
- * Returns: TRUE if @newdata was different from @olddata
+ * Returns: %TRUE if @newdata was different from @olddata
  */
 gboolean
 gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
@@ -518,7 +518,7 @@ gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
  * @olddata: (inout) (transfer full): pointer to a pointer to a mini-object to
  *     be stolen
  *
- * Replace the current #GstMiniObject pointer to by @olddata with NULL and
+ * Replace the current #GstMiniObject pointer to by @olddata with %NULL and
  * return the old value.
  *
  * Returns: the #GstMiniObject at @oldata
@@ -554,9 +554,9 @@ gst_mini_object_steal (GstMiniObject ** olddata)
  * except that it does not increase the refcount of @newdata and thus
  * takes ownership of @newdata.
  *
- * Either @newdata and the value pointed to by @olddata may be NULL.
+ * Either @newdata and the value pointed to by @olddata may be %NULL.
  *
- * Returns: TRUE if @newdata was different from @olddata
+ * Returns: %TRUE if @newdata was different from @olddata
  */
 gboolean
 gst_mini_object_take (GstMiniObject ** olddata, GstMiniObject * newdata)
@@ -648,7 +648,7 @@ gst_mini_object_weak_unref (GstMiniObject * object,
  * can be gotten back from the @object with gst_mini_object_get_qdata()
  * until the @object is disposed.
  * Setting a previously set user data pointer, overrides (frees)
- * the old pointer set, using #NULL as pointer essentially
+ * the old pointer set, using %NULL as pointer essentially
  * removes the data stored.
  *
  * @destroy may be specified which is called with @data as argument

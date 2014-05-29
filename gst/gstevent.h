@@ -285,9 +285,9 @@ GST_EXPORT GType _gst_event_type;
  * in some cases), and the reference counts are updated appropriately (the old
  * event is unreffed, the new one is reffed).
  *
- * Either @new_event or the #GstEvent pointed to by @old_event may be NULL.
+ * Either @new_event or the #GstEvent pointed to by @old_event may be %NULL.
  *
- * Returns: TRUE if @new_event was different from @old_event
+ * Returns: %TRUE if @new_event was different from @old_event
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC gboolean gst_event_replace (GstEvent **old_event, GstEvent *new_event);
@@ -304,7 +304,7 @@ gst_event_replace (GstEvent **old_event, GstEvent *new_event)
  * @old_event: (inout) (transfer full): pointer to a pointer to a #GstEvent
  *     to be stolen.
  *
- * Atomically replace the #GstEvent pointed to by @old_event with NULL and
+ * Atomically replace the #GstEvent pointed to by @old_event with %NULL and
  * return the original event.
  *
  * Returns: the #GstEvent that was in @old_event
@@ -330,9 +330,9 @@ gst_event_steal (GstEvent **old_event)
  * function is similar to gst_event_replace() except that it takes ownership of
  * @new_event.
  *
- * Either @new_event or the #GstEvent pointed to by @old_event may be NULL.
+ * Either @new_event or the #GstEvent pointed to by @old_event may be %NULL.
  *
- * Returns: TRUE if @new_event was different from @old_event
+ * Returns: %TRUE if @new_event was different from @old_event
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC gboolean gst_event_take (GstEvent **old_event, GstEvent *new_event);

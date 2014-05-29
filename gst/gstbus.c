@@ -291,7 +291,7 @@ gst_bus_new (void)
  * Post a message on the given bus. Ownership of the message
  * is taken by the bus.
  *
- * Returns: TRUE if the message could be posted, FALSE if the bus is flushing.
+ * Returns: %TRUE if the message could be posted, %FALSE if the bus is flushing.
  *
  * MT safe.
  */
@@ -402,7 +402,7 @@ is_flushing:
  * Check if there are pending messages on the bus that
  * should be handled.
  *
- * Returns: TRUE if there are messages on the bus to be handled, FALSE
+ * Returns: %TRUE if there are messages on the bus to be handled, %FALSE
  * otherwise.
  *
  * MT safe.
@@ -427,7 +427,7 @@ gst_bus_have_pending (GstBus * bus)
  *
  * If @flushing, flush out and unref any messages queued in the bus. Releases
  * references to the message origin objects. Will flush future messages until
- * gst_bus_set_flushing() sets @flushing to #FALSE.
+ * gst_bus_set_flushing() sets @flushing to %FALSE.
  *
  * MT safe.
  */
@@ -468,7 +468,7 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
  * matching message was posted on the bus.
  *
  * Returns: (transfer full): a #GstMessage matching the filter in @types,
- *     or NULL if no matching message was found on the bus until the timeout
+ *     or %NULL if no matching message was found on the bus until the timeout
  *     expired. The message is taken from the bus and needs to be unreffed
  *     with gst_message_unref() after usage.
  *
@@ -569,7 +569,7 @@ beach:
  * posted on the bus.
  *
  * Returns: (transfer full): the #GstMessage that is on the bus after the
- *     specified timeout or NULL if the bus is empty after the timeout expired.
+ *     specified timeout or %NULL if the bus is empty after the timeout expired.
  * The message is taken from the bus and needs to be unreffed with
  * gst_message_unref() after usage.
  *
@@ -595,7 +595,7 @@ gst_bus_timed_pop (GstBus * bus, GstClockTime timeout)
  * enums beyond #GST_MESSAGE_EXTENDED in the @events mask.
  *
  * Returns: (transfer full): the next #GstMessage matching @type that is on
- *     the bus, or NULL if the bus is empty or there is no message matching
+ *     the bus, or %NULL if the bus is empty or there is no message matching
  *     @type. The message is taken from the bus and needs to be unreffed with
  *     gst_message_unref() after usage.
  *
@@ -616,7 +616,7 @@ gst_bus_pop_filtered (GstBus * bus, GstMessageType types)
  *
  * Get a message from the bus.
  *
- * Returns: (transfer full): the #GstMessage that is on the bus, or NULL if the
+ * Returns: (transfer full): the #GstMessage that is on the bus, or %NULL if the
  *     bus is empty. The message is taken from the bus and needs to be unreffed
  *     with gst_message_unref() after usage.
  *
@@ -638,7 +638,7 @@ gst_bus_pop (GstBus * bus)
  * on the bus' message queue. A reference is returned, and needs to be unreffed
  * by the caller.
  *
- * Returns: (transfer full): the #GstMessage that is on the bus, or NULL if the
+ * Returns: (transfer full): the #GstMessage that is on the bus, or %NULL if the
  *     bus is empty.
  *
  * MT safe.
@@ -675,7 +675,7 @@ gst_bus_peek (GstBus * bus)
  * should handle messages asynchronously using the gst_bus watch and poll
  * functions.
  *
- * You cannot replace an existing sync_handler. You can pass NULL to this
+ * You cannot replace an existing sync_handler. You can pass %NULL to this
  * function, which will clear the existing handler.
  */
 void
@@ -896,7 +896,7 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
  * When @func is called, the message belongs to the caller; if you want to
  * keep a copy of it, call gst_message_ref() before leaving @func.
  *
- * The watch can be removed using g_source_remove() or by returning FALSE
+ * The watch can be removed using g_source_remove() or by returning %FALSE
  * from @func.
  *
  * MT safe.
@@ -935,7 +935,7 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * There can only be a single bus watch per bus, you must remove it before you
  * can set a new one.
  *
- * The watch can be removed using g_source_remove() or by returning FALSE
+ * The watch can be removed using g_source_remove() or by returning %FALSE
  * from @func.
  *
  * Returns: The event source id.
@@ -1054,7 +1054,7 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  * better handled by setting up an asynchronous bus watch and doing things
  * from there.
  *
- * Returns: (transfer full): the message that was received, or NULL if the
+ * Returns: (transfer full): the message that was received, or %NULL if the
  *     poll timed out. The message is taken from the bus and needs to be
  *     unreffed with gst_message_unref() after usage.
  */
@@ -1113,7 +1113,7 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTime timeout)
  * A helper #GstBusFunc that can be used to convert all asynchronous messages
  * into signals.
  *
- * Returns: TRUE
+ * Returns: %TRUE
  */
 gboolean
 gst_bus_async_signal_func (GstBus * bus, GstMessage * message, gpointer data)

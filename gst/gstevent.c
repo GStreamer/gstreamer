@@ -351,7 +351,7 @@ gst_event_get_structure (GstEvent * event)
  * Returns: The structure of the event. The structure is still
  * owned by the event, which means that you should not free it and
  * that the pointer becomes invalid when you free the event.
- * This function checks if @event is writable and will never return NULL.
+ * This function checks if @event is writable and will never return %NULL.
  *
  * MT safe.
  */
@@ -1719,8 +1719,8 @@ gst_event_new_segment_done (GstFormat format, gint64 position)
 /**
  * gst_event_parse_segment_done:
  * @event: A valid #GstEvent of type GST_EVENT_SEGMENT_DONE.
- * @format: (out) (allow-none): Result location for the format, or NULL
- * @position: (out) (allow-none): Result location for the position, or NULL
+ * @format: (out) (allow-none): Result location for the format, or %NULL
+ * @position: (out) (allow-none): Result location for the position, or %NULL
  *
  * Extracts the position and format from the segment done message.
  *

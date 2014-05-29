@@ -139,7 +139,7 @@ gst_parse_context_free (GstParseContext * context)
  * of %GST_PARSE_ERROR_NO_SUCH_ELEMENT was returned.
  *
  * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*): a
- *     NULL-terminated array of element factory name strings of missing
+ *     %NULL-terminated array of element factory name strings of missing
  *     elements. Free with g_strfreev() when no longer needed.
  */
 gchar **

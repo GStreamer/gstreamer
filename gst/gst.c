@@ -53,7 +53,7 @@
  * </programlisting>
  * </example>
  *
- * It's allowed to pass two NULL pointers to gst_init() in case you don't want
+ * It's allowed to pass two %NULL pointers to gst_init() in case you don't want
  * to pass the command line args to GStreamer.
  *
  * You can also use GOption to initialize your own parameters as shown in
@@ -400,7 +400,7 @@ gst_init (int *argc, char **argv[])
  * Use this function to check if GStreamer has been initialized with gst_init()
  * or gst_init_check().
  *
- * Returns: TRUE if initialization has been done, FALSE otherwise.
+ * Returns: %TRUE if initialization has been done, %FALSE otherwise.
  */
 gboolean
 gst_is_initialized (void)
@@ -693,7 +693,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
    * gstreamer as being initialized, since it is the case from a plugin point of
    * view.
    *
-   * If anything fails, it will be put back to FALSE in gst_init_check().
+   * If anything fails, it will be put back to %FALSE in gst_init_check().
    * This allows some special plugins that would call gst_init() to not cause a
    * looping effect (i.e. initializing GStreamer twice).
    */

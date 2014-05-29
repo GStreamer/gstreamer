@@ -284,9 +284,9 @@ gst_query_copy (const GstQuery * q)
  * in some cases), and the reference counts are updated appropriately (the old
  * query is unreffed, the new one is reffed).
  *
- * Either @new_query or the #GstQuery pointed to by @old_query may be NULL.
+ * Either @new_query or the #GstQuery pointed to by @old_query may be %NULL.
  *
- * Returns: TRUE if @new_query was different from @old_query
+ * Returns: %TRUE if @new_query was different from @old_query
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC gboolean gst_query_replace (GstQuery **old_query, GstQuery *new_query);

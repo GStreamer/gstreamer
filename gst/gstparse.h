@@ -61,7 +61,7 @@ typedef enum
 /**
  * GstParseFlags:
  * @GST_PARSE_FLAG_NONE: Do not use any special parsing options.
- * @GST_PARSE_FLAG_FATAL_ERRORS: Always return NULL when an error occurs
+ * @GST_PARSE_FLAG_FATAL_ERRORS: Always return %NULL when an error occurs
  *     (default behaviour is to return partially constructed bins or elements
  *      in some cases)
  * @GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS: If a bin only has a single element,

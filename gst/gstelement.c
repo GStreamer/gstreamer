@@ -1641,7 +1641,7 @@ gst_element_default_query (GstElement * element, GstQuery * query)
  *
  * Please note that some queries might need a running pipeline to work.
  *
- * Returns: TRUE if the query could be performed.
+ * Returns: %TRUE if the query could be performed.
  *
  * MT safe.
  */
@@ -1873,7 +1873,7 @@ void gst_element_message_full
  *
  * MT safe.
  *
- * Returns: TRUE, if the element's state is locked.
+ * Returns: %TRUE, if the element's state is locked.
  */
 gboolean
 gst_element_is_locked_state (GstElement * element)
@@ -1892,14 +1892,14 @@ gst_element_is_locked_state (GstElement * element)
 /**
  * gst_element_set_locked_state:
  * @element: a #GstElement
- * @locked_state: TRUE to lock the element's state
+ * @locked_state: %TRUE to lock the element's state
  *
  * Locks the state of an element, so state changes of the parent don't affect
  * this element anymore.
  *
  * MT safe.
  *
- * Returns: TRUE if the state was changed, FALSE if bad parameters were given
+ * Returns: %TRUE if the state was changed, %FALSE if bad parameters were given
  * or the elements state-locking needed no change.
  */
 gboolean
@@ -1944,9 +1944,9 @@ was_ok:
  * @element: a #GstElement.
  *
  * Tries to change the state of the element to the same as its parent.
- * If this function returns FALSE, the state of element is undefined.
+ * If this function returns %FALSE, the state of element is undefined.
  *
- * Returns: TRUE, if the element's state could be synced to the parent's state.
+ * Returns: %TRUE, if the element's state could be synced to the parent's state.
  *
  * MT safe.
  */

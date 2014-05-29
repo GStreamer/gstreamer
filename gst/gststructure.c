@@ -51,7 +51,7 @@
  * gst_structure_remove_fields().
  *
  * Strings in structures must be ASCII or UTF-8 encoded. Other encodings are
- * not allowed. Strings may be NULL however.
+ * not allowed. Strings may be %NULL however.
  *
  * Be aware that the current #GstCaps / #GstStructure serialization into string
  * has limited support for nested #GstCaps / #GstStructure fields. It can only
@@ -237,7 +237,7 @@ gst_structure_new_empty (const gchar * name)
  * Creates a new #GstStructure with the given name.  Parses the
  * list of variable arguments and sets fields to the values listed.
  * Variable arguments should be passed as field name, field type,
- * and value.  Last variable argument should be NULL.
+ * and value.  Last variable argument should be %NULL.
  *
  * Free-function: gst_structure_free
  *
@@ -415,7 +415,7 @@ gst_structure_get_name (const GstStructure * structure)
  *
  * Checks if the structure has the given name
  *
- * Returns: TRUE if @name matches the name of the structure.
+ * Returns: %TRUE if @name matches the name of the structure.
  */
 gboolean
 gst_structure_has_name (const GstStructure * structure, const gchar * name)
@@ -621,7 +621,7 @@ gst_structure_set_valist_internal (GstStructure * structure,
  *
  * Parses the variable arguments and sets fields accordingly.
  * Variable arguments should be in the form field name, field type
- * (as a GType), value(s).  The last variable argument should be NULL.
+ * (as a GType), value(s).  The last variable argument should be %NULL.
  */
 void
 gst_structure_set (GstStructure * structure, const gchar * field, ...)
@@ -694,7 +694,7 @@ gst_structure_id_set_valist_internal (GstStructure * structure,
  * passed using the GQuark for the field name. This allows more efficient
  * setting of the structure if the caller already knows the associated
  * quark values.
- * The last variable argument must be NULL.
+ * The last variable argument must be %NULL.
  */
 void
 gst_structure_id_set (GstStructure * structure, GQuark field, ...)
@@ -737,7 +737,7 @@ gst_structure_id_set_valist (GstStructure * structure,
  * gst_structure_id_set(). Basically a convenience wrapper around
  * gst_structure_new_id_empty() and gst_structure_id_set().
  *
- * The last variable argument must be NULL (or 0).
+ * The last variable argument must be %NULL (or 0).
  *
  * Free-function: gst_structure_free
  *
@@ -960,7 +960,7 @@ gst_structure_remove_field (GstStructure * structure, const gchar * fieldname)
  * gst_structure_remove_fields:
  * @structure: a #GstStructure
  * @fieldname: the name of the field to remove
- * @...: NULL-terminated list of more fieldnames to remove
+ * @...: %NULL-terminated list of more fieldnames to remove
  *
  * Removes the fields with the given names. If a field does not exist, the
  * argument is ignored.
@@ -984,7 +984,7 @@ gst_structure_remove_fields (GstStructure * structure,
  * gst_structure_remove_fields_valist:
  * @structure: a #GstStructure
  * @fieldname: the name of the field to remove
- * @varargs: NULL-terminated list of more fieldnames to remove
+ * @varargs: %NULL-terminated list of more fieldnames to remove
  *
  * va_list form of gst_structure_remove_fields().
  */
@@ -1104,8 +1104,8 @@ gst_structure_nth_field_name (const GstStructure * structure, guint index)
  * Calls the provided function once for each field in the #GstStructure. The
  * function must not modify the fields. Also see gst_structure_map_in_place().
  *
- * Returns: TRUE if the supplied function returns TRUE For each of the fields,
- * FALSE otherwise.
+ * Returns: %TRUE if the supplied function returns %TRUE For each of the fields,
+ * %FALSE otherwise.
  */
 gboolean
 gst_structure_foreach (const GstStructure * structure,
@@ -1141,8 +1141,8 @@ gst_structure_foreach (const GstStructure * structure,
  * contrast to gst_structure_foreach(), the function may modify but not delete the
  * fields. The structure must be mutable.
  *
- * Returns: TRUE if the supplied function returns TRUE For each of the fields,
- * FALSE otherwise.
+ * Returns: %TRUE if the supplied function returns %TRUE For each of the fields,
+ * %FALSE otherwise.
  */
 gboolean
 gst_structure_map_in_place (GstStructure * structure,
@@ -1175,7 +1175,7 @@ gst_structure_map_in_place (GstStructure * structure,
  *
  * Check if @structure contains a field named @field.
  *
- * Returns: TRUE if the structure contains a field with the given name
+ * Returns: %TRUE if the structure contains a field with the given name
  */
 gboolean
 gst_structure_id_has_field (const GstStructure * structure, GQuark field)
@@ -1197,7 +1197,7 @@ gst_structure_id_has_field (const GstStructure * structure, GQuark field)
  *
  * Check if @structure contains a field named @fieldname.
  *
- * Returns: TRUE if the structure contains a field with the given name
+ * Returns: %TRUE if the structure contains a field with the given name
  */
 gboolean
 gst_structure_has_field (const GstStructure * structure,
@@ -1218,7 +1218,7 @@ gst_structure_has_field (const GstStructure * structure,
  *
  * Check if @structure contains a field named @field and with GType @type.
  *
- * Returns: TRUE if the structure contains a field with the given name and type
+ * Returns: %TRUE if the structure contains a field with the given name and type
  */
 gboolean
 gst_structure_id_has_field_typed (const GstStructure * structure,
@@ -1244,7 +1244,7 @@ gst_structure_id_has_field_typed (const GstStructure * structure,
  *
  * Check if @structure contains a field named @fieldname and with GType @type.
  *
- * Returns: TRUE if the structure contains a field with the given name and type
+ * Returns: %TRUE if the structure contains a field with the given name and type
  */
 gboolean
 gst_structure_has_field_typed (const GstStructure * structure,
@@ -1269,9 +1269,9 @@ gst_structure_has_field_typed (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
- * Returns: TRUE if the value could be set correctly. If there was no field
+ * Returns: %TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain a boolean, this
- * function returns FALSE.
+ * function returns %FALSE.
  */
 gboolean
 gst_structure_get_boolean (const GstStructure * structure,
@@ -1457,9 +1457,9 @@ gst_structure_get_uint64 (const GstStructure * structure,
  * inconsistent with e.g. gst_structure_get_string() which doesn't return a
  * copy of the string).
  *
- * Returns: TRUE if the value could be set correctly. If there was no field
+ * Returns: %TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain a data, this function
- * returns FALSE.
+ * returns %FALSE.
  */
 gboolean
 gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
@@ -1499,9 +1499,9 @@ gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
  * (note: this is inconsistent with e.g. gst_structure_get_string()
  * which doesn't return a copy of the string).
  *
- * Returns: TRUE if the value could be set correctly. If there was no field
+ * Returns: %TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain a data, this function
- * returns FALSE.
+ * returns %FALSE.
  */
 gboolean
 gst_structure_get_date_time (const GstStructure * structure,
@@ -1536,9 +1536,9 @@ gst_structure_get_date_time (const GstStructure * structure,
  * of the given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
- * Returns: TRUE if the value could be set correctly. If there was no field
+ * Returns: %TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain a #GstClockTime, this
- * function returns FALSE.
+ * function returns %FALSE.
  */
 gboolean
 gst_structure_get_clock_time (const GstStructure * structure,
@@ -1557,9 +1557,9 @@ gst_structure_get_clock_time (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
- * Returns: TRUE if the value could be set correctly. If there was no field
+ * Returns: %TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain a double, this
- * function returns FALSE.
+ * function returns %FALSE.
  */
 gboolean
 gst_structure_get_double (const GstStructure * structure,
@@ -1595,7 +1595,7 @@ gst_structure_get_double (const GstStructure * structure,
  * The string should not be modified, and remains valid until the next
  * call to a gst_structure_*() function with the given structure.
  *
- * Returns: a pointer to the string or NULL when the field did not exist
+ * Returns: a pointer to the string or %NULL when the field did not exist
  * or did not contain a string.
  */
 const gchar *
@@ -1628,9 +1628,9 @@ gst_structure_get_string (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists,
  * has the correct type and that the enumtype is correct.
  *
- * Returns: TRUE if the value could be set correctly. If there was no field
+ * Returns: %TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain an enum of the given
- * type, this function returns FALSE.
+ * type, this function returns %FALSE.
  */
 gboolean
 gst_structure_get_enum (const GstStructure * structure,
@@ -1666,9 +1666,9 @@ gst_structure_get_enum (const GstStructure * structure,
  * corresponding to the value of the given field.  Caller is responsible
  * for making sure the field exists and has the correct type.
  *
- * Returns: TRUE if the values could be set correctly. If there was no field
+ * Returns: %TRUE if the values could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain a GstFraction, this
- * function returns FALSE.
+ * function returns %FALSE.
  */
 gboolean
 gst_structure_get_fraction (const GstStructure * structure,
@@ -2380,7 +2380,7 @@ priv_gst_structure_parse_fields (gchar * str, gchar ** end,
  * @string: a string representation of a #GstStructure
  *
  * Creates a #GstStructure from a string representation.
- * If end is not NULL, a pointer to the place inside the given string
+ * If end is not %NULL, a pointer to the place inside the given string
  * where parsing ended will be returned.
  *
  * The current implementation of serialization will lead to unexpected results
@@ -2388,7 +2388,7 @@ priv_gst_structure_parse_fields (gchar * str, gchar ** end,
  *
  * Free-function: gst_structure_free
  *
- * Returns: (transfer full): a new #GstStructure or NULL when the string could
+ * Returns: (transfer full): a new #GstStructure or %NULL when the string could
  *     not be parsed. Free with gst_structure_free() after use.
  *
  * Since: 1.2
@@ -2405,12 +2405,12 @@ gst_structure_new_from_string (const gchar * string)
  * @end: (out) (allow-none) (transfer none) (skip): pointer to store the end of the string in.
  *
  * Creates a #GstStructure from a string representation.
- * If end is not NULL, a pointer to the place inside the given string
+ * If end is not %NULL, a pointer to the place inside the given string
  * where parsing ended will be returned.
  *
  * Free-function: gst_structure_free
  *
- * Returns: (transfer full): a new #GstStructure or NULL when the string could
+ * Returns: (transfer full): a new #GstStructure or %NULL when the string could
  *     not be parsed. Free with gst_structure_free() after use.
  */
 GstStructure *
@@ -2488,7 +2488,7 @@ gst_structure_copy_conditional (const GstStructure * structure)
  * Fixates a #GstStructure by changing the given field to the nearest
  * integer to @target that is a subset of the existing field.
  *
- * Returns: TRUE if the structure could be fixated
+ * Returns: %TRUE if the structure could be fixated
  */
 gboolean
 gst_structure_fixate_field_nearest_int (GstStructure * structure,
@@ -2552,7 +2552,7 @@ gst_structure_fixate_field_nearest_int (GstStructure * structure,
  * Fixates a #GstStructure by changing the given field to the nearest
  * double to @target that is a subset of the existing field.
  *
- * Returns: TRUE if the structure could be fixated
+ * Returns: %TRUE if the structure could be fixated
  */
 gboolean
 gst_structure_fixate_field_nearest_double (GstStructure * structure,
@@ -2617,7 +2617,7 @@ gst_structure_fixate_field_nearest_double (GstStructure * structure,
  * Fixates a #GstStructure by changing the given @field_name field to the given
  * @target boolean if that field is not fixed yet.
  *
- * Returns: TRUE if the structure could be fixated
+ * Returns: %TRUE if the structure could be fixated
  */
 gboolean
 gst_structure_fixate_field_boolean (GstStructure * structure,
@@ -2670,7 +2670,7 @@ gst_structure_fixate_field_boolean (GstStructure * structure,
  * Fixates a #GstStructure by changing the given @field_name field to the given
  * @target string if that field is not fixed yet.
  *
- * Returns: TRUE if the structure could be fixated
+ * Returns: %TRUE if the structure could be fixated
  */
 gboolean
 gst_structure_fixate_field_string (GstStructure * structure,
@@ -2725,7 +2725,7 @@ gst_structure_fixate_field_string (GstStructure * structure,
  * fraction to @target_numerator/@target_denominator that is a subset
  * of the existing field.
  *
- * Returns: TRUE if the structure could be fixated
+ * Returns: %TRUE if the structure could be fixated
  */
 gboolean
 gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
@@ -2827,7 +2827,7 @@ default_fixate (GQuark field_id, const GValue * value, gpointer data)
  *
  * Fixates a #GstStructure by changing the given field with its fixated value.
  *
- * Returns: TRUE if the structure field could be fixated
+ * Returns: %TRUE if the structure field could be fixated
  */
 gboolean
 gst_structure_fixate_field (GstStructure * structure, const char *field_name)
@@ -2845,7 +2845,7 @@ gst_structure_fixate_field (GstStructure * structure, const char *field_name)
 
 /* our very own version of G_VALUE_LCOPY that allows NULL return locations
  * (useful for message parsing functions where the return location is user
- * supplied and the user may pass NULL if the value isn't of interest) */
+ * supplied and the user may pass %NULL if the value isn't of interest) */
 #define GST_VALUE_LCOPY(value, var_args, flags, __error, fieldname)           \
 G_STMT_START {                                                                \
   const GValue *_value = (value);                                             \
@@ -2879,7 +2879,7 @@ G_STMT_START {                                                                \
  * valist-variant of gst_structure_get(). Look at the documentation of
  * gst_structure_get() for more details.
  *
- * Returns: TRUE, or FALSE if there was a problem reading any of the fields
+ * Returns: %TRUE, or %FALSE if there was a problem reading any of the fields
  */
 gboolean
 gst_structure_get_valist (const GstStructure * structure,
@@ -2946,7 +2946,7 @@ wrong_type:
  * valist-variant of gst_structure_id_get(). Look at the documentation of
  * gst_structure_id_get() for more details.
  *
- * Returns: TRUE, or FALSE if there was a problem reading any of the fields
+ * Returns: %TRUE, or %FALSE if there was a problem reading any of the fields
  */
 gboolean
 gst_structure_id_get_valist (const GstStructure * structure,
@@ -3013,16 +3013,16 @@ wrong_type:
  * Parses the variable arguments and reads fields from @structure accordingly.
  * Variable arguments should be in the form field name, field type
  * (as a GType), pointer(s) to a variable(s) to hold the return value(s).
- * The last variable argument should be NULL.
+ * The last variable argument should be %NULL.
  *
  * For refcounted (mini)objects you will receive a new reference which
  * you must release with a suitable _unref() when no longer needed. For
  * strings and boxed types you will receive a copy which you will need to
  * release with either g_free() or the suitable function for the boxed type.
  *
- * Returns: FALSE if there was a problem reading any of the fields (e.g.
+ * Returns: %FALSE if there was a problem reading any of the fields (e.g.
  *     because the field requested did not exist, or was of a type other
- *     than the type specified), otherwise TRUE.
+ *     than the type specified), otherwise %TRUE.
  */
 gboolean
 gst_structure_get (const GstStructure * structure, const char *first_fieldname,
@@ -3050,9 +3050,9 @@ gst_structure_get (const GstStructure * structure, const char *first_fieldname,
  * Parses the variable arguments and reads fields from @structure accordingly.
  * Variable arguments should be in the form field id quark, field type
  * (as a GType), pointer(s) to a variable(s) to hold the return value(s).
- * The last variable argument should be NULL (technically it should be a
- * 0 quark, but we require NULL so compilers that support it can check for
- * the NULL terminator and warn if it's not there).
+ * The last variable argument should be %NULL (technically it should be a
+ * 0 quark, but we require %NULL so compilers that support it can check for
+ * the %NULL terminator and warn if it's not there).
  *
  * This function is just like gst_structure_get() only that it is slightly
  * more efficient since it saves the string-to-quark lookup in the global
@@ -3063,9 +3063,9 @@ gst_structure_get (const GstStructure * structure, const char *first_fieldname,
  * strings and boxed types you will receive a copy which you will need to
  * release with either g_free() or the suitable function for the boxed type.
  *
- * Returns: FALSE if there was a problem reading any of the fields (e.g.
+ * Returns: %FALSE if there was a problem reading any of the fields (e.g.
  *     because the field requested did not exist, or was of a type other
- *     than the type specified), otherwise TRUE.
+ *     than the type specified), otherwise %TRUE.
  */
 gboolean
 gst_structure_id_get (const GstStructure * structure, GQuark first_field_id,
@@ -3107,7 +3107,7 @@ gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
  *
  * Tests if the two #GstStructure are equal.
  *
- * Returns: TRUE if the two structures have the same name and field.
+ * Returns: %TRUE if the two structures have the same name and field.
  **/
 gboolean
 gst_structure_is_equal (const GstStructure * structure1,

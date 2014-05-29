@@ -327,7 +327,7 @@ gst_caps_new_simple (const char *media_type, const char *fieldname, ...)
  * @...: additional structures to add
  *
  * Creates a new #GstCaps and adds all the structures listed as
- * arguments.  The list must be NULL-terminated.  The structures
+ * arguments.  The list must be %NULL-terminated.  The structures
  * are not copied; the returned #GstCaps owns the structures.
  *
  * Returns: (transfer full): the new #GstCaps
@@ -351,7 +351,7 @@ gst_caps_new_full (GstStructure * struct1, ...)
  * @var_args: additional structures to add
  *
  * Creates a new #GstCaps and adds all the structures listed as
- * arguments.  The list must be NULL-terminated.  The structures
+ * arguments.  The list must be %NULL-terminated.  The structures
  * are not copied; the returned #GstCaps owns the structures.
  *
  * Returns: (transfer full): the new #GstCaps
@@ -999,7 +999,7 @@ gst_caps_set_value (GstCaps * caps, const char *field, const GValue * value)
  * @varargs: additional parameters
  *
  * Sets fields in a #GstCaps.  The arguments must be passed in the same
- * manner as gst_structure_set(), and be NULL-terminated.
+ * manner as gst_structure_set(), and be %NULL-terminated.
  */
 void
 gst_caps_set_simple_valist (GstCaps * caps, const char *field, va_list varargs)
@@ -1036,7 +1036,7 @@ gst_caps_set_simple_valist (GstCaps * caps, const char *field, va_list varargs)
  * @...: additional parameters
  *
  * Sets fields in a #GstCaps.  The arguments must be passed in the same
- * manner as gst_structure_set(), and be NULL-terminated.
+ * manner as gst_structure_set(), and be %NULL-terminated.
  */
 void
 gst_caps_set_simple (GstCaps * caps, const char *field, ...)
@@ -1059,7 +1059,7 @@ gst_caps_set_simple (GstCaps * caps, const char *field, ...)
  *
  * Determines if @caps represents any media format.
  *
- * Returns: TRUE if @caps represents any format.
+ * Returns: %TRUE if @caps represents any format.
  */
 gboolean
 gst_caps_is_any (const GstCaps * caps)
@@ -1075,7 +1075,7 @@ gst_caps_is_any (const GstCaps * caps)
  *
  * Determines if @caps represents no media formats.
  *
- * Returns: TRUE if @caps represents no formats.
+ * Returns: %TRUE if @caps represents no formats.
  */
 gboolean
 gst_caps_is_empty (const GstCaps * caps)
@@ -1103,7 +1103,7 @@ gst_caps_is_fixed_foreach (GQuark field_id, const GValue * value,
  * one structure, and each field in the structure describes a fixed type.
  * Examples of non-fixed types are GST_TYPE_INT_RANGE and GST_TYPE_LIST.
  *
- * Returns: TRUE if @caps is fixed
+ * Returns: %TRUE if @caps is fixed
  */
 gboolean
 gst_caps_is_fixed (const GstCaps * caps)
@@ -1133,7 +1133,7 @@ gst_caps_is_fixed (const GstCaps * caps)
  * Tests if two #GstCaps are equal.  This function only works on fixed
  * #GstCaps.
  *
- * Returns: TRUE if the arguments represent the same format
+ * Returns: %TRUE if the arguments represent the same format
  */
 gboolean
 gst_caps_is_equal_fixed (const GstCaps * caps1, const GstCaps * caps2)
@@ -1166,7 +1166,7 @@ gst_caps_is_equal_fixed (const GstCaps * caps1, const GstCaps * caps2)
  * every media format that is in the first is also contained in the
  * second.  That is, @caps1 is a subset of @caps2.
  *
- * Returns: TRUE if @caps1 is a subset of @caps2.
+ * Returns: %TRUE if @caps1 is a subset of @caps2.
  */
 gboolean
 gst_caps_is_always_compatible (const GstCaps * caps1, const GstCaps * caps2)
@@ -1322,7 +1322,7 @@ gst_caps_is_subset_structure_full (const GstCaps * caps,
  *
  * Checks if the given caps represent the same set of caps.
  *
- * Returns: TRUE if both caps are equal.
+ * Returns: %TRUE if both caps are equal.
  */
 gboolean
 gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
@@ -1346,7 +1346,7 @@ gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
  *
  * Checks if the given caps are exactly the same set of caps.
  *
- * Returns: TRUE if both caps are strictly equal.
+ * Returns: %TRUE if both caps are strictly equal.
  */
 gboolean
 gst_caps_is_strictly_equal (const GstCaps * caps1, const GstCaps * caps2)

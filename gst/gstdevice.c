@@ -160,7 +160,7 @@ gst_device_set_property (GObject * object, guint prop_id,
 /**
  * gst_device_create_element:
  * @device: a #GstDevice
- * @name: (allow-none): name of new element, or NULL to automatically
+ * @name: (allow-none): name of new element, or %NULL to automatically
  * create a unique name.
  *
  * Returns: (transfer full): a new #GstElement configured to use this device

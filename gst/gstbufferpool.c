@@ -608,7 +608,7 @@ wrong_config:
  * the configuration haven't change, this function will return %TRUE. If the
  * pool is active, this function will try deactivating it. Buffers allocated
  * form this pool must be returned or else this function will do nothing and
- * return FALSE.
+ * return %FALSE.
  *
  * @config is a #GstStructure that contains the configuration parameters for
  * the pool. A default and mandatory set of parameters can be configured with

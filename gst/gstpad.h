@@ -229,7 +229,7 @@ typedef enum {
  * activate function that puts the pad in push mode but elements can
  * override this function to activate the pad in pull mode if they wish.
  *
- * Returns: TRUE if the pad could be activated.
+ * Returns: %TRUE if the pad could be activated.
  */
 typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad, GstObject *parent);
 /**
@@ -241,7 +241,7 @@ typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad, GstObject *parent);
  *
  * The prototype of the push and pull activate functions.
  *
- * Returns: TRUE if the pad could be activated or deactivated.
+ * Returns: %TRUE if the pad could be activated or deactivated.
  */
 typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, GstObject *parent,
                                                                  GstPadMode mode, gboolean active);
@@ -252,7 +252,7 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, GstObject *parent,
  * GstPadChainFunction:
  * @pad: the sink #GstPad that performed the chain.
  * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
- *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          @parent is guaranteed to be not-%NULL and remain valid during the
  *          execution of this function.
  * @buffer: the #GstBuffer that is chained, not %NULL.
  *
@@ -275,7 +275,7 @@ typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstObject *parent,
  * GstPadChainListFunction:
  * @pad: the sink #GstPad that performed the chain.
  * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
- *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          @parent is guaranteed to be not-%NULL and remain valid during the
  *          execution of this function.
  * @list: the #GstBufferList that is chained, not %NULL.
  *
@@ -298,11 +298,11 @@ typedef GstFlowReturn		(*GstPadChainListFunction)	(GstPad *pad, GstObject *paren
  * GstPadGetRangeFunction:
  * @pad: the src #GstPad to perform the getrange on.
  * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
- *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          @parent is guaranteed to be not-%NULL and remain valid during the
  *          execution of this function.
  * @offset: the offset of the range
  * @length: the length of the range
- * @buffer: a memory location to hold the result buffer, cannot be NULL.
+ * @buffer: a memory location to hold the result buffer, cannot be %NULL.
  *
  * This function will be called on source pads when a peer element
  * request a buffer at the specified @offset and @length. If this function
@@ -349,13 +349,13 @@ typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, GstObject *parent
  * GstPadEventFunction:
  * @pad: the #GstPad to handle the event.
  * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
- *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          @parent is guaranteed to be not-%NULL and remain valid during the
  *          execution of this function.
  * @event: the #GstEvent to handle.
  *
  * Function signature to handle an event for the pad.
  *
- * Returns: TRUE if the pad could handle the event.
+ * Returns: %TRUE if the pad could handle the event.
  */
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstObject *parent,
                                                                  GstEvent *event);
@@ -366,7 +366,7 @@ typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstObject *parent,
  * GstPadIterIntLinkFunction:
  * @pad: The #GstPad to query.
  * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
- *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          @parent is guaranteed to be not-%NULL and remain valid during the
  *          execution of this function.
  *
  * The signature of the internal pad link iterator function.
@@ -383,13 +383,13 @@ typedef GstIterator*           (*GstPadIterIntLinkFunction)    (GstPad *pad, Gst
  * GstPadQueryFunction:
  * @pad: the #GstPad to query.
  * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
- *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          @parent is guaranteed to be not-%NULL and remain valid during the
  *          execution of this function.
  * @query: the #GstQuery object to execute
  *
  * The signature of the query function.
  *
- * Returns: TRUE if the query could be performed.
+ * Returns: %TRUE if the query could be performed.
  */
 typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstObject *parent,
                                                                  GstQuery *query);
@@ -400,7 +400,7 @@ typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstObject *parent,
  * GstPadLinkFunction:
  * @pad: the #GstPad that is linked.
  * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
- *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          @parent is guaranteed to be not-%NULL and remain valid during the
  *          execution of this function.
  * @peer: the peer #GstPad of the link
  *
@@ -413,7 +413,7 @@ typedef GstPadLinkReturn	(*GstPadLinkFunction)		(GstPad *pad, GstObject *parent,
  * GstPadUnlinkFunction:
  * @pad: the #GstPad that is linked.
  * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
- *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          @parent is guaranteed to be not-%NULL and remain valid during the
  *          execution of this function.
  *
  * Function signature to handle a unlinking the pad prom its peer.
@@ -430,7 +430,7 @@ typedef void			(*GstPadUnlinkFunction)		(GstPad *pad, GstObject *parent);
  * A forward function is called for all internally linked pads, see
  * gst_pad_forward().
  *
- * Returns: TRUE if the dispatching procedure has to be stopped.
+ * Returns: %TRUE if the dispatching procedure has to be stopped.
  */
 typedef gboolean		(*GstPadForwardFunction)	(GstPad *pad, gpointer user_data);
 
@@ -525,7 +525,7 @@ typedef enum
  * @type: the current probe type
  * @id: the id of the probe
  * @data: type specific data, check the @type field to know the datatype.
- *    This field can be NULL.
+ *    This field can be %NULL.
  * @offset: offset of pull probe, this field is valid when @type contains
  *    #GST_PAD_PROBE_TYPE_PULL
  * @size: size of pull probe, this field is valid when @type contains
@@ -589,7 +589,7 @@ typedef GstPadProbeReturn   (*GstPadProbeCallback)   (GstPad *pad, GstPadProbeIn
  * When this function returns %TRUE, the next event will be
  * returned. When %FALSE is returned, gst_pad_sticky_events_foreach() will return.
  *
- * When @event is set to NULL, the item will be removed from the list of sticky events.
+ * When @event is set to %NULL, the item will be removed from the list of sticky events.
  * @event can be replaced by assigning a new reference to it.
  * This function is responsible for unreffing the old event when
  * removing or modifying.
@@ -898,21 +898,21 @@ struct _GstPadClass {
  * GST_PAD_IS_SRC:
  * @pad: a #GstPad
  *
- * Returns: TRUE if the pad is a source pad (i.e. produces data).
+ * Returns: %TRUE if the pad is a source pad (i.e. produces data).
  */
 #define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
 /**
  * GST_PAD_IS_SINK:
  * @pad: a #GstPad
  *
- * Returns: TRUE if the pad is a sink pad (i.e. consumes data).
+ * Returns: %TRUE if the pad is a sink pad (i.e. consumes data).
  */
 #define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
 /**
  * GST_PAD_IS_LINKED:
  * @pad: a #GstPad
  *
- * Returns: TRUE if the pad is linked to another pad. Use gst_pad_is_linked()
+ * Returns: %TRUE if the pad is linked to another pad. Use gst_pad_is_linked()
  * instead.
  */
 #define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
@@ -920,7 +920,7 @@ struct _GstPadClass {
  * GST_PAD_IS_ACTIVE:
  * @pad: a #GstPad
  *
- * Returns: TRUE if the pad has been activated.
+ * Returns: %TRUE if the pad has been activated.
  */
 #define GST_PAD_IS_ACTIVE(pad)          (GST_PAD_MODE(pad) != GST_PAD_MODE_NONE)
 /**
@@ -1134,8 +1134,8 @@ struct _GstPadClass {
  * GST_PAD_STREAM_TRYLOCK:
  * @pad: a #GstPad
  *
- * Try to take the pad's stream lock, and return TRUE if the lock could be
- * taken, and otherwise FALSE.
+ * Try to take the pad's stream lock, and return %TRUE if the lock could be
+ * taken, and otherwise %FALSE.
  */
 #define GST_PAD_STREAM_TRYLOCK(pad)     g_rec_mutex_trylock(GST_PAD_GET_STREAM_LOCK(pad))
 /**
@@ -1183,7 +1183,7 @@ GstPad*			gst_pad_new_from_static_template	(GstStaticPadTemplate *templ, const g
  *
  * Get the parent of @pad. This function increases the refcount
  * of the parent object so you should gst_object_unref() it after usage.
- * Can return NULL if the pad did not have a parent.
+ * Can return %NULL if the pad did not have a parent.
  *
  * MT safe.
  */

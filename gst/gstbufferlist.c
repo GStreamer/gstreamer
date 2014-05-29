@@ -227,7 +227,7 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
  *
  * Get the buffer at @idx.
  *
- * Returns: (transfer none): the buffer at @idx in @group or NULL when there
+ * Returns: (transfer none): the buffer at @idx in @group or %NULL when there
  *     is no buffer. The buffer remains valid as long as @list is valid.
  */
 GstBuffer *

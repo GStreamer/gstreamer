@@ -174,7 +174,7 @@ gst_child_proxy_get_children_count (GstChildProxy * parent)
  *
  * MT safe.
  *
- * Returns: TRUE if @target and @pspec could be found. FALSE otherwise. In that
+ * Returns: %TRUE if @target and @pspec could be found. %FALSE otherwise. In that
  * case the values for @pspec and @target are not modified. Unref @target after
  * usage. For plain GObjects @target is the same as @object.
  */
@@ -274,7 +274,7 @@ not_found:
  * gst_child_proxy_get_valist:
  * @object: the object to query
  * @first_property_name: name of the first property to get
- * @var_args: return location for the first property, followed optionally by more name/return location pairs, followed by NULL
+ * @var_args: return location for the first property, followed optionally by more name/return location pairs, followed by %NULL
  *
  * Gets properties of the parent object and its children.
  */
@@ -328,7 +328,7 @@ cant_copy:
  * gst_child_proxy_get:
  * @object: the parent object
  * @first_property_name: name of the first property to get
- * @...: return location for the first property, followed optionally by more name/return location pairs, followed by NULL
+ * @...: return location for the first property, followed optionally by more name/return location pairs, followed by %NULL
  *
  * Gets properties of the parent object and its children.
  */
@@ -383,7 +383,7 @@ not_found:
  * gst_child_proxy_set_valist:
  * @object: the parent object
  * @first_property_name: name of the first property to set
- * @var_args: value for the first property, followed optionally by more name/value pairs, followed by NULL
+ * @var_args: value for the first property, followed optionally by more name/value pairs, followed by %NULL
  *
  * Sets properties of the parent object and its children.
  */
@@ -440,7 +440,7 @@ cant_copy:
  * gst_child_proxy_set:
  * @object: the parent object
  * @first_property_name: name of the first property to set
- * @...: value for the first property, followed optionally by more name/value pairs, followed by NULL
+ * @...: value for the first property, followed optionally by more name/value pairs, followed by %NULL
  *
  * Sets properties of the parent object and its children.
  */

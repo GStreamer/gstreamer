@@ -298,9 +298,9 @@ gst_caps_copy (const GstCaps * caps)
  * in some cases), and the reference counts are updated appropriately (the old
  * caps is unreffed, the new is reffed).
  *
- * Either @ncaps or the #GstCaps pointed to by @ocaps may be NULL.
+ * Either @ncaps or the #GstCaps pointed to by @ocaps may be %NULL.
  *
- * Returns: TRUE if @new_caps was different from @old_caps
+ * Returns: %TRUE if @new_caps was different from @old_caps
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC gboolean gst_caps_replace (GstCaps **old_caps, GstCaps *new_caps);
@@ -323,7 +323,7 @@ gst_caps_replace (GstCaps **old_caps, GstCaps *new_caps)
  * function is similar to gst_caps_replace() except that it takes ownership
  * of @new_caps.
  *
- * Returns: TRUE if @new_caps was different from @old_caps
+ * Returns: %TRUE if @new_caps was different from @old_caps
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC gboolean gst_caps_take (GstCaps **old_caps, GstCaps *new_caps);

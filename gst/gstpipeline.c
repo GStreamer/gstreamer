@@ -652,7 +652,7 @@ gst_pipeline_get_clock (GstPipeline * pipeline)
  * always use the given clock even if new clock providers are added
  * to this pipeline.
  *
- * If @clock is NULL all clocking will be disabled which will make
+ * If @clock is %NULL all clocking will be disabled which will make
  * the pipeline run as fast as possible.
  *
  * MT safe.
@@ -683,7 +683,7 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
  * Set the clock for @pipeline. The clock will be distributed
  * to all the elements managed by the pipeline.
  *
- * Returns: TRUE if the clock could be set on the pipeline. FALSE if
+ * Returns: %TRUE if the clock could be set on the pipeline. %FALSE if
  *   some element did not accept the clock.
  *
  * MT safe.

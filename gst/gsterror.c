@@ -80,7 +80,7 @@
  *     currently provided should be enough.  If you find your type of error
  *     does not fit the current codes, you should use FAILED.</para></listitem>
  *   <listitem><para>Don't provide a message if the default one suffices.
- *     this keeps messages more uniform.  Use (NULL) - not forgetting the
+ *     this keeps messages more uniform.  Use (%NULL) - not forgetting the
  *     parentheses.</para></listitem>
  *   <listitem><para>If you do supply a custom message, it should be
  *     marked for translation.  The message should start with a capital
@@ -89,7 +89,7 @@
  *     A user interface will present this message as the first thing a user
  *     sees.  Details, technical info, ... should go in the debug string.
  *   </para></listitem>
- *   <listitem><para>The debug string can be as you like.  Again, use (NULL)
+ *   <listitem><para>The debug string can be as you like.  Again, use (%NULL)
  *     if there's nothing to add - file and line number will still be
  *     passed.  #GST_ERROR_SYSTEM can be used as a shortcut to give
  *     debug information on a system call error.</para></listitem>

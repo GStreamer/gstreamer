@@ -146,7 +146,7 @@ typedef void         (*GstIteratorForeachFunction)     (const GValue * item, gpo
  *
  * A function to be passed to gst_iterator_fold().
  *
- * Returns: TRUE if the fold should continue, FALSE if it should stop.
+ * Returns: %TRUE if the fold should continue, %FALSE if it should stop.
  */
 typedef gboolean          (*GstIteratorFoldFunction)    (const GValue * item, GValue * ret, gpointer user_data);
 

@@ -430,7 +430,7 @@ gst_registry_get_path_list (GstRegistry * registry)
  * Add the plugin to the registry. The plugin-added signal will be emitted.
  * This function will sink @plugin.
  *
- * Returns: TRUE on success.
+ * Returns: %TRUE on success.
  *
  * MT safe.
  */
@@ -556,7 +556,7 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
  * Add the feature to the registry. The feature-added signal will be emitted.
  * This function sinks @feature.
  *
- * Returns: TRUE on success.
+ * Returns: %TRUE on success.
  *
  * MT safe.
  */
@@ -801,8 +801,8 @@ gst_registry_get_device_monitor_factory_list (GstRegistry * registry)
 
   /* Return reffed copy */
   list =
-      gst_plugin_feature_list_copy (registry->priv->
-      device_monitor_factory_list);
+      gst_plugin_feature_list_copy (registry->
+      priv->device_monitor_factory_list);
 
   GST_OBJECT_UNLOCK (registry);
 
@@ -868,7 +868,7 @@ gst_registry_plugin_name_filter (GstPlugin * plugin, const gchar * name)
  * Find the plugin with the given name in the registry.
  * The plugin will be reffed; caller is responsible for unreffing.
  *
- * Returns: (transfer full): the plugin with the given name or NULL if the
+ * Returns: (transfer full): the plugin with the given name or %NULL if the
  *     plugin was not found. gst_object_unref() after usage.
  *
  * MT safe.
@@ -903,7 +903,7 @@ gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
  * Find the pluginfeature with the given name and type in the registry.
  *
  * Returns: (transfer full): the pluginfeature with the given name and type
- *     or NULL if the plugin was not found. gst_object_unref() after usage.
+ *     or %NULL if the plugin was not found. gst_object_unref() after usage.
  *
  * MT safe.
  */
@@ -1055,7 +1055,7 @@ gst_registry_lookup_bn (GstRegistry * registry, const char *basename)
  * Look up a plugin in the given registry with the given filename.
  * If found, plugin is reffed.
  *
- * Returns: (transfer full): the #GstPlugin if found, or NULL if not.
+ * Returns: (transfer full): the #GstPlugin if found, or %NULL if not.
  *     gst_object_unref() after usage.
  */
 GstPlugin *
@@ -1452,8 +1452,8 @@ _priv_gst_registry_cleanup (void)
  * @registry and whether its version is at least the
  * version required.
  *
- * Returns: #TRUE if the feature could be found and the version is
- * the same as the required version or newer, and #FALSE otherwise.
+ * Returns: %TRUE if the feature could be found and the version is
+ * the same as the required version or newer, and %FALSE otherwise.
  */
 gboolean
 gst_registry_check_feature_version (GstRegistry * registry,
@@ -1508,7 +1508,7 @@ load_plugin_func (gpointer data, gpointer user_data)
 
 #ifndef GST_DISABLE_REGISTRY
 /* Unref all plugins marked 'cached', to clear old plugins that no
- * longer exist. Returns TRUE if any plugins were removed */
+ * longer exist. Returns %TRUE if any plugins were removed */
 static gboolean
 gst_registry_remove_cache_plugins (GstRegistry * registry)
 {
@@ -1640,14 +1640,11 @@ scan_and_update_registry (GstRegistry * default_registry,
           g_win32_get_package_installation_directory_of_module
           (_priv_gst_dll_handle);
 
-      dir =
-          g_build_filename (base_dir,
+      dir = g_build_filename (base_dir,
 #ifdef _DEBUG
-                            "debug"
+          "debug"
 #endif
-                            "lib",
-                            "gstreamer-" GST_API_VERSION,
-                            NULL);
+          "lib", "gstreamer-" GST_API_VERSION, NULL);
       GST_DEBUG ("scanning DLL dir %s", dir);
 
       changed |= gst_registry_scan_path_internal (&context, dir);

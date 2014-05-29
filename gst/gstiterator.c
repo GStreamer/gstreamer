@@ -586,8 +586,8 @@ gst_iterator_filter (GstIterator * it, GCompareFunc func,
  * This procedure can be used (and is used internally) to implement the
  * gst_iterator_foreach() and gst_iterator_find_custom() operations.
  *
- * The fold will proceed as long as @func returns TRUE. When the iterator has no
- * more arguments, %GST_ITERATOR_DONE will be returned. If @func returns FALSE,
+ * The fold will proceed as long as @func returns %TRUE. When the iterator has no
+ * more arguments, %GST_ITERATOR_DONE will be returned. If @func returns %FALSE,
  * the fold will stop, and %GST_ITERATOR_OK will be returned. Errors or resyncs
  * will cause fold to return %GST_ITERATOR_ERROR or %GST_ITERATOR_RESYNC as
  * appropriate.
@@ -703,10 +703,10 @@ find_custom_fold_func (const GValue * item, GValue * ret,
  *
  * The iterator will not be freed.
  *
- * This function will return FALSE if an error happened to the iterator
+ * This function will return %FALSE if an error happened to the iterator
  * or if the element wasn't found.
  *
- * Returns: Returns TRUE if the element was found, else FALSE.
+ * Returns: Returns %TRUE if the element was found, else %FALSE.
  *
  * MT safe.
  */

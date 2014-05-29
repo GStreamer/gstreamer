@@ -216,8 +216,8 @@ gst_segment_init (GstSegment * segment, GstFormat format)
  * If the caller can apply a rate change, it should update @segment
  * rate and applied_rate after calling this function.
  *
- * @update will be set to TRUE if a seek should be performed to the segment
- * position field. This field can be FALSE if, for example, only the @rate
+ * @update will be set to %TRUE if a seek should be performed to the segment
+ * position field. This field can be %FALSE if, for example, only the @rate
  * has been changed but not the playback position.
  *
  * Returns: %TRUE if the seek could be performed.
@@ -551,18 +551,18 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
  * in @segment. @start and @stop are compared and clipped to @segment
  * start and stop values.
  *
- * If the function returns FALSE, @start and @stop are known to fall
+ * If the function returns %FALSE, @start and @stop are known to fall
  * outside of @segment and @clip_start and @clip_stop are not updated.
  *
- * When the function returns TRUE, @clip_start and @clip_stop will be
+ * When the function returns %TRUE, @clip_start and @clip_stop will be
  * updated. If @clip_start or @clip_stop are different from @start or @stop
  * respectively, the region fell partially in the segment.
  *
  * Note that when @stop is -1, @clip_stop will be set to the end of the
  * segment. Depending on the use case, this may or may not be what you want.
  *
- * Returns: TRUE if the given @start and @stop times fall partially or
- *     completely in @segment, FALSE if the values are completely outside
+ * Returns: %TRUE if the given @start and @stop times fall partially or
+ *     completely in @segment, %FALSE if the values are completely outside
  *     of the segment.
  */
 gboolean

@@ -33,7 +33,7 @@
  * in the allocated region.
  *
  * Memory is usually created by allocators with a gst_allocator_alloc()
- * method call. When NULL is used as the allocator, the default allocator will
+ * method call. When %NULL is used as the allocator, the default allocator will
  * be used.
  *
  * New allocators can be registered with gst_allocator_register().
@@ -59,7 +59,7 @@
  * memory with an existing memory block at a custom offset and with a custom
  * size.
  *
- * Memory can be efficiently merged when gst_memory_is_span() returns TRUE.
+ * Memory can be efficiently merged when gst_memory_is_span() returns %TRUE.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -224,7 +224,7 @@ gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
  * This function takes ownership of old @mem and returns a reference to a new
  * #GstMemory.
  *
- * Returns: (transfer full): a #GstMemory object mapped with @flags or NULL when
+ * Returns: (transfer full): a #GstMemory object mapped with @flags or %NULL when
  * a mapping is not possible.
  */
 GstMemory *

@@ -130,9 +130,9 @@ gst_context_copy (const GstContext * context)
  * in some cases), and the reference counts are updated appropriately (the old
  * context is unreffed, the new one is reffed).
  *
- * Either @new_context or the #GstContext pointed to by @old_context may be NULL.
+ * Either @new_context or the #GstContext pointed to by @old_context may be %NULL.
  *
- * Returns: TRUE if @new_context was different from @old_context
+ * Returns: %TRUE if @new_context was different from @old_context
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC gboolean gst_context_replace (GstContext **old_context, GstContext *new_context);

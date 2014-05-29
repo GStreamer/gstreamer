@@ -90,7 +90,7 @@ gst_plugin_feature_finalize (GObject * object)
  * feature = loaded_feature;
  * ]|
  *
- * Returns: (transfer full): a reference to the loaded feature, or NULL on error
+ * Returns: (transfer full): a reference to the loaded feature, or %NULL on error
  */
 GstPluginFeature *
 gst_plugin_feature_load (GstPluginFeature * feature)
@@ -307,8 +307,8 @@ gst_plugin_feature_list_debug (GList * list)
  * Checks whether the given plugin feature is at least
  *  the required version
  *
- * Returns: #TRUE if the plugin feature has at least
- *  the required version, otherwise #FALSE.
+ * Returns: %TRUE if the plugin feature has at least
+ *  the required version, otherwise %FALSE.
  */
 gboolean
 gst_plugin_feature_check_version (GstPluginFeature * feature,
