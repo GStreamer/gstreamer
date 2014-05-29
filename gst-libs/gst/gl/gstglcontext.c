@@ -1042,6 +1042,37 @@ gst_gl_context_get_gl_version (GstGLContext * context, gint * maj, gint * min)
 }
 
 /**
+ * gst_gl_context_check_gl_version:
+ * @context: a #GstGLContext
+ * @api: api type required
+ * @maj: major version required
+ * @min: minor version required
+ *
+ * Returns: whether OpenGL context implements the required api and specified
+ * version.
+ */
+gboolean
+gst_gl_context_check_gl_version (GstGLContext * context, GstGLAPI api,
+    gint maj, gint min)
+{
+  g_return_if_fail (GST_GL_IS_CONTEXT (context));
+
+  if (maj > context->priv->gl_major)
+    return FALSE;
+
+  if ((gst_gl_context_get_gl_api (context) & api) == GST_GL_API_NONE)
+    return FALSE;
+
+  if (maj < context->priv->gl_major)
+    return TRUE;
+
+  if (min > context->priv->gl_minor)
+    return FALSE;
+
+  return TRUE;
+}
+
+/**
  * gst_gl_context_check_feature:
  * @context: a #GstGLContext
  * @feature: a platform specific feature
