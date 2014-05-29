@@ -118,8 +118,6 @@ gst_gl_upload_init (GstGLUpload * upload)
   upload->priv->tex_id = 0;
 
   gst_video_info_set_format (&upload->in_info, GST_VIDEO_FORMAT_ENCODED, 0, 0);
-
-  g_mutex_init (&upload->lock);
 }
 
 /**
@@ -154,8 +152,6 @@ gst_gl_upload_finalize (GObject * object)
     gst_object_unref (upload->context);
     upload->context = NULL;
   }
-
-  g_mutex_clear (&upload->lock);
 
   G_OBJECT_CLASS (gst_gl_upload_parent_class)->finalize (object);
 }
@@ -218,11 +214,9 @@ _gst_gl_upload_set_format_unlocked (GstGLUpload * upload,
 void
 gst_gl_upload_set_format (GstGLUpload * upload, GstVideoInfo * in_info)
 {
-  g_mutex_lock (&upload->lock);
-
+  GST_OBJECT_LOCK (upload);
   _gst_gl_upload_set_format_unlocked (upload, in_info);
-
-  g_mutex_unlock (&upload->lock);
+  GST_OBJECT_UNLOCK (upload);
 }
 
 /**
@@ -236,11 +230,9 @@ gst_gl_upload_get_format (GstGLUpload * upload)
 {
   GstVideoInfo *ret;
 
-  g_mutex_lock (&upload->lock);
-
+  GST_OBJECT_LOCK (upload);
   ret = &upload->in_info;
-
-  g_mutex_unlock (&upload->lock);
+  GST_OBJECT_UNLOCK (upload);
 
   return ret;
 }
@@ -411,7 +403,7 @@ gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload * upload,
     return FALSE;
   }
 
-  g_mutex_lock (&upload->lock);
+  GST_OBJECT_LOCK (upload);
 
   upload->priv->meta = meta;
   if (!upload->priv->tex_id)
@@ -427,7 +419,7 @@ gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload * upload,
 
   ret = upload->priv->result;
 
-  g_mutex_unlock (&upload->lock);
+  GST_OBJECT_UNLOCK (upload);
 
   return ret;
 }
@@ -451,11 +443,9 @@ gst_gl_upload_perform_with_data (GstGLUpload * upload, GLuint * texture_id,
 
   g_return_val_if_fail (upload != NULL, FALSE);
 
-  g_mutex_lock (&upload->lock);
-
+  GST_OBJECT_LOCK (upload);
   ret = _gst_gl_upload_perform_with_data_unlocked (upload, texture_id, data);
-
-  g_mutex_unlock (&upload->lock);
+  GST_OBJECT_UNLOCK (upload);
 
   return ret;
 }

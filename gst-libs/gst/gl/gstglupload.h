@@ -46,8 +46,6 @@ struct _GstGLUpload
   /* <private> */
   GstObject        parent;
 
-  GMutex           lock;
-
   GstGLContext    *context;
   GstGLColorConvert *convert;
 
