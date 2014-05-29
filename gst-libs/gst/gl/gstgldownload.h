@@ -46,8 +46,6 @@ struct _GstGLDownload
   /* <private> */
   GstObject        parent;
 
-  GMutex           lock;
-
   GstGLContext     *context;
   GstGLColorConvert *convert;
 
