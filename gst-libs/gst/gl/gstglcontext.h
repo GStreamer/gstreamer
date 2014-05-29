@@ -135,6 +135,7 @@ gboolean      gst_gl_context_set_window (GstGLContext *context, GstGLWindow *win
 GstGLWindow * gst_gl_context_get_window (GstGLContext *context);
 
 void          gst_gl_context_get_gl_version (GstGLContext *context, gint *maj, gint *min);
+gboolean      gst_gl_context_check_gl_version (GstGLContext * context, GstGLAPI api, gint maj, gint min);
 gboolean      gst_gl_context_check_feature (GstGLContext *context, const gchar *feature);
 
 /* FIXME: remove */
