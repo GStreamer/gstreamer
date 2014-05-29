@@ -1001,6 +1001,8 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
             gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/mpeg",
             "mpegversion", G_TYPE_INT, 4, "systemstream", G_TYPE_BOOLEAN, FALSE,
             NULL);
+        gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
+                encode, "video/x-xvid", NULL));
         if (encode) {
           gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
                   encode, "video/x-divx", "divxversion", G_TYPE_INT, 5, NULL));
@@ -1008,8 +1010,6 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
                   encode, "video/x-divx", "divxversion", GST_TYPE_INT_RANGE, 4,
                   5, NULL));
-          gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
-                  encode, "video/x-xvid", NULL));
           gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
                   encode, "video/x-3ivx", NULL));
         }
@@ -2944,16 +2944,29 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
     {
       const gchar *mime = gst_structure_get_name (str);
 
+      context->flags |= CODEC_FLAG_4MV;
+
       if (!strcmp (mime, "video/x-divx"))
         context->codec_tag = GST_MAKE_FOURCC ('D', 'I', 'V', 'X');
-      else if (!strcmp (mime, "video/x-xvid"))
+      else if (!strcmp (mime, "video/x-xvid")) {
         context->codec_tag = GST_MAKE_FOURCC ('X', 'V', 'I', 'D');
-      else if (!strcmp (mime, "video/x-3ivx"))
+        /* Advanced Simple Profile */
+        context->flags |= CODEC_FLAG_GMC | CODEC_FLAG_QPEL;
+      } else if (!strcmp (mime, "video/x-3ivx"))
         context->codec_tag = GST_MAKE_FOURCC ('3', 'I', 'V', '1');
-      else if (!strcmp (mime, "video/mpeg"))
+      else if (!strcmp (mime, "video/mpeg")) {
+        const gchar *profile;
+
         context->codec_tag = GST_MAKE_FOURCC ('m', 'p', '4', 'v');
-    }
+
+        profile = gst_structure_get_string (str, "profile");
+        if (profile) {
+          if (g_strcmp0 (profile, "advanced-simple") == 0)
+            context->flags |= CODEC_FLAG_GMC | CODEC_FLAG_QPEL;
+        }
+      }
       break;
+    }
 
     case AV_CODEC_ID_SVQ3:
       /* FIXME: this is a workaround for older gst-plugins releases
