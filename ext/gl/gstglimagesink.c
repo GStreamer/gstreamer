@@ -759,6 +759,7 @@ static GstFlowReturn
 gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
+  GstBuffer *stored_buffer;
 
   GST_TRACE ("rendering buffer:%p", buf);
 
@@ -773,8 +774,11 @@ gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   /* Avoid to release the texture while drawing */
   GST_GLIMAGE_SINK_LOCK (glimage_sink);
   glimage_sink->redisplay_texture = glimage_sink->next_tex;
-  gst_buffer_replace (&glimage_sink->stored_buffer, buf);
+  stored_buffer = glimage_sink->stored_buffer;
+  glimage_sink->stored_buffer = gst_buffer_ref (buf);
   GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
+  if (stored_buffer)
+    gst_buffer_unref (stored_buffer);
 
   /* Ask the underlying window to redraw its content */
   if (!gst_glimage_sink_redisplay (glimage_sink))
