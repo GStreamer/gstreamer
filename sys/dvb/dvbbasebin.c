@@ -71,6 +71,7 @@ enum
   PROP_INVERSION,
   PROP_PROGRAM_NUMBERS,
   PROP_STATS_REPORTING_INTERVAL,
+  PROP_TUNING_TIMEOUT,
   PROP_DELSYS,
   PROP_PILOT,
   PROP_ROLLOFF,
@@ -128,6 +129,14 @@ static void dvb_base_bin_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
 static void dvb_base_bin_program_destroy (gpointer data);
+
+/* Proxy callbacks for dvbsrc signals */
+static void tuning_start_signal_cb (GObject * object, GParamSpec * pspec,
+    DvbBaseBin * dvbbasebin);
+static void tuning_done_signal_cb (GObject * object, GParamSpec * pspec,
+    DvbBaseBin * dvbbasebin);
+static void tuning_fail_signal_cb (GObject * object, GParamSpec * pspec,
+    DvbBaseBin * dvbbasebin);
 
 #define dvb_base_bin_parent_class parent_class
 G_DEFINE_TYPE_EXTENDED (DvbBaseBin, dvb_base_bin, GST_TYPE_BIN,
@@ -205,6 +214,28 @@ static guint signals [LAST_SIGNAL] = { 0 };
 */
 
 static void
+tuning_start_signal_cb (GObject * object, GParamSpec * pspec,
+    DvbBaseBin * dvbbasebin)
+{
+  g_object_notify (G_OBJECT (dvbbasebin), "tuning-start");
+}
+
+static void
+tuning_done_signal_cb (GObject * object, GParamSpec * pspec,
+    DvbBaseBin * dvbbasebin)
+{
+  g_object_notify (G_OBJECT (dvbbasebin), "tuning-done");
+}
+
+static void
+tuning_fail_signal_cb (GObject * object, GParamSpec * pspec,
+    DvbBaseBin * dvbbasebin)
+{
+  g_object_notify (G_OBJECT (dvbbasebin), "tuning-fail");
+}
+
+
+static void
 dvb_base_bin_class_init (DvbBaseBinClass * klass)
 {
   GObjectClass *gobject_class;
@@ -234,6 +265,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
     {PROP_HIERARCHY, "hierarchy"},
     {PROP_INVERSION, "inversion"},
     {PROP_STATS_REPORTING_INTERVAL, "stats-reporting-interval"},
+    {PROP_TUNING_TIMEOUT, "tuning-timeout"},
     {PROP_DELSYS, "delsys"},
     {PROP_PILOT, "pilot"},
     {PROP_ROLLOFF, "rolloff"},
@@ -361,6 +393,14 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin)
   gst_element_link_many (dvbbasebin->dvbsrc,
       dvbbasebin->buffer_queue, dvbbasebin->tsparse, NULL);
 
+  /* Proxy dvbsrc signals */
+  g_signal_connect (dvbbasebin->dvbsrc, "tuning-start",
+      G_CALLBACK (tuning_start_signal_cb), dvbbasebin);
+  g_signal_connect (dvbbasebin->dvbsrc, "tuning-done",
+      G_CALLBACK (tuning_done_signal_cb), dvbbasebin);
+  g_signal_connect (dvbbasebin->dvbsrc, "tuning-fail",
+      G_CALLBACK (tuning_fail_signal_cb), dvbbasebin);
+
   /* Expose tsparse source pad */
   pad = gst_element_get_static_pad (dvbbasebin->tsparse, "src");
   ghost = gst_ghost_pad_new ("src", pad);
@@ -478,6 +518,7 @@ dvb_base_bin_set_property (GObject * object, guint prop_id,
     case PROP_HIERARCHY:
     case PROP_INVERSION:
     case PROP_STATS_REPORTING_INTERVAL:
+    case PROP_TUNING_TIMEOUT:
     case PROP_DELSYS:
     case PROP_PILOT:
     case PROP_ROLLOFF:
@@ -516,6 +557,7 @@ dvb_base_bin_get_property (GObject * object, guint prop_id,
     case PROP_HIERARCHY:
     case PROP_INVERSION:
     case PROP_STATS_REPORTING_INTERVAL:
+    case PROP_TUNING_TIMEOUT:
     case PROP_DELSYS:
     case PROP_PILOT:
     case PROP_ROLLOFF:
