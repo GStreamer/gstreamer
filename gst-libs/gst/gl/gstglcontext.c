@@ -1015,7 +1015,7 @@ gboolean
 gst_gl_context_check_gl_version (GstGLContext * context, GstGLAPI api,
     gint maj, gint min)
 {
-  g_return_if_fail (GST_GL_IS_CONTEXT (context));
+  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
 
   if (maj > context->priv->gl_major)
     return FALSE;
