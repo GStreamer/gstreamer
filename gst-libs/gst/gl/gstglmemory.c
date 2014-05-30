@@ -75,6 +75,9 @@ static GstAllocator *_gl_allocator;
 #ifndef GL_STREAM_COPY
 #define GL_STREAM_COPY 0x88E2
 #endif
+#ifndef GL_UNPACK_ROW_LENGTH
+#define GL_UNPACK_ROW_LENGTH 0x0CF2
+#endif
 
 typedef struct
 {
@@ -386,16 +389,11 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
 
   gl_format = _gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
 
-#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
   if (USING_OPENGL (context) || USING_GLES3 (context)) {
     gl->PixelStorei (GL_UNPACK_ROW_LENGTH, gl_mem->unpack_length);
-  }
-#endif
-#if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (context)) {
+  } else if (USING_GLES2 (context)) {
     gl->PixelStorei (GL_UNPACK_ALIGNMENT, gl_mem->unpack_length);
   }
-#endif
 
   GST_CAT_LOG (GST_CAT_GL_MEMORY, "upload for texture id:%u, %ux%u",
       gl_mem->tex_id, gl_mem->width, gl_mem->height);
@@ -405,16 +403,12 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
       gl_format, gl_type, gl_mem->data);
 
   /* Reset to default values */
-#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
   if (USING_OPENGL (context) || USING_GLES3 (context)) {
     gl->PixelStorei (GL_UNPACK_ROW_LENGTH, 0);
-  }
-#endif
-#if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (context)) {
+  } else if (USING_GLES2 (context)) {
     gl->PixelStorei (GL_UNPACK_ALIGNMENT, 4);
   }
-#endif
+
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
   GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
@@ -435,13 +429,10 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
         gl_mem->tex_type);
     return;
   }
-#if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
+
   if (USING_OPENGL (gl_mem->context) || USING_GLES3 (gl_mem->context)) {
     gl_mem->unpack_length = gl_mem->stride / n_gl_bytes;
-  } else
-#endif
-#if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (gl_mem->context)) {
+  } else if (USING_GLES2 (gl_mem->context)) {
     guint j = 8;
 
     while (j >= n_gl_bytes) {
@@ -493,7 +484,6 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
       }
     }
   }
-#endif
 }
 
 static void
