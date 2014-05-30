@@ -68,13 +68,6 @@ gst_gl_api_to_string (GstGLAPI api)
       str = g_string_new (GST_GL_API_GLES2_NAME);
     }
   }
-  if (api & GST_GL_API_GLES3) {
-    if (str) {
-      g_string_append (str, " " GST_GL_API_GLES3_NAME);
-    } else {
-      str = g_string_new (GST_GL_API_GLES3_NAME);
-    }
-  }
 
 out:
   if (!str)
@@ -116,9 +109,6 @@ gst_gl_api_from_string (const gchar * apis_s)
         apis = &apis[5];
       } else if (g_strstr_len (apis, 5, GST_GL_API_GLES2_NAME)) {
         ret |= GST_GL_API_GLES2;
-        apis = &apis[5];
-      } else if (g_strstr_len (apis, 5, GST_GL_API_GLES3_NAME)) {
-        ret |= GST_GL_API_GLES3;
         apis = &apis[5];
       } else {
         GST_ERROR ("Error parsing \'%s\'", apis);

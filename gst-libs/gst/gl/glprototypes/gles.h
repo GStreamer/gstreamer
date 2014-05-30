@@ -39,9 +39,10 @@
  */
 
 GST_GL_EXT_BEGIN (only_in_both_gles,
-                  255, 255,
                   GST_GL_API_GLES1 |
                   GST_GL_API_GLES2,
+                  255, 255,
+                  1, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, DepthRangef,
@@ -51,16 +52,18 @@ GST_GL_EXT_FUNCTION (void, ClearDepthf,
 GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (only_in_gles1,
-                255, 255,
                 GST_GL_API_GLES1,
+                255, 255,
+                1, 0,
                 "\0",
                 "\0")
 GST_GL_EXT_FUNCTION (void, ClipPlanef, (GLenum plane, const GLfloat *equation))
 GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (gles2_only_api,
-                  255, 255,
                   GST_GL_API_GLES2,
+                  255, 255,
+                  2, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, ReleaseShaderCompiler, (void))
@@ -77,8 +80,10 @@ GST_GL_EXT_FUNCTION (void, ShaderBinary,
                       GLsizei length))
 GST_GL_EXT_END ()
 
-GST_GL_EXT_BEGIN (IMG_multisampled_render_to_texture, 255, 255,
-                  0, /* not in either GLES */
+GST_GL_EXT_BEGIN (IMG_multisampled_render_to_texture,
+                  GST_GL_API_NONE,
+                  255, 255,
+                  255, 255, /* not in either GLES */
                   "\0",
                   "IMG_multisampled_render_to_texture\0")
 GST_GL_EXT_FUNCTION (void, RenderbufferStorageMultisampleIMG,

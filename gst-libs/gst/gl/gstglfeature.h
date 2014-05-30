@@ -68,13 +68,19 @@ typedef struct _GstGLFeatureData GstGLFeatureData;
 
 struct _GstGLFeatureData
 {
-  /* A minimum GL version which the functions should be defined in
-     without needing an extension. Set to 255,255 if it's only
-     provided in an extension */
-  int min_gl_major, min_gl_minor;
+  /* name of the feature */
+  const char *feature_name;
   /* Flags specifying which versions of GL the feature is available
      in core in */
   GstGLAPI gl_availability;
+  /* A minimum GL version which the functions should be defined in
+     without needing an extension. Set to 255, 255 if it's only
+     provided in an extension */
+  int min_gl_major, min_gl_minor;
+  /* A minimum GLES version which the functions should be defined in
+     without needing an extension. Set to 255, 255 if it's only
+     provided in an extension */
+  int min_gles_major, min_gles_minor;
   /* \0 separated list of namespaces to try. Eg "EXT\0ARB\0" */
   const char *namespaces;
   /* \0 separated list of required extension names without the GL_EXT

@@ -97,7 +97,6 @@ typedef enum {
   GST_GL_API_OPENGL3 = (1 << 1),
   GST_GL_API_GLES1 = (1 << 15),
   GST_GL_API_GLES2 = (1 << 16),
-  GST_GL_API_GLES3 = (1 << 17),
 
   GST_GL_API_ANY = G_MAXUINT32
 } GstGLAPI;
@@ -106,7 +105,6 @@ typedef enum {
 #define GST_GL_API_OPENGL3_NAME "opengl3"
 #define GST_GL_API_GLES1_NAME "gles1"
 #define GST_GL_API_GLES2_NAME "gles2"
-#define GST_GL_API_GLES3_NAME "gles3"
 
 typedef enum
 {
@@ -120,7 +118,8 @@ typedef enum
   GST_GL_PLATFORM_ANY = G_MAXUINT32
 } GstGLPlatform;
 
-#define GST_GL_EXT_BEGIN(name, min_gl, maj_gl, in_gles, ext_suf, ext_name)
+#define GST_GL_EXT_BEGIN(name, gl_availability, min_gl, maj_gl, gles_maj, \
+    gles_min, ext_suf, ext_name)
 #define GST_GL_EXT_FUNCTION(ret, name, args) \
   ret GSTGLAPI (*name) args;
 #define GST_GL_EXT_END()

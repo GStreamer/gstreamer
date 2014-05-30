@@ -40,8 +40,11 @@
 
 /* This lists functions that are unique to GL 2.0 or GLES 2.0 and are
  * not in the old GLSL extensions */
-GST_GL_EXT_BEGIN (shaders_glsl_2_only, 2, 0,
+GST_GL_EXT_BEGIN (shaders_glsl_2_only,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
                   GST_GL_API_GLES2,
+                  2, 0,
+                  2, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (GLuint, CreateProgram,
@@ -90,8 +93,11 @@ GST_GL_EXT_END ()
 
 /* These functions are provided by GL_ARB_shader_objects or are in GL
  * 2.0 core */
-GST_GL_EXT_BEGIN (shader_objects_or_gl2, 2, 0,
+GST_GL_EXT_BEGIN (shader_objects_or_gl2,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
                   GST_GL_API_GLES2,
+                  2, 0,
+                  2, 0,
                   "ARB\0",
                   "shader_objects\0")
 GST_GL_EXT_FUNCTION (void, ShaderSource,
@@ -216,8 +222,11 @@ GST_GL_EXT_END ()
 
 /* These functions are provided by GL_ARB_vertex_shader or are in GL
  * 2.0 core */
-GST_GL_EXT_BEGIN (vertex_shaders, 2, 0,
+GST_GL_EXT_BEGIN (vertex_shaders,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
                   GST_GL_API_GLES2,
+                  2, 0,
+                  2, 0,
                   "ARB\0",
                   "vertex_shader\0")
 GST_GL_EXT_FUNCTION (void, VertexAttribPointer,
@@ -270,8 +279,10 @@ GST_GL_EXT_END ()
 /* These only list functions that come from the old GLSL extensions.
  * Functions that are common to the extensions and GLSL 2.0 should
  * instead be listed in cogl-glsl-functions.h */
-GST_GL_EXT_BEGIN (shader_objects, 255, 255,
-                  0, /* not in either GLES */
+GST_GL_EXT_BEGIN (shader_objects,
+                  GST_GL_API_NONE,
+                  255, 255,
+                  255, 255, /* not in either GLES */
                   "ARB\0",
                   "shader_objects\0")
 GST_GL_EXT_FUNCTION (GLuint, CreateProgramObject,
@@ -303,8 +314,10 @@ GST_GL_EXT_FUNCTION (void, GetAttachedObjects,
 GST_GL_EXT_END ()
 
 /* ARB_fragment_program */
-GST_GL_EXT_BEGIN (arbfp, 255, 255,
-                  0, /* not in either GLES */
+GST_GL_EXT_BEGIN (arbfp,
+                  GST_GL_API_NONE,
+                  255, 255,
+                  255, 255, /* not in either GLES */
                   "ARB\0",
                   "fragment_program\0")
 GST_GL_EXT_FUNCTION (void, GenPrograms,
@@ -329,8 +342,11 @@ GST_GL_EXT_END ()
 
 /* This lists functions that are unique to GL 2.1 or GLES 3.0 and are
  * not in the old GLSL extensions */
-GST_GL_EXT_BEGIN (shaders_2_1, 2, 1,
-                  GST_GL_API_GLES3,
+GST_GL_EXT_BEGIN (shaders_2_1,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
+                  GST_GL_API_GLES2,
+                  2, 1,
+                  3, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, UniformMatrix2x3fv,

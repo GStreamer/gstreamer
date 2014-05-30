@@ -38,8 +38,11 @@
  * License along with this library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-GST_GL_EXT_BEGIN (multitexture_part1, 1, 3,
+GST_GL_EXT_BEGIN (multitexture_part1,
+                  GST_GL_API_OPENGL |
                   GST_GL_API_GLES1,
+                  1, 3,
+                  1, 0,
                   "ARB\0",
                   "multitexture\0")
 GST_GL_EXT_FUNCTION (void, ClientActiveTexture,
@@ -49,8 +52,10 @@ GST_GL_EXT_END ()
 /* These are the core GL functions which are available when the API
    supports fixed-function (ie, GL and GLES1.1) */
 GST_GL_EXT_BEGIN (fixed_function_core,
-                  0, 0,
+                  GST_GL_API_OPENGL |
                   GST_GL_API_GLES1,
+                  0, 0,
+                  1, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, AlphaFunc,
@@ -106,8 +111,9 @@ GST_GL_EXT_END ()
 
 /* Eventually we want to remove this category */
 GST_GL_EXT_BEGIN (fixed_function_gl_only,
+                  GST_GL_API_OPENGL,
                   0, 0,
-                  0,
+                  0, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, PushAttrib,

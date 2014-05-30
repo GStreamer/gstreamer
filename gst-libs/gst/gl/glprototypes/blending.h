@@ -38,8 +38,11 @@
  * License along with this library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-GST_GL_EXT_BEGIN (blending, 1, 2,
+GST_GL_EXT_BEGIN (blending,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
                   GST_GL_API_GLES2,
+                  1, 2,
+                  2, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, BlendEquation,
@@ -52,8 +55,11 @@ GST_GL_EXT_FUNCTION (void, BlendColor,
 GST_GL_EXT_END ()
 
 /* Optional, declared in 1.4 or GLES 1.2 */
-GST_GL_EXT_BEGIN (blend_func_separate, 1, 4,
+GST_GL_EXT_BEGIN (blend_func_separate,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
                   GST_GL_API_GLES2,
+                  1, 4,
+                  2, 0,
                   "EXT\0",
                   "blend_func_separate\0")
 GST_GL_EXT_FUNCTION (void, BlendFuncSeparate,
@@ -64,8 +70,11 @@ GST_GL_EXT_FUNCTION (void, BlendFuncSeparate,
 GST_GL_EXT_END ()
 
 /* Optional, declared in 2.0 */
-GST_GL_EXT_BEGIN (blend_equation_separate, 2, 0,
+GST_GL_EXT_BEGIN (blend_equation_separate,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
                   GST_GL_API_GLES2,
+                  2, 0,
+                  2, 0,
                   "EXT\0",
                   "blend_equation_separate\0")
 GST_GL_EXT_FUNCTION (void, BlendEquationSeparate,
@@ -75,8 +84,10 @@ GST_GL_EXT_END ()
 
 /* GL and GLES 2.0 apis */
 GST_GL_EXT_BEGIN (two_point_zero_api,
-                  2, 0,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
                   GST_GL_API_GLES2,
+                  2, 0,
+                  2, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, StencilFuncSeparate,
