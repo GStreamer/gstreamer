@@ -39,8 +39,10 @@
  */
 
 GST_GL_EXT_BEGIN (offscreen,
-                  3, 0,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
                   GST_GL_API_GLES2,
+                  3, 0,
+                  2, 0,
                   /* for some reason the ARB version of this
                      extension doesn't have an ARB suffix for the
                      functions */
@@ -99,8 +101,10 @@ GST_GL_EXT_FUNCTION (GLboolean, IsFramebuffer,
                      (GLuint                framebuffer))
 GST_GL_EXT_END ()
 
-GST_GL_EXT_BEGIN (offscreen_blit, 255, 255,
-                  0, /* not in either GLES */
+GST_GL_EXT_BEGIN (offscreen_blit,
+                  GST_GL_API_NONE,
+                  255, 255,
+                  255, 255, /* not in either GLES */
                   "EXT\0ANGLE\0",
                   "framebuffer_blit\0")
 GST_GL_EXT_FUNCTION (void, BlitFramebuffer,
@@ -116,8 +120,10 @@ GST_GL_EXT_FUNCTION (void, BlitFramebuffer,
                       GLenum                filter))
 GST_GL_EXT_END ()
 
-GST_GL_EXT_BEGIN (framebuffer_discard, 255, 255,
-                  0, /* not in either GLES */
+GST_GL_EXT_BEGIN (framebuffer_discard, 
+                  GST_GL_API_NONE,
+                  255, 255,
+                  255, 255, /* not in either GLES */
                   "EXT\0",
                   "framebuffer_discard\0")
 GST_GL_EXT_FUNCTION (void, DiscardFramebuffer,
@@ -127,16 +133,22 @@ GST_GL_EXT_FUNCTION (void, DiscardFramebuffer,
 GST_GL_EXT_END ()
 
 
-GST_GL_EXT_BEGIN (read_buffer, 1, 0,
-                  GST_GL_API_GLES3,
+GST_GL_EXT_BEGIN (read_buffer,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
+                  GST_GL_API_GLES2,
+                  1, 0,
+                  3, 0,
                   "NV\0",
                   "read_buffer\0")
 GST_GL_EXT_FUNCTION (void, ReadBuffer,
                      (GLenum mode))
 GST_GL_EXT_END ()
 
-GST_GL_EXT_BEGIN (draw_buffers, 2, 1,
-                  GST_GL_API_GLES3,
+GST_GL_EXT_BEGIN (draw_buffers,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
+                  GST_GL_API_GLES2,
+                  2, 1,
+                  3, 0,
                   "ARB\0ATI\0NV\0",
                   "draw_buffers\0")
 GST_GL_EXT_FUNCTION (void, DrawBuffers,

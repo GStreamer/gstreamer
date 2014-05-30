@@ -54,8 +54,9 @@ gst_gl_check_extension (const char *name, const gchar * ext)
 /* Define a set of arrays containing the functions required from GL
    for each feature */
 #define GST_GL_EXT_BEGIN(name,                                            \
+                       gl_availability,                                 \
                        min_gl_major, min_gl_minor,                      \
-                       gles_availability,                               \
+                       min_gles_major, min_gles_minor,                  \
                        namespaces, extension_names)                     \
   static const GstGLFeatureFunction gst_gl_ext_ ## name ## _funcs[] = {
 #define GST_GL_EXT_FUNCTION(ret, name, args)                          \
@@ -66,16 +67,18 @@ gst_gl_check_extension (const char *name, const gchar * ext)
 #include "glprototypes/all_functions.h"
 
 #undef GST_GL_EXT_BEGIN
-#define GST_GL_EXT_BEGIN(name,                                          \
-                       min_gl_major, min_gl_minor,                      \
-                       gles_availability,                               \
-                       namespaces, extension_names)                     \
-  { min_gl_major, min_gl_minor, gles_availability, namespaces,          \
-    extension_names,                                                    \
-    gst_gl_ext_ ## name ## _funcs },
 #undef GST_GL_EXT_FUNCTION
-#define GST_GL_EXT_FUNCTION(ret, name, args)
 #undef GST_GL_EXT_END
+
+#define GST_GL_EXT_BEGIN(name,                                          \
+                       gl_availability,                                 \
+                       min_gl_major, min_gl_minor,                      \
+                       min_gles_major, min_gles_minor,                  \
+                       namespaces, extension_names)                     \
+  { G_STRINGIFY (name), gl_availability, min_gl_major, min_gl_minor, min_gles_major,        \
+    min_gles_minor, namespaces, extension_names,                        \
+    gst_gl_ext_ ## name ## _funcs },
+#define GST_GL_EXT_FUNCTION(ret, name, args)
 #define GST_GL_EXT_END()
 
 static const GstGLFeatureData gst_gl_feature_ext_functions_data[] = {
@@ -149,15 +152,25 @@ _gst_gl_feature_check (GstGLContext * context,
   const char *suffix = NULL;
   int func_num;
   GstGLFuncs *gst_gl = context->gl_vtable;
+  guint gl_min = 0, gl_maj = 0;
   GstGLAPI gl_api = gst_gl_context_get_gl_api (context);
+
+  if (gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)) {
+    gl_maj = data->min_gl_major;
+    gl_min = data->min_gl_minor;
+  } else if (gl_api & (GST_GL_API_GLES1 | GST_GL_API_GLES2)) {
+    gl_maj = data->min_gles_major;
+    gl_min = data->min_gles_minor;
+  }
+
+  GST_DEBUG ("%s, 0x%x, %d.%d vs 0x%x, %d.%d", data->feature_name,
+      data->gl_availability, gl_maj, gl_min,
+      gst_gl_context_get_gl_api (context), gl_major, gl_minor);
 
   /* First check whether the functions should be directly provided by
      GL */
-  if (((gl_api & GST_GL_API_OPENGL) &&
-          GST_GL_CHECK_GL_VERSION (gl_major, gl_minor,
-              data->min_gl_major, data->min_gl_minor)) ||
-      ((gl_api & GST_GL_API_GLES2) &&
-          (data->gl_availability & GST_GL_API_GLES2))) {
+  if (gst_gl_context_check_gl_version (context, data->gl_availability, gl_maj,
+          gl_min)) {
     in_core = TRUE;
     suffix = "";
   } else {
@@ -217,6 +230,7 @@ _gst_gl_feature_check (GstGLContext * context,
    * then set all of the functions pointers to NULL so we can safely
    * do feature testing by just looking at the function pointers */
 error:
+  GST_DEBUG ("failed to find feature %s", data->feature_name);
 
   for (func_num = 0; data->functions[func_num].name; func_num++) {
     *(void **) ((guint8 *) gst_gl +
@@ -224,7 +238,7 @@ error:
   }
 
   if (full_function_name) {
-    GST_TRACE ("failed to find function %s", full_function_name);
+    GST_DEBUG ("failed to find function %s", full_function_name);
     g_free (full_function_name);
   }
 

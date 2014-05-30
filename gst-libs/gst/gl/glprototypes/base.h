@@ -42,8 +42,10 @@
 /* These are the core GL functions which we assume will always be
    available */
 GST_GL_EXT_BEGIN (core,
-                  0, 0,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
                   GST_GL_API_GLES1 | GST_GL_API_GLES2,
+                  1, 0,
+                  1, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, BindTexture,
@@ -178,8 +180,10 @@ GST_GL_EXT_FUNCTION (void, LineWidth, (GLfloat width))
 GST_GL_EXT_FUNCTION (void, PolygonOffset, (GLfloat factor, GLfloat units))
 GST_GL_EXT_END ()
 
-GST_GL_EXT_BEGIN (texture_3d, 1, 2,
-                  0, /* not in either GLES */
+GST_GL_EXT_BEGIN (texture_3d,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3,
+                  1, 2,
+                  255, 255, /* not in either GLES */
                   "OES\0",
                   "texture_3D\0")
 GST_GL_EXT_FUNCTION (void, TexImage3D,
@@ -199,9 +203,10 @@ GST_GL_EXT_FUNCTION (void, TexSubImage3D,
 GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (only_in_both_gles_and_gl_1_3,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
+                  GST_GL_API_GLES1 | GST_GL_API_GLES2,
                   1, 3,
-                  GST_GL_API_GLES1 |
-                  GST_GL_API_GLES2,
+                  1, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, CompressedTexImage2D,
@@ -228,18 +233,21 @@ GST_GL_EXT_FUNCTION (void, SampleCoverage,
 GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (only_in_both_gles_and_gl_1_5,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
+                  GST_GL_API_GLES1 | GST_GL_API_GLES2,
                   1, 5,
-                  GST_GL_API_GLES1 |
-                  GST_GL_API_GLES2,
+                  1, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (void, GetBufferParameteriv,
                      (GLenum target, GLenum pname, GLint* params))
 GST_GL_EXT_END ()
 
-GST_GL_EXT_BEGIN (vbos, 1, 5,
-                  GST_GL_API_GLES1 |
-                  GST_GL_API_GLES2,
+GST_GL_EXT_BEGIN (vbos,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
+                  GST_GL_API_GLES1 | GST_GL_API_GLES2,
+                  1, 5,
+                  1, 0,
                   "ARB\0",
                   "vertex_buffer_object\0")
 GST_GL_EXT_FUNCTION (void, GenBuffers,
@@ -267,11 +275,13 @@ GST_GL_EXT_END ()
 
 /* Available in GL 1.3, the multitexture extension or GLES. These are
    required */
-GST_GL_EXT_BEGIN (multitexture_part0, 1, 3,
-                GST_GL_API_GLES1 |
-                GST_GL_API_GLES2,
-                "ARB\0",
-                "multitexture\0")
+GST_GL_EXT_BEGIN (multitexture_part0,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
+                  GST_GL_API_GLES1 | GST_GL_API_GLES2,
+                  1, 3,
+                  1, 0,
+                  "ARB\0",
+                  "multitexture\0")
 GST_GL_EXT_FUNCTION (void, ActiveTexture,
                    (GLenum                texture))
 GST_GL_EXT_END ()
@@ -279,10 +289,12 @@ GST_GL_EXT_END ()
 
  /* GLES doesn't support mapping buffers in core so this has to be a
    separate check */
-GST_GL_EXT_BEGIN (map_vbos, 1, 5,
-                0, /* not in GLES core */
-                "ARB\0OES\0",
-                "vertex_buffer_object\0mapbuffer\0")
+GST_GL_EXT_BEGIN (map_vbos, 
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3,
+                  1, 5,
+                  255, 255, /* not in GLES core */
+                  "ARB\0OES\0",
+                  "vertex_buffer_object\0mapbuffer\0")
 GST_GL_EXT_FUNCTION (void *, MapBuffer,
                    (GLenum		 target,
                     GLenum		 access))
@@ -291,8 +303,10 @@ GST_GL_EXT_FUNCTION (GLboolean, UnmapBuffer,
 GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (gl3,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
+                  GST_GL_API_GLES2,
                   3, 1,
-                  GST_GL_API_GLES3,
+                  3, 0,
                   "\0",
                   "\0")
 GST_GL_EXT_FUNCTION (const GLubyte*, GetStringi,

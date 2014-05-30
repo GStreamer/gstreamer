@@ -42,11 +42,11 @@
  * Data is uploaded or downloaded from the GPU as is necessary.
  */
 
-#define USING_OPENGL(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL)
-#define USING_OPENGL3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3)
-#define USING_GLES(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES)
-#define USING_GLES2(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
-#define USING_GLES3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES3)
+#define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
+#define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
+#define USING_GLES(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES, 1, 0))
+#define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
+#define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 #define GST_CAT_DEFUALT GST_CAT_GL_MEMORY
@@ -438,7 +438,7 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
 #if GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
   if (USING_OPENGL (gl_mem->context) || USING_GLES3 (gl_mem->context)) {
     gl_mem->unpack_length = gl_mem->stride / n_gl_bytes;
-  }
+  } else
 #endif
 #if GST_GL_HAVE_GLES2
   if (USING_GLES2 (gl_mem->context)) {
