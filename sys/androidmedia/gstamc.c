@@ -42,6 +42,203 @@
 #include <string.h>
 #include <jni.h>
 
+/* getExceptionSummary() and getStackTrace() taken from Android's
+ *   platform/libnativehelper/JNIHelp.cpp
+ * Modified to work with normal C strings and without C++.
+ *
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * Returns a human-readable summary of an exception object. The buffer will
+ * be populated with the "binary" class name and, if present, the
+ * exception message.
+ */
+static gchar *
+getExceptionSummary (JNIEnv * env, jthrowable exception)
+{
+  GString *gs = g_string_new ("");
+  jclass exceptionClass = NULL, classClass = NULL;
+  jmethodID classGetNameMethod, getMessage;
+  jstring classNameStr = NULL, messageStr = NULL;
+  const char *classNameChars, *messageChars;
+
+  /* get the name of the exception's class */
+  exceptionClass = (*env)->GetObjectClass (env, exception);
+  classClass = (*env)->GetObjectClass (env, exceptionClass);
+  classGetNameMethod =
+      (*env)->GetMethodID (env, classClass, "getName", "()Ljava/lang/String;");
+
+  classNameStr =
+      (jstring) (*env)->CallObjectMethod (env, exceptionClass,
+      classGetNameMethod);
+
+  if (classNameStr == NULL) {
+    if ((*env)->ExceptionCheck (env))
+      (*env)->ExceptionClear (env);
+    g_string_append (gs, "<error getting class name>");
+    goto done;
+  }
+
+  classNameChars = (*env)->GetStringUTFChars (env, classNameStr, NULL);
+  if (classNameChars == NULL) {
+    if ((*env)->ExceptionCheck (env))
+      (*env)->ExceptionClear (env);
+    g_string_append (gs, "<error getting class name UTF-8>");
+    goto done;
+  }
+
+  g_string_append (gs, classNameChars);
+
+  (*env)->ReleaseStringUTFChars (env, classNameStr, classNameChars);
+
+  /* if the exception has a detail message, get that */
+  getMessage =
+      (*env)->GetMethodID (env, exceptionClass, "getMessage",
+      "()Ljava/lang/String;");
+  messageStr = (jstring) (*env)->CallObjectMethod (env, exception, getMessage);
+  if (messageStr == NULL) {
+    if ((*env)->ExceptionCheck (env))
+      (*env)->ExceptionClear (env);
+    goto done;
+  }
+  g_string_append (gs, ": ");
+
+  messageChars = (*env)->GetStringUTFChars (env, messageStr, NULL);
+  if (messageChars != NULL) {
+    g_string_append (gs, messageChars);
+    (*env)->ReleaseStringUTFChars (env, messageStr, messageChars);
+  } else {
+    if ((*env)->ExceptionCheck (env))
+      (*env)->ExceptionClear (env);
+    g_string_append (gs, "<error getting message>");
+  }
+
+done:
+  if (exceptionClass)
+    (*env)->DeleteLocalRef (env, exceptionClass);
+  if (classClass)
+    (*env)->DeleteLocalRef (env, classClass);
+  if (classNameStr)
+    (*env)->DeleteLocalRef (env, classNameStr);
+  if (messageStr)
+    (*env)->DeleteLocalRef (env, messageStr);
+
+  return g_string_free (gs, FALSE);
+}
+
+/*
+ * Returns an exception (with stack trace) as a string.
+ */
+static gchar *
+getStackTrace (JNIEnv * env, jthrowable exception)
+{
+  GString *gs = g_string_new ("");
+  jclass stringWriterClass = NULL, printWriterClass = NULL;
+  jclass exceptionClass = NULL;
+  jmethodID stringWriterCtor, stringWriterToStringMethod;
+  jmethodID printWriterCtor, printStackTraceMethod;
+  jobject stringWriter = NULL, printWriter = NULL;
+  jstring messageStr = NULL;
+  const char *utfChars;
+
+  stringWriterClass = (*env)->FindClass (env, "java/io/StringWriter");
+
+  if (stringWriterClass == NULL) {
+    g_string_append (gs, "<error getting java.io.StringWriter class>");
+    goto done;
+  }
+
+  stringWriterCtor =
+      (*env)->GetMethodID (env, stringWriterClass, "<init>", "()V");
+  stringWriterToStringMethod =
+      (*env)->GetMethodID (env, stringWriterClass, "toString",
+      "()Ljava/lang/String;");
+
+  printWriterClass = (*env)->FindClass (env, "java/io/PrintWriter");
+  if (printWriterClass == NULL) {
+    g_string_append (gs, "<error getting java.io.PrintWriter class>");
+    goto done;
+  }
+
+  printWriterCtor =
+      (*env)->GetMethodID (env, printWriterClass, "<init>",
+      "(Ljava/io/Writer;)V");
+  stringWriter = (*env)->NewObject (env, stringWriterClass, stringWriterCtor);
+  if (stringWriter == NULL) {
+    if ((*env)->ExceptionCheck (env))
+      (*env)->ExceptionClear (env);
+    g_string_append (gs, "<error creating new StringWriter instance>");
+    goto done;
+  }
+
+  printWriter =
+      (*env)->NewObject (env, printWriterClass, printWriterCtor, stringWriter);
+  if (printWriter == NULL) {
+    if ((*env)->ExceptionCheck (env))
+      (*env)->ExceptionClear (env);
+    g_string_append (gs, "<error creating new PrintWriter instance>");
+    goto done;
+  }
+
+  exceptionClass = (*env)->GetObjectClass (env, exception);
+  printStackTraceMethod =
+      (*env)->GetMethodID (env, exceptionClass, "printStackTrace",
+      "(Ljava/io/PrintWriter;)V");
+  (*env)->CallVoidMethod (env, exception, printStackTraceMethod, printWriter);
+  if ((*env)->ExceptionCheck (env)) {
+    (*env)->ExceptionClear (env);
+    g_string_append (gs, "<exception while printing stack trace>");
+    goto done;
+  }
+
+  messageStr = (jstring) (*env)->CallObjectMethod (env, stringWriter,
+      stringWriterToStringMethod);
+  if (messageStr == NULL) {
+    if ((*env)->ExceptionCheck (env))
+      (*env)->ExceptionClear (env);
+    g_string_append (gs, "<failed to call StringWriter.toString()>");
+    goto done;
+  }
+
+  utfChars = (*env)->GetStringUTFChars (env, messageStr, NULL);
+  if (utfChars == NULL) {
+    if ((*env)->ExceptionCheck (env))
+      (*env)->ExceptionClear (env);
+    g_string_append (gs, "<failed to get UTF chars for message>");
+    goto done;
+  }
+  (*env)->ReleaseStringUTFChars (env, messageStr, utfChars);
+
+done:
+  if (stringWriterClass)
+    (*env)->DeleteLocalRef (env, stringWriterClass);
+  if (printWriterClass)
+    (*env)->DeleteLocalRef (env, printWriterClass);
+  if (exceptionClass)
+    (*env)->DeleteLocalRef (env, exceptionClass);
+  if (stringWriter)
+    (*env)->DeleteLocalRef (env, stringWriter);
+  if (printWriter)
+    (*env)->DeleteLocalRef (env, printWriter);
+  if (messageStr)
+    (*env)->DeleteLocalRef (env, messageStr);
+
+  return g_string_free (gs, FALSE);
+}
+
 #include <pthread.h>
 
 GST_DEBUG_CATEGORY (gst_amc_debug);
