@@ -934,22 +934,32 @@ gst_v4l2_buffer_pool_poll (GstV4l2BufferPool * pool)
 {
   gint ret;
 
-  if (pool->can_poll_device) {
-    GST_LOG_OBJECT (pool, "polling device");
-    ret = gst_poll_wait (pool->poll, GST_CLOCK_TIME_NONE);
-    if (G_UNLIKELY (ret < 0)) {
-      if (errno == EBUSY)
+  if (!pool->can_poll_device)
+    goto done;
+
+  GST_LOG_OBJECT (pool, "polling device");
+
+again:
+  ret = gst_poll_wait (pool->poll, GST_CLOCK_TIME_NONE);
+  if (G_UNLIKELY (ret < 0)) {
+    switch (errno) {
+      case EBUSY:
         goto stopped;
-      if (errno == ENXIO) {
+      case EAGAIN:
+      case EINTR:
+        goto again;
+      case ENXIO:
         GST_WARNING_OBJECT (pool,
-            "v4l2 device doesn't support polling. Disabling");
+            "v4l2 device doesn't support polling. Disabling"
+            " using libv4l2 in this case may cause deadlocks");
         pool->can_poll_device = FALSE;
-      } else {
-        if (errno != EAGAIN && errno != EINTR)
-          goto select_error;
-      }
+        goto done;
+      default:
+        goto select_error;
     }
   }
+
+done:
   return GST_FLOW_OK;
 
   /* ERRORS */
