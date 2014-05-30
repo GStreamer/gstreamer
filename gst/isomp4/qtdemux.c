@@ -1556,10 +1556,10 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
       GstClockTime ts = gst_util_get_timestamp ();
 #endif
 
-      if (qtdemux->upstream_newsegment || qtdemux->fragmented) {
+      if (qtdemux->upstream_newsegment && qtdemux->fragmented) {
         /* seek should be handled by upstream, we might need to re-download fragments */
         GST_DEBUG_OBJECT (qtdemux,
-            "leting upstream handle seek for smoothstreaming");
+            "let upstream handle seek for fragmented playback");
         goto upstream;
       }
 
