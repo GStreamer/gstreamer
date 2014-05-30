@@ -270,8 +270,10 @@ gst_amc_video_dec_close (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Closing decoder");
 
-  if (self->codec)
+  if (self->codec) {
+    gst_amc_codec_release (self->codec);
     gst_amc_codec_free (self->codec);
+  }
   self->codec = NULL;
 
   self->started = FALSE;
