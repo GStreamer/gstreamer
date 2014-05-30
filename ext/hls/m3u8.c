@@ -50,7 +50,7 @@ gst_m3u8_new (void)
 }
 
 static void
-gst_m3u8_set_uri (GstM3U8 * self, gchar * uri, gchar * base_uri)
+gst_m3u8_set_uri (GstM3U8 * self, gchar * uri, gchar * base_uri, gchar * name)
 {
   g_return_if_fail (self != NULL);
 
@@ -59,6 +59,9 @@ gst_m3u8_set_uri (GstM3U8 * self, gchar * uri, gchar * base_uri)
 
   g_free (self->base_uri);
   self->base_uri = base_uri;
+
+  g_free (self->name);
+  self->name = name;
 }
 
 static void
@@ -68,6 +71,7 @@ gst_m3u8_free (GstM3U8 * self)
 
   g_free (self->uri);
   g_free (self->base_uri);
+  g_free (self->name);
   g_free (self->codecs);
   g_free (self->key);
 
@@ -107,6 +111,85 @@ gst_m3u8_media_file_free (GstM3U8MediaFile * self)
   g_free (self->uri);
   g_free (self->key);
   g_free (self);
+}
+
+static GstM3U8MediaFile *
+gst_m3u8_media_file_copy (const GstM3U8MediaFile * self, gpointer user_data)
+{
+  g_return_if_fail (self != NULL);
+
+  return gst_m3u8_media_file_new (g_strdup (self->uri), g_strdup (self->title),
+      self->duration, self->sequence);
+}
+
+static GstM3U8 *
+_m3u8_copy (const GstM3U8 * self, GstM3U8 * parent)
+{
+  GstM3U8 *dup;
+
+  g_return_if_fail (self != NULL);
+
+  dup = gst_m3u8_new ();
+  dup->uri = g_strdup (self->uri);
+  dup->base_uri = g_strdup (self->base_uri);
+  dup->name = g_strdup (self->name);
+  dup->endlist = self->endlist;
+  dup->version = self->version;
+  dup->targetduration = self->targetduration;
+  dup->allowcache = self->allowcache;
+  dup->key = g_strdup (self->key);
+  dup->bandwidth = self->bandwidth;
+  dup->program_id = self->program_id;
+  dup->codecs = g_strdup (self->codecs);
+  dup->width = self->width;
+  dup->height = self->height;
+  dup->iframe = self->iframe;
+  dup->files =
+      g_list_copy_deep (self->files, (GCopyFunc) gst_m3u8_media_file_copy,
+      NULL);
+
+  /* private */
+  dup->last_data = g_strdup (self->last_data);
+  dup->lists = g_list_copy_deep (self->lists, (GCopyFunc) _m3u8_copy, dup);
+  dup->iframe_lists =
+      g_list_copy_deep (self->iframe_lists, (GCopyFunc) _m3u8_copy, dup);
+  /* NOTE: current_variant will get set in gst_m3u8_copy () */
+  dup->parent = parent;
+  dup->mediasequence = self->mediasequence;
+  return dup;
+}
+
+static GstM3U8 *
+gst_m3u8_copy (const GstM3U8 * self)
+{
+  GList *entry;
+  guint n;
+
+  GstM3U8 *dup = _m3u8_copy (self, NULL);
+
+  if (self->current_variant != NULL) {
+    for (n = 0, entry = self->lists; entry; entry = entry->next, n++) {
+      if (entry == self->current_variant) {
+        dup->current_variant = g_list_nth (dup->lists, n);
+        break;
+      }
+    }
+
+    if (!dup->current_variant) {
+      for (n = 0, entry = self->iframe_lists; entry; entry = entry->next, n++) {
+        if (entry == self->current_variant) {
+          dup->current_variant = g_list_nth (dup->iframe_lists, n);
+          break;
+        }
+      }
+
+      if (!dup->current_variant) {
+        GST_ERROR ("Failed to determine current playlist");
+      }
+    }
+  }
+
+  return dup;
 }
 
 static gboolean
@@ -320,6 +403,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       *r = '\0';
 
     if (data[0] != '#' && data[0] != '\0') {
+      gchar *name = data;
       if (duration <= 0 && list == NULL) {
         GST_LOG ("%s: got line without EXTINF or EXTSTREAMINF, dropping", data);
         goto next_line;
@@ -336,7 +420,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
           gst_m3u8_free (list);
           g_free (data);
         } else {
-          gst_m3u8_set_uri (list, data, NULL);
+          gst_m3u8_set_uri (list, data, NULL, g_strdup (name));
           self->lists = g_list_append (self->lists, list);
         }
         list = NULL;
@@ -397,6 +481,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       GstM3U8 *new_list;
 
       new_list = gst_m3u8_new ();
+      new_list->parent = self;
       new_list->iframe = iframe;
       data = data + (iframe ? 26 : 18);
       while (data && parse_attributes (&data, &a, &v)) {
@@ -420,6 +505,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
               GST_WARNING ("Error while reading RESOLUTION height");
           }
         } else if (iframe && g_str_equal (a, "URI")) {
+          gchar *name;
           gchar *uri = g_strdup (v);
           gchar *urip = uri;
           int len = strlen (uri);
@@ -430,12 +516,15 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
           if (uri[0] == '"')
             uri += 1;
 
+          name = g_strdup (uri);
           uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
           g_free (urip);
 
-          if (uri == NULL)
+          if (uri == NULL) {
+            g_free (name);
             continue;
-          gst_m3u8_set_uri (new_list, uri, NULL);
+          }
+          gst_m3u8_set_uri (new_list, uri, NULL, name);
         }
       }
 
@@ -620,7 +709,7 @@ gst_m3u8_client_new (const gchar * uri, const gchar * base_uri)
   client->sequence_position = 0;
   client->update_failed_count = 0;
   g_mutex_init (&client->lock);
-  gst_m3u8_set_uri (client->main, g_strdup (uri), g_strdup (base_uri));
+  gst_m3u8_set_uri (client->main, g_strdup (uri), g_strdup (base_uri), NULL);
 
   return client;
 }
@@ -692,6 +781,92 @@ gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
   ret = TRUE;
 out:
   GST_M3U8_CLIENT_UNLOCK (self);
+  return ret;
+}
+
+static gint
+_find_m3u8_list_match (const GstM3U8 * a, const GstM3U8 * b)
+{
+  if (g_strcmp0 (a->name, b->name) == 0 &&
+      a->bandwidth == b->bandwidth &&
+      a->program_id == b->program_id &&
+      g_strcmp0 (a->codecs, b->codecs) == 0 &&
+      a->width == b->width &&
+      a->height == b->height && a->iframe == b->iframe) {
+    return 0;
+  }
+
+  return 1;
+}
+
+gboolean
+gst_m3u8_client_update_variant_playlist (GstM3U8Client * self, gchar * data,
+    const gchar * uri, const gchar * base_uri)
+{
+  gboolean ret = FALSE;
+  GList *list_entry, *unmatched_lists;
+  GstM3U8Client *new_client;
+  GstM3U8 *old;
+
+  g_return_val_if_fail (self != NULL, FALSE);
+
+  new_client = gst_m3u8_client_new (uri, base_uri);
+  if (gst_m3u8_client_update (new_client, data)) {
+    if (!new_client->main->lists) {
+      GST_ERROR
+          ("Cannot update variant playlist: New playlist is not a variant playlist");
+      gst_m3u8_client_free (new_client);
+      return FALSE;
+    }
+
+    GST_M3U8_CLIENT_LOCK (self);
+
+    if (!self->main->lists) {
+      GST_ERROR
+          ("Cannot update variant playlist: Current playlist is not a variant playlist");
+      goto out;
+    }
+
+    /* Now see if the variant playlist still has the same lists */
+    unmatched_lists = g_list_copy (self->main->lists);
+    for (list_entry = new_client->main->lists; list_entry;
+        list_entry = list_entry->next) {
+      GList *match = g_list_find_custom (unmatched_lists, list_entry->data,
+          (GCompareFunc) _find_m3u8_list_match);
+      if (match)
+        unmatched_lists = g_list_remove_link (unmatched_lists, match);
+    }
+
+    if (unmatched_lists != NULL) {
+      g_list_free (unmatched_lists);
+
+      /* We should attempt to handle the case where playlists are dropped/replaced,
+       * and possibly switch over to a comparable (not neccessarily identical)
+       * playlist.
+       */
+      GST_FIXME
+          ("Cannot update variant playlist, unable to match all playlists");
+      goto out;
+    }
+
+    /* Switch out the variant playlist */
+    old = self->main;
+
+    self->main = gst_m3u8_copy (new_client->main);
+    if (self->main->lists)
+      self->current = self->main->current_variant->data;
+    else
+      self->current = self->main;
+
+    gst_m3u8_free (old);
+
+    ret = TRUE;
+
+  out:
+    GST_M3U8_CLIENT_UNLOCK (self);
+  }
+
+  gst_m3u8_client_free (new_client);
   return ret;
 }
 

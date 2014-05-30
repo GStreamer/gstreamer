@@ -1490,15 +1490,65 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
   GstFragment *download;
   GstBuffer *buf;
   gchar *playlist;
-  gboolean updated = FALSE;
-  const gchar *uri = gst_m3u8_client_get_current_uri (demux->client);
+  gboolean main_checked = FALSE, updated = FALSE;
+  const gchar *uri;
 
+retry:
+  uri = gst_m3u8_client_get_current_uri (demux->client);
   download =
       gst_uri_downloader_fetch_uri (demux->downloader, uri,
       demux->client->main ? demux->client->main->uri : NULL, TRUE, TRUE, TRUE,
       err);
-  if (download == NULL)
-    return FALSE;
+  if (download == NULL) {
+    if (update && !main_checked
+        && gst_m3u8_client_has_variant_playlist (demux->client)
+        && demux->client->main) {
+      GError *err2 = NULL;
+      GST_INFO_OBJECT (demux,
+          "Updating playlist %s failed, attempt to refresh variant playlist %s",
+          uri, demux->client->main->uri);
+      download =
+          gst_uri_downloader_fetch_uri (demux->downloader,
+          demux->client->main->uri, NULL, TRUE, TRUE, TRUE, &err2);
+      g_clear_error (&err2);
+      if (download != NULL) {
+        gchar *base_uri;
+
+        buf = gst_fragment_get_buffer (download);
+        playlist = gst_hls_src_buf_to_utf8_playlist (buf);
+
+        if (playlist == NULL) {
+          GST_WARNING_OBJECT (demux,
+              "Failed to validate variant playlist encoding");
+          return FALSE;
+        }
+
+        if (download->redirect_permanent && download->redirect_uri) {
+          uri = download->redirect_uri;
+          base_uri = NULL;
+        } else {
+          uri = download->uri;
+          base_uri = download->redirect_uri;
+        }
+
+        if (!gst_m3u8_client_update_variant_playlist (demux->client, playlist,
+                uri, base_uri)) {
+          GST_WARNING_OBJECT (demux, "Failed to update the variant playlist");
+          return FALSE;
+        }
+
+        g_object_unref (download);
+
+        g_clear_error (err);
+        main_checked = TRUE;
+        goto retry;
+      } else {
+        return FALSE;
+      }
+    } else {
+      return FALSE;
+    }
+  }
 
   /* Set the base URI of the playlist to the redirect target if any */
   GST_M3U8_CLIENT_LOCK (demux->client);
@@ -1540,8 +1590,8 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
 
     GST_M3U8_CLIENT_LOCK (demux->client);
     last_sequence =
-        GST_M3U8_MEDIA_FILE (g_list_last (demux->client->current->files)->
-        data)->sequence;
+        GST_M3U8_MEDIA_FILE (g_list_last (demux->client->current->
+            files)->data)->sequence;
 
     if (demux->client->sequence >= last_sequence - 3) {
       GST_DEBUG_OBJECT (demux, "Sequence is beyond playlist. Moving back to %u",
@@ -1642,8 +1692,8 @@ retry_failover_protection:
     gst_m3u8_client_set_current (demux->client, previous_variant->data);
     /*  Try a lower bitrate (or stop if we just tried the lowest) */
     if (GST_M3U8 (previous_variant->data)->iframe && new_bandwidth ==
-        GST_M3U8 (g_list_first (demux->client->main->iframe_lists)->
-            data)->bandwidth)
+        GST_M3U8 (g_list_first (demux->client->main->iframe_lists)->data)->
+        bandwidth)
       return FALSE;
     else if (!GST_M3U8 (previous_variant->data)->iframe && new_bandwidth ==
         GST_M3U8 (g_list_first (demux->client->main->lists)->data)->bandwidth)

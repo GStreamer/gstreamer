@@ -40,6 +40,8 @@ struct _GstM3U8
   gchar *uri;                   /* actually downloaded URI */
   gchar *base_uri;              /* URI to use as base for resolving relative URIs.
                                  * This will be different to uri in case of redirects */
+  gchar *name;                  /* This will be the "name" of the playlist, the original
+                                 * relative/absolute uri in a variant playlist */
 
   gboolean endlist;             /* if ENDLIST has been reached */
   gint version;                 /* last EXT-X-VERSION */
@@ -90,6 +92,7 @@ struct _GstM3U8Client
 GstM3U8Client *gst_m3u8_client_new (const gchar * uri, const gchar * base_uri);
 void gst_m3u8_client_free (GstM3U8Client * client);
 gboolean gst_m3u8_client_update (GstM3U8Client * client, gchar * data);
+gboolean gst_m3u8_client_update_variant_playlist (GstM3U8Client * client, gchar * data, const gchar * uri, const gchar * base_uri);
 void gst_m3u8_client_set_current (GstM3U8Client * client, GstM3U8 * m3u8);
 gboolean gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
