@@ -544,12 +544,6 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
           break;
         }
 
-        /* just ignore request that does not come from us
-         * they are un-necessary and it overloads the drawer
-         */
-        if (!event.xexpose.send_event)
-          break;
-
         /* We need to redraw on expose */
         if (window->draw) {
           context = gst_gl_window_get_context (window);
