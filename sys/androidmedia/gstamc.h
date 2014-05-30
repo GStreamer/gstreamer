@@ -81,44 +81,44 @@ struct _GstAmcBufferInfo {
 
 extern GQuark gst_amc_codec_info_quark;
 
-GstAmcCodec * gst_amc_codec_new (const gchar *name);
+GstAmcCodec * gst_amc_codec_new (const gchar *name, GError **err);
 void gst_amc_codec_free (GstAmcCodec * codec);
 
-gboolean gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, gint flags);
-GstAmcFormat * gst_amc_codec_get_output_format (GstAmcCodec * codec);
+gboolean gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, gint flags, GError **err);
+GstAmcFormat * gst_amc_codec_get_output_format (GstAmcCodec * codec, GError **err);
 
-gboolean gst_amc_codec_start (GstAmcCodec * codec);
-gboolean gst_amc_codec_stop (GstAmcCodec * codec);
-gboolean gst_amc_codec_flush (GstAmcCodec * codec);
-gboolean gst_amc_codec_release (GstAmcCodec * codec);
+gboolean gst_amc_codec_start (GstAmcCodec * codec, GError **err);
+gboolean gst_amc_codec_stop (GstAmcCodec * codec, GError **err);
+gboolean gst_amc_codec_flush (GstAmcCodec * codec, GError **err);
+gboolean gst_amc_codec_release (GstAmcCodec * codec, GError **err);
 
-GstAmcBuffer * gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers);
-GstAmcBuffer * gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers);
+GstAmcBuffer * gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers, GError **err);
+GstAmcBuffer * gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers, GError **err);
 void gst_amc_codec_free_buffers (GstAmcBuffer * buffers, gsize n_buffers);
 
-gint gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs);
-gint gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec, GstAmcBufferInfo *info, gint64 timeoutUs);
+gint gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs, GError **err);
+gint gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec, GstAmcBufferInfo *info, gint64 timeoutUs, GError **err);
 
-gboolean gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index, const GstAmcBufferInfo *info);
-gboolean gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index);
+gboolean gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index, const GstAmcBufferInfo *info, GError **err);
+gboolean gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index, GError **err);
 
 
-GstAmcFormat * gst_amc_format_new_audio (const gchar *mime, gint sample_rate, gint channels);
-GstAmcFormat * gst_amc_format_new_video (const gchar *mime, gint width, gint height);
+GstAmcFormat * gst_amc_format_new_audio (const gchar *mime, gint sample_rate, gint channels, GError **err);
+GstAmcFormat * gst_amc_format_new_video (const gchar *mime, gint width, gint height, GError **err);
 void gst_amc_format_free (GstAmcFormat * format);
 
-gchar * gst_amc_format_to_string (GstAmcFormat * format);
+gchar * gst_amc_format_to_string (GstAmcFormat * format, GError **err);
 
-gboolean gst_amc_format_contains_key (GstAmcFormat *format, const gchar *key);
+gboolean gst_amc_format_contains_key (GstAmcFormat *format, const gchar *key, GError **err);
 
-gboolean gst_amc_format_get_float (GstAmcFormat *format, const gchar *key, gfloat *value);
-void gst_amc_format_set_float (GstAmcFormat *format, const gchar *key, gfloat value);
-gboolean gst_amc_format_get_int (GstAmcFormat *format, const gchar *key, gint *value);
-void gst_amc_format_set_int (GstAmcFormat *format, const gchar *key, gint value);
-gboolean gst_amc_format_get_string (GstAmcFormat *format, const gchar *key, gchar **value);
-void gst_amc_format_set_string (GstAmcFormat *format, const gchar *key, const gchar *value);
-gboolean gst_amc_format_get_buffer (GstAmcFormat *format, const gchar *key, guint8 **data, gsize *size);
-void gst_amc_format_set_buffer (GstAmcFormat *format, const gchar *key, guint8 *data, gsize size);
+gboolean gst_amc_format_get_float (GstAmcFormat *format, const gchar *key, gfloat *value, GError **err);
+void gst_amc_format_set_float (GstAmcFormat *format, const gchar *key, gfloat value, GError **err);
+gboolean gst_amc_format_get_int (GstAmcFormat *format, const gchar *key, gint *value, GError **err);
+void gst_amc_format_set_int (GstAmcFormat *format, const gchar *key, gint value, GError **err);
+gboolean gst_amc_format_get_string (GstAmcFormat *format, const gchar *key, gchar **value, GError **err);
+void gst_amc_format_set_string (GstAmcFormat *format, const gchar *key, const gchar *value, GError **err);
+gboolean gst_amc_format_get_buffer (GstAmcFormat *format, const gchar *key, guint8 **data, gsize *size, GError **err);
+void gst_amc_format_set_buffer (GstAmcFormat *format, const gchar *key, guint8 *data, gsize size, GError **err);
 
 GstVideoFormat gst_amc_color_format_to_video_format (const GstAmcCodecInfo * codec_info, const gchar * mime, gint color_format);
 gint gst_amc_video_format_to_color_format (const GstAmcCodecInfo * codec_info, const gchar * mime, GstVideoFormat video_format);

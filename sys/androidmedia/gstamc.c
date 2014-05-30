@@ -443,8 +443,53 @@ create_failed:
   }
 }
 
+static void
+gst_amc_set_error_string (JNIEnv * env, GQuark domain, gint code, GError ** err,
+    const gchar * message)
+{
+  jthrowable exception;
+
+  if (!err)
+    return;
+
+  if ((*env)->ExceptionCheck (env)) {
+    if ((exception = (*env)->ExceptionOccurred (env))) {
+      gchar *exception_description, *exception_stacktrace;
+
+      exception_description = getExceptionSummary (env, exception);
+      exception_stacktrace = getStackTrace (env, exception);
+      g_set_error (err, domain, code, "%s: %s\n%s", message,
+          exception_description, exception_stacktrace);
+      g_free (exception_description);
+      g_free (exception_stacktrace);
+    } else {
+      g_set_error (err, domain, code, "%s", message);
+    }
+    (*env)->ExceptionClear (env);
+  } else {
+    g_set_error (err, domain, code, "%s", message);
+  }
+}
+
+G_GNUC_PRINTF (5, 6)
+     static void
+         gst_amc_set_error (JNIEnv * env, GQuark domain, gint code,
+    GError ** err, const gchar * format, ...)
+{
+  gchar *message;
+  va_list var_args;
+
+  va_start (var_args, format);
+  message = g_strdup_vprintf (format, var_args);
+  va_end (var_args);
+
+  gst_amc_set_error_string (env, domain, code, err, message);
+
+  g_free (message);
+}
+
 GstAmcCodec *
-gst_amc_codec_new (const gchar * name)
+gst_amc_codec_new (const gchar * name, GError ** err)
 {
   JNIEnv *env;
   GstAmcCodec *codec = NULL;
@@ -456,8 +501,11 @@ gst_amc_codec_new (const gchar * name)
   env = gst_amc_get_jni_env ();
 
   name_str = (*env)->NewStringUTF (env, name);
-  if (name_str == NULL)
+  if (name_str == NULL) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, err,
+        "Failed to create Java String");
     goto error;
+  }
 
   codec = g_slice_new0 (GstAmcCodec);
 
@@ -465,15 +513,15 @@ gst_amc_codec_new (const gchar * name)
       (*env)->CallStaticObjectMethod (env, media_codec.klass,
       media_codec.create_by_codec_name, name_str);
   if ((*env)->ExceptionCheck (env) || !object) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to create codec '%s'", name);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, err,
+        "Failed to create codec '%s'", name);
     goto error;
   }
 
   codec->object = (*env)->NewGlobalRef (env, object);
   if (!codec->object) {
-    GST_ERROR ("Failed to create global reference");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, err,
+        "Failed to create global codec reference");
     goto error;
   }
 
@@ -506,7 +554,8 @@ gst_amc_codec_free (GstAmcCodec * codec)
 }
 
 gboolean
-gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, gint flags)
+gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, gint flags,
+    GError ** err)
 {
   JNIEnv *env;
   gboolean ret = TRUE;
@@ -519,8 +568,8 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, gint flags)
   (*env)->CallVoidMethod (env, codec->object, media_codec.configure,
       format->object, NULL, NULL, flags);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS, err,
+        "Failed to configure codec");
     ret = FALSE;
     goto done;
   }
@@ -531,7 +580,7 @@ done:
 }
 
 GstAmcFormat *
-gst_amc_codec_get_output_format (GstAmcCodec * codec)
+gst_amc_codec_get_output_format (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
   GstAmcFormat *ret = NULL;
@@ -545,8 +594,8 @@ gst_amc_codec_get_output_format (GstAmcCodec * codec)
       (*env)->CallObjectMethod (env, codec->object,
       media_codec.get_output_format);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS, err,
+        "Failed to get output format");
     goto done;
   }
 
@@ -554,8 +603,8 @@ gst_amc_codec_get_output_format (GstAmcCodec * codec)
 
   ret->object = (*env)->NewGlobalRef (env, object);
   if (!ret->object) {
-    GST_ERROR ("Failed to create global reference");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS, err,
+        "Failed to create global format reference");
     g_slice_free (GstAmcFormat, ret);
     ret = NULL;
   }
@@ -568,7 +617,7 @@ done:
 }
 
 gboolean
-gst_amc_codec_start (GstAmcCodec * codec)
+gst_amc_codec_start (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
   gboolean ret = TRUE;
@@ -579,8 +628,8 @@ gst_amc_codec_start (GstAmcCodec * codec)
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.start);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to start codec");
     ret = FALSE;
     goto done;
   }
@@ -591,7 +640,7 @@ done:
 }
 
 gboolean
-gst_amc_codec_stop (GstAmcCodec * codec)
+gst_amc_codec_stop (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
   gboolean ret = TRUE;
@@ -602,8 +651,8 @@ gst_amc_codec_stop (GstAmcCodec * codec)
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.stop);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to stop codec");
     ret = FALSE;
     goto done;
   }
@@ -614,7 +663,7 @@ done:
 }
 
 gboolean
-gst_amc_codec_flush (GstAmcCodec * codec)
+gst_amc_codec_flush (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
   gboolean ret = TRUE;
@@ -625,8 +674,8 @@ gst_amc_codec_flush (GstAmcCodec * codec)
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.flush);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to flush codec");
     ret = FALSE;
     goto done;
   }
@@ -637,7 +686,7 @@ done:
 }
 
 gboolean
-gst_amc_codec_release (GstAmcCodec * codec)
+gst_amc_codec_release (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
   gboolean ret = TRUE;
@@ -648,8 +697,8 @@ gst_amc_codec_release (GstAmcCodec * codec)
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.release);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to release codec");
     ret = FALSE;
     goto done;
   }
@@ -677,7 +726,8 @@ gst_amc_codec_free_buffers (GstAmcBuffer * buffers, gsize n_buffers)
 }
 
 GstAmcBuffer *
-gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers)
+gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers,
+    GError ** err)
 {
   JNIEnv *env;
   jobject output_buffers = NULL;
@@ -695,15 +745,15 @@ gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers)
       (*env)->CallObjectMethod (env, codec->object,
       media_codec.get_output_buffers);
   if ((*env)->ExceptionCheck (env) || !output_buffers) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to get output buffers");
     goto done;
   }
 
   n_output_buffers = (*env)->GetArrayLength (env, output_buffers);
   if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get output buffers array length");
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to get output buffers array length");
     goto done;
   }
 
@@ -715,23 +765,23 @@ gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers)
 
     buffer = (*env)->GetObjectArrayElement (env, output_buffers, i);
     if ((*env)->ExceptionCheck (env) || !buffer) {
-      (*env)->ExceptionClear (env);
-      GST_ERROR ("Failed to get output buffer %d", i);
+      gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+          "Failed to get output buffer %d", i);
       goto error;
     }
 
     ret[i].object = (*env)->NewGlobalRef (env, buffer);
     (*env)->DeleteLocalRef (env, buffer);
     if (!ret[i].object) {
-      (*env)->ExceptionClear (env);
-      GST_ERROR ("Failed to create global reference %d", i);
+      gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+          "Failed to create global output buffer reference %d", i);
       goto error;
     }
 
     ret[i].data = (*env)->GetDirectBufferAddress (env, ret[i].object);
     if (!ret[i].data) {
-      (*env)->ExceptionClear (env);
-      GST_ERROR ("Failed to get buffer address %d", i);
+      gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+          "Failed to get output buffer address %d", i);
       goto error;
     }
     ret[i].size = (*env)->GetDirectBufferCapacity (env, ret[i].object);
@@ -752,7 +802,8 @@ error:
 }
 
 GstAmcBuffer *
-gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers)
+gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers,
+    GError ** err)
 {
   JNIEnv *env;
   jobject input_buffers = NULL;
@@ -770,15 +821,15 @@ gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers)
       (*env)->CallObjectMethod (env, codec->object,
       media_codec.get_input_buffers);
   if ((*env)->ExceptionCheck (env) || !input_buffers) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to get input buffers");
     goto done;
   }
 
   n_input_buffers = (*env)->GetArrayLength (env, input_buffers);
   if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get input buffers array length");
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to get input buffers array length");
     goto done;
   }
 
@@ -790,23 +841,23 @@ gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers)
 
     buffer = (*env)->GetObjectArrayElement (env, input_buffers, i);
     if ((*env)->ExceptionCheck (env) || !buffer) {
-      (*env)->ExceptionClear (env);
-      GST_ERROR ("Failed to get input buffer %d", i);
+      gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+          "Failed to get input buffer %d", i);
       goto error;
     }
 
     ret[i].object = (*env)->NewGlobalRef (env, buffer);
     (*env)->DeleteLocalRef (env, buffer);
     if (!ret[i].object) {
-      (*env)->ExceptionClear (env);
-      GST_ERROR ("Failed to create global reference %d", i);
+      gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+          "Failed to create global input buffer reference %d", i);
       goto error;
     }
 
     ret[i].data = (*env)->GetDirectBufferAddress (env, ret[i].object);
     if (!ret[i].data) {
-      (*env)->ExceptionClear (env);
-      GST_ERROR ("Failed to get buffer address %d", i);
+      gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+          "Failed to get input buffer address %d", i);
       goto error;
     }
     ret[i].size = (*env)->GetDirectBufferCapacity (env, ret[i].object);
@@ -827,7 +878,8 @@ error:
 }
 
 gint
-gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs)
+gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs,
+    GError ** err)
 {
   JNIEnv *env;
   gint ret = G_MININT;
@@ -840,8 +892,8 @@ gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs)
       (*env)->CallIntMethod (env, codec->object,
       media_codec.dequeue_input_buffer, timeoutUs);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to dequeue input buffer");
     ret = G_MININT;
     goto done;
   }
@@ -853,23 +905,23 @@ done:
 
 static gboolean
 gst_amc_codec_fill_buffer_info (JNIEnv * env, jobject buffer_info,
-    GstAmcBufferInfo * info)
+    GstAmcBufferInfo * info, GError ** err)
 {
   g_return_val_if_fail (buffer_info != NULL, FALSE);
 
   info->flags =
       (*env)->GetIntField (env, buffer_info, media_codec_buffer_info.flags);
   if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get buffer info field");
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to get buffer info flags");
     return FALSE;
   }
 
   info->offset =
       (*env)->GetIntField (env, buffer_info, media_codec_buffer_info.offset);
   if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get buffer info field");
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to get buffer info offset");
     return FALSE;
   }
 
@@ -877,8 +929,8 @@ gst_amc_codec_fill_buffer_info (JNIEnv * env, jobject buffer_info,
       (*env)->GetLongField (env, buffer_info,
       media_codec_buffer_info.presentation_time_us);
   if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get buffer info field");
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to get buffer info pts");
     return FALSE;
   }
 
@@ -886,7 +938,8 @@ gst_amc_codec_fill_buffer_info (JNIEnv * env, jobject buffer_info,
       (*env)->GetIntField (env, buffer_info, media_codec_buffer_info.size);
   if ((*env)->ExceptionCheck (env)) {
     (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get buffer info field");
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to get buffer info size");
     return FALSE;
   }
 
@@ -895,7 +948,7 @@ gst_amc_codec_fill_buffer_info (JNIEnv * env, jobject buffer_info,
 
 gint
 gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
-    GstAmcBufferInfo * info, gint64 timeoutUs)
+    GstAmcBufferInfo * info, gint64 timeoutUs, GError ** err)
 {
   JNIEnv *env;
   gint ret = G_MININT;
@@ -909,8 +962,8 @@ gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
       (*env)->NewObject (env, media_codec_buffer_info.klass,
       media_codec_buffer_info.constructor);
   if (!info_o) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create buffer info instance");
     goto done;
   }
 
@@ -918,13 +971,13 @@ gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
       (*env)->CallIntMethod (env, codec->object,
       media_codec.dequeue_output_buffer, info_o, timeoutUs);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to dequeue output buffer");
     ret = G_MININT;
     goto done;
   }
 
-  if (!gst_amc_codec_fill_buffer_info (env, info_o, info)) {
+  if (!gst_amc_codec_fill_buffer_info (env, info_o, info, err)) {
     ret = G_MININT;
     goto done;
   }
@@ -939,7 +992,7 @@ done:
 
 gboolean
 gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index,
-    const GstAmcBufferInfo * info)
+    const GstAmcBufferInfo * info, GError ** err)
 {
   JNIEnv *env;
   gboolean ret = TRUE;
@@ -952,8 +1005,8 @@ gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index,
   (*env)->CallVoidMethod (env, codec->object, media_codec.queue_input_buffer,
       index, info->offset, info->size, info->presentation_time_us, info->flags);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to queue input buffer");
     ret = FALSE;
     goto done;
   }
@@ -964,7 +1017,8 @@ done:
 }
 
 gboolean
-gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index)
+gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index,
+    GError ** err)
 {
   JNIEnv *env;
   gboolean ret = TRUE;
@@ -976,8 +1030,8 @@ gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index)
   (*env)->CallVoidMethod (env, codec->object, media_codec.release_output_buffer,
       index, JNI_FALSE);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to release output buffer");
     ret = FALSE;
     goto done;
   }
@@ -988,7 +1042,8 @@ done:
 }
 
 GstAmcFormat *
-gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels)
+gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels,
+    GError ** err)
 {
   JNIEnv *env;
   GstAmcFormat *format = NULL;
@@ -1000,8 +1055,11 @@ gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels)
   env = gst_amc_get_jni_env ();
 
   mime_str = (*env)->NewStringUTF (env, mime);
-  if (mime_str == NULL)
+  if (mime_str == NULL) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, err,
+        "Failed to create Java string");
     goto error;
+  }
 
   format = g_slice_new0 (GstAmcFormat);
 
@@ -1009,15 +1067,15 @@ gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels)
       (*env)->CallStaticObjectMethod (env, media_format.klass,
       media_format.create_audio_format, mime_str, sample_rate, channels);
   if ((*env)->ExceptionCheck (env) || !object) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to create format '%s'", mime);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, err,
+        "Failed to create format instance '%s'", mime);
     goto error;
   }
 
   format->object = (*env)->NewGlobalRef (env, object);
   if (!format->object) {
-    GST_ERROR ("Failed to create global reference");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, err,
+        "Failed to create global format reference");
     goto error;
   }
 
@@ -1038,7 +1096,8 @@ error:
 }
 
 GstAmcFormat *
-gst_amc_format_new_video (const gchar * mime, gint width, gint height)
+gst_amc_format_new_video (const gchar * mime, gint width, gint height,
+    GError ** err)
 {
   JNIEnv *env;
   GstAmcFormat *format = NULL;
@@ -1050,8 +1109,11 @@ gst_amc_format_new_video (const gchar * mime, gint width, gint height)
   env = gst_amc_get_jni_env ();
 
   mime_str = (*env)->NewStringUTF (env, mime);
-  if (mime_str == NULL)
+  if (mime_str == NULL) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, err,
+        "Failed to create Java string");
     goto error;
+  }
 
   format = g_slice_new0 (GstAmcFormat);
 
@@ -1059,15 +1121,15 @@ gst_amc_format_new_video (const gchar * mime, gint width, gint height)
       (*env)->CallStaticObjectMethod (env, media_format.klass,
       media_format.create_video_format, mime_str, width, height);
   if ((*env)->ExceptionCheck (env) || !object) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to create format '%s'", mime);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, err,
+        "Failed to create format instance '%s'", mime);
     goto error;
   }
 
   format->object = (*env)->NewGlobalRef (env, object);
   if (!format->object) {
-    GST_ERROR ("Failed to create global reference");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, err,
+        "Failed to create global format reference");
     goto error;
   }
 
@@ -1100,7 +1162,7 @@ gst_amc_format_free (GstAmcFormat * format)
 }
 
 gchar *
-gst_amc_format_to_string (GstAmcFormat * format)
+gst_amc_format_to_string (GstAmcFormat * format, GError ** err)
 {
   JNIEnv *env;
   jstring v_str = NULL;
@@ -1114,15 +1176,15 @@ gst_amc_format_to_string (GstAmcFormat * format)
   v_str =
       (*env)->CallObjectMethod (env, format->object, media_format.to_string);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to convert format to string");
     goto done;
   }
 
   v = (*env)->GetStringUTFChars (env, v_str, NULL);
   if (!v) {
-    GST_ERROR ("Failed to convert string to UTF8");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to get UTF8 string");
     goto done;
   }
 
@@ -1138,7 +1200,8 @@ done:
 }
 
 gboolean
-gst_amc_format_contains_key (GstAmcFormat * format, const gchar * key)
+gst_amc_format_contains_key (GstAmcFormat * format, const gchar * key,
+    GError ** err)
 {
   JNIEnv *env;
   gboolean ret = FALSE;
@@ -1150,15 +1213,18 @@ gst_amc_format_contains_key (GstAmcFormat * format, const gchar * key)
   env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
-  if (!key_str)
+  if (!key_str) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create Java string");
     goto done;
+  }
 
   ret =
       (*env)->CallBooleanMethod (env, format->object, media_format.contains_key,
       key_str);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to check if format contains key '%s'", key);
     goto done;
   }
 
@@ -1171,7 +1237,7 @@ done:
 
 gboolean
 gst_amc_format_get_float (GstAmcFormat * format, const gchar * key,
-    gfloat * value)
+    gfloat * value, GError ** err)
 {
   JNIEnv *env;
   gboolean ret = FALSE;
@@ -1185,15 +1251,18 @@ gst_amc_format_get_float (GstAmcFormat * format, const gchar * key,
   env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
-  if (!key_str)
+  if (!key_str) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create Java string");
     goto done;
+  }
 
   *value =
       (*env)->CallFloatMethod (env, format->object, media_format.get_float,
       key_str);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed get float key '%s'", key);
     goto done;
   }
   ret = TRUE;
@@ -1207,7 +1276,7 @@ done:
 
 void
 gst_amc_format_set_float (GstAmcFormat * format, const gchar * key,
-    gfloat value)
+    gfloat value, GError ** err)
 {
   JNIEnv *env;
   jstring key_str = NULL;
@@ -1218,14 +1287,17 @@ gst_amc_format_set_float (GstAmcFormat * format, const gchar * key,
   env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
-  if (!key_str)
+  if (!key_str) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create Java string");
     goto done;
+  }
 
   (*env)->CallVoidMethod (env, format->object, media_format.set_float, key_str,
       value);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed set float key '%s'", key);
     goto done;
   }
 
@@ -1235,7 +1307,8 @@ done:
 }
 
 gboolean
-gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value)
+gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value,
+    GError ** err)
 {
   JNIEnv *env;
   gboolean ret = FALSE;
@@ -1249,15 +1322,18 @@ gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value)
   env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
-  if (!key_str)
+  if (!key_str) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create Java string");
     goto done;
+  }
 
   *value =
       (*env)->CallIntMethod (env, format->object, media_format.get_integer,
       key_str);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed get integer key '%s'", key);
     goto done;
   }
   ret = TRUE;
@@ -1271,7 +1347,8 @@ done:
 }
 
 void
-gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value)
+gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value,
+    GError ** err)
 {
   JNIEnv *env;
   jstring key_str = NULL;
@@ -1282,14 +1359,17 @@ gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value)
   env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
-  if (!key_str)
+  if (!key_str) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create Java string");
     goto done;
+  }
 
   (*env)->CallVoidMethod (env, format->object, media_format.set_integer,
       key_str, value);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed set integer key '%s'", key);
     goto done;
   }
 
@@ -1300,7 +1380,7 @@ done:
 
 gboolean
 gst_amc_format_get_string (GstAmcFormat * format, const gchar * key,
-    gchar ** value)
+    gchar ** value, GError ** err)
 {
   JNIEnv *env;
   gboolean ret = FALSE;
@@ -1316,22 +1396,25 @@ gst_amc_format_get_string (GstAmcFormat * format, const gchar * key,
   env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
-  if (!key_str)
+  if (!key_str) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create Java string");
     goto done;
+  }
 
   v_str =
       (*env)->CallObjectMethod (env, format->object, media_format.get_string,
       key_str);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed get string key '%s'", key);
     goto done;
   }
 
   v = (*env)->GetStringUTFChars (env, v_str, NULL);
   if (!v) {
-    GST_ERROR ("Failed to convert string to UTF8");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed get string UTF8 characters");
     goto done;
   }
 
@@ -1352,7 +1435,7 @@ done:
 
 void
 gst_amc_format_set_string (GstAmcFormat * format, const gchar * key,
-    const gchar * value)
+    const gchar * value, GError ** err)
 {
   JNIEnv *env;
   jstring key_str = NULL;
@@ -1365,18 +1448,24 @@ gst_amc_format_set_string (GstAmcFormat * format, const gchar * key,
   env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
-  if (!key_str)
+  if (!key_str) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create Java string");
     goto done;
+  }
 
   v_str = (*env)->NewStringUTF (env, value);
-  if (!v_str)
+  if (!v_str) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create Java string");
     goto done;
+  }
 
   (*env)->CallVoidMethod (env, format->object, media_format.set_string, key_str,
       v_str);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed set string key '%s'", key);
     goto done;
   }
 
@@ -1389,7 +1478,7 @@ done:
 
 gboolean
 gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
-    guint8 ** data, gsize * size)
+    guint8 ** data, gsize * size, GError ** err)
 {
   JNIEnv *env;
   gboolean ret = FALSE;
@@ -1406,21 +1495,24 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
   env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
-  if (!key_str)
+  if (!key_str) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create Java string");
     goto done;
+  }
 
   v = (*env)->CallObjectMethod (env, format->object,
       media_format.get_byte_buffer, key_str);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed get buffer key '%s'", key);
     goto done;
   }
 
   *data = (*env)->GetDirectBufferAddress (env, v);
   if (!data) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get buffer address");
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed get buffer address");
     goto done;
   }
   *size = (*env)->GetDirectBufferCapacity (env, v);
@@ -1439,7 +1531,7 @@ done:
 
 void
 gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
-    guint8 * data, gsize size)
+    guint8 * data, gsize size, GError ** err)
 {
   JNIEnv *env;
   jstring key_str = NULL;
@@ -1452,19 +1544,25 @@ gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
   env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
-  if (!key_str)
+  if (!key_str) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed to create Java string");
     goto done;
+  }
 
   /* FIXME: The memory must remain valid until the codec is stopped */
   v = (*env)->NewDirectByteBuffer (env, data, size);
-  if (!v)
+  if (!v) {
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed create Java byte buffer");
     goto done;
+  }
 
   (*env)->CallVoidMethod (env, format->object, media_format.set_byte_buffer,
       key_str, v);
   if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+    gst_amc_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, err,
+        "Failed set buffer key '%s'", key);
     goto done;
   }
 
