@@ -161,6 +161,7 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
   gint stride, slice_height;
   GstAmcFormat *format = NULL;
   GstVideoInfo *info = &input_state->info;
+  GError *err = NULL;
 
   klass = GST_AMC_VIDEO_ENC_GET_CLASS (encoder);
   s = gst_caps_get_structure (src_caps, 0);
@@ -213,10 +214,11 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
     return NULL;
   }
 
-  format = gst_amc_format_new_video (mime, info->width, info->height);
+  format = gst_amc_format_new_video (mime, info->width, info->height, &err);
   if (!format) {
     GST_ERROR_OBJECT (encoder, "Failed to create a \"%s,%dx%d\" MediaFormat",
         mime, info->width, info->height);
+    GST_ELEMENT_ERROR_FROM_ERROR (encoder, err);
     return NULL;
   }
 
@@ -226,12 +228,20 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
   if (color_format == -1)
     goto video_format_failed_to_convert;
 
-  gst_amc_format_set_int (format, "bitrate", encoder->bitrate);
-  gst_amc_format_set_int (format, "color-format", color_format);
+  gst_amc_format_set_int (format, "bitrate", encoder->bitrate, &err);
+  if (err)
+    GST_ELEMENT_WARNING_FROM_ERROR (encoder, err);
+  gst_amc_format_set_int (format, "color-format", color_format, &err);
+  if (err)
+    GST_ELEMENT_WARNING_FROM_ERROR (encoder, err);
   stride = GST_ROUND_UP_4 (info->width);        /* safe (?) */
-  gst_amc_format_set_int (format, "stride", stride);
+  gst_amc_format_set_int (format, "stride", stride, &err);
+  if (err)
+    GST_ELEMENT_WARNING_FROM_ERROR (encoder, err);
   slice_height = info->height;
-  gst_amc_format_set_int (format, "slice-height", slice_height);
+  gst_amc_format_set_int (format, "slice-height", slice_height, &err);
+  if (err)
+    GST_ELEMENT_WARNING_FROM_ERROR (encoder, err);
 
   if (profile_string) {
     if (amc_profile.id == -1)
@@ -250,11 +260,16 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
   }
 
   if (encoder->i_frame_int)
-    gst_amc_format_set_int (format, "i-frame-interval", encoder->i_frame_int);
+    gst_amc_format_set_int (format, "i-frame-interval", encoder->i_frame_int,
+        &err);
+  if (err)
+    GST_ELEMENT_WARNING_FROM_ERROR (encoder, err);
 
   if (info->fps_d)
     gst_amc_format_set_float (format, "frame-rate",
-        ((gfloat) info->fps_n) / info->fps_d);
+        ((gfloat) info->fps_n) / info->fps_d, &err);
+  if (err)
+    GST_ELEMENT_WARNING_FROM_ERROR (encoder, err);
 
   encoder->format = info->finfo->format;
   if (!gst_amc_color_format_info_set (&encoder->color_format_info,
@@ -306,21 +321,24 @@ caps_from_amc_format (GstAmcFormat * amc_format)
   gint amc_profile, amc_level;
   gfloat frame_rate = 0.0;
   gint fraction_n, fraction_d;
+  GError *err = NULL;
 
-  if (!gst_amc_format_get_string (amc_format, "mime", &mime)) {
-    GST_ERROR ("Failed to get 'mime'");
+  if (!gst_amc_format_get_string (amc_format, "mime", &mime, &err)) {
+    GST_ERROR ("Failed to get 'mime': %s", err->message);
+    g_clear_error (&err);
     return NULL;
   }
 
-  if (!gst_amc_format_get_int (amc_format, "width", &width) ||
-      !gst_amc_format_get_int (amc_format, "height", &height)) {
-    GST_ERROR ("Failed to get size");
+  if (!gst_amc_format_get_int (amc_format, "width", &width, &err) ||
+      !gst_amc_format_get_int (amc_format, "height", &height, &err)) {
+    GST_ERROR ("Failed to get size: %s", err->message);
+    g_clear_error (&err);
 
     g_free (mime);
     return NULL;
   }
 
-  gst_amc_format_get_float (amc_format, "frame-rate", &frame_rate);
+  gst_amc_format_get_float (amc_format, "frame-rate", &frame_rate, NULL);
   gst_util_double_to_fraction (frame_rate, &fraction_n, &fraction_d);
 
   if (strcmp (mime, "video/mp4v-es") == 0) {
@@ -331,7 +349,7 @@ caps_from_amc_format (GstAmcFormat * amc_format)
         "systemstream", G_TYPE_BOOLEAN, FALSE,
         "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
-    if (gst_amc_format_get_int (amc_format, "profile", &amc_profile)) {
+    if (gst_amc_format_get_int (amc_format, "profile", &amc_profile, NULL)) {
       profile_string = gst_amc_mpeg4_profile_to_string (amc_profile);
       if (!profile_string)
         goto unsupported_profile;
@@ -340,7 +358,7 @@ caps_from_amc_format (GstAmcFormat * amc_format)
           NULL);
     }
 
-    if (gst_amc_format_get_int (amc_format, "level", &amc_level)) {
+    if (gst_amc_format_get_int (amc_format, "level", &amc_level, NULL)) {
       level_string = gst_amc_mpeg4_level_to_string (amc_profile);
       if (!level_string)
         goto unsupported_level;
@@ -360,7 +378,7 @@ caps_from_amc_format (GstAmcFormat * amc_format)
         "stream-format", G_TYPE_STRING, "byte-stream",
         "alignment", G_TYPE_STRING, "au", NULL);
 
-    if (gst_amc_format_get_int (amc_format, "profile", &amc_profile)) {
+    if (gst_amc_format_get_int (amc_format, "profile", &amc_profile, NULL)) {
       profile_string = gst_amc_avc_profile_to_string (amc_profile, NULL);
       if (!profile_string)
         goto unsupported_profile;
@@ -369,7 +387,7 @@ caps_from_amc_format (GstAmcFormat * amc_format)
           NULL);
     }
 
-    if (gst_amc_format_get_int (amc_format, "level", &amc_level)) {
+    if (gst_amc_format_get_int (amc_format, "level", &amc_level, NULL)) {
       level_string = gst_amc_avc_level_to_string (amc_profile);
       if (!level_string)
         goto unsupported_level;
@@ -553,12 +571,15 @@ gst_amc_video_enc_open (GstVideoEncoder * encoder)
 {
   GstAmcVideoEnc *self = GST_AMC_VIDEO_ENC (encoder);
   GstAmcVideoEncClass *klass = GST_AMC_VIDEO_ENC_GET_CLASS (self);
+  GError *err = NULL;
 
   GST_DEBUG_OBJECT (self, "Opening encoder");
 
-  self->codec = gst_amc_codec_new (klass->codec_info->name);
-  if (!self->codec)
+  self->codec = gst_amc_codec_new (klass->codec_info->name, &err);
+  if (!self->codec) {
+    GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     return FALSE;
+  }
   self->started = FALSE;
   self->flushing = TRUE;
 
@@ -574,8 +595,15 @@ gst_amc_video_enc_close (GstVideoEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Closing encoder");
 
-  if (self->codec)
+  if (self->codec) {
+    GError *err = NULL;
+
+    gst_amc_codec_release (self->codec, &err);
+    if (err)
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+
     gst_amc_codec_free (self->codec);
+  }
   self->codec = NULL;
 
   self->started = FALSE;
@@ -602,6 +630,7 @@ gst_amc_video_enc_change_state (GstElement * element, GstStateChange transition)
 {
   GstAmcVideoEnc *self;
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GError *err = NULL;
 
   g_return_val_if_fail (GST_IS_AMC_VIDEO_ENC (element),
       GST_STATE_CHANGE_FAILURE);
@@ -619,7 +648,9 @@ gst_amc_video_enc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       self->flushing = TRUE;
-      gst_amc_codec_flush (self->codec);
+      gst_amc_codec_flush (self->codec, &err);
+      if (err)
+        GST_ELEMENT_WARNING_FROM_ERROR (self, err);
       g_mutex_lock (&self->drain_lock);
       self->draining = FALSE;
       g_cond_broadcast (&self->drain_cond);
@@ -889,6 +920,7 @@ gst_amc_video_enc_loop (GstAmcVideoEnc * self)
   GstAmcBufferInfo buffer_info;
   GstAmcBuffer *buf;
   gint idx;
+  GError *err = NULL;
 
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
@@ -897,13 +929,17 @@ retry:
   GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
   /* Wait at most 100ms here, some codecs don't fail dequeueing if
    * the codec is flushing, causing deadlocks during shutdown */
-  idx = gst_amc_codec_dequeue_output_buffer (self->codec, &buffer_info, 100000);
+  idx =
+      gst_amc_codec_dequeue_output_buffer (self->codec, &buffer_info, 100000,
+      &err);
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
   /*} */
 
   if (idx < 0 || self->amc_format) {
-    if (self->flushing || self->downstream_flow_ret == GST_FLOW_FLUSHING)
+    if (self->flushing || self->downstream_flow_ret == GST_FLOW_FLUSHING) {
+      g_clear_error (&err);
       goto flushing;
+    }
 
     /* The comments from https://android.googlesource.com/platform/cts/+/android-4.3_r3.1/tests/tests/media/src/android/media/cts/EncodeDecodeTest.java
      * line 539 says INFO_OUTPUT_FORMAT_CHANGED is not expected for an encoder
@@ -915,7 +951,12 @@ retry:
       GST_DEBUG_OBJECT (self, "Output format has changed");
 
       format = (idx == INFO_OUTPUT_FORMAT_CHANGED) ?
-          gst_amc_codec_get_output_format (self->codec) : self->amc_format;
+          gst_amc_codec_get_output_format (self->codec,
+          &err) : self->amc_format;
+      if (err) {
+        format = self->amc_format;
+        GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      }
 
       if (self->amc_format) {
         if (format != self->amc_format)
@@ -926,8 +967,11 @@ retry:
       if (!format)
         goto format_error;
 
-
-      format_string = gst_amc_format_to_string (format);
+      format_string = gst_amc_format_to_string (format, &err);
+      if (err) {
+        gst_amc_format_free (format);
+        goto format_error;
+      }
       GST_DEBUG_OBJECT (self, "Got new output format: %s", format_string);
       g_free (format_string);
 
@@ -943,7 +987,7 @@ retry:
             self->n_output_buffers);
       self->output_buffers =
           gst_amc_codec_get_output_buffers (self->codec,
-          &self->n_output_buffers);
+          &self->n_output_buffers, &err);
       if (!self->output_buffers)
         goto get_output_buffers_error;
 
@@ -961,7 +1005,7 @@ retry:
               self->n_output_buffers);
         self->output_buffers =
             gst_amc_codec_get_output_buffers (self->codec,
-            &self->n_output_buffers);
+            &self->n_output_buffers, &err);
         if (!self->output_buffers)
           goto get_output_buffers_error;
         break;
@@ -998,8 +1042,10 @@ process_buffer:
     GST_ERROR_OBJECT (self, "Invalid output buffer index %d of %d",
         idx, self->n_output_buffers);
 
-    if (!gst_amc_codec_release_output_buffer (self->codec, idx))
+    if (!gst_amc_codec_release_output_buffer (self->codec, idx, &err))
       GST_ERROR_OBJECT (self, "Failed to release output buffer index %d", idx);
+    if (err)
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
     goto invalid_buffer;
   }
   buf = &self->output_buffers[idx];
@@ -1007,7 +1053,7 @@ process_buffer:
   flow_ret =
       gst_amc_video_enc_handle_output_frame (self, buf, &buffer_info, frame);
 
-  if (!gst_amc_codec_release_output_buffer (self->codec, idx))
+  if (!gst_amc_codec_release_output_buffer (self->codec, idx, &err))
     goto failed_release;
 
   if (is_eos || flow_ret == GST_FLOW_EOS) {
@@ -1038,8 +1084,7 @@ process_buffer:
 
 dequeue_error:
   {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("Failed to dequeue output buffer"));
+    GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     gst_pad_push_event (GST_VIDEO_ENCODER_SRC_PAD (self), gst_event_new_eos ());
     gst_pad_pause_task (GST_VIDEO_ENCODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_ERROR;
@@ -1049,8 +1094,7 @@ dequeue_error:
 
 get_output_buffers_error:
   {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("Failed to get output buffers"));
+    GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     gst_pad_push_event (GST_VIDEO_ENCODER_SRC_PAD (self), gst_event_new_eos ());
     gst_pad_pause_task (GST_VIDEO_ENCODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_ERROR;
@@ -1060,8 +1104,11 @@ get_output_buffers_error:
 
 format_error:
   {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("Failed to handle format"));
+    if (err)
+      GST_ELEMENT_ERROR_FROM_ERROR (self, err);
+    else
+      GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
+          ("Failed to handle format"));
     gst_pad_push_event (GST_VIDEO_ENCODER_SRC_PAD (self), gst_event_new_eos ());
     gst_pad_pause_task (GST_VIDEO_ENCODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_ERROR;
@@ -1070,8 +1117,7 @@ format_error:
   }
 failed_release:
   {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("Failed to release output buffer index %d", idx));
+    GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     gst_pad_push_event (GST_VIDEO_ENCODER_SRC_PAD (self), gst_event_new_eos ());
     gst_pad_pause_task (GST_VIDEO_ENCODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_ERROR;
@@ -1137,13 +1183,18 @@ static gboolean
 gst_amc_video_enc_stop (GstVideoEncoder * encoder)
 {
   GstAmcVideoEnc *self;
+  GError *err = NULL;
 
   self = GST_AMC_VIDEO_ENC (encoder);
   GST_DEBUG_OBJECT (self, "Stopping encoder");
   self->flushing = TRUE;
   if (self->started) {
-    gst_amc_codec_flush (self->codec);
-    gst_amc_codec_stop (self->codec);
+    gst_amc_codec_flush (self->codec, &err);
+    if (err)
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+    gst_amc_codec_stop (self->codec, &err);
+    if (err)
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
     self->started = FALSE;
     if (self->input_buffers)
       gst_amc_codec_free_buffers (self->input_buffers, self->n_input_buffers);
@@ -1184,6 +1235,7 @@ gst_amc_video_enc_set_format (GstVideoEncoder * encoder,
   gboolean needs_disable = FALSE;
   gchar *format_string;
   gboolean r = FALSE;
+  GError *err = NULL;
 
   self = GST_AMC_VIDEO_ENC (encoder);
 
@@ -1248,26 +1300,33 @@ gst_amc_video_enc_set_format (GstVideoEncoder * encoder,
   if (!format)
     goto quit;
 
-  format_string = gst_amc_format_to_string (format);
-  GST_DEBUG_OBJECT (self, "Configuring codec with format: %s", format_string);
+  format_string = gst_amc_format_to_string (format, &err);
+  if (err)
+    GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+  GST_DEBUG_OBJECT (self, "Configuring codec with format: %s",
+      GST_STR_NULL (format_string));
   g_free (format_string);
 
-  if (!gst_amc_codec_configure (self->codec, format, 1)) {
+  if (!gst_amc_codec_configure (self->codec, format, 1, &err)) {
     GST_ERROR_OBJECT (self, "Failed to configure codec");
+    GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     goto quit;
   }
 
-  if (!gst_amc_codec_start (self->codec)) {
+  if (!gst_amc_codec_start (self->codec, &err)) {
     GST_ERROR_OBJECT (self, "Failed to start codec");
+    GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     goto quit;
   }
 
   if (self->input_buffers)
     gst_amc_codec_free_buffers (self->input_buffers, self->n_input_buffers);
   self->input_buffers =
-      gst_amc_codec_get_input_buffers (self->codec, &self->n_input_buffers);
+      gst_amc_codec_get_input_buffers (self->codec, &self->n_input_buffers,
+      &err);
   if (!self->input_buffers) {
     GST_ERROR_OBJECT (self, "Failed to get input buffers");
+    GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     goto quit;
   }
 
@@ -1300,6 +1359,7 @@ static gboolean
 gst_amc_video_enc_flush (GstVideoEncoder * encoder)
 {
   GstAmcVideoEnc *self;
+  GError *err = NULL;
 
   self = GST_AMC_VIDEO_ENC (encoder);
 
@@ -1311,7 +1371,9 @@ gst_amc_video_enc_flush (GstVideoEncoder * encoder)
   }
 
   self->flushing = TRUE;
-  gst_amc_codec_flush (self->codec);
+  gst_amc_codec_flush (self->codec, &err);
+  if (err)
+    GST_ELEMENT_WARNING_FROM_ERROR (self, err);
 
   /* Wait until the srcpad loop is finished,
    * unlock GST_VIDEO_ENCODER_STREAM_LOCK to prevent deadlocks
@@ -1344,6 +1406,7 @@ gst_amc_video_enc_handle_frame (GstVideoEncoder * encoder,
   GstAmcBufferInfo buffer_info;
   GstClockTime timestamp, duration, timestamp_offset = 0;
   BufferIdentification *id;
+  GError *err = NULL;
 
   self = GST_AMC_VIDEO_ENC (encoder);
 
@@ -1377,12 +1440,15 @@ again:
   GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
   /* Wait at most 100ms here, some codecs don't fail dequeueing if
    * the codec is flushing, causing deadlocks during shutdown */
-  idx = gst_amc_codec_dequeue_input_buffer (self->codec, 100000);
+  idx = gst_amc_codec_dequeue_input_buffer (self->codec, 100000, &err);
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
   if (idx < 0) {
-    if (self->flushing)
+    if (self->flushing) {
+      g_clear_error (&err);
       goto flushing;
+    }
+
     switch (idx) {
       case INFO_TRY_AGAIN_LATER:
         GST_DEBUG_OBJECT (self, "Dequeueing input buffer timed out");
@@ -1407,7 +1473,9 @@ again:
 
   if (self->downstream_flow_ret != GST_FLOW_OK) {
     memset (&buffer_info, 0, sizeof (buffer_info));
-    gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info);
+    gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, &err);
+    if (err)
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
     goto downstream_error;
   }
 
@@ -1424,7 +1492,9 @@ again:
   if (!gst_amc_video_enc_fill_buffer (self, frame->input_buffer, buf,
           &buffer_info)) {
     memset (&buffer_info, 0, sizeof (buffer_info));
-    gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info);
+    gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, &err);
+    if (err)
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
     goto buffer_fill_error;
   }
 
@@ -1446,7 +1516,7 @@ again:
       "Queueing buffer %d: size %d time %" G_GINT64_FORMAT " flags 0x%08x",
       idx, buffer_info.size, buffer_info.presentation_time_us,
       buffer_info.flags);
-  if (!gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info))
+  if (!gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, &err))
     goto queue_error;
 
   gst_video_codec_frame_unref (frame);
@@ -1478,15 +1548,13 @@ buffer_fill_error:
   }
 dequeue_error:
   {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("Failed to dequeue input buffer"));
+    GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
 queue_error:
   {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("Failed to queue input buffer"));
+    GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
@@ -1503,6 +1571,7 @@ gst_amc_video_enc_finish (GstVideoEncoder * encoder)
 {
   GstAmcVideoEnc *self;
   gint idx;
+  GError *err = NULL;
 
   self = GST_AMC_VIDEO_ENC (encoder);
   GST_DEBUG_OBJECT (self, "Sending EOS to the component");
@@ -1522,7 +1591,7 @@ gst_amc_video_enc_finish (GstVideoEncoder * encoder)
    * class drop the EOS event. We will send it later when
    * the EOS buffer arrives on the output port.
    * Wait at most 0.5s here. */
-  idx = gst_amc_codec_dequeue_input_buffer (self->codec, 500000);
+  idx = gst_amc_codec_dequeue_input_buffer (self->codec, 500000, &err);
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
   if (idx >= 0 && idx < self->n_input_buffers) {
@@ -1534,15 +1603,19 @@ gst_amc_video_enc_finish (GstVideoEncoder * encoder)
         gst_util_uint64_scale (self->last_upstream_ts, 1, GST_USECOND);
     buffer_info.flags |= BUFFER_FLAG_END_OF_STREAM;
 
-    if (gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info))
+    if (gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, &err)) {
       GST_DEBUG_OBJECT (self, "Sent EOS to the codec");
-    else
+    } else {
       GST_ERROR_OBJECT (self, "Failed to send EOS to the codec");
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+    }
   } else if (idx >= self->n_input_buffers) {
     GST_ERROR_OBJECT (self, "Invalid input buffer index %d of %d",
         idx, self->n_input_buffers);
   } else {
     GST_ERROR_OBJECT (self, "Failed to dequeue input buffer for EOS: %d", idx);
+    if (err)
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
   }
 
   return GST_VIDEO_ENCODER_FLOW_DROPPED;
@@ -1553,6 +1626,7 @@ gst_amc_video_enc_drain (GstAmcVideoEnc * self)
 {
   GstFlowReturn ret;
   gint idx;
+  GError *err = NULL;
 
   GST_DEBUG_OBJECT (self, "Draining codec");
   if (!self->started) {
@@ -1574,7 +1648,7 @@ gst_amc_video_enc_drain (GstAmcVideoEnc * self)
    * class drop the EOS event. We will send it later when
    * the EOS buffer arrives on the output port.
    * Wait at most 0.5s here. */
-  idx = gst_amc_codec_dequeue_input_buffer (self->codec, 500000);
+  idx = gst_amc_codec_dequeue_input_buffer (self->codec, 500000, &err);
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
   if (idx >= 0 && idx < self->n_input_buffers) {
@@ -1590,13 +1664,14 @@ gst_amc_video_enc_drain (GstAmcVideoEnc * self)
         gst_util_uint64_scale (self->last_upstream_ts, 1, GST_USECOND);
     buffer_info.flags |= BUFFER_FLAG_END_OF_STREAM;
 
-    if (gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info)) {
+    if (gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, &err)) {
       GST_DEBUG_OBJECT (self, "Waiting until codec is drained");
       g_cond_wait (&self->drain_cond, &self->drain_lock);
       GST_DEBUG_OBJECT (self, "Drained codec");
       ret = GST_FLOW_OK;
     } else {
       GST_ERROR_OBJECT (self, "Failed to queue input buffer");
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
       ret = GST_FLOW_ERROR;
     }
 
@@ -1608,6 +1683,8 @@ gst_amc_video_enc_drain (GstAmcVideoEnc * self)
     ret = GST_FLOW_ERROR;
   } else {
     GST_ERROR_OBJECT (self, "Failed to acquire buffer for EOS: %d", idx);
+    if (err)
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
     ret = GST_FLOW_ERROR;
   }
 

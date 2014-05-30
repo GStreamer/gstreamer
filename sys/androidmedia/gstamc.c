@@ -3859,8 +3859,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               const gchar *profile;
 
               profile =
-                  gst_amc_mpeg4_profile_to_string (type->
-                  profile_levels[j].profile);
+                  gst_amc_mpeg4_profile_to_string (type->profile_levels[j].
+                  profile);
               if (!profile) {
                 GST_ERROR ("Unable to map MPEG4 profile 0x%08x",
                     type->profile_levels[j].profile);
@@ -3933,8 +3933,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               gint profile;
 
               profile =
-                  gst_amc_h263_profile_to_gst_id (type->
-                  profile_levels[j].profile);
+                  gst_amc_h263_profile_to_gst_id (type->profile_levels[j].
+                  profile);
 
               if (profile == -1) {
                 GST_ERROR ("Unable to map h263 profile 0x%08x",
@@ -3998,8 +3998,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               const gchar *profile, *alternative = NULL;
 
               profile =
-                  gst_amc_avc_profile_to_string (type->
-                  profile_levels[j].profile, &alternative);
+                  gst_amc_avc_profile_to_string (type->profile_levels[j].
+                  profile, &alternative);
 
               if (!profile) {
                 GST_ERROR ("Unable to map H264 profile 0x%08x",

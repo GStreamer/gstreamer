@@ -165,6 +165,23 @@ gboolean gst_amc_audio_channel_mask_to_positions (guint32 channel_mask, gint cha
 guint32 gst_amc_audio_channel_mask_from_positions (GstAudioChannelPosition *positions, gint channels);
 void gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info, GstCaps **sink_caps, GstCaps **src_caps);
 
+#define GST_ELEMENT_ERROR_FROM_ERROR(el, err) G_STMT_START { \
+  gchar *__dbg = g_strdup (err->message);                               \
+  GST_WARNING_OBJECT (el, "error: %s", __dbg);                          \
+  gst_element_message_full (GST_ELEMENT(el), GST_MESSAGE_ERROR,         \
+    err->domain, err->code,                                             \
+    NULL, __dbg, __FILE__, GST_FUNCTION, __LINE__);                     \
+  g_clear_error (&err); \
+} G_STMT_END
+
+#define GST_ELEMENT_WARNING_FROM_ERROR(el, err) G_STMT_START { \
+  gchar *__dbg = g_strdup (err->message);                               \
+  GST_WARNING_OBJECT (el, "error: %s", __dbg);                          \
+  gst_element_message_full (GST_ELEMENT(el), GST_MESSAGE_WARNING,       \
+    err->domain, err->code,                                             \
+    NULL, __dbg, __FILE__, GST_FUNCTION, __LINE__);                     \
+  g_clear_error (&err); \
+} G_STMT_END
 
 G_END_DECLS
 
