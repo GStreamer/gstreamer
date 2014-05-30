@@ -269,10 +269,11 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->clientReshapeCallback = NULL;
   glimage_sink->clientDrawCallback = NULL;
   glimage_sink->client_data = NULL;
-  glimage_sink->keep_aspect_ratio = TRUE;
-  glimage_sink->par_n = 1;
+  glimage_sink->keep_aspect_ratio = FALSE;
+  glimage_sink->par_n = 0;
   glimage_sink->par_d = 1;
   glimage_sink->pool = NULL;
+  glimage_sink->stored_buffer = NULL;
   glimage_sink->redisplay_texture = 0;
 
   g_mutex_init (&glimage_sink->drawing_lock);
@@ -540,6 +541,10 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
        */
       GST_GLIMAGE_SINK_LOCK (glimage_sink);
       glimage_sink->redisplay_texture = 0;
+      if (glimage_sink->stored_buffer) {
+        gst_buffer_unref (glimage_sink->stored_buffer);
+        glimage_sink->stored_buffer = NULL;
+      }
       GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
 
       if (glimage_sink->upload) {
@@ -768,6 +773,7 @@ gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   /* Avoid to release the texture while drawing */
   GST_GLIMAGE_SINK_LOCK (glimage_sink);
   glimage_sink->redisplay_texture = glimage_sink->next_tex;
+  gst_buffer_replace (&glimage_sink->stored_buffer, buf);
   GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
 
   /* Ask the underlying window to redraw its content */
