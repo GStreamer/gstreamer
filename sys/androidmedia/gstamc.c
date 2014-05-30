@@ -1489,15 +1489,21 @@ get_java_classes (void)
   tmp = (*env)->FindClass (env, "java/lang/String");
   if (!tmp) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get string class");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
   java_string.klass = (*env)->NewGlobalRef (env, tmp);
   if (!java_string.klass) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get string class global reference");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
   (*env)->DeleteLocalRef (env, tmp);
@@ -1507,23 +1513,32 @@ get_java_classes (void)
       (*env)->GetMethodID (env, java_string.klass, "<init>", "([C)V");
   if (!java_string.constructor) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get string methods");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
 
   tmp = (*env)->FindClass (env, "android/media/MediaCodec");
   if (!tmp) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get codec class");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
   media_codec.klass = (*env)->NewGlobalRef (env, tmp);
   if (!media_codec.klass) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get codec class global reference");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
   (*env)->DeleteLocalRef (env, tmp);
@@ -1578,8 +1593,11 @@ get_java_classes (void)
       !media_codec.release_output_buffer ||
       !media_codec.start || !media_codec.stop) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get codec methods");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
 
@@ -1593,8 +1611,11 @@ get_java_classes (void)
   media_codec_buffer_info.klass = (*env)->NewGlobalRef (env, tmp);
   if (!media_codec_buffer_info.klass) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get codec buffer info class global reference");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
   (*env)->DeleteLocalRef (env, tmp);
@@ -1616,23 +1637,32 @@ get_java_classes (void)
       || !media_codec_buffer_info.presentation_time_us
       || !media_codec_buffer_info.size) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get buffer info methods and fields");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
 
   tmp = (*env)->FindClass (env, "android/media/MediaFormat");
   if (!tmp) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get format class");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
   media_format.klass = (*env)->NewGlobalRef (env, tmp);
   if (!media_format.klass) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get format class global reference");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
   (*env)->DeleteLocalRef (env, tmp);
@@ -1681,8 +1711,11 @@ get_java_classes (void)
       || !media_format.set_string || !media_format.get_byte_buffer
       || !media_format.set_byte_buffer) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get format methods");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
 
@@ -1788,8 +1821,11 @@ scan_codecs (GstPlugin * plugin)
   codec_list_class = (*env)->FindClass (env, "android/media/MediaCodecList");
   if (!codec_list_class) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get codec list class");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
 
@@ -1800,8 +1836,11 @@ scan_codecs (GstPlugin * plugin)
       "(I)Landroid/media/MediaCodecInfo;");
   if (!get_codec_count_id || !get_codec_info_at_id) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get codec list method IDs");
+    if ((*env)->ExceptionCheck (env)) {
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
+    }
     goto done;
   }
 
@@ -1809,8 +1848,9 @@ scan_codecs (GstPlugin * plugin)
       (*env)->CallStaticIntMethod (env, codec_list_class, get_codec_count_id);
   if ((*env)->ExceptionCheck (env)) {
     ret = FALSE;
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get number of available codecs");
+    (*env)->ExceptionDescribe (env);
+    (*env)->ExceptionClear (env);
     goto done;
   }
 
@@ -1836,16 +1876,22 @@ scan_codecs (GstPlugin * plugin)
         (*env)->CallStaticObjectMethod (env, codec_list_class,
         get_codec_info_at_id, i);
     if ((*env)->ExceptionCheck (env) || !codec_info) {
-      (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get codec info %d", i);
+      if ((*env)->ExceptionCheck (env)) {
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
+      }
       valid_codec = FALSE;
       goto next_codec;
     }
 
     codec_info_class = (*env)->GetObjectClass (env, codec_info);
     if (!codec_list_class) {
-      (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get codec info class");
+      if ((*env)->ExceptionCheck (env)) {
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
+      }
       valid_codec = FALSE;
       goto next_codec;
     }
@@ -1863,23 +1909,28 @@ scan_codecs (GstPlugin * plugin)
         (*env)->GetMethodID (env, codec_info_class, "isEncoder", "()Z");
     if (!get_capabilities_for_type_id || !get_name_id
         || !get_supported_types_id || !is_encoder_id) {
-      (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get codec info method IDs");
+      if ((*env)->ExceptionCheck (env)) {
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
+      }
       valid_codec = FALSE;
       goto next_codec;
     }
 
     name = (*env)->CallObjectMethod (env, codec_info, get_name_id);
     if ((*env)->ExceptionCheck (env)) {
-      (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get codec name");
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
       valid_codec = FALSE;
       goto next_codec;
     }
     name_str = (*env)->GetStringUTFChars (env, name, NULL);
     if ((*env)->ExceptionCheck (env)) {
-      (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to convert codec name to UTF8");
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
       valid_codec = FALSE;
       goto next_codec;
     }
@@ -1932,8 +1983,9 @@ scan_codecs (GstPlugin * plugin)
 
     is_encoder = (*env)->CallBooleanMethod (env, codec_info, is_encoder_id);
     if ((*env)->ExceptionCheck (env)) {
-      (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to detect if codec is an encoder");
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
       valid_codec = FALSE;
       goto next_codec;
     }
@@ -1942,16 +1994,18 @@ scan_codecs (GstPlugin * plugin)
     supported_types =
         (*env)->CallObjectMethod (env, codec_info, get_supported_types_id);
     if ((*env)->ExceptionCheck (env)) {
-      (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get supported types");
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
       valid_codec = FALSE;
       goto next_codec;
     }
 
     n_supported_types = (*env)->GetArrayLength (env, supported_types);
     if ((*env)->ExceptionCheck (env)) {
-      (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get supported types array length");
+      (*env)->ExceptionDescribe (env);
+      (*env)->ExceptionClear (env);
       valid_codec = FALSE;
       goto next_codec;
     }
@@ -1984,8 +2038,9 @@ scan_codecs (GstPlugin * plugin)
 
       supported_type = (*env)->GetObjectArrayElement (env, supported_types, j);
       if ((*env)->ExceptionCheck (env)) {
-        (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get %d-th supported type", j);
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
         valid_codec = FALSE;
         goto next_supported_type;
       }
@@ -1993,8 +2048,9 @@ scan_codecs (GstPlugin * plugin)
       supported_type_str =
           (*env)->GetStringUTFChars (env, supported_type, NULL);
       if ((*env)->ExceptionCheck (env) || !supported_type_str) {
-        (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to convert supported type to UTF8");
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
         valid_codec = FALSE;
         goto next_supported_type;
       }
@@ -2006,16 +2062,18 @@ scan_codecs (GstPlugin * plugin)
           (*env)->CallObjectMethod (env, codec_info,
           get_capabilities_for_type_id, supported_type);
       if ((*env)->ExceptionCheck (env)) {
-        (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get capabilities for supported type");
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
         valid_codec = FALSE;
         goto next_supported_type;
       }
 
       capabilities_class = (*env)->GetObjectClass (env, capabilities);
       if (!capabilities_class) {
-        (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get capabilities class");
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
         valid_codec = FALSE;
         goto next_supported_type;
       }
@@ -2026,8 +2084,9 @@ scan_codecs (GstPlugin * plugin)
           (*env)->GetFieldID (env, capabilities_class, "profileLevels",
           "[Landroid/media/MediaCodecInfo$CodecProfileLevel;");
       if (!color_formats_id || !profile_levels_id) {
-        (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get capabilities field IDs");
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
         valid_codec = FALSE;
         goto next_supported_type;
       }
@@ -2035,16 +2094,18 @@ scan_codecs (GstPlugin * plugin)
       color_formats =
           (*env)->GetObjectField (env, capabilities, color_formats_id);
       if ((*env)->ExceptionCheck (env)) {
-        (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get color formats");
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
         valid_codec = FALSE;
         goto next_supported_type;
       }
 
       n_elems = (*env)->GetArrayLength (env, color_formats);
       if ((*env)->ExceptionCheck (env)) {
-        (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get color formats array length");
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
         valid_codec = FALSE;
         goto next_supported_type;
       }
@@ -2053,8 +2114,9 @@ scan_codecs (GstPlugin * plugin)
       color_formats_elems =
           (*env)->GetIntArrayElements (env, color_formats, NULL);
       if ((*env)->ExceptionCheck (env)) {
-        (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get color format elements");
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
         valid_codec = FALSE;
         goto next_supported_type;
       }
@@ -2083,16 +2145,18 @@ scan_codecs (GstPlugin * plugin)
       profile_levels =
           (*env)->GetObjectField (env, capabilities, profile_levels_id);
       if ((*env)->ExceptionCheck (env)) {
-        (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get profile/levels");
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
         valid_codec = FALSE;
         goto next_supported_type;
       }
 
       n_elems = (*env)->GetArrayLength (env, profile_levels);
       if ((*env)->ExceptionCheck (env)) {
-        (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get profile/levels array length");
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
         valid_codec = FALSE;
         goto next_supported_type;
       }
@@ -2107,16 +2171,18 @@ scan_codecs (GstPlugin * plugin)
 
         profile_level = (*env)->GetObjectArrayElement (env, profile_levels, k);
         if ((*env)->ExceptionCheck (env)) {
-          (*env)->ExceptionClear (env);
           GST_ERROR ("Failed to get %d-th profile/level", k);
+          (*env)->ExceptionDescribe (env);
+          (*env)->ExceptionClear (env);
           valid_codec = FALSE;
           goto next_profile_level;
         }
 
         profile_level_class = (*env)->GetObjectClass (env, profile_level);
         if (!profile_level_class) {
-          (*env)->ExceptionClear (env);
           GST_ERROR ("Failed to get profile/level class");
+          (*env)->ExceptionDescribe (env);
+          (*env)->ExceptionClear (env);
           valid_codec = FALSE;
           goto next_profile_level;
         }
@@ -2125,16 +2191,18 @@ scan_codecs (GstPlugin * plugin)
         profile_id =
             (*env)->GetFieldID (env, profile_level_class, "profile", "I");
         if (!level_id || !profile_id) {
-          (*env)->ExceptionClear (env);
           GST_ERROR ("Failed to get profile/level field IDs");
+          (*env)->ExceptionDescribe (env);
+          (*env)->ExceptionClear (env);
           valid_codec = FALSE;
           goto next_profile_level;
         }
 
         level = (*env)->GetIntField (env, profile_level, level_id);
         if ((*env)->ExceptionCheck (env)) {
-          (*env)->ExceptionClear (env);
           GST_ERROR ("Failed to get level");
+          (*env)->ExceptionDescribe (env);
+          (*env)->ExceptionClear (env);
           valid_codec = FALSE;
           goto next_profile_level;
         }
@@ -2143,8 +2211,9 @@ scan_codecs (GstPlugin * plugin)
 
         profile = (*env)->GetIntField (env, profile_level, profile_id);
         if ((*env)->ExceptionCheck (env)) {
-          (*env)->ExceptionClear (env);
           GST_ERROR ("Failed to get profile");
+          (*env)->ExceptionDescribe (env);
+          (*env)->ExceptionClear (env);
           valid_codec = FALSE;
           goto next_profile_level;
         }
