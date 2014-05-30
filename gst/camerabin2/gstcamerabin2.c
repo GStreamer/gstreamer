@@ -1056,11 +1056,20 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         g_mutex_unlock (&camerabin->preview_list_mutex);
 
         if (location) {
+          GstStructure *new_structure;
           GValue value = { 0 };
+
           g_value_init (&value, G_TYPE_STRING);
           g_value_take_string (&value, location);
-          gst_structure_take_value ((GstStructure *) structure, "location",
-              &value);
+
+          /* need to do a copy because the structure isn't mutable */
+          new_structure = gst_structure_copy (structure);
+          gst_structure_take_value (new_structure, "location", &value);
+
+          gst_message_unref (message);
+          message =
+              gst_message_new_element (GST_OBJECT_CAST (camerabin),
+              new_structure);
         }
 
         GST_LOG_OBJECT (bin, "received preview-image message");
