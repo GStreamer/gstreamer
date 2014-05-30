@@ -74,7 +74,7 @@ gboolean      gst_device_monitor_factory_has_classesv (GstDeviceMonitorFactory *
 gboolean      gst_device_monitor_factory_has_classes (GstDeviceMonitorFactory *factory,
                                                       const gchar * classes);
 
-GList *       gst_device_monitor_factory_list_get_device_monitors (const gchar *types,
+GList *       gst_device_monitor_factory_list_get_device_monitors (const gchar *classes,
                                                                    GstRank minrank) G_GNUC_MALLOC;
 
 G_END_DECLS

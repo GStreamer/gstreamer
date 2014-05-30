@@ -283,12 +283,12 @@ gst_control_binding_get_value (GstControlBinding * binding,
 }
 
 /**
- * gst_control_binding_get_value_array:
+ * gst_control_binding_get_value_array: (skip)
  * @binding: the control binding
  * @timestamp: the time that should be processed
  * @interval: the time spacing between subsequent values
  * @n_values: the number of values
- * @values: array to put control-values in
+ * @values: (array length=n_values): array to put control-values in
  *
  * Gets a number of values for the given controlled property starting at the
  * requested time. The array @values need to hold enough space for @n_values of
@@ -347,7 +347,7 @@ gst_control_binding_get_value_array (GstControlBinding * binding,
  * @timestamp: the time that should be processed
  * @interval: the time spacing between subsequent values
  * @n_values: the number of values
- * @values: array to put control-values in
+ * @values: (array length=n_values): array to put control-values in
  *
  * Gets a number of #GValues for the given controlled property starting at the
  * requested time. The array @values need to hold enough space for @n_values of

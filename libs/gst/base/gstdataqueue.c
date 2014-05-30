@@ -209,7 +209,7 @@ gst_data_queue_init (GstDataQueue * queue)
 }
 
 /**
- * gst_data_queue_new:
+ * gst_data_queue_new: (skip)
  * @checkfull: the callback used to tell if the element considers the queue full
  * or not.
  * @fullcallback: the callback which will be called when the queue is considered full.
