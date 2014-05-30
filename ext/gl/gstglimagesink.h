@@ -79,6 +79,7 @@ struct _GstGLImageSink
 
     /* avoid replacing the stored_buffer while drawing */
     GMutex drawing_lock;
+    GstBuffer *stored_buffer;
     GLuint redisplay_texture;
 
 #if GST_GL_HAVE_GLES2
