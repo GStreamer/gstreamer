@@ -944,7 +944,11 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
           gst_buffer_unmap (outbuf, &map);
 
-          gst_adapter_push (rtph264depay->adapter, outbuf);
+          outbuf =
+              gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
+              marker);
+          if (outbuf)
+            gst_adapter_push (rtph264depay->adapter, outbuf);
 
           payload += nalu_size;
           payload_len -= nalu_size;
