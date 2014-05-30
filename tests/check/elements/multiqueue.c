@@ -940,6 +940,8 @@ GST_START_TEST (test_buffering_with_none_pts)
   gst_element_set_state (mq, GST_STATE_NULL);
   gst_object_unref (inputpad);
   gst_object_unref (outputpad);
+  gst_object_unref (mq_sinkpad);
+  gst_object_unref (mq_srcpad);
   gst_object_unref (mq);
   g_mutex_clear (&block_mutex);
   g_cond_clear (&block_cond);
