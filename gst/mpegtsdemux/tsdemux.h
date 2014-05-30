@@ -85,6 +85,9 @@ struct _GstTSDemux
   gdouble rate;
 
   GstFlowCombiner *flowcombiner;
+
+  /* Used when seeking for a keyframe to go backward in the stream */
+  guint64 last_seek_offset;
 };
 
 struct _GstTSDemuxClass

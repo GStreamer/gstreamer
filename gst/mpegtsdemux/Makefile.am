@@ -13,6 +13,7 @@ libgstmpegtsdemux_la_CFLAGS = \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstmpegtsdemux_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/mpegts/libgstmpegts-$(GST_API_VERSION).la \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-$(GST_API_VERSION).la \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) \
 	-lgstpbutils-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS)
