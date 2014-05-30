@@ -49,6 +49,9 @@ GST_STATIC_PAD_TEMPLATE ("program_%u", GST_PAD_SRC,
 enum
 {
   /* FILL ME */
+  SIGNAL_TUNING_START,
+  SIGNAL_TUNING_DONE,
+  SIGNAL_TUNING_FAIL,
   LAST_SIGNAL
 };
 
@@ -131,12 +134,9 @@ static void dvb_base_bin_uri_handler_init (gpointer g_iface,
 static void dvb_base_bin_program_destroy (gpointer data);
 
 /* Proxy callbacks for dvbsrc signals */
-static void tuning_start_signal_cb (GObject * object, GParamSpec * pspec,
-    DvbBaseBin * dvbbasebin);
-static void tuning_done_signal_cb (GObject * object, GParamSpec * pspec,
-    DvbBaseBin * dvbbasebin);
-static void tuning_fail_signal_cb (GObject * object, GParamSpec * pspec,
-    DvbBaseBin * dvbbasebin);
+static void tuning_start_signal_cb (GObject * object, DvbBaseBin * dvbbasebin);
+static void tuning_done_signal_cb (GObject * object, DvbBaseBin * dvbbasebin);
+static void tuning_fail_signal_cb (GObject * object, DvbBaseBin * dvbbasebin);
 
 #define dvb_base_bin_parent_class parent_class
 G_DEFINE_TYPE_EXTENDED (DvbBaseBin, dvb_base_bin, GST_TYPE_BIN,
@@ -209,29 +209,25 @@ dvb_base_bin_get_program (DvbBaseBin * dvbbasebin, gint program_number)
       GINT_TO_POINTER (program_number));
 }
 
-/*
-static guint signals [LAST_SIGNAL] = { 0 };
-*/
+
+static guint dvb_base_bin_signals[LAST_SIGNAL] = { 0 };
 
 static void
-tuning_start_signal_cb (GObject * object, GParamSpec * pspec,
-    DvbBaseBin * dvbbasebin)
+tuning_start_signal_cb (GObject * object, DvbBaseBin * dvbbasebin)
 {
-  g_object_notify (G_OBJECT (dvbbasebin), "tuning-start");
+  g_signal_emit (dvbbasebin, dvb_base_bin_signals[SIGNAL_TUNING_START], 0);
 }
 
 static void
-tuning_done_signal_cb (GObject * object, GParamSpec * pspec,
-    DvbBaseBin * dvbbasebin)
+tuning_done_signal_cb (GObject * object, DvbBaseBin * dvbbasebin)
 {
-  g_object_notify (G_OBJECT (dvbbasebin), "tuning-done");
+  g_signal_emit (dvbbasebin, dvb_base_bin_signals[SIGNAL_TUNING_DONE], 0);
 }
 
 static void
-tuning_fail_signal_cb (GObject * object, GParamSpec * pspec,
-    DvbBaseBin * dvbbasebin)
+tuning_fail_signal_cb (GObject * object, DvbBaseBin * dvbbasebin)
 {
-  g_object_notify (G_OBJECT (dvbbasebin), "tuning-fail");
+  g_signal_emit (dvbbasebin, dvb_base_bin_signals[SIGNAL_TUNING_FAIL], 0);
 }
 
 
@@ -357,6 +353,35 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
       g_param_spec_string ("program-numbers",
           "Program Numbers",
           "Colon separated list of programs", "", G_PARAM_READWRITE));
+  /**
+   * DvbBaseBin::tuning-start:
+   * @dvbbasebin: the element on which the signal is emitted
+   *
+   * Signal emited when the element first attempts to tune the
+   * frontend tunner to a given frequency.
+   */
+  dvb_base_bin_signals[SIGNAL_TUNING_START] =
+      g_signal_new ("tuning-start", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+  /**
+   * DvbBaseBin::tuning-done:
+   * @dvbbasebin: the element on which the signal is emitted
+   *
+   * Signal emited when the tunner has successfully got a lock on a signal.
+   */
+  dvb_base_bin_signals[SIGNAL_TUNING_DONE] =
+      g_signal_new ("tuning-done", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+  /**
+   * DvbBaseBin::tuning-fail:
+   * @dvbbasebin: the element on which the signal is emitted
+   *
+   * Signal emited when the tunner failed to get a lock on the
+   * signal.
+   */
+  dvb_base_bin_signals[SIGNAL_TUNING_FAIL] =
+      g_signal_new ("tuning-fail", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 
 }
 
