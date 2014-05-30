@@ -322,6 +322,13 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
             g_param_spec_get_nick (pspec), g_param_spec_get_blurb (pspec),
             src_pspec->minimum, src_pspec->maximum, src_pspec->default_value,
             pspec->flags);
+      } else if (param_type == G_TYPE_PARAM_UINT64) {
+        GParamSpecUInt64 *src_pspec = G_PARAM_SPEC_UINT64 (pspec);
+
+        our_pspec = g_param_spec_uint64 (g_param_spec_get_name (pspec),
+            g_param_spec_get_nick (pspec), g_param_spec_get_blurb (pspec),
+            src_pspec->minimum, src_pspec->maximum, src_pspec->default_value,
+            pspec->flags);
       } else if (param_type == G_TYPE_PARAM_STRING) {
         GParamSpecString *src_pspec = G_PARAM_SPEC_STRING (pspec);
 
