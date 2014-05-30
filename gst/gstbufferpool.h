@@ -190,7 +190,7 @@ GstStructure *   gst_buffer_pool_get_config      (GstBufferPool *pool);
 const gchar **   gst_buffer_pool_get_options     (GstBufferPool *pool);
 gboolean         gst_buffer_pool_has_option      (GstBufferPool *pool, const gchar *option);
 
-void             gst_buffer_pool_set_flushing    (GstBufferPool *poo, gboolean flushing);
+void             gst_buffer_pool_set_flushing    (GstBufferPool *pool, gboolean flushing);
 
 /* helpers for configuring the config structure */
 void             gst_buffer_pool_config_set_params    (GstStructure *config, GstCaps *caps,
