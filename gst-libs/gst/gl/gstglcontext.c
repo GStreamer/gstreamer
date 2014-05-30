@@ -598,50 +598,13 @@ gst_gl_context_create (GstGLContext * context,
 }
 
 static gboolean
-_create_context_gles2 (GstGLContext * context, gint * gl_major, gint * gl_minor,
-    GError ** error)
-{
-  const GstGLFuncs *gl;
-  GLenum gl_err = GL_NO_ERROR;
-
-  gl = context->gl_vtable;
-
-  GST_INFO ("GL_VERSION: %s", gl->GetString (GL_VERSION));
-  GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
-      gl->GetString (GL_SHADING_LANGUAGE_VERSION));
-  GST_INFO ("GL_VENDOR: %s", gl->GetString (GL_VENDOR));
-  GST_INFO ("GL_RENDERER: %s", gl->GetString (GL_RENDERER));
-
-  gl_err = gl->GetError ();
-  if (gl_err != GL_NO_ERROR) {
-    g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
-        "glGetString error: 0x%x", gl_err);
-    return FALSE;
-  }
-#if GST_GL_HAVE_GLES2
-  if (!GL_ES_VERSION_2_0) {
-    g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_OLD_LIBS,
-        "OpenGL|ES >= 2.0 is required");
-    return FALSE;
-  }
-#endif
-
-  if (gl_major)
-    *gl_major = 2;
-  if (gl_minor)
-    *gl_minor = 0;
-
-  return TRUE;
-}
-
-static gboolean
-_create_context_opengl (GstGLContext * context, gint * gl_major,
+_create_context_info (GstGLContext * context, GstGLAPI gl_api, gint * gl_major,
     gint * gl_minor, GError ** error)
 {
   const GstGLFuncs *gl;
   guint maj, min;
   GLenum gl_err = GL_NO_ERROR;
-  GString *opengl_version = NULL;
+  gchar *opengl_version = NULL;
 
   gl = context->gl_vtable;
 
@@ -657,19 +620,21 @@ _create_context_opengl (GstGLContext * context, gint * gl_major,
         "glGetString error: 0x%x", gl_err);
     return FALSE;
   }
-  opengl_version =
-      g_string_truncate (g_string_new ((gchar *) gl->GetString (GL_VERSION)),
-      3);
 
-  sscanf (opengl_version->str, "%d.%d", &maj, &min);
+  opengl_version = (gchar *) gl->GetString (GL_VERSION);
+  if (opengl_version && gl_api & GST_GL_API_GLES2)
+    /* gles starts with "OpenGL ES " */
+    opengl_version = &opengl_version[10];
 
-  g_string_free (opengl_version, TRUE);
+  sscanf (opengl_version, "%d.%d", &maj, &min);
 
   /* OpenGL > 1.2.0 */
-  if ((maj < 1) || (maj < 2 && maj >= 1 && min < 2)) {
-    g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_OLD_LIBS,
-        "OpenGL >= 1.2.0 required, found %u.%u", maj, min);
-    return FALSE;
+  if (gl_api & GST_GL_API_OPENGL || gl_api & GST_GL_API_OPENGL3) {
+    if ((maj < 1) || (maj < 2 && maj >= 1 && min < 2)) {
+      g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_OLD_LIBS,
+          "OpenGL >= 1.2.0 required, found %u.%u", maj, min);
+      return FALSE;
+    }
   }
 
   if (gl_major)
@@ -835,13 +800,8 @@ gst_gl_context_create_thread (GstGLContext * context)
   }
 
   /* gl api specific code */
-  if (!ret && gl_api & GST_GL_API_OPENGL)
-    ret = _create_context_opengl (context, &context->priv->gl_major,
-        &context->priv->gl_minor, error);
-  if (!ret && gl_api & GST_GL_API_GLES2)
-    ret =
-        _create_context_gles2 (context, &context->priv->gl_major,
-        &context->priv->gl_minor, error);
+  ret = _create_context_info (context, gl_api, &context->priv->gl_major,
+      &context->priv->gl_minor, error);
 
   if (!ret) {
     g_assert (error == NULL || *error != NULL);
