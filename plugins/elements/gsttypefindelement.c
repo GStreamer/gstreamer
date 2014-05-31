@@ -642,15 +642,27 @@ gst_type_find_element_sink_event (GstPad * pad, GstObject * parent,
           res = gst_pad_push_event (typefind->src, event);
           break;
         }
-        case GST_EVENT_FLUSH_STOP:
+        case GST_EVENT_FLUSH_STOP:{
+          GList *l;
+
           GST_OBJECT_LOCK (typefind);
-          g_list_foreach (typefind->cached_events,
-              (GFunc) gst_mini_object_unref, NULL);
+
+          for (l = typefind->cached_events; l; l = l->next) {
+            if (!GST_EVENT_IS_STICKY (l->data) ||
+                GST_EVENT_TYPE (l->data) == GST_EVENT_SEGMENT ||
+                GST_EVENT_TYPE (l->data) == GST_EVENT_EOS) {
+              gst_event_unref (l->data);
+            } else {
+              gst_pad_store_sticky_event (typefind->src, l->data);
+            }
+          }
+
           g_list_free (typefind->cached_events);
           typefind->cached_events = NULL;
           gst_adapter_clear (typefind->adapter);
           GST_OBJECT_UNLOCK (typefind);
           /* fall through */
+        }
         case GST_EVENT_FLUSH_START:
           res = gst_pad_push_event (typefind->src, event);
           break;
