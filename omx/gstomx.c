@@ -1398,9 +1398,10 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
     goto done;
   }
 
-  if (port->flushing) {
-    GST_DEBUG_OBJECT (comp->parent, "%s port %u is flushing, not releasing "
-        "buffer", comp->name, port->index);
+  if (port->flushing || port->disabled_pending || !port->port_def.bEnabled) {
+    GST_DEBUG_OBJECT (comp->parent,
+        "%s port %u is flushing or disabled, not releasing " "buffer",
+        comp->name, port->index);
     g_queue_push_tail (&port->pending_buffers, buf);
     gst_omx_component_send_message (comp, NULL);
     goto done;
@@ -1857,13 +1858,6 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   else
     port->disabled_pending = TRUE;
 
-  if (!enabled) {
-    /* This is also like flushing, i.e. all buffers are returned
-     * by the component and no new buffers should be passed to
-     * the component anymore */
-    port->flushing = TRUE;
-  }
-
   if (enabled)
     err =
         OMX_SendCommand (comp->handle, OMX_CommandPortEnable, port->index,
@@ -2013,9 +2007,9 @@ gst_omx_port_populate_unlocked (GstOMXPort * port)
 
   gst_omx_component_handle_messages (comp);
 
-  if (port->flushing) {
-    GST_DEBUG_OBJECT (comp->parent, "%s port %u is flushing", comp->name,
-        port->index);
+  if (port->flushing || port->disabled_pending || !port->port_def.bEnabled) {
+    GST_DEBUG_OBJECT (comp->parent, "%s port %u is flushing or disabled",
+        comp->name, port->index);
     err = OMX_ErrorIncorrectStateOperation;
     goto done;
   }
@@ -2146,7 +2140,6 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
     err = last_error;
   } else {
     if (enabled) {
-      port->flushing = FALSE;
       /* Reset EOS flag */
       port->eos = FALSE;
     }
