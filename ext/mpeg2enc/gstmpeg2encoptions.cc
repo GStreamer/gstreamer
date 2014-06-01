@@ -335,7 +335,7 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
   /* general encoding stream options */
   g_object_class_install_property (klass, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
-          0, 10 * 1000, DEFAULT_BITRATE,
+          0, 40 * 1000, DEFAULT_BITRATE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_NONVIDEO_BITRATE,
       g_param_spec_int ("non-video-bitrate", "Non-video bitrate",
