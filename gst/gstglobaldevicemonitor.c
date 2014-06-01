@@ -114,7 +114,7 @@ gst_global_device_monitor_init (GstGlobalDeviceMonitor * self)
       GstBus *bus = gst_device_monitor_get_bus (monitor);
 
       gst_bus_enable_sync_message_emission (bus);
-      g_signal_connect (monitor, "sync-message",
+      g_signal_connect (bus, "sync-message",
           G_CALLBACK (bus_sync_message), self);
       g_ptr_array_add (self->priv->monitors, monitor);
     }
