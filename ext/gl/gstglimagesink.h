@@ -67,10 +67,6 @@ struct _GstGLImageSink
     GstGLUpload *upload;
     guint      next_tex;
 
-    CRCB clientReshapeCallback;
-    CDCB clientDrawCallback;
-    gpointer client_data;
-
     volatile gint to_quit;
     gboolean keep_aspect_ratio;
     gint par_n, par_d;

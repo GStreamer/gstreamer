@@ -111,9 +111,9 @@ GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 static void gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink);
 #endif
 static void gst_glimage_sink_on_close (GstGLImageSink * gl_sink);
-static void gst_glimage_sink_on_resize (const GstGLImageSink * gl_sink,
+static void gst_glimage_sink_on_resize (GstGLImageSink * gl_sink,
     gint width, gint height);
-static void gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink);
+static void gst_glimage_sink_on_draw (GstGLImageSink * gl_sink);
 static gboolean gst_glimage_sink_redisplay (GstGLImageSink * gl_sink);
 
 static void gst_glimage_sink_finalize (GObject * object);
@@ -167,13 +167,20 @@ enum
 {
   ARG_0,
   ARG_DISPLAY,
-  PROP_CLIENT_RESHAPE_CALLBACK,
-  PROP_CLIENT_DRAW_CALLBACK,
-  PROP_CLIENT_DATA,
   PROP_FORCE_ASPECT_RATIO,
   PROP_PIXEL_ASPECT_RATIO,
   PROP_OTHER_CONTEXT
 };
+
+enum
+{
+  SIGNAL_0,
+  CLIENT_DRAW_SIGNAL,
+  CLIENT_RESHAPE_SIGNAL,
+  LAST_SIGNAL
+};
+
+static guint gst_glimage_sink_signals[LAST_SIGNAL] = { 0 };
 
 #define gst_glimage_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLImageSink, gst_glimage_sink,
@@ -204,22 +211,6 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
       g_param_spec_string ("display", "Display", "Display name",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_CLIENT_RESHAPE_CALLBACK,
-      g_param_spec_pointer ("client-reshape-callback",
-          "Client reshape callback",
-          "Define a custom reshape callback in a client code",
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_CLIENT_DRAW_CALLBACK,
-      g_param_spec_pointer ("client-draw-callback", "Client draw callback",
-          "Define a custom draw callback in a client code",
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_CLIENT_DATA,
-      g_param_spec_pointer ("client-data", "Client data",
-          "Pass data to the draw and reshape callbacks",
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
@@ -240,6 +231,42 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gst_element_class_set_metadata (element_class, "OpenGL video sink",
       "Sink/Video", "A videosink based on OpenGL",
       "Julien Isorce <julien.isorce@gmail.com>");
+
+  /**
+   * GstGLImageSink::client-draw:
+   * @object: the #GstGLImageSink
+   * @texture: the #guint id of the texture.
+   * @width: the #guint width of the texture.
+   * @height: the #guint height of the texture.
+   *
+   * Will be emitted before actually drawing the texture.  The client should
+   * redraw the surface/contents with the @texture, @width and @height and
+   * and return %TRUE.
+   *
+   * Returns: whether the texture was redrawn by the signal.  If not, a
+   *          default redraw will occur.
+   */
+  gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL] =
+      g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_BOOLEAN, 3, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT);
+
+  /**
+   * GstGLImageSink::client-reshape:
+   * @object: the #GstGLImageSink
+   * @width: the #guint width of the texture.
+   * @height: the #guint height of the texture.
+   *
+   * The client should resize the surface/window/viewport with the @width and
+   * @height and return %TRUE.
+   *
+   * Returns: whether the content area was resized by the signal.  If not, a
+   *          default viewport resize will occur.
+   */
+  gst_glimage_sink_signals[CLIENT_RESHAPE_SIGNAL] =
+      g_signal_new ("client-reshape", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_BOOLEAN, 2, G_TYPE_UINT, G_TYPE_UINT);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_glimage_sink_template));
@@ -266,9 +293,6 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->window_id = 0;
   glimage_sink->new_window_id = 0;
   glimage_sink->display = NULL;
-  glimage_sink->clientReshapeCallback = NULL;
-  glimage_sink->clientDrawCallback = NULL;
-  glimage_sink->client_data = NULL;
   glimage_sink->keep_aspect_ratio = FALSE;
   glimage_sink->par_n = 0;
   glimage_sink->par_d = 1;
@@ -294,21 +318,6 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
     {
       g_free (glimage_sink->display_name);
       glimage_sink->display_name = g_strdup (g_value_get_string (value));
-      break;
-    }
-    case PROP_CLIENT_RESHAPE_CALLBACK:
-    {
-      glimage_sink->clientReshapeCallback = g_value_get_pointer (value);
-      break;
-    }
-    case PROP_CLIENT_DRAW_CALLBACK:
-    {
-      glimage_sink->clientDrawCallback = g_value_get_pointer (value);
-      break;
-    }
-    case PROP_CLIENT_DATA:
-    {
-      glimage_sink->client_data = g_value_get_pointer (value);
       break;
     }
     case PROP_FORCE_ASPECT_RATIO:
@@ -991,22 +1000,22 @@ gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
 #endif
 
 static void
-gst_glimage_sink_on_resize (const GstGLImageSink * gl_sink, gint width,
-    gint height)
+gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
 {
   /* Here gl_sink members (ex:gl_sink->info) have a life time of set_caps.
    * It means that they cannot not change between two set_caps
    */
   const GstGLFuncs *gl = gl_sink->context->gl_vtable;
+  gboolean do_reshape;
 
   GST_TRACE ("GL Window resized to %ux%u", width, height);
 
   /* check if a client reshape callback is registered */
-  if (gl_sink->clientReshapeCallback)
-    gl_sink->clientReshapeCallback (width, height, gl_sink->client_data);
+  g_signal_emit (gl_sink, gst_glimage_sink_signals[CLIENT_RESHAPE_SIGNAL], 0,
+      width, height, &do_reshape);
 
   /* default reshape */
-  else {
+  if (!do_reshape) {
     if (gl_sink->keep_aspect_ratio) {
       GstVideoRectangle src, dst, result;
 
@@ -1038,7 +1047,7 @@ gst_glimage_sink_on_resize (const GstGLImageSink * gl_sink, gint width,
 
 
 static void
-gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
+gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 {
   /* Here gl_sink members (ex:gl_sink->info) have a life time of set_caps.
    * It means that they cannot not change between two set_caps as well as
@@ -1048,6 +1057,7 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
 
   const GstGLFuncs *gl = NULL;
   GstGLWindow *window = NULL;
+  gboolean do_redisplay;
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (gl_sink));
 
@@ -1077,22 +1087,11 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
-  /* check if a client draw callback is registered */
-  if (gl_sink->clientDrawCallback) {
+  g_signal_emit (gl_sink, gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL], 0,
+      gl_sink->redisplay_texture, GST_VIDEO_INFO_WIDTH (&gl_sink->info),
+      GST_VIDEO_INFO_HEIGHT (&gl_sink->info), &do_redisplay);
 
-    gboolean doRedisplay =
-        gl_sink->clientDrawCallback (gl_sink->redisplay_texture,
-        GST_VIDEO_INFO_WIDTH (&gl_sink->info),
-        GST_VIDEO_INFO_HEIGHT (&gl_sink->info),
-        gl_sink->client_data);
-
-    if (doRedisplay)
-      gst_gl_window_draw_unlocked (window,
-          GST_VIDEO_INFO_WIDTH (&gl_sink->info),
-          GST_VIDEO_INFO_HEIGHT (&gl_sink->info));
-  }
-  /* default opengl scene */
-  else {
+  if (!do_redisplay) {
 #if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (gl_sink->context)) {
       GLfloat verts[8] = { 1.0f, 1.0f,
@@ -1165,8 +1164,8 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
       gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
     }
 #endif
-  }                             /* end default opengl scene */
-
+  }
+  /* end default opengl scene */
   window->is_drawing = FALSE;
   gst_object_unref (window);
 
