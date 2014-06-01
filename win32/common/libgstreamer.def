@@ -410,8 +410,8 @@ EXPORTS
 	gst_deinit
 	gst_device_create_element
 	gst_device_get_caps
+	gst_device_get_device_class
 	gst_device_get_display_name
-	gst_device_get_klass
 	gst_device_get_type
 	gst_device_has_classes
 	gst_device_has_classesv

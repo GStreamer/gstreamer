@@ -3344,6 +3344,11 @@ GST_DEVICE_GET_CLASS
 GST_IS_DEVICE
 GST_IS_DEVICE_CLASS
 GST_TYPE_DEVICE
+
+gst_device_create_element
+gst_device_get_caps
+gst_device_get_display_name
+gst_device_get_device_class
 gst_device_get_type
 </SECTION>
 

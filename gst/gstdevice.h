@@ -90,7 +90,7 @@ GstElement * gst_device_create_element (GstDevice * device, const gchar * name);
 
 GstCaps *    gst_device_get_caps (GstDevice * device);
 gchar *      gst_device_get_display_name (GstDevice * device);
-gchar *      gst_device_get_klass (GstDevice * device);
+gchar *      gst_device_get_device_class (GstDevice * device);
 gboolean     gst_device_reconfigure_element (GstDevice * device,
                                              GstElement * element);
 
