@@ -622,6 +622,17 @@ failed:
   }
 }
 
+gchar *
+convert_lang_code (guint8 * data)
+{
+  gchar *code;
+  /* the iso language code and country code is always 3 byte long */
+  code = g_malloc0 (4);
+  memcpy (code, data, 3);
+
+  return code;
+}
+
 void
 _packetize_descriptor_array (GPtrArray * array, guint8 ** out_data)
 {
@@ -855,10 +866,43 @@ gst_mpegts_descriptor_from_registration (const gchar * format_identifier,
 }
 
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */
+static GstMpegTsISO639LanguageDescriptor *
+_gst_mpegts_iso_639_language_descriptor_copy (GstMpegTsISO639LanguageDescriptor
+    * source)
+{
+  GstMpegTsISO639LanguageDescriptor *copy;
+  guint i;
+
+  copy = g_slice_dup (GstMpegTsISO639LanguageDescriptor, source);
+
+  for (i = 0; i < source->nb_language; i++) {
+    copy->language[i] = g_strdup (source->language[i]);
+  }
+
+  return copy;
+}
+
+void
+gst_mpegts_iso_639_language_descriptor_free (GstMpegTsISO639LanguageDescriptor
+    * desc)
+{
+  guint i;
+
+  for (i = 0; i < desc->nb_language; i++) {
+    g_free (desc->language[i]);
+  }
+  g_slice_free (GstMpegTsISO639LanguageDescriptor, desc);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegTsISO639LanguageDescriptor,
+    gst_mpegts_iso_639_language,
+    (GBoxedCopyFunc) _gst_mpegts_iso_639_language_descriptor_copy,
+    (GFreeFunc) gst_mpegts_iso_639_language_descriptor_free);
+
 /**
  * gst_mpegts_descriptor_parse_iso_639_language:
  * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegTsDescriptor
- * @res: (out) (transfer none): the #GstMpegTsISO639LanguageDescriptor to fill
+ * @res: (out) (transfer full): the #GstMpegTsISO639LanguageDescriptor to fill
  *
  * Extracts the iso 639-2 language information from @descriptor.
  *
@@ -869,23 +913,30 @@ gst_mpegts_descriptor_from_registration (const gchar * format_identifier,
  */
 gboolean
 gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
-    descriptor, GstMpegTsISO639LanguageDescriptor * res)
+    descriptor, GstMpegTsISO639LanguageDescriptor ** desc)
 {
   guint i;
   guint8 *data;
+  GstMpegTsISO639LanguageDescriptor *res;
 
-  g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
+  g_return_val_if_fail (descriptor != NULL && desc != NULL, FALSE);
   /* This descriptor can be empty, no size check needed */
   __common_desc_checks (descriptor, GST_MTS_DESC_ISO_639_LANGUAGE, 0, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
+
+  res = g_slice_new0 (GstMpegTsISO639LanguageDescriptor);
+
   /* Each language is 3 + 1 bytes */
   res->nb_language = descriptor->length / 4;
   for (i = 0; i < res->nb_language; i++) {
-    memcpy (res->language[i], data, 3);
+    res->language[i] = convert_lang_code (data);
     res->audio_type[i] = data[3];
     data += 4;
   }
+
+  *desc = res;
+
   return TRUE;
 
 }
@@ -894,7 +945,7 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
  * gst_mpegts_descriptor_parse_iso_639_language_idx:
  * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegTsDescriptor
  * @idx: Table id of the language to parse
- * @lang: (out) (transfer none): 4-byte gchar array to hold the language code
+ * @lang: (out) (transfer full): 4-byte gchar array to hold the language code
  * @audio_type: (out) (transfer none) (allow-none): the #GstMpegTsIso639AudioType to set
  *
  * Extracts the iso 639-2 language information from specific table id in @descriptor.
@@ -906,8 +957,7 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
  */
 gboolean
 gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegTsDescriptor *
-    descriptor, guint idx, gchar (*lang)[4],
-    GstMpegTsIso639AudioType * audio_type)
+    descriptor, guint idx, gchar ** lang, GstMpegTsIso639AudioType * audio_type)
 {
   guint8 *data;
 
@@ -920,8 +970,7 @@ gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegTsDescriptor *
 
   data = (guint8 *) descriptor->data + 2 + idx * 4;
 
-  memcpy (lang, data, 3);
-  (*lang)[3] = 0;
+  *lang = convert_lang_code (data);
 
   data += 3;
 
@@ -969,6 +1018,7 @@ gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *
   __common_desc_checks (descriptor, GST_MTS_DESC_DTG_LOGICAL_CHANNEL, 0, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
+
   res->nb_channels = descriptor->length / 4;
 
   for (i = 0; i < res->nb_channels; i++) {

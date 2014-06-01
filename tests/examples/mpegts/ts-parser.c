@@ -178,8 +178,9 @@ dump_terrestrial_delivery (GstMpegTsDescriptor * desc, guint spacing)
     g_printf ("%*s   Constellation     : %d (%s)\n", spacing, "",
         res.constellation, enum_name (GST_TYPE_MPEG_TS_MODULATION_TYPE,
             res.constellation));
-    g_printf ("%*s   Hierarchy         : %d (%s)\n", spacing, "", res.hierarchy,
-        enum_name (GST_TYPE_MPEG_TS_TERRESTRIAL_HIERARCHY, res.hierarchy));
+    g_printf ("%*s   Hierarchy         : %d (%s)\n", spacing, "",
+        res.hierarchy, enum_name (GST_TYPE_MPEG_TS_TERRESTRIAL_HIERARCHY,
+            res.hierarchy));
     g_printf ("%*s   Code Rate HP      : %d (%s)\n", spacing, "",
         res.code_rate_hp, enum_name (GST_TYPE_MPEG_TS_DVB_CODE_RATE,
             res.code_rate_hp));
@@ -310,28 +311,25 @@ dump_multiligual_component (GstMpegTsDescriptor * desc, guint spacing)
 static void
 dump_linkage (GstMpegTsDescriptor * desc, guint spacing)
 {
-  GstMpegTsDVBLinkageDescriptor res;
-
-  res.private_data_length = 0;
-  res.private_data_bytes = NULL;
+  GstMpegTsDVBLinkageDescriptor *res;
 
   if (gst_mpegts_descriptor_parse_dvb_linkage (desc, &res)) {
     g_printf ("%*s Linkage Descriptor : 0x%02x (%s)\n", spacing, "",
-        res.linkage_type, enum_name (GST_TYPE_MPEG_TS_DVB_LINKAGE_TYPE,
-            res.linkage_type));
+        res->linkage_type, enum_name (GST_TYPE_MPEG_TS_DVB_LINKAGE_TYPE,
+            res->linkage_type));
 
     g_printf ("%*s   Transport Stream ID : 0x%04x\n", spacing, "",
-        res.transport_stream_id);
+        res->transport_stream_id);
     g_printf ("%*s   Original Network ID : 0x%04x\n", spacing, "",
-        res.original_network_id);
+        res->original_network_id);
     g_printf ("%*s   Service ID          : 0x%04x\n", spacing, "",
-        res.service_id);
+        res->service_id);
 
-    switch (res.linkage_type) {
+    switch (res->linkage_type) {
       case GST_MPEGTS_DVB_LINKAGE_MOBILE_HAND_OVER:
       {
         GstMpegTsDVBLinkageMobileHandOver *linkage =
-            (GstMpegTsDVBLinkageMobileHandOver *) res.linkage_data;
+            (GstMpegTsDVBLinkageMobileHandOver *) res->linkage_data;
         g_printf ("%*s   hand_over_type    : 0x%02x (%s)\n", spacing,
             "", linkage->hand_over_type,
             enum_name (GST_TYPE_MPEG_TS_DVB_LINKAGE_HAND_OVER_TYPE,
@@ -347,7 +345,7 @@ dump_linkage (GstMpegTsDescriptor * desc, guint spacing)
       case GST_MPEGTS_DVB_LINKAGE_EVENT:
       {
         GstMpegTsDVBLinkageEvent *linkage =
-            (GstMpegTsDVBLinkageEvent *) res.linkage_data;
+            (GstMpegTsDVBLinkageEvent *) res->linkage_data;
         g_printf ("%*s   target_event_id   : 0x%04x\n", spacing, "",
             linkage->target_event_id);
         g_printf ("%*s   target_listed     : %s\n", spacing, "",
@@ -359,7 +357,7 @@ dump_linkage (GstMpegTsDescriptor * desc, guint spacing)
       case GST_MPEGTS_DVB_LINKAGE_EXTENDED_EVENT:
       {
         guint i;
-        GPtrArray *items = (GPtrArray *) res.linkage_data;
+        GPtrArray *items = (GPtrArray *) res->linkage_data;
 
         for (i = 0; i < items->len; i++) {
           GstMpegTsDVBLinkageExtendedEvent *linkage =
@@ -398,31 +396,31 @@ dump_linkage (GstMpegTsDescriptor * desc, guint spacing)
       default:
         break;
     }
-    if (res.private_data_length > 0) {
-      dump_memory_bytes (res.private_data_bytes, res.private_data_length,
+    if (res->private_data_length > 0) {
+      dump_memory_bytes (res->private_data_bytes, res->private_data_length,
           spacing + 2);
-      g_free ((gpointer) res.private_data_bytes);
     }
+    gst_mpegts_dvb_linkage_descriptor_free (res);
   }
 }
 
 static void
 dump_component (GstMpegTsDescriptor * desc, guint spacing)
 {
-  GstMpegTsComponentDescriptor res;
-
-  res.text = NULL;
+  GstMpegTsComponentDescriptor *res;
 
   if (gst_mpegts_descriptor_parse_dvb_component (desc, &res)) {
     g_printf ("%*s stream_content : 0x%02x (%s)\n", spacing, "",
-        res.stream_content,
+        res->stream_content,
         enum_name (GST_TYPE_MPEG_TS_COMPONENT_STREAM_CONTENT,
-            res.stream_content));
-    g_printf ("%*s component_type : 0x%02x\n", spacing, "", res.component_type);
-    g_printf ("%*s component_tag  : 0x%02x\n", spacing, "", res.component_tag);
-    g_printf ("%*s language_code  : %s\n", spacing, "", res.language_code);
+            res->stream_content));
+    g_printf ("%*s component_type : 0x%02x\n", spacing, "",
+        res->component_type);
+    g_printf ("%*s component_tag  : 0x%02x\n", spacing, "", res->component_tag);
+    g_printf ("%*s language_code  : %s\n", spacing, "", res->language_code);
     g_printf ("%*s text           : %s\n", spacing, "",
-        res.text ? res.text : "NULL");
+        res->text ? res->text : "NULL");
+    gst_mpegts_dvb_component_descriptor_free (res);
   }
 }
 
@@ -452,35 +450,37 @@ static void
 dump_iso_639_language (GstMpegTsDescriptor * desc, guint spacing)
 {
   guint i;
-  GstMpegTsISO639LanguageDescriptor res;
+  GstMpegTsISO639LanguageDescriptor *res;
 
   if (gst_mpegts_descriptor_parse_iso_639_language (desc, &res)) {
-    for (i = 0; i < res.nb_language; i++)
+    for (i = 0; i < res->nb_language; i++) {
       g_print
-          ("%*s ISO 639 Language Descriptor %c%c%c , audio_type:0x%x (%s)\n",
-          spacing, "", res.language[i][0], res.language[i][1],
-          res.language[i][2], res.audio_type[i],
-          enum_name (GST_TYPE_MPEG_TS_ISO639_AUDIO_TYPE, res.audio_type[i]));
+          ("%*s ISO 639 Language Descriptor %s , audio_type:0x%x (%s)\n",
+          spacing, "", res->language[i], res->audio_type[i],
+          enum_name (GST_TYPE_MPEG_TS_ISO639_AUDIO_TYPE, res->audio_type[i]));
+    }
+    gst_mpegts_iso_639_language_descriptor_free (res);
   }
 }
 
 static void
 dump_dvb_extended_event (GstMpegTsDescriptor * desc, guint spacing)
 {
-  GstMpegTsExtendedEventDescriptor res;
+  GstMpegTsExtendedEventDescriptor *res;
 
   if (gst_mpegts_descriptor_parse_dvb_extended_event (desc, &res)) {
     guint i;
     g_printf ("%*s DVB Extended Event\n", spacing, "");
     g_printf ("%*s   descriptor_number:%d, last_descriptor_number:%d\n",
-        spacing, "", res.descriptor_number, res.last_descriptor_number);
-    g_printf ("%*s   language_code:%s\n", spacing, "", res.language_code);
-    g_printf ("%*s   text : %s\n", spacing, "", res.text);
-    for (i = 0; i < res.items->len; i++) {
-      GstMpegTsExtendedEventItem *item = g_ptr_array_index (res.items, i);
+        spacing, "", res->descriptor_number, res->last_descriptor_number);
+    g_printf ("%*s   language_code:%s\n", spacing, "", res->language_code);
+    g_printf ("%*s   text : %s\n", spacing, "", res->text);
+    for (i = 0; i < res->items->len; i++) {
+      GstMpegTsExtendedEventItem *item = g_ptr_array_index (res->items, i);
       g_printf ("%*s     #%d [description:item]  %s : %s\n",
           spacing, "", i, item->item_description, item->item);
     }
+    gst_mpegts_extended_event_descriptor_free (res);
   }
 }
 
@@ -579,8 +579,18 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
       }
       case GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER:
       {
-        if (!DUMP_DESCRIPTORS)
-          dump_memory_content (desc, spacing + 2);
+        guint32 specifier;
+        guint8 len = 0, *data = NULL;
+
+        if (gst_mpegts_descriptor_parse_dvb_private_data_specifier (desc,
+                &specifier, &data, &len)) {
+          g_printf ("%*s   private_data_specifier : 0x%08x\n", spacing, "",
+              specifier);
+          if (len > 0) {
+            dump_memory_bytes (data, len, spacing + 2);
+            g_free (data);
+          }
+        }
         break;
       }
       case GST_MTS_DESC_DVB_FREQUENCY_LIST:
@@ -647,6 +657,25 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
         }
         break;
       }
+      case GST_MTS_DESC_DVB_DATA_BROADCAST:
+      {
+        GstMpegTsDataBroadcastDescriptor *res;
+
+        if (gst_mpegts_descriptor_parse_dvb_data_broadcast (desc, &res)) {
+          g_printf ("%*s   data_broadcast_id : 0x%04x\n", spacing, "",
+              res->data_broadcast_id);
+          g_printf ("%*s   component_tag     : 0x%02x\n", spacing, "",
+              res->component_tag);
+          if (res->length > 0) {
+            g_printf ("%*s   selector_bytes:\n", spacing, "");
+            dump_memory_bytes (res->selector_bytes, res->length, spacing + 2);
+          }
+          g_printf ("%*s   text              : %s\n", spacing, "",
+              res->text ? res->text : "NULL");
+          gst_mpegts_dvb_data_broadcast_descriptor_free (res);
+        }
+        break;
+      }
       case GST_MTS_DESC_ISO_639_LANGUAGE:
         dump_iso_639_language (desc, spacing + 2);
         break;
@@ -672,7 +701,7 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
       }
       case GST_MTS_DESC_DVB_SUBTITLING:
       {
-        gchar lang[4];
+        gchar *lang;
         guint8 type;
         guint16 composition;
         guint16 ancillary;
@@ -687,13 +716,14 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
               composition);
           g_printf ("%*s      ancillary page id   : %u\n", spacing, "",
               ancillary);
+          g_free (lang);
         }
       }
         break;
       case GST_MTS_DESC_DVB_TELETEXT:
       {
         GstMpegTsDVBTeletextType type;
-        gchar lang[4];
+        gchar *lang;
         guint8 magazine, page_number;
         guint j;
 
@@ -705,6 +735,7 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
           g_printf ("%*s      language    : %s\n", spacing, "", lang);
           g_printf ("%*s      magazine    : %u\n", spacing, "", magazine);
           g_printf ("%*s      page number : %u\n", spacing, "", page_number);
+          g_free (lang);
         }
       }
         break;

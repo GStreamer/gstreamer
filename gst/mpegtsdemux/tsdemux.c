@@ -967,7 +967,7 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
       mpegts_get_descriptor_from_stream (bstream,
       GST_MTS_DESC_ISO_639_LANGUAGE);
   if (desc) {
-    gchar lang_code[4];
+    gchar *lang_code;
 
     nb = gst_mpegts_descriptor_parse_iso_639_language_nb (desc);
 
@@ -975,8 +975,10 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
 
     for (i = 0; i < nb; i++)
       if (gst_mpegts_descriptor_parse_iso_639_language_idx (desc, i, &lang_code,
-              NULL))
+              NULL)) {
         add_iso639_language_to_tags (stream, lang_code);
+        g_free (lang_code);
+      }
 
     return;
   }
@@ -985,7 +987,7 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
       mpegts_get_descriptor_from_stream (bstream, GST_MTS_DESC_DVB_SUBTITLING);
 
   if (desc) {
-    gchar lang_code[4];
+    gchar *lang_code;
 
     nb = gst_mpegts_descriptor_parse_dvb_subtitling_nb (desc);
 
@@ -993,8 +995,10 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
 
     for (i = 0; i < nb; i++)
       if (gst_mpegts_descriptor_parse_dvb_subtitling_idx (desc, i, &lang_code,
-              NULL, NULL, NULL))
+              NULL, NULL, NULL)) {
         add_iso639_language_to_tags (stream, lang_code);
+        g_free (lang_code);
+      }
   }
 }
 

@@ -287,14 +287,17 @@ typedef struct _GstMpegTsISO639LanguageDescriptor GstMpegTsISO639LanguageDescrip
 struct _GstMpegTsISO639LanguageDescriptor
 {
   guint                    nb_language;
-  gchar                    language[64][3];
+  gchar                    *language[64];
   GstMpegTsIso639AudioType audio_type[64];
 };
 
+#define GST_TYPE_MPEGTS_ISO_639_LANGUAGE (gst_mpegts_iso_639_language_get_type ())
+GType gst_mpegts_iso_639_language_get_type (void);
+void gst_mpegts_iso_639_language_descriptor_free (GstMpegTsISO639LanguageDescriptor * desc);
 gboolean gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *descriptor,
-						       GstMpegTsISO639LanguageDescriptor *res);
+						       GstMpegTsISO639LanguageDescriptor **res);
 gboolean gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegTsDescriptor *descriptor,
-                                                           guint idx, gchar (*lang)[4],
+                                                           guint idx, gchar **lang,
                                                            GstMpegTsIso639AudioType *audio_type);
 guint gst_mpegts_descriptor_parse_iso_639_language_nb (const GstMpegTsDescriptor *descriptor);
 
