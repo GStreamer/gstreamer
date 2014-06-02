@@ -354,6 +354,37 @@ gst_amc_get_jni_env (void)
 }
 
 static gboolean
+check_nativehelper (void)
+{
+  GModule *module;
+  void **jni_invocation = NULL;
+  gboolean ret = FALSE;
+
+  module = g_module_open (NULL, G_MODULE_BIND_LOCAL);
+  if (!module)
+    return ret;
+
+  /* Check if libnativehelper is loaded in the process and if
+   * it has these awful wrappers for JNI_CreateJavaVM and
+   * JNI_GetCreatedJavaVMs that crash the app if you don't
+   * create a JniInvocation instance first. If it isn't we
+   * just fail here and don't initialize anything.
+   * See this code for reference:
+   * https://android.googlesource.com/platform/libnativehelper/+/master/JniInvocation.cpp
+   */
+  if (!g_module_symbol (module, "_ZN13JniInvocation15jni_invocation_E",
+          (gpointer *) & jni_invocation)) {
+    ret = TRUE;
+  } else {
+    ret = (jni_invocation != NULL && *jni_invocation != NULL);
+  }
+
+  g_module_close (module);
+
+  return ret;
+}
+
+static gboolean
 load_java_module (const gchar * name)
 {
   java_module = g_module_open (name, G_MODULE_BIND_LOCAL);
@@ -390,6 +421,18 @@ static gboolean
 initialize_java_vm (void)
 {
   jsize n_vms;
+
+  /* Returns TRUE if we can safely
+   * a) get the current VMs and
+   * b) start a VM if none is started yet
+   *
+   * FIXME: On Android >= 4.4 we won't be able to safely start a
+   * VM on our own without using private C++ API!
+   */
+  if (!check_nativehelper ()) {
+    GST_ERROR ("Can't safely check for VMs or start a VM");
+    return FALSE;
+  }
 
   if (!load_java_module (NULL)) {
     if (!load_java_module ("libdvm"))
