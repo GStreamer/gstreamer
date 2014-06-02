@@ -220,6 +220,9 @@ getStackTrace (JNIEnv * env, jthrowable exception)
     g_string_append (gs, "<failed to get UTF chars for message>");
     goto done;
   }
+
+  g_string_append (gs, utfChars);
+
   (*env)->ReleaseStringUTFChars (env, messageStr, utfChars);
 
 done:
