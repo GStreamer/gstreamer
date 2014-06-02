@@ -2467,7 +2467,7 @@ const GstOggMap mappers[] = {
     granulepos_to_granule_opus,
     granule_to_granulepos_default,
     NULL,
-    NULL,
+    is_packet_keyframe_true,
     is_header_opus,
     packet_duration_opus,
     NULL,
