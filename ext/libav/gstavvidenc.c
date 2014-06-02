@@ -546,13 +546,16 @@ bad_input_fmt:
         oclass->in_plugin->name);
     goto close_codec;
   }
+close_codec:
   {
-  close_codec:
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
     if (avcodec_get_context_defaults3 (ffmpegenc->context,
             oclass->in_plugin) < 0)
       GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
-  cleanup_stats_in:
+    goto cleanup_stats_in;
+  }
+cleanup_stats_in:
+  {
     if (ffmpegenc->context->stats_in)
       g_free (ffmpegenc->context->stats_in);
     return FALSE;
