@@ -499,16 +499,21 @@ gst_amc_set_error_string (JNIEnv * env, GQuark domain, gint code, GError ** err,
     if ((exception = (*env)->ExceptionOccurred (env))) {
       gchar *exception_description, *exception_stacktrace;
 
+      /* Clear exception so that we can call Java methods again */
+      (*env)->ExceptionClear (env);
+
       exception_description = getExceptionSummary (env, exception);
       exception_stacktrace = getStackTrace (env, exception);
       g_set_error (err, domain, code, "%s: %s\n%s", message,
           exception_description, exception_stacktrace);
       g_free (exception_description);
       g_free (exception_stacktrace);
+
+      (*env)->DeleteLocalRef (env, exception);
     } else {
+      (*env)->ExceptionClear (env);
       g_set_error (err, domain, code, "%s", message);
     }
-    (*env)->ExceptionClear (env);
   } else {
     g_set_error (err, domain, code, "%s", message);
   }
