@@ -2151,8 +2151,16 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
           GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->pcr_offset)));
       refpcr = group->first_pcr;
       refpcroffset = group->pcr_offset;
-      if (pts < PCRTIME_TO_GSTTIME (refpcr))
-        refpcr -= PCR_MAX_VALUE;
+      if (pts < PCRTIME_TO_GSTTIME (refpcr)) {
+        /* Only apply wrapover if we're certain it is, and avoid
+         * returning bogus values if it's a PTS/DTS which is *just*
+         * before the start of the current group
+         */
+        if (ABSDIFF (pts, PCRTIME_TO_GSTTIME (refpcr)) > GST_SECOND)
+          refpcr -= PCR_MAX_VALUE;
+        else
+          refpcr = G_MAXINT64;
+      }
     } else {
       GList *tmp;
       /* Otherwise, find a suitable group */
