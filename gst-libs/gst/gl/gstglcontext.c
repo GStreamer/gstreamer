@@ -602,17 +602,20 @@ _create_context_info (GstGLContext * context, GstGLAPI gl_api, gint * gl_major,
     gint * gl_minor, GError ** error)
 {
   const GstGLFuncs *gl;
-  guint maj, min;
+  guint maj = 0, min = 0;
   GLenum gl_err = GL_NO_ERROR;
-  gchar *opengl_version = NULL;
+  const gchar *opengl_version = NULL;
 
   gl = context->gl_vtable;
 
-  GST_INFO ("GL_VERSION: %s", gl->GetString (GL_VERSION));
-  GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
-      gl->GetString (GL_SHADING_LANGUAGE_VERSION));
-  GST_INFO ("GL_VENDOR: %s", gl->GetString (GL_VENDOR));
-  GST_INFO ("GL_RENDERER: %s", gl->GetString (GL_RENDERER));
+  GST_INFO ("GL_VERSION: %s",
+      GST_STR_NULL ((const gchar *) gl->GetString (GL_VERSION)));
+  GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s", GST_STR_NULL ((const gchar *)
+          gl->GetString (GL_SHADING_LANGUAGE_VERSION)));
+  GST_INFO ("GL_VENDOR: %s",
+      GST_STR_NULL ((const gchar *) gl->GetString (GL_VENDOR)));
+  GST_INFO ("GL_RENDERER: %s",
+      GST_STR_NULL ((const gchar *) gl->GetString (GL_RENDERER)));
 
   gl_err = gl->GetError ();
   if (gl_err != GL_NO_ERROR) {
@@ -621,12 +624,13 @@ _create_context_info (GstGLContext * context, GstGLAPI gl_api, gint * gl_major,
     return FALSE;
   }
 
-  opengl_version = (gchar *) gl->GetString (GL_VERSION);
+  opengl_version = (const gchar *) gl->GetString (GL_VERSION);
   if (opengl_version && gl_api & GST_GL_API_GLES2)
     /* gles starts with "OpenGL ES " */
     opengl_version = &opengl_version[10];
 
-  sscanf (opengl_version, "%d.%d", &maj, &min);
+  if (opengl_version)
+    sscanf (opengl_version, "%d.%d", &maj, &min);
 
   /* OpenGL > 1.2.0 */
   if (gl_api & GST_GL_API_OPENGL || gl_api & GST_GL_API_OPENGL3) {
