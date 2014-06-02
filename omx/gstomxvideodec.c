@@ -1139,6 +1139,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
     gst_video_codec_state_unref (state);
     GST_ERROR_OBJECT (self, "Failed to negotiate");
     err = OMX_ErrorUndefined;
+    GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     goto done;
   }
 
