@@ -197,8 +197,7 @@ _parse_atsc_vct (GstMpegTsSection * section)
   return (gpointer) vct;
 
 error:
-  if (vct)
-    _gst_mpegts_atsc_vct_free (vct);
+  _gst_mpegts_atsc_vct_free (vct);
 
   return NULL;
 }
@@ -366,8 +365,7 @@ _parse_atsc_mgt (GstMpegTsSection * section)
   return (gpointer) mgt;
 
 error:
-  if (mgt)
-    _gst_mpegts_atsc_mgt_free (mgt);
+  _gst_mpegts_atsc_mgt_free (mgt);
 
   return NULL;
 }
@@ -710,8 +708,7 @@ _parse_atsc_eit (GstMpegTsSection * section)
   return (gpointer) eit;
 
 error:
-  if (eit)
-    _gst_mpegts_atsc_eit_free (eit);
+  _gst_mpegts_atsc_eit_free (eit);
 
   return NULL;
 
@@ -798,8 +795,7 @@ _parse_ett (GstMpegTsSection * section)
   return (gpointer) ett;
 
 error:
-  if (ett)
-    _gst_mpegts_atsc_ett_free (ett);
+  _gst_mpegts_atsc_ett_free (ett);
 
   return NULL;
 
@@ -888,8 +884,7 @@ _parse_atsc_stt (GstMpegTsSection * section)
   return (gpointer) stt;
 
 error:
-  if (stt)
-    _gst_mpegts_atsc_stt_free (stt);
+  _gst_mpegts_atsc_stt_free (stt);
 
   return NULL;
 }
