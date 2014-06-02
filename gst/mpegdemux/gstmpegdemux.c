@@ -796,7 +796,6 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
           break;
         case 0x7:
           /* FIXME: What range is SDDS? */
-          break;
         default:
           GST_WARNING_OBJECT (demux,
               "Unknown audio stream format in language code event: %d",
