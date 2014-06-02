@@ -4,14 +4,16 @@ libgstandroidmedia_la_SOURCES = \
 	gstamc.c \
 	gstamcaudiodec.c \
 	gstamcvideodec.c \
-	gstamcvideoenc.c
+	gstamcvideoenc.c \
+	gstjniutils.c
 
 noinst_HEADERS = \
 	gstamc.h \
 	gstamc-constants.h \
 	gstamcaudiodec.h \
 	gstamcvideodec.h \
-	gstamcvideoenc.h
+	gstamcvideoenc.h \
+	gstjniutils.h
 
 libgstandroidmedia_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
