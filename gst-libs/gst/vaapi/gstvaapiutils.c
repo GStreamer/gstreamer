@@ -145,6 +145,9 @@ string_of_VAProfile (VAProfile profile)
       MAP (VC1Simple);
       MAP (VC1Main);
       MAP (VC1Advanced);
+#if VA_CHECK_VERSION(0,35,0)
+      MAP (VP8Version0_3);
+#endif
 #undef MAP
     default:
       break;

@@ -126,8 +126,10 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "image/jpeg", "baseline"
     },
 #endif
+#if VA_CHECK_VERSION(0,35,0)
     {GST_VAAPI_PROFILE_VP8, VAProfileVP8Version0_3,
       "video/x-vp8", "Version0_3"},
+#endif
     { 0, }
 };
 
