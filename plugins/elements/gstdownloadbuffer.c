@@ -327,8 +327,6 @@ gst_download_buffer_init (GstDownloadBuffer * dlbuf)
   dlbuf->waiting_add = FALSE;
   g_cond_init (&dlbuf->item_add);
 
-  dlbuf->buffering_percent = 100;
-
   /* tempfile related */
   dlbuf->temp_template = NULL;
   dlbuf->temp_location = NULL;
@@ -351,6 +349,18 @@ gst_download_buffer_finalize (GObject * object)
   g_free (dlbuf->temp_location);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+reset_positions (GstDownloadBuffer * dlbuf)
+{
+  dlbuf->write_pos = 0;
+  dlbuf->read_pos = 0;
+  dlbuf->filling = TRUE;
+  dlbuf->buffering_percent = 0;
+  dlbuf->is_buffering = TRUE;
+  dlbuf->seeking = FALSE;
+  GST_DOWNLOAD_BUFFER_CLEAR_LEVEL (dlbuf->cur_level);
 }
 
 static void
@@ -882,6 +892,7 @@ gst_download_buffer_open_temp_location_file (GstDownloadBuffer * dlbuf)
   g_free (dlbuf->temp_location);
   dlbuf->temp_location = name;
   dlbuf->temp_fd = fd;
+  reset_positions (dlbuf);
 
   GST_DOWNLOAD_BUFFER_MUTEX_UNLOCK (dlbuf);
 
@@ -962,7 +973,7 @@ gst_download_buffer_locked_flush (GstDownloadBuffer * dlbuf, gboolean full,
 {
   if (clear_temp)
     gst_download_buffer_flush_temp_file (dlbuf);
-  GST_DOWNLOAD_BUFFER_CLEAR_LEVEL (dlbuf->cur_level);
+  reset_positions (dlbuf);
   gst_event_replace (&dlbuf->stream_start_event, NULL);
   gst_event_replace (&dlbuf->segment_event, NULL);
 }
