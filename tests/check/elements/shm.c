@@ -143,6 +143,8 @@ GST_START_TEST (test_shm_alloc)
 
   g_object_get (sink, "shm-size", &size, NULL);
 
+  size -= params.align | gst_memory_alignment;
+
   /* alloc buffer of max size, this way, it will block forever it a copy
    * is made inside shmsink*/
   buf = gst_buffer_new_allocate (alloc, size, &params);
