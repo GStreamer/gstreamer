@@ -258,7 +258,7 @@ gst_shm_sink_allocator_alloc_locked (GstShmSinkAllocator * self, gsize size,
   /* allocate more to compensate for alignment */
   maxsize += align;
 
-  block = sp_writer_alloc_block (self->sink->pipe, size);
+  block = sp_writer_alloc_block (self->sink->pipe, maxsize);
   if (block) {
     GstShmSinkMemory *mymem;
     gsize aoffset, padding;
