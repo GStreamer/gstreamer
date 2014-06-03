@@ -65,6 +65,7 @@ struct _GstGLUploadPrivate
   GstVideoGLTextureUploadMeta *meta;
 
   GstBuffer *outbuf;
+  gboolean released;
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
@@ -161,6 +162,8 @@ gst_gl_upload_reset (GstGLUpload * upload)
       upload->in_tex[i] = NULL;
     }
   }
+
+  gst_gl_upload_release_buffer (upload);
 }
 
 static void
@@ -240,6 +243,8 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   g_return_val_if_fail (buffer != NULL, FALSE);
   g_return_val_if_fail (tex_id != NULL, FALSE);
   g_return_val_if_fail (gst_buffer_n_memory (buffer) > 0, FALSE);
+
+  gst_gl_upload_release_buffer (upload);
 
   /* GstGLMemory */
   mem = gst_buffer_peek_memory (buffer, 0);
@@ -330,6 +335,8 @@ gst_gl_upload_release_buffer (GstGLUpload * upload)
     gst_buffer_unref (upload->priv->outbuf);
     upload->priv->outbuf = NULL;
   }
+
+  upload->priv->released = TRUE;
 }
 
 /*
@@ -539,6 +546,7 @@ _upload_memory (GstGLUpload * upload)
   upload->out_tex->tex_id = *(guint *) out_frame.data[0];
 
   gst_video_frame_unmap (&out_frame);
+  upload->priv->released = FALSE;
 
   return TRUE;
 }
