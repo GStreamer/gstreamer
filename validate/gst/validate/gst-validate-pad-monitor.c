@@ -823,10 +823,17 @@ gst_validate_pad_monitor_check_first_buffer (GstValidatePadMonitor *
       GST_VALIDATE_REPORT (pad_monitor, BUFFER_BEFORE_SEGMENT,
           "Received buffer before Segment event");
     }
+
+    GST_DEBUG_OBJECT (pad_monitor->pad,
+        "Checking first buffer (pts:%" GST_TIME_FORMAT " dts:%" GST_TIME_FORMAT
+        ")", GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+        GST_TIME_ARGS (GST_BUFFER_DTS (buffer)));
+
     if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) {
       gint64 running_time = gst_segment_to_running_time (&pad_monitor->segment,
           pad_monitor->segment.format, GST_BUFFER_TIMESTAMP (buffer));
-      if (running_time != 0) {
+      /* Only check for in-segment buffers */
+      if (GST_CLOCK_TIME_IS_VALID (running_time) && running_time != 0) {
         GST_VALIDATE_REPORT (pad_monitor, FIRST_BUFFER_RUNNING_TIME_IS_NOT_ZERO,
             "First buffer running time is not 0, it is: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (running_time));
@@ -1280,6 +1287,9 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
     case GST_EVENT_SEGMENT:
       /* parse segment data to be used if event is handled */
       gst_event_parse_segment (event, &segment);
+
+      GST_DEBUG_OBJECT (pad_monitor->pad, "Got segment %" GST_SEGMENT_FORMAT,
+          segment);
 
       if (pad_monitor->pending_newsegment_seqnum) {
         if (pad_monitor->pending_newsegment_seqnum == seqnum) {
