@@ -771,6 +771,34 @@ dpb_find_lowest_voc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
 }
 
 static gboolean
+dpb_output_other_views(GstVaapiDecoderH264 *decoder,
+    GstVaapiPictureH264 *picture, guint voc)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiPictureH264 *found_picture;
+    gint found_index;
+    gboolean success;
+
+    if (priv->max_views == 1)
+        return TRUE;
+
+    /* Emit all other view components that were in the same access
+       unit than the picture we have just found */
+    found_picture = picture;
+    for (;;) {
+        found_index = dpb_find_lowest_voc(decoder, found_picture,
+            &found_picture);
+        if (found_index < 0 || found_picture->base.voc >= voc)
+            break;
+        success = dpb_output(decoder, priv->dpb[found_index], found_picture);
+        dpb_evict(decoder, found_picture, found_index);
+        if (!success)
+            return FALSE;
+    }
+    return TRUE;
+}
+
+static gboolean
 dpb_bump(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
@@ -782,21 +810,16 @@ dpb_bump(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     if (found_index < 0)
         return FALSE;
 
+    if (picture && picture->base.poc != found_picture->base.poc)
+        dpb_output_other_views(decoder, found_picture, found_picture->base.voc);
+
     success = dpb_output(decoder, priv->dpb[found_index], found_picture);
     dpb_evict(decoder, found_picture, found_index);
     if (priv->max_views == 1)
         return success;
 
-    /* Emit all other view components that were in the same access
-       unit than the picture we have just found */
-    for (;;) {
-        found_index = dpb_find_lowest_voc(decoder, found_picture,
-            &found_picture);
-        if (found_index < 0)
-            break;
-        dpb_output(decoder, priv->dpb[found_index], found_picture);
-        dpb_evict(decoder, found_picture, found_index);
-    }
+    if (picture && picture->base.poc != found_picture->base.poc)
+        dpb_output_other_views(decoder, found_picture, G_MAXUINT32);
     return success;
 }
 
