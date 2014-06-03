@@ -382,7 +382,8 @@ gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
     GList *l;
 
     for (l = filter->pending_events; l; l = l->next) {
-      if (GST_EVENT_TYPE (l->data) == GST_EVENT_SEGMENT) {
+      if (GST_EVENT_TYPE (l->data) == GST_EVENT_SEGMENT ||
+          GST_EVENT_TYPE (l->data) == GST_EVENT_EOS) {
         gst_event_unref (l->data);
         filter->pending_events = g_list_delete_link (filter->pending_events, l);
         break;
