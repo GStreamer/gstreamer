@@ -280,7 +280,9 @@ gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   GstAlsaSink *sink = GST_ALSA_SINK (bsink);
   GstCaps *caps, *templ_caps;
 
+  GST_OBJECT_LOCK (sink);
   if (sink->handle == NULL) {
+    GST_OBJECT_UNLOCK (sink);
     GST_DEBUG_OBJECT (sink, "device not open, using template caps");
     return NULL;                /* base class will get template caps for us */
   }
@@ -289,20 +291,26 @@ gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter)
     if (filter) {
       caps = gst_caps_intersect_full (filter, sink->cached_caps,
           GST_CAPS_INTERSECT_FIRST);
+      GST_OBJECT_UNLOCK (sink);
       GST_LOG_OBJECT (sink, "Returning cached caps %" GST_PTR_FORMAT " with "
           "filter %" GST_PTR_FORMAT " applied: %" GST_PTR_FORMAT,
           sink->cached_caps, filter, caps);
       return caps;
     } else {
-      GST_LOG_OBJECT (sink, "Returning cached caps %" GST_PTR_FORMAT,
-          sink->cached_caps);
-      return gst_caps_ref (sink->cached_caps);
+      caps = gst_caps_ref (sink->cached_caps);
+      GST_OBJECT_UNLOCK (sink);
+      GST_LOG_OBJECT (sink, "Returning cached caps %" GST_PTR_FORMAT, caps);
+      return caps;
     }
   }
 
   element_class = GST_ELEMENT_GET_CLASS (sink);
   pad_template = gst_element_class_get_pad_template (element_class, "sink");
-  g_return_val_if_fail (pad_template != NULL, NULL);
+  if (pad_template == NULL) {
+    GST_OBJECT_UNLOCK (sink);
+    g_assert_not_reached ();
+    return NULL;
+  }
 
   templ_caps = gst_pad_template_get_caps (pad_template);
   caps = gst_alsa_probe_supported_formats (GST_OBJECT (sink), sink->device,
@@ -312,6 +320,8 @@ gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   if (caps) {
     sink->cached_caps = gst_caps_ref (caps);
   }
+
+  GST_OBJECT_UNLOCK (sink);
 
   GST_INFO_OBJECT (sink, "returning caps %" GST_PTR_FORMAT, caps);
 
@@ -953,11 +963,13 @@ gst_alsasink_close (GstAudioSink * asink)
 {
   GstAlsaSink *alsa = GST_ALSA_SINK (asink);
 
+  GST_OBJECT_LOCK (asink);
   if (alsa->handle) {
     snd_pcm_close (alsa->handle);
     alsa->handle = NULL;
   }
   gst_caps_replace (&alsa->cached_caps, NULL);
+  GST_OBJECT_UNLOCK (asink);
 
   return TRUE;
 }
