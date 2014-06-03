@@ -2051,6 +2051,45 @@ find_inter_view_reference(GstVaapiDecoderH264 *decoder, guint16 view_id)
     return NULL;
 }
 
+/* Checks whether the view id exists in the supplied list of view ids */
+static gboolean
+find_view_id(guint16 view_id, const guint16 *view_ids, guint num_view_ids)
+{
+    guint i;
+
+    for (i = 0; i < num_view_ids; i++) {
+        if (view_ids[i] == view_id)
+            return TRUE;
+    }
+    return FALSE;
+}
+
+/* Checks whether the inter-view reference picture with the supplied
+   view id is used for decoding the current view component picture */
+static gboolean
+is_inter_view_reference_for_picture(GstVaapiDecoderH264 *decoder,
+    guint16 view_id, GstVaapiPictureH264 *picture)
+{
+    const GstH264SPS * const sps = get_sps(decoder);
+    const GstH264SPSExtMVCView *view;
+
+    if (!GST_VAAPI_PICTURE_IS_MVC(picture) ||
+        sps->extension_type != GST_H264_NAL_EXTENSION_MVC)
+        return FALSE;
+
+    view = &sps->extension.mvc.view[picture->base.voc];
+    if (GST_VAAPI_PICTURE_IS_ANCHOR(picture))
+        return (find_view_id(view_id, view->anchor_ref_l0,
+                    view->num_anchor_refs_l0) ||
+                find_view_id(view_id, view->anchor_ref_l1,
+                    view->num_anchor_refs_l1));
+
+    return (find_view_id(view_id, view->non_anchor_ref_l0,
+                view->num_non_anchor_refs_l0) ||
+            find_view_id(view_id, view->non_anchor_ref_l1,
+                view->num_non_anchor_refs_l1));
+}
+
 /* H.8.2.1 - Initialization process for inter-view prediction references */
 static void
 init_picture_refs_mvc_1(GstVaapiDecoderH264 *decoder,
@@ -3147,7 +3186,8 @@ fill_picture(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         GstVaapiFrameStore * const fs = priv->dpb[i];
         if ((gst_vaapi_frame_store_has_reference(fs) &&
              fs->view_id == picture->base.view_id) ||
-            gst_vaapi_frame_store_has_inter_view(fs))
+            (gst_vaapi_frame_store_has_inter_view(fs) &&
+             is_inter_view_reference_for_picture(decoder, fs->view_id, picture)))
             vaapi_fill_picture(&pic_param->ReferenceFrames[n++],
                 fs->buffers[0], fs->structure);
         if (n >= G_N_ELEMENTS(pic_param->ReferenceFrames))
