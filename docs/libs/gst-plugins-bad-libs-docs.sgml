@@ -63,6 +63,12 @@
       <xi:include href="xml/gstaggregatorpad.xml" />
     </chapter>
 
+    <chapter id="video">
+      <title>Video helpers and baseclasses</title>
+      <xi:include href="xml/gstvideoaggregator.xml" />
+      <xi:include href="xml/gstvideoaggregatorpad.xml" />
+    </chapter>
+
     <chapter id="gl">
       <title>OpenGL Helper Library</title>
       <xi:include href="xml/gstglapi.xml"/>

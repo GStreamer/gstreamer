@@ -1,0 +1,15 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_API_VERSION@
+pluginsdir=@libdir@/gstreamer-@GST_API_VERSION@
+
+Name: GStreamer bad video library, uninstalled
+Description: Bad video library for GStreamer elements, Not Installed
+Version: @VERSION@
+Requires: gstreamer-@GST_API_VERSION@
+
+Libs: -L${libdir} ${libdir}/libgstbadvideo-@GST_API_VERSION@.la @BADBASE_LIBS@
+Cflags: -I${includedir} -I@srcdir@/.. @BADBASE_CFLAGS@
+
+libraries=badvideo
