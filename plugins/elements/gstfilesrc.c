@@ -480,13 +480,15 @@ gst_file_src_start (GstBaseSrc * basesrc)
           g_strerror (errno));
       src->seekable = FALSE;
     } else {
+      res = lseek (src->fd, 0, SEEK_SET);
+
+      if (res < 0) {
+        /* We really don't like not being able to go back to 0 */
+        src->seekable = FALSE;
+        goto lseek_wonky;
+      }
+
       src->seekable = TRUE;
-    }
-    res = lseek (src->fd, 0, SEEK_SET);
-    if (res < 0) {
-      /* We really don't like not being able to go back to 0 */
-      src->seekable = FALSE;
-      goto lseek_wonky;
     }
   }
 
