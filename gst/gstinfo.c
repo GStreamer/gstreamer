@@ -687,12 +687,9 @@ gst_debug_print_object (gpointer ptr)
     else
       return str;
   }
-#if 0
-  /* FIXME, datetime does not have a type as first field */
   if (*(GType *) ptr == GST_TYPE_DATE_TIME) {
     return __gst_date_time_serialize ((GstDateTime *) ptr, TRUE);
   }
-#endif
   if (GST_IS_BUFFER (ptr)) {
     return gst_info_describe_buffer (GST_BUFFER_CAST (ptr));
   }
