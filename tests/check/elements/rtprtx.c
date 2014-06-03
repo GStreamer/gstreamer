@@ -416,6 +416,8 @@ start_test_drop_and_check_results (GstElement * bin, GstElement * rtppayloader,
   receive_rtxdata->seqnum_offset = 0;
   receive_rtxdata->seqnum_prev = 0;
 
+  *eos = FALSE;
+
   /* retrieve offset before going to paused */
   g_object_get (G_OBJECT (rtppayloader), "seqnum-offset",
       &receive_rtxdata->seqnum_offset, NULL);
