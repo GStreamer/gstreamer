@@ -260,11 +260,11 @@ gst_validate_report_init (void)
 
   file_env = g_getenv ("GST_VALIDATE_FILE");
   if (file_env != NULL && *file_env != '\0') {
-      log_file = g_fopen (file_env, "w");
-      if (log_file == NULL) {
-        g_printerr ("Could not open log file '%s' for writing: %s\n", file_env,
-            g_strerror (errno));
-        log_file = stderr;
+    log_file = g_fopen (file_env, "w");
+    if (log_file == NULL) {
+      g_printerr ("Could not open log file '%s' for writing: %s\n", file_env,
+          g_strerror (errno));
+      log_file = stderr;
     }
   } else {
     log_file = stdout;
@@ -390,24 +390,24 @@ gst_validate_printf (gpointer source, const gchar * format, ...)
 }
 
 void
-gst_validate_printf_valist (gpointer source,
-    const gchar * format, va_list args)
+gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 {
   GString *string = g_string_new (NULL);
 
   if (source) {
     if (*(GType *) source == GST_TYPE_VALIDATE_ACTION) {
-      GstValidateAction *action = (GstValidateAction*) source;
+      GstValidateAction *action = (GstValidateAction *) source;
 
-      g_string_printf (string, "\n(Executing action: %s, number: %u at position: %"
-          GST_TIME_FORMAT " repeat: %i) | ", g_strcmp0 (action->name, "") == 0 ?
-          "Unnamed" : action->name,
-          action->action_number, GST_TIME_ARGS (action->playback_time),
-          action->repeat);
+      g_string_printf (string,
+          "\n(Executing action: %s, number: %u at position: %" GST_TIME_FORMAT
+          " repeat: %i) | ", g_strcmp0 (action->name,
+              "") == 0 ? "Unnamed" : action->name, action->action_number,
+          GST_TIME_ARGS (action->playback_time), action->repeat);
     } else if (GST_IS_OBJECT (source)) {
       g_string_printf (string, "\n%s --> ", GST_OBJECT_NAME (source));
     } else if (G_IS_OBJECT (source)) {
-      g_string_printf (string, "\n<%s@%p> --> ", G_OBJECT_TYPE_NAME (source), source);
+      g_string_printf (string, "\n<%s@%p> --> ", G_OBJECT_TYPE_NAME (source),
+          source);
     }
   }
 
@@ -422,14 +422,16 @@ gst_validate_printf_valist (gpointer source,
 void
 gst_validate_report_printf (GstValidateReport * report)
 {
-  gst_validate_printf (NULL, "%10s : %s\n", gst_validate_report_level_get_name (report->level),
+  gst_validate_printf (NULL, "%10s : %s\n",
+      gst_validate_report_level_get_name (report->level),
       report->issue->summary);
-  gst_validate_printf (NULL, "%*s Detected on <%s> at %" GST_TIME_FORMAT "\n", 12, "",
-      gst_validate_reporter_get_name (report->reporter),
+  gst_validate_printf (NULL, "%*s Detected on <%s> at %" GST_TIME_FORMAT "\n",
+      12, "", gst_validate_reporter_get_name (report->reporter),
       GST_TIME_ARGS (report->timestamp));
   if (report->message)
     gst_validate_printf (NULL, "%*s Details : %s\n", 12, "", report->message);
   if (report->issue->description)
-    gst_validate_printf (NULL, "%*s Description : %s\n", 12, "", report->issue->description);
+    gst_validate_printf (NULL, "%*s Description : %s\n", 12, "",
+        report->issue->description);
   gst_validate_printf (NULL, "\n");
 }

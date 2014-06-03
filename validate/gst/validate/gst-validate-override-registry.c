@@ -51,7 +51,7 @@ static GstValidateOverrideRegistry *_registry_default;
 #define GST_VALIDATE_OVERRIDE_REGISTRY_UNLOCK(r) g_mutex_unlock (&r->mutex)
 
 #define GST_VALIDATE_OVERRIDE_INIT_SYMBOL "gst_validate_create_overrides"
-typedef int (*GstValidateCreateOverride)(void);
+typedef int (*GstValidateCreateOverride) (void);
 
 static GstValidateOverrideRegistry *
 gst_validate_override_registry_new (void)
@@ -222,7 +222,8 @@ gst_validate_override_registry_preload (void)
     module = g_module_open (*modname, G_MODULE_BIND_LAZY);
     if (module == NULL) {
       loaderr = g_module_error ();
-      GST_ERROR ("Failed to load %s %s", *modname, loaderr ? loaderr : "no idea why");
+      GST_ERROR ("Failed to load %s %s", *modname,
+          loaderr ? loaderr : "no idea why");
       continue;
     }
     if (g_module_symbol (module, GST_VALIDATE_OVERRIDE_INIT_SYMBOL,
@@ -237,7 +238,8 @@ gst_validate_override_registry_preload (void)
         GST_INFO ("Loaded no overrides from %s", *modname);
       }
     } else {
-      GST_WARNING (GST_VALIDATE_OVERRIDE_INIT_SYMBOL " not found in %s", *modname);
+      GST_WARNING (GST_VALIDATE_OVERRIDE_INIT_SYMBOL " not found in %s",
+          *modname);
     }
     g_module_close (module);
   }

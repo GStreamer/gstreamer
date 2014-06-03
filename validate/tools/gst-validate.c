@@ -128,9 +128,9 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       gst_message_parse_request_state (message, &state);
 
       if (GST_IS_VALIDATE_SCENARIO (GST_MESSAGE_SRC (message))
-            && state == GST_STATE_NULL) {
-        gst_validate_printf (GST_MESSAGE_SRC (message), "State change request NULL, "
-            "quiting mainloop\n");
+          && state == GST_STATE_NULL) {
+        gst_validate_printf (GST_MESSAGE_SRC (message),
+            "State change request NULL, " "quiting mainloop\n");
         g_main_loop_quit (mainloop);
       }
       break;
@@ -143,7 +143,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 }
 
 static gboolean
-_is_playbin_pipeline (int argc, gchar **argv)
+_is_playbin_pipeline (int argc, gchar ** argv)
 {
   gint i;
 
@@ -157,10 +157,11 @@ _is_playbin_pipeline (int argc, gchar **argv)
 }
 
 static gboolean
-_execute_set_subtitles (GstValidateScenario * scenario, GstValidateAction * action)
+_execute_set_subtitles (GstValidateScenario * scenario,
+    GstValidateAction * action)
 {
   gchar *uri, *fname;
-  GFile * tmpfile, *folder;
+  GFile *tmpfile, *folder;
   const gchar *subtitle_file, *subtitle_dir;
 
   subtitle_file = gst_structure_get_string (action->structure, "subtitle-file");
@@ -176,8 +177,7 @@ _execute_set_subtitles (GstValidateScenario * scenario, GstValidateAction * acti
   fname = g_strdup_printf ("%s%s%s%s",
       subtitle_dir ? subtitle_dir : "",
       subtitle_dir ? G_DIR_SEPARATOR_S : "",
-      g_file_get_basename (tmpfile),
-      subtitle_file);
+      g_file_get_basename (tmpfile), subtitle_file);
   gst_object_unref (tmpfile);
 
   tmpfile = g_file_get_child (folder, fname);
@@ -206,12 +206,14 @@ _execute_switch_track (GstValidateScenario * scenario,
   if (!(type = gst_structure_get_string (action->structure, "type")))
     type = "audio";
 
-  tflag = gst_validate_utils_flags_from_str (g_type_from_name ("GstPlayFlags"), type);
+  tflag =
+      gst_validate_utils_flags_from_str (g_type_from_name ("GstPlayFlags"),
+      type);
   current_txt = g_strdup_printf ("current-%s", type);
 
   tmp = g_strdup_printf ("n-%s", type);
   g_object_get (scenario->pipeline, "flags", &flags, tmp, &n,
-     current_txt, &current, NULL);
+      current_txt, &current, NULL);
 
   g_free (tmp);
 
@@ -219,7 +221,8 @@ _execute_switch_track (GstValidateScenario * scenario,
     disabling = TRUE;
     flags &= ~tflag;
     index = -1;
-  } else if (!(str_index = gst_structure_get_string (action->structure, "index"))) {
+  } else if (!(str_index =
+          gst_structure_get_string (action->structure, "index"))) {
     if (!gst_structure_get_int (action->structure, "index", &index)) {
       GST_WARNING ("No index given, defaulting to +1");
       index = 1;
@@ -230,7 +233,7 @@ _execute_switch_track (GstValidateScenario * scenario,
     index = g_ascii_strtoll (str_index, NULL, 10);
   }
 
-  if (relative) {             /* We are changing track relatively to current track */
+  if (relative) {               /* We are changing track relatively to current track */
     index = current + index;
     if (current >= n)
       index = -2;
@@ -238,7 +241,8 @@ _execute_switch_track (GstValidateScenario * scenario,
 
   if (!disabling) {
     tmp = g_strdup_printf ("get-%s-pad", type);
-    g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, current, &oldpad);
+    g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, current,
+        &oldpad);
     g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, index, &newpad);
 
     gst_validate_printf (action, "Switching to track number: %i,"
@@ -277,13 +281,13 @@ main (int argc, gchar ** argv)
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the avalaible scenarios that can be run", NULL},
     {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,
-        &output_file, "The output file to store scenarios details. "
-            "Implies --list-scenario",
+          &output_file, "The output file to store scenarios details. "
+          "Implies --list-scenario",
         NULL},
     {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
-        "Let you set a config scenario, the scenario needs to be set as 'config"
-        "' you can specify a list of scenario separated by ':'"
-        " it will override the GST_VALIDATE_SCENARIO environment variable,",
+          "Let you set a config scenario, the scenario needs to be set as 'config"
+          "' you can specify a list of scenario separated by ':'"
+          " it will override the GST_VALIDATE_SCENARIO environment variable,",
         NULL},
     {NULL}
   };
@@ -330,7 +334,7 @@ main (int argc, gchar ** argv)
 
   if (list_scenarios || output_file) {
     if (gst_validate_list_scenarios (argv + 1, argc - 1, output_file))
-        return 1;
+      return 1;
     return 0;
   }
 
@@ -358,7 +362,6 @@ main (int argc, gchar ** argv)
     gst_bin_add (GST_BIN (new_pipeline), pipeline);
     pipeline = new_pipeline;
   }
-
 #ifdef G_OS_UNIX
   signal_watch_id =
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
@@ -379,7 +382,7 @@ main (int argc, gchar ** argv)
         FALSE);
 
     /* Overriding default implementation */
-   gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
+    gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
         "The 'switch-track' command can be used to switch tracks.\n"
         "The 'type' argument selects which track type to change (can be 'audio', 'video',"
         " or 'text'). The 'index' argument selects which track of this type"

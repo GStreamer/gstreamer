@@ -139,8 +139,8 @@ gst_media_descriptor_finalize (GstMediaDescriptor * self)
   if (self->filenode)
     free_filenode (self->filenode);
 
-  G_OBJECT_CLASS (gst_media_descriptor_parent_class)->
-      finalize (G_OBJECT (self));
+  G_OBJECT_CLASS (gst_media_descriptor_parent_class)->finalize (G_OBJECT
+      (self));
 }
 
 static void
@@ -203,7 +203,8 @@ gst_media_descriptor_class_init (GstMediaDescriptorClass * self_class)
 }
 
 static gint
-compare_tags (GstMediaDescriptor *ref, StreamNode *rstream, StreamNode *cstream)
+compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
+    StreamNode * cstream)
 {
   gboolean found;
   TagNode *rtag, *ctag;
@@ -233,7 +234,7 @@ compare_tags (GstMediaDescriptor *ref, StreamNode *rstream, StreamNode *cstream)
       GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
           "Reference descriptor for stream %s has tags %s"
           " but no equivalent taglist was found on the compared stream",
-        rstream->id, rtaglist);
+          rstream->id, rtaglist);
       g_free (rtaglist);
 
       return 0;
@@ -245,17 +246,17 @@ compare_tags (GstMediaDescriptor *ref, StreamNode *rstream, StreamNode *cstream)
 
 /*  Return -1 if not found 1 if OK 0 if an error occured */
 static gint
-comparse_stream (GstMediaDescriptor *ref, StreamNode *rstream, StreamNode *cstream)
+comparse_stream (GstMediaDescriptor * ref, StreamNode * rstream,
+    StreamNode * cstream)
 {
   if (g_strcmp0 (rstream->id, cstream->id) == 0) {
     if (!gst_caps_is_equal (rstream->caps, cstream->caps)) {
       gchar *rcaps = gst_caps_to_string (rstream->caps),
-            *ccaps =  gst_caps_to_string (cstream->caps);
+          *ccaps = gst_caps_to_string (cstream->caps);
       GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
           "Reference descriptor for stream %s has caps: %s"
           " but compared stream %s has caps: %s",
-          rstream->id, rcaps,
-          cstream->id, ccaps);
+          rstream->id, rcaps, cstream->id, ccaps);
       g_free (rcaps);
       g_free (ccaps);
       return 0;
@@ -276,8 +277,8 @@ gst_media_descriptors_compare (GstMediaDescriptor * ref,
 
   if (rfilenode->duration != cfilenode->duration) {
     GST_VALIDATE_REPORT (ref, FILE_DURATION_INCORRECT,
-        "Duration %" GST_TIME_FORMAT " is different from the reference %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (cfilenode->duration),
+        "Duration %" GST_TIME_FORMAT " is different from the reference %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (cfilenode->duration),
         GST_TIME_ARGS (rfilenode->duration));
   }
 
@@ -300,7 +301,7 @@ gst_media_descriptors_compare (GstMediaDescriptor * ref,
   for (rstream_list = rfilenode->streams; rstream_list;
       rstream_list = rstream_list->next) {
     GList *cstream_list;
-    gint  sfound = -1;
+    gint sfound = -1;
 
     for (cstream_list = cfilenode->streams; cstream_list;
         cstream_list = cstream_list->next) {
@@ -309,14 +310,14 @@ gst_media_descriptors_compare (GstMediaDescriptor * ref,
       if (sfound == 0) {
         return FALSE;
       } else if (sfound == 1) {
-        break; 
+        break;
       }
     }
 
     if (sfound == FALSE) {
       GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
           "Could not find stream %s in the compared descriptor",
-          ((StreamNode*) rstream_list->data)->id);
+          ((StreamNode *) rstream_list->data)->id);
 
       return FALSE;
     }

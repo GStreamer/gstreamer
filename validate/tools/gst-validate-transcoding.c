@@ -55,7 +55,7 @@ typedef struct
 {
   volatile gint refcount;
 
-  GstSegment segment; /* The currently configured segment */
+  GstSegment segment;           /* The currently configured segment */
 
   /* FIXME Do we need a weak ref here? */
   GstValidateScenario *scenario;
@@ -95,7 +95,7 @@ intr_handler (gpointer user_data)
 #endif /* G_OS_UNIX */
 
 static void
-key_unit_data_unref (KeyUnitProbeInfo *info)
+key_unit_data_unref (KeyUnitProbeInfo * info)
 {
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&info->refcount))) {
     g_slice_free (KeyUnitProbeInfo, info);
@@ -103,7 +103,7 @@ key_unit_data_unref (KeyUnitProbeInfo *info)
 }
 
 static KeyUnitProbeInfo *
-key_unit_data_ref (KeyUnitProbeInfo *info)
+key_unit_data_ref (KeyUnitProbeInfo * info)
 {
   g_atomic_int_inc (&info->refcount);
 
@@ -111,7 +111,7 @@ key_unit_data_ref (KeyUnitProbeInfo *info)
 }
 
 static KeyUnitProbeInfo *
-key_unit_data_new (GstValidateScenario *scenario, GstClockTime running_time)
+key_unit_data_new (GstValidateScenario * scenario, GstClockTime running_time)
 {
   KeyUnitProbeInfo *info = g_slice_new0 (KeyUnitProbeInfo);
   info->refcount = 1;
@@ -123,7 +123,8 @@ key_unit_data_new (GstValidateScenario *scenario, GstClockTime running_time)
 }
 
 static GstPadProbeReturn
-_check_is_key_unit_cb (GstPad * pad, GstPadProbeInfo * info, KeyUnitProbeInfo *kuinfo)
+_check_is_key_unit_cb (GstPad * pad, GstPadProbeInfo * info,
+    KeyUnitProbeInfo * kuinfo)
 {
   if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info))) {
     if (gst_video_event_is_force_key_unit (GST_PAD_PROBE_INFO_DATA (info)))
@@ -135,38 +136,40 @@ _check_is_key_unit_cb (GstPad * pad, GstPadProbeInfo * info, KeyUnitProbeInfo *k
       gst_event_parse_segment (info->data, &segment);
       kuinfo->segment = *segment;
     }
-  } else if (GST_IS_BUFFER (GST_PAD_PROBE_INFO_DATA (info)) && kuinfo->seen_event) {
+  } else if (GST_IS_BUFFER (GST_PAD_PROBE_INFO_DATA (info))
+      && kuinfo->seen_event) {
 
-     if (GST_CLOCK_TIME_IS_VALID (kuinfo->running_time)) {
-       GstClockTime running_time = gst_segment_to_running_time (&kuinfo->segment,
-           GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (info->data));
+    if (GST_CLOCK_TIME_IS_VALID (kuinfo->running_time)) {
+      GstClockTime running_time = gst_segment_to_running_time (&kuinfo->segment,
+          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (info->data));
 
-       if (running_time < kuinfo->running_time)
-         return GST_PAD_PROBE_OK;
-     }
+      if (running_time < kuinfo->running_time)
+        return GST_PAD_PROBE_OK;
+    }
 
-     if (GST_BUFFER_FLAG_IS_SET (GST_PAD_PROBE_INFO_BUFFER (info), GST_BUFFER_FLAG_DELTA_UNIT)) {
-       if (kuinfo->count_bufs >= NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE) {
-         GST_VALIDATE_REPORT (kuinfo->scenario,
-             SCENARIO_ACTION_EXECUTION_ERROR,
-             "Did not receive a key frame after requested one, "
-             " at running_time %" GST_TIME_FORMAT " (with a %i "
-             "frame tolerance)", GST_TIME_ARGS (kuinfo->running_time),
-             NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE);
+    if (GST_BUFFER_FLAG_IS_SET (GST_PAD_PROBE_INFO_BUFFER (info),
+            GST_BUFFER_FLAG_DELTA_UNIT)) {
+      if (kuinfo->count_bufs >= NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE) {
+        GST_VALIDATE_REPORT (kuinfo->scenario,
+            SCENARIO_ACTION_EXECUTION_ERROR,
+            "Did not receive a key frame after requested one, "
+            " at running_time %" GST_TIME_FORMAT " (with a %i "
+            "frame tolerance)", GST_TIME_ARGS (kuinfo->running_time),
+            NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE);
 
-         return GST_PAD_PROBE_REMOVE;
-       }
+        return GST_PAD_PROBE_REMOVE;
+      }
 
-       kuinfo->count_bufs++;
-     } else {
-       GST_DEBUG_OBJECT (kuinfo->scenario,
-           "Properly got keyframe after \"force-keyframe\" event "
-           "with running_time %" GST_TIME_FORMAT " (latency %d frame(s))",
-           GST_TIME_ARGS (kuinfo->running_time), kuinfo->count_bufs);
+      kuinfo->count_bufs++;
+    } else {
+      GST_DEBUG_OBJECT (kuinfo->scenario,
+          "Properly got keyframe after \"force-keyframe\" event "
+          "with running_time %" GST_TIME_FORMAT " (latency %d frame(s))",
+          GST_TIME_ARGS (kuinfo->running_time), kuinfo->count_bufs);
 
-       return GST_PAD_PROBE_REMOVE;
-     }
-   }
+      return GST_PAD_PROBE_REMOVE;
+    }
+  }
 
   return GST_PAD_PROBE_OK;
 }
@@ -176,11 +179,11 @@ _find_video_encoder (GValue * velement, gpointer udata)
 {
   GstElement *element = g_value_get_object (velement);
 
-  const gchar *klass = gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (element),
+  const gchar *klass =
+      gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (element),
       GST_ELEMENT_METADATA_KLASS);
 
-  if (g_strstr_len (klass, -1, "Video") &&
-    g_strstr_len (klass, -1, "Encoder")) {
+  if (g_strstr_len (klass, -1, "Video") && g_strstr_len (klass, -1, "Encoder")) {
 
     return 0;
   }
@@ -210,7 +213,7 @@ _execute_request_key_unit (GstValidateScenario * scenario,
 
   iter = gst_bin_iterate_recurse (GST_BIN (encodebin));
   if (!gst_iterator_find_custom (iter,
-          (GCompareFunc) _find_video_encoder, &result,NULL)) {
+          (GCompareFunc) _find_video_encoder, &result, NULL)) {
     g_error ("Could not find any video encode");
 
     goto fail;
@@ -254,8 +257,7 @@ _execute_request_key_unit (GstValidateScenario * scenario,
     gst_pad_add_probe (encoder_srcpad,
         GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
         (GstPadProbeCallback) _check_is_key_unit_cb,
-        key_unit_data_ref (info),
-        (GDestroyNotify) key_unit_data_unref);
+        key_unit_data_ref (info), (GDestroyNotify) key_unit_data_unref);
   } else if (g_strcmp0 (direction, "downstream") == 0) {
     GstClockTime timestamp = GST_CLOCK_TIME_NONE,
         stream_time = GST_CLOCK_TIME_NONE;
@@ -274,14 +276,14 @@ _execute_request_key_unit (GstValidateScenario * scenario,
     gst_validate_action_get_clocktime (scenario, action,
         "stream-time", &stream_time);
 
-    event = gst_video_event_new_downstream_force_key_unit (timestamp, stream_time,
+    event =
+        gst_video_event_new_downstream_force_key_unit (timestamp, stream_time,
         running_time, all_headers, count);
 
     gst_pad_add_probe (pad,
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
         (GstPadProbeCallback) _check_is_key_unit_cb,
-        key_unit_data_ref (info),
-        (GDestroyNotify) key_unit_data_unref);
+        key_unit_data_ref (info), (GDestroyNotify) key_unit_data_unref);
   } else {
     g_error ("request keyunit direction %s invalide (should be in"
         " [downstrean, upstream]", direction);
@@ -289,15 +291,15 @@ _execute_request_key_unit (GstValidateScenario * scenario,
     goto fail;
   }
 
-  gst_validate_printf (action, "Sendings a \"force key unit\" event %s\n", direction);
+  gst_validate_printf (action, "Sendings a \"force key unit\" event %s\n",
+      direction);
 
   segment_query = gst_query_new_segment (GST_FORMAT_TIME);
   gst_pad_query (encoder_srcpad, segment_query);
 
   gst_query_parse_segment (segment_query, &(info->segment.rate),
-    &(info->segment.format),
-    (gint64*) &(info->segment.start),
-    (gint64*) &(info->segment.stop));
+      &(info->segment.format),
+      (gint64 *) & (info->segment.start), (gint64 *) & (info->segment.stop));
 
   gst_pad_add_probe (encoder_srcpad,
       GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
@@ -306,8 +308,8 @@ _execute_request_key_unit (GstValidateScenario * scenario,
 
 
   if (!gst_pad_send_event (pad, event)) {
-     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-         "Could not send \"force key unit\" event %s", direction);
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not send \"force key unit\" event %s", direction);
     goto fail;
   }
 
@@ -493,10 +495,10 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 
       if (GST_IS_VALIDATE_SCENARIO (GST_MESSAGE_SRC (message))
           && state == GST_STATE_NULL) {
-         GST_VALIDATE_REPORT (GST_MESSAGE_SRC (message),
-           SCENARIO_ACTION_EXECUTION_ISSUE,
-           "Force stopping a transcoding pipeline is not recommanded"
-           " you should make sure to finalize it using a EOS event");
+        GST_VALIDATE_REPORT (GST_MESSAGE_SRC (message),
+            SCENARIO_ACTION_EXECUTION_ISSUE,
+            "Force stopping a transcoding pipeline is not recommanded"
+            " you should make sure to finalize it using a EOS event");
 
         gst_validate_printf (pipeline, "State change request NULL, "
             "quiting mainloop\n");
@@ -701,10 +703,12 @@ _register_actions (void)
 {
   const gchar *resize_video_mandatory_fields[] = { "restriction-caps", NULL };
   const gchar *force_key_unit_mandatory_fields[] = { "direction",
-    "running-time", "all-headers", "count", NULL };
+    "running-time", "all-headers", "count", NULL
+  };
 
   gst_validate_add_action_type ("set-restriction", _execute_set_restriction,
-      resize_video_mandatory_fields, "Change the restriction caps on the fly", FALSE);
+      resize_video_mandatory_fields, "Change the restriction caps on the fly",
+      FALSE);
   gst_validate_add_action_type ("video-request-key-unit",
       _execute_request_key_unit, force_key_unit_mandatory_fields,
       "Request a video key unit", FALSE);
@@ -745,9 +749,9 @@ main (int argc, gchar ** argv)
         "Let you set a scenario, it will override the GST_VALIDATE_SCENARIO "
           "environment variable", NULL},
     {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
-        "Let you set a config scenario, the scenario needs to be set as 'config"
-        "' you can specify a list of scenario separated by ':'"
-        " it will override the GST_VALIDATE_SCENARIO environment variable,",
+          "Let you set a config scenario, the scenario needs to be set as 'config"
+          "' you can specify a list of scenario separated by ':'"
+          " it will override the GST_VALIDATE_SCENARIO environment variable,",
         NULL},
     {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
         "If an EOS event should be sent to the pipeline if an interrupt is "
@@ -757,12 +761,12 @@ main (int argc, gchar ** argv)
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the avalaible scenarios that can be run", NULL},
     {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,
-        &output_file, "The output file to store scenarios details. "
-            "Implies --list-scenario",
+          &output_file, "The output file to store scenarios details. "
+          "Implies --list-scenario",
         NULL},
     {"force-reencoding", 'r', 0, G_OPTION_ARG_NONE, &force_reencoding,
         "Whether to try to force reencoding, meaning trying to only remux "
-        "if possible(default: TRUE)", NULL},
+          "if possible(default: TRUE)", NULL},
     {NULL}
   };
 
@@ -812,7 +816,7 @@ main (int argc, gchar ** argv)
 
   if (list_scenarios || output_file) {
     if (gst_validate_list_scenarios (argv + 1, argc - 1, output_file))
-        return 1;
+      return 1;
     return 0;
   }
 

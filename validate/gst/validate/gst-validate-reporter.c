@@ -38,7 +38,7 @@ typedef struct _GstValidateReporterPrivate
   guint log_handler_id;
 } GstValidateReporterPrivate;
 
-static GstValidateReporterPrivate * g_log_handler = NULL;
+static GstValidateReporterPrivate *g_log_handler = NULL;
 
 G_DEFINE_INTERFACE (GstValidateReporter, gst_validate_reporter, G_TYPE_OBJECT);
 
@@ -226,7 +226,8 @@ gst_validate_reporter_set_runner (GstValidateReporter * reporter,
 void
 gst_validate_reporter_set_handle_g_logs (GstValidateReporter * reporter)
 {
-  g_log_set_default_handler ((GLogFunc) gst_validate_reporter_g_log_func, reporter);
+  g_log_set_default_handler ((GLogFunc) gst_validate_reporter_g_log_func,
+      reporter);
 
   g_log_handler = gst_validate_reporter_get_priv (reporter);
 }

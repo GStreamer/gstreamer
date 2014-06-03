@@ -446,8 +446,8 @@ _read_power (MathParser * parser)
 }
 
 gdouble
-gst_validate_utils_parse_expression (const gchar * expr, ParseVariableFunc variable_func,
-    gpointer user_data, gchar ** error)
+gst_validate_utils_parse_expression (const gchar * expr,
+    ParseVariableFunc variable_func, gpointer user_data, gchar ** error)
 {
   gdouble val;
   MathParser parser;
@@ -489,7 +489,8 @@ gst_validate_utils_flags_from_str (GType type, const gchar * str_flags)
 }
 
 gboolean
-gst_validate_utils_enum_from_str (GType type, const gchar * str_enum, guint * enum_value)
+gst_validate_utils_enum_from_str (GType type, const gchar * str_enum,
+    guint * enum_value)
 {
   guint i;
   GEnumClass *class = g_type_class_ref (type);

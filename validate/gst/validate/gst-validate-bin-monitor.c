@@ -74,9 +74,9 @@ gst_validate_bin_monitor_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_STATELESS:
-      monitor->stateless = g_value_get_boolean(value);
+      monitor->stateless = g_value_get_boolean (value);
       if (monitor->scenario != NULL)
-        g_object_set(monitor->scenario, "stateless", monitor->stateless, NULL);
+        g_object_set (monitor->scenario, "stateless", monitor->stateless, NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -139,9 +139,9 @@ gst_validate_bin_monitor_class_init (GstValidateBinMonitorClass * klass)
   gobject_class->dispose = gst_validate_bin_monitor_dispose;
 
   g_object_class_install_property (gobject_class, PROP_STATELESS,
-      g_param_spec_boolean ("stateless", "Stateless", "True to execute actions as soon as possible, regardless "
-        "of the initial state of the pipeline",
-          FALSE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("stateless", "Stateless",
+          "True to execute actions as soon as possible, regardless "
+          "of the initial state of the pipeline", FALSE, G_PARAM_READWRITE));
 
   validatemonitor_class->setup = gst_validate_bin_monitor_setup;
 }
@@ -152,11 +152,12 @@ gst_validate_bin_monitor_init (GstValidateBinMonitor * bin_monitor)
 }
 
 static gboolean
-print_position (GstValidateMonitor *monitor)
+print_position (GstValidateMonitor * monitor)
 {
   GstQuery *query;
   gint64 position, duration;
-  GstElement *pipeline = GST_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
+  GstElement *pipeline =
+      GST_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
 
   gdouble rate = 1.0;
   GstFormat format = GST_FORMAT_TIME;
@@ -180,7 +181,8 @@ print_position (GstValidateMonitor *monitor)
 }
 
 static void
-_bus_handler (GstBus * bus, GstMessage * message, GstValidateBinMonitor *monitor)
+_bus_handler (GstBus * bus, GstMessage * message,
+    GstValidateBinMonitor * monitor)
 {
   GError *err;
   gchar *debug;
@@ -256,10 +258,11 @@ gst_validate_bin_monitor_new (GstBin * bin, GstValidateRunner * runner,
     GstBus *bus;
 
     monitor->print_pos_srcid =
-        g_timeout_add (PRINT_POSITION_TIMEOUT, (GSourceFunc) print_position, monitor);
+        g_timeout_add (PRINT_POSITION_TIMEOUT, (GSourceFunc) print_position,
+        monitor);
 
     bus = gst_element_get_bus (GST_ELEMENT (bin));
-    gst_bus_enable_sync_message_emission(bus);
+    gst_bus_enable_sync_message_emission (bus);
     g_signal_connect (bus, "sync-message", (GCallback) _bus_handler, monitor);
 
     gst_object_unref (bus);

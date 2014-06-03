@@ -186,7 +186,8 @@ gst_validate_media_info_load (const gchar * path, GError ** err)
   if (err && *err)
     goto end;
 
-  mi->duration = g_key_file_get_uint64 (kf, "media-info", "file-duration", NULL);
+  mi->duration =
+      g_key_file_get_uint64 (kf, "media-info", "file-duration", NULL);
   mi->seekable = g_key_file_get_boolean (kf, "media-info", "seekable", NULL);
   mi->is_image = g_key_file_get_boolean (kf, "media-info", "is-image", NULL);
 
@@ -1042,25 +1043,25 @@ end:
 }
 
 static gboolean
-check_is_image (GstDiscovererInfo *info)
+check_is_image (GstDiscovererInfo * info)
 {
-    gboolean ret = FALSE;
-    GList *video_streams = gst_discoverer_info_get_video_streams (info);
+  gboolean ret = FALSE;
+  GList *video_streams = gst_discoverer_info_get_video_streams (info);
 
-    if (g_list_length (video_streams) == 1) {
-        if (gst_discoverer_video_info_is_image (video_streams->data)) {
-            GList *audio_streams = gst_discoverer_info_get_audio_streams (info);
+  if (g_list_length (video_streams) == 1) {
+    if (gst_discoverer_video_info_is_image (video_streams->data)) {
+      GList *audio_streams = gst_discoverer_info_get_audio_streams (info);
 
-            if (audio_streams == NULL)
-                ret = TRUE;
-            else
-                gst_discoverer_stream_info_list_free (audio_streams);
-        }
+      if (audio_streams == NULL)
+        ret = TRUE;
+      else
+        gst_discoverer_stream_info_list_free (audio_streams);
     }
+  }
 
-    gst_discoverer_stream_info_list_free (video_streams);
+  gst_discoverer_stream_info_list_free (video_streams);
 
-    return ret;
+  return ret;
 }
 
 gboolean
@@ -1093,11 +1094,11 @@ gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
   ret = check_file_duration (mi, info) & ret;
 
   if (mi->is_image)
-      goto done;
+    goto done;
 
   check_seekable (mi, info);
   if (discover_only)
-      goto done;
+    goto done;
 
   ret = check_playback (mi, &mi->playback_error) & ret;
   ret = check_reverse_playback (mi, &mi->reverse_playback_error) & ret;
@@ -1131,21 +1132,21 @@ gst_validate_media_info_compare (GstValidateMediaInfo * expected,
   }
 
   if (extracted->discover_only == FALSE) {
-      if (expected->playback_error == NULL && extracted->playback_error) {
-          g_print ("Playback is now failing with: %s\n", extracted->playback_error);
-          ret = FALSE;
-      }
-      if (expected->reverse_playback_error == NULL
-              && extracted->reverse_playback_error) {
-          g_print ("Reverse playback is now failing with: %s\n",
-                  extracted->reverse_playback_error);
-          ret = FALSE;
-      }
-      if (expected->track_switch_error == NULL && extracted->track_switch_error) {
-          g_print ("Track switching is now failing with: %s\n",
-                  extracted->track_switch_error);
-          ret = FALSE;
-      }
+    if (expected->playback_error == NULL && extracted->playback_error) {
+      g_print ("Playback is now failing with: %s\n", extracted->playback_error);
+      ret = FALSE;
+    }
+    if (expected->reverse_playback_error == NULL
+        && extracted->reverse_playback_error) {
+      g_print ("Reverse playback is now failing with: %s\n",
+          extracted->reverse_playback_error);
+      ret = FALSE;
+    }
+    if (expected->track_switch_error == NULL && extracted->track_switch_error) {
+      g_print ("Track switching is now failing with: %s\n",
+          extracted->track_switch_error);
+      ret = FALSE;
+    }
   }
 
   if (extracted->stream_info == NULL || expected->stream_info == NULL) {

@@ -48,7 +48,7 @@ main (int argc, gchar ** argv)
   gchar *output = NULL;
   GstMediaDescriptorWriter *writer;
   GstValidateRunner *runner;
-  GstMediaDescriptorParser * reference = NULL;
+  GstMediaDescriptorParser *reference = NULL;
 
   GOptionEntry options[] = {
     {"output-file", 'o', 0, G_OPTION_ARG_FILENAME,
@@ -93,7 +93,8 @@ main (int argc, gchar ** argv)
   g_option_context_free (ctx);
 
   runner = gst_validate_runner_new ();
-  writer = gst_media_descriptor_writer_new_discover (runner, argv[1], full, NULL);
+  writer =
+      gst_media_descriptor_writer_new_discover (runner, argv[1], full, NULL);
   if (writer == NULL) {
     g_print ("Could not discover file: %s", argv[1]);
     return 1;
@@ -103,8 +104,7 @@ main (int argc, gchar ** argv)
     gst_media_descriptor_writer_write (writer, output_file);
 
   if (expected_file) {
-    reference = gst_media_descriptor_parser_new (runner,
-        expected_file, NULL);
+    reference = gst_media_descriptor_parser_new (runner, expected_file, NULL);
 
     if (reference == NULL) {
       g_print ("Could not parse file: %s", expected_file);
