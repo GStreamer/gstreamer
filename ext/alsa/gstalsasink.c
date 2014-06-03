@@ -910,7 +910,8 @@ gst_alsasink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
     if (chmap && chmap->channels == alsa->channels) {
       GstAudioChannelPosition pos[8];
       if (alsa_chmap_to_channel_positions (chmap, pos))
-	gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SINK (alsa)->ringbuffer, pos);
+        gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SINK
+            (alsa)->ringbuffer, pos);
     }
     free (chmap);
   }
