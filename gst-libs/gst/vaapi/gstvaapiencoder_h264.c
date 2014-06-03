@@ -25,6 +25,7 @@
 #include <va/va.h>
 #include <va/va_enc_h264.h>
 #include <gst/base/gstbitwriter.h>
+#include <gst/codecparsers/gsth264parser.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiencoder_priv.h"
 #include "gstvaapiencoder_h264.h"
@@ -73,23 +74,10 @@
    VA_ENC_PACKED_HEADER_SLICE    |              \
    VA_ENC_PACKED_HEADER_RAW_DATA)
 
-#define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_NONE        0
-#define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_LOW         1
-#define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_MEDIUM      2
-#define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH        3
-
-typedef enum
-{
-  GST_VAAPI_ENCODER_H264_NAL_UNKNOWN = 0,
-  GST_VAAPI_ENCODER_H264_NAL_NON_IDR = 1,
-  GST_VAAPI_ENCODER_H264_NAL_IDR = 5,   /* ref_idc != 0 */
-  GST_VAAPI_ENCODER_H264_NAL_SEI = 6,   /* ref_idc == 0 */
-  GST_VAAPI_ENCODER_H264_NAL_SPS = 7,
-  GST_VAAPI_ENCODER_H264_NAL_PPS = 8,
-  GST_VAAPI_ENCODER_H264_NAL_PREFIX = 14,       /* mvc nal prefix */
-  GST_VAAPI_ENCODER_H264_NAL_SUBSET_SPS = 15,
-  GST_VAAPI_ENCODER_H264_NAL_SLICE_EXT = 20
-} GstVaapiEncoderH264NalType;
+#define GST_H264_NAL_REF_IDC_NONE        0
+#define GST_H264_NAL_REF_IDC_LOW         1
+#define GST_H264_NAL_REF_IDC_MEDIUM      2
+#define GST_H264_NAL_REF_IDC_HIGH        3
 
 typedef struct
 {
@@ -134,13 +122,13 @@ h264_get_slice_type (GstVaapiPictureType type)
 {
   switch (type) {
     case GST_VAAPI_PICTURE_TYPE_I:
-      return 2;
+      return GST_H264_I_SLICE;
     case GST_VAAPI_PICTURE_TYPE_P:
-      return 0;
+      return GST_H264_P_SLICE;
     case GST_VAAPI_PICTURE_TYPE_B:
-      return 1;
+      return GST_H264_B_SLICE;
     default:
-      return -1;
+      break;
   }
   return -1;
 }
@@ -905,17 +893,17 @@ _check_sps_pps_status (GstVaapiEncoderH264 * encoder,
 
   nal_type = nal[0] & 0x1F;
   switch (nal_type) {
-    case GST_VAAPI_ENCODER_H264_NAL_SPS:
+    case GST_H264_NAL_SPS:
       encoder->sps_data = gst_buffer_new_allocate (NULL, size, NULL);
       ret = gst_buffer_fill (encoder->sps_data, 0, nal, size);
       g_assert (ret == size);
       break;
-    case GST_VAAPI_ENCODER_H264_NAL_SUBSET_SPS:
+    case GST_H264_NAL_SUBSET_SPS:
       encoder->subset_sps_data = gst_buffer_new_allocate (NULL, size, NULL);
       ret = gst_buffer_fill (encoder->subset_sps_data, 0, nal, size);
       g_assert (ret == size);
       break;
-    case GST_VAAPI_ENCODER_H264_NAL_PPS:
+    case GST_H264_NAL_PPS:
       encoder->pps_data = gst_buffer_new_allocate (NULL, size, NULL);
       ret = gst_buffer_fill (encoder->pps_data, 0, nal, size);
       g_assert (ret == size);
@@ -1253,8 +1241,7 @@ add_packed_sequence_header (GstVaapiEncoderH264 * encoder,
 
   gst_bit_writer_init (&bs, 128 * 8);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
-  bs_write_nal_header (&bs,
-      GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH, GST_VAAPI_ENCODER_H264_NAL_SPS);
+  bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_SPS);
 
   /* Set High profile for encoding the MVC base view. Otherwise, some
      traditional decoder cannot recognize MVC profile streams with
@@ -1312,9 +1299,7 @@ add_packed_sequence_header_mvc (GstVaapiEncoderH264 * encoder,
   /* non-base layer, pack one subset sps */
   gst_bit_writer_init (&bs, 128 * 8);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
-  bs_write_nal_header (&bs,
-      GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH,
-      GST_VAAPI_ENCODER_H264_NAL_SUBSET_SPS);
+  bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_SUBSET_SPS);
 
   bs_write_subset_sps (&bs, seq_param, encoder->profile, encoder->num_views,
       &hrd_params);
@@ -1364,8 +1349,7 @@ add_packed_picture_header (GstVaapiEncoderH264 * encoder,
 
   gst_bit_writer_init (&bs, 128 * 8);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
-  bs_write_nal_header (&bs,
-      GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH, GST_VAAPI_ENCODER_H264_NAL_PPS);
+  bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_PPS);
   bs_write_pps (&bs, pic_param, encoder->profile);
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
@@ -1403,19 +1387,19 @@ get_nal_hdr_attributes (GstVaapiEncPicture * picture,
 {
   switch (picture->type) {
     case GST_VAAPI_PICTURE_TYPE_I:
-      *nal_ref_idc = GST_VAAPI_ENCODER_H264_NAL_REF_IDC_HIGH;
+      *nal_ref_idc = GST_H264_NAL_REF_IDC_HIGH;
       if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture))
-        *nal_unit_type = GST_VAAPI_ENCODER_H264_NAL_IDR;
+        *nal_unit_type = GST_H264_NAL_SLICE_IDR;
       else
-        *nal_unit_type = GST_VAAPI_ENCODER_H264_NAL_NON_IDR;
+        *nal_unit_type = GST_H264_NAL_SLICE;
       break;
     case GST_VAAPI_PICTURE_TYPE_P:
-      *nal_ref_idc = GST_VAAPI_ENCODER_H264_NAL_REF_IDC_MEDIUM;
-      *nal_unit_type = GST_VAAPI_ENCODER_H264_NAL_NON_IDR;
+      *nal_ref_idc = GST_H264_NAL_REF_IDC_MEDIUM;
+      *nal_unit_type = GST_H264_NAL_SLICE;
       break;
     case GST_VAAPI_PICTURE_TYPE_B:
-      *nal_ref_idc = GST_VAAPI_ENCODER_H264_NAL_REF_IDC_NONE;
-      *nal_unit_type = GST_VAAPI_ENCODER_H264_NAL_NON_IDR;
+      *nal_ref_idc = GST_H264_NAL_REF_IDC_NONE;
+      *nal_unit_type = GST_H264_NAL_SLICE;
       break;
     default:
       return FALSE;
@@ -1441,7 +1425,7 @@ add_packed_prefix_nal_header (GstVaapiEncoderH264 * encoder,
 
   if (!get_nal_hdr_attributes (picture, &nal_ref_idc, &nal_unit_type))
     goto bs_error;
-  nal_unit_type = GST_VAAPI_ENCODER_H264_NAL_PREFIX;
+  nal_unit_type = GST_H264_NAL_PREFIX_UNIT;
 
   bs_write_nal_header (&bs, nal_ref_idc, nal_unit_type);
   bs_write_nal_header_mvc_extension (&bs, picture, encoder->view_idx);
