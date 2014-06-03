@@ -1475,6 +1475,7 @@ gst_download_buffer_handle_src_query (GstPad * pad, GstObject * parent,
         /* fill out the buffered ranges */
         start = offset = 0;
         stop = -1;
+        estimated_total = -1;
         while (gst_sparse_file_get_range_after (dlbuf->file, offset,
                 &range_start, &range_stop)) {
           gboolean current_range;
@@ -1492,8 +1493,6 @@ gst_download_buffer_handle_src_query (GstPad * pad, GstObject * parent,
             /* calculate remaining and total download time */
             if (duration >= range_stop && avg_in > 0.0)
               estimated_total = ((duration - range_stop) * 1000) / avg_in;
-            else
-              estimated_total = -1;
           } else
             current_range = FALSE;
 
