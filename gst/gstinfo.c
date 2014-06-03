@@ -671,16 +671,16 @@ gst_debug_print_object (gpointer ptr)
   if (object == NULL) {
     return g_strdup ("(NULL)");
   }
-  if (*(GType *) ptr == GST_TYPE_CAPS) {
+  if (GST_IS_CAPS (ptr)) {
     return gst_caps_to_string ((const GstCaps *) ptr);
   }
-  if (*(GType *) ptr == GST_TYPE_STRUCTURE) {
+  if (GST_IS_STRUCTURE (ptr)) {
     return gst_info_structure_to_string ((const GstStructure *) ptr);
   }
   if (*(GType *) ptr == GST_TYPE_CAPS_FEATURES) {
     return gst_caps_features_to_string ((const GstCapsFeatures *) ptr);
   }
-  if (*(GType *) ptr == GST_TYPE_TAG_LIST) {
+  if (GST_IS_TAG_LIST (ptr)) {
     gchar *str = gst_tag_list_to_string ((GstTagList *) ptr);
     if (G_UNLIKELY (pretty_tags))
       return prettify_structure_string (str);
