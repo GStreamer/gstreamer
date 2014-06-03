@@ -56,11 +56,16 @@ typedef enum
 
 struct _GstDateTime
 {
+  GstMiniObject mini_object;
+
   GDateTime *datetime;
 
   GstDateTimeFields fields;
-  volatile gint ref_count;
 };
+
+GST_DEFINE_MINI_OBJECT_TYPE (GstDateTime, gst_date_time);
+
+static void gst_date_time_free (GstDateTime * datetime);
 
 /**
  * gst_date_time_new_from_g_date_time:
@@ -81,9 +86,12 @@ gst_date_time_new_from_g_date_time (GDateTime * dt)
     return NULL;
 
   gst_dt = g_slice_new (GstDateTime);
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (gst_dt), 0, GST_TYPE_DATE_TIME,
+      NULL, NULL, (GstMiniObjectFreeFunction) gst_date_time_free);
+
   gst_dt->datetime = dt;
   gst_dt->fields = GST_DATE_TIME_FIELDS_YMD_HMS;
-  gst_dt->ref_count = 1;
   return gst_dt;
 }
 
@@ -868,7 +876,6 @@ ymd:
   return gst_date_time_new_ymd (year, month, day);
 }
 
-
 static void
 gst_date_time_free (GstDateTime * datetime)
 {
@@ -887,10 +894,7 @@ gst_date_time_free (GstDateTime * datetime)
 GstDateTime *
 gst_date_time_ref (GstDateTime * datetime)
 {
-  g_return_val_if_fail (datetime != NULL, NULL);
-  g_return_val_if_fail (datetime->ref_count > 0, NULL);
-  g_atomic_int_inc (&datetime->ref_count);
-  return datetime;
+  return (GstDateTime *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (datetime));
 }
 
 /**
@@ -903,9 +907,5 @@ gst_date_time_ref (GstDateTime * datetime)
 void
 gst_date_time_unref (GstDateTime * datetime)
 {
-  g_return_if_fail (datetime != NULL);
-  g_return_if_fail (datetime->ref_count > 0);
-
-  if (g_atomic_int_dec_and_test (&datetime->ref_count))
-    gst_date_time_free (datetime);
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (datetime));
 }

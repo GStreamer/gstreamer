@@ -273,16 +273,6 @@ G_BEGIN_DECLS
 #define GST_TYPE_FRACTION                gst_fraction_get_type ()
 
 /**
- * GST_TYPE_DATE_TIME:
- *
- * a boxed #GValue type for #GstDateTime that represents a date and time.
- *
- * Returns: the #GType of GstDateTime
- */
-
-#define GST_TYPE_DATE_TIME               gst_date_time_get_type ()
-
-/**
  * GST_TYPE_BITMASK:
  *
  * a #GValue type that represents a 64-bit bitmask.
@@ -404,8 +394,6 @@ GType gst_bitmask_get_type (void);
 #ifndef __GI_SCANNER__
 GType gst_g_thread_get_type (void);
 #endif
-
-GType gst_date_time_get_type (void);
 
 void            gst_value_register              (const GstValueTable   *table);
 void            gst_value_init_and_copy         (GValue                *dest,

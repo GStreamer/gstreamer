@@ -36,6 +36,18 @@ G_BEGIN_DECLS
  */
 typedef struct _GstDateTime GstDateTime;
 
+/**
+ * GST_TYPE_DATE_TIME:
+ *
+ * a boxed #GValue type for #GstDateTime that represents a date and time.
+ *
+ * Returns: the #GType of GstDateTime
+ */
+
+#define GST_TYPE_DATE_TIME gst_date_time_get_type()
+
+GType           gst_date_time_get_type (void);
+
 /* query which fields are set */
 
 gboolean        gst_date_time_has_year                (const GstDateTime * datetime);
