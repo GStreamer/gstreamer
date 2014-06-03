@@ -701,15 +701,6 @@ gst_debug_print_object (gpointer ptr)
     return g_strdup_printf ("<poisoned@%p>", ptr);
   }
 #endif
-  if (GST_IS_PAD (object) && GST_OBJECT_NAME (object)) {
-    return g_strdup_printf ("<%s:%s>", GST_DEBUG_PAD_NAME (object));
-  }
-  if (GST_IS_OBJECT (object) && GST_OBJECT_NAME (object)) {
-    return g_strdup_printf ("<%s>", GST_OBJECT_NAME (object));
-  }
-  if (G_IS_OBJECT (object)) {
-    return g_strdup_printf ("<%s@%p>", G_OBJECT_TYPE_NAME (object), object);
-  }
   if (GST_IS_MESSAGE (object)) {
     return gst_info_describe_message (GST_MESSAGE_CAST (object));
   }
@@ -733,6 +724,15 @@ gst_debug_print_object (gpointer ptr)
     ret = g_strdup_printf ("context '%s'='%s'", type, s);
     g_free (s);
     return ret;
+  }
+  if (GST_IS_PAD (object) && GST_OBJECT_NAME (object)) {
+    return g_strdup_printf ("<%s:%s>", GST_DEBUG_PAD_NAME (object));
+  }
+  if (GST_IS_OBJECT (object) && GST_OBJECT_NAME (object)) {
+    return g_strdup_printf ("<%s>", GST_OBJECT_NAME (object));
+  }
+  if (G_IS_OBJECT (object)) {
+    return g_strdup_printf ("<%s@%p>", G_OBJECT_TYPE_NAME (object), object);
   }
 
   return g_strdup_printf ("%p", ptr);
