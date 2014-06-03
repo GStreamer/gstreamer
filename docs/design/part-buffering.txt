@@ -196,19 +196,23 @@ range in a specific format and the estimated time to complete:
     - the format of the "start" and "stop" values below  
    
   "start", G_TYPE_INT64, -1 unknown
-    - the start position of the available data
+    - the start position of the available data. If there are multiple ranges,
+      this field contains the start position of the currently downloading
+      range.
 
   "stop", G_TYPE_INT64, -1 unknown
-    - the stop position of the available data
+    - the stop position of the available data. If there are multiple ranges,
+      this field contains the stop position of the currently downloading
+      range.
 
   "estimated-total", G_TYPE_INT64
     - gives the estimated download time in milliseconds. -1 unknown.
 
     When the size of the downloaded file is known, this value will contain
-    the latest estimate of the remaining download time. This value is usually
-    only filled for the "download" buffering mode. The application can use
-    this information to estimate the amount of remaining time to download the
-    complete file.
+    the latest estimate of the remaining download time of the currently
+    downloading range. This value is usually only filled for the "download"
+    buffering mode. The application can use this information to estimate the
+    amount of remaining time to download till the end of the file.
 
   "buffering-ranges", G_TYPE_ARRAY of GstQueryBufferingRange
     - contains optionally the downloaded areas in the format given above. One

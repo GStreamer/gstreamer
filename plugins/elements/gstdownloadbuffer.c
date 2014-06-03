@@ -654,6 +654,7 @@ get_seek_threshold (GstDownloadBuffer * dlbuf)
   return threshold;
 }
 
+/* called with DOWNLOAD_BUFFER_MUTEX */
 static void
 gst_download_buffer_update_upstream_size (GstDownloadBuffer * dlbuf)
 {
@@ -736,6 +737,7 @@ out_flushing:
   }
 }
 
+/* called with DOWNLOAD_BUFFER_MUTEX */
 static gboolean
 check_upstream_size (GstDownloadBuffer * dlbuf, gsize offset, guint * length)
 {
@@ -1458,6 +1460,7 @@ gst_download_buffer_handle_src_query (GstPad * pad, GstObject * parent,
         gint64 duration;
         gsize offset, range_start, range_stop;
 
+        GST_DOWNLOAD_BUFFER_MUTEX_LOCK (dlbuf);
         write_pos = dlbuf->write_pos;
 
         /* get duration of upstream in bytes */
@@ -1467,49 +1470,36 @@ gst_download_buffer_handle_src_query (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (dlbuf, "percent %d, duration %" G_GINT64_FORMAT
             ", writing %" G_GINT64_FORMAT, percent, duration, write_pos);
 
-        /* calculate remaining and total download time */
-        if (duration > write_pos && avg_in > 0.0)
-          estimated_total = ((duration - write_pos) * 1000) / avg_in;
-        else
-          estimated_total = -1;
-
-        GST_DEBUG_OBJECT (dlbuf, "estimated-total %" G_GINT64_FORMAT,
-            estimated_total);
-
         gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
 
-        switch (format) {
-          case GST_FORMAT_PERCENT:
-            start = 0;
-            /* get our available data relative to the duration */
-            if (duration != -1)
-              stop =
-                  gst_util_uint64_scale (GST_FORMAT_PERCENT_MAX, write_pos,
-                  duration);
-            else
-              stop = -1;
-            break;
-          case GST_FORMAT_BYTES:
-            start = 0;
-            stop = write_pos;
-            break;
-          default:
-            start = -1;
-            stop = -1;
-            break;
-        }
-
-        gst_query_set_buffering_range (query, format, start, stop,
-            estimated_total);
-
         /* fill out the buffered ranges */
-        offset = 0;
+        start = offset = 0;
+        stop = -1;
         while (gst_sparse_file_get_range_after (dlbuf->file, offset,
                 &range_start, &range_stop)) {
+          gboolean current_range;
+
+          GST_DEBUG_OBJECT (dlbuf,
+              "range starting at %" G_GSIZE_FORMAT " and finishing at %"
+              G_GSIZE_FORMAT, range_start, range_stop);
+
           offset = range_stop;
+
+          /* find the range we are currently downloading, we'll remember it
+           * after we convert to the target format */
+          if (range_start <= write_pos && range_stop >= write_pos) {
+            current_range = TRUE;
+            /* calculate remaining and total download time */
+            if (duration >= range_stop && avg_in > 0.0)
+              estimated_total = ((duration - range_stop) * 1000) / avg_in;
+            else
+              estimated_total = -1;
+          } else
+            current_range = FALSE;
 
           switch (format) {
             case GST_FORMAT_PERCENT:
+              /* get our available data relative to the duration */
               if (duration == -1) {
                 range_start = 0;
                 range_stop = 0;
@@ -1527,13 +1517,27 @@ gst_download_buffer_handle_src_query (GstPad * pad, GstObject * parent,
               range_stop = -1;
               break;
           }
+
+          if (current_range) {
+            /* we are currently downloading this range */
+            start = range_start;
+            stop = range_stop;
+          }
+          GST_DEBUG_OBJECT (dlbuf,
+              "range to format: %" G_GSIZE_FORMAT " - %" G_GSIZE_FORMAT,
+              range_start, range_stop);
           if (range_start == range_stop)
             continue;
-          GST_DEBUG_OBJECT (dlbuf,
-              "range starting at %" G_GSIZE_FORMAT " and finishing at %"
-              G_GSIZE_FORMAT, range_start, range_stop);
           gst_query_add_buffering_range (query, range_start, range_stop);
         }
+
+        GST_DEBUG_OBJECT (dlbuf, "estimated-total %" G_GINT64_FORMAT,
+            estimated_total);
+
+        gst_query_set_buffering_range (query, format, start, stop,
+            estimated_total);
+
+        GST_DOWNLOAD_BUFFER_MUTEX_UNLOCK (dlbuf);
       }
       break;
     }
