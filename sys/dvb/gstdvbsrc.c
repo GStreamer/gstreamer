@@ -1732,8 +1732,6 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
 
   memset (dvb_prop, 0, sizeof (dvb_prop));
   dvb_prop[0].cmd = DTV_CLEAR;
-  props.num = 1;
-  props.props = dvb_prop;
 
   if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_SET_PROPERTY, &props)) {
     GST_WARNING_OBJECT (object, "Error resetting tuner: %s",
