@@ -3982,6 +3982,8 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
       GST_ELEMENT_ERROR (dbin, STREAM, FAILED, (NULL),
           ("all streams without buffers"));
     }
+
+    do_async_done (dbin);
     return FALSE;
   }
 
