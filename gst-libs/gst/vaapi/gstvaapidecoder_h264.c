@@ -1270,7 +1270,7 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
         return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
     }
 
-    if (priv->profile != profile) {
+    if (!priv->profile || (priv->profile != profile && priv->max_views == 1)) {
         GST_DEBUG("profile changed");
         reset_context = TRUE;
         priv->profile = profile;
