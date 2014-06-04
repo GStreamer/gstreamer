@@ -1,6 +1,8 @@
 /* GStreamer DVB source
  * Copyright (C) 2006 Zaheer Abbas Merali <zaheerabbas at merali
  *                                         dot org>
+ * Copyright (C) 2014 Samsung Electronics. All rights reserved.
+ *     @Author: Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -205,7 +207,7 @@ enum
 #define DEFAULT_INVERSION INVERSION_ON
 #define DEFAULT_STATS_REPORTING_INTERVAL 100
 #define DEFAULT_TIMEOUT 1000000 /* 1 second */
-#define DEFAULT_TUNING_TIMEOUT 10 * GST_MSECOND /* 10 milliseconds */
+#define DEFAULT_TUNING_TIMEOUT 10 * GST_SECOND  /* 10 seconds */
 #define DEFAULT_DVB_BUFFER_SIZE (10*188*1024)   /* kernel default is 8192 */
 #define DEFAULT_BUFFER_SIZE 8192        /* not a property */
 #define DEFAULT_DELSYS SYS_UNDEFINED
@@ -470,6 +472,8 @@ static gboolean gst_dvbsrc_tune_fe (GstDvbSrc * object);
 
 static void gst_dvbsrc_set_pes_filters (GstDvbSrc * object);
 static void gst_dvbsrc_unset_pes_filters (GstDvbSrc * object);
+static inline int gst_dvbsrc_retry_ioctl (int fd, unsigned long req,
+    void *data);
 
 static GstStaticPadTemplate ts_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -751,6 +755,29 @@ gst_dvbsrc_init (GstDvbSrc * object)
   g_mutex_init (&object->tune_mutex);
   object->timeout = DEFAULT_TIMEOUT;
   object->tuning_timeout = DEFAULT_TUNING_TIMEOUT;
+}
+
+/**
+ * This loop should be safe enough considering:
+ *
+ * 1.- EINTR suggest the next ioctl might succeed
+ * 2.- It's highly unlikely you will end up spining
+ *     before your entire system goes nuts due to
+ *     the massive number of interrupts.
+ *
+ * We don't check for EAGAIN here cause we are opening
+ * the frontend in blocking mode.
+ */
+static inline int
+gst_dvbsrc_retry_ioctl (int fd, unsigned long req, void *data)
+{
+  int ret;
+
+  do
+    ret = ioctl (fd, req, data);
+  while (ret == -1 && errno == EINTR);
+
+  return ret;
 }
 
 static void
@@ -1658,8 +1685,8 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   fe_status_t status;
   struct dtv_properties props;
   struct dtv_property dvb_prop[NUM_DTV_PROPS];
-  GstClockTimeDiff timeout_step = 1 * GST_USECOND;
-  GstClockTime elapsed_time;
+  GstClockTimeDiff elapsed_time, timeout_step = 500 * GST_MSECOND;
+  GstClockTime start;
 
   GST_DEBUG_OBJECT (object, "Starting the frontend tuning process");
 
@@ -1674,7 +1701,7 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   props.num = 1;
   props.props = dvb_prop;
 
-  if (ioctl (object->fd_frontend, FE_GET_PROPERTY, &props) < 0) {
+  if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_GET_PROPERTY, &props)) {
     GST_WARNING_OBJECT (object, "Error enumerating delsys: %s",
         g_strerror (errno));
 
@@ -1708,38 +1735,52 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   props.num = 1;
   props.props = dvb_prop;
 
-  if (ioctl (object->fd_frontend, FE_SET_PROPERTY, &props) < 0) {
+  if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_SET_PROPERTY, &props)) {
     GST_WARNING_OBJECT (object, "Error resetting tuner: %s",
         g_strerror (errno));
   }
 
+  memset (dvb_prop, 0, sizeof (dvb_prop));
   if (!gst_dvbsrc_set_fe_params (object, &props)) {
     GST_WARNING_OBJECT (object, "Could not set frontend params");
     goto fail;
   }
 
   GST_DEBUG_OBJECT (object, "Setting %d properties", props.num);
-  if (ioctl (object->fd_frontend, FE_SET_PROPERTY, &props) < 0) {
-    GST_WARNING_OBJECT (object, "Error tuning channel: %s", g_strerror (errno));
+  if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_SET_PROPERTY, &props)) {
+    GST_WARNING_OBJECT (object, "Error tuning channel: %s (%d)",
+        g_strerror (errno), errno);
+    goto fail;
   }
 
   g_signal_emit (object, gst_dvbsrc_signals[SIGNAL_TUNING_START], 0);
-  elapsed_time = 0;
+
+  if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_READ_STATUS, &status)) {
+    GST_WARNING_OBJECT (object, "Failed querying frontend for tuning status:"
+        " %s (%d)", g_strerror (errno), errno);
+    goto fail_with_signal;
+  }
 
   /* signal locking loop */
-  do {
-    if (ioctl (object->fd_frontend, FE_READ_STATUS, &status) == -1) {
-      GST_WARNING_OBJECT (object, "Failed querying frontend for tuning status");
-      goto fail_with_signal;
-    }
+  elapsed_time = 0;
+  start = gst_util_get_timestamp ();
+
+  while (!(status & FE_HAS_LOCK) && elapsed_time <= object->tuning_timeout) {
     if (gst_poll_wait (poll_set, timeout_step) == -1)
       goto fail_with_signal;
+    if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_READ_STATUS, &status)) {
+      GST_WARNING_OBJECT (object, "Failed querying frontend for tuning status"
+          " %s (%d)", g_strerror (errno), errno);
+      goto fail_with_signal;
+    }
     gst_dvbsrc_output_frontend_stats (object);
-    GST_INFO_OBJECT (object, "Trying to get lock");
     /* keep retrying forever if tuning_timeout = 0 */
     if (object->tuning_timeout)
-      elapsed_time += timeout_step;
-  } while (!(status & FE_HAS_LOCK) && elapsed_time < object->tuning_timeout);
+      elapsed_time = GST_CLOCK_DIFF (start, gst_util_get_timestamp ());
+    GST_LOG_OBJECT (object,
+        "Tuning. Time elapsed %" G_GUINT64_FORMAT " Limit %" G_GUINT64_FORMAT,
+        elapsed_time, object->tuning_timeout);
+  }
 
   if (!(status & FE_HAS_LOCK)) {
     GST_WARNING_OBJECT (object,
