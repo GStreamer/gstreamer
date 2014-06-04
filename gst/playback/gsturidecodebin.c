@@ -981,8 +981,17 @@ no_more_pads_full (GstElement * element, gboolean subs,
 done:
   GST_URI_DECODE_BIN_UNLOCK (decoder);
 
-  if (final)
-    gst_element_no_more_pads (GST_ELEMENT_CAST (decoder));
+  if (final) {
+    /* If we got not a single stream yet, that means that all
+     * decodebins had missing plugins for all of their streams!
+     */
+    if (!decoder->streams || g_hash_table_size (decoder->streams) == 0) {
+      GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
+          ("no suitable plugins found"));
+    } else {
+      gst_element_no_more_pads (GST_ELEMENT_CAST (decoder));
+    }
+  }
 
   return;
 }
@@ -2386,15 +2395,40 @@ handle_redirect_message (GstURIDecodeBin * dec, GstMessage * msg)
 static void
 handle_message (GstBin * bin, GstMessage * msg)
 {
-  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ELEMENT
-      && gst_message_has_name (msg, "redirect")) {
-    /* sort redirect messages based on the connection speed. This simplifies
-     * the user of this element as it can in most cases just pick the first item
-     * of the sorted list as a good redirection candidate. It can of course
-     * choose something else from the list if it has a better way. */
-    msg = handle_redirect_message (GST_URI_DECODE_BIN (bin), msg);
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_ELEMENT:{
+      if (gst_message_has_name (msg, "redirect")) {
+        /* sort redirect messages based on the connection speed. This simplifies
+         * the user of this element as it can in most cases just pick the first item
+         * of the sorted list as a good redirection candidate. It can of course
+         * choose something else from the list if it has a better way. */
+        msg = handle_redirect_message (GST_URI_DECODE_BIN (bin), msg);
+      }
+      break;
+    }
+    case GST_MESSAGE_ERROR:{
+      GError *err = NULL;
+
+      /* Filter out missing plugin error messages from the decodebins. Only if
+       * all decodebins exposed no streams we will report a missing plugin
+       * error from no_more_pads_full()
+       */
+      gst_message_parse_error (msg, &err, NULL);
+      if (g_error_matches (err, GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN)) {
+        no_more_pads_full (GST_ELEMENT (GST_MESSAGE_SRC (msg)), FALSE,
+            GST_URI_DECODE_BIN (bin));
+        gst_message_unref (msg);
+        msg = NULL;
+      }
+      g_clear_error (&err);
+      break;
+    }
+    default:
+      break;
   }
-  GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+
+  if (msg)
+    GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
 }
 
 /* generic struct passed to all query fold methods
