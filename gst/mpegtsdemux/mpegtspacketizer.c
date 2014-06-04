@@ -453,9 +453,13 @@ mpegts_packetizer_parse_packet (MpegTSPacketizer2 * packetizer,
 
   packet->data = data;
 
-  if (FLAGS_HAS_AFC (tmp))
+  packet->afc_flags = 0;
+  packet->pcr = G_MAXUINT64;
+
+  if (FLAGS_HAS_AFC (tmp)) {
     if (!mpegts_packetizer_parse_adaptation_field_control (packetizer, packet))
       return FALSE;
+  }
 
   if (FLAGS_HAS_PAYLOAD (tmp))
     packet->payload = packet->data;
@@ -1200,7 +1204,7 @@ mpegts_packetizer_resync (MpegTSPCR * pcr, GstClockTime time,
  *
  *  J = N + n
  *
- *   N   : a constant network delay.
+ *   D   : a constant network delay.
  *   n   : random added noise. The noise is concentrated around 0
  *
  * In the receiver we can track the elapsed time at the sender with:
