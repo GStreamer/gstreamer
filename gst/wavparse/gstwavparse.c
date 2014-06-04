@@ -1037,6 +1037,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   gchar *codec_name = NULL;
   GstEvent **event_p;
   gint64 upstream_size = 0;
+  GstStructure *s;
 
   /* search for "_fmt" chunk, which should be first */
   while (!wav->got_fmt) {
@@ -1106,6 +1107,15 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
     if (!caps)
       goto unknown_format;
+
+    /* If we got raw audio from upstream, we remove the codec_data field,
+     * which may have been added if the wav header included an extended
+     * chunk. We want to keep it for non raw audio.
+     */
+    s = gst_caps_get_structure (caps, 0);
+    if (s && gst_structure_has_name (s, "audio/x-raw")) {
+      gst_structure_remove_field (s, "codec_data");
+    }
 
     /* do more sanity checks of header fields
      * (these can be sanitized by gst_riff_create_audio_caps()
