@@ -477,7 +477,7 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
            and D.0.2 (Audio and video presentation synchronization)
 
            We can end up with an interval of up to 700ms between valid
-           PCR/SCR. We therefore allow a latency of 700ms for that.
+           PTS/DTS. We therefore allow a latency of 700ms for that.
          */
         gst_query_parse_latency (query, &live, &min_lat, &max_lat);
         if (min_lat != -1)
@@ -1349,7 +1349,7 @@ gst_ts_demux_record_dts (GstTSDemux * demux, TSDemuxStream * stream,
 
 /* This is called when we haven't got a valid initial PTS/DTS on all streams */
 static gboolean
-check_pending_buffers (GstTSDemux * demux, TSDemuxStream * stream)
+check_pending_buffers (GstTSDemux * demux)
 {
   gboolean have_observation = FALSE;
   /* The biggest offset */
@@ -1502,7 +1502,7 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
           (stream->pts != GST_CLOCK_TIME_NONE
               || stream->dts != GST_CLOCK_TIME_NONE))) {
     GST_DEBUG ("Got pts/dts update, rechecking all streams");
-    check_pending_buffers (demux, stream);
+    check_pending_buffers (demux);
   } else if (stream->first_dts == GST_CLOCK_TIME_NONE) {
     if (GST_CLOCK_TIME_IS_VALID (stream->dts))
       stream->first_dts = stream->dts;
@@ -1764,7 +1764,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
 
   buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
 
-  if (G_UNLIKELY (stream->pending_ts && !check_pending_buffers (demux, stream))) {
+  if (G_UNLIKELY (stream->pending_ts && !check_pending_buffers (demux))) {
     PendingBuffer *pend;
     pend = g_slice_new0 (PendingBuffer);
     pend->buffer = buffer;
