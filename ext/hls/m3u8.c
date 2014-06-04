@@ -322,6 +322,28 @@ parse_attributes (gchar ** ptr, gchar ** a, gchar ** v)
   return TRUE;
 }
 
+static gchar *
+unquote_string (gchar * string)
+{
+  gchar *string_ret;
+
+  string_ret = strchr (string, '"');
+  if (string_ret != NULL) {
+    /* found initialization quotation mark of string */
+    string = string_ret + 1;
+    string_ret = strchr (string, '"');
+    if (string_ret != NULL) {
+      /* found finalizing quotation mark of string */
+      string_ret[0] = '\0';
+    } else {
+      GST_WARNING
+          ("wrong string unqouting - cannot find finalizing quotation mark");
+      return NULL;
+    }
+  }
+  return string;
+}
+
 static gint
 _m3u8_compare_uri (GstM3U8 * a, gchar * uri)
 {
@@ -507,23 +529,24 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
           gchar *name;
           gchar *uri = g_strdup (v);
           gchar *urip = uri;
-          int len = strlen (uri);
 
-          /* handle the \"uri\" case */
-          if (uri[len - 1] == '"')
-            uri[len - 1] = '\0';
-          if (uri[0] == '"')
-            uri += 1;
+          uri = unquote_string (uri);
+          if (uri) {
+            uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
 
-          name = g_strdup (uri);
-          uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
-          g_free (urip);
+            uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
+            if (uri == NULL) {
+              g_free (urip);
+              continue;
+            }
+            name = g_strdup (uri);
 
-          if (uri == NULL) {
-            g_free (name);
-            continue;
+            gst_m3u8_set_uri (new_list, uri, NULL, name);
+          } else {
+            GST_WARNING
+                ("Cannot remove quotation marks from i-frame-stream URI");
           }
-          gst_m3u8_set_uri (new_list, uri, NULL, name);
+          g_free (urip);
         }
       }
 
@@ -567,28 +590,15 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
         if (g_str_equal (a, "URI")) {
           gchar *key = g_strdup (v);
           gchar *keyp = key;
-          gchar *key_ret;
 
-          /* handle the \"key\" case *
-           * there are sometimes situations where we have white signs
-           * before or after \" sign of URL therefore we are using for loops 
-           * in order to remove first and last \" sign from decryption key URI */
-          key_ret = strchr (key, '"');
-          if (key_ret != NULL) {
-            /* found initialization quotation mark key URI */
-            key = key_ret + 1;
-            key_ret = strchr (key, '"');
-            if (key_ret != NULL) {
-              /* found finalizing quotation mark inside key URI */
-              key_ret[0] = '\0';
-            } else {
-              GST_WARNING
-                  ("Decryption key URL parsing - cannot find finalizing quotation mark");
-            }
+          key = unquote_string (key);
+          if (key) {
+            current_key =
+                uri_join (self->base_uri ? self->base_uri : self->uri, key);
+          } else {
+            GST_WARNING
+                ("Cannot remove quotation marks from decryption key URI");
           }
-
-          current_key =
-              uri_join (self->base_uri ? self->base_uri : self->uri, key);
           g_free (keyp);
         } else if (g_str_equal (a, "IV")) {
           gchar *ivp = v;
