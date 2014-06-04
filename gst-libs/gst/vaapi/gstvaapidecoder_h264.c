@@ -3113,6 +3113,23 @@ vaapi_fill_picture(VAPictureH264 *pic, GstVaapiPictureH264 *picture,
     }
 }
 
+static void
+vaapi_fill_picture_for_RefPicListX(VAPictureH264 *pic,
+    GstVaapiPictureH264 *picture)
+{
+    vaapi_fill_picture(pic, picture, 0);
+
+    /* H.8.4 - MVC inter prediction and inter-view prediction process */
+    if (GST_VAAPI_PICTURE_IS_INTER_VIEW(picture)) {
+        /* The inter-view reference components and inter-view only
+           reference components that are included in the reference
+           picture lists are considered as not being marked as "used for
+           short-term reference" or "used for long-term reference" */
+        pic->flags &= ~(VA_PICTURE_H264_SHORT_TERM_REFERENCE|
+                        VA_PICTURE_H264_LONG_TERM_REFERENCE);
+    }
+}
+
 static gboolean
 fill_picture(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
@@ -3474,7 +3491,8 @@ fill_RefPicList(GstVaapiDecoderH264 *decoder,
         slice_hdr->num_ref_idx_l0_active_minus1;
 
     for (i = 0; i < priv->RefPicList0_count && priv->RefPicList0[i]; i++)
-        vaapi_fill_picture(&slice_param->RefPicList0[i], priv->RefPicList0[i], 0);
+        vaapi_fill_picture_for_RefPicListX(&slice_param->RefPicList0[i],
+            priv->RefPicList0[i]);
     for (; i <= slice_param->num_ref_idx_l0_active_minus1; i++)
         vaapi_init_picture(&slice_param->RefPicList0[i]);
 
@@ -3485,7 +3503,8 @@ fill_RefPicList(GstVaapiDecoderH264 *decoder,
         slice_hdr->num_ref_idx_l1_active_minus1;
 
     for (i = 0; i < priv->RefPicList1_count && priv->RefPicList1[i]; i++)
-        vaapi_fill_picture(&slice_param->RefPicList1[i], priv->RefPicList1[i], 0);
+        vaapi_fill_picture_for_RefPicListX(&slice_param->RefPicList1[i],
+            priv->RefPicList1[i]);
     for (; i <= slice_param->num_ref_idx_l1_active_minus1; i++)
         vaapi_init_picture(&slice_param->RefPicList1[i]);
     return TRUE;
