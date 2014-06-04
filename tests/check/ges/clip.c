@@ -427,6 +427,60 @@ GST_START_TEST (test_clip_find_track_element)
 
 GST_END_TEST;
 
+GST_START_TEST (test_effects_priorities)
+{
+  GESClip *clip;
+  GESTimeline *timeline;
+  GESTrack *audio_track, *video_track;
+
+  GESTrackElement *effect, *effect1, *effect2;
+
+  ges_init ();
+
+  clip = GES_CLIP (ges_test_clip_new ());
+  audio_track = GES_TRACK (ges_audio_track_new ());
+  video_track = GES_TRACK (ges_video_track_new ());
+
+  timeline = ges_timeline_new ();
+  fail_unless (ges_timeline_add_track (timeline, audio_track));
+  fail_unless (ges_timeline_add_track (timeline, video_track));
+
+  effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
+  fail_unless (ges_track_add_element (video_track, effect));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect)));
+
+  effect1 = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
+  fail_unless (ges_track_add_element (video_track, effect1));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect1)));
+
+  effect2 = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
+  fail_unless (ges_track_add_element (video_track, effect2));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect2)));
+
+  fail_unless_equals_int (0, _PRIORITY (effect));
+  fail_unless_equals_int (1, _PRIORITY (effect1));
+  fail_unless_equals_int (2, _PRIORITY (effect2));
+
+  fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
+          2));
+  fail_unless_equals_int (0, _PRIORITY (effect1));
+  fail_unless_equals_int (1, _PRIORITY (effect2));
+  fail_unless_equals_int (2, _PRIORITY (effect));
+
+  fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
+          0));
+  fail_unless_equals_int (0, _PRIORITY (effect));
+  fail_unless_equals_int (1, _PRIORITY (effect1));
+  fail_unless_equals_int (2, _PRIORITY (effect2));
+
+  gst_object_unref (timeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -440,6 +494,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_clip_group_ungroup);
   tcase_add_test (tc_chain, test_clip_refcount_remove_child);
   tcase_add_test (tc_chain, test_clip_find_track_element);
+  tcase_add_test (tc_chain, test_effects_priorities);
 
   return s;
 }
