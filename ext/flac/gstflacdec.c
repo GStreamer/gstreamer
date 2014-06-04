@@ -433,13 +433,14 @@ gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
     const FLAC__StreamMetadata * metadata, void *client_data)
 {
   GstFlacDec *flacdec = GST_FLAC_DEC (client_data);
+  GstAudioChannelPosition position[8];
 
   GST_LOG_OBJECT (flacdec, "metadata type: %d", metadata->type);
 
   switch (metadata->type) {
     case FLAC__METADATA_TYPE_STREAMINFO:{
       gint64 samples;
-      guint depth, width, gdepth;
+      guint depth, width, gdepth, channels;
 
       samples = metadata->data.stream_info.total_samples;
 
@@ -458,20 +459,18 @@ gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
         gdepth = width = 32;
       }
 
+      channels = metadata->data.stream_info.channels;
+      memcpy (position, channel_positions[channels - 1], sizeof (position));
+      gst_audio_channel_positions_to_valid_order (position, channels);
+      /* Note: we create the inverse reordering map here */
+      gst_audio_get_channel_reorder_map (channels,
+          position, channel_positions[channels - 1],
+          flacdec->channel_reorder_map);
+
       gst_audio_info_set_format (&flacdec->info,
           gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, width, gdepth),
           metadata->data.stream_info.sample_rate,
-          metadata->data.stream_info.channels, NULL);
-
-      memcpy (flacdec->info.position,
-          channel_positions[flacdec->info.channels - 1],
-          sizeof (GstAudioChannelPosition) * flacdec->info.channels);
-      gst_audio_channel_positions_to_valid_order (flacdec->info.position,
-          flacdec->info.channels);
-      /* Note: we create the inverse reordering map here */
-      gst_audio_get_channel_reorder_map (flacdec->info.channels,
-          flacdec->info.position, channel_positions[flacdec->info.channels - 1],
-          flacdec->channel_reorder_map);
+          metadata->data.stream_info.channels, position);
 
       GST_DEBUG_OBJECT (flacdec, "blocksize: min=%u, max=%u",
           flacdec->min_blocksize, flacdec->max_blocksize);
@@ -555,6 +554,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   guint j, i;
   GstMapInfo map;
   gboolean caps_changed;
+  GstAudioChannelPosition chanpos[8];
 
   GST_LOG_OBJECT (flacdec, "samples in frame header: %d", samples);
 
@@ -611,15 +611,14 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     GST_DEBUG_OBJECT (flacdec, "Negotiating %d Hz @ %d channels", sample_rate,
         channels);
 
+    memcpy (chanpos, channel_positions[flacdec->info.channels - 1],
+        sizeof (chanpos));
+    gst_audio_channel_positions_to_valid_order (chanpos,
+        flacdec->info.channels);
     gst_audio_info_set_format (&flacdec->info,
         gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, width, gdepth),
-        sample_rate, channels, NULL);
+        sample_rate, channels, chanpos);
 
-    memcpy (flacdec->info.position,
-        channel_positions[flacdec->info.channels - 1],
-        sizeof (GstAudioChannelPosition) * flacdec->info.channels);
-    gst_audio_channel_positions_to_valid_order (flacdec->info.position,
-        flacdec->info.channels);
     /* Note: we create the inverse reordering map here */
     gst_audio_get_channel_reorder_map (flacdec->info.channels,
         flacdec->info.position, channel_positions[flacdec->info.channels - 1],
