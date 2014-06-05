@@ -42,6 +42,184 @@ static gboolean initialized = FALSE;
 static gboolean started_java_vm = FALSE;
 static pthread_key_t current_jni_env;
 
+jclass
+gst_amc_jni_get_class (JNIEnv * env, const gchar * name)
+{
+  jclass tmp, ret = NULL;
+
+  GST_DEBUG ("Retrieving Java class %s", name);
+
+  tmp = (*env)->FindClass (env, name);
+  if (!tmp) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get %s class", name);
+    goto done;
+  }
+
+  ret = (*env)->NewGlobalRef (env, tmp);
+  if (!ret) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get %s class global reference", name);
+  }
+
+done:
+  if (tmp)
+    (*env)->DeleteLocalRef (env, tmp);
+  tmp = NULL;
+
+  return ret;
+}
+
+jmethodID
+gst_amc_jni_get_method (JNIEnv * env, jclass klass, const gchar * name,
+    const gchar * signature)
+{
+  jmethodID ret;
+
+  ret = (*env)->GetMethodID (env, klass, name, signature);
+  if (!ret) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get method ID %s", name);
+  }
+  return ret;
+}
+
+jmethodID
+gst_amc_jni_get_static_method (JNIEnv * env, jclass klass, const gchar * name,
+    const gchar * signature)
+{
+  jmethodID ret;
+
+  ret = (*env)->GetStaticMethodID (env, klass, name, signature);
+  if (!ret) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get static method id %s", name);
+  }
+  return ret;
+}
+
+jfieldID
+gst_amc_jni_get_field_id (JNIEnv * env, jclass klass, const gchar * name,
+    const gchar * type)
+{
+  jfieldID ret;
+
+  ret = (*env)->GetFieldID (env, klass, name, type);
+  if (!ret) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get field ID %s", name);
+  }
+  return ret;
+}
+
+jobject
+gst_amc_jni_new_object (JNIEnv * env, jclass klass, jmethodID constructor, ...)
+{
+  jobject tmp;
+  va_list args;
+
+  va_start (args, constructor);
+  tmp = (*env)->NewObjectV (env, klass, constructor, args);
+  va_end (args);
+
+  if (!tmp) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to create object");
+    return NULL;
+  }
+
+  return gst_amc_jni_object_make_global (env, tmp);
+}
+
+jobject
+gst_amc_jni_new_object_from_static (JNIEnv * env, jclass klass,
+    jmethodID method, ...)
+{
+  jobject tmp;
+  va_list args;
+
+  va_start (args, method);
+  tmp = (*env)->CallStaticObjectMethodV (env, klass, method, args);
+  va_end (args);
+
+  if ((*env)->ExceptionCheck (env) || !tmp) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to create object from static method");
+    return NULL;
+  }
+
+  return gst_amc_jni_object_make_global (env, tmp);
+}
+
+jobject
+gst_amc_jni_object_make_global (JNIEnv * env, jobject object)
+{
+  jobject ret;
+
+  ret = (*env)->NewGlobalRef (env, object);
+  if (!ret) {
+    GST_ERROR ("Failed to create global reference");
+    (*env)->ExceptionClear (env);
+  } else {
+    gst_amc_jni_object_local_unref (env, object);
+  }
+  return ret;
+}
+
+jobject
+gst_amc_jni_object_ref (JNIEnv * env, jobject object)
+{
+  jobject ret;
+
+  ret = (*env)->NewGlobalRef (env, object);
+  if (!ret) {
+    GST_ERROR ("Failed to create global reference");
+    (*env)->ExceptionClear (env);
+  }
+  return ret;
+}
+
+void
+gst_amc_jni_object_unref (JNIEnv * env, jobject object)
+{
+  (*env)->DeleteGlobalRef (env, object);
+}
+
+void
+gst_amc_jni_object_local_unref (JNIEnv * env, jobject object)
+{
+  (*env)->DeleteLocalRef (env, object);
+}
+
+jstring
+gst_amc_jni_string_from_gchar (JNIEnv * env, const gchar * string)
+{
+  return (*env)->NewStringUTF (env, string);
+}
+
+gchar *
+gst_amc_jni_string_to_gchar (JNIEnv * env, jstring string, gboolean release)
+{
+  const gchar *s = NULL;
+  gchar *ret = NULL;
+
+  s = (*env)->GetStringUTFChars (env, string, NULL);
+  if (!s) {
+    GST_ERROR ("Failed to convert string to UTF8");
+    (*env)->ExceptionClear (env);
+    return ret;
+  }
+
+  ret = g_strdup (s);
+  (*env)->ReleaseStringUTFChars (env, string, s);
+
+  if (release) {
+    (*env)->DeleteLocalRef (env, string);
+  }
+  return ret;
+}
+
 /* getExceptionSummary() and getStackTrace() taken from Android's
  *   platform/libnativehelper/JNIHelp.cpp
  * Modified to work with normal C strings and without C++.
@@ -482,3 +660,67 @@ gst_amc_jni_is_vm_started (void)
 {
   return started_java_vm;
 }
+
+#define CALL_TYPE_METHOD(_type, _name,  _jname, _retval)                                                     \
+_type gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject obj, jmethodID methodID, ...)   \
+  {                                                                                                          \
+    _type ret;                                                                                               \
+    va_list args;                                                                                            \
+    va_start(args, methodID);                                                                                \
+    ret = (*env)->Call##_jname##MethodV(env, obj, methodID, args);                                           \
+    if ((*env)->ExceptionCheck (env)) {                                                                      \
+      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                               \
+          err, "Failed to call Java method");                                                                \
+      (*env)->ExceptionClear (env);                                                                          \
+      ret = _retval;                                                                                         \
+    }                                                                                                        \
+    va_end(args);                                                                                            \
+    return (_type) ret;                                                                                      \
+  }
+
+CALL_TYPE_METHOD (gboolean, boolean, Boolean, FALSE)
+    CALL_TYPE_METHOD (gint8, byte, Byte, G_MININT8)
+    CALL_TYPE_METHOD (gshort, short, Short, G_MINSHORT)
+    CALL_TYPE_METHOD (gint, int, Int, G_MININT)
+CALL_TYPE_METHOD (gchar, char, Char, 0)
+CALL_TYPE_METHOD (glong, long, Long, G_MINLONG)
+CALL_TYPE_METHOD (gfloat, float, Float, G_MINFLOAT)
+CALL_TYPE_METHOD (gdouble, double, Double, G_MINDOUBLE)
+CALL_TYPE_METHOD (jobject, object, Object, NULL)
+
+gboolean
+gst_amc_jni_call_void_method (JNIEnv * env, GError ** err, jobject obj,
+    jmethodID methodID, ...)
+{
+  gboolean ret = TRUE;
+  va_list args;
+  va_start (args, methodID);
+
+  (*env)->CallVoidMethodV (env, obj, methodID, args);
+  if ((*env)->ExceptionCheck (env)) {
+    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        err, "Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    ret = FALSE;
+  }
+  va_end (args);
+  return ret;
+}
+
+#define GET_TYPE_FIELD(_type, _name, _jname, _retval)                                               \
+_type gst_amc_jni_get_##_name##_field (JNIEnv *env, GError ** err, jobject obj, jfieldID fieldID)   \
+  {                                                                                                 \
+    _type res;                                                                                      \
+                                                                                                    \
+    res = (*env)->Get##_jname##Field(env, obj, fieldID);                                            \
+    if ((*env)->ExceptionCheck (env)) {                                                             \
+      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                      \
+          err, "Failed to call Java field");                                                        \
+      (*env)->ExceptionClear (env);                                                                 \
+      res = _retval;                                                                                \
+    }                                                                                               \
+    return res;                                                                                     \
+  }
+
+GET_TYPE_FIELD (gint, int, Int, G_MININT)
+    GET_TYPE_FIELD (glong, long, Long, G_MINLONG)

@@ -1569,7 +1569,7 @@ scan_codecs (GstPlugin * plugin)
     goto done;
   }
 
-  GST_LOG ("Found %d available codecs", codec_count);
+  GST_INFO ("Found %d available codecs", codec_count);
 
   for (i = 0; i < codec_count; i++) {
     GstAmcCodecInfo *gst_codec_info;
