@@ -1411,7 +1411,7 @@ get_nal_hdr_attributes (GstVaapiEncPicture * picture,
    headers to pass down as-is to the encoder */
 static gboolean
 add_packed_prefix_nal_header (GstVaapiEncoderH264 * encoder,
-    GstVaapiEncPicture * picture)
+    GstVaapiEncPicture * picture, GstVaapiEncSlice * slice)
 {
   GstVaapiEncPackedHeader *packed_prefix_nal;
   GstBitWriter bs;
@@ -1443,7 +1443,7 @@ add_packed_prefix_nal_header (GstVaapiEncoderH264 * encoder,
       (data_bit_size + 7) / 8);
   g_assert (packed_prefix_nal);
 
-  gst_vaapi_enc_picture_add_packed_header (picture, packed_prefix_nal);
+  gst_vaapi_enc_slice_add_packed_header (slice, packed_prefix_nal);
   gst_vaapi_codec_object_replace (&packed_prefix_nal, NULL);
 
   gst_bit_writer_clear (&bs, TRUE);
@@ -1493,7 +1493,7 @@ add_packed_slice_header (GstVaapiEncoderH264 * encoder,
       data, (data_bit_size + 7) / 8);
   g_assert (packed_slice);
 
-  gst_vaapi_enc_picture_add_packed_header (picture, packed_slice);
+  gst_vaapi_enc_slice_add_packed_header (slice, packed_slice);
   gst_vaapi_codec_object_replace (&packed_slice, NULL);
 
   gst_bit_writer_clear (&bs, TRUE);
@@ -1887,11 +1887,11 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     last_mb_index += cur_slice_mbs;
 
     if (encoder->is_mvc &&
-        (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderRawData)
-        && !add_packed_prefix_nal_header (encoder, picture))
+        (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VA_ENC_PACKED_HEADER_RAW_DATA)
+        && !add_packed_prefix_nal_header (encoder, picture, slice))
       goto error_create_packed_prefix_nal_hdr;
     if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
-            VAEncPackedHeaderH264_Slice)
+            VA_ENC_PACKED_HEADER_SLICE)
         && !add_packed_slice_header (encoder, picture, slice))
       goto error_create_packed_slice_hdr;
 
