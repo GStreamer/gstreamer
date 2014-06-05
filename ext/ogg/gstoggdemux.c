@@ -177,6 +177,7 @@ gst_ogg_pad_init (GstOggPad * pad)
   gst_pad_use_fixed_caps (GST_PAD (pad));
 
   pad->current_granule = -1;
+  pad->prev_granule = -1;
   pad->keyframe_granule = -1;
 
   pad->start_time = GST_CLOCK_TIME_NONE;
@@ -458,6 +459,7 @@ gst_ogg_pad_reset (GstOggPad * pad)
   pad->last_ret = GST_FLOW_OK;
   pad->position = GST_CLOCK_TIME_NONE;
   pad->current_granule = -1;
+  pad->prev_granule = -1;
   pad->keyframe_granule = -1;
   pad->is_eos = FALSE;
 }
@@ -640,8 +642,21 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
               GST_SECOND * pad->map.granulerate_d, pad->map.granulerate_n);
         }
       } else {
-        out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
-            pad->current_granule - duration);
+        /* The last packet may be clipped. This will be represented
+           by the last granule being smaller than what it would otherwise
+           have been, had no content been clipped. In that case, we
+           cannot calculate the PTS of the audio from the packet length
+           and granule. */
+        if (packet->e_o_s) {
+          if (pad->prev_granule >= 0)
+            out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
+                pad->prev_granule);
+          else
+            out_timestamp = 0;
+        } else {
+          out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
+              pad->current_granule - duration);
+        }
         out_duration =
             gst_ogg_stream_granule_to_time (&pad->map,
             pad->current_granule) - out_timestamp;
@@ -652,6 +667,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       out_offset =
           gst_ogg_stream_granule_to_time (&pad->map, pad->current_granule);
     }
+    pad->prev_granule = pad->current_granule;
   }
 
   if (pad->map.is_ogm_text) {

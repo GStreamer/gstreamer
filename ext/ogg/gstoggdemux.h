@@ -89,6 +89,7 @@ struct _GstOggPad
 
   gint64 packetno;
   gint64 current_granule;
+  gint64 prev_granule;
   gint64 keyframe_granule;
 
   GstClockTime start_time;      /* the timestamp of the first sample */
