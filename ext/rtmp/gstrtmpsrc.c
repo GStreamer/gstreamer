@@ -416,7 +416,7 @@ gst_rtmp_src_query (GstBaseSrc * basesrc, GstQuery * query)
 
       gst_query_parse_position (query, &format, NULL);
       if (format == GST_FORMAT_TIME) {
-        gst_query_set_duration (query, format, src->last_timestamp);
+        gst_query_set_position (query, format, src->last_timestamp);
         ret = TRUE;
       }
       break;
