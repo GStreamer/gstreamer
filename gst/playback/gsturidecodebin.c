@@ -2414,7 +2414,9 @@ handle_message (GstBin * bin, GstMessage * msg)
        * error from no_more_pads_full()
        */
       gst_message_parse_error (msg, &err, NULL);
-      if (g_error_matches (err, GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN)) {
+      if (g_error_matches (err, GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN)
+          || g_error_matches (err, GST_STREAM_ERROR,
+              GST_STREAM_ERROR_CODEC_NOT_FOUND)) {
         no_more_pads_full (GST_ELEMENT (GST_MESSAGE_SRC (msg)), FALSE,
             GST_URI_DECODE_BIN (bin));
         gst_message_unref (msg);
