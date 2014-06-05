@@ -107,6 +107,10 @@ gboolean gst_amc_jni_is_vm_started           (void);
 
 JNIEnv *gst_amc_jni_get_env                  (void);
 
+jclass gst_amc_jni_get_application_class     (JNIEnv * env,
+                                             const gchar * name,
+                                             GError ** err);
+
 #define DEF_CALL_STATIC_TYPE_METHOD(_type, _name,  _jname, _retval) \
 gboolean gst_amc_jni_call_static_##_name##_method (JNIEnv *env, GError ** err, jclass klass, jmethodID methodID, _type * value, ...)
 

@@ -41,6 +41,7 @@ static jint (*create_java_vm) (JavaVM ** p_vm, JNIEnv ** p_env, void *vm_args);
 static JavaVM *java_vm;
 static gboolean started_java_vm = FALSE;
 static pthread_key_t current_jni_env;
+static jobject (*get_class_loader) (void);
 
 static struct
 {
@@ -564,6 +565,26 @@ symbol_error:
 }
 
 static gboolean
+check_application_class_loader (void)
+{
+  gboolean ret = TRUE;
+  GModule *module = NULL;
+
+  module = g_module_open (NULL, G_MODULE_BIND_LOCAL);
+  if (!module) {
+    return FALSE;
+  }
+  if (!g_module_symbol (module, "gst_android_get_application_class_loader",
+          (gpointer *) & get_class_loader)) {
+    ret = FALSE;
+  }
+
+  g_module_close (module);
+
+  return ret;
+}
+
+static gboolean
 initialize_classes (void)
 {
   JNIEnv *env;
@@ -620,6 +641,11 @@ initialize_classes (void)
   if (!java_nio_buffer.clear) {
     GST_ERROR ("Failed to get java.nio.Buffer clear(): %s", err->message);
     g_clear_error (&err);
+    return FALSE;
+  }
+
+  if (!check_application_class_loader ()) {
+    GST_ERROR ("Could not find application class loader provider");
     return FALSE;
   }
 
@@ -800,6 +826,57 @@ gboolean
 gst_amc_jni_is_vm_started (void)
 {
   return started_java_vm;
+}
+
+jclass
+gst_amc_jni_get_application_class (JNIEnv * env, const gchar * name,
+    GError ** err)
+{
+  jclass tmp = NULL;
+  jclass class = NULL;
+  jstring name_jstr = NULL;
+
+  jobject class_loader = NULL;
+  jclass class_loader_cls = NULL;
+  jmethodID load_class_id = 0;
+
+
+  class_loader = get_class_loader ();
+  if (!class_loader) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Could not retreive application class loader");
+    goto done;
+  }
+
+  class_loader_cls = (*env)->GetObjectClass (env, class_loader);
+  if (!class_loader_cls) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Could not retreive application class loader java class");
+    goto done;
+  }
+
+  load_class_id =
+      gst_amc_jni_get_method_id (env, err, class_loader_cls, "loadClass",
+      "(Ljava/lang/String;)Ljava/lang/Class;");
+  if (!class_loader_cls) {
+    goto done;
+  }
+
+  name_jstr = gst_amc_jni_string_from_gchar (env, err, FALSE, name);
+  if (!name_jstr) {
+    goto done;
+  }
+
+  if (gst_amc_jni_call_object_method (env, err, class_loader,
+          load_class_id, &tmp, name_jstr)) {
+    class = gst_amc_jni_object_make_global (env, tmp);
+  }
+
+done:
+  gst_amc_jni_object_local_unref (env, name_jstr);
+  gst_amc_jni_object_local_unref (env, class_loader_cls);
+
+  return class;
 }
 
 #define CALL_STATIC_TYPE_METHOD(_type, _name,  _jname)                                                     \

@@ -82,7 +82,7 @@ extern GQuark gst_amc_codec_info_quark;
 GstAmcCodec * gst_amc_codec_new (const gchar *name, GError **err);
 void gst_amc_codec_free (GstAmcCodec * codec);
 
-gboolean gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, gint flags, GError **err);
+gboolean gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, jobject surface, gint flags, GError **err);
 GstAmcFormat * gst_amc_codec_get_output_format (GstAmcCodec * codec, GError **err);
 
 gboolean gst_amc_codec_start (GstAmcCodec * codec, GError **err);
@@ -97,7 +97,7 @@ gint gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs, 
 gint gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec, GstAmcBufferInfo *info, gint64 timeoutUs, GError **err);
 
 gboolean gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index, const GstAmcBufferInfo *info, GError **err);
-gboolean gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index, GError **err);
+gboolean gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index, gboolean render, GError **err);
 
 
 GstAmcFormat * gst_amc_format_new_audio (const gchar *mime, gint sample_rate, gint channels, GError **err);
@@ -183,6 +183,8 @@ void gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info, GstCaps **s
     NULL, __dbg, __FILE__, GST_FUNCTION, __LINE__);                     \
   g_clear_error (&err); \
 } G_STMT_END
+
+GST_DEBUG_CATEGORY_EXTERN (gst_amc_debug);
 
 G_END_DECLS
 
