@@ -38,7 +38,7 @@
  * if it wants to continue using it later.
  *
  * The basic use pattern of an iterator is as follows:
- * |[
+ * |[<!-- language="C" -->
  *   GstIterator *it = _get_iterator(object);
  *   GValue item = G_VALUE_INIT;
  *   done = FALSE;

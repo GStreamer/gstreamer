@@ -34,7 +34,7 @@
  * handle or produce at runtime.
  *
  * A #GstCaps can be constructed with the following code fragment:
- * |[
+ * |[<!-- language="C" -->
  *   GstCaps *caps = gst_caps_new_simple ("video/x-raw",
  *      "format", G_TYPE_STRING, "I420",
  *      "framerate", GST_TYPE_FRACTION, 25, 1,
@@ -2163,7 +2163,7 @@ gst_caps_fixate (GstCaps * caps)
  * can be converted back to a #GstCaps by gst_caps_from_string().
  *
  * For debugging purposes its easier to do something like this:
- * |[
+ * |[<!-- language="C" -->
  * GST_LOG ("caps are %" GST_PTR_FORMAT, caps);
  * ]|
  * This prints the caps in human readable form.

@@ -50,12 +50,12 @@
  * categories. This is easily done with 3 lines. At the top of your code,
  * declare
  * the variables and set the default category.
- * |[
+ * |[<!-- language="C" -->
  *   GST_DEBUG_CATEGORY_STATIC (my_category);  // define category (statically)
  *   #define GST_CAT_DEFAULT my_category       // set as default
  * ]|
  * After that you only need to initialize the category.
- * |[
+ * |[<!-- language="C" -->
  *   GST_DEBUG_CATEGORY_INIT (my_category, "my category",
  *                            0, "This is my very own");
  * ]|

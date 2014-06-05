@@ -37,7 +37,7 @@
  * #GstBaseSink provides support for exactly one sink pad, which should be
  * named "sink". A sink implementation (subclass of #GstBaseSink) should
  * install a pad template in its class_init function, like so:
- * |[
+ * |[<!-- language="C" -->
  * static void
  * my_element_class_init (GstMyElementClass *klass)
  * {

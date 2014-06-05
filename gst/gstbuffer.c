@@ -33,7 +33,7 @@
  * created one will typically allocate memory for it and add it to the buffer.
  * The following example creates a buffer that can hold a given video frame
  * with a given width, height and bits per plane.
- * |[
+ * |[<!-- language="C" -->
  *   GstBuffer *buffer;
  *   GstMemory *memory;
  *   gint size, width, height, bpp;

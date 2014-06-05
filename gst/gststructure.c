@@ -1993,7 +1993,7 @@ priv__gst_structure_append_template_to_gstring (GQuark field_id,
  * Converts @structure to a human-readable string representation.
  *
  * For debugging purposes its easier to do something like this:
- * |[
+ * |[<!-- language="C" -->
  * GST_LOG ("structure is %" GST_PTR_FORMAT, structure);
  * ]|
  * This prints the structure in human readable form.

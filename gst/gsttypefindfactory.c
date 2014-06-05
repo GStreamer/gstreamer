@@ -31,7 +31,7 @@
  * The following example shows how to write a very simple typefinder that
  * identifies the given data. You can get quite a bit more complicated than
  * that though.
- * |[
+ * |[<!-- language="C" -->
  *   typedef struct {
  *     guint8 *data;
  *     guint size;

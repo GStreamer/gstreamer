@@ -36,7 +36,7 @@
  * gst_query_parse_*() helpers.
  *
  * The following example shows how to query the duration of a pipeline:
- * |[
+ * |[<!-- language="C" -->
  *   GstQuery *query;
  *   gboolean res;
  *   query = gst_query_new_duration (GST_FORMAT_TIME);

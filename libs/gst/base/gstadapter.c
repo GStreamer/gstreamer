@@ -43,7 +43,7 @@
  *
  * For example, a sink pad's chain function that needs to pass data to a library
  * in 512-byte chunks could be implemented like this:
- * |[
+ * |[<!-- language="C" -->
  * static GstFlowReturn
  * sink_pad_chain (GstPad *pad, GstObject *parent, GstBuffer *buffer)
  * {

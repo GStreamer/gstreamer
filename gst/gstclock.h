@@ -221,7 +221,7 @@ G_STMT_START {                                                    \
  * the matching arguments.
  *
  * Example:
- * |[
+ * |[<!-- language="C" -->
  * printf("%" GST_TIME_FORMAT "\n", GST_TIME_ARGS(ts));
  * ]|
  */

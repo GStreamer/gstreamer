@@ -34,7 +34,7 @@
  * application using the #GstBus.
  *
  * The basic use pattern of posting a message on a #GstBus is as follows:
- * |[
+ * |[<!-- language="C" -->
  *   gst_bus_post (bus, gst_message_new_eos());
  * ]|
  *
@@ -994,7 +994,7 @@ gst_message_has_name (GstMessage * message, const gchar * name)
  * output argument is a copy; the caller must free it when done.
  *
  * Typical usage of this function might be:
- * |[
+ * |[<!-- language="C" -->
  *   ...
  *   switch (GST_MESSAGE_TYPE (msg)) {
  *     case GST_MESSAGE_TAG: {
@@ -1117,7 +1117,7 @@ gst_message_parse_buffering_stats (GstMessage * message,
  * Extracts the old and new states from the GstMessage.
  *
  * Typical usage of this function might be:
- * |[
+ * |[<!-- language="C" -->
  *   ...
  *   switch (GST_MESSAGE_TYPE (msg)) {
  *     case GST_MESSAGE_STATE_CHANGED: {
@@ -1304,7 +1304,7 @@ gst_message_parse_structure_change (GstMessage * message,
  * in the output arguments are copies; the caller must free them when done.
  *
  * Typical usage of this function might be:
- * |[
+ * |[<!-- language="C" -->
  *   ...
  *   switch (GST_MESSAGE_TYPE (msg)) {
  *     case GST_MESSAGE_ERROR: {

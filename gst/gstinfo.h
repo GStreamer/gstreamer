@@ -493,7 +493,7 @@ G_STMT_START{                                        \
  * category is not found, but GST_CAT_DEFAULT is defined, that is assigned to
  * @cat. Otherwise @cat will be %NULL.
  *
- * |[
+ * |[<!-- language="C" -->
  * GST_DEBUG_CATEGORY_STATIC (gst_myplugin_debug);
  * #define GST_CAT_DEFAULT gst_myplugin_debug
  * GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);

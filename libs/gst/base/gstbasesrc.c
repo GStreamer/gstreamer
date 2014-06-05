@@ -112,7 +112,7 @@
  * There is only support in #GstBaseSrc for exactly one source pad, which
  * should be named "src". A source implementation (subclass of #GstBaseSrc)
  * should install a pad template in its class_init function, like so:
- * |[
+ * |[<!-- language="C" -->
  * static void
  * my_element_class_init (GstMyElementClass *klass)
  * {

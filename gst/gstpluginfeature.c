@@ -81,7 +81,7 @@ gst_plugin_feature_finalize (GObject * object)
  * unaffected; use the return value instead.
  *
  * Normally this function is used like this:
- * |[
+ * |[<!-- language="C" -->
  * GstPluginFeature *loaded_feature;
  *
  * loaded_feature = gst_plugin_feature_load (feature);
