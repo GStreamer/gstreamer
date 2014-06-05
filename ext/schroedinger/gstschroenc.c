@@ -400,6 +400,15 @@ gst_schro_enc_set_format (GstVideoEncoder * base_video_encoder,
   schro_enc->video_format->frame_rate_numerator = GST_VIDEO_INFO_FPS_N (info);
   schro_enc->video_format->frame_rate_denominator = GST_VIDEO_INFO_FPS_D (info);
 
+  /* Seems that schroenc doesn't like unknown framerates, so let's pick
+   * the random value 30 FPS if the framerate is unknown.
+   */
+  if (schro_enc->video_format->frame_rate_denominator == 0 ||
+      schro_enc->video_format->frame_rate_numerator == 0) {
+    schro_enc->video_format->frame_rate_numerator = 30;
+    schro_enc->video_format->frame_rate_denominator = 1;
+  }
+
   schro_enc->video_format->width = GST_VIDEO_INFO_WIDTH (info);
   schro_enc->video_format->height = GST_VIDEO_INFO_HEIGHT (info);
   schro_enc->video_format->clean_width = GST_VIDEO_INFO_WIDTH (info);
@@ -448,9 +457,9 @@ gst_schro_enc_set_format (GstVideoEncoder * base_video_encoder,
 
   /* Finally set latency */
   latency = gst_util_uint64_scale (GST_SECOND,
-      GST_VIDEO_INFO_FPS_D (info) *
+      schro_enc->video_format->frame_rate_denominator *
       (int) schro_encoder_setting_get_double (schro_enc->encoder,
-          "queue_depth"), GST_VIDEO_INFO_FPS_N (info));
+          "queue_depth"), schro_enc->video_format->frame_rate_numerator);
   gst_video_encoder_set_latency (base_video_encoder, latency, latency);
 
   schro_video_format_set_std_colour_spec (schro_enc->video_format,
