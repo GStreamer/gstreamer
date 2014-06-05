@@ -2,7 +2,8 @@ plugin_LTLIBRARIES = libgstrtponvif.la
 
 libgstrtponvif_la_SOURCES = \
 	gstrtponvif.c \
-	gstrtponviftimestamp.c gstrtponviftimestamp.h
+	gstrtponviftimestamp.c gstrtponviftimestamp.h \
+	gstrtponvifparse.c gstonvifparse.h
 libgstrtponvif_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtponvif_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \

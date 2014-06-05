@@ -326,18 +326,113 @@ GST_START_TEST (test_apply_e_bit)
 
 GST_END_TEST;
 
+static GstElement *
+setup_rtponvifparse (gboolean set_e_bit)
+{
+  GstElement *parse;
+
+  GST_DEBUG ("setup_rtponvifparse");
+  parse = gst_check_setup_element ("rtponvifparse");
+
+  setup_element (parse);
+
+  return parse;
+}
+
+static void
+cleanup_rtponvifparse (GstElement * parse)
+{
+  GST_DEBUG ("cleanup_rtponvifparse");
+
+  cleanup_element (parse);
+}
+
+static void
+test_parse (gboolean clean_point, gboolean discont)
+{
+  GstElement *parse;
+  GstBuffer *rtp, *buf;
+  GstSegment segment;
+
+  parse = setup_rtponvifparse (FALSE);
+
+  rtp = gst_rtp_buffer_new_allocate (4, 0, 0);
+  buf = create_extension_buffer (rtp, clean_point, FALSE, discont);
+  gst_buffer_unref (rtp);
+
+  /* stream start */
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_stream_start ("test")));
+
+  /* Push a segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* Push buffer */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK,
+      "failed pushing buffer");
+
+  g_assert_cmpuint (g_list_length (buffers), ==, 1);
+  buf = buffers->data;
+
+  if (clean_point)
+    g_assert (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT));
+  else
+    g_assert (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT));
+
+  if (discont)
+    g_assert (GST_BUFFER_IS_DISCONT (buf));
+  else
+    g_assert (!GST_BUFFER_IS_DISCONT (buf));
+
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
+
+  ASSERT_OBJECT_REFCOUNT (parse, "rtponvifparse", 1);
+  cleanup_rtponvifparse (parse);
+}
+
+GST_START_TEST (test_parse_no_flag)
+{
+  test_parse (FALSE, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_parse_clean_point)
+{
+  test_parse (TRUE, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_parse_discont)
+{
+  test_parse (FALSE, TRUE);
+}
+
+GST_END_TEST;
+
 static Suite *
 onviftimestamp_suite (void)
 {
   Suite *s = suite_create ("onviftimestamp");
-  TCase *tc_chain = tcase_create ("apply");
+  TCase *tc_chain;
 
+  tc_chain = tcase_create ("apply");
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_apply_discont);
   tcase_add_test (tc_chain, test_apply_not_discont);
   tcase_add_test (tc_chain, test_apply_clean_point);
   tcase_add_test (tc_chain, test_apply_no_e_bit);
   tcase_add_test (tc_chain, test_apply_e_bit);
+
+  tc_chain = tcase_create ("parse");
+  suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_parse_no_flag);
+  tcase_add_test (tc_chain, test_parse_clean_point);
+  tcase_add_test (tc_chain, test_parse_discont);
 
   return s;
 }

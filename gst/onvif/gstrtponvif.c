@@ -25,12 +25,16 @@
 #include <gst/gst.h>
 
 #include "gstrtponviftimestamp.h"
+#include "gstrtponvifparse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "rtponviftimestamp", GST_RANK_NONE,
           GST_TYPE_RTP_ONVIF_TIMESTAMP))
+    return FALSE;
+  if (!gst_element_register (plugin, "rtponvifparse", GST_RANK_NONE,
+          GST_TYPE_RTP_ONVIF_PARSE))
     return FALSE;
 
   return TRUE;
