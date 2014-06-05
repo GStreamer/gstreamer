@@ -3136,6 +3136,11 @@ gst_flv_demux_query (GstPad * pad, GstObject * parent, GstQuery * query)
     {
       GstFormat format;
 
+      /* Try to push upstream first */
+      res = gst_pad_peer_query (demux->sinkpad, query);
+      if (res)
+        goto beach;
+
       gst_query_parse_duration (query, &format, NULL);
 
       /* duration is time only */
