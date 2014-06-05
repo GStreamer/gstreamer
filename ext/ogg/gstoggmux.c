@@ -816,7 +816,7 @@ static GstBuffer *
 gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
     GstBuffer * buf)
 {
-  GstClockTime time;
+  GstClockTime time, end_time;
   gint64 duration, granule, limit;
   GstClockTime next_time;
   GstClockTimeDiff diff;
@@ -864,6 +864,24 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
     GST_WARNING_OBJECT (pad->collect.pad,
         "failed to determine packet duration");
     goto no_granule;
+  }
+
+  /* The last packet may have clipped samples. We need to test against
+   * the segment to ensure we do not use a granpos that encompasses those.
+   */
+  end_time =
+      gst_ogg_stream_granule_to_time (&pad->map, pad->next_granule + duration);
+  if (!GST_CLOCK_TIME_IS_VALID (gst_segment_to_running_time (&pad->segment,
+              GST_FORMAT_TIME, end_time))) {
+    gint64 actual_duration =
+        gst_util_uint64_scale_round (pad->segment.stop - time,
+        pad->map.granulerate_n,
+        GST_SECOND * pad->map.granulerate_d);
+    GST_INFO_OBJECT (ogg_mux,
+        "Got clipped last packet of duration %" G_GINT64_FORMAT " (%"
+        G_GINT64_FORMAT " clipped)", actual_duration,
+        duration - actual_duration);
+    duration = actual_duration;
   }
 
   GST_LOG_OBJECT (pad->collect.pad, "buffer ts %" GST_TIME_FORMAT
