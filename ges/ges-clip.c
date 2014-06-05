@@ -1104,7 +1104,7 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
 {
   gint inc;
   GList *tmp;
-  guint current_prio;
+  guint current_prio, min_prio, max_prio;
   GESTrackElement *track_element;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
@@ -1112,21 +1112,22 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
   track_element = GES_TRACK_ELEMENT (effect);
   current_prio = _PRIORITY (track_element);
 
-  /* FIXME, do we actually want to change what the user is telling us to do? */
-  newindex = newindex + MIN_GNL_PRIO;
+  _get_priority_range (GES_CONTAINER (clip), &min_prio, &max_prio);
+
+  newindex = newindex + min_prio;
   /*  We don't change the priority */
   if (current_prio == newindex ||
       (G_UNLIKELY (GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (track_element)) !=
               clip)))
     return FALSE;
 
-  if (newindex > (clip->priv->nb_effects - 1 + MIN_GNL_PRIO)) {
+  if (newindex > (clip->priv->nb_effects - 1 + min_prio)) {
     GST_DEBUG ("You are trying to make %p not a top effect", effect);
     return FALSE;
   }
 
-  if (current_prio > clip->priv->nb_effects + MIN_GNL_PRIO) {
-    GST_DEBUG ("%p is not a top effect", effect);
+  if (current_prio > clip->priv->nb_effects + min_prio) {
+    GST_ERROR ("%p is not a top effect", effect);
     return FALSE;
   }
 

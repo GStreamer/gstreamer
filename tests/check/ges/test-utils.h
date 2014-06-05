@@ -32,6 +32,8 @@ GESPipeline * ges_test_create_pipeline (GESTimeline *timeline);
  */
 #define MIN_GNL_PRIO 2
 
+#define LAYER_HEIGHT 1000
+
 gchar * ges_test_get_audio_only_uri (void);
 gchar * ges_test_get_audio_video_uri (void);
 gchar * ges_test_get_image_uri (void);
