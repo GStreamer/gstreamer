@@ -592,28 +592,31 @@ static GstEncodingProfile *
 _parse_encoding_profile (const gchar * format)
 {
   GstCaps *caps;
-  GstEncodingProfile *encoding_profile;
+  GstEncodingProfile *encoding_profile = NULL;
   gchar **restriction_format, **preset_v;
 
-  guint i, presence = 0;
+  guint i = 1, presence = 0;
   GstCaps *restrictioncaps = NULL;
   gchar **strpresence_v, **strcaps_v = g_strsplit (format, ":", 0);
 
   if (strcaps_v[0] && *strcaps_v[0]) {
-    caps = gst_caps_from_string (strcaps_v[0]);
-    if (caps == NULL) {
-      g_printerr ("Could not parse caps %s", strcaps_v[0]);
-      return FALSE;
+    if (strcaps_v[1] == NULL) {
+      /* Only 1 profile which means no container used */
+      i = 0;
+    } else {
+      caps = gst_caps_from_string (strcaps_v[0]);
+      if (caps == NULL) {
+        g_printerr ("Could not parse caps %s", strcaps_v[0]);
+        return FALSE;
+      }
+      encoding_profile =
+          GST_ENCODING_PROFILE (gst_encoding_container_profile_new
+          ("User profile", "User profile", caps, NULL));
+      gst_caps_unref (caps);
     }
-    encoding_profile =
-        GST_ENCODING_PROFILE (gst_encoding_container_profile_new
-        ("User profile", "User profile", caps, NULL));
-    gst_caps_unref (caps);
-  } else {
-    encoding_profile = NULL;
   }
 
-  for (i = 1; strcaps_v[i]; i++) {
+  for (; strcaps_v[i]; i++) {
     gchar *strcaps, *strpresence;
     char *preset_name = NULL;
     GstEncodingProfile *profile = NULL;

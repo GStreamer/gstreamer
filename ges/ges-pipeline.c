@@ -344,6 +344,45 @@ ges_pipeline_new (void)
     (GST_IS_ENCODING_VIDEO_PROFILE (profile) && (tracktype) == GES_TRACK_TYPE_VIDEO))
 
 static gboolean
+_track_is_compatible_with_profile (GESPipeline * self, GESTrack * track,
+    GstEncodingProfile * prof)
+{
+  if (TRACK_COMPATIBLE_PROFILE (track->type, prof)) {
+    if (self->priv->mode == GES_PIPELINE_MODE_SMART_RENDER) {
+      GstCaps *ocaps, *rcaps;
+
+      GST_DEBUG ("Smart Render mode, setting input caps");
+      ocaps = gst_encoding_profile_get_input_caps (prof);
+      ocaps = gst_caps_make_writable (ocaps);
+      if (track->type == GES_TRACK_TYPE_AUDIO)
+        rcaps = gst_caps_new_empty_simple ("audio/x-raw");
+      else
+        rcaps = gst_caps_new_empty_simple ("video/x-raw");
+      gst_caps_append (ocaps, rcaps);
+      ges_track_set_caps (track, ocaps);
+      gst_caps_unref (ocaps);
+    } else {
+      GstCaps *caps = NULL;
+
+      /* Raw preview or rendering mode */
+      if (track->type == GES_TRACK_TYPE_VIDEO)
+        caps = gst_caps_new_empty_simple ("video/x-raw");
+      else if (track->type == GES_TRACK_TYPE_AUDIO)
+        caps = gst_caps_new_empty_simple ("audio/x-raw");
+
+      if (caps) {
+        ges_track_set_caps (track, caps);
+        gst_caps_unref (caps);
+      }
+    }
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
 ges_pipeline_update_caps (GESPipeline * self)
 {
   GList *ltrack, *tracks, *lstream;
@@ -361,6 +400,17 @@ ges_pipeline_update_caps (GESPipeline * self)
     GESTrack *track = (GESTrack *) ltrack->data;
     GList *allstreams;
 
+    if (!GST_IS_ENCODING_CONTAINER_PROFILE (self->priv->profile)) {
+      if (_track_is_compatible_with_profile (self, track, self->priv->profile)) {
+        gst_object_unref (track);
+
+        goto done;
+      } else {
+        gst_object_unref (track);
+        continue;
+      }
+    }
+
     allstreams = (GList *)
         gst_encoding_container_profile_get_profiles (
         (GstEncodingContainerProfile *) self->priv->profile);
@@ -368,42 +418,14 @@ ges_pipeline_update_caps (GESPipeline * self)
     /* Find a matching stream setting */
     for (lstream = allstreams; lstream; lstream = lstream->next) {
       GstEncodingProfile *prof = (GstEncodingProfile *) lstream->data;
-
-      if (TRACK_COMPATIBLE_PROFILE (track->type, prof)) {
-        if (self->priv->mode == GES_PIPELINE_MODE_SMART_RENDER) {
-          GstCaps *ocaps, *rcaps;
-
-          GST_DEBUG ("Smart Render mode, setting input caps");
-          ocaps = gst_encoding_profile_get_input_caps (prof);
-          ocaps = gst_caps_make_writable (ocaps);
-          if (track->type == GES_TRACK_TYPE_AUDIO)
-            rcaps = gst_caps_new_empty_simple ("audio/x-raw");
-          else
-            rcaps = gst_caps_new_empty_simple ("video/x-raw");
-          gst_caps_append (ocaps, rcaps);
-          ges_track_set_caps (track, ocaps);
-          gst_caps_unref (ocaps);
-        } else {
-          GstCaps *caps = NULL;
-
-          /* Raw preview or rendering mode */
-          if (track->type == GES_TRACK_TYPE_VIDEO)
-            caps = gst_caps_new_empty_simple ("video/x-raw");
-          else if (track->type == GES_TRACK_TYPE_AUDIO)
-            caps = gst_caps_new_empty_simple ("audio/x-raw");
-
-          if (caps) {
-            ges_track_set_caps (track, caps);
-            gst_caps_unref (caps);
-          }
-        }
+      if (_track_is_compatible_with_profile (self, track, prof))
         break;
-      }
     }
 
     gst_object_unref (track);
   }
 
+done:
   if (tracks)
     g_list_free (tracks);
 
