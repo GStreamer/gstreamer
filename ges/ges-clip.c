@@ -95,7 +95,7 @@ _get_priority_range (GESContainer * container, guint32 * min_priority,
     *min_priority = layer->min_gnl_priority;
     *max_priority = layer->max_gnl_priority;
   } else {
-    *min_priority = 0;
+    *min_priority = MIN_GNL_PRIO;
     *max_priority = G_MAXUINT32;
   }
 }

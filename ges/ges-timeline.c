@@ -2206,7 +2206,8 @@ trackelement_priority_changed_cb (GESTrackElement * child,
     GST_ERROR_OBJECT (timeline,
         "Changing a TrackElement prio, which would not "
         "land in no layer we are controlling");
-    g_sequence_remove (iters->iter_by_layer);
+    if (iters->iter_by_layer)
+      g_sequence_remove (iters->iter_by_layer);
     iters->iter_by_layer = NULL;
     iters->layer = NULL;
   } else {

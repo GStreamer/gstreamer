@@ -460,21 +460,21 @@ GST_START_TEST (test_effects_priorities)
   fail_unless (ges_container_add (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (effect2)));
 
-  fail_unless_equals_int (0, _PRIORITY (effect));
-  fail_unless_equals_int (1, _PRIORITY (effect1));
-  fail_unless_equals_int (2, _PRIORITY (effect2));
+  fail_unless_equals_int (MIN_GNL_PRIO + 0, _PRIORITY (effect));
+  fail_unless_equals_int (MIN_GNL_PRIO + 1, _PRIORITY (effect1));
+  fail_unless_equals_int (MIN_GNL_PRIO + 2, _PRIORITY (effect2));
 
   fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
           2));
-  fail_unless_equals_int (0, _PRIORITY (effect1));
-  fail_unless_equals_int (1, _PRIORITY (effect2));
-  fail_unless_equals_int (2, _PRIORITY (effect));
+  fail_unless_equals_int (MIN_GNL_PRIO + 0, _PRIORITY (effect1));
+  fail_unless_equals_int (MIN_GNL_PRIO + 1, _PRIORITY (effect2));
+  fail_unless_equals_int (MIN_GNL_PRIO + 2, _PRIORITY (effect));
 
   fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
           0));
-  fail_unless_equals_int (0, _PRIORITY (effect));
-  fail_unless_equals_int (1, _PRIORITY (effect1));
-  fail_unless_equals_int (2, _PRIORITY (effect2));
+  fail_unless_equals_int (MIN_GNL_PRIO + 0, _PRIORITY (effect));
+  fail_unless_equals_int (MIN_GNL_PRIO + 1, _PRIORITY (effect1));
+  fail_unless_equals_int (MIN_GNL_PRIO + 2, _PRIORITY (effect2));
 
   gst_object_unref (timeline);
 }
