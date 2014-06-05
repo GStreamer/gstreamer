@@ -1050,16 +1050,16 @@ ges_clip_get_top_effects (GESClip * clip)
 }
 
 /**
- * ges_clip_get_top_effect_position:
+ * ges_clip_get_top_effect_index:
  * @clip: The origin #GESClip
- * @effect: The #GESBaseEffect we want to get the top position from
+ * @effect: The #GESBaseEffect we want to get the top index from
  *
- * Gets the top position of an effect.
+ * Gets the index position of an effect.
  *
- * Returns: The top position of the effect, -1 if something went wrong.
+ * Returns: The top index of the effect, -1 if something went wrong.
  */
 gint
-ges_clip_get_top_effect_position (GESClip * clip, GESBaseEffect * effect)
+ges_clip_get_top_effect_index (GESClip * clip, GESBaseEffect * effect)
 {
   guint max_prio, min_prio;
 
@@ -1072,20 +1072,35 @@ ges_clip_get_top_effect_position (GESClip * clip, GESBaseEffect * effect)
       GES_TIMELINE_ELEMENT_PRIORITY (clip);
 }
 
+/* TODO 2.0 remove as it is Deprecated */
+gint
+ges_clip_get_top_effect_position (GESClip * clip, GESBaseEffect * effect)
+{
+  return ges_clip_get_top_effect_index (clip, effect);
+}
+
+/* TODO 2.0 remove as it is Deprecated */
+gboolean
+ges_clip_set_top_effect_priority (GESClip * clip,
+    GESBaseEffect * effect, guint newpriority)
+{
+  return ges_clip_set_top_effect_index (clip, effect, newpriority);
+}
+
 /**
- * ges_clip_set_top_effect_priority:
+ * ges_clip_set_top_effect_index:
  * @clip: The origin #GESClip
  * @effect: The #GESBaseEffect to move
- * @newpriority: the new position at which to move the @effect inside this
+ * @newindex: the new index at which to move the @effect inside this
  * #GESClip
  *
- * This is a convenience method that lets you set the priority of a top effect.
+ * This is a convenience method that lets you set the index of a top effect.
  *
  * Returns: %TRUE if @effect was successfuly moved, %FALSE otherwise.
  */
 gboolean
-ges_clip_set_top_effect_priority (GESClip * clip,
-    GESBaseEffect * effect, guint newpriority)
+ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
+    guint newindex)
 {
   gint inc;
   GList *tmp;
@@ -1098,14 +1113,14 @@ ges_clip_set_top_effect_priority (GESClip * clip,
   current_prio = _PRIORITY (track_element);
 
   /* FIXME, do we actually want to change what the user is telling us to do? */
-  newpriority = newpriority + MIN_GNL_PRIO;
+  newindex = newindex + MIN_GNL_PRIO;
   /*  We don't change the priority */
-  if (current_prio == newpriority ||
+  if (current_prio == newindex ||
       (G_UNLIKELY (GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (track_element)) !=
               clip)))
     return FALSE;
 
-  if (newpriority > (clip->priv->nb_effects - 1 + MIN_GNL_PRIO)) {
+  if (newindex > (clip->priv->nb_effects - 1 + MIN_GNL_PRIO)) {
     GST_DEBUG ("You are trying to make %p not a top effect", effect);
     return FALSE;
   }
@@ -1116,13 +1131,13 @@ ges_clip_set_top_effect_priority (GESClip * clip,
   }
 
   _ges_container_sort_children (GES_CONTAINER (clip));
-  if (_PRIORITY (track_element) < newpriority)
+  if (_PRIORITY (track_element) < newindex)
     inc = -1;
   else
     inc = +1;
 
   GST_DEBUG_OBJECT (clip, "Setting top effect %" GST_PTR_FORMAT "priority: %i",
-      effect, newpriority);
+      effect, newindex);
 
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrackElement *tmpo = GES_TRACK_ELEMENT (tmp->data);
@@ -1131,12 +1146,12 @@ ges_clip_set_top_effect_priority (GESClip * clip,
     if (tmpo == track_element)
       continue;
 
-    if ((inc == +1 && tck_priority >= newpriority) ||
-        (inc == -1 && tck_priority <= newpriority)) {
+    if ((inc == +1 && tck_priority >= newindex) ||
+        (inc == -1 && tck_priority <= newindex)) {
       _set_priority0 (GES_TIMELINE_ELEMENT (tmpo), tck_priority + inc);
     }
   }
-  _set_priority0 (GES_TIMELINE_ELEMENT (track_element), newpriority);
+  _set_priority0 (GES_TIMELINE_ELEMENT (track_element), newindex);
 
   return TRUE;
 }

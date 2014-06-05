@@ -161,8 +161,11 @@ gboolean          ges_clip_move_to_layer          (GESClip *clip, GESLayer  *lay
  ****************************************************/
 GList*   ges_clip_get_top_effects           (GESClip *clip);
 gint     ges_clip_get_top_effect_position   (GESClip *clip, GESBaseEffect *effect);
+gint     ges_clip_get_top_effect_index   (GESClip *clip, GESBaseEffect *effect);
 gboolean ges_clip_set_top_effect_priority   (GESClip *clip, GESBaseEffect *effect,
                                              guint newpriority);
+gboolean ges_clip_set_top_effect_index   (GESClip *clip, GESBaseEffect *effect,
+                                             guint newindex);
 
 /****************************************************
  *                   Editing                        *
