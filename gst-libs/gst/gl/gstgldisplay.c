@@ -134,6 +134,10 @@ gst_gl_display_new (void)
   if (!display && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
     display = GST_GL_DISPLAY (gst_gl_display_x11_new (NULL));
 #endif
+#if GST_GL_HAVE_WINDOW_WAYLAND
+  if (!display && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
+    display = g_object_new (GST_TYPE_GL_DISPLAY, NULL);
+#endif
 #if GST_GL_HAVE_PLATFORM_EGL
   if (!display && (!platform_choice
           || g_strstr_len (platform_choice, 3, "egl")))
