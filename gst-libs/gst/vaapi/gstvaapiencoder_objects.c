@@ -156,6 +156,11 @@ GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiEncSlice, gst_vaapi_enc_slice);
 void
 gst_vaapi_enc_slice_destroy (GstVaapiEncSlice * slice)
 {
+  if (slice->packed_headers) {
+    g_ptr_array_unref (slice->packed_headers);
+    slice->packed_headers = NULL;
+  }
+
   vaapi_destroy_buffer (GET_VA_DISPLAY (slice), &slice->param_id);
   slice->param = NULL;
 }
@@ -173,6 +178,12 @@ gst_vaapi_enc_slice_create (GstVaapiEncSlice * slice,
       args->param_size, args->param, &slice->param_id, &slice->param);
   if (!success)
     return FALSE;
+
+  slice->packed_headers = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      gst_vaapi_mini_object_unref);
+  if (!slice->packed_headers)
+    return FALSE;
+
   return TRUE;
 }
 
@@ -381,6 +392,16 @@ gst_vaapi_enc_picture_add_slice (GstVaapiEncPicture * picture,
   g_ptr_array_add (picture->slices, gst_vaapi_codec_object_ref (slice));
 }
 
+void
+gst_vaapi_enc_slice_add_packed_header (GstVaapiEncSlice * slice,
+    GstVaapiEncPackedHeader * header)
+{
+  g_return_if_fail (slice != NULL);
+  g_return_if_fail (header != NULL);
+
+  g_ptr_array_add (slice->packed_headers, gst_vaapi_codec_object_ref (header));
+}
+
 static gboolean
 do_encode (VADisplay dpy, VAContextID ctx, VABufferID * buf_id, void **buf_ptr)
 {
@@ -449,6 +470,17 @@ gst_vaapi_enc_picture_encode (GstVaapiEncPicture * picture)
   /* Submit Slice parameters */
   for (i = 0; i < picture->slices->len; i++) {
     GstVaapiEncSlice *const slice = g_ptr_array_index (picture->slices, i);
+    guint j;
+
+    /* Submit packed_slice_header and packed_raw_data */
+    for (j = 0; j < slice->packed_headers->len; j++) {
+      GstVaapiEncPackedHeader *const header =
+          g_ptr_array_index (slice->packed_headers, j);
+      if (!do_encode (va_display, va_context,
+              &header->param_id, &header->param) ||
+          !do_encode (va_display, va_context, &header->data_id, &header->data))
+        return FALSE;
+    }
     if (!do_encode (va_display, va_context, &slice->param_id, &slice->param))
       return FALSE;
   }

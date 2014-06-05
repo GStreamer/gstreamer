@@ -118,6 +118,7 @@ struct _GstVaapiEncSlice
   /*< public >*/
   VABufferID param_id;
   gpointer param;
+  GPtrArray *packed_headers;
 };
 
 G_GNUC_INTERNAL
@@ -229,6 +230,11 @@ G_GNUC_INTERNAL
 void
 gst_vaapi_enc_picture_add_slice (GstVaapiEncPicture * picture,
     GstVaapiEncSlice * slice);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_enc_slice_add_packed_header (GstVaapiEncSlice *slice,
+    GstVaapiEncPackedHeader * header);
 
 G_GNUC_INTERNAL
 gboolean
