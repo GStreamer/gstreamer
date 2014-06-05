@@ -139,7 +139,7 @@ struct _GstCollectData
  *
  * A function that will be called when all pads have received data.
  *
- * Returns: #GST_FLOW_OK for success
+ * Returns: %GST_FLOW_OK for success
  */
 typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer user_data);
 
@@ -151,10 +151,10 @@ typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer 
  * @user_data: user data passed to gst_collect_pads_set_buffer_function()
  *
  * A function that will be called when a (considered oldest) buffer can be muxed.
- * If all pads have reached EOS, this function is called with NULL @buffer
- * and NULL @data.
+ * If all pads have reached EOS, this function is called with %NULL @buffer
+ * and %NULL @data.
  *
- * Returns: #GST_FLOW_OK for success
+ * Returns: %GST_FLOW_OK for success
  */
 typedef GstFlowReturn (*GstCollectPadsBufferFunction) (GstCollectPads *pads, GstCollectData *data,
                                                        GstBuffer *buffer, gpointer user_data);

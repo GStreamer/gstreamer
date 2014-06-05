@@ -336,7 +336,7 @@ gst_data_queue_flush (GstDataQueue * queue)
  * Queries if there are any items in the @queue.
  * MT safe.
  *
- * Returns: #TRUE if @queue is empty.
+ * Returns: %TRUE if @queue is empty.
  *
  * Since: 1.2
  */
@@ -360,7 +360,7 @@ gst_data_queue_is_empty (GstDataQueue * queue)
  * #GstDataQueueCheckFullFunction registered with @queue.
  * MT safe.
  *
- * Returns: #TRUE if @queue is full.
+ * Returns: %TRUE if @queue is full.
  *
  * Since: 1.2
  */
@@ -381,11 +381,11 @@ gst_data_queue_is_full (GstDataQueue * queue)
  * @queue: a #GstDataQueue.
  * @flushing: a #gboolean stating if the queue will be flushing or not.
  *
- * Sets the queue to flushing state if @flushing is #TRUE. If set to flushing
+ * Sets the queue to flushing state if @flushing is %TRUE. If set to flushing
  * state, any incoming data on the @queue will be discarded. Any call currently
  * blocking on #gst_data_queue_push or #gst_data_queue_pop will return straight
- * away with a return value of #FALSE. While the @queue is in flushing state, 
- * all calls to those two functions will return #FALSE.
+ * away with a return value of %FALSE. While the @queue is in flushing state, 
+ * all calls to those two functions will return %FALSE.
  *
  * MT Safe.
  *
@@ -436,10 +436,10 @@ gst_data_queue_push_force_unlocked (GstDataQueue * queue,
  *
  * Note that this function has slightly different semantics than gst_pad_push()
  * and gst_pad_push_event(): this function only takes ownership of @item and
- * the #GstMiniObject contained in @item if the push was successful. If FALSE
+ * the #GstMiniObject contained in @item if the push was successful. If %FALSE
  * is returned, the caller is responsible for freeing @item and its contents.
  *
- * Returns: #TRUE if the @item was successfully pushed on the @queue.
+ * Returns: %TRUE if the @item was successfully pushed on the @queue.
  *
  * Since: 1.2
  */
@@ -484,10 +484,10 @@ flushing:
  *
  * Note that this function has slightly different semantics than gst_pad_push()
  * and gst_pad_push_event(): this function only takes ownership of @item and
- * the #GstMiniObject contained in @item if the push was successful. If FALSE
+ * the #GstMiniObject contained in @item if the push was successful. If %FALSE
  * is returned, the caller is responsible for freeing @item and its contents.
  *
- * Returns: #TRUE if the @item was successfully pushed on the @queue.
+ * Returns: %TRUE if the @item was successfully pushed on the @queue.
  *
  * Since: 1.2
  */
@@ -566,7 +566,7 @@ _gst_data_queue_wait_non_empty (GstDataQueue * queue)
  * @queue is set to the flushing state.
  * MT safe.
  *
- * Returns: #TRUE if an @item was successfully retrieved from the @queue.
+ * Returns: %TRUE if an @item was successfully retrieved from the @queue.
  *
  * Since: 1.2
  */
@@ -636,7 +636,7 @@ is_of_type (gconstpointer a, gconstpointer b)
  * one item is available, OR the @queue is set to the flushing state.
  * MT safe.
  *
- * Returns: #TRUE if an @item was successfully retrieved from the @queue.
+ * Returns: %TRUE if an @item was successfully retrieved from the @queue.
  *
  * Since: 1.2
  */
@@ -688,7 +688,7 @@ flushing:
  *
  * Pop and unref the head-most #GstMiniObject with the given #GType.
  *
- * Returns: TRUE if an element was removed.
+ * Returns: %TRUE if an element was removed.
  *
  * Since: 1.2
  */

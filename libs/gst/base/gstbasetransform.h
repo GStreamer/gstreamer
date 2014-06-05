@@ -132,13 +132,13 @@ struct _GstBaseTransform {
  *                    If there is a @filter_meta method implementation, it will
  *                    be called for all metadata API in the downstream query,
  *                    otherwise the metadata API is removed.
- * @filter_meta: Return TRUE if the metadata API should be proposed in the
- *               upstream allocation query. The default implementation is NULL
+ * @filter_meta: Return %TRUE if the metadata API should be proposed in the
+ *               upstream allocation query. The default implementation is %NULL
  *               and will cause all metadata to be removed.
  * @propose_allocation: Propose buffer allocation parameters for upstream elements.
  *                      This function must be implemented if the element reads or
  *                      writes the buffer content. The query that was passed to
- *                      the decide_allocation is passed in this method (or NULL
+ *                      the decide_allocation is passed in this method (or %NULL
  *                      when the element is in passthrough mode). The default
  *                      implementation will pass the query downstream when in
  *                      passthrough mode and will copy all the filtered metadata
@@ -176,9 +176,9 @@ struct _GstBaseTransform {
  *                 The default implementation will copy the flags, timestamps and
  *                 offsets of the buffer.
  * @transform_meta: Optional. Transform the metadata on the input buffer to the
- *                  output buffer. By default this method is NULL and no
+ *                  output buffer. By default this method is %NULL and no
  *                  metadata is copied. subclasses can implement this method and
- *                  return TRUE if the metadata is to be copied.
+ *                  return %TRUE if the metadata is to be copied.
  * @before_transform: Optional.
  *                    This method is called right before the base class will
  *                    start processing. Dynamic properties or other delayed

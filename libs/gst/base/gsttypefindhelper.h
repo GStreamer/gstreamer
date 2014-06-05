@@ -44,7 +44,7 @@ GstCaps * gst_type_find_helper_for_extension (GstObject * obj,
 /**
  * GstTypeFindHelperGetRangeFunction:
  * @obj: a #GstObject that will handle the getrange request
- * @parent: (allow-none): the parent of @obj or NULL
+ * @parent: (allow-none): the parent of @obj or %NULL
  * @offset: the offset of the range
  * @length: the length of the range
  * @buffer: a memory location to hold the result buffer

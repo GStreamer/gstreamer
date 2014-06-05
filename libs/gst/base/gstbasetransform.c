@@ -57,14 +57,14 @@
  *     intact.
  *   </para></listitem>
  *   <listitem><para>
- *     On the GstBaseTransformClass is the passthrough_on_same_caps variable
- *     which will automatically set/unset passthrough based on whether the
+ *     The #GstBaseTransformClass.passthrough_on_same_caps variable
+ *     will automatically set/unset passthrough based on whether the
  *     element negotiates the same caps on both pads.
  *   </para></listitem>
  *   <listitem><para>
- *     passthrough_on_same_caps on an element that doesn't implement a
- *     transform_caps function is useful for elements that only inspect data
- *     (such as level)
+ *     #GstBaseTransformClass.passthrough_on_same_caps on an element that
+ *     doesn't implement a transform_caps function is useful for elements that
+ *     only inspect data (such as level)
  *   </para></listitem>
  *   </itemizedlist>
  *   <itemizedlist>
@@ -94,7 +94,7 @@
  *     immediately.  </para></listitem>
  *   <listitem><para>
  *     only implementing transform_ip and not transform implies always_in_place
- *     = TRUE
+ *     = %TRUE
  *   </para></listitem>
  *   </itemizedlist>
  *   <itemizedlist>
@@ -116,7 +116,7 @@
  *   <listitem><para>
  *     Elements wishing to operate in this mode should replace the
  *     prepare_output_buffer method to create subbuffers of the input buffer
- *     and set always_in_place to TRUE
+ *     and set always_in_place to %TRUE
  *   </para></listitem>
  *   </itemizedlist>
  *   <itemizedlist>
@@ -185,10 +185,10 @@
  *       to the transform_ip function.
  *     </para></listitem>
  *     <listitem><para>
- *       Implied TRUE if no transform function is implemented.
+ *       Implied %TRUE if no transform function is implemented.
  *     </para></listitem>
  *     <listitem><para>
- *       Implied FALSE if ONLY transform function is implemented.
+ *       Implied %FALSE if ONLY transform function is implemented.
  *     </para></listitem>
  *   </itemizedlist>
  * </para></listitem>
@@ -1717,7 +1717,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
   }
 
   /* we only copy metadata when the subclass implemented a transform_meta
-   * function and when it returns TRUE */
+   * function and when it returns %TRUE */
   if (do_copy) {
     GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
     GST_DEBUG_OBJECT (trans, "copy metadata %s", g_type_name (info->api));
@@ -1778,7 +1778,7 @@ not_writable:
  * We have two cache locations to store the size, one for the source caps
  * and one for the sink caps.
  *
- * this function returns FALSE if no size could be calculated.
+ * this function returns %FALSE if no size could be calculated.
  */
 static gboolean
 gst_base_transform_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
@@ -2439,7 +2439,7 @@ gst_base_transform_src_activate_mode (GstPad * pad, GstObject * parent,
  * Set passthrough mode for this filter by default. This is mostly
  * useful for filters that do not care about negotiation.
  *
- * Always TRUE for filters which don't implement either a transform
+ * Always %TRUE for filters which don't implement either a transform
  * or transform_ip method.
  *
  * MT safe.
@@ -2472,7 +2472,7 @@ gst_base_transform_set_passthrough (GstBaseTransform * trans,
  *
  * See if @trans is configured as a passthrough transform.
  *
- * Returns: TRUE is the transform is configured in passthrough mode.
+ * Returns: %TRUE is the transform is configured in passthrough mode.
  *
  * MT safe.
  */
@@ -2499,8 +2499,8 @@ gst_base_transform_is_passthrough (GstBaseTransform * trans)
  * Determines whether a non-writable buffer will be copied before passing
  * to the transform_ip function.
  * <itemizedlist>
- *   <listitem>Always TRUE if no transform function is implemented.</listitem>
- *   <listitem>Always FALSE if ONLY transform function is implemented.</listitem>
+ *   <listitem>Always %TRUE if no transform function is implemented.</listitem>
+ *   <listitem>Always %FALSE if ONLY transform function is implemented.</listitem>
  * </itemizedlist>
  *
  * MT safe.
@@ -2537,7 +2537,7 @@ gst_base_transform_set_in_place (GstBaseTransform * trans, gboolean in_place)
  *
  * See if @trans is configured as a in_place transform.
  *
- * Returns: TRUE is the transform is configured in in_place mode.
+ * Returns: %TRUE is the transform is configured in in_place mode.
  *
  * MT safe.
  */
@@ -2612,7 +2612,7 @@ gst_base_transform_set_qos_enabled (GstBaseTransform * trans, gboolean enabled)
  *
  * Queries if the transform will handle QoS.
  *
- * Returns: TRUE if QoS is enabled.
+ * Returns: %TRUE if QoS is enabled.
  *
  * MT safe.
  */

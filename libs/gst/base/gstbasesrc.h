@@ -129,28 +129,31 @@ struct _GstBaseSrc {
  *    these times.
  * @get_size: Return the total size of the resource, in the configured format.
  * @is_seekable: Check if the source can seek
- * @prepare_seek_segment: Prepare the GstSegment that will be passed to the
- *   do_seek vmethod for executing a seek request. Sub-classes should override
- *   this if they support seeking in formats other than the configured native
- *   format. By default, it tries to convert the seek arguments to the
- *   configured native format and prepare a segment in that format.
+ * @prepare_seek_segment: Prepare the #GstSegment that will be passed to the
+ *   #GstBaseSrcClass.do_seek() vmethod for executing a seek
+ *   request. Sub-classes should override this if they support seeking in
+ *   formats other than the configured native format. By default, it tries to
+ *   convert the seek arguments to the configured native format and prepare a
+ *   segment in that format.
  * @do_seek: Perform seeking on the resource to the indicated segment.
- * @unlock: Unlock any pending access to the resource. Subclasses should
- *    unblock any blocked function ASAP. In particular, any create() function in
+ * @unlock: Unlock any pending access to the resource. Subclasses should unblock
+ *    any blocked function ASAP. In particular, any create() function in
  *    progress should be unblocked and should return GST_FLOW_FLUSHING. Any
- *    future @create<!-- -->() function call should also return GST_FLOW_FLUSHING
- *    until the @unlock_stop<!-- -->() function has been called.
- * @unlock_stop: Clear the previous unlock request. Subclasses should clear
- *    any state they set during unlock(), such as clearing command queues.
+ *    future #GstBaseSrcClass.create() function call should also return
+ *    GST_FLOW_FLUSHING until the #GstBaseSrcClass.unlock_stop() function has
+ *    been called.
+ * @unlock_stop: Clear the previous unlock request. Subclasses should clear any
+ *    state they set during #GstBaseSrcClass.unlock(), such as clearing command
+ *    queues.
  * @query: Handle a requested query.
  * @event: Override this to implement custom event handling.
- * @create: Ask the subclass to create a buffer with offset and size.
- *   When the subclass returns GST_FLOW_OK, it MUST return a buffer of the
- *   requested size unless fewer bytes are available because an EOS condition
- *   is near. No buffer should be returned when the return value is different
- *   from GST_FLOW_OK. A return value of GST_FLOW_EOS signifies that the
- *   end of stream is reached. The default implementation will call @alloc and
- *   then call @fill.
+ * @create: Ask the subclass to create a buffer with offset and size.  When the
+ *   subclass returns GST_FLOW_OK, it MUST return a buffer of the requested size
+ *   unless fewer bytes are available because an EOS condition is near. No
+ *   buffer should be returned when the return value is different from
+ *   GST_FLOW_OK. A return value of GST_FLOW_EOS signifies that the end of
+ *   stream is reached. The default implementation will call
+ *   #GstBaseSrcClass.alloc() and then call #GstBaseSrcClass.fill().
  * @alloc: Ask the subclass to allocate a buffer with for offset and size. The
  *   default implementation will create a new buffer from the negotiated allocator.
  * @fill: Ask the subclass to fill the buffer with data for offset and size. The

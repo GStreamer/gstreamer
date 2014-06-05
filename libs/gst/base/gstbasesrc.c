@@ -35,13 +35,13 @@
  *
  * The source can be configured to operate in any #GstFormat with the
  * gst_base_src_set_format() method. The currently set format determines
- * the format of the internal #GstSegment and any #GST_EVENT_SEGMENT
- * events. The default format for #GstBaseSrc is #GST_FORMAT_BYTES.
+ * the format of the internal #GstSegment and any %GST_EVENT_SEGMENT
+ * events. The default format for #GstBaseSrc is %GST_FORMAT_BYTES.
  *
  * #GstBaseSrc always supports push mode scheduling. If the following
  * conditions are met, it also supports pull mode scheduling:
  * <itemizedlist>
- *   <listitem><para>The format is set to #GST_FORMAT_BYTES (default).</para>
+ *   <listitem><para>The format is set to %GST_FORMAT_BYTES (default).</para>
  *   </listitem>
  *   <listitem><para>#GstBaseSrcClass.is_seekable() returns %TRUE.</para>
  *   </listitem>
@@ -50,7 +50,7 @@
  * If all the conditions are met for operating in pull mode, #GstBaseSrc is
  * automatically seekable in push mode as well. The following conditions must
  * be met to make the element seekable in push mode when the format is not
- * #GST_FORMAT_BYTES:
+ * %GST_FORMAT_BYTES:
  * <itemizedlist>
  *   <listitem><para>
  *     #GstBaseSrcClass.is_seekable() returns %TRUE.
@@ -82,7 +82,7 @@
  * #GstBaseSrcClass.create() method will not be called in PAUSED but only in
  * PLAYING. To signal the pipeline that the element will not produce data, the
  * return value from the READY to PAUSED state will be
- * #GST_STATE_CHANGE_NO_PREROLL.
+ * %GST_STATE_CHANGE_NO_PREROLL.
  *
  * A typical live source will timestamp the buffers it creates with the
  * current running time of the pipeline. This is one reason why a live source
@@ -118,7 +118,7 @@
  * {
  *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
  *   // srctemplate should be a #GstStaticPadTemplate with direction
- *   // #GST_PAD_SRC and name "src"
+ *   // %GST_PAD_SRC and name "src"
  *   gst_element_class_add_pad_template (gstelement_class,
  *       gst_static_pad_template_get (&amp;srctemplate));
  *
@@ -144,7 +144,7 @@
  *
  * An application may send an EOS event to a source element to make it
  * perform the EOS logic (send EOS event downstream or post a
- * #GST_MESSAGE_SEGMENT_DONE on the bus). This can typically be done
+ * %GST_MESSAGE_SEGMENT_DONE on the bus). This can typically be done
  * with the gst_element_send_event() function on the element or its parent bin.
  *
  * After the EOS has been sent to the element, the application should wait for
@@ -506,11 +506,11 @@ gst_base_src_finalize (GObject * object)
  * and call this method before continuing to produce the remaining data.
  *
  * This function will block until a state change to PLAYING happens (in which
- * case this function returns #GST_FLOW_OK) or the processing must be stopped due
+ * case this function returns %GST_FLOW_OK) or the processing must be stopped due
  * to a state change to READY or a FLUSH event (in which case this function
- * returns #GST_FLOW_FLUSHING).
+ * returns %GST_FLOW_FLUSHING).
  *
- * Returns: #GST_FLOW_OK if @src is PLAYING and processing can
+ * Returns: %GST_FLOW_OK if @src is PLAYING and processing can
  * continue. Any other return value should be returned from the create vmethod.
  */
 GstFlowReturn
@@ -592,7 +592,7 @@ gst_base_src_is_live (GstBaseSrc * src)
  * for sending SEGMENT events and for performing seeks.
  *
  * If a format of GST_FORMAT_BYTES is set, the element will be able to
- * operate in pull mode if the #GstBaseSrcClass.is_seekable() returns TRUE.
+ * operate in pull mode if the #GstBaseSrcClass.is_seekable() returns %TRUE.
  *
  * This function must only be called in states < %GST_STATE_PAUSED.
  */
@@ -694,14 +694,14 @@ gst_base_src_is_async (GstBaseSrc * src)
  * @min_latency: (out) (allow-none): the min latency of the source
  * @max_latency: (out) (allow-none): the max latency of the source
  *
- * Query the source for the latency parameters. @live will be TRUE when @src is
+ * Query the source for the latency parameters. @live will be %TRUE when @src is
  * configured as a live source. @min_latency will be set to the difference
  * between the running time and the timestamp of the first buffer.
  * @max_latency is always the undefined value of -1.
  *
  * This function is mostly used by subclasses.
  *
- * Returns: TRUE if the query succeeded.
+ * Returns: %TRUE if the query succeeded.
  */
 gboolean
 gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,

@@ -163,7 +163,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
 #endif
 
   /* getrange might silently return shortened buffers at the end of a file,
-   * we must, however, always return either the full requested data or NULL */
+   * we must, however, always return either the full requested data or %NULL */
   buf_offset = GST_BUFFER_OFFSET (buffer);
   buf_size = gst_buffer_get_size (buffer);
 
@@ -246,13 +246,13 @@ helper_find_get_length (gpointer data)
 /**
  * gst_type_find_helper_get_range:
  * @obj: A #GstObject that will be passed as first argument to @func
- * @parent: (allow-none): the parent of @obj or NULL
+ * @parent: (allow-none): the parent of @obj or %NULL
  * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
  *        be used to access data at random offsets when doing the typefinding
  * @size: The length in bytes
  * @extension: extension of the media
  * @prob: (out) (allow-none): location to store the probability of the found
- *     caps, or #NULL
+ *     caps, or %NULL
  *
  * Utility function to do pull-based typefinding. Unlike gst_type_find_helper()
  * however, this function will use the specified function @func to obtain the
@@ -263,14 +263,14 @@ helper_find_get_length (gpointer data)
  * callback can then call the upstream peer pad with offsets adjusted for the
  * tag size, for example).
  *
- * When @extension is not NULL, this function will first try the typefind
+ * When @extension is not %NULL, this function will first try the typefind
  * functions for the given extension, which might speed up the typefinding
  * in many cases.
  *
  * Free-function: gst_caps_unref
  *
  * Returns: (transfer full): the #GstCaps corresponding to the data stream.
- *     Returns #NULL if no #GstCaps matches the data stream.
+ *     Returns %NULL if no #GstCaps matches the data stream.
  */
 GstCaps *
 gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
@@ -389,7 +389,7 @@ gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
  * Free-function: gst_caps_unref
  *
  * Returns: (transfer full): the #GstCaps corresponding to the data stream.
- *     Returns #NULL if no #GstCaps matches the data stream.
+ *     Returns %NULL if no #GstCaps matches the data stream.
  */
 
 GstCaps *
@@ -480,26 +480,26 @@ buf_helper_find_suggest (gpointer data, GstTypeFindProbability probability,
 
 /**
  * gst_type_find_helper_for_data:
- * @obj: (allow-none): object doing the typefinding, or NULL (used for logging)
+ * @obj: (allow-none): object doing the typefinding, or %NULL (used for logging)
  * @data: (in) (transfer none): a pointer with data to typefind
  * @size: (in) (transfer none): the size of @data
  * @prob: (out) (allow-none): location to store the probability of the found
- *     caps, or #NULL
+ *     caps, or %NULL
  *
  * Tries to find what type of data is contained in the given @data, the
  * assumption being that the data represents the beginning of the stream or
  * file.
  *
  * All available typefinders will be called on the data in order of rank. If
- * a typefinding function returns a probability of #GST_TYPE_FIND_MAXIMUM,
+ * a typefinding function returns a probability of %GST_TYPE_FIND_MAXIMUM,
  * typefinding is stopped immediately and the found caps will be returned
  * right away. Otherwise, all available typefind functions will the tried,
- * and the caps with the highest probability will be returned, or #NULL if
+ * and the caps with the highest probability will be returned, or %NULL if
  * the content of @data could not be identified.
  *
  * Free-function: gst_caps_unref
  *
- * Returns: (transfer full): the #GstCaps corresponding to the data, or #NULL
+ * Returns: (transfer full): the #GstCaps corresponding to the data, or %NULL
  *     if no type could be found. The caller should free the caps returned
  *     with gst_caps_unref().
  */
@@ -552,25 +552,25 @@ gst_type_find_helper_for_data (GstObject * obj, const guint8 * data, gsize size,
 
 /**
  * gst_type_find_helper_for_buffer:
- * @obj: (allow-none): object doing the typefinding, or NULL (used for logging)
+ * @obj: (allow-none): object doing the typefinding, or %NULL (used for logging)
  * @buf: (in) (transfer none): a #GstBuffer with data to typefind
  * @prob: (out) (allow-none): location to store the probability of the found
- *     caps, or #NULL
+ *     caps, or %NULL
  *
  * Tries to find what type of data is contained in the given #GstBuffer, the
  * assumption being that the buffer represents the beginning of the stream or
  * file.
  *
  * All available typefinders will be called on the data in order of rank. If
- * a typefinding function returns a probability of #GST_TYPE_FIND_MAXIMUM,
+ * a typefinding function returns a probability of %GST_TYPE_FIND_MAXIMUM,
  * typefinding is stopped immediately and the found caps will be returned
  * right away. Otherwise, all available typefind functions will the tried,
- * and the caps with the highest probability will be returned, or #NULL if
+ * and the caps with the highest probability will be returned, or %NULL if
  * the content of the buffer could not be identified.
  *
  * Free-function: gst_caps_unref
  *
- * Returns: (transfer full): the #GstCaps corresponding to the data, or #NULL
+ * Returns: (transfer full): the #GstCaps corresponding to the data, or %NULL
  *     if no type could be found. The caller should free the caps returned
  *     with gst_caps_unref().
  */
@@ -596,7 +596,7 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
 
 /**
  * gst_type_find_helper_for_extension:
- * @obj: (allow-none): object doing the typefinding, or NULL (used for logging)
+ * @obj: (allow-none): object doing the typefinding, or %NULL (used for logging)
  * @extension: an extension
  *
  * Tries to find the best #GstCaps associated with @extension.
@@ -608,7 +608,7 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
  * Free-function: gst_caps_unref
  *
  * Returns: (transfer full): the #GstCaps corresponding to @extension, or
- *     #NULL if no type could be found. The caller should free the caps
+ *     %NULL if no type could be found. The caller should free the caps
  *     returned with gst_caps_unref().
  */
 GstCaps *

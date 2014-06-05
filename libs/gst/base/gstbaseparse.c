@@ -50,22 +50,22 @@
  * <listitem>
  *   <itemizedlist><title>Set-up phase</title>
  *   <listitem><para>
- *     GstBaseParse calls @start to inform subclass that data processing is
+ *     #GstBaseParse calls @start to inform subclass that data processing is
  *     about to start now.
  *   </para></listitem>
  *   <listitem><para>
- *     GstBaseParse class calls @set_sink_caps to inform the subclass about
+ *     #GstBaseParse class calls @set_sink_caps to inform the subclass about
  *     incoming sinkpad caps. Subclass could already set the srcpad caps
  *     accordingly, but this might be delayed until calling
  *     gst_base_parse_finish_frame() with a non-queued frame.
  *   </para></listitem>
  *   <listitem><para>
- *      At least at this point subclass needs to tell the GstBaseParse class
+ *      At least at this point subclass needs to tell the #GstBaseParse class
  *      how big data chunks it wants to receive (min_frame_size). It can do
  *      this with gst_base_parse_set_min_frame_size().
  *   </para></listitem>
  *   <listitem><para>
- *      GstBaseParse class sets up appropriate data passing mode (pull/push)
+ *      #GstBaseParse class sets up appropriate data passing mode (pull/push)
  *      and starts to process the data.
  *   </para></listitem>
  *   </itemizedlist>
@@ -74,7 +74,7 @@
  *   <itemizedlist>
  *   <title>Parsing phase</title>
  *     <listitem><para>
- *       GstBaseParse gathers at least min_frame_size bytes of data either
+ *       #GstBaseParse gathers at least min_frame_size bytes of data either
  *       by pulling it from upstream or collecting buffers in an internal
  *       #GstAdapter.
  *     </para></listitem>
@@ -101,7 +101,7 @@
  *       </para><para>
  *       Subclass is also responsible for setting the buffer metadata
  *       (e.g. buffer timestamp and duration, or keyframe if applicable).
- *       (although the latter can also be done by GstBaseParse if it is
+ *       (although the latter can also be done by #GstBaseParse if it is
  *       appropriately configured, see below).  Frame is provided with
  *       timestamp derived from upstream (as much as generally possible),
  *       duration obtained from configuration (see below), and offset
@@ -118,7 +118,7 @@
  *       events, or to perform custom (segment) filtering.
  *     </para></listitem>
  *     <listitem><para>
- *       During the parsing process GstBaseParseClass will handle both srcpad
+ *       During the parsing process #GstBaseParseClass will handle both srcpad
  *       and sinkpad events. They will be passed to subclass if @event or
  *       @src_event callbacks have been provided.
  *     </para></listitem>
@@ -127,7 +127,7 @@
  * <listitem>
  *   <itemizedlist><title>Shutdown phase</title>
  *   <listitem><para>
- *     GstBaseParse class calls @stop to inform the subclass that data
+ *     #GstBaseParse class calls @stop to inform the subclass that data
  *     parsing will be stopped.
  *   </para></listitem>
  *   </itemizedlist>
@@ -139,12 +139,12 @@
  * needs to set the fixed caps on srcpad, when the format is ensured (e.g.
  * when base class calls subclass' @set_sink_caps function).
  *
- * This base class uses #GST_FORMAT_DEFAULT as a meaning of frames. So,
+ * This base class uses %GST_FORMAT_DEFAULT as a meaning of frames. So,
  * subclass conversion routine needs to know that conversion from
- * #GST_FORMAT_TIME to #GST_FORMAT_DEFAULT must return the
+ * %GST_FORMAT_TIME to %GST_FORMAT_DEFAULT must return the
  * frame number that can be found from the given byte position.
  *
- * GstBaseParse uses subclasses conversion methods also for seeking (or
+ * #GstBaseParse uses subclasses conversion methods also for seeking (or
  * otherwise uses its own default one, see also below).
  *
  * Subclass @start and @stop functions will be called to inform the beginning
@@ -180,10 +180,10 @@
  *   <listitem><para>
  *      In particular, if subclass is unable to determine a duration, but
  *      parsing (or specs) yields a frames per seconds rate, then this can be
- *      provided to GstBaseParse to enable it to cater for
+ *      provided to #GstBaseParse to enable it to cater for
  *      buffer time metadata (which will be taken from upstream as much as
  *      possible). Internally keeping track of frame durations and respective
- *      sizes that have been pushed provides GstBaseParse with an estimated
+ *      sizes that have been pushed provides #GstBaseParse with an estimated
  *      bitrate. A default @convert (used if not overridden) will then use these
  *      rates to perform obvious conversions.  These rates are also used to
  *      update (estimated) duration at regular frame intervals.
@@ -561,11 +561,11 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   /**
    * GstBaseParse:disable-passthrough:
    *
-   * If set to #TRUE, baseparse will unconditionally force parsing of the
+   * If set to %TRUE, baseparse will unconditionally force parsing of the
    * incoming data. This can be required in the rare cases where the incoming
    * side-data (caps, pts, dts, ...) is not trusted by the user and wants to
    * force validation and parsing of the incoming data.
-   * If set to #FALSE, decision of whether to parse the data or not is up to
+   * If set to %FALSE, decision of whether to parse the data or not is up to
    * the implementation (standard behaviour).
    */
   g_object_class_install_property (gobject_class, PROP_DISABLE_PASSTHROUGH,
@@ -898,7 +898,7 @@ gst_base_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
  *
  * Converts using configured "convert" vmethod in #GstBaseParse class.
  *
- * Returns: TRUE if conversion was successful.
+ * Returns: %TRUE if conversion was successful.
  */
 static gboolean
 gst_base_parse_convert (GstBaseParse * parse,
@@ -949,7 +949,7 @@ gst_base_parse_convert (GstBaseParse * parse,
  *
  * Handler for sink pad events.
  *
- * Returns: TRUE if the event was handled.
+ * Returns: %TRUE if the event was handled.
  */
 static gboolean
 gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
@@ -1351,7 +1351,7 @@ gst_base_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
  *
  * Handler for source pad events.
  *
- * Returns: TRUE if the event was handled.
+ * Returns: %TRUE if the event was handled.
  */
 static gboolean
 gst_base_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
@@ -1388,7 +1388,7 @@ gst_base_parse_is_seekable (GstBaseParse * parse)
  *
  * Default srcpad event handler.
  *
- * Returns: TRUE if the event was handled and can be dropped.
+ * Returns: %TRUE if the event was handled and can be dropped.
  */
 static gboolean
 gst_base_parse_src_event_default (GstBaseParse * parse, GstEvent * event)
@@ -1419,7 +1419,7 @@ gst_base_parse_src_event_default (GstBaseParse * parse, GstEvent * event)
  *
  * Default implementation of "convert" vmethod in #GstBaseParse class.
  *
- * Returns: TRUE if conversion was successful.
+ * Returns: %TRUE if conversion was successful.
  */
 gboolean
 gst_base_parse_convert_default (GstBaseParse * parse,
@@ -4504,7 +4504,7 @@ gst_base_parse_change_state (GstElement * element, GstStateChange transition)
  *
  * This function should only be called from a @handle_frame implementation.
  *
- * GstBaseParse creates initial timestamps for frames by using the last
+ * #GstBaseParse creates initial timestamps for frames by using the last
  * timestamp seen in the stream before the frame starts.  In certain
  * cases, the correct timestamps will occur in the stream after the
  * start of the frame, but before the start of the actual picture data.

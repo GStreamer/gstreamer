@@ -47,8 +47,8 @@ typedef struct _GstDataQueuePrivate GstDataQueuePrivate;
  * @object: the #GstMiniObject to queue.
  * @size: the size in bytes of the miniobject.
  * @duration: the duration in #GstClockTime of the miniobject. Can not be
- * #GST_CLOCK_TIME_NONE.
- * @visible: #TRUE if @object should be considered as a visible object.
+ * %GST_CLOCK_TIME_NONE.
+ * @visible: %TRUE if @object should be considered as a visible object.
  * @destroy: The #GDestroyNotify function to use to free the #GstDataQueueItem.
  * This function should also drop the reference to @object the owner of the
  * #GstDataQueueItem is assumed to hold.
@@ -97,7 +97,7 @@ struct _GstDataQueueSize
  * The prototype of the function used to inform the queue that it should be
  * considered as full.
  *
- * Returns: #TRUE if the queue should be considered full.
+ * Returns: %TRUE if the queue should be considered full.
  */
 typedef gboolean (*GstDataQueueCheckFullFunction) (GstDataQueue * queue,
     guint visible, guint bytes, guint64 time, gpointer checkdata);

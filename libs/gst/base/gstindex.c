@@ -25,7 +25,7 @@
  * @short_description: Generate indexes on objects
  * @see_also: #GstIndexFactory
  *
- * GstIndex is used to generate a stream index of one or more elements
+ * #GstIndex is used to generate a stream index of one or more elements
  * in a pipeline.
  *
  * Elements will overload the set_index and get_index virtual methods in
@@ -368,7 +368,7 @@ gst_index_new_group (GstIndex * index)
  *
  * Set the current groupnumber to the given argument.
  *
- * Returns: TRUE if the operation succeeded, FALSE if the group
+ * Returns: %TRUE if the operation succeeded, %FALSE if the group
  * did not exist.
  */
 gboolean
@@ -571,7 +571,7 @@ gst_index_entry_free (GstIndexEntry * entry)
  * @format: the format to add to the index
  *
  * Adds a format entry into the index. This function is
- * used to map dynamic GstFormat ids to their original
+ * used to map dynamic #GstFormat ids to their original
  * format key.
  *
  * Free-function: gst_index_entry_free
@@ -676,7 +676,7 @@ gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
 /**
  * gst_index_get_writer_id:
  * @index: the index to get a unique write id for
- * @writer: the GstObject to allocate an id for
+ * @writer: the #GstObject to allocate an id for
  * @id: a pointer to a gint to hold the id
  *
  * Before entries can be added to the index, a writer
@@ -688,12 +688,12 @@ gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
  * in the index.
  *
  * <note>
- * The caller must not hold @writer's #GST_OBJECT_LOCK, as the default
+ * The caller must not hold @writer's GST_OBJECT_LOCK(), as the default
  * resolver may call functions that take the object lock as well, and
  * the lock is not recursive.
  * </note>
  *
- * Returns: TRUE if the writer would be mapped to an id.
+ * Returns: %TRUE if the writer would be mapped to an id.
  */
 gboolean
 gst_index_get_writer_id (GstIndex * index, GstObject * writer, gint * id)
@@ -918,7 +918,7 @@ gst_index_compare_func (gconstpointer a, gconstpointer b, gpointer user_data)
  *
  * Finds the given format/value in the index
  *
- * Returns: the entry associated with the value or NULL if the
+ * Returns: the entry associated with the value or %NULL if the
  *   value was not found.
  */
 GstIndexEntry *
@@ -949,7 +949,7 @@ gst_index_get_assoc_entry (GstIndex * index, gint id,
  * Finds the given format/value in the index with the given
  * compare function and user_data.
  *
- * Returns: the entry associated with the value or NULL if the
+ * Returns: the entry associated with the value or %NULL if the
  *   value was not found.
  */
 GstIndexEntry *
@@ -981,7 +981,7 @@ gst_index_get_assoc_entry_full (GstIndex * index, gint id,
  *
  * Gets alternative formats associated with the indexentry.
  *
- * Returns: TRUE if there was a value associated with the given
+ * Returns: %TRUE if there was a value associated with the given
  * format.
  */
 gboolean

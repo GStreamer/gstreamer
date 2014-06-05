@@ -49,8 +49,8 @@
  *   <listitem><para>
  *     Data can be dequeued from the pad with the gst_collect_pads_pop() method.
  *     One can peek at the data with the gst_collect_pads_peek() function.
- *     These functions will return NULL if the pad received an EOS event. When all
- *     pads return NULL from a gst_collect_pads_peek(), the element can emit an EOS
+ *     These functions will return %NULL if the pad received an EOS event. When all
+ *     pads return %NULL from a gst_collect_pads_peek(), the element can emit an EOS
  *     event itself.
  *   </para></listitem>
  *   <listitem><para>
@@ -296,7 +296,7 @@ gst_collect_pads_finalize (GObject * object)
  *
  * MT safe.
  *
- * Returns: (transfer full): a new #GstCollectPads, or NULL in case of an error.
+ * Returns: (transfer full): a new #GstCollectPads, or %NULL in case of an error.
  */
 GstCollectPads *
 gst_collect_pads_new (void)
@@ -324,7 +324,7 @@ gst_collect_pads_set_buffer_function_locked (GstCollectPads * pads,
  * @user_data: (closure): user data passed to the function
  *
  * Set the callback function and user data that will be called with
- * the oldest buffer when all pads have been collected, or NULL on EOS.
+ * the oldest buffer when all pads have been collected, or %NULL on EOS.
  * If a buffer is passed, the callback owns a reference and must unref
  * it.
  *
@@ -606,7 +606,7 @@ gst_collect_pads_set_flush_function (GstCollectPads * pads,
  *
  * MT safe.
  *
- * Returns: a new #GstCollectData to identify the new pad. Or NULL
+ * Returns: a new #GstCollectData to identify the new pad. Or %NULL
  *   if wrong parameters are supplied.
  */
 GstCollectData *
@@ -924,7 +924,7 @@ gst_collect_pads_stop (GstCollectPads * pads)
  *
  * MT safe.
  *
- * Returns: The buffer in @data or NULL if no buffer is queued.
+ * Returns: The buffer in @data or %NULL if no buffer is queued.
  *  should unref the buffer after usage.
  */
 GstBuffer *
@@ -956,7 +956,7 @@ gst_collect_pads_peek (GstCollectPads * pads, GstCollectData * data)
  *
  * MT safe.
  *
- * Returns: (transfer full): The buffer in @data or NULL if no buffer was
+ * Returns: (transfer full): The buffer in @data or %NULL if no buffer was
  *   queued. You should unref the buffer after usage.
  */
 GstBuffer *
@@ -1124,7 +1124,7 @@ gst_collect_pads_flush (GstCollectPads * pads, GstCollectData * data,
  * MT safe.
  *
  * Returns: (transfer full): A sub buffer. The size of the buffer can be less that requested.
- * A return of NULL signals that the pad is end-of-stream.
+ * A return of %NULL signals that the pad is end-of-stream.
  * Unref the buffer after use.
  */
 GstBuffer *
@@ -1163,7 +1163,7 @@ gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
  * MT safe.
  *
  * Returns: A sub buffer. The size of the buffer can be less that requested.
- * A return of NULL signals that the pad is end-of-stream.
+ * A return of %NULL signals that the pad is end-of-stream.
  * Unref the buffer after use.
  */
 GstBuffer *
@@ -1366,7 +1366,7 @@ gst_collect_pads_check_collected (GstCollectPads * pads)
  *
  * Must be called with STREAM_LOCK.
  *
- * Returns TRUE if a pad was set to waiting
+ * Returns %TRUE if a pad was set to waiting
  * (from non-waiting state).
  */
 static gboolean
@@ -1639,7 +1639,7 @@ gst_collect_pads_clip_time (GstCollectPads * pads, GstCollectData * data,
  * @event: event being processed
  * @discard: process but do not send event downstream
  *
- * Default GstCollectPads event handling that elements should always
+ * Default #GstCollectPads event handling that elements should always
  * chain up to to ensure proper operation.  Element might however indicate
  * event should not be forwarded downstream.
  */
@@ -1893,7 +1893,7 @@ forward_event_to_all_sinkpads (GstPad * srcpad, GstEvent * event)
  * @pad: src #GstPad that received the event
  * @event: event being processed
  *
- * Default GstCollectPads event handling for the src pad of elements.
+ * Default #GstCollectPads event handling for the src pad of elements.
  * Elements can chain up to this to let flushing seek event handling
  * be done by GstCollectPads.
  *
@@ -2010,7 +2010,7 @@ pad_removed:
  * @query: query being processed
  * @discard: process but do not send event downstream
  *
- * Default GstCollectPads query handling that elements should always
+ * Default #GstCollectPads query handling that elements should always
  * chain up to to ensure proper operation.  Element might however indicate
  * query should not be forwarded downstream.
  */
