@@ -991,8 +991,6 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
             gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/mpeg",
             "mpegversion", G_TYPE_INT, 4, "systemstream", G_TYPE_BOOLEAN, FALSE,
             NULL);
-        gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
-                encode, "video/x-xvid", NULL));
         if (encode) {
           gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
                   encode, "video/x-divx", "divxversion", G_TYPE_INT, 5, NULL));
@@ -1000,6 +998,8 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
                   encode, "video/x-divx", "divxversion", GST_TYPE_INT_RANGE, 4,
                   5, NULL));
+          gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
+                  encode, "video/x-xvid", NULL));
           gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
                   encode, "video/x-3ivx", NULL));
         }
