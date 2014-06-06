@@ -422,7 +422,6 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   static GstAllocationParams params = { 0, 0, 0, 15, };
 
   sink = GST_WAYLAND_SINK (bsink);
-  GST_OBJECT_LOCK (sink);
 
   GST_DEBUG_OBJECT (sink, "set caps %" GST_PTR_FORMAT, caps);
 
@@ -462,34 +461,28 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_object_replace ((GstObject **) & sink->pool, (GstObject *) newpool);
   gst_object_unref (newpool);
 
-  GST_OBJECT_UNLOCK (sink);
   return TRUE;
 
 invalid_format:
   {
     GST_DEBUG_OBJECT (sink,
         "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
-    goto failure;
+    return FALSE;
   }
 unsupported_format:
   {
     GST_DEBUG_OBJECT (sink, "Format %s is not available on the display",
         gst_wayland_format_to_string (format));
-    goto failure;
+    return FALSE;
   }
 pool_failed:
   {
     GST_DEBUG_OBJECT (sink, "Failed to create new pool");
-    goto failure;
+    return FALSE;
   }
 config_failed:
   {
     GST_DEBUG_OBJECT (bsink, "failed setting config");
-    goto failure;
-  }
-failure:
-  {
-    GST_OBJECT_UNLOCK (sink);
     return FALSE;
   }
 }
