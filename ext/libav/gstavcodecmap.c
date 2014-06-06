@@ -998,10 +998,6 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
                   encode, "video/x-divx", "divxversion", GST_TYPE_INT_RANGE, 4,
                   5, NULL));
-          gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
-                  encode, "video/x-xvid", NULL));
-          gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
-                  encode, "video/x-3ivx", NULL));
         }
       }
       break;
@@ -2938,12 +2934,6 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
 
       if (!strcmp (mime, "video/x-divx"))
         context->codec_tag = GST_MAKE_FOURCC ('D', 'I', 'V', 'X');
-      else if (!strcmp (mime, "video/x-xvid")) {
-        context->codec_tag = GST_MAKE_FOURCC ('X', 'V', 'I', 'D');
-        /* Advanced Simple Profile */
-        context->flags |= CODEC_FLAG_GMC | CODEC_FLAG_QPEL;
-      } else if (!strcmp (mime, "video/x-3ivx"))
-        context->codec_tag = GST_MAKE_FOURCC ('3', 'I', 'V', '1');
       else if (!strcmp (mime, "video/mpeg")) {
         const gchar *profile;
 
@@ -3747,12 +3737,6 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     }
     if (id != AV_CODEC_ID_NONE)
       video = TRUE;
-  } else if (!strcmp (mimetype, "video/x-3ivx")) {
-    id = AV_CODEC_ID_MPEG4;
-    video = TRUE;
-  } else if (!strcmp (mimetype, "video/x-xvid")) {
-    id = AV_CODEC_ID_MPEG4;
-    video = TRUE;
   } else if (!strcmp (mimetype, "video/x-ffv")) {
     gint ffvversion = 0;
 
