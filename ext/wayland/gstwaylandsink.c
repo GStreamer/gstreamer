@@ -175,7 +175,9 @@ gst_wayland_sink_get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_DISPLAY:
+      GST_OBJECT_LOCK (sink);
       g_value_set_string (value, sink->display_name);
+      GST_OBJECT_UNLOCK (sink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -191,7 +193,9 @@ gst_wayland_sink_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_DISPLAY:
+      GST_OBJECT_LOCK (sink);
       sink->display_name = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (sink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -283,7 +287,10 @@ gst_wayland_sink_find_display (GstWaylandSink * sink)
 
       if (!sink->display) {
         /* if the application didn't set a display, let's create it ourselves */
+        GST_OBJECT_LOCK (sink);
         sink->display = gst_wl_display_new (sink->display_name, &error);
+        GST_OBJECT_UNLOCK (sink);
+
         if (error) {
           GST_ELEMENT_WARNING (sink, RESOURCE, OPEN_READ_WRITE,
               ("Could not initialise Wayland output"),
