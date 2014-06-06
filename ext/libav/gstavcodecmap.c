@@ -976,16 +976,6 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
                 gst_ff_vid_caps_new (context, NULL, codec_id, encode,
                 "video/x-divx", "divxversion", G_TYPE_INT, 5, NULL);
             break;
-          case GST_MAKE_FOURCC ('X', 'V', 'I', 'D'):
-            caps =
-                gst_ff_vid_caps_new (context, NULL, codec_id, encode,
-                "video/x-xvid", NULL);
-            break;
-          case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
-            caps =
-                gst_ff_vid_caps_new (context, NULL, codec_id, encode,
-                "video/x-3ivx", NULL);
-            break;
           case GST_MAKE_FOURCC ('m', 'p', '4', 'v'):
           default:
             /* FIXME: bitrate */
