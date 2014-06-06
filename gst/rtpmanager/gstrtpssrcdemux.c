@@ -694,6 +694,9 @@ gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstObject * parent,
       gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, NULL, NULL, NULL,
           NULL);
       break;
+    case GST_RTCP_TYPE_RR:
+      ssrc = gst_rtcp_packet_rr_get_ssrc (&packet);
+      break;
     default:
       goto unexpected_rtcp;
   }
