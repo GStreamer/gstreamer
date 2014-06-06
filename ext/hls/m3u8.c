@@ -73,7 +73,6 @@ gst_m3u8_free (GstM3U8 * self)
   g_free (self->base_uri);
   g_free (self->name);
   g_free (self->codecs);
-  g_free (self->key);
 
   g_list_foreach (self->files, (GFunc) gst_m3u8_media_file_free, NULL);
   g_list_free (self->files);
@@ -137,7 +136,6 @@ _m3u8_copy (const GstM3U8 * self, GstM3U8 * parent)
   dup->version = self->version;
   dup->targetduration = self->targetduration;
   dup->allowcache = self->allowcache;
-  dup->key = g_strdup (self->key);
   dup->bandwidth = self->bandwidth;
   dup->program_id = self->program_id;
   dup->codecs = g_strdup (self->codecs);
@@ -350,6 +348,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
   gchar *title, *end;
   gboolean discontinuity = FALSE;
   GstM3U8 *list;
+  gchar *current_key = NULL;
   gboolean have_iv = FALSE;
   guint8 iv[16] = { 0, };
   gint64 size = -1, offset = -1;
@@ -431,7 +430,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
             self->mediasequence++);
 
         /* set encryption params */
-        file->key = g_strdup (self->key);
+        file->key = current_key ? g_strdup (current_key) : NULL;
         if (file->key) {
           if (have_iv) {
             memcpy (file->iv, iv, sizeof (iv));
@@ -562,8 +561,8 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
 
       /* IV and KEY are only valid until the next #EXT-X-KEY */
       have_iv = FALSE;
-      g_free (self->key);
-      self->key = NULL;
+      g_free (current_key);
+      current_key = NULL;
       while (data && parse_attributes (&data, &a, &v)) {
         if (g_str_equal (a, "URI")) {
           gchar *key = g_strdup (v);
@@ -588,7 +587,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
             }
           }
 
-          self->key =
+          current_key =
               uri_join (self->base_uri ? self->base_uri : self->uri, key);
           g_free (keyp);
         } else if (g_str_equal (a, "IV")) {
@@ -662,6 +661,9 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       break;
     data = g_utf8_next_char (end);      /* skip \n */
   }
+
+  g_free (current_key);
+  current_key = NULL;
 
   /* reorder playlists by bitrate */
   if (self->lists) {

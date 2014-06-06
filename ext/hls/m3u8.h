@@ -47,7 +47,6 @@ struct _GstM3U8
   gint version;                 /* last EXT-X-VERSION */
   GstClockTime targetduration;  /* last EXT-X-TARGETDURATION */
   gboolean allowcache;          /* last EXT-X-ALLOWCACHE */
-  gchar *key;
 
   gint bandwidth;
   gint program_id;
