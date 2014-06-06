@@ -607,6 +607,7 @@ GST_START_TEST (videodecoder_buffer_after_segment)
 
   /* push buffers until we fill our segment */
   i = 0;
+  pos = 0;
   while (pos < GST_SECOND) {
     buffer = create_test_buffer (i++);
 
