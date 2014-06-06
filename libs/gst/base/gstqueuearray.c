@@ -145,7 +145,7 @@ gst_queue_array_push_tail (GstQueueArray * array, gpointer data)
   /* Check if we need to make room */
   if (G_UNLIKELY (array->length == array->size)) {
     /* newsize is 50% bigger */
-    guint newsize = (3 * array->size) / 2;
+    guint newsize = MAX ((3 * array->size) / 2, array->size + 1);
 
     /* copy over data */
     if (array->tail != 0) {
