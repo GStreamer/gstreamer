@@ -2161,11 +2161,15 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           ogg->push_byte_offset = segment.start;
           ogg->push_last_seek_offset = segment.start;
 
-          if (gst_event_get_seqnum (event) == ogg->push_seek_seqnum)
+          if (gst_event_get_seqnum (event) == ogg->push_seek_seqnum) {
+            GstSeekType stop_type = GST_SEEK_TYPE_NONE;
+            if (ogg->push_seek_time_original_stop != -1)
+              stop_type = GST_SEEK_TYPE_SET;
             gst_segment_do_seek (&ogg->segment, ogg->push_seek_rate,
                 GST_FORMAT_TIME, ogg->push_seek_flags, GST_SEEK_TYPE_SET,
-                ogg->push_seek_time_original_target, GST_SEEK_TYPE_SET,
+                ogg->push_seek_time_original_target, stop_type,
                 ogg->push_seek_time_original_stop, &update);
+          }
 
           GST_PUSH_UNLOCK (ogg);
         } else {
@@ -3485,10 +3489,15 @@ gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
     goto error;
   }
 
-  if (start_type != GST_SEEK_TYPE_SET || stop_type != GST_SEEK_TYPE_SET) {
+  if (start_type != GST_SEEK_TYPE_SET) {
     GST_DEBUG_OBJECT (ogg, "can only seek to a SET target");
     goto error;
   }
+
+  /* If stop is unset, make sure it is -1, as this value will be tested
+     later to check whether stop is set or not */
+  if (stop_type == GST_SEEK_TYPE_NONE)
+    stop = -1;
 
   if (!(flags & GST_SEEK_FLAG_FLUSH)) {
     GST_DEBUG_OBJECT (ogg, "can only do flushing seeks");
