@@ -251,6 +251,13 @@ str_to_time (char *time)
   return nsecs * GST_SECOND;
 }
 
+static void
+_clip_added_cb (GESLayer * layer, GESClip * clip, GESAsset * asset)
+{
+  if (GES_IS_TRANSITION_CLIP (clip))
+    ges_extractable_set_asset (GES_EXTRACTABLE (clip), asset);
+}
+
 static GESTimeline *
 create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
     const gchar * scenario)
@@ -259,7 +266,8 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
   GESTrack *tracka = NULL, *trackv = NULL;
   GESTimeline *timeline;
   gboolean activate_before_paused = TRUE;
-  guint i;
+  guint i, clip_added_sigid = 0;
+  GstClockTime next_trans_dur = 0;
   GESProject *project = ges_project_new (proj_uri);
 
   if (new_paths->len)
@@ -280,6 +288,7 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
     goto activate_validate;
   }
 
+  g_object_set (timeline, "auto-transition", TRUE, NULL);
   if (track_types & GES_TRACK_TYPE_AUDIO) {
     tracka = GES_TRACK (ges_audio_track_new ());
     if (disable_mixing)
@@ -336,21 +345,19 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
     }
 
     else if (!g_strcmp0 ("+transition", source)) {
-      clip = GES_CLIP (ges_transition_clip_new_for_nick (arg0));
+      GESAsset *asset =
+          ges_asset_request (GES_TYPE_TRANSITION_CLIP, arg0, NULL);
 
-      if (!clip) {
-        g_error ("invalid transition type\n");
-        goto build_failure;
+      if (asset == NULL) {
+        g_warning ("Can not create transition %s", arg0);
       }
 
-      g_object_set (G_OBJECT (clip), "duration", duration, NULL);
+      next_trans_dur = duration;
+      clip_added_sigid = g_signal_connect (layer, "clip-added",
+          (GCallback) _clip_added_cb, asset);
 
-      g_printf ("Adding <transition:%s> duration %" GST_TIME_FORMAT "\n", arg0,
-          GST_TIME_ARGS (duration));
-
-    }
-
-    else if (!g_strcmp0 ("+title", source)) {
+      continue;
+    } else if (!g_strcmp0 ("+title", source)) {
       clip = GES_CLIP (ges_title_clip_new ());
 
       g_object_set (clip, "duration", duration, "text", arg0, NULL);
@@ -401,9 +408,17 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
       g_free (uri);
     }
 
-    g_object_set (G_OBJECT (clip), "start", ges_layer_get_duration (layer),
-        NULL);
+    g_object_set (G_OBJECT (clip), "start",
+        ges_layer_get_duration (layer) - next_trans_dur, NULL);
+
     ges_layer_add_clip (layer, clip);
+
+    if (clip_added_sigid) {
+      g_signal_handler_disconnect (layer, clip_added_sigid);
+      clip_added_sigid = 0;
+      next_trans_dur = 0;
+    }
+
   }
 
 activate_validate:
