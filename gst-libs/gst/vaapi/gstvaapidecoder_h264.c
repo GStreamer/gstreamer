@@ -977,9 +977,7 @@ mvc_reset(GstVaapiDecoderH264 *decoder)
     guint i;
 
     // Resize array of inter-view references
-    if (priv->inter_views)
-        g_ptr_array_set_size(priv->inter_views, priv->max_views);
-    else {
+    if (!priv->inter_views) {
         priv->inter_views = g_ptr_array_new_full(priv->max_views,
             (GDestroyNotify)unref_inter_view);
         if (!priv->inter_views)
