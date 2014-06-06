@@ -52,6 +52,7 @@ struct _GstWaylandSink
 {
   GstVideoSink parent;
 
+  GMutex display_lock;
   GstWlDisplay *display;
   GstWlWindow *window;
   GstBufferPool *pool;

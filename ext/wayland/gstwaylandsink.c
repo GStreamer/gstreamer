@@ -162,6 +162,7 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
 static void
 gst_wayland_sink_init (GstWaylandSink * sink)
 {
+  g_mutex_init (&sink->display_lock);
   g_mutex_init (&sink->render_lock);
   g_cond_init (&sink->render_cond);
 }
@@ -223,10 +224,30 @@ gst_wayland_sink_finalize (GObject * object)
   if (sink->display_name)
     g_free (sink->display_name);
 
+  g_mutex_clear (&sink->display_lock);
   g_mutex_clear (&sink->render_lock);
   g_cond_clear (&sink->render_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+/* must be called with the display_lock */
+static void
+gst_wayland_sink_set_display_from_context (GstWaylandSink * sink,
+    GstContext * context)
+{
+  struct wl_display *display;
+  GError *error = NULL;
+
+  display = gst_wayland_display_handle_context_get_handle (context);
+  sink->display = gst_wl_display_new_existing (display, FALSE, &error);
+
+  if (error) {
+    GST_ELEMENT_WARNING (sink, RESOURCE, OPEN_READ_WRITE,
+        ("Could not set display handle"),
+        ("Failed to use the external wayland display: '%s'", error->message));
+    g_error_free (error);
+  }
 }
 
 static gboolean
@@ -238,12 +259,14 @@ gst_wayland_sink_find_display (GstWaylandSink * sink)
   GError *error = NULL;
   gboolean ret = TRUE;
 
+  g_mutex_lock (&sink->display_lock);
+
   if (!sink->display) {
     /* first query upstream for the needed display handle */
     query = gst_query_new_context (GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE);
     if (gst_pad_peer_query (GST_VIDEO_SINK_PAD (sink), query)) {
       gst_query_parse_context (query, &context);
-      gst_wayland_sink_set_context (GST_ELEMENT (sink), context);
+      gst_wayland_sink_set_display_from_context (sink, context);
     }
     gst_query_unref (query);
 
@@ -251,9 +274,12 @@ gst_wayland_sink_find_display (GstWaylandSink * sink)
       /* now ask the application to set the display handle */
       msg = gst_message_new_need_context (GST_OBJECT_CAST (sink),
           GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE);
+
+      g_mutex_unlock (&sink->display_lock);
       gst_element_post_message (GST_ELEMENT_CAST (sink), msg);
       /* at this point we expect gst_wayland_sink_set_context
        * to get called and fill sink->display */
+      g_mutex_lock (&sink->display_lock);
 
       if (!sink->display) {
         /* if the application didn't set a display, let's create it ourselves */
@@ -274,6 +300,8 @@ gst_wayland_sink_find_display (GstWaylandSink * sink)
       }
     }
   }
+
+  g_mutex_unlock (&sink->display_lock);
 
   return ret;
 }
@@ -305,6 +333,7 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      g_mutex_lock (&sink->display_lock);
       /* We don't need to keep the display around, unless we are embedded
        * in another window as a subsurface, in which case we should continue
        * to respond to expose() and therefore both the window and the display
@@ -330,6 +359,7 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
         g_clear_object (&sink->display);
         g_clear_object (&sink->pool);
       }
+      g_mutex_unlock (&sink->display_lock);
       break;
     default:
       break;
@@ -345,19 +375,12 @@ gst_wayland_sink_set_context (GstElement * element, GstContext * context)
 
   if (gst_context_has_context_type (context,
           GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE)) {
-    struct wl_display *display;
-    GError *error = NULL;
-
-    g_clear_object (&sink->display);
-    display = gst_wayland_display_handle_context_get_handle (context);
-    sink->display = gst_wl_display_new_existing (display, FALSE, &error);
-
-    if (error) {
-      GST_ELEMENT_WARNING (sink, RESOURCE, OPEN_READ_WRITE,
-          ("Could not set display handle"),
-          ("Failed to use the external wayland display: '%s'", error->message));
-      g_error_free (error);
-    }
+    g_mutex_lock (&sink->display_lock);
+    if (G_LIKELY (!sink->display))
+      gst_wayland_sink_set_display_from_context (sink, context);
+    else
+      GST_WARNING_OBJECT (element, "changing display handle is not supported");
+    g_mutex_unlock (&sink->display_lock);
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->set_context)
@@ -373,6 +396,8 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   sink = GST_WAYLAND_SINK (bsink);
 
   caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
+
+  g_mutex_lock (&sink->display_lock);
 
   if (sink->display) {
     GValue list = G_VALUE_INIT;
@@ -396,6 +421,8 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 
     GST_DEBUG_OBJECT (sink, "display caps: %" GST_PTR_FORMAT, caps);
   }
+
+  g_mutex_unlock (&sink->display_lock);
 
   if (filter) {
     GstCaps *intersection;
