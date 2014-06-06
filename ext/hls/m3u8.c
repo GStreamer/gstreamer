@@ -116,7 +116,7 @@ gst_m3u8_media_file_free (GstM3U8MediaFile * self)
 static GstM3U8MediaFile *
 gst_m3u8_media_file_copy (const GstM3U8MediaFile * self, gpointer user_data)
 {
-  g_return_if_fail (self != NULL);
+  g_return_val_if_fail (self != NULL, NULL);
 
   return gst_m3u8_media_file_new (g_strdup (self->uri), g_strdup (self->title),
       self->duration, self->sequence);
@@ -127,7 +127,7 @@ _m3u8_copy (const GstM3U8 * self, GstM3U8 * parent)
 {
   GstM3U8 *dup;
 
-  g_return_if_fail (self != NULL);
+  g_return_val_if_fail (self != NULL, NULL);
 
   dup = gst_m3u8_new ();
   dup->uri = g_strdup (self->uri);
