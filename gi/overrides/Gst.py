@@ -96,6 +96,24 @@ Caps = override(Caps)
 __all__.append('Caps')
 
 class Pad(Gst.Pad):
+    def __init__(self):
+        self._real_chain_func = None
+        self._real_event_func = None
+
+    def _chain_override(self, pad, parent, buf):
+        return self._real_chain_func(pad, buf)
+
+    def _event_override(self, pad, parent, buf):
+        return self._real_event_func(pad, buf)
+
+    def set_chain_function(self, func):
+        self._real_chain_func = func
+        self.set_chain_function_full(self._chain_override, None)
+
+    def set_event_function(self, func):
+        self._real_event_func = func
+        self.set_event_function_full(self._event_override, None)
+
     def query_caps(self, filter=None):
         return Gst.Pad.query_caps(self, filter)
 
