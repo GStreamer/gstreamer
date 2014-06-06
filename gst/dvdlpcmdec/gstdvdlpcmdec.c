@@ -246,6 +246,7 @@ gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
   GstAudioFormat format;
   gint rate, channels, width;
   const GstAudioChannelPosition *position;
+  GstAudioChannelPosition sorted_position[8];
 
   g_return_val_if_fail (caps != NULL, FALSE);
   g_return_val_if_fail (pad != NULL, FALSE);
@@ -288,17 +289,18 @@ gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
       break;
   }
 
-  gst_audio_info_set_format (&dvdlpcmdec->info, format, rate, channels, NULL);
   if (channels < 9
       && channel_positions[channels - 1][0] !=
       GST_AUDIO_CHANNEL_POSITION_INVALID) {
-    dvdlpcmdec->info.flags &= ~GST_AUDIO_FLAG_UNPOSITIONED;
     position = channel_positions[channels - 1];
     dvdlpcmdec->lpcm_layout = position;
-    memcpy (dvdlpcmdec->info.position, position,
-        sizeof (GstAudioChannelPosition) * channels);
-    gst_audio_channel_positions_to_valid_order (dvdlpcmdec->info.position,
-        channels);
+    memcpy (sorted_position, channel_positions[channels - 1],
+        sizeof (sorted_position));
+    gst_audio_channel_positions_to_valid_order (sorted_position, channels);
+    gst_audio_info_set_format (&dvdlpcmdec->info, format, rate, channels,
+        sorted_position);
+  } else {
+    gst_audio_info_set_format (&dvdlpcmdec->info, format, rate, channels, NULL);
   }
 
   dvdlpcmdec->width = width;
@@ -411,18 +413,20 @@ parse_header (GstDvdLpcmDec * dec, guint32 header)
   /* And, of course, the number of channels (up to 8) */
   channels = ((header >> 8) & 0x7) + 1;
 
-  gst_audio_info_set_format (&dec->info, format, rate, channels, NULL);
   if (channels < 9
       && channel_positions[channels - 1][0] !=
       GST_AUDIO_CHANNEL_POSITION_INVALID) {
     const GstAudioChannelPosition *position;
+    GstAudioChannelPosition sorted_position[8];
 
-    dec->info.flags &= ~GST_AUDIO_FLAG_UNPOSITIONED;
     position = channel_positions[channels - 1];
     dec->lpcm_layout = position;
-    memcpy (dec->info.position, position,
-        sizeof (GstAudioChannelPosition) * channels);
-    gst_audio_channel_positions_to_valid_order (dec->info.position, channels);
+    memcpy (sorted_position, position, sizeof (sorted_position));
+    gst_audio_channel_positions_to_valid_order (sorted_position, channels);
+    gst_audio_info_set_format (&dec->info, format, rate, channels,
+        sorted_position);
+  } else {
+    gst_audio_info_set_format (&dec->info, format, rate, channels, NULL);
   }
 }
 
