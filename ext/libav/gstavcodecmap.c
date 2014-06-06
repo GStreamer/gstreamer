@@ -978,7 +978,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
             break;
           case GST_MAKE_FOURCC ('m', 'p', '4', 'v'):
           default:
-            /* FIXME: bitrate */
+            /* FIXME: bitrate. libav doesn't expose the used profile and level */
             caps =
                 gst_ff_vid_caps_new (context, NULL, codec_id, encode,
                 "video/mpeg", "systemstream", G_TYPE_BOOLEAN, FALSE,
@@ -991,7 +991,22 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
             gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/mpeg",
             "mpegversion", G_TYPE_INT, 4, "systemstream", G_TYPE_BOOLEAN, FALSE,
             NULL);
+
         if (encode) {
+          GValue arr = { 0, };
+          GValue item = { 0, };
+
+          g_value_init (&arr, GST_TYPE_LIST);
+          g_value_init (&item, G_TYPE_STRING);
+          g_value_set_string (&item, "simple");
+          gst_value_list_append_value (&arr, &item);
+          g_value_set_string (&item, "advanced-simple");
+          gst_value_list_append_value (&arr, &item);
+          g_value_unset (&item);
+
+          gst_caps_set_value (caps, "profile", &arr);
+          g_value_unset (&arr);
+
           gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
                   encode, "video/x-divx", "divxversion", G_TYPE_INT, 5, NULL));
         } else {
