@@ -65,15 +65,15 @@ struct _GstWaylandVideoInterface {
   GTypeInterface iface;
 
   /* virtual functions */
-  void (*pause_rendering)      (GstWaylandVideo *video);
-  void (*resume_rendering)     (GstWaylandVideo *video);
+  void (*begin_geometry_change)    (GstWaylandVideo *video);
+  void (*end_geometry_change)     (GstWaylandVideo *video);
 };
 
 GType   gst_wayland_video_get_type (void);
 
 /* virtual function wrappers */
-void gst_wayland_video_pause_rendering (GstWaylandVideo * video);
-void gst_wayland_video_resume_rendering (GstWaylandVideo * video);
+void gst_wayland_video_begin_geometry_change (GstWaylandVideo * video);
+void gst_wayland_video_end_geometry_change (GstWaylandVideo * video);
 
 G_END_DECLS
 

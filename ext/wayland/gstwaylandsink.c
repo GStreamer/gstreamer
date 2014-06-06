@@ -107,8 +107,8 @@ static void gst_wayland_sink_expose (GstVideoOverlay * overlay);
 /* WaylandVideo interface */
 static void gst_wayland_sink_waylandvideo_init (GstWaylandVideoInterface *
     iface);
-static void gst_wayland_sink_pause_rendering (GstWaylandVideo * video);
-static void gst_wayland_sink_resume_rendering (GstWaylandVideo * video);
+static void gst_wayland_sink_begin_geometry_change (GstWaylandVideo * video);
+static void gst_wayland_sink_end_geometry_change (GstWaylandVideo * video);
 
 #define gst_wayland_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWaylandSink, gst_wayland_sink, GST_TYPE_VIDEO_SINK,
@@ -830,12 +830,12 @@ gst_wayland_sink_expose (GstVideoOverlay * overlay)
 static void
 gst_wayland_sink_waylandvideo_init (GstWaylandVideoInterface * iface)
 {
-  iface->pause_rendering = gst_wayland_sink_pause_rendering;
-  iface->resume_rendering = gst_wayland_sink_resume_rendering;
+  iface->begin_geometry_change = gst_wayland_sink_begin_geometry_change;
+  iface->end_geometry_change = gst_wayland_sink_end_geometry_change;
 }
 
 static void
-gst_wayland_sink_pause_rendering (GstWaylandVideo * video)
+gst_wayland_sink_begin_geometry_change (GstWaylandVideo * video)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (video);
   g_return_if_fail (sink != NULL);
@@ -843,7 +843,8 @@ gst_wayland_sink_pause_rendering (GstWaylandVideo * video)
   g_mutex_lock (&sink->render_lock);
   if (!sink->window || !sink->window->subsurface) {
     g_mutex_unlock (&sink->render_lock);
-    GST_INFO_OBJECT (sink, "pause_rendering called without window, ignoring");
+    GST_INFO_OBJECT (sink,
+        "begin_geometry_change called without window, ignoring");
     return;
   }
 
@@ -852,17 +853,16 @@ gst_wayland_sink_pause_rendering (GstWaylandVideo * video)
 }
 
 static void
-gst_wayland_sink_resume_rendering (GstWaylandVideo * video)
+gst_wayland_sink_end_geometry_change (GstWaylandVideo * video)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (video);
   g_return_if_fail (sink != NULL);
 
-  GST_DEBUG_OBJECT (sink, "resuming rendering");
-
   g_mutex_lock (&sink->render_lock);
   if (!sink->window || !sink->window->subsurface) {
     g_mutex_unlock (&sink->render_lock);
-    GST_INFO_OBJECT (sink, "resume_rendering called without window, ignoring");
+    GST_INFO_OBJECT (sink,
+        "end_geometry_change called without window, ignoring");
     return;
   }
 

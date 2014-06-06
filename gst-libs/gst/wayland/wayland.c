@@ -73,15 +73,21 @@ gst_wayland_video_default_init (GstWaylandVideoInterface * klass)
 }
 
 /**
- * gst_wayland_video_pause_rendering:
+ * gst_wayland_video_begin_geometry_change:
  *
- * This tells the video sink to stop rendering on the surface,
- * dropping frames in the meanwhile. This should be called
- * before resizing a stack of subsurfaces, one of which is
- * the surface of the video sink.
+ * Notifies the video sink that we are about to change its
+ * geometry (probably using set_render_rectangle()). This is useful
+ * in order to allow the sink to synchronize resizing/moving of the
+ * video area with the parent surface and avoid glitches, in cases
+ * where the video area is being painted asynchronously from another
+ * thread, like in waylandsink.
+ *
+ * Please note that any calls to this method MUST be matched by
+ * calls to end_geometry_change() and AFTER the parent surface has
+ * commited its geometry changes.
  */
 void
-gst_wayland_video_pause_rendering (GstWaylandVideo * video)
+gst_wayland_video_begin_geometry_change (GstWaylandVideo * video)
 {
   GstWaylandVideoInterface *iface;
 
@@ -90,22 +96,25 @@ gst_wayland_video_pause_rendering (GstWaylandVideo * video)
 
   iface = GST_WAYLAND_VIDEO_GET_INTERFACE (video);
 
-  if (iface->pause_rendering) {
-    iface->pause_rendering (video);
+  if (iface->begin_geometry_change) {
+    iface->begin_geometry_change (video);
   }
 }
 
 /**
- * gst_wayland_video_resume_rendering:
+ * gst_wayland_video_end_geometry_change:
  *
- * Resumes surface rendering that was previously paused
- * with gst_wayland_video_pause_rendering. This function will
- * block until there is a new wl_buffer commited on the surface
- * inside the element, either with a new frame (if the element
- * is PLAYING) or with an old frame (if the element is PAUSED).
+ * Notifies the video sink that we just finished changing the
+ * geometry of both itself and its parent surface. This should
+ * have been earlier preceeded by a call to begin_geometry_change()
+ * which notified the sink before any of these changes had happened.
+ *
+ * It is important to call this method only AFTER the parent surface
+ * has commited its geometry changes, otherwise no synchronization
+ * is actually achieved.
  */
 void
-gst_wayland_video_resume_rendering (GstWaylandVideo * video)
+gst_wayland_video_end_geometry_change (GstWaylandVideo * video)
 {
   GstWaylandVideoInterface *iface;
 
@@ -114,7 +123,7 @@ gst_wayland_video_resume_rendering (GstWaylandVideo * video)
 
   iface = GST_WAYLAND_VIDEO_GET_INTERFACE (video);
 
-  if (iface->resume_rendering) {
-    iface->resume_rendering (video);
+  if (iface->end_geometry_change) {
+    iface->end_geometry_change (video);
   }
 }
