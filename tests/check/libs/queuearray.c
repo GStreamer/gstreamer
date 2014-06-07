@@ -250,6 +250,18 @@ GST_START_TEST (test_array_drop2)
 
 GST_END_TEST;
 
+GST_START_TEST (test_array_grow_from_prealloc1)
+{
+  GstQueueArray *array;
+
+  array = gst_queue_array_new (1);
+  gst_queue_array_push_tail (array, NULL);
+  gst_queue_array_push_tail (array, NULL);
+  gst_queue_array_free (array);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_queue_array_suite (void)
 {
@@ -264,6 +276,7 @@ gst_queue_array_suite (void)
   tcase_add_test (tc_chain, test_array_grow_middle);
   tcase_add_test (tc_chain, test_array_grow_end);
   tcase_add_test (tc_chain, test_array_drop2);
+  tcase_add_test (tc_chain, test_array_grow_from_prealloc1);
 
   return s;
 }
