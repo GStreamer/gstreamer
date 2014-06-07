@@ -42,7 +42,13 @@ typedef struct _GstGlobalDeviceMonitorClass GstGlobalDeviceMonitorClass;
 #define GST_GLOBAL_DEVICE_MONITOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GLOBAL_DEVICE_MONITOR, GstGlobalDeviceMonitorClass))
 #define GST_GLOBAL_DEVICE_MONITOR_CAST(obj)            ((GstGlobalDeviceMonitor *)(obj))
 
-
+/**
+ * GstGlobalDeviceMonitor:
+ *
+ * Opaque global device monitor object structure.
+ *
+ * Since: 1.4
+ */
 struct _GstGlobalDeviceMonitor {
   GstObject                parent;
 
@@ -53,6 +59,13 @@ struct _GstGlobalDeviceMonitor {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstGlobalDeviceMonitorClass:
+ *
+ * Opaque global device monitor class structure.
+ *
+ * Since: 1.4
+ */
 struct _GstGlobalDeviceMonitorClass {
   GstObjectClass           parent_class;
 
@@ -60,32 +73,30 @@ struct _GstGlobalDeviceMonitorClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType       gst_global_device_monitor_get_type (void);
+GType     gst_global_device_monitor_get_type (void);
 
 GstGlobalDeviceMonitor * gst_global_device_monitor_new  (void);
 
-GList *     gst_global_device_monitor_get_devices (GstGlobalDeviceMonitor * monitor);
+GstBus *  gst_global_device_monitor_get_bus (GstGlobalDeviceMonitor * monitor);
 
-gboolean    gst_global_device_monitor_start (GstGlobalDeviceMonitor * monitor);
-void        gst_global_device_monitor_stop  (GstGlobalDeviceMonitor * monitor);
-
-
-void        gst_global_device_monitor_set_classes_filter (
-    GstGlobalDeviceMonitor * monitor, const gchar *classes);
-
-gchar *gst_global_device_monitor_get_classes_filter (
-  GstGlobalDeviceMonitor * monitor);
+GList *   gst_global_device_monitor_get_devices (GstGlobalDeviceMonitor * monitor);
 
 
-void        gst_global_device_monitor_set_caps_filter (
-  GstGlobalDeviceMonitor * monitor,
-  GstCaps *                caps);
+gboolean  gst_global_device_monitor_start (GstGlobalDeviceMonitor * monitor);
 
-GstCaps *   gst_global_device_monitor_get_caps_filter (
-  GstGlobalDeviceMonitor * monitor);
+void      gst_global_device_monitor_stop  (GstGlobalDeviceMonitor * monitor);
 
-GstBus *    gst_global_device_monitor_get_bus (
-  GstGlobalDeviceMonitor * monitor);
+
+void      gst_global_device_monitor_set_classes_filter (GstGlobalDeviceMonitor * monitor,
+                                                        const gchar            * classes);
+
+gchar *   gst_global_device_monitor_get_classes_filter (GstGlobalDeviceMonitor * monitor);
+
+
+void      gst_global_device_monitor_set_caps_filter (GstGlobalDeviceMonitor * monitor,
+                                                     GstCaps                * caps);
+
+GstCaps * gst_global_device_monitor_get_caps_filter (GstGlobalDeviceMonitor * monitor);
 
 G_END_DECLS
 
