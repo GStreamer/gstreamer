@@ -1470,7 +1470,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   encoder->reconfig = FALSE;
   /* good start, will be corrected if needed */
-  encoder->dts_offset = 0;
+  encoder->ts_offset = 0;
 
   GST_OBJECT_UNLOCK (encoder);
 
@@ -1964,7 +1964,6 @@ gst_x264_enc_handle_frame (GstVideoEncoder * video_enc,
 
   pic_in.i_type = X264_TYPE_AUTO;
   pic_in.i_pts = frame->pts;
-  pic_in.i_dts = frame->dts;
   pic_in.opaque = GINT_TO_POINTER (frame->system_frame_number);
 
   ret = gst_x264_enc_encode_frame (encoder, &pic_in, frame, &i_nal, TRUE);
@@ -2070,23 +2069,16 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
 
   /* we want to know if x264 is messing around with this */
   g_assert (frame->pts == pic_out.i_pts);
-  if (pic_out.b_keyframe) {
-    /* expect dts == pts, and also positive ts,
-     * so arrange for an offset if needed */
-    if (pic_out.i_dts + encoder->dts_offset != pic_out.i_pts) {
-      encoder->dts_offset = pic_out.i_pts - pic_out.i_dts;
-      GST_DEBUG_OBJECT (encoder, "determined dts offset %" G_GINT64_FORMAT,
-          encoder->dts_offset);
-    }
-  }
 
-  if (pic_out.i_dts + (gint64) encoder->dts_offset < 0) {
-    /* should be ok now, surprise if not */
-    GST_WARNING_OBJECT (encoder, "negative dts after offset compensation");
-    frame->dts = GST_CLOCK_TIME_NONE;
-  } else
-    frame->dts = pic_out.i_dts + encoder->dts_offset;
+  /* As upstream often starts with PTS set to zero, in presence of b-frames,
+   * x264 will have to use negative DTS. As this is not supported by
+   * GStreamer, we shift both DTS and PTS forward to make it positive. It's
+   * important to shift both in order to ensure PTS remains >= to DTS. */
+  if (pic_out.i_dts < encoder->ts_offset)
+    encoder->ts_offset = pic_out.i_dts;
 
+  frame->dts = pic_out.i_dts - encoder->ts_offset;
+  frame->pts = pic_out.i_pts - encoder->ts_offset;
 
   if (pic_out.b_keyframe) {
     GST_DEBUG_OBJECT (encoder, "Output keyframe");

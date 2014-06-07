@@ -51,7 +51,7 @@ struct _GstX264Enc
   x264_t *x264enc;
   x264_param_t x264param;
   gint current_byte_stream;
-  GstClockTime dts_offset;
+  gint64 ts_offset;
 
   /* List of frame/buffer mapping structs for
    * pending frames */
