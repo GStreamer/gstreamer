@@ -1095,6 +1095,10 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
   }
 
+  /* Always return TRUE for sticky events */
+  if (GST_EVENT_IS_STICKY (event))
+    res = TRUE;
+
   return res;
 }
 
