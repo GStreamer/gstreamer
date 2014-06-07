@@ -1001,11 +1001,26 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   GstBuffer *tag;
   GstMapInfo map;
   guint size;
-  guint32 timestamp =
-      (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) ? GST_BUFFER_TIMESTAMP (buffer) /
-      GST_MSECOND : cpad->last_timestamp / GST_MSECOND;
+  guint32 pts, dts, cts;
   guint8 *data, *bdata;
   gsize bsize;
+
+  if (GST_BUFFER_DTS_IS_VALID (buffer))
+    dts = GST_BUFFER_DTS (buffer) / GST_MSECOND;
+  else
+    dts = cpad->last_timestamp / GST_MSECOND;
+
+  if (GST_BUFFER_PTS_IS_VALID (buffer))
+    pts = GST_BUFFER_PTS (buffer) / GST_MSECOND;
+  else
+    pts = dts;
+
+  if (pts > dts)
+    cts = pts - dts;
+  else
+    cts = 0;
+
+  GST_LOG_OBJECT (mux, "got pts %i dts %i cts %i\n", pts, dts, cts);
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   bdata = map.data;
@@ -1028,7 +1043,6 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   size += 4;
 
   _gst_buffer_new_and_alloc (size, &tag, &data);
-  GST_BUFFER_TIMESTAMP (tag) = timestamp * GST_MSECOND;
   memset (data, 0, size);
 
   data[0] = (cpad->video) ? 9 : 8;
@@ -1037,12 +1051,8 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   data[2] = ((size - 11 - 4) >> 8) & 0xff;
   data[3] = ((size - 11 - 4) >> 0) & 0xff;
 
-  /* wrap the timestamp every G_MAXINT32 miliseconds */
-  timestamp &= 0x7fffffff;
-  data[4] = (timestamp >> 16) & 0xff;
-  data[5] = (timestamp >> 8) & 0xff;
-  data[6] = (timestamp >> 0) & 0xff;
-  data[7] = (timestamp >> 24) & 0xff;
+  GST_WRITE_UINT24_BE (data + 4, dts);
+  data[7] = (((guint) dts) >> 24) & 0xff;
 
   data[8] = data[9] = data[10] = 0;
 
@@ -1055,11 +1065,14 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     data[11] |= cpad->video_codec & 0x0f;
 
     if (cpad->video_codec == 7) {
-      data[12] = is_codec_data ? 0 : 1;
-
-      /* FIXME: what to do about composition time */
-      data[13] = data[14] = data[15] = 0;
-
+      if (is_codec_data) {
+        data[12] = 0;
+        GST_WRITE_UINT24_BE (data + 13, 0);
+      } else {
+        /* ACV NALU */
+        data[12] = 1;
+        GST_WRITE_UINT24_BE (data + 13, cts);
+      }
       memcpy (data + 11 + 1 + 4, bdata, bsize);
     } else {
       memcpy (data + 11 + 1, bdata, bsize);
@@ -1083,8 +1096,9 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
 
   GST_WRITE_UINT32_BE (data + size - 4, size - 4);
 
-  GST_BUFFER_TIMESTAMP (tag) = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (tag) = GST_BUFFER_DURATION (buffer);
+  GST_BUFFER_PTS (tag) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DTS (tag) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (tag) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET (buffer);
   GST_BUFFER_OFFSET_END (tag) = GST_BUFFER_OFFSET_END (buffer);
 
@@ -1267,11 +1281,10 @@ gst_flv_mux_update_index (GstFlvMux * mux, GstBuffer * buffer, GstFlvPad * cpad)
           GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)))
     return;
 
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+  if (GST_BUFFER_PTS_IS_VALID (buffer)) {
     GstFlvMuxIndexEntry *entry = g_slice_new (GstFlvMuxIndexEntry);
     entry->position = mux->byte_count;
-    entry->time =
-        gst_guint64_to_gdouble (GST_BUFFER_TIMESTAMP (buffer)) / GST_SECOND;
+    entry->time = gst_guint64_to_gdouble (GST_BUFFER_PTS (buffer)) / GST_SECOND;
     mux->index = g_list_prepend (mux->index, entry);
   }
 }
@@ -1293,8 +1306,8 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad, GstBuffer * buffer)
 
   ret = gst_flv_mux_push (mux, tag);
 
-  if (ret == GST_FLOW_OK && GST_BUFFER_TIMESTAMP_IS_VALID (tag))
-    cpad->last_timestamp = GST_BUFFER_TIMESTAMP (tag);
+  if (ret == GST_FLOW_OK && GST_BUFFER_DTS_IS_VALID (tag))
+    cpad->last_timestamp = GST_BUFFER_DTS (tag);
 
   return ret;
 }
@@ -1492,7 +1505,7 @@ gst_flv_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
   best = (GstFlvPad *) cdata;
   if (best) {
     g_assert (buffer);
-    best_time = GST_BUFFER_TIMESTAMP (buffer);
+    best_time = GST_BUFFER_DTS (buffer);
   } else {
     best_time = GST_CLOCK_TIME_NONE;
   }

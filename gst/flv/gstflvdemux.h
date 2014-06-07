@@ -118,7 +118,7 @@ struct _GstFlvDemux
   gboolean got_par;
   GstBuffer * video_codec_data;
   GstClockTime video_start;
-  guint32 last_video_pts;
+  guint32 last_video_dts;
   GstClockTime video_time_offset;
   gdouble framerate;
 
