@@ -281,8 +281,6 @@ speed_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           GST_LOG_OBJECT (filter, "BYTES query on peer pad failed too");
           goto error;
         }
-        GST_LOG_OBJECT (filter, "query on peer pad failed");
-        goto error;
       }
 
       if (rformat == GST_FORMAT_BYTES)
