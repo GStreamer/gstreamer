@@ -658,6 +658,7 @@ _gst_caps_set_buffer_array (GstCaps * caps, const gchar * field,
 
     buf = va_arg (va, GstBuffer *);
   }
+  va_end (va);
 
   gst_structure_set_value (structure, field, &array);
   g_value_unset (&array);
