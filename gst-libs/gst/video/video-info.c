@@ -373,10 +373,10 @@ gst_video_info_to_caps (GstVideoInfo * info)
 static int
 fill_planes (GstVideoInfo * info)
 {
-  gint width, height;
+  gsize width, height;
 
-  width = info->width;
-  height = info->height;
+  width = (gsize) info->width;
+  height = (gsize) info->height;
 
   switch (info->finfo->format) {
     case GST_VIDEO_FORMAT_YUY2:
@@ -627,7 +627,8 @@ gst_video_info_convert (GstVideoInfo * info,
     GstFormat dest_format, gint64 * dest_value)
 {
   gboolean ret = FALSE;
-  int size, fps_n, fps_d;
+  int fps_n, fps_d;
+  gsize size;
 
   g_return_val_if_fail (info != NULL, 0);
   g_return_val_if_fail (info->finfo != NULL, 0);
@@ -657,7 +658,7 @@ gst_video_info_convert (GstVideoInfo * info,
   /* bytes to frames */
   if (src_format == GST_FORMAT_BYTES && dest_format == GST_FORMAT_DEFAULT) {
     if (size != 0) {
-      *dest_value = gst_util_uint64_scale_int (src_value, 1, size);
+      *dest_value = gst_util_uint64_scale (src_value, 1, size);
     } else {
       GST_ERROR ("blocksize is 0");
       *dest_value = 0;
@@ -668,7 +669,7 @@ gst_video_info_convert (GstVideoInfo * info,
 
   /* frames to bytes */
   if (src_format == GST_FORMAT_DEFAULT && dest_format == GST_FORMAT_BYTES) {
-    *dest_value = gst_util_uint64_scale_int (src_value, size, 1);
+    *dest_value = gst_util_uint64_scale (src_value, size, 1);
     ret = TRUE;
     goto done;
   }
