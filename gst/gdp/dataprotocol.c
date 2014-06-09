@@ -559,8 +559,8 @@ gst_dp_event_from_packet_1_0 (guint header_length, const guint8 * header,
         g_strndup ((gchar *) payload, GST_DP_HEADER_PAYLOAD_LENGTH (header));
     s = gst_structure_from_string (string, NULL);
     if (s == NULL) {
-      g_free (string);
       GST_WARNING ("Could not parse payload string: %s", string);
+      g_free (string);
       return NULL;
     }
 
