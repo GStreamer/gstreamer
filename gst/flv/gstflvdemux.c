@@ -3109,6 +3109,10 @@ gst_flv_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
+      /* Try to push upstream first */
+      ret = gst_pad_push_event (demux->sinkpad, event);
+      if (ret)
+        break;
       if (demux->random_access) {
         ret = gst_flv_demux_handle_seek_pull (demux, event, TRUE);
       } else {
