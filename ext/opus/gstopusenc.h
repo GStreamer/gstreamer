@@ -74,6 +74,7 @@ struct _GstOpusEnc {
   gint                  sample_rate;
 
   gboolean              header_sent;
+  guint64               encoded_samples;
 
   GSList                *headers;
 
