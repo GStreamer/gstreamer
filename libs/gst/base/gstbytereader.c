@@ -783,7 +783,7 @@ _scan_for_start_code (const guint8 * data, guint offset, guint size)
       pdata += 3;
     } else if (pdata[1]) {
       pdata += 2;
-    } else if (*pdata || pdata[2] != 1) {
+    } else if (pdata[0] || pdata[2] != 1) {
       pdata++;
     } else {
       return (pdata - data + offset);
