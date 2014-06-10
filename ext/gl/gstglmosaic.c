@@ -197,9 +197,9 @@ gst_gl_mosaic_process_textures (GstGLMixer * mix, GPtrArray * frames,
 
   //blocking call, use a FBO
   gst_gl_context_use_fbo_v2 (mix->context,
-      GST_VIDEO_INFO_WIDTH (&mix->out_info),
-      GST_VIDEO_INFO_HEIGHT (&mix->out_info), mix->fbo, mix->depthbuffer,
-      out_tex, gst_gl_mosaic_callback, (gpointer) mosaic);
+      GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR (mix)->info),
+      GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR (mix)->info), mix->fbo,
+      mix->depthbuffer, out_tex, gst_gl_mosaic_callback, (gpointer) mosaic);
 
   return TRUE;
 }
@@ -294,8 +294,9 @@ gst_gl_mosaic_callback (gpointer stuff)
       continue;
     }
     in_tex = frame->texture;
-    width = GST_VIDEO_INFO_WIDTH (&frame->pad->in_info);
-    height = GST_VIDEO_INFO_HEIGHT (&frame->pad->in_info);
+    width = GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR_PAD (frame->pad)->info);
+    height =
+        GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR_PAD (frame->pad)->info);
 
     if (!in_tex || width <= 0 || height <= 0) {
       GST_DEBUG ("skipping texture:%u frame:%p width:%u height %u",
