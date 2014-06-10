@@ -6914,6 +6914,12 @@ qtdemux_parse_svq3_stsd_data (GstQTDemux * qtdemux, GNode * stsd,
         fourcc = QT_FOURCC (stsd_data + 4);
         data = stsd_data + 8;
 
+        if (size == 0) {
+          GST_WARNING_OBJECT (qtdemux, "Atom of size 0 found, aborting "
+              "svq3 atom parsing");
+          goto end;
+        }
+
         switch (fourcc) {
           case FOURCC_gama:{
             if (size == 12) {
