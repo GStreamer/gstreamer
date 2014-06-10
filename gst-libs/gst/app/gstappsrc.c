@@ -214,6 +214,8 @@ static void gst_app_src_set_property (GObject * object, guint prop_id,
 static void gst_app_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_app_src_send_event (GstElement * element, GstEvent * event);
+
 static void gst_app_src_set_latencies (GstAppSrc * appsrc,
     gboolean do_min, guint64 min, gboolean do_max, guint64 max);
 
@@ -479,6 +481,8 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_app_src_template));
 
+  element_class->send_event = gst_app_src_send_event;
+
   basesrc_class->negotiate = gst_app_src_negotiate;
   basesrc_class->get_caps = gst_app_src_internal_get_caps;
   basesrc_class->create = gst_app_src_create;
@@ -698,6 +702,23 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_app_src_send_event (GstElement * element, GstEvent * event)
+{
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (element);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_app_src_flush_queued (appsrc);
+      break;
+    default:
+      break;
+  }
+
+  return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, send_event, (element,
+          event), FALSE);
 }
 
 static gboolean
