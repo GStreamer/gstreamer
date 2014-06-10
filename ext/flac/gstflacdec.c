@@ -317,7 +317,7 @@ static const guint8 crc8_table[256] = {
 };
 
 static guint8
-gst_flac_calculate_crc8 (guint8 * data, guint length)
+gst_flac_calculate_crc8 (const guint8 * data, guint length)
 {
   guint8 crc = 0;
 
@@ -332,7 +332,8 @@ gst_flac_calculate_crc8 (guint8 * data, guint length)
 /* FIXME: for our purposes it's probably enough to just check for the sync
  * marker - we just want to know if it's a header frame or not */
 static gboolean
-gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size)
+gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, const guint8 * data,
+    guint size)
 {
   guint headerlen;
   guint sr_from_end = 0;        /* can be 0, 8 or 16 */
