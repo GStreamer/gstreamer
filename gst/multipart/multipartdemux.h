@@ -87,6 +87,10 @@ struct _GstMultipartDemux
   gint scanpos;
 
   gboolean singleStream;
+
+  /* to handle stream-start */
+  gboolean have_group_id;
+  guint group_id;
 };
 
 struct _GstMultipartDemuxClass

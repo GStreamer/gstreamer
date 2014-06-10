@@ -188,6 +188,8 @@ gst_multipart_demux_init (GstMultipartDemux * multipart)
   multipart->header_completed = FALSE;
   multipart->scanpos = 0;
   multipart->singleStream = DEFAULT_SINGLE_STREAM;
+  multipart->have_group_id = FALSE;
+  multipart->group_id = G_MAXUINT;
 }
 
 static void
@@ -296,6 +298,8 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     gchar *name;
     const gchar *capsname;
     GstCaps *caps;
+    gchar *stream_id;
+    GstEvent *event;
 
     mppad = g_new0 (GstMultipartPad, 1);
 
@@ -316,16 +320,41 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     demux->srcpads = g_slist_prepend (demux->srcpads, mppad);
     demux->numpads++;
 
+    gst_pad_use_fixed_caps (pad);
+    gst_pad_set_active (pad, TRUE);
+    gst_element_add_pad (GST_ELEMENT_CAST (demux), pad);
+
+    /* prepare and send stream-start */
+    if (!demux->have_group_id) {
+      event = gst_pad_get_sticky_event (demux->sinkpad,
+          GST_EVENT_STREAM_START, 0);
+
+      if (event) {
+        demux->have_group_id =
+            gst_event_parse_group_id (event, &demux->group_id);
+        gst_event_unref (event);
+      } else if (!demux->have_group_id) {
+        demux->have_group_id = TRUE;
+        demux->group_id = gst_util_group_id_next ();
+      }
+    }
+
+    stream_id = gst_pad_create_stream_id (pad,
+        GST_ELEMENT_CAST (demux), demux->mime_type);
+
+    event = gst_event_new_stream_start (stream_id);
+    if (demux->have_group_id)
+      gst_event_set_group_id (event, demux->group_id);
+
+    gst_pad_push_event (pad, event);
+    g_free (stream_id);
+
     /* take the mime type, convert it to the caps name */
     capsname = gst_multipart_demux_get_gstname (demux, mime);
     caps = gst_caps_from_string (capsname);
     GST_DEBUG_OBJECT (demux, "caps for pad: %s", capsname);
-    gst_pad_use_fixed_caps (pad);
-    gst_pad_set_active (pad, TRUE);
     gst_pad_set_caps (pad, caps);
     gst_caps_unref (caps);
-
-    gst_element_add_pad (GST_ELEMENT_CAST (demux), pad);
 
     if (created) {
       *created = TRUE;
@@ -677,6 +706,8 @@ gst_multipart_demux_change_state (GstElement * element,
       multipart->content_length = -1;
       multipart->scanpos = 0;
       gst_multipart_demux_remove_src_pads (multipart);
+      multipart->have_group_id = FALSE;
+      multipart->group_id = G_MAXUINT;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
