@@ -1930,7 +1930,7 @@ record_pcr (MpegTSPacketizer2 * packetizer, MpegTSPCR * pcrtable,
       current->first_offset);
   GST_DEBUG ("Last PCR: +%" GST_TIME_FORMAT " offset: +%u",
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (current->pending[current->last].pcr)),
-      current->pending[current->last].pcr);
+      current->pending[current->last].offset);
   GST_DEBUG ("To add (corrected) PCR:%" GST_TIME_FORMAT " offset:%u",
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (corpcr)), coroffset);
 
