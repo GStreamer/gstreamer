@@ -22,7 +22,7 @@
 #define __GST_GL_MIXER_PAD_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/video/gstvideoaggregator.h>
 
 #include <gst/gl/gstgldisplay.h>
 #include <gst/gl/gstglupload.h>
@@ -41,38 +41,21 @@ G_BEGIN_DECLS
 
 typedef struct _GstGLMixerPad GstGLMixerPad;
 typedef struct _GstGLMixerPadClass GstGLMixerPadClass;
-typedef struct _GstGLMixerCollect GstGLMixerCollect;
-
-struct _GstGLMixerCollect
-{
-  GstCollectData collect;       /* we extend the CollectData */
-
-  GstBuffer *queued;
-
-  GstBuffer *buffer;            /* the queued buffer for this pad */
-  GstClockTime start_time;
-  GstClockTime end_time;
-
-  GstGLMixerPad *mixpad;
-};
 
 /* all information needed for one video stream */
 struct _GstGLMixerPad
 {
-  GstPad parent;                /* subclass the pad */
+  GstVideoAggregatorPad parent;                /* subclass the pad */
 
   /* <private> */
   GstGLUpload *upload;
-  GstVideoInfo in_info;
   guint in_tex_id;
   gboolean mapped;
-
-  GstGLMixerCollect *mixcol;
 };
 
 struct _GstGLMixerPadClass
 {
-  GstPadClass parent_class;
+  GstVideoAggregatorPadClass parent_class;
 };
 
 GType gst_gl_mixer_pad_get_type (void);
