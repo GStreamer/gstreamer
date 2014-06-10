@@ -873,31 +873,21 @@ static void
 dpb_prune_mvc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    const gboolean is_last_picture = /* in the access unit */
+        GST_VAAPI_PICTURE_FLAG_IS_SET(picture, GST_VAAPI_PICTURE_FLAG_AU_END);
     guint i;
 
     // Remove all unused inter-view only reference components of the current AU
-    if (GST_VAAPI_PICTURE_FLAG_IS_SET(picture, GST_VAAPI_PICTURE_FLAG_AU_END)) {
-        i = 0;
-        while (i < priv->dpb_count) {
-            GstVaapiFrameStore * const fs = priv->dpb[i];
-            if (fs->view_id != picture->base.view_id &&
-                !fs->output_needed && !gst_vaapi_frame_store_has_reference(fs))
-                dpb_remove_index(decoder, i);
-            else
-                i++;
-        }
-    }
-    else {
-        i = 0;
-        while (i < priv->dpb_count) {
-            GstVaapiFrameStore * const fs = priv->dpb[i];
-            if (fs->view_id != picture->base.view_id &&
-                !fs->output_needed && !gst_vaapi_frame_store_has_reference(fs) &&
-                !is_inter_view_reference_for_next_frames(decoder, fs))
-                dpb_remove_index(decoder, i);
-            else
-                i++;
-        }
+    i = 0;
+    while (i < priv->dpb_count) {
+        GstVaapiFrameStore * const fs = priv->dpb[i];
+        if (fs->view_id != picture->base.view_id &&
+            !fs->output_needed && !gst_vaapi_frame_store_has_reference(fs) &&
+            (is_last_picture ||
+             !is_inter_view_reference_for_next_frames(decoder, fs)))
+            dpb_remove_index(decoder, i);
+        else
+            i++;
     }
 }
 
