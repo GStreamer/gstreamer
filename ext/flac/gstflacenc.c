@@ -408,6 +408,8 @@ gst_flac_enc_start (GstAudioEncoder * enc)
   flacenc->eos = FALSE;
   flacenc->tags = gst_tag_list_new_empty ();
   flacenc->toc = NULL;
+  flacenc->samples_in = 0;
+  flacenc->samples_out = 0;
 
   return TRUE;
 }
@@ -1124,6 +1126,8 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
   GstFlowReturn ret = GST_FLOW_OK;
   GstFlacEnc *flacenc;
   GstBuffer *outbuf;
+  GstSegment *segment;
+  GstClockTime duration;
 
   flacenc = GST_FLAC_ENC (client_data);
 
@@ -1159,6 +1163,28 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
     ret = gst_pad_push (GST_AUDIO_ENCODER_SRC_PAD (flacenc), outbuf);
   } else {
     /* regular frame data, pass to base class */
+    if (flacenc->eos && flacenc->samples_in == flacenc->samples_out + samples) {
+      /* If encoding part of a frame, and we have no set stop time on
+       * the output segment, we update the segment stop time to reflect
+       * the last sample. This will let oggmux set the last page's
+       * granpos to tell a decoder the dummy samples should be clipped.
+       */
+      segment = &GST_AUDIO_ENCODER_OUTPUT_SEGMENT (flacenc);
+      if (!GST_CLOCK_TIME_IS_VALID (segment->stop)) {
+        GST_DEBUG_OBJECT (flacenc,
+            "No stop time and partial frame, updating segment");
+        duration =
+            gst_util_uint64_scale (flacenc->samples_out + samples,
+            GST_SECOND,
+            FLAC__stream_encoder_get_sample_rate (flacenc->encoder));
+        segment->stop = segment->start + duration;
+        GST_DEBUG_OBJECT (flacenc, "new output segment %" GST_SEGMENT_FORMAT,
+            segment);
+        gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (flacenc),
+            gst_event_new_segment (segment));
+      }
+    }
+
     GST_LOG ("Pushing buffer: samples=%u, size=%u, pos=%" G_GUINT64_FORMAT,
         samples, (guint) bytes, flacenc->offset);
     ret = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (flacenc),
@@ -1227,6 +1253,11 @@ gst_flac_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
           flacenc->toc = toc;
         }
       }
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (enc, event);
+      break;
+    case GST_EVENT_SEGMENT:
+      flacenc->samples_in = 0;
+      flacenc->samples_out = 0;
       ret = GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (enc, event);
       break;
     default:
@@ -1328,6 +1359,7 @@ gst_flac_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 
   res = FLAC__stream_encoder_process_interleaved (flacenc->encoder,
       (const FLAC__int32 *) data, samples);
+  flacenc->samples_in += samples;
 
   g_free (data);
 

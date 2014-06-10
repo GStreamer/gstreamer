@@ -59,6 +59,8 @@ struct _GstFlacEnc {
   GstTagList *     tags;
   GstToc *         toc;
 
+  guint64          samples_in;
+  guint64          samples_out;
   gboolean         eos;
   /* queue headers until we have them all so we can add streamheaders to caps */
   gboolean         got_headers;
