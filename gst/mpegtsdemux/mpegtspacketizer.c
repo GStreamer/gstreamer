@@ -2080,27 +2080,38 @@ mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer,
 
   pcrtable = get_pcr_table (packetizer, pid);
 
-  if (g_list_length (pcrtable->groups) < 2) {
+  if (g_list_length (pcrtable->groups) < 1) {
     GST_WARNING ("Not enough observations to return a duration estimate");
     return GST_CLOCK_TIME_NONE;
   }
 
-  /* FIXME : Refine this later to use neighbouring groups */
-  tmp = g_list_last (pcrtable->groups);
-  last = tmp->data;
+  if (g_list_length (pcrtable->groups) > 1) {
+    GST_LOG ("Using last group");
 
-  if (G_UNLIKELY (last->flags & PCR_GROUP_FLAG_ESTIMATED))
-    _reevaluate_group_pcr_offset (pcrtable, last);
+    /* FIXME : Refine this later to use neighbouring groups */
+    tmp = g_list_last (pcrtable->groups);
+    last = tmp->data;
 
-  /* lastpcr is the full value in PCR from the first first chunk of data */
-  lastpcr = last->values[last->last_value].pcr + last->pcr_offset;
-  /* lastoffset is the full offset from the first chunk of data */
-  lastoffset =
-      last->values[last->last_value].offset + last->first_offset -
-      packetizer->refoffset;
+    if (G_UNLIKELY (last->flags & PCR_GROUP_FLAG_ESTIMATED))
+      _reevaluate_group_pcr_offset (pcrtable, last);
 
-  GST_DEBUG ("lastpcr:%" GST_TIME_FORMAT " lastoffset:%" G_GUINT64_FORMAT,
-      GST_TIME_ARGS (PCRTIME_TO_GSTTIME (lastpcr)), lastoffset);
+    /* lastpcr is the full value in PCR from the first first chunk of data */
+    lastpcr = last->values[last->last_value].pcr + last->pcr_offset;
+    /* lastoffset is the full offset from the first chunk of data */
+    lastoffset =
+        last->values[last->last_value].offset + last->first_offset -
+        packetizer->refoffset;
+  } else {
+    PCROffsetCurrent *current = pcrtable->current;
+    /* If doing progressive read, use current */
+    GST_LOG ("Using current group");
+    lastpcr = current->group->pcr_offset + current->pending[current->last].pcr;
+    lastoffset = current->first_offset + current->pending[current->last].offset;
+  }
+  GST_DEBUG ("lastpcr:%" GST_TIME_FORMAT " lastoffset:%" G_GUINT64_FORMAT
+      " refoffset:%" G_GUINT64_FORMAT,
+      GST_TIME_ARGS (PCRTIME_TO_GSTTIME (lastpcr)), lastoffset,
+      packetizer->refoffset);
 
   /* Convert byte difference into time difference (and transformed from 27MHz to 1GHz) */
   res =
