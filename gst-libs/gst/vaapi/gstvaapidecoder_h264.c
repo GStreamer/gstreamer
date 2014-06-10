@@ -514,6 +514,17 @@ struct _GstVaapiDecoderH264Class {
 static gboolean
 exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture);
 
+static gboolean
+is_inter_view_reference_for_next_pictures(GstVaapiDecoderH264 *decoder,
+    GstVaapiPictureH264 *picture);
+
+static inline gboolean
+is_inter_view_reference_for_next_frames(GstVaapiDecoderH264 *decoder,
+    GstVaapiFrameStore *fs)
+{
+    return is_inter_view_reference_for_next_pictures(decoder, fs->buffers[0]);
+}
+
 /* Determines if the supplied profile is one of the MVC set */
 static gboolean
 is_mvc_profile(GstH264Profile profile)
@@ -864,13 +875,25 @@ dpb_prune_mvc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     guint i;
 
-    // Remove all unused inter-view pictures
+    // Remove all unused inter-view only reference components of the current AU
     if (GST_VAAPI_PICTURE_FLAG_IS_SET(picture, GST_VAAPI_PICTURE_FLAG_AU_END)) {
         i = 0;
         while (i < priv->dpb_count) {
             GstVaapiFrameStore * const fs = priv->dpb[i];
             if (fs->view_id != picture->base.view_id &&
                 !fs->output_needed && !gst_vaapi_frame_store_has_reference(fs))
+                dpb_remove_index(decoder, i);
+            else
+                i++;
+        }
+    }
+    else {
+        i = 0;
+        while (i < priv->dpb_count) {
+            GstVaapiFrameStore * const fs = priv->dpb[i];
+            if (fs->view_id != picture->base.view_id &&
+                !fs->output_needed && !gst_vaapi_frame_store_has_reference(fs) &&
+                !is_inter_view_reference_for_next_frames(decoder, fs))
                 dpb_remove_index(decoder, i);
             else
                 i++;
@@ -2085,21 +2108,11 @@ find_view_id(guint16 view_id, const guint16 *view_ids, guint num_view_ids)
     return FALSE;
 }
 
-/* Checks whether the inter-view reference picture with the supplied
-   view id is used for decoding the current view component picture */
 static gboolean
-is_inter_view_reference_for_picture(GstVaapiDecoderH264 *decoder,
-    guint16 view_id, GstVaapiPictureH264 *picture)
+find_view_id_in_view(guint16 view_id, const GstH264SPSExtMVCView *view,
+    gboolean is_anchor)
 {
-    const GstH264SPS * const sps = get_sps(decoder);
-    const GstH264SPSExtMVCView *view;
-
-    if (!GST_VAAPI_PICTURE_IS_MVC(picture) ||
-        sps->extension_type != GST_H264_NAL_EXTENSION_MVC)
-        return FALSE;
-
-    view = &sps->extension.mvc.view[picture->base.voc];
-    if (GST_VAAPI_PICTURE_IS_ANCHOR(picture))
+    if (is_anchor)
         return (find_view_id(view_id, view->anchor_ref_l0,
                     view->num_anchor_refs_l0) ||
                 find_view_id(view_id, view->anchor_ref_l1,
@@ -2109,6 +2122,48 @@ is_inter_view_reference_for_picture(GstVaapiDecoderH264 *decoder,
                 view->num_non_anchor_refs_l0) ||
             find_view_id(view_id, view->non_anchor_ref_l1,
                 view->num_non_anchor_refs_l1));
+}
+
+/* Checks whether the inter-view reference picture with the supplied
+   view id is used for decoding the current view component picture */
+static gboolean
+is_inter_view_reference_for_picture(GstVaapiDecoderH264 *decoder,
+    guint16 view_id, GstVaapiPictureH264 *picture)
+{
+    const GstH264SPS * const sps = get_sps(decoder);
+    gboolean is_anchor;
+
+    if (!GST_VAAPI_PICTURE_IS_MVC(picture) ||
+        sps->extension_type != GST_H264_NAL_EXTENSION_MVC)
+        return FALSE;
+
+    is_anchor = GST_VAAPI_PICTURE_IS_ANCHOR(picture);
+    return find_view_id_in_view(view_id,
+        &sps->extension.mvc.view[picture->base.voc], is_anchor);
+}
+
+/* Checks whether the supplied inter-view reference picture is used
+   for decoding the next view component pictures */
+static gboolean
+is_inter_view_reference_for_next_pictures(GstVaapiDecoderH264 *decoder,
+    GstVaapiPictureH264 *picture)
+{
+    const GstH264SPS * const sps = get_sps(decoder);
+    gboolean is_anchor;
+    guint i, num_views;
+
+    if (!GST_VAAPI_PICTURE_IS_MVC(picture) ||
+        sps->extension_type != GST_H264_NAL_EXTENSION_MVC)
+        return FALSE;
+
+    is_anchor = GST_VAAPI_PICTURE_IS_ANCHOR(picture);
+    num_views = sps->extension.mvc.num_views_minus1 + 1;
+    for (i = picture->base.voc + 1; i < num_views; i++) {
+        const GstH264SPSExtMVCView * const view = &sps->extension.mvc.view[i];
+        if (find_view_id_in_view(picture->base.view_id, view, is_anchor))
+            return TRUE;
+    }
+    return FALSE;
 }
 
 /* H.8.2.1 - Initialization process for inter-view prediction references */
