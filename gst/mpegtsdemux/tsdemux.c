@@ -545,8 +545,6 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
   gint64 start, stop;
-  GstSegment seeksegment;
-  gboolean update;
   guint64 start_offset;
 
   gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
@@ -566,20 +564,8 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
     goto done;
   }
 
-  /* copy segment, we need this because we still need the old
-   * segment when we close the current segment. */
-  memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
-
   /* configure the segment with the seek variables */
   GST_DEBUG_OBJECT (demux, "configuring seek");
-  GST_DEBUG ("seeksegment before set_seek " SEGMENT_FORMAT,
-      SEGMENT_ARGS (seeksegment));
-
-  gst_segment_do_seek (&seeksegment, rate, format, flags, start_type, start,
-      stop_type, stop, &update);
-
-  GST_DEBUG ("seeksegment after set_seek " SEGMENT_FORMAT,
-      SEGMENT_ARGS (seeksegment));
 
   /* Convert start/stop to offset */
   start_offset =
