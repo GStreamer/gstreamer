@@ -40,10 +40,6 @@ G_BEGIN_DECLS
 #define GST_GL_MIXER_GET_CLASS(obj) \
         (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_GL_MIXER,GstGLMixerClass))
 
-#define GST_GL_MIXER_GET_LOCK(mix) (GST_GL_MIXER(mix)->lock)
-#define GST_GL_MIXER_LOCK(mix)     (g_mutex_lock(&GST_GL_MIXER_GET_LOCK (mix)))
-#define GST_GL_MIXER_UNLOCK(mix)   (g_mutex_unlock(&GST_GL_MIXER_GET_LOCK (mix)))
-
 typedef struct _GstGLMixer GstGLMixer;
 typedef struct _GstGLMixerClass GstGLMixerClass;
 typedef struct _GstGLMixerPrivate GstGLMixerPrivate;
@@ -59,57 +55,28 @@ typedef gboolean (*GstGLMixerProcessTextures) (GstGLMixer *mix,
 
 struct _GstGLMixer
 {
-  GstElement element;
+  GstVideoAggregator vaggregator;
 
   GstGLMixerPrivate *priv;
 
-  /* pad */
-  GstPad *srcpad;
-
   /* Lock to prevent the state to change while blending */
   GMutex lock;
-  /* Sink pads using Collect Pads from core's base library */
-  GstCollectPads *collect;
-
-  /* sinkpads, a GSList of GstGLMixerPads */
-  GSList *sinkpads;
-  gint numpads;
-  /* Next available sinkpad index */
-  gint next_sinkpad;
 
   GPtrArray *array_buffers;
   GPtrArray *frames;
 
-  GstCaps *current_caps;
-  GstVideoInfo out_info;
   GLuint out_tex_id;
   GstGLDownload *download;
-
-  gboolean newseg_pending;
-  gboolean flush_stop_pending;
-  gboolean send_stream_start;
-  gboolean send_caps;
-
-  GstSegment segment;
-  GstClockTime ts_offset;
-  guint64 nframes;
-
-  /* sink event handling */
-  gdouble proportion;
-  GstClockTime earliest_time;
-  guint64 qos_processed, qos_dropped;
 
   GstGLDisplay *display;
   GstGLContext *context;
   GLuint fbo;
   GLuint depthbuffer;
-
-  GType pad_type;
 };
 
 struct _GstGLMixerClass
 {
-  GstElementClass parent_class;
+  GstVideoAggregatorClass parent_class;
 
   GstGLMixerSetCaps set_caps;
   GstGLMixerReset reset;
@@ -126,8 +93,6 @@ struct _GstGLMixerFrameData
 GType gst_gl_mixer_get_type(void);
 
 gboolean gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf);
-
-void gst_gl_mixer_set_pad_type (GstGLMixer * mix, GType pad_type);
 
 G_END_DECLS
 #endif /* __GST_GL_MIXER_H__ */
