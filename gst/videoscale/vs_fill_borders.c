@@ -51,7 +51,7 @@ vs_fill_borders_RGBA (const VSImage * dest, const uint8_t * val)
   int width = dest->width;
   int height = dest->height;
   int real_width = dest->real_width;
-  int stride = dest->stride;
+  gsize stride = dest->stride;
   int tmp, tmp2;
   uint8_t *data;
   uint32_t v = READ_UINT32 (val);
@@ -103,7 +103,7 @@ vs_fill_borders_RGB (const VSImage * dest, const uint8_t * val)
   int width = dest->width;
   int height = dest->height;
   int real_width = dest->real_width;
-  int stride = dest->stride;
+  gsize stride = dest->stride;
   int tmp, tmp2;
   uint8_t *data;
 
@@ -140,7 +140,7 @@ vs_fill_borders_YUYV (const VSImage * dest, const uint8_t * val)
   int width = dest->width;
   int height = dest->height;
   int real_width = dest->real_width;
-  int stride = dest->stride;
+  gsize stride = dest->stride;
   int tmp, tmp2;
   uint8_t *data;
 
@@ -189,7 +189,7 @@ vs_fill_borders_UYVY (const VSImage * dest, const uint8_t * val)
   int width = dest->width;
   int height = dest->height;
   int real_width = dest->real_width;
-  int stride = dest->stride;
+  gsize stride = dest->stride;
   int tmp, tmp2;
   uint8_t *data;
 
@@ -238,7 +238,7 @@ vs_fill_borders_Y (const VSImage * dest, const uint8_t * val)
   int width = dest->width;
   int height = dest->height;
   int real_width = dest->real_width;
-  int stride = dest->stride;
+  gsize stride = dest->stride;
   int tmp, tmp2;
   uint8_t *data;
 
@@ -275,7 +275,7 @@ vs_fill_borders_Y16 (const VSImage * dest, const uint16_t val)
   int width = dest->width;
   int height = dest->height;
   int real_width = dest->real_width;
-  int stride = dest->stride;
+  gsize stride = dest->stride;
   int tmp, tmp2;
   uint8_t *data;
 
@@ -312,7 +312,7 @@ vs_fill_borders_RGB565 (const VSImage * dest, const uint8_t * val)
   int width = dest->width;
   int height = dest->height;
   int real_width = dest->real_width;
-  int stride = dest->stride;
+  gsize stride = dest->stride;
   int tmp, tmp2;
   uint8_t *data;
   uint16_t v = READ_UINT16 (val);
@@ -350,7 +350,7 @@ vs_fill_borders_RGB555 (const VSImage * dest, const uint8_t * val)
   int width = dest->width;
   int height = dest->height;
   int real_width = dest->real_width;
-  int stride = dest->stride;
+  gsize stride = dest->stride;
   int tmp, tmp2;
   uint8_t *data;
   uint16_t v = READ_UINT16 (val);
@@ -388,7 +388,7 @@ vs_fill_borders_AYUV64 (const VSImage * dest, const uint8_t * val)
   int width = dest->width;
   int height = dest->height;
   int real_width = dest->real_width;
-  int stride = dest->stride;
+  gsize stride = dest->stride;
   int tmp, tmp2;
   uint8_t *data;
   uint64_t v;

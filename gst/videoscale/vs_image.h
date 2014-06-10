@@ -42,7 +42,7 @@ struct _VSImage {
   uint8_t *pixels;
   int width;
   int height;
-  int stride;
+  gsize stride;
 };
 
 G_GNUC_INTERNAL void vs_image_scale_nearest_RGBA   (const VSImage * dest,
