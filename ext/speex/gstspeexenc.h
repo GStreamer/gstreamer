@@ -80,6 +80,7 @@ struct _GstSpeexEnc {
   gint                  rate;
 
   gboolean              header_sent;
+  guint64               encoded_samples;
 
   GstTagList            *tags;
 

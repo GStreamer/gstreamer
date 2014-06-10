@@ -253,6 +253,7 @@ gst_speex_enc_start (GstAudioEncoder * benc)
   speex_bits_init (&enc->bits);
   enc->tags = gst_tag_list_new_empty ();
   enc->header_sent = FALSE;
+  enc->encoded_samples = 0;
 
   return TRUE;
 }
@@ -511,6 +512,9 @@ gst_speex_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
       }
       break;
     }
+    case GST_EVENT_SEGMENT:
+      enc->encoded_samples = 0;
+      break;
     default:
       break;
   }
@@ -530,6 +534,8 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
   gsize bsize, size;
   GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstSegment *segment;
+  GstClockTime duration;
 
   if (G_LIKELY (buf)) {
     gst_buffer_map (buf, &map, GST_MAP_READ);
@@ -538,6 +544,28 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
 
     if (G_UNLIKELY (bsize % bytes)) {
       GST_DEBUG_OBJECT (enc, "draining; adding silence samples");
+
+      /* If encoding part of a frame, and we have no set stop time on
+       * the output segment, we update the segment stop time to reflect
+       * the last sample. This will let oggmux set the last page's
+       * granpos to tell a decoder the dummy samples should be clipped.
+       */
+      segment = &GST_AUDIO_ENCODER_OUTPUT_SEGMENT (enc);
+      GST_DEBUG_OBJECT (enc, "existing output segment %" GST_SEGMENT_FORMAT,
+          segment);
+      if (!GST_CLOCK_TIME_IS_VALID (segment->stop)) {
+        int input_samples = bsize / (enc->channels * 2);
+        GST_DEBUG_OBJECT (enc,
+            "No stop time and partial frame, updating segment");
+        duration =
+            gst_util_uint64_scale (enc->encoded_samples + input_samples,
+            GST_SECOND, enc->rate);
+        segment->stop = segment->start + duration;
+        GST_DEBUG_OBJECT (enc, "new output segment %" GST_SEGMENT_FORMAT,
+            segment);
+        gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (enc),
+            gst_event_new_segment (segment));
+      }
 
       size = ((bsize / bytes) + 1) * bytes;
       data0 = data = g_malloc0 (size);
@@ -603,6 +631,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
 
   ret = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (enc),
       outbuf, samples);
+  enc->encoded_samples += frame_size;
 
 done:
   g_free (data0);
