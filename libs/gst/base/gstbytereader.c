@@ -775,22 +775,20 @@ gst_byte_reader_dup_data (GstByteReader * reader, guint size, guint8 ** val)
 static inline gint
 _scan_for_start_code (const guint8 * data, guint offset, guint size)
 {
-  guint i = 0;
+  guint8 *pdata = (guint8 *) data;
+  guint8 *pend = (guint8 *) (data + size - 4);
 
-  while (i <= (size - 4)) {
-    if (data[i + 2] > 1) {
-      i += 3;
-    } else if (data[i + 1]) {
-      i += 2;
-    } else if (data[i] || data[i + 2] != 1) {
-      i++;
+  while (pdata <= pend) {
+    if (pdata[2] > 1) {
+      pdata += 3;
+    } else if (pdata[1]) {
+      pdata += 2;
+    } else if (*pdata || pdata[2] != 1) {
+      pdata++;
     } else {
-      break;
+      return (pdata - data + offset);
     }
   }
-
-  if (i <= (size - 4))
-    return i + offset;
 
   /* nothing found */
   return -1;
