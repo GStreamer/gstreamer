@@ -1777,7 +1777,7 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 }
 
 /**
- * gst_h264_video_quant_matrix_8x8_get_zigzag_from_raster:
+ * gst_h264_quant_matrix_8x8_get_zigzag_from_raster:
  * @out_quant: (out): The resulting quantization matrix
  * @quant: The source quantization matrix
  *
@@ -1790,7 +1790,7 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
  * Since: 1.4
  */
 void
-gst_h264_video_quant_matrix_8x8_get_zigzag_from_raster (guint8 out_quant[64],
+gst_h264_quant_matrix_8x8_get_zigzag_from_raster (guint8 out_quant[64],
     const guint8 quant[64])
 {
   guint i;
@@ -1815,7 +1815,7 @@ gst_h264_video_quant_matrix_8x8_get_zigzag_from_raster (guint8 out_quant[64],
  * Since: 1.4
  */
 void
-gst_h264_video_quant_matrix_8x8_get_raster_from_zigzag (guint8 out_quant[64],
+gst_h264_quant_matrix_8x8_get_raster_from_zigzag (guint8 out_quant[64],
     const guint8 quant[64])
 {
   guint i;
@@ -1827,7 +1827,7 @@ gst_h264_video_quant_matrix_8x8_get_raster_from_zigzag (guint8 out_quant[64],
 }
 
 /**
- * gst_h264_video_quant_matrix_4x4_get_zigzag_from_raster:
+ * gst_h264_quant_matrix_4x4_get_zigzag_from_raster:
  * @out_quant: (out): The resulting quantization matrix
  * @quant: The source quantization matrix
  *
@@ -1840,7 +1840,7 @@ gst_h264_video_quant_matrix_8x8_get_raster_from_zigzag (guint8 out_quant[64],
  * Since: 1.4
  */
 void
-gst_h264_video_quant_matrix_4x4_get_zigzag_from_raster (guint8 out_quant[16],
+gst_h264_quant_matrix_4x4_get_zigzag_from_raster (guint8 out_quant[16],
     const guint8 quant[16])
 {
   guint i;
@@ -1865,7 +1865,7 @@ gst_h264_video_quant_matrix_4x4_get_zigzag_from_raster (guint8 out_quant[16],
  * Since: 1.4
  */
 void
-gst_h264_video_quant_matrix_4x4_get_raster_from_zigzag (guint8 out_quant[16],
+gst_h264_quant_matrix_4x4_get_raster_from_zigzag (guint8 out_quant[16],
     const guint8 quant[16])
 {
   guint i;
