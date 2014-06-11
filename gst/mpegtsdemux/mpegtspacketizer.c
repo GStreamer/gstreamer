@@ -2364,7 +2364,11 @@ mpegts_packetizer_set_current_pcr_offset (MpegTSPacketizer2 * packetizer,
 
   pcr_offset = GSTTIME_TO_PCRTIME (offset);
 
-  group = pcrtable->current->group;
+  /* Pick delta from *first* group */
+  if (pcrtable->groups)
+    group = pcrtable->groups->data;
+  else
+    group = pcrtable->current->group;
   GST_DEBUG ("Current group PCR %" GST_TIME_FORMAT " (offset %"
       G_GUINT64_FORMAT " pcr_offset %" GST_TIME_FORMAT,
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->first_pcr)),
@@ -2374,6 +2378,10 @@ mpegts_packetizer_set_current_pcr_offset (MpegTSPacketizer2 * packetizer,
   /* Remember the difference between previous initial pcr_offset and
    * new initial pcr_offset */
   delta = pcr_offset - group->pcr_offset;
+  if (delta == 0) {
+    GST_DEBUG ("No shift to apply");
+    return;
+  }
   GST_DEBUG ("Shifting groups by %" GST_TIME_FORMAT
       " for new initial pcr_offset %" GST_TIME_FORMAT,
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (delta)), GST_TIME_ARGS (offset));
