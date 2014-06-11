@@ -440,17 +440,49 @@ GstOggMuxClass
 <FILE>element-playbin</FILE>
 <TITLE>playbin</TITLE>
 GstPlayBin
-<SUBSECTION Standard>
-</SECTION>
-
-<SECTION>
-<FILE>element-playbin</FILE>
-<TITLE>playbin</TITLE>
-GstPlayBin
 GstPlayFlags
 <SUBSECTION Standard>
 gst_play_flags_get_type
 GST_TYPE_PLAY_FLAGS
+</SECTION>
+
+<SECTION>
+<FILE>element-playsink</FILE>
+<TITLE>playsink</TITLE>
+GstPlaySink
+<SUBSECTION Standard>
+GST_TYPE_PLAY_SINK
+GST_PLAY_SINK
+GST_PLAY_SINK_CLASS
+GST_IS_PLAY_SINK
+GST_IS_PLAY_SINK_CLASS
+GstPlaySinkType
+gst_play_sink_get_type
+gst_play_sink_request_pad
+gst_play_sink_release_pad
+gst_play_sink_refresh_pad
+gst_play_sink_set_filter
+gst_play_sink_get_filter
+gst_play_sink_set_sink
+gst_play_sink_get_sink
+gst_play_sink_set_vis_plugin
+gst_play_sink_get_vis_plugin
+gst_play_sink_set_volume
+gst_play_sink_get_volume
+gst_play_sink_set_mute
+gst_play_sink_get_mute
+gst_play_sink_set_flags
+gst_play_sink_get_flags
+gst_play_sink_set_font_desc
+gst_play_sink_get_font_desc
+gst_play_sink_set_subtitle_encoding
+gst_play_sink_get_subtitle_encoding
+gst_play_sink_set_av_offset
+gst_play_sink_get_av_offset
+gst_play_sink_get_last_sample
+gst_play_sink_convert_sample
+gst_play_sink_reconfigure
+gst_play_sink_plugin_init
 </SECTION>
 
 <SECTION>
