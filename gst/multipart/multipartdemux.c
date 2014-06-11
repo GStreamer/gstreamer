@@ -621,6 +621,9 @@ gst_multipart_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     if (G_UNLIKELY (datalen <= 0)) {
       GST_DEBUG_OBJECT (multipart, "skipping empty content.");
       gst_adapter_flush (adapter, size - datalen);
+    } else if (G_UNLIKELY (!multipart->mime_type)) {
+      GST_DEBUG_OBJECT (multipart, "content has no MIME type.");
+      gst_adapter_flush (adapter, size - datalen);
     } else {
       GstClockTime ts;
 
