@@ -207,6 +207,7 @@
       <xi:include href="xml/gstvideoencoder.xml" />
       <xi:include href="xml/gstvideopool.xml" />
       <xi:include href="xml/gstvideoutils.xml" />
+      <xi:include href="xml/gstnavigation.xml" />
     </chapter>
   </part>
 
