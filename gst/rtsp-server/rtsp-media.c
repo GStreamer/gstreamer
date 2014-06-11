@@ -1323,8 +1323,8 @@ gst_rtsp_media_n_streams (GstRTSPMedia * media)
  *
  * Retrieve the stream with index @idx from @media.
  *
- * Returns: (transfer none): the #GstRTSPStream at index @idx or %NULL when a stream with
- * that index did not exist.
+ * Returns: (nullable) (transfer none): the #GstRTSPStream at index
+ * @idx or %NULL when a stream with that index did not exist.
  */
 GstRTSPStream *
 gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
@@ -1353,8 +1353,9 @@ gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
  *
  * Find a stream in @media with @control as the control uri.
  *
- * Returns: (transfer none): the #GstRTSPStream with control uri @control
- * or %NULL when a stream with that control did not exist.
+ * Returns: (nullable) (transfer none): the #GstRTSPStream with
+ * control uri @control or %NULL when a stream with that control did
+ * not exist.
  */
 GstRTSPStream *
 gst_rtsp_media_find_stream (GstRTSPMedia * media, const gchar * control)

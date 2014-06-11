@@ -216,9 +216,9 @@ gst_rtsp_token_writable_structure (GstRTSPToken * token)
  *
  * Get the string value of @field in @token.
  *
- * Returns: (transfer none): the string value of @field in @token or %NULL when
- * @field is not defined in @token. The string becomes invalid when you free
- * @token.
+ * Returns: (transfer none) (nullable): the string value of @field in
+ * @token or %NULL when @field is not defined in @token. The string
+ * becomes invalid when you free @token.
  */
 const gchar *
 gst_rtsp_token_get_string (GstRTSPToken * token, const gchar * field)

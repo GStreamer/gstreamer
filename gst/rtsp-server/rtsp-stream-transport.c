@@ -317,8 +317,9 @@ gst_rtsp_stream_transport_get_url (GstRTSPStreamTransport * trans)
  *
  * Get the RTP-Info string for @trans and @start_time.
  *
- * Returns: (transfer full): the RTPInfo string for @trans and @start_time or
- * %NULL when the RTP-Info could not be determined. g_free() after usage.
+ * Returns: (transfer full) (nullable): the RTPInfo string for @trans
+ * and @start_time or %NULL when the RTP-Info could not be
+ * determined. g_free() after usage.
  */
 gchar *
 gst_rtsp_stream_transport_get_rtpinfo (GstRTSPStreamTransport * trans,

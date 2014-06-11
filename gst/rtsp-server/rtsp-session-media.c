@@ -239,8 +239,8 @@ gst_rtsp_session_media_get_base_time (GstRTSPSessionMedia * media)
  * Retrieve the RTP-Info header string for all streams in @media
  * with configured transports.
  *
- * Returns: (transfer full): The RTP-Info as a string or %NULL when
- * no RTP-Info could be generated, g_free() after usage.
+ * Returns: (transfer full) (nullable): The RTP-Info as a string or
+ * %NULL when no RTP-Info could be generated, g_free() after usage.
  */
 gchar *
 gst_rtsp_session_media_get_rtpinfo (GstRTSPSessionMedia * media)

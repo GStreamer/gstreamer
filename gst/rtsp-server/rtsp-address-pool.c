@@ -423,8 +423,9 @@ split_range (GstRTSPAddressPool * pool, AddrRange * range, guint skip_addr,
  * allocation. @n_ports consecutive ports will be allocated of which the first
  * one can be found in @port.
  *
- * Returns: a #GstRTSPAddress that should be freed with gst_rtsp_address_free
- * after use or %NULL when no address could be acquired.
+ * Returns: (nullable): a #GstRTSPAddress that should be freed with
+ * gst_rtsp_address_free after use or %NULL when no address could be
+ * acquired.
  */
 GstRTSPAddress *
 gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,

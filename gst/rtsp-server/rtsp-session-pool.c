@@ -266,8 +266,8 @@ gst_rtsp_session_pool_get_n_sessions (GstRTSPSessionPool * pool)
  * Find the session with @sessionid in @pool. The access time of the session
  * will be updated with gst_rtsp_session_touch().
  *
- * Returns: (transfer full): the #GstRTSPSession with @sessionid or %NULL when the session did
- * not exist. g_object_unref() after usage.
+ * Returns: (transfer full) (nullable): the #GstRTSPSession with @sessionid
+ * or %NULL when the session did not exist. g_object_unref() after usage.
  */
 GstRTSPSession *
 gst_rtsp_session_pool_find (GstRTSPSessionPool * pool, const gchar * sessionid)

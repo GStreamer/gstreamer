@@ -804,8 +804,9 @@ gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
  *
  * Get the multicast address of @stream for @family.
  *
- * Returns: (transfer full): the #GstRTSPAddress of @stream or %NULL when no
- * address could be allocated. gst_rtsp_address_free() after usage.
+ * Returns: (transfer full) (nullable): the #GstRTSPAddress of @stream
+ * or %NULL when no address could be allocated. gst_rtsp_address_free()
+ * after usage.
  */
 GstRTSPAddress *
 gst_rtsp_stream_get_multicast_address (GstRTSPStream * stream,
@@ -869,8 +870,8 @@ no_address:
  *
  * Reserve @address and @port as the address and port of @stream.
  *
- * Returns: the #GstRTSPAddress of @stream or %NULL when the address could be
- * reserved. gst_rtsp_address_free() after usage.
+ * Returns: (nullable): the #GstRTSPAddress of @stream or %NULL when
+ * the address could be reserved. gst_rtsp_address_free() after usage.
  */
 GstRTSPAddress *
 gst_rtsp_stream_reserve_address (GstRTSPStream * stream,
@@ -2406,8 +2407,8 @@ gst_rtsp_stream_update_crypto (GstRTSPStream * stream,
  *
  * @stream must be joined to a bin.
  *
- * Returns: (transfer full): the RTP socket or %NULL if no socket could be
- * allocated for @family. Unref after usage
+ * Returns: (transfer full) (nullable): the RTP socket or %NULL if no
+ * socket could be allocated for @family. Unref after usage
  */
 GSocket *
 gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
@@ -2440,8 +2441,8 @@ gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
  *
  * @stream must be joined to a bin.
  *
- * Returns: (transfer full): the RTCP socket or %NULL if no socket could be
- * allocated for @family. Unref after usage
+ * Returns: (transfer full) (nullable): the RTCP socket or %NULL if no
+ * socket could be allocated for @family. Unref after usage
  */
 GSocket *
 gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
