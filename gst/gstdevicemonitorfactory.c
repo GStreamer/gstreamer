@@ -459,8 +459,8 @@ gst_device_monitor_factory_get_metadata_keys (GstDeviceMonitorFactory * factory)
 /**
  * gst_device_monitor_factory_has_classesv:
  * @factory: a #GstDeviceMonitorFactory
- * @classes: a %NULL terminated array of klasses to match, only match if all
- *  classes are matched
+ * @classes: (array zero-terminated=1): a %NULL terminated array of
+ *   klasses to match, only match if all classes are matched
  *
  * Check if @factory matches all of the given classes
  *

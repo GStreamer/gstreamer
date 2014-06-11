@@ -348,10 +348,11 @@ gst_event_get_structure (GstEvent * event)
  *
  * Get a writable version of the structure.
  *
- * Returns: The structure of the event. The structure is still
- * owned by the event, which means that you should not free it and
- * that the pointer becomes invalid when you free the event.
- * This function checks if @event is writable and will never return %NULL.
+ * Returns: (transfer none): The structure of the event. The structure
+ * is still owned by the event, which means that you should not free
+ * it and that the pointer becomes invalid when you free the event.
+ * This function checks if @event is writable and will never return
+ * %NULL.
  *
  * MT safe.
  */
