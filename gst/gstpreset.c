@@ -116,9 +116,9 @@ static gboolean gst_preset_default_save_presets_file (GstPreset * preset);
 /*
  * preset_get_paths:
  * @preset: a #GObject that implements #GstPreset
- * @preset_user_path: location for path or %NULL
- * @preset_app_path: location for path or %NULL
- * @preset_system_path: location for path or %NULL
+ * @preset_user_path: (out) (allow-none): location for path or %NULL
+ * @preset_app_path: (out) (allow-none): location for path or %NULL
+ * @preset_system_path: (out) (allow-none): location for path or %NULL
  *
  * Fetch the preset_path for user local, application specific and system wide
  * settings. Don't free after use.

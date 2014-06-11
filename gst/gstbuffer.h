@@ -457,8 +457,8 @@ gboolean        gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src
 
 /**
  * gst_buffer_replace:
- * @obuf: (inout) (transfer full): pointer to a pointer to a #GstBuffer to be
- *     replaced.
+ * @obuf: (inout) (transfer full) (nullable): pointer to a pointer to
+ *     a #GstBuffer to be replaced.
  * @nbuf: (transfer none) (allow-none): pointer to a #GstBuffer that will
  *     replace the buffer pointed to by @obuf.
  *
@@ -496,7 +496,7 @@ GstBuffer*      gst_buffer_append               (GstBuffer *buf1, GstBuffer *buf
 /**
  * GstBufferForeachMetaFunc:
  * @buffer: a #GstBuffer
- * @meta: a pointer to a #GstMeta
+ * @meta: (out) (nullable): a pointer to a #GstMeta
  * @user_data: user data passed to gst_buffer_foreach_meta()
  *
  * A function that will be called from gst_buffer_foreach_meta(). The @meta

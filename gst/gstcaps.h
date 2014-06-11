@@ -288,8 +288,8 @@ gst_caps_copy (const GstCaps * caps)
 
 /**
  * gst_caps_replace:
- * @old_caps: (inout) (transfer full): pointer to a pointer to a #GstCaps to be
- *     replaced.
+ * @old_caps: (inout) (transfer full) (nullable): pointer to a pointer
+ *     to a #GstCaps to be replaced.
  * @new_caps: (transfer none) (allow-none): pointer to a #GstCaps that will
  *     replace the caps pointed to by @ocaps.
  *

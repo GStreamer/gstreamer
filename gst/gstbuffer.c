@@ -1235,8 +1235,8 @@ gst_buffer_is_all_memory_writable (GstBuffer * buffer)
 /**
  * gst_buffer_get_sizes:
  * @buffer: a #GstBuffer.
- * @offset: (out): a pointer to the offset
- * @maxsize: (out): a pointer to the maxsize
+ * @offset: (out) (allow-none): a pointer to the offset
+ * @maxsize: (out) (allow-none): a pointer to the maxsize
  *
  * Get the total size of the memory blocks in @b.
  *
@@ -1273,8 +1273,8 @@ gst_buffer_get_size (GstBuffer * buffer)
  * @buffer: a #GstBuffer.
  * @idx: an index
  * @length: a length
- * @offset: (out): a pointer to the offset
- * @maxsize: (out): a pointer to the maxsize
+ * @offset: (out) (allow-none): a pointer to the offset
+ * @maxsize: (out) (allow-none): a pointer to the maxsize
  *
  * Get the total size of @length memory blocks stating from @idx in @buffer.
  *

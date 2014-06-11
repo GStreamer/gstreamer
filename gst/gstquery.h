@@ -276,8 +276,8 @@ gst_query_copy (const GstQuery * q)
 #define         gst_query_make_writable(q)      GST_QUERY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (q)))
 /**
  * gst_query_replace:
- * @old_query: (inout) (transfer full): pointer to a pointer to a #GstQuery
- *     to be replaced.
+ * @old_query: (inout) (transfer full) (nullable): pointer to a pointer to a
+ *     #GstQuery to be replaced.
  * @new_query: (allow-none) (transfer none): pointer to a #GstQuery that will
  *     replace the query pointed to by @old_query.
  *

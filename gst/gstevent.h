@@ -275,8 +275,8 @@ GST_EXPORT GType _gst_event_type;
 #define         gst_event_make_writable(ev)   GST_EVENT_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (ev)))
 /**
  * gst_event_replace:
- * @old_event: (inout) (transfer full): pointer to a pointer to a #GstEvent
- *     to be replaced.
+ * @old_event: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstEvent to be replaced.
  * @new_event: (allow-none) (transfer none): pointer to a #GstEvent that will
  *     replace the event pointed to by @old_event.
  *
@@ -301,8 +301,8 @@ gst_event_replace (GstEvent **old_event, GstEvent *new_event)
 
 /**
  * gst_event_steal:
- * @old_event: (inout) (transfer full): pointer to a pointer to a #GstEvent
- *     to be stolen.
+ * @old_event: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstEvent to be stolen.
  *
  * Atomically replace the #GstEvent pointed to by @old_event with %NULL and
  * return the original event.
@@ -321,8 +321,8 @@ gst_event_steal (GstEvent **old_event)
 
 /**
  * gst_event_take:
- * @old_event: (inout) (transfer full): pointer to a pointer to a #GstEvent
- *     to be stolen.
+ * @old_event: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstEvent to be stolen.
  * @new_event: (allow-none) (transfer full): pointer to a #GstEvent that will
  *     replace the event pointed to by @old_event.
  *

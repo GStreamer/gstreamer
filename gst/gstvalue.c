@@ -4785,8 +4785,10 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_intersect:
- * @dest: (out caller-allocates) (transfer full): a uninitialized #GValue that will hold the calculated
- * intersection value. May be %NULL if the resulting set if not needed.
+ * @dest: (out caller-allocates) (transfer full) (allow-none):
+ *   a uninitialized #GValue that will hold the calculated
+ *   intersection value. May be %NULL if the resulting set if not
+ *   needed.
  * @value1: a value to intersect
  * @value2: another value to intersect
  *
@@ -4870,9 +4872,10 @@ gst_value_register_intersect_func (GType type1, GType type2,
 
 /**
  * gst_value_subtract:
- * @dest: (out caller-allocates): the destination value for the result if the
- *     subtraction is not empty. May be %NULL, in which case the resulting set
- *     will not be computed, which can give a fair speedup.
+ * @dest: (out caller-allocates) (allow-none): the destination value
+ *     for the result if the subtraction is not empty. May be %NULL,
+ *     in which case the resulting set will not be computed, which can
+ *     give a fair speedup.
  * @minuend: the value to subtract from
  * @subtrahend: the value to subtract
  *

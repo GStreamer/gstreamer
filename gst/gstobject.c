@@ -310,8 +310,8 @@ gst_object_ref_sink (gpointer object)
 
 /**
  * gst_object_replace:
- * @oldobj: (inout) (transfer full): pointer to a place of a #GstObject to
- *     replace
+ * @oldobj: (inout) (transfer full) (nullable): pointer to a place of
+ *     a #GstObject to replace
  * @newobj: (transfer none): a new #GstObject
  *
  * Atomically modifies a pointer to point to a new object.

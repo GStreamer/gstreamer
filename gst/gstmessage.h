@@ -404,8 +404,8 @@ gst_message_copy (const GstMessage * msg)
 #define         gst_message_make_writable(msg)  GST_MESSAGE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (msg)))
 /**
  * gst_message_replace:
- * @old_message: (inout) (transfer full): pointer to a pointer to a #GstMessage
- *     to be replaced.
+ * @old_message: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstMessage to be replaced.
  * @new_message: (allow-none) (transfer none): pointer to a #GstMessage that will
  *     replace the message pointed to by @old_message.
  *
