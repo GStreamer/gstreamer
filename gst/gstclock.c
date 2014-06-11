@@ -1204,8 +1204,9 @@ not_supported:
  * Get the master clock that @clock is slaved to or %NULL when the clock is
  * not slaved to any master clock.
  *
- * Returns: (transfer full): a master #GstClock or %NULL when this clock is
- *     not slaved to a master clock. Unref after usage.
+ * Returns: (transfer full) (nullable): a master #GstClock or %NULL
+ *     when this clock is not slaved to a master clock. Unref after
+ *     usage.
  *
  * MT safe.
  */

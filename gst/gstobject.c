@@ -649,7 +649,8 @@ had_parent:
  *
  * Free-function: g_free
  *
- * Returns: (transfer full): the name of @object. g_free() after usage.
+ * Returns: (transfer full) (nullable): the name of @object. g_free()
+ * after usage.
  *
  * MT safe. This function grabs and releases @object's LOCK.
  */
@@ -724,8 +725,8 @@ had_parent:
  * Returns the parent of @object. This function increases the refcount
  * of the parent object so you should gst_object_unref() it after usage.
  *
- * Returns: (transfer full): parent of @object, this can be %NULL if @object
- *   has no parent. unref after usage.
+ * Returns: (transfer full) (nullable): parent of @object, this can be
+ *   %NULL if @object has no parent. unref after usage.
  *
  * MT safe. Grabs and releases @object's LOCK.
  */
@@ -992,8 +993,8 @@ gst_object_get_path_string (GstObject * object)
  *
  * Searches the list of properties under control.
  *
- * Returns: a #GstControlBinding or %NULL if the property is not being
- * controlled.
+ * Returns: (nullable): a #GstControlBinding or %NULL if the property
+ * is not being controlled.
  */
 static GstControlBinding *
 gst_object_find_control_binding (GstObject * self, const gchar * name)
@@ -1210,8 +1211,8 @@ gst_object_add_control_binding (GstObject * object, GstControlBinding * binding)
  * Gets the corresponding #GstControlBinding for the property. This should be
  * unreferenced again after use.
  *
- * Returns: (transfer full): the #GstControlBinding for @property_name or %NULL if
- * the property is not controlled.
+ * Returns: (transfer full) (nullable): the #GstControlBinding for
+ * @property_name or %NULL if the property is not controlled.
  */
 GstControlBinding *
 gst_object_get_control_binding (GstObject * object, const gchar * property_name)
@@ -1271,8 +1272,8 @@ gst_object_remove_control_binding (GstObject * object,
  *
  * Gets the value for the given controlled property at the requested time.
  *
- * Returns: the GValue of the property at the given time, or %NULL if the
- * property isn't controlled.
+ * Returns: (nullable): the GValue of the property at the given time,
+ * or %NULL if the property isn't controlled.
  */
 GValue *
 gst_object_get_value (GstObject * object, const gchar * property_name,

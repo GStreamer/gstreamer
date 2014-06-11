@@ -773,8 +773,8 @@ gst_element_create_all_pads (GstElement * element)
  * Retrieves a pad template from @element that is compatible with @compattempl.
  * Pads from compatible templates can be linked together.
  *
- * Returns: (transfer none): a compatible #GstPadTemplate, or %NULL if none
- *     was found. No unreferencing is necessary.
+ * Returns: (transfer none) (nullable): a compatible #GstPadTemplate,
+ *   or %NULL if none was found. No unreferencing is necessary.
  */
 GstPadTemplate *
 gst_element_get_compatible_pad_template (GstElement * element,
@@ -850,8 +850,8 @@ gst_element_get_compatible_pad_template (GstElement * element,
  * #GST_PAD_REQUEST, requests a new pad. Can return %NULL for #GST_PAD_SOMETIMES
  * templates.
  *
- * Returns: (transfer full): the #GstPad, or NULL if one could not be found
- *     or created.
+ * Returns: (transfer full) (nullable): the #GstPad, or %NULL if one
+ *   could not be found or created.
  */
 static GstPad *
 gst_element_get_pad_from_template (GstElement * element, GstPadTemplate * templ)
@@ -891,7 +891,8 @@ gst_element_get_pad_from_template (GstElement * element, GstPadTemplate * templ)
  * Requests a pad from @element. The returned pad should be unlinked and
  * compatible with @templ. Might return an existing pad, or request a new one.
  *
- * Returns: a #GstPad, or %NULL if one could not be found or created.
+ * Returns: (nullable): a #GstPad, or %NULL if one could not be found
+ *   or created.
  */
 static GstPad *
 gst_element_request_compatible_pad (GstElement * element,
@@ -984,8 +985,9 @@ gst_pad_check_link (GstPad * srcpad, GstPad * sinkpad)
  * and if none can be found, it will request a compatible REQUEST pad by looking
  * at the templates of @element.
  *
- * Returns: (transfer full): the #GstPad to which a link can be made, or %NULL
- *     if one cannot be found. gst_object_unref() after usage.
+ * Returns: (transfer full) (nullable): the #GstPad to which a link
+ *   can be made, or %NULL if one cannot be found. gst_object_unref()
+ *   after usage.
  */
 GstPad *
 gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
@@ -2311,8 +2313,9 @@ gst_pad_use_fixed_caps (GstPad * pad)
  * Gets the parent of @pad, cast to a #GstElement. If a @pad has no parent or
  * its parent is not an element, return %NULL.
  *
- * Returns: (transfer full): the parent of the pad. The caller has a
- * reference on the parent, so unref when you're finished with it.
+ * Returns: (transfer full) (nullable): the parent of the pad. The
+ * caller has a reference on the parent, so unref when you're finished
+ * with it.
  *
  * MT safe.
  */
@@ -2957,7 +2960,8 @@ element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
  * owns a reference to it and should use gst_object_unref() on the
  * pad when it is not needed any longer.
  *
- * Returns: (transfer full): unlinked pad of the given direction, %NULL.
+ * Returns: (transfer full) (nullable): unlinked pad of the given
+ * direction, %NULL.
  */
 GstPad *
 gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
@@ -3017,8 +3021,8 @@ gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
  *
- * Returns: (transfer floating) (type Gst.Bin): a newly-created bin,
- *   or %NULL if an error occurred.
+ * Returns: (transfer floating) (type Gst.Bin) (nullable): a
+ *   newly-created bin, or %NULL if an error occurred.
  */
 GstElement *
 gst_parse_bin_from_description (const gchar * bin_description,
@@ -3159,7 +3163,8 @@ gst_util_get_timestamp (void)
  *
  * The complexity of this search function is O(log (num_elements)).
  *
- * Returns: (transfer none): The address of the found element or %NULL if nothing was found
+ * Returns: (transfer none) (nullable): The address of the found
+ * element or %NULL if nothing was found
  */
 gpointer
 gst_util_array_binary_search (gpointer array, guint num_elements,
@@ -3778,8 +3783,9 @@ gst_pad_create_stream_id (GstPad * pad, GstElement * parent,
  * The returned stream-id string should be treated as an opaque string, its
  * contents should not be interpreted.
  *
- * Returns: a newly-allocated copy of the stream-id for @pad, or %NULL.
- *     g_free() the returned string when no longer needed.
+ * Returns: (nullable): a newly-allocated copy of the stream-id for
+ *     @pad, or %NULL.  g_free() the returned string when no longer
+ *     needed.
  *
  * Since: 1.2
  */

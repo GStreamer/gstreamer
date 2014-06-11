@@ -143,10 +143,10 @@ had_parent:
  *
  * Get the buffer associated with @sample
  *
- * Returns: (transfer none): the buffer of @sample or %NULL when there
- *  is no buffer. The buffer remains valid as long as @sample is valid.
- *  If you need to hold on to it for longer than that, take a ref to
- *  the buffer with gst_buffer_ref().
+ * Returns: (transfer none) (nullable): the buffer of @sample or %NULL
+ *  when there is no buffer. The buffer remains valid as long as
+ *  @sample is valid.  If you need to hold on to it for longer than
+ *  that, take a ref to the buffer with gst_buffer_ref().
  */
 GstBuffer *
 gst_sample_get_buffer (GstSample * sample)
@@ -162,10 +162,10 @@ gst_sample_get_buffer (GstSample * sample)
  *
  * Get the caps associated with @sample
  *
- * Returns: (transfer none): the caps of @sample or %NULL when there
- *  is no caps. The caps remain valid as long as @sample is valid.
- *  If you need to hold on to the caps for longer than that, take a ref to
- *  the caps with gst_caps_ref().
+ * Returns: (transfer none) (nullable): the caps of @sample or %NULL
+ *  when there is no caps. The caps remain valid as long as @sample is
+ *  valid.  If you need to hold on to the caps for longer than that,
+ *  take a ref to the caps with gst_caps_ref().
  */
 GstCaps *
 gst_sample_get_caps (GstSample * sample)

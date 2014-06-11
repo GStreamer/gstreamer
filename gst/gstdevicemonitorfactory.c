@@ -105,7 +105,8 @@ gst_device_monitor_factory_finalize (GObject * object)
  * Search for an device monitor factory of the given name. Refs the returned
  * device monitor factory; caller is responsible for unreffing.
  *
- * Returns: (transfer full): #GstDeviceMonitorFactory if found, %NULL otherwise
+ * Returns: (transfer full) (nullable): #GstDeviceMonitorFactory if
+ * found, %NULL otherwise
  *
  * Since: 1.4
  */
@@ -244,8 +245,8 @@ detailserror:
  * Returns the device monitor of the type defined by the given device
  * monitorfactory.
  *
- * Returns: (transfer full): the #GstDeviceMonitor or %NULL if the
- *     device monitor couldn't be created
+ * Returns: (transfer full) (nullable): the #GstDeviceMonitor or %NULL
+ * if the device monitor couldn't be created
  *
  * Since: 1.4
  */
@@ -336,8 +337,8 @@ no_device_monitor:
  * Returns the device monitor of the type defined by the given device
  * monitor factory.
  *
- * Returns: (transfer full): a #GstDeviceMonitor or %NULL if unable to
- * create device monitor
+ * Returns: (transfer full) (nullable): a #GstDeviceMonitor or %NULL
+ * if unable to create device monitor
  *
  * Since: 1.4
  */
@@ -407,8 +408,8 @@ gst_device_monitor_factory_get_device_monitor_type (GstDeviceMonitorFactory *
  *
  * Get the metadata on @factory with @key.
  *
- * Returns: the metadata with @key on @factory or %NULL when there was no
- * metadata with the given @key.
+ * Returns: (nullable): the metadata with @key on @factory or %NULL
+ * when there was no metadata with the given @key.
  *
  * Since: 1.4
  */
@@ -425,7 +426,7 @@ gst_device_monitor_factory_get_metadata (GstDeviceMonitorFactory * factory,
  *
  * Get the available keys for the metadata on @factory.
  *
- * Returns: (transfer full) (element-type utf8) (array zero-terminated=1):
+ * Returns: (transfer full) (element-type utf8) (array zero-terminated=1) (nullable):
  * a %NULL-terminated array of key strings, or %NULL when there is no
  * metadata. Free with g_strfreev() when no longer needed.
  *

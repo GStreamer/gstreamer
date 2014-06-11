@@ -108,8 +108,8 @@ gst_child_proxy_default_get_child_by_name (GstChildProxy * parent,
  * together with gst_object_get_name(). If the interface is to be used with
  * #GObjects, this methods needs to be overridden.
  *
- * Returns: (transfer full): the child object or %NULL if not found. Unref
- *     after usage.
+ * Returns: (transfer full) (nullable): the child object or %NULL if
+ *     not found. Unref after usage.
  *
  * MT safe.
  */
@@ -129,8 +129,8 @@ gst_child_proxy_get_child_by_name (GstChildProxy * parent, const gchar * name)
  *
  * Fetches a child by its number.
  *
- * Returns: (transfer full): the child object or %NULL if not found (index
- *     too high). Unref after usage.
+ * Returns: (transfer full) (nullable): the child object or %NULL if
+ *     not found (index too high). Unref after usage.
  *
  * MT safe.
  */

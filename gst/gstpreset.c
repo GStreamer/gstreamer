@@ -1141,7 +1141,8 @@ gst_preset_set_app_dir (const gchar * app_dir)
  * Gets the directory for application specific presets if set by the
  * application.
  *
- * Returns: the directory or %NULL, don't free or modify the string
+ * Returns: (nullable): the directory or %NULL, don't free or modify
+ * the string
  */
 const gchar *
 gst_preset_get_app_dir (void)

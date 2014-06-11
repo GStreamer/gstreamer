@@ -1006,7 +1006,8 @@ gst_plugin_get_origin (GstPlugin * plugin)
  *
  * There may be plugins that do not have a valid release date set on them.
  *
- * Returns: the date string of the plugin, or %NULL if not available.
+ * Returns: (nullable): the date string of the plugin, or %NULL if not
+ * available.
  */
 const gchar *
 gst_plugin_get_release_date_string (GstPlugin * plugin)
@@ -1039,7 +1040,8 @@ gst_plugin_is_loaded (GstPlugin * plugin)
  * Gets the plugin specific data cache. If it is %NULL there is no cached data
  * stored. This is the case when the registry is getting rebuilt.
  *
- * Returns: (transfer none): The cached data as a #GstStructure or %NULL.
+ * Returns: (transfer none) (nullable): The cached data as a
+ * #GstStructure or %NULL.
  */
 const GstStructure *
 gst_plugin_get_cache_data (GstPlugin * plugin)

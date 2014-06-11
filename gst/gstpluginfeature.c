@@ -90,7 +90,8 @@ gst_plugin_feature_finalize (GObject * object)
  * feature = loaded_feature;
  * ]|
  *
- * Returns: (transfer full): a reference to the loaded feature, or %NULL on error
+ * Returns: (transfer full) (nullable): a reference to the loaded
+ * feature, or %NULL on error
  */
 GstPluginFeature *
 gst_plugin_feature_load (GstPluginFeature * feature)
@@ -185,8 +186,9 @@ gst_plugin_feature_get_rank (GstPluginFeature * feature)
  *
  * Get the plugin that provides this feature.
  *
- * Returns: (transfer full): the plugin that provides this feature, or %NULL.
- *     Unref with gst_object_unref() when no longer needed.
+ * Returns: (transfer full) (nullable): the plugin that provides this
+ *     feature, or %NULL.  Unref with gst_object_unref() when no
+ *     longer needed.
  */
 GstPlugin *
 gst_plugin_feature_get_plugin (GstPluginFeature * feature)
@@ -205,8 +207,9 @@ gst_plugin_feature_get_plugin (GstPluginFeature * feature)
  *
  * Get the name of the plugin that provides this feature.
  *
- * Returns: the name of the plugin that provides this feature, or %NULL if
- *     the feature is not associated with a plugin.
+ * Returns: (nullable): the name of the plugin that provides this
+ *     feature, or %NULL if the feature is not associated with a
+ *     plugin.
  *
  * Since: 1.2
  */

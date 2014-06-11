@@ -1186,6 +1186,8 @@ GstPad*			gst_pad_new_from_static_template	(GstStaticPadTemplate *templ, const g
  * Can return %NULL if the pad did not have a parent.
  *
  * MT safe.
+ *
+ * Returns: (nullable): the parent
  */
 #define gst_pad_get_parent(pad) gst_object_get_parent (GST_OBJECT_CAST (pad))
 

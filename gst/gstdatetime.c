@@ -76,7 +76,8 @@ static void gst_date_time_free (GstDateTime * datetime);
  *
  * Free-function: gst_date_time_unref
  *
- * Returns: (transfer full): a newly created #GstDateTime, or %NULL on error
+ * Returns: (transfer full) (nullable): a newly created #GstDateTime,
+ * or %NULL on error
  */
 GstDateTime *
 gst_date_time_new_from_g_date_time (GDateTime * dt)
@@ -104,7 +105,8 @@ gst_date_time_new_from_g_date_time (GDateTime * dt)
  *
  * Free-function: g_date_time_unref
  *
- * Returns: (transfer full): a newly created #GDateTime, or %NULL on error
+ * Returns: (transfer full) (nullable): a newly created #GDateTime, or
+ * %NULL on error
  */
 GDateTime *
 gst_date_time_to_g_date_time (GstDateTime * datetime)
@@ -725,9 +727,10 @@ done:
  * are (for example): 2012, 2012-06, 2012-06-23, 2012-06-23T23:30Z,
  * 2012-06-23T23:30+0100, 2012-06-23T23:30:59Z, 2012-06-23T23:30:59+0100
  *
- * Returns: a newly allocated string formatted according to ISO 8601 and
- *     only including the datetime fields that are valid, or %NULL in case
- *     there was an error. The string should be freed with g_free().
+ * Returns: (nullable): a newly allocated string formatted according
+ *     to ISO 8601 and only including the datetime fields that are
+ *     valid, or %NULL in case there was an error. The string should
+ *     be freed with g_free().
  */
 gchar *
 gst_date_time_to_iso8601_string (GstDateTime * datetime)
@@ -749,7 +752,8 @@ gst_date_time_to_iso8601_string (GstDateTime * datetime)
  *
  * Free-function: gst_date_time_unref
  *
- * Returns: (transfer full): a newly created #GstDateTime, or %NULL on error
+ * Returns: (transfer full) (nullable): a newly created #GstDateTime,
+ * or %NULL on error
  */
 GstDateTime *
 gst_date_time_new_from_iso8601_string (const gchar * string)

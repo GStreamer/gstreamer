@@ -1585,8 +1585,8 @@ gst_structure_get_double (const GstStructure * structure,
  * The string should not be modified, and remains valid until the next
  * call to a gst_structure_*() function with the given structure.
  *
- * Returns: a pointer to the string or %NULL when the field did not exist
- * or did not contain a string.
+ * Returns: (nullable): a pointer to the string or %NULL when the
+ * field did not exist or did not contain a string.
  */
 const gchar *
 gst_structure_get_string (const GstStructure * structure,
@@ -2374,8 +2374,9 @@ priv_gst_structure_parse_fields (gchar * str, gchar ** end,
  *
  * Free-function: gst_structure_free
  *
- * Returns: (transfer full): a new #GstStructure or %NULL when the string could
- *     not be parsed. Free with gst_structure_free() after use.
+ * Returns: (transfer full) (nullable): a new #GstStructure or %NULL
+ *     when the string could not be parsed. Free with
+ *     gst_structure_free() after use.
  *
  * Since: 1.2
  */
@@ -2396,8 +2397,9 @@ gst_structure_new_from_string (const gchar * string)
  *
  * Free-function: gst_structure_free
  *
- * Returns: (transfer full): a new #GstStructure or %NULL when the string could
- *     not be parsed. Free with gst_structure_free() after use.
+ * Returns: (transfer full) (nullable): a new #GstStructure or %NULL
+ *     when the string could not be parsed. Free with
+ *     gst_structure_free() after use.
  */
 GstStructure *
 gst_structure_from_string (const gchar * string, gchar ** end)

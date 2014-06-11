@@ -233,9 +233,9 @@ unescape_character (const char *scanner)
  * Characters are encoded in PERCENTxy form, where xy is the ASCII hex code
  * for character 16x+y.
  *
- * Return value: a newly allocated string with the unescaped equivalents,
- * or %NULL if @escaped_string contained one of the characters
- * in @illegal_characters.
+ * Return value: (nullable): a newly allocated string with the
+ * unescaped equivalents, or %NULL if @escaped_string contained one of
+ * the characters in @illegal_characters.
  **/
 static char *
 unescape_string (const gchar * escaped_string, const gchar * illegal_characters)
@@ -664,9 +664,10 @@ gst_uri_handler_get_uri_type (GstURIHandler * handler)
  * Gets the list of protocols supported by @handler. This list may not be
  * modified.
  *
- * Returns: (transfer none) (element-type utf8): the supported protocols.
- *     Returns %NULL if the @handler isn't implemented properly, or the @handler
- *     doesn't support any protocols.
+ * Returns: (transfer none) (element-type utf8) (nullable): the
+ *     supported protocols.  Returns %NULL if the @handler isn't
+ *     implemented properly, or the @handler doesn't support any
+ *     protocols.
  */
 const gchar *const *
 gst_uri_handler_get_protocols (GstURIHandler * handler)
@@ -692,9 +693,10 @@ gst_uri_handler_get_protocols (GstURIHandler * handler)
  *
  * Gets the currently handled URI.
  *
- * Returns: (transfer full): the URI currently handled by the @handler.
- *   Returns %NULL if there are no URI currently handled. The
- *   returned string must be freed with g_free() when no longer needed.
+ * Returns: (transfer full) (nullable): the URI currently handled by
+ *   the @handler.  Returns %NULL if there are no URI currently
+ *   handled. The returned string must be freed with g_free() when no
+ *   longer needed.
  */
 gchar *
 gst_uri_handler_get_uri (GstURIHandler * handler)

@@ -85,8 +85,8 @@ _priv_gst_format_initialize (void)
  *
  * Get a printable name for the given format. Do not modify or free.
  *
- * Returns: a reference to the static name of the format or %NULL if
- * the format is unknown.
+ * Returns: (nullable): a reference to the static name of the format
+ * or %NULL if the format is unknown.
  */
 const gchar *
 gst_format_get_name (GstFormat format)
@@ -225,7 +225,8 @@ gst_formats_contains (const GstFormat * formats, GstFormat format)
  *
  * Get details about the given format.
  *
- * Returns: The #GstFormatDefinition for @format or %NULL on failure.
+ * Returns: (nullable): The #GstFormatDefinition for @format or %NULL
+ * on failure.
  *
  * MT safe.
  */

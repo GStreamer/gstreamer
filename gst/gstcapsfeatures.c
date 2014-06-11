@@ -471,8 +471,9 @@ priv_gst_caps_features_append_to_gstring (const GstCapsFeatures * features,
  *
  * Free-function: gst_caps_features_free
  *
- * Returns: (transfer full): a new #GstCapsFeatures or %NULL when the string could
- *     not be parsed. Free with gst_caps_features_free() after use.
+ * Returns: (transfer full) (nullable): a new #GstCapsFeatures or
+ *     %NULL when the string could not be parsed. Free with
+ *     gst_caps_features_free() after use.
  *
  * Since: 1.2
  */

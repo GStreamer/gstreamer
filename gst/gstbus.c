@@ -467,10 +467,11 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
  * @timeout is #GST_CLOCK_TIME_NONE, this function will block forever until a
  * matching message was posted on the bus.
  *
- * Returns: (transfer full): a #GstMessage matching the filter in @types,
- *     or %NULL if no matching message was found on the bus until the timeout
- *     expired. The message is taken from the bus and needs to be unreffed
- *     with gst_message_unref() after usage.
+ * Returns: (transfer full) (nullable): a #GstMessage matching the
+ *     filter in @types, or %NULL if no matching message was found on
+ *     the bus until the timeout expired. The message is taken from
+ *     the bus and needs to be unreffed with gst_message_unref() after
+ *     usage.
  *
  * MT safe.
  */
@@ -568,10 +569,10 @@ beach:
  * #GST_CLOCK_TIME_NONE, this function will block forever until a message was
  * posted on the bus.
  *
- * Returns: (transfer full): the #GstMessage that is on the bus after the
- *     specified timeout or %NULL if the bus is empty after the timeout expired.
- * The message is taken from the bus and needs to be unreffed with
- * gst_message_unref() after usage.
+ * Returns: (transfer full) (nullable): the #GstMessage that is on the
+ *     bus after the specified timeout or %NULL if the bus is empty
+ *     after the timeout expired.  The message is taken from the bus
+ *     and needs to be unreffed with gst_message_unref() after usage.
  *
  * MT safe.
  */
@@ -594,10 +595,10 @@ gst_bus_timed_pop (GstBus * bus, GstClockTime timeout)
  * the bus, all messages will be discarded. It is not possible to use message
  * enums beyond #GST_MESSAGE_EXTENDED in the @events mask.
  *
- * Returns: (transfer full): the next #GstMessage matching @type that is on
- *     the bus, or %NULL if the bus is empty or there is no message matching
- *     @type. The message is taken from the bus and needs to be unreffed with
- *     gst_message_unref() after usage.
+ * Returns: (transfer full) (nullable): the next #GstMessage matching
+ *     @type that is on the bus, or %NULL if the bus is empty or there
+ *     is no message matching @type. The message is taken from the bus
+ *     and needs to be unreffed with gst_message_unref() after usage.
  *
  * MT safe.
  */
@@ -616,9 +617,10 @@ gst_bus_pop_filtered (GstBus * bus, GstMessageType types)
  *
  * Get a message from the bus.
  *
- * Returns: (transfer full): the #GstMessage that is on the bus, or %NULL if the
- *     bus is empty. The message is taken from the bus and needs to be unreffed
- *     with gst_message_unref() after usage.
+ * Returns: (transfer full) (nullable): the #GstMessage that is on the
+ *     bus, or %NULL if the bus is empty. The message is taken from
+ *     the bus and needs to be unreffed with gst_message_unref() after
+ *     usage.
  *
  * MT safe.
  */
@@ -638,8 +640,8 @@ gst_bus_pop (GstBus * bus)
  * on the bus' message queue. A reference is returned, and needs to be unreffed
  * by the caller.
  *
- * Returns: (transfer full): the #GstMessage that is on the bus, or %NULL if the
- *     bus is empty.
+ * Returns: (transfer full) (nullable): the #GstMessage that is on the
+ *     bus, or %NULL if the bus is empty.
  *
  * MT safe.
  */
@@ -1054,9 +1056,10 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  * better handled by setting up an asynchronous bus watch and doing things
  * from there.
  *
- * Returns: (transfer full): the message that was received, or %NULL if the
- *     poll timed out. The message is taken from the bus and needs to be
- *     unreffed with gst_message_unref() after usage.
+ * Returns: (transfer full) (nullable): the message that was received,
+ *     or %NULL if the poll timed out. The message is taken from the
+ *     bus and needs to be unreffed with gst_message_unref() after
+ *     usage.
  */
 GstMessage *
 gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTime timeout)

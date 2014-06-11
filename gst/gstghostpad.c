@@ -79,8 +79,8 @@ static GstPad *gst_proxy_pad_get_target (GstPad * pad);
  *
  * Invoke the default iterate internal links function of the proxy pad.
  *
- * Returns: a #GstIterator of #GstPad, or %NULL if @pad has no parent. Unref each
- * returned pad with gst_object_unref().
+ * Returns: (nullable): a #GstIterator of #GstPad, or %NULL if @pad
+ * has no parent. Unref each returned pad with gst_object_unref().
  */
 GstIterator *
 gst_proxy_pad_iterate_internal_links_default (GstPad * pad, GstObject * parent)
@@ -208,8 +208,8 @@ gst_proxy_pad_get_target (GstPad * pad)
  * The internal pad of a #GstGhostPad is the internally used
  * pad of opposite direction, which is used to link to the target.
  *
- * Returns: (transfer full): the target #GstProxyPad, can be %NULL.
- * Unref target pad after usage.
+ * Returns: (transfer full) (nullable): the target #GstProxyPad, can
+ * be %NULL.  Unref target pad after usage.
  */
 GstProxyPad *
 gst_proxy_pad_get_internal (GstProxyPad * pad)
@@ -653,7 +653,8 @@ construct_failed:
  *
  * The created ghostpad will not have a padtemplate.
  *
- * Returns: (transfer full): a new #GstPad, or %NULL in case of an error.
+ * Returns: (transfer full) (nullable): a new #GstPad, or %NULL in
+ * case of an error.
  */
 GstPad *
 gst_ghost_pad_new_no_target (const gchar * name, GstPadDirection dir)
@@ -679,7 +680,8 @@ gst_ghost_pad_new_no_target (const gchar * name, GstPadDirection dir)
  *
  * Will ref the target.
  *
- * Returns: (transfer floating): a new #GstPad, or %NULL in case of an error.
+ * Returns: (transfer floating) (nullable): a new #GstPad, or %NULL in
+ * case of an error.
  */
 GstPad *
 gst_ghost_pad_new (const gchar * name, GstPad * target)
@@ -719,7 +721,8 @@ set_target_failed:
  *
  * Will ref the target.
  *
- * Returns: (transfer full): a new #GstPad, or %NULL in case of an error.
+ * Returns: (transfer full) (nullable): a new #GstPad, or %NULL in
+ * case of an error.
  */
 
 GstPad *
@@ -761,7 +764,8 @@ set_target_failed:
  * Create a new ghostpad based on @templ, without setting a target. The
  * direction will be taken from the @templ.
  *
- * Returns: (transfer full): a new #GstPad, or %NULL in case of an error.
+ * Returns: (transfer full) (nullable): a new #GstPad, or %NULL in
+ * case of an error.
  */
 GstPad *
 gst_ghost_pad_new_no_target_from_template (const gchar * name,
@@ -783,8 +787,9 @@ gst_ghost_pad_new_no_target_from_template (const gchar * name,
  *
  * Get the target pad of @gpad. Unref target pad after usage.
  *
- * Returns: (transfer full): the target #GstPad, can be %NULL if the ghostpad
- * has no target set. Unref target pad after usage.
+ * Returns: (transfer full) (nullable): the target #GstPad, can be
+ * %NULL if the ghostpad has no target set. Unref target pad after
+ * usage.
  */
 GstPad *
 gst_ghost_pad_get_target (GstGhostPad * gpad)

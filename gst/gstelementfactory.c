@@ -123,7 +123,8 @@ gst_element_factory_finalize (GObject * object)
  * Search for an element factory of the given name. Refs the returned
  * element factory; caller is responsible for unreffing.
  *
- * Returns: (transfer full): #GstElementFactory if found, %NULL otherwise
+ * Returns: (transfer full) (nullable): #GstElementFactory if found,
+ * %NULL otherwise
  */
 GstElementFactory *
 gst_element_factory_find (const gchar * name)
@@ -335,8 +336,8 @@ detailserror:
  * It will be given the name supplied, since all elements require a name as
  * their first argument.
  *
- * Returns: (transfer floating): new #GstElement or %NULL if the element couldn't
- *     be created
+ * Returns: (transfer floating) (nullable): new #GstElement or %NULL
+ *     if the element couldn't be created
  */
 GstElement *
 gst_element_factory_create (GstElementFactory * factory, const gchar * name)
@@ -422,7 +423,8 @@ no_element:
  * consisting of the element factory name and a number.
  * If name is given, it will be given the name supplied.
  *
- * Returns: (transfer floating): new #GstElement or %NULL if unable to create element
+ * Returns: (transfer floating) (nullable): new #GstElement or %NULL
+ * if unable to create element
  */
 GstElement *
 gst_element_factory_make (const gchar * factoryname, const gchar * name)
@@ -500,8 +502,8 @@ gst_element_factory_get_element_type (GstElementFactory * factory)
  *
  * Get the metadata on @factory with @key.
  *
- * Returns: the metadata with @key on @factory or %NULL when there was no
- * metadata with the given @key.
+ * Returns: (nullable): the metadata with @key on @factory or %NULL
+ * when there was no metadata with the given @key.
  */
 const gchar *
 gst_element_factory_get_metadata (GstElementFactory * factory,
@@ -516,7 +518,7 @@ gst_element_factory_get_metadata (GstElementFactory * factory,
  *
  * Get the available keys for the metadata on @factory.
  *
- * Returns: (transfer full) (element-type utf8) (array zero-terminated=1):
+ * Returns: (transfer full) (element-type utf8) (array zero-terminated=1) (nullable):
  * a %NULL-terminated array of key strings, or %NULL when there is no
  * metadata. Free with g_strfreev() when no longer needed.
  */

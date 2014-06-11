@@ -774,7 +774,8 @@ gst_pad_get_property (GObject * object, guint prop_id,
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer floating): a new #GstPad, or %NULL in case of an error.
+ * Returns: (transfer floating) (nullable): a new #GstPad, or %NULL in
+ * case of an error.
  *
  * MT safe.
  */
@@ -795,7 +796,8 @@ gst_pad_new (const gchar * name, GstPadDirection direction)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer floating): a new #GstPad, or %NULL in case of an error.
+ * Returns: (transfer floating) (nullable): a new #GstPad, or %NULL in
+ * case of an error.
  */
 GstPad *
 gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
@@ -816,7 +818,8 @@ gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer floating): a new #GstPad, or %NULL in case of an error.
+ * Returns: (transfer floating) (nullable): a new #GstPad, or %NULL in
+ * case of an error.
  */
 GstPad *
 gst_pad_new_from_static_template (GstStaticPadTemplate * templ,
@@ -2458,9 +2461,9 @@ gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ)
  *
  * Gets the template for @pad.
  *
- * Returns: (transfer full): the #GstPadTemplate from which this pad was
- *     instantiated, or %NULL if this pad has no template. Unref after
- *     usage.
+ * Returns: (transfer full) (nullable): the #GstPadTemplate from which
+ *     this pad was instantiated, or %NULL if this pad has no
+ *     template. Unref after usage.
  */
 GstPadTemplate *
 gst_pad_get_pad_template (GstPad * pad)
@@ -2584,9 +2587,9 @@ gst_pad_get_peer (GstPad * pad)
  * calling gst_pad_query_caps() on @pad and its peer. The caller owns a reference
  * on the resulting caps.
  *
- * Returns: (transfer full): the allowed #GstCaps of the pad link. Unref the
- *     caps when you no longer need it. This function returns %NULL when @pad
- *     has no peer.
+ * Returns: (transfer full) (nullable): the allowed #GstCaps of the
+ *     pad link. Unref the caps when you no longer need it. This
+ *     function returns %NULL when @pad has no peer.
  *
  * MT safe.
  */
@@ -2641,8 +2644,8 @@ no_peer:
  *
  * The caller must free this iterator after use with gst_iterator_free().
  *
- * Returns: a #GstIterator of #GstPad, or %NULL if @pad has no parent. Unref each
- * returned pad with gst_object_unref().
+ * Returns: (nullable): a #GstIterator of #GstPad, or %NULL if @pad
+ * has no parent. Unref each returned pad with gst_object_unref().
  */
 GstIterator *
 gst_pad_iterate_internal_links_default (GstPad * pad, GstObject * parent)
@@ -2707,9 +2710,9 @@ no_parent:
  *
  * Free-function: gst_iterator_free
  *
- * Returns: (transfer full): a new #GstIterator of #GstPad or %NULL when the
- *     pad does not have an iterator function configured. Use
- *     gst_iterator_free() after usage.
+ * Returns: (transfer full) (nullable): a new #GstIterator of #GstPad
+ *     or %NULL when the pad does not have an iterator function
+ *     configured. Use gst_iterator_free() after usage.
  */
 GstIterator *
 gst_pad_iterate_internal_links (GstPad * pad)
@@ -5348,8 +5351,9 @@ gst_pad_get_element_private (GstPad * pad)
  * Returns a new reference of the sticky event of type @event_type
  * from the event.
  *
- * Returns: (transfer full): a #GstEvent of type @event_type or %NULL when no
- * event of @event_type was on @pad. Unref after usage.
+ * Returns: (transfer full) (nullable): a #GstEvent of type
+ * @event_type or %NULL when no event of @event_type was on
+ * @pad. Unref after usage.
  */
 GstEvent *
 gst_pad_get_sticky_event (GstPad * pad, GstEventType event_type, guint idx)

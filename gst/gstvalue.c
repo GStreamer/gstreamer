@@ -5059,7 +5059,8 @@ gst_value_move (GValue * dest, GValue * src)
  *
  * Free-function: g_free
  *
- * Returns: (transfer full): the serialization for @value or %NULL if none exists
+ * Returns: (transfer full) (nullable): the serialization for @value
+ * or %NULL if none exists
  */
 gchar *
 gst_value_serialize (const GValue * value)

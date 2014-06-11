@@ -205,8 +205,8 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
  * Lookup a previously registered meta info structure by its implementation name
  * @impl.
  *
- * Returns: (transfer none): a #GstMetaInfo with @impl, or %NULL when no such
- * metainfo exists.
+ * Returns: (transfer none) (nullable): a #GstMetaInfo with @impl, or
+ * %NULL when no such metainfo exists.
  */
 const GstMetaInfo *
 gst_meta_get_info (const gchar * impl)

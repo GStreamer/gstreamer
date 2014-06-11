@@ -119,8 +119,8 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
  * the stream. The returned memory is valid until the typefinding function
  * returns and must not be freed.
  *
- * Returns: (transfer none) (array length=size): the requested data, or %NULL
- *     if that data is not available.
+ * Returns: (transfer none) (array length=size) (nullable): the
+ *     requested data, or %NULL if that data is not available.
  */
 const guint8 *
 gst_type_find_peek (GstTypeFind * find, gint64 offset, guint size)

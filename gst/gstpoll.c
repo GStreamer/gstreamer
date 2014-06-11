@@ -545,8 +545,8 @@ gst_poll_collect_winsock_events (GstPoll * set)
  *
  * Free-function: gst_poll_free
  *
- * Returns: (transfer full): a new #GstPoll, or %NULL in case of an error.
- *     Free with gst_poll_free().
+ * Returns: (transfer full) (nullable): a new #GstPoll, or %NULL in
+ *     case of an error.  Free with gst_poll_free().
  */
 GstPoll *
 gst_poll_new (gboolean controllable)
@@ -617,8 +617,8 @@ no_socket_pair:
  *
  * Free-function: gst_poll_free
  *
- * Returns: (transfer full): a new #GstPoll, or %NULL in case of an error.
- *     Free with gst_poll_free().
+ * Returns: (transfer full) (nullable): a new #GstPoll, or %NULL in
+ *     case of an error.  Free with gst_poll_free().
  */
 GstPoll *
 gst_poll_new_timer (void)

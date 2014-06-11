@@ -214,8 +214,8 @@ gst_atomic_queue_unref (GstAtomicQueue * queue)
  *
  * Peek the head element of the queue without removing it from the queue.
  *
- * Returns: (transfer none): the head element of @queue or %NULL when
- * the queue is empty.
+ * Returns: (transfer none) (nullable): the head element of @queue or
+ * %NULL when the queue is empty.
  */
 gpointer
 gst_atomic_queue_peek (GstAtomicQueue * queue)

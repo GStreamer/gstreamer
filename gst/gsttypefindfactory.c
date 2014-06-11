@@ -177,8 +177,8 @@ gst_type_find_factory_get_caps (GstTypeFindFactory * factory)
  * copy it using g_strdupv().  This function may return %NULL to indicate
  * a 0-length list.
  *
- * Returns: (transfer none) (array zero-terminated=1) (element-type utf8): a
- *     %NULL-terminated array of extensions associated with this factory
+ * Returns: (transfer none) (array zero-terminated=1) (element-type utf8) (nullable):
+ *     a %NULL-terminated array of extensions associated with this factory
  */
 const gchar *const *
 gst_type_find_factory_get_extensions (GstTypeFindFactory * factory)

@@ -221,8 +221,9 @@ gst_allocator_register (const gchar * name, GstAllocator * allocator)
  * Find a previously registered allocator with @name. When @name is %NULL, the
  * default allocator will be returned.
  *
- * Returns: (transfer full): a #GstAllocator or %NULL when the allocator with @name was not
- * registered. Use gst_object_unref() to release the allocator after usage.
+ * Returns: (transfer full) (nullable): a #GstAllocator or %NULL when
+ * the allocator with @name was not registered. Use gst_object_unref()
+ * to release the allocator after usage.
  */
 GstAllocator *
 gst_allocator_find (const gchar * name)

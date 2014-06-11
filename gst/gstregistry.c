@@ -868,8 +868,9 @@ gst_registry_plugin_name_filter (GstPlugin * plugin, const gchar * name)
  * Find the plugin with the given name in the registry.
  * The plugin will be reffed; caller is responsible for unreffing.
  *
- * Returns: (transfer full): the plugin with the given name or %NULL if the
- *     plugin was not found. gst_object_unref() after usage.
+ * Returns: (transfer full) (nullable): the plugin with the given name
+ *     or %NULL if the plugin was not found. gst_object_unref() after
+ *     usage.
  *
  * MT safe.
  */
@@ -902,8 +903,9 @@ gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
  *
  * Find the pluginfeature with the given name and type in the registry.
  *
- * Returns: (transfer full): the pluginfeature with the given name and type
- *     or %NULL if the plugin was not found. gst_object_unref() after usage.
+ * Returns: (transfer full) (nullable): the pluginfeature with the
+ *     given name and type or %NULL if the plugin was not
+ *     found. gst_object_unref() after usage.
  *
  * MT safe.
  */
@@ -1055,8 +1057,8 @@ gst_registry_lookup_bn (GstRegistry * registry, const char *basename)
  * Look up a plugin in the given registry with the given filename.
  * If found, plugin is reffed.
  *
- * Returns: (transfer full): the #GstPlugin if found, or %NULL if not.
- *     gst_object_unref() after usage.
+ * Returns: (transfer full) (nullable): the #GstPlugin if found, or
+ *     %NULL if not.  gst_object_unref() after usage.
  */
 GstPlugin *
 gst_registry_lookup (GstRegistry * registry, const char *filename)

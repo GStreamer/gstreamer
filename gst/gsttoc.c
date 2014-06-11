@@ -360,7 +360,8 @@ gst_toc_entry_find_sub_entry (const GstTocEntry * entry, const gchar * uid)
  *
  * Find #GstTocEntry with given @uid in the @toc.
  *
- * Returns: (transfer none): #GstTocEntry with specified @uid from the @toc, or %NULL if not found.
+ * Returns: (transfer none) (nullable): #GstTocEntry with specified
+ * @uid from the @toc, or %NULL if not found.
  */
 GstTocEntry *
 gst_toc_find_entry (const GstToc * toc, const gchar * uid)
@@ -393,8 +394,9 @@ gst_toc_find_entry (const GstToc * toc, const gchar * uid)
  *
  * Copy #GstTocEntry with all subentries (deep copy).
  *
- * Returns: newly allocated #GstTocEntry in case of success, %NULL otherwise;
- * free it when done with gst_toc_entry_unref().
+ * Returns: (nullable): newly allocated #GstTocEntry in case of
+ * success, %NULL otherwise; free it when done with
+ * gst_toc_entry_unref().
  */
 static GstTocEntry *
 gst_toc_entry_copy (const GstTocEntry * entry)
@@ -437,8 +439,8 @@ gst_toc_entry_copy (const GstTocEntry * entry)
  *
  * Copy #GstToc with all subentries (deep copy).
  *
- * Returns: newly allocated #GstToc in case of success, %NULL otherwise;
- * free it when done with gst_toc_unref().
+ * Returns: (nullable): newly allocated #GstToc in case of success,
+ * %NULL otherwise; free it when done with gst_toc_unref().
  */
 static GstToc *
 gst_toc_copy (const GstToc * toc)

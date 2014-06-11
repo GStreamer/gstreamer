@@ -691,7 +691,8 @@ gst_mini_object_set_qdata (GstMiniObject * object, GQuark quark,
  * This function gets back user data pointers stored via
  * gst_mini_object_set_qdata().
  *
- * Returns: (transfer none): The user data pointer set, or %NULL
+ * Returns: (transfer none) (nullable): The user data pointer set, or
+ * %NULL
  */
 gpointer
 gst_mini_object_get_qdata (GstMiniObject * object, GQuark quark)
@@ -721,7 +722,8 @@ gst_mini_object_get_qdata (GstMiniObject * object, GQuark quark)
  * and removes the data from @object without invoking its destroy() function (if
  * any was set).
  *
- * Returns: (transfer full): The user data pointer set, or %NULL
+ * Returns: (transfer full) (nullable): The user data pointer set, or
+ * %NULL
  */
 gpointer
 gst_mini_object_steal_qdata (GstMiniObject * object, GQuark quark)

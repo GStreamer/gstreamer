@@ -1633,7 +1633,8 @@ no_function:
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: (transfer full): a #GstIterator of #GstElement, or %NULL
+ * Returns: (transfer full) (nullable): a #GstIterator of #GstElement,
+ * or %NULL
  */
 GstIterator *
 gst_bin_iterate_elements (GstBin * bin)
@@ -1673,7 +1674,8 @@ iterate_child_recurse (GstIterator * it, const GValue * item)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: (transfer full): a #GstIterator of #GstElement, or %NULL
+ * Returns: (transfer full) (nullable): a #GstIterator of #GstElement,
+ * or %NULL
  */
 GstIterator *
 gst_bin_iterate_recurse (GstBin * bin)
@@ -1730,7 +1732,8 @@ sink_iterator_filter (const GValue * vchild, GValue * vbin)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: (transfer full): a #GstIterator of #GstElement, or %NULL
+ * Returns: (transfer full) (nullable): a #GstIterator of #GstElement,
+ * or %NULL
  */
 GstIterator *
 gst_bin_iterate_sinks (GstBin * bin)
@@ -1790,7 +1793,8 @@ src_iterator_filter (const GValue * vchild, GValue * vbin)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: (transfer full): a #GstIterator of #GstElement, or %NULL
+ * Returns: (transfer full) (nullable): a #GstIterator of #GstElement,
+ * or %NULL
  */
 GstIterator *
 gst_bin_iterate_sources (GstBin * bin)
@@ -2166,7 +2170,8 @@ gst_bin_sort_iterator_new (GstBin * bin)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: (transfer full): a #GstIterator of #GstElement, or %NULL
+ * Returns: (transfer full) (nullable): a #GstIterator of #GstElement,
+ * or %NULL
  */
 GstIterator *
 gst_bin_iterate_sorted (GstBin * bin)
@@ -4126,7 +4131,8 @@ compare_name (const GValue * velement, const gchar * name)
  *
  * MT safe.  Caller owns returned reference.
  *
- * Returns: (transfer full): the #GstElement with the given name, or %NULL
+ * Returns: (transfer full) (nullable): the #GstElement with the given
+ * name, or %NULL
  */
 GstElement *
 gst_bin_get_by_name (GstBin * bin, const gchar * name)
@@ -4169,7 +4175,8 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
  *
  * MT safe.  Caller owns returned reference.
  *
- * Returns: (transfer full): the #GstElement with the given name, or %NULL
+ * Returns: (transfer full) (nullable): the #GstElement with the given
+ * name, or %NULL
  */
 GstElement *
 gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
@@ -4269,8 +4276,9 @@ gst_bin_get_by_interface (GstBin * bin, GType iface)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: (transfer full): a #GstIterator of #GstElement for all elements
- *          in the bin implementing the given interface, or %NULL
+ * Returns: (transfer full) (nullable): a #GstIterator of #GstElement
+ *     for all elements in the bin implementing the given interface,
+ *     or %NULL
  */
 GstIterator *
 gst_bin_iterate_all_by_interface (GstBin * bin, GType iface)

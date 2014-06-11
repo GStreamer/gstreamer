@@ -225,8 +225,8 @@ gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
  * This function takes ownership of old @mem and returns a reference to a new
  * #GstMemory.
  *
- * Returns: (transfer full): a #GstMemory object mapped with @flags or %NULL when
- * a mapping is not possible.
+ * Returns: (transfer full) (nullable): a #GstMemory object mapped
+ * with @flags or %NULL when a mapping is not possible.
  */
 GstMemory *
 gst_memory_make_mapped (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
