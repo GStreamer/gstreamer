@@ -766,7 +766,7 @@ gst_pad_get_property (GObject * object, guint prop_id,
 
 /**
  * gst_pad_new:
- * @name: the name of the new pad.
+ * @name: (allow-none): the name of the new pad.
  * @direction: the #GstPadDirection of the pad.
  *
  * Creates a new pad with the given name in the given direction.
@@ -789,7 +789,7 @@ gst_pad_new (const gchar * name, GstPadDirection direction)
 /**
  * gst_pad_new_from_template:
  * @templ: the pad template to use
- * @name: the name of the element
+ * @name: (allow-none): the name of the element
  *
  * Creates a new pad with the given name from the given template.
  * If name is %NULL, a guaranteed unique name (across all pads)

@@ -823,8 +823,8 @@ gst_buffer_pool_config_set_params (GstStructure * config, GstCaps * caps,
 /**
  * gst_buffer_pool_config_set_allocator:
  * @config: a #GstBufferPool configuration
- * @allocator: a #GstAllocator
- * @params: #GstAllocationParams
+ * @allocator: (allow-none): a #GstAllocator
+ * @params: (allow-none): #GstAllocationParams
  *
  * Set the @allocator and @params on @config.
  *

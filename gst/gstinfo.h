@@ -197,7 +197,7 @@ struct _GstDebugCategory {
 
 /**
  * GST_STR_NULL:
- * @str: The string to check.
+ * @str: (allow-none): The string to check.
  *
  * Macro to use when a string must not be %NULL, but may be %NULL. If the string
  * is %NULL, "(NULL)" is printed instead.

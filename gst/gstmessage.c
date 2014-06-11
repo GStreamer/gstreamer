@@ -256,8 +256,8 @@ gst_message_init (GstMessageImpl * message, GstMessageType type,
  * gst_message_new_custom:
  * @type: The #GstMessageType to distinguish messages
  * @src: The object originating the message.
- * @structure: (transfer full): the structure for the message. The message
- *     will take ownership of the structure.
+ * @structure: (transfer full) (allow-none): the structure for the
+ *     message. The message will take ownership of the structure.
  *
  * Create a new custom-typed message. This can be used for anything not
  * handled by other message-specific functions to pass a message to the
@@ -785,8 +785,8 @@ gst_message_new_application (GstObject * src, GstStructure * structure)
 /**
  * gst_message_new_element:
  * @src: (transfer none): The object originating the message.
- * @structure: (transfer full): The structure for the message. The message
- *     will take ownership of the structure.
+ * @structure: (transfer full): The structure for the
+ *     message. The message will take ownership of the structure.
  *
  * Create a new element-specific message. This is meant as a generic way of
  * allowing one-way communication from an element to an application, for example

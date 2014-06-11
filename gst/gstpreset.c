@@ -1069,7 +1069,7 @@ gst_preset_delete_preset (GstPreset * preset, const gchar * name)
  * @preset: a #GObject that implements #GstPreset
  * @name: preset name
  * @tag: meta data item name
- * @value: new value
+ * @value: (allow-none): new value
  *
  * Sets a new @value for an existing meta data item or adds a new item. Meta
  * data @tag names can be something like e.g. "comment". Supplying %NULL for the

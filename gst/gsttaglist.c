@@ -1133,8 +1133,8 @@ gst_tag_list_insert (GstTagList * into, const GstTagList * from,
 
 /**
  * gst_tag_list_merge:
- * @list1: first list to merge
- * @list2: second list to merge
+ * @list1: (allow-none): first list to merge
+ * @list2: (allow-none): second list to merge
  * @mode: the mode to use
  *
  * Merges the two given lists into a new list. If one of the lists is %NULL, a

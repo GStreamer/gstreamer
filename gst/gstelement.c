@@ -1731,7 +1731,7 @@ gst_element_post_message (GstElement * element, GstMessage * message)
 
 /**
  * _gst_element_error_printf:
- * @format: the printf-like format to use, or %NULL
+ * @format: (allow-none): the printf-like format to use, or %NULL
  *
  * This function is only used internally by the gst_element_error() macro.
  *
