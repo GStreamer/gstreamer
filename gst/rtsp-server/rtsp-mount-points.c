@@ -221,7 +221,7 @@ has_prefix (DataItem * str, DataItem * prefix)
  * gst_rtsp_mount_points_match:
  * @mounts: a #GstRTSPMountPoints
  * @path: a mount point
- * @matched: (out): the amount of @path matched
+ * @matched: (out) (allow-none): the amount of @path matched
  *
  * Find the factory in @mounts that has the longest match with @path.
  *

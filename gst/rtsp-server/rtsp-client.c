@@ -3015,7 +3015,8 @@ gst_rtsp_client_handle_message (GstRTSPClient * client,
 /**
  * gst_rtsp_client_send_message:
  * @client: a #GstRTSPClient
- * @session: (transfer none): a #GstRTSPSession to send the message to or %NULL
+ * @session: (allow-none) (transfer none): a #GstRTSPSession to send
+ *   the message to or %NULL
  * @message: (transfer none): The #GstRTSPMessage to send
  *
  * Send a message message to the remote end. @message must be a

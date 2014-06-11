@@ -2217,7 +2217,8 @@ no_rtpbin:
 /**
  * gst_rtsp_media_prepare:
  * @media: a #GstRTSPMedia
- * @thread: (transfer full): a #GstRTSPThread to run the bus handler or %NULL
+ * @thread: (transfer full) (allow-none): a #GstRTSPThread to run the
+ *   bus handler or %NULL
  *
  * Prepare @media for streaming. This function will create the objects
  * to manage the streaming. A pipeline must have been set on @media with
@@ -2572,7 +2573,7 @@ not_prepared:
 /**
  * gst_rtsp_media_get_time_provider:
  * @media: a #GstRTSPMedia
- * @address: an address or %NULL
+ * @address: (allow-none): an address or %NULL
  * @port: a port or 0
  *
  * Get the #GstNetTimeProvider for the clock used by @media. The time provider
