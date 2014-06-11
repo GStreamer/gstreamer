@@ -486,6 +486,21 @@ gst_play_sink_plugin_init
 </SECTION>
 
 <SECTION>
+<FILE>element-streamsynchronizer</FILE>
+<TITLE>streamsynchronizer</TITLE>
+GstStreamSynchronizer
+<SUBSECTION Standard>
+GST_TYPE_STREAM_SYNCHRONIZER
+GST_STREAM_SYNCHRONIZER
+GST_STREAM_SYNCHRONIZER_CLASS
+GST_IS_STREAM_SYNCHRONIZER
+GST_IS_STREAM_SYNCHRONIZER_CLASS
+GstStreamSynchronizerClass
+gst_stream_synchronizer_get_type
+gst_stream_synchronizer_plugin_init
+</SECTION>
+
+<SECTION>
 <FILE>element-subtitleoverlay</FILE>
 <TITLE>subtitleoverlay</TITLE>
 GstSubtitleOverlay
