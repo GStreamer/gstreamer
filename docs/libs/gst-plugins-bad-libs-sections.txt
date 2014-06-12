@@ -695,10 +695,14 @@ GstInsertBinPrivate
 <FILE>gstglapi</FILE>
 <TITLE>GstGLAPI</TITLE>
 GstGLAPI
-gst_gl_api_string
+gst_gl_api_to_string
+gst_gl_api_from_string
+GstGLPlatform
+gst_gl_platform_to_string
+gst_gl_platform_from_string
 gst_gl_check_extension
-GST_GL_CHECK_GL_VERSION
 <SUBSECTION Private>
+GST_GL_CHECK_GL_VERSION
 GSTGLAPI
 GST_GL_EXT_BEGIN
 GST_GL_EXT_END
@@ -730,7 +734,7 @@ GST_GL_COLOR_CONVERT_VIDEO_CAPS
 GstGLColorConvert
 GstGLColorConvertClass
 gst_gl_color_convert_new
-gst_gl_color_convert_init_format
+gst_gl_color_convert_set_format
 gst_gl_color_convert_perform
 <SUBSECTION Standard>
 GstGLColorConvertPrivate
@@ -761,7 +765,7 @@ gst_gl_context_thread_add
 gst_gl_context_get_display
 gst_gl_context_get_gl_api
 gst_gl_context_get_gl_context
-gst_gl_context_get_platform
+gst_gl_context_get_gl_platform
 gst_gl_context_check_feature
 gst_gl_context_check_gl_version
 <SUBSECTION Standard>
@@ -1032,9 +1036,7 @@ GstGLUpload
 gst_gl_upload_new
 gst_gl_upload_set_format
 gst_gl_upload_get_format
-gst_gl_upload_add_video_gl_texture_upload_meta
 gst_gl_upload_perform_with_data
-gst_gl_upload_perform_with_memory
 gst_gl_upload_perform_with_gl_texture_upload_meta
 gst_gl_upload_perform_with_buffer
 gst_gl_upload_release_buffer
