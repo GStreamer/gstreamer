@@ -576,8 +576,8 @@ gst_collect_pads_set_flush_function (GstCollectPads * pads,
  * @pads: the collectpads to use
  * @pad: (transfer none): the pad to add
  * @size: the size of the returned #GstCollectData structure
- * @destroy_notify: function to be called before the returned #GstCollectData
- * structure is freed
+ * @destroy_notify: (scope async): function to be called before the returned
+ *   #GstCollectData structure is freed
  * @lock: whether to lock this pad in usual waiting state
  *
  * Add a pad to the collection of collect pads. The pad has to be
@@ -606,8 +606,8 @@ gst_collect_pads_set_flush_function (GstCollectPads * pads,
  *
  * MT safe.
  *
- * Returns: (nullable): a new #GstCollectData to identify the new pad. Or %NULL
- *   if wrong parameters are supplied.
+ * Returns: (nullable) (transfer none): a new #GstCollectData to identify the
+ *   new pad. Or %NULL if wrong parameters are supplied.
  */
 GstCollectData *
 gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size,

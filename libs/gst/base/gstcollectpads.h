@@ -279,7 +279,8 @@ typedef void (*GstCollectPadsFlushFunction) (GstCollectPads *pads, gpointer user
 
 /**
  * GstCollectPads:
- * @data: #GList of #GstCollectData managed by this #GstCollectPads.
+ * @data: (element-type GstBase.CollectData): #GList of #GstCollectData managed
+ *   by this #GstCollectPads.
  *
  * Collectpads object.
  */

@@ -1165,7 +1165,7 @@ gst_adapter_prev_dts_at_offset (GstAdapter * adapter, gsize offset,
  * @offset: offset into the adapter data from which to start scanning, returns
  *          the last scanned position.
  * @size: number of bytes to scan from offset
- * @value: pointer to uint32 to return matching data
+ * @value: (out) (allow-none): pointer to uint32 to return matching data
  *
  * Scan for pattern @pattern with applied mask @mask in the adapter data,
  * starting from offset @offset.  If a match is found, the value that matched
