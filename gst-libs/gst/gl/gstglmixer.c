@@ -1347,12 +1347,16 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
 
   mix->out_info = info;
 
+  if (mix->current_caps == NULL ||
+      gst_caps_is_equal (caps, mix->current_caps) == FALSE) {
+    gst_caps_replace (&mix->current_caps, caps);
+    mix->send_caps = TRUE;
+  }
+
   GST_GL_MIXER_UNLOCK (mix);
 
-  ret = gst_pad_set_caps (mix->srcpad, caps);
+  ret = gst_gl_mixer_do_bufferpool (mix, caps);
 
-  if (ret)
-    ret = gst_gl_mixer_do_bufferpool (mix, caps);
 done:
   priv->negotiated = ret;
 
@@ -1847,6 +1851,28 @@ gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
     gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
+  if (mix->send_stream_start) {
+    gchar s_id[32];
+
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "mix-%08x", g_random_int ());
+    if (!gst_pad_push_event (mix->srcpad, gst_event_new_stream_start (s_id))) {
+      GST_WARNING_OBJECT (mix->srcpad, "Sending stream start event failed");
+    }
+    mix->send_stream_start = FALSE;
+  }
+
+  if (gst_pad_check_reconfigure (mix->srcpad))
+    gst_gl_mixer_update_src_caps (mix);
+
+  if (mix->send_caps) {
+    if (!gst_pad_push_event (mix->srcpad,
+            gst_event_new_caps (mix->current_caps))) {
+      GST_WARNING_OBJECT (mix->srcpad, "Sending caps event failed");
+    }
+    mix->send_caps = FALSE;
+  }
+
   GST_GL_MIXER_LOCK (mix);
 
   if (mix->newseg_pending) {
@@ -2292,6 +2318,9 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
+      mix->send_stream_start = TRUE;
+      mix->send_caps = TRUE;
+      gst_caps_replace (&mix->current_caps, NULL);
       GST_LOG_OBJECT (mix, "starting collectpads");
       gst_collect_pads_start (mix->collect);
       break;
