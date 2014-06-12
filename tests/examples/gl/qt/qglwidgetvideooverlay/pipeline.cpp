@@ -156,17 +156,19 @@ void Pipeline::exposeRequested()
 //-----------------------------------------------------------------------
 
 //client reshape callback
-void Pipeline::reshapeCallback (uint width, uint height)
+gboolean Pipeline::reshapeCallback (void *sink, guint width, guint height, gpointer data)
 {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);  
-    glMatrixMode(GL_MODELVIEW);	
+    glMatrixMode(GL_MODELVIEW);
+
+    return TRUE;
 }
 
 //client draw callback
-gboolean Pipeline::drawCallback (uint texture, uint width, uint height)
+gboolean Pipeline::drawCallback (void *sink, guint texture, guint width, guint height, gpointer data)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;				

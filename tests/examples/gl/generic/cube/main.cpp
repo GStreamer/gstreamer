@@ -65,17 +65,19 @@ static gboolean bus_call (GstBus *bus, GstMessage *msg, gpointer data)
 }
 
 //client reshape callback
-static void reshapeCallback (GLuint width, GLuint height, gpointer data)
+static gboolean reshapeCallback (void *gl_sink, GLuint width, GLuint height, gpointer data)
 {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);
     glMatrixMode(GL_MODELVIEW);
+
+    return TRUE;
 }
 
 //client draw callback
-static gboolean drawCallback (GLuint texture, GLuint width, GLuint height, gpointer data)
+static gboolean drawCallback (void * gl_sink, GLuint texture, GLuint width, GLuint height, gpointer data)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;
@@ -200,9 +202,8 @@ gint main (gint argc, gchar *argv[])
 
     /* configure elements */
     g_object_set(G_OBJECT(videosrc), "num-buffers", 400, NULL);
-    g_object_set(G_OBJECT(glimagesink), "client-reshape-callback", reshapeCallback, NULL);
-    g_object_set(G_OBJECT(glimagesink), "client-draw-callback", drawCallback, NULL);
-    g_object_set(G_OBJECT(glimagesink), "client-data", NULL, NULL);
+    g_signal_connect(G_OBJECT(glimagesink), "client-reshape", G_CALLBACK (reshapeCallback), NULL);
+    g_signal_connect(G_OBJECT(glimagesink), "client-draw", G_CALLBACK (drawCallback), NULL);
 
     /* add elements */
     gst_bin_add_many (GST_BIN (pipeline), videosrc, glimagesink, NULL);

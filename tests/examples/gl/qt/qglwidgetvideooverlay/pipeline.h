@@ -59,8 +59,8 @@ private:
     WId winId() const { return m_winId; }
     void doExpose() const;
 
-    static void reshapeCallback (uint width, uint height);
-    static gboolean drawCallback (uint texture, uint width, uint height);
+    static gboolean reshapeCallback (void *sink, guint width, guint height, gpointer data);
+    static gboolean drawCallback (void *sink, guint texture, guint width, guint height, gpointer data);
     static gboolean bus_call (GstBus *bus, GstMessage *msg, Pipeline* p);
     static void cb_new_pad (GstElement* decodebin, GstPad* pad, gboolean last, Pipeline* p);
     static gboolean cb_expose (gpointer data);
