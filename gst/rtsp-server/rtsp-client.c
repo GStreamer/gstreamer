@@ -61,6 +61,7 @@ struct _GstRTSPClientPrivate
   GMutex send_lock;
   GstRTSPConnection *connection;
   GstRTSPWatch *watch;
+  GMainContext *watch_context;
   guint close_seq;
   gchar *server_ip;
   gboolean is_ipv6;
@@ -363,6 +364,9 @@ gst_rtsp_client_finalize (GObject * obj)
 
   if (priv->watch)
     g_source_destroy ((GSource *) priv->watch);
+
+  if (priv->watch_context)
+    g_main_context_unref (priv->watch_context);
 
   client_cleanup_sessions (client);
 
@@ -3230,6 +3234,8 @@ handle_tunnel (GstRTSPClient * client)
     /* the old client owns the tunnel now, the new one will be freed */
     g_source_destroy ((GSource *) priv->watch);
     priv->watch = NULL;
+    g_main_context_unref (priv->watch_context);
+    priv->watch_context = NULL;
     gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
   }
 
@@ -3314,6 +3320,8 @@ client_watch_notify (GstRTSPClient * client)
 
   GST_INFO ("client %p: watch destroyed", client);
   priv->watch = NULL;
+  g_main_context_unref (priv->watch_context);
+  priv->watch_context = NULL;
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
   g_object_unref (client);
 }
@@ -3342,6 +3350,9 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
   priv = client->priv;
   g_return_val_if_fail (priv->connection != NULL, 0);
   g_return_val_if_fail (priv->watch == NULL, 0);
+
+  /* make sure noone will free the context before the watch is destroyed */
+  priv->watch_context = g_main_context_ref (context);
 
   /* create watch for the connection and attach */
   priv->watch = gst_rtsp_watch_new (priv->connection, &watch_funcs,
