@@ -1713,7 +1713,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
             if (!gst_rtp_h263_pay_mode_B_fragment (rtph263pay, context,
                     context->gobs[i])) {
               GST_ERROR ("There was an error fragmenting in mode B");
-              return GST_FLOW_ERROR;
+              ret = GST_FLOW_ERROR;
+              goto end;
             }
           } else {
             //IMPLEMENT C mode
