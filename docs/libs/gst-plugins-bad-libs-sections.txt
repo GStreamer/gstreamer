@@ -1053,6 +1053,26 @@ GstGLUploadPrivate
 </SECTION>
 
 <SECTION>
+<FILE>gstgluploadmeta</FILE>
+<TITLE>GstGLUploadMeta</TITLE>
+GstGLUploadMeta
+gst_gl_upload_meta_new
+gst_gl_upload_meta_set_format
+gst_gl_upload_meta_get_format
+gst_gl_upload_meta_add_to_buffer
+<SUBSECTION Standard>
+GST_GL_UPLOAD_META
+GST_GL_UPLOAD_META_CAST
+GST_GL_UPLOAD_META_CLASS
+GST_GL_UPLOAD_META_GET_CLASS
+gst_gl_upload_meta_get_type
+GST_IS_GL_UPLOAD_META
+GST_IS_GL_UPLOAD_META_CLASS
+GST_TYPE_GL_UPLOAD_META
+GstGLUploadMetaPrivate
+</SECTION>
+
+<SECTION>
 <FILE>gstglutils</FILE>
 <TITLE>Utilities</TITLE>
 GLCB

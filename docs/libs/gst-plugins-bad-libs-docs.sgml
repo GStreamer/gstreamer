@@ -74,6 +74,7 @@
       <xi:include href="xml/gstglmixer.xml"/>
       <xi:include href="xml/gstglshader.xml"/>
       <xi:include href="xml/gstglupload.xml"/>
+      <xi:include href="xml/gstgluploadmeta.xml"/>
       <xi:include href="xml/gstglutils.xml"/>
       <xi:include href="xml/gstglwindow.xml"/>
       <xi:include href="xml/gstglwindowandroid.xml"/>
