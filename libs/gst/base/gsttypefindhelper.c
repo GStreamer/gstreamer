@@ -75,8 +75,8 @@ typedef struct
  * for performance reasons, but mostly because pointers returned by us need
  * to stay valid until typefinding has finished)
  *
- * Returns: address of the data or %NULL if buffer does not cover the
- * requested range.
+ * Returns: (nullable): address of the data or %NULL if buffer does not cover
+ * the requested range.
  */
 static const guint8 *
 helper_find_peek (gpointer data, gint64 offset, guint size)
@@ -269,8 +269,8 @@ helper_find_get_length (gpointer data)
  *
  * Free-function: gst_caps_unref
  *
- * Returns: (transfer full): the #GstCaps corresponding to the data stream.
- *     Returns %NULL if no #GstCaps matches the data stream.
+ * Returns: (transfer full) (nullable): the #GstCaps corresponding to the data
+ *     stream.  Returns %NULL if no #GstCaps matches the data stream.
  */
 GstCaps *
 gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
@@ -388,8 +388,8 @@ gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
  *
  * Free-function: gst_caps_unref
  *
- * Returns: (transfer full): the #GstCaps corresponding to the data stream.
- *     Returns %NULL if no #GstCaps matches the data stream.
+ * Returns: (transfer full) (nullable): the #GstCaps corresponding to the data
+ *     stream.  Returns %NULL if no #GstCaps matches the data stream.
  */
 
 GstCaps *
@@ -426,8 +426,8 @@ typedef struct
  *
  * Get data pointer within a buffer.
  *
- * Returns: address inside the buffer or %NULL if buffer does not cover the
- * requested range.
+ * Returns: (nullable): address inside the buffer or %NULL if buffer does not
+ * cover the requested range.
  */
 static const guint8 *
 buf_helper_find_peek (gpointer data, gint64 off, guint size)
@@ -499,9 +499,9 @@ buf_helper_find_suggest (gpointer data, GstTypeFindProbability probability,
  *
  * Free-function: gst_caps_unref
  *
- * Returns: (transfer full): the #GstCaps corresponding to the data, or %NULL
- *     if no type could be found. The caller should free the caps returned
- *     with gst_caps_unref().
+ * Returns: (transfer full) (nullable): the #GstCaps corresponding to the data,
+ *     or %NULL if no type could be found. The caller should free the caps
+ *     returned with gst_caps_unref().
  */
 GstCaps *
 gst_type_find_helper_for_data (GstObject * obj, const guint8 * data, gsize size,
@@ -570,9 +570,9 @@ gst_type_find_helper_for_data (GstObject * obj, const guint8 * data, gsize size,
  *
  * Free-function: gst_caps_unref
  *
- * Returns: (transfer full): the #GstCaps corresponding to the data, or %NULL
- *     if no type could be found. The caller should free the caps returned
- *     with gst_caps_unref().
+ * Returns: (transfer full) (nullable): the #GstCaps corresponding to the data,
+ *     or %NULL if no type could be found. The caller should free the caps
+ *     returned with gst_caps_unref().
  */
 GstCaps *
 gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
@@ -607,9 +607,9 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
  *
  * Free-function: gst_caps_unref
  *
- * Returns: (transfer full): the #GstCaps corresponding to @extension, or
- *     %NULL if no type could be found. The caller should free the caps
- *     returned with gst_caps_unref().
+ * Returns: (transfer full) (nullable): the #GstCaps corresponding to
+ *     @extension, or %NULL if no type could be found. The caller should free
+ *     the caps returned with gst_caps_unref().
  */
 GstCaps *
 gst_type_find_helper_for_extension (GstObject * obj, const gchar * extension)

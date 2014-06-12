@@ -425,7 +425,7 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, gsize size)
  *
  * Returns %NULL if @size bytes are not available.
  *
- * Returns: (transfer none) (array length=size) (element-type guint8):
+ * Returns: (transfer none) (array length=size) (element-type guint8) (nullable):
  *     a pointer to the first @size bytes of data, or %NULL
  */
 gconstpointer
@@ -708,7 +708,7 @@ gst_adapter_take_internal (GstAdapter * adapter, gsize nbytes)
  *
  * Free-function: g_free
  *
- * Returns: (transfer full) (array length=nbytes) (element-type guint8):
+ * Returns: (transfer full) (array length=nbytes) (element-type guint8) (nullable):
  *     oven-fresh hot data, or %NULL if @nbytes bytes are not available
  */
 gpointer
@@ -758,8 +758,8 @@ gst_adapter_take (GstAdapter * adapter, gsize nbytes)
  *
  * Free-function: gst_buffer_unref
  *
- * Returns: (transfer full): a #GstBuffer containing the first @nbytes of
- *     the adapter, or %NULL if @nbytes bytes are not available.
+ * Returns: (transfer full) (nullable): a #GstBuffer containing the first
+ *     @nbytes of the adapter, or %NULL if @nbytes bytes are not available.
  *     gst_buffer_unref() when no longer needed.
  *
  * Since: 1.2
@@ -840,8 +840,8 @@ done:
  *
  * Free-function: gst_buffer_unref
  *
- * Returns: (transfer full): a #GstBuffer containing the first @nbytes of
- *     the adapter, or %NULL if @nbytes bytes are not available.
+ * Returns: (transfer full) (nullable): a #GstBuffer containing the first
+ *     @nbytes of the adapter, or %NULL if @nbytes bytes are not available.
  *     gst_buffer_unref() when no longer needed.
  */
 GstBuffer *
@@ -917,9 +917,9 @@ done:
  * Caller owns returned list and contained buffers. gst_buffer_unref() each
  * buffer in the list before freeing the list after usage.
  *
- * Returns: (element-type Gst.Buffer) (transfer full): a #GList of buffers
- *     containing the first @nbytes of the adapter, or %NULL if @nbytes bytes
- *     are not available
+ * Returns: (element-type Gst.Buffer) (transfer full) (nullable): a #GList of
+ *     buffers containing the first @nbytes of the adapter, or %NULL if @nbytes
+ *     bytes are not available
  */
 GList *
 gst_adapter_take_list (GstAdapter * adapter, gsize nbytes)

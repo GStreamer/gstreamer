@@ -918,7 +918,7 @@ gst_index_compare_func (gconstpointer a, gconstpointer b, gpointer user_data)
  *
  * Finds the given format/value in the index
  *
- * Returns: the entry associated with the value or %NULL if the
+ * Returns: (nullable): the entry associated with the value or %NULL if the
  *   value was not found.
  */
 GstIndexEntry *
@@ -949,7 +949,7 @@ gst_index_get_assoc_entry (GstIndex * index, gint id,
  * Finds the given format/value in the index with the given
  * compare function and user_data.
  *
- * Returns: the entry associated with the value or %NULL if the
+ * Returns: (nullable): the entry associated with the value or %NULL if the
  *   value was not found.
  */
 GstIndexEntry *

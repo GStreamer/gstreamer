@@ -904,9 +904,9 @@ gst_base_sink_get_ts_offset (GstBaseSink * sink)
  *
  * Free-function: gst_sample_unref
  *
- * Returns: (transfer full): a #GstSample. gst_sample_unref() after usage.
- *     This function returns %NULL when no buffer has arrived in the sink yet
- *     or when the sink is not in PAUSED or PLAYING.
+ * Returns: (transfer full) (nullable): a #GstSample. gst_sample_unref() after
+ *     usage.  This function returns %NULL when no buffer has arrived in the
+ *     sink yet or when the sink is not in PAUSED or PLAYING.
  */
 GstSample *
 gst_base_sink_get_last_sample (GstBaseSink * sink)

@@ -606,7 +606,7 @@ gst_collect_pads_set_flush_function (GstCollectPads * pads,
  *
  * MT safe.
  *
- * Returns: a new #GstCollectData to identify the new pad. Or %NULL
+ * Returns: (nullable): a new #GstCollectData to identify the new pad. Or %NULL
  *   if wrong parameters are supplied.
  */
 GstCollectData *
