@@ -65,8 +65,8 @@ void Pipeline::create()
 
     g_object_set(G_OBJECT(videosrc), "num-buffers", 800, NULL);
     g_object_set(G_OBJECT(videosrc), "location", m_videoLocation.toAscii().data(), NULL);
-    g_object_set(G_OBJECT(m_glimagesink), "client-reshape-callback", reshapeCallback, NULL);
-    g_object_set(G_OBJECT(m_glimagesink), "client-draw-callback", drawCallback, NULL);
+    g_signal_connect(G_OBJECT(m_glimagesink), "client-reshape", G_CALLBACK (reshapeCallback), NULL);
+    g_signal_connect(G_OBJECT(m_glimagesink), "client-draw", G_CALLBACK (drawCallback), NULL);
 
     gst_bin_add_many (GST_BIN (m_pipeline), videosrc, decodebin, m_glimagesink, NULL);
 
@@ -159,17 +159,19 @@ float Pipeline::m_yrot = 0;
 float Pipeline::m_zrot = 0;
 
 //client reshape callback
-void Pipeline::reshapeCallback (uint width, uint height)
+gboolean Pipeline::reshapeCallback (void *sink, guint width, guint height, gpointer data)
 {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);  
-    glMatrixMode(GL_MODELVIEW);	
+    glMatrixMode(GL_MODELVIEW);
+
+    return TRUE;
 }
 
 //client draw callback
-gboolean Pipeline::drawCallback (uint texture, uint width, uint height)
+gboolean Pipeline::drawCallback (void *sink, uint texture, uint width, uint height, gpointer data)
 {
     static GTimeVal current_time;
     static glong last_sec = current_time.tv_sec;

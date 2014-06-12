@@ -87,18 +87,20 @@ static void identityCallback (GstElement *src, GstBuffer  *buffer, GstElement* t
 
 
 //client reshape callback
-static void reshapeCallback (GLuint width, GLuint height)
+static gboolean reshapeCallback (void * gl_sink, GLuint width, GLuint height, gpointer data)
 {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);
     glMatrixMode(GL_MODELVIEW);
+
+    return TRUE;
 }
 
 
 //client draw callback
-static gboolean drawCallback (GLuint texture, GLuint width, GLuint height)
+static gboolean drawCallback (void * gl_sink, GLuint texture, GLuint width, GLuint height, gpointer data)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;
@@ -264,8 +266,8 @@ gint main (gint argc, gchar *argv[])
     g_object_set(G_OBJECT(videosrc), "location", video_location.c_str(), NULL);
     g_signal_connect(identity, "handoff", G_CALLBACK(identityCallback), textoverlay) ;
     g_object_set(G_OBJECT(textoverlay), "font_desc", "Ahafoni CLM Bold 30", NULL);
-    g_object_set(G_OBJECT(glimagesink), "client-reshape-callback", reshapeCallback, NULL);
-    g_object_set(G_OBJECT(glimagesink), "client-draw-callback", drawCallback, NULL);
+    g_signal_connect(G_OBJECT(glimagesink), "client-reshape", G_CALLBACK (reshapeCallback), NULL);
+    g_signal_connect(G_OBJECT(glimagesink), "client-draw", G_CALLBACK (drawCallback), NULL);
 
     /* add elements */
     gst_bin_add_many (GST_BIN (pipeline), videosrc, decodebin, identity,
