@@ -21,6 +21,7 @@
 #define __GST_PNMDEC_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include "gstpnmutils.h"
 
@@ -38,15 +39,15 @@ typedef struct _GstPnmdecClass GstPnmdecClass;
 struct _GstPnmdec
 {
   GstElement element;
-
+  GstVideoDecoder decoder;
   GstPnmInfoMngr mngr;
-  guint size, last_byte;
+  guint size, last_byte, current_size ;
   GstBuffer *buf;
 };
 
 struct _GstPnmdecClass
 {
-  GstElementClass parent_class;
+  GstVideoDecoderClass parent_class ;
 };
 
 GType gst_pnmdec_get_type (void) G_GNUC_CONST;
