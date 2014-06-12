@@ -282,6 +282,7 @@ BUILT_GIRSOURCES = Gst-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_API_VERSION@include_HEADERS))
 gir_headers+=$(patsubst %,$(builddir)/%, $(built_header_make))
+gir_headers+=$(patsubst %,$(builddir)/%, gstversion.h)
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_API_VERSION@_la_SOURCES))
 gir_sources+=$(patsubst %,$(builddir)/%, $(built_source_make))
 
