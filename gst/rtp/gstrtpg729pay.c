@@ -204,6 +204,17 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay,
   return ret;
 }
 
+static GstFlowReturn
+gst_rtp_g729_pay_push_and_free (GstRTPG729Pay * rtpg729pay,
+    guint8 * data, guint payload_len)
+{
+  GstFlowReturn ret;
+
+  ret = gst_rtp_g729_pay_push (rtpg729pay, data, payload_len);
+  g_free (data);
+  return ret;
+}
+
 static void
 gst_rtp_g729_pay_recalc_rtp_time (GstRTPG729Pay * rtpg729pay, GstClockTime time)
 {
@@ -309,7 +320,7 @@ gst_rtp_g729_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
   if (GST_BUFFER_IS_DISCONT (buf)) {
     /* flush remainder */
     if (available > 0) {
-      gst_rtp_g729_pay_push (rtpg729pay,
+      gst_rtp_g729_pay_push_and_free (rtpg729pay,
           gst_adapter_take (adapter, available), available);
       available = 0;
     }
@@ -354,7 +365,7 @@ gst_rtp_g729_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
           (available / G729_FRAME_SIZE) * G729_FRAME_SIZE);
     }
 
-    ret = gst_rtp_g729_pay_push (rtpg729pay,
+    ret = gst_rtp_g729_pay_push_and_free (rtpg729pay,
         gst_adapter_take (adapter, payload_len), payload_len);
     available -= payload_len;
   }
