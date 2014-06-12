@@ -195,6 +195,12 @@ gst_tcp_server_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
         g_socket_accept (src->server_socket, src->cancellable, &err);
     if (!src->client_socket)
       goto accept_error;
+    GST_DEBUG_OBJECT (src, "closing server socket");
+
+    if (!g_socket_close (src->server_socket, &err)) {
+      GST_ERROR_OBJECT (src, "Failed to close socket: %s", err->message);
+      g_clear_error (&err);
+    }
     /* now read from the socket. */
   }
 
