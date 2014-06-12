@@ -1271,8 +1271,7 @@ gst_mikey_message_add_t_now_ntp_utc (GstMIKEYMessage * msg)
 
   /* convert clock time to NTP time. upper 32 bits should contain the seconds
    * and the lower 32 bits, the fractions of a second. */
-  ntptime = gst_util_uint64_scale (now, (G_GINT64_CONSTANT (1) << 32),
-      GST_USECOND);
+  ntptime = gst_util_uint64_scale (now, (G_GINT64_CONSTANT (1) << 32), 1000000);
   /* conversion from UNIX timestamp (seconds since 1970) to NTP (seconds
    * since 1900). */
   ntptime += (G_GUINT64_CONSTANT (2208988800) << 32);
