@@ -958,7 +958,7 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
     GST_DEBUG ("MCBPC index: %d", mb_type_index);
     if (mb_type_index == -1) {
       GST_ERROR ("MB index shouldn't be -1 in window: %08x", context->window);
-      return NULL;
+      goto beach;
     }
 
     mac->ebit =
@@ -977,7 +977,7 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
     GST_DEBUG ("CBPY index: %d", cbpy_type_index);
     if (cbpy_type_index == -1) {
       GST_ERROR ("CBPY index shouldn't be -1 in window: %08x", context->window);
-      return NULL;
+      goto beach;
     }
 
     mac->ebit =
@@ -1018,7 +1018,7 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
           if (tcoef_type_index == -1) {
             GST_ERROR ("TCOEF index shouldn't be -1 in window: %08x",
                 context->window);
-            return NULL;
+            goto beach;
           }
           mac->ebit =
               gst_rtp_h263_pay_move_window_right (context,
@@ -1069,7 +1069,7 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
     GST_DEBUG ("MCBPC index: %d", mb_type_index);
     if (mb_type_index == -1) {
       GST_ERROR ("MB index shouldn't be -1 in window: %08x", context->window);
-      return NULL;
+      goto beach;
     }
     mac->ebit =
         gst_rtp_h263_pay_move_window_right (context, mcbpc_P[mb_type_index][2],
@@ -1087,7 +1087,7 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
     GST_DEBUG ("CBPY index: %d", cbpy_type_index);
     if (cbpy_type_index == -1) {
       GST_ERROR ("CBPY index shouldn't be -1 in window: %08x", context->window);
-      return NULL;
+      goto beach;
     }
     mac->ebit =
         gst_rtp_h263_pay_move_window_right (context, cbpy_P[cbpy_type_index][2],
@@ -1121,7 +1121,7 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
         if (mvd_type == -1) {
           GST_ERROR ("MVD1-4 index shouldn't be -1 in window: %08x",
               context->window);
-          return NULL;
+          goto beach;
         }
         //set the MB mvd values
         mac->mvd[j] = mvd[mvd_type][3];
@@ -1166,7 +1166,7 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
           if (tcoef_type_index == -1) {
             GST_ERROR ("TCOEF index shouldn't be -1 in window: %08x",
                 context->window);
-            return NULL;
+            goto beach;
           }
 
           mac->ebit =
@@ -1193,6 +1193,10 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
   mac->length = mac->end - mac->start + 1;
 
   return mac;
+
+beach:
+  gst_rtp_h263_pay_mb_destroy (mac);
+  return NULL;
 }
 
 static GstRtpH263PayMB *
