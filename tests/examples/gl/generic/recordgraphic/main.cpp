@@ -65,19 +65,8 @@ static gboolean bus_call (GstBus *bus, GstMessage *msg, gpointer data)
     return TRUE;
 }
 
-//client reshape callback
-static void reshapeCallback (GLuint width, GLuint height)
-{
-    glViewport(0, 0, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);
-    glMatrixMode(GL_MODELVIEW);
-}
-
-
 //client draw callback
-static gboolean drawCallback (GLuint width, GLuint height, GLuint texture, gpointer data)
+static gboolean drawCallback (void *filter, GLuint width, GLuint height, GLuint texture, gpointer data)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;
@@ -215,9 +204,7 @@ gint main (gint argc, gchar *argv[])
 
     /* configure elements */
     g_object_set(G_OBJECT(videosrc), "num-buffers", 400, NULL);
-    g_object_set(G_OBJECT(glfilterapp), "client-reshape-callback", reshapeCallback, NULL);
-    g_object_set(G_OBJECT(glfilterapp), "client-draw-callback", drawCallback, NULL);
-    g_object_set(G_OBJECT(glfilterapp), "client-data", NULL, NULL);
+    g_signal_connect(G_OBJECT(glfilterapp), "client-draw", G_CALLBACK (drawCallback), NULL);
     g_object_set(G_OBJECT(filesink), "location", "record.avi", NULL);
 
     /* add elements */

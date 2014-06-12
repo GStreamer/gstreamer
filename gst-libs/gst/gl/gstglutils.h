@@ -40,15 +40,6 @@ typedef enum
 } GstGLDisplayProjection;
 
 /**
- * CRCB:
- * @width: new width
- * @height: new height:
- * @data: user data
- *
- * client reshape callback
- */
-typedef void (*CRCB) (GLuint width, GLuint height, gpointer data);
-/**
  * CDCB:
  * @texture: texture to draw
  * @width: new width
