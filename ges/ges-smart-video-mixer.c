@@ -108,6 +108,7 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   if (infos->mixer_pad == NULL) {
     GST_WARNING_OBJECT (element, "Could not get any pad from GstMixer");
+    g_slice_free (PadInfos, infos);
 
     return NULL;
   }
