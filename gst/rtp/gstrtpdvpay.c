@@ -300,7 +300,12 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
   max_payload_size = ((GST_RTP_BASE_PAYLOAD_MTU (rtpdvpay) - hdrlen) / 80) * 80;
 
   /* The length of the buffer to transmit. */
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+    GST_ELEMENT_ERROR (rtpdvpay, CORE, FAILED,
+        (NULL), ("Failed to map buffer"));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
+  }
   data = map.data;
   size = map.size;
 
@@ -327,7 +332,13 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
       outbuf = gst_rtp_buffer_new_allocate (max_payload_size, 0, 0);
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
 
-      gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+      if (!gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp)) {
+        gst_buffer_unref (outbuf);
+        GST_ELEMENT_ERROR (rtpdvpay, CORE, FAILED,
+            (NULL), ("Failed to map RTP buffer"));
+        ret = GST_FLOW_ERROR;
+        goto beach;
+      }
       dest = gst_rtp_buffer_get_payload (&rtp);
       filled = 0;
     }
@@ -368,6 +379,8 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
       outbuf = NULL;
     }
   }
+
+beach:
   gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
