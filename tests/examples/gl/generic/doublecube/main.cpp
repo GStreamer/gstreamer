@@ -25,8 +25,6 @@
 #endif
 #include <gst/gst.h>
 
-#include <gst/gl/gl.h>
-
 #include <iostream>
 #include <sstream>
 #include <string>
