@@ -716,6 +716,12 @@ gst_gl_mixer_reset (GstGLMixer * mix)
 }
 
 static void
+_free_pad_frame_data (gpointer data)
+{
+  g_slice_free1 (sizeof (GstGLMixerFrameData), data);
+}
+
+static void
 gst_gl_mixer_init (GstGLMixer * mix)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (mix);
@@ -751,6 +757,9 @@ gst_gl_mixer_init (GstGLMixer * mix)
   mix->fbo = 0;
   mix->depthbuffer = 0;
 
+  mix->frames = g_ptr_array_new_full (4, _free_pad_frame_data);
+  mix->array_buffers = g_ptr_array_new_full (4, NULL);
+
   /* initialize variables */
   gst_gl_mixer_reset (mix);
 }
@@ -762,6 +771,9 @@ gst_gl_mixer_finalize (GObject * object)
 
   gst_object_unref (mix->collect);
   g_mutex_clear (&mix->lock);
+
+  g_ptr_array_free (mix->frames, TRUE);
+  g_ptr_array_free (mix->array_buffers, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1354,50 +1366,47 @@ gst_gl_mixer_request_new_pad (GstElement * element,
   GstGLMixer *mix;
   GstGLMixerPad *mixpad;
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+  gint serial = 0;
+  gchar *name = NULL;
+  GstGLMixerCollect *mixcol = NULL;
 
   mix = GST_GL_MIXER (element);
 
-  if (templ == gst_element_class_get_pad_template (klass, "sink_%d")) {
-    gint serial = 0;
-    gchar *name = NULL;
-    GstGLMixerCollect *mixcol = NULL;
-
-    GST_GL_MIXER_LOCK (mix);
-    if (req_name == NULL || strlen (req_name) < 6
-        || !g_str_has_prefix (req_name, "sink_")) {
-      /* no name given when requesting the pad, use next available int */
-      serial = mix->next_sinkpad++;
-    } else {
-      /* parse serial number from requested padname */
-      serial = g_ascii_strtoull (&req_name[5], NULL, 10);
-      if (serial >= mix->next_sinkpad)
-        mix->next_sinkpad = serial + 1;
-    }
-    /* create new pad with the name */
-    name = g_strdup_printf ("sink_%d", serial);
-    mixpad = g_object_new (GST_TYPE_GL_MIXER_PAD, "name", name, "direction",
-        templ->direction, "template", templ, NULL);
-    g_free (name);
-
-    mixcol = (GstGLMixerCollect *)
-        gst_collect_pads_add_pad (mix->collect, GST_PAD (mixpad),
-        sizeof (GstGLMixerCollect),
-        (GstCollectDataDestroyNotify) gst_gl_mixer_collect_free, TRUE);
-
-    /* Keep track of each other */
-    mixcol->mixpad = mixpad;
-    mixpad->mixcol = mixcol;
-
-    mixcol->start_time = -1;
-    mixcol->end_time = -1;
-
-    /* Keep an internal list of mixpads for zordering */
-    mix->sinkpads = g_slist_append (mix->sinkpads, mixpad);
-    mix->numpads++;
-    GST_GL_MIXER_UNLOCK (mix);
-  } else {
+  if (templ != gst_element_class_get_pad_template (klass, "sink_%d"))
     return NULL;
+
+  GST_GL_MIXER_LOCK (mix);
+  if (req_name == NULL || strlen (req_name) < 6
+      || !g_str_has_prefix (req_name, "sink_")) {
+    /* no name given when requesting the pad, use next available int */
+    serial = mix->next_sinkpad++;
+  } else {
+    /* parse serial number from requested padname */
+    serial = g_ascii_strtoull (&req_name[5], NULL, 10);
+    if (serial >= mix->next_sinkpad)
+      mix->next_sinkpad = serial + 1;
   }
+  /* create new pad with the name */
+  name = g_strdup_printf ("sink_%d", serial);
+  mixpad = g_object_new (GST_TYPE_GL_MIXER_PAD, "name", name, "direction",
+      templ->direction, "template", templ, NULL);
+  g_free (name);
+
+  mixcol = (GstGLMixerCollect *)
+      gst_collect_pads_add_pad (mix->collect, GST_PAD (mixpad),
+      sizeof (GstGLMixerCollect),
+      (GstCollectDataDestroyNotify) gst_gl_mixer_collect_free, TRUE);
+
+  /* Keep track of each other */
+  mixcol->mixpad = mixpad;
+  mixpad->mixcol = mixcol;
+
+  mixcol->start_time = -1;
+  mixcol->end_time = -1;
+
+  /* Keep an internal list of mixpads for zordering */
+  mix->sinkpads = g_slist_append (mix->sinkpads, mixpad);
+  mix->numpads++;
 
   GST_DEBUG_OBJECT (element, "Adding pad %s", GST_PAD_NAME (mixpad));
 
@@ -1405,6 +1414,13 @@ gst_gl_mixer_request_new_pad (GstElement * element,
   gst_element_add_pad (element, GST_PAD (mixpad));
   gst_child_proxy_child_added (GST_CHILD_PROXY (mix), G_OBJECT (mixpad),
       GST_OBJECT_NAME (mixpad));
+
+  g_ptr_array_set_size (mix->array_buffers, mix->numpads);
+  g_ptr_array_set_size (mix->frames, mix->numpads);
+
+  mix->frames->pdata[mix->numpads - 1] = g_slice_new0 (GstGLMixerFrameData);
+
+  GST_GL_MIXER_UNLOCK (mix);
 
   return GST_PAD (mixpad);
 }
@@ -1430,6 +1446,9 @@ gst_gl_mixer_release_pad (GstElement * element, GstPad * pad)
   gst_child_proxy_child_removed (GST_CHILD_PROXY (mix), G_OBJECT (mixpad),
       GST_OBJECT_NAME (mixpad));
   mix->numpads--;
+
+  g_ptr_array_set_size (mix->array_buffers, mix->numpads);
+  g_ptr_array_set_size (mix->frames, mix->numpads);
 
   update_caps =
       GST_VIDEO_INFO_FORMAT (&mix->out_info) != GST_VIDEO_FORMAT_UNKNOWN;
@@ -2273,36 +2292,16 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
-      guint i;
-
-      mix->array_buffers = g_ptr_array_new_full (mix->numpads, NULL);
-      mix->frames = g_ptr_array_new_full (mix->numpads, NULL);
-
-      g_ptr_array_set_size (mix->array_buffers, mix->numpads);
-      g_ptr_array_set_size (mix->frames, mix->numpads);
-
-      for (i = 0; i < mix->numpads; i++) {
-        mix->frames->pdata[i] = g_slice_new0 (GstGLMixerFrameData);
-      }
-
       GST_LOG_OBJECT (mix, "starting collectpads");
       gst_collect_pads_start (mix->collect);
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
-      guint i;
       GSList *walk = mix->sinkpads;
 
       GST_LOG_OBJECT (mix, "stopping collectpads");
       gst_collect_pads_stop (mix->collect);
-
-      for (i = 0; i < mix->numpads; i++) {
-        g_slice_free1 (sizeof (GstGLMixerFrameData), mix->frames->pdata[i]);
-      }
-
-      g_ptr_array_free (mix->array_buffers, TRUE);
-      g_ptr_array_free (mix->frames, TRUE);
 
       if (mixer_class->reset)
         mixer_class->reset (mix);
