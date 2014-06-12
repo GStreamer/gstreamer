@@ -581,6 +581,7 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 no_output:
   {
     gst_rtp_buffer_unmap (&rtp);
+    g_free (to_free);
     return NULL;
   }
   /* ERORRS */
@@ -600,6 +601,7 @@ ignore_reserved:
   {
     GST_WARNING_OBJECT (rtptheoradepay, "reserved TDT ignored");
     gst_rtp_buffer_unmap (&rtp);
+    g_free (to_free);
     return NULL;
   }
 length_short:
@@ -622,6 +624,7 @@ request_config:
             gst_structure_new ("GstForceKeyUnit",
                 "all-headers", G_TYPE_BOOLEAN, TRUE, NULL)));
     gst_rtp_buffer_unmap (&rtp);
+    g_free (to_free);
     return NULL;
   }
 request_keyframe:
@@ -631,6 +634,7 @@ request_keyframe:
         gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
             gst_structure_new_empty ("GstForceKeyUnit")));
     gst_rtp_buffer_unmap (&rtp);
+    g_free (to_free);
     return NULL;
   }
 }
