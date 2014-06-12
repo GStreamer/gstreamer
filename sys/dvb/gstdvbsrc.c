@@ -1974,7 +1974,8 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
     fd = &object->fd_filters[i];
     pid = object->pids[i];
 
-    close (*fd);
+    if (*fd >= 0)
+      close (*fd);
     if ((*fd = open (demux_dev, O_RDWR)) < 0) {
       GST_ERROR_OBJECT (object, "Error opening demuxer: %s (%s)",
           g_strerror (errno), demux_dev);
