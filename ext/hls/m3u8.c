@@ -30,6 +30,25 @@
 
 #define GST_CAT_DEFAULT fragmented_debug
 
+#if !GLIB_CHECK_VERSION (2, 33, 4)
+#define g_list_copy_deep gst_g_list_copy_deep
+static GList *
+gst_g_list_copy_deep (GList * list, GCopyFunc func, gpointer user_data)
+{
+  list = g_list_copy (list);
+
+  if (func != NULL) {
+    GList *l;
+
+    for (l = list; l != NULL; l = l->next) {
+      l->data = func (l->data, user_data);
+    }
+  }
+
+  return list;
+}
+#endif
+
 static GstM3U8 *gst_m3u8_new (void);
 static void gst_m3u8_free (GstM3U8 * m3u8);
 static gboolean gst_m3u8_update (GstM3U8 * m3u8, gchar * data,
