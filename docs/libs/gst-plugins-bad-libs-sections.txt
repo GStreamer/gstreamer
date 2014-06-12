@@ -915,6 +915,26 @@ GST_GL_FILTER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gstglframebuffer</FILE>
+<TITLE>GstGLFramebuffer</TITLE>
+GstGLFramebuffer
+GstGLFramebufferClass
+gst_gl_framebuffer_new
+gst_gl_framebuffer_generate
+gst_gl_framebuffer_delete
+gst_gl_framebuffer_use
+gst_gl_framebuffer_use_v2
+<SUBSECTION Standard>
+GST_GL_FRAMEBUFFER
+GST_IS_GL_FRAMEBUFFER
+GST_TYPE_GL_FRAMEBUFFER
+gst_gl_framebuffer_get_type
+GST_GL_FRAMEBUFFER_CLASS
+GST_IS_GL_FRAMEBUFFER_CLASS
+GST_GL_FRAMEBUFFER_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gstglmemory</FILE>
 GstGLAllocator
 GstGLAllocatorClass
