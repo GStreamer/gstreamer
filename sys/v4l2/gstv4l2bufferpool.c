@@ -1418,6 +1418,8 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 
   pool->vallocator =
       gst_v4l2_allocator_new (GST_OBJECT (pool), obj->video_fd, &obj->format);
+  if (pool->vallocator == NULL)
+    goto allocator_failed;
 
   gst_object_ref (obj->element);
 
@@ -1433,6 +1435,11 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 dup_failed:
   {
     GST_ERROR ("failed to dup fd %d (%s)", errno, g_strerror (errno));
+    return NULL;
+  }
+allocator_failed:
+  {
+    GST_ERROR_OBJECT (pool, "Failed to create V4L2 allocator");
     return NULL;
   }
 }
