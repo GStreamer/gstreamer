@@ -3345,6 +3345,8 @@ pkgconfig/gstreamer-gl.pc
 pkgconfig/gstreamer-gl-uninstalled.pc
 pkgconfig/gstreamer-mpegts.pc
 pkgconfig/gstreamer-mpegts-uninstalled.pc
+pkgconfig/gstreamer-wayland.pc
+pkgconfig/gstreamer-wayland-uninstalled.pc
 tools/Makefile
 m4/Makefile
 )

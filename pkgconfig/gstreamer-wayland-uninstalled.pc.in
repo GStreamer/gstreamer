@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/wayland
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer Wayland, Uninstalled
+Description: GStreamer Wayland support, uninstalled
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-video-@GST_API_VERSION@
+Version: @VERSION@
+Libs: -L${libdir} ${libdir}/libgstwayland-@GST_API_VERSION@.la
+Cflags: -I${includedir}
+
