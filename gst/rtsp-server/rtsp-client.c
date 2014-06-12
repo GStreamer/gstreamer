@@ -795,6 +795,15 @@ close_connection (GstRTSPClient * client)
   }
 
   gst_rtsp_connection_close (priv->connection);
+
+  /* connection is now closed, destroy the watch which will also cause the
+   * closed signal to be emitted */
+  if (priv->watch) {
+    GST_DEBUG ("client %p: destroying watch", client);
+    g_source_destroy ((GSource *) priv->watch);
+    priv->watch = NULL;
+    gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
+  }
 }
 
 static gchar *
