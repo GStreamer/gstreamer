@@ -701,6 +701,10 @@ GstGLPlatform
 gst_gl_platform_to_string
 gst_gl_platform_from_string
 gst_gl_check_extension
+GST_GL_API_GLES1_NAME
+GST_GL_API_GLES2_NAME
+GST_GL_API_OPENGL3_NAME
+GST_GL_API_OPENGL_NAME
 <SUBSECTION Private>
 GST_GL_CHECK_GL_VERSION
 GSTGLAPI
@@ -718,6 +722,7 @@ GstGLBufferPool
 GstGLBufferPoolClass
 gst_gl_buffer_pool_new
 <SUBSECTION Standard>
+gst_gl_buffer_pool_replace_last_buffer
 GstGLBufferPoolPrivate
 GST_GL_BUFFER_POOL
 GST_GL_BUFFER_POOL_CAST
@@ -755,6 +760,7 @@ GstGLContextError
 GstGLContextThreadFunc
 GstGLContext
 gst_gl_context_new
+gst_gl_context_new_wrapped
 gst_gl_context_create
 gst_gl_context_activate
 gst_gl_context_default_get_proc_address
@@ -768,6 +774,7 @@ gst_gl_context_get_gl_context
 gst_gl_context_get_gl_platform
 gst_gl_context_check_feature
 gst_gl_context_check_gl_version
+gst_gl_context_get_gl_version
 <SUBSECTION Standard>
 GST_GL_CONTEXT
 GST_GL_IS_CONTEXT
@@ -851,6 +858,7 @@ gst_gl_context_wgl_get_type
 <SECTION>
 <FILE>gstgldisplay</FILE>
 <TITLE>GstGLDisplay</TITLE>
+GST_GL_DISPLAY_CONTEXT_TYPE
 GstGLDisplayType
 GstGLDisplay
 gst_gl_display_new
@@ -926,6 +934,7 @@ gst_gl_memory_wrapped_texture
 gst_gl_memory_copy_into_texture
 gst_gl_memory_setup_buffer
 gst_gl_memory_setup_wrapped
+gst_gl_texture_type_from_format
 gst_is_gl_memory
 <SUBSECTION Standard>
 GST_GL_ALLOCATOR
@@ -989,6 +998,10 @@ gst_gl_shader_set_active
 gst_gl_shader_is_compiled
 gst_gl_shader_compile
 gst_gl_shader_compile_and_check
+gst_gl_shader_compile_all_with_attribs_and_check
+gst_gl_shader_compile_with_default_f_and_check
+gst_gl_shader_compile_with_default_v_and_check
+gst_gl_shader_compile_with_default_vf_and_check
 gst_gl_shader_release
 gst_gl_shader_use
 gst_gl_shader_set_uniform_1i
@@ -1095,6 +1108,7 @@ gst_gl_context_check_framebuffer_status
 gst_gl_context_set_error
 gst_gl_context_get_error
 gst_gl_context_clear_shader
+gst_gl_generate_texture_full
 </SECTION>
 
 <SECTION>
