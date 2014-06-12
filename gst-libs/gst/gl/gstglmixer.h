@@ -76,12 +76,15 @@ struct _GstGLMixer
   GPtrArray *array_buffers;
   GPtrArray *frames;
 
+  GstCaps *current_caps;
   GstVideoInfo out_info;
   GLuint out_tex_id;
   GstGLDownload *download;
 
   gboolean newseg_pending;
   gboolean flush_stop_pending;
+  gboolean send_stream_start;
+  gboolean send_caps;
 
   GstSegment segment;
   GstClockTime ts_offset;
