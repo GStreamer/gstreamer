@@ -179,7 +179,7 @@ gst_curl_ssh_sink_class_init (GstCurlSshSinkClass * klass)
 static void
 gst_curl_ssh_sink_init (GstCurlSshSink * sink)
 {
-  sink->ssh_auth_type = CURLSSH_AUTH_NONE;
+  sink->ssh_auth_type = GST_CURLSSH_AUTH_NONE;
   sink->ssh_pub_keyfile = NULL;
   sink->ssh_priv_keyfile = NULL;
   sink->ssh_key_passphrase = NULL;
@@ -373,8 +373,8 @@ gst_curl_ssh_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
 
   /* make sure we only accept PASSWORD or PUBLICKEY auth methods
    * (can be extended later) */
-  if (sink->ssh_auth_type == CURLSSH_AUTH_PASSWORD ||
-      sink->ssh_auth_type == CURLSSH_AUTH_PUBLICKEY) {
+  if (sink->ssh_auth_type == GST_CURLSSH_AUTH_PASSWORD ||
+      sink->ssh_auth_type == GST_CURLSSH_AUTH_PUBLICKEY) {
 
     /* set the SSH_AUTH_TYPE */
     if ((curl_err = curl_easy_setopt (bcsink->curl, CURLOPT_SSH_AUTH_TYPES,
@@ -385,7 +385,7 @@ gst_curl_ssh_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
     }
 
     /* if key authentication -> provide the private key passphrase as well */
-    if (sink->ssh_auth_type == CURLSSH_AUTH_PUBLICKEY) {
+    if (sink->ssh_auth_type == GST_CURLSSH_AUTH_PUBLICKEY) {
       if (sink->ssh_key_passphrase) {
         if ((curl_err = curl_easy_setopt (bcsink->curl, CURLOPT_KEYPASSWD,
                     sink->ssh_key_passphrase)) != CURLE_OK) {

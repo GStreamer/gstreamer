@@ -38,9 +38,10 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CURL_SSH_SINK))
 #define GST_IS_CURL_SSH_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CURL_SSH_SINK))
-/* see <curl/curl.h> */
-    typedef enum
+
+typedef enum
 {
+  /* Keep these in sync with the libcurl definitions. See <curl/curl.h> */
   GST_CURLSSH_AUTH_NONE = CURLSSH_AUTH_NONE,
   GST_CURLSSH_AUTH_PUBLICKEY = CURLSSH_AUTH_PUBLICKEY,
   GST_CURLSSH_AUTH_PASSWORD = CURLSSH_AUTH_PASSWORD
@@ -55,9 +56,10 @@ struct _GstCurlSshSink
   GstCurlBaseSink parent;
 
   /*< private > */
-  guint ssh_auth_type;          /* for now, supporting only:
-                                   CURLSSH_AUTH_PASSWORD  (passwd auth) OR
-                                   CURLSSH_AUTH_PUBLICKEY (pub/pvt key auth) */
+  /* for now, supporting only:
+   * GST_CURLSSH_AUTH_PASSWORD (password authentication) and
+   * GST_CURLSSH_AUTH_PUBLICKEY (public key authentication) */
+  GstCurlSshAuthType ssh_auth_type;
 
   gchar *ssh_pub_keyfile;       /* filename for the public key:
                                    CURLOPT_SSH_PUBLIC_KEYFILE */
