@@ -116,16 +116,16 @@ gst_wl_window_new_internal (GstWlDisplay * display, struct wl_surface *surface)
 }
 
 GstWlWindow *
-gst_wl_window_new_toplevel (GstWlDisplay * display, gint video_width,
-    gint video_height)
+gst_wl_window_new_toplevel (GstWlDisplay * display, GstVideoInfo * video_info)
 {
   GstWlWindow *window;
 
   window = gst_wl_window_new_internal (display,
       wl_compositor_create_surface (display->compositor));
 
-  gst_wl_window_set_video_size (window, video_width, video_height);
-  gst_wl_window_set_render_rectangle (window, 0, 0, video_width, video_height);
+  gst_wl_window_set_video_info (window, video_info);
+  gst_wl_window_set_render_rectangle (window, 0, 0, video_info->width,
+      video_info->height);
 
   window->shell_surface = wl_shell_get_shell_surface (display->shell,
       window->surface);
@@ -207,17 +207,15 @@ gst_wl_window_resize_internal (GstWlWindow * window)
 }
 
 void
-gst_wl_window_set_video_size (GstWlWindow * window, gint w, gint h)
+gst_wl_window_set_video_info (GstWlWindow * window, GstVideoInfo * info)
 {
   g_return_if_fail (window != NULL);
 
-  if (w != window->video_width || h != window->video_height) {
-    window->video_width = w;
-    window->video_height = h;
+  window->video_width = info->width;
+  window->video_height = info->height;
 
-    if (window->render_rectangle.w != 0)
-      gst_wl_window_resize_internal (window);
-  }
+  if (window->render_rectangle.w != 0)
+    gst_wl_window_resize_internal (window);
 }
 
 void

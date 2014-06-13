@@ -465,10 +465,6 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (format == -1)
     goto invalid_format;
 
-  /* store the video size */
-  sink->video_width = info.width;
-  sink->video_height = info.height;
-
   /* verify we support the requested format */
   formats = sink->display->formats;
   for (i = 0; i < formats->len; i++) {
@@ -489,6 +485,10 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_buffer_pool_config_set_allocator (structure, NULL, &params);
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
+
+  /* store the video info */
+  sink->video_info = info;
+  sink->video_info_changed = TRUE;
 
   gst_object_replace ((GstObject **) & sink->pool, (GstObject *) newpool);
   gst_object_unref (newpool);
@@ -654,29 +654,45 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstWlMeta *meta;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  /* ask for window handle. do that before locking the sink, because
-   * set_window_handle & friends will lock it in this context */
-  if (!sink->window)
-    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (sink));
-
   g_mutex_lock (&sink->render_lock);
 
   GST_LOG_OBJECT (sink, "render buffer %p", buffer);
+
+  if (G_UNLIKELY (!sink->window)) {
+    /* ask for window handle. Unlock render_lock while doing that because
+     * set_window_handle & friends will lock it in this context */
+    g_mutex_unlock (&sink->render_lock);
+    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (sink));
+    g_mutex_lock (&sink->render_lock);
+
+    if (sink->window) {
+      /* inform the window about our caps */
+      gst_wl_window_set_video_info (sink->window, &sink->video_info);
+    } else {
+      /* if we were not provided a window, create one ourselves */
+      sink->window =
+          gst_wl_window_new_toplevel (sink->display, &sink->video_info);
+    }
+    sink->video_info_changed = FALSE;
+  }
 
   /* drop buffers until we get a frame callback */
   if (g_atomic_int_get (&sink->redraw_pending) == TRUE)
     goto done;
 
-  /* if we were not provided a window, create one ourselves */
-  if (!sink->window) {
-    sink->window = gst_wl_window_new_toplevel (sink->display, sink->video_width,
-        sink->video_height);
-  } else {
-    gst_wl_window_set_video_size (sink->window, sink->video_width,
-        sink->video_height);
-    if (sink->window->surface_width == 0 || sink->window->surface_height == 0)
-      goto no_window_size;
+  if (G_UNLIKELY (sink->video_info_changed)) {
+    gst_wl_window_set_video_info (sink->window, &sink->video_info);
+    sink->video_info_changed = FALSE;
   }
+
+  /* now that we have for sure set the video info on the window, it must have
+   * a valid size, otherwise this means that the application has called
+   * set_window_handle() without calling set_render_rectangle(), which is
+   * absolutely necessary for us.
+   */
+  if (G_UNLIKELY (sink->window->surface_width == 0 ||
+          sink->window->surface_height == 0))
+    goto no_window_size;
 
   meta = gst_buffer_get_wl_meta (buffer);
 

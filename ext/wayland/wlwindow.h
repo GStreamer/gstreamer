@@ -22,7 +22,7 @@
 #define __GST_WL_WINDOW_H__
 
 #include "wldisplay.h"
-#include <gst/video/gstvideosink.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -62,7 +62,7 @@ struct _GstWlWindowClass
 GType gst_wl_window_get_type (void);
 
 GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
-        gint video_width, gint video_height);
+        GstVideoInfo * video_info);
 GstWlWindow *gst_wl_window_new_in_surface (GstWlDisplay * display,
         struct wl_surface * parent);
 
@@ -71,7 +71,7 @@ struct wl_surface *gst_wl_window_get_wl_surface (GstWlWindow * window);
 gboolean gst_wl_window_is_toplevel (GstWlWindow *window);
 
 /* functions to manipulate the size on non-toplevel windows */
-void gst_wl_window_set_video_size (GstWlWindow * window, gint w, gint h);
+void gst_wl_window_set_video_info (GstWlWindow * window, GstVideoInfo * info);
 void gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
         gint w, gint h);
 

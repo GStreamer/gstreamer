@@ -23,7 +23,7 @@
 #define __GST_WAYLAND_VIDEO_SINK_H__
 
 #include <gst/gst.h>
-#include <gst/video/gstvideosink.h>
+#include <gst/video/video.h>
 
 #include <wayland-client.h>
 
@@ -57,8 +57,8 @@ struct _GstWaylandSink
   GstWlWindow *window;
   GstBufferPool *pool;
 
-  gint video_width;
-  gint video_height;
+  gboolean video_info_changed;
+  GstVideoInfo video_info;
 
   gchar *display_name;
 
