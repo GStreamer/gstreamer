@@ -81,75 +81,69 @@ static int gst_oss_helper_rate_int_compare (gconstpointer a, gconstpointer b);
 GstCaps *
 gst_oss_helper_probe_caps (gint fd)
 {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  const guint probe_formats[] = { AFMT_S16_LE, AFMT_U16_LE, AFMT_U8, AFMT_S8 };
+#else
+  const guint probe_formats[] = { AFMT_S16_BE, AFMT_U16_BE, AFMT_U8, AFMT_S8 };
+#endif
   GstOssProbe *probe;
-  int i;
+  int i, f;
   gboolean ret;
   GstStructure *structure;
-  unsigned int format_bit;
-  unsigned int format_mask;
   GstCaps *caps;
 
   /* FIXME test make sure we're not currently playing */
   /* FIXME test both mono and stereo */
 
-  format_mask = AFMT_U8 | AFMT_S8;
-
-  if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-    format_mask |= AFMT_S16_LE | AFMT_U16_LE;
-  else
-    format_mask |= AFMT_S16_BE | AFMT_U16_BE;
-
   caps = gst_caps_new_empty ();
 
   /* assume that the most significant bit of format_mask is 0 */
-  for (format_bit = 1 << 31; format_bit > 0; format_bit >>= 1) {
-    if (format_bit & format_mask) {
-      GValue rate_value = { 0 };
+  for (f = 0; f < G_N_ELEMENTS (probe_formats); ++f) {
+    GValue rate_value = { 0 };
 
-      probe = g_new0 (GstOssProbe, 1);
-      probe->fd = fd;
-      probe->format = format_bit;
-      /* FIXME: this is not working for all cards, see bug #518474 */
-      probe->n_channels = 2;
+    probe = g_new0 (GstOssProbe, 1);
+    probe->fd = fd;
+    probe->format = probe_formats[f];
+    /* FIXME: this is not working for all cards, see bug #518474 */
+    probe->n_channels = 2;
 
-      ret = gst_oss_helper_rate_probe_check (probe);
-      if (probe->min == -1 || probe->max == -1) {
-        g_array_free (probe->rates, TRUE);
-        g_free (probe);
-        continue;
-      }
-
-      if (ret) {
-        GValue value = { 0 };
-
-        g_array_sort (probe->rates, gst_oss_helper_rate_int_compare);
-
-        g_value_init (&rate_value, GST_TYPE_LIST);
-        g_value_init (&value, G_TYPE_INT);
-
-        for (i = 0; i < probe->rates->len; i++) {
-          g_value_set_int (&value, g_array_index (probe->rates, int, i));
-
-          gst_value_list_append_value (&rate_value, &value);
-        }
-
-        g_value_unset (&value);
-      } else {
-        /* one big range */
-        g_value_init (&rate_value, GST_TYPE_INT_RANGE);
-        gst_value_set_int_range (&rate_value, probe->min, probe->max);
-      }
-
+    ret = gst_oss_helper_rate_probe_check (probe);
+    if (probe->min == -1 || probe->max == -1) {
       g_array_free (probe->rates, TRUE);
       g_free (probe);
-
-      structure = gst_oss_helper_get_format_structure (format_bit);
-      gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
-      gst_structure_set_value (structure, "rate", &rate_value);
-      g_value_unset (&rate_value);
-
-      gst_caps_append_structure (caps, structure);
+      continue;
     }
+
+    if (ret) {
+      GValue value = { 0 };
+
+      g_array_sort (probe->rates, gst_oss_helper_rate_int_compare);
+
+      g_value_init (&rate_value, GST_TYPE_LIST);
+      g_value_init (&value, G_TYPE_INT);
+
+      for (i = 0; i < probe->rates->len; i++) {
+        g_value_set_int (&value, g_array_index (probe->rates, int, i));
+
+        gst_value_list_append_value (&rate_value, &value);
+      }
+
+      g_value_unset (&value);
+    } else {
+      /* one big range */
+      g_value_init (&rate_value, GST_TYPE_INT_RANGE);
+      gst_value_set_int_range (&rate_value, probe->min, probe->max);
+    }
+
+    g_array_free (probe->rates, TRUE);
+    g_free (probe);
+
+    structure = gst_oss_helper_get_format_structure (probe_formats[f]);
+    gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+    gst_structure_set_value (structure, "rate", &rate_value);
+    g_value_unset (&rate_value);
+
+    gst_caps_append_structure (caps, structure);
   }
 
   if (gst_caps_is_empty (caps)) {
