@@ -21,7 +21,7 @@ EXTRA_DIST = \
 	$(METADATA) \
 	AssemblyInfo.cs.in \
 	$(ASSEMBLY_NAME).snk \
-	gstreamer-sharp.xml
+	gstreamer-sharp-api.xml
 
 all: generated-stamp $(ASSEMBLY)
 

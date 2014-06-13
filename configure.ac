@@ -1,4 +1,4 @@
-AC_INIT([gstreamer-sharp], m4_esyscmd([tr -d '\n' < VERSION]))
+AC_INIT(gstreamer-sharp, m4_esyscmd([tr -d '\n' < VERSION]))
 AC_CONFIG_SRCDIR([README])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
