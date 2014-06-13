@@ -134,6 +134,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_srtp_enc_debug);
 #define DEFAULT_RTCP_AUTH       DEFAULT_RTP_AUTH
 #define DEFAULT_RANDOM_KEY      FALSE
 #define DEFAULT_REPLAY_WINDOW_SIZE 128
+#define DEFAULT_ALLOW_REPEAT_TX FALSE
 
 #define HAS_CRYPTO(filter) (filter->rtp_cipher != GST_SRTP_CIPHER_NULL || \
       filter->rtcp_cipher != GST_SRTP_CIPHER_NULL ||                      \
@@ -157,7 +158,8 @@ enum
   PROP_RTCP_CIPHER,
   PROP_RTCP_AUTH,
   PROP_RANDOM_KEY,
-  PROP_REPLAY_WINDOW_SIZE
+  PROP_REPLAY_WINDOW_SIZE,
+  PROP_ALLOW_REPEAT_TX
 };
 
 /* the capabilities of the inputs and outputs.
@@ -321,6 +323,10 @@ gst_srtp_enc_class_init (GstSrtpEncClass * klass)
           "Size of the replay protection window",
           64, 0x8000, DEFAULT_REPLAY_WINDOW_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ALLOW_REPEAT_TX,
+      g_param_spec_boolean ("allow-repeat-tx", "Allow repeat packets transmission",
+          "Whether retransmissions of packets with the same sequence number are allowed",
+          DEFAULT_ALLOW_REPEAT_TX, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstSrtpEnc::soft-limit:
@@ -365,6 +371,7 @@ gst_srtp_enc_init (GstSrtpEnc * filter)
   filter->rtcp_cipher = DEFAULT_RTCP_CIPHER;
   filter->rtcp_auth = DEFAULT_RTCP_AUTH;
   filter->replay_window_size = DEFAULT_REPLAY_WINDOW_SIZE;
+  filter->allow_repeat_tx = DEFAULT_ALLOW_REPEAT_TX;
 }
 
 static guint
@@ -436,6 +443,7 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
   policy.next = NULL;
 
   policy.window_size = filter->replay_window_size;
+  policy.allow_repeat_tx = filter->allow_repeat_tx;
 
   /* If it is the first stream, create the session
    * If not, add the stream to the session
@@ -652,6 +660,10 @@ gst_srtp_enc_set_property (GObject * object, guint prop_id,
       filter->replay_window_size = g_value_get_uint (value);
       break;
 
+    case PROP_ALLOW_REPEAT_TX:
+      filter->allow_repeat_tx = g_value_get_boolean (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -689,6 +701,9 @@ gst_srtp_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_REPLAY_WINDOW_SIZE:
       g_value_set_uint (value, filter->replay_window_size);
+      break;
+    case PROP_ALLOW_REPEAT_TX:
+      g_value_set_boolean (value, filter->allow_repeat_tx);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -83,6 +83,7 @@ struct _GstSrtpEnc
   gboolean key_changed;
 
   guint replay_window_size;
+  gboolean allow_repeat_tx;
 };
 
 struct _GstSrtpEncClass
