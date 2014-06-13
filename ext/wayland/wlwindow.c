@@ -185,7 +185,7 @@ gst_wl_window_is_toplevel (GstWlWindow * window)
 }
 
 static void
-gst_wl_window_resize_internal (GstWlWindow * window)
+gst_wl_window_resize_internal (GstWlWindow * window, gboolean commit)
 {
   GstVideoRectangle src, res;
 
@@ -198,8 +198,10 @@ gst_wl_window_resize_internal (GstWlWindow * window)
         window->render_rectangle.x + res.x, window->render_rectangle.y + res.y);
   wl_viewport_set_destination (window->viewport, res.w, res.h);
 
-  wl_surface_damage (window->surface, 0, 0, res.w, res.h);
-  wl_surface_commit (window->surface);
+  if (commit) {
+    wl_surface_damage (window->surface, 0, 0, res.w, res.h);
+    wl_surface_commit (window->surface);
+  }
 
   /* this is saved for use in wl_surface_damage */
   window->surface_width = res.w;
@@ -216,7 +218,7 @@ gst_wl_window_set_video_info (GstWlWindow * window, GstVideoInfo * info)
   window->video_height = info->height;
 
   if (window->render_rectangle.w != 0)
-    gst_wl_window_resize_internal (window);
+    gst_wl_window_resize_internal (window, FALSE);
 }
 
 void
@@ -231,5 +233,5 @@ gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
   window->render_rectangle.h = h;
 
   if (window->video_width != 0)
-    gst_wl_window_resize_internal (window);
+    gst_wl_window_resize_internal (window, TRUE);
 }
