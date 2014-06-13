@@ -267,9 +267,18 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
 send_error:
   {
-    GST_DEBUG ("got send error %s", err->message);
+    GstFlowReturn flow_ret;
+
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+      GST_DEBUG_OBJECT (sink, "send cancelled");
+      flow_ret = GST_FLOW_FLUSHING;
+    } else {
+      GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
+          ("send error: %s", err->message));
+      flow_ret = GST_FLOW_ERROR;
+    }
     g_clear_error (&err);
-    return GST_FLOW_ERROR;
+    return flow_ret;
   }
 invalid_family:
   {
