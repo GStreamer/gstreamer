@@ -1380,7 +1380,7 @@ fill_iq_matrix_4x4(VAIQMatrixBufferH264 *iq_matrix, const GstH264PPS *pps,
     g_assert(G_N_ELEMENTS(iq_matrix->ScalingList4x4[0]) == 16);
 
     for (i = 0; i < G_N_ELEMENTS(iq_matrix->ScalingList4x4); i++)
-        gst_h264_video_quant_matrix_4x4_get_raster_from_zigzag(
+        gst_h264_quant_matrix_4x4_get_raster_from_zigzag(
             iq_matrix->ScalingList4x4[i], pps->scaling_lists_4x4[i]);
 }
 
@@ -1399,7 +1399,7 @@ fill_iq_matrix_8x8(VAIQMatrixBufferH264 *iq_matrix, const GstH264PPS *pps,
 
     n = (sps->chroma_format_idc != 3) ? 2 : 6;
     for (i = 0; i < n; i++) {
-        gst_h264_video_quant_matrix_8x8_get_raster_from_zigzag(
+        gst_h264_quant_matrix_8x8_get_raster_from_zigzag(
             iq_matrix->ScalingList8x8[i], pps->scaling_lists_8x8[i]);
     }
 }
