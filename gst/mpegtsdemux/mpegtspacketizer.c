@@ -2135,12 +2135,24 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
   /* Use clock skew if present */
   if (packetizer->calculate_skew
       && GST_CLOCK_TIME_IS_VALID (pcrtable->base_time)) {
-    GST_DEBUG ("pts %" G_GUINT64_FORMAT " base_pcrtime:%" G_GUINT64_FORMAT
-        " base_time:%" GST_TIME_FORMAT, pts, pcrtable->base_pcrtime,
-        GST_TIME_ARGS (pcrtable->base_time));
-    res =
-        pts + pcrtable->pcroffset - pcrtable->base_pcrtime +
-        pcrtable->base_time + pcrtable->skew;
+    GST_DEBUG ("pts %" GST_TIME_FORMAT " base_pcrtime:%" GST_TIME_FORMAT
+        " base_time:%" GST_TIME_FORMAT " pcroffset:%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (pts),
+        GST_TIME_ARGS (pcrtable->base_pcrtime),
+        GST_TIME_ARGS (pcrtable->base_time),
+        GST_TIME_ARGS (pcrtable->pcroffset));
+    res = pts + pcrtable->pcroffset;
+
+    /* Don't return anything if we differ too much against last seen PCR */
+    /* FIXME : Ideally we want to figure out whether we have a wraparound or
+     * a reset so we can provide actual values.
+     * That being said, this will only happen for the small interval of time
+     * where PTS/DTS are wrapping just before we see the first reset/wrap PCR
+     */
+    if (G_UNLIKELY (ABSDIFF (res, pcrtable->last_pcrtime) > 15 * GST_SECOND))
+      res = GST_CLOCK_TIME_NONE;
+    else
+      res += pcrtable->base_time + pcrtable->skew - pcrtable->base_pcrtime;
   } else if (packetizer->calculate_offset && pcrtable->groups) {
     gint64 refpcr = G_MAXINT64, refpcroffset;
     PCROffsetGroup *group = pcrtable->current->group;
