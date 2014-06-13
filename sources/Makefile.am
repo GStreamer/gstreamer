@@ -35,7 +35,7 @@ generated-stamp: $(API)
 	$(GAPI_CODEGEN) --generate $(srcdir)/$(API) $(GLIB_SHARP_CFLAGS) \
 		--outdir=generated \
 		--glue-filename=$(GLUEDIR)/generated.c --gluelib-name=libgstreamersharpglue-1.0.0.dll \
-		--glue-includes=gst/gst.h,`cd $(GST_INCLUDEDIR);find gst -type f | tr "\n" ","` \
+		--glue-includes=gst/gst.h,`cd $(GST_INCLUDEDIR);find gst -type f -name "*.h" | tr "\n" ","` \
 	 	--assembly-name=$(ASSEMBLY_NAME) && touch generated-stamp
 
 $(DLL): $(build_sources) generated-stamp
