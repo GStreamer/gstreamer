@@ -124,8 +124,8 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, GstVideoInfo * video_info)
       wl_compositor_create_surface (display->compositor));
 
   gst_wl_window_set_video_info (window, video_info);
-  gst_wl_window_set_render_rectangle (window, 0, 0, video_info->width,
-      video_info->height);
+  gst_wl_window_set_render_rectangle (window, 0, 0, window->video_width,
+      window->video_height);
 
   window->shell_surface = wl_shell_get_shell_surface (display->shell,
       window->surface);
@@ -211,7 +211,8 @@ gst_wl_window_set_video_info (GstWlWindow * window, GstVideoInfo * info)
 {
   g_return_if_fail (window != NULL);
 
-  window->video_width = info->width;
+  window->video_width =
+      gst_util_uint64_scale_int_round (info->width, info->par_n, info->par_d);
   window->video_height = info->height;
 
   if (window->render_rectangle.w != 0)
