@@ -514,6 +514,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     gboolean has_video_meta = FALSE;
     GstVideoCodecState *state;
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
+    gboolean has_texture_upload_meta = FALSE;
     GstCapsFeatures *features, *features2;
 #endif
 
@@ -534,10 +535,22 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     features = gst_caps_get_features(state->caps, 0);
     features2 = gst_caps_features_new(GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
 
+    has_texture_upload_meta =
+        gst_vaapi_find_preferred_caps_feature(GST_VIDEO_DECODER_SRC_PAD(vdec),
+            GST_VIDEO_FORMAT_ENCODED) ==
+        GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META;
+
     /* Update src caps if feature is not handled downstream */
     if (!decode->has_texture_upload_meta &&
         gst_caps_features_is_equal(features, features2))
         gst_vaapidecode_update_src_caps (decode, state);
+    else if (has_texture_upload_meta &&
+             !gst_caps_features_is_equal(features, features2)) {
+        gst_video_info_set_format(&state->info, GST_VIDEO_FORMAT_RGBA,
+                                  state->info.width,
+                                  state->info.height);
+        gst_vaapidecode_update_src_caps(decode, state);
+    }
     gst_caps_features_free(features2);
 #endif
 
