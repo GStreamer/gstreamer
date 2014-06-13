@@ -3879,6 +3879,7 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     guint i, size, buf_size, nalu_size, flags;
     guint32 start_code;
     gint ofs, ofs2;
+    gboolean at_au_end = FALSE;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
@@ -3886,6 +3887,7 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
 
     switch (priv->stream_alignment) {
     case GST_VAAPI_STREAM_ALIGN_H264_NALU:
+    case GST_VAAPI_STREAM_ALIGN_H264_AU:
         size = gst_adapter_available_fast(adapter);
         break;
     default:
@@ -3908,6 +3910,8 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
         buf_size = priv->nal_length_size + nalu_size;
         if (size < buf_size)
             return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+        else if (priv->stream_alignment == GST_VAAPI_STREAM_ALIGN_H264_AU)
+            at_au_end = (buf_size == size);
     }
     else {
         if (size < 4)
@@ -3933,7 +3937,10 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
                 scan_for_start_code(adapter, ofs2, size - ofs2, NULL);
             if (ofs < 0) {
                 // Assume the whole NAL unit is present if end-of-stream
-                if (!at_eos) {
+                // or stream buffers aligned on access unit boundaries
+                if (priv->stream_alignment == GST_VAAPI_STREAM_ALIGN_H264_AU)
+                    at_au_end = TRUE;
+                else if (!at_eos) {
                     ps->input_offset2 = size;
                     return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
                 }
@@ -3998,6 +4005,10 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
         return status;
 
     flags = 0;
+    if (at_au_end) {
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END |
+            GST_VAAPI_DECODER_UNIT_FLAG_AU_END;
+    }
     switch (pi->nalu.type) {
     case GST_H264_NAL_AU_DELIMITER:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_AU_START;
