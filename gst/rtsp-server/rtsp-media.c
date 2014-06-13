@@ -1627,7 +1627,7 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
         flags |= GST_SEEK_FLAG_KEY_UNIT;
     }
 
-    /* FIXME, we only do forwards */
+    /* FIXME, we only do forwards playback, no trick modes yet */
     res = gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME,
         flags, start_type, start, stop_type, stop);
 
