@@ -276,10 +276,16 @@ done:
 
 select_error:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("Select failed: %s", err->message));
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+      GST_DEBUG_OBJECT (src, "Cancelled");
+      ret = GST_FLOW_FLUSHING;
+    } else {
+      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+          ("Select failed: %s", err->message));
+      ret = GST_FLOW_ERROR;
+    }
     g_clear_error (&err);
-    return GST_FLOW_ERROR;
+    return ret;
   }
 get_available_error:
   {
