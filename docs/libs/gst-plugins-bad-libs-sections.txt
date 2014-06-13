@@ -968,6 +968,21 @@ GST_TYPE_GL_ALLOCATOR
 </SECTION>
 
 <SECTION>
+<FILE>gsteglimagememory</FILE>
+<TITLE>GstEGLImageMemory</TITLE>
+gst_egl_image_memory_init
+gst_egl_image_memory_get_display
+gst_egl_image_memory_get_image
+gst_egl_image_memory_get_orientation
+gst_egl_image_memory_set_orientation
+gst_egl_image_memory_setup_buffer
+gst_is_egl_image_memory
+GST_EGL_IMAGE_MEMORY_TYPE
+GST_CAPS_FEATURE_MEMORY_EGL_IMAGE
+<SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
 <FILE>gstglmixer</FILE>
 GstGLMixerPad
 GstGLMixerPadClass
