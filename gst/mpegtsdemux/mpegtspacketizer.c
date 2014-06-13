@@ -1855,7 +1855,7 @@ record_pcr (MpegTSPacketizer2 * packetizer, MpegTSPCR * pcrtable,
     guint64 pcr, guint64 offset)
 {
   PCROffsetCurrent *current = pcrtable->current;
-  guint32 corpcr, coroffset;
+  gint64 corpcr, coroffset;
 
   packetizer->nb_seen_offsets += 1;
 
@@ -1931,8 +1931,8 @@ record_pcr (MpegTSPacketizer2 * packetizer, MpegTSPCR * pcrtable,
   GST_DEBUG ("Last PCR: +%" GST_TIME_FORMAT " offset: +%u",
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (current->pending[current->last].pcr)),
       current->pending[current->last].offset);
-  GST_DEBUG ("To add (corrected) PCR:%" GST_TIME_FORMAT " offset:%u",
-      GST_TIME_ARGS (PCRTIME_TO_GSTTIME (corpcr)), coroffset);
+  GST_DEBUG ("To add (corrected) PCR:%" GST_TIME_FORMAT " offset:%"
+      G_GINT64_FORMAT, GST_TIME_ARGS (PCRTIME_TO_GSTTIME (corpcr)), coroffset);
 
   /* Do we need to close the current group ? */
   /* Check for wrapover/discont */
@@ -2167,9 +2167,9 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
          * returning bogus values if it's a PTS/DTS which is *just*
          * before the start of the current group
          */
-        if (ABSDIFF (pts, PCRTIME_TO_GSTTIME (refpcr)) > GST_SECOND)
-          refpcr -= PCR_MAX_VALUE;
-        else
+        if (PCRTIME_TO_GSTTIME (refpcr) - pts > GST_SECOND) {
+          pts += PCR_GST_MAX_VALUE;
+        } else
           refpcr = G_MAXINT64;
       }
     } else {
@@ -2213,7 +2213,8 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
       }
     }
     if (refpcr != G_MAXINT64)
-      res = pts - PCRTIME_TO_GSTTIME (refpcr - refpcroffset);
+      res =
+          pts - PCRTIME_TO_GSTTIME (refpcr) + PCRTIME_TO_GSTTIME (refpcroffset);
     else
       GST_WARNING ("No groups, can't calculate timestamp");
   } else
