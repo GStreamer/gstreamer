@@ -129,7 +129,11 @@ gst_flow_combiner_unref (GstFlowCombiner * combiner)
   g_return_if_fail (combiner->ref_count > 0);
 
   if (g_atomic_int_dec_and_test (&combiner->ref_count)) {
-    g_queue_clear (&combiner->pads);
+    GstPad *pad;
+
+    while ((pad = g_queue_pop_head (&combiner->pads)))
+      gst_object_unref (pad);
+
     g_slice_free (GstFlowCombiner, combiner);
   }
 }
@@ -219,7 +223,7 @@ gst_flow_combiner_add_pad (GstFlowCombiner * combiner, GstPad * pad)
   g_return_if_fail (combiner != NULL);
   g_return_if_fail (pad != NULL);
 
-  g_queue_push_head (&combiner->pads, pad);
+  g_queue_push_head (&combiner->pads, gst_object_ref (pad));
 }
 
 /**
@@ -237,5 +241,6 @@ gst_flow_combiner_remove_pad (GstFlowCombiner * combiner, GstPad * pad)
   g_return_if_fail (combiner != NULL);
   g_return_if_fail (pad != NULL);
 
-  g_queue_remove (&combiner->pads, pad);
+  if (g_queue_remove (&combiner->pads, pad))
+    gst_object_unref (pad);
 }
