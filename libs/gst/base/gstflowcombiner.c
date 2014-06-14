@@ -70,7 +70,15 @@ struct _GstFlowCombiner
   GQueue pads;
 
   GstFlowReturn last_ret;
+  volatile gint ref_count;
 };
+
+static GstFlowCombiner *gst_flow_combiner_ref (GstFlowCombiner * combiner);
+static void gst_flow_combiner_unref (GstFlowCombiner * combiner);
+
+G_DEFINE_BOXED_TYPE (GstFlowCombiner, gst_flow_combiner,
+    (GBoxedCopyFunc) gst_flow_combiner_ref,
+    (GBoxedFreeFunc) gst_flow_combiner_unref);
 
 /**
  * gst_flow_combiner_new:
@@ -87,6 +95,7 @@ gst_flow_combiner_new (void)
 
   g_queue_init (&combiner->pads);
   combiner->last_ret = GST_FLOW_OK;
+  combiner->ref_count = 1;
 
   return combiner;
 }
@@ -102,10 +111,27 @@ gst_flow_combiner_new (void)
 void
 gst_flow_combiner_free (GstFlowCombiner * combiner)
 {
+  gst_flow_combiner_unref (combiner);
+}
+
+static GstFlowCombiner *
+gst_flow_combiner_ref (GstFlowCombiner * combiner)
+{
   g_return_if_fail (combiner != NULL);
 
-  g_queue_clear (&combiner->pads);
-  g_slice_free (GstFlowCombiner, combiner);
+  g_atomic_int_inc (&combiner->ref_count);
+}
+
+static void
+gst_flow_combiner_unref (GstFlowCombiner * combiner)
+{
+  g_return_if_fail (combiner != NULL);
+  g_return_if_fail (combiner->ref_count > 0);
+
+  if (g_atomic_int_dec_and_test (&combiner->ref_count)) {
+    g_queue_clear (&combiner->pads);
+    g_slice_free (GstFlowCombiner, combiner);
+  }
 }
 
 static GstFlowReturn

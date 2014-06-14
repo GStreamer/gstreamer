@@ -30,6 +30,8 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_FLOW_COMBINER gst_flow_combiner_get_type()
+
 /**
  * GstFlowCombiner:
  *
@@ -48,6 +50,8 @@ GstFlowReturn     gst_flow_combiner_update_flow (GstFlowCombiner * combiner, Gst
 void              gst_flow_combiner_add_pad    (GstFlowCombiner * combiner, GstPad * pad);
 
 void              gst_flow_combiner_remove_pad (GstFlowCombiner * combiner, GstPad * pad);
+
+GType             gst_flow_combiner_get_type (void);
 
 G_END_DECLS
 
