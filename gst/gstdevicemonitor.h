@@ -42,6 +42,11 @@ typedef struct _GstDeviceMonitorPrivate GstDeviceMonitorPrivate;
 #define GST_DEVICE_MONITOR_CAST(obj)            ((GstDeviceMonitor *)(obj))
 
 
+/**
+ * GstDeviceMonitor:
+ *
+ * Since: 1.4
+ */
 struct _GstDeviceMonitor {
   GstObject         parent;
 
@@ -59,7 +64,7 @@ struct _GstDeviceMonitor {
  * GstDeviceMonitorClass:
  * @factory: a pointer to the #GstDeviceMonitorFactory that creates this
  *  monitor
- * @get_devices: Returns a list of devices that are currently available.
+ * @probe: Returns a list of devices that are currently available.
  *  This should never block.
  * @start: Starts monitoring for new devices.
  * @stop: Stops monitoring for new devices
@@ -79,7 +84,7 @@ struct _GstDeviceMonitorClass {
   gboolean    (*start) (GstDeviceMonitor * monitor);
   void        (*stop)  (GstDeviceMonitor * monitor);
 
-
+  /*< private >*/
   gpointer metadata;
 
   /*< private >*/

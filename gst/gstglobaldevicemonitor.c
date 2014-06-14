@@ -18,7 +18,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/* FIXME: documentation section! */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -169,56 +169,58 @@ gst_global_device_monitor_dispose (GObject * object)
  *
  * Returns: (transfer full) (element-type GstDevice): a #GList of
  *   #GstDevice
+ *
+ * Since: 1.4
  */
 
 GList *
-gst_global_device_monitor_get_devices (GstGlobalDeviceMonitor * self)
+gst_global_device_monitor_get_devices (GstGlobalDeviceMonitor * monitor)
 {
   GList *devices = NULL;
   guint i;
   guint cookie;
 
-  g_return_val_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (self), NULL);
+  g_return_val_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (monitor), NULL);
 
-  GST_OBJECT_LOCK (self);
+  GST_OBJECT_LOCK (monitor);
 
 again:
 
   g_list_free_full (devices, gst_object_unref);
   devices = NULL;
 
-  cookie = self->priv->cookie;
+  cookie = monitor->priv->cookie;
 
-  for (i = 0; i < self->priv->monitors->len; i++) {
+  for (i = 0; i < monitor->priv->monitors->len; i++) {
     GList *tmpdev;
-    GstDeviceMonitor *monitor =
-        gst_object_ref (g_ptr_array_index (self->priv->monitors, i));
+    GstDeviceMonitor *device_monitor =
+        gst_object_ref (g_ptr_array_index (monitor->priv->monitors, i));
     GList *item;
 
-    GST_OBJECT_UNLOCK (self);
+    GST_OBJECT_UNLOCK (monitor);
 
-    tmpdev = gst_device_monitor_get_devices (monitor);
+    tmpdev = gst_device_monitor_get_devices (device_monitor);
 
     for (item = tmpdev; item; item = item->next) {
       GstDevice *dev = GST_DEVICE (item->data);
       GstCaps *caps = gst_device_get_caps (dev);
 
-      if (gst_caps_can_intersect (self->priv->caps, caps) &&
-          gst_device_has_classes (dev, self->priv->classes))
+      if (gst_caps_can_intersect (monitor->priv->caps, caps) &&
+          gst_device_has_classes (dev, monitor->priv->classes))
         devices = g_list_prepend (devices, gst_object_ref (dev));
       gst_caps_unref (caps);
     }
 
     g_list_free_full (tmpdev, gst_object_unref);
-    gst_object_unref (monitor);
+    gst_object_unref (device_monitor);
 
-    GST_OBJECT_LOCK (self);
+    GST_OBJECT_LOCK (monitor);
 
-    if (self->priv->cookie != cookie)
+    if (monitor->priv->cookie != cookie)
       goto again;
   }
 
-  GST_OBJECT_UNLOCK (self);
+  GST_OBJECT_UNLOCK (monitor);
 
   return devices;
 }
@@ -232,39 +234,42 @@ again:
  * signals will be emitted when the list of devices changes.
  *
  * Returns: %TRUE if the device monitoring could be started
+ *
+ * Since: 1.4
  */
 
 gboolean
-gst_global_device_monitor_start (GstGlobalDeviceMonitor * self)
+gst_global_device_monitor_start (GstGlobalDeviceMonitor * monitor)
 {
   guint i;
 
-  g_return_val_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (self), FALSE);
+  g_return_val_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (monitor), FALSE);
 
-  GST_OBJECT_LOCK (self);
+  GST_OBJECT_LOCK (monitor);
 
-  if (self->priv->monitors->len == 0) {
-    GST_OBJECT_UNLOCK (self);
+  if (monitor->priv->monitors->len == 0) {
+    GST_OBJECT_UNLOCK (monitor);
     return FALSE;
   }
 
-  gst_bus_set_flushing (self->priv->bus, FALSE);
+  gst_bus_set_flushing (monitor->priv->bus, FALSE);
 
-  for (i = 0; i < self->priv->monitors->len; i++) {
-    if (!gst_device_monitor_start (g_ptr_array_index (self->priv->monitors, i))) {
-      gst_bus_set_flushing (self->priv->bus, TRUE);
+  for (i = 0; i < monitor->priv->monitors->len; i++) {
+    if (!gst_device_monitor_start (g_ptr_array_index (monitor->priv->monitors,
+                i))) {
+      gst_bus_set_flushing (monitor->priv->bus, TRUE);
 
       for (; i != 0; i--)
-        gst_device_monitor_stop (g_ptr_array_index (self->priv->monitors,
+        gst_device_monitor_stop (g_ptr_array_index (monitor->priv->monitors,
                 i - 1));
 
-      GST_OBJECT_UNLOCK (self);
+      GST_OBJECT_UNLOCK (monitor);
       return FALSE;
     }
   }
 
-  self->priv->started = TRUE;
-  GST_OBJECT_UNLOCK (self);
+  monitor->priv->started = TRUE;
+  GST_OBJECT_UNLOCK (monitor);
 
   return TRUE;
 }
@@ -274,52 +279,65 @@ gst_global_device_monitor_start (GstGlobalDeviceMonitor * self)
  * @monitor: A #GstDeviceMonitor
  *
  * Stops monitoring the devices.
+ *
+ * Since: 1.4
  */
-
 void
-gst_global_device_monitor_stop (GstGlobalDeviceMonitor * self)
+gst_global_device_monitor_stop (GstGlobalDeviceMonitor * monitor)
 {
   guint i;
 
-  g_return_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (self));
+  g_return_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (monitor));
 
-  gst_bus_set_flushing (self->priv->bus, TRUE);
+  gst_bus_set_flushing (monitor->priv->bus, TRUE);
 
-  GST_OBJECT_LOCK (self);
-  for (i = 0; i < self->priv->monitors->len; i++)
-    gst_device_monitor_stop (g_ptr_array_index (self->priv->monitors, i));
-  self->priv->started = FALSE;
-  GST_OBJECT_UNLOCK (self);
+  GST_OBJECT_LOCK (monitor);
+  for (i = 0; i < monitor->priv->monitors->len; i++)
+    gst_device_monitor_stop (g_ptr_array_index (monitor->priv->monitors, i));
+  monitor->priv->started = FALSE;
+  GST_OBJECT_UNLOCK (monitor);
 
 }
 
+/**
+ * gst_global_device_monitor_set_classes_filter:
+ * @self: the global device monitor
+ * @classes: device classes to use as filter
+ *
+ * Filter devices monitored by device class, e.g. in case you are only
+ * interested in a certain type of device like audio devices or
+ * video sources.
+ *
+ * Since: 1.4
+ */
 void
-gst_global_device_monitor_set_classes_filter (GstGlobalDeviceMonitor * self,
+gst_global_device_monitor_set_classes_filter (GstGlobalDeviceMonitor * monitor,
     const gchar * classes)
 {
   GList *factories = NULL;
   guint i;
 
-  g_return_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (self));
-  g_return_if_fail (!self->priv->started);
+  g_return_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (monitor));
+  g_return_if_fail (!monitor->priv->started);
 
-  GST_OBJECT_LOCK (self);
-  if (!strcmp (self->priv->classes, classes)) {
-    GST_OBJECT_UNLOCK (self);
+  GST_OBJECT_LOCK (monitor);
+  if (!strcmp (monitor->priv->classes, classes)) {
+    GST_OBJECT_UNLOCK (monitor);
     return;
   }
 
-  g_free (self->priv->classes);
-  self->priv->classes = g_strdup (classes);
+  g_free (monitor->priv->classes);
+  monitor->priv->classes = g_strdup (classes);
 
-  factories =
-      gst_device_monitor_factory_list_get_device_monitors (self->priv->classes,
-      1);
+  factories = gst_device_monitor_factory_list_get_device_monitors (classes, 1);
 
-  for (i = 0; i < self->priv->monitors->len; i++) {
-    GstDeviceMonitor *monitor = g_ptr_array_index (self->priv->monitors, i);
-    GstDeviceMonitorFactory *f = gst_device_monitor_get_factory (monitor);
+  for (i = 0; i < monitor->priv->monitors->len; i++) {
+    GstDeviceMonitor *dev_monitor;
+    GstDeviceMonitorFactory *f;
     GList *item;
+
+    dev_monitor = g_ptr_array_index (monitor->priv->monitors, i);
+    f = gst_device_monitor_get_factory (dev_monitor);
 
     item = g_list_find (factories, f);
 
@@ -333,76 +351,111 @@ gst_global_device_monitor_set_classes_filter (GstGlobalDeviceMonitor * self,
       /* If it's not in our list, them remove it from the list of monitors.
        */
 
-      self->priv->cookie++;
-      gst_global_device_monitor_remove (self, i);
+      monitor->priv->cookie++;
+      gst_global_device_monitor_remove (monitor, i);
       i--;
     }
   }
 
   while (factories) {
     GstDeviceMonitorFactory *factory = factories->data;
-    GstDeviceMonitor *monitor;
+    GstDeviceMonitor *device_monitor;
 
     factories = g_list_remove (factories, factory);
 
-    monitor = gst_device_monitor_factory_get (factory);
-    if (monitor) {
-      GstBus *bus = gst_device_monitor_get_bus (monitor);
+    device_monitor = gst_device_monitor_factory_get (factory);
+    if (device_monitor) {
+      GstBus *bus = gst_device_monitor_get_bus (device_monitor);
 
       gst_bus_enable_sync_message_emission (bus);
       g_signal_connect (bus, "sync-message",
-          G_CALLBACK (bus_sync_message), self);
+          G_CALLBACK (bus_sync_message), monitor);
       gst_object_unref (bus);
-      g_ptr_array_add (self->priv->monitors, monitor);
-      self->priv->cookie++;
+      g_ptr_array_add (monitor->priv->monitors, device_monitor);
+      monitor->priv->cookie++;
     }
 
     gst_object_unref (factory);
   }
 
-  GST_OBJECT_UNLOCK (self);
+  GST_OBJECT_UNLOCK (monitor);
 }
 
+/**
+ * gst_global_device_monitor_get_classes_filter:
+ * @monitor: the global device monitor
+ *
+ * Return the type (device classes) filter active for device filtering.
+ *
+ * Returns: string of device classes that are being filtered.
+ *
+ * Since: 1.4
+ */
 gchar *
-gst_global_device_monitor_get_classes_filter (GstGlobalDeviceMonitor * self)
+gst_global_device_monitor_get_classes_filter (GstGlobalDeviceMonitor * monitor)
 {
   gchar *res;
 
-  g_return_val_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (self), 0);
+  g_return_val_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (monitor), 0);
 
-  GST_OBJECT_LOCK (self);
-  res = g_strdup (self->priv->classes);
-  GST_OBJECT_UNLOCK (self);
+  GST_OBJECT_LOCK (monitor);
+  res = g_strdup (monitor->priv->classes);
+  GST_OBJECT_UNLOCK (monitor);
 
   return res;
 }
 
+/**
+ * gst_global_device_monitor_set_caps_filter:
+ * @monitor: the global device monitor
+ * @caps: caps to filter
+ *
+ * Set caps to use as filter for devices. By default ANY caps are used,
+ * meaning no caps filter is active.
+ *
+ * Since: 1.4
+ */
 void
-gst_global_device_monitor_set_caps_filter (GstGlobalDeviceMonitor * self,
+gst_global_device_monitor_set_caps_filter (GstGlobalDeviceMonitor * monitor,
     GstCaps * caps)
 {
-  g_return_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (self));
+  g_return_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (monitor));
   g_return_if_fail (GST_IS_CAPS (caps));
 
-  GST_OBJECT_LOCK (self);
-  gst_caps_replace (&self->priv->caps, caps);
-  GST_OBJECT_UNLOCK (self);
+  GST_OBJECT_LOCK (monitor);
+  gst_caps_replace (&monitor->priv->caps, caps);
+  GST_OBJECT_UNLOCK (monitor);
 }
 
+/**
+ * gst_global_device_monitor_get_caps_filter:
+ * @monitor: a global device monitor
+ *
+ * Returns: (transfer full): the filter caps that are active (or ANY caps)
+ *
+ * Since: 1.4
+ */
 GstCaps *
-gst_global_device_monitor_get_caps_filter (GstGlobalDeviceMonitor * self)
+gst_global_device_monitor_get_caps_filter (GstGlobalDeviceMonitor * monitor)
 {
   GstCaps *res;
 
-  g_return_val_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (self), NULL);
+  g_return_val_if_fail (GST_IS_GLOBAL_DEVICE_MONITOR (monitor), NULL);
 
-  GST_OBJECT_LOCK (self);
-  res = gst_caps_ref (self->priv->caps);
-  GST_OBJECT_UNLOCK (self);
+  GST_OBJECT_LOCK (monitor);
+  res = gst_caps_ref (monitor->priv->caps);
+  GST_OBJECT_UNLOCK (monitor);
 
   return res;
 }
 
+/**
+ * gst_global_device_monitor_new:
+ *
+ * Returns: (transfer full): a new global device monitor.
+ *
+ * Since: 1.4
+ */
 GstGlobalDeviceMonitor *
 gst_global_device_monitor_new (void)
 {
@@ -416,6 +469,8 @@ gst_global_device_monitor_new (void)
  * Gets the #GstBus of this #GstGlobalDeviceMonitor
  *
  * Returns: (transfer full): a #GstBus
+ *
+ * Since: 1.4
  */
 GstBus *
 gst_global_device_monitor_get_bus (GstGlobalDeviceMonitor * monitor)
