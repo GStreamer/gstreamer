@@ -851,6 +851,8 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
 # endif
 "
   AC_MSG_CHECKING([whether it is possible to include both GL and GLES2 headers])
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS -Werror"
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[$GL_INCLUDES]], [[
     #if !defined(GL_FALSE)
     #error Failed to include GL headers
@@ -868,6 +870,7 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
       HAVE_GLES2=no
     fi
   ])
+  CPPFLAGS="$save_CPPFLAGS"
 fi
 
 #dnl Check for OpenGL, GLU
