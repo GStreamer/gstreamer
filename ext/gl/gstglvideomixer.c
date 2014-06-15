@@ -451,7 +451,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
     /* bottom-right */
     v_vertices[11] = v_vertices[16] = v_vertices[1] + 2.0f * h;
     GST_TRACE ("processing texture:%u dimensions:%ux%u, at %f,%f %fx%f with "
-        "alpha", in_tex, in_width, in_height, v_vertices[0], v_vertices[1],
+        "alpha:%f", in_tex, in_width, in_height, v_vertices[0], v_vertices[1],
         v_vertices[5], v_vertices[11], pad->alpha);
 
     gl->VertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
