@@ -996,6 +996,7 @@ GstGLMixerReset
 GstGLMixerProcessTextures
 GstGLMixerFrameData
 gst_gl_mixer_process_textures
+gst_gl_mixer_set_pad_type
 <SUBSECTION Standard>
 GstGLMixerPrivate
 GST_GL_MIXER
