@@ -81,11 +81,12 @@ static const gchar *video_mixer_v_src =
 /* fragment source */
 static const gchar *video_mixer_f_src =
     "uniform sampler2D texture;                     \n"
+    "uniform float alpha;\n"
     "varying vec2 v_texCoord;                            \n"
     "void main()                                         \n"
     "{                                                   \n"
     "  vec4 rgba = texture2D( texture, v_texCoord );\n"
-    "  gl_FragColor = vec4(rgba.rgb, 1.0);\n"
+    "  gl_FragColor = vec4(rgba.rgb, rgba.a * alpha);\n"
     "}                                                   \n";
 
 #define GST_TYPE_GL_VIDEO_MIXER_PAD (gst_gl_video_mixer_pad_get_type())
@@ -153,6 +154,7 @@ enum
 static void
 gst_gl_video_mixer_pad_init (GstGLVideoMixerPad * pad)
 {
+  pad->alpha = 1.0;
 }
 
 static void
@@ -448,9 +450,9 @@ gst_gl_video_mixer_callback (gpointer stuff)
     v_vertices[5] = v_vertices[10] = v_vertices[0] + 2.0f * w;
     /* bottom-right */
     v_vertices[11] = v_vertices[16] = v_vertices[1] + 2.0f * h;
-    GST_TRACE ("processing texture:%u dimensions:%ux%u, at %f,%f %fx%f", in_tex,
-        in_width, in_height, v_vertices[0], v_vertices[1], v_vertices[5],
-        v_vertices[11]);
+    GST_TRACE ("processing texture:%u dimensions:%ux%u, at %f,%f %fx%f with "
+        "alpha", in_tex, in_width, in_height, v_vertices[0], v_vertices[1],
+        v_vertices[5], v_vertices[11], pad->alpha);
 
     gl->VertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
         GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[0]);
@@ -461,12 +463,14 @@ gst_gl_video_mixer_callback (gpointer stuff)
     gl->EnableVertexAttribArray (attr_position_loc);
     gl->EnableVertexAttribArray (attr_texture_loc);
 
-    gl->BlendFunc (GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-    gl->BlendEquation (GL_FUNC_ADD);
+    gl->BlendFuncSeparate (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
+        GL_ZERO);
+    gl->BlendEquationSeparate (GL_FUNC_ADD, GL_FUNC_ADD);
 
     gl->ActiveTexture (GL_TEXTURE0);
     gl->BindTexture (GL_TEXTURE_2D, in_tex);
     gst_gl_shader_set_uniform_1i (video_mixer->shader, "texture", 0);
+    gst_gl_shader_set_uniform_1f (video_mixer->shader, "alpha", pad->alpha);
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
