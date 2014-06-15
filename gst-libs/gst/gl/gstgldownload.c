@@ -312,6 +312,7 @@ _do_download (GstGLDownload * download, guint texture_id,
   }
 
   gst_buffer_unref (inbuf);
+  gst_buffer_unref (outbuf);
 
   return ret;
 }
