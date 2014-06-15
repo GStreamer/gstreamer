@@ -114,6 +114,7 @@ struct _GstGLVideoMixerPad
   /* < private > */
   /* properties */
   gint xpos, ypos;
+  gint width, height;
   guint zorder;
   gdouble alpha;
 };
@@ -135,6 +136,8 @@ static void gst_gl_video_mixer_pad_get_property (GObject * object,
 #define DEFAULT_PAD_ZORDER 0
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
+#define DEFAULT_PAD_WIDTH  0
+#define DEFAULT_PAD_HEIGHT 0
 #define DEFAULT_PAD_ALPHA  1.0
 enum
 {
@@ -142,6 +145,8 @@ enum
   PROP_PAD_ZORDER,
   PROP_PAD_XPOS,
   PROP_PAD_YPOS,
+  PROP_PAD_WIDTH,
+  PROP_PAD_HEIGHT,
   PROP_PAD_ALPHA
 };
 
@@ -170,6 +175,14 @@ gst_gl_video_mixer_pad_class_init (GstGLVideoMixerPadClass * klass)
       g_param_spec_int ("ypos", "Y Position", "Y Position of the picture",
           G_MININT, G_MAXINT, DEFAULT_PAD_YPOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAD_WIDTH,
+      g_param_spec_int ("width", "Width", "Width of the picture",
+          G_MININT, G_MAXINT, DEFAULT_PAD_WIDTH,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAD_HEIGHT,
+      g_param_spec_int ("height", "Height", "Height of the picture",
+          G_MININT, G_MAXINT, DEFAULT_PAD_HEIGHT,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAD_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
           DEFAULT_PAD_ALPHA,
@@ -191,6 +204,12 @@ gst_gl_video_mixer_pad_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_YPOS:
       g_value_set_int (value, pad->ypos);
+      break;
+    case PROP_PAD_WIDTH:
+      g_value_set_int (value, pad->width);
+      break;
+    case PROP_PAD_HEIGHT:
+      g_value_set_int (value, pad->height);
       break;
     case PROP_PAD_ALPHA:
       g_value_set_double (value, pad->alpha);
@@ -229,6 +248,12 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_YPOS:
       pad->ypos = g_value_get_int (value);
+      break;
+    case PROP_PAD_WIDTH:
+      pad->width = g_value_get_int (value);
+      break;
+    case PROP_PAD_HEIGHT:
+      pad->height = g_value_get_int (value);
       break;
     case PROP_PAD_ALPHA:
       pad->alpha = g_value_get_double (value);
@@ -387,6 +412,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
     /* *INDENT-ON* */
     guint in_tex;
     guint in_width, in_height;
+    guint pad_width, pad_height;
     gfloat w, h;
 
     frame = g_ptr_array_index (video_mixer->input_frames, count);
@@ -406,15 +432,21 @@ gst_gl_video_mixer_callback (gpointer stuff)
       continue;
     }
     in_tex = frame->texture;
+    pad_width = pad->width <= 0 ? in_width : pad->width;
+    pad_height = pad->height <= 0 ? in_height : pad->height;
 
-    w = ((gfloat) in_width / (gfloat) out_width);
-    h = ((gfloat) in_height / (gfloat) out_height);
+    w = ((gfloat) pad_width / (gfloat) out_width);
+    h = ((gfloat) pad_height / (gfloat) out_height);
 
+    /* top-left */
     v_vertices[0] = v_vertices[15] =
         2.0f * (gfloat) pad->xpos / (gfloat) out_width - 1.0f;
+    /* bottom-left */
     v_vertices[1] = v_vertices[6] =
         2.0f * (gfloat) pad->ypos / (gfloat) out_height - 1.0f;
+    /* top-right */
     v_vertices[5] = v_vertices[10] = v_vertices[0] + 2.0f * w;
+    /* bottom-right */
     v_vertices[11] = v_vertices[16] = v_vertices[1] + 2.0f * h;
     GST_TRACE ("processing texture:%u dimensions:%ux%u, at %f,%f %fx%f", in_tex,
         in_width, in_height, v_vertices[0], v_vertices[1], v_vertices[5],
