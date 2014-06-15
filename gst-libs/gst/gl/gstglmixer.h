@@ -40,6 +40,10 @@ G_BEGIN_DECLS
 #define GST_GL_MIXER_GET_CLASS(obj) \
         (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_GL_MIXER,GstGLMixerClass))
 
+#define GST_GL_MIXER_GET_LOCK(mix) (GST_GL_MIXER(mix)->lock)
+#define GST_GL_MIXER_LOCK(mix)     (g_mutex_lock(&GST_GL_MIXER_GET_LOCK (mix)))
+#define GST_GL_MIXER_UNLOCK(mix)   (g_mutex_unlock(&GST_GL_MIXER_GET_LOCK (mix)))
+
 typedef struct _GstGLMixer GstGLMixer;
 typedef struct _GstGLMixerClass GstGLMixerClass;
 typedef struct _GstGLMixerPrivate GstGLMixerPrivate;
@@ -99,6 +103,8 @@ struct _GstGLMixer
   GstGLContext *context;
   GLuint fbo;
   GLuint depthbuffer;
+
+  GType pad_type;
 };
 
 struct _GstGLMixerClass
@@ -120,6 +126,8 @@ struct _GstGLMixerFrameData
 GType gst_gl_mixer_get_type(void);
 
 gboolean gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf);
+
+void gst_gl_mixer_set_pad_type (GstGLMixer * mix, GType pad_type);
 
 G_END_DECLS
 #endif /* __GST_GL_MIXER_H__ */

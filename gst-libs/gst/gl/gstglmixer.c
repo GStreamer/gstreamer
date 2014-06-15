@@ -756,6 +756,7 @@ gst_gl_mixer_init (GstGLMixer * mix)
   mix->display = NULL;
   mix->fbo = 0;
   mix->depthbuffer = 0;
+  mix->pad_type = GST_TYPE_GL_MIXER_PAD;
 
   mix->frames = g_ptr_array_new_full (4, _free_pad_frame_data);
   mix->array_buffers = g_ptr_array_new_full (4, NULL);
@@ -1363,6 +1364,26 @@ done:
   return ret;
 }
 
+/**
+ * gst_gl_mixer_set_pad_type:
+ * @mix: a #GstGLMixer
+ * @pad_type: a #GstPad type subclass
+ *
+ * Set the pad type that will be created in the request_new_pad vfunc.
+ * 
+ * Intended only for derived classes of #GstGLMixer.
+ */
+void
+gst_gl_mixer_set_pad_type (GstGLMixer * mix, GType pad_type)
+{
+  g_return_if_fail (GST_IS_GL_MIXER (mix));
+  g_return_if_fail (g_type_is_a (pad_type, GST_TYPE_GL_MIXER_PAD));
+
+  GST_GL_MIXER_LOCK (mix);
+  mix->pad_type = pad_type;
+  GST_GL_MIXER_UNLOCK (mix);
+}
+
 static GstPad *
 gst_gl_mixer_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
@@ -1392,7 +1413,7 @@ gst_gl_mixer_request_new_pad (GstElement * element,
   }
   /* create new pad with the name */
   name = g_strdup_printf ("sink_%d", serial);
-  mixpad = g_object_new (GST_TYPE_GL_MIXER_PAD, "name", name, "direction",
+  mixpad = g_object_new (mix->pad_type, "name", name, "direction",
       templ->direction, "template", templ, NULL);
   g_free (name);
 
@@ -1412,19 +1433,18 @@ gst_gl_mixer_request_new_pad (GstElement * element,
   mix->sinkpads = g_slist_append (mix->sinkpads, mixpad);
   mix->numpads++;
 
-  GST_DEBUG_OBJECT (element, "Adding pad %s", GST_PAD_NAME (mixpad));
-
-  /* add the pad to the element */
-  gst_element_add_pad (element, GST_PAD (mixpad));
-  gst_child_proxy_child_added (GST_CHILD_PROXY (mix), G_OBJECT (mixpad),
-      GST_OBJECT_NAME (mixpad));
-
   g_ptr_array_set_size (mix->array_buffers, mix->numpads);
   g_ptr_array_set_size (mix->frames, mix->numpads);
 
   mix->frames->pdata[mix->numpads - 1] = g_slice_new0 (GstGLMixerFrameData);
 
   GST_GL_MIXER_UNLOCK (mix);
+
+  /* add the pad to the element */
+  GST_DEBUG_OBJECT (element, "Adding pad %s", GST_PAD_NAME (mixpad));
+  gst_element_add_pad (element, GST_PAD (mixpad));
+  gst_child_proxy_child_added (GST_CHILD_PROXY (mix), G_OBJECT (mixpad),
+      GST_OBJECT_NAME (mixpad));
 
   return GST_PAD (mixpad);
 }
