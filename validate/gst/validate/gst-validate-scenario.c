@@ -41,7 +41,7 @@
 #define GST_VALIDATE_SCENARIO_SUFFIX ".scenario"
 #define GST_VALIDATE_SCENARIO_DIRECTORY "validate-scenario"
 
-#define DEFAULT_SEEK_TOLERANCE (0.1 * GST_SECOND)       /* tolerance seek interval
+#define DEFAULT_SEEK_TOLERANCE (1 * GST_MSECOND)        /* tolerance seek interval
                                                            TODO make it overridable  */
 enum
 {
