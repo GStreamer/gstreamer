@@ -107,6 +107,33 @@ GST_START_TEST (test_add_and_iterate)
 
 GST_END_TEST;
 
+GST_START_TEST (test_remove)
+{
+  GstBuffer *buf;
+
+  /* buffer list is initially empty */
+  fail_unless (gst_buffer_list_length (list) == 0);
+
+  buf = gst_buffer_new ();
+
+  /* add our own ref so it stays alive after removal from the list */
+  buf = gst_buffer_ref (buf);
+
+  /* add a buffer */
+  fail_unless (gst_buffer_list_length (list) == 0);
+  ASSERT_CRITICAL (gst_buffer_list_insert (list, -1, NULL));
+  ASSERT_BUFFER_REFCOUNT (buf, "buf", 2);
+  gst_buffer_list_add (list, buf);
+  ASSERT_BUFFER_REFCOUNT (buf, "buf", 2);       /* list takes ownership */
+  fail_unless (gst_buffer_list_length (list) == 1);
+  gst_buffer_list_remove (list, 0, 1);
+  ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
+  gst_buffer_unref (buf);
+  fail_unless (gst_buffer_list_length (list) == 0);
+}
+
+GST_END_TEST;
+
 #if 0
 GST_START_TEST (test_make_writable)
 {
@@ -762,6 +789,7 @@ gst_buffer_list_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, cleanup);
   tcase_add_test (tc_chain, test_add_and_iterate);
+  tcase_add_test (tc_chain, test_remove);
 #if 0
   tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_copy);
