@@ -27,7 +27,12 @@
 
 #include "gstrtpvrawpay.h"
 
-#define BUFFER_LISTS_PER_FRAME 10
+enum
+{
+  PROP_CHUNKS_PER_FRAME = 1
+};
+
+#define DEFAULT_CHUNKS_PER_FRAME 10
 
 GST_DEBUG_CATEGORY_STATIC (rtpvrawpay_debug);
 #define GST_CAT_DEFAULT (rtpvrawpay_debug)
@@ -72,6 +77,10 @@ static gboolean gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
+static void gst_rtp_vraw_pay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_rtp_vraw_pay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 
 G_DEFINE_TYPE (GstRtpVRawPay, gst_rtp_vraw_pay, GST_TYPE_RTP_BASE_PAYLOAD)
 
@@ -79,9 +88,22 @@ G_DEFINE_TYPE (GstRtpVRawPay, gst_rtp_vraw_pay, GST_TYPE_RTP_BASE_PAYLOAD)
 {
   GstRTPBasePayloadClass *gstrtpbasepayload_class;
   GstElementClass *gstelement_class;
+  GObjectClass *gobject_class;
 
+  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
+
+  gobject_class->set_property = gst_rtp_vraw_pay_set_property;
+  gobject_class->get_property = gst_rtp_vraw_pay_get_property;
+
+  g_object_class_install_property (gobject_class,
+      PROP_CHUNKS_PER_FRAME,
+      g_param_spec_int ("chunks-per-frame", "Chunks per Frame",
+          "Split and send out each frame in multiple chunks to reduce overhead",
+          1, G_MAXINT, DEFAULT_CHUNKS_PER_FRAME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
 
   gstrtpbasepayload_class->set_caps = gst_rtp_vraw_pay_setcaps;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_vraw_pay_handle_buffer;
@@ -103,6 +125,7 @@ G_DEFINE_TYPE (GstRtpVRawPay, gst_rtp_vraw_pay, GST_TYPE_RTP_BASE_PAYLOAD)
 static void
 gst_rtp_vraw_pay_init (GstRtpVRawPay * rtpvrawpay)
 {
+  rtpvrawpay->chunks_per_frame = DEFAULT_CHUNKS_PER_FRAME;
 }
 
 static gboolean
@@ -253,7 +276,8 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   GstVideoFormat format;
   GstVideoFrame frame;
   gint interlaced;
-  GstBufferList *list;
+  gboolean use_buffer_lists;
+  GstBufferList *list = NULL;
   GstRTPBuffer rtp = { NULL, };
 
   rtpvrawpay = GST_RTP_VRAW_PAY (payload);
@@ -287,14 +311,16 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   xinc = rtpvrawpay->xinc;
 
   /* after how many packed lines we push out a buffer list */
-  lines_delay = GST_ROUND_UP_4 (height / BUFFER_LISTS_PER_FRAME);
+  lines_delay = GST_ROUND_UP_4 (height / rtpvrawpay->chunks_per_frame);
 
   /* calculate how many buffers we expect to store in a single buffer list */
   pgroups_per_packet = (mtu - (12 + 14)) / pgroup;
   packets_per_packline = width / (xinc * pgroups_per_packet * 1.0);
-  packlines_per_list = height / (yinc * BUFFER_LISTS_PER_FRAME);
+  packlines_per_list = height / (yinc * rtpvrawpay->chunks_per_frame);
   buffers_per_list = packlines_per_list * packets_per_packline;
   buffers_per_list = GST_ROUND_UP_8 (buffers_per_list);
+
+  use_buffer_lists = (rtpvrawpay->chunks_per_frame < (height / yinc));
 
   fields = 1 + interlaced;
 
@@ -304,7 +330,8 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
     offset = 0;
     last_line = 0;
 
-    list = gst_buffer_list_new_sized (buffers_per_list);
+    if (use_buffer_lists)
+      list = gst_buffer_list_new_sized (buffers_per_list);
 
     /* write all lines */
     while (line < height) {
@@ -528,11 +555,18 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
         gst_buffer_resize (out, 0, gst_buffer_get_size (out) - left);
       }
 
+      /* Now either push out the buffer directly */
+      if (!use_buffer_lists) {
+        ret = gst_rtp_base_payload_push (payload, out);
+        continue;
+      }
+
+      /* or add the buffer to buffer list ... */
       gst_buffer_list_add (list, out);
 
+      /* .. and check if we need to push out the list */
       pack_line = (line - field) / fields;
       if (complete || (pack_line > last_line && pack_line % lines_delay == 0)) {
-        /* push buffers */
         GST_LOG_OBJECT (rtpvrawpay, "pushing list of %u buffers up to pack "
             "line %u", gst_buffer_list_length (list), pack_line);
         ret = gst_rtp_base_payload_push_list (payload, list);
@@ -566,6 +600,42 @@ too_small:
     gst_video_frame_unmap (&frame);
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_SUPPORTED;
+  }
+}
+
+static void
+gst_rtp_vraw_pay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpVRawPay *rtpvrawpay;
+
+  rtpvrawpay = GST_RTP_VRAW_PAY (object);
+
+  switch (prop_id) {
+    case PROP_CHUNKS_PER_FRAME:
+      rtpvrawpay->chunks_per_frame = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_vraw_pay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpVRawPay *rtpvrawpay;
+
+  rtpvrawpay = GST_RTP_VRAW_PAY (object);
+
+  switch (prop_id) {
+    case PROP_CHUNKS_PER_FRAME:
+      g_value_set_int (value, rtpvrawpay->chunks_per_frame);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
 }
 

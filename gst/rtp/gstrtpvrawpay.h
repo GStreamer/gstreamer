@@ -48,6 +48,9 @@ struct _GstRtpVRawPay
 
   gint pgroup;
   gint xinc, yinc;
+
+  /* properties */
+  guint chunks_per_frame;
 };
 
 struct _GstRtpVRawPayClass
