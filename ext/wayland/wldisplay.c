@@ -237,6 +237,24 @@ gst_wl_display_new_existing (struct wl_display * display,
     }
   }
 
+  /* verify we got all the required interfaces */
+#define VERIFY_INTERFACE_EXISTS(var, interface) \
+  if (!self->var) { \
+    g_set_error (error, g_quark_from_static_string ("GstWlDisplay"), 0, \
+        "Could not bind to " interface ". Either it is not implemented in " \
+        "the compositor, or the implemented version doesn't match"); \
+    g_object_unref (self); \
+    return NULL; \
+  }
+
+  VERIFY_INTERFACE_EXISTS (compositor, "wl_compositor");
+  VERIFY_INTERFACE_EXISTS (subcompositor, "wl_subcompositor");
+  VERIFY_INTERFACE_EXISTS (shell, "wl_shell");
+  VERIFY_INTERFACE_EXISTS (shm, "wl_shm");
+  VERIFY_INTERFACE_EXISTS (scaler, "wl_scaler");
+
+#undef VERIFY_INTERFACE_EXISTS
+
   self->thread = g_thread_try_new ("GstWlDisplay", gst_wl_display_thread_run,
       self, &err);
   if (err) {
