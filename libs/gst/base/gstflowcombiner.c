@@ -117,9 +117,11 @@ gst_flow_combiner_free (GstFlowCombiner * combiner)
 static GstFlowCombiner *
 gst_flow_combiner_ref (GstFlowCombiner * combiner)
 {
-  g_return_if_fail (combiner != NULL);
+  g_return_val_if_fail (combiner != NULL, NULL);
 
   g_atomic_int_inc (&combiner->ref_count);
+
+  return combiner;
 }
 
 static void
