@@ -332,17 +332,32 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (sink->window && gst_wl_window_is_toplevel (sink->window)) {
-        gst_buffer_replace (&sink->last_buffer, NULL);
-        g_clear_object (&sink->window);
+      gst_buffer_replace (&sink->last_buffer, NULL);
+      if (sink->window) {
+        if (gst_wl_window_is_toplevel (sink->window)) {
+          g_clear_object (&sink->window);
+        } else {
+          /* remove buffer from surface, show nothing */
+          wl_surface_attach (sink->window->surface, NULL, 0, 0);
+          wl_surface_damage (sink->window->surface, 0, 0,
+              sink->window->surface_width, sink->window->surface_height);
+          wl_surface_commit (sink->window->surface);
+          wl_display_flush (sink->display->display);
+        }
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       g_mutex_lock (&sink->display_lock);
-      /* We don't need to keep the display around, unless we are embedded
-       * in another window as a subsurface, in which case we should continue
-       * to respond to expose() and therefore both the window and the display
-       * are kept alive */
+      /* If we had a toplevel window, we most likely have our own connection
+       * to the display too, and it is a good idea to disconnect and allow
+       * potentially the application to embed us with GstVideoOverlay
+       * (which requires to re-use the same display connection as the parent
+       * surface). If we didn't have a toplevel window, then the display
+       * connection that we have is definitely shared with the application
+       * and it's better to keep it around (together with the window handle)
+       * to avoid requesting them again from the application if/when we are
+       * restarted (GstVideoOverlay behaves like that in other sinks)
+       */
       if (sink->display && !sink->window) {     /* -> the window was toplevel */
         /* Force all buffers to return to the pool, regardless of
          * whether the compositor has released them or not. We are
