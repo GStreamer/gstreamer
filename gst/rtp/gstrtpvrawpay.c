@@ -239,15 +239,18 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 {
   GstRtpVRawPay *rtpvrawpay;
   GstFlowReturn ret = GST_FLOW_OK;
+  guint lines_delay;            /* after how many packed lines we push out a buffer list */
+  guint last_line;              /* last pack line number we pushed out a buffer list     */
   guint line, offset;
   guint8 *p0, *yp, *up, *vp;
   guint ystride, uvstride;
   guint pgroup;
   guint mtu;
   guint width, height;
-  gint field;
+  gint field, fields;
   GstVideoFrame frame;
   gint interlaced;
+  GstBufferList *list;
   GstRTPBuffer rtp = { NULL, };
 
   rtpvrawpay = GST_RTP_VRAW_PAY (payload);
@@ -275,17 +278,25 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 
   interlaced = GST_VIDEO_INFO_IS_INTERLACED (&rtpvrawpay->vinfo);
 
+  /* after how many packed lines we push out a buffer list */
+  lines_delay = GST_ROUND_UP_4 (height / 10);
+
+  fields = 1 + interlaced;
+
   /* start with line 0, offset 0 */
-  for (field = 0; field < 1 + interlaced; field++) {
+  for (field = 0; field < fields; field++) {
     line = field;
     offset = 0;
+    last_line = 0;
+
+    list = gst_buffer_list_new ();
 
     /* write all lines */
     while (line < height) {
-      guint left;
+      guint left, pack_line;
       GstBuffer *out;
       guint8 *outdata, *headers;
-      gboolean next_line;
+      gboolean next_line, complete = FALSE;
       guint length, cont, pixels;
 
       /* get the max allowed payload length size, we try to fill the complete MTU */
@@ -496,6 +507,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
       if (line >= height) {
         GST_LOG_OBJECT (rtpvrawpay, "field/frame complete, set marker");
         gst_rtp_buffer_set_marker (&rtp, TRUE);
+        complete = TRUE;
       }
       gst_rtp_buffer_unmap (&rtp);
       if (left > 0) {
@@ -503,8 +515,19 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
         gst_buffer_resize (out, 0, gst_buffer_get_size (out) - left);
       }
 
-      /* push buffer */
-      ret = gst_rtp_base_payload_push (payload, out);
+      gst_buffer_list_add (list, out);
+
+      pack_line = (line - field) / fields;
+      if (complete || (pack_line > last_line && pack_line % lines_delay == 0)) {
+        /* push buffers */
+        GST_LOG_OBJECT (rtpvrawpay, "pushing list of %u buffers up to pack "
+            "line %u", gst_buffer_list_length (list), pack_line);
+        ret = gst_rtp_base_payload_push_list (payload, list);
+        list = NULL;
+        if (!complete)
+          list = gst_buffer_list_new ();
+        last_line = pack_line;
+      }
     }
 
   }
