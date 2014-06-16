@@ -79,6 +79,16 @@ rtp_pipeline_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
   return GST_FLOW_OK;
 }
 
+static GstFlowReturn
+rtp_pipeline_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
+{
+  GstBufferList *list;
+
+  list = gst_buffer_list_new_sized (1);
+  gst_buffer_list_add (list, buf);
+  return rtp_pipeline_chain_list (pad, parent, list);
+}
+
 /*
  * RTP bus callback.
  */
@@ -303,6 +313,8 @@ rtp_pipeline_enable_lists (rtp_pipeline * p, guint mtu_size)
   pad = gst_element_get_static_pad (p->rtpdepay, "sink");
   gst_pad_set_chain_list_function (pad,
       GST_DEBUG_FUNCPTR (rtp_pipeline_chain_list));
+  /* .. to satisfy this silly test code in case someone dares push a buffer */
+  gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (rtp_pipeline_chain));
   gst_object_unref (pad);
 }
 
