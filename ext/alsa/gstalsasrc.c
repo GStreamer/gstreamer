@@ -787,7 +787,8 @@ gst_alsasrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
     if (chmap && chmap->channels == alsa->channels) {
       GstAudioChannelPosition pos[8];
       if (alsa_chmap_to_channel_positions (chmap, pos))
-	gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SRC (alsa)->ringbuffer, pos);
+        gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SRC
+            (alsa)->ringbuffer, pos);
     }
     free (chmap);
   }
@@ -861,7 +862,7 @@ gst_alsasrc_close (GstAudioSrc * asrc)
 static gint
 xrun_recovery (GstAlsaSrc * alsa, snd_pcm_t * handle, gint err)
 {
-  GST_DEBUG_OBJECT (alsa, "xrun recovery %d: %s", err, g_strerror (err));
+  GST_WARNING_OBJECT (alsa, "xrun recovery %d: %s", err, g_strerror (err));
 
   if (err == -EPIPE) {          /* under-run */
     err = snd_pcm_prepare (handle);
