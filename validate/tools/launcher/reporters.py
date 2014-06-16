@@ -97,7 +97,7 @@ class Reporter(Loggable):
     def final_report(self):
         print "\n"
         printc("Final Report:", title=True)
-        for test in self.results:
+        for test in sorted(self.results, key=lambda test: test.result):
             printc(test)
 
         print "\n"
