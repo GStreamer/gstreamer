@@ -261,6 +261,8 @@ G_GNUC_INTERNAL gint element_start_compare                (GESTimelineElement * 
                                                            GESTimelineElement * b);
 G_GNUC_INTERNAL gint element_end_compare                  (GESTimelineElement * a,
                                                            GESTimelineElement * b);
+G_GNUC_INTERNAL GstElementFactory *
+ges_get_compositor_factory                                (void);
 
 void
 ges_base_xml_formatter_set_timeline_properties(GESBaseXmlFormatter * self,

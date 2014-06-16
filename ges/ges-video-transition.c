@@ -311,7 +311,7 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
 
-  mixer = gst_element_factory_make ("videomixer", NULL);
+  mixer = gst_element_factory_create (ges_get_compositor_factory (), NULL);
   g_assert (mixer);
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);

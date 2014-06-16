@@ -31,6 +31,8 @@
 #include "ges-layer.h"
 #include "ges.h"
 
+static GstElementFactory *compositor_factory = NULL;
+
 /**
  * ges_timeline_new_audio_video:
  * 
@@ -121,4 +123,41 @@ ges_pspec_hash (gconstpointer key_spec)
     h = (h << 5) - h + *p;
 
   return h;
+}
+
+static gboolean
+find_compositor (GstPluginFeatureFilter * feature, gpointer udata)
+{
+  const gchar *klass;
+
+  if (G_UNLIKELY (!GST_IS_ELEMENT_FACTORY (feature)))
+    return FALSE;
+
+  klass = gst_element_factory_get_metadata (GST_ELEMENT_FACTORY_CAST (feature),
+      GST_ELEMENT_METADATA_KLASS);
+
+  return (strstr (klass, "Compositor") != NULL);
+}
+
+
+
+GstElementFactory *
+ges_get_compositor_factory (void)
+{
+  GList *result;
+
+  if (compositor_factory)
+    return compositor_factory;
+
+  result = gst_registry_feature_filter (gst_registry_get (),
+      (GstPluginFeatureFilter) find_compositor, FALSE, NULL);
+
+  /* sort on rank and name */
+  result = g_list_sort (result, gst_plugin_feature_rank_compare_func);
+  g_assert (result);
+
+  compositor_factory = result->data;
+  gst_plugin_feature_list_free (result);
+
+  return compositor_factory;
 }

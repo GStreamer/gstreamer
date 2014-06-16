@@ -209,10 +209,10 @@ static void
 ges_smart_mixer_init (GESSmartMixer * self)
 {
   GstPad *pad;
-
   g_mutex_init (&self->lock);
 
-  self->mixer = gst_element_factory_make ("videomixer", "smart-mixer-mixer");
+  self->mixer = gst_element_factory_create (ges_get_compositor_factory (),
+      "smart-mixer-mixer");
   g_object_set (self->mixer, "background", 1, NULL);
   gst_bin_add (GST_BIN (self), self->mixer);
 
