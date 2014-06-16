@@ -27,6 +27,8 @@
 
 #include "gstrtpvrawpay.h"
 
+#define BUFFER_LISTS_PER_FRAME 10
+
 GST_DEBUG_CATEGORY_STATIC (rtpvrawpay_debug);
 #define GST_CAT_DEFAULT (rtpvrawpay_debug)
 
@@ -239,6 +241,9 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 {
   GstRtpVRawPay *rtpvrawpay;
   GstFlowReturn ret = GST_FLOW_OK;
+  gfloat packets_per_packline;
+  guint pgroups_per_packet;
+  guint packlines_per_list, buffers_per_list;
   guint lines_delay;            /* after how many packed lines we push out a buffer list */
   guint last_line;              /* last pack line number we pushed out a buffer list     */
   guint line, offset;
@@ -286,7 +291,14 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   xinc = rtpvrawpay->xinc;
 
   /* after how many packed lines we push out a buffer list */
-  lines_delay = GST_ROUND_UP_4 (height / 10);
+  lines_delay = GST_ROUND_UP_4 (height / BUFFER_LISTS_PER_FRAME);
+
+  /* calculate how many buffers we expect to store in a single buffer list */
+  pgroups_per_packet = (mtu - (12 + 14)) / pgroup;
+  packets_per_packline = width / (xinc * pgroups_per_packet * 1.0);
+  packlines_per_list = height / (yinc * BUFFER_LISTS_PER_FRAME);
+  buffers_per_list = packlines_per_list * packets_per_packline;
+  buffers_per_list = GST_ROUND_UP_8 (buffers_per_list);
 
   fields = 1 + interlaced;
 
@@ -296,7 +308,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
     offset = 0;
     last_line = 0;
 
-    list = gst_buffer_list_new ();
+    list = gst_buffer_list_new_sized (buffers_per_list);
 
     /* write all lines */
     while (line < height) {
@@ -530,7 +542,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
         ret = gst_rtp_base_payload_push_list (payload, list);
         list = NULL;
         if (!complete)
-          list = gst_buffer_list_new ();
+          list = gst_buffer_list_new_sized (buffers_per_list);
         last_line = pack_line;
       }
     }
