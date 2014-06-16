@@ -811,10 +811,9 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   /* configure the segment with the seek variables */
   GST_DEBUG_OBJECT (demux, "configuring seek");
 
-  start = MAX (0, start - SEEK_TIMESTAMP_OFFSET);
   start_offset =
-      mpegts_packetizer_ts_to_offset (base->packetizer, start,
-      demux->program->pcr_pid);
+      mpegts_packetizer_ts_to_offset (base->packetizer, MAX (0,
+          start - SEEK_TIMESTAMP_OFFSET), demux->program->pcr_pid);
 
   if (G_UNLIKELY (start_offset == -1)) {
     GST_WARNING ("Couldn't convert start position to an offset");
