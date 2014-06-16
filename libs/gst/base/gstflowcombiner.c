@@ -213,7 +213,7 @@ gst_flow_combiner_update_flow (GstFlowCombiner * combiner, GstFlowReturn fret)
 /**
  * gst_flow_combiner_add_pad:
  * @combiner: the #GstFlowCombiner
- * @pad: (transfer-none): the #GstPad that is being added
+ * @pad: (transfer none): the #GstPad that is being added
  *
  * Adds a new #GstPad to the #GstFlowCombiner.
  *
@@ -231,7 +231,7 @@ gst_flow_combiner_add_pad (GstFlowCombiner * combiner, GstPad * pad)
 /**
  * gst_flow_combiner_remove_pad:
  * @combiner: the #GstFlowCombiner
- * @pad: (transfer-none): the #GstPad to remove
+ * @pad: (transfer none): the #GstPad to remove
  *
  * Removes a #GstPad from the #GstFlowCombiner.
  *
