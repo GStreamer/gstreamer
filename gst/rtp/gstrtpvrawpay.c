@@ -113,7 +113,6 @@ gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   gint pgroup, xinc, yinc;
   const gchar *depthstr, *samplingstr, *colorimetrystr;
   gchar *wstr, *hstr;
-  gint depth;
   GstVideoInfo info;
 
   rtpvrawpay = GST_RTP_VRAW_PAY (payload);
@@ -140,7 +139,6 @@ gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 
   /* these values are the only thing we can do */
   depthstr = "8";
-  depth = 8;
 
   switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_RGBA:
@@ -182,7 +180,6 @@ gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
       samplingstr = "YCbCr-4:2:2";
       pgroup = 5;
       xinc = 2;
-      depth = 10;
       depthstr = "10";
       break;
     default:
@@ -197,7 +194,6 @@ gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   rtpvrawpay->pgroup = pgroup;
   rtpvrawpay->xinc = xinc;
   rtpvrawpay->yinc = yinc;
-  rtpvrawpay->depth = depth;
 
   GST_DEBUG_OBJECT (payload, "width %d, height %d, sampling %s",
       GST_VIDEO_INFO_WIDTH (&info), GST_VIDEO_INFO_HEIGHT (&info), samplingstr);
