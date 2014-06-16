@@ -133,14 +133,15 @@ class GESRenderTest(GESTest):
         self.add_arguments("-f", profile, "-o", self.dest_file)
 
     def check_results(self):
-        if self.result is Result.PASSED and self.scenario is None:
-            res, msg = utils.compare_rendered_with_original(self.duration, self.dest_file)
+        if self.result in [Result.PASSED, Result.NOT_RUN] and self.scenario is None:
+            res, msg = utils.compare_rendered_with_original(self.duration * utils.GST_SECOND,
+                                                            self.dest_file)
             self.set_result(res, msg)
         else:
             if self.result == utils.Result.TIMEOUT:
                 missing_eos = False
                 try:
-                    if utils.get_duration(self.dest_file) == self.duration:
+                    if utils.get_duration(self.dest_file) == self.duration * utils.GST_SECOND:
                         missing_eos = True
                 except Exception as e:
                     pass

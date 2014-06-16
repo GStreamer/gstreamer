@@ -34,7 +34,7 @@ DEFAULT_TIMEOUT = 30
 DEFAULT_MAIN_DIR = os.path.expanduser("~/gst-validate/")
 DEFAULT_GST_QA_ASSETS =  os.path.join(DEFAULT_MAIN_DIR, "gst-qa-assets")
 DISCOVERER_COMMAND = "gst-discoverer-1.0"
-DURATION_TOLERANCE = GST_SECOND / 2
+DURATION_TOLERANCE = GST_SECOND / 4
 # Use to set the duration from which a test is concidered as being 'long'
 LONG_TEST = 40
 
@@ -165,6 +165,12 @@ def get_subclasses(klass, env):
 
     return subclasses
 
+def TIME_ARGS(time):
+    return "%u:%02u:%02u.%09u" % (time / (GST_SECOND * 60 * 60),
+                                  (time / (GST_SECOND * 60)) % 60,
+                                  (time / GST_SECOND) % 60,
+                                  time % GST_SECOND)
+
 ##############################
 #    Encoding related utils  #
 ##############################
@@ -238,6 +244,7 @@ def parse_gsttimeargs(time):
 def get_duration(media_file):
 
     duration = 0
+    res = ''
     try:
         res = subprocess.check_output([DISCOVERER_COMMAND, media_file])
     except subprocess.CalledProcessError:
@@ -251,16 +258,14 @@ def get_duration(media_file):
 
     return duration
 
-
 def compare_rendered_with_original(orig_duration, dest_file, tolerance=DURATION_TOLERANCE):
         duration = get_duration(dest_file)
 
-        if orig_duration - tolerance >= duration >= orig_duration + tolerance:
+        if orig_duration - tolerance >= duration <= orig_duration + tolerance:
             return (Result.FAILED, "Duration of encoded file is "
                     " wrong (%s instead of %s)" %
-                    (orig_duration / GST_SECOND,
-                    duration / GST_SECOND),
-                    "wrong-duration")
+                    (TIME_ARGS (duration),
+                     TIME_ARGS (orig_duration)))
         else:
             return (Result.PASSED, "")
 
