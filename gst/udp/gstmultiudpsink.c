@@ -352,7 +352,8 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
 
   gst_element_class_set_static_metadata (gstelement_class, "UDP packet sender",
       "Sink/Network",
-      "Send data over the network via UDP",
+      "Send data over the network via UDP to one or multiple recipients "
+      "which can be added or removed at runtime using action signals",
       "Wim Taymans <wim.taymans@gmail.com>");
 
   gstbasesink_class->render = gst_multiudpsink_render;
