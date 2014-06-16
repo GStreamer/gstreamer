@@ -99,6 +99,10 @@ static GstVTEncFrame *gst_vtenc_frame_new (GstBuffer * buf,
     GstVideoInfo * videoinfo);
 static void gst_vtenc_frame_free (GstVTEncFrame * frame);
 
+static void gst_pixel_buffer_release_cb (void *releaseRefCon,
+    const void *dataPtr, size_t dataSize, size_t numberOfPlanes,
+    const void *planeAddresses[]);
+
 static GstStaticCaps sink_caps =
 GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420 }"));
 
@@ -812,15 +816,13 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
       cv_ret = CVPixelBufferCreateWithPlanarBytes (NULL,
           self->negotiated_width, self->negotiated_height,
           pixel_format_type,
-          NULL,
+          frame,
           GST_VIDEO_FRAME_SIZE (&frame->videoframe),
           num_planes,
           plane_base_addresses,
           plane_widths,
           plane_heights,
-          plane_bytes_per_row,
-          (CVPixelBufferReleasePlanarBytesCallback) gst_vtenc_frame_free, frame,
-          NULL, &pbuf);
+          plane_bytes_per_row, gst_pixel_buffer_release_cb, frame, NULL, &pbuf);
       if (cv_ret != kCVReturnSuccess) {
         gst_vtenc_frame_free (frame);
         goto cv_error;
@@ -963,6 +965,15 @@ gst_vtenc_frame_free (GstVTEncFrame * frame)
   gst_video_frame_unmap (&frame->videoframe);
   gst_buffer_unref (frame->buf);
   g_slice_free (GstVTEncFrame, frame);
+}
+
+static void
+gst_pixel_buffer_release_cb (void *releaseRefCon, const void *dataPtr,
+    size_t dataSize, size_t numberOfPlanes, const void *planeAddresses[])
+{
+  GstVTEncFrame *frame = (GstVTEncFrame *) releaseRefCon;
+
+  gst_vtenc_frame_free (frame);
 }
 
 static void
