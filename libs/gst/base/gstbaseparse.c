@@ -2716,6 +2716,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstBaseParseClass *bclass;
   GstBaseParse *parse;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn old_ret = GST_FLOW_OK;
   GstBuffer *tmpbuf = NULL;
   guint fsize = 1;
   gint skip = -1;
@@ -2902,8 +2903,11 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (skip == 0 && flush == 0) {
       GST_LOG_OBJECT (parse, "nothing skipped and no frames finished, "
           "breaking to get more data");
+      /* ignore this return as it produced no data */
+      ret = old_ret;
       goto done;
     }
+    old_ret = ret;
   }
 
 done:
