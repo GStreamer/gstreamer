@@ -26,6 +26,9 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtph263pdepay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtph263pdepay_debug);
+#define GST_CAT_DEFAULT (rtph263pdepay_debug)
+
 static GstStaticPadTemplate gst_rtp_h263p_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -117,6 +120,9 @@ gst_rtp_h263p_depay_class_init (GstRtpH263PDepayClass * klass)
 
   gstrtpbasedepayload_class->process = gst_rtp_h263p_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_h263p_depay_setcaps;
+
+  GST_DEBUG_CATEGORY_INIT (rtph263pdepay_debug, "rtph263pdepay", 0,
+      "H263+ Video RTP Depayloader");
 }
 
 static void
