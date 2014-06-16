@@ -244,10 +244,12 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   guint line, offset;
   guint8 *p0, *yp, *up, *vp;
   guint ystride, uvstride;
+  guint xinc, yinc;
   guint pgroup;
   guint mtu;
   guint width, height;
   gint field, fields;
+  GstVideoFormat format;
   GstVideoFrame frame;
   gint interlaced;
   GstBufferList *list;
@@ -277,6 +279,11 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   height = GST_VIDEO_INFO_HEIGHT (&rtpvrawpay->vinfo);
 
   interlaced = GST_VIDEO_INFO_IS_INTERLACED (&rtpvrawpay->vinfo);
+
+  format = GST_VIDEO_INFO_FORMAT (&rtpvrawpay->vinfo);
+
+  yinc = rtpvrawpay->yinc;
+  xinc = rtpvrawpay->xinc;
 
   /* after how many packed lines we push out a buffer list */
   lines_delay = GST_ROUND_UP_4 (height / 10);
@@ -356,7 +363,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 
         /* get how may bytes we need for the remaining pixels */
         pixels = width - offset;
-        length = (pixels * pgroup) / rtpvrawpay->xinc;
+        length = (pixels * pgroup) / xinc;
 
         if (left >= length) {
           /* pixels and header fit completely, we will write them and skip to the
@@ -364,8 +371,8 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
           next_line = TRUE;
         } else {
           /* line does not fit completely, see how many pixels fit */
-          pixels = (left / pgroup) * rtpvrawpay->xinc;
-          length = (pixels * pgroup) / rtpvrawpay->xinc;
+          pixels = (left / pgroup) * xinc;
+          length = (pixels * pgroup) / xinc;
           next_line = FALSE;
         }
         GST_LOG_OBJECT (rtpvrawpay, "filling %u bytes in %u pixels", length,
@@ -382,7 +389,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 
         if (next_line) {
           /* go to next line we do this here to make the check below easier */
-          line += rtpvrawpay->yinc;
+          line += yinc;
         }
 
         /* calculate continuation marker */
@@ -423,14 +430,14 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
             "writing length %u, line %u, offset %u, cont %d", length, lin, offs,
             cont);
 
-        switch (GST_VIDEO_INFO_FORMAT (&rtpvrawpay->vinfo)) {
+        switch (format) {
           case GST_VIDEO_FORMAT_RGB:
           case GST_VIDEO_FORMAT_RGBA:
           case GST_VIDEO_FORMAT_BGR:
           case GST_VIDEO_FORMAT_BGRA:
           case GST_VIDEO_FORMAT_UYVY:
           case GST_VIDEO_FORMAT_UYVP:
-            offs /= rtpvrawpay->xinc;
+            offs /= xinc;
             memcpy (outdata, p0 + (lin * ystride) + (offs * pgroup), length);
             outdata += length;
             break;
@@ -457,8 +464,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 
             yd1p = yp + (lin * ystride) + (offs);
             yd2p = yd1p + ystride;
-            uvoff =
-                (lin / rtpvrawpay->yinc * uvstride) + (offs / rtpvrawpay->xinc);
+            uvoff = (lin / yinc * uvstride) + (offs / xinc);
             udp = up + uvoff;
             vdp = vp + uvoff;
 
@@ -479,8 +485,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
             guint8 *ydp, *udp, *vdp;
 
             ydp = yp + (lin * ystride) + offs;
-            uvoff =
-                (lin / rtpvrawpay->yinc * uvstride) + (offs / rtpvrawpay->xinc);
+            uvoff = (lin / yinc * uvstride) + (offs / xinc);
             udp = up + uvoff;
             vdp = vp + uvoff;
 
