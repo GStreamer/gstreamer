@@ -42,7 +42,10 @@ struct _GstGLFilterShader
   gchar *filename;
   gchar *presetfile;
   int texSet;
+  gdouble time;
 
+  gint attr_position_loc;
+  gint attr_texture_loc;
 };
 
 struct _GstGLFilterShaderClass

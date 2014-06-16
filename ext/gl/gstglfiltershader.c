@@ -60,6 +60,15 @@ enum
   PROP_VARIABLES
 };
 
+static const gchar text_vertex_shader[] =
+    "attribute vec4 a_position;   \n"
+    "attribute vec2 a_texcoord;   \n"
+    "varying vec2 v_texcoord;     \n"
+    "void main()                  \n"
+    "{                            \n"
+    "   gl_Position = a_position; \n"
+    "   v_texcoord = a_texcoord;  \n" "}                            \n";
+
 #define GST_CAT_DEFAULT gst_gl_filtershader_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -80,6 +89,8 @@ static gboolean gst_gl_filtershader_load_shader (GstGLFilterShader *
 static gboolean gst_gl_filtershader_load_variables (GstGLFilterShader *
     filter_shader, char *filename, char **storage);
 static gboolean gst_gl_filtershader_init_shader (GstGLFilter * filter);
+static gboolean gst_gl_filtershader_filter (GstGLFilter * filter,
+    GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_gl_filtershader_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
 static void gst_gl_filtershader_hcallback (gint width, gint height,
@@ -136,6 +147,7 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
       "OpenGL fragment shader filter", "Filter/Effect",
       "Load GLSL fragment shader from file", "<luc.deschenaux@freesurf.ch>");
 
+  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filtershader_filter;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_filtershader_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
@@ -318,8 +330,8 @@ gst_gl_filtershader_init_shader (GstGLFilter * filter)
     return FALSE;
 
   //blocking call, wait the opengl thread has compiled the shader
-  if (!gst_gl_context_gen_shader (filter->context, 0, hfilter_fragment_source,
-          &filtershader->shader0))
+  if (!gst_gl_context_gen_shader (filter->context, text_vertex_shader,
+          hfilter_fragment_source, &filtershader->shader0))
     return FALSE;
 
 
@@ -330,6 +342,43 @@ gst_gl_filtershader_init_shader (GstGLFilter * filter)
   filtershader->compiled = 1;
 
   return TRUE;
+}
+
+static inline gboolean
+_gst_clock_time_to_double (GstClockTime time, gdouble * result)
+{
+  if (!GST_CLOCK_TIME_IS_VALID (time))
+    return FALSE;
+
+  *result = (gdouble) time / GST_SECOND;
+
+  return TRUE;
+}
+
+static inline gboolean
+_gint64_time_val_to_double (gint64 time, gdouble * result)
+{
+  if (time == -1)
+    return FALSE;
+
+  *result = (gdouble) time / GST_USECOND;
+
+  return TRUE;
+}
+
+static gboolean
+gst_gl_filtershader_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
+
+  if (!_gst_clock_time_to_double (GST_BUFFER_PTS (inbuf), &filtershader->time)) {
+    if (!_gst_clock_time_to_double (GST_BUFFER_DTS (inbuf),
+            &filtershader->time))
+      _gint64_time_val_to_double (g_get_monotonic_time (), &filtershader->time);
+  }
+
+  return gst_gl_filter_filter_texture (filter, inbuf, outbuf);
 }
 
 static gboolean
@@ -351,18 +400,39 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
   GstGLFuncs *gl = filter->context->gl_vtable;
+  const GLfloat vVertices[] = {
+    -1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+    1.0, -1.0f, -1.0f, 1.0f, 0.0f,
+    1.0f, 1.0f, -1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f, -1.0f, 0.0f, 1.0f
+  };
+  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+#if GST_GL_HAVE_OPENGL
+  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_shader_use (filtershader->shader0);
 
-  gl->ActiveTexture (GL_TEXTURE1);
+  gl->ActiveTexture (GL_TEXTURE0);
   gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
-  gl->Disable (GL_TEXTURE_2D);
 
-  gst_gl_shader_set_uniform_1i (filtershader->shader0, "tex", 1);
+  gst_gl_shader_set_uniform_1i (filtershader->shader0, "tex", 0);
+  gst_gl_shader_set_uniform_1f (filtershader->shader0, "width", width);
+  gst_gl_shader_set_uniform_1f (filtershader->shader0, "height", height);
+  gst_gl_shader_set_uniform_1f (filtershader->shader0, "time",
+      filtershader->time);
+
+  filtershader->attr_position_loc =
+      gst_gl_shader_get_attribute_location (filtershader->shader0,
+      "a_position");
+  filtershader->attr_texture_loc =
+      gst_gl_shader_get_attribute_location (filtershader->shader0,
+      "a_texcoord");
 
   if (hfilter_fragment_variables[0]) {
     gst_gl_filtershader_variables_parse (filtershader->shader0,
@@ -377,6 +447,21 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
     hfilter_fragment_variables[1] = 0;
   }
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gl->Clear (GL_COLOR_BUFFER_BIT);
 
+  gl->EnableVertexAttribArray (filtershader->attr_position_loc);
+  gl->EnableVertexAttribArray (filtershader->attr_texture_loc);
+
+  /* Load the vertex position */
+  gl->VertexAttribPointer (filtershader->attr_position_loc, 3, GL_FLOAT,
+      GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (filtershader->attr_texture_loc, 2, GL_FLOAT,
+      GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+
+  gl->DisableVertexAttribArray (filtershader->attr_position_loc);
+  gl->DisableVertexAttribArray (filtershader->attr_texture_loc);
 }
