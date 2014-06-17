@@ -150,7 +150,7 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
   g_value_init (&v, value_type);
 
   /* special case for element <-> xml (de)serialisation */
-  if (GST_VALUE_HOLDS_STRUCTURE (&v) && strcmp (value, "NULL") == 0) {
+  if (value_type == GST_TYPE_STRUCTURE && strcmp (value, "NULL") == 0) {
     g_value_set_boxed (&v, NULL);
     goto done;
   }

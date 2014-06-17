@@ -1926,8 +1926,6 @@ gst_tag_list_get_date_time (const GstTagList * list, const gchar * tag,
   if (!gst_tag_list_copy_value (&v, list, tag))
     return FALSE;
 
-  g_return_val_if_fail (GST_VALUE_HOLDS_DATE_TIME (&v), FALSE);
-
   *value = (GstDateTime *) g_value_dup_boxed (&v);
   g_value_unset (&v);
   return (*value != NULL);
