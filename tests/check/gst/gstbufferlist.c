@@ -28,20 +28,18 @@
 #define TIMESTAMP 42
 
 static GstBufferList *list;
-static GstCaps *caps;
 
 static void
 setup (void)
 {
   list = gst_buffer_list_new ();
-  caps = gst_caps_new_empty_simple ("text/plain");
 }
 
 static void
 cleanup (void)
 {
-  gst_caps_unref (caps);
   gst_buffer_list_unref (list);
+  list = NULL;
 }
 
 #if 0
@@ -54,7 +52,6 @@ buffer_from_string (const gchar * str)
 
   size = strlen (str);
   buf = gst_buffer_new_and_alloc (size);
-  gst_buffer_set_caps (buf, caps);
   GST_BUFFER_TIMESTAMP (buf) = TIMESTAMP;
 
   data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
@@ -510,111 +507,6 @@ GST_START_TEST (test_do)
 
 GST_END_TEST;
 
-GST_START_TEST (test_merge)
-{
-  GstBufferListIterator *it;
-  GstBufferListIterator *merge_it;
-  GstBuffer *merged_buf;
-  GstBuffer *buf;
-
-  it = gst_buffer_list_iterate (list);
-  fail_unless (gst_buffer_list_iterator_merge_group (it) == NULL);
-
-  /* create a new group and add a buffer */
-  gst_buffer_list_iterator_add_group (it);
-  fail_unless (gst_buffer_list_iterator_merge_group (it) == NULL);
-  buf = buffer_from_string ("One");
-  gst_buffer_ref (buf);
-  gst_buffer_list_iterator_add (it, buf);
-
-  /* merging a group with one buffer returns a copy of the buffer */
-  merge_it = gst_buffer_list_iterate (list);
-  fail_unless (gst_buffer_list_iterator_next_group (merge_it));
-  merged_buf = gst_buffer_list_iterator_merge_group (merge_it);
-  fail_unless (merged_buf != buf);
-  ASSERT_BUFFER_REFCOUNT (merged_buf, "merged_buf", 1);
-  gst_buffer_unref (buf);
-  fail_unless (GST_BUFFER_CAPS (merged_buf) == caps);
-  fail_unless (GST_BUFFER_TIMESTAMP (merged_buf) == TIMESTAMP);
-  check_buffer (merged_buf, 3, "One");
-  gst_buffer_unref (merged_buf);
-
-  /* add another buffer to the same group */
-  gst_buffer_list_iterator_add (it, buffer_from_string ("Group"));
-
-  /* merging a group returns a new buffer with merged data */
-  merged_buf = gst_buffer_list_iterator_merge_group (merge_it);
-  ASSERT_BUFFER_REFCOUNT (merged_buf, "merged_buf", 1);
-  fail_unless (GST_BUFFER_CAPS (merged_buf) == caps);
-  fail_unless (GST_BUFFER_TIMESTAMP (merged_buf) == TIMESTAMP);
-  check_buffer (merged_buf, 8, "OneGroup");
-
-  /* merging the same group again should return a new buffer with merged data */
-  buf = gst_buffer_list_iterator_merge_group (merge_it);
-  ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
-  fail_unless (buf != merged_buf);
-  check_buffer (buf, 8, "OneGroup");
-  gst_buffer_unref (buf);
-  gst_buffer_unref (merged_buf);
-
-  /* add a new group */
-  gst_buffer_list_iterator_add_group (it);
-  gst_buffer_list_iterator_add (it, buffer_from_string ("AnotherGroup"));
-  gst_buffer_list_iterator_free (it);
-
-  /* merge the first group again */
-  merged_buf = gst_buffer_list_iterator_merge_group (merge_it);
-  ASSERT_BUFFER_REFCOUNT (merged_buf, "merged_buf", 1);
-  fail_unless (GST_BUFFER_CAPS (merged_buf) == caps);
-  fail_unless (GST_BUFFER_TIMESTAMP (merged_buf) == TIMESTAMP);
-  check_buffer (merged_buf, 8, "OneGroup");
-  gst_buffer_unref (merged_buf);
-
-  /* merge the second group */
-  fail_unless (gst_buffer_list_iterator_next_group (merge_it));
-  merged_buf = gst_buffer_list_iterator_merge_group (merge_it);
-  ASSERT_BUFFER_REFCOUNT (merged_buf, "merged_buf", 1);
-  fail_unless (GST_BUFFER_CAPS (merged_buf) == caps);
-  fail_unless (GST_BUFFER_TIMESTAMP (merged_buf) == TIMESTAMP);
-  check_buffer (merged_buf, 12, "AnotherGroup");
-  gst_buffer_unref (merged_buf);
-
-  gst_buffer_list_iterator_free (merge_it);
-
-  /* steal the second buffer and merge the first group again */
-  it = gst_buffer_list_iterate (list);
-  fail_unless (gst_buffer_list_iterator_next_group (it));
-  fail_unless (gst_buffer_list_iterator_next (it) != NULL);
-  fail_unless (gst_buffer_list_iterator_next (it) != NULL);
-  buf = gst_buffer_list_iterator_steal (it);
-  gst_buffer_list_iterator_free (it);
-  fail_unless (buf != NULL);
-  check_buffer (buf, 0, "Group");
-  gst_buffer_unref (buf);
-  merge_it = gst_buffer_list_iterate (list);
-  fail_unless (gst_buffer_list_iterator_next_group (merge_it));
-  merged_buf = gst_buffer_list_iterator_merge_group (merge_it);
-  ASSERT_BUFFER_REFCOUNT (merged_buf, "merged_buf", 1);
-  fail_unless (GST_BUFFER_CAPS (merged_buf) == caps);
-  fail_unless (GST_BUFFER_TIMESTAMP (merged_buf) == TIMESTAMP);
-  check_buffer (merged_buf, 3, "One");
-  gst_buffer_unref (merged_buf);
-
-  /* steal the first buffer too and merge the first group again */
-  it = gst_buffer_list_iterate (list);
-  fail_unless (gst_buffer_list_iterator_next_group (it));
-  fail_unless (gst_buffer_list_iterator_next (it) != NULL);
-  buf = gst_buffer_list_iterator_steal (it);
-  fail_unless (buf != NULL);
-  check_buffer (buf, 3, "One");
-  gst_buffer_unref (buf);
-  gst_buffer_list_iterator_free (it);
-  fail_unless (gst_buffer_list_iterator_merge_group (merge_it) == NULL);
-  gst_buffer_list_iterator_free (merge_it);
-}
-
-GST_END_TEST;
-
 typedef struct
 {
   GstBuffer *buf[3][3];
@@ -796,7 +688,6 @@ gst_buffer_list_suite (void)
   tcase_add_test (tc_chain, test_steal);
   tcase_add_test (tc_chain, test_take);
   tcase_add_test (tc_chain, test_do);
-  tcase_add_test (tc_chain, test_merge);
   tcase_add_test (tc_chain, test_foreach);
   tcase_add_test (tc_chain, test_list);
 #endif
