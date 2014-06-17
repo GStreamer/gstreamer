@@ -19,7 +19,6 @@
 
 import os
 import sys
-from launcher.main import main
 
 LIBDIR = '@LIBDIR@'
 
@@ -37,4 +36,5 @@ def _add_gst_launcher_path():
 
 if "__main__" == __name__:
     _add_gst_launcher_path()
+    from launcher.main import main
     exit(main())
