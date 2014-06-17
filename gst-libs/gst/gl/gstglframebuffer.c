@@ -296,9 +296,8 @@ gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
 
   gl->Viewport (0, 0, texture_fbo_width, texture_fbo_height);
 
-#if GST_GL_HAVE_OPENGL
-  gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
-#endif
+  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL)
+    gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
 
   gl->ClearColor (0.0, 0.0, 0.0, 0.0);
   gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -306,9 +305,8 @@ gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
   /* the opengl scene */
   cb (stuff);
 
-#if GST_GL_HAVE_OPENGL
-  gl->DrawBuffer (GL_NONE);
-#endif
+  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL)
+    gl->DrawBuffer (GL_NONE);
 
   gl->Viewport (viewport_dim[0], viewport_dim[1],
       viewport_dim[2], viewport_dim[3]);
