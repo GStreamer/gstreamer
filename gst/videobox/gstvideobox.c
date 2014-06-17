@@ -2862,22 +2862,27 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
       for (j = 0; j < gst_value_list_get_size (fval); j++) {
         lval = gst_value_list_get_value (fval, j);
         if ((str = g_value_get_string (lval))) {
-          if (strstr (str, "RGB") || strstr (str, "BGR") ||
-              strcmp (str, "AYUV") == 0)
-            seen_rgb = TRUE;
-          else if (strcmp (str, "I420") == 0 || strcmp (str, "YV12") == 0 ||
-              strcmp (str, "AYUV") == 0)
+          if (strcmp (str, "AYUV") == 0) {
             seen_yuv = TRUE;
+            seen_rgb = TRUE;
+            break;
+          } else if (strstr (str, "RGB") || strstr (str, "BGR")) {
+            seen_rgb = TRUE;
+          } else if (strcmp (str, "I420") == 0 || strcmp (str, "YV12") == 0) {
+            seen_yuv = TRUE;
+          }
         }
       }
     } else if (fval && G_VALUE_HOLDS_STRING (fval)) {
       if ((str = g_value_get_string (fval))) {
-        if (strstr (str, "RGB") || strstr (str, "BGR") ||
-            strcmp (str, "AYUV") == 0)
-          seen_rgb = TRUE;
-        else if (strcmp (str, "I420") == 0 || strcmp (str, "YV12") == 0 ||
-            strcmp (str, "AYUV") == 0)
+        if (strcmp (str, "AYUV") == 0) {
           seen_yuv = TRUE;
+          seen_rgb = TRUE;
+        } else if (strstr (str, "RGB") || strstr (str, "BGR")) {
+          seen_rgb = TRUE;
+        } else if (strcmp (str, "I420") == 0 || strcmp (str, "YV12") == 0) {
+          seen_yuv = TRUE;
+        }
       }
     }
 
