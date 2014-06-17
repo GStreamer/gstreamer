@@ -1190,6 +1190,7 @@ gst_srtp_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event,
 
       gst_event_parse_caps (event, &caps);
       ret = gst_srtp_enc_sink_setcaps (pad, filter, caps, is_rtcp);
+      gst_event_unref (event);
       break;
     }
     default:
