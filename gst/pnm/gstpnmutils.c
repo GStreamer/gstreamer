@@ -156,6 +156,11 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
             mngr->info.fields |= GST_PNM_INFO_FIELDS_HEIGHT;
             mngr->state = GST_PNM_INFO_MNGR_STATE_WHITE_SPACE;
             mngr->data_offset += i;
+            if (mngr->info.type == GST_PNM_TYPE_BITMAP) {
+              mngr->data_offset += 1;
+              mngr->info.fields |= GST_PNM_INFO_FIELDS_MAX;
+              return GST_PNM_INFO_MNGR_RESULT_FINISHED;
+            }
             return gst_pnm_info_mngr_scan (mngr, buf + i, buf_len - i);
           default:
             return GST_PNM_INFO_MNGR_RESULT_FAILED;

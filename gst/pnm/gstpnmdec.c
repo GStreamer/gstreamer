@@ -193,11 +193,13 @@ gst_pnmdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   guint i_rowstride;
   guint o_rowstride;
   GstFlowReturn r = GST_FLOW_OK;
+  gint bytes, i;
 
   r = gst_video_decoder_allocate_output_frame (decoder, frame);
   if (r != GST_FLOW_OK) {
     goto out;
   }
+
   if (s->mngr.info.encoding == GST_PNM_ENCODING_ASCII) {
     /* In case of ASCII parsed data is stored in buf, so input needs to be
        taken from here for frame processing */
@@ -210,9 +212,21 @@ gst_pnmdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   gst_buffer_copy_into (frame->output_buffer, frame->input_buffer,
       GST_BUFFER_COPY_METADATA, 0, 0);
 
-  /* Need to convert from PNM rowstride to GStreamer rowstride */
+  if (s->mngr.info.type == GST_PNM_TYPE_BITMAP) {
+    bytes = (s->mngr.info.width * s->mngr.info.height + 7) / 8;
+    for (i = 0; i < bytes; i++) {
+      omap.data[i * 8] = (imap.data[i] & 0x80) ? 0 : 255;
+      omap.data[i * 8 + 1] = (imap.data[i] & 0x40) ? 0 : 255;
+      omap.data[i * 8 + 2] = (imap.data[i] & 0x20) ? 0 : 255;
+      omap.data[i * 8 + 3] = (imap.data[i] & 0x10) ? 0 : 255;
+      omap.data[i * 8 + 4] = (imap.data[i] & 0x08) ? 0 : 255;
+      omap.data[i * 8 + 5] = (imap.data[i] & 0x04) ? 0 : 255;
+      omap.data[i * 8 + 6] = (imap.data[i] & 0x02) ? 0 : 255;
+      omap.data[i * 8 + 7] = (imap.data[i] & 0x01) ? 0 : 255;
+    }
+  } else
+    /* Need to convert from PNM rowstride to GStreamer rowstride */
   if (s->mngr.info.width % 4 != 0) {
-    guint i;
     if (s->mngr.info.type == GST_PNM_TYPE_PIXMAP) {
       i_rowstride = 3 * s->mngr.info.width;
       o_rowstride = GST_ROUND_UP_4 (i_rowstride);
@@ -278,9 +292,13 @@ gst_pnmdec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
       case GST_PNM_INFO_MNGR_RESULT_FINISHED:
         switch (s->mngr.info.type) {
           case GST_PNM_TYPE_BITMAP:
-            GST_DEBUG_OBJECT (s, "FIXME: BITMAP format not implemented!");
-            r = GST_FLOW_ERROR;
-            goto out;
+            if (s->mngr.info.encoding == GST_PNM_ENCODING_ASCII) {
+              r = GST_FLOW_ERROR;
+              goto out;
+            }
+            s->size = s->mngr.info.width * s->mngr.info.height * 1;
+            format = GST_VIDEO_FORMAT_GRAY8;
+            break;
           case GST_PNM_TYPE_GRAYMAP:
             s->size = s->mngr.info.width * s->mngr.info.height * 1;
             format = GST_VIDEO_FORMAT_GRAY8;
@@ -317,8 +335,13 @@ gst_pnmdec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
        bytes actually parsed from the input data */
     r = gst_pnmdec_parse_ascii (s, raw_data + offset, size);
   } else {
-    s->current_size += size;
+    /* Bitmap Contains 8 pixels in a byte */
+    if (s->mngr.info.type == GST_PNM_TYPE_BITMAP)
+      s->current_size += (size * 8);
+    else
+      s->current_size += size;
   }
+
   gst_video_decoder_add_to_frame (decoder, size);
   if (s->size <= s->current_size) {
     goto have_full_frame;
