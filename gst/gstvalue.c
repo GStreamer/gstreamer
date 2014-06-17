@@ -4460,6 +4460,27 @@ gst_value_list_equals_range (const GValue * list, const GValue * value)
   return FALSE;
 }
 
+/* "Pure" variant of gst_value_compare which is guaranteed to
+ * not have list arguments and therefore does basic comparisions
+ */
+static inline gint
+_gst_value_compare_nolist (const GValue * value1, const GValue * value2)
+{
+  GstValueCompareFunc compare;
+
+  if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
+    return GST_VALUE_UNORDERED;
+
+  compare = gst_value_get_compare_func (value1);
+  if (compare) {
+    return compare (value1, value2);
+  }
+
+  g_critical ("unable to compare values of type %s\n",
+      g_type_name (G_VALUE_TYPE (value1)));
+  return GST_VALUE_UNORDERED;
+}
+
 /**
  * gst_value_compare:
  * @value1: a value to compare
@@ -4476,7 +4497,6 @@ gst_value_list_equals_range (const GValue * list, const GValue * value)
 gint
 gst_value_compare (const GValue * value1, const GValue * value2)
 {
-  GstValueCompareFunc compare;
   GType ltype;
 
   g_return_val_if_fail (G_IS_VALUE (value1), GST_VALUE_LESS_THAN);
@@ -4533,17 +4553,8 @@ gst_value_compare (const GValue * value1, const GValue * value2)
     return GST_VALUE_EQUAL;
   }
 
-  if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
-    return GST_VALUE_UNORDERED;
-
-  compare = gst_value_get_compare_func (value1);
-  if (compare) {
-    return compare (value1, value2);
-  }
-
-  g_critical ("unable to compare values of type %s\n",
-      g_type_name (G_VALUE_TYPE (value1)));
-  return GST_VALUE_UNORDERED;
+  /* And now handle the generic case */
+  return _gst_value_compare_nolist (value1, value2);
 }
 
 /*
@@ -4760,7 +4771,7 @@ gst_value_intersect (GValue * dest, const GValue * value1,
   if (G_VALUE_HOLDS (value2, ltype))
     return gst_value_intersect_list (dest, value2, value1);
 
-  if (gst_value_compare (value1, value2) == GST_VALUE_EQUAL) {
+  if (_gst_value_compare_nolist (value1, value2) == GST_VALUE_EQUAL) {
     if (dest)
       gst_value_init_and_copy (dest, value1);
     return TRUE;
@@ -4857,7 +4868,7 @@ gst_value_subtract (GValue * dest, const GValue * minuend,
     }
   }
 
-  if (gst_value_compare (minuend, subtrahend) != GST_VALUE_EQUAL) {
+  if (_gst_value_compare_nolist (minuend, subtrahend) != GST_VALUE_EQUAL) {
     if (dest)
       gst_value_init_and_copy (dest, minuend);
     return TRUE;
