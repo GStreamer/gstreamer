@@ -9,6 +9,7 @@ libgstwayland_@GST_API_VERSION@include_HEADERS = wayland.h
 
 libgstwayland_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(WAYLAND_CFLAGS)
 
