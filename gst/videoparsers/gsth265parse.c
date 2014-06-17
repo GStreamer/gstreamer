@@ -1767,7 +1767,7 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     size = map.size;
 
     /* parse the hvcC data */
-    if (size < 28) {
+    if (size < 23) {
       gst_buffer_unmap (codec_data, &map);
       goto hvcc_too_small;
     }
@@ -1854,7 +1854,7 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   /* ERRORS */
 hvcc_too_small:
   {
-    GST_DEBUG_OBJECT (h265parse, "hvcC size %" G_GSIZE_FORMAT " < 8", size);
+    GST_DEBUG_OBJECT (h265parse, "hvcC size %" G_GSIZE_FORMAT " < 23", size);
     goto refuse_caps;
   }
 wrong_version:
