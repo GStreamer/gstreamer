@@ -662,6 +662,8 @@ gst_rtp_jpeg_pay_scan_marker (const guint8 * data, guint size, guint * offset)
   }
 }
 
+#define RTP_HEADER_LEN 12
+
 static GstFlowReturn
 gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
@@ -678,7 +680,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GstMapInfo map;
   guint8 *data;
   gsize size;
-  guint mtu;
+  guint mtu, max_payload_size;
   guint bytes_left;
   guint jpeg_header_size = 0;
   guint offset;
@@ -802,12 +804,13 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   GST_LOG_OBJECT (pay, "quant_data size %u", quant_data_size);
 
-  list = gst_buffer_list_new ();
-
   bytes_left = sizeof (jpeg_header) + quant_data_size + size;
 
   if (dri_found)
     bytes_left += sizeof (restart_marker_header);
+
+  max_payload_size = mtu - (RTP_HEADER_LEN + sizeof (jpeg_header));
+  list = gst_buffer_list_new_sized ((bytes_left / max_payload_size) + 1);
 
   frame_done = FALSE;
   do {
