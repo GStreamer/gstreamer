@@ -1333,10 +1333,7 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     }
 
     priv->progressive_sequence = sps->frame_mbs_only_flag;
-#if 0
-    /* XXX: we only output complete frames for now */
     gst_vaapi_decoder_set_interlaced(base_decoder, !priv->progressive_sequence);
-#endif
 
     gst_vaapi_decoder_set_pixel_aspect_ratio(
         base_decoder,
