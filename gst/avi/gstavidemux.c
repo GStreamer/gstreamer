@@ -211,6 +211,7 @@ gst_avi_demux_finalize (GObject * object)
   GST_DEBUG ("AVI: finalize");
 
   g_object_unref (avi->adapter);
+  gst_flow_combiner_free (avi->flowcombiner);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
