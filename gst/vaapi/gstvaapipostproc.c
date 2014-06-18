@@ -447,6 +447,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     GstVaapiDeinterlaceMethod deint_method;
     guint flags, deint_flags;
     gboolean tff, deint, deint_refs, deint_changed;
+    GstVaapiRectangle *crop_rect = NULL;
 
     /* Validate filters */
     if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_FORMAT) &&
@@ -487,6 +488,22 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     if (!inbuf_meta)
         goto error_invalid_buffer;
     inbuf_surface = gst_vaapi_video_meta_get_surface(inbuf_meta);
+
+#if GST_CHECK_VERSION(1,0,0)
+    GstVideoCropMeta * const crop_meta =
+        gst_buffer_get_video_crop_meta(inbuf);
+    if (crop_meta) {
+        GstVaapiRectangle tmp_rect;
+        crop_rect = &tmp_rect;
+        crop_rect->x = crop_meta->x;
+        crop_rect->y = crop_meta->y;
+        crop_rect->width = crop_meta->width;
+        crop_rect->height = crop_meta->height;
+    }
+#endif
+    if (!crop_rect)
+        crop_rect = (GstVaapiRectangle *)
+            gst_vaapi_video_meta_get_render_rect(inbuf_meta);
 
     timestamp  = GST_BUFFER_TIMESTAMP(inbuf);
     tff        = GST_BUFFER_FLAG_IS_SET(inbuf, GST_VIDEO_BUFFER_FLAG_TFF);
@@ -545,6 +562,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
                 goto error_op_deinterlace;
         }
 
+        gst_vaapi_filter_set_cropping_rectangle(postproc->filter, crop_rect);
         status = gst_vaapi_filter_process(postproc->filter, inbuf_surface,
             outbuf_surface, flags);
         if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
@@ -583,6 +601,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
                  postproc->filter, deint_method, 0))
         goto error_op_deinterlace;
 
+    gst_vaapi_filter_set_cropping_rectangle(postproc->filter, crop_rect);
     status = gst_vaapi_filter_process(postproc->filter, inbuf_surface,
         outbuf_surface, flags);
     if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
