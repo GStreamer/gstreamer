@@ -324,8 +324,11 @@ gst_srtp_enc_class_init (GstSrtpEncClass * klass)
           64, 0x8000, DEFAULT_REPLAY_WINDOW_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ALLOW_REPEAT_TX,
-      g_param_spec_boolean ("allow-repeat-tx", "Allow repeat packets transmission",
-          "Whether retransmissions of packets with the same sequence number are allowed",
+      g_param_spec_boolean ("allow-repeat-tx",
+          "Allow repeat packets transmission",
+          "Whether retransmissions of packets with the same sequence number are allowed"
+          "(Note that such repeated transmissions must have the same RTP payload, "
+          "or a severe security weakness is introduced!)",
           DEFAULT_ALLOW_REPEAT_TX, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
