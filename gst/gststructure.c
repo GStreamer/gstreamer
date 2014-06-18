@@ -775,9 +775,13 @@ static void
 gst_structure_set_field (GstStructure * structure, GstStructureField * field)
 {
   GstStructureField *f;
-  guint i, len = GST_STRUCTURE_FIELDS (structure)->len;
+  GType field_value_type;
+  guint i, len;
 
-  if (G_UNLIKELY (G_VALUE_HOLDS_STRING (&field->value))) {
+  len = GST_STRUCTURE_FIELDS (structure)->len;
+
+  field_value_type = G_VALUE_TYPE (&field->value);
+  if (field_value_type == G_TYPE_STRING) {
     const gchar *s;
 
     s = g_value_get_string (&field->value);
@@ -804,7 +808,7 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
       g_value_unset (&field->value);
       return;
     }
-  } else if (G_UNLIKELY (G_VALUE_HOLDS (&field->value, G_TYPE_DATE))) {
+  } else if (G_UNLIKELY (field_value_type == G_TYPE_DATE)) {
     const GDate *d;
 
     d = g_value_get_boxed (&field->value);
@@ -1284,9 +1288,7 @@ gst_structure_get_boolean (const GstStructure * structure,
 
   field = gst_structure_get_field (structure, fieldname);
 
-  if (field == NULL)
-    return FALSE;
-  if (!G_VALUE_HOLDS_BOOLEAN (&field->value))
+  if (field == NULL || G_VALUE_TYPE (&field->value) != G_TYPE_BOOLEAN)
     return FALSE;
 
   *value = gst_g_value_get_boolean_unchecked (&field->value);
@@ -1320,9 +1322,7 @@ gst_structure_get_int (const GstStructure * structure,
 
   field = gst_structure_get_field (structure, fieldname);
 
-  if (field == NULL)
-    return FALSE;
-  if (!G_VALUE_HOLDS_INT (&field->value))
+  if (field == NULL || G_VALUE_TYPE (&field->value) != G_TYPE_INT)
     return FALSE;
 
   *value = gst_g_value_get_int_unchecked (&field->value);
@@ -1356,9 +1356,7 @@ gst_structure_get_uint (const GstStructure * structure,
 
   field = gst_structure_get_field (structure, fieldname);
 
-  if (field == NULL)
-    return FALSE;
-  if (!G_VALUE_HOLDS_UINT (&field->value))
+  if (field == NULL || G_VALUE_TYPE (&field->value) != G_TYPE_UINT)
     return FALSE;
 
   *value = gst_g_value_get_uint_unchecked (&field->value);
@@ -1394,9 +1392,7 @@ gst_structure_get_int64 (const GstStructure * structure,
 
   field = gst_structure_get_field (structure, fieldname);
 
-  if (field == NULL)
-    return FALSE;
-  if (!G_VALUE_HOLDS_INT64 (&field->value))
+  if (field == NULL || G_VALUE_TYPE (&field->value) != G_TYPE_INT64)
     return FALSE;
 
   *value = gst_g_value_get_int64_unchecked (&field->value);
@@ -1432,9 +1428,7 @@ gst_structure_get_uint64 (const GstStructure * structure,
 
   field = gst_structure_get_field (structure, fieldname);
 
-  if (field == NULL)
-    return FALSE;
-  if (!G_VALUE_HOLDS_UINT64 (&field->value))
+  if (field == NULL || G_VALUE_TYPE (&field->value) != G_TYPE_UINT64)
     return FALSE;
 
   *value = gst_g_value_get_uint64_unchecked (&field->value);
@@ -1473,12 +1467,10 @@ gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
 
   field = gst_structure_get_field (structure, fieldname);
 
-  if (field == NULL)
-    return FALSE;
-  if (!G_VALUE_HOLDS (&field->value, G_TYPE_DATE))
+  if (field == NULL || G_VALUE_TYPE (&field->value) != G_TYPE_DATE)
     return FALSE;
 
-  /* FIXME: 0.11 g_value_dup_boxed() -> g_value_get_boxed() */
+  /* FIXME: 2.0 g_value_dup_boxed() -> g_value_get_boxed() */
   *value = g_value_dup_boxed (&field->value);
 
   return TRUE;
@@ -1573,9 +1565,7 @@ gst_structure_get_double (const GstStructure * structure,
 
   field = gst_structure_get_field (structure, fieldname);
 
-  if (field == NULL)
-    return FALSE;
-  if (!G_VALUE_HOLDS_DOUBLE (&field->value))
+  if (field == NULL || G_VALUE_TYPE (&field->value) != G_TYPE_DOUBLE)
     return FALSE;
 
   *value = gst_g_value_get_double_unchecked (&field->value);
@@ -1609,9 +1599,7 @@ gst_structure_get_string (const GstStructure * structure,
 
   field = gst_structure_get_field (structure, fieldname);
 
-  if (field == NULL)
-    return NULL;
-  if (!G_VALUE_HOLDS_STRING (&field->value))
+  if (field == NULL || G_VALUE_TYPE (&field->value) != G_TYPE_STRING)
     return NULL;
 
   return gst_g_value_get_string_unchecked (&field->value);
@@ -1683,9 +1671,7 @@ gst_structure_get_fraction (const GstStructure * structure,
 
   field = gst_structure_get_field (structure, fieldname);
 
-  if (field == NULL)
-    return FALSE;
-  if (!GST_VALUE_HOLDS_FRACTION (&field->value))
+  if (field == NULL || G_VALUE_TYPE (&field->value) != GST_TYPE_FRACTION)
     return FALSE;
 
   *value_numerator = gst_value_get_fraction_numerator (&field->value);
