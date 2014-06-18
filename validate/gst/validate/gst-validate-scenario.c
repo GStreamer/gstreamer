@@ -334,6 +334,7 @@ _execute_set_state (GstValidateScenario * scenario, GstValidateAction * action)
   ret = gst_element_set_state (scenario->pipeline, state);
 
   if (ret == GST_STATE_CHANGE_FAILURE) {
+    scenario->priv->changing_state = FALSE;
     GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
         "Failed to set state to %s", str_state);
 
