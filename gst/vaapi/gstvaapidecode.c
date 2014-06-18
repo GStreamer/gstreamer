@@ -54,6 +54,8 @@
 #define GST_PLUGIN_NAME "vaapidecode"
 #define GST_PLUGIN_DESC "A VA-API based video decoder"
 
+#define GST_VAAPI_DECODE_FLOW_PARSE_DATA        GST_FLOW_CUSTOM_SUCCESS_2
+
 GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapidecode);
 #define GST_CAT_DEFAULT gst_debug_vaapidecode
 
@@ -785,7 +787,7 @@ gst_vaapidecode_set_format(GstVideoDecoder *vdec, GstVideoCodecState *state)
 }
 
 static GstFlowReturn
-gst_vaapidecode_parse(GstVideoDecoder *vdec,
+gst_vaapidecode_parse_frame(GstVideoDecoder *vdec,
     GstVideoCodecFrame *frame, GstAdapter *adapter, gboolean at_eos)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
@@ -808,7 +810,7 @@ gst_vaapidecode_parse(GstVideoDecoder *vdec,
             decode->current_frame_size = 0;
         }
         else
-            ret = GST_FLOW_OK;
+            ret = GST_VAAPI_DECODE_FLOW_PARSE_DATA;
         break;
     case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
         ret = GST_VIDEO_DECODER_FLOW_NEED_DATA;
@@ -826,6 +828,18 @@ gst_vaapidecode_parse(GstVideoDecoder *vdec,
         decode->current_frame_size = 0;
         break;
     }
+    return ret;
+}
+
+static GstFlowReturn
+gst_vaapidecode_parse(GstVideoDecoder *vdec,
+    GstVideoCodecFrame *frame, GstAdapter *adapter, gboolean at_eos)
+{
+    GstFlowReturn ret;
+
+    do {
+        ret = gst_vaapidecode_parse_frame(vdec, frame, adapter, at_eos);
+    } while (ret == GST_VAAPI_DECODE_FLOW_PARSE_DATA);
     return ret;
 }
 
