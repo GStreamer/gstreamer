@@ -869,7 +869,7 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     /* We keep 2 bytes for FU indicator and FU Header */
     payload_len = gst_rtp_buffer_calc_payload_len (mtu - 2, 0, 0);
 
-    list = gst_buffer_list_new ();
+    list = gst_buffer_list_new_sized ((size / payload_len) + 1);
 
     while (end == 0) {
       limitedSize = size < payload_len ? size : payload_len;
