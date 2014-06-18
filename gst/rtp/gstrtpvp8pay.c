@@ -460,7 +460,8 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   size = gst_buffer_get_size (buffer);
 
   if (G_UNLIKELY (!gst_rtp_vp8_pay_parse_frame (self, buffer, size))) {
-    g_message ("Failed to parse frame");
+    GST_ELEMENT_ERROR (self, STREAM, ENCODE, (NULL),
+        ("Failed to parse VP8 frame"));
     return GST_FLOW_ERROR;
   }
 
