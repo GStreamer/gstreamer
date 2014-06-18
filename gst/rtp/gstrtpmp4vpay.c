@@ -223,10 +223,12 @@ gst_rtp_mp4v_pay_empty (GstRtpMP4VPay * rtpmp4vpay)
   gst_adapter_clear (rtpmp4vpay->adapter);
 }
 
+#define RTP_HEADER_LEN 12
+
 static GstFlowReturn
 gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
 {
-  guint avail;
+  guint avail, mtu;
   GstBuffer *outbuf;
   GstBuffer *outbuf_data = NULL;
   GstFlowReturn ret;
@@ -248,12 +250,12 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
   if (!avail)
     return GST_FLOW_OK;
 
-  ret = GST_FLOW_OK;
+  mtu = GST_RTP_BASE_PAYLOAD_MTU (rtpmp4vpay);
 
   /* Use buffer lists. Each frame will be put into a list
    * of buffers and the whole list will be pushed downstream
    * at once */
-  list = gst_buffer_list_new ();
+  list = gst_buffer_list_new_sized ((avail / (mtu - RTP_HEADER_LEN)) + 1);
 
   while (avail > 0) {
     guint towrite;
@@ -265,7 +267,7 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
     packet_len = gst_rtp_buffer_calc_packet_len (avail, 0, 0);
 
     /* fill one MTU or all available bytes */
-    towrite = MIN (packet_len, GST_RTP_BASE_PAYLOAD_MTU (rtpmp4vpay));
+    towrite = MIN (packet_len, mtu);
 
     /* this is the payload length */
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
