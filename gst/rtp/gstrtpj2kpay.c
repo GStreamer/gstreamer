@@ -353,10 +353,10 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
   state.next_sot = 0;
   state.force_packet = FALSE;
 
-  list = gst_buffer_list_new ();
-
   /* get max packet length */
   max_size = gst_rtp_buffer_calc_payload_len (mtu - HEADER_SIZE, 0, 0);
+
+  list = gst_buffer_list_new_sized ((mtu / max_size) + 1);
 
   do {
     GstBuffer *outbuf;
