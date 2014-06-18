@@ -193,7 +193,7 @@ gst_pnmdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   guint i_rowstride;
   guint o_rowstride;
   GstFlowReturn r = GST_FLOW_OK;
-  gint bytes, i;
+  gint bytes, i, total_bytes = 0;
 
   r = gst_video_decoder_allocate_output_frame (decoder, frame);
   if (r != GST_FLOW_OK) {
@@ -224,6 +224,7 @@ gst_pnmdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       omap.data[i * 8 + 6] = (imap.data[i] & 0x02) ? 0 : 255;
       omap.data[i * 8 + 7] = (imap.data[i] & 0x01) ? 0 : 255;
     }
+    total_bytes = bytes * 8;
   } else
     /* Need to convert from PNM rowstride to GStreamer rowstride */
   if (s->mngr.info.width % 4 != 0) {
@@ -238,8 +239,26 @@ gst_pnmdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     for (i = 0; i < s->mngr.info.height; i++)
       memcpy (omap.data + i * o_rowstride, imap.data + i * i_rowstride,
           i_rowstride);
+    total_bytes = o_rowstride * s->mngr.info.height;
   } else {
     memcpy (omap.data, imap.data, s->size);
+    total_bytes = s->size;
+  }
+
+  if (s->mngr.info.type != GST_PNM_TYPE_BITMAP) {
+    /* Convert the pixels from 0 - max range to 0 - 255 range */
+    if (s->mngr.info.max < 255) {
+      gint max = s->mngr.info.max;
+      for (i = 0; i < total_bytes; i++) {
+        if (omap.data[i] <= max) {
+          omap.data[i] = 255 * omap.data[i] / max;
+        } else {
+          /* This is an error case, wherein value in the data stream is
+             more than max. Clamp such values to 255 */
+          omap.data[i] = 255;
+        }
+      }
+    }
   }
 
   if (s->mngr.info.encoding == GST_PNM_ENCODING_ASCII) {

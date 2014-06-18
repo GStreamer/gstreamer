@@ -176,6 +176,11 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
           case '\n':
           case '\t':
           case ' ':
+            /* Check for maximum and minimum supported bit depth and
+               return error if its out of range */
+            if ((mngr->info.max > 255) || (mngr->info.max < 1)) {
+              return GST_PNM_INFO_MNGR_RESULT_FAILED;
+            }
             mngr->info.fields |= GST_PNM_INFO_FIELDS_MAX;
             mngr->data_offset += i + 1;
             return GST_PNM_INFO_MNGR_RESULT_FINISHED;
