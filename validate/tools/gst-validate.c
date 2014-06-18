@@ -65,6 +65,9 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
     {
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.error");
+
       g_main_loop_quit (loop);
       break;
     }
@@ -76,6 +79,8 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_STATE_CHANGED:
       if (GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline)) {
         GstState oldstate, newstate, pending;
+        gchar *dump_name;
+        gchar *state_transition_name;
 
         gst_message_parse_state_changed (message, &oldstate, &newstate,
             &pending);
@@ -85,13 +90,39 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             gst_element_state_get_name (newstate),
             gst_element_state_get_name (pending));
 
-        if (newstate == GST_STATE_PLAYING) {
-          GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-              GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.playing");
-        }
+        state_transition_name = g_strdup_printf ("%s_%s",
+            gst_element_state_get_name (oldstate),
+            gst_element_state_get_name (newstate));
+        dump_name = g_strconcat ("ges-launch.", state_transition_name, NULL);
+
+
+        GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+            GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
+
+        g_free (dump_name);
+        g_free (state_transition_name);
       }
 
       break;
+    case GST_MESSAGE_WARNING:{
+      GError *gerror;
+      gchar *debug;
+      gchar *name = gst_object_get_path_string (GST_MESSAGE_SRC (message));
+
+      /* dump graph on warning */
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.warning");
+
+      gst_message_parse_warning (message, &gerror, &debug);
+      g_print ("WARNING: from element %s: %s\n", name, gerror->message);
+      if (debug)
+        g_print ("Additional debug info:\n%s\n", debug);
+
+      g_error_free (gerror);
+      g_free (debug);
+      g_free (name);
+      break;
+    }
     case GST_MESSAGE_BUFFERING:{
       gint percent;
 
