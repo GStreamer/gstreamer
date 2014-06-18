@@ -519,7 +519,7 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   if (info == NULL
       || gst_discoverer_info_get_result (info) != GST_DISCOVERER_OK) {
 
-    GST_ERROR ("Could not discover URI: %s", uri);
+    GST_ERROR ("Could not discover URI: %s (erro: %s", uri, (*err)->message);
 
     return NULL;
   }
