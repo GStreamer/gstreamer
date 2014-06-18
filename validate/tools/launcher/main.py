@@ -132,10 +132,6 @@ QA_ASSETS = "gst-qa-assets"
 MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
 
-class Formatter(argparse.RawDescriptionHelpFormatter):
-    def _format_usage(self, usage, actions, groups, prefix):
-        pass
-
 class PrintUsage(argparse.Action):
     def __init__(self, option_strings, dest=argparse.SUPPRESS, default=argparse.SUPPRESS, help=None):
         super(PrintUsage, self).__init__( option_strings=option_strings, dest=dest,
@@ -146,7 +142,7 @@ class PrintUsage(argparse.Action):
         parser.exit()
 
 def main():
-    parser = argparse.ArgumentParser(formatter_class=Formatter, prog='gst-validate-launcher',
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, prog='gst-validate-launcher',
                                      description=HELP)
     parser.add_argument("-d", "--debug", dest="debug",
                       action="store_true",
