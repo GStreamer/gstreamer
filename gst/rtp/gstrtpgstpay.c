@@ -257,12 +257,13 @@ gst_rtp_gst_pay_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+#define RTP_HEADER_LEN 12
 
 static gboolean
 gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
     GstClockTime timestamp)
 {
-  guint avail;
+  guint avail, mtu;
   guint frag_offset;
   GstBufferList *list;
 
@@ -270,7 +271,9 @@ gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
   if (avail == 0)
     return FALSE;
 
-  list = gst_buffer_list_new ();
+  mtu = GST_RTP_BASE_PAYLOAD_MTU (rtpgstpay);
+
+  list = gst_buffer_list_new_sized ((avail / (mtu - (RTP_HEADER_LEN + 8))) + 1);
   frag_offset = 0;
 
   while (avail) {
@@ -287,7 +290,7 @@ gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
     packet_len = gst_rtp_buffer_calc_packet_len (8 + avail, 0, 0);
 
     /* fill one MTU or all available bytes */
-    towrite = MIN (packet_len, GST_RTP_BASE_PAYLOAD_MTU (rtpgstpay));
+    towrite = MIN (packet_len, mtu);
 
     /* this is the payload length */
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
