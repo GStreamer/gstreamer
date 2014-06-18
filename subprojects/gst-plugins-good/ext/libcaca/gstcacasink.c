@@ -62,7 +62,8 @@ enum
   PROP_SCREEN_WIDTH,
   PROP_SCREEN_HEIGHT,
   PROP_DITHER,
-  PROP_ANTIALIASING
+  PROP_ANTIALIASING,
+  PROP_DRIVER
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -112,6 +113,49 @@ gst_cacasink_dither_get_type (void)
   return dither_type;
 }
 
+#define GST_TYPE_CACADRIVER (gst_cacasink_driver_get_type())
+
+/**
+ * GstCACASinkDriver:
+ *
+ * Libcaca output driver.
+ *
+ * Since: 1.24
+ */
+static GType
+gst_cacasink_driver_get_type (void)
+{
+  static GType driver_type = 0;
+
+  if (g_once_init_enter (&driver_type)) {
+    char const *const *list;
+    gint i, n_drivers = 0;
+    GEnumValue *driver;
+    GType _driver_type;
+
+    list = caca_get_display_driver_list ();
+
+    /* Read number of available drivers */
+    for (i = 0; list[i]; i += 2, ++n_drivers);
+
+    driver = g_new0 (GEnumValue, n_drivers + 1);
+
+    for (i = 0; i < n_drivers; i++) {
+      driver[i].value = i;
+      driver[i].value_nick = g_strdup (list[2 * i]);
+      driver[i].value_name = g_strdup (list[2 * i + 1]);
+    }
+    driver[i].value = 0;
+    driver[i].value_name = NULL;
+    driver[i].value_nick = NULL;
+
+    _driver_type = g_enum_register_static ("GstCACASinkDriver", driver);
+    g_once_init_leave (&driver_type, _driver_type);
+  }
+
+  return driver_type;
+}
+
 static void
 gst_cacasink_class_init (GstCACASinkClass * klass)
 {
@@ -146,6 +190,17 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
           "Enables Anti-Aliasing", GST_CACA_DEFAULT_ANTIALIASING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstCACASink:driver:
+   *
+   * The libcaca output driver.
+   *
+   * Since: 1.24
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DRIVER,
+      g_param_spec_enum ("driver", "driver", "Output driver",
+          GST_TYPE_CACADRIVER, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_cacasink_change_state;
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -159,6 +214,8 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_cacasink_render);
 
   gst_type_mark_as_plugin_api (GST_TYPE_CACADITHER, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_CACADRIVER,
+      GST_PLUGIN_API_FLAG_IGNORE_ENUM_MEMBERS);
 }
 
 static void
@@ -250,6 +307,7 @@ gst_cacasink_init (GstCACASink * cacasink)
 
   cacasink->dither = GST_CACA_DEFAULT_DITHER;
   cacasink->antialiasing = GST_CACA_DEFAULT_ANTIALIASING;
+  cacasink->driver = 0;
 }
 
 static GstFlowReturn
@@ -263,11 +321,11 @@ gst_cacasink_render (GstBaseSink * basesink, GstBuffer * buffer)
   if (!gst_video_frame_map (&frame, &cacasink->info, buffer, GST_MAP_READ))
     goto invalid_frame;
 
-  caca_clear ();
-  caca_draw_bitmap (0, 0, cacasink->screen_width - 1,
+  caca_clear_canvas (cacasink->cv);
+  caca_dither_bitmap (cacasink->cv, 0, 0, cacasink->screen_width - 1,
       cacasink->screen_height - 1, cacasink->bitmap,
       GST_VIDEO_FRAME_PLANE_DATA (&frame, 0));
-  caca_refresh ();
+  caca_refresh_display (cacasink->dp);
 
   gst_video_frame_unmap (&frame);
 
@@ -306,6 +364,10 @@ gst_cacasink_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_DRIVER:{
+      cacasink->driver = g_value_get_enum (value);
+      break;
+    }
     default:
       break;
   }
@@ -336,6 +398,10 @@ gst_cacasink_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, cacasink->antialiasing);
       break;
     }
+    case PROP_DRIVER:{
+      g_value_set_enum (value, cacasink->driver);
+      break;
+    }
     default:{
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -346,13 +412,26 @@ gst_cacasink_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_cacasink_open (GstCACASink * cacasink)
 {
+  GEnumClass *enum_class;
+  GEnumValue *ev;
+
   cacasink->bitmap = NULL;
 
-  if (caca_init () < 0)
+  if (!(cacasink->cv = caca_create_canvas (0, 0)))
     goto init_failed;
 
-  cacasink->screen_width = caca_get_width ();
-  cacasink->screen_height = caca_get_height ();
+  enum_class = g_type_class_peek (GST_TYPE_CACADRIVER);
+  ev = g_enum_get_value (enum_class, cacasink->driver);
+
+  cacasink->dp = caca_create_display_with_driver (cacasink->cv, ev->value_nick);
+
+  if (!cacasink->dp) {
+    caca_free_canvas (cacasink->cv);
+    return FALSE;
+  }
+
+  cacasink->screen_width = caca_get_canvas_width (cacasink->cv);
+  cacasink->screen_height = caca_get_canvas_height (cacasink->cv);
   cacasink->antialiasing = TRUE;
   caca_set_feature (CACA_ANTIALIASING_MAX);
   cacasink->dither = 0;
@@ -376,7 +455,11 @@ gst_cacasink_close (GstCACASink * cacasink)
     caca_free_bitmap (cacasink->bitmap);
     cacasink->bitmap = NULL;
   }
-  caca_end ();
+
+  caca_free_display (cacasink->dp);
+  cacasink->dp = NULL;
+  caca_free_canvas (cacasink->cv);
+  cacasink->cv = NULL;
 }
 
 static GstStateChangeReturn

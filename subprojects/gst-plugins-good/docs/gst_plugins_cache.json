@@ -3987,6 +3987,18 @@
                         "type": "GstCACASinkDithering",
                         "writable": true
                     },
+                    "driver": {
+                        "blurb": "Output driver",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "x11 (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstCACASinkDriver",
+                        "writable": true
+                    },
                     "screen-height": {
                         "blurb": "The height of the screen",
                         "conditionally-available": false,
@@ -4147,6 +4159,11 @@
                         "value": "53"
                     }
                 ]
+            },
+            "GstCACASinkDriver": {
+                "ignore-enum-members": true,
+                "kind": "enum",
+                "values": []
             },
             "GstCACATvDithering": {
                 "kind": "enum",
