@@ -43,6 +43,11 @@
 
 #define DEFAULT_SEEK_TOLERANCE (1 * GST_MSECOND)        /* tolerance seek interval
                                                            TODO make it overridable  */
+
+GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario_debug);
+#undef GST_CAT_DEFAULT
+#define GST_CAT_DEFAULT gst_validate_scenario_debug
+
 enum
 {
   PROP_0,
@@ -704,8 +709,10 @@ get_position (GstValidateScenario * scenario)
 
     /* TODO what about non flushing seeks? */
     /* TODO why is this inside the action time if ? */
-    if (priv->last_seek)
+    if (priv->last_seek) {
+      GST_INFO_OBJECT (scenario, "Still seeking -- not executing action");
       return TRUE;
+    }
 
     type = g_hash_table_lookup (action_types_table, act->type);
 
@@ -1632,6 +1639,9 @@ init_scenarios (void)
   const gchar *seek_mandatory_fields[] = { "start", NULL };
   const gchar *wait_mandatory_fields[] = { "duration", NULL };
   const gchar *set_state_mandatory_fields[] = { "state", NULL };
+
+  GST_DEBUG_CATEGORY_INIT (gst_validate_scenario_debug, "gstvalidatescenario",
+      GST_DEBUG_FG_YELLOW, "Gst validate scenarios");
 
   _gst_validate_action_type = gst_validate_action_get_type ();
 
