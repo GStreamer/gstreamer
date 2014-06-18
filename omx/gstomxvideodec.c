@@ -1504,9 +1504,12 @@ eos:
   {
     g_mutex_lock (&self->drain_lock);
     if (self->draining) {
+      GstQuery *query = gst_query_new_drain ();
+
       /* Drain the pipeline to reclaim all memories back to the pool */
-      gst_pad_peer_query (GST_VIDEO_DECODER_SRC_PAD (self),
-          gst_query_new_drain ());
+      if (!gst_pad_peer_query (GST_VIDEO_DECODER_SRC_PAD (self), query))
+        GST_DEBUG_OBJECT (self, "drain query failed");
+      gst_query_unref (query);
 
       GST_DEBUG_OBJECT (self, "Drained");
       self->draining = FALSE;
