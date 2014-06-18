@@ -29,6 +29,10 @@ from utils import MediaFormatCombination, get_profile,\
     path2url, DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
     compare_rendered_with_original, Protocols
 
+######################################
+#       Private global variables     #
+######################################
+
 # definitions of commands to use
 GST_VALIDATE_COMMAND = "gst-validate-1.0"
 GST_VALIDATE_TRANSCODING_COMMAND = "gst-validate-transcoding-1.0"
@@ -42,80 +46,48 @@ if "win32" in sys.platform:
 G_V_MEDIA_INFO_EXT = "media_info"
 G_V_STREAM_INFO_EXT = "stream_info"
 
-# Some info about protocols and how to handle them
-G_V_CAPS_TO_PROTOCOL = [("application/x-hls", Protocols.HLS)]
-G_V_PROTOCOL_TIMEOUTS = {Protocols.HTTP: 120,
-                         Protocols.HLS: 240}
 
-# Tests descriptions
-_G_V_TEST_GENERATORS = []
+#################################################
+#       API to be used to create testsuites     #
+#################################################
 
-# Description of wanted output formats for transcoding test
-G_V_ENCODING_TARGET_COMBINATIONS = [
-    MediaFormatCombination("ogg", "vorbis", "theora"),
-    MediaFormatCombination("webm", "vorbis", "vp8"),
-    MediaFormatCombination("mp4", "mp3", "h264"),
-    MediaFormatCombination("mkv", "vorbis", "h264")]
+"""
+A list of tuple of the form:
+ (@regex_defining_blacklister_test_names, @reson_for_the_blacklisting)
+"""
+GST_VALIDATE_BLACKLISTED_TESTS = []
 
+"""
+A list of scenario names to be run
+"""
+GST_VALIDATE_SCENARIOS = []
 
-# List of scenarios to run depending on the protocol in use
-G_V_SCENARIOS = ["play_15s",
-                 "reverse_playback",
-                 "fast_forward",
-                 "seek_forward",
-                 "seek_backward",
-                 "seek_with_stop",
-                 "switch_audio_track",
-                 "switch_audio_track_while_paused",
-                 "switch_subtitle_track",
-                 "switch_subtitle_track_while_paused",
-                 "disable_subtitle_track_while_paused",
-                 "change_state_intensive",
-                 "scrub_forward_seeking"]
+"""
+A list of #GstValidateTestGenerator to be used to generate tests
+"""
+GST_VALIDATE_TEST_GENERATORS = []
 
-G_V_PROTOCOL_VIDEO_RESTRICTION_CAPS = {
-    # Handle the unknown framerate in HLS samples
-    Protocols.HLS: "video/x-raw,framerate=25/1"
-}
-
-G_V_BLACKLISTED_TESTS = \
-[# HLS known issues:
- ("validate.hls.playback.fast_forward.*",
-  "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
- ("validate.hls.playback.seek_with_stop.*",
-  "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
- ("validate.hls.playback.reverse_playback.*",
-  "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
- ("validate.hls.*scrub_forward_seeking.*", "This is not stable enough for now."),
-
- # Matroska/WEBM known issues:
- ("validate.*.reverse_playback.*webm$",
-  "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
- ("validate.*reverse.*Sintel_2010_720p_mkv",
-  "TODO in matroskademux: FIXME: We should build an index during playback or "
-  "when scanning that can be used here. The reverse playback code requires "
-  " seek_index and seek_entry to be set!"),
- ("validate.http.playback.seek_with_stop.*webm",
-  "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
- ("validate.http.playback.seek_with_stop.*mkv",
-  "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
-
- # MPEG TS known issues:
- ('(?i)validate.*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
-  "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
-
- # HTTP known issues:
- ("validate.http.*scrub_forward_seeking.*", "This is not stable enough for now."),
-]
+"""
+A list of #MediaFormatCombinations describing wanted output
+formats for transcoding test
+"""
+GST_VALIDATE_ENCODING_FORMATS = []
 
 
-class MediaDescriptor(Loggable):
+"""
+Some info about protocols and how to handle them
+"""
+GST_VALIDATE_CAPS_TO_PROTOCOL = [("application/x-hls", Protocols.HLS)]
+GST_VALIDATE_PROTOCOL_TIMEOUTS = {Protocols.HTTP: 120,
+                                  Protocols.HLS: 240}
+
+class GstValidateMediaDescriptor(Loggable):
     def __init__(self, xml_path):
         Loggable.__init__(self)
         self._xml_path = xml_path
         self.media_xml = ET.parse(xml_path).getroot()
 
-        # Sanity checks
+       # Sanity checks
         self.media_xml.attrib["duration"]
         self.media_xml.attrib["seekable"]
 
@@ -174,94 +146,134 @@ class MediaDescriptor(Loggable):
 
         return True
 
-class TestGenerator(Loggable):
-    def __init__(self, name):
+class GstValidateTestGenerator(Loggable):
+    def __init__(self, name, tests=[]):
         Loggable.__init__(self)
         self.name = name
+        self._tests = tests
+        self.set_config(None, None)
 
-    def generate_tests(self, options, reporter,
-                       uri_minfo_special_scenarios,
-                       scenarios):
-        raise NotImplemented
+    def set_config(self, options, reporter):
+        self.options = options
+        self.reporter = reporter
 
-class MediaCheckTestGenerator(TestGenerator):
+    def populate_tests(self, uri_minfo_special_scenarios, scenarios):
+        pass
+
+    def generate_tests(self, uri_minfo_special_scenarios, scenarios):
+
+        self.populate_tests(uri_minfo_special_scenarios, scenarios)
+        return self._tests
+
+    def add_test(self, test):
+        self._tests.append(test)
+
+
+class GstValidateMediaCheckTestGenerator(GstValidateTestGenerator):
     def __init__(self):
-        TestGenerator.__init__(self, "media_check")
+        GstValidateTestGenerator.__init__(self, "media_check")
 
-    def generate_tests(self, options, reporter,
-                       uri_minfo_special_scenarios,
-                       scenarios):
-        tests = []
+    def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for uri, mediainfo, special_scenarios in uri_minfo_special_scenarios:
             protocol = mediainfo.media_descriptor.get_protocol()
             try:
-                timeout = G_V_PROTOCOL_TIMEOUTS[protocol]
+                timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[protocol]
             except KeyError:
                 timeout = DEFAULT_TIMEOUT
 
             classname = "validate.%s.media_check.%s" % (protocol,
                                                         os.path.basename(uri).replace(".", "_"))
-            tests.append(GstValidateMediaCheckTest(classname,
-                                                    options,
-                                                    reporter,
+            self.add_test(GstValidateMediaCheckTest(classname,
+                                                    self.options,
+                                                    self.reporter,
                                                     mediainfo.media_descriptor,
                                                     uri,
                                                     mediainfo.path,
                                                     timeout=timeout))
-        return tests
 
 
-class TranscodingTestGenerator(TestGenerator):
+class GstValidateTranscodingTestGenerator(GstValidateTestGenerator):
     def __init__(self):
-        TestGenerator.__init__(self, "transcode")
+        GstValidateTestGenerator.__init__(self, "transcode")
 
-    def generate_tests(self, options, reporter,
-                       uri_minfo_special_scenarios,
-                       scenarios):
-        tests = []
+    def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for uri, mediainfo, special_scenarios in uri_minfo_special_scenarios:
             if mediainfo.media_descriptor.is_image():
                 continue
 
-            for comb in G_V_ENCODING_TARGET_COMBINATIONS:
+            for comb in GST_VALIDATE_ENCODING_FORMATS:
                 classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.media_descriptor.get_protocol(),
                                                                 str(comb).replace(' ', '_'),
                                                                 os.path.basename(uri).replace(".", "_"))
-                tests.append(GstValidateTranscodingTest(classname,
-                                                        options,
-                                                        reporter,
-                                                        comb,
-                                                        uri,
-                                                        mediainfo.media_descriptor))
-        return tests
+                self.add_test(GstValidateTranscodingTest(classname,
+                                                         self.options,
+                                                         self.reporter,
+                                                         comb,
+                                                         uri,
+                                                         mediainfo.media_descriptor))
 
 
-class PipelineTestGenerator(TestGenerator):
-    def __init__(self, name, pipeline):
-        TestGenerator.__init__(self, name)
-        self._pipeline = pipeline
+class GstValidatePipelineTestGenerator(GstValidateTestGenerator):
+    def __init__(self, name, pipeline_template=None, pipelines_descriptions=None,
+                 valid_scenarios=[]):
+        """
+        @name: The name of the generator
+        @pipeline_template: A template pipeline to be used to generate actual pipelines
+        @pipelines_descriptions: A list of tuple of the form:
+                                 (test_name, pipeline_description)
+        @valid_scenarios: A list of scenario name that can be used with that generator
+        """
+        GstValidateTestGenerator.__init__(self, name)
+        self._pipeline_template = pipeline_template
+        self._pipelines_descriptions = pipelines_descriptions
+        self._valid_scenarios = valid_scenarios
 
-    def get_fname(self, scenario, protocol=None):
+    def get_fname(self, scenario, protocol=None, name=None):
+        if name is None:
+            name = self.name
+
+        if protocol is not None:
+            protocol_str = "%s." % protocol
+        else:
+            protocol_str = ""
+
         if scenario is not None and scenario.name.lower() != "none":
-            return "%s.%s.%s.%s" % ("validate", protocol, self.name, scenario.name)
+            return "%s.%s%s.%s" % ("validate", protocol_str, name, scenario.name)
 
-        return "%s.%s.%s" % ("validate", protocol, self.name)
+        return "%s.%s%s" % ("validate", protocol_str, name)
+
+    def generate_tests(self, uri_minfo_special_scenarios, scenarios):
+
+        if self._valid_scenarios:
+            scenarios = [scenario for scenario in scenarios if
+                          scenario.name in self._valid_scenarios]
+
+        return super(GstValidatePipelineTestGenerator, self).generate_tests(
+              uri_minfo_special_scenarios, scenarios)
+
+    def populate_tests(self, uri_minfo_special_scenarios, scenarios):
+        for name, pipeline in self._pipelines_descriptions:
+            for scenario in scenarios:
+                fname = self.get_fname(scenario, name=name)
+                self.add_test(GstValidateLaunchTest(fname,
+                                                    self.options,
+                                                    self.reporter,
+                                                    pipeline,
+                                                    scenario=scenario)
+                              )
 
 
-class PlaybinTestsGenerator(PipelineTestGenerator):
+class GstValidatePlaybinTestGenerator(GstValidatePipelineTestGenerator):
 
     def __init__(self):
-        PipelineTestGenerator.__init__(self, "playback", "playbin")
+        GstValidatePipelineTestGenerator.__init__(self, "playback", "playbin")
 
-    def generate_tests(self, options, reporter,
-                       uri_minfo_special_scenarios,
-                       scenarios):
-        tests = []
+    def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for uri, minfo, special_scenarios in uri_minfo_special_scenarios:
-            pipe = self._pipeline
+            pipe = self._pipeline_template
             protocol = minfo.media_descriptor.get_protocol()
 
-            if options.mute:
+            if self.options.mute:
                 fakesink = "'fakesink sync=true'"
                 pipe += " audio-sink=%s video-sink=%s" %(fakesink, fakesink)
 
@@ -279,22 +291,20 @@ class PlaybinTestsGenerator(PipelineTestGenerator):
                     # 10MB so we can reverse playback
                     pipe += " ring-buffer-max-size=10485760"
 
-                tests.append(GstValidateLaunchTest(fname,
-                                                   options,
-                                                   reporter,
-                                                   pipe,
-                                                   scenario=scenario,
-                                                   media_descriptor=minfo.media_descriptor)
-                             )
-
-        return tests
+                self.add_test(GstValidateLaunchTest(fname,
+                                                    self.options,
+                                                    self.reporter,
+                                                    pipe,
+                                                    scenario=scenario,
+                                                    media_descriptor=minfo.media_descriptor)
+                              )
 
 
 class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
                  timeout=DEFAULT_TIMEOUT, scenario=None, media_descriptor=None):
         try:
-            timeout = G_V_PROTOCOL_TIMEOUTS[media_descriptor.get_protocol()]
+            timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[media_descriptor.get_protocol()]
         except KeyError:
             pass
         except AttributeError:
@@ -364,7 +374,7 @@ class GstValidateTranscodingTest(GstValidateTest):
 
         file_dur = long(media_descriptor.get_duration()) / GST_SECOND
         try:
-            timeout = G_V_PROTOCOL_TIMEOUTS[media_descriptor.get_protocol()]
+            timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[media_descriptor.get_protocol()]
         except KeyError:
             pass
 
@@ -386,12 +396,7 @@ class GstValidateTranscodingTest(GstValidateTest):
         if urlparse.urlparse(self.dest_file).scheme == "":
             self.dest_file = path2url(self.dest_file)
 
-        try:
-            video_restriction = G_V_PROTOCOL_VIDEO_RESTRICTION_CAPS[self.media_descriptor.get_protocol()]
-        except KeyError:
-            video_restriction = None
-
-        profile = get_profile(self.combination, video_restriction=video_restriction)
+        profile = get_profile(self.combination)
         self.add_arguments("-o", profile)
 
     def build_arguments(self):
@@ -443,6 +448,7 @@ class GstValidateManager(TestsManager, Loggable):
         Loggable.__init__(self)
         self._uris = []
         self._run_defaults = True
+        self._is_populated = False
 
     def init(self):
         if which(GST_VALIDATE_COMMAND) and which(GST_VALIDATE_TRANSCODING_COMMAND):
@@ -452,34 +458,62 @@ class GstValidateManager(TestsManager, Loggable):
     def add_options(self, parser):
         group = parser.add_argument_group("GstValidate tools specific options"
                             " and behaviours",
-                            description="""
-When using --wanted-tests, all the scenarios can be used, even those which have
+description="""When using --wanted-tests, all the scenarios can be used, even those which have
 not been tested and explicitely activated, in order to only use those, you should
 use --wanted-tests defaults_only""")
+
+        group.add_argument("-vc", "--validate-config", dest="validate_config",
+                           default=None,
+help="""Lets you specify a file where the testsuite to execute is defined.
+In this file, your will be able to access the following variables:
+   * GST_VALIDATE_SCENARIOS: A list of scenario names to be run
+   * GST_VALIDATE_BLACKLISTED_TESTS: A list of tuple of the form:
+         (@regex_defining_blacklister_test_names, @reason_for_the_blacklisting)
+   * GST_VALIDATE_TEST_GENERATORS: A list of #GstValidateTestGenerator to be used to generate tests
+   * GST_VALIDATE_ENCODING_FORMATS: A list of #MediaFormatCombination to be used for transcoding tests
+
+You can also set default values with:
+    * gst_validate_register_defaults: Sets default values for all parametters
+    * gst_validate_register_default_test_generators: Sets default values for the TestGenerators to be used
+    * gst_validate_register_default_scenarios: Sets default values for the scenarios to be executed
+    * gst_validate_register_default_encoding_formats: Sets default values for the encoding formats to be tested
+""")
+
+    def _populate_testsuite(self, options):
+
+        if self._is_populated is True:
+            return
+
+        if options.validate_config:
+            execfile(options.validate_config, globals())
+        else:
+            gst_validate_register_defaults()
+
+        self._is_populated = True
 
     def list_tests(self):
         if self.tests:
             return self.tests
 
+        self._populate_testsuite(self.options)
+
         if self._run_defaults:
             scenarios = [self._scenarios.get_scenario(scenario_name)
-                         for scenario_name in G_V_SCENARIOS]
+                         for scenario_name in GST_VALIDATE_SCENARIOS]
         else:
             scenarios = self._scenarios.get_scenario(None)
         uris = self._list_uris()
 
-        for generator in _G_V_TEST_GENERATORS:
-            for test in generator.generate_tests(self.options,
-                                                       self.reporter,
-                                                       uris,
-                                                       scenarios):
+        for generator in GST_VALIDATE_TEST_GENERATORS:
+            generator.set_config(self.options, self.reporter)
+            for test in generator.generate_tests(uris, scenarios):
                 self.add_test(test)
 
         return self.tests
 
     def _check_discovering_info(self, media_info, uri=None):
         self.debug("Checking %s", media_info)
-        media_descriptor = MediaDescriptor(media_info)
+        media_descriptor = GstValidateMediaDescriptor(media_info)
         try:
             # Just testing that the vairous mandatory infos are present
             caps = media_descriptor.get_caps()
@@ -487,7 +521,7 @@ use --wanted-tests defaults_only""")
                 uri = media_descriptor.get_uri()
 
             media_descriptor.set_protocol(urlparse.urlparse(uri).scheme)
-            for caps2, prot in G_V_CAPS_TO_PROTOCOL:
+            for caps2, prot in GST_VALIDATE_CAPS_TO_PROTOCOL:
                 if caps2 == caps:
                     media_descriptor.set_protocol(prot)
                     break
@@ -560,8 +594,10 @@ use --wanted-tests defaults_only""")
                     return True
         return False
 
-    def get_blacklisted(self):
-        return G_V_BLACKLISTED_TESTS
+    def get_blacklisted(self, options):
+        self._populate_testsuite(options)
+
+        return GST_VALIDATE_BLACKLISTED_TESTS
 
     def set_settings(self, options, args, reporter):
         TestsManager.set_settings(self, options, args, reporter)
@@ -569,9 +605,83 @@ use --wanted-tests defaults_only""")
                                          if "defaults_only" in d]:
             self._run_defaults = False
 
-def gst_validate_register_test_generator(generator):
-    _G_V_TEST_GENERATORS.append(generator)
 
-gst_validate_register_test_generator(PlaybinTestsGenerator())
-gst_validate_register_test_generator(MediaCheckTestGenerator())
-gst_validate_register_test_generator(TranscodingTestGenerator())
+#################################################
+# GstValidate default testsuite implementation     #
+#################################################
+
+
+def gst_validate_register_default_test_generators():
+    """
+    Registers default test generators
+    """
+    GST_VALIDATE_TEST_GENERATORS.append(GstValidatePlaybinTestGenerator())
+    GST_VALIDATE_TEST_GENERATORS.append(GstValidateMediaCheckTestGenerator())
+    GST_VALIDATE_TEST_GENERATORS.append(GstValidateTranscodingTestGenerator())
+
+
+def gst_validate_register_default_scenarios():
+    """
+    Registers default test scenarios
+    """
+    GST_VALIDATE_SCENARIOS.extend([
+                 "play_15s",
+                 "reverse_playback",
+                 "fast_forward",
+                 "seek_forward",
+                 "seek_backward",
+                 "seek_with_stop",
+                 "switch_audio_track",
+                 "switch_audio_track_while_paused",
+                 "switch_subtitle_track",
+                 "switch_subtitle_track_while_paused",
+                 "disable_subtitle_track_while_paused",
+                 "change_state_intensive",
+                 "scrub_forward_seeking"])
+
+def gst_validate_register_default_encoding_formats():
+    """
+    Registers default encoding formats
+    """
+    GST_VALIDATE_ENCODING_FORMATS.extend([
+        MediaFormatCombination("ogg", "vorbis", "theora"),
+        MediaFormatCombination("webm", "vorbis", "vp8"),
+        MediaFormatCombination("mp4", "mp3", "h264"),
+        MediaFormatCombination("mkv", "vorbis", "h264"),
+    ])
+
+def gst_validate_define_default_blacklist():
+    GST_VALIDATE_BLACKLISTED_TESTS.extend([
+        ("validate.hls.playback.fast_forward.*",
+         "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
+        ("validate.hls.playback.seek_with_stop.*",
+         "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
+        ("validate.hls.playback.reverse_playback.*",
+         "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
+        ("validate.hls.*scrub_forward_seeking.*", "This is not stable enough for now."),
+
+        # Matroska/WEBM known issues:
+        ("validate.*.reverse_playback.*webm$",
+         "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
+        ("validate.*reverse.*Sintel_2010_720p_mkv",
+         "TODO in matroskademux: FIXME: We should build an index during playback or "
+         "when scanning that can be used here. The reverse playback code requires "
+         " seek_index and seek_entry to be set!"),
+        ("validate.http.playback.seek_with_stop.*webm",
+         "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
+        ("validate.http.playback.seek_with_stop.*mkv",
+         "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
+
+        # MPEG TS known issues:
+        ('(?i)validate.*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
+         "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
+
+        # HTTP known issues:
+        ("validate.http.*scrub_forward_seeking.*", "This is not stable enough for now."),
+    ])
+
+def gst_validate_register_defaults():
+    gst_validate_register_default_test_generators()
+    gst_validate_register_default_scenarios()
+    gst_validate_register_default_encoding_formats()
+    gst_validate_define_default_blacklist()

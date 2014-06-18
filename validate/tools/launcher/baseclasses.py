@@ -473,7 +473,7 @@ class TestsManager(Loggable):
     def get_tests(self):
         return self.tests
 
-    def get_blacklisted(self):
+    def get_blacklisted(self, options=None):
         return []
 
     def add_options(self, parser):
@@ -638,10 +638,10 @@ class _TestsLauncher(Loggable):
             if tester.needs_http_server():
                 return True
 
-    def get_blacklisted(self):
+    def get_blacklisted(self, options=None):
         res = []
         for tester in self.testers:
-            for blacklisted in tester.get_blacklisted():
+            for blacklisted in tester.get_blacklisted(options):
                 if isinstance(blacklisted, str):
                     res.append(blacklisted, "Unknown")
                 else:

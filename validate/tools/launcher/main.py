@@ -283,7 +283,7 @@ def main():
                % options.clone_dir, Colors.FAIL, True)
         return -1
 
-    blacklisted = tests_launcher.get_blacklisted()
+    blacklisted = tests_launcher.get_blacklisted(options)
     if blacklisted:
         msg = "Currently 'hardcoded' blacklisted tests:\n"
         for name, bug in blacklisted:
