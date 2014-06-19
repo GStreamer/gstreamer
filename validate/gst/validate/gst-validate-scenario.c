@@ -664,6 +664,12 @@ get_position (GstValidateScenario * scenario)
     return TRUE;
   }
 
+  /* TODO what about non flushing seeks? */
+  if (priv->last_seek) {
+    GST_INFO_OBJECT (scenario, "Still seeking -- not executing action");
+    return TRUE;
+  }
+
   query = gst_query_new_segment (GST_FORMAT_DEFAULT);
   if (gst_element_query (GST_ELEMENT (scenario->pipeline), query))
     gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
@@ -715,13 +721,6 @@ get_position (GstValidateScenario * scenario)
   if (act && ((rate > 0 && (GstClockTime) position >= act->playback_time) ||
           (rate < 0 && (GstClockTime) position <= act->playback_time))) {
     GstValidateActionType *type;
-
-    /* TODO what about non flushing seeks? */
-    /* TODO why is this inside the action time if ? */
-    if (priv->last_seek) {
-      GST_INFO_OBJECT (scenario, "Still seeking -- not executing action");
-      return TRUE;
-    }
 
     type = g_hash_table_lookup (action_types_table, act->type);
 
