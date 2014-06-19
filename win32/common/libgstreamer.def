@@ -31,6 +31,7 @@ EXPORTS
 	GST_CAT_SCHEDULING DATA
 	GST_CAT_SIGNAL DATA
 	GST_CAT_STATES DATA
+	_gst_bitmask_type DATA
 	_gst_buffer_list_type DATA
 	_gst_buffer_type DATA
 	_gst_caps_any DATA
@@ -39,6 +40,8 @@ EXPORTS
 	_gst_caps_features_type DATA
 	_gst_caps_none DATA
 	_gst_caps_type DATA
+	_gst_context_type DATA
+	_gst_date_time_type DATA
 	_gst_debug_category_new
 	_gst_debug_dump_mem
 	_gst_debug_enabled DATA
@@ -47,14 +50,27 @@ EXPORTS
 	_gst_debug_nameof_funcptr
 	_gst_debug_register_funcptr
 	_gst_disable_registry_cache DATA
+	_gst_double_range_type DATA
 	_gst_element_error_printf
 	_gst_event_type DATA
+	_gst_fraction_range_type DATA
+	_gst_fraction_type DATA
+	_gst_int64_range_type DATA
+	_gst_int_range_type DATA
+	_gst_memory_type DATA
+	_gst_message_type DATA
 	_gst_meta_tag_memory DATA
 	_gst_meta_transform_copy DATA
 	_gst_plugin_loader_client_run
+	_gst_query_type DATA
 	_gst_sample_type DATA
 	_gst_structure_type DATA
+	_gst_tag_list_type DATA
+	_gst_toc_entry_type DATA
+	_gst_toc_type DATA
 	_gst_trace_mutex DATA
+	_gst_value_array_type DATA
+	_gst_value_list_type DATA
 	gst_allocation_params_copy
 	gst_allocation_params_free
 	gst_allocation_params_get_type
