@@ -897,62 +897,42 @@ gst_value_deserialize_array (GValue * dest, const gchar * s)
  * Values in the range are defined as any value greater or equal
  * to min*step, AND lesser or equal to max*step.
  * For step == 1, this falls back to the traditional range semantics.
+ *
+ * data[0] = (min << 32) | (max)
+ * data[1] = step
+ *
  *************/
 
-#define INT_RANGE_MIN(v) (((gint *)((v)->data[0].v_pointer))[0])
-#define INT_RANGE_MAX(v) (((gint *)((v)->data[0].v_pointer))[1])
-#define INT_RANGE_STEP(v) (((gint *)((v)->data[0].v_pointer))[2])
+#define INT_RANGE_MIN(v) ((gint) (((v)->data[0].v_uint64) >> 32))
+#define INT_RANGE_MAX(v) ((gint) (((v)->data[0].v_uint64) & 0xffffffff))
+#define INT_RANGE_STEP(v) ((v)->data[1].v_int)
 
 static void
 gst_value_init_int_range (GValue * value)
 {
-  gint *vals = g_slice_alloc0 (3 * sizeof (gint));
-  value->data[0].v_pointer = vals;
-  INT_RANGE_MIN (value) = 0;
-  INT_RANGE_MAX (value) = 0;
-  INT_RANGE_STEP (value) = 1;
-}
+  G_STATIC_ASSERT (sizeof (gint) <= 2 * sizeof (guint64));
 
-static void
-gst_value_free_int_range (GValue * value)
-{
-  g_return_if_fail (GST_VALUE_HOLDS_INT_RANGE (value));
-  g_slice_free1 (3 * sizeof (gint), value->data[0].v_pointer);
-  value->data[0].v_pointer = NULL;
+  value->data[0].v_uint64 = 0;
+  value->data[1].v_int = 1;
 }
 
 static void
 gst_value_copy_int_range (const GValue * src_value, GValue * dest_value)
 {
-  gint *vals = (gint *) dest_value->data[0].v_pointer;
-  gint *src_vals = (gint *) src_value->data[0].v_pointer;
-
-  if (vals == NULL) {
-    gst_value_init_int_range (dest_value);
-  }
-  if (src_vals != NULL) {
-    INT_RANGE_MIN (dest_value) = INT_RANGE_MIN (src_value);
-    INT_RANGE_MAX (dest_value) = INT_RANGE_MAX (src_value);
-    INT_RANGE_STEP (dest_value) = INT_RANGE_STEP (src_value);
-  }
+  dest_value->data[0].v_uint64 = src_value->data[0].v_uint64;
+  dest_value->data[1].v_int = src_value->data[1].v_int;
 }
 
 static gchar *
 gst_value_collect_int_range (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  gint *vals = value->data[0].v_pointer;
-
   if (n_collect_values != 2)
     return g_strdup_printf ("not enough value locations for `%s' passed",
         G_VALUE_TYPE_NAME (value));
   if (collect_values[0].v_int >= collect_values[1].v_int)
     return g_strdup_printf ("range start is not smaller than end for `%s'",
         G_VALUE_TYPE_NAME (value));
-
-  if (vals == NULL) {
-    gst_value_init_int_range (value);
-  }
 
   gst_value_set_int_range_step (value, collect_values[0].v_int,
       collect_values[1].v_int, 1);
@@ -966,8 +946,6 @@ gst_value_lcopy_int_range (const GValue * value, guint n_collect_values,
 {
   guint32 *int_range_start = collect_values[0].v_pointer;
   guint32 *int_range_end = collect_values[1].v_pointer;
-  guint32 *int_range_step = collect_values[2].v_pointer;
-  gint *vals = (gint *) value->data[0].v_pointer;
 
   if (!int_range_start)
     return g_strdup_printf ("start value location for `%s' passed as NULL",
@@ -975,18 +953,9 @@ gst_value_lcopy_int_range (const GValue * value, guint n_collect_values,
   if (!int_range_end)
     return g_strdup_printf ("end value location for `%s' passed as NULL",
         G_VALUE_TYPE_NAME (value));
-  if (!int_range_step)
-    return g_strdup_printf ("step value location for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
-
-  if (G_UNLIKELY (vals == NULL)) {
-    return g_strdup_printf ("Uninitialised `%s' passed",
-        G_VALUE_TYPE_NAME (value));
-  }
 
   *int_range_start = INT_RANGE_MIN (value);
   *int_range_end = INT_RANGE_MAX (value);
-  *int_range_step = INT_RANGE_STEP (value);
 
   return NULL;
 }
@@ -1003,15 +972,18 @@ gst_value_lcopy_int_range (const GValue * value, guint n_collect_values,
 void
 gst_value_set_int_range_step (GValue * value, gint start, gint end, gint step)
 {
+  guint64 sstart, sstop;
+
   g_return_if_fail (GST_VALUE_HOLDS_INT_RANGE (value));
   g_return_if_fail (start < end);
   g_return_if_fail (step > 0);
   g_return_if_fail (start % step == 0);
   g_return_if_fail (end % step == 0);
 
-  INT_RANGE_MIN (value) = start / step;
-  INT_RANGE_MAX (value) = end / step;
-  INT_RANGE_STEP (value) = step;
+  sstart = (guint64) (start / step);
+  sstop = (guint64) (end / step);
+  value->data[0].v_uint64 = (sstart << 32) | sstop;
+  value->data[1].v_int = step;
 }
 
 /**
@@ -3359,15 +3331,21 @@ gst_value_union_int_int_range (GValue * dest, const GValue * src1,
   /* check if it extends the range */
   if (v == (INT_RANGE_MIN (src2) - 1) * INT_RANGE_STEP (src2)) {
     if (dest) {
+      guint64 new_min = (INT_RANGE_MIN (src2) - 1) * INT_RANGE_STEP (src2);
+      guint64 new_max = INT_RANGE_MAX (src2) * INT_RANGE_STEP (src2);
+
       gst_value_init_and_copy (dest, src2);
-      --INT_RANGE_MIN (src2);
+      dest->data[0].v_uint64 = (new_min << 32) | (new_max);
     }
     return TRUE;
   }
   if (v == (INT_RANGE_MAX (src2) + 1) * INT_RANGE_STEP (src2)) {
     if (dest) {
+      guint64 new_min = INT_RANGE_MIN (src2) * INT_RANGE_STEP (src2);
+      guint64 new_max = (INT_RANGE_MAX (src2) + 1) * INT_RANGE_STEP (src2);
+
       gst_value_init_and_copy (dest, src2);
-      ++INT_RANGE_MAX (src2);
+      dest->data[0].v_uint64 = (new_min << 32) | (new_max);
     }
     return TRUE;
   }
@@ -3433,15 +3411,24 @@ gst_value_union_int_range_int_range (GValue * dest, const GValue * src1,
       if (scalar ==
           (INT_RANGE_MIN (range_value) - 1) * INT_RANGE_STEP (range_value)) {
         if (dest) {
+          guint64 new_min =
+              (INT_RANGE_MIN (range_value) - 1) * INT_RANGE_STEP (range_value);
+          guint64 new_max =
+              INT_RANGE_MAX (range_value) * INT_RANGE_STEP (range_value);
+
           gst_value_init_and_copy (dest, range_value);
-          --INT_RANGE_MIN (range_value);
+          dest->data[0].v_uint64 = (new_min << 32) | (new_max);
         }
         return TRUE;
       } else if (scalar ==
           (INT_RANGE_MAX (range_value) + 1) * INT_RANGE_STEP (range_value)) {
         if (dest) {
+          guint64 new_min =
+              INT_RANGE_MIN (range_value) * INT_RANGE_STEP (range_value);
+          guint64 new_max =
+              (INT_RANGE_MAX (range_value) + 1) * INT_RANGE_STEP (range_value);
           gst_value_init_and_copy (dest, range_value);
-          ++INT_RANGE_MIN (range_value);
+          dest->data[0].v_uint64 = (new_min << 32) | (new_max);
         }
         return TRUE;
       }
@@ -5954,7 +5941,7 @@ GType gst_ ## type ## _get_type (void)                          \
 
 static const GTypeValueTable _gst_int_range_value_table = {
   gst_value_init_int_range,
-  gst_value_free_int_range,
+  NULL,
   gst_value_copy_int_range,
   NULL,
   (char *) "ii",
