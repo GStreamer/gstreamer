@@ -106,7 +106,7 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstBuffer * buf)
   GstRtpVP8Depay *self = GST_RTP_VP8_DEPAY (depay);
   GstBuffer *payload;
   guint8 *data;
-  guint offset;
+  guint hdrsize;
   guint size;
   GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
 
@@ -134,31 +134,32 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstBuffer * buf)
     self->started = TRUE;
   }
 
-  offset = 1;
+  hdrsize = 1;
   /* Check X optional header */
   if ((data[0] & 0x80) != 0) {
-    offset++;
+    hdrsize++;
     /* Check I optional header */
     if ((data[1] & 0x80) != 0) {
-      offset++;
-      if (G_UNLIKELY (offset + 2 >= size))
+      if (G_UNLIKELY (size < 3))
         goto too_small;
+      hdrsize++;
       /* Check for 16 bits PictureID */
       if ((data[2] & 0x80) != 0)
-        offset++;
+        hdrsize++;
     }
     /* Check L optional header */
     if ((data[1] & 0x40) != 0)
-      offset++;
+      hdrsize++;
     /* Check T or K optional headers */
     if ((data[1] & 0x20) != 0 || (data[1] & 0x10) != 0)
-      offset++;
+      hdrsize++;
   }
+  GST_DEBUG_OBJECT (depay, "hdrsize %u, size %u", hdrsize, size);
 
-  if (G_UNLIKELY (offset >= size))
+  if (G_UNLIKELY (hdrsize >= size))
     goto too_small;
 
-  payload = gst_rtp_buffer_get_payload_subbuffer (&rtpbuffer, offset, -1);
+  payload = gst_rtp_buffer_get_payload_subbuffer (&rtpbuffer, hdrsize, -1);
   gst_adapter_push (self->adapter, payload);
 
   /* Marker indicates that it was the last rtp packet for this frame */
