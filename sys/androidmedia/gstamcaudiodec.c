@@ -562,8 +562,13 @@ retry:
   }
 
 done:
-  if (!gst_amc_codec_release_output_buffer (self->codec, idx, &err))
+  if (!gst_amc_codec_release_output_buffer (self->codec, idx, &err)) {
+    if (self->flushing) {
+      g_clear_error (&err);
+      goto flushing;
+    }
     goto failed_release;
+  }
 
   if (is_eos || flow_ret == GST_FLOW_EOS) {
     GST_AUDIO_DECODER_STREAM_UNLOCK (self);
@@ -1054,7 +1059,7 @@ gst_amc_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     GST_AUDIO_DECODER_STREAM_LOCK (self);
 
     if (idx < 0) {
-      if (self->flushing) {
+      if (self->flushing || self->downstream_flow_ret == GST_FLOW_FLUSHING) {
         g_clear_error (&err);
         goto flushing;
       }
@@ -1078,8 +1083,11 @@ gst_amc_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     if (idx >= self->n_input_buffers)
       goto invalid_buffer_index;
 
-    if (self->flushing)
+    if (self->flushing) {
+      memset (&buffer_info, 0, sizeof (buffer_info));
+      gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, NULL);
       goto flushing;
+    }
 
     if (self->downstream_flow_ret != GST_FLOW_OK) {
       memset (&buffer_info, 0, sizeof (buffer_info));
