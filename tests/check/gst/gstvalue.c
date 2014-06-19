@@ -2505,6 +2505,13 @@ GST_START_TEST (test_int_range)
   g_value_unset (&dest);
   fail_unless (gst_value_intersect (&dest, &range, &range2) == FALSE);
 
+  gst_value_set_int_range (&range, -7, -6);
+  fail_unless_equals_int (gst_value_get_int_range_min (&range), -7);
+  fail_unless_equals_int (gst_value_get_int_range_max (&range), -6);
+  gst_value_set_int_range (&range, -7, 7);
+  fail_unless_equals_int (gst_value_get_int_range_min (&range), -7);
+  fail_unless_equals_int (gst_value_get_int_range_max (&range), 7);
+
   g_value_unset (&start);
   g_value_unset (&end);
   g_value_unset (&range);

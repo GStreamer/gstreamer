@@ -980,8 +980,8 @@ gst_value_set_int_range_step (GValue * value, gint start, gint end, gint step)
   g_return_if_fail (start % step == 0);
   g_return_if_fail (end % step == 0);
 
-  sstart = (guint64) (start / step);
-  sstop = (guint64) (end / step);
+  sstart = (guint) (start / step);
+  sstop = (guint) (end / step);
   value->data[0].v_uint64 = (sstart << 32) | sstop;
   value->data[1].v_int = step;
 }
@@ -3331,8 +3331,9 @@ gst_value_union_int_int_range (GValue * dest, const GValue * src1,
   /* check if it extends the range */
   if (v == (INT_RANGE_MIN (src2) - 1) * INT_RANGE_STEP (src2)) {
     if (dest) {
-      guint64 new_min = (INT_RANGE_MIN (src2) - 1) * INT_RANGE_STEP (src2);
-      guint64 new_max = INT_RANGE_MAX (src2) * INT_RANGE_STEP (src2);
+      guint64 new_min =
+          (guint) ((INT_RANGE_MIN (src2) - 1) * INT_RANGE_STEP (src2));
+      guint64 new_max = (guint) (INT_RANGE_MAX (src2) * INT_RANGE_STEP (src2));
 
       gst_value_init_and_copy (dest, src2);
       dest->data[0].v_uint64 = (new_min << 32) | (new_max);
@@ -3341,8 +3342,9 @@ gst_value_union_int_int_range (GValue * dest, const GValue * src1,
   }
   if (v == (INT_RANGE_MAX (src2) + 1) * INT_RANGE_STEP (src2)) {
     if (dest) {
-      guint64 new_min = INT_RANGE_MIN (src2) * INT_RANGE_STEP (src2);
-      guint64 new_max = (INT_RANGE_MAX (src2) + 1) * INT_RANGE_STEP (src2);
+      guint64 new_min = (guint) (INT_RANGE_MIN (src2) * INT_RANGE_STEP (src2));
+      guint64 new_max =
+          (guint) ((INT_RANGE_MAX (src2) + 1) * INT_RANGE_STEP (src2));
 
       gst_value_init_and_copy (dest, src2);
       dest->data[0].v_uint64 = (new_min << 32) | (new_max);
@@ -3411,10 +3413,11 @@ gst_value_union_int_range_int_range (GValue * dest, const GValue * src1,
       if (scalar ==
           (INT_RANGE_MIN (range_value) - 1) * INT_RANGE_STEP (range_value)) {
         if (dest) {
-          guint64 new_min =
-              (INT_RANGE_MIN (range_value) - 1) * INT_RANGE_STEP (range_value);
-          guint64 new_max =
-              INT_RANGE_MAX (range_value) * INT_RANGE_STEP (range_value);
+          guint64 new_min = (guint)
+              ((INT_RANGE_MIN (range_value) -
+                  1) * INT_RANGE_STEP (range_value));
+          guint64 new_max = (guint)
+              (INT_RANGE_MAX (range_value) * INT_RANGE_STEP (range_value));
 
           gst_value_init_and_copy (dest, range_value);
           dest->data[0].v_uint64 = (new_min << 32) | (new_max);
@@ -3423,10 +3426,11 @@ gst_value_union_int_range_int_range (GValue * dest, const GValue * src1,
       } else if (scalar ==
           (INT_RANGE_MAX (range_value) + 1) * INT_RANGE_STEP (range_value)) {
         if (dest) {
-          guint64 new_min =
-              INT_RANGE_MIN (range_value) * INT_RANGE_STEP (range_value);
-          guint64 new_max =
-              (INT_RANGE_MAX (range_value) + 1) * INT_RANGE_STEP (range_value);
+          guint64 new_min = (guint)
+              (INT_RANGE_MIN (range_value) * INT_RANGE_STEP (range_value));
+          guint64 new_max = (guint)
+              ((INT_RANGE_MAX (range_value) +
+                  1) * INT_RANGE_STEP (range_value));
           gst_value_init_and_copy (dest, range_value);
           dest->data[0].v_uint64 = (new_min << 32) | (new_max);
         }
