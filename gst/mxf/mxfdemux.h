@@ -155,6 +155,8 @@ struct _GstMXFDemux
   GArray *essence_tracks;
   GList *pending_index_table_segments;
 
+  gboolean index_table_segments_collected;
+
   GArray *random_index_pack;
 
   /* Metadata */

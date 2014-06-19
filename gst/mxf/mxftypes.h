@@ -171,6 +171,7 @@ typedef struct {
   MXFIndexEntry *index_entries;
 
   GHashTable *other_tags;
+  guint64 stream_offset;
 } MXFIndexTableSegment;
 
 #define GST_TAG_MXF_UMID "mxf-umid"
