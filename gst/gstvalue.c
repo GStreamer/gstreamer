@@ -4209,9 +4209,6 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
   guint i, size;
   GValue subtraction = { 0, };
   gboolean ret = FALSE;
-  GType ltype;
-
-  ltype = gst_value_list_get_type ();
 
   size = VALUE_LIST_SIZE (minuend);
   for (i = 0; i < size; i++) {
@@ -4230,8 +4227,8 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
       if (!ret) {
         gst_value_move (dest, &subtraction);
         ret = TRUE;
-      } else if (G_VALUE_HOLDS (dest, ltype)
-          && !G_VALUE_HOLDS (&subtraction, ltype)) {
+      } else if (G_VALUE_TYPE (dest) == GST_TYPE_LIST
+          && G_VALUE_TYPE (&subtraction) != GST_TYPE_LIST) {
         _gst_value_list_append_and_take_value (dest, &subtraction);
       } else {
         GValue temp;
@@ -4544,15 +4541,18 @@ _gst_value_compare_nolist (const GValue * value1, const GValue * value2)
 gint
 gst_value_compare (const GValue * value1, const GValue * value2)
 {
-  GType ltype;
+  gboolean value1_is_list;
+  gboolean value2_is_list;
 
   g_return_val_if_fail (G_IS_VALUE (value1), GST_VALUE_LESS_THAN);
   g_return_val_if_fail (G_IS_VALUE (value2), GST_VALUE_GREATER_THAN);
 
+  value1_is_list = G_VALUE_TYPE (value1) == GST_TYPE_LIST;
+  value2_is_list = G_VALUE_TYPE (value2) == GST_TYPE_LIST;
+
   /* Special cases: lists and scalar values ("{ 1 }" and "1" are equal),
      as well as lists and ranges ("{ 1, 2 }" and "[ 1, 2 ]" are equal) */
-  ltype = gst_value_list_get_type ();
-  if (G_VALUE_HOLDS (value1, ltype) && !G_VALUE_HOLDS (value2, ltype)) {
+  if (value1_is_list && !value2_is_list) {
     gint i, n, ret;
 
     if (gst_value_list_equals_range (value1, value2)) {
@@ -4575,7 +4575,7 @@ gst_value_compare (const GValue * value1, const GValue * value2)
     }
 
     return GST_VALUE_EQUAL;
-  } else if (G_VALUE_HOLDS (value2, ltype) && !G_VALUE_HOLDS (value1, ltype)) {
+  } else if (value2_is_list && !value1_is_list) {
     gint i, n, ret;
 
     if (gst_value_list_equals_range (value2, value1)) {
@@ -4753,23 +4753,21 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 {
   GstValueIntersectInfo *intersect_info;
   guint i, len;
-  GType ltype, type1, type2;
+  GType type1, type2;
 
   g_return_val_if_fail (G_IS_VALUE (value1), FALSE);
   g_return_val_if_fail (G_IS_VALUE (value2), FALSE);
-
-  ltype = gst_value_list_get_type ();
-
-  /* special cases */
-  if (G_VALUE_HOLDS (value1, ltype) || G_VALUE_HOLDS (value2, ltype))
-    return TRUE;
 
   type1 = G_VALUE_TYPE (value1);
   type2 = G_VALUE_TYPE (value2);
 
   /* practically all GstValue types have a compare function (_can_compare=TRUE)
-   * GstStructure and GstCaps have npot, but are intersectable */
+   * GstStructure and GstCaps have not, but are intersectable */
   if (type1 == type2)
+    return TRUE;
+
+  /* special cases */
+  if (type1 == GST_TYPE_LIST || type2 == GST_TYPE_LIST)
     return TRUE;
 
   /* check registered intersect functions */
@@ -4805,17 +4803,18 @@ gst_value_intersect (GValue * dest, const GValue * value1,
 {
   GstValueIntersectInfo *intersect_info;
   guint i, len;
-  GType ltype, type1, type2;
+  GType type1, type2;
 
   g_return_val_if_fail (G_IS_VALUE (value1), FALSE);
   g_return_val_if_fail (G_IS_VALUE (value2), FALSE);
 
-  ltype = gst_value_list_get_type ();
+  type1 = G_VALUE_TYPE (value1);
+  type2 = G_VALUE_TYPE (value2);
 
   /* special cases first */
-  if (G_VALUE_HOLDS (value1, ltype))
+  if (type1 == GST_TYPE_LIST)
     return gst_value_intersect_list (dest, value1, value2);
-  if (G_VALUE_HOLDS (value2, ltype))
+  if (type2 == GST_TYPE_LIST)
     return gst_value_intersect_list (dest, value2, value1);
 
   if (_gst_value_compare_nolist (value1, value2) == GST_VALUE_EQUAL) {
@@ -4823,9 +4822,6 @@ gst_value_intersect (GValue * dest, const GValue * value1,
       gst_value_init_and_copy (dest, value1);
     return TRUE;
   }
-
-  type1 = G_VALUE_TYPE (value1);
-  type2 = G_VALUE_TYPE (value2);
 
   len = gst_value_intersect_funcs->len;
   for (i = 0; i < len; i++) {
@@ -4891,21 +4887,19 @@ gst_value_subtract (GValue * dest, const GValue * minuend,
 {
   GstValueSubtractInfo *info;
   guint i, len;
-  GType ltype, mtype, stype;
+  GType mtype, stype;
 
   g_return_val_if_fail (G_IS_VALUE (minuend), FALSE);
   g_return_val_if_fail (G_IS_VALUE (subtrahend), FALSE);
 
-  ltype = gst_value_list_get_type ();
-
-  /* special cases first */
-  if (G_VALUE_HOLDS (minuend, ltype))
-    return gst_value_subtract_from_list (dest, minuend, subtrahend);
-  if (G_VALUE_HOLDS (subtrahend, ltype))
-    return gst_value_subtract_list (dest, minuend, subtrahend);
-
   mtype = G_VALUE_TYPE (minuend);
   stype = G_VALUE_TYPE (subtrahend);
+
+  /* special cases first */
+  if (mtype == GST_TYPE_LIST)
+    return gst_value_subtract_from_list (dest, minuend, subtrahend);
+  if (stype == GST_TYPE_LIST)
+    return gst_value_subtract_list (dest, minuend, subtrahend);
 
   len = gst_value_subtract_funcs->len;
   for (i = 0; i < len; i++) {
@@ -4952,19 +4946,17 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
 {
   GstValueSubtractInfo *info;
   guint i, len;
-  GType ltype, mtype, stype;
+  GType mtype, stype;
 
   g_return_val_if_fail (G_IS_VALUE (minuend), FALSE);
   g_return_val_if_fail (G_IS_VALUE (subtrahend), FALSE);
 
-  ltype = gst_value_list_get_type ();
-
-  /* special cases */
-  if (G_VALUE_HOLDS (minuend, ltype) || G_VALUE_HOLDS (subtrahend, ltype))
-    return TRUE;
-
   mtype = G_VALUE_TYPE (minuend);
   stype = G_VALUE_TYPE (subtrahend);
+
+  /* special cases */
+  if (mtype == GST_TYPE_LIST || stype == GST_TYPE_LIST)
+    return TRUE;
 
   len = gst_value_subtract_funcs->len;
   for (i = 0; i < len; i++) {
