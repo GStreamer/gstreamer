@@ -4454,9 +4454,9 @@ gst_value_list_equals_range (const GValue * list, const GValue * value)
   const GValue *first;
   guint list_size, n;
 
-  g_return_val_if_fail (G_IS_VALUE (list), FALSE);
-  g_return_val_if_fail (G_IS_VALUE (value), FALSE);
-  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (list), FALSE);
+  g_assert (G_IS_VALUE (list));
+  g_assert (G_IS_VALUE (value));
+  g_assert (GST_VALUE_HOLDS_LIST (list));
 
   /* TODO: compare against an empty list ? No type though... */
   list_size = VALUE_LIST_SIZE (list);
