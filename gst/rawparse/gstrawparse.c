@@ -1030,7 +1030,7 @@ gst_raw_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     default:
       /* else forward upstream */
-      ret = gst_pad_query_default (rp->sinkpad, parent, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
