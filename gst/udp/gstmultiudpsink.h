@@ -62,6 +62,10 @@ struct _GstMultiUDPSink {
 
   GMutex         client_lock;
   GList         *clients;
+  guint          num_v4_unique;  /* number IPv4 clients (excluding duplicates) */
+  guint          num_v4_all;     /* number IPv4 clients (including duplicates) */
+  guint          num_v6_unique;  /* number IPv6 clients (excluding duplicates) */
+  guint          num_v6_all;     /* number IPv6 clients (including duplicates) */
 
   GOutputVector *vec;
   GstMapInfo *map;

@@ -378,6 +378,12 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   guint max_mem;
 
   g_mutex_init (&sink->client_lock);
+  sink->clients = NULL;
+  sink->num_v4_unique = 0;
+  sink->num_v4_all = 0;
+  sink->num_v6_unique = 0;
+  sink->num_v6_all = 0;
+
   sink->socket = DEFAULT_SOCKET;
   sink->socket_v6 = DEFAULT_SOCKET;
   sink->used_socket = DEFAULT_USED_SOCKET;
@@ -1238,6 +1244,7 @@ static void
 gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
     gint port, gboolean lock)
 {
+  GSocketFamily family;
   GstUDPClient *client;
   GstUDPClient udpclient;
   GTimeVal now;
@@ -1253,8 +1260,11 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
 
   find = g_list_find_custom (sink->clients, &udpclient,
       (GCompareFunc) client_compare);
+
   if (find) {
     client = (GstUDPClient *) find->data;
+
+    family = g_socket_address_get_family (client->addr);
 
     GST_DEBUG_OBJECT (sink, "found %d existing clients with host %s, port %d",
         client->refcount, host, port);
@@ -1264,6 +1274,8 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
     if (!client)
       goto error;
 
+    family = g_socket_address_get_family (client->addr);
+
     g_get_current_time (&now);
     client->connect_time = GST_TIMEVAL_TO_TIME (now);
 
@@ -1272,7 +1284,17 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
 
     GST_DEBUG_OBJECT (sink, "add client with host %s, port %d", host, port);
     sink->clients = g_list_prepend (sink->clients, client);
+
+    if (family == G_SOCKET_FAMILY_IPV4)
+      ++sink->num_v4_unique;
+    else
+      ++sink->num_v6_unique;
   }
+
+  if (family == G_SOCKET_FAMILY_IPV4)
+    ++sink->num_v4_all;
+  else
+    ++sink->num_v6_all;
 
   if (lock)
     g_mutex_unlock (&sink->client_lock);
@@ -1387,6 +1409,10 @@ gst_multiudpsink_clear_internal (GstMultiUDPSink * sink, gboolean lock)
   g_list_foreach (sink->clients, (GFunc) free_client, sink);
   g_list_free (sink->clients);
   sink->clients = NULL;
+  sink->num_v4_unique = 0;
+  sink->num_v4_all = 0;
+  sink->num_v6_unique = 0;
+  sink->num_v6_all = 0;
   if (lock)
     g_mutex_unlock (&sink->client_lock);
 }
