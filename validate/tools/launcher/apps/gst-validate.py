@@ -459,8 +459,7 @@ class GstValidateManager(TestsManager, Loggable):
         group = parser.add_argument_group("GstValidate tools specific options"
                             " and behaviours",
 description="""When using --wanted-tests, all the scenarios can be used, even those which have
-not been tested and explicitely activated, in order to only use those, you should
-use --wanted-tests defaults_only""")
+not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
         group.add_argument("-vc", "--validate-config", dest="validate_config",
                            default=None,
@@ -604,10 +603,17 @@ user argument, you can thus overrides command line options using that.
         return GST_VALIDATE_BLACKLISTED_TESTS
 
     def set_settings(self, options, args, reporter):
+        if options.wanted_tests:
+            for i in range(len(options.wanted_tests)):
+                if "ALL" in options.wanted_tests[i]:
+                    self._run_defaults = False
+                    options.wanted_tests[i] = options.wanted_tests[i].replace("ALL", "")
+        try:
+            options.wanted_tests.remove("")
+        except ValueError:
+            pass
+
         TestsManager.set_settings(self, options, args, reporter)
-        if options.wanted_tests and not [d for d in options.wanted_tests
-                                         if "defaults_only" in d]:
-            self._run_defaults = False
 
 
 #################################################
