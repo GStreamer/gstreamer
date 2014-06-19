@@ -707,8 +707,9 @@ retry:
       if (!gst_amc_codec_release_output_buffer (self->codec, idx, &err))
         GST_ERROR_OBJECT (self, "Failed to release output buffer index %d",
             idx);
-      if (err)
+      if (err && !self->flushing)
         GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      g_clear_error (&err);
       goto invalid_buffer;
     }
 
@@ -723,8 +724,9 @@ retry:
       if (!gst_amc_codec_release_output_buffer (self->codec, idx, &err))
         GST_ERROR_OBJECT (self, "Failed to release output buffer index %d",
             idx);
-      if (err)
+      if (err && !self->flushing)
         GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      g_clear_error (&err);
       goto flow_error;
     }
 
@@ -735,8 +737,9 @@ retry:
       if (!gst_amc_codec_release_output_buffer (self->codec, idx, &err))
         GST_ERROR_OBJECT (self, "Failed to release output buffer index %d",
             idx);
-      if (err)
+      if (err && !self->flushing)
         GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      g_clear_error (&err);
       goto invalid_buffer;
     }
 
@@ -1197,8 +1200,9 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
     if (self->downstream_flow_ret != GST_FLOW_OK) {
       memset (&buffer_info, 0, sizeof (buffer_info));
       gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, &err);
-      if (err)
+      if (err && !self->flushing)
         GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      g_clear_error (&err);
       goto downstream_error;
     }
 
@@ -1363,8 +1367,13 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self, gboolean at_eos)
       ret = GST_FLOW_OK;
     } else {
       GST_ERROR_OBJECT (self, "Failed to queue input buffer");
-      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
-      ret = GST_FLOW_ERROR;
+      if (self->flushing) {
+        g_clear_error (&err);
+        ret = GST_FLOW_FLUSHING;
+      } else {
+        GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+        ret = GST_FLOW_ERROR;
+      }
     }
 
     g_mutex_unlock (&self->drain_lock);

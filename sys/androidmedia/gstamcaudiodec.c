@@ -684,8 +684,9 @@ invalid_buffer_size:
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Invalid buffer size %u (bfp %d)", buffer_info.size, self->info.bpf));
     gst_amc_codec_release_output_buffer (self->codec, idx, &err);
-    if (err)
+    if (err && !self->flushing)
       GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+    g_clear_error (&err);
     gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (self), gst_event_new_eos ());
     gst_pad_pause_task (GST_AUDIO_DECODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_ERROR;
@@ -698,8 +699,9 @@ failed_allocate:
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
         ("Failed to allocate output buffer"));
     gst_amc_codec_release_output_buffer (self->codec, idx, &err);
-    if (err)
+    if (err && !self->flushing)
       GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+    g_clear_error (&err);
     gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (self), gst_event_new_eos ());
     gst_pad_pause_task (GST_AUDIO_DECODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_ERROR;
@@ -1092,8 +1094,9 @@ gst_amc_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     if (self->downstream_flow_ret != GST_FLOW_OK) {
       memset (&buffer_info, 0, sizeof (buffer_info));
       gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, &err);
-      if (err)
+      if (err && !self->flushing)
         GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      g_clear_error (&err);
       goto downstream_error;
     }
 
@@ -1246,8 +1249,13 @@ gst_amc_audio_dec_drain (GstAmcAudioDec * self)
       ret = GST_FLOW_OK;
     } else {
       GST_ERROR_OBJECT (self, "Failed to queue input buffer");
-      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
-      ret = GST_FLOW_ERROR;
+      if (self->flushing) {
+        g_clear_error (&err);
+        ret = GST_FLOW_FLUSHING;
+      } else {
+        GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+        ret = GST_FLOW_ERROR;
+      }
     }
 
     g_mutex_unlock (&self->drain_lock);

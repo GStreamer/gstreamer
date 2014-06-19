@@ -1042,10 +1042,6 @@ process_buffer:
     GST_ERROR_OBJECT (self, "Invalid output buffer index %d of %d",
         idx, self->n_output_buffers);
 
-    if (!gst_amc_codec_release_output_buffer (self->codec, idx, &err))
-      GST_ERROR_OBJECT (self, "Failed to release output buffer index %d", idx);
-    if (err)
-      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
     goto invalid_buffer;
   }
   buf = &self->output_buffers[idx];
@@ -1482,8 +1478,9 @@ again:
   if (self->downstream_flow_ret != GST_FLOW_OK) {
     memset (&buffer_info, 0, sizeof (buffer_info));
     gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, &err);
-    if (err)
+    if (err && !self->flushing)
       GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+    g_clear_error (&err);
     goto downstream_error;
   }
 
@@ -1501,8 +1498,9 @@ again:
           &buffer_info)) {
     memset (&buffer_info, 0, sizeof (buffer_info));
     gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, &err);
-    if (err)
+    if (err && !self->flushing)
       GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+    g_clear_error (&err);
     goto buffer_fill_error;
   }
 
@@ -1620,7 +1618,9 @@ gst_amc_video_enc_finish (GstVideoEncoder * encoder)
       GST_DEBUG_OBJECT (self, "Sent EOS to the codec");
     } else {
       GST_ERROR_OBJECT (self, "Failed to send EOS to the codec");
-      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      if (!self->flushing)
+        GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      g_clear_error (&err);
     }
   } else if (idx >= self->n_input_buffers) {
     GST_ERROR_OBJECT (self, "Invalid input buffer index %d of %d",
@@ -1684,8 +1684,13 @@ gst_amc_video_enc_drain (GstAmcVideoEnc * self)
       ret = GST_FLOW_OK;
     } else {
       GST_ERROR_OBJECT (self, "Failed to queue input buffer");
-      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
-      ret = GST_FLOW_ERROR;
+      if (self->flushing) {
+        g_clear_error (&err);
+        ret = GST_FLOW_FLUSHING;
+      } else {
+        GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+        ret = GST_FLOW_ERROR;
+      }
     }
 
     g_mutex_unlock (&self->drain_lock);
