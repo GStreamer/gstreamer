@@ -134,7 +134,7 @@ DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-asse
 
 class PrintUsage(argparse.Action):
     def __init__(self, option_strings, dest=argparse.SUPPRESS, default=argparse.SUPPRESS, help=None):
-        super(PrintUsage, self).__init__( option_strings=option_strings, dest=dest,
+        super(PrintUsage, self).__init__(option_strings=option_strings, dest=dest,
                                           default=default, nargs=0, help=help)
 
     def __call__(self, parser, namespace, values, option_string=None):

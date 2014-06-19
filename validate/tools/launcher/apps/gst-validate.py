@@ -477,6 +477,9 @@ You can also set default values with:
     * gst_validate_register_default_test_generators: Sets default values for the TestGenerators to be used
     * gst_validate_register_default_scenarios: Sets default values for the scenarios to be executed
     * gst_validate_register_default_encoding_formats: Sets default values for the encoding formats to be tested
+
+Note: In the config file, you have acces to the options variable resulting from the parsing of the command line
+user argument, you can thus overrides command line options using that.
 """)
 
     def _populate_testsuite(self, options):
@@ -485,6 +488,7 @@ You can also set default values with:
             return
 
         if options.validate_config:
+            globals()["options"] = options
             execfile(options.validate_config, globals())
         else:
             gst_validate_register_defaults()
