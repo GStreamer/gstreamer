@@ -44,6 +44,15 @@
 #include <gst/base/gsttypefindhelper.h>
 #include "gsthlsdemux.h"
 
+#define GST_ELEMENT_ERROR_FROM_ERROR(el, err) G_STMT_START { \
+  gchar *__dbg = g_strdup (err->message);                               \
+  GST_WARNING_OBJECT (el, "error: %s", __dbg);                          \
+  gst_element_message_full (GST_ELEMENT(el), GST_MESSAGE_ERROR,         \
+    err->domain, err->code,                                             \
+    NULL, __dbg, __FILE__, GST_FUNCTION, __LINE__);                     \
+  g_clear_error (&err); \
+} G_STMT_END
+
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
@@ -459,10 +468,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_uri_downloader_reset (demux->downloader);
         if (!gst_hls_demux_update_playlist (demux, FALSE, &err)) {
           g_rec_mutex_unlock (&demux->stream_lock);
-          gst_element_post_message (GST_ELEMENT_CAST (demux),
-              gst_message_new_error (GST_OBJECT_CAST (demux), err,
-                  "Could not switch playlist"));
-          g_clear_error (&err);
+          GST_ELEMENT_ERROR_FROM_ERROR (demux, err);
           gst_event_unref (event);
           return FALSE;
         }
@@ -488,10 +494,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         if (!gst_hls_demux_update_playlist (demux, FALSE, &err)) {
           g_rec_mutex_unlock (&demux->stream_lock);
 
-          gst_element_post_message (GST_ELEMENT_CAST (demux),
-              gst_message_new_error (GST_OBJECT_CAST (demux), err,
-                  "Could not switch playlist"));
-          g_clear_error (&err);
+          GST_ELEMENT_ERROR_FROM_ERROR (demux, err);
           gst_event_unref (event);
           return FALSE;
         }
@@ -1210,10 +1213,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
         GST_DEBUG_OBJECT (demux, "Retrying now");
         return;
       } else {
-        gst_element_post_message (GST_ELEMENT_CAST (demux),
-            gst_message_new_error (GST_OBJECT_CAST (demux), err,
-                "Could not fetch the next fragment"));
-        g_clear_error (&err);
+        GST_ELEMENT_ERROR_FROM_ERROR (demux, err);
         goto pause_task;
       }
     }
@@ -1366,10 +1366,7 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
 
     gst_m3u8_client_set_current (demux->client, child);
     if (!gst_hls_demux_update_playlist (demux, FALSE, &err)) {
-      gst_element_post_message (GST_ELEMENT_CAST (demux),
-          gst_message_new_error (GST_OBJECT_CAST (demux), err,
-              "Could not fetch the child playlist"));
-      g_error_free (err);
+      GST_ELEMENT_ERROR_FROM_ERROR (demux, err);
       goto error;
     }
   }
@@ -1423,10 +1420,7 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
             gst_util_uint64_scale (gst_m3u8_client_get_target_duration
             (demux->client), G_USEC_PER_SEC, 2 * GST_SECOND);
       } else {
-        gst_element_post_message (GST_ELEMENT_CAST (demux),
-            gst_message_new_error (GST_OBJECT_CAST (demux), err,
-                "Could not update the playlist"));
-        g_error_free (err);
+        GST_ELEMENT_ERROR_FROM_ERROR (demux, err);
         goto error;
       }
     } else {
