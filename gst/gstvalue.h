@@ -198,6 +198,8 @@ G_BEGIN_DECLS
  */
 #define GST_VALUE_HOLDS_BITMASK(x)      (G_VALUE_HOLDS((x), gst_bitmask_get_type ()))
 
+GST_EXPORT GType _gst_int_range_type;
+
 /**
  * GST_TYPE_INT_RANGE:
  *
@@ -205,7 +207,9 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstIntRange
  */
-#define GST_TYPE_INT_RANGE               gst_int_range_get_type ()
+#define GST_TYPE_INT_RANGE               (_gst_int_range_type)
+
+GST_EXPORT GType _gst_int64_range_type;
 
 /**
  * GST_TYPE_INT64_RANGE:
@@ -214,7 +218,9 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstInt64Range
  */
-#define GST_TYPE_INT64_RANGE             gst_int64_range_get_type ()
+#define GST_TYPE_INT64_RANGE             (_gst_int64_range_type)
+
+GST_EXPORT GType _gst_double_range_type;
 
 /**
  * GST_TYPE_DOUBLE_RANGE:
@@ -223,7 +229,9 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstIntRange
  */
-#define GST_TYPE_DOUBLE_RANGE            gst_double_range_get_type ()
+#define GST_TYPE_DOUBLE_RANGE            (_gst_double_range_type)
+
+GST_EXPORT GType _gst_fraction_range_type;
 
 /**
  * GST_TYPE_FRACTION_RANGE:
@@ -232,7 +240,9 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstFractionRange
  */
-#define GST_TYPE_FRACTION_RANGE            gst_fraction_range_get_type ()
+#define GST_TYPE_FRACTION_RANGE           (_gst_fraction_range_type)
+
+GST_EXPORT GType _gst_value_list_type;
 
 /**
  * GST_TYPE_LIST:
@@ -245,7 +255,9 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstValueList (which is not explicitly typed)
  */
-#define GST_TYPE_LIST                    gst_value_list_get_type ()
+#define GST_TYPE_LIST                    (_gst_value_list_type)
+
+GST_EXPORT GType _gst_value_array_type;
 
 /**
  * GST_TYPE_ARRAY:
@@ -259,7 +271,9 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstArrayList (which is not explicitly typed)
  */
-#define GST_TYPE_ARRAY                   gst_value_array_get_type ()
+#define GST_TYPE_ARRAY                   (_gst_value_array_type)
+
+GST_EXPORT GType _gst_fraction_type;
 
 /**
  * GST_TYPE_FRACTION:
@@ -270,7 +284,9 @@ G_BEGIN_DECLS
  * Returns: the #GType of GstFraction (which is not explicitly typed)
  */
 
-#define GST_TYPE_FRACTION                gst_fraction_get_type ()
+#define GST_TYPE_FRACTION                (_gst_fraction_type)
+
+GST_EXPORT GType _gst_bitmask_type;
 
 /**
  * GST_TYPE_BITMASK:
@@ -280,7 +296,7 @@ G_BEGIN_DECLS
  * Returns: the #GType of GstBitmask (which is not explicitly typed)
  */
 
-#define GST_TYPE_BITMASK                 gst_bitmask_get_type ()
+#define GST_TYPE_BITMASK                 (_gst_bitmask_type)
 
 /**
  * GST_TYPE_G_THREAD:
