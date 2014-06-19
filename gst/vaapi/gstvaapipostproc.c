@@ -522,7 +522,8 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
         /* Reset deinterlacing state when there is a discontinuity */
         if (prev_buf && (prev_pts = GST_BUFFER_TIMESTAMP(prev_buf)) != pts) {
             const GstClockTimeDiff pts_diff = GST_CLOCK_DIFF(prev_pts, pts);
-            if (pts_diff < 0 || pts_diff > postproc->field_duration * 2)
+            if (pts_diff < 0 || (postproc->field_duration > 0 &&
+                    pts_diff > postproc->field_duration * 2))
                 ds_reset(ds);
         }
     }
@@ -823,9 +824,9 @@ gst_vaapipostproc_update_sink_caps(GstVaapiPostproc *postproc, GstCaps *caps,
     deinterlace = is_deinterlace_enabled(postproc, &vi);
     if (deinterlace)
         postproc->flags |= GST_VAAPI_POSTPROC_FLAG_DEINTERLACE;
-    postproc->field_duration = gst_util_uint64_scale(
-        GST_SECOND, GST_VIDEO_INFO_FPS_D(&vi),
-        (1 + deinterlace) * GST_VIDEO_INFO_FPS_N(&vi));
+    postproc->field_duration = GST_VIDEO_INFO_FPS_N(&vi) > 0 ?
+        gst_util_uint64_scale(GST_SECOND, GST_VIDEO_INFO_FPS_D(&vi),
+            (1 + deinterlace) * GST_VIDEO_INFO_FPS_N(&vi)) : 0;
 
     postproc->is_raw_yuv = GST_VIDEO_INFO_IS_YUV(&vi);
     return TRUE;
