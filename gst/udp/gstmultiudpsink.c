@@ -526,7 +526,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   gint num, no_clients;
   GError *err = NULL;
 
-  sink = GST_MULTIUDPSINK (bsink);
+  sink = GST_MULTIUDPSINK_CAST (bsink);
 
   n_mem = gst_buffer_n_memory (buffer);
   if (n_mem == 0)
@@ -1327,9 +1327,8 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
   client->refcount--;
   if (client->refcount == 0) {
     GInetSocketAddress *saddr = G_INET_SOCKET_ADDRESS (client->addr);
+    GSocketFamily family = g_socket_address_get_family (client->addr);
     GInetAddress *addr = g_inet_socket_address_get_address (saddr);
-    GSocketFamily family =
-        g_socket_address_get_family (G_SOCKET_ADDRESS (saddr));
     GSocket *socket;
 
     /* Select socket to send from for this address */
