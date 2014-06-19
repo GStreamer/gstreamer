@@ -486,6 +486,8 @@ user argument, you can thus overrides command line options using that.
         if self._is_populated is True:
             return
 
+        execfile(os.path.join(os.path.dirname(__file__), "apps",
+                 "validate_default_testsuite.py"), globals())
         if options.validate_config:
             globals()["options"] = options
             execfile(options.validate_config, globals())
@@ -615,83 +617,6 @@ user argument, you can thus overrides command line options using that.
 
         TestsManager.set_settings(self, options, args, reporter)
 
-
-#################################################
-# GstValidate default testsuite implementation     #
-#################################################
-
-
-def gst_validate_register_default_test_generators():
-    """
-    Registers default test generators
-    """
-    GST_VALIDATE_TEST_GENERATORS.append(GstValidatePlaybinTestGenerator())
-    GST_VALIDATE_TEST_GENERATORS.append(GstValidateMediaCheckTestGenerator())
-    GST_VALIDATE_TEST_GENERATORS.append(GstValidateTranscodingTestGenerator())
-
-
-def gst_validate_register_default_scenarios():
-    """
-    Registers default test scenarios
-    """
-    GST_VALIDATE_SCENARIOS.extend([
-                 "play_15s",
-                 "reverse_playback",
-                 "fast_forward",
-                 "seek_forward",
-                 "seek_backward",
-                 "seek_with_stop",
-                 "switch_audio_track",
-                 "switch_audio_track_while_paused",
-                 "switch_subtitle_track",
-                 "switch_subtitle_track_while_paused",
-                 "disable_subtitle_track_while_paused",
-                 "change_state_intensive",
-                 "scrub_forward_seeking"])
-
-def gst_validate_register_default_encoding_formats():
-    """
-    Registers default encoding formats
-    """
-    GST_VALIDATE_ENCODING_FORMATS.extend([
-        MediaFormatCombination("ogg", "vorbis", "theora"),
-        MediaFormatCombination("webm", "vorbis", "vp8"),
-        MediaFormatCombination("mp4", "mp3", "h264"),
-        MediaFormatCombination("mkv", "vorbis", "h264"),
-    ])
-
-def gst_validate_define_default_blacklist():
-    GST_VALIDATE_BLACKLISTED_TESTS.extend([
-        ("validate.hls.playback.fast_forward.*",
-         "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
-        ("validate.hls.playback.seek_with_stop.*",
-         "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
-        ("validate.hls.playback.reverse_playback.*",
-         "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
-        ("validate.hls.*scrub_forward_seeking.*", "This is not stable enough for now."),
-
-        # Matroska/WEBM known issues:
-        ("validate.*.reverse_playback.*webm$",
-         "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
-        ("validate.*reverse.*Sintel_2010_720p_mkv",
-         "TODO in matroskademux: FIXME: We should build an index during playback or "
-         "when scanning that can be used here. The reverse playback code requires "
-         " seek_index and seek_entry to be set!"),
-        ("validate.http.playback.seek_with_stop.*webm",
-         "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
-        ("validate.http.playback.seek_with_stop.*mkv",
-         "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
-
-        # MPEG TS known issues:
-        ('(?i)validate.*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
-         "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
-
-        # HTTP known issues:
-        ("validate.http.*scrub_forward_seeking.*", "This is not stable enough for now."),
-    ])
-
-def gst_validate_register_defaults():
-    gst_validate_register_default_test_generators()
-    gst_validate_register_default_scenarios()
-    gst_validate_register_default_encoding_formats()
-    gst_validate_define_default_blacklist()
+def gst_validate_checkout_element_present(element_name):
+    null = open(os.devnull)
+    return subprocess.call("gst-inspect-1.0 videmixer", shell=True, stdout=null, stderr=null)
