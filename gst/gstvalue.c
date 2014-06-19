@@ -121,8 +121,9 @@ struct _GstValueSubtractInfo
 #define FUNDAMENTAL_TYPE_ID(type) \
     ((type) >> G_TYPE_FUNDAMENTAL_SHIFT)
 
-#define VALUE_LIST_SIZE(v) (((GArray *) (v)->data[0].v_pointer)->len)
-#define VALUE_LIST_GET_VALUE(v, index) ((const GValue *) &g_array_index ((GArray *) (v)->data[0].v_pointer, GValue, (index)))
+#define VALUE_LIST_ARRAY(v) ((GArray *) (v)->data[0].v_pointer)
+#define VALUE_LIST_SIZE(v) (VALUE_LIST_ARRAY(v)->len)
+#define VALUE_LIST_GET_VALUE(v, index) ((const GValue *) &g_array_index (VALUE_LIST_ARRAY(v), GValue, (index)))
 
 static GArray *gst_value_table;
 static GHashTable *gst_value_hash;
@@ -528,6 +529,56 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
   } else {
     gst_value_init_and_copy (&g_array_index (array, GValue, value1_length),
         value2);
+  }
+}
+
+/* same as gst_value_list_concat() but takes ownership of GValues */
+static void
+gst_value_list_concat_and_take_values (GValue * dest, GValue * val1,
+    GValue * val2)
+{
+  guint i, val1_length, val2_length;
+  gboolean val1_is_list;
+  gboolean val2_is_list;
+  GArray *array;
+
+  g_assert (dest != NULL);
+  g_assert (G_VALUE_TYPE (dest) == 0);
+  g_assert (G_IS_VALUE (val1));
+  g_assert (G_IS_VALUE (val2));
+  g_assert (gst_value_list_or_array_are_compatible (val1, val2));
+
+  val1_is_list = GST_VALUE_HOLDS_LIST (val1);
+  val1_length = (val1_is_list ? VALUE_LIST_SIZE (val1) : 1);
+
+  val2_is_list = GST_VALUE_HOLDS_LIST (val2);
+  val2_length = (val2_is_list ? VALUE_LIST_SIZE (val2) : 1);
+
+  g_value_init (dest, GST_TYPE_LIST);
+  array = (GArray *) dest->data[0].v_pointer;
+  g_array_set_size (array, val1_length + val2_length);
+
+  if (val1_is_list) {
+    for (i = 0; i < val1_length; i++) {
+      g_array_index (array, GValue, i) = *VALUE_LIST_GET_VALUE (val1, i);
+    }
+    g_array_set_size (VALUE_LIST_ARRAY (val1), 0);
+    g_value_unset (val1);
+  } else {
+    g_array_index (array, GValue, 0) = *val1;
+    G_VALUE_TYPE (val1) = G_TYPE_INVALID;
+  }
+
+  if (val2_is_list) {
+    for (i = 0; i < val2_length; i++) {
+      const GValue *v2 = VALUE_LIST_GET_VALUE (val2, i);
+      g_array_index (array, GValue, i + val1_length) = *v2;
+    }
+    g_array_set_size (VALUE_LIST_ARRAY (val2), 0);
+    g_value_unset (val2);
+  } else {
+    g_array_index (array, GValue, val1_length) = *val2;
+    G_VALUE_TYPE (val2) = G_TYPE_INVALID;
   }
 }
 
@@ -3853,9 +3904,7 @@ gst_value_create_new_range (GValue * dest, gint min1, gint max1, gint min2,
   }
 
   if (min1 <= max1 && min2 <= max2) {
-    gst_value_list_concat (dest, pv1, pv2);
-    g_value_unset (pv1);
-    g_value_unset (pv2);
+    gst_value_list_concat_and_take_values (dest, pv1, pv2);
   }
   return TRUE;
 }
@@ -4002,9 +4051,7 @@ gst_value_create_new_int64_range (GValue * dest, gint64 min1, gint64 max1,
   }
 
   if (min1 <= max1 && min2 <= max2) {
-    gst_value_list_concat (dest, pv1, pv2);
-    g_value_unset (pv1);
-    g_value_unset (pv2);
+    gst_value_list_concat_and_take_values (dest, pv1, pv2);
   }
   return TRUE;
 }
@@ -4150,9 +4197,7 @@ gst_value_subtract_double_range_double_range (GValue * dest,
   }
 
   if (min1 < max1 && min2 < max2) {
-    gst_value_list_concat (dest, pv1, pv2);
-    g_value_unset (pv1);
-    g_value_unset (pv2);
+    gst_value_list_concat_and_take_values (dest, pv1, pv2);
   }
   return TRUE;
 }
@@ -4192,9 +4237,7 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
         GValue temp;
 
         gst_value_move (&temp, dest);
-        gst_value_list_concat (dest, &temp, &subtraction);
-        g_value_unset (&temp);
-        g_value_unset (&subtraction);
+        gst_value_list_concat_and_take_values (dest, &temp, &subtraction);
       }
     }
   }
@@ -4328,9 +4371,7 @@ gst_value_subtract_fraction_range_fraction_range (GValue * dest,
   }
 
   if (cmp1 == GST_VALUE_LESS_THAN && cmp2 == GST_VALUE_LESS_THAN) {
-    gst_value_list_concat (dest, pv1, pv2);
-    g_value_unset (pv1);
-    g_value_unset (pv2);
+    gst_value_list_concat_and_take_values (dest, pv1, pv2);
   }
   return TRUE;
 }
