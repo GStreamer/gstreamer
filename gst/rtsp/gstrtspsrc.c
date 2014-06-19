@@ -693,6 +693,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   /**
    * GstRTSPSrc::request-rtcp-key:
    * @rtspsrc: a #GstRTSPSrc
+   * @num: the stream number
    *
    * Signal emited to get the crypto parameters relevant to the RTCP
    * stream. User should provide the key and the RTCP encryption ciphers
@@ -702,7 +703,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   gst_rtspsrc_signals[SIGNAL_REQUEST_RTCP_KEY] =
       g_signal_new ("request-rtcp-key", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_CAPS, 0, G_TYPE_NONE);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_CAPS, 1, G_TYPE_UINT);
 
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
@@ -5912,11 +5913,12 @@ auth_key_length_from_auth_name (const gchar * auth)
 }
 
 static GstCaps *
-signal_get_srtcp_params (GstRTSPSrc * src)
+signal_get_srtcp_params (GstRTSPSrc * src, GstRTSPStream * stream)
 {
   GstCaps *caps = NULL;
 
-  g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_REQUEST_RTCP_KEY], 0, &caps);
+  g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_REQUEST_RTCP_KEY], 0,
+      stream->id, &caps);
 
   if (caps != NULL)
     GST_DEBUG_OBJECT (src, "SRTP parameters received");
@@ -5964,7 +5966,7 @@ gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
   const GValue *val;
   const gchar *srtcpcipher, *srtcpauth;
 
-  stream->srtcpparams = signal_get_srtcp_params (src);
+  stream->srtcpparams = signal_get_srtcp_params (src, stream);
   if (stream->srtcpparams == NULL)
     stream->srtcpparams = default_srtcp_params ();
 
