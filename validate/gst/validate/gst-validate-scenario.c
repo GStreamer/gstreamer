@@ -692,8 +692,8 @@ get_position (GstValidateScenario * scenario)
   has_dur = gst_element_query_duration (pipeline, GST_FORMAT_TIME, &duration)
       && GST_CLOCK_TIME_IS_VALID (duration);
 
-  if (!has_pos) {
-    GST_LOG ("Unknown position");
+  if (!has_pos && GST_STATE (pipeline) >= GST_STATE_PAUSED) {
+    GST_LOG ("Unknown position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
     return TRUE;
   }
 
@@ -727,8 +727,9 @@ get_position (GstValidateScenario * scenario)
         GST_TIME_ARGS (stop_with_tolerance));
   }
 
-  if (act && ((rate > 0 && (GstClockTime) position >= act->playback_time) ||
-          (rate < 0 && (GstClockTime) position <= act->playback_time))) {
+  if (act && (((rate > 0 && (GstClockTime) position >= act->playback_time) ||
+              (rate < 0 && (GstClockTime) position <= act->playback_time)) ||
+          (GST_STATE (pipeline) < GST_STATE_PAUSED))) {
     GstValidateActionType *type;
 
     type = g_hash_table_lookup (action_types_table, act->type);
