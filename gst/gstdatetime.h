@@ -36,6 +36,8 @@ G_BEGIN_DECLS
  */
 typedef struct _GstDateTime GstDateTime;
 
+GST_EXPORT GType _gst_date_time_type;
+
 /**
  * GST_TYPE_DATE_TIME:
  *
@@ -44,7 +46,7 @@ typedef struct _GstDateTime GstDateTime;
  * Returns: the #GType of GstDateTime
  */
 
-#define GST_TYPE_DATE_TIME gst_date_time_get_type()
+#define GST_TYPE_DATE_TIME (_gst_date_time_type)
 
 GType           gst_date_time_get_type (void);
 

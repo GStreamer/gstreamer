@@ -63,6 +63,7 @@ struct _GstDateTime
   GstDateTimeFields fields;
 };
 
+GType _gst_date_time_type = 0;
 GST_DEFINE_MINI_OBJECT_TYPE (GstDateTime, gst_date_time);
 
 static void gst_date_time_free (GstDateTime * datetime);
@@ -908,4 +909,10 @@ void
 gst_date_time_unref (GstDateTime * datetime)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (datetime));
+}
+
+void
+_priv_gst_date_time_initialize (void)
+{
+  _gst_date_time_type = gst_date_time_get_type ();
 }

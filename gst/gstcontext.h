@@ -31,7 +31,9 @@ typedef struct _GstContext GstContext;
 #include <gst/gstminiobject.h>
 #include <gst/gststructure.h>
 
-#define GST_TYPE_CONTEXT                         (gst_context_get_type())
+GST_EXPORT GType _gst_context_type;
+
+#define GST_TYPE_CONTEXT                         (_gst_context_type)
 #define GST_IS_CONTEXT(obj)                      (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_CONTEXT))
 #define GST_CONTEXT_CAST(obj)                    ((GstContext*)(obj))
 #define GST_CONTEXT(obj)                         (GST_CONTEXT_CAST(obj))

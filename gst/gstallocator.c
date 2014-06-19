@@ -569,7 +569,7 @@ gst_allocator_sysmem_init (GstAllocatorSysmem * allocator)
 }
 
 void
-_priv_gst_memory_initialize (void)
+_priv_gst_allocator_initialize (void)
 {
   g_rw_lock_init (&lock);
   allocators = g_hash_table_new (g_str_hash, g_str_equal);

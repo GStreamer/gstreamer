@@ -104,6 +104,8 @@ G_GNUC_INTERNAL  gboolean _priv_gst_in_valgrind (void);
 /* init functions called from gst_init(). */
 G_GNUC_INTERNAL  void  _priv_gst_quarks_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_mini_object_initialize (void);
+G_GNUC_INTERNAL  void  _priv_gst_memory_initialize (void);
+G_GNUC_INTERNAL  void  _priv_gst_allocator_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_buffer_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_buffer_list_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_structure_initialize (void);
@@ -121,6 +123,8 @@ G_GNUC_INTERNAL  void  _priv_gst_tag_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_value_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_debug_init (void);
 G_GNUC_INTERNAL  void  _priv_gst_context_initialize (void);
+G_GNUC_INTERNAL  void  _priv_gst_toc_initialize (void);
+G_GNUC_INTERNAL  void  _priv_gst_date_time_initialize (void);
 
 /* Private registry functions */
 G_GNUC_INTERNAL

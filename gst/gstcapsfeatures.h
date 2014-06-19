@@ -28,7 +28,9 @@ G_BEGIN_DECLS
 
 typedef struct _GstCapsFeatures GstCapsFeatures;
 
-#define GST_TYPE_CAPS_FEATURES (gst_caps_features_get_type ())
+GST_EXPORT GType _gst_caps_features_type;
+
+#define GST_TYPE_CAPS_FEATURES (_gst_caps_features_type)
 #define GST_IS_CAPS_FEATURES(object)       (gst_is_caps_features(object))
 #define GST_CAPS_FEATURES_CAST(object)     ((GstCapsFeatures *)(object))
 #define GST_CAPS_FEATURES(object)          (GST_CAPS_FEATURES_CAST(object))

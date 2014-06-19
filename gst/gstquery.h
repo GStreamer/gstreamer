@@ -132,7 +132,9 @@ typedef enum {
 } GstQueryType;
 #undef FLAG
 
-#define GST_TYPE_QUERY                         (gst_query_get_type())
+GST_EXPORT GType _gst_query_type;
+
+#define GST_TYPE_QUERY                         (_gst_query_type)
 #define GST_IS_QUERY(obj)                      (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_QUERY))
 #define GST_QUERY_CAST(obj)                    ((GstQuery*)(obj))
 #define GST_QUERY(obj)                         (GST_QUERY_CAST(obj))

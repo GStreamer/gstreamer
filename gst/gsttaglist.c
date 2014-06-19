@@ -84,6 +84,7 @@ static GMutex __tag_mutex;
 /* tags hash table: maps tag name string => GstTagInfo */
 static GHashTable *__tags;
 
+GType _gst_tag_list_type = 0;
 GST_DEFINE_MINI_OBJECT_TYPE (GstTagList, gst_tag_list);
 
 static void __gst_tag_list_free (GstTagList * list);
@@ -97,6 +98,8 @@ void
 _priv_gst_tag_initialize (void)
 {
   g_mutex_init (&__tag_mutex);
+
+  _gst_tag_list_type = gst_tag_list_get_type ();
 
   __tags = g_hash_table_new (g_str_hash, g_str_equal);
   gst_tag_register_static (GST_TAG_TITLE, GST_TAG_FLAG_META,

@@ -65,7 +65,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_query_debug);
 #define GST_CAT_DEFAULT gst_query_debug
 
-static GType _gst_query_type = 0;
+GType _gst_query_type = 0;
 
 typedef struct
 {

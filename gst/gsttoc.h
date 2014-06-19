@@ -30,8 +30,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_TOC (gst_toc_get_type ())
-#define GST_TYPE_TOC_ENTRY (gst_toc_entry_get_type ())
+GST_EXPORT GType _gst_toc_type;
+GST_EXPORT GType _gst_toc_entry_type;
+
+#define GST_TYPE_TOC (_gst_toc_type)
+#define GST_TYPE_TOC_ENTRY (_gst_toc_entry_type)
 
 typedef struct _GstTocEntry GstTocEntry;
 typedef struct _GstToc GstToc;

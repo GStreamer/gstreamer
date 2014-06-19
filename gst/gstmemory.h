@@ -29,7 +29,8 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MEMORY (gst_memory_get_type())
+GST_EXPORT GType _gst_memory_type;
+#define GST_TYPE_MEMORY (_gst_memory_type)
 GType gst_memory_get_type(void);
 
 typedef struct _GstMemory GstMemory;

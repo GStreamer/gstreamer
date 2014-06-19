@@ -68,7 +68,7 @@ struct _GstContext
 
 #define GST_CONTEXT_STRUCTURE(c)  (((GstContext *)(c))->structure)
 
-static GType _gst_context_type = 0;
+GType _gst_context_type = 0;
 GST_DEFINE_MINI_OBJECT_TYPE (GstContext, gst_context);
 
 void

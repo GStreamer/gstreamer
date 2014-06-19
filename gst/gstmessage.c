@@ -108,7 +108,7 @@ static GstMessageQuarks message_quarks[] = {
   {0, NULL, 0}
 };
 
-static GType _gst_message_type = 0;
+GType _gst_message_type = 0;
 GST_DEFINE_MINI_OBJECT_TYPE (GstMessage, gst_message);
 
 void

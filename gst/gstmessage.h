@@ -165,7 +165,9 @@ typedef enum
 #include <gst/gsttoc.h>
 #include <gst/gstdevice.h>
 
-#define GST_TYPE_MESSAGE                         (gst_message_get_type())
+GST_EXPORT GType _gst_message_type;
+
+#define GST_TYPE_MESSAGE                         (_gst_message_type)
 #define GST_IS_MESSAGE(obj)                      (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_MESSAGE))
 #define GST_MESSAGE_CAST(obj)                    ((GstMessage*)(obj))
 #define GST_MESSAGE(obj)                         (GST_MESSAGE_CAST(obj))

@@ -116,6 +116,9 @@ static void gst_toc_free (GstToc * toc);
 static GstTocEntry *gst_toc_entry_copy (const GstTocEntry * toc);
 static void gst_toc_entry_free (GstTocEntry * toc);
 
+GType _gst_toc_type = 0;
+GType _gst_toc_entry_type = 0;
+
 GST_DEFINE_MINI_OBJECT_TYPE (GstToc, gst_toc);
 GST_DEFINE_MINI_OBJECT_TYPE (GstTocEntry, gst_toc_entry);
 
@@ -819,4 +822,11 @@ gst_toc_dump (GstToc * toc)
       (toc->scope == GST_TOC_SCOPE_GLOBAL) ? "global" : "current", toc->tags);
   gst_toc_dump_entries (toc->entries, 2);
 #endif
+}
+
+void
+_priv_gst_toc_initialize (void)
+{
+  _gst_toc_type = gst_toc_get_type ();
+  _gst_toc_entry_type = gst_toc_entry_get_type ();
 }

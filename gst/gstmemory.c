@@ -69,6 +69,7 @@
 #include "gst_private.h"
 #include "gstmemory.h"
 
+GType _gst_memory_type = 0;
 GST_DEFINE_MINI_OBJECT_TYPE (GstMemory, gst_memory);
 
 static GstMemory *
@@ -424,4 +425,10 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
     return FALSE;
 
   return TRUE;
+}
+
+void
+_priv_gst_memory_initialize (void)
+{
+  _gst_memory_type = gst_memory_get_type ();
 }

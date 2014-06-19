@@ -154,8 +154,10 @@ struct _GstTagList {
   GstMiniObject mini_object;
 };
 
+GST_EXPORT GType _gst_tag_list_type;
+
 #define GST_TAG_LIST(x)       ((GstTagList *) (x))
-#define GST_TYPE_TAG_LIST     (gst_tag_list_get_type ())
+#define GST_TYPE_TAG_LIST     (_gst_tag_list_type)
 #define GST_IS_TAG_LIST(obj)  (GST_IS_MINI_OBJECT_TYPE((obj), GST_TYPE_TAG_LIST))
 
 /**
