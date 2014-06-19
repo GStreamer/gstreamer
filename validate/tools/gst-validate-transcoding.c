@@ -898,5 +898,7 @@ exit:
   g_source_remove (signal_watch_id);
 #endif
 
+  g_print ("\n=======> Test %s (Return value: %i)\n\n",
+      ret == 0 ? "PASSED" : "FAILED", ret);
   return ret;
 }
