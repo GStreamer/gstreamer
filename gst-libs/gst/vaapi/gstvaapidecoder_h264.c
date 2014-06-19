@@ -855,8 +855,9 @@ dpb_clear(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 
     /* Clear previous frame buffers only if this is a "flush-all" operation,
        or if the picture is the first one in the access unit */
-    if (!picture || GST_VAAPI_PICTURE_FLAG_IS_SET(picture,
-            GST_VAAPI_PICTURE_FLAG_AU_START)) {
+    if (priv->prev_frames && (!picture ||
+            GST_VAAPI_PICTURE_FLAG_IS_SET(picture,
+                GST_VAAPI_PICTURE_FLAG_AU_START))) {
         for (i = 0; i < priv->max_views; i++)
             gst_vaapi_picture_replace(&priv->prev_frames[i], NULL);
     }
