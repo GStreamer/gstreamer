@@ -114,7 +114,6 @@ G_GNUC_INTERNAL  void  _priv_gst_caps_features_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_event_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_format_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_message_initialize (void);
-G_GNUC_INTERNAL  void  _priv_gst_memory_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_meta_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_plugin_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_query_initialize (void);
