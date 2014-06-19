@@ -4421,6 +4421,15 @@ gst_value_get_compare_func (const GValue * value1)
   return NULL;
 }
 
+static inline gboolean
+gst_value_can_compare_unchecked (const GValue * value1, const GValue * value2)
+{
+  if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
+    return FALSE;
+
+  return gst_value_get_compare_func (value1) != NULL;
+}
+
 /**
  * gst_value_can_compare:
  * @value1: a value to compare
@@ -4436,10 +4445,7 @@ gst_value_can_compare (const GValue * value1, const GValue * value2)
   g_return_val_if_fail (G_IS_VALUE (value1), FALSE);
   g_return_val_if_fail (G_IS_VALUE (value2), FALSE);
 
-  if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
-    return FALSE;
-
-  return gst_value_get_compare_func (value1) != NULL;
+  return gst_value_can_compare_unchecked (value1, value2);
 }
 
 static gboolean
@@ -4776,7 +4782,7 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
       return TRUE;
   }
 
-  return gst_value_can_compare (value1, value2);
+  return gst_value_can_compare_unchecked (value1, value2);
 }
 
 /**
@@ -4967,7 +4973,7 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
       return TRUE;
   }
 
-  return gst_value_can_compare (minuend, subtrahend);
+  return gst_value_can_compare_unchecked (minuend, subtrahend);
 }
 
 /* gst_value_register_subtract_func: (skip)
