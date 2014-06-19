@@ -411,7 +411,7 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
 }
 
 static GstUDPClient *
-create_client (GstMultiUDPSink * sink, const gchar * host, gint port)
+gst_udp_client_new (GstMultiUDPSink * sink, const gchar * host, gint port)
 {
   GstUDPClient *client;
   GInetAddress *addr;
@@ -442,7 +442,8 @@ create_client (GstMultiUDPSink * sink, const gchar * host, gint port)
 #endif
 
   client = g_slice_new0 (GstUDPClient);
-  client->refcount = 1;
+  client->ref_count = 1;
+  client->add_count = 0;
   client->host = g_strdup (host);
   client->port = port;
   client->addr = g_inet_socket_address_new (addr, port);
@@ -458,12 +459,23 @@ name_resolve:
   }
 }
 
+/* call with client lock held */
 static void
-free_client (GstUDPClient * client)
+gst_udp_client_unref (GstUDPClient * client)
 {
-  g_object_unref (client->addr);
-  g_free (client->host);
-  g_slice_free (GstUDPClient, client);
+  if (--client->ref_count == 0) {
+    g_object_unref (client->addr);
+    g_free (client->host);
+    g_slice_free (GstUDPClient, client);
+  }
+}
+
+/* call with client lock held */
+static inline GstUDPClient *
+gst_udp_client_ref (GstUDPClient * client)
+{
+  ++client->ref_count;
+  return client;
 }
 
 static gint
@@ -482,7 +494,7 @@ gst_multiudpsink_finalize (GObject * object)
 
   sink = GST_MULTIUDPSINK (object);
 
-  g_list_foreach (sink->clients, (GFunc) free_client, NULL);
+  g_list_foreach (sink->clients, (GFunc) gst_udp_client_unref, NULL);
   g_list_free (sink->clients);
 
   if (sink->socket)
@@ -584,7 +596,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
     else
       socket = sink->used_socket;
 
-    count = sink->send_duplicates ? client->refcount : 1;
+    count = sink->send_duplicates ? client->add_count : 1;
 
     while (count--) {
       gssize ret;
@@ -695,7 +707,7 @@ gst_multiudpsink_get_clients_string (GstMultiUDPSink * sink)
 
     clients = g_list_next (clients);
 
-    count = client->refcount;
+    count = client->add_count;
     while (count--) {
       g_string_append_printf (str, "%s:%d%s", client->host, client->port,
           (clients || count > 1 ? "," : ""));
@@ -1267,10 +1279,9 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
     family = g_socket_address_get_family (client->addr);
 
     GST_DEBUG_OBJECT (sink, "found %d existing clients with host %s, port %d",
-        client->refcount, host, port);
-    client->refcount++;
+        client->add_count, host, port);
   } else {
-    client = create_client (sink, host, port);
+    client = gst_udp_client_new (sink, host, port);
     if (!client)
       goto error;
 
@@ -1290,6 +1301,8 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
     else
       ++sink->num_v6_unique;
   }
+
+  ++client->add_count;
 
   if (family == G_SOCKET_FAMILY_IPV4)
     ++sink->num_v4_all;
@@ -1342,10 +1355,11 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
   client = (GstUDPClient *) find->data;
 
   GST_DEBUG_OBJECT (sink, "found %d clients with host %s, port %d",
-      client->refcount, host, port);
+      client->add_count, host, port);
 
-  client->refcount--;
-  if (client->refcount == 0) {
+  --client->add_count;
+
+  if (client->add_count == 0) {
     GInetSocketAddress *saddr = G_INET_SOCKET_ADDRESS (client->addr);
     GSocketFamily family = g_socket_address_get_family (client->addr);
     GInetAddress *addr = g_inet_socket_address_get_address (saddr);
@@ -1382,7 +1396,7 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
 
     sink->clients = g_list_delete_link (sink->clients, find);
 
-    free_client (client);
+    gst_udp_client_unref (client);
   }
   g_mutex_unlock (&sink->client_lock);
 
@@ -1406,7 +1420,7 @@ gst_multiudpsink_clear_internal (GstMultiUDPSink * sink, gboolean lock)
    * socket or anything to free for UDP */
   if (lock)
     g_mutex_lock (&sink->client_lock);
-  g_list_foreach (sink->clients, (GFunc) free_client, sink);
+  g_list_foreach (sink->clients, (GFunc) gst_udp_client_unref, sink);
   g_list_free (sink->clients);
   sink->clients = NULL;
   sink->num_v4_unique = 0;

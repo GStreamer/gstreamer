@@ -39,7 +39,8 @@ typedef struct _GstMultiUDPSink GstMultiUDPSink;
 typedef struct _GstMultiUDPSinkClass GstMultiUDPSinkClass;
 
 typedef struct {
-  gint refcount;
+  gint ref_count;         /* for memory management */
+  gint add_count;         /* how often this address has been added */
 
   GSocketAddress *addr;
   gchar *host;
