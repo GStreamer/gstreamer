@@ -44,8 +44,8 @@
 #include <gst/base/gsttypefindhelper.h>
 #include "gsthlsdemux.h"
 
-#define GST_ELEMENT_ERROR_FROM_ERROR(el, err) G_STMT_START { \
-  gchar *__dbg = g_strdup (err->message);                               \
+#define GST_ELEMENT_ERROR_FROM_ERROR(el, msg, err) G_STMT_START { \
+  gchar *__dbg = g_strdup_printf ("%s: %s", msg, err->message);         \
   GST_WARNING_OBJECT (el, "error: %s", __dbg);                          \
   gst_element_message_full (GST_ELEMENT(el), GST_MESSAGE_ERROR,         \
     err->domain, err->code,                                             \
@@ -470,7 +470,8 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_uri_downloader_reset (demux->downloader);
         if (!gst_hls_demux_update_playlist (demux, FALSE, &err)) {
           g_rec_mutex_unlock (&demux->stream_lock);
-          GST_ELEMENT_ERROR_FROM_ERROR (demux, err);
+          GST_ELEMENT_ERROR_FROM_ERROR (demux, "Could not switch playlist",
+              err);
           gst_event_unref (event);
           return FALSE;
         }
@@ -496,7 +497,8 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         if (!gst_hls_demux_update_playlist (demux, FALSE, &err)) {
           g_rec_mutex_unlock (&demux->stream_lock);
 
-          GST_ELEMENT_ERROR_FROM_ERROR (demux, err);
+          GST_ELEMENT_ERROR_FROM_ERROR (demux, "Could not switch playlist",
+              err);
           gst_event_unref (event);
           return FALSE;
         }
@@ -1215,7 +1217,8 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
         GST_DEBUG_OBJECT (demux, "Retrying now");
         return;
       } else {
-        GST_ELEMENT_ERROR_FROM_ERROR (demux, err);
+        GST_ELEMENT_ERROR_FROM_ERROR (demux,
+            "Could not fetch the next fragment", err);
         goto pause_task;
       }
     }
@@ -1370,7 +1373,8 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
 
     gst_m3u8_client_set_current (demux->client, child);
     if (!gst_hls_demux_update_playlist (demux, FALSE, &err)) {
-      GST_ELEMENT_ERROR_FROM_ERROR (demux, err);
+      GST_ELEMENT_ERROR_FROM_ERROR (demux, "Could not fetch the child playlist",
+          err);
       goto error;
     }
   }
@@ -1424,7 +1428,7 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
             gst_util_uint64_scale (gst_m3u8_client_get_target_duration
             (demux->client), G_USEC_PER_SEC, 2 * GST_SECOND);
       } else {
-        GST_ELEMENT_ERROR_FROM_ERROR (demux, err);
+        GST_ELEMENT_ERROR_FROM_ERROR (demux, "Could not update playlist", err);
         goto error;
       }
     } else {
