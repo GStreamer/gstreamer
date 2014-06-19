@@ -1694,6 +1694,15 @@ gst_value_set_fraction_range_full (GValue * value,
   /* g_value_unset (&end);   */
 }
 
+/* FIXME 2.0: Don't leak the internal representation of fraction
+ * ranges but instead return the numerator and denominator
+ * separately.
+ * This would allow to store fraction ranges as
+ *  data[0] = (min_n << 32) | (min_d)
+ *  data[1] = (max_n << 32) | (max_d)
+ * without requiring an additional allocation for each value.
+ */
+
 /**
  * gst_value_get_fraction_range_min:
  * @value: a GValue initialized to GST_TYPE_FRACTION_RANGE
