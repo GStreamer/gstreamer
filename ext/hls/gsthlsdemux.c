@@ -365,6 +365,8 @@ gst_hls_demux_handle_message (GstBin * bin, GstMessage * msg)
       /* error, but ask to retry */
       g_mutex_lock (&demux->fragment_download_lock);
       demux->last_ret = GST_FLOW_CUSTOM_ERROR;
+      g_clear_error (&demux->last_error);
+      demux->last_error = g_error_copy (err);
       g_cond_signal (&demux->fragment_download_cond);
       g_mutex_unlock (&demux->fragment_download_lock);
 
@@ -1311,6 +1313,8 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
     gst_element_set_state (demux->src, GST_STATE_NULL);
   }
 
+  g_clear_error (&demux->last_error);
+
   if (demux->adapter)
     gst_adapter_clear (demux->adapter);
   if (demux->pending_buffer)
@@ -1978,6 +1982,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
 
   /* Reset last flow return */
   demux->last_ret = GST_FLOW_OK;
+  g_clear_error (&demux->last_error);
 
   if (!gst_hls_demux_update_source (demux, next_fragment_uri,
           demux->client->main ? demux->client->main->uri : NULL,
@@ -2028,9 +2033,15 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
 
   if (demux->last_ret != GST_FLOW_OK) {
     gst_element_set_state (demux->src, GST_STATE_NULL);
-    if (*err == NULL)
-      *err = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-          "Failed to download fragment");
+    if (*err == NULL) {
+      if (demux->last_error) {
+        *err = demux->last_error;
+        demux->last_error = NULL;
+      } else {
+        *err = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+            "Failed to download fragment");
+      }
+    }
   } else {
     gst_element_set_state (demux->src, GST_STATE_READY);
     if (demux->segment.rate > 0)

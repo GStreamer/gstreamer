@@ -125,6 +125,7 @@ struct _GstHLSDemux
   gint64 download_total_time;
   gint64 download_total_bytes;
   GstFlowReturn last_ret;
+  GError *last_error;
 
   /* decryption tooling */
 #ifdef HAVE_NETTLE
