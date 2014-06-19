@@ -356,11 +356,19 @@ gst_hls_demux_handle_message (GstBin * bin, GstMessage * msg)
     case GST_MESSAGE_ERROR:{
       GError *err = NULL;
       gchar *debug = NULL;
+      gchar *new_error = NULL;
 
       gst_message_parse_error (msg, &err, &debug);
 
       GST_WARNING_OBJECT (demux, "Source posted error: %d:%d %s (%s)",
           err->domain, err->code, err->message, debug);
+
+      if (debug)
+        new_error = g_strdup_printf ("%s: %s\n", err->message, debug);
+      if (new_error) {
+        g_free (err->message);
+        err->message = new_error;
+      }
 
       /* error, but ask to retry */
       g_mutex_lock (&demux->fragment_download_lock);
