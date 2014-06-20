@@ -805,7 +805,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     gsize available;
 
     /* restart the decrypting lib for a new fragment */
-    if (demux->starting_fragment) {
+    if (demux->reset_crypto) {
       GstFragment *key_fragment;
       GstBuffer *key_buffer;
       GstMapInfo key_info;
@@ -842,6 +842,8 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       gst_buffer_unmap (key_buffer, &key_info);
       gst_buffer_unref (key_buffer);
       g_object_unref (key_fragment);
+
+      demux->reset_crypto = FALSE;
     }
 
     gst_adapter_push (demux->adapter, buffer);
@@ -1989,6 +1991,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   demux->current_timestamp = timestamp;
   demux->current_duration = duration;
   demux->starting_fragment = TRUE;
+  demux->reset_crypto = TRUE;
   demux->current_key = key;
   demux->current_iv = iv;
 

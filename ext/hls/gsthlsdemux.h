@@ -121,6 +121,7 @@ struct _GstHLSDemux
   GstClockTime current_timestamp;
   GstClockTime current_duration;
   gboolean starting_fragment;
+  gboolean reset_crypto;
   gint64 download_start_time;
   gint64 download_total_time;
   gint64 download_total_bytes;
