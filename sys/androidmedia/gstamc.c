@@ -495,8 +495,11 @@ gst_amc_set_error_string (JNIEnv * env, GQuark domain, gint code, GError ** err,
 {
   jthrowable exception;
 
-  if (!err)
+  if (!err) {
+    if ((*env)->ExceptionCheck (env))
+      (*env)->ExceptionClear (env);
     return;
+  }
 
   if ((*env)->ExceptionCheck (env)) {
     if ((exception = (*env)->ExceptionOccurred (env))) {
