@@ -257,7 +257,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   gobject_class->get_property = gst_gl_video_mixer_get_property;
 
   gst_element_class_set_metadata (element_class, "OpenGL video_mixer",
-      "Filter/Effect/Video", "OpenGL video_mixer",
+      "Filter/Effect/Video/Compositor", "OpenGL video_mixer",
       "Julien Isorce <julien.isorce@gmail.com>");
 
   GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_video_mixer_init_shader;
@@ -401,10 +401,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
       continue;
     }
     pad = (GstGLVideoMixerPad *) frame->pad;
-    in_width =
-        GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
-    in_height =
-        GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
+    in_width = GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
+    in_height = GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
 
     if (!frame->texture || in_width <= 0 || in_height <= 0) {
       GST_DEBUG ("skipping texture:%u frame:%p width:%u height %u",
