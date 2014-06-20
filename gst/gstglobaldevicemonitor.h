@@ -44,6 +44,7 @@ typedef struct _GstGlobalDeviceMonitorClass GstGlobalDeviceMonitorClass;
 
 /**
  * GstGlobalDeviceMonitor:
+ * @parent: the parent #GstObject structure
  *
  * Opaque global device monitor object structure.
  *
@@ -61,6 +62,7 @@ struct _GstGlobalDeviceMonitor {
 
 /**
  * GstGlobalDeviceMonitorClass:
+ * @parent_class: the parent #GstObjectClass structure
  *
  * Opaque global device monitor class structure.
  *

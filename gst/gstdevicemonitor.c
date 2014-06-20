@@ -19,6 +19,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstdevicemonitor
+ * @short_description: A device monitor and prober
+ * @see_also: #GstDevice, #GstGlobalDeviceMonitor
+ *
+ * A #GstDeviceMonitor subclass is provided by a plugin that handles devices
+ * if there is a way to programatically list connected devices. It can also
+ * optionally provide updates to the list of connected devices.
+ *
+ * Each #GstDeviceMonitor subclass is a singleton, a plugin should
+ * normally provide a single subclass for all devices.
+ *
+ * Applications would normally use a #GstGlobalDeviceMonitor to monitor devices
+ * from all revelant monitors.
+ *
+ * Since: 1.4
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

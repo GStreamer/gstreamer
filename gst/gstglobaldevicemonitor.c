@@ -18,7 +18,23 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-/* FIXME: documentation section! */
+
+/**
+ * SECTION:gstglobaldevicemonitor
+ * @short_description: A global device monitor and prober
+ * @see_also: #GstDevice, #GstDeviceMonitor
+ *
+ * Applications should create a #GstGlobalDeviceMonitor when they want
+ * to probe, list and monitor devices of a specific type. The
+ * #GstGlobalDeviceMonitor will create the appropriate
+ * #GstDeviceMonitor objects and manage them. It will then post
+ * messages on its #GstBus for devices that have been added and
+ * removed.
+ *
+ * Since: 1.4
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -230,8 +246,8 @@ again:
  * @monitor: A #GstGlobalDeviceMonitor
  *
  * Starts monitoring the devices, one this has succeeded, the
- * #GstGlobalDeviceMonitor:added and #GstGlobalDeviceMonitor:removed
- * signals will be emitted when the list of devices changes.
+ * %GST_MESSAGE_DEVICE_ADDED and %GST_MESSAGE_DEVICE_REMOVED messages
+ * will be emitted on the bus when the list of devices changes.
  *
  * Returns: %TRUE if the device monitoring could be started
  *
@@ -301,7 +317,7 @@ gst_global_device_monitor_stop (GstGlobalDeviceMonitor * monitor)
 
 /**
  * gst_global_device_monitor_set_classes_filter:
- * @self: the global device monitor
+ * @monitor: the global device monitor
  * @classes: device classes to use as filter
  *
  * Filter devices monitored by device class, e.g. in case you are only
@@ -431,6 +447,8 @@ gst_global_device_monitor_set_caps_filter (GstGlobalDeviceMonitor * monitor,
  * gst_global_device_monitor_get_caps_filter:
  * @monitor: a global device monitor
  *
+ * Get the #GstCaps filter set by gst_global_device_monitor_set_caps_filter().
+ *
  * Returns: (transfer full): the filter caps that are active (or ANY caps)
  *
  * Since: 1.4
@@ -451,6 +469,8 @@ gst_global_device_monitor_get_caps_filter (GstGlobalDeviceMonitor * monitor)
 
 /**
  * gst_global_device_monitor_new:
+ *
+ * Create a new #GstGlobalDeviceMonitor
  *
  * Returns: (transfer full): a new global device monitor.
  *

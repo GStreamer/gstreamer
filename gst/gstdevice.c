@@ -19,6 +19,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstdevice
+ * @short_description: Object representing a device
+ * @see_also: #GstDeviceMonitor
+ *
+ * #GstDevice are objects representing a device, they contain
+ * relevant metadata about the device, such as its class and the #GstCaps
+ * representing the media types it can produce or handle.
+ *
+ * #GstDevice are created by #GstDeviceMonitor objects which can be
+ * aggregated by #GstGlobalDeviceMonitor objects.
+ *
+ * Since: 1.4
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -162,6 +177,9 @@ gst_device_set_property (GObject * object, guint prop_id,
  * @device: a #GstDevice
  * @name: (allow-none): name of new element, or %NULL to automatically
  * create a unique name.
+ *
+ * Creates the element with all of the required paramaters set to use
+ * this device.
  *
  * Returns: (transfer full): a new #GstElement configured to use this device
  *

@@ -1580,6 +1580,10 @@ gst_message_parse_context_type
 gst_message_new_have_context
 gst_message_parse_have_context
 
+gst_message_new_device_added
+gst_message_new_device_removed
+gst_message_parse_device_added
+gst_message_parse_device_removed
 <SUBSECTION Standard>
 GstMessageClass
 GST_MESSAGE
@@ -3324,6 +3328,15 @@ GST_CHECK_VERSION
 GstDevice
 GstDeviceClass
 
+gst_device_create_element
+gst_device_get_caps
+gst_device_get_display_name
+gst_device_get_klass
+gst_device_has_classes
+gst_device_has_classesv
+gst_device_reconfigure_element
+
+<SUBSECTION Standard>
 GST_DEVICE
 GST_DEVICE_CAST
 GST_DEVICE_CLASS
@@ -3331,15 +3344,7 @@ GST_DEVICE_GET_CLASS
 GST_IS_DEVICE
 GST_IS_DEVICE_CLASS
 GST_TYPE_DEVICE
-
-gst_device_create_element
-gst_device_get_caps
-gst_device_get_display_name
-gst_device_get_klass
 gst_device_get_type
-gst_device_has_classes
-gst_device_has_classesv
-gst_device_reconfigure_element
 </SECTION>
 
 <SECTION>
@@ -3347,13 +3352,6 @@ gst_device_reconfigure_element
 <TITLE>GstDeviceMonitor</TITLE>
 GstDeviceMonitor
 GstDeviceMonitorClass
-GST_DEVICE_MONITOR
-GST_DEVICE_MONITOR_CAST
-GST_DEVICE_MONITOR_CLASS
-GST_DEVICE_MONITOR_GET_CLASS
-GST_IS_DEVICE_MONITOR
-GST_IS_DEVICE_MONITOR_CLASS
-GST_TYPE_DEVICE_MONITOR
 gst_device_monitor_can_monitor
 gst_device_monitor_class_add_metadata
 gst_device_monitor_class_add_static_metadata
@@ -3365,10 +3363,20 @@ gst_device_monitor_device_remove
 gst_device_monitor_get_bus
 gst_device_monitor_get_devices
 gst_device_monitor_get_factory
-gst_device_monitor_get_type
 gst_device_monitor_register
 gst_device_monitor_start
 gst_device_monitor_stop
+
+<SUBSECTION Standard>
+GstDevicePrivate
+GST_DEVICE_MONITOR
+GST_DEVICE_MONITOR_CAST
+GST_DEVICE_MONITOR_CLASS
+GST_DEVICE_MONITOR_GET_CLASS
+GST_IS_DEVICE_MONITOR
+GST_IS_DEVICE_MONITOR_CLASS
+GST_TYPE_DEVICE_MONITOR
+gst_device_monitor_get_type
 </SECTION>
 
 <SECTION>
@@ -3376,20 +3384,25 @@ gst_device_monitor_stop
 <TITLE>GstDeviceMonitorFactory</TITLE>
 GstDeviceMonitorFactory
 GstDeviceMonitorFactoryClass
-GST_DEVICE_MONITOR_FACTORY
-GST_DEVICE_MONITOR_FACTORY_CAST
-GST_DEVICE_MONITOR_FACTORY_CLASS
-GST_TYPE_DEVICE_MONITOR_FACTORY
 gst_device_monitor_factory_find
 gst_device_monitor_factory_get
 gst_device_monitor_factory_get_by_name
 gst_device_monitor_factory_get_device_monitor_type
 gst_device_monitor_factory_get_metadata
 gst_device_monitor_factory_get_metadata_keys
-gst_device_monitor_factory_get_type
 gst_device_monitor_factory_has_classes
 gst_device_monitor_factory_has_classesv
 gst_device_monitor_factory_list_get_device_monitors
+
+<SUBSECTION Standard>
+GstDeviceMonitorPrivate
+GST_DEVICE_MONITOR_FACTORY
+GST_DEVICE_MONITOR_FACTORY_CAST
+GST_DEVICE_MONITOR_FACTORY_CLASS
+GST_TYPE_DEVICE_MONITOR_FACTORY
+GST_IS_DEVICE_MONITOR_FACTORY
+GST_IS_DEVICE_MONITOR_FACTORY_CLASS
+gst_device_monitor_factory_get_type
 </SECTION>
 
 <SECTION>
@@ -3397,6 +3410,18 @@ gst_device_monitor_factory_list_get_device_monitors
 <TITLE>GstGlobalDeviceMonitor</TITLE>
 GstGlobalDeviceMonitor
 GstGlobalDeviceMonitorClass
+gst_global_device_monitor_get_bus
+gst_global_device_monitor_get_caps_filter
+gst_global_device_monitor_get_classes_filter
+gst_global_device_monitor_get_devices
+gst_global_device_monitor_new
+gst_global_device_monitor_set_caps_filter
+gst_global_device_monitor_set_classes_filter
+gst_global_device_monitor_start
+gst_global_device_monitor_stop
+
+<SUBSECTION Standard>
+GstGlobalDeviceMonitorPrivate
 GST_GLOBAL_DEVICE_MONITOR
 GST_GLOBAL_DEVICE_MONITOR_CAST
 GST_GLOBAL_DEVICE_MONITOR_CLASS
@@ -3404,15 +3429,6 @@ GST_GLOBAL_DEVICE_MONITOR_GET_CLASS
 GST_IS_GLOBAL_DEVICE_MONITOR
 GST_IS_GLOBAL_DEVICE_MONITOR_CLASS
 GST_TYPE_GLOBAL_DEVICE_MONITOR
-gst_global_device_monitor_get_bus
-gst_global_device_monitor_get_caps_filter
-gst_global_device_monitor_get_classes_filter
-gst_global_device_monitor_get_devices
 gst_global_device_monitor_get_type
-gst_global_device_monitor_new
-gst_global_device_monitor_set_caps_filter
-gst_global_device_monitor_set_classes_filter
-gst_global_device_monitor_start
-gst_global_device_monitor_stop
 </SECTION>
 

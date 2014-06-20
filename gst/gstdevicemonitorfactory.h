@@ -33,6 +33,14 @@
  *
  * Since: 1.4
  */
+
+/**
+ * GstDeviceMonitorFactoryClass:
+ *
+ * The opaque #GstDeviceMonitorFactoryClass data structure.
+ *
+ * Since: 1.4
+ */
 typedef struct _GstDeviceMonitorFactory GstDeviceMonitorFactory;
 typedef struct _GstDeviceMonitorFactoryClass GstDeviceMonitorFactoryClass;
 

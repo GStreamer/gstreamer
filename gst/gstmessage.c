@@ -2361,6 +2361,7 @@ gst_message_new_device_added (GstObject * src, GstDevice * device)
 
 /**
  * gst_message_parse_device_added:
+ * @message: a #GstMessage of type %GST_MESSAGE_DEVICE_ADDED
  * @device: (out) (allow-none) (transfer none): A location where to store a
  *  pointer to the new #GstDevice, or %NULL
  * 
@@ -2412,6 +2413,7 @@ gst_message_new_device_removed (GstObject * src, GstDevice * device)
 
 /**
  * gst_message_parse_device_removed:
+ * @message: a #GstMessage of type %GST_MESSAGE_DEVICE_REMOVED
  * @device: (out) (allow-none) (transfer none): A location where to store a
  *  pointer to the removed #GstDevice, or %NULL
  *

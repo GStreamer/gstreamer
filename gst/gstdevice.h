@@ -42,6 +42,14 @@ typedef struct _GstDevicePrivate GstDevicePrivate;
 #define GST_DEVICE_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE, GstDeviceClass))
 #define GST_DEVICE_CAST(obj)            ((GstDevice *)(obj))
 
+/**
+ * GstDevice:
+ * @parent: The parent #GstObject strucuture.
+ *
+ * A device object.
+ *
+ * Since: 1.4
+ */
 
 struct _GstDevice {
   GstObject         parent;
@@ -51,6 +59,20 @@ struct _GstDevice {
 
   gpointer _gst_reserved[GST_PADDING];
 };
+
+/**
+ * GstDeviceClass:
+ * @parent_class: The parent #GstObjectClass strucuture.
+ * @create_element: Creates the fully configured element to access this device.
+ *  Subclasses need to override this and return a new element.
+ * @reconfigure_element: This only needs to be implemented by subclasses if the
+ *  element can be reconfigured to use a different device. See the documentation
+ *  for gst_device_reconfigure_element().
+ *
+ * The class structure for a #GstDevice object.
+ *
+ * Since: 1.4
+ */
 
 struct _GstDeviceClass {
   GstObjectClass    parent_class;
