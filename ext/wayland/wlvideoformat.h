@@ -29,10 +29,10 @@
 
 G_BEGIN_DECLS
 
-enum wl_shm_format gst_video_format_to_wayland_format (GstVideoFormat format);
-GstVideoFormat gst_wayland_format_to_video_format (enum wl_shm_format wl_format);
+enum wl_shm_format gst_video_format_to_wl_shm_format (GstVideoFormat format);
+GstVideoFormat gst_wl_shm_format_to_video_format (enum wl_shm_format wl_format);
 
-const gchar *gst_wayland_format_to_string (enum wl_shm_format wl_format);
+const gchar *gst_wl_shm_format_to_string (enum wl_shm_format wl_format);
 
 G_END_DECLS
 

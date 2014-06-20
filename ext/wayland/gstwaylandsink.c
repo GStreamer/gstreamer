@@ -410,7 +410,7 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     formats = sink->display->formats;
     for (i = 0; i < formats->len; i++) {
       fmt = g_array_index (formats, uint32_t, i);
-      g_value_set_string (&value, gst_wayland_format_to_string (fmt));
+      g_value_set_string (&value, gst_wl_shm_format_to_string (fmt));
       gst_value_list_append_value (&list, &value);
     }
 
@@ -453,7 +453,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_video_info_from_caps (&info, caps))
     goto invalid_format;
 
-  format = gst_video_format_to_wayland_format (GST_VIDEO_INFO_FORMAT (&info));
+  format = gst_video_format_to_wl_shm_format (GST_VIDEO_INFO_FORMAT (&info));
   if ((gint) format == -1)
     goto invalid_format;
 
@@ -497,7 +497,7 @@ invalid_format:
 unsupported_format:
   {
     GST_DEBUG_OBJECT (sink, "Format %s is not available on the display",
-        gst_wayland_format_to_string (format));
+        gst_wl_shm_format_to_string (format));
     return FALSE;
   }
 pool_failed:

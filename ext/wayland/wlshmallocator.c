@@ -159,7 +159,7 @@ gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
   height = GST_VIDEO_INFO_HEIGHT (info);
   stride = GST_VIDEO_INFO_PLANE_STRIDE (info, 0);
   size = GST_VIDEO_INFO_SIZE (info);
-  format = gst_video_format_to_wayland_format (GST_VIDEO_INFO_FORMAT (info));
+  format = gst_video_format_to_wl_shm_format (GST_VIDEO_INFO_FORMAT (info));
 
   g_return_val_if_fail (gst_is_wl_shm_memory (mem), NULL);
   g_return_val_if_fail (size <= mem->size, NULL);
@@ -167,7 +167,7 @@ gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
 
   GST_DEBUG_OBJECT (mem->allocator, "Creating wl_buffer of size %"
       G_GSSIZE_FORMAT " (%d x %d, stride %d), format %s", size, width, height,
-      stride, gst_wayland_format_to_string (format));
+      stride, gst_wl_shm_format_to_string (format));
 
   wl_pool = wl_shm_create_pool (display->shm, shm_mem->fd, mem->size);
   wbuffer = wl_shm_pool_create_buffer (wl_pool, 0, width, height, stride,
