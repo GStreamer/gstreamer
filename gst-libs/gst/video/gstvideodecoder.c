@@ -926,26 +926,46 @@ gst_video_decoder_parse_available (GstVideoDecoder * dec, gboolean at_eos,
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_GET_CLASS (dec);
   GstVideoDecoderPrivate *priv = dec->priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  gsize start_size, available;
+  gsize was_available, available;
+  guint inactive = 0;
 
   available = gst_adapter_available (priv->input_adapter);
-  start_size = 0;
 
-  while (ret == GST_FLOW_OK && ((available && start_size != available)
-          || new_buffer)) {
+  while (available || new_buffer) {
     new_buffer = FALSE;
     /* current frame may have been parsed and handled,
      * so we need to set up a new one when asking subclass to parse */
     if (priv->current_frame == NULL)
       priv->current_frame = gst_video_decoder_new_frame (dec);
 
-    start_size = available;
+    was_available = available;
     ret = decoder_class->parse (dec, priv->current_frame,
         priv->input_adapter, at_eos);
+    if (ret != GST_FLOW_OK)
+      break;
+
+    /* if the subclass returned success (GST_FLOW_OK), it is expected
+     * to have collected and submitted a frame, i.e. it should have
+     * called gst_video_decoder_have_frame(), or at least consumed a
+     * few bytes through gst_video_decoder_add_to_frame().
+     *
+     * Otherwise, this is an implementation bug, and we error out
+     * after 2 failed attempts */
     available = gst_adapter_available (priv->input_adapter);
+    if (!priv->current_frame || available != was_available)
+      inactive = 0;
+    else if (++inactive == 2)
+      goto error_inactive;
   }
 
   return ret;
+
+  /* ERRORS */
+error_inactive:
+  {
+    GST_ERROR_OBJECT (dec, "Failed to consume data. Error in subclass?");
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
