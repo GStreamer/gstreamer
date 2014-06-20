@@ -539,7 +539,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   size = 0;
   for (i = 0; i < n_mem; i++) {
-    mem = gst_buffer_get_memory (buffer, i);
+    mem = gst_buffer_peek_memory (buffer, i);
     gst_memory_map (mem, &map[i], GST_MAP_READ);
 
     vec[i].buffer = map[i].data;
@@ -613,10 +613,8 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   g_mutex_unlock (&sink->client_lock);
 
   /* unmap all memory again */
-  for (i = 0; i < n_mem; i++) {
+  for (i = 0; i < n_mem; i++)
     gst_memory_unmap (map[i].memory, &map[i]);
-    gst_memory_unref (map[i].memory);
-  }
 
   GST_LOG_OBJECT (sink, "sent %" G_GSIZE_FORMAT " bytes to %d (of %d) clients",
       size, num, no_clients);
@@ -634,10 +632,8 @@ flushing:
     g_clear_error (&err);
 
     /* unmap all memory */
-    for (i = 0; i < n_mem; i++) {
+    for (i = 0; i < n_mem; i++)
       gst_memory_unmap (map[i].memory, &map[i]);
-      gst_memory_unref (map[i].memory);
-    }
 
     return GST_FLOW_FLUSHING;
   }
