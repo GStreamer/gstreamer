@@ -26,6 +26,7 @@
 #include "waylandpool.h"
 #include "wldisplay.h"
 #include "wlvideoformat.h"
+#include "wlbuffer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,44 +38,6 @@
 
 GST_DEBUG_CATEGORY_EXTERN (gstwayland_debug);
 #define GST_CAT_DEFAULT gstwayland_debug
-
-/* wl metadata */
-GType
-gst_wl_meta_api_get_type (void)
-{
-  static volatile GType type;
-  static const gchar *tags[] =
-      { "memory", "size", "colorspace", "orientation", NULL };
-
-  if (g_once_init_enter (&type)) {
-    GType _type = gst_meta_api_type_register ("GstWlMetaAPI", tags);
-    g_once_init_leave (&type, _type);
-  }
-  return type;
-}
-
-static void
-gst_wl_meta_free (GstWlMeta * meta, GstBuffer * buffer)
-{
-  GST_DEBUG ("destroying wl_buffer %p", meta->wbuffer);
-  wl_buffer_destroy (meta->wbuffer);
-}
-
-const GstMetaInfo *
-gst_wl_meta_get_info (void)
-{
-  static const GstMetaInfo *wl_meta_info = NULL;
-
-  if (g_once_init_enter (&wl_meta_info)) {
-    const GstMetaInfo *meta =
-        gst_meta_register (GST_WL_META_API_TYPE, "GstWlMeta",
-        sizeof (GstWlMeta), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) gst_wl_meta_free,
-        (GstMetaTransformFunction) NULL);
-    g_once_init_leave (&wl_meta_info, meta);
-  }
-  return wl_meta_info;
-}
 
 /* bufferpool */
 static void gst_wayland_buffer_pool_finalize (GObject * object);
@@ -107,8 +70,6 @@ static void
 gst_wayland_buffer_pool_init (GstWaylandBufferPool * self)
 {
   gst_video_info_init (&self->info);
-  g_mutex_init (&self->buffers_map_mutex);
-  self->buffers_map = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 static void
@@ -119,84 +80,9 @@ gst_wayland_buffer_pool_finalize (GObject * object)
   if (pool->wl_pool)
     gst_wayland_buffer_pool_stop (GST_BUFFER_POOL (pool));
 
-  g_mutex_clear (&pool->buffers_map_mutex);
-  g_hash_table_unref (pool->buffers_map);
-
   g_object_unref (pool->display);
 
   G_OBJECT_CLASS (gst_wayland_buffer_pool_parent_class)->finalize (object);
-}
-
-static void
-buffer_release (void *data, struct wl_buffer *wl_buffer)
-{
-  GstWaylandBufferPool *self = data;
-  GstBuffer *buffer;
-  GstWlMeta *meta;
-
-  g_mutex_lock (&self->buffers_map_mutex);
-  buffer = g_hash_table_lookup (self->buffers_map, wl_buffer);
-
-  GST_LOG_OBJECT (self, "wl_buffer::release (GstBuffer: %p)", buffer);
-
-  if (buffer) {
-    meta = gst_buffer_get_wl_meta (buffer);
-    if (meta->used_by_compositor) {
-      meta->used_by_compositor = FALSE;
-      /* unlock before unref because stop() may be called from here */
-      g_mutex_unlock (&self->buffers_map_mutex);
-      gst_buffer_unref (buffer);
-      return;
-    }
-  }
-  g_mutex_unlock (&self->buffers_map_mutex);
-}
-
-static const struct wl_buffer_listener buffer_listener = {
-  buffer_release
-};
-
-void
-gst_wayland_compositor_acquire_buffer (GstWaylandBufferPool * self,
-    GstBuffer * buffer)
-{
-  GstWlMeta *meta;
-
-  meta = gst_buffer_get_wl_meta (buffer);
-  g_return_if_fail (meta != NULL);
-  g_return_if_fail (meta->pool == self);
-  g_return_if_fail (meta->used_by_compositor == FALSE);
-
-  meta->used_by_compositor = TRUE;
-  gst_buffer_ref (buffer);
-}
-
-static void
-unref_used_buffers (gpointer key, gpointer value, gpointer data)
-{
-  GstBuffer *buffer = value;
-  GstWlMeta *meta = gst_buffer_get_wl_meta (buffer);
-  GList **to_unref = data;
-
-  if (meta->used_by_compositor) {
-    meta->used_by_compositor = FALSE;
-    *to_unref = g_list_prepend (*to_unref, buffer);
-  }
-}
-
-void
-gst_wayland_compositor_release_all_buffers (GstWaylandBufferPool * self)
-{
-  GList *to_unref = NULL;
-
-  g_mutex_lock (&self->buffers_map_mutex);
-  g_hash_table_foreach (self->buffers_map, unref_used_buffers, &to_unref);
-  g_mutex_unlock (&self->buffers_map_mutex);
-
-  /* unref without the lock because stop() may be called from here */
-  if (to_unref) {
-    g_list_free_full (to_unref, (GDestroyNotify) gst_buffer_unref);
-  }
 }
 
 static gboolean
@@ -302,12 +188,6 @@ gst_wayland_buffer_pool_stop (GstBufferPool * pool)
   self->size = 0;
   self->used = 0;
 
-  /* all buffers are about to be destroyed;
-   * we should no longer do anything with them */
-  g_mutex_lock (&self->buffers_map_mutex);
-  g_hash_table_remove_all (self->buffers_map);
-  g_mutex_unlock (&self->buffers_map_mutex);
-
   return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
 
@@ -321,7 +201,7 @@ gst_wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   enum wl_shm_format format;
   gint offset;
   void *data;
-  GstWlMeta *meta;
+  struct wl_buffer *wbuffer;
 
   width = GST_VIDEO_INFO_WIDTH (&self->info);
   height = GST_VIDEO_INFO_HEIGHT (&self->info);
@@ -342,25 +222,17 @@ gst_wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   self->used += size;
   data = ((gchar *) self->data) + offset;
 
-  /* create buffer and its metadata object */
   *buffer = gst_buffer_new ();
-  meta = (GstWlMeta *) gst_buffer_add_meta (*buffer, GST_WL_META_INFO, NULL);
-  meta->pool = self;
-  meta->wbuffer = wl_shm_pool_create_buffer (self->wl_pool, offset,
-      width, height, stride, format);
-  meta->used_by_compositor = FALSE;
-
-  /* configure listening to wl_buffer.release */
-  g_mutex_lock (&self->buffers_map_mutex);
-  g_hash_table_insert (self->buffers_map, meta->wbuffer, *buffer);
-  g_mutex_unlock (&self->buffers_map_mutex);
-
-  wl_buffer_add_listener (meta->wbuffer, &buffer_listener, self);
 
   /* add the allocated memory on the GstBuffer */
   gst_buffer_append_memory (*buffer,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
           size, 0, size, NULL, NULL));
+
+  /* create wl_buffer and attach it on the GstBuffer via GstWlBuffer */
+  wbuffer = wl_shm_pool_create_buffer (self->wl_pool, offset, width, height,
+      stride, format);
+  gst_buffer_add_wl_buffer (*buffer, wbuffer, self->display);
 
   return GST_FLOW_OK;
 
