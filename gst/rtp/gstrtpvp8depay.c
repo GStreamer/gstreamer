@@ -136,7 +136,7 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstBuffer * buf)
   if (G_UNLIKELY (!self->started)) {
     /* Check if this is the start of a VP8 frame, otherwise bail */
     /* S=1 and PartID= 0 */
-    if ((data[0] & 0x1F) != 0x10)
+    if ((data[0] & 0x17) != 0x10)
       goto done;
 
     self->started = TRUE;
