@@ -40,9 +40,10 @@
 
 #include <string.h>
 
+#include "videoconvert.h"
+
 #include "gstvideoaggregator.h"
 #include "gstvideoaggregatorpad.h"
-#include "videoconvert.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_videoaggregator_debug);
 #define GST_CAT_DEFAULT gst_videoaggregator_debug
@@ -59,6 +60,13 @@ enum
 {
   PROP_PAD_0,
   PROP_PAD_ZORDER,
+};
+
+
+struct _GstVideoAggregatorPadPrivate
+{
+  /* Converter, if NULL no conversion is done */
+  VideoConvert *convert;
 };
 
 G_DEFINE_TYPE (GstVideoAggregatorPad, gst_videoaggregator_pad,
@@ -130,9 +138,9 @@ gst_videoaggregator_pad_finalize (GObject * o)
 {
   GstVideoAggregatorPad *vaggpad = GST_VIDEO_AGGREGATOR_PAD (o);
 
-  if (vaggpad->convert)
-    videoconvert_convert_free (vaggpad->convert);
-  vaggpad->convert = NULL;
+  if (vaggpad->priv->convert)
+    videoconvert_convert_free (vaggpad->priv->convert);
+  vaggpad->priv->convert = NULL;
 
   G_OBJECT_CLASS (gst_videoaggregator_pad_parent_class)->dispose (o);
 }
@@ -152,17 +160,24 @@ gst_videoaggregator_pad_class_init (GstVideoAggregatorPadClass * klass)
           0, 10000, DEFAULT_PAD_ZORDER,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  g_type_class_add_private (klass, sizeof (GstVideoAggregatorPadPrivate));
+
   aggpadclass->flush = GST_DEBUG_FUNCPTR (_flush_pad);
 }
 
 static void
 gst_videoaggregator_pad_init (GstVideoAggregatorPad * vaggpad)
 {
+  vaggpad->priv =
+      G_TYPE_INSTANCE_GET_PRIVATE (vaggpad, GST_TYPE_VIDEO_AGGREGATOR_PAD,
+      GstVideoAggregatorPadPrivate);
+
   vaggpad->zorder = DEFAULT_PAD_ZORDER;
-  vaggpad->convert = NULL;
   vaggpad->need_conversion_update = FALSE;
   vaggpad->aggregated_frame = NULL;
   vaggpad->converted_buffer = NULL;
+
+  vaggpad->priv->convert = NULL;
 }
 
 /*********************************
@@ -417,10 +432,10 @@ gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
     if (GST_VIDEO_INFO_FORMAT (&pad->info) == GST_VIDEO_FORMAT_UNKNOWN)
       continue;
 
-    if (pad->convert)
-      videoconvert_convert_free (pad->convert);
+    if (pad->priv->convert)
+      videoconvert_convert_free (pad->priv->convert);
 
-    pad->convert = NULL;
+    pad->priv->convert = NULL;
 
     colorimetry = gst_video_colorimetry_to_string (&(pad->info.colorimetry));
     chroma = gst_video_chroma_to_string (pad->info.chroma_site);
@@ -431,9 +446,9 @@ gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
       GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
           GST_VIDEO_INFO_FORMAT (&pad->info),
           GST_VIDEO_INFO_FORMAT (&best_info));
-      pad->convert = videoconvert_convert_new (&pad->info, &best_info);
+      pad->priv->convert = videoconvert_convert_new (&pad->info, &best_info);
       pad->need_conversion_update = TRUE;
-      if (!pad->convert) {
+      if (!pad->priv->convert) {
         g_free (colorimetry);
         g_free (best_colorimetry);
         GST_WARNING ("No path found for conversion");
@@ -1016,7 +1031,7 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
       GST_WARNING_OBJECT (vagg, "Could not map input buffer");
     }
 
-    if (pad->convert) {
+    if (pad->priv->convert) {
       gint converted_size;
 
       /* We wait until here to set the conversion infos, in case vagg->info changed */
@@ -1040,7 +1055,7 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
         return FALSE;
       }
 
-      videoconvert_convert_convert (pad->convert, converted_frame, frame);
+      videoconvert_convert_convert (pad->priv->convert, converted_frame, frame);
       pad->converted_buffer = converted_buf;
       gst_video_frame_unmap (frame);
     } else {

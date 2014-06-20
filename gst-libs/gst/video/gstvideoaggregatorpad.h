@@ -26,8 +26,6 @@
 
 #include <gst/base/gstaggregator.h>
 
-#include "videoconvert.h"
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_VIDEO_AGGREGATOR_PAD (gst_videoaggregator_pad_get_type())
@@ -42,7 +40,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstVideoAggregatorPad GstVideoAggregatorPad;
 typedef struct _GstVideoAggregatorPadClass GstVideoAggregatorPadClass;
-typedef struct _GstVideoAggregatorCollect GstVideoAggregatorCollect;
+typedef struct _GstVideoAggregatorPadPrivate GstVideoAggregatorPadPrivate;
 
 /**
  * GstVideoAggregatorPad:
@@ -64,8 +62,6 @@ struct _GstVideoAggregatorPad
   /* caps used for conversion if needed */
   GstVideoInfo conversion_info;
 
-  /* Converter, if NULL no conversion is done */
-  VideoConvert *convert;
   gboolean need_conversion_update;
   GstBuffer *converted_buffer;
 
@@ -77,11 +73,17 @@ struct _GstVideoAggregatorPad
   GstClockTime start_time;
   GstClockTime end_time;
   GstVideoFrame *aggregated_frame;
+
+  /* < private > */
+  GstVideoAggregatorPadPrivate *priv;
+  gpointer          _gst_reserved[GST_PADDING];
 };
 
 struct _GstVideoAggregatorPadClass
 {
   GstAggregatorPadClass parent_class;
+
+  gpointer          _gst_reserved[GST_PADDING];
 };
 
 GType gst_videoaggregator_pad_get_type (void);
