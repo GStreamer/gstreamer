@@ -19,13 +19,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/* this benchmark recursively builds a pipeline and measures the time to go
- * from ready to paused.
- * The graph size and type can be controlled with a few commandline args:
+/* This benchmark recursively builds a pipeline and measures the time to go
+ * from READY to PAUSED state.
+ *
+ * The graph size and type can be controlled with a few command line options:
+ *
  *  -d depth: is the depth of the tree
  *  -c children: is the number of branches on each level
- *  -f <flavour>: can be a=udio/v=ideo and is conttrolling the kind of elements
- *                that are used.
+ *  -f <flavour>: can be "audio" or "video" and is controlling the kind of
+ *                elements that are used.
  */
 
 #include <gst/gst.h>
@@ -195,52 +197,45 @@ event_loop (GstElement * bin, GstClockTime start)
   gst_object_unref (bus);
 }
 
-
 gint
 main (gint argc, gchar * argv[])
 {
+  /* default parameters */
+  const gchar *flavour_str = "audio";
+  gint flavour = FLAVOUR_AUDIO;
+  gint children = 3;
+  gint depth = 4;
+
+  GOptionContext *ctx;
+  GOptionEntry options[] = {
+    {"children", 'c', 0, G_OPTION_ARG_INT, &children,
+        "Number of children (branches on each level) (default: 3)", NULL},
+    {"depth", 'd', 0, G_OPTION_ARG_INT, &depth,
+        "Depth of pipeline hierarchy tree (default: 4)", NULL},
+    {"flavour", 0, 0, G_OPTION_ARG_STRING, &flavour_str,
+        "Flavour (video|audio) controlling the kind of elements used "
+          "(default: audio)", NULL},
+    {NULL}
+  };
+  GError *err = NULL;
   GstBin *bin;
   GstClockTime start, end;
   GstElement *sink, *new_sink;
 
-  /* default parameters */
-  gint depth = 4;
-  gint children = 3;
-  gint flavour = FLAVOUR_AUDIO;
-  const gchar *flavour_str = "audio";
-
-  gst_init (&argc, &argv);
+  g_set_prgname ("capsnego");
 
   /* check command line options */
-  if (argc) {
-    gint arg;
-    for (arg = 0; arg < argc; arg++) {
-      if (!strcmp (argv[arg], "-d")) {
-        arg++;
-        if (arg < argc)
-          depth = atoi (argv[arg]);
-      } else if (!strcmp (argv[arg], "-c")) {
-        arg++;
-        if (arg < argc)
-          children = atoi (argv[arg]);
-      } else if (!strcmp (argv[arg], "-f")) {
-        arg++;
-        if (arg < argc) {
-          flavour_str = argv[arg];
-          switch (*flavour_str) {
-            case 'a':
-              flavour = FLAVOUR_AUDIO;
-              break;
-            case 'v':
-              flavour = FLAVOUR_VIDEO;
-              break;
-            default:
-              break;
-          }
-        }
-      }
-    }
+  ctx = g_option_context_new ("");
+  g_option_context_add_main_entries (ctx, options, NULL);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+    g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+    return 1;
   }
+  g_option_context_free (ctx);
+
+  if (strcmp (flavour_str, "video") == 0)
+    flavour = FLAVOUR_VIDEO;
 
   /* build pipeline */
   g_print ("building %s pipeline with depth = %d and children = %d\n",
