@@ -38,6 +38,28 @@ G_BEGIN_DECLS
 typedef struct _GstMultiUDPSink GstMultiUDPSink;
 typedef struct _GstMultiUDPSinkClass GstMultiUDPSinkClass;
 
+#if GLIB_CHECK_VERSION (2, 43, 2)
+#define HAVE_G_SOCKET_SEND_MESSAGES
+#endif
+
+#ifndef HAVE_G_SOCKET_SEND_MESSAGES
+/* same as GOutputMessage used for g_socket_send_messages() */
+typedef struct {
+  /*< private >*/
+  GSocketAddress         *address;
+
+  GOutputVector          *vectors;
+  guint                   num_vectors;
+
+  guint                   bytes_sent;
+
+  GSocketControlMessage **control_messages;
+  guint                   num_control_messages;
+} GstOutputMessage;
+#else
+typedef GOutputMessage GstOutputMessage;
+#endif /* HAVE_G_SOCKET_SEND_MESSAGES*/
+
 typedef struct {
   gint ref_count;         /* for memory management */
   gint add_count;         /* how often this address has been added */
@@ -61,6 +83,7 @@ struct _GstMultiUDPSink {
   GSocket       *used_socket, *used_socket_v6;
   GCancellable  *cancellable;
 
+  /* client management */
   GMutex         client_lock;
   GList         *clients;
   guint          num_v4_unique;  /* number IPv4 clients (excluding duplicates) */
@@ -68,6 +91,7 @@ struct _GstMultiUDPSink {
   guint          num_v6_unique;  /* number IPv6 clients (excluding duplicates) */
   guint          num_v6_all;     /* number IPv6 clients (including duplicates) */
 
+  /* pre-allocated scrap space for render function */
   GOutputVector *vec;
   GstMapInfo *map;
 
