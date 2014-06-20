@@ -168,7 +168,11 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
       GST_WARNING_OBJECT (scenario, "Could not query duration");
       return FALSE;
     }
-    *value = ((double) (duration / GST_SECOND));
+
+    if (!GST_CLOCK_TIME_IS_VALID (duration))
+      *value = G_MAXDOUBLE;
+    else
+      *value = ((double) duration / GST_SECOND);
 
     return TRUE;
   } else if (!g_strcmp0 (name, "position")) {
@@ -179,7 +183,12 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
       GST_WARNING_OBJECT (scenario, "Could not query position");
       return FALSE;
     }
-    *value = ((double) position / GST_SECOND);
+
+    if (!GST_CLOCK_TIME_IS_VALID (position))
+      *value = G_MAXDOUBLE;
+    else
+      *value = ((double) position / GST_SECOND);
+
 
     return TRUE;
   }
