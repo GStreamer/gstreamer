@@ -6,13 +6,6 @@ lib_LTLIBRARIES = libgstbadvideo-@GST_API_VERSION@.la
 
 CLEANFILES =
 
-# headers we need but don't want installed
-noinst_HEADERS = \
-	gstvideoaggregatorpad.h \
-	gstvideoaggregator.h \
-	videoconvert.h \
-	gstcms.h
-
 libgstbadvideo_@GST_API_VERSION@_la_SOURCES = \
 	videoconvert.c gstvideoaggregator.c gstcms.c
 
@@ -20,6 +13,7 @@ nodist_libgstbadvideo_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
 libgstbadvideo_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/video
 libgstbadvideo_@GST_API_VERSION@include_HEADERS = \
+	gstvideoaggregatorpad.h \
 	gstvideoaggregator.h
 
 nodist_libgstbadvideo_@GST_API_VERSION@include_HEADERS = $(built_headers)
