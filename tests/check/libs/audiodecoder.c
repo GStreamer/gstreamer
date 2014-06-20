@@ -44,6 +44,7 @@ struct _GstAudioDecoderTester
   GstAudioDecoder parent;
 
   gboolean setoutputformat_on_decoding;
+  gboolean output_too_many_frames;
 };
 
 struct _GstAudioDecoderTesterClass
@@ -129,7 +130,11 @@ gst_audio_decoder_tester_handle_frame (GstAudioDecoder * dec,
 
   gst_buffer_unmap (buffer, &map);
 
-  return gst_audio_decoder_finish_frame (dec, output_buffer, 1);
+  if (tester->output_too_many_frames) {
+    return gst_audio_decoder_finish_frame (dec, output_buffer, 2);
+  } else {
+    return gst_audio_decoder_finish_frame (dec, output_buffer, 1);
+  }
 }
 
 static void
@@ -582,6 +587,63 @@ GST_START_TEST (audiodecoder_buffer_after_segment)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (audiodecoder_output_too_many_frames)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint64 i;
+
+  setup_audiodecodertester ();
+
+  ((GstAudioDecoderTester *) dec)->output_too_many_frames = TRUE;
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push buffers, the data is actually a number so we can track them */
+  for (i = 0; i < 3; i++) {
+    GstMapInfo map;
+    guint64 num;
+
+    buffer = create_test_buffer (i);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+    /* check that buffer was received by our source pad */
+    buffer = buffers->data;
+
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+    num = *(guint64 *) map.data;
+    fail_unless_equals_uint64 (i, num);
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer),
+        gst_util_uint64_scale_round (i, GST_SECOND, TEST_MSECS_PER_SAMPLE));
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buffer),
+        gst_util_uint64_scale_round (1, GST_SECOND, TEST_MSECS_PER_SAMPLE));
+
+    gst_buffer_unmap (buffer, &map);
+
+    gst_buffer_unref (buffer);
+    buffers = g_list_delete_link (buffers, buffers);
+  }
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless (buffers == NULL);
+
+  cleanup_audiodecodertest ();
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_audiodecoder_suite (void)
 {
@@ -595,6 +657,7 @@ gst_audiodecoder_suite (void)
   tcase_add_test (tc, audiodecoder_negotiation_with_gap_event);
   tcase_add_test (tc, audiodecoder_delayed_negotiation_with_gap_event);
   tcase_add_test (tc, audiodecoder_buffer_after_segment);
+  tcase_add_test (tc, audiodecoder_output_too_many_frames);
 
   return s;
 }
