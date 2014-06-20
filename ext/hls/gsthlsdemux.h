@@ -102,6 +102,8 @@ struct _GstHLSDemux
                               * the last buffer can only be pushed when
                               * resized, so need to store and wait for
                               * EOS to know it is the last */
+
+  gboolean reset_pts;
 };
 
 struct _GstHLSDemuxClass

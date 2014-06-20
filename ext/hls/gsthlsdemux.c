@@ -436,6 +436,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 
   GST_M3U8_CLIENT_LOCK (hlsdemux->client);
   GST_DEBUG_OBJECT (demux, "seeking to sequence %u", (guint) current_sequence);
+  hlsdemux->reset_pts = TRUE;
   hlsdemux->client->sequence = current_sequence;
   hlsdemux->client->sequence_position = current_pos;
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
@@ -460,6 +461,8 @@ gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
 
   /* only 1 output supported */
   gst_adaptive_demux_stream_new (demux, gst_hls_demux_create_pad (hlsdemux));
+
+  hlsdemux->reset_pts = TRUE;
 
   return TRUE;
 }
@@ -725,6 +728,7 @@ gst_hls_demux_advance_fragment (GstAdaptiveDemuxStream * stream)
 
   gst_m3u8_client_advance_fragment (hlsdemux->client,
       stream->demux->segment.rate > 0);
+  hlsdemux->reset_pts = FALSE;
   return GST_FLOW_OK;
 }
 
@@ -748,8 +752,12 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
   }
 
   /* set up our source for download */
-  stream->fragment.timestamp = timestamp;
-  stream->fragment.duration = duration;
+  if (hlsdemux->reset_pts) {
+    stream->fragment.timestamp = timestamp;
+  } else {
+    stream->fragment.timestamp = GST_CLOCK_TIME_NONE;
+  }
+
   if (hlsdemux->current_key)
     g_free (hlsdemux->current_key);
   hlsdemux->current_key = key;
@@ -799,6 +807,7 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
   GstHLSDemux *demux = GST_HLS_DEMUX_CAST (ademux);
 
   demux->do_typefind = TRUE;
+  demux->reset_pts = TRUE;
 
   g_free (demux->key_url);
   demux->key_url = NULL;
@@ -1017,6 +1026,9 @@ retry:
       target_pos = stream->segment.position;
     } else {
       target_pos = 0;
+    }
+    if (GST_CLOCK_TIME_IS_VALID (demux->client->sequence_position)) {
+      target_pos = MAX (target_pos, demux->client->sequence_position);
     }
 
     current_pos = 0;
