@@ -22,6 +22,11 @@
 #ifndef __GSTURI_DOWNLOADER_H__
 #define __GSTURI_DOWNLOADER_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The UriDownloaded library from gst-plugins-bad is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <glib-object.h>
 #include <gst/gst.h>
 #include "gstfragment.h"
