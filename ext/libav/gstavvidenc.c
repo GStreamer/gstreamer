@@ -463,7 +463,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
     gst_caps_unref (icaps);
     goto unsupported_codec;
   }
-  icaps = gst_caps_truncate (icaps);
+  icaps = gst_caps_fixate (icaps);
 
   GST_DEBUG_OBJECT (ffmpegenc, "codec flags 0x%08x", ffmpegenc->context->flags);
 
