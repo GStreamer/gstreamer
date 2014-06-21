@@ -34,7 +34,6 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglcontext.h \
 	gstglmemory.h \
 	gstglbufferpool.h \
-	gstgles2.h \
 	gstglfilter.h \
 	gstglmixer.h \
 	gstglmixerpad.h \

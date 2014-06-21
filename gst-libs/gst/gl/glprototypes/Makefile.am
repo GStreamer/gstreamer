@@ -10,5 +10,6 @@ prototype_HEADERS = \
 	gles.h \
 	opengl.h \
 	shaders.h \
-	gstgl_compat.h
+	gstgl_compat.h \
+	gstgl_gles2compat.h
 

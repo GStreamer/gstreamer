@@ -62,7 +62,7 @@
 #  include <GLES2/gl2ext.h>
 # endif
 # if !GST_GL_HAVE_OPENGL
-#  include <gst/gl/gstgles2.h>
+#  include <gst/gl/glprototypes/gstgl_gles2compat.h>
 # endif
 #endif
 
