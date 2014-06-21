@@ -744,7 +744,7 @@ _request_new_pad (GstElement * element,
   self = GST_AGGREGATOR (element);
 
   if (templ == gst_element_class_get_pad_template (klass, "sink_%u")) {
-    guint serial = 0;
+    gint serial = 0;
     gchar *name = NULL;
 
     GST_OBJECT_LOCK (element);
@@ -756,7 +756,7 @@ _request_new_pad (GstElement * element,
       /* parse serial number from requested padname */
       serial = g_ascii_strtoull (&req_name[5], NULL, 10);
       if (serial >= priv->padcount)
-        priv->padcount = serial + 1;
+        priv->padcount = serial;
     }
 
     name = g_strdup_printf ("sink_%u", priv->padcount);
