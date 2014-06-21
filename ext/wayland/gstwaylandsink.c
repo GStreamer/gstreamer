@@ -477,7 +477,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     goto invalid_format;
 
   format = gst_video_format_to_wayland_format (GST_VIDEO_INFO_FORMAT (&info));
-  if (format == -1)
+  if ((gint) format == -1)
     goto invalid_format;
 
   /* verify we support the requested format */
