@@ -630,7 +630,7 @@ gst_pulse_device_new (guint device_index, const gchar * device_name,
 
 
   gstdev = g_object_new (GST_TYPE_PULSE_DEVICE,
-      "display-name", device_name, "caps", caps, "klass", klass,
+      "display-name", device_name, "caps", caps, "device-class", klass,
       "internal-name", internal_name, NULL);
 
   gstdev->type = type;

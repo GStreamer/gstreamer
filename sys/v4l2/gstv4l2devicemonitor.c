@@ -458,7 +458,7 @@ gst_v4l2_device_new (const gchar * device_path, const gchar * device_name,
   }
 
   gstdev = g_object_new (GST_TYPE_V4L2_DEVICE, "device-path", device_path,
-      "display-name", device_name, "caps", caps, "klass", klass, NULL);
+      "display-name", device_name, "caps", caps, "device-class", klass, NULL);
 
   gstdev->element = element;
 
