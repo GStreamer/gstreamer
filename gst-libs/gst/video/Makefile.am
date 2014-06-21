@@ -18,7 +18,13 @@ libgstbadvideo_@GST_API_VERSION@include_HEADERS = \
 
 nodist_libgstbadvideo_@GST_API_VERSION@include_HEADERS = $(built_headers)
 
-libgstbadvideo_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ORC_CFLAGS) -I$(top_builddir)/gst-libs
+libgstbadvideo_@GST_API_VERSION@_la_CFLAGS = \
+	-I$(top_srcdir)/gst-libs \
+	-I$(top_builddir)/gst-libs \
+	$(GST_CFLAGS) $(ORC_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS)
+
 libgstbadvideo_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS) -lgstvideo-$(GST_API_VERSION)\
 	$(top_builddir)/gst-libs/gst/base/libgstbadbase-$(GST_API_VERSION).la
 libgstbadvideo_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
