@@ -115,7 +115,7 @@ typedef struct _TSDemuxStream TSDemuxStream;
 
 typedef struct _TSDemuxH264ParsingInfos TSDemuxH264ParsingInfos;
 
-/* Return offset of a keyframe if found, otherwise either KEYFRAME_SCAN_NOT_FOUND or KEYFRAME_SCAN_NEED_MORE_DATA */
+/* Return offset of a keyframe if found */
 typedef gboolean (*GstTsDemuxKeyFrameScanFunction) (TSDemuxStream * stream,
     guint8 * data, const gsize data_size, const gsize max_frame_offset);
 
@@ -568,12 +568,6 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
   return res;
 
 }
-
-/* no keyframe found in the data */
-static const gint64 KEYFRAME_SCAN_NOT_FOUND = -1;
-
-/* the function needs more data to finish scanning a frame that begins before max_frame_offset */
-static const gint64 KEYFRAME_SCAN_NEED_MORE_DATA = -2;
 
 static void
 clear_simple_buffer (SimpleBuffer * sbuf)
