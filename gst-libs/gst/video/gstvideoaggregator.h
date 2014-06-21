@@ -21,6 +21,11 @@
 #ifndef __GST_VIDEO_AGGREGATOR_H__
 #define __GST_VIDEO_AGGREGATOR_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The Video library from gst-plugins-bad is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/base/gstaggregator.h>

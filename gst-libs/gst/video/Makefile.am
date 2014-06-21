@@ -19,6 +19,7 @@ libgstbadvideo_@GST_API_VERSION@include_HEADERS = \
 nodist_libgstbadvideo_@GST_API_VERSION@include_HEADERS = $(built_headers)
 
 libgstbadvideo_@GST_API_VERSION@_la_CFLAGS = \
+	-DGST_USE_UNSTABLE_API \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
 	$(GST_CFLAGS) $(ORC_CFLAGS) \
