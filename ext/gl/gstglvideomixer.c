@@ -81,6 +81,9 @@ static const gchar *video_mixer_v_src =
 
 /* fragment source */
 static const gchar *video_mixer_f_src =
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
     "uniform sampler2D texture;                     \n"
     "uniform float alpha;\n"
     "varying vec2 v_texCoord;                            \n"
