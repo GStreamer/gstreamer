@@ -3,7 +3,7 @@
   <description>All libav codecs and formats (local snapshot)</description>
   <filename>../../ext/libav/.libs/libgstlibav.so</filename>
   <basename>libgstlibav.so</basename>
-  <version>1.3.2</version>
+  <version>1.3.3</version>
   <license>GPL</license>
   <source>gst-libav</source>
   <package>libav</package>
@@ -3191,7 +3191,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)[ 4, 5 ]; video/x-xvid; video/x-3ivx</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)[ 4, 5 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7109,7 +7109,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)5</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, profile=(string){ simple, advanced-simple }; video/x-divx, divxversion=(int)5</details>
         </caps>
       </pads>
     </element>
@@ -7781,7 +7781,7 @@
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)5; video/x-h263, width=(int)352, height=(int)288, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)704, height=(int)576, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)176, height=(int)144, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)1408, height=(int)1152, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)128, height=(int)96, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, variant=(string)itu, h263version=(string)h263p; video/x-h264, alignment=(string)au</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, profile=(string){ simple, advanced-simple }; video/x-divx, divxversion=(int)5; video/x-h263, width=(int)352, height=(int)288, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)704, height=(int)576, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)176, height=(int)144, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)1408, height=(int)1152, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)128, height=(int)96, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, variant=(string)itu, h263version=(string)h263p; video/x-h264, alignment=(string)au</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7808,7 +7808,7 @@
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)5; video/x-h263, width=(int)352, height=(int)288, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)704, height=(int)576, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)176, height=(int)144, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)1408, height=(int)1152, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)128, height=(int)96, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, variant=(string)itu, h263version=(string)h263p; video/x-h264, alignment=(string)au</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, profile=(string){ simple, advanced-simple }; video/x-divx, divxversion=(int)5; video/x-h263, width=(int)352, height=(int)288, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)704, height=(int)576, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)176, height=(int)144, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)1408, height=(int)1152, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)128, height=(int)96, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, variant=(string)itu, h263version=(string)h263p; video/x-h264, alignment=(string)au</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8009,7 +8009,7 @@
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)5</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, profile=(string){ simple, advanced-simple }; video/x-divx, divxversion=(int)5</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8426,7 +8426,7 @@
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)5</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, profile=(string){ simple, advanced-simple }; video/x-divx, divxversion=(int)5</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8501,7 +8501,7 @@
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-svq, svqversion=(int)1; video/x-svq, svqversion=(int)3; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)5; video/x-h263, width=(int)352, height=(int)288, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)704, height=(int)576, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)176, height=(int)144, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)1408, height=(int)1152, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)128, height=(int)96, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, variant=(string)itu, h263version=(string)h263p; video/x-h264, alignment=(string)au; video/x-dv, width=(int)720, height=(int)480, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)8/9, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)480, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)32/27, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)480, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)8/9, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)480, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)32/27, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)16/15, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)64/45, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)16/15, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)64/45, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)16/15, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)64/45, systemstream=(boolean)false; video/x-dv, width=(int)1280, height=(int)1080, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)1/1, systemstream=(boolean)false; video/x-dv, width=(int)1280, height=(int)1080, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)3/2, systemstream=(boolean)false; video/x-dv, width=(int)1440, height=(int)1080, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)1/1, systemstream=(boolean)false; video/x-dv, width=(int)1440, height=(int)1080, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)4/3, systemstream=(boolean)false; video/x-dv, width=(int)960, height=(int)720, framerate=(fraction)60000/1001, pixel-aspect-ratio=(fraction)1/1, systemstream=(boolean)false; video/x-dv, width=(int)960, height=(int)720, framerate=(fraction)60000/1001, pixel-aspect-ratio=(fraction)4/3, systemstream=(boolean)false; video/x-dv, width=(int)960, height=(int)720, framerate=(fraction)50/1, pixel-aspect-ratio=(fraction)1/1, systemstream=(boolean)false; video/x-dv, width=(int)960, height=(int)720, framerate=(fraction)50/1, pixel-aspect-ratio=(fraction)4/3, systemstream=(boolean)false; image/jpeg, parsed=(boolean)true</details>
+          <details>video/x-svq, svqversion=(int)1; video/x-svq, svqversion=(int)3; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, profile=(string){ simple, advanced-simple }; video/x-divx, divxversion=(int)5; video/x-h263, width=(int)352, height=(int)288, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)704, height=(int)576, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)176, height=(int)144, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)1408, height=(int)1152, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, width=(int)128, height=(int)96, framerate=(fraction)[ 0/1, 2147483647/1 ], variant=(string)itu, h263version=(string)h263; video/x-h263, variant=(string)itu, h263version=(string)h263p; video/x-h264, alignment=(string)au; video/x-dv, width=(int)720, height=(int)480, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)8/9, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)480, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)32/27, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)480, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)8/9, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)480, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)32/27, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)16/15, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)64/45, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)16/15, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)64/45, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)16/15, systemstream=(boolean)false; video/x-dv, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)64/45, systemstream=(boolean)false; video/x-dv, width=(int)1280, height=(int)1080, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)1/1, systemstream=(boolean)false; video/x-dv, width=(int)1280, height=(int)1080, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)3/2, systemstream=(boolean)false; video/x-dv, width=(int)1440, height=(int)1080, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)1/1, systemstream=(boolean)false; video/x-dv, width=(int)1440, height=(int)1080, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)4/3, systemstream=(boolean)false; video/x-dv, width=(int)960, height=(int)720, framerate=(fraction)60000/1001, pixel-aspect-ratio=(fraction)1/1, systemstream=(boolean)false; video/x-dv, width=(int)960, height=(int)720, framerate=(fraction)60000/1001, pixel-aspect-ratio=(fraction)4/3, systemstream=(boolean)false; video/x-dv, width=(int)960, height=(int)720, framerate=(fraction)50/1, pixel-aspect-ratio=(fraction)1/1, systemstream=(boolean)false; video/x-dv, width=(int)960, height=(int)720, framerate=(fraction)50/1, pixel-aspect-ratio=(fraction)4/3, systemstream=(boolean)false; image/jpeg, parsed=(boolean)true</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8576,7 +8576,7 @@
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)5; video/x-h264, alignment=(string)au; image/jpeg, parsed=(boolean)true</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, profile=(string){ simple, advanced-simple }; video/x-divx, divxversion=(int)5; video/x-h264, alignment=(string)au; image/jpeg, parsed=(boolean)true</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8732,7 +8732,7 @@
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)5</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, profile=(string){ simple, advanced-simple }; video/x-divx, divxversion=(int)5</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8801,7 +8801,7 @@
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)5</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, profile=(string){ simple, advanced-simple }; video/x-divx, divxversion=(int)5</details>
         </caps>
         <caps>
           <name>src</name>
