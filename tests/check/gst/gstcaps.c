@@ -1133,6 +1133,26 @@ GST_START_TEST (test_features)
 
 GST_END_TEST;
 
+GST_START_TEST (test_special_caps)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_new_any ();
+  fail_unless (gst_caps_is_any (caps));
+  fail_unless (gst_caps_is_any (caps) == TRUE);
+  fail_if (gst_caps_is_empty (caps));
+  fail_unless (gst_caps_is_empty (caps) == FALSE);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_empty ();
+  fail_if (gst_caps_is_any (caps));
+  fail_unless (gst_caps_is_any (caps) == FALSE);
+  fail_unless (gst_caps_is_empty (caps));
+  fail_unless (gst_caps_is_empty (caps) == TRUE);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
 static Suite *
 gst_caps_suite (void)
 {
@@ -1161,6 +1181,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_normalize);
   tcase_add_test (tc_chain, test_broken);
   tcase_add_test (tc_chain, test_features);
+  tcase_add_test (tc_chain, test_special_caps);
 
   return s;
 }
