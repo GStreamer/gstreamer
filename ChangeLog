@@ -1,9 +1,804 @@
-=== release 1.3.2 ===
+=== release 1.3.3 ===
 
-2014-05-21  Sebastian Dröge <slomo@coaxion.net>
+2014-06-22  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.2
+	  releasing 1.3.3
+
+2014-06-22 14:23:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/hu.po:
+	* po/id.po:
+	* po/sr.po:
+	* po/zh_TW.po:
+	  po: Update translations
+
+2014-06-22 12:52:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstcaps.c:
+	  tests: add unit test for gst_caps_is_any() and _is_empty()
+	  https://bugzilla.gnome.org//show_bug.cgi?id=731704
+
+2014-06-22 12:50:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstcaps.c:
+	  caps: gst_caps_is_any() should return TRUE or FALSE
+	  Not some flag value instead of TRUE. Fixes code like
+	  gst_caps_is_any() == TRUE.
+	  https://bugzilla.gnome.org//show_bug.cgi?id=731704
+
+2014-06-01 16:56:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstdevice.c:
+	* gst/gstdevice.h:
+	* win32/common/libgstreamer.def:
+	  device: rename "klass" and get_klass() to "device-class" and _get_device_class()
+	  There's some precedent in GstElementFactory, but a
+	  "klass" property just seems weird.
+
+2014-06-20 18:34:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/benchmarks/capsnego.c:
+	  benchmarks: capsnego: add --loops command line option
+	  And default to 50 loops.
+
+2014-06-20 17:14:52 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/benchmarks/capsnego.c:
+	  benchmark: capsnego: use GOptionContext for option parsing
+
+2014-06-19 12:10:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstvalue.c:
+	  tests: fix compiler warnings in gstvalue tests
+	  Calling GST_VALUE_HOLDS_*(&v) now results in a compiler
+	  warning about value!=NULL always being false, so check
+	  type directly in those cases.
+
+2014-06-17 22:45:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gsttaglist.c:
+	* gst/gstutils.c:
+	* gst/gstvalue.h:
+	  value: simplify GST_VALUE_HOLDS for our boxed and fundamental types
+	  Boxed types can't be derived from, and we don't support
+	  deriving from our special fundamental types (the code
+	  checks for GType equality in most places.
+
+2014-06-20 16:55:06 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstdevice.c:
+	* gst/gstdevice.h:
+	* gst/gstdevicemonitor.c:
+	* gst/gstdevicemonitor.h:
+	* gst/gstdevicemonitorfactory.h:
+	* gst/gstglobaldevicemonitor.c:
+	* gst/gstglobaldevicemonitor.h:
+	* gst/gstmessage.c:
+	  GstDevice: Document GstDevice and related classes
+
+2014-06-16 13:47:55 +0200  Srimanta Panda <srimanta.panda@axis.com>
+
+	* plugins/elements/gstfunnel.c:
+	* tests/check/elements/funnel.c:
+	  Fix funnel EOS handling and wrong unittest
+	  When no data is coming from sinkpads and eos events
+	  arrived at one of the sinkpad, funnel forwards the EOS
+	  event to downstream. It forwards the EOS because lastsink pad
+	  is NULL. Also the unit testcase of the funnel is not checking
+	  the correct behavior as it should. The unit test case should
+	  fail if one of the sink pad has already EOS present on it and
+	  we are trying to push one more EOS.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731716
+
+2014-06-19 08:09:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstvalue.c:
+	  gstvalue: optimise checks for lists
+	  Our fundamental types are non-derivable, so we can
+	  just check for equality. Also avoid doing the same
+	  check multiple times in a couple of places.
+
+2014-06-19 08:06:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstvalue.c:
+	  gstvalue: use g_assert() in internal function for already-checked things
+	  So these get compiled out for releases.
+
+2014-06-19 08:05:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstvalue.c:
+	  gstvalue: add internal _can_compare_unchecked()
+
+2014-06-19 08:03:37 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstvalue.c:
+	  gstvalue: add internal _list_concat() that takes ownership of input values
+	  Avoids unnecessary copies.
+
+2014-06-18 19:06:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gststructure.c:
+	  structure: simplify value type checks in getters
+	  Just check for GType equality in common cases.
+
+2014-06-19 09:29:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstvalue.c:
+	  value: Add a FIXME 2.0 for a fraction ranges optimization
+	  Currently we leak the internal representation of them as two GValues that
+	  contain a fraction. Without this we could store fraction ranges as
+	  data[0] = (min_n << 32) | (min_d)
+	  data[1] = (max_n << 32) | (max_d)
+	  and wouldn't require an additional allocation per range.
+
+2014-06-19 09:23:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstvalue.c:
+	* tests/check/gst/gstvalue.c:
+	  value: Make sure to cast int range values to guints before storing them
+	  Otherwise negative values will sets all of the 64 bits due to two's
+	  complement's definition of negative values.
+	  Also add a test for negative int ranges.
+
+2014-06-19 07:57:11 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/libgstreamer.def:
+	  win32: update exports
+
+2014-06-19 09:05:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstvalue.c:
+	  value: Store integer ranges directly in a GValue without additional allocation
+	  Micro optimization to save some allocations. Next step to do this
+	  with fraction ranges too.
+
+2014-06-19 08:43:02 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/gst_private.h:
+	  gst_private: Fix duplicate definition
+
+2014-06-19 08:05:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gst.c:
+	* gst/gst_private.h:
+	* gst/gstallocator.c:
+	* gst/gstcapsfeatures.h:
+	* gst/gstcontext.c:
+	* gst/gstcontext.h:
+	* gst/gstdatetime.c:
+	* gst/gstdatetime.h:
+	* gst/gstmemory.c:
+	* gst/gstmemory.h:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	* gst/gstquery.c:
+	* gst/gstquery.h:
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	* gst/gsttoc.c:
+	* gst/gsttoc.h:
+	  gst: Store more basic type GTypes in variables
+	  Micro optimization to change a function call to a variable access
+	  for all our basic types.
+
+2014-06-19 08:04:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstvalue.c:
+	* gst/gstvalue.h:
+	  value: Store our fundamental type GTypes in variables
+	  Micro optimization to change a function call to a variable access
+	  for all our basic types.
+
+2014-06-17 07:31:48 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/gstvalue.c:
+	  gstvalue: Speed up gst_value_intersect/_subtract
+	  Both gst_value_intersect and gst_value_subtract will call
+	  gst_value_compare if one of their arguments isn't a list.
+	  gst_value_compare will then re-do a check to see if one of
+	  the arguments is a list (for the special case of comparing a unitary
+	  value with a list of length 1).
+	  The problem is that the various G_VALUE_HOLDS represent an expensive
+	  amount of calling gst_value_compare (almost half of it) to see if
+	  the provided arguments are list. These checks can be done without
+	  when we know that the arguments aren't lists.
+	  * Create a new "nolist" gst_value_compare which avoids that special
+	  case comparision
+	  Benchmarks:
+	  valgrind/callgrind: average speedup in instruction calls for
+	  gst_value_intersect and gst_value_subtract is around 56% (Makes 63%
+	  of the calls it used to take previously)
+	  tests/benchmarks/capsnego: With default settings (depth 4, children 3
+	  607 elements), time taken for transition from READY to PAUSED:
+	  Before : 00.391519153
+	  After  : 00.220397492
+	  56% of the time previously used, +77% speedup
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731756
+
+2014-06-17 14:39:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstbufferlist.c:
+	  tests: remove some cruft from the bufferlist test
+	  Buffers no longer carry caps, and bufferlists don't have
+	  groups where buffers may need to be merged into one any more.
+
+2014-06-16 20:30:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstbufferlist.c:
+	  tests: add test for gst_buffer_list_remove()
+
+2014-06-16 20:29:56 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstbufferlist.c:
+	  bufferlist: fix buffer leak in _remove()
+
+2014-06-16 09:18:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstflowcombiner.c:
+	  flowcombiner: fix g-i transfer annotations
+
+2014-06-16 08:41:48 +0200  Edward Hervey <edward@collabora.com>
+
+	* libs/gst/base/gstflowcombiner.c:
+	  flowcombiner: Fixed GBoxedCopyFunc
+	  I'll just quote the most interesting man in the world:
+	  "I don't usually push commits, but when I do I don't compile it
+	  first"
+
+2014-06-14 16:30:49 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstdevicemonitor.h:
+	* gst/gstglobaldevicemonitor.c:
+	  devicemonitor: some docs additions and fixes
+
+2014-06-14 16:28:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/libgstbase.def:
+	  win32: add exports for new get_type() function
+
+2014-06-14 11:31:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstflowcombiner.c:
+	  flowcombiner: keep a ref to the pads we're using
+	  Needed for use via the boxed type.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731355
+
+2014-06-14 10:54:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstflowcombiner.c:
+	* libs/gst/base/gstflowcombiner.h:
+	  flowcombiner: add boxed type for bindings
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731355
+
+2014-06-11 16:28:51 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst/gstdevice.c:
+	* gst/gstdevicemonitorfactory.c:
+	* gst/gstevent.c:
+	  introspection: minor annotation additions
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731541
+
+2014-06-11 19:08:04 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst/Makefile.am:
+	  introspection: include gstversion.h in GIR generation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703021
+
+2014-06-10 10:23:13 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/base/gstbytereader.c:
+	  bytereader: Use concistant derefence method
+	  This is minor style fix to not mix *var and var[N].
+
+2014-06-10 09:35:38 -0400  Sungho Bae <baver.bae@lge.com>
+
+	* libs/gst/base/gstbytereader.c:
+	  bytereader: Use pointer instead of index access
+	  Currently the scan uses Boyer-moore method and its performance is good.
+	  but, it can be optimized from an implementation of view.
+	  The original scan code is implemented by byte array and index-based access.
+	  In _scan_for_start_code(), the index is increasing from start to end and the
+	  base address of the byte array is referred to as return value.
+	  In the case, index-based access can be replaced by pointer access, which
+	  improve the performance by removing index-related operations.
+	  Its performace is enhanced by approximately 8% on arm-based embedded devices.
+	  Although it seems trivial, it can affect the overall performance because the
+	  _scan_for_start_code() function is very often called when H.264/H.265 video is
+	  played.
+	  In addition, the technique can apply for all architectures and it is good in
+	  view of readability and maintainability.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731442
+
+2014-06-07 10:13:56 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstglobaldevicemonitor.h:
+	  globaldevicemonitor: prettify header
+
+2014-06-07 09:46:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/libs/queuearray.c:
+	  tests: add unit test for queuearray expansion from 1
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731349
+
+2014-06-06 16:36:00 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* libs/gst/base/gstqueuearray.c:
+	  queuearray: fix expanding size of queue from 1
+	  Without we would not actually expand and access
+	  memory beyond the allocated region for the array.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731349
+
+2014-06-05 16:55:15 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* libs/gst/base/gstdataqueue.c:
+	  dataqueue: clear up documentation of gst_data_queue_new
+	  The gpointer argument is passed to all three callbacks, not just one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731302
+
+2014-05-30 00:17:06 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst/gstcontrolbinding.c:
+	* gst/gstcontrolsource.c:
+	* gst/gstdevicemonitorfactory.h:
+	* gst/gstutils.c:
+	* libs/gst/base/gstdataqueue.c:
+	* libs/gst/base/gstindex.c:
+	  introspection: fix some minor annotation bugs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730982
+
+2014-06-05 12:38:20 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* libs/gst/base/gstadapter.c:
+	* libs/gst/base/gstbaseparse.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasesrc.h:
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstbasetransform.h:
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/base/gstcollectpads.h:
+	* libs/gst/base/gstdataqueue.c:
+	* libs/gst/base/gstdataqueue.h:
+	* libs/gst/base/gstindex.c:
+	* libs/gst/base/gsttypefindhelper.c:
+	* libs/gst/base/gsttypefindhelper.h:
+	  base: use correct syntax in documentation more consistently
+	  Previously, many constants were prefixed with # or unprefixed,
+	  some functions and macros were prefixed with # instead of suffixed
+	  with (), etc.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731293
+
+2014-05-07 18:26:38 +0800  zhouming <zmafox@gmail.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Pass rate of input segment to output segment
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729701
+
+2014-04-07 14:49:59 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* plugins/elements/Makefile.am:
+	* plugins/elements/gstelements_private.c:
+	* plugins/elements/gstelements_private.h:
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstidentity.c:
+	  gstbuffer: factor three flags-to-string loops
+
+2014-06-03 23:42:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstinfo.c:
+	  info: make printing datetimes work with GST_PTR_FORMAT
+
+2014-06-03 23:38:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstdatetime.c:
+	* gst/gstdatetime.h:
+	* gst/gstvalue.c:
+	* gst/gstvalue.h:
+	  datetime: change internal implementation to mini object
+	  And move type stuff from GstValue to GstDateTime.
+
+2014-06-03 22:19:33 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* plugins/elements/gstdownloadbuffer.c:
+	  downloadbuffer: fix uninitialized variable
+
+2014-06-03 22:12:13 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* docs/design/part-buffering.txt:
+	* plugins/elements/gstdownloadbuffer.c:
+	  downloadbuffer: improve start/stop in buffering query
+	  The start and stop should represent the currently downloading region.
+	  The estimated-total should represent the remaining time to download
+	  the currently downloading region. This makes it a lot more useful
+	  for applications because they can then use those values to update
+	  the fill region and use the estimated time to delay playback.
+	  Update the docs with this clarification.
+
+2014-04-07 14:35:04 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* plugins/elements/gstidentity.c:
+	  identity: add static and const where appropriate
+
+2014-04-07 14:31:17 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* plugins/elements/gstidentity.c:
+	  identity: fix potential buffer overflow
+	  Coverity 1037155
+
+2014-06-03 14:49:44 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* plugins/elements/gstdownloadbuffer.c:
+	  downloadbuffer: reset read and write positions
+	  Reset the read and write positions right after we open the file or flush
+	  it. We are also in the buffering state with 0 percent buffered when we
+	  start.
+
+2014-06-03 14:47:17 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstinfo.c:
+	  info: first handle all miniobjects, then GObjects
+	  First handle all miniobjects before we attempt to dereference the first
+	  field pointer and look at the GType. With the recent glib change to
+	  speed up G_IS_OBJECT, this causes crashes on miniobjects otherwise.
+
+2014-06-03 14:46:11 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstinfo.c:
+	  info: GstDateTime does not have a GType as first field
+	  GstDateTime does not have the GType as the first field so we can't use
+	  it to detect its type.
+
+2014-06-03 14:45:22 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstinfo.c:
+	  info: use macros to check types
+	  Use the macros to check the type of objects instead of directly poking
+	  at the first field.
+
+2014-06-01 23:51:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstglobaldevicemonitor.c:
+	  globaldevicemonitor: connect sync-message signal on the right object
+	  Fixes criticals at runtime and makes stuff actually work.
+
+2014-05-31 17:35:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Keep still meaningfull pending events on FLUSH_STOP
+	  Only EOS and segment should be deleted in that case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709868
+
+2014-05-30 09:13:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstminiobject.c:
+	  Revert "miniobject: Add missing (nullable) annotations"
+	  This reverts commit 96361e9b5c5d00dc7712ff3a9acfbe10df7cd9fe.
+	  This was not supposed to be pushed yet!
+
+2014-05-30 09:12:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbufferpool.h:
+	  bufferpool: It's pool, not poo... even when talking about flushing
+
+2014-05-28 10:14:45 +0100  Philip Withnall <philip.withnall@collabora.co.uk>
+
+	* gst/gstminiobject.c:
+	  miniobject: Add missing (nullable) annotations
+	  gst_mini_object_replace() can take NULL mini-objects.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730873
+
+2014-05-30 01:42:17 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* tests/check/elements/multiqueue.c:
+	  tests: multiqueue: fix leaks
+
+2014-05-29 14:54:34 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst/gst.c:
+	* gst/gstallocator.c:
+	* gst/gstatomicqueue.c:
+	* gst/gstbin.c:
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* gst/gstbufferlist.c:
+	* gst/gstbufferlist.h:
+	* gst/gstbufferpool.c:
+	* gst/gstbus.c:
+	* gst/gstbus.h:
+	* gst/gstcaps.c:
+	* gst/gstcaps.h:
+	* gst/gstcapsfeatures.c:
+	* gst/gstchildproxy.c:
+	* gst/gstcontext.h:
+	* gst/gstcontrolsource.c:
+	* gst/gstdatetime.c:
+	* gst/gstdevice.c:
+	* gst/gstdevicemonitorfactory.c:
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	* gst/gstelementfactory.c:
+	* gst/gsterror.c:
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* gst/gstformat.c:
+	* gst/gstghostpad.c:
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	* gst/gstiterator.c:
+	* gst/gstiterator.h:
+	* gst/gstmemory.c:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	* gst/gstmeta.c:
+	* gst/gstminiobject.c:
+	* gst/gstobject.c:
+	* gst/gstobject.h:
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* gst/gstparse.c:
+	* gst/gstparse.h:
+	* gst/gstpipeline.c:
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	* gst/gstpluginfeature.c:
+	* gst/gstpluginfeature.h:
+	* gst/gstpreset.c:
+	* gst/gstquery.c:
+	* gst/gstquery.h:
+	* gst/gstregistry.c:
+	* gst/gstsample.c:
+	* gst/gstsegment.c:
+	* gst/gststructure.c:
+	* gst/gststructure.h:
+	* gst/gsttaglist.c:
+	* gst/gsttagsetter.c:
+	* gst/gsttask.c:
+	* gst/gsttaskpool.c:
+	* gst/gsttoc.c:
+	* gst/gsttocsetter.c:
+	* gst/gsttypefind.c:
+	* gst/gsttypefindfactory.c:
+	* gst/gsturi.c:
+	* gst/gstutils.c:
+	* gst/gstvalue.c:
+	  docs: convert NULL, TRUE, and FALSE to %NULL, %TRUE, and %FALSE
+	  This should help improve documentation generated for
+	  languages other than C.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730961
+
+2014-05-30 00:13:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstobject.c:
+	  docs: fix type in GstObject docs
+
+2014-05-29 15:04:45 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst/gstbufferpool.c:
+	  bufferpool: fix gst_buffer_pool_has_option() documentation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730962
+
+2014-05-29 14:07:15 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/gstelement.c:
+	* tests/check/gst/gstelement.c:
+	  element: set pads need-parent flag to false when removing
+	  When a pad is added the need-parent flag is set to true, so when
+	  they are removed the flag should be set back to false
+	  This was preventing GstPads to be reused in elements (removed and
+	  later re-added). A unit tests was added to verify that this is
+	  working now.
+	  The use case is tsdemux that has a program-number property and
+	  allows the user to switch programs. In order to do that tsdemux
+	  will remove the pads of the current program and add from the new
+	  ones. The removed pads are kept in the demuxer for later if the
+	  user selects the old program again.
+
+2014-05-27 08:09:36 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: post buffering message when queues flush
+	  The buffering status goes back to 0, so inform the application about it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726423
+
+2014-05-29 14:39:36 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* .gitignore:
+	  gitignore: Ignore VIM swap files
+
+2014-05-27 13:36:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	  pad: two minor docs fixes
+
+2014-05-27 10:09:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstflowcombiner.h:
+	  flowcombiner: beautify headers a little
+
+2014-05-27 10:05:51 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstflowcombiner.h:
+	  docs: add GstFlowCombiner
+
+2014-05-27 09:55:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/base.h:
+	  base: include flowcombiner header from base.h
+
+2014-05-26 12:31:33 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* libs/gst/base/Makefile.am:
+	* libs/gst/base/gstflowcombiner.c:
+	* libs/gst/base/gstflowcombiner.h:
+	* tests/check/Makefile.am:
+	* tests/check/libs/.gitignore:
+	* tests/check/libs/flowcombiner.c:
+	* win32/common/libgstbase.def:
+	  flowcombiner: add GstFlowCombiner
+	  Adds a utility struct that is capable of storing and aggregating flow returns
+	  associated with pads.
+	  This way all demuxers will have a standard function to use and have the
+	  same expected results.
+	  Includes tests.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709224
+
+2014-05-23 13:25:35 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* tests/check/gst/gstpad.c:
+	* win32/common/libgstreamer.def:
+	  pad: store last flow return and provide acessor function
+	  Stores the last result of a gst_pad_push or a pull on the GstPad and provides
+	  a getter and a macro to access this field.
+	  Whenever the pad is inactive it is set to FLUSHING
+	  API: gst_pad_get_last_flow_return
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709224
+
+2014-05-23 15:26:59 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbufferpool.c:
+	* gst/gstbufferpool.h:
+	* tests/check/gst/gstbufferpool.c:
+	* win32/common/libgstreamer.def:
+	  bufferpool: Add method and virtuals to set flushing state
+	  Currently there is no other way to unlock a buffer pool other then
+	  stopping it. This may have the effect of freeing all the buffers,
+	  which is too heavy for a seek. This patch add a method to enter and
+	  leave flushing state. As a convenience, flush_start/flush_stop
+	  virtual are added so pool implementation can also unblock their own
+	  internal poll atomically with the rest of the pool.  This is fully
+	  backward compatible with doing stop/start to actually flush the pool
+	  (as being done in GstBaseSrc).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727611
+
+2014-05-26 14:23:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: Passthrough ALLOCATION queries in passthrough mode even if we had no caps yet
+	  Or if the element does not care about caps at all.
+	  Also remove an assigned but unused local variable.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710268
+
+2014-05-25 16:10:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: update
+
+2014-05-25 16:57:59 +0200  Piotr Drąg <piotrdrag@gmail.com>
+
+	* po/POTFILES.in:
+	  po: update POTFILES
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730718
+
+2014-05-21 13:23:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.3.2 ===
+
+2014-05-21 13:06:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.3.2
+
+2014-05-21 11:39:53 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-05-21 10:50:43 +0200  Sebastian Dröge <sebastian@centricular.com>
 
