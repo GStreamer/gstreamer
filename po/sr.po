@@ -1,14 +1,14 @@
 # Serbian translation of gst-plugins
-# Copyright (C) 2004 Free Software Foundation, Inc.
+# Copyright (C) 2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011, 2013.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.1.4\n"
+"Project-Id-Version: gst-plugins-bad-1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:31+0200\n"
-"PO-Revision-Date: 2013-10-04 11:47+0200\n"
+"POT-Creation-Date: 2014-06-22 14:25+0200\n"
+"PO-Revision-Date: 2014-06-18 19:15+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Project-Style: gnome\n"
 
 msgid "Could not read title information for DVD."
 msgstr "Не могу да прочитам информације о наслову ДВД-а."
@@ -54,9 +53,8 @@ msgstr "Унутрашња грешка тока података."
 msgid "Couldn't download fragments"
 msgstr "Не могу да преузмем одломке"
 
-#, fuzzy
 msgid "Could not open sndfile stream for reading."
-msgstr "Не могу да отворим датотеку „%s“ за читање."
+msgstr "Не могу да отворим ток датотеке звука за читање."
 
 msgid "No file name specified for writing."
 msgstr "Није наведен назив датотеке за упис."
@@ -116,9 +114,9 @@ msgstr "Не могу да отворим управљачки уређај „%
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не могу да добавим подешавања са управљачког уређаја „%s“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Не могу да добавим подешавања са управљачког уређаја „%s“."
+msgstr "Не могу да нумеришем системе доставе са управљачког уређаја „%s“."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."

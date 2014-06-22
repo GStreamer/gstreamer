@@ -1,4 +1,4 @@
-# German po for gst-plugins-bad 1.1.4
+# German po for gst-plugins-bad 1.3.2
 # Copyright (C) 2007 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Andre Klapper <ak-47@gmx.net>, 2008.
@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.1.4\n"
+"Project-Id-Version: gst-plugins-bad 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:31+0200\n"
-"PO-Revision-Date: 2013-09-21 13:34+0100\n"
+"POT-Creation-Date: 2014-06-22 14:25+0200\n"
+"PO-Revision-Date: 2014-05-22 18:27+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -55,9 +55,8 @@ msgstr "Interner Datenstromfehler."
 msgid "Couldn't download fragments"
 msgstr "Fragmente konnten nicht heruntergeladen werden"
 
-#, fuzzy
 msgid "Could not open sndfile stream for reading."
-msgstr "Datei »%s« konnte nicht zum Lesen geöffnet werden."
+msgstr "sndfile-Datenstrom konnte nicht zum Lesen geöffnet werden."
 
 msgid "No file name specified for writing."
 msgstr "Kein Dateiname zum Schreiben angegeben."
@@ -122,10 +121,10 @@ msgid "Could not get settings from frontend device \"%s\"."
 msgstr ""
 "Einstellungen des Frontend-Geräts »%s« konnten nicht aufgerufen werden."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr ""
-"Einstellungen des Frontend-Geräts »%s« konnten nicht aufgerufen werden."
+"Ausliefersystem des Frontend-Geräts »%s« kann nicht durchgezählt werden."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."

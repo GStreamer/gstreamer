@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-bad.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2013.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.1.4\n"
+"Project-Id-Version: gst-plugins-bad 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:31+0200\n"
-"PO-Revision-Date: 2013-09-15 11:29+0200\n"
+"POT-Creation-Date: 2014-06-22 14:25+0200\n"
+"PO-Revision-Date: 2014-05-22 18:34+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -50,9 +50,8 @@ msgstr "Błąd wewnętrzny strumienia danych."
 msgid "Couldn't download fragments"
 msgstr "Nie udało się pobrać fragmentów"
 
-#, fuzzy
 msgid "Could not open sndfile stream for reading."
-msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
+msgstr "Nie udało się otworzyć strumienia sndfile do odczytu."
 
 msgid "No file name specified for writing."
 msgstr "Nie określono nazwy pliku do zapisu."
@@ -113,9 +112,10 @@ msgstr "Nie udało się otworzyć urządzenia frontendu \"%s\"."
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nie udało się pobrać ustawień z urządzenia frontendu \"%s\"."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Nie udało się pobrać ustawień z urządzenia frontendu \"%s\"."
+msgstr ""
+"Nie można wyliczyć systemów dostarczania z urządzenia frontendu \"%s\"."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
