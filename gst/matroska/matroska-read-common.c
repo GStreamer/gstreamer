@@ -50,11 +50,11 @@ GST_DEBUG_CATEGORY (matroskareadcommon_debug);
 #define GST_CAT_DEFAULT matroskareadcommon_debug
 
 #define DEBUG_ELEMENT_START(common, ebml, element) \
-    GST_DEBUG_OBJECT (common, "Parsing " element " element at offset %" \
+    GST_DEBUG_OBJECT (common->sinkpad, "Parsing " element " element at offset %" \
         G_GUINT64_FORMAT, gst_ebml_read_get_pos (ebml))
 
 #define DEBUG_ELEMENT_STOP(common, ebml, element, ret) \
-    GST_DEBUG_OBJECT (common, "Parsing " element " element " \
+    GST_DEBUG_OBJECT (common->sinkpad, "Parsing " element " element " \
         " finished with '%s'", gst_flow_get_name (ret))
 
 #define GST_MATROSKA_TOC_UID_CHAPTER "chapter"
@@ -453,8 +453,8 @@ gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
     gint i;
 
     /* hm, already sent, no need to cache and wait anymore */
-    GST_DEBUG_OBJECT (common, "Sending late global tags %" GST_PTR_FORMAT,
-        taglist);
+    GST_DEBUG_OBJECT (common->sinkpad,
+        "Sending late global tags %" GST_PTR_FORMAT, taglist);
 
     for (i = 0; i < common->src->len; i++) {
       GstMatroskaTrackContext *stream;
@@ -474,7 +474,7 @@ gst_matroska_read_common_get_length (GstMatroskaReadCommon * common)
 
   if (!gst_pad_peer_query_duration (common->sinkpad, GST_FORMAT_BYTES,
           &end) || end < 0)
-    GST_DEBUG_OBJECT (common, "no upstream length");
+    GST_DEBUG_OBJECT (common->sinkpad, "no upstream length");
 
   return end;
 }
@@ -506,11 +506,11 @@ gst_matroska_read_common_parse_skip (GstMatroskaReadCommon * common,
     GstEbmlRead * ebml, const gchar * parent_name, guint id)
 {
   if (id == GST_EBML_ID_VOID) {
-    GST_DEBUG_OBJECT (common, "Skipping EBML Void element");
+    GST_DEBUG_OBJECT (common->sinkpad, "Skipping EBML Void element");
   } else if (id == GST_EBML_ID_CRC32) {
-    GST_DEBUG_OBJECT (common, "Skipping EBML CRC32 element");
+    GST_DEBUG_OBJECT (common->sinkpad, "Skipping EBML CRC32 element");
   } else {
-    GST_WARNING_OBJECT (common,
+    GST_WARNING_OBJECT (common->sinkpad,
         "Unknown %s subelement 0x%x - ignoring", parent_name, id);
   }
 
@@ -545,42 +545,46 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
     switch (id) {
       case GST_MATROSKA_ID_FILEDESCRIPTION:
         if (description) {
-          GST_WARNING_OBJECT (common, "FileDescription can only appear once");
+          GST_WARNING_OBJECT (common->sinkpad,
+              "FileDescription can only appear once");
           break;
         }
 
         ret = gst_ebml_read_utf8 (ebml, &id, &description);
-        GST_DEBUG_OBJECT (common, "FileDescription: %s",
+        GST_DEBUG_OBJECT (common->sinkpad, "FileDescription: %s",
             GST_STR_NULL (description));
         break;
       case GST_MATROSKA_ID_FILENAME:
         if (filename) {
-          GST_WARNING_OBJECT (common, "FileName can only appear once");
+          GST_WARNING_OBJECT (common->sinkpad, "FileName can only appear once");
           break;
         }
 
         ret = gst_ebml_read_utf8 (ebml, &id, &filename);
 
-        GST_DEBUG_OBJECT (common, "FileName: %s", GST_STR_NULL (filename));
+        GST_DEBUG_OBJECT (common->sinkpad, "FileName: %s",
+            GST_STR_NULL (filename));
         break;
       case GST_MATROSKA_ID_FILEMIMETYPE:
         if (mimetype) {
-          GST_WARNING_OBJECT (common, "FileMimeType can only appear once");
+          GST_WARNING_OBJECT (common->sinkpad,
+              "FileMimeType can only appear once");
           break;
         }
 
         ret = gst_ebml_read_ascii (ebml, &id, &mimetype);
-        GST_DEBUG_OBJECT (common, "FileMimeType: %s", GST_STR_NULL (mimetype));
+        GST_DEBUG_OBJECT (common->sinkpad, "FileMimeType: %s",
+            GST_STR_NULL (mimetype));
         break;
       case GST_MATROSKA_ID_FILEDATA:
         if (data) {
-          GST_WARNING_OBJECT (common, "FileData can only appear once");
+          GST_WARNING_OBJECT (common->sinkpad, "FileData can only appear once");
           break;
         }
 
         ret = gst_ebml_read_binary (ebml, &id, &data, &datalen);
-        GST_DEBUG_OBJECT (common, "FileData of size %" G_GUINT64_FORMAT,
-            datalen);
+        GST_DEBUG_OBJECT (common->sinkpad,
+            "FileData of size %" G_GUINT64_FORMAT, datalen);
         break;
 
       default:
@@ -603,7 +607,7 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
     GstCaps *caps = NULL;
     gchar *filename_lc = g_utf8_strdown (filename, -1);
 
-    GST_DEBUG_OBJECT (common, "Creating tag for attachment with "
+    GST_DEBUG_OBJECT (common->sinkpad, "Creating tag for attachment with "
         "filename '%s', mimetype '%s', description '%s', "
         "size %" G_GUINT64_FORMAT, filename, mimetype,
         GST_STR_NULL (description), datalen);
@@ -662,7 +666,7 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
     gst_buffer_unref (tagbuffer);
     gst_caps_unref (caps);
 
-    GST_DEBUG_OBJECT (common,
+    GST_DEBUG_OBJECT (common->sinkpad,
         "Created attachment sample: %" GST_PTR_FORMAT, tagsample);
 
     /* and append to the tag list */
@@ -722,10 +726,10 @@ gst_matroska_read_common_parse_attachments (GstMatroskaReadCommon * common,
   DEBUG_ELEMENT_STOP (common, ebml, "Attachments", ret);
 
   if (gst_tag_list_n_tags (taglist) > 0) {
-    GST_DEBUG_OBJECT (common, "Storing attachment tags");
+    GST_DEBUG_OBJECT (common->sinkpad, "Storing attachment tags");
     gst_matroska_read_common_found_global_tag (common, el, taglist);
   } else {
-    GST_DEBUG_OBJECT (common, "No valid attachments found");
+    GST_DEBUG_OBJECT (common->sinkpad, "No valid attachments found");
     gst_tag_list_unref (taglist);
   }
 
@@ -1110,7 +1114,7 @@ gst_matroska_read_common_parse_chapter_edition (GstMatroskaReadCommon * common,
   if (is_hidden == 0 && subentries != NULL && ret == GST_FLOW_OK)
     gst_toc_append_entry (toc, edition_info);
   else {
-    GST_DEBUG_OBJECT (common,
+    GST_DEBUG_OBJECT (common->sinkpad,
         "Skipping empty or hidden edition in the chapters TOC");
     gst_toc_entry_unref (edition_info);
   }
@@ -1186,10 +1190,10 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  GST_DEBUG_OBJECT (common, "id: %08x", id);
+  GST_DEBUG_OBJECT (common->sinkpad, "id: %08x", id);
 
   if (id != GST_EBML_ID_HEADER) {
-    GST_ERROR_OBJECT (common, "Failed to read header");
+    GST_ERROR_OBJECT (common->sinkpad, "Failed to read header");
     goto exit;
   }
 
@@ -1211,12 +1215,13 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
         if (ret != GST_FLOW_OK)
           goto exit_error;
         if (num != GST_EBML_VERSION) {
-          GST_ERROR_OBJECT (ebml, "Unsupported EBML version %" G_GUINT64_FORMAT,
-              num);
+          GST_ERROR_OBJECT (common->sinkpad,
+              "Unsupported EBML version %" G_GUINT64_FORMAT, num);
           goto exit_error;
         }
 
-        GST_DEBUG_OBJECT (ebml, "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
+        GST_DEBUG_OBJECT (common->sinkpad,
+            "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
         break;
       }
 
@@ -1228,11 +1233,12 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
         if (ret != GST_FLOW_OK)
           goto exit_error;
         if (num > sizeof (guint64)) {
-          GST_ERROR_OBJECT (ebml,
+          GST_ERROR_OBJECT (common->sinkpad,
               "Unsupported EBML maximum size %" G_GUINT64_FORMAT, num);
           return GST_FLOW_ERROR;
         }
-        GST_DEBUG_OBJECT (ebml, "EbmlMaxSizeLength: %" G_GUINT64_FORMAT, num);
+        GST_DEBUG_OBJECT (common->sinkpad,
+            "EbmlMaxSizeLength: %" G_GUINT64_FORMAT, num);
         break;
       }
 
@@ -1244,11 +1250,12 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
         if (ret != GST_FLOW_OK)
           goto exit_error;
         if (num > sizeof (guint32)) {
-          GST_ERROR_OBJECT (ebml,
+          GST_ERROR_OBJECT (common->sinkpad,
               "Unsupported EBML maximum ID %" G_GUINT64_FORMAT, num);
           return GST_FLOW_ERROR;
         }
-        GST_DEBUG_OBJECT (ebml, "EbmlMaxIdLength: %" G_GUINT64_FORMAT, num);
+        GST_DEBUG_OBJECT (common->sinkpad,
+            "EbmlMaxIdLength: %" G_GUINT64_FORMAT, num);
         break;
       }
 
@@ -1259,7 +1266,8 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
         if (ret != GST_FLOW_OK)
           goto exit_error;
 
-        GST_DEBUG_OBJECT (ebml, "EbmlDocType: %s", GST_STR_NULL (text));
+        GST_DEBUG_OBJECT (common->sinkpad, "EbmlDocType: %s",
+            GST_STR_NULL (text));
 
         if (doctype)
           g_free (doctype);
@@ -1274,7 +1282,8 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
         if (ret != GST_FLOW_OK)
           goto exit_error;
         version = num;
-        GST_DEBUG_OBJECT (ebml, "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
+        GST_DEBUG_OBJECT (common->sinkpad,
+            "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
         break;
       }
 
@@ -1302,12 +1311,14 @@ exit:
       (doctype == NULL)) {
     if (version <= 2) {
       if (doctype) {
-        GST_INFO_OBJECT (common, "Input is %s version %d", doctype, version);
+        GST_INFO_OBJECT (common->sinkpad, "Input is %s version %d", doctype,
+            version);
         if (!strcmp (doctype, GST_MATROSKA_DOCTYPE_WEBM))
           common->is_webm = TRUE;
       } else {
-        GST_WARNING_OBJECT (common, "Input is EBML without doctype, assuming "
-            "matroska (version %d)", version);
+        GST_WARNING_OBJECT (common->sinkpad,
+            "Input is EBML without doctype, assuming " "matroska (version %d)",
+            version);
       }
       ret = GST_FLOW_OK;
     } else {
@@ -1364,11 +1375,11 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
 
         if (num == 0) {
           idx.track = 0;
-          GST_WARNING_OBJECT (common, "Invalid CueTrack 0");
+          GST_WARNING_OBJECT (common->sinkpad, "Invalid CueTrack 0");
           break;
         }
 
-        GST_DEBUG_OBJECT (common, "CueTrack: %" G_GUINT64_FORMAT, num);
+        GST_DEBUG_OBJECT (common->sinkpad, "CueTrack: %" G_GUINT64_FORMAT, num);
         idx.track = num;
         break;
       }
@@ -1382,8 +1393,8 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
           break;
 
         if (num > G_MAXINT64) {
-          GST_WARNING_OBJECT (common, "CueClusterPosition %" G_GUINT64_FORMAT
-              " too large", num);
+          GST_WARNING_OBJECT (common->sinkpad,
+              "CueClusterPosition %" G_GUINT64_FORMAT " too large", num);
           break;
         }
 
@@ -1400,16 +1411,17 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
           break;
 
         if (num == 0) {
-          GST_WARNING_OBJECT (common, "Invalid CueBlockNumber 0");
+          GST_WARNING_OBJECT (common->sinkpad, "Invalid CueBlockNumber 0");
           break;
         }
 
-        GST_DEBUG_OBJECT (common, "CueBlockNumber: %" G_GUINT64_FORMAT, num);
+        GST_DEBUG_OBJECT (common->sinkpad, "CueBlockNumber: %" G_GUINT64_FORMAT,
+            num);
         idx.block = num;
 
         /* mild sanity check, disregard strange cases ... */
         if (idx.block > G_MAXUINT16) {
-          GST_DEBUG_OBJECT (common, "... looks suspicious, ignoring");
+          GST_DEBUG_OBJECT (common->sinkpad, "... looks suspicious, ignoring");
           idx.block = 1;
         }
         break;
@@ -1438,7 +1450,7 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
         common->index->len - 1);
     if (last_idx->block == idx.block && last_idx->pos == idx.pos &&
         last_idx->track == idx.track && idx.time > last_idx->time) {
-      GST_DEBUG_OBJECT (common, "Cue entry refers to same location, "
+      GST_DEBUG_OBJECT (common->sinkpad, "Cue entry refers to same location, "
           "but has different time than previous entry; discarding");
       idx.track = 0;
     }
@@ -1449,7 +1461,8 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
     g_array_append_val (common->index, idx);
     (*nentries)++;
   } else if (ret == GST_FLOW_OK || ret == GST_FLOW_EOS) {
-    GST_DEBUG_OBJECT (common, "CueTrackPositions without valid content");
+    GST_DEBUG_OBJECT (common->sinkpad,
+        "CueTrackPositions without valid content");
   }
 
   return ret;
@@ -1482,7 +1495,7 @@ gst_matroska_read_common_parse_index_pointentry (GstMatroskaReadCommon *
         if ((ret = gst_ebml_read_uint (ebml, &id, &time)) != GST_FLOW_OK)
           break;
 
-        GST_DEBUG_OBJECT (common, "CueTime: %" G_GUINT64_FORMAT, time);
+        GST_DEBUG_OBJECT (common->sinkpad, "CueTime: %" G_GUINT64_FORMAT, time);
         time = time * common->time_scale;
         break;
       }
@@ -1508,7 +1521,7 @@ gst_matroska_read_common_parse_index_pointentry (GstMatroskaReadCommon *
 
   if (nentries > 0) {
     if (time == GST_CLOCK_TIME_NONE) {
-      GST_WARNING_OBJECT (common, "CuePoint without valid time");
+      GST_WARNING_OBJECT (common->sinkpad, "CuePoint without valid time");
       g_array_remove_range (common->index, common->index->len - nentries,
           nentries);
     } else {
@@ -1519,13 +1532,13 @@ gst_matroska_read_common_parse_index_pointentry (GstMatroskaReadCommon *
             &g_array_index (common->index, GstMatroskaIndex, i);
 
         idx->time = time;
-        GST_DEBUG_OBJECT (common, "Index entry: pos=%" G_GUINT64_FORMAT
+        GST_DEBUG_OBJECT (common->sinkpad, "Index entry: pos=%" G_GUINT64_FORMAT
             ", time=%" GST_TIME_FORMAT ", track=%u, block=%u", idx->pos,
             GST_TIME_ARGS (idx->time), (guint) idx->track, (guint) idx->block);
       }
     }
   } else {
-    GST_DEBUG_OBJECT (common, "Empty CuePoint");
+    GST_DEBUG_OBJECT (common->sinkpad, "Empty CuePoint");
   }
 
   return ret;
@@ -1547,7 +1560,7 @@ gst_matroska_read_common_stream_from_num (GstMatroskaReadCommon * common,
   }
 
   if (n == common->num_streams)
-    GST_WARNING_OBJECT (common,
+    GST_WARNING_OBJECT (common->sinkpad,
         "Failed to find corresponding pad for tracknum %d", track_num);
 
   return -1;
@@ -1621,9 +1634,9 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
         writer_id = common->element_index_writer_id;
       }
 
-      GST_LOG_OBJECT (common, "adding association %" GST_TIME_FORMAT "-> %"
-          G_GUINT64_FORMAT " for writer id %d", GST_TIME_ARGS (idx->time),
-          idx->pos, writer_id);
+      GST_LOG_OBJECT (common->sinkpad,
+          "adding association %" GST_TIME_FORMAT "-> %" G_GUINT64_FORMAT
+          " for writer id %d", GST_TIME_ARGS (idx->time), idx->pos, writer_id);
       gst_index_add_association (common->element_index, writer_id,
           GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME, idx->time,
           GST_FORMAT_BYTES, idx->pos + common->ebml_segment_start, NULL);
@@ -1685,7 +1698,8 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
           break;
 
 
-        GST_DEBUG_OBJECT (common, "TimeCodeScale: %" G_GUINT64_FORMAT, num);
+        GST_DEBUG_OBJECT (common->sinkpad, "TimeCodeScale: %" G_GUINT64_FORMAT,
+            num);
         common->time_scale = num;
         break;
       }
@@ -1695,11 +1709,11 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
           break;
 
         if (dur_f <= 0.0) {
-          GST_WARNING_OBJECT (common, "Invalid duration %lf", dur_f);
+          GST_WARNING_OBJECT (common->sinkpad, "Invalid duration %lf", dur_f);
           break;
         }
 
-        GST_DEBUG_OBJECT (common, "Duration: %lf", dur_f);
+        GST_DEBUG_OBJECT (common->sinkpad, "Duration: %lf", dur_f);
         break;
       }
 
@@ -1709,7 +1723,8 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
         if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
           break;
 
-        GST_DEBUG_OBJECT (common, "WritingApp: %s", GST_STR_NULL (text));
+        GST_DEBUG_OBJECT (common->sinkpad, "WritingApp: %s",
+            GST_STR_NULL (text));
         common->writing_app = text;
         break;
       }
@@ -1720,7 +1735,8 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
         if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
           break;
 
-        GST_DEBUG_OBJECT (common, "MuxingApp: %s", GST_STR_NULL (text));
+        GST_DEBUG_OBJECT (common->sinkpad, "MuxingApp: %s",
+            GST_STR_NULL (text));
         common->muxing_app = text;
         break;
       }
@@ -1731,7 +1747,7 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
         if ((ret = gst_ebml_read_date (ebml, &id, &time)) != GST_FLOW_OK)
           break;
 
-        GST_DEBUG_OBJECT (common, "DateUTC: %" G_GINT64_FORMAT, time);
+        GST_DEBUG_OBJECT (common->sinkpad, "DateUTC: %" G_GINT64_FORMAT, time);
         common->created = time;
         break;
       }
@@ -1743,7 +1759,7 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
         if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
           break;
 
-        GST_DEBUG_OBJECT (common, "Title: %s", GST_STR_NULL (text));
+        GST_DEBUG_OBJECT (common->sinkpad, "Title: %s", GST_STR_NULL (text));
         taglist = gst_tag_list_new (GST_TAG_TITLE, text, NULL);
         gst_tag_list_set_scope (taglist, GST_TAG_SCOPE_GLOBAL);
         gst_matroska_read_common_found_global_tag (common, el, taglist);
@@ -1981,7 +1997,7 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
         g_free (tag);
         tag = NULL;
         ret = gst_ebml_read_ascii (ebml, &id, &tag);
-        GST_DEBUG_OBJECT (common, "TagName: %s", GST_STR_NULL (tag));
+        GST_DEBUG_OBJECT (common->sinkpad, "TagName: %s", GST_STR_NULL (tag));
         g_free (name_with_parent);
         if (parent != NULL)
           name_with_parent = g_strdup_printf ("%s/%s", parent, tag);
@@ -1993,7 +2009,8 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
         g_free (value);
         value = NULL;
         ret = gst_ebml_read_utf8 (ebml, &id, &value);
-        GST_DEBUG_OBJECT (common, "TagString: %s", GST_STR_NULL (value));
+        GST_DEBUG_OBJECT (common->sinkpad, "TagString: %s",
+            GST_STR_NULL (value));
         break;
 
       case GST_MATROSKA_ID_SIMPLETAG:
@@ -2061,7 +2078,7 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
           gst_tag_list_add_values (*p_taglist, GST_TAG_MERGE_APPEND,
               tagname_gst, &dest, NULL);
         } else {
-          GST_WARNING_OBJECT (common, "Can't transform tag '%s' with "
+          GST_WARNING_OBJECT (common->sinkpad, "Can't transform tag '%s' with "
               "value '%s' to target type '%s'", tag, value,
               g_type_name (dest_type));
         }
@@ -2128,8 +2145,9 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
                 gst_tag_list_add_values (*p_taglist, GST_TAG_MERGE_APPEND,
                     tagname_gst, &dest, NULL);
               } else {
-                GST_WARNING_OBJECT (common, "Can't transform complex tag '%s' "
-                    "to target type '%s'", val, g_type_name (dest_type));
+                GST_WARNING_OBJECT (common->sinkpad,
+                    "Can't transform complex tag '%s' " "to target type '%s'",
+                    val, g_type_name (dest_type));
               }
               g_value_unset (&dest);
               matched = TRUE;
@@ -2363,7 +2381,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
     gint i;
     if (chapter_targets->len > 0 || edition_targets->len > 0) {
       if (common->toc == NULL)
-        GST_WARNING_OBJECT (common,
+        GST_WARNING_OBJECT (common->sinkpad,
             "Found chapter/edition specific tag, but TOC is not present");
       else {
         cur = gst_toc_get_entries (common->toc);
@@ -2390,7 +2408,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
         }
       }
       if (!found) {
-        GST_WARNING_OBJECT (common,
+        GST_WARNING_OBJECT (common->sinkpad,
             "Found track-specific tag(s), but track %" G_GUINT64_FORMAT
             " is not known (yet?)", tgt);
       }
@@ -2425,8 +2443,8 @@ gst_matroska_read_common_parse_metadata (GstMatroskaReadCommon * common,
     guint64 *pos = l->data;
 
     if (*pos == curpos) {
-      GST_DEBUG_OBJECT (common, "Skipping already parsed Tags at offset %"
-          G_GUINT64_FORMAT, curpos);
+      GST_DEBUG_OBJECT (common->sinkpad,
+          "Skipping already parsed Tags at offset %" G_GUINT64_FORMAT, curpos);
       return GST_FLOW_OK;
     }
   }
@@ -2552,7 +2570,7 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
       gst_pad_pull_range (common->sinkpad, common->offset, size,
       &common->cached_buffer);
   if (ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (common, "pull_range returned %d", ret);
+    GST_DEBUG_OBJECT (common->sinkpad, "pull_range returned %d", ret);
     if (p_buf)
       *p_buf = NULL;
     if (bytes)
@@ -2561,7 +2579,7 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
   }
 
   if (gst_buffer_get_size (common->cached_buffer) < size) {
-    GST_WARNING_OBJECT (common, "Dropping short buffer at offset %"
+    GST_WARNING_OBJECT (common->sinkpad, "Dropping short buffer at offset %"
         G_GUINT64_FORMAT ": wanted %u bytes, got %" G_GSIZE_FORMAT " bytes",
         common->offset, size, gst_buffer_get_size (common->cached_buffer));
 
@@ -2649,14 +2667,15 @@ gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
 
         if (!gst_matroska_read_common_encoding_order_unique (context->encodings,
                 num)) {
-          GST_ERROR_OBJECT (common, "ContentEncodingOrder %" G_GUINT64_FORMAT
+          GST_ERROR_OBJECT (common->sinkpad,
+              "ContentEncodingOrder %" G_GUINT64_FORMAT
               "is not unique for track %" G_GUINT64_FORMAT, num, context->num);
           ret = GST_FLOW_ERROR;
           break;
         }
 
-        GST_DEBUG_OBJECT (common, "ContentEncodingOrder: %" G_GUINT64_FORMAT,
-            num);
+        GST_DEBUG_OBJECT (common->sinkpad,
+            "ContentEncodingOrder: %" G_GUINT64_FORMAT, num);
         enc.order = num;
         break;
       }
@@ -2667,14 +2686,14 @@ gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
           break;
 
         if (num > 7 || num == 0) {
-          GST_ERROR_OBJECT (common, "Invalid ContentEncodingScope %"
+          GST_ERROR_OBJECT (common->sinkpad, "Invalid ContentEncodingScope %"
               G_GUINT64_FORMAT, num);
           ret = GST_FLOW_ERROR;
           break;
         }
 
-        GST_DEBUG_OBJECT (common, "ContentEncodingScope: %" G_GUINT64_FORMAT,
-            num);
+        GST_DEBUG_OBJECT (common->sinkpad,
+            "ContentEncodingScope: %" G_GUINT64_FORMAT, num);
         enc.scope = num;
 
         break;
@@ -2686,17 +2705,18 @@ gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
           break;
 
         if (num > 1) {
-          GST_ERROR_OBJECT (common, "Invalid ContentEncodingType %"
+          GST_ERROR_OBJECT (common->sinkpad, "Invalid ContentEncodingType %"
               G_GUINT64_FORMAT, num);
           ret = GST_FLOW_ERROR;
           break;
         } else if (num != 0) {
-          GST_ERROR_OBJECT (common, "Encrypted tracks are not supported yet");
+          GST_ERROR_OBJECT (common->sinkpad,
+              "Encrypted tracks are not supported yet");
           ret = GST_FLOW_ERROR;
           break;
         }
-        GST_DEBUG_OBJECT (common, "ContentEncodingType: %" G_GUINT64_FORMAT,
-            num);
+        GST_DEBUG_OBJECT (common->sinkpad,
+            "ContentEncodingType: %" G_GUINT64_FORMAT, num);
         enc.type = num;
         break;
       }
@@ -2720,13 +2740,13 @@ gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
                 break;
               }
               if (num > 3) {
-                GST_ERROR_OBJECT (common, "Invalid ContentCompAlgo %"
+                GST_ERROR_OBJECT (common->sinkpad, "Invalid ContentCompAlgo %"
                     G_GUINT64_FORMAT, num);
                 ret = GST_FLOW_ERROR;
                 break;
               }
-              GST_DEBUG_OBJECT (common, "ContentCompAlgo: %" G_GUINT64_FORMAT,
-                  num);
+              GST_DEBUG_OBJECT (common->sinkpad,
+                  "ContentCompAlgo: %" G_GUINT64_FORMAT, num);
               enc.comp_algo = num;
 
               break;
@@ -2742,12 +2762,12 @@ gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
               }
               enc.comp_settings = data;
               enc.comp_settings_length = size;
-              GST_DEBUG_OBJECT (common,
+              GST_DEBUG_OBJECT (common->sinkpad,
                   "ContentCompSettings of size %" G_GUINT64_FORMAT, size);
               break;
             }
             default:
-              GST_WARNING_OBJECT (common,
+              GST_WARNING_OBJECT (common->sinkpad,
                   "Unknown ContentCompression subelement 0x%x - ignoring", id);
               ret = gst_ebml_read_skip (ebml);
               break;
@@ -2758,12 +2778,13 @@ gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
       }
 
       case GST_MATROSKA_ID_CONTENTENCRYPTION:
-        GST_ERROR_OBJECT (common, "Encrypted tracks not yet supported");
+        GST_ERROR_OBJECT (common->sinkpad,
+            "Encrypted tracks not yet supported");
         gst_ebml_read_skip (ebml);
         ret = GST_FLOW_ERROR;
         break;
       default:
-        GST_WARNING_OBJECT (common,
+        GST_WARNING_OBJECT (common->sinkpad,
             "Unknown ContentEncoding subelement 0x%x - ignoring", id);
         ret = gst_ebml_read_skip (ebml);
         break;
@@ -2808,7 +2829,7 @@ gst_matroska_read_common_read_track_encodings (GstMatroskaReadCommon * common,
             context);
         break;
       default:
-        GST_WARNING_OBJECT (common,
+        GST_WARNING_OBJECT (common->sinkpad,
             "Unknown ContentEncodings subelement 0x%x - ignoring", id);
         ret = gst_ebml_read_skip (ebml);
         break;
@@ -2865,7 +2886,7 @@ gst_matroska_read_common_reset (GstElement * element,
 {
   guint i;
 
-  GST_LOG_OBJECT (ctx, "resetting read context");
+  GST_LOG_OBJECT (ctx->sinkpad, "resetting read context");
 
   /* reset input */
   ctx->state = GST_MATROSKA_READ_STATE_START;
@@ -2950,7 +2971,7 @@ gst_matroska_read_common_reset_streams (GstMatroskaReadCommon * common,
 {
   gint i;
 
-  GST_DEBUG_OBJECT (common, "resetting stream state");
+  GST_DEBUG_OBJECT (common->sinkpad, "resetting stream state");
 
   g_assert (common->src->len == common->num_streams);
   for (i = 0; i < common->src->len; i++) {
