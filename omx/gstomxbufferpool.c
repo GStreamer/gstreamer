@@ -202,7 +202,12 @@ gst_omx_memory_allocator_alloc (GstAllocator * allocator, GstMemoryFlags flags,
 
 static GQuark gst_omx_buffer_data_quark = 0;
 
-G_DEFINE_TYPE (GstOMXBufferPool, gst_omx_buffer_pool, GST_TYPE_BUFFER_POOL);
+#define DEBUG_INIT \
+  GST_DEBUG_CATEGORY_INIT (gst_omx_buffer_pool_debug_category, "omxbufferpool", 0, \
+      "debug category for gst-omx buffer pool base class");
+
+G_DEFINE_TYPE_WITH_CODE (GstOMXBufferPool, gst_omx_buffer_pool,
+    GST_TYPE_BUFFER_POOL, DEBUG_INIT);
 
 static void gst_omx_buffer_pool_free_buffer (GstBufferPool * bpool,
     GstBuffer * buffer);
