@@ -48,6 +48,7 @@
 #include "gstglfiltercube.h"
 #include "gstgleffects.h"
 #include "gstglcolorscale.h"
+#include "gstglvideomixer.h"
 #if HAVE_GRAPHENE
 #include "gstgltransformation.h"
 #endif
@@ -63,7 +64,6 @@
 #include "gstglfiltersobel.h"
 #include "gstgldeinterlace.h"
 #include "gstglmosaic.h"
-#include "gstglvideomixer.h"
 #if HAVE_PNG
 #include "gstgldifferencematte.h"
 #include "gstglbumper.h"
@@ -124,6 +124,11 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_COLORSCALE)) {
     return FALSE;
   }
+
+  if (!gst_element_register (plugin, "glvideomixer",
+          GST_RANK_NONE, GST_TYPE_GL_VIDEO_MIXER)) {
+    return FALSE;
+  }
 #if GST_GL_HAVE_OPENGL
   if (!gst_element_register (plugin, "gltestsrc",
           GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
@@ -172,11 +177,6 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glmosaic",
           GST_RANK_NONE, GST_TYPE_GL_MOSAIC)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glvideomixer",
-          GST_RANK_NONE, GST_TYPE_GL_VIDEO_MIXER)) {
     return FALSE;
   }
 #if HAVE_PNG

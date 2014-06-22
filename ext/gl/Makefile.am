@@ -29,8 +29,6 @@ OPENGL_SOURCES =  \
 	gstgltestsrc.h \
 	gstglmosaic.c \
 	gstglmosaic.h \
-	gstglvideomixer.c \
-	gstglvideomixer.h \
 	effects/gstgleffectscurves.h \
 	effects/gstgleffectstretch.c \
 	effects/gstgleffecttunnel.c \
@@ -74,6 +72,8 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectsqueeze.c \
 	gstglcolorscale.c \
 	gstglcolorscale.h \
+	gstglvideomixer.c \
+	gstglvideomixer.h \
 	$(OPENGL_SOURCES)
 
 if HAVE_GRAPHENE
