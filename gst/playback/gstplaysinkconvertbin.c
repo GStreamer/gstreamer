@@ -394,8 +394,30 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
       gst_object_unref (peer);
       if (self->converter_caps && is_raw_caps (peer_caps, self->audio)) {
         GstCaps *converter_caps = gst_caps_ref (self->converter_caps);
+        GstCapsFeatures *cf;
+        GstStructure *s;
+        guint i, n;
+
         GST_PLAY_SINK_CONVERT_BIN_FILTER_CAPS (filter, converter_caps);
-        ret = gst_caps_merge (peer_caps, converter_caps);
+
+        ret = gst_caps_make_writable (peer_caps);
+
+        /* Filter out ANY capsfeatures from the converter caps. We can't
+         * convert to ANY capsfeatures, they are only there so that we
+         * can passthrough whatever downstream can support... but we
+         * definitely don't want to return them here
+         */
+        n = gst_caps_get_size (converter_caps);
+        for (i = 0; i < n; i++) {
+          s = gst_caps_get_structure (converter_caps, i);
+          cf = gst_caps_get_features (converter_caps, i);
+
+          if (cf && gst_caps_features_is_any (cf))
+            continue;
+          ret =
+              gst_caps_merge_structure_full (ret, gst_structure_copy (s),
+              (cf ? gst_caps_features_copy (cf) : NULL));
+        }
       } else {
         ret = peer_caps;
         GST_PLAY_SINK_CONVERT_BIN_FILTER_CAPS (filter, ret);
