@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Base Plugins 1.3.2
+Release notes for GStreamer Base Plugins 1.3.3
 
 
-The GStreamer team is pleased to announce the second release of the unstable
+The GStreamer team is pleased to announce the third release of the unstable
 1.3 release series. The 1.3 release series is adding new features on top of
 the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.3 release series
@@ -10,21 +10,13 @@ will lead to the stable 1.4 release series in the next weeks, and newly added
 API can still change until that point.
 
 
+This is hopefully the last 1.3 development release and will be followed by
+the first 1.4.0 release candidate (1.3.90) in 1-2 weeks. Which then hopefully
+is followed by 1.4.0 soonish in early July.
+
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
 during the unstable 1.3 release series.
-
-
-
-The versioning scheme that is used in general is that 1.x.y is API and
-ABI backwards compatible with previous 1.x.y releases. If x is an even
-number it is a stable release series and all releases in this series
-will only contain important bugfixes, e.g. the 1.0 series with 1.0.7. If
-x is odd it is a development release series that will lead to the next
-stable release series 1.x+1 and contains new features and bigger
-changes. During the development release series, new API can still
-change.
-
 
 
 This module contains a set of reference plugins, base classes for other
@@ -73,15 +65,15 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 720596 : discoverer: Rework the API to make " install missing plugin " feature cleaner
-      * 729514 : rtsp: fails to build on Windows, undefined refs to getsockname and setsockopt
-      * 729515 : W32: playback-test fails to build due to warnings
-      * 729617 : playback-test: crash when setting buffer-size property on playbin
-      * 729632 : rtspconnection: crashing sometimes when addinging a read source
-      * 730010 : gst-play: audio_sink and video_sink strings are not freed
-      * 730368 : Add a read source on write socket when tunnel lost.
-      * 730441 : dmabuf: shared the mapping with shared copies of the memory
-      * 729513 : W32: -base erroneously detects X11 headers from tcl/tk
+      * 709868 : Keep still meaningfull pending events on FLUSH_STOP
+      * 724231 : appsrc: handle flushing from send_event
+      * 730559 : dmabuf: fix checking mmap flags
+      * 730749 : Failed to determine keyframeness of audio/x-opus packet
+      * 730868 : uridecodebin: Does not handle RTSP streams where one of the payload formats is not supported properly
+      * 730874 : audio: Add a missing precondition to gst_audio_format_from_string()
+      * 731121 : alsasink: Race condition causes alsasink to use invalid caps when a pipeline fails to start
+      * 731566 : tcpserversrc: close the server socket after accepting a connection
+      * 731567 : tcpserversrc: return GST_FLOW_FLUSHING instead of GST_FLOW_ERROR when accept is canceled
 
 ==== Download ====
 
@@ -118,17 +110,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Anuj Jaiswal
       * Edward Hervey
-      * Göran Jönsson
-      * Luis de Bethencourt
       * Michael Olbrich
-      * Nicolas Dufresne
-      * Ravi Kiran K N
+      * Philip Withnall
       * Sebastian Dröge
+      * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Wim Taymans
-      * Руслан Ижбулатов
  

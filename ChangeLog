@@ -1,9 +1,407 @@
-=== release 1.3.2 ===
+=== release 1.3.3 ===
 
-2014-05-21  Sebastian Dröge <slomo@coaxion.net>
+2014-06-22  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.2
+	  releasing 1.3.3
+
+2014-06-22 14:23:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/da.po:
+	* po/de.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/sr.po:
+	* po/uk.po:
+	  po: Update translations
+
+2014-06-20 11:00:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	* tests/check/libs/audiodecoder.c:
+	  audiodecoder: Don't be too picky about the output frame counter
+	  With most decoder libraries, and especially when accessing codecs via
+	  OpenMAX or similar APIs, we don't have the ability to properly related
+	  the output buffers to a number of input samples. And could e.g. get
+	  a fractional number of input buffers decoded at a time.
+	  Previously this would in the end lead to an error message and stopped
+	  playback. Change it to a warning message instead and try to handle it
+	  gracefully. In theory the subclass can now get timestamp tracking
+	  wrong if it completely misuses the API, but if on average it behaves
+	  correct (and gst-omx and others do) it will continue to work properly.
+	  Also add a test for the new behaviour.
+	  We don't change it in the encoder yet as that requires more internal logic
+	  changes AFAIU and I'm not aware of a case where this was a problem so far.
+
+2014-06-12 12:36:26 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst/tcp/gsttcpserversrc.c:
+	  tcpserversrc: close the server socket after accepting a connection
+	  g_socket_accept() is only called once for a server socket. So
+	  keeping the socket open ist just confusing possible clients.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731566
+
+2014-06-13 10:04:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/tcp/gsttcpclientsrc.c:
+	  tcpclientsrc: return FLUSHING when select() is canceled
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731567
+
+2014-06-12 13:23:29 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst/tcp/gsttcpserversrc.c:
+	  tcpserversrc: return FLOW_FLUSHING instead of an error when accept/select is canceled
+	  Canceling the accept/select happens when the source is shut down. This is
+	  not an error and the GST_FLOW_ERROR causes problems when only part of the
+	  pipeline is shut down.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731567
+
+2014-06-12 11:55:59 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/sdp/gstmikey.c:
+	  mikey: Fix Wall to NTP conversion
+	  We are scaling from a unit in microseconds to a unit in ((1 << 32) per seconds).
+	  We therefore scale the microseconds values by:
+	  value of a second in the target unit (1 << 32)
+	  --------------------------------------------------------------
+	  value of a second in the origin format (1 000 000 microsecond)
+
+2014-06-06 12:18:49 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: allow unset seek stop time in push mode
+
+2014-06-11 12:50:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	  docs: add streamsynchronizer to documentation
+
+2014-06-11 12:43:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	  docs: add playsink element to documentation
+
+2014-06-11 10:53:50 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	  docs: add navigation interface to docs
+
+2014-06-10 12:59:53 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: add send_event handler for flushing
+	  Adds a send_event handling for allowing appsrc to flush its internal
+	  data, allowing users to flush the pipeline without setting it to null.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724231
+
+2014-06-09 21:05:00 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/videoscale/vs_fill_borders.c:
+	* gst/videoscale/vs_image.h:
+	  videoscale: vs_image: strides are a gsize
+	  The strides that are set from the GstVideoInfo structs are
+	  a gsize. Using an int can cause overflows when dealing with large
+	  enough images
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731195
+
+2014-06-09 19:44:56 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst-libs/gst/video/video-info.c:
+	* tests/check/libs/video.c:
+	  video: avoid overflows when doing int operations for size
+	  size is a gsize, so cast the operands to it to avoid overflows
+	  and setting wrong value to the video size.
+	  Includes tests.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731195
+
+2014-06-09 10:53:03 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/theora/gsttheoraenc.c:
+	  theoraenc: Remove unneeded check
+	  running timestamps are guaranteed to be positive and valid since the
+	  GstVideoEncoder base class will clip incoming buffers
+	  CID #1139797
+
+2014-06-09 10:38:53 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/vorbis/gstvorbisenc.c:
+	  vorbisenc: add missing va_end in variadic function
+	  Coverity 1139944
+
+2014-06-06 10:35:31 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* tests/check/libs/videodecoder.c:
+	  tests: fix uninitialized variable use in video decoder test
+
+2014-06-05 15:35:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: Also catch CODEC_NOT_FOUND errors and delay them until all decodebins are done
+
+2014-06-04 17:00:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: Ignore missing-plugin messages unless all decodebins post one
+	  When playing RTSP streams there will be one decodebin per stream. If some of
+	  them fail because of a missing plugin we should not fail completely but play
+	  the supported streams at least.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730868
+
+2014-06-04 14:14:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: Do async-done on expose errors too
+
+2014-05-20 12:28:15 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/allocators/gstdmabuf.c:
+	  dmabuf: fix checking mmap flags
+	  A simple '&' is not sufficiant. With mmapping_flags == PROT_READ and
+	  prot == PROT_READ|PROT_WRITE the check produces the wrong result.
+	  Change the check to make sure that prot is a subset of mmapping_flags.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730559
+
+2014-06-03 15:16:44 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/alsa/gstalsasink.c:
+	  alsasink: make gst-ident happy
+
+2014-06-03 15:10:33 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/alsa/gstalsasink.c:
+	  alsasink: fix occasional crash intersecting invalid values
+	  When a pipeline using alsasink and push mode upstream fails
+	  to preroll, the following state will be the case:
+	  - A loop upstream will be PAUSED, pushing a first buffer
+	  - alsasink will be READY, pending PAUSED, because async
+	  On error, the pipeline will switch to NULL. alsasink is in
+	  READY, so goes to NULL immediately. It zeroes its cached
+	  caps. Meanwhile, the upstream loop can cause a caps query,
+	  conccurent with the state change. This will use those cached
+	  caps. If the zeroing happens between the NULL test and the
+	  dereferencing, GStreamer will critical down in the GstValue
+	  code.
+	  Since it appears that such a gap between states (PAUSED
+	  and pushing upstream, and NULL downstream) is expected, we
+	  need to protect the read/write access to the cached caps.
+	  This fixes the critical.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=731121
+
+2013-10-14 18:56:55 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* tests/check/libs/videodecoder.c:
+	  videodecoder: Keep still meaningfull pending events on FLUSH_STOP
+	  Only EOS and segment should be deleted in that case.
+	  + Add a testcase
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709868
+
+2013-10-14 18:48:08 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	* tests/check/libs/audiodecoder.c:
+	  audiodecoder: Keep still meaningfull pending events on FLUSH_STOP
+	  Only EOS and segment should be deleted in that case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709868
+
+2013-10-14 18:45:10 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	* tests/check/libs/videoencoder.c:
+	  videoencoder: Keep still meaningfull pending events on FLUSH_STOP
+	  Only EOS and segment should be deleted in that case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709868
+
+2013-10-10 18:50:17 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst/encoding/gststreamsplitter.c:
+	  streamsplitter: Keep still meaningfull pending events on FLUSH_STOP
+	  Only EOS and segment should be deleted in that case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709868
+
+2013-10-10 18:48:47 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	* tests/check/libs/audioencoder.c:
+	  audioencoder: Keep still meaningfull pending events on FLUSH_STOP
+	  Only EOS and segment should be deleted in that case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709868
+
+2014-06-02 12:40:27 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  oggstream: consider all opus packets as "keyframes"
+	  This lets oggdemux determine they are not delta units, and removes
+	  spurious per packet warnings about being unable to determine the
+	  packet's keyframeness.
+
+2014-05-12 17:13:50 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/sdp/gstmikey.c:
+	  mikey: Free MikeyPayload in error cases
+	  CID #1212136
+
+2014-03-16 14:27:30 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/playback/gstdecodebin2.c:
+	* tests/check/elements/decodebin.c:
+	  decodebin: aggregate buffering messages
+	  Aggregate buffering messages to only post the lower value
+	  to avoid setting pipeline to playing while any multiqueue
+	  is still buffering.
+	  There are 3 scenarios where the entries should be removed from
+	  the list:
+	  1) When decodebin is set to READY
+	  2) When an element posts a 100% buffering (already implemented)
+	  3) When a multiqueue is removed from decodebin.
+	  For item 3 we don't need to handle it because this should only
+	  happen when either 1 is hapenning or when it is playing a
+	  chained file, for which number 2 should have happened for the
+	  previous stream to finish
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726423
+
+2014-05-28 10:23:24 +0100  Philip Withnall <philip.withnall@collabora.co.uk>
+
+	* gst-libs/gst/audio/audio-format.c:
+	  audio: Add a missing precondition to gst_audio_format_from_string()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730874
+
+2014-05-26 20:57:30 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* tests/check/libs/audiodecoder.c:
+	* tests/check/libs/videodecoder.c:
+	  tests: videodecoder: audiodecoder: add tests for eos after segment
+	  Tests that pushing a buffer after the segment returns EOS
+
+2014-05-26 21:24:07 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: actually return the push result in backwards playback
+	  It was always returning _OK regardless of what downstream returned
+
+2014-05-26 12:44:48 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: return EOS when segment is over
+	  if a buffer is clipped by being completely out of segment, check if this
+	  buffer is after the end of the segment and return EOS upstream
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709224
+
+2014-05-26 12:44:38 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: return EOS when segment is over
+	  if a buffer is clipped by being completely out of segment, check if this
+	  buffer is after the end of the segment and return EOS upstream
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709224
+
+2014-05-26 11:45:29 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggdemux.h:
+	  oggdemux: use new gstutils helper GstFlowCombiner
+	  Fixes the handling of GST_FLOW_EOS by using the helper object
+	  from gstutils that does the correct combination of flow returns.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709224
+
+2014-05-23 19:21:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/gst-play.c:
+	  tools: play: use cubic volume factor when adjusting volume
+	  This is more natural and better-suited for a playback application.
+
+2014-05-21 13:23:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.3.2 ===
+
+2014-05-21 13:06:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.3.2
+
+2014-05-21 12:01:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2014-05-21 10:50:56 +0200  Sebastian Dröge <sebastian@centricular.com>
 
