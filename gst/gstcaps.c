@@ -92,7 +92,7 @@ typedef struct _GstCapsImpl
 
 /* same as gst_caps_is_any () */
 #define CAPS_IS_ANY(caps)				\
-  (GST_CAPS_FLAGS(caps) & GST_CAPS_FLAG_ANY)
+  (!!(GST_CAPS_FLAGS(caps) & GST_CAPS_FLAG_ANY))
 
 /* same as gst_caps_is_empty () */
 #define CAPS_IS_EMPTY(caps)				\
