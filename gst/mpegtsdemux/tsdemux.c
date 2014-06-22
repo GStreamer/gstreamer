@@ -115,7 +115,7 @@ typedef struct _TSDemuxStream TSDemuxStream;
 
 typedef struct _TSDemuxH264ParsingInfos TSDemuxH264ParsingInfos;
 
-/* Return offset of a keyframe if found */
+/* Returns TRUE if a keyframe was found */
 typedef gboolean (*GstTsDemuxKeyFrameScanFunction) (TSDemuxStream * stream,
     guint8 * data, const gsize data_size, const gsize max_frame_offset);
 
