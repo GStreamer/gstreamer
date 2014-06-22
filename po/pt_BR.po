@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-25 17:40+0100\n"
+"POT-Creation-Date: 2014-06-22 14:24+0200\n"
 "PO-Revision-Date: 2013-12-29 17:48-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
@@ -329,9 +329,6 @@ msgstr "O dispositivo de vídeo não aceita definir uma nova taxa de quadros."
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "O dispositivo de vídeo não aceita definir uma nova taxa de quadros."
-
-msgid "Failed to re-enabled decoder."
-msgstr ""
 
 msgid "Failed to allocate required memory."
 msgstr ""

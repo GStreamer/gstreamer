@@ -7,10 +7,10 @@
 # Balázs Úr <urbalazs@gmail.com>, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.2.1\n"
+"Project-Id-Version: gst-plugins-good 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-25 17:40+0100\n"
-"PO-Revision-Date: 2014-03-20 18:55+0100\n"
+"POT-Creation-Date: 2014-06-22 14:24+0200\n"
+"PO-Revision-Date: 2014-05-23 21:00+0200\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
-"X-Generator: Lokalize 1.2\n"
+"X-Generator: Lokalize 1.5\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
@@ -249,9 +249,9 @@ msgstr "A(z) „%s” eszköz nem képes felvenni %dx%d felbontásban"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "A(z) „%s” eszköz nem képes felvenni a megadott formátumban"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "A(z) „%s” eszköz nem támogatja a videofelvételt"
+msgstr "A(z) „%s” eszköz nem támogatja a nem szomszédos síkokat"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -260,27 +260,23 @@ msgstr "Nem kérhetők le a(z) „%s” eszköz paraméterei"
 msgid "Video device did not accept new frame rate setting."
 msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
 
-#, fuzzy
 msgid "Video device did not provide output format."
-msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
+msgstr "A videoeszköz nem szolgáltatott kimeneti formátumot."
 
 msgid "Video device returned invalid dimensions."
-msgstr ""
+msgstr "A videoeszköz érvénytelen dimenziókkal tért vissza."
 
-#, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr "A(z) „%s” eszköz illesztőprogramja nem támogatja a(z) %d. IO módot"
+msgstr "A videoeszközök nem támogatott váltottsoros módot használnak."
 
 msgid "Video devices uses an unsupported pixel format."
-msgstr ""
+msgstr "A videoeszközök nem támogatott képpontformátumot használnak."
 
-#, fuzzy
 msgid "Failed to configure internal buffer pool."
-msgstr "A videoeszköz nem tudott létrehozni puffertárolót."
+msgstr "Nem sikerült beállítani a belső puffertárolót."
 
-#, fuzzy
 msgid "Video device did not suggest any buffer size."
-msgstr "A videoeszköz nem tudott létrehozni puffertárolót."
+msgstr "A videoeszköz nem javasolt semmilyen pufferméretet."
 
 msgid "No downstream pool to import from."
 msgstr ""
@@ -314,22 +310,19 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
-msgstr "A(z) „%s” eszköz illesztőprogramja nem támogatja a(z) %d. IO módot"
+msgstr "A videoeszközök nem támogatott képpontformátumot használnak."
 
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
+msgstr "A videoeszközök nem támogatott képpontformátumot használnak."
 
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
+msgstr "A videoeszközök nem támogatott képpontformátumot használnak."
 
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
-
-msgid "Failed to re-enabled decoder."
-msgstr ""
+msgstr "A videoeszközök nem támogatott képpontformátumot használnak."
 
 msgid "Failed to allocate required memory."
 msgstr ""
@@ -385,9 +378,9 @@ msgstr "A(z) „%s” eszköz nem rögzítőeszköz."
 msgid "Device '%s' is not a output device."
 msgstr "A(z) „%s” eszköz nem kimeneti eszköz."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "A(z) „%s” eszköz nem kimeneti eszköz."
+msgstr "A(z) „%s” eszköz nem M2M eszköz."
 
 #, fuzzy, c-format
 msgid "Could not dup device '%s' for reading and writing."

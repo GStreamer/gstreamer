@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-25 17:40+0100\n"
+"POT-Creation-Date: 2014-06-22 14:24+0200\n"
 "PO-Revision-Date: 2011-06-04 21:48+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -302,9 +302,6 @@ msgstr ""
 
 #, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr ""
-
-msgid "Failed to re-enabled decoder."
 msgstr ""
 
 msgid "Failed to allocate required memory."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-25 17:40+0100\n"
+"POT-Creation-Date: 2014-06-22 14:24+0200\n"
 "PO-Revision-Date: 2013-09-16 14:36+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -327,9 +327,6 @@ msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khu
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khung hình mới."
-
-msgid "Failed to re-enabled decoder."
-msgstr ""
 
 msgid "Failed to allocate required memory."
 msgstr ""

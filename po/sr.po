@@ -1,14 +1,14 @@
 # Serbian translation of gst-plugins
-# Copyright (C) 2004 Free Software Foundation, Inc.
+# Copyright (C) 2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011, 2013.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.1.4\n"
+"Project-Id-Version: gst-plugins-good-1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-25 17:40+0100\n"
-"PO-Revision-Date: 2013-10-04 12:15+0200\n"
+"POT-Creation-Date: 2014-06-22 14:24+0200\n"
+"PO-Revision-Date: 2014-06-18 19:56+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Project-Style: gnome\n"
 
 msgid "Jack server not found"
 msgstr "Нисам пронашао сервер утичнице"
@@ -244,9 +243,9 @@ msgstr "Уређај „%s“ не може да снима на %dx%d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Уређај „%s“ не може да снима у наведеном запису"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Уређај „%s“ не подржава видео снимање"
+msgstr "Уређај „%s“ не подржава не-непрекидне равни"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -255,30 +254,26 @@ msgstr "Не могу да добавим параметре на уређају
 msgid "Video device did not accept new frame rate setting."
 msgstr "Видео уређај не прихвата нове поставке протока кадрова."
 
-#, fuzzy
 msgid "Video device did not provide output format."
-msgstr "Видео уређај не прихвата нове поставке протока кадрова."
+msgstr "Видео уређај не обезбеђује излазни запис."
 
 msgid "Video device returned invalid dimensions."
-msgstr ""
+msgstr "Видео уређај је вратио неисправне димензије."
 
-#, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr "Управљачки програм уређаја „%s“ не подржава УИ начин %d"
+msgstr "Видео уређаји користе неподржани метод преплитања."
 
 msgid "Video devices uses an unsupported pixel format."
-msgstr ""
+msgstr "Видео уређаји користе неподржани запис сличице."
 
-#, fuzzy
 msgid "Failed to configure internal buffer pool."
-msgstr "Видео уређај не може да направи смештај међумеморије."
+msgstr "Нисам успео да подесим унутрашњи смештај међумеморије."
 
-#, fuzzy
 msgid "Video device did not suggest any buffer size."
-msgstr "Видео уређај не може да направи смештај међумеморије."
+msgstr "Видео уређај не предлаже величину међумеморије."
 
 msgid "No downstream pool to import from."
-msgstr ""
+msgstr "Нема смештаја доњег тока из кога увести."
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -309,22 +304,19 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
-msgstr "Управљачки програм уређаја „%s“ не подржава УИ начин %d"
+msgstr "Видео уређаји користе неподржани запис сличице."
 
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "Видео уређај не прихвата нове поставке протока кадрова."
+msgstr "Видео уређаји користе неподржани запис сличице."
 
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "Видео уређај не прихвата нове поставке протока кадрова."
+msgstr "Видео уређаји користе неподржани запис сличице."
 
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "Видео уређај не прихвата нове поставке протока кадрова."
-
-msgid "Failed to re-enabled decoder."
-msgstr ""
+msgstr "Видео уређаји користе неподржани запис сличице."
 
 msgid "Failed to allocate required memory."
 msgstr ""
@@ -380,13 +372,13 @@ msgstr "Уређај „%s“ није уређај за снимање."
 msgid "Device '%s' is not a output device."
 msgstr "Уређај „%s“ није излазни уређај."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "Уређај „%s“ није излазни уређај."
+msgstr "Уређај „%s“ није М2М уређај."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr "Не могу да покренем уређај „%s“ ради читања и уписа."
+msgstr "Не могу да удвостручим уређај „%s“ ради читања и уписа."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
