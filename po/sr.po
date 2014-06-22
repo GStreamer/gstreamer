@@ -1,14 +1,14 @@
 # Serbian translation of gstreamer
-# Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+# Copyright (C) 2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-# Danilo Segan <dsegan@gmx.net>, 2004, 2005.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011, 2013, 2014.
+# Danilo Segan <dsegan@gmx.net>, 2004-2005.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.2.1\n"
+"Project-Id-Version: gstreamer-1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-25 16:08+0100\n"
-"PO-Revision-Date: 2014-01-13 17:53+0200\n"
+"POT-Creation-Date: 2014-06-22 14:22+0200\n"
+"PO-Revision-Date: 2014-06-18 20:12+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Project-Style: gnome\n"
 
 msgid "Print the GStreamer version"
 msgstr "Исписује издање Гстримера"
@@ -204,9 +203,8 @@ msgstr "Не могу да добавим/поставим подешавања 
 msgid "No space left on the resource."
 msgstr "Није преостало простора у изворишту."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Није преостало простора у изворишту."
+msgstr "Нисам овлашћен да приступим изворишту."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "Гстример је наишао на општу грешку тока."
@@ -815,10 +813,10 @@ msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Подаци о људима који су урадили ремикс и сличне изведбе"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "миди-основна-нота"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Број миди ноте звучне нумере."
 
 msgid ", "
 msgstr ", "
@@ -845,11 +843,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "веза нема извора [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "веза нема усклађивање [source=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -869,11 +867,11 @@ msgstr "нема елемента „%s“"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "неочекивана упута „%s“ — занемарујем"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "неочекивана упута-попуне „%s“ — занемарујем"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -888,18 +886,18 @@ msgid "no source element for URI \"%s\""
 msgstr "нема изворног елемента за адресу „%s“"
 
 msgid "syntax error"
-msgstr ""
+msgstr "грешка синтаксе"
 
 msgid "bin"
-msgstr ""
+msgstr "канта"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "наведена је празна канта „%s“, ово није дозвољено"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "нема канте „%s“, прескачем"
+msgstr "нема канте „%s“, распакујем елементе"
 
 msgid "empty pipeline not allowed"
 msgstr "није допуштена празна спојка низа"

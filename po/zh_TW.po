@@ -1,14 +1,35 @@
 # traditional Chinese translation of gstreamer.
 # This file is put in the public domain.
 # Abel Cheung <abelcheung@gmail.com>, 2005.
-#
+# Wen Liao <wen.cf83@gmail.com>, 2014
+# Terms sync-up:
+# plugin: 外掛程式
+# log: 日誌
+# registry: 登錄資料
+# thread: 執行緒
+# seek: 跳播 (通常多媒體播放中seek不是字面上的搜尋，而是跳到媒體任意地方，因此
+#             使用搜尋，尋找並不夠精確）
+# stream: 資料串流
+# multiplex: 多工串接
+# demultiplex: 解多工分接
+# key: 金鑰
+# replaygain: 回放增益，用在確保playlist內所有音軌不會音量不同
+#           http://zh.wikipedia.org/zh-tw/%E5%9B%9E%E6%94%BE%E5%A2%9E%E7%9B%8A
+# problem: 大部分翻成錯誤
+# reference: 參照（應該有更好的名詞）
+# 保留原名：
+# 1. GStreamer專用元件: element, pad, caps, clock, pipeline, bin, 某些link
+# 2. 專有名詞： codec, container, beat, URI, URI scheme, TOC
+# 3. 疑似專有名詞：domain
+# 4. GStreamer內部狀態
+# 5. metadata
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.8\n"
+"Project-Id-Version: gstreamer 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-25 16:08+0100\n"
-"PO-Revision-Date: 2005-04-27 14:55+0800\n"
-"Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
+"POT-Creation-Date: 2014-06-22 14:22+0200\n"
+"PO-Revision-Date: 2014-06-08 00:22+0800\n"
+"Last-Translator: Wen Liao <wen.cf83@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
@@ -20,158 +41,143 @@ msgid "Print the GStreamer version"
 msgstr "顯示 GStreamer 版本"
 
 msgid "Make all warnings fatal"
-msgstr "令任何警告都造成程式終止"
+msgstr "將所有警告視為嚴重錯誤"
 
 msgid "Print available debug categories and exit"
-msgstr "顯示可以偵錯的類別，然後結束"
+msgstr "顯示可以偵錯的類別，並結束"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"將預設偵錯級別設定為 1 (只顯示錯誤) 至 5 (任何訊息)，或者用 0 表示不顯示訊息"
+"將預設偵錯等級設定為 1 (只顯示錯誤) 至 9 (任何訊息)，或者用 0 表示不顯示訊息"
 
 msgid "LEVEL"
-msgstr "LEVEL"
+msgstr ""
 
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"各種類別和它們的詳細程度，格式是「分類:等級」，每個都以逗號隔開。例如："
-"GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+"以逗號分隔列表中的內容，內容的格式為「分類:等級」，以此方式指定各個分類的等"
+"級。例如：GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
-msgstr "LIST"
+msgstr ""
 
 msgid "Disable colored debugging output"
-msgstr "偵錯結果不加上色彩"
+msgstr "偵錯結果不顯示顏色"
 
 msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
-msgstr ""
+msgstr "更改偵錯日誌配色模式，支援配色模式為：off, on, disable, auto, unix"
 
 msgid "Disable debugging"
 msgstr "關閉偵錯功能"
 
 msgid "Enable verbose plugin loading diagnostics"
-msgstr "載入增效模組時顯示詳細訊息"
+msgstr "載入外掛時顯示詳細訊息"
 
 msgid "Colon-separated paths containing plugins"
-msgstr ""
+msgstr "以分號分隔的路徑中有包含外掛程式"
 
 msgid "PATHS"
-msgstr "PATHS"
+msgstr "路徑"
 
-#, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
-"除了環境變數 GST_PLUGIN_PATH 中的增效模組之外，另外再指定載入的增效模組 (以逗"
-"號分隔)"
+"除了有輸入環境變數 GST_PLUGIN_PATH 的外掛程式之外，所有以逗號分隔的外掛程式清"
+"單都會被預載"
 
 msgid "PLUGINS"
-msgstr "PLUGINS"
+msgstr "外掛程式"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "載入增效模組時不攔截程式區段碼錯誤"
+msgstr "載入外掛程式時不攔截程式區段碼錯誤"
 
 msgid "Disable updating the registry"
-msgstr ""
+msgstr "停止更新登錄資料"
 
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr ""
+msgstr "掃描登錄資料時不產生協助處理資料的行程"
 
 msgid "GStreamer Options"
-msgstr ""
+msgstr "GStreamer 選項"
 
-#, fuzzy
 msgid "Show GStreamer Options"
-msgstr "顯示 GStreamer 版本"
+msgstr "顯示 GStreamer 選項"
 
 msgid "Unknown option"
-msgstr ""
+msgstr "未知的選項"
 
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer 主要函式庫發生一般性的錯誤。"
 
-#, fuzzy
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
-msgstr "GStreamer 開發人員未用任何錯誤碼判定這類錯誤。請匯報之。"
+msgstr "GStreamer 開發人員尚未定義這類錯誤的錯誤代碼。"
 
-#, fuzzy
 msgid "Internal GStreamer error: code not implemented."
-msgstr "GStreamer 內部錯誤：未完成編程。請匯報錯誤。"
+msgstr "GStreamer 內部錯誤：未實作的功能。"
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"GStreamer錯誤： 狀態切換失敗，同時部份element在該次失敗中無法顯示相關錯誤訊息"
 
-#, fuzzy
 msgid "Internal GStreamer error: pad problem."
-msgstr "GStreamer 內部錯誤：線程發生問題。請匯報錯誤。"
+msgstr "GStreamer 內部錯誤：pad錯誤。"
 
-#, fuzzy
 msgid "Internal GStreamer error: thread problem."
-msgstr "GStreamer 內部錯誤：線程發生問題。請匯報錯誤。"
+msgstr "GStreamer 內部錯誤：執行緒錯誤。"
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "GStreamer 內部錯誤：線程發生問題。請匯報錯誤。"
+msgstr "GStreamer 內部錯誤：溝通協定錯誤。"
 
-#, fuzzy
 msgid "Internal GStreamer error: event problem."
-msgstr "GStreamer 內部錯誤：搜尋發生問題。請匯報錯誤。"
+msgstr "GStreamer 內部錯誤：事件錯誤。"
 
-#, fuzzy
 msgid "Internal GStreamer error: seek problem."
-msgstr "GStreamer 內部錯誤：搜尋發生問題。請匯報錯誤。"
+msgstr "GStreamer 內部錯誤：跳播錯誤。"
 
-#, fuzzy
 msgid "Internal GStreamer error: caps problem."
-msgstr "GStreamer 內部錯誤：搜尋發生問題。請匯報錯誤。"
+msgstr "GStreamer 內部錯誤：caps錯誤。"
 
-#, fuzzy
 msgid "Internal GStreamer error: tag problem."
-msgstr "GStreamer 內部錯誤：線程發生問題。請匯報錯誤。"
+msgstr "GStreamer 內部錯誤：標籤錯誤。"
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr ""
+msgstr "您的GStreamer缺少外掛程式。"
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "GStreamer 內部錯誤：搜尋發生問題。請匯報錯誤。"
+msgstr "GStreamer 內部錯誤：時脈錯誤。"
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
-msgstr ""
+msgstr "應用程式嘗試使用已被關閉的選項內的功能"
 
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer 輔助函式庫發生一般性的錯誤。"
 
 msgid "Could not initialize supporting library."
-msgstr "無法初始化輔助函式庫。"
+msgstr "無法初始化支援函式庫。"
 
 # (abel) close library? 該解釋清楚才是。
 msgid "Could not close supporting library."
-msgstr "無法關閉輔助函式庫。"
+msgstr "無法關閉支援函式庫。"
 
-# (abel) close library? 該解釋清楚才是。
-#, fuzzy
 msgid "Could not configure supporting library."
-msgstr "無法關閉輔助函式庫。"
+msgstr "無法設定支援函式庫組態。"
 
 msgid "Encoding error."
-msgstr ""
+msgstr "編碼錯誤。"
 
-#, fuzzy
 msgid "GStreamer encountered a general resource error."
-msgstr "GStreamer 主要函式庫發生一般性的錯誤。"
+msgstr "GStreamer 遭遇一般性的資源錯誤。"
 
 msgid "Resource not found."
 msgstr "找不到資源。"
@@ -180,53 +186,52 @@ msgid "Resource busy or not available."
 msgstr "資源使用中，或者無法存取。"
 
 msgid "Could not open resource for reading."
-msgstr ""
+msgstr "無法開啟讀取用的資源"
 
 msgid "Could not open resource for writing."
-msgstr ""
+msgstr "無法開啟寫入用的資源。"
 
 msgid "Could not open resource for reading and writing."
-msgstr ""
+msgstr "無法開啟讀取和寫入用的資源。"
 
 msgid "Could not close resource."
-msgstr ""
+msgstr "無法關閉資源。"
 
 msgid "Could not read from resource."
-msgstr ""
+msgstr "無法從資源中讀取資料。"
 
 msgid "Could not write to resource."
-msgstr ""
+msgstr "無法寫入資料到資源內。"
 
 msgid "Could not perform seek on resource."
-msgstr ""
+msgstr "該資源內無法跳播。"
 
 msgid "Could not synchronize on resource."
-msgstr ""
+msgstr "無法和資源同步。"
 
 msgid "Could not get/set settings from/on resource."
-msgstr ""
+msgstr "無法從資源取得或設定組態設定。"
 
 msgid "No space left on the resource."
-msgstr ""
+msgstr "資源已經沒有剩餘空間。"
 
 msgid "Not authorized to access resource."
-msgstr ""
+msgstr "未經授權無法存取資源。"
 
-#, fuzzy
 msgid "GStreamer encountered a general stream error."
-msgstr "GStreamer 主要函式庫發生一般性的錯誤。"
+msgstr "GStreamer 遭遇一般性的資料串流錯誤。"
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr ""
+msgstr "Element 沒有實作處理該資料串流，請回報錯誤。"
 
 msgid "Could not determine type of stream."
 msgstr "無法決定資料串流的類型。"
 
 msgid "The stream is of a different type than handled by this element."
-msgstr ""
+msgstr "該資料串流和element能處理的型態不一致。"
 
 msgid "There is no codec present that can handle the stream's type."
-msgstr ""
+msgstr "沒有能夠處理該資料串流的codec。"
 
 msgid "Could not decode stream."
 msgstr "無法將資料串流進行解碼。"
@@ -235,61 +240,61 @@ msgid "Could not encode stream."
 msgstr "無法將資料串流進行編碼。"
 
 msgid "Could not demultiplex stream."
-msgstr ""
+msgstr "無法將資料串流解多工分接。"
 
 msgid "Could not multiplex stream."
-msgstr ""
+msgstr "無法將資料串流多工串接。"
 
-#, fuzzy
 msgid "The stream is in the wrong format."
 msgstr "資料串流格式錯誤。"
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr ""
+msgstr "資料串流已加密，但是目前不支援解密。"
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
-msgstr ""
+msgstr "資料串流已加密，但是沒有適當的金鑰因而無法解密。"
 
+# Wen, 怪怪的？Domain意義不明。
 #, c-format
 msgid "No error message for domain %s."
-msgstr ""
+msgstr "domain %s沒有可用的錯誤訊息。"
 
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr ""
+msgstr "domain %s 以及代碼 %d沒有標準的錯誤訊息。"
 
 msgid "Selected clock cannot be used in pipeline."
-msgstr ""
+msgstr "在pipeline中無法使用選擇的clock。"
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "寫入登錄資料快取到%s時發生錯誤：%s"
 
 msgid "title"
 msgstr "標題"
 
 msgid "commonly used title"
-msgstr ""
+msgstr "通用標題"
 
 msgid "title sortname"
-msgstr ""
+msgstr "排序後的標題"
 
 msgid "commonly used title for sorting purposes"
-msgstr ""
+msgstr "排序用的通用標題"
 
 msgid "artist"
-msgstr ""
+msgstr "作者"
 
 msgid "person(s) responsible for the recording"
-msgstr ""
+msgstr "錄製人"
 
 msgid "artist sortname"
-msgstr ""
+msgstr "排序後的作者"
 
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr ""
+msgstr "排序後的錄製人"
 
 msgid "album"
 msgstr "專輯"
@@ -298,82 +303,77 @@ msgid "album containing this data"
 msgstr "這些樂曲所屬的專輯"
 
 msgid "album sortname"
-msgstr ""
+msgstr "排序後的專輯"
 
-#, fuzzy
+# 從gsttaglist.c猜測這個是前面訊息的詳細版本
 msgid "album containing this data for sorting purposes"
-msgstr "這些樂曲所屬的專輯"
+msgstr "排序後包含這些資料的專輯"
 
 msgid "album artist"
-msgstr ""
+msgstr "專輯作者"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "整張專輯的作者"
 
 msgid "album artist sortname"
-msgstr ""
+msgstr "排序後的專輯作者"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "排序後的整張專輯作者"
 
 msgid "date"
 msgstr "日期"
 
-#, fuzzy
 msgid "date the data was created (as a GDate structure)"
 msgstr "媒體資料製作日期"
 
-#, fuzzy
 msgid "datetime"
-msgstr "日期"
+msgstr "日期時間"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "媒體資料製作日期"
 
 msgid "genre"
-msgstr "樂曲分類"
+msgstr "媒體類型"
 
 msgid "genre this data belongs to"
-msgstr "這首樂曲的分類"
+msgstr "媒體類型"
 
 msgid "comment"
 msgstr "註解"
 
 msgid "free text commenting the data"
-msgstr "任意用來為媒體加上註解的文字"
+msgstr "媒體註解的內容"
 
-#, fuzzy
 msgid "extended comment"
-msgstr "註解"
+msgstr "延伸註解"
 
-#, fuzzy
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr "任意用來為媒體加上註解的文字"
+msgstr "使用關鍵字=值或是關鍵字[en]=註解格式表示媒體註解的內容"
 
 msgid "track number"
 msgstr "音軌編號"
 
 msgid "track number inside a collection"
-msgstr "樂曲屬於專輯中的第幾首樂曲"
+msgstr "蒐集資料內的音軌編號"
 
 msgid "track count"
 msgstr "音軌總數"
 
 msgid "count of tracks inside collection this track belongs to"
-msgstr "整套專輯的樂曲總數"
+msgstr "目前音軌所屬的蒐集資料音軌總數"
 
 msgid "disc number"
 msgstr "碟片編號"
 
 msgid "disc number inside a collection"
-msgstr "整套專輯中該樂曲存取在第幾片碟片"
+msgstr "蒐集資料中的碟片編號"
 
 msgid "disc count"
 msgstr "碟片總數"
 
 msgid "count of discs inside collection this disc belongs to"
-msgstr "整套專輯的碟片總數"
+msgstr "目前碟片編號所數的蒐集資料碟片總數"
 
 msgid "location"
 msgstr "位置"
@@ -381,16 +381,16 @@ msgstr "位置"
 msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
-msgstr ""
+msgstr "媒體的URI(檔案或是資料串流的位置)"
 
 msgid "homepage"
-msgstr ""
+msgstr "首頁"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
+msgstr "該媒體的首頁（如作者或是電影首頁）"
 
 msgid "description"
-msgstr "說明"
+msgstr "描述"
 
 msgid "short text describing the content of the data"
 msgstr "一段有關媒體內容的簡短說明文字"
@@ -405,31 +405,28 @@ msgid "ISRC"
 msgstr "ISRC"
 
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr ""
+msgstr "國際標準錄音錄影資料代碼 - 請參考: http://www.ifpi.org/isrc/"
 
 msgid "organization"
 msgstr "組織"
 
 msgid "copyright"
-msgstr "授權"
+msgstr "版權"
 
 msgid "copyright notice of the data"
-msgstr ""
+msgstr "資料的版權通知"
 
-#, fuzzy
 msgid "copyright uri"
-msgstr "授權"
+msgstr "版權URI"
 
-#, fuzzy
 msgid "URI to the copyright notice of the data"
-msgstr "一段有關媒體內容的簡短說明文字"
+msgstr "資料的版權通知URI"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "編碼程序"
+msgstr "編碼者"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "編碼者或是編碼組織名稱"
 
 msgid "contact"
 msgstr "連絡"
@@ -441,66 +438,65 @@ msgid "license"
 msgstr "條款"
 
 msgid "license of data"
-msgstr ""
+msgstr "資料的條款"
 
-#, fuzzy
 msgid "license uri"
-msgstr "條款"
+msgstr "條款uri"
 
 msgid "URI to the license of the data"
-msgstr ""
+msgstr "資料的條款URI"
 
 msgid "performer"
 msgstr "演出者"
 
 msgid "person(s) performing"
-msgstr ""
+msgstr "演出者"
 
 msgid "composer"
-msgstr ""
+msgstr "作曲者"
 
 msgid "person(s) who composed the recording"
-msgstr ""
+msgstr "作曲者"
 
 msgid "duration"
 msgstr "時間長度"
 
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr ""
+msgstr "GStreamer 時間單位（奈秒）長度"
 
 msgid "codec"
-msgstr "編碼"
-
-msgid "codec the data is stored in"
 msgstr ""
+
+# Wen, 怪怪的
+# 從gsttaglist.c猜測這個是前面訊息的詳細版本
+msgid "codec the data is stored in"
+msgstr "處理資料用的codec"
 
 msgid "video codec"
-msgstr "視像編碼"
+msgstr "影片codec"
 
+# Wen, 怪怪的
+# 從gsttaglist.c猜測這個是前面訊息的詳細版本
 msgid "codec the video data is stored in"
-msgstr ""
+msgstr "處理影片資料用的codec"
 
 msgid "audio codec"
-msgstr "音效編碼"
+msgstr "聲音codec"
 
 msgid "codec the audio data is stored in"
-msgstr "音效"
+msgstr "處理聲音資料用的codec"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "視像編碼"
+msgstr "字幕codec"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "音效"
+msgstr "處理字幕資料的codec"
 
-#, fuzzy
 msgid "container format"
-msgstr "連絡資訊"
+msgstr "container 格式"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "音效"
+msgstr "處理資料的container模式"
 
 msgid "bitrate"
 msgstr "位元率"
@@ -527,312 +523,307 @@ msgid "maximum bitrate in bits/s"
 msgstr "最高位元率 (bit/s)"
 
 msgid "encoder"
-msgstr "編碼程序"
+msgstr "編碼器"
 
 msgid "encoder used to encode this stream"
-msgstr ""
+msgstr "該資料串流使用的編碼器"
 
 msgid "encoder version"
-msgstr ""
+msgstr "編碼器版本"
 
 msgid "version of the encoder used to encode this stream"
-msgstr ""
+msgstr "該資料串流使用的編碼器版本"
 
 msgid "serial"
-msgstr ""
+msgstr "流水號"
 
 msgid "serial number of track"
-msgstr ""
+msgstr "音軌的流水號"
 
 msgid "replaygain track gain"
-msgstr ""
+msgstr "回放增益音軌增益"
 
 msgid "track gain in db"
-msgstr ""
+msgstr "音軌增益(db)"
 
 msgid "replaygain track peak"
-msgstr ""
+msgstr "回放增益音軌峰值"
 
 msgid "peak of the track"
-msgstr ""
+msgstr "音軌峰值"
 
 msgid "replaygain album gain"
-msgstr ""
+msgstr "回放增益專輯增益"
 
 msgid "album gain in db"
-msgstr ""
+msgstr "專輯增益(db)"
 
 msgid "replaygain album peak"
-msgstr ""
+msgstr "回放增益專輯峰值"
 
 msgid "peak of the album"
-msgstr ""
+msgstr "專輯峰值"
 
 msgid "replaygain reference level"
-msgstr ""
+msgstr "回放增益參考level"
 
 msgid "reference level of track and album gain values"
-msgstr ""
+msgstr "音軌以及增益值的參考level"
 
 msgid "language code"
-msgstr ""
+msgstr "語言編碼"
 
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr ""
+msgstr "該資料串流的語言編碼，和ISO-639或ISO-639-2相容"
 
 msgid "language name"
-msgstr ""
+msgstr "語言名稱"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "該資料串流使用的語言"
 
 msgid "image"
-msgstr ""
+msgstr "影像"
 
 msgid "image related to this stream"
-msgstr ""
+msgstr "和該資料串流有關的影像"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
-msgstr ""
+msgstr "影像預覽"
 
 msgid "preview image related to this stream"
-msgstr ""
+msgstr "和該資料串流有關的影像預覽"
 
 msgid "attachment"
-msgstr ""
+msgstr "附件"
 
 msgid "file attached to this stream"
-msgstr ""
+msgstr "該資料串流所附的檔案"
 
 msgid "beats per minute"
-msgstr ""
+msgstr "每分鐘beat數"
 
 msgid "number of beats per minute in audio"
-msgstr ""
+msgstr "聲音中每分鐘beat數"
 
 msgid "keywords"
-msgstr ""
+msgstr "關鍵字"
 
-#, fuzzy
 msgid "comma separated keywords describing the content"
-msgstr "一段有關媒體內容的簡短說明文字"
+msgstr "用來敘述媒體內容的關鍵字，關鍵字之間以逗號分開"
 
-#, fuzzy
 msgid "geo location name"
-msgstr "位置"
+msgstr "地理位置名稱"
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
-msgstr ""
+msgstr "人類可讀的媒體錄製地點資訊。"
 
 msgid "geo location latitude"
-msgstr ""
+msgstr "地理緯度位置"
 
+# Wen, 省略規格描述部份
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
-msgstr ""
+msgstr "媒體錄製地點緯度"
 
 msgid "geo location longitude"
-msgstr ""
+msgstr "地理經度位置"
 
+# Wen, 省略規格描述部份
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
-msgstr ""
+msgstr "媒體錄製地點經度"
 
 msgid "geo location elevation"
-msgstr ""
+msgstr "地理位置海拔"
 
+# Wen, 省略規格描述部份
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
-msgstr ""
+msgstr "媒體錄製地點海拔"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "位置"
+msgstr "地理位置國家"
 
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
+msgstr "媒體錄製的國家(英文名)"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "位置"
+msgstr "地理位置城市"
 
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
+msgstr "以英文表示的媒體錄製城市"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "位置"
+msgstr "地理位置城市內區域"
 
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
-msgstr ""
+msgstr "媒體錄製城市內區域"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "位置"
+msgstr "地理位置水平誤差"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "預期的水平誤差（以公尺為單位）"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "位置"
+msgstr "地理位址移動速度"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr ""
+msgstr "錄製設備操作時的移動速度(m/s)"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "位置"
+msgstr "地理位址移動方向"
 
+# Wen, 省略規格描述部份
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
-msgstr ""
+msgstr "錄製設備操作時的移動方向"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "位置"
+msgstr "地理位址錄製設備方向"
 
+# Wen, 省略規格描述部份
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
-msgstr ""
+msgstr "錄製設備操作時的方向"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr ""
+msgstr "顯示名稱"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "tv/podcast/影集中媒體的名稱"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
-msgstr ""
+msgstr "顯示排序後名稱"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr ""
+msgstr "排序後的tv/podcast/影集中媒體的名稱"
 
-#, fuzzy
 msgid "episode number"
-msgstr "碟片編號"
+msgstr "集數編號"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "該季中媒體集數編號"
 
-#, fuzzy
 msgid "season number"
-msgstr "碟片編號"
+msgstr "季數編號"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "媒體的季數編號"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "條款"
+msgstr "歌詞"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "歌曲歌詞"
 
 msgid "composer sortname"
-msgstr ""
+msgstr "排序後的編曲者"
 
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr ""
+msgstr "排序後的編曲者"
 
 msgid "grouping"
-msgstr ""
+msgstr "群組"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"將有關聯的不同的音軌設成群組，例如一場演唱會切成不同段落。比單一音軌高階，但"
+"是比專輯低階"
 
-#, fuzzy
 msgid "user rating"
-msgstr "時間長度"
+msgstr "使用者評價"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
-msgstr ""
+msgstr "使用者評價，分數愈高表示愈受歡迎"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "設備製造商"
 
 msgid "Manufacturer of the device used to create this media"
-msgstr ""
+msgstr "錄製媒體設備的製造商"
 
 msgid "device model"
-msgstr ""
+msgstr "設備型號"
 
 msgid "Model of the device used to create this media"
-msgstr ""
+msgstr "錄製媒體設備的型號"
 
-#, fuzzy
 msgid "application name"
-msgstr "位置"
+msgstr "應用程式名稱"
 
 msgid "Application used to create the media"
-msgstr ""
+msgstr "產生媒體使用的應用程式"
 
 msgid "application data"
-msgstr ""
+msgstr "應用程式資料"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "任意的應用程式資料，最後會被串列化後放入媒體"
 
 msgid "image orientation"
-msgstr ""
+msgstr "影像方向"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "用來協助判斷影像播放時應該旋轉或是翻面"
 
 msgid "publisher"
-msgstr ""
+msgstr "出版者"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "標簽或出版商名稱"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "詮釋者"
 
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr ""
+msgstr "重新混音或是重新詮釋的作者"
 
+# Wen, 怪怪的
 msgid "midi-base-note"
-msgstr ""
+msgstr "Midi簡譜"
 
+# Wen, 怪怪的
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "音軌Midi簡譜"
 
 msgid ", "
 msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "找不到%s的URI處理程式"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "不支援URI scheme:'%s'"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "錯誤：來自 %s 元件：%s\n"
+msgstr "錯誤：來自 %s element：%s\n"
 
 #, c-format
 msgid ""
@@ -842,10 +833,12 @@ msgstr ""
 "額外偵錯資訊：\n"
 "%s\n"
 
+# Wen, 不翻譯，幾乎都是專有名詞
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
 
+# Wen, 不翻譯，幾乎都是專有名詞
 #, c-format
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
@@ -856,7 +849,7 @@ msgstr "“%2$s” 元件沒有 “%1$s” 屬性"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "無法將 “%2$s” 元件的 “%1$s” 屬性設定為 “%3$s”"
+msgstr "無法將 “%2$s” element的 “%1$s” 屬性設定為 “%3$s”"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -864,85 +857,85 @@ msgstr "無法連接 %s 和 %s"
 
 #, c-format
 msgid "no element \"%s\""
-msgstr "“%s” 元件不存在"
+msgstr "“%s” element不存在"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "忽略非預期的參照: \"%s\""
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "忽略非預期的pad參照: \"%s\""
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr ""
+msgstr "無法分析caps \"%s\""
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "URI “%s” 沒有輸出元件"
+msgstr "URI “%s” 沒有可用的sink element"
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr "URI “%s” 沒有來源元件"
+msgstr "URI “%s” 沒有可用的source element"
 
 msgid "syntax error"
-msgstr ""
+msgstr "語法錯誤"
 
 msgid "bin"
 msgstr ""
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr ""
+msgstr "不允許指定空的bin: \"%s\""
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "“%2$s” 元件沒有 “%1$s” 屬性"
+msgstr "bin \"%s\"不存在，解開elements"
 
 msgid "empty pipeline not allowed"
-msgstr "不允許使用沒有內容的管線"
+msgstr "不允許空的pipeline"
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "正在拋棄大量的緩衝區"
 
 msgid "Internal data flow problem."
-msgstr ""
+msgstr "內部資料流程錯誤"
 
 msgid "Internal data stream error."
-msgstr ""
+msgstr "內部資料串流錯誤"
 
 msgid "Internal data flow error."
-msgstr ""
+msgstr "內部資料流程錯誤"
 
 msgid "Internal clock error."
-msgstr ""
+msgstr "內部clock錯誤"
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "對應緩衝區失敗"
 
 msgid "Filter caps"
-msgstr ""
+msgstr "過濾caps"
 
+# Wen, 怪怪的
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
-msgstr ""
+msgstr "限制允許的capabilities (NULL表示不限制)，打開該屬性將會參照GstCaps物件"
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "未指定暫存目錄"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "無法連接 %s 和 %s"
+msgstr "無法產生暫存檔案\"%s\""
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "無法開啟檔案 “%s” 來讀取內容。"
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
+msgstr "下載並寫入內容至檔案時發生錯誤。"
 
 msgid "No file name specified for writing."
 msgstr "未指定準備寫入的檔案名稱。"
@@ -955,9 +948,9 @@ msgstr "無法開啟 “%s” 檔案來寫入內容。"
 msgid "Error closing file \"%s\"."
 msgstr "關閉檔案 “%s” 時發生錯誤。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
+msgstr "對檔案 “%s” 定位時發生錯誤。"
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
@@ -966,9 +959,9 @@ msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
 msgid "No file name specified for reading."
 msgstr "未指定要讀取的檔案名稱。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "無法連接 %s 和 %s"
+msgstr "無法從 %s 取得資料"
 
 #, c-format
 msgid "\"%s\" is a directory."
@@ -978,223 +971,226 @@ msgstr "“%s” 是一個目錄。"
 msgid "File \"%s\" is a socket."
 msgstr "“%s” 是一個 socket。"
 
+# Wen, 怪怪的
 msgid "Failed after iterations as requested."
-msgstr ""
+msgstr "重複送出請求後發生失敗"
 
 msgid "caps"
 msgstr ""
 
 msgid "detected capabilities in stream"
-msgstr ""
+msgstr "已從資料串流中偵測到capabilities"
 
 msgid "minimum"
 msgstr "最低"
 
 msgid "force caps"
-msgstr ""
+msgstr "強迫caps"
 
 msgid "force caps without doing a typefind"
-msgstr ""
+msgstr "不尋找型態，直些強迫caps"
 
-#, fuzzy
 msgid "Stream contains no data."
-msgstr "這些樂曲所屬的專輯"
+msgstr "資料串流中沒有資料"
 
 msgid "Implemented Interfaces:\n"
-msgstr ""
+msgstr "實作介面：\n"
 
 msgid "readable"
-msgstr ""
+msgstr "可讀"
 
-#, fuzzy
 msgid "writable"
-msgstr "標題"
+msgstr "可寫"
 
 msgid "controllable"
-msgstr ""
+msgstr "可控制"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "可以切換到NULL, READY, PAUSED 或PLAYING狀態"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "只能切換到NULL, READY, 或PAUSED狀態"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "只能切換到NULL 或 READY狀態"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "黑名單檔案"
 
-#, fuzzy
 msgid "Total count: "
-msgstr "音軌總數"
+msgstr "總數量:"
 
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
+msgstr[0] "%d個黑名單檔案"
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] ""
+msgstr[0] "%d 個外掛程式"
 
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
+msgstr[0] "%d筆黑名單紀錄"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%d feature"
 msgid_plural "%d features"
-msgstr[0] "功能"
+msgstr[0] "%d 個功能"
 
 msgid "Print all elements"
-msgstr "顯示所有元件"
+msgstr "顯示所有elements"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "顯示所有黑名單檔案"
 
+# Wen, 怪怪的
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
+"從指定外掛程式或是所有外掛程式印出電腦可以分析的功能列表。\n"
+"                                       對於連結並安裝外部自動外掛程式有用"
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "列出外掛程式內容"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "檢查指定的element或是外掛程式是否存在"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
-msgstr ""
+msgstr "檢查指定的element或是外掛程式是否存在時順便檢查是否為最新版本"
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr ""
+msgstr "印出支援的URI schemes以及有實作它的elements"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "無法開啟 “%s” 檔案來寫入內容。"
+msgstr "無法再入外掛程式檔案： “%s”\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "URI “%s” 沒有來源元件"
+msgstr "找不到element或外掛程式'%s'\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "索引統計"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr ""
+msgstr "從element \"%2$s\"(%3$s) 中得到訊息#%1$u:"
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "從pad \"%4$s\"(%2$s:%3$s) 中得到訊息#%1$u:"
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "從物件 \"%2$s\"(%3$s) 中得到訊息#%1$u:"
 
 #, c-format
 msgid "Got message #%u (%s): "
-msgstr ""
+msgstr "收到訊息 #%u (%s):"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "錯誤：來自 %s 元件：%s\n"
+msgstr "從element \"%s\" 中得到EOS通知\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr ""
+msgstr "找到標籤      : 由element \"%s\"找到。\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr ""
+msgstr "找到標籤      : 由pad \"%s:%s\"找到。\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr ""
+msgstr "找到標籤      : 由從物件 \"%s\"找到。\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "找到標籤\n"
 
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr ""
+msgstr "找到 TOC      : 從element \"%s\"。\n"
 
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr ""
+msgstr "找到 TOC      : 從物件 \"%s\"。\n"
 
 msgid "FOUND TOC\n"
-msgstr ""
+msgstr "找到TOC\n"
 
 #, c-format
 msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
+"資訊：\n"
+"%s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "錯誤：來自 %s 元件：%s\n"
+msgstr "警告：來自element %s ：%s\n"
 
+# Wen, 怪怪的, 如何精確區分preroll和buffer?
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr ""
+msgstr "緩衝中，等待緩衝完成...\n"
 
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr ""
+msgstr "緩衝中，等待完成進度...\n"
 
 msgid "buffering..."
-msgstr ""
+msgstr "緩衝中..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "緩衝完成，將pipeline狀態設成PLAYING...\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "緩衝完成，將pipeline狀態設成PAUSE...\n"
 
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "重新分配延遲時間...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "由%2$s要求，將狀態設成%1$s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr ""
+msgstr "中斷：停止pipeline...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "進度：(%s) %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "“%s” 元件不存在"
+msgstr "“%s” element不存在\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "錯誤：來自 %s 元件：%s\n"
+msgstr "從element '%s' 取得內容: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
-msgstr ""
+msgstr "輸出標籤 （即metadata）"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "輸出TOC (章節以及版本)"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "輸出狀態資訊以及屬性通知"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "不顯示和 TYPE 有關的狀態資訊"
+msgstr "不顯示任何進度資訊"
 
 msgid "Output messages"
-msgstr ""
+msgstr "輸出訊息"
 
 msgid "Do not output status information of TYPE"
 msgstr "不顯示和 TYPE 有關的狀態資訊"
@@ -1203,84 +1199,81 @@ msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
 msgid "Do not install a fault handler"
-msgstr ""
+msgstr "不安裝錯誤處理程式"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "在關閉pipeline前強迫source EOS"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "收集並列印索引統計"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr "錯誤：無法製作管線：%s。\n"
+msgstr "錯誤：無法建立pipeline：%s。\n"
 
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr "錯誤：無法製作管線。\n"
+msgstr "錯誤：無法建立pipeline。\n"
 
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr "警告：管線錯誤：%s\n"
+msgstr "警告：pipeline錯誤：%s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "錯誤：找不到 ‘pipeline’ 元件。\n"
+msgstr "錯誤：找不到 ‘pipeline’ element。\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "將pipeline狀態設為PAUSED...\n"
 
-#, fuzzy
 msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "錯誤：管線無法執行。\n"
+msgstr "錯誤：Pipeline 不想要暫停。\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr ""
+msgstr "Pipepline可以正常運動，不需要緩衝 ...\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
+msgstr "Pipeline正在緩衝 ...\n"
 
-#, fuzzy
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "錯誤：管線無法執行。\n"
+msgstr "錯誤：Pipeline 不想要緩衝。\n"
 
 msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
+msgstr "Pipleline已經緩衝完畢 ...\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "將pipeline狀態設為PLAYING...\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "錯誤：管線無法執行。\n"
+msgstr "錯誤：Pipeline 不想要播放。\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
+msgstr "關閉時送出EOS已設定 -- 強迫Pipeline EOS\n"
 
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
+msgstr "關閉時送出EOS已設定 -- 產生錯誤後等待EOS\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "等待EOS...\n"
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr ""
+msgstr "收到EOS - 停止pipeline...\n"
 
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr ""
+msgstr "等待EOS時發生中斷 - 停止pipeline\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "等待EOS時發生錯誤\n"
 
 msgid "Execution ended after %"
-msgstr ""
+msgstr "在 % 之後執行結束"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr ""
+msgstr "將pipeline狀態設為READY...\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr ""
+msgstr "將pipeline狀態設為NULL...\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "執行管線 ...\n"
+msgstr "釋放pipeline ...\n"
 
 #~ msgid "link without source element"
 #~ msgstr "管線中沒有來源元件"
@@ -1316,7 +1309,7 @@ msgstr "執行管線 ...\n"
 #~ msgstr "REGISTRY"
 
 #~ msgid "path list for loading plugins (separated by '%s')"
-#~ msgstr "搜尋增效模組時的路徑清單，以‘%s’分隔"
+#~ msgstr "搜尋外掛時的路徑清單，以‘%s’分隔"
 
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "準備使用的排程器 (預設為 ‘%s’)"
@@ -1341,20 +1334,3 @@ msgstr "執行管線 ...\n"
 
 #~ msgid "         Trying to run anyway.\n"
 #~ msgstr "      嘗試強制執行。\n"
-
-# (abel) e.g. "Added plugin alaw with 2 features."
-#~ msgid "Added plugin %s with %d %s.\n"
-#~ msgstr "加入增效模組 %s，當中有 %d 項%s。\n"
-
-#~ msgid "Rebuilding %s (%s) ...\n"
-#~ msgstr "正在重新整理 %s (%s) ...\n"
-
-#~ msgid "Trying to load %s ...\n"
-#~ msgstr "嘗試載入 %s ...\n"
-
-#~ msgid "Error loading %s\n"
-#~ msgstr "載入 %s 失敗\n"
-
-# (abel) e.g. "Loaded 146 plugins with 293 features."
-#~ msgid "Loaded %d plugins with %d %s.\n"
-#~ msgstr "載入 %d 個增效模組，當中有 %d 項%s。\n"
