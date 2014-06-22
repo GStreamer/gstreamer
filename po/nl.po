@@ -1,14 +1,14 @@
-# translation of gst-plugins-ugly-1.0.3.nl.po to Dutch
+# translation of gst-plugins-ugly-1.3.2.nl.po to Dutch
 # Copyright (C) 2004, 2007, 2008, 2009 Free Software Foundation, Inc.
 #
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2011, 2012.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2011, 2012, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 1.0.3\n"
+"Project-Id-Version: gst-plugins-ugly 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 12:49+0200\n"
-"PO-Revision-Date: 2012-11-29 22:31+0100\n"
+"POT-Creation-Date: 2014-06-22 14:24+0200\n"
+"PO-Revision-Date: 2014-05-22 13:05+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
