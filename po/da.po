@@ -1,9 +1,9 @@
 # Danish translation of gst-plugins-base.
-# Copyright (C) 2013 gst, Mogens Jaeger, Joe Hansen.
+# Copyright (C) 2014 gst, Mogens Jaeger, Joe Hansen.
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2009, 2010, 2011, 2013.
+# Joe Hansen <joedalton2@yahoo.dk>, 2009, 2010, 2011, 2013, 2014.
 #
 # capture -> optage
 # gain -> forstærkning
@@ -31,10 +31,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.2.1\n"
+"Project-Id-Version: gst-plugins-base 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-05-21 11:55+0200\n"
-"PO-Revision-Date: 2013-12-08 16:38+0100\n"
+"POT-Creation-Date: 2014-06-22 14:23+0200\n"
+"PO-Revision-Date: 2014-05-24 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -555,7 +555,7 @@ msgid "Buffering..."
 msgstr "Mellemlagrer ..."
 
 msgid "Clock lost, selecting a new one\n"
-msgstr ""
+msgstr "Ur tabt, vælger et nyt ur\n"
 
 msgid "Print version information and exit"
 msgstr "Vis versionsinformation og afslut"
@@ -570,16 +570,16 @@ msgid "Enable gapless playback"
 msgstr "Aktiver afspilning uden huller"
 
 msgid "Shuffle playlist"
-msgstr ""
+msgstr "Bland afspilningsliste"
 
 msgid "Interactive control via keyboard"
-msgstr ""
+msgstr "Interaktiv kontrol via tastatur"
 
 msgid "Volume"
-msgstr ""
+msgstr "Lydstyrke"
 
 msgid "Playlist file containing input media files"
-msgstr ""
+msgstr "Afspilningsfil der indeholder mediefiler"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
