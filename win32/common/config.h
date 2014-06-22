@@ -86,7 +86,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2014-05-21"
+#define GST_PACKAGE_RELEASE_DATETIME "2014-06-22"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -270,6 +270,9 @@
 
 /* Define to 1 if you have the `gmtime_r' function. */
 #undef HAVE_GMTIME_R
+
+/* Use graphene */
+#undef HAVE_GRAPHENE
 
 /* Define to enable GSettings plugin (used by gsettings). */
 #undef HAVE_GSETTINGS
@@ -631,7 +634,7 @@
 #define PACKAGE_NAME "GStreamer Bad Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.3.2"
+#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.3.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-bad"
@@ -640,7 +643,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.3.2"
+#define PACKAGE_VERSION "1.3.3"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -680,7 +683,7 @@
 #undef USE_EGL_RPI
 
 /* Version number of package */
-#define VERSION "1.3.2"
+#define VERSION "1.3.3"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

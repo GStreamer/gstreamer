@@ -14,6 +14,12 @@ GObject
       GstControlBinding
       GstControlSource
       GstElement
+        GstAggregator
+          GstVideoAggregator
+            GstCompositor
+            GstGLMixer
+              GstGLMosaic
+              GstGLVideoMixer
         GstAiffMux
         GstAiffParse
         GstAsfMux
@@ -226,9 +232,6 @@ GObject
         GstFluidDec
         GstGDPDepay
         GstGDPPay
-        GstGLMixer
-          GstGLMosaic
-          GstGLVideoMixer
         GstGmeDec
         GstInterlace
         GstJP2kDecimator
@@ -251,7 +254,6 @@ GObject
         GstOpencvTextOverlay
         GstPcapParse
         GstPitch
-        GstPnmdec
         GstPnmenc
         GstPyramidSegment
         GstRTPBaseDepayload
@@ -279,6 +281,7 @@ GObject
         GstVideoDecoder
           GstOpenEXRDec
           GstOpenJPEGDec
+          GstPnmdec
           GstRsvgDec
           GstSchroDec
           GstVMncDec
@@ -298,7 +301,11 @@ GObject
         MpegTsMux
       GstGLContext
       GstPad
-        GstGLMixerPad
+        GstAggregatorPad
+          GstVideoAggregatorPad
+            GstCompositorPad
+            GstGLMixerPad
+              GstGLVideoMixerPad
       GstPadTemplate
       GstPlugin
       GstPluginFeature
@@ -395,4 +402,5 @@ GInterface
   GstTagXmpWriter
   GstURIHandler
   GstVideoOverlay
+  GstWaylandVideo
   MXFDescriptiveMetadataFrameworkInterface

@@ -3,7 +3,7 @@
   <description>Wayland Video Sink</description>
   <filename>../../ext/wayland/.libs/libgstwaylandsink.so</filename>
   <basename>libgstwaylandsink.so</basename>
-  <version>1.3.2</version>
+  <version>1.3.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -14,13 +14,13 @@
       <longname>wayland video sink</longname>
       <class>Sink/Video</class>
       <description>Output to wayland surface</description>
-      <author>Sreerenj Balachandran &lt;sreerenj.balachandran@intel.com&gt;</author>
+      <author>Sreerenj Balachandran &lt;sreerenj.balachandran@intel.com&gt;, George Kiagiadakis &lt;george.kiagiadakis@collabora.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGRx, BGRA }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ BGRx, BGRA, RGBx, xBGR, xRGB, RGBA, ABGR, ARGB, RGB, BGR, RGB16, BGR16, YUY2, YVYU, UYVY, AYUV, NV12, NV21, NV16, YUV9, YVU9, Y41B, I420, YV12, Y42B, v308 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

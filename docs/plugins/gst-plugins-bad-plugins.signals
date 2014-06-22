@@ -551,6 +551,14 @@ GstSrtpEnc *gstsrtpenc
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstSrtpEnc::get-rollover-counter</NAME>
+<RETURNS>guint</RETURNS>
+<FLAGS>la</FLAGS>
+GstSrtpEnc *gstsrtpenc
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstSrtpDec::clear-keys</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
@@ -587,5 +595,76 @@ guint  arg1
 <FLAGS>la</FLAGS>
 GstSrtpDec *gstsrtpdec
 guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDvbSrc::tuning-done</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDvbSrc *gstdvbsrc
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDvbSrc::tuning-fail</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDvbSrc *gstdvbsrc
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDvbSrc::tuning-start</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDvbSrc *gstdvbsrc
+</SIGNAL>
+
+<SIGNAL>
+<NAME>DvbBaseBin::tuning-done</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+DvbBaseBin *dvbbasebin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>DvbBaseBin::tuning-fail</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+DvbBaseBin *dvbbasebin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>DvbBaseBin::tuning-start</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+DvbBaseBin *dvbbasebin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLImageSink::client-draw</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLImageSink *gstglimagesink
+guint  arg1
+guint  arg2
+guint  arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLImageSink::client-reshape</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLImageSink *gstglimagesink
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLFilterApp::client-draw</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLFilterApp *gstglfilterapp
+guint  arg1
+guint  arg2
+guint  arg3
 </SIGNAL>
 

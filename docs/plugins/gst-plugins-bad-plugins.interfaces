@@ -15,6 +15,7 @@ GstCameraBin GstChildProxy GstImplementsInterface GstColorBalance GstTagSetter
 GstCameraBin GstChildProxy GstTagSetter
 GstCameraBin2 GstChildProxy GstTagSetter
 GstCeltEnc GstPreset GstTagSetter
+GstCompositor GstChildProxy
 GstDaalaEnc GstPreset
 GstDashDemux GstChildProxy
 GstDataURISrc GstURIHandler
@@ -65,10 +66,12 @@ GstUvcH264Src GstChildProxy
 GstVCDSrc GstURIHandler
 GstVP8Enc GstPreset GstTagSetter
 GstVP8Enc GstTagSetter GstPreset
+GstVideoAggregator GstChildProxy
 GstVideoEncoder GstPreset
 GstViewfinderBin GstChildProxy
 GstVoAacEnc GstPreset
 GstVoAmrWbEnc GstPreset
+GstWaylandSink GstVideoOverlay GstWaylandVideo
 GstWrapperCameraBinSrc GstChildProxy
 GstXvidEnc GstPreset
 MXFDMS1ClipFramework MXFDescriptiveMetadataFrameworkInterface

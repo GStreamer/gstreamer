@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Bad Plugins 1.3.2
+Release notes for GStreamer Bad Plugins 1.3.3
 
 
-The GStreamer team is pleased to announce the second release of the unstable
+The GStreamer team is pleased to announce the third release of the unstable
 1.3 release series. The 1.3 release series is adding new features on top of
 the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.3 release series
@@ -10,20 +10,13 @@ will lead to the stable 1.4 release series in the next weeks, and newly added
 API can still change until that point.
 
 
+This is hopefully the last 1.3 development release and will be followed by
+the first 1.4.0 release candidate (1.3.90) in 1-2 weeks. Which then hopefully
+is followed by 1.4.0 soonish in early July.
+
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
 during the unstable 1.3 release series.
-
-
-
-The versioning scheme that is used in general is that 1.x.y is API and
-ABI backwards compatible with previous 1.x.y releases. If x is an even
-number it is a stable release series and all releases in this series
-will only contain important bugfixes, e.g. the 1.0 series with 1.0.7. If
-x is odd it is a development release series that will lead to the next
-stable release series 1.x+1 and contains new features and bigger
-changes. During the development release series, new API can still
-change.
 
 
 
@@ -75,22 +68,70 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 721685 : mpegtsmux: Remove unused data in TsMuxSection
-      * 723167 : curlsftpsink: allow remote host authentication by public key fingerprint
-      * 726666 : gl: error: redundant redeclaration of numerous GL functions
-      * 728234 : gl: Don't unconditonally use EGL extensions
-      * 729542 : glimagesink: pool may never be activated, which leads to crash
-      * 729588 : glimagesink: cannot play 1080p on RPI
-      * 729614 : PNM Encoder is Encoding 0 x 0 images
-      * 729658 : gl: wrong negotiated caps when using eglimage
-      * 729742 : glcolorconvert: Should set alpha to 1 if source is opaque
-      * 729743 : glcolorconvert: Should preserve alpha channel when doing AYUV - > ARGB
+      * 731918 : videoaggregator: Add a new base class that aggregates video streams
+      * 731921 : gl: Port glmixer to the GstVideoAggregator baseclass
+      * 723352 : codecparsers_h264: Framerate estimation enhancement
+      * 675132 : tsdemux: implement proper seeking with binary search and keyframe detection
+      * 674536 : tsdemux: Freeze on pts-wrap with streaming sources
+      * 704507 : glimagesink: Replace pointer properties with signals
+      * 705129 : androidmedia: add support for video encoding
+      * 709414 : dvbsrc: Uses deprecated field frontend type and add DVB S2/T2 support
+      * 721035 : tsdemux: fails to seek on the attached file (regression)
+      * 721869 : dvbsrc needs to conditionally build for older dvb headers
+      * 722397 : liveadder: handle gap buffer flag
+      * 723529 : glimagesink: only draws on buffer push
+      * 726193 : waylandsink: subsurface & scaling support, plus many other improvements
+      * 726861 : srtp: add support for rollover counter
+      * 728364 : mpegts: add service list, stuffing and bouquet name descriptors
+      * 728429 : mpegts: add multilingual descriptors
+      * 728514 : glimagesink fails with gst-sdk android tutorial-5 / tutorial-4
+      * 728890 : GstGLUpload: wrong colors for YUY2 and UYVY on GLES
+      * 729054 : schroenc: Does not handle variable framerate streams
+      * 729245 : gl: rename platform cocoa to cgl to be more consistent with context type
+      * 729257 : glvideomixer: segfault in gst_gl_video_mixer_callback when accessing frame info
+      * 729278 : gl: avoid using an extra FBO pass in some basic cases
+      * 729750 : gl: GL_FRAMEBUFFER_UNSUPPORTED with GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
+      * 729798 : glvideomixer: Does not support positioning of input streams
       * 729861 : glfilter: lose some caps informations like the framerate
-      * 729896 : glupload: Ignores stride when uploading raw data
-      * 730069 : gl: Crash when setting invalid GST_GL_PLATFORM
-      * 730133 : motioncells:fix memleak
-      * 730459 : curlsshsink: post error on bus in element, not transfer  thread
-      * 729551 : GstGLDisplay: mix platform and window
+      * 729882 : opusenc: use aux vars to minimize critical region
+      * 730141 : motioncells improvements
+      * 730231 : gl*: No libGLU with NVIDIA binary drivers
+      * 730363 : h264parse: set field_pic_flag when parsing a slice header
+      * 730435 : mpegts: add support for ATSC tables MGT / ETT / EIT / STT
+      * 730523 : pnmdec: PBM (Bitmap) decoding support is not present
+      * 730570 : dvbsrc: fix building with newer kernel headers
+      * 730574 : hlsdemux: Saving IV from media sequence number is done out of file- > iv structure
+      * 730635 : androidmedia: Add a new QCOM color format
+      * 730641 : dvbbasebin: criticals/crash if tsparse is missing
+      * 730642 : mpegts: atsc: rename TVCT to VCT as it is the same as CVCT
+      * 730666 : gl: YUY2 conversion broken in GLES2
+      * 730692 : dvbsrc: Add missing tone ioctl
+      * 730703 : gl: Freshly allocated memory is twice the expected size
+      * 730782 : glimagesink: cannot create window and stalls
+      * 730802 : glimagesink: should honor " show-preroll-frame " property inherited from GstVideoSink
+      * 730830 : hlsdemux: Remove \ " sign from decryption KEY url does not always work
+      * 730847 : example: ts-parser: add terrestrial delivery system descriptor
+      * 730854 : example: ts-parser: add component, content, stream id, ca id, parential rating descriptors
+      * 730901 : example: ts-parser: add linkage descriptor
+      * 730944 : glvideomixer: Got data flow before stream-start event
+      * 731088 : tsdemux: missing audio after seeking in mpeg transport stream (regression)
+      * 731107 : glimagesink: Failed to create window surface: EGL_BAD_ALLOC
+      * 731164 : hlsdemux: Attempt to reload variant playlist if refreshing playlist or downloading fragments failed
+      * 731250 : dvbsrc: tuning/locking logic improvements
+      * 731400 : pnmdec: PNMDecoder gives sticky event warning
+      * 731522 : codecparsers: add C++ guards for MPEG-4 and VP8 parsers
+      * 731524 : codecparsers: h264: fix quantization matrix conversion  routine names
+      * 731555 : gst-plugins-bad requires glib > = 2.34.0
+      * 731698 : tsdemux : latest patch for accurate seeking of h264 streams has been incorrectly merged.
+      * 731707 : tsdemux: remove unused const variables
+      * 731714 : gstsrtpenc: add allow-repeat-tx property
+      * 731722 : OpenGL: Add an element for transforming video geometry
+      * 731768 : gstsrtpenc: unref event when needed
+      * 731899 : rawparser doesn't forward custom query
+      * 731917 : aggregator: Add a new base class for mixers and muxers
+      * 731919 : compositor: Add a new compositor based on the new GstVideoAggregator base class
+      * 731968 : hlsdemux: Fix decrypting fragments
+      * 641204 : dvbsrc: Faster tuning logic: Use poll instead of artificial usleep
 
 ==== Download ====
 
@@ -127,20 +168,36 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Aleix Conchillo Flaqué
+      * Arnaud Vrac
       * Aurélien Zanelli
+      * Chen Jie
+      * Christian Fredrik Kalager Schaller
+      * Damian Ziobro
       * Edward Hervey
-      * Jesper Larsen
+      * George Kiagiadakis
+      * Gwenole Beauchesne
+      * Jan Schmidt
+      * Jorge Zapata
       * Julien Isorce
-      * L. Sorin
-      * Luis de Bethencourt
+      * Justin Joy
+      * Lubosz Sarnecki
+      * Mathieu Duponchelle
       * Matthew Waters
+      * Matthieu Bouron
+      * Michael Olbrich
+      * Miguel París Díaz
       * Nicola Murino
       * Nicolas Dufresne
       * Olivier Crête
       * Reynaldo H. Verdejo Pinochet
       * Sanjay NM
       * Sebastian Dröge
+      * Stefan Ringel
       * Thiago Santos
+      * Thibault Saunier
+      * Thomas Bluemel
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
       * Wim Taymans
  

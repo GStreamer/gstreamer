@@ -731,7 +731,7 @@
 <ARG>
 <NAME>GstMpeg2enc::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,10000]</RANGE>
+<RANGE>[0,40000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bitrate</NICK>
 <BLURB>Compressed video bitrate (kbps).</BLURB>
@@ -1926,6 +1926,16 @@
 <NICK>stream-id</NICK>
 <BLURB>Stream ID (-1 disabled, DVB-T2 and DVB-S2 max 255, ISDB max 65535).</BLURB>
 <DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::tuning-timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tuning Timeout</NICK>
+<BLURB>Milliseconds to wait before giving up tuning/locking on a signal.</BLURB>
+<DEFAULT>10000000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18126,6 +18136,16 @@
 <NICK>stream-id</NICK>
 <BLURB>Stream ID (-1 disabled, DVB-T2 and DVB-S2 max 255, ISDB max 65535).</BLURB>
 <DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::tuning-timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tuning Timeout</NICK>
+<BLURB>Milliseconds to wait before giving up tuning/locking on a signal.</BLURB>
+<DEFAULT>10000000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59094,6 +59114,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstWaylandSink::display</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Wayland Display name</NICK>
+<BLURB>Wayland display name to connect to, if not supplied via the GstContext.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstPyramidSegment::level</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[0,4]</RANGE>
@@ -67078,6 +67108,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstSrtpEnc::allow-repeat-tx</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Allow repeat packets transmission</NICK>
+<BLURB>Whether retransmissions of packets with the same sequence number are allowed(Note that such repeated transmissions must have the same RTP payload, or a severe security weakness is introduced!).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSegmentation::learning-rate</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
@@ -67823,5 +67863,15 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Normal map location</NICK>
 <BLURB>Normal map location.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCompositor::background</NAME>
+<TYPE>GstCompositorBackground</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Background</NICK>
+<BLURB>Background type.</BLURB>
+<DEFAULT>Checker pattern</DEFAULT>
 </ARG>
 
