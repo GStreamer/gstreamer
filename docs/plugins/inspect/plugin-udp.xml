@@ -3,7 +3,7 @@
   <description>transfer data via UDP</description>
   <filename>../../gst/udp/.libs/libgstudp.so</filename>
   <basename>libgstudp.so</basename>
-  <version>1.3.2</version>
+  <version>1.3.3</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -13,7 +13,7 @@
       <name>dynudpsink</name>
       <longname>UDP packet sender</longname>
       <class>Sink/Network</class>
-      <description>Send data over the network via UDP</description>
+      <description>Send data over the network via UDP with packet destinations picked up dynamically from meta on the buffers passed</description>
       <author>Philippe Khalaf &lt;burger@speedy.org&gt;</author>
       <pads>
         <caps>
@@ -28,7 +28,7 @@
       <name>multiudpsink</name>
       <longname>UDP packet sender</longname>
       <class>Sink/Network</class>
-      <description>Send data over the network via UDP</description>
+      <description>Send data over the network via UDP to one or multiple recipients which can be added or removed at runtime using action signals</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>

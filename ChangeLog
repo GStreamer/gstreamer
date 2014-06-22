@@ -1,9 +1,905 @@
-=== release 1.3.2 ===
+=== release 1.3.3 ===
 
-2014-05-21  Sebastian Dröge <slomo@coaxion.net>
+2014-06-22  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.2
+	  releasing 1.3.3
+
+2014-06-22 14:24:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  po: Update translations
+
+2014-06-21 01:32:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/pulse/pulsedevicemonitor.c:
+	* sys/v4l2/gstv4l2devicemonitor.c:
+	  pulse, v4l2: update for device "klass" -> "device-class" rename
+
+2014-06-20 12:21:05 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/udp/gstmultiudpsink.c:
+	  multiudpsink: optimisation: avoid unnecessary memory ref/unrefs
+	  We know the buffer will stay valid and we will also not
+	  modify the buffer, we just want to send out the data.
+
+2014-06-19 14:59:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/udp/gstmultiudpsink.c:
+	* gst/udp/gstmultiudpsink.h:
+	  multiudpsink: avoid some unnecessary run-time type checks
+
+2014-06-19 16:17:23 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: pass the stream id when asking for crypto params
+	  This way the app can choose different parameters for each stream.
+
+2014-05-20 14:58:07 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/rtsp/gstrtspsrc.h:
+	  rtspsrc: add support for key length parameters
+	  This patch adds supports for the incoming key management parameters for
+	  encryption and authentication key lengths.
+	  It also adds a new signal request-rtcp-key that allows the user to
+	  provide the crypto parameters and key for the RTCP stream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730473
+
+2014-06-19 15:25:01 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtp/gstrtpvp8depay.c:
+	  vp8depay: fix header size checking
+	  Use a different variable name to make it clear that we are calculating
+	  the header size.
+	  Correctly check that we have enough bytes to read the header bits. We
+	  were checking if there were 5 bytes available in the header while we
+	  only needed 3, causing the packet to be discarded as too small.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=723595
+
+2014-05-20 12:39:31 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/rtp/gstrtph264pay.c:
+	* gst/rtp/gstrtph264pay.h:
+	  rtph264pay: propagate the GST_BUFFER_FLAG_DISCONT flag
+	  Similarly to what we did with the DELTA_UNIT flag, this patch
+	  propagates the DISCONT flag to the first RTP packet being used to transfer a
+	  DISCONT buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730563
+
+2014-05-06 17:42:14 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/rtp/gstrtph264pay.c:
+	* gst/rtp/gstrtph264pay.h:
+	  rtph264pay: propagate the GST_BUFFER_FLAG_DELTA_UNIT flag
+	  Downstream elements may be interested knowing if a RTP packet is the start
+	  of a key frame (to implement a RTP extension as defined in the
+	  ONVIF Streaming Spec for example).
+	  We do this by checking the GST_BUFFER_FLAG_DELTA_UNIT flag we receive from
+	  upstream and propagate it to the *first* RTP packet outputted to transfer this
+	  buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730563
+
+2014-05-20 13:58:20 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/rtp/gstrtpmp4gpay.c:
+	* gst/rtp/gstrtpmp4gpay.h:
+	  gstrtpmp4gpay: propagate the GST_BUFFER_FLAG_DISCONT flag
+	  Propagate the DISCONT flag to the first RTP packet being used to transfer
+	  a DISCONT buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730563
+
+2014-05-20 13:58:20 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/rtp/gstrtpjpegpay.c:
+	  rtpjpegpay: propagate the GST_BUFFER_FLAG_DISCONT flag
+	  Propagate the DISCONT flag to the first RTP packet being used to transfer
+	  a DISCONT buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730563
+
+2014-06-18 15:03:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: don't leak flow combiner
+
+2014-06-18 14:38:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpj2kpay.c:
+	  rtpjp2kpay: pre-allocate buffer-list of the right size
+
+2014-06-18 14:34:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpjpegpay.c:
+	  rtpjpegpay: pre-allocate buffer list of the right size
+
+2014-06-18 14:19:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpmp4vpay.c:
+	  rtpmp4vpay: pre-allocate buffer list of the right size
+
+2014-06-18 13:44:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpvp8pay.c:
+	  rtpvp8pay: allocate bitreader on the stack
+
+2014-06-18 13:29:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpvp8pay.c:
+	  rtpvp8pay: post error message on bus on error and don't use g_message()
+
+2014-06-18 13:20:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpvp8pay.c:
+	  rtpvp8pay: couple of minor optimisations
+	  Pre-allocate buffer list of the right size to avoid re-allocs.
+	  Avoid plenty of double runtime cast checks and re-doing the
+	  same calculation over and over again in rtp_vp8_calc_payload_len().
+	  Only call gst_buffer_get_size() once.
+
+2014-06-18 08:10:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpgstpay.c:
+	  rtpgstpay: pre-allocate buffer list of the right size
+	  To avoid re-allocs.
+
+2014-06-18 07:52:05 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: pre-allocate bufferlist of the right size
+	  To avoid unnecessary re-allocs.
+
+2014-06-16 20:15:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	* tests/check/elements/rtp-payloading.c:
+	  rtph264pay: push single buffer directly, no need to wrap it in a bufferlist
+	  No point in a buffer list if we just have one single
+	  buffer to push. Fix up unit test to handle that case
+	  as well.
+
+2014-06-16 15:35:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpvrawpay.c:
+	* gst/rtp/gstrtpvrawpay.h:
+	  rtpvrawpay: make chunks per frame configurable
+	  Bit of a misnomer because it's really chunks per field
+	  and not per frame, but we're going to ignore that for
+	  the time being.
+
+2014-06-16 14:52:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpvrawpay.c:
+	* gst/rtp/gstrtpvrawpay.h:
+	  rtpvrawpay: remove unused variables
+
+2014-06-16 14:44:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpvrawpay.c:
+	  rtpvrawpay: pre-allocate buffer lists of sufficient size
+	  Avoids unnecessary reallocs when appending buffers
+	  to the bufferlist.
+
+2014-06-16 13:51:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpvrawpay.c:
+	  rtpvrawpay: micro-optimise variable access in inner loop
+	  Store some values that don't change during the execution
+	  of the inner loops locally, so the compiler knows that too.
+
+2014-06-16 13:38:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpvrawpay.c:
+	  rtpvrawpay: use buffer lists
+	  Collect buffers to send out in buffer lists instead of
+	  pushing out single buffers one at a time. For HD video
+	  each frame might easily add up to a couple of thousand
+	  packets, multiply that by the frame rate and that's a
+	  lot of push() and sendmsg() calls per second.
+	  A good reason to push out buffers as early as possible is
+	  latency, so we don't accumulate the whole frame in a single
+	  buffer list, but instead push it out in a few chunks, which
+	  is hopefully a reasonable compromise.
+
+2014-06-16 16:40:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/udp/gstdynudpsink.c:
+	* gst/udp/gstmultiudpsink.c:
+	  udp: improve element descriptions for dynudpsink and multiudpsink
+
+2014-06-16 16:17:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/udp/gstdynudpsink.c:
+	* gst/udp/gstmultiudpsink.c:
+	  udp: remove suppression of compiler warnings for deprecated GLib API
+	  Not needed any more.
+
+2014-06-17 13:16:27 +0530  Ravi Kiran K N <ravi.kiran@samsung.com>
+
+	* gst/videobox/gstvideobox.c:
+	  videobox: Fix caps negotiation issue
+	  Make sure that if AYUV is received it will detect that it can produce
+	  both RGB and YUV formats
+	  Signed-off-by: Ravi Kiran K N <ravi.kiran@samsung.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725248
+
+2014-06-16 12:02:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtptheoradepay.c:
+	  rtptheoradepay: fix double frees
+	  Fix double-frees introduced to fix another coverity report.
+	  CID 1223053
+
+2014-06-13 10:12:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/udp/gstdynudpsink.c:
+	  dynudpsink: return FLUSHING when sendto got canceled, not an error
+
+2014-06-13 09:52:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* sys/oss/gstosshelper.c:
+	  oss: simplify probed caps before returning them
+	  Exposes all formats in the first structure if the
+	  rest is the same for all of them.
+
+2014-06-13 09:45:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* sys/oss/gstosshelper.c:
+	  oss: make sure 16-bit formats are before 8-bit formats in probed caps
+	  Probe supported formats in order of desirability rather than in
+	  what order they may happen to be in the formats bitmask. Fixes
+	  accidentally exposure of 8-bit formats in caps before 16-bit formats
+	  (in case where U16 was not supported S8 might be listed before S16).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706884
+
+2014-06-12 16:36:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Cleanly handle v4l2_allocator_new failure
+
+2014-06-12 11:24:15 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/rtp/gstrtptheoradepay.c:
+	  rtptheordepay: fix leaks
+	  Coverity 1212163
+
+2014-06-12 11:16:08 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/rtp/gstrtpg729pay.c:
+	  rtpg729pay: leak fixes
+	  Coverity 1212159
+
+2014-06-12 11:11:38 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/rtp/gstrtph263pay.c:
+	  rtph263pay: fix leak
+	  Coverity 1212157
+
+2014-06-12 10:43:53 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/rtp/gstrtph263pay.c:
+	  rtph263pay: fix leaks
+	  Coverity 1212149
+
+2014-06-12 10:31:47 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/rtp/gstrtpdvpay.c:
+	  rtpdvpay: catch failures to map buffer
+	  Coverity 1139741
+
+2014-06-11 17:43:42 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/multipart/multipartdemux.c:
+	  multipartdemux: guard against having no MIME type
+	  The code would previously crash trying to insert a NULL string
+	  into a hash table.
+	  It does seem a little broken that indexing is done by MIME type
+	  and not by index though, unless the spec says there cannot be
+	  two parts with the same MIME type.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=659573
+
+2014-06-10 15:42:14 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/multipart/multipartdemux.c:
+	* gst/multipart/multipartdemux.h:
+	  multipartdemux: Send stream-start event
+	  This event was not sent. Send it before caps, this requires the pad to
+	  be parented. This removes warning like: "Got data flow before
+	  stream-start event".
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=731475
+
+2014-06-10 15:33:33 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: avoid looping indefinitely in broken svq3 files
+	  Abort if an atom with size 0 is read from within the svq3 stsd
+	  atoms
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726512
+
+2014-06-10 10:52:23 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/flac/gstflacdec.c:
+	  flacdec: add const where appropriate
+
+2014-06-09 10:39:20 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/speex/gstspeexenc.c:
+	  speexenc: add missing va_end in variadic function
+	  Coverity 1139944
+
+2014-06-09 10:04:38 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Attempt upstream seek first
+	  If we have an upstream element that can handle the seek (such as
+	  rtmpsrc), try to do that first before attempting it ourself.
+
+2014-06-04 11:34:27 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: do not include codec_data on raw audio caps
+	  If the wav header contains an extended chunk, we want to keep
+	  the codec_data field, but not for raw audio.
+	  This fixes some elements (such as adder) from failing to intersect
+	  raw audio caps which would otherwise be intersectable.
+
+2014-06-05 09:38:29 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Query duration upstream first
+	  Upstream elements (like rtmpsrc) might be able to provide the duration
+	  more accurately than flvdemux. Especially with index-less vod files
+
+2014-05-30 19:37:57 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Cleanup poll method and retry on EINTR/EAGAIN
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731015
+
+2014-03-06 16:37:51 +0100  Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: set RESYNC buffer flag when bridging large PTS gaps
+	  So downstream gets notified when this happens.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725903
+
+2014-06-03 17:59:32 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/elements/rtprtx.c:
+	  rtprtx: Reset state on each iteration
+	  Otherwise it didn't wait for the test to finish before checking the results.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728501
+
+2014-05-09 14:22:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/matroska/matroska-read-common.c:
+	  matroskademux: don't leak doctype string in error code path
+	  CID 1212145.
+
+2014-05-20 08:20:42 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/vpx/gstvp9enc.c:
+	  vp9enc: Don't dereference NULL checks
+	  CID #1197703
+
+2014-05-20 08:23:06 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: Don't dereference NULL variable
+	  CID #1139838
+
+2014-05-30 14:32:42 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: upstream handles seek if fragmented and on time segment
+	  Otherwise we can reject seeks on local files that contain fragmented-like
+	  atoms like 'mvex'. Also improve a message log
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730722
+
+2014-05-30 16:43:44 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtp/gstrtph264depay.c:
+	  h264depay: make sure we call handle_nal for each NAL
+	  Call handle_nal for each NAL in the STAP-A RTP packet. This makes
+	  sure we correctly extract the SPS and PPS.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=730999
+
+2014-05-07 14:09:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	* ext/soup/gstsouphttpsrc.h:
+	  souphttpsrc: Add custom sticky event to contain the HTTP request and response headers
+	  This can be useful to e.g. get cookie information downstream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729707
+
+2014-05-26 19:47:39 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: remove stream last flow return
+	  GstPad already stores that information
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709224
+
+2014-05-26 19:37:46 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: remove last flow return from stream struct
+	  It is already stored on GstPad on core
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709224
+
+2014-05-26 19:19:45 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvdemux.h:
+	  flvdemux: Use GstFlowCombiner
+	  Use the flow combiner to have the standard combination results and avoid
+	  repeating the same code
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709224
+
+2014-05-26 13:21:25 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-demux.h:
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-parse.c:
+	* gst/matroska/matroska-read-common.c:
+	  matroskademux: use GstFlowCombiner
+	  Use the flow combiner to have the standard combination results and avoid
+	  repeating the same code
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709224
+
+2014-05-26 13:04:10 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: use GstFlowCombiner
+	  Removes flow return combination code to use the newly added GstFlowCombiner
+
+2014-05-23 17:53:00 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux.h:
+	  qtdemux: use GstFlowCombiner
+	  Removes the common code to combining flow returns to let it be
+	  handled by core gstutils' GstFlowCombiner
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709224
+
+2014-05-26 10:59:55 -0400  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2sink.c:
+	  v4l2sink: implement gstvideosink.show_frame instead of gstbasesink.render
+	  It allows to show preroll frame. Especially it allows to update the
+	  frame when seeking in PAUSED state.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722303
+
+2014-05-26 10:59:06 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2sink.c:
+	  v4l2sink: Cleanup old pad alloc declaration
+
+2014-05-26 12:34:42 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2sink.c:
+	  v4l2bufferpool: Copy already queued buffer
+	  This is required as during preroll we pass the first buffer twice, hence already
+	  queued. It is also useful, to allow filters replaying a previous rendered buffers.
+	  This will require 1 more buffer in sink if last-sample is enabled, since the last
+	  sample will not be the same as the currently queued buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722303
+
+2014-05-24 20:20:07 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2transform.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	* sys/v4l2/v4l2_calls.c:
+	  v4l2bufferpool: Port to bufferpool flush_start/stop method
+	  Port the buffer pool to use the new flush_start/flush_stop virtual
+	  methods added to GstBufferPool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727611
+
+2014-05-25 17:40:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  po: update
+
+2014-05-25 16:54:18 +0200  Piotr Drąg <piotrdrag@gmail.com>
+
+	* po/POTFILES.in:
+	  po: update POTFILES
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726556
+
+2014-05-24 23:51:58 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Don't queue all the buffers before dequeueing first
+	  For output device, we where queuing all the buffers, and then we would
+	  dequeue one. This means we only have 1 buffer for the pipeline, no matter
+	  the size of the queue. Instead, start dequeued when min_latency is reached.
+	  Eventually, this the min_latency should also be affected by control
+	  MIN_BUFFERS_FOR_OUTPUT (use by encoders).
+
+2014-05-24 23:49:19 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Simply read back the config to update the query
+	  It's easy to get the min/max outdate when hacking decide allocation. In
+	  order to avoid this, simply read back the choosen value from the config.
+
+2014-05-24 23:31:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2src.c:
+	  v4l2: Cleanup and fix calculation of latency
+	  Calculation of num_buffers (the max latency in buffers) was
+	  up-side-down.  If we can allcoate, then our maximum latency match
+	  pool maximum number of buffers. Also renamed it to max latency. Finally
+	  introduced a min_latency for clarity.
+
+2014-05-24 20:00:14 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2transform.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	* sys/v4l2/v4l2_calls.c:
+	  Revert "v4l2bufferpool: Port to bufferpool flush_start/stop method"
+	  This reverts commit 2e0fb42e868fc9f6d98b028def80a3e953527307.
+	  Conflicts:
+	  sys/v4l2/gstv4l2allocator.c
+	  sys/v4l2/gstv4l2bufferpool.c
+	  sys/v4l2/gstv4l2videodec.c
+
+2014-05-24 18:56:32 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Fix configuration of other_pool and importation case
+	  Fix the choice of min/max, don't override the min/max with own pool selected
+	  size, correct other_pool is_active check, start from other_pool config when
+	  configuring the other pool and finally validate the configuration.
+
+2014-05-24 18:45:30 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Use proposed allocator as default
+
+2014-05-24 18:43:28 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Fix USERPTR map flags
+	  We need to map READ only for output and write only for capture, we where
+	  doing the opposite. This fixing USERPTR with glimagesink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730698
+
+2014-05-24 11:16:35 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: parse tkhd transformation matrix and add tags if appropriate
+	  Handle the transformation matrix cases where there are only simple rotations
+	  (90, 180 or 270 degrees) and use a tag for those cases. This is a common scenario
+	  when recording with mobile devices
+	  https://bugzilla.gnome.org/show_bug.cgi?id=679522
+
+2014-05-23 19:10:21 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Prevent num_queued from going negative
+
+2014-05-23 18:25:49 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: don't stop if loop returned FLUSHING
+	  The decodeing thread returning flushing isn't an error, we should simply
+	  try starting the task again. If it's actually flushing, it will stop again by itself.
+
+2014-05-23 17:54:20 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Handle early task stop
+
+2014-05-23 17:28:13 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Handle gst_pad_start_task() failure
+
+2014-05-23 17:19:07 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Add trace for FLUSH_START/STOP handling
+
+2014-05-23 17:18:16 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Fix use of atomic value
+
+2014-05-23 17:01:53 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Improve debugging
+	  No need to use obj->element, the pool now have a significant name. Also don't
+	  warn if flushing.
+
+2014-05-23 17:01:02 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Fix handle_frame error handling
+
+2014-05-23 15:56:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Add a trace when _start() is called
+
+2014-05-23 15:56:02 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Add debug assert to detect calls in the wrong state
+
+2014-05-23 15:55:26 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Reset count when stopped
+
+2014-05-23 15:55:08 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2allocator: Return a GstFlowReturn instead of boolean in alloc
+
+2014-05-23 15:17:27 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Don't leak config structure
+
+2014-05-23 14:12:10 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2transform.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	* sys/v4l2/v4l2_calls.c:
+	  v4l2bufferpool: Port to bufferpool flush_start/stop method
+
+2014-05-23 03:00:50 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/isomp4/fourcc.h:
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: add tag mappings for _swr, _mak and _mod tags
+	  swr -> Application name
+	  mak -> device manufacturer
+	  mod -> device model
+
+2014-05-20 17:37:49 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/ximage/gstximagesrc.c:
+	  ximagesrc: Fix ximage leaks when buffer has more then one ximage
+	  From time to time, when the image_pool list has more then 1 element
+	  and I suppose at start, all but 1 pooled ximage are leaked. This is
+	  due to broken algorithm in gst_ximagesink_src_ximage_get(). There was
+	  also a risk of use after free for the case where the ximage size has
+	  changed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728502
+
+2014-05-21 13:23:27 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.3.2 ===
+
+2014-05-21 13:06:35 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/inspect-build.stamp:
+	* docs/plugins/inspect.stamp:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.3.2
+
+2014-05-21 12:19:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-05-21 10:51:10 +0200  Sebastian Dröge <sebastian@centricular.com>
 

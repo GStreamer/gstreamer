@@ -24728,3 +24728,13 @@
 <DEFAULT>1</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstRtpVRawPay::chunks-per-frame</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chunks per Frame</NICK>
+<BLURB>Split and send out each frame in multiple chunks to reduce overhead.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+

@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Good Plugins 1.3.2
+Release notes for GStreamer Good Plugins 1.3.3
 
 
-The GStreamer team is pleased to announce the second release of the unstable
+The GStreamer team is pleased to announce the third release of the unstable
 1.3 release series. The 1.3 release series is adding new features on top of
 the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.3 release series
@@ -10,20 +10,13 @@ will lead to the stable 1.4 release series in the next weeks, and newly added
 API can still change until that point.
 
 
+This is hopefully the last 1.3 development release and will be followed by
+the first 1.4.0 release candidate (1.3.90) in 1-2 weeks. Which then hopefully
+is followed by 1.4.0 soonish in early July.
+
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
 during the unstable 1.3 release series.
-
-
-
-The versioning scheme that is used in general is that 1.x.y is API and
-ABI backwards compatible with previous 1.x.y releases. If x is an even
-number it is a stable release series and all releases in this series
-will only contain important bugfixes, e.g. the 1.0 series with 1.0.7. If
-x is odd it is a development release series that will lead to the next
-stable release series 1.x+1 and contains new features and bigger
-changes. During the development release series, new API can still
-change.
 
 
 
@@ -70,25 +63,19 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 583890 : v4l2: Implement V4L2_MEMORY_USERPTR support
+      * 725903 : flvdemux: set RESYNC buffer flag when bridging large PTS gaps
+      * 726512 : some svq3/mov files stall on start
+      * 726556 : POTFILES.in is out of date
       * 728501 : rtpaux/rtprtx: Unit tests are racy and take very long sometimes
-      * 663944 : souphttpsrc: leaking file descriptors + memory when destroyed while connecting
-      * 707321 : flvdemux: complains too much when failed to send buffers
-      * 720440 : rtpsession: internal sources are never removed
-      * 725410 : v4l2videodec: Probe fails if first device does not start with 0
-      * 725415 : v4l2videodec: Check caps are subset of encode or raw when probing devices
-      * 727925 : v4l2: Share device enumeration
-      * 729247 : rtp/README: update to work with gst 1.0
-      * 729524 : rtpjitterbuffer: if retransmissions enabled, a gap larger than the latency can result in a stuck jitterbuffer
-      * 729553 : qtdemux: tries to reply to a byte position query with a time position
-      * 729591 : v4l2videodec: Remove meaningless properties
-      * 730078 : rtpjitterbuffer: wrong packet insertion if events present in the jitter queue
-      * 730146 : rtpbin: update rtp encoder/decoder documentation
-      * 730200 : v4l2videodec: v4l2bufferpool must be updated according to driver requirement
-      * 730207 : v4l2: Seeking with M2M devices
-      * 730212 : rtspsrc: use a random ssrc for the internal session
-      * 730217 : rtpsession: do not mark internal senders as expired
-      * 724630 : v4l2videodec: alignment support
+      * 729707 : souphttpsrc: Add custom sticky event to contain the HTTP request and response headers
+      * 730473 : rtspsrc: add support for key length parameters
+      * 730476 : v4l2videodec:  stalls on large seeks
+      * 730563 : Propagate DISCONT and DELTAUNIT flags through H264 and Jpeg payloaders
+      * 730698 : v4lsrc: Fails using glimagesink in userptr
+      * 730722 : Cannot seek in a m4a AAC audio file
+      * 731169 : wavparse: Puts codec_data on raw audio caps
+      * 731475 : multipartdemux: Got data flow before stream-start
+      * 722303 : v4l2sink: Enable rendering of the preroll buffer
 
 ==== Download ====
 
@@ -125,21 +112,18 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Adrien SCH
       * Aleix Conchillo Flaqué
-      * Benjamin Gaignard
       * Edward Hervey
-      * Eric Trousset
-      * George Kiagiadakis
       * Guillaume Desmottes
-      * Jason Litzinger
-      * Mark Nauwelaerts
+      * Jan Alexander Steffens (heftig)
+      * Julien Isorce
       * Nicolas Dufresne
       * Olivier Crête
+      * Piotr Drąg
+      * Ravi Kiran K N
       * Sebastian Dröge
+      * Thiago Santos
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Víctor Manuel Jáquez Leal
       * Wim Taymans
-      * Руслан Ижбулатов
  

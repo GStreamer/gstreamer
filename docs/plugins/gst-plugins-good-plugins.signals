@@ -781,3 +781,11 @@ GstRTSPSrc *gstrtspsrc
 GstElement *arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstRTSPSrc::request-rtcp-key</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTSPSrc *gstrtspsrc
+guint  arg1
+</SIGNAL>
+
