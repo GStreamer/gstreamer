@@ -342,7 +342,7 @@ push_buffer_full (State * state, GstFlowReturn expected,
         mapped = TRUE;
       }
       if (!g_strcmp0 (field, "rtptime")) {
-        guint32 rtptime = va_arg (var_args, guint32);
+        guint32 rtptime = va_arg (var_args, guint);
         gst_rtp_buffer_set_timestamp (&rtp, rtptime);
       } else if (!g_strcmp0 (field, "payload-type")) {
         guint payload_type = va_arg (var_args, guint);
@@ -351,7 +351,7 @@ push_buffer_full (State * state, GstFlowReturn expected,
         guint seq = va_arg (var_args, guint);
         gst_rtp_buffer_set_seq (&rtp, seq);
       } else if (!g_strcmp0 (field, "ssrc")) {
-        guint32 ssrc = va_arg (var_args, guint32);
+        guint32 ssrc = va_arg (var_args, guint);
         gst_rtp_buffer_set_ssrc (&rtp, ssrc);
       } else {
         fail ("test cannot set unknown buffer field '%s'", field);
@@ -398,7 +398,7 @@ push_buffer_list (State * state, const gchar * field, ...)
         mapped = TRUE;
       }
       if (!g_strcmp0 (field, "rtptime")) {
-        guint32 rtptime = va_arg (var_args, guint32);
+        guint32 rtptime = va_arg (var_args, guint);
         gst_rtp_buffer_set_timestamp (&rtp, rtptime);
       } else if (!g_strcmp0 (field, "payload-type")) {
         guint payload_type = va_arg (var_args, guint);
@@ -407,7 +407,7 @@ push_buffer_list (State * state, const gchar * field, ...)
         guint seq = va_arg (var_args, guint);
         gst_rtp_buffer_set_seq (&rtp, seq);
       } else if (!g_strcmp0 (field, "ssrc")) {
-        guint32 ssrc = va_arg (var_args, guint32);
+        guint32 ssrc = va_arg (var_args, guint);
         gst_rtp_buffer_set_ssrc (&rtp, ssrc);
       } else {
         fail ("test cannot set unknown buffer field '%s'", field);
@@ -467,7 +467,7 @@ validate_buffer (guint index, const gchar * field, ...)
         mapped = TRUE;
       }
       if (!g_strcmp0 (field, "rtptime")) {
-        guint32 rtptime = va_arg (var_args, guint32);
+        guint32 rtptime = va_arg (var_args, guint);
         fail_unless_equals_int (gst_rtp_buffer_get_timestamp (&rtp), rtptime);
       } else if (!g_strcmp0 (field, "payload-type")) {
         guint pt = va_arg (var_args, guint);
@@ -476,7 +476,7 @@ validate_buffer (guint index, const gchar * field, ...)
         guint seq = va_arg (var_args, guint);
         fail_unless_equals_int (gst_rtp_buffer_get_seq (&rtp), seq);
       } else if (!g_strcmp0 (field, "ssrc")) {
-        guint32 ssrc = va_arg (var_args, guint32);
+        guint32 ssrc = va_arg (var_args, guint);
         fail_unless_equals_int (gst_rtp_buffer_get_ssrc (&rtp), ssrc);
       } else {
         fail ("test cannot validate unknown buffer field '%s'", field);
@@ -802,19 +802,23 @@ GST_START_TEST (rtp_base_payload_perfect_rtptime_test)
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state, "pts", 0 * GST_SECOND, "offset", 0, NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, "offset", G_GINT64_CONSTANT (0),
+      NULL);
 
-  push_buffer (state, "pts", GST_CLOCK_TIME_NONE, "offset", 21, NULL);
+  push_buffer (state, "pts", GST_CLOCK_TIME_NONE, "offset",
+      G_GINT64_CONSTANT (21), NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0, "pts", 0 * GST_SECOND, "offset", 0, NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "offset", G_GINT64_CONSTANT (0),
+      NULL);
   get_buffer_field (0, "rtptime", &rtptime, NULL);
 
   validate_buffer (1,
-      "pts", GST_CLOCK_TIME_NONE, "offset", 21, "rtptime", rtptime + 21, NULL);
+      "pts", GST_CLOCK_TIME_NONE, "offset", G_GINT64_CONSTANT (21), "rtptime",
+      rtptime + 21, NULL);
 
   validate_events_received (3);
 
@@ -1605,37 +1609,43 @@ GST_START_TEST (rtp_base_payload_property_perfect_rtptime_test)
   g_object_get (state->element, "perfect-rtptime", &perfect, NULL);
   fail_unless (!perfect);
 
-  push_buffer (state, "pts", 0 * GST_SECOND, "offset", 0, NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, "offset", G_GINT64_CONSTANT (0),
+      NULL);
 
-  push_buffer (state, "pts", 1 * GST_SECOND, "offset", 17, NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, "offset", G_GINT64_CONSTANT (17),
+      NULL);
 
   g_object_set (state->element, "perfect-rtptime", TRUE, NULL);
   g_object_get (state->element, "perfect-rtptime", &perfect, NULL);
   fail_unless (perfect);
 
-  push_buffer (state, "pts", 2 * GST_SECOND, "offset", 31, NULL);
+  push_buffer (state, "pts", 2 * GST_SECOND, "offset", G_GINT64_CONSTANT (31),
+      NULL);
 
-  push_buffer (state, "pts", 3 * GST_SECOND, "offset", 67, NULL);
+  push_buffer (state, "pts", 3 * GST_SECOND, "offset", G_GINT64_CONSTANT (67),
+      NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (4);
 
   validate_buffer (0,
-      "pts", 0 * GST_SECOND, "offset", 0, "rtptime", timestamp_base, NULL);
+      "pts", 0 * GST_SECOND, "offset", G_GINT64_CONSTANT (0), "rtptime",
+      timestamp_base, NULL);
 
   validate_buffer (1,
       "pts", 1 * GST_SECOND,
-      "offset", 17, "rtptime", timestamp_base + 1 * DEFAULT_CLOCK_RATE, NULL);
+      "offset", G_GINT64_CONSTANT (17), "rtptime",
+      timestamp_base + 1 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_buffer (2,
       "pts", 2 * GST_SECOND,
-      "offset", 31,
+      "offset", G_GINT64_CONSTANT (31),
       "rtptime", timestamp_base + 1 * DEFAULT_CLOCK_RATE + (31 - 17), NULL);
 
   validate_buffer (3,
       "pts", 3 * GST_SECOND,
-      "offset", 67,
+      "offset", G_GINT64_CONSTANT (67),
       "rtptime", timestamp_base + 1 * DEFAULT_CLOCK_RATE + (67 - 17), NULL);
 
   validate_events_received (3);
@@ -1663,11 +1673,11 @@ GST_START_TEST (rtp_base_payload_property_ptime_multiple_test)
   g_object_get (state->element, "ptime-multiple", &multiple, NULL);
   fail_unless_equals_int64 (multiple, 0);
 
-  g_object_set (state->element, "ptime-multiple", 42, NULL);
+  g_object_set (state->element, "ptime-multiple", G_GINT64_CONSTANT (42), NULL);
   g_object_get (state->element, "ptime-multiple", &multiple, NULL);
   fail_unless_equals_int64 (multiple, 42);
 
-  g_object_set (state->element, "ptime-multiple", 0, NULL);
+  g_object_set (state->element, "ptime-multiple", G_GINT64_CONSTANT (0), NULL);
   g_object_get (state->element, "ptime-multiple", &multiple, NULL);
   fail_unless_equals_int64 (multiple, 0);
 
