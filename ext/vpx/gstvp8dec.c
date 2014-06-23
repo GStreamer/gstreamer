@@ -59,6 +59,7 @@ static void gst_vp8_dec_set_default_format (GstVPXDec * dec, GstVideoFormat fmt,
     int width, int height);
 static void gst_vp8_dec_handle_resolution_change (GstVPXDec * dec,
     vpx_image_t * img, GstVideoFormat fmt);
+static gboolean gst_vp8_dec_get_needs_sync_point (GstVPXDec * dec);
 
 static GstStaticPadTemplate gst_vp8_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -103,6 +104,8 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
       GST_DEBUG_FUNCPTR (gst_vp8_dec_set_default_format);
   vpx_class->handle_resolution_change =
       GST_DEBUG_FUNCPTR (gst_vp8_dec_handle_resolution_change);
+  vpx_class->get_needs_sync_point =
+      GST_DEBUG_FUNCPTR (gst_vp8_dec_get_needs_sync_point);
 
   GST_DEBUG_CATEGORY_INIT (gst_vp8dec_debug, "vp8dec", 0, "VP8 Decoder");
 }
@@ -151,6 +154,12 @@ gst_vp8_dec_handle_resolution_change (GstVPXDec * dec, vpx_image_t * img,
     /* No need to call negotiate() here, it will be automatically called
      * by allocate_output_frame()*/
   }
+}
+
+static gboolean
+gst_vp8_dec_get_needs_sync_point (GstVPXDec * dec)
+{
+  return FALSE;
 }
 
 #endif /* HAVE_VP8_DECODER */

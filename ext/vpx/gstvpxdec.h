@@ -102,6 +102,11 @@ struct _GstVPXDecClass
   void (*handle_resolution_change) (GstVPXDec *dec, vpx_image_t *img, GstVideoFormat fmt);
   /*virtual function to check valid format*/
   gboolean (*get_frame_format)(GstVPXDec *dec, vpx_image_t *img, GstVideoFormat* fmt);
+  /* virtual function to check whether the decoder can handle data
+   * before receiving a sync_point, either at the start of after a
+   * decoding error
+   */
+  gboolean (*get_needs_sync_point)(GstVPXDec *dec);
 };
 
 GType gst_vpx_dec_get_type (void);
