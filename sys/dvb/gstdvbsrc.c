@@ -1849,7 +1849,7 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
         /* DTV_TONE not yet implemented
          * set_prop (fe_props_array, &n, DTV_TONE, object->tone) */
         if (ioctl (object->fd_frontend, FE_SET_TONE, object->tone) < 0) {
-          GST_WARNING_OBJECT (object, "Could'nt set tone: %s",
+          GST_WARNING_OBJECT (object, "Couldn't set tone: %s",
               g_strerror (errno));
         }
       } else {
