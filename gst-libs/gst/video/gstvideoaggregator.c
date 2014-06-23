@@ -142,7 +142,7 @@ gst_videoaggregator_pad_finalize (GObject * o)
     videoconvert_convert_free (vaggpad->priv->convert);
   vaggpad->priv->convert = NULL;
 
-  G_OBJECT_CLASS (gst_videoaggregator_pad_parent_class)->dispose (o);
+  G_OBJECT_CLASS (gst_videoaggregator_pad_parent_class)->finalize (o);
 }
 
 static void
@@ -1854,6 +1854,8 @@ gst_videoaggregator_dispose (GObject * o)
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (o);
 
   gst_caps_replace (&vagg->priv->current_caps, NULL);
+
+  G_OBJECT_CLASS (gst_videoaggregator_parent_class)->dispose (o);
 }
 
 static void
