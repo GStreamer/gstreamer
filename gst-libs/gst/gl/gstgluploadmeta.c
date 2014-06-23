@@ -269,9 +269,9 @@ _perform_for_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
 {
   GstGLUploadMeta *upload;
   GstVideoFrame frame;
-//  GstMemory *mem;
+  GstMemory *mem;
   gboolean ret;
-//  guint i, n;
+  guint i, n;
 
   g_return_val_if_fail (meta != NULL, FALSE);
   g_return_val_if_fail (texture_id != NULL, FALSE);
@@ -304,7 +304,7 @@ _perform_for_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
 
   GST_LOG ("Uploading for meta with textures %i,%i,%i,%i", texture_id[0],
       texture_id[1], texture_id[2], texture_id[3]);
-#if 0
+
   /* GstGLMemory */
   n = gst_buffer_n_memory (upload->priv->buffer);
   mem = gst_buffer_peek_memory (upload->priv->buffer, 0);
@@ -321,7 +321,7 @@ _perform_for_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
     if (ret)
       goto out;
   }
-#endif
+
   if (!(ret = gst_video_frame_map (&frame, &upload->info, upload->priv->buffer,
           GST_MAP_READ))) {
     GST_ERROR ("failed to map video frame");
