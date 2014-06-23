@@ -74,7 +74,6 @@ GstWlDisplay *gst_wl_display_new_existing (struct wl_display * display,
     gboolean take_ownership, GError ** error);
 
 /* see wlbuffer.c for explanation */
-void gst_wl_display_stop (GstWlDisplay * self);
 void gst_wl_display_register_buffer (GstWlDisplay * self, gpointer buf);
 void gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer buf);
 

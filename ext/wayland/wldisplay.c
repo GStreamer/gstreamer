@@ -54,6 +54,13 @@ gst_wl_display_finalize (GObject * gobject)
 {
   GstWlDisplay *self = GST_WL_DISPLAY (gobject);
 
+  gst_poll_set_flushing (self->wl_fd_poll, TRUE);
+  g_thread_join (self->thread);
+
+  g_hash_table_foreach (self->buffers,
+      (GHFunc) gst_wl_buffer_force_release_and_unref, NULL);
+  g_hash_table_remove_all (self->buffers);
+
   g_array_unref (self->formats);
   gst_poll_free (self->wl_fd_poll);
   g_hash_table_unref (self->buffers);
@@ -263,17 +270,6 @@ gst_wl_display_new_existing (struct wl_display * display,
   }
 
   return self;
-}
-
-void
-gst_wl_display_stop (GstWlDisplay * self)
-{
-  gst_poll_set_flushing (self->wl_fd_poll, TRUE);
-  g_thread_join (self->thread);
-
-  g_hash_table_foreach (self->buffers,
-      (GHFunc) gst_wl_buffer_force_release_and_unref, NULL);
-  g_hash_table_remove_all (self->buffers);
 }
 
 void

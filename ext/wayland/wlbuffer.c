@@ -28,14 +28,14 @@
  * references that can be dangerous. The reference cycles looks like:
  *
  *   ----------------
- *   | GstWlDisplay | ---------------------------------->
- *   ----------------                                    |
- *         ^                                             |
- *         |                                             V
- *   ------------------------     -------------     ---------------
- *   | GstWaylandBufferPool | --> | GstBuffer | ==> | GstWlBuffer |
- *   |                      | <-- |           | <-- |             |
- *   ------------------------     -------------     ---------------
+ *   | GstWlDisplay | ---------------------------->
+ *   ----------------                              |
+ *                                                 |
+ *                                                 V
+ *   -----------------     -------------     ---------------
+ *   | GstBufferPool | --> | GstBuffer | ==> | GstWlBuffer |
+ *   |               | <-- |           | <-- |             |
+ *   -----------------     -------------     ---------------
  *
  * A GstBufferPool normally holds references to its GstBuffers and each buffer
  * holds a reference to a GstWlBuffer (saved in the GstMiniObject qdata).
@@ -48,31 +48,25 @@
  * to the GstBuffer, which prevents it from returning to the pool. When the
  * last GstWlBuffer receives a release event and unrefs the last GstBuffer,
  * the GstBufferPool will be able to stop and if no-one is holding a strong
- * ref to it, it will be destroyed. This will destroy that last GstBuffer and
- * also the GstWlBuffer. This will all happen in the same context of the
+ * ref to it, it will be destroyed. This will destroy the pool's GstBuffers and
+ * also the GstWlBuffers. This will all happen in the same context of the last
  * gst_buffer_unref, which will be called from the buffer_release() callback.
  *
- * The big problem here lies in the fact that buffer_release() will be called
- * from the event loop thread of GstWlDisplay and the second big problem is
- * that the GstWaylandBufferPool holds a strong ref to the GstWlDisplay.
- * Therefore, if the buffer_release() causes the pool to be destroyed, it may
- * also cause the GstWlDisplay to be destroyed and that will happen in the
- * context of the event loop thread that GstWlDisplay runs. Destroying the
- * GstWlDisplay will need to join the thread (from inside the thread!) and boom.
+ * The problem here lies in the fact that buffer_release() will be called
+ * from the event loop thread of GstWlDisplay, so it's as if the display
+ * holds a reference to the GstWlBuffer, but without having an actual reference.
+ * When we kill the display, there is no way for the GstWlBuffer, the associated
+ * GstBuffer and the GstBufferPool to get destroyed, so we are going to leak a
+ * fair ammount of memory.
  *
  * Normally, this will never happen, even if we don't take special care for it,
  * because the compositor releases buffers almost immediately and when
  * waylandsink stops, they are already released.
  *
  * However, we want to be absolutely certain, so a solution is introduced
- * by explicitly releasing all the buffer references and destroying the
- * GstWlBuffers as soon as we know that we are not going to use them again.
- * All the GstWlBuffers are registered in a hash set inside GstWlDisplay
- * and there is gst_wl_display_stop(), which stops the event loop thread
- * and releases all the buffers explicitly. This gets called from GstWaylandSink
- * right before dropping its own reference to the GstWlDisplay, leaving
- * a possible last (but safe now!) reference to the pool, which may be
- * referenced by an upstream element.
+ * by registering all the GstWlBuffers with the display and explicitly
+ * releasing all the buffer references and destroying the GstWlBuffers as soon
+ * as the display is destroyed.
  */
 
 #include "wlbuffer.h"

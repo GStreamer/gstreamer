@@ -212,12 +212,8 @@ gst_wayland_sink_finalize (GObject * object)
 
   if (sink->last_buffer)
     gst_buffer_unref (sink->last_buffer);
-  if (sink->display) {
-    /* the display must be stopped before droping our reference to it
-     * - see the comment on wlbuffer.c for details */
-    gst_wl_display_stop (sink->display);
+  if (sink->display)
     g_object_unref (sink->display);
-  }
   if (sink->window)
     g_object_unref (sink->window);
   if (sink->pool)
@@ -358,9 +354,6 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
        * restarted (GstVideoOverlay behaves like that in other sinks)
        */
       if (sink->display && !sink->window) {     /* -> the window was toplevel */
-        /* the display must be stopped before droping our reference to it
-         * - see the comment on wlbuffer.c for details */
-        gst_wl_display_stop (sink->display);
         g_clear_object (&sink->display);
       }
       g_mutex_unlock (&sink->display_lock);
