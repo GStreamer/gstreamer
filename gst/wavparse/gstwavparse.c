@@ -1451,6 +1451,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
                   data_size);
               gst_buffer_unmap (buf, &map);
             }
+            wav->offset += GST_ROUND_UP_2 (data_size);
             break;
           }
           default:
