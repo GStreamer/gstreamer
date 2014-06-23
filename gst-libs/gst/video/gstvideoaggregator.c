@@ -1011,7 +1011,7 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
     GstClockTime timestamp;
     gint64 stream_time;
     GstSegment *seg;
-    GstVideoFrame *converted_frame = g_slice_new0 (GstVideoFrame);
+    GstVideoFrame *converted_frame;
     GstBuffer *converted_buf = NULL;
     GstVideoFrame *frame = g_slice_new0 (GstVideoFrame);
 
@@ -1033,6 +1033,8 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
 
     if (pad->priv->convert) {
       gint converted_size;
+
+      converted_frame = g_slice_new0 (GstVideoFrame);
 
       /* We wait until here to set the conversion infos, in case vagg->info changed */
       if (pad->need_conversion_update) {
