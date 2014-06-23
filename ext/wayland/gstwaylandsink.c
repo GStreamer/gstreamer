@@ -43,8 +43,8 @@
 
 #include "gstwaylandsink.h"
 #include "wlvideoformat.h"
-#include "waylandpool.h"
 #include "wlbuffer.h"
+#include "wlshmallocator.h"
 
 #include <gst/wayland/wayland.h>
 #include <gst/video/videooverlay.h>
@@ -362,9 +362,9 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
          * - see the comment on wlbuffer.c for details */
         gst_wl_display_stop (sink->display);
         g_clear_object (&sink->display);
-        g_clear_object (&sink->pool);
       }
       g_mutex_unlock (&sink->display_lock);
+      g_clear_object (&sink->pool);
       break;
     default:
       break;
@@ -451,7 +451,6 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GArray *formats;
   gint i;
   GstStructure *structure;
-  static GstAllocationParams params = { 0, 0, 0, 15, };
 
   sink = GST_WAYLAND_SINK (bsink);
 
@@ -476,13 +475,14 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     goto unsupported_format;
 
   /* create a new pool for the new configuration */
-  newpool = gst_wayland_buffer_pool_new (sink->display);
+  newpool = gst_video_buffer_pool_new ();
   if (!newpool)
     goto pool_failed;
 
   structure = gst_buffer_pool_get_config (newpool);
   gst_buffer_pool_config_set_params (structure, caps, info.size, 2, 0);
-  gst_buffer_pool_config_set_allocator (structure, NULL, &params);
+  gst_buffer_pool_config_set_allocator (structure, gst_wl_shm_allocator_get (),
+      NULL);
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
@@ -524,76 +524,18 @@ static gboolean
 gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
-  GstBufferPool *pool = NULL;
   GstStructure *config;
-  GstCaps *caps;
-  guint size;
-  gboolean need_pool;
+  guint size, min_bufs, max_bufs;
 
-  gst_query_parse_allocation (query, &caps, &need_pool);
+  config = gst_buffer_pool_get_config (sink->pool);
+  gst_buffer_pool_config_get_params (config, NULL, &size, &min_bufs, &max_bufs);
 
-  if (caps == NULL)
-    goto no_caps;
-
-  if (sink->pool)
-    pool = gst_object_ref (sink->pool);
-
-  if (pool != NULL) {
-    GstCaps *pcaps;
-
-    /* we had a pool, check caps */
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
-
-    if (!gst_caps_is_equal (caps, pcaps)) {
-      /* different caps, we can't use this pool */
-      gst_object_unref (pool);
-      pool = NULL;
-    }
-    gst_structure_free (config);
-  }
-
-  if (pool == NULL && need_pool) {
-    GstVideoInfo info;
-
-    if (!gst_video_info_from_caps (&info, caps))
-      goto invalid_caps;
-
-    GST_DEBUG_OBJECT (sink, "create new pool");
-    pool = gst_wayland_buffer_pool_new (sink->display);
-
-    /* the normal size of a frame */
-    size = info.size;
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set_params (config, caps, size, 2, 0);
-    if (!gst_buffer_pool_set_config (pool, config))
-      goto config_failed;
-  }
-  if (pool) {
-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
-    gst_object_unref (pool);
-  }
+  /* we do have a pool for sure (created in set_caps),
+   * so let's propose it anyway, but also propose the allocator on its own */
+  gst_query_add_allocation_pool (query, sink->pool, size, min_bufs, max_bufs);
+  gst_query_add_allocation_param (query, gst_wl_shm_allocator_get (), NULL);
 
   return TRUE;
-
-  /* ERRORS */
-no_caps:
-  {
-    GST_DEBUG_OBJECT (bsink, "no caps specified");
-    return FALSE;
-  }
-invalid_caps:
-  {
-    GST_DEBUG_OBJECT (bsink, "invalid caps specified");
-    return FALSE;
-  }
-config_failed:
-  {
-    GST_DEBUG_OBJECT (bsink, "failed setting config");
-    gst_object_unref (pool);
-    return FALSE;
-  }
 }
 
 static GstFlowReturn
@@ -691,26 +633,63 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   wlbuffer = gst_buffer_get_wl_buffer (buffer);
 
-  if (wlbuffer && wlbuffer->display == sink->display) {
-    GST_LOG_OBJECT (sink, "buffer %p from our pool, writing directly", buffer);
+  if (G_LIKELY (wlbuffer && wlbuffer->display == sink->display)) {
+    GST_LOG_OBJECT (sink, "buffer %p has a wl_buffer from our display, "
+        "writing directly", buffer);
     to_render = buffer;
   } else {
-    GstMapInfo src;
-    GST_LOG_OBJECT (sink, "buffer %p not from our pool, copying", buffer);
+    GstMemory *mem;
+    struct wl_buffer *wbuf = NULL;
 
-    if (!sink->pool)
-      goto no_pool;
+    GST_LOG_OBJECT (sink, "buffer %p does not have a wl_buffer from our "
+        "display, creating it", buffer);
 
-    if (!gst_buffer_pool_set_active (sink->pool, TRUE))
-      goto activate_failed;
+    mem = gst_buffer_peek_memory (buffer, 0);
 
-    ret = gst_buffer_pool_acquire_buffer (sink->pool, &to_render, NULL);
-    if (ret != GST_FLOW_OK)
-      goto no_buffer;
+    if (gst_is_wl_shm_memory (mem)) {
+      wbuf = gst_wl_shm_memory_construct_wl_buffer (mem, sink->display,
+          &sink->video_info);
+    }
 
-    gst_buffer_map (buffer, &src, GST_MAP_READ);
-    gst_buffer_fill (to_render, 0, src.data, src.size);
-    gst_buffer_unmap (buffer, &src);
+    if (wbuf) {
+      gst_buffer_add_wl_buffer (buffer, wbuf, sink->display);
+      to_render = buffer;
+    } else {
+      GstMapInfo src;
+      /* we don't know how to create a wl_buffer directly from the provided
+       * memory, so we have to copy the data to a memory that we know how
+       * to handle... */
+
+      GST_LOG_OBJECT (sink, "buffer %p cannot have a wl_buffer, "
+          "copying to wl_shm memory", buffer);
+
+      /* sink->pool always exists (created in set_caps), but it may not
+       * be active if upstream is not using it */
+      if (!gst_buffer_pool_is_active (sink->pool) &&
+          !gst_buffer_pool_set_active (sink->pool, TRUE))
+        goto activate_failed;
+
+      ret = gst_buffer_pool_acquire_buffer (sink->pool, &to_render, NULL);
+      if (ret != GST_FLOW_OK)
+        goto no_buffer;
+
+      /* the first time we acquire a buffer,
+       * we need to attach a wl_buffer on it */
+      wlbuffer = gst_buffer_get_wl_buffer (buffer);
+      if (G_UNLIKELY (!wlbuffer)) {
+        mem = gst_buffer_peek_memory (to_render, 0);
+        wbuf = gst_wl_shm_memory_construct_wl_buffer (mem, sink->display,
+            &sink->video_info);
+        if (G_UNLIKELY (!wbuf))
+          goto no_wl_buffer;
+
+        gst_buffer_add_wl_buffer (buffer, wbuf, sink->display);
+      }
+
+      gst_buffer_map (buffer, &src, GST_MAP_READ);
+      gst_buffer_fill (to_render, 0, src.data, src.size);
+      gst_buffer_unmap (buffer, &src);
+    }
   }
 
   gst_buffer_replace (&sink->last_buffer, to_render);
@@ -730,14 +709,12 @@ no_window_size:
   }
 no_buffer:
   {
-    GST_WARNING_OBJECT (sink, "could not create image");
+    GST_WARNING_OBJECT (sink, "could not create buffer");
     goto done;
   }
-no_pool:
+no_wl_buffer:
   {
-    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
-        ("Internal error: can't allocate images"),
-        ("We don't have a bufferpool negotiated"));
+    GST_ERROR_OBJECT (sink, "could not create wl_buffer out of wl_shm memory");
     ret = GST_FLOW_ERROR;
     goto done;
   }
@@ -886,6 +863,8 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gstwayland_debug, "waylandsink", 0,
       " wayland video sink");
+
+  gst_wl_shm_allocator_register ();
 
   return gst_element_register (plugin, "waylandsink", GST_RANK_MARGINAL,
       GST_TYPE_WAYLAND_SINK);
