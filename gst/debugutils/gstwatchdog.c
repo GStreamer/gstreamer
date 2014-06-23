@@ -215,10 +215,10 @@ gst_watchdog_feed (GstWatchdog * watchdog)
     watchdog->source = NULL;
   }
 
-  if (watchdog->timeout != 0) {
+  if (watchdog->timeout != 0 && watchdog->main_context) {
     watchdog->source = g_timeout_source_new (watchdog->timeout);
-    g_source_set_callback (watchdog->source, gst_watchdog_trigger, watchdog,
-        NULL);
+    g_source_set_callback (watchdog->source, gst_watchdog_trigger, gst_object_ref (watchdog),
+        gst_object_unref);
     g_source_attach (watchdog->source, watchdog->main_context);
   }
 }
