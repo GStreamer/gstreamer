@@ -78,6 +78,7 @@ typedef struct _GstD3DDataClass {
 
 typedef struct _GstD3DData {
   /* Window Proc Stuff */
+  HWND                   external_window_handle;
   HWND                   window_handle;
   gboolean               window_is_internal;
   WNDPROC                orig_wnd_proc;

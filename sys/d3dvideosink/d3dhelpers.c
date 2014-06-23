@@ -58,6 +58,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3dvideosink_debug);
 static gint WM_D3DVIDEO_NOTIFY_DEVICE_LOST = 0;
 #define IDT_DEVICE_RESET_TIMER 0
 
+#define WM_QUIT_THREAD  WM_USER+0
+
 /** Helpers **/
 
 #define ERROR_CHECK_HR(hr)                          \
@@ -1083,6 +1085,7 @@ d3d_set_window_handle (GstD3DVideoSink * sink, guintptr window_id,
 
   /* Unset current window  */
   if (sink->d3d.window_handle != NULL) {
+    PostMessage (sink->d3d.window_handle, WM_QUIT_THREAD, NULL, NULL);
     GST_DEBUG_OBJECT (sink, "Unsetting window [HWND:%p]",
         sink->d3d.window_handle);
     d3d_window_wndproc_unset (sink);
@@ -1096,6 +1099,8 @@ d3d_set_window_handle (GstD3DVideoSink * sink, guintptr window_id,
   if (window_id) {
     sink->d3d.window_handle = (HWND) window_id;
     sink->d3d.window_is_internal = is_internal;
+    if (!is_internal)
+      sink->d3d.external_window_handle = sink->d3d.window_handle;
     /* If caps have been set.. prepare window */
     if (sink->format != 0)
       d3d_prepare_render_window (sink);
@@ -1130,6 +1135,10 @@ d3d_prepare_window (GstD3DVideoSink * sink)
   gboolean ret = FALSE;
 
   LOCK_SINK (sink);
+
+  /* if we already had an external window, then use it again */
+  if (sink->d3d.external_window_handle)
+    sink->d3d.window_handle = sink->d3d.external_window_handle;
 
   /* Give the app a last chance to set a window id */
   if (!sink->d3d.window_handle)
@@ -2118,6 +2127,7 @@ d3d_internal_window_thread (D3DInternalWindowDat * dat)
   GstD3DVideoSink *sink;
   HWND hWnd;
   MSG msg;
+  BOOL fGetMsg;
 
   g_return_val_if_fail (dat != NULL, NULL);
 
@@ -2138,7 +2148,10 @@ d3d_internal_window_thread (D3DInternalWindowDat * dat)
   /*
    * Internal window message loop
    */
+
   while (GetMessage (&msg, NULL, 0, 0)) {
+    if (msg.message == WM_QUIT_THREAD)
+      break;
     TranslateMessage (&msg);
     DispatchMessage (&msg);
   }
@@ -2597,6 +2610,7 @@ error:
   if (!ret)
     klass->d3d.error_exit = TRUE;
   if (hWnd) {
+    PostMessage (hWnd, WM_DESTROY, NULL, NULL);
     DestroyWindow (hWnd);
     klass->d3d.hidden_window = 0;
   }
