@@ -808,7 +808,7 @@ gst_multiudpsink_render_buffers (GstMultiUDPSink * sink, GstBuffer ** buffers,
       guint num_msgs_v4 = num_buffers * num_addr_v4;
       guint num_msgs_v6 = num_buffers * num_addr_v6;
 
-      /* FIXME: assumes clients are sorted in our list! */
+      /* our client list is sorted with IPv4 clients first and IPv6 ones last */
       ret = gst_multiudpsink_send_messages (sink, sink->used_socket,
           msgs, num_msgs_v4);
 
@@ -1627,6 +1627,23 @@ gst_multiudpsink_stop (GstBaseSink * bsink)
   return TRUE;
 }
 
+static gint
+gst_udp_client_compare_socket_family (GstUDPClient * a, GstUDPClient * b)
+{
+  GSocketFamily fa = g_socket_address_get_family (a->addr);
+  GSocketFamily fb = g_socket_address_get_family (b->addr);
+
+  if (fa == fb)
+    return 0;
+
+  /* a should go before b */
+  if (fa == G_SOCKET_FAMILY_IPV4 && fb == G_SOCKET_FAMILY_IPV6)
+    return -1;
+
+  /* b should go before a */
+  return 1;
+}
+
 static void
 gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
     gint port, gboolean lock)
@@ -1669,7 +1686,11 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
       gst_multiudpsink_configure_client (sink, client);
 
     GST_DEBUG_OBJECT (sink, "add client with host %s, port %d", host, port);
-    sink->clients = g_list_prepend (sink->clients, client);
+
+    /* keep IPv4 clients at the beginning, and IPv6 at the end, we can make
+     * use of this in gst_multiudpsink_render_buffers() */
+    sink->clients = g_list_insert_sorted (sink->clients, client,
+        (GCompareFunc) gst_udp_client_compare_socket_family);
 
     if (family == G_SOCKET_FAMILY_IPV4)
       ++sink->num_v4_unique;
