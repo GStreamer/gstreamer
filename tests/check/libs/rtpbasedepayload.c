@@ -331,7 +331,7 @@ static void push_rtp_buffer_full (State *state, GstFlowReturn expected,
         mapped = TRUE;
       }
       if (!g_strcmp0 (field, "rtptime")) {
-        guint32 rtptime = va_arg (var_args, guint32);
+        guint32 rtptime = va_arg (var_args, guint64);
         gst_rtp_buffer_set_timestamp (&rtp, rtptime);
       } else if (!g_strcmp0 (field, "payload-type")) {
         guint payload_type = va_arg (var_args, guint);
@@ -340,7 +340,7 @@ static void push_rtp_buffer_full (State *state, GstFlowReturn expected,
         guint seq = va_arg (var_args, guint);
         gst_rtp_buffer_set_seq (&rtp, seq);
       } else if (!g_strcmp0 (field, "ssrc")) {
-        guint32 ssrc = va_arg (var_args, guint32);
+        guint32 ssrc = va_arg (var_args, guint);
         gst_rtp_buffer_set_ssrc (&rtp, ssrc);
       } else {
         fail ("test cannot set unknown buffer field '%s'", field);
