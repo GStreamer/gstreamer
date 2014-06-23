@@ -1734,6 +1734,7 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
 void
 gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
 {
+  GSocketFamily family;
   GList *find;
   GstUDPClient udpclient;
   GstUDPClient *client;
@@ -1755,9 +1756,14 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
 
   --client->add_count;
 
+  family = g_socket_address_get_family (client->addr);
+  if (family == G_SOCKET_FAMILY_IPV4)
+    --sink->num_v4_all;
+  else
+    --sink->num_v6_all;
+
   if (client->add_count == 0) {
     GInetSocketAddress *saddr = G_INET_SOCKET_ADDRESS (client->addr);
-    GSocketFamily family = g_socket_address_get_family (client->addr);
     GInetAddress *addr = g_inet_socket_address_get_address (saddr);
     GSocket *socket;
 
@@ -1783,6 +1789,11 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
         g_clear_error (&err);
       }
     }
+
+    if (family == G_SOCKET_FAMILY_IPV4)
+      --sink->num_v4_unique;
+    else
+      --sink->num_v6_unique;
 
     /* Unlock to emit signal before we delete the actual client */
     g_mutex_unlock (&sink->client_lock);
