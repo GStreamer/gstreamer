@@ -82,7 +82,7 @@ gst_opensles_src_class_init (GstOpenSLESSrcClass * klass)
       gst_static_pad_template_get (&src_factory));
 
   gst_element_class_set_static_metadata (gstelement_class, "OpenSL ES Src",
-      "Src/Audio",
+      "Source/Audio",
       "Input sound using the OpenSL ES APIs",
       "Josep Torra <support@fluendo.com>");
 
