@@ -20,9 +20,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbasesink.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-#if 0
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -40,103 +38,70 @@ static guint render_list_bytes_received;
  * Render function for testing udpsink with buffer lists
  */
 static GstFlowReturn
-udpsink_render (GstBaseSink * sink, GstBufferList * list)
+udpsink_render_list (GstBaseSink * sink, GstBufferList * list)
 {
-  GstBufferListIterator *it;
+  guint i, num;
 
-  fail_if (!list);
+  num = gst_buffer_list_length (list);
+  for (i = 0; i < num; ++i) {
+    GstBuffer *buf = gst_buffer_list_get (list, i);
+    gsize size = gst_buffer_get_size (buf);
 
-  /*
-   * Count the size of the rtp header and the payload in the buffer list.
-   */
-
-  it = gst_buffer_list_iterate (list);
-
-  /* Loop through all groups */
-  while (gst_buffer_list_iterator_next_group (it)) {
-    GstBuffer *buf;
-    /* Loop through all buffers in the current group */
-    while ((buf = gst_buffer_list_iterator_next (it))) {
-      guint size;
-
-      size = GST_BUFFER_SIZE (buf);
-      GST_DEBUG ("rendered %u bytes", size);
-
-      render_list_bytes_received += size;
-    }
+    GST_DEBUG ("rendered %" G_GSIZE_FORMAT " bytes", size);
+    render_list_bytes_received += size;
   }
-
-  gst_buffer_list_iterator_free (it);
 
   return GST_FLOW_OK;
 }
 
 static void
-_set_render_function (GstElement * bsink)
+set_render_list_function (GstElement * bsink)
 {
   GstBaseSinkClass *bsclass;
+
   bsclass = GST_BASE_SINK_GET_CLASS ((GstBaseSink *) bsink);
+
   /* Add callback function for the buffer list tests */
-  bsclass->render_list = udpsink_render;
+  bsclass->render_list = udpsink_render_list;
 }
 
 static GstBufferList *
-_create_buffer_list (guint * data_size)
+create_buffer_list (guint * data_size)
 {
   GstBufferList *list;
-  GstBufferListIterator *it;
   GstBuffer *rtp_buffer;
   GstBuffer *data_buffer;
 
   list = gst_buffer_list_new ();
-  it = gst_buffer_list_iterate (list);
 
   /*** First group, i.e. first packet. **/
 
   /* Create the RTP header buffer */
-  rtp_buffer = gst_buffer_new ();
-  GST_BUFFER_MALLOCDATA (rtp_buffer) = g_malloc (RTP_HEADER_SIZE);
-  GST_BUFFER_DATA (rtp_buffer) = GST_BUFFER_MALLOCDATA (rtp_buffer);
-  GST_BUFFER_SIZE (rtp_buffer) = RTP_HEADER_SIZE;
-  memset (GST_BUFFER_DATA (rtp_buffer), 0, RTP_HEADER_SIZE);
+  rtp_buffer = gst_buffer_new_allocate (NULL, RTP_HEADER_SIZE, NULL);
+  gst_buffer_memset (rtp_buffer, 0, 0, RTP_HEADER_SIZE);
 
   /* Create the buffer that holds the payload */
-  data_buffer = gst_buffer_new ();
-  GST_BUFFER_MALLOCDATA (data_buffer) = g_malloc (RTP_PAYLOAD_SIZE);
-  GST_BUFFER_DATA (data_buffer) = GST_BUFFER_MALLOCDATA (data_buffer);
-  GST_BUFFER_SIZE (data_buffer) = RTP_PAYLOAD_SIZE;
-  memset (GST_BUFFER_DATA (data_buffer), 0, RTP_PAYLOAD_SIZE);
+  data_buffer = gst_buffer_new_allocate (NULL, RTP_PAYLOAD_SIZE, NULL);
+  gst_buffer_memset (data_buffer, 0, 0, RTP_PAYLOAD_SIZE);
 
   /* Create a new group to hold the rtp header and the payload */
-  gst_buffer_list_iterator_add_group (it);
-  gst_buffer_list_iterator_add (it, rtp_buffer);
-  gst_buffer_list_iterator_add (it, data_buffer);
+  gst_buffer_list_add (list, gst_buffer_append (rtp_buffer, data_buffer));
 
   /***  Second group, i.e. second packet. ***/
 
   /* Create the RTP header buffer */
-  rtp_buffer = gst_buffer_new ();
-  GST_BUFFER_MALLOCDATA (rtp_buffer) = g_malloc (RTP_HEADER_SIZE);
-  GST_BUFFER_DATA (rtp_buffer) = GST_BUFFER_MALLOCDATA (rtp_buffer);
-  GST_BUFFER_SIZE (rtp_buffer) = RTP_HEADER_SIZE;
-  memset (GST_BUFFER_DATA (rtp_buffer), 0, RTP_HEADER_SIZE);
+  rtp_buffer = gst_buffer_new_allocate (NULL, RTP_HEADER_SIZE, NULL);
+  gst_buffer_memset (rtp_buffer, 0, 0, RTP_HEADER_SIZE);
 
   /* Create the buffer that holds the payload */
-  data_buffer = gst_buffer_new ();
-  GST_BUFFER_MALLOCDATA (data_buffer) = g_malloc (RTP_PAYLOAD_SIZE);
-  GST_BUFFER_DATA (data_buffer) = GST_BUFFER_MALLOCDATA (data_buffer);
-  GST_BUFFER_SIZE (data_buffer) = RTP_PAYLOAD_SIZE;
-  memset (GST_BUFFER_DATA (data_buffer), 0, RTP_PAYLOAD_SIZE);
+  data_buffer = gst_buffer_new_allocate (NULL, RTP_PAYLOAD_SIZE, NULL);
+  gst_buffer_memset (data_buffer, 0, 0, RTP_PAYLOAD_SIZE);
 
   /* Create a new group to hold the rtp header and the payload */
-  gst_buffer_list_iterator_add_group (it);
-  gst_buffer_list_iterator_add (it, rtp_buffer);
-  gst_buffer_list_iterator_add (it, data_buffer);
+  gst_buffer_list_add (list, gst_buffer_append (rtp_buffer, data_buffer));
 
   /* Calculate the size of the data */
   *data_size = 2 * RTP_HEADER_SIZE + 2 * RTP_PAYLOAD_SIZE;
-
-  gst_buffer_list_iterator_free (it);
 
   return list;
 }
@@ -144,25 +109,29 @@ _create_buffer_list (guint * data_size)
 static void
 udpsink_test (gboolean use_buffer_lists)
 {
+  GstSegment segment;
   GstElement *udpsink;
   GstPad *srcpad;
   GstBufferList *list;
   guint data_size;
 
-  list = _create_buffer_list (&data_size);
+  list = create_buffer_list (&data_size);
 
   udpsink = gst_check_setup_element ("udpsink");
   if (use_buffer_lists)
-    _set_render_function (udpsink);
+    set_render_list_function (udpsink);
 
   srcpad = gst_check_setup_src_pad_by_name (udpsink, &srctemplate, "sink");
 
   gst_element_set_state (udpsink, GST_STATE_PLAYING);
+  gst_pad_set_active (srcpad, TRUE);
 
-  gst_pad_push_event (srcpad, gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
-          GST_FORMAT_TIME, 0, -1, 0));
+  gst_pad_push_event (srcpad, gst_event_new_stream_start ("hey there!"));
 
-  gst_pad_push_list (srcpad, list);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_pad_push_event (srcpad, gst_event_new_segment (&segment));
+
+  fail_unless_equals_int (gst_pad_push_list (srcpad, list), GST_FLOW_OK);
 
   gst_check_teardown_pad_by_name (udpsink, "sink");
   gst_check_teardown_element (udpsink);
@@ -177,34 +146,26 @@ GST_START_TEST (test_udpsink)
 }
 
 GST_END_TEST;
+
+
 GST_START_TEST (test_udpsink_bufferlist)
 {
   udpsink_test (TRUE);
 }
 
 GST_END_TEST;
-#endif
 
-/*
- * Creates the test suite.
- *
- * Returns: pointer to the test suite.
- */
 static Suite *
 udpsink_suite (void)
 {
   Suite *s = suite_create ("udpsink_test");
-
   TCase *tc_chain = tcase_create ("linear");
 
-  /* Set timeout to 60 seconds. */
-  tcase_set_timeout (tc_chain, 60);
-
   suite_add_tcase (s, tc_chain);
-#if 0
+
   tcase_add_test (tc_chain, test_udpsink);
   tcase_add_test (tc_chain, test_udpsink_bufferlist);
-#endif
+
   return s;
 }
 
