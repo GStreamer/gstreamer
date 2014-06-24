@@ -35,6 +35,8 @@ struct _GnlPadPrivate
   GstPadDirection dir;
   GstPadEventFunction eventfunc;
   GstPadQueryFunction queryfunc;
+
+  GstEvent *pending_seek;
 };
 
 static GstEvent *
@@ -489,7 +491,18 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
     {
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_SEEK:
+        {
+          GstPad *target;
+
           event = translate_incoming_seek (object, event);
+          if (!(target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghostpad)))) {
+            priv->pending_seek = event;
+            GST_INFO_OBJECT (ghostpad, "No target set yet, "
+                "Will send the seek event when the target is set");
+            ret = TRUE;
+            event = NULL;
+          }
+        }
           break;
         default:
           break;
@@ -661,7 +674,7 @@ gnl_object_ghost_pad (GnlObject * object, const gchar * name, GstPad * target)
   g_return_val_if_fail (target, FALSE);
   g_return_val_if_fail ((dir != GST_PAD_UNKNOWN), FALSE);
 
-  ghost = gnl_object_ghost_pad_no_target (object, name, dir);
+  ghost = gnl_object_ghost_pad_no_target (object, name, dir, NULL);
   if (!ghost) {
     GST_WARNING_OBJECT (object, "Couldn't create ghostpad");
     return NULL;
@@ -692,17 +705,19 @@ gnl_object_ghost_pad (GnlObject * object, const gchar * name, GstPad * target)
  */
 GstPad *
 gnl_object_ghost_pad_no_target (GnlObject * object, const gchar * name,
-    GstPadDirection dir)
+    GstPadDirection dir, GstPadTemplate * template)
 {
   GstPad *ghost;
   GnlPadPrivate *priv;
 
   /* create a no_target ghostpad */
-  ghost = gst_ghost_pad_new_no_target (name, dir);
+  if (template)
+    ghost = gst_ghost_pad_new_no_target_from_template (name, template);
+  else
+    ghost = gst_ghost_pad_new_no_target (name, dir);
   if (!ghost)
     return NULL;
 
-  GST_DEBUG ("grabbing existing pad functions");
 
   /* remember the existing ghostpad event/query/link/unlink functions */
   priv = g_slice_new0 (GnlPadPrivate);
@@ -726,6 +741,8 @@ gnl_object_ghost_pad_no_target (GnlObject * object, const gchar * name,
   return ghost;
 }
 
+
+
 void
 gnl_object_remove_ghost_pad (GnlObject * object, GstPad * ghost)
 {
@@ -747,16 +764,32 @@ gnl_object_ghost_pad_set_target (GnlObject * object, GstPad * ghost,
   GnlPadPrivate *priv = gst_pad_get_element_private (ghost);
 
   g_return_val_if_fail (priv, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (ghost), FALSE);
 
-  if (target)
-    GST_DEBUG_OBJECT (object, "setting target %s:%s on ghostpad",
-        GST_DEBUG_PAD_NAME (target));
-  else
-    GST_DEBUG_OBJECT (object, "removing target from ghostpad");
+  if (target) {
+    GST_DEBUG_OBJECT (object, "setting target %s:%s on %s:%s",
+        GST_DEBUG_PAD_NAME (target), GST_DEBUG_PAD_NAME (ghost));
+  } else {
+    GST_ERROR_OBJECT (object, "removing target from ghostpad");
+    priv->pending_seek = NULL;
+  }
 
   /* set target */
-  if (!(gst_ghost_pad_set_target (GST_GHOST_PAD (ghost), target)))
+  if (!(gst_ghost_pad_set_target (GST_GHOST_PAD (ghost), target))) {
+    GST_WARNING_OBJECT (priv->object, "Could not set ghost %s:%s "
+        "target to: %s:%s", GST_DEBUG_PAD_NAME (ghost),
+        GST_DEBUG_PAD_NAME (target));
     return FALSE;
+  }
+
+  if (target && priv->pending_seek) {
+    gboolean res = gst_pad_send_event (ghost, priv->pending_seek);
+
+    GST_INFO_OBJECT (object, "Sending our pending seek event: %" GST_PTR_FORMAT
+        " -- Result is %i", priv->pending_seek, res);
+
+    priv->pending_seek = NULL;
+  }
 
   return TRUE;
 }

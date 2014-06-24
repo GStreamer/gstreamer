@@ -26,8 +26,7 @@ fill_pipeline_and_check (GstElement * comp, GList * segments,
   /* Expected segments */
   collect->expected_segments = segments;
 
-  g_signal_connect (G_OBJECT (comp), "pad-added",
-      G_CALLBACK (composition_pad_added_cb), collect);
+  gst_element_link (comp, sink);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
@@ -562,8 +561,7 @@ GST_START_TEST (test_renegotiation)
       segment_new (1.0, GST_FORMAT_TIME,
           2 * GST_SECOND, 3 * GST_SECOND, 2 * GST_SECOND));
 
-  g_signal_connect (G_OBJECT (comp), "pad-added",
-      G_CALLBACK (composition_pad_added_cb), collect);
+  gst_element_link (comp, audioconvert);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,

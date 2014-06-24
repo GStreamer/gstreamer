@@ -1,4 +1,5 @@
 #include "common.h"
+static const gchar *compositor_element = NULL;
 
 typedef struct _SeekInfo
 {
@@ -48,8 +49,7 @@ fill_pipeline_and_check (GstElement * comp, GList * segments, GList * seeks)
   collect->expected_segments = segments;
   collect->keep_expected_segments = TRUE;
 
-  g_signal_connect (G_OBJECT (comp), "pad-added",
-      G_CALLBACK (composition_pad_added_cb), collect);
+  gst_element_link (comp, sink);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
@@ -521,7 +521,8 @@ GST_START_TEST (test_complex_operations)
    */
 
   oper =
-      new_operation ("oper", "videomixer", 2 * GST_SECOND, 2 * GST_SECOND, 1);
+      new_operation ("oper", compositor_element, 2 * GST_SECOND, 2 * GST_SECOND,
+      1);
   fail_if (oper == NULL);
   check_start_stop_duration (oper, 2 * GST_SECOND, 4 * GST_SECOND,
       2 * GST_SECOND);
@@ -639,7 +640,8 @@ GST_START_TEST (test_complex_operations_bis)
    */
 
   oper =
-      new_operation ("oper", "videomixer", 2 * GST_SECOND, 2 * GST_SECOND, 1);
+      new_operation ("oper", compositor_element, 2 * GST_SECOND, 2 * GST_SECOND,
+      1);
   fail_if (oper == NULL);
   check_start_stop_duration (oper, 2 * GST_SECOND, 4 * GST_SECOND,
       2 * GST_SECOND);
@@ -751,12 +753,26 @@ gnonlin_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
+  if (gst_registry_check_feature_version (gst_registry_get (), "compositor", 1,
+          0, 0)) {
+    compositor_element = "compositor";
+  } else if (gst_registry_check_feature_version (gst_registry_get (),
+          "videomixer", 1, 0, 0)) {
+    compositor_element = "videomixer";
+
+  }
+
   tcase_add_test (tc_chain, test_simplest);
   tcase_add_test (tc_chain, test_one_after_other);
   tcase_add_test (tc_chain, test_one_under_another);
   tcase_add_test (tc_chain, test_one_bin_after_other);
-  tcase_add_test (tc_chain, test_complex_operations);
-  tcase_add_test (tc_chain, test_complex_operations_bis);
+
+  if (compositor_element) {
+    tcase_add_test (tc_chain, test_complex_operations);
+    tcase_add_test (tc_chain, test_complex_operations_bis);
+  } else {
+    GST_WARNING ("No compositor element, can not run operations tests");
+  }
 
   return s;
 }

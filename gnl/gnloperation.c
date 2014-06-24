@@ -40,7 +40,7 @@
 static GstStaticPadTemplate gnl_operation_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate gnl_operation_sink_template =
@@ -163,10 +163,9 @@ gnl_operation_dispose (GObject * object)
   GnlOperation *oper = (GnlOperation *) object;
 
   GST_DEBUG_OBJECT (object, "Disposing of source pad");
-  if (oper->ghostpad) {
-    gnl_object_remove_ghost_pad (GNL_OBJECT (oper), oper->ghostpad);
-    oper->ghostpad = NULL;
-  }
+
+  gnl_object_ghost_pad_set_target (GNL_OBJECT (object),
+      GNL_OBJECT (object)->srcpad, NULL);
 
   GST_DEBUG_OBJECT (object, "Disposing of sink pad(s)");
   while (oper->sinks) {
@@ -190,7 +189,6 @@ static void
 gnl_operation_init (GnlOperation * operation)
 {
   gnl_operation_reset (operation);
-  operation->ghostpad = NULL;
   operation->element = NULL;
 }
 
@@ -362,13 +360,8 @@ gnl_operation_add_element (GstBin * bin, GstElement * element)
         operation->element = element;
         operation->dynamicsinks = isdynamic;
 
-        /* Source ghostpad */
-        if (operation->ghostpad)
-          gnl_object_ghost_pad_set_target (GNL_OBJECT (operation),
-              operation->ghostpad, srcpad);
-        else
-          operation->ghostpad = gnl_object_ghost_pad (GNL_OBJECT (operation),
-              GST_PAD_NAME (srcpad), srcpad);
+        gnl_object_ghost_pad_set_target (GNL_OBJECT (operation),
+            GNL_OBJECT (operation)->srcpad, srcpad);
 
         /* Remove the reference get_src_pad gave us */
         gst_object_unref (srcpad);

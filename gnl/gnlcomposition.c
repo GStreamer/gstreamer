@@ -34,7 +34,7 @@
 static GstStaticPadTemplate gnl_composition_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
 GST_DEBUG_CATEGORY_STATIC (gnlcomposition_debug);
@@ -96,7 +96,6 @@ struct _GnlCompositionPrivate
   gboolean flushing;
 
   /* source top-level ghostpad, probe and entry */
-  GstPad *ghostpad;
   gulong ghosteventprobe;
   GnlCompositionEntry *toplevelentry;
 
@@ -120,18 +119,12 @@ struct _GnlCompositionPrivate
   GstClockTime segment_start;
   GstClockTime segment_stop;
 
-  /* pending child seek */
-  GstEvent *childseek;
-
   /* Seek segment handler */
   GstSegment *segment;
   GstSegment *outside_segment;
 
   /* Next running base_time to set on outgoing segment */
   guint64 next_base_time;
-
-  /* number of pads we are waiting to appear so be can do proper linking */
-  guint waitingpads;
 
   /*
      OUR sync_handler on the child_bus
@@ -178,10 +171,9 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element);
 static GstStateChangeReturn
 gnl_composition_change_state (GstElement * element, GstStateChange transition);
 
-static GstPad *get_src_pad (GstElement * element);
 static GstPadProbeReturn pad_blocked (GstPad * pad, GstPadProbeInfo * info,
     GnlComposition * comp);
-static inline void gnl_composition_remove_ghostpad (GnlComposition * comp);
+static inline void gnl_composition_reset_target_pad (GnlComposition * comp);
 
 static gboolean
 seek_handling (GnlComposition * comp, gboolean initial, gboolean update);
@@ -191,11 +183,13 @@ static GstClockTime get_current_position (GnlComposition * comp);
 
 static gboolean update_pipeline (GnlComposition * comp,
     GstClockTime currenttime, gboolean initial, gboolean modify);
-static void no_more_pads_object_cb (GstElement * element,
-    GnlComposition * comp);
 static gboolean gnl_composition_commit_func (GnlObject * object,
     gboolean recurse);
 static void update_start_stop_duration (GnlComposition * comp);
+
+static gboolean
+gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
+    GstEvent * event);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -262,11 +256,6 @@ struct _GnlCompositionEntry
 {
   GnlObject *object;
   GnlComposition *comp;
-
-  /* handler id for 'no-more-pads' signal */
-  gulong nomorepadshandler;
-  gulong padaddedhandler;
-  gulong padremovedhandler;
 
   /* handler id for block probe */
   gulong probeid;
@@ -368,23 +357,15 @@ hash_value_destroy (GnlCompositionEntry * entry)
   GstPad *srcpad;
   GstElement *element = GST_ELEMENT (entry->object);
 
-  g_signal_handler_disconnect (entry->object, entry->padremovedhandler);
-  g_signal_handler_disconnect (entry->object, entry->padaddedhandler);
+  srcpad = GNL_OBJECT_SRC (element);
+  if (entry->probeid) {
+    gst_pad_remove_probe (srcpad, entry->probeid);
+    entry->probeid = 0;
+  }
 
-  if (entry->nomorepadshandler)
-    g_signal_handler_disconnect (entry->object, entry->nomorepadshandler);
-
-  if ((srcpad = get_src_pad (element))) {
-    if (entry->probeid) {
-      gst_pad_remove_probe (srcpad, entry->probeid);
-      entry->probeid = 0;
-    }
-
-    if (entry->dataprobeid) {
-      gst_pad_remove_probe (srcpad, entry->dataprobeid);
-      entry->dataprobeid = 0;
-    }
-    gst_object_unref (srcpad);
+  if (entry->dataprobeid) {
+    gst_pad_remove_probe (srcpad, entry->dataprobeid);
+    entry->dataprobeid = 0;
   }
 
   g_slice_free (GnlCompositionEntry, entry);
@@ -410,8 +391,6 @@ gnl_composition_init (GnlComposition * comp)
   priv->segment = gst_segment_new ();
   priv->outside_segment = gst_segment_new ();
 
-  priv->waitingpads = 0;
-
   priv->reset_time = FALSE;
 
   priv->objects_hash = g_hash_table_new_full
@@ -423,6 +402,10 @@ gnl_composition_init (GnlComposition * comp)
   comp->priv = priv;
 
   gnl_composition_reset (comp);
+
+  priv->gnl_event_pad_func = GST_PAD_EVENTFUNC (GNL_OBJECT_SRC (comp));
+  gst_pad_set_event_function (GNL_OBJECT_SRC (comp),
+      GST_DEBUG_FUNCPTR (gnl_composition_event_handler));
 }
 
 static void
@@ -436,14 +419,6 @@ gnl_composition_dispose (GObject * object)
 
   priv->dispose_has_run = TRUE;
 
-  if (priv->ghostpad)
-    gnl_composition_remove_ghostpad (comp);
-
-  if (priv->childseek) {
-    gst_event_unref (priv->childseek);
-    priv->childseek = NULL;
-  }
-
   if (priv->current) {
     g_node_destroy (priv->current);
     priv->current = NULL;
@@ -453,6 +428,7 @@ gnl_composition_dispose (GObject * object)
     g_list_free (priv->expandables);
     priv->expandables = NULL;
   }
+  gnl_composition_reset_target_pad (comp);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -514,32 +490,10 @@ gnl_composition_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-wait_no_more_pads (GnlComposition * comp, gpointer object,
-    GnlCompositionEntry * entry, gboolean wait)
-{
-  if (wait) {
-    GST_INFO_OBJECT (object, "no existing pad, connecting to 'no-more-pads'");
-    entry->nomorepadshandler = g_signal_connect
-        (G_OBJECT (object), "no-more-pads",
-        G_CALLBACK (no_more_pads_object_cb), comp);
-    comp->priv->waitingpads++;
-  } else {
-    GST_INFO_OBJECT (object, "disconnecting from 'no-more-pads'");
-    g_signal_handler_disconnect (object, entry->nomorepadshandler);
-    entry->nomorepadshandler = 0;
-    comp->priv->waitingpads--;
-  }
-
-  GST_INFO_OBJECT (comp, "the number of waiting pads is now %d",
-      comp->priv->waitingpads);
-}
-
 /* signal_duration_change
  * Creates a new GST_MESSAGE_DURATION_CHANGED with the currently configured
  * composition duration and sends that on the bus.
  */
-
 static inline void
 signal_duration_change (GnlComposition * comp)
 {
@@ -557,13 +511,10 @@ unblock_child_pads (GValue * item, GValue * ret G_GNUC_UNUSED,
 
   GST_DEBUG_OBJECT (child, "unblocking pads");
 
-  pad = get_src_pad (child);
-  if (pad) {
-    if (entry->probeid) {
-      gst_pad_remove_probe (pad, entry->probeid);
-      entry->probeid = 0;
-    }
-    gst_object_unref (pad);
+  pad = GNL_OBJECT_SRC (child);
+  if (entry->probeid) {
+    gst_pad_remove_probe (pad, entry->probeid);
+    entry->probeid = 0;
   }
   return TRUE;
 }
@@ -592,13 +543,20 @@ reset_child (GValue * item, GValue * ret G_GNUC_UNUSED, gpointer user_data)
   GnlCompositionEntry *entry;
   GstElement *child = g_value_get_object (item);
   GnlComposition *comp = GNL_COMPOSITION (user_data);
+  GnlObject *object;
+  GstPad *srcpad, *peerpad;
 
   GST_DEBUG_OBJECT (child, "unlocking state");
   gst_element_set_locked_state (child, FALSE);
 
   entry = COMP_ENTRY (comp, child);
-  if (entry->nomorepadshandler)
-    wait_no_more_pads (comp, child, entry, FALSE);
+  object = entry->object;
+  srcpad = object->srcpad;
+  peerpad = gst_pad_get_peer (srcpad);
+  if (peerpad) {
+    gst_pad_unlink (srcpad, peerpad);
+    gst_object_unref (peerpad);
+  }
 
   return TRUE;
 }
@@ -651,13 +609,7 @@ gnl_composition_reset (GnlComposition * comp)
 
   priv->stackvalid = FALSE;
 
-  if (priv->ghostpad)
-    gnl_composition_remove_ghostpad (comp);
-
-  if (priv->childseek) {
-    gst_event_unref (priv->childseek);
-    priv->childseek = NULL;
-  }
+  gnl_composition_reset_target_pad (comp);
 
   reset_children (comp);
 
@@ -992,27 +944,26 @@ get_current_position (GnlComposition * comp)
   gboolean res;
   gint64 value = GST_CLOCK_TIME_NONE;
 
+  GstPad *peer = gst_pad_get_peer (GNL_OBJECT (comp)->srcpad);
+
   /* 1. Try querying position downstream */
-  if (priv->ghostpad) {
-    GstPad *peer = gst_pad_get_peer (priv->ghostpad);
 
-    if (peer) {
-      res = gst_pad_query_position (peer, GST_FORMAT_TIME, &value);
-      gst_object_unref (peer);
+  if (peer) {
+    res = gst_pad_query_position (peer, GST_FORMAT_TIME, &value);
+    gst_object_unref (peer);
 
-      if (res) {
-        GST_LOG_OBJECT (comp,
-            "Successfully got downstream position %" GST_TIME_FORMAT,
-            GST_TIME_ARGS ((guint64) value));
-        goto beach;
-      }
+    if (res) {
+      GST_LOG_OBJECT (comp,
+          "Successfully got downstream position %" GST_TIME_FORMAT,
+          GST_TIME_ARGS ((guint64) value));
+      goto beach;
     }
-
-    GST_DEBUG_OBJECT (comp, "Downstream position query failed");
-
-    /* resetting format/value */
-    value = GST_CLOCK_TIME_NONE;
   }
+
+  GST_DEBUG_OBJECT (comp, "Downstream position query failed");
+
+  /* resetting format/value */
+  value = GST_CLOCK_TIME_NONE;
 
   /* 2. If downstream fails , try within the current stack */
   if (!priv->current) {
@@ -1022,14 +973,11 @@ get_current_position (GnlComposition * comp)
 
   obj = (GnlObject *) priv->current->data;
 
-  if (!(pad = get_src_pad ((GstElement *) obj)))
-    goto beach;
-
+  pad = GNL_OBJECT_SRC (obj);
   res = gst_pad_query_position (pad, GST_FORMAT_TIME, &value);
 
   if (G_UNLIKELY (res == FALSE)) {
-    GST_WARNING_OBJECT (comp,
-        "query failed or returned a format different from TIME");
+    GST_WARNING_OBJECT (comp, "query position failed");
     value = GST_CLOCK_TIME_NONE;
   } else {
     GST_LOG_OBJECT (comp, "Query returned %" GST_TIME_FORMAT,
@@ -1098,7 +1046,7 @@ seek_handling (GnlComposition * comp, gboolean initial, gboolean update)
   return TRUE;
 }
 
-static void
+static gboolean
 handle_seek_event (GnlComposition * comp, GstEvent * event)
 {
   gdouble rate;
@@ -1122,6 +1070,14 @@ handle_seek_event (GnlComposition * comp, GstEvent * event)
 
   GST_DEBUG_OBJECT (comp, "Segment now has flags:%d", priv->segment->flags);
 
+  if (priv->segment->start >= GNL_OBJECT_STOP (comp)) {
+    GST_INFO_OBJECT (comp,
+        "Start %" GST_TIME_FORMAT " > comp->stop: %" GST_TIME_FORMAT
+        " Not seeking", GST_TIME_ARGS (priv->segment->start),
+        GST_TIME_ARGS (GNL_OBJECT_STOP (comp)));
+    return FALSE;
+  }
+
   /* crop the segment start/stop values */
   /* Only crop segment start value if we don't have a default object */
   if (priv->expandables == NULL)
@@ -1131,6 +1087,7 @@ handle_seek_event (GnlComposition * comp, GstEvent * event)
   comp->priv->next_base_time = 0;
 
   seek_handling (comp, TRUE, FALSE);
+  return TRUE;
 }
 
 static gboolean
@@ -1148,7 +1105,11 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
     {
       GstEvent *nevent;
 
-      handle_seek_event (comp, event);
+      if ((res = handle_seek_event (comp, event)) == FALSE) {
+        gst_event_unref (event);
+        event = NULL;
+        break;
+      }
 
       /* the incoming event might not be quite correct, we get a new proper
        * event to pass on to the children. */
@@ -1238,23 +1199,12 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
       break;
   }
 
-  if (res && priv->ghostpad) {
-    COMP_OBJECTS_LOCK (comp);
-
-    /* If the timeline isn't entirely reconstructed, we silently ignore the
-     * event. In the case of seeks the pipeline will already be correctly
-     * configured at this point*/
-    if (priv->waitingpads == 0) {
-      COMP_OBJECTS_UNLOCK (comp);
-      GST_DEBUG_OBJECT (comp, "About to call gnl_event_pad_func()");
-      res = priv->gnl_event_pad_func (priv->ghostpad, parent, event);
-      priv->reset_time = FALSE;
-      GST_DEBUG_OBJECT (comp, "Done calling gnl_event_pad_func() %d", res);
-    } else {
-      COMP_OBJECTS_UNLOCK (comp);
-      gst_event_unref (event);
-    }
-
+  if (res) {
+    GST_DEBUG_OBJECT (comp, "About to call gnl_event_pad_func: %p",
+        priv->gnl_event_pad_func);
+    res = priv->gnl_event_pad_func (GNL_OBJECT (comp)->srcpad, parent, event);
+    priv->reset_time = FALSE;
+    GST_DEBUG_OBJECT (comp, "Done calling gnl_event_pad_func() %d", res);
   }
 
 beach:
@@ -1267,6 +1217,29 @@ pad_blocked (GstPad * pad, GstPadProbeInfo * info, GnlComposition * comp)
   GST_DEBUG_OBJECT (comp, "Pad : %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   return GST_PAD_PROBE_OK;
+}
+
+static inline void
+gnl_composition_reset_target_pad (GnlComposition * comp)
+{
+  GnlCompositionPrivate *priv = comp->priv;
+
+  GST_DEBUG_OBJECT (comp, "Removing ghostpad");
+
+  if (priv->ghosteventprobe) {
+    GstPad *target;
+
+    target = gst_ghost_pad_get_target ((GstGhostPad *) GNL_OBJECT_SRC (comp));
+    if (target)
+      gst_pad_remove_probe (target, priv->ghosteventprobe);
+    priv->ghosteventprobe = 0;
+  }
+
+  gnl_object_ghost_pad_set_target (GNL_OBJECT (comp),
+      GNL_OBJECT_SRC (comp), NULL);
+  priv->toplevelentry = NULL;
+  GST_ERROR ("NEED STRAM START");
+  priv->send_stream_start = TRUE;
 }
 
 static GstPadProbeReturn
@@ -1296,104 +1269,64 @@ drop_data (GstPad * pad, GstPadProbeInfo * info, GnlCompositionEntry * entry)
   return GST_PAD_PROBE_OK;
 }
 
-static inline void
-gnl_composition_remove_ghostpad (GnlComposition * comp)
-{
-  GnlCompositionPrivate *priv = comp->priv;
-
-  GST_DEBUG_OBJECT (comp, "Removing ghostpad");
-
-  if (priv->ghosteventprobe) {
-    GstPad *target;
-
-    target = gst_ghost_pad_get_target ((GstGhostPad *) priv->ghostpad);
-    if (target)
-      gst_pad_remove_probe (target, priv->ghosteventprobe);
-    priv->ghosteventprobe = 0;
-  }
-
-  gnl_object_remove_ghost_pad (GNL_OBJECT (comp), priv->ghostpad);
-  priv->ghostpad = NULL;
-  priv->toplevelentry = NULL;
-  priv->send_stream_start = TRUE;
-}
-
 /* gnl_composition_ghost_pad_set_target:
  * target: The target #GstPad. The refcount will be decremented (given to the ghostpad).
  * entry: The GnlCompositionEntry to which the pad belongs
  */
-
 static void
 gnl_composition_ghost_pad_set_target (GnlComposition * comp, GstPad * target,
     GnlCompositionEntry * entry)
 {
+  GstPad *ptarget;
   GnlCompositionPrivate *priv = comp->priv;
-  gboolean hadghost = priv->ghostpad ? TRUE : FALSE;
 
   if (target)
-    GST_DEBUG_OBJECT (comp, "target:%s:%s , hadghost:%d",
-        GST_DEBUG_PAD_NAME (target), hadghost);
+    GST_DEBUG_OBJECT (comp, "target:%s:%s", GST_DEBUG_PAD_NAME (target));
   else
-    GST_DEBUG_OBJECT (comp, "Removing target, hadghost:%d", hadghost);
+    GST_DEBUG_OBJECT (comp, "Removing target");
 
-  if (!hadghost) {
-    /* Create new ghostpad */
-    GstPad *ghostpad =
-        gnl_object_ghost_pad_no_target ((GnlObject *) comp, "src", GST_PAD_SRC);
 
-    if (!priv->gnl_event_pad_func) {
-      GST_DEBUG_OBJECT (ghostpad, "About to replace event_pad_func");
-      priv->gnl_event_pad_func = GST_PAD_EVENTFUNC (ghostpad);
+  ptarget =
+      gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT (comp)->srcpad));
+  if (ptarget && ptarget == target) {
+    GST_DEBUG_OBJECT (comp,
+        "Target of srcpad is the same as existing one, not changing");
+    gst_object_unref (ptarget);
+    return;
+  }
+
+  /* Unset previous target */
+  if (ptarget) {
+    GST_DEBUG_OBJECT (comp, "Previous target was %s:%s",
+        GST_DEBUG_PAD_NAME (ptarget));
+
+    if (!priv->toplevelentry->probeid) {
+      /* If it's not blocked, block it */
+      priv->toplevelentry->probeid =
+          gst_pad_add_probe (ptarget,
+          GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
+          (GstPadProbeCallback) pad_blocked, comp, NULL);
     }
 
-    gst_pad_set_event_function (ghostpad,
-        GST_DEBUG_FUNCPTR (gnl_composition_event_handler));
-    GST_DEBUG_OBJECT (ghostpad, "eventfunc is now %s",
-        GST_DEBUG_FUNCPTR_NAME (GST_PAD_EVENTFUNC (ghostpad)));
-
-    priv->ghostpad = ghostpad;
-  } else {
-    GstPad *ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (priv->ghostpad));
-
-    if (ptarget && ptarget == target) {
-      GST_DEBUG_OBJECT (comp,
-          "Target of ghostpad is the same as existing one, not changing");
-      gst_object_unref (ptarget);
-      return;
+    if (!priv->toplevelentry->dataprobeid) {
+      priv->toplevelentry->dataprobeid = gst_pad_add_probe (ptarget,
+          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
+          GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data,
+          priv->toplevelentry, NULL);
     }
 
-    /* Unset previous target */
-    if (ptarget) {
-      GST_DEBUG_OBJECT (comp, "Previous target was %s:%s",
-          GST_DEBUG_PAD_NAME (ptarget));
-
-      if (!priv->toplevelentry->probeid) {
-        /* If it's not blocked, block it */
-        priv->toplevelentry->probeid =
-            gst_pad_add_probe (ptarget,
-            GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
-            (GstPadProbeCallback) pad_blocked, comp, NULL);
-      }
-
-      if (!priv->toplevelentry->dataprobeid) {
-        priv->toplevelentry->dataprobeid = gst_pad_add_probe (ptarget,
-            GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
-            GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data,
-            priv->toplevelentry, NULL);
-      }
-
-      /* remove event probe */
-      if (priv->ghosteventprobe) {
-        gst_pad_remove_probe (ptarget, priv->ghosteventprobe);
-        priv->ghosteventprobe = 0;
-      }
-      gst_object_unref (ptarget);
-
+    /* remove event probe */
+    if (priv->ghosteventprobe) {
+      gst_pad_remove_probe (ptarget, priv->ghosteventprobe);
+      priv->ghosteventprobe = 0;
     }
+    gst_object_unref (ptarget);
+
   }
 
   /* Actually set the target */
-  gnl_object_ghost_pad_set_target ((GnlObject *) comp, priv->ghostpad, target);
+  gnl_object_ghost_pad_set_target ((GnlObject *) comp,
+      GNL_OBJECT (comp)->srcpad, target);
 
   /* Set top-level entry (will be NULL if unsetting) */
   priv->toplevelentry = entry;
@@ -1404,17 +1337,6 @@ gnl_composition_ghost_pad_set_target (GnlComposition * comp, GstPad * target,
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH,
         (GstPadProbeCallback) ghost_event_probe_handler, comp, NULL);
     GST_DEBUG_OBJECT (comp, "added event probe %lu", priv->ghosteventprobe);
-  }
-
-  if (!hadghost) {
-    gst_pad_set_active (priv->ghostpad, TRUE);
-
-    COMP_OBJECTS_UNLOCK (comp);
-    if (!gst_element_add_pad (GST_ELEMENT (comp), priv->ghostpad))
-      GST_WARNING ("Couldn't add the ghostpad");
-    else
-      gst_element_no_more_pads (GST_ELEMENT (comp));
-    COMP_OBJECTS_LOCK (comp);
   }
 
   GST_DEBUG_OBJECT (comp, "END");
@@ -1780,52 +1702,6 @@ get_clean_toplevel_stack (GnlComposition * comp, GstClockTime * timestamp,
 }
 
 
-/*
- *
- * UTILITY FUNCTIONS
- *
- */
-
-/*
- * get_src_pad:
- * element: a #GstElement
- *
- * Returns: The src pad for the given element. A reference was added to the
- * returned pad, remove it when you don't need that pad anymore.
- * Returns NULL if there's no source pad.
- */
-static GstPad *
-get_src_pad (GstElement * element)
-{
-  GstIterator *it;
-  GstIteratorResult itres;
-  GValue item = { 0, };
-  GstPad *srcpad;
-
-  it = gst_element_iterate_src_pads (element);
-
-  itres = gst_iterator_next (it, &item);
-  if (itres != GST_ITERATOR_OK) {
-    GST_DEBUG ("%s doesn't have a src pad !", GST_ELEMENT_NAME (element));
-    srcpad = NULL;
-  } else {
-    srcpad = g_value_get_object (&item);
-    gst_object_ref (srcpad);
-    g_value_reset (&item);
-  }
-
-  gst_iterator_free (it);
-
-  return srcpad;
-}
-
-
-/*
- *
- * END OF UTILITY FUNCTIONS
- *
- */
-
 static gboolean
 set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp)
 {
@@ -1866,8 +1742,7 @@ update_pipeline_func (GnlComposition * comp)
       /* If we're at the end, post SEGMENT_DONE, or push EOS */
       GST_DEBUG_OBJECT (comp, "Nothing else to play");
 
-      if (!(priv->segment->flags & GST_SEEK_FLAG_SEGMENT)
-          && priv->ghostpad) {
+      if (!(priv->segment->flags & GST_SEEK_FLAG_SEGMENT)) {
         GST_DEBUG_OBJECT (comp, "Real EOS should be sent now");
       } else if (priv->segment->flags & GST_SEEK_FLAG_SEGMENT) {
         gint64 epos;
@@ -1882,7 +1757,7 @@ update_pipeline_func (GnlComposition * comp)
         gst_element_post_message (GST_ELEMENT_CAST (comp),
             gst_message_new_segment_done (GST_OBJECT (comp),
                 priv->segment->format, epos));
-        gst_pad_push_event (priv->ghostpad,
+        gst_pad_push_event (GNL_OBJECT (comp)->srcpad,
             gst_event_new_segment_done (priv->segment->format, epos));
       }
     }
@@ -2118,144 +1993,6 @@ update_start_stop_duration (GnlComposition * comp)
       GST_TIME_ARGS (cobj->stop), GST_TIME_ARGS (cobj->duration));
 }
 
-static void
-no_more_pads_object_cb (GstElement * element, GnlComposition * comp)
-{
-  GnlCompositionPrivate *priv = comp->priv;
-  GnlObject *object = (GnlObject *) element;
-  GNode *tmp;
-  GstPad *pad = NULL;
-  GnlCompositionEntry *entry;
-
-  GST_LOG_OBJECT (comp, "no more pads on element %s",
-      GST_ELEMENT_NAME (element));
-
-  if (!(pad = get_src_pad (element)))
-    goto no_source;
-
-  COMP_OBJECTS_LOCK (comp);
-
-  if (G_UNLIKELY (priv->current == NULL)) {
-    GST_DEBUG_OBJECT (comp, "current stack is empty !");
-    goto done;
-  }
-
-  tmp = g_node_find (priv->current, G_IN_ORDER, G_TRAVERSE_ALL, object);
-
-  if (G_UNLIKELY (tmp == NULL))
-    goto not_in_stack;
-
-  entry = COMP_ENTRY (comp, object);
-  wait_no_more_pads (comp, object, entry, FALSE);
-
-  if (tmp->parent) {
-    GstElement *parent = (GstElement *) tmp->parent->data;
-    GstPad *sinkpad;
-
-    /* Get an unlinked sinkpad from the parent */
-    sinkpad = get_unlinked_sink_ghost_pad ((GnlOperation *) parent);
-
-    if (G_UNLIKELY (sinkpad == NULL)) {
-      GST_WARNING_OBJECT (comp,
-          "Couldn't find an unlinked sinkpad from %s",
-          GST_ELEMENT_NAME (parent));
-      goto done;
-    }
-
-    /* Link pad to parent sink pad */
-    if (G_UNLIKELY (gst_pad_link_full (pad, sinkpad,
-                GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
-      GST_WARNING_OBJECT (comp, "Failed to link pads %s:%s - %s:%s",
-          GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (sinkpad));
-      gst_object_unref (sinkpad);
-      goto done;
-    }
-
-    /* inform operation of incoming stream priority */
-    gnl_operation_signal_input_priority_changed ((GnlOperation *) parent,
-        sinkpad, object->priority);
-    gst_object_unref (sinkpad);
-    gst_pad_remove_probe (pad, entry->probeid);
-    entry->probeid = 0;
-  }
-
-  /* If there are no more waiting pads, activate the current stack */
-  if (priv->current && (priv->waitingpads == 0)
-      && priv->stackvalid) {
-    GnlCompositionEntry *topentry = COMP_ENTRY (comp, priv->current->data);
-    GstPad *tpad = NULL;
-
-    /* There are no more waiting pads for the currently configured timeline */
-    /* stack. */
-    tpad = get_src_pad (GST_ELEMENT (priv->current->data));
-    GST_LOG_OBJECT (comp,
-        "top-level pad %s:%s, Setting target of ghostpad to it",
-        GST_DEBUG_PAD_NAME (tpad));
-
-    /* 2. send pending seek */
-    if (priv->childseek) {
-      GstEvent *childseek = priv->childseek;
-
-      priv->childseek = NULL;
-      GST_INFO_OBJECT (comp, "Sending pending seek on %s:%s",
-          GST_DEBUG_PAD_NAME (tpad));
-
-      COMP_OBJECTS_UNLOCK (comp);
-
-      if (!(gst_pad_send_event (tpad, childseek)))
-        GST_ERROR_OBJECT (comp, "Sending seek event failed!");
-
-      COMP_OBJECTS_LOCK (comp);
-    }
-    priv->childseek = NULL;
-
-    /* 1. set target of ghostpad to toplevel element src pad */
-    gnl_composition_ghost_pad_set_target (comp, tpad, topentry);
-
-    /* Check again if the top-level element is still in the stack */
-    if (priv->current &&
-        g_node_find (priv->current, G_IN_ORDER, G_TRAVERSE_ALL, object)) {
-
-      /* 3. unblock ghostpad */
-      if (topentry->probeid) {
-        GST_LOG_OBJECT (comp, "About to unblock top-level pad : %s:%s",
-            GST_DEBUG_PAD_NAME (tpad));
-        gst_pad_remove_probe (tpad, topentry->probeid);
-        topentry->probeid = 0;
-        GST_LOG_OBJECT (comp, "Unblocked top-level pad");
-      }
-    } else
-      GST_DEBUG ("Element went away from currently configured stack");
-
-    if (tpad)
-      gst_object_unref (tpad);
-  }
-
-done:
-  COMP_OBJECTS_UNLOCK (comp);
-
-  if (pad)
-    gst_object_unref (pad);
-
-  GST_DEBUG_OBJECT (comp, "end");
-
-  return;
-
-no_source:
-  {
-    GST_LOG_OBJECT (comp, "no source pad");
-    return;
-  }
-
-not_in_stack:
-  {
-    GST_LOG_OBJECT (comp,
-        "The following object is not in currently configured stack : %s",
-        GST_ELEMENT_NAME (object));
-    goto done;
-  }
-}
-
 /*
  * recursive depth-first relink stack function on new stack
  *
@@ -2265,7 +2002,6 @@ not_in_stack:
  *
  * WITH OBJECTS LOCK TAKEN
  */
-
 static void
 compare_relink_single_node (GnlComposition * comp, GNode * node,
     GNode * oldstack)
@@ -2292,10 +2028,11 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
 
   GST_DEBUG_OBJECT (comp, "newobj:%s",
       GST_ELEMENT_NAME ((GstElement *) newobj));
-  srcpad = get_src_pad ((GstElement *) newobj);
+
+  srcpad = GNL_OBJECT_SRC (newobj);
 
   /* 1. Make sure the source pad is blocked for new objects */
-  if (G_UNLIKELY (!oldnode && srcpad)) {
+  if (G_UNLIKELY (!oldnode)) {
     GnlCompositionEntry *oldentry = COMP_ENTRY (comp, newobj);
     if (!oldentry->probeid) {
       GST_LOG_OBJECT (comp, "block_async(%s:%s, TRUE)",
@@ -2314,58 +2051,47 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
   }
 
   entry = COMP_ENTRY (comp, newobj);
-  /* 2. link to parent if needed.
-   *
-   * If entry->nomorepadshandler is not zero, it means that srcpad didn't exist
-   * before and so we connected to no-more-pads. This can happen since there's a
-   * window of time between gnlsource adds its srcpad and then emits
-   * no-more-pads. In that case, we just wait for no-more-pads to be emitted.
-   */
-  if (srcpad && entry->nomorepadshandler == 0) {
-    GST_LOG_OBJECT (comp, "has a valid source pad");
-    /* POST PROCESSING */
-    if ((oldparent != newparent) ||
-        (oldparent && newparent &&
-            (g_node_child_index (node,
-                    newobj) != g_node_child_index (oldnode, newobj)))) {
-      GST_LOG_OBJECT (comp,
-          "not same parent, or same parent but in different order");
-      /* relink to new parent in required order */
-      if (newparent) {
-        GstPad *sinkpad;
-        GST_LOG_OBJECT (comp, "Linking %s and %s",
-            GST_ELEMENT_NAME (GST_ELEMENT (newobj)),
-            GST_ELEMENT_NAME (GST_ELEMENT (newparent)));
-        sinkpad = get_unlinked_sink_ghost_pad ((GnlOperation *) newparent);
-        if (G_UNLIKELY (sinkpad == NULL)) {
-          GST_WARNING_OBJECT (comp,
-              "Couldn't find an unlinked sinkpad from %s",
-              GST_ELEMENT_NAME (newparent));
-        } else {
-          if (G_UNLIKELY (gst_pad_link_full (srcpad, sinkpad,
-                      GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
-            GST_WARNING_OBJECT (comp, "Failed to link pads %s:%s - %s:%s",
-                GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-          }
-          gst_object_unref (sinkpad);
-        }
-      }
-    } else
-      GST_LOG_OBJECT (newobj, "Same parent and same position in the new stack");
-    /* If there's an operation, inform it about priority changes */
+  /* 2. link to parent if needed.  */
+  GST_LOG_OBJECT (comp, "has a valid source pad");
+  /* POST PROCESSING */
+  if ((oldparent != newparent) ||
+      (oldparent && newparent &&
+          (g_node_child_index (node,
+                  newobj) != g_node_child_index (oldnode, newobj)))) {
+    GST_LOG_OBJECT (comp,
+        "not same parent, or same parent but in different order");
+    /* relink to new parent in required order */
     if (newparent) {
-      sinkpad = gst_pad_get_peer (srcpad);
-      gnl_operation_signal_input_priority_changed ((GnlOperation *)
-          newparent, sinkpad, newobj->priority);
-      gst_object_unref (sinkpad);
+      GstPad *sinkpad;
+      GST_LOG_OBJECT (comp, "Linking %s and %s",
+          GST_ELEMENT_NAME (GST_ELEMENT (newobj)),
+          GST_ELEMENT_NAME (GST_ELEMENT (newparent)));
+      sinkpad = get_unlinked_sink_ghost_pad ((GnlOperation *) newparent);
+      if (G_UNLIKELY (sinkpad == NULL)) {
+        GST_WARNING_OBJECT (comp,
+            "Couldn't find an unlinked sinkpad from %s",
+            GST_ELEMENT_NAME (newparent));
+      } else {
+        if (G_UNLIKELY (gst_pad_link_full (srcpad, sinkpad,
+                    GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
+          GST_WARNING_OBJECT (comp, "Failed to link pads %s:%s - %s:%s",
+              GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+        }
+        gst_object_unref (sinkpad);
+      }
     }
-
-  } else if (entry->nomorepadshandler) {
-    GST_INFO_OBJECT (newobj,
-        "we have a pad but we are connected to 'no-more-pads'");
   } else {
-    wait_no_more_pads (comp, newobj, entry, TRUE);
+    GST_LOG_OBJECT (newobj, "Same parent and same position in the new stack");
   }
+
+  /* If there's an operation, inform it about priority changes */
+  if (newparent) {
+    sinkpad = gst_pad_get_peer (srcpad);
+    gnl_operation_signal_input_priority_changed ((GnlOperation *)
+        newparent, sinkpad, newobj->priority);
+    gst_object_unref (sinkpad);
+  }
+
 
   /* 3. Handle children */
   if (GNL_IS_OPERATION (newobj)) {
@@ -2391,15 +2117,12 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
   }
 
   /* 4. Unblock source pad */
-  if ((srcpad && entry->nomorepadshandler == 0) && !G_NODE_IS_ROOT (node) &&
-      entry->probeid) {
+  if (!G_NODE_IS_ROOT (node) && entry->probeid) {
     GST_LOG_OBJECT (comp, "Unblocking pad %s:%s", GST_DEBUG_PAD_NAME (srcpad));
     gst_pad_remove_probe (srcpad, entry->probeid);
     entry->probeid = 0;
   }
 
-  if (G_LIKELY (srcpad))
-    gst_object_unref (srcpad);
   GST_LOG_OBJECT (comp, "done with object %s",
       GST_ELEMENT_NAME (GST_ELEMENT (newobj)));
 }
@@ -2416,7 +2139,6 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
  *
  * WITH OBJECTS LOCK TAKEN
  */
-
 static GList *
 compare_deactivate_single_node (GnlComposition * comp, GNode * node,
     GNode * newstack, gboolean modify)
@@ -2427,6 +2149,8 @@ compare_deactivate_single_node (GnlComposition * comp, GNode * node,
   GList *deactivate = NULL;
   GnlObject *oldobj = NULL;
   GstPad *srcpad = NULL;
+  GstPad *peerpad = NULL;
+  GnlCompositionEntry *entry;
 
   if (G_UNLIKELY (!node))
     return NULL;
@@ -2443,46 +2167,40 @@ compare_deactivate_single_node (GnlComposition * comp, GNode * node,
 
   GST_DEBUG_OBJECT (comp, "oldobj:%s",
       GST_ELEMENT_NAME ((GstElement *) oldobj));
-  srcpad = get_src_pad ((GstElement *) oldobj);
+  srcpad = GNL_OBJECT_SRC (oldobj);
 
-  if (G_LIKELY (srcpad)) {
-    GstPad *peerpad = NULL;
-    GnlCompositionEntry *entry = COMP_ENTRY (comp, oldobj);
+  entry = COMP_ENTRY (comp, oldobj);
 
-    /* 1. Block source pad
-     *   This makes sure that no data/event flow will come out of this element after this
-     *   point.
-     *
-     * If entry is NULL, this means the element is in the process of being removed.
-     */
-    if (entry && !entry->probeid) {
-      GST_LOG_OBJECT (comp, "Setting BLOCKING probe on %s:%s",
-          GST_DEBUG_PAD_NAME (srcpad));
-      entry->probeid =
-          gst_pad_add_probe (srcpad,
-          GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
-          (GstPadProbeCallback) pad_blocked, comp, NULL);
-    }
-    if (entry && !entry->dataprobeid) {
-      entry->dataprobeid = gst_pad_add_probe (srcpad,
-          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
-          GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data, entry,
-          NULL);
-    }
+  /* 1. Block source pad
+   *   This makes sure that no data/event flow will come out of this element after this
+   *   point.
+   *
+   * If entry is NULL, this means the element is in the process of being removed.
+   */
+  if (entry && !entry->probeid) {
+    GST_LOG_OBJECT (comp, "Setting BLOCKING probe on %s:%s",
+        GST_DEBUG_PAD_NAME (srcpad));
+    entry->probeid =
+        gst_pad_add_probe (srcpad,
+        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
+        (GstPadProbeCallback) pad_blocked, comp, NULL);
+  }
+  if (entry && !entry->dataprobeid) {
+    entry->dataprobeid = gst_pad_add_probe (srcpad,
+        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
+        GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data, entry,
+        NULL);
+  }
 
-    /* 2. If we have to modify or we have a parent, flush downstream
-     *   This ensures the streaming thread going through the current object has
-     *   either stopped or is blocking against the source pad. */
-    if ((modify || oldparent) && (peerpad = gst_pad_get_peer (srcpad))) {
-      GST_LOG_OBJECT (comp, "Sending flush start/stop downstream ");
-      gst_pad_send_event (peerpad, gst_event_new_flush_start ());
-      gst_pad_send_event (peerpad, gst_event_new_flush_stop (TRUE));
-      GST_DEBUG_OBJECT (comp, "DONE Sending flush events downstream");
-      gst_object_unref (peerpad);
-    }
-
-  } else {
-    GST_LOG_OBJECT (comp, "No source pad available");
+  /* 2. If we have to modify or we have a parent, flush downstream
+   *   This ensures the streaming thread going through the current object has
+   *   either stopped or is blocking against the source pad. */
+  if ((modify || oldparent) && (peerpad = gst_pad_get_peer (srcpad))) {
+    GST_LOG_OBJECT (comp, "Sending flush start/stop downstream ");
+    gst_pad_send_event (peerpad, gst_event_new_flush_start ());
+    gst_pad_send_event (peerpad, gst_event_new_flush_stop (TRUE));
+    GST_DEBUG_OBJECT (comp, "DONE Sending flush events downstream");
+    gst_object_unref (peerpad);
   }
 
   /* 3. Unlink from the parent if we've changed position */
@@ -2492,11 +2210,7 @@ compare_deactivate_single_node (GnlComposition * comp, GNode * node,
   if (G_UNLIKELY (!oldparent)) {
     GST_LOG_OBJECT (comp, "Top-level object");
     /* for top-level objects we just set the ghostpad target to NULL */
-    if (comp->priv->ghostpad) {
-      GST_LOG_OBJECT (comp, "Setting ghostpad target to NULL");
-      gnl_composition_ghost_pad_set_target (comp, NULL, NULL);
-    } else
-      GST_LOG_OBJECT (comp, "No ghostpad");
+    gnl_composition_ghost_pad_set_target (comp, NULL, NULL);
   } else {
     GnlObject *newparent = NULL;
 
@@ -2514,7 +2228,7 @@ compare_deactivate_single_node (GnlComposition * comp, GNode * node,
 
       GST_LOG_OBJECT (comp, "Topology changed, unlinking from downstream");
 
-      if (srcpad && (peerpad = gst_pad_get_peer (srcpad))) {
+      if ((peerpad = gst_pad_get_peer (srcpad))) {
         GST_LOG_OBJECT (peerpad, "Sending flush start/stop");
         gst_pad_send_event (peerpad, gst_event_new_flush_start ());
         gst_pad_send_event (peerpad, gst_event_new_flush_stop (TRUE));
@@ -2544,8 +2258,6 @@ compare_deactivate_single_node (GnlComposition * comp, GNode * node,
     deactivate = g_list_prepend (deactivate, oldobj);
   }
 
-  if (G_LIKELY (srcpad))
-    gst_object_unref (srcpad);
   GST_LOG_OBJECT (comp, "done with object %s",
       GST_ELEMENT_NAME (GST_ELEMENT (oldobj)));
 
@@ -2717,23 +2429,14 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     priv->segment_stop = currenttime;
   }
 
-  /* 4. Clear pending child seek
-   *    We'll be creating a new one */
-  if (priv->childseek) {
-    GST_DEBUG ("unreffing event %p", priv->childseek);
-    gst_event_unref (priv->childseek);
-    priv->childseek = NULL;
-  }
-
   /* Invalidate current stack */
   if (priv->current)
     g_node_destroy (priv->current);
   priv->current = NULL;
 
-  /* 5. deactivate unused elements */
+  /* 4. deactivate unused elements */
   if (todeactivate) {
     GList *tmp;
-    GnlCompositionEntry *entry;
     GstElement *element;
 
     GST_DEBUG_OBJECT (comp, "De-activating objects no longer used");
@@ -2744,13 +2447,6 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
       gst_element_set_state (element, priv->deactivated_elements_state);
       gst_element_set_locked_state (element, TRUE);
-      entry = COMP_ENTRY (comp, element);
-
-      /* entry can be NULL here if update_pipeline was called by
-       * gnl_composition_remove_object (comp, tmp->data)
-       */
-      if (entry && entry->nomorepadshandler)
-        wait_no_more_pads (comp, element, entry, FALSE);
     }
 
     g_list_free (todeactivate);
@@ -2758,7 +2454,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     GST_DEBUG_OBJECT (comp, "Finished de-activating objects no longer used");
   }
 
-  /* 6. Unlock all elements in new stack */
+  /* 5. Unlock all elements in new stack */
   GST_DEBUG_OBJECT (comp, "Setting current stack");
   priv->current = stack;
 
@@ -2769,13 +2465,16 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     GST_DEBUG_OBJECT (comp, "Finished activating objects in new stack");
   }
 
-  /* 7. Activate stack (might happen asynchronously) */
+  /* 6. Activate stack (might happen asynchronously) */
   if (priv->current) {
     GstEvent *event;
+    GstPad *pad;
+    GstElement *topelement;
+    GnlCompositionEntry *topentry;
 
     priv->stackvalid = TRUE;
 
-    /* 7.1. Create new seek event for newly configured timeline stack */
+    /* 6.1. Create new seek event for newly configured timeline stack */
     if (samestack && (startchanged || stopchanged))
       event =
           get_new_seek_event (comp,
@@ -2783,60 +2482,38 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     else
       event = get_new_seek_event (comp, initial, FALSE);
 
-    /* 7.2.a If the stack entirely ready, send seek out synchronously */
-    if (priv->waitingpads == 0) {
-      GstPad *pad;
-      GstElement *topelement = GST_ELEMENT (priv->current->data);
+    /* 6.2 The stack is entirely ready, send seek out synchronously */
+    topelement = GST_ELEMENT (priv->current->data);
+    /* Get toplevel object source pad */
+    pad = GNL_OBJECT_SRC (topelement);
+    topentry = COMP_ENTRY (comp, topelement);
 
-      /* Get toplevel object source pad */
-      if ((pad = get_src_pad (topelement))) {
-        GnlCompositionEntry *topentry = COMP_ENTRY (comp, topelement);
+    GST_DEBUG_OBJECT (comp,
+        "We have a valid toplevel element pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-        GST_DEBUG_OBJECT (comp,
-            "We have a valid toplevel element pad %s:%s",
-            GST_DEBUG_PAD_NAME (pad));
+    /* Send seek event */
+    GST_LOG_OBJECT (comp, "sending seek event");
+    if (gst_pad_send_event (pad, event)) {
+      /* Unconditionnaly set the ghostpad target to pad */
+      GST_LOG_OBJECT (comp,
+          "Setting the composition's ghostpad target to %s:%s",
+          GST_DEBUG_PAD_NAME (pad));
 
-        /* Send seek event */
-        GST_LOG_OBJECT (comp, "sending seek event");
-        if (gst_pad_send_event (pad, event)) {
-          /* Unconditionnaly set the ghostpad target to pad */
-          GST_LOG_OBJECT (comp,
-              "Setting the composition's ghostpad target to %s:%s",
-              GST_DEBUG_PAD_NAME (pad));
+      gnl_composition_ghost_pad_set_target (comp, pad, topentry);
 
-          gnl_composition_ghost_pad_set_target (comp, pad, topentry);
+      if (topentry->probeid) {
 
-          if (topentry->probeid) {
-
-            /* unblock top-level pad */
-            GST_LOG_OBJECT (comp, "About to unblock top-level srcpad");
-            gst_pad_remove_probe (pad, topentry->probeid);
-            topentry->probeid = 0;
-          }
-        } else {
-          ret = FALSE;
-        }
-        gst_object_unref (pad);
-
-      } else {
-        GST_WARNING_OBJECT (comp,
-            "Timeline is entirely linked, but couldn't get top-level element's source pad");
-
-        ret = FALSE;
+        /* unblock top-level pad */
+        GST_LOG_OBJECT (comp, "About to unblock top-level srcpad");
+        gst_pad_remove_probe (pad, topentry->probeid);
+        topentry->probeid = 0;
       }
     } else {
-      /* 7.2.b. Stack isn't entirely ready, save seek event for later on */
-      GST_LOG_OBJECT (comp,
-          "The timeline stack isn't entirely linked, delaying sending seek event (waitingpads:%d)",
-          priv->waitingpads);
-
-      priv->childseek = event;
-      ret = TRUE;
+      ret = FALSE;
     }
   } else {
-    if ((!priv->objects_start) && priv->ghostpad) {
-      GST_DEBUG_OBJECT (comp, "composition is now empty, removing ghostpad");
-      gnl_composition_remove_ghostpad (comp);
+    if ((!priv->objects_start)) {
+      gnl_composition_reset_target_pad (comp);
       priv->segment_start = 0;
       priv->segment_stop = GST_CLOCK_TIME_NONE;
     }
@@ -2844,65 +2521,6 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
   GST_DEBUG_OBJECT (comp, "Returning %d", ret);
   return ret;
-}
-
-/*
- * Child modification updates
- */
-
-static void
-object_pad_removed (GnlObject * object, GstPad * pad, GnlComposition * comp)
-{
-  GnlCompositionPrivate *priv = comp->priv;
-
-  GST_DEBUG_OBJECT (comp, "pad %s:%s was removed", GST_DEBUG_PAD_NAME (pad));
-
-  if (GST_PAD_IS_SRC (pad)) {
-    /* remove ghostpad if it's the current top stack object */
-    if (priv->current && GNL_OBJECT (priv->current->data) == object
-        && priv->ghostpad)
-      gnl_composition_remove_ghostpad (comp);
-    else {
-      GnlCompositionEntry *entry = COMP_ENTRY (comp, object);
-
-      if (entry && entry->probeid) {
-        gst_pad_remove_probe (pad, entry->probeid);
-        entry->probeid = 0;
-      }
-      if (entry && entry->dataprobeid) {
-        gst_pad_remove_probe (pad, entry->dataprobeid);
-        entry->dataprobeid = 0;
-      }
-    }
-  }
-}
-
-static void
-object_pad_added (GnlObject * object G_GNUC_UNUSED, GstPad * pad,
-    GnlComposition * comp)
-{
-  GnlCompositionEntry *entry;
-
-  if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK)
-    return;
-
-  entry = COMP_ENTRY (comp, object);
-
-  if (!entry->probeid) {
-    GST_DEBUG_OBJECT (comp, "pad %s:%s was added, blocking it",
-        GST_DEBUG_PAD_NAME (pad));
-    entry->probeid =
-        gst_pad_add_probe (pad,
-        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
-        (GstPadProbeCallback) pad_blocked, comp, NULL);
-  }
-
-  if (!entry->dataprobeid) {
-    entry->dataprobeid = gst_pad_add_probe (pad,
-        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
-        GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data, entry,
-        NULL);
-  }
 }
 
 static gboolean
@@ -2967,10 +2585,15 @@ gnl_composition_add_object (GstBin * bin, GstElement * element)
   /* ...and add it to the hash table */
   g_hash_table_insert (priv->objects_hash, element, entry);
 
-  entry->padremovedhandler = g_signal_connect (G_OBJECT (element),
-      "pad-removed", G_CALLBACK (object_pad_removed), comp);
-  entry->padaddedhandler = g_signal_connect (G_OBJECT (element),
-      "pad-added", G_CALLBACK (object_pad_added), comp);
+  entry->dataprobeid = gst_pad_add_probe (entry->object->srcpad,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
+      GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data, entry,
+      NULL);
+
+  entry->probeid =
+      gst_pad_add_probe (entry->object->srcpad,
+      GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
+      (GstPadProbeCallback) pad_blocked, comp, NULL);
 
   /* Set the caps of the composition */
   if (G_UNLIKELY (!gst_caps_is_any (((GnlObject *) comp)->caps)))
@@ -3034,8 +2657,6 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element)
     goto out;
   }
 
-  if (entry->nomorepadshandler)
-    wait_no_more_pads (comp, element, entry, FALSE);
   gst_object_ref (element);
   gst_element_set_locked_state (element, FALSE);
 
@@ -3069,6 +2690,7 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element)
   /* Make it possible to reuse the same object later */
   gnl_object_reset (GNL_OBJECT (element));
   gst_object_unref (element);
+
 out:
   return ret;
 }

@@ -43,6 +43,8 @@ G_BEGIN_DECLS
 #define GNL_IS_OBJECT_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GNL_TYPE_OBJECT))
 
+#define GNL_OBJECT_SRC(obj) (((GnlObject *) obj)->srcpad)
+
 /**
  * GnlObjectFlags:
  * @GNL_OBJECT_IS_SOURCE:
@@ -83,6 +85,8 @@ typedef enum
 struct _GnlObject
 {
   GstBin parent;
+
+  GstPad *srcpad;
 
   /* Time positionning */
   GstClockTime start;

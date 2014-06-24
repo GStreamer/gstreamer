@@ -42,10 +42,7 @@
 GST_DEBUG_CATEGORY_STATIC (gnlobject_debug);
 #define GST_CAT_DEFAULT gnlobject_debug
 
-#define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gnlobject_debug, "gnlobject", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin Object base class");
-#define gnl_object_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GnlObject, gnl_object, GST_TYPE_BIN, _do_init);
+static GObjectClass *parent_class = NULL;
 
 /****************************************************
  *              Helper macros                       *
@@ -117,6 +114,9 @@ gnl_object_class_init (GnlObjectClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gnlobject_class = (GnlObjectClass *) klass;
+  GST_DEBUG_CATEGORY_INIT (gnlobject_debug, "gnlobject",
+      GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin object");
+  parent_class = g_type_class_ref (GST_TYPE_BIN);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gnl_object_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gnl_object_get_property);
@@ -243,7 +243,7 @@ gnl_object_class_init (GnlObjectClass * klass)
 }
 
 static void
-gnl_object_init (GnlObject * object)
+gnl_object_init (GnlObject * object, GnlObjectClass * klass)
 {
   object->start = object->pending_start = 0;
   object->duration = object->pending_duration = 0;
@@ -258,6 +258,12 @@ gnl_object_init (GnlObject * object)
   object->segment_rate = 1.0;
   object->segment_start = -1;
   object->segment_stop = -1;
+
+  object->srcpad = gnl_object_ghost_pad_no_target (object,
+      "src", GST_PAD_SRC,
+      gst_element_class_get_pad_template ((GstElementClass *) klass, "src"));
+
+  gst_element_add_pad (GST_ELEMENT (object), object->srcpad);
 }
 
 static void
@@ -652,4 +658,31 @@ gnl_object_reset (GnlObject * object)
   object->inpoint = GST_CLOCK_TIME_NONE;
   object->priority = 0;
   object->active = TRUE;
+}
+
+GType
+gnl_object_get_type (void)
+{
+  static volatile gsize type = 0;
+
+  if (g_once_init_enter (&type)) {
+    GType _type;
+    static const GTypeInfo info = {
+      sizeof (GnlObjectClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gnl_object_class_init,
+      NULL,
+      NULL,
+      sizeof (GnlObject),
+      0,
+      (GInstanceInitFunc) gnl_object_init,
+    };
+
+    _type = g_type_register_static (GST_TYPE_BIN,
+        "GnlObject", &info, G_TYPE_FLAG_ABSTRACT);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+
 }

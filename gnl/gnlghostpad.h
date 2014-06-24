@@ -33,7 +33,7 @@ GstPad *gnl_object_ghost_pad (GnlObject * object,
     const gchar * name, GstPad * target);
 
 GstPad *gnl_object_ghost_pad_no_target (GnlObject * object,
-    const gchar * name, GstPadDirection dir);
+    const gchar * name, GstPadDirection dir, GstPadTemplate *templ);
 
 gboolean gnl_object_ghost_pad_set_target (GnlObject * object,
     GstPad * ghost, GstPad * target);

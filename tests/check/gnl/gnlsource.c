@@ -39,8 +39,7 @@ GST_START_TEST (test_simple_videotestsrc)
       segment_new (1.0, GST_FORMAT_TIME,
           1 * GST_SECOND, 2 * GST_SECOND, 1 * GST_SECOND));
 
-  g_signal_connect (G_OBJECT (gnlsource), "pad-added",
-      G_CALLBACK (composition_pad_added_cb), collect);
+  gst_element_link (gnlsource, sink);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_if (sinkpad == NULL);
@@ -139,8 +138,7 @@ GST_START_TEST (test_videotestsrc_in_bin)
   collect->expected_segments = g_list_append (collect->expected_segments,
       segment_new (1.0, GST_FORMAT_TIME, 0, 1 * GST_SECOND, 0));
 
-  g_signal_connect (G_OBJECT (gnlsource), "pad-added",
-      G_CALLBACK (composition_pad_added_cb), collect);
+  gst_element_link (gnlsource, sink);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_if (sinkpad == NULL);

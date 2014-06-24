@@ -59,8 +59,6 @@ G_BEGIN_DECLS
   /* FIXME : We might need to use a lock to access this list */
   GList * sinks;		/* The sink ghostpads */
   
-  GstPad *ghostpad;		/* src ghostpad */
-
   GstElement *element;		/* controlled element */
 
   GstClockTime next_base_time;

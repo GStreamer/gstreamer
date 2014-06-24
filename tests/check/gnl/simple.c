@@ -52,9 +52,7 @@ test_simplest_full (void)
   collect->expected_segments = g_list_append (collect->expected_segments,
       segment_new (1.0, GST_FORMAT_TIME, 5 * GST_SECOND, 6 * GST_SECOND, 0));
 
-  g_signal_connect (G_OBJECT (comp), "pad-added",
-      G_CALLBACK (composition_pad_added_cb), collect);
-
+  gst_element_link (comp, sink);
   sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
       (GstPadProbeCallback) sinkpad_probe, collect, NULL);
@@ -282,8 +280,7 @@ test_one_after_other_full (void)
       segment_new (1.0, GST_FORMAT_TIME,
           2 * GST_SECOND, 3 * GST_SECOND, 1 * GST_SECOND));
 
-  g_signal_connect (G_OBJECT (comp), "pad-added",
-      G_CALLBACK (composition_pad_added_cb), collect);
+  gst_element_link (comp, sink);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
@@ -485,8 +482,7 @@ test_one_under_another_full (void)
       segment_new (1.0, GST_FORMAT_TIME,
           2 * GST_SECOND, 3 * GST_SECOND, 2 * GST_SECOND));
 
-  g_signal_connect (G_OBJECT (comp), "pad-added",
-      G_CALLBACK (composition_pad_added_cb), collect);
+  gst_element_link (comp, sink);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
@@ -634,8 +630,7 @@ test_one_bin_after_other_full (void)
       segment_new (1.0, GST_FORMAT_TIME,
           1 * GST_SECOND, 2 * GST_SECOND, 1 * GST_SECOND));
 
-  g_signal_connect (G_OBJECT (comp), "pad-added",
-      G_CALLBACK (composition_pad_added_cb), collect);
+  gst_element_link (comp, sink);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
