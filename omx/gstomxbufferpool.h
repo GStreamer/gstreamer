@@ -51,6 +51,7 @@ struct _GstOMXBufferPool
 
   GstCaps *caps;
   gboolean add_videometa;
+  gboolean need_copy;
   GstVideoInfo video_info;
 
   /* Owned by element, element has to stop this pool before

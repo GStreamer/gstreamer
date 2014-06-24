@@ -1214,6 +1214,29 @@ gst_omx_video_dec_clean_older_frames (GstOMXVideoDec * self,
   g_list_free (frames);
 }
 
+static GstBuffer *
+copy_frame (const GstVideoInfo * info, GstBuffer * outbuf)
+{
+  GstVideoInfo out_info, tmp_info;
+  GstBuffer *tmpbuf;
+  GstVideoFrame out_frame, tmp_frame;
+
+  out_info = *info;
+  tmp_info = *info;
+
+  tmpbuf = gst_buffer_new_and_alloc (out_info.size);
+
+  gst_video_frame_map (&out_frame, &out_info, outbuf, GST_MAP_READ);
+  gst_video_frame_map (&tmp_frame, &tmp_info, tmpbuf, GST_MAP_WRITE);
+  gst_video_frame_copy (&tmp_frame, &out_frame);
+  gst_video_frame_unmap (&out_frame);
+  gst_video_frame_unmap (&tmp_frame);
+
+  gst_buffer_unref (outbuf);
+
+  return tmpbuf;
+}
+
 static void
 gst_omx_video_dec_loop (GstOMXVideoDec * self)
 {
@@ -1392,6 +1415,12 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         gst_omx_port_release_buffer (port, buf);
         goto invalid_buffer;
       }
+
+      if (GST_OMX_BUFFER_POOL (self->out_port_pool)->need_copy)
+        outbuf =
+            copy_frame (&GST_OMX_BUFFER_POOL (self->out_port_pool)->video_info,
+            outbuf);
+
       buf = NULL;
     } else {
       outbuf =
@@ -1407,6 +1436,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   } else if (buf->omx_buf->nFilledLen > 0 || buf->eglimage) {
     if (self->out_port_pool) {
       gint i, n;
+      GstBuffer *outbuf;
       GstBufferPoolAcquireParams params = { 0, };
 
       n = port->buffers->len;
@@ -1421,7 +1451,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       GST_OMX_BUFFER_POOL (self->out_port_pool)->current_buffer_index = i;
       flow_ret =
           gst_buffer_pool_acquire_buffer (self->out_port_pool,
-          &frame->output_buffer, &params);
+          &outbuf, &params);
       if (flow_ret != GST_FLOW_OK) {
         flow_ret =
             gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
@@ -1429,6 +1459,14 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         gst_omx_port_release_buffer (port, buf);
         goto invalid_buffer;
       }
+
+      if (GST_OMX_BUFFER_POOL (self->out_port_pool)->need_copy)
+        outbuf =
+            copy_frame (&GST_OMX_BUFFER_POOL (self->out_port_pool)->video_info,
+            outbuf);
+
+      frame->output_buffer = outbuf;
+
       flow_ret =
           gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
       frame = NULL;
