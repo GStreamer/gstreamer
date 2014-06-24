@@ -533,10 +533,14 @@ GST_START_TEST (test_mpegts_dvb_descriptors)
   /* Descriptor should fail if string is more than 255 bytes */
   memset (long_string, 0x41, 256);
   long_string[256] = 0x00;
-  ASSERT_CRITICAL (gst_mpegts_descriptor_from_dvb_service
-      (GST_DVB_SERVICE_DIGITAL_TELEVISION, long_string, NULL));
-  ASSERT_CRITICAL (gst_mpegts_descriptor_from_dvb_service
-      (GST_DVB_SERVICE_DIGITAL_TELEVISION, NULL, long_string));
+  desc =
+      gst_mpegts_descriptor_from_dvb_service
+      (GST_DVB_SERVICE_DIGITAL_TELEVISION, long_string, NULL);
+  fail_if (desc != NULL);
+  desc =
+      gst_mpegts_descriptor_from_dvb_service
+      (GST_DVB_SERVICE_DIGITAL_TELEVISION, NULL, long_string);
+  fail_if (desc != NULL);
 }
 
 GST_END_TEST;

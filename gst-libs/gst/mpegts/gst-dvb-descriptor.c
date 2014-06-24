@@ -467,7 +467,7 @@ GstMpegTsDescriptor *
 gst_mpegts_descriptor_from_dvb_service (GstMpegTsDVBServiceType service_type,
     const gchar * service_name, const gchar * service_provider)
 {
-  GstMpegTsDescriptor *descriptor;
+  GstMpegTsDescriptor *descriptor = NULL;
   guint8 *conv_provider_name = NULL, *conv_service_name = NULL;
   gsize provider_size = 0, service_size = 0;
   guint8 *data;
@@ -478,13 +478,14 @@ gst_mpegts_descriptor_from_dvb_service (GstMpegTsDVBServiceType service_type,
     if (!conv_provider_name) {
       GST_WARNING ("Could not find proper encoding for string `%s`",
           service_provider);
-      return NULL;
+      goto beach;
     }
   }
 
   if (provider_size >= 256) {
-    g_free (conv_provider_name);
-    g_return_val_if_reached (NULL);
+    GST_WARNING ("Service provider string too big (%" G_GSIZE_FORMAT " > 256)",
+        provider_size);
+    goto beach;
   }
 
   if (service_name) {
@@ -493,14 +494,14 @@ gst_mpegts_descriptor_from_dvb_service (GstMpegTsDVBServiceType service_type,
     if (!conv_service_name) {
       GST_WARNING ("Could not find proper encoding for string `%s`",
           service_name);
-      return NULL;
+      goto beach;
     }
   }
 
   if (service_size >= 256) {
-    g_free (conv_provider_name);
-    g_free (conv_service_name);
-    g_return_val_if_reached (NULL);
+    GST_WARNING ("Service name string too big (%" G_GSIZE_FORMAT " > 256)",
+        service_size);
+    goto beach;
   }
 
   descriptor =
@@ -510,13 +511,19 @@ gst_mpegts_descriptor_from_dvb_service (GstMpegTsDVBServiceType service_type,
   data = descriptor->data + 2;
   *data++ = service_type;
   *data++ = provider_size;
-  memcpy (data, conv_provider_name, provider_size);
+  if (conv_provider_name)
+    memcpy (data, conv_provider_name, provider_size);
+
   data += provider_size;
   *data++ = service_size;
-  memcpy (data, conv_service_name, service_size);
+  if (conv_service_name)
+    memcpy (data, conv_service_name, service_size);
 
-  g_free (conv_provider_name);
-  g_free (conv_service_name);
+beach:
+  if (conv_service_name)
+    g_free (conv_service_name);
+  if (conv_provider_name)
+    g_free (conv_provider_name);
 
   return descriptor;
 }
