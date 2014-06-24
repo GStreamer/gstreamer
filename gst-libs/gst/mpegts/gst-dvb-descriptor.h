@@ -849,7 +849,7 @@ typedef struct _GstMpegtsT2DeliverySystemCell GstMpegtsT2DeliverySystemCell;
 /**
  * GstMpegtsT2DeliverySystemCell:
  * @cell_id: id of the cell
- * @centre_frequencies: centre frequencies in Hz
+ * @centre_frequencies: (element-type guint32): centre frequencies in Hz
  * @sub_cells: (element-type GstMpegtsT2DeliverySystemCellExtension):
  */
 struct _GstMpegtsT2DeliverySystemCell
