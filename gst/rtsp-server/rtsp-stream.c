@@ -2364,7 +2364,7 @@ gst_rtsp_stream_remove_transport (GstRTSPStream * stream,
  * gst_rtsp_stream_update_crypto:
  * @stream: a #GstRTSPStream
  * @ssrc: the SSRC
- * @crypto: (transfer none) (allow none): a #GstCaps with crypto info
+ * @crypto: (transfer none) (allow-none): a #GstCaps with crypto info
  *
  * Update the new crypto information for @ssrc in @stream. If information
  * for @ssrc did not exist, it will be added. If information

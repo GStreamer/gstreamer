@@ -249,6 +249,12 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
           handle_response), NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::send-message:
+   * @client: The RTSP client
+   * @session: (type GstRtspServer.RTSPSession): The session
+   * @message: (type GstRtsp.RTSPMessage): The message
+   */
   gst_rtsp_client_signals[SIGNAL_SEND_MESSAGE] =
       g_signal_new ("send-message", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
@@ -1721,8 +1727,7 @@ strip_chars (gchar * str)
   memmove (str, s, len + 1);
 }
 
-/**
- * KeyMgmt = "KeyMgmt" ":" key-mgmt-spec 0*("," key-mgmt-spec)
+/* KeyMgmt = "KeyMgmt" ":" key-mgmt-spec 0*("," key-mgmt-spec)
  * key-mgmt-spec = "prot" "=" KMPID ";" ["uri" "=" %x22 URI %x22 ";"]
  */
 static gboolean
