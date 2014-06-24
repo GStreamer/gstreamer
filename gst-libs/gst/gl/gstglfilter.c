@@ -757,6 +757,12 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
     result = tmp;
   }
 
+  /* if output still intersects input then prefer the intersection */
+  if (direction == GST_PAD_SINK) {
+    tmp = gst_caps_intersect_full (result, caps, GST_CAPS_INTERSECT_FIRST);
+    result = gst_caps_merge (tmp, result);
+  }
+
   GST_DEBUG_OBJECT (bt, "returning caps: %" GST_PTR_FORMAT, result);
 
   return result;
