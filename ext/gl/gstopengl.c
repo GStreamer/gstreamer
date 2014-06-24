@@ -77,6 +77,10 @@
 #include <bcm_host.h>
 #endif
 
+#if GST_GL_HAVE_WINDOW_X11
+#include <X11/Xlib.h>
+#endif
+
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -89,6 +93,11 @@ plugin_init (GstPlugin * plugin)
 #ifdef USE_EGL_RPI
   GST_DEBUG ("Initialize BCM host");
   bcm_host_init ();
+#endif
+
+#if GST_GL_HAVE_WINDOW_X11
+  if (g_getenv ("GST_GL_XINITTHREADS"))
+    XInitThreads ();
 #endif
 
   if (!gst_element_register (plugin, "glimagesink",
