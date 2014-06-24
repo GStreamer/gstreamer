@@ -88,6 +88,7 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstGLFilterClass *filter_class;
+  GstBaseTransformClass *basetransform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
@@ -107,6 +108,8 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
 #endif
 
   filter_class->filter_texture = gst_gl_colorscale_filter_texture;
+
+  basetransform_class->passthrough_on_same_caps = TRUE;
 }
 
 static void
