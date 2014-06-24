@@ -155,6 +155,55 @@ GST_START_TEST (test_udpsink_bufferlist)
 
 GST_END_TEST;
 
+GST_START_TEST (test_udpsink_client_add_remove)
+{
+  GstElement *udpsink;
+
+  /* Note: keep in mind that these are in addition to the client added by
+   * the host/port properties (by default 'localhost:5004' */
+
+  udpsink = gst_check_setup_element ("udpsink");
+  g_signal_emit_by_name (udpsink, "remove", "localhost", 5004, NULL);
+  gst_object_unref (udpsink);
+
+  udpsink = gst_check_setup_element ("udpsink");
+  g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5554, NULL);
+  gst_object_unref (udpsink);
+
+  udpsink = gst_check_setup_element ("udpsink");
+  g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5554, NULL);
+  g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5554, NULL);
+  gst_object_unref (udpsink);
+
+  udpsink = gst_check_setup_element ("udpsink");
+  g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5554, NULL);
+  g_signal_emit_by_name (udpsink, "remove", "127.0.0.1", 5554, NULL);
+  gst_object_unref (udpsink);
+
+  udpsink = gst_check_setup_element ("udpsink");
+  g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5554, NULL);
+  g_signal_emit_by_name (udpsink, "remove", "127.0.0.1", 5555, NULL);
+  gst_object_unref (udpsink);
+
+  udpsink = gst_check_setup_element ("udpsink");
+  g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5554, NULL);
+  g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5555, NULL);
+  gst_object_unref (udpsink);
+
+  udpsink = gst_check_setup_element ("udpsink");
+  g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5554, NULL);
+  g_signal_emit_by_name (udpsink, "add", "10.2.0.1", 5554, NULL);
+  gst_object_unref (udpsink);
+
+  udpsink = gst_check_setup_element ("udpsink");
+  g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5554, NULL);
+  g_signal_emit_by_name (udpsink, "add", "10.2.0.1", 5554, NULL);
+  g_signal_emit_by_name (udpsink, "remove", "127.0.0.1", 5554, NULL);
+  gst_object_unref (udpsink);
+}
+
+GST_END_TEST;
+
 static Suite *
 udpsink_suite (void)
 {
@@ -165,6 +214,7 @@ udpsink_suite (void)
 
   tcase_add_test (tc_chain, test_udpsink);
   tcase_add_test (tc_chain, test_udpsink_bufferlist);
+  tcase_add_test (tc_chain, test_udpsink_client_add_remove);
 
   return s;
 }
