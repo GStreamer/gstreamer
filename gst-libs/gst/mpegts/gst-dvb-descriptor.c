@@ -460,7 +460,7 @@ gst_mpegts_descriptor_parse_dvb_service (const GstMpegTsDescriptor *
  * The data field of the #GstMpegTsDescriptor will be allocated,
  * and transferred to the caller.
  *
- * Returns: (transfer full): the #GstMpgTsDescriptor or %NULL on fail
+ * Returns: (transfer full): the #GstMpegTsDescriptor or %NULL on fail
  */
 GstMpegTsDescriptor *
 gst_mpegts_descriptor_from_dvb_service (GstMpegTsDVBServiceType service_type,
