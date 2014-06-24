@@ -225,8 +225,8 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
   gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED] =
       g_signal_new ("client-connected", G_TYPE_FROM_CLASS (gobject_class),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPServerClass, client_connected),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      gst_rtsp_client_get_type ());
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CLIENT);
 
   klass->create_client = default_create_client;
 

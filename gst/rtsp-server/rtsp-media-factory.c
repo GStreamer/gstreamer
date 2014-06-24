@@ -182,13 +182,13 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
   gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED] =
       g_signal_new ("media-constructed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
-          media_constructed), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+          media_constructed), NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_RTSP_MEDIA);
 
   gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONFIGURE] =
       g_signal_new ("media-configure", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
-          media_configure), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+          media_configure), NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_RTSP_MEDIA);
 
   klass->gen_key = default_gen_key;

@@ -188,71 +188,71 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_CLOSED] =
       g_signal_new ("closed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPClientClass, closed), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   gst_rtsp_client_signals[SIGNAL_NEW_SESSION] =
       g_signal_new ("new-session", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPClientClass, new_session), NULL, NULL,
-      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_RTSP_SESSION);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_RTSP_SESSION);
 
   gst_rtsp_client_signals[SIGNAL_OPTIONS_REQUEST] =
       g_signal_new ("options-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, options_request),
-      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-      G_TYPE_POINTER);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_DESCRIBE_REQUEST] =
       g_signal_new ("describe-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, describe_request),
-      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-      G_TYPE_POINTER);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_SETUP_REQUEST] =
       g_signal_new ("setup-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, setup_request),
-      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-      G_TYPE_POINTER);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_PLAY_REQUEST] =
       g_signal_new ("play-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, play_request),
-      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-      G_TYPE_POINTER);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_PAUSE_REQUEST] =
       g_signal_new ("pause-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, pause_request),
-      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-      G_TYPE_POINTER);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST] =
       g_signal_new ("teardown-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, teardown_request),
-      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-      G_TYPE_POINTER);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_SET_PARAMETER_REQUEST] =
       g_signal_new ("set-parameter-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          set_parameter_request), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-      G_TYPE_NONE, 1, G_TYPE_POINTER);
+          set_parameter_request), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_GET_PARAMETER_REQUEST] =
       g_signal_new ("get-parameter-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          get_parameter_request), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-      G_TYPE_NONE, 1, G_TYPE_POINTER);
+          get_parameter_request), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_HANDLE_RESPONSE] =
       g_signal_new ("handle-response", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          handle_response), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-      G_TYPE_NONE, 1, G_TYPE_POINTER);
+          handle_response), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_SEND_MESSAGE] =
       g_signal_new ("send-message", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_POINTER);
+      G_TYPE_NONE, 2, GST_TYPE_RTSP_CONTEXT, G_TYPE_POINTER);
 
   tunnels =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);

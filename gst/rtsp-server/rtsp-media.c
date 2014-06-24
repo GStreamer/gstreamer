@@ -288,22 +288,22 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   gst_rtsp_media_signals[SIGNAL_PREPARED] =
       g_signal_new ("prepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, prepared), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   gst_rtsp_media_signals[SIGNAL_UNPREPARED] =
       g_signal_new ("unprepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, unprepared), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   gst_rtsp_media_signals[SIGNAL_TARGET_STATE] =
       g_signal_new ("target-state", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaClass, new_state), NULL,
-      NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
 
   gst_rtsp_media_signals[SIGNAL_NEW_STATE] =
       g_signal_new ("new-state", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_state), NULL, NULL,
-      g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
 
   GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
 
