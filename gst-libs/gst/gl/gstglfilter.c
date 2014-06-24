@@ -873,19 +873,23 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
 
   if (pool == NULL && need_pool) {
     GstVideoInfo info;
-    GstBufferPool *decide_pool;
+    GstBufferPool *decide_pool = NULL;
 
     if (!gst_video_info_from_caps (&info, caps))
       goto invalid_caps;
 
-    gst_query_parse_allocation (decide_query, &decide_caps, NULL);
-    decide_pool = gst_base_transform_get_buffer_pool (trans);
-    if (GST_IS_GL_BUFFER_POOL (decide_pool)
+    if (decide_query) {
+      gst_query_parse_allocation (decide_query, &decide_caps, NULL);
+      decide_pool = gst_base_transform_get_buffer_pool (trans);
+    }
+
+    if (decide_pool && GST_IS_GL_BUFFER_POOL (decide_pool)
         && gst_caps_is_equal_fixed (decide_caps, caps)) {
       pool = decide_pool;
     } else {
       GST_DEBUG_OBJECT (filter, "create new pool");
-      gst_object_unref (decide_pool);
+      if (decide_pool)
+        gst_object_unref (decide_pool);
       pool = gst_gl_buffer_pool_new (filter->context);
 
       /* the normal size of a frame */
