@@ -229,7 +229,7 @@ gst_geometric_transform_transform_frame (GstVideoFilter * vfilter,
 {
   GstGeometricTransform *gt;
   GstGeometricTransformClass *klass;
-  gint x, y;
+  gint x, y, i;
   GstFlowReturn ret = GST_FLOW_OK;
   gdouble *ptr;
   guint8 *in_data;
@@ -245,7 +245,7 @@ gst_geometric_transform_transform_frame (GstVideoFilter * vfilter,
     /* in AYUV black is not just all zeros:
      * 0x10 is black for Y,
      * 0x80 is black for Cr and Cb */
-    for (int i = 0; i < out_frame->map[0].size; i += 4)
+    for (i = 0; i < out_frame->map[0].size; i += 4)
       GST_WRITE_UINT32_BE (out_data + i, 0xff108080);
   } else {
     memset (out_data, 0, out_frame->map[0].size);

@@ -80,10 +80,11 @@ get_array_from_matrix (GstPerspective * self)
 {
   GValue v = { 0, };
   GValueArray *va;
+  int i;
 
   va = g_value_array_new (1);
 
-  for (int i = 0; i < 9; i++) {
+  for (i = 0; i < 9; i++) {
     g_value_init (&v, G_TYPE_DOUBLE);
     g_value_set_double (&v, self->matrix[i]);
     g_value_array_append (va, &v);

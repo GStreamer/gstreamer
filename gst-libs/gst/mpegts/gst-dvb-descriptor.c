@@ -542,6 +542,7 @@ gboolean
 gst_mpegts_descriptor_parse_dvb_linkage (const GstMpegTsDescriptor * descriptor,
     GstMpegTsDVBLinkageDescriptor * res)
 {
+  guint i;
   guint8 *data, *end;
 
   g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
@@ -627,7 +628,7 @@ gst_mpegts_descriptor_parse_dvb_linkage (const GstMpegTsDescriptor * descriptor,
 
       res->linkage_data = (gpointer) ext_events;
 
-      for (guint8 i = 0; i < *data++;) {
+      for (i = 0; i < *data++;) {
         GstMpegTsDVBLinkageExtendedEvent *ext_event;
 
         if (end - data < 3)
@@ -1063,6 +1064,7 @@ gst_mpegts_descriptor_parse_dvb_ca_identifier (const GstMpegTsDescriptor *
 {
   guint8 *data;
   guint16 tmp;
+  guint i;
 
   g_return_val_if_fail (descriptor != NULL && list != NULL, FALSE);
   /* 2 bytes = one entry */
@@ -1072,7 +1074,7 @@ gst_mpegts_descriptor_parse_dvb_ca_identifier (const GstMpegTsDescriptor *
 
   *list = g_array_new (FALSE, FALSE, sizeof (guint16));
 
-  for (guint i = 0; i < descriptor->length - 1; i += 2) {
+  for (i = 0; i < descriptor->length - 1; i += 2) {
     tmp = GST_READ_UINT16_BE (data);
     g_array_append_val (*list, tmp);
     data += 2;
@@ -1151,6 +1153,7 @@ gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegTsDescriptor
     * descriptor, GPtrArray ** rating)
 {
   guint8 *data;
+  guint i;
 
   g_return_val_if_fail (descriptor != NULL && rating != NULL, FALSE);
   __common_desc_checks (descriptor, GST_MTS_DESC_DVB_PARENTAL_RATING, 0, FALSE);
@@ -1160,7 +1163,7 @@ gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegTsDescriptor
   *rating = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_dvb_parental_rating_item_free);
 
-  for (guint8 i = 0; i < descriptor->length - 3; i += 4) {
+  for (i = 0; i < descriptor->length - 3; i += 4) {
     GstMpegTsDVBParentalRatingItem *item =
         g_slice_new0 (GstMpegTsDVBParentalRatingItem);
     g_ptr_array_add (*rating, item);
@@ -1659,6 +1662,7 @@ gst_mpegts_descriptor_parse_dvb_frequency_list (const GstMpegTsDescriptor
 {
   guint8 *data, type, len;
   guint32 freq;
+  guint i;
 
   g_return_val_if_fail (descriptor != NULL && offset != NULL &&
       list != NULL, FALSE);
@@ -1682,7 +1686,7 @@ gst_mpegts_descriptor_parse_dvb_frequency_list (const GstMpegTsDescriptor
 
   len = descriptor->length - 1;
 
-  for (guint8 i = 0; i < len - 3; i += 4) {
+  for (i = 0; i < len - 3; i += 4) {
     switch (type) {
       case 1:
         freq = BCD_32 (data) * 10;
