@@ -131,6 +131,7 @@ gst_omx_memory_allocator_alloc (GstAllocator * allocator, GstMemoryFlags flags,
     GstOMXBuffer * buf)
 {
   GstOMXMemory *mem;
+  gint align;
 
   /* FIXME: We don't allow sharing because we need to know
    * when the memory becomes unused and can only then put
@@ -139,11 +140,22 @@ gst_omx_memory_allocator_alloc (GstAllocator * allocator, GstMemoryFlags flags,
    */
   flags |= GST_MEMORY_FLAG_NO_SHARE;
 
+  /* GStreamer uses a bitmask for the alignment while
+   * OMX uses the alignment itself. So we have to convert
+   * here */
+  align = buf->port->port_def.nBufferAlignment;
+  if (align > 0)
+    align -= 1;
+  if (((align + 1) & align) != 0) {
+    GST_WARNING ("Invalid alignment that is not a power of two: %u",
+        buf->port->port_def.nBufferAlignment);
+    align = 0;
+  }
+
   mem = g_slice_new (GstOMXMemory);
   /* the shared memory is always readonly */
   gst_memory_init (GST_MEMORY_CAST (mem), flags, allocator, NULL,
-      buf->omx_buf->nAllocLen, buf->port->port_def.nBufferAlignment,
-      0, buf->omx_buf->nAllocLen);
+      buf->omx_buf->nAllocLen, align, 0, buf->omx_buf->nAllocLen);
 
   mem->buf = buf;
 
