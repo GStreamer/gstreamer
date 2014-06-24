@@ -538,6 +538,11 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
       gst_buffer_unmap (hdrs, &map);
       l = g_list_append (l, hdrs);
       gst_video_encoder_set_headers (GST_VIDEO_ENCODER (self), l);
+
+      if (frame)
+        gst_video_codec_frame_unref (frame);
+
+      return GST_FLOW_OK;
     }
   }
 
