@@ -1665,6 +1665,13 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   find = g_list_find_custom (sink->clients, &udpclient,
       (GCompareFunc) client_compare);
 
+  if (!find) {
+    find = g_list_find_custom (sink->clients_to_be_removed, &udpclient,
+        (GCompareFunc) client_compare);
+    if (find)
+      gst_udp_client_ref (find->data);
+  }
+
   if (find) {
     client = (GstUDPClient *) find->data;
 
@@ -1795,13 +1802,22 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
     else
       --sink->num_v6_unique;
 
+    /* Keep state consistent for streaming thread, so remove from client list,
+     * but keep it around until after the signal has been emitted, in case a
+     * callback wants to get stats for that client or so */
+    sink->clients = g_list_delete_link (sink->clients, find);
+
+    sink->clients_to_be_removed =
+        g_list_prepend (sink->clients_to_be_removed, client);
+
     /* Unlock to emit signal before we delete the actual client */
     g_mutex_unlock (&sink->client_lock);
     g_signal_emit (G_OBJECT (sink),
         gst_multiudpsink_signals[SIGNAL_CLIENT_REMOVED], 0, host, port);
     g_mutex_lock (&sink->client_lock);
 
-    sink->clients = g_list_delete_link (sink->clients, find);
+    sink->clients_to_be_removed =
+        g_list_remove (sink->clients_to_be_removed, client);
 
     gst_udp_client_unref (client);
   }
@@ -1860,6 +1876,11 @@ gst_multiudpsink_get_stats (GstMultiUDPSink * sink, const gchar * host,
 
   find = g_list_find_custom (sink->clients, &udpclient,
       (GCompareFunc) client_compare);
+
+  if (!find)
+    find = g_list_find_custom (sink->clients_to_be_removed, &udpclient,
+        (GCompareFunc) client_compare);
+
   if (!find)
     goto not_found;
 

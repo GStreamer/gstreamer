@@ -90,6 +90,7 @@ struct _GstMultiUDPSink {
   guint          num_v4_all;     /* number IPv4 clients (including duplicates) */
   guint          num_v6_unique;  /* number IPv6 clients (excluding duplicates) */
   guint          num_v6_all;     /* number IPv6 clients (including duplicates) */
+  GList         *clients_to_be_removed;
 
   /* pre-allocated scrap space for render function */
   GOutputVector *vec;
