@@ -56,8 +56,6 @@ struct _GnlSourceClass
 {
   GnlObjectClass parent_class;
 
-  /* controls_one is TRUE if the class only controls one element */
-  gboolean controls_one;
   /* control_element() takes care of controlling the given element */
     gboolean (*control_element) (GnlSource * source, GstElement * element);
 };

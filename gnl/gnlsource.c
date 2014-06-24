@@ -103,7 +103,6 @@ gnl_source_class_init (GnlSourceClass * klass)
 
   parent_class = g_type_class_ref (GNL_TYPE_OBJECT);
 
-  klass->controls_one = TRUE;
   klass->control_element = GST_DEBUG_FUNCPTR (gnl_source_control_element_func);
 
   gnlobject_class->prepare = GST_DEBUG_FUNCPTR (gnl_source_prepare);
@@ -422,7 +421,7 @@ gnl_source_add_element (GstBin * bin, GstElement * element)
 
   GST_DEBUG_OBJECT (source, "Adding element %s", GST_ELEMENT_NAME (element));
 
-  if (GNL_SOURCE_GET_CLASS (source)->controls_one && source->element) {
+  if (source->element) {
     GST_WARNING_OBJECT (bin, "GnlSource can only handle one element at a time");
     return FALSE;
   }
@@ -430,7 +429,7 @@ gnl_source_add_element (GstBin * bin, GstElement * element)
   /* call parent add_element */
   pret = GST_BIN_CLASS (parent_class)->add_element (bin, element);
 
-  if (pret && GNL_SOURCE_GET_CLASS (source)->controls_one) {
+  if (pret) {
     gnl_source_control_element_func (source, element);
   }
   return pret;
