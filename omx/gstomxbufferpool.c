@@ -148,7 +148,7 @@ gst_omx_memory_allocator_alloc (GstAllocator * allocator, GstMemoryFlags flags,
     align -= 1;
   if (((align + 1) & align) != 0) {
     GST_WARNING ("Invalid alignment that is not a power of two: %u",
-        buf->port->port_def.nBufferAlignment);
+        (guint) buf->port->port_def.nBufferAlignment);
     align = 0;
   }
 
