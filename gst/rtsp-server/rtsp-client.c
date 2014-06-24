@@ -1500,6 +1500,12 @@ make_server_transport (GstRTSPClient * client, GstRTSPContext * ctx,
   return st;
 }
 
+#define AES_128_KEY_LEN 16
+#define AES_256_KEY_LEN 32
+
+#define HMAC_32_KEY_LEN 4
+#define HMAC_80_KEY_LEN 10
+
 static gboolean
 mikey_apply_policy (GstCaps * caps, GstMIKEYMessage * msg, guint8 policy)
 {

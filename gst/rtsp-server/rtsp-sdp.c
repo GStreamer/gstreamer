@@ -30,6 +30,12 @@
 
 #include "rtsp-sdp.h"
 
+#define AES_128_KEY_LEN 16
+#define AES_256_KEY_LEN 32
+
+#define HMAC_32_KEY_LEN 4
+#define HMAC_80_KEY_LEN 10
+
 static gboolean
 get_info_from_tags (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
