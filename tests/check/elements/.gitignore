@@ -62,6 +62,7 @@ sunaudio
 udpsink
 udpsrc
 videocrop
+videobox
 videofilter
 videomixer
 vp8dec

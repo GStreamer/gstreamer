@@ -272,6 +272,12 @@ else
 check_udp =
 endif
 
+if USE_PLUGIN_VIDEOBOX
+check_videobox = elements/videobox
+else
+check_videobox =
+endif
+
 if USE_PLUGIN_VIDEOCROP
 check_videocrop = \
 	elements/aspectratiocrop \
@@ -368,6 +374,7 @@ check_PROGRAMS = \
 	$(check_sunaudio) \
 	$(check_taglib) \
 	$(check_udp) \
+	$(check_videobox) \
 	$(check_videocrop) \
 	$(check_videofilter) \
 	$(check_videomixer) \
