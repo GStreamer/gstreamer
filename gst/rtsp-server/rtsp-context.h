@@ -25,6 +25,8 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_RTSP_CONTEXT              (gst_rtsp_context_get_type ())
+
 typedef struct _GstRTSPContext GstRTSPContext;
 
 #include "rtsp-server.h"
