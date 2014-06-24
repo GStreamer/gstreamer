@@ -140,14 +140,13 @@ set_sftp_dynamic_options_unlocked (GstCurlBaseSink * basesink)
   gchar *tmp = g_strdup_printf ("%s%s", basesink->url, basesink->file_name);
   CURLcode curl_err = CURLE_OK;
 
-  if ((curl_err =
-          curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp)) != CURLE_OK) {
+  curl_err = curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp);
+  g_free (tmp);
+  if (curl_err != CURLE_OK) {
     basesink->error = g_strdup_printf ("failed to set URL: %s",
         curl_easy_strerror (curl_err));
     return FALSE;
   }
-
-  g_free (tmp);
 
   return TRUE;
 }

@@ -185,7 +185,6 @@ set_ftp_dynamic_options_unlocked (GstCurlBaseSink * basesink)
     gchar *rename_to = NULL;
     gchar *uploadfile_as = NULL;
     gchar *last_slash = NULL;
-    gchar *dir_name = NULL;
     gchar *tmpfile_name = NULL;
 
     if (sink->headerlist != NULL) {
@@ -204,56 +203,53 @@ set_ftp_dynamic_options_unlocked (GstCurlBaseSink * basesink)
 
     last_slash = strrchr (basesink->file_name, '/');
     if (last_slash != NULL) {
-      dir_name =
+      gchar *dir_name =
           g_strndup (basesink->file_name, last_slash - basesink->file_name);
       rename_to = g_strdup_printf ("%s%s", RENAME_TO, last_slash + 1);
       uploadfile_as = g_strdup_printf ("%s/%s", dir_name, tmpfile_name);
+      g_free (dir_name);
     } else {
       rename_to = g_strdup_printf ("%s%s", RENAME_TO, basesink->file_name);
       uploadfile_as = g_strdup_printf ("%s", tmpfile_name);
     }
+    g_free (tmpfile_name);
 
     tmp = g_strdup_printf ("%s%s", basesink->url, uploadfile_as);
+    g_free (uploadfile_as);
+
+    sink->headerlist = curl_slist_append (sink->headerlist, rename_from);
+    sink->headerlist = curl_slist_append (sink->headerlist, rename_to);
+    g_free (rename_from);
+    g_free (rename_to);
 
     res = curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp);
+    g_free (tmp);
     if (res != CURLE_OK) {
-      g_free (tmp);
       basesink->error = g_strdup_printf ("failed to set URL: %s",
           curl_easy_strerror (res));
       return FALSE;
     }
 
-    sink->headerlist = curl_slist_append (sink->headerlist, rename_from);
-    sink->headerlist = curl_slist_append (sink->headerlist, rename_to);
-
     res = curl_easy_setopt (basesink->curl, CURLOPT_POSTQUOTE, sink->headerlist);
     if (res != CURLE_OK) {
-      g_free (tmp);
       basesink->error = g_strdup_printf ("failed to set post quote: %s",
           curl_easy_strerror (res));
       return FALSE;
     }
 
-    g_free (rename_from);
-    g_free (rename_to);
-    g_free (uploadfile_as);
-    g_free (dir_name);
-    g_free (tmpfile_name);
     if (last_slash != NULL) {
       *last_slash = '\0';
     }
   } else {
     tmp = g_strdup_printf ("%s%s", basesink->url, basesink->file_name);
     res = curl_easy_setopt (basesink->curl, CURLOPT_URL, tmp);
+    g_free (tmp);
     if (res != CURLE_OK) {
-      g_free (tmp);
       basesink->error = g_strdup_printf ("failed to set URL: %s",
           curl_easy_strerror (res));
       return FALSE;
     }
   }
-
-  g_free (tmp);
 
   return TRUE;
 }
