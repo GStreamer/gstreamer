@@ -197,7 +197,7 @@ struct _GstMpegTsBATStream
  */
 struct _GstMpegTsBAT
 {
-  GPtrArray     *descriptors;
+  GPtrArray  *descriptors;
 
   GPtrArray  *streams;
 };
@@ -289,7 +289,7 @@ struct _GstMpegTsEITEvent
   GstMpegTsRunningStatus running_status;
   gboolean     free_CA_mode;
 
-  GPtrArray      *descriptors;
+  GPtrArray   *descriptors;
 };
 
 /**
@@ -335,7 +335,7 @@ struct _GstMpegTsTOT
 {
   GstDateTime   *utc_time;
 
-  GPtrArray        *descriptors;
+  GPtrArray     *descriptors;
 };
 
 GType gst_mpegts_tot_get_type (void);

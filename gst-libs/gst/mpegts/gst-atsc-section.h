@@ -75,6 +75,7 @@ typedef struct _GstMpegTsAtscVCT GstMpegTsAtscVCT;
 
 /**
  * GstMpegTsAtscVCTSource:
+ * @descriptors: (element-type GstMpegTsDescriptor): descriptors
  *
  * Source from a @GstMpegTsAtscVCT, can be used both for TVCT and CVCT tables
  */
@@ -102,6 +103,8 @@ struct _GstMpegTsAtscVCTSource
 
 /**
  * GstMpegTsAtscVCT:
+ * @sources: (element-type GstMpegTsAtscVCTSource): sources
+ * @descriptors: (element-type GstMpegTsDescriptor): descriptors
  *
  * Represents both:
  *   Terrestrial Virtual Channel Table (A65)
@@ -138,6 +141,7 @@ typedef enum {
 
 /**
  * GstMpegTsAtscMGTTable:
+ * @descriptors: (element-type GstMpegTsDescriptor): descriptors
  *
  * Source from a @GstMpegTsAtscMGT
  */
@@ -152,8 +156,10 @@ struct _GstMpegTsAtscMGTTable
 
 /**
  * GstMpegTsAtscMGT:
+ * @tables: (element-type GstMpegTsAtscMGTTable): the tables
+ * @descriptors: (element-type GstMpegTsDescriptor): descriptors
  *
- * Terrestrial Virtual Channel Table (A65)
+ * Master Guide Table (A65)
  *
  */
 struct _GstMpegTsAtscMGT
@@ -188,6 +194,11 @@ struct _GstMpegTsAtscStringSegment {
 
 const gchar * gst_mpegts_atsc_string_segment_get_string (GstMpegTsAtscStringSegment * seg);
 
+/**
+ * GstMpegTsAtscMultString:
+ * @segments: (element-type GstMpegTsAtscStringSegment)
+ *
+ */
 struct _GstMpegTsAtscMultString {
   gchar      iso_639_langcode[4];
   GPtrArray *segments;
@@ -204,6 +215,13 @@ GType gst_mpegts_atsc_mult_string_get_type (void);
 typedef struct _GstMpegTsAtscEITEvent GstMpegTsAtscEITEvent;
 typedef struct _GstMpegTsAtscEIT GstMpegTsAtscEIT;
 
+/**
+ * GstMpegTsAtscEITEvent:
+ * @titles: (element-type GstMpegTsAtscMultString): the titles
+ * @descriptors: (element-type GstMpegTsDescriptor): descriptors
+ *
+ * An ATSC EIT Event
+ */
 struct _GstMpegTsAtscEITEvent {
   guint16        event_id;
   guint32        start_time;
@@ -267,6 +285,7 @@ typedef struct _GstMpegTsAtscSTT GstMpegTsAtscSTT;
 
 /**
  * GstMpegTsAtscSTT:
+ * @descriptors: (element-type GstMpegTsDescriptor): descriptors
  *
  * System Time Table (A65)
  *

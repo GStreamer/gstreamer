@@ -521,7 +521,7 @@ struct _GstMpegTsComponentDescriptor
   guint8 component_type;
   guint8 component_tag;
   gchar  *language_code;
-  gchar *text;
+  gchar  *text;
 };
 
 GType gst_mpegts_component_descriptor_get_type (void);
@@ -555,7 +555,7 @@ typedef enum {
 typedef struct _GstMpegTsContent GstMpegTsContent;
 struct _GstMpegTsContent
 {
-  guint8 content_nibble_1;
+  GstMpegTsContentNibbleHi content_nibble_1;
   guint8 content_nibble_2;
   guint8 user_byte;
 };
@@ -590,11 +590,11 @@ gboolean gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegTsDescrip
  * As specified in Table 100 of ETSI EN 300 468 v1.13.1
  */
 typedef enum {
-	INITIAL_PAGE = 0x01,
-	SUBTITLE_PAGE,
-	ADDITIONAL_INFO_PAGE,
-	PROGRAMME_SCHEDULE_PAGE,
-	HEARING_IMPAIRED_PAGE
+  INITIAL_PAGE = 0x01,
+  SUBTITLE_PAGE,
+  ADDITIONAL_INFO_PAGE,
+  PROGRAMME_SCHEDULE_PAGE,
+  HEARING_IMPAIRED_PAGE
 } GstMpegTsDVBTeletextType;
 
 gboolean gst_mpegts_descriptor_parse_dvb_teletext_idx (const GstMpegTsDescriptor *

@@ -340,7 +340,7 @@ struct _GstMpegTsPMTStream
   guint8      stream_type;
   guint16     pid;
 
-  GPtrArray     *descriptors;
+  GPtrArray  *descriptors;
 };
 
 /**
@@ -359,7 +359,7 @@ struct _GstMpegTsPMT
   guint16    pcr_pid;
   guint16    program_number;
 
-  GPtrArray    *descriptors;
+  GPtrArray *descriptors;
   GPtrArray *streams;
 };
 

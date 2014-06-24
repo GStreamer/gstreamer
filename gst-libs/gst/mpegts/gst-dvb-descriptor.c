@@ -80,7 +80,7 @@ gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTsDescriptor *
  * gst_mpegts_descriptor_from_dvb_network_name:
  * @name: the network name to set
  *
- * Fills a #GstMpegTsDescriptor to be a %GST_MTS_DESC_DVB_NETWORK_NAME,
+ * Creates a #GstMpegTsDescriptor to be a %GST_MTS_DESC_DVB_NETWORK_NAME,
  * with the network name @name. The data field of the #GstMpegTsDescriptor
  * will be allocated, and transferred to the caller.
  *
