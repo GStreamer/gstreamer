@@ -52,6 +52,10 @@
 #include <OMX_Broadcom.h>
 #endif
 
+#ifdef HAVE_VIDEO_EXT
+#include <OMX_VideoExt.h>
+#endif
+
 #ifdef GST_OMX_STRUCT_PACKING
 #pragma pack()
 #endif

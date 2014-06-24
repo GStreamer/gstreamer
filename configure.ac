@@ -170,14 +170,27 @@ dnl Check for external OpenMAX IL headers
 AC_CHECK_HEADER([OMX_Core.h], [HAVE_EXTERNAL_OMX=yes], [HAVE_EXTERNAL_OMX=no], [AC_INCLUDES_DEFAULT])
 AM_CONDITIONAL(HAVE_EXTERNAL_OMX, test "x$HAVE_EXTERNAL_OMX" = "xyes")
 
+dnl Our internal OpenMAX IL headers have OMX_VideoExt.h
+HAVE_VIDEO_EXT=yes
+if test "x$HAVE_EXTERNAL_OMX" = "xyes"; then
+    AC_CHECK_HEADER([OMX_VideoExt.h], [HAVE_VIDEO_EXT=yes], [HAVE_VIDEO_EXT=no], [AC_INCLUDES_DEFAULT])
+fi
+
+VIDEO_HEADERS="#include <OMX_Video.h>"
+if test "x$HAVE_VIDEO_EXT" = "xyes"; then
+    AC_DEFINE(HAVE_VIDEO_EXT, 1, [OpenMAX IL has OMX_VideoExt.h header])
+    VIDEO_HEADERS="$VIDEO_HEADERS
+#include <OMX_VideoExt.h>
+"
+fi
+
 AC_CHECK_DECLS([OMX_VIDEO_CodingVP8],
   [
     AC_DEFINE(HAVE_VP8, 1, [OpenMAX IL has VP8 support])
     HAVE_VP8=yes
   ], [
     HAVE_VP8=no
-  ], [[#include <OMX_Video.h>
-       #include <OMX_VideoExt.h>]])
+  ], [[$VIDEO_HEADERS]])
 AM_CONDITIONAL(HAVE_VP8, test "x$HAVE_VP8" = "xyes")
 
 AC_CHECK_DECLS([OMX_VIDEO_CodingTheora],
@@ -186,7 +199,7 @@ AC_CHECK_DECLS([OMX_VIDEO_CodingTheora],
     HAVE_THEORA=yes
   ], [
     HAVE_THEORA=no
-  ], [[#include <OMX_Video.h>]])
+  ], [[$VIDEO_HEADERS]])
 AM_CONDITIONAL(HAVE_THEORA, test "x$HAVE_THEORA" = "xyes")
 
 dnl Check for -Bsymbolic-functions linker flag used to avoid
