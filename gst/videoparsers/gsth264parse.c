@@ -675,10 +675,10 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
   GstH264NalUnit nnalu;
 
   GST_DEBUG_OBJECT (h264parse, "parsing collected nal");
-  parse_res = gst_h264_parser_identify_nalu (h264parse->nalparser, data,
-      nalu->offset + nalu->size, size, &nnalu);
+  parse_res = gst_h264_parser_identify_nalu_unchecked (h264parse->nalparser,
+      data, nalu->offset + nalu->size, size, &nnalu);
 
-  if (parse_res == GST_H264_PARSER_ERROR)
+  if (parse_res != GST_H264_PARSER_OK)
     return FALSE;
 
   /* determine if AU complete */
