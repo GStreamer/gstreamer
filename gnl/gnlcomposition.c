@@ -946,7 +946,7 @@ get_current_position (GnlComposition * comp)
 
   GstPad *peer = gst_pad_get_peer (GNL_OBJECT (comp)->srcpad);
 
-  /* 1. Try querying position downstream */
+  /* Try querying position downstream */
 
   if (peer) {
     res = gst_pad_query_position (peer, GST_FORMAT_TIME, &value);
@@ -965,7 +965,7 @@ get_current_position (GnlComposition * comp)
   /* resetting format/value */
   value = GST_CLOCK_TIME_NONE;
 
-  /* 2. If downstream fails , try within the current stack */
+  /* If downstream fails , try within the current stack */
   if (!priv->current) {
     GST_DEBUG_OBJECT (comp, "No current stack, can't send query");
     goto beach;
@@ -1993,6 +1993,26 @@ update_start_stop_duration (GnlComposition * comp)
       GST_TIME_ARGS (cobj->stop), GST_TIME_ARGS (cobj->duration));
 }
 
+static void
+block_object_src_pad (GnlComposition * comp, GnlObject * obj)
+{
+  GnlCompositionEntry *entry = COMP_ENTRY (comp, obj);
+  if (!entry->probeid) {
+    GST_LOG_OBJECT (comp, "block_async(%s:%s, TRUE)",
+        GST_DEBUG_PAD_NAME (obj->srcpad));
+    entry->probeid =
+        gst_pad_add_probe (obj->srcpad,
+        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
+        (GstPadProbeCallback) pad_blocked, comp, NULL);
+  }
+  if (!entry->dataprobeid) {
+    entry->dataprobeid = gst_pad_add_probe (obj->srcpad,
+        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
+        GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data,
+        entry, NULL);
+  }
+}
+
 /*
  * recursive depth-first relink stack function on new stack
  *
@@ -2031,24 +2051,9 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
 
   srcpad = GNL_OBJECT_SRC (newobj);
 
-  /* 1. Make sure the source pad is blocked for new objects */
-  if (G_UNLIKELY (!oldnode)) {
-    GnlCompositionEntry *oldentry = COMP_ENTRY (comp, newobj);
-    if (!oldentry->probeid) {
-      GST_LOG_OBJECT (comp, "block_async(%s:%s, TRUE)",
-          GST_DEBUG_PAD_NAME (srcpad));
-      oldentry->probeid =
-          gst_pad_add_probe (srcpad,
-          GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
-          (GstPadProbeCallback) pad_blocked, comp, NULL);
-    }
-    if (!oldentry->dataprobeid) {
-      oldentry->dataprobeid = gst_pad_add_probe (srcpad,
-          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
-          GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data,
-          oldentry, NULL);
-    }
-  }
+  /* Make sure the source pad is blocked for new objects */
+  if (G_UNLIKELY (!oldnode))
+    block_object_src_pad (comp, newobj);
 
   entry = COMP_ENTRY (comp, newobj);
   /* 2. link to parent if needed.  */
