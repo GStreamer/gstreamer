@@ -955,8 +955,10 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         if (!picture->output_flag && !StoreInterViewOnlyRefFlag)
             return TRUE;
         while (priv->dpb_count == priv->dpb_size) {
+            GstVaapiPictureH264 *found_picture;
             if (!StoreInterViewOnlyRefFlag) {
-                if (dpb_find_lowest_poc(decoder, picture, NULL) < 0)
+                if (dpb_find_lowest_poc(decoder, picture, &found_picture) < 0 ||
+                    found_picture->base.poc > picture->base.poc)
                     return dpb_output(decoder, NULL, picture);
             }
             if (!dpb_bump(decoder, picture))
