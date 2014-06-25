@@ -60,6 +60,22 @@ enum
   GST_H264_PARSE_ALIGN_AU
 };
 
+enum
+{
+  GST_H264_PARSE_STATE_GOT_SPS = 1 << 0,
+  GST_H264_PARSE_STATE_GOT_PPS = 1 << 1,
+  GST_H264_PARSE_STATE_GOT_SLICE = 1 << 2,
+
+  GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS = (GST_H264_PARSE_STATE_GOT_SPS |
+      GST_H264_PARSE_STATE_GOT_PPS),
+  GST_H264_PARSE_STATE_VALID_PICTURE =
+      (GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS |
+      GST_H264_PARSE_STATE_GOT_SLICE)
+};
+
+#define GST_H264_PARSE_STATE_VALID(parse, expected_state) \
+  (((parse)->state & (expected_state)) == (expected_state))
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -540,6 +556,9 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
   switch (nal_type) {
     case GST_H264_NAL_SPS:
+      /* reset state, everything else is obsolete */
+      h264parse->state = 0;
+
       pres = gst_h264_parser_parse_sps (nalparser, nalu, &sps, TRUE);
       /* arranged for a fallback sps.id, so use that one and only warn */
       if (pres != GST_H264_PARSER_OK)
@@ -558,8 +577,11 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       }
 
       gst_h264_parser_store_nal (h264parse, sps.id, nal_type, nalu);
+      h264parse->state |= GST_H264_PARSE_STATE_GOT_SPS;
       break;
     case GST_H264_NAL_PPS:
+      h264parse->state &= GST_H264_PARSE_STATE_GOT_SPS;
+
       pres = gst_h264_parser_parse_pps (nalparser, nalu, &pps);
       /* arranged for a fallback pps.id, so use that one and only warn */
       if (pres != GST_H264_PARSER_OK)
@@ -582,6 +604,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
       gst_h264_parser_store_nal (h264parse, pps.id, nal_type, nalu);
       gst_h264_pps_clear (&pps);
+      h264parse->state |= GST_H264_PARSE_STATE_GOT_PPS;
       break;
     case GST_H264_NAL_SEI:
       gst_h264_parse_process_sei (h264parse, nalu);
@@ -601,6 +624,8 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
     case GST_H264_NAL_SLICE_DPB:
     case GST_H264_NAL_SLICE_DPC:
     case GST_H264_NAL_SLICE_IDR:
+      h264parse->state &= GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS;
+
       /* don't need to parse the whole slice (header) here */
       if (*(nalu->data + nalu->offset + 1) & 0x80) {
         /* means first_mb_in_slice == 0 */
@@ -621,6 +646,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
           if (GST_H264_IS_I_SLICE (&slice) || GST_H264_IS_SI_SLICE (&slice))
             h264parse->keyframe |= TRUE;
 
+          h264parse->state |= GST_H264_PARSE_STATE_GOT_SLICE;
           h264parse->field_pic_flag = slice.field_pic_flag;
         }
       }
@@ -970,7 +996,8 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
 
     if (nalu.type == GST_H264_NAL_SPS ||
         nalu.type == GST_H264_NAL_PPS ||
-        (h264parse->have_sps && h264parse->have_pps)) {
+        GST_H264_PARSE_STATE_VALID (h264parse,
+            GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS)) {
       gst_h264_parse_process_nal (h264parse, &nalu);
     } else {
       GST_WARNING_OBJECT (h264parse,
@@ -1767,6 +1794,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       h264parse->push_codec = FALSE;
       h264parse->have_sps = FALSE;
       h264parse->have_pps = FALSE;
+      h264parse->state &= GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS;
     }
   }
 
