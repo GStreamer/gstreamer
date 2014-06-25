@@ -215,25 +215,29 @@ gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     GstQuery * query)
 {
   GstGLFilter *filter;
-  gboolean res;
 
   filter = GST_GL_FILTER (trans);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+    {
+      if (direction == GST_PAD_SINK
+          && gst_base_transform_is_passthrough (trans))
+        return gst_pad_peer_query (GST_BASE_TRANSFORM_SRC_PAD (trans), query);
+      break;
+    }
     case GST_QUERY_CONTEXT:
     {
-      res = gst_gl_handle_context_query ((GstElement *) filter, query,
+      return gst_gl_handle_context_query ((GstElement *) filter, query,
           &filter->display);
       break;
     }
     default:
-      res =
-          GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
-          query);
       break;
   }
 
-  return res;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+      query);;
 }
 
 static void
