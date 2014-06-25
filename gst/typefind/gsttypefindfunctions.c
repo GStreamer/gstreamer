@@ -5498,8 +5498,8 @@ plugin_init (GstPlugin * plugin)
       "m4a", M4A_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-3gp", GST_RANK_PRIMARY,
       q3gp_type_find, "3gp", Q3GP_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "video/quicktime", GST_RANK_SECONDARY,
-      qt_type_find, "mov", QT_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/quicktime", GST_RANK_PRIMARY,
+      qt_type_find, "mov,mp4", QT_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "image/x-quicktime", GST_RANK_SECONDARY,
       qtif_type_find, "qif,qtif,qti", QTIF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "image/jp2", GST_RANK_PRIMARY,
