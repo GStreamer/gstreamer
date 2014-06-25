@@ -179,60 +179,6 @@ gst_gl_matrix_translate (GstGLMatrix * matrix, GLfloat tx, GLfloat ty,
 }
 
 static void
-gst_gl_matrix_rotate (GstGLMatrix * matrix, GLfloat angle, GLfloat x, GLfloat y,
-    GLfloat z)
-{
-  GLfloat sinAngle, cosAngle;
-  GLfloat mag = sqrtf (x * x + y * y + z * z);
-
-  sinAngle = sinf (angle * M_PI / 180.0f);
-  cosAngle = cosf (angle * M_PI / 180.0f);
-
-  if (mag > 0.0f) {
-    GLfloat xx, yy, zz, xy, yz, zx, xs, ys, zs;
-    GLfloat oneMinusCos;
-    GstGLMatrix rotMat;
-
-    x /= mag;
-    y /= mag;
-    z /= mag;
-
-    xx = x * x;
-    yy = y * y;
-    zz = z * z;
-    xy = x * y;
-    yz = y * z;
-    zx = z * x;
-    xs = x * sinAngle;
-    ys = y * sinAngle;
-    zs = z * sinAngle;
-    oneMinusCos = 1.0f - cosAngle;
-
-    rotMat.m[0][0] = (oneMinusCos * xx) + cosAngle;
-    rotMat.m[0][1] = (oneMinusCos * xy) - zs;
-    rotMat.m[0][2] = (oneMinusCos * zx) + ys;
-    rotMat.m[0][3] = 0.0f;
-
-    rotMat.m[1][0] = (oneMinusCos * xy) + zs;
-    rotMat.m[1][1] = (oneMinusCos * yy) + cosAngle;
-    rotMat.m[1][2] = (oneMinusCos * yz) - xs;
-    rotMat.m[1][3] = 0.0f;
-
-    rotMat.m[2][0] = (oneMinusCos * zx) - ys;
-    rotMat.m[2][1] = (oneMinusCos * yz) + xs;
-    rotMat.m[2][2] = (oneMinusCos * zz) + cosAngle;
-    rotMat.m[2][3] = 0.0f;
-
-    rotMat.m[3][0] = 0.0f;
-    rotMat.m[3][1] = 0.0f;
-    rotMat.m[3][2] = 0.0f;
-    rotMat.m[3][3] = 1.0f;
-
-    gst_gl_matrix_multiply (matrix, &rotMat, matrix);
-  }
-}
-
-static void
 gst_gl_matrix_frustum (GstGLMatrix * matrix, GLfloat left, GLfloat right,
     GLfloat bottom, GLfloat top, GLfloat nearZ, GLfloat farZ)
 {
@@ -281,11 +227,34 @@ gst_gl_matrix_perspective (GstGLMatrix * matrix, GLfloat fovy, GLfloat aspect,
 static const gchar *cube_v_src =
     "attribute vec4 a_position;                          \n"
     "attribute vec2 a_texCoord;                          \n"
-    "uniform mat4 u_matrix;                              \n"
+    "uniform float u_rotx;                               \n"
+    "uniform float u_roty;                               \n"
+    "uniform float u_rotz;                               \n"
+    "uniform mat4 u_modelview;                           \n"
+    "uniform mat4 u_projection;                          \n"
     "varying vec2 v_texCoord;                            \n"
     "void main()                                         \n"
     "{                                                   \n"
-    "   gl_Position = u_matrix * a_position;             \n"
+    "   float PI = 3.14159265;                           \n"
+    "   float xrot = u_rotx*2.0*PI/360.0;                \n"
+    "   float yrot = u_roty*2.0*PI/360.0;                \n"
+    "   float zrot = u_rotz*2.0*PI/360.0;                \n"
+    "   mat4 matX = mat4 (                               \n"
+    "            1.0,        0.0,        0.0, 0.0,       \n"
+    "            0.0,  cos(xrot),  sin(xrot), 0.0,       \n"
+    "            0.0, -sin(xrot),  cos(xrot), 0.0,       \n"
+    "            0.0,        0.0,        0.0, 1.0 );     \n"
+    "   mat4 matY = mat4 (                               \n"
+    "      cos(yrot),        0.0, -sin(yrot), 0.0,       \n"
+    "            0.0,        1.0,        0.0, 0.0,       \n"
+    "      sin(yrot),        0.0,  cos(yrot), 0.0,       \n"
+    "            0.0,        0.0,       0.0,  1.0 );     \n"
+    "   mat4 matZ = mat4 (                               \n"
+    "      cos(zrot),  sin(zrot),        0.0, 0.0,       \n"
+    "     -sin(zrot),  cos(zrot),        0.0, 0.0,       \n"
+    "            0.0,        0.0,        1.0, 0.0,       \n"
+    "            0.0,        0.0,        0.0, 1.0 );     \n"
+    "   gl_Position = u_projection * u_modelview * matZ * matY * matX * a_position;\n"
     "   v_texCoord = a_texCoord;                         \n"
     "}                                                   \n";
 
@@ -323,8 +292,12 @@ typedef struct
   GLint fshader;
   GLint program;
 
-  GLint u_modelviewprojectionmatrix;
+  GLint u_modelviewmatrix;
+  GLint u_projectionmatrix;
   GLint s_texture;
+  GLint u_rotx;
+  GLint u_roty;
+  GLint u_rotz;
 
   GstGLMatrix modelview;
   GstGLMatrix projection;
@@ -558,8 +531,15 @@ init_model_proj (APP_STATE_T * state)
 
   glUseProgram (state->program);
 
-  state->u_modelviewprojectionmatrix =
-      glGetUniformLocation (state->program, "u_matrix");
+  state->u_rotx = glGetUniformLocation (state->program, "u_rotx");
+  state->u_roty = glGetUniformLocation (state->program, "u_roty");
+  state->u_rotz = glGetUniformLocation (state->program, "u_rotz");
+
+  state->u_modelviewmatrix =
+      glGetUniformLocation (state->program, "u_modelview");
+
+  state->u_projectionmatrix =
+      glGetUniformLocation (state->program, "u_projection");
 
   state->s_texture = glGetUniformLocation (state->program, "s_texture");
 
@@ -670,9 +650,6 @@ inc_and_wrap_angle (GLfloat angle, GLfloat angle_inc)
 static void
 redraw_scene (APP_STATE_T * state)
 {
-  GstGLMatrix modelview;
-  GstGLMatrix modelviewprojection;
-
   glBindFramebuffer (GL_FRAMEBUFFER, 0);
 
   glEnable (GL_CULL_FACE);
@@ -694,16 +671,15 @@ redraw_scene (APP_STATE_T * state)
   glBindTexture (GL_TEXTURE_2D, state->tex);
   glUniform1i (state->s_texture, 0);
 
-  memcpy (&modelview, &state->modelview, sizeof (GstGLMatrix));
-  gst_gl_matrix_rotate (&modelview, state->rot_angle_x, 1.0f, 0.0f, 0.0f);
-  gst_gl_matrix_rotate (&modelview, state->rot_angle_y, 0.0f, 1.0f, 0.0f);
-  gst_gl_matrix_rotate (&modelview, state->rot_angle_z, 0.0f, 0.0f, 1.0f);
+  glUniform1f (state->u_rotx, state->rot_angle_x);
+  glUniform1f (state->u_roty, state->rot_angle_y);
+  glUniform1f (state->u_rotz, state->rot_angle_z);
 
-  gst_gl_matrix_load_identity (&modelviewprojection);
-  gst_gl_matrix_multiply (&modelviewprojection, &modelview, &state->projection);
+  glUniformMatrix4fv (state->u_modelviewmatrix, 1, GL_FALSE,
+      &state->modelview.m[0][0]);
 
-  glUniformMatrix4fv (state->u_modelviewprojectionmatrix, 1, GL_FALSE,
-      &modelviewprojection.m[0][0]);
+  glUniformMatrix4fv (state->u_projectionmatrix, 1, GL_FALSE,
+      &state->projection.m[0][0]);
 
   /* draw first 4 vertices */
   glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
