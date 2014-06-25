@@ -190,6 +190,9 @@ static void update_start_stop_duration (GnlComposition * comp);
 static gboolean
 gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
     GstEvent * event);
+static void
+compare_relink_single_node (GnlComposition * comp, GNode * node,
+    GNode * oldstack);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -2032,6 +2035,61 @@ _parent_or_priority_changed (GnlObject * obj, GNode * oldnode,
   return (g_node_child_index (node, obj) != g_node_child_index (oldnode, obj));
 }
 
+static void
+_link_to_parent (GnlComposition * comp, GnlObject * newobj,
+    GnlObject * newparent)
+{
+  GstPad *sinkpad;
+
+  /* relink to new parent in required order */
+  GST_LOG_OBJECT (comp, "Linking %s and %s",
+      GST_ELEMENT_NAME (GST_ELEMENT (newobj)),
+      GST_ELEMENT_NAME (GST_ELEMENT (newparent)));
+
+  sinkpad = get_unlinked_sink_ghost_pad ((GnlOperation *) newparent);
+
+  if (G_UNLIKELY (sinkpad == NULL)) {
+    GST_WARNING_OBJECT (comp,
+        "Couldn't find an unlinked sinkpad from %s",
+        GST_ELEMENT_NAME (newparent));
+  } else {
+    if (G_UNLIKELY (gst_pad_link_full (GNL_OBJECT_SRC (newobj), sinkpad,
+                GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
+      GST_WARNING_OBJECT (comp, "Failed to link pads %s:%s - %s:%s",
+          GST_DEBUG_PAD_NAME (GNL_OBJECT_SRC (newobj)),
+          GST_DEBUG_PAD_NAME (sinkpad));
+    }
+    gst_object_unref (sinkpad);
+  }
+}
+
+static void
+_relink_children_recursively (GnlComposition * comp,
+    GnlObject * newobj, GNode * oldstack, GNode * node)
+{
+  GNode *child;
+  guint nbchildren = g_node_n_children (node);
+  GnlOperation *oper = (GnlOperation *) newobj;
+
+  GST_INFO_OBJECT (newobj, "is a %s operation, analyzing the %d children",
+      oper->dynamicsinks ? "dynamic" : "regular", nbchildren);
+  /* Update the operation's number of sinks, that will make it have the proper
+   * number of sink pads to connect the children to. */
+  if (oper->dynamicsinks)
+    g_object_set (G_OBJECT (newobj), "sinks", nbchildren, NULL);
+
+  for (child = node->children; child; child = child->next)
+    compare_relink_single_node (comp, child, oldstack);
+
+  if (G_UNLIKELY (nbchildren < oper->num_sinks))
+    GST_ERROR ("Not enough sinkpads to link all objects to the operation ! "
+        "%d / %d", oper->num_sinks, nbchildren);
+
+  if (G_UNLIKELY (nbchildren == 0))
+    GST_ERROR ("Operation has no child objects to be connected to !!!");
+  /* Make sure we have enough sinkpads */
+}
+
 /*
  * recursive depth-first relink stack function on new stack
  *
@@ -2045,7 +2103,6 @@ static void
 compare_relink_single_node (GnlComposition * comp, GNode * node,
     GNode * oldstack)
 {
-  GNode *child;
   GNode *oldnode = NULL;
   GnlObject *newobj;
   GnlObject *newparent;
@@ -2073,66 +2130,22 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
   entry = COMP_ENTRY (comp, newobj);
 
   /* link to parent if needed.  */
-  if (_parent_or_priority_changed (newobj, oldnode, newparent, node)) {
-    GST_LOG_OBJECT (comp,
-        "not same parent, or same parent but in different order");
-    /* relink to new parent in required order */
-    if (newparent) {
-      GstPad *sinkpad;
-      GST_LOG_OBJECT (comp, "Linking %s and %s",
-          GST_ELEMENT_NAME (GST_ELEMENT (newobj)),
-          GST_ELEMENT_NAME (GST_ELEMENT (newparent)));
-      sinkpad = get_unlinked_sink_ghost_pad ((GnlOperation *) newparent);
-      if (G_UNLIKELY (sinkpad == NULL)) {
-        GST_WARNING_OBJECT (comp,
-            "Couldn't find an unlinked sinkpad from %s",
-            GST_ELEMENT_NAME (newparent));
-      } else {
-        if (G_UNLIKELY (gst_pad_link_full (srcpad, sinkpad,
-                    GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
-          GST_WARNING_OBJECT (comp, "Failed to link pads %s:%s - %s:%s",
-              GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-        }
-        gst_object_unref (sinkpad);
-      }
-    }
-  } else {
-    GST_LOG_OBJECT (newobj, "Same parent and same position in the new stack");
-  }
-
-  /* If there's an operation, inform it about priority changes */
   if (newparent) {
+    if (_parent_or_priority_changed (newobj, oldnode, newparent, node))
+      _link_to_parent (comp, newobj, newparent);
+
+    /* If there's an operation, inform it about priority changes */
     sinkpad = gst_pad_get_peer (srcpad);
     gnl_operation_signal_input_priority_changed ((GnlOperation *)
         newparent, sinkpad, newobj->priority);
     gst_object_unref (sinkpad);
   }
 
+  /* Handle children */
+  if (GNL_IS_OPERATION (newobj))
+    _relink_children_recursively (comp, newobj, oldstack, node);
 
-  /* 3. Handle children */
-  if (GNL_IS_OPERATION (newobj)) {
-    guint nbchildren = g_node_n_children (node);
-    GnlOperation *oper = (GnlOperation *) newobj;
-    GST_LOG_OBJECT (newobj, "is a %s operation, analyzing the %d children",
-        oper->dynamicsinks ? "dynamic" : "regular", nbchildren);
-    /* Update the operation's number of sinks, that will make it have the proper
-     * number of sink pads to connect the children to. */
-    if (oper->dynamicsinks)
-      g_object_set (G_OBJECT (newobj), "sinks", nbchildren, NULL);
-    for (child = node->children; child; child = child->next)
-      compare_relink_single_node (comp, child, oldstack);
-    if (G_UNLIKELY (nbchildren < oper->num_sinks))
-      GST_ERROR
-          ("Not enough sinkpads to link all objects to the operation ! %d / %d",
-          oper->num_sinks, nbchildren);
-    if (G_UNLIKELY (nbchildren == 0))
-      GST_ERROR ("Operation has no child objects to be connected to !!!");
-    /* Make sure we have enough sinkpads */
-  } else {
-    /* FIXME : do we need to do something specific for sources ? */
-  }
-
-  /* 4. Unblock source pad */
+  /* Unblock source pad */
   if (!G_NODE_IS_ROOT (node) && entry->probeid) {
     GST_LOG_OBJECT (comp, "Unblocking pad %s:%s", GST_DEBUG_PAD_NAME (srcpad));
     gst_pad_remove_probe (srcpad, entry->probeid);
