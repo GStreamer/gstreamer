@@ -60,6 +60,7 @@ static void gst_gl_video_mixer_set_property (GObject * object, guint prop_id,
 static void gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean _update_info (GstVideoAggregator * vagg, GstVideoInfo * info);
 static void gst_gl_video_mixer_reset (GstGLMixer * mixer);
 static gboolean gst_gl_video_mixer_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
@@ -249,6 +250,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstAggregatorClass *agg_class = (GstAggregatorClass *) klass;
+  GstVideoAggregatorClass *vagg_class = (GstVideoAggregatorClass *) klass;
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
@@ -265,8 +267,9 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   GST_GL_MIXER_CLASS (klass)->process_textures =
       gst_gl_video_mixer_process_textures;
 
-  agg_class->sinkpads_type = GST_TYPE_GL_VIDEO_MIXER_PAD;
+  vagg_class->update_info = _update_info;
 
+  agg_class->sinkpads_type = GST_TYPE_GL_VIDEO_MIXER_PAD;
 }
 
 static void
@@ -296,6 +299,52 @@ gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+_update_info (GstVideoAggregator * vagg, GstVideoInfo * info)
+{
+  GList *l;
+  gint best_width = -1, best_height = -1;
+  gboolean ret = FALSE;
+
+  GST_OBJECT_LOCK (vagg);
+  for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
+    GstVideoAggregatorPad *vaggpad = l->data;
+    GstGLVideoMixerPad *mixer_pad = GST_GL_VIDEO_MIXER_PAD (vaggpad);
+    gint this_width, this_height;
+    gint width, height;
+
+    if (mixer_pad->width > 0)
+      width = mixer_pad->width;
+    else
+      width = GST_VIDEO_INFO_WIDTH (&vaggpad->info);
+
+    if (mixer_pad->height > 0)
+      height = mixer_pad->height;
+    else
+      height = GST_VIDEO_INFO_HEIGHT (&vaggpad->info);
+
+    if (width == 0 || height == 0)
+      continue;
+
+    this_width = width + MAX (mixer_pad->xpos, 0);
+    this_height = height + MAX (mixer_pad->ypos, 0);
+
+    if (best_width < this_width)
+      best_width = this_width;
+    if (best_height < this_height)
+      best_height = this_height;
+  }
+  GST_OBJECT_UNLOCK (vagg);
+
+  if (best_width > 0 && best_height > 0) {
+    gst_video_info_set_format (info, GST_VIDEO_INFO_FORMAT (info),
+        best_width, best_height);
+    ret = TRUE;
+  }
+
+  return ret;
 }
 
 static void
