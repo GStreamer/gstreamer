@@ -36,6 +36,13 @@ GstStaticPadTemplate sinktemplate_bs_nal = GST_STATIC_PAD_TEMPLATE ("sink",
         ", stream-format = (string) byte-stream, alignment = (string) nal")
     );
 
+GstStaticPadTemplate sinktemplate_bs_au = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (SINK_CAPS_TMPL
+        ", stream-format = (string) byte-stream, alignment = (string) au")
+    );
+
 GstStaticPadTemplate sinktemplate_avc_au = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -181,6 +188,43 @@ verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
   }
 
   return FALSE;
+}
+
+/* A single access unit comprising of SPS, SEI, PPS and IDR frame */
+static gboolean
+verify_buffer_bs_au (buffer_verify_data_s * vdata, GstBuffer * buffer)
+{
+  GstMapInfo map;
+
+  fail_unless (ctx_sink_template == &sinktemplate_bs_au);
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  fail_unless (map.size > 4);
+
+  if (vdata->buffer_counter == 0) {
+    guint8 *data = map.data;
+
+    /* SPS, SEI, PPS */
+    fail_unless (map.size == vdata->data_to_verify_size +
+        ctx_headers[0].size + ctx_headers[1].size + ctx_headers[2].size);
+    fail_unless (memcmp (data, ctx_headers[0].data, ctx_headers[0].size) == 0);
+    data += ctx_headers[0].size;
+    fail_unless (memcmp (data, ctx_headers[1].data, ctx_headers[1].size) == 0);
+    data += ctx_headers[1].size;
+    fail_unless (memcmp (data, ctx_headers[2].data, ctx_headers[2].size) == 0);
+    data += ctx_headers[2].size;
+
+    /* IDR frame */
+    fail_unless (memcmp (data, vdata->data_to_verify,
+            vdata->data_to_verify_size) == 0);
+  } else {
+    /* IDR frame */
+    fail_unless (map.size == vdata->data_to_verify_size);
+    fail_unless (memcmp (map.data, vdata->data_to_verify, map.size) == 0);
+  }
+
+  gst_buffer_unmap (buffer, &map);
+  return TRUE;
 }
 
 GST_START_TEST (test_parse_normal)
@@ -414,9 +458,22 @@ main (int argc, char **argv)
   nf += srunner_ntests_failed (sr);
   srunner_free (sr);
 
+  /* setup and tweak to handle bs au output */
+  ctx_suite = "h264parse_to_bs_au";
+  ctx_sink_template = &sinktemplate_bs_au;
+  ctx_verify_buffer = verify_buffer_bs_au;
+  ctx_discard = 0;
+
+  s = h264parse_suite ();
+  sr = srunner_create (s);
+  srunner_run_all (sr, CK_NORMAL);
+  nf += srunner_ntests_failed (sr);
+  srunner_free (sr);
+
   /* setup and tweak to handle avc au output */
   ctx_suite = "h264parse_to_avc_au";
   ctx_sink_template = &sinktemplate_avc_au;
+  ctx_verify_buffer = verify_buffer;
   ctx_discard = 0;
   ctx_codec_data = TRUE;
 
