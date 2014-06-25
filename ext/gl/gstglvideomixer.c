@@ -315,6 +315,9 @@ gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mixer);
 
+  if (video_mixer->shader)
+    gst_gl_context_del_shader (mixer->context, video_mixer->shader);
+
   return gst_gl_context_gen_shader (mixer->context, video_mixer_v_src,
       video_mixer_f_src, &video_mixer->shader);
 }
