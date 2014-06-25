@@ -1167,7 +1167,29 @@ init_parse_launch_player (APP_STATE_T * state, const gchar * spipeline)
   GstElement *vsink;
   GError *error = NULL;
 
-  // TODO handle parse
+  /* ex:
+
+     ./testegl "filesrc location=big_buck_bunny_720p_h264.mov ! qtdemux ! \
+     h264parse !  omxh264dec ! glcolorscale ! fakesink name=vsink"
+
+     ./testegl "filesrc location=big_buck_bunny_720p_h264.mov ! qtdemux ! \
+     h264parse ! omxh264dec ! glcolorscale ! \
+     video/x-raw(memory:EGLImage) ! fakesink name=vsink"
+
+     ./testegl "filesrc location=big_buck_bunny_720p_h264.mov ! qtdemux ! \
+     h264parse ! omxh264dec ! glcolorscale ! \
+     video/x-raw(memory:GLMemory) ! fakesink name=vsink"
+
+     ./testegl "filesrc location=big_buck_bunny_720p_h264.mov ! qtdemux ! \
+     h264parse ! omxh264dec ! glcolorscale ! \
+     video/x-raw(meta:GstVideoGLTextureUploadMeta) ! \
+     fakesink name=vsink"
+
+   */
+
+  /* pipeline 1 and 2 are the same and the most efficient as glcolorscale
+   * will enter in passthrough mode and testegl will just bind the eglimage
+   * to a gl texture without any copy. */
 
   state->pipeline = gst_parse_launch (spipeline, &error);
 
