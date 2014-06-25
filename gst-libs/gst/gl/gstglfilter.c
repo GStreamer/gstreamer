@@ -728,25 +728,26 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
 {
   GstCaps *tmp = NULL;
   GstCaps *result = NULL;
+  GstCaps *glcaps = gst_gl_filter_set_caps_features (caps,
+      GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+#if GST_GL_HAVE_PLATFORM_EGL
+  GstCaps *eglcaps = gst_gl_filter_set_caps_features (caps,
+      GST_CAPS_FEATURE_MEMORY_EGL_IMAGE);
+#endif
+  GstCaps *uploadcaps = gst_gl_filter_set_caps_features (caps,
+      GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
+  GstCaps *raw_caps =
+      gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS));
+  GstCapsFeatures *f;
 
   tmp = gst_caps_new_empty ();
 
-  if (direction == GST_PAD_SINK) {
-    GstCaps *glcaps = gst_gl_filter_set_caps_features (caps,
-        GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  tmp = gst_caps_merge (tmp, glcaps);
 #if GST_GL_HAVE_PLATFORM_EGL
-    GstCaps *eglcaps = gst_gl_filter_set_caps_features (caps,
-        GST_CAPS_FEATURE_MEMORY_EGL_IMAGE);
+  tmp = gst_caps_merge (tmp, eglcaps);
 #endif
-    GstCaps *uploadcaps = gst_gl_filter_set_caps_features (caps,
-        GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
-
-    tmp = gst_caps_merge (tmp, glcaps);
-#if GST_GL_HAVE_PLATFORM_EGL
-    tmp = gst_caps_merge (tmp, eglcaps);
-#endif
-    tmp = gst_caps_merge (tmp, uploadcaps);
-  }
+  tmp = gst_caps_merge (tmp, uploadcaps);
+  tmp = gst_caps_merge (tmp, raw_caps);
 
   tmp = gst_caps_merge (tmp, gst_gl_filter_caps_remove_format_info (caps));
 
@@ -758,7 +759,11 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
   }
 
   /* if output still intersects input then prefer the intersection */
-  if (direction == GST_PAD_SINK) {
+  f = gst_caps_get_features (caps, 0);
+
+  if (!gst_caps_features_is_any (f)
+      && !gst_caps_features_is_equal (f,
+          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
     tmp = gst_caps_intersect_full (result, caps, GST_CAPS_INTERSECT_FIRST);
     result = gst_caps_merge (tmp, result);
   }
