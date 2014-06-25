@@ -594,6 +594,7 @@ bs_write_subset_sps (GstBitWriter * bs,
     /* num level values signalled minus1 */
     num_level_values_signalled_minus1 = 0;
     g_assert (num_level_values_signalled_minus1 < 64);
+    WRITE_UE (bs, num_level_values_signalled_minus1);
 
     for (i = 0; i <= num_level_values_signalled_minus1; i++) {
       guint16 num_applicable_ops_minus1 = 0;
