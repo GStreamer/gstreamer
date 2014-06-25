@@ -31,13 +31,13 @@
 G_BEGIN_DECLS
 
 /**
- * GstMpegTsSectionATSCTableID:
+ * GstMpegtsSectionATSCTableID:
  *
- * Values for a #GstMpegTsSection table_id.
+ * Values for a #GstMpegtsSection table_id.
  *
  * These are the registered ATSC table_id variants.
  *
- * see also: #GstMpegTsSectionTableID
+ * see also: #GstMpegtsSectionTableID
  */
 typedef enum {
 
@@ -64,22 +64,22 @@ typedef enum {
   /* 0xD8 ?? */
   GST_MTS_TABLE_ID_ATSC_AGGREGATE_DATA_EVENT            = 0xD9,
   GST_MTS_TABLE_ID_ATSC_SATELLITE_VIRTUAL_CHANNEL       = 0xDA,
-} GstMpegTsSectionATSCTableID;
+} GstMpegtsSectionATSCTableID;
 
 /* TVCT/CVCT */
 #define GST_TYPE_MPEGTS_ATSC_VCT (gst_mpegts_atsc_vct_get_type ())
 #define GST_TYPE_MPEGTS_ATSC_VCT_SOURCE (gst_mpegts_atsc_vct_source_get_type ())
 
-typedef struct _GstMpegTsAtscVCTSource GstMpegTsAtscVCTSource;
-typedef struct _GstMpegTsAtscVCT GstMpegTsAtscVCT;
+typedef struct _GstMpegtsAtscVCTSource GstMpegtsAtscVCTSource;
+typedef struct _GstMpegtsAtscVCT GstMpegtsAtscVCT;
 
 /**
- * GstMpegTsAtscVCTSource:
- * @descriptors: (element-type GstMpegTsDescriptor): descriptors
+ * GstMpegtsAtscVCTSource:
+ * @descriptors: (element-type GstMpegtsDescriptor): descriptors
  *
- * Source from a @GstMpegTsAtscVCT, can be used both for TVCT and CVCT tables
+ * Source from a @GstMpegtsAtscVCT, can be used both for TVCT and CVCT tables
  */
-struct _GstMpegTsAtscVCTSource
+struct _GstMpegtsAtscVCTSource
 {
   gchar    *short_name;
   guint16   major_channel_number;
@@ -102,16 +102,16 @@ struct _GstMpegTsAtscVCTSource
 };
 
 /**
- * GstMpegTsAtscVCT:
- * @sources: (element-type GstMpegTsAtscVCTSource): sources
- * @descriptors: (element-type GstMpegTsDescriptor): descriptors
+ * GstMpegtsAtscVCT:
+ * @sources: (element-type GstMpegtsAtscVCTSource): sources
+ * @descriptors: (element-type GstMpegtsDescriptor): descriptors
  *
  * Represents both:
  *   Terrestrial Virtual Channel Table (A65)
  *   Cable Virtual Channel Table (A65)
  *
  */
-struct _GstMpegTsAtscVCT
+struct _GstMpegtsAtscVCT
 {
   guint16   transport_stream_id;
   guint8    protocol_version;
@@ -122,30 +122,30 @@ struct _GstMpegTsAtscVCT
 GType gst_mpegts_atsc_vct_get_type (void);
 GType gst_mpegts_atsc_vct_source_get_type (void);
 
-const GstMpegTsAtscVCT * gst_mpegts_section_get_atsc_tvct (GstMpegTsSection * section);
-const GstMpegTsAtscVCT * gst_mpegts_section_get_atsc_cvct (GstMpegTsSection * section);
+const GstMpegtsAtscVCT * gst_mpegts_section_get_atsc_tvct (GstMpegtsSection * section);
+const GstMpegtsAtscVCT * gst_mpegts_section_get_atsc_cvct (GstMpegtsSection * section);
 
 /* MGT */
 #define GST_TYPE_MPEGTS_ATSC_MGT (gst_mpegts_atsc_mgt_get_type ())
 #define GST_TYPE_MPEGTS_ATSC_MGT_TABLE (gst_mpegts_atsc_mgt_table_get_type ())
 
-typedef struct _GstMpegTsAtscMGTTable GstMpegTsAtscMGTTable;
-typedef struct _GstMpegTsAtscMGT GstMpegTsAtscMGT;
+typedef struct _GstMpegtsAtscMGTTable GstMpegtsAtscMGTTable;
+typedef struct _GstMpegtsAtscMGT GstMpegtsAtscMGT;
 
 typedef enum {
-  GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_EIT0 = 0x0100,
-  GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_EIT127 = 0x017F,
-  GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_ETT0 = 0x0200,
-  GST_MPEG_TS_ATSC_MGT_TABLE_TYPE_ETT127 = 0x027F
-} GstMpegTsAtscMGTTableType;
+  GST_MPEGTS_ATSC_MGT_TABLE_TYPE_EIT0 = 0x0100,
+  GST_MPEGTS_ATSC_MGT_TABLE_TYPE_EIT127 = 0x017F,
+  GST_MPEGTS_ATSC_MGT_TABLE_TYPE_ETT0 = 0x0200,
+  GST_MPEGTS_ATSC_MGT_TABLE_TYPE_ETT127 = 0x027F
+} GstMpegtsAtscMGTTableType;
 
 /**
- * GstMpegTsAtscMGTTable:
- * @descriptors: (element-type GstMpegTsDescriptor): descriptors
+ * GstMpegtsAtscMGTTable:
+ * @descriptors: (element-type GstMpegtsDescriptor): descriptors
  *
- * Source from a @GstMpegTsAtscMGT
+ * Source from a @GstMpegtsAtscMGT
  */
-struct _GstMpegTsAtscMGTTable
+struct _GstMpegtsAtscMGTTable
 {
   guint16 table_type;
   guint16 pid;
@@ -155,14 +155,14 @@ struct _GstMpegTsAtscMGTTable
 };
 
 /**
- * GstMpegTsAtscMGT:
- * @tables: (element-type GstMpegTsAtscMGTTable): the tables
- * @descriptors: (element-type GstMpegTsDescriptor): descriptors
+ * GstMpegtsAtscMGT:
+ * @tables: (element-type GstMpegtsAtscMGTTable): the tables
+ * @descriptors: (element-type GstMpegtsDescriptor): descriptors
  *
  * Master Guide Table (A65)
  *
  */
-struct _GstMpegTsAtscMGT
+struct _GstMpegtsAtscMGT
 {
   guint8  protocol_version;
   guint16 tables_defined;
@@ -173,17 +173,17 @@ struct _GstMpegTsAtscMGT
 GType gst_mpegts_atsc_mgt_get_type (void);
 GType gst_mpegts_atsc_mgt_table_get_type (void);
 
-const GstMpegTsAtscMGT * gst_mpegts_section_get_atsc_mgt (GstMpegTsSection * section);
+const GstMpegtsAtscMGT * gst_mpegts_section_get_atsc_mgt (GstMpegtsSection * section);
 
 /* Multiple string structure (used in ETT and EIT */
 
 #define GST_TYPE_MPEGTS_ATSC_STRING_SEGMENT (gst_mpegts_atsc_string_segment_get_type())
 #define GST_TYPE_MPEGTS_ATSC_MULT_STRING (gst_mpegts_atsc_mult_string_get_type())
 
-typedef struct _GstMpegTsAtscStringSegment GstMpegTsAtscStringSegment;
-typedef struct _GstMpegTsAtscMultString GstMpegTsAtscMultString;
+typedef struct _GstMpegtsAtscStringSegment GstMpegtsAtscStringSegment;
+typedef struct _GstMpegtsAtscMultString GstMpegtsAtscMultString;
 
-struct _GstMpegTsAtscStringSegment {
+struct _GstMpegtsAtscStringSegment {
   guint8 compression_type;
   guint8 mode;
   guint8 compressed_data_size;
@@ -192,14 +192,14 @@ struct _GstMpegTsAtscStringSegment {
   gchar *cached_string;
 };
 
-const gchar * gst_mpegts_atsc_string_segment_get_string (GstMpegTsAtscStringSegment * seg);
+const gchar * gst_mpegts_atsc_string_segment_get_string (GstMpegtsAtscStringSegment * seg);
 
 /**
- * GstMpegTsAtscMultString:
- * @segments: (element-type GstMpegTsAtscStringSegment)
+ * GstMpegtsAtscMultString:
+ * @segments: (element-type GstMpegtsAtscStringSegment)
  *
  */
-struct _GstMpegTsAtscMultString {
+struct _GstMpegtsAtscMultString {
   gchar      iso_639_langcode[4];
   GPtrArray *segments;
 };
@@ -212,17 +212,17 @@ GType gst_mpegts_atsc_mult_string_get_type (void);
 #define GST_TYPE_MPEGTS_ATSC_EIT_EVENT (gst_mpegts_atsc_eit_event_get_type())
 #define GST_TYPE_MPEGTS_ATSC_EIT (gst_mpegts_atsc_eit_get_type())
 
-typedef struct _GstMpegTsAtscEITEvent GstMpegTsAtscEITEvent;
-typedef struct _GstMpegTsAtscEIT GstMpegTsAtscEIT;
+typedef struct _GstMpegtsAtscEITEvent GstMpegtsAtscEITEvent;
+typedef struct _GstMpegtsAtscEIT GstMpegtsAtscEIT;
 
 /**
- * GstMpegTsAtscEITEvent:
- * @titles: (element-type GstMpegTsAtscMultString): the titles
- * @descriptors: (element-type GstMpegTsDescriptor): descriptors
+ * GstMpegtsAtscEITEvent:
+ * @titles: (element-type GstMpegtsAtscMultString): the titles
+ * @descriptors: (element-type GstMpegtsDescriptor): descriptors
  *
  * An ATSC EIT Event
  */
-struct _GstMpegTsAtscEITEvent {
+struct _GstMpegtsAtscEITEvent {
   guint16        event_id;
   guint32        start_time;
   guint8         etm_location;
@@ -233,13 +233,13 @@ struct _GstMpegTsAtscEITEvent {
 };
 
 /**
- * GstMpegTsAtscEIT:
- * @events: (element-type GstMpegTsAtscEITEvent): Events
+ * GstMpegtsAtscEIT:
+ * @events: (element-type GstMpegtsAtscEITEvent): Events
  *
  * Event Information Table (ATSC)
  *
  */
-struct _GstMpegTsAtscEIT
+struct _GstMpegtsAtscEIT
 {
   guint16        source_id;
   guint8         protocol_version;
@@ -250,22 +250,22 @@ struct _GstMpegTsAtscEIT
 GType gst_mpegts_atsc_eit_event_get_type (void);
 GType gst_mpegts_atsc_eit_get_type (void);
 
-const GstMpegTsAtscEIT *gst_mpegts_section_get_atsc_eit (GstMpegTsSection *section);
+const GstMpegtsAtscEIT *gst_mpegts_section_get_atsc_eit (GstMpegtsSection *section);
 
 /* ETT */
 
 #define GST_TYPE_MPEGTS_ATSC_ETT (gst_mpegts_atsc_ett_get_type())
 
-typedef struct _GstMpegTsAtscETT GstMpegTsAtscETT;
+typedef struct _GstMpegtsAtscETT GstMpegtsAtscETT;
 
 /**
- * GstMpegTsAtscETT:
- * @messages: (element-type GstMpegTsAtscMultString): List of texts
+ * GstMpegtsAtscETT:
+ * @messages: (element-type GstMpegtsAtscMultString): List of texts
  *
  * Extended Text Table (ATSC)
  *
  */
-struct _GstMpegTsAtscETT
+struct _GstMpegtsAtscETT
 {
   guint16        ett_table_id_extension;
   guint16        protocol_version;
@@ -276,21 +276,21 @@ struct _GstMpegTsAtscETT
 
 GType gst_mpegts_atsc_ett_get_type (void);
 
-const GstMpegTsAtscETT *gst_mpegts_section_get_atsc_ett (GstMpegTsSection *section);
+const GstMpegtsAtscETT *gst_mpegts_section_get_atsc_ett (GstMpegtsSection *section);
 
 /* STT */
 #define GST_TYPE_MPEGTS_ATSC_STT (gst_mpegts_atsc_stt_get_type ())
 
-typedef struct _GstMpegTsAtscSTT GstMpegTsAtscSTT;
+typedef struct _GstMpegtsAtscSTT GstMpegtsAtscSTT;
 
 /**
- * GstMpegTsAtscSTT:
- * @descriptors: (element-type GstMpegTsDescriptor): descriptors
+ * GstMpegtsAtscSTT:
+ * @descriptors: (element-type GstMpegtsDescriptor): descriptors
  *
  * System Time Table (A65)
  *
  */
-struct _GstMpegTsAtscSTT
+struct _GstMpegtsAtscSTT
 {
   guint8     protocol_version;
   guint32    system_time;
@@ -305,9 +305,9 @@ struct _GstMpegTsAtscSTT
 
 GType gst_mpegts_atsc_stt_get_type (void);
 
-const GstMpegTsAtscSTT * gst_mpegts_section_get_atsc_stt (GstMpegTsSection * section);
+const GstMpegtsAtscSTT * gst_mpegts_section_get_atsc_stt (GstMpegtsSection * section);
 /* FIXME receive a non-const parameter but we only provide a const getter */
-GstDateTime * gst_mpegts_atsc_stt_get_datetime_utc (GstMpegTsAtscSTT * stt);
+GstDateTime * gst_mpegts_atsc_stt_get_datetime_utc (GstMpegtsAtscSTT * stt);
 
 G_END_DECLS
 

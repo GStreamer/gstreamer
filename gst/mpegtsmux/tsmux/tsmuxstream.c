@@ -697,9 +697,9 @@ tsmux_stream_add_data (TsMuxStream * stream, guint8 * data, guint len,
  */
 void
 tsmux_stream_get_es_descrs (TsMuxStream * stream,
-    GstMpegTsPMTStream * pmt_stream)
+    GstMpegtsPMTStream * pmt_stream)
 {
-  GstMpegTsDescriptor *descriptor;
+  GstMpegtsDescriptor *descriptor;
 
   g_return_if_fail (stream != NULL);
   g_return_if_fail (pmt_stream != NULL);

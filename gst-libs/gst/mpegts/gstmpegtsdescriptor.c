@@ -282,7 +282,7 @@ _encode_control_codes (gchar * text, gsize length, gboolean is_multibyte)
  * @out_size: (out): the byte length of the new text
  *
  * Converts UTF-8 strings to text characters compliant with EN 300 468.
- * The converted text can be used directly in DVB #GstMpegTsDescriptor
+ * The converted text can be used directly in DVB #GstMpegtsDescriptor
  *
  * The function will try different character maps until the string is
  * completely converted.
@@ -638,7 +638,7 @@ _packetize_descriptor_array (GPtrArray * array, guint8 ** out_data)
 {
   guint i;
   guint8 header_size;
-  GstMpegTsDescriptor *descriptor;
+  GstMpegtsDescriptor *descriptor;
 
   g_return_if_fail (out_data != NULL);
   g_return_if_fail (*out_data != NULL);
@@ -659,13 +659,13 @@ _packetize_descriptor_array (GPtrArray * array, guint8 ** out_data)
   }
 }
 
-GstMpegTsDescriptor *
+GstMpegtsDescriptor *
 _new_descriptor (guint8 tag, guint8 length)
 {
-  GstMpegTsDescriptor *descriptor;
+  GstMpegtsDescriptor *descriptor;
   guint8 *data;
 
-  descriptor = g_slice_new (GstMpegTsDescriptor);
+  descriptor = g_slice_new (GstMpegtsDescriptor);
 
   descriptor->tag = tag;
   descriptor->tag_extension = 0;
@@ -681,13 +681,13 @@ _new_descriptor (guint8 tag, guint8 length)
   return descriptor;
 }
 
-GstMpegTsDescriptor *
+GstMpegtsDescriptor *
 _new_descriptor_with_extension (guint8 tag, guint8 tag_extension, guint8 length)
 {
-  GstMpegTsDescriptor *descriptor;
+  GstMpegtsDescriptor *descriptor;
   guint8 *data;
 
-  descriptor = g_slice_new (GstMpegTsDescriptor);
+  descriptor = g_slice_new (GstMpegtsDescriptor);
 
   descriptor->tag = tag;
   descriptor->tag_extension = tag_extension;
@@ -704,25 +704,25 @@ _new_descriptor_with_extension (guint8 tag, guint8 tag_extension, guint8 length)
   return descriptor;
 }
 
-static GstMpegTsDescriptor *
-_copy_descriptor (GstMpegTsDescriptor * desc)
+static GstMpegtsDescriptor *
+_copy_descriptor (GstMpegtsDescriptor * desc)
 {
-  GstMpegTsDescriptor *copy;
+  GstMpegtsDescriptor *copy;
 
-  copy = g_slice_dup (GstMpegTsDescriptor, desc);
+  copy = g_slice_dup (GstMpegtsDescriptor, desc);
   copy->data = g_memdup (desc->data, desc->length + 2);
 
   return copy;
 }
 
 void
-_free_descriptor (GstMpegTsDescriptor * desc)
+_free_descriptor (GstMpegtsDescriptor * desc)
 {
   g_free ((gpointer) desc->data);
-  g_slice_free (GstMpegTsDescriptor, desc);
+  g_slice_free (GstMpegtsDescriptor, desc);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsDescriptor, gst_mpegts_descriptor,
+G_DEFINE_BOXED_TYPE (GstMpegtsDescriptor, gst_mpegts_descriptor,
     (GBoxedCopyFunc) _copy_descriptor, (GBoxedFreeFunc) _free_descriptor);
 
 /**
@@ -735,7 +735,7 @@ G_DEFINE_BOXED_TYPE (GstMpegTsDescriptor, gst_mpegts_descriptor,
  *
  * Note: The data provided in @buffer will not be copied.
  *
- * Returns: (transfer full) (element-type GstMpegTsDescriptor): an
+ * Returns: (transfer full) (element-type GstMpegtsDescriptor): an
  * array of the parsed descriptors or %NULL if there was an error.
  * Release with #g_array_unref when done with it.
  */
@@ -783,7 +783,7 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
   data = buffer;
 
   for (i = 0; i < nb_desc; i++) {
-    GstMpegTsDescriptor *desc = g_slice_new0 (GstMpegTsDescriptor);
+    GstMpegtsDescriptor *desc = g_slice_new0 (GstMpegtsDescriptor);
 
     desc->data = data;
     desc->tag = *data++;
@@ -809,8 +809,8 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
 
 /**
  * gst_mpegts_find_descriptor:
- * @descriptors: (element-type GstMpegTsDescriptor) (transfer none): an array
- * of #GstMpegTsDescriptor
+ * @descriptors: (element-type GstMpegtsDescriptor) (transfer none): an array
+ * of #GstMpegtsDescriptor
  * @tag: the tag to look for
  *
  * Finds the first descriptor of type @tag in the array.
@@ -820,7 +820,7 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
  *
  * Returns: (transfer none): the first descriptor matchin @tag, else %NULL.
  */
-const GstMpegTsDescriptor *
+const GstMpegtsDescriptor *
 gst_mpegts_find_descriptor (GPtrArray * descriptors, guint8 tag)
 {
   guint i, nb_desc;
@@ -829,9 +829,9 @@ gst_mpegts_find_descriptor (GPtrArray * descriptors, guint8 tag)
 
   nb_desc = descriptors->len;
   for (i = 0; i < nb_desc; i++) {
-    GstMpegTsDescriptor *desc = g_ptr_array_index (descriptors, i);
+    GstMpegtsDescriptor *desc = g_ptr_array_index (descriptors, i);
     if (desc->tag == tag)
-      return (const GstMpegTsDescriptor *) desc;
+      return (const GstMpegtsDescriptor *) desc;
   }
   return NULL;
 }
@@ -843,15 +843,15 @@ gst_mpegts_find_descriptor (GPtrArray * descriptors, guint8 tag)
  * @additional_info: (transfer none) (allow-none): pointer to optional additional info
  * @additional_info_length: length of the optional @additional_info
  *
- * Creates a %GST_MTS_DESC_REGISTRATION #GstMpegTsDescriptor
+ * Creates a %GST_MTS_DESC_REGISTRATION #GstMpegtsDescriptor
  *
- * Return: #GstMpegTsDescriptor, %NULL on failure
+ * Return: #GstMpegtsDescriptor, %NULL on failure
  */
-GstMpegTsDescriptor *
+GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_registration (const gchar * format_identifier,
     guint8 * additional_info, gsize additional_info_length)
 {
-  GstMpegTsDescriptor *descriptor;
+  GstMpegtsDescriptor *descriptor;
 
   g_return_val_if_fail (format_identifier != NULL, NULL);
 
@@ -866,14 +866,14 @@ gst_mpegts_descriptor_from_registration (const gchar * format_identifier,
 }
 
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */
-static GstMpegTsISO639LanguageDescriptor *
-_gst_mpegts_iso_639_language_descriptor_copy (GstMpegTsISO639LanguageDescriptor
+static GstMpegtsISO639LanguageDescriptor *
+_gst_mpegts_iso_639_language_descriptor_copy (GstMpegtsISO639LanguageDescriptor
     * source)
 {
-  GstMpegTsISO639LanguageDescriptor *copy;
+  GstMpegtsISO639LanguageDescriptor *copy;
   guint i;
 
-  copy = g_slice_dup (GstMpegTsISO639LanguageDescriptor, source);
+  copy = g_slice_dup (GstMpegtsISO639LanguageDescriptor, source);
 
   for (i = 0; i < source->nb_language; i++) {
     copy->language[i] = g_strdup (source->language[i]);
@@ -883,7 +883,7 @@ _gst_mpegts_iso_639_language_descriptor_copy (GstMpegTsISO639LanguageDescriptor
 }
 
 void
-gst_mpegts_iso_639_language_descriptor_free (GstMpegTsISO639LanguageDescriptor
+gst_mpegts_iso_639_language_descriptor_free (GstMpegtsISO639LanguageDescriptor
     * desc)
 {
   guint i;
@@ -891,18 +891,18 @@ gst_mpegts_iso_639_language_descriptor_free (GstMpegTsISO639LanguageDescriptor
   for (i = 0; i < desc->nb_language; i++) {
     g_free (desc->language[i]);
   }
-  g_slice_free (GstMpegTsISO639LanguageDescriptor, desc);
+  g_slice_free (GstMpegtsISO639LanguageDescriptor, desc);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsISO639LanguageDescriptor,
+G_DEFINE_BOXED_TYPE (GstMpegtsISO639LanguageDescriptor,
     gst_mpegts_iso_639_language,
     (GBoxedCopyFunc) _gst_mpegts_iso_639_language_descriptor_copy,
     (GFreeFunc) gst_mpegts_iso_639_language_descriptor_free);
 
 /**
  * gst_mpegts_descriptor_parse_iso_639_language:
- * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegTsDescriptor
- * @res: (out) (transfer full): the #GstMpegTsISO639LanguageDescriptor to fill
+ * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegtsDescriptor
+ * @res: (out) (transfer full): the #GstMpegtsISO639LanguageDescriptor to fill
  *
  * Extracts the iso 639-2 language information from @descriptor.
  *
@@ -912,12 +912,12 @@ G_DEFINE_BOXED_TYPE (GstMpegTsISO639LanguageDescriptor,
  * Returns: %TRUE if parsing succeeded, else %FALSE.
  */
 gboolean
-gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
-    descriptor, GstMpegTsISO639LanguageDescriptor ** desc)
+gst_mpegts_descriptor_parse_iso_639_language (const GstMpegtsDescriptor *
+    descriptor, GstMpegtsISO639LanguageDescriptor ** desc)
 {
   guint i;
   guint8 *data;
-  GstMpegTsISO639LanguageDescriptor *res;
+  GstMpegtsISO639LanguageDescriptor *res;
 
   g_return_val_if_fail (descriptor != NULL && desc != NULL, FALSE);
   /* This descriptor can be empty, no size check needed */
@@ -925,7 +925,7 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
 
   data = (guint8 *) descriptor->data + 2;
 
-  res = g_slice_new0 (GstMpegTsISO639LanguageDescriptor);
+  res = g_slice_new0 (GstMpegtsISO639LanguageDescriptor);
 
   /* Each language is 3 + 1 bytes */
   res->nb_language = descriptor->length / 4;
@@ -943,10 +943,10 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
 
 /**
  * gst_mpegts_descriptor_parse_iso_639_language_idx:
- * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegTsDescriptor
+ * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegtsDescriptor
  * @idx: Table id of the language to parse
  * @lang: (out) (transfer full): 4-byte gchar array to hold the language code
- * @audio_type: (out) (transfer none) (allow-none): the #GstMpegTsIso639AudioType to set
+ * @audio_type: (out) (transfer none) (allow-none): the #GstMpegtsIso639AudioType to set
  *
  * Extracts the iso 639-2 language information from specific table id in @descriptor.
  *
@@ -956,8 +956,8 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
  * Returns: %TRUE if parsing succeeded, else %FALSE.
  */
 gboolean
-gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegTsDescriptor *
-    descriptor, guint idx, gchar ** lang, GstMpegTsIso639AudioType * audio_type)
+gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegtsDescriptor *
+    descriptor, guint idx, gchar ** lang, GstMpegtsIso639AudioType * audio_type)
 {
   guint8 *data;
 
@@ -982,12 +982,12 @@ gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegTsDescriptor *
 
 /**
  * gst_mpegts_descriptor_parse_iso_639_language_nb:
- * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegTsDescriptor
+ * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegtsDescriptor
  *
  * Returns: The number of languages in @descriptor
  */
 guint
-gst_mpegts_descriptor_parse_iso_639_language_nb (const GstMpegTsDescriptor *
+gst_mpegts_descriptor_parse_iso_639_language_nb (const GstMpegtsDescriptor *
     descriptor)
 {
   g_return_val_if_fail (descriptor != NULL, 0);
@@ -999,16 +999,16 @@ gst_mpegts_descriptor_parse_iso_639_language_nb (const GstMpegTsDescriptor *
 
 /**
  * gst_mpegts_descriptor_parse_logical_channel:
- * @descriptor: a %GST_MTS_DESC_DTG_LOGICAL_CHANNEL #GstMpegTsDescriptor
- * @res: (out) (transfer none): the #GstMpegTsLogicalChannelDescriptor to fill
+ * @descriptor: a %GST_MTS_DESC_DTG_LOGICAL_CHANNEL #GstMpegtsDescriptor
+ * @res: (out) (transfer none): the #GstMpegtsLogicalChannelDescriptor to fill
  *
  * Extracts the logical channels from @descriptor.
  *
  * Returns: %TRUE if parsing succeeded, else %FALSE.
  */
 gboolean
-gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *
-    descriptor, GstMpegTsLogicalChannelDescriptor * res)
+gst_mpegts_descriptor_parse_logical_channel (const GstMpegtsDescriptor *
+    descriptor, GstMpegtsLogicalChannelDescriptor * res)
 {
   guint i;
   guint8 *data;
@@ -1039,15 +1039,15 @@ gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *
  * @data: (transfer none): descriptor data (after tag and length field)
  * @length: length of @data
  *
- * Creates a #GstMpegTsDescriptor with custom @tag and @data
+ * Creates a #GstMpegtsDescriptor with custom @tag and @data
  *
- * Returns: #GstMpegTsDescriptor
+ * Returns: #GstMpegtsDescriptor
  */
-GstMpegTsDescriptor *
+GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 * data,
     gsize length)
 {
-  GstMpegTsDescriptor *descriptor;
+  GstMpegtsDescriptor *descriptor;
 
   descriptor = _new_descriptor (tag, length);
 

@@ -91,7 +91,7 @@ mpegts_parse_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program);
 
 static GstFlowReturn
 mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
-    GstMpegTsSection * section);
+    GstMpegtsSection * section);
 
 static MpegTSParsePad *mpegts_parse_create_tspad (MpegTSParse2 * parse,
     const gchar * name);
@@ -402,7 +402,7 @@ mpegts_parse_release_pad (GstElement * element, GstPad * pad)
 
 static GstFlowReturn
 mpegts_parse_tspad_push_section (MpegTSParse2 * parse, MpegTSParsePad * tspad,
-    GstMpegTsSection * section, MpegTSPacketizerPacket * packet)
+    GstMpegtsSection * section, MpegTSPacketizerPacket * packet)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean to_push = TRUE;
@@ -480,7 +480,7 @@ pad_clear_for_push (GstPad * pad, MpegTSParse2 * parse)
 
 static GstFlowReturn
 mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
-    GstMpegTsSection * section)
+    GstMpegtsSection * section)
 {
   MpegTSParse2 *parse = (MpegTSParse2 *) base;
   guint32 pads_cookie;

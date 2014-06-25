@@ -31,17 +31,17 @@
 G_BEGIN_DECLS
 
 /**
- * GstMpegTsScteStreamType:
- * @GST_MPEG_TS_STREAM_TYPE_SCTE_SUBTITLING:  SCTE-27 Subtitling
- * @GST_MPEG_TS_STREAM_TYPE_SCTE_ISOCH_DATA:  SCTE-19 Isochronous data
- * @GST_MPEG_TS_STREAM_TYPE_SCTE_DST_NRT:     SCTE-07 Data Service or
+ * GstMpegtsScteStreamType:
+ * @GST_MPEGTS_STREAM_TYPE_SCTE_SUBTITLING:  SCTE-27 Subtitling
+ * @GST_MPEGTS_STREAM_TYPE_SCTE_ISOCH_DATA:  SCTE-19 Isochronous data
+ * @GST_MPEGTS_STREAM_TYPE_SCTE_DST_NRT:     SCTE-07 Data Service or
  * Network Resource Table
- * @GST_MPEG_TS_STREAM_TYPE_SCTE_DSMCC_DCB:   Type B - DSM-CC Data Carousel
+ * @GST_MPEGTS_STREAM_TYPE_SCTE_DSMCC_DCB:   Type B - DSM-CC Data Carousel
  * [IEC 13818-6])
- * @GST_MPEG_TS_STREAM_TYPE_SCTE_SIGNALING:   Enhanced Television Application
+ * @GST_MPEGTS_STREAM_TYPE_SCTE_SIGNALING:   Enhanced Television Application
  * Signaling (OC-SP-ETV-AM1.0.1-120614)
- * @GST_MPEG_TS_STREAM_TYPE_SCTE_SYNC_DATA:   SCTE-07 Synchronous data
- * @GST_MPEG_TS_STREAM_TYPE_SCTE_ASYNC_DATA:  SCTE-53 Asynchronous data
+ * @GST_MPEGTS_STREAM_TYPE_SCTE_SYNC_DATA:   SCTE-07 Synchronous data
+ * @GST_MPEGTS_STREAM_TYPE_SCTE_ASYNC_DATA:  SCTE-53 Asynchronous data
  *
  * Type of mpeg-ts streams for SCTE
  *
@@ -49,23 +49,23 @@ G_BEGIN_DECLS
 typedef enum {
 
   /* 0x01 - 0x82 : defined in other specs */
-  GST_MPEG_TS_STREAM_TYPE_SCTE_SUBTITLING = 0x82,   /* Subtitling data */
-  GST_MPEG_TS_STREAM_TYPE_SCTE_ISOCH_DATA = 0x83,   /* Isochronous data */
+  GST_MPEGTS_STREAM_TYPE_SCTE_SUBTITLING = 0x82,   /* Subtitling data */
+  GST_MPEGTS_STREAM_TYPE_SCTE_ISOCH_DATA = 0x83,   /* Isochronous data */
   /* 0x84 - 0x94 : defined in other specs */
-  GST_MPEG_TS_STREAM_TYPE_SCTE_DST_NRT    = 0x95,   /* DST / NRT data */
+  GST_MPEGTS_STREAM_TYPE_SCTE_DST_NRT    = 0x95,   /* DST / NRT data */
   /* 0x96 - 0xaf : defined in other specs */
-  GST_MPEG_TS_STREAM_TYPE_SCTE_DSMCC_DCB  = 0xb0,   /* Data Carousel Type B */
+  GST_MPEGTS_STREAM_TYPE_SCTE_DSMCC_DCB  = 0xb0,   /* Data Carousel Type B */
   /* 0xb1 - 0xbf : User Private (or defined in other specs) */
-  GST_MPEG_TS_STREAM_TYPE_SCTE_SIGNALING  = 0xc0,   /* EBIF Signaling */
-  GST_MPEG_TS_STREAM_TYPE_SCTE_SYNC_DATA  = 0xc2,   /* Synchronous data */
-  GST_MPEG_TS_STREAM_TYPE_SCTE_ASYNC_DATA = 0xc3,   /* Asynchronous data */
+  GST_MPEGTS_STREAM_TYPE_SCTE_SIGNALING  = 0xc0,   /* EBIF Signaling */
+  GST_MPEGTS_STREAM_TYPE_SCTE_SYNC_DATA  = 0xc2,   /* Synchronous data */
+  GST_MPEGTS_STREAM_TYPE_SCTE_ASYNC_DATA = 0xc3,   /* Asynchronous data */
   /* 0xc4 - 0xff : User Private (or defined in other specs) */
 
-} GstMpegTsScteStreamType;
+} GstMpegtsScteStreamType;
 
 
 /**
- * GstMpegTsSectionSCTETableID:
+ * GstMpegtsSectionSCTETableID:
  * @GST_MTS_TABLE_ID_SCTE_EAS:    SCTE-18 Emergency Alert System
  * @GST_MTS_TABLE_ID_SCTE_EBIF:   CL-SP-ETV-AM 1.0.1 EBIF message
  * @GST_MTS_TABLE_ID_SCTE_EISS:   CL-SP-ETV-AM 1.0.1 EBIF Int. Signaling Sect.
@@ -76,11 +76,11 @@ typedef enum {
  * Splice Event notifications to remain associated with the program and pass
  * through multiplexers.
  *
- * Values for a #GstMpegTsSection table_id.
+ * Values for a #GstMpegtsSection table_id.
  *
  * These are the registered SCTE table_id variants.
  *
- * see also: #GstMpegTsSectionTableID
+ * see also: #GstMpegtsSectionTableID
  */
 typedef enum {
 
@@ -95,7 +95,7 @@ typedef enum {
   /* 0xe5 - 0xfb : defined in other specs */
   GST_MTS_TABLE_ID_SCTE_SPLICE   = 0xfc,     /* splice information table */
 
-} GstMpegTsSectionSCTETableID;
+} GstMpegtsSectionSCTETableID;
 
 G_END_DECLS
 

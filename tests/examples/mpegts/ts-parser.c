@@ -84,23 +84,23 @@ descriptor_name (gint val)
   GEnumValue *en;
 
   en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
-          (GST_TYPE_MPEG_TS_DESCRIPTOR_TYPE)), val);
+          (GST_TYPE_MPEGTS_DESCRIPTOR_TYPE)), val);
   if (en == NULL)
     /* Else try with DVB enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
-            (GST_TYPE_MPEG_TS_DVB_DESCRIPTOR_TYPE)), val);
+            (GST_TYPE_MPEGTS_DVB_DESCRIPTOR_TYPE)), val);
   if (en == NULL)
     /* Else try with ATSC enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
-            (GST_TYPE_MPEG_TS_ATSC_DESCRIPTOR_TYPE)), val);
+            (GST_TYPE_MPEGTS_ATSC_DESCRIPTOR_TYPE)), val);
   if (en == NULL)
     /* Else try with ISB enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
-            (GST_TYPE_MPEG_TS_ISDB_DESCRIPTOR_TYPE)), val);
+            (GST_TYPE_MPEGTS_ISDB_DESCRIPTOR_TYPE)), val);
   if (en == NULL)
     /* Else try with misc enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
-            (GST_TYPE_MPEG_TS_MISC_DESCRIPTOR_TYPE)), val);
+            (GST_TYPE_MPEGTS_MISC_DESCRIPTOR_TYPE)), val);
   if (en == NULL)
     return "UNKNOWN/PRIVATE";
   return en->value_nick;
@@ -112,19 +112,19 @@ table_id_name (gint val)
   GEnumValue *en;
 
   en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
-          (GST_TYPE_MPEG_TS_SECTION_TABLE_ID)), val);
+          (GST_TYPE_MPEGTS_SECTION_TABLE_ID)), val);
   if (en == NULL)
     /* Else try with DVB enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
-            (GST_TYPE_MPEG_TS_SECTION_DVB_TABLE_ID)), val);
+            (GST_TYPE_MPEGTS_SECTION_DVB_TABLE_ID)), val);
   if (en == NULL)
     /* Else try with ATSC enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
-            (GST_TYPE_MPEG_TS_SECTION_ATSC_TABLE_ID)), val);
+            (GST_TYPE_MPEGTS_SECTION_ATSC_TABLE_ID)), val);
   if (en == NULL)
     /* Else try with SCTE enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
-            (GST_TYPE_MPEG_TS_SECTION_SCTE_TABLE_ID)), val);
+            (GST_TYPE_MPEGTS_SECTION_SCTE_TABLE_ID)), val);
   if (en == NULL)
     return "UNKNOWN/PRIVATE";
   return en->value_nick;
@@ -143,27 +143,27 @@ enum_name (GType instance_type, gint val)
 }
 
 static void
-dump_cable_delivery_descriptor (GstMpegTsDescriptor * desc, guint spacing)
+dump_cable_delivery_descriptor (GstMpegtsDescriptor * desc, guint spacing)
 {
-  GstMpegTsCableDeliverySystemDescriptor res;
+  GstMpegtsCableDeliverySystemDescriptor res;
 
   if (gst_mpegts_descriptor_parse_cable_delivery_system (desc, &res)) {
     g_printf ("%*s Cable Delivery Descriptor\n", spacing, "");
     g_printf ("%*s   Frequency   : %d Hz\n", spacing, "", res.frequency);
     g_printf ("%*s   Outer FEC   : %d (%s)\n", spacing, "", res.outer_fec,
-        enum_name (GST_TYPE_MPEG_TS_CABLE_OUTER_FEC_SCHEME, res.outer_fec));
+        enum_name (GST_TYPE_MPEGTS_CABLE_OUTER_FEC_SCHEME, res.outer_fec));
     g_printf ("%*s   modulation  : %d (%s)\n", spacing, "", res.modulation,
-        enum_name (GST_TYPE_MPEG_TS_MODULATION_TYPE, res.modulation));
+        enum_name (GST_TYPE_MPEGTS_MODULATION_TYPE, res.modulation));
     g_printf ("%*s   Symbol rate : %d sym/s\n", spacing, "", res.symbol_rate);
     g_printf ("%*s   Inner FEC   : %d (%s)\n", spacing, "", res.fec_inner,
-        enum_name (GST_TYPE_MPEG_TS_DVB_CODE_RATE, res.fec_inner));
+        enum_name (GST_TYPE_MPEGTS_DVB_CODE_RATE, res.fec_inner));
   }
 }
 
 static void
-dump_terrestrial_delivery (GstMpegTsDescriptor * desc, guint spacing)
+dump_terrestrial_delivery (GstMpegtsDescriptor * desc, guint spacing)
 {
-  GstMpegTsTerrestrialDeliverySystemDescriptor res;
+  GstMpegtsTerrestrialDeliverySystemDescriptor res;
 
   if (gst_mpegts_descriptor_parse_terrestrial_delivery_system (desc, &res)) {
     g_printf ("%*s Terrestrial Delivery Descriptor\n", spacing, "");
@@ -176,24 +176,24 @@ dump_terrestrial_delivery (GstMpegTsDescriptor * desc, guint spacing)
     g_printf ("%*s   MPE FEC           : %s\n", spacing, "",
         res.mpe_fec ? "TRUE" : "FALSE");
     g_printf ("%*s   Constellation     : %d (%s)\n", spacing, "",
-        res.constellation, enum_name (GST_TYPE_MPEG_TS_MODULATION_TYPE,
+        res.constellation, enum_name (GST_TYPE_MPEGTS_MODULATION_TYPE,
             res.constellation));
     g_printf ("%*s   Hierarchy         : %d (%s)\n", spacing, "",
-        res.hierarchy, enum_name (GST_TYPE_MPEG_TS_TERRESTRIAL_HIERARCHY,
+        res.hierarchy, enum_name (GST_TYPE_MPEGTS_TERRESTRIAL_HIERARCHY,
             res.hierarchy));
     g_printf ("%*s   Code Rate HP      : %d (%s)\n", spacing, "",
-        res.code_rate_hp, enum_name (GST_TYPE_MPEG_TS_DVB_CODE_RATE,
+        res.code_rate_hp, enum_name (GST_TYPE_MPEGTS_DVB_CODE_RATE,
             res.code_rate_hp));
     g_printf ("%*s   Code Rate LP      : %d (%s)\n", spacing, "",
-        res.code_rate_lp, enum_name (GST_TYPE_MPEG_TS_DVB_CODE_RATE,
+        res.code_rate_lp, enum_name (GST_TYPE_MPEGTS_DVB_CODE_RATE,
             res.code_rate_lp));
     g_printf ("%*s   Guard Interval    : %d (%s)\n", spacing, "",
         res.guard_interval,
-        enum_name (GST_TYPE_MPEG_TS_TERRESTRIAL_GUARD_INTERVAL,
+        enum_name (GST_TYPE_MPEGTS_TERRESTRIAL_GUARD_INTERVAL,
             res.guard_interval));
     g_printf ("%*s   Transmission Mode : %d (%s)\n", spacing, "",
         res.transmission_mode,
-        enum_name (GST_TYPE_MPEG_TS_TERRESTRIAL_TRANSMISSION_MODE,
+        enum_name (GST_TYPE_MPEGTS_TERRESTRIAL_TRANSMISSION_MODE,
             res.transmission_mode));
     g_printf ("%*s   Other Frequency   : %s\n", spacing, "",
         res.other_frequency ? "TRUE" : "FALSE");
@@ -201,7 +201,7 @@ dump_terrestrial_delivery (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
-dump_dvb_service_list (GstMpegTsDescriptor * desc, guint spacing)
+dump_dvb_service_list (GstMpegtsDescriptor * desc, guint spacing)
 {
   GPtrArray *res;
 
@@ -209,26 +209,26 @@ dump_dvb_service_list (GstMpegTsDescriptor * desc, guint spacing)
     guint i;
     g_printf ("%*s DVB Service List Descriptor\n", spacing, "");
     for (i = 0; i < res->len; i++) {
-      GstMpegTsDVBServiceListItem *item = g_ptr_array_index (res, i);
+      GstMpegtsDVBServiceListItem *item = g_ptr_array_index (res, i);
       g_printf ("%*s   Service #%d, id:0x%04x, type:0x%x (%s)\n",
           spacing, "", i, item->service_id, item->type,
-          enum_name (GST_TYPE_MPEG_TS_DVB_SERVICE_TYPE, item->type));
+          enum_name (GST_TYPE_MPEGTS_DVB_SERVICE_TYPE, item->type));
     }
     g_ptr_array_unref (res);
   }
 }
 
 static void
-dump_logical_channel_descriptor (GstMpegTsDescriptor * desc, guint spacing)
+dump_logical_channel_descriptor (GstMpegtsDescriptor * desc, guint spacing)
 {
-  GstMpegTsLogicalChannelDescriptor res;
+  GstMpegtsLogicalChannelDescriptor res;
   guint i;
 
   if (gst_mpegts_descriptor_parse_logical_channel (desc, &res)) {
     g_printf ("%*s Logical Channel Descriptor (%d channels)\n", spacing, "",
         res.nb_channels);
     for (i = 0; i < res.nb_channels; i++) {
-      GstMpegTsLogicalChannel *chann = &res.channels[i];
+      GstMpegtsLogicalChannel *chann = &res.channels[i];
       g_printf ("%*s   service_id: 0x%04x, logical channel number:%4d\n",
           spacing, "", chann->service_id, chann->logical_channel_number);
     }
@@ -236,13 +236,13 @@ dump_logical_channel_descriptor (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
-dump_multiligual_network_name (GstMpegTsDescriptor * desc, guint spacing)
+dump_multiligual_network_name (GstMpegtsDescriptor * desc, guint spacing)
 {
   GPtrArray *items;
   if (gst_mpegts_descriptor_parse_dvb_multilingual_network_name (desc, &items)) {
     guint i;
     for (i = 0; i < items->len; i++) {
-      GstMpegTsDvbMultilingualNetworkNameItem *item =
+      GstMpegtsDvbMultilingualNetworkNameItem *item =
           g_ptr_array_index (items, i);
       g_printf ("%*s item : %u\n", spacing, "", i);
       g_printf ("%*s   language_code : %s\n", spacing, "", item->language_code);
@@ -253,13 +253,13 @@ dump_multiligual_network_name (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
-dump_multiligual_bouquet_name (GstMpegTsDescriptor * desc, guint spacing)
+dump_multiligual_bouquet_name (GstMpegtsDescriptor * desc, guint spacing)
 {
   GPtrArray *items;
   if (gst_mpegts_descriptor_parse_dvb_multilingual_bouquet_name (desc, &items)) {
     guint i;
     for (i = 0; i < items->len; i++) {
-      GstMpegTsDvbMultilingualBouquetNameItem *item =
+      GstMpegtsDvbMultilingualBouquetNameItem *item =
           g_ptr_array_index (items, i);
       g_printf ("%*s item : %u\n", spacing, "", i);
       g_printf ("%*s   language_code : %s\n", spacing, "", item->language_code);
@@ -270,13 +270,13 @@ dump_multiligual_bouquet_name (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
-dump_multiligual_service_name (GstMpegTsDescriptor * desc, guint spacing)
+dump_multiligual_service_name (GstMpegtsDescriptor * desc, guint spacing)
 {
   GPtrArray *items;
   if (gst_mpegts_descriptor_parse_dvb_multilingual_service_name (desc, &items)) {
     guint i;
     for (i = 0; i < items->len; i++) {
-      GstMpegTsDvbMultilingualServiceNameItem *item =
+      GstMpegtsDvbMultilingualServiceNameItem *item =
           g_ptr_array_index (items, i);
       g_printf ("%*s item : %u\n", spacing, "", i);
       g_printf ("%*s   language_code : %s\n", spacing, "", item->language_code);
@@ -288,7 +288,7 @@ dump_multiligual_service_name (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
-dump_multiligual_component (GstMpegTsDescriptor * desc, guint spacing)
+dump_multiligual_component (GstMpegtsDescriptor * desc, guint spacing)
 {
   GPtrArray *items;
   guint8 tag;
@@ -297,7 +297,7 @@ dump_multiligual_component (GstMpegTsDescriptor * desc, guint spacing)
     guint8 i;
     g_printf ("%*s component_tag : 0x%02x\n", spacing, "", tag);
     for (i = 0; i < items->len; i++) {
-      GstMpegTsDvbMultilingualComponentItem *item =
+      GstMpegtsDvbMultilingualComponentItem *item =
           g_ptr_array_index (items, i);
       g_printf ("%*s   item : %u\n", spacing, "", i);
       g_printf ("%*s     language_code : %s\n", spacing, "",
@@ -309,13 +309,13 @@ dump_multiligual_component (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
-dump_linkage (GstMpegTsDescriptor * desc, guint spacing)
+dump_linkage (GstMpegtsDescriptor * desc, guint spacing)
 {
-  GstMpegTsDVBLinkageDescriptor *res;
+  GstMpegtsDVBLinkageDescriptor *res;
 
   if (gst_mpegts_descriptor_parse_dvb_linkage (desc, &res)) {
     g_printf ("%*s Linkage Descriptor : 0x%02x (%s)\n", spacing, "",
-        res->linkage_type, enum_name (GST_TYPE_MPEG_TS_DVB_LINKAGE_TYPE,
+        res->linkage_type, enum_name (GST_TYPE_MPEGTS_DVB_LINKAGE_TYPE,
             res->linkage_type));
 
     g_printf ("%*s   Transport Stream ID : 0x%04x\n", spacing, "",
@@ -328,11 +328,11 @@ dump_linkage (GstMpegTsDescriptor * desc, guint spacing)
     switch (res->linkage_type) {
       case GST_MPEGTS_DVB_LINKAGE_MOBILE_HAND_OVER:
       {
-        GstMpegTsDVBLinkageMobileHandOver *linkage =
-            (GstMpegTsDVBLinkageMobileHandOver *) res->linkage_data;
+        GstMpegtsDVBLinkageMobileHandOver *linkage =
+            (GstMpegtsDVBLinkageMobileHandOver *) res->linkage_data;
         g_printf ("%*s   hand_over_type    : 0x%02x (%s)\n", spacing,
             "", linkage->hand_over_type,
-            enum_name (GST_TYPE_MPEG_TS_DVB_LINKAGE_HAND_OVER_TYPE,
+            enum_name (GST_TYPE_MPEGTS_DVB_LINKAGE_HAND_OVER_TYPE,
                 linkage->hand_over_type));
         g_printf ("%*s   origin_type       : %s\n", spacing, "",
             linkage->origin_type ? "SDT" : "NIT");
@@ -344,8 +344,8 @@ dump_linkage (GstMpegTsDescriptor * desc, guint spacing)
       }
       case GST_MPEGTS_DVB_LINKAGE_EVENT:
       {
-        GstMpegTsDVBLinkageEvent *linkage =
-            (GstMpegTsDVBLinkageEvent *) res->linkage_data;
+        GstMpegtsDVBLinkageEvent *linkage =
+            (GstMpegtsDVBLinkageEvent *) res->linkage_data;
         g_printf ("%*s   target_event_id   : 0x%04x\n", spacing, "",
             linkage->target_event_id);
         g_printf ("%*s   target_listed     : %s\n", spacing, "",
@@ -360,7 +360,7 @@ dump_linkage (GstMpegTsDescriptor * desc, guint spacing)
         GPtrArray *items = (GPtrArray *) res->linkage_data;
 
         for (i = 0; i < items->len; i++) {
-          GstMpegTsDVBLinkageExtendedEvent *linkage =
+          GstMpegtsDVBLinkageExtendedEvent *linkage =
               g_ptr_array_index (items, i);
           g_printf ("%*s   target_event_id   : 0x%04x\n", spacing, "",
               linkage->target_event_id);
@@ -405,14 +405,14 @@ dump_linkage (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
-dump_component (GstMpegTsDescriptor * desc, guint spacing)
+dump_component (GstMpegtsDescriptor * desc, guint spacing)
 {
-  GstMpegTsComponentDescriptor *res;
+  GstMpegtsComponentDescriptor *res;
 
   if (gst_mpegts_descriptor_parse_dvb_component (desc, &res)) {
     g_printf ("%*s stream_content : 0x%02x (%s)\n", spacing, "",
         res->stream_content,
-        enum_name (GST_TYPE_MPEG_TS_COMPONENT_STREAM_CONTENT,
+        enum_name (GST_TYPE_MPEGTS_COMPONENT_STREAM_CONTENT,
             res->stream_content));
     g_printf ("%*s component_type : 0x%02x\n", spacing, "",
         res->component_type);
@@ -425,17 +425,17 @@ dump_component (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
-dump_content (GstMpegTsDescriptor * desc, guint spacing)
+dump_content (GstMpegtsDescriptor * desc, guint spacing)
 {
   GPtrArray *contents;
   guint i;
 
   if (gst_mpegts_descriptor_parse_dvb_content (desc, &contents)) {
     for (i = 0; i < contents->len; i++) {
-      GstMpegTsContent *item = g_ptr_array_index (contents, i);
+      GstMpegtsContent *item = g_ptr_array_index (contents, i);
       g_printf ("%*s content nibble 1 : 0x%01x (%s)\n", spacing, "",
           item->content_nibble_1,
-          enum_name (GST_TYPE_MPEG_TS_CONTENT_NIBBLE_HI,
+          enum_name (GST_TYPE_MPEGTS_CONTENT_NIBBLE_HI,
               item->content_nibble_1));
       g_printf ("%*s content nibble 2 : 0x%01x\n", spacing, "",
           item->content_nibble_2);
@@ -447,26 +447,26 @@ dump_content (GstMpegTsDescriptor * desc, guint spacing)
 }
 
 static void
-dump_iso_639_language (GstMpegTsDescriptor * desc, guint spacing)
+dump_iso_639_language (GstMpegtsDescriptor * desc, guint spacing)
 {
   guint i;
-  GstMpegTsISO639LanguageDescriptor *res;
+  GstMpegtsISO639LanguageDescriptor *res;
 
   if (gst_mpegts_descriptor_parse_iso_639_language (desc, &res)) {
     for (i = 0; i < res->nb_language; i++) {
       g_print
           ("%*s ISO 639 Language Descriptor %s , audio_type:0x%x (%s)\n",
           spacing, "", res->language[i], res->audio_type[i],
-          enum_name (GST_TYPE_MPEG_TS_ISO639_AUDIO_TYPE, res->audio_type[i]));
+          enum_name (GST_TYPE_MPEGTS_ISO639_AUDIO_TYPE, res->audio_type[i]));
     }
     gst_mpegts_iso_639_language_descriptor_free (res);
   }
 }
 
 static void
-dump_dvb_extended_event (GstMpegTsDescriptor * desc, guint spacing)
+dump_dvb_extended_event (GstMpegtsDescriptor * desc, guint spacing)
 {
-  GstMpegTsExtendedEventDescriptor *res;
+  GstMpegtsExtendedEventDescriptor *res;
 
   if (gst_mpegts_descriptor_parse_dvb_extended_event (desc, &res)) {
     guint i;
@@ -476,7 +476,7 @@ dump_dvb_extended_event (GstMpegTsDescriptor * desc, guint spacing)
     g_printf ("%*s   language_code:%s\n", spacing, "", res->language_code);
     g_printf ("%*s   text : %s\n", spacing, "", res->text);
     for (i = 0; i < res->items->len; i++) {
-      GstMpegTsExtendedEventItem *item = g_ptr_array_index (res->items, i);
+      GstMpegtsExtendedEventItem *item = g_ptr_array_index (res->items, i);
       g_printf ("%*s     #%d [description:item]  %s : %s\n",
           spacing, "", i, item->item_description, item->item);
     }
@@ -490,7 +490,7 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
   guint i;
 
   for (i = 0; i < descriptors->len; i++) {
-    GstMpegTsDescriptor *desc = g_ptr_array_index (descriptors, i);
+    GstMpegtsDescriptor *desc = g_ptr_array_index (descriptors, i);
     g_printf ("%*s [descriptor 0x%02x (%s) length:%d]\n", spacing, "",
         desc->tag, descriptor_name (desc->tag), desc->length);
     if (DUMP_DESCRIPTORS)
@@ -542,11 +542,11 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
       case GST_MTS_DESC_DVB_SERVICE:
       {
         gchar *service_name, *provider_name;
-        GstMpegTsDVBServiceType service_type;
+        GstMpegtsDVBServiceType service_type;
         if (gst_mpegts_descriptor_parse_dvb_service (desc, &service_type,
                 &service_name, &provider_name)) {
           g_printf ("%*s   Service Descriptor, type:0x%02x (%s)\n", spacing, "",
-              service_type, enum_name (GST_TYPE_MPEG_TS_DVB_SERVICE_TYPE,
+              service_type, enum_name (GST_TYPE_MPEGTS_DVB_SERVICE_TYPE,
                   service_type));
           g_printf ("%*s      service_name  : %s\n", spacing, "", service_name);
           g_printf ("%*s      provider_name : %s\n", spacing, "",
@@ -647,7 +647,7 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
 
         if (gst_mpegts_descriptor_parse_dvb_parental_rating (desc, &ratings)) {
           for (j = 0; j < ratings->len; j++) {
-            GstMpegTsDVBParentalRatingItem *item =
+            GstMpegtsDVBParentalRatingItem *item =
                 g_ptr_array_index (ratings, j);
             g_printf ("%*s   country_code : %s\n", spacing, "",
                 item->country_code);
@@ -659,7 +659,7 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
       }
       case GST_MTS_DESC_DVB_DATA_BROADCAST:
       {
-        GstMpegTsDataBroadcastDescriptor *res;
+        GstMpegtsDataBroadcastDescriptor *res;
 
         if (gst_mpegts_descriptor_parse_dvb_data_broadcast (desc, &res)) {
           g_printf ("%*s   data_broadcast_id : 0x%04x\n", spacing, "",
@@ -722,7 +722,7 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
         break;
       case GST_MTS_DESC_DVB_TELETEXT:
       {
-        GstMpegTsDVBTeletextType type;
+        GstMpegtsDVBTeletextType type;
         gchar *lang;
         guint8 magazine, page_number;
         guint j;
@@ -731,7 +731,7 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
             gst_mpegts_descriptor_parse_dvb_teletext_idx (desc, j, &lang, &type,
                 &magazine, &page_number); j++) {
           g_printf ("%*s   Teletext, type:0x%02x (%s)\n", spacing, "", type,
-              enum_name (GST_TYPE_MPEG_TS_DVB_TELETEXT_TYPE, type));
+              enum_name (GST_TYPE_MPEGTS_DVB_TELETEXT_TYPE, type));
           g_printf ("%*s      language    : %s\n", spacing, "", lang);
           g_printf ("%*s      magazine    : %u\n", spacing, "", magazine);
           g_printf ("%*s      page number : %u\n", spacing, "", page_number);
@@ -746,7 +746,7 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
 }
 
 static void
-dump_pat (GstMpegTsSection * section)
+dump_pat (GstMpegtsSection * section)
 {
   GPtrArray *pat = gst_mpegts_section_get_pat (section);
   guint i, len;
@@ -755,7 +755,7 @@ dump_pat (GstMpegTsSection * section)
   g_printf ("   %d program(s):\n", len);
 
   for (i = 0; i < len; i++) {
-    GstMpegTsPatProgram *patp = g_ptr_array_index (pat, i);
+    GstMpegtsPatProgram *patp = g_ptr_array_index (pat, i);
 
     g_print
         ("     program_number:%6d (0x%04x), network_or_program_map_PID:0x%04x\n",
@@ -767,9 +767,9 @@ dump_pat (GstMpegTsSection * section)
 }
 
 static void
-dump_pmt (GstMpegTsSection * section)
+dump_pmt (GstMpegtsSection * section)
 {
-  const GstMpegTsPMT *pmt = gst_mpegts_section_get_pmt (section);
+  const GstMpegtsPMT *pmt = gst_mpegts_section_get_pmt (section);
   guint i, len;
 
   g_printf ("     program_number : 0x%04x\n", section->subtable_extension);
@@ -778,18 +778,18 @@ dump_pmt (GstMpegTsSection * section)
   len = pmt->streams->len;
   g_printf ("     %d Streams:\n", len);
   for (i = 0; i < len; i++) {
-    GstMpegTsPMTStream *stream = g_ptr_array_index (pmt->streams, i);
+    GstMpegtsPMTStream *stream = g_ptr_array_index (pmt->streams, i);
     g_printf ("       pid:0x%04x , stream_type:0x%02x (%s)\n", stream->pid,
         stream->stream_type,
-        enum_name (GST_TYPE_MPEG_TS_STREAM_TYPE, stream->stream_type));
+        enum_name (GST_TYPE_MPEGTS_STREAM_TYPE, stream->stream_type));
     dump_descriptors (stream->descriptors, 9);
   }
 }
 
 static void
-dump_eit (GstMpegTsSection * section)
+dump_eit (GstMpegtsSection * section)
 {
-  const GstMpegTsEIT *eit = gst_mpegts_section_get_eit (section);
+  const GstMpegtsEIT *eit = gst_mpegts_section_get_eit (section);
   guint i, len;
 
   g_assert (eit);
@@ -807,7 +807,7 @@ dump_eit (GstMpegTsSection * section)
   g_printf ("     %d Event(s):\n", len);
   for (i = 0; i < len; i++) {
     gchar *tmp = (gchar *) "<NO TIME>";
-    GstMpegTsEITEvent *event = g_ptr_array_index (eit->events, i);
+    GstMpegtsEITEvent *event = g_ptr_array_index (eit->events, i);
 
     if (event->start_time)
       tmp = gst_date_time_to_iso8601_string (event->start_time);
@@ -815,7 +815,7 @@ dump_eit (GstMpegTsSection * section)
         GST_TIME_FORMAT "\n", event->event_id, tmp,
         GST_TIME_ARGS (event->duration * GST_SECOND));
     g_printf ("       running_status:0x%02x (%s), free_CA_mode:%d (%s)\n",
-        event->running_status, enum_name (GST_TYPE_MPEG_TS_RUNNING_STATUS,
+        event->running_status, enum_name (GST_TYPE_MPEGTS_RUNNING_STATUS,
             event->running_status), event->free_CA_mode,
         event->free_CA_mode ? "MAYBE SCRAMBLED" : "NOT SCRAMBLED");
     if (event->start_time)
@@ -830,7 +830,7 @@ dump_atsc_mult_string (GPtrArray * mstrings, guint spacing)
   guint i;
 
   for (i = 0; i < mstrings->len; i++) {
-    GstMpegTsAtscMultString *mstring = g_ptr_array_index (mstrings, i);
+    GstMpegtsAtscMultString *mstring = g_ptr_array_index (mstrings, i);
     gint j, n;
 
     n = mstring->segments->len;
@@ -839,7 +839,7 @@ dump_atsc_mult_string (GPtrArray * mstrings, guint spacing)
         i, mstring->iso_639_langcode);
     g_printf ("%*s   segments:%d\n", spacing, "", n);
     for (j = 0; j < n; j++) {
-      GstMpegTsAtscStringSegment *segment =
+      GstMpegtsAtscStringSegment *segment =
           g_ptr_array_index (mstring->segments, j);
 
       g_printf ("%*s    Compression:0x%x\n", spacing, "",
@@ -853,9 +853,9 @@ dump_atsc_mult_string (GPtrArray * mstrings, guint spacing)
 }
 
 static void
-dump_atsc_eit (GstMpegTsSection * section)
+dump_atsc_eit (GstMpegtsSection * section)
 {
-  const GstMpegTsAtscEIT *eit = gst_mpegts_section_get_atsc_eit (section);
+  const GstMpegtsAtscEIT *eit = gst_mpegts_section_get_atsc_eit (section);
   guint i, len;
 
   g_assert (eit);
@@ -866,7 +866,7 @@ dump_atsc_eit (GstMpegTsSection * section)
   len = eit->events->len;
   g_printf ("     %d Event(s):\n", len);
   for (i = 0; i < len; i++) {
-    GstMpegTsAtscEITEvent *event = g_ptr_array_index (eit->events, i);
+    GstMpegtsAtscEITEvent *event = g_ptr_array_index (eit->events, i);
 
     g_printf ("     %d)\n", i);
     g_printf ("       event_id: 0x%04x\n", event->event_id);
@@ -880,9 +880,9 @@ dump_atsc_eit (GstMpegTsSection * section)
 }
 
 static void
-dump_ett (GstMpegTsSection * section)
+dump_ett (GstMpegtsSection * section)
 {
-  const GstMpegTsAtscETT *ett = gst_mpegts_section_get_atsc_ett (section);
+  const GstMpegtsAtscETT *ett = gst_mpegts_section_get_atsc_ett (section);
   guint len;
 
   g_assert (ett);
@@ -897,15 +897,15 @@ dump_ett (GstMpegTsSection * section)
 }
 
 static void
-dump_stt (GstMpegTsSection * section)
+dump_stt (GstMpegtsSection * section)
 {
-  const GstMpegTsAtscSTT *stt = gst_mpegts_section_get_atsc_stt (section);
+  const GstMpegtsAtscSTT *stt = gst_mpegts_section_get_atsc_stt (section);
   GstDateTime *dt;
   gchar *dt_str = NULL;
 
   g_assert (stt);
 
-  dt = gst_mpegts_atsc_stt_get_datetime_utc ((GstMpegTsAtscSTT *) stt);
+  dt = gst_mpegts_atsc_stt_get_datetime_utc ((GstMpegtsAtscSTT *) stt);
   if (dt)
     dt_str = gst_date_time_to_iso8601_string (dt);
 
@@ -921,9 +921,9 @@ dump_stt (GstMpegTsSection * section)
 }
 
 static void
-dump_nit (GstMpegTsSection * section)
+dump_nit (GstMpegtsSection * section)
 {
-  const GstMpegTsNIT *nit = gst_mpegts_section_get_nit (section);
+  const GstMpegtsNIT *nit = gst_mpegts_section_get_nit (section);
   guint i, len;
 
   g_assert (nit);
@@ -935,7 +935,7 @@ dump_nit (GstMpegTsSection * section)
   len = nit->streams->len;
   g_printf ("     %d Streams:\n", len);
   for (i = 0; i < len; i++) {
-    GstMpegTsNITStream *stream = g_ptr_array_index (nit->streams, i);
+    GstMpegtsNITStream *stream = g_ptr_array_index (nit->streams, i);
     g_printf
         ("       transport_stream_id:0x%04x , original_network_id:0x%02x\n",
         stream->transport_stream_id, stream->original_network_id);
@@ -944,9 +944,9 @@ dump_nit (GstMpegTsSection * section)
 }
 
 static void
-dump_bat (GstMpegTsSection * section)
+dump_bat (GstMpegtsSection * section)
 {
-  const GstMpegTsBAT *bat = gst_mpegts_section_get_bat (section);
+  const GstMpegtsBAT *bat = gst_mpegts_section_get_bat (section);
   guint i, len;
 
   g_assert (bat);
@@ -956,7 +956,7 @@ dump_bat (GstMpegTsSection * section)
   len = bat->streams->len;
   g_printf ("     %d Streams:\n", len);
   for (i = 0; i < len; i++) {
-    GstMpegTsBATStream *stream = g_ptr_array_index (bat->streams, i);
+    GstMpegtsBATStream *stream = g_ptr_array_index (bat->streams, i);
     g_printf
         ("       transport_stream_id:0x%04x , original_network_id:0x%02x\n",
         stream->transport_stream_id, stream->original_network_id);
@@ -965,9 +965,9 @@ dump_bat (GstMpegTsSection * section)
 }
 
 static void
-dump_sdt (GstMpegTsSection * section)
+dump_sdt (GstMpegtsSection * section)
 {
-  const GstMpegTsSDT *sdt = gst_mpegts_section_get_sdt (section);
+  const GstMpegtsSDT *sdt = gst_mpegts_section_get_sdt (section);
   guint i, len;
 
   g_assert (sdt);
@@ -978,7 +978,7 @@ dump_sdt (GstMpegTsSection * section)
   len = sdt->services->len;
   g_printf ("     %d Services:\n", len);
   for (i = 0; i < len; i++) {
-    GstMpegTsSDTService *service = g_ptr_array_index (sdt->services, i);
+    GstMpegtsSDTService *service = g_ptr_array_index (sdt->services, i);
     g_print
         ("       service_id:0x%04x, EIT_schedule_flag:%d, EIT_present_following_flag:%d\n",
         service->service_id, service->EIT_schedule_flag,
@@ -986,7 +986,7 @@ dump_sdt (GstMpegTsSection * section)
     g_print
         ("       running_status:0x%02x (%s), free_CA_mode:%d (%s)\n",
         service->running_status,
-        enum_name (GST_TYPE_MPEG_TS_RUNNING_STATUS, service->running_status),
+        enum_name (GST_TYPE_MPEGTS_RUNNING_STATUS, service->running_status),
         service->free_CA_mode,
         service->free_CA_mode ? "MAYBE SCRAMBLED" : "NOT SCRAMBLED");
     dump_descriptors (service->descriptors, 9);
@@ -994,7 +994,7 @@ dump_sdt (GstMpegTsSection * section)
 }
 
 static void
-dump_tdt (GstMpegTsSection * section)
+dump_tdt (GstMpegtsSection * section)
 {
   GstDateTime *date = gst_mpegts_section_get_tdt (section);
 
@@ -1009,9 +1009,9 @@ dump_tdt (GstMpegTsSection * section)
 }
 
 static void
-dump_tot (GstMpegTsSection * section)
+dump_tot (GstMpegtsSection * section)
 {
-  const GstMpegTsTOT *tot = gst_mpegts_section_get_tot (section);
+  const GstMpegtsTOT *tot = gst_mpegts_section_get_tot (section);
   gchar *str = gst_date_time_to_iso8601_string (tot->utc_time);
 
   g_printf ("     utc_time : %s\n", str);
@@ -1020,15 +1020,15 @@ dump_tot (GstMpegTsSection * section)
 }
 
 static void
-dump_mgt (GstMpegTsSection * section)
+dump_mgt (GstMpegtsSection * section)
 {
-  const GstMpegTsAtscMGT *mgt = gst_mpegts_section_get_atsc_mgt (section);
+  const GstMpegtsAtscMGT *mgt = gst_mpegts_section_get_atsc_mgt (section);
   gint i;
 
   g_printf ("     protocol_version    : %u\n", mgt->protocol_version);
   g_printf ("     tables number       : %d\n", mgt->tables->len);
   for (i = 0; i < mgt->tables->len; i++) {
-    GstMpegTsAtscMGTTable *table = g_ptr_array_index (mgt->tables, i);
+    GstMpegtsAtscMGTTable *table = g_ptr_array_index (mgt->tables, i);
     g_printf ("     table %d)\n", i);
     g_printf ("       table_type    : %u\n", table->table_type);
     g_printf ("       pid           : 0x%x\n", table->pid);
@@ -1040,9 +1040,9 @@ dump_mgt (GstMpegTsSection * section)
 }
 
 static void
-dump_vct (GstMpegTsSection * section)
+dump_vct (GstMpegtsSection * section)
 {
-  const GstMpegTsAtscVCT *vct;
+  const GstMpegtsAtscVCT *vct;
   gint i;
 
   if (GST_MPEGTS_SECTION_TYPE (section) == GST_MPEGTS_SECTION_ATSC_CVCT) {
@@ -1058,7 +1058,7 @@ dump_vct (GstMpegTsSection * section)
   g_printf ("     protocol_version    : %u\n", vct->protocol_version);
   g_printf ("     %d Sources:\n", vct->sources->len);
   for (i = 0; i < vct->sources->len; i++) {
-    GstMpegTsAtscVCTSource *source = g_ptr_array_index (vct->sources, i);
+    GstMpegtsAtscVCTSource *source = g_ptr_array_index (vct->sources, i);
     g_print ("       short_name: %s\n", source->short_name);
     g_print ("       major_channel_number: %u, minor_channel_number: %u\n",
         source->major_channel_number, source->minor_channel_number);
@@ -1083,7 +1083,7 @@ dump_vct (GstMpegTsSection * section)
 }
 
 static void
-dump_section (GstMpegTsSection * section)
+dump_section (GstMpegtsSection * section)
 {
   switch (GST_MPEGTS_SECTION_TYPE (section)) {
     case GST_MPEGTS_SECTION_PAT:
@@ -1144,7 +1144,7 @@ _on_bus_message (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
       break;
     case GST_MESSAGE_ELEMENT:
     {
-      GstMpegTsSection *section;
+      GstMpegtsSection *section;
       if ((section = gst_message_parse_mpegts_section (message))) {
         const gchar *table_name;
 
@@ -1152,7 +1152,7 @@ _on_bus_message (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
         g_print
             ("Got section: PID:0x%04x type:%s (table_id 0x%02x (%s)) at offset %"
             G_GUINT64_FORMAT "\n", section->pid,
-            enum_name (GST_TYPE_MPEG_TS_SECTION_TYPE, section->section_type),
+            enum_name (GST_TYPE_MPEGTS_SECTION_TYPE, section->section_type),
             section->table_id, table_name, section->offset);
         if (!section->short_section) {
           g_print
@@ -1194,31 +1194,31 @@ main (int argc, gchar ** argv)
   }
 
   /* Hack: ensure all enum type classes are loaded */
-  g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_TABLE_ID);
-  g_type_class_ref (GST_TYPE_MPEG_TS_RUNNING_STATUS);
-  g_type_class_ref (GST_TYPE_MPEG_TS_DESCRIPTOR_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_DESCRIPTOR_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_ATSC_DESCRIPTOR_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_ISDB_DESCRIPTOR_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_MISC_DESCRIPTOR_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_ISO639_AUDIO_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_SERVICE_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_TELETEXT_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_STREAM_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_DVB_TABLE_ID);
-  g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_ATSC_TABLE_ID);
-  g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_SCTE_TABLE_ID);
-  g_type_class_ref (GST_TYPE_MPEG_TS_MODULATION_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_CODE_RATE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_CABLE_OUTER_FEC_SCHEME);
-  g_type_class_ref (GST_TYPE_MPEG_TS_TERRESTRIAL_TRANSMISSION_MODE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_TERRESTRIAL_GUARD_INTERVAL);
-  g_type_class_ref (GST_TYPE_MPEG_TS_TERRESTRIAL_HIERARCHY);
-  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_LINKAGE_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_LINKAGE_HAND_OVER_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TS_COMPONENT_STREAM_CONTENT);
-  g_type_class_ref (GST_TYPE_MPEG_TS_CONTENT_NIBBLE_HI);
+  g_type_class_ref (GST_TYPE_MPEGTS_SECTION_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_SECTION_TABLE_ID);
+  g_type_class_ref (GST_TYPE_MPEGTS_RUNNING_STATUS);
+  g_type_class_ref (GST_TYPE_MPEGTS_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_DVB_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_ATSC_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_ISDB_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_MISC_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_ISO639_AUDIO_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_DVB_SERVICE_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_DVB_TELETEXT_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_STREAM_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_SECTION_DVB_TABLE_ID);
+  g_type_class_ref (GST_TYPE_MPEGTS_SECTION_ATSC_TABLE_ID);
+  g_type_class_ref (GST_TYPE_MPEGTS_SECTION_SCTE_TABLE_ID);
+  g_type_class_ref (GST_TYPE_MPEGTS_MODULATION_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_DVB_CODE_RATE);
+  g_type_class_ref (GST_TYPE_MPEGTS_CABLE_OUTER_FEC_SCHEME);
+  g_type_class_ref (GST_TYPE_MPEGTS_TERRESTRIAL_TRANSMISSION_MODE);
+  g_type_class_ref (GST_TYPE_MPEGTS_TERRESTRIAL_GUARD_INTERVAL);
+  g_type_class_ref (GST_TYPE_MPEGTS_TERRESTRIAL_HIERARCHY);
+  g_type_class_ref (GST_TYPE_MPEGTS_DVB_LINKAGE_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_DVB_LINKAGE_HAND_OVER_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_COMPONENT_STREAM_CONTENT);
+  g_type_class_ref (GST_TYPE_MPEGTS_CONTENT_NIBBLE_HI);
 
   mainloop = g_main_loop_new (NULL, FALSE);
 

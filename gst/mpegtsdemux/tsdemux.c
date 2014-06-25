@@ -275,7 +275,7 @@ gst_ts_demux_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program);
 static void gst_ts_demux_reset (MpegTSBase * base);
 static GstFlowReturn
 gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
-    GstMpegTsSection * section);
+    GstMpegtsSection * section);
 static void gst_ts_demux_flush (MpegTSBase * base, gboolean hard);
 static GstFlowReturn gst_ts_demux_drain (MpegTSBase * base);
 static void
@@ -960,7 +960,7 @@ static void
 gst_ts_demux_create_tags (TSDemuxStream * stream)
 {
   MpegTSBaseStream *bstream = (MpegTSBaseStream *) stream;
-  const GstMpegTsDescriptor *desc = NULL;
+  const GstMpegtsDescriptor *desc = NULL;
   int i, nb;
 
   desc =
@@ -1011,7 +1011,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
   gchar *name = NULL;
   GstCaps *caps = NULL;
   GstPadTemplate *template = NULL;
-  const GstMpegTsDescriptor *desc = NULL;
+  const GstMpegtsDescriptor *desc = NULL;
   GstPad *pad = NULL;
 
   gst_ts_demux_create_tags (stream);
@@ -1025,7 +1025,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     switch (bstream->stream_type) {
       case ST_BD_AUDIO_AC3:
       {
-        const GstMpegTsDescriptor *ac3_desc;
+        const GstMpegtsDescriptor *ac3_desc;
 
         /* ATSC ac3 audio descriptor */
         ac3_desc =
@@ -1079,8 +1079,8 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
 
   /* Handle non-BluRay stream types */
   switch (bstream->stream_type) {
-    case GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG1:
-    case GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2:
+    case GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG1:
+    case GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG2:
     case ST_PS_VIDEO_MPEG2_DCII:
       /* FIXME : Use DCII registration code (ETV1 ?) to handle that special
        * Stream type (ST_PS_VIDEO_MPEG2_DCII) */
@@ -1093,12 +1093,12 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       name = g_strdup_printf ("video_%04x", bstream->pid);
       caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT,
-          bstream->stream_type == GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG1 ? 1 : 2,
+          bstream->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG1 ? 1 : 2,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
 
       break;
-    case GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG1:
-    case GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG2:
+    case GST_MPEGTS_STREAM_TYPE_AUDIO_MPEG1:
+    case GST_MPEGTS_STREAM_TYPE_AUDIO_MPEG2:
       GST_LOG ("mpeg audio");
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
@@ -1109,7 +1109,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       if (program->registration_id == DRF_ID_TSHV)
         gst_caps_set_simple (caps, "layer", G_TYPE_INT, 2, NULL);
       break;
-    case GST_MPEG_TS_STREAM_TYPE_PRIVATE_PES_PACKETS:
+    case GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS:
       GST_LOG ("private data");
       /* FIXME: Move all of this into a common method (there might be other
        * types also, depending on registratino descriptors also
@@ -1202,35 +1202,35 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       /* name = g_strdup_printf ("private_%04x", bstream->pid); */
       /* caps = gst_caps_new_simple ("hdv/aux-a", NULL); */
       break;
-    case GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_ADTS:
+    case GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_ADTS:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 2,
           "stream-format", G_TYPE_STRING, "adts", NULL);
       break;
-    case GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_LATM:
+    case GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_LATM:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4,
           "stream-format", G_TYPE_STRING, "loas", NULL);
       break;
-    case GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG4:
+    case GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG4:
       template = gst_static_pad_template_get (&video_template);
       name = g_strdup_printf ("video_%04x", bstream->pid);
       caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, 4,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
-    case GST_MPEG_TS_STREAM_TYPE_VIDEO_H264:
+    case GST_MPEGTS_STREAM_TYPE_VIDEO_H264:
       template = gst_static_pad_template_get (&video_template);
       name = g_strdup_printf ("video_%04x", bstream->pid);
       caps = gst_caps_new_simple ("video/x-h264",
           "stream-format", G_TYPE_STRING, "byte-stream",
           "alignment", G_TYPE_STRING, "nal", NULL);
       break;
-    case GST_MPEG_TS_STREAM_TYPE_VIDEO_HEVC:
+    case GST_MPEGTS_STREAM_TYPE_VIDEO_HEVC:
       template = gst_static_pad_template_get (&video_template);
       name = g_strdup_printf ("video_%04x", bstream->pid);
       caps = gst_caps_new_simple ("video/x-h265",
@@ -1385,7 +1385,7 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
         gst_flow_combiner_add_pad (demux->flowcombiner, stream->pad);
     }
 
-    if (bstream->stream_type == GST_MPEG_TS_STREAM_TYPE_VIDEO_H264) {
+    if (bstream->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_H264) {
       stream->scan_function =
           (GstTsDemuxKeyFrameScanFunction) scan_keyframe_h264;
     } else {
@@ -2151,7 +2151,7 @@ beach:
 
 static GstFlowReturn
 gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
-    MpegTSPacketizerPacket * packet, GstMpegTsSection * section)
+    MpegTSPacketizerPacket * packet, GstMpegtsSection * section)
 {
   GstFlowReturn res = GST_FLOW_OK;
 
@@ -2232,7 +2232,7 @@ gst_ts_demux_drain (MpegTSBase * base)
 
 static GstFlowReturn
 gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
-    GstMpegTsSection * section)
+    GstMpegtsSection * section)
 {
   GstTSDemux *demux = GST_TS_DEMUX_CAST (base);
   TSDemuxStream *stream = NULL;

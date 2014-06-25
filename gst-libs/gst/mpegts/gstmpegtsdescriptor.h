@@ -62,9 +62,9 @@ G_BEGIN_DECLS
  */
 
 /**
- * GstMpegTsDescriptorType:
+ * GstMpegtsDescriptorType:
  *
- * The type of #GstMpegTsDescriptor
+ * The type of #GstMpegtsDescriptor
  *
  * These values correspond to the registered descriptor type from
  * the base MPEG-TS specifications (ITU H.222.0 | ISO/IEC 13818-1).
@@ -135,12 +135,12 @@ typedef enum {
   GST_MTS_DESC_STEREOSCOPIC_VIDEO_INFO          = 0x36,
 
   /* 55-63 ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved */
-} GstMpegTsDescriptorType;
+} GstMpegtsDescriptorType;
 
 /**
- * GstMpegTsMiscDescriptorType:
+ * GstMpegtsMiscDescriptorType:
  *
- * The type of #GstMpegTsDescriptor
+ * The type of #GstMpegtsDescriptor
  *
  * These values correspond to miscellaneous descriptor types that are
  * not yet identified from known specifications.
@@ -149,10 +149,10 @@ typedef enum {
   /* 0x80 - 0xFE are user defined */
   GST_MTS_DESC_AC3_AUDIO_STREAM                 = 0x81,
   GST_MTS_DESC_DTG_LOGICAL_CHANNEL              = 0x83,    /* from DTG D-Book */
-} GstMpegTsMiscDescriptorType;
+} GstMpegtsMiscDescriptorType;
 
 /**
- * GstMpegTsATSCDescriptorType:
+ * GstMpegtsATSCDescriptorType:
  *
  * These values correspond to the registered descriptor type from
  * the various ATSC specifications.
@@ -186,10 +186,10 @@ typedef enum {
   GST_MTS_DESC_ATSC_MODULE_LINK                 = 0xB4,
   GST_MTS_DESC_ATSC_CRC32                       = 0xB5,
   GST_MTS_DESC_ATSC_GROUP_LINK                  = 0xB8,
-} GstMpegTsATSCDescriptorType;
+} GstMpegtsATSCDescriptorType;
 
 /**
- * GstMpegTsISDBDescriptorType:
+ * GstMpegtsISDBDescriptorType:
  *
  * These values correspond to the registered descriptor type from
  * the various ISDB specifications.
@@ -232,15 +232,15 @@ typedef enum {
   /* ... */
   GST_MTS_DESC_ISDB_SERVICE_GROUP               = 0xe0
   
-} GstMpegTsISDBDescriptorType;
+} GstMpegtsISDBDescriptorType;
 
-typedef struct _GstMpegTsDescriptor GstMpegTsDescriptor;
+typedef struct _GstMpegtsDescriptor GstMpegtsDescriptor;
 
 #define GST_TYPE_MPEGTS_DESCRIPTOR (gst_mpegts_descriptor_get_type())
 GType gst_mpegts_descriptor_get_type (void);
 
 /**
- * GstMpegTsDescriptor:
+ * GstMpegtsDescriptor:
  * @tag: the type of descriptor
  * @tag_extension: the extended type (if @descriptor_tag is 0x7f)
  * @length: the length of the descriptor content (excluding tag/length field)
@@ -249,7 +249,7 @@ GType gst_mpegts_descriptor_get_type (void);
  *
  * Mpeg-TS descriptor (ISO/IEC 13818-1).
  */
-struct _GstMpegTsDescriptor
+struct _GstMpegtsDescriptor
 {
   guint8 tag;
   guint8 tag_extension;
@@ -259,18 +259,18 @@ struct _GstMpegTsDescriptor
 
 GPtrArray *gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len);
 
-const GstMpegTsDescriptor * gst_mpegts_find_descriptor (GPtrArray *descriptors,
+const GstMpegtsDescriptor * gst_mpegts_find_descriptor (GPtrArray *descriptors,
 							guint8 tag);
 
 /* GST_MTS_DESC_REGISTRATION (0x05) */
 
-GstMpegTsDescriptor *gst_mpegts_descriptor_from_registration (
+GstMpegtsDescriptor *gst_mpegts_descriptor_from_registration (
     const gchar *format_identifier,
     guint8 *additional_info, gsize additional_info_length);
 
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */
 /**
- * GstMpegTsISO639AudioType:
+ * GstMpegtsISO639AudioType:
  *
  * Type of audio streams
  *
@@ -281,52 +281,52 @@ typedef enum {
   GST_MPEGTS_AUDIO_TYPE_CLEAN_EFFECTS,
   GST_MPEGTS_AUDIO_TYPE_HEARING_IMPAIRED,
   GST_MPEGTS_AUDIO_TYPE_VISUAL_IMPAIRED_COMMENTARY
-} GstMpegTsIso639AudioType;
+} GstMpegtsIso639AudioType;
 
-typedef struct _GstMpegTsISO639LanguageDescriptor GstMpegTsISO639LanguageDescriptor;
-struct _GstMpegTsISO639LanguageDescriptor
+typedef struct _GstMpegtsISO639LanguageDescriptor GstMpegtsISO639LanguageDescriptor;
+struct _GstMpegtsISO639LanguageDescriptor
 {
   guint                    nb_language;
   gchar                    *language[64];
-  GstMpegTsIso639AudioType audio_type[64];
+  GstMpegtsIso639AudioType audio_type[64];
 };
 
 #define GST_TYPE_MPEGTS_ISO_639_LANGUAGE (gst_mpegts_iso_639_language_get_type ())
 GType gst_mpegts_iso_639_language_get_type (void);
-void gst_mpegts_iso_639_language_descriptor_free (GstMpegTsISO639LanguageDescriptor * desc);
-gboolean gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *descriptor,
-						       GstMpegTsISO639LanguageDescriptor **res);
-gboolean gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegTsDescriptor *descriptor,
+void gst_mpegts_iso_639_language_descriptor_free (GstMpegtsISO639LanguageDescriptor * desc);
+gboolean gst_mpegts_descriptor_parse_iso_639_language (const GstMpegtsDescriptor *descriptor,
+						       GstMpegtsISO639LanguageDescriptor **res);
+gboolean gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegtsDescriptor *descriptor,
                                                            guint idx, gchar **lang,
-                                                           GstMpegTsIso639AudioType *audio_type);
-guint gst_mpegts_descriptor_parse_iso_639_language_nb (const GstMpegTsDescriptor *descriptor);
+                                                           GstMpegtsIso639AudioType *audio_type);
+guint gst_mpegts_descriptor_parse_iso_639_language_nb (const GstMpegtsDescriptor *descriptor);
 
 
 
 /* GST_MTS_DESC_DTG_LOGICAL_CHANNEL (0x83) */
-typedef struct _GstMpegTsLogicalChannelDescriptor GstMpegTsLogicalChannelDescriptor;
-typedef struct _GstMpegTsLogicalChannel GstMpegTsLogicalChannel;
+typedef struct _GstMpegtsLogicalChannelDescriptor GstMpegtsLogicalChannelDescriptor;
+typedef struct _GstMpegtsLogicalChannel GstMpegtsLogicalChannel;
 
-struct _GstMpegTsLogicalChannel
+struct _GstMpegtsLogicalChannel
 {
   guint16   service_id;
   gboolean  visible_service;
   guint16   logical_channel_number;
 };
 
-struct _GstMpegTsLogicalChannelDescriptor
+struct _GstMpegtsLogicalChannelDescriptor
 {
   guint                   nb_channels;
-  GstMpegTsLogicalChannel channels[64];
+  GstMpegtsLogicalChannel channels[64];
 };
 
 /* FIXME : Maybe make two methods. One for getting the number of channels,
  * and the other for getting the content for one channel ? */
 gboolean
-gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *descriptor,
-					     GstMpegTsLogicalChannelDescriptor *res);
+gst_mpegts_descriptor_parse_logical_channel (const GstMpegtsDescriptor *descriptor,
+					     GstMpegtsLogicalChannelDescriptor *res);
 
-GstMpegTsDescriptor *
+GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 *data, gsize length);
 
 G_END_DECLS

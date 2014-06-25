@@ -48,7 +48,7 @@ void cam_sw_client_free (CamSwClient *sw_client);
 gboolean cam_sw_client_open (CamSwClient *sw_client, const char *sock_path);
 void cam_sw_client_close (CamSwClient *sw_client);
 
-void cam_sw_client_set_pmt (CamSwClient *sw_client, GstMpegTsPMT *pmt);
-void cam_sw_client_update_pmt (CamSwClient *sw_client, GstMpegTsPMT *pmt);
+void cam_sw_client_set_pmt (CamSwClient *sw_client, GstMpegtsPMT *pmt);
+void cam_sw_client_update_pmt (CamSwClient *sw_client, GstMpegtsPMT *pmt);
 
 #endif /* CAM_SW_CLIENT_H */

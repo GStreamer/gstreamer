@@ -1737,7 +1737,7 @@ mpegtsmux_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 mpegtsmux_send_event (GstElement * element, GstEvent * event)
 {
-  GstMpegTsSection *section;
+  GstMpegtsSection *section;
   MpegTsMux *mux = GST_MPEG_TSMUX (element);
 
   g_return_val_if_fail (event != NULL, FALSE);

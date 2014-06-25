@@ -217,7 +217,7 @@ cam_device_ready (CamDevice * device)
 
 void
 cam_device_set_pmt (CamDevice * device,
-    GstMpegTsPMT * pmt, CamConditionalAccessPmtFlag flag)
+    GstMpegtsPMT * pmt, CamConditionalAccessPmtFlag flag)
 {
   g_return_if_fail (device != NULL);
   g_return_if_fail (device->state == CAM_DEVICE_STATE_OPEN);

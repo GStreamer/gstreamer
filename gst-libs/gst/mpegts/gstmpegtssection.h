@@ -29,17 +29,17 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstMpegTsSection GstMpegTsSection;
+typedef struct _GstMpegtsSection GstMpegtsSection;
 
 #define GST_TYPE_MPEGTS_SECTION (gst_mpegts_section_get_type())
-#define GST_MPEGTS_SECTION(section) ((GstMpegTsSection*) section)
+#define GST_MPEGTS_SECTION(section) ((GstMpegtsSection*) section)
 
 #define GST_MPEGTS_SECTION_TYPE(section) (GST_MPEGTS_SECTION (section)->section_type)
 
 GType gst_mpegts_section_get_type (void);
 
 /**
- * GstMpegTsSectionType:
+ * GstMpegtsSectionType:
  * @GST_MPEGTS_SECTION_UNKNOWN: Unknown section type
  * @GST_MPEGTS_SECTION_PAT: Program Association Table (ISO/IEC 13818-1)
  * @GST_MPEGTS_SECTION_PMT: Program Map Table (ISO/IEC 13818-1)
@@ -58,7 +58,7 @@ GType gst_mpegts_section_get_type (void);
  * @GST_MPEGTS_SECTION_ATSC_EIT: ATSC Event Information Table (A65)
  * @GST_MPEGTS_SECTION_ATSC_STT: ATSC System Time Table (A65)
  *
- * Types of #GstMpegTsSection that the library handles.
+ * Types of #GstMpegtsSection that the library handles.
  */
 typedef enum {
   GST_MPEGTS_SECTION_UNKNOWN           = 0,
@@ -78,17 +78,17 @@ typedef enum {
   GST_MPEGTS_SECTION_ATSC_ETT,
   GST_MPEGTS_SECTION_ATSC_EIT,
   GST_MPEGTS_SECTION_ATSC_STT
-} GstMpegTsSectionType;
+} GstMpegtsSectionType;
 
 /**
- * GstMpegTsSectionTableID:
+ * GstMpegtsSectionTableID:
  *
- * Values for a #GstMpegTsSection table_id
+ * Values for a #GstMpegtsSection table_id
  *
  * These are the registered ITU H.222.0 | ISO/IEC 13818-1 table_id variants.
  *
- * see also #GstMpegTsSectionATSCTableID, #GstMpegTsSectionDVBTableID, and
- * #GstMpegTsSectionSCTETableID
+ * see also #GstMpegtsSectionATSCTableID, #GstMpegtsSectionDVBTableID, and
+ * #GstMpegtsSectionSCTETableID
  */
 typedef enum {
   /* ITU H.222.0 / IEC 13818-1 */
@@ -114,12 +114,12 @@ typedef enum {
   /* Unset */
   GST_MTS_TABLE_ID_UNSET = 0xFF
   
-} GstMpegTsSectionTableID;
+} GstMpegtsSectionTableID;
 
-typedef gboolean (*GstMpegTsPacketizeFunc) (GstMpegTsSection *section);
+typedef gboolean (*GstMpegtsPacketizeFunc) (GstMpegtsSection *section);
 
 /**
- * GstMpegTsSection:
+ * GstMpegtsSection:
  * @section_type: The type of section
  * @pid: The pid on which this section was found
  * @table_id: The table id of this section
@@ -133,13 +133,13 @@ typedef gboolean (*GstMpegTsPacketizeFunc) (GstMpegTsSection *section);
  *
  * Mpeg-TS Section Information (SI) (ISO/IEC 13818-1)
  */
-struct _GstMpegTsSection
+struct _GstMpegtsSection
 {
   /*< private >*/
   GstMiniObject parent;
 
   /*< public >*/
-  GstMpegTsSectionType   section_type;
+  GstMpegtsSectionType   section_type;
 
   guint16       pid;
   guint8        table_id;
@@ -170,110 +170,110 @@ struct _GstMpegTsSection
    * FIXME : Maybe make public later on when allowing creation of
    * sections to that people can create private short sections ? */
   gboolean      short_section;
-  GstMpegTsPacketizeFunc packetizer;
+  GstMpegtsPacketizeFunc packetizer;
 };
 
-GBytes *gst_mpegts_section_get_data (GstMpegTsSection *section);
+GBytes *gst_mpegts_section_get_data (GstMpegtsSection *section);
 
 /* PAT */
 #define GST_TYPE_MPEGTS_PAT_PROGRAM (gst_mpegts_pat_program_get_type())
 
-typedef struct _GstMpegTsPatProgram GstMpegTsPatProgram;
+typedef struct _GstMpegtsPatProgram GstMpegtsPatProgram;
 /**
- * GstMpegTsPatProgram:
+ * GstMpegtsPatProgram:
  * @program_number: the program number
  * @network_or_program_map_PID: the network of program map PID
  *
  * A program entry from a Program Association Table (ITU H.222.0, ISO/IEC 13818-1).
  */
-struct _GstMpegTsPatProgram
+struct _GstMpegtsPatProgram
 {
   guint16 program_number;
   guint16 network_or_program_map_PID;
 };
 
-GPtrArray *gst_mpegts_section_get_pat (GstMpegTsSection *section);
+GPtrArray *gst_mpegts_section_get_pat (GstMpegtsSection *section);
 GType gst_mpegts_pat_program_get_type (void);
 
 GPtrArray *gst_mpegts_pat_new (void);
-GstMpegTsPatProgram *gst_mpegts_pat_program_new (void);
-GstMpegTsSection *gst_mpegts_section_from_pat (GPtrArray * programs,
+GstMpegtsPatProgram *gst_mpegts_pat_program_new (void);
+GstMpegtsSection *gst_mpegts_section_from_pat (GPtrArray * programs,
     guint16 ts_id);
 
 /* CAT */
 
-GPtrArray *gst_mpegts_section_get_cat (GstMpegTsSection *section);
+GPtrArray *gst_mpegts_section_get_cat (GstMpegtsSection *section);
 
 /* PMT */
-typedef struct _GstMpegTsPMTStream GstMpegTsPMTStream;
-typedef struct _GstMpegTsPMT GstMpegTsPMT;
+typedef struct _GstMpegtsPMTStream GstMpegtsPMTStream;
+typedef struct _GstMpegtsPMT GstMpegtsPMT;
 #define GST_TYPE_MPEGTS_PMT (gst_mpegts_pmt_get_type())
 #define GST_TYPE_MPEGTS_PMT_STREAM (gst_mpegts_pmt_stream_get_type())
 
 /**
- * GstMpegTsStreamType:
- * @GST_MPEG_TS_STREAM_TYPE_RESERVED_00: ITU-T | ISO/IEC Reserved
- * @GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG1: ISO/IEC 11172-2 Video
- * @GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2: Rec. ITU-T H.262 | ISO/IEC 13818-2
+ * GstMpegtsStreamType:
+ * @GST_MPEGTS_STREAM_TYPE_RESERVED_00: ITU-T | ISO/IEC Reserved
+ * @GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG1: ISO/IEC 11172-2 Video
+ * @GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG2: Rec. ITU-T H.262 | ISO/IEC 13818-2
  * Video or ISO/IEC 11172-2 constrained parameter video stream
- * @GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG1: ISO/IEC 11172-3 Audio
- * @GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG2: ISO/IEC 13818-3 Audio
- * @GST_MPEG_TS_STREAM_TYPE_PRIVATE_SECTIONS: private sections
- * @GST_MPEG_TS_STREAM_TYPE_PRIVATE_PES_PACKETS: PES packets containing private data
- * @GST_MPEG_TS_STREAM_TYPE_MHEG: ISO/IEC 13522 MHEG
- * @GST_MPEG_TS_STREAM_TYPE_DSM_CC: Annex A DSM-CC
- * @GST_MPEG_TS_STREAM_TYPE_H_222_1: Rec. ITU-T H.222.1
- * @GST_MPEG_TS_STREAM_TYPE_DSMCC_A: ISO/IEC 13818-6 type A
- * @GST_MPEG_TS_STREAM_TYPE_DSMCC_B: ISO/IEC 13818-6 type B
- * @GST_MPEG_TS_STREAM_TYPE_DSMCC_C: ISO/IEC 13818-6 type C
- * @GST_MPEG_TS_STREAM_TYPE_DSMCC_D: ISO/IEC 13818-6 type D
- * @GST_MPEG_TS_STREAM_TYPE_AUXILIARY: auxiliary streams
- * @GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_ADTS: ISO/IEC 13818-7 Audio with ADTS
+ * @GST_MPEGTS_STREAM_TYPE_AUDIO_MPEG1: ISO/IEC 11172-3 Audio
+ * @GST_MPEGTS_STREAM_TYPE_AUDIO_MPEG2: ISO/IEC 13818-3 Audio
+ * @GST_MPEGTS_STREAM_TYPE_PRIVATE_SECTIONS: private sections
+ * @GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS: PES packets containing private data
+ * @GST_MPEGTS_STREAM_TYPE_MHEG: ISO/IEC 13522 MHEG
+ * @GST_MPEGTS_STREAM_TYPE_DSM_CC: Annex A DSM-CC
+ * @GST_MPEGTS_STREAM_TYPE_H_222_1: Rec. ITU-T H.222.1
+ * @GST_MPEGTS_STREAM_TYPE_DSMCC_A: ISO/IEC 13818-6 type A
+ * @GST_MPEGTS_STREAM_TYPE_DSMCC_B: ISO/IEC 13818-6 type B
+ * @GST_MPEGTS_STREAM_TYPE_DSMCC_C: ISO/IEC 13818-6 type C
+ * @GST_MPEGTS_STREAM_TYPE_DSMCC_D: ISO/IEC 13818-6 type D
+ * @GST_MPEGTS_STREAM_TYPE_AUXILIARY: auxiliary streams
+ * @GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_ADTS: ISO/IEC 13818-7 Audio with ADTS
  * transport syntax
- * @GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG4: ISO/IEC 14496-2 Visual
- * @GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_LATM: ISO/IEC 14496-3 Audio with the LATM
+ * @GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG4: ISO/IEC 14496-2 Visual
+ * @GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_LATM: ISO/IEC 14496-3 Audio with the LATM
  * transport syntax as defined in ISO/IEC 14496-3
- * @GST_MPEG_TS_STREAM_TYPE_SL_FLEXMUX_PES_PACKETS: ISO/IEC 14496-1
+ * @GST_MPEGTS_STREAM_TYPE_SL_FLEXMUX_PES_PACKETS: ISO/IEC 14496-1
  * SL-packetized stream or FlexMux stream carried in PES packets
- * @GST_MPEG_TS_STREAM_TYPE_SL_FLEXMUX_SECTIONS: ISO/IEC 14496-1 SL-packetized
+ * @GST_MPEGTS_STREAM_TYPE_SL_FLEXMUX_SECTIONS: ISO/IEC 14496-1 SL-packetized
  * stream or FlexMux stream carried in ISO/IEC 14496_sections
- * @GST_MPEG_TS_STREAM_TYPE_SYNCHRONIZED_DOWNLOAD: ISO/IEC 13818-6 Synchronized
+ * @GST_MPEGTS_STREAM_TYPE_SYNCHRONIZED_DOWNLOAD: ISO/IEC 13818-6 Synchronized
  * Download Protocol
- * @GST_MPEG_TS_STREAM_TYPE_METADATA_PES_PACKETS: Metadata carried in PES packets
- * @GST_MPEG_TS_STREAM_TYPE_METADATA_SECTIONS: Metadata carried in metadata_sections
- * @GST_MPEG_TS_STREAM_TYPE_METADATA_DATA_CAROUSEL: Metadata carried in ISO/IEC
+ * @GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS: Metadata carried in PES packets
+ * @GST_MPEGTS_STREAM_TYPE_METADATA_SECTIONS: Metadata carried in metadata_sections
+ * @GST_MPEGTS_STREAM_TYPE_METADATA_DATA_CAROUSEL: Metadata carried in ISO/IEC
  * 13818-6 Data Carousel
- * @GST_MPEG_TS_STREAM_TYPE_METADATA_OBJECT_CAROUSEL: Metadata carried in
+ * @GST_MPEGTS_STREAM_TYPE_METADATA_OBJECT_CAROUSEL: Metadata carried in
  * ISO/IEC 13818-6 Object Carousel
- * @GST_MPEG_TS_STREAM_TYPE_METADATA_SYNCHRONIZED_DOWNLOAD: Metadata carried in
+ * @GST_MPEGTS_STREAM_TYPE_METADATA_SYNCHRONIZED_DOWNLOAD: Metadata carried in
  * ISO/IEC 13818-6 Synchronized Download Protocol
- * @GST_MPEG_TS_STREAM_TYPE_MPEG2_IPMP: IPMP stream (defined in ISO/IEC 13818-11,
+ * @GST_MPEGTS_STREAM_TYPE_MPEG2_IPMP: IPMP stream (defined in ISO/IEC 13818-11,
  * MPEG-2 IPMP)
- * @GST_MPEG_TS_STREAM_TYPE_VIDEO_H264: AVC video stream conforming to one or
+ * @GST_MPEGTS_STREAM_TYPE_VIDEO_H264: AVC video stream conforming to one or
  * more profiles defined in Annex A of Rec. ITU-T H.264 | ISO/IEC 14496-10 or
  * AVC video sub-bitstream of SVC as defined in 2.1.78 or MVC base view
  * sub-bitstream, as defined in 2.1.85, or AVC video sub-bitstream of MVC, as
  * defined in 2.1.88
- * @GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_CLEAN: ISO/IEC 14496-3 Audio, without
+ * @GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_CLEAN: ISO/IEC 14496-3 Audio, without
  * using any additional transport syntax, such as DST, ALS and SLS
- * @GST_MPEG_TS_STREAM_TYPE_MPEG4_TIMED_TEXT: ISO/IEC 14496-17 Text
- * @GST_MPEG_TS_STREAM_TYPE_VIDEO_RVC: Auxiliary video stream as defined in
+ * @GST_MPEGTS_STREAM_TYPE_MPEG4_TIMED_TEXT: ISO/IEC 14496-17 Text
+ * @GST_MPEGTS_STREAM_TYPE_VIDEO_RVC: Auxiliary video stream as defined in
  * ISO/IEC 23002-3
- * @GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_SVC_SUB_BITSTREAM: SVC video sub-bitstream
+ * @GST_MPEGTS_STREAM_TYPE_VIDEO_H264_SVC_SUB_BITSTREAM: SVC video sub-bitstream
  * of an AVC video stream conforming to one or more profiles defined in Annex G
  * of Rec. ITU-T H.264 | ISO/IEC 14496-10
- * @GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_MVC_SUB_BITSTREAM: MVC video sub-bitstream
+ * @GST_MPEGTS_STREAM_TYPE_VIDEO_H264_MVC_SUB_BITSTREAM: MVC video sub-bitstream
  * of an AVC video stream conforming to one or more profiles defined in Annex H
  * of Rec. ITU-T H.264 | ISO/IEC 14496-10
- * @GST_MPEG_TS_STREAM_TYPE_VIDEO_JP2K: Video stream conforming to one or more
+ * @GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K: Video stream conforming to one or more
  * profiles as defined in Rec. ITU-T T.800 | ISO/IEC 15444-1
- * @GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2_STEREO_ADDITIONAL_VIEW: Additional view
+ * @GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG2_STEREO_ADDITIONAL_VIEW: Additional view
  * Rec. ITU-T H.262 | ISO/IEC 13818-2 video stream for service-compatible
  * stereoscopic 3D services
- * @GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_STEREO_ADDITIONAL_VIEW: Additional view
+ * @GST_MPEGTS_STREAM_TYPE_VIDEO_H264_STEREO_ADDITIONAL_VIEW: Additional view
  * Rec. ITU-T H.264 | ISO/IEC 14496-10 video stream conforming to one or more
  * profiles defined in Annex A for service-compatible stereoscopic 3D services
- * @GST_MPEG_TS_STREAM_TYPE_IPMP_STREAM: IPMP stream
+ * @GST_MPEGTS_STREAM_TYPE_IPMP_STREAM: IPMP stream
  *
  * Type of mpeg-ts stream type.
  *
@@ -284,58 +284,58 @@ typedef struct _GstMpegTsPMT GstMpegTsPMT;
  * Corresponds to table 2-34 of ITU H.222.0 | ISO/IEC 13818-1
  */
 typedef enum {
-  GST_MPEG_TS_STREAM_TYPE_RESERVED_00                  = 0x00,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG1                  = 0x01,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2                  = 0x02,
-  GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG1                  = 0x03,
-  GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG2                  = 0x04,
-  GST_MPEG_TS_STREAM_TYPE_PRIVATE_SECTIONS             = 0x05,
-  GST_MPEG_TS_STREAM_TYPE_PRIVATE_PES_PACKETS          = 0x06,
-  GST_MPEG_TS_STREAM_TYPE_MHEG                         = 0x07,
-  GST_MPEG_TS_STREAM_TYPE_DSM_CC                       = 0x08,
-  GST_MPEG_TS_STREAM_TYPE_H_222_1                      = 0x09,
-  GST_MPEG_TS_STREAM_TYPE_DSMCC_A                      = 0x0a,
-  GST_MPEG_TS_STREAM_TYPE_DSMCC_B                      = 0x0b,
-  GST_MPEG_TS_STREAM_TYPE_DSMCC_C                      = 0x0c,
-  GST_MPEG_TS_STREAM_TYPE_DSMCC_D                      = 0x0d,
-  GST_MPEG_TS_STREAM_TYPE_AUXILIARY                    = 0x0e,
-  GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_ADTS               = 0x0f,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG4                  = 0x10,
-  GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_LATM               = 0x11,
-  GST_MPEG_TS_STREAM_TYPE_SL_FLEXMUX_PES_PACKETS       = 0x12,
-  GST_MPEG_TS_STREAM_TYPE_SL_FLEXMUX_SECTIONS          = 0x13,
-  GST_MPEG_TS_STREAM_TYPE_SYNCHRONIZED_DOWNLOAD        = 0x14,
-  GST_MPEG_TS_STREAM_TYPE_METADATA_PES_PACKETS         = 0x15,
-  GST_MPEG_TS_STREAM_TYPE_METADATA_SECTIONS            = 0x16,
-  GST_MPEG_TS_STREAM_TYPE_METADATA_DATA_CAROUSEL       = 0x17,
-  GST_MPEG_TS_STREAM_TYPE_METADATA_OBJECT_CAROUSEL     = 0x18,
-  GST_MPEG_TS_STREAM_TYPE_METADATA_SYNCHRONIZED_DOWNLOAD  = 0x19,
-  GST_MPEG_TS_STREAM_TYPE_MPEG2_IPMP                   = 0x1a,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_H264                   = 0x1b,
-  GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_CLEAN              = 0x1c,
-  GST_MPEG_TS_STREAM_TYPE_MPEG4_TIMED_TEXT             = 0x1d,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_RVC                    = 0x1e,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_SVC_SUB_BITSTREAM = 0x1f,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_MVC_SUB_BITSTREAM = 0x20,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_JP2K                   = 0x21,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2_STEREO_ADDITIONAL_VIEW = 0x22,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_STEREO_ADDITIONAL_VIEW  = 0x23,
-  GST_MPEG_TS_STREAM_TYPE_VIDEO_HEVC                   = 0x24,
+  GST_MPEGTS_STREAM_TYPE_RESERVED_00                  = 0x00,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG1                  = 0x01,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG2                  = 0x02,
+  GST_MPEGTS_STREAM_TYPE_AUDIO_MPEG1                  = 0x03,
+  GST_MPEGTS_STREAM_TYPE_AUDIO_MPEG2                  = 0x04,
+  GST_MPEGTS_STREAM_TYPE_PRIVATE_SECTIONS             = 0x05,
+  GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS          = 0x06,
+  GST_MPEGTS_STREAM_TYPE_MHEG                         = 0x07,
+  GST_MPEGTS_STREAM_TYPE_DSM_CC                       = 0x08,
+  GST_MPEGTS_STREAM_TYPE_H_222_1                      = 0x09,
+  GST_MPEGTS_STREAM_TYPE_DSMCC_A                      = 0x0a,
+  GST_MPEGTS_STREAM_TYPE_DSMCC_B                      = 0x0b,
+  GST_MPEGTS_STREAM_TYPE_DSMCC_C                      = 0x0c,
+  GST_MPEGTS_STREAM_TYPE_DSMCC_D                      = 0x0d,
+  GST_MPEGTS_STREAM_TYPE_AUXILIARY                    = 0x0e,
+  GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_ADTS               = 0x0f,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG4                  = 0x10,
+  GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_LATM               = 0x11,
+  GST_MPEGTS_STREAM_TYPE_SL_FLEXMUX_PES_PACKETS       = 0x12,
+  GST_MPEGTS_STREAM_TYPE_SL_FLEXMUX_SECTIONS          = 0x13,
+  GST_MPEGTS_STREAM_TYPE_SYNCHRONIZED_DOWNLOAD        = 0x14,
+  GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS         = 0x15,
+  GST_MPEGTS_STREAM_TYPE_METADATA_SECTIONS            = 0x16,
+  GST_MPEGTS_STREAM_TYPE_METADATA_DATA_CAROUSEL       = 0x17,
+  GST_MPEGTS_STREAM_TYPE_METADATA_OBJECT_CAROUSEL     = 0x18,
+  GST_MPEGTS_STREAM_TYPE_METADATA_SYNCHRONIZED_DOWNLOAD  = 0x19,
+  GST_MPEGTS_STREAM_TYPE_MPEG2_IPMP                   = 0x1a,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_H264                   = 0x1b,
+  GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_CLEAN              = 0x1c,
+  GST_MPEGTS_STREAM_TYPE_MPEG4_TIMED_TEXT             = 0x1d,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_RVC                    = 0x1e,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_H264_SVC_SUB_BITSTREAM = 0x1f,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_H264_MVC_SUB_BITSTREAM = 0x20,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K                   = 0x21,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG2_STEREO_ADDITIONAL_VIEW = 0x22,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_H264_STEREO_ADDITIONAL_VIEW  = 0x23,
+  GST_MPEGTS_STREAM_TYPE_VIDEO_HEVC                   = 0x24,
   /* 0x24 - 0x7e : Rec. ITU-T H.222.0 | ISO/IEC 13818-1 Reserved */
-  GST_MPEG_TS_STREAM_TYPE_IPMP_STREAM                  = 0x7f
+  GST_MPEGTS_STREAM_TYPE_IPMP_STREAM                  = 0x7f
   /* 0x80 - 0xff : User Private (or defined in other specs) */
-} GstMpegTsStreamType;
+} GstMpegtsStreamType;
 
 /**
- * GstMpegTsPMTStream:
- * @stream_type: the type of stream. See #GstMpegTsStreamType
+ * GstMpegtsPMTStream:
+ * @stream_type: the type of stream. See #GstMpegtsStreamType
  * @pid: the PID of the stream
- * @descriptors: (element-type GstMpegTsDescriptor): the descriptors of the
+ * @descriptors: (element-type GstMpegtsDescriptor): the descriptors of the
  * stream
  *
  * An individual stream definition.
  */
-struct _GstMpegTsPMTStream
+struct _GstMpegtsPMTStream
 {
   guint8      stream_type;
   guint16     pid;
@@ -344,17 +344,17 @@ struct _GstMpegTsPMTStream
 };
 
 /**
- * GstMpegTsPMT:
+ * GstMpegtsPMT:
  * @pcr_pid: PID of the stream containing PCR
- * @descriptors: (element-type GstMpegTsDescriptor): array of #GstMpegTsDescriptor
- * @streams: (element-type GstMpegTsPMTStream): Array of #GstMpegTsPMTStream
+ * @descriptors: (element-type GstMpegtsDescriptor): array of #GstMpegtsDescriptor
+ * @streams: (element-type GstMpegtsPMTStream): Array of #GstMpegtsPMTStream
  *
  * Program Map Table (ISO/IEC 13818-1).
  *
  * The program_number is contained in the subtable_extension field of the
- * container #GstMpegTsSection.
+ * container #GstMpegtsSection.
  */
-struct _GstMpegTsPMT
+struct _GstMpegtsPMT
 {
   guint16    pcr_pid;
   guint16    program_number;
@@ -366,32 +366,32 @@ struct _GstMpegTsPMT
 GType gst_mpegts_pmt_get_type (void);
 GType gst_mpegts_pmt_stream_get_type (void);
 
-GstMpegTsPMT *gst_mpegts_pmt_new (void);
-GstMpegTsPMTStream *gst_mpegts_pmt_stream_new (void);
-const GstMpegTsPMT *gst_mpegts_section_get_pmt (GstMpegTsSection *section);
-GstMpegTsSection *gst_mpegts_section_from_pmt (GstMpegTsPMT *pmt, guint16 pid);
+GstMpegtsPMT *gst_mpegts_pmt_new (void);
+GstMpegtsPMTStream *gst_mpegts_pmt_stream_new (void);
+const GstMpegtsPMT *gst_mpegts_section_get_pmt (GstMpegtsSection *section);
+GstMpegtsSection *gst_mpegts_section_from_pmt (GstMpegtsPMT *pmt, guint16 pid);
 
 /* TSDT */
 
-GPtrArray *gst_mpegts_section_get_tsdt (GstMpegTsSection *section);
+GPtrArray *gst_mpegts_section_get_tsdt (GstMpegtsSection *section);
 
 
 /* generic */
 
-#define gst_mpegts_section_ref(section)   ((GstMpegTsSection*) gst_mini_object_ref (GST_MINI_OBJECT_CAST (section)))
+#define gst_mpegts_section_ref(section)   ((GstMpegtsSection*) gst_mini_object_ref (GST_MINI_OBJECT_CAST (section)))
 #define gst_mpegts_section_unref(section) (gst_mini_object_unref (GST_MINI_OBJECT_CAST (section)))
 
-GstMessage *gst_message_new_mpegts_section (GstObject *parent, GstMpegTsSection *section);
-gboolean gst_mpegts_section_send_event (GstMpegTsSection * section, GstElement * element);
-GstMpegTsSection *gst_event_parse_mpegts_section (GstEvent * event);
+GstMessage *gst_message_new_mpegts_section (GstObject *parent, GstMpegtsSection *section);
+gboolean gst_mpegts_section_send_event (GstMpegtsSection * section, GstElement * element);
+GstMpegtsSection *gst_event_parse_mpegts_section (GstEvent * event);
 
-GstMpegTsSection *gst_message_parse_mpegts_section (GstMessage *message);
+GstMpegtsSection *gst_message_parse_mpegts_section (GstMessage *message);
 
-GstMpegTsSection *gst_mpegts_section_new (guint16 pid,
+GstMpegtsSection *gst_mpegts_section_new (guint16 pid,
 					   guint8 * data,
 					   gsize data_size);
 
-guint8 *gst_mpegts_section_packetize (GstMpegTsSection * section, gsize * output_size);
+guint8 *gst_mpegts_section_packetize (GstMpegtsSection * section, gsize * output_size);
 
 G_END_DECLS
 

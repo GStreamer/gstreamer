@@ -469,12 +469,12 @@ mpegts_packetizer_parse_packet (MpegTSPacketizer2 * packetizer,
   return PACKET_OK;
 }
 
-static GstMpegTsSection *
+static GstMpegtsSection *
 mpegts_packetizer_parse_section_header (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerStream * stream)
 {
   MpegTSPacketizerStreamSubtable *subtable;
-  GstMpegTsSection *res;
+  GstMpegtsSection *res;
 
   subtable =
       find_subtable (stream->subtables, stream->table_id,
@@ -874,7 +874,7 @@ mpegts_packetizer_has_packets (MpegTSPacketizer2 * packetizer)
  * * The section applies now (current_next_indicator)
  * * The section is an update or was never seen
  *
- * The section should be a new GstMpegTsSection:
+ * The section should be a new GstMpegtsSection:
  * * properly initialized
  * * With pid, table_id AND section_type set (move logic from mpegtsbase)
  * * With data copied into it (yes, minor overhead)
@@ -884,12 +884,12 @@ mpegts_packetizer_has_packets (MpegTSPacketizer2 * packetizer)
  * If more than one section is available, the 'remaining' field will
  * be set to the beginning of a valid GList containing other sections.
  * */
-GstMpegTsSection *
+GstMpegtsSection *
 mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerPacket * packet, GList ** remaining)
 {
-  GstMpegTsSection *section;
-  GstMpegTsSection *res = NULL;
+  GstMpegtsSection *section;
+  GstMpegtsSection *res = NULL;
   MpegTSPacketizerStream *stream;
   gboolean long_packet;
   guint8 pointer = 0, table_id;

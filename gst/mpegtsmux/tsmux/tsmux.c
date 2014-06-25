@@ -263,14 +263,14 @@ tsmux_get_si_interval (TsMux * mux)
 /**
  * tsmux_add_mpegts_si_section:
  * @mux: a #TsMux
- * @section: (transfer full): a #GstMpegTsSection to add
+ * @section: (transfer full): a #GstMpegtsSection to add
  *
- * Add a Service Information #GstMpegTsSection to the stream
+ * Add a Service Information #GstMpegtsSection to the stream
  *
  * Returns: #TRUE on success, #FALSE otherwise
  */
 gboolean
-tsmux_add_mpegts_si_section (TsMux * mux, GstMpegTsSection * section)
+tsmux_add_mpegts_si_section (TsMux * mux, GstMpegtsSection * section)
 {
   TsMuxSection *tsmux_section;
 
@@ -842,7 +842,7 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
 }
 
 static gboolean
-tsmux_section_write_packet (GstMpegTsSectionType * type,
+tsmux_section_write_packet (GstMpegtsSectionType * type,
     TsMuxSection * section, TsMux * mux)
 {
   GstBuffer *section_buffer;
@@ -872,7 +872,7 @@ tsmux_section_write_packet (GstMpegTsSectionType * type,
   payload_written = 0;
 
   /* Wrap section data in a buffer without free function.
-     The data will be freed when the GstMpegTsSection is destroyed. */
+     The data will be freed when the GstMpegtsSection is destroyed. */
   section_buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
       data, data_size, 0, data_size, NULL, NULL);
 
@@ -1138,7 +1138,7 @@ tsmux_write_pat (TsMux * mux)
     pat = gst_mpegts_pat_new ();
 
     for (cur = mux->programs; cur; cur = cur->next) {
-      GstMpegTsPatProgram *pat_pgm;
+      GstMpegtsPatProgram *pat_pgm;
       TsMuxProgram *program = (TsMuxProgram *) cur->data;
 
       pat_pgm = gst_mpegts_pat_program_new ();
@@ -1187,8 +1187,8 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
      *    }
      * }
      */
-    GstMpegTsDescriptor *descriptor;
-    GstMpegTsPMT *pmt;
+    GstMpegtsDescriptor *descriptor;
+    GstMpegtsPMT *pmt;
     guint8 desc[] = { 0x0F, 0xFF, 0xFC, 0xFC };
     guint i;
 
@@ -1207,7 +1207,7 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
 
     /* Write out the entries */
     for (i = 0; i < program->streams->len; i++) {
-      GstMpegTsPMTStream *pmt_stream;
+      GstMpegtsPMTStream *pmt_stream;
       TsMuxStream *stream = g_array_index (program->streams, TsMuxStream *, i);
 
       pmt_stream = gst_mpegts_pmt_stream_new ();

@@ -70,9 +70,9 @@ static const guint8 stt_data_check[] = {
 
 GST_START_TEST (test_mpegts_pat)
 {
-  GstMpegTsPatProgram *program;
+  GstMpegtsPatProgram *program;
   GPtrArray *pat;
-  GstMpegTsSection *pat_section;
+  GstMpegtsSection *pat_section;
   gint i;
   guint8 *data;
   gsize data_size;
@@ -129,10 +129,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_pmt)
 {
-  GstMpegTsPMT *pmt;
-  GstMpegTsPMTStream *stream;
-  GstMpegTsDescriptor *desc;
-  GstMpegTsSection *pmt_section;
+  GstMpegtsPMT *pmt;
+  GstMpegtsPMTStream *stream;
+  GstMpegtsDescriptor *desc;
+  GstMpegtsSection *pmt_section;
   guint8 *data;
   gsize data_size;
   gint i;
@@ -149,7 +149,7 @@ GST_START_TEST (test_mpegts_pmt)
   for (i = 0; i < 2; i++) {
     stream = gst_mpegts_pmt_stream_new ();
 
-    stream->stream_type = GST_MPEG_TS_STREAM_TYPE_VIDEO_H264;
+    stream->stream_type = GST_MPEGTS_STREAM_TYPE_VIDEO_H264;
     stream->pid = 0x40 + i;
 
     desc = gst_mpegts_descriptor_from_registration ("HDMV", NULL, 0);
@@ -162,26 +162,26 @@ GST_START_TEST (test_mpegts_pmt)
   fail_if (pmt_section == NULL);
 
   /* Re-parse the PMT from section */
-  pmt = (GstMpegTsPMT *) gst_mpegts_section_get_pmt (pmt_section);
+  pmt = (GstMpegtsPMT *) gst_mpegts_section_get_pmt (pmt_section);
 
   fail_unless (pmt->pcr_pid == 0x1FFF);
   fail_unless (pmt->program_number == 1);
   fail_unless (pmt->descriptors->len == 1);
   fail_unless (pmt->streams->len == 2);
 
-  desc = (GstMpegTsDescriptor *) gst_mpegts_find_descriptor (pmt->descriptors,
+  desc = (GstMpegtsDescriptor *) gst_mpegts_find_descriptor (pmt->descriptors,
       GST_MTS_DESC_REGISTRATION);
   fail_if (desc == NULL);
 
   for (i = 0; i < 2; i++) {
     stream = g_ptr_array_index (pmt->streams, i);
 
-    fail_unless (stream->stream_type == GST_MPEG_TS_STREAM_TYPE_VIDEO_H264);
+    fail_unless (stream->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_H264);
     fail_unless (stream->pid == 0x40 + i);
     fail_unless (stream->descriptors->len == 1);
 
     desc =
-        (GstMpegTsDescriptor *) gst_mpegts_find_descriptor (stream->descriptors,
+        (GstMpegtsDescriptor *) gst_mpegts_find_descriptor (stream->descriptors,
         GST_MTS_DESC_REGISTRATION);
     fail_if (desc == NULL);
   }
@@ -198,7 +198,7 @@ GST_START_TEST (test_mpegts_pmt)
   /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
   pmt_section->data[pmt_section->section_length - 1]++;
   pmt_section->cached_parsed = NULL;
-  pmt = (GstMpegTsPMT *) gst_mpegts_section_get_pmt (pmt_section);
+  pmt = (GstMpegtsPMT *) gst_mpegts_section_get_pmt (pmt_section);
 
   fail_unless (pmt == NULL);
 
@@ -210,10 +210,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_nit)
 {
-  GstMpegTsNITStream *stream;
-  GstMpegTsNIT *nit;
-  GstMpegTsDescriptor *desc;
-  GstMpegTsSection *nit_section;
+  GstMpegtsNITStream *stream;
+  GstMpegtsNIT *nit;
+  GstMpegtsDescriptor *desc;
+  GstMpegtsSection *nit_section;
   gchar *name;
   guint8 *data;
   gsize data_size;
@@ -246,14 +246,14 @@ GST_START_TEST (test_mpegts_nit)
   fail_if (nit_section == NULL);
 
   /* Re-parse the NIT from section */
-  nit = (GstMpegTsNIT *) gst_mpegts_section_get_nit (nit_section);
+  nit = (GstMpegtsNIT *) gst_mpegts_section_get_nit (nit_section);
 
   fail_unless (nit->descriptors->len == 1);
   fail_unless (nit->streams->len == 2);
   fail_unless (nit->actual_network == TRUE);
   fail_unless (nit->network_id == 0x1FFF);
 
-  desc = (GstMpegTsDescriptor *) gst_mpegts_find_descriptor (nit->descriptors,
+  desc = (GstMpegtsDescriptor *) gst_mpegts_find_descriptor (nit->descriptors,
       GST_MTS_DESC_DVB_NETWORK_NAME);
 
   fail_if (desc == NULL);
@@ -269,7 +269,7 @@ GST_START_TEST (test_mpegts_nit)
     fail_unless (stream->descriptors->len == 1);
 
     desc =
-        (GstMpegTsDescriptor *) gst_mpegts_find_descriptor (stream->descriptors,
+        (GstMpegtsDescriptor *) gst_mpegts_find_descriptor (stream->descriptors,
         GST_MTS_DESC_DVB_NETWORK_NAME);
 
     fail_unless (gst_mpegts_descriptor_parse_dvb_network_name (desc,
@@ -290,7 +290,7 @@ GST_START_TEST (test_mpegts_nit)
   /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
   nit_section->data[nit_section->section_length - 1]++;
   nit_section->cached_parsed = NULL;
-  nit = (GstMpegTsNIT *) gst_mpegts_section_get_nit (nit_section);
+  nit = (GstMpegtsNIT *) gst_mpegts_section_get_nit (nit_section);
 
   fail_unless (nit == NULL);
 
@@ -301,10 +301,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_sdt)
 {
-  GstMpegTsSDTService *service;
-  GstMpegTsSDT *sdt;
-  GstMpegTsDescriptor *desc;
-  GstMpegTsSection *sdt_section;
+  GstMpegtsSDTService *service;
+  GstMpegtsSDT *sdt;
+  GstMpegtsDescriptor *desc;
+  GstMpegtsSection *sdt_section;
   guint8 *data;
   gsize data_size;
   gint i;
@@ -335,7 +335,7 @@ GST_START_TEST (test_mpegts_sdt)
   fail_if (sdt_section == NULL);
 
   /* Re-parse the SDT from section */
-  sdt = (GstMpegTsSDT *) gst_mpegts_section_get_sdt (sdt_section);
+  sdt = (GstMpegtsSDT *) gst_mpegts_section_get_sdt (sdt_section);
 
   fail_unless (sdt->services->len == 2);
   fail_unless (sdt->actual_ts == TRUE);
@@ -354,7 +354,7 @@ GST_START_TEST (test_mpegts_sdt)
         GST_MPEGTS_RUNNING_STATUS_RUNNING + i);
     fail_unless (service->free_CA_mode == TRUE);
 
-    desc = (GstMpegTsDescriptor *)
+    desc = (GstMpegtsDescriptor *)
         gst_mpegts_find_descriptor (service->descriptors,
         GST_MTS_DESC_DVB_SERVICE);
 
@@ -378,7 +378,7 @@ GST_START_TEST (test_mpegts_sdt)
   /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
   sdt_section->data[sdt_section->section_length - 1]++;
   sdt_section->cached_parsed = NULL;
-  sdt = (GstMpegTsSDT *) gst_mpegts_section_get_sdt (sdt_section);
+  sdt = (GstMpegtsSDT *) gst_mpegts_section_get_sdt (sdt_section);
 
   fail_unless (sdt == NULL);
 
@@ -389,8 +389,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_atsc_stt)
 {
-  const GstMpegTsAtscSTT *stt;
-  GstMpegTsSection *section;
+  const GstMpegtsAtscSTT *stt;
+  GstMpegtsSection *section;
   guint8 *data;
   GstDateTime *dt;
 
@@ -407,7 +407,7 @@ GST_START_TEST (test_mpegts_atsc_stt)
   fail_unless (stt->ds_dayofmonth == 0);
   fail_unless (stt->ds_hour == 0);
 
-  dt = gst_mpegts_atsc_stt_get_datetime_utc ((GstMpegTsAtscSTT *) stt);
+  dt = gst_mpegts_atsc_stt_get_datetime_utc ((GstMpegtsAtscSTT *) stt);
   fail_unless (gst_date_time_get_day (dt) == 30);
   fail_unless (gst_date_time_get_month (dt) == 12);
   fail_unless (gst_date_time_get_year (dt) == 1998);
@@ -428,7 +428,7 @@ static const guint8 registration_descriptor[] = {
 
 GST_START_TEST (test_mpegts_descriptors)
 {
-  GstMpegTsDescriptor *desc;
+  GstMpegtsDescriptor *desc;
   guint i;
 
   /*
@@ -461,8 +461,8 @@ static const guint8 service_descriptor[] = {
 
 GST_START_TEST (test_mpegts_dvb_descriptors)
 {
-  GstMpegTsDescriptor *desc;
-  GstMpegTsDVBServiceType service_type;
+  GstMpegtsDescriptor *desc;
+  GstMpegtsDVBServiceType service_type;
   gchar *string, *provider;
   gchar long_string[257];
   gboolean ret;

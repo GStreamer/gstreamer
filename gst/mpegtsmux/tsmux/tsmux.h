@@ -105,7 +105,7 @@ typedef void (*TsMuxAllocFunc) (GstBuffer ** buf, void *user_data);
 
 struct TsMuxSection {
   TsMuxPacketInfo pi;
-  GstMpegTsSection *section;
+  GstMpegtsSection *section;
 };
 
 /* Information for the streams associated with one program */
@@ -200,7 +200,7 @@ guint 		tsmux_get_pmt_interval   	(TsMuxProgram *program);
 /* SI table management */
 void            tsmux_set_si_interval           (TsMux *mux, guint interval);
 guint           tsmux_get_si_interval           (TsMux *mux);
-gboolean        tsmux_add_mpegts_si_section     (TsMux * mux, GstMpegTsSection * section);
+gboolean        tsmux_add_mpegts_si_section     (TsMux * mux, GstMpegtsSection * section);
 
 /* stream management */
 TsMuxStream *	tsmux_create_stream 		(TsMux *mux, TsMuxStreamType stream_type, guint16 pid, gchar *language);

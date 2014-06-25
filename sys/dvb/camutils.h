@@ -55,6 +55,6 @@ typedef enum
 guint8 cam_calc_length_field_size (guint length);
 guint8 cam_write_length_field (guint8 *buff, guint length);
 guint8 cam_read_length_field (guint8 *buff, guint *length);
-guint8 *cam_build_ca_pmt (GstMpegTsPMT *pmt, guint8 list_management, guint8 cmd_id, guint *size);
+guint8 *cam_build_ca_pmt (GstMpegtsPMT *pmt, guint8 list_management, guint8 cmd_id, guint *size);
 
 #endif /* CAM_UTILS_H */

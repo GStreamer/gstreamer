@@ -35,35 +35,35 @@
  */
 
 /* Terrestrial/Cable Virtual Channel Table TVCT/CVCT */
-static GstMpegTsAtscVCTSource *
-_gst_mpegts_atsc_vct_source_copy (GstMpegTsAtscVCTSource * source)
+static GstMpegtsAtscVCTSource *
+_gst_mpegts_atsc_vct_source_copy (GstMpegtsAtscVCTSource * source)
 {
-  GstMpegTsAtscVCTSource *copy;
+  GstMpegtsAtscVCTSource *copy;
 
-  copy = g_slice_dup (GstMpegTsAtscVCTSource, source);
+  copy = g_slice_dup (GstMpegtsAtscVCTSource, source);
   copy->descriptors = g_ptr_array_ref (source->descriptors);
 
   return copy;
 }
 
 static void
-_gst_mpegts_atsc_vct_source_free (GstMpegTsAtscVCTSource * source)
+_gst_mpegts_atsc_vct_source_free (GstMpegtsAtscVCTSource * source)
 {
   if (source->descriptors)
     g_ptr_array_unref (source->descriptors);
-  g_slice_free (GstMpegTsAtscVCTSource, source);
+  g_slice_free (GstMpegtsAtscVCTSource, source);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsAtscVCTSource, gst_mpegts_atsc_vct_source,
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscVCTSource, gst_mpegts_atsc_vct_source,
     (GBoxedCopyFunc) _gst_mpegts_atsc_vct_source_copy,
     (GFreeFunc) _gst_mpegts_atsc_vct_source_free);
 
-static GstMpegTsAtscVCT *
-_gst_mpegts_atsc_vct_copy (GstMpegTsAtscVCT * vct)
+static GstMpegtsAtscVCT *
+_gst_mpegts_atsc_vct_copy (GstMpegtsAtscVCT * vct)
 {
-  GstMpegTsAtscVCT *copy;
+  GstMpegtsAtscVCT *copy;
 
-  copy = g_slice_dup (GstMpegTsAtscVCT, vct);
+  copy = g_slice_dup (GstMpegtsAtscVCT, vct);
   copy->sources = g_ptr_array_ref (vct->sources);
   copy->descriptors = g_ptr_array_ref (vct->descriptors);
 
@@ -71,30 +71,30 @@ _gst_mpegts_atsc_vct_copy (GstMpegTsAtscVCT * vct)
 }
 
 static void
-_gst_mpegts_atsc_vct_free (GstMpegTsAtscVCT * vct)
+_gst_mpegts_atsc_vct_free (GstMpegtsAtscVCT * vct)
 {
   if (vct->sources)
     g_ptr_array_unref (vct->sources);
   if (vct->descriptors)
     g_ptr_array_unref (vct->descriptors);
-  g_slice_free (GstMpegTsAtscVCT, vct);
+  g_slice_free (GstMpegtsAtscVCT, vct);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsAtscVCT, gst_mpegts_atsc_vct,
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscVCT, gst_mpegts_atsc_vct,
     (GBoxedCopyFunc) _gst_mpegts_atsc_vct_copy,
     (GFreeFunc) _gst_mpegts_atsc_vct_free);
 
 static gpointer
-_parse_atsc_vct (GstMpegTsSection * section)
+_parse_atsc_vct (GstMpegtsSection * section)
 {
-  GstMpegTsAtscVCT *vct = NULL;
+  GstMpegtsAtscVCT *vct = NULL;
   guint8 *data, *end, source_nb;
   guint32 tmp32;
   guint16 descriptors_loop_length, tmp16;
   guint i;
   GError *err = NULL;
 
-  vct = g_slice_new0 (GstMpegTsAtscVCT);
+  vct = g_slice_new0 (GstMpegtsAtscVCT);
 
   data = section->data;
   end = data + section->section_length;
@@ -118,14 +118,14 @@ _parse_atsc_vct (GstMpegTsSection * section)
       (GDestroyNotify) _gst_mpegts_atsc_vct_source_free);
 
   for (i = 0; i < source_nb; i++) {
-    GstMpegTsAtscVCTSource *source;
+    GstMpegtsAtscVCTSource *source;
 
     /* minimum 32 bytes for a entry, 2 bytes second descriptor
        loop-length, 4 bytes crc */
     if (end - data < 32 + 2 + 4)
       goto error;
 
-    source = g_slice_new0 (GstMpegTsAtscVCTSource);
+    source = g_slice_new0 (GstMpegtsAtscVCTSource);
     g_ptr_array_add (vct->sources, source);
 
     source->short_name =
@@ -204,15 +204,15 @@ error:
 
 /**
  * gst_mpegts_section_get_atsc_tvct:
- * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_ATSC_TVCT
+ * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_ATSC_TVCT
  *
- * Returns the #GstMpegTsAtscVCT contained in the @section
+ * Returns the #GstMpegtsAtscVCT contained in the @section
  *
- * Returns: The #GstMpegTsAtscVCT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegtsAtscVCT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTsAtscVCT *
-gst_mpegts_section_get_atsc_tvct (GstMpegTsSection * section)
+const GstMpegtsAtscVCT *
+gst_mpegts_section_get_atsc_tvct (GstMpegtsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_ATSC_TVCT,
       NULL);
@@ -223,20 +223,20 @@ gst_mpegts_section_get_atsc_tvct (GstMpegTsSection * section)
         __common_section_checks (section, 16, _parse_atsc_vct,
         (GDestroyNotify) _gst_mpegts_atsc_vct_free);
 
-  return (const GstMpegTsAtscVCT *) section->cached_parsed;
+  return (const GstMpegtsAtscVCT *) section->cached_parsed;
 }
 
 /**
  * gst_mpegts_section_get_atsc_cvct:
- * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_ATSC_CVCT
+ * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_ATSC_CVCT
  *
- * Returns the #GstMpegTsAtscVCT contained in the @section
+ * Returns the #GstMpegtsAtscVCT contained in the @section
  *
- * Returns: The #GstMpegTsAtscVCT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegtsAtscVCT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTsAtscVCT *
-gst_mpegts_section_get_atsc_cvct (GstMpegTsSection * section)
+const GstMpegtsAtscVCT *
+gst_mpegts_section_get_atsc_cvct (GstMpegtsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_ATSC_CVCT,
       NULL);
@@ -247,39 +247,39 @@ gst_mpegts_section_get_atsc_cvct (GstMpegTsSection * section)
         __common_section_checks (section, 16, _parse_atsc_vct,
         (GDestroyNotify) _gst_mpegts_atsc_vct_free);
 
-  return (const GstMpegTsAtscVCT *) section->cached_parsed;
+  return (const GstMpegtsAtscVCT *) section->cached_parsed;
 }
 
 /* MGT */
 
-static GstMpegTsAtscMGTTable *
-_gst_mpegts_atsc_mgt_table_copy (GstMpegTsAtscMGTTable * mgt_table)
+static GstMpegtsAtscMGTTable *
+_gst_mpegts_atsc_mgt_table_copy (GstMpegtsAtscMGTTable * mgt_table)
 {
-  GstMpegTsAtscMGTTable *copy;
+  GstMpegtsAtscMGTTable *copy;
 
-  copy = g_slice_dup (GstMpegTsAtscMGTTable, mgt_table);
+  copy = g_slice_dup (GstMpegtsAtscMGTTable, mgt_table);
   copy->descriptors = g_ptr_array_ref (mgt_table->descriptors);
 
   return copy;
 }
 
 static void
-_gst_mpegts_atsc_mgt_table_free (GstMpegTsAtscMGTTable * mgt_table)
+_gst_mpegts_atsc_mgt_table_free (GstMpegtsAtscMGTTable * mgt_table)
 {
   g_ptr_array_unref (mgt_table->descriptors);
-  g_slice_free (GstMpegTsAtscMGTTable, mgt_table);
+  g_slice_free (GstMpegtsAtscMGTTable, mgt_table);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsAtscMGTTable, gst_mpegts_atsc_mgt_table,
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscMGTTable, gst_mpegts_atsc_mgt_table,
     (GBoxedCopyFunc) _gst_mpegts_atsc_mgt_table_copy,
     (GFreeFunc) _gst_mpegts_atsc_mgt_table_free);
 
-static GstMpegTsAtscMGT *
-_gst_mpegts_atsc_mgt_copy (GstMpegTsAtscMGT * mgt)
+static GstMpegtsAtscMGT *
+_gst_mpegts_atsc_mgt_copy (GstMpegtsAtscMGT * mgt)
 {
-  GstMpegTsAtscMGT *copy;
+  GstMpegtsAtscMGT *copy;
 
-  copy = g_slice_dup (GstMpegTsAtscMGT, mgt);
+  copy = g_slice_dup (GstMpegtsAtscMGT, mgt);
   copy->tables = g_ptr_array_ref (mgt->tables);
   copy->descriptors = g_ptr_array_ref (mgt->descriptors);
 
@@ -287,26 +287,26 @@ _gst_mpegts_atsc_mgt_copy (GstMpegTsAtscMGT * mgt)
 }
 
 static void
-_gst_mpegts_atsc_mgt_free (GstMpegTsAtscMGT * mgt)
+_gst_mpegts_atsc_mgt_free (GstMpegtsAtscMGT * mgt)
 {
   g_ptr_array_unref (mgt->tables);
   g_ptr_array_unref (mgt->descriptors);
-  g_slice_free (GstMpegTsAtscMGT, mgt);
+  g_slice_free (GstMpegtsAtscMGT, mgt);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsAtscMGT, gst_mpegts_atsc_mgt,
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscMGT, gst_mpegts_atsc_mgt,
     (GBoxedCopyFunc) _gst_mpegts_atsc_mgt_copy,
     (GFreeFunc) _gst_mpegts_atsc_mgt_free);
 
 static gpointer
-_parse_atsc_mgt (GstMpegTsSection * section)
+_parse_atsc_mgt (GstMpegtsSection * section)
 {
-  GstMpegTsAtscMGT *mgt = NULL;
+  GstMpegtsAtscMGT *mgt = NULL;
   guint i = 0;
   guint8 *data, *end;
   guint16 descriptors_loop_length;
 
-  mgt = g_slice_new0 (GstMpegTsAtscMGT);
+  mgt = g_slice_new0 (GstMpegtsAtscMGT);
 
   data = section->data;
   end = data + section->section_length;
@@ -321,14 +321,14 @@ _parse_atsc_mgt (GstMpegTsSection * section)
   mgt->tables = g_ptr_array_new_full (mgt->tables_defined,
       (GDestroyNotify) _gst_mpegts_atsc_mgt_table_free);
   for (i = 0; i < mgt->tables_defined && data + 11 < end; i++) {
-    GstMpegTsAtscMGTTable *mgt_table;
+    GstMpegtsAtscMGTTable *mgt_table;
 
     if (data + 11 >= end) {
       GST_WARNING ("MGT data too short to parse inner table num %d", i);
       goto error;
     }
 
-    mgt_table = g_slice_new0 (GstMpegTsAtscMGTTable);
+    mgt_table = g_slice_new0 (GstMpegtsAtscMGTTable);
     g_ptr_array_add (mgt->tables, mgt_table);
 
     mgt_table->table_type = GST_READ_UINT16_BE (data);
@@ -373,15 +373,15 @@ error:
 
 /**
  * gst_mpegts_section_get_atsc_mgt:
- * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_ATSC_MGT
+ * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_ATSC_MGT
  *
- * Returns the #GstMpegTsAtscMGT contained in the @section.
+ * Returns the #GstMpegtsAtscMGT contained in the @section.
  *
- * Returns: The #GstMpegTsAtscMGT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegtsAtscMGT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTsAtscMGT *
-gst_mpegts_section_get_atsc_mgt (GstMpegTsSection * section)
+const GstMpegtsAtscMGT *
+gst_mpegts_section_get_atsc_mgt (GstMpegtsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_ATSC_MGT,
       NULL);
@@ -392,31 +392,31 @@ gst_mpegts_section_get_atsc_mgt (GstMpegTsSection * section)
         __common_section_checks (section, 17, _parse_atsc_mgt,
         (GDestroyNotify) _gst_mpegts_atsc_mgt_free);
 
-  return (const GstMpegTsAtscMGT *) section->cached_parsed;
+  return (const GstMpegtsAtscMGT *) section->cached_parsed;
 }
 
 /* Multi string structure */
 
-static GstMpegTsAtscStringSegment *
-_gst_mpegts_atsc_string_segment_copy (GstMpegTsAtscStringSegment * seg)
+static GstMpegtsAtscStringSegment *
+_gst_mpegts_atsc_string_segment_copy (GstMpegtsAtscStringSegment * seg)
 {
-  GstMpegTsAtscStringSegment *copy;
+  GstMpegtsAtscStringSegment *copy;
 
-  copy = g_slice_dup (GstMpegTsAtscStringSegment, seg);
+  copy = g_slice_dup (GstMpegtsAtscStringSegment, seg);
 
   return copy;
 }
 
 static void
-_gst_mpegts_atsc_string_segment_free (GstMpegTsAtscStringSegment * seg)
+_gst_mpegts_atsc_string_segment_free (GstMpegtsAtscStringSegment * seg)
 {
   if (seg->cached_string)
     g_free (seg->cached_string);
-  g_slice_free (GstMpegTsAtscStringSegment, seg);
+  g_slice_free (GstMpegtsAtscStringSegment, seg);
 }
 
 static void
-_gst_mpegts_atsc_string_segment_decode_string (GstMpegTsAtscStringSegment * seg)
+_gst_mpegts_atsc_string_segment_decode_string (GstMpegtsAtscStringSegment * seg)
 {
   const gchar *from_encoding;
 
@@ -457,7 +457,7 @@ _gst_mpegts_atsc_string_segment_decode_string (GstMpegTsAtscStringSegment * seg)
 }
 
 const gchar *
-gst_mpegts_atsc_string_segment_get_string (GstMpegTsAtscStringSegment * seg)
+gst_mpegts_atsc_string_segment_get_string (GstMpegtsAtscStringSegment * seg)
 {
   if (!seg->cached_string)
     _gst_mpegts_atsc_string_segment_decode_string (seg);
@@ -465,29 +465,29 @@ gst_mpegts_atsc_string_segment_get_string (GstMpegTsAtscStringSegment * seg)
   return seg->cached_string;
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsAtscStringSegment, gst_mpegts_atsc_string_segment,
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscStringSegment, gst_mpegts_atsc_string_segment,
     (GBoxedCopyFunc) _gst_mpegts_atsc_string_segment_copy,
     (GFreeFunc) _gst_mpegts_atsc_string_segment_free);
 
-static GstMpegTsAtscMultString *
-_gst_mpegts_atsc_mult_string_copy (GstMpegTsAtscMultString * mstring)
+static GstMpegtsAtscMultString *
+_gst_mpegts_atsc_mult_string_copy (GstMpegtsAtscMultString * mstring)
 {
-  GstMpegTsAtscMultString *copy;
+  GstMpegtsAtscMultString *copy;
 
-  copy = g_slice_dup (GstMpegTsAtscMultString, mstring);
+  copy = g_slice_dup (GstMpegtsAtscMultString, mstring);
   copy->segments = g_ptr_array_ref (mstring->segments);
 
   return copy;
 }
 
 static void
-_gst_mpegts_atsc_mult_string_free (GstMpegTsAtscMultString * mstring)
+_gst_mpegts_atsc_mult_string_free (GstMpegtsAtscMultString * mstring)
 {
   g_ptr_array_unref (mstring->segments);
-  g_slice_free (GstMpegTsAtscMultString, mstring);
+  g_slice_free (GstMpegtsAtscMultString, mstring);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsAtscMultString, gst_mpegts_atsc_mult_string,
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscMultString, gst_mpegts_atsc_mult_string,
     (GBoxedCopyFunc) _gst_mpegts_atsc_mult_string_copy,
     (GFreeFunc) _gst_mpegts_atsc_mult_string_free);
 
@@ -509,11 +509,11 @@ _parse_atsc_mult_string (guint8 * data, guint datasize)
         (GDestroyNotify) _gst_mpegts_atsc_mult_string_free);
 
     for (i = 0; i < num_strings; i++) {
-      GstMpegTsAtscMultString *mstring;
+      GstMpegtsAtscMultString *mstring;
       guint8 num_segments;
       gint j;
 
-      mstring = g_slice_new0 (GstMpegTsAtscMultString);
+      mstring = g_slice_new0 (GstMpegtsAtscMultString);
       g_ptr_array_add (res, mstring);
       mstring->segments =
           g_ptr_array_new_full (num_strings,
@@ -536,9 +536,9 @@ _parse_atsc_mult_string (guint8 * data, guint datasize)
       data += 1;
 
       for (j = 0; j < num_segments; j++) {
-        GstMpegTsAtscStringSegment *seg;
+        GstMpegtsAtscStringSegment *seg;
 
-        seg = g_slice_new0 (GstMpegTsAtscStringSegment);
+        seg = g_slice_new0 (GstMpegtsAtscStringSegment);
         g_ptr_array_add (mstring->segments, seg);
 
         /* each entry needs at least 3 bytes */
@@ -576,12 +576,12 @@ error:
 
 /* EIT */
 
-static GstMpegTsAtscEITEvent *
-_gst_mpegts_atsc_eit_event_copy (GstMpegTsAtscEITEvent * event)
+static GstMpegtsAtscEITEvent *
+_gst_mpegts_atsc_eit_event_copy (GstMpegtsAtscEITEvent * event)
 {
-  GstMpegTsAtscEITEvent *copy;
+  GstMpegtsAtscEITEvent *copy;
 
-  copy = g_slice_dup (GstMpegTsAtscEITEvent, event);
+  copy = g_slice_dup (GstMpegtsAtscEITEvent, event);
   copy->titles = g_ptr_array_ref (event->titles);
   copy->descriptors = g_ptr_array_ref (event->descriptors);
 
@@ -589,51 +589,51 @@ _gst_mpegts_atsc_eit_event_copy (GstMpegTsAtscEITEvent * event)
 }
 
 static void
-_gst_mpegts_atsc_eit_event_free (GstMpegTsAtscEITEvent * event)
+_gst_mpegts_atsc_eit_event_free (GstMpegtsAtscEITEvent * event)
 {
   if (event->titles)
     g_ptr_array_unref (event->titles);
   if (event->descriptors)
     g_ptr_array_unref (event->descriptors);
-  g_slice_free (GstMpegTsAtscEITEvent, event);
+  g_slice_free (GstMpegtsAtscEITEvent, event);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsAtscEITEvent, gst_mpegts_atsc_eit_event,
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscEITEvent, gst_mpegts_atsc_eit_event,
     (GBoxedCopyFunc) _gst_mpegts_atsc_eit_event_copy,
     (GFreeFunc) _gst_mpegts_atsc_eit_event_free);
 
-static GstMpegTsAtscEIT *
-_gst_mpegts_atsc_eit_copy (GstMpegTsAtscEIT * eit)
+static GstMpegtsAtscEIT *
+_gst_mpegts_atsc_eit_copy (GstMpegtsAtscEIT * eit)
 {
-  GstMpegTsAtscEIT *copy;
+  GstMpegtsAtscEIT *copy;
 
-  copy = g_slice_dup (GstMpegTsAtscEIT, eit);
+  copy = g_slice_dup (GstMpegtsAtscEIT, eit);
   copy->events = g_ptr_array_ref (eit->events);
 
   return copy;
 }
 
 static void
-_gst_mpegts_atsc_eit_free (GstMpegTsAtscEIT * eit)
+_gst_mpegts_atsc_eit_free (GstMpegtsAtscEIT * eit)
 {
   if (eit->events)
     g_ptr_array_unref (eit->events);
-  g_slice_free (GstMpegTsAtscEIT, eit);
+  g_slice_free (GstMpegtsAtscEIT, eit);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsAtscEIT, gst_mpegts_atsc_eit,
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscEIT, gst_mpegts_atsc_eit,
     (GBoxedCopyFunc) _gst_mpegts_atsc_eit_copy,
     (GFreeFunc) _gst_mpegts_atsc_eit_free);
 
 static gpointer
-_parse_atsc_eit (GstMpegTsSection * section)
+_parse_atsc_eit (GstMpegtsSection * section)
 {
-  GstMpegTsAtscEIT *eit = NULL;
+  GstMpegtsAtscEIT *eit = NULL;
   guint i = 0;
   guint8 *data, *end;
   guint8 num_events;
 
-  eit = g_slice_new0 (GstMpegTsAtscEIT);
+  eit = g_slice_new0 (GstMpegtsAtscEIT);
 
   data = section->data;
   end = data + section->section_length;
@@ -652,7 +652,7 @@ _parse_atsc_eit (GstMpegTsSection * section)
       _gst_mpegts_atsc_eit_event_free);
 
   for (i = 0; i < num_events; i++) {
-    GstMpegTsAtscEITEvent *event;
+    GstMpegtsAtscEITEvent *event;
     guint32 tmp;
     guint8 text_length;
     guint16 descriptors_loop_length;
@@ -663,7 +663,7 @@ _parse_atsc_eit (GstMpegTsSection * section)
       goto error;
     }
 
-    event = g_slice_new0 (GstMpegTsAtscEITEvent);
+    event = g_slice_new0 (GstMpegtsAtscEITEvent);
     g_ptr_array_add (eit->events, event);
 
     event->event_id = GST_READ_UINT16_BE (data) & 0x3FFF;
@@ -716,15 +716,15 @@ error:
 
 /**
  * gst_mpegts_section_get_atsc_eit:
- * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_ATSC_EIT
+ * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_ATSC_EIT
  *
- * Returns the #GstMpegTsAtscEIT contained in the @section.
+ * Returns the #GstMpegtsAtscEIT contained in the @section.
  *
- * Returns: The #GstMpegTsAtscEIT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegtsAtscEIT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTsAtscEIT *
-gst_mpegts_section_get_atsc_eit (GstMpegTsSection * section)
+const GstMpegtsAtscEIT *
+gst_mpegts_section_get_atsc_eit (GstMpegtsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_ATSC_EIT,
       NULL);
@@ -735,40 +735,40 @@ gst_mpegts_section_get_atsc_eit (GstMpegTsSection * section)
         __common_section_checks (section, 14, _parse_atsc_eit,
         (GDestroyNotify) _gst_mpegts_atsc_eit_free);
 
-  return (const GstMpegTsAtscEIT *) section->cached_parsed;
+  return (const GstMpegtsAtscEIT *) section->cached_parsed;
 }
 
 
-static GstMpegTsAtscETT *
-_gst_mpegts_atsc_ett_copy (GstMpegTsAtscETT * ett)
+static GstMpegtsAtscETT *
+_gst_mpegts_atsc_ett_copy (GstMpegtsAtscETT * ett)
 {
-  GstMpegTsAtscETT *copy;
+  GstMpegtsAtscETT *copy;
 
-  copy = g_slice_dup (GstMpegTsAtscETT, ett);
+  copy = g_slice_dup (GstMpegtsAtscETT, ett);
   copy->messages = g_ptr_array_ref (ett->messages);
 
   return copy;
 }
 
 static void
-_gst_mpegts_atsc_ett_free (GstMpegTsAtscETT * ett)
+_gst_mpegts_atsc_ett_free (GstMpegtsAtscETT * ett)
 {
   if (ett->messages)
     g_ptr_array_unref (ett->messages);
-  g_slice_free (GstMpegTsAtscETT, ett);
+  g_slice_free (GstMpegtsAtscETT, ett);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsAtscETT, gst_mpegts_atsc_ett,
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscETT, gst_mpegts_atsc_ett,
     (GBoxedCopyFunc) _gst_mpegts_atsc_ett_copy,
     (GFreeFunc) _gst_mpegts_atsc_ett_free);
 
 static gpointer
-_parse_ett (GstMpegTsSection * section)
+_parse_ett (GstMpegtsSection * section)
 {
-  GstMpegTsAtscETT *ett = NULL;
+  GstMpegtsAtscETT *ett = NULL;
   guint8 *data, *end;
 
-  ett = g_slice_new0 (GstMpegTsAtscETT);
+  ett = g_slice_new0 (GstMpegtsAtscETT);
 
   data = section->data;
   end = data + section->section_length;
@@ -803,15 +803,15 @@ error:
 
 /**
  * gst_mpegts_section_get_atsc_ett:
- * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_ATSC_ETT
+ * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_ATSC_ETT
  *
- * Returns the #GstMpegTsAtscETT contained in the @section.
+ * Returns the #GstMpegtsAtscETT contained in the @section.
  *
- * Returns: The #GstMpegTsAtscETT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegtsAtscETT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTsAtscETT *
-gst_mpegts_section_get_atsc_ett (GstMpegTsSection * section)
+const GstMpegtsAtscETT *
+gst_mpegts_section_get_atsc_ett (GstMpegtsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_ATSC_ETT,
       NULL);
@@ -821,42 +821,42 @@ gst_mpegts_section_get_atsc_ett (GstMpegTsSection * section)
     section->cached_parsed = __common_section_checks (section, 17, _parse_ett,
         (GDestroyNotify) _gst_mpegts_atsc_ett_free);
 
-  return (const GstMpegTsAtscETT *) section->cached_parsed;
+  return (const GstMpegtsAtscETT *) section->cached_parsed;
 }
 
 /* STT */
 
-static GstMpegTsAtscSTT *
-_gst_mpegts_atsc_stt_copy (GstMpegTsAtscSTT * stt)
+static GstMpegtsAtscSTT *
+_gst_mpegts_atsc_stt_copy (GstMpegtsAtscSTT * stt)
 {
-  GstMpegTsAtscSTT *copy;
+  GstMpegtsAtscSTT *copy;
 
-  copy = g_slice_dup (GstMpegTsAtscSTT, stt);
+  copy = g_slice_dup (GstMpegtsAtscSTT, stt);
   copy->descriptors = g_ptr_array_ref (stt->descriptors);
 
   return copy;
 }
 
 static void
-_gst_mpegts_atsc_stt_free (GstMpegTsAtscSTT * stt)
+_gst_mpegts_atsc_stt_free (GstMpegtsAtscSTT * stt)
 {
   if (stt->descriptors)
     g_ptr_array_unref (stt->descriptors);
-  g_slice_free (GstMpegTsAtscSTT, stt);
+  g_slice_free (GstMpegtsAtscSTT, stt);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTsAtscSTT, gst_mpegts_atsc_stt,
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscSTT, gst_mpegts_atsc_stt,
     (GBoxedCopyFunc) _gst_mpegts_atsc_stt_copy,
     (GFreeFunc) _gst_mpegts_atsc_stt_free);
 
 static gpointer
-_parse_atsc_stt (GstMpegTsSection * section)
+_parse_atsc_stt (GstMpegtsSection * section)
 {
-  GstMpegTsAtscSTT *stt = NULL;
+  GstMpegtsAtscSTT *stt = NULL;
   guint8 *data, *end;
   guint16 daylight_saving;
 
-  stt = g_slice_new0 (GstMpegTsAtscSTT);
+  stt = g_slice_new0 (GstMpegtsAtscSTT);
 
   data = section->data;
   end = data + section->section_length;
@@ -892,15 +892,15 @@ error:
 
 /**
  * gst_mpegts_section_get_atsc_stt:
- * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_ATSC_STT
+ * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_ATSC_STT
  *
- * Returns the #GstMpegTsAtscSTT contained in the @section.
+ * Returns the #GstMpegtsAtscSTT contained in the @section.
  *
- * Returns: The #GstMpegTsAtscSTT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegtsAtscSTT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTsAtscSTT *
-gst_mpegts_section_get_atsc_stt (GstMpegTsSection * section)
+const GstMpegtsAtscSTT *
+gst_mpegts_section_get_atsc_stt (GstMpegtsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_ATSC_STT,
       NULL);
@@ -911,7 +911,7 @@ gst_mpegts_section_get_atsc_stt (GstMpegTsSection * section)
         __common_section_checks (section, 20, _parse_atsc_stt,
         (GDestroyNotify) _gst_mpegts_atsc_stt_free);
 
-  return (const GstMpegTsAtscSTT *) section->cached_parsed;
+  return (const GstMpegtsAtscSTT *) section->cached_parsed;
 }
 
 #define GPS_TO_UTC_TICKS G_GINT64_CONSTANT(315964800)
@@ -923,7 +923,7 @@ _gst_mpegts_atsc_gps_time_to_datetime (guint32 systemtime, guint8 gps_offset)
 }
 
 GstDateTime *
-gst_mpegts_atsc_stt_get_datetime_utc (GstMpegTsAtscSTT * stt)
+gst_mpegts_atsc_stt_get_datetime_utc (GstMpegtsAtscSTT * stt)
 {
   if (stt->utc_datetime == NULL)
     stt->utc_datetime = _gst_mpegts_atsc_gps_time_to_datetime (stt->system_time,
