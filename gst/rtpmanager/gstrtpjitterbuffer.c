@@ -3063,7 +3063,7 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
   guint64 last_rtptime;
   guint64 clock_base;
   guint64 ext_rtptime, diff;
-  gboolean drop = FALSE;
+  gboolean valid = TRUE, keep = FALSE;
 
   priv = jitterbuffer->priv;
 
@@ -3080,13 +3080,15 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
       ext_rtptime, base_rtptime, clock_rate, clock_base, last_rtptime);
 
   if (base_rtptime == -1 || clock_rate == -1 || base_time == -1) {
-    GST_DEBUG_OBJECT (jitterbuffer, "dropping, no RTP values");
-    drop = TRUE;
+    /* we keep this SR packet for later. When we get a valid RTP packet the
+     * above values will be set and we can try to use the SR packet */
+    GST_DEBUG_OBJECT (jitterbuffer, "keeping for later, no RTP values");
+    keep = TRUE;
   } else {
     /* we can't accept anything that happened before we did the last resync */
     if (base_rtptime > ext_rtptime) {
       GST_DEBUG_OBJECT (jitterbuffer, "dropping, older than base time");
-      drop = TRUE;
+      valid = FALSE;
     } else {
       /* the SR RTP timestamp must be something close to what we last observed
        * in the jitterbuffer */
@@ -3108,7 +3110,9 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
     }
   }
 
-  if (!drop) {
+  if (keep) {
+    GST_DEBUG_OBJECT (jitterbuffer, "keeping RTCP packet for later");
+  } else if (valid) {
     GstStructure *s;
 
     s = gst_structure_new ("application/x-rtp-sync",
@@ -3128,6 +3132,7 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
     gst_structure_free (s);
   } else {
     GST_DEBUG_OBJECT (jitterbuffer, "dropping RTCP packet");
+    gst_buffer_replace (&priv->last_sr, NULL);
   }
 }
 
