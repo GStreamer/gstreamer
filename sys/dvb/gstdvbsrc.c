@@ -41,7 +41,7 @@
 /* 
  * History of DVB_API_VERSION 5 minor changes
  *
- * API Addition/changes in reverse order (most recent addition first)
+ * API Addition/changes in reverse order (most recent first)
  *
  * Minor 10 (statistics properties)
  *   DTV_STAT_*
@@ -194,7 +194,7 @@ enum
 #define DEFAULT_DISEQC_SRC -1   /* disabled */
 #define DEFAULT_FREQUENCY 0
 #define DEFAULT_POLARITY "H"
-#define DEFAULT_PIDS "8192"
+#define DEFAULT_PIDS "8192"     /* Special value meaning 'all' PIDs */
 #define DEFAULT_SYMBOL_RATE 0
 #define DEFAULT_BANDWIDTH_HZ 8000000
 #define DEFAULT_BANDWIDTH BANDWIDTH_8_MHZ
@@ -536,7 +536,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_ADAPTER,
       g_param_spec_int ("adapter", "The adapter device number",
-          "The adapter device number (eg. 0 for adapter0)",
+          "The DVB adapter device number (eg. 0 for adapter0)",
           0, 16, DEFAULT_ADAPTER, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_FRONTEND,
@@ -550,8 +550,8 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_POLARITY,
       g_param_spec_string ("polarity", "polarity",
-          "Polarity [vhHV] (DVB-S, DVB-S2)", DEFAULT_POLARITY,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "(DVB-S/S2) Polarity [vhHV] (eg. V for Vertical)",
+          DEFAULT_POLARITY, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_PIDS,
       g_param_spec_string ("pids", "pids",
@@ -561,7 +561,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DVBSRC_SYM_RATE,
       g_param_spec_uint ("symbol-rate",
           "symbol rate",
-          "Symbol Rate (DVB-S, DVB-S2, DVB-C)",
+          "(DVB-S/S2, DVB-C) Symbol rate in bauds",
           0, G_MAXUINT, DEFAULT_SYMBOL_RATE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_TUNE,
@@ -571,61 +571,63 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DVBSRC_DISEQC_SRC,
       g_param_spec_int ("diseqc-source",
           "diseqc source",
-          "DISEqC selected source (-1 disabled) (DVB-S, DVB-S2)",
-          -1, 7, DEFAULT_DISEQC_SRC, G_PARAM_READWRITE));
+          "(DVB-S/S2) Selected DiSEqC source. Only needed if you have a "
+          "DiSEqC switch. Otherwise leave at -1 (disabled)", -1, 7,
+          DEFAULT_DISEQC_SRC, G_PARAM_READWRITE));
 
   /* DVB-T, additional properties */
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_BANDWIDTH_HZ,
       g_param_spec_uint ("bandwidth-hz", "bandwidth-hz",
-          "Bandwidth in Hz (DVB-T)",
-          0, G_MAXUINT, DEFAULT_BANDWIDTH_HZ, G_PARAM_READWRITE));
+          "(DVB-T) Bandwidth in Hz", 0, G_MAXUINT, DEFAULT_BANDWIDTH_HZ,
+          G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_BANDWIDTH,
       g_param_spec_enum ("bandwidth", "bandwidth",
-          "Bandwidth (DVB-T) deprecated",
-          GST_TYPE_DVBSRC_BANDWIDTH, DEFAULT_BANDWIDTH, G_PARAM_READWRITE));
+          "(DVB-T) Bandwidth. Deprecated", GST_TYPE_DVBSRC_BANDWIDTH,
+          DEFAULT_BANDWIDTH, G_PARAM_READWRITE));
 
   /* FIXME: DVB-C, DVB-S, DVB-S2 named it as innerFEC */
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_HP,
       g_param_spec_enum ("code-rate-hp",
           "code-rate-hp",
-          "High Priority Code Rate (DVB-T, DVB-S, DVB-S2 and DVB-C)",
+          "(DVB-T, DVB-S/S2 and DVB-C) High priority code rate",
           GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_CODE_RATE_HP, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_LP,
       g_param_spec_enum ("code-rate-lp",
           "code-rate-lp",
-          "Low Priority Code Rate (DVB-T)",
+          "(DVB-T) Low priority code rate",
           GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_CODE_RATE_LP, G_PARAM_READWRITE));
 
   /* FIXME: should the property be called 'guard-interval' then? */
   g_object_class_install_property (gobject_class, ARG_DVBSRC_GUARD,
       g_param_spec_enum ("guard",
           "guard",
-          "Guard Interval (DVB-T)",
+          "(DVB-T) Guard Interval",
           GST_TYPE_DVBSRC_GUARD, DEFAULT_GUARD, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_MODULATION,
       g_param_spec_enum ("modulation", "modulation",
-          "Modulation (DVB-T and DVB-C)",
+          "(DVB-T and DVB-C) Modulation type",
           GST_TYPE_DVBSRC_MODULATION, DEFAULT_MODULATION, G_PARAM_READWRITE));
 
   /* FIXME: property should be named 'transmission-mode' */
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_TRANSMISSION_MODE,
       g_param_spec_enum ("trans-mode", "trans-mode",
-          "Transmission Mode (DVB-T)", GST_TYPE_DVBSRC_TRANSMISSION_MODE,
-          DEFAULT_TRANSMISSION_MODE, G_PARAM_READWRITE));
+          "(DVB-T) Transmission mode",
+          GST_TYPE_DVBSRC_TRANSMISSION_MODE, DEFAULT_TRANSMISSION_MODE,
+          G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_HIERARCHY_INF,
       g_param_spec_enum ("hierarchy", "hierarchy",
-          "Hierarchy Information (DVB-T)",
+          "(DVB-T) Hierarchy information",
           GST_TYPE_DVBSRC_HIERARCHY, DEFAULT_HIERARCHY, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_INVERSION,
       g_param_spec_enum ("inversion", "inversion",
-          "Inversion Information (DVB-T and DVB-C)",
+          "(DVB-T and DVB-C) Inversion information",
           GST_TYPE_DVBSRC_INVERSION, DEFAULT_INVERSION, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
@@ -637,13 +639,13 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
-          "Post a message after timeout microseconds (0 = disabled)", 0,
-          G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READWRITE));
+          "Post a message after timeout microseconds (0 = disabled)",
+          0, G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_TUNING_TIMEOUT,
       g_param_spec_uint64 ("tuning-timeout", "Tuning Timeout",
-          "Milliseconds to wait before giving up tuning/locking on a signal", 0,
-          G_MAXUINT64, DEFAULT_TUNING_TIMEOUT, G_PARAM_READWRITE));
+          "Milliseconds to wait before giving up tuning/locking on a signal",
+          0, G_MAXUINT64, DEFAULT_TUNING_TIMEOUT, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_DVB_BUFFER_SIZE,
@@ -666,8 +668,8 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_STREAM_ID,
       g_param_spec_int ("stream-id", "stream-id",
-          "Stream ID (-1 disabled, DVB-T2 and DVB-S2 max 255, ISDB max 65535)",
-          -1, 65535, DEFAULT_STREAM_ID, G_PARAM_READWRITE));
+          "(DVB-T2 and DVB-S2 max 255, ISDB max 65535) Stream ID "
+          "(-1 = disabled)", -1, 65535, DEFAULT_STREAM_ID, G_PARAM_READWRITE));
 
   /**
    * GstDvbSrc::tuning-start:
@@ -728,7 +730,7 @@ gst_dvbsrc_init (GstDvbSrc * object)
     object->pids[i] = G_MAXUINT16;
     object->fd_filters[i] = -1;
   }
-  /* Pid 8192 on DVB gets the whole transport stream */
+  /* PID 8192 on DVB gets the whole transport stream */
   object->pids[0] = 8192;
   object->dvb_buffer_size = DEFAULT_DVB_BUFFER_SIZE;
   object->adapter_number = DEFAULT_ADAPTER;
@@ -928,7 +930,8 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
     case ARG_DVBSRC_TUNE:{
       GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_TUNE");
 
-      /* if we are in paused/playing state tune now, otherwise in ready to paused state change */
+      /* if we are in paused/playing state tune now, otherwise in ready
+       * to paused state change */
       if (GST_STATE (object) > GST_STATE_READY) {
         g_mutex_lock (&object->tune_mutex);
         gst_dvbsrc_tune (object);
@@ -1622,7 +1625,7 @@ diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
       cmd->cmd.msg[1], cmd->cmd.msg[2], cmd->cmd.msg[3], cmd->cmd.msg[4],
       cmd->cmd.msg[5]);
   if (ioctl (fd, FE_DISEQC_SEND_MASTER_CMD, &cmd->cmd) == -1) {
-    GST_ERROR ("Sending diseqc command failed");
+    GST_ERROR ("Sending DiSEqC command failed");
     return;
   }
 
@@ -1657,7 +1660,7 @@ diseqc (int secfd, int sat_no, int voltage, int tone)
   cmd.cmd.msg[3] =
       0xf0 | (((sat_no * 4) & 0x0f) | (tone == SEC_TONE_ON ? 1 : 0) |
       (voltage == SEC_VOLTAGE_13 ? 0 : 2));
-  /* send twice because some diseqc switches do not respond correctly the
+  /* send twice because some DiSEqC switches do not respond correctly the
    * first time */
   diseqc_send_msg (secfd, voltage, &cmd, tone,
       sat_no % 2 ? SEC_MINI_B : SEC_MINI_A);
@@ -1708,7 +1711,7 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
     return FALSE;
   }
 
-  /* If theres no delivery system set yet. Choose the
+  /* If there's no delivery system set yet. Choose the
    * last from the list of frontend supported ones */
   if (object->delsys == SYS_UNDEFINED) {
     object->delsys = object->best_guess_delsys;
@@ -1819,7 +1822,11 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
     case SYS_DVBS2:
     case SYS_TURBO:
       if (freq > 2200000) {
-        /* this must be an absolute frequency */
+        /* FIXME: Make SLOF/LOF1/LOF2 seteable props with a sane default.
+         * These values shouldn't be fixed because not all universal LNBs
+         * share the same parameters.
+         *
+         * this must be an absolute frequency */
         if (freq < SLOF) {
           freq -= LOF1;
           object->tone = SEC_TONE_OFF;
@@ -1855,7 +1862,7 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
       } else {
         GST_DEBUG_OBJECT (object, "Sending DISEqC");
         diseqc (object->fd_frontend, object->diseqc_src, voltage, object->tone);
-        /* Once diseqc source is set, do not set it again until
+        /* Once DiSEqC source is set, do not set it again until
          * app decides to change it
          * object->send_diseqc = FALSE; */
       }

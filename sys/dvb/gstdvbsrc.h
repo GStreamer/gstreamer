@@ -47,7 +47,7 @@ struct _GstDvbSrc
   guchar delsys;
   guchar best_guess_delsys;
 
-  int adapter_number;           /* the device directory with the sub-devices */
+  int adapter_number;
   int frontend_number;
 
   int fd_frontend;
