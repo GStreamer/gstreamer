@@ -49,6 +49,7 @@
 #include "gstgleffects.h"
 #include "gstglcolorscale.h"
 #include "gstglvideomixer.h"
+#include "gstglfiltershader.h"
 #if HAVE_GRAPHENE
 #include "gstgltransformation.h"
 #endif
@@ -60,7 +61,6 @@
 #include "gstglfilterapp.h"
 #include "gstglfilterblur.h"
 #include "gstglfilterreflectedscreen.h"
-#include "gstglfiltershader.h"
 #include "gstglfiltersobel.h"
 #include "gstgldeinterlace.h"
 #include "gstglmosaic.h"
@@ -129,6 +129,10 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_VIDEO_MIXER)) {
     return FALSE;
   }
+  if (!gst_element_register (plugin, "glshader",
+          GST_RANK_NONE, gst_gl_filtershader_get_type ())) {
+    return FALSE;
+  }
 #if GST_GL_HAVE_OPENGL
   if (!gst_element_register (plugin, "gltestsrc",
           GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
@@ -137,11 +141,6 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glfilterblur",
           GST_RANK_NONE, gst_gl_filterblur_get_type ())) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glshader",
-          GST_RANK_NONE, gst_gl_filtershader_get_type ())) {
     return FALSE;
   }
 

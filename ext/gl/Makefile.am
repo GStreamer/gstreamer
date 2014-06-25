@@ -7,8 +7,6 @@ AM_LIBS = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS)
 # full opengl required
 if USE_OPENGL
 OPENGL_SOURCES =  \
-	gstglfiltershader.c \
-	gstglfiltershader.h \
 	gstglfilterblur.c \
 	gstglfilterblur.h \
 	gstglfiltersobel.c \
@@ -74,6 +72,8 @@ libgstopengl_la_SOURCES = \
 	gstglcolorscale.h \
 	gstglvideomixer.c \
 	gstglvideomixer.h \
+	gstglfiltershader.c \
+	gstglfiltershader.h \
 	$(OPENGL_SOURCES)
 
 if HAVE_GRAPHENE

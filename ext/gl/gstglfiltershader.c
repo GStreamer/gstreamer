@@ -36,13 +36,6 @@
 #include "config.h"
 #endif
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <string.h>
-
 #include <gst/gst.h>
 #include <gst/gl/gstglshadervariables.h>
 
