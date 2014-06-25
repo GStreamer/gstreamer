@@ -696,6 +696,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     GstCaps *caps;
     GstEvent *event;
     gchar *stream_id;
+    gchar *lang = NULL;
 
     active_stream = gst_mpdparser_get_active_stream_by_index (demux->client, i);
     if (active_stream == NULL)
@@ -750,6 +751,21 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     g_free (stream_id);
 
     gst_pad_push_event (stream->pad, gst_event_new_caps (caps));
+
+    if (active_stream->cur_adapt_set) {
+      lang = active_stream->cur_adapt_set->lang;
+    }
+
+    if (lang) {
+      GstTagList *tags;
+
+      if (gst_tag_check_language_code (lang))
+        tags = gst_tag_list_new (GST_TAG_LANGUAGE_CODE, lang, NULL);
+      else
+        tags = gst_tag_list_new (GST_TAG_LANGUAGE_NAME, lang, NULL);
+
+      gst_pad_push_event (stream->pad, gst_event_new_tag (tags));
+    }
   }
   streams = g_slist_reverse (streams);
 

@@ -34,6 +34,7 @@
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstdataqueue.h>
 #include "gstmpdparser.h"
+#include <gst/tag/tag.h>
 #include <gst/uridownloader/gsturidownloader.h>
 
 G_BEGIN_DECLS
