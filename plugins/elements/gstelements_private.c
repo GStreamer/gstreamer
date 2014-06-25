@@ -1,4 +1,7 @@
 /* GStreamer
+ * Copyright (C) 2011 David Schleef <ds@schleef.org>
+ * Copyright (C) 2011 Tim-Philipp Müller <tim.muller@collabora.co.uk>
+ * Copyright (C) 2014 Tim-Philipp Müller <tim@centricular.com>
  * Copyright (C) 2014 Vincent Penquerc'h <vincent@collabora.co.uk>
  *
  * gstelements_private.c: Shared code for core elements
@@ -26,17 +29,7 @@
 #include "gst/gst.h"
 #include "gstelements_private.h"
 
-/**
- * gst_buffer_get_flags_string:
- * @buffer: a #GstBuffer
- * Returns: A newly allocated string
- *
- * Returns a newly allocated string describing the flags on this buffer.
- * The string must be freed using g_free() when done.
- *
- * Since: 1.4
- */
-
+/* Returns a newly allocated string describing the flags on this buffer */
 char *
 gst_buffer_get_flags_string (GstBuffer * buffer)
 {
