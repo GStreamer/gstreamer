@@ -1223,6 +1223,7 @@ short_packet:
     GST_WARNING
         ("PID 0x%04x section extends past provided data (got:%" G_GSIZE_FORMAT
         ", need:%d)", pid, data_size, section_length + 3);
+    g_free (data);
     return NULL;
   }
 }
