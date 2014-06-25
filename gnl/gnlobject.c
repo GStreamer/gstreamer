@@ -580,7 +580,6 @@ gnl_object_change_state (GstElement * element, GstStateChange transition)
     }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gnl_object_commit (GNL_OBJECT (element), FALSE);
       if (gnl_object_prepare (GNL_OBJECT (element)) == GST_STATE_CHANGE_FAILURE) {
         ret = GST_STATE_CHANGE_FAILURE;
         goto beach;
