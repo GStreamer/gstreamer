@@ -2013,6 +2013,25 @@ block_object_src_pad (GnlComposition * comp, GnlObject * obj)
   }
 }
 
+static inline gboolean
+_parent_or_priority_changed (GnlObject * obj, GNode * oldnode,
+    GnlObject * newparent, GNode * node)
+{
+  GnlObject *oldparent = NULL;
+
+  if (oldnode)
+    oldparent =
+        G_NODE_IS_ROOT (oldnode) ? NULL : (GnlObject *) oldnode->parent->data;
+
+  if (oldparent != newparent)
+    return TRUE;
+
+  if (oldparent == NULL || newparent == NULL)
+    return FALSE;
+
+  return (g_node_child_index (node, obj) != g_node_child_index (oldnode, obj));
+}
+
 /*
  * recursive depth-first relink stack function on new stack
  *
@@ -2030,7 +2049,6 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
   GNode *oldnode = NULL;
   GnlObject *newobj;
   GnlObject *newparent;
-  GnlObject *oldparent = NULL;
   GstPad *srcpad = NULL, *sinkpad = NULL;
   GnlCompositionEntry *entry;
 
@@ -2041,9 +2059,6 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
   newobj = (GnlObject *) node->data;
   if (oldstack) {
     oldnode = g_node_find (oldstack, G_IN_ORDER, G_TRAVERSE_ALL, newobj);
-    if (oldnode)
-      oldparent =
-          G_NODE_IS_ROOT (oldnode) ? NULL : (GnlObject *) oldnode->parent->data;
   }
 
   GST_DEBUG_OBJECT (comp, "newobj:%s",
@@ -2056,13 +2071,9 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
     block_object_src_pad (comp, newobj);
 
   entry = COMP_ENTRY (comp, newobj);
-  /* 2. link to parent if needed.  */
-  GST_LOG_OBJECT (comp, "has a valid source pad");
-  /* POST PROCESSING */
-  if ((oldparent != newparent) ||
-      (oldparent && newparent &&
-          (g_node_child_index (node,
-                  newobj) != g_node_child_index (oldnode, newobj)))) {
+
+  /* link to parent if needed.  */
+  if (_parent_or_priority_changed (newobj, oldnode, newparent, node)) {
     GST_LOG_OBJECT (comp,
         "not same parent, or same parent but in different order");
     /* relink to new parent in required order */
