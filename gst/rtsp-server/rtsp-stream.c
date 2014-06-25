@@ -58,6 +58,15 @@
 #define GST_RTSP_STREAM_GET_PRIVATE(obj)  \
      (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_STREAM, GstRTSPStreamPrivate))
 
+typedef struct
+{
+  GstRTSPStreamTransport *transport;
+
+  /* RTP and RTCP source */
+  GstElement *udpsrc[2];
+  GstPad *selpad[2];
+} GstRTSPMulticastTransportSource;
+
 struct _GstRTSPStreamPrivate
 {
   GMutex lock;
@@ -127,6 +136,9 @@ struct _GstRTSPStreamPrivate
   guint transports_cookie;
   GList *tr_cache;
   guint tr_cache_cookie;
+
+  /* UDP sources for UDP multicast transports */
+  GList *transport_sources;
 
   gint dscp_qos;
 
@@ -1137,6 +1149,7 @@ again:
   udpsrc_out[1] = udpsrc1;
   udpsink_out[0] = udpsink0;
   udpsink_out[1] = udpsink1;
+
   server_port_out->min = rtpport;
   server_port_out->max = rtcpport;
 
@@ -2236,8 +2249,83 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
   tr = gst_rtsp_stream_transport_get_transport (trans);
 
   switch (tr->lower_transport) {
-    case GST_RTSP_LOWER_TRANS_UDP:
     case GST_RTSP_LOWER_TRANS_UDP_MCAST:
+    {
+      GstRTSPMulticastTransportSource *source;
+      GstBin *bin;
+
+      bin = GST_BIN (gst_object_get_parent (GST_OBJECT (priv->funnel[0])));
+
+      if (add) {
+        gchar *host;
+        gint i;
+        GstPad *selpad, *pad;
+
+        source = g_slice_new0 (GstRTSPMulticastTransportSource);
+        source->transport = trans;
+
+        for (i = 0; i < 2; i++) {
+          host =
+              g_strdup_printf ("udp://%s:%d", tr->destination,
+              (i == 0) ? tr->port.min : tr->port.max);
+          source->udpsrc[i] =
+              gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
+          g_free (host);
+
+          /* we set and keep these to playing so that they don't cause NO_PREROLL return
+           * values */
+          gst_element_set_state (source->udpsrc[i], GST_STATE_PLAYING);
+          gst_element_set_locked_state (source->udpsrc[i], TRUE);
+          /* add udpsrc */
+          gst_bin_add (bin, source->udpsrc[i]);
+
+          /* and link to the funnel v4 */
+          source->selpad[i] = selpad =
+              gst_element_get_request_pad (priv->funnel[i], "sink_%u");
+          pad = gst_element_get_static_pad (source->udpsrc[i], "src");
+          gst_pad_link (pad, selpad);
+          gst_object_unref (pad);
+          gst_object_unref (selpad);
+        }
+        gst_object_unref (bin);
+
+        priv->transport_sources =
+            g_list_prepend (priv->transport_sources, source);
+      } else {
+        GList *l;
+
+        for (l = priv->transport_sources; l; l = l->next) {
+          source = l->data;
+
+          if (source->transport == trans) {
+            priv->transport_sources =
+                g_list_delete_link (priv->transport_sources, l);
+            break;
+          }
+        }
+
+        if (l != NULL) {
+          gint i;
+
+          for (i = 0; i < 2; i++) {
+            /* Will automatically unlink everything */
+            gst_bin_remove (bin,
+                GST_ELEMENT (gst_object_ref (source->udpsrc[i])));
+
+            gst_element_set_state (source->udpsrc[i], GST_STATE_NULL);
+            gst_object_unref (source->udpsrc[i]);
+
+            gst_element_release_request_pad (priv->funnel[i],
+                source->selpad[i]);
+          }
+
+          g_slice_free (GstRTSPMulticastTransportSource, source);
+        }
+      }
+
+      /* fall through for the generic case */
+    }
+    case GST_RTSP_LOWER_TRANS_UDP:
     {
       gchar *dest;
       gint min, max;
