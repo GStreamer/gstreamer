@@ -24,6 +24,9 @@
 #ifndef __GST_QUEUE_ARRAY_H__
 #define __GST_QUEUE_ARRAY_H__
 
+/**
+ * GstQueueArray: (skip)
+ */
 typedef struct _GstQueueArray GstQueueArray;
 
 GstQueueArray * gst_queue_array_new       (guint initial_size);

@@ -44,7 +44,7 @@ struct _GstQueueArray
 };
 
 /**
- * gst_queue_array_new:
+ * gst_queue_array_new: (skip)
  * @initial_size: Initial size of the new queue
  *
  * Allocates a new #GstQueueArray object with an initial
@@ -70,7 +70,7 @@ gst_queue_array_new (guint initial_size)
 
 
 /**
- * gst_queue_array_free:
+ * gst_queue_array_free: (skip)
  * @array: a #GstQueueArray object
  *
  * Frees queue @array and all memory associated to it.
@@ -85,7 +85,7 @@ gst_queue_array_free (GstQueueArray * array)
 }
 
 /**
- * gst_queue_array_pop_head:
+ * gst_queue_array_pop_head: (skip)
  * @array: a #GstQueueArray object
  *
  * Returns and head of the queue @array and removes
@@ -111,7 +111,7 @@ gst_queue_array_pop_head (GstQueueArray * array)
 }
 
 /**
- * gst_queue_array_peek_head:
+ * gst_queue_array_peek_head: (skip)
  * @array: a #GstQueueArray object
  *
  * Returns and head of the queue @array and does not
@@ -131,7 +131,7 @@ gst_queue_array_peek_head (GstQueueArray * array)
 }
 
 /**
- * gst_queue_array_push_tail:
+ * gst_queue_array_push_tail: (skip)
  * @array: a #GstQueueArray object
  * @data: object to push
  *
@@ -183,7 +183,7 @@ gst_queue_array_push_tail (GstQueueArray * array, gpointer data)
 }
 
 /**
- * gst_queue_array_is_empty:
+ * gst_queue_array_is_empty: (skip)
  * @array: a #GstQueueArray object
  *
  * Checks if the queue @array is empty.
@@ -199,7 +199,7 @@ gst_queue_array_is_empty (GstQueueArray * array)
 }
 
 /**
- * gst_queue_array_drop_element:
+ * gst_queue_array_drop_element: (skip)
  * @array: a #GstQueueArray object
  * @idx: index to drop
  *
@@ -285,7 +285,7 @@ gst_queue_array_drop_element (GstQueueArray * array, guint idx)
 }
 
 /**
- * gst_queue_array_find:
+ * gst_queue_array_find: (skip)
  * @array: a #GstQueueArray object
  * @func: (allow-none): comparison function, or %NULL to find @data by value
  * @data: data for comparison function
@@ -325,7 +325,7 @@ gst_queue_array_find (GstQueueArray * array, GCompareFunc func, gpointer data)
 }
 
 /**
- * gst_queue_array_get_length:
+ * gst_queue_array_get_length: (skip)
  * @array: a #GstQueueArray object
  *
  * Returns the length of the queue @array
