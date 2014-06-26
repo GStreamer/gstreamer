@@ -806,6 +806,7 @@ gst_videoaggregator_reset (GstVideoAggregator * vagg)
     GstVideoAggregatorPad *p = l->data;
 
     gst_buffer_replace (&p->buffer, NULL);
+    gst_buffer_replace (&p->queued, NULL);
     p->start_time = -1;
     p->end_time = -1;
 
@@ -959,6 +960,7 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
       } else if (start_time >= output_end_time) {
         GST_DEBUG_OBJECT (pad, "Keeping buffer until %" GST_TIME_FORMAT,
             GST_TIME_ARGS (start_time));
+        gst_buffer_unref (buf);
         eos = FALSE;
       } else {
         GST_DEBUG_OBJECT (pad, "Too old buffer -- dropping");
