@@ -20,6 +20,28 @@
 # Boston, MA 02110-1301, USA.
 
 
+valid_mixing_scenarios=["play_15s",
+                        "fast_forward",
+                        "seek_forward",
+                        "seek_backward",
+                        "seek_with_stop",
+                        "scrub_forward_seeking"]
+
+
+def register_compositing_tests(self):
+    """
+    Those tests are not activated in the default testsuite,
+    they should be activated in a configuration file.
+    """
+    for compositor in ["compositor", "glmixer"]:
+        if gst_validate_checkout_element_present(compositor):
+            self.add_generators(GstValidateMixerTestsGenerator(compositor, self,
+                                                compositor,
+                                                "video",
+                                                converter="deinterlace ! videoconvert ! videorate ! videoscale ! video/x-raw,framerate=25/1,pixel-aspect-ratio=1/1",
+                                                valid_scenarios=valid_mixing_scenarios))
+
+
 def register_default_test_generators(self):
     """
     Registers default test generators
@@ -27,6 +49,22 @@ def register_default_test_generators(self):
     self.add_generators([GstValidatePlaybinTestsGenerator(self),
                          GstValidateMediaCheckTestsGenerator(self),
                          GstValidateTranscodingTestsGenerator(self)])
+
+    for compositor in ["compositor", "glvideomixer"]:
+            self.add_generators(GstValidateMixerTestsGenerator(compositor + ".simple", self,
+                                                compositor,
+                                                "video",
+                                                converter="deinterlace ! videoconvert",
+                                                mixed_srcs= {
+                                                "synchronized": {"mixer_props": "sink_1::alpha=0.5 sink_1::xpos=50 sink_1::ypos=50",
+                                                    "sources":
+                                                       ("videotestsrc pattern=snow timestamp-offset=3000000000 ! 'video/x-raw,format=AYUV,width=640,height=480,framerate=(fraction)30/1' !  timeoverlay",
+                                                        "videotestsrc pattern=smpte ! 'video/x-raw,format=AYUV,width=800,height=600,framerate=(fraction)10/1' ! timeoverlay")},
+                                                "bgra":
+                                                    ("videotestsrc ! video/x-raw, framerate=\(fraction\)10/1, width=100, height=100",
+                                                     "videotestsrc ! video/x-raw, framerate=\(fraction\)5/1, width=320, height=240")
+                                                    },
+                                                valid_scenarios=valid_mixing_scenarios))
 
 
 def register_default_scenarios(self):
@@ -95,8 +133,15 @@ def register_defaults(self):
     self.register_default_blacklist()
     self.register_default_test_generators()
 
+
+def register_all(self):
+    self.register_defaults()
+    self.register_compositing_tests()
+
+
 try:
     GstValidateTestManager.register_defaults = register_defaults
+    GstValidateTestManager.register_all = register_all
     GstValidateTestManager.register_default_blacklist = register_default_blacklist
     GstValidateTestManager.register_default_test_generators = register_default_test_generators
     GstValidateTestManager.register_default_scenarios = register_default_scenarios

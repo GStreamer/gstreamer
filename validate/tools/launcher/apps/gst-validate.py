@@ -256,6 +256,76 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                               )
 
 
+class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
+    def __init__(self, name, test_manager, mixer, media_type, converter="", num_sources=3,
+                 mixed_srcs={}, valid_scenarios=[]):
+        pipe_template = "%(mixer)s name=_mixer !  " + converter + " ! %(sink)s "
+        self.converter = converter
+        self.mixer = mixer
+        self.media_type = media_type
+        self.num_sources = num_sources
+        self.mixed_srcs = mixed_srcs
+        super(GstValidateMixerTestsGenerator, self).__init__(name, test_manager, pipe_template,
+                                                             valid_scenarios=valid_scenarios)
+
+    def populate_tests(self, uri_minfo_special_scenarios, scenarios):
+        wanted_ressources = []
+        for uri, minfo, special_scenarios in uri_minfo_special_scenarios:
+            protocol = minfo.media_descriptor.get_protocol()
+            if protocol == Protocols.FILE and \
+                    minfo.media_descriptor.get_num_tracks(self.media_type) > 0:
+                wanted_ressources.append((uri, minfo))
+
+        if not self.mixed_srcs:
+            if not wanted_ressources:
+                return
+
+            for i in range(len(uri_minfo_special_scenarios) / self.num_sources):
+                can_run = True
+                srcs = []
+                name = ""
+                for nsource in range(self.num_sources):
+                    uri, minfo = wanted_ressources[i + nsource]
+                    srcs.append("uridecodebin uri=%s ! %s" % (uri, self.converter))
+                    fname = os.path.basename(uri).replace(".", "_")
+                    if not name:
+                        name = fname
+                    else:
+                        name += "+%s" % fname
+
+                self.mixed_srcs[name] = tuple(srcs)
+
+        for name, srcs in self.mixed_srcs.iteritems():
+            if isinstance(srcs, dict):
+                pipe_arguments = {"mixer": self.mixer + " %s" % srcs["mixer_props"]}
+                srcs = srcs["sources"]
+            else:
+                pipe_arguments = {"mixer": self.mixer}
+
+            if self.test_manager.options.mute:
+                pipe_arguments["sink"] = "'fakesink sync=true'"
+            else:
+                pipe_arguments["sink"] = "auto%ssink" % self.media_type
+
+            pipe = self._pipeline_template % pipe_arguments
+
+            for src in srcs:
+                pipe += "%s ! _mixer. " % src
+
+            for scenario in scenarios:
+                fname = self.get_fname(scenario, Protocols.FILE) + "."
+                fname += name
+
+                self.debug("Adding: %s", fname)
+
+                self.add_test(GstValidateLaunchTest(fname,
+                                                    self.test_manager.options,
+                                                    self.test_manager.reporter,
+                                                    pipe,
+                                                    scenario=scenario)
+                              )
+
+
 class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
                  timeout=DEFAULT_TIMEOUT, scenario=None, media_descriptor=None):
@@ -403,7 +473,7 @@ class GstValidateTestManager(GstValidateBaseTestManager):
         self._run_defaults = True
         self._is_populated = False
         execfile(os.path.join(os.path.dirname(__file__), "apps",
-                 "validate_default_testsuite.py"), globals())
+                 "validate", "validate_testsuite.py"), globals())
 
     def init(self):
         if which(GST_VALIDATE_COMMAND) and which(GST_VALIDATE_TRANSCODING_COMMAND):
@@ -422,7 +492,10 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             return
 
         if not self.options.config:
-            self.register_defaults()
+            if self._run_defaults:
+                self.register_defaults()
+            else:
+                self.register_all()
 
         self._is_populated = True
 
