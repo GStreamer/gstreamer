@@ -680,6 +680,7 @@ _RGB_to_RGB (GstGLColorConvert * convert)
   info->shader_tex_names[0] = "tex";
 
   g_free (alpha);
+  g_free (pixel_order);
 }
 
 static void
@@ -874,6 +875,7 @@ _RGB_to_GRAY (GstGLColorConvert * convert)
   }
 
   g_free (alpha);
+  g_free (pixel_order);
 }
 
 static void
@@ -913,6 +915,8 @@ _GRAY_to_RGB (GstGLColorConvert * convert)
     default:
       break;
   }
+
+  g_free (pixel_order);
 }
 
 /* Called in the gl thread */
