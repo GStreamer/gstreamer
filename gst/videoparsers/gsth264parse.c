@@ -388,7 +388,8 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
   h264parse->format = format;
   h264parse->align = align;
 
-  h264parse->transform = (in_format != h264parse->format);
+  h264parse->transform = in_format != h264parse->format ||
+      align == GST_H264_PARSE_ALIGN_AU;
 }
 
 static GstBuffer *
@@ -1060,7 +1061,13 @@ out:
 
 skip:
   GST_DEBUG_OBJECT (h264parse, "skipping %d", *skipsize);
-  gst_h264_parse_reset_frame (h264parse);
+  /* If we are collecting access units, we need to preserve the initial
+   * config headers (SPS, PPS et al.) and only reset the frame if another
+   * slice NAL was received. This means that broken pictures are discarded */
+  if (h264parse->align != GST_H264_PARSE_ALIGN_AU ||
+      !(h264parse->state & GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS) ||
+      (h264parse->state & GST_H264_PARSE_STATE_GOT_SLICE))
+    gst_h264_parse_reset_frame (h264parse);
   goto out;
 
 invalid_stream:
