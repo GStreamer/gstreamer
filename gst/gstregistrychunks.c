@@ -33,7 +33,7 @@
 #include <gst/gstelement.h>
 #include <gst/gsttypefind.h>
 #include <gst/gsttypefindfactory.h>
-#include <gst/gstdevicemonitorfactory.h>
+#include <gst/gstdeviceproviderfactory.h>
 #include <gst/gsturi.h>
 #include <gst/gstinfo.h>
 #include <gst/gstenumtypes.h>
@@ -333,17 +333,17 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     } else {
       gst_registry_chunks_save_const_string (list, "");
     }
-  } else if (GST_IS_DEVICE_MONITOR_FACTORY (feature)) {
-    GstRegistryChunkDeviceMonitorFactory *tff;
-    GstDeviceMonitorFactory *factory = GST_DEVICE_MONITOR_FACTORY (feature);
+  } else if (GST_IS_DEVICE_PROVIDER_FACTORY (feature)) {
+    GstRegistryChunkDeviceProviderFactory *tff;
+    GstDeviceProviderFactory *factory = GST_DEVICE_PROVIDER_FACTORY (feature);
 
     /* Initialize with zeroes because of struct padding and
      * valgrind complaining about copying unitialized memory
      */
-    tff = g_slice_new0 (GstRegistryChunkDeviceMonitorFactory);
+    tff = g_slice_new0 (GstRegistryChunkDeviceProviderFactory);
     chk =
         gst_registry_chunks_make_data (tff,
-        sizeof (GstRegistryChunkDeviceMonitorFactory));
+        sizeof (GstRegistryChunkDeviceProviderFactory));
     pf = (GstRegistryChunkPluginFeature *) tff;
 
 
@@ -668,16 +668,16 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
         factory->extensions[i - 1] = str;
       }
     }
-  } else if (GST_IS_DEVICE_MONITOR_FACTORY (feature)) {
-    GstRegistryChunkDeviceMonitorFactory *dmf;
-    GstDeviceMonitorFactory *factory = GST_DEVICE_MONITOR_FACTORY (feature);
+  } else if (GST_IS_DEVICE_PROVIDER_FACTORY (feature)) {
+    GstRegistryChunkDeviceProviderFactory *dmf;
+    GstDeviceProviderFactory *factory = GST_DEVICE_PROVIDER_FACTORY (feature);
     const gchar *meta_data_str;
 
     align (*in);
     GST_DEBUG
         ("Reading/casting for GstRegistryChunkPluginFeature at address %p",
         *in);
-    unpack_element (*in, dmf, GstRegistryChunkDeviceMonitorFactory, end, fail);
+    unpack_element (*in, dmf, GstRegistryChunkDeviceProviderFactory, end, fail);
 
     pf = (GstRegistryChunkPluginFeature *) dmf;
 

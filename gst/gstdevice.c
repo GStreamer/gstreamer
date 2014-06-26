@@ -22,13 +22,13 @@
 /**
  * SECTION:gstdevice
  * @short_description: Object representing a device
- * @see_also: #GstDeviceMonitor
+ * @see_also: #GstDeviceProvider
  *
  * #GstDevice are objects representing a device, they contain
  * relevant metadata about the device, such as its class and the #GstCaps
  * representing the media types it can produce or handle.
  *
- * #GstDevice are created by #GstDeviceMonitor objects which can be
+ * #GstDevice are created by #GstDeviceProvider objects which can be
  * aggregated by #GstGlobalDeviceMonitor objects.
  *
  * Since: 1.4
@@ -239,7 +239,7 @@ gst_device_get_display_name (GstDevice * device)
  *
  * Gets the "class" of a device. This is a "/" separated list of
  * classes that represent this device. They are a subset of the
- * classes of the #GstDeviceMonitor that produced this device.
+ * classes of the #GstDeviceProvider that produced this device.
  *
  * Returns: The device class. Free with g_free() after use.
  *

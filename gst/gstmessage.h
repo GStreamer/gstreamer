@@ -105,9 +105,9 @@ typedef struct _GstMessage GstMessage;
  *     filter for GST_MESSAGE_EXTENDED and then check the result for the
  *     specific type. (Since 1.4)
  * @GST_MESSAGE_DEVICE_ADDED: Message indicating a #GstDevice was added to
- *     a #GstDeviceMonitor (Since 1.4)
+ *     a #GstDeviceProvider (Since 1.4)
  * @GST_MESSAGE_DEVICE_REMOVED: Message indicating a #GstDevice was removed
- *     from a #GstDeviceMonitor (Since 1.4)
+ *     from a #GstDeviceProvider (Since 1.4)
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.

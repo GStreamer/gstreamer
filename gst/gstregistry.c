@@ -127,7 +127,7 @@
 #include "gstinfo.h"
 #include "gsterror.h"
 #include "gstregistry.h"
-#include "gstdevicemonitorfactory.h"
+#include "gstdeviceproviderfactory.h"
 
 #include "gstpluginloader.h"
 
@@ -166,7 +166,7 @@ struct _GstRegistryPrivate
   guint32 efl_cookie;
   GList *typefind_factory_list;
   guint32 tfl_cookie;
-  GList *device_monitor_factory_list;
+  GList *device_provider_factory_list;
   guint32 dmfl_cookie;
 };
 
@@ -317,10 +317,10 @@ gst_registry_finalize (GObject * object)
     gst_plugin_feature_list_free (registry->priv->typefind_factory_list);
   }
 
-  if (registry->priv->device_monitor_factory_list) {
+  if (registry->priv->device_provider_factory_list) {
     GST_DEBUG_OBJECT (registry,
-        "Cleaning up cached device monitor factory list");
-    gst_plugin_feature_list_free (registry->priv->device_monitor_factory_list);
+        "Cleaning up cached device provider factory list");
+    gst_plugin_feature_list_free (registry->priv->device_provider_factory_list);
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -789,20 +789,20 @@ gst_registry_get_typefind_factory_list (GstRegistry * registry)
 
 
 static GList *
-gst_registry_get_device_monitor_factory_list (GstRegistry * registry)
+gst_registry_get_device_provider_factory_list (GstRegistry * registry)
 {
   GList *list;
 
   GST_OBJECT_LOCK (registry);
 
   gst_registry_get_feature_list_or_create (registry,
-      &registry->priv->device_monitor_factory_list,
-      &registry->priv->dmfl_cookie, GST_TYPE_DEVICE_MONITOR_FACTORY);
+      &registry->priv->device_provider_factory_list,
+      &registry->priv->dmfl_cookie, GST_TYPE_DEVICE_PROVIDER_FACTORY);
 
   /* Return reffed copy */
   list =
       gst_plugin_feature_list_copy (registry->
-      priv->device_monitor_factory_list);
+      priv->device_provider_factory_list);
 
   GST_OBJECT_UNLOCK (registry);
 
@@ -953,8 +953,8 @@ gst_registry_get_feature_list (GstRegistry * registry, GType type)
     return gst_registry_get_element_factory_list (registry);
   else if (type == GST_TYPE_TYPE_FIND_FACTORY)
     return gst_registry_get_typefind_factory_list (registry);
-  else if (type == GST_TYPE_DEVICE_MONITOR_FACTORY)
-    return gst_registry_get_device_monitor_factory_list (registry);
+  else if (type == GST_TYPE_DEVICE_PROVIDER_FACTORY)
+    return gst_registry_get_device_provider_factory_list (registry);
 
   data.type = type;
   data.name = NULL;

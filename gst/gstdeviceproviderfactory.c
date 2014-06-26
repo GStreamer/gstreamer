@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
- * gstdevicemonitorfactory.c: GstDeviceMonitorFactory object, support routines
+ * gstdeviceproviderfactory.c: GstDeviceProviderFactory object, support routines
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,16 +22,16 @@
  */
 
 /**
- * SECTION:gstdevicemonitorfactory
- * @short_description: Create GstDeviceMonitors from a factory
- * @see_also: #GstDeviceMonitor, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
+ * SECTION:gstdeviceproviderfactory
+ * @short_description: Create GstDeviceProviders from a factory
+ * @see_also: #GstDeviceProvider, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
  *
- * #GstDeviceMonitorFactory is used to create instances of device monitors. A
- * GstDeviceMonitorfactory can be added to a #GstPlugin as it is also a
+ * #GstDeviceProviderFactory is used to create instances of device providers. A
+ * GstDeviceProviderfactory can be added to a #GstPlugin as it is also a
  * #GstPluginFeature.
  *
- * Use the gst_device_monitor_factory_find() and gst_device_monitor_factory_create()
- * functions to create device monitor instances or use gst_device_monitor_factory_make() as a
+ * Use the gst_device_provider_factory_find() and gst_device_provider_factory_create()
+ * functions to create device provider instances or use gst_device_provider_factory_make() as a
  * convenient shortcut.
  *
  * Since: 1.4
@@ -43,94 +43,94 @@
 
 #include "gst_private.h"
 
-#include "gstdevicemonitorfactory.h"
+#include "gstdeviceproviderfactory.h"
 #include "gst.h"
 
 #include "glib-compat-private.h"
 
-GST_DEBUG_CATEGORY_STATIC (device_monitor_factory_debug);
-#define GST_CAT_DEFAULT device_monitor_factory_debug
+GST_DEBUG_CATEGORY_STATIC (device_provider_factory_debug);
+#define GST_CAT_DEFAULT device_provider_factory_debug
 
-static void gst_device_monitor_factory_finalize (GObject * object);
-static void gst_device_monitor_factory_cleanup (GstDeviceMonitorFactory *
+static void gst_device_provider_factory_finalize (GObject * object);
+static void gst_device_provider_factory_cleanup (GstDeviceProviderFactory *
     factory);
 
-/* static guint gst_device_monitor_factory_signals[LAST_SIGNAL] = { 0 }; */
+/* static guint gst_device_provider_factory_signals[LAST_SIGNAL] = { 0 }; */
 
 /* this is defined in gstelement.c */
-extern GQuark __gst_devicemonitorclass_factory;
+extern GQuark __gst_deviceproviderclass_factory;
 
 #define _do_init \
 { \
-  GST_DEBUG_CATEGORY_INIT (device_monitor_factory_debug, "GST_DEVICE_MONITOR_FACTORY", \
+  GST_DEBUG_CATEGORY_INIT (device_provider_factory_debug, "GST_DEVICE_PROVIDER_FACTORY", \
       GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, \
-      "device monitor factories keep information about installed device monitors"); \
+      "device provider factories keep information about installed device providers"); \
 }
 
-G_DEFINE_TYPE_WITH_CODE (GstDeviceMonitorFactory, gst_device_monitor_factory,
+G_DEFINE_TYPE_WITH_CODE (GstDeviceProviderFactory, gst_device_provider_factory,
     GST_TYPE_PLUGIN_FEATURE, _do_init);
 
 static void
-gst_device_monitor_factory_class_init (GstDeviceMonitorFactoryClass * klass)
+gst_device_provider_factory_class_init (GstDeviceProviderFactoryClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class->finalize = gst_device_monitor_factory_finalize;
+  gobject_class->finalize = gst_device_provider_factory_finalize;
 }
 
 static void
-gst_device_monitor_factory_init (GstDeviceMonitorFactory * factory)
+gst_device_provider_factory_init (GstDeviceProviderFactory * factory)
 {
 }
 
 static void
-gst_device_monitor_factory_finalize (GObject * object)
+gst_device_provider_factory_finalize (GObject * object)
 {
-  GstDeviceMonitorFactory *factory = GST_DEVICE_MONITOR_FACTORY (object);
-  GstDeviceMonitor *monitor;
+  GstDeviceProviderFactory *factory = GST_DEVICE_PROVIDER_FACTORY (object);
+  GstDeviceProvider *provider;
 
-  gst_device_monitor_factory_cleanup (factory);
+  gst_device_provider_factory_cleanup (factory);
 
-  monitor = g_atomic_pointer_get (&factory->monitor);
-  if (monitor)
-    gst_object_unref (monitor);
+  provider = g_atomic_pointer_get (&factory->provider);
+  if (provider)
+    gst_object_unref (provider);
 
-  G_OBJECT_CLASS (gst_device_monitor_factory_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_device_provider_factory_parent_class)->finalize (object);
 }
 
 /**
- * gst_device_monitor_factory_find:
+ * gst_device_provider_factory_find:
  * @name: name of factory to find
  *
- * Search for an device monitor factory of the given name. Refs the returned
- * device monitor factory; caller is responsible for unreffing.
+ * Search for an device provider factory of the given name. Refs the returned
+ * device provider factory; caller is responsible for unreffing.
  *
- * Returns: (transfer full) (nullable): #GstDeviceMonitorFactory if
+ * Returns: (transfer full) (nullable): #GstDeviceProviderFactory if
  * found, %NULL otherwise
  *
  * Since: 1.4
  */
-GstDeviceMonitorFactory *
-gst_device_monitor_factory_find (const gchar * name)
+GstDeviceProviderFactory *
+gst_device_provider_factory_find (const gchar * name)
 {
   GstPluginFeature *feature;
 
   g_return_val_if_fail (name != NULL, NULL);
 
   feature = gst_registry_find_feature (gst_registry_get (), name,
-      GST_TYPE_DEVICE_MONITOR_FACTORY);
+      GST_TYPE_DEVICE_PROVIDER_FACTORY);
   if (feature)
-    return GST_DEVICE_MONITOR_FACTORY (feature);
+    return GST_DEVICE_PROVIDER_FACTORY (feature);
 
-  /* this isn't an error, for instance when you query if an device monitor factory is
+  /* this isn't an error, for instance when you query if an device provider factory is
    * present */
-  GST_LOG ("no such device monitor factory \"%s\"", name);
+  GST_LOG ("no such device provider factory \"%s\"", name);
 
   return NULL;
 }
 
 static void
-gst_device_monitor_factory_cleanup (GstDeviceMonitorFactory * factory)
+gst_device_provider_factory_cleanup (GstDeviceProviderFactory * factory)
 {
   if (factory->metadata) {
     gst_structure_free ((GstStructure *) factory->metadata);
@@ -143,22 +143,22 @@ gst_device_monitor_factory_cleanup (GstDeviceMonitorFactory * factory)
 
 #define CHECK_METADATA_FIELD(klass, name, key)                                 \
   G_STMT_START {                                                               \
-    const gchar *metafield = gst_device_monitor_class_get_metadata (klass, key);      \
+    const gchar *metafield = gst_device_provider_class_get_metadata (klass, key);      \
     if (G_UNLIKELY (metafield == NULL || *metafield == '\0')) {                \
-      g_warning ("Device monitor factory metadata for '%s' has no valid %s field", name, key);    \
+      g_warning ("Device provider factory metadata for '%s' has no valid %s field", name, key);    \
       goto detailserror;                                                       \
     } \
   } G_STMT_END;
 
 /**
- * gst_device_monitor_register:
- * @plugin: (allow-none): #GstPlugin to register the device monitor with, or %NULL for
- *     a static device monitor.
- * @name: name of device monitors of this type
- * @rank: rank of device monitor (higher rank means more importance when autoplugging)
- * @type: GType of device monitor to register
+ * gst_device_provider_register:
+ * @plugin: (allow-none): #GstPlugin to register the device provider with, or %NULL for
+ *     a static device provider.
+ * @name: name of device providers of this type
+ * @rank: rank of device provider (higher rank means more importance when autoplugging)
+ * @type: GType of device provider to register
  *
- * Create a new device monitorfactory capable of instantiating objects of the
+ * Create a new device providerfactory capable of instantiating objects of the
  * @type and add the factory to @plugin.
  *
  * Returns: %TRUE, if the registering succeeded, %FALSE on error
@@ -166,16 +166,16 @@ gst_device_monitor_factory_cleanup (GstDeviceMonitorFactory * factory)
  * Since: 1.4
  */
 gboolean
-gst_device_monitor_register (GstPlugin * plugin, const gchar * name, guint rank,
-    GType type)
+gst_device_provider_register (GstPlugin * plugin, const gchar * name,
+    guint rank, GType type)
 {
   GstPluginFeature *existing_feature;
   GstRegistry *registry;
-  GstDeviceMonitorFactory *factory;
-  GstDeviceMonitorClass *klass;
+  GstDeviceProviderFactory *factory;
+  GstDeviceProviderClass *klass;
 
   g_return_val_if_fail (name != NULL, FALSE);
-  g_return_val_if_fail (g_type_is_a (type, GST_TYPE_DEVICE_MONITOR), FALSE);
+  g_return_val_if_fail (g_type_is_a (type, GST_TYPE_DEVICE_PROVIDER), FALSE);
 
   registry = gst_registry_get ();
 
@@ -187,24 +187,24 @@ gst_device_monitor_register (GstPlugin * plugin, const gchar * name, guint rank,
   if (existing_feature) {
     GST_DEBUG_OBJECT (registry, "update existing feature %p (%s)",
         existing_feature, name);
-    factory = GST_DEVICE_MONITOR_FACTORY_CAST (existing_feature);
+    factory = GST_DEVICE_PROVIDER_FACTORY_CAST (existing_feature);
     factory->type = type;
     existing_feature->loaded = TRUE;
-    g_type_set_qdata (type, __gst_devicemonitorclass_factory, factory);
+    g_type_set_qdata (type, __gst_deviceproviderclass_factory, factory);
     gst_object_unref (existing_feature);
     return TRUE;
   }
 
   factory =
-      GST_DEVICE_MONITOR_FACTORY_CAST (g_object_newv
-      (GST_TYPE_DEVICE_MONITOR_FACTORY, 0, NULL));
+      GST_DEVICE_PROVIDER_FACTORY_CAST (g_object_newv
+      (GST_TYPE_DEVICE_PROVIDER_FACTORY, 0, NULL));
   gst_plugin_feature_set_name (GST_PLUGIN_FEATURE_CAST (factory), name);
-  GST_LOG_OBJECT (factory, "Created new device monitorfactory for type %s",
+  GST_LOG_OBJECT (factory, "Created new device providerfactory for type %s",
       g_type_name (type));
 
   /* provide info needed during class structure setup */
-  g_type_set_qdata (type, __gst_devicemonitorclass_factory, factory);
-  klass = GST_DEVICE_MONITOR_CLASS (g_type_class_ref (type));
+  g_type_set_qdata (type, __gst_deviceproviderclass_factory, factory);
+  klass = GST_DEVICE_PROVIDER_CLASS (g_type_class_ref (type));
 
   CHECK_METADATA_FIELD (klass, name, GST_ELEMENT_METADATA_LONGNAME);
   CHECK_METADATA_FIELD (klass, name, GST_ELEMENT_METADATA_KLASS);
@@ -233,34 +233,34 @@ gst_device_monitor_register (GstPlugin * plugin, const gchar * name, guint rank,
   /* ERRORS */
 detailserror:
   {
-    gst_device_monitor_factory_cleanup (factory);
+    gst_device_provider_factory_cleanup (factory);
     return FALSE;
   }
 }
 
 /**
- * gst_device_monitor_factory_get:
+ * gst_device_provider_factory_get:
  * @factory: factory to instantiate
  *
- * Returns the device monitor of the type defined by the given device
- * monitorfactory.
+ * Returns the device provider of the type defined by the given device
+ * providerfactory.
  *
- * Returns: (transfer full) (nullable): the #GstDeviceMonitor or %NULL
- * if the device monitor couldn't be created
+ * Returns: (transfer full) (nullable): the #GstDeviceProvider or %NULL
+ * if the device provider couldn't be created
  *
  * Since: 1.4
  */
-GstDeviceMonitor *
-gst_device_monitor_factory_get (GstDeviceMonitorFactory * factory)
+GstDeviceProvider *
+gst_device_provider_factory_get (GstDeviceProviderFactory * factory)
 {
-  GstDeviceMonitor *device_monitor;
-  GstDeviceMonitorClass *oclass;
-  GstDeviceMonitorFactory *newfactory;
+  GstDeviceProvider *device_provider;
+  GstDeviceProviderClass *oclass;
+  GstDeviceProviderFactory *newfactory;
 
   g_return_val_if_fail (factory != NULL, NULL);
 
   newfactory =
-      GST_DEVICE_MONITOR_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
+      GST_DEVICE_PROVIDER_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
 
   if (newfactory == NULL)
@@ -268,45 +268,45 @@ gst_device_monitor_factory_get (GstDeviceMonitorFactory * factory)
 
   factory = newfactory;
 
-  GST_INFO ("getting device monitor \"%s\"", GST_OBJECT_NAME (factory));
+  GST_INFO ("getting device provider \"%s\"", GST_OBJECT_NAME (factory));
 
   if (factory->type == 0)
     goto no_type;
 
-  device_monitor = g_atomic_pointer_get (&newfactory->monitor);
-  if (device_monitor)
-    return gst_object_ref (device_monitor);
+  device_provider = g_atomic_pointer_get (&newfactory->provider);
+  if (device_provider)
+    return gst_object_ref (device_provider);
 
-  /* create an instance of the device monitor, cast so we don't assert on NULL
+  /* create an instance of the device provider, cast so we don't assert on NULL
    * also set name as early as we can
    */
-  device_monitor = GST_DEVICE_MONITOR_CAST (g_object_newv (factory->type, 0,
+  device_provider = GST_DEVICE_PROVIDER_CAST (g_object_newv (factory->type, 0,
           NULL));
-  if (G_UNLIKELY (device_monitor == NULL))
-    goto no_device_monitor;
+  if (G_UNLIKELY (device_provider == NULL))
+    goto no_device_provider;
 
-  /* fill in the pointer to the factory in the device monitor class. The
+  /* fill in the pointer to the factory in the device provider class. The
    * class will not be unreffed currently.
    * Be thread safe as there might be 2 threads creating the first instance of
-   * an device monitor at the same moment
+   * an device provider at the same moment
    */
-  oclass = GST_DEVICE_MONITOR_GET_CLASS (device_monitor);
+  oclass = GST_DEVICE_PROVIDER_GET_CLASS (device_provider);
   if (!g_atomic_pointer_compare_and_exchange (&oclass->factory, NULL, factory))
     gst_object_unref (factory);
 
-  gst_object_ref_sink (device_monitor);
+  gst_object_ref_sink (device_provider);
 
   /* We use an atomic to make sure we don't create two in parallel */
-  if (!g_atomic_pointer_compare_and_exchange (&newfactory->monitor, NULL,
-          device_monitor)) {
-    gst_object_unref (device_monitor);
+  if (!g_atomic_pointer_compare_and_exchange (&newfactory->provider, NULL,
+          device_provider)) {
+    gst_object_unref (device_provider);
 
-    device_monitor = g_atomic_pointer_get (&newfactory->monitor);
+    device_provider = g_atomic_pointer_get (&newfactory->provider);
   }
 
-  GST_DEBUG ("created device monitor \"%s\"", GST_OBJECT_NAME (factory));
+  GST_DEBUG ("created device provider \"%s\"", GST_OBJECT_NAME (factory));
 
-  return gst_object_ref (device_monitor);
+  return gst_object_ref (device_provider);
 
   /* ERRORS */
 load_failed:
@@ -322,53 +322,53 @@ no_type:
     gst_object_unref (factory);
     return NULL;
   }
-no_device_monitor:
+no_device_provider:
   {
-    GST_WARNING_OBJECT (factory, "could not create device monitor");
+    GST_WARNING_OBJECT (factory, "could not create device provider");
     gst_object_unref (factory);
     return NULL;
   }
 }
 
 /**
- * gst_device_monitor_factory_get_by_name:
+ * gst_device_provider_factory_get_by_name:
  * @factoryname: a named factory to instantiate
  *
- * Returns the device monitor of the type defined by the given device
- * monitor factory.
+ * Returns the device provider of the type defined by the given device
+ * provider factory.
  *
- * Returns: (transfer full) (nullable): a #GstDeviceMonitor or %NULL
- * if unable to create device monitor
+ * Returns: (transfer full) (nullable): a #GstDeviceProvider or %NULL
+ * if unable to create device provider
  *
  * Since: 1.4
  */
-GstDeviceMonitor *
-gst_device_monitor_factory_get_by_name (const gchar * factoryname)
+GstDeviceProvider *
+gst_device_provider_factory_get_by_name (const gchar * factoryname)
 {
-  GstDeviceMonitorFactory *factory;
-  GstDeviceMonitor *device_monitor;
+  GstDeviceProviderFactory *factory;
+  GstDeviceProvider *device_provider;
 
   g_return_val_if_fail (factoryname != NULL, NULL);
   g_return_val_if_fail (gst_is_initialized (), NULL);
 
-  GST_LOG ("gstdevicemonitorfactory: get_by_name \"%s\"", factoryname);
+  GST_LOG ("gstdeviceproviderfactory: get_by_name \"%s\"", factoryname);
 
-  factory = gst_device_monitor_factory_find (factoryname);
+  factory = gst_device_provider_factory_find (factoryname);
   if (factory == NULL)
     goto no_factory;
 
   GST_LOG_OBJECT (factory, "found factory %p", factory);
-  device_monitor = gst_device_monitor_factory_get (factory);
-  if (device_monitor == NULL)
+  device_provider = gst_device_provider_factory_get (factory);
+  if (device_provider == NULL)
     goto create_failed;
 
   gst_object_unref (factory);
-  return device_monitor;
+  return device_provider;
 
   /* ERRORS */
 no_factory:
   {
-    GST_INFO ("no such device monitor factory \"%s\"!", factoryname);
+    GST_INFO ("no such device provider factory \"%s\"!", factoryname);
     return NULL;
   }
 create_failed:
@@ -380,30 +380,30 @@ create_failed:
 }
 
 /**
- * gst_device_monitor_factory_get_device_monitor_type:
+ * gst_device_provider_factory_get_device_provider_type:
  * @factory: factory to get managed #GType from
  *
- * Get the #GType for device monitors managed by this factory. The type can
- * only be retrieved if the device monitor factory is loaded, which can be
+ * Get the #GType for device providers managed by this factory. The type can
+ * only be retrieved if the device provider factory is loaded, which can be
  * assured with gst_plugin_feature_load().
  *
- * Returns: the #GType for device monitors managed by this factory or 0 if
+ * Returns: the #GType for device providers managed by this factory or 0 if
  * the factory is not loaded.
  *
  * Since: 1.4
  */
 GType
-gst_device_monitor_factory_get_device_monitor_type (GstDeviceMonitorFactory *
+gst_device_provider_factory_get_device_provider_type (GstDeviceProviderFactory *
     factory)
 {
-  g_return_val_if_fail (GST_IS_DEVICE_MONITOR_FACTORY (factory), 0);
+  g_return_val_if_fail (GST_IS_DEVICE_PROVIDER_FACTORY (factory), 0);
 
   return factory->type;
 }
 
 /**
- * gst_device_monitor_factory_get_metadata:
- * @factory: a #GstDeviceMonitorFactory
+ * gst_device_provider_factory_get_metadata:
+ * @factory: a #GstDeviceProviderFactory
  * @key: a key
  *
  * Get the metadata on @factory with @key.
@@ -414,15 +414,15 @@ gst_device_monitor_factory_get_device_monitor_type (GstDeviceMonitorFactory *
  * Since: 1.4
  */
 const gchar *
-gst_device_monitor_factory_get_metadata (GstDeviceMonitorFactory * factory,
+gst_device_provider_factory_get_metadata (GstDeviceProviderFactory * factory,
     const gchar * key)
 {
   return gst_structure_get_string ((GstStructure *) factory->metadata, key);
 }
 
 /**
- * gst_device_monitor_factory_get_metadata_keys:
- * @factory: a #GstDeviceMonitorFactory
+ * gst_device_provider_factory_get_metadata_keys:
+ * @factory: a #GstDeviceProviderFactory
  *
  * Get the available keys for the metadata on @factory.
  *
@@ -433,13 +433,14 @@ gst_device_monitor_factory_get_metadata (GstDeviceMonitorFactory * factory,
  * Since: 1.4
  */
 gchar **
-gst_device_monitor_factory_get_metadata_keys (GstDeviceMonitorFactory * factory)
+gst_device_provider_factory_get_metadata_keys (GstDeviceProviderFactory *
+    factory)
 {
   GstStructure *metadata;
   gchar **arr;
   gint i, num;
 
-  g_return_val_if_fail (GST_IS_DEVICE_MONITOR_FACTORY (factory), NULL);
+  g_return_val_if_fail (GST_IS_DEVICE_PROVIDER_FACTORY (factory), NULL);
 
   metadata = (GstStructure *) factory->metadata;
   if (metadata == NULL)
@@ -458,8 +459,8 @@ gst_device_monitor_factory_get_metadata_keys (GstDeviceMonitorFactory * factory)
 }
 
 /**
- * gst_device_monitor_factory_has_classesv:
- * @factory: a #GstDeviceMonitorFactory
+ * gst_device_provider_factory_has_classesv:
+ * @factory: a #GstDeviceProviderFactory
  * @classes: (array zero-terminated=1): a %NULL terminated array of
  *   klasses to match, only match if all classes are matched
  *
@@ -470,19 +471,19 @@ gst_device_monitor_factory_get_metadata_keys (GstDeviceMonitorFactory * factory)
  * Since: 1.4
  */
 gboolean
-gst_device_monitor_factory_has_classesv (GstDeviceMonitorFactory * factory,
+gst_device_provider_factory_has_classesv (GstDeviceProviderFactory * factory,
     gchar ** classes)
 {
   const gchar *klass;
 
-  g_return_val_if_fail (GST_IS_DEVICE_MONITOR_FACTORY (factory), FALSE);
+  g_return_val_if_fail (GST_IS_DEVICE_PROVIDER_FACTORY (factory), FALSE);
 
-  klass = gst_device_monitor_factory_get_metadata (factory,
+  klass = gst_device_provider_factory_get_metadata (factory,
       GST_ELEMENT_METADATA_KLASS);
 
   if (klass == NULL) {
     GST_ERROR_OBJECT (factory,
-        "device monitor factory is missing klass identifiers");
+        "device provider factory is missing klass identifiers");
     return FALSE;
   }
 
@@ -509,8 +510,8 @@ gst_device_monitor_factory_has_classesv (GstDeviceMonitorFactory * factory,
 }
 
 /**
- * gst_device_monitor_factory_has_classes:
- * @factory: a #GstDeviceMonitorFactory
+ * gst_device_provider_factory_has_classes:
+ * @factory: a #GstDeviceProviderFactory
  * @classes: a "/" separate list of klasses to match, only match if all classes
  *  are matched
  *
@@ -521,7 +522,7 @@ gst_device_monitor_factory_has_classesv (GstDeviceMonitorFactory * factory,
  * Since: 1.4
  */
 gboolean
-gst_device_monitor_factory_has_classes (GstDeviceMonitorFactory * factory,
+gst_device_provider_factory_has_classes (GstDeviceProviderFactory * factory,
     const gchar * classes)
 {
   gchar **classesv;
@@ -529,7 +530,7 @@ gst_device_monitor_factory_has_classes (GstDeviceMonitorFactory * factory,
 
   classesv = g_strsplit (classes, "/", 0);
 
-  res = gst_device_monitor_factory_has_classesv (factory, classesv);
+  res = gst_device_provider_factory_has_classesv (factory, classesv);
 
   g_strfreev (classesv);
 
@@ -543,38 +544,38 @@ typedef struct
 } FilterData;
 
 static gboolean
-device_monitor_filter (GstPluginFeature * feature, FilterData * data)
+device_provider_filter (GstPluginFeature * feature, FilterData * data)
 {
   gboolean res;
 
-  /* we only care about device monitor factories */
-  if (G_UNLIKELY (!GST_IS_DEVICE_MONITOR_FACTORY (feature)))
+  /* we only care about device provider factories */
+  if (G_UNLIKELY (!GST_IS_DEVICE_PROVIDER_FACTORY (feature)))
     return FALSE;
 
   res = (gst_plugin_feature_get_rank (feature) >= data->minrank) &&
-      gst_device_monitor_factory_has_classes (GST_DEVICE_MONITOR_FACTORY_CAST
+      gst_device_provider_factory_has_classes (GST_DEVICE_PROVIDER_FACTORY_CAST
       (feature), data->classes);
 
   return res;
 }
 
 /**
- * gst_device_monitor_factory_list_get_device_monitors:
+ * gst_device_provider_factory_list_get_device_providers:
  * @classes: a "/" separate list of klasses to match, only match if all classes
  *  are matched
  * @minrank: Minimum rank
  *
  * Get a list of factories that match all of the given @classes. Only
- * device monitors with a rank greater or equal to @minrank will be
+ * device providers with a rank greater or equal to @minrank will be
  * returned.  The list of factories is returned by decreasing rank.
  *
- * Returns: (transfer full) (element-type Gst.DeviceMonitorFactory): a #GList of
- *     #GstDeviceMonitorFactory device monitors. Use gst_plugin_feature_list_free() after
+ * Returns: (transfer full) (element-type Gst.DeviceProviderFactory): a #GList of
+ *     #GstDeviceProviderFactory device providers. Use gst_plugin_feature_list_free() after
  *     usage.
  *
  * Since: 1.4
  */
-GList *gst_device_monitor_factory_list_get_device_monitors
+GList *gst_device_provider_factory_list_get_device_providers
     (const gchar * classes, GstRank minrank)
 {
   GList *result;
@@ -586,7 +587,7 @@ GList *gst_device_monitor_factory_list_get_device_monitors
 
   /* get the feature list using the filter */
   result = gst_registry_feature_filter (gst_registry_get (),
-      (GstPluginFeatureFilter) device_monitor_filter, FALSE, &data);
+      (GstPluginFeatureFilter) device_provider_filter, FALSE, &data);
 
   /* sort on rank and name */
   result = g_list_sort (result, gst_plugin_feature_rank_compare_func);

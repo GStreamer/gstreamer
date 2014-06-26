@@ -25,8 +25,8 @@
 
 #include <gst/gstobject.h>
 #include <gst/gstdevice.h>
-#include <gst/gstdevicemonitor.h>
-#include <gst/gstdevicemonitorfactory.h>
+#include <gst/gstdeviceprovider.h>
+#include <gst/gstdeviceproviderfactory.h>
 
 G_BEGIN_DECLS
 

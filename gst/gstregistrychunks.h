@@ -132,15 +132,15 @@ typedef struct _GstRegistryChunkTypeFindFactory
 } GstRegistryChunkTypeFindFactory;
 
 /*
- * GstRegistryChunkDeviceMonitorFactory:
+ * GstRegistryChunkDeviceProviderFactory:
  *
- * A structure containing the device monitor factory fields
+ * A structure containing the device provider factory fields
  */
-typedef struct _GstRegistryChunkDeviceMonitorFactory
+typedef struct _GstRegistryChunkDeviceProviderFactory
 {
   GstRegistryChunkPluginFeature plugin_feature;
 
-} GstRegistryChunkDeviceMonitorFactory;
+} GstRegistryChunkDeviceProviderFactory;
 
 /*
  * GstRegistryChunkPadTemplate:

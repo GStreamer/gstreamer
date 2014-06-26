@@ -43,7 +43,7 @@
 #include <gst/gstdatetime.h>
 #include <gst/gstdebugutils.h>
 #include <gst/gstdevice.h>
-#include <gst/gstdevicemonitor.h>
+#include <gst/gstdeviceprovider.h>
 #include <gst/gstelement.h>
 #include <gst/gstelementmetadata.h>
 #include <gst/gsterror.h>

@@ -2340,7 +2340,7 @@ gst_message_parse_have_context (GstMessage * message, GstContext ** context)
  * @device: (transfer none): The new #GstDevice
  *
  * Creates a new device-added message. The device-added message is produced by
- * #GstDeviceMonitor or a #GstGlobalDeviceMonitor. They announce the appearance
+ * #GstDeviceProvider or a #GstGlobalDeviceMonitor. They announce the appearance
  * of monitored devices.
  *
  * Returns: a newly allocated #GstMessage
@@ -2370,7 +2370,7 @@ gst_message_new_device_added (GstObject * src, GstDevice * device)
  *  pointer to the new #GstDevice, or %NULL
  * 
  * Parses a device-added message. The device-added message is produced by
- * #GstDeviceMonitor or a #GstGlobalDeviceMonitor. It announces the appearance
+ * #GstDeviceProvider or a #GstGlobalDeviceMonitor. It announces the appearance
  * of monitored devices.
  *
  * Since: 1.4
@@ -2392,7 +2392,7 @@ gst_message_parse_device_added (GstMessage * message, GstDevice ** device)
  * @device: (transfer none): The removed #GstDevice
  *
  * Creates a new device-removed message. The device-removed message is produced
- * by #GstDeviceMonitor or a #GstGlobalDeviceMonitor. They announce the
+ * by #GstDeviceProvider or a #GstGlobalDeviceMonitor. They announce the
  * disappearance of monitored devices.
  *
  * Returns: a newly allocated #GstMessage
@@ -2422,7 +2422,7 @@ gst_message_new_device_removed (GstObject * src, GstDevice * device)
  *  pointer to the removed #GstDevice, or %NULL
  *
  * Parses a device-removed message. The device-removed message is produced by
- * #GstDeviceMonitor or a #GstGlobalDeviceMonitor. It announces the
+ * #GstDeviceProvider or a #GstGlobalDeviceMonitor. It announces the
  * disappearance of monitored devices.
  *
  * Since: 1.4

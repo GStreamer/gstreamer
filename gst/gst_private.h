@@ -54,8 +54,8 @@ extern const char             g_log_domain_gstreamer[];
 /* for GstElement */
 #include "gstelement.h"
 
-/* for GstDeviceMonitor */
-#include "gstdevicemonitor.h"
+/* for GstDeviceProvider */
+#include "gstdeviceprovider.h"
 
 /* for GstToc */
 #include "gsttoc.h"
@@ -399,19 +399,19 @@ struct _GstElementFactoryClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstDeviceMonitorFactory {
+struct _GstDeviceProviderFactory {
   GstPluginFeature           feature;
   /* <private> */
 
   GType                      type;              /* unique GType the device factory or 0 if not loaded */
 
-  volatile GstDeviceMonitor *monitor;
+  volatile GstDeviceProvider *provider;
   gpointer                   metadata;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstDeviceMonitorFactoryClass {
+struct _GstDeviceProviderFactoryClass {
   GstPluginFeatureClass         parent;
   /* <private> */
 

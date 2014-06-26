@@ -1139,7 +1139,7 @@ print_plugin_features (GstPlugin * plugin)
   gint num_features = 0;
   gint num_elements = 0;
   gint num_typefinders = 0;
-  gint num_devmonitors = 0;
+  gint num_devproviders = 0;
   gint num_other = 0;
 
   origlist = features =
@@ -1180,14 +1180,14 @@ print_plugin_features (GstPlugin * plugin)
             gst_plugin_feature_get_name (feature));
 
       num_typefinders++;
-    } else if (GST_IS_DEVICE_MONITOR_FACTORY (feature)) {
-      GstDeviceMonitorFactory *factory;
+    } else if (GST_IS_DEVICE_PROVIDER_FACTORY (feature)) {
+      GstDeviceProviderFactory *factory;
 
-      factory = GST_DEVICE_MONITOR_FACTORY (feature);
+      factory = GST_DEVICE_PROVIDER_FACTORY (feature);
       n_print ("  %s: %s\n", GST_OBJECT_NAME (factory),
-          gst_device_monitor_factory_get_metadata (factory,
+          gst_device_provider_factory_get_metadata (factory,
               GST_ELEMENT_METADATA_LONGNAME));
-      num_devmonitors++;
+      num_devproviders++;
     } else if (feature) {
       n_print ("  %s (%s)\n", gst_object_get_name (GST_OBJECT (feature)),
           g_type_name (G_OBJECT_TYPE (feature)));
@@ -1205,8 +1205,8 @@ print_plugin_features (GstPlugin * plugin)
     n_print ("  +-- %d elements\n", num_elements);
   if (num_typefinders > 0)
     n_print ("  +-- %d typefinders\n", num_typefinders);
-  if (num_devmonitors > 0)
-    n_print ("  +-- %d device monitors\n", num_devmonitors);
+  if (num_devproviders > 0)
+    n_print ("  +-- %d device providers\n", num_devproviders);
   if (num_other > 0)
     n_print ("  +-- %d other objects\n", num_other);
 

@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2012 Olivier Crete <olivier.crete@collabora.com>
  *
- * gstdevicemonitor.h: Device probing and monitoring
+ * gstdeviceprovider.h: Device probing and monitoring
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,39 +19,39 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gstdevicemonitorfactory.h>
+#include <gst/gstdeviceproviderfactory.h>
 
 
-#ifndef __GST_DEVICE_MONITOR_H__
-#define __GST_DEVICE_MONITOR_H__
+#ifndef __GST_DEVICE_PROVIDER_H__
+#define __GST_DEVICE_PROVIDER_H__
 
 #include <gst/gstelement.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstDeviceMonitor GstDeviceMonitor;
-typedef struct _GstDeviceMonitorClass GstDeviceMonitorClass;
-typedef struct _GstDeviceMonitorPrivate GstDeviceMonitorPrivate;
+typedef struct _GstDeviceProvider GstDeviceProvider;
+typedef struct _GstDeviceProviderClass GstDeviceProviderClass;
+typedef struct _GstDeviceProviderPrivate GstDeviceProviderPrivate;
 
-#define GST_TYPE_DEVICE_MONITOR                 (gst_device_monitor_get_type())
-#define GST_IS_DEVICE_MONITOR(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEVICE_MONITOR))
-#define GST_IS_DEVICE_MONITOR_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEVICE_MONITOR))
-#define GST_DEVICE_MONITOR_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DEVICE_MONITOR, GstDeviceMonitorClass))
-#define GST_DEVICE_MONITOR(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DEVICE_MONITOR, GstDeviceMonitor))
-#define GST_DEVICE_MONITOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE_MONITOR, GstDeviceMonitorClass))
-#define GST_DEVICE_MONITOR_CAST(obj)            ((GstDeviceMonitor *)(obj))
+#define GST_TYPE_DEVICE_PROVIDER                 (gst_device_provider_get_type())
+#define GST_IS_DEVICE_PROVIDER(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEVICE_PROVIDER))
+#define GST_IS_DEVICE_PROVIDER_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEVICE_PROVIDER))
+#define GST_DEVICE_PROVIDER_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DEVICE_PROVIDER, GstDeviceProviderClass))
+#define GST_DEVICE_PROVIDER(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DEVICE_PROVIDER, GstDeviceProvider))
+#define GST_DEVICE_PROVIDER_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE_PROVIDER, GstDeviceProviderClass))
+#define GST_DEVICE_PROVIDER_CAST(obj)            ((GstDeviceProvider *)(obj))
 
 
 /**
- * GstDeviceMonitor:
+ * GstDeviceProvider:
  * @parent: The parent #GstObject
  * @devices: a #GList of the #GstDevice objects
  *
- * The structure of the base #GstDeviceMonitor
+ * The structure of the base #GstDeviceProvider
  *
  * Since: 1.4
  */
-struct _GstDeviceMonitor {
+struct _GstDeviceProvider {
   GstObject         parent;
 
   /* Protected by the Object lock */
@@ -59,16 +59,16 @@ struct _GstDeviceMonitor {
 
   /*< private >*/
 
-  GstDeviceMonitorPrivate *priv;
+  GstDeviceProviderPrivate *priv;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
- * GstDeviceMonitorClass:
+ * GstDeviceProviderClass:
  * @parent_class: the parent #GstObjectClass structure
- * @factory: a pointer to the #GstDeviceMonitorFactory that creates this
- *  monitor
+ * @factory: a pointer to the #GstDeviceProviderFactory that creates this
+ *  provider
  * @probe: Returns a list of devices that are currently available.
  *  This should never block.
  * @start: Starts monitoring for new devices. Only subclasses that can know
@@ -76,20 +76,20 @@ struct _GstDeviceMonitor {
  * @stop: Stops monitoring for new devices. Only subclasses that implement
  *  the start() method need to implement this method.
  *
- * The structure of the base #GstDeviceMonitorClass
+ * The structure of the base #GstDeviceProviderClass
  *
  * Since: 1.4
  */
 
-struct _GstDeviceMonitorClass {
+struct _GstDeviceProviderClass {
   GstObjectClass    parent_class;
 
-  GstDeviceMonitorFactory     *factory;
+  GstDeviceProviderFactory     *factory;
 
-  GList*      (*probe) (GstDeviceMonitor * monitor);
+  GList*      (*probe) (GstDeviceProvider * provider);
 
-  gboolean    (*start) (GstDeviceMonitor * monitor);
-  void        (*stop)  (GstDeviceMonitor * monitor);
+  gboolean    (*start) (GstDeviceProvider * provider);
+  void        (*stop)  (GstDeviceProvider * provider);
 
   /*< private >*/
   gpointer metadata;
@@ -98,45 +98,45 @@ struct _GstDeviceMonitorClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType       gst_device_monitor_get_type (void);
+GType       gst_device_provider_get_type (void);
 
 
-GList *     gst_device_monitor_get_devices    (GstDeviceMonitor * monitor);
+GList *     gst_device_provider_get_devices    (GstDeviceProvider * provider);
 
-gboolean    gst_device_monitor_start          (GstDeviceMonitor * monitor);
-void        gst_device_monitor_stop           (GstDeviceMonitor * monitor);
+gboolean    gst_device_provider_start          (GstDeviceProvider * provider);
+void        gst_device_provider_stop           (GstDeviceProvider * provider);
 
-gboolean    gst_device_monitor_can_monitor    (GstDeviceMonitor * monitor);
+gboolean    gst_device_provider_can_monitor    (GstDeviceProvider * provider);
 
-GstBus *    gst_device_monitor_get_bus        (GstDeviceMonitor * monitor);
+GstBus *    gst_device_provider_get_bus        (GstDeviceProvider * provider);
 
-void        gst_device_monitor_device_add     (GstDeviceMonitor * monitor,
+void        gst_device_provider_device_add     (GstDeviceProvider * provider,
                                                GstDevice * device);
-void        gst_device_monitor_device_remove  (GstDeviceMonitor * monitor,
+void        gst_device_provider_device_remove  (GstDeviceProvider * provider,
                                                GstDevice * device);
 
 
-/* device monitor class meta data */
-void        gst_device_monitor_class_set_metadata          (GstDeviceMonitorClass *klass,
+/* device provider class meta data */
+void        gst_device_provider_class_set_metadata          (GstDeviceProviderClass *klass,
                                                             const gchar     *longname,
                                                             const gchar     *classification,
                                                             const gchar     *description,
                                                             const gchar     *author);
-void        gst_device_monitor_class_set_static_metadata   (GstDeviceMonitorClass *klass,
+void        gst_device_provider_class_set_static_metadata   (GstDeviceProviderClass *klass,
                                                             const gchar     *longname,
                                                             const gchar     *classification,
                                                             const gchar     *description,
                                                             const gchar     *author);
-void        gst_device_monitor_class_add_metadata          (GstDeviceMonitorClass * klass,
+void        gst_device_provider_class_add_metadata          (GstDeviceProviderClass * klass,
                                                             const gchar * key, const gchar * value);
-void        gst_device_monitor_class_add_static_metadata   (GstDeviceMonitorClass * klass,
+void        gst_device_provider_class_add_static_metadata   (GstDeviceProviderClass * klass,
                                                             const gchar * key, const gchar * value);
-const gchar * gst_device_monitor_class_get_metadata        (GstDeviceMonitorClass * klass,
+const gchar * gst_device_provider_class_get_metadata        (GstDeviceProviderClass * klass,
                                                               const gchar * key);
 
 /* factory management */
-GstDeviceMonitorFactory * gst_device_monitor_get_factory   (GstDeviceMonitor * monitor);
+GstDeviceProviderFactory * gst_device_provider_get_factory   (GstDeviceProvider * provider);
 
 G_END_DECLS
 
-#endif /* __GST_DEVICE_MONITOR_H__ */
+#endif /* __GST_DEVICE_PROVIDER_H__ */

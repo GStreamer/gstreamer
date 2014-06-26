@@ -36,7 +36,7 @@ GObject
       GstPadTemplate
       GstPlugin
       GstPluginFeature
-        GstDeviceMonitorFactory
+        GstDeviceProviderFactory
         GstElementFactory
         GstTypeFindFactory
       GstRegistry

@@ -22,12 +22,12 @@
 /**
  * SECTION:gstglobaldevicemonitor
  * @short_description: A global device monitor and prober
- * @see_also: #GstDevice, #GstDeviceMonitor
+ * @see_also: #GstDevice, #GstDeviceProvider
  *
  * Applications should create a #GstGlobalDeviceMonitor when they want
  * to probe, list and monitor devices of a specific type. The
  * #GstGlobalDeviceMonitor will create the appropriate
- * #GstDeviceMonitor objects and manage them. It will then post
+ * #GstDeviceProvider objects and manage them. It will then post
  * messages on its #GstBus for devices that have been added and
  * removed.
  *
@@ -48,7 +48,7 @@ struct _GstGlobalDeviceMonitorPrivate
 
   GstBus *bus;
 
-  GPtrArray *monitors;
+  GPtrArray *providers;
   guint cookie;
 
   GstCaps *caps;
@@ -111,28 +111,28 @@ gst_global_device_monitor_init (GstGlobalDeviceMonitor * self)
   self->priv->bus = gst_bus_new ();
   gst_bus_set_flushing (self->priv->bus, TRUE);
 
-  self->priv->monitors = g_ptr_array_new ();
+  self->priv->providers = g_ptr_array_new ();
   self->priv->caps = gst_caps_new_any ();
   self->priv->classes = g_strdup ("");
 
   factories =
-      gst_device_monitor_factory_list_get_device_monitors (self->priv->classes,
-      1);
+      gst_device_provider_factory_list_get_device_providers (self->priv->
+      classes, 1);
 
   while (factories) {
-    GstDeviceMonitorFactory *factory = factories->data;
-    GstDeviceMonitor *monitor;
+    GstDeviceProviderFactory *factory = factories->data;
+    GstDeviceProvider *provider;
 
     factories = g_list_remove (factories, factory);
 
-    monitor = gst_device_monitor_factory_get (factory);
-    if (monitor) {
-      GstBus *bus = gst_device_monitor_get_bus (monitor);
+    provider = gst_device_provider_factory_get (factory);
+    if (provider) {
+      GstBus *bus = gst_device_provider_get_bus (provider);
 
       gst_bus_enable_sync_message_emission (bus);
       g_signal_connect (bus, "sync-message",
           G_CALLBACK (bus_sync_message), self);
-      g_ptr_array_add (self->priv->monitors, monitor);
+      g_ptr_array_add (self->priv->providers, provider);
     }
 
     gst_object_unref (factory);
@@ -143,16 +143,16 @@ gst_global_device_monitor_init (GstGlobalDeviceMonitor * self)
 static void
 gst_global_device_monitor_remove (GstGlobalDeviceMonitor * self, guint i)
 {
-  GstDeviceMonitor *monitor = g_ptr_array_index (self->priv->monitors, i);
+  GstDeviceProvider *provider = g_ptr_array_index (self->priv->providers, i);
   GstBus *bus;
 
-  g_ptr_array_remove_index_fast (self->priv->monitors, i);
+  g_ptr_array_remove_index_fast (self->priv->providers, i);
 
-  bus = gst_device_monitor_get_bus (monitor);
+  bus = gst_device_provider_get_bus (provider);
   g_signal_handlers_disconnect_by_func (bus, bus_sync_message, self);
   gst_object_unref (bus);
 
-  gst_object_unref (monitor);
+  gst_object_unref (provider);
 }
 
 static void
@@ -162,11 +162,11 @@ gst_global_device_monitor_dispose (GObject * object)
 
   g_return_if_fail (self->priv->started == FALSE);
 
-  if (self->priv->monitors) {
-    while (self->priv->monitors->len)
-      gst_global_device_monitor_remove (self, self->priv->monitors->len - 1);
-    g_ptr_array_unref (self->priv->monitors);
-    self->priv->monitors = NULL;
+  if (self->priv->providers) {
+    while (self->priv->providers->len)
+      gst_global_device_monitor_remove (self, self->priv->providers->len - 1);
+    g_ptr_array_unref (self->priv->providers);
+    self->priv->providers = NULL;
   }
 
   gst_caps_replace (&self->priv->caps, NULL);
@@ -178,7 +178,7 @@ gst_global_device_monitor_dispose (GObject * object)
 
 /**
  * gst_global_device_monitor_get_devices:
- * @monitor: A #GstDeviceMonitor
+ * @monitor: A #GstDeviceProvider
  *
  * Gets a list of devices from all of the relevant monitors. This may actually
  * probe the hardware if the global monitor is not currently started.
@@ -207,15 +207,15 @@ again:
 
   cookie = monitor->priv->cookie;
 
-  for (i = 0; i < monitor->priv->monitors->len; i++) {
+  for (i = 0; i < monitor->priv->providers->len; i++) {
     GList *tmpdev;
-    GstDeviceMonitor *device_monitor =
-        gst_object_ref (g_ptr_array_index (monitor->priv->monitors, i));
+    GstDeviceProvider *provider =
+        gst_object_ref (g_ptr_array_index (monitor->priv->providers, i));
     GList *item;
 
     GST_OBJECT_UNLOCK (monitor);
 
-    tmpdev = gst_device_monitor_get_devices (device_monitor);
+    tmpdev = gst_device_provider_get_devices (provider);
 
     for (item = tmpdev; item; item = item->next) {
       GstDevice *dev = GST_DEVICE (item->data);
@@ -228,7 +228,7 @@ again:
     }
 
     g_list_free_full (tmpdev, gst_object_unref);
-    gst_object_unref (device_monitor);
+    gst_object_unref (provider);
 
     GST_OBJECT_LOCK (monitor);
 
@@ -263,20 +263,20 @@ gst_global_device_monitor_start (GstGlobalDeviceMonitor * monitor)
 
   GST_OBJECT_LOCK (monitor);
 
-  if (monitor->priv->monitors->len == 0) {
+  if (monitor->priv->providers->len == 0) {
     GST_OBJECT_UNLOCK (monitor);
     return FALSE;
   }
 
   gst_bus_set_flushing (monitor->priv->bus, FALSE);
 
-  for (i = 0; i < monitor->priv->monitors->len; i++) {
-    if (!gst_device_monitor_start (g_ptr_array_index (monitor->priv->monitors,
+  for (i = 0; i < monitor->priv->providers->len; i++) {
+    if (!gst_device_provider_start (g_ptr_array_index (monitor->priv->providers,
                 i))) {
       gst_bus_set_flushing (monitor->priv->bus, TRUE);
 
       for (; i != 0; i--)
-        gst_device_monitor_stop (g_ptr_array_index (monitor->priv->monitors,
+        gst_device_provider_stop (g_ptr_array_index (monitor->priv->providers,
                 i - 1));
 
       GST_OBJECT_UNLOCK (monitor);
@@ -292,7 +292,7 @@ gst_global_device_monitor_start (GstGlobalDeviceMonitor * monitor)
 
 /**
  * gst_global_device_monitor_stop:
- * @monitor: A #GstDeviceMonitor
+ * @monitor: A #GstDeviceProvider
  *
  * Stops monitoring the devices.
  *
@@ -308,8 +308,8 @@ gst_global_device_monitor_stop (GstGlobalDeviceMonitor * monitor)
   gst_bus_set_flushing (monitor->priv->bus, TRUE);
 
   GST_OBJECT_LOCK (monitor);
-  for (i = 0; i < monitor->priv->monitors->len; i++)
-    gst_device_monitor_stop (g_ptr_array_index (monitor->priv->monitors, i));
+  for (i = 0; i < monitor->priv->providers->len; i++)
+    gst_device_provider_stop (g_ptr_array_index (monitor->priv->providers, i));
   monitor->priv->started = FALSE;
   GST_OBJECT_UNLOCK (monitor);
 
@@ -345,15 +345,16 @@ gst_global_device_monitor_set_classes_filter (GstGlobalDeviceMonitor * monitor,
   g_free (monitor->priv->classes);
   monitor->priv->classes = g_strdup (classes);
 
-  factories = gst_device_monitor_factory_list_get_device_monitors (classes, 1);
+  factories = gst_device_provider_factory_list_get_device_providers (classes,
+      1);
 
-  for (i = 0; i < monitor->priv->monitors->len; i++) {
-    GstDeviceMonitor *dev_monitor;
-    GstDeviceMonitorFactory *f;
+  for (i = 0; i < monitor->priv->providers->len; i++) {
+    GstDeviceProvider *provider;
+    GstDeviceProviderFactory *f;
     GList *item;
 
-    dev_monitor = g_ptr_array_index (monitor->priv->monitors, i);
-    f = gst_device_monitor_get_factory (dev_monitor);
+    provider = g_ptr_array_index (monitor->priv->providers, i);
+    f = gst_device_provider_get_factory (provider);
 
     item = g_list_find (factories, f);
 
@@ -364,7 +365,7 @@ gst_global_device_monitor_set_classes_filter (GstGlobalDeviceMonitor * monitor,
       factories = g_list_remove_link (factories, item);
       gst_object_unref (f);
     } else {
-      /* If it's not in our list, them remove it from the list of monitors.
+      /* If it's not in our list, them remove it from the list of providers.
        */
 
       monitor->priv->cookie++;
@@ -374,20 +375,20 @@ gst_global_device_monitor_set_classes_filter (GstGlobalDeviceMonitor * monitor,
   }
 
   while (factories) {
-    GstDeviceMonitorFactory *factory = factories->data;
-    GstDeviceMonitor *device_monitor;
+    GstDeviceProviderFactory *factory = factories->data;
+    GstDeviceProvider *provider;
 
     factories = g_list_remove (factories, factory);
 
-    device_monitor = gst_device_monitor_factory_get (factory);
-    if (device_monitor) {
-      GstBus *bus = gst_device_monitor_get_bus (device_monitor);
+    provider = gst_device_provider_factory_get (factory);
+    if (provider) {
+      GstBus *bus = gst_device_provider_get_bus (provider);
 
       gst_bus_enable_sync_message_emission (bus);
       g_signal_connect (bus, "sync-message",
           G_CALLBACK (bus_sync_message), monitor);
       gst_object_unref (bus);
-      g_ptr_array_add (monitor->priv->monitors, device_monitor);
+      g_ptr_array_add (monitor->priv->providers, provider);
       monitor->priv->cookie++;
     }
 
@@ -484,7 +485,7 @@ gst_global_device_monitor_new (void)
 
 /**
  * gst_global_device_monitor_get_bus:
- * @monitor: a #GstDeviceMonitor
+ * @monitor: a #GstDeviceProvider
  *
  * Gets the #GstBus of this #GstGlobalDeviceMonitor
  *
