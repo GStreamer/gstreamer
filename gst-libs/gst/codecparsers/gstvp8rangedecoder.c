@@ -12,7 +12,7 @@
 #include "dboolhuff.h"
 
 #define BOOL_DECODER_CAST(rd) \
-  ((BOOL_DECODER *)(&(rd)->_gst_reserved[1]))
+  ((BOOL_DECODER *)(&(rd)->_gst_reserved[0]))
 
 gboolean
 gst_vp8_range_decoder_init (GstVp8RangeDecoder * rd, const guchar * buf,
