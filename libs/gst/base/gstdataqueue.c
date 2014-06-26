@@ -142,7 +142,7 @@ gst_data_queue_class_init (GstDataQueueClass * klass)
 
   /* signals */
   /**
-   * GstDataQueue::empty:
+   * GstDataQueue::empty: (skip)
    * @queue: the queue instance
    *
    * Reports that the queue became empty (empty).
@@ -156,7 +156,7 @@ gst_data_queue_class_init (GstDataQueueClass * klass)
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /**
-   * GstDataQueue::full:
+   * GstDataQueue::full: (skip)
    * @queue: the queue instance
    *
    * Reports that the queue became full (full).
@@ -312,7 +312,7 @@ gst_data_queue_locked_is_full (GstDataQueue * queue)
 }
 
 /**
- * gst_data_queue_flush:
+ * gst_data_queue_flush: (skip)
  * @queue: a #GstDataQueue.
  *
  * Flushes all the contents of the @queue. Any call to #gst_data_queue_push and
@@ -331,7 +331,7 @@ gst_data_queue_flush (GstDataQueue * queue)
 }
 
 /**
- * gst_data_queue_is_empty:
+ * gst_data_queue_is_empty: (skip)
  * @queue: a #GstDataQueue.
  *
  * Queries if there are any items in the @queue.
@@ -354,7 +354,7 @@ gst_data_queue_is_empty (GstDataQueue * queue)
 }
 
 /**
- * gst_data_queue_is_full:
+ * gst_data_queue_is_full: (skip)
  * @queue: a #GstDataQueue.
  *
  * Queries if @queue is full. This check will be done using the
@@ -378,7 +378,7 @@ gst_data_queue_is_full (GstDataQueue * queue)
 }
 
 /**
- * gst_data_queue_set_flushing:
+ * gst_data_queue_set_flushing: (skip)
  * @queue: a #GstDataQueue.
  * @flushing: a #gboolean stating if the queue will be flushing or not.
  *
@@ -426,7 +426,7 @@ gst_data_queue_push_force_unlocked (GstDataQueue * queue,
 }
 
 /**
- * gst_data_queue_push_force:
+ * gst_data_queue_push_force: (skip)
  * @queue: a #GstDataQueue.
  * @item: a #GstDataQueueItem.
  *
@@ -474,7 +474,7 @@ flushing:
 }
 
 /**
- * gst_data_queue_push:
+ * gst_data_queue_push: (skip)
  * @queue: a #GstDataQueue.
  * @item: a #GstDataQueueItem.
  *
@@ -558,7 +558,7 @@ _gst_data_queue_wait_non_empty (GstDataQueue * queue)
 }
 
 /**
- * gst_data_queue_pop:
+ * gst_data_queue_pop: (skip)
  * @queue: a #GstDataQueue.
  * @item: pointer to store the returned #GstDataQueueItem.
  *
@@ -628,7 +628,7 @@ is_of_type (gconstpointer a, gconstpointer b)
 }
 
 /**
- * gst_data_queue_peek:
+ * gst_data_queue_peek: (skip)
  * @queue: a #GstDataQueue.
  * @item: pointer to store the returned #GstDataQueueItem.
  *
@@ -683,7 +683,7 @@ flushing:
 }
 
 /**
- * gst_data_queue_drop_head:
+ * gst_data_queue_drop_head: (skip)
  * @queue: The #GstDataQueue to drop an item from.
  * @type: The #GType of the item to drop.
  *
@@ -731,7 +731,7 @@ done:
 }
 
 /**
- * gst_data_queue_limits_changed:
+ * gst_data_queue_limits_changed: (skip)
  * @queue: The #GstDataQueue
  *
  * Inform the queue that the limits for the fullness check have changed and that
@@ -755,7 +755,7 @@ gst_data_queue_limits_changed (GstDataQueue * queue)
 }
 
 /**
- * gst_data_queue_get_level:
+ * gst_data_queue_get_level: (skip)
  * @queue: The #GstDataQueue
  * @level: the location to store the result
  *
