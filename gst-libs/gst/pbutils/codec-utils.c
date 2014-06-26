@@ -427,7 +427,7 @@ const gchar *
 gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
 {
   const gchar *profile = NULL;
-  gint csf1, csf3;
+  gint csf1, csf3, csf5;
 
   g_return_val_if_fail (sps != NULL, NULL);
 
@@ -438,6 +438,7 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
 
   csf1 = (sps[1] & 0x40) >> 6;
   csf3 = (sps[1] & 0x10) >> 4;
+  csf5 = (sps[1] & 0x04) >> 2;
 
   switch (sps[0]) {
     case 66:
@@ -481,6 +482,15 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
       break;
     case 128:
       profile = "stereo-high";
+      break;
+    case 83:
+      if (csf5)
+        profile = "scalable-constrained-baseline";
+      else
+        profile = "scalable-baseline";
+      break;
+    case 86:
+      profile = "scalable-high";
       break;
     default:
       return NULL;
@@ -540,6 +550,8 @@ gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
         return "4.2";
       case 51:
         return "5.1";
+      case 52:
+        return "5.2";
       default:
         return NULL;
     }
@@ -591,6 +603,8 @@ gst_codec_utils_h264_get_level_idc (const gchar * level)
     return 50;
   else if (!strcmp (level, "5.1"))
     return 51;
+  else if (!strcmp (level, "5.2"))
+    return 52;
 
   GST_WARNING ("Invalid level %s", level);
   return 0;
