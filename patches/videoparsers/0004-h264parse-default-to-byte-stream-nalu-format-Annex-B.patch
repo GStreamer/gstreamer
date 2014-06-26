@@ -1,0 +1,43 @@
+From 3885faab12f7bbcc862a3da191161bf91b0b8bd9 Mon Sep 17 00:00:00 2001
+From: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+Date: Tue, 24 Jun 2014 17:27:12 +0200
+Subject: [PATCH 4/8] h264parse: default to byte-stream/nalu format (Annex B).
+
+Always default to stream-format=byte-stream,alignment=nalu if avcC
+format was not detected. This is the natural stream format specified
+in the standard (Annex.B): a series of NAL units prefixed with the
+usual start code.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=732167
+
+Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+---
+ gst/vaapi/gsth264parse.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
+index 7a88a07..4800c2b 100644
+--- a/gst/vaapi/gsth264parse.c
++++ b/gst/vaapi/gsth264parse.c
+@@ -367,7 +367,8 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
+   if (!format)
+     format = GST_H264_PARSE_FORMAT_BYTE;
+   if (!align)
+-    align = GST_H264_PARSE_ALIGN_AU;
++    align = format == GST_H264_PARSE_FORMAT_BYTE ? GST_H264_PARSE_ALIGN_NAL :
++        GST_H264_PARSE_ALIGN_AU;
+ 
+   GST_DEBUG_OBJECT (h264parse, "selected format %s, alignment %s",
+       gst_h264_parse_get_string (h264parse, TRUE, format),
+@@ -1893,7 +1894,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
+ 
+     if (format == GST_H264_PARSE_FORMAT_NONE) {
+       format = GST_H264_PARSE_FORMAT_BYTE;
+-      align = GST_H264_PARSE_ALIGN_AU;
++      align = GST_H264_PARSE_ALIGN_NAL;
+     }
+   }
+ 
+-- 
+1.7.9.5
+
