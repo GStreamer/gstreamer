@@ -1129,6 +1129,13 @@ GST_START_TEST (test_features)
 
   gst_caps_unref (c2);
   gst_caps_unref (c1);
+
+  c1 = gst_caps_from_string ("video/x-raw");
+  f1 = gst_caps_get_features (c1, 0);
+  f2 = gst_caps_features_new ("memory:dmabuf", NULL);
+  gst_caps_set_features (c1, 0, f2);
+
+  gst_caps_unref (c1);
 }
 
 GST_END_TEST;
