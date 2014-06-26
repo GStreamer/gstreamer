@@ -1,0 +1,41 @@
+From cf890efdb44feb4cfc728756bcf0ce1df17b8e9d Mon Sep 17 00:00:00 2001
+From: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+Date: Tue, 24 Jun 2014 13:55:13 +0200
+Subject: [PATCH 3/8] h264parse: fix and optimize NAL collection function.
+
+Use gst_h264_parser_identify_nalu_unchecked() to identify the next
+NAL unit. We don't want to parse the full NAL unit, but only the
+header bytes and possibly the first RBSP byte for identifying the
+first_mb_in_slice syntax element.
+
+Also fix check for failure when returning from that function. The
+only success condition for that is GST_H264_PARSER_OK, so use it.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=732154
+
+Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+---
+ gst/vaapi/gsth264parse.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
+index fff1d48..7a88a07 100644
+--- a/gst/vaapi/gsth264parse.c
++++ b/gst/vaapi/gsth264parse.c
+@@ -668,10 +668,10 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
+   GstH264NalUnit nnalu;
+ 
+   GST_DEBUG_OBJECT (h264parse, "parsing collected nal");
+-  parse_res = gst_h264_parser_identify_nalu (h264parse->nalparser, data,
+-      nalu->offset + nalu->size, size, &nnalu);
++  parse_res = gst_h264_parser_identify_nalu_unchecked (h264parse->nalparser,
++      data, nalu->offset + nalu->size, size, &nnalu);
+ 
+-  if (parse_res == GST_H264_PARSER_ERROR)
++  if (parse_res != GST_H264_PARSER_OK)
+     return FALSE;
+ 
+   /* determine if AU complete */
+-- 
+1.7.9.5
+
