@@ -171,8 +171,8 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element);
 static GstStateChangeReturn
 gnl_composition_change_state (GstElement * element, GstStateChange transition);
 
-static GstPadProbeReturn pad_blocked (GstPad * pad, GstPadProbeInfo * info,
-    GnlComposition * comp);
+static inline void
+_object_block_and_drop_data (GnlComposition * comp, GnlObject * obj);
 static inline void gnl_composition_reset_target_pad (GnlComposition * comp);
 
 static gboolean
@@ -1272,6 +1272,38 @@ drop_data (GstPad * pad, GstPadProbeInfo * info, GnlCompositionEntry * entry)
   return GST_PAD_PROBE_OK;
 }
 
+static inline void
+_entry_block_and_drop_data (GnlCompositionEntry * entry)
+{
+  if (!entry->probeid) {
+    GST_LOG_OBJECT (entry->comp, "block_async(%s:%s, TRUE)",
+        GST_DEBUG_PAD_NAME (entry->object->srcpad));
+    entry->probeid =
+        gst_pad_add_probe (entry->object->srcpad,
+        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
+        (GstPadProbeCallback) pad_blocked, entry->comp, NULL);
+  }
+  if (!entry->dataprobeid) {
+    entry->dataprobeid = gst_pad_add_probe (entry->object->srcpad,
+        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
+        GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data,
+        entry, NULL);
+  }
+}
+
+static inline void
+_object_block_and_drop_data (GnlComposition * comp, GnlObject * obj)
+{
+  GnlCompositionEntry *entry = COMP_ENTRY (comp, obj);
+
+  if (entry == NULL) {
+    GST_DEBUG_OBJECT (obj, "No entry associated, (being removed)");
+    return;
+  }
+
+  _entry_block_and_drop_data (entry);
+}
+
 /* gnl_composition_ghost_pad_set_target:
  * target: The target #GstPad. The refcount will be decremented (given to the ghostpad).
  * entry: The GnlCompositionEntry to which the pad belongs
@@ -1996,26 +2028,6 @@ update_start_stop_duration (GnlComposition * comp)
       GST_TIME_ARGS (cobj->stop), GST_TIME_ARGS (cobj->duration));
 }
 
-static void
-block_object_src_pad (GnlComposition * comp, GnlObject * obj)
-{
-  GnlCompositionEntry *entry = COMP_ENTRY (comp, obj);
-  if (!entry->probeid) {
-    GST_LOG_OBJECT (comp, "block_async(%s:%s, TRUE)",
-        GST_DEBUG_PAD_NAME (obj->srcpad));
-    entry->probeid =
-        gst_pad_add_probe (obj->srcpad,
-        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
-        (GstPadProbeCallback) pad_blocked, comp, NULL);
-  }
-  if (!entry->dataprobeid) {
-    entry->dataprobeid = gst_pad_add_probe (obj->srcpad,
-        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
-        GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data,
-        entry, NULL);
-  }
-}
-
 static inline gboolean
 _parent_or_priority_changed (GnlObject * obj, GNode * oldnode,
     GnlObject * newparent, GNode * node)
@@ -2125,7 +2137,7 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
 
   /* Make sure the source pad is blocked for new objects */
   if (G_UNLIKELY (!oldnode))
-    block_object_src_pad (comp, newobj);
+    _object_block_and_drop_data (comp, newobj);
 
   entry = COMP_ENTRY (comp, newobj);
 
@@ -2179,7 +2191,6 @@ compare_deactivate_single_node (GnlComposition * comp, GNode * node,
   GnlObject *oldobj = NULL;
   GstPad *srcpad = NULL;
   GstPad *peerpad = NULL;
-  GnlCompositionEntry *entry;
 
   if (G_UNLIKELY (!node))
     return NULL;
@@ -2198,28 +2209,11 @@ compare_deactivate_single_node (GnlComposition * comp, GNode * node,
       GST_ELEMENT_NAME ((GstElement *) oldobj));
   srcpad = GNL_OBJECT_SRC (oldobj);
 
-  entry = COMP_ENTRY (comp, oldobj);
-
-  /* 1. Block source pad
+  /* Block source pad
    *   This makes sure that no data/event flow will come out of this element after this
    *   point.
-   *
-   * If entry is NULL, this means the element is in the process of being removed.
    */
-  if (entry && !entry->probeid) {
-    GST_LOG_OBJECT (comp, "Setting BLOCKING probe on %s:%s",
-        GST_DEBUG_PAD_NAME (srcpad));
-    entry->probeid =
-        gst_pad_add_probe (srcpad,
-        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
-        (GstPadProbeCallback) pad_blocked, comp, NULL);
-  }
-  if (entry && !entry->dataprobeid) {
-    entry->dataprobeid = gst_pad_add_probe (srcpad,
-        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
-        GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data, entry,
-        NULL);
-  }
+  _object_block_and_drop_data (comp, oldobj);
 
   /* 2. If we have to modify or we have a parent, flush downstream
    *   This ensures the streaming thread going through the current object has
@@ -2614,15 +2608,7 @@ gnl_composition_add_object (GstBin * bin, GstElement * element)
   /* ...and add it to the hash table */
   g_hash_table_insert (priv->objects_hash, element, entry);
 
-  entry->dataprobeid = gst_pad_add_probe (entry->object->srcpad,
-      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
-      GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data, entry,
-      NULL);
-
-  entry->probeid =
-      gst_pad_add_probe (entry->object->srcpad,
-      GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
-      (GstPadProbeCallback) pad_blocked, comp, NULL);
+  _entry_block_and_drop_data (entry);
 
   /* Set the caps of the composition */
   if (G_UNLIKELY (!gst_caps_is_any (((GnlObject *) comp)->caps)))
