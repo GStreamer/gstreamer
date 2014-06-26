@@ -398,7 +398,7 @@ struct _GstH264VUIParams
   GstH264HRDParams nal_hrd_parameters;
 
   guint8 vcl_hrd_parameters_present_flag;
-  /* if nal_hrd_parameters_present_flag */
+  /* if vcl_hrd_parameters_present_flag */
   GstH264HRDParams vcl_hrd_parameters;
 
   guint8 low_delay_hrd_flag;
