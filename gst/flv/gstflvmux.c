@@ -81,7 +81,7 @@ static GstStaticPadTemplate audiosink_templ = GST_STATIC_PAD_TEMPLATE ("audio",
         "audio/x-raw, format = (string) { U8, S16LE}, layout = (string) interleaved, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/x-alaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
-        "audio/x-speex, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 };")
+        "audio/x-speex, channels = (int) 1, rate = (int) 16000;")
     );
 
 #define gst_flv_mux_parent_class parent_class
@@ -464,7 +464,8 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       else if (rate == 8000 && (cpad->audio_codec == 5
               || cpad->audio_codec == 14))
         cpad->rate = 0;
-      else if (rate == 16000 && cpad->audio_codec == 4)
+      else if (rate == 16000 && (cpad->audio_codec == 4
+              || cpad->audio_codec == 11))
         cpad->rate = 0;
       else
         ret = FALSE;
@@ -476,7 +477,7 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
     if (gst_structure_get_int (s, "channels", &channels)) {
       if (cpad->audio_codec == 4 || cpad->audio_codec == 5
-          || cpad->audio_codec == 6)
+          || cpad->audio_codec == 6 || cpad->audio_codec == 11)
         cpad->channels = 0;
       else if (cpad->audio_codec == 10)
         cpad->channels = 1;
