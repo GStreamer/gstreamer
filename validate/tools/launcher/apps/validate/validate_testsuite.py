@@ -125,6 +125,10 @@ def register_default_blacklist(self):
 
         # HTTP known issues:
         ("validate.http.*scrub_forward_seeking.*", "This is not stable enough for now."),
+
+        # MXF known issues"
+        (".*reverse_playback.*", "Reverse playback is not handled in MXF"),
+        ("validate\.file\.transcode.*mxf", "FIXME: Transcoding and mixing tests need to be tested"),
     ])
 
 def register_defaults(self):
