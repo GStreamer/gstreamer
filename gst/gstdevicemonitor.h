@@ -89,16 +89,11 @@ gboolean  gst_device_monitor_start (GstDeviceMonitor * monitor);
 void      gst_device_monitor_stop  (GstDeviceMonitor * monitor);
 
 
-void      gst_device_monitor_set_classes_filter (GstDeviceMonitor * monitor,
-                                                        const gchar            * classes);
-
-gchar *   gst_device_monitor_get_classes_filter (GstDeviceMonitor * monitor);
-
-
-void      gst_device_monitor_set_caps_filter (GstDeviceMonitor * monitor,
-                                                     GstCaps                * caps);
-
-GstCaps * gst_device_monitor_get_caps_filter (GstDeviceMonitor * monitor);
+guint     gst_device_monitor_add_filter (GstDeviceMonitor * monitor,
+                                         const gchar      * classes,
+                                         GstCaps          * caps);
+gboolean  gst_device_monitor_remove_filter (GstDeviceMonitor * monitor,
+                                            guint filter_id);
 
 G_END_DECLS
 

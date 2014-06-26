@@ -537,57 +537,37 @@ gst_device_provider_factory_has_classes (GstDeviceProviderFactory * factory,
   return res;
 }
 
-typedef struct
-{
-  const char *classes;
-  GstRank minrank;
-} FilterData;
-
 static gboolean
-device_provider_filter (GstPluginFeature * feature, FilterData * data)
+device_provider_filter (GstPluginFeature * feature, GstRank * minrank)
 {
-  gboolean res;
-
   /* we only care about device provider factories */
   if (G_UNLIKELY (!GST_IS_DEVICE_PROVIDER_FACTORY (feature)))
     return FALSE;
 
-  res = (gst_plugin_feature_get_rank (feature) >= data->minrank) &&
-      gst_device_provider_factory_has_classes (GST_DEVICE_PROVIDER_FACTORY_CAST
-      (feature), data->classes);
-
-  return res;
+  return (gst_plugin_feature_get_rank (feature) >= *minrank);
 }
 
 /**
  * gst_device_provider_factory_list_get_device_providers:
- * @classes: a "/" separate list of klasses to match, only match if all classes
- *  are matched
  * @minrank: Minimum rank
  *
- * Get a list of factories that match all of the given @classes. Only
- * device providers with a rank greater or equal to @minrank will be
- * returned.  The list of factories is returned by decreasing rank.
+ * Get a list of factories with a rank greater or equal to @minrank.
+ * The list of factories is returned by decreasing rank.
  *
- * Returns: (transfer full) (element-type Gst.DeviceProviderFactory): a #GList of
- *     #GstDeviceProviderFactory device providers. Use gst_plugin_feature_list_free() after
- *     usage.
+ * Returns: (transfer full) (element-type Gst.DeviceProviderFactory):
+ * a #GList of #GstDeviceProviderFactory device providers. Use
+ * gst_plugin_feature_list_free() after usage.
  *
  * Since: 1.4
  */
-GList *gst_device_provider_factory_list_get_device_providers
-    (const gchar * classes, GstRank minrank)
+GList *
+gst_device_provider_factory_list_get_device_providers (GstRank minrank)
 {
   GList *result;
-  FilterData data;
-
-  /* prepare type */
-  data.classes = classes;
-  data.minrank = minrank;
 
   /* get the feature list using the filter */
   result = gst_registry_feature_filter (gst_registry_get (),
-      (GstPluginFeatureFilter) device_provider_filter, FALSE, &data);
+      (GstPluginFeatureFilter) device_provider_filter, FALSE, &minrank);
 
   /* sort on rank and name */
   result = g_list_sort (result, gst_plugin_feature_rank_compare_func);

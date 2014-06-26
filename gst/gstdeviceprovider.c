@@ -21,7 +21,7 @@
 
 /**
  * SECTION:gstdeviceprovider
- * @short_description: A device provider, monitor and prober
+ * @short_description: A device provider
  * @see_also: #GstDevice, #GstGlobalDeviceMonitor
  *
  * A #GstDeviceProvider subclass is provided by a plugin that handles devices

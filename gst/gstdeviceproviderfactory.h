@@ -80,10 +80,10 @@ gboolean      gst_device_provider_factory_has_classesv (GstDeviceProviderFactory
                                                        gchar ** classes);
 
 gboolean      gst_device_provider_factory_has_classes (GstDeviceProviderFactory *factory,
-                                                      const gchar * classes);
+                                                       const gchar * classes);
 
-GList *       gst_device_provider_factory_list_get_device_providers (const gchar *classes,
-                                                                   GstRank minrank) G_GNUC_MALLOC;
+GList *       gst_device_provider_factory_list_get_device_providers (
+                                                       GstRank minrank) G_GNUC_MALLOC;
 
 G_END_DECLS
 
