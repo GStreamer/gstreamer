@@ -779,6 +779,8 @@ gst_message_new_segment_done (GstObject * src, GstFormat format,
 GstMessage *
 gst_message_new_application (GstObject * src, GstStructure * structure)
 {
+  g_return_val_if_fail (structure != NULL, NULL);
+
   return gst_message_new_custom (GST_MESSAGE_APPLICATION, src, structure);
 }
 
@@ -800,6 +802,8 @@ gst_message_new_application (GstObject * src, GstStructure * structure)
 GstMessage *
 gst_message_new_element (GstObject * src, GstStructure * structure)
 {
+  g_return_val_if_fail (structure != NULL, NULL);
+
   return gst_message_new_custom (GST_MESSAGE_ELEMENT, src, structure);
 }
 
