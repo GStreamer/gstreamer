@@ -24,7 +24,8 @@ import ConfigParser
 import xml.etree.ElementTree as ET
 from loggable import Loggable
 
-from baseclasses import GstValidateTest, TestsManager, Test, ScenarioManager, NamedDic
+from baseclasses import GstValidateTest, TestsManager, Test, \
+    ScenarioManager, NamedDic, GstValidateTestsGenerator
 from utils import MediaFormatCombination, get_profile,\
     path2url, DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
     compare_rendered_with_original, Protocols
@@ -50,29 +51,6 @@ G_V_STREAM_INFO_EXT = "stream_info"
 #################################################
 #       API to be used to create testsuites     #
 #################################################
-
-"""
-A list of tuple of the form:
- (@regex_defining_blacklister_test_names, @reson_for_the_blacklisting)
-"""
-GST_VALIDATE_BLACKLISTED_TESTS = []
-
-"""
-A list of scenario names to be run
-"""
-GST_VALIDATE_SCENARIOS = []
-
-"""
-A list of #GstValidateTestGenerator to be used to generate tests
-"""
-GST_VALIDATE_TEST_GENERATORS = []
-
-"""
-A list of #MediaFormatCombinations describing wanted output
-formats for transcoding test
-"""
-GST_VALIDATE_ENCODING_FORMATS = []
-
 
 """
 Some info about protocols and how to handle them
@@ -146,32 +124,10 @@ class GstValidateMediaDescriptor(Loggable):
 
         return True
 
-class GstValidateTestGenerator(Loggable):
-    def __init__(self, name, tests=[]):
-        Loggable.__init__(self)
-        self.name = name
-        self._tests = tests
-        self.set_config(None, None)
 
-    def set_config(self, options, reporter):
-        self.options = options
-        self.reporter = reporter
-
-    def populate_tests(self, uri_minfo_special_scenarios, scenarios):
-        pass
-
-    def generate_tests(self, uri_minfo_special_scenarios, scenarios):
-
-        self.populate_tests(uri_minfo_special_scenarios, scenarios)
-        return self._tests
-
-    def add_test(self, test):
-        self._tests.append(test)
-
-
-class GstValidateMediaCheckTestGenerator(GstValidateTestGenerator):
-    def __init__(self):
-        GstValidateTestGenerator.__init__(self, "media_check")
+class GstValidateMediaCheckTestsGenerator(GstValidateTestsGenerator):
+    def __init__(self, test_manager):
+        GstValidateTestsGenerator.__init__(self, "media_check", test_manager)
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for uri, mediainfo, special_scenarios in uri_minfo_special_scenarios:
@@ -184,37 +140,37 @@ class GstValidateMediaCheckTestGenerator(GstValidateTestGenerator):
             classname = "validate.%s.media_check.%s" % (protocol,
                                                         os.path.basename(uri).replace(".", "_"))
             self.add_test(GstValidateMediaCheckTest(classname,
-                                                    self.options,
-                                                    self.reporter,
+                                                    self.test_manager.options,
+                                                    self.test_manager.reporter,
                                                     mediainfo.media_descriptor,
                                                     uri,
                                                     mediainfo.path,
                                                     timeout=timeout))
 
 
-class GstValidateTranscodingTestGenerator(GstValidateTestGenerator):
-    def __init__(self):
-        GstValidateTestGenerator.__init__(self, "transcode")
+class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
+    def __init__(self, test_manager):
+        GstValidateTestsGenerator.__init__(self, "transcode", test_manager)
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for uri, mediainfo, special_scenarios in uri_minfo_special_scenarios:
             if mediainfo.media_descriptor.is_image():
                 continue
 
-            for comb in GST_VALIDATE_ENCODING_FORMATS:
+            for comb in self.test_manager.get_encoding_formats():
                 classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.media_descriptor.get_protocol(),
                                                                 str(comb).replace(' ', '_'),
                                                                 os.path.basename(uri).replace(".", "_"))
                 self.add_test(GstValidateTranscodingTest(classname,
-                                                         self.options,
-                                                         self.reporter,
+                                                         self.test_manager.options,
+                                                         self.test_manager.reporter,
                                                          comb,
                                                          uri,
                                                          mediainfo.media_descriptor))
 
 
-class GstValidatePipelineTestGenerator(GstValidateTestGenerator):
-    def __init__(self, name, pipeline_template=None, pipelines_descriptions=None,
+class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
+    def __init__(self, name, test_manager, pipeline_template=None, pipelines_descriptions=None,
                  valid_scenarios=[]):
         """
         @name: The name of the generator
@@ -223,7 +179,7 @@ class GstValidatePipelineTestGenerator(GstValidateTestGenerator):
                                  (test_name, pipeline_description)
         @valid_scenarios: A list of scenario name that can be used with that generator
         """
-        GstValidateTestGenerator.__init__(self, name)
+        GstValidateTestsGenerator.__init__(self, name, test_manager)
         self._pipeline_template = pipeline_template
         self._pipelines_descriptions = pipelines_descriptions
         self._valid_scenarios = valid_scenarios
@@ -248,7 +204,7 @@ class GstValidatePipelineTestGenerator(GstValidateTestGenerator):
             scenarios = [scenario for scenario in scenarios if
                           scenario.name in self._valid_scenarios]
 
-        return super(GstValidatePipelineTestGenerator, self).generate_tests(
+        return super(GstValidatePipelineTestsGenerator, self).generate_tests(
               uri_minfo_special_scenarios, scenarios)
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
@@ -256,24 +212,24 @@ class GstValidatePipelineTestGenerator(GstValidateTestGenerator):
             for scenario in scenarios:
                 fname = self.get_fname(scenario, name=name)
                 self.add_test(GstValidateLaunchTest(fname,
-                                                    self.options,
-                                                    self.reporter,
+                                                    self.test_manager.options,
+                                                    self.test_manager.reporter,
                                                     pipeline,
                                                     scenario=scenario)
                               )
 
 
-class GstValidatePlaybinTestGenerator(GstValidatePipelineTestGenerator):
+class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 
-    def __init__(self):
-        GstValidatePipelineTestGenerator.__init__(self, "playback", "playbin")
+    def __init__(self, test_manager):
+        GstValidatePipelineTestsGenerator.__init__(self, "playback", test_manager, "playbin")
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for uri, minfo, special_scenarios in uri_minfo_special_scenarios:
             pipe = self._pipeline_template
             protocol = minfo.media_descriptor.get_protocol()
 
-            if self.options.mute:
+            if self.test_manager.options.mute:
                 fakesink = "'fakesink sync=true'"
                 pipe += " audio-sink=%s video-sink=%s" %(fakesink, fakesink)
 
@@ -292,8 +248,8 @@ class GstValidatePlaybinTestGenerator(GstValidatePipelineTestGenerator):
                     pipe += " ring-buffer-max-size=10485760"
 
                 self.add_test(GstValidateLaunchTest(fname,
-                                                    self.options,
-                                                    self.reporter,
+                                                    self.test_manager.options,
+                                                    self.test_manager.reporter,
                                                     pipe,
                                                     scenario=scenario,
                                                     media_descriptor=minfo.media_descriptor)
@@ -364,7 +320,7 @@ class GstValidateMediaCheckTest(Test):
 
 
 class GstValidateTranscodingTest(GstValidateTest):
-    _scenarios = ScenarioManager()
+    scenarios_manager = ScenarioManager()
     def __init__(self, classname, options, reporter,
                  combination, uri, media_descriptor,
                  timeout=DEFAULT_TIMEOUT,
@@ -437,18 +393,17 @@ class GstValidateTranscodingTest(GstValidateTest):
         self.set_result(res, msg)
 
 
-class GstValidateManager(TestsManager, Loggable):
+class GstValidateTestManager(GstValidateBaseTestManager):
 
     name = "validate"
-    _scenarios = ScenarioManager()
-
 
     def __init__(self):
-        TestsManager.__init__(self)
-        Loggable.__init__(self)
+        super(GstValidateTestManager, self).__init__()
         self._uris = []
         self._run_defaults = True
         self._is_populated = False
+        execfile(os.path.join(os.path.dirname(__file__), "apps",
+                 "validate_default_testsuite.py"), globals())
 
     def init(self):
         if which(GST_VALIDATE_COMMAND) and which(GST_VALIDATE_TRANSCODING_COMMAND):
@@ -461,38 +416,13 @@ class GstValidateManager(TestsManager, Loggable):
 description="""When using --wanted-tests, all the scenarios can be used, even those which have
 not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
-        group.add_argument("-vc", "--validate-config", dest="validate_config",
-                           default=None,
-help="""Lets you specify a file where the testsuite to execute is defined.
-In this file, your will be able to access the following variables:
-   * GST_VALIDATE_SCENARIOS: A list of scenario names to be run
-   * GST_VALIDATE_BLACKLISTED_TESTS: A list of tuple of the form:
-         (@regex_defining_blacklister_test_names, @reason_for_the_blacklisting)
-   * GST_VALIDATE_TEST_GENERATORS: A list of #GstValidateTestGenerator to be used to generate tests
-   * GST_VALIDATE_ENCODING_FORMATS: A list of #MediaFormatCombination to be used for transcoding tests
-
-You can also set default values with:
-    * gst_validate_register_defaults: Sets default values for all parametters
-    * gst_validate_register_default_test_generators: Sets default values for the TestGenerators to be used
-    * gst_validate_register_default_scenarios: Sets default values for the scenarios to be executed
-    * gst_validate_register_default_encoding_formats: Sets default values for the encoding formats to be tested
-
-Note: In the config file, you have acces to the options variable resulting from the parsing of the command line
-user argument, you can thus overrides command line options using that.
-""")
-
-    def _populate_testsuite(self, options):
+    def populate_testsuite(self):
 
         if self._is_populated is True:
             return
 
-        execfile(os.path.join(os.path.dirname(__file__), "apps",
-                 "validate_default_testsuite.py"), globals())
-        if options.validate_config:
-            globals()["options"] = options
-            execfile(options.validate_config, globals())
-        else:
-            gst_validate_register_defaults()
+        if not self.options.config:
+            self.register_defaults()
 
         self._is_populated = True
 
@@ -500,17 +430,14 @@ user argument, you can thus overrides command line options using that.
         if self.tests:
             return self.tests
 
-        self._populate_testsuite(self.options)
-
         if self._run_defaults:
-            scenarios = [self._scenarios.get_scenario(scenario_name)
-                         for scenario_name in GST_VALIDATE_SCENARIOS]
+            scenarios = [self.scenarios_manager.get_scenario(scenario_name)
+                         for scenario_name in self.get_scenarios()]
         else:
-            scenarios = self._scenarios.get_scenario(None)
+            scenarios = self.scenarios_manager.get_scenario(None)
         uris = self._list_uris()
 
-        for generator in GST_VALIDATE_TEST_GENERATORS:
-            generator.set_config(self.options, self.reporter)
+        for generator in self.get_generators():
             for test in generator.generate_tests(uris, scenarios):
                 self.add_test(test)
 
@@ -532,7 +459,7 @@ user argument, you can thus overrides command line options using that.
                     break
 
             scenario_bname = media_descriptor.get_media_filepath()
-            special_scenarios = self._scenarios.find_special_scenarios(scenario_bname)
+            special_scenarios = self.scenarios_manager.find_special_scenarios(scenario_bname)
             self._uris.append((uri,
                                NamedDic({"path": media_info,
                                          "media_descriptor": media_descriptor}),
@@ -556,13 +483,23 @@ user argument, you can thus overrides command line options using that.
             else:
                 return True
 
-            subprocess.check_output(args)
+            if self.options.generate_info:
+                printc("Generating media info for %s\n"
+                       "    Command: '%s'"  % (fpath, ' '.join(args)),
+                       Colors.OKBLUE)
+            out = subprocess.check_output(args, stderr=open(os.devnull))
             self._check_discovering_info(media_info, uri)
+
+            if self.options.generate_info:
+                printc("Result: Passed", Colors.OKGREEN)
 
             return True
 
         except subprocess.CalledProcessError as e:
-            self.debug("Exception: %s", e)
+            if self.options.generate_info:
+                printc("Result: Failed", Colors.FAIL)
+            else:
+                self.error("Exception: %s", e)
             return False
 
     def _list_uris(self):
@@ -599,11 +536,6 @@ user argument, you can thus overrides command line options using that.
                     return True
         return False
 
-    def get_blacklisted(self, options):
-        self._populate_testsuite(options)
-
-        return GST_VALIDATE_BLACKLISTED_TESTS
-
     def set_settings(self, options, args, reporter):
         if options.wanted_tests:
             for i in range(len(options.wanted_tests)):
@@ -615,7 +547,7 @@ user argument, you can thus overrides command line options using that.
         except ValueError:
             pass
 
-        TestsManager.set_settings(self, options, args, reporter)
+        super(GstValidateTestManager, self).set_settings(options, args, reporter)
 
 def gst_validate_checkout_element_present(element_name):
     null = open(os.devnull)

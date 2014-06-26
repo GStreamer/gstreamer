@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 #
-#       gst-validate-default-pipelines.py 
+#       validate_default_testsuite.py
 #
 # Copyright (c) 2014, Thibault Saunier tsaunier@gnome.org
 #
@@ -20,19 +20,20 @@
 # Boston, MA 02110-1301, USA.
 
 
-def gst_validate_register_default_test_generators():
+def register_default_test_generators(self):
     """
     Registers default test generators
     """
-    GST_VALIDATE_TEST_GENERATORS.append(GstValidatePlaybinTestGenerator())
-    GST_VALIDATE_TEST_GENERATORS.append(GstValidateMediaCheckTestGenerator())
-    GST_VALIDATE_TEST_GENERATORS.append(GstValidateTranscodingTestGenerator())
+    self.add_generators([GstValidatePlaybinTestsGenerator(self),
+                         GstValidateMediaCheckTestsGenerator(self),
+                         GstValidateTranscodingTestsGenerator(self)])
 
-def gst_validate_register_default_scenarios():
+
+def register_default_scenarios(self):
     """
     Registers default test scenarios
     """
-    GST_VALIDATE_SCENARIOS.extend([
+    self.add_scenarios([
                  "play_15s",
                  "reverse_playback",
                  "fast_forward",
@@ -47,19 +48,19 @@ def gst_validate_register_default_scenarios():
                  "change_state_intensive",
                  "scrub_forward_seeking"])
 
-def gst_validate_register_default_encoding_formats():
+def register_default_encoding_formats(self):
     """
     Registers default encoding formats
     """
-    GST_VALIDATE_ENCODING_FORMATS.extend([
+    self.add_encoding_formats([
         MediaFormatCombination("ogg", "vorbis", "theora"),
         MediaFormatCombination("webm", "vorbis", "vp8"),
         MediaFormatCombination("mp4", "mp3", "h264"),
         MediaFormatCombination("mkv", "vorbis", "h264"),
     ])
 
-def gst_validate_define_default_blacklist():
-    GST_VALIDATE_BLACKLISTED_TESTS.extend([
+def register_default_blacklist(self):
+    self.set_default_blacklist([
         ("validate.hls.playback.fast_forward.*",
          "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
         ("validate.hls.playback.seek_with_stop.*",
@@ -88,8 +89,18 @@ def gst_validate_define_default_blacklist():
         ("validate.http.*scrub_forward_seeking.*", "This is not stable enough for now."),
     ])
 
-def gst_validate_register_defaults():
-    gst_validate_register_default_test_generators()
-    gst_validate_register_default_scenarios()
-    gst_validate_register_default_encoding_formats()
-    gst_validate_define_default_blacklist()
+def register_defaults(self):
+    self.register_default_scenarios()
+    self.register_default_encoding_formats()
+    self.register_default_blacklist()
+    self.register_default_test_generators()
+
+try:
+    GstValidateTestManager.register_defaults = register_defaults
+    GstValidateTestManager.register_default_blacklist = register_default_blacklist
+    GstValidateTestManager.register_default_test_generators = register_default_test_generators
+    GstValidateTestManager.register_default_scenarios = register_default_scenarios
+    GstValidateTestManager.register_compositing_tests = register_compositing_tests
+    GstValidateTestManager.register_default_encoding_formats = register_default_encoding_formats
+except NameError:
+    pass

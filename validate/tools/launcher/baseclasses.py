@@ -457,6 +457,7 @@ class TestsManager(Loggable):
         self.reporter = None
         self.wanted_tests_patterns = []
         self.blacklisted_tests_patterns = []
+        self._generators = []
 
     def init(self):
         return False
@@ -473,8 +474,29 @@ class TestsManager(Loggable):
     def get_tests(self):
         return self.tests
 
-    def get_blacklisted(self, options=None):
-        return []
+    def populate_testsuite(self):
+        pass
+
+    def add_generators(self, generators):
+        """
+        @generators: A list of, or one single #TestsGenerator to be used to generate tests
+        """
+        if isinstance(generators, list):
+            self._generators.extend(generators)
+        else:
+            self._generators.append(generators)
+
+    def get_generators(self):
+        return self._generators
+
+    def set_default_blacklist(self, default_blacklist):
+        msg = "\nCurrently 'hardcoded' %s blacklisted tests:\n\n" % self.name
+        for name, bug in default_blacklist:
+            self.options.blacklisted_tests.append(name)
+            msg += "  + %s \n   --> bug: %s\n" % (name, bug)
+
+        printc(msg, Colors.FAIL, True)
+
 
     def add_options(self, parser):
         """ Add more arguments. """
@@ -486,6 +508,7 @@ class TestsManager(Loggable):
         self.args = args
         self.reporter = reporter
 
+        self.populate_testsuite()
         if options.wanted_tests:
             for patterns in options.wanted_tests:
                 for pattern in patterns.split(","):
@@ -545,6 +568,34 @@ class TestsManager(Loggable):
         return False
 
 
+class TestsGenerator(Loggable):
+    def __init__(self, name, test_manager, tests=[]):
+        Loggable.__init__(self)
+        self.name = name
+        self.test_manager = test_manager
+        self._tests = {}
+        for test in tests:
+            self._tests[test.classname] = test
+
+    def generate_tests(self, *kwargs):
+        """
+        Method that generates tests
+        """
+        return list(self._tests.values())
+
+    def add_test(self, test):
+        self._tests[test.classname] = test
+
+
+class GstValidateTestsGenerator(TestsGenerator):
+    def populate_tests(self, uri_minfo_special_scenarios, scenarios):
+        pass
+
+    def generate_tests(self, uri_minfo_special_scenarios, scenarios):
+        self.populate_tests(uri_minfo_special_scenarios, scenarios)
+        return super(GstValidateTestsGenerator, self).generate_tests()
+
+
 class _TestsLauncher(Loggable):
     def __init__(self):
 
@@ -593,8 +644,16 @@ class _TestsLauncher(Loggable):
                     self.testers.append(tester)
                     args.remove(tester.name)
 
+        if options.config:
+            for tester in self.testers:
+                tester.options = options
+                globals()[tester.name] = tester
+            globals()["options"] = options
+            execfile(self.options.config, globals())
+
         for tester in self.testers:
             tester.set_settings(options, args, self.reporter)
+
 
     def list_tests(self):
         for tester in self.testers:
@@ -637,16 +696,6 @@ class _TestsLauncher(Loggable):
         for tester in self.testers:
             if tester.needs_http_server():
                 return True
-
-    def get_blacklisted(self, options=None):
-        res = []
-        for tester in self.testers:
-            for blacklisted in tester.get_blacklisted(options):
-                if isinstance(blacklisted, str):
-                    res.append(blacklisted, "Unknown")
-                else:
-                    res.append(blacklisted)
-        return res
 
 
 class NamedDic(object):
@@ -779,3 +828,44 @@ class ScenarioManager(Loggable):
         except IndexError:
             self.warning("Scenario: %s not found" % name)
             return None
+
+
+class GstValidateBaseTestManager(TestsManager):
+    scenarios_manager = ScenarioManager()
+
+    def __init__(self):
+        super(GstValidateBaseTestManager, self).__init__()
+        self._scenarios = []
+        self._encoding_formats = []
+
+    def add_scenarios(self, scenarios):
+        """
+        @scenarios: A list or a unic scenario name(s) to be run on the tests.
+                    They are just the default scenarios, and then depending on
+                    the TestsGenerator to be used you can have more fine grained
+                    control on what to be run on each serie of tests.
+        """
+        if isinstance(scenarios, list):
+            self._scenarios.extend(scenarios)
+        else:
+            self._scenarios.append(scenarios)
+
+    def get_scenarios(self):
+        return self._scenarios
+
+
+    def add_encoding_formats(self, encoding_formats):
+        """
+        @encoding_formats: A list or one single #MediaFormatCombinations describing wanted output
+                           formats for transcoding test.
+                           They are just the default encoding formats, and then depending on
+                           the TestsGenerator to be used you can have more fine grained
+                           control on what to be run on each serie of tests.
+        """
+        if isinstance(encoding_formats, list):
+            self._encoding_formats.extend(encoding_formats)
+        else:
+            self._encoding_formats.append(encoding_formats)
+
+    def get_encoding_formats(self):
+        return self._encoding_formats

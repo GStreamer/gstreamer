@@ -181,7 +181,29 @@ def main():
                      help="Set it in order to generate the missing .media_infos files")
     parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
                      default=utils.LONG_TEST, action='store',
-                     help="Defines the limite from which a test is concidered as long (is seconds)"),
+                     help="Defines the limite from which a test is concidered as long (in seconds)"),
+    parser.add_argument("-c", "--config", dest="config",
+                           default=None,
+help="""Lets you specify a file where the testsuite to execute is defined.
+In this file you will have acces to the TestManager objects that you can configure with
+its various methods, for example you can find the 'validate' variable in case the GstValidateManager
+launcher is avalaible. You should configure it using:
+   * validate.add_scenarios: which allows you to register a list of scenario names to be run
+   * validate.set_default_blacklist: Lets you set a list of tuple of the form:
+         (@regex_defining_blacklister_test_names, @reason_for_the_blacklisting)
+   * validate.add_generators: which allows you to register a list of #GstValidateTestsGenerator
+     to be used to generate tests
+   * validate.add_encoding_formats:: which allows you to register a list #MediaFormatCombination to be used for transcoding tests
+
+You can also set default values with:
+    * validate.register_defaults: Sets default values for all parametters
+    * validate.register_default_test_generators: Sets default values for the TestsGenerators to be used
+    * gst_validate_register_default_scenarios: Sets default values for the scenarios to be executed
+    * gst_validate_register_default_encoding_formats: Sets default values for the encoding formats to be tested
+
+Note: In the config file, you have acces to the options variable resulting from the parsing of the command line
+user argument, you can thus overrides command line options using that.
+""")
     dir_group = parser.add_argument_group("Directories and files to be used by the launcher")
     parser.add_argument('--xunit-file', action='store',
                       dest='xunit_file', metavar="FILE",
@@ -278,15 +300,6 @@ def main():
         printc("Media path (%s) does not exists. Forgot to run --sync ?"
                % options.clone_dir, Colors.FAIL, True)
         return -1
-
-    blacklisted = tests_launcher.get_blacklisted(options)
-    if blacklisted:
-        msg = "Currently 'hardcoded' blacklisted tests:\n"
-        for name, bug in blacklisted:
-            options.blacklisted_tests.append(name)
-            msg += "  + %s \n   --> bug: %s\n\n" % (name, bug)
-
-        printc(msg, Colors.FAIL, True)
 
     tests_launcher.set_settings(options, args)
 
