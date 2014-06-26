@@ -426,12 +426,6 @@ gst_gl_mixer_reset (GstGLMixer * mix)
 }
 
 static void
-_free_pad_frame_data (gpointer data)
-{
-  g_slice_free1 (sizeof (GstGLMixerFrameData), data);
-}
-
-static void
 gst_gl_mixer_init (GstGLMixer * mix)
 {
   mix->priv = GST_GL_MIXER_GET_PRIVATE (mix);
@@ -440,9 +434,6 @@ gst_gl_mixer_init (GstGLMixer * mix)
   mix->display = NULL;
   mix->fbo = 0;
   mix->depthbuffer = 0;
-
-  mix->frames = g_ptr_array_new_full (4, _free_pad_frame_data);
-  mix->array_buffers = g_ptr_array_new_full (4, NULL);
 
   /* initialize variables */
   gst_gl_mixer_reset (mix);
@@ -454,9 +445,6 @@ gst_gl_mixer_finalize (GObject * object)
   GstGLMixer *mix = GST_GL_MIXER (object);
 
   g_mutex_clear (&mix->lock);
-
-  g_ptr_array_free (mix->frames, TRUE);
-  g_ptr_array_free (mix->array_buffers, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1028,7 +1016,6 @@ gst_gl_mixer_start (GstAggregator * agg)
 static gboolean
 gst_gl_mixer_stop (GstAggregator * agg)
 {
-  guint i;
   GstGLMixer *mix = GST_GL_MIXER (agg);
   GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
 
@@ -1036,9 +1023,10 @@ gst_gl_mixer_stop (GstAggregator * agg)
     return FALSE;
 
   GST_OBJECT_LOCK (agg);
-  for (i = 0; i < GST_ELEMENT (agg)->numsinkpads; i++) {
-    g_slice_free1 (sizeof (GstGLMixerFrameData), mix->frames->pdata[i]);
-  }
+  g_ptr_array_free (mix->frames, TRUE);
+  mix->frames = NULL;
+  g_ptr_array_free (mix->array_buffers, TRUE);
+  mix->array_buffers = NULL;
   GST_OBJECT_UNLOCK (agg);
 
   if (mixer_class->reset)
