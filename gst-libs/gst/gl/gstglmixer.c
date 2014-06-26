@@ -533,6 +533,10 @@ gst_gl_mixer_query_caps (GstPad * pad, GstAggregator * agg, GstQuery * query)
           "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
     }
   }
+
+  if (filter)
+    caps = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+
   gst_query_set_caps_result (query, caps);
 
   return TRUE;
