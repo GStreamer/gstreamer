@@ -538,6 +538,7 @@ gst_gl_mixer_query_caps (GstPad * pad, GstAggregator * agg, GstQuery * query)
     caps = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
 
   gst_query_set_caps_result (query, caps);
+  gst_caps_unref (caps);
 
   return TRUE;
 }
