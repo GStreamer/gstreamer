@@ -1831,26 +1831,21 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
 
       children = gst_bin_iterate_elements (GST_BIN (comp));
 
-    retry_lock:
-      if (G_UNLIKELY (gst_iterator_fold (children,
+      while (G_UNLIKELY (gst_iterator_fold (children,
                   (GstIteratorFoldFunction) lock_child_state, NULL,
                   NULL) == GST_ITERATOR_RESYNC)) {
         gst_iterator_resync (children);
-        goto retry_lock;
       }
-
       gst_iterator_free (children);
 
       /* Set caps on all objects */
       if (G_UNLIKELY (!gst_caps_is_any (GNL_OBJECT (comp)->caps))) {
         children = gst_bin_iterate_elements (GST_BIN (comp));
 
-      retry_caps:
-        if (G_UNLIKELY (gst_iterator_fold (children,
+        while (G_UNLIKELY (gst_iterator_fold (children,
                     (GstIteratorFoldFunction) set_child_caps, NULL,
                     comp) == GST_ITERATOR_RESYNC)) {
           gst_iterator_resync (children);
-          goto retry_caps;
         }
         gst_iterator_free (children);
       }
