@@ -6,5 +6,6 @@ videoparsers_patches_base = \
 	0003-h264parse-fix-and-optimize-NAL-collection-function.patch	\
 	0004-h264parse-default-to-byte-stream-nalu-format-Annex-B.patch	\
 	0005-h264parse-introduce-new-state-tracking-variables.patch	\
+	0006-h264parse-improve-conditions-for-skipping-NAL-units.patch	\
 	0003-h264parse-add-initial-support-for-MVC-NAL-units.patch	\
 	$(NULL)

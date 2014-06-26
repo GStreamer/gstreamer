@@ -1,0 +1,146 @@
+From 2b3680eeaff91f611d8c8b0e74efc66b0d874c66 Mon Sep 17 00:00:00 2001
+From: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+Date: Wed, 25 Jun 2014 13:14:10 +0200
+Subject: [PATCH 6/8] h264parse: improve conditions for skipping NAL units.
+
+Carefully track cases when skipping broken or invalid NAL units is
+necessary. In particular, always allow NAL units to be processed
+and let that gst_h264_parse_process_nal() function decide on whether
+the current NAL needs to be dropped or not.
+
+This fixes parsing of streams with SEI NAL buffering_period() message
+inserted between SPS and PPS, or SPS-Ext NAL following a traditional
+SPS NAL unit, among other cases too.
+
+Practical examples from the H.264 AVC conformance suite include
+alphaconformanceG, CVSE2_Sony_B, CVSE3_Sony_H, CVSEFDFT3_Sony_E
+when parsing in stream-format=byte-stream,alignment=au mode.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=732203
+
+Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+---
+ gst/vaapi/gsth264parse.c |   43 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 31 insertions(+), 12 deletions(-)
+
+diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
+index 1542a82..805c55f 100644
+--- a/gst/vaapi/gsth264parse.c
++++ b/gst/vaapi/gsth264parse.c
+@@ -528,7 +528,7 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+ }
+ 
+ /* caller guarantees 2 bytes of nal payload */
+-static void
++static gboolean
+ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+ {
+   guint nal_type;
+@@ -540,7 +540,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+   /* nothing to do for broken input */
+   if (G_UNLIKELY (nalu->size < 2)) {
+     GST_DEBUG_OBJECT (h264parse, "not processing nal size %u", nalu->size);
+-    return;
++    return TRUE;
+   }
+ 
+   /* we have a peek as well */
+@@ -556,8 +556,10 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+ 
+       pres = gst_h264_parser_parse_sps (nalparser, nalu, &sps, TRUE);
+       /* arranged for a fallback sps.id, so use that one and only warn */
+-      if (pres != GST_H264_PARSER_OK)
++      if (pres != GST_H264_PARSER_OK) {
+         GST_WARNING_OBJECT (h264parse, "failed to parse SPS:");
++        return FALSE;
++      }
+ 
+       GST_DEBUG_OBJECT (h264parse, "triggering src caps check");
+       h264parse->update_caps = TRUE;
+@@ -575,12 +577,18 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+       h264parse->state |= GST_H264_PARSE_STATE_GOT_SPS;
+       break;
+     case GST_H264_NAL_PPS:
++      /* expected state: got-sps */
+       h264parse->state &= GST_H264_PARSE_STATE_GOT_SPS;
++      if (!GST_H264_PARSE_STATE_VALID (h264parse, GST_H264_PARSE_STATE_GOT_SPS))
++        return FALSE;
+ 
+       pres = gst_h264_parser_parse_pps (nalparser, nalu, &pps);
+       /* arranged for a fallback pps.id, so use that one and only warn */
+-      if (pres != GST_H264_PARSER_OK)
++      if (pres != GST_H264_PARSER_OK) {
+         GST_WARNING_OBJECT (h264parse, "failed to parse PPS:");
++        if (pres != GST_H264_PARSER_BROKEN_LINK)
++          return FALSE;
++      }
+ 
+       /* parameters might have changed, force caps check */
+       if (!h264parse->have_pps) {
+@@ -601,6 +609,10 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+       h264parse->state |= GST_H264_PARSE_STATE_GOT_PPS;
+       break;
+     case GST_H264_NAL_SEI:
++      /* expected state: got-sps */
++      if (!GST_H264_PARSE_STATE_VALID (h264parse, GST_H264_PARSE_STATE_GOT_SPS))
++        return FALSE;
++
+       gst_h264_parse_process_sei (h264parse, nalu);
+       /* mark SEI pos */
+       if (h264parse->sei_pos == -1) {
+@@ -618,7 +630,11 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+     case GST_H264_NAL_SLICE_DPB:
+     case GST_H264_NAL_SLICE_DPC:
+     case GST_H264_NAL_SLICE_IDR:
++      /* expected state: got-sps|got-pps (valid picture headers) */
+       h264parse->state &= GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS;
++      if (!GST_H264_PARSE_STATE_VALID (h264parse,
++              GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS))
++        return FALSE;
+ 
+       /* don't need to parse the whole slice (header) here */
+       if (*(nalu->data + nalu->offset + 1) & 0x80) {
+@@ -668,7 +684,14 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+       }
+       break;
+     default:
+-      gst_h264_parser_parse_nal (nalparser, nalu);
++      /* drop anything before the initial SPS */
++      if (!GST_H264_PARSE_STATE_VALID (h264parse, GST_H264_PARSE_STATE_GOT_SPS))
++        return FALSE;
++
++      pres = gst_h264_parser_parse_nal (nalparser, nalu);
++      if (pres != GST_H264_PARSER_OK)
++        return FALSE;
++      break;
+   }
+ 
+   /* if AVC output needed, collect properly prefixed nal in adapter,
+@@ -681,6 +704,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+         nalu->data + nalu->offset, nalu->size);
+     gst_adapter_push (h264parse->frame_out, buf);
+   }
++  return TRUE;
+ }
+ 
+ /* caller guarantees at least 2 bytes of nal payload for each nal
+@@ -988,14 +1012,9 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
+       }
+     }
+ 
+-    if (nalu.type == GST_H264_NAL_SPS ||
+-        nalu.type == GST_H264_NAL_PPS ||
+-        GST_H264_PARSE_STATE_VALID (h264parse,
+-            GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS)) {
+-      gst_h264_parse_process_nal (h264parse, &nalu);
+-    } else {
++    if (!gst_h264_parse_process_nal (h264parse, &nalu)) {
+       GST_WARNING_OBJECT (h264parse,
+-          "no SPS/PPS yet, nal Type: %d %s, Size: %u will be dropped",
++          "broken/invalid nal Type: %d %s, Size: %u will be dropped",
+           nalu.type, _nal_name (nalu.type), nalu.size);
+       *skipsize = nalu.size;
+       goto skip;
+-- 
+1.7.9.5
+
