@@ -69,7 +69,7 @@ static GstStaticPadTemplate audio_src_template =
         "audio/x-raw, format = (string) { U8, S16LE }, layout = (string) interleaved, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/x-alaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
-        "audio/x-speex, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 };")
+        "audio/x-speex, channels = (int) 1, rate = (int) 16000;")
     );
 
 static GstStaticPadTemplate video_src_template =
@@ -784,6 +784,9 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       g_value_unset (&value);
 
       gst_structure_take_value (structure, "streamheader", &streamheader);
+
+      channels = 1;
+      adjusted_rate = 16000;
       break;
     }
     default:
