@@ -321,6 +321,7 @@ _push_mandatory_events (GstAggregator * self)
             gst_event_new_caps (self->priv->srccaps))) {
       GST_WARNING_OBJECT (self->srcpad, "Sending caps event failed");
     }
+    gst_caps_unref (self->priv->srccaps);
     self->priv->srccaps = NULL;
   }
 
