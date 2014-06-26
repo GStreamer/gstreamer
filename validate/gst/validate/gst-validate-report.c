@@ -195,6 +195,8 @@ gst_validate_report_load_issues (void)
       _("resulting file duration wasn't within the expected values"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_SEEKABLE_INCORRECT,
       _("resulting file wasn't seekable or not seekable as expected"), NULL);
+  REGISTER_VALIDATE_ISSUE (ISSUE, FILE_TAG_DETECTION_INCORRECT,
+      _("detected tags are different than expected ones"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_PROFILE_INCORRECT,
       _("resulting file stream profiles didn't match expected values"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_NOT_FOUND,

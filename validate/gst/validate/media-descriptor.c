@@ -231,7 +231,7 @@ compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
     if (found == FALSE) {
       gchar *rtaglist = gst_tag_list_to_string (rtag->taglist);
 
-      GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
+      GST_VALIDATE_REPORT (ref, FILE_TAG_DETECTION_INCORRECT,
           "Reference descriptor for stream %s has tags %s"
           " but no equivalent taglist was found on the compared stream",
           rstream->id, rtaglist);
@@ -262,7 +262,9 @@ comparse_stream (GstMediaDescriptor * ref, StreamNode * rstream,
       return 0;
     }
 
-    return compare_tags (ref, rstream, cstream);
+    compare_tags (ref, rstream, cstream);
+
+    return 1;
   }
 
   return -1;
