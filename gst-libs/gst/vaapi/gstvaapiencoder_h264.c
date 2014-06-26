@@ -572,24 +572,24 @@ bs_write_subset_sps (GstBitWriter * bs,
       WRITE_UE (bs, i);
 
     for (i = 1; i <= num_views_minus1; i++) {
-      guint32 num_anchor_refs_l0 = 15;
+      guint32 num_anchor_refs_l0 = 0;
       WRITE_UE (bs, num_anchor_refs_l0);
       for (j = 0; j < num_anchor_refs_l0; j++)
         WRITE_UE (bs, 0);
 
-      guint32 num_anchor_refs_l1 = 15;
+      guint32 num_anchor_refs_l1 = 0;
       WRITE_UE (bs, num_anchor_refs_l1);
       for (j = 0; j < num_anchor_refs_l1; j++)
         WRITE_UE (bs, 0);
     }
 
     for (i = 1; i <= num_views_minus1; i++) {
-      guint num_non_anchor_refs_l0 = 15;
+      guint32 num_non_anchor_refs_l0 = 0;
       WRITE_UE (bs, num_non_anchor_refs_l0);
       for (j = 0; j < num_non_anchor_refs_l0; j++)
         WRITE_UE (bs, 0);
 
-      guint num_non_anchor_refs_l1 = 15;
+      guint32 num_non_anchor_refs_l1 = 0;
       WRITE_UE (bs, num_non_anchor_refs_l1);
       for (j = 0; j < num_non_anchor_refs_l1; j++)
         WRITE_UE (bs, 0);
