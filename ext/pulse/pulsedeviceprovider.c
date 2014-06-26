@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2012 Olivier Crete <olivier.crete@collabora.com>
  *
- * gstv4l2devicemonitor.c: V4l2 device probing and monitoring
+ * gstv4l2deviceprovider.c: V4l2 device probing and monitoring
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,7 +23,7 @@
 #include "config.h"
 #endif
 
-#include "pulsedevicemonitor.h"
+#include "pulsedeviceprovider.h"
 
 #include <string.h>
 
@@ -42,19 +42,19 @@ static GstDevice *gst_pulse_device_new (guint id,
     const gchar * device_name, GstCaps * caps, const gchar * internal_name,
     GstPulseDeviceType type);
 
-G_DEFINE_TYPE (GstPulseDeviceMonitor, gst_pulse_device_monitor,
-    GST_TYPE_DEVICE_MONITOR);
+G_DEFINE_TYPE (GstPulseDeviceProvider, gst_pulse_device_provider,
+    GST_TYPE_DEVICE_PROVIDER);
 
-static void gst_pulse_device_monitor_finalize (GObject * object);
-static void gst_pulse_device_monitor_set_property (GObject * object,
+static void gst_pulse_device_provider_finalize (GObject * object);
+static void gst_pulse_device_provider_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_pulse_device_monitor_get_property (GObject * object,
+static void gst_pulse_device_provider_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 
-static GList *gst_pulse_device_monitor_probe (GstDeviceMonitor * monitor);
-static gboolean gst_pulse_device_monitor_start (GstDeviceMonitor * monitor);
-static void gst_pulse_device_monitor_stop (GstDeviceMonitor * monitor);
+static GList *gst_pulse_device_provider_probe (GstDeviceProvider * provider);
+static gboolean gst_pulse_device_provider_start (GstDeviceProvider * provider);
+static void gst_pulse_device_provider_stop (GstDeviceProvider * provider);
 
 enum
 {
@@ -66,19 +66,19 @@ enum
 
 
 static void
-gst_pulse_device_monitor_class_init (GstPulseDeviceMonitorClass * klass)
+gst_pulse_device_provider_class_init (GstPulseDeviceProviderClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstDeviceMonitorClass *dm_class = GST_DEVICE_MONITOR_CLASS (klass);
+  GstDeviceProviderClass *dm_class = GST_DEVICE_PROVIDER_CLASS (klass);
   gchar *client_name;
 
-  gobject_class->set_property = gst_pulse_device_monitor_set_property;
-  gobject_class->get_property = gst_pulse_device_monitor_get_property;
-  gobject_class->finalize = gst_pulse_device_monitor_finalize;
+  gobject_class->set_property = gst_pulse_device_provider_set_property;
+  gobject_class->get_property = gst_pulse_device_provider_get_property;
+  gobject_class->finalize = gst_pulse_device_provider_finalize;
 
-  dm_class->probe = gst_pulse_device_monitor_probe;
-  dm_class->start = gst_pulse_device_monitor_start;
-  dm_class->stop = gst_pulse_device_monitor_stop;
+  dm_class->probe = gst_pulse_device_provider_probe;
+  dm_class->start = gst_pulse_device_provider_start;
+  dm_class->stop = gst_pulse_device_provider_stop;
 
   g_object_class_install_property (gobject_class,
       PROP_SERVER,
@@ -95,35 +95,35 @@ gst_pulse_device_monitor_class_init (GstPulseDeviceMonitorClass * klass)
           GST_PARAM_MUTABLE_READY));
   g_free (client_name);
 
-  gst_device_monitor_class_set_static_metadata (dm_class,
-      "PulseAudio Device Monitor", "Sink/Source/Audio",
-      "List and monitor PulseAudio source and sink devices",
+  gst_device_provider_class_set_static_metadata (dm_class,
+      "PulseAudio Device Provider", "Sink/Source/Audio",
+      "List and provider PulseAudio source and sink devices",
       "Olivier Crete <olivier.crete@collabora.com>");
 }
 
 static void
-gst_pulse_device_monitor_init (GstPulseDeviceMonitor * self)
+gst_pulse_device_provider_init (GstPulseDeviceProvider * self)
 {
   self->client_name = gst_pulse_client_name ();
 }
 
 static void
-gst_pulse_device_monitor_finalize (GObject * object)
+gst_pulse_device_provider_finalize (GObject * object)
 {
-  GstPulseDeviceMonitor *self = GST_PULSE_DEVICE_MONITOR (object);
+  GstPulseDeviceProvider *self = GST_PULSE_DEVICE_PROVIDER (object);
 
   g_free (self->client_name);
   g_free (self->server);
 
-  G_OBJECT_CLASS (gst_pulse_device_monitor_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_pulse_device_provider_parent_class)->finalize (object);
 }
 
 
 static void
-gst_pulse_device_monitor_set_property (GObject * object,
+gst_pulse_device_provider_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstPulseDeviceMonitor *self = GST_PULSE_DEVICE_MONITOR (object);
+  GstPulseDeviceProvider *self = GST_PULSE_DEVICE_PROVIDER (object);
 
   switch (prop_id) {
     case PROP_SERVER:
@@ -147,10 +147,10 @@ gst_pulse_device_monitor_set_property (GObject * object,
 }
 
 static void
-gst_pulse_device_monitor_get_property (GObject * object,
+gst_pulse_device_provider_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstPulseDeviceMonitor *self = GST_PULSE_DEVICE_MONITOR (object);
+  GstPulseDeviceProvider *self = GST_PULSE_DEVICE_PROVIDER (object);
 
   switch (prop_id) {
     case PROP_SERVER:
@@ -168,7 +168,7 @@ gst_pulse_device_monitor_get_property (GObject * object,
 static void
 context_state_cb (pa_context * c, void *userdata)
 {
-  GstPulseDeviceMonitor *self = userdata;
+  GstPulseDeviceProvider *self = userdata;
 
   switch (pa_context_get_state (c)) {
     case PA_CONTEXT_READY:
@@ -219,7 +219,7 @@ static void
 get_source_info_cb (pa_context * context,
     const pa_source_info * info, int eol, void *userdata)
 {
-  GstPulseDeviceMonitor *self = userdata;
+  GstPulseDeviceProvider *self = userdata;
   GstDevice *dev;
 
   if (eol) {
@@ -230,14 +230,14 @@ get_source_info_cb (pa_context * context,
   dev = new_source (info);
 
   if (dev)
-    gst_device_monitor_device_add (GST_DEVICE_MONITOR (self), dev);
+    gst_device_provider_device_add (GST_DEVICE_PROVIDER (self), dev);
 }
 
 static void
 get_sink_info_cb (pa_context * context,
     const pa_sink_info * info, int eol, void *userdata)
 {
-  GstPulseDeviceMonitor *self = userdata;
+  GstPulseDeviceProvider *self = userdata;
   GstDevice *dev;
 
   if (eol) {
@@ -248,15 +248,15 @@ get_sink_info_cb (pa_context * context,
   dev = new_sink (info);
 
   if (dev)
-    gst_device_monitor_device_add (GST_DEVICE_MONITOR (self), dev);
+    gst_device_provider_device_add (GST_DEVICE_PROVIDER (self), dev);
 }
 
 static void
 context_subscribe_cb (pa_context * context, pa_subscription_event_type_t type,
     uint32_t idx, void *userdata)
 {
-  GstPulseDeviceMonitor *self = userdata;
-  GstDeviceMonitor *monitor = userdata;
+  GstPulseDeviceProvider *self = userdata;
+  GstDeviceProvider *provider = userdata;
   pa_subscription_event_type_t facility =
       type & PA_SUBSCRIPTION_EVENT_FACILITY_MASK;
   pa_subscription_event_type_t event_type =
@@ -279,7 +279,7 @@ context_subscribe_cb (pa_context * context, pa_subscription_event_type_t type,
     GList *item;
 
     GST_OBJECT_LOCK (self);
-    for (item = monitor->devices; item; item = item->next) {
+    for (item = provider->devices; item; item = item->next) {
       dev = item->data;
 
       if (((facility == PA_SUBSCRIPTION_EVENT_SOURCE &&
@@ -295,7 +295,7 @@ context_subscribe_cb (pa_context * context, pa_subscription_event_type_t type,
     GST_OBJECT_UNLOCK (self);
 
     if (dev) {
-      gst_device_monitor_device_remove (GST_DEVICE_MONITOR (self),
+      gst_device_provider_device_remove (GST_DEVICE_PROVIDER (self),
           GST_DEVICE (dev));
       gst_object_unref (dev);
     }
@@ -327,9 +327,9 @@ get_sink_info_list_cb (pa_context * context, const pa_sink_info * info,
 }
 
 static GList *
-gst_pulse_device_monitor_probe (GstDeviceMonitor * monitor)
+gst_pulse_device_provider_probe (GstDeviceProvider * provider)
 {
-  GstPulseDeviceMonitor *self = GST_PULSE_DEVICE_MONITOR (monitor);
+  GstPulseDeviceProvider *self = GST_PULSE_DEVICE_PROVIDER (provider);
   GList *devices = NULL;
   pa_mainloop *m = NULL;
   pa_context *c = NULL;
@@ -397,9 +397,9 @@ failed:
 }
 
 static gboolean
-gst_pulse_device_monitor_start (GstDeviceMonitor * monitor)
+gst_pulse_device_provider_start (GstDeviceProvider * provider)
 {
-  GstPulseDeviceMonitor *self = GST_PULSE_DEVICE_MONITOR (monitor);
+  GstPulseDeviceProvider *self = GST_PULSE_DEVICE_PROVIDER (provider);
   pa_operation *initial_operation;
 
   if (!(self->mainloop = pa_threaded_mainloop_new ())) {
@@ -484,7 +484,7 @@ gst_pulse_device_monitor_start (GstDeviceMonitor * monitor)
 
 unlock_and_fail:
   pa_threaded_mainloop_unlock (self->mainloop);
-  gst_pulse_device_monitor_stop (monitor);
+  gst_pulse_device_provider_stop (provider);
   return FALSE;
 
 mainloop_failed:
@@ -497,9 +497,9 @@ cancel_and_fail:
 }
 
 static void
-gst_pulse_device_monitor_stop (GstDeviceMonitor * monitor)
+gst_pulse_device_provider_stop (GstDeviceProvider * provider)
 {
-  GstPulseDeviceMonitor *self = GST_PULSE_DEVICE_MONITOR (monitor);
+  GstPulseDeviceProvider *self = GST_PULSE_DEVICE_PROVIDER (provider);
 
   pa_threaded_mainloop_stop (self->mainloop);
 

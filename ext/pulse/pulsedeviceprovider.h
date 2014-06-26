@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2012 Olivier Crete <olivier.crete@collabora.com>
  *
- * pulsedevicemonitor.h: Device probing and monitoring
+ * pulsedeviceprovider.h: Device probing and monitoring
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,8 +20,8 @@
  */
 
 
-#ifndef __GST_PULSE_DEVICE_MONITOR_H__
-#define __GST_PULSE_DEVICE_MONITOR_H__
+#ifndef __GST_PULSE_DEVICE_PROVIDER_H__
+#define __GST_PULSE_DEVICE_PROVIDER_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -34,20 +34,20 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstPulseDeviceMonitor GstPulseDeviceMonitor;
-typedef struct _GstPulseDeviceMonitorPrivate GstPulseDeviceMonitorPrivate;
-typedef struct _GstPulseDeviceMonitorClass GstPulseDeviceMonitorClass;
+typedef struct _GstPulseDeviceProvider GstPulseDeviceProvider;
+typedef struct _GstPulseDeviceProviderPrivate GstPulseDeviceProviderPrivate;
+typedef struct _GstPulseDeviceProviderClass GstPulseDeviceProviderClass;
 
-#define GST_TYPE_PULSE_DEVICE_MONITOR                 (gst_pulse_device_monitor_get_type())
-#define GST_IS_PULSE_DEVICE_MONITOR(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PULSE_DEVICE_MONITOR))
-#define GST_IS_PULSE_DEVICE_MONITOR_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PULSE_DEVICE_MONITOR))
-#define GST_PULSE_DEVICE_MONITOR_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PULSE_DEVICE_MONITOR, GstPulseDeviceMonitorClass))
-#define GST_PULSE_DEVICE_MONITOR(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PULSE_DEVICE_MONITOR, GstPulseDeviceMonitor))
-#define GST_PULSE_DEVICE_MONITOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE_MONITOR, GstPulseDeviceMonitorClass))
-#define GST_PULSE_DEVICE_MONITOR_CAST(obj)            ((GstPulseDeviceMonitor *)(obj))
+#define GST_TYPE_PULSE_DEVICE_PROVIDER                 (gst_pulse_device_provider_get_type())
+#define GST_IS_PULSE_DEVICE_PROVIDER(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PULSE_DEVICE_PROVIDER))
+#define GST_IS_PULSE_DEVICE_PROVIDER_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PULSE_DEVICE_PROVIDER))
+#define GST_PULSE_DEVICE_PROVIDER_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PULSE_DEVICE_PROVIDER, GstPulseDeviceProviderClass))
+#define GST_PULSE_DEVICE_PROVIDER(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PULSE_DEVICE_PROVIDER, GstPulseDeviceProvider))
+#define GST_PULSE_DEVICE_PROVIDER_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE_PROVIDER, GstPulseDeviceProviderClass))
+#define GST_PULSE_DEVICE_PROVIDER_CAST(obj)            ((GstPulseDeviceProvider *)(obj))
 
-struct _GstPulseDeviceMonitor {
-  GstDeviceMonitor         parent;
+struct _GstPulseDeviceProvider {
+  GstDeviceProvider         parent;
 
   gchar *server;
   gchar *client_name;
@@ -61,11 +61,11 @@ typedef enum {
   GST_PULSE_DEVICE_TYPE_SINK
 } GstPulseDeviceType;
 
-struct _GstPulseDeviceMonitorClass {
-  GstDeviceMonitorClass    parent_class;
+struct _GstPulseDeviceProviderClass {
+  GstDeviceProviderClass    parent_class;
 };
 
-GType        gst_pulse_device_monitor_get_type (void);
+GType        gst_pulse_device_provider_get_type (void);
 
 
 typedef struct _GstPulseDevice GstPulseDevice;
@@ -95,4 +95,4 @@ struct _GstPulseDeviceClass {
 
 GType        gst_pulse_device_get_type (void);
 
-#endif /* __GST_PULSE_DEVICE_MONITOR_H__ */
+#endif /* __GST_PULSE_DEVICE_PROVIDER_H__ */

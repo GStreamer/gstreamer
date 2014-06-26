@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2012 Olivier Crete <olivier.crete@collabora.com>
  *
- * gstv4l2devicemonitor.h: V4l2 device probing and monitoring
+ * gstv4l2deviceprovider.h: V4l2 device probing and monitoring
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,8 +20,8 @@
  */
 
 
-#ifndef __GST_V4L2_DEVICE_MONITOR_H__
-#define __GST_V4L2_DEVICE_MONITOR_H__
+#ifndef __GST_V4L2_DEVICE_PROVIDER_H__
+#define __GST_V4L2_DEVICE_PROVIDER_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -35,20 +35,20 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstV4l2DeviceMonitor GstV4l2DeviceMonitor;
-typedef struct _GstV4l2DeviceMonitorPrivate GstV4l2DeviceMonitorPrivate;
-typedef struct _GstV4l2DeviceMonitorClass GstV4l2DeviceMonitorClass;
+typedef struct _GstV4l2DeviceProvider GstV4l2DeviceProvider;
+typedef struct _GstV4l2DeviceProviderPrivate GstV4l2DeviceProviderPrivate;
+typedef struct _GstV4l2DeviceProviderClass GstV4l2DeviceProviderClass;
 
-#define GST_TYPE_V4L2_DEVICE_MONITOR                 (gst_v4l2_device_monitor_get_type())
-#define GST_IS_V4L2_DEVICE_MONITOR(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_DEVICE_MONITOR))
-#define GST_IS_V4L2_DEVICE_MONITOR_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_V4L2_DEVICE_MONITOR))
-#define GST_V4L2_DEVICE_MONITOR_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4L2_DEVICE_MONITOR, GstV4l2DeviceMonitorClass))
-#define GST_V4L2_DEVICE_MONITOR(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_DEVICE_MONITOR, GstV4l2DeviceMonitor))
-#define GST_V4L2_DEVICE_MONITOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE_MONITOR, GstV4l2DeviceMonitorClass))
-#define GST_V4L2_DEVICE_MONITOR_CAST(obj)            ((GstV4l2DeviceMonitor *)(obj))
+#define GST_TYPE_V4L2_DEVICE_PROVIDER                 (gst_v4l2_device_provider_get_type())
+#define GST_IS_V4L2_DEVICE_PROVIDER(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_DEVICE_PROVIDER))
+#define GST_IS_V4L2_DEVICE_PROVIDER_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_V4L2_DEVICE_PROVIDER))
+#define GST_V4L2_DEVICE_PROVIDER_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4L2_DEVICE_PROVIDER, GstV4l2DeviceProviderClass))
+#define GST_V4L2_DEVICE_PROVIDER(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_DEVICE_PROVIDER, GstV4l2DeviceProvider))
+#define GST_V4L2_DEVICE_PROVIDER_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE_PROVIDER, GstV4l2DeviceProviderClass))
+#define GST_V4L2_DEVICE_PROVIDER_CAST(obj)            ((GstV4l2DeviceProvider *)(obj))
 
-struct _GstV4l2DeviceMonitor {
-  GstDeviceMonitor         parent;
+struct _GstV4l2DeviceProvider {
+  GstDeviceProvider         parent;
 
 #ifdef HAVE_GUDEV
   GMainContext *context;
@@ -65,11 +65,11 @@ typedef enum {
   GST_V4L2_DEVICE_TYPE_SINK
 } GstV4l2DeviceType;
 
-struct _GstV4l2DeviceMonitorClass {
-  GstDeviceMonitorClass    parent_class;
+struct _GstV4l2DeviceProviderClass {
+  GstDeviceProviderClass    parent_class;
 };
 
-GType        gst_v4l2_device_monitor_get_type (void);
+GType        gst_v4l2_device_provider_get_type (void);
 
 
 typedef struct _GstV4l2Device GstV4l2Device;
@@ -98,4 +98,4 @@ struct _GstV4l2DeviceClass {
 
 GType        gst_v4l2_device_get_type (void);
 
-#endif /* __GST_V4L2_DEVICE_MONITOR_H__ */
+#endif /* __GST_V4L2_DEVICE_PROVIDER_H__ */

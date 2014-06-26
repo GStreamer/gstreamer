@@ -5,7 +5,7 @@ include $(top_srcdir)/common/gst-glib-gen.mak
 libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				gstv4l2allocator.c \
 				gstv4l2colorbalance.c \
-				gstv4l2devicemonitor.c \
+				gstv4l2deviceprovider.c \
 				gstv4l2object.c \
 				gstv4l2bufferpool.c \
 				gstv4l2sink.c \
@@ -47,7 +47,7 @@ noinst_HEADERS = \
 	gstv4l2allocator.h \
 	gstv4l2bufferpool.h \
 	gstv4l2colorbalance.h \
-	gstv4l2devicemonitor.h \
+	gstv4l2deviceprovider.h \
 	gstv4l2object.h \
 	gstv4l2sink.h \
 	gstv4l2src.h \

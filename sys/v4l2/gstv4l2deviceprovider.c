@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2012 Olivier Crete <olivier.crete@collabora.com>
  *
- * gstv4l2devicemonitor.c: V4l2 device probing and monitoring
+ * gstv4l2deviceprovider.c: V4l2 device probing and monitoring
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,7 +23,7 @@
 #include "config.h"
 #endif
 
-#include "gstv4l2devicemonitor.h"
+#include "gstv4l2deviceprovider.h"
 
 #include <string.h>
 #include <sys/stat.h>
@@ -42,61 +42,61 @@ static GstV4l2Device *gst_v4l2_device_new (const gchar * device_path,
     const gchar * device_name, GstCaps * caps, GstV4l2DeviceType type);
 
 
-G_DEFINE_TYPE (GstV4l2DeviceMonitor, gst_v4l2_device_monitor,
-    GST_TYPE_DEVICE_MONITOR);
+G_DEFINE_TYPE (GstV4l2DeviceProvider, gst_v4l2_device_provider,
+    GST_TYPE_DEVICE_PROVIDER);
 
-static void gst_v4l2_device_monitor_finalize (GObject * object);
-static GList *gst_v4l2_device_monitor_probe (GstDeviceMonitor * monitor);
+static void gst_v4l2_device_provider_finalize (GObject * object);
+static GList *gst_v4l2_device_provider_probe (GstDeviceProvider * provider);
 
 #if HAVE_GUDEV
-static gboolean gst_v4l2_device_monitor_start (GstDeviceMonitor * monitor);
-static void gst_v4l2_device_monitor_stop (GstDeviceMonitor * monitor);
+static gboolean gst_v4l2_device_provider_start (GstDeviceProvider * provider);
+static void gst_v4l2_device_provider_stop (GstDeviceProvider * provider);
 #endif
 
 
 static void
-gst_v4l2_device_monitor_class_init (GstV4l2DeviceMonitorClass * klass)
+gst_v4l2_device_provider_class_init (GstV4l2DeviceProviderClass * klass)
 {
-  GstDeviceMonitorClass *dm_class = GST_DEVICE_MONITOR_CLASS (klass);
+  GstDeviceProviderClass *dm_class = GST_DEVICE_PROVIDER_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  dm_class->probe = gst_v4l2_device_monitor_probe;
+  dm_class->probe = gst_v4l2_device_provider_probe;
 
 #if HAVE_GUDEV
-  dm_class->start = gst_v4l2_device_monitor_start;
-  dm_class->stop = gst_v4l2_device_monitor_stop;
+  dm_class->start = gst_v4l2_device_provider_start;
+  dm_class->stop = gst_v4l2_device_provider_stop;
 #endif
 
-  gobject_class->finalize = gst_v4l2_device_monitor_finalize;
+  gobject_class->finalize = gst_v4l2_device_provider_finalize;
 
-  gst_device_monitor_class_set_static_metadata (dm_class,
-      "Video (video4linux2) Device Monitor", "Source/Sink/Video",
+  gst_device_provider_class_set_static_metadata (dm_class,
+      "Video (video4linux2) Device Provider", "Source/Sink/Video",
       "List and monitor video4linux2 source and sink devices",
       "Olivier Crete <olivier.crete@collabora.com>");
 }
 
 static void
-gst_v4l2_device_monitor_init (GstV4l2DeviceMonitor * monitor)
+gst_v4l2_device_provider_init (GstV4l2DeviceProvider * provider)
 {
 #if HAVE_GUDEV
-  g_cond_init (&monitor->started_cond);
+  g_cond_init (&provider->started_cond);
 #endif
 }
 
 static void
-gst_v4l2_device_monitor_finalize (GObject * object)
+gst_v4l2_device_provider_finalize (GObject * object)
 {
 #if HAVE_GUDEV
-  GstV4l2DeviceMonitor *monitor = GST_V4L2_DEVICE_MONITOR (object);
+  GstV4l2DeviceProvider *provider = GST_V4L2_DEVICE_PROVIDER (object);
 
-  g_cond_clear (&monitor->started_cond);
+  g_cond_clear (&provider->started_cond);
 #endif
 
-  G_OBJECT_CLASS (gst_v4l2_device_monitor_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_v4l2_device_provider_parent_class)->finalize (object);
 }
 
 static GstV4l2Device *
-gst_v4l2_device_monitor_probe_device (GstV4l2DeviceMonitor * monitor,
+gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
     const gchar * device_path, const gchar * device_name)
 {
   GstV4l2Object *v4l2obj;
@@ -111,7 +111,7 @@ gst_v4l2_device_monitor_probe_device (GstV4l2DeviceMonitor * monitor,
   if (!S_ISCHR (st.st_mode))
     return NULL;
 
-  v4l2obj = gst_v4l2_object_new ((GstElement *) monitor,
+  v4l2obj = gst_v4l2_object_new ((GstElement *) provider,
       V4L2_BUF_TYPE_VIDEO_CAPTURE, device_path, NULL, NULL, NULL);
 
   if (!gst_v4l2_open (v4l2obj))
@@ -129,7 +129,7 @@ gst_v4l2_device_monitor_probe_device (GstV4l2DeviceMonitor * monitor,
       type = GST_V4L2_DEVICE_TYPE_SINK;
     else
       /* We ignore M2M devices that are both capture and output for now
-       * The monitor is not for them
+       * The provider is not for them
        */
       goto close;
   }
@@ -160,9 +160,9 @@ destroy:
 
 
 static GList *
-gst_v4l2_device_monitor_probe (GstDeviceMonitor * monitor)
+gst_v4l2_device_provider_probe (GstDeviceProvider * provider)
 {
-  GstV4l2DeviceMonitor *self = GST_V4L2_DEVICE_MONITOR (monitor);
+  GstV4l2DeviceProvider *self = GST_V4L2_DEVICE_PROVIDER (provider);
   GstV4l2Iterator *it;
   GList *devices = NULL;
 
@@ -171,7 +171,8 @@ gst_v4l2_device_monitor_probe (GstDeviceMonitor * monitor)
   while (gst_v4l2_iterator_next (it)) {
     GstV4l2Device *device;
 
-    device = gst_v4l2_device_monitor_probe_device (self, it->device_path, NULL);
+    device =
+        gst_v4l2_device_provider_probe_device (self, it->device_path, NULL);
 
     if (device) {
       gst_object_ref_sink (device);
@@ -187,7 +188,7 @@ gst_v4l2_device_monitor_probe (GstDeviceMonitor * monitor)
 #if HAVE_GUDEV
 
 static GstDevice *
-gst_v4l2_device_monitor_device_from_udev (GstV4l2DeviceMonitor * monitor,
+gst_v4l2_device_provider_device_from_udev (GstV4l2DeviceProvider * provider,
     GUdevDevice * udev_device)
 {
   GstV4l2Device *gstdev;
@@ -200,7 +201,7 @@ gst_v4l2_device_monitor_device_from_udev (GstV4l2DeviceMonitor * monitor,
   if (!device_name)
     device_name = g_udev_device_get_property (udev_device, "ID_MODEL");
 
-  gstdev = gst_v4l2_device_monitor_probe_device (monitor, device_path,
+  gstdev = gst_v4l2_device_provider_probe_device (provider, device_path,
       device_name);
 
   if (gstdev)
@@ -211,9 +212,9 @@ gst_v4l2_device_monitor_device_from_udev (GstV4l2DeviceMonitor * monitor,
 
 static void
 uevent_cb (GUdevClient * client, const gchar * action, GUdevDevice * device,
-    GstV4l2DeviceMonitor * self)
+    GstV4l2DeviceProvider * self)
 {
-  GstDeviceMonitor *monitor = GST_DEVICE_MONITOR (self);
+  GstDeviceProvider *provider = GST_DEVICE_PROVIDER (self);
 
   /* Not V4L2, ignoring */
   if (g_udev_device_get_property_as_int (device, "ID_V4L_VERSION") != 2)
@@ -222,16 +223,16 @@ uevent_cb (GUdevClient * client, const gchar * action, GUdevDevice * device,
   if (!strcmp (action, "add")) {
     GstDevice *gstdev = NULL;
 
-    gstdev = gst_v4l2_device_monitor_device_from_udev (self, device);
+    gstdev = gst_v4l2_device_provider_device_from_udev (self, device);
 
     if (gstdev)
-      gst_device_monitor_device_add (monitor, gstdev);
+      gst_device_provider_device_add (provider, gstdev);
   } else if (!strcmp (action, "remove")) {
     GstV4l2Device *gstdev = NULL;
     GList *item;
 
     GST_OBJECT_LOCK (self);
-    for (item = monitor->devices; item; item = item->next) {
+    for (item = provider->devices; item; item = item->next) {
       gstdev = item->data;
 
       if (!strcmp (gstdev->syspath, g_udev_device_get_sysfs_path (device))) {
@@ -241,10 +242,10 @@ uevent_cb (GUdevClient * client, const gchar * action, GUdevDevice * device,
 
       gstdev = NULL;
     }
-    GST_OBJECT_UNLOCK (monitor);
+    GST_OBJECT_UNLOCK (provider);
 
     if (gstdev) {
-      gst_device_monitor_device_remove (monitor, GST_DEVICE (gstdev));
+      gst_device_provider_device_remove (provider, GST_DEVICE (gstdev));
       g_object_unref (gstdev);
     }
   } else {
@@ -253,34 +254,34 @@ uevent_cb (GUdevClient * client, const gchar * action, GUdevDevice * device,
 }
 
 static gpointer
-monitor_thread (gpointer data)
+provider_thread (gpointer data)
 {
-  GstV4l2DeviceMonitor *monitor = data;
+  GstV4l2DeviceProvider *provider = data;
   GMainContext *context = NULL;
   GMainLoop *loop = NULL;
   GUdevClient *client;
   GList *devices;
   static const gchar *subsystems[] = { "video4linux", NULL };
 
-  GST_OBJECT_LOCK (monitor);
-  if (monitor->context)
-    context = g_main_context_ref (monitor->context);
-  if (monitor->loop)
-    loop = g_main_loop_ref (monitor->loop);
+  GST_OBJECT_LOCK (provider);
+  if (provider->context)
+    context = g_main_context_ref (provider->context);
+  if (provider->loop)
+    loop = g_main_loop_ref (provider->loop);
 
   if (context == NULL || loop == NULL) {
-    monitor->started = TRUE;
-    g_cond_broadcast (&monitor->started_cond);
-    GST_OBJECT_UNLOCK (monitor);
+    provider->started = TRUE;
+    g_cond_broadcast (&provider->started_cond);
+    GST_OBJECT_UNLOCK (provider);
     return NULL;
   }
-  GST_OBJECT_UNLOCK (monitor);
+  GST_OBJECT_UNLOCK (provider);
 
   g_main_context_push_thread_default (context);
 
   client = g_udev_client_new (subsystems);
 
-  g_signal_connect (client, "uevent", G_CALLBACK (uevent_cb), monitor);
+  g_signal_connect (client, "uevent", G_CALLBACK (uevent_cb), provider);
 
   devices = g_udev_client_query_by_subsystem (client, "video4linux");
 
@@ -291,18 +292,19 @@ monitor_thread (gpointer data)
     devices = g_list_remove (devices, udev_device);
 
     if (g_udev_device_get_property_as_int (udev_device, "ID_V4L_VERSION") == 2) {
-      gstdev = gst_v4l2_device_monitor_device_from_udev (monitor, udev_device);
+      gstdev =
+          gst_v4l2_device_provider_device_from_udev (provider, udev_device);
       if (gstdev)
-        gst_device_monitor_device_add (GST_DEVICE_MONITOR (monitor), gstdev);
+        gst_device_provider_device_add (GST_DEVICE_PROVIDER (provider), gstdev);
     }
 
     g_object_unref (udev_device);
   }
 
-  GST_OBJECT_LOCK (monitor);
-  monitor->started = TRUE;
-  g_cond_broadcast (&monitor->started_cond);
-  GST_OBJECT_UNLOCK (monitor);
+  GST_OBJECT_LOCK (provider);
+  provider->started = TRUE;
+  g_cond_broadcast (&provider->started_cond);
+  GST_OBJECT_UNLOCK (provider);
 
   g_main_loop_run (loop);
   g_main_loop_unref (loop);
@@ -310,15 +312,15 @@ monitor_thread (gpointer data)
   g_object_unref (client);
   g_main_context_unref (context);
 
-  gst_object_unref (monitor);
+  gst_object_unref (provider);
 
   return NULL;
 }
 
 static gboolean
-gst_v4l2_device_monitor_start (GstDeviceMonitor * monitor)
+gst_v4l2_device_provider_start (GstDeviceProvider * provider)
 {
-  GstV4l2DeviceMonitor *self = GST_V4L2_DEVICE_MONITOR (monitor);
+  GstV4l2DeviceProvider *self = GST_V4L2_DEVICE_PROVIDER (provider);
 
   GST_OBJECT_LOCK (self);
   g_assert (self->context == NULL);
@@ -326,7 +328,7 @@ gst_v4l2_device_monitor_start (GstDeviceMonitor * monitor)
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
 
-  self->thread = g_thread_new ("v4l2-device-monitor", monitor_thread,
+  self->thread = g_thread_new ("v4l2-device-provider", provider_thread,
       g_object_ref (self));
 
   while (self->started == FALSE)
@@ -338,9 +340,9 @@ gst_v4l2_device_monitor_start (GstDeviceMonitor * monitor)
 }
 
 static void
-gst_v4l2_device_monitor_stop (GstDeviceMonitor * monitor)
+gst_v4l2_device_provider_stop (GstDeviceProvider * provider)
 {
-  GstV4l2DeviceMonitor *self = GST_V4L2_DEVICE_MONITOR (monitor);
+  GstV4l2DeviceProvider *self = GST_V4L2_DEVICE_PROVIDER (provider);
   GMainContext *context;
   GMainLoop *loop;
   GSource *idle_stop_source;
