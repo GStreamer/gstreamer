@@ -59,9 +59,6 @@ struct _GstGLMixer
 
   GstGLMixerPrivate *priv;
 
-  /* Lock to prevent the state to change while blending */
-  GMutex lock;
-
   GPtrArray *array_buffers;
   GPtrArray *frames;
 

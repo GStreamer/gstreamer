@@ -45,13 +45,6 @@ static gboolean gst_gl_mixer_do_bufferpool (GstGLMixer * mix,
 #define GST_CAT_DEFAULT gst_gl_mixer_debug
 GST_DEBUG_CATEGORY (gst_gl_mixer_debug);
 
-#define GST_GL_MIXER_GET_LOCK(mix) \
-  (GST_GL_MIXER(mix)->lock)
-#define GST_GL_MIXER_LOCK(mix) \
-  (g_mutex_lock(&GST_GL_MIXER_GET_LOCK (mix)))
-#define GST_GL_MIXER_UNLOCK(mix) \
-  (g_mutex_unlock(&GST_GL_MIXER_GET_LOCK (mix)))
-
 static void gst_gl_mixer_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_mixer_pad_set_property (GObject * object, guint prop_id,
@@ -429,7 +422,6 @@ static void
 gst_gl_mixer_init (GstGLMixer * mix)
 {
   mix->priv = GST_GL_MIXER_GET_PRIVATE (mix);
-  g_mutex_init (&mix->lock);
   mix->array_buffers = 0;
   mix->display = NULL;
   mix->fbo = 0;
@@ -442,13 +434,8 @@ gst_gl_mixer_init (GstGLMixer * mix)
 static void
 gst_gl_mixer_finalize (GObject * object)
 {
-  GstGLMixer *mix = GST_GL_MIXER (object);
-
-  g_mutex_clear (&mix->lock);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
-
 
 static void
 gst_gl_mixer_set_context (GstElement * element, GstContext * context)
