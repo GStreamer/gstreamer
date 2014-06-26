@@ -415,6 +415,16 @@ EXPORTS
 	gst_device_get_type
 	gst_device_has_classes
 	gst_device_has_classesv
+	gst_device_monitor_get_bus
+	gst_device_monitor_get_caps_filter
+	gst_device_monitor_get_classes_filter
+	gst_device_monitor_get_devices
+	gst_device_monitor_get_type
+	gst_device_monitor_new
+	gst_device_monitor_set_caps_filter
+	gst_device_monitor_set_classes_filter
+	gst_device_monitor_start
+	gst_device_monitor_stop
 	gst_device_provider_can_monitor
 	gst_device_provider_class_add_metadata
 	gst_device_provider_class_add_static_metadata
@@ -605,16 +615,6 @@ EXPORTS
 	gst_ghost_pad_new_no_target
 	gst_ghost_pad_new_no_target_from_template
 	gst_ghost_pad_set_target
-	gst_global_device_monitor_get_bus
-	gst_global_device_monitor_get_caps_filter
-	gst_global_device_monitor_get_classes_filter
-	gst_global_device_monitor_get_devices
-	gst_global_device_monitor_get_type
-	gst_global_device_monitor_new
-	gst_global_device_monitor_set_caps_filter
-	gst_global_device_monitor_set_classes_filter
-	gst_global_device_monitor_start
-	gst_global_device_monitor_stop
 	gst_init
 	gst_init_check
 	gst_init_get_option_group

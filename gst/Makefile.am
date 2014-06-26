@@ -80,7 +80,7 @@ libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	gstevent.c		\
 	gstformat.c		\
 	gstghostpad.c		\
-	gstglobaldevicemonitor.c \
+	gstdevicemonitor.c 	\
 	gstinfo.c		\
 	gstiterator.c		\
 	gstatomicqueue.c	\
@@ -184,7 +184,7 @@ gst_headers =			\
 	gstevent.h		\
 	gstformat.h		\
 	gstghostpad.h		\
-	gstglobaldevicemonitor.h \
+	gstdevicemonitor.h 	\
 	gstinfo.h		\
 	gstiterator.h		\
 	gstatomicqueue.h	\

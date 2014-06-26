@@ -117,7 +117,7 @@ Windows.  It is released under the GNU Library General Public License
 
   <chapter id="gstreamer-device-probing">
     <title>GStreamer Device Discovery and Device Probing</title>
-    <xi:include href="xml/gstglobaldevicemonitor.xml" />
+    <xi:include href="xml/gstdevicemonitor.xml" />
     <xi:include href="xml/gstdevice.xml" />
     <xi:include href="xml/gstdeviceprovider.xml" />
     <xi:include href="xml/gstdeviceproviderfactory.xml" />
