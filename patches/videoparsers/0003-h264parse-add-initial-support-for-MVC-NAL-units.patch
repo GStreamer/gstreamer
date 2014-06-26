@@ -1,7 +1,7 @@
-From 3ef58fae7a578f72c4607b57434ed54a0ee9ee1d Mon Sep 17 00:00:00 2001
+From b1974b68fac0dad1c76ab74f0b6b3d9ff99b6f27 Mon Sep 17 00:00:00 2001
 From: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
 Date: Tue, 19 Mar 2013 14:23:00 +0200
-Subject: [PATCH 3/3] h264parse: add initial support for MVC NAL units.
+Subject: [PATCH 8/8] h264parse: add initial support for MVC NAL units.
 
 Initial support for MVC NAL units. It is only needed to propagate the
 complete set of NAL units downstream at this time.
@@ -11,14 +11,14 @@ https://bugzilla.gnome.org/show_bug.cgi?id=696135
 Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
 Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 ---
- gst/vaapi/gsth264parse.c |   20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ gst/vaapi/gsth264parse.c |   20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
 diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
-index 7c970ee..e9b9481 100644
+index 413a227..b4f20f7 100644
 --- a/gst/vaapi/gsth264parse.c
 +++ b/gst/vaapi/gsth264parse.c
-@@ -415,7 +415,7 @@ gst_h264_parser_store_nal (GstH264Parse * h264parse, guint id,
+@@ -433,7 +433,7 @@ gst_h264_parser_store_nal (GstH264Parse * h264parse, guint id,
    GstBuffer *buf, **store;
    guint size = nalu->size, store_size;
  
@@ -69,17 +69,7 @@ index 7c970ee..e9b9481 100644
        {
          GstH264SliceHdr slice;
  
-@@ -677,7 +681,8 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
-   /* coded slice NAL starts a picture,
-    * i.e. other types become aggregated in front of it */
-   h264parse->picture_start |= (nal_type == GST_H264_NAL_SLICE ||
--      nal_type == GST_H264_NAL_SLICE_DPA || nal_type == GST_H264_NAL_SLICE_IDR);
-+      nal_type == GST_H264_NAL_SLICE_DPA || nal_type == GST_H264_NAL_SLICE_IDR
-+      || nal_type == GST_H264_NAL_SLICE_EXT);
- 
-   /* consider a coded slices (IDR or not) to start a picture,
-    * (so ending the previous one) if first_mb_in_slice == 0
-@@ -687,16 +692,18 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
+@@ -741,8 +750,9 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
     * and also works with broken frame_num in NAL
     * (where spec-wise would fail) */
    nal_type = nnalu.type;
@@ -91,9 +81,8 @@ index 7c970ee..e9b9481 100644
  
    GST_LOG_OBJECT (h264parse, "next nal type: %d %s", nal_type,
        _nal_name (nal_type));
-   complete |= h264parse->picture_start && (nal_type == GST_H264_NAL_SLICE
+@@ -750,7 +760,7 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
        || nal_type == GST_H264_NAL_SLICE_DPA
-+      || nal_type == GST_H264_NAL_SLICE_EXT
        || nal_type == GST_H264_NAL_SLICE_IDR) &&
        /* first_mb_in_slice == 0 considered start of frame */
 -      (nnalu.data[nnalu.offset + 1] & 0x80);
