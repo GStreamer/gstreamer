@@ -1479,7 +1479,12 @@ add_packed_slice_header (GstVaapiEncoderH264 * encoder,
 
   if (!get_nal_hdr_attributes (picture, &nal_ref_idc, &nal_unit_type))
     goto bs_error;
-  bs_write_nal_header (&bs, nal_ref_idc, nal_unit_type);
+  /* pack nal_unit_header_mvc_extension() for the non base view */
+  if (encoder->is_mvc && encoder->view_idx) {
+    bs_write_nal_header (&bs, nal_ref_idc, GST_H264_NAL_SLICE_EXT);
+    bs_write_nal_header_mvc_extension (&bs, picture, encoder->view_idx);
+  } else
+    bs_write_nal_header (&bs, nal_ref_idc, nal_unit_type);
 
   bs_write_slice (&bs, slice_param, encoder, picture);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
@@ -1887,8 +1892,10 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     /* set calculation for next slice */
     last_mb_index += cur_slice_mbs;
 
-    if (encoder->is_mvc &&
-        (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VA_ENC_PACKED_HEADER_RAW_DATA)
+    /* add packed Prefix NAL unit before each Coded slice NAL in base view */
+    if (encoder->is_mvc && !encoder->view_idx &&
+        (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+            VA_ENC_PACKED_HEADER_RAW_DATA)
         && !add_packed_prefix_nal_header (encoder, picture, slice))
       goto error_create_packed_prefix_nal_hdr;
     if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
