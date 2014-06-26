@@ -299,6 +299,85 @@ GST_START_TEST (test_foreach)
 
 GST_END_TEST;
 
+/* make sure everything is fine if we exceed the pre-allocated size */
+GST_START_TEST (test_expand_and_remove)
+{
+  GPtrArray *arr;
+  GstBuffer *buf;
+  guint i, idx, num, counter = 0;
+
+  gst_buffer_list_unref (list);
+
+  arr = g_ptr_array_new ();
+
+  list = gst_buffer_list_new_sized (1);
+
+  for (i = 0; i < 250; ++i) {
+    num = ++counter;
+    buf = gst_buffer_new_allocate (NULL, num, NULL);
+    gst_buffer_list_add (list, buf);
+    g_ptr_array_add (arr, GINT_TO_POINTER (num));
+  }
+
+  for (i = 0; i < 250; ++i) {
+    num = ++counter;
+    buf = gst_buffer_new_allocate (NULL, num, NULL);
+    idx = g_random_int_range (0, gst_buffer_list_length (list));
+    gst_buffer_list_insert (list, idx, buf);
+    g_ptr_array_insert (arr, idx, GINT_TO_POINTER (num));
+  }
+
+  /* make sure the list looks like it should */
+  fail_unless_equals_int (arr->len, gst_buffer_list_length (list));
+  for (i = 0; i < arr->len; ++i) {
+    buf = gst_buffer_list_get (list, i);
+    num = gst_buffer_get_size (buf);
+    fail_unless_equals_int (num, GPOINTER_TO_INT (g_ptr_array_index (arr, i)));
+  }
+
+  for (i = 0; i < 44; ++i) {
+    num = g_random_int_range (1, 5);
+    idx = g_random_int_range (0, gst_buffer_list_length (list) - num);
+    gst_buffer_list_remove (list, idx, num);
+    g_ptr_array_remove_range (arr, idx, num);
+  }
+
+  /* make sure the list still looks like it should */
+  fail_unless_equals_int (arr->len, gst_buffer_list_length (list));
+  for (i = 0; i < arr->len; ++i) {
+    buf = gst_buffer_list_get (list, i);
+    num = gst_buffer_get_size (buf);
+    fail_unless_equals_int (num, GPOINTER_TO_INT (g_ptr_array_index (arr, i)));
+  }
+
+  for (i = 0; i < 500; ++i) {
+    num = ++counter;
+    buf = gst_buffer_new_allocate (NULL, num, NULL);
+    gst_buffer_list_add (list, buf);
+    g_ptr_array_add (arr, GINT_TO_POINTER (num));
+  }
+
+  for (i = 0; i < 500; ++i) {
+    num = ++counter;
+    buf = gst_buffer_new_allocate (NULL, num, NULL);
+    idx = g_random_int_range (0, gst_buffer_list_length (list));
+    gst_buffer_list_insert (list, idx, buf);
+    g_ptr_array_insert (arr, idx, GINT_TO_POINTER (num));
+  }
+
+  /* make sure the list still looks like it should */
+  fail_unless_equals_int (arr->len, gst_buffer_list_length (list));
+  for (i = 0; i < arr->len; ++i) {
+    buf = gst_buffer_list_get (list, i);
+    num = gst_buffer_get_size (buf);
+    fail_unless_equals_int (num, GPOINTER_TO_INT (g_ptr_array_index (arr, i)));
+  }
+
+  g_ptr_array_unref (arr);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_list_suite (void)
 {
@@ -312,6 +391,7 @@ gst_buffer_list_suite (void)
   tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_copy);
   tcase_add_test (tc_chain, test_foreach);
+  tcase_add_test (tc_chain, test_expand_and_remove);
 
   return s;
 }
