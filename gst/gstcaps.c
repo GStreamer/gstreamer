@@ -882,8 +882,10 @@ gst_caps_set_features (GstCaps * caps, guint index, GstCapsFeatures * features)
   if (features)
     gst_caps_features_set_parent_refcount (features, &GST_CAPS_REFCOUNT (caps));
 
-  if (old)
+  if (old) {
+    gst_caps_features_set_parent_refcount (old, NULL);
     gst_caps_features_free (old);
+  }
 }
 
 /**
