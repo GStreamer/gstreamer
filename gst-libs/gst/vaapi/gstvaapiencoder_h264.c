@@ -169,6 +169,10 @@ h264_get_cpb_nal_factor (GstVaapiProfile profile)
     case GST_VAAPI_PROFILE_H264_HIGH_444:
       f = 4800;
       break;
+    case GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH:
+    case GST_VAAPI_PROFILE_H264_STEREO_HIGH:
+      f = 1500;                 /* H.10.2.1 (r) */
+      break;
     default:
       f = 1200;
       break;
