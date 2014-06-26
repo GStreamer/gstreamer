@@ -1,0 +1,135 @@
+From fcdf7736ca43b9847b22100042e19bf64005ee39 Mon Sep 17 00:00:00 2001
+From: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+Date: Wed, 25 Jun 2014 11:06:41 +0200
+Subject: [PATCH 5/8] h264parse: introduce new state tracking variables.
+
+Improve parser state tracking by introducing new flags reflecting
+it: "got-sps", "got-pps" and "got-slice". This is an addition for
+robustness purposes.
+
+Older have_sps and have_pps variables are kept because they have
+a different meaning. i.e. they are used for deciding on when to
+submit updated caps or not, and rather mean "have new SPS/PPS to
+be submitted?"
+
+Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+---
+ gst/vaapi/gsth264parse.c |   30 +++++++++++++++++++++++++++++-
+ gst/vaapi/gsth264parse.h |    3 +++
+ 2 files changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
+index 4800c2b..1542a82 100644
+--- a/gst/vaapi/gsth264parse.c
++++ b/gst/vaapi/gsth264parse.c
+@@ -61,6 +61,22 @@ enum
+   GST_H264_PARSE_ALIGN_AU
+ };
+ 
++enum
++{
++  GST_H264_PARSE_STATE_GOT_SPS = 1 << 0,
++  GST_H264_PARSE_STATE_GOT_PPS = 1 << 1,
++  GST_H264_PARSE_STATE_GOT_SLICE = 1 << 2,
++
++  GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS = (GST_H264_PARSE_STATE_GOT_SPS |
++      GST_H264_PARSE_STATE_GOT_PPS),
++  GST_H264_PARSE_STATE_VALID_PICTURE =
++      (GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS |
++      GST_H264_PARSE_STATE_GOT_SLICE)
++};
++
++#define GST_H264_PARSE_STATE_VALID(parse, expected_state) \
++  (((parse)->state & (expected_state)) == (expected_state))
++
+ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+     GST_PAD_SINK,
+     GST_PAD_ALWAYS,
+@@ -535,6 +551,9 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+ 
+   switch (nal_type) {
+     case GST_H264_NAL_SPS:
++      /* reset state, everything else is obsolete */
++      h264parse->state = 0;
++
+       pres = gst_h264_parser_parse_sps (nalparser, nalu, &sps, TRUE);
+       /* arranged for a fallback sps.id, so use that one and only warn */
+       if (pres != GST_H264_PARSER_OK)
+@@ -553,8 +572,11 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+       }
+ 
+       gst_h264_parser_store_nal (h264parse, sps.id, nal_type, nalu);
++      h264parse->state |= GST_H264_PARSE_STATE_GOT_SPS;
+       break;
+     case GST_H264_NAL_PPS:
++      h264parse->state &= GST_H264_PARSE_STATE_GOT_SPS;
++
+       pres = gst_h264_parser_parse_pps (nalparser, nalu, &pps);
+       /* arranged for a fallback pps.id, so use that one and only warn */
+       if (pres != GST_H264_PARSER_OK)
+@@ -576,6 +598,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+       }
+ 
+       gst_h264_parser_store_nal (h264parse, pps.id, nal_type, nalu);
++      h264parse->state |= GST_H264_PARSE_STATE_GOT_PPS;
+       break;
+     case GST_H264_NAL_SEI:
+       gst_h264_parse_process_sei (h264parse, nalu);
+@@ -595,6 +618,8 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+     case GST_H264_NAL_SLICE_DPB:
+     case GST_H264_NAL_SLICE_DPC:
+     case GST_H264_NAL_SLICE_IDR:
++      h264parse->state &= GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS;
++
+       /* don't need to parse the whole slice (header) here */
+       if (*(nalu->data + nalu->offset + 1) & 0x80) {
+         /* means first_mb_in_slice == 0 */
+@@ -615,6 +640,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+           if (GST_H264_IS_I_SLICE (&slice) || GST_H264_IS_SI_SLICE (&slice))
+             h264parse->keyframe |= TRUE;
+ 
++          h264parse->state |= GST_H264_PARSE_STATE_GOT_SLICE;
+           h264parse->field_pic_flag = slice.field_pic_flag;
+         }
+       }
+@@ -964,7 +990,8 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
+ 
+     if (nalu.type == GST_H264_NAL_SPS ||
+         nalu.type == GST_H264_NAL_PPS ||
+-        (h264parse->have_sps && h264parse->have_pps)) {
++        GST_H264_PARSE_STATE_VALID (h264parse,
++            GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS)) {
+       gst_h264_parse_process_nal (h264parse, &nalu);
+     } else {
+       GST_WARNING_OBJECT (h264parse,
+@@ -1761,6 +1788,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+       h264parse->push_codec = FALSE;
+       h264parse->have_sps = FALSE;
+       h264parse->have_pps = FALSE;
++      h264parse->state &= GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS;
+     }
+   }
+ 
+diff --git a/gst/vaapi/gsth264parse.h b/gst/vaapi/gsth264parse.h
+index 4c3fdd4..c9d188b 100644
+--- a/gst/vaapi/gsth264parse.h
++++ b/gst/vaapi/gsth264parse.h
+@@ -69,12 +69,15 @@ struct _GstH264Parse
+ 
+   /* state */
+   GstH264NalParser *nalparser;
++  guint state;
+   guint align;
+   guint format;
+   gint current_off;
+ 
+   GstClockTime last_report;
+   gboolean push_codec;
++  /* The following variables have a meaning in context of "have
++   * SPS/PPS to push downstream", e.g. to update caps */
+   gboolean have_sps;
+   gboolean have_pps;
+ 
+-- 
+1.7.9.5
+

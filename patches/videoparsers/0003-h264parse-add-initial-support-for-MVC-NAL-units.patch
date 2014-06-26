@@ -27,19 +27,34 @@ index 7c970ee..e9b9481 100644
      store_size = GST_H264_MAX_SPS_COUNT;
      store = h264parse->sps_nals;
      GST_DEBUG_OBJECT (h264parse, "storing sps %u", id);
-@@ -534,6 +534,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+@@ -551,10 +551,16 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+       nal_type, _nal_name (nal_type), nalu->size);
  
    switch (nal_type) {
-     case GST_H264_NAL_SPS:
 +    case GST_H264_NAL_SUBSET_SPS:
++      if (!GST_H264_PARSE_STATE_VALID (h264parse, GST_H264_PARSE_STATE_GOT_SPS))
++        return FALSE;
++      goto process_sps;
++
+     case GST_H264_NAL_SPS:
+       /* reset state, everything else is obsolete */
+       h264parse->state = 0;
+ 
++    process_sps:
        pres = gst_h264_parser_parse_sps (nalparser, nalu, &sps, TRUE);
        /* arranged for a fallback sps.id, so use that one and only warn */
-       if (pres != GST_H264_PARSER_OK)
-@@ -594,14 +595,17 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+       if (pres != GST_H264_PARSER_OK) {
+@@ -631,6 +637,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
      case GST_H264_NAL_SLICE_DPB:
      case GST_H264_NAL_SLICE_DPC:
      case GST_H264_NAL_SLICE_IDR:
 +    case GST_H264_NAL_SLICE_EXT:
+       h264parse->state &= GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS;
+ 
+       /* don't need to parse the whole slice (header) here */
+@@ -638,13 +645,15 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+         return FALSE;
+ 
        /* don't need to parse the whole slice (header) here */
 -      if (*(nalu->data + nalu->offset + 1) & 0x80) {
 +      if (*(nalu->data + nalu->offset + nalu->header_bytes) & 0x80) {
