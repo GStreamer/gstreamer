@@ -1,0 +1,58 @@
+From def7c6b2a0fcd08969940349e458248dd0c7b3da Mon Sep 17 00:00:00 2001
+From: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+Date: Thu, 26 Jun 2014 09:44:26 +0200
+Subject: [PATCH 7/8] h264parse: fix collection of access units to preserve
+ config headers.
+
+Always use a GstAdapter when collecting access units (alignment="au")
+in either byte-stream or avcC format. This is required to properly
+preserve config headers like SPS and PPS when invalid or broken NAL
+units are subsequently parsed.
+
+More precisely, this fixes scenario like:
+<SPS> <PPS> <invalid-NAL> <slice>
+
+where we used to reset the output frame buffer when an invalid or
+broken NAL is parsed, i.e. SPS and PPS NAL units were lost, thus
+preventing the next slice unit to be decoded, should this also
+represent any valid data.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=732203
+
+Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+---
+ gst/vaapi/gsth264parse.c |   11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
+index 805c55f..413a227 100644
+--- a/gst/vaapi/gsth264parse.c
++++ b/gst/vaapi/gsth264parse.c
+@@ -393,7 +393,8 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
+   h264parse->format = format;
+   h264parse->align = align;
+ 
+-  h264parse->transform = (in_format != h264parse->format);
++  h264parse->transform = in_format != h264parse->format ||
++      align == GST_H264_PARSE_ALIGN_AU;
+ }
+ 
+ static GstBuffer *
+@@ -1054,7 +1055,13 @@ out:
+ 
+ skip:
+   GST_DEBUG_OBJECT (h264parse, "skipping %d", *skipsize);
+-  gst_h264_parse_reset_frame (h264parse);
++  /* If we are collecting access units, we need to preserve the initial
++   * config headers (SPS, PPS et al.) and only reset the frame if another
++   * slice NAL was received. This means that broken pictures are discarded */
++  if (h264parse->align != GST_H264_PARSE_ALIGN_AU ||
++      !(h264parse->state & GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS) ||
++      (h264parse->state & GST_H264_PARSE_STATE_GOT_SLICE))
++    gst_h264_parse_reset_frame (h264parse);
+   goto out;
+ 
+ invalid_stream:
+-- 
+1.7.9.5
+
