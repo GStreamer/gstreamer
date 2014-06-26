@@ -22,7 +22,7 @@
 /**
  * SECTION:gstdeviceprovider
  * @short_description: A device provider
- * @see_also: #GstDevice, #GstGlobalDeviceMonitor
+ * @see_also: #GstDevice, #GstDeviceMonitor
  *
  * A #GstDeviceProvider subclass is provided by a plugin that handles devices
  * if there is a way to programatically list connected devices. It can also
@@ -31,7 +31,7 @@
  * Each #GstDeviceProvider subclass is a singleton, a plugin should
  * normally provide a single subclass for all devices.
  *
- * Applications would normally use a #GstGlobalDeviceMonitor to monitor devices
+ * Applications would normally use a #GstDeviceMonitor to monitor devices
  * from all relevant providers.
  *
  * Since: 1.4

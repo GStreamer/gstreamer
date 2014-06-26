@@ -30,8 +30,9 @@
  * GstDeviceProviderfactory can be added to a #GstPlugin as it is also a
  * #GstPluginFeature.
  *
- * Use the gst_device_provider_factory_find() and gst_device_provider_factory_create()
- * functions to create device provider instances or use gst_device_provider_factory_make() as a
+ * Use the gst_device_provider_factory_find() and
+ * gst_device_provider_factory_create() functions to create device
+ * provider instances or use gst_device_provider_factory_make() as a
  * convenient shortcut.
  *
  * Since: 1.4

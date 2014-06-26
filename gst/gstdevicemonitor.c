@@ -34,6 +34,57 @@
  * The device monitor will monitor all devices matching the filters that
  * the application has set.
  *
+ *
+ * The basic use pattern of an iterator is as follows:
+ * |[
+ *   static gboolean
+ *   my_bus_func (GstBus * bus, GstMessage * message, gpointer user_data)
+ *   {
+ *      GstDevice *device;
+ *      gchar name;
+ *
+ *      switch (GST_MESSAGE_TYPE (message)) {
+ *        case GST_MESSAGE_DEVICE_ADDED:
+ *          gst_message_parse_device_added (message, &device);
+ *          name = gst_device_get_display_name (device);
+ *          g_print("Device added: %s\n", name);
+ *          g_free (name);
+ *          break;
+ *        case GST_MESSAGE_DEVICE_REMOVED:
+ *          gst_message_parse_device_removed (message, &device);
+ *          name = gst_device_get_display_name (device);
+ *          g_print("Device removed: %s\n", name);
+ *          g_free (name);
+ *          break;
+ *        default:
+ *          break;
+ *      }
+ *
+ *      return G_SOURCE_CONTINUE;
+ *   }
+ *
+ *   GstDeviceMonitor *
+ *   setup_raw_video_source_device_monitor (void) {
+ *      GstDeviceMonitor *monitor;
+ *      GstBus *bus;
+ *      GstCaps *caps;
+ *
+ *      monitor = gst_device_monitor_new ();
+ *
+ *      bus = gst_device_monitor_get_bus (monitor);
+ *      gst_bus_add_watch (bus, my_bus_func, NULL);
+ *      gst_object_unref (bus);
+ *
+ *      caps = gst_caps_new_simple_empty ("video/x-raw");
+ *      gst_device_monitor_add_filter (monitor, "Video/Source", caps);
+ *      gst_caps_unref (caps);
+ *
+ *      gst_device_monitor_start (monitor);
+ *
+ *      return monitor;
+ *   }
+ * ]|
+ *
  * Since: 1.4
  */
 
