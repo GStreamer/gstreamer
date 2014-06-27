@@ -256,7 +256,7 @@ static gboolean update_pipeline_func (GnlComposition * comp);
         g_thread_self());                                            \
 } G_STMT_END
 
-
+#define GET_TASK_LOCK(comp)    (&(GNL_COMPOSITION(comp)->task_rec_lock))
 
 struct _GnlCompositionEntry
 {
@@ -297,19 +297,31 @@ iterate_main_context_func (GnlComposition * comp)
 }
 
 static void
-_start_srcpad_task (GnlComposition * comp)
+_start_task (GnlComposition * comp)
 {
-  GST_ERROR_OBJECT (comp, "Starting srcpad task");
+  GstTask *task;
 
   comp->priv->running = TRUE;
-  gst_pad_start_task (GST_PAD (GNL_OBJECT_SRC (comp)),
-      (GstTaskFunction) iterate_main_context_func, comp, NULL);
+
+  GST_OBJECT_LOCK (comp);
+
+  task = comp->task;
+  if (task == NULL) {
+    task = gst_task_new ((GstTaskFunction) iterate_main_context_func, comp, NULL);
+    gst_task_set_lock (task, GET_TASK_LOCK (comp));
+    GST_INFO_OBJECT (comp, "created task %p", task);
+    comp->task = task;
+  }
+
+  gst_task_set_state (task, GST_TASK_STARTED);
+  GST_OBJECT_UNLOCK (comp);
 }
 
 static gboolean
-_stop_srcpad_task (GnlComposition * comp, GstEvent * flush_start)
+_stop_task (GnlComposition * comp, GstEvent * flush_start)
 {
   gboolean res = TRUE;
+  GstTask *task;
   GnlObject *obj = GNL_OBJECT (comp);
 
   GST_ERROR_OBJECT (comp, "%s srcpad task",
@@ -324,7 +336,44 @@ _stop_srcpad_task (GnlComposition * comp, GstEvent * flush_start)
     res = gst_pad_push_event (obj->srcpad, flush_start);
   }
 
-  gst_pad_stop_task (obj->srcpad);
+  GST_DEBUG_OBJECT (comp, "stop task");
+
+  GST_OBJECT_LOCK (comp);
+  task = comp->task;
+  if (task == NULL)
+    goto no_task;
+  comp->task = NULL;
+  res = gst_task_set_state (task, GST_TASK_STOPPED);
+  GST_OBJECT_UNLOCK (comp);
+
+  if (!gst_task_join (task))
+    goto join_failed;
+
+  gst_object_unref (task);
+
+  return res;
+
+no_task:
+  {
+    GST_OBJECT_UNLOCK (comp);
+
+    /* this is not an error */
+    return TRUE;
+  }
+join_failed:
+  {
+    /* this is bad, possibly the application tried to join the task from
+     * the task's thread. We install the task again so that it will be stopped
+     * again from the right thread next time hopefully. */
+    GST_OBJECT_LOCK (comp);
+    GST_DEBUG_OBJECT (comp, "join failed");
+    /* we can only install this task if there was no other task */
+    if (comp->task == NULL)
+      comp->task = task;
+    GST_OBJECT_UNLOCK (comp);
+
+    return FALSE;
+  }
 
   return res;
 }
@@ -346,7 +395,7 @@ src_activate_mode (GstPad * pad,
       case GST_PAD_MODE_PUSH:
       {
         GST_INFO_OBJECT (pad, "Activating pad!");
-        _start_srcpad_task (comp);
+        _start_task (comp);
         return TRUE;
       }
       default:
@@ -359,7 +408,7 @@ src_activate_mode (GstPad * pad,
 
   /* deactivating */
   GST_INFO_OBJECT (comp, "Deactivating srcpad");
-  _stop_srcpad_task (comp, FALSE);
+  _stop_task (comp, FALSE);
 
   return TRUE;
 }
@@ -500,6 +549,8 @@ gnl_composition_init (GnlComposition * comp)
   priv->segment = gst_segment_new ();
   priv->outside_segment = gst_segment_new ();
 
+  g_rec_mutex_init (&comp->task_rec_lock);
+
   priv->reset_time = FALSE;
 
   priv->objects_hash = g_hash_table_new_full
@@ -567,6 +618,8 @@ gnl_composition_finalize (GObject * object)
 
   g_mutex_clear (&priv->objects_lock);
   g_mutex_clear (&priv->flushing_lock);
+
+  g_rec_mutex_clear (&comp->task_rec_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

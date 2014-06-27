@@ -47,9 +47,11 @@ struct _GnlComposition
 {
   GnlObject parent;
 
+  GstTask               * task;
+  GRecMutex		            task_rec_lock;
   /*< private >*/
 
-  GnlCompositionPrivate *priv;
+  GnlCompositionPrivate * priv;
 };
 
 struct _GnlCompositionClass
