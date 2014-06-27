@@ -766,12 +766,14 @@ gst_audio_visualizer_src_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
 
   /* find a pool for the negotiated caps now */
   res = gst_audio_visualizer_do_bufferpool (scope, caps);
+  gst_caps_unref (caps);
 
   return res;
 
   /* ERRORS */
 wrong_caps:
   {
+    gst_caps_unref (caps);
     GST_DEBUG_OBJECT (scope, "error parsing caps");
     return FALSE;
   }
@@ -1263,6 +1265,7 @@ gst_audio_visualizer_sink_event (GstPad * pad, GstObject * parent,
 
       gst_event_parse_caps (event, &caps);
       res = gst_audio_visualizer_sink_setcaps (scope, caps);
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_FLUSH_START:
