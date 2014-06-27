@@ -847,9 +847,15 @@ dpb_clear(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         gst_vaapi_frame_store_replace(&priv->dpb[i], NULL);
     }
 
+    /* Compact the resulting DPB, i.e. remove holes */
     for (i = 0, n = 0; i < priv->dpb_count; i++) {
-        if (priv->dpb[i])
-            priv->dpb[n++] = priv->dpb[i];
+        if (priv->dpb[i]) {
+            if (i != n) {
+                priv->dpb[n] = priv->dpb[i];
+                priv->dpb[i] = NULL;
+            }
+            n++;
+        }
     }
     priv->dpb_count = n;
 
@@ -859,7 +865,7 @@ dpb_clear(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
             GST_VAAPI_PICTURE_FLAG_IS_SET(picture,
                 GST_VAAPI_PICTURE_FLAG_AU_START))) {
         for (i = 0; i < priv->max_views; i++)
-            gst_vaapi_picture_replace(&priv->prev_frames[i], NULL);
+            gst_vaapi_frame_store_replace(&priv->prev_frames[i], NULL);
     }
 }
 
@@ -1026,7 +1032,7 @@ mvc_reset(GstVaapiDecoderH264 *decoder)
 
     // Resize array of previous frame buffers
     for (i = priv->max_views; i < priv->prev_frames_alloc; i++)
-        gst_vaapi_picture_replace(&priv->prev_frames[i], NULL);
+        gst_vaapi_frame_store_replace(&priv->prev_frames[i], NULL);
 
     priv->prev_frames = g_try_realloc_n(priv->prev_frames, priv->max_views,
         sizeof(*priv->prev_frames));
