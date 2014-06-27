@@ -35,7 +35,7 @@
  * the application has set.
  *
  *
- * The basic use pattern of an iterator is as follows:
+ * The basic use pattern of a device monitor is as follows:
  * |[
  *   static gboolean
  *   my_bus_func (GstBus * bus, GstMessage * message, gpointer user_data)
@@ -348,8 +348,10 @@ gst_device_monitor_start (GstDeviceMonitor * monitor)
 
   if (monitor->priv->filters->len == 0) {
     GST_OBJECT_UNLOCK (monitor);
-    GST_WARNING_OBJECT (monitor, "No filters have been set");
-    return FALSE;
+    GST_WARNING_OBJECT (monitor, "No filters have been set, will expose all "
+        "devices found");
+    gst_device_monitor_add_filter (monitor, NULL, NULL);
+    GST_OBJECT_LOCK (monitor);
   }
 
   if (monitor->priv->providers->len == 0) {

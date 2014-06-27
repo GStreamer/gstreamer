@@ -420,8 +420,6 @@ GST_START_TEST (test_device_monitor)
 
   mon = gst_device_monitor_new ();
 
-  fail_if (gst_device_monitor_start (mon));
-
   devices = g_list_append (NULL, test_device_new ());
 
   devs = gst_device_monitor_get_devices (mon);
@@ -533,6 +531,12 @@ GST_START_TEST (test_device_monitor)
   gst_object_unref (dp);
   gst_object_unref (dp2);
   g_list_free_full (devices, (GDestroyNotify) gst_object_unref);
+
+  /* should work fine without any filters */
+  mon = gst_device_monitor_new ();
+  fail_unless (gst_device_monitor_start (mon));
+  gst_device_monitor_stop (mon);
+  gst_object_unref (mon);
 }
 
 GST_END_TEST;
