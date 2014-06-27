@@ -1881,28 +1881,22 @@ update_pipeline_func (GnlComposition * comp)
 
   seek_handling (comp, TRUE, TRUE);
 
-  if (!priv->current) {
-    /* If we're at the end, post SEGMENT_DONE, or push EOS */
-    GST_DEBUG_OBJECT (comp, "Nothing else to play");
+  /* Post segment done if last seek was a segment seek */
+  if (!priv->current && (priv->segment->flags & GST_SEEK_FLAG_SEGMENT)) {
+    gint64 epos;
 
-    if (!(priv->segment->flags & GST_SEEK_FLAG_SEGMENT)) {
-      GST_DEBUG_OBJECT (comp, "Real EOS should be sent now");
-    } else if (priv->segment->flags & GST_SEEK_FLAG_SEGMENT) {
-      gint64 epos;
+    if (GST_CLOCK_TIME_IS_VALID (priv->segment->stop))
+      epos = (MIN (priv->segment->stop, GNL_OBJECT_STOP (comp)));
+    else
+      epos = GNL_OBJECT_STOP (comp);
 
-      if (GST_CLOCK_TIME_IS_VALID (priv->segment->stop))
-        epos = (MIN (priv->segment->stop, GNL_OBJECT_STOP (comp)));
-      else
-        epos = GNL_OBJECT_STOP (comp);
-
-      GST_LOG_OBJECT (comp, "Emitting segment done pos %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (epos));
-      gst_element_post_message (GST_ELEMENT_CAST (comp),
-          gst_message_new_segment_done (GST_OBJECT (comp),
-              priv->segment->format, epos));
-      gst_pad_push_event (GNL_OBJECT (comp)->srcpad,
-          gst_event_new_segment_done (priv->segment->format, epos));
-    }
+    GST_LOG_OBJECT (comp, "Emitting segment done pos %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (epos));
+    gst_element_post_message (GST_ELEMENT_CAST (comp),
+        gst_message_new_segment_done (GST_OBJECT (comp),
+          priv->segment->format, epos));
+    gst_pad_push_event (GNL_OBJECT (comp)->srcpad,
+        gst_event_new_segment_done (priv->segment->format, epos));
   }
 
 
