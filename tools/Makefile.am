@@ -1,10 +1,14 @@
 man_MANS = \
+	gst-device-monitor-@GST_API_VERSION@.1 \
 	gst-discoverer-@GST_API_VERSION@.1 \
 	gst-play-@GST_API_VERSION@.1	
 
 bin_PROGRAMS = \
+	gst-device-monitor-@GST_API_VERSION@ \
 	gst-discoverer-@GST_API_VERSION@ \
 	gst-play-@GST_API_VERSION@
+
+gst_device_monitor_@GST_API_VERSION@_SOURCES = gst-device-monitor.c
 
 gst_discoverer_@GST_API_VERSION@_SOURCES = gst-discoverer.c
 
