@@ -1941,8 +1941,8 @@ ensure_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 {
   GstVaapiEncSequence *sequence = NULL;
 
-  // Submit an SPS header before every new I-frame
-  if (picture->type != GST_VAAPI_PICTURE_TYPE_I)
+  /* submit an SPS header before every new I-frame, if codec config changed */
+  if (!encoder->config_changed || picture->type != GST_VAAPI_PICTURE_TYPE_I)
     return TRUE;
 
   sequence = GST_VAAPI_ENC_SEQUENCE_NEW (H264, encoder);
@@ -1964,6 +1964,9 @@ ensure_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     gst_vaapi_enc_picture_set_sequence (picture, sequence);
     gst_vaapi_codec_object_replace (&sequence, NULL);
   }
+
+  if (!encoder->is_mvc || encoder->view_idx > 0)
+    encoder->config_changed = FALSE;
   return TRUE;
 
   /* ERRORS */
