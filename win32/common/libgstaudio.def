@@ -197,6 +197,7 @@ EXPORTS
 	gst_audio_ring_buffer_release
 	gst_audio_ring_buffer_samples_done
 	gst_audio_ring_buffer_set_callback
+	gst_audio_ring_buffer_set_callback_full
 	gst_audio_ring_buffer_set_channel_positions
 	gst_audio_ring_buffer_set_flushing
 	gst_audio_ring_buffer_set_sample

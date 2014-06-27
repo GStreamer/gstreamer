@@ -593,6 +593,7 @@ GST_AUDIO_RING_BUFFER_SIGNAL
 GST_AUDIO_RING_BUFFER_WAIT
 
 gst_audio_ring_buffer_set_callback
+gst_audio_ring_buffer_set_callback_full
 
 gst_audio_ring_buffer_acquire
 gst_audio_ring_buffer_release

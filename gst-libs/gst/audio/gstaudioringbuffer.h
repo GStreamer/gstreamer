@@ -205,8 +205,10 @@ struct _GstAudioRingBuffer {
   gint                        may_start;
   gboolean                    active;
 
+  GDestroyNotify              cb_data_notify;
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 /**
@@ -260,9 +262,13 @@ struct _GstAudioRingBufferClass {
 GType gst_audio_ring_buffer_get_type(void);
 
 /* callback stuff */
-void            gst_audio_ring_buffer_set_callback    (GstAudioRingBuffer *buf,
-                                                       GstAudioRingBufferCallback cb,
-                                                       gpointer user_data);
+void            gst_audio_ring_buffer_set_callback      (GstAudioRingBuffer *buf,
+                                                         GstAudioRingBufferCallback cb,
+                                                         gpointer user_data);
+void            gst_audio_ring_buffer_set_callback_full (GstAudioRingBuffer *buf,
+                                                         GstAudioRingBufferCallback cb,
+                                                         gpointer user_data,
+                                                         GDestroyNotify notify);
 
 gboolean        gst_audio_ring_buffer_parse_caps      (GstAudioRingBufferSpec *spec, GstCaps *caps);
 void            gst_audio_ring_buffer_debug_spec_caps (GstAudioRingBufferSpec *spec);
