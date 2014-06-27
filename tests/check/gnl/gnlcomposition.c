@@ -215,7 +215,6 @@ GST_START_TEST (test_simple_adder)
 
   composition = gst_element_factory_make ("gnlcomposition", "composition");
   fakesink = gst_element_factory_make ("fakesink", NULL);
-  g_object_set (fakesink, "sync", TRUE, NULL);
 
   /* gnl_adder */
   gnl_adder = gst_element_factory_make ("gnloperation", "gnl_adder");
