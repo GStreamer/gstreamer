@@ -437,7 +437,7 @@ _gst_mpegts_atsc_string_segment_decode_string (GstMpegtsAtscStringSegment * seg)
       break;
   }
 
-  if (from_encoding != NULL) {
+  if (from_encoding != NULL && seg->compressed_data_size > 0) {
     GError *err = NULL;
 
     seg->cached_string =
