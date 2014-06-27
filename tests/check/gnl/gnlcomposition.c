@@ -257,6 +257,8 @@ GST_START_TEST (test_simple_adder)
   message = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
       GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
 
+  gst_mini_object_unref (GST_MINI_OBJECT (message));
+
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR)
     fail_error_message (message);
 
