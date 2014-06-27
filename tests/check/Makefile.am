@@ -105,7 +105,7 @@ check_PROGRAMS =				\
 	gst/gstatomicqueue			\
 	gst/gstbuffer				\
 	gst/gstbufferlist			\
-	gst/gstbufferpool				\
+	gst/gstbufferpool			\
 	gst/gstmeta				\
 	gst/gstmemory				\
 	gst/gstbus				\
@@ -113,6 +113,7 @@ check_PROGRAMS =				\
 	gst/gstcapsfeatures    			\
 	$(CXX_CHECKS)			     	\
 	gst/gstdatetime     			\
+	gst/gstdevice				\
 	gst/gstinfo		 		\
 	gst/gstiterator 			\
 	gst/gstmessage	 			\
