@@ -2381,7 +2381,7 @@ gst_rtsp_stream_update_crypto (GstRTSPStream * stream,
   GstRTSPStreamPrivate *priv;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
-  g_return_val_if_fail (GST_IS_CAPS (crypto), FALSE);
+  g_return_val_if_fail (crypto == NULL || GST_IS_CAPS (crypto), FALSE);
 
   priv = stream->priv;
 
