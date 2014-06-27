@@ -448,6 +448,9 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     guint flags, deint_flags;
     gboolean tff, deint, deint_refs, deint_changed;
     GstVaapiRectangle *crop_rect = NULL;
+#if GST_CHECK_VERSION(1,0,0)
+    GstVaapiRectangle tmp_rect;
+#endif
 
     /* Validate filters */
     if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_FORMAT) &&
@@ -493,7 +496,6 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     GstVideoCropMeta * const crop_meta =
         gst_buffer_get_video_crop_meta(inbuf);
     if (crop_meta) {
-        GstVaapiRectangle tmp_rect;
         crop_rect = &tmp_rect;
         crop_rect->x = crop_meta->x;
         crop_rect->y = crop_meta->y;
