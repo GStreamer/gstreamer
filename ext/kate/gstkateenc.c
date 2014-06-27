@@ -1227,7 +1227,7 @@ gst_kate_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_unref (event);
       break;
     }
-    case GST_EVENT_SEGMENT: {
+    case GST_EVENT_SEGMENT:{
       GstSegment seg;
 
       GST_LOG_OBJECT (ke, "Got newsegment event");
@@ -1235,7 +1235,9 @@ gst_kate_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_copy_segment (event, &seg);
 
       if (!ke->headers_sent) {
-        gst_event_replace (&ke->pending_segment, event);
+        if (ke->pending_segment)
+          gst_event_unref (ke->pending_segment);
+        ke->pending_segment = event;
         event = NULL;
       }
 
