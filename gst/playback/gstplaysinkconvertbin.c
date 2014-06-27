@@ -418,6 +418,7 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
               gst_caps_merge_structure_full (ret, gst_structure_copy (s),
               (cf ? gst_caps_features_copy (cf) : NULL));
         }
+        gst_caps_unref (converter_caps);
       } else {
         ret = peer_caps;
         GST_PLAY_SINK_CONVERT_BIN_FILTER_CAPS (filter, ret);
