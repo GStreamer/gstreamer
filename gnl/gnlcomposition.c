@@ -378,41 +378,6 @@ join_failed:
   return res;
 }
 
-static gboolean
-src_activate_mode (GstPad * pad,
-    GstObject * parent, GstPadMode mode, gboolean active)
-{
-  GnlComposition *comp = GNL_COMPOSITION (parent);
-
-  if (gst_ghost_pad_activate_mode_default (pad, parent, mode, active) == FALSE) {
-    GST_WARNING_OBJECT (pad, "Could not activate ghost pad");
-    return FALSE;
-  }
-
-  GST_ERROR ("ACTIVATING SRCPAD TASK %i", active);
-  if (active == TRUE) {
-    switch (mode) {
-      case GST_PAD_MODE_PUSH:
-      {
-        GST_INFO_OBJECT (pad, "Activating pad!");
-        _start_task (comp);
-        return TRUE;
-      }
-      default:
-      {
-        GST_ERROR_OBJECT (pad, "Only supported mode is PUSH");
-        return FALSE;
-      }
-    }
-  }
-
-  /* deactivating */
-  GST_INFO_OBJECT (comp, "Deactivating srcpad");
-  _stop_task (comp, FALSE);
-
-  return TRUE;
-}
-
 static void
 _add_update_gsource (GnlComposition * comp)
 {
@@ -568,8 +533,8 @@ gnl_composition_init (GnlComposition * comp)
   priv->gnl_event_pad_func = GST_PAD_EVENTFUNC (GNL_OBJECT_SRC (comp));
   gst_pad_set_event_function (GNL_OBJECT_SRC (comp),
       GST_DEBUG_FUNCPTR (gnl_composition_event_handler));
-  gst_pad_set_activatemode_function (GNL_OBJECT_SRC (comp),
-      GST_DEBUG_FUNCPTR ((GstPadActivateModeFunction) src_activate_mode));
+
+  _start_task (comp);
 }
 
 static void
@@ -603,8 +568,6 @@ gnl_composition_finalize (GObject * object)
   GnlComposition *comp = GNL_COMPOSITION (object);
   GnlCompositionPrivate *priv = comp->priv;
 
-  GST_INFO ("finalize");
-
   COMP_OBJECTS_LOCK (comp);
   g_list_free (priv->objects_start);
   g_list_free (priv->objects_stop);
@@ -619,6 +582,7 @@ gnl_composition_finalize (GObject * object)
   g_mutex_clear (&priv->objects_lock);
   g_mutex_clear (&priv->flushing_lock);
 
+  _stop_task (comp, FALSE);
   g_rec_mutex_clear (&comp->task_rec_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
