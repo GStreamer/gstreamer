@@ -738,6 +738,7 @@ struct _GstVaapiEncoderH264
   gboolean use_cabac;
   gboolean use_dct8x8;
   GstClockTime cts_offset;
+  gboolean config_changed;
 
   /* frame, poc */
   guint32 max_frame_num;
@@ -2087,15 +2088,21 @@ ensure_bitrate_hrd (GstVaapiEncoderH264 * encoder)
   /* Round down bitrate. This is a hard limit mandated by the user */
   g_assert (SX_BITRATE >= 6);
   bitrate = (base_encoder->bitrate * 1000) & ~((1U << SX_BITRATE) - 1);
-  GST_DEBUG ("HRD bitrate: %u bits/sec", bitrate);
-  encoder->bitrate_bits = bitrate;
+  if (bitrate != encoder->bitrate_bits) {
+    GST_DEBUG ("HRD bitrate: %u bits/sec", bitrate);
+    encoder->bitrate_bits = bitrate;
+    encoder->config_changed = TRUE;
+  }
 
   /* Round up CPB size. This is an HRD compliance detail */
   g_assert (SX_CPB_SIZE >= 4);
   cpb_size = gst_util_uint64_scale (bitrate, encoder->cpb_length, 1000) &
       ~((1U << SX_CPB_SIZE) - 1);
-  GST_DEBUG ("HRD CPB size: %u bits", cpb_size);
-  encoder->cpb_length_bits = cpb_size;
+  if (cpb_size != encoder->cpb_length_bits) {
+    GST_DEBUG ("HRD CPB size: %u bits", cpb_size);
+    encoder->cpb_length_bits = cpb_size;
+    encoder->config_changed = TRUE;
+  }
 }
 
 /* Estimates a good enough bitrate if none was supplied */
@@ -2138,6 +2145,9 @@ ensure_bitrate (GstVaapiEncoderH264 * encoder)
 static GstVaapiEncoderStatus
 ensure_profile_and_level (GstVaapiEncoderH264 * encoder)
 {
+  const GstVaapiProfile profile = encoder->profile;
+  const GstVaapiLevelH264 level = encoder->level;
+
   ensure_tuning (encoder);
 
   if (!ensure_profile (encoder) || !ensure_profile_limits (encoder))
@@ -2153,6 +2163,13 @@ ensure_profile_and_level (GstVaapiEncoderH264 * encoder)
   ensure_bitrate (encoder);
   if (!ensure_level (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+
+  if (encoder->profile != profile || encoder->level != level) {
+    GST_DEBUG ("selected %s profile at level %s",
+        gst_vaapi_utils_h264_get_profile_string (encoder->profile),
+        gst_vaapi_utils_h264_get_level_string (encoder->level));
+    encoder->config_changed = TRUE;
+  }
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
@@ -2525,9 +2542,17 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264_CAST (base_encoder);
   GstVaapiEncoderStatus status;
+  guint mb_width, mb_height;
 
-  encoder->mb_width = (GST_VAAPI_ENCODER_WIDTH (encoder) + 15) / 16;
-  encoder->mb_height = (GST_VAAPI_ENCODER_HEIGHT (encoder) + 15) / 16;
+  mb_width = (GST_VAAPI_ENCODER_WIDTH (encoder) + 15) / 16;
+  mb_height = (GST_VAAPI_ENCODER_HEIGHT (encoder) + 15) / 16;
+  if (mb_width != encoder->mb_width || mb_height != encoder->mb_height) {
+    GST_DEBUG ("resolution: %dx%d", GST_VAAPI_ENCODER_WIDTH (encoder),
+        GST_VAAPI_ENCODER_HEIGHT (encoder));
+    encoder->mb_width = mb_width;
+    encoder->mb_height = mb_height;
+    encoder->config_changed = TRUE;
+  }
 
   status = ensure_profile_and_level (encoder);
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
