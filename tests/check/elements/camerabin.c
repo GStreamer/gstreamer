@@ -134,6 +134,7 @@ gst_test_camera_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           gst_caps_unref (tmp);
         }
         gst_query_set_caps_result (query, result);
+        gst_caps_unref (result);
         ret = TRUE;
       }
       break;
