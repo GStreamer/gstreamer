@@ -2129,10 +2129,9 @@ static gboolean
 gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
     guint32 pixelformat, gint * width, gint * height, gboolean * interlaced)
 {
-  struct v4l2_format fmt, prevfmt;
+  struct v4l2_format fmt;
   int fd;
   int r;
-  int prevfmt_valid = FALSE;
   gboolean ret = FALSE;
 
   g_return_val_if_fail (width != NULL, FALSE);
@@ -2145,15 +2144,6 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   fd = v4l2object->video_fd;
 
   memset (&fmt, 0, sizeof (struct v4l2_format));
-  memset (&prevfmt, 0, sizeof (struct v4l2_format));
-
-  /* Some drivers are buggy and will modify the currently set format
-     when processing VIDIOC_TRY_FMT, so we remember what is set at the
-     minute, and will reset it when done. */
-  if (!v4l2object->no_initial_format) {
-    prevfmt.type = v4l2object->type;
-    prevfmt_valid = (v4l2_ioctl (fd, VIDIOC_G_FMT, &prevfmt) >= 0);
-  }
 
   /* get size delimiters */
   memset (&fmt, 0, sizeof (fmt));
@@ -2234,12 +2224,6 @@ error:
     GST_WARNING_OBJECT (v4l2object->element,
         "Unable to try format: %s", g_strerror (errno));
   }
-  if (prevfmt_valid)
-    if (v4l2_ioctl (fd, VIDIOC_S_FMT, &prevfmt) < 0) {
-      GST_WARNING_OBJECT (v4l2object->element,
-          "Unable to restore format after trying format: %s",
-          g_strerror (errno));
-    }
 
   return ret;
 }
