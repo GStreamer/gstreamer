@@ -462,8 +462,8 @@ gst_device_provider_factory_get_metadata_keys (GstDeviceProviderFactory *
 /**
  * gst_device_provider_factory_has_classesv:
  * @factory: a #GstDeviceProviderFactory
- * @classes: (array zero-terminated=1): a %NULL terminated array of
- *   klasses to match, only match if all classes are matched
+ * @classes: (array zero-terminated=1) (allow-none): a %NULL terminated array
+ *   of klasses to match, only match if all classes are matched
  *
  * Check if @factory matches all of the given classes
  *
@@ -488,7 +488,7 @@ gst_device_provider_factory_has_classesv (GstDeviceProviderFactory * factory,
     return FALSE;
   }
 
-  for (; classes[0]; classes++) {
+  for (; classes != NULL && classes[0] != NULL; classes++) {
     const gchar *found;
     guint len;
 
@@ -513,12 +513,12 @@ gst_device_provider_factory_has_classesv (GstDeviceProviderFactory * factory,
 /**
  * gst_device_provider_factory_has_classes:
  * @factory: a #GstDeviceProviderFactory
- * @classes: a "/" separate list of klasses to match, only match if all classes
- *  are matched
+ * @classes: (allow-none): a "/" separate list of klasses to match, only match
+ *     if all classes are matched
  *
  * Check if @factory matches all of the given @classes
  *
- * Returns: %TRUE if @factory matches.
+ * Returns: %TRUE if @factory matches or if @classes is %NULL.
  *
  * Since: 1.4
  */
@@ -528,6 +528,9 @@ gst_device_provider_factory_has_classes (GstDeviceProviderFactory * factory,
 {
   gchar **classesv;
   gboolean res;
+
+  if (classes == NULL)
+    return TRUE;
 
   classesv = g_strsplit (classes, "/", 0);
 
