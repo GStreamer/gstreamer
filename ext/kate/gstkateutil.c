@@ -186,6 +186,7 @@ gst_kate_util_decoder_base_free_event_queue (GstKateDecoderBase * decoder)
   while (decoder->event_queue->length) {
     GstKateDecoderBaseQueuedEvent *item = (GstKateDecoderBaseQueuedEvent *)
         g_queue_pop_head (decoder->event_queue);
+    gst_event_unref (item->event);
     g_slice_free (GstKateDecoderBaseQueuedEvent, item);
   }
   g_queue_free (decoder->event_queue);
