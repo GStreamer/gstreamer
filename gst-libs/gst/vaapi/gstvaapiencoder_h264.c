@@ -1697,6 +1697,11 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
   seq_param->vui_parameters_present_flag = TRUE;
   if (seq_param->vui_parameters_present_flag) {
     seq_param->vui_fields.bits.aspect_ratio_info_present_flag = FALSE;
+    if (seq_param->vui_fields.bits.aspect_ratio_info_present_flag) {
+      const GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
+      seq_param->sar_width = GST_VIDEO_INFO_PAR_N (vip);
+      seq_param->sar_height = GST_VIDEO_INFO_PAR_D (vip);
+    }
     seq_param->vui_fields.bits.bitstream_restriction_flag = FALSE;
     /* if vui_parameters_present_flag is TRUE and sps data belongs to
      * subset sps, timing_info_preset_flag should be zero (H.7.4.2.1.1) */
