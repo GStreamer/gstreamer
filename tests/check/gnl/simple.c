@@ -59,7 +59,7 @@ test_simplest_full (void)
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
-  GST_DEBUG ("Setting pipeline to PLAYING");
+  GST_ERROR ("Setting pipeline to PLAYING");
   ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
@@ -76,7 +76,7 @@ test_simplest_full (void)
 
   fail_if (collect->expected_segments != NULL);
 
-  GST_DEBUG ("Resetted pipeline to READY");
+  GST_ERROR ("Resetted pipeline to READY");
 
   /* Expected segments */
   collect->expected_segments = g_list_append (collect->expected_segments,
@@ -84,7 +84,7 @@ test_simplest_full (void)
   collect->expected_base = 0;
   collect->gotsegment = FALSE;
 
-  GST_DEBUG ("Setting pipeline to PLAYING again");
+  GST_ERROR ("Setting pipeline to PLAYING again");
 
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
