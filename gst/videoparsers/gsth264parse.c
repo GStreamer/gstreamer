@@ -581,6 +581,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       }
 
       gst_h264_parser_store_nal (h264parse, pps.id, nal_type, nalu);
+      gst_h264_pps_clear (&pps);
       break;
     case GST_H264_NAL_SEI:
       gst_h264_parse_process_sei (h264parse, nalu);

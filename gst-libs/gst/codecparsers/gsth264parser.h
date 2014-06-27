@@ -781,6 +781,8 @@ GstH264ParserResult gst_h264_parse_sps                (GstH264NalUnit *nalu,
 GstH264ParserResult gst_h264_parse_pps                (GstH264NalParser *nalparser,
                                                        GstH264NalUnit *nalu, GstH264PPS *pps);
 
+void                gst_h264_pps_clear                (GstH264PPS *pps);
+
 void    gst_h264_quant_matrix_8x8_get_zigzag_from_raster (guint8 out_quant[64],
                                                           const guint8 quant[64]);
 
