@@ -2803,6 +2803,9 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element)
     GST_LOG_OBJECT (element, "Removed from the objects start/stop list");
   }
 
+  if (priv->current && GNL_OBJECT (priv->current->data) == GNL_OBJECT (element))
+    gnl_composition_reset_target_pad (comp);
+
   g_hash_table_remove (priv->objects_hash, element);
   update_required = OBJECT_IN_ACTIVE_SEGMENT (comp, element) ||
       (GNL_OBJECT_PRIORITY (element) == G_MAXUINT32) ||
