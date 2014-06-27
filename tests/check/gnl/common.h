@@ -71,3 +71,5 @@ GstElement *
 gst_element_factory_make_or_warn (const gchar * factoryname, const gchar * name);
 Segment *
 segment_new (gdouble rate, GstFormat format, gint64 start, gint64 stop, gint64 position);
+
+void commit_and_wait (GstElement *comp, gboolean *ret);

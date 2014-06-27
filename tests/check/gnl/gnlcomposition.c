@@ -87,7 +87,7 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
 
   /* Add default */
   gst_bin_add (GST_BIN (comp), def);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (source1, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
@@ -133,7 +133,7 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
 
   /* move source1 out of the active segment */
   g_object_set (source1, "start", (guint64) 4 * GST_SECOND, NULL);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   fail_unless (seek_events > seek_events_before, "%i > %i", seek_events,
       seek_events_before);
 
@@ -144,7 +144,7 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   g_object_set (source1, "start", (guint64) 0 * GST_SECOND, NULL);
   /* add the source again and check that the ghostpad is added again */
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
 
   g_mutex_lock (&pad_added_lock);
   g_cond_wait (&pad_added_cond, &pad_added_lock);
@@ -155,7 +155,7 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   seek_events_before = seek_events;
 
   g_object_set (source1, "duration", (guint64) 1 * GST_SECOND, NULL);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   fail_unless (seek_events > seek_events_before);
 
   GST_DEBUG ("Setting pipeline to NULL");
@@ -213,6 +213,7 @@ GST_START_TEST (test_simple_adder)
   pipeline = GST_ELEMENT (gst_pipeline_new (NULL));
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
+  GST_ERROR ("Pipeline refcounts: %i", ((GObject *) pipeline)->ref_count);
   composition = gst_element_factory_make ("gnlcomposition", "composition");
   fakesink = gst_element_factory_make ("fakesink", NULL);
 
@@ -226,6 +227,7 @@ GST_START_TEST (test_simple_adder)
       "priority", 0, NULL);
   gst_bin_add (GST_BIN (composition), gnl_adder);
 
+  GST_ERROR ("Pipeline refcounts: %i", ((GObject *) pipeline)->ref_count);
   /* source 1 */
   gnlsource1 = gst_element_factory_make ("gnlsource", "gnlsource1");
   audiotestsrc1 = gst_element_factory_make ("audiotestsrc", "audiotestsrc1");
@@ -245,6 +247,8 @@ GST_START_TEST (test_simple_adder)
   GST_DEBUG ("Adding composition to pipeline");
   gst_bin_add_many (GST_BIN (pipeline), composition, fakesink, NULL);
 
+  GST_ERROR ("Pipeline refcounts: %i", ((GObject *) pipeline)->ref_count);
+
   fail_unless (gst_bin_add (GST_BIN (composition), gnlsource2));
   fail_unless (gst_element_link (composition, fakesink) == TRUE);
 
@@ -256,7 +260,6 @@ GST_START_TEST (test_simple_adder)
 
   message = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
       GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
-
   gst_mini_object_unref (GST_MINI_OBJECT (message));
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR)
@@ -307,8 +310,8 @@ GST_START_TEST (test_simple_adder)
   }
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-  gst_object_unref (pipeline);
   gst_object_unref (bus);
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;

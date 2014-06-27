@@ -68,6 +68,7 @@ enum
 enum
 {
   COMMIT_SIGNAL,
+  COMMITED_SIGNAL,
   LAST_SIGNAL
 };
 
@@ -199,6 +200,7 @@ static void
 compare_relink_single_node (GnlComposition * comp, GNode * node,
     GNode * oldstack);
 static gboolean update_pipeline_func (GnlComposition * comp);
+static gboolean commit_pipeline_func (GnlComposition *comp);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -388,6 +390,15 @@ _add_update_gsource (GnlComposition * comp)
 }
 
 static void
+_add_commit_gsource (GnlComposition * comp)
+{
+  MAIN_CONTEXT_LOCK (comp);
+  g_main_context_invoke (comp->priv->mcontext,
+      (GSourceFunc) commit_pipeline_func, comp);
+  MAIN_CONTEXT_UNLOCK (comp);
+}
+
+static void
 gnl_composition_class_init (GnlCompositionClass * klass)
 {
   GObjectClass *gobject_class;
@@ -470,6 +481,10 @@ gnl_composition_class_init (GnlCompositionClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GnlObjectClass, commit_signal_handler), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 1, G_TYPE_BOOLEAN);
+
+  _signals[COMMITED_SIGNAL] = g_signal_new ("commited", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 
   gnlobject_class->commit = gnl_composition_commit_func;
 }
@@ -978,38 +993,8 @@ update_pipeline_at_current_position (GnlComposition * comp)
 static gboolean
 gnl_composition_commit_func (GnlObject * object, gboolean recurse)
 {
-  GList *tmp;
-  gboolean commited = FALSE;
-  GnlComposition *comp = GNL_COMPOSITION (object);
-  GnlCompositionPrivate *priv = comp->priv;
-
-
-  GST_DEBUG_OBJECT (object, "Commiting state");
-  COMP_OBJECTS_LOCK (comp);
-  for (tmp = priv->objects_start; tmp; tmp = tmp->next) {
-    if (gnl_object_commit (tmp->data, recurse))
-      commited = TRUE;
-  }
-
-  GST_DEBUG_OBJECT (object, "Linking up commit vmethod");
-  if (commited == FALSE &&
-      (GNL_OBJECT_CLASS (parent_class)->commit (object, recurse) == FALSE)) {
-    COMP_OBJECTS_UNLOCK (comp);
-    GST_DEBUG_OBJECT (object, "Nothing to commit, leaving");
-    return FALSE;
-  }
-
-  /* The topology of the composition might have changed, update the lists */
-  priv->objects_start = g_list_sort
-      (priv->objects_start, (GCompareFunc) objects_start_compare);
-  priv->objects_stop = g_list_sort
-      (priv->objects_stop, (GCompareFunc) objects_stop_compare);
-
-  /* And update the pipeline at current position if needed */
-  update_pipeline_at_current_position (comp);
-  COMP_OBJECTS_UNLOCK (comp);
-
-  GST_DEBUG_OBJECT (object, "Done commiting");
+  GST_ERROR ("Adding commit gsource");
+  _add_commit_gsource (GNL_COMPOSITION (object));
   return TRUE;
 }
 
@@ -1876,6 +1861,45 @@ set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp)
 }
 
 static gboolean
+commit_pipeline_func (GnlComposition *comp)
+{
+  GList *tmp;
+  gboolean commited = FALSE;
+  GnlObject *object = GNL_OBJECT (comp);
+  GnlCompositionPrivate *priv = comp->priv;
+
+  GST_ERROR_OBJECT (object, "Commiting state");
+  COMP_OBJECTS_LOCK (comp);
+  for (tmp = priv->objects_start; tmp; tmp = tmp->next) {
+    if (gnl_object_commit (tmp->data, TRUE))
+      commited = TRUE;
+  }
+
+  GST_DEBUG_OBJECT (object, "Linking up commit vmethod");
+  if (commited == FALSE &&
+      (GNL_OBJECT_CLASS (parent_class)->commit (object, TRUE) == FALSE)) {
+    COMP_OBJECTS_UNLOCK (comp);
+    GST_ERROR_OBJECT (object, "Nothing to commit, leaving");
+    g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, FALSE);
+    return G_SOURCE_REMOVE;
+  }
+
+  /* The topology of the composition might have changed, update the lists */
+  priv->objects_start = g_list_sort
+      (priv->objects_start, (GCompareFunc) objects_start_compare);
+  priv->objects_stop = g_list_sort
+      (priv->objects_stop, (GCompareFunc) objects_stop_compare);
+
+  /* And update the pipeline at current position if needed */
+  update_pipeline_at_current_position (comp);
+  COMP_OBJECTS_UNLOCK (comp);
+
+  GST_ERROR ("emitted signal");
+  g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, TRUE);
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
 update_pipeline_func (GnlComposition * comp)
 {
   GnlCompositionPrivate *priv;
@@ -2605,7 +2629,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   GstState nextstate = (GST_STATE_NEXT (comp) == GST_STATE_VOID_PENDING) ?
       GST_STATE (comp) : GST_STATE_NEXT (comp);
 
-  GST_DEBUG_OBJECT (comp,
+  GST_ERROR_OBJECT (comp,
       "currenttime:%" GST_TIME_FORMAT
       " initial:%d , modify:%d", GST_TIME_ARGS (currenttime), initial, modify);
 
@@ -2778,7 +2802,6 @@ chiringuito:
     goto beach;
   }
 }
-
 
 static gboolean
 gnl_composition_remove_object (GstBin * bin, GstElement * element)

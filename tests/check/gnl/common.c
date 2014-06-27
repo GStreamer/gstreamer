@@ -346,3 +346,24 @@ copy_segment_list (GList * list)
 
   return res;
 }
+
+static GMutex lock;
+static GCond cond;
+static void
+commited_cb (GstElement * comp, gboolean changed)
+{
+  GST_ERROR ("commited !!");
+  g_mutex_lock (&lock);
+  g_cond_signal (&cond);
+  g_mutex_unlock (&lock);
+}
+
+void
+commit_and_wait (GstElement * comp, gboolean * ret)
+{
+  g_signal_connect (comp, "commited", (GCallback) commited_cb, NULL);
+  g_mutex_lock (&lock);
+  g_signal_emit_by_name (comp, "commit", TRUE, ret);
+  g_cond_wait (&cond, &lock);
+  g_mutex_unlock (&lock);
+}

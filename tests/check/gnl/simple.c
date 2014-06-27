@@ -32,7 +32,7 @@ test_simplest_full (void)
   /* Add one source */
 
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   fail_unless (ret);
   check_start_stop_duration (source1, 0, 1 * GST_SECOND, 1 * GST_SECOND);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
@@ -143,7 +143,7 @@ test_time_duration_full (void)
   ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
 
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   fail_unless (ret == TRUE);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
 
@@ -153,7 +153,7 @@ test_time_duration_full (void)
 
   ret = FALSE;
   gst_bin_add (GST_BIN (comp), source2);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   fail_unless (ret == TRUE);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
@@ -163,7 +163,7 @@ test_time_duration_full (void)
 
   gst_object_ref (source1);
   gst_bin_remove (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 1 * GST_SECOND, 2 * GST_SECOND,
       1 * GST_SECOND);
 
@@ -172,7 +172,7 @@ test_time_duration_full (void)
   /* Re-add first source */
 
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   gst_object_unref (source1);
 
@@ -227,7 +227,7 @@ test_one_after_other_full (void)
 
   /* Add one source */
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
 
   ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
@@ -235,7 +235,7 @@ test_one_after_other_full (void)
   /* Second source */
   gst_bin_add (GST_BIN (comp), source2);
 
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   fail_unless (ret);
   check_start_stop_duration (source1, 0 * GST_SECOND, 1 * GST_SECOND,
       1 * GST_SECOND);
@@ -257,7 +257,7 @@ test_one_after_other_full (void)
   /* Re-add first source */
 
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   gst_object_unref (source1);
 
@@ -440,7 +440,7 @@ test_one_under_another_full (void)
   gst_bin_add (GST_BIN (comp), source2);
   check_start_stop_duration (comp, 0, 0 * GST_SECOND, 0 * GST_SECOND);
   /* Now commiting changes */
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
   check_start_stop_duration (source1, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   check_start_stop_duration (source2, 1 * GST_SECOND, 3 * GST_SECOND,
@@ -456,7 +456,7 @@ test_one_under_another_full (void)
   /* Re-add second source */
 
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
   gst_object_unref (source1);
 
@@ -577,7 +577,7 @@ test_one_bin_after_other_full (void)
   /* Add one source */
 
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   fail_unless (ret);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
   check_start_stop_duration (source1, 0, 1 * GST_SECOND, 1 * GST_SECOND);
@@ -587,7 +587,7 @@ test_one_bin_after_other_full (void)
   /* Second source */
 
   gst_bin_add (GST_BIN (comp), source2);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   check_start_stop_duration (source1, 0, 1 * GST_SECOND, 1 * GST_SECOND);
   check_start_stop_duration (source2, 1 * GST_SECOND, 2 * GST_SECOND,
@@ -607,7 +607,7 @@ test_one_bin_after_other_full (void)
   /* Re-add first source */
 
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   gst_object_unref (source1);
 
