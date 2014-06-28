@@ -75,9 +75,17 @@ run_check_for_file (const gchar * file_name, gboolean push_mode)
   state_ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
 
-  msg = gst_bus_poll (bus, GST_MESSAGE_EOS, -1);
-  fail_unless (msg != NULL, "Expected EOS message on bus! (%s)", file_name);
+  msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+    GError *err;
+    gchar *dbg;
 
+    gst_message_parse_error (msg, &err, &dbg);
+    gst_object_default_error (GST_MESSAGE_SRC (msg), err, dbg);
+    g_error ("%s (%s)", err->message, dbg);
+    g_error_free (err);
+    g_free (dbg);
+  }
   gst_message_unref (msg);
   gst_object_unref (bus);
 
@@ -88,12 +96,14 @@ run_check_for_file (const gchar * file_name, gboolean push_mode)
   g_free (path);
 }
 
+#if 0
 GST_START_TEST (test_parse_file_pull)
 {
   run_check_for_file ("pinknoise-vorbis.mkv", TRUE);
 }
 
 GST_END_TEST;
+#endif
 
 GST_START_TEST (test_parse_file_push)
 {
@@ -109,7 +119,9 @@ matroskaparse_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+#if 0
   tcase_add_test (tc_chain, test_parse_file_pull);
+#endif
   tcase_add_test (tc_chain, test_parse_file_push);
 
   return s;
