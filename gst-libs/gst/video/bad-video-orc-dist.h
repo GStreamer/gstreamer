@@ -80,41 +80,41 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #endif
 #endif
 
-void video_convert_orc_memcpy_2d (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_I420_UYVY (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
-void video_convert_orc_convert_I420_YUY2 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
-void video_convert_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
-void video_convert_orc_convert_YUY2_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, guint8 * ORC_RESTRICT d3, guint8 * ORC_RESTRICT d4, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void video_convert_orc_convert_UYVY_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_planar_chroma_420_422 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_planar_chroma_420_444 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_planar_chroma_422_444 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_planar_chroma_444_422 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_planar_chroma_444_420 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, int n, int m);
-void video_convert_orc_planar_chroma_422_420 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, int n, int m);
-void video_convert_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_YUY2_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_UYVY_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_YUY2_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_UYVY_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_UYVY_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, guint8 * ORC_RESTRICT d3, guint8 * ORC_RESTRICT d4, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void video_convert_orc_convert_AYUV_I420 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, guint8 * ORC_RESTRICT d4, int d4_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, int n, int m);
-void video_convert_orc_convert_AYUV_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_AYUV_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_AYUV_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_AYUV_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void video_convert_orc_convert_Y42B_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
-void video_convert_orc_convert_Y42B_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
-void video_convert_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
-void video_convert_orc_convert_Y444_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
-void video_convert_orc_convert_Y444_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
-void video_convert_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
-void video_convert_orc_convert_AYUV_ARGB (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int p2, int p3, int p4, int p5, int n, int m);
-void video_convert_orc_convert_AYUV_BGRA (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int p2, int p3, int p4, int p5, int n, int m);
-void video_convert_orc_convert_AYUV_ABGR (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int p2, int p3, int p4, int p5, int n, int m);
-void video_convert_orc_convert_AYUV_RGBA (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int p2, int p3, int p4, int p5, int n, int m);
-void video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1, int p2, int p3, int p4, int p5, int n);
+void bad_video_convert_orc_memcpy_2d (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_I420_UYVY (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
+void bad_video_convert_orc_convert_I420_YUY2 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
+void bad_video_convert_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
+void bad_video_convert_orc_convert_YUY2_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, guint8 * ORC_RESTRICT d3, guint8 * ORC_RESTRICT d4, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
+void bad_video_convert_orc_convert_UYVY_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_planar_chroma_420_422 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_planar_chroma_420_444 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_planar_chroma_422_444 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_planar_chroma_444_422 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_planar_chroma_444_420 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, int n, int m);
+void bad_video_convert_orc_planar_chroma_422_420 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, int n, int m);
+void bad_video_convert_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_YUY2_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_UYVY_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_YUY2_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_UYVY_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_UYVY_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, guint8 * ORC_RESTRICT d3, guint8 * ORC_RESTRICT d4, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
+void bad_video_convert_orc_convert_AYUV_I420 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, guint8 * ORC_RESTRICT d4, int d4_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, int n, int m);
+void bad_video_convert_orc_convert_AYUV_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_AYUV_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_AYUV_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_AYUV_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride, guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3, int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void bad_video_convert_orc_convert_Y42B_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
+void bad_video_convert_orc_convert_Y42B_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
+void bad_video_convert_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
+void bad_video_convert_orc_convert_Y444_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
+void bad_video_convert_orc_convert_Y444_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
+void bad_video_convert_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, const guint8 * ORC_RESTRICT s2, int s2_stride, const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
+void bad_video_convert_orc_convert_AYUV_ARGB (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int p2, int p3, int p4, int p5, int n, int m);
+void bad_video_convert_orc_convert_AYUV_BGRA (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int p2, int p3, int p4, int p5, int n, int m);
+void bad_video_convert_orc_convert_AYUV_ABGR (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int p2, int p3, int p4, int p5, int n, int m);
+void bad_video_convert_orc_convert_AYUV_RGBA (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int p2, int p3, int p4, int p5, int n, int m);
+void bad_video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1, int p2, int p3, int p4, int p5, int n);
 
 #ifdef __cplusplus
 }
