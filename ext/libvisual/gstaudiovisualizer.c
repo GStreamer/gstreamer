@@ -503,7 +503,7 @@ struct _GstAudioVisualizerPrivate
 };
 
 GType
-gst_audio_visualizer_get_type (void)
+libvisual_gst_audio_visualizer_get_type (void)
 {
   static volatile gsize audio_visualizer_type = 0;
 
