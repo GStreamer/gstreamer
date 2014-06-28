@@ -1158,12 +1158,14 @@ _chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 
 flushing:
 
+  gst_buffer_unref (buffer);
   GST_DEBUG_OBJECT (aggpad, "We are flushing");
 
   return GST_FLOW_FLUSHING;
 
 eos:
 
+  gst_buffer_unref (buffer);
   GST_DEBUG_OBJECT (pad, "We are EOS already...");
 
   return GST_FLOW_EOS;
