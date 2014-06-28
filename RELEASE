@@ -1,22 +1,28 @@
 
-Release notes for GStreamer 1.3.3
+Release notes for GStreamer 1.3.90
 
 
-The GStreamer team is pleased to announce the third release of the unstable
-1.3 release series. The 1.3 release series is adding new features on top of
-the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.3 release series
-will lead to the stable 1.4 release series in the next weeks, and newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the first release candidate of
+the stable 1.4 release series. The 1.4 release series is adding new features
+on top of the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-This is hopefully the last 1.3 development release and will be followed by
-the first 1.4.0 release candidate (1.3.90) in 1-2 weeks. Which then hopefully
-is followed by 1.4.0 soonish in early July.
+This release candidate will hopefully shortly be followed by the stable 1.4.0
+release if no bigger regressions or bigger issues are detected, and enough
+testing of the release candidate happened. The new API that was added during
+the 1.3 release series is not expected to change anymore at this point.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.3 release series.
+Binaries for Android, iOS, Mac OS X and Windows are provided together with this
+release.
+
+
+The stable 1.4 release series is API and ABI compatible with 1.0.x, 1.2.x and
+any other 1.x release series in the future. Compared to 1.2.x it contains some
+new features and more intrusive changes that were considered too risky as a
+bugfix.
+
 
 
 This module, gstreamer, only contains core functionality.
@@ -42,25 +48,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
+      * 730873 : miniobject: Add missing (nullable) annotations
+      * 730957 : Missing nullability annotations
+      * 731303 : dataqueue: add bindings-friendly gst_data_queue_new_full()
+      * 731350 : Add gst_queue_array_new variant which takes a GDestroyNotify
+      * 731542 : base: introspection fixes
       * 732007 : Rename GstGlobalDeviceMonitor
-      * 703021 : Missing Gst.VERSION_MAJOR, Gst.VERSION_MINOR
-      * 709224 : audio/videodecoder: Not returning GST_FLOW_EOS when after segment
-      * 710268 : basetransform: cannot answer GST_QUERY_ALLOCATION if its src has ANY caps
-      * 727746 : Factor buffer flags-to-string code
-      * 729440 : docs: DeviceMonitor missing in generated doc
-      * 729701 : baseparse: rate parameter from segment event could not pass to downstream
-      * 730718 : POTFILES.in is out of date
-      * 730982 : Minor annotation fixes
-      * 731302 : gst_data_queue_new documentation is misleading
-      * 731349 : queuearray: doesn't expand with initial size of 1, resulting in invalid memory access
-      * 731355 : GstFlowCombiner not introspection-friendly
-      * 731442 : bytereader: optimize _scan_for_start_code() using pointer access
-      * 731541 : minor introspection fixes
-      * 731704 : gst_caps_is_any() returns FALSE or flag value, not TRUE or FALSE
-      * 731716 : funnel: fix eos handling and unit test case
-      * 731756 : gstvalue: Speed up gst_value_intersect/_subtract
-      * 731892 : gstvalue: Avoid expensive g_type_check_value_holds calls when dealing with fundamental GType
-      * 727611 : bufferpool: Add _set_flushing() and new (active,flushing) state
 
 ==== Download ====
 
@@ -97,18 +90,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
       * Evan Nemerson
-      * Nicolas Dufresne
+      * George Kiagiadakis
       * Olivier Crête
       * Philip Withnall
-      * Piotr Drąg
       * Sebastian Dröge
-      * Srimanta Panda
-      * Sungho Bae
       * Thiago Santos
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Wim Taymans
-      * zhouming
  

@@ -1,9 +1,391 @@
-=== release 1.3.3 ===
+=== release 1.3.90 ===
 
-2014-06-22  Sebastian Dröge <slomo@coaxion.net>
+2014-06-28 10:45:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.3.90
+
+2014-06-28 10:41:48 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
+
+2014-06-27 10:44:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstdevicemonitor.c:
+	* tests/check/gst/gstdevice.c:
+	  devicemonitor: don't fail when started without any filters
+	  Just show all devices then.
+
+2014-06-27 10:44:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstdeviceproviderfactory.c:
+	  deviceproviderfactory: handle NULL classes argument and match any
+
+2014-06-26 21:00:40 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/.gitignore:
+	* tests/check/gst/gstdevice.c:
+	  device: Add unit tests
+
+2014-06-26 17:22:25 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstdevicemonitor.c:
+	* gst/gstdeviceprovider.c:
+	* gst/gstdeviceproviderfactory.c:
+	* gst/gstmessage.c:
+	  devicemonitor: Improve documentation
+
+2014-06-26 17:13:12 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstdevicemonitor.c:
+	* gst/gstdevicemonitor.h:
+	* gst/gstdeviceprovider.c:
+	* gst/gstdeviceproviderfactory.c:
+	* gst/gstdeviceproviderfactory.h:
+	* win32/common/libgstreamer.def:
+	  devicemonitor: Make it possible to add multiple filters
+	  Each filter will include a GstCaps and a set of classes to match
+
+2014-06-26 16:31:51 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstdevice.c:
+	  device: Add pre-conditions
+
+2014-06-26 15:08:46 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* gst/gstdevicemonitor.c:
+	* gst/gstdevicemonitor.h:
+	* gst/gstglobaldevicemonitor.c:
+	* gst/gstglobaldevicemonitor.h:
+	* win32/common/libgstreamer.def:
+	  GstDeviceMonitor: Rename from GstGlobalDeviceMonitor
+
+2014-06-26 14:28:09 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/plugins/gstreamer-plugins.hierarchy:
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* gst/gst_private.h:
+	* gst/gstdevice.c:
+	* gst/gstdevicemonitor.c:
+	* gst/gstdevicemonitor.h:
+	* gst/gstdevicemonitorfactory.c:
+	* gst/gstdevicemonitorfactory.h:
+	* gst/gstdeviceprovider.c:
+	* gst/gstdeviceprovider.h:
+	* gst/gstdeviceproviderfactory.c:
+	* gst/gstdeviceproviderfactory.h:
+	* gst/gstglobaldevicemonitor.c:
+	* gst/gstglobaldevicemonitor.h:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	* gst/gstregistry.c:
+	* gst/gstregistrybinary.c:
+	* gst/gstregistrychunks.c:
+	* gst/gstregistrychunks.h:
+	* tools/gst-inspect.c:
+	* win32/common/libgstreamer.def:
+	  DeviceProvider: Rename from DeviceMonitor
+
+2014-06-26 19:31:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstdataqueue.c:
+	* libs/gst/base/gstdataqueue.h:
+	  dataqueue: Hide from bindings
+	  Other languages have their own data structures that are more convenient to
+	  use.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731303
+
+2014-06-26 19:30:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstqueuearray.c:
+	* libs/gst/base/gstqueuearray.h:
+	  queuearray: Hide from bindings
+	  Other languages have their own data structures that are more convenient to use.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731350
+
+2014-05-28 10:14:45 +0100  Philip Withnall <philip.withnall@collabora.co.uk>
+
+	* gst/gstminiobject.c:
+	  miniobject: Add missing (nullable) annotations
+	  gst_mini_object_replace() can take NULL mini-objects.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730873
+
+2014-06-26 19:02:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstmessage.c:
+	  message: Application and element messages should not have NULL structures
+	  It does not make sense for them.
+
+2014-06-11 16:19:01 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst/gstbufferpool.c:
+	* gst/gstelement.c:
+	* gst/gstinfo.h:
+	* gst/gstmessage.c:
+	* gst/gstobject.c:
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* gst/gstplugin.h:
+	* gst/gstpreset.c:
+	* gst/gsttaglist.c:
+	  introspection: add some missing allow-none annotations to in params
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730957
+
+2014-06-11 16:06:19 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* gst/gstbufferlist.h:
+	* gst/gstcaps.h:
+	* gst/gstevent.h:
+	* gst/gstmessage.h:
+	* gst/gstobject.c:
+	* gst/gstpreset.c:
+	* gst/gstquery.h:
+	* gst/gsttoc.c:
+	* gst/gstvalue.c:
+	  introspection: add nullability annotations to out and inout params
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730957
+
+2014-06-11 15:21:34 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst/gstallocator.c:
+	* gst/gstatomicqueue.c:
+	* gst/gstbin.c:
+	* gst/gstbuffer.c:
+	* gst/gstbufferlist.c:
+	* gst/gstbus.c:
+	* gst/gstcapsfeatures.c:
+	* gst/gstchildproxy.c:
+	* gst/gstclock.c:
+	* gst/gstcontrolbinding.c:
+	* gst/gstdatetime.c:
+	* gst/gstdevicemonitorfactory.c:
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	* gst/gstelementfactory.c:
+	* gst/gstformat.c:
+	* gst/gstghostpad.c:
+	* gst/gstmemory.c:
+	* gst/gstmeta.c:
+	* gst/gstminiobject.c:
+	* gst/gstobject.c:
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* gst/gstplugin.c:
+	* gst/gstpluginfeature.c:
+	* gst/gstpluginfeature.h:
+	* gst/gstpoll.c:
+	* gst/gstpreset.c:
+	* gst/gstregistry.c:
+	* gst/gstsample.c:
+	* gst/gststructure.c:
+	* gst/gsttaglist.c:
+	* gst/gsttagsetter.c:
+	* gst/gsttaskpool.c:
+	* gst/gsttoc.c:
+	* gst/gsttocsetter.c:
+	* gst/gsttypefind.c:
+	* gst/gsttypefindfactory.c:
+	* gst/gsturi.c:
+	* gst/gstutils.c:
+	* gst/gstvalue.c:
+	  introspection: add missing (nullable) annotations to return values
+	  Support for (nullable) was added to G-I at the same time as nullable
+	  return values.  Previous versions of G-I will not mark return values as
+	  nullable, even when an (allow-none) annotation is present, so it is
+	  not necessary to add (allow-none) annotations for compatibility with
+	  older versions of G-I.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730957
+
+2014-06-11 17:15:39 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* libs/gst/base/gstadapter.c:
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/base/gstcollectpads.h:
+	  base: assorted introspection fixes and additions
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731542
+
+2014-06-11 17:12:20 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* libs/gst/base/gstadapter.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/base/gstindex.c:
+	* libs/gst/base/gsttypefindhelper.c:
+	  base: add (nullable) annotations to return values
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731542
+
+2014-06-26 14:08:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstbufferlist.c:
+	  tests: add another buffer list test case
+
+2014-06-26 13:24:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstbufferlist.c:
+	  tests: port and re-enable buffer list tests
+	  And remove some which don't apply any more.
+
+2014-06-26 11:58:04 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* tests/check/gst/gstcaps.c:
+	  tests: enhance the gstcaps test_features to also test gst_caps_set_features()
+	  Compliments my previous patch for gst_caps_set_features, which would
+	  previously assert and leak the old GstCapsFeatures if the caps already
+	  had a GstCapsFeatures and you were trying to replace it with a new one.
+
+2014-06-26 11:16:34 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* gst/gstcaps.c:
+	  caps: unset the parent refcount of the old features before freeing them in gst_caps_set_features()
+	  Otherwise gst_caps_features_free() asserts and the features structure is leaked
+
+2014-06-16 19:30:06 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: avoid returning _OK for _NOT_LINKED
+	  When the parser receives non-aligned packets it can push a buffer
+	  and get a not-linked return while still leaving some data still to
+	  be parsed. This remaining data will not form a complete frame and
+	  the subclass likely returns _OK and baseparse would take that
+	  as the return, while it the element is actually not-linked.
+	  This patch fixes this by storing the last flow-return from a push
+	  and using that if a parsing operation doesn't result in data being
+	  flushed or skipped.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731474
+
+2014-06-25 11:40:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstelements_private.c:
+	  elements: fix copyright and remove gtk-doc chunk
+	  Trivial as it may be, this code was mostly copied from
+	  somewhere else. The gtk-doc chunk is not needed, since
+	  it's not public API.
+
+2014-06-02 22:07:52 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* plugins/elements/gstfilesrc.c:
+	  filesrc: Ignore seek error on non-seekable files
+	  This make it works with FIFOs.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731176
+
+2014-06-22 19:36:14 +0200  Sebastian Dröge <sebastian@centricular.com>
 
 	* configure.ac:
-	  releasing 1.3.3
+	  Back to development
+
+=== release 1.3.3 ===
+
+2014-06-22 18:07:42 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.3.3
+
+2014-06-22 17:15:40 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-06-22 14:23:03 +0200  Sebastian Dröge <sebastian@centricular.com>
 
