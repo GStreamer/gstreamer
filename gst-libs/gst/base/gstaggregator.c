@@ -1006,10 +1006,21 @@ _sink_query (GstAggregator * self, GstAggregatorPad * aggpad, GstQuery * query)
   return gst_pad_query_default (pad, GST_OBJECT (self), query);
 }
 
+static void
+gst_aggregator_finalize (GObject * object)
+{
+  GstAggregator *self = (GstAggregator *) object;
+
+  g_mutex_clear (&self->priv->mcontext_lock);
+
+  G_OBJECT_CLASS (aggregator_parent_class)->finalize (object);
+}
+
 /* GObject vmethods implementations */
 static void
 gst_aggregator_class_init (GstAggregatorClass * klass)
 {
+  GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   aggregator_parent_class = g_type_class_peek_parent (klass);
@@ -1031,6 +1042,8 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (_release_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (_change_state);
+
+  gobject_class->finalize = gst_aggregator_finalize;
 }
 
 static void
@@ -1066,6 +1079,8 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
       GST_DEBUG_FUNCPTR ((GstPadActivateModeFunction) src_activate_mode));
 
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
+
+  g_mutex_init (&self->priv->mcontext_lock);
 }
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
@@ -1196,6 +1211,7 @@ pad_activate_mode_func (GstPad * pad,
 /***********************************
  * GstAggregatorPad implementation  *
  ************************************/
+static GstPadClass *aggregator_pad_parent_class = NULL;
 G_DEFINE_TYPE (GstAggregatorPad, gst_aggregator_pad, GST_TYPE_PAD);
 
 static void
@@ -1214,13 +1230,40 @@ _pad_constructed (GObject * object)
 }
 
 static void
+gst_aggregator_pad_finalize (GObject * object)
+{
+  GstAggregatorPad *pad = (GstAggregatorPad *) object;
+
+  g_mutex_clear (&pad->priv->event_lock);
+  g_cond_clear (&pad->priv->event_cond);
+
+  G_OBJECT_CLASS (aggregator_pad_parent_class)->finalize (object);
+}
+
+static void
+gst_aggregator_pad_dispose (GObject * object)
+{
+  GstAggregatorPad *pad = (GstAggregatorPad *) object;
+  GstBuffer *buf;
+
+  buf = gst_aggregator_pad_steal_buffer (pad);
+  if (buf)
+    gst_buffer_unref (buf);
+
+  G_OBJECT_CLASS (aggregator_pad_parent_class)->dispose (object);
+}
+
+static void
 gst_aggregator_pad_class_init (GstAggregatorPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
+  aggregator_pad_parent_class = g_type_class_peek_parent (klass);
   g_type_class_add_private (klass, sizeof (GstAggregatorPadPrivate));
 
   gobject_class->constructed = GST_DEBUG_FUNCPTR (_pad_constructed);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_aggregator_pad_finalize);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_aggregator_pad_dispose);
 }
 
 static void
