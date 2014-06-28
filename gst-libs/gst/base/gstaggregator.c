@@ -361,6 +361,7 @@ gst_aggregator_finish_buffer (GstAggregator * self, GstBuffer * buffer)
     GST_INFO_OBJECT (self, "Not pushing (active: %i, flushing: %i)",
         g_atomic_int_get (&self->priv->flush_seeking),
         gst_pad_is_active (self->srcpad));
+    gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 }
