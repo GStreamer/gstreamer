@@ -1,9 +1,240 @@
-=== release 1.3.3 ===
+=== release 1.3.90 ===
 
-2014-06-22  Sebastian Dröge <slomo@coaxion.net>
+2014-06-28  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.3
+	  releasing 1.3.90
+
+2014-06-28 11:01:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.3.90
+
+2014-06-28 10:56:36 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
+
+2014-06-27 14:24:10 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/playback/gstplaysinkconvertbin.c:
+	  playsinkconvertbin: fix caps leak
+	  Let go the reference to the converter caps after using it
+
+2014-06-27 10:41:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/.gitignore:
+	* tools/Makefile.am:
+	* tools/gst-device-monitor-1.0.1:
+	* tools/gst-device-monitor.c:
+	  tools: add gst-device-monitor-1.0 utility
+	  Just shows devices with basic info and exits. Or will
+	  wait for more devices to show up or be removed with
+	  the --follow option. It's also possible to pass filters
+	  as command line arguments in the form DEVICE_CLASSES
+	  or DEVICE_CLASSES:CAPS.
+
+2014-06-26 16:18:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/audio/streamvolume.h:
+	* gst-libs/gst/tag/xmpwriter.h:
+	  libs: There is no G_TYPE_CHECK_INTERFACE_TYPE and G_TYPE_CHECK_INTERFACE_CAST
+	  Remove the macros that used them, nobody could've used them anyway.
+
+2014-06-26 11:35:43 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+	* gst-libs/gst/pbutils/codec-utils.c:
+	  pbutils: handle more H.264 profiles and levels.
+	  Recognize H.264 Level 5.2, as exposed by modern 2160p30+ streams,
+	  i.e. commonly known as 4K. Also add initial support for handling
+	  Annex.G (SVC) profiles.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732269
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2014-06-26 04:27:31 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Bump iso mp4 typefinder to PRIMARY. Add mp4 extension hint.
+	  Fixes a problem with at least one file being detected incorrectly as
+	  DTS because there's DTS packets early enough in the file.
+
+2014-06-23 01:02:22 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/libs/rtpbasedepayload.c:
+	  tests: fix vararg handling in rtpbasedepayload unit test
+	  Makes it pass on 32-bit systems.
+
+2014-06-23 00:33:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/libs/rtpbasepayload.c:
+	  tests: fix vararg handling in rtpbasepayload unit test
+	  Makes it pass on 32-bit systems.
+
+2014-06-22 20:42:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysinkconvertbin.c:
+	  playsinkconvertbin: Filter out ANY capsfeatures from the converter caps
+	  We can't convert to ANY capsfeatures, they are only there so that we
+	  can passthrough whatever downstream can support... but we definitely
+	  don't want to return them to upstream.
+
+2014-06-22 19:36:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.3.3 ===
+
+2014-06-22 18:07:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.3.3
+
+2014-06-22 17:25:42 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2014-06-22 14:23:32 +0200  Sebastian Dröge <sebastian@centricular.com>
 

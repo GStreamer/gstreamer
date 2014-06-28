@@ -1,22 +1,28 @@
 
-Release notes for GStreamer Base Plugins 1.3.3
+Release notes for GStreamer Base Plugins 1.3.90
 
 
-The GStreamer team is pleased to announce the third release of the unstable
-1.3 release series. The 1.3 release series is adding new features on top of
-the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.3 release series
-will lead to the stable 1.4 release series in the next weeks, and newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the first release candidate of
+the stable 1.4 release series. The 1.4 release series is adding new features
+on top of the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-This is hopefully the last 1.3 development release and will be followed by
-the first 1.4.0 release candidate (1.3.90) in 1-2 weeks. Which then hopefully
-is followed by 1.4.0 soonish in early July.
+This release candidate will hopefully shortly be followed by the stable 1.4.0
+release if no bigger regressions or bigger issues are detected, and enough
+testing of the release candidate happened. The new API that was added during
+the 1.3 release series is not expected to change anymore at this point.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.3 release series.
+Binaries for Android, iOS, Mac OS X and Windows are provided together with this
+release.
+
+
+The stable 1.4 release series is API and ABI compatible with 1.0.x, 1.2.x and
+any other 1.x release series in the future. Compared to 1.2.x it contains some
+new features and more intrusive changes that were considered too risky as a
+bugfix.
+
 
 
 This module contains a set of reference plugins, base classes for other
@@ -65,15 +71,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 709868 : Keep still meaningfull pending events on FLUSH_STOP
-      * 724231 : appsrc: handle flushing from send_event
-      * 730559 : dmabuf: fix checking mmap flags
-      * 730749 : Failed to determine keyframeness of audio/x-opus packet
-      * 730868 : uridecodebin: Does not handle RTSP streams where one of the payload formats is not supported properly
-      * 730874 : audio: Add a missing precondition to gst_audio_format_from_string()
-      * 731121 : alsasink: Race condition causes alsasink to use invalid caps when a pipeline fails to start
-      * 731566 : tcpserversrc: close the server socket after accepting a connection
-      * 731567 : tcpserversrc: return GST_FLOW_FLUSHING instead of GST_FLOW_ERROR when accept is canceled
+      * 684030 : typefinding: mp4 with video and dts ES detected as DTS audio
+      * 732269 : pbutils: handle more H.264 profiles/levels
 
 ==== Download ====
 
@@ -110,12 +109,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
-      * Michael Olbrich
-      * Philip Withnall
+      * Gwenole Beauchesne
+      * Jan Schmidt
       * Sebastian Dröge
       * Thiago Santos
-      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
  
