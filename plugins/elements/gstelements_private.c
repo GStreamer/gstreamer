@@ -29,29 +29,33 @@
 #include "gst/gst.h"
 #include "gstelements_private.h"
 
+#define BUFFER_FLAG_SHIFT 4
+
+G_STATIC_ASSERT ((1 << BUFFER_FLAG_SHIFT) == GST_MINI_OBJECT_FLAG_LAST);
+
 /* Returns a newly allocated string describing the flags on this buffer */
 char *
 gst_buffer_get_flags_string (GstBuffer * buffer)
 {
-  static const char *const flag_list[] = {
-    "", "", "", "", "live", "decode-only", "discont", "resync", "corrupted",
-    "marker", "header", "gap", "droppable", "delta-unit", "tag-memory",
-    "FIXME"
+  static const char flag_strings[] =
+      "\000\000\000\000live\000decode-only\000discont\000resync\000corrupted\000"
+      "marker\000header\000gap\000droppable\000delta-unit\000tag-memory\000"
+      "FIXME";
+  static const guint8 flag_idx[] = { 0, 1, 2, 3, 4, 9, 21, 29, 36, 46, 53,
+    60, 64, 74, 85, 96
   };
   int i, max_bytes;
   char *flag_str, *end;
 
-  max_bytes = 1;                /* NUL */
-  for (i = 0; i < G_N_ELEMENTS (flag_list); i++) {
-    max_bytes += strlen (flag_list[i]) + 1;     /* string and space */
-  }
+  /* max size is all flag strings plus a space or terminator after each one */
+  max_bytes = sizeof (flag_strings);
   flag_str = g_malloc (max_bytes);
 
   end = flag_str;
   end[0] = '\0';
-  for (i = 0; i < G_N_ELEMENTS (flag_list); i++) {
+  for (i = BUFFER_FLAG_SHIFT; i < G_N_ELEMENTS (flag_idx); i++) {
     if (GST_MINI_OBJECT_CAST (buffer)->flags & (1 << i)) {
-      strcpy (end, flag_list[i]);
+      strcpy (end, flag_strings + flag_idx[i]);
       end += strlen (end);
       end[0] = ' ';
       end[1] = '\0';
