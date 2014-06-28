@@ -66,13 +66,13 @@ struct _VideoConvert {
 };
 
 VideoConvert *   videomixer_videoconvert_convert_new            (GstVideoInfo *in_info,
-                                                      GstVideoInfo *out_info);
+                                                                 GstVideoInfo *out_info);
 void             videomixer_videoconvert_convert_free           (VideoConvert * convert);
 
 void             videomixer_videoconvert_convert_set_dither     (VideoConvert * convert, int type);
 
 void             videomixer_videoconvert_convert_convert        (VideoConvert * convert,
-                                                      GstVideoFrame *dest, const GstVideoFrame *src);
+                                                                 GstVideoFrame *dest, const GstVideoFrame *src);
 
 
 G_END_DECLS

@@ -33,7 +33,7 @@
 /* our simple CMS */
 
 void
-color_xyY_to_XYZ (Color * c)
+videomixer_color_xyY_to_XYZ (Color * c)
 {
   if (c->v[1] == 0) {
     c->v[0] = 0;
@@ -51,7 +51,7 @@ color_xyY_to_XYZ (Color * c)
 }
 
 void
-color_XYZ_to_xyY (Color * c)
+videomixer_color_XYZ_to_xyY (Color * c)
 {
   double d;
   d = c->v[0] + c->v[1] + c->v[2];
@@ -71,7 +71,7 @@ color_XYZ_to_xyY (Color * c)
 }
 
 void
-color_set (Color * c, double x, double y, double z)
+videomixer_color_set (Color * c, double x, double y, double z)
 {
   c->v[0] = x;
   c->v[1] = y;
@@ -79,7 +79,7 @@ color_set (Color * c, double x, double y, double z)
 }
 
 void
-color_matrix_set_identity (ColorMatrix * m)
+videomixer_color_matrix_set_identity (ColorMatrix * m)
 {
   int i, j;
 
@@ -92,7 +92,7 @@ color_matrix_set_identity (ColorMatrix * m)
 
 /* Prettyprint a 4x4 matrix @m@ */
 void
-color_matrix_dump (ColorMatrix * m)
+videomixer_color_matrix_dump (ColorMatrix * m)
 {
   int i, j;
 
@@ -112,7 +112,8 @@ color_matrix_dump (ColorMatrix * m)
  *  - @dst@ may be a pointer to @a@ andor @b@
  */
 void
-color_matrix_multiply (ColorMatrix * dst, ColorMatrix * a, ColorMatrix * b)
+videomixer_color_matrix_multiply (ColorMatrix * dst, ColorMatrix * a,
+    ColorMatrix * b)
 {
   ColorMatrix tmp;
   int i, j, k;
@@ -131,7 +132,7 @@ color_matrix_multiply (ColorMatrix * dst, ColorMatrix * a, ColorMatrix * b)
 }
 
 void
-color_matrix_apply (ColorMatrix * m, Color * dest, Color * src)
+videomixer_color_matrix_apply (ColorMatrix * m, Color * dest, Color * src)
 {
   int i;
   Color tmp;
@@ -148,32 +149,33 @@ color_matrix_apply (ColorMatrix * m, Color * dest, Color * src)
 }
 
 void
-color_matrix_offset_components (ColorMatrix * m, double a1, double a2,
+videomixer_color_matrix_offset_components (ColorMatrix * m, double a1,
+    double a2, double a3)
+{
+  ColorMatrix a;
+
+  videomixer_color_matrix_set_identity (&a);
+  a.m[0][3] = a1;
+  a.m[1][3] = a2;
+  a.m[2][3] = a3;
+  videomixer_color_matrix_multiply (m, &a, m);
+}
+
+void
+videomixer_color_matrix_scale_components (ColorMatrix * m, double a1, double a2,
     double a3)
 {
   ColorMatrix a;
 
-  color_matrix_set_identity (&a);
-  a.m[0][3] = a1;
-  a.m[1][3] = a2;
-  a.m[2][3] = a3;
-  color_matrix_multiply (m, &a, m);
-}
-
-void
-color_matrix_scale_components (ColorMatrix * m, double a1, double a2, double a3)
-{
-  ColorMatrix a;
-
-  color_matrix_set_identity (&a);
+  videomixer_color_matrix_set_identity (&a);
   a.m[0][0] = a1;
   a.m[1][1] = a2;
   a.m[2][2] = a3;
-  color_matrix_multiply (m, &a, m);
+  videomixer_color_matrix_multiply (m, &a, m);
 }
 
 void
-color_matrix_YCbCr_to_RGB (ColorMatrix * m, double Kr, double Kb)
+videomixer_color_matrix_YCbCr_to_RGB (ColorMatrix * m, double Kr, double Kb)
 {
   double Kg = 1.0 - Kr - Kb;
   ColorMatrix k = {
@@ -185,11 +187,11 @@ color_matrix_YCbCr_to_RGB (ColorMatrix * m, double Kr, double Kb)
         }
   };
 
-  color_matrix_multiply (m, &k, m);
+  videomixer_color_matrix_multiply (m, &k, m);
 }
 
 void
-color_matrix_RGB_to_YCbCr (ColorMatrix * m, double Kr, double Kb)
+videomixer_color_matrix_RGB_to_YCbCr (ColorMatrix * m, double Kr, double Kb)
 {
   double Kg = 1.0 - Kr - Kb;
   ColorMatrix k;
@@ -217,27 +219,28 @@ color_matrix_RGB_to_YCbCr (ColorMatrix * m, double Kr, double Kb)
   k.m[3][2] = 0;
   k.m[3][3] = 1;
 
-  color_matrix_multiply (m, &k, m);
+  videomixer_color_matrix_multiply (m, &k, m);
 }
 
 void
-color_matrix_build_yuv_to_rgb_601 (ColorMatrix * dst)
+videomixer_color_matrix_build_yuv_to_rgb_601 (ColorMatrix * dst)
 {
   /*
    * At this point, everything is in YCbCr
    * All components are in the range [0,255]
    */
-  color_matrix_set_identity (dst);
+  videomixer_color_matrix_set_identity (dst);
 
   /* offset required to get input video black to (0.,0.,0.) */
-  color_matrix_offset_components (dst, -16, -128, -128);
+  videomixer_color_matrix_offset_components (dst, -16, -128, -128);
 
   /* scale required to get input video black to (0.,0.,0.) */
-  color_matrix_scale_components (dst, (1 / 219.0), (1 / 224.0), (1 / 224.0));
+  videomixer_color_matrix_scale_components (dst, (1 / 219.0), (1 / 224.0),
+      (1 / 224.0));
 
   /* colour matrix, YCbCr -> RGB */
   /* Requires Y in [0,1.0], Cb&Cr in [-0.5,0.5] */
-  color_matrix_YCbCr_to_RGB (dst, 0.2990, 0.1140);      /* SD */
+  videomixer_color_matrix_YCbCr_to_RGB (dst, 0.2990, 0.1140);   /* SD */
 
   /*
    * We are now in RGB space
@@ -245,72 +248,73 @@ color_matrix_build_yuv_to_rgb_601 (ColorMatrix * dst)
 
 #if 0
   /* scale to output range. */
-  color_matrix_scale_components (dst, 255.0, 255.0, 255.0);
+  videomixer_color_matrix_scale_components (dst, 255.0, 255.0, 255.0);
 #endif
 }
 
 void
-color_matrix_build_bt709_to_bt601 (ColorMatrix * dst)
+videomixer_color_matrix_build_bt709_to_bt601 (ColorMatrix * dst)
 {
-  color_matrix_set_identity (dst);
+  videomixer_color_matrix_set_identity (dst);
 
   /* offset required to get input video black to (0.,0.,0.) */
-  color_matrix_offset_components (dst, -16, -128, -128);
+  videomixer_color_matrix_offset_components (dst, -16, -128, -128);
 
   /* scale required to get input video black to (0.,0.,0.) */
-  color_matrix_scale_components (dst, (1 / 219.0), (1 / 224.0), (1 / 224.0));
+  videomixer_color_matrix_scale_components (dst, (1 / 219.0), (1 / 224.0),
+      (1 / 224.0));
 
   /* colour matrix, YCbCr -> RGB */
   /* Requires Y in [0,1.0], Cb&Cr in [-0.5,0.5] */
-  color_matrix_YCbCr_to_RGB (dst, 0.2126, 0.0722);      /* HD */
+  videomixer_color_matrix_YCbCr_to_RGB (dst, 0.2126, 0.0722);   /* HD */
 
-  color_matrix_RGB_to_YCbCr (dst, 0.2990, 0.1140);      /* SD */
+  videomixer_color_matrix_RGB_to_YCbCr (dst, 0.2990, 0.1140);   /* SD */
 
-  color_matrix_scale_components (dst, 219.0, 224.0, 224.0);
+  videomixer_color_matrix_scale_components (dst, 219.0, 224.0, 224.0);
 
-  color_matrix_offset_components (dst, 16, 128, 128);
+  videomixer_color_matrix_offset_components (dst, 16, 128, 128);
 }
 
 void
-color_matrix_build_rgb_to_yuv_601 (ColorMatrix * dst)
+videomixer_color_matrix_build_rgb_to_yuv_601 (ColorMatrix * dst)
 {
-  color_matrix_set_identity (dst);
+  videomixer_color_matrix_set_identity (dst);
 
-  color_matrix_RGB_to_YCbCr (dst, 0.2990, 0.1140);      /* SD */
+  videomixer_color_matrix_RGB_to_YCbCr (dst, 0.2990, 0.1140);   /* SD */
 
-  color_matrix_scale_components (dst, 219.0, 224.0, 224.0);
+  videomixer_color_matrix_scale_components (dst, 219.0, 224.0, 224.0);
 
-  color_matrix_offset_components (dst, 16, 128, 128);
+  videomixer_color_matrix_offset_components (dst, 16, 128, 128);
 
   {
     Color c;
     int i;
     for (i = 7; i >= 0; i--) {
-      color_set (&c, (i & 2) ? 0.75 : 0.0, (i & 4) ? 0.75 : 0.0,
+      videomixer_color_set (&c, (i & 2) ? 0.75 : 0.0, (i & 4) ? 0.75 : 0.0,
           (i & 1) ? 0.75 : 0.0);
-      color_matrix_apply (dst, &c, &c);
+      videomixer_color_matrix_apply (dst, &c, &c);
       g_print ("  { %g, %g, %g },\n", rint (c.v[0]), rint (c.v[1]),
           rint (c.v[2]));
     }
-    color_set (&c, -0.075, -0.075, -0.075);
-    color_matrix_apply (dst, &c, &c);
+    videomixer_color_set (&c, -0.075, -0.075, -0.075);
+    videomixer_color_matrix_apply (dst, &c, &c);
     g_print ("  { %g, %g, %g },\n", rint (c.v[0]), rint (c.v[1]),
         rint (c.v[2]));
-    color_set (&c, 0.075, 0.075, 0.075);
-    color_matrix_apply (dst, &c, &c);
+    videomixer_color_set (&c, 0.075, 0.075, 0.075);
+    videomixer_color_matrix_apply (dst, &c, &c);
     g_print ("  { %g, %g, %g },\n", rint (c.v[0]), rint (c.v[1]),
         rint (c.v[2]));
   }
 }
 
 void
-color_matrix_invert (ColorMatrix * m)
+videomixer_color_matrix_invert (ColorMatrix * m)
 {
   ColorMatrix tmp;
   int i, j;
   double det;
 
-  color_matrix_set_identity (&tmp);
+  videomixer_color_matrix_set_identity (&tmp);
   for (j = 0; j < 3; j++) {
     for (i = 0; i < 3; i++) {
       tmp.m[j][i] =
@@ -330,18 +334,18 @@ color_matrix_invert (ColorMatrix * m)
 }
 
 void
-color_matrix_copy (ColorMatrix * dest, ColorMatrix * src)
+videomixer_color_matrix_copy (ColorMatrix * dest, ColorMatrix * src)
 {
   memcpy (dest, src, sizeof (ColorMatrix));
 }
 
 void
-color_matrix_transpose (ColorMatrix * m)
+videomixer_color_matrix_transpose (ColorMatrix * m)
 {
   int i, j;
   ColorMatrix tmp;
 
-  color_matrix_set_identity (&tmp);
+  videomixer_color_matrix_set_identity (&tmp);
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       tmp.m[i][j] = m->m[j][i];
@@ -351,23 +355,23 @@ color_matrix_transpose (ColorMatrix * m)
 }
 
 void
-color_matrix_build_XYZ (ColorMatrix * dst,
+videomixer_color_matrix_build_XYZ (ColorMatrix * dst,
     double rx, double ry,
     double gx, double gy, double bx, double by, double wx, double wy)
 {
   Color r, g, b, w, scale;
   ColorMatrix m;
 
-  color_set (&r, rx, ry, 1.0);
-  color_xyY_to_XYZ (&r);
-  color_set (&g, gx, gy, 1.0);
-  color_xyY_to_XYZ (&g);
-  color_set (&b, bx, by, 1.0);
-  color_xyY_to_XYZ (&b);
-  color_set (&w, wx, wy, 1.0);
-  color_xyY_to_XYZ (&w);
+  videomixer_color_set (&r, rx, ry, 1.0);
+  videomixer_color_xyY_to_XYZ (&r);
+  videomixer_color_set (&g, gx, gy, 1.0);
+  videomixer_color_xyY_to_XYZ (&g);
+  videomixer_color_set (&b, bx, by, 1.0);
+  videomixer_color_xyY_to_XYZ (&b);
+  videomixer_color_set (&w, wx, wy, 1.0);
+  videomixer_color_xyY_to_XYZ (&w);
 
-  color_matrix_set_identity (dst);
+  videomixer_color_matrix_set_identity (dst);
 
   dst->m[0][0] = r.v[0];
   dst->m[0][1] = r.v[1];
@@ -379,13 +383,13 @@ color_matrix_build_XYZ (ColorMatrix * dst,
   dst->m[2][1] = b.v[1];
   dst->m[2][2] = b.v[2];
 
-  color_matrix_dump (dst);
-  color_matrix_copy (&m, dst);
-  color_matrix_invert (&m);
-  color_matrix_dump (&m);
+  videomixer_color_matrix_dump (dst);
+  videomixer_color_matrix_copy (&m, dst);
+  videomixer_color_matrix_invert (&m);
+  videomixer_color_matrix_dump (&m);
 
-  color_matrix_transpose (&m);
-  color_matrix_apply (&m, &scale, &w);
+  videomixer_color_matrix_transpose (&m);
+  videomixer_color_matrix_apply (&m, &scale, &w);
   g_print ("%g %g %g\n", scale.v[0], scale.v[1], scale.v[2]);
 
   dst->m[0][0] = r.v[0] * scale.v[0];
@@ -398,54 +402,54 @@ color_matrix_build_XYZ (ColorMatrix * dst,
   dst->m[2][1] = b.v[1] * scale.v[2];
   dst->m[2][2] = b.v[2] * scale.v[2];
 
-  color_matrix_transpose (dst);
-  color_matrix_dump (dst);
+  videomixer_color_matrix_transpose (dst);
+  videomixer_color_matrix_dump (dst);
 
-  color_set (&scale, 1, 1, 1);
-  color_matrix_apply (dst, &scale, &scale);
-  color_XYZ_to_xyY (&scale);
+  videomixer_color_set (&scale, 1, 1, 1);
+  videomixer_color_matrix_apply (dst, &scale, &scale);
+  videomixer_color_XYZ_to_xyY (&scale);
   g_print ("white %g %g %g\n", scale.v[0], scale.v[1], scale.v[2]);
 
 }
 
 void
-color_matrix_build_rgb_to_XYZ_601 (ColorMatrix * dst)
+videomixer_color_matrix_build_rgb_to_XYZ_601 (ColorMatrix * dst)
 {
   /* SMPTE C primaries, SMPTE 170M-2004 */
-  color_matrix_build_XYZ (dst,
+  videomixer_color_matrix_build_XYZ (dst,
       0.630, 0.340, 0.310, 0.595, 0.155, 0.070, 0.3127, 0.3290);
 #if 0
   /* NTSC 1953 primaries, SMPTE 170M-2004 */
-  color_matrix_build_XYZ (dst,
+  videomixer_color_matrix_build_XYZ (dst,
       0.67, 0.33, 0.21, 0.71, 0.14, 0.08, 0.3127, 0.3290);
 #endif
 }
 
 void
-color_matrix_build_XYZ_to_rgb_709 (ColorMatrix * dst)
+videomixer_color_matrix_build_XYZ_to_rgb_709 (ColorMatrix * dst)
 {
   /* Rec. ITU-R BT.709-5 */
-  color_matrix_build_XYZ (dst,
+  videomixer_color_matrix_build_XYZ (dst,
       0.640, 0.330, 0.300, 0.600, 0.150, 0.060, 0.3127, 0.3290);
 }
 
 void
-color_matrix_build_XYZ_to_rgb_dell (ColorMatrix * dst)
+videomixer_color_matrix_build_XYZ_to_rgb_dell (ColorMatrix * dst)
 {
   /* Dell monitor */
 #if 1
-  color_matrix_build_XYZ (dst,
+  videomixer_color_matrix_build_XYZ (dst,
       0.662, 0.329, 0.205, 0.683, 0.146, 0.077, 0.3135, 0.3290);
 #endif
 #if 0
-  color_matrix_build_XYZ (dst,
+  videomixer_color_matrix_build_XYZ (dst,
       0.630, 0.340, 0.310, 0.595, 0.155, 0.070, 0.3127, 0.3290);
 #endif
-  color_matrix_invert (dst);
+  videomixer_color_matrix_invert (dst);
 }
 
 void
-color_transfer_function_apply (Color * dest, Color * src)
+videomixer_color_transfer_function_apply (Color * dest, Color * src)
 {
   int i;
 
@@ -459,7 +463,7 @@ color_transfer_function_apply (Color * dest, Color * src)
 }
 
 void
-color_transfer_function_unapply (Color * dest, Color * src)
+videomixer_color_transfer_function_unapply (Color * dest, Color * src)
 {
   int i;
 
@@ -473,7 +477,7 @@ color_transfer_function_unapply (Color * dest, Color * src)
 }
 
 void
-color_gamut_clamp (Color * dest, Color * src)
+videomixer_color_gamut_clamp (Color * dest, Color * src)
 {
   dest->v[0] = CLAMP (src->v[0], 0.0, 1.0);
   dest->v[1] = CLAMP (src->v[1], 0.0, 1.0);
@@ -497,10 +501,10 @@ get_color_transform_table (void)
     guint8 *table_v;
     int y, u, v;
 
-    color_matrix_build_yuv_to_rgb_601 (&bt601_to_rgb);
-    color_matrix_build_rgb_to_yuv_601 (&bt601_to_yuv);
-    color_matrix_build_rgb_to_XYZ_601 (&bt601_rgb_to_XYZ);
-    color_matrix_build_XYZ_to_rgb_dell (&dell_XYZ_to_rgb);
+    videomixer_color_matrix_build_yuv_to_rgb_601 (&bt601_to_rgb);
+    videomixer_color_matrix_build_rgb_to_yuv_601 (&bt601_to_yuv);
+    videomixer_color_matrix_build_rgb_to_XYZ_601 (&bt601_rgb_to_XYZ);
+    videomixer_color_matrix_build_XYZ_to_rgb_dell (&dell_XYZ_to_rgb);
 
     color_transform_table = g_malloc (0x1000000 * 3);
 
@@ -516,14 +520,14 @@ get_color_transform_table (void)
           c.v[0] = y;
           c.v[1] = u;
           c.v[2] = v;
-          color_matrix_apply (&bt601_to_rgb, &c, &c);
+          videomixer_color_matrix_apply (&bt601_to_rgb, &c, &c);
           color_gamut_clamp (&c, &c);
           color_transfer_function_apply (&c, &c);
-          color_matrix_apply (&bt601_rgb_to_XYZ, &c, &c);
-          color_matrix_apply (&dell_XYZ_to_rgb, &c, &c);
+          videomixer_color_matrix_apply (&bt601_rgb_to_XYZ, &c, &c);
+          videomixer_color_matrix_apply (&dell_XYZ_to_rgb, &c, &c);
           color_transfer_function_unapply (&c, &c);
           color_gamut_clamp (&c, &c);
-          color_matrix_apply (&bt601_to_yuv, &c, &c);
+          videomixer_color_matrix_apply (&bt601_to_yuv, &c, &c);
 
           table_y[(y << 16) | (u << 8) | (v)] = rint (c.v[0]);
           table_u[(y << 16) | (u << 8) | (v)] = rint (c.v[1]);
@@ -541,7 +545,7 @@ get_color_transform_table (void)
     guint8 *table_v;
     int y, u, v;
 
-    color_matrix_build_bt709_to_bt601 (&bt709_to_bt601);
+    videomixer_color_matrix_build_bt709_to_bt601 (&bt709_to_bt601);
 
     color_transform_table = g_malloc (0x1000000 * 3);
 
@@ -557,7 +561,7 @@ get_color_transform_table (void)
           c.v[0] = y;
           c.v[1] = u;
           c.v[2] = v;
-          color_matrix_apply (&bt709_to_bt601, &c, &c);
+          videomixer_color_matrix_apply (&bt709_to_bt601, &c, &c);
 
           table_y[(y << 16) | (u << 8) | (v)] = rint (c.v[0]);
           table_u[(y << 16) | (u << 8) | (v)] = rint (c.v[1]);

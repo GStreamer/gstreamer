@@ -37,33 +37,33 @@ struct _ColorMatrix
   double m[4][4];
 };
 
-void color_xyY_to_XYZ (Color * c);
-void color_XYZ_to_xyY (Color * c);
-void color_set (Color * c, double x, double y, double z);
-void color_matrix_set_identity (ColorMatrix * m);
-void color_matrix_dump (ColorMatrix * m);
-void color_matrix_multiply (ColorMatrix * dst, ColorMatrix * a, ColorMatrix * b);
-void color_matrix_apply (ColorMatrix * m, Color * dest, Color * src);
-void color_matrix_offset_components (ColorMatrix * m, double a1, double a2,
+void videomixer_color_xyY_to_XYZ (Color * c);
+void videomixer_color_XYZ_to_xyY (Color * c);
+void videomixer_color_set (Color * c, double x, double y, double z);
+void videomixer_color_matrix_set_identity (ColorMatrix * m);
+void videomixer_color_matrix_dump (ColorMatrix * m);
+void videomixer_color_matrix_multiply (ColorMatrix * dst, ColorMatrix * a, ColorMatrix * b);
+void videomixer_color_matrix_apply (ColorMatrix * m, Color * dest, Color * src);
+void videomixer_color_matrix_offset_components (ColorMatrix * m, double a1, double a2,
     double a3);
-void color_matrix_scale_components (ColorMatrix * m, double a1, double a2, double a3);
-void color_matrix_YCbCr_to_RGB (ColorMatrix * m, double Kr, double Kb);
-void color_matrix_RGB_to_YCbCr (ColorMatrix * m, double Kr, double Kb);
-void color_matrix_build_yuv_to_rgb_601 (ColorMatrix * dst);
-void color_matrix_build_bt709_to_bt601 (ColorMatrix * dst);
-void color_matrix_build_rgb_to_yuv_601 (ColorMatrix * dst);
-void color_matrix_invert (ColorMatrix * m);
-void color_matrix_copy (ColorMatrix * dest, ColorMatrix * src);
-void color_matrix_transpose (ColorMatrix * m);
-void color_matrix_build_XYZ (ColorMatrix * dst,
+void videomixer_color_matrix_scale_components (ColorMatrix * m, double a1, double a2, double a3);
+void videomixer_color_matrix_YCbCr_to_RGB (ColorMatrix * m, double Kr, double Kb);
+void videomixer_color_matrix_RGB_to_YCbCr (ColorMatrix * m, double Kr, double Kb);
+void videomixer_color_matrix_build_yuv_to_rgb_601 (ColorMatrix * dst);
+void videomixer_color_matrix_build_bt709_to_bt601 (ColorMatrix * dst);
+void videomixer_color_matrix_build_rgb_to_yuv_601 (ColorMatrix * dst);
+void videomixer_color_matrix_invert (ColorMatrix * m);
+void videomixer_color_matrix_copy (ColorMatrix * dest, ColorMatrix * src);
+void videomixer_color_matrix_transpose (ColorMatrix * m);
+void videomixer_color_matrix_build_XYZ (ColorMatrix * dst,
     double rx, double ry,
     double gx, double gy, double bx, double by, double wx, double wy);
-void color_matrix_build_rgb_to_XYZ_601 (ColorMatrix * dst);
-void color_matrix_build_XYZ_to_rgb_709 (ColorMatrix * dst);
-void color_matrix_build_XYZ_to_rgb_dell (ColorMatrix * dst);
-void color_transfer_function_apply (Color * dest, Color * src);
-void color_transfer_function_unapply (Color * dest, Color * src);
-void color_gamut_clamp (Color * dest, Color * src);
+void videomixer_color_matrix_build_rgb_to_XYZ_601 (ColorMatrix * dst);
+void videomixer_color_matrix_build_XYZ_to_rgb_709 (ColorMatrix * dst);
+void videomixer_color_matrix_build_XYZ_to_rgb_dell (ColorMatrix * dst);
+void videomixer_color_transfer_function_apply (Color * dest, Color * src);
+void videomixer_color_transfer_function_unapply (Color * dest, Color * src);
+void videomixer_color_gamut_clamp (Color * dest, Color * src);
 
 G_END_DECLS
 
