@@ -411,6 +411,7 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri,
 
   GST_OBJECT_LOCK (src);
   gst_buffer_replace (&src->buffer, buffer);
+  gst_buffer_unref (buffer);
   g_free (src->uri);
   src->uri = g_strdup (orig_uri);
   GST_OBJECT_UNLOCK (src);
