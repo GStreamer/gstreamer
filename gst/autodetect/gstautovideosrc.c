@@ -49,9 +49,29 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+static GstElement *
+gst_auto_video_src_create_fake_element (GstAutoDetect * autodetect)
+{
+  GstElement *fake;
+
+  fake = gst_element_factory_make ("videotestsrc", "fake-auto-video-src");
+  if (fake != NULL) {
+    g_object_set (fake, "is-live", TRUE, NULL);
+  } else {
+    GST_ELEMENT_ERROR (autodetect, RESOURCE, NOT_FOUND,
+        ("Failed to find usable video source element."),
+        ("Failed to find a usable video source and couldn't create a video"
+            "testsrc as fallback either, check your GStreamer installation."));
+    /* This will error out with not-negotiated.. */
+    fake = gst_element_factory_make ("fakesrc", "fake-auto-video-src");
+  }
+  return fake;
+}
+
 static void
 gst_auto_video_src_class_init (GstAutoVideoSrcClass * klass)
 {
+  GstAutoDetectClass *autoclass = GST_AUTO_DETECT_CLASS (klass);
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (eklass,
@@ -61,6 +81,8 @@ gst_auto_video_src_class_init (GstAutoVideoSrcClass * klass)
       "Wrapper video source for automatically detected video source",
       "Jan Schmidt <thaytan@noraisin.net>, "
       "Stefan Kost <ensonic@users.sf.net>");
+
+  autoclass->create_fake_element = gst_auto_video_src_create_fake_element;
 }
 
 static void
