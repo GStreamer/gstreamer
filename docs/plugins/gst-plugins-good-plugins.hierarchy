@@ -14,9 +14,9 @@ GObject
           GstAudioClock
       GstControlBinding
       GstControlSource
-      GstDeviceMonitor
-        GstPulseDeviceMonitor
-        GstV4l2DeviceMonitor
+      GstDeviceProvider
+        GstPulseDeviceProvider
+        GstV4l2DeviceProvider
       GstElement
         Gst3GPPMux
         GstALawDec
@@ -297,7 +297,7 @@ GObject
       GstPadTemplate
       GstPlugin
       GstPluginFeature
-        GstDeviceMonitorFactory
+        GstDeviceProviderFactory
         GstElementFactory
         GstTypeFindFactory
       GstRegistry

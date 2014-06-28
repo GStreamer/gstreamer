@@ -3,7 +3,7 @@
   <description>Video mixer</description>
   <filename>../../gst/videomixer/.libs/libgstvideomixer.so</filename>
   <basename>libgstvideomixer.so</basename>
-  <version>1.3.3</version>
+  <version>1.3.90</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -12,7 +12,7 @@
     <element>
       <name>videomixer</name>
       <longname>Video mixer 2</longname>
-      <class>Filter/Editor/Video</class>
+      <class>Filter/Editor/Video/Compositor</class>
       <description>Mix multiple video streams</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
