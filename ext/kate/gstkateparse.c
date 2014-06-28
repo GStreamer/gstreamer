@@ -362,7 +362,7 @@ gst_kate_parse_parse_packet (GstKateParse * parse, GstBuffer * buf)
 
   size = gst_buffer_extract (buf, 0, header, 1);
 
-  GST_LOG_OBJECT (parse, "Got packet %02x, %zu bytes",
+  GST_LOG_OBJECT (parse, "Got packet %02x, %" G_GSIZE_FORMAT " bytes",
       size ? header[0] : -1, gst_buffer_get_size (buf));
 
   if (size > 0 && header[0] & 0x80) {

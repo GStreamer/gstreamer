@@ -289,7 +289,8 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
 
   header_size = gst_buffer_extract (buf, 0, header, 1);
 
-  GST_DEBUG_OBJECT (element, "got kate packet, %zu bytes, type %02x",
+  GST_DEBUG_OBJECT (element,
+      "got kate packet, %" G_GSIZE_FORMAT " bytes, type %02x",
       gst_buffer_get_size (buf), header_size == 0 ? -1 : header[0]);
 
   is_header = header_size > 0 && (header[0] & 0x80);
@@ -429,15 +430,16 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
         } else {
           if (gst_kate_util_is_utf8_string (value, len)) {
             gchar *compound = g_strdup_printf ("%s=%s", tag, value);
-            GST_DEBUG_OBJECT (decoder, "Metadata %d: %s=%s (%zu bytes)", idx,
-                tag, value, len);
+            GST_DEBUG_OBJECT (decoder,
+                "Metadata %d: %s=%s (%" G_GSIZE_FORMAT " bytes)", idx, tag,
+                value, len);
             gst_tag_list_add (evtags, GST_TAG_MERGE_APPEND,
                 GST_TAG_EXTENDED_COMMENT, compound, NULL);
             g_free (compound);
           } else {
             GST_INFO_OBJECT (decoder,
-                "Metadata %d, (%s, %zu bytes) is binary, ignored", idx, tag,
-                len);
+                "Metadata %d, (%s, %" G_GSIZE_FORMAT
+                " bytes) is binary, ignored", idx, tag, len);
           }
         }
       }

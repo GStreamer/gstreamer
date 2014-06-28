@@ -386,7 +386,7 @@ out_of_range:
   {
     gst_buffer_unmap (buf, &info);
     GST_ELEMENT_ERROR (ke, STREAM, DECODE, (NULL),
-        ("Command sequence offset %u is out of range %zu",
+        ("Command sequence offset %u is out of range %" G_GSIZE_FORMAT,
             command_sequence_offset, info.size));
     return GST_FLOW_ERROR;
   }
@@ -505,8 +505,8 @@ gst_kate_spu_decode_spu (GstKateEnc * ke, GstBuffer * buf, kate_region * kr,
   CHECK (2);
   packet_size = GST_KATE_UINT16_BE (ptr);
   ADVANCE (2);
-  GST_DEBUG_OBJECT (ke, "packet size %d (GstBuffer size %zu)", packet_size,
-      info.size);
+  GST_DEBUG_OBJECT (ke, "packet size %d (GstBuffer size %" G_GSIZE_FORMAT ")",
+      packet_size, info.size);
 
   CHECK (2);
   next_command_sequence = GST_KATE_UINT16_BE (ptr);
