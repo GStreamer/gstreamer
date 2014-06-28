@@ -65,13 +65,13 @@ struct _VideoConvert {
 
 };
 
-VideoConvert *   videoconvert_convert_new            (GstVideoInfo *in_info,
+VideoConvert *   badvideoconvert_convert_new            (GstVideoInfo *in_info,
                                                       GstVideoInfo *out_info);
-void             videoconvert_convert_free           (VideoConvert * convert);
+void             badvideoconvert_convert_free           (VideoConvert * convert);
 
-void             videoconvert_convert_set_dither     (VideoConvert * convert, int type);
+void             badvideoconvert_convert_set_dither     (VideoConvert * convert, int type);
 
-void             videoconvert_convert_convert        (VideoConvert * convert,
+void             badvideoconvert_convert_convert        (VideoConvert * convert,
                                                       GstVideoFrame *dest, const GstVideoFrame *src);
 
 

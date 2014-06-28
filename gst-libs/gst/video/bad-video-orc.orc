@@ -1,11 +1,11 @@
-.function video_convert_orc_memcpy_2d
+.function bad_video_convert_orc_memcpy_2d
 .flags 2d
 .dest 1 d1 guint8
 .source 1 s1 guint8
 
 copyb d1, s1
 
-.function video_convert_orc_convert_I420_UYVY
+.function bad_video_convert_orc_convert_I420_UYVY
 .dest 4 d1 guint8
 .dest 4 d2 guint8
 .source 2 y1 guint8
@@ -19,7 +19,7 @@ x2 mergebw d1, uv, y1
 x2 mergebw d2, uv, y2
 
 
-.function video_convert_orc_convert_I420_YUY2
+.function bad_video_convert_orc_convert_I420_YUY2
 .dest 4 d1 guint8
 .dest 4 d2 guint8
 .source 2 y1 guint8
@@ -34,7 +34,7 @@ x2 mergebw d2, y2, uv
 
 
 
-.function video_convert_orc_convert_I420_AYUV
+.function bad_video_convert_orc_convert_I420_AYUV
 .dest 4 d1 guint8
 .dest 4 d2 guint8
 .source 1 y1 guint8
@@ -56,7 +56,7 @@ mergebw ay, c255, y2
 mergewl d2, ay, uv
 
 
-.function video_convert_orc_convert_YUY2_I420
+.function bad_video_convert_orc_convert_YUY2_I420
 .dest 2 y1 guint8
 .dest 2 y2 guint8
 .dest 1 u guint8
@@ -75,7 +75,7 @@ x2 avgub t1, t1, t2
 splitwb v, u, t1
 
 
-.function video_convert_orc_convert_UYVY_YUY2
+.function bad_video_convert_orc_convert_UYVY_YUY2
 .flags 2d
 .dest 4 yuy2 guint8
 .source 4 uyvy guint8
@@ -83,7 +83,7 @@ splitwb v, u, t1
 x2 swapw yuy2, uyvy
 
 
-.function video_convert_orc_planar_chroma_420_422
+.function bad_video_convert_orc_planar_chroma_420_422
 .flags 2d
 .dest 1 d1 guint8
 .dest 1 d2 guint8
@@ -93,7 +93,7 @@ copyb d1, s
 copyb d2, s
 
 
-.function video_convert_orc_planar_chroma_420_444
+.function bad_video_convert_orc_planar_chroma_420_444
 .flags 2d
 .dest 2 d1 guint8
 .dest 2 d2 guint8
@@ -105,7 +105,7 @@ storew d1, t
 storew d2, t
 
 
-.function video_convert_orc_planar_chroma_422_444
+.function bad_video_convert_orc_planar_chroma_422_444
 .flags 2d
 .dest 2 d1 guint8
 .source 1 s guint8
@@ -115,7 +115,7 @@ splatbw t, s
 storew d1, t
 
 
-.function video_convert_orc_planar_chroma_444_422
+.function bad_video_convert_orc_planar_chroma_444_422
 .flags 2d
 .dest 1 d guint8
 .source 2 s guint8
@@ -126,7 +126,7 @@ splitwb t1, t2, s
 avgub d, t1, t2
 
 
-.function video_convert_orc_planar_chroma_444_420
+.function bad_video_convert_orc_planar_chroma_444_420
 .flags 2d
 .dest 1 d guint8
 .source 2 s1 guint8
@@ -140,7 +140,7 @@ splitwb t1, t2, t
 avgub d, t1, t2
 
 
-.function video_convert_orc_planar_chroma_422_420
+.function bad_video_convert_orc_planar_chroma_422_420
 .flags 2d
 .dest 1 d guint8
 .source 1 s1 guint8
@@ -149,7 +149,7 @@ avgub d, t1, t2
 avgub d, s1, s2
 
 
-.function video_convert_orc_convert_YUY2_AYUV
+.function bad_video_convert_orc_convert_YUY2_AYUV
 .flags 2d
 .dest 8 ayuv guint8
 .source 4 yuy2 guint8
@@ -165,7 +165,7 @@ mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
 
-.function video_convert_orc_convert_UYVY_AYUV
+.function bad_video_convert_orc_convert_UYVY_AYUV
 .flags 2d
 .dest 8 ayuv guint8
 .source 4 uyvy guint8
@@ -181,7 +181,7 @@ mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
 
-.function video_convert_orc_convert_YUY2_Y42B
+.function bad_video_convert_orc_convert_YUY2_Y42B
 .flags 2d
 .dest 2 y guint8
 .dest 1 u guint8
@@ -193,7 +193,7 @@ x2 splitwb uv, y, yuy2
 splitwb v, u, uv
 
 
-.function video_convert_orc_convert_UYVY_Y42B
+.function bad_video_convert_orc_convert_UYVY_Y42B
 .flags 2d
 .dest 2 y guint8
 .dest 1 u guint8
@@ -205,7 +205,7 @@ x2 splitwb y, uv, uyvy
 splitwb v, u, uv
 
 
-.function video_convert_orc_convert_YUY2_Y444
+.function bad_video_convert_orc_convert_YUY2_Y444
 .flags 2d
 .dest 2 y guint8
 .dest 2 uu guint8
@@ -221,7 +221,7 @@ splatbw uu, u
 splatbw vv, v
 
 
-.function video_convert_orc_convert_UYVY_Y444
+.function bad_video_convert_orc_convert_UYVY_Y444
 .flags 2d
 .dest 2 y guint8
 .dest 2 uu guint8
@@ -237,7 +237,7 @@ splatbw uu, u
 splatbw vv, v
 
 
-.function video_convert_orc_convert_UYVY_I420
+.function bad_video_convert_orc_convert_UYVY_I420
 .dest 2 y1 guint8
 .dest 2 y2 guint8
 .dest 1 u guint8
@@ -257,7 +257,7 @@ splitwb v, u, t1
 
 
 
-.function video_convert_orc_convert_AYUV_I420
+.function bad_video_convert_orc_convert_AYUV_I420
 .flags 2d
 .dest 2 y1 guint8
 .dest 2 y2 guint8
@@ -287,7 +287,7 @@ avgub v, t1, t2
 
 
 
-.function video_convert_orc_convert_AYUV_YUY2
+.function bad_video_convert_orc_convert_AYUV_YUY2
 .flags 2d
 .dest 4 yuy2 guint8
 .source 8 ayuv guint8
@@ -304,7 +304,7 @@ x2 select1wb yy, ayay
 x2 mergebw yuy2, yy, uv1
 
 
-.function video_convert_orc_convert_AYUV_UYVY
+.function bad_video_convert_orc_convert_AYUV_UYVY
 .flags 2d
 .dest 4 yuy2 guint8
 .source 8 ayuv guint8
@@ -322,7 +322,7 @@ x2 mergebw yuy2, uv1, yy
 
 
 
-.function video_convert_orc_convert_AYUV_Y42B
+.function bad_video_convert_orc_convert_AYUV_Y42B
 .flags 2d
 .dest 2 y guint8
 .dest 1 u guint8
@@ -340,7 +340,7 @@ splitwb v, u, uv1
 x2 select1wb y, ayay
 
 
-.function video_convert_orc_convert_AYUV_Y444
+.function bad_video_convert_orc_convert_AYUV_Y444
 .flags 2d
 .dest 1 y guint8
 .dest 1 u guint8
@@ -354,7 +354,7 @@ splitwb v, u, uv
 select1wb y, ay
 
 
-.function video_convert_orc_convert_Y42B_YUY2
+.function bad_video_convert_orc_convert_Y42B_YUY2
 .flags 2d
 .dest 4 yuy2 guint8
 .source 2 y guint8
@@ -366,7 +366,7 @@ mergebw uv, u, v
 x2 mergebw yuy2, y, uv
 
 
-.function video_convert_orc_convert_Y42B_UYVY
+.function bad_video_convert_orc_convert_Y42B_UYVY
 .flags 2d
 .dest 4 uyvy guint8
 .source 2 y guint8
@@ -378,7 +378,7 @@ mergebw uv, u, v
 x2 mergebw uyvy, uv, y
 
 
-.function video_convert_orc_convert_Y42B_AYUV
+.function bad_video_convert_orc_convert_Y42B_AYUV
 .flags 2d
 .dest 8 ayuv guint8
 .source 2 yy guint8
@@ -396,7 +396,7 @@ mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
 
-.function video_convert_orc_convert_Y444_YUY2
+.function bad_video_convert_orc_convert_Y444_YUY2
 .flags 2d
 .dest 4 yuy2 guint8
 .source 2 y guint8
@@ -413,7 +413,7 @@ x2 avgub uv, uv1, uv2
 x2 mergebw yuy2, y, uv
 
 
-.function video_convert_orc_convert_Y444_UYVY
+.function bad_video_convert_orc_convert_Y444_UYVY
 .flags 2d
 .dest 4 uyvy guint8
 .source 2 y guint8
@@ -430,7 +430,7 @@ x2 avgub uv, uv1, uv2
 x2 mergebw uyvy, uv, y
 
 
-.function video_convert_orc_convert_Y444_AYUV
+.function bad_video_convert_orc_convert_Y444_AYUV
 .flags 2d
 .dest 4 ayuv guint8
 .source 1 yy guint8
@@ -446,7 +446,7 @@ mergewl ayuv, ay, uv
 
 
 
-.function video_convert_orc_convert_AYUV_ARGB
+.function bad_video_convert_orc_convert_AYUV_ARGB
 .flags 2d
 .dest 4 argb guint8
 .source 4 ayuv guint8
@@ -502,7 +502,7 @@ mergebw wb, g, b
 mergewl x, wr, wb
 x4 addb argb, x, c128
 
-.function video_convert_orc_convert_AYUV_BGRA
+.function bad_video_convert_orc_convert_AYUV_BGRA
 .flags 2d
 .dest 4 bgra guint8
 .source 4 ayuv guint8
@@ -559,7 +559,7 @@ mergewl x, wb, wr
 x4 addb bgra, x, c128
 
 
-.function video_convert_orc_convert_AYUV_ABGR
+.function bad_video_convert_orc_convert_AYUV_ABGR
 .flags 2d
 .dest 4 argb guint8
 .source 4 ayuv guint8
@@ -615,7 +615,7 @@ mergebw wr, g, r
 mergewl x, wb, wr
 x4 addb argb, x, c128
 
-.function video_convert_orc_convert_AYUV_RGBA
+.function bad_video_convert_orc_convert_AYUV_RGBA
 .flags 2d
 .dest 4 argb guint8
 .source 4 ayuv guint8
@@ -673,7 +673,7 @@ x4 addb argb, x, c128
 
 
 
-.function video_convert_orc_convert_I420_BGRA
+.function bad_video_convert_orc_convert_I420_BGRA
 .dest 4 argb guint8
 .source 1 y guint8
 .source 1 u guint8
