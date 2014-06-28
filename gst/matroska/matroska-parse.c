@@ -2274,10 +2274,10 @@ gst_matroska_parse_take (GstMatroskaParse * parse, guint64 bytes,
     ret = GST_FLOW_ERROR;
     goto exit;
   }
-  if (gst_adapter_available (parse->common.adapter) >= bytes)
-    buffer = gst_adapter_take_buffer (parse->common.adapter, bytes);
-  else
-    ret = GST_FLOW_EOS;
+  if (gst_adapter_available (parse->common.adapter) < bytes)
+    return GST_FLOW_EOS;
+
+  buffer = gst_adapter_take_buffer (parse->common.adapter, bytes);
   if (G_LIKELY (buffer)) {
     gst_ebml_read_init (ebml, GST_ELEMENT_CAST (parse), buffer,
         parse->common.offset);
@@ -2286,6 +2286,7 @@ gst_matroska_parse_take (GstMatroskaParse * parse, guint64 bytes,
     ret = GST_FLOW_ERROR;
   }
 exit:
+
   return ret;
 }
 
