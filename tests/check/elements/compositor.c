@@ -1029,6 +1029,7 @@ GST_START_TEST (test_flush_start_flush_stop)
 
   /* cleanup */
   gst_element_set_state (compositor, GST_STATE_NULL);
+  gst_object_unref (sinkpad1);
   gst_object_unref (compositor);
 }
 
