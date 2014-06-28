@@ -384,6 +384,9 @@ _test_data_clear (TestData * test)
   gst_element_set_state (test->aggregator, GST_STATE_NULL);
   gst_object_unref (test->aggregator);
 
+  if (test->sinkpad)
+    gst_object_unref (test->sinkpad);
+
   g_main_loop_unref (test->ml);
 }
 
@@ -629,6 +632,8 @@ GST_START_TEST (test_flushing_seek)
   g_thread_join (thread1);
   g_thread_join (thread2);
 
+  _chain_data_clear (&data1);
+  _chain_data_clear (&data2);
   _test_data_clear (&test);
 
 }
@@ -747,6 +752,7 @@ pad_probe_cb (GstPad * pad, GstPadProbeInfo * info, RemoveElementData * data)
   gst_pad_unlink (pad, peer);
   gst_element_release_request_pad (data->agg, peer);
   fail_unless (gst_bin_remove (GST_BIN (data->pipeline), data->src));
+  gst_object_unref (peer);
 
   g_mutex_lock (data->lock);
   g_cond_broadcast (data->cond);
@@ -841,6 +847,7 @@ GST_START_TEST (test_add_remove)
                   gst_element_state_get_name (GST_STATE (data.src)));
               g_cond_wait (&cond, &lock);
               g_mutex_unlock (&lock);
+              gst_object_unref (pad);
 
               /*  We can not set state from the streaming thread so we
                *  need to make sure that the source has been removed
@@ -877,6 +884,8 @@ GST_START_TEST (test_add_remove)
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (bus);
   gst_object_unref (pipeline);
+  g_mutex_clear (&lock);
+  g_cond_clear (&cond);
 }
 
 GST_END_TEST;
