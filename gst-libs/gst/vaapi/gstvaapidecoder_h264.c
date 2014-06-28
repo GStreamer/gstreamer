@@ -985,9 +985,6 @@ dpb_reset(GstVaapiDecoderH264 *decoder, guint dpb_size)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
 
-    if (dpb_size < priv->dpb_count)
-        return FALSE;
-
     if (dpb_size > priv->dpb_size_max) {
         priv->dpb = g_try_realloc_n(priv->dpb, dpb_size, sizeof(*priv->dpb));
         if (!priv->dpb)
@@ -996,11 +993,7 @@ dpb_reset(GstVaapiDecoderH264 *decoder, guint dpb_size)
             (dpb_size - priv->dpb_size_max) * sizeof(*priv->dpb));
         priv->dpb_size_max = dpb_size;
     }
-
-    if (priv->dpb_size < dpb_size)
-        priv->dpb_size = dpb_size;
-    else if (dpb_size < priv->dpb_count)
-        return FALSE;
+    priv->dpb_size = dpb_size;
 
     GST_DEBUG("DPB size %u", priv->dpb_size);
     return TRUE;
@@ -1300,7 +1293,13 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     GstVaapiProfile profile;
     GstVaapiChromaType chroma_type;
     gboolean reset_context = FALSE;
-    guint mb_width, mb_height, dpb_size;
+    guint mb_width, mb_height, dpb_size, num_views;
+
+    num_views = get_num_views(sps);
+    if (priv->max_views < num_views) {
+        priv->max_views = num_views;
+        GST_DEBUG("maximum number of views changed to %u", num_views);
+    }
 
     dpb_size = get_max_dec_frame_buffering(sps);
     if (priv->dpb_size < dpb_size) {
@@ -1495,9 +1494,6 @@ parse_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
-    /* Reset defaults */
-    priv->max_views = 1;
-
     priv->parser_state |= GST_H264_VIDEO_STATE_GOT_SPS;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -1577,7 +1573,6 @@ parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     GstH264NalUnit * const nalu = &pi->nalu;
     GstH264SPS *sps;
     GstH264ParserResult result;
-    guint num_views;
 
     GST_DEBUG("parse slice");
 
@@ -1625,11 +1620,6 @@ parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     sps = slice_hdr->pps->sequence;
 
     /* Update MVC data */
-    num_views = get_num_views(sps);
-    if (priv->max_views < num_views) {
-        priv->max_views = num_views;
-        GST_DEBUG("maximum number of views changed to %u", num_views);
-    }
     pi->view_id = get_view_id(&pi->nalu);
     pi->voc = get_view_order_index(sps, pi->view_id);
 
@@ -1679,6 +1669,7 @@ decode_pps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 static GstVaapiDecoderStatus
 decode_sequence_end(GstVaapiDecoderH264 *decoder)
 {
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiDecoderStatus status;
 
     GST_DEBUG("decode sequence-end");
@@ -1688,6 +1679,9 @@ decode_sequence_end(GstVaapiDecoderH264 *decoder)
         return status;
 
     dpb_flush(decoder, NULL);
+
+    /* Reset defaults, should there be a new sequence available next */
+    priv->max_views = 1;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
