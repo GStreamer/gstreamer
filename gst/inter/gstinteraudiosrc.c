@@ -195,16 +195,21 @@ gst_inter_audio_src_set_caps (GstBaseSrc * src, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  ret = gst_structure_get_int (structure, "rate", &sample_rate);
-  if (ret) {
-    interaudiosrc->sample_rate = sample_rate;
-
-    ret = gst_pad_set_caps (src->srcpad, caps);
+  if (!gst_structure_get_int (structure, "rate", &sample_rate)) {
+    GST_ERROR_OBJECT (src, "Audio caps without rate");
+    return FALSE;
   }
 
-  if (gst_audio_info_from_caps (&info, caps)) {
-    interaudiosrc->finfo = info.finfo;
+  interaudiosrc->sample_rate = sample_rate;
+
+  if (!gst_audio_info_from_caps (&info, caps)) {
+    GST_ERROR_OBJECT (src, "Can't parse audio caps");
+    return FALSE;
   }
+
+  interaudiosrc->finfo = info.finfo;
+
+  ret = gst_pad_set_caps (src->srcpad, caps);
 
   return ret;
 }
