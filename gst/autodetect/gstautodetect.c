@@ -119,7 +119,7 @@ gst_auto_detect_clear_kid (GstAutoDetect * self)
 }
 
 static GstElement *
-gst_auto_detect_create_fake_element (GstAutoDetect * self)
+gst_auto_detect_create_fake_element_default (GstAutoDetect * self)
 {
   GstElement *fake;
   gchar dummy_factory[10], dummy_name[20];
@@ -128,6 +128,20 @@ gst_auto_detect_create_fake_element (GstAutoDetect * self)
   sprintf (dummy_name, "fake-%s-%s", self->media_klass_lc, self->type_klass_lc);
   fake = gst_element_factory_make (dummy_factory, dummy_name);
   g_object_set (fake, "sync", self->sync, NULL);
+
+  return fake;
+}
+
+static GstElement *
+gst_auto_detect_create_fake_element (GstAutoDetect * self)
+{
+  GstAutoDetectClass *klass = GST_AUTO_DETECT_GET_CLASS (self);
+  GstElement *fake;
+
+  if (klass->create_fake_element)
+    fake = klass->create_fake_element (self);
+  else
+    fake = gst_auto_detect_create_fake_element_default (self);
 
   return fake;
 }

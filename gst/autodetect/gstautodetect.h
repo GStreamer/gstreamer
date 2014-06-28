@@ -60,9 +60,10 @@ typedef struct _GstAutoDetect {
 typedef struct _GstAutoDetectClass {
   GstBinClass parent_class;
   
-  /*< public >*/
+  /*< private >*/
   /* virtual methods for subclasses */
   void (*configure)(GstAutoDetect *self, GstElement *kid);
+  GstElement * (*create_fake_element) (GstAutoDetect * autodetect);
 } GstAutoDetectClass;
 
 GType   gst_auto_detect_get_type    (void);
