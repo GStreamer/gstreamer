@@ -1644,7 +1644,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bandwidth-hz</NICK>
-<BLURB>Bandwidth in Hz (DVB-T).</BLURB>
+<BLURB>(DVB-T) Bandwidth in Hz.</BLURB>
 <DEFAULT>8000000</DEFAULT>
 </ARG>
 
@@ -1654,7 +1654,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bandwidth</NICK>
-<BLURB>Bandwidth (DVB-T) deprecated.</BLURB>
+<BLURB>(DVB-T) Bandwidth. Deprecated.</BLURB>
 <DEFAULT>8</DEFAULT>
 </ARG>
 
@@ -1664,7 +1664,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>code-rate-hp</NICK>
-<BLURB>High Priority Code Rate (DVB-T, DVB-S, DVB-S2 and DVB-C).</BLURB>
+<BLURB>(DVB-T, DVB-S/S2 and DVB-C) High priority code rate.</BLURB>
 <DEFAULT>AUTO</DEFAULT>
 </ARG>
 
@@ -1674,7 +1674,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>code-rate-lp</NICK>
-<BLURB>Low Priority Code Rate (DVB-T).</BLURB>
+<BLURB>(DVB-T) Low priority code rate.</BLURB>
 <DEFAULT>1/2</DEFAULT>
 </ARG>
 
@@ -1714,7 +1714,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>guard</NICK>
-<BLURB>Guard Interval (DVB-T).</BLURB>
+<BLURB>(DVB-T) Guard Interval.</BLURB>
 <DEFAULT>16</DEFAULT>
 </ARG>
 
@@ -1724,7 +1724,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>hierarchy</NICK>
-<BLURB>Hierarchy Information (DVB-T).</BLURB>
+<BLURB>(DVB-T) Hierarchy information.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -1734,7 +1734,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>inversion</NICK>
-<BLURB>Inversion Information (DVB-T and DVB-C).</BLURB>
+<BLURB>(DVB-T and DVB-C) Inversion information.</BLURB>
 <DEFAULT>ON</DEFAULT>
 </ARG>
 
@@ -1744,7 +1744,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>modulation</NICK>
-<BLURB>Modulation (DVB-T and DVB-C).</BLURB>
+<BLURB>(DVB-T and DVB-C) Modulation type.</BLURB>
 <DEFAULT>QAM 16</DEFAULT>
 </ARG>
 
@@ -1784,7 +1784,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>trans-mode</NICK>
-<BLURB>Transmission Mode (DVB-T).</BLURB>
+<BLURB>(DVB-T) Transmission mode.</BLURB>
 <DEFAULT>8K</DEFAULT>
 </ARG>
 
@@ -1804,7 +1804,7 @@
 <RANGE>[0,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>The adapter device number</NICK>
-<BLURB>The adapter device number (eg. 0 for adapter0).</BLURB>
+<BLURB>The DVB adapter device number (eg. 0 for adapter0).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1814,7 +1814,7 @@
 <RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
-<BLURB>DISEqC selected source (-1 disabled) (DVB-S, DVB-S2).</BLURB>
+<BLURB>(DVB-S/S2) Selected DiSEqC source. Only needed if you have a DiSEqC switch. Otherwise leave at -1 (disabled).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
@@ -1844,7 +1844,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>polarity</NICK>
-<BLURB>Polarity [vhHV] (DVB-S, DVB-S2).</BLURB>
+<BLURB>(DVB-S/S2) Polarity [vhHV] (eg. V for Vertical).</BLURB>
 <DEFAULT>"H"</DEFAULT>
 </ARG>
 
@@ -1854,7 +1854,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>symbol rate</NICK>
-<BLURB>Symbol Rate (DVB-S, DVB-S2, DVB-C).</BLURB>
+<BLURB>(DVB-S/S2, DVB-C) Symbol rate in bauds.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1924,7 +1924,7 @@
 <RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>stream-id</NICK>
-<BLURB>Stream ID (-1 disabled, DVB-T2 and DVB-S2 max 255, ISDB max 65535).</BLURB>
+<BLURB>(DVB-T2 and DVB-S2 max 255, ISDB max 65535) Stream ID (-1 = disabled).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
@@ -17934,7 +17934,7 @@
 <RANGE>[0,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>The adapter device number</NICK>
-<BLURB>The adapter device number (eg. 0 for adapter0).</BLURB>
+<BLURB>The DVB adapter device number (eg. 0 for adapter0).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17944,7 +17944,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bandwidth</NICK>
-<BLURB>Bandwidth (DVB-T) deprecated.</BLURB>
+<BLURB>(DVB-T) Bandwidth. Deprecated.</BLURB>
 <DEFAULT>8</DEFAULT>
 </ARG>
 
@@ -17954,7 +17954,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>code-rate-hp</NICK>
-<BLURB>High Priority Code Rate (DVB-T, DVB-S, DVB-S2 and DVB-C).</BLURB>
+<BLURB>(DVB-T, DVB-S/S2 and DVB-C) High priority code rate.</BLURB>
 <DEFAULT>AUTO</DEFAULT>
 </ARG>
 
@@ -17964,7 +17964,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>code-rate-lp</NICK>
-<BLURB>Low Priority Code Rate (DVB-T).</BLURB>
+<BLURB>(DVB-T) Low priority code rate.</BLURB>
 <DEFAULT>1/2</DEFAULT>
 </ARG>
 
@@ -17974,7 +17974,7 @@
 <RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
-<BLURB>DISEqC selected source (-1 disabled) (DVB-S, DVB-S2).</BLURB>
+<BLURB>(DVB-S/S2) Selected DiSEqC source. Only needed if you have a DiSEqC switch. Otherwise leave at -1 (disabled).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
@@ -18004,7 +18004,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>guard</NICK>
-<BLURB>Guard Interval (DVB-T).</BLURB>
+<BLURB>(DVB-T) Guard Interval.</BLURB>
 <DEFAULT>16</DEFAULT>
 </ARG>
 
@@ -18014,7 +18014,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>hierarchy</NICK>
-<BLURB>Hierarchy Information (DVB-T).</BLURB>
+<BLURB>(DVB-T) Hierarchy information.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -18024,7 +18024,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>inversion</NICK>
-<BLURB>Inversion Information (DVB-T and DVB-C).</BLURB>
+<BLURB>(DVB-T and DVB-C) Inversion information.</BLURB>
 <DEFAULT>ON</DEFAULT>
 </ARG>
 
@@ -18034,7 +18034,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>modulation</NICK>
-<BLURB>Modulation (DVB-T and DVB-C).</BLURB>
+<BLURB>(DVB-T and DVB-C) Modulation type.</BLURB>
 <DEFAULT>QAM 16</DEFAULT>
 </ARG>
 
@@ -18044,7 +18044,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>polarity</NICK>
-<BLURB>Polarity [vhHV] (DVB-S, DVB-S2).</BLURB>
+<BLURB>(DVB-S/S2) Polarity [vhHV] (eg. V for Vertical).</BLURB>
 <DEFAULT>"H"</DEFAULT>
 </ARG>
 
@@ -18074,7 +18074,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>symbol rate</NICK>
-<BLURB>Symbol Rate (DVB-S, DVB-S2, DVB-C).</BLURB>
+<BLURB>(DVB-S/S2, DVB-C) Symbol rate in bauds.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -18084,7 +18084,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>trans-mode</NICK>
-<BLURB>Transmission Mode (DVB-T).</BLURB>
+<BLURB>(DVB-T) Transmission mode.</BLURB>
 <DEFAULT>8K</DEFAULT>
 </ARG>
 
@@ -18094,7 +18094,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bandwidth-hz</NICK>
-<BLURB>Bandwidth in Hz (DVB-T).</BLURB>
+<BLURB>(DVB-T) Bandwidth in Hz.</BLURB>
 <DEFAULT>8000000</DEFAULT>
 </ARG>
 
@@ -18134,7 +18134,7 @@
 <RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>stream-id</NICK>
-<BLURB>Stream ID (-1 disabled, DVB-T2 and DVB-S2 max 255, ISDB max 65535).</BLURB>
+<BLURB>(DVB-T2 and DVB-S2 max 255, ISDB max 65535) Stream ID (-1 = disabled).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 

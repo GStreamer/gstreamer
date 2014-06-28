@@ -26,7 +26,6 @@ GObject
         GstAssRender
         GstAudioDecoder
           ADPCMDec
-          GstCeltDec
           GstDtsDec
           GstFaad
           GstGSMDec
@@ -36,7 +35,6 @@ GObject
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
-          GstCeltEnc
           GstFaac
           GstGSMEnc
           GstOpusEnc
@@ -77,7 +75,6 @@ GObject
           GstInterAudioSink
           GstInterSubSink
           GstInterVideoSink
-          GstRTMPSink
           GstShmSink
           GstVideoSink
             GstDfbVideoSink
@@ -85,7 +82,6 @@ GObject
             GstGLImageSink
             GstWaylandSink
         GstBaseSrc
-          GstDTMFSrc
           GstDataURISrc
           GstFliteTestSrc
           GstInterAudioSrc
@@ -101,11 +97,8 @@ GObject
             GstDvbSrc
             GstGLTestSrc
             GstMMS
-            GstNeonhttpSrc
-            GstRTMPSrc
             GstRfbSrc
             GstShmSrc
-          GstRTPDTMFSrc
         GstBaseTransform
           GstAudioFilter
             GstAccurip
@@ -258,7 +251,6 @@ GObject
         GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
-          GstRtpDTMFDepay
         GstRTPBasePayload
           GstRtpAsfPay
           GstRtpOPUSPay
@@ -309,7 +301,7 @@ GObject
       GstPadTemplate
       GstPlugin
       GstPluginFeature
-        GstDeviceMonitorFactory
+        GstDeviceProviderFactory
         GstElementFactory
         GstTypeFindFactory
       GstRegistry
