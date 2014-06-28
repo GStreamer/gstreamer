@@ -1,4 +1,4 @@
-This is GStreamer Ugly Plugins 1.3.3
+This is GStreamer Ugly Plugins 1.3.90
 
 Changes since 1.2:
 
@@ -129,7 +129,7 @@ Major changes:
      with downstream via caps.
    ∘ Lots of fixes for coverity warnings all over the place.
    ∘ Negotiation related performance improvements.
-   ∘ 500+ fixed bug reports, and many other bug fixes and other
+   ∘ 800+ fixed bug reports, and many other bug fixes and other
      improvements everywhere that had no bug report.
 
 Things to look out for:
@@ -137,5 +137,10 @@ Things to look out for:
    element.
  • The mfcdec element was removed and replaced by v4l2videodec.
  • osxvideosink is only available in OS X 10.6 or newer.
- • The GstDeviceMonitor API will likely change slightly before the
-   1.4.0 release.
+ • On Android the namespace of the automatically generated Java class
+   for initialization of GStreamer has changed from com.gstreamer to
+   org.freedesktop.gstreamer to prevent namespace pollution.
+ • On iOS you have to update your gst_ios_init.h and gst_ios_init.m in
+   your projects from the one included in the binaries if you used the
+   GnuTLS GIO module before. The loading mechanism has slightly changed.
+
