@@ -408,6 +408,7 @@ static void
 crank_rtcp_thread (TestData * data, GstClockTime * time, GstClockID * id)
 {
   gint queue_length;
+  GstClockID *tid;
 
   queue_length = g_async_queue_length (data->rtcp_queue);
   do {
@@ -415,8 +416,12 @@ crank_rtcp_thread (TestData * data, GstClockTime * time, GstClockID * id)
     GST_DEBUG ("Advancing time to %" GST_TIME_FORMAT, GST_TIME_ARGS (*time));
     if (*time > gst_clock_get_time (data->clock))
       gst_test_clock_set_time (GST_TEST_CLOCK (data->clock), *time);
-    fail_unless_equals_pointer (gst_test_clock_process_next_clock_id
-        (GST_TEST_CLOCK (data->clock)), *id);
+    tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data->clock));
+    fail_unless_equals_pointer (tid, *id);
+
+    gst_clock_id_unref (tid);
+    gst_clock_id_unref (*id);
+    *id = NULL;
 
     /* wait for the RTCP pad thread to output its data
      * and start waiting on the next timeout */
@@ -552,6 +557,7 @@ GST_START_TEST (test_internal_sources_timeout)
     gst_buffer_unref (buf);
   }
   g_assert_cmpint (j, ==, 0x3); /* verify we got both BYE and RR */
+  gst_clock_id_unref (id);
 
   g_object_unref (internal_session);
   destroy_testharness (&data);
