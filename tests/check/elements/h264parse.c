@@ -133,6 +133,7 @@ verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
           vdata->data_to_verify_size - 1);
       fail_unless (gst_buffer_memcmp (buffer, 0, vdata->data_to_verify + 1,
               vdata->data_to_verify_size - 1) == 0);
+      gst_buffer_unmap (buffer, &map);
       return TRUE;
     } else if (GST_READ_UINT32_BE (map.data) == 0x01) {
       /* this is not avc, use default tests from parser.c */
