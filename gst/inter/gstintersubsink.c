@@ -53,6 +53,7 @@ static void gst_inter_sub_sink_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_inter_sub_sink_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
+static void gst_inter_sub_sink_finalize (GObject * object);
 
 static void gst_inter_sub_sink_get_times (GstBaseSink * sink,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
@@ -78,7 +79,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 
 /* class initialization */
-
+#define parent_class gst_inter_sub_sink_parent_class
 G_DEFINE_TYPE (GstInterSubSink, gst_inter_sub_sink, GST_TYPE_BASE_SINK);
 
 static void
@@ -102,6 +103,7 @@ gst_inter_sub_sink_class_init (GstInterSubSinkClass * klass)
 
   gobject_class->set_property = gst_inter_sub_sink_set_property;
   gobject_class->get_property = gst_inter_sub_sink_get_property;
+  gobject_class->finalize = gst_inter_sub_sink_finalize;
   base_sink_class->get_times = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_get_times);
   base_sink_class->start = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_start);
   base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_stop);
@@ -117,7 +119,6 @@ gst_inter_sub_sink_class_init (GstInterSubSinkClass * klass)
 static void
 gst_inter_sub_sink_init (GstInterSubSink * intersubsink)
 {
-
   intersubsink->channel = g_strdup ("default");
 
   intersubsink->fps_n = 1;
@@ -156,6 +157,18 @@ gst_inter_sub_sink_get_property (GObject * object, guint property_id,
       break;
   }
 }
+
+static void
+gst_inter_sub_sink_finalize (GObject * object)
+{
+  GstInterSubSink *intersubsink = GST_INTER_SUB_SINK (object);
+
+  g_free (intersubsink->channel);
+  intersubsink->channel = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 
 static void
 gst_inter_sub_sink_get_times (GstBaseSink * sink, GstBuffer * buffer,

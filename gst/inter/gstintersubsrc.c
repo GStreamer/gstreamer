@@ -54,6 +54,7 @@ static void gst_inter_sub_src_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_inter_sub_src_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
+static void gst_inter_sub_src_finalize (GObject * object);
 
 static gboolean gst_inter_sub_src_start (GstBaseSrc * src);
 static gboolean gst_inter_sub_src_stop (GstBaseSrc * src);
@@ -79,9 +80,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/unknown")
     );
 
-
 /* class initialization */
-
+#define parent_class gst_inter_sub_src_parent_class
 G_DEFINE_TYPE (GstInterSubSrc, gst_inter_sub_src, GST_TYPE_BASE_SRC);
 
 static void
@@ -105,6 +105,7 @@ gst_inter_sub_src_class_init (GstInterSubSrcClass * klass)
 
   gobject_class->set_property = gst_inter_sub_src_set_property;
   gobject_class->get_property = gst_inter_sub_src_get_property;
+  gobject_class->finalize = gst_inter_sub_src_finalize;
   base_src_class->start = GST_DEBUG_FUNCPTR (gst_inter_sub_src_start);
   base_src_class->stop = GST_DEBUG_FUNCPTR (gst_inter_sub_src_stop);
   base_src_class->get_times = GST_DEBUG_FUNCPTR (gst_inter_sub_src_get_times);
@@ -162,6 +163,16 @@ gst_inter_sub_src_get_property (GObject * object, guint property_id,
   }
 }
 
+static void
+gst_inter_sub_src_finalize (GObject * object)
+{
+  GstInterSubSrc *intersubsrc = GST_INTER_SUB_SRC (object);
+
+  g_free (intersubsrc->channel);
+  intersubsrc->channel = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
 
 static gboolean
 gst_inter_sub_src_start (GstBaseSrc * src)
