@@ -238,7 +238,6 @@ GST_START_TEST (test_share)
   GError *error = NULL;
   gint i = 0;
 
-  display = gst_gl_display_new ();
   context = gst_gl_context_new (display);
 
   window = gst_gl_window_new (display);
@@ -292,7 +291,6 @@ GST_START_TEST (test_wrapped_context)
   GstGLPlatform platform;
   GstGLAPI apis;
 
-  display = gst_gl_display_new ();
   context = gst_gl_context_new (display);
 
   window = gst_gl_window_new (display);
@@ -338,6 +336,7 @@ GST_START_TEST (test_wrapped_context)
   gst_object_unref (other_window);
   gst_object_unref (other_context);
   gst_object_unref (context);
+  gst_object_unref (wrapped_context);
 }
 
 GST_END_TEST;
