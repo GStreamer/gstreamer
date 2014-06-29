@@ -41,6 +41,8 @@ static GstCaps *gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc,
     GstOMXPort * port, GstVideoCodecState * state);
 static GstFlowReturn gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc *
     self, GstOMXPort * port, GstOMXBuffer * buf, GstVideoCodecFrame * frame);
+static gboolean gst_omx_h264_enc_flush (GstVideoEncoder * enc);
+static gboolean gst_omx_h264_enc_stop (GstVideoEncoder * enc);
 static void gst_omx_h264_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_omx_h264_enc_get_property (GObject * object, guint prop_id,
@@ -69,6 +71,7 @@ enum
   GST_DEBUG_CATEGORY_INIT (gst_omx_h264_enc_debug_category, "omxh264enc", 0, \
       "debug category for gst-omx video encoder base class");
 
+#define parent_class gst_omx_h264_enc_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOMXH264Enc, gst_omx_h264_enc,
     GST_TYPE_OMX_VIDEO_ENC, DEBUG_INIT);
 
@@ -77,6 +80,7 @@ gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstVideoEncoderClass *basevideoenc_class = GST_VIDEO_ENCODER_CLASS (klass);
   GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (klass);
 
   videoenc_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h264_enc_set_format);
@@ -112,6 +116,9 @@ gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
           GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
+
+  basevideoenc_class->flush = gst_omx_h264_enc_flush;
+  basevideoenc_class->stop = gst_omx_h264_enc_stop;
 
   videoenc_class->cdata.default_src_template_caps = "video/x-h264, "
       "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
@@ -186,6 +193,28 @@ gst_omx_h264_enc_init (GstOMXH264Enc * self)
       GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT;
   self->interval_intraframes =
       GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT;
+}
+
+static gboolean
+gst_omx_h264_enc_flush (GstVideoEncoder * enc)
+{
+  GstOMXH264Enc *self = GST_OMX_H264_ENC (enc);
+
+  g_list_free_full (self->headers, (GDestroyNotify) gst_buffer_unref);
+  self->headers = NULL;
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->flush (enc);
+}
+
+static gboolean
+gst_omx_h264_enc_stop (GstVideoEncoder * enc)
+{
+  GstOMXH264Enc *self = GST_OMX_H264_ENC (enc);
+
+  g_list_free_full (self->headers, (GDestroyNotify) gst_buffer_unref);
+  self->headers = NULL;
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->stop (enc);
 }
 
 static gboolean
@@ -511,9 +540,11 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
 }
 
 static GstFlowReturn
-gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
+gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * enc, GstOMXPort * port,
     GstOMXBuffer * buf, GstVideoCodecFrame * frame)
 {
+  GstOMXH264Enc *self = GST_OMX_H264_ENC (enc);
+
   if (buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG) {
     /* The codec data is SPS/PPS with a startcode => bytestream stream format
      * For bytestream stream format the SPS/PPS is only in-stream and not
@@ -522,12 +553,10 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
     if (buf->omx_buf->nFilledLen >= 4 &&
         GST_READ_UINT32_BE (buf->omx_buf->pBuffer +
             buf->omx_buf->nOffset) == 0x00000001) {
-      GList *l = NULL;
       GstBuffer *hdrs;
       GstMapInfo map = GST_MAP_INFO_INIT;
 
       GST_DEBUG_OBJECT (self, "got codecconfig in byte-stream format");
-      buf->omx_buf->nFlags &= ~OMX_BUFFERFLAG_CODECCONFIG;
 
       hdrs = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
 
@@ -536,18 +565,20 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
           buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
           buf->omx_buf->nFilledLen);
       gst_buffer_unmap (hdrs, &map);
-      l = g_list_append (l, hdrs);
-      gst_video_encoder_set_headers (GST_VIDEO_ENCODER (self), l);
+      self->headers = g_list_append (self->headers, hdrs);
 
       if (frame)
         gst_video_codec_frame_unref (frame);
 
       return GST_FLOW_OK;
     }
+  } else if (self->headers) {
+    gst_video_encoder_set_headers (GST_VIDEO_ENCODER (self), self->headers);
+    self->headers = NULL;
   }
 
   return
       GST_OMX_VIDEO_ENC_CLASS
-      (gst_omx_h264_enc_parent_class)->handle_output_frame (self, port, buf,
+      (gst_omx_h264_enc_parent_class)->handle_output_frame (enc, port, buf,
       frame);
 }

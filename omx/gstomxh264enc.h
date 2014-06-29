@@ -51,6 +51,8 @@ struct _GstOMXH264Enc
 #endif
   guint32 periodicty_idr;
   guint32 interval_intraframes;
+
+  GList *headers;
 };
 
 struct _GstOMXH264EncClass
