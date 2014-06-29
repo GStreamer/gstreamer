@@ -842,6 +842,9 @@ _gst_mpegts_atsc_stt_free (GstMpegtsAtscSTT * stt)
 {
   if (stt->descriptors)
     g_ptr_array_unref (stt->descriptors);
+  if (stt->utc_datetime)
+    gst_date_time_unref (stt->utc_datetime);
+
   g_slice_free (GstMpegtsAtscSTT, stt);
 }
 

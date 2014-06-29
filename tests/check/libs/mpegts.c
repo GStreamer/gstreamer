@@ -78,7 +78,7 @@ GST_START_TEST (test_mpegts_pat)
   gsize data_size;
 
   /* Check creation of PAT */
-  pat = g_ptr_array_new ();
+  pat = gst_mpegts_pat_new ();
 
   for (i = 0; i < 2; i++) {
     program = gst_mpegts_pat_program_new ();
@@ -103,6 +103,8 @@ GST_START_TEST (test_mpegts_pat)
     assert_equals_int (program->program_number, i);
     assert_equals_int (program->network_or_program_map_PID, 0x30 + i);
   }
+  g_ptr_array_unref (pat);
+  pat = NULL;
 
   /* Packetize the section, and check the data integrity */
   data = gst_mpegts_section_packetize (pat_section, &data_size);
@@ -116,13 +118,13 @@ GST_START_TEST (test_mpegts_pat)
 
   /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
   pat_section->data[pat_section->section_length - 1]++;
+  pat_section->destroy_parsed (pat_section->cached_parsed);
   pat_section->cached_parsed = NULL;
-  pat = gst_mpegts_section_get_pat (pat_section);
 
+  pat = gst_mpegts_section_get_pat (pat_section);
   fail_unless (pat == NULL);
 
   gst_mpegts_section_unref (pat_section);
-
 }
 
 GST_END_TEST;
@@ -197,6 +199,7 @@ GST_START_TEST (test_mpegts_pmt)
 
   /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
   pmt_section->data[pmt_section->section_length - 1]++;
+  pmt_section->destroy_parsed (pmt_section->cached_parsed);
   pmt_section->cached_parsed = NULL;
   pmt = (GstMpegtsPMT *) gst_mpegts_section_get_pmt (pmt_section);
 
@@ -261,6 +264,8 @@ GST_START_TEST (test_mpegts_nit)
   fail_unless (gst_mpegts_descriptor_parse_dvb_network_name (desc,
           &name) == TRUE);
 
+  g_free (name);
+
   for (i = 0; i < 2; i++) {
     stream = g_ptr_array_index (nit->streams, i);
 
@@ -274,6 +279,7 @@ GST_START_TEST (test_mpegts_nit)
 
     fail_unless (gst_mpegts_descriptor_parse_dvb_network_name (desc,
             &name) == TRUE);
+    g_free (name);
   }
 
   /* Packetize the section, and check data integrity */
@@ -289,6 +295,7 @@ GST_START_TEST (test_mpegts_nit)
 
   /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
   nit_section->data[nit_section->section_length - 1]++;
+  nit_section->destroy_parsed (nit_section->cached_parsed);
   nit_section->cached_parsed = NULL;
   nit = (GstMpegtsNIT *) gst_mpegts_section_get_nit (nit_section);
 
@@ -377,6 +384,7 @@ GST_START_TEST (test_mpegts_sdt)
 
   /* Check assertion on bad CRC. Reset parsed data, and make the CRC corrupt */
   sdt_section->data[sdt_section->section_length - 1]++;
+  sdt_section->destroy_parsed (sdt_section->cached_parsed);
   sdt_section->cached_parsed = NULL;
   sdt = (GstMpegtsSDT *) gst_mpegts_section_get_sdt (sdt_section);
 
@@ -445,6 +453,7 @@ GST_START_TEST (test_mpegts_descriptors)
       fail ("0x%X != 0x%X in byte %d of registration descriptor",
           desc->data[i], registration_descriptor[i], i);
   }
+  g_boxed_free (GST_TYPE_MPEGTS_DESCRIPTOR, desc);
 }
 
 GST_END_TEST;
@@ -488,11 +497,13 @@ GST_START_TEST (test_mpegts_dvb_descriptors)
   ret = gst_mpegts_descriptor_parse_dvb_network_name (desc, &string);
   fail_unless (ret == TRUE);
   fail_unless (strcmp (string, "Name") == 0);
+  g_free (string);
+  g_boxed_free (GST_TYPE_MPEGTS_DESCRIPTOR, desc);
 
   /* Descriptor should fail if string is more than 255 bytes */
   memset (long_string, 0x41, 256);
   long_string[256] = 0x00;
-  ASSERT_CRITICAL (gst_mpegts_descriptor_from_dvb_network_name (long_string));
+  fail_if (gst_mpegts_descriptor_from_dvb_network_name (long_string) != NULL);
 
   /*
    * Service descriptor (0x48)
@@ -518,6 +529,9 @@ GST_START_TEST (test_mpegts_dvb_descriptors)
   fail_unless (service_type == GST_DVB_SERVICE_DIGITAL_TELEVISION);
   fail_unless (strcmp (string, "Name") == 0);
   fail_unless (strcmp (provider, "Provider") == 0);
+  g_free (string);
+  g_free (provider);
+  g_boxed_free (GST_TYPE_MPEGTS_DESCRIPTOR, desc);
 
   /* Check creation of descriptor without data */
   desc = gst_mpegts_descriptor_from_dvb_service
@@ -529,6 +543,7 @@ GST_START_TEST (test_mpegts_dvb_descriptors)
   /* Check parsing of descriptor without data */
   ret = gst_mpegts_descriptor_parse_dvb_service (desc, NULL, NULL, NULL);
   fail_unless (ret == TRUE);
+  g_boxed_free (GST_TYPE_MPEGTS_DESCRIPTOR, desc);
 
   /* Descriptor should fail if string is more than 255 bytes */
   memset (long_string, 0x41, 256);
