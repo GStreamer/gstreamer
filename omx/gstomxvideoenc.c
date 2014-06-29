@@ -74,8 +74,7 @@ static gboolean gst_omx_video_enc_start (GstVideoEncoder * encoder);
 static gboolean gst_omx_video_enc_stop (GstVideoEncoder * encoder);
 static gboolean gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
-static gboolean gst_omx_video_enc_reset (GstVideoEncoder * encoder,
-    gboolean hard);
+static gboolean gst_omx_video_enc_flush (GstVideoEncoder * encoder);
 static GstFlowReturn gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_omx_video_enc_finish (GstVideoEncoder * encoder);
@@ -171,7 +170,7 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
   video_encoder_class->close = GST_DEBUG_FUNCPTR (gst_omx_video_enc_close);
   video_encoder_class->start = GST_DEBUG_FUNCPTR (gst_omx_video_enc_start);
   video_encoder_class->stop = GST_DEBUG_FUNCPTR (gst_omx_video_enc_stop);
-  video_encoder_class->reset = GST_DEBUG_FUNCPTR (gst_omx_video_enc_reset);
+  video_encoder_class->flush = GST_DEBUG_FUNCPTR (gst_omx_video_enc_flush);
   video_encoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_omx_video_enc_set_format);
   video_encoder_class->handle_frame =
@@ -734,7 +733,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
   g_assert (acq_return == GST_OMX_ACQUIRE_BUFFER_OK);
 
   /* This prevents a deadlock between the srcpad stream
-   * lock and the videocodec stream lock, if ::reset()
+   * lock and the videocodec stream lock, if ::flush()
    * is called at the wrong time
    */
   if (gst_omx_port_is_flushing (self->enc_out_port)) {
@@ -1179,13 +1178,13 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
 }
 
 static gboolean
-gst_omx_video_enc_reset (GstVideoEncoder * encoder, gboolean hard)
+gst_omx_video_enc_flush (GstVideoEncoder * encoder)
 {
   GstOMXVideoEnc *self;
 
   self = GST_OMX_VIDEO_ENC (encoder);
 
-  GST_DEBUG_OBJECT (self, "Resetting encoder");
+  GST_DEBUG_OBJECT (self, "Flushing encoder");
 
   if (gst_omx_component_get_state (self->enc, 0) == OMX_StateLoaded)
     return TRUE;
