@@ -166,7 +166,7 @@ GST_START_TEST (test_simple_operation)
   ASSERT_OBJECT_REFCOUNT (oper, "oper", 1);
 
   gst_bin_add (GST_BIN (comp), source);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
 
   ASSERT_OBJECT_REFCOUNT (source, "source", 1);
@@ -174,7 +174,7 @@ GST_START_TEST (test_simple_operation)
   /* Add operaton */
 
   gst_bin_add (GST_BIN (comp), oper);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
 
   ASSERT_OBJECT_REFCOUNT (oper, "oper", 1);
@@ -190,7 +190,7 @@ GST_START_TEST (test_simple_operation)
 
   /* re-add source */
   gst_bin_add (GST_BIN (comp), source);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
   gst_object_unref (source);
 
@@ -255,7 +255,7 @@ GST_START_TEST (test_pyramid_operations)
   ASSERT_OBJECT_REFCOUNT (oper2, "oper2", 1);
 
   gst_bin_add (GST_BIN (comp), source);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (source, 0, 10 * GST_SECOND, 10 * GST_SECOND);
   check_start_stop_duration (comp, 0, 10 * GST_SECOND, 10 * GST_SECOND);
 
@@ -264,7 +264,7 @@ GST_START_TEST (test_pyramid_operations)
   /* Add operation 1 */
 
   gst_bin_add (GST_BIN (comp), oper1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (oper1, 4 * GST_SECOND, 6 * GST_SECOND,
       2 * GST_SECOND);
   check_start_stop_duration (comp, 0, 10 * GST_SECOND, 10 * GST_SECOND);
@@ -274,7 +274,7 @@ GST_START_TEST (test_pyramid_operations)
   /* Add operation 2 */
 
   gst_bin_add (GST_BIN (comp), oper2);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (oper2, 2 * GST_SECOND, 8 * GST_SECOND,
       6 * GST_SECOND);
   check_start_stop_duration (comp, 0, 10 * GST_SECOND, 10 * GST_SECOND);
@@ -355,25 +355,25 @@ GST_START_TEST (test_pyramid_operations2)
   /* Add source 1 */
 
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
   /* Add source 2 */
 
   gst_bin_add (GST_BIN (comp), source2);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 6 * GST_SECOND, 6 * GST_SECOND);
 
   /* Add operation */
 
   gst_bin_add (GST_BIN (comp), oper);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 6 * GST_SECOND, 6 * GST_SECOND);
 
   /* Add default */
 
   gst_bin_add (GST_BIN (comp), def);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 6 * GST_SECOND, 6 * GST_SECOND);
 
 
@@ -458,7 +458,7 @@ GST_START_TEST (test_pyramid_operations_expandable)
   /* Add default */
   gst_bin_add (GST_BIN (comp), def);
 
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (source1, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   check_start_stop_duration (oper, 0 * GST_SECOND, 6 * GST_SECOND,
       6 * GST_SECOND);
@@ -551,7 +551,7 @@ GST_START_TEST (test_complex_operations)
   gst_bin_add (GST_BIN (comp), oper);
   check_start_stop_duration (comp, 0, 0, 0);
 
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 6 * GST_SECOND, 6 * GST_SECOND);
 
   ASSERT_OBJECT_REFCOUNT (oper, "oper", 1);
@@ -632,14 +632,14 @@ GST_START_TEST (test_complex_operations_bis)
 
   /* Add source1 */
   gst_bin_add (GST_BIN (comp), source1);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 4 * GST_SECOND, 4 * GST_SECOND);
 
   ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   /* Add source2 */
   gst_bin_add (GST_BIN (comp), source2);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 6 * GST_SECOND, 6 * GST_SECOND);
 
   ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
@@ -647,7 +647,7 @@ GST_START_TEST (test_complex_operations_bis)
   /* Add operaton */
 
   gst_bin_add (GST_BIN (comp), oper);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
+  commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 6 * GST_SECOND, 6 * GST_SECOND);
   /* Since it's expandable, it should have changed to full length */
   check_start_stop_duration (oper, 0 * GST_SECOND, 6 * GST_SECOND,

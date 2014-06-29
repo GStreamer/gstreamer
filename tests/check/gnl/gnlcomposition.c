@@ -252,9 +252,9 @@ GST_START_TEST (test_simple_adder)
   fail_unless (gst_bin_add (GST_BIN (composition), gnlsource2));
   fail_unless (gst_element_link (composition, fakesink) == TRUE);
 
-  GST_DEBUG ("Setting pipeline to PAUSED");
+  GST_DEBUG ("Setting pipeline to PLAYING");
 
-  g_signal_emit_by_name (composition, "commit", TRUE, &ret);
+  commit_and_wait (composition, &ret);
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING)
       == GST_STATE_CHANGE_FAILURE);
 

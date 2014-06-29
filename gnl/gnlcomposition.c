@@ -200,7 +200,7 @@ static void
 compare_relink_single_node (GnlComposition * comp, GNode * node,
     GNode * oldstack);
 static gboolean update_pipeline_func (GnlComposition * comp);
-static gboolean commit_pipeline_func (GnlComposition *comp);
+static gboolean commit_pipeline_func (GnlComposition * comp);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -309,7 +309,8 @@ _start_task (GnlComposition * comp)
 
   task = comp->task;
   if (task == NULL) {
-    task = gst_task_new ((GstTaskFunction) iterate_main_context_func, comp, NULL);
+    task =
+        gst_task_new ((GstTaskFunction) iterate_main_context_func, comp, NULL);
     gst_task_set_lock (task, GET_TASK_LOCK (comp));
     GST_INFO_OBJECT (comp, "created task %p", task);
     comp->task = task;
@@ -482,9 +483,10 @@ gnl_composition_class_init (GnlCompositionClass * klass)
       G_STRUCT_OFFSET (GnlObjectClass, commit_signal_handler), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 1, G_TYPE_BOOLEAN);
 
-  _signals[COMMITED_SIGNAL] = g_signal_new ("commited", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
+  _signals[COMMITED_SIGNAL] =
+      g_signal_new ("commited", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
+      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      G_TYPE_BOOLEAN);
 
   gnlobject_class->commit = gnl_composition_commit_func;
 }
@@ -1861,7 +1863,7 @@ set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp)
 }
 
 static gboolean
-commit_pipeline_func (GnlComposition *comp)
+commit_pipeline_func (GnlComposition * comp)
 {
   GList *tmp;
   gboolean commited = FALSE;
@@ -1890,8 +1892,12 @@ commit_pipeline_func (GnlComposition *comp)
   priv->objects_stop = g_list_sort
       (priv->objects_stop, (GCompareFunc) objects_stop_compare);
 
-  /* And update the pipeline at current position if needed */
-  update_pipeline_at_current_position (comp);
+  if (GST_STATE (comp) < GST_STATE_PAUSED) {
+    update_start_stop_duration (comp);
+  } else {
+    /* And update the pipeline at current position if needed */
+    update_pipeline_at_current_position (comp);
+  }
   COMP_OBJECTS_UNLOCK (comp);
 
   GST_ERROR ("emitted signal");
@@ -1935,7 +1941,7 @@ update_pipeline_func (GnlComposition * comp)
         GST_TIME_ARGS (epos));
     gst_element_post_message (GST_ELEMENT_CAST (comp),
         gst_message_new_segment_done (GST_OBJECT (comp),
-          priv->segment->format, epos));
+            priv->segment->format, epos));
     gst_pad_push_event (GNL_OBJECT (comp)->srcpad,
         gst_event_new_segment_done (priv->segment->format, epos));
   }
