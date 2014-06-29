@@ -270,6 +270,13 @@ gst_edge_detect_handle_sink_event (GstPad * pad, GstObject * parent,
       gst_structure_get_int (structure, "width", &width);
       gst_structure_get_int (structure, "height", &height);
 
+      if (filter->cvImage != NULL) {
+        cvReleaseImage (&filter->cvImage);
+        cvReleaseImage (&filter->cvCEdge);
+        cvReleaseImage (&filter->cvGray);
+        cvReleaseImage (&filter->cvEdge);
+      }
+
       filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
       filter->cvCEdge = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
       filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
