@@ -165,12 +165,6 @@ gst_yadif_class_init (GstYadifClass * klass)
 static void
 gst_yadif_init (GstYadif * yadif)
 {
-
-  yadif->sinkpad = gst_pad_new_from_static_template (&gst_yadif_sink_template,
-      "sink");
-
-  yadif->srcpad = gst_pad_new_from_static_template (&gst_yadif_src_template,
-      "src");
 }
 
 void

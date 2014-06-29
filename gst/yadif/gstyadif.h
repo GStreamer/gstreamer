@@ -45,9 +45,6 @@ struct _GstYadif
 {
   GstBaseTransform base_yadif;
 
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
   GstDeinterlaceMode mode;
 
   GstVideoInfo video_info;
