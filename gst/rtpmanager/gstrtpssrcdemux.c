@@ -215,7 +215,7 @@ forward_initial_events (GstRtpSsrcDemux * demux, guint32 ssrc, GstPad * pad,
     PadType padtype)
 {
   struct ForwardStickyEventData fdata;
-  GstPad *sinkpad;
+  GstPad *sinkpad = NULL;
 
   if (padtype == RTP_PAD)
     sinkpad = demux->rtp_sink;
