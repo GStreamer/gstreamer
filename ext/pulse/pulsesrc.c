@@ -1240,7 +1240,7 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps ** caps,
   const pa_channel_map *m;
   GstStructure *s;
   gboolean need_channel_layout = FALSE;
-  GstAudioRingBufferSpec new_spec, *spec;
+  GstAudioRingBufferSpec new_spec, *spec = NULL;
   const gchar *name;
   int i;
 
