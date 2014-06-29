@@ -2728,6 +2728,8 @@ gst_uvc_h264_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       self->secondary_format = UVC_H264_SRC_FORMAT_RAW;
     } else {
       g_assert_not_reached ();
+      type = NONE_NONE;
+      self->main_format = UVC_H264_SRC_FORMAT_NONE;
     }
   } else {
     type = NONE_NONE;
