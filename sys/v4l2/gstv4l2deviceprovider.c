@@ -438,8 +438,8 @@ gst_v4l2_device_new (const gchar * device_path, const gchar * device_name,
     GstCaps * caps, GstV4l2DeviceType type)
 {
   GstV4l2Device *gstdev;
-  const gchar *element;
-  const gchar *klass;
+  const gchar *element = NULL;
+  const gchar *klass = NULL;
 
   g_return_val_if_fail (device_path, NULL);
   g_return_val_if_fail (device_name, NULL);
