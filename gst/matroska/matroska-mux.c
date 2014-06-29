@@ -1911,8 +1911,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     guint8 *codec_priv;
     guint codec_priv_size;
     guint16 format = 0;
-    gint block_align;
-    gint bitrate;
+    gint block_align = 0;
+    gint bitrate = 0;
 
     if (samplerate == 0 || channels == 0) {
       GST_WARNING_OBJECT (mux, "Missing channels/samplerate on caps");
