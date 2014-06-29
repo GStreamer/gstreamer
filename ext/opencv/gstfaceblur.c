@@ -121,6 +121,7 @@ gst_face_blur_finalize (GObject * obj)
   if (filter->cvImage) {
     cvReleaseImage (&filter->cvImage);
     cvReleaseImage (&filter->cvGray);
+    cvReleaseMemStorage (&filter->cvStorage);
   }
 
   g_free (filter->profile);
@@ -240,6 +241,12 @@ gst_face_blur_handle_sink_event (GstPad * pad, GstObject * parent,
       structure = gst_caps_get_structure (caps, 0);
       gst_structure_get_int (structure, "width", &width);
       gst_structure_get_int (structure, "height", &height);
+
+      if (filter->cvImage) {
+        cvReleaseImage (&filter->cvImage);
+        cvReleaseImage (&filter->cvGray);
+        cvReleaseMemStorage (&filter->cvStorage);
+      }
 
       filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
       filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
