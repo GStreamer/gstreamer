@@ -573,7 +573,7 @@ static gboolean
 gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
 {
   GstCaps *caps;
-  GstVC1Profile profile;
+  GstVC1Profile profile = -1;
   const gchar *stream_format, *header_format;
 
   if (gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (vc1parse))
@@ -611,7 +611,7 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
     g_assert_not_reached ();
 
   if (profile == GST_VC1_PROFILE_ADVANCED) {
-    const gchar *level;
+    const gchar *level = NULL;
     /* Caller must make sure this is valid here */
     g_assert (vc1parse->seq_hdr_buffer);
     switch ((GstVC1Level) vc1parse->seq_hdr.advanced.level) {
@@ -651,7 +651,7 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
         "profile", G_TYPE_STRING, profile_str, NULL);
 
     if (vc1parse->seq_layer_buffer) {
-      const gchar *level;
+      const gchar *level = NULL;
       switch (vc1parse->seq_layer.struct_b.level) {
         case GST_VC1_LEVEL_LOW:
           level = "low";
