@@ -59,7 +59,7 @@ expect_write (GstSparseFile * file, gsize offset, gsize count, gsize result,
     gsize avail)
 {
   GError *error = NULL;
-  gchar buffer[200];
+  gchar buffer[200] = { 0, };
   gsize res, a;
 
   res = gst_sparse_file_write (file, offset, buffer, count, &a, &error);
