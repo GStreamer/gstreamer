@@ -310,7 +310,9 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
     GstVideoFrame * outframe, gint cur_field_idx)
 {
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
+#ifndef G_DISABLE_ASSERT
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
+#endif
   GstDeinterlaceScanlineData scanlines;
   guint cur_field_flags;
   gint i;
@@ -519,7 +521,9 @@ gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
     GstVideoFrame * outframe, gint cur_field_idx)
 {
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
+#ifndef G_DISABLE_ASSERT
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
+#endif
   const GstVideoFrame *frame0, *frame1, *frame2, *framep;
   guint cur_field_flags = history[cur_field_idx].flags;
   gint i;
@@ -562,7 +566,9 @@ gst_deinterlace_simple_method_deinterlace_frame_nv12 (GstDeinterlaceMethod *
     GstVideoFrame * outframe, gint cur_field_idx)
 {
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
+#ifndef G_DISABLE_ASSERT
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
+#endif
   const GstVideoFrame *frame0, *frame1, *frame2, *framep;
   guint cur_field_flags = history[cur_field_idx].flags;
   gint i;
