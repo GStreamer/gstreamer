@@ -606,8 +606,8 @@ gst_pulse_device_new (guint device_index, const gchar * device_name,
     GstCaps * caps, const gchar * internal_name, GstPulseDeviceType type)
 {
   GstPulseDevice *gstdev;
-  const gchar *element;
-  const gchar *klass;
+  const gchar *element = NULL;
+  const gchar *klass = NULL;
 
   g_return_val_if_fail (device_name, NULL);
   g_return_val_if_fail (internal_name, NULL);
