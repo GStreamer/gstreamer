@@ -2813,8 +2813,10 @@ caps_changed (GstPad * pad, GParamSpec * pspec, GstRtpBinSession * session)
   s = gst_caps_get_structure (caps, 0);
 
   /* get payload, finish when it's not there */
-  if (!gst_structure_get_int (s, "payload", &payload))
+  if (!gst_structure_get_int (s, "payload", &payload)) {
+    gst_caps_unref (caps);
     return;
+  }
 
   GST_RTP_SESSION_LOCK (session);
   GST_DEBUG_OBJECT (bin, "insert caps for payload %d", payload);
