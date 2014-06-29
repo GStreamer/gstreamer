@@ -137,6 +137,8 @@ gst_opencv_text_overlay_finalize (GObject * obj)
     cvReleaseImage (&filter->cvImage);
   }
 
+  g_free (filter->textbuf);
+
   G_OBJECT_CLASS (gst_opencv_text_overlay_parent_class)->finalize (obj);
 }
 
@@ -243,7 +245,6 @@ gst_opencv_text_overlay_init (GstOpencvTextOverlay * filter)
   filter->colorR = DEFAULT_PROP_COLOR;
   filter->colorG = DEFAULT_PROP_COLOR;
   filter->colorB = DEFAULT_PROP_COLOR;
-
 }
 
 static void
