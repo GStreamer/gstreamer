@@ -785,9 +785,9 @@ blit_bgra_premultiplied (GstAssRender * render, ASS_Image * ass_image,
 static gboolean
 gst_ass_render_can_handle_caps (GstCaps * incaps)
 {
+  static GstStaticCaps static_caps = GST_STATIC_CAPS (ASSRENDER_CAPS);
   gboolean ret;
   GstCaps *caps;
-  GstStaticCaps static_caps = GST_STATIC_CAPS (ASSRENDER_CAPS);
 
   caps = gst_static_caps_get (&static_caps);
   ret = gst_caps_is_subset (incaps, caps);
