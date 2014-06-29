@@ -38,7 +38,6 @@ struct _GstInterSubSrc
 {
   GstBaseSrc base_intersubsrc;
 
-  GstPad *srcpad;
   GstInterSurface *surface;
   char *channel;
 

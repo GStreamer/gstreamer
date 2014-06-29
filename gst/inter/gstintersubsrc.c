@@ -120,10 +120,6 @@ gst_inter_sub_src_class_init (GstInterSubSrcClass * klass)
 static void
 gst_inter_sub_src_init (GstInterSubSrc * intersubsrc)
 {
-
-  intersubsrc->srcpad =
-      gst_pad_new_from_static_template (&gst_inter_sub_src_src_template, "src");
-
   gst_base_src_set_format (GST_BASE_SRC (intersubsrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (intersubsrc), TRUE);
 
