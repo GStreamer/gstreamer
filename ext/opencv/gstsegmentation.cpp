@@ -360,6 +360,8 @@ gst_segmentation_release_all_pointers (GstSegmentation * filter)
   cvReleaseImage (&filter->ch2);
   cvReleaseImage (&filter->ch3);
 
+  cvReleaseMemStorage (&filter->mem_storage);
+
   g_free (filter->TcodeBook);
   finalise_mog (filter);
 }
