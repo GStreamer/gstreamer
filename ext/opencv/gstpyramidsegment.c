@@ -125,10 +125,10 @@ gst_pyramid_segment_finalize (GObject * obj)
     cvReleaseImage (&filter->cvSegmentedImage);
   }
 
+  cvReleaseMemStorage (&filter->storage);
+
   G_OBJECT_CLASS (gst_pyramid_segment_parent_class)->finalize (obj);
 }
-
-
 
 /* initialize the pyramidsegment's class */
 static void
