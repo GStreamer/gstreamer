@@ -338,6 +338,7 @@ GST_START_TEST (test_upload_meta_producer)
 
   gst_object_unref (upload_meta);
   gst_gl_context_del_texture (context, &tex_ids[0]);
+  gst_buffer_unref (buffer);
 }
 
 GST_END_TEST;
