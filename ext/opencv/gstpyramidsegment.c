@@ -122,7 +122,6 @@ gst_pyramid_segment_finalize (GObject * obj)
 
   if (filter->cvImage != NULL) {
     cvReleaseImage (&filter->cvImage);
-    cvReleaseImage (&filter->cvSegmentedImage);
   }
 
   cvReleaseMemStorage (&filter->storage);
@@ -273,6 +272,9 @@ gst_pyramid_segment_handle_sink_event (GstPad * pad, GstObject * parent,
       gst_event_parse_caps (event, &caps);
       gst_video_info_from_caps (&info, caps);
 
+      if (filter->cvImage != NULL) {
+        cvReleaseImage (&filter->cvImage);
+      }
       filter->cvImage =
           cvCreateImage (cvSize (info.width, info.height), IPL_DEPTH_8U, 3);
       break;
