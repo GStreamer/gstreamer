@@ -266,6 +266,9 @@ gst_template_match_handle_sink_event (GstPad * pad, GstObject * parent,
       gst_event_parse_caps (event, &caps);
       gst_video_info_from_caps (&info, caps);
 
+      if (filter->cvImage) {
+        cvReleaseImageHeader (&filter->cvImage);
+      }
       filter->cvImage =
           cvCreateImageHeader (cvSize (info.width, info.height), IPL_DEPTH_8U,
           3);
@@ -406,6 +409,10 @@ static void
 gst_template_match_load_template (GstTemplateMatch * filter)
 {
   if (filter->template) {
+
+    if (filter->cvTemplateImage) {
+      cvReleaseImage (&filter->cvTemplateImage);
+    }
     filter->cvTemplateImage =
         cvLoadImage (filter->template, CV_LOAD_IMAGE_COLOR);
 
