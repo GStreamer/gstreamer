@@ -647,7 +647,6 @@ gst_schro_enc_handle_frame (GstVideoEncoder * base_video_encoder,
     GST_DEBUG ("granule offset %" G_GINT64_FORMAT, schro_enc->granule_offset);
   }
 
-  /* FIXME : We could make that method just take GstVideoInfo ... */
   schro_frame = gst_schro_buffer_wrap (frame->input_buffer, FALSE, info);
 
   GST_DEBUG ("pushing frame %p", frame);
