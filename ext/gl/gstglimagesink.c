@@ -358,6 +358,7 @@ gst_glimage_sink_finalize (GObject * object)
   g_free (glimage_sink->display_name);
 
   GST_DEBUG ("finalized");
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
