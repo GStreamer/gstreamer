@@ -106,7 +106,7 @@ gst_test_aggregator_aggregate (GstAggregator * aggregator)
   gst_iterator_free (iter);
 
   if (all_eos == TRUE) {
-    GST_ERROR_OBJECT (testagg, "no data available, must be EOS");
+    GST_INFO_OBJECT (testagg, "no data available, must be EOS");
     gst_pad_push_event (aggregator->srcpad, gst_event_new_eos ());
     return GST_FLOW_EOS;
   }
@@ -257,7 +257,7 @@ push_event (gpointer user_data)
 {
   ChainData *chain_data = (ChainData *) user_data;
 
-  GST_ERROR_OBJECT (chain_data->srcpad, "Pushing event: %"
+  GST_INFO_OBJECT (chain_data->srcpad, "Pushing event: %"
       GST_PTR_FORMAT, chain_data->event);
   fail_unless (gst_pad_push_event (chain_data->srcpad,
           chain_data->event) == TRUE);
