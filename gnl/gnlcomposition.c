@@ -637,6 +637,8 @@ gnl_composition_finalize (GObject * object)
   g_rec_mutex_clear (&comp->task_rec_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+
+  g_mutex_clear (&priv->mcontext_lock);
 }
 
 static void
