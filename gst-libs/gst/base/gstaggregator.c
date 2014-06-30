@@ -163,6 +163,7 @@ struct _GstAggregatorPrivate
    * we can not add any source, avoiding:
    * "g_source_attach: assertion '!SOURCE_DESTROYED (source)' failed" */
   GMutex mcontext_lock;
+  GList *gsources;
 
   gboolean send_stream_start;
   gboolean send_segment;
@@ -375,17 +376,22 @@ _push_eos (GstAggregator * self)
   gst_pad_push_event (self->srcpad, gst_event_new_eos ());
 }
 
+
+static void
+_destroy_gsource (GSource * source)
+{
+  g_source_destroy (source);
+  g_source_unref (source);
+}
+
 static void
 _remove_all_sources (GstAggregator * self)
 {
-  GSource *source;
+  GstAggregatorPrivate *priv = self->priv;
 
   MAIN_CONTEXT_LOCK (self);
-  while ((source =
-          g_main_context_find_source_by_user_data (self->priv->mcontext,
-              self))) {
-    g_source_destroy (source);
-  }
+  g_list_free_full (priv->gsources, (GDestroyNotify) _destroy_gsource);
+  priv->gsources = NULL;
   MAIN_CONTEXT_UNLOCK (self);
 }
 
@@ -488,9 +494,14 @@ _start_srcpad_task (GstAggregator * self)
 static inline void
 _add_aggregate_gsource (GstAggregator * self)
 {
+  GSource *source;
+  GstAggregatorPrivate *priv = self->priv;
+
   MAIN_CONTEXT_LOCK (self);
-  g_main_context_invoke (self->priv->mcontext, (GSourceFunc) aggregate_func,
-      self);
+  source = g_idle_source_new ();
+  g_source_set_callback (source, (GSourceFunc) aggregate_func, self, NULL);
+  priv->gsources = g_list_prepend (priv->gsources, source);
+  g_source_attach (source, priv->mcontext);
   MAIN_CONTEXT_UNLOCK (self);
 }
 
@@ -1017,6 +1028,17 @@ gst_aggregator_finalize (GObject * object)
   G_OBJECT_CLASS (aggregator_parent_class)->finalize (object);
 }
 
+static void
+gst_aggregator_dispose (GObject * object)
+{
+  GstAggregator *self = (GstAggregator *) object;
+
+  G_OBJECT_CLASS (aggregator_parent_class)->dispose (object);
+
+  g_main_context_unref (self->priv->mcontext);
+  _remove_all_sources (self);
+}
+
 /* GObject vmethods implementations */
 static void
 gst_aggregator_class_init (GstAggregatorClass * klass)
@@ -1045,6 +1067,7 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (_change_state);
 
   gobject_class->finalize = gst_aggregator_finalize;
+  gobject_class->dispose = gst_aggregator_dispose;
 }
 
 static void
