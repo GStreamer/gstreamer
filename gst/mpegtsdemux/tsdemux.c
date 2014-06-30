@@ -1196,6 +1196,12 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
               "stream-format", G_TYPE_STRING, "byte-stream",
               "alignment", G_TYPE_STRING, "nal", NULL);
           break;
+        case DRF_ID_KLVA:
+          sparse = TRUE;
+          is_private = TRUE;
+          caps = gst_caps_new_simple ("meta/x-klv",
+              "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+          break;
       }
       if (caps)
         break;
@@ -1851,7 +1857,7 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
       stream->expected_size -= header.header_size;
     } else {
       /* next packet will have to complete this one */
-      GST_ERROR ("invalid header and packet size combination");
+      GST_WARNING ("invalid header and packet size combination, empty packet");
       stream->expected_size = 0;
     }
   }
