@@ -57,6 +57,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma GCC optimize ("gnu89-inline")
 #endif
 
+#define GST_USE_UNSTABLE_API
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gstgldisplay_egl.h>
 
