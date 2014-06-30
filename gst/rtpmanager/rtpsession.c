@@ -2393,7 +2393,11 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
 
       value = g_strndup ((const gchar *) data, len);
 
-      gst_structure_set (sdes, name, G_TYPE_STRING, value, NULL);
+      if (g_utf8_validate (value, -1, NULL)) {
+        gst_structure_set (sdes, name, G_TYPE_STRING, value, NULL);
+      } else {
+        GST_WARNING ("ignore SDES field %s with non-utf8 data %s", name, value);
+      }
 
       g_free (name);
       g_free (value);
