@@ -36,6 +36,8 @@ G_BEGIN_DECLS
  * @GST_VAAPI_SURFACE_PROXY_FLAG_TFF: top-field-first
  * @GST_VAAPI_SURFACE_PROXY_FLAG_RFF: repeat-field-first
  * @GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD: only one field is available
+ * @GST_VAAPI_SURFACE_PROXY_FLAG_FFB: first frame in bundle, e.g. the first
+ *   view component of a MultiView Coded (MVC) frame
  * @GST_VAAPI_SURFACE_PROXY_FLAG_LAST: first flag that can be used by subclasses
  *
  * Flags for #GstVaapiDecoderFrame.
@@ -45,6 +47,7 @@ typedef enum {
     GST_VAAPI_SURFACE_PROXY_FLAG_TFF            = (1 << 1),
     GST_VAAPI_SURFACE_PROXY_FLAG_RFF            = (1 << 2),
     GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD       = (1 << 3),
+    GST_VAAPI_SURFACE_PROXY_FLAG_FFB            = (1 << 4),
     GST_VAAPI_SURFACE_PROXY_FLAG_LAST           = (1 << 8)
 } GstVaapiSurfaceProxyFlags;
 
@@ -66,6 +69,16 @@ typedef enum {
  */
 #define GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy) \
     gst_vaapi_surface_proxy_get_surface_id(proxy)
+
+/**
+ * GST_VAAPI_SURFACE_PROXY_VIEW_ID:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Macro that evaluates to the decoded view ID of the underlying @proxy
+ * surface.
+ */
+#define GST_VAAPI_SURFACE_PROXY_VIEW_ID(proxy) \
+    gst_vaapi_surface_proxy_get_view_id(proxy)
 
 /**
  * GST_VAAPI_SURFACE_PROXY_TIMESTAMP:
@@ -111,6 +124,9 @@ gst_vaapi_surface_proxy_get_surface(GstVaapiSurfaceProxy *proxy);
 
 GstVaapiID
 gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy);
+
+guintptr
+gst_vaapi_surface_proxy_get_view_id(GstVaapiSurfaceProxy *proxy);
 
 GstClockTime
 gst_vaapi_surface_proxy_get_timestamp(GstVaapiSurfaceProxy *proxy);

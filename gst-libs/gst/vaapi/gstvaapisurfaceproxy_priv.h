@@ -40,6 +40,7 @@ struct _GstVaapiSurfaceProxy {
 
     GstVaapiVideoPool  *pool;
     GstVaapiSurface    *surface;
+    guintptr            view_id;
     GstClockTime        timestamp;
     GstClockTime        duration;
     GDestroyNotify      destroy_func;
@@ -76,6 +77,19 @@ struct _GstVaapiSurfaceProxy {
 #undef  GST_VAAPI_SURFACE_PROXY_SURFACE_ID
 #define GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy) \
     GST_VAAPI_OBJECT_ID(GST_VAAPI_SURFACE_PROXY(proxy)->surface)
+
+/**
+ * GST_VAAPI_SURFACE_PROXY_VIEW_ID:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Macro that evaluates to the decoded view ID of the underlying @proxy
+ * surface.
+ *
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_SURFACE_PROXY_VIEW_ID
+#define GST_VAAPI_SURFACE_PROXY_VIEW_ID(proxy) \
+    GST_VAAPI_SURFACE_PROXY(proxy)->view_id
 
 /**
  * GST_VAAPI_SURFACE_PROXY_TIMESTAMP:

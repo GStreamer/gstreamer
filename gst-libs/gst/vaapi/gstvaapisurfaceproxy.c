@@ -91,6 +91,7 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
     proxy->surface = gst_vaapi_video_pool_get_object(proxy->pool);
     if (!proxy->surface)
         goto error;
+    proxy->view_id = 0;
     proxy->timestamp = GST_CLOCK_TIME_NONE;
     proxy->duration = GST_CLOCK_TIME_NONE;
     proxy->has_crop_rect = FALSE;
@@ -243,6 +244,22 @@ gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy)
     g_return_val_if_fail(proxy->surface != NULL, VA_INVALID_ID);
 
     return GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy);
+}
+
+/**
+ * gst_vaapi_surface_proxy_get_view_id:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Returns the decoded view-id stored in the @proxy.
+ *
+ * Return value: the #GstVaapiID
+ */
+guintptr
+gst_vaapi_surface_proxy_get_view_id(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_val_if_fail(proxy != NULL, 0);
+
+    return GST_VAAPI_SURFACE_PROXY_VIEW_ID(proxy);
 }
 
 /**

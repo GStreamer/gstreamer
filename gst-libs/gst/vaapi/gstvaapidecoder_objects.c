@@ -332,6 +332,12 @@ do_output (GstVaapiPicture * picture)
     GST_VIDEO_CODEC_FRAME_FLAG_SET (out_frame,
         GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
 
+  if (GST_VAAPI_PICTURE_IS_MVC (picture)) {
+    if (picture->voc == 0)
+      flags |= GST_VAAPI_SURFACE_PROXY_FLAG_FFB;
+    GST_VAAPI_SURFACE_PROXY_VIEW_ID (proxy) = picture->view_id;
+  }
+
   if (GST_VAAPI_PICTURE_IS_INTERLACED (picture)) {
     flags |= GST_VAAPI_SURFACE_PROXY_FLAG_INTERLACED;
     if (GST_VAAPI_PICTURE_IS_TFF (picture))
