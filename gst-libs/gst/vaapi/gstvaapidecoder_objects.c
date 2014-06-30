@@ -294,6 +294,17 @@ gst_vaapi_picture_decode (GstVaapiPicture * picture)
   return TRUE;
 }
 
+/* Mark picture as output for internal purposes only. Don't push frame out */
+static void
+do_output_internal (GstVaapiPicture * picture)
+{
+  if (GST_VAAPI_PICTURE_IS_OUTPUT (picture))
+    return;
+
+  gst_video_codec_frame_clear (&picture->frame);
+  GST_VAAPI_PICTURE_FLAG_SET (picture, GST_VAAPI_PICTURE_FLAG_OUTPUT);
+}
+
 static gboolean
 do_output (GstVaapiPicture * picture)
 {
@@ -350,10 +361,14 @@ gst_vaapi_picture_output (GstVaapiPicture * picture)
         break;
       if (!GST_VAAPI_PICTURE_IS_FIRST_FIELD (parent_picture))
         break;
-      GST_VAAPI_PICTURE_FLAG_SET (parent_picture,
-          GST_VAAPI_PICTURE_FLAG_SKIPPED);
-      if (!do_output (parent_picture))
-        return FALSE;
+      if (parent_picture->frame == picture->frame)
+        do_output_internal (parent_picture);
+      else {
+        GST_VAAPI_PICTURE_FLAG_SET (parent_picture,
+            GST_VAAPI_PICTURE_FLAG_SKIPPED);
+        if (!do_output (parent_picture))
+          return FALSE;
+      }
     } while (0);
   }
   return do_output (picture);
