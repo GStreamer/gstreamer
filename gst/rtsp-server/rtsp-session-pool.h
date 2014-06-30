@@ -58,6 +58,7 @@ struct _GstRTSPSessionPool {
  * @create_session_id: create a new random session id. Subclasses can create
  *    custom session ids and should not check if the session exists.
  * @create_session: make a new session object.
+ * @session_removed: a session was removed from the pool
  */
 struct _GstRTSPSessionPoolClass {
   GObjectClass  parent_class;
@@ -65,8 +66,12 @@ struct _GstRTSPSessionPoolClass {
   gchar *          (*create_session_id)   (GstRTSPSessionPool *pool);
   GstRTSPSession * (*create_session)      (GstRTSPSessionPool *pool, const gchar *id);
 
+  /* signals */
+  void             (*session_removed)     (GstRTSPSessionPool *pool,
+                                           GstRTSPSession *session);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE];
+  gpointer _gst_reserved[GST_PADDING_LARGE - 1];
 };
 
 /**

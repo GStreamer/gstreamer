@@ -69,6 +69,14 @@ static const gchar session_id_charset[] =
   '8', '9', '$', '-', '_', '.', '+'
 };
 
+enum
+{
+  SIGNAL_SESSION_REMOVED,
+  SIGNAL_LAST
+};
+
+static guint gst_rtsp_session_pool_signals[SIGNAL_LAST] = { 0 };
+
 GST_DEBUG_CATEGORY_STATIC (rtsp_session_debug);
 #define GST_CAT_DEFAULT rtsp_session_debug
 
@@ -103,6 +111,12 @@ gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
           0, G_MAXUINT, DEFAULT_MAX_SESSIONS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED] =
+      g_signal_new ("session-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPSessionPoolClass,
+          session_removed), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
+      1, GST_TYPE_RTSP_SESSION);
+
   klass->create_session_id = create_session_id;
   klass->create_session = create_session;
 
@@ -123,14 +137,22 @@ gst_rtsp_session_pool_init (GstRTSPSessionPool * pool)
   priv->max_sessions = DEFAULT_MAX_SESSIONS;
 }
 
+static GstRTSPFilterResult
+remove_sessions_func (GstRTSPSessionPool * pool, GstRTSPSession * session,
+    gpointer user_data)
+{
+  return GST_RTSP_FILTER_REMOVE;
+}
+
 static void
 gst_rtsp_session_pool_finalize (GObject * object)
 {
   GstRTSPSessionPool *pool = GST_RTSP_SESSION_POOL (object);
   GstRTSPSessionPoolPrivate *priv = pool->priv;
 
-  g_mutex_clear (&priv->lock);
+  gst_rtsp_session_pool_filter (pool, remove_sessions_func, NULL);
   g_hash_table_unref (priv->sessions);
+  g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_session_pool_parent_class)->finalize (object);
 }
@@ -428,18 +450,38 @@ gst_rtsp_session_pool_remove (GstRTSPSessionPool * pool, GstRTSPSession * sess)
   priv = pool->priv;
 
   g_mutex_lock (&priv->lock);
+  g_object_ref (sess);
   found =
       g_hash_table_remove (priv->sessions,
       gst_rtsp_session_get_sessionid (sess));
+  if (found) {
+    g_signal_emit (pool, gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED],
+        0, sess);
+  }
+  g_object_unref (sess);
   g_mutex_unlock (&priv->lock);
 
   return found;
 }
 
-static gboolean
-cleanup_func (gchar * sessionid, GstRTSPSession * sess, GTimeVal * now)
+typedef struct
 {
-  return gst_rtsp_session_is_expired (sess, now);
+  GTimeVal now;
+  GstRTSPSessionPool *pool;
+} CleanupData;
+
+static gboolean
+cleanup_func (gchar * sessionid, GstRTSPSession * sess, CleanupData * data)
+{
+  gboolean expired;
+
+  expired = gst_rtsp_session_is_expired (sess, &data->now);
+  if (expired) {
+    GST_DEBUG ("session expired, emitting signal");
+    g_signal_emit (data->pool,
+        gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED], 0, sess);
+  }
+  return expired;
 }
 
 /**
@@ -456,18 +498,19 @@ gst_rtsp_session_pool_cleanup (GstRTSPSessionPool * pool)
 {
   GstRTSPSessionPoolPrivate *priv;
   guint result;
-  GTimeVal now;
+  CleanupData data;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION_POOL (pool), 0);
 
   priv = pool->priv;
 
-  g_get_current_time (&now);
+  g_get_current_time (&data.now);
+  data.pool = pool;
 
   g_mutex_lock (&priv->lock);
   result =
       g_hash_table_foreach_remove (priv->sessions, (GHRFunc) cleanup_func,
-      &now);
+      &data);
   g_mutex_unlock (&priv->lock);
 
   return result;
@@ -493,6 +536,8 @@ filter_func (gchar * sessionid, GstRTSPSession * sess, FilterData * data)
 
   switch (res) {
     case GST_RTSP_FILTER_REMOVE:
+      g_signal_emit (data->pool,
+          gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED], 0, sess);
       return TRUE;
     case GST_RTSP_FILTER_REF:
       /* keep ref */
@@ -514,7 +559,8 @@ filter_func (gchar * sessionid, GstRTSPSession * sess, FilterData * data)
  * what happens to the session. @func will be called with the session pool
  * locked so no further actions on @pool can be performed from @func.
  *
- * If @func returns #GST_RTSP_FILTER_REMOVE, the session will be removed from
+ * If @func returns #GST_RTSP_FILTER_REMOVE, the session will be set to the
+ * expired state with gst_rtsp_session_set_expired() and removed from
  * @pool.
  *
  * If @func returns #GST_RTSP_FILTER_KEEP, the session will remain in @pool.
