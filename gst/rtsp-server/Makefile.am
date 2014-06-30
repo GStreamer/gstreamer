@@ -68,7 +68,6 @@ BUILT_GIRSOURCES = GstRtspServer-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstrtspserver_@GST_API_VERSION@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstrtspserver_@GST_API_VERSION@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/rtsp-server/%',$(libgstrtspinclude_HEADERS))
 
 GstRtspServer-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
@@ -79,7 +78,7 @@ GstRtspServer-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@
 		-I$(top_srcdir) \
 		-I$(top_builddir) \
 		-DIN_GOBJECT_INTROSPECTION=1 \
-		--c-include='gst/gst.h' \
+		--c-include='gst/rtsp-server/rtsp-server.h' \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-rtsp-@GST_API_VERSION@` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-sdp-@GST_API_VERSION@` \

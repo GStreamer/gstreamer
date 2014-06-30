@@ -29,9 +29,24 @@ typedef struct _GstRTSPServerClass GstRTSPServerClass;
 typedef struct _GstRTSPServerPrivate GstRTSPServerPrivate;
 
 #include "rtsp-session-pool.h"
-#include "rtsp-mount-points.h"
+#include "rtsp-session.h"
+#include "rtsp-media.h"
+#include "rtsp-stream.h"
+#include "rtsp-stream-transport.h"
+#include "rtsp-address-pool.h"
+#include "rtsp-thread-pool.h"
 #include "rtsp-client.h"
+#include "rtsp-context.h"
+#include "rtsp-server.h"
+#include "rtsp-mount-points.h"
+#include "rtsp-media-factory.h"
+#include "rtsp-permissions.h"
 #include "rtsp-auth.h"
+#include "rtsp-token.h"
+#include "rtsp-session-media.h"
+#include "rtsp-sdp.h"
+#include "rtsp-media-factory-uri.h"
+#include "rtsp-params.h"
 
 #define GST_TYPE_RTSP_SERVER              (gst_rtsp_server_get_type ())
 #define GST_IS_RTSP_SERVER(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_SERVER))
