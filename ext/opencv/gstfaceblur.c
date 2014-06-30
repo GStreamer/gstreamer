@@ -123,6 +123,8 @@ gst_face_blur_finalize (GObject * obj)
     cvReleaseImage (&filter->cvGray);
     cvReleaseMemStorage (&filter->cvStorage);
   }
+  if (filter->cvCascade)
+    cvReleaseHaarClassifierCascade (&filter->cvCascade);
 
   g_free (filter->profile);
 
@@ -312,6 +314,8 @@ gst_face_blur_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 static void
 gst_face_blur_load_profile (GstFaceBlur * filter)
 {
+  if (filter->cvCascade)
+    cvReleaseHaarClassifierCascade (&filter->cvCascade);
   filter->cvCascade =
       (CvHaarClassifierCascade *) cvLoad (filter->profile, 0, 0, 0);
   if (!filter->cvCascade) {
