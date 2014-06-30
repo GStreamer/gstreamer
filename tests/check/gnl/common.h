@@ -73,3 +73,5 @@ Segment *
 segment_new (gdouble rate, GstFormat format, gint64 start, gint64 stop, gint64 position);
 
 void commit_and_wait (GstElement *comp, gboolean *ret);
+gboolean gnl_composition_remove (GstBin * comp, GstElement * object);
+gboolean gnl_composition_add (GstBin * comp, GstElement * object);

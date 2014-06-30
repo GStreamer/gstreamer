@@ -361,10 +361,35 @@ commited_cb (GstElement * comp, gboolean changed)
 void
 commit_and_wait (GstElement * comp, gboolean * ret)
 {
-  gulong handler_id = g_signal_connect (comp, "commited", (GCallback) commited_cb, NULL);
+  gulong handler_id =
+      g_signal_connect (comp, "commited", (GCallback) commited_cb, NULL);
   g_mutex_lock (&lock);
   g_signal_emit_by_name (comp, "commit", TRUE, ret);
   g_cond_wait (&cond, &lock);
   g_mutex_unlock (&lock);
   g_signal_handler_disconnect (comp, handler_id);
+}
+
+gboolean
+gnl_composition_remove (GstBin * comp, GstElement * object)
+{
+  gboolean ret;
+
+  g_signal_emit_by_name (GST_BIN (comp), "remove-object", object, &ret);
+  if (!ret)
+    return ret;
+
+  commit_and_wait ((GstElement *) comp, &ret);
+
+  return ret;
+}
+
+gboolean
+gnl_composition_add (GstBin * comp, GstElement * object)
+{
+  gboolean ret;
+
+  g_signal_emit_by_name (comp, "add-object", object, &ret);
+
+  return ret;
 }

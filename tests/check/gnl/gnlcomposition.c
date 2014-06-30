@@ -83,10 +83,10 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
 
   /* keep an extra ref to source1 as we remove it from the bin */
   gst_object_ref (source1);
-  gst_bin_add (GST_BIN (comp), source1);
+  gnl_composition_add (GST_BIN (comp), source1);
 
   /* Add default */
-  gst_bin_add (GST_BIN (comp), def);
+  gnl_composition_add (GST_BIN (comp), def);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (source1, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
@@ -139,11 +139,12 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
 
   /* remove source1 from the composition, which will become empty and remove the
    * ghostpad */
-  gst_bin_remove (GST_BIN (comp), source1);
+
+  fail_unless (gnl_composition_remove (GST_BIN (comp), source1));
 
   g_object_set (source1, "start", (guint64) 0 * GST_SECOND, NULL);
   /* add the source again and check that the ghostpad is added again */
-  gst_bin_add (GST_BIN (comp), source1);
+  gnl_composition_add (GST_BIN (comp), source1);
   commit_and_wait (comp, &ret);
 
   g_mutex_lock (&pad_added_lock);
@@ -185,9 +186,9 @@ GST_START_TEST (test_remove_invalid_object)
   source1 = gst_element_factory_make ("gnlsource", "source1");
   source2 = gst_element_factory_make ("gnlsource", "source2");
 
-  gst_bin_add (composition, source1);
-  fail_if (gst_bin_remove (composition, source2));
-  fail_unless (gst_bin_remove (composition, source1));
+  gnl_composition_add (composition, source1);
+  fail_if (gnl_composition_remove (composition, source2));
+  fail_unless (gnl_composition_remove (composition, source1));
 
   gst_object_unref (composition);
   gst_object_unref (source2);
@@ -225,7 +226,7 @@ GST_START_TEST (test_simple_adder)
   g_object_set (gnl_adder, "start", (guint64) 0 * GST_SECOND,
       "duration", total_time, "inpoint", (guint64) 0 * GST_SECOND,
       "priority", 0, NULL);
-  gst_bin_add (GST_BIN (composition), gnl_adder);
+  gnl_composition_add (GST_BIN (composition), gnl_adder);
 
   GST_ERROR ("Pipeline refcounts: %i", ((GObject *) pipeline)->ref_count);
   /* source 1 */
@@ -234,7 +235,7 @@ GST_START_TEST (test_simple_adder)
   gst_bin_add (GST_BIN (gnlsource1), audiotestsrc1);
   g_object_set (gnlsource1, "start", (guint64) 0 * GST_SECOND,
       "duration", total_time / 2, "inpoint", (guint64) 0, "priority", 1, NULL);
-  fail_unless (gst_bin_add (GST_BIN (composition), gnlsource1));
+  fail_unless (gnl_composition_add (GST_BIN (composition), gnlsource1));
 
   /* gnlsource2 */
   gnlsource2 = gst_element_factory_make ("gnlsource", "gnlsource2");
@@ -249,7 +250,7 @@ GST_START_TEST (test_simple_adder)
 
   GST_ERROR ("Pipeline refcounts: %i", ((GObject *) pipeline)->ref_count);
 
-  fail_unless (gst_bin_add (GST_BIN (composition), gnlsource2));
+  fail_unless (gnl_composition_add (GST_BIN (composition), gnlsource2));
   fail_unless (gst_element_link (composition, fakesink) == TRUE);
 
   GST_DEBUG ("Setting pipeline to PLAYING");

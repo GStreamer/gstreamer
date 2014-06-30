@@ -69,6 +69,8 @@ enum
 {
   COMMIT_SIGNAL,
   COMMITED_SIGNAL,
+  ADD_OBJECT_SIGNAL,
+  REMOVE_OBJECT_SIGNAL,
   LAST_SIGNAL
 };
 
@@ -89,6 +91,11 @@ struct _GnlCompositionPrivate
   GList *objects_stop;
   GHashTable *objects_hash;
   GMutex objects_lock;
+
+  /* List of GnlObject to be inserted or removed from the composition on the
+   * next commit */
+  GHashTable *pending_io;
+  GMutex pending_io_lock;
 
   /*
      thread-safe Seek handling.
@@ -142,13 +149,14 @@ struct _GnlCompositionPrivate
    * "g_source_attach: assertion '!SOURCE_DESTROYED (source)' failed" */
   GMutex mcontext_lock;
 
-
   gboolean reset_time;
 
   gboolean running;
   gboolean initialized;
 
   GstState deactivated_elements_state;
+
+  gboolean external_gst_bin_add_remove; /*  When people try to call gst_bin_add/remove themselves */
 };
 
 static guint _signals[LAST_SIGNAL] = { 0 };
@@ -234,6 +242,13 @@ set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp);
     g_mutex_unlock (&comp->priv->objects_lock);                                \
   } G_STMT_END
 
+#define COMP_PENDING_IO_LOCK(comp) G_STMT_START {                                 \
+    GST_LOG_OBJECT (comp, "locking pending_io_lock from thread %p",               \
+        g_thread_self());                                                      \
+    g_mutex_lock (&comp->priv->pending_io_lock);                                  \
+    GST_LOG_OBJECT (comp, "locked pending_io_lock from thread %p",                \
+        g_thread_self());                                                      \
+  } G_STMT_END
 
 #define COMP_FLUSHING_LOCK(comp) G_STMT_START {                                \
     GST_LOG_OBJECT (comp, "locking flushing_lock from thread %p",              \
@@ -242,7 +257,6 @@ set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp);
     GST_LOG_OBJECT (comp, "locked flushing_lock from thread %p",               \
         g_thread_self());                                                      \
   } G_STMT_END
-
 #define COMP_FLUSHING_UNLOCK(comp) G_STMT_START {                              \
     GST_LOG_OBJECT (comp, "unlocking flushing_lock from thread %p",            \
         g_thread_self());                                                      \
@@ -433,6 +447,83 @@ _add_initialize_stack_gsource (GnlComposition * comp)
   MAIN_CONTEXT_UNLOCK (comp);
 }
 
+static gboolean
+remove_object_handler (GnlComposition * comp, GnlObject * object)
+{
+  GnlCompositionPrivate *priv = comp->priv;
+  GnlCompositionEntry *entry;
+  GnlObject *in_pending_io;
+
+  COMP_OBJECTS_LOCK (comp);
+  entry = COMP_ENTRY (comp, object);
+  in_pending_io = g_hash_table_lookup (priv->pending_io, object);
+
+  if (!entry) {
+    if (in_pending_io) {
+      GST_INFO_OBJECT (comp, "Object %" GST_PTR_FORMAT " was marked"
+          " for addition, removing it from the addition list", object);
+
+      g_hash_table_remove (priv->pending_io, object);
+      COMP_OBJECTS_UNLOCK (comp);
+      return TRUE;
+    }
+
+    GST_ERROR_OBJECT (comp, "Object %" GST_PTR_FORMAT " is "
+        " not in the composition", object);
+
+    COMP_OBJECTS_UNLOCK (comp);
+    return FALSE;
+  }
+
+  if (in_pending_io) {
+    GST_WARNING_OBJECT (comp, "Object %" GST_PTR_FORMAT " is already marked"
+        " for removal", object);
+
+    COMP_OBJECTS_UNLOCK (comp);
+    return FALSE;
+  }
+
+
+  g_hash_table_add (priv->pending_io, object);
+  COMP_OBJECTS_UNLOCK (comp);
+
+  return TRUE;
+}
+
+static gboolean
+add_object_handler (GnlComposition * comp, GnlObject * object)
+{
+  GnlCompositionPrivate *priv = comp->priv;
+  GnlCompositionEntry *entry;
+  GnlObject *in_pending_io;
+
+  COMP_OBJECTS_LOCK (comp);
+  entry = COMP_ENTRY (comp, object);
+  in_pending_io = g_hash_table_lookup (priv->pending_io, object);
+
+  if (entry) {
+    GST_ERROR_OBJECT (comp, "Object %" GST_PTR_FORMAT " is "
+        " already in the composition", object);
+
+    COMP_OBJECTS_UNLOCK (comp);
+    return FALSE;
+  }
+
+  if (in_pending_io) {
+    GST_WARNING_OBJECT (comp, "Object %" GST_PTR_FORMAT " is already marked"
+        " for addition", object);
+
+    COMP_OBJECTS_UNLOCK (comp);
+    return FALSE;
+  }
+
+
+  g_hash_table_add (priv->pending_io, object);
+
+  COMP_OBJECTS_UNLOCK (comp);
+  return TRUE;
+}
+
 static void
 gnl_composition_class_init (GnlCompositionClass * klass)
 {
@@ -522,7 +613,22 @@ gnl_composition_class_init (GnlCompositionClass * klass)
       0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       G_TYPE_BOOLEAN);
 
+  _signals[REMOVE_OBJECT_SIGNAL] =
+      g_signal_new ("remove-object", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GnlCompositionClass, remove_object_handler), NULL, NULL,
+      NULL, G_TYPE_BOOLEAN, 1, GNL_TYPE_OBJECT);
+
+  _signals[ADD_OBJECT_SIGNAL] =
+      g_signal_new ("add-object", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GnlCompositionClass, add_object_handler), NULL, NULL,
+      NULL, G_TYPE_BOOLEAN, 1, GNL_TYPE_OBJECT);
+
+
   gnlobject_class->commit = gnl_composition_commit_func;
+  klass->remove_object_handler = remove_object_handler;
+  klass->add_object_handler = add_object_handler;
 }
 
 static void
@@ -576,6 +682,13 @@ gnl_composition_init (GnlComposition * comp)
   priv->deactivated_elements_state = GST_STATE_READY;
   priv->mcontext = g_main_context_new ();
   g_mutex_init (&priv->mcontext_lock);
+  priv->objects_hash = g_hash_table_new_full
+      (g_direct_hash,
+      g_direct_equal, NULL, (GDestroyNotify) hash_value_destroy);
+
+  g_mutex_init (&priv->pending_io_lock);
+  priv->pending_io = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->external_gst_bin_add_remove = TRUE;
 
   comp->priv = priv;
 
@@ -610,7 +723,9 @@ gnl_composition_dispose (GObject * object)
   }
   gnl_composition_reset_target_pad (comp);
 
+  priv->external_gst_bin_add_remove = FALSE;
   G_OBJECT_CLASS (parent_class)->dispose (object);
+  priv->external_gst_bin_add_remove = TRUE;
 }
 
 static void
@@ -632,6 +747,7 @@ gnl_composition_finalize (GObject * object)
 
   g_mutex_clear (&priv->objects_lock);
   g_mutex_clear (&priv->flushing_lock);
+  g_mutex_clear (&priv->pending_io_lock);
 
   _stop_task (comp, FALSE);
   g_rec_mutex_clear (&comp->task_rec_lock);
@@ -1898,6 +2014,23 @@ set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp)
   return TRUE;
 }
 
+/*  Must be called with OBJECTS_LOCK and PENDING_IO_LOCK taken */
+static gboolean
+_process_pending_entry (GnlObject * object,
+    GnlObject * unused_object G_GNUC_UNUSED, GnlComposition * comp)
+{
+  GnlCompositionEntry *entry = COMP_ENTRY (comp, object);
+
+  comp->priv->external_gst_bin_add_remove = FALSE;
+  if (entry)
+    gst_bin_remove (GST_BIN (comp), GST_ELEMENT (object));
+  else
+    gst_bin_add (GST_BIN (comp), GST_ELEMENT (object));
+  comp->priv->external_gst_bin_add_remove = TRUE;
+
+  return TRUE;
+}
+
 static gboolean
 commit_pipeline_func (GnlComposition * comp)
 {
@@ -1908,6 +2041,10 @@ commit_pipeline_func (GnlComposition * comp)
 
   GST_ERROR_OBJECT (object, "Commiting state");
   COMP_OBJECTS_LOCK (comp);
+
+  g_hash_table_foreach_remove (priv->pending_io,
+      (GHRFunc) _process_pending_entry, comp);
+
   for (tmp = priv->objects_start; tmp; tmp = tmp->next) {
     if (gnl_object_commit (tmp->data, TRUE))
       commited = TRUE;
@@ -2737,6 +2874,7 @@ gnl_composition_add_object (GstBin * bin, GstElement * element)
 
   /* we only accept GnlObject */
   g_return_val_if_fail (GNL_IS_OBJECT (element), FALSE);
+  g_return_val_if_fail (priv->external_gst_bin_add_remove == FALSE, FALSE);
 
   GST_DEBUG_OBJECT (bin, "element %s", GST_OBJECT_NAME (element));
   GST_DEBUG_OBJECT (element, "%" GST_TIME_FORMAT "--%" GST_TIME_FORMAT,
@@ -2744,8 +2882,6 @@ gnl_composition_add_object (GstBin * bin, GstElement * element)
       GST_TIME_ARGS (GNL_OBJECT_STOP (element)));
 
   gst_object_ref (element);
-
-  COMP_OBJECTS_LOCK (comp);
 
   if ((GNL_OBJECT_IS_EXPANDABLE (element)) &&
       g_list_find (priv->expandables, element)) {
@@ -2820,8 +2956,6 @@ gnl_composition_add_object (GstBin * bin, GstElement * element)
   /* Now the object is ready to be commited and then used */
 
 beach:
-  COMP_OBJECTS_UNLOCK (comp);
-
   gst_object_unref (element);
   return ret;
 
@@ -2838,17 +2972,16 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element)
   GnlComposition *comp = (GnlComposition *) bin;
   GnlCompositionPrivate *priv = comp->priv;
   gboolean ret = FALSE;
-  gboolean update_required;
   GnlCompositionEntry *entry;
 
   GST_DEBUG_OBJECT (bin, "element %s", GST_OBJECT_NAME (element));
 
   /* we only accept GnlObject */
   g_return_val_if_fail (GNL_IS_OBJECT (element), FALSE);
-  COMP_OBJECTS_LOCK (comp);
+  g_return_val_if_fail (priv->external_gst_bin_add_remove == FALSE, FALSE);
+
   entry = COMP_ENTRY (comp, element);
   if (entry == NULL) {
-    COMP_OBJECTS_UNLOCK (comp);
     goto out;
   }
 
@@ -2870,20 +3003,9 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element)
     gnl_composition_reset_target_pad (comp);
 
   g_hash_table_remove (priv->objects_hash, element);
-  update_required = OBJECT_IN_ACTIVE_SEGMENT (comp, element) ||
-      (GNL_OBJECT_PRIORITY (element) == G_MAXUINT32) ||
-      GNL_OBJECT_IS_EXPANDABLE (element);
-
-  if (G_LIKELY (update_required)) {
-    /* And update the pipeline at current position if needed */
-    update_pipeline_at_current_position (comp);
-  } else
-    update_start_stop_duration (comp);
 
   ret = GST_BIN_CLASS (parent_class)->remove_element (bin, element);
   GST_LOG_OBJECT (element, "Done removing from the composition, now updating");
-  COMP_OBJECTS_UNLOCK (comp);
-
 
   /* Make it possible to reuse the same object later */
   gnl_object_reset (GNL_OBJECT (element));
