@@ -689,11 +689,11 @@ dpb_output(
 {
     picture->output_needed = FALSE;
 
-    if (fs) {
-        if (--fs->output_needed > 0)
-            return TRUE;
-        picture = fs->buffers[0];
-    }
+    if (--fs->output_needed > 0)
+        return TRUE;
+
+    if (!GST_VAAPI_PICTURE_IS_COMPLETE(picture))
+        return TRUE;
     return gst_vaapi_picture_output(GST_VAAPI_PICTURE_CAST(picture));
 }
 
@@ -929,6 +929,14 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
             GST_VAAPI_PICTURE_H264(picture->base.parent_picture));
         if (found_index >= 0)
             return gst_vaapi_frame_store_add(priv->dpb[found_index], picture);
+
+        // ... also check the previous picture that was immediately output
+        fs = priv->prev_frames[picture->base.voc];
+        if (fs && &fs->buffers[0]->base == picture->base.parent_picture) {
+            if (!gst_vaapi_frame_store_add(fs, picture))
+                return FALSE;
+            return dpb_output(decoder, fs, picture);
+        }
     }
 
     // Create new frame store, and split fields if necessary
@@ -937,6 +945,11 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         return FALSE;
     gst_vaapi_frame_store_replace(&priv->prev_frames[picture->base.voc], fs);
     gst_vaapi_frame_store_unref(fs);
+
+    if (picture->output_flag) {
+        picture->output_needed = TRUE;
+        fs->output_needed++;
+    }
 
     if (!priv->progressive_sequence && gst_vaapi_frame_store_has_frame(fs)) {
         if (!gst_vaapi_frame_store_split_fields(fs))
@@ -965,18 +978,13 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
             if (!StoreInterViewOnlyRefFlag) {
                 if (dpb_find_lowest_poc(decoder, picture, &found_picture) < 0 ||
                     found_picture->base.poc > picture->base.poc)
-                    return dpb_output(decoder, NULL, picture);
+                    return dpb_output(decoder, fs, picture);
             }
             if (!dpb_bump(decoder, picture))
                 return FALSE;
         }
     }
-
     gst_vaapi_frame_store_replace(&priv->dpb[priv->dpb_count++], fs);
-    if (picture->output_flag) {
-        picture->output_needed = TRUE;
-        fs->output_needed++;
-    }
     return TRUE;
 }
 
