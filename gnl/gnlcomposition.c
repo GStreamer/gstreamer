@@ -146,6 +146,7 @@ struct _GnlCompositionPrivate
   gboolean reset_time;
 
   gboolean running;
+  gboolean initialized;
 
   GstState deactivated_elements_state;
 };
@@ -201,6 +202,10 @@ compare_relink_single_node (GnlComposition * comp, GNode * node,
     GNode * oldstack);
 static gboolean update_pipeline_func (GnlComposition * comp);
 static gboolean commit_pipeline_func (GnlComposition * comp);
+static gboolean lock_child_state (GValue * item, GValue * ret,
+    gpointer udata G_GNUC_UNUSED);
+static gboolean
+set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -396,6 +401,35 @@ _add_commit_gsource (GnlComposition * comp)
   MAIN_CONTEXT_LOCK (comp);
   g_main_context_invoke (comp->priv->mcontext,
       (GSourceFunc) commit_pipeline_func, comp);
+  MAIN_CONTEXT_UNLOCK (comp);
+}
+
+static gboolean
+_initialize_stack_func (GnlComposition * comp)
+{
+  GnlCompositionPrivate *priv = comp->priv;
+
+  /* set ghostpad target */
+  COMP_OBJECTS_LOCK (comp);
+  if (!(update_pipeline (comp, COMP_REAL_START (comp), TRUE, TRUE))) {
+    COMP_OBJECTS_UNLOCK (comp);
+    GST_FIXME_OBJECT (comp, "PLEASE signal state change failure ASYNC");
+
+    return G_SOURCE_REMOVE;
+  }
+  COMP_OBJECTS_UNLOCK (comp);
+
+  priv->initialized = TRUE;
+
+  return G_SOURCE_REMOVE;
+}
+
+static void
+_add_initialize_stack_gsource (GnlComposition * comp)
+{
+  MAIN_CONTEXT_LOCK (comp);
+  g_main_context_invoke (comp->priv->mcontext,
+      (GSourceFunc) _initialize_stack_func, comp);
   MAIN_CONTEXT_UNLOCK (comp);
 }
 
@@ -767,7 +801,7 @@ gnl_composition_reset (GnlComposition * comp)
   COMP_FLUSHING_UNLOCK (comp);
 
   priv->reset_time = FALSE;
-
+  priv->initialized = FALSE;
   priv->send_stream_start = TRUE;
 
   GST_DEBUG_OBJECT (comp, "Composition now resetted");
@@ -1892,7 +1926,7 @@ commit_pipeline_func (GnlComposition * comp)
   priv->objects_stop = g_list_sort
       (priv->objects_stop, (GCompareFunc) objects_stop_compare);
 
-  if (GST_STATE (comp) < GST_STATE_PAUSED) {
+  if (priv->initialized == FALSE) {
     update_start_stop_duration (comp);
   } else {
     /* And update the pipeline at current position if needed */
@@ -1953,6 +1987,7 @@ update_pipeline_func (GnlComposition * comp)
 static GstStateChangeReturn
 gnl_composition_change_state (GstElement * element, GstStateChange transition)
 {
+  GstIterator *children;
   GnlComposition *comp = (GnlComposition *) element;
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
@@ -1962,9 +1997,6 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-    {
-      GstIterator *children;
-
       gnl_composition_reset (comp);
 
       /* state-lock all elements */
@@ -1992,17 +2024,7 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
         gst_iterator_free (children);
       }
 
-
-      /* set ghostpad target */
-      COMP_OBJECTS_LOCK (comp);
-      if (!(update_pipeline (comp, COMP_REAL_START (comp), TRUE, TRUE))) {
-        ret = GST_STATE_CHANGE_FAILURE;
-        COMP_OBJECTS_UNLOCK (comp);
-        goto beach;
-      }
-
-      COMP_OBJECTS_UNLOCK (comp);
-    }
+      _add_initialize_stack_gsource (comp);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* Fallthrough */
@@ -2027,7 +2049,6 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-beach:
   return ret;
 }
 
