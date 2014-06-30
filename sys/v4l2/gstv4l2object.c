@@ -1948,6 +1948,8 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
     GST_DEBUG_OBJECT (v4l2object->element,
         "done iterating discrete frame sizes");
   } else if (size.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
+    guint32 maxw, maxh, step_w, step_h;
+
     GST_DEBUG_OBJECT (v4l2object->element, "we have stepwise frame sizes:");
     GST_DEBUG_OBJECT (v4l2object->element, "min width:   %d",
         size.stepwise.min_width);
@@ -1962,21 +1964,34 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
     GST_DEBUG_OBJECT (v4l2object->element, "step height: %d",
         size.stepwise.step_height);
 
-    for (w = size.stepwise.min_width, h = size.stepwise.min_height;
-        w <= size.stepwise.max_width && h <= size.stepwise.max_height;
-        w += size.stepwise.step_width, h += size.stepwise.step_height) {
-      if (w == 0 || h == 0)
-        continue;
+    w = MAX (size.stepwise.min_width, 1);
+    h = MAX (size.stepwise.min_height, 1);
+    maxw = MIN (size.stepwise.max_width, G_MAXINT);
+    maxh = MIN (size.stepwise.max_height, G_MAXINT);
 
-      tmp =
-          gst_v4l2_object_probe_caps_for_format_and_size (v4l2object,
-          pixelformat, w, h, template);
+    step_w = MAX (size.stepwise.step_width, 1);
+    step_h = MAX (size.stepwise.step_height, 1);
 
-      if (tmp)
-        results = g_list_prepend (results, tmp);
+    /* FIXME: check for sanity and that min/max are multiples of the steps */
+
+    /* we only query details for the max width/height since it's likely the
+     * most restricted if there are any resolution-dependent restrictions */
+    tmp = gst_v4l2_object_probe_caps_for_format_and_size (v4l2object,
+        pixelformat, maxw, maxh, template);
+
+    if (tmp) {
+      GValue step_range = G_VALUE_INIT;
+
+      g_value_init (&step_range, GST_TYPE_INT_RANGE);
+      gst_value_set_int_range_step (&step_range, w, maxw, step_w);
+      gst_structure_set_value (tmp, "width", &step_range);
+
+      gst_value_set_int_range_step (&step_range, h, maxh, step_h);
+      gst_structure_take_value (tmp, "height", &step_range);
+
+      /* no point using the results list here, since there's only one struct */
+      gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp);
     }
-    GST_DEBUG_OBJECT (v4l2object->element,
-        "done iterating stepwise frame sizes");
   } else if (size.type == V4L2_FRMSIZE_TYPE_CONTINUOUS) {
     guint32 maxw, maxh;
 
