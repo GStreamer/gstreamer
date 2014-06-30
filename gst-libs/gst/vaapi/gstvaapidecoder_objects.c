@@ -336,6 +336,8 @@ do_output (GstVaapiPicture * picture)
     flags |= GST_VAAPI_SURFACE_PROXY_FLAG_INTERLACED;
     if (GST_VAAPI_PICTURE_IS_TFF (picture))
       flags |= GST_VAAPI_SURFACE_PROXY_FLAG_TFF;
+    if (GST_VAAPI_PICTURE_IS_ONEFIELD (picture))
+      flags |= GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD;
   }
   GST_VAAPI_SURFACE_PROXY_FLAG_SET (proxy, flags);
 
