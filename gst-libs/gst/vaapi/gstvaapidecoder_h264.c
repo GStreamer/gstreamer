@@ -1463,11 +1463,11 @@ decode_current_picture(GstVaapiDecoderH264 *decoder)
     if (!picture)
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
+    if (!gst_vaapi_picture_decode(GST_VAAPI_PICTURE_CAST(picture)))
+        goto error;
     if (!exec_ref_pic_marking(decoder, picture))
         goto error;
     if (!dpb_add(decoder, picture))
-        goto error;
-    if (!gst_vaapi_picture_decode(GST_VAAPI_PICTURE_CAST(picture)))
         goto error;
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
