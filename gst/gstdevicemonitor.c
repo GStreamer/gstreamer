@@ -232,7 +232,10 @@ gst_device_monitor_dispose (GObject * object)
     self->priv->providers = NULL;
   }
 
-  g_clear_pointer (&self->priv->filters, (GDestroyNotify) g_ptr_array_unref);
+  if (self->priv->filters) {
+    g_ptr_array_unref (self->priv->filters);
+    self->priv->filters = NULL;
+  }
 
   gst_object_replace ((GstObject **) & self->priv->bus, NULL);
 
