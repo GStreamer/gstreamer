@@ -4040,7 +4040,12 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     case GST_H264_NAL_SLICE_IDR:
     case GST_H264_NAL_SLICE:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
-        if (is_new_picture(pi, priv->prev_slice_pi)) {
+        if (priv->prev_pi &&
+            (priv->prev_pi->flags & GST_VAAPI_DECODER_UNIT_FLAG_AU_END)) {
+            flags |= GST_VAAPI_DECODER_UNIT_FLAG_AU_START |
+                GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
+        }
+        else if (is_new_picture(pi, priv->prev_slice_pi)) {
             flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
             if (is_new_access_unit(pi, priv->prev_slice_pi))
                 flags |= GST_VAAPI_DECODER_UNIT_FLAG_AU_START;
