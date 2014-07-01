@@ -76,6 +76,12 @@ enum
 
 typedef struct _GnlCompositionEntry GnlCompositionEntry;
 
+typedef struct
+{
+  GnlComposition *comp;
+  GstEvent *event;
+} SeekData;
+
 struct _GnlCompositionPrivate
 {
   gboolean dispose_has_run;
@@ -214,6 +220,8 @@ static gboolean lock_child_state (GValue * item, GValue * ret,
     gpointer udata G_GNUC_UNUSED);
 static gboolean
 set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp);
+static GstEvent *get_new_seek_event (GnlComposition * comp, gboolean initial,
+    gboolean updatestoponly);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -400,6 +408,66 @@ join_failed:
   return res;
 }
 
+static gboolean
+_seek_pipeline_func (SeekData * seekd)
+{
+  gdouble rate;
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
+  GnlCompositionPrivate *priv = seekd->comp->priv;
+
+  gst_event_parse_seek (seekd->event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
+
+  GST_DEBUG_OBJECT (seekd->comp,
+      "start:%" GST_TIME_FORMAT " -- stop:%" GST_TIME_FORMAT "  flags:%d",
+      GST_TIME_ARGS (cur), GST_TIME_ARGS (stop), flags);
+
+  gst_segment_do_seek (priv->segment,
+      rate, format, flags, cur_type, cur, stop_type, stop, NULL);
+  gst_segment_do_seek (priv->outside_segment,
+      rate, format, flags, cur_type, cur, stop_type, stop, NULL);
+
+  GST_DEBUG_OBJECT (seekd->comp, "Segment now has flags:%d",
+      priv->segment->flags);
+
+  if (priv->segment->start >= GNL_OBJECT_STOP (seekd->comp)) {
+    GST_INFO_OBJECT (seekd->comp,
+        "Start %" GST_TIME_FORMAT " > comp->stop: %" GST_TIME_FORMAT
+        " Not seeking", GST_TIME_ARGS (priv->segment->start),
+        GST_TIME_ARGS (GNL_OBJECT_STOP (seekd->comp)));
+    GST_FIXME_OBJECT (seekd->comp, "HANDLE error async!");
+    goto beach;
+  }
+
+  /* crop the segment start/stop values */
+  /* Only crop segment start value if we don't have a default object */
+  if (priv->expandables == NULL)
+    priv->segment->start =
+        MAX (priv->segment->start, GNL_OBJECT_START (seekd->comp));
+  priv->segment->stop =
+      MIN (priv->segment->stop, GNL_OBJECT_STOP (seekd->comp));
+
+  priv->next_base_time = 0;
+
+  seek_handling (seekd->comp, TRUE, FALSE);
+
+  priv->reset_time = TRUE;
+  priv->gnl_event_pad_func (GNL_OBJECT (seekd->comp)->srcpad,
+      GST_OBJECT (seekd->comp), get_new_seek_event (seekd->comp, FALSE, FALSE));
+  priv->reset_time = FALSE;
+
+beach:
+  gst_event_unref (seekd->event);
+  g_slice_free (SeekData, seekd);
+
+  return G_SOURCE_REMOVE;
+}
+
+
+
 static void
 _add_update_gsource (GnlComposition * comp)
 {
@@ -417,6 +485,21 @@ _add_commit_gsource (GnlComposition * comp)
       (GSourceFunc) commit_pipeline_func, comp);
   MAIN_CONTEXT_UNLOCK (comp);
 }
+
+static void
+_add_seek_gsource (GnlComposition * comp, GstEvent * event)
+{
+  SeekData *seekd = g_slice_new0 (SeekData);
+
+  seekd->comp = comp;
+  seekd->event = event;
+
+  MAIN_CONTEXT_LOCK (comp);
+  g_main_context_invoke (comp->priv->mcontext,
+      (GSourceFunc) _seek_pipeline_func, seekd);
+  MAIN_CONTEXT_UNLOCK (comp);
+}
+
 
 static gboolean
 _initialize_stack_func (GnlComposition * comp)
@@ -1317,50 +1400,6 @@ seek_handling (GnlComposition * comp, gboolean initial, gboolean update)
 }
 
 static gboolean
-handle_seek_event (GnlComposition * comp, GstEvent * event)
-{
-  gdouble rate;
-  GstFormat format;
-  GstSeekFlags flags;
-  GstSeekType cur_type, stop_type;
-  gint64 cur, stop;
-  GnlCompositionPrivate *priv = comp->priv;
-
-  gst_event_parse_seek (event, &rate, &format, &flags,
-      &cur_type, &cur, &stop_type, &stop);
-
-  GST_DEBUG_OBJECT (comp,
-      "start:%" GST_TIME_FORMAT " -- stop:%" GST_TIME_FORMAT "  flags:%d",
-      GST_TIME_ARGS (cur), GST_TIME_ARGS (stop), flags);
-
-  gst_segment_do_seek (priv->segment,
-      rate, format, flags, cur_type, cur, stop_type, stop, NULL);
-  gst_segment_do_seek (priv->outside_segment,
-      rate, format, flags, cur_type, cur, stop_type, stop, NULL);
-
-  GST_DEBUG_OBJECT (comp, "Segment now has flags:%d", priv->segment->flags);
-
-  if (priv->segment->start >= GNL_OBJECT_STOP (comp)) {
-    GST_INFO_OBJECT (comp,
-        "Start %" GST_TIME_FORMAT " > comp->stop: %" GST_TIME_FORMAT
-        " Not seeking", GST_TIME_ARGS (priv->segment->start),
-        GST_TIME_ARGS (GNL_OBJECT_STOP (comp)));
-    return FALSE;
-  }
-
-  /* crop the segment start/stop values */
-  /* Only crop segment start value if we don't have a default object */
-  if (priv->expandables == NULL)
-    priv->segment->start = MAX (priv->segment->start, GNL_OBJECT_START (comp));
-  priv->segment->stop = MIN (priv->segment->stop, GNL_OBJECT_STOP (comp));
-
-  comp->priv->next_base_time = 0;
-
-  seek_handling (comp, TRUE, FALSE);
-  return TRUE;
-}
-
-static gboolean
 gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
     GstEvent * event)
 {
@@ -1373,23 +1412,11 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      GstEvent *nevent;
+      _add_seek_gsource (comp, event);
+      event = NULL;
+      GST_FIXME_OBJECT (comp, "HANDLE seeking errors!");
 
-      if ((res = handle_seek_event (comp, event)) == FALSE) {
-        gst_event_unref (event);
-        event = NULL;
-        break;
-      }
-
-      /* the incoming event might not be quite correct, we get a new proper
-       * event to pass on to the children. */
-      COMP_OBJECTS_LOCK (comp);
-      nevent = get_new_seek_event (comp, FALSE, FALSE);
-      COMP_OBJECTS_UNLOCK (comp);
-      gst_event_unref (event);
-      event = nevent;
-      priv->reset_time = TRUE;
-      break;
+      return TRUE;
     }
     case GST_EVENT_QOS:
     {
