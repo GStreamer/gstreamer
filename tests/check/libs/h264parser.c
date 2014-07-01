@@ -132,6 +132,18 @@ static guint8 slice_dpa[] = {
   0x63, 0x72, 0x6f, 0x6e, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02
 };
 
+/* IDR slice, EOSEQ, IDR slice */
+static guint8 slice_eoseq_slice[] = {
+  0x00, 0x00, 0x00, 0x01, 0x65, 0x88, 0x84, 0x00,
+  0x10, 0xff, 0xfe, 0xf6, 0xf0, 0xfe, 0x05, 0x36,
+  0x56, 0x04, 0x50, 0x96, 0x7b, 0x3f, 0x53, 0xe1,
+  0x00, 0x00, 0x00, 0x01, 0x0a,
+  0x00, 0x00, 0x00, 0x01, 0x65, 0x88, 0x84, 0x00,
+  0x10, 0xff, 0xfe, 0xf6, 0xf0, 0xfe, 0x05, 0x36,
+  0x56, 0x04, 0x50, 0x96, 0x7b, 0x3f, 0x53, 0xe1,
+  0x00, 0x00, 0x00, 0x01, 0x0b
+};
+
 GST_START_TEST (test_h264_parse_slice_dpa)
 {
   GstH264ParserResult res;
@@ -150,6 +162,55 @@ GST_START_TEST (test_h264_parse_slice_dpa)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h264_parse_slice_eoseq_slice)
+{
+  GstH264ParserResult res;
+  GstH264NalUnit nalu;
+  GstH264NalParser *const parser = gst_h264_nal_parser_new ();
+  const guint8 *buf = slice_eoseq_slice;
+  guint n, buf_size = sizeof (slice_eoseq_slice);
+
+  res = gst_h264_parser_identify_nalu (parser, buf, 0, buf_size, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H264_NAL_SLICE_IDR);
+  assert_equals_int (nalu.size, 20);
+
+  n = nalu.offset + nalu.size;
+  buf += n;
+  buf_size -= n;
+
+  res = gst_h264_parser_identify_nalu (parser, buf, 0, buf_size, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H264_NAL_SEQ_END);
+  assert_equals_int (nalu.size, 1);
+
+  n = nalu.offset + nalu.size;
+  buf += n;
+  buf_size -= n;
+
+  res = gst_h264_parser_identify_nalu (parser, buf, 0, buf_size, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H264_NAL_SLICE_IDR);
+  assert_equals_int (nalu.size, 20);
+
+  n = nalu.offset + nalu.size;
+  buf += n;
+  buf_size -= n;
+
+  res = gst_h264_parser_identify_nalu (parser, buf, 0, buf_size, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H264_NAL_STREAM_END);
+  assert_equals_int (nalu.size, 1);
+
+  gst_h264_nal_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h264parser_suite (void)
 {
@@ -159,6 +220,7 @@ h264parser_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_h264_parse_slice_dpa);
+  tcase_add_test (tc_chain, test_h264_parse_slice_eoseq_slice);
 
   return s;
 }
