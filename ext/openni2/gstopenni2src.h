@@ -57,6 +57,9 @@ struct _GstOpenni2Src
   GstVideoInfo info;
   GstCaps *gst_caps;
 
+  /* Timestamp of the first frame */
+  GstClockTime oni_start_ts;
+
   /* OpenNI2 variables */
   openni::Device device;
   openni::VideoStream depth, color;

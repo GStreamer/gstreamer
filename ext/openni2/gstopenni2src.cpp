@@ -178,6 +178,8 @@ gst_openni2_src_init (GstOpenni2Src * ni2src)
 {
   gst_base_src_set_live (GST_BASE_SRC (ni2src), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (ni2src), GST_FORMAT_TIME);
+
+  ni2src->oni_start_ts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -401,7 +403,9 @@ gst_openni2_src_change_state (GstElement * element, GstStateChange transition)
       }
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      src->oni_start_ts = GST_CLOCK_TIME_NONE;
       break;
     default:
       break;
@@ -592,6 +596,7 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
   openni::VideoStream * pStream = &(src->depth);
   int changedStreamDummy;
   GstVideoFrame vframe;
+  uint64_t oni_ts;
 
   /* Block until we get some data */
   rc = openni::OpenNI::waitForAnyStream (&pStream, 1, &changedStreamDummy,
@@ -638,10 +643,11 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
     }
     gst_video_frame_unmap (&vframe);
 
-    GST_BUFFER_PTS (buf) = src->colorFrame.getTimestamp () * 1000;
-    GST_LOG_OBJECT (src, "sending buffer (%d+%d)B [%" GST_TIME_FORMAT "]",
+    oni_ts = src->colorFrame.getTimestamp () * 1000;
+
+    GST_LOG_OBJECT (src, "sending buffer (%d+%d)B",
         src->colorFrame.getDataSize (),
-        src->depthFrame.getDataSize (), GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+        src->depthFrame.getDataSize ());
   } else if (src->depth.isValid () && src->sourcetype == SOURCETYPE_DEPTH) {
     rc = src->depth.readFrame (&src->depthFrame);
     if (rc != openni::STATUS_OK) {
@@ -663,11 +669,12 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
     }
     gst_video_frame_unmap (&vframe);
 
-    GST_BUFFER_PTS (buf) = src->depthFrame.getTimestamp () * 1000;
-    GST_LOG_OBJECT (src, "sending buffer (%dx%d)=%dB [%" GST_TIME_FORMAT "]",
+    oni_ts = src->depthFrame.getTimestamp () * 1000;
+
+    GST_LOG_OBJECT (src, "sending buffer (%dx%d)=%dB",
         src->depthFrame.getWidth (),
         src->depthFrame.getHeight (),
-        src->depthFrame.getDataSize (), GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+        src->depthFrame.getDataSize ());
   } else if (src->color.isValid () && src->sourcetype == SOURCETYPE_COLOR) {
     rc = src->color.readFrame (&src->colorFrame);
     if (rc != openni::STATUS_OK) {
@@ -688,12 +695,22 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
     }
     gst_video_frame_unmap (&vframe);
 
-    GST_BUFFER_PTS (buf) = src->colorFrame.getTimestamp () * 1000;
-    GST_LOG_OBJECT (src, "sending buffer (%dx%d)=%dB [%" GST_TIME_FORMAT "]",
+    oni_ts = src->colorFrame.getTimestamp () * 1000;
+
+    GST_LOG_OBJECT (src, "sending buffer (%dx%d)=%dB",
         src->colorFrame.getWidth (),
         src->colorFrame.getHeight (),
-        src->colorFrame.getDataSize (), GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+        src->colorFrame.getDataSize ());
   }
+
+  if (G_UNLIKELY (src->oni_start_ts == GST_CLOCK_TIME_NONE))
+    src->oni_start_ts = oni_ts;
+
+  GST_BUFFER_PTS (buf) = oni_ts - src->oni_start_ts;
+
+  GST_LOG_OBJECT (src, "Calculated PTS as %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+
   return GST_FLOW_OK;
 }
 
