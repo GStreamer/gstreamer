@@ -110,7 +110,7 @@ static GstFlowReturn gst_openni2src_fill (GstPushSrc * src, GstBuffer * buf);
 
 /* OpenNI2 interaction methods */
 static gboolean openni2_initialise_library ();
-static GstFlowReturn openni2_initialise_devices (GstOpenni2Src * src);
+static gboolean openni2_initialise_devices (GstOpenni2Src * src);
 static GstFlowReturn openni2_read_gstbuffer (GstOpenni2Src * src,
     GstBuffer * buf);
 static void openni2_finalise (GstOpenni2Src * src);
@@ -227,10 +227,8 @@ gst_openni2_src_set_property (GObject * object, guint prop_id,
         g_free (openni2src->uri_name);
         openni2src->uri_name = NULL;
       }
-      openni2src->uri_name = g_value_dup_string (value);
 
-      /* Action! */
-      openni2_initialise_devices (openni2src);
+      openni2src->uri_name = g_value_dup_string (value);
       break;
     case PROP_SOURCETYPE:
       openni2src->sourcetype = g_value_get_enum (value);
@@ -377,6 +375,9 @@ gst_openni2_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      /* Action! */
+      if (!openni2_initialise_devices (src))
+        return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!src->uri_name) {
@@ -491,7 +492,7 @@ openni2_initialise_library (void)
   return (rc == openni::STATUS_OK);
 }
 
-GstFlowReturn
+static gboolean
 openni2_initialise_devices (GstOpenni2Src * src)
 {
   openni::Status rc = openni::STATUS_OK;
@@ -506,7 +507,7 @@ openni2_initialise_devices (GstOpenni2Src * src)
     GST_ERROR_OBJECT (src, "Device (%s) open failed: %s", deviceURI,
         openni::OpenNI::getExtendedError ());
     openni::OpenNI::shutdown ();
-    return GST_FLOW_ERROR;
+    return FALSE;
   }
 
   /** depth sensor **/
@@ -539,7 +540,7 @@ openni2_initialise_devices (GstOpenni2Src * src)
   if (!src->depth.isValid () && !src->color.isValid ()) {
     GST_ERROR_OBJECT (src, "No valid streams. Exiting\n");
     openni::OpenNI::shutdown ();
-    return GST_FLOW_ERROR;
+    return FALSE;
   }
 
   /** Get resolution and make sure is valid **/
@@ -562,7 +563,7 @@ openni2_initialise_devices (GstOpenni2Src * src)
       GST_ERROR_OBJECT (src, "Error - expect color and depth to be"
           " in same resolution: D: %dx%d vs C: %dx%d",
           depthWidth, depthHeight, colorWidth, colorHeight);
-      return GST_FLOW_ERROR;
+      return FALSE;
     }
     GST_INFO_OBJECT (src, "DEPTH&COLOR resolution: %dx%d",
         src->width, src->height);
@@ -582,10 +583,10 @@ openni2_initialise_devices (GstOpenni2Src * src)
     GST_INFO_OBJECT (src, "COLOR resolution: %dx%d", src->width, src->height);
   } else {
     GST_ERROR_OBJECT (src, "Expected at least one of the streams to be valid.");
-    return GST_FLOW_ERROR;
+    return FALSE;
   }
 
-  return GST_FLOW_OK;
+  return TRUE;
 }
 
 static GstFlowReturn
