@@ -226,6 +226,7 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   GMainLoop *loop = (GMainLoop *) data;
 
   g_print ("Got %s message from %s\n", GST_MESSAGE_TYPE_NAME (message), name);
+  g_free (name);
 
   switch (GST_MESSAGE_TYPE (message)) {
 
