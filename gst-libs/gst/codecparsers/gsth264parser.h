@@ -241,16 +241,20 @@ typedef struct _GstH264SEIMessage             GstH264SEIMessage;
 
 /**
  * GstH264NalUnit:
- * @ref_idc: not equal to 0 specifies that the content of the NAL unit contains a sequence
- *  parameter set, a sequence * parameter set extension, a subset sequence parameter set, a
- *  picture parameter set, a slice of a reference picture, a slice data partition of a
- *  reference picture, or a prefix NAL unit preceding a slice of a reference picture.
+ * @ref_idc: not equal to 0 specifies that the content of the NAL unit
+ *  contains a sequence parameter set, a sequence parameter set
+ *  extension, a subset sequence parameter set, a picture parameter
+ *  set, a slice of a reference picture, a slice data partition of a
+ *  reference picture, or a prefix NAL unit preceding a slice of a
+ *  reference picture.
  * @type: A #GstH264NalUnitType
  * @idr_pic_flag: calculated idr_pic_flag
- * @size: The size of the nal unit starting from @offset
- * @offset: The offset of the actual start of the nal unit
- * @sc_offset:The offset of the start code of the nal unit
- * @valid: If the nal unit is valid, which mean it has
+ * @size: The size of the nal unit starting from @offset, thus
+ *  including the header bytes. e.g. @type (nal_unit_type)
+ * @offset: The offset of the actual start of the nal unit, thus
+ *  including the header bytes
+ * @sc_offset: The offset of the start code of the nal unit
+ * @valid: If the nal unit is valid, which means it has
  * already been parsed
  * @data: The data from which the Nalu has been parsed
  *
