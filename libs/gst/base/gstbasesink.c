@@ -3091,6 +3091,7 @@ gst_base_sink_default_event (GstBaseSink * basesink, GstEvent * event)
       GST_DEBUG_OBJECT (basesink, "configured segment %" GST_SEGMENT_FORMAT,
           &basesink->segment);
       basesink->have_newsegment = TRUE;
+      gst_base_sink_reset_qos (basesink);
       GST_OBJECT_UNLOCK (basesink);
       break;
     case GST_EVENT_GAP:
