@@ -299,7 +299,7 @@ client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
 
   g_mutex_lock (&priv->lock);
   /* check if we already know about this session */
-  if (g_list_find (priv->sessions, session) = NULL) {
+  if (g_list_find (priv->sessions, session) == NULL) {
     GST_INFO ("watching session %p", session);
     priv->sessions = g_list_prepend (priv->sessions, g_object_ref (session));
   }
