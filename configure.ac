@@ -139,6 +139,9 @@ dnl *** checks for dependency libraries ***
 dnl GLib is required
 AG_GST_GLIB_CHECK([2.32])
 
+dnl Needed by plugins that use g_module_*() API
+PKG_CHECK_MODULES(GMODULE_NO_EXPORT, gmodule-no-export-2.0)
+
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
 AG_GST_CHECK_GST($GST_API_VERSION, [$GST_REQ], yes)
@@ -354,7 +357,7 @@ AC_SUBST(GST_OMX_CFLAGS)
 
 dnl FIXME: do we want to rename to GST_ALL_* ?
 dnl add GST_OPTION_CFLAGS, but overridable
-GST_CFLAGS="$GLIB_CFLAGS $GST_CFLAGS $GLIB_EXTRA_CFLAGS \$(GST_OPTION_CFLAGS)"
+GST_CFLAGS="$GST_CFLAGS $GLIB_EXTRA_CFLAGS \$(GST_OPTION_CFLAGS)"
 AC_SUBST(GST_CFLAGS)
 dnl add GCOV libs because libtool strips -fprofile-arcs -ftest-coverage
 GST_LIBS="$GST_LIBS \$(GCOV_LIBS)"

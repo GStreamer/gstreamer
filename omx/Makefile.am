@@ -65,7 +65,8 @@ libgstomx_la_CFLAGS = \
 	$(GST_GL_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS)
+	$(GST_CFLAGS) \
+	$(GMODULE_NO_EXPORT_CFLAGS)
 libgstomx_la_LIBADD = \
 	$(GST_GL_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
@@ -73,7 +74,8 @@ libgstomx_la_LIBADD = \
 	-lgstpbutils-@GST_API_VERSION@ \
 	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
-	$(GST_LIBS)
+	$(GST_LIBS) \
+	$(GMODULE_NO_EXPORT_LIBS)
 libgstomx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 EXTRA_DIST = \
