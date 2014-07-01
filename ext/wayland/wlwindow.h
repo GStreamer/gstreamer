@@ -22,6 +22,7 @@
 #define __GST_WL_WINDOW_H__
 
 #include "wldisplay.h"
+#include "wlbuffer.h"
 #include <gst/video/video.h>
 
 G_BEGIN_DECLS
@@ -41,16 +42,19 @@ struct _GstWlWindow
   GObject parent_instance;
 
   GstWlDisplay *display;
-  struct wl_surface *surface;
-  struct wl_subsurface *subsurface;
-  struct wl_viewport *viewport;
+  struct wl_surface *area_surface;
+  struct wl_subsurface *area_subsurface;
+  struct wl_viewport *area_viewport;
+  struct wl_surface *video_surface;
+  struct wl_subsurface *video_subsurface;
+  struct wl_viewport *video_viewport;
   struct wl_shell_surface *shell_surface;
 
-  /* the size of the destination area where we are overlaying our subsurface */
+  /* the size and position of the area_(sub)surface */
   GstVideoRectangle render_rectangle;
   /* the size of the video in the buffers */
   gint video_width, video_height;
-  /* the size of the (sub)surface */
+  /* the size of the video_(sub)surface */
   gint surface_width, surface_height;
 };
 
@@ -62,7 +66,7 @@ struct _GstWlWindowClass
 GType gst_wl_window_get_type (void);
 
 GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
-        GstVideoInfo * video_info);
+        const GstVideoInfo * info);
 GstWlWindow *gst_wl_window_new_in_surface (GstWlDisplay * display,
         struct wl_surface * parent);
 
@@ -70,8 +74,8 @@ GstWlDisplay *gst_wl_window_get_display (GstWlWindow * window);
 struct wl_surface *gst_wl_window_get_wl_surface (GstWlWindow * window);
 gboolean gst_wl_window_is_toplevel (GstWlWindow *window);
 
-/* functions to manipulate the size on non-toplevel windows */
-void gst_wl_window_set_video_info (GstWlWindow * window, GstVideoInfo * info);
+void gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
+        const GstVideoInfo * info);
 void gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
         gint w, gint h);
 

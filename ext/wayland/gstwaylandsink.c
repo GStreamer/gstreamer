@@ -333,11 +333,7 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
           g_clear_object (&sink->window);
         } else {
           /* remove buffer from surface, show nothing */
-          wl_surface_attach (sink->window->surface, NULL, 0, 0);
-          wl_surface_damage (sink->window->surface, 0, 0,
-              sink->window->surface_width, sink->window->surface_height);
-          wl_surface_commit (sink->window->surface);
-          wl_display_flush (sink->display->display);
+          gst_wl_window_render (sink->window, NULL, NULL);
         }
       }
       break;
@@ -558,6 +554,7 @@ static void
 render_last_buffer (GstWaylandSink * sink)
 {
   GstWlBuffer *wlbuffer;
+  const GstVideoInfo *info = NULL;
   struct wl_surface *surface;
   struct wl_callback *callback;
 
@@ -568,12 +565,11 @@ render_last_buffer (GstWaylandSink * sink)
   callback = wl_surface_frame (surface);
   wl_callback_add_listener (callback, &frame_callback_listener, sink);
 
-  gst_wl_buffer_attach (wlbuffer, sink->window);
-  wl_surface_damage (surface, 0, 0, sink->window->surface_width,
-      sink->window->surface_height);
-
-  wl_surface_commit (surface);
-  wl_display_flush (sink->display->display);
+  if (G_UNLIKELY (sink->video_info_changed)) {
+    info = &sink->video_info;
+    sink->video_info_changed = FALSE;
+  }
+  gst_wl_window_render (sink->window, wlbuffer, info);
 }
 
 static GstFlowReturn
@@ -595,33 +591,19 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (sink));
     g_mutex_lock (&sink->render_lock);
 
-    if (sink->window) {
-      /* inform the window about our caps */
-      gst_wl_window_set_video_info (sink->window, &sink->video_info);
-    } else {
+    if (!sink->window) {
       /* if we were not provided a window, create one ourselves */
       sink->window =
           gst_wl_window_new_toplevel (sink->display, &sink->video_info);
     }
-    sink->video_info_changed = FALSE;
   }
 
   /* drop buffers until we get a frame callback */
   if (g_atomic_int_get (&sink->redraw_pending) == TRUE)
     goto done;
 
-  if (G_UNLIKELY (sink->video_info_changed)) {
-    gst_wl_window_set_video_info (sink->window, &sink->video_info);
-    sink->video_info_changed = FALSE;
-  }
-
-  /* now that we have for sure set the video info on the window, it must have
-   * a valid size, otherwise this means that the application has called
-   * set_window_handle() without calling set_render_rectangle(), which is
-   * absolutely necessary for us.
-   */
-  if (G_UNLIKELY (sink->window->surface_width == 0 ||
-          sink->window->surface_height == 0))
+  /* make sure that the application has called set_render_rectangle() */
+  if (G_UNLIKELY (sink->window->render_rectangle.w == 0))
     goto no_window_size;
 
   wlbuffer = gst_buffer_get_wl_buffer (buffer);
@@ -822,14 +804,14 @@ gst_wayland_sink_begin_geometry_change (GstWaylandVideo * video)
   g_return_if_fail (sink != NULL);
 
   g_mutex_lock (&sink->render_lock);
-  if (!sink->window || !sink->window->subsurface) {
+  if (!sink->window || !sink->window->area_subsurface) {
     g_mutex_unlock (&sink->render_lock);
     GST_INFO_OBJECT (sink,
         "begin_geometry_change called without window, ignoring");
     return;
   }
 
-  wl_subsurface_set_sync (sink->window->subsurface);
+  wl_subsurface_set_sync (sink->window->area_subsurface);
   g_mutex_unlock (&sink->render_lock);
 }
 
@@ -840,14 +822,14 @@ gst_wayland_sink_end_geometry_change (GstWaylandVideo * video)
   g_return_if_fail (sink != NULL);
 
   g_mutex_lock (&sink->render_lock);
-  if (!sink->window || !sink->window->subsurface) {
+  if (!sink->window || !sink->window->area_subsurface) {
     g_mutex_unlock (&sink->render_lock);
     GST_INFO_OBJECT (sink,
         "end_geometry_change called without window, ignoring");
     return;
   }
 
-  wl_subsurface_set_desync (sink->window->subsurface);
+  wl_subsurface_set_desync (sink->window->area_subsurface);
   g_mutex_unlock (&sink->render_lock);
 }
 

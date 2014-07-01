@@ -24,7 +24,7 @@
 #ifndef __GST_WL_VIDEO_FORMAT_H__
 #define __GST_WL_VIDEO_FORMAT_H__
 
-#include <wayland-client.h>
+#include <wayland-client-protocol.h>
 #include <gst/video/video.h>
 
 G_BEGIN_DECLS

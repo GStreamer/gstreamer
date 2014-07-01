@@ -120,7 +120,7 @@ static const struct wl_buffer_listener buffer_listener = {
   buffer_release
 };
 
-void
+GstWlBuffer *
 gst_buffer_add_wl_buffer (GstBuffer * gstbuffer, struct wl_buffer *wlbuffer,
     GstWlDisplay * display)
 {
@@ -137,6 +137,8 @@ gst_buffer_add_wl_buffer (GstBuffer * gstbuffer, struct wl_buffer *wlbuffer,
 
   gst_mini_object_set_qdata ((GstMiniObject *) gstbuffer,
       gst_wl_buffer_qdata_quark (), self, g_object_unref);
+
+  return self;
 }
 
 GstWlBuffer *
@@ -172,11 +174,11 @@ gst_wl_buffer_force_release_and_unref (GstWlBuffer * self)
 }
 
 void
-gst_wl_buffer_attach (GstWlBuffer * self, GstWlWindow * target)
+gst_wl_buffer_attach (GstWlBuffer * self, struct wl_surface *surface)
 {
   g_return_if_fail (self->used_by_compositor == FALSE);
 
-  wl_surface_attach (target->surface, self->wlbuffer, 0, 0);
+  wl_surface_attach (surface, self->wlbuffer, 0, 0);
 
   /* Add a reference to the buffer. This represents the fact that
    * the compositor is using the buffer and it should not return

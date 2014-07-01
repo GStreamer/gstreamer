@@ -21,7 +21,7 @@
 #ifndef __GST_WL_BUFFER_H__
 #define __GST_WL_BUFFER_H__
 
-#include "wlwindow.h"
+#include "wldisplay.h"
 
 G_BEGIN_DECLS
 
@@ -54,13 +54,13 @@ struct _GstWlBufferClass
 
 GType gst_wl_buffer_get_type (void);
 
-void gst_buffer_add_wl_buffer (GstBuffer * gstbuffer,
+GstWlBuffer * gst_buffer_add_wl_buffer (GstBuffer * gstbuffer,
     struct wl_buffer * wlbuffer, GstWlDisplay * display);
 GstWlBuffer * gst_buffer_get_wl_buffer (GstBuffer * gstbuffer);
 
 void gst_wl_buffer_force_release_and_unref (GstWlBuffer * self);
 
-void gst_wl_buffer_attach (GstWlBuffer * self, GstWlWindow * target);
+void gst_wl_buffer_attach (GstWlBuffer * self, struct wl_surface *surface);
 
 G_END_DECLS
 
