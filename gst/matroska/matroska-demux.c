@@ -3478,37 +3478,18 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
               && lace_time > demux->common.segment.start
               && (!GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop)
                   || lace_time < demux->common.segment.stop)) {
-            GstSegment segment;
-            GstEvent *event1, *event2;
+            GstEvent *event;
             GST_DEBUG_OBJECT (demux,
                 "Gap of %" G_GINT64_FORMAT " ns detected in"
                 "stream %d (%" GST_TIME_FORMAT " -> %" GST_TIME_FORMAT "). "
                 "Sending updated SEGMENT events", diff,
                 stream->index, GST_TIME_ARGS (stream->pos),
                 GST_TIME_ARGS (lace_time));
-            /* send segment events such that the gap is not accounted in
-             * segment base time, hence running_time */
-            /* close ahead of gap */
-            segment = demux->common.segment;
-            segment.start = demux->last_stop_end;
-            segment.stop = demux->last_stop_end;
-            segment.position = demux->last_stop_end;
-            event1 = gst_event_new_segment (&segment);
-            /* skip gap */
-            segment.start = lace_time;
-            segment.stop = demux->common.segment.stop;
-            segment.position = lace_time;
-            event2 = gst_event_new_segment (&segment);
+
+            event = gst_event_new_gap (demux->last_stop_end, diff);
             GST_OBJECT_UNLOCK (demux);
-            gst_matroska_demux_send_event (demux, event1);
-            gst_matroska_demux_send_event (demux, event2);
+            gst_pad_push_event (stream->pad, event);
             GST_OBJECT_LOCK (demux);
-            /* align segment view with downstream,
-             * prevents double-counting base time when closing segment */
-            /* FIXME: in 0.10, the segment base/accum got updated here, but
-             * maybe we don't need that because of the double accounting
-             * mentioned above? */
-            demux->common.segment = segment;
           }
         }
 
