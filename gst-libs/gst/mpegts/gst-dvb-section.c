@@ -630,8 +630,8 @@ gst_mpegts_nit_new (void)
 
   nit = g_slice_new0 (GstMpegtsNIT);
 
-  nit->descriptors =
-      g_ptr_array_new_with_free_func ((GDestroyNotify) _free_descriptor);
+  nit->descriptors = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      gst_mpegts_descriptor_free);
   nit->streams = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_nit_stream_free);
 
@@ -653,7 +653,7 @@ gst_mpegts_nit_stream_new (void)
   stream = g_slice_new0 (GstMpegtsNITStream);
 
   stream->descriptors = g_ptr_array_new_with_free_func (
-      (GDestroyNotify) _free_descriptor);
+      (GDestroyNotify) gst_mpegts_descriptor_free);
 
   return stream;
 }
@@ -979,7 +979,7 @@ gst_mpegts_sdt_service_new (void)
   service = g_slice_new0 (GstMpegtsSDTService);
 
   service->descriptors = g_ptr_array_new_with_free_func ((GDestroyNotify)
-      _free_descriptor);
+      gst_mpegts_descriptor_free);
 
   return service;
 }

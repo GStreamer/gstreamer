@@ -453,7 +453,7 @@ GST_START_TEST (test_mpegts_descriptors)
       fail ("0x%X != 0x%X in byte %d of registration descriptor",
           desc->data[i], registration_descriptor[i], i);
   }
-  g_boxed_free (GST_TYPE_MPEGTS_DESCRIPTOR, desc);
+  gst_mpegts_descriptor_free (desc);
 }
 
 GST_END_TEST;
@@ -498,7 +498,7 @@ GST_START_TEST (test_mpegts_dvb_descriptors)
   fail_unless (ret == TRUE);
   fail_unless (strcmp (string, "Name") == 0);
   g_free (string);
-  g_boxed_free (GST_TYPE_MPEGTS_DESCRIPTOR, desc);
+  gst_mpegts_descriptor_free (desc);
 
   /* Descriptor should fail if string is more than 255 bytes */
   memset (long_string, 0x41, 256);
@@ -531,7 +531,7 @@ GST_START_TEST (test_mpegts_dvb_descriptors)
   fail_unless (strcmp (provider, "Provider") == 0);
   g_free (string);
   g_free (provider);
-  g_boxed_free (GST_TYPE_MPEGTS_DESCRIPTOR, desc);
+  gst_mpegts_descriptor_free (desc);
 
   /* Check creation of descriptor without data */
   desc = gst_mpegts_descriptor_from_dvb_service
@@ -543,7 +543,7 @@ GST_START_TEST (test_mpegts_dvb_descriptors)
   /* Check parsing of descriptor without data */
   ret = gst_mpegts_descriptor_parse_dvb_service (desc, NULL, NULL, NULL);
   fail_unless (ret == TRUE);
-  g_boxed_free (GST_TYPE_MPEGTS_DESCRIPTOR, desc);
+  gst_mpegts_descriptor_free (desc);
 
   /* Descriptor should fail if string is more than 255 bytes */
   memset (long_string, 0x41, 256);

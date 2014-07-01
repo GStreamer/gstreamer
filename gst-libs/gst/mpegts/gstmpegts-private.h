@@ -34,7 +34,6 @@ G_GNUC_INTERNAL guint32 _calc_crc32 (const guint8 *data, guint datalen);
 G_GNUC_INTERNAL gchar *get_encoding_and_convert (const gchar *text, guint length);
 G_GNUC_INTERNAL gchar *convert_lang_code (guint8 * data);
 G_GNUC_INTERNAL guint8 *dvb_text_from_utf8 (const gchar * text, gsize *out_size);
-G_GNUC_INTERNAL void _free_descriptor (GstMpegtsDescriptor *descriptor);
 G_GNUC_INTERNAL GstMpegtsDescriptor *_new_descriptor (guint8 tag, guint8 length);
 G_GNUC_INTERNAL GstMpegtsDescriptor *_new_descriptor_with_extension (guint8 tag,
     guint8 tag_extension, guint8 length);

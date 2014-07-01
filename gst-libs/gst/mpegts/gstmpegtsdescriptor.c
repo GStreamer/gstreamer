@@ -715,15 +715,22 @@ _copy_descriptor (GstMpegtsDescriptor * desc)
   return copy;
 }
 
+/**
+ * gst_mpegts_descriptor_free:
+ * @desc: The descriptor to free
+ *
+ * Frees @desc
+ */
 void
-_free_descriptor (GstMpegtsDescriptor * desc)
+gst_mpegts_descriptor_free (GstMpegtsDescriptor * desc)
 {
   g_free ((gpointer) desc->data);
   g_slice_free (GstMpegtsDescriptor, desc);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsDescriptor, gst_mpegts_descriptor,
-    (GBoxedCopyFunc) _copy_descriptor, (GBoxedFreeFunc) _free_descriptor);
+    (GBoxedCopyFunc) _copy_descriptor,
+    (GBoxedFreeFunc) gst_mpegts_descriptor_free);
 
 /**
  * gst_mpegts_parse_descriptors:
@@ -778,7 +785,9 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
     return NULL;
   }
 
-  res = g_ptr_array_new_full (nb_desc + 1, (GDestroyNotify) _free_descriptor);
+  res =
+      g_ptr_array_new_full (nb_desc + 1,
+      (GDestroyNotify) gst_mpegts_descriptor_free);
 
   data = buffer;
 

@@ -257,6 +257,8 @@ struct _GstMpegtsDescriptor
   guint8 *data;
 };
 
+void       gst_mpegts_descriptor_free (GstMpegtsDescriptor *desc);
+
 GPtrArray *gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len);
 
 const GstMpegtsDescriptor * gst_mpegts_find_descriptor (GPtrArray *descriptors,
