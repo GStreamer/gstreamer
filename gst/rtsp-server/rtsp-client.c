@@ -3263,8 +3263,6 @@ handle_tunnel (GstRTSPClient * client)
     /* the old client owns the tunnel now, the new one will be freed */
     g_source_destroy ((GSource *) priv->watch);
     priv->watch = NULL;
-    g_main_context_unref (priv->watch_context);
-    priv->watch_context = NULL;
     gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
   }
 
@@ -3393,7 +3391,7 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
    * be superceeded by a cache object later */
   gst_rtsp_watch_set_send_backlog (priv->watch, 0, 100);
 
-  GST_INFO ("attaching to context %p", context);
+  GST_INFO ("client %p: attaching to context %p", client, context);
   res = gst_rtsp_watch_attach (priv->watch, context);
 
   return res;
