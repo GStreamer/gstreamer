@@ -71,6 +71,7 @@ struct _GstRTSPClientPrivate
   GDestroyNotify send_notify;   /* protected by send_lock */
 
   GstRTSPSessionPool *session_pool;
+  gulong session_removed_id;
   GstRTSPMountPoints *mount_points;
   GstRTSPAuth *auth;
   GstRTSPThreadPool *thread_pool;
@@ -131,8 +132,6 @@ static void gst_rtsp_client_set_property (GObject * object, guint propid,
 static void gst_rtsp_client_finalize (GObject * obj);
 
 static GstSDPMessage *create_sdp (GstRTSPClient * client, GstRTSPMedia * media);
-static void client_session_finalized (GstRTSPClient * client,
-    GstRTSPSession * session);
 static void unlink_session_transports (GstRTSPClient * client,
     GstRTSPSession * session, GstRTSPSessionMedia * sessmedia);
 static gboolean default_configure_client_media (GstRTSPClient * client,
@@ -281,7 +280,7 @@ gst_rtsp_client_init (GstRTSPClient * client)
 }
 
 static GstRTSPFilterResult
-filter_session (GstRTSPSession * sess, GstRTSPSessionMedia * sessmedia,
+filter_session_media (GstRTSPSession * sess, GstRTSPSessionMedia * sessmedia,
     gpointer user_data)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
@@ -294,65 +293,45 @@ filter_session (GstRTSPSession * sess, GstRTSPSessionMedia * sessmedia,
 }
 
 static void
-client_unlink_session (GstRTSPClient * client, GstRTSPSession * session)
-{
-  /* unlink all media managed in this session */
-  gst_rtsp_session_filter (session, filter_session, client);
-}
-
-static void
 client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
 {
   GstRTSPClientPrivate *priv = client->priv;
-  GList *walk;
 
-  for (walk = priv->sessions; walk; walk = g_list_next (walk)) {
-    GstRTSPSession *msession = (GstRTSPSession *) walk->data;
+  /* we already know about this session */
+  if (g_list_find (priv->sessions, session) != NULL)
+    return;
 
-    /* we already know about this session */
-    if (msession == session)
+  GST_INFO ("watching session %p", session);
+  priv->sessions = g_list_prepend (priv->sessions, g_object_ref (session));
+}
+
+static void
+client_unwatch_session (GstRTSPClient * client, GstRTSPSession * session,
+    GList * link)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+
+  GST_INFO ("client %p: unwatch session %p", client, session);
+
+  if (link == NULL) {
+    link = g_list_find (priv->sessions, session);
+    if (link == NULL)
       return;
   }
 
-  GST_INFO ("watching session %p", session);
+  /* unlink all media managed in this session */
+  gst_rtsp_session_filter (session, filter_session_media, client);
 
-  g_object_weak_ref (G_OBJECT (session), (GWeakNotify) client_session_finalized,
-      client);
-  priv->sessions = g_list_prepend (priv->sessions, session);
+  /* remove the session */
+  priv->sessions = g_list_delete_link (priv->sessions, link);
+  g_object_unref (session);
 }
 
-static void
-client_unwatch_session (GstRTSPClient * client, GstRTSPSession * session)
+static GstRTSPFilterResult
+cleanup_session (GstRTSPClient * client, GstRTSPSession * sess,
+    gpointer user_data)
 {
-  GstRTSPClientPrivate *priv = client->priv;
-
-  GST_INFO ("unwatching session %p", session);
-
-  g_object_weak_unref (G_OBJECT (session),
-      (GWeakNotify) client_session_finalized, client);
-  priv->sessions = g_list_remove (priv->sessions, session);
-}
-
-static void
-client_cleanup_session (GstRTSPClient * client, GstRTSPSession * session)
-{
-  g_object_weak_unref (G_OBJECT (session),
-      (GWeakNotify) client_session_finalized, client);
-  client_unlink_session (client, session);
-}
-
-static void
-client_cleanup_sessions (GstRTSPClient * client)
-{
-  GstRTSPClientPrivate *priv = client->priv;
-  GList *sessions;
-
-  /* remove weak-ref from sessions */
-  for (sessions = priv->sessions; sessions; sessions = g_list_next (sessions)) {
-    client_cleanup_session (client, (GstRTSPSession *) sessions->data);
-  }
-  g_list_free (priv->sessions);
-  priv->sessions = NULL;
+  return GST_RTSP_FILTER_REMOVE;
 }
 
 /* A client is finalized when the connection is broken */
@@ -374,12 +353,14 @@ gst_rtsp_client_finalize (GObject * obj)
   if (priv->watch_context)
     g_main_context_unref (priv->watch_context);
 
-  client_cleanup_sessions (client);
+  gst_rtsp_client_session_filter (client, cleanup_session, NULL);
 
   if (priv->connection)
     gst_rtsp_connection_free (priv->connection);
-  if (priv->session_pool)
+  if (priv->session_pool) {
+    g_signal_handler_disconnect (priv->session_pool, priv->session_removed_id);
     g_object_unref (priv->session_pool);
+  }
   if (priv->mount_points)
     g_object_unref (priv->mount_points);
   if (priv->auth)
@@ -797,14 +778,15 @@ close_connection (GstRTSPClient * client)
 
   GST_DEBUG ("client %p: closing connection", client);
 
-  if ((tunnelid = gst_rtsp_connection_get_tunnelid (priv->connection))) {
-    g_mutex_lock (&tunnels_lock);
-    /* remove from tunnelids */
-    g_hash_table_remove (tunnels, tunnelid);
-    g_mutex_unlock (&tunnels_lock);
+  if (priv->connection) {
+    if ((tunnelid = gst_rtsp_connection_get_tunnelid (priv->connection))) {
+      g_mutex_lock (&tunnels_lock);
+      /* remove from tunnelids */
+      g_hash_table_remove (tunnels, tunnelid);
+      g_mutex_unlock (&tunnels_lock);
+    }
+    gst_rtsp_connection_close (priv->connection);
   }
-
-  gst_rtsp_connection_close (priv->connection);
 
   /* connection is now closed, destroy the watch which will also cause the
    * closed signal to be emitted */
@@ -839,6 +821,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPStatusCode code;
   gchar *path;
   gint matched;
+  gboolean keep_session;
 
   if (!ctx->session)
     goto no_session;
@@ -875,9 +858,6 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* unlink the all TCP callbacks */
   unlink_session_transports (client, session, sessmedia);
 
-  /* remove the session from the watched sessions */
-  client_unwatch_session (client, session);
-
   gst_rtsp_session_media_set_state (sessmedia, GST_STATE_NULL);
 
   /* allow messages again so that we can send the reply */
@@ -885,16 +865,19 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   /* unmanage the media in the session, returns false if all media session
    * are torn down. */
-  if (!gst_rtsp_session_release_media (session, sessmedia)) {
-    /* remove the session */
-    gst_rtsp_session_pool_remove (priv->session_pool, session);
-  }
+  keep_session = gst_rtsp_session_release_media (session, sessmedia);
+
   /* construct the response now */
   code = GST_RTSP_STS_OK;
   gst_rtsp_message_init_response (ctx->response, code,
       gst_rtsp_status_as_text (code), ctx->request);
 
   send_message (client, ctx, ctx->response, TRUE);
+
+  if (!keep_session) {
+    /* remove the session */
+    gst_rtsp_session_pool_remove (priv->session_pool, session);
+  }
 
   return TRUE;
 
@@ -2247,22 +2230,13 @@ sanitize_uri (GstRTSPUrl * uri)
   *d = '\0';
 }
 
+/* is called when the session is removed from its session pool. */
 static void
-client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
+client_session_removed (GstRTSPSessionPool * pool, GstRTSPSession * session,
+    GstRTSPClient * client)
 {
-  GstRTSPClientPrivate *priv = client->priv;
-
-  GST_INFO ("client %p: session %p finished", client, session);
-
-  /* unlink all media managed in this session */
-  client_unlink_session (client, session);
-
-  /* remove the session */
-  if (!(priv->sessions = g_list_remove (priv->sessions, session))) {
-    GST_INFO ("client %p: all sessions finalized, close the connection",
-        client);
-    close_connection (client);
-  }
+  GST_INFO ("client %p: session %p removed", client, session);
+  client_unwatch_session (client, session, NULL);
 }
 
 /* Returns TRUE if there are no Require headers, otherwise returns FALSE
@@ -2656,8 +2630,17 @@ gst_rtsp_client_set_session_pool (GstRTSPClient * client,
   g_mutex_lock (&priv->lock);
   old = priv->session_pool;
   priv->session_pool = pool;
+
+  if (priv->session_removed_id)
+    g_signal_handler_disconnect (old, priv->session_removed_id);
+  if (pool)
+    priv->session_removed_id = g_signal_connect (pool, "session-removed",
+        G_CALLBACK (client_session_removed), client);
+  else
+    priv->session_removed_id = 0;
   g_mutex_unlock (&priv->lock);
 
+  /* FIXME, should remove all sessions from the old pool for this client */
   if (old)
     g_object_unref (old);
 }
@@ -3112,6 +3095,7 @@ message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
   GstRTSPClientPrivate *priv = client->priv;
 
   if (priv->close_seq && priv->close_seq == cseq) {
+    GST_INFO ("client %p: send close message", client);
     priv->close_seq = 0;
     close_connection (client);
   }
@@ -3459,7 +3443,7 @@ gst_rtsp_client_session_filter (GstRTSPClient * client,
     switch (res) {
       case GST_RTSP_FILTER_REMOVE:
         /* stop watching the session and pretent it went away */
-        client_cleanup_session (client, sess);
+        client_unwatch_session (client, sess, walk);
         break;
       case GST_RTSP_FILTER_REF:
         result = g_list_prepend (result, g_object_ref (sess));
