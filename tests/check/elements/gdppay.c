@@ -110,7 +110,7 @@ check_caps_buffer (gint refcount, GstCaps * caps)
 
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   buffers = g_list_remove (buffers, outbuffer);
-  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 2);
+  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", refcount);
   length = GST_DP_HEADER_LENGTH + (strlen (caps_string) + 1);
   fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
@@ -159,14 +159,13 @@ GST_START_TEST (test_audio)
   fail_unless_equals_int (g_list_length (buffers), 4);
 
   /* first buffer is the stream-start event */
-  check_stream_start_buffer (2);
+  check_stream_start_buffer (1);
 
-  /* second buffer is the serialized caps;
-   * the element also holds a ref to it */
-  check_caps_buffer (2, caps);
+  /* second buffer is the serialized caps */
+  check_caps_buffer (1, caps);
 
   /* third buffer is the serialized new_segment event */
-  check_segment_buffer (2);
+  check_segment_buffer (1);
 
   /* the fourth buffer is the GDP buffer for our pushed buffer */
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
@@ -319,15 +318,15 @@ GST_START_TEST (test_streamheader)
   gst_caps_unref (sinkcaps);
 
   /* first buffer is the stream-start event */
-  check_stream_start_buffer (2);
+  check_stream_start_buffer (1);
 
   /* second buffer is the serialized caps;
    * the element also holds a ref to it */
-  check_caps_buffer (2, caps);
+  check_caps_buffer (1, caps);
 
   /* third buffer is the serialized new_segment event;
    * the element also holds a ref to it */
-  check_segment_buffer (2);
+  check_segment_buffer (1);
 
   /* the fourth buffer is the GDP buffer for our pushed buffer */
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
@@ -500,16 +499,16 @@ GST_START_TEST (test_crc)
   fail_unless_equals_int (g_list_length (buffers), 4);
 
   /* first buffer is the stream-start event */
-  check_stream_start_buffer (2);
+  check_stream_start_buffer (1);
 
   /* second buffer is the serialized caps;
    * the element also holds a ref to it */
-  check_caps_buffer (2, caps);
+  check_caps_buffer (1, caps);
 
   /* third buffer is the serialized new_segment event */
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   buffers = g_list_remove (buffers, outbuffer);
-  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 2);
+  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
 
   /* verify the header checksum */
   /* CRC's start at 58 in the header */
