@@ -306,6 +306,8 @@ gst_openni2_src_stop (GstBaseSrc * bsrc)
   if (src->color.isValid ())
     src->color.stop ();
 
+  src->device->close ();
+
   return TRUE;
 }
 
