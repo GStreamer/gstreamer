@@ -176,6 +176,7 @@ gst_openni2_src_class_init (GstOpenni2SrcClass * klass)
 static void
 gst_openni2_src_init (GstOpenni2Src * ni2src)
 {
+  gst_base_src_set_live (GST_BASE_SRC (ni2src), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (ni2src), GST_FORMAT_TIME);
 }
 
