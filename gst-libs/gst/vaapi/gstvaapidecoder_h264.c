@@ -104,6 +104,9 @@ gst_vaapi_parser_info_h264_finalize(GstVaapiParserInfoH264 *pi)
     case GST_H264_NAL_SUBSET_SPS:
         gst_h264_sps_clear(&pi->data.sps);
         break;
+    case GST_H264_NAL_PPS:
+        gst_h264_pps_clear(&pi->data.pps);
+        break;
     case GST_H264_NAL_SEI:
         if (pi->data.sei) {
             g_array_unref(pi->data.sei);
