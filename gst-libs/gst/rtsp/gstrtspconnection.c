@@ -3771,18 +3771,18 @@ gst_rtsp_watch_send_message (GstRTSPWatch * watch, GstRTSPMessage * message,
  * Wait until there is place in the backlog queue, @timeout is reached
  * or @watch is set to flushing.
  *
- * If @timeout is #NULL this function can block forever. If @timeout
- * contains a valid timeout, this function will return #GST_RTSP_ETIMEOUT
+ * If @timeout is %NULL this function can block forever. If @timeout
+ * contains a valid timeout, this function will return %GST_RTSP_ETIMEOUT
  * after the timeout expired.
  *
  * The typically use of this function is when gst_rtsp_watch_write_data
- * returns GST_RTSP_ENOMEM. The caller then calls this function to wait for
+ * returns %GST_RTSP_ENOMEM. The caller then calls this function to wait for
  * free space in the backlog queue and try again.
  *
- * Returns: #GST_RTSP_OK when if there is room in queue.
- *          #GST_RTSP_ETIMEOUT when @timeout was reached.
- *          #GST_RTSP_EINTR when @watch is flushing
- *          #GST_RTSP_EINVAL when called with invalid parameters.
+ * Returns: %GST_RTSP_OK when if there is room in queue.
+ *          %GST_RTSP_ETIMEOUT when @timeout was reached.
+ *          %GST_RTSP_EINTR when @watch is flushing
+ *          %GST_RTSP_EINVAL when called with invalid parameters.
  *
  * Since: 1.4
  */

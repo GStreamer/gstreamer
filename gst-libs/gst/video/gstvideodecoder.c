@@ -3720,7 +3720,7 @@ gst_video_decoder_set_needs_format (GstVideoDecoder * dec, gboolean enabled)
  *
  * Queries decoder required format handling.
  *
- * Returns: TRUE if required format handling is enabled.
+ * Returns: %TRUE if required format handling is enabled.
  *
  * Since: 1.4
  */

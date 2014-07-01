@@ -1085,9 +1085,9 @@ DISCOVERER_INFO_ACCESSOR_CODE (toc, const GstToc *, NULL);
  *
  * Get the installer details for missing elements
  *
- * Returns: (transfer full): (array zero-terminated=1): An array of strings
+ * Returns: (transfer full) (array zero-terminated=1): An array of strings
  * containing informations about how to install the various missing elements
- * for @info to be usable. Free with g_strfreev.
+ * for @info to be usable. Free with g_strfreev().
  *
  * Since: 1.4
  */

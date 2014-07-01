@@ -29,6 +29,8 @@
  * messages.
  * </para>
  * </refsect2>
+ *
+ * Since: 1.4
  */
 
 #include <string.h>
@@ -92,10 +94,12 @@ get_mac_len (GstMIKEYMacAlg mac_alg)
  * @enc_alg: the #GstMIKEYEncAlg
  * @mac_alg: a #GstMIKEYMacAlg
  *
- * Set the KEMAC parameters. @payload should point to a #GST_MIKEY_PT_KEMAC
+ * Set the KEMAC parameters. @payload should point to a %GST_MIKEY_PT_KEMAC
  * payload.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_kemac_set (GstMIKEYPayload * payload,
@@ -139,9 +143,11 @@ gst_mikey_payload_kemac_copy (const GstMIKEYPayloadKEMAC * payload)
  * @payload: a #GstMIKEYPayload
  *
  * Get the number of sub payloads of @payload. @payload should be of type
- * #GST_MIKEY_PT_KEMAC.
+ * %GST_MIKEY_PT_KEMAC.
  *
  * Returns: the number of sub payloads in @payload
+ *
+ * Since: 1.4
  */
 guint
 gst_mikey_payload_kemac_get_n_sub (const GstMIKEYPayload * payload)
@@ -160,9 +166,11 @@ gst_mikey_payload_kemac_get_n_sub (const GstMIKEYPayload * payload)
  * @idx: an index
  *
  * Get the sub payload of @payload at @idx. @payload should be of type
- * #GST_MIKEY_PT_KEMAC.
+ * %GST_MIKEY_PT_KEMAC.
  *
  * Returns: the #GstMIKEYPayload at @idx.
+ *
+ * Since: 1.4
  */
 const GstMIKEYPayload *
 gst_mikey_payload_kemac_get_sub (const GstMIKEYPayload * payload, guint idx)
@@ -186,6 +194,8 @@ gst_mikey_payload_kemac_get_sub (const GstMIKEYPayload * payload, guint idx)
  * Remove the sub payload at @idx in @payload.
  *
  * Returns: %TRUE on success.
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_kemac_remove_sub (GstMIKEYPayload * payload, guint idx)
@@ -209,6 +219,8 @@ gst_mikey_payload_kemac_remove_sub (GstMIKEYPayload * payload, guint idx)
  * Add a new sub payload to @payload.
  *
  * Returns: %TRUE on success.
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_kemac_add_sub (GstMIKEYPayload * payload,
@@ -230,12 +242,14 @@ gst_mikey_payload_kemac_add_sub (GstMIKEYPayload * payload,
  * @payload: a #GstMIKEYPayload
  * @C: envelope key cache indicator
  * @data_len: the length of @data
- * @data: the encrypted envelope key
+ * @data: (array length=data_len): the encrypted envelope key
  *
  * Set the PKE values in @payload. @payload must be of type
- * #GST_MIKEY_PT_PKE.
+ * %GST_MIKEY_PT_PKE.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_pke_set (GstMIKEYPayload * payload, GstMIKEYCacheType C,
@@ -296,11 +310,13 @@ get_ts_len (GstMIKEYTSType type)
  * gst_mikey_payload_t_set:
  * @payload: a #GstMIKEYPayload
  * @type: the #GstMIKEYTSType
- * @ts_value: the timestamp value
+ * @ts_value: (array): the timestamp value
  *
- * Set the timestamp in a #GST_MIKEY_PT_T @payload.
+ * Set the timestamp in a %GST_MIKEY_PT_T @payload.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_t_set (GstMIKEYPayload * payload,
@@ -355,6 +371,8 @@ param_clear (GstMIKEYPayloadSPParam * param)
  * Set the Security Policy parameters for @payload.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_sp_set (GstMIKEYPayload * payload,
@@ -398,10 +416,12 @@ gst_mikey_payload_sp_copy (const GstMIKEYPayloadSP * payload)
  * gst_mikey_payload_sp_get_n_params:
  * @payload: a #GstMIKEYPayload
  *
- * Get the number of security policy parameters in a #GST_MIKEY_PT_SP
+ * Get the number of security policy parameters in a %GST_MIKEY_PT_SP
  * @payload.
  *
  * Returns: the number of parameters in @payload
+ *
+ * Since: 1.4
  */
 guint
 gst_mikey_payload_sp_get_n_params (const GstMIKEYPayload * payload)
@@ -420,10 +440,12 @@ gst_mikey_payload_sp_get_n_params (const GstMIKEYPayload * payload)
  * @payload: a #GstMIKEYPayload
  * @idx: an index
  *
- * Get the Security Policy parameter in a #GST_MIKEY_PT_SP @payload
+ * Get the Security Policy parameter in a %GST_MIKEY_PT_SP @payload
  * at @idx.
  *
  * Returns: the #GstMIKEYPayloadSPParam at @idx in @payload
+ *
+ * Since: 1.4
  */
 const GstMIKEYPayloadSPParam *
 gst_mikey_payload_sp_get_param (const GstMIKEYPayload * payload, guint idx)
@@ -444,10 +466,12 @@ gst_mikey_payload_sp_get_param (const GstMIKEYPayload * payload, guint idx)
  * @payload: a #GstMIKEYPayload
  * @idx: an index
  *
- * Remove the Security Policy parameters from a #GST_MIKEY_PT_SP
+ * Remove the Security Policy parameters from a %GST_MIKEY_PT_SP
  * @payload at @idx.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_sp_remove_param (GstMIKEYPayload * payload, guint idx)
@@ -468,12 +492,14 @@ gst_mikey_payload_sp_remove_param (GstMIKEYPayload * payload, guint idx)
  * @payload: a #GstMIKEYPayload
  * @type: a type
  * @len: a length
- * @val: @len bytes of data
+ * @val: (array length=len): @len bytes of data
  *
- * Add a new parameter to the #GST_MIKEY_PT_SP @payload with @type, @len
+ * Add a new parameter to the %GST_MIKEY_PT_SP @payload with @type, @len
  * and @val.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_sp_add_param (GstMIKEYPayload * payload,
@@ -499,11 +525,13 @@ gst_mikey_payload_sp_add_param (GstMIKEYPayload * payload,
  * gst_mikey_payload_rand_set:
  * @payload: a #GstMIKEYPayload
  * @len: the length of @rand
- * @rand: random values
+ * @rand: (array length=len): random values
  *
- * Set the random values in a #GST_MIKEY_PT_RAND @payload.
+ * Set the random values in a %GST_MIKEY_PT_RAND @payload.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_rand_set (GstMIKEYPayload * payload, guint8 len,
@@ -544,12 +572,14 @@ gst_mikey_payload_rand_copy (const GstMIKEYPayloadRAND * payload)
  * @payload: a #GstMIKEYPayload
  * @key_type: a #GstMIKEYKeyDataType
  * @key_len: the length of @key_data
- * @key_data: the key of type @key_type
+ * @key_data: (array length=key_len): the key of type @key_type
  *
  * Set @key_len bytes of @key_data of type @key_type as the key for the
- * #GST_MIKEY_PT_KEY_DATA @payload.
+ * %GST_MIKEY_PT_KEY_DATA @payload.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_key_data_set_key (GstMIKEYPayload * payload,
@@ -572,12 +602,14 @@ gst_mikey_payload_key_data_set_key (GstMIKEYPayload * payload,
  * gst_mikey_payload_key_data_set_salt:
  * @payload: a #GstMIKEYPayload
  * @salt_len: the length of @salt_data
- * @salt_data: the salt
+ * @salt_data: (array length=salt_len) (allow-none): the salt
  *
  * Set the salt key data. If @salt_len is 0 and @salt_data is %NULL, the
  * salt data will be removed.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_key_data_set_salt (GstMIKEYPayload * payload,
@@ -602,11 +634,13 @@ gst_mikey_payload_key_data_set_salt (GstMIKEYPayload * payload,
  * gst_mikey_payload_key_data_set_spi:
  * @payload: a #GstMIKEYPayload
  * @spi_len: the length of @spi_data
- * @spi_data: the SPI/MKI data
+ * @spi_data: (array length=spi_len): the SPI/MKI data
  *
- * Set the SPI/MKI validity in the #GST_MIKEY_PT_KEY_DATA @payload.
+ * Set the SPI/MKI validity in the %GST_MIKEY_PT_KEY_DATA @payload.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_key_data_set_spi (GstMIKEYPayload * payload,
@@ -632,13 +666,15 @@ gst_mikey_payload_key_data_set_spi (GstMIKEYPayload * payload,
  * gst_mikey_payload_key_data_set_interval:
  * @payload: a #GstMIKEYPayload
  * @vf_len: the length of @vf_data
- * @vf_data: the Valid From data
+ * @vf_data: (array length=vf_data): the Valid From data
  * @vt_len: the length of @vt_data
- * @vt_data: the Valid To data
+ * @vt_data: (array length=vt_len): the Valid To data
  *
- * Set the key validity period in the #GST_MIKEY_PT_KEY_DATA @payload.
+ * Set the key validity period in the %GST_MIKEY_PT_KEY_DATA @payload.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_key_data_set_interval (GstMIKEYPayload * payload,
@@ -701,7 +737,9 @@ gst_mikey_payload_key_data_copy (const GstMIKEYPayloadKeyData * payload)
  *
  * Make a new #GstMIKEYPayload with @type.
  *
- * Returns: a new #GstMIKEYPayload or %NULL on failure.
+ * Returns: (nullable): a new #GstMIKEYPayload or %NULL on failure.
+ *
+ * Since: 1.4
  */
 GstMIKEYPayload *
 gst_mikey_payload_new (GstMIKEYPayloadType type)
@@ -773,6 +811,8 @@ gst_mikey_payload_new (GstMIKEYPayloadType type)
  * Copy @payload.
  *
  * Returns: a new #GstMIKEYPayload that is a copy of @payload
+ *
+ * Since: 1.4
  */
 GstMIKEYPayload *
 gst_mikey_payload_copy (const GstMIKEYPayload * payload)
@@ -790,6 +830,8 @@ gst_mikey_payload_copy (const GstMIKEYPayload * payload)
  * Free @payload
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_payload_free (GstMIKEYPayload * payload)
@@ -815,6 +857,8 @@ payload_destroy (GstMIKEYPayload ** payload)
  * Make a new MIKEY message.
  *
  * Returns: a new #GstMIKEYMessage on success
+ *
+ * Since: 1.4
  */
 GstMIKEYMessage *
 gst_mikey_message_new (void)
@@ -838,6 +882,8 @@ gst_mikey_message_new (void)
  * Make a new #GstMIKEYMessage from @bytes.
  *
  * Returns: a new #GstMIKEYMessage
+ *
+ * Since: 1.4
  */
 GstMIKEYMessage *
 gst_mikey_message_new_from_bytes (GBytes * bytes, GstMIKEYDecryptInfo * info,
@@ -857,6 +903,8 @@ gst_mikey_message_new_from_bytes (GBytes * bytes, GstMIKEYDecryptInfo * info,
  * @msg: a #GstMIKEYMessage
  *
  * Free all resources allocated in @msg.
+ *
+ * Since: 1.4
  */
 void
 gst_mikey_message_free (GstMIKEYMessage * msg)
@@ -882,6 +930,8 @@ gst_mikey_message_free (GstMIKEYMessage * msg)
  * Set the information in @msg.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_set_info (GstMIKEYMessage * msg, guint8 version,
@@ -907,6 +957,8 @@ gst_mikey_message_set_info (GstMIKEYMessage * msg, guint8 version,
  * Get the number of crypto sessions in @msg.
  *
  * Returns: the number of crypto sessions
+ *
+ * Since: 1.4
  */
 guint
 gst_mikey_message_get_n_cs (const GstMIKEYMessage * msg)
@@ -924,6 +976,8 @@ gst_mikey_message_get_n_cs (const GstMIKEYMessage * msg)
  * Get the policy information of @msg at @idx.
  *
  * Returns: a #GstMIKEYMapSRTP
+ *
+ * Since: 1.4
  */
 const GstMIKEYMapSRTP *
 gst_mikey_message_get_cs_srtp (const GstMIKEYMessage * msg, guint idx)
@@ -948,6 +1002,8 @@ gst_mikey_message_get_cs_srtp (const GstMIKEYMessage * msg, guint idx)
  * When @idx is -1, the policy will be appended.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_insert_cs_srtp (GstMIKEYMessage * msg, gint idx,
@@ -975,6 +1031,8 @@ gst_mikey_message_insert_cs_srtp (GstMIKEYMessage * msg, gint idx,
  * Replace a Crypto Session map for SRTP in @msg at @idx with @map.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_replace_cs_srtp (GstMIKEYMessage * msg, gint idx,
@@ -998,6 +1056,8 @@ gst_mikey_message_replace_cs_srtp (GstMIKEYMessage * msg, gint idx,
  * Remove the SRTP policy at @idx.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_remove_cs_srtp (GstMIKEYMessage * msg, gint idx)
@@ -1021,6 +1081,8 @@ gst_mikey_message_remove_cs_srtp (GstMIKEYMessage * msg, gint idx)
  * Add a Crypto policy for SRTP to @msg.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_add_cs_srtp (GstMIKEYMessage * msg, guint8 policy,
@@ -1046,6 +1108,8 @@ gst_mikey_message_add_cs_srtp (GstMIKEYMessage * msg, guint8 policy,
  * Get the number of payloads in @msg.
  *
  * Returns: the number of payloads in @msg
+ *
+ * Since: 1.4
  */
 guint
 gst_mikey_message_get_n_payloads (const GstMIKEYMessage * msg)
@@ -1063,6 +1127,8 @@ gst_mikey_message_get_n_payloads (const GstMIKEYMessage * msg)
  * Get the #GstMIKEYPayload at @idx in @msg
  *
  * Returns: the #GstMIKEYPayload at @idx
+ *
+ * Since: 1.4
  */
 const GstMIKEYPayload *
 gst_mikey_message_get_payload (const GstMIKEYMessage * msg, guint idx)
@@ -1084,6 +1150,8 @@ gst_mikey_message_get_payload (const GstMIKEYMessage * msg, guint idx)
  * Find the @nth occurence of the payload with @type in @msg.
  *
  * Returns: the @nth #GstMIKEYPayload of @type.
+ *
+ * Since: 1.4
  */
 const GstMIKEYPayload *
 gst_mikey_message_find_payload (const GstMIKEYMessage * msg,
@@ -1115,6 +1183,8 @@ gst_mikey_message_find_payload (const GstMIKEYMessage * msg,
  * Remove the payload in @msg at @idx
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_remove_payload (GstMIKEYMessage * msg, guint idx)
@@ -1137,6 +1207,8 @@ gst_mikey_message_remove_payload (GstMIKEYMessage * msg, guint idx)
  * will be appended to @msg.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_insert_payload (GstMIKEYMessage * msg, guint idx,
@@ -1162,6 +1234,8 @@ gst_mikey_message_insert_payload (GstMIKEYMessage * msg, guint idx,
  * Add a new payload to @msg.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_add_payload (GstMIKEYMessage * msg, GstMIKEYPayload * payload)
@@ -1178,6 +1252,8 @@ gst_mikey_message_add_payload (GstMIKEYMessage * msg, GstMIKEYPayload * payload)
  * Replace the payload at @idx in @msg with @payload.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_replace_payload (GstMIKEYMessage * msg, guint idx,
@@ -1201,11 +1277,13 @@ gst_mikey_message_replace_payload (GstMIKEYMessage * msg, guint idx,
  * @msg: a #GstMIKEYMessage
  * @C: envelope key cache indicator
  * @data_len: the length of @data
- * @data: the encrypted envelope key
+ * @data: (array length=data_len): the encrypted envelope key
  *
  * Add a new PKE payload to @msg with the given parameters.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_add_pke (GstMIKEYMessage * msg, GstMIKEYCacheType C,
@@ -1228,11 +1306,13 @@ gst_mikey_message_add_pke (GstMIKEYMessage * msg, GstMIKEYCacheType C,
  * gst_mikey_message_add_t:
  * @msg: a #GstMIKEYMessage
  * @type: specifies the timestamp type used
- * @ts_value: The timestamp value of the specified @type
+ * @ts_value: (array): The timestamp value of the specified @type
  *
  * Add a new T payload to @msg with the given parameters.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_add_t (GstMIKEYMessage * msg, GstMIKEYTSType type,
@@ -1259,6 +1339,8 @@ gst_mikey_message_add_t (GstMIKEYMessage * msg, GstMIKEYTSType type,
  * in NTP-UTC format.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_add_t_now_ntp_utc (GstMIKEYMessage * msg)
@@ -1284,11 +1366,13 @@ gst_mikey_message_add_t_now_ntp_utc (GstMIKEYMessage * msg)
  * gst_mikey_message_add_rand:
  * @msg: a #GstMIKEYMessage
  * @len: the length of @rand
- * @rand: random data
+ * @rand: (array length=len): random data
  *
  * Add a new RAND payload to @msg with the given parameters.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_add_rand (GstMIKEYMessage * msg, guint8 len,
@@ -1316,6 +1400,8 @@ gst_mikey_message_add_rand (GstMIKEYMessage * msg, guint8 len,
  * Add a new RAND payload to @msg with @len random bytes.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.4
  */
 gboolean
 gst_mikey_message_add_rand_len (GstMIKEYMessage * msg, guint8 len)
@@ -1582,6 +1668,8 @@ payloads_to_bytes (GArray * payloads, GByteArray * arr, guint8 ** ptr,
  * Convert @msg to a #GBytes.
  *
  * Returns: a new #GBytes for @msg.
+ *
+ * Since: 1.4
  */
 GBytes *
 gst_mikey_message_to_bytes (GstMIKEYMessage * msg, GstMIKEYEncryptInfo * info,
@@ -1957,7 +2045,7 @@ invalid_data:
 
 /**
  * gst_mikey_message_new_from_data:
- * @data: bytes to read
+ * @data: (array length=size) (element-type guint8): bytes to read
  * @size: length of @data
  * @info: #GstMIKEYDecryptInfo
  * @error: a #GError
@@ -1967,6 +2055,8 @@ invalid_data:
  *
  * Returns: a #GstMIKEYMessage on success or %NULL when parsing failed and
  * @error will be set.
+ *
+ * Since: 1.4
  */
 GstMIKEYMessage *
 gst_mikey_message_new_from_data (gconstpointer data, gsize size,
