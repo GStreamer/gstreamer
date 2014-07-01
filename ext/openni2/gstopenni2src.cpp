@@ -320,13 +320,9 @@ gst_openni2_src_get_caps (GstBaseSrc * src, GstCaps * filter)
   ni2src = GST_OPENNI2_SRC (src);
 
   GST_OBJECT_LOCK (ni2src);
-  if (ni2src->gst_caps) {
-    GST_OBJECT_UNLOCK (ni2src);
-    return (filter)
-        ? gst_caps_intersect_full (filter, ni2src->gst_caps,
-        GST_CAPS_INTERSECT_FIRST)
-        : gst_caps_ref (ni2src->gst_caps);
-  }
+  if (ni2src->gst_caps)
+    goto out;
+
   // If we are here, we need to compose the caps and return them.
 
   if (ni2src->depth.isValid () && ni2src->color.isValid () &&
@@ -339,7 +335,7 @@ gst_openni2_src_get_caps (GstBaseSrc * src, GstCaps * filter)
       && ni2src->colorpixfmt == openni::PIXEL_FORMAT_RGB888) {
     format = GST_VIDEO_FORMAT_RGB;
   } else {
-    return gst_caps_new_empty ();
+    goto out;
   }
 
   gst_video_info_init (&info);
@@ -350,7 +346,13 @@ gst_openni2_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 
   GST_INFO_OBJECT (ni2src, "probed caps: %" GST_PTR_FORMAT, caps);
   ni2src->gst_caps = caps;
+
+out:
   GST_OBJECT_UNLOCK (ni2src);
+
+  if (!ni2src->gst_caps)
+    return gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (ni2src));
+
   return (filter)
       ? gst_caps_intersect_full (filter, ni2src->gst_caps,
       GST_CAPS_INTERSECT_FIRST)
