@@ -535,9 +535,6 @@ static GstFlowReturn
 gst_gdp_pay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstGDPPay *this;
-#if 0
-  GstCaps *caps;
-#endif
   GstBuffer *outbuffer;
   GstFlowReturn ret;
 
@@ -612,16 +609,6 @@ no_caps:
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }
-#if 0
-no_caps_buffer:
-  {
-    GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
-        ("Could not create GDP buffer from caps %" GST_PTR_FORMAT, caps));
-    gst_caps_unref (caps);
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-#endif
 no_buffer:
   {
     GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
