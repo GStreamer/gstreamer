@@ -110,6 +110,8 @@ static gboolean gst_identity_start (GstBaseTransform * trans);
 static gboolean gst_identity_stop (GstBaseTransform * trans);
 static GstStateChangeReturn gst_identity_change_state (GstElement * element,
     GstStateChange transition);
+static gboolean gst_identity_accept_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps);
 
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
@@ -235,6 +237,8 @@ gst_identity_class_init (GstIdentityClass * klass)
       GST_DEBUG_FUNCPTR (gst_identity_transform_ip);
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_identity_start);
   gstbasetrans_class->stop = GST_DEBUG_FUNCPTR (gst_identity_stop);
+  gstbasetrans_class->accept_caps =
+      GST_DEBUG_FUNCPTR (gst_identity_accept_caps);
 }
 
 static void
@@ -743,6 +747,25 @@ gst_identity_stop (GstBaseTransform * trans)
   GST_OBJECT_UNLOCK (identity);
 
   return TRUE;
+}
+
+static gboolean
+gst_identity_accept_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps)
+{
+  gboolean ret;
+  GstPad *pad;
+
+  /* Proxy accept-caps */
+
+  if (direction == GST_PAD_SRC)
+    pad = GST_BASE_TRANSFORM_SINK_PAD (base);
+  else
+    pad = GST_BASE_TRANSFORM_SRC_PAD (base);
+
+  ret = gst_pad_peer_query_accept_caps (pad, caps);
+
+  return ret;
 }
 
 static GstStateChangeReturn
