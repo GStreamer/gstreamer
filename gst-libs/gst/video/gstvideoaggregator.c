@@ -1630,6 +1630,7 @@ gst_videoaggregator_sink_event (GstAggregator * agg, GstAggregatorPad * bpad,
       gst_event_copy_segment (event, &seg);
 
       g_assert (seg.format == GST_FORMAT_TIME);
+      gst_videoaggregator_reset_qos (vagg);
       break;
     }
     default:
