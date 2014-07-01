@@ -41,8 +41,8 @@ static const gchar *post_msg =
     "Content-Length: 0\r\n"
     "Content-Type: application/x-rtsp-tunnelled\r\n\r\n";
 
-static guint tunnel_start_count;
-static guint tunnel_complete_count;
+static guint tunnel_get_count;
+static guint tunnel_post_count;
 static guint tunnel_lost_count;
 static guint closed_count;
 static guint message_sent_count;
@@ -149,16 +149,16 @@ create_connection (GSocketConnection ** client_conn,
 }
 
 static GstRTSPStatusCode
-tunnel_start (GstRTSPWatch * watch, gpointer user_data)
+tunnel_get (GstRTSPWatch * watch, gpointer user_data)
 {
-  tunnel_start_count++;
+  tunnel_get_count++;
   return GST_RTSP_STS_OK;
 }
 
 static GstRTSPResult
-tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
+tunnel_post (GstRTSPWatch * watch, gpointer user_data)
 {
-  tunnel_complete_count++;
+  tunnel_post_count++;
   return GST_RTSP_OK;
 }
 
@@ -188,8 +188,8 @@ static GstRTSPWatchFuncs watch_funcs = {
   message_sent,
   closed,
   NULL,
-  tunnel_start,
-  tunnel_complete,
+  tunnel_get,
+  tunnel_post,
   NULL,
   tunnel_lost
 };
@@ -241,8 +241,8 @@ GST_START_TEST (test_rtspconnection_tunnel_setup)
   fail_unless (size == strlen (get_msg));
 
   while (!g_main_context_iteration (NULL, TRUE));
-  fail_unless (tunnel_start_count == 1);
-  fail_unless (tunnel_complete_count == 0);
+  fail_unless (tunnel_get_count == 1);
+  fail_unless (tunnel_post_count == 0);
   fail_unless (tunnel_lost_count == 0);
   fail_unless (closed_count == 0);
 
@@ -276,8 +276,8 @@ GST_START_TEST (test_rtspconnection_tunnel_setup)
   fail_unless (size == strlen (post_msg));
 
   while (!g_main_context_iteration (NULL, TRUE));
-  fail_unless (tunnel_start_count == 1);
-  fail_unless (tunnel_complete_count == 1);
+  fail_unless (tunnel_get_count == 1);
+  fail_unless (tunnel_post_count == 1);
   fail_unless (tunnel_lost_count == 0);
   fail_unless (closed_count == 0);
 
@@ -292,8 +292,8 @@ GST_START_TEST (test_rtspconnection_tunnel_setup)
   /* it must be possible to reconnect the POST channel */
   g_object_unref (client_post);
   while (!g_main_context_iteration (NULL, TRUE));
-  fail_unless (tunnel_start_count == 1);
-  fail_unless (tunnel_complete_count == 1);
+  fail_unless (tunnel_get_count == 1);
+  fail_unless (tunnel_post_count == 1);
   fail_unless (tunnel_lost_count == 1);
   fail_unless (closed_count == 0);
   g_object_unref (server_post);
@@ -325,8 +325,8 @@ GST_START_TEST (test_rtspconnection_tunnel_setup)
   fail_unless (size == strlen (post_msg));
 
   while (!g_main_context_iteration (NULL, TRUE));
-  fail_unless (tunnel_start_count == 1);
-  fail_unless (tunnel_complete_count == 2);
+  fail_unless (tunnel_get_count == 1);
+  fail_unless (tunnel_post_count == 2);
   fail_unless (tunnel_lost_count == 1);
   fail_unless (closed_count == 0);
 
@@ -341,8 +341,172 @@ GST_START_TEST (test_rtspconnection_tunnel_setup)
   /* check if rtspconnection can detect close of the get channel */
   g_object_unref (client_get);
   while (!g_main_context_iteration (NULL, TRUE));
-  fail_unless (tunnel_start_count == 1);
-  fail_unless (tunnel_complete_count == 2);
+  fail_unless (tunnel_get_count == 1);
+  fail_unless (tunnel_post_count == 2);
+  fail_unless (tunnel_lost_count == 1);
+  fail_unless (closed_count == 1);
+
+  fail_unless (gst_rtsp_connection_close (rtsp_conn1) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_free (rtsp_conn1) == GST_RTSP_OK);
+
+  g_object_unref (client_post);
+  g_object_unref (server_post);
+  g_object_unref (server_get);
+}
+
+GST_END_TEST;
+
+/* setts up a new tunnel, starting with the read channel,
+ * then disconnects the read connection and creates it again
+ * ideally this test should be merged with test_rtspconnection_tunnel_setup but
+ * but it became quite messy */
+GST_START_TEST (test_rtspconnection_tunnel_setup_post_first)
+{
+  GstRTSPConnection *rtsp_conn1 = NULL;
+  GstRTSPConnection *rtsp_conn2 = NULL;
+  GstRTSPWatch *watch1;
+  GstRTSPWatch *watch2;
+  GstRTSPResult res;
+  GSocketConnection *client_get = NULL;
+  GSocketConnection *server_get = NULL;
+  GSocketConnection *client_post = NULL;
+  GSocketConnection *server_post = NULL;
+  GSocket *server_sock;
+  GOutputStream *ostream_get;
+  GInputStream *istream_get;
+  GOutputStream *ostream_post;
+  gsize size = 0;
+  gchar buffer[1024];
+
+  /* create POST channel */
+  create_connection (&client_post, &server_post);
+  server_sock = g_socket_connection_get_socket (server_post);
+  fail_unless (server_sock != NULL);
+
+  res = gst_rtsp_connection_create_from_socket (server_sock, "127.0.0.1", 4444,
+      NULL, &rtsp_conn1);
+  fail_unless (res == GST_RTSP_OK);
+  fail_unless (rtsp_conn1 != NULL);
+
+  watch1 = gst_rtsp_watch_new (rtsp_conn1, &watch_funcs, NULL, NULL);
+  fail_unless (watch1 != NULL);
+  fail_unless (gst_rtsp_watch_attach (watch1, NULL) > 0);
+  g_source_unref ((GSource *) watch1);
+
+  ostream_post = g_io_stream_get_output_stream (G_IO_STREAM (client_post));
+  fail_unless (ostream_post != NULL);
+
+  /* initiate the tunnel by sending HTTP POST */
+  fail_unless (g_output_stream_write_all (ostream_post, post_msg,
+          strlen (post_msg), &size, NULL, NULL));
+  fail_unless (size == strlen (post_msg));
+
+  while (!g_main_context_iteration (NULL, TRUE));
+  fail_unless (tunnel_get_count == 0);
+  fail_unless (tunnel_post_count == 1);
+  fail_unless (tunnel_lost_count == 0);
+  fail_unless (closed_count == 0);
+
+  /* create GET connection */
+  create_connection (&client_get, &server_get);
+  server_sock = g_socket_connection_get_socket (server_get);
+  fail_unless (server_sock != NULL);
+
+  res = gst_rtsp_connection_create_from_socket (server_sock, "127.0.0.1", 4444,
+      NULL, &rtsp_conn2);
+  fail_unless (res == GST_RTSP_OK);
+  fail_unless (rtsp_conn2 != NULL);
+
+  watch2 = gst_rtsp_watch_new (rtsp_conn2, &watch_funcs, NULL, NULL);
+  fail_unless (watch2 != NULL);
+  fail_unless (gst_rtsp_watch_attach (watch2, NULL) > 0);
+  g_source_unref ((GSource *) watch2);
+
+  ostream_get = g_io_stream_get_output_stream (G_IO_STREAM (client_get));
+  fail_unless (ostream_get != NULL);
+
+  istream_get = g_io_stream_get_input_stream (G_IO_STREAM (client_get));
+  fail_unless (istream_get != NULL);
+
+  /* complete the tunnel by sending HTTP GET */
+  fail_unless (g_output_stream_write_all (ostream_get, get_msg,
+          strlen (get_msg), &size, NULL, NULL));
+  fail_unless (size == strlen (get_msg));
+
+  while (!g_main_context_iteration (NULL, TRUE));
+  fail_unless (tunnel_get_count == 1);
+  fail_unless (tunnel_post_count == 1);
+  fail_unless (tunnel_lost_count == 0);
+  fail_unless (closed_count == 0);
+
+  /* read the HTTP GET response */
+  size = g_input_stream_read (istream_get, buffer, 1024, NULL, NULL);
+  fail_unless (size > 0);
+  buffer[size] = 0;
+  fail_unless (g_strrstr (buffer, "HTTP/1.0 200 OK") != NULL);
+
+  /* merge the two connections together */
+  fail_unless (gst_rtsp_connection_do_tunnel (rtsp_conn1, rtsp_conn2) ==
+      GST_RTSP_OK);
+  gst_rtsp_watch_reset (watch1);
+  g_source_destroy ((GSource *) watch2);
+  gst_rtsp_connection_free (rtsp_conn2);
+  rtsp_conn2 = NULL;
+
+  /* it must be possible to reconnect the POST channel */
+  g_object_unref (client_post);
+  while (!g_main_context_iteration (NULL, TRUE));
+  fail_unless (tunnel_get_count == 1);
+  fail_unless (tunnel_post_count == 1);
+  fail_unless (tunnel_lost_count == 1);
+  fail_unless (closed_count == 0);
+  g_object_unref (server_post);
+
+  /* no other source should get dispatched */
+  fail_if (g_main_context_iteration (NULL, FALSE));
+
+  /* create new POST connection */
+  create_connection (&client_post, &server_post);
+  server_sock = g_socket_connection_get_socket (server_post);
+  fail_unless (server_sock != NULL);
+
+  res = gst_rtsp_connection_create_from_socket (server_sock, "127.0.0.1", 4444,
+      NULL, &rtsp_conn2);
+  fail_unless (res == GST_RTSP_OK);
+  fail_unless (rtsp_conn2 != NULL);
+
+  watch2 = gst_rtsp_watch_new (rtsp_conn2, &watch_funcs, NULL, NULL);
+  fail_unless (watch2 != NULL);
+  fail_unless (gst_rtsp_watch_attach (watch2, NULL) > 0);
+  g_source_unref ((GSource *) watch2);
+
+  ostream_post = g_io_stream_get_output_stream (G_IO_STREAM (client_post));
+  fail_unless (ostream_post != NULL);
+
+  /* complete the tunnel by sending HTTP POST */
+  fail_unless (g_output_stream_write_all (ostream_post, post_msg,
+          strlen (post_msg), &size, NULL, NULL));
+  fail_unless (size == strlen (post_msg));
+
+  while (!g_main_context_iteration (NULL, TRUE));
+  fail_unless (tunnel_get_count == 1);
+  fail_unless (tunnel_post_count == 2);
+  fail_unless (tunnel_lost_count == 1);
+  fail_unless (closed_count == 0);
+
+  /* merge the two connections together */
+  fail_unless (gst_rtsp_connection_do_tunnel (rtsp_conn1, rtsp_conn2) ==
+      GST_RTSP_OK);
+  gst_rtsp_watch_reset (watch1);
+  g_source_destroy ((GSource *) watch2);
+  gst_rtsp_connection_free (rtsp_conn2);
+  rtsp_conn2 = NULL;
+
+  /* check if rtspconnection can detect close of the get channel */
+  g_object_unref (client_get);
+  while (!g_main_context_iteration (NULL, TRUE));
+  fail_unless (tunnel_get_count == 1);
+  fail_unless (tunnel_post_count == 2);
   fail_unless (tunnel_lost_count == 1);
   fail_unless (closed_count == 1);
 
@@ -643,6 +807,7 @@ rtspconnection_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_rtspconnection_tunnel_setup);
+  tcase_add_test (tc_chain, test_rtspconnection_tunnel_setup_post_first);
   tcase_add_test (tc_chain, test_rtspconnection_send_receive);
   tcase_add_test (tc_chain, test_rtspconnection_connect);
   tcase_add_test (tc_chain, test_rtspconnection_poll);
