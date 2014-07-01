@@ -61,12 +61,12 @@ struct _GstOpenni2Src
   GstClockTime oni_start_ts;
 
   /* OpenNI2 variables */
-  openni::Device device;
-  openni::VideoStream depth, color;
+  openni::Device *device;
+  openni::VideoStream *depth, *color;
   openni::VideoMode depthVideoMode, colorVideoMode;
   openni::PixelFormat depthpixfmt, colorpixfmt;
   int width, height, fps;
-  openni::VideoFrameRef depthFrame, colorFrame;
+  openni::VideoFrameRef *depthFrame, *colorFrame;
 };
 
 struct _GstOpenni2SrcClass
