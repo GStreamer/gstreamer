@@ -399,6 +399,7 @@ remove_events (GstPad * pad)
 {
   guint i, len;
   GArray *events;
+  gboolean notify = FALSE;
 
   events = pad->priv->events;
 
@@ -409,19 +410,24 @@ remove_events (GstPad * pad)
 
     ev->event = NULL;
 
-    if (event && GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
-      GST_OBJECT_UNLOCK (pad);
+    if (event && GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
+      notify = TRUE;
 
-      GST_DEBUG_OBJECT (pad, "notify caps");
-      g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
-
-      GST_OBJECT_LOCK (pad);
-    }
     gst_event_unref (event);
   }
+
   GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
   g_array_set_size (events, 0);
   pad->priv->events_cookie++;
+
+  if (notify) {
+    GST_OBJECT_UNLOCK (pad);
+
+    GST_DEBUG_OBJECT (pad, "notify caps");
+    g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
+
+    GST_OBJECT_LOCK (pad);
+  }
 }
 
 /* should be called with object lock */
