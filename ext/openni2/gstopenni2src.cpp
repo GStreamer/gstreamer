@@ -219,13 +219,11 @@ gst_openni2_src_finalize (GObject * gobject)
   }
 
   if (ni2src->depth) {
-    ni2src->depth->destroy ();
     delete ni2src->depth;
     ni2src->depth = NULL;
   }
 
   if (ni2src->color) {
-    ni2src->color->destroy ();
     delete ni2src->color;
     ni2src->color = NULL;
   }
@@ -333,10 +331,21 @@ gst_openni2_src_stop (GstBaseSrc * bsrc)
 {
   GstOpenni2Src *src = GST_OPENNI2_SRC (bsrc);
 
-  if (src->depth->isValid ())
+  if (src->depthFrame)
+    src->depthFrame->release ();
+
+  if (src->colorFrame)
+    src->colorFrame->release ();
+
+  if (src->depth->isValid ()) {
     src->depth->stop ();
-  if (src->color->isValid ())
+    src->depth->destroy ();
+  }
+
+  if (src->color->isValid ()) {
     src->color->stop ();
+    src->color->destroy ();
+  }
 
   src->device->close ();
 
