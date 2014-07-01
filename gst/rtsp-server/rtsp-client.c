@@ -297,14 +297,18 @@ client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
 {
   GstRTSPClientPrivate *priv = client->priv;
 
-  /* we already know about this session */
-  if (g_list_find (priv->sessions, session) != NULL)
-    return;
+  g_mutex_lock (&priv->lock);
+  /* check if we already know about this session */
+  if (g_list_find (priv->sessions, session) = NULL) {
+    GST_INFO ("watching session %p", session);
+    priv->sessions = g_list_prepend (priv->sessions, g_object_ref (session));
+  }
+  g_mutex_unlock (&priv->lock);
 
-  GST_INFO ("watching session %p", session);
-  priv->sessions = g_list_prepend (priv->sessions, g_object_ref (session));
+  return;
 }
 
+/* should be called with lock */
 static void
 client_unwatch_session (GstRTSPClient * client, GstRTSPSession * session,
     GList * link)
@@ -318,12 +322,12 @@ client_unwatch_session (GstRTSPClient * client, GstRTSPSession * session,
     if (link == NULL)
       return;
   }
+  priv->sessions = g_list_delete_link (priv->sessions, link);
 
   /* unlink all media managed in this session */
   gst_rtsp_session_filter (session, filter_session_media, client);
 
   /* remove the session */
-  priv->sessions = g_list_delete_link (priv->sessions, link);
   g_object_unref (session);
 }
 
@@ -2235,8 +2239,13 @@ static void
 client_session_removed (GstRTSPSessionPool * pool, GstRTSPSession * session,
     GstRTSPClient * client)
 {
+  GstRTSPClientPrivate *priv = client->priv;
+
   GST_INFO ("client %p: session %p removed", client, session);
+
+  g_mutex_lock (&priv->lock);
   client_unwatch_session (client, session, NULL);
+  g_mutex_unlock (&priv->lock);
 }
 
 /* Returns TRUE if there are no Require headers, otherwise returns FALSE
