@@ -22,6 +22,7 @@
 
 #include <QGLWidget>
 #include <QApplication>
+#include <QDebug>
 #include <QCloseEvent>
 
 #include <gst/video/video.h>
@@ -60,11 +61,11 @@ QGLRenderer::initializeGL()
     display = gst_gl_display_new ();
 
     /* FIXME: Allow the choice at runtime */
-#if defined(GST_GL_HAVE_PLATFORM_WGL)
+#if GST_GL_HAVE_PLATFORM_WGL
     context = gst_gl_context_new_wrapped (display, (guintptr) wglGetCurrentContext (), GST_GL_PLATFORM_WGL, GST_GL_API_OPENGL);
-#elif defined (GST_GL_HAVE_PLATFORM_CGL)
+#elif GST_GL_HAVE_PLATFORM_CGL
     context = gst_gl_context_new_wrapped (display, (guintptr) qt_current_nsopengl_context(), GST_GL_PLATFORM_CGL, GST_GL_API_OPENGL);
-#elif defined(GST_GL_HAVE_PLATFORM_GLX)
+#elif GST_GL_HAVE_PLATFORM_GLX
     context = gst_gl_context_new_wrapped (display, (guintptr) glXGetCurrentContext (), GST_GL_PLATFORM_GLX, GST_GL_API_OPENGL);
 #endif
     gst_object_unref (display);
@@ -139,15 +140,15 @@ QGLRenderer::paintGL()
         mem = gst_buffer_peek_memory (this->frame, 0);
         v_meta = gst_buffer_get_video_meta (this->frame);
 
-        if (gst_is_gl_memory (mem)) {
-            gst_video_info_set_format (&v_info, v_meta->format, v_meta->width,
+        Q_ASSERT(gst_is_gl_memory (mem));
+
+        gst_video_info_set_format (&v_info, v_meta->format, v_meta->width,
                 v_meta->height);
 
-            gst_video_frame_map (&v_frame, &v_info, this->frame,
+        gst_video_frame_map (&v_frame, &v_info, this->frame,
                 (GstMapFlags) (GST_MAP_READ | GST_MAP_GL));
 
-            tex_id = *(guint *) v_frame.data[0];
-        }
+        tex_id = *(guint *) v_frame.data[0];
 
         glEnable(GL_DEPTH_TEST);
 
@@ -216,6 +217,8 @@ QGLRenderer::paintGL()
         zrot+=0.4f;
 
         glBindTexture(GL_TEXTURE_2D, 0);
+
+        gst_video_frame_unmap(&v_frame);
     }
 }
 
