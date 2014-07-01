@@ -380,10 +380,6 @@ gst_openni2_src_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!src->uri_name) {
-        GST_ERROR_OBJECT (src, "Invalid location");
-        return ret;
-      }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
