@@ -25,12 +25,12 @@
 
 #include <gst/gl/gstglconfig.h>
 
-#if defined(GST_GL_HAVE_PLATFORM_WGL)
+#if GST_GL_HAVE_PLATFORM_WGL
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
     #include <Wingdi.h>
     #include <GL/gl.h>
-#elif defined (GST_GL_HAVE_PLATFORM_CGL)
+#elif GST_GL_HAVE_PLATFORM_CGL
     #include <OpenGL/OpenGL.h>
     class NSOpenGLContext;
 #else
@@ -41,18 +41,18 @@
 #endif
 
 
-#if defined(GST_GL_HAVE_PLATFORM_WGL)
+#if GST_GL_HAVE_PLATFORM_WGL
     typedef struct _tagGLContextID
     {
         HGLRC contextId;
         HDC dc;
     } GLContextID;
-#elif  defined(GST_GL_HAVE_PLATFORM_CGL)
+#elif  GST_GL_HAVE_PLATFORM_CGL
     typedef struct _tagGLContextID
     {
         NSOpenGLContext* contextId;
     } GLContextID;
-#elif defined(GST_GL_HAVE_PLATFORM_GLX)
+#elif GST_GL_HAVE_PLATFORM_GLX
     typedef struct _tagGLContextID
     {
         GLXContext contextId;
