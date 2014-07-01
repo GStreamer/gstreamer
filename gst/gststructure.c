@@ -1368,14 +1368,14 @@ gst_structure_get_uint (const GstStructure * structure,
  * gst_structure_get_int64:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
- * @value: (out): a pointer to an int64 to set
+ * @value: (out): a pointer to a #gint64 to set
  *
- * Sets the int64 pointed to by @value corresponding to the value of the
+ * Sets the #gint64 pointed to by @value corresponding to the value of the
  * given field. Caller is responsible for making sure the field exists
  * and has the correct type.
  *
  * Returns: %TRUE if the value could be set correctly. If there was no field
- * with @fieldname or the existing field did not contain an int64, this function
+ * with @fieldname or the existing field did not contain a #gint64, this function
  * returns %FALSE.
  *
  * Since: 1.4
@@ -1404,14 +1404,14 @@ gst_structure_get_int64 (const GstStructure * structure,
  * gst_structure_get_uint64:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
- * @value: (out): a pointer to a uint64 to set
+ * @value: (out): a pointer to a #guint64 to set
  *
- * Sets the uint64 pointed to by @value corresponding to the value of the
+ * Sets the #guint64 pointed to by @value corresponding to the value of the
  * given field. Caller is responsible for making sure the field exists
  * and has the correct type.
  *
  * Returns: %TRUE if the value could be set correctly. If there was no field
- * with @fieldname or the existing field did not contain a uint64, this function
+ * with @fieldname or the existing field did not contain a #guint64, this function
  * returns %FALSE.
  *
  * Since: 1.4

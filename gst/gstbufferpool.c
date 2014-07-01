@@ -1294,7 +1294,7 @@ gst_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
  * @pool: a #GstBufferPool
  * @flushing: whether to start or stop flushing
  *
- * Enabled or disable the flushing state of a @pool without freeing or
+ * Enable or disable the flushing state of a @pool without freeing or
  * allocating buffers.
  *
  * Since: 1.4

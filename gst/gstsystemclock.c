@@ -284,7 +284,7 @@ gst_system_clock_get_property (GObject * object, guint prop_id, GValue * value,
  * @new_clock: a #GstClock
  *
  * Sets the default system clock that can be obtained with
- * gst_system_clock_obtain.
+ * gst_system_clock_obtain().
  *
  * This is mostly used for testing and debugging purposes when you
  * want to have control over the time reported by the default system

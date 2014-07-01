@@ -985,7 +985,7 @@ gst_test_clock_get_next_entry_time (GstTestClock * test_clock)
  * @count: the number of pending clock notifications to wait for
  * @pending_list: (out) (element-type Gst.ClockID) (transfer full) (allow-none): Address
  *     of a #GList pointer variable to store the list of pending #GstClockIDs
- *     that expired, or NULL
+ *     that expired, or %NULL
  *
  * Blocks until at least @count clock notifications have been requested from
  * @test_clock. There is no timeout for this wait, see the main description of

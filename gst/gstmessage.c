@@ -2340,7 +2340,7 @@ gst_message_parse_have_context (GstMessage * message, GstContext ** context)
  * @device: (transfer none): The new #GstDevice
  *
  * Creates a new device-added message. The device-added message is produced by
- * #GstDeviceProvider or a #GstlDeviceMonitor. They announce the appearance
+ * #GstDeviceProvider or a #GstDeviceMonitor. They announce the appearance
  * of monitored devices.
  *
  * Returns: a newly allocated #GstMessage

@@ -629,7 +629,7 @@ gst_base_src_set_dynamic_size (GstBaseSrc * src, gboolean dynamic)
  * @src: base source instance
  * @automatic_eos: automatic eos
  *
- * If @automatic_eos is %TRUE, basesrc will automatically go EOS if a buffer
+ * If @automatic_eos is %TRUE, @src will automatically go EOS if a buffer
  * after the total size is returned. By default this is %TRUE but sources
  * that can't return an authoritative size and only know that they're EOS
  * when trying to read more should set this to %FALSE.

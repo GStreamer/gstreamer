@@ -181,6 +181,8 @@ gst_device_provider_finalize (GObject * object)
  * @value: the value to set
  *
  * Set @key with @value as metadata in @klass.
+ *
+ * Since: 1.4
  */
 void
 gst_device_provider_class_add_metadata (GstDeviceProviderClass * klass,
@@ -198,7 +200,7 @@ gst_device_provider_class_add_metadata (GstDeviceProviderClass * klass,
  * gst_device_provider_class_add_static_metadata:
  * @klass: class to set metadata for
  * @key: the key to set
- * @value: the value to set
+ * @value: (transfer full): the value to set
  *
  * Set @key with @value as metadata in @klass.
  *
@@ -263,14 +265,15 @@ gst_device_provider_class_set_metadata (GstDeviceProviderClass * klass,
 /**
  * gst_device_provider_class_set_static_metadata:
  * @klass: class to set metadata for
- * @longname: The long English name of the element. E.g. "File Sink"
- * @classification: String describing the type of element, as an unordered list
- * separated with slashes ('/'). See draft-klass.txt of the design docs
- * for more details and common types. E.g: "Sink/File"
- * @description: Sentence describing the purpose of the element.
- * E.g: "Write stream to a file"
- * @author: Name and contact details of the author(s). Use \n to separate
- * multiple author metadata. E.g: "Joe Bloggs &lt;joe.blogs at foo.com&gt;"
+ * @longname: (transfer full): The long English name of the element. E.g. "File Sink"
+ * @classification: (transfer full): String describing the type of element, as
+ * an unordered list separated with slashes ('/'). See draft-klass.txt of the
+ * design docs for more details and common types. E.g: "Sink/File"
+ * @description: (transfer full): Sentence describing the purpose of the
+ * element.  E.g: "Write stream to a file"
+ * @author: (transfer full): Name and contact details of the author(s). Use \n
+ * to separate multiple author metadata. E.g: "Joe Bloggs &lt;joe.blogs at
+ * foo.com&gt;"
  *
  * Sets the detailed information for a #GstDeviceProviderClass.
  * <note>This function is for use in _class_init functions only.</note>

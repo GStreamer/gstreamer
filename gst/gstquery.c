@@ -1463,7 +1463,7 @@ gst_query_parse_uri_redirection (GstQuery * query, gchar ** uri)
 
 /**
  * gst_query_set_uri_redirection_permanent:
- * @query: a #GstQuery with query type GST_QUERY_URI
+ * @query: a #GstQuery with query type %GST_QUERY_URI
  * @permanent: whether the redirect is permanent or not
  *
  * Answer a URI query by setting the requested URI redirection

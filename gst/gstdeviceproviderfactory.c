@@ -388,8 +388,7 @@ create_failed:
  * only be retrieved if the device provider factory is loaded, which can be
  * assured with gst_plugin_feature_load().
  *
- * Returns: the #GType for device providers managed by this factory or 0 if
- * the factory is not loaded.
+ * Returns: the #GType for device providers managed by this factory.
  *
  * Since: 1.4
  */
@@ -397,7 +396,8 @@ GType
 gst_device_provider_factory_get_device_provider_type (GstDeviceProviderFactory *
     factory)
 {
-  g_return_val_if_fail (GST_IS_DEVICE_PROVIDER_FACTORY (factory), 0);
+  g_return_val_if_fail (GST_IS_DEVICE_PROVIDER_FACTORY (factory),
+      G_TYPE_INVALID);
 
   return factory->type;
 }
@@ -463,7 +463,7 @@ gst_device_provider_factory_get_metadata_keys (GstDeviceProviderFactory *
  * gst_device_provider_factory_has_classesv:
  * @factory: a #GstDeviceProviderFactory
  * @classes: (array zero-terminated=1) (allow-none): a %NULL terminated array
- *   of klasses to match, only match if all classes are matched
+ *   of classes to match, only match if all classes are matched
  *
  * Check if @factory matches all of the given classes
  *
@@ -513,7 +513,7 @@ gst_device_provider_factory_has_classesv (GstDeviceProviderFactory * factory,
 /**
  * gst_device_provider_factory_has_classes:
  * @factory: a #GstDeviceProviderFactory
- * @classes: (allow-none): a "/" separate list of klasses to match, only match
+ * @classes: (allow-none): a "/" separate list of classes to match, only match
  *     if all classes are matched
  *
  * Check if @factory matches all of the given @classes

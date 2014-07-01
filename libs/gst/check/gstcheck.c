@@ -280,6 +280,8 @@ gst_check_setup_src_pad_by_name (GstElement * element,
  * @tmpl: pad template
  *
  * Returns: (transfer full): a new pad
+ *
+ * Since: 1.4
  */
 GstPad *
 gst_check_setup_src_pad_from_template (GstElement * element,
@@ -295,6 +297,8 @@ gst_check_setup_src_pad_from_template (GstElement * element,
  * @name: name
  *
  * Returns: (transfer full): a new pad
+ *
+ * Since: 1.4
  */
 GstPad *
 gst_check_setup_src_pad_by_name_from_template (GstElement * element,
@@ -403,6 +407,8 @@ gst_check_setup_sink_pad_by_name (GstElement * element,
  * @tmpl: pad template
  *
  * Returns: (transfer full): a new pad
+ *
+ * Since: 1.4
  */
 GstPad *
 gst_check_setup_sink_pad_from_template (GstElement * element,
@@ -418,6 +424,8 @@ gst_check_setup_sink_pad_from_template (GstElement * element,
  * @name: name
  *
  * Returns: (transfer full): a new pad
+ *
+ * Since: 1.4
  */
 GstPad *
 gst_check_setup_sink_pad_by_name_from_template (GstElement * element,

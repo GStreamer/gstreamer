@@ -1889,13 +1889,13 @@ forward_event_to_all_sinkpads (GstPad * srcpad, GstEvent * event)
 
 /**
  * gst_collect_pads_src_event_default:
- * @pads: the collectpads to use
+ * @pads: the #GstCollectPads to use
  * @pad: src #GstPad that received the event
  * @event: event being processed
  *
  * Default #GstCollectPads event handling for the src pad of elements.
  * Elements can chain up to this to let flushing seek event handling
- * be done by GstCollectPads.
+ * be done by #GstCollectPads.
  *
  * Since: 1.4
  */
