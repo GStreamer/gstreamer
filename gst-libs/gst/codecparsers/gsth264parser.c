@@ -1087,7 +1087,7 @@ gst_h264_parser_identify_nalu_unchecked (GstH264NalParser * nalparser,
   if (nalu->type == GST_H264_NAL_SEQ_END ||
       nalu->type == GST_H264_NAL_STREAM_END) {
     GST_DEBUG ("end-of-seq or end-of-stream nal found");
-    nalu->size = 0;
+    nalu->size = 1;
     return GST_H264_PARSER_OK;
   }
 
@@ -1117,7 +1117,7 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
       gst_h264_parser_identify_nalu_unchecked (nalparser, data, offset, size,
       nalu);
 
-  if (res != GST_H264_PARSER_OK || nalu->size == 0)
+  if (res != GST_H264_PARSER_OK || nalu->size == 1)
     goto beach;
 
   off2 = scan_for_start_codes (data + nalu->offset, size - nalu->offset);
