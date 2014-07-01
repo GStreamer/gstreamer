@@ -1917,6 +1917,7 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
       gst_event_copy_segment (event, &seg);
 
       g_assert (seg.format == GST_FORMAT_TIME);
+      gst_videomixer2_reset_qos (mix);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
