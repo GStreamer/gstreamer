@@ -341,7 +341,7 @@ gst_omx_audio_dec_loop (GstOMXAudioDec * self)
     g_assert (port_def.format.audio.eEncoding == OMX_AUDIO_CodingPCM);
 
     GST_OMX_INIT_STRUCT (&pcm_param);
-    pcm_param.nPortIndex = self->dec_in_port->index;
+    pcm_param.nPortIndex = self->dec_out_port->index;
     err =
         gst_omx_component_get_parameter (self->dec, OMX_IndexParamAudioPcm,
         &pcm_param);
