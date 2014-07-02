@@ -2127,7 +2127,6 @@ d3d_internal_window_thread (D3DInternalWindowDat * dat)
   GstD3DVideoSink *sink;
   HWND hWnd;
   MSG msg;
-  BOOL fGetMsg;
 
   g_return_val_if_fail (dat != NULL, NULL);
 
