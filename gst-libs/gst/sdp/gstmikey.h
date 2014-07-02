@@ -171,6 +171,8 @@ GstMIKEYPayload *   gst_mikey_payload_new      (GstMIKEYPayloadType type);
  * Increase the refcount of this payload.
  *
  * Returns: (transfer full): @payload (for convenience when doing assignments)
+ *
+ * Since: 1.4
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstMIKEYPayload * gst_mikey_payload_ref (GstMIKEYPayload * payload);
@@ -187,6 +189,8 @@ gst_mikey_payload_ref (GstMIKEYPayload * payload)
  * @payload: (transfer full): the payload to refcount
  *
  * Decrease the refcount of an payload, freeing it if the refcount reaches 0.
+ *
+ * Since: 1.4
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC void gst_mikey_payload_unref (GstMIKEYPayload * payload);
@@ -205,6 +209,8 @@ gst_mikey_payload_unref (GstMIKEYPayload * payload)
  * Create a copy of the given payload.
  *
  * Returns: (transfer full): a new copy of @payload.
+ *
+ * Since: 1.4
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstMIKEYPayload * gst_mikey_payload_copy (const GstMIKEYPayload * buf);
@@ -558,6 +564,8 @@ GBytes *                    gst_mikey_message_to_bytes          (GstMIKEYMessage
  * Increase the refcount of this message.
  *
  * Returns: (transfer full): @message (for convenience when doing assignments)
+ *
+ * Since: 1.4
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstMIKEYMessage * gst_mikey_message_ref (GstMIKEYMessage * message);
@@ -574,6 +582,8 @@ gst_mikey_message_ref (GstMIKEYMessage * message)
  * @message: (transfer full): the message to refcount
  *
  * Decrease the refcount of an message, freeing it if the refcount reaches 0.
+ *
+ * Since: 1.4
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC void gst_mikey_message_unref (GstMIKEYMessage * message);
@@ -592,6 +602,8 @@ gst_mikey_message_unref (GstMIKEYMessage * message)
  * Create a copy of the given message.
  *
  * Returns: (transfer full): a new copy of @message.
+ *
+ * Since: 1.4
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstMIKEYMessage * gst_mikey_message_copy (const GstMIKEYMessage * buf);
