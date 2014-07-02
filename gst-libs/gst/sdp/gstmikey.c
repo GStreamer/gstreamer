@@ -37,7 +37,14 @@
 
 #include "gstmikey.h"
 
-static void payload_destroy (GstMIKEYPayload ** payload);
+GST_DEFINE_MINI_OBJECT_TYPE (GstMIKEYPayload, gst_mikey_payload);
+GST_DEFINE_MINI_OBJECT_TYPE (GstMIKEYMessage, gst_mikey_message);
+
+static void
+payload_destroy (GstMIKEYPayload ** payload)
+{
+  gst_mikey_payload_unref (*payload);
+}
 
 #define INIT_ARRAY(field, type, init_func)              \
 G_STMT_START {                                          \
@@ -117,10 +124,12 @@ gst_mikey_payload_kemac_set (GstMIKEYPayload * payload,
   return TRUE;
 }
 
-static void
-gst_mikey_payload_kemac_clear (GstMIKEYPayloadKEMAC * payload)
+static gboolean
+gst_mikey_payload_kemac_dispose (GstMIKEYPayloadKEMAC * payload)
 {
   FREE_ARRAY (payload->subpayloads);
+
+  return TRUE;
 }
 
 static GstMIKEYPayloadKEMAC *
@@ -131,8 +140,8 @@ gst_mikey_payload_kemac_copy (const GstMIKEYPayloadKEMAC * payload)
   gst_mikey_payload_kemac_set (&copy->pt, payload->enc_alg, payload->mac_alg);
   len = payload->subpayloads->len;
   for (i = 0; i < len; i++) {
-    GstMIKEYPayload *pay = g_array_index (payload->subpayloads,
-        GstMIKEYPayload *, i);
+    GstMIKEYPayload *pay =
+        g_array_index (payload->subpayloads, GstMIKEYPayload *, i);
     gst_mikey_payload_kemac_add_sub (&copy->pt, gst_mikey_payload_copy (pay));
   }
   return copy;
@@ -168,7 +177,7 @@ gst_mikey_payload_kemac_get_n_sub (const GstMIKEYPayload * payload)
  * Get the sub payload of @payload at @idx. @payload should be of type
  * %GST_MIKEY_PT_KEMAC.
  *
- * Returns: the #GstMIKEYPayload at @idx.
+ * Returns: (transfer none): the #GstMIKEYPayload at @idx.
  *
  * Since: 1.4
  */
@@ -214,7 +223,7 @@ gst_mikey_payload_kemac_remove_sub (GstMIKEYPayload * payload, guint idx)
 /**
  * gst_mikey_payload_kemac_add_sub:
  * @payload: a #GstMIKEYPayload
- * @newpay: a #GstMIKEYPayload to add
+ * @newpay: (transfer full): a #GstMIKEYPayload to add
  *
  * Add a new sub payload to @payload.
  *
@@ -267,10 +276,12 @@ gst_mikey_payload_pke_set (GstMIKEYPayload * payload, GstMIKEYCacheType C,
   return TRUE;
 }
 
-static void
-gst_mikey_payload_pke_clear (GstMIKEYPayloadPKE * payload)
+static gboolean
+gst_mikey_payload_pke_dispose (GstMIKEYPayloadPKE * payload)
 {
   FREE_MEMDUP (payload->data);
+
+  return TRUE;
 }
 
 static GstMIKEYPayloadPKE *
@@ -337,10 +348,12 @@ gst_mikey_payload_t_set (GstMIKEYPayload * payload,
   return TRUE;
 }
 
-static void
-gst_mikey_payload_t_clear (GstMIKEYPayloadT * payload)
+static gboolean
+gst_mikey_payload_t_dispose (GstMIKEYPayloadT * payload)
 {
   FREE_MEMDUP (payload->ts_value);
+
+  return TRUE;
 }
 
 static GstMIKEYPayloadT *
@@ -390,10 +403,12 @@ gst_mikey_payload_sp_set (GstMIKEYPayload * payload,
   return TRUE;
 }
 
-static void
-gst_mikey_payload_sp_clear (GstMIKEYPayloadSP * payload)
+static gboolean
+gst_mikey_payload_sp_dispose (GstMIKEYPayloadSP * payload)
 {
   FREE_ARRAY (payload->params);
+
+  return TRUE;
 }
 
 static GstMIKEYPayloadSP *
@@ -548,10 +563,12 @@ gst_mikey_payload_rand_set (GstMIKEYPayload * payload, guint8 len,
   return TRUE;
 }
 
-static void
-gst_mikey_payload_rand_clear (GstMIKEYPayloadRAND * payload)
+static gboolean
+gst_mikey_payload_rand_dispose (GstMIKEYPayloadRAND * payload)
 {
   FREE_MEMDUP (payload->rand);
+
+  return TRUE;
 }
 
 static GstMIKEYPayloadRAND *
@@ -699,13 +716,15 @@ gst_mikey_payload_key_data_set_interval (GstMIKEYPayload * payload,
   return TRUE;
 }
 
-static void
-gst_mikey_payload_key_data_clear (GstMIKEYPayloadKeyData * payload)
+static gboolean
+gst_mikey_payload_key_data_dispose (GstMIKEYPayloadKeyData * payload)
 {
   FREE_MEMDUP (payload->key_data);
   FREE_MEMDUP (payload->salt_data);
   FREE_MEMDUP (payload->kv_data[0]);
   FREE_MEMDUP (payload->kv_data[1]);
+
+  return TRUE;
 }
 
 static GstMIKEYPayloadKeyData *
@@ -731,6 +750,13 @@ gst_mikey_payload_key_data_copy (const GstMIKEYPayloadKeyData * payload)
 
 /* General Extension Payload */
 
+static void
+mikey_payload_free (GstMIKEYPayload * payload)
+{
+  g_slice_free1 (payload->len, payload);
+}
+
+
 /**
  * gst_mikey_payload_new:
  * @type: a #GstMIKEYPayloadType
@@ -745,25 +771,25 @@ GstMIKEYPayload *
 gst_mikey_payload_new (GstMIKEYPayloadType type)
 {
   guint len = 0;
-  GstMIKEYPayloadClearFunc clear;
-  GstMIKEYPayloadCopyFunc copy;
   GstMIKEYPayload *result;
+  GstMiniObjectCopyFunction copy;
+  GstMiniObjectDisposeFunction clear;
 
   switch (type) {
     case GST_MIKEY_PT_KEMAC:
       len = sizeof (GstMIKEYPayloadKEMAC);
-      clear = (GstMIKEYPayloadClearFunc) gst_mikey_payload_kemac_clear;
-      copy = (GstMIKEYPayloadCopyFunc) gst_mikey_payload_kemac_copy;
+      clear = (GstMiniObjectDisposeFunction) gst_mikey_payload_kemac_dispose;
+      copy = (GstMiniObjectCopyFunction) gst_mikey_payload_kemac_copy;
       break;
     case GST_MIKEY_PT_T:
       len = sizeof (GstMIKEYPayloadT);
-      clear = (GstMIKEYPayloadClearFunc) gst_mikey_payload_t_clear;
-      copy = (GstMIKEYPayloadCopyFunc) gst_mikey_payload_t_copy;
+      clear = (GstMiniObjectDisposeFunction) gst_mikey_payload_t_dispose;
+      copy = (GstMiniObjectCopyFunction) gst_mikey_payload_t_copy;
       break;
     case GST_MIKEY_PT_PKE:
       len = sizeof (GstMIKEYPayloadPKE);
-      clear = (GstMIKEYPayloadClearFunc) gst_mikey_payload_pke_clear;
-      copy = (GstMIKEYPayloadCopyFunc) gst_mikey_payload_pke_copy;
+      clear = (GstMiniObjectDisposeFunction) gst_mikey_payload_pke_dispose;
+      copy = (GstMiniObjectCopyFunction) gst_mikey_payload_pke_copy;
       break;
     case GST_MIKEY_PT_DH:
     case GST_MIKEY_PT_SIGN:
@@ -773,20 +799,20 @@ gst_mikey_payload_new (GstMIKEYPayloadType type)
     case GST_MIKEY_PT_V:
     case GST_MIKEY_PT_SP:
       len = sizeof (GstMIKEYPayloadSP);
-      clear = (GstMIKEYPayloadClearFunc) gst_mikey_payload_sp_clear;
-      copy = (GstMIKEYPayloadCopyFunc) gst_mikey_payload_sp_copy;
+      clear = (GstMiniObjectDisposeFunction) gst_mikey_payload_sp_dispose;
+      copy = (GstMiniObjectCopyFunction) gst_mikey_payload_sp_copy;
       break;
     case GST_MIKEY_PT_RAND:
       len = sizeof (GstMIKEYPayloadRAND);
-      clear = (GstMIKEYPayloadClearFunc) gst_mikey_payload_rand_clear;
-      copy = (GstMIKEYPayloadCopyFunc) gst_mikey_payload_rand_copy;
+      clear = (GstMiniObjectDisposeFunction) gst_mikey_payload_rand_dispose;
+      copy = (GstMiniObjectCopyFunction) gst_mikey_payload_rand_copy;
       break;
     case GST_MIKEY_PT_ERR:
       break;
     case GST_MIKEY_PT_KEY_DATA:
       len = sizeof (GstMIKEYPayloadKeyData);
-      clear = (GstMIKEYPayloadClearFunc) gst_mikey_payload_key_data_clear;
-      copy = (GstMIKEYPayloadCopyFunc) gst_mikey_payload_key_data_copy;
+      clear = (GstMiniObjectDisposeFunction) gst_mikey_payload_key_data_dispose;
+      copy = (GstMiniObjectCopyFunction) gst_mikey_payload_key_data_copy;
       break;
     case GST_MIKEY_PT_GEN_EXT:
     case GST_MIKEY_PT_LAST:
@@ -796,59 +822,47 @@ gst_mikey_payload_new (GstMIKEYPayloadType type)
     return NULL;
 
   result = g_slice_alloc0 (len);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (result),
+      0, GST_TYPE_MIKEY_PAYLOAD, copy, clear,
+      (GstMiniObjectFreeFunction) mikey_payload_free);
   result->type = type;
   result->len = len;
-  result->clear_func = clear;
-  result->copy_func = copy;
 
   return result;
 }
 
-/**
- * gst_mikey_payload_copy:
- * @payload: a #GstMIKEYPayload
- *
- * Copy @payload.
- *
- * Returns: a new #GstMIKEYPayload that is a copy of @payload
- *
- * Since: 1.4
- */
-GstMIKEYPayload *
-gst_mikey_payload_copy (const GstMIKEYPayload * payload)
+static GstMIKEYMessage *
+mikey_message_copy (GstMIKEYMessage * msg)
 {
-  g_return_val_if_fail (payload != NULL, NULL);
-  g_return_val_if_fail (payload->copy_func != NULL, NULL);
+  GstMIKEYMessage *copy;
+  guint i, len;
 
-  return payload->copy_func (payload);
-}
+  copy = gst_mikey_message_new ();
 
-/**
- * gst_mikey_payload_free:
- * @payload: a #GstMIKEYPayload
- *
- * Free @payload
- *
- * Returns: %TRUE on success
- *
- * Since: 1.4
- */
-gboolean
-gst_mikey_payload_free (GstMIKEYPayload * payload)
-{
-  g_return_val_if_fail (payload != NULL, FALSE);
+  gst_mikey_message_set_info (copy, msg->version, msg->type, msg->V,
+      msg->prf_func, msg->CSB_id, msg->map_type);
 
-  if (payload->clear_func)
-    payload->clear_func (payload);
-  g_slice_free1 (payload->len, payload);
+  len = msg->map_info->len;
+  for (i = 0; i < len; i++) {
+    const GstMIKEYMapSRTP *srtp = gst_mikey_message_get_cs_srtp (msg, i);
+    gst_mikey_message_add_cs_srtp (copy, srtp->policy, srtp->ssrc, srtp->roc);
+  }
 
-  return TRUE;
+  len = msg->payloads->len;
+  for (i = 0; i < len; i++) {
+    const GstMIKEYPayload *pay = gst_mikey_message_get_payload (msg, i);
+    gst_mikey_message_add_payload (copy, gst_mikey_payload_copy (pay));
+  }
+  return copy;
 }
 
 static void
-payload_destroy (GstMIKEYPayload ** payload)
+mikey_message_free (GstMIKEYMessage * msg)
 {
-  gst_mikey_payload_free (*payload);
+  FREE_ARRAY (msg->map_info);
+  FREE_ARRAY (msg->payloads);
+
+  g_slice_free (GstMIKEYMessage, msg);
 }
 
 /**
@@ -866,6 +880,10 @@ gst_mikey_message_new (void)
   GstMIKEYMessage *result;
 
   result = g_slice_new0 (GstMIKEYMessage);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (result),
+      0, GST_TYPE_MIKEY_MESSAGE,
+      (GstMiniObjectCopyFunction) mikey_message_copy, NULL,
+      (GstMiniObjectFreeFunction) mikey_message_free);
 
   INIT_ARRAY (result->map_info, GstMIKEYMapSRTP, NULL);
   INIT_ARRAY (result->payloads, GstMIKEYPayload *, payload_destroy);
@@ -896,25 +914,6 @@ gst_mikey_message_new_from_bytes (GBytes * bytes, GstMIKEYDecryptInfo * info,
 
   data = g_bytes_get_data (bytes, &size);
   return gst_mikey_message_new_from_data (data, size, info, error);
-}
-
-/**
- * gst_mikey_message_free:
- * @msg: a #GstMIKEYMessage
- *
- * Free all resources allocated in @msg.
- *
- * Since: 1.4
- */
-void
-gst_mikey_message_free (GstMIKEYMessage * msg)
-{
-  g_return_if_fail (msg != NULL);
-
-  FREE_ARRAY (msg->map_info);
-  FREE_ARRAY (msg->payloads);
-
-  g_slice_free (GstMIKEYMessage, msg);
 }
 
 /**
@@ -1126,7 +1125,8 @@ gst_mikey_message_get_n_payloads (const GstMIKEYMessage * msg)
  *
  * Get the #GstMIKEYPayload at @idx in @msg
  *
- * Returns: the #GstMIKEYPayload at @idx
+ * Returns: (transfer none): the #GstMIKEYPayload at @idx. The payload
+ * remains valid for as long as it is part of @msg.
  *
  * Since: 1.4
  */
@@ -1201,7 +1201,7 @@ gst_mikey_message_remove_payload (GstMIKEYMessage * msg, guint idx)
  * gst_mikey_message_insert_payload:
  * @msg: a #GstMIKEYMessage
  * @idx: an index
- * @payload: a #GstMIKEYPayload
+ * @payload: (transfer full): a #GstMIKEYPayload
  *
  * Insert the @payload at index @idx in @msg. If @idx is -1, the payload
  * will be appended to @msg.
@@ -1229,7 +1229,7 @@ gst_mikey_message_insert_payload (GstMIKEYMessage * msg, guint idx,
 /**
  * gst_mikey_message_add_payload:
  * @msg: a #GstMIKEYMessage
- * @payload: a #GstMIKEYPayload
+ * @payload: (transfer full): a #GstMIKEYPayload
  *
  * Add a new payload to @msg.
  *
@@ -1247,7 +1247,7 @@ gst_mikey_message_add_payload (GstMIKEYMessage * msg, GstMIKEYPayload * payload)
  * gst_mikey_message_replace_payload:
  * @msg: a #GstMIKEYMessage
  * @idx: an index
- * @payload: a #GstMIKEYPayload
+ * @payload: (transfer full): a #GstMIKEYPayload
  *
  * Replace the payload at @idx in @msg with @payload.
  *
@@ -1266,7 +1266,7 @@ gst_mikey_message_replace_payload (GstMIKEYMessage * msg, guint idx,
   g_return_val_if_fail (msg->payloads->len > idx, FALSE);
 
   p = g_array_index (msg->payloads, GstMIKEYPayload *, idx);
-  gst_mikey_payload_free (p);
+  gst_mikey_payload_unref (p);
   g_array_index (msg->payloads, GstMIKEYPayload *, idx) = payload;
 
   return TRUE;
@@ -1295,7 +1295,7 @@ gst_mikey_message_add_pke (GstMIKEYMessage * msg, GstMIKEYCacheType C,
 
   p = gst_mikey_payload_new (GST_MIKEY_PT_PKE);
   if (!gst_mikey_payload_pke_set (p, C, data_len, data)) {
-    gst_mikey_payload_free (p);
+    gst_mikey_payload_unref (p);
     return FALSE;
   }
 
@@ -1324,7 +1324,7 @@ gst_mikey_message_add_t (GstMIKEYMessage * msg, GstMIKEYTSType type,
 
   p = gst_mikey_payload_new (GST_MIKEY_PT_T);
   if (!gst_mikey_payload_t_set (p, type, ts_value)) {
-    gst_mikey_payload_free (p);
+    gst_mikey_payload_unref (p);
     return FALSE;
   }
 
@@ -1385,7 +1385,7 @@ gst_mikey_message_add_rand (GstMIKEYMessage * msg, guint8 len,
 
   p = gst_mikey_payload_new (GST_MIKEY_PT_RAND);
   if (!gst_mikey_payload_rand_set (p, len, rand)) {
-    gst_mikey_payload_free (p);
+    gst_mikey_payload_unref (p);
     return FALSE;
   }
 
@@ -2031,14 +2031,14 @@ short_data:
   {
     GST_DEBUG ("not enough data");
     if (p)
-      gst_mikey_payload_free (p);
+      gst_mikey_payload_unref (p);
     return FALSE;
   }
 invalid_data:
   {
     GST_DEBUG ("invalid data");
     if (p)
-      gst_mikey_payload_free (p);
+      gst_mikey_payload_unref (p);
     return FALSE;
   }
 }
@@ -2132,19 +2132,19 @@ gst_mikey_message_new_from_data (gconstpointer data, gsize size,
 short_data:
   {
     GST_DEBUG ("not enough data");
-    gst_mikey_message_free (msg);
+    gst_mikey_message_unref (msg);
     return NULL;
   }
 unknown_version:
   {
     GST_DEBUG ("unknown version");
-    gst_mikey_message_free (msg);
+    gst_mikey_message_unref (msg);
     return NULL;
   }
 parse_error:
   {
     GST_DEBUG ("failed to parse");
-    gst_mikey_message_free (msg);
+    gst_mikey_message_unref (msg);
     return NULL;
   }
 }

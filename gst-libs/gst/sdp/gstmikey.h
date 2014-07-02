@@ -26,6 +26,9 @@
 
 G_BEGIN_DECLS
 
+GType gst_mikey_message_get_type(void);
+#define GST_TYPE_MIKEY_MESSAGE (gst_mikey_message_get_type())
+
 typedef struct _GstMIKEYMessage GstMIKEYMessage;
 typedef struct _GstMIKEYEncryptInfo GstMIKEYEncryptInfo;
 typedef struct _GstMIKEYDecryptInfo GstMIKEYDecryptInfo;
@@ -140,21 +143,8 @@ typedef struct {
 
 typedef struct _GstMIKEYPayload GstMIKEYPayload;
 
-/**
- * GstMIKEYPayloadClearFunc:
- * @payload: a #GstMIKEYPayload
- *
- * Function used to clear a payload
- */
-typedef void (*GstMIKEYPayloadClearFunc) (GstMIKEYPayload *payload);
-
-/**
- * GstMIKEYPayloadCopyFunc:
- * @payload: a #GstMIKEYPayload
- *
- * Function used to copy a payload
- */
-typedef GstMIKEYPayload * (*GstMIKEYPayloadCopyFunc) (const GstMIKEYPayload *payload);
+GType gst_mikey_payload_get_type(void);
+#define GST_TYPE_MIKEY_PAYLOAD (gst_mikey_payload_get_type())
 
 /**
  * GstMIKEYPayload:
@@ -166,15 +156,65 @@ typedef GstMIKEYPayload * (*GstMIKEYPayloadCopyFunc) (const GstMIKEYPayload *pay
  * Hold the common fields for all payloads
  */
 struct _GstMIKEYPayload {
+  GstMiniObject mini_object;
+
   GstMIKEYPayloadType type;
   guint len;
-  GstMIKEYPayloadClearFunc clear_func;
-  GstMIKEYPayloadCopyFunc copy_func;
 };
 
 GstMIKEYPayload *   gst_mikey_payload_new      (GstMIKEYPayloadType type);
-GstMIKEYPayload *   gst_mikey_payload_copy     (const GstMIKEYPayload *payload);
-gboolean            gst_mikey_payload_free     (GstMIKEYPayload *payload);
+
+/**
+ * gst_mikey_payload_ref:
+ * @payload: The payload to refcount
+ *
+ * Increase the refcount of this payload.
+ *
+ * Returns: (transfer full): @payload (for convenience when doing assignments)
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstMIKEYPayload * gst_mikey_payload_ref (GstMIKEYPayload * payload);
+#endif
+
+static inline GstMIKEYPayload *
+gst_mikey_payload_ref (GstMIKEYPayload * payload)
+{
+  return (GstMIKEYPayload *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (payload));
+}
+
+/**
+ * gst_mikey_payload_unref:
+ * @payload: (transfer full): the payload to refcount
+ *
+ * Decrease the refcount of an payload, freeing it if the refcount reaches 0.
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_mikey_payload_unref (GstMIKEYPayload * payload);
+#endif
+
+static inline void
+gst_mikey_payload_unref (GstMIKEYPayload * payload)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (payload));
+}
+
+/**
+ * gst_mikey_payload_copy:
+ * @payload: a #GstMIKEYPayload.
+ *
+ * Create a copy of the given payload.
+ *
+ * Returns: (transfer full): a new copy of @payload.
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstMIKEYPayload * gst_mikey_payload_copy (const GstMIKEYPayload * buf);
+#endif
+
+static inline GstMIKEYPayload *
+gst_mikey_payload_copy (const GstMIKEYPayload * payload)
+{
+  return (GstMIKEYPayload *) gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (payload));
+}
 
 /**
  * GstMIKEYEncAlg:
@@ -491,6 +531,8 @@ gboolean   gst_mikey_payload_key_data_set_interval (GstMIKEYPayload *payload,
  */
 struct _GstMIKEYMessage
 {
+  GstMiniObject mini_object;
+
   guint8 version;
   GstMIKEYType type;
   gboolean V;
@@ -509,7 +551,58 @@ GstMIKEYMessage *           gst_mikey_message_new_from_bytes    (GBytes *bytes, 
                                                                  GError **error);
 GBytes *                    gst_mikey_message_to_bytes          (GstMIKEYMessage *msg, GstMIKEYEncryptInfo *info,
                                                                  GError **error);
-void                        gst_mikey_message_free              (GstMIKEYMessage *msg);
+/**
+ * gst_mikey_message_ref:
+ * @message: The message to refcount
+ *
+ * Increase the refcount of this message.
+ *
+ * Returns: (transfer full): @message (for convenience when doing assignments)
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstMIKEYMessage * gst_mikey_message_ref (GstMIKEYMessage * message);
+#endif
+
+static inline GstMIKEYMessage *
+gst_mikey_message_ref (GstMIKEYMessage * message)
+{
+  return (GstMIKEYMessage *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (message));
+}
+
+/**
+ * gst_mikey_message_unref:
+ * @message: (transfer full): the message to refcount
+ *
+ * Decrease the refcount of an message, freeing it if the refcount reaches 0.
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_mikey_message_unref (GstMIKEYMessage * message);
+#endif
+
+static inline void
+gst_mikey_message_unref (GstMIKEYMessage * message)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (message));
+}
+
+/**
+ * gst_mikey_message_copy:
+ * @message: a #GstMIKEYMessage.
+ *
+ * Create a copy of the given message.
+ *
+ * Returns: (transfer full): a new copy of @message.
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstMIKEYMessage * gst_mikey_message_copy (const GstMIKEYMessage * buf);
+#endif
+
+static inline GstMIKEYMessage *
+gst_mikey_message_copy (const GstMIKEYMessage * message)
+{
+  return (GstMIKEYMessage *) gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (message));
+}
+
 
 gboolean                    gst_mikey_message_set_info          (GstMIKEYMessage *msg,
                                                                  guint8 version, GstMIKEYType type, gboolean V,

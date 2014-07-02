@@ -106,7 +106,7 @@ GST_START_TEST (create_common)
   fail_unless (gst_mikey_message_remove_cs_srtp (msg, 0));
   fail_unless (gst_mikey_message_get_n_cs (msg) == 0);
 
-  gst_mikey_message_free (msg);
+  gst_mikey_message_unref (msg);
 }
 
 GST_END_TEST
@@ -176,7 +176,7 @@ GST_START_TEST (create_payloads)
   fail_unless (cp->type == GST_MIKEY_PT_KEMAC);
 
   bytes = gst_mikey_message_to_bytes (msg, NULL, NULL);
-  gst_mikey_message_free (msg);
+  gst_mikey_message_unref (msg);
 
   msg = gst_mikey_message_new_from_bytes (bytes, NULL, NULL);
   fail_unless (msg != NULL);
@@ -199,7 +199,7 @@ GST_START_TEST (create_payloads)
   fail_unless (pkd->kv_type == GST_MIKEY_KV_NULL);
 
 
-  gst_mikey_message_free (msg);
+  gst_mikey_message_unref (msg);
 }
 
 GST_END_TEST
