@@ -302,22 +302,22 @@ ghost_seek_pad (GnlSource * source)
   GST_DEBUG_OBJECT (source, "ghosting %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   gnl_object_ghost_pad_set_target (gnlobject, gnlobject->srcpad, pad);
-  GST_DEBUG_OBJECT (source, "emitting no more pads");
 
   /*FIXME : do that when going to PAUSED */
   gst_pad_set_active (gnlobject->srcpad, TRUE);
 
-  if (priv->event) {
-    GST_DEBUG_OBJECT (source, "sending queued seek event");
+  GST_DEBUG_OBJECT (source, "about to unblock %s:%s", GST_DEBUG_PAD_NAME (pad));
+  /* FIXME: Kill that code please! */
+  if (g_strcmp0 (GST_OBJECT_NAME (GST_OBJECT_PARENT (source)), "current-bin")
+      && priv->event) {
     if (!(gst_pad_send_event (gnlobject->srcpad, priv->event)))
       GST_ELEMENT_ERROR (source, RESOURCE, SEEK,
           (NULL), ("Sending initial seek to upstream element failed"));
     else
-      GST_DEBUG_OBJECT (source, "queued seek sent");
+      GST_ERROR_OBJECT (source, "queued seek sent");
     priv->event = NULL;
   }
 
-  GST_DEBUG_OBJECT (source, "about to unblock %s:%s", GST_DEBUG_PAD_NAME (pad));
   priv->is_blocked = FALSE;
   if (priv->probeid) {
     gst_pad_remove_probe (pad, priv->probeid);

@@ -185,17 +185,17 @@ GST_START_TEST (test_one_space_another)
   /* Add one source */
 
   gnl_composition_add (GST_BIN (comp), source1);
+  GST_ERROR ("doing one commit");
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
 
   /* Second source */
 
   gnl_composition_add (GST_BIN (comp), source2);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
-  g_signal_emit_by_name (comp, "commit", TRUE, &ret);
   commit_and_wait (comp, &ret);
-  ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
+  ASSERT_OBJECT_REFCOUNT (source2, "source2", 2);
 
   /* Remove first source */
 
@@ -211,7 +211,7 @@ GST_START_TEST (test_one_space_another)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
   gst_object_unref (source1);
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
 
   /* Expected segments */
   segments = g_list_append (segments,
@@ -294,7 +294,7 @@ GST_START_TEST (test_one_default_another)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, GST_SECOND, 2 * GST_SECOND, 1 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
 
   /* defaultsrc source */
   gnl_composition_add (GST_BIN (comp), defaultsrc);
@@ -302,7 +302,7 @@ GST_START_TEST (test_one_default_another)
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   check_start_stop_duration (defaultsrc, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (defaultsrc, "defaultsrc", 1);
+  ASSERT_OBJECT_REFCOUNT (defaultsrc, "defaultsrc", 2);
 
   /* Second source */
 
@@ -315,7 +315,7 @@ GST_START_TEST (test_one_default_another)
   check_start_stop_duration (comp, 0, 5 * GST_SECOND, 5 * GST_SECOND);
   check_start_stop_duration (defaultsrc, 0, 5 * GST_SECOND, 5 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source3, "source3", 1);
+  ASSERT_OBJECT_REFCOUNT (source3, "source3", 2);
 
   /* Expected segments */
   segments = g_list_append (segments,
@@ -408,7 +408,7 @@ GST_START_TEST (test_one_expandable_another)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, GST_SECOND, 2 * GST_SECOND, 1 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
 
   /* defaultsrc source */
 
@@ -417,7 +417,7 @@ GST_START_TEST (test_one_expandable_another)
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   check_start_stop_duration (defaultsrc, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (defaultsrc, "defaultsrc", 1);
+  ASSERT_OBJECT_REFCOUNT (defaultsrc, "defaultsrc", 2);
 
   /* Second source */
 
@@ -426,7 +426,7 @@ GST_START_TEST (test_one_expandable_another)
   check_start_stop_duration (comp, 0, 4 * GST_SECOND, 4 * GST_SECOND);
   check_start_stop_duration (defaultsrc, 0, 4 * GST_SECOND, 4 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
+  ASSERT_OBJECT_REFCOUNT (source2, "source2", 2);
 
 
   /* Third source */
@@ -436,7 +436,7 @@ GST_START_TEST (test_one_expandable_another)
   check_start_stop_duration (comp, 0, 5 * GST_SECOND, 5 * GST_SECOND);
   check_start_stop_duration (defaultsrc, 0, 5 * GST_SECOND, 5 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source3, "source3", 1);
+  ASSERT_OBJECT_REFCOUNT (source3, "source3", 2);
 
   /* Expected segments */
   segments = g_list_append (segments,
@@ -518,7 +518,7 @@ GST_START_TEST (test_renegotiation)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
 
   /* Second source */
 
@@ -526,7 +526,7 @@ GST_START_TEST (test_renegotiation)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
+  ASSERT_OBJECT_REFCOUNT (source2, "source2", 2);
 
 
   /* Third source */
@@ -535,7 +535,7 @@ GST_START_TEST (test_renegotiation)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source3, "source3", 1);
+  ASSERT_OBJECT_REFCOUNT (source3, "source3", 2);
 
 
   sink = gst_element_factory_make_or_warn ("fakesink", "sink");
@@ -570,7 +570,7 @@ GST_START_TEST (test_renegotiation)
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
   GST_DEBUG ("Setting pipeline to PLAYING");
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
 
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);

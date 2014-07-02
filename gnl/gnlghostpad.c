@@ -39,8 +39,8 @@ struct _GnlPadPrivate
   GstEvent *pending_seek;
 };
 
-static GstEvent *
-translate_incoming_seek (GnlObject * object, GstEvent * event)
+GstEvent *
+gnl_object_translate_incoming_seek (GnlObject * object, GstEvent * event)
 {
   GstEvent *event2;
   GstFormat format;
@@ -494,7 +494,8 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
         {
           GstPad *target;
 
-          event = translate_incoming_seek (object, event);
+          GST_ERROR_OBJECT (object, "GOT SEEKD: %" GST_PTR_FORMAT, event);
+          event = gnl_object_translate_incoming_seek (object, event);
           if (!(target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghostpad)))) {
             priv->pending_seek = event;
             GST_INFO_OBJECT (ghostpad, "No target set yet, "

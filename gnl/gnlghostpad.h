@@ -39,6 +39,7 @@ gboolean gnl_object_ghost_pad_set_target (GnlObject * object,
     GstPad * ghost, GstPad * target);
 
 void gnl_object_remove_ghost_pad (GnlObject * object, GstPad * ghost);
+GstEvent * gnl_object_translate_incoming_seek (GnlObject * object, GstEvent * event);
 
 void gnl_init_ghostpad_category (void);
 

@@ -684,5 +684,4 @@ gnl_object_get_type (void)
     g_once_init_leave (&type, _type);
   }
   return type;
-
 }

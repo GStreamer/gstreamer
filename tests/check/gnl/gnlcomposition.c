@@ -94,7 +94,7 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
   GST_DEBUG ("Setting pipeline to PLAYING");
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 3);
 
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE);
