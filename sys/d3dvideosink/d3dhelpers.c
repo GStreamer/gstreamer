@@ -1085,7 +1085,7 @@ d3d_set_window_handle (GstD3DVideoSink * sink, guintptr window_id,
 
   /* Unset current window  */
   if (sink->d3d.window_handle != NULL) {
-    PostMessage (sink->d3d.window_handle, WM_QUIT_THREAD, NULL, NULL);
+    PostMessage (sink->d3d.window_handle, WM_QUIT_THREAD, 0, 0);
     GST_DEBUG_OBJECT (sink, "Unsetting window [HWND:%p]",
         sink->d3d.window_handle);
     d3d_window_wndproc_unset (sink);
@@ -2609,7 +2609,7 @@ error:
   if (!ret)
     klass->d3d.error_exit = TRUE;
   if (hWnd) {
-    PostMessage (hWnd, WM_DESTROY, NULL, NULL);
+    PostMessage (hWnd, WM_DESTROY, 0, 0);
     DestroyWindow (hWnd);
     klass->d3d.hidden_window = 0;
   }
