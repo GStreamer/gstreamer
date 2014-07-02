@@ -530,6 +530,13 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
 
   /* FIXME: use gst_video_decoder_allocate_output_buffer */
   state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
+  if (state == NULL) {
+    GST_WARNING_OBJECT (vtdec, "Output state not configured, release buffer");
+    /* release as this usually means that the baseclass isn't ready to do
+     * the QoS that _drop requires and will lead to an assertion with the
+     * segment.format being undefined */
+    goto release;
+  }
   buf = gst_core_video_buffer_new (image_buffer, &state->info);
   gst_video_codec_state_unref (state);
   frame->output_buffer = buf;
@@ -548,6 +555,13 @@ drop:
   GST_WARNING_OBJECT (vtdec, "Frame dropped %p %d", frame,
       frame->decode_frame_number);
   gst_video_decoder_drop_frame (GST_VIDEO_DECODER (vtdec), frame);
+  return;
+
+release:
+  GST_WARNING_OBJECT (vtdec, "Frame released %p %d", frame,
+      frame->decode_frame_number);
+  gst_video_decoder_release_frame (GST_VIDEO_DECODER (vtdec), frame);
+  return;
 }
 
 static GstFlowReturn
