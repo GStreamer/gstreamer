@@ -222,7 +222,7 @@ static gboolean
 my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   GstElement *sender = (GstElement *) GST_MESSAGE_SRC (message);
-  const gchar *name = gst_element_get_name (sender);
+  gchar *name = gst_element_get_name (sender);
   GMainLoop *loop = (GMainLoop *) data;
 
   g_print ("Got %s message from %s\n", GST_MESSAGE_TYPE_NAME (message), name);
