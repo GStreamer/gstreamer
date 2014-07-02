@@ -86,6 +86,7 @@ struct _RTPJitterBuffer {
   guint64           high_level;
 
   /* for calculating skew */
+  gboolean       need_resync;
   GstClockTime   base_time;
   GstClockTime   base_rtptime;
   guint32        clock_rate;

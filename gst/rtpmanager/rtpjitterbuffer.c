@@ -219,6 +219,7 @@ rtp_jitter_buffer_reset_skew (RTPJitterBuffer * jbuf)
   jbuf->skew = 0;
   jbuf->prev_send_diff = -1;
   jbuf->prev_out_time = -1;
+  jbuf->need_resync = TRUE;
   GST_DEBUG ("reset skew correction");
 }
 
@@ -251,6 +252,7 @@ rtp_jitter_buffer_resync (RTPJitterBuffer * jbuf, GstClockTime time,
     jbuf->window_size = 0;
     jbuf->skew = 0;
   }
+  jbuf->need_resync = FALSE;
 }
 
 static guint64
@@ -425,33 +427,28 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
   /* keep track of the last extended rtptime */
   jbuf->last_rtptime = ext_rtptime;
 
-  /* first time, lock on to time and gstrtptime */
-  if (G_UNLIKELY (jbuf->base_time == -1)) {
-    jbuf->base_time = time;
-    jbuf->prev_out_time = -1;
-    GST_DEBUG ("Taking new base time %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
-  }
-  if (G_UNLIKELY (jbuf->base_rtptime == -1)) {
-    jbuf->base_rtptime = gstrtptime;
-    jbuf->base_extrtp = ext_rtptime;
-    jbuf->prev_send_diff = -1;
-    GST_DEBUG ("Taking new base rtptime %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (gstrtptime));
+  send_diff = 0;
+  if (G_LIKELY (jbuf->base_rtptime != -1)) {
+    /* check elapsed time in RTP units */
+    if (G_LIKELY (gstrtptime >= jbuf->base_rtptime)) {
+      send_diff = gstrtptime - jbuf->base_rtptime;
+    } else {
+      /* elapsed time at sender, timestamps can go backwards and thus be
+       * smaller than our base time, schedule to take a new base time in
+       * that case. */
+      GST_WARNING ("backward timestamps at server, schedule resync");
+      jbuf->need_resync = TRUE;
+      send_diff = 0;
+    }
   }
 
-  if (G_LIKELY (gstrtptime >= jbuf->base_rtptime))
-    send_diff = gstrtptime - jbuf->base_rtptime;
-  else if (time != -1) {
-    /* elapsed time at sender, timestamps can go backwards and thus be smaller
-     * than our base time, take a new base time in that case. */
-    GST_WARNING ("backward timestamps at server, taking new base time");
+  /* need resync, lock on to time and gstrtptime if we can, otherwise we
+   * do with the previous values */
+  if (G_UNLIKELY (jbuf->need_resync && time != -1)) {
+    GST_WARNING ("resync to time %" GST_TIME_FORMAT ", rtptime %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (time), GST_TIME_ARGS (gstrtptime));
     rtp_jitter_buffer_resync (jbuf, time, gstrtptime, ext_rtptime, FALSE);
     send_diff = 0;
-  } else {
-    GST_WARNING ("backward timestamps at server but no timestamps");
-    send_diff = 0;
-    /* at least try to get a new timestamp.. */
-    jbuf->base_time = -1;
   }
 
   GST_DEBUG ("extrtp %" G_GUINT64_FORMAT ", gstrtp %" GST_TIME_FORMAT ", base %"
