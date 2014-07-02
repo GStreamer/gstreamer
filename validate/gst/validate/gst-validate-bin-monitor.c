@@ -41,7 +41,7 @@
 enum
 {
   PROP_0,
-  PROP_STATELESS,
+  PROP_HANDLES_STATE,
   PROP_LAST
 };
 
@@ -68,15 +68,9 @@ static void
 gst_validate_bin_monitor_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstValidateBinMonitor *monitor;
-
-  monitor = GST_VALIDATE_BIN_MONITOR_CAST (object);
-
   switch (prop_id) {
-    case PROP_STATELESS:
-      monitor->stateless = g_value_get_boolean (value);
-      if (monitor->scenario != NULL)
-        g_object_set (monitor->scenario, "stateless", monitor->stateless, NULL);
+    case PROP_HANDLES_STATE:
+      g_assert_not_reached ();
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -93,8 +87,12 @@ gst_validate_bin_monitor_get_property (GObject * object, guint prop_id,
   monitor = GST_VALIDATE_BIN_MONITOR_CAST (object);
 
   switch (prop_id) {
-    case PROP_STATELESS:
-      g_value_set_boolean (value, monitor->stateless);
+    case PROP_HANDLES_STATE:
+      if (monitor->scenario == NULL)
+        g_value_set_boolean (value, FALSE);
+      else
+        g_object_get_property (G_OBJECT (monitor->scenario), "handles-states",
+            value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -138,10 +136,11 @@ gst_validate_bin_monitor_class_init (GstValidateBinMonitorClass * klass)
   gobject_class->set_property = gst_validate_bin_monitor_set_property;
   gobject_class->dispose = gst_validate_bin_monitor_dispose;
 
-  g_object_class_install_property (gobject_class, PROP_STATELESS,
-      g_param_spec_boolean ("stateless", "Stateless",
-          "True to execute actions as soon as possible, regardless "
-          "of the initial state of the pipeline", FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_HANDLES_STATE,
+      g_param_spec_boolean ("handles-states", "Handles state",
+          "True if the application should not set handle the first state change "
+          " False if it is application responsibility",
+          FALSE, G_PARAM_READABLE));
 
   validatemonitor_class->setup = gst_validate_bin_monitor_setup;
 }

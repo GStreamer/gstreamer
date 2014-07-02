@@ -295,7 +295,7 @@ main (int argc, gchar ** argv)
 {
   GError *err = NULL;
   const gchar *scenario = NULL, *configs = NULL;
-  gboolean list_scenarios = FALSE;
+  gboolean list_scenarios = FALSE, monitor_handles_state;
   GstStateChangeReturn sret;
   gchar *output_file = NULL;
   gint ret = 0;
@@ -442,25 +442,30 @@ main (int argc, gchar ** argv)
   gst_object_unref (bus);
 
   g_print ("Starting pipeline\n");
-  sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  switch (sret) {
-    case GST_STATE_CHANGE_FAILURE:
-      /* ignore, we should get an error message posted on the bus */
-      g_print ("Pipeline failed to go to PLAYING state\n");
-      ret = -1;
-      goto exit;
-    case GST_STATE_CHANGE_NO_PREROLL:
-      g_print ("Pipeline is live.\n");
-      is_live = TRUE;
-      break;
-    case GST_STATE_CHANGE_ASYNC:
-      g_print ("Prerolling...\r");
-      break;
-    default:
-      break;
+  g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);
+  if (monitor_handles_state == FALSE) {
+    sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    switch (sret) {
+      case GST_STATE_CHANGE_FAILURE:
+        /* ignore, we should get an error message posted on the bus */
+        g_print ("Pipeline failed to go to PLAYING state\n");
+        ret = -1;
+        goto exit;
+      case GST_STATE_CHANGE_NO_PREROLL:
+        g_print ("Pipeline is live.\n");
+        is_live = TRUE;
+        break;
+      case GST_STATE_CHANGE_ASYNC:
+        g_print ("Prerolling...\r");
+        break;
+      default:
+        break;
+    }
+    g_print ("Pipeline started\n");
+  } else {
+    g_print ("Letting scenario handle set state\n");
   }
 
-  g_print ("Pipeline started\n");
   g_main_loop_run (mainloop);
 
   rep_err = gst_validate_runner_printf (runner);

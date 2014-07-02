@@ -52,7 +52,7 @@ enum
 {
   PROP_0,
   PROP_RUNNER,
-  PROP_STATELESS,
+  PROP_HANDLES_STATE,
   PROP_LAST
 };
 
@@ -89,7 +89,7 @@ struct _GstValidateScenarioPrivate
 
   guint num_actions;
 
-  gboolean stateless;
+  gboolean handles_state;
 
   guint get_pos_id;
   guint wait_id;
@@ -1141,6 +1141,8 @@ _load_scenario_file (GstValidateScenario * scenario,
     type = gst_structure_get_name (structure);
     if (!g_strcmp0 (type, "description")) {
       gst_structure_get_boolean (structure, "is-config", is_config);
+      gst_structure_get_boolean (structure, "handles-states",
+          &priv->handles_state);
       continue;
     } else if (!(action_type = g_hash_table_lookup (action_types_table, type))) {
       GST_ERROR_OBJECT (scenario, "We do not handle action types %s", type);
@@ -1324,8 +1326,6 @@ static void
 gst_validate_scenario_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstValidateScenario *self = GST_VALIDATE_SCENARIO (object);
-
   switch (prop_id) {
     case PROP_RUNNER:
       /* we assume the runner is valid as long as this scenario is,
@@ -1333,10 +1333,8 @@ gst_validate_scenario_set_property (GObject * object, guint prop_id,
       gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (object),
           g_value_get_object (value));
       break;
-    case PROP_STATELESS:
-      self->priv->stateless = g_value_get_boolean (value);
-      if (self->priv->stateless)
-        _add_get_position_source (self);
+    case PROP_HANDLES_STATE:
+      g_assert_not_reached ();
       break;
     default:
       break;
@@ -1356,8 +1354,8 @@ gst_validate_scenario_get_property (GObject * object, guint prop_id,
       g_value_set_object (value,
           gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (object)));
       break;
-    case PROP_STATELESS:
-      g_value_set_boolean (value, self->priv->stateless);
+    case PROP_HANDLES_STATE:
+      g_value_set_boolean (value, self->priv->handles_state);
       break;
     default:
       break;
@@ -1383,10 +1381,11 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
-  g_object_class_install_property (object_class, PROP_STATELESS,
-      g_param_spec_boolean ("stateless", "Stateless",
-          "True to execute actions as soon as possible, regardless "
-          "of the initial state of the pipeline", FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_HANDLES_STATE,
+      g_param_spec_boolean ("handles-states", "Handles state",
+          "True if the application should not set handle the first state change "
+          " False if it is application responsibility",
+          FALSE, G_PARAM_READABLE));
 }
 
 static void
@@ -1446,6 +1445,12 @@ gst_validate_scenario_factory_create (GstValidateRunner *
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", (GCallback) message_cb, scenario);
   gst_object_unref (bus);
+
+  if (scenario->priv->handles_state) {
+    GST_INFO_OBJECT (scenario, "Scenario handles state,"
+        " Starting the get position source");
+    _add_get_position_source (scenario);
+  }
 
   gst_validate_printf (NULL,
       "\n=========================================\n"
