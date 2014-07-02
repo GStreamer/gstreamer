@@ -54,10 +54,6 @@ libgstapplemedia_la_LDFLAGS =			\
 	-Wl,-framework -Wl,CoreVideo 		\
 	-Wl,-framework -Wl,AudioToolbox
 
-if !HAVE_IOS
-libgstapplemedia_la_LDFLAGS += -Wl,-framework -Wl,VideoToolbox
-endif
-
 noinst_HEADERS =				\
 	qtkitvideosrc.h				\
 	avfvideosrc.h				\
@@ -88,9 +84,7 @@ libgstapplemedia_la_LDFLAGS +=			\
 else
 
 libgstapplemedia_la_SOURCES +=			\
-	qtkitvideosrc.m				\
-	vtenc.c 				\
-	vtdec.c
+	qtkitvideosrc.m
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,Cocoa		\
@@ -107,4 +101,12 @@ libgstapplemedia_la_SOURCES +=			\
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,AVFoundation
 
+endif
+
+if HAVE_VIDEOTOOLBOX
+libgstapplemedia_la_SOURCES +=			\
+	vtenc.c 				\
+	vtdec.c
+
+libgstapplemedia_la_LDFLAGS += -Wl,-framework -Wl,VideoToolbox
 endif
