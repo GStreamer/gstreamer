@@ -297,8 +297,8 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 
   gst_rtsp_media_signals[SIGNAL_TARGET_STATE] =
       g_signal_new ("target-state", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaClass, new_state), NULL,
-      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaClass, target_state),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
 
   gst_rtsp_media_signals[SIGNAL_NEW_STATE] =
       g_signal_new ("new-state", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
