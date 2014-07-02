@@ -1839,7 +1839,7 @@ parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
 
   res = TRUE;
 done:
-  gst_mikey_message_free (msg);
+  gst_mikey_message_unref (msg);
 
   return res;
 }
@@ -6036,7 +6036,7 @@ gst_rtspsrc_stream_make_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream)
 
   /* now serialize this to bytes */
   bytes = gst_mikey_message_to_bytes (msg, NULL, NULL);
-  gst_mikey_message_free (msg);
+  gst_mikey_message_unref (msg);
   /* and make it into base64 */
   data = g_bytes_get_data (bytes, &size);
   base64 = g_base64_encode (data, size);
