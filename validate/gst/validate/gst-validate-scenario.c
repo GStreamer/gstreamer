@@ -674,7 +674,7 @@ get_position (GstValidateScenario * scenario)
   }
 
   /* TODO what about non flushing seeks? */
-  if (priv->last_seek) {
+  if (priv->last_seek && priv->target_state > GST_STATE_READY) {
     GST_INFO_OBJECT (scenario, "Still seeking -- not executing action");
     return TRUE;
   }
