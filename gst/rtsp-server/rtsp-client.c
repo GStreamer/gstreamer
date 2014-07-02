@@ -1659,7 +1659,7 @@ handle_mikey_data (GstRTSPClient * client, GstRTSPContext * ctx,
     gst_rtsp_stream_update_crypto (ctx->stream, map->ssrc, caps);
     gst_caps_unref (caps);
   }
-  gst_mikey_message_free (msg);
+  gst_mikey_message_unref (msg);
 
   return TRUE;
 
@@ -1691,7 +1691,7 @@ unsupported_encryption:
   }
 cleanup_message:
   {
-    gst_mikey_message_free (msg);
+    gst_mikey_message_unref (msg);
     return FALSE;
   }
 }
