@@ -59,14 +59,21 @@
  * GstBuffer and the GstBufferPool to get destroyed, so we are going to leak a
  * fair ammount of memory.
  *
- * Normally, this will never happen, even if we don't take special care for it,
- * because the compositor releases buffers almost immediately and when
- * waylandsink stops, they are already released.
+ * Normally, this rarely happens, because the compositor releases buffers
+ * almost immediately and when waylandsink stops, they are already released.
  *
  * However, we want to be absolutely certain, so a solution is introduced
  * by registering all the GstWlBuffers with the display and explicitly
- * releasing all the buffer references and destroying the GstWlBuffers as soon
- * as the display is destroyed.
+ * releasing all the buffer references as soon as the display is destroyed.
+ *
+ * When the GstWlDisplay is finalized, it takes a reference to all the
+ * registered GstWlBuffers and then calls gst_wl_buffer_force_release_and_unref,
+ * which releases the potential reference to the GstBuffer, destroys the
+ * underlying wl_buffer and removes the reference that GstWlDisplay is holding.
+ * At that point, either the GstBuffer is alive somewhere and still holds a ref
+ * to the GstWlBuffer, which it will release when it gets destroyed, or the
+ * GstBuffer was destroyed in the meantime and the GstWlBuffer gets destroyed
+ * as soon as we remove the reference that GstWlDisplay holds.
  */
 
 #include "wlbuffer.h"
@@ -79,13 +86,31 @@ G_DEFINE_TYPE (GstWlBuffer, gst_wl_buffer, G_TYPE_OBJECT);
 static G_DEFINE_QUARK (GstWlBufferQDataQuark, gst_wl_buffer_qdata);
 
 static void
+gst_wl_buffer_dispose (GObject * gobject)
+{
+  GstWlBuffer *self = GST_WL_BUFFER (gobject);
+
+  GST_TRACE_OBJECT (self, "dispose");
+
+  /* if the display is shutting down and we are trying to dipose
+   * the GstWlBuffer from another thread, unregister_buffer() will
+   * block and in the end the display will increase the refcount
+   * of this GstWlBuffer, so it will not be finalized */
+  if (self->display)
+    gst_wl_display_unregister_buffer (self->display, self);
+
+  G_OBJECT_CLASS (gst_wl_buffer_parent_class)->dispose (gobject);
+}
+
+static void
 gst_wl_buffer_finalize (GObject * gobject)
 {
   GstWlBuffer *self = GST_WL_BUFFER (gobject);
 
-  if (self->display)
-    gst_wl_display_unregister_buffer (self->display, self);
-  wl_buffer_destroy (self->wlbuffer);
+  GST_TRACE_OBJECT (self, "finalize");
+
+  if (self->wlbuffer)
+    wl_buffer_destroy (self->wlbuffer);
 
   G_OBJECT_CLASS (gst_wl_buffer_parent_class)->finalize (gobject);
 }
@@ -95,6 +120,7 @@ gst_wl_buffer_class_init (GstWlBufferClass * klass)
 {
   GObjectClass *object_class = (GObjectClass *) klass;
 
+  object_class->dispose = gst_wl_buffer_dispose;
   object_class->finalize = gst_wl_buffer_finalize;
 }
 
@@ -120,6 +146,19 @@ static const struct wl_buffer_listener buffer_listener = {
   buffer_release
 };
 
+static void
+gstbuffer_disposed (GstWlBuffer * self)
+{
+  g_assert (!self->used_by_compositor);
+  self->gstbuffer = NULL;
+
+  GST_TRACE_OBJECT (self, "owning GstBuffer was finalized");
+
+  /* this will normally destroy the GstWlBuffer, unless the display is
+   * finalizing and it has taken an additional reference to it */
+  g_object_unref (self);
+}
+
 GstWlBuffer *
 gst_buffer_add_wl_buffer (GstBuffer * gstbuffer, struct wl_buffer *wlbuffer,
     GstWlDisplay * display)
@@ -136,7 +175,7 @@ gst_buffer_add_wl_buffer (GstBuffer * gstbuffer, struct wl_buffer *wlbuffer,
   wl_buffer_add_listener (self->wlbuffer, &buffer_listener, self);
 
   gst_mini_object_set_qdata ((GstMiniObject *) gstbuffer,
-      gst_wl_buffer_qdata_quark (), self, g_object_unref);
+      gst_wl_buffer_qdata_quark (), self, (GDestroyNotify) gstbuffer_disposed);
 
   return self;
 }
@@ -151,25 +190,30 @@ gst_buffer_get_wl_buffer (GstBuffer * gstbuffer)
 void
 gst_wl_buffer_force_release_and_unref (GstWlBuffer * self)
 {
-  /* detach from the GstBuffer */
-  (void) gst_mini_object_steal_qdata ((GstMiniObject *) self->gstbuffer,
-      gst_wl_buffer_qdata_quark ());
-
-  /* force a buffer release
-   * at this point, the GstWlDisplay has killed its event loop,
+  /* Force a buffer release.
+   * At this point, the GstWlDisplay has killed its event loop,
    * so we don't need to worry about buffer_release() being called
    * at the same time from the event loop thread */
   if (self->used_by_compositor) {
     GST_DEBUG_OBJECT (self, "forcing wl_buffer::release (GstBuffer: %p)",
         self->gstbuffer);
-    gst_buffer_unref (self->gstbuffer);
     self->used_by_compositor = FALSE;
+    gst_buffer_unref (self->gstbuffer);
   }
 
-  /* avoid unregistering from the display in finalize() because this
-   * function is being called from a hash table foreach function,
-   * which would be modified in gst_wl_display_unregister_buffer() */
+  /* Finalize this GstWlBuffer early.
+   * This method has been called as a result of the display shutting down,
+   * so we need to stop using any wayland resources and disconnect from
+   * the display. The GstWlBuffer stays alive, though, to avoid race
+   * conditions with the GstBuffer being destroyed from another thread.
+   * The last reference is either owned by the GstBuffer or by us and
+   * it will be released at the end of this function. */
+  GST_TRACE_OBJECT (self, "finalizing early");
+  wl_buffer_destroy (self->wlbuffer);
+  self->wlbuffer = NULL;
   self->display = NULL;
+
+  /* remove the reference that the caller (GstWlDisplay) owns */
   g_object_unref (self);
 }
 
