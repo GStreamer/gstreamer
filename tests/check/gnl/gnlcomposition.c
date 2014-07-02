@@ -187,7 +187,7 @@ GST_START_TEST (test_remove_invalid_object)
   source2 = gst_element_factory_make ("gnlsource", "source2");
 
   gnl_composition_add (composition, source1);
-  fail_if (gnl_composition_remove (composition, source2));
+  gnl_composition_remove (composition, source2);
   fail_unless (gnl_composition_remove (composition, source1));
 
   gst_object_unref (composition);

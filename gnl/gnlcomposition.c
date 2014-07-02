@@ -82,6 +82,12 @@ typedef struct
   GstEvent *event;
 } SeekData;
 
+typedef struct
+{
+  GnlComposition *comp;
+  GnlObject *object;
+} ChildIOData;
+
 struct _GnlCompositionPrivate
 {
   gboolean dispose_has_run;
@@ -530,9 +536,18 @@ _add_initialize_stack_gsource (GnlComposition * comp)
   MAIN_CONTEXT_UNLOCK (comp);
 }
 
-static gboolean
-remove_object_handler (GnlComposition * comp, GnlObject * object)
+static void
+_free_child_io_data (gpointer childio)
 {
+  g_slice_free (ChildIOData, childio);
+}
+
+static void
+_remove_object_func (ChildIOData * childio)
+{
+  GnlComposition *comp = childio->comp;
+  GnlObject *object = childio->object;
+
   GnlCompositionPrivate *priv = comp->priv;
   GnlCompositionEntry *entry;
   GnlObject *in_pending_io;
@@ -548,14 +563,14 @@ remove_object_handler (GnlComposition * comp, GnlObject * object)
 
       g_hash_table_remove (priv->pending_io, object);
       COMP_OBJECTS_UNLOCK (comp);
-      return TRUE;
+      return;
     }
 
     GST_ERROR_OBJECT (comp, "Object %" GST_PTR_FORMAT " is "
         " not in the composition", object);
 
     COMP_OBJECTS_UNLOCK (comp);
-    return FALSE;
+    return;
   }
 
   if (in_pending_io) {
@@ -563,19 +578,43 @@ remove_object_handler (GnlComposition * comp, GnlObject * object)
         " for removal", object);
 
     COMP_OBJECTS_UNLOCK (comp);
-    return FALSE;
+    return;
   }
 
 
   g_hash_table_add (priv->pending_io, object);
   COMP_OBJECTS_UNLOCK (comp);
 
-  return TRUE;
+  return;
+}
+
+static void
+_add_remove_object_gsource (GnlComposition * comp, GnlObject * object)
+{
+  ChildIOData *childio = g_slice_new0 (ChildIOData);
+
+  childio->comp = comp;
+  childio->object = object;
+
+  MAIN_CONTEXT_LOCK (comp);
+  g_main_context_invoke_full (comp->priv->mcontext, G_PRIORITY_HIGH,
+      (GSourceFunc) _remove_object_func, childio, _free_child_io_data);
+  MAIN_CONTEXT_UNLOCK (comp);
 }
 
 static gboolean
-add_object_handler (GnlComposition * comp, GnlObject * object)
+remove_object_handler (GnlComposition * comp, GnlObject * object)
 {
+  _add_remove_object_gsource (comp, object);
+
+  return TRUE;
+}
+
+static void
+_add_object_func (ChildIOData * childio)
+{
+  GnlComposition *comp = childio->comp;
+  GnlObject *object = childio->object;
   GnlCompositionPrivate *priv = comp->priv;
   GnlCompositionEntry *entry;
   GnlObject *in_pending_io;
@@ -589,7 +628,7 @@ add_object_handler (GnlComposition * comp, GnlObject * object)
         " already in the composition", object);
 
     COMP_OBJECTS_UNLOCK (comp);
-    return FALSE;
+    return;
   }
 
   if (in_pending_io) {
@@ -597,13 +636,35 @@ add_object_handler (GnlComposition * comp, GnlObject * object)
         " for addition", object);
 
     COMP_OBJECTS_UNLOCK (comp);
-    return FALSE;
+    return;
   }
 
 
   g_hash_table_add (priv->pending_io, object);
 
   COMP_OBJECTS_UNLOCK (comp);
+  return;
+}
+
+static void
+_add_add_object_gsource (GnlComposition * comp, GnlObject * object)
+{
+  ChildIOData *childio = g_slice_new0 (ChildIOData);
+
+  childio->comp = comp;
+  childio->object = object;
+
+  MAIN_CONTEXT_LOCK (comp);
+  g_main_context_invoke_full (comp->priv->mcontext, G_PRIORITY_HIGH,
+      (GSourceFunc) _add_object_func, childio, _free_child_io_data);
+  MAIN_CONTEXT_UNLOCK (comp);
+}
+
+static gboolean
+add_object_handler (GnlComposition * comp, GnlObject * object)
+{
+  _add_add_object_gsource (comp, object);
+
   return TRUE;
 }
 
