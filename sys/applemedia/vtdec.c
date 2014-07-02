@@ -512,16 +512,21 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
   GstBuffer *buf;
   GstVideoCodecState *state;
 
-  GST_LOG_OBJECT (vtdec, "got output frame %p %d", frame,
-      frame->decode_frame_number);
+  GST_LOG_OBJECT (vtdec, "got output frame %p %d and VT buffer %p", frame,
+      frame->decode_frame_number, image_buffer);
 
   if (status != noErr) {
     GST_ERROR_OBJECT (vtdec, "Error decoding frame %d", status);
     goto drop;
   }
 
-  if (info_flags & kVTDecodeInfo_FrameDropped)
+  if (image_buffer == NULL) {
+    if (info_flags & kVTDecodeInfo_FrameDropped)
+      GST_DEBUG_OBJECT (vtdec, "Frame dropped by video toolbox");
+    else
+      GST_DEBUG_OBJECT (vtdec, "Decoded frame is NULL");
     goto drop;
+  }
 
   /* FIXME: use gst_video_decoder_allocate_output_buffer */
   state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
