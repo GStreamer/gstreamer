@@ -51,6 +51,7 @@ struct _GstV4l2BufferPool
   GstV4l2Object *obj;        /* the v4l2 object */
   gint video_fd;             /* a dup(2) of the v4l2object's video_fd */
   GstPoll *poll;             /* a poll for video_fd */
+  GstPollFD pollfd;
   gboolean can_poll_device;
 
   gboolean empty;

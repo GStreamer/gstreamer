@@ -969,6 +969,9 @@ again:
     }
   }
 
+  if (gst_poll_fd_has_error (pool->poll, &pool->pollfd))
+    goto select_error;
+
 done:
   return GST_FLOW_OK;
 
@@ -1410,7 +1413,6 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   GstStructure *config;
   gchar *name, *parent_name;
   gint fd;
-  GstPollFD pollfd = GST_POLL_FD_INIT;
 
   fd = v4l2_dup (obj->video_fd);
   if (fd < 0)
@@ -1426,12 +1428,13 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
       "name", name, NULL);
   g_free (name);
 
-  pollfd.fd = fd;
-  gst_poll_add_fd (pool->poll, &pollfd);
+  gst_poll_fd_init (&pool->pollfd);
+  pool->pollfd.fd = fd;
+  gst_poll_add_fd (pool->poll, &pool->pollfd);
   if (V4L2_TYPE_IS_OUTPUT (obj->type))
-    gst_poll_fd_ctl_write (pool->poll, &pollfd, TRUE);
+    gst_poll_fd_ctl_write (pool->poll, &pool->pollfd, TRUE);
   else
-    gst_poll_fd_ctl_read (pool->poll, &pollfd, TRUE);
+    gst_poll_fd_ctl_read (pool->poll, &pool->pollfd, TRUE);
 
   pool->video_fd = fd;
   pool->obj = obj;
