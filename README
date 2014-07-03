@@ -64,7 +64,7 @@ Requirements
 
 Software requirements
 
-  * GStreamer 0.10.x:
+  * GStreamer 0.10.x [DEPRECATED]:
       libglib2.0-dev (>= 2.28)
       libgstreamer0.10-dev (>= 0.10.36)
         or with GstBaseSink::query()

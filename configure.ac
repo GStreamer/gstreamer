@@ -256,6 +256,7 @@ AC_SUBST([GST_PKG_VERSION])
 
 dnl Validate certain features
 if test "$USE_GST_API_0_10" = "yes"; then
+    AC_MSG_WARN([support for GStreamer 0.10 is deprecated, and will be removed])
     if test "$enable_builtin_videoparsers" = "yes"; then
         AC_MSG_WARN([disabled built-in videoparsers (unsupported)])
         enable_builtin_videoparsers="no"
