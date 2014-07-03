@@ -36,7 +36,7 @@ test_simplest_full (void)
   fail_unless (ret);
   check_start_stop_duration (source1, 0, 1 * GST_SECOND, 1 * GST_SECOND);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   sink = gst_element_factory_make_or_warn ("fakesink", "sink");
   fail_if (sink == NULL);
@@ -60,7 +60,7 @@ test_simplest_full (void)
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
   GST_ERROR ("Setting pipeline to PLAYING");
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
@@ -147,7 +147,7 @@ test_time_duration_full (void)
   fail_unless (ret == TRUE);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   /* Second source */
 
@@ -157,11 +157,13 @@ test_time_duration_full (void)
   fail_unless (ret == TRUE);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source2, "source2", 2);
+  ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
 
   /* Remove first source */
 
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
   gst_object_ref (source1);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
   GST_ERROR_OBJECT (source1, "Num refs : %i", ((GObject *) source1)->ref_count);
   gnl_composition_remove (GST_BIN (comp), source1);
   commit_and_wait (comp, &ret);
@@ -178,7 +180,7 @@ test_time_duration_full (void)
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   gst_object_unref (source1);
 
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   gst_object_unref (comp);
 }
@@ -232,11 +234,10 @@ test_one_after_other_full (void)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   /* Second source */
   gnl_composition_add (GST_BIN (comp), source2);
-
   commit_and_wait (comp, &ret);
   fail_unless (ret);
   check_start_stop_duration (source1, 0 * GST_SECOND, 1 * GST_SECOND,
@@ -245,7 +246,7 @@ test_one_after_other_full (void)
       1 * GST_SECOND);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source2, "source2", 2);
+  ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
 
   sink = gst_element_factory_make_or_warn ("autovideosink", "sink");
   fail_if (sink == NULL);
@@ -273,7 +274,7 @@ test_one_after_other_full (void)
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
   GST_DEBUG ("Setting pipeline to PLAYING");
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
@@ -403,7 +404,7 @@ test_one_under_another_full (void)
      Duration : 2s
      Priority : 1
    */
-  source1 = videotest_gnl_src ("source1", 0, 2 * GST_SECOND, 3, 1);
+  source1 = videotest_gnl_src ("source1", 0, 2 * GST_SECOND, 18, 1);
   fail_if (source1 == NULL);
   check_start_stop_duration (source1, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
@@ -413,7 +414,7 @@ test_one_under_another_full (void)
      Duration : 2s
      Priority : 2
    */
-  source2 = videotest_gnl_src ("source2", 1 * GST_SECOND, 2 * GST_SECOND, 2, 2);
+  source2 = videotest_gnl_src ("source2", 1 * GST_SECOND, 2 * GST_SECOND, 0, 2);
   fail_if (source2 == NULL);
   check_start_stop_duration (source2, 1 * GST_SECOND, 3 * GST_SECOND,
       2 * GST_SECOND);
@@ -566,7 +567,7 @@ test_one_bin_after_other_full (void)
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
   check_start_stop_duration (source1, 0, 1 * GST_SECOND, 1 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   /* Second source */
 
@@ -577,7 +578,7 @@ test_one_bin_after_other_full (void)
   check_start_stop_duration (source2, 1 * GST_SECOND, 2 * GST_SECOND,
       1 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source2, "source2", 2);
+  ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
 
   /* Remove first source */
 
@@ -595,7 +596,7 @@ test_one_bin_after_other_full (void)
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   gst_object_unref (source1);
 
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   sink = gst_element_factory_make_or_warn ("fakesink", "sink");
   fail_if (sink == NULL);
@@ -623,7 +624,7 @@ test_one_bin_after_other_full (void)
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
   GST_DEBUG ("Setting pipeline to PLAYING");
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);

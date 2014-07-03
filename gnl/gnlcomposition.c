@@ -2454,7 +2454,7 @@ _relink_single_node (GnlComposition * comp, GNode * node,
 
   srcpad = GNL_OBJECT_SRC (newobj);
 
-  gst_bin_add (GST_BIN (comp->priv->current_bin), GST_ELEMENT_CAST (newobj));
+  gst_bin_add (GST_BIN (comp->priv->current_bin), gst_object_ref (newobj));
   gst_element_sync_state_with_parent (GST_ELEMENT_CAST (newobj));
 
   translated_seek = gnl_object_translate_incoming_seek (newobj, toplevel_seek);
@@ -2750,7 +2750,7 @@ _gnl_composition_add_entry (GnlComposition * comp, GnlObject * object)
       GST_TIME_ARGS (GNL_OBJECT_START (object)),
       GST_TIME_ARGS (GNL_OBJECT_STOP (object)));
 
-  gst_object_ref (object);
+  g_object_ref_sink (object);
 
   if ((GNL_OBJECT_IS_EXPANDABLE (object)) &&
       g_list_find (priv->expandables, object)) {
