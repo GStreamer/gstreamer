@@ -3776,6 +3776,7 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
         if (strcmp (type->mime, "audio/mpeg") == 0) {
           tmp = gst_structure_new ("audio/mpeg",
               "mpegversion", G_TYPE_INT, 1,
+              "layer", G_TYPE_INT, 3,
               "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
               "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
               "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
