@@ -3360,11 +3360,13 @@ setup_other_pool:
     }
   }
 
-  /* For simplicity, simply read back the active configuration, so our base
-   * class get the right information */
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_get_params (config, NULL, &size, &min, &max);
-  gst_structure_free (config);
+  if (pool) {
+    /* For simplicity, simply read back the active configuration, so our base
+     * class get the right information */
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, NULL, &size, &min, &max);
+    gst_structure_free (config);
+  }
 
 done:
   if (update)
