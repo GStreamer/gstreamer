@@ -326,7 +326,12 @@ gst_vaapi_frame_store_new(GstVaapiPictureH264 *picture)
     fs->buffers[0]      = gst_vaapi_picture_ref(picture);
     fs->buffers[1]      = NULL;
     fs->num_buffers     = 1;
-    fs->output_needed   = picture->output_needed;
+    fs->output_needed   = 0;
+
+    if (picture->output_flag) {
+        picture->output_needed = TRUE;
+        fs->output_needed++;
+    }
     return fs;
 }
 
@@ -388,6 +393,13 @@ static inline gboolean
 gst_vaapi_frame_store_has_frame(GstVaapiFrameStore *fs)
 {
     return fs->structure == GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+}
+
+static inline gboolean
+gst_vaapi_frame_store_is_complete(GstVaapiFrameStore *fs)
+{
+    return gst_vaapi_frame_store_has_frame(fs) ||
+        GST_VAAPI_PICTURE_IS_ONEFIELD(fs->buffers[0]);
 }
 
 static inline gboolean
@@ -684,19 +696,26 @@ dpb_remove_index(GstVaapiDecoderH264 *decoder, guint index)
 }
 
 static gboolean
-dpb_output(
-    GstVaapiDecoderH264 *decoder,
-    GstVaapiFrameStore  *fs,
-    GstVaapiPictureH264 *picture
-)
+dpb_output(GstVaapiDecoderH264 *decoder, GstVaapiFrameStore *fs)
 {
+    GstVaapiPictureH264 *picture;
+
+    g_return_val_if_fail(fs != NULL, FALSE);
+
+    if (!gst_vaapi_frame_store_is_complete(fs))
+        return TRUE;
+
+    picture = fs->buffers[0];
+    g_return_val_if_fail(picture != NULL, FALSE);
     picture->output_needed = FALSE;
 
-    if (--fs->output_needed > 0)
-        return TRUE;
+    if (fs->num_buffers > 1) {
+        picture = fs->buffers[1];
+        g_return_val_if_fail(picture != NULL, FALSE);
+        picture->output_needed = FALSE;
+    }
 
-    if (!GST_VAAPI_PICTURE_IS_COMPLETE(picture))
-        return TRUE;
+    fs->output_needed = 0;
     return gst_vaapi_picture_output(GST_VAAPI_PICTURE_CAST(picture));
 }
 
@@ -805,7 +824,7 @@ dpb_output_other_views(GstVaapiDecoderH264 *decoder,
             &found_picture);
         if (found_index < 0 || found_picture->base.voc >= voc)
             break;
-        success = dpb_output(decoder, priv->dpb[found_index], found_picture);
+        success = dpb_output(decoder, priv->dpb[found_index]);
         dpb_evict(decoder, found_picture, found_index);
         if (!success)
             return FALSE;
@@ -828,7 +847,7 @@ dpb_bump(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     if (picture && picture->base.poc != found_picture->base.poc)
         dpb_output_other_views(decoder, found_picture, found_picture->base.voc);
 
-    success = dpb_output(decoder, priv->dpb[found_index], found_picture);
+    success = dpb_output(decoder, priv->dpb[found_index]);
     dpb_evict(decoder, found_picture, found_index);
     if (priv->max_views == 1)
         return success;
@@ -938,7 +957,7 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         if (fs && &fs->buffers[0]->base == picture->base.parent_picture) {
             if (!gst_vaapi_frame_store_add(fs, picture))
                 return FALSE;
-            return dpb_output(decoder, fs, picture);
+            return dpb_output(decoder, fs);
         }
     }
 
@@ -948,11 +967,6 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         return FALSE;
     gst_vaapi_frame_store_replace(&priv->prev_frames[picture->base.voc], fs);
     gst_vaapi_frame_store_unref(fs);
-
-    if (picture->output_flag) {
-        picture->output_needed = TRUE;
-        fs->output_needed++;
-    }
 
     if (!priv->progressive_sequence && gst_vaapi_frame_store_has_frame(fs)) {
         if (!gst_vaapi_frame_store_split_fields(fs))
@@ -981,7 +995,7 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
             if (!StoreInterViewOnlyRefFlag) {
                 if (dpb_find_lowest_poc(decoder, picture, &found_picture) < 0 ||
                     found_picture->base.poc > picture->base.poc)
-                    return dpb_output(decoder, fs, picture);
+                    return dpb_output(decoder, fs);
             }
             if (!dpb_bump(decoder, picture))
                 return FALSE;
