@@ -2157,6 +2157,19 @@ update_pipeline_func (GnlComposition * comp)
   return G_SOURCE_REMOVE;
 }
 
+static void
+_set_all_children_state (GnlComposition * comp, GstState state)
+{
+  GList *tmp;
+  COMP_OBJECTS_LOCK (comp);
+
+  gst_element_set_state (comp->priv->current_bin, state);
+  for (tmp = comp->priv->objects_start; tmp; tmp = tmp->next)
+    gst_element_set_state (tmp->data, state);
+
+  COMP_OBJECTS_UNLOCK (comp);
+}
+
 static GstStateChangeReturn
 gnl_composition_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2200,11 +2213,11 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
       _add_initialize_stack_gsource (comp);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_element_set_state (comp->priv->current_bin, GST_STATE_READY);
+      _set_all_children_state (comp, GST_STATE_READY);
       gnl_composition_reset (comp);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_element_set_state (comp->priv->current_bin, GST_STATE_NULL);
+      _set_all_children_state (comp, GST_STATE_NULL);
       gnl_composition_reset (comp);
       break;
     default:
