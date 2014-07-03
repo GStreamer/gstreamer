@@ -1040,6 +1040,32 @@ retry:
   gst_iterator_free (children);
 }
 
+static gboolean
+_remove_child (GValue * item, GValue * ret G_GNUC_UNUSED, GstBin * bin)
+{
+  GstElement *child = g_value_get_object (item);
+
+  gst_bin_remove (bin, child);
+
+  return TRUE;
+}
+
+static void
+_empty_bin (GstBin * bin)
+{
+  GstIterator *children;
+
+  children = gst_bin_iterate_elements (bin);
+
+  while (G_UNLIKELY (gst_iterator_fold (children,
+              (GstIteratorFoldFunction) _remove_child, NULL,
+              bin) == GST_ITERATOR_RESYNC)) {
+    gst_iterator_resync (children);
+  }
+
+  gst_iterator_free (children);
+}
+
 static void
 gnl_composition_reset (GnlComposition * comp)
 {
@@ -1073,6 +1099,8 @@ gnl_composition_reset (GnlComposition * comp)
   priv->reset_time = FALSE;
   priv->initialized = FALSE;
   priv->send_stream_start = TRUE;
+
+  _empty_bin (GST_BIN_CAST (priv->current_bin));
 
   GST_DEBUG_OBJECT (comp, "Composition now resetted");
 }
@@ -2449,31 +2477,7 @@ _relink_single_node (GnlComposition * comp, GNode * node,
       GST_ELEMENT_NAME (GST_ELEMENT (newobj)));
 }
 
-static gboolean
-_remove_child (GValue * item, GValue * ret G_GNUC_UNUSED, GstBin * bin)
-{
-  GstElement *child = g_value_get_object (item);
 
-  gst_bin_remove (bin, child);
-
-  return TRUE;
-}
-
-static void
-_empty_bin (GstBin * bin)
-{
-  GstIterator *children;
-
-  children = gst_bin_iterate_elements (bin);
-
-  while (G_UNLIKELY (gst_iterator_fold (children,
-              (GstIteratorFoldFunction) _remove_child, NULL,
-              bin) == GST_ITERATOR_RESYNC)) {
-    gst_iterator_resync (children);
-  }
-
-  gst_iterator_free (children);
-}
 
 /*
  * compare_relink_stack:
