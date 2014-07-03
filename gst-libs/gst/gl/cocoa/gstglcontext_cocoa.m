@@ -161,7 +161,7 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
     g_cond_init (&nsapp_cond);
 
     g_mutex_lock (&nsapp_lock);
-    g_timeout_add_seconds (0, gst_gl_window_cocoa_init_nsapp, NULL);
+    g_idle_add_full (G_PRIORITY_HIGH, gst_gl_window_cocoa_init_nsapp, NULL, NULL);
     end_time = g_get_monotonic_time () + 2 * 1000 * 1000;
     is_loop_running = g_cond_wait_until (&nsapp_cond, &nsapp_lock, end_time);
     g_mutex_unlock (&nsapp_lock);
