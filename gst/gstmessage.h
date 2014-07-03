@@ -116,6 +116,9 @@ typedef struct _GstMessage GstMessage;
  * NOTE: keep GST_MESSAGE_ANY a valid gint to avoid compiler warnings.
  */
 /* FIXME: 2.0: Make it NOT flags, just a regular 1,2,3,4.. enumeration */
+/* FIXME: For GST_MESSAGE_ANY ~0 -> 0xffffffff see
+ *        https://bugzilla.gnome.org/show_bug.cgi?id=732633
+ */
 typedef enum
 {
   GST_MESSAGE_UNKNOWN           = 0,
@@ -153,7 +156,7 @@ typedef enum
   GST_MESSAGE_EXTENDED          = (1 << 31),
   GST_MESSAGE_DEVICE_ADDED      = GST_MESSAGE_EXTENDED + 1,
   GST_MESSAGE_DEVICE_REMOVED    = GST_MESSAGE_EXTENDED + 2,
-  GST_MESSAGE_ANY               = ~0
+  GST_MESSAGE_ANY               = (gint) (0xffffffff)
 } GstMessageType;
 
 #include <gst/gstminiobject.h>
