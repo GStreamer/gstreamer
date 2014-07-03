@@ -846,6 +846,11 @@ gst_v4l2_buffer_pool_flush_start (GstBufferPool * bpool)
 
   gst_poll_set_flushing (pool->poll, TRUE);
 
+  GST_OBJECT_LOCK (pool);
+  pool->empty = FALSE;
+  g_cond_broadcast (&pool->empty_cond);
+  GST_OBJECT_UNLOCK (pool);
+
   if (pool->other_pool)
     gst_buffer_pool_set_flushing (pool->other_pool, TRUE);
 }
@@ -934,6 +939,11 @@ gst_v4l2_buffer_pool_poll (GstV4l2BufferPool * pool)
 {
   gint ret;
 
+  GST_OBJECT_LOCK (pool);
+  while (pool->empty)
+    g_cond_wait (&pool->empty_cond, GST_OBJECT_GET_LOCK (pool));
+  GST_OBJECT_UNLOCK (pool);
+
   if (!pool->can_poll_device)
     goto done;
 
@@ -1001,6 +1011,11 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
   if (!gst_v4l2_allocator_qbuf (pool->vallocator, group))
     goto queue_failed;
 
+  GST_OBJECT_LOCK (pool);
+  pool->empty = FALSE;
+  g_cond_signal (&pool->empty_cond);
+  GST_OBJECT_UNLOCK (pool);
+
   return GST_FLOW_OK;
 
 already_queued:
@@ -1047,7 +1062,11 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
 
   /* mark the buffer outstanding */
   pool->buffers[group->buffer.index] = NULL;
-  g_atomic_int_add (&pool->num_queued, -1);
+  if (g_atomic_int_dec_and_test (&pool->num_queued)) {
+    GST_OBJECT_LOCK (pool);
+    pool->empty = TRUE;
+    GST_OBJECT_UNLOCK (pool);
+  }
 
   timestamp = GST_TIMEVAL_TO_TIME (group->buffer.timestamp);
 
@@ -1354,6 +1373,8 @@ gst_v4l2_buffer_pool_init (GstV4l2BufferPool * pool)
 {
   pool->poll = gst_poll_new (TRUE);
   pool->can_poll_device = TRUE;
+  g_cond_init (&pool->empty_cond);
+  pool->empty = TRUE;
 }
 
 static void

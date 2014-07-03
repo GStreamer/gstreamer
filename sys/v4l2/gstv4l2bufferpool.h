@@ -53,6 +53,9 @@ struct _GstV4l2BufferPool
   GstPoll *poll;             /* a poll for video_fd */
   gboolean can_poll_device;
 
+  gboolean empty;
+  GCond empty_cond;
+
   GstV4l2Allocator *vallocator;
   GstAllocator *allocator;
   GstAllocationParams params;
