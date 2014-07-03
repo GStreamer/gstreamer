@@ -2526,6 +2526,7 @@ compare_relink_stack (GnlComposition * comp, GNode * stack, gboolean modify)
 
 
   _relink_single_node (comp, stack, toplevel_seek);
+  gst_event_unref (toplevel_seek);
 
   gst_element_set_locked_state (comp->priv->current_bin, FALSE);
   gst_element_sync_state_with_parent (comp->priv->current_bin);

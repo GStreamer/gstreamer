@@ -120,8 +120,6 @@ gnl_object_translate_incoming_seek (GnlObject * object, GstEvent * event)
       ncurtype, (gint64) ncur, GST_SEEK_TYPE_SET, (gint64) nstop);
   GST_EVENT_SEQNUM (event2) = seqnum;
 
-  gst_event_unref (event);
-
   return event2;
 
   /* ERRORS */
