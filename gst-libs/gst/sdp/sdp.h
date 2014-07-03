@@ -24,5 +24,6 @@
 
 #include <gst/sdp/gstsdp.h>
 #include <gst/sdp/gstsdpmessage.h>
+#include <gst/sdp/gstmikey.h>
 
 #endif /* __GST_SDP__H__ */
