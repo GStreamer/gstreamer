@@ -49,18 +49,12 @@ static GObjectClass *parent_class = NULL;
  ****************************************************/
 #define CHECK_AND_SET(PROPERTY, property, prop_str, print_format)            \
 {                                                                            \
-GstObject *parent = gst_object_get_parent (GST_OBJECT (object));             \
-if (parent == NULL && !GNL_OBJECT_IS_COMPOSITION (object)) {                 \
-  GST_INFO_OBJECT (object, "Not in a composition yet, "                      \
-      "not commiting" prop_str);                                             \
-} else if (object->pending_##property != object->property)      {            \
+if (object->pending_##property != object->property)      {            \
   object->property = object->pending_##property;                             \
   GST_DEBUG_OBJECT(object, "Setting " prop_str " to %"                       \
       print_format, object->property);                                       \
 } else                                                                       \
   GST_DEBUG_OBJECT(object, "Nothing to do for " prop_str);                   \
-if (parent)                                                                  \
-  gst_object_unref (parent);                                                 \
 }
 
 #define SET_PENDING_VALUE(property, property_str, type, print_format)      \
