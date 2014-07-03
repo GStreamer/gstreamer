@@ -1,7 +1,23 @@
-gst-vaapi NEWS -- summary of changes.  2014-01-23
+gst-vaapi NEWS -- summary of changes.  2014-07-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.5.9 - DD.Jul.2014
+* Add VP8 decoder (+Halley Zhao)
+* Add H.264 MVC decoder and encoder (+Sreerenj Balachandran, Xiaowei Li)
+* Improvements to H.264 decoder
+  + Add support for grayscale encoded clips
+  + Add minor optimizations to the parsing process
+  + Make support for interlaced streams more robust [#701340]
+  + Fix multiple slices decoding with varying slice types [#724518]
+  + Fix parsing of multiple SEI messages in single NAL units (Aurelien Zanelli)
+* Improvements to plugin elements
+  + Add support for crop regions in VPP mode [#720730]
+  + Fix support for headless pipelines, e.g. vaapisink display="drm" mode
+  + Fix creation of output surface pool for vaapipostproc (Simon Farnsworth)
+  + Fix vaapipostproc "deinterlace-mode" semantics (Simon Farnsworth) [#726361]
+  + Fix memory leak in vaapidecode ! {glimagesink,cluttersink} (Matthew Waters)
 
 Version 0.5.8 - 23.Jan.2014
 * Add H.264 video encoding (+Feng Yuan)
