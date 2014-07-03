@@ -258,8 +258,7 @@ too_small:
 not_riff:
   {
     GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-        ("Stream is no RIFF stream: %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (tag)));
+        ("Stream is no RIFF stream: 0x%" G_GINT32_MODIFIER "x", tag));
     gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     return FALSE;
