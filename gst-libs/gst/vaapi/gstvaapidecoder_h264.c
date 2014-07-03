@@ -894,6 +894,20 @@ dpb_clear(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 static void
 dpb_flush(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    guint i;
+
+    /* Detect broken frames and mark them as having a single field if
+       needed */
+    for (i = 0; i < priv->dpb_count; i++) {
+        GstVaapiFrameStore * const fs = priv->dpb[i];
+        if (!fs->output_needed || gst_vaapi_frame_store_is_complete(fs))
+            continue;
+        GST_VAAPI_PICTURE_FLAG_SET(fs->buffers[0],
+            GST_VAAPI_PICTURE_FLAG_ONEFIELD);
+    }
+
+    /* Output any frame remaining in DPB */
     while (dpb_bump(decoder, picture))
         ;
     dpb_clear(decoder, picture);
