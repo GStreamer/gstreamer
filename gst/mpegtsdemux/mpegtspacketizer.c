@@ -2118,6 +2118,12 @@ mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer,
         packetizer->refoffset;
   } else {
     PCROffsetCurrent *current = pcrtable->current;
+
+    if (!current->group) {
+      PACKETIZER_GROUP_UNLOCK (packetizer);
+      GST_LOG ("No PCR yet");
+      return GST_CLOCK_TIME_NONE;
+    }
     /* If doing progressive read, use current */
     GST_LOG ("Using current group");
     lastpcr = current->group->pcr_offset + current->pending[current->last].pcr;
