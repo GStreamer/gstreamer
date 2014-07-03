@@ -200,8 +200,6 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element);
 static GstStateChangeReturn
 gnl_composition_change_state (GstElement * element, GstStateChange transition);
 
-static inline void
-_object_block_and_drop_data (GnlComposition * comp, GnlObject * obj);
 static inline void gnl_composition_reset_target_pad (GnlComposition * comp);
 
 static gboolean
@@ -219,7 +217,8 @@ static void update_start_stop_duration (GnlComposition * comp);
 static gboolean
 gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
     GstEvent * event);
-static void _relink_single_node (GnlComposition * comp, GNode * node, GstEvent *toplevel_seek);
+static void _relink_single_node (GnlComposition * comp, GNode * node,
+    GstEvent * toplevel_seek);
 static gboolean update_pipeline_func (GnlComposition * comp);
 static gboolean commit_pipeline_func (GnlComposition * comp);
 static gboolean lock_child_state (GValue * item, GValue * ret,
@@ -1583,14 +1582,6 @@ beach:
   return res;
 }
 
-static GstPadProbeReturn
-pad_blocked (GstPad * pad, GstPadProbeInfo * info, GnlComposition * comp)
-{
-  GST_DEBUG_OBJECT (comp, "Pad : %s:%s", GST_DEBUG_PAD_NAME (pad));
-
-  return GST_PAD_PROBE_OK;
-}
-
 static inline void
 gnl_composition_reset_target_pad (GnlComposition * comp)
 {
@@ -1612,65 +1603,6 @@ gnl_composition_reset_target_pad (GnlComposition * comp)
   priv->toplevelentry = NULL;
   GST_ERROR ("NEED STRAM START");
   priv->send_stream_start = TRUE;
-}
-
-static GstPadProbeReturn
-drop_data (GstPad * pad, GstPadProbeInfo * info, GnlCompositionEntry * entry)
-{
-  /* When updating the pipeline, do not let data flowing */
-  if (!GST_IS_EVENT (info->data)) {
-    GST_LOG_OBJECT (pad, "Dropping data while updating pipeline");
-    return GST_PAD_PROBE_DROP;
-  } else {
-    GstEvent *event = GST_EVENT (info->data);
-
-    if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
-      entry->seeked = TRUE;
-      GST_DEBUG_OBJECT (pad, "Got SEEK event");
-    } else if (entry->seeked == TRUE &&
-        GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
-      entry->seeked = FALSE;
-      entry->dataprobeid = 0;
-
-      GST_DEBUG_OBJECT (pad, "Already seeked and got segment,"
-          " removing probe");
-      return GST_PAD_PROBE_REMOVE;
-    }
-  }
-
-  return GST_PAD_PROBE_OK;
-}
-
-static inline void
-_entry_block_and_drop_data (GnlCompositionEntry * entry)
-{
-  if (!entry->probeid) {
-    GST_LOG_OBJECT (entry->comp, "block_async(%s:%s, TRUE)",
-        GST_DEBUG_PAD_NAME (entry->object->srcpad));
-    entry->probeid =
-        gst_pad_add_probe (entry->object->srcpad,
-        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
-        (GstPadProbeCallback) pad_blocked, entry->comp, NULL);
-  }
-  if (!entry->dataprobeid) {
-    entry->dataprobeid = gst_pad_add_probe (entry->object->srcpad,
-        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
-        GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data,
-        entry, NULL);
-  }
-}
-
-static inline void
-_object_block_and_drop_data (GnlComposition * comp, GnlObject * obj)
-{
-  GnlCompositionEntry *entry = COMP_ENTRY (comp, obj);
-
-  if (entry == NULL) {
-    GST_DEBUG_OBJECT (obj, "No entry associated, (being removed)");
-    return;
-  }
-
-  _entry_block_and_drop_data (entry);
 }
 
 /* gnl_composition_ghost_pad_set_target:
@@ -1697,35 +1629,6 @@ gnl_composition_ghost_pad_set_target (GnlComposition * comp, GstPad * target,
         "Target of srcpad is the same as existing one, not changing");
     gst_object_unref (ptarget);
     return;
-  }
-
-  /* Unset previous target */
-  if (ptarget) {
-    GST_DEBUG_OBJECT (comp, "Previous target was %s:%s",
-        GST_DEBUG_PAD_NAME (ptarget));
-
-    if (!priv->toplevelentry->probeid) {
-      /* If it's not blocked, block it */
-      priv->toplevelentry->probeid =
-          gst_pad_add_probe (ptarget,
-          GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_IDLE,
-          (GstPadProbeCallback) pad_blocked, comp, NULL);
-    }
-
-    if (!priv->toplevelentry->dataprobeid) {
-      priv->toplevelentry->dataprobeid = gst_pad_add_probe (ptarget,
-          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
-          GST_PAD_PROBE_TYPE_EVENT_BOTH, (GstPadProbeCallback) drop_data,
-          priv->toplevelentry, NULL);
-    }
-
-    /* remove event probe */
-    if (priv->ghosteventprobe) {
-      gst_pad_remove_probe (ptarget, priv->ghosteventprobe);
-      priv->ghosteventprobe = 0;
-    }
-    gst_object_unref (ptarget);
-
   }
 
   /* Actually set the target */
@@ -2474,7 +2377,7 @@ _link_to_parent (GnlComposition * comp, GnlObject * newobj,
 
 static void
 _relink_children_recursively (GnlComposition * comp,
-    GnlObject * newobj, GNode * node, GstEvent *toplevel_seek)
+    GnlObject * newobj, GNode * node, GstEvent * toplevel_seek)
 {
   GNode *child;
   guint nbchildren = g_node_n_children (node);
@@ -2509,7 +2412,8 @@ _relink_children_recursively (GnlComposition * comp,
  * WITH OBJECTS LOCK TAKEN
  */
 static void
-_relink_single_node (GnlComposition * comp, GNode * node, GstEvent *toplevel_seek)
+_relink_single_node (GnlComposition * comp, GNode * node,
+    GstEvent * toplevel_seek)
 {
   GnlObject *newobj;
   GnlObject *newparent;
@@ -2595,6 +2499,7 @@ _empty_bin (GstBin * bin)
 static GList *
 compare_relink_stack (GnlComposition * comp, GNode * stack, gboolean modify)
 {
+  GstPad *ptarget;
   GstEvent *toplevel_seek = get_new_seek_event (comp, TRUE, FALSE);
   GList *deactivate = NULL;
 
@@ -2604,7 +2509,15 @@ compare_relink_stack (GnlComposition * comp, GNode * stack, gboolean modify)
       gst_element_state_change_return_get_name
       (gst_element_set_state (comp->priv->current_bin, GST_STATE_READY)));
 
+  ptarget =
+      gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT (comp)->srcpad));
   _empty_bin (GST_BIN_CAST (comp->priv->current_bin));
+
+  if (comp->priv->ghosteventprobe) {
+    gst_pad_remove_probe (ptarget, comp->priv->ghosteventprobe);
+    comp->priv->ghosteventprobe = 0;
+  }
+
 
   _relink_single_node (comp, stack, toplevel_seek);
 
@@ -2880,8 +2793,6 @@ _gnl_composition_add_entry (GnlComposition * comp, GnlObject * object)
 
   /* ...and add it to the hash table */
   g_hash_table_insert (priv->objects_hash, object, entry);
-
-  _entry_block_and_drop_data (entry);
 
   /* Set the caps of the composition */
   if (G_UNLIKELY (!gst_caps_is_any (((GnlObject *) comp)->caps)))

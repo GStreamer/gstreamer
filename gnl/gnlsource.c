@@ -73,8 +73,6 @@ static gboolean gnl_source_remove_element (GstBin * bin, GstElement * element);
 
 static void gnl_source_dispose (GObject * object);
 
-static gboolean gnl_source_send_event (GstElement * element, GstEvent * event);
-
 static GstPadProbeReturn
 pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, GnlSource * source);
 
@@ -110,8 +108,6 @@ gnl_source_class_init (GnlSourceClass * klass)
 
   gstbin_class->add_element = GST_DEBUG_FUNCPTR (gnl_source_add_element);
   gstbin_class->remove_element = GST_DEBUG_FUNCPTR (gnl_source_remove_element);
-
-  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gnl_source_send_event);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gnl_source_dispose);
 
@@ -482,31 +478,6 @@ gnl_source_remove_element (GstBin * bin, GstElement * element)
     source->element = NULL;
   }
   return pret;
-}
-
-static gboolean
-gnl_source_send_event (GstElement * element, GstEvent * event)
-{
-  GnlSource *source = (GnlSource *) element;
-  GnlObject *gnlobject = (GnlObject *) element;
-  gboolean res = TRUE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
-      if (source->priv->ghostedpad)
-        res = gst_pad_send_event (gnlobject->srcpad, event);
-      else {
-        if (source->priv->event)
-          gst_event_unref (source->priv->event);
-        source->priv->event = event;
-      }
-      break;
-    default:
-      res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
-      break;
-  }
-
-  return res;
 }
 
 static gboolean
