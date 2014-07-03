@@ -1,0 +1,48 @@
+From 92908c46e7dd90063a613742f285e9c494c90d6f Mon Sep 17 00:00:00 2001
+From: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+Date: Mon, 28 Apr 2014 17:17:04 +0200
+Subject: [PATCH 2/3] h264parse: fix build with older GStreamer 1.x stacks.
+
+---
+ gst/vaapi/gsth264parse.c |    4 +++-
+ gst/vaapi/gsth264parse.h |    1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
+index 678c7f7..37ce228 100644
+--- a/gst/vaapi/gsth264parse.c
++++ b/gst/vaapi/gsth264parse.c
+@@ -27,7 +27,7 @@
+ #endif
+ 
+ #include "gstvaapiparse.h"
+-#include <gst/base/base.h>
++#include <gst/base/gstbytewriter.h>
+ #include <gst/pbutils/pbutils.h>
+ #include <gst/video/video.h>
+ #include "gsth264parse.h"
+@@ -148,7 +148,9 @@ gst_h264_parse_init (GstH264Parse * h264parse)
+ {
+   h264parse->frame_out = gst_adapter_new ();
+   gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (h264parse), FALSE);
++#if GST_CHECK_VERSION(1,3,0)
+   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (h264parse));
++#endif
+ }
+ 
+ 
+diff --git a/gst/vaapi/gsth264parse.h b/gst/vaapi/gsth264parse.h
+index 4c3fdd4..3db8f21 100644
+--- a/gst/vaapi/gsth264parse.h
++++ b/gst/vaapi/gsth264parse.h
+@@ -27,6 +27,7 @@
+ 
+ #include <gst/gst.h>
+ #include <gst/base/gstbaseparse.h>
++#include <gst/base/gstadapter.h>
+ #include <gst/codecparsers/gsth264parser.h>
+ 
+ G_BEGIN_DECLS
+-- 
+1.7.9.5
+
