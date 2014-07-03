@@ -54,23 +54,26 @@ static gboolean
 compare_segments (CollectStructure * collect, Segment * segment,
     GstEvent * event)
 {
-  const GstSegment *orig;
+  const GstSegment *received_segment;
   guint64 running_stop, running_start, running_duration;
 
-  gst_event_parse_segment (event, &orig);
+  gst_event_parse_segment (event, &received_segment);
 
   GST_DEBUG ("Got Segment rate:%f, format:%s, start:%" GST_TIME_FORMAT
       ", stop:%" GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT
       ", base:%" GST_TIME_FORMAT ", offset:%" GST_TIME_FORMAT,
-      orig->rate, gst_format_get_name (orig->format),
-      GST_TIME_ARGS (orig->start), GST_TIME_ARGS (orig->stop),
-      GST_TIME_ARGS (orig->time), GST_TIME_ARGS (orig->base),
-      GST_TIME_ARGS (orig->offset));
+      received_segment->rate, gst_format_get_name (received_segment->format),
+      GST_TIME_ARGS (received_segment->start),
+      GST_TIME_ARGS (received_segment->stop),
+      GST_TIME_ARGS (received_segment->time),
+      GST_TIME_ARGS (received_segment->base),
+      GST_TIME_ARGS (received_segment->offset));
   GST_DEBUG ("[RUNNING] start:%" GST_TIME_FORMAT " [STREAM] start:%"
-      GST_TIME_FORMAT, GST_TIME_ARGS (gst_segment_to_running_time (orig,
-              GST_FORMAT_TIME, orig->start)),
-      GST_TIME_ARGS (gst_segment_to_stream_time (orig, GST_FORMAT_TIME,
-              orig->start)));
+      GST_TIME_FORMAT,
+      GST_TIME_ARGS (gst_segment_to_running_time (received_segment,
+              GST_FORMAT_TIME, received_segment->start)),
+      GST_TIME_ARGS (gst_segment_to_stream_time (received_segment,
+              GST_FORMAT_TIME, received_segment->start)));
 
   GST_DEBUG ("Expecting rate:%f, format:%s, start:%" GST_TIME_FORMAT
       ", stop:%" GST_TIME_FORMAT ", position:%" GST_TIME_FORMAT ", base:%"
@@ -80,15 +83,17 @@ compare_segments (CollectStructure * collect, Segment * segment,
       GST_TIME_ARGS (collect->expected_base));
 
   running_start =
-      gst_segment_to_running_time (orig, GST_FORMAT_TIME, orig->start);
+      gst_segment_to_running_time (received_segment, GST_FORMAT_TIME,
+      received_segment->start);
   running_stop =
-      gst_segment_to_running_time (orig, GST_FORMAT_TIME, orig->stop);
+      gst_segment_to_running_time (received_segment, GST_FORMAT_TIME,
+      received_segment->stop);
   running_duration = running_stop - running_start;
-  fail_if (orig->rate != segment->rate);
-  fail_if (orig->format != segment->format);
-  fail_unless_equals_int64 (orig->time, segment->position);
-  fail_unless_equals_int64 (orig->base, collect->expected_base);
-  fail_unless_equals_uint64 (orig->stop - orig->start,
+  fail_if (received_segment->rate != segment->rate);
+  fail_if (received_segment->format != segment->format);
+  fail_unless_equals_int64 (received_segment->time, segment->position);
+  fail_unless_equals_int64 (received_segment->base, collect->expected_base);
+  fail_unless_equals_uint64 (received_segment->stop - received_segment->start,
       segment->stop - segment->start);
 
   collect->expected_base += running_duration;

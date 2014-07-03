@@ -247,25 +247,7 @@ test_one_after_other_full (void)
 
   ASSERT_OBJECT_REFCOUNT (source2, "source2", 2);
 
-  /* Remove first source */
-
-  gst_object_ref (source1);
-  gnl_composition_remove (GST_BIN (comp), source1);
-  check_start_stop_duration (comp, 1 * GST_SECOND, 2 * GST_SECOND,
-      1 * GST_SECOND);
-
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
-
-  /* Re-add first source */
-
-  gnl_composition_add (GST_BIN (comp), source1);
-  commit_and_wait (comp, &ret);
-  check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
-  gst_object_unref (source1);
-
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
-
-  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
+  sink = gst_element_factory_make_or_warn ("autovideosink", "sink");
   fail_if (sink == NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
