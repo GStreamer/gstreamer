@@ -2770,6 +2770,7 @@ gst_amc_color_format_info_set (GstAmcColorFormatInfo * color_format_info,
       break;
     }
     case COLOR_QCOM_FormatYUV420SemiPlanar:
+    case COLOR_QCOM_FormatYVU420SemiPlanar32m:
     case COLOR_FormatYUV420SemiPlanar:{
       if (stride == 0 || slice_height == 0) {
         GST_ERROR ("Stride or slice height is 0");
@@ -2950,6 +2951,7 @@ gst_amc_color_format_copy (GstAmcColorFormatInfo * cinfo,
       break;
     }
     case COLOR_QCOM_FormatYUV420SemiPlanar:
+    case COLOR_QCOM_FormatYVU420SemiPlanar32m:
     case COLOR_FormatYUV420SemiPlanar:{
       gint i, j, height;
       gint c_stride, v_stride;
