@@ -365,7 +365,6 @@ gst_d3d_surface_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 {
   GstD3DSurfaceMemory *parent;
   gpointer ret = NULL;
-  gint d3d_flags = ((flags & GST_MAP_WRITE) == 0) ? D3DLOCK_READONLY : 0;
 
   /* find the real parent */
   if ((parent = (GstD3DSurfaceMemory *) mem->parent) == NULL)
@@ -374,7 +373,7 @@ gst_d3d_surface_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
   g_mutex_lock (&parent->lock);
   if (!parent->map_count
       && IDirect3DSurface9_LockRect (parent->surface, &parent->lr, NULL,
-          d3d_flags) != D3D_OK) {
+          0) != D3D_OK) {
     ret = NULL;
     goto done;
   }
@@ -592,7 +591,7 @@ gst_d3dsurface_buffer_pool_alloc_buffer (GstBufferPool * bpool,
     goto fallback;
   }
 
-  IDirect3DSurface9_LockRect (surface, &lr, NULL, D3DLOCK_READONLY);
+  IDirect3DSurface9_LockRect (surface, &lr, NULL, 0);
   if (!lr.pBits) {
     GST_ERROR_OBJECT (sink, "Failed to lock D3D surface");
     IDirect3DSurface9_Release (surface);
