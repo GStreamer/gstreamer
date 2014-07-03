@@ -629,14 +629,25 @@ gst_d3dsurface_buffer_pool_alloc_buffer (GstBufferPool * bpool,
     case GST_VIDEO_FORMAT_YV12:
       offset[0] = 0;
       stride[0] = lr.Pitch;
-      offset[2] =
-          offset[0] + stride[0] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 0);
-      stride[2] = lr.Pitch / 2;
-      offset[1] =
-          offset[2] + stride[2] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 2);
-      stride[1] = lr.Pitch / 2;
-      size =
-          offset[1] + stride[1] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 1);
+      if (GST_VIDEO_INFO_FORMAT (&pool->info) == GST_VIDEO_FORMAT_YV12) {
+        offset[1] =
+            offset[0] + stride[0] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 0);
+        stride[1] = lr.Pitch / 2;
+        offset[2] =
+            offset[1] + stride[1] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 1);
+        stride[2] = lr.Pitch / 2;
+        size =
+            offset[2] + stride[2] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 2);
+      } else {
+        offset[2] =
+            offset[0] + stride[0] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 0);
+        stride[2] = lr.Pitch / 2;
+        offset[1] =
+            offset[2] + stride[2] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 2);
+        stride[1] = lr.Pitch / 2;
+        size =
+            offset[1] + stride[1] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 1);
+      }
       break;
     case GST_VIDEO_FORMAT_NV12:
       offset[0] = 0;
