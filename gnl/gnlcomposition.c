@@ -169,6 +169,9 @@ struct _GnlCompositionPrivate
   GstState deactivated_elements_state;
 
   GstElement *current_bin;
+
+
+  gboolean seeking_itself;
 };
 
 static guint _signals[LAST_SIGNAL] = { 0 };
@@ -1509,11 +1512,15 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      _add_seek_gsource (comp, event);
-      event = NULL;
-      GST_FIXME_OBJECT (comp, "HANDLE seeking errors!");
+      if (!priv->seeking_itself) {
+        _add_seek_gsource (comp, event);
+        event = NULL;
+        GST_FIXME_OBJECT (comp, "HANDLE seeking errors!");
 
-      return TRUE;
+        return TRUE;
+      }
+
+      break;
     }
     case GST_EVENT_QOS:
     {
@@ -2712,14 +2719,26 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   }
 
   /* Activate stack */
-  if (samestack && (startchanged || stopchanged)) {
-    /* Update seek events need to be flushing if not in PLAYING,
-     * else we will encounter deadlocks. */
-    forcing_flush = (state == GST_STATE_PLAYING) ? FALSE : TRUE;
-  }
+  if (!samestack) {
+    return _activate_new_stack (comp, initial);
+  } else {
+    gboolean res;
+    GstEvent *toplevel_seek;
+    GstPad *peer = gst_pad_get_peer (GNL_OBJECT_SRC (comp));
 
-  _activate_new_stack (comp, forcing_flush);
-  return TRUE;
+    if (samestack && (startchanged || stopchanged)) {
+      /* Update seek events need to be flushing if not in PLAYING,
+       * else we will encounter deadlocks. */
+      forcing_flush = (state == GST_STATE_PLAYING) ? FALSE : TRUE;
+    }
+    toplevel_seek = get_new_seek_event (comp, TRUE, forcing_flush);
+
+    priv->seeking_itself = TRUE;
+    res = gst_pad_push_event (peer, toplevel_seek);
+    priv->seeking_itself = FALSE;
+
+    return res;
+  }
 }
 
 static gboolean
