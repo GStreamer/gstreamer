@@ -515,12 +515,12 @@ gst_vaapi_video_allocator_new(GstVaapiDisplay *display, const GstVideoInfo *vip)
             image = gst_vaapi_surface_derive_image(surface);
             if (!image)
                 break;
-            if (GST_VAAPI_IMAGE_FORMAT(image) != GST_VIDEO_INFO_FORMAT(vip))
-                break;
             if (!gst_vaapi_image_map(image))
                 break;
             allocator->has_direct_rendering = gst_video_info_update_from_image(
                 &allocator->surface_info, image);
+            if (GST_VAAPI_IMAGE_FORMAT(image) != GST_VIDEO_INFO_FORMAT(vip))
+               allocator->has_direct_rendering = FALSE;
             gst_vaapi_image_unmap(image);
             GST_INFO("has direct-rendering for %s surfaces: %s",
                      GST_VIDEO_INFO_FORMAT_STRING(&allocator->surface_info),
