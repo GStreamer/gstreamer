@@ -2193,8 +2193,11 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
       _add_initialize_stack_gsource (comp);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      /* Fallthrough */
+      gst_element_set_state (comp->priv->current_bin, GST_STATE_READY);
+      gnl_composition_reset (comp);
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_element_set_state (comp->priv->current_bin, GST_STATE_NULL);
       gnl_composition_reset (comp);
       break;
     default:
