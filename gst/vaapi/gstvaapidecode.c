@@ -129,6 +129,7 @@ gst_vaapidecode_update_sink_caps(GstVaapiDecode *decode, GstCaps *caps)
     return TRUE;
 }
 
+#if GST_CHECK_VERSION(1,1,0)
 static void
 gst_vaapidecode_video_info_change_format(GstVideoInfo *info,
     GstVideoFormat format, guint width, guint height)
@@ -145,6 +146,7 @@ gst_vaapidecode_video_info_change_format(GstVideoInfo *info,
     info->fps_n = vi.fps_n;
     info->fps_d = vi.fps_d;
 }
+#endif
 
 static gboolean
 gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,

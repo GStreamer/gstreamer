@@ -254,6 +254,14 @@ if test "$USE_GST_API_1_2p" = "yes"; then
 fi
 AC_SUBST([GST_PKG_VERSION])
 
+dnl Validate certain features
+if test "$USE_GST_API_0_10" = "yes"; then
+    if test "$enable_builtin_videoparsers" = "yes"; then
+        AC_MSG_WARN([disabled built-in videoparsers (unsupported)])
+        enable_builtin_videoparsers="no"
+    fi
+fi
+
 dnl GStreamer Core
 PKG_CHECK_MODULES([GST],
     [gstreamer-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
