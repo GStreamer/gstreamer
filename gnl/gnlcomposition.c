@@ -168,8 +168,6 @@ struct _GnlCompositionPrivate
 
   GstState deactivated_elements_state;
 
-  gboolean external_gst_bin_add_remove; /*  When people try to call gst_bin_add/remove themselves */
-
   GstElement *current_bin;
 };
 
@@ -839,7 +837,6 @@ gnl_composition_init (GnlComposition * comp)
 
   g_mutex_init (&priv->pending_io_lock);
   priv->pending_io = g_hash_table_new (g_direct_hash, g_direct_equal);
-  priv->external_gst_bin_add_remove = TRUE;
 
   comp->priv = priv;
 
@@ -879,9 +876,7 @@ gnl_composition_dispose (GObject * object)
   }
   gnl_composition_reset_target_pad (comp);
 
-  priv->external_gst_bin_add_remove = FALSE;
   G_OBJECT_CLASS (parent_class)->dispose (object);
-  priv->external_gst_bin_add_remove = TRUE;
 }
 
 static void
@@ -2026,14 +2021,11 @@ _process_pending_entry (GnlObject * object,
 {
   GnlCompositionEntry *entry = COMP_ENTRY (comp, object);
 
-  comp->priv->external_gst_bin_add_remove = FALSE;
   if (entry) {
     _gnl_composition_remove_entry (comp, object);
   } else {
     _gnl_composition_add_entry (comp, object);
   }
-
-  comp->priv->external_gst_bin_add_remove = TRUE;
 
   return TRUE;
 }
@@ -2745,8 +2737,6 @@ _gnl_composition_add_entry (GnlComposition * comp, GnlObject * object)
 
   GnlCompositionEntry *entry;
   GnlCompositionPrivate *priv = comp->priv;
-
-  g_return_val_if_fail (priv->external_gst_bin_add_remove == FALSE, FALSE);
 
   GST_DEBUG_OBJECT (comp, "element %s", GST_OBJECT_NAME (object));
   GST_DEBUG_OBJECT (object, "%" GST_TIME_FORMAT "--%" GST_TIME_FORMAT,
