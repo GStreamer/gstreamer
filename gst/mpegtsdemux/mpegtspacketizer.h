@@ -244,6 +244,8 @@ typedef struct _MpegTSPCR
 struct _MpegTSPacketizer2 {
   GObject     parent;
 
+  GMutex group_lock;
+
   GstAdapter *adapter;
   /* streams hashed by pid */
   /* FIXME : be more memory efficient (see how it's done in mpegtsbase) */

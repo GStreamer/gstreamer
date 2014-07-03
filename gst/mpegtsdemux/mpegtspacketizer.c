@@ -45,6 +45,9 @@ G_DEFINE_TYPE_EXTENDED (MpegTSPacketizer2, mpegts_packetizer, G_TYPE_OBJECT, 0,
 
 #define ABSDIFF(a,b) ((a) < (b) ? (b) - (a) : (a) - (b))
 
+#define PACKETIZER_GROUP_LOCK(p) g_mutex_lock(&((p)->group_lock))
+#define PACKETIZER_GROUP_UNLOCK(p) g_mutex_unlock(&((p)->group_lock))
+
 static void mpegts_packetizer_dispose (GObject * object);
 static void mpegts_packetizer_finalize (GObject * object);
 static GstClockTime calculate_skew (MpegTSPCR * pcr, guint64 pcrtime,
@@ -234,6 +237,8 @@ mpegts_packetizer_class_init (MpegTSPacketizer2Class * klass)
 static void
 mpegts_packetizer_init (MpegTSPacketizer2 * packetizer)
 {
+  g_mutex_init (&packetizer->group_lock);
+
   packetizer->adapter = gst_adapter_new ();
   packetizer->offset = 0;
   packetizer->empty = TRUE;
@@ -374,6 +379,7 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
         ") offset:%" G_GUINT64_FORMAT, packet->pid, packet->pcr,
         GST_TIME_ARGS (PCRTIME_TO_GSTTIME (packet->pcr)), packet->offset);
 
+    PACKETIZER_GROUP_LOCK (packetizer);
     if (packetizer->calculate_skew
         && GST_CLOCK_TIME_IS_VALID (packetizer->last_in_time)) {
       pcrtable = get_pcr_table (packetizer, packet->pid);
@@ -384,6 +390,7 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
         pcrtable = get_pcr_table (packetizer, packet->pid);
       record_pcr (packetizer, pcrtable, packet->pcr, packet->offset);
     }
+    PACKETIZER_GROUP_UNLOCK (packetizer);
   }
 #ifndef GST_DISABLE_GST_DEBUG
   /* OPCR */
@@ -560,12 +567,15 @@ mpegts_packetizer_clear (MpegTSPacketizer2 * packetizer)
   packetizer->last_in_time = GST_CLOCK_TIME_NONE;
 
   /* Close current PCR group */
+  PACKETIZER_GROUP_LOCK (packetizer);
+
   for (i = 0; i < MAX_PCR_OBS_CHANNELS; i++) {
     if (packetizer->observations[i])
       _close_current_group (packetizer->observations[i]);
     else
       break;
   }
+  PACKETIZER_GROUP_UNLOCK (packetizer);
 }
 
 void
@@ -592,12 +602,14 @@ mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer, gboolean hard)
   packetizer->last_in_time = GST_CLOCK_TIME_NONE;
 
   /* Close current PCR group */
+  PACKETIZER_GROUP_LOCK (packetizer);
   for (i = 0; i < MAX_PCR_OBS_CHANNELS; i++) {
     if (packetizer->observations[i])
       _close_current_group (packetizer->observations[i]);
     else
       break;
   }
+  PACKETIZER_GROUP_UNLOCK (packetizer);
 
   if (hard) {
     /* For pull mode seeks in tsdemux the observation must be preserved */
@@ -2078,9 +2090,12 @@ mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer,
   if (G_UNLIKELY (offset < packetizer->refoffset))
     return GST_CLOCK_TIME_NONE;
 
+  PACKETIZER_GROUP_LOCK (packetizer);
+
   pcrtable = get_pcr_table (packetizer, pid);
 
   if (g_list_length (pcrtable->groups) < 1) {
+    PACKETIZER_GROUP_UNLOCK (packetizer);
     GST_WARNING ("Not enough observations to return a duration estimate");
     return GST_CLOCK_TIME_NONE;
   }
@@ -2117,6 +2132,9 @@ mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer,
   res =
       PCRTIME_TO_GSTTIME (gst_util_uint64_scale (offset - packetizer->refoffset,
           lastpcr, lastoffset));
+
+  PACKETIZER_GROUP_UNLOCK (packetizer);
+
   GST_DEBUG ("Returning timestamp %" GST_TIME_FORMAT " for offset %"
       G_GUINT64_FORMAT, GST_TIME_ARGS (res), offset);
 
@@ -2130,7 +2148,10 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
     GstClockTime pts, guint16 pcr_pid)
 {
   GstClockTime res = GST_CLOCK_TIME_NONE;
-  MpegTSPCR *pcrtable = get_pcr_table (packetizer, pcr_pid);
+  MpegTSPCR *pcrtable;
+
+  PACKETIZER_GROUP_LOCK (packetizer);
+  pcrtable = get_pcr_table (packetizer, pcr_pid);
 
   /* Use clock skew if present */
   if (packetizer->calculate_skew
@@ -2232,6 +2253,8 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
   } else
     GST_WARNING ("Not enough information to calculate proper timestamp");
 
+  PACKETIZER_GROUP_UNLOCK (packetizer);
+
   GST_DEBUG ("Returning timestamp %" GST_TIME_FORMAT " for pts %"
       GST_TIME_FORMAT " pcr_pid:0x%04x", GST_TIME_ARGS (res),
       GST_TIME_ARGS (pts), pcr_pid);
@@ -2253,10 +2276,13 @@ mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
   if (!packetizer->calculate_offset)
     return -1;
 
+  PACKETIZER_GROUP_LOCK (packetizer);
   pcrtable = get_pcr_table (packetizer, pcr_pid);
 
-  if (pcrtable->groups == NULL)
+  if (pcrtable->groups == NULL) {
+    PACKETIZER_GROUP_UNLOCK (packetizer);
     return -1;
+  }
 
   querypcr = GSTTIME_TO_PCRTIME (ts);
 
@@ -2333,6 +2359,8 @@ calculate_points:
         prevgroup->values[prevgroup->last_value].pcr + prevgroup->pcr_offset;
   }
 
+  PACKETIZER_GROUP_UNLOCK (packetizer);
+
   GST_DEBUG ("Using prev PCR %" G_GUINT64_FORMAT " offset %" G_GUINT64_FORMAT,
       firstpcr, firstoffset);
   GST_DEBUG ("Using last PCR %" G_GUINT64_FORMAT " offset %" G_GUINT64_FORMAT,
@@ -2355,7 +2383,9 @@ mpegts_packetizer_set_reference_offset (MpegTSPacketizer2 * packetizer,
 {
   GST_DEBUG ("Setting reference offset to %" G_GUINT64_FORMAT, refoffset);
 
+  PACKETIZER_GROUP_LOCK (packetizer);
   packetizer->refoffset = refoffset;
+  PACKETIZER_GROUP_UNLOCK (packetizer);
 }
 
 void
@@ -2370,10 +2400,13 @@ mpegts_packetizer_set_current_pcr_offset (MpegTSPacketizer2 * packetizer,
   gboolean apply = FALSE;
 
   /* fast path */
+  PACKETIZER_GROUP_LOCK (packetizer);
   pcrtable = get_pcr_table (packetizer, pcr_pid);
 
-  if (pcrtable == NULL || pcrtable->current->group == NULL)
+  if (pcrtable == NULL || pcrtable->current->group == NULL) {
+    PACKETIZER_GROUP_UNLOCK (packetizer);
     return;
+  }
 
   pcr_offset = GSTTIME_TO_PCRTIME (offset);
 
@@ -2393,6 +2426,7 @@ mpegts_packetizer_set_current_pcr_offset (MpegTSPacketizer2 * packetizer,
   delta = pcr_offset - group->pcr_offset;
   if (delta == 0) {
     GST_DEBUG ("No shift to apply");
+    PACKETIZER_GROUP_UNLOCK (packetizer);
     return;
   }
   GST_DEBUG ("Shifting groups by %" GST_TIME_FORMAT
@@ -2417,4 +2451,5 @@ mpegts_packetizer_set_current_pcr_offset (MpegTSPacketizer2 * packetizer,
           tgroup->first_offset,
           GST_TIME_ARGS (PCRTIME_TO_GSTTIME (tgroup->pcr_offset)));
   }
+  PACKETIZER_GROUP_UNLOCK (packetizer);
 }
