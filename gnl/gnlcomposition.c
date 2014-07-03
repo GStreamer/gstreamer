@@ -218,7 +218,7 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
 static void _relink_single_node (GnlComposition * comp, GNode * node,
     GstEvent * toplevel_seek);
 static gboolean update_pipeline_func (GnlComposition * comp);
-static gboolean commit_pipeline_func (GnlComposition * comp);
+static gboolean _commit_func (GnlComposition * comp);
 static gboolean lock_child_state (GValue * item, GValue * ret,
     gpointer udata G_GNUC_UNUSED);
 static gboolean
@@ -489,7 +489,7 @@ _add_commit_gsource (GnlComposition * comp)
 {
   MAIN_CONTEXT_LOCK (comp);
   g_main_context_invoke (comp->priv->mcontext,
-      (GSourceFunc) commit_pipeline_func, comp);
+      (GSourceFunc) _commit_func, comp);
   MAIN_CONTEXT_UNLOCK (comp);
 }
 
@@ -2059,7 +2059,7 @@ _process_pending_entry (GnlObject * object,
 }
 
 static gboolean
-commit_pipeline_func (GnlComposition * comp)
+_commit_func (GnlComposition * comp)
 {
   GList *tmp;
   gboolean commited = FALSE;
