@@ -176,8 +176,8 @@ gst_mim_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       gst_adapter_unmap (mimdec->adapter);
       gst_adapter_flush (mimdec->adapter, 24);
       GST_ELEMENT_ERROR (mimdec, STREAM, WRONG_TYPE, (NULL),
-          ("invalid frame: unknown FOURCC code %X (%" GST_FOURCC_FORMAT ")",
-              fourcc, GST_FOURCC_ARGS (fourcc)));
+          ("invalid frame: unknown FOURCC code 0x%" G_GINT32_MODIFIER "x",
+              fourcc));
       return GST_FLOW_ERROR;
     }
 
