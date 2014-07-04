@@ -130,7 +130,9 @@ pts_eval(PTSGenerator *tsg, GstClockTime pic_pts, guint pic_tsn)
     if (!GST_CLOCK_TIME_IS_VALID(tsg->gop_pts))
         tsg->gop_pts = 0;
 
-    pts = tsg->gop_pts + pts_get_duration(tsg, tsg->ovl_tsn * 1024 + pic_tsn);
+    pts = pic_pts;
+    if (!GST_CLOCK_TIME_IS_VALID (pts))
+       pts = tsg->gop_pts + pts_get_duration(tsg, tsg->ovl_tsn * 1024 + pic_tsn);
 
     if (!GST_CLOCK_TIME_IS_VALID(tsg->max_pts) || tsg->max_pts < pts)
         tsg->max_pts = pts;
@@ -142,6 +144,7 @@ pts_eval(PTSGenerator *tsg, GstClockTime pic_pts, guint pic_tsn)
         tsg->ovl_tsn++;
     }
     tsg->lst_tsn = pic_tsn;
+
     return pts;
 }
 
