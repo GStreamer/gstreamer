@@ -250,8 +250,7 @@ gst_aiff_parse_parse_file_header (GstAiffParse * aiff, GstBuffer * buf)
 not_aiff:
   {
     GST_ELEMENT_ERROR (aiff, STREAM, WRONG_TYPE, (NULL),
-        ("File is not an AIFF file: %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (type)));
+        ("File is not an AIFF file: 0x%" G_GINT32_MODIFIER "x", type));
     gst_buffer_unref (buf);
     return FALSE;
   }
