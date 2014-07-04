@@ -1072,8 +1072,7 @@ gst_avi_demux_parse_file_header (GstElement * element, GstBuffer * buf)
 not_avi:
   {
     GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-        ("File is not an AVI file: %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (doctype)));
+        ("File is not an AVI file: 0x%" G_GINT32_MODIFIER "x", doctype));
     return FALSE;
   }
 }

@@ -303,8 +303,7 @@ gst_wavparse_parse_file_header (GstElement * element, GstBuffer * buf)
 not_wav:
   {
     GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-        ("File is not a WAVE file: %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (doctype)));
+        ("File is not a WAVE file: 0x%" G_GINT32_MODIFIER "x", doctype));
     return FALSE;
   }
 }
