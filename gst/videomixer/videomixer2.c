@@ -1246,8 +1246,8 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
 
   if (output_end_time >= mix->segment.stop) {
     GST_DEBUG_OBJECT (mix, "Segment done");
-    GST_VIDEO_MIXER2_UNLOCK (mix);
     if (!(mix->segment.flags & GST_SEGMENT_FLAG_SEGMENT)) {
+      GST_VIDEO_MIXER2_UNLOCK (mix);
       gst_pad_push_event (mix->srcpad, gst_event_new_eos ());
 
       ret = GST_FLOW_EOS;
