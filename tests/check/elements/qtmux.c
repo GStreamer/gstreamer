@@ -895,6 +895,9 @@ qtmux_suite (void)
   Suite *s = suite_create ("qtmux");
   TCase *tc_chain = tcase_create ("general");
 
+  /* avoid glib warnings when setting deprecated dts-method property */
+  g_setenv ("G_ENABLE_DIAGNOSTIC", "0", TRUE);
+
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_video_pad_dd);
   tcase_add_test (tc_chain, test_audio_pad_dd);
