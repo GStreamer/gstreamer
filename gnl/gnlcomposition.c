@@ -2523,10 +2523,7 @@ compare_relink_stack (GnlComposition * comp, GNode * stack, gboolean modify)
   GList *deactivate = NULL;
 
   gst_element_set_locked_state (comp->priv->current_bin, TRUE);
-
-  GST_ERROR ("Set state return: %s",
-      gst_element_state_change_return_get_name
-      (gst_element_set_state (comp->priv->current_bin, GST_STATE_READY)));
+  gst_element_set_state (comp->priv->current_bin, GST_STATE_READY);
 
   ptarget =
       gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT (comp)->srcpad));
