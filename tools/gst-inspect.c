@@ -1484,6 +1484,9 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
+  /* avoid glib warnings when inspecting deprecated properties */
+  g_setenv ("G_ENABLE_DIAGNOSTIC", "0", FALSE);
+
   g_set_prgname ("gst-inspect-" GST_API_VERSION);
 
 #ifndef GST_DISABLE_OPTION_PARSING
