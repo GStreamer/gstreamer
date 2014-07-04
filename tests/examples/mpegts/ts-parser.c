@@ -328,8 +328,8 @@ dump_linkage (GstMpegtsDescriptor * desc, guint spacing)
     switch (res->linkage_type) {
       case GST_MPEGTS_DVB_LINKAGE_MOBILE_HAND_OVER:
       {
-        GstMpegtsDVBLinkageMobileHandOver *linkage =
-            (GstMpegtsDVBLinkageMobileHandOver *) res->linkage_data;
+        const GstMpegtsDVBLinkageMobileHandOver *linkage =
+            gst_mpegts_dvb_linkage_descriptor_get_mobile_hand_over (res);
         g_printf ("%*s   hand_over_type    : 0x%02x (%s)\n", spacing,
             "", linkage->hand_over_type,
             enum_name (GST_TYPE_MPEGTS_DVB_LINKAGE_HAND_OVER_TYPE,
@@ -344,8 +344,8 @@ dump_linkage (GstMpegtsDescriptor * desc, guint spacing)
       }
       case GST_MPEGTS_DVB_LINKAGE_EVENT:
       {
-        GstMpegtsDVBLinkageEvent *linkage =
-            (GstMpegtsDVBLinkageEvent *) res->linkage_data;
+        const GstMpegtsDVBLinkageEvent *linkage =
+            gst_mpegts_dvb_linkage_descriptor_get_event (res);
         g_printf ("%*s   target_event_id   : 0x%04x\n", spacing, "",
             linkage->target_event_id);
         g_printf ("%*s   target_listed     : %s\n", spacing, "",
@@ -357,7 +357,8 @@ dump_linkage (GstMpegtsDescriptor * desc, guint spacing)
       case GST_MPEGTS_DVB_LINKAGE_EXTENDED_EVENT:
       {
         guint i;
-        GPtrArray *items = (GPtrArray *) res->linkage_data;
+        const GPtrArray *items =
+            gst_mpegts_dvb_linkage_descriptor_get_extended_event (res);
 
         for (i = 0; i < items->len; i++) {
           GstMpegtsDVBLinkageExtendedEvent *linkage =

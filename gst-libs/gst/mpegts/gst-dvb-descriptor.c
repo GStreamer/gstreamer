@@ -770,6 +770,57 @@ fail:
   return FALSE;
 }
 
+/**
+ * gst_mpegts_dvb_linkage_descriptor_get_mobile_hand_over:
+ * @desc: the #GstMpegtsDVBLinkageDescriptor
+ *
+ * Returns: The #GstMpegtsDVBLinkageMobileHandOver or %NULL if an error happened
+ */
+const GstMpegtsDVBLinkageMobileHandOver *
+gst_mpegts_dvb_linkage_descriptor_get_mobile_hand_over (const
+    GstMpegtsDVBLinkageDescriptor * desc)
+{
+  g_return_val_if_fail (desc != NULL, NULL);
+  g_return_val_if_fail (desc->linkage_type ==
+      GST_MPEGTS_DVB_LINKAGE_MOBILE_HAND_OVER, NULL);
+
+  return (const GstMpegtsDVBLinkageMobileHandOver *) desc->linkage_data;
+}
+
+/**
+ * gst_mpegts_dvb_linkage_descriptor_get_event:
+ * @desc: the #GstMpegtsDVBLinkageDescriptor
+ *
+ * Returns: The #GstMpegtsDVBLinkageEvent or %NULL if an error happened
+ */
+const GstMpegtsDVBLinkageEvent *
+gst_mpegts_dvb_linkage_descriptor_get_event (const GstMpegtsDVBLinkageDescriptor
+    * desc)
+{
+  g_return_val_if_fail (desc != NULL, NULL);
+  g_return_val_if_fail (desc->linkage_type ==
+      GST_MPEGTS_DVB_LINKAGE_EVENT, NULL);
+
+  return (const GstMpegtsDVBLinkageEvent *) desc->linkage_data;
+}
+
+/**
+ * gst_mpegts_dvb_linkage_descriptor_get_extended_event:
+ * @desc: the #GstMpegtsDVBLinkageDescriptor
+ *
+ * Returns: (element-type GstMpegtsDVBLinkageExtendedEvent): an #GstMpegtsDVBLinkageExtendedEvent array or %NULL if an error happened
+ */
+const GPtrArray *
+gst_mpegts_dvb_linkage_descriptor_get_extended_event (const
+    GstMpegtsDVBLinkageDescriptor * desc)
+{
+  g_return_val_if_fail (desc != NULL, NULL);
+  g_return_val_if_fail (desc->linkage_type ==
+      GST_MPEGTS_DVB_LINKAGE_EXTENDED_EVENT, NULL);
+
+  return (const GPtrArray *) desc->linkage_data;
+}
+
 /* GST_MTS_DESC_DVB_SHORT_EVENT (0x4D) */
 /**
  * gst_mpegts_descriptor_parse_dvb_short_event:
