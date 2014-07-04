@@ -521,8 +521,7 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
 unknown_fourcc:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (demux), STREAM, DECODE, (NULL),
-        ("Unknown fourcc '%" GST_FOURCC_FORMAT "'",
-            GST_FOURCC_ARGS (demux->fourcc)));
+        ("Unknown fourcc '0x%" G_GINT32_MODIFIER "x'", demux->fourcc));
     return GST_FLOW_ERROR;
   }
 broken_file:
