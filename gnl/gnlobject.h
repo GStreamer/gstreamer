@@ -124,6 +124,8 @@ struct _GnlObject
   GstSeekFlags segment_flags;
   gint64 segment_start;
   gint64 segment_stop;
+
+  gint seqnum;
 };
 
 struct _GnlObjectClass

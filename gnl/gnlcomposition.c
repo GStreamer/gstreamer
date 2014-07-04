@@ -170,8 +170,8 @@ struct _GnlCompositionPrivate
 
   GstElement *current_bin;
 
-
   gboolean seeking_itself;
+  gint real_eos_seqnum;
 };
 
 static guint _signals[LAST_SIGNAL] = { 0 };
@@ -468,6 +468,8 @@ _seek_pipeline_func (SeekData * seekd)
   priv->gnl_event_pad_func (GNL_OBJECT (seekd->comp)->srcpad,
       GST_OBJECT (seekd->comp), get_new_seek_event (seekd->comp, FALSE, FALSE));
   priv->reset_time = FALSE;
+
+  GNL_OBJECT (seekd->comp)->seqnum = gst_event_get_seqnum (seekd->event);
 
 beach:
   gst_event_unref (seekd->event);
@@ -1115,7 +1117,6 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
   GstPadProbeReturn retval = GST_PAD_PROBE_OK;
   GnlCompositionPrivate *priv = comp->priv;
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
-  GList *tmp;
 
   GST_DEBUG_OBJECT (comp, "event: %s", GST_EVENT_TYPE_NAME (event));
 
@@ -1168,16 +1169,18 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
 
       event2 = gst_event_new_segment (&copy);
       GST_EVENT_SEQNUM (event2) = GST_EVENT_SEQNUM (event);
+
+      if (GNL_OBJECT (comp)->seqnum == 0)
+        GNL_OBJECT (comp)->seqnum = GST_EVENT_SEQNUM (event);
+
       GST_PAD_PROBE_INFO_DATA (info) = event2;
       gst_event_unref (event);
     }
       break;
     case GST_EVENT_EOS:
     {
-      gboolean reverse = (comp->priv->segment->rate < 0);
-      gboolean should_check_objects = FALSE;
+      gint seqnum = gst_event_get_seqnum (event);
 
-      GST_ERROR ("EOS");
       COMP_FLUSHING_LOCK (comp);
       if (priv->flushing) {
         GST_DEBUG_OBJECT (comp, "flushing, bailing out");
@@ -1187,37 +1190,19 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       }
       COMP_FLUSHING_UNLOCK (comp);
 
-      if (reverse && GST_CLOCK_TIME_IS_VALID (comp->priv->segment_start))
-        should_check_objects = TRUE;
-      else if (!reverse && GST_CLOCK_TIME_IS_VALID (comp->priv->segment_stop))
-        should_check_objects = TRUE;
+      GST_ERROR_OBJECT (comp, "Got EOS, last EOS seqnum id : %i current "
+          "seq num is: %i", comp->priv->real_eos_seqnum, seqnum);
 
-      if (should_check_objects) {
-        retval = GST_PAD_PROBE_OK;
-        COMP_OBJECTS_LOCK (comp);
-        for (tmp = comp->priv->objects_stop; tmp; tmp = g_list_next (tmp)) {
-          GnlObject *object = (GnlObject *) tmp->data;
+      if (g_atomic_int_compare_and_exchange (&comp->priv->real_eos_seqnum,
+              seqnum, 1)) {
 
-          if (!GNL_IS_SOURCE (object))
-            continue;
-
-          if ((!reverse && comp->priv->segment_stop < object->stop) ||
-              (reverse && comp->priv->segment_start > object->start)) {
-            retval = GST_PAD_PROBE_DROP;
-            break;
-          }
-        }
-        COMP_OBJECTS_UNLOCK (comp);
-      }
-
-      if (retval == GST_PAD_PROBE_OK) {
-        GST_DEBUG_OBJECT (comp, "Got EOS for real, fowarding it");
+        GST_INFO_OBJECT (comp, "Got EOS for real, fowarding it");
+        GST_ERROR_OBJECT (comp, "GOGOGO EOS -- Seq ID is %i", seqnum);
 
         return GST_PAD_PROBE_OK;
       }
 
       _add_update_gsource (comp);
-
       retval = GST_PAD_PROBE_DROP;
     }
       break;
@@ -2515,24 +2500,32 @@ _relink_single_node (GnlComposition * comp, GNode * node,
  * Returns: The #GList of #GnlObject no longer used
  */
 
-static GList *
-compare_relink_stack (GnlComposition * comp, GNode * stack, gboolean modify)
+static void
+_deactivate_stack (GnlComposition * comp)
 {
   GstPad *ptarget;
-  GstEvent *toplevel_seek = get_new_seek_event (comp, TRUE, FALSE);
-  GList *deactivate = NULL;
 
   gst_element_set_locked_state (comp->priv->current_bin, TRUE);
   gst_element_set_state (comp->priv->current_bin, GST_STATE_READY);
 
-  ptarget =
-      gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT (comp)->srcpad));
+  ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT_SRC (comp)));
   _empty_bin (GST_BIN_CAST (comp->priv->current_bin));
 
   if (comp->priv->ghosteventprobe) {
+    GST_INFO_OBJECT (comp, "Removing old ghost pad probe");
+
     gst_pad_remove_probe (ptarget, comp->priv->ghosteventprobe);
     comp->priv->ghosteventprobe = 0;
   }
+
+  if (ptarget)
+    gst_object_unref (ptarget);
+}
+
+static void
+_relink_new_stack (GnlComposition * comp, GNode * stack,
+    GstEvent * toplevel_seek)
+{
 
 
   _relink_single_node (comp, stack, toplevel_seek);
@@ -2540,8 +2533,6 @@ compare_relink_stack (GnlComposition * comp, GNode * stack, gboolean modify)
 
   gst_element_set_locked_state (comp->priv->current_bin, FALSE);
   gst_element_sync_state_with_parent (comp->priv->current_bin);
-
-  return deactivate;
 }
 
 static void
@@ -2604,7 +2595,7 @@ beach:
 }
 
 static inline gboolean
-_activate_new_stack (GnlComposition * comp, gboolean forcing_flush)
+_activate_new_stack (GnlComposition * comp, GstEvent * toplevel_seek)
 {
   GstPad *pad;
   GstElement *topelement;
@@ -2641,6 +2632,36 @@ _activate_new_stack (GnlComposition * comp, gboolean forcing_flush)
   return TRUE;
 }
 
+/* WITH OBJECTS LOCK TAKEN */
+static gboolean
+_is_last_stack (GnlComposition * comp)
+{
+  GList *tmp;
+  gboolean reverse = (comp->priv->segment->rate < 0);
+  gboolean should_check_objects = FALSE;
+
+  if (reverse && GST_CLOCK_TIME_IS_VALID (comp->priv->segment_start))
+    should_check_objects = TRUE;
+  else if (!reverse && GST_CLOCK_TIME_IS_VALID (comp->priv->segment_stop))
+    should_check_objects = TRUE;
+
+  if (should_check_objects) {
+    for (tmp = comp->priv->objects_stop; tmp; tmp = g_list_next (tmp)) {
+      GnlObject *object = (GnlObject *) tmp->data;
+
+      if (!GNL_IS_SOURCE (object))
+        continue;
+
+      if ((!reverse && comp->priv->segment_stop < object->stop) ||
+          (reverse && comp->priv->segment_start > object->start)) {
+        return FALSE;
+      }
+    }
+  }
+
+  return TRUE;
+}
+
 /*
  * update_pipeline:
  * @comp: The #GnlComposition
@@ -2660,15 +2681,20 @@ static gboolean
 update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     gboolean initial, gboolean modify)
 {
-  gboolean startchanged, stopchanged;
+
+  gint stack_seqnum;
+  GstEvent *toplevel_seek;
 
   GNode *stack = NULL;
   gboolean samestack = FALSE;
-  gboolean forcing_flush = initial;
+  gboolean updatestoponly = FALSE;
   GstState state = GST_STATE (comp);
   GnlCompositionPrivate *priv = comp->priv;
   GstClockTime new_stop = GST_CLOCK_TIME_NONE;
   GstClockTime new_start = GST_CLOCK_TIME_NONE;
+
+  gboolean startchanged, stopchanged;
+
   GstState nextstate = (GST_STATE_NEXT (comp) == GST_STATE_VOID_PENDING) ?
       GST_STATE (comp) : GST_STATE_NEXT (comp);
 
@@ -2714,9 +2740,28 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     priv->segment_stop = currenttime;
   }
 
+  if (samestack) {
+    if (startchanged || stopchanged) {
+      /* Update seek events need to be flushing if not in PLAYING,
+       * else we will encounter deadlocks. */
+      updatestoponly = (state == GST_STATE_PLAYING) ? FALSE : TRUE;
+    }
+  }
+
+  toplevel_seek = get_new_seek_event (comp, TRUE, updatestoponly);
+  if (_is_last_stack (comp)) {
+    stack_seqnum = gst_event_get_seqnum (toplevel_seek);
+    g_atomic_int_set (&priv->real_eos_seqnum, stack_seqnum);
+
+    GST_ERROR_OBJECT (comp, "Seeting up last stack, seqnum is: %i",
+        stack_seqnum);
+  }
+
   /* If stacks are different, unlink/relink objects */
-  if (!samestack)
-    compare_relink_stack (comp, stack, modify);
+  if (!samestack) {
+    _deactivate_stack (comp);
+    _relink_new_stack (comp, stack, toplevel_seek);
+  }
 
   /* Unlock all elements in new stack */
   GST_DEBUG_OBJECT (comp, "Setting current stack");
@@ -2731,18 +2776,10 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
   /* Activate stack */
   if (!samestack) {
-    return _activate_new_stack (comp, initial);
+    return _activate_new_stack (comp, toplevel_seek);
   } else {
     gboolean res;
-    GstEvent *toplevel_seek;
     GstPad *peer = gst_pad_get_peer (GNL_OBJECT_SRC (comp));
-
-    if (samestack && (startchanged || stopchanged)) {
-      /* Update seek events need to be flushing if not in PLAYING,
-       * else we will encounter deadlocks. */
-      forcing_flush = (state == GST_STATE_PLAYING) ? FALSE : TRUE;
-    }
-    toplevel_seek = get_new_seek_event (comp, TRUE, forcing_flush);
 
     priv->seeking_itself = TRUE;
     res = gst_pad_push_event (peer, toplevel_seek);

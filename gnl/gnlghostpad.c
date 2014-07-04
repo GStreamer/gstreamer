@@ -322,8 +322,16 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
   switch (priv->dir) {
     case GST_PAD_SRC:{
       switch (GST_EVENT_TYPE (event)) {
+        case GST_EVENT_SEEK:
+          object->seqnum = gst_event_get_seqnum (event);
+          GST_INFO_OBJECT (object, "Setting seqnum to %i", object->seqnum);
+          break;
         case GST_EVENT_SEGMENT:
           event = translate_outgoing_segment (object, event);
+          break;
+        case GST_EVENT_EOS:
+          GST_INFO_OBJECT (object, "Tweaking seqnum to %i", object->seqnum);
+          gst_event_set_seqnum (event, object->seqnum);
           break;
         default:
           break;
