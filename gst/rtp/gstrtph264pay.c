@@ -701,6 +701,10 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
   if (SPS_TYPE_ID == type || PPS_TYPE_ID == type) {
     GstBuffer *nal;
 
+    /* trailing 0x0 are not part of the SPS/PPS */
+    while (size > 0 && data[size - 1] == 0x0)
+      size--;
+
     /* encode the entire SPS NAL in base64 */
     GST_DEBUG ("Found %s %x %x %x Len=%u", type == SPS_TYPE_ID ? "SPS" : "PPS",
         (header >> 7), (header >> 5) & 3, type, size);
