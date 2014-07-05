@@ -359,6 +359,11 @@ gst_handdetect_set_caps (GstOpencvVideoFilter * transform,
   GstHanddetect *filter;
   filter = GST_HANDDETECT (transform);
 
+  /* 320 x 240 is with the best detect accuracy, if not, give info */
+  if (in_width != 320 || in_height != 240)
+    GST_WARNING_OBJECT (filter,
+        "resize to 320 x 240 to have best detect accuracy.\n");
+
   if (filter->cvGray)
     cvReleaseImage (&filter->cvGray);
   filter->cvGray =
@@ -398,10 +403,6 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
   gst_buffer_map (buffer, &info, GST_MAP_READWRITE);
 
   filter->cvImage->imageData = (char *) info.data;
-  /* 320 x 240 is with the best detect accuracy, if not, give info */
-  if (filter->cvImage->width != 320 || filter->cvImage->height != 240)
-    GST_INFO_OBJECT (filter,
-        "WARNING: resize to 320 x 240 to have best detect accuracy.\n");
   /* cvt to gray colour space for hand detect */
   cvCvtColor (filter->cvImage, filter->cvGray, CV_RGB2GRAY);
   cvClearMemStorage (filter->cvStorage);
