@@ -87,10 +87,8 @@ struct _GstHanddetect
   guint roi_height;
 
   /* opencv
-   * cvImage - image from video cam,
-   * cvGray -  cvt cvImage to gray colour
+   * cvGray - image to gray colour
    */
-  IplImage *cvImage;
   IplImage *cvGray;
   CvHaarClassifierCascade *cvCascade_fist;
   CvHaarClassifierCascade *cvCascade_palm;
