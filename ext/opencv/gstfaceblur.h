@@ -49,6 +49,8 @@
 #include <gst/gst.h>
 #include <cv.h>
 
+#include "gstopencvvideofilter.h"
+
 #if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
 #include <opencv2/objdetect/objdetect.hpp>
 #endif
@@ -70,22 +72,20 @@ typedef struct _GstFaceBlurClass GstFaceBlurClass;
 
 struct _GstFaceBlur
 {
-  GstElement element;
-
-  GstPad *sinkpad, *srcpad;
+  GstOpencvVideoFilter element;
 
   gboolean display;
 
   gchar *profile;
 
-  IplImage *cvImage, *cvGray;
+  IplImage *cvGray;
   CvHaarClassifierCascade *cvCascade;
   CvMemStorage *cvStorage;
 };
 
 struct _GstFaceBlurClass
 {
-  GstElementClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_face_blur_get_type (void);
