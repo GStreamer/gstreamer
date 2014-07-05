@@ -217,15 +217,11 @@ gst_opencv_video_filter_transform_ip (GstBaseTransform * trans,
   g_return_val_if_fail (fclass->cv_trans_ip_func != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (transform->cvImage != NULL, GST_FLOW_ERROR);
 
-  /* TODO this is not always needed and should be solved at BaseTransform
-   * level */
-  buffer = gst_buffer_make_writable (buffer);
   if (!gst_buffer_map (buffer, &info, GST_MAP_READWRITE))
     goto map_failed;
 
   transform->cvImage->imageData = (char *) info.data;
 
-  /* FIXME how to release buffer? */
   ret = fclass->cv_trans_ip_func (transform, buffer, transform->cvImage);
 
   gst_buffer_unmap (buffer, &info);
