@@ -1279,6 +1279,7 @@ GST_CAT_LOG_OBJECT
 GST_CAT_FIXME_OBJECT
 GST_CAT_TRACE_OBJECT
 GST_CAT_MEMDUMP_OBJECT
+GST_CAT_DEFAULT
 GST_CAT_ERROR
 GST_CAT_WARNING
 GST_CAT_INFO
@@ -1492,6 +1493,7 @@ GST_MESSAGE_SRC_NAME
 GST_MESSAGE_TIMESTAMP
 GST_MESSAGE_SEQNUM
 GST_MESSAGE_TYPE
+GST_MESSAGE_TYPE_IS_EXTENDED
 GST_MESSAGE_TYPE_NAME
 gst_message_type_to_quark
 gst_message_type_get_name
@@ -1781,6 +1783,7 @@ GstPadStickyEventsForeachFunction
 gst_pad_sticky_events_foreach
 
 gst_pad_is_active
+gst_pad_get_last_flow_return
 
 <SUBSECTION probes>
 GstPadProbeReturn
@@ -1924,6 +1927,7 @@ GST_PAD_PARENT
 GST_PAD_ELEMENT_PRIVATE
 GST_PAD_PAD_TEMPLATE
 GST_PAD_DIRECTION
+GST_PAD_LAST_FLOW_RETURN
 
 GST_PAD_TASK
 GST_PAD_MODE
@@ -2891,6 +2895,7 @@ GstToc
 GstTocScope
 GstTocEntry
 GstTocEntryType
+GstTocLoopType
 gst_toc_new
 gst_toc_ref
 gst_toc_unref
@@ -2914,6 +2919,8 @@ gst_toc_entry_get_uid
 gst_toc_entry_get_parent
 gst_toc_entry_get_sub_entries
 gst_toc_entry_append_sub_entry
+gst_toc_entry_get_loop
+gst_toc_entry_set_loop
 gst_toc_entry_get_start_stop_times
 gst_toc_entry_set_start_stop_times
 gst_toc_entry_get_tags
@@ -2925,15 +2932,18 @@ gst_toc_entry_is_alternative
 gst_toc_entry_is_sequence
 GST_TOC_ENTRY_TYPE_IS_ALTERNATIVE
 GST_TOC_ENTRY_TYPE_IS_SEQUENCE
+GST_TOC_REPEAT_COUNT_INFINITE
 <SUBSECTION Standard>
 GST_TYPE_TOC
 GST_TYPE_TOC_ENTRY
 GST_TYPE_TOC_ENTRY_TYPE
+GST_TYPE_TOC_LOOP_TYPE
 GST_TYPE_TOC_SCOPE
 <SUBSECTION Private>
 gst_toc_get_type
 gst_toc_entry_get_type
 gst_toc_entry_type_get_type
+gst_toc_loop_type_get_type
 gst_toc_scope_get_type
 </SECTION>
 
@@ -3298,12 +3308,15 @@ gst_value_array_prepend_value
 gst_value_fixate
 
 
+<SUBSECTION Standard>
+GST_TYPE_G_THREAD
 <SUBSECTION Private>
 gst_date_get_type
 gst_date_time_get_type
 gst_double_range_get_type
 gst_fraction_get_type
 gst_fraction_range_get_type
+gst_g_thread_get_type
 gst_int_range_get_type
 gst_int64_range_get_type
 gst_value_array_get_type
@@ -3330,8 +3343,8 @@ GstDeviceClass
 
 gst_device_create_element
 gst_device_get_caps
+gst_device_get_device_class
 gst_device_get_display_name
-gst_device_get_klass
 gst_device_has_classes
 gst_device_has_classesv
 gst_device_reconfigure_element
@@ -3344,11 +3357,6 @@ GST_DEVICE_GET_CLASS
 GST_IS_DEVICE
 GST_IS_DEVICE_CLASS
 GST_TYPE_DEVICE
-
-gst_device_create_element
-gst_device_get_caps
-gst_device_get_display_name
-gst_device_get_device_class
 gst_device_get_type
 </SECTION>
 

@@ -65,7 +65,6 @@ gst_timed_value_control_source_get_all
 gst_timed_value_control_source_unset
 gst_timed_value_control_source_unset_all
 gst_timed_value_control_source_get_count
-gst_timed_value_control_source_get_base_value_type
 gst_timed_value_control_invalidate_cache
 <SUBSECTION Standard>
 GstTimedValueControlSourceClass
@@ -294,7 +293,6 @@ gst_base_sink_do_preroll
 gst_base_sink_wait
 gst_base_sink_wait_preroll
 gst_base_sink_wait_clock
-gst_base_sink_wait_eos
 gst_base_sink_set_sync
 gst_base_sink_get_sync
 gst_base_sink_set_max_lateness
@@ -307,8 +305,6 @@ gst_base_sink_set_ts_offset
 gst_base_sink_get_ts_offset
 gst_base_sink_set_render_delay
 gst_base_sink_get_render_delay
-gst_base_sink_set_last_buffer_enabled
-gst_base_sink_is_last_buffer_enabled
 gst_base_sink_get_last_sample
 gst_base_sink_set_blocksize
 gst_base_sink_get_blocksize
@@ -325,7 +321,6 @@ GST_BASE_SINK_GET_PREROLL_LOCK
 GST_BASE_SINK_PREROLL_BROADCAST
 GST_BASE_SINK_PREROLL_LOCK
 GST_BASE_SINK_PREROLL_SIGNAL
-GST_BASE_SINK_PREROLL_TIMED_WAIT
 GST_BASE_SINK_PREROLL_TRYLOCK
 GST_BASE_SINK_PREROLL_UNLOCK
 GST_BASE_SINK_PREROLL_WAIT
@@ -361,8 +356,6 @@ gst_base_transform_is_qos_enabled
 gst_base_transform_set_qos_enabled
 gst_base_transform_update_qos
 gst_base_transform_set_gap_aware
-gst_base_transform_suggest
-gst_base_transform_reconfigure
 gst_base_transform_get_allocator
 gst_base_transform_get_buffer_pool
 gst_base_transform_reconfigure_sink
@@ -725,7 +718,6 @@ gst_collect_pads_flush
 gst_collect_pads_peek
 gst_collect_pads_pop
 
-gst_collect_pads_read
 gst_collect_pads_read_buffer
 gst_collect_pads_take_buffer
 
@@ -769,7 +761,9 @@ gst_flow_combiner_update_flow
 gst_flow_combiner_add_pad
 gst_flow_combiner_remove_pad
 <SUBSECTION Standard>
+GST_TYPE_FLOW_COMBINER
 <SUBSECTION Private>
+gst_flow_combiner_get_type
 </SECTION>
 
 <SECTION>
@@ -799,7 +793,6 @@ gst_type_find_helper_for_extension
 gst_type_find_helper_for_data
 GstTypeFindHelperGetRangeFunction
 gst_type_find_helper_get_range
-gst_type_find_helper_get_range_ext
 <SUBSECTION Private>
 </SECTION>
 
@@ -1143,6 +1136,9 @@ gst_test_clock_wait_for_next_pending_id
 gst_test_clock_wait_for_pending_id_count
 gst_test_clock_process_next_clock_id
 gst_test_clock_get_next_entry_time
+gst_test_clock_wait_for_multiple_pending_ids
+gst_test_clock_id_list_get_latest_time
+gst_test_clock_process_id_list
 <SUBSECTION Standard>
 GST_TEST_CLOCK
 GST_IS_TEST_CLOCK
