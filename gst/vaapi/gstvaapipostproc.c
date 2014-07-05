@@ -280,6 +280,7 @@ gst_vaapipostproc_destroy_filter(GstVaapiPostproc *postproc)
     }
     gst_vaapi_filter_replace(&postproc->filter, NULL);
     gst_vaapi_video_pool_replace(&postproc->filter_pool, NULL);
+    postproc->filter_pool_active = FALSE;
 }
 
 static void
@@ -313,6 +314,7 @@ gst_vaapipostproc_stop(GstBaseTransform *trans)
 
     ds_reset(&postproc->deinterlace_state);
     gst_vaapi_plugin_base_close(GST_VAAPI_PLUGIN_BASE(postproc));
+    postproc->filter_pool_active = FALSE;
     return TRUE;
 }
 
@@ -354,18 +356,44 @@ create_output_buffer(GstVaapiPostproc *postproc)
 {
     GstBuffer *outbuf;
 
+#if GST_CHECK_VERSION(1,0,0)
+    GstBufferPool * const pool =
+        GST_VAAPI_PLUGIN_BASE(postproc)->srcpad_buffer_pool;
+    GstBufferPoolAcquireParams params = { 0, };
+    GstFlowReturn ret;
+
+    g_return_val_if_fail(pool != NULL, NULL);
+
+    if (!postproc->filter_pool_active) {
+        if (!gst_buffer_pool_set_active(pool, TRUE))
+            goto error_activate_pool;
+        postproc->filter_pool_active = TRUE;
+    }
+
+    outbuf = NULL;
+    params.flags = GST_VAAPI_VIDEO_BUFFER_POOL_ACQUIRE_FLAG_NO_ALLOC;
+    ret = gst_buffer_pool_acquire_buffer(pool, &outbuf, &params);
+    if (ret != GST_FLOW_OK || !outbuf)
+        goto error_create_buffer;
+#else
     /* Create a raw VA video buffer without GstVaapiVideoMeta attached
        to it yet, as this will be done next in the transform() hook */
     outbuf = gst_vaapi_video_buffer_new_empty();
     if (!outbuf)
         goto error_create_buffer;
 
-#if !GST_CHECK_VERSION(1,0,0)
     gst_buffer_set_caps(outbuf, GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAPS(postproc));
 #endif
     return outbuf;
 
     /* ERRORS */
+#if GST_CHECK_VERSION(1,0,0)
+error_activate_pool:
+    {
+        GST_ERROR("failed to activate output video buffer pool");
+        return NULL;
+    }
+#endif
 error_create_buffer:
     {
         GST_ERROR("failed to create output video buffer");
@@ -1239,6 +1267,13 @@ gst_vaapipostproc_propose_allocation(GstBaseTransform *trans,
         return FALSE;
     return TRUE;
 }
+
+static gboolean
+gst_vaapipostproc_decide_allocation(GstBaseTransform *trans, GstQuery *query)
+{
+    return gst_vaapi_plugin_base_decide_allocation(GST_VAAPI_PLUGIN_BASE(trans),
+        query, 0);
+}
 #endif
 
 static void
@@ -1392,6 +1427,7 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
 
 #if GST_CHECK_VERSION(1,0,0)
     trans_class->propose_allocation = gst_vaapipostproc_propose_allocation;
+    trans_class->decide_allocation = gst_vaapipostproc_decide_allocation;
 #endif
 
     trans_class->prepare_output_buffer =
