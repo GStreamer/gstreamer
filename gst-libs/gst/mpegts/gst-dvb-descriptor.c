@@ -554,8 +554,8 @@ _gst_mpegts_dvb_linkage_descriptor_copy (GstMpegtsDVBLinkageDescriptor * source)
       break;
   }
 
-  copy->private_data_bytes = g_slice_copy (source->private_data_length,
-      source->private_data_bytes);
+  copy->private_data_bytes = g_memdup (source->private_data_bytes,
+      source->private_data_length);
 
   return copy;
 }
@@ -578,8 +578,7 @@ gst_mpegts_dvb_linkage_descriptor_free (GstMpegtsDVBLinkageDescriptor * source)
         break;
     }
 
-  if (source->private_data_bytes)
-    g_slice_free1 (source->private_data_length, source->private_data_bytes);
+  g_free (source->private_data_bytes);
   g_slice_free (GstMpegtsDVBLinkageDescriptor, source);
 }
 
@@ -1023,7 +1022,7 @@ _gst_mpegts_extended_event_descriptor_copy (GstMpegtsExtendedEventDescriptor *
 
   copy = g_slice_dup (GstMpegtsExtendedEventDescriptor, source);
   copy->items = g_ptr_array_ref (source->items);
-  copy->text = g_slice_copy (sizeof (source->text), source->text);
+  copy->text = g_strdup (source->text);
 
   return copy;
 }
@@ -1906,7 +1905,7 @@ _gst_mpegts_dvb_data_broadcast_descriptor_copy (GstMpegtsDataBroadcastDescriptor
 
   copy = g_slice_dup (GstMpegtsDataBroadcastDescriptor, source);
 
-  copy->selector_bytes = g_slice_copy (source->length, source->selector_bytes);
+  copy->selector_bytes = g_memdup (source->selector_bytes, source->length);
   copy->language_code = g_strdup (source->language_code);
   copy->text = g_strdup (source->text);
 
