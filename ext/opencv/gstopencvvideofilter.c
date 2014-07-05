@@ -173,10 +173,13 @@ gst_opencv_video_filter_transform (GstBaseTransform * trans,
   g_return_val_if_fail (transform->cvImage != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (transform->out_cvImage != NULL, GST_FLOW_ERROR);
 
-  gst_buffer_map (inbuf, &in_info, GST_MAP_READ);
-  transform->cvImage->imageData = (char *) in_info.data;
+  if (!gst_buffer_map (inbuf, &in_info, GST_MAP_READ))
+    goto inbuf_map_failed;
 
-  gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
+  if (!gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE))
+    goto outbuf_map_failed;
+
+  transform->cvImage->imageData = (char *) in_info.data;
   transform->out_cvImage->imageData = (char *) out_info.data;
 
   ret = fclass->cv_trans_func (transform, inbuf, transform->cvImage, outbuf,
@@ -186,6 +189,17 @@ gst_opencv_video_filter_transform (GstBaseTransform * trans,
   gst_buffer_unmap (outbuf, &out_info);
 
   return ret;
+
+inbuf_map_failed:
+  GST_ELEMENT_ERROR (transform, RESOURCE, READ,
+      ("Failed to map buffer for reading"), (NULL));
+  return GST_FLOW_ERROR;
+
+outbuf_map_failed:
+  GST_ELEMENT_ERROR (transform, RESOURCE, WRITE,
+      ("Failed to map buffer for writing"), (NULL));
+  gst_buffer_unmap (inbuf, &in_info);
+  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
@@ -206,8 +220,9 @@ gst_opencv_video_filter_transform_ip (GstBaseTransform * trans,
   /* TODO this is not always needed and should be solved at BaseTransform
    * level */
   buffer = gst_buffer_make_writable (buffer);
+  if (!gst_buffer_map (buffer, &info, GST_MAP_READWRITE))
+    goto map_failed;
 
-  gst_buffer_map (buffer, &info, GST_MAP_READWRITE);
   transform->cvImage->imageData = (char *) info.data;
 
   /* FIXME how to release buffer? */
@@ -216,6 +231,11 @@ gst_opencv_video_filter_transform_ip (GstBaseTransform * trans,
   gst_buffer_unmap (buffer, &info);
 
   return ret;
+
+map_failed:
+  GST_ELEMENT_ERROR (transform, RESOURCE, WRITE,
+      ("Failed to map buffer for reading and writing"), (NULL));
+  return GST_FLOW_ERROR;
 }
 
 static gboolean
