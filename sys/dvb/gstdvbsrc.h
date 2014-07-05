@@ -104,6 +104,11 @@ struct _GstDvbSrc
   gboolean need_unlock;
 
   guint dvb_buffer_size;
+
+  /* LNB properties */
+  unsigned int lnb_slof;
+  unsigned int lnb_lof1;
+  unsigned int lnb_lof2;
 };
 
 struct _GstDvbSrcClass

@@ -143,10 +143,6 @@
 GST_DEBUG_CATEGORY_STATIC (gstdvbsrc_debug);
 #define GST_CAT_DEFAULT (gstdvbsrc_debug)
 
-#define SLOF (11700*1000UL)
-#define LOF1 (9750*1000UL)
-#define LOF2 (10600*1000UL)
-
 #define NUM_DTV_PROPS 16
 
 /* Signals */
@@ -186,7 +182,10 @@ enum
   ARG_DVBSRC_PILOT,
   ARG_DVBSRC_ROLLOFF,
   ARG_DVBSRC_STREAM_ID,
-  ARG_DVBSRC_BANDWIDTH_HZ
+  ARG_DVBSRC_BANDWIDTH_HZ,
+  ARG_DVBSRC_LNB_SLOF,
+  ARG_DVBSRC_LNB_LOF1,
+  ARG_DVBSRC_LNB_LOF2
 };
 
 #define DEFAULT_ADAPTER 0
@@ -214,6 +213,9 @@ enum
 #define DEFAULT_PILOT PILOT_AUTO
 #define DEFAULT_ROLLOFF ROLLOFF_AUTO
 #define DEFAULT_STREAM_ID NO_STREAM_ID_FILTER
+#define DEFAULT_LNB_SLOF (11700*1000UL)
+#define DEFAULT_LNB_LOF1 (9750*1000UL)
+#define DEFAULT_LNB_LOF2 (10600*1000UL)
 
 static void gst_dvbsrc_output_frontend_stats (GstDvbSrc * src);
 
@@ -671,6 +673,23 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
           "(DVB-T2 and DVB-S2 max 255, ISDB max 65535) Stream ID "
           "(-1 = disabled)", -1, 65535, DEFAULT_STREAM_ID, G_PARAM_READWRITE));
 
+  /* LNB properties (Satellite distribution standards) */
+
+  g_object_class_install_property (gobject_class, ARG_DVBSRC_LNB_SLOF,
+      g_param_spec_uint ("lnb-slof", "Tuning Timeout",
+          "LNB's Upper bound for low band reception (kHz)",
+          0, G_MAXUINT, DEFAULT_LNB_SLOF, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_DVBSRC_LNB_LOF1,
+      g_param_spec_uint ("lnb-lof1", "Low band local oscillator frequency",
+          "LNB's Local oscillator frequency used for low band reception (kHz)",
+          0, G_MAXUINT, DEFAULT_LNB_LOF1, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_DVBSRC_LNB_LOF2,
+      g_param_spec_uint ("lnb-lof2", "High band local oscillator frequency",
+          "LNB's Local oscillator frequency used for high band reception (kHz)",
+          0, G_MAXUINT, DEFAULT_LNB_LOF2, G_PARAM_READWRITE));
+
   /**
    * GstDvbSrc::tuning-start:
    * @gstdvbsrc: the element on which the signal is emitted
@@ -753,6 +772,9 @@ gst_dvbsrc_init (GstDvbSrc * object)
   object->pilot = DEFAULT_PILOT;
   object->rolloff = DEFAULT_ROLLOFF;
   object->stream_id = DEFAULT_STREAM_ID;
+  object->lnb_slof = DEFAULT_LNB_SLOF;
+  object->lnb_lof1 = DEFAULT_LNB_LOF1;
+  object->lnb_lof2 = DEFAULT_LNB_LOF2;
 
   g_mutex_init (&object->tune_mutex);
   object->timeout = DEFAULT_TIMEOUT;
@@ -964,6 +986,21 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
     case ARG_DVBSRC_STREAM_ID:
       object->stream_id = g_value_get_int (value);
       break;
+    case ARG_DVBSRC_LNB_SLOF:
+      g_mutex_lock (&object->tune_mutex);
+      object->lnb_slof = g_value_get_uint (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_LNB_LOF1:
+      g_mutex_lock (&object->tune_mutex);
+      object->lnb_lof1 = g_value_get_uint (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_LNB_LOF2:
+      g_mutex_lock (&object->tune_mutex);
+      object->lnb_lof2 = g_value_get_uint (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -1063,6 +1100,15 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
       break;
     case ARG_DVBSRC_STREAM_ID:
       g_value_set_int (value, object->stream_id);
+      break;
+    case ARG_DVBSRC_LNB_SLOF:
+      g_value_set_uint (value, object->lnb_slof);
+      break;
+    case ARG_DVBSRC_LNB_LOF1:
+      g_value_set_uint (value, object->lnb_lof1);
+      break;
+    case ARG_DVBSRC_LNB_LOF2:
+      g_value_set_uint (value, object->lnb_lof2);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1822,16 +1868,12 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
     case SYS_DVBS2:
     case SYS_TURBO:
       if (freq > 2200000) {
-        /* FIXME: Make SLOF/LOF1/LOF2 seteable props with a sane default.
-         * These values shouldn't be fixed because not all universal LNBs
-         * share the same parameters.
-         *
-         * this must be an absolute frequency */
-        if (freq < SLOF) {
-          freq -= LOF1;
+        /* this must be an absolute frequency */
+        if (freq < object->lnb_slof) {
+          freq -= object->lnb_lof1;
           object->tone = SEC_TONE_OFF;
         } else {
-          freq -= LOF2;
+          freq -= object->lnb_lof2;
           object->tone = SEC_TONE_ON;
         }
       }
