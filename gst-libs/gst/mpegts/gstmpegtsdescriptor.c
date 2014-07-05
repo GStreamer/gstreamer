@@ -338,8 +338,7 @@ out:
   if (error) {
     GST_WARNING ("Could not convert from utf-8: %s", error->message);
     g_error_free (error);
-    if (out_text)
-      g_free (out_text);
+    g_free (out_text);
     return NULL;
   }
 
@@ -571,8 +570,7 @@ get_encoding_and_convert (const gchar * text, guint length)
       giconv, is_multibyte, &error);
   if (error != NULL) {
     GST_WARNING ("Could not convert string: %s", error->message);
-    if (converted_str)
-      g_free (converted_str);
+    g_free (converted_str);
     g_error_free (error);
     error = NULL;
 

@@ -411,8 +411,7 @@ _gst_mpegts_atsc_string_segment_copy (GstMpegtsAtscStringSegment * seg)
 static void
 _gst_mpegts_atsc_string_segment_free (GstMpegtsAtscStringSegment * seg)
 {
-  if (seg->cached_string)
-    g_free (seg->cached_string);
+  g_free (seg->cached_string);
   g_slice_free (GstMpegtsAtscStringSegment, seg);
 }
 

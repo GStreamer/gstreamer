@@ -522,10 +522,8 @@ gst_mpegts_descriptor_from_dvb_service (GstMpegtsDVBServiceType service_type,
     memcpy (data, conv_service_name, service_size);
 
 beach:
-  if (conv_service_name)
-    g_free (conv_service_name);
-  if (conv_provider_name)
-    g_free (conv_provider_name);
+  g_free (conv_service_name);
+  g_free (conv_provider_name);
 
   return descriptor;
 }
@@ -1138,12 +1136,8 @@ _gst_mpegts_dvb_component_descriptor_copy (GstMpegtsComponentDescriptor *
 void
 gst_mpegts_dvb_component_descriptor_free (GstMpegtsComponentDescriptor * source)
 {
-  if (source->language_code)
-    g_free (source->language_code);
-
-  if (source->text)
-    g_free (source->text);
-
+  g_free (source->language_code);
+  g_free (source->text);
   g_slice_free (GstMpegtsComponentDescriptor, source);
 }
 
