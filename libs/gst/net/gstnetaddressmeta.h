@@ -29,6 +29,8 @@ typedef struct _GstNetAddressMeta GstNetAddressMeta;
 
 /**
  * GstNetAddressMeta:
+ * @meta: the parent type
+ * @addr: a #GSocketAddress stored as metadata
  *
  * Buffer metadata for network addresses.
  */

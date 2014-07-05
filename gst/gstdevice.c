@@ -29,7 +29,7 @@
  * representing the media types it can produce or handle.
  *
  * #GstDevice are created by #GstDeviceProvider objects which can be
- * aggregated by #GstGlobalDeviceMonitor objects.
+ * aggregated by #GstDeviceMonitor objects.
  *
  * Since: 1.4
  */

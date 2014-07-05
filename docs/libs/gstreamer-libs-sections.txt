@@ -978,6 +978,10 @@ gst_check_element_push_buffer
 gst_check_run_suite
 gst_check_setup_events
 gst_check_setup_events_with_stream_id
+gst_check_setup_sink_pad_by_name_from_template
+gst_check_setup_sink_pad_from_template
+gst_check_setup_src_pad_by_name_from_template
+gst_check_setup_src_pad_from_template
 
 <SUBSECTION Private>
 MAIN_INIT

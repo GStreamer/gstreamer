@@ -81,7 +81,20 @@ typedef enum {
   GST_TOC_ENTRY_TYPE_CHAPTER     = 3,
 } GstTocEntryType;
 
+/**
+ * GST_TOC_ENTRY_TYPE_IS_ALTERNATIVE:
+ * @entry_type: The #GstTocEntryType from a #GstTocEntry
+ *
+ * Checks if @entry_type indicates that its #GstTocEntry is an alternative.
+ */
 #define GST_TOC_ENTRY_TYPE_IS_ALTERNATIVE(entry_type)  (entry_type < 0)
+
+/**
+ * GST_TOC_ENTRY_TYPE_IS_SEQUENCE:
+ * @entry_type: The #GstTocEntryType from a #GstTocEntry
+ *
+ * Checks if @entry_type indicates that its #GstTocEntry is a sequence.
+ */
 #define GST_TOC_ENTRY_TYPE_IS_SEQUENCE(entry_type)     (entry_type > 0)
 
 /**

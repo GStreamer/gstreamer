@@ -380,9 +380,9 @@ gst_device_provider_get_devices (GstDeviceProvider * provider)
  * gst_device_provider_start:
  * @provider: A #GstDeviceProvider
  *
- * Starts providering the devices. This will cause #GST_MESSAGE_DEVICE messages
- * to be posted on the provider's bus when devices are added or removed from
- * the system.
+ * Starts providering the devices. This will cause #GST_MESSAGE_DEVICE_ADDED
+ * and #GST_MESSAGE_DEVICE_REMOVED messages to be posted on the provider's bus
+ * when devices are added or removed from the system.
  *
  * Since the #GstDeviceProvider is a singleton,
  * gst_device_provider_start() may already have been called by another

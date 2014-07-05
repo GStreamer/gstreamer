@@ -31,8 +31,8 @@
  * #GstPluginFeature.
  *
  * Use the gst_device_provider_factory_find() and
- * gst_device_provider_factory_create() functions to create device
- * provider instances or use gst_device_provider_factory_make() as a
+ * gst_device_provider_factory_get() functions to create device
+ * provider instances or use gst_device_provider_factory_get_by_name() as a
  * convenient shortcut.
  *
  * Since: 1.4

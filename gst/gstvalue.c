@@ -4637,7 +4637,7 @@ gst_value_compare_with_func (const GValue * value1, const GValue * value2,
  *
  * Determines if @value1 and @value2 can be non-trivially unioned.
  * Any two values can be trivially unioned by adding both of them
- * to a #GstValueList.  However, certain types have the possibility
+ * to a GstValueList.  However, certain types have the possibility
  * to be unioned in a simpler way.  For example, an integer range
  * and an integer can be unioned if the integer is a subset of the
  * integer range.  If there is the possibility that two values can

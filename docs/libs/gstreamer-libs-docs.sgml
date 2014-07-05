@@ -72,6 +72,7 @@
         libgstnet-&GST_API_VERSION;.so provides network elements and objects.
       </para>
 
+      <xi:include href="xml/gstnetaddressmeta.xml" />
       <xi:include href="xml/gstnetclientclock.xml" />
       <xi:include href="xml/gstnettimepacket.xml" />
       <xi:include href="xml/gstnettimeprovider.xml" />
