@@ -484,6 +484,8 @@ G_STMT_START {                                                  \
 G_STMT_START {                                                  \
   /* synchronize everyone */                                    \
   GST_DEBUG ("THREAD %p: syncing", g_thread_self ());           \
+  fail_if (g_mutex_trylock (&mutex),                            \
+      "bug in unit test, mutex should be locked at this point");\
   g_cond_wait (&sync_cond, &mutex);                             \
   GST_DEBUG ("THREAD %p: synced", g_thread_self ());            \
   g_mutex_unlock (&mutex);                                      \
