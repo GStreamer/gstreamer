@@ -416,6 +416,9 @@ MAIN_SYNCHRONIZE();
 
 #define MAIN_INIT()                     \
 G_STMT_START {                          \
+  g_mutex_init (&mutex);                \
+  g_cond_init (&start_cond);            \
+  g_cond_init (&sync_cond);             \
   _gst_check_threads_running = TRUE;    \
 } G_STMT_END;
 
@@ -459,6 +462,9 @@ G_STMT_START {                                                  \
   g_list_foreach (thread_list, (GFunc) g_thread_join, NULL);    \
   g_list_free (thread_list);                                    \
   thread_list = NULL;                                           \
+  g_mutex_clear (&mutex);                                       \
+  g_cond_clear (&start_cond);                                   \
+  g_cond_clear (&sync_cond);                                    \
   GST_DEBUG ("MAIN: joined");                                   \
 } G_STMT_END;
 
