@@ -153,6 +153,11 @@ GstGLContext * gst_gl_window_get_context (GstGLWindow *window);
 
 gboolean gst_gl_window_is_running (GstGLWindow *window);
 
+void gst_gl_window_send_key_event(GstGLWindow * window, char * event_type,
+    char * key_str);
+void gst_gl_window_send_mouse_event(GstGLWindow * window, char *
+    event_type, int button, double posx, double posy);
+
 GST_DEBUG_CATEGORY_EXTERN (gst_gl_window_debug);
 
 G_END_DECLS
