@@ -62,6 +62,7 @@ start_dccpclientsrc_pipe (GstElement * object, gint socket, gpointer data)
   GstElement *pipelinesrc =
       (GstElement *) gst_element_get_parent (dccpclientsrc);
   gst_element_set_state (pipelinesrc, GST_STATE_PLAYING);
+  gst_object_unref (pipelinesrc);
 }
 
 

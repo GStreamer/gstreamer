@@ -62,6 +62,7 @@ start_dccpserversink_pipe (GstElement * object, gint socket, gpointer data)
   GstElement *pipelinesink =
       (GstElement *) gst_element_get_parent (dccpserversink);
   gst_element_set_state (pipelinesink, GST_STATE_PLAYING);
+  gst_object_unref (pipelinesink);
 }
 
 
