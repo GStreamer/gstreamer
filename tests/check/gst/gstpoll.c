@@ -275,6 +275,7 @@ delayed_control (gpointer data)
   gst_poll_fd_ctl_write (set, &fd, TRUE);
   gst_poll_restart (set);
 
+  g_mutex_lock (&mutex);
   THREAD_SYNCHRONIZE ();
 
   g_usleep (500000);
