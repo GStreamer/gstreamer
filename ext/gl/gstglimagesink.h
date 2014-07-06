@@ -56,6 +56,8 @@ struct _GstGLImageSink
 
     guintptr window_id;
     guintptr new_window_id;
+    gulong mouse_sig_id;
+    gulong key_sig_id;
 
     //caps
     GstVideoInfo info;
