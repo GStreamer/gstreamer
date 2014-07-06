@@ -84,6 +84,7 @@
 #endif
 
 #include <gst/video/videooverlay.h>
+#include <gst/video/navigation.h>
 
 #include "gstglimagesink.h"
 
@@ -182,10 +183,36 @@ enum
 
 static guint gst_glimage_sink_signals[LAST_SIGNAL] = { 0 };
 
+static void
+gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
+    * structure)
+{
+  GstGLImageSink *sink = GST_GLIMAGE_SINK (navigation);
+  GstEvent *event = NULL;
+  GstPad *pad = NULL;
+
+  event = gst_event_new_navigation (structure);
+
+  pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
+
+  if (GST_IS_PAD (pad) && GST_IS_EVENT (event))
+    gst_pad_send_event (pad, event);
+
+  gst_object_unref (pad);
+}
+
+static void
+gst_glimage_sink_navigation_interface_init (GstNavigationInterface * iface)
+{
+  iface->send_event = gst_glimage_sink_navigation_send_event;
+}
+
 #define gst_glimage_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLImageSink, gst_glimage_sink,
     GST_TYPE_VIDEO_SINK, G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
         gst_glimage_sink_video_overlay_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
+        gst_glimage_sink_navigation_interface_init);
     GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0,
         "OpenGL Video Sink"));
 
@@ -390,6 +417,26 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static void
+gst_glimage_sink_key_event_cb (GstGLWindow * window, char *event_name, char
+    *key_string, GstGLImageSink * gl_sink)
+{
+  GST_DEBUG_OBJECT (gl_sink, "glimagesink event %s key %s pressed", event_name,
+      key_string);
+  gst_navigation_send_key_event (GST_NAVIGATION (gl_sink),
+      event_name, key_string);
+}
+
+static void
+gst_glimage_sink_mouse_event_cb (GstGLWindow * window, char *event_name,
+    int button, double posx, double posy, GstGLImageSink * gl_sink)
+{
+  GST_DEBUG_OBJECT (gl_sink, "glimagesink event %s at %g, %g", event_name, posx,
+      posy, gl_sink);
+  gst_navigation_send_mouse_event (GST_NAVIGATION (gl_sink),
+      event_name, button, posx, posy);
+}
+
 static gboolean
 _ensure_gl_setup (GstGLImageSink * gl_sink)
 {
@@ -431,6 +478,10 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
     gst_gl_window_set_close_callback (window,
         GST_GL_WINDOW_CB (gst_glimage_sink_on_close),
         gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
+    gl_sink->key_sig_id = g_signal_connect (window, "key-event", G_CALLBACK
+        (gst_glimage_sink_key_event_cb), gl_sink);
+    gl_sink->mouse_sig_id = g_signal_connect (window, "mouse-event", G_CALLBACK
+        (gst_glimage_sink_mouse_event_cb), gl_sink);
 
     gst_object_unref (window);
   }
@@ -1182,6 +1233,8 @@ gst_glimage_sink_on_close (GstGLImageSink * gl_sink)
   gst_gl_context_set_error (gl_sink->context, "Output window was closed");
 
   g_atomic_int_set (&gl_sink->to_quit, 1);
+  g_signal_handler_disconnect (gl_sink, gl_sink->key_sig_id);
+  g_signal_handler_disconnect (gl_sink, gl_sink->mouse_sig_id);
 }
 
 static gboolean
