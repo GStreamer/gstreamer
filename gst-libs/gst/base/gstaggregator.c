@@ -637,9 +637,9 @@ _sink_event (GstAggregator * self, GstAggregatorPad * aggpad, GstEvent * event)
     }
     case GST_EVENT_SEGMENT:
     {
+      PAD_LOCK_EVENT (aggpad);
       gst_event_copy_segment (event, &aggpad->segment);
       PAD_UNLOCK_EVENT (aggpad);
-
       goto eat;
     }
     case GST_EVENT_STREAM_START:
