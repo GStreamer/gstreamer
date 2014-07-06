@@ -127,6 +127,7 @@ test_with_caps (GstElement * src, GstElement * videocrop, GstCaps * caps)
   g_timer_destroy (timer);
   gst_object_unref (bus);
   gst_object_unref (pad);
+  gst_object_unref (pipeline);
 }
 
 /* return a list of caps where we only need to set
