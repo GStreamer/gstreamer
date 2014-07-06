@@ -876,7 +876,18 @@ gnl_composition_dispose (GObject * object)
   }
 
   if (priv->expandables) {
-    g_list_free (priv->expandables);
+    GList *iter;
+
+    iter = priv->expandables;
+
+    g_print ("ITER IS: %p\n", iter);
+    while (iter) {
+      GList *next = iter->next;
+
+      _gnl_composition_remove_entry (comp, iter->data);
+      iter = next;
+    }
+
     priv->expandables = NULL;
   }
   gnl_composition_reset_target_pad (comp);
@@ -887,11 +898,19 @@ gnl_composition_dispose (GObject * object)
 static void
 gnl_composition_finalize (GObject * object)
 {
+  GList *iter;
   GnlComposition *comp = GNL_COMPOSITION (object);
   GnlCompositionPrivate *priv = comp->priv;
 
   COMP_OBJECTS_LOCK (comp);
-  g_list_free (priv->objects_start);
+  iter = priv->objects_start;
+  while (iter) {
+    GList *next = iter->next;
+
+    _gnl_composition_remove_entry (comp, iter->data);
+    iter = next;
+  }
+
   g_list_free (priv->objects_stop);
   if (priv->current)
     g_node_destroy (priv->current);
@@ -2927,6 +2946,7 @@ _gnl_composition_remove_entry (GnlComposition * comp, GnlObject * object)
   }
 
   gst_element_set_locked_state (GST_ELEMENT (object), FALSE);
+  gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
 
   /* handle default source */
   if (GNL_OBJECT_IS_EXPANDABLE (object)) {
