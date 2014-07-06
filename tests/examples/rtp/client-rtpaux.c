@@ -226,10 +226,12 @@ handle_new_stream (GstElement * element, GstPad * newPad, gpointer data)
 
   if (g_str_has_prefix (padName, myPrefix)) {
     GstPad *outputSinkPad;
+    GstElement *parent;
 
-    gst_bin_add (GST_BIN (gst_element_get_parent (session->rtpbin)),
-        session->output);
+    parent = GST_ELEMENT (gst_element_get_parent (session->rtpbin));
+    gst_bin_add (GST_BIN (parent), session->output);
     gst_element_sync_state_with_parent (session->output);
+    gst_object_unref (parent);
 
     outputSinkPad = gst_element_get_static_pad (session->output, "sink");
     g_assert_cmpint (gst_pad_link (newPad, outputSinkPad), ==, GST_PAD_LINK_OK);
