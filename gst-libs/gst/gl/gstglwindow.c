@@ -106,6 +106,16 @@ typedef struct _GstGLDummyWindowCass
 
 GstGLDummyWindow *gst_gl_dummy_window_new (void);
 
+enum
+{
+  SIGNAL_0,
+  EVENT_MOUSE_SIGNAL,
+  EVENT_KEY_SIGNAL,
+  LAST_SIGNAL
+};
+
+static guint gst_gl_window_signals[LAST_SIGNAL] = { 0 };
+
 GQuark
 gst_gl_window_error_quark (void)
 {
@@ -131,6 +141,36 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
   klass->send_message = GST_DEBUG_FUNCPTR (gst_gl_window_default_send_message);
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_window_finalize;
+
+  /**
+   * GstGLWindow::mouse-event:
+   * @object: the #GstGLWindow
+   * @id: the name of the event
+   * @button: the id of the button
+   * @x: the x coordinate of the mouse event
+   * @y: the y coordinate of the mouse event
+   *
+   * Will be emitted when a mouse event is received by the GstGLwindow.
+   *
+   */
+  gst_gl_window_signals[EVENT_MOUSE_SIGNAL] =
+      g_signal_new ("mouse-event", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 4, G_TYPE_STRING, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+
+  /**
+   * GstGLWindow::key-event:
+   * @object: the #GstGLWindow
+   * @id: the name of the event
+   * @key: the id of the key pressed
+   *
+   * Will be emitted when a key event is received by the GstGLwindow.
+   *
+   */
+  gst_gl_window_signals[EVENT_KEY_SIGNAL] =
+      g_signal_new ("key-event", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
 }
 
 /**
@@ -728,4 +768,20 @@ GstGLDummyWindow *
 gst_gl_dummy_window_new (void)
 {
   return g_object_new (gst_gl_dummy_window_get_type (), NULL);
+}
+
+void
+gst_gl_window_send_key_event (GstGLWindow * window, char *event_type,
+    char *key_str)
+{
+  g_signal_emit (window, gst_gl_window_signals[EVENT_KEY_SIGNAL], 0,
+      event_type, key_str);
+}
+
+void
+gst_gl_window_send_mouse_event (GstGLWindow * window, char *event_type,
+    int button, double posx, double posy)
+{
+  g_signal_emit (window, gst_gl_window_signals[EVENT_MOUSE_SIGNAL], 0,
+      event_type, button, posx, posy);
 }
