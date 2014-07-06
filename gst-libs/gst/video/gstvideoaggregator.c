@@ -555,7 +555,6 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
       best_fps_d = fps_d;
     }
   }
-  GST_OBJECT_UNLOCK (vagg);
 
   if (best_fps_n <= 0 || best_fps_d <= 0 || best_fps == 0.0) {
     best_fps_n = 25;
@@ -583,6 +582,8 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
     info.par_n = GST_VIDEO_INFO_PAR_N (&vagg->info);
     info.par_d = GST_VIDEO_INFO_PAR_D (&vagg->info);
 
+    GST_OBJECT_UNLOCK (vagg);
+
     if (vagg_klass->update_info) {
       if (!vagg_klass->update_info (vagg, &info)) {
         ret = FALSE;
@@ -594,6 +595,9 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
     caps = gst_video_info_to_caps (&info);
 
     peercaps = gst_pad_peer_query_caps (agg->srcpad, NULL);
+
+    GST_OBJECT_LOCK (vagg);
+
     if (peercaps) {
       GstCaps *tmp;
 
