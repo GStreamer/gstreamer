@@ -323,15 +323,31 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
     case GST_PAD_SRC:{
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_SEEK:
-          object->seqnum = gst_event_get_seqnum (event);
-          GST_INFO_OBJECT (object, "Setting seqnum to %i", object->seqnum);
+          object->wanted_seqnum = gst_event_get_seqnum (event);
+          object->seqnum = 0;
+          GST_DEBUG_OBJECT (object, "Setting wanted_seqnum to %i",
+              object->wanted_seqnum);
           break;
         case GST_EVENT_SEGMENT:
+          if (object->wanted_seqnum == 0) {
+            g_assert ("All gnlobject should be seeked at one point or another"
+                " and thus we should always have a wanted_seqnum when getting"
+                " a new segment" == NULL);
+          }
+
+          GST_DEBUG_OBJECT (object, "Got segment, seqnum-> %i (wanted %i)",
+              gst_event_get_seqnum (event), object->wanted_seqnum);
+
+          object->seqnum = object->wanted_seqnum;
+          object->wanted_seqnum = 0;
+
           event = translate_outgoing_segment (object, event);
+          gst_event_set_seqnum (event, object->seqnum);
           break;
         case GST_EVENT_EOS:
-          GST_INFO_OBJECT (object, "Tweaking seqnum to %i", object->seqnum);
+          if (object->seqnum);
           gst_event_set_seqnum (event, object->seqnum);
+          GST_INFO_OBJECT (object, "Tweaking seqnum to %i", object->seqnum);
           break;
         default:
           break;
@@ -500,8 +516,9 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
         {
           GstPad *target;
 
-          GST_ERROR_OBJECT (object, "GOT SEEKD: %" GST_PTR_FORMAT, event);
           event = gnl_object_translate_incoming_seek (object, event);
+          object->wanted_seqnum = gst_event_get_seqnum (event);
+          object->seqnum = 0;
           if (!(target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghostpad)))) {
             priv->pending_seek = event;
             GST_INFO_OBJECT (ghostpad, "No target set yet, "
@@ -520,6 +537,7 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_SEGMENT:
           event = translate_incoming_segment (object, event);
+          gst_event_set_seqnum (event, object->seqnum);
           break;
         default:
           break;

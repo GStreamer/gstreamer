@@ -460,11 +460,11 @@ _seek_pipeline_func (SeekData * seekd)
   seek_handling (seekd->comp, TRUE, FALSE);
 
   priv->reset_time = TRUE;
+  GNL_OBJECT (seekd->comp)->wanted_seqnum = gst_event_get_seqnum (seekd->event);
   priv->gnl_event_pad_func (GNL_OBJECT (seekd->comp)->srcpad,
       GST_OBJECT (seekd->comp), get_new_seek_event (seekd->comp, FALSE, FALSE));
   priv->reset_time = FALSE;
 
-  GNL_OBJECT (seekd->comp)->seqnum = gst_event_get_seqnum (seekd->event);
 
 beach:
   gst_event_unref (seekd->event);
@@ -1519,6 +1519,7 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
         return TRUE;
       }
 
+      GNL_OBJECT (comp)->wanted_seqnum = gst_event_get_seqnum (event);
       break;
     }
     case GST_EVENT_QOS:

@@ -103,9 +103,9 @@ static gboolean
 gnl_object_send_event (GstElement * element, GstEvent * event)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
-    GNL_OBJECT (element)->seqnum = gst_event_get_seqnum (event);
-    GST_INFO_OBJECT (element, "Remember seqnum! %i",
-        GNL_OBJECT (element)->seqnum);
+    GNL_OBJECT (element)->wanted_seqnum = gst_event_get_seqnum (event);
+    GST_DEBUG_OBJECT (element, "Remember seqnum! %i",
+        GNL_OBJECT (element)->wanted_seqnum);
   }
 
 
@@ -426,6 +426,7 @@ gnl_object_cleanup (GnlObject * object)
   GST_DEBUG_OBJECT (object, "cleaning-up");
 
   object->seqnum = 0;
+  object->wanted_seqnum = 0;
   if (!(GNL_OBJECT_GET_CLASS (object)->cleanup (object)))
     ret = GST_STATE_CHANGE_FAILURE;
 
@@ -663,6 +664,7 @@ gnl_object_reset (GnlObject * object)
   GST_INFO_OBJECT (object, "Resetting child timing values to default");
 
   object->seqnum = 0;
+  object->wanted_seqnum = 0;
   object->start = 0;
   object->duration = 0;
   object->stop = 0;
