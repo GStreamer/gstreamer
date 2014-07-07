@@ -826,9 +826,21 @@ start_image_capture (GstWrapperCameraBinSrc * self)
       GST_TYPE_PHOTOGRAPHY);
   gboolean ret = FALSE;
   GstCaps *caps;
+  GstPad *pad, *peer;
 
   GST_DEBUG_OBJECT (self, "Starting image capture");
   gst_element_set_state (self->src_vid_src, GST_STATE_READY);
+
+  /* FIXME - V4L2 source will not close the device until all buffers have came
+   * back. Flushing the pipeline, will ensure it's properly closed, and that
+   * setting it back to PLAYING will work. This is more a workaround then a
+   * solution to buffer reclaiming. */
+  pad = gst_element_get_static_pad (self->src_vid_src, "src");
+  peer = gst_pad_get_peer (pad);
+  gst_object_unref (pad);
+  gst_pad_send_event (peer, gst_event_new_flush_start ());
+  gst_pad_send_event (peer, gst_event_new_flush_stop (TRUE));
+  gst_object_unref (peer);
 
   if (self->image_renegotiate) {
     /* clean capsfilter caps so they don't interfere here */
