@@ -2121,10 +2121,16 @@ static void
 _set_all_children_state (GnlComposition * comp, GstState state)
 {
   GList *tmp;
-  COMP_OBJECTS_LOCK (comp);
 
+  GST_DEBUG_OBJECT (comp, "Setting all children state to %s",
+      gst_element_state_get_name (state));
+
+  COMP_OBJECTS_LOCK (comp);
   gst_element_set_state (comp->priv->current_bin, state);
   for (tmp = comp->priv->objects_start; tmp; tmp = tmp->next)
+    gst_element_set_state (tmp->data, state);
+
+  for (tmp = comp->priv->expandables; tmp; tmp = tmp->next)
     gst_element_set_state (tmp->data, state);
 
   COMP_OBJECTS_UNLOCK (comp);
