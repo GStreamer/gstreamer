@@ -1964,6 +1964,31 @@ get_clean_toplevel_stack (GnlComposition * comp, GstClockTime * timestamp,
   return stack;
 }
 
+
+/*  Must be called with OBJECTS_LOCK taken */
+static void
+_set_current_bin_to_ready (GnlComposition * comp)
+{
+  GstPad *ptarget;
+  GnlCompositionPrivate *priv = comp->priv;
+
+  /* FIXME Check how to guarantee some thread safety here */
+  if (priv->current && GST_STATE (comp) != GST_STATE_PLAYING) {
+    ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT_SRC (comp)));
+
+    if (ptarget) {
+      gst_element_send_event (priv->current_bin, gst_event_new_flush_start ());
+      gst_element_send_event (priv->current_bin,
+          gst_event_new_flush_stop (TRUE));
+
+      gst_object_unref (ptarget);
+    }
+  }
+
+  gst_element_set_locked_state (priv->current_bin, TRUE);
+  gst_element_set_state (priv->current_bin, GST_STATE_READY);
+}
+
 /*  Must be called with OBJECTS_LOCK taken */
 static void
 _process_pending_entries (GnlComposition * comp)
@@ -2414,8 +2439,7 @@ _deactivate_stack (GnlComposition * comp)
 {
   GstPad *ptarget;
 
-  gst_element_set_locked_state (comp->priv->current_bin, TRUE);
-  gst_element_set_state (comp->priv->current_bin, GST_STATE_READY);
+  _set_current_bin_to_ready (comp);
 
   ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT_SRC (comp)));
   _empty_bin (GST_BIN_CAST (comp->priv->current_bin));
