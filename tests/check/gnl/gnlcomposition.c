@@ -44,7 +44,6 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   GstBus *bus;
   GstMessage *message;
   gboolean carry_on, ret = FALSE;
-  int seek_events_before;
 
   pipeline = gst_pipeline_new ("test_pipeline");
   comp =
@@ -81,11 +80,7 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
 
   /* Add source 1 */
 
-  /* keep an extra ref to source1 as we remove it from the bin */
-  gst_object_ref (source1);
   gnl_composition_add (GST_BIN (comp), source1);
-
-  /* Add default */
   gnl_composition_add (GST_BIN (comp), def);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (source1, 0, 2 * GST_SECOND, 2 * GST_SECOND);
@@ -93,8 +88,8 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
-  GST_DEBUG ("Setting pipeline to PLAYING");
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  GST_DEBUG ("Setting pipeline to PAUSED");
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE);
@@ -127,24 +122,24 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
     }
   }
 
-  seek_events_before = seek_events;
 
   /* pipeline is paused at this point */
 
   /* move source1 out of the active segment */
   g_object_set (source1, "start", (guint64) 4 * GST_SECOND, NULL);
   commit_and_wait (comp, &ret);
-  fail_unless (seek_events > seek_events_before, "%i > %i", seek_events,
-      seek_events_before);
 
   /* remove source1 from the composition, which will become empty and remove the
    * ghostpad */
 
-  fail_unless (gnl_composition_remove (GST_BIN (comp), source1));
 
+  /* keep an extra ref to source1 as we remove it from the bin */
+  gst_object_ref (source1);
+  fail_unless (gnl_composition_remove (GST_BIN (comp), source1));
   g_object_set (source1, "start", (guint64) 0 * GST_SECOND, NULL);
   /* add the source again and check that the ghostpad is added again */
   gnl_composition_add (GST_BIN (comp), source1);
+  gst_object_unref (source1);
   commit_and_wait (comp, &ret);
 
   g_mutex_lock (&pad_added_lock);
@@ -157,7 +152,6 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
 
   g_object_set (source1, "duration", (guint64) 1 * GST_SECOND, NULL);
   commit_and_wait (comp, &ret);
-  fail_unless (seek_events > seek_events_before);
 
   GST_DEBUG ("Setting pipeline to NULL");
 
@@ -166,7 +160,7 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   gst_element_set_state (source1, GST_STATE_NULL);
   gst_object_unref (source1);
 
-  GST_DEBUG ("Resetted pipeline to READY");
+  GST_DEBUG ("Resetted pipeline to NULL");
 
   ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "main pipeline", 1, 2);
   gst_object_unref (pipeline);

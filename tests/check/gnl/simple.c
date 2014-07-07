@@ -248,7 +248,7 @@ test_one_after_other_full (void)
 
   ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
 
-  sink = gst_element_factory_make_or_warn ("autovideosink", "sink");
+  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
   fail_if (sink == NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
