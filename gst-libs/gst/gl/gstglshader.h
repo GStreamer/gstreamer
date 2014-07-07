@@ -67,6 +67,8 @@ GType gst_gl_shader_get_type (void);
 
 GstGLShader * gst_gl_shader_new (GstGLContext *context);
 
+int gst_gl_shader_get_program_handle(GstGLShader * shader);
+
 void          gst_gl_shader_set_vertex_source   (GstGLShader *shader, const gchar *src);
 void          gst_gl_shader_set_fragment_source (GstGLShader *shader, const gchar *src);
 const gchar * gst_gl_shader_get_vertex_source   (GstGLShader *shader);
