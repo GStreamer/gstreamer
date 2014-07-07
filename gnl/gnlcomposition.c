@@ -358,23 +358,18 @@ _start_task (GnlComposition * comp)
 }
 
 static gboolean
-_stop_task (GnlComposition * comp, GstEvent * flush_start)
+_stop_task (GnlComposition * comp)
 {
   gboolean res = TRUE;
   GstTask *task;
-  GnlObject *obj = GNL_OBJECT (comp);
 
-  GST_ERROR_OBJECT (comp, "%s srcpad task",
-      flush_start ? "Pausing" : "Stopping");
+  GST_INFO_OBJECT (comp, "Stoping children management task");
 
   comp->priv->running = FALSE;
 
   /*  Clean the stack of GSource set on the MainContext */
   g_main_context_wakeup (comp->priv->mcontext);
   _remove_all_sources (comp);
-  if (flush_start) {
-    res = gst_pad_push_event (obj->srcpad, flush_start);
-  }
 
   GST_DEBUG_OBJECT (comp, "stop task");
 
@@ -924,7 +919,7 @@ gnl_composition_finalize (GObject * object)
   g_mutex_clear (&priv->flushing_lock);
   g_mutex_clear (&priv->pending_io_lock);
 
-  _stop_task (comp, FALSE);
+  _stop_task (comp);
   g_rec_mutex_clear (&comp->task_rec_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
