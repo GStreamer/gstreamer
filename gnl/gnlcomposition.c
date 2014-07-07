@@ -598,7 +598,7 @@ _add_remove_object_gsource (GnlComposition * comp, GnlObject * object)
   childio->object = object;
 
   MAIN_CONTEXT_LOCK (comp);
-  g_main_context_invoke_full (comp->priv->mcontext, G_PRIORITY_HIGH,
+  g_main_context_invoke_full (comp->priv->mcontext, G_PRIORITY_DEFAULT,
       (GSourceFunc) _remove_object_func, childio, _free_child_io_data);
   MAIN_CONTEXT_UNLOCK (comp);
 }
@@ -658,7 +658,7 @@ _add_add_object_gsource (GnlComposition * comp, GnlObject * object)
   childio->object = object;
 
   MAIN_CONTEXT_LOCK (comp);
-  g_main_context_invoke_full (comp->priv->mcontext, G_PRIORITY_HIGH,
+  g_main_context_invoke_full (comp->priv->mcontext, G_PRIORITY_DEFAULT,
       (GSourceFunc) _add_object_func, childio, _free_child_io_data);
   MAIN_CONTEXT_UNLOCK (comp);
 }
