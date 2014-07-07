@@ -212,6 +212,13 @@ gst_gl_shader_get_property (GObject * object,
 
 }
 
+int
+gst_gl_shader_get_program_handle (GstGLShader * shader)
+{
+  GstGLShaderPrivate *priv = shader->priv;
+  return (int) priv->program_handle;
+}
+
 static void
 gst_gl_shader_class_init (GstGLShaderClass * klass)
 {
