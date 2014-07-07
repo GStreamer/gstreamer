@@ -169,7 +169,7 @@ GST_START_TEST (test_simple_operation)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source, "source", 2);
+  ASSERT_OBJECT_REFCOUNT (source, "source", 1);
 
   /* Add operaton */
 
@@ -177,7 +177,7 @@ GST_START_TEST (test_simple_operation)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (oper, "oper", 2);
+  ASSERT_OBJECT_REFCOUNT (oper, "oper", 1);
 
   /* remove source */
 
@@ -194,7 +194,7 @@ GST_START_TEST (test_simple_operation)
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
   gst_object_unref (source);
 
-  ASSERT_OBJECT_REFCOUNT (source, "source", 2);
+  ASSERT_OBJECT_REFCOUNT (source, "source", 1);
 
   /* Expected segments */
   segments = g_list_append (segments,
@@ -259,7 +259,7 @@ GST_START_TEST (test_pyramid_operations)
   check_start_stop_duration (source, 0, 10 * GST_SECOND, 10 * GST_SECOND);
   check_start_stop_duration (comp, 0, 10 * GST_SECOND, 10 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source, "source", 2);
+  ASSERT_OBJECT_REFCOUNT (source, "source", 1);
 
   /* Add operation 1 */
 
@@ -269,7 +269,7 @@ GST_START_TEST (test_pyramid_operations)
       2 * GST_SECOND);
   check_start_stop_duration (comp, 0, 10 * GST_SECOND, 10 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (oper1, "oper1", 2);
+  ASSERT_OBJECT_REFCOUNT (oper1, "oper1", 1);
 
   /* Add operation 2 */
 
@@ -279,7 +279,7 @@ GST_START_TEST (test_pyramid_operations)
       6 * GST_SECOND);
   check_start_stop_duration (comp, 0, 10 * GST_SECOND, 10 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (oper1, "oper2", 2);
+  ASSERT_OBJECT_REFCOUNT (oper1, "oper2", 1);
 
   /* Expected segments */
   segments = g_list_append (segments,
@@ -554,7 +554,7 @@ GST_START_TEST (test_complex_operations)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 6 * GST_SECOND, 6 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (oper, "oper", 2);
+  ASSERT_OBJECT_REFCOUNT (oper, "oper", 1);
 
   /* Expected segments */
   segments = g_list_append (segments,
@@ -635,14 +635,14 @@ GST_START_TEST (test_complex_operations_bis)
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 4 * GST_SECOND, 4 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 2);
+  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   /* Add source2 */
   gnl_composition_add (GST_BIN (comp), source2);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 6 * GST_SECOND, 6 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (source2, "source2", 2);
+  ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
 
   /* Add operaton */
 
@@ -653,7 +653,7 @@ GST_START_TEST (test_complex_operations_bis)
   check_start_stop_duration (oper, 0 * GST_SECOND, 6 * GST_SECOND,
       6 * GST_SECOND);
 
-  ASSERT_OBJECT_REFCOUNT (oper, "oper", 2);
+  ASSERT_OBJECT_REFCOUNT (oper, "oper", 1);
 
   /* Expected segments */
   segments = g_list_append (segments,
