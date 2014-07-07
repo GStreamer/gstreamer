@@ -46,6 +46,7 @@
 
 #include <gst/gl/gstglapi.h>
 #include "gstgltransformation.h"
+#include <graphene-1.0/graphene-gobject.h>
 
 #define GST_CAT_DEFAULT gst_gl_transformation_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -53,7 +54,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 enum
 {
   PROP_0,
-  PROP_FOVY,
+  PROP_FOV,
   PROP_ORTHO,
   PROP_TRANSLATION_X,
   PROP_TRANSLATION_Y,
@@ -62,7 +63,8 @@ enum
   PROP_ROTATION_Y,
   PROP_ROTATION_Z,
   PROP_SCALE_X,
-  PROP_SCALE_Y
+  PROP_SCALE_Y,
+  PROP_MVP
 };
 
 #define DEBUG_INIT \
@@ -130,8 +132,8 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_transformation_filter_texture;
 
-  g_object_class_install_property (gobject_class, PROP_FOVY,
-      g_param_spec_float ("fovy", "Fovy", "Field of view angle in degrees",
+  g_object_class_install_property (gobject_class, PROP_FOV,
+      g_param_spec_float ("fov", "Fov", "Field of view angle in degrees",
           0.0, G_MAXFLOAT, 90.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ORTHO,
@@ -188,6 +190,13 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
           "Scale multiplierer for the Y-Axis.",
           0.0, G_MAXFLOAT, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* MVP */
+  g_object_class_install_property (gobject_class, PROP_MVP,
+      g_param_spec_boxed ("mvp-matrix",
+          "Modelview Projection Matrix",
+          "The final Graphene 4x4 Matrix for transformation",
+          GRAPHENE_TYPE_MATRIX, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_metadata (element_class, "OpenGL transformation filter",
       "Filter/Effect/Video", "Transform video on the GPU",
       "Lubosz Sarnecki <lubosz@gmail.com>");
@@ -197,8 +206,8 @@ static void
 gst_gl_transformation_init (GstGLTransformation * filter)
 {
   filter->shader = NULL;
-  filter->fovy = 90;
-  filter->aspect = 0;
+  filter->fov = 90;
+  filter->aspect = 1.0;
   filter->znear = 0.1;
   filter->zfar = 100;
 
@@ -231,14 +240,16 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
   graphene_vec3_init (&center, 0.f, 0.f, 0.f);
   graphene_vec3_init (&up, 0.f, 1.f, 0.f);
 
-  graphene_matrix_init_rotate (&model_matrix,
+  graphene_matrix_init_scale (&model_matrix,
+      transformation->xscale, transformation->yscale, 1.0f);
+
+  graphene_matrix_rotate (&model_matrix,
       transformation->xrotation, graphene_vec3_x_axis ());
   graphene_matrix_rotate (&model_matrix,
       transformation->yrotation, graphene_vec3_y_axis ());
   graphene_matrix_rotate (&model_matrix,
       transformation->zrotation, graphene_vec3_z_axis ());
-  graphene_matrix_scale (&model_matrix,
-      transformation->xscale, transformation->yscale, 1.0f);
+
   graphene_matrix_translate (&model_matrix, &translation_vector);
 
   if (transformation->ortho) {
@@ -247,7 +258,7 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
         -1, 1, transformation->znear, transformation->zfar);
   } else {
     graphene_matrix_init_perspective (&projection_matrix,
-        transformation->fovy,
+        transformation->fov,
         transformation->aspect, transformation->znear, transformation->zfar);
   }
 
@@ -265,8 +276,8 @@ gst_gl_transformation_set_property (GObject * object, guint prop_id,
   GstGLTransformation *filter = GST_GL_TRANSFORMATION (object);
 
   switch (prop_id) {
-    case PROP_FOVY:
-      filter->fovy = g_value_get_float (value);
+    case PROP_FOV:
+      filter->fov = g_value_get_float (value);
       break;
     case PROP_ORTHO:
       filter->ortho = g_value_get_boolean (value);
@@ -295,6 +306,11 @@ gst_gl_transformation_set_property (GObject * object, guint prop_id,
     case PROP_SCALE_Y:
       filter->yscale = g_value_get_float (value);
       break;
+    case PROP_MVP:
+      if (g_value_get_boxed (value) != NULL)
+        filter->mvp_matrix = *((graphene_matrix_t *) g_value_get_boxed (value));
+      return;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -309,8 +325,8 @@ gst_gl_transformation_get_property (GObject * object, guint prop_id,
   GstGLTransformation *filter = GST_GL_TRANSFORMATION (object);
 
   switch (prop_id) {
-    case PROP_FOVY:
-      g_value_set_float (value, filter->fovy);
+    case PROP_FOV:
+      g_value_set_float (value, filter->fov);
       break;
     case PROP_ORTHO:
       g_value_set_boolean (value, filter->ortho);
@@ -338,6 +354,9 @@ gst_gl_transformation_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SCALE_Y:
       g_value_set_float (value, filter->yscale);
+      break;
+    case PROP_MVP:
+      g_value_set_boxed (value, (gconstpointer) & filter->mvp_matrix);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -437,7 +456,7 @@ gst_gl_transformation_callback (gpointer stuff)
   gst_gl_context_clear_shader (filter->context);
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
-  gl->ClearColor (0.f, 0.f, 0.f, 0.f);
+  gl->ClearColor (0.f, 0.f, 0.f, 1.f);
   gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   gst_gl_shader_use (transformation->shader);
