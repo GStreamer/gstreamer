@@ -1233,25 +1233,6 @@ have_to_update_pipeline (GnlComposition * comp)
   return FALSE;
 }
 
-/* OBJECTS LOCK must be taken when calling this ! */
-static gboolean
-update_pipeline_at_current_position (GnlComposition * comp)
-{
-  GstClockTime curpos;
-
-  /* Get current position */
-  if ((curpos = get_current_position (comp)) == GST_CLOCK_TIME_NONE) {
-    if (GST_CLOCK_TIME_IS_VALID (comp->priv->segment_start))
-      curpos = comp->priv->segment->start = comp->priv->segment_start;
-    else
-      curpos = 0;
-  }
-
-  update_start_stop_duration (comp);
-
-  return update_pipeline (comp, curpos, TRUE, TRUE);
-}
-
 static gboolean
 gnl_composition_commit_func (GnlObject * object, gboolean recurse)
 {
@@ -1363,6 +1344,13 @@ get_current_position (GnlComposition * comp)
   }
 
 beach:
+
+  if (GST_CLOCK_TIME_IS_VALID (comp->priv->segment_start)) {
+    GST_INFO_OBJECT (comp, "Current position is unknown, " "setting it to 0");
+
+    value = 0;
+  }
+
   return (guint64) value;
 }
 
@@ -2027,6 +2015,7 @@ _commit_func (GnlComposition * comp)
   GList *tmp;
   gboolean commited = FALSE;
   GnlObject *object = GNL_OBJECT (comp);
+  GstClockTime curpos;
   GnlCompositionPrivate *priv = comp->priv;
 
   GST_ERROR_OBJECT (object, "Commiting state");
@@ -2040,6 +2029,9 @@ _commit_func (GnlComposition * comp)
   GST_DEBUG_OBJECT (object, "Linking up commit vmethod");
   if (commited == FALSE &&
       (GNL_OBJECT_CLASS (parent_class)->commit (object, TRUE) == FALSE)) {
+  /* Get current so that it represent the duration it was
+   * before commiting children */
+  curpos = get_current_position (comp);
 
   _process_pending_entries (comp);
     COMP_OBJECTS_UNLOCK (comp);
@@ -2058,7 +2050,10 @@ _commit_func (GnlComposition * comp)
     update_start_stop_duration (comp);
   } else {
     /* And update the pipeline at current position if needed */
-    update_pipeline_at_current_position (comp);
+
+    update_start_stop_duration (comp);
+    update_pipeline (comp, curpos, TRUE, TRUE);
+
   }
   COMP_OBJECTS_UNLOCK (comp);
 
