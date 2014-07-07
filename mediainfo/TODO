@@ -59,7 +59,11 @@ http://www.headbands.com/gspot/v26x/index.htm
   - encoded_size = duration * bitrate;
   - bitrate = encoded_size / duration;
   - needed in: quicktime, ogg/theora
-
+- we'd like to have some transport-info (from sources)
+  - http-source can post a taglist of http-header fields (e.g. mime-type)
+  - we can have wiki-links for the protocol
+  - we can get the file-size for remote content
+  
 == deep scan mode ==
 - could be done in gst_devtools/validate
 - play the file by using fakesinks and gather statistics:

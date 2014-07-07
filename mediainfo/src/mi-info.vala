@@ -66,6 +66,7 @@ public class MediaInfo.Info : Box
     set_orientation (Gtk.Orientation.VERTICAL);
 
     // setup lookup tables
+    // TODO(ensonic); move to a data class
     // video resolutions: http://upload.wikimedia.org/wikipedia/mediainfo/commons/e/e5/Vector_Video_Standards2.svg
     // FIXME: these are only for PAR = 1:1
     // we could have another list for CIF (http://en.wikipedia.org/wiki/Common_Intermediate_Format)
@@ -175,6 +176,11 @@ public class MediaInfo.Info : Box
 
     table = new Table (8, 3, false);
     info_area.add_with_viewport (table);
+    
+    /* TODO(ensonic): add a 'Source' box ? maybe only for streams?
+    Transport: {file, http, rtsp, ....} as wikilink
+    Size: (in bytes)
+    */
 
     label = new Label (null);
     label.set_markup("<b>Container</b>");
@@ -312,6 +318,7 @@ public class MediaInfo.Info : Box
       album_art = null;
 
       try {
+        // TODO(ensonic): this does not work for streams
         FileInfo finfo = file.query_info ("standard::*", FileQueryInfoFlags.NONE, null);
         mime_type.set_text (finfo.get_attribute_string (FileAttribute.STANDARD_CONTENT_TYPE));
         icon_image.set_from_gicon ((Icon) finfo.get_attribute_object (FileAttribute.STANDARD_ICON), IconSize.DIALOG);
