@@ -2610,7 +2610,7 @@ beach:
 }
 
 static inline gboolean
-_activate_new_stack (GnlComposition * comp, GstEvent * toplevel_seek)
+_activate_new_stack (GnlComposition * comp)
 {
   GstPad *pad;
   GstElement *topelement;
@@ -2791,7 +2791,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
   /* Activate stack */
   if (!samestack) {
-    return _activate_new_stack (comp, toplevel_seek);
+    return _activate_new_stack (comp);
   } else {
     gboolean res;
     GstPad *peer = gst_pad_get_peer (GNL_OBJECT_SRC (comp));
