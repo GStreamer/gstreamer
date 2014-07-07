@@ -56,7 +56,7 @@ struct _GstGLTransformation
     gfloat ztranslation;
 
     /* perspective */
-    gfloat fovy;
+    gfloat fov;
     gfloat aspect;
     gfloat znear;
     gfloat zfar;
