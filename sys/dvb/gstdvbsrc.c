@@ -35,6 +35,9 @@
  * |[
  * gst-launch dvbsrc polarity="h" frequency=11302000 symbol-rate=27500 diseqc-source=0 pids=50:102:103 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mad ! alsasink
  * ]| Captures and renders a transport stream from dvb card 0 that is a DVB-S card for a program at tuned frequency 11302000 Hz, symbol rate of 27500 kHz with PMT pid of 50 and elementary stream pids of 102 and 103.
+ * |[
+ gst-launch dvbsrc frequency=515142857 guard=16 trans-mode="8k" isdbt-layer-enabled=7 isdbt-partial-reception=1 isdbt-sound-broadcasting=0 isdbt-sb-subchannel-id=0 isdbt-sb-segment-idx=0 isdbt-sb-segment-count=0 isdbt-layera-fec="2/3" isdbt-layera-modulation="QPSK" isdbt-layera-segment-count=1 isdbt-layera-time-interleaving=4 isdbt-layerb-fec="3/4" isdbt-layerb-modulation="qam-64" isdbt-layerb-segment-count=12 isdbt-layerb-time-interleaving=2 isdbt-layerc-fec="1/2" isdbt-layerc-modulation="qam-64" isdbt-layerc-segment-count=0 isdbt-layerc-time-interleaving=0 delsys=8 ! tsdemux name=d ! "video/x-h264" ! h264parse ! queue ! avdec_h264 ! videoconvert ! queue ! autovideosink 
+ * ]| Captures and renders the video track of Tv Paraíba HD (Globo affiliate) in Campina Grande (Brasil). This is an ISDB-T (ISDB-Tb) broadcast.
  * </refsect2>
  */
 
@@ -143,7 +146,13 @@
 GST_DEBUG_CATEGORY_STATIC (gstdvbsrc_debug);
 #define GST_CAT_DEFAULT (gstdvbsrc_debug)
 
-#define NUM_DTV_PROPS 16
+/**
+ * Can't be greater than DTV_IOCTL_MAX_MSGS but we are
+ * not using more than 25 for the largest use case (ISDB-T).
+ *
+ * Bump as needed. 
+ */
+#define NUM_DTV_PROPS 25
 
 /* Signals */
 enum
@@ -183,6 +192,24 @@ enum
   ARG_DVBSRC_ROLLOFF,
   ARG_DVBSRC_STREAM_ID,
   ARG_DVBSRC_BANDWIDTH_HZ,
+  ARG_DVBSRC_ISDBT_LAYER_ENABLED,
+  ARG_DVBSRC_ISDBT_PARTIAL_RECEPTION,
+  ARG_DVBSRC_ISDBT_SOUND_BROADCASTING,
+  ARG_DVBSRC_ISDBT_SB_SUBCHANNEL_ID,
+  ARG_DVBSRC_ISDBT_SB_SEGMENT_IDX,
+  ARG_DVBSRC_ISDBT_SB_SEGMENT_COUNT,
+  ARG_DVBSRC_ISDBT_LAYERA_FEC,
+  ARG_DVBSRC_ISDBT_LAYERA_MODULATION,
+  ARG_DVBSRC_ISDBT_LAYERA_SEGMENT_COUNT,
+  ARG_DVBSRC_ISDBT_LAYERA_TIME_INTERLEAVING,
+  ARG_DVBSRC_ISDBT_LAYERB_FEC,
+  ARG_DVBSRC_ISDBT_LAYERB_MODULATION,
+  ARG_DVBSRC_ISDBT_LAYERB_SEGMENT_COUNT,
+  ARG_DVBSRC_ISDBT_LAYERB_TIME_INTERLEAVING,
+  ARG_DVBSRC_ISDBT_LAYERC_FEC,
+  ARG_DVBSRC_ISDBT_LAYERC_MODULATION,
+  ARG_DVBSRC_ISDBT_LAYERC_SEGMENT_COUNT,
+  ARG_DVBSRC_ISDBT_LAYERC_TIME_INTERLEAVING,
   ARG_DVBSRC_LNB_SLOF,
   ARG_DVBSRC_LNB_LOF1,
   ARG_DVBSRC_LNB_LOF2
@@ -213,6 +240,24 @@ enum
 #define DEFAULT_PILOT PILOT_AUTO
 #define DEFAULT_ROLLOFF ROLLOFF_AUTO
 #define DEFAULT_STREAM_ID NO_STREAM_ID_FILTER
+#define DEFAULT_ISDBT_LAYER_ENABLED 7
+#define DEFAULT_ISDBT_PARTIAL_RECEPTION 1
+#define DEFAULT_ISDBT_SOUND_BROADCASTING 0
+#define DEFAULT_ISDBT_SB_SUBCHANNEL_ID -1
+#define DEFAULT_ISDBT_SB_SEGMENT_IDX 0
+#define DEFAULT_ISDBT_SB_SEGMENT_COUNT 1
+#define DEFAULT_ISDBT_LAYERA_FEC FEC_AUTO
+#define DEFAULT_ISDBT_LAYERA_MODULATION QAM_AUTO
+#define DEFAULT_ISDBT_LAYERA_SEGMENT_COUNT -1
+#define DEFAULT_ISDBT_LAYERA_TIME_INTERLEAVING -1
+#define DEFAULT_ISDBT_LAYERB_FEC FEC_AUTO
+#define DEFAULT_ISDBT_LAYERB_MODULATION QAM_AUTO
+#define DEFAULT_ISDBT_LAYERB_SEGMENT_COUNT -1
+#define DEFAULT_ISDBT_LAYERB_TIME_INTERLEAVING -1
+#define DEFAULT_ISDBT_LAYERC_FEC FEC_AUTO
+#define DEFAULT_ISDBT_LAYERC_MODULATION QAM_AUTO
+#define DEFAULT_ISDBT_LAYERC_SEGMENT_COUNT -1
+#define DEFAULT_ISDBT_LAYERC_TIME_INTERLEAVING -1
 #define DEFAULT_LNB_SLOF (11700*1000UL)
 #define DEFAULT_LNB_LOF1 (9750*1000UL)
 #define DEFAULT_LNB_LOF2 (10600*1000UL)
@@ -524,8 +569,9 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "DVB Source",
       "Source/Video",
       "Digital Video Broadcast Source",
-      "P2P-VCR, C-Lab, University of Paderborn,"
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
+      "P2P-VCR, C-Lab, University of Paderborn, "
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>\n"
+      "Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>");
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dvbsrc_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dvbsrc_stop);
@@ -673,6 +719,133 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
           "(DVB-T2 and DVB-S2 max 255, ISDB max 65535) Stream ID "
           "(-1 = disabled)", -1, 65535, DEFAULT_STREAM_ID, G_PARAM_READWRITE));
 
+  /* Additional ISDB-T properties */
+
+  /* FIXME: bitmask, double check range, is 1 - 7, allowed
+     values are 0x1 0x2 0x3 |-ables */
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_LAYER_ENABLED,
+      g_param_spec_uint ("isdbt-layer-enabled",
+          "ISB-T layer enabled",
+          "(ISDB-T) Layer Enabled (7 = All layers)", 1, 7,
+          DEFAULT_ISDBT_LAYER_ENABLED, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_PARTIAL_RECEPTION,
+      g_param_spec_int ("isdbt-partial-reception",
+          "ISB-T partial reception",
+          "(ISDB-T) Partial Reception (-1 = AUTO)", -1, 1,
+          DEFAULT_ISDBT_PARTIAL_RECEPTION, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_SOUND_BROADCASTING,
+      g_param_spec_int ("isdbt-sound-broadcasting",
+          "ISB-T sound broadcasting",
+          "(ISDB-T) Sound Broadcasting", 0, 1,
+          DEFAULT_ISDBT_SOUND_BROADCASTING, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_SB_SUBCHANNEL_ID,
+      g_param_spec_int ("isdbt-sb-subchannel-id",
+          "ISB-T SB subchannel ID",
+          "(ISDB-T) SB Subchannel ID (-1 = AUTO)", -1, 41,
+          DEFAULT_ISDBT_SB_SEGMENT_IDX, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_SB_SEGMENT_IDX,
+      g_param_spec_int ("isdbt-sb-segment-idx",
+          "ISB-T SB segment IDX",
+          "(ISDB-T) SB segment IDX", 0, 12,
+          DEFAULT_ISDBT_SB_SEGMENT_IDX, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_SB_SEGMENT_COUNT,
+      g_param_spec_uint ("isdbt-sb-segment-count",
+          "ISB-T SB segment count",
+          "(ISDB-T) SB segment count", 1, 13,
+          DEFAULT_ISDBT_SB_SEGMENT_COUNT, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_DVBSRC_ISDBT_LAYERA_FEC,
+      g_param_spec_enum ("isdbt-layera-fec",
+          "ISDB-T layer A FEC", "(ISDB-T) layer A Forward Error Correction",
+          GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_ISDBT_LAYERA_FEC,
+          G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_DVBSRC_ISDBT_LAYERB_FEC,
+      g_param_spec_enum ("isdbt-layerb-fec",
+          "ISDB-T layer B FEC", "(ISDB-T) layer B Forward Error Correction",
+          GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_ISDBT_LAYERB_FEC,
+          G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_DVBSRC_ISDBT_LAYERC_FEC,
+      g_param_spec_enum ("isdbt-layerc-fec",
+          "ISDB-T layer A FEC", "(ISDB-T) layer C Forward Error Correction",
+          GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_ISDBT_LAYERC_FEC,
+          G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_LAYERA_MODULATION,
+      g_param_spec_enum ("isdbt-layera-modulation", "ISDBT layer A modulation",
+          "(ISDB-T) Layer A modulation type",
+          GST_TYPE_DVBSRC_MODULATION, DEFAULT_ISDBT_LAYERA_MODULATION,
+          G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_LAYERB_MODULATION,
+      g_param_spec_enum ("isdbt-layerb-modulation", "ISDBT layer B modulation",
+          "(ISDB-T) Layer B modulation type",
+          GST_TYPE_DVBSRC_MODULATION, DEFAULT_ISDBT_LAYERB_MODULATION,
+          G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_LAYERC_MODULATION,
+      g_param_spec_enum ("isdbt-layerc-modulation", "ISDBT layer C modulation",
+          "(ISDB-T) Layer C modulation type",
+          GST_TYPE_DVBSRC_MODULATION, DEFAULT_ISDBT_LAYERC_MODULATION,
+          G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_LAYERA_SEGMENT_COUNT,
+      g_param_spec_int ("isdbt-layera-segment-count",
+          "ISB-T layer A segment count",
+          "(ISDB-T) Layer A segment count (-1 = AUTO)", -1, 13,
+          DEFAULT_ISDBT_LAYERA_SEGMENT_COUNT, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_LAYERB_SEGMENT_COUNT,
+      g_param_spec_int ("isdbt-layerb-segment-count",
+          "ISB-T layer B segment count",
+          "(ISDB-T) Layer B segment count (-1 = AUTO)", -1, 13,
+          DEFAULT_ISDBT_LAYERB_SEGMENT_COUNT, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_LAYERC_SEGMENT_COUNT,
+      g_param_spec_int ("isdbt-layerc-segment-count",
+          "ISB-T layer C segment count",
+          "(ISDB-T) Layer C segment count (-1 = AUTO)", -1, 13,
+          DEFAULT_ISDBT_LAYERC_SEGMENT_COUNT, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_LAYERA_TIME_INTERLEAVING,
+      g_param_spec_int ("isdbt-layera-time-interleaving",
+          "ISB-T layer A time interleaving ",
+          "(ISDB-T) Layer A time interleaving (-1 = AUTO)", -1, 8,
+          DEFAULT_ISDBT_LAYERA_TIME_INTERLEAVING, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_LAYERB_TIME_INTERLEAVING,
+      g_param_spec_int ("isdbt-layerb-time-interleaving",
+          "ISB-T layer B time interleaving ",
+          "(ISDB-T) Layer B time interleaving (-1 = AUTO)", -1, 8,
+          DEFAULT_ISDBT_LAYERB_TIME_INTERLEAVING, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_ISDBT_LAYERC_TIME_INTERLEAVING,
+      g_param_spec_int ("isdbt-layerc-time-interleaving",
+          "ISB-T layer C time interleaving ",
+          "(ISDB-T) Layer C time interleaving (-1 = AUTO)", -1, 8,
+          DEFAULT_ISDBT_LAYERC_TIME_INTERLEAVING, G_PARAM_READWRITE));
+
   /* LNB properties (Satellite distribution standards) */
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_LNB_SLOF,
@@ -772,6 +945,29 @@ gst_dvbsrc_init (GstDvbSrc * object)
   object->pilot = DEFAULT_PILOT;
   object->rolloff = DEFAULT_ROLLOFF;
   object->stream_id = DEFAULT_STREAM_ID;
+
+  object->isdbt_layer_enabled = DEFAULT_ISDBT_LAYER_ENABLED;
+  object->isdbt_partial_reception = DEFAULT_ISDBT_PARTIAL_RECEPTION;
+  object->isdbt_sound_broadcasting = DEFAULT_ISDBT_SOUND_BROADCASTING;
+  object->isdbt_sb_subchannel_id = DEFAULT_ISDBT_SB_SUBCHANNEL_ID;
+  object->isdbt_sb_segment_idx = DEFAULT_ISDBT_SB_SEGMENT_IDX;
+  object->isdbt_sb_segment_count = DEFAULT_ISDBT_SB_SEGMENT_COUNT;
+  object->isdbt_layera_fec = DEFAULT_ISDBT_LAYERA_FEC;
+  object->isdbt_layera_modulation = DEFAULT_ISDBT_LAYERA_MODULATION;
+  object->isdbt_layera_segment_count = DEFAULT_ISDBT_LAYERA_SEGMENT_COUNT;
+  object->isdbt_layera_time_interleaving =
+      DEFAULT_ISDBT_LAYERA_TIME_INTERLEAVING;
+  object->isdbt_layerb_fec = DEFAULT_ISDBT_LAYERB_FEC;
+  object->isdbt_layerb_modulation = DEFAULT_ISDBT_LAYERB_MODULATION;
+  object->isdbt_layerb_segment_count = DEFAULT_ISDBT_LAYERB_SEGMENT_COUNT;
+  object->isdbt_layerb_time_interleaving =
+      DEFAULT_ISDBT_LAYERB_TIME_INTERLEAVING;
+  object->isdbt_layerc_fec = DEFAULT_ISDBT_LAYERC_FEC;
+  object->isdbt_layerc_modulation = DEFAULT_ISDBT_LAYERC_MODULATION;
+  object->isdbt_layerc_segment_count = DEFAULT_ISDBT_LAYERC_SEGMENT_COUNT;
+  object->isdbt_layerc_time_interleaving =
+      DEFAULT_ISDBT_LAYERC_TIME_INTERLEAVING;
+
   object->lnb_slof = DEFAULT_LNB_SLOF;
   object->lnb_lof1 = DEFAULT_LNB_LOF1;
   object->lnb_lof2 = DEFAULT_LNB_LOF2;
@@ -986,6 +1182,96 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
     case ARG_DVBSRC_STREAM_ID:
       object->stream_id = g_value_get_int (value);
       break;
+    case ARG_DVBSRC_ISDBT_LAYER_ENABLED:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layer_enabled = g_value_get_uint (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_PARTIAL_RECEPTION:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_partial_reception = g_value_get_int (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_SOUND_BROADCASTING:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_sound_broadcasting = g_value_get_int (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_SB_SUBCHANNEL_ID:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_sb_subchannel_id = g_value_get_int (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_SB_SEGMENT_IDX:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_sb_segment_idx = g_value_get_int (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_SB_SEGMENT_COUNT:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_sb_segment_count = g_value_get_uint (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERA_FEC:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layera_fec = g_value_get_enum (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERA_MODULATION:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layera_modulation = g_value_get_enum (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERA_SEGMENT_COUNT:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layera_segment_count = g_value_get_int (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERA_TIME_INTERLEAVING:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layera_time_interleaving = g_value_get_int (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERB_FEC:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layerb_fec = g_value_get_enum (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERB_MODULATION:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layerb_modulation = g_value_get_enum (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERB_SEGMENT_COUNT:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layerb_segment_count = g_value_get_int (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERB_TIME_INTERLEAVING:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layerb_time_interleaving = g_value_get_int (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERC_FEC:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layerc_fec = g_value_get_enum (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERC_MODULATION:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layerc_modulation = g_value_get_enum (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERC_SEGMENT_COUNT:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layerc_segment_count = g_value_get_int (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERC_TIME_INTERLEAVING:
+      g_mutex_lock (&object->tune_mutex);
+      object->isdbt_layerc_time_interleaving = g_value_get_int (value);
+      g_mutex_unlock (&object->tune_mutex);
+      break;
     case ARG_DVBSRC_LNB_SLOF:
       g_mutex_lock (&object->tune_mutex);
       object->lnb_slof = g_value_get_uint (value);
@@ -1100,6 +1386,60 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
       break;
     case ARG_DVBSRC_STREAM_ID:
       g_value_set_int (value, object->stream_id);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYER_ENABLED:
+      g_value_set_uint (value, object->isdbt_layer_enabled);
+      break;
+    case ARG_DVBSRC_ISDBT_PARTIAL_RECEPTION:
+      g_value_set_int (value, object->isdbt_partial_reception);
+      break;
+    case ARG_DVBSRC_ISDBT_SOUND_BROADCASTING:
+      g_value_set_int (value, object->isdbt_sound_broadcasting);
+      break;
+    case ARG_DVBSRC_ISDBT_SB_SUBCHANNEL_ID:
+      g_value_set_int (value, object->isdbt_sb_subchannel_id);
+      break;
+    case ARG_DVBSRC_ISDBT_SB_SEGMENT_IDX:
+      g_value_set_int (value, object->isdbt_sb_segment_idx);
+      break;
+    case ARG_DVBSRC_ISDBT_SB_SEGMENT_COUNT:
+      g_value_set_uint (value, object->isdbt_sb_segment_count);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERA_FEC:
+      g_value_set_enum (value, object->isdbt_layera_fec);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERA_MODULATION:
+      g_value_set_enum (value, object->isdbt_layera_modulation);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERA_SEGMENT_COUNT:
+      g_value_set_int (value, object->isdbt_layera_segment_count);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERA_TIME_INTERLEAVING:
+      g_value_set_int (value, object->isdbt_layera_time_interleaving);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERB_FEC:
+      g_value_set_enum (value, object->isdbt_layerb_fec);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERB_MODULATION:
+      g_value_set_enum (value, object->isdbt_layerb_modulation);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERB_SEGMENT_COUNT:
+      g_value_set_int (value, object->isdbt_layerb_segment_count);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERB_TIME_INTERLEAVING:
+      g_value_set_int (value, object->isdbt_layerb_time_interleaving);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERC_FEC:
+      g_value_set_enum (value, object->isdbt_layerc_fec);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERC_MODULATION:
+      g_value_set_enum (value, object->isdbt_layerc_modulation);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERC_SEGMENT_COUNT:
+      g_value_set_int (value, object->isdbt_layerc_segment_count);
+      break;
+    case ARG_DVBSRC_ISDBT_LAYERC_TIME_INTERLEAVING:
+      g_value_set_int (value, object->isdbt_layerc_time_interleaving);
       break;
     case ARG_DVBSRC_LNB_SLOF:
       g_value_set_uint (value, object->lnb_slof);
@@ -1952,6 +2292,53 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
       GST_INFO_OBJECT (object, "Tuning ATSC to %d", freq);
 
       set_prop (props->props, &n, DTV_MODULATION, object->modulation);
+      break;
+    case SYS_ISDBT:
+      /* FIXME: This works but further parameter sanity checking
+       * can be done for some property combinatios. This is still
+       * safe anyway, as the current worst case scenario is just
+       * a fail at tuning/locking */
+      GST_INFO_OBJECT (object, "Tuning ISDB-T to %d", freq);
+      set_prop (props->props, &n, DTV_BANDWIDTH_HZ, object->bandwidth);
+      set_prop (props->props, &n, DTV_GUARD_INTERVAL, object->guard_interval);
+      set_prop (props->props, &n, DTV_TRANSMISSION_MODE,
+          object->transmission_mode);
+      set_prop (props->props, &n, DTV_ISDBT_LAYER_ENABLED,
+          object->isdbt_layer_enabled);
+      set_prop (props->props, &n, DTV_ISDBT_PARTIAL_RECEPTION,
+          object->isdbt_partial_reception);
+      set_prop (props->props, &n, DTV_ISDBT_SOUND_BROADCASTING,
+          object->isdbt_sound_broadcasting);
+      set_prop (props->props, &n, DTV_ISDBT_SB_SUBCHANNEL_ID,
+          object->isdbt_sb_subchannel_id);
+      set_prop (props->props, &n, DTV_ISDBT_SB_SEGMENT_IDX,
+          object->isdbt_sb_segment_idx);
+      set_prop (props->props, &n, DTV_ISDBT_SB_SEGMENT_COUNT,
+          object->isdbt_sb_segment_count);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERA_FEC,
+          object->isdbt_layera_fec);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERA_MODULATION,
+          object->isdbt_layera_modulation);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERA_SEGMENT_COUNT,
+          object->isdbt_layera_segment_count);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERA_TIME_INTERLEAVING,
+          object->isdbt_layera_time_interleaving);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERB_FEC,
+          object->isdbt_layerb_fec);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERB_MODULATION,
+          object->isdbt_layerb_modulation);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERB_SEGMENT_COUNT,
+          object->isdbt_layerb_segment_count);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERB_TIME_INTERLEAVING,
+          object->isdbt_layerb_time_interleaving);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERC_FEC,
+          object->isdbt_layerc_fec);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERC_MODULATION,
+          object->isdbt_layerc_modulation);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERC_SEGMENT_COUNT,
+          object->isdbt_layerc_segment_count);
+      set_prop (props->props, &n, DTV_ISDBT_LAYERC_TIME_INTERLEAVING,
+          object->isdbt_layerc_time_interleaving);
       break;
     default:
       GST_ERROR_OBJECT (object, "Unknown frontend type %u", object->delsys);

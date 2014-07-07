@@ -1,9 +1,11 @@
 /*
  * dvbbasebin.c - 
  * Copyright (C) 2007 Alessandro Decina
+ * Copyright (C) 2014 Samsung Electronics. All rights reserved.
  * 
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
+ *   Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -80,6 +82,24 @@ enum
   PROP_ROLLOFF,
   PROP_STREAM_ID,
   PROP_BANDWIDTH_HZ,
+  PROP_ISDBT_LAYER_ENABLED,
+  PROP_ISDBT_PARTIAL_RECEPTION,
+  PROP_ISDBT_SOUND_BROADCASTING,
+  PROP_ISDBT_SB_SUBCHANNEL_ID,
+  PROP_ISDBT_SB_SEGMENT_IDX,
+  PROP_ISDBT_SB_SEGMENT_COUNT,
+  PROP_ISDBT_LAYERA_FEC,
+  PROP_ISDBT_LAYERA_MODULATION,
+  PROP_ISDBT_LAYERA_SEGMENT_COUNT,
+  PROP_ISDBT_LAYERA_TIME_INTERLEAVING,
+  PROP_ISDBT_LAYERB_FEC,
+  PROP_ISDBT_LAYERB_MODULATION,
+  PROP_ISDBT_LAYERB_SEGMENT_COUNT,
+  PROP_ISDBT_LAYERB_TIME_INTERLEAVING,
+  PROP_ISDBT_LAYERC_FEC,
+  PROP_ISDBT_LAYERC_MODULATION,
+  PROP_ISDBT_LAYERC_SEGMENT_COUNT,
+  PROP_ISDBT_LAYERC_TIME_INTERLEAVING,
   PROP_LNB_SLOF,
   PROP_LNB_LOF1,
   PROP_LNB_LOF2
@@ -269,6 +289,24 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
     {PROP_ROLLOFF, "rolloff"},
     {PROP_STREAM_ID, "stream-id"},
     {PROP_BANDWIDTH_HZ, "bandwidth-hz"},
+    {PROP_ISDBT_LAYER_ENABLED, "isdbt-layer-enabled"},
+    {PROP_ISDBT_PARTIAL_RECEPTION, "isdbt-partial-reception"},
+    {PROP_ISDBT_SOUND_BROADCASTING, "isdbt-sound-broadcasting"},
+    {PROP_ISDBT_SB_SUBCHANNEL_ID, "isdbt-sb-subchannel-id"},
+    {PROP_ISDBT_SB_SEGMENT_IDX, "isdbt-sb-segment-idx"},
+    {PROP_ISDBT_SB_SEGMENT_COUNT, "isdbt-sb-segment-count"},
+    {PROP_ISDBT_LAYERA_FEC, "isdbt-layera-fec"},
+    {PROP_ISDBT_LAYERA_MODULATION, "isdbt-layera-modulation"},
+    {PROP_ISDBT_LAYERA_SEGMENT_COUNT, "isdbt-layera-segment-count"},
+    {PROP_ISDBT_LAYERA_TIME_INTERLEAVING, "isdbt-layera-time-interleaving"},
+    {PROP_ISDBT_LAYERB_FEC, "isdbt-layerb-fec"},
+    {PROP_ISDBT_LAYERB_MODULATION, "isdbt-layerb-modulation"},
+    {PROP_ISDBT_LAYERB_SEGMENT_COUNT, "isdbt-layerb-segment-count"},
+    {PROP_ISDBT_LAYERB_TIME_INTERLEAVING, "isdbt-layerb-time-interleaving"},
+    {PROP_ISDBT_LAYERC_FEC, "isdbt-layerc-fec"},
+    {PROP_ISDBT_LAYERC_MODULATION, "isdbt-layerc-modulation"},
+    {PROP_ISDBT_LAYERC_SEGMENT_COUNT, "isdbt-layerc-segment-count"},
+    {PROP_ISDBT_LAYERC_TIME_INTERLEAVING, "isdbt-layerc-time-interleaving"},
     {PROP_LNB_SLOF, "lnb-slof"},
     {PROP_LNB_LOF1, "lnb-lof1"},
     {PROP_LNB_LOF2, "lnb-lof2"},
@@ -292,7 +330,8 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
   gst_element_class_set_static_metadata (element_class, "DVB bin",
       "Source/Bin/Video",
       "Access descramble and split DVB streams",
-      "Alessandro Decina <alessandro@nnva.org>");
+      "Alessandro Decina <alessandro@nnva.org>\n"
+      "Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>");
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->set_property = dvb_base_bin_set_property;
@@ -566,6 +605,24 @@ dvb_base_bin_set_property (GObject * object, guint prop_id,
     case PROP_ROLLOFF:
     case PROP_STREAM_ID:
     case PROP_BANDWIDTH_HZ:
+    case PROP_ISDBT_LAYER_ENABLED:
+    case PROP_ISDBT_PARTIAL_RECEPTION:
+    case PROP_ISDBT_SOUND_BROADCASTING:
+    case PROP_ISDBT_SB_SUBCHANNEL_ID:
+    case PROP_ISDBT_SB_SEGMENT_IDX:
+    case PROP_ISDBT_SB_SEGMENT_COUNT:
+    case PROP_ISDBT_LAYERA_FEC:
+    case PROP_ISDBT_LAYERA_MODULATION:
+    case PROP_ISDBT_LAYERA_SEGMENT_COUNT:
+    case PROP_ISDBT_LAYERA_TIME_INTERLEAVING:
+    case PROP_ISDBT_LAYERB_FEC:
+    case PROP_ISDBT_LAYERB_MODULATION:
+    case PROP_ISDBT_LAYERB_SEGMENT_COUNT:
+    case PROP_ISDBT_LAYERB_TIME_INTERLEAVING:
+    case PROP_ISDBT_LAYERC_FEC:
+    case PROP_ISDBT_LAYERC_MODULATION:
+    case PROP_ISDBT_LAYERC_SEGMENT_COUNT:
+    case PROP_ISDBT_LAYERC_TIME_INTERLEAVING:
     case PROP_LNB_SLOF:
     case PROP_LNB_LOF1:
     case PROP_LNB_LOF2:
@@ -608,6 +665,24 @@ dvb_base_bin_get_property (GObject * object, guint prop_id,
     case PROP_ROLLOFF:
     case PROP_STREAM_ID:
     case PROP_BANDWIDTH_HZ:
+    case PROP_ISDBT_LAYER_ENABLED:
+    case PROP_ISDBT_PARTIAL_RECEPTION:
+    case PROP_ISDBT_SOUND_BROADCASTING:
+    case PROP_ISDBT_SB_SUBCHANNEL_ID:
+    case PROP_ISDBT_SB_SEGMENT_IDX:
+    case PROP_ISDBT_SB_SEGMENT_COUNT:
+    case PROP_ISDBT_LAYERA_FEC:
+    case PROP_ISDBT_LAYERA_MODULATION:
+    case PROP_ISDBT_LAYERA_SEGMENT_COUNT:
+    case PROP_ISDBT_LAYERA_TIME_INTERLEAVING:
+    case PROP_ISDBT_LAYERB_FEC:
+    case PROP_ISDBT_LAYERB_MODULATION:
+    case PROP_ISDBT_LAYERB_SEGMENT_COUNT:
+    case PROP_ISDBT_LAYERB_TIME_INTERLEAVING:
+    case PROP_ISDBT_LAYERC_FEC:
+    case PROP_ISDBT_LAYERC_MODULATION:
+    case PROP_ISDBT_LAYERC_SEGMENT_COUNT:
+    case PROP_ISDBT_LAYERC_TIME_INTERLEAVING:
     case PROP_LNB_SLOF:
     case PROP_LNB_LOF1:
     case PROP_LNB_LOF2:

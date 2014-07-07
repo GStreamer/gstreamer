@@ -105,6 +105,25 @@ struct _GstDvbSrc
 
   guint dvb_buffer_size;
 
+  unsigned int isdbt_layer_enabled;
+  int isdbt_partial_reception;
+  int isdbt_sound_broadcasting;
+  int isdbt_sb_subchannel_id;
+  int isdbt_sb_segment_idx;
+  unsigned int isdbt_sb_segment_count;
+  int isdbt_layera_fec;
+  int isdbt_layera_modulation;
+  int isdbt_layera_segment_count;
+  int isdbt_layera_time_interleaving;
+  int isdbt_layerb_fec;
+  int isdbt_layerb_modulation;
+  int isdbt_layerb_segment_count;
+  int isdbt_layerb_time_interleaving;
+  int isdbt_layerc_fec;
+  int isdbt_layerc_modulation;
+  int isdbt_layerc_segment_count;
+  int isdbt_layerc_time_interleaving;
+
   /* LNB properties */
   unsigned int lnb_slof;
   unsigned int lnb_lof1;
