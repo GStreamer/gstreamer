@@ -173,6 +173,7 @@ enum
   ARG_DISPLAY,
   PROP_FORCE_ASPECT_RATIO,
   PROP_PIXEL_ASPECT_RATIO,
+  PROP_CONTEXT,
   PROP_OTHER_CONTEXT
 };
 
@@ -282,6 +283,12 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
           "Give an external OpenGL context with which to share textures",
           GST_GL_TYPE_CONTEXT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_CONTEXT,
+      g_param_spec_object ("context",
+          "OpenGL context",
+          "Get OpenGL context",
+          GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_metadata (element_class, "OpenGL video sink",
       "Sink/Video", "A videosink based on OpenGL",
       "Julien Isorce <julien.isorce@gmail.com>");
@@ -303,7 +310,8 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL] =
       g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 3, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT);
+      G_TYPE_BOOLEAN, 4, GST_GL_TYPE_CONTEXT,
+      G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT);
 
   /**
    * GstGLImageSink::client-reshape:
@@ -320,7 +328,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gst_glimage_sink_signals[CLIENT_RESHAPE_SIGNAL] =
       g_signal_new ("client-reshape", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 2, G_TYPE_UINT, G_TYPE_UINT);
+      G_TYPE_BOOLEAN, 3, GST_GL_TYPE_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_glimage_sink_template));
@@ -435,6 +443,8 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
     case PROP_PIXEL_ASPECT_RATIO:
       gst_value_set_fraction (value, glimage_sink->par_n, glimage_sink->par_d);
       break;
+    case PROP_CONTEXT:
+      g_value_set_object (value, glimage_sink->context);
     case PROP_OTHER_CONTEXT:
       g_value_set_object (value, glimage_sink->other_context);
       break;
@@ -1093,7 +1103,7 @@ gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
 
   /* check if a client reshape callback is registered */
   g_signal_emit (gl_sink, gst_glimage_sink_signals[CLIENT_RESHAPE_SIGNAL], 0,
-      width, height, &do_reshape);
+      gl_sink->context, width, height, &do_reshape);
 
   /* default reshape */
   if (!do_reshape) {
@@ -1169,6 +1179,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
   g_signal_emit (gl_sink, gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL], 0,
+      gl_sink->context,
       gl_sink->redisplay_texture, GST_VIDEO_INFO_WIDTH (&gl_sink->info),
       GST_VIDEO_INFO_HEIGHT (&gl_sink->info), &do_redisplay);
 
