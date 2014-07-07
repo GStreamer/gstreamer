@@ -232,6 +232,7 @@ static gboolean
 _gnl_composition_add_entry (GnlComposition * comp, GnlObject * object);
 static gboolean
 _gnl_composition_remove_entry (GnlComposition * comp, GnlObject * object);
+static void _deactivate_stack (GnlComposition * comp);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -2050,19 +2051,36 @@ set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp)
 }
 
 /*  Must be called with OBJECTS_LOCK and PENDING_IO_LOCK taken */
-static gboolean
-_process_pending_entry (GnlObject * object,
-    GnlObject * unused_object G_GNUC_UNUSED, GnlComposition * comp)
+/*  Must be called with OBJECTS_LOCK taken */
+static void
+_process_pending_entries (GnlComposition * comp)
 {
-  GnlCompositionEntry *entry = COMP_ENTRY (comp, object);
+  GnlObject *object;
+  GHashTableIter iter;
+  gboolean deactivated_stack = FALSE;
 
-  if (entry) {
-    _gnl_composition_remove_entry (comp, object);
-  } else {
-    _gnl_composition_add_entry (comp, object);
+  GnlCompositionPrivate *priv = comp->priv;
+
+  g_hash_table_iter_init (&iter, priv->pending_io);
+  while (g_hash_table_iter_next (&iter, (gpointer *) & object, NULL)) {
+    GnlCompositionEntry *entry = COMP_ENTRY (comp, object);
+
+    if (entry) {
+
+      if (GST_OBJECT_PARENT (object) == GST_OBJECT_CAST (priv->current_bin) &&
+          deactivated_stack == FALSE) {
+        deactivated_stack = TRUE;
+
+        _deactivate_stack (comp);
+      }
+
+      _gnl_composition_remove_entry (comp, object);
+    } else {
+      _gnl_composition_add_entry (comp, object);
+    }
   }
 
-  return TRUE;
+  g_hash_table_remove_all (priv->pending_io);
 }
 
 static gboolean
@@ -2076,9 +2094,7 @@ _commit_func (GnlComposition * comp)
   GST_ERROR_OBJECT (object, "Commiting state");
   COMP_OBJECTS_LOCK (comp);
 
-  g_hash_table_foreach_remove (priv->pending_io,
-      (GHRFunc) _process_pending_entry, comp);
-
+  _process_pending_entries (comp);
   for (tmp = priv->objects_start; tmp; tmp = tmp->next) {
     if (gnl_object_commit (tmp->data, TRUE))
       commited = TRUE;
@@ -2087,6 +2103,7 @@ _commit_func (GnlComposition * comp)
   GST_DEBUG_OBJECT (object, "Linking up commit vmethod");
   if (commited == FALSE &&
       (GNL_OBJECT_CLASS (parent_class)->commit (object, TRUE) == FALSE)) {
+
     COMP_OBJECTS_UNLOCK (comp);
     GST_ERROR_OBJECT (object, "Nothing to commit, leaving");
     g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, FALSE);
