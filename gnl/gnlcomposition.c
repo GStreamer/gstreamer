@@ -2009,34 +2009,44 @@ _process_pending_entries (GnlComposition * comp)
   g_hash_table_remove_all (priv->pending_io);
 }
 
-static gboolean
-_commit_func (GnlComposition * comp)
+static inline gboolean
+_commit_values (GnlComposition * comp)
 {
   GList *tmp;
   gboolean commited = FALSE;
-  GnlObject *object = GNL_OBJECT (comp);
-  GstClockTime curpos;
   GnlCompositionPrivate *priv = comp->priv;
-
-  GST_ERROR_OBJECT (object, "Commiting state");
-  COMP_OBJECTS_LOCK (comp);
 
   for (tmp = priv->objects_start; tmp; tmp = tmp->next) {
     if (gnl_object_commit (tmp->data, TRUE))
       commited = TRUE;
   }
 
-  GST_DEBUG_OBJECT (object, "Linking up commit vmethod");
-  if (commited == FALSE &&
-      (GNL_OBJECT_CLASS (parent_class)->commit (object, TRUE) == FALSE)) {
+  GST_DEBUG_OBJECT (comp, "Linking up commit vmethod");
+  commited |= GNL_OBJECT_CLASS (parent_class)->commit (GNL_OBJECT (comp), TRUE);
+
+  return commited;
+}
+
+static gboolean
+_commit_func (GnlComposition * comp)
+{
+  GstClockTime curpos;
+  GnlCompositionPrivate *priv = comp->priv;
+
+  COMP_OBJECTS_LOCK (comp);
+
   /* Get current so that it represent the duration it was
    * before commiting children */
   curpos = get_current_position (comp);
 
   _process_pending_entries (comp);
+
+  if (_commit_values (comp) == FALSE) {
     COMP_OBJECTS_UNLOCK (comp);
-    GST_ERROR_OBJECT (object, "Nothing to commit, leaving");
+    GST_ERROR_OBJECT (comp, "Nothing to commit, leaving");
+
     g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, FALSE);
+
     return G_SOURCE_REMOVE;
   }
 
