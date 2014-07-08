@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=song.ogg ! decodebin2 ! autoaudiosink
+ * gst-launch filesrc location=song.ogg ! decodebin ! autoaudiosink
  * ]| Play a song.ogg from local dir.
  * </refsect2>
  */

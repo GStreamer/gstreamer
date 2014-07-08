@@ -334,7 +334,7 @@ This example also shows how to refer to specific pads by name if an element
 (here: textoverlay) has multiple sink or source pads.
 
 .B
-        gst\-launch textoverlay name=overlay ! videoconvert ! videoscale !  autovideosink   filesrc location=movie.avi ! decodebin2 ! videoconvert ! overlay.video_sink   filesrc location=movie.srt ! subparse ! overlay.text_sink
+        gst\-launch textoverlay name=overlay ! videoconvert ! videoscale !  autovideosink   filesrc location=movie.avi ! decodebin ! videoconvert ! overlay.video_sink   filesrc location=movie.srt ! subparse ! overlay.text_sink
 
 .br
 Play an AVI movie with an external text subtitle stream using playbin
