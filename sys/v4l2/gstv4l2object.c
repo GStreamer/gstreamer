@@ -3183,6 +3183,20 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 
   can_share_own_pool = (has_video_meta || !obj->need_video_meta);
 
+  /* Certain driver may expose a minimum through controls */
+  ctl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
+  if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CTRL, &ctl) >= 0) {
+    GST_DEBUG_OBJECT (obj->element, "driver require a minimum of %d buffers",
+        ctl.value);
+    obj->min_buffers_for_capture = ctl.value;
+  } else {
+    obj->min_buffers_for_capture = 0;
+  }
+
+  /* We can't share our own pool, if it exceed V4L2 capacity */
+  if (min + obj->min_buffers_for_capture + 1 > VIDEO_MAX_FRAME)
+    can_share_own_pool = FALSE;
+
   /* select a pool */
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
@@ -3249,16 +3263,6 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 
   if (size == 0)
     goto no_size;
-
-  /* Certain driver may expose a minimum through controls */
-  ctl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
-  if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CTRL, &ctl) >= 0) {
-    GST_DEBUG_OBJECT (obj->element, "driver require a minimum of %d buffers",
-        ctl.value);
-    obj->min_buffers_for_capture = ctl.value;
-  } else {
-    obj->min_buffers_for_capture = 0;
-  }
 
   /* If pushing from our own pool, configure it with queried minimum,
    * otherwise use the minimum required */
