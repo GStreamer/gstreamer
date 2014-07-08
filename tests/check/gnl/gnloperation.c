@@ -530,7 +530,7 @@ GST_START_TEST (test_complex_operations)
    */
 
   oper =
-      new_operation ("oper", "videomixer", 2 * GST_SECOND, 2 * GST_SECOND, 1);
+      new_operation ("oper", "compositor", 2 * GST_SECOND, 2 * GST_SECOND, 1);
   fail_if (oper == NULL);
 
   ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
@@ -587,7 +587,7 @@ GST_START_TEST (test_complex_operations_bis)
    * ----------------------------------------------------------------------------
    * [ ......................[------ oper ----------]..........]  | 1 EXPANDABLE
    * [--------------------- source1 ----------------]             | 2
-   *                         [------------ source2       ------]  | 3
+   *                         [------------ source2 ------------]  | 3
    * */
 
 
@@ -622,7 +622,7 @@ GST_START_TEST (test_complex_operations_bis)
    */
 
   oper =
-      new_operation ("oper", "videomixer", 2 * GST_SECOND, 2 * GST_SECOND, 1);
+      new_operation ("oper", "compositor", 2 * GST_SECOND, 2 * GST_SECOND, 1);
   fail_if (oper == NULL);
   g_object_set (oper, "expandable", TRUE, NULL);
 
@@ -684,12 +684,12 @@ gnonlin_suite (void)
   tcase_add_test (tc_chain, test_pyramid_operations);
   tcase_add_test (tc_chain, test_pyramid_operations2);
   tcase_add_test (tc_chain, test_pyramid_operations_expandable);
-  if (gst_registry_check_feature_version (gst_registry_get (), "videomixer", 0,
+  if (gst_registry_check_feature_version (gst_registry_get (), "compositor", 0,
           11, 0)) {
     tcase_add_test (tc_chain, test_complex_operations);
     tcase_add_test (tc_chain, test_complex_operations_bis);
   } else
-    GST_WARNING ("videomixer element not available, skipping 1 test");
+    GST_WARNING ("compositor element not available, skipping 1 test");
 
   return s;
 }
