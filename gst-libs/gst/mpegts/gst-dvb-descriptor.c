@@ -987,6 +987,7 @@ gst_mpegts_extended_event_descriptor_free (GstMpegtsExtendedEventDescriptor *
     source)
 {
   g_free (source->text);
+  g_free (source->language_code);
   g_ptr_array_unref (source->items);
   g_slice_free (GstMpegtsExtendedEventDescriptor, source);
 }
