@@ -464,14 +464,13 @@ _seek_pipeline_func (SeekData * seekd)
 
   priv->next_base_time = 0;
 
-  seek_handling (seekd->comp, TRUE, FALSE);
+  GST_FIXME_OBJECT (comp, "BE smarter and do not force pipeline update on"
+      " seek (though it just does basic comparision and not full rebuild)");
+  seek_handling (seekd->comp, TRUE, TRUE);
 
   priv->reset_time = TRUE;
   GNL_OBJECT (seekd->comp)->wanted_seqnum = gst_event_get_seqnum (seekd->event);
-  priv->gnl_event_pad_func (GNL_OBJECT (seekd->comp)->srcpad,
-      GST_OBJECT (seekd->comp), get_new_seek_event (seekd->comp, FALSE, FALSE));
   priv->reset_time = FALSE;
-
 
 beach:
   gst_event_unref (seekd->event);
@@ -2103,8 +2102,7 @@ _process_pending_entries (GnlComposition * comp)
 static gboolean
 _emit_commited_signal_func (GnlComposition * comp)
 {
-  GST_INFO_OBJECT (comp, "Emiting COMMITED now that the stack "
-      "is ready");
+  GST_INFO_OBJECT (comp, "Emiting COMMITED now that the stack " "is ready");
 
   g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, TRUE);
 
