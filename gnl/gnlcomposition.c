@@ -2696,11 +2696,10 @@ _relink_new_stack (GnlComposition * comp, GNode * stack,
 {
   GnlCompositionPrivate *priv = comp->priv;
 
-  GST_ERROR ("RElinking new stack");
-  _relink_single_node (comp, stack, toplevel_seek);
-
   GST_ERROR ("Reseting seqnum to %i", gst_event_get_seqnum (toplevel_seek));
   GNL_OBJECT (comp)->wanted_seqnum = gst_event_get_seqnum (toplevel_seek);
+
+  _relink_single_node (comp, stack, toplevel_seek);
 
   gst_event_unref (toplevel_seek);
 
