@@ -98,8 +98,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
-        ("{ I420, YV12, YUY2, UYVY, Y41B, Y42B, YVYU, Y444, "
-         "RGB, BGR, RGBx, xRGB, BGRx, xBGR, GRAY8 }"))
+        ("{ I420, YV12, YUY2, UYVY, Y41B, Y42B, YVYU, Y444, NV21, "
+         "NV12, RGB, BGR, RGBx, xRGB, BGRx, xBGR, GRAY8 }"))
     );
 /* *INDENT-ON* */
 
