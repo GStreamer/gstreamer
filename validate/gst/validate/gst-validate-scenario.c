@@ -87,6 +87,10 @@ struct _GstValidateScenarioPrivate
   GstClockTime segment_stop;
   GstClockTime seek_pos_tol;
 
+  /* If we seeked in paused the position should be exactly what
+   * the seek value was (if accurate) */
+  gboolean seeked_in_pause;
+
   guint num_actions;
 
   gboolean handles_state;
@@ -337,6 +341,7 @@ _execute_set_state (GstValidateScenario * scenario, GstValidateAction * action)
 
   scenario->priv->target_state = state;
   scenario->priv->changing_state = TRUE;
+  scenario->priv->seeked_in_pause = FALSE;
 
   gst_validate_printf (action, "Setting state to %s\n", str_state);
 
@@ -649,6 +654,42 @@ _add_get_position_source (GstValidateScenario * scenario)
   return FALSE;
 }
 
+static void
+_check_position (GstValidateScenario * scenario, gdouble rate,
+    GstClockTime position)
+{
+  gint64 start_with_tolerance, stop_with_tolerance;
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
+  /* Check if playback is within seek segment */
+  start_with_tolerance =
+      MAX (0, (gint64) (priv->segment_start - priv->seek_pos_tol));
+  stop_with_tolerance =
+      priv->segment_stop != -1 ? priv->segment_stop + priv->seek_pos_tol : -1;
+  if ((GST_CLOCK_TIME_IS_VALID (stop_with_tolerance)
+          && position > stop_with_tolerance)
+      || (priv->seek_flags & GST_SEEK_FLAG_ACCURATE
+          && position < start_with_tolerance)) {
+
+    GST_VALIDATE_REPORT (scenario, QUERY_POSITION_OUT_OF_SEGMENT,
+        "Current position %" GST_TIME_FORMAT " not in the expected range [%"
+        GST_TIME_FORMAT " -- %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
+        GST_TIME_ARGS (start_with_tolerance),
+        GST_TIME_ARGS (stop_with_tolerance));
+  }
+
+  if (priv->seeked_in_pause && priv->seek_flags & GST_SEEK_FLAG_ACCURATE) {
+    if ((rate > 0 && position != priv->segment_start) ||
+        (rate < 0 && position != priv->segment_stop)) {
+      GST_VALIDATE_REPORT (scenario, QUERY_POSITION_OUT_OF_SEGMENT,
+          "Reported position after accurate seek in PAUSED state should be exactlty"
+          " what the user asked for %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (position), GST_TIME_ARGS (priv->segment_start));
+    }
+  }
+
+}
+
 static gboolean
 get_position (GstValidateScenario * scenario)
 {
@@ -656,7 +697,6 @@ get_position (GstValidateScenario * scenario)
   GstQuery *query;
   gdouble rate = 1.0;
   GstValidateAction *act = NULL;
-  gint64 start_with_tolerance, stop_with_tolerance;
   gint64 position, duration;
   gboolean has_pos, has_dur;
   GstValidateScenarioPrivate *priv = scenario->priv;
@@ -710,22 +750,7 @@ get_position (GstValidateScenario * scenario)
 
   GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
 
-  /* Check if playback is within seek segment */
-  start_with_tolerance =
-      MAX (0, (gint64) (priv->segment_start - priv->seek_pos_tol));
-  stop_with_tolerance =
-      priv->segment_stop != -1 ? priv->segment_stop + priv->seek_pos_tol : -1;
-  if ((GST_CLOCK_TIME_IS_VALID (stop_with_tolerance)
-          && position > stop_with_tolerance)
-      || (priv->seek_flags & GST_SEEK_FLAG_ACCURATE
-          && position < start_with_tolerance)) {
-
-    GST_VALIDATE_REPORT (scenario, QUERY_POSITION_OUT_OF_SEGMENT,
-        "Current position %" GST_TIME_FORMAT " not in the expected range [%"
-        GST_TIME_FORMAT " -- %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
-        GST_TIME_ARGS (start_with_tolerance),
-        GST_TIME_ARGS (stop_with_tolerance));
-  }
+  _check_position (scenario, rate, position);
 
   if (act && (((rate > 0 && (GstClockTime) position >= act->playback_time) ||
               (rate < 0 && (GstClockTime) position <= act->playback_time)) ||
@@ -930,6 +955,10 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       if (priv->last_seek) {
         gst_validate_scenario_update_segment_from_seek (scenario,
             priv->last_seek);
+
+        if (priv->target_state == GST_STATE_PAUSED)
+          priv->seeked_in_pause = TRUE;
+
         gst_event_replace (&priv->last_seek, NULL);
       }
 
