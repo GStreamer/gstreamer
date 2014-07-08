@@ -346,11 +346,8 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
           object->wanted_seqnum = 0;
 
           event = translate_outgoing_segment (object, event);
-          gst_event_set_seqnum (event, object->seqnum);
           break;
         case GST_EVENT_EOS:
-          if (object->seqnum);
-          gst_event_set_seqnum (event, object->seqnum);
           if (object->seqnum)
             gst_event_set_seqnum (event, object->seqnum);
           GST_INFO_OBJECT (object, "Tweaking seqnum to %i", object->seqnum);
@@ -526,11 +523,11 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
           object->wanted_seqnum = gst_event_get_seqnum (event);
           object->seqnum = 0;
           if (!(target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghostpad)))) {
-            priv->pending_seek = event;
-            GST_INFO_OBJECT (ghostpad, "No target set yet, "
-                "Will send the seek event when the target is set");
-            ret = TRUE;
+            g_assert ("Seeked a pad with not target SHOULD NOT HAPPEND");
+            ret = FALSE;
             event = NULL;
+          } else {
+            gst_object_unref (target);
           }
         }
           break;
@@ -543,7 +540,6 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_SEGMENT:
           event = translate_incoming_segment (object, event);
-          gst_event_set_seqnum (event, object->seqnum);
           break;
         default:
           break;
