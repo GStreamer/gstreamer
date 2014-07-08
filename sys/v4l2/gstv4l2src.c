@@ -464,7 +464,20 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   if (gst_v4l2_object_decide_allocation (src->v4l2object, query))
     ret = GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
 
+  if (ret) {
+    if (!gst_buffer_pool_set_active (src->v4l2object->pool, TRUE))
+      goto activate_failed;
+  }
+
   return ret;
+
+activate_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS,
+        (_("Failed to allocate required memory.")),
+        ("Buffer pool activation failed"));
+    return FALSE;
+  }
 }
 
 static gboolean
