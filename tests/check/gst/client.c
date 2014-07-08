@@ -602,7 +602,7 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   session_pool = gst_rtsp_client_get_session_pool (client);
   fail_unless (session_pool != NULL);
   /* FIXME: There seems to be a leak of a session here ! */
-  /* fail_unless (gst_rtsp_session_pool_get_n_sessions (session_pool) == 0); */
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (session_pool) == 0);
   g_object_unref (session_pool);
 
 
@@ -623,7 +623,7 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   session_pool = gst_rtsp_client_get_session_pool (client);
   fail_unless (session_pool != NULL);
   /* FIXME: There seems to be a leak of a session here ! */
-  /* fail_unless (gst_rtsp_session_pool_get_n_sessions (session_pool) == 0); */
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (session_pool) == 0);
   g_object_unref (session_pool);
 
 
@@ -644,7 +644,7 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   session_pool = gst_rtsp_client_get_session_pool (client);
   fail_unless (session_pool != NULL);
   /* FIXME: There seems to be a leak of a session here ! */
-  /* fail_unless (gst_rtsp_session_pool_get_n_sessions (session_pool) == 0); */
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (session_pool) == 0);
   g_object_unref (session_pool);
 
 

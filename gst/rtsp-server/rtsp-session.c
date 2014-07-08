@@ -128,6 +128,8 @@ gst_rtsp_session_init (GstRTSPSession * session)
 
   session->priv = priv;
 
+  GST_INFO ("init session %p", session);
+
   g_mutex_init (&priv->lock);
   priv->timeout = DEFAULT_TIMEOUT;
   g_get_current_time (&priv->create_time);

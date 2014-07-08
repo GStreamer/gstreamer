@@ -1770,6 +1770,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPClientClass *klass;
   gchar *path, *control;
   gint matched;
+  gboolean new_session = FALSE;
 
   if (!ctx->uri)
     goto no_uri;
@@ -1842,24 +1843,13 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     /* make sure this client is closed when the session is closed */
     client_watch_session (client, session);
 
+    new_session = TRUE;
     /* signal new session */
     g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_NEW_SESSION], 0,
         session);
 
     ctx->session = session;
   }
-
-  if (sessmedia == NULL) {
-    /* manage the media in our session now, if not done already  */
-    sessmedia = gst_rtsp_session_manage_media (session, path, media);
-    /* if we stil have no media, error */
-    if (sessmedia == NULL)
-      goto sessmedia_unavailable;
-  } else {
-    g_object_unref (media);
-  }
-
-  ctx->sessmedia = sessmedia;
 
   if (!klass->configure_client_media (client, media, stream, ctx))
     goto configure_media_failed_no_reply;
@@ -1880,6 +1870,18 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     if (!handle_keymgmt (client, ctx, keymgmt))
       goto keymgmt_error;
   }
+
+  if (sessmedia == NULL) {
+    /* manage the media in our session now, if not done already  */
+    sessmedia = gst_rtsp_session_manage_media (session, path, media);
+    /* if we stil have no media, error */
+    if (sessmedia == NULL)
+      goto sessmedia_unavailable;
+  } else {
+    g_object_unref (media);
+  }
+
+  ctx->sessmedia = sessmedia;
 
   /* set in the session media transport */
   trans = gst_rtsp_session_media_set_transport (sessmedia, stream, ct);
@@ -2014,6 +2016,8 @@ keymgmt_error:
   cleanup_transport:
     gst_rtsp_transport_free (ct);
   cleanup_session:
+    if (new_session)
+      gst_rtsp_session_pool_remove (priv->session_pool, session);
     g_object_unref (session);
   cleanup_path:
     g_free (path);
