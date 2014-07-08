@@ -239,6 +239,8 @@ _gnl_composition_add_entry (GnlComposition * comp, GnlObject * object);
 static gboolean
 _gnl_composition_remove_entry (GnlComposition * comp, GnlObject * object);
 static void _deactivate_stack (GnlComposition * comp);
+static GstPadProbeReturn _add_emit_commited_and_restart_task (GnlComposition *
+    comp);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -1212,6 +1214,14 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
 
       GST_ERROR_OBJECT (comp, "Got EOS, last EOS seqnum id : %i current "
           "seq num is: %i", comp->priv->real_eos_seqnum, seqnum);
+
+      if (priv->commited_probeid && comp->priv->awaited_segment_seqnum == 0) {
+
+        GST_INFO_OBJECT (comp, "We got an EOS right after seeing the right"
+            " segment, restarting task");
+        gst_pad_remove_probe (GNL_OBJECT_SRC (comp), priv->commited_probeid);
+        _add_emit_commited_and_restart_task (comp);
+      }
 
       if (g_atomic_int_compare_and_exchange (&comp->priv->real_eos_seqnum,
               seqnum, 1)) {
