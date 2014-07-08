@@ -346,6 +346,7 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
           object->wanted_seqnum = 0;
 
           event = translate_outgoing_segment (object, event);
+          gst_event_set_seqnum (event, object->seqnum);
           break;
         case GST_EVENT_EOS:
           if (object->seqnum)
