@@ -1183,7 +1183,7 @@ speex_resampler_process_float (SpeexResamplerState * st,
   if (st->magic_samples[channel_index])
     olen -= speex_resampler_magic (st, channel_index, &out, olen);
   if (!st->magic_samples[channel_index]) {
-    while (ilen && olen) {
+    while (ilen) {
       spx_uint32_t ichunk = (ilen > xlen) ? xlen : ilen;
       spx_uint32_t ochunk = olen;
 
@@ -1238,7 +1238,7 @@ speex_resampler_process_int (SpeexResamplerState * st,
 
   st->out_stride = 1;
 
-  while (ilen && olen) {
+  while (ilen) {
     spx_word16_t *y = ystack;
     spx_uint32_t ichunk = (ilen > xlen) ? xlen : ilen;
     spx_uint32_t ochunk = (olen > ylen) ? ylen : olen;
