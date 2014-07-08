@@ -844,6 +844,35 @@ _request_new_pad (GstElement * element,
 }
 
 static gboolean
+_send_event (GstElement * element, GstEvent * event)
+{
+  GstAggregator *self = GST_AGGREGATOR (element);
+
+  GST_STATE_LOCK (element);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK &&
+      GST_STATE (element) < GST_STATE_PAUSED) {
+    gdouble rate;
+    GstFormat fmt;
+    GstSeekFlags flags;
+    GstSeekType start_type, stop_type;
+    gint64 start, stop;
+
+    gst_event_parse_seek (event, &rate, &fmt, &flags, &start_type,
+        &start, &stop_type, &stop);
+    gst_segment_do_seek (&self->segment, rate, fmt, flags, start_type, start,
+        stop_type, stop, NULL);
+
+    self->priv->seqnum = gst_event_get_seqnum (event);
+    GST_DEBUG_OBJECT (element, "Storing segment %" GST_PTR_FORMAT, event);
+  }
+  GST_STATE_UNLOCK (element);
+
+
+  return GST_ELEMENT_CLASS (aggregator_parent_class)->send_event (element,
+      event);
+}
+
+static gboolean
 _src_query (GstAggregator * self, GstQuery * query)
 {
   gboolean res = TRUE;
@@ -1118,6 +1147,7 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   klass->src_query = _src_query;
 
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (_request_new_pad);
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (_send_event);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (_release_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (_change_state);
 
