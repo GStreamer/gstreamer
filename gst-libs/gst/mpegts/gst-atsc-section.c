@@ -49,6 +49,7 @@ _gst_mpegts_atsc_vct_source_copy (GstMpegtsAtscVCTSource * source)
 static void
 _gst_mpegts_atsc_vct_source_free (GstMpegtsAtscVCTSource * source)
 {
+  g_free (source->short_name);
   if (source->descriptors)
     g_ptr_array_unref (source->descriptors);
   g_slice_free (GstMpegtsAtscVCTSource, source);
