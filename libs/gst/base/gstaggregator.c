@@ -165,6 +165,7 @@ struct _GstAggregatorPrivate
   GMutex mcontext_lock;
   GList *gsources;
 
+  gint seqnum;
   gboolean send_stream_start;
   gboolean send_segment;
   gboolean flush_seeking;
@@ -328,8 +329,15 @@ _push_mandatory_events (GstAggregator * self)
 
   if (g_atomic_int_get (&self->priv->send_segment)) {
     if (!g_atomic_int_get (&self->priv->flush_seeking)) {
-      GST_INFO_OBJECT (self, "pushing segment");
-      gst_pad_push_event (self->srcpad, gst_event_new_segment (&self->segment));
+      GstEvent *segev = gst_event_new_segment (&self->segment);
+
+      if (!self->priv->seqnum)
+        self->priv->seqnum = gst_event_get_seqnum (segev);
+      else
+        gst_event_set_seqnum (segev, self->priv->seqnum);
+
+      GST_DEBUG_OBJECT (self, "pushing segment %" GST_PTR_FORMAT, segev);
+      gst_pad_push_event (self->srcpad, segev);
       g_atomic_int_set (&self->priv->send_segment, FALSE);
     }
   }
@@ -370,10 +378,13 @@ gst_aggregator_finish_buffer (GstAggregator * self, GstBuffer * buffer)
 static void
 _push_eos (GstAggregator * self)
 {
+  GstEvent *event;
   _push_mandatory_events (self);
 
   self->priv->send_eos = FALSE;
-  gst_pad_push_event (self->srcpad, gst_event_new_eos ());
+  event = gst_event_new_eos ();
+  gst_event_set_seqnum (event, self->priv->seqnum);
+  gst_pad_push_event (self->srcpad, event);
 }
 
 
@@ -935,7 +946,11 @@ _src_event (GstAggregator * self, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
+      gst_event_ref (event);
       res = _do_seek (self, event);
+      if (res)
+        self->priv->seqnum = gst_event_get_seqnum (event);
+      gst_event_unref (event);
       event = NULL;
       goto done;
     }
