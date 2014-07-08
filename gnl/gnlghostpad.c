@@ -299,6 +299,10 @@ translate_incoming_segment (GnlObject * object, GstEvent * event)
   GST_EVENT_SEQNUM (event2) = seqnum;
   gst_event_unref (event);
 
+  if (object->seqnum) {
+    gst_event_set_seqnum (event, object->seqnum);
+  }
+
   return event2;
 }
 
@@ -347,6 +351,8 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
         case GST_EVENT_EOS:
           if (object->seqnum);
           gst_event_set_seqnum (event, object->seqnum);
+          if (object->seqnum)
+            gst_event_set_seqnum (event, object->seqnum);
           GST_INFO_OBJECT (object, "Tweaking seqnum to %i", object->seqnum);
           break;
         default:
