@@ -1920,7 +1920,20 @@ gst_x264_enc_finish (GstVideoEncoder * encoder)
 static gboolean
 gst_x264_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 {
+  GstX264Enc *self = GST_X264_ENC (encoder);
+  GstVideoInfo *info;
+  guint num_buffers;
+
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  if (!self->input_state)
+    return FALSE;
+
+  info = &self->input_state->info;
+  num_buffers = x264_encoder_maximum_delayed_frames (self->x264enc) + 1;
+
+  gst_query_add_allocation_pool (query, NULL, info->size, num_buffers,
+      num_buffers);
 
   return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
       query);
