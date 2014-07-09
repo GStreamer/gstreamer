@@ -293,7 +293,7 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->window_id = 0;
   glimage_sink->new_window_id = 0;
   glimage_sink->display = NULL;
-  glimage_sink->keep_aspect_ratio = FALSE;
+  glimage_sink->keep_aspect_ratio = TRUE;
   glimage_sink->par_n = 0;
   glimage_sink->par_d = 1;
   glimage_sink->pool = NULL;
