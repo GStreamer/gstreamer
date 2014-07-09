@@ -1,0 +1,12 @@
+<ui>
+  <menubar name="MainMenu">
+    <menu name="MediaMenu" action="MediaMenuAction">
+      <menuitem name="Quit" action="QuitAction" />
+      <placeholder name="MediaMenuAdditions" />
+    </menu>
+    <menu name="HelpMenu" action="HelpMenuAction">
+      <menuitem name="Help" action="HelpAction"/>
+      <menuitem name="About" action="AboutAction"/>
+    </menu>
+  </menubar>
+</ui>

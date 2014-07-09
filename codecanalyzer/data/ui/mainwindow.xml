@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <!-- interface-requires gtk+ 3.0 -->
+  <object class="GtkWindow" id="Codecanalyzer-main-window">
+    <property name="title">CodecAnalyzer</property>
+    <property name="can_focus">False</property>
+    <property name="default_width">800</property>
+    <property name="default_height">600</property>
+    <property name="window-position">GTK_WIN_POS_CENTER</property>
+    <signal name="destroy" handler="callback_main_window_destroy"/>
+    <child>
+      <object class="GtkBox" id="MainVBox">
+        <property name="visible">False</property>
+        <property name="can_focus">False</property>
+	<property name="orientation">vertical</property>
+	<property name="spacing">5</property>
+	<property name="homogeneous">False</property>
+        <child>
+          <object class="GtkBox" id="menubar_vbox">
+            <property name="visible">False</property>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+          </packing>
+        </child>
+	<child>
+          <object class="GtkBox" id="child_vbox1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+	    <property name="orientation">vertical</property>
+	    <property name="spacing">5</property>
+
+	    <child>
+	      <object class="GtkBox" id="child_vbox1_1">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+	        <property name="orientation">vertical</property>
+
+		<child>
+		  <object class="GtkBox" id="child_hbox_in_vbox1_1">
+		    <property name="visible">True</property>
+		    <property name="spacing">5</property>
+		    <child>
+                      <object class="GtkLabel" id="hspace1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+		      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">False</property>
+                      </packing>
+		    </child>
+	            <child>
+                      <object class="GtkLabel" id="ChooseFileLabel">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">0</property>
+                        <property name="label">&lt;b&gt;Open the Stream file:&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                      </object>
+                      <packing>
+			<property name="expand">False</property>
+			<property name="fill">False</property>
+                      </packing>
+                    </child>
+	            <child>
+                      <object class="GtkFileChooserButton" id="StreamChooser">
+                       <property name="title">Select a Stream</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <signal name="file-set" handler="callback_stream_chooser_new_stream" swapped="no"/>
+                      </object>
+                      <packing>
+			<property name="expand">False</property>
+			<property name="fill">False</property>
+                      </packing>
+                    </child>
+		    <child>
+                      <object class="GtkLabel" id="hspace2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+		      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">False</property>
+                      </packing>
+		    </child>
+	            <child>
+                      <object class="GtkLabel" id="ChooseNumFrames">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">0</property>
+                        <property name="label">&lt;b&gt;Number of frames to Analyze:&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                      </object>
+                      <packing>
+			 <property name="expand">False</property>
+                         <property name="fill">False</property>
+                      </packing>
+                    </child>
+	            <child>
+                      <object class="GtkEntry" id="NumFrameEntryButton">
+                        <property name="visibility">True</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                      </object>
+                      <packing>
+			 <property name="expand">False</property>
+                         <property name="fill">False</property>
+                      </packing>
+                    </child>
+		    <child>
+                      <object class="GtkLabel" id="hspace3">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+		      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">False</property>
+                      </packing>
+		    </child>
+		  </object>
+		</child>
+	      </object>
+              <packing>
+	         <property name="expand">False</property>
+                 <property name="fill">False</property>
+              </packing>
+	    </child>
+	    <child>
+              <object class="GtkBox" id="child_vbox1_2">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+
+		<child>
+		  <object class="GtkBox" id="child_hbox_in_vbox1_2">
+                    <property name="visible">True</property>
+		    <property name="spacing">5</property>
+		    <child>
+                      <object class="GtkLabel" id="hspace4">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+		      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">False</property>
+                      </packing>
+		    </child>
+		    <child>
+                      <object class="GtkButton" id="AnalyzeButton">
+                        <property name="label" translatable="yes">Analyze</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="use_underline">True</property>
+                        <property name="sensitive">False</property>
+		        <signal name="clicked" handler="callback_analyzer_button_analyze" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                      </packing>
+	            </child>
+                    <child>
+                      <object class="GtkButton" id="CancelButton">
+                        <property name="label">Cancel</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="use_underline">True</property>
+                        <property name="sensitive">False</property>
+                        <signal name="clicked" handler="callback_cancel_button_cancel" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                      </packing>
+                    </child>
+		    <child>
+                      <object class="GtkLabel" id="hspace5">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+		      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">False</property>
+                      </packing>
+		    </child>
+
+	          </object>
+	        </child>
+
+             </object>
+              <packing>
+	         <property name="expand">False</property>
+                 <property name="fill">False</property>
+              </packing>
+            </child>
+
+	  </object>
+	  <packing>
+            <property name="expand">False</property>
+	  </packing>
+	</child>
+
+        <child>
+          <object class="GtkBox" id="child_vbox2">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+	    <property name="orientation">vertical</property>
+	    <child>
+	      <object class="GtkScrolledWindow" id="thumbnails_scrolled_window">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">never</property>
+		<property name="shadow-type">GTK_SHADOW_IN</property>
+		<property name="height_request">20</property>
+		<child>
+		  <object class="GtkViewport" id="thumbnails_view_port">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+		    <child>
+	              <object class="GtkBox" id="hbox1_in_vbox2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                     </object>
+	            </child>
+		  </object>
+		</child>
+
+	      </object>
+            </child>
+	  </object>
+	  <packing>
+            <property name="expand">False</property>
+	  </packing>
+        </child>
+
+	<child>
+          <object class="GtkBox" id="child_vbox3">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+	    <property name="orientation">vertical</property>
+           <property name="border_width">5</property>
+            <property name="sensitive">False</property>
+
+	    <child>
+	      <object class="GtkBox" id="child_hbox_in_vbox3">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="spacing">15</property>
+
+		<child>
+		  <object class="GtkFrame" id="general_info_frame">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+
+		    <child>
+	              <object class="GtkBox" id="general_info_vbox">
+                       <property name="visible">True</property>
+		        <property name="can_focus">False</property>
+                       <property name="orientation">vertical</property>
+                       <property name="spacing">5</property>
+
+                       <child>
+                          <object class="GtkLabel" id="general_info_header">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+			    <property name="label">General Stream Info</property>
+		          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                          </packing>
+		        </child>
+
+			<child>
+		          <object class="GtkTreeView" id="general_info_treeview">
+		            <property name="visible">True</property>
+		            <property name="can_focus">False</property>
+		          </object>
+                         <packing>
+			    <property name="expand">True</property>
+			    <property name="fill">True</property>
+                         </packing>
+		        </child>
+
+		      </object>
+		    </child>
+
+		  </object>
+                 <packing>
+		    <property name="expand">False</property>
+		    <property name="fill">False</property>
+	          </packing>
+		</child> <!-- gerneral_info_frame -->
+
+		<child>
+		  <object class="GtkFrame" id="parsed_info_frame">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label_xalign">0.5</property>
+                    <property name="label_yalign">1.0</property>
+
+		    <child>
+	              <object class="GtkBox" id="parsed_info_hbox">
+		        <property name="visible">True</property>
+		        <property name="can_focus">True</property>
+
+			<child>
+	                  <object class="GtkBox" id="parsed_info_button_box">
+		            <property name="visible">True</property>
+		            <property name="can_focus">True</property>
+		            <property name="orientation">vertical</property>
+                         </object>
+                         <packing>
+			    <property name="expand">False</property>
+			    <property name="fill">False</property>
+                         </packing>
+                       </child>
+
+			<child>
+	                  <object class="GtkBox" id="parsed_info_vbox">
+		            <property name="visible">True</property>
+		            <property name="can_focus">True</property>
+		            <property name="orientation">vertical</property>
+                         </object>
+                       </child>
+		      </object>
+		    </child>
+
+		  </object>
+                 <packing>
+		    <property name="expand">True</property>
+		    <property name="fill">True</property>
+	          </packing>
+		</child>  <!--parsed_info_frame -->
+
+	      </object>
+	    </child> <!-- hbox in vbox3 -->
+
+	  </object>
+          <packing>
+	    <property name="expand">True</property>
+	    <property name="fill">True</property>
+          </packing>
+	</child> <!-- child_vbox3 -->
+
+      </object>
+    </child>
+
+  </object> <!-- MainWindow -->
+</interface>
