@@ -1073,6 +1073,10 @@ _remove_child (GValue * item, GValue * ret G_GNUC_UNUSED, GstBin * bin)
 {
   GstElement *child = g_value_get_object (item);
 
+  if (GNL_IS_OPERATION (child))
+    gnl_operation_hard_cleanup (GNL_OPERATION (child));
+
+
   gst_bin_remove (bin, child);
 
   return TRUE;

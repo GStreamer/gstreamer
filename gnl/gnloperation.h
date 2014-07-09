@@ -80,6 +80,8 @@ gnl_operation_signal_input_priority_changed(GnlOperation * operation, GstPad *pa
 void gnl_operation_update_base_time (GnlOperation *operation,
                                      GstClockTime timestamp);
 
+void gnl_operation_hard_cleanup (GnlOperation *operation);
+
 
 /* normal GOperation stuff */
 GType gnl_operation_get_type (void);

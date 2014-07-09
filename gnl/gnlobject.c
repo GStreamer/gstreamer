@@ -418,7 +418,7 @@ gnl_object_cleanup_func (GnlObject * object)
   return TRUE;
 }
 
-static GstStateChangeReturn
+GstStateChangeReturn
 gnl_object_cleanup (GnlObject * object)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;

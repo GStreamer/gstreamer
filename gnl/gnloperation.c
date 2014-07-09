@@ -728,6 +728,45 @@ gnl_operation_cleanup (GnlObject * object)
   return TRUE;
 }
 
+void
+gnl_operation_hard_cleanup (GnlOperation * operation)
+{
+  gboolean done = FALSE;
+
+  GValue item = { 0, };
+  GstIterator *pads;
+
+  GST_INFO_OBJECT (operation, "Hard reset of the operation");
+
+  pads = gst_element_iterate_sink_pads (GST_ELEMENT (operation));
+  while (!done) {
+    switch (gst_iterator_next (pads, &item)) {
+      case GST_ITERATOR_OK:
+      {
+        GstPad *sinkpad = g_value_get_object (&item);
+        GstPad *srcpad = gst_pad_get_peer (sinkpad);
+
+        if (srcpad) {
+          GST_ERROR ("Unlinking %" GST_PTR_FORMAT " and  %"
+              GST_PTR_FORMAT, srcpad, sinkpad);
+          gst_pad_unlink (srcpad, sinkpad);
+        }
+
+        g_value_reset (&item);
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (pads);
+        break;
+      default:
+        /* ERROR and DONE */
+        done = TRUE;
+        break;
+    }
+  }
+  gnl_object_cleanup (GNL_OBJECT (operation));
+}
+
 
 static GstPad *
 gnl_operation_request_new_pad (GstElement * element, GstPadTemplate * templ,

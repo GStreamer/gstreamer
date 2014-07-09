@@ -166,5 +166,9 @@ gnl_object_commit (GnlObject *object, gboolean recurse);
 
 void
 gnl_object_reset (GnlObject *object);
+
+GstStateChangeReturn
+gnl_object_cleanup (GnlObject * object);
+
 G_END_DECLS
 #endif /* __GNL_OBJECT_H__ */
