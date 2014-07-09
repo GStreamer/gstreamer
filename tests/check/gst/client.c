@@ -21,6 +21,7 @@
 
 #include <rtsp-client.h>
 
+static gchar * session_id;
 static gint cseq;
 static guint expected_session_timeout = 60;
 
@@ -392,6 +393,10 @@ test_setup_response_200_multicast (GstRTSPClient * client,
   session = gst_rtsp_session_pool_find (session_pool, session_hdr_params[0]);
   g_strfreev (session_hdr_params);
 
+  /* remember session id to be able to send teardown */
+  session_id = g_strdup (gst_rtsp_session_get_sessionid (session));
+  fail_unless (session_id != NULL);
+
   fail_unless (session != NULL);
   g_object_unref (session);
 
@@ -399,6 +404,49 @@ test_setup_response_200_multicast (GstRTSPClient * client,
 
 
   return TRUE;
+}
+
+static gboolean
+test_teardown_response_200 (GstRTSPClient * client,
+    GstRTSPMessage * response, gboolean close, gpointer user_data)
+{
+  GstRTSPStatusCode code;
+  const gchar *reason;
+  GstRTSPVersion version;
+
+  fail_unless (gst_rtsp_message_get_type (response) ==
+      GST_RTSP_MESSAGE_RESPONSE);
+
+  fail_unless (gst_rtsp_message_parse_response (response, &code, &reason,
+          &version)
+      == GST_RTSP_OK);
+  fail_unless (code == GST_RTSP_STS_OK);
+  fail_unless (g_str_equal (reason, "OK"));
+  fail_unless (version == GST_RTSP_VERSION_1_0);
+
+  return TRUE;
+}
+
+static void
+send_teardown (GstRTSPClient * client)
+{
+  GstRTSPMessage request = { 0, };
+  gchar *str;
+
+  fail_unless (session_id != NULL);
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_TEARDOWN,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SESSION,
+      session_id);
+  gst_rtsp_client_set_send_func (client, test_teardown_response_200,
+      NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+  g_free (session_id);
+  session_id = NULL;
 }
 
 static GstRTSPClient *
@@ -503,6 +551,9 @@ GST_START_TEST (test_client_multicast_transport)
   gst_rtsp_message_unset (&request);
   expected_transport = NULL;
   expected_session_timeout = 60;
+
+  send_teardown (client);
+
   teardown_client (client);
 }
 
@@ -533,6 +584,8 @@ GST_START_TEST (test_client_multicast_ignore_transport_specific)
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
   expected_transport = NULL;
+
+  send_teardown (client);
 
   teardown_client (client);
 }
@@ -698,6 +751,8 @@ GST_START_TEST (test_client_multicast_transport_specific)
   fail_unless (session_pool != NULL);
   fail_unless (gst_rtsp_session_pool_get_n_sessions (session_pool) == 1);
   g_object_unref (session_pool);
+
+  send_teardown (client);
 
   teardown_client (client);
   g_object_unref (ctx.auth);
