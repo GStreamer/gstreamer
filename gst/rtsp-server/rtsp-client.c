@@ -144,6 +144,8 @@ static GstRTSPResult default_params_get (GstRTSPClient * client,
     GstRTSPContext * ctx);
 static gchar *default_make_path_from_uri (GstRTSPClient * client,
     const GstRTSPUrl * uri);
+static void client_session_removed (GstRTSPSessionPool * pool,
+    GstRTSPSession * session, GstRTSPClient * client);
 
 G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
@@ -301,7 +303,15 @@ client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
   /* check if we already know about this session */
   if (g_list_find (priv->sessions, session) == NULL) {
     GST_INFO ("watching session %p", session);
+
     priv->sessions = g_list_prepend (priv->sessions, g_object_ref (session));
+
+    /* connect removed session handler, it will be disconnected when the last
+     * session gets removed  */
+    if (priv->session_removed_id == 0)
+      priv->session_removed_id = g_signal_connect_data (priv->session_pool,
+          "session-removed", G_CALLBACK (client_session_removed),
+          g_object_ref (client), (GClosureNotify) g_object_unref, 0);
   }
   g_mutex_unlock (&priv->lock);
 
@@ -322,7 +332,16 @@ client_unwatch_session (GstRTSPClient * client, GstRTSPSession * session,
     if (link == NULL)
       return;
   }
+
   priv->sessions = g_list_delete_link (priv->sessions, link);
+
+  /* if this was the last session, disconnect the handler.
+   * This will also drop the extra client ref */
+  if (!priv->sessions) {
+    g_signal_handler_disconnect (priv->session_pool,
+        priv->session_removed_id);
+    priv->session_removed_id = 0;
+  }
 
   /* unlink all media managed in this session */
   gst_rtsp_session_filter (session, filter_session_media, client);
@@ -357,12 +376,15 @@ gst_rtsp_client_finalize (GObject * obj)
   if (priv->watch_context)
     g_main_context_unref (priv->watch_context);
 
-  gst_rtsp_client_session_filter (client, cleanup_session, NULL);
+  /* all sessions should have been removed by now. We keep a ref to
+   * the client object for the session removed handler. The ref is
+   * dropped when the last session is removed from the list. */
+  g_assert (priv->sessions == NULL);
+  g_assert (priv->session_removed_id == 0);
 
   if (priv->connection)
     gst_rtsp_connection_free (priv->connection);
   if (priv->session_pool) {
-    g_signal_handler_disconnect (priv->session_pool, priv->session_removed_id);
     g_object_unref (priv->session_pool);
   }
   if (priv->mount_points)
@@ -2644,13 +2666,10 @@ gst_rtsp_client_set_session_pool (GstRTSPClient * client,
   old = priv->session_pool;
   priv->session_pool = pool;
 
-  if (priv->session_removed_id)
+  if (priv->session_removed_id) {
     g_signal_handler_disconnect (old, priv->session_removed_id);
-  if (pool)
-    priv->session_removed_id = g_signal_connect (pool, "session-removed",
-        G_CALLBACK (client_session_removed), client);
-  else
     priv->session_removed_id = 0;
+  }
   g_mutex_unlock (&priv->lock);
 
   /* FIXME, should remove all sessions from the old pool for this client */
@@ -3353,6 +3372,8 @@ client_watch_notify (GstRTSPClient * client)
   priv->watch = NULL;
   g_main_context_unref (priv->watch_context);
   priv->watch_context = NULL;
+  /* remove all sessions and so drop the extra client ref */
+  gst_rtsp_client_session_filter (client, cleanup_session, NULL);
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
   g_object_unref (client);
 }
