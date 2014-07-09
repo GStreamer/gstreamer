@@ -647,6 +647,10 @@ GST_START_TEST (test_setup)
   fail_unless (audio_transport->mode_play);
   gst_rtsp_transport_free (audio_transport);
 
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session) == GST_RTSP_STS_OK);
+
   /* clean up and iterate so the clean-up can finish */
   g_free (session);
   gst_sdp_message_free (sdp_message);
@@ -709,6 +713,10 @@ GST_START_TEST (test_setup_with_require_header)
   fail_unless (video_transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP);
   fail_unless (video_transport->mode_play);
   gst_rtsp_transport_free (video_transport);
+
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session) == GST_RTSP_STS_OK);
 
   /* clean up and iterate so the clean-up can finish */
   g_free (session);
