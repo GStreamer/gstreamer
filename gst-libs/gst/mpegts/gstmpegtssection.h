@@ -171,6 +171,9 @@ struct _GstMpegtsSection
    * sections to that people can create private short sections ? */
   gboolean      short_section;
   GstMpegtsPacketizeFunc packetizer;
+
+  /* Padding for future extension */
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GBytes *gst_mpegts_section_get_data (GstMpegtsSection *section);

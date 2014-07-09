@@ -255,6 +255,10 @@ struct _GstMpegtsDescriptor
   guint8 tag_extension;
   guint8 length;
   guint8 *data;
+
+  /*< private >*/
+  /* Padding for future extension */
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 void       gst_mpegts_descriptor_free (GstMpegtsDescriptor *desc);
