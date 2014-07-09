@@ -1205,7 +1205,7 @@ mpegts_base_scan (MpegTSBase * base)
   gboolean done = FALSE;
   MpegTSPacketizerPacketReturn pret;
   gint64 tmpval;
-  gint64 upstream_size, seek_pos;
+  gint64 upstream_size, seek_pos, reverse_limit;
   GstFormat format;
   guint initial_pcr_seen;
 
@@ -1213,7 +1213,7 @@ mpegts_base_scan (MpegTSBase * base)
 
   /* Find initial sync point and at least 5 PCR values */
   for (i = 0; i < 10 && !done; i++) {
-    GST_DEBUG ("Grabbing %d => %d", i * 65536, 65536);
+    GST_DEBUG ("Grabbing %d => %d", i * 65536, (i + 1) * 65536);
 
     ret = gst_pad_pull_range (base->sinkpad, i * 65536, 65536, &buf);
     if (G_UNLIKELY (ret == GST_FLOW_EOS))
@@ -1252,7 +1252,6 @@ mpegts_base_scan (MpegTSBase * base)
   GST_DEBUG ("Seen %d initial PCR", initial_pcr_seen);
 
   /* Now send data from the end */
-  mpegts_packetizer_clear (base->packetizer);
 
   /* Get the size of upstream */
   format = GST_FORMAT_BYTES;
@@ -1261,12 +1260,19 @@ mpegts_base_scan (MpegTSBase * base)
   upstream_size = tmpval;
   done = FALSE;
 
-  /* Find last PCR value */
-  for (seek_pos = MAX (0, upstream_size - 655360);
-      seek_pos < upstream_size && !done; seek_pos += 65536) {
-    GST_DEBUG ("Grabbing %" G_GUINT64_FORMAT " => %d", seek_pos, 65536);
+  /* The scanning takes place on the last 2048kB. Considering PCR should
+   * be present at least every 100ms, this should cope with streams
+   * up to 160Mbit/s */
+  reverse_limit = MAX (0, upstream_size - 2097152);
 
-    ret = gst_pad_pull_range (base->sinkpad, seek_pos, 65536, &buf);
+  /* Find last PCR value, searching backwards by chunks of 300 MPEG-ts packets */
+  for (seek_pos = MAX (0, upstream_size - 56400);
+      seek_pos >= reverse_limit && !done; seek_pos -= 56400) {
+    mpegts_packetizer_clear (base->packetizer);
+    GST_DEBUG ("Grabbing %" G_GUINT64_FORMAT " => %" G_GUINT64_FORMAT, seek_pos,
+        seek_pos + 56400);
+
+    ret = gst_pad_pull_range (base->sinkpad, seek_pos, 56400, &buf);
     if (G_UNLIKELY (ret == GST_FLOW_EOS))
       break;
     if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -1277,17 +1283,16 @@ mpegts_base_scan (MpegTSBase * base)
     buf = NULL;
 
     if (mpegts_packetizer_has_packets (base->packetizer)) {
-      while (1) {
-        /* Eat up all packets */
+      pret = PACKET_OK;
+      /* Eat up all packets, really try to get last PCR(s) */
+      while (pret != PACKET_NEED_MORE)
         pret = mpegts_packetizer_process_next_packet (base->packetizer);
-        if (pret == PACKET_NEED_MORE)
-          break;
-        if (pret != PACKET_BAD &&
-            base->packetizer->nb_seen_offsets > initial_pcr_seen) {
-          GST_DEBUG ("Got last PCR");
-          done = TRUE;
-          break;
-        }
+
+      if (base->packetizer->nb_seen_offsets > initial_pcr_seen) {
+        GST_DEBUG ("Got last PCR(s) (total seen:%d)",
+            base->packetizer->nb_seen_offsets);
+        done = TRUE;
+        break;
       }
     }
   }
