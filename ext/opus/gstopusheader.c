@@ -190,8 +190,8 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
       "multistream", G_TYPE_BOOLEAN, multistream, NULL);
   *caps = _gst_caps_set_buffer_array (*caps, "streamheader", buf1, buf2, NULL);
 
-  *headers = g_slist_prepend (*headers, buf2);
-  *headers = g_slist_prepend (*headers, buf1);
+  *headers = g_slist_prepend (*headers, gst_buffer_ref (buf2));
+  *headers = g_slist_prepend (*headers, gst_buffer_ref (buf1));
 }
 
 void
@@ -218,6 +218,9 @@ gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
   buf2 = gst_opus_enc_create_metadata_buffer (tags);
 
   gst_opus_header_create_caps_from_headers (caps, headers, buf1, buf2);
+
+  gst_buffer_unref (buf2);
+  gst_buffer_unref (buf1);
 }
 
 gboolean
