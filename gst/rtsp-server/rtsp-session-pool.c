@@ -456,13 +456,15 @@ gst_rtsp_session_pool_remove (GstRTSPSessionPool * pool, GstRTSPSession * sess)
   found =
       g_hash_table_remove (priv->sessions,
       gst_rtsp_session_get_sessionid (sess));
-  if (found) {
+  if (found)
     priv->sessions_cookie++;
+  g_mutex_unlock (&priv->lock);
+
+  if (found)
     g_signal_emit (pool, gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED],
         0, sess);
-  }
+
   g_object_unref (sess);
-  g_mutex_unlock (&priv->lock);
 
   return found;
 }
@@ -471,6 +473,7 @@ typedef struct
 {
   GTimeVal now;
   GstRTSPSessionPool *pool;
+  GList *removed;
 } CleanupData;
 
 static gboolean
@@ -480,9 +483,8 @@ cleanup_func (gchar * sessionid, GstRTSPSession * sess, CleanupData * data)
 
   expired = gst_rtsp_session_is_expired (sess, &data->now);
   if (expired) {
-    GST_DEBUG ("session expired, emitting signal");
-    g_signal_emit (data->pool,
-        gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED], 0, sess);
+    GST_DEBUG ("session expired");
+    data->removed = g_list_prepend (data->removed, g_object_ref (sess));
   }
   return expired;
 }
@@ -502,6 +504,7 @@ gst_rtsp_session_pool_cleanup (GstRTSPSessionPool * pool)
   GstRTSPSessionPoolPrivate *priv;
   guint result;
   CleanupData data;
+  GList *walk;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION_POOL (pool), 0);
 
@@ -509,6 +512,7 @@ gst_rtsp_session_pool_cleanup (GstRTSPSessionPool * pool)
 
   g_get_current_time (&data.now);
   data.pool = pool;
+  data.removed = NULL;
 
   g_mutex_lock (&priv->lock);
   result =
@@ -517,6 +521,16 @@ gst_rtsp_session_pool_cleanup (GstRTSPSessionPool * pool)
   if (result > 0)
     priv->sessions_cookie++;
   g_mutex_unlock (&priv->lock);
+
+  for (walk = data.removed; walk; walk = walk->next) {
+    GstRTSPSession *sess = walk->data;
+
+    g_signal_emit (pool,
+        gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED], 0, sess);
+
+    g_object_unref (sess);
+  }
+  g_list_free (data.removed);
 
   return result;
 }
@@ -593,15 +607,31 @@ restart:
 
     switch (res) {
       case GST_RTSP_FILTER_REMOVE:
-        g_signal_emit (pool,
-            gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED], 0, session);
+      {
+        gboolean removed = TRUE;
 
         if (changed)
-          g_hash_table_remove (priv->sessions, key);
+          /* something changed, check if we still have the session */
+          removed = g_hash_table_remove (priv->sessions, key);
         else
           g_hash_table_iter_remove (&iter);
-        cookie = ++priv->sessions_cookie;
+
+        if (removed) {
+          /* if we managed to remove the session, update the cookie and
+           * signal */
+          cookie = ++priv->sessions_cookie;
+          g_mutex_unlock (&priv->lock);
+
+          g_signal_emit (pool,
+              gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED], 0,
+              session);
+
+          g_mutex_lock (&priv->lock);
+          /* cookie could have changed again, make sure we restart */
+          changed |= (cookie != priv->sessions_cookie);
+        }
         break;
+      }
       case GST_RTSP_FILTER_REF:
         /* keep ref */
         result = g_list_prepend (result, g_object_ref (session));
