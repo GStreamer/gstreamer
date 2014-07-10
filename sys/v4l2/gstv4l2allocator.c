@@ -204,17 +204,21 @@ _v4l2mem_is_span (GstV4l2Memory * mem1, GstV4l2Memory * mem2, gsize * offset)
   return mem1->mem.offset + mem1->mem.size == mem2->mem.offset;
 }
 
-static void
-_v4l2mem_parent_to_dmabuf (GstV4l2Memory * mem, GstMemory * dma_mem)
-{
-  gst_memory_lock (&mem->mem, GST_LOCK_FLAG_EXCLUSIVE);
-  dma_mem->parent = gst_memory_ref (&mem->mem);
-}
-
 gboolean
 gst_is_v4l2_memory (GstMemory * mem)
 {
   return gst_memory_is_type (mem, GST_V4L2_MEMORY_TYPE);
+}
+
+GQuark
+gst_v4l2_memory_quark (void)
+{
+  static GQuark quark = 0;
+
+  if (quark == 0)
+    quark = g_quark_from_string ("GstV4l2Memory");
+
+  return quark;
 }
 
 
@@ -885,7 +889,9 @@ gst_v4l2_allocator_alloc_dmabuf (GstV4l2Allocator * allocator,
 
     dma_mem = gst_dmabuf_allocator_alloc (dmabuf_allocator, dmafd,
         mem->mem.maxsize);
-    _v4l2mem_parent_to_dmabuf (mem, dma_mem);
+
+    gst_mini_object_set_qdata (GST_MINI_OBJECT (dma_mem),
+        GST_V4L2_MEMORY_QUARK, mem, (GDestroyNotify) gst_memory_unref);
 
     group->mem[i] = dma_mem;
     group->mems_allocated++;

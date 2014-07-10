@@ -42,6 +42,8 @@ G_BEGIN_DECLS
 #define GST_V4L2_ALLOCATOR_CAN_ALLOCATE(obj,type) \
         (GST_OBJECT_FLAG_IS_SET (obj, GST_V4L2_ALLOCATOR_FLAG_ ## type ## _CREATE_BUFS))
 
+#define GST_V4L2_MEMORY_QUARK gst_v4l2_memory_quark ()
+
 typedef struct _GstV4l2Allocator GstV4l2Allocator;
 typedef struct _GstV4l2AllocatorClass GstV4l2AllocatorClass;
 typedef struct _GstV4l2MemoryGroup GstV4l2MemoryGroup;
@@ -108,6 +110,8 @@ struct _GstV4l2AllocatorClass {
 GType gst_v4l2_allocator_get_type(void);
 
 gboolean             gst_is_v4l2_memory                (GstMemory * mem);
+
+GQuark               gst_v4l2_memory_quark             (void);
 
 gboolean             gst_v4l2_allocator_is_active      (GstV4l2Allocator * allocator);
 

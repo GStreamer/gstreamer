@@ -78,9 +78,10 @@ gst_v4l2_is_buffer_valid (GstBuffer * buffer, GstV4l2MemoryGroup ** group)
     goto done;
 
   if (gst_is_dmabuf_memory (mem))
-    mem = mem->parent;
+    mem = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+        GST_V4L2_MEMORY_QUARK);
 
-  if (gst_is_v4l2_memory (mem)) {
+  if (mem && gst_is_v4l2_memory (mem)) {
     GstV4l2Memory *vmem = (GstV4l2Memory *) mem;
     valid = TRUE;
     if (group)
