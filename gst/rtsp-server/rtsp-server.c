@@ -1404,7 +1404,12 @@ restart:
 
     switch (res) {
       case GST_RTSP_FILTER_REMOVE:
-        /* remove client, FIXME */
+        GST_RTSP_SERVER_UNLOCK (server);
+
+        gst_rtsp_client_close (client);
+
+        GST_RTSP_SERVER_LOCK (server);
+        changed |= (cookie != priv->clients_cookie);
         break;
       case GST_RTSP_FILTER_REF:
         result = g_list_prepend (result, g_object_ref (client));
