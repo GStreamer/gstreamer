@@ -1889,6 +1889,40 @@ remove_error_filter (GstDecodeBin * dbin, GstElement * element)
   GST_OBJECT_UNLOCK (dbin);
 }
 
+typedef struct
+{
+  gboolean ret;
+  GstPad *peer;
+} SendStickyEventsData;
+
+static gboolean
+send_sticky_event (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  SendStickyEventsData *data = user_data;
+  gboolean ret;
+
+  ret = gst_pad_send_event (data->peer, gst_event_ref (*event));
+  if (!ret)
+    data->ret = FALSE;
+
+  return data->ret;
+}
+
+static gboolean
+send_sticky_events (GstDecodeBin * dbin, GstPad * pad)
+{
+  SendStickyEventsData data;
+
+  data.ret = TRUE;
+  data.peer = gst_pad_get_peer (pad);
+
+  gst_pad_sticky_events_foreach (pad, send_sticky_event, &data);
+
+  gst_object_unref (data.peer);
+
+  return data.ret;
+}
+
 /* connect_pad:
  *
  * Try to connect the given pad to an element created from one of the factories,
@@ -2220,7 +2254,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
     /* Bring the element to the state of the parent */
     if ((gst_element_set_state (element,
-                GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE) {
+                GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE ||
+        !send_sticky_events (dbin, pad)) {
       GstDecodeElement *dtmp = NULL;
       GstElement *tmp = NULL;
 
