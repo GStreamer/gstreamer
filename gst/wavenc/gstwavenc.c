@@ -848,7 +848,10 @@ gst_wavenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstWavEnc *wavenc = GST_WAVENC (parent);
   GstFlowReturn flow = GST_FLOW_OK;
 
-  g_return_val_if_fail (wavenc->channels > 0, GST_FLOW_FLUSHING);
+  if (wavenc->channels <= 0) {
+    GST_ERROR_OBJECT (wavenc, "Got data without caps");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 
   if (G_UNLIKELY (!wavenc->sent_header)) {
     /* starting a file, means we have to finish it properly */
