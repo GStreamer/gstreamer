@@ -274,6 +274,13 @@ GstMpegtsDescriptor *gst_mpegts_descriptor_from_registration (
     const gchar *format_identifier,
     guint8 *additional_info, gsize additional_info_length);
 
+/* GST_MTS_DESC_CA (0x09) */
+gboolean  gst_mpegts_descriptor_parse_ca (GstMpegtsDescriptor *descriptor,
+					  guint16 *ca_system_id,
+					  guint16 *ca_pid,
+					  const guint8 **private_data,
+					  gsize *private_data_size);
+
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */
 /**
  * GstMpegtsISO639AudioType:

@@ -872,6 +872,47 @@ gst_mpegts_descriptor_from_registration (const gchar * format_identifier,
   return descriptor;
 }
 
+/* GST_MTS_DESC_CA (0x09) */
+
+/**
+ * gst_mpegts_descriptor_parse_ca:
+ * @descriptor: a %GST_MTS_DESC_CA #GstMpegtsDescriptor
+ * @ca_system_id: (out): the type of CA system used
+ * @ca_pid: (out): The PID containing ECM or EMM data
+ * @private_data: (out) (allow-none): The private data
+ * @private_data_size: (out) (allow-none): The size of @private_data in bytes
+ *
+ * Extracts the Conditional Access information from @descriptor.
+ *
+ * Returns: %TRUE if parsing succeeded, else %FALSE.
+ */
+
+gboolean
+gst_mpegts_descriptor_parse_ca (GstMpegtsDescriptor * descriptor,
+    guint16 * ca_system_id, guint16 * ca_pid,
+    const guint8 ** private_data, gsize * private_data_size)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL && ca_system_id != NULL
+      && ca_pid != NULL, FALSE);
+  /* The smallest CA is 4 bytes (though not having any private data
+   * sounds a bit ... weird) */
+  __common_desc_checks (descriptor, GST_MTS_DESC_CA, 4, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+  *ca_system_id = GST_READ_UINT16_BE (data);
+  data += 2;
+  *ca_pid = GST_READ_UINT16_BE (data) & 0x1fff;
+  data += 2;
+  if (private_data && private_data_size) {
+    *private_data = data;
+    *private_data_size = descriptor->length - 4;
+  }
+
+  return TRUE;
+}
+
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */
 static GstMpegtsISO639LanguageDescriptor *
 _gst_mpegts_iso_639_language_descriptor_copy (GstMpegtsISO639LanguageDescriptor
