@@ -2203,9 +2203,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       }
     }
 
-    /* link this element further */
-    connect_element (dbin, delem, chain);
-
     /* try to configure the subtitle encoding property when we can */
     pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element),
         "subtitle-encoding");
@@ -2301,6 +2298,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       dbin->subtitles = g_list_prepend (dbin->subtitles, element);
       SUBTITLE_UNLOCK (dbin);
     }
+
+    /* link this element further */
+    connect_element (dbin, delem, chain);
 
     res = TRUE;
     break;
