@@ -86,6 +86,7 @@ GstRTSPClient
 GstRTSPClientClass
 
 gst_rtsp_client_new
+gst_rtsp_client_close
 
 gst_rtsp_client_get_session_pool
 gst_rtsp_client_set_session_pool
@@ -133,6 +134,7 @@ gst_rtsp_context_get_current
 gst_rtsp_context_push_current
 gst_rtsp_context_pop_current
 <SUBSECTION Standard>
+GST_TYPE_RTSP_CONTEXT
 gst_rtsp_context_get_type
 </SECTION>
 
@@ -154,6 +156,9 @@ gst_rtsp_media_is_shared
 gst_rtsp_media_set_reusable
 gst_rtsp_media_is_reusable
 
+gst_rtsp_media_set_profiles
+gst_rtsp_media_get_profiles
+
 gst_rtsp_media_set_protocols
 gst_rtsp_media_get_protocols
 
@@ -166,11 +171,21 @@ gst_rtsp_media_get_address_pool
 gst_rtsp_media_set_buffer_size
 gst_rtsp_media_get_buffer_size
 
+gst_rtsp_media_setup_sdp
+
 <SUBSECTION MediaPrepare>
 gst_rtsp_media_prepare
 gst_rtsp_media_unprepare
 GstRTSPMediaStatus
 gst_rtsp_media_get_status
+
+<SUBSECTION MediaSuspend>
+gst_rtsp_media_set_suspend_mode
+gst_rtsp_media_get_suspend_mode
+
+GstRTSPSuspendMode
+gst_rtsp_media_suspend
+gst_rtsp_media_unsuspend
 
 <SUBSECTION MediaStreams>
 gst_rtsp_media_collect_streams
@@ -203,6 +218,8 @@ GST_RTSP_MEDIA_GET_CLASS
 GST_TYPE_RTSP_MEDIA
 GstRTSPMediaPrivate
 gst_rtsp_media_get_type
+GST_TYPE_RTSP_SUSPEND_MODE
+gst_rtsp_suspend_mode_get_type
 </SECTION>
 
 <SECTION>
@@ -210,7 +227,6 @@ gst_rtsp_media_get_type
 <TITLE>GstRTSPMediaFactory</TITLE>
 GstRTSPMediaFactory
 GstRTSPMediaFactoryClass
-
 gst_rtsp_media_factory_new
 
 gst_rtsp_media_factory_get_launch
@@ -229,11 +245,17 @@ gst_rtsp_media_factory_set_eos_shutdown
 gst_rtsp_media_factory_get_protocols
 gst_rtsp_media_factory_set_protocols
 
+gst_rtsp_media_factory_set_profiles
+gst_rtsp_media_factory_get_profiles
+
 gst_rtsp_media_factory_get_address_pool
 gst_rtsp_media_factory_set_address_pool
 
 gst_rtsp_media_factory_get_buffer_size
 gst_rtsp_media_factory_set_buffer_size
+
+gst_rtsp_media_factory_get_suspend_mode
+gst_rtsp_media_factory_set_suspend_mode
 
 gst_rtsp_media_factory_construct
 gst_rtsp_media_factory_create_element
@@ -433,6 +455,7 @@ gst_rtsp_session_media_matches
 
 gst_rtsp_session_media_get_media
 gst_rtsp_session_media_get_base_time
+gst_rtsp_session_media_get_rtpinfo
 
 gst_rtsp_session_media_set_state
 
@@ -512,8 +535,13 @@ gst_rtsp_stream_set_mtu
 gst_rtsp_stream_get_dscp_qos
 gst_rtsp_stream_set_dscp_qos
 
+gst_rtsp_stream_set_profiles
+gst_rtsp_stream_get_profiles
+
 gst_rtsp_stream_get_protocols
 gst_rtsp_stream_set_protocols
+
+gst_rtsp_stream_is_transport_supported
 
 gst_rtsp_stream_get_address_pool
 gst_rtsp_stream_set_address_pool
@@ -528,6 +556,7 @@ gst_rtsp_stream_get_rtpsession
 gst_rtsp_stream_get_ssrc
 gst_rtsp_stream_get_rtpinfo
 gst_rtsp_stream_get_caps
+gst_rtsp_stream_get_pt
 
 gst_rtsp_stream_recv_rtcp
 gst_rtsp_stream_recv_rtp
@@ -537,6 +566,11 @@ gst_rtsp_stream_remove_transport
 
 gst_rtsp_stream_get_rtp_socket
 gst_rtsp_stream_get_rtcp_socket
+
+gst_rtsp_stream_set_blocked
+gst_rtsp_stream_is_blocking
+
+gst_rtsp_stream_update_crypto
 
 GstRTSPStreamTransportFilterFunc
 gst_rtsp_stream_transport_filter
@@ -565,6 +599,11 @@ gst_rtsp_stream_transport_get_stream
 
 gst_rtsp_stream_transport_get_transport
 gst_rtsp_stream_transport_set_transport
+
+gst_rtsp_stream_transport_get_url
+gst_rtsp_stream_transport_set_url
+
+gst_rtsp_stream_transport_get_rtpinfo
 
 GstRTSPSendFunc
 gst_rtsp_stream_transport_set_callbacks
