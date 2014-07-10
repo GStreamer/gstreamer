@@ -2818,13 +2818,14 @@ _activate_new_stack (GnlComposition * comp)
 
 /* WITH OBJECTS LOCK TAKEN */
 static gboolean
-_is_last_stack (GnlComposition * comp)
+_set_real_eos_seqnum_from_seek (GnlComposition * comp, GstEvent * event)
 {
   GList *tmp;
 
   gboolean should_check_objects = FALSE;
   GnlCompositionPrivate *priv = comp->priv;
   gboolean reverse = (priv->segment->rate < 0);
+  gint stack_seqnum = gst_event_get_seqnum (event);
 
   if (reverse && GST_CLOCK_TIME_IS_VALID (priv->segment_start))
     should_check_objects = TRUE;
@@ -2840,10 +2841,14 @@ _is_last_stack (GnlComposition * comp)
 
       if ((!reverse && priv->segment_stop < object->stop) ||
           (reverse && priv->segment_start > object->start)) {
+
+        g_atomic_int_set (&priv->real_eos_seqnum, 0);
         return FALSE;
       }
     }
   }
+
+  g_atomic_int_set (&priv->real_eos_seqnum, stack_seqnum);
 
   return TRUE;
 }
@@ -2936,12 +2941,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
   toplevel_seek = get_new_seek_event (comp, TRUE, updatestoponly);
   stack_seqnum = gst_event_get_seqnum (toplevel_seek);
-  if (_is_last_stack (comp)) {
-    g_atomic_int_set (&priv->real_eos_seqnum, stack_seqnum);
-
-    GST_ERROR_OBJECT (comp, "Seeting up last stack, seqnum is: %i",
-        stack_seqnum);
-  }
+  _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
 
   /* If stacks are different, unlink/relink objects */
   if (!samestack) {
