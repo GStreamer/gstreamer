@@ -1422,7 +1422,7 @@ static gboolean is_adaptive_demuxer_element (GstElement * srcelement);
 static gboolean connect_pad (GstDecodeBin * dbin, GstElement * src,
     GstDecodePad * dpad, GstPad * pad, GstCaps * caps, GValueArray * factories,
     GstDecodeChain * chain);
-static gboolean connect_element (GstDecodeBin * dbin, GstDecodeElement * delem,
+static GList *connect_element (GstDecodeBin * dbin, GstDecodeElement * delem,
     GstDecodeChain * chain);
 static void expose_pad (GstDecodeBin * dbin, GstElement * src,
     GstDecodePad * dpad, GstPad * pad, GstCaps * caps, GstDecodeChain * chain);
@@ -1972,6 +1972,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GstPad *sinkpad;
     GParamSpec *pspec;
     gboolean subtitle;
+    GList *to_connect = NULL;
+    gboolean is_parser_converter = FALSE;
 
     /* Set dpad target to pad again, it might've been unset
      * below but we came back here because something failed
@@ -2068,6 +2070,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
             gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory)));
         continue;
       }
+
+      is_parser_converter = strstr (gst_element_factory_get_metadata (factory,
+              GST_ELEMENT_METADATA_KLASS), "Parser") != NULL;
     }
 
     /* emit autoplug-select to see what we should do with it. */
@@ -2252,6 +2257,26 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       subtitle = FALSE;
     }
 
+    /* link this element further */
+    to_connect = connect_element (dbin, delem, chain);
+
+    if (is_parser_converter && to_connect) {
+      GList *l;
+      for (l = to_connect; l; l = g_list_next (l)) {
+        GstPad *opad = GST_PAD_CAST (l->data);
+        GstCaps *ocaps;
+
+        ocaps = get_pad_caps (opad);
+        analyze_new_pad (dbin, delem->element, opad, ocaps, chain);
+        if (ocaps)
+          gst_caps_unref (ocaps);
+
+        gst_object_unref (opad);
+      }
+      g_list_free (to_connect);
+      to_connect = NULL;
+    }
+
     /* Bring the element to the state of the parent */
     if ((gst_element_set_state (element,
                 GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE ||
@@ -2261,6 +2286,10 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
       GST_WARNING_OBJECT (dbin, "Couldn't set %s to PAUSED",
           GST_ELEMENT_NAME (element));
+
+      g_list_foreach (to_connect, (GFunc) gst_object_unref, NULL);
+      g_list_free (to_connect);
+      to_connect = NULL;
 
       remove_error_filter (dbin, element);
 
@@ -2334,8 +2363,22 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       SUBTITLE_UNLOCK (dbin);
     }
 
-    /* link this element further */
-    connect_element (dbin, delem, chain);
+    if (to_connect) {
+      GList *l;
+      for (l = to_connect; l; l = g_list_next (l)) {
+        GstPad *opad = GST_PAD_CAST (l->data);
+        GstCaps *ocaps;
+
+        ocaps = get_pad_caps (opad);
+        analyze_new_pad (dbin, delem->element, opad, ocaps, chain);
+        if (ocaps)
+          gst_caps_unref (ocaps);
+
+        gst_object_unref (opad);
+      }
+      g_list_free (to_connect);
+      to_connect = NULL;
+    }
 
     res = TRUE;
     break;
@@ -2366,13 +2409,14 @@ get_pad_caps (GstPad * pad)
   return caps;
 }
 
-static gboolean
+/* Returns a list of pads that can be connected to already and
+ * connects to pad-added and related signals */
+static GList *
 connect_element (GstDecodeBin * dbin, GstDecodeElement * delem,
     GstDecodeChain * chain)
 {
   GstElement *element = delem->element;
   GList *pads;
-  gboolean res = TRUE;
   gboolean dynamic = FALSE;
   GList *to_connect = NULL;
 
@@ -2450,21 +2494,9 @@ connect_element (GstDecodeBin * dbin, GstDecodeElement * delem,
         G_CALLBACK (no_more_pads_cb), chain);
   }
 
-  /* 3. for every available pad, connect it */
-  for (pads = to_connect; pads; pads = g_list_next (pads)) {
-    GstPad *pad = GST_PAD_CAST (pads->data);
-    GstCaps *caps;
+  /* 3. return all pads that can be connected to already */
 
-    caps = get_pad_caps (pad);
-    analyze_new_pad (dbin, element, pad, caps, chain);
-    if (caps)
-      gst_caps_unref (caps);
-
-    gst_object_unref (pad);
-  }
-  g_list_free (to_connect);
-
-  return res;
+  return to_connect;
 }
 
 /* expose_pad:
