@@ -1224,6 +1224,8 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
 
         GST_INFO_OBJECT (comp, "We got an EOS right after seeing the right"
             " segment, restarting task");
+        GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (comp),
+            GST_DEBUG_GRAPH_SHOW_ALL, "eos-after-segment");
         gst_pad_remove_probe (GNL_OBJECT_SRC (comp), priv->commited_probeid);
         _add_emit_commited_and_restart_task (comp);
       }
@@ -2200,6 +2202,8 @@ _commit_done_cb (GstPad * pad, GstPadProbeInfo * info, GnlComposition * comp)
     GST_INFO_OBJECT (comp, "Got %" GST_PTR_FORMAT " concidering commit "
         "as done", info->data);
 
+    GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (comp),
+        GST_DEBUG_GRAPH_SHOW_ALL, "new-stack");
     return _add_emit_commited_and_restart_task (comp);
   }
 
