@@ -293,6 +293,7 @@ gst_aggregator_set_src_caps (GstAggregator * self, GstCaps * caps)
 static void
 _reset_flow_values (GstAggregator * self)
 {
+  self->priv->flow_return = GST_FLOW_FLUSHING;
   self->priv->send_stream_start = TRUE;
   self->priv->send_segment = TRUE;
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
@@ -460,6 +461,7 @@ _start (GstAggregator * self)
   self->priv->send_segment = TRUE;
   self->priv->send_eos = TRUE;
   self->priv->srccaps = NULL;
+  self->priv->flow_return = GST_FLOW_OK;
 
   return TRUE;
 }
