@@ -486,6 +486,8 @@ beach:
 static void
 _add_update_gsource (GnlComposition * comp)
 {
+  GST_DEBUG_OBJECT (comp, "Adding GSource");
+
   MAIN_CONTEXT_LOCK (comp);
   g_main_context_invoke (comp->priv->mcontext,
       (GSourceFunc) update_pipeline_func, comp);
@@ -495,6 +497,8 @@ _add_update_gsource (GnlComposition * comp)
 static void
 _add_commit_gsource (GnlComposition * comp)
 {
+  GST_DEBUG_OBJECT (comp, "Adding GSource");
+
   MAIN_CONTEXT_LOCK (comp);
   g_main_context_invoke (comp->priv->mcontext,
       (GSourceFunc) _commit_func, comp);
@@ -505,6 +509,8 @@ static void
 _add_seek_gsource (GnlComposition * comp, GstEvent * event)
 {
   SeekData *seekd = g_slice_new0 (SeekData);
+
+  GST_DEBUG_OBJECT (comp, "Adding GSource");
 
   seekd->comp = comp;
   seekd->event = event;
@@ -539,6 +545,8 @@ _initialize_stack_func (GnlComposition * comp)
 static void
 _add_initialize_stack_gsource (GnlComposition * comp)
 {
+  GST_DEBUG_OBJECT (comp, "Adding GSource");
+
   MAIN_CONTEXT_LOCK (comp);
   g_main_context_invoke (comp->priv->mcontext,
       (GSourceFunc) _initialize_stack_func, comp);
@@ -602,6 +610,8 @@ _add_remove_object_gsource (GnlComposition * comp, GnlObject * object)
 {
   ChildIOData *childio = g_slice_new0 (ChildIOData);
 
+  GST_DEBUG_OBJECT (comp, "Adding GSource");
+
   childio->comp = comp;
   childio->object = object;
 
@@ -661,6 +671,8 @@ static void
 _add_add_object_gsource (GnlComposition * comp, GnlObject * object)
 {
   ChildIOData *childio = g_slice_new0 (ChildIOData);
+
+  GST_DEBUG_OBJECT (comp, "Adding GSource");
 
   childio->comp = comp;
   childio->object = object;
@@ -2973,7 +2985,9 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   }
 
   /* Unlock all elements in new stack */
-  GST_DEBUG_OBJECT (comp, "Setting current stack");
+  GST_INFO_OBJECT (comp, "Setting current stack [%" GST_TIME_FORMAT " - %"
+      GST_TIME_FORMAT "]", GST_TIME_ARGS (priv->segment_start),
+      GST_TIME_ARGS (priv->segment_stop));
   priv->current = stack;
 
   if (priv->current) {
