@@ -315,6 +315,8 @@ static void gst_decode_bin_handle_message (GstBin * bin, GstMessage * message);
 
 static gboolean check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad);
 
+static GstCaps *get_pad_caps (GstPad * pad);
+
 #define EXPOSE_LOCK(dbin) G_STMT_START {				\
     GST_LOG_OBJECT (dbin,						\
 		    "expose locking from thread %p",			\
@@ -1730,6 +1732,9 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     p = gst_element_get_static_pad (delem->capsfilter, "src");
     decode_pad_set_target (dpad, p);
     pad = p;
+
+    gst_caps_unref (caps);
+    caps = get_pad_caps (pad);
 
     if (!gst_caps_is_fixed (caps)) {
       g_value_array_free (factories);
