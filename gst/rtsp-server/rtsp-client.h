@@ -146,6 +146,7 @@ GstRTSPConnection *   gst_rtsp_client_get_connection    (GstRTSPClient *client);
 
 guint                 gst_rtsp_client_attach            (GstRTSPClient *client,
                                                          GMainContext *context);
+void                  gst_rtsp_client_close             (GstRTSPClient * client);
 
 void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
                                                          GstRTSPClientSendFunc func,

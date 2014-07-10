@@ -798,8 +798,16 @@ unlink_session_transports (GstRTSPClient * client, GstRTSPSession * session,
   }
 }
 
-static void
-close_connection (GstRTSPClient * client)
+/**
+ * gst_rtsp_client_close:
+ * @client: a #GstRTSPClient
+ *
+ * Close the connection of @client and remove all media it was managing.
+ *
+ * Since: 1.4
+ */
+void
+gst_rtsp_client_close (GstRTSPClient * client)
 {
   GstRTSPClientPrivate *priv = client->priv;
   const gchar *tunnelid;
@@ -3133,7 +3141,7 @@ message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
   if (priv->close_seq && priv->close_seq == cseq) {
     GST_INFO ("client %p: send close message", client);
     priv->close_seq = 0;
-    close_connection (client);
+    gst_rtsp_client_close (client);
   }
 
   return GST_RTSP_OK;
