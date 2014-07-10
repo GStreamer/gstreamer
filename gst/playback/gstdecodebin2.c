@@ -1577,8 +1577,16 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   /* 1.c when the caps are not fixed yet, we can't be sure what element to
    * connect. We delay autoplugging until the caps are fixed */
-  if (!is_parser_converter && !gst_caps_is_fixed (caps))
+  if (!is_parser_converter && !gst_caps_is_fixed (caps)) {
     goto non_fixed;
+  } else if (!is_parser_converter) {
+    gst_caps_unref (caps);
+    caps = gst_pad_get_current_caps (pad);
+    if (!caps) {
+      GST_DEBUG_OBJECT (dbin, "No final caps set yet, delaying autoplugging");
+      goto setup_caps_delay;
+    }
+  }
 
   /* 1.d else get the factories and if there's no compatible factory goto
    * unknown_type */
@@ -1734,11 +1742,11 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     pad = p;
 
     gst_caps_unref (caps);
-    caps = get_pad_caps (pad);
 
-    if (!gst_caps_is_fixed (caps)) {
-      g_value_array_free (factories);
-      goto non_fixed;
+    caps = gst_pad_get_current_caps (pad);
+    if (!caps) {
+      GST_DEBUG_OBJECT (dbin, "No final caps set yet, delaying autoplugging");
+      goto setup_caps_delay;
     }
   }
 
