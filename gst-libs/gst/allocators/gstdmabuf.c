@@ -69,7 +69,7 @@ gst_dmabuf_allocator_free (GstAllocator * allocator, GstMemory * gmem)
     g_warning (G_STRLOC ":%s: Freeing memory %p still mapped", G_STRFUNC, mem);
     munmap ((void *) mem->data, gmem->maxsize);
   }
-  if (mem->fd >= 0)
+  if (mem->fd >= 0 && gmem->parent == NULL)
     close (mem->fd);
   g_mutex_clear (&mem->lock);
   g_slice_free (GstDmaBufMemory, mem);
@@ -176,7 +176,7 @@ gst_dmabuf_mem_share (GstMemory * gmem, gssize offset, gssize size)
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->mem.allocator, parent,
       mem->mem.maxsize, mem->mem.align, mem->mem.offset + offset, size);
 
-  sub->fd = -1;
+  sub->fd = mem->fd;
   g_mutex_init (&sub->lock);
 
   return GST_MEMORY_CAST (sub);
