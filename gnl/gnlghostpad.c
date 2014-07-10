@@ -300,7 +300,9 @@ translate_incoming_segment (GnlObject * object, GstEvent * event)
   gst_event_unref (event);
 
   if (object->seqnum) {
-    gst_event_set_seqnum (event, object->seqnum);
+    GST_INFO_OBJECT (object, "Tweaking SEGMENT seqnum from %i to %i",
+        gst_event_get_seqnum (event2), object->seqnum);
+    gst_event_set_seqnum (event2, object->seqnum);
   }
 
   return event2;
@@ -346,12 +348,18 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
           object->wanted_seqnum = 0;
 
           event = translate_outgoing_segment (object, event);
-          gst_event_set_seqnum (event, object->seqnum);
+          if (object->seqnum) {
+            GST_INFO_OBJECT (object, "Tweaking SEGMENT seqnum from %i to %i",
+                gst_event_get_seqnum (event), object->seqnum);
+            gst_event_set_seqnum (event, object->seqnum);
+          }
           break;
         case GST_EVENT_EOS:
-          if (object->seqnum)
+          if (object->seqnum) {
+            GST_INFO_OBJECT (object, "Tweaking EOS seqnum from %i to %i",
+                gst_event_get_seqnum (event), object->seqnum);
             gst_event_set_seqnum (event, object->seqnum);
-          GST_INFO_OBJECT (object, "Tweaking seqnum to %i", object->seqnum);
+          }
           break;
         default:
           break;
