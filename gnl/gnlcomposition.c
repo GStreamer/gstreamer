@@ -469,10 +469,9 @@ _seek_pipeline_func (SeekData * seekd)
   GST_FIXME_OBJECT (seekd->comp,
       "BE smarter and do not force pipeline update on"
       " seek (though it just does basic comparision and not full rebuild)");
-  seek_handling (seekd->comp, TRUE, TRUE);
 
   priv->reset_time = TRUE;
-  GNL_OBJECT (seekd->comp)->wanted_seqnum = gst_event_get_seqnum (seekd->event);
+  seek_handling (seekd->comp, FALSE, TRUE);
   priv->reset_time = FALSE;
 
 beach:
