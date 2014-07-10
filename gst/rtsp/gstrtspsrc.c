@@ -2328,12 +2328,16 @@ gst_rtspsrc_get_position (GstRTSPSrc * src)
         GST_DEBUG_OBJECT (src, "retaining position %" GST_TIME_FORMAT,
             GST_TIME_ARGS (pos));
         src->last_pos = pos;
-        return;
+        goto out;
       }
     }
   }
 
   src->last_pos = 0;
+
+out:
+
+  gst_query_unref (query);
 }
 
 static gboolean
