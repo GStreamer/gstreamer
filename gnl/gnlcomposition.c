@@ -241,6 +241,8 @@ _gnl_composition_remove_entry (GnlComposition * comp, GnlObject * object);
 static void _deactivate_stack (GnlComposition * comp);
 static GstPadProbeReturn _add_emit_commited_and_restart_task (GnlComposition *
     comp);
+static gboolean
+_set_real_eos_seqnum_from_seek (GnlComposition * comp, GstEvent * event);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -471,7 +473,7 @@ _seek_pipeline_func (SeekData * seekd)
       " seek (though it just does basic comparision and not full rebuild)");
 
   priv->reset_time = TRUE;
-  seek_handling (seekd->comp, FALSE, TRUE);
+  seek_handling (seekd->comp, TRUE, FALSE);
   priv->reset_time = FALSE;
 
 beach:
@@ -1534,6 +1536,11 @@ seek_handling (GnlComposition * comp, gboolean initial, gboolean update)
     else
       update_pipeline (comp, comp->priv->segment->stop, initial, !update);
   } else {
+    GstEvent *toplevel_seek = get_new_seek_event (comp, FALSE, FALSE);
+
+    _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
+
+    _seek_current_stack (comp, toplevel_seek);
     update_operations_base_time (comp, !(comp->priv->segment->rate >= 0.0));
   }
   COMP_OBJECTS_UNLOCK (comp);
@@ -2324,7 +2331,7 @@ update_pipeline_func (GnlComposition * comp)
     priv->segment->stop = priv->segment_start;
   }
 
-  seek_handling (comp, TRUE, TRUE);
+  seek_handling (comp, TRUE, FALSE);
 
   /* Post segment done if last seek was a segment seek */
   if (!priv->current && (priv->segment->flags & GST_SEEK_FLAG_SEGMENT)) {
