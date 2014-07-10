@@ -2815,23 +2815,25 @@ static gboolean
 _is_last_stack (GnlComposition * comp)
 {
   GList *tmp;
-  gboolean reverse = (comp->priv->segment->rate < 0);
-  gboolean should_check_objects = FALSE;
 
-  if (reverse && GST_CLOCK_TIME_IS_VALID (comp->priv->segment_start))
+  gboolean should_check_objects = FALSE;
+  GnlCompositionPrivate *priv = comp->priv;
+  gboolean reverse = (priv->segment->rate < 0);
+
+  if (reverse && GST_CLOCK_TIME_IS_VALID (priv->segment_start))
     should_check_objects = TRUE;
-  else if (!reverse && GST_CLOCK_TIME_IS_VALID (comp->priv->segment_stop))
+  else if (!reverse && GST_CLOCK_TIME_IS_VALID (priv->segment_stop))
     should_check_objects = TRUE;
 
   if (should_check_objects) {
-    for (tmp = comp->priv->objects_stop; tmp; tmp = g_list_next (tmp)) {
+    for (tmp = priv->objects_stop; tmp; tmp = g_list_next (tmp)) {
       GnlObject *object = (GnlObject *) tmp->data;
 
       if (!GNL_IS_SOURCE (object))
         continue;
 
-      if ((!reverse && comp->priv->segment_stop < object->stop) ||
-          (reverse && comp->priv->segment_start > object->start)) {
+      if ((!reverse && priv->segment_stop < object->stop) ||
+          (reverse && priv->segment_start > object->start)) {
         return FALSE;
       }
     }
