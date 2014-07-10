@@ -691,9 +691,20 @@ eat:
 }
 
 static gboolean
+_flush_pad (GstAggregator * self, GstAggregatorPad * pad, gpointer unused_udata)
+{
+  _aggpad_flush (pad, self);
+
+  return TRUE;
+}
+
+static gboolean
 _stop (GstAggregator * agg)
 {
   _reset_flow_values (agg);
+
+  gst_aggregator_iterate_sinkpads (agg,
+      (GstAggregatorPadForeachFunc) _flush_pad, NULL);
 
   return TRUE;
 }
