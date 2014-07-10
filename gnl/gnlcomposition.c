@@ -2242,6 +2242,7 @@ _commit_func (GnlComposition * comp)
     GST_DEBUG_OBJECT (comp, "Not initialized yet, just updating values");
 
     update_start_stop_duration (comp);
+    COMP_OBJECTS_UNLOCK (comp);
 
     g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, TRUE);
 
@@ -2252,12 +2253,16 @@ _commit_func (GnlComposition * comp)
     update_pipeline (comp, curpos, TRUE, TRUE);
 
     if (!priv->current) {
+      COMP_OBJECTS_UNLOCK (comp);
+
       GST_INFO_OBJECT (comp, "No new stack set, we can go and keep acting on"
           " our children");
+
       g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, TRUE);
+    } else {
+      COMP_OBJECTS_UNLOCK (comp);
     }
   }
-  COMP_OBJECTS_UNLOCK (comp);
 
   return G_SOURCE_REMOVE;
 }
