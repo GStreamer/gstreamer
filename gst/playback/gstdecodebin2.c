@@ -2115,14 +2115,14 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       continue;
     }
 
-    /* Stop filtering errors. */
-    remove_error_filter (dbin, element);
-
     /* check if we still accept the caps on the pad after setting
      * the element to READY */
     if (!gst_pad_query_accept_caps (sinkpad, caps)) {
       GST_WARNING_OBJECT (dbin, "Element %s does not accept caps",
           GST_ELEMENT_NAME (element));
+
+      remove_error_filter (dbin, element);
+
       gst_element_set_state (element, GST_STATE_NULL);
       gst_object_unref (sinkpad);
       gst_bin_remove (GST_BIN (dbin), element);
@@ -2230,6 +2230,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       GST_WARNING_OBJECT (dbin, "Couldn't set %s to PAUSED",
           GST_ELEMENT_NAME (element));
 
+      remove_error_filter (dbin, element);
+
       /* Remove all elements in this chain that were just added. No
        * other thread could've added elements in the meantime */
       CHAIN_MUTEX_LOCK (chain);
@@ -2284,6 +2286,10 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
       continue;
     }
+
+    /* Remove error filter now, from now on we can't gracefully
+     * handle errors of the element anymore */
+    remove_error_filter (dbin, element);
 
     /* Now let the bin handle the state */
     gst_element_set_locked_state (element, FALSE);
