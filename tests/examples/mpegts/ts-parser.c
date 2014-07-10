@@ -507,6 +507,23 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
 
         break;
       }
+      case GST_MTS_DESC_CA:
+      {
+        guint16 ca_pid, ca_system_id;
+        const guint8 *private_data;
+        gsize private_data_size;
+        if (gst_mpegts_descriptor_parse_ca (desc, &ca_system_id, &ca_pid,
+                &private_data, &private_data_size)) {
+          g_printf ("%*s   CA system id : 0x%04x\n", spacing, "", ca_system_id);
+          g_printf ("%*s   CA PID       : 0x%04x\n", spacing, "", ca_pid);
+          if (private_data_size) {
+            g_printf ("%*s   Private Data :\n", spacing, "");
+            dump_memory_bytes ((guint8 *) private_data, private_data_size,
+                spacing + 2);
+          }
+        }
+        break;
+      }
       case GST_MTS_DESC_DVB_NETWORK_NAME:
       {
         gchar *network_name;
@@ -1084,6 +1101,17 @@ dump_vct (GstMpegtsSection * section)
 }
 
 static void
+dump_cat (GstMpegtsSection * section)
+{
+  GPtrArray *descriptors;
+
+  descriptors = gst_mpegts_section_get_cat (section);
+  g_assert (descriptors);
+  dump_descriptors (descriptors, 7);
+  g_ptr_array_unref (descriptors);
+}
+
+static void
 dump_section (GstMpegtsSection * section)
 {
   switch (GST_MPEGTS_SECTION_TYPE (section)) {
@@ -1092,6 +1120,9 @@ dump_section (GstMpegtsSection * section)
       break;
     case GST_MPEGTS_SECTION_PMT:
       dump_pmt (section);
+      break;
+    case GST_MPEGTS_SECTION_CAT:
+      dump_cat (section);
       break;
     case GST_MPEGTS_SECTION_TDT:
       dump_tdt (section);
