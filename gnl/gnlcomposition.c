@@ -1473,6 +1473,26 @@ update_operations_base_time (GnlComposition * comp, gboolean reverse)
       (GNodeTraverseFunc) update_base_time, &timestamp);
 }
 
+
+static gboolean
+_seek_current_stack (GnlComposition * comp, GstEvent * event)
+{
+  gboolean res;
+  GnlCompositionPrivate *priv = comp->priv;
+  GstPad *peer = gst_pad_get_peer (GNL_OBJECT_SRC (comp));
+
+  GST_INFO_OBJECT (comp, "Seeking itself %" GST_PTR_FORMAT, event);
+
+  priv->seeking_itself = TRUE;
+  res = gst_pad_push_event (peer, event);
+  priv->seeking_itself = FALSE;
+  gst_object_unref (peer);
+
+  GST_DEBUG_OBJECT (comp, "Done seeking");
+
+  return res;
+}
+
 /*
   Figures out if pipeline needs updating.
   Updates it and sends the seek event.
@@ -2966,18 +2986,10 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   }
 
   /* Activate stack */
-  if (!samestack) {
+  if (!samestack)
     return _activate_new_stack (comp);
-  } else {
-    gboolean res;
-    GstPad *peer = gst_pad_get_peer (GNL_OBJECT_SRC (comp));
-
-    priv->seeking_itself = TRUE;
-    res = gst_pad_push_event (peer, toplevel_seek);
-    priv->seeking_itself = FALSE;
-
-    return res;
-  }
+  else
+    return _seek_current_stack (comp, toplevel_seek);
 }
 
 static gboolean
