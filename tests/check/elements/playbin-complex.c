@@ -413,7 +413,7 @@ static GstStaticPadTemplate cd_sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
         " stream0 = (string)" STREAM_TYPES " ,"
         " stream1 = (string)" STREAM_TYPES)
     );
-static GstStaticPadTemplate cd_src_templ = GST_STATIC_PAD_TEMPLATE ("src_%d",
+static GstStaticPadTemplate cd_src_templ = GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC, GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/x-raw; audio/x-compressed; "
         "video/x-raw; video/x-compressed")
@@ -500,7 +500,7 @@ gst_codec_demuxer_setup_pad (GstCodecDemuxer * demux, GstPad ** pad,
 
       templ =
           gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (demux),
-          "src_%d");
+          "src_%u");
       if (pad == &demux->srcpad0)
         *pad = gst_pad_new_from_template (templ, "src_0");
       else
