@@ -238,8 +238,6 @@ struct _GstAudioDecoderPrivate
   gboolean drained;
   /* subclass currently being forcibly drained */
   gboolean force;
-  /* need to handle changed input caps */
-  gboolean do_caps;
 
   /* input bps estimatation */
   /* global in bytes seen */
@@ -1730,21 +1728,6 @@ gst_audio_decoder_chain_reverse (GstAudioDecoder * dec, GstBuffer * buf)
   return result;
 }
 
-static gboolean
-gst_audio_decoder_do_caps (GstAudioDecoder * dec)
-{
-  GstCaps *caps = gst_pad_get_current_caps (dec->sinkpad);
-  if (caps) {
-    if (!gst_audio_decoder_sink_setcaps (dec, caps)) {
-      gst_caps_unref (caps);
-      return FALSE;
-    }
-    gst_caps_unref (caps);
-  }
-  dec->priv->do_caps = FALSE;
-  return TRUE;
-}
-
 static GstFlowReturn
 gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
@@ -1752,12 +1735,6 @@ gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstFlowReturn ret;
 
   dec = GST_AUDIO_DECODER (parent);
-
-  if (G_UNLIKELY (dec->priv->do_caps)) {
-    if (!gst_audio_decoder_do_caps (dec)) {
-      goto not_negotiated;
-    }
-  }
 
   if (G_UNLIKELY (!gst_pad_has_current_caps (pad) && dec->priv->needs_format))
     goto not_negotiated;
@@ -1930,13 +1907,6 @@ gst_audio_decoder_handle_gap (GstAudioDecoder * dec, GstEvent * event)
   gboolean ret;
   GstClockTime timestamp, duration;
 
-  /* Check if there is a caps pending to be pushed */
-  if (G_UNLIKELY (dec->priv->do_caps)) {
-    if (!gst_audio_decoder_do_caps (dec)) {
-      goto not_negotiated;
-    }
-  }
-
   /* Ensure we have caps first */
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
   if (!GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info)) {
@@ -1985,14 +1955,6 @@ gst_audio_decoder_handle_gap (GstAudioDecoder * dec, GstEvent * event)
     }
   }
   return ret;
-
-  /* ERRORS */
-not_negotiated:
-  {
-    GST_ELEMENT_ERROR (dec, CORE, NEGOTIATION, (NULL),
-        ("decoder not initialized"));
-    return FALSE;
-  }
 }
 
 static GList *
@@ -2135,8 +2097,10 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
 
     case GST_EVENT_CAPS:
     {
-      ret = TRUE;
-      dec->priv->do_caps = TRUE;
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_audio_decoder_sink_setcaps (dec, caps);
       gst_event_unref (event);
       break;
     }
