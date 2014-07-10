@@ -124,8 +124,9 @@ struct _GstRTSPStreamPrivate
   /* transports we stream to */
   guint n_active;
   GList *transports;
-  gboolean tr_changed;
+  guint transports_cookie;
   GList *tr_cache;
+  guint tr_cache_cookie;
 
   gint dscp_qos;
 
@@ -1503,13 +1504,13 @@ handle_new_sample (GstAppSink * sink, gpointer user_data)
   is_rtp = GST_ELEMENT_CAST (sink) == priv->appsink[0];
 
   g_mutex_lock (&priv->lock);
-  if (priv->tr_changed) {
+  if (priv->tr_cache_cookie != priv->transports_cookie) {
     clear_tr_cache (priv);
     for (walk = priv->transports; walk; walk = g_list_next (walk)) {
       GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
       priv->tr_cache = g_list_prepend (priv->tr_cache, g_object_ref (tr));
     }
-    priv->tr_changed = FALSE;
+    priv->tr_cache_cookie = priv->transports_cookie;
   }
   g_mutex_unlock (&priv->lock);
 
@@ -2268,7 +2269,7 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         g_signal_emit_by_name (priv->udpsink[1], "remove", dest, max, NULL);
         priv->transports = g_list_remove (priv->transports, trans);
       }
-      priv->tr_changed = TRUE;
+      priv->transports_cookie++;
       break;
     }
     case GST_RTSP_LOWER_TRANS_TCP:
@@ -2279,7 +2280,7 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         GST_INFO ("removing TCP %s", tr->destination);
         priv->transports = g_list_remove (priv->transports, trans);
       }
-      priv->tr_changed = TRUE;
+      priv->transports_cookie++;
       break;
     default:
       goto unknown_transport;
@@ -2497,24 +2498,42 @@ gst_rtsp_stream_transport_filter (GstRTSPStream * stream,
 {
   GstRTSPStreamPrivate *priv;
   GList *result, *walk, *next;
+  GHashTable *visited;
+  guint cookie;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
 
   priv = stream->priv;
 
   result = NULL;
+  if (func)
+    visited = g_hash_table_new_full (NULL, NULL, g_object_unref, NULL);
 
   g_mutex_lock (&priv->lock);
+restart:
+  cookie = priv->transports_cookie;
   for (walk = priv->transports; walk; walk = next) {
     GstRTSPStreamTransport *trans = walk->data;
     GstRTSPFilterResult res;
+    gboolean changed;
 
     next = g_list_next (walk);
 
-    if (func)
+    if (func) {
+      /* only visit each transport once */
+      if (g_hash_table_contains (visited, trans))
+        continue;
+
+      g_hash_table_add (visited, g_object_ref (trans));
+      g_mutex_unlock (&priv->lock);
+
       res = func (stream, trans, user_data);
-    else
+
+      g_mutex_lock (&priv->lock);
+    } else
       res = GST_RTSP_FILTER_REF;
+
+    changed = (cookie != priv->transports_cookie);
 
     switch (res) {
       case GST_RTSP_FILTER_REMOVE:
@@ -2527,8 +2546,13 @@ gst_rtsp_stream_transport_filter (GstRTSPStream * stream,
       default:
         break;
     }
+    if (changed)
+      goto restart;
   }
   g_mutex_unlock (&priv->lock);
+
+  if (func)
+    g_hash_table_unref (visited);
 
   return result;
 }

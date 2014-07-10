@@ -50,6 +50,7 @@ struct _GstRTSPSessionPoolPrivate
   GMutex lock;                  /* protects everything in this struct */
   guint max_sessions;
   GHashTable *sessions;
+  guint sessions_cookie;
 };
 
 #define DEFAULT_MAX_SESSIONS 0
@@ -394,6 +395,7 @@ gst_rtsp_session_pool_create (GstRTSPSessionPool * pool)
       g_object_ref (result);
       g_hash_table_insert (priv->sessions,
           (gchar *) gst_rtsp_session_get_sessionid (result), result);
+      priv->sessions_cookie++;
     }
     g_mutex_unlock (&priv->lock);
 
@@ -455,6 +457,7 @@ gst_rtsp_session_pool_remove (GstRTSPSessionPool * pool, GstRTSPSession * sess)
       g_hash_table_remove (priv->sessions,
       gst_rtsp_session_get_sessionid (sess));
   if (found) {
+    priv->sessions_cookie++;
     g_signal_emit (pool, gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED],
         0, sess);
   }
@@ -511,42 +514,11 @@ gst_rtsp_session_pool_cleanup (GstRTSPSessionPool * pool)
   result =
       g_hash_table_foreach_remove (priv->sessions, (GHRFunc) cleanup_func,
       &data);
+  if (result > 0)
+    priv->sessions_cookie++;
   g_mutex_unlock (&priv->lock);
 
   return result;
-}
-
-typedef struct
-{
-  GstRTSPSessionPool *pool;
-  GstRTSPSessionPoolFilterFunc func;
-  gpointer user_data;
-  GList *list;
-} FilterData;
-
-static gboolean
-filter_func (gchar * sessionid, GstRTSPSession * sess, FilterData * data)
-{
-  GstRTSPFilterResult res;
-
-  if (data->func)
-    res = data->func (data->pool, sess, data->user_data);
-  else
-    res = GST_RTSP_FILTER_REF;
-
-  switch (res) {
-    case GST_RTSP_FILTER_REMOVE:
-      g_signal_emit (data->pool,
-          gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED], 0, sess);
-      return TRUE;
-    case GST_RTSP_FILTER_REF:
-      /* keep ref */
-      data->list = g_list_prepend (data->list, g_object_ref (sess));
-      /* fallthrough */
-    default:
-    case GST_RTSP_FILTER_KEEP:
-      return FALSE;
-  }
 }
 
 /**
@@ -580,22 +552,73 @@ gst_rtsp_session_pool_filter (GstRTSPSessionPool * pool,
     GstRTSPSessionPoolFilterFunc func, gpointer user_data)
 {
   GstRTSPSessionPoolPrivate *priv;
-  FilterData data;
+  GHashTableIter iter;
+  gpointer key, value;
+  GList *result;
+  GHashTable *visited;
+  guint cookie;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION_POOL (pool), NULL);
 
   priv = pool->priv;
 
-  data.pool = pool;
-  data.func = func;
-  data.user_data = user_data;
-  data.list = NULL;
+  result = NULL;
+  if (func)
+    visited = g_hash_table_new_full (NULL, NULL, g_object_unref, NULL);
 
   g_mutex_lock (&priv->lock);
-  g_hash_table_foreach_remove (priv->sessions, (GHRFunc) filter_func, &data);
+restart:
+  g_hash_table_iter_init (&iter, priv->sessions);
+  cookie = priv->sessions_cookie;
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    GstRTSPSession *session = value;
+    GstRTSPFilterResult res;
+    gboolean changed;
+
+    if (func) {
+      /* only visit each session once */
+      if (g_hash_table_contains (visited, session))
+        continue;
+
+      g_hash_table_add (visited, g_object_ref (session));
+      g_mutex_unlock (&priv->lock);
+
+      res = func (pool, session, user_data);
+
+      g_mutex_lock (&priv->lock);
+    } else
+      res = GST_RTSP_FILTER_REF;
+
+    changed = (cookie != priv->sessions_cookie);
+
+    switch (res) {
+      case GST_RTSP_FILTER_REMOVE:
+        g_signal_emit (pool,
+            gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED], 0, session);
+
+        if (changed)
+          g_hash_table_remove (priv->sessions, key);
+        else
+          g_hash_table_iter_remove (&iter);
+        cookie = ++priv->sessions_cookie;
+        break;
+      case GST_RTSP_FILTER_REF:
+        /* keep ref */
+        result = g_list_prepend (result, g_object_ref (session));
+        break;
+      case GST_RTSP_FILTER_KEEP:
+      default:
+        break;
+    }
+    if (changed)
+      goto restart;
+  }
   g_mutex_unlock (&priv->lock);
 
-  return data.list;
+  if (func)
+    g_hash_table_unref (visited);
+
+  return result;
 }
 
 typedef struct

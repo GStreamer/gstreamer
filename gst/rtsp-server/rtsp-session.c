@@ -62,6 +62,7 @@ struct _GstRTSPSessionPrivate
   gint expire_count;
 
   GList *medias;
+  guint medias_cookie;
 };
 
 #undef DEBUG
@@ -238,6 +239,7 @@ gst_rtsp_session_manage_media (GstRTSPSession * sess, const gchar * path,
 
   g_mutex_lock (&priv->lock);
   priv->medias = g_list_prepend (priv->medias, result);
+  priv->medias_cookie++;
   g_mutex_unlock (&priv->lock);
 
   GST_INFO ("manage new media %p in session %p", media, result);
@@ -269,8 +271,10 @@ gst_rtsp_session_release_media (GstRTSPSession * sess,
 
   g_mutex_lock (&priv->lock);
   find = g_list_find (priv->medias, media);
-  if (find)
+  if (find) {
     priv->medias = g_list_delete_link (priv->medias, find);
+    priv->medias_cookie++;
+  }
   more = (priv->medias != NULL);
   g_mutex_unlock (&priv->lock);
 
@@ -359,29 +363,51 @@ gst_rtsp_session_filter (GstRTSPSession * sess,
 {
   GstRTSPSessionPrivate *priv;
   GList *result, *walk, *next;
+  GHashTable *visited;
+  guint cookie;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
 
   priv = sess->priv;
 
   result = NULL;
+  if (func)
+    visited = g_hash_table_new_full (NULL, NULL, g_object_unref, NULL);
 
   g_mutex_lock (&priv->lock);
+restart:
+  cookie = priv->medias_cookie;
   for (walk = priv->medias; walk; walk = next) {
     GstRTSPSessionMedia *media = walk->data;
     GstRTSPFilterResult res;
+    gboolean changed;
 
     next = g_list_next (walk);
 
-    if (func)
+    if (func) {
+      /* only visit each media once */
+      if (g_hash_table_contains (visited, media))
+        continue;
+
+      g_hash_table_add (visited, g_object_ref (media));
+      g_mutex_unlock (&priv->lock);
+
       res = func (sess, media, user_data);
-    else
+
+      g_mutex_lock (&priv->lock);
+    } else
       res = GST_RTSP_FILTER_REF;
+
+    changed = (cookie != priv->medias_cookie);
 
     switch (res) {
       case GST_RTSP_FILTER_REMOVE:
+        if (changed)
+          priv->medias = g_list_remove (priv->medias, media);
+        else
+          priv->medias = g_list_delete_link (priv->medias, walk);
+        cookie = ++priv->medias_cookie;
         g_object_unref (media);
-        priv->medias = g_list_delete_link (priv->medias, walk);
         break;
       case GST_RTSP_FILTER_REF:
         result = g_list_prepend (result, g_object_ref (media));
@@ -390,8 +416,13 @@ gst_rtsp_session_filter (GstRTSPSession * sess,
       default:
         break;
     }
+    if (changed)
+      goto restart;
   }
   g_mutex_unlock (&priv->lock);
+
+  if (func)
+    g_hash_table_unref (visited);
 
   return result;
 }

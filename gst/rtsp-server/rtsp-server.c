@@ -90,6 +90,7 @@ struct _GstRTSPServerPrivate
 
   /* the clients that are connected */
   GList *clients;
+  guint clients_cookie;
 };
 
 #define DEFAULT_ADDRESS         "0.0.0.0"
@@ -999,6 +1000,7 @@ unmanage_client (GstRTSPClient * client, ClientContext * ctx)
 
   GST_RTSP_SERVER_LOCK (server);
   priv->clients = g_list_remove (priv->clients, ctx);
+  priv->clients_cookie++;
   GST_RTSP_SERVER_UNLOCK (server);
 
   if (ctx->thread) {
@@ -1050,6 +1052,7 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
 
   g_signal_connect (client, "closed", (GCallback) unmanage_client, cctx);
   priv->clients = g_list_prepend (priv->clients, cctx);
+  priv->clients_cookie++;
 
   gst_rtsp_client_attach (client, mainctx);
 
@@ -1361,38 +1364,62 @@ gst_rtsp_server_client_filter (GstRTSPServer * server,
 {
   GstRTSPServerPrivate *priv;
   GList *result, *walk, *next;
+  GHashTable *visited;
+  guint cookie;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
   priv = server->priv;
 
   result = NULL;
+  if (func)
+    visited = g_hash_table_new_full (NULL, NULL, g_object_unref, NULL);
 
   GST_RTSP_SERVER_LOCK (server);
+restart:
+  cookie = priv->clients_cookie;
   for (walk = priv->clients; walk; walk = next) {
     ClientContext *cctx = walk->data;
+    GstRTSPClient *client = cctx->client;
     GstRTSPFilterResult res;
+    gboolean changed;
 
     next = g_list_next (walk);
 
-    if (func)
-      res = func (server, cctx->client, user_data);
-    else
+    if (func) {
+      /* only visit each media once */
+      if (g_hash_table_contains (visited, client))
+        continue;
+
+      g_hash_table_add (visited, g_object_ref (client));
+      GST_RTSP_SERVER_UNLOCK (server);
+
+      res = func (server, client, user_data);
+
+      GST_RTSP_SERVER_LOCK (server);
+    } else
       res = GST_RTSP_FILTER_REF;
+
+    changed = (cookie != priv->clients_cookie);
 
     switch (res) {
       case GST_RTSP_FILTER_REMOVE:
         /* remove client, FIXME */
         break;
       case GST_RTSP_FILTER_REF:
-        result = g_list_prepend (result, g_object_ref (cctx->client));
+        result = g_list_prepend (result, g_object_ref (client));
         break;
       case GST_RTSP_FILTER_KEEP:
       default:
         break;
     }
+    if (changed)
+      goto restart;
   }
   GST_RTSP_SERVER_UNLOCK (server);
+
+  if (func)
+    g_hash_table_unref (visited);
 
   return result;
 }

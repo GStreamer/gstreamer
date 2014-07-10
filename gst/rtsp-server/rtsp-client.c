@@ -83,6 +83,7 @@ struct _GstRTSPClientPrivate
 
   GList *transports;
   GList *sessions;
+  guint sessions_cookie;
 
   gboolean drop_backlog;
 };
@@ -305,6 +306,7 @@ client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
     GST_INFO ("watching session %p", session);
 
     priv->sessions = g_list_prepend (priv->sessions, g_object_ref (session));
+    priv->sessions_cookie++;
 
     /* connect removed session handler, it will be disconnected when the last
      * session gets removed  */
@@ -334,12 +336,12 @@ client_unwatch_session (GstRTSPClient * client, GstRTSPSession * session,
   }
 
   priv->sessions = g_list_delete_link (priv->sessions, link);
+  priv->sessions_cookie++;
 
   /* if this was the last session, disconnect the handler.
    * This will also drop the extra client ref */
   if (!priv->sessions) {
-    g_signal_handler_disconnect (priv->session_pool,
-        priv->session_removed_id);
+    g_signal_handler_disconnect (priv->session_pool, priv->session_removed_id);
     priv->session_removed_id = 0;
   }
 
@@ -3455,29 +3457,50 @@ gst_rtsp_client_session_filter (GstRTSPClient * client,
 {
   GstRTSPClientPrivate *priv;
   GList *result, *walk, *next;
+  GHashTable *visited;
+  guint cookie;
 
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
 
   priv = client->priv;
 
   result = NULL;
+  if (func)
+    visited = g_hash_table_new_full (NULL, NULL, g_object_unref, NULL);
 
   g_mutex_lock (&priv->lock);
+restart:
+  cookie = priv->sessions_cookie;
   for (walk = priv->sessions; walk; walk = next) {
     GstRTSPSession *sess = walk->data;
     GstRTSPFilterResult res;
+    gboolean changed;
 
     next = g_list_next (walk);
 
-    if (func)
+    if (func) {
+      /* only visit each session once */
+      if (g_hash_table_contains (visited, sess))
+        continue;
+
+      g_hash_table_add (visited, g_object_ref (sess));
+      g_mutex_unlock (&priv->lock);
+
       res = func (client, sess, user_data);
-    else
+
+      g_mutex_lock (&priv->lock);
+    } else
       res = GST_RTSP_FILTER_REF;
+
+    changed = (cookie != priv->sessions_cookie);
 
     switch (res) {
       case GST_RTSP_FILTER_REMOVE:
-        /* stop watching the session and pretent it went away */
-        client_unwatch_session (client, sess, walk);
+        /* stop watching the session and pretend it went away, if the list was
+         * changed, we can't use the current list position, try to see if we
+         * still have the session */
+        client_unwatch_session (client, sess, changed ? NULL : walk);
+        cookie = priv->sessions_cookie;
         break;
       case GST_RTSP_FILTER_REF:
         result = g_list_prepend (result, g_object_ref (sess));
@@ -3486,8 +3509,13 @@ gst_rtsp_client_session_filter (GstRTSPClient * client,
       default:
         break;
     }
+    if (changed)
+      goto restart;
   }
   g_mutex_unlock (&priv->lock);
+
+  if (func)
+    g_hash_table_unref (visited);
 
   return result;
 }
