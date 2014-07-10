@@ -1131,6 +1131,7 @@ gnl_composition_reset (GnlComposition * comp)
   priv->reset_time = FALSE;
   priv->initialized = FALSE;
   priv->send_stream_start = TRUE;
+  priv->real_eos_seqnum = 0;
 
   _empty_bin (GST_BIN_CAST (priv->current_bin));
 
