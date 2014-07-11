@@ -329,24 +329,19 @@ gst_wrapper_camera_src_src_event_probe (GstPad * pad, GstPadProbeInfo * info,
 }
 
 static void
-gst_wrapper_camera_bin_src_caps_cb (GObject * gobject, GParamSpec * pspec,
+gst_wrapper_camera_bin_src_caps_cb (GstPad * pad, GParamSpec * pspec,
     gpointer user_data)
 {
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (user_data);
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (user_data);
-  GstPad *src_caps_src_pad;
-  GstCaps *caps = NULL;
+  GstCaps *caps;
   GstStructure *in_st = NULL;
 
-  /* get the new caps that were set on the capsfilter that configures the
-   * source */
-  src_caps_src_pad = gst_element_get_static_pad (self->src_filter, "src");
-  caps = gst_pad_query_caps (src_caps_src_pad, NULL);
-  gst_object_unref (src_caps_src_pad);
-  GST_DEBUG_OBJECT (self, "src-filter caps changed to %s",
-      gst_caps_to_string (caps));
+  caps = gst_pad_get_current_caps (pad);
 
-  if (gst_caps_get_size (caps)) {
+  GST_DEBUG_OBJECT (self, "src-filter caps changed to %" GST_PTR_FORMAT, caps);
+
+  if (caps && gst_caps_get_size (caps)) {
     in_st = gst_caps_get_structure (caps, 0);
     if (in_st) {
       gst_structure_get_int (in_st, "width", &bcamsrc->width);
@@ -365,13 +360,17 @@ gst_wrapper_camera_bin_src_caps_cb (GObject * gobject, GParamSpec * pspec,
     GstCaps *filtercaps;
 
     g_object_get (G_OBJECT (self->src_zoom_filter), "caps", &filtercaps, NULL);
-    if (!gst_caps_is_equal (filtercaps, caps))
+
+    if (caps != filtercaps && (caps == NULL || filtercaps == NULL ||
+            !gst_caps_is_equal (filtercaps, caps)))
       g_object_set (G_OBJECT (self->src_zoom_filter), "caps", caps, NULL);
-    gst_caps_unref (filtercaps);
+
+    if (filtercaps)
+      gst_caps_unref (filtercaps);
   }
 
-  /* drop our ref on the caps */
-  gst_caps_unref (caps);
+  if (caps)
+    gst_caps_unref (caps);
 };
 
 static void
