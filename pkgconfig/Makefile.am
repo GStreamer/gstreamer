@@ -4,15 +4,13 @@ pcverfiles =  \
 	gstreamer-plugins-bad-@GST_API_VERSION@.pc \
 	gstreamer-codecparsers-@GST_API_VERSION@.pc \
 	gstreamer-insertbin-@GST_API_VERSION@.pc \
-	gstreamer-mpegts-@GST_API_VERSION@.pc \
-	gstreamer-wayland-@GST_API_VERSION@.pc
+	gstreamer-mpegts-@GST_API_VERSION@.pc
 
 pcverfiles_uninstalled = \
 	gstreamer-plugins-bad-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-codecparsers-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-insertbin-@GST_API_VERSION@-uninstalled.pc \
-	gstreamer-mpegts-@GST_API_VERSION@-uninstalled.pc \
-	gstreamer-wayland-@GST_API_VERSION@-uninstalled.pc
+	gstreamer-mpegts-@GST_API_VERSION@-uninstalled.pc
 
 if HAVE_GST_GL
 pcverfiles += gstreamer-gl-@GST_API_VERSION@.pc
@@ -40,8 +38,7 @@ pcinfiles = \
            gstreamer-codecparsers.pc.in gstreamer-codecparsers-uninstalled.pc.in \
            gstreamer-gl.pc.in gstreamer-gl-uninstalled.pc.in \
            gstreamer-insertbin.pc.in gstreamer-insertbin-uninstalled.pc.in \
-           gstreamer-mpegts.pc.in gstreamer-mpegts-uninstalled.pc.in \
-           gstreamer-wayland.pc.in gstreamer-wayland-uninstalled.pc.in
+           gstreamer-mpegts.pc.in gstreamer-mpegts-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)
 EXTRA_DIST = $(pcinfiles)
