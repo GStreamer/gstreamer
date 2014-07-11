@@ -1,4 +1,4 @@
-# German translations for gst-plugins-good 1.3.2
+# German translations for gst-plugins-good 1.3.90
 # Copyright (C) 2007 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 #
@@ -8,14 +8,14 @@
 # Pipeline = Weiterleitung
 # Stream = Strom
 # mixer  = Mischer
-# Christian Kirbach <christian.kirbach@gmail.com>, 2010, 2011, 2012, 2013.
+# Christian Kirbach <christian.kirbach@gmail.com>, 2010, 2011, 2012, 2013, 2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.3.2\n"
+"Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-06-28 11:04+0200\n"
-"PO-Revision-Date: 2014-05-22 17:31+0100\n"
+"POT-Creation-Date: 2014-07-11 08:52+0200\n"
+"PO-Revision-Date: 2014-06-29 21:20+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -319,33 +319,32 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Ändern des Stummzustands von Gerät »%s« schlug fehl."
 
 msgid "Failed to allocated required memory."
-msgstr ""
+msgstr "Anfordern des benötigen Arbeitsspeichers schlug fehl."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported input format"
-msgstr "Das Video-Gerät verwendet ein nicht unterstütztes Pixelformat."
+msgstr "Der Umwandler auf Gerät %s hat kein unterstütztes Eingabeformat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "Das Video-Gerät verwendet ein nicht unterstütztes Pixelformat."
+msgstr "Der Umwandler auf Gerät %s hat kein unterstütztes Ausgabeformat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "Das Video-Gerät verwendet ein nicht unterstütztes Pixelformat."
+msgstr "Der Kodierer auf Gerät %s hat kein unterstütztes Eingabeformat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "Das Video-Gerät verwendet ein nicht unterstütztes Pixelformat."
+msgstr "Der Kodierer auf Gerät %s hat kein unterstütztes Ausgabeformat"
 
 msgid "Failed to allocate required memory."
-msgstr ""
+msgstr "Anfordern des benötigen Arbeitsspeichers schlug fehl."
 
-#, fuzzy
 msgid "Failed to start decoding thread."
-msgstr "Dekodieren des JPEG-Bildes schlug fehl"
+msgstr "Beginn der Dekodierung des JPEG-Bildes schlug fehl"
 
 msgid "Failed to process frame."
-msgstr ""
+msgstr "Verarbeiten des Einzelbilds schlug fehl."
 
 #, c-format
 msgid ""
