@@ -337,7 +337,6 @@ struct _GstVideoDecoderPrivate
   gboolean had_input_data;
 
   gboolean needs_format;
-  gboolean do_caps;
 
   /* ... being tracked here;
    * only available during parsing */
@@ -1053,8 +1052,10 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     }
     case GST_EVENT_CAPS:
     {
-      ret = TRUE;
-      decoder->priv->do_caps = TRUE;
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_video_decoder_setcaps (decoder, caps);
       gst_event_unref (event);
       event = NULL;
       break;
@@ -2125,18 +2126,6 @@ gst_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
 
   decoder = GST_VIDEO_DECODER (parent);
-
-  if (G_UNLIKELY (decoder->priv->do_caps)) {
-    GstCaps *caps = gst_pad_get_current_caps (decoder->sinkpad);
-    if (caps) {
-      if (!gst_video_decoder_setcaps (decoder, caps)) {
-        gst_caps_unref (caps);
-        goto not_negotiated;
-      }
-      gst_caps_unref (caps);
-    }
-    decoder->priv->do_caps = FALSE;
-  }
 
   if (G_UNLIKELY (!decoder->priv->input_state && decoder->priv->needs_format))
     goto not_negotiated;
