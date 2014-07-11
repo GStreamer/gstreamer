@@ -74,6 +74,18 @@ enum
   LAST_SIGNAL
 };
 
+typedef enum
+{
+  COMP_UPDATE_STACK_INITIALIZE,
+  COMP_UPDATE_STACK_ON_COMMIT,
+  COMP_UPDATE_STACK_ON_EOS,
+  COMP_UPDATE_STACK_ON_SEEK
+} GnlUpdateStackReason;
+
+static const char *UPDATE_PIPELINE_REASONS[] = {
+  "Initialize", "Commit", "EOS", "Seek"
+};
+
 typedef struct _GnlCompositionEntry GnlCompositionEntry;
 
 typedef struct
@@ -212,14 +224,13 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition);
 static inline void gnl_composition_reset_target_pad (GnlComposition * comp);
 
 static gboolean
-seek_handling (GnlComposition * comp, gboolean initial, gboolean update,
-    gboolean flush_downstream);
+seek_handling (GnlComposition * comp, GnlUpdateStackReason update_stack_reason);
 static gint objects_start_compare (GnlObject * a, GnlObject * b);
 static gint objects_stop_compare (GnlObject * a, GnlObject * b);
 static GstClockTime get_current_position (GnlComposition * comp);
 
 static gboolean update_pipeline (GnlComposition * comp,
-    GstClockTime currenttime, gboolean initial, gboolean modify);
+    GstClockTime currenttime, GnlUpdateStackReason update_stack_reason);
 static gboolean gnl_composition_commit_func (GnlObject * object,
     gboolean recurse);
 static void update_start_stop_duration (GnlComposition * comp);
@@ -243,11 +254,10 @@ static gboolean
 _gnl_composition_remove_entry (GnlComposition * comp, GnlObject * object);
 static void _deactivate_stack (GnlComposition * comp,
     gboolean flush_downstream);
-static GstPadProbeReturn _add_emit_commited_and_restart_task (GnlComposition *
-    comp);
 static gboolean _set_real_eos_seqnum_from_seek (GnlComposition * comp,
     GstEvent * event);
 static gboolean _emit_commited_signal_func (GnlComposition * comp);
+static void _restart_task (GnlComposition * comp, gboolean emit_commit);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -481,7 +491,7 @@ _seek_pipeline_func (SeekData * seekd)
   priv->next_base_time = 0;
 
   priv->reset_time = TRUE;
-  seek_handling (seekd->comp, TRUE, FALSE, TRUE);
+  seek_handling (seekd->comp, COMP_UPDATE_STACK_ON_SEEK);
   priv->reset_time = FALSE;
 
 beach:
@@ -529,7 +539,8 @@ _initialize_stack_func (GnlComposition * comp)
 
   /* set ghostpad target */
   COMP_OBJECTS_LOCK (comp);
-  if (!(update_pipeline (comp, COMP_REAL_START (comp), TRUE, FALSE))) {
+  if (!(update_pipeline (comp, COMP_REAL_START (comp),
+              COMP_UPDATE_STACK_INITIALIZE))) {
     COMP_OBJECTS_UNLOCK (comp);
     GST_FIXME_OBJECT (comp, "PLEASE signal state change failure ASYNC");
 
@@ -1326,9 +1337,13 @@ priority_comp (GnlObject * a, GnlObject * b)
 }
 
 static inline gboolean
-have_to_update_pipeline (GnlComposition * comp)
+have_to_update_pipeline (GnlComposition * comp,
+    GnlUpdateStackReason update_stack_reason)
 {
   GnlCompositionPrivate *priv = comp->priv;
+
+  if (update_stack_reason == COMP_UPDATE_STACK_ON_EOS)
+    return TRUE;
 
   GST_DEBUG_OBJECT (comp,
       "segment[%" GST_TIME_FORMAT "--%" GST_TIME_FORMAT "] current[%"
@@ -1526,10 +1541,10 @@ _seek_current_stack (GnlComposition * comp, GstEvent * event)
 */
 
 static gboolean
-seek_handling (GnlComposition * comp, gboolean initial, gboolean update,
-    gboolean flush_downstream)
+seek_handling (GnlComposition * comp, GnlUpdateStackReason update_stack_reason)
 {
-  GST_DEBUG_OBJECT (comp, "initial:%d, update:%d", initial, update);
+  GST_DEBUG_OBJECT (comp, "Seek hnalding update pipeline reason: %s",
+      UPDATE_PIPELINE_REASONS[update_stack_reason]);
 
   COMP_FLUSHING_LOCK (comp);
   GST_DEBUG_OBJECT (comp, "Setting flushing to TRUE");
@@ -1537,13 +1552,11 @@ seek_handling (GnlComposition * comp, gboolean initial, gboolean update,
   COMP_FLUSHING_UNLOCK (comp);
 
   COMP_OBJECTS_LOCK (comp);
-  if (update || have_to_update_pipeline (comp)) {
+  if (have_to_update_pipeline (comp, update_stack_reason)) {
     if (comp->priv->segment->rate >= 0.0)
-      update_pipeline (comp, comp->priv->segment->start, initial,
-          flush_downstream);
+      update_pipeline (comp, comp->priv->segment->start, update_stack_reason);
     else
-      update_pipeline (comp, comp->priv->segment->stop, initial,
-          flush_downstream);
+      update_pipeline (comp, comp->priv->segment->stop, update_stack_reason);
   } else {
     GstEvent *toplevel_seek = get_new_seek_event (comp, FALSE, FALSE);
 
@@ -2283,7 +2296,7 @@ _commit_func (GnlComposition * comp)
     /* And update the pipeline at current position if needed */
 
     update_start_stop_duration (comp);
-    update_pipeline (comp, curpos, TRUE, TRUE);
+    update_pipeline (comp, curpos, COMP_UPDATE_STACK_ON_COMMIT);
 
     if (!priv->current) {
       COMP_OBJECTS_UNLOCK (comp);
@@ -2321,7 +2334,7 @@ update_pipeline_func (GnlComposition * comp)
     priv->segment->stop = priv->segment_start;
   }
 
-  seek_handling (comp, TRUE, TRUE, FALSE);
+  seek_handling (comp, COMP_UPDATE_STACK_ON_EOS);
 
   /* Post segment done if last seek was a segment seek */
   if (!priv->current && (priv->segment->flags & GST_SEEK_FLAG_SEGMENT)) {
@@ -2887,13 +2900,21 @@ _set_real_eos_seqnum_from_seek (GnlComposition * comp, GstEvent * event)
   return TRUE;
 }
 
+static gboolean
+_flush_downstream (GnlUpdateStackReason update_reason)
+{
+  if (update_reason == COMP_UPDATE_STACK_ON_COMMIT ||
+      update_reason == COMP_UPDATE_STACK_ON_SEEK)
+    return TRUE;
+
+  return FALSE;
+}
+
 /*
  * update_pipeline:
  * @comp: The #GnlComposition
  * @currenttime: The #GstClockTime to update at, can be GST_CLOCK_TIME_NONE.
- * @initial: TRUE if this is the first setup
- * @change_state: Change the state of the (de)activated objects if TRUE.
- * @modify: Flush downstream if TRUE. Needed for modified timelines.
+ * @update_reason: Reason why we are updating the pipeline
  *
  * Updates the internal pipeline and properties. If @currenttime is
  * GST_CLOCK_TIME_NONE, it will not modify the current pipeline
@@ -2904,7 +2925,7 @@ _set_real_eos_seqnum_from_seek (GnlComposition * comp, GstEvent * event)
  */
 static gboolean
 update_pipeline (GnlComposition * comp, GstClockTime currenttime,
-    gboolean initial, gboolean flush_downstream)
+    GnlUpdateStackReason update_reason)
 {
 
   gint stack_seqnum;
@@ -2925,8 +2946,8 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
   GST_DEBUG_OBJECT (comp,
       "currenttime:%" GST_TIME_FORMAT
-      " initial:%d , flushing downstream:%d", GST_TIME_ARGS (currenttime),
-      initial, flush_downstream);
+      " Reason: %s", GST_TIME_ARGS (currenttime),
+      UPDATE_PIPELINE_REASONS[update_reason]);
 
   if (!GST_CLOCK_TIME_IS_VALID (currenttime))
     return FALSE;
@@ -2980,7 +3001,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
   /* If stacks are different, unlink/relink objects */
   if (!samestack) {
-    _deactivate_stack (comp, flush_downstream);
+    _deactivate_stack (comp, _flush_downstream (update_reason));
     _relink_new_stack (comp, stack, toplevel_seek);
   }
 
@@ -2991,14 +3012,21 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   priv->current = stack;
 
   if (priv->current) {
+    GstPadProbeCallback _stack_setup_done;
+
     GST_INFO_OBJECT (comp, "New stack set and ready to run, probing src pad"
         " and stopping children thread until we are actually ready with"
         " that new stack");
 
+    if (update_reason == COMP_UPDATE_STACK_ON_COMMIT)
+      _stack_setup_done = (GstPadProbeCallback) _commit_done_cb;
+    else
+      _stack_setup_done = (GstPadProbeCallback) _stack_setup_done_cb;
+
     comp->priv->awaited_caps_seqnum = stack_seqnum;
     priv->commited_probeid = gst_pad_add_probe (GNL_OBJECT_SRC (comp),
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-        (GstPadProbeCallback) _commit_done_cb, comp, NULL);
+        (GstPadProbeCallback) _stack_setup_done, comp, NULL);
 
     gst_task_pause (comp->task);
   }
