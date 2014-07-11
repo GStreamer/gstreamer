@@ -2331,7 +2331,7 @@ update_pipeline_func (GnlComposition * comp)
     priv->segment->stop = priv->segment_start;
   }
 
-  seek_handling (comp, TRUE, FALSE);
+  seek_handling (comp, TRUE, TRUE);
 
   /* Post segment done if last seek was a segment seek */
   if (!priv->current && (priv->segment->flags & GST_SEEK_FLAG_SEGMENT)) {
