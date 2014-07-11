@@ -1,9 +1,22 @@
-=== release 1.3.90 ===
+=== release 1.3.91 ===
 
-2014-06-28  Sebastian Dröge <slomo@coaxion.net>
+2014-07-11  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.90
+	  releasing 1.3.91
+
+=== release 1.3.90 ===
+
+2014-06-28 11:44:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.3.90
 
 2014-06-28 09:59:49 +0200  Sebastian Dröge <sebastian@centricular.com>
 
