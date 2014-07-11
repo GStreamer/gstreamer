@@ -828,6 +828,62 @@ _execute_dot_pipeline (GstValidateScenario * scenario,
   return TRUE;
 }
 
+static gboolean
+_object_set_property (GObject * object, const gchar * property,
+    const gchar * value_str)
+{
+  GValue value = { 0 };
+  GObjectClass *klass = G_OBJECT_GET_CLASS (object);
+  GParamSpec *paramspec;
+
+  paramspec = g_object_class_find_property (klass, property);
+  if (paramspec == NULL) {
+    GST_ERROR ("Target doesn't have property %s", property);
+    return FALSE;
+  }
+
+  g_value_init (&value, paramspec->value_type);
+  if (!gst_value_deserialize (&value, value_str)) {
+    GST_ERROR ("Failed to deserialize string '%s' for property: '%s'",
+        value_str, property);
+    g_value_reset (&value);
+    return FALSE;
+  }
+
+  g_object_set_property (object, property, &value);
+
+  g_value_reset (&value);
+
+  return TRUE;
+}
+
+static gboolean
+_execute_set_property (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstElement *target;
+  const gchar *name;
+  const gchar *property;
+  const gchar *property_value;
+  gboolean ret;
+
+  name = gst_structure_get_string (action->structure, "target-element-name");
+  target = gst_bin_get_by_name (GST_BIN (scenario->pipeline), name);
+  if (target == NULL) {
+    GST_ERROR ("Target element with given name (%s) not found", name);
+    return FALSE;
+  }
+
+  property = gst_structure_get_string (action->structure, "property-name");
+  property_value =
+      gst_structure_get_string (action->structure, "property-value");
+
+  ret = _object_set_property (G_OBJECT (target), property, property_value);
+
+  gst_object_unref (target);
+  return ret;
+}
+
 
 static void
 gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
@@ -1662,6 +1718,8 @@ init_scenarios (void)
   const gchar *seek_mandatory_fields[] = { "start", NULL };
   const gchar *wait_mandatory_fields[] = { "duration", NULL };
   const gchar *set_state_mandatory_fields[] = { "state", NULL };
+  const gchar *set_property_mandatory_fields[] =
+      { "target-element-name", "property-name", "property-value", NULL };
 
   GST_DEBUG_CATEGORY_INIT (gst_validate_scenario_debug, "gstvalidatescenario",
       GST_DEBUG_FG_YELLOW, "Gst validate scenarios");
@@ -1701,4 +1759,7 @@ init_scenarios (void)
   gst_validate_add_action_type ("set-state", _execute_set_state,
       set_state_mandatory_fields,
       "Allows to change the state of the pipeline to any GstState", FALSE);
+  gst_validate_add_action_type ("set-property", _execute_set_property,
+      set_property_mandatory_fields,
+      "Allows to set a property of any element in the pipeline", FALSE);
 }
