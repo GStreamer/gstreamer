@@ -1,9 +1,155 @@
-=== release 1.3.90 ===
+=== release 1.3.91 ===
 
-2014-06-28  Sebastian Dröge <slomo@coaxion.net>
+2014-07-11  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.90
+	  releasing 1.3.91
+
+2014-07-10 17:37:45 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	  docs: update docs
+
+2014-07-10 17:10:06 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  server: implement client REMOVE filter
+
+2014-07-10 17:05:13 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: expose _close() method
+	  Expose a previously internal close method to close the client
+	  connection.
+
+2014-07-10 12:20:15 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	  session-pool: signal session-removed outside of the lock
+	  Release the lock before emiting the session-removed signal.
+
+2014-07-10 11:32:20 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  filter: Release lock in filter functions
+	  Release the object lock before calling the filter functions. We need to
+	  keep a cookie to detect when the list changed during the filter
+	  callback. We also keep a hashtable to make sure we only call the filter
+	  function once for each object in case of concurrent modification.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732950
+
+2014-07-09 15:16:08 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: check if watch is set in handle_teardown()
+	  The unit tests run without a watch
+
+2014-07-09 14:19:10 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* tests/check/gst/client.c:
+	  client tests: send teardown to cleanup session
+
+2014-07-09 14:17:46 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* tests/check/gst/rtspserver.c:
+	  server tests: send teardown to cleanup session
+
+2014-07-09 15:01:31 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: keep ref to client for the session removed handler
+	  This extra ref will be dropped when all client sessions have been
+	  removed. A session is removed when a client sends teardown, closes its
+	  endpoint of the TCP connection or the sessions expires.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732226
+
+2014-07-08 12:36:12 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* tests/check/gst/client.c:
+	  client: manage media in session as a last step
+	  Once we manage a media in a session, we can't unmanage it anymore
+	  without destroying it. Therefore, first check everything before we
+	  manage the media, otherwise if something is wrong we have no way to
+	  unmanage the media.
+	  If we created a new session and something went wrong, remove the session
+	  again. Fixes a leak in the unit test.
+
+2014-07-03 19:52:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/test-mp4.c:
+	* examples/test-ogg.c:
+	  examples: print 'stream ready at url' for mp4 and ogg example
+
+2014-07-02 16:04:53 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	  rtsp: fix for MIKEY api change
+
+2014-07-01 16:12:13 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: free watch context only once
+	  The watch context is freed when the source is destroyed. Avoids
+	  a CRITICAL when we try to unref the context twice.
+
+2014-07-01 15:02:15 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: fix build
+
+2014-07-01 14:41:14 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: protect sessions with lock
+	  Protect the list of sessions with the lock.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732226
+
+2014-07-01 12:13:47 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  Client: keep a ref to the session
+	  Don't just keep a weak ref to the session objects but use a hard ref. We
+	  will be notified when a session is removed from the pool (expired) with
+	  the new session-removed signal.
+	  Don't automatically close the RTSP connection when all the sessions of
+	  a client are removed, a client can continue to operate and it can create
+	  a new session if it wants. If you want to remove the client from the
+	  server, you have to use gst_rtsp_server_client_filter() now.
+	  Based on patch from Ognyan Tonchev <ognyan.tonchev at axis.com>
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=732226
+
+2014-06-30 15:14:34 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	  session-pool: add session-removed signal
+	  Add a signal to be notified when a session is removed from the pool.
+
+2014-06-30 00:37:59 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-server.h:
+	  Make rtsp-server.h a single-include header, use it for G-I
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732411
+
+=== release 1.3.90 ===
+
+2014-06-28 11:48:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.3.90
 
 2014-06-27 16:54:22 +0200  Wim Taymans <wtaymans@redhat.com>
 

@@ -1,8 +1,8 @@
 
-Release notes for GStreamer RTSP Server Library 1.3.90
+Release notes for GStreamer RTSP Server Library 1.3.91
 
 
-The GStreamer team is pleased to announce the first release candidate of
+The GStreamer team is pleased to announce the second release candidate of
 the stable 1.4 release series. The 1.4 release series is adding new features
 on top of the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x
 release series of the GStreamer multimedia framework.
@@ -28,8 +28,9 @@ bugfix.
 
 Bugs fixed in this release
      
-      * 730952 : Missing nullability annotations
-      * 730953 : Missing documentation (and annotations) for GstRTSPServer
+      * 732226 : Races when sessions time out
+      * 732411 : rtsp server GIR has wrong C include
+      * 732950 : deadlock after TEARDOWN
 
 ==== Download ====
 
@@ -69,6 +70,7 @@ Applications
 Contributors to this release
     
       * Evan Nemerson
-      * Sebastian Dröge
+      * Ognyan Tonchev
+      * Tim-Philipp Müller
       * Wim Taymans
  
