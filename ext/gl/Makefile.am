@@ -25,9 +25,6 @@ OPENGL_SOURCES =  \
 	gltestsrc.h \
 	gstgltestsrc.c \
 	gstgltestsrc.h \
-	gstglmixer.c \
-	gstglmixer.h \
-	gstglmixerpad.h \
 	gstglmosaic.c \
 	gstglmosaic.h \
 	effects/gstgleffectscurves.h \
@@ -73,6 +70,9 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectsqueeze.c \
 	gstglcolorscale.c \
 	gstglcolorscale.h \
+	gstglmixer.c \
+	gstglmixer.h \
+	gstglmixerpad.h \
 	gstglvideomixer.c \
 	gstglvideomixer.h \
 	gstglfiltershader.c \
