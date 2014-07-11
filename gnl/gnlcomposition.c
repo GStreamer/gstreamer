@@ -179,7 +179,7 @@ struct _GnlCompositionPrivate
    * we are not commited */
   gulong commited_probeid;
   /* 0 means that we already received the right segment */
-  gint awaited_segment_seqnum;
+  gint awaited_caps_seqnum;
 };
 
 static guint _signals[LAST_SIGNAL] = { 0 };
@@ -1235,7 +1235,7 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       GST_INFO_OBJECT (comp, "Got EOS, last EOS seqnum id : %i current "
           "seq num is: %i", comp->priv->real_eos_seqnum, seqnum);
 
-      if (priv->commited_probeid && comp->priv->awaited_segment_seqnum == 0) {
+      if (priv->commited_probeid && comp->priv->awaited_caps_seqnum == 0) {
 
         GST_INFO_OBJECT (comp, "We got an EOS right after seeing the right"
             " segment, restarting task");
@@ -2188,8 +2188,7 @@ _add_emit_commited_and_restart_task (GnlComposition * comp)
   _add_gsource (comp, (GSourceFunc) _emit_commited_signal_func, comp, NULL,
       G_PRIORITY_HIGH);
 
-
-  comp->priv->awaited_segment_seqnum = 0;
+  comp->priv->awaited_caps_seqnum = 0;
   comp->priv->commited_probeid = 0;
 
   gst_task_start (comp->task);
@@ -2205,7 +2204,7 @@ _commit_done_cb (GstPad * pad, GstPadProbeInfo * info, GnlComposition * comp)
     gint seqnum = gst_event_get_seqnum (info->data);
 
 
-    if (comp->priv->awaited_segment_seqnum == seqnum) {
+    if (comp->priv->awaited_caps_seqnum == seqnum) {
       GST_INFO_OBJECT (comp, "Got %s with proper seqnum"
           " done with stack reconfiguration %" GST_PTR_FORMAT,
           GST_EVENT_TYPE_NAME (info->data), info->data);
@@ -2215,8 +2214,8 @@ _commit_done_cb (GstPad * pad, GstPadProbeInfo * info, GnlComposition * comp)
       return _add_emit_commited_and_restart_task (comp);
 
     } else {
-      GST_INFO_OBJECT (comp, "WARNING: Caps seqnum %i != wanted %i",
-          seqnum, comp->priv->awaited_segment_seqnum);
+      GST_ERROR_OBJECT (comp, "WARNING: Caps seqnum %i != wanted %i",
+          seqnum, comp->priv->awaited_caps_seqnum);
     }
   }
 
@@ -2996,7 +2995,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
         " and stopping children thread until we are actually ready with"
         " that new stack");
 
-    comp->priv->awaited_segment_seqnum = stack_seqnum;
+    comp->priv->awaited_caps_seqnum = stack_seqnum;
     priv->commited_probeid = gst_pad_add_probe (GNL_OBJECT_SRC (comp),
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
         (GstPadProbeCallback) _commit_done_cb, comp, NULL);
