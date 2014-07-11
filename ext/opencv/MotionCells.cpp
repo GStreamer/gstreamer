@@ -53,41 +53,7 @@
 #include <errno.h>
 #include <math.h>
 #include <gst/gst.h>
-#ifdef _WIN32
-  #include <winsock.h>
-  #define bzero(p, l) memset(p, 0, l)
-#else
-  #include <arpa/inet.h>
-#endif
 #include "MotionCells.h"
-
-uint64_t ntohl64 (uint64_t val);
-uint64_t htonl64 (uint64_t val);
-
-uint64_t
-ntohl64 (uint64_t val)
-{
-  uint64_t res64;
-  uint32_t low = (uint32_t) (val & 0x00000000FFFFFFFFLL);
-  uint32_t high = (uint32_t) ((val & 0xFFFFFFFF00000000LL) >> 32);
-  low = ntohl (low);
-  high = ntohl (high);
-  res64 = (uint64_t) high + (((uint64_t) low) << 32);
-  return res64;
-}
-
-
-uint64_t
-htonl64 (uint64_t val)
-{
-  uint64_t res64;
-  uint32_t low = (uint32_t) (val & 0x00000000FFFFFFFFLL);
-  uint32_t high = (uint32_t) ((val & 0xFFFFFFFF00000000LL) >> 32);
-  low = htonl (low);
-  high = htonl (high);
-  res64 = (uint64_t) high + (((uint64_t) low) << 32);
-  return res64;
-}
 
 MotionCells::MotionCells ()
 {
@@ -364,20 +330,20 @@ MotionCells::initDataFile (char *p_datafile, gint64 starttime)  //p_date is incr
     }
   } else
     mc_savefile = NULL;
-  bzero (&m_header, sizeof (MotionCellHeader));
-  m_header.headersize = htonl (MC_HEADER);
-  m_header.type = htonl (MC_TYPE);
-  m_header.version = htonl (MC_VERSION);
+  memset (&m_header, 0, sizeof (MotionCellHeader));
+  m_header.headersize = GINT32_TO_BE (MC_HEADER);
+  m_header.type = GINT32_TO_BE (MC_TYPE);
+  m_header.version = GINT32_TO_BE (MC_VERSION);
   //it needs these bytes
   m_header.itemsize =
-      htonl ((int) ceil (ceil (m_gridx * m_gridy / 8.0) / 4.0) * 4 +
+      GINT32_TO_BE ((int) ceil (ceil (m_gridx * m_gridy / 8.0) / 4.0) * 4 +
       sizeof (mcd.timestamp));
-  m_header.gridx = htonl (m_gridx);
-  m_header.gridy = htonl (m_gridy);
-  m_header.starttime = htonl64 (starttime);
+  m_header.gridx = GINT32_TO_BE (m_gridx);
+  m_header.gridy = GINT32_TO_BE (m_gridy);
+  m_header.starttime = GINT64_TO_BE (starttime);
 
   snprintf (m_header.name, sizeof (m_header.name), "%s %dx%d", MC_VERSIONTEXT,
-      ntohl (m_header.gridx), ntohl (m_header.gridy));
+      GINT32_FROM_BE (m_header.gridx), GINT32_FROM_BE (m_header.gridy));
   m_changed_datafile = false;
   return 0;
 }
@@ -387,7 +353,7 @@ MotionCells::saveMotionCells (gint64 timestamp_millisec)
 {
 
   MotionCellData mc_data;
-  mc_data.timestamp = htonl (timestamp_millisec);
+  mc_data.timestamp = GINT32_TO_BE (timestamp_millisec);
   mc_data.data = NULL;
   //There is no datafile
   if (mc_savefile == NULL)
@@ -407,7 +373,7 @@ MotionCells::saveMotionCells (gint64 timestamp_millisec)
 
   mc_data.data =
       (char *) calloc (1,
-      ntohl (m_header.itemsize) - sizeof (mc_data.timestamp));
+      GINT32_FROM_BE (m_header.itemsize) - sizeof (mc_data.timestamp));
   if (mc_data.data == NULL) {
     //fprintf(stderr, "%s %d:saveMotionCells:calloc:%d (%s)\n", __FILE__, __LINE__, errno,
     //strerror(errno));
@@ -418,7 +384,7 @@ MotionCells::saveMotionCells (gint64 timestamp_millisec)
 
   for (unsigned int i = 0; i < m_MotionCells.size (); i++) {
     int bitnum =
-        m_MotionCells.at (i).lineidx * ntohl (m_header.gridx) +
+        m_MotionCells.at (i).lineidx * GINT32_FROM_BE (m_header.gridx) +
         m_MotionCells.at (i).colidx;
     int bytenum = (int) floor (bitnum / 8.0);
     int shift = bitnum - bytenum * 8;
@@ -437,7 +403,7 @@ MotionCells::saveMotionCells (gint64 timestamp_millisec)
   }
 
   if (fwrite (mc_data.data,
-          ntohl (m_header.itemsize) - sizeof (mc_data.timestamp), 1,
+          GINT32_FROM_BE (m_header.itemsize) - sizeof (mc_data.timestamp), 1,
           mc_savefile) != 1) {
     //fprintf(stderr, "%s %d:saveMotionCells:fwrite:%d (%s)\n", __FILE__, __LINE__, errno,
     //strerror(errno));
