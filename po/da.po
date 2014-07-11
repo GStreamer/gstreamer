@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gstreamer package.
 #
 # Mogens Jæger <mogensjaeger@gmail.com>, 2010.
-# Mogens Jaeger <mogensjaeger@gmail.com>, 2007, 2010, 2013.
+# Mogens Jaeger <mogensjaeger@gmail.com>, 2007, 2010, 2013, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.2.1\n"
+"Project-Id-Version: gstreamer 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-06-28 10:24+0200\n"
-"PO-Revision-Date: 2013-12-08 12:41+0100\n"
+"POT-Creation-Date: 2014-07-11 08:50+0200\n"
+"PO-Revision-Date: 2014-06-29 16:46+0200\n"
 "Last-Translator: Mogens Jaeger <mogensjaeger@gmail.com>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -204,9 +204,8 @@ msgstr "Kunne ikke hente/sætte indstillinger fra/på ressource."
 msgid "No space left on the resource."
 msgstr "Der er ikke mere ledig plads på ressourcen."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Der er ikke mere ledig plads på ressourcen."
+msgstr "Ikke autoriseret til at tilgå ressourcen."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer opdagede en generel fejl i mediestrømmen."
@@ -812,10 +811,10 @@ msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Information om personerne bag et remix og lignende fortolkninger"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "midi-base-note"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Midi-notenummer på lydsporet."
 
 msgid ", "
 msgstr ", "
@@ -842,11 +841,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "Henvisningen har ingen kilde [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "Linket har ingen sink [kilde=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -866,11 +865,11 @@ msgstr "intet element \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "uventet reference \"%s\" - ignorerer"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "uventet pad-reference \"%s\" - ignorerer"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -885,18 +884,18 @@ msgid "no source element for URI \"%s\""
 msgstr "intet kildeelement for URI \"%s\""
 
 msgid "syntax error"
-msgstr ""
+msgstr "syntaksfejl"
 
 msgid "bin"
-msgstr ""
+msgstr "lager"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "specificeret tomt lager \"%s\", er ikke tilladt"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "intet lager \"%s\", sprunget over"
+msgstr "intet lager \"%s\", udpakker elementer"
 
 msgid "empty pipeline not allowed"
 msgstr "tom rørledning ikke tilladt"

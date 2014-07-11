@@ -1,16 +1,16 @@
 # Vietnamese Translation for GStreamer.
 # Bản dịch tiếng Việt dành cho GStreamer.
-# Copyright © 2013 Free Software Foundation, Inc.
+# Copyright © 2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
-# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2013.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.2.1\n"
+"Project-Id-Version: gstreamer 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-06-28 10:24+0200\n"
-"PO-Revision-Date: 2013-12-11 08:08+0700\n"
+"POT-Creation-Date: 2014-07-11 08:50+0200\n"
+"PO-Revision-Date: 2014-06-30 09:40+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -81,7 +81,7 @@ msgstr ""
 "vào danh sách được cất giữ trong biến môi trường GST_PLUGIN_PATH"
 
 msgid "PLUGINS"
-msgstr "PHẦN BỔ SUNG"
+msgstr "PHẦN_BỔ_SUNG"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Tắt chức năng bắt lỗi phân đoạn trong khi nạp phần bổ sung"
@@ -107,7 +107,8 @@ msgstr "Trình GStreamer mới gặp một lỗi thư viện lõi chung."
 
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
-msgstr "Những nhà phát triển GStreamer chưa gán mã lỗi cho lỗi này."
+msgstr ""
+"Những nhà phát triển GStreamer đã quá lười mà chưa gán mã lỗi cho lỗi này."
 
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Lỗi nội bộ GStreamer: chưa viết mã cho chức năng này."
@@ -205,9 +206,8 @@ msgstr "Không thể lấy/đặt cài đặt từ/trên tài nguyên."
 msgid "No space left on the resource."
 msgstr "Không còn không gian trống trên tài nguyên đó."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Không còn không gian trống trên tài nguyên đó."
+msgstr "Không đủ thẩm quyền truy cập trên tài nguyên."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "Trình GStreamer mới gặp một lỗi luồng chung."
@@ -307,7 +307,7 @@ msgid "The artist of the entire album, as it should be displayed"
 msgstr "Nghệ sĩ của toàn bộ tập nhạc, như hiển thị đúng"
 
 msgid "album artist sortname"
-msgstr "tên sắp nghệ sĩ tập"
+msgstr "tên sắp nghệ sĩ tập nhạc"
 
 msgid "The artist of the entire album, as it should be sorted"
 msgstr "Nghệ sĩ của toàn bộ tập nhạc, theo thứ tự đúng"
@@ -382,7 +382,7 @@ msgid "homepage"
 msgstr "trang chủ"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr "Trang chủ của nghệ sĩ hay phim "
+msgstr "Trang chủ của nghệ sĩ hay phim"
 
 msgid "description"
 msgstr "mô tả"
@@ -402,7 +402,7 @@ msgstr "ISRC"
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
 "Luật thu âm Tiêu chuẩn Quốc tế (International Standard Recording Code) — xem "
-"<http://www.ifpi.org/isrc/>."
+"<http://www.ifpi.org/isrc/>"
 
 msgid "organization"
 msgstr "tổ chức"
@@ -462,13 +462,13 @@ msgid "length in GStreamer time units (nanoseconds)"
 msgstr "thời gian bằng đơn vị thời gian kiểu GStreamer (phần tỷ giây: ns)"
 
 msgid "codec"
-msgstr "codec"
+msgstr "mã hóa"
 
 msgid "codec the data is stored in"
 msgstr "cách mã hóa/giải mà dữ liệu này"
 
 msgid "video codec"
-msgstr "codec ảnh động"
+msgstr "codec của phim"
 
 msgid "codec the video data is stored in"
 msgstr "cách mã hóa/giải mã dữ liệu ảnh động này"
@@ -655,14 +655,14 @@ msgstr "vị trí địa lý của quốc gia"
 
 msgid "country (english name) where the media has been recorded or produced"
 msgstr ""
-"quốc gia (tên tiếng Anh, v.d. “Vietnam”) ở đó nhạc/phím đã được thu hay tạo"
+"quốc gia (tên tiếng Anh, v.d. “Vietnam”) ở đó nhạc/phim đã được quay/thu"
 
 msgid "geo location city"
 msgstr "vị trí địa lý của thành phố"
 
 msgid "city (english name) where the media has been recorded or produced"
 msgstr ""
-"thành phố (tên tiếng Anh, v.d. “Hanoi”) ở đó nhạc/phím đã được thu hay tạo"
+"thành phố (tên tiếng Anh, v.d. “Hanoi”) ở đó nhạc/phím đã được quay/thu"
 
 msgid "geo location sublocation"
 msgstr "vị trí phụ địa lý"
@@ -751,7 +751,7 @@ msgid "composer sortname"
 msgstr "tên sắp nhạc sĩ"
 
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "(các) người đã soạn bản thu, cho mục đích sắp xếp"
+msgstr "(những) người đã soạn bản thu, dành cho mục đích sắp xếp"
 
 msgid "grouping"
 msgstr "nhóm lại"
@@ -818,10 +818,10 @@ msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Thông tin về người đứng sau phối và biên tập lại"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "midi-base-note"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Số ghi chú midi của rãnh âm thanh."
 
 msgid ", "
 msgstr ", "
@@ -848,11 +848,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "liên kết không có nguồn [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "liên kết không có sink [nguồn=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -872,11 +872,11 @@ msgstr "không có phần tử “%s”"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "gặp tham chiếu không cần \"%s\" nên bỏ qua"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "gặp tham chiếu đệm không cần \"%s\" nên bỏ qua"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -893,18 +893,18 @@ msgid "no source element for URI \"%s\""
 msgstr "không có phần tử nguồn cho URI “%s”"
 
 msgid "syntax error"
-msgstr ""
+msgstr "lỗi cú pháp"
 
 msgid "bin"
-msgstr ""
+msgstr "nhị phân"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "không cho phép nhị phân trống được ghi rõ “%s”"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "không có nhị phân “%s” nên bỏ qua"
+msgstr "không có nhị phân “%s”, đang giải nén các phần tử"
 
 msgid "empty pipeline not allowed"
 msgstr "không cho phép đường ống trống"
@@ -1011,10 +1011,10 @@ msgid "Implemented Interfaces:\n"
 msgstr "Giao diện đã thực hiện:\n"
 
 msgid "readable"
-msgstr "đọc được"
+msgstr "được đọc"
 
 msgid "writable"
-msgstr "ghi được"
+msgstr "được ghi"
 
 msgid "controllable"
 msgstr "điều khiển được"
@@ -1224,10 +1224,10 @@ msgstr "Tập hợp lại và in ra thống kê chỉ mục"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr "LỖI: không thể cấu tạo đường ống: %s.\n"
+msgstr "LỖI: không thể xây dựng đường ống: %s.\n"
 
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr "LỖI: không thể cấu tạo đường ống.\n"
+msgstr "LỖI: không thể xây dựng đường ống.\n"
 
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
@@ -1284,10 +1284,10 @@ msgid "Execution ended after %"
 msgstr "Thực hiện xong sau %"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr "Đang đặt đường ống thành SẴN SÀNG ...\n"
+msgstr "Đang đặt đường ống thành SẴN_SÀNG ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr "Đang đặt đường ống thành VÔ GIÁ TRỊ ...\n"
+msgstr "Đang đặt đường ống thành VÔ_GIÁ_TRỊ ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Đang giải phóng đường ống ...\n"
