@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Base Plugins 1.3.90
+Release notes for GStreamer Base Plugins 1.3.91
 
 
-The GStreamer team is pleased to announce the first release candidate of
+The GStreamer team is pleased to announce the second release candidate of
 the stable 1.4 release series. The 1.4 release series is adding new features
 on top of the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x
 release series of the GStreamer multimedia framework.
@@ -71,8 +71,16 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 684030 : typefinding: mp4 with video and dts ES detected as DTS audio
-      * 732269 : pbutils: handle more H.264 profiles/levels
+      * 730441 : dmabuf: shared the mapping with shared copies of the memory
+      * 731974 : videodecoder: parse source data until a frame is obtained
+      * 732459 : rtspconnection: tunneled connections do not work if POST channel is established first
+      * 732589 : gst_mikey_* not introspection-friendly
+      * 732593 : tests: codec-select: Plug element name memory leak
+      * 732595 : Introspection and documentation issues for new 1.4 symbols
+      * 732697 : riff: Hexprint invalid fourcc in error message
+      * 732709 : sdp: gstmikey.h not included by single include header (sdp.h)
+      * 732945 : giosink: Won't work with mp4mux
+      * 733046 : visual: Remove support for < 0.4
 
 ==== Download ====
 
@@ -109,9 +117,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Edward Hervey
+      * Evan Nemerson
       * Gwenole Beauchesne
-      * Jan Schmidt
+      * Nicolas Dufresne
       * Sebastian Dröge
-      * Thiago Santos
-      * Tim-Philipp Müller
+      * Sebastian Rasmussen
+      * Wim Taymans
  

@@ -1,9 +1,130 @@
-=== release 1.3.90 ===
+=== release 1.3.91 ===
 
-2014-06-28  Sebastian Dröge <slomo@coaxion.net>
+2014-07-11  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.90
+	  releasing 1.3.91
+
+2014-07-11 10:13:03 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	* ext/libvisual/plugin.c:
+	* ext/libvisual/visual.c:
+	  libvisual: Remove < 0.4 support
+	  And remove the version guards that went along with it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733046
+
+2014-07-10 18:17:47 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/allocators/gstdmabuf.c:
+	  dmabuf: Ensure _get_fd() works even for shared memory
+	  Fixes regression introduced by:
+	  commit b60888fd4bcacd42bb4e27fa938272d6e72c5c32
+	  Author: Michael Olbrich <m.olbrich@pengutronix.de>
+	  Date:   Tue May 20 11:18:56 2014 +0200
+	  dmabuf: share the mapping with shared copies of the memory
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730441
+
+2014-07-11 08:51:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/vi.po:
+	  po: Update translations
+
+2014-07-03 13:46:08 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst-libs/gst/sdp/sdp.h:
+	  sdp: add gstmikey.h to sdp.h
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732709
+
+2014-07-03 18:32:02 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* gst-libs/gst/riff/riff-read.c:
+	  riff: Print invalid fourcc in error message in hex
+	  Previously this was printed as characters which caused later processing
+	  of the error message to sometimes warn about non-UTF-8 characters.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732697
+
+2014-06-20 18:02:31 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: parse any source data that is still available.
+	  Fix gst_video_decoder_parse_available() to really parse any pending
+	  source data that is still available in the adapter. This is a memory
+	  optimization to avoid expansion of video packed added to the adapter,
+	  but also a fix to EOS condition when the subclass parse() function
+	  ultimately only needed to call into gvd_have_frame() and no additional
+	  source bytes were consumed, i.e. gvd_add_to_frame() is not called.
+	  This situation can occur when decoding H.264 streams in byte-stream/nal
+	  mode for instance. A decoder always requires the next NAL unit to be
+	  parsed so that to determine picture boundaries. When a new picture is
+	  found, no byte is consumed (i.e. gvd_add_to_frame() is not called)
+	  but gvd_have_frame() is called (i.e. priv->current_frame is gone).
+	  Also make sure to avoid infinite loops caused by incorrect subclass
+	  parse() implementations. This can occur when no byte gets consumed
+	  and no appropriate indication (GST_VIDEO_DECODER_FLOW_NEED_DATA) is
+	  returned.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731974
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2014-07-02 15:50:23 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* tests/examples/dynamic/codec-select.c:
+	  tests: codec-select: fix compilation
+
+2014-07-02 15:49:38 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/sdp/gstmikey.h:
+	  mikey: add more Since markers for new methods
+
+2014-07-02 15:38:41 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/sdp/gstmikey.c:
+	* gst-libs/gst/sdp/gstmikey.h:
+	* tests/check/libs/mikey.c:
+	* win32/common/libgstsdp.def:
+	  mikey: make message and payload mini-objects
+	  Make the MIKEY message and payload objects miniobjects so that they have
+	  a GType and are refcounted.
+	  We can reuse the dispose method to clear our payload objects.
+	  Add some annotations.
+	  Implement a copy function for the MIKEY message.
+	  Fix the unit test.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732589
+
+2014-07-02 00:21:00 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* tests/examples/dynamic/codec-select.c:
+	  tests: codec-select: Plug element name memory leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732593
+
+2014-07-01 16:14:43 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst-libs/gst/pbutils/gstdiscoverer-types.c:
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	* gst-libs/gst/rtsp/gstrtsptransport.c:
+	* gst-libs/gst/sdp/gstmikey.c:
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* gst-libs/gst/video/video-tile.c:
+	  docs: Assorted documentation and introspection fixes for new 1.4 API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732595
+
+2014-07-01 16:19:22 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	* tests/check/libs/rtspconnection.c:
+	  rtspconnection: also allow POST before GET
+	  Don't only allow GET and then POST request to setup tunneling over HTTP
+	  but also allow POST and then GET.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732459
+
+2014-06-28 17:08:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libvisual/gstaudiovisualizer.c:
+	* ext/libvisual/gstaudiovisualizer.h:
+	  libvisual: Rename get_type() function to prevent conflicts with static linking
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728443
+
+=== release 1.3.90 ===
 
 2014-06-28 11:01:13 +0200  Sebastian Dröge <sebastian@centricular.com>
 
