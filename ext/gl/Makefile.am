@@ -25,6 +25,9 @@ OPENGL_SOURCES =  \
 	gltestsrc.h \
 	gstgltestsrc.c \
 	gstgltestsrc.h \
+	gstglmixer.c \
+	gstglmixer.h \
+	gstglmixerpad.h \
 	gstglmosaic.c \
 	gstglmosaic.h \
 	effects/gstgleffectscurves.h \

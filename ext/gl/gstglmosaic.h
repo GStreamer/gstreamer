@@ -21,7 +21,7 @@
 #ifndef _GST_GL_MOSAIC_H_
 #define _GST_GL_MOSAIC_H_
 
-#include <gst/gl/gstglmixer.h>
+#include "gstglmixer.h"
 
 G_BEGIN_DECLS
 
