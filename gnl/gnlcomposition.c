@@ -210,7 +210,7 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition);
 static inline void gnl_composition_reset_target_pad (GnlComposition * comp);
 
 static gboolean
-seek_handling (GnlComposition * comp, gboolean initial, gboolean update);
+seek_handling (GnlComposition * comp, gboolean initial, gboolean update, gboolean flush_downstream);
 static gint objects_start_compare (GnlObject * a, GnlObject * b);
 static gint objects_stop_compare (GnlObject * a, GnlObject * b);
 static GstClockTime get_current_position (GnlComposition * comp);
@@ -238,7 +238,7 @@ static gboolean
 _gnl_composition_add_entry (GnlComposition * comp, GnlObject * object);
 static gboolean
 _gnl_composition_remove_entry (GnlComposition * comp, GnlObject * object);
-static void _deactivate_stack (GnlComposition * comp);
+static void _deactivate_stack (GnlComposition * comp, gboolean flush_downstream);
 static GstPadProbeReturn _add_emit_commited_and_restart_task (GnlComposition *
     comp);
 static gboolean
@@ -473,7 +473,7 @@ _seek_pipeline_func (SeekData * seekd)
       " seek (though it just does basic comparision and not full rebuild)");
 
   priv->reset_time = TRUE;
-  seek_handling (seekd->comp, TRUE, FALSE);
+  seek_handling (seekd->comp, TRUE, FALSE, TRUE);
   priv->reset_time = FALSE;
 
 beach:
@@ -531,7 +531,7 @@ _initialize_stack_func (GnlComposition * comp)
 
   /* set ghostpad target */
   COMP_OBJECTS_LOCK (comp);
-  if (!(update_pipeline (comp, COMP_REAL_START (comp), TRUE, TRUE))) {
+  if (!(update_pipeline (comp, COMP_REAL_START (comp), TRUE, FALSE))) {
     COMP_OBJECTS_UNLOCK (comp);
     GST_FIXME_OBJECT (comp, "PLEASE signal state change failure ASYNC");
 
@@ -1520,7 +1520,7 @@ _seek_current_stack (GnlComposition * comp, GstEvent * event)
 */
 
 static gboolean
-seek_handling (GnlComposition * comp, gboolean initial, gboolean update)
+seek_handling (GnlComposition * comp, gboolean initial, gboolean update, gboolean flush_downstream)
 {
   GST_DEBUG_OBJECT (comp, "initial:%d, update:%d", initial, update);
 
@@ -1532,9 +1532,9 @@ seek_handling (GnlComposition * comp, gboolean initial, gboolean update)
   COMP_OBJECTS_LOCK (comp);
   if (update || have_to_update_pipeline (comp)) {
     if (comp->priv->segment->rate >= 0.0)
-      update_pipeline (comp, comp->priv->segment->start, initial, !update);
+      update_pipeline (comp, comp->priv->segment->start, initial, flush_downstream);
     else
-      update_pipeline (comp, comp->priv->segment->stop, initial, !update);
+      update_pipeline (comp, comp->priv->segment->stop, initial, flush_downstream);
   } else {
     GstEvent *toplevel_seek = get_new_seek_event (comp, FALSE, FALSE);
 
@@ -2101,13 +2101,12 @@ set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp)
 
 /*  Must be called with OBJECTS_LOCK taken */
 static void
-_set_current_bin_to_ready (GnlComposition * comp)
+_set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
 {
   GstPad *ptarget;
   GnlCompositionPrivate *priv = comp->priv;
 
-  /* FIXME Check how to guarantee some thread safety here */
-  if (priv->current && GST_STATE (comp) != GST_STATE_PLAYING) {
+  if (flush_downstream) {
     ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT_SRC (comp)));
 
     if (ptarget) {
@@ -2143,7 +2142,7 @@ _process_pending_entries (GnlComposition * comp)
           deactivated_stack == FALSE) {
         deactivated_stack = TRUE;
 
-        _deactivate_stack (comp);
+        _deactivate_stack (comp, TRUE);
       }
 
       _gnl_composition_remove_entry (comp, object);
@@ -2331,7 +2330,7 @@ update_pipeline_func (GnlComposition * comp)
     priv->segment->stop = priv->segment_start;
   }
 
-  seek_handling (comp, TRUE, TRUE);
+  seek_handling (comp, TRUE, TRUE, FALSE);
 
   /* Post segment done if last seek was a segment seek */
   if (!priv->current && (priv->segment->flags & GST_SEEK_FLAG_SEGMENT)) {
@@ -2720,11 +2719,11 @@ _relink_single_node (GnlComposition * comp, GNode * node,
  */
 
 static void
-_deactivate_stack (GnlComposition * comp)
+_deactivate_stack (GnlComposition * comp, gboolean flush_downstream)
 {
   GstPad *ptarget;
 
-  _set_current_bin_to_ready (comp);
+  _set_current_bin_to_ready (comp, flush_downstream);
 
   ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT_SRC (comp)));
   _empty_bin (GST_BIN_CAST (comp->priv->current_bin));
@@ -2912,7 +2911,7 @@ _set_real_eos_seqnum_from_seek (GnlComposition * comp, GstEvent * event)
  */
 static gboolean
 update_pipeline (GnlComposition * comp, GstClockTime currenttime,
-    gboolean initial, gboolean modify)
+    gboolean initial, gboolean flush_downstream)
 {
 
   gint stack_seqnum;
@@ -2933,7 +2932,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
   GST_ERROR_OBJECT (comp,
       "currenttime:%" GST_TIME_FORMAT
-      " initial:%d , modify:%d", GST_TIME_ARGS (currenttime), initial, modify);
+      " initial:%d , flushing downstream:%d", GST_TIME_ARGS (currenttime), initial, flush_downstream);
 
   if (!GST_CLOCK_TIME_IS_VALID (currenttime))
     return FALSE;
@@ -2987,7 +2986,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
   /* If stacks are different, unlink/relink objects */
   if (!samestack) {
-    _deactivate_stack (comp);
+    _deactivate_stack (comp, flush_downstream);
     _relink_new_stack (comp, stack, toplevel_seek);
   }
 
