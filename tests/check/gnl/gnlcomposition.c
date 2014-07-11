@@ -184,8 +184,40 @@ GST_START_TEST (test_remove_invalid_object)
   gnl_composition_remove (composition, source2);
   fail_unless (gnl_composition_remove (composition, source1));
 
+  gst_element_set_state (GST_ELEMENT (composition), GST_STATE_NULL);
   gst_object_unref (composition);
   gst_object_unref (source2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_dispose_on_commit)
+{
+  GstElement *composition;
+  GstElement *gnlsource;
+  GstElement *audiotestsrc;
+  GstElement *pipeline, *fakesink;
+  gboolean ret;
+
+  composition = gst_element_factory_make ("gnlcomposition", "composition");
+  pipeline = GST_ELEMENT (gst_pipeline_new (NULL));
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+
+  gnlsource = gst_element_factory_make ("gnlsource", "gnlsource1");
+  audiotestsrc = gst_element_factory_make ("audiotestsrc", "audiotestsrc1");
+  gst_bin_add (GST_BIN (gnlsource), audiotestsrc);
+  g_object_set (gnlsource, "start", (guint64) 0 * GST_SECOND,
+      "duration", 10 * GST_SECOND, "inpoint", (guint64) 0, "priority", 1, NULL);
+  fail_unless (gnl_composition_add (GST_BIN (composition), gnlsource));
+
+  gst_bin_add_many (GST_BIN (pipeline), composition, fakesink, NULL);
+  fail_unless (gst_element_link (composition, fakesink) == TRUE);
+
+
+  g_signal_emit_by_name (composition, "commit", TRUE, &ret);
+
+  ASSERT_OBJECT_REFCOUNT (composition, "composition", 1);
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
@@ -321,6 +353,8 @@ gnonlin_suite (void)
 
   tcase_add_test (tc_chain, test_change_object_start_stop_in_current_stack);
   tcase_add_test (tc_chain, test_remove_invalid_object);
+
+  tcase_add_test (tc_chain, test_dispose_on_commit);
 
   if (gst_registry_check_feature_version (gst_registry_get (), "adder", 1,
           0, 0)) {
