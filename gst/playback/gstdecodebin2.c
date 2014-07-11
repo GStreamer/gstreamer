@@ -2653,8 +2653,13 @@ pad_event_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
       GST_DEBUG_OBJECT (dbin, "Received EOS on a non final pad, this stream "
           "ended too early");
       chain->deadend = TRUE;
+      chain->drained = TRUE;
       gst_object_replace ((GstObject **) & chain->current_pad, NULL);
       /* we don't set the endcaps because NULL endcaps means early EOS */
+
+      /* TODO check if this makes the next_group complete, but drained/deadend,
+       * meaning that it should be skipped and not exposed */
+
       EXPOSE_LOCK (dbin);
       if (gst_decode_chain_is_complete (dbin->decode_chain))
         gst_decode_bin_expose (dbin);
