@@ -34,12 +34,16 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef _WIN32
+#include <winsock.h>
+#else
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <netinet/in.h>
-#include <unistd.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#endif
+#include <sys/types.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 

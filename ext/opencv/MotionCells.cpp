@@ -53,7 +53,12 @@
 #include <errno.h>
 #include <math.h>
 #include <gst/gst.h>
-#include <arpa/inet.h>
+#ifdef _WIN32
+  #include <winsock.h>
+  #define bzero(p, l) memset(p, 0, l)
+#else
+  #include <arpa/inet.h>
+#endif
 #include "MotionCells.h"
 
 uint64_t ntohl64 (uint64_t val);
