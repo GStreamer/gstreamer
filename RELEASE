@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Bad Plugins 1.3.90
+Release notes for GStreamer Bad Plugins 1.3.91
 
 
-The GStreamer team is pleased to announce the first release candidate of
+The GStreamer team is pleased to announce the second release candidate of
 the stable 1.4 release series. The 1.4 release series is adding new features
 on top of the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x
 release series of the GStreamer multimedia framework.
@@ -73,17 +73,31 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 707282 : Memory leak in h264 codecparser
-      * 723380 : codecparsers_h264: Add SEI recovery point message parsing.
-      * 726026 : d3dvideosink: D3d surface not released when pipeline is set to GST_STATE_NULL
-      * 727811 : opensslessrc: Does not work with autoaudiosrc
-      * 731525 : multiple glimagesink elements aborts due to no XInitThreads.
-      * 731692 : Fix include GL and GLES header check with clang.
-      * 731783 : h265parse: incorrect value used to check size of hvcC data
-      * 731878 : glvideomixer: Does not provide correct video resolution information when inputs are tiled
-      * 731930 : modplug: don't hardcode c++ standard lib in Makefile.am
-      * 732174 : curls?ftpsink: Fix memory leaks due to new error handling
-      * 732178 : glcolorscale: add support for passthrough on same caps
+      * 711847 : vtenc: huge memory leaks
+      * 712809 : d3dvideosink: Shows corrupted output on NVIDIA GPUs due to wrong stride
+      * 723670 : applemedia: Fails to build on OSX < 10.8
+      * 728435 : vtdec: fails to decode randomly
+      * 730914 : mpegts lib : Ensure all functions/fields are introspectable and are not leaked
+      * 732154 : h264parse: fix and optimize NAL collection function
+      * 732203 : h264parse: improve handling of byte-stream/au format
+      * 732207 : bad/gst-libs: Cleanup libraries before 1.4 release
+      * 732335 : rtmpsrc: Report limited bandwidth
+      * 732390 : glimagesink: Only shows green on iOS
+      * 732445 : aggregator: Many invalid memory access to destroyed GSources in the unit test
+      * 732529 : fix qglwtextureshare demo
+      * 732535 : openni2src: Various fixes
+      * 732553 : codecparsers: h264: fix identification of EOSEQ and EOS NALs
+      * 732554 : watchdog: sometimes expire even when stopped and causes crash
+      * 732661 : gl-cocoa: crash when aborting too early
+      * 732715 : aiff,mimdec: Print invalid fourcc in error message in hex
+      * 732741 : camerabin2: Fails reconfiguring the source
+      * 732744 : configure: fix uninitialized variables with --disable-external
+      * 732750 : videoaggregator: broken locking in setcaps function
+      * 732756 : faceblur: Render black when input is GLMemory
+      * 732789 : mpegts: don't confuse slice allocator with regular allocator
+      * 732977 : tests/dccp: Unref parent after use
+      * 732986 : mpegts: Add support for CAT section and CA descriptor
+      * 733013 : opus: Fix a double-unref in the Opus header code
 
 ==== Download ====
 
@@ -120,18 +134,24 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aurélien Zanelli
-      * Chris Bass
+      * Alessandro Decina
+      * Arun Raghavan
       * Edward Hervey
-      * Eric Trousset
       * Gwenole Beauchesne
+      * Göran Jönsson
+      * Jan Alexander Steffens (heftig)
+      * Jan Schmidt
       * Julien Isorce
-      * Koop Mast
       * Matthew Waters
-      * Reynaldo H. Verdejo Pinochet
+      * Matthieu Bouron
+      * Nicolas Dufresne
+      * Philip Withnall
       * Sebastian Dröge
       * Sebastian Rasmussen
       * Stefan Ringel
       * Thiago Santos
+      * Thibault Saunier
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
+      * Wang Xin-yu (王昕宇)
  

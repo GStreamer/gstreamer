@@ -175,6 +175,7 @@ GObject
               GstCvLaplace
               GstCvSmooth
               GstCvSobel
+              GstFaceBlur
               GstFaceDetect
               GstHanddetect
               GstSkinDetect
@@ -219,7 +220,6 @@ GObject
         GstDecklinkSrc
         GstDisparity
         GstEdgeDetect
-        GstFaceBlur
         GstFestival
         GstFieldAnalysis
         GstFluidDec
