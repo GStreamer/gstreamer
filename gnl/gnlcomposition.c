@@ -479,10 +479,6 @@ _seek_pipeline_func (SeekData * seekd)
 
   priv->next_base_time = 0;
 
-  GST_FIXME_OBJECT (seekd->comp,
-      "BE smarter and do not force pipeline update on"
-      " seek (though it just does basic comparision and not full rebuild)");
-
   priv->reset_time = TRUE;
   seek_handling (seekd->comp, TRUE, FALSE, TRUE);
   priv->reset_time = FALSE;
