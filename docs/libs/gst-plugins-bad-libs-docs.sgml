@@ -85,7 +85,6 @@
       <xi:include href="xml/gstglfilter.xml"/>
       <xi:include href="xml/gstglframebuffer.xml"/>
       <xi:include href="xml/gstglmemory.xml"/>
-      <xi:include href="xml/gstglmixer.xml"/>
       <xi:include href="xml/gstglshader.xml"/>
       <xi:include href="xml/gstglupload.xml"/>
       <xi:include href="xml/gstgluploadmeta.xml"/>

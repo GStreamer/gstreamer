@@ -43,7 +43,6 @@
 #include <gst/gl/gstglbufferpool.h>
 #include <gst/gl/gstglframebuffer.h>
 #include <gst/gl/gstglfilter.h>
-#include <gst/gl/gstglmixer.h>
 #include <gst/gl/gstglshadervariables.h>
 
 #endif /* __GST_GL_H__ */

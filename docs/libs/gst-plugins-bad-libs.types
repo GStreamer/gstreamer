@@ -33,7 +33,6 @@ gst_gl_display_get_type
 gst_gl_context_get_type
 gst_gl_filter_get_type
 gst_gl_shader_get_type
-gst_gl_mixer_get_type
 gst_gl_buffer_pool_get_type
 gst_gl_allocator_get_type
 gst_gl_window_get_type
