@@ -30,6 +30,9 @@
 #include "config.h"
 #endif
 
+#include "gstcurlbasesink.h"
+#include "gstcurlsshsink.h"
+
 #include <curl/curl.h>
 #include <string.h>
 #include <stdio.h>
@@ -46,9 +49,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-#include "gstcurlbasesink.h"
-#include "gstcurlsshsink.h"
 
 /* Default values */
 #define GST_CAT_DEFAULT    gst_curl_ssh_sink_debug
