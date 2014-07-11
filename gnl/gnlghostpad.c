@@ -334,19 +334,18 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
           GST_DEBUG_OBJECT (object, "Setting wanted_seqnum to %i",
               object->wanted_seqnum);
           break;
-        case GST_EVENT_SEGMENT:
-          if (object->wanted_seqnum == 0) {
-            g_assert ("All gnlobject should be seeked at one point or another"
-                " and thus we should always have a wanted_seqnum when getting"
-                " a new segment" == NULL);
+        case GST_EVENT_CAPS:
+          if (object->wanted_seqnum != 0) {
+
+            GST_ERROR_OBJECT (object, "Got caps, seqnum-> %i (wanted %i)",
+                gst_event_get_seqnum (event), object->wanted_seqnum);
+
+            object->seqnum = object->wanted_seqnum;
+            object->wanted_seqnum = 0;
+            gst_event_set_seqnum (event, object->seqnum);
           }
-
-          GST_DEBUG_OBJECT (object, "Got segment, seqnum-> %i (wanted %i)",
-              gst_event_get_seqnum (event), object->wanted_seqnum);
-
-          object->seqnum = object->wanted_seqnum;
-          object->wanted_seqnum = 0;
-
+          break;
+        case GST_EVENT_SEGMENT:
           event = translate_outgoing_segment (object, event);
           if (object->seqnum) {
             GST_INFO_OBJECT (object, "Tweaking SEGMENT seqnum from %i to %i",
