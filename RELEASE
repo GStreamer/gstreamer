@@ -1,8 +1,8 @@
 
-Release notes for GStreamer 1.3.90
+Release notes for GStreamer 1.3.91
 
 
-The GStreamer team is pleased to announce the first release candidate of
+The GStreamer team is pleased to announce the second release candidate of
 the stable 1.4 release series. The 1.4 release series is adding new features
 on top of the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x
 release series of the GStreamer multimedia framework.
@@ -48,12 +48,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 730873 : miniobject: Add missing (nullable) annotations
-      * 730957 : Missing nullability annotations
-      * 731303 : dataqueue: add bindings-friendly gst_data_queue_new_full()
-      * 731350 : Add gst_queue_array_new variant which takes a GDestroyNotify
-      * 731542 : base: introspection fixes
-      * 732007 : Rename GstGlobalDeviceMonitor
+      * 732534 : Introspection and documentation issues for new 1.4 symbols
+      * 732540 : basesink: reset QoS on segment event
+      * 732556 : pad: Race condition when removing sticky events
+      * 732559 : identity: Should proxy accept-caps query
+      * 732770 : gst-uninstalled: add video and base library paths from -bad
+      * 732786 : docs: Various fixes for omissions, typos and inconsistencies.
 
 ==== Download ====
 
@@ -91,10 +91,12 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Evan Nemerson
-      * George Kiagiadakis
-      * Olivier Crête
-      * Philip Withnall
+      * Guillaume Desmottes
+      * Göran Jönsson
+      * Matthieu Bouron
       * Sebastian Dröge
+      * Sebastian Rasmussen
       * Thiago Santos
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
  

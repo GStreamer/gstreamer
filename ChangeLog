@@ -1,3 +1,165 @@
+=== release 1.3.91 ===
+
+2014-07-11  Sebastian Dröge <slomo@coaxion.net>
+
+	* configure.ac:
+	  releasing 1.3.91
+
+2014-07-11 08:51:08 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/da.po:
+	* po/vi.po:
+	  po: Update translations
+
+2014-07-05 18:29:29 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* gst/gstcaps.h:
+	* gst/gstdevice.c:
+	* gst/gstdeviceprovider.c:
+	* gst/gstdeviceproviderfactory.c:
+	* gst/gsttoc.h:
+	* gst/gstvalue.c:
+	* libs/gst/check/gstcheck.c:
+	* libs/gst/net/gstnetaddressmeta.c:
+	* libs/gst/net/gstnetaddressmeta.h:
+	  docs: Fix documentation typos and inconsistencies
+	  * GstGlobalDeviceMonitor was renamed to GstDeviceMonitor
+	  * Expand GST_MESSAGE_DEVICE to the full enum value names
+	  * Correct the incorrect references to the GstDeviceProvider interfaces
+	  * Describe caps arguments for gstcheck interface
+	  * Add missing docs for GstNetAddressMeta and its add function
+	  * Add docs for toc helper macros
+	  * Avoid refering to GstValueList type as done elsewhere
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732786
+
+2014-07-05 17:13:21 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/libs/gstreamer-libs-sections.txt:
+	  docs: Cleanup interface references in docs
+	  * Delete references to removed interfaces
+	  * Add missing documentation sections
+	  * Fix duplicate interface references for GstDevice
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732786
+
+2014-07-08 11:17:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstfilesrc.c:
+	* plugins/elements/gsttee.c:
+	* tools/gst-launch.1.in:
+	  docs: There is no decodebin2 anymore, don't pretend otherwise
+
+2014-07-07 16:14:32 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* plugins/elements/gstfdsrc.c:
+	  fdsrc: fix error setting when uri is invalid
+	  Elements should always set the GError
+
+2014-07-06 12:13:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/check/gstcheck.h:
+	  libs: gstcheck: check that mutex is locked before g_cond_wait*() is called
+	  Sanity check to catch problems in unit test.
+
+2014-07-06 12:12:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/check/gstcheck.h:
+	  libs: gstcheck: init and clear global mutex and cond variables
+
+2014-07-06 12:09:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstpoll.c:
+	  tests: fix locking in gstpoll unit test
+	  The mutex needs to be locked when g_cond_wait*() is
+	  called.
+
+2014-07-05 16:24:18 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* scripts/gst-uninstalled:
+	  gst-uninstalled: add video and base library paths from -bad
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732770
+
+2014-07-04 19:40:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/gst-inspect.c:
+	  tools: suppress GLib warnings when gst-inspecting deprecated properties
+	  GLib in git will spew a g_warning() when a property marked as
+	  deprecated via param spec flags is accessed. Suppress this by
+	  setting the appropriate environment variable.
+
+2014-07-03 10:11:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstmessage.h:
+	  message: Work around g-i/pygobject/gjs bug with ~0 in enums
+	  GST_MESSAGE_ANY was considered a long by pygobject and gjs, and thus
+	  couldn't be used in gst_bus_poll() and similar APIs as they expect an
+	  int-typed enum.
+	  Just use 0xffffffff instead for now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732633
+
+2014-07-02 08:41:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstbufferlist.c:
+	  tests: don't use post-GLib 2.32 API in bufferlist test
+	  g_ptr_array_insert() is GLib >= 2.40
+
+2014-07-01 12:22:56 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/gstpad.c:
+	  pad: Don't unlock while iterating over all sticky events for removal
+	  Otherwise we might end up getting the event removed from elsewhere
+	  at the same time while we're unlocked for g_object_notify().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732556
+
+2014-07-01 19:17:11 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstidentity.c:
+	  identity: Proxy the accept-caps query
+	  We always work in passthrough mode so there's no point in doing
+	  something more clever in basetransform. Also the basetransform
+	  code leads to problems with incomplete caps and downstream
+	  elements that use GST_PAD_FLAG_ACCEPT_INTERSECT.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732559
+
+2014-07-01 11:21:53 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: reset QoS on segment event
+	  This avoids spurious warnings about slow machine when upstream
+	  sends new segments without flushing.
+
+2014-06-30 23:39:18 -0700  Evan Nemerson <evan@nemerson.com>
+
+	* gst/gstbufferpool.c:
+	* gst/gstdevice.c:
+	* gst/gstdevicemonitor.c:
+	* gst/gstdeviceprovider.c:
+	* gst/gstdeviceproviderfactory.c:
+	* gst/gstmessage.c:
+	* gst/gstquery.c:
+	* gst/gststructure.c:
+	* gst/gstsystemclock.c:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/check/gstcheck.c:
+	* libs/gst/check/gsttestclock.c:
+	  introspection: Assorted minor introspection and documentation fixes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732534
+
+2014-06-30 08:59:18 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/gstdevicemonitor.c:
+	  devicemonitor: Stop using g_clear_pointer()
+	  We dont't want to depend on GLib 2.34 for now.
+
+2014-06-29 19:16:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/libs/sparsefile.c:
+	  sparsefile: Initialize memory in unit test to make valgrind happy
+	  We were writing unitialized stack memory to the file.
+
 === release 1.3.90 ===
 
 2014-06-28 10:45:18 +0200  Sebastian Dröge <sebastian@centricular.com>
