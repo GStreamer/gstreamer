@@ -173,6 +173,7 @@ struct _GnlCompositionPrivate
    * "g_source_attach: assertion '!SOURCE_DESTROYED (source)' failed" */
   GMutex mcontext_lock;
   GList *gsources;
+  GList *update_gsources;
 
   gboolean reset_time;
 
@@ -185,6 +186,7 @@ struct _GnlCompositionPrivate
 
   gboolean seeking_itself;
   gint real_eos_seqnum;
+  gint next_eos_seqnum;
   gint flush_seqnum;
 
   /* While we do not get a buffer on our srcpad,
@@ -512,7 +514,12 @@ _add_gsource (GnlComposition * comp, GSourceFunc func,
   source = g_idle_source_new ();
   g_source_set_callback (source, func, data, destroy);
   g_source_set_priority (source, priority);
-  priv->gsources = g_list_prepend (priv->gsources, source);
+
+  if (func == (GSourceFunc) update_pipeline_func)
+    priv->update_gsources = g_list_prepend (priv->update_gsources, source);
+  else
+    priv->gsources = g_list_prepend (priv->gsources, source);
+
   g_source_attach (source, priv->mcontext);
   MAIN_CONTEXT_UNLOCK (comp);
 }
@@ -1145,6 +1152,7 @@ gnl_composition_reset (GnlComposition * comp)
   priv->initialized = FALSE;
   priv->send_stream_start = TRUE;
   priv->real_eos_seqnum = 0;
+  priv->next_eos_seqnum = 0;
   priv->flush_seqnum = 0;
 
   _empty_bin (GST_BIN_CAST (priv->current_bin));
@@ -1266,8 +1274,14 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
         return GST_PAD_PROBE_OK;
       }
 
-      _add_gsource (comp, (GSourceFunc) update_pipeline_func, comp,
-          NULL, G_PRIORITY_DEFAULT);
+      if (priv->next_eos_seqnum == seqnum)
+        _add_gsource (comp, (GSourceFunc) update_pipeline_func, comp,
+            NULL, G_PRIORITY_DEFAULT);
+      else
+        GST_INFO_OBJECT (comp,
+            "Got an EOS but it seqnum %i != next eos seqnum %i", seqnum,
+            priv->next_eos_seqnum);
+
       retval = GST_PAD_PROBE_DROP;
     }
       break;
@@ -1591,7 +1605,6 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
 
         return TRUE;
       }
-
       GNL_OBJECT (comp)->wanted_seqnum = gst_event_get_seqnum (event);
       break;
     }
@@ -2197,7 +2210,7 @@ _emit_commited_signal_func (GnlComposition * comp)
 static void
 _restart_task (GnlComposition * comp, gboolean emit_commit)
 {
-  GST_INFO_OBJECT (comp, "Restarting task! (%semiting commit done?)",
+  GST_INFO_OBJECT (comp, "Restarting task! (%semiting commit done)",
       emit_commit ? "" : "NOT ");
 
   if (emit_commit)
@@ -2927,7 +2940,7 @@ _set_real_eos_seqnum_from_seek (GnlComposition * comp, GstEvent * event)
   return TRUE;
 }
 
-static gboolean
+static inline gboolean
 _flush_downstream (GnlUpdateStackReason update_reason)
 {
   if (update_reason == COMP_UPDATE_STACK_ON_COMMIT ||
@@ -2935,6 +2948,23 @@ _flush_downstream (GnlUpdateStackReason update_reason)
     return TRUE;
 
   return FALSE;
+}
+
+static void
+_destroy_gsource (GSource * source)
+{
+  g_source_destroy (source);
+  g_source_unref (source);
+}
+
+static void
+_remove_all_update_sources (GnlComposition * comp)
+{
+  MAIN_CONTEXT_LOCK (comp);
+  g_list_free_full (comp->priv->update_gsources,
+      (GDestroyNotify) _destroy_gsource);
+  comp->priv->update_gsources = NULL;
+  MAIN_CONTEXT_UNLOCK (comp);
 }
 
 /*
@@ -2955,7 +2985,6 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     GnlUpdateStackReason update_reason)
 {
 
-  gint stack_seqnum;
   GstEvent *toplevel_seek;
 
   GNode *stack = NULL;
@@ -2983,7 +3012,6 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     GST_DEBUG_OBJECT (comp, "STATE_NULL: not updating pipeline");
     return FALSE;
   }
-
 
   GST_DEBUG_OBJECT (comp,
       "now really updating the pipeline, current-state:%s",
@@ -3023,8 +3051,12 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   }
 
   toplevel_seek = get_new_seek_event (comp, TRUE, updatestoponly);
-  stack_seqnum = gst_event_get_seqnum (toplevel_seek);
   _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
+
+  /* All EOS received from now on will be ignored */
+  priv->next_eos_seqnum = gst_event_get_seqnum (toplevel_seek);
+
+  _remove_all_update_sources (comp);
 
   /* If stacks are different, unlink/relink objects */
   if (!samestack) {
@@ -3050,7 +3082,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     else
       _stack_setup_done = (GstPadProbeCallback) _stack_setup_done_cb;
 
-    comp->priv->awaited_caps_seqnum = stack_seqnum;
+    comp->priv->awaited_caps_seqnum = priv->next_eos_seqnum;
     priv->commited_probeid = gst_pad_add_probe (GNL_OBJECT_SRC (comp),
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
         (GstPadProbeCallback) _stack_setup_done, comp, NULL);
