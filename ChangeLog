@@ -1,9 +1,405 @@
-=== release 1.3.90 ===
+=== release 1.3.91 ===
 
-2014-06-28  Sebastian Dröge <slomo@coaxion.net>
+2014-07-11  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.90
+	  releasing 1.3.91
+
+2014-07-10 18:11:20 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	* sys/v4l2/gstv4l2allocator.h:
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2allocator: Use qdata instead of parenting to DmabufMemory
+	  Parenting V4l2Memory to DmabufMemory was in conflict with recent
+	  optimization in DmabufMemory to avoid dup(), and didn't work with
+	  memory sharing. Instead, use a qdata and it's destroy notify.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730441
+
+2014-07-11 08:52:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/da.po:
+	* po/de.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/uk.po:
+	* po/vi.po:
+	  po: Update translations
+
+2014-07-08 17:50:47 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Workaround elements not requesting any buffers
+	  This is a workaround for element that don't request buffers when
+	  they should.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732288
+
+2014-07-06 11:27:36 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* tests/icles/videocrop-test.c:
+	  tests: fix pipeline leak in videocrop test
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732976
+
+2014-07-06 11:26:46 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* tests/examples/rtp/client-rtpaux.c:
+	  examples: client-rtpaux: Release reference to parent when done
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732976
+
+2014-07-10 17:19:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: fix query leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733003
+
+2014-07-10 12:10:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/wavenc/gstwavenc.c:
+	  wavenc: Return not-negotiated if we got no caps or caps negotiation failed
+	  And do it always, not inside a g_return_val_if_fail().
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=732939
+
+2014-07-08 13:34:28 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2src.c:
+	  v4l2src: Ensure internal pool activation
+	  Before we would hit an assertion "'gst_buffer_pool_is_active (bpool)' failed"
+	  if the internal pool was not used to push buffer downstrea, hence not
+	  given to the baseclass.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732912
+
+2014-07-04 20:22:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: fix double unlock in segment seek segment code path
+	  We only want to unlock if we push an event downstream and
+	  jump to done_unlock label afterwards. We would also unlock
+	  in case of a segment seek and then unlock again later, and
+	  nothing good can come of that.
+	  (This code looks a bit dodgy anyway though, shouldn't it
+	  also bail out with FLOW_EOS here in case of a segment seek
+	  scenario, just without the event?)
+
+2014-07-04 19:45:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/qtmux.c:
+	  tests: qtmux: suppress glib criticals caused by testing deprecated dts methods
+
+2014-07-04 03:21:30 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/avi/gstavidemux.c:
+	* gst/wavparse/gstwavparse.c:
+	  avidemux, wavparse: Print invalid fourcc in hex
+	  Previously this was printed as characters which caused later processing
+	  of the error message to sometimes warn about non-UTF-8 characters.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=732714
+
+2014-07-03 15:21:18 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Pool might be NULL in decide allocation
+	  If special stride is needed and downstream don't support VideoMeta,
+	  pool might be NULL in order to let the baseclass create a generic
+	  pool­. This would lead to assertion with on Exynos with:
+	  gst-launch-1.0 -v filesrc location=mov ! qtdemux ! h264parse ! \
+	  v4l2video8dec ! fakesink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732707
+
+2014-07-03 15:29:54 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	  v4l2bufferpool: Handle FD error during poll
+	  This will ensure we fail earlier if something unrecoverable
+	  happens.
+
+2014-07-03 15:28:45 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	  v4l2bufferpool: Wait before polling if queue is empty
+	  In kernel before 3.17, polling during queue underrun would unblock right
+	  away and trigger POLLERR. As we are not handling POLLERR, we would endup
+	  blocking in DQBUF call, which won't be unblocked correctly when going
+	  to NULL state. A deadlock at start caused by locking error in libv4l2 was
+	  also seen before this patch. Instead, we wait until the queue is no longer
+	  empty before polling.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731015
+
+2014-07-02 16:01:47 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: fix for mikey api change
+
+2014-06-30 10:29:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: fix probing and enumeration of stepwise frame sizes
+	  The code enumerating STEPWISE framesizes would start from
+	  (min_w, min_h) and then add (step_w, step_h) to get the
+	  next framesize. However, it should really allow any width
+	  from min_w to max_w with step_w and same for heights.
+	  Secondly, we would add and probe each individual stepped
+	  frame size to the caps as separate structure, which would
+	  lead to hundreds if not thousands of structs ending up in
+	  the probed caps. Use integer ranges with steps instead.
+	  This was particularly noticable with the Raspberry Pi Cam.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724521
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732458
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726521
+
+2014-06-27 11:33:06 +0100  Daniel Drake <drake@endlessm.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: drop workaround for misbehaving TRY_FMT
+	  This workaround from 2011 was causing 25 S_FMT ioctls to be sent
+	  to my UVC webcam from under gst_v4l2_object_get_caps as it probes
+	  all the formats. In total, this adds up to about 5 seconds of
+	  execution time, or a 10 second delay while starting up cheese.
+	  These ioctls come from a workaround from 2011 where TRY_FMT might
+	  make changes to hardware settings, so S_FMT was used to restore
+	  the original config:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=649067
+	  The driver bug is now assumed fixed. Remove the workaround to fix the
+	  long startup delay.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732326
+
+2014-07-01 12:50:31 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: reset QoS on segment event
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732540
+
+2014-07-01 15:14:34 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: send gap events instead of segment tricks
+	  This fixes missing frames from being time skipped.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732372
+
+2014-06-30 00:00:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/elements/rtpsession.c:
+	  rtpsession: Fix memory leaks in unit test
+
+2014-06-29 23:55:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: Don't leak caps
+
+2014-06-29 20:02:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: Fix compiler warning when compiling with G_DISABLE_ASSERT
+
+2014-06-29 19:59:53 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	  rtpssrcdemux: Fix compiler warning when compiling with G_DISABLE_ASSERT
+
+2014-06-29 19:57:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: Fix compiler warnings when compiling with G_DISABLE_ASSERT
+
+2014-06-29 19:54:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/deinterlace/gstdeinterlacemethod.c:
+	  deinterlace: Fix compiler warnings when compiling with G_DISABLE_ASSERT
+
+2014-06-29 17:05:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/pulse/pulsedeviceprovider.c:
+	  pulse: fix compiler warnings when compiling with -DG_DISABLE_ASSERT
+	  Compiler complains about uninitialised variables in the impossible
+	  'default' code path in device provider source/sink switch-case.
+
+2014-06-29 17:03:17 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* sys/v4l2/gstv4l2deviceprovider.c:
+	  v4l2: fix compiler warnings when compiling with -DG_DISABLE_ASSERT
+	  Compiler complains about uninitialised variables in the impossible
+	  'default' code path in device provider source/sink switch-case.
+
+2014-06-28 17:40:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/matroskaparse.c:
+	  tests: matroskaparse: fail on errors and disable pull mode test
+	  Actually look for error messages on the bus and fail if there
+	  is one before the EOS message. Disable pull mode test which is
+	  pointless as long as matroskaparse only supports push mode
+	  (pull mode support has not been ported over to 1.0).
+
+2014-06-28 17:37:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/matroska/matroska-parse.c:
+	  matroskaparse: don't error out if there's not enough data in the adapter
+	  gst_matroska_parse_take() would return FLOW_ERROR instead of
+	  FLOW_EOS in case there's less data in the adapter than requested,
+	  because buffer is NULL in that case which triggers the error
+	  code path. This made the unit test fail (occasionally at least,
+	  because of a bug in the unit test there's a race and it would
+	  happen only sporadically).
+
+2014-06-28 16:53:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/videomixer/videomixerorc-dist.c:
+	* gst/videomixer/videomixerorc-dist.h:
+	  videomixer: Update dist generated ORC files
+
+2014-06-28 16:48:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/videomixer/gstcms.c:
+	* gst/videomixer/gstcms.h:
+	* gst/videomixer/videoconvert.c:
+	* gst/videomixer/videoconvert.h:
+	* gst/videomixer/videomixerorc.orc:
+	  videomixer: Update videoconvert code from -base
+	  And also rename the remaining symbols to prevent conflicts
+	  during static linking.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728443
+
+2014-06-28 13:01:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/autodetect/gstautovideosrc.c:
+	  autovideosrc: use videotestsrc as fallback element instead of fakesrc
+	  fakesrc doesn't announce video caps, so most video pipelines will
+	  just error out with not-negotiated if a fallback element is created.
+
+2014-06-28 12:44:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/autodetect/gstautoaudiosrc.c:
+	* gst/autodetect/gstautodetect.c:
+	* gst/autodetect/gstautodetect.h:
+	  autoaudiosrc: use audiotestsrc as fallback element instead of fakesrc
+	  fakesrc doesn't announce audio caps, so most audio pipelines will
+	  just error out with not-negotiated if a fallback element is created.
+
+=== release 1.3.90 ===
+
+2014-06-28 11:21:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.3.90
+
+2014-06-28 11:08:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-06-26 14:52:57 -0400  Olivier Crête <olivier.crete@collabora.com>
 
