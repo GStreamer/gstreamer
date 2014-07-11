@@ -1253,7 +1253,8 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
         GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (comp),
             GST_DEBUG_GRAPH_SHOW_ALL, "eos-after-segment");
         gst_pad_remove_probe (GNL_OBJECT_SRC (comp), priv->commited_probeid);
-        _add_emit_commited_and_restart_task (comp);
+        GST_FIXME_OBJECT (comp, "Check it we need to emit or not!!");
+        _restart_task (comp, TRUE);
       }
 
       if (g_atomic_int_compare_and_exchange (&comp->priv->real_eos_seqnum,
@@ -2193,43 +2194,69 @@ _emit_commited_signal_func (GnlComposition * comp)
   return G_SOURCE_REMOVE;
 }
 
-static GstPadProbeReturn
-_add_emit_commited_and_restart_task (GnlComposition * comp)
+static void
+_restart_task (GnlComposition * comp, gboolean emit_commit)
 {
-  GST_INFO_OBJECT (comp, "Setting up commited source and restarting task!");
+  GST_INFO_OBJECT (comp, "Restarting task! (%semiting commit done?)",
+      emit_commit ? "" : "NOT ");
 
-  _add_gsource (comp, (GSourceFunc) _emit_commited_signal_func, comp, NULL,
-      G_PRIORITY_HIGH);
+  if (emit_commit)
+    _add_gsource (comp, (GSourceFunc) _emit_commited_signal_func, comp, NULL,
+        G_PRIORITY_HIGH);
 
   comp->priv->awaited_caps_seqnum = 0;
   comp->priv->commited_probeid = 0;
 
   gst_task_start (comp->task);
-
-  return GST_PAD_PROBE_REMOVE;
 }
 
-static GstPadProbeReturn
-_commit_done_cb (GstPad * pad, GstPadProbeInfo * info, GnlComposition * comp)
+static gboolean
+_is_ready_to_restart_task (GnlComposition * comp, GstEvent * event)
 {
-  if (GST_EVENT_TYPE (info->data) == GST_EVENT_CAPS ||
-      GST_EVENT_TYPE (info->data) == GST_EVENT_SEGMENT) {
-    gint seqnum = gst_event_get_seqnum (info->data);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS ||
+      GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+    gint seqnum = gst_event_get_seqnum (event);
 
 
     if (comp->priv->awaited_caps_seqnum == seqnum) {
       GST_INFO_OBJECT (comp, "Got %s with proper seqnum"
           " done with stack reconfiguration %" GST_PTR_FORMAT,
-          GST_EVENT_TYPE_NAME (info->data), info->data);
+          GST_EVENT_TYPE_NAME (event), event);
 
       GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (comp),
           GST_DEBUG_GRAPH_SHOW_ALL, "new-stack");
-      return _add_emit_commited_and_restart_task (comp);
+
+      return TRUE;
 
     } else {
       GST_ERROR_OBJECT (comp, "WARNING: Caps seqnum %i != wanted %i",
           seqnum, comp->priv->awaited_caps_seqnum);
     }
+  }
+
+  return FALSE;
+}
+
+static GstPadProbeReturn
+_commit_done_cb (GstPad * pad, GstPadProbeInfo * info, GnlComposition * comp)
+{
+  if (_is_ready_to_restart_task (comp, info->data)) {
+    _restart_task (comp, TRUE);
+
+    return GST_PAD_PROBE_REMOVE;
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+static GstPadProbeReturn
+_stack_setup_done_cb (GstPad * pad, GstPadProbeInfo * info,
+    GnlComposition * comp)
+{
+  if (_is_ready_to_restart_task (comp, info->data)) {
+    _restart_task (comp, FALSE);
+
+    return GST_PAD_PROBE_REMOVE;
   }
 
   return GST_PAD_PROBE_OK;
