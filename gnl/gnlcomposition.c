@@ -862,10 +862,8 @@ gnl_composition_init (GnlComposition * comp)
 
   comp->priv = priv;
 
-  GST_ERROR_OBJECT (comp, "HERE");
   priv->current_bin = gst_bin_new ("current-bin");
   gst_bin_add (GST_BIN (comp), priv->current_bin);
-  GST_ERROR_OBJECT (comp, "There");
 
   gnl_composition_reset (comp);
 
@@ -1231,7 +1229,7 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       }
       COMP_FLUSHING_UNLOCK (comp);
 
-      GST_ERROR_OBJECT (comp, "Got EOS, last EOS seqnum id : %i current "
+      GST_INFO_OBJECT (comp, "Got EOS, last EOS seqnum id : %i current "
           "seq num is: %i", comp->priv->real_eos_seqnum, seqnum);
 
       if (priv->commited_probeid && comp->priv->awaited_segment_seqnum == 0) {
@@ -1247,8 +1245,7 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       if (g_atomic_int_compare_and_exchange (&comp->priv->real_eos_seqnum,
               seqnum, 1)) {
 
-        GST_INFO_OBJECT (comp, "Got EOS for real, fowarding it");
-        GST_ERROR_OBJECT (comp, "GOGOGO EOS -- Seq ID is %i", seqnum);
+        GST_INFO_OBJECT (comp, "Got EOS for real, seq ID is %i, fowarding it", seqnum);
 
         return GST_PAD_PROBE_OK;
       }
@@ -1347,7 +1344,6 @@ have_to_update_pipeline (GnlComposition * comp)
 static gboolean
 gnl_composition_commit_func (GnlObject * object, gboolean recurse)
 {
-  GST_ERROR ("Adding commit gsource");
   _add_commit_gsource (GNL_COMPOSITION (object));
   return TRUE;
 }
@@ -1681,7 +1677,6 @@ gnl_composition_reset_target_pad (GnlComposition * comp)
   gnl_object_ghost_pad_set_target (GNL_OBJECT (comp),
       GNL_OBJECT_SRC (comp), NULL);
   priv->toplevelentry = NULL;
-  GST_ERROR ("NEED STRAM START");
   priv->send_stream_start = TRUE;
 }
 
@@ -2167,7 +2162,7 @@ _emit_commited_signal_func (GnlComposition * comp)
 static GstPadProbeReturn
 _add_emit_commited_and_restart_task (GnlComposition * comp)
 {
-  GST_ERROR_OBJECT (comp, "Setup commit and restart task!");
+  GST_INFO_OBJECT (comp, "Setting up commited source and restarting task!");
 
   MAIN_CONTEXT_LOCK (comp);
   g_main_context_invoke_full (comp->priv->mcontext, G_PRIORITY_HIGH,
@@ -2748,7 +2743,7 @@ _relink_new_stack (GnlComposition * comp, GNode * stack,
 {
   GnlCompositionPrivate *priv = comp->priv;
 
-  GST_ERROR ("Reseting seqnum to %i", gst_event_get_seqnum (toplevel_seek));
+  GST_INFO_OBJECT (comp, "Reseting seqnum to %i", gst_event_get_seqnum (toplevel_seek));
   GNL_OBJECT (comp)->wanted_seqnum = gst_event_get_seqnum (toplevel_seek);
 
   _relink_single_node (comp, stack, toplevel_seek);
@@ -2835,7 +2830,7 @@ _activate_new_stack (GnlComposition * comp)
       priv->segment_stop = GST_CLOCK_TIME_NONE;
     }
 
-    GST_ERROR_OBJECT (comp, "Nothing else in the composition"
+    GST_DEBUG_OBJECT (comp, "Nothing else in the composition"
         ", update 'worked'");
     return TRUE;
   }
@@ -2848,12 +2843,12 @@ _activate_new_stack (GnlComposition * comp)
   pad = GNL_OBJECT_SRC (topelement);
   topentry = COMP_ENTRY (comp, topelement);
 
-  GST_ERROR_OBJECT (comp,
+  GST_INFO_OBJECT (comp,
       "We have a valid toplevel element pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   gnl_composition_ghost_pad_set_target (comp, pad, topentry);
 
-  GST_ERROR_OBJECT (comp, "New stack activated!");
+  GST_DEBUG_OBJECT (comp, "New stack activated!");
   return TRUE;
 }
 
@@ -2930,7 +2925,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   GstState nextstate = (GST_STATE_NEXT (comp) == GST_STATE_VOID_PENDING) ?
       GST_STATE (comp) : GST_STATE_NEXT (comp);
 
-  GST_ERROR_OBJECT (comp,
+  GST_DEBUG_OBJECT (comp,
       "currenttime:%" GST_TIME_FORMAT
       " initial:%d , flushing downstream:%d", GST_TIME_ARGS (currenttime), initial, flush_downstream);
 
@@ -3022,7 +3017,7 @@ gnl_composition_add_object (GstBin * bin, GstElement * element)
   GnlComposition *comp = (GnlComposition *) bin;
 
   if (element == comp->priv->current_bin) {
-    GST_ERROR_OBJECT (comp, "Adding internal bin");
+    GST_INFO_OBJECT (comp, "Adding internal bin");
     return GST_BIN_CLASS (parent_class)->add_element (bin, element);
   }
 
@@ -3129,7 +3124,7 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element)
   GnlComposition *comp = (GnlComposition *) bin;
 
   if (element == comp->priv->current_bin) {
-    GST_ERROR_OBJECT (comp, "Adding internal bin");
+    GST_INFO_OBJECT (comp, "Adding internal bin");
     return GST_BIN_CLASS (parent_class)->remove_element (bin, element);
   }
 
@@ -3145,7 +3140,7 @@ _gnl_composition_remove_entry (GnlComposition * comp, GnlObject * object)
   GnlCompositionEntry *entry;
   GnlCompositionPrivate *priv = comp->priv;
 
-  GST_ERROR_OBJECT (comp, "object %s", GST_OBJECT_NAME (object));
+  GST_DEBUG_OBJECT (comp, "removing object %s", GST_OBJECT_NAME (object));
 
   /* we only accept GnlObject */
   entry = COMP_ENTRY (comp, object);
