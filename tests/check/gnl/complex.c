@@ -152,6 +152,7 @@ GST_START_TEST (test_one_space_another)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
   /* TOPOLOGY
@@ -230,6 +231,7 @@ GST_START_TEST (test_one_default_another)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
   /* TOPOLOGY
@@ -346,6 +348,7 @@ GST_START_TEST (test_one_expandable_another)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
   /* TOPOLOGY
@@ -477,6 +480,7 @@ GST_START_TEST (test_renegotiation)
   pipeline = gst_pipeline_new ("test_pipeline");
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
   /*
@@ -682,6 +686,7 @@ GST_START_TEST (test_one_bin_space_another)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
   /*
@@ -750,6 +755,7 @@ GST_START_TEST (test_one_above_another)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
   /*

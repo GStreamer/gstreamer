@@ -879,8 +879,6 @@ gnl_composition_init (GnlComposition * comp)
   priv->gnl_event_pad_func = GST_PAD_EVENTFUNC (GNL_OBJECT_SRC (comp));
   gst_pad_set_event_function (GNL_OBJECT_SRC (comp),
       GST_DEBUG_FUNCPTR (gnl_composition_event_handler));
-
-  _start_task (comp);
 }
 
 static void
@@ -947,8 +945,6 @@ gnl_composition_finalize (GObject * object)
   g_mutex_clear (&priv->objects_lock);
   g_mutex_clear (&priv->flushing_lock);
   g_mutex_clear (&priv->pending_io_lock);
-
-  _stop_task (comp);
   g_rec_mutex_clear (&comp->task_rec_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -2429,6 +2425,9 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
       gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      _start_task (comp);
+      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gnl_composition_reset (comp);
 
@@ -2465,6 +2464,7 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
       gnl_composition_reset (comp);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      _stop_task (comp);
       _set_all_children_state (comp, GST_STATE_NULL);
       gnl_composition_reset (comp);
       break;

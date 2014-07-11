@@ -132,6 +132,7 @@ GST_START_TEST (test_simple_operation)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
 
   /* TOPOLOGY
    *
@@ -219,6 +220,7 @@ GST_START_TEST (test_pyramid_operations)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
 
   /*
      source
@@ -310,6 +312,7 @@ GST_START_TEST (test_pyramid_operations2)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
 
   /*
      source1
@@ -406,6 +409,7 @@ GST_START_TEST (test_pyramid_operations_expandable)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
 
   /*
      source1
@@ -490,6 +494,7 @@ GST_START_TEST (test_complex_operations)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
 
   /* TOPOLOGY
    *
@@ -580,6 +585,7 @@ GST_START_TEST (test_complex_operations_bis)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
 
   /* TOPOLOGY
    *

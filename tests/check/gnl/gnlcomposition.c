@@ -49,6 +49,8 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
 
+  gst_element_set_state (comp, GST_STATE_READY);
+
   sink = gst_element_factory_make_or_warn ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
 
@@ -177,6 +179,8 @@ GST_START_TEST (test_remove_invalid_object)
 
   composition = GST_BIN (gst_element_factory_make ("gnlcomposition",
           "composition"));
+  gst_element_set_state (GST_ELEMENT (composition), GST_STATE_READY);
+
   source1 = gst_element_factory_make ("gnlsource", "source1");
   source2 = gst_element_factory_make ("gnlsource", "source2");
 
@@ -242,6 +246,7 @@ GST_START_TEST (test_simple_adder)
 
   GST_ERROR ("Pipeline refcounts: %i", ((GObject *) pipeline)->ref_count);
   composition = gst_element_factory_make ("gnlcomposition", "composition");
+  gst_element_set_state (composition, GST_STATE_READY);
   fakesink = gst_element_factory_make ("fakesink", NULL);
 
   /* gnl_adder */

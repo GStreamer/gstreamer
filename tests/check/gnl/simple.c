@@ -13,6 +13,7 @@ test_simplest_full (void)
   pipeline = gst_pipeline_new ("test_pipeline");
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
   /*
@@ -116,6 +117,7 @@ test_time_duration_full (void)
 
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
 
   /*
      Source 1
@@ -182,6 +184,7 @@ test_time_duration_full (void)
 
   ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
+  gst_element_set_state (comp, GST_STATE_NULL);
   gst_object_unref (comp);
 }
 
@@ -201,6 +204,7 @@ test_one_after_other_full (void)
   pipeline = gst_pipeline_new ("test_pipeline");
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
   /*
@@ -388,6 +392,7 @@ test_one_under_another_full (void)
   pipeline = gst_pipeline_new ("test_pipeline");
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
   /* TOPOLOGY
@@ -530,6 +535,7 @@ test_one_bin_after_other_full (void)
   pipeline = gst_pipeline_new ("test_pipeline");
   comp =
       gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
   /*
