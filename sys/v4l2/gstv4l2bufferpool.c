@@ -1171,27 +1171,6 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
           ret = gst_v4l2_buffer_pool_dqbuf (pool, buffer);
           if (G_UNLIKELY (ret != GST_FLOW_OK))
             goto done;
-
-          /* start copying buffers when we are running low on buffers */
-          if (g_atomic_int_get (&pool->num_queued) < pool->copy_threshold) {
-            GstBuffer *copy;
-
-            if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP)) {
-              if (pclass->acquire_buffer (bpool, &copy, params) == GST_FLOW_OK) {
-                gst_v4l2_buffer_pool_release_buffer (bpool, copy);
-                break;
-              }
-            }
-
-            /* copy the buffer */
-            copy = gst_buffer_copy_region (*buffer,
-                GST_BUFFER_COPY_ALL | GST_BUFFER_COPY_DEEP, 0, -1);
-            GST_LOG_OBJECT (pool, "copy buffer %p->%p", *buffer, copy);
-
-            /* and requeue so that we can continue capturing */
-            gst_v4l2_buffer_pool_release_buffer (bpool, *buffer);
-            *buffer = copy;
-          }
           break;
         }
         case GST_V4L2_IO_USERPTR:
@@ -1580,9 +1559,32 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
           if ((*buf)->pool == bpool) {
             if (gst_buffer_get_size (*buf) == 0)
               goto eos;
-            else
-              /* nothing, data was inside the buffer when we did _acquire() */
-              goto done;
+
+            /* start copying buffers when we are running low on buffers */
+            if (g_atomic_int_get (&pool->num_queued) < pool->copy_threshold) {
+              GstBuffer *copy;
+
+              if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP)) {
+
+                if (gst_buffer_pool_acquire_buffer (bpool, &copy,
+                        NULL) == GST_FLOW_OK) {
+                  gst_v4l2_buffer_pool_release_buffer (bpool, copy);
+                  goto done;
+                }
+              }
+
+              /* copy the buffer */
+              copy = gst_buffer_copy_region (*buf,
+                  GST_BUFFER_COPY_ALL | GST_BUFFER_COPY_DEEP, 0, -1);
+              GST_LOG_OBJECT (pool, "copy buffer %p->%p", *buf, copy);
+
+              /* and requeue so that we can continue capturing */
+              gst_buffer_unref (*buf);
+              *buf = copy;
+            }
+
+            /* nothing, data was inside the buffer when we did _acquire() */
+            goto done;
           }
 
           /* buffer not from our pool, grab a frame and copy it into the target */
