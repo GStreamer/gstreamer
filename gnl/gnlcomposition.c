@@ -160,6 +160,7 @@ struct _GnlCompositionPrivate
    * we can not add any source, avoiding:
    * "g_source_attach: assertion '!SOURCE_DESTROYED (source)' failed" */
   GMutex mcontext_lock;
+  GList *gsources;
 
   gboolean reset_time;
 
@@ -427,6 +428,13 @@ join_failed:
   return res;
 }
 
+static void
+_free_seek_data (SeekData * seekd)
+{
+  gst_event_unref (seekd->event);
+  g_slice_free (SeekData, seekd);
+}
+
 static gboolean
 _seek_pipeline_func (SeekData * seekd)
 {
@@ -480,23 +488,32 @@ _seek_pipeline_func (SeekData * seekd)
   priv->reset_time = FALSE;
 
 beach:
-  gst_event_unref (seekd->event);
-  g_slice_free (SeekData, seekd);
-
   return G_SOURCE_REMOVE;
 }
 
+static void
+_add_gsource (GnlComposition * comp, GSourceFunc func,
+    gpointer data, GDestroyNotify destroy, gint priority)
+{
+  GSource *source;
+  GnlCompositionPrivate *priv = comp->priv;
 
+  MAIN_CONTEXT_LOCK (comp);
+  source = g_idle_source_new ();
+  g_source_set_callback (source, func, data, destroy);
+  g_source_set_priority (source, priority);
+  priv->gsources = g_list_prepend (priv->gsources, source);
+  g_source_attach (source, priv->mcontext);
+  MAIN_CONTEXT_UNLOCK (comp);
+}
 
 static void
 _add_update_gsource (GnlComposition * comp)
 {
   GST_DEBUG_OBJECT (comp, "Adding GSource");
 
-  MAIN_CONTEXT_LOCK (comp);
-  g_main_context_invoke (comp->priv->mcontext,
-      (GSourceFunc) update_pipeline_func, comp);
-  MAIN_CONTEXT_UNLOCK (comp);
+  _add_gsource (comp, (GSourceFunc) update_pipeline_func, comp,
+      NULL, G_PRIORITY_DEFAULT);
 }
 
 static void
@@ -504,10 +521,8 @@ _add_commit_gsource (GnlComposition * comp)
 {
   GST_DEBUG_OBJECT (comp, "Adding GSource");
 
-  MAIN_CONTEXT_LOCK (comp);
-  g_main_context_invoke (comp->priv->mcontext,
-      (GSourceFunc) _commit_func, comp);
-  MAIN_CONTEXT_UNLOCK (comp);
+  _add_gsource (comp, (GSourceFunc) _commit_func, comp, NULL,
+      G_PRIORITY_DEFAULT);
 }
 
 static void
@@ -520,10 +535,8 @@ _add_seek_gsource (GnlComposition * comp, GstEvent * event)
   seekd->comp = comp;
   seekd->event = event;
 
-  MAIN_CONTEXT_LOCK (comp);
-  g_main_context_invoke (comp->priv->mcontext,
-      (GSourceFunc) _seek_pipeline_func, seekd);
-  MAIN_CONTEXT_UNLOCK (comp);
+  _add_gsource (comp, (GSourceFunc) _seek_pipeline_func, seekd,
+      (GDestroyNotify) _free_seek_data, G_PRIORITY_DEFAULT);
 }
 
 
@@ -552,10 +565,8 @@ _add_initialize_stack_gsource (GnlComposition * comp)
 {
   GST_DEBUG_OBJECT (comp, "Adding GSource");
 
-  MAIN_CONTEXT_LOCK (comp);
-  g_main_context_invoke (comp->priv->mcontext,
-      (GSourceFunc) _initialize_stack_func, comp);
-  MAIN_CONTEXT_UNLOCK (comp);
+  _add_gsource (comp, (GSourceFunc) _initialize_stack_func, comp,
+      NULL, G_PRIORITY_DEFAULT);
 }
 
 static void
@@ -620,10 +631,8 @@ _add_remove_object_gsource (GnlComposition * comp, GnlObject * object)
   childio->comp = comp;
   childio->object = object;
 
-  MAIN_CONTEXT_LOCK (comp);
-  g_main_context_invoke_full (comp->priv->mcontext, G_PRIORITY_DEFAULT,
-      (GSourceFunc) _remove_object_func, childio, _free_child_io_data);
-  MAIN_CONTEXT_UNLOCK (comp);
+  _add_gsource (comp, (GSourceFunc) _remove_object_func,
+      childio, _free_child_io_data, G_PRIORITY_DEFAULT);
 }
 
 static gboolean
@@ -682,10 +691,8 @@ _add_add_object_gsource (GnlComposition * comp, GnlObject * object)
   childio->comp = comp;
   childio->object = object;
 
-  MAIN_CONTEXT_LOCK (comp);
-  g_main_context_invoke_full (comp->priv->mcontext, G_PRIORITY_DEFAULT,
-      (GSourceFunc) _add_object_func, childio, _free_child_io_data);
-  MAIN_CONTEXT_UNLOCK (comp);
+  _add_gsource (comp, (GSourceFunc) _add_object_func, childio,
+      _free_child_io_data, G_PRIORITY_DEFAULT);
 }
 
 static gboolean
@@ -2195,10 +2202,8 @@ _add_emit_commited_and_restart_task (GnlComposition * comp)
 {
   GST_INFO_OBJECT (comp, "Setting up commited source and restarting task!");
 
-  MAIN_CONTEXT_LOCK (comp);
-  g_main_context_invoke_full (comp->priv->mcontext, G_PRIORITY_HIGH,
-      (GSourceFunc) _emit_commited_signal_func, comp, NULL);
-  MAIN_CONTEXT_UNLOCK (comp);
+  _add_gsource (comp, (GSourceFunc) _emit_commited_signal_func, comp, NULL,
+      G_PRIORITY_HIGH);
 
 
   comp->priv->awaited_segment_seqnum = 0;
@@ -2768,13 +2773,13 @@ _relink_new_stack (GnlComposition * comp, GNode * stack,
  * unlock_activate_stack (GnlComposition * comp, GNode * node, GstState state)
  * {
  *   GNode *child;
- * 
+ *
  *   GST_LOG_OBJECT (comp, "object:%s",
  *       GST_ELEMENT_NAME ((GstElement *) (node->data)));
- * 
+ *
  *   gst_element_set_locked_state ((GstElement *) (node->data), FALSE);
  *   gst_element_set_state (GST_ELEMENT (node->data), state);
- * 
+ *
  *   for (child = node->children; child; child = child->next)
  *     unlock_activate_stack (comp, child, state);
  * }
