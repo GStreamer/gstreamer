@@ -806,7 +806,7 @@ gnl_object_ghost_pad_set_target (GnlObject * object, GstPad * ghost,
     GST_DEBUG_OBJECT (object, "setting target %s:%s on %s:%s",
         GST_DEBUG_PAD_NAME (target), GST_DEBUG_PAD_NAME (ghost));
   } else {
-    GST_ERROR_OBJECT (object, "removing target from ghostpad");
+    GST_DEBUG_OBJECT (object, "removing target from ghostpad");
     priv->pending_seek = NULL;
   }
 
