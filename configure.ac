@@ -671,16 +671,8 @@ dnl *** libvisual ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
 AG_GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization library], libvisual, [
   AG_GST_PKG_CHECK_MODULES(LIBVISUAL, libvisual-0.4 >= 0.4.0)
-  if test $HAVE_LIBVISUAL = no
-  then
-    AG_GST_PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.2.0)
-    if test x$HAVE_LIBVISUAL = xyes; then
-      LIBVIS_PLUGINSDIR="`$PKG_CONFIG --variable=pluginsbasedir libvisual-0.2`"
-    fi
-  else
-    if test x$HAVE_LIBVISUAL = xyes; then
-      LIBVIS_PLUGINSDIR="`$PKG_CONFIG --variable=pluginsbasedir libvisual-0.4`"
-    fi
+  if test x$HAVE_LIBVISUAL = xyes; then
+    LIBVIS_PLUGINSDIR="`$PKG_CONFIG --variable=pluginsbasedir libvisual-0.4`"
   fi
   AC_MSG_NOTICE([libvisual pluginsdir: $LIBVIS_PLUGINSDIR])
   if test x$LIBVIS_PLUGINSDIR != x; then

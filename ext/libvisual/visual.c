@@ -48,12 +48,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
         "layout = (string) interleaved, " "channels = (int) { 1, 2 }, "
-#if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
-        "rate = (int) { 8000, 11250, 22500, 32000, 44100, 48000, 96000 }"
-#else
-        "rate = (int) [ 1000, MAX ]"
-#endif
-    )
+        "rate = (int) { 8000, 11250, 22500, 32000, 44100, 48000, 96000 }")
     );
 
 
@@ -224,6 +219,9 @@ gst_visual_render (GstAudioVisualizer * bscope, GstBuffer * audio,
   const guint16 *adata;
   gint i, channels;
   gboolean res = TRUE;
+  VisBuffer *lbuf, *rbuf;
+  guint16 ldata[VISUAL_SAMPLES], rdata[VISUAL_SAMPLES];
+  VisAudioSampleRateType vrate;
 
   visual_video_set_buffer (visual->video, GST_VIDEO_FRAME_PLANE_DATA (video,
           0));
@@ -235,74 +233,10 @@ gst_visual_render (GstAudioVisualizer * bscope, GstBuffer * audio,
   gst_buffer_map (audio, &amap, GST_MAP_READ);
   adata = (const guint16 *) amap.data;
 
-#if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
-  {
-    VisBuffer *lbuf, *rbuf;
-    guint16 ldata[VISUAL_SAMPLES], rdata[VISUAL_SAMPLES];
-    VisAudioSampleRateType vrate;
+  lbuf = visual_buffer_new_with_buffer (ldata, sizeof (ldata), NULL);
+  rbuf = visual_buffer_new_with_buffer (rdata, sizeof (rdata), NULL);
 
-    lbuf = visual_buffer_new_with_buffer (ldata, sizeof (ldata), NULL);
-    rbuf = visual_buffer_new_with_buffer (rdata, sizeof (rdata), NULL);
-
-    if (channels == 2) {
-      for (i = 0; i < VISUAL_SAMPLES; i++) {
-        ldata[i] = *adata++;
-        rdata[i] = *adata++;
-      }
-    } else {
-      for (i = 0; i < VISUAL_SAMPLES; i++) {
-        ldata[i] = *adata;
-        rdata[i] = *adata++;
-      }
-    }
-
-    /* TODO(ensonic): move to setup */
-    switch (bscope->ainfo.rate) {
-      case 8000:
-        vrate = VISUAL_AUDIO_SAMPLE_RATE_8000;
-        break;
-      case 11250:
-        vrate = VISUAL_AUDIO_SAMPLE_RATE_11250;
-        break;
-      case 22500:
-        vrate = VISUAL_AUDIO_SAMPLE_RATE_22500;
-        break;
-      case 32000:
-        vrate = VISUAL_AUDIO_SAMPLE_RATE_32000;
-        break;
-      case 44100:
-        vrate = VISUAL_AUDIO_SAMPLE_RATE_44100;
-        break;
-      case 48000:
-        vrate = VISUAL_AUDIO_SAMPLE_RATE_48000;
-        break;
-      case 96000:
-        vrate = VISUAL_AUDIO_SAMPLE_RATE_96000;
-        break;
-      default:
-        visual_object_unref (VISUAL_OBJECT (lbuf));
-        visual_object_unref (VISUAL_OBJECT (rbuf));
-        GST_ERROR_OBJECT (visual, "unsupported rate %d", bscope->ainfo.rate);
-        res = FALSE;
-        goto done;
-    }
-
-    visual_audio_samplepool_input_channel (visual->audio->samplepool,
-        lbuf,
-        vrate, VISUAL_AUDIO_SAMPLE_FORMAT_S16,
-        (char *) VISUAL_AUDIO_CHANNEL_LEFT);
-    visual_audio_samplepool_input_channel (visual->audio->samplepool, rbuf,
-        vrate, VISUAL_AUDIO_SAMPLE_FORMAT_S16,
-        (char *) VISUAL_AUDIO_CHANNEL_RIGHT);
-
-    visual_object_unref (VISUAL_OBJECT (lbuf));
-    visual_object_unref (VISUAL_OBJECT (rbuf));
-
-  }
-#else
   if (channels == 2) {
-    guint16 *ldata = visual->audio->plugpcm[0];
-    guint16 *rdata = visual->audio->plugpcm[1];
     for (i = 0; i < VISUAL_SAMPLES; i++) {
       ldata[i] = *adata++;
       rdata[i] = *adata++;
@@ -313,7 +247,48 @@ gst_visual_render (GstAudioVisualizer * bscope, GstBuffer * audio,
       rdata[i] = *adata++;
     }
   }
-#endif
+
+  /* TODO(ensonic): move to setup */
+  switch (bscope->ainfo.rate) {
+    case 8000:
+      vrate = VISUAL_AUDIO_SAMPLE_RATE_8000;
+      break;
+    case 11250:
+      vrate = VISUAL_AUDIO_SAMPLE_RATE_11250;
+      break;
+    case 22500:
+      vrate = VISUAL_AUDIO_SAMPLE_RATE_22500;
+      break;
+    case 32000:
+      vrate = VISUAL_AUDIO_SAMPLE_RATE_32000;
+      break;
+    case 44100:
+      vrate = VISUAL_AUDIO_SAMPLE_RATE_44100;
+      break;
+    case 48000:
+      vrate = VISUAL_AUDIO_SAMPLE_RATE_48000;
+      break;
+    case 96000:
+      vrate = VISUAL_AUDIO_SAMPLE_RATE_96000;
+      break;
+    default:
+      visual_object_unref (VISUAL_OBJECT (lbuf));
+      visual_object_unref (VISUAL_OBJECT (rbuf));
+      GST_ERROR_OBJECT (visual, "unsupported rate %d", bscope->ainfo.rate);
+      res = FALSE;
+      goto done;
+  }
+
+  visual_audio_samplepool_input_channel (visual->audio->samplepool,
+      lbuf,
+      vrate, VISUAL_AUDIO_SAMPLE_FORMAT_S16,
+      (char *) VISUAL_AUDIO_CHANNEL_LEFT);
+  visual_audio_samplepool_input_channel (visual->audio->samplepool, rbuf,
+      vrate, VISUAL_AUDIO_SAMPLE_FORMAT_S16,
+      (char *) VISUAL_AUDIO_CHANNEL_RIGHT);
+
+  visual_object_unref (VISUAL_OBJECT (lbuf));
+  visual_object_unref (VISUAL_OBJECT (rbuf));
 
   visual_audio_analyze (visual->audio);
   visual_actor_run (visual->actor, visual->audio);
