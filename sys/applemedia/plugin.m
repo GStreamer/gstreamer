@@ -87,7 +87,7 @@ plugin_init (GstPlugin * plugin)
   res &= gst_element_register (plugin, "vth264encbin", GST_RANK_NONE,
       GST_TYPE_VT_H264_ENC_BIN);
 #endif
-  res &= gst_element_register (plugin, "atdec", GST_RANK_PRIMARY, GST_TYPE_ATDEC);
+  res &= gst_element_register (plugin, "atdec", GST_RANK_MARGINAL, GST_TYPE_ATDEC);
 
 #ifdef HAVE_VIDEOTOOLBOX
   res &= gst_element_register (plugin, "vtdec", GST_RANK_PRIMARY, GST_TYPE_VTDEC);
