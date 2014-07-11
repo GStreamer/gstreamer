@@ -172,6 +172,7 @@ struct _GnlCompositionPrivate
 
   gboolean seeking_itself;
   gint real_eos_seqnum;
+  gint flush_seqnum;
 
   /* While we do not get a buffer on our srcpad,
    * we are not commited */
@@ -1143,6 +1144,7 @@ gnl_composition_reset (GnlComposition * comp)
   priv->initialized = FALSE;
   priv->send_stream_start = TRUE;
   priv->real_eos_seqnum = 0;
+  priv->flush_seqnum = 0;
 
   _empty_bin (GST_BIN_CAST (priv->current_bin));
 
@@ -1161,12 +1163,21 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      GST_DEBUG_OBJECT (comp,
-          "replacing flush stop event with a flush stop event with 'reset_time' = %d",
-          priv->reset_time);
-      GST_PAD_PROBE_INFO_DATA (info) =
-          gst_event_new_flush_stop (priv->reset_time);
-      gst_event_unref (event);
+      if (gst_event_get_seqnum (event) != comp->priv->flush_seqnum) {
+        GST_ERROR_OBJECT (comp, "Dropping flush stop");
+        retval = GST_PAD_PROBE_DROP;
+      } else {
+        GST_ERROR_OBJECT (comp, "Forwarding our flush stop with seqnum %i", comp->priv->flush_seqnum);
+        comp->priv->flush_seqnum = 0;
+      }
+      break;
+    case GST_EVENT_FLUSH_START:
+      if (gst_event_get_seqnum (event) != comp->priv->flush_seqnum) {
+        GST_ERROR_OBJECT (comp, "Dropping flush start");
+        retval = GST_PAD_PROBE_DROP;
+      } else {
+        GST_ERROR_OBJECT (comp, "Forwarding our flush start with seqnum %i", comp->priv->flush_seqnum);
+      }
       break;
     case GST_EVENT_STREAM_START:
       if (g_atomic_int_compare_and_exchange (&priv->send_stream_start, TRUE,
@@ -1494,6 +1505,9 @@ _seek_current_stack (GnlComposition * comp, GstEvent * event)
   GstPad *peer = gst_pad_get_peer (GNL_OBJECT_SRC (comp));
 
   GST_INFO_OBJECT (comp, "Seeking itself %" GST_PTR_FORMAT, event);
+
+  priv->flush_seqnum = gst_event_get_seqnum (event);
+  GST_ERROR_OBJECT (comp, "sending flushes downstream with seqnum %d", priv->flush_seqnum);
 
   priv->seeking_itself = TRUE;
   res = gst_pad_push_event (peer, event);
@@ -2105,9 +2119,17 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
     ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT_SRC (comp)));
 
     if (ptarget) {
-      gst_element_send_event (priv->current_bin, gst_event_new_flush_start ());
+      GstEvent *flush_event;
+
+      flush_event = gst_event_new_flush_start ();
+      priv->flush_seqnum = gst_event_get_seqnum (flush_event);
+      GST_ERROR_OBJECT (comp, "sending flushes downstream with seqnum %d", priv->flush_seqnum);
+      gst_element_send_event (priv->current_bin, flush_event);
+
+      flush_event = gst_event_new_flush_stop (TRUE);
+      gst_event_set_seqnum (flush_event, priv->flush_seqnum);
       gst_element_send_event (priv->current_bin,
-          gst_event_new_flush_stop (TRUE));
+          flush_event);
 
       gst_object_unref (ptarget);
     }
