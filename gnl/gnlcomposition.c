@@ -247,6 +247,7 @@ static GstPadProbeReturn _add_emit_commited_and_restart_task (GnlComposition *
     comp);
 static gboolean _set_real_eos_seqnum_from_seek (GnlComposition * comp,
     GstEvent * event);
+static gboolean _emit_commited_signal_func (GnlComposition * comp);
 
 
 /* COMP_REAL_START: actual position to start current playback at. */
@@ -494,6 +495,9 @@ _add_gsource (GnlComposition * comp, GSourceFunc func,
   GSource *source;
   GnlCompositionPrivate *priv = comp->priv;
 
+  GST_INFO_OBJECT (comp, "Adding GSource for function: %s",
+      GST_DEBUG_FUNCPTR_NAME (func));
+
   MAIN_CONTEXT_LOCK (comp);
   source = g_idle_source_new ();
   g_source_set_callback (source, func, data, destroy);
@@ -501,24 +505,6 @@ _add_gsource (GnlComposition * comp, GSourceFunc func,
   priv->gsources = g_list_prepend (priv->gsources, source);
   g_source_attach (source, priv->mcontext);
   MAIN_CONTEXT_UNLOCK (comp);
-}
-
-static void
-_add_update_gsource (GnlComposition * comp)
-{
-  GST_DEBUG_OBJECT (comp, "Adding GSource");
-
-  _add_gsource (comp, (GSourceFunc) update_pipeline_func, comp,
-      NULL, G_PRIORITY_DEFAULT);
-}
-
-static void
-_add_commit_gsource (GnlComposition * comp)
-{
-  GST_DEBUG_OBJECT (comp, "Adding GSource");
-
-  _add_gsource (comp, (GSourceFunc) _commit_func, comp, NULL,
-      G_PRIORITY_DEFAULT);
 }
 
 static void
@@ -554,15 +540,6 @@ _initialize_stack_func (GnlComposition * comp)
   priv->initialized = TRUE;
 
   return G_SOURCE_REMOVE;
-}
-
-static void
-_add_initialize_stack_gsource (GnlComposition * comp)
-{
-  GST_DEBUG_OBJECT (comp, "Adding GSource");
-
-  _add_gsource (comp, (GSourceFunc) _initialize_stack_func, comp,
-      NULL, G_PRIORITY_DEFAULT);
 }
 
 static void
@@ -806,6 +783,14 @@ gnl_composition_class_init (GnlCompositionClass * klass)
   gnlobject_class->commit = gnl_composition_commit_func;
   klass->remove_object_handler = remove_object_handler;
   klass->add_object_handler = add_object_handler;
+
+  GST_DEBUG_FUNCPTR (_seek_pipeline_func);
+  GST_DEBUG_FUNCPTR (_remove_object_func);
+  GST_DEBUG_FUNCPTR (_add_object_func);
+  GST_DEBUG_FUNCPTR (update_pipeline_func);
+  GST_DEBUG_FUNCPTR (_commit_func);
+  GST_DEBUG_FUNCPTR (_emit_commited_signal_func);
+  GST_DEBUG_FUNCPTR (_initialize_stack_func);
 }
 
 static void
@@ -1269,7 +1254,8 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
         return GST_PAD_PROBE_OK;
       }
 
-      _add_update_gsource (comp);
+      _add_gsource (comp, (GSourceFunc) update_pipeline_func, comp,
+          NULL, G_PRIORITY_DEFAULT);
       retval = GST_PAD_PROBE_DROP;
     }
       break;
@@ -1363,7 +1349,8 @@ have_to_update_pipeline (GnlComposition * comp)
 static gboolean
 gnl_composition_commit_func (GnlObject * object, gboolean recurse)
 {
-  _add_commit_gsource (GNL_COMPOSITION (object));
+  _add_gsource (GNL_COMPOSITION (object), (GSourceFunc) _commit_func,
+      GNL_COMPOSITION (object), NULL, G_PRIORITY_DEFAULT);
   return TRUE;
 }
 
@@ -2418,7 +2405,8 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
         gst_iterator_free (children);
       }
 
-      _add_initialize_stack_gsource (comp);
+      _add_gsource (comp, (GSourceFunc) _initialize_stack_func, comp,
+          NULL, G_PRIORITY_DEFAULT);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       _set_all_children_state (comp, GST_STATE_READY);
