@@ -334,23 +334,11 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
           GST_DEBUG_OBJECT (object, "Setting wanted_seqnum to %i",
               object->wanted_seqnum);
           break;
-        case GST_EVENT_CAPS:
-          if (object->wanted_seqnum != 0) {
-
-            GST_ERROR_OBJECT (object, "Got caps, seqnum-> %i (wanted %i)",
-                gst_event_get_seqnum (event), object->wanted_seqnum);
-
-            object->seqnum = object->wanted_seqnum;
-            object->wanted_seqnum = 0;
-            gst_event_set_seqnum (event, object->seqnum);
-          }
-          break;
         case GST_EVENT_SEGMENT:
           event = translate_outgoing_segment (object, event);
-          if (object->seqnum) {
-            GST_INFO_OBJECT (object, "Tweaking SEGMENT seqnum from %i to %i",
-                gst_event_get_seqnum (event), object->seqnum);
-            gst_event_set_seqnum (event, object->seqnum);
+          if (object->wanted_seqnum == gst_event_get_seqnum (event)) {
+            object->seqnum = object->wanted_seqnum;
+            object->wanted_seqnum = 0;
           }
           break;
         case GST_EVENT_EOS:
