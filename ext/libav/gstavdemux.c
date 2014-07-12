@@ -460,7 +460,7 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment * segment)
   /* get the stream for seeking */
   stream = demux->context->streams[index];
   /* initial seek position */
-  target = segment->position;
+  target = segment->position + demux->start_time;
   /* convert target to ffmpeg time */
   fftarget = gst_ffmpeg_time_gst_to_ff (target, stream->time_base);
 
@@ -502,6 +502,11 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment * segment)
     goto seek_failed;
 
   GST_DEBUG_OBJECT (demux, "seek success, returned %d", seekret);
+
+  if (target > demux->start_time)
+    target -= demux->start_time;
+  else
+    target = 0;
 
   segment->position = target;
   segment->time = target;
