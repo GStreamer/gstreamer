@@ -154,6 +154,7 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
   style_name = "filled,solid";
   if ((pad_templ = gst_pad_get_pad_template (pad))) {
     presence = GST_PAD_TEMPLATE_PRESENCE (pad_templ);
+    gst_object_unref (pad_templ);
     if (presence == GST_PAD_SOMETIMES) {
       style_name = "filled,dotted";
     } else if (presence == GST_PAD_REQUEST) {
