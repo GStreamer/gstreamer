@@ -973,6 +973,7 @@ gst_play_sink_get_filter (GstPlaySink * playsink, GstPlaySinkType type)
 
   GST_PLAY_SINK_LOCK (playsink);
   switch (type) {
+    case GST_PLAY_SINK_TYPE_AUDIO:
     case GST_PLAY_SINK_TYPE_AUDIO_RAW:
     {
       GstPlayAudioChain *chain;
@@ -981,6 +982,7 @@ gst_play_sink_get_filter (GstPlaySink * playsink, GstPlaySinkType type)
       elem = playsink->audio_filter;
       break;
     }
+    case GST_PLAY_SINK_TYPE_VIDEO:
     case GST_PLAY_SINK_TYPE_VIDEO_RAW:
     {
       GstPlayVideoChain *chain;
