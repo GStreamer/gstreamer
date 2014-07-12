@@ -2791,8 +2791,6 @@ static void
 _relink_new_stack (GnlComposition * comp, GNode * stack,
     GstEvent * toplevel_seek)
 {
-  GnlCompositionPrivate *priv = comp->priv;
-
   GST_INFO_OBJECT (comp, "Reseting seqnum to %i",
       gst_event_get_seqnum (toplevel_seek));
   GNL_OBJECT (comp)->wanted_seqnum = gst_event_get_seqnum (toplevel_seek);
@@ -2800,9 +2798,6 @@ _relink_new_stack (GnlComposition * comp, GNode * stack,
   _relink_single_node (comp, stack, toplevel_seek);
 
   gst_event_unref (toplevel_seek);
-
-  gst_element_set_locked_state (priv->current_bin, FALSE);
-  gst_element_sync_state_with_parent (priv->current_bin);
 }
 
 /* static void
@@ -2883,7 +2878,7 @@ _activate_new_stack (GnlComposition * comp)
 
     GST_DEBUG_OBJECT (comp, "Nothing else in the composition"
         ", update 'worked'");
-    return TRUE;
+    goto resync_state;
   }
 
   priv->stackvalid = TRUE;
@@ -2900,6 +2895,13 @@ _activate_new_stack (GnlComposition * comp)
   gnl_composition_ghost_pad_set_target (comp, pad, topentry);
 
   GST_DEBUG_OBJECT (comp, "New stack activated!");
+
+resync_state:
+  gst_element_set_locked_state (priv->current_bin, FALSE);
+  GST_ERROR ("going back to parent state");
+  gst_element_sync_state_with_parent (priv->current_bin);
+  GST_ERROR ("gone back to parent state");
+
   return TRUE;
 }
 
