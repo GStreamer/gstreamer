@@ -55,7 +55,7 @@ struct _GnlSourcePrivate
 
   gulong padremovedid;          /* signal handler for element pad-removed signal */
   gulong padaddedid;            /* signal handler for element pad-added signal */
-  gulong probeid;               /* source pad probe id */
+  gint probeid;                 /* source pad probe id */
 
   gboolean pendingblock;        /* We have a pending pad_block */
   gboolean is_blocked;          /* We already got blocked */
@@ -162,6 +162,20 @@ gnl_source_dispose (GObject * object)
 }
 
 static void
+_remove_pad_probe (GnlSource * source, GstPad * pad)
+{
+  gint tmp_probe_id;
+
+  tmp_probe_id = source->priv->probeid;
+  if (g_atomic_int_compare_and_exchange (&source->priv->probeid,
+          tmp_probe_id, 0)) {
+    if (tmp_probe_id)
+      gst_pad_remove_probe (pad, tmp_probe_id);
+  }
+
+}
+
+static void
 element_pad_added_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
     GnlSource * source)
 {
@@ -219,11 +233,7 @@ element_pad_removed_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
     GST_DEBUG_OBJECT (source, "Clearing up ghostpad");
 
     priv->is_blocked = FALSE;
-    if (priv->probeid) {
-      gst_pad_remove_probe (pad, priv->probeid);
-      priv->probeid = 0;
-    }
-
+    _remove_pad_probe (source, pad);
     gnl_object_ghost_pad_set_target (GNL_OBJECT (source), gnlobject->srcpad,
         NULL);
 
@@ -315,10 +325,7 @@ ghost_seek_pad (GnlSource * source)
   }
 
   priv->is_blocked = FALSE;
-  if (priv->probeid) {
-    gst_pad_remove_probe (pad, priv->probeid);
-    priv->probeid = 0;
-  }
+  _remove_pad_probe (source, pad);
   gst_element_no_more_pads (GST_ELEMENT (source));
 
   priv->pendingblock = FALSE;
@@ -549,10 +556,7 @@ gnl_source_cleanup (GnlObject * object)
   GstPad *target = gst_ghost_pad_get_target ((GstGhostPad *) object->srcpad);
 
   if (target) {
-    if (priv->probeid) {
-      gst_pad_remove_probe (target, priv->probeid);
-      priv->probeid = 0;
-    }
+    _remove_pad_probe (source, target);
     gst_object_unref (target);
   }
 
