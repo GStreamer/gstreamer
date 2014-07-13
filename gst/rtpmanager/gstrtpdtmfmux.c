@@ -165,7 +165,7 @@ gst_rtp_dtmf_mux_request_new_pad (GstElement * element, GstPadTemplate * templ,
     padpriv = gst_pad_get_element_private (pad);
 
     if (gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
-            "priority_sink_%u") == gst_pad_get_pad_template (pad))
+            "priority_sink_%u") == GST_PAD_PAD_TEMPLATE (pad))
       padpriv->priority = TRUE;
     GST_OBJECT_UNLOCK (element);
   }
