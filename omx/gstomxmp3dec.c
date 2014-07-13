@@ -40,7 +40,7 @@ static gint gst_omx_mp3_dec_get_samples_per_frame (GstOMXAudioDec * dec,
 
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_omx_mp3_dec_debug_category, "omxmp3dec", 0, \
-      "debug category for gst-omx audio decoder base class");
+      "debug category for gst-omx mp3 audio decoder");
 
 G_DEFINE_TYPE_WITH_CODE (GstOMXMP3Dec, gst_omx_mp3_dec,
     GST_TYPE_OMX_AUDIO_DEC, DEBUG_INIT);
