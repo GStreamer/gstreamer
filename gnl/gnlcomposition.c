@@ -2130,11 +2130,19 @@ set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp)
   return TRUE;
 }
 
+static GstPadProbeReturn
+_drop_all_cb (GstPad * pad G_GNUC_UNUSED,
+    GstPadProbeInfo * info, GnlComposition * comp)
+{
+  return GST_PAD_PROBE_DROP;
+}
+
 /*  Must be called with OBJECTS_LOCK taken */
 static void
 _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
 {
-  GstPad *ptarget;
+  gint probe_id = -1;
+  GstPad *ptarget = NULL;
   GnlCompositionPrivate *priv = comp->priv;
 
   if (flush_downstream) {
@@ -2142,6 +2150,16 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
 
     if (ptarget) {
       GstEvent *flush_event;
+
+      /* Make sure that between the flush_start/flush_stop
+       * and the time we set the current_bin to READY, no
+       * buffer can ever get prerolled which would lead to
+       * a deadlock */
+      probe_id = gst_pad_add_probe (ptarget,
+          GST_PAD_PROBE_TYPE_DATA_BOTH | GST_PAD_PROBE_TYPE_EVENT_BOTH,
+          (GstPadProbeCallback) _drop_all_cb, comp, NULL);
+
+      GST_DEBUG_OBJECT (comp, "added event probe %lu", priv->ghosteventprobe);
 
       flush_event = gst_event_new_flush_start ();
       priv->flush_seqnum = gst_event_get_seqnum (flush_event);
@@ -2159,6 +2177,9 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
 
   gst_element_set_locked_state (priv->current_bin, TRUE);
   gst_element_set_state (priv->current_bin, GST_STATE_READY);
+
+  if (ptarget)
+    gst_pad_remove_probe (ptarget, probe_id);
 }
 
 /*  Must be called with OBJECTS_LOCK taken */
