@@ -270,7 +270,7 @@ gst_mxf_mux_event_caps (GstPad * pad, GstCaps * caps)
   }
 
   cpad->descriptor =
-      cpad->writer->get_descriptor (gst_pad_get_pad_template (pad), caps,
+      cpad->writer->get_descriptor (GST_PAD_PAD_TEMPLATE (pad), caps,
       &cpad->write_func, &cpad->mapping_data);
 
   if (!cpad->descriptor) {
