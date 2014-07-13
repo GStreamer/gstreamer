@@ -310,6 +310,7 @@ gst_omx_audio_dec_loop (GstOMXAudioDec * self)
     OMX_PARAM_PORTDEFINITIONTYPE port_def;
     OMX_AUDIO_PARAM_PCMMODETYPE pcm_param;
     GstAudioChannelPosition omx_position[OMX_AUDIO_MAXCHANNELS];
+    GstOMXAudioDecClass *klass = GST_OMX_AUDIO_DEC_GET_CLASS (self);
     gint i;
 
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
@@ -397,6 +398,13 @@ gst_omx_audio_dec_loop (GstOMXAudioDec * self)
     if (pcm_param.nChannels == 1
         && omx_position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER)
       omx_position[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+
+    if (omx_position[0] == GST_AUDIO_CHANNEL_POSITION_NONE
+        && klass->get_channel_positions) {
+      GST_WARNING_OBJECT (self,
+          "Failed to get a valid channel layout, trying fallback");
+      klass->get_channel_positions (self, self->dec_out_port, omx_position);
+    }
 
     memcpy (self->position, omx_position, sizeof (omx_position));
     gst_audio_channel_positions_to_valid_order (self->position,

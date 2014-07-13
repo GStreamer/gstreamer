@@ -91,6 +91,7 @@ struct _GstOMXAudioDecClass
   gboolean (*is_format_change) (GstOMXAudioDec * self, GstOMXPort * port, GstCaps * caps);
   gboolean (*set_format)       (GstOMXAudioDec * self, GstOMXPort * port, GstCaps * caps);
   gint     (*get_samples_per_frame) (GstOMXAudioDec * self, GstOMXPort * port);
+  gboolean (*get_channel_positions) (GstOMXAudioDec * self, GstOMXPort * port, GstAudioChannelPosition position[OMX_AUDIO_MAXCHANNELS]);
 };
 
 GType gst_omx_audio_dec_get_type (void);

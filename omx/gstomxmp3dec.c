@@ -35,6 +35,8 @@ static gboolean gst_omx_mp3_dec_is_format_change (GstOMXAudioDec * dec,
     GstOMXPort * port, GstCaps * caps);
 static gint gst_omx_mp3_dec_get_samples_per_frame (GstOMXAudioDec * dec,
     GstOMXPort * port);
+static gboolean gst_omx_mp3_dec_get_channel_positions (GstOMXAudioDec * dec,
+    GstOMXPort * port, GstAudioChannelPosition position[OMX_AUDIO_MAXCHANNELS]);
 
 /* class initialization */
 
@@ -57,6 +59,8 @@ gst_omx_mp3_dec_class_init (GstOMXMP3DecClass * klass)
       GST_DEBUG_FUNCPTR (gst_omx_mp3_dec_is_format_change);
   audiodec_class->get_samples_per_frame =
       GST_DEBUG_FUNCPTR (gst_omx_mp3_dec_get_samples_per_frame);
+  audiodec_class->get_channel_positions =
+      GST_DEBUG_FUNCPTR (gst_omx_mp3_dec_get_channel_positions);
 
   audiodec_class->cdata.default_sink_template_caps = "audio/mpeg, "
       "mpegversion=(int)1, "
@@ -206,4 +210,37 @@ static gint
 gst_omx_mp3_dec_get_samples_per_frame (GstOMXAudioDec * dec, GstOMXPort * port)
 {
   return GST_OMX_MP3_DEC (dec)->spf;
+}
+
+static gboolean
+gst_omx_mp3_dec_get_channel_positions (GstOMXAudioDec * dec,
+    GstOMXPort * port, GstAudioChannelPosition position[OMX_AUDIO_MAXCHANNELS])
+{
+  OMX_AUDIO_PARAM_PCMMODETYPE pcm_param;
+  OMX_ERRORTYPE err;
+
+  GST_OMX_INIT_STRUCT (&pcm_param);
+  pcm_param.nPortIndex = port->index;
+  err =
+      gst_omx_component_get_parameter (dec->dec, OMX_IndexParamAudioPcm,
+      &pcm_param);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (dec, "Failed to get PCM parameters: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  switch (pcm_param.nChannels) {
+    case 1:
+      position[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+      break;
+    case 2:
+      position[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      position[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      break;
+    default:
+      return FALSE;
+  }
+
+  return TRUE;
 }
