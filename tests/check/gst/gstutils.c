@@ -1304,6 +1304,235 @@ GST_START_TEST (test_write_macros)
 }
 
 GST_END_TEST;
+
+static void
+count_request_pad (const GValue * item, gpointer user_data)
+{
+  GstPad *pad = GST_PAD (g_value_get_object (item));
+  guint *count = (guint *) user_data;
+
+  if (GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad)) == GST_PAD_REQUEST)
+    (*count)++;
+}
+
+static guint
+request_pads (GstElement * element)
+{
+  GstIterator *iter;
+  guint pads = 0;
+
+  iter = gst_element_iterate_pads (element);
+  fail_unless (gst_iterator_foreach (iter, count_request_pad, &pads) ==
+      GST_ITERATOR_DONE);
+  gst_iterator_free (iter);
+
+  return pads;
+}
+
+static GstPadLinkReturn
+refuse_to_link (GstPad * pad, GstObject * parent, GstPad * peer)
+{
+  return GST_PAD_LINK_REFUSED;
+}
+
+typedef struct _GstFakeReqSink GstFakeReqSink;
+typedef struct _GstFakeReqSinkClass GstFakeReqSinkClass;
+
+struct _GstFakeReqSink
+{
+  GstElement element;
+};
+
+struct _GstFakeReqSinkClass
+{
+  GstElementClass parent_class;
+};
+
+G_GNUC_INTERNAL GType gst_fakereqsink_get_type (void);
+
+static GstStaticPadTemplate fakereqsink_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
+
+G_DEFINE_TYPE (GstFakeReqSink, gst_fakereqsink, GST_TYPE_ELEMENT);
+
+static GstPad *
+gst_fakereqsink_request_new_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * name, const GstCaps * caps)
+{
+  GstPad *pad;
+  pad = gst_pad_new_from_static_template (&fakereqsink_sink_template, name);
+  gst_pad_set_link_function (pad, refuse_to_link);
+  gst_element_add_pad (GST_ELEMENT_CAST (element), pad);
+  return pad;
+}
+
+static void
+gst_fakereqsink_release_pad (GstElement * element, GstPad * pad)
+{
+  gst_pad_set_active (pad, FALSE);
+  gst_element_remove_pad (element, pad);
+}
+
+static void
+gst_fakereqsink_class_init (GstFakeReqSinkClass * klass)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Fake Request Source", "Source", "Push empty buffers from request pads",
+      "Sebastian Rasmussen <sebras@hotmail.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&fakereqsink_sink_template));
+
+  gstelement_class->request_new_pad = gst_fakereqsink_request_new_pad;
+  gstelement_class->release_pad = gst_fakereqsink_release_pad;
+}
+
+static void
+gst_fakereqsink_init (GstFakeReqSink * fakereqsink)
+{
+}
+
+static void
+test_link (const gchar * expectation, const gchar * srcname,
+    const gchar * srcpad, const gchar * srcstate, const gchar * sinkname,
+    const gchar * sinkpad, const gchar * sinkstate)
+{
+  GstElement *src, *sink, *othersrc, *othersink;
+  guint src_pads, sink_pads;
+
+  if (g_strcmp0 (srcname, "requestsrc") == 0)
+    src = gst_element_factory_make ("tee", NULL);
+  else if (g_strcmp0 (srcname, "requestsink") == 0)
+    src = gst_element_factory_make ("funnel", NULL);
+  else if (g_strcmp0 (srcname, "staticsrc") == 0)
+    src = gst_element_factory_make ("fakesrc", NULL);
+  else if (g_strcmp0 (srcname, "staticsink") == 0)
+    src = gst_element_factory_make ("fakesink", NULL);
+
+  if (g_strcmp0 (sinkname, "requestsink") == 0)
+    sink = gst_element_factory_make ("funnel", NULL);
+  else if (g_strcmp0 (sinkname, "requestsrc") == 0)
+    sink = gst_element_factory_make ("tee", NULL);
+  else if (g_strcmp0 (sinkname, "staticsink") == 0)
+    sink = gst_element_factory_make ("fakesink", NULL);
+  else if (g_strcmp0 (sinkname, "staticsrc") == 0)
+    sink = gst_element_factory_make ("fakesrc", NULL);
+  else if (g_strcmp0 (sinkname, "fakerequestsink") == 0)
+    sink = gst_element_factory_make ("fakereqsink", NULL);
+
+  othersrc = gst_element_factory_make ("fakesrc", NULL);
+  othersink = gst_element_factory_make ("fakesink", NULL);
+
+  if (g_strcmp0 (srcstate, "linked") == 0)
+    fail_unless (gst_element_link_pads (src, srcpad, othersink, NULL));
+  if (g_strcmp0 (sinkstate, "linked") == 0)
+    fail_unless (gst_element_link_pads (othersrc, NULL, sink, sinkpad));
+  if (g_strcmp0 (srcstate, "unlinkable") == 0) {
+    GstPad *pad = gst_element_get_static_pad (src, srcpad ? srcpad : "src");
+    gst_pad_set_link_function (pad, refuse_to_link);
+    gst_object_unref (pad);
+  }
+  if (g_strcmp0 (sinkstate, "unlinkable") == 0) {
+    GstPad *pad = gst_element_get_static_pad (sink, sinkpad ? sinkpad : "sink");
+    gst_pad_set_link_function (pad, refuse_to_link);
+    gst_object_unref (pad);
+  }
+
+  src_pads = request_pads (src);
+  sink_pads = request_pads (sink);
+  if (g_strcmp0 (expectation, "OK") == 0) {
+    fail_unless (gst_element_link_pads (src, srcpad, sink, sinkpad));
+    if (g_str_has_prefix (srcname, "request")) {
+      fail_unless_equals_int (request_pads (src), src_pads + 1);
+    } else {
+      fail_unless_equals_int (request_pads (src), src_pads);
+    }
+    if (g_str_has_prefix (sinkname, "request")) {
+      fail_unless_equals_int (request_pads (sink), sink_pads + 1);
+    } else {
+      fail_unless_equals_int (request_pads (sink), sink_pads);
+    }
+  } else {
+    fail_if (gst_element_link_pads (src, srcpad, sink, sinkpad));
+    fail_unless_equals_int (request_pads (src), src_pads);
+    fail_unless_equals_int (request_pads (sink), sink_pads);
+  }
+
+  gst_object_unref (othersrc);
+  gst_object_unref (othersink);
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_START_TEST (test_element_link)
+{
+  /* Successful cases */
+
+  gst_element_register (NULL, "fakereqsink", GST_RANK_NONE,
+      gst_fakereqsink_get_type ());
+
+  test_link ("OK", "staticsrc", "src", "", "staticsink", "sink", "");
+  test_link ("OK", "staticsrc", "src", "", "requestsink", "sink_0", "");
+  test_link ("OK", "staticsrc", "src", "", "staticsink", NULL, "");
+  test_link ("OK", "staticsrc", "src", "", "requestsink", NULL, "");
+  test_link ("OK", "requestsrc", "src_0", "", "staticsink", "sink", "");
+  test_link ("OK", "requestsrc", "src_0", "", "requestsink", "sink_0", "");
+  test_link ("OK", "requestsrc", "src_0", "", "staticsink", NULL, "");
+  test_link ("OK", "requestsrc", "src_0", "", "requestsink", NULL, "");
+  test_link ("OK", "staticsrc", NULL, "", "staticsink", "sink", "");
+  test_link ("OK", "staticsrc", NULL, "", "requestsink", "sink_0", "");
+  test_link ("OK", "staticsrc", NULL, "", "staticsink", NULL, "");
+  test_link ("OK", "staticsrc", NULL, "", "requestsink", NULL, "");
+  test_link ("OK", "requestsrc", NULL, "", "staticsink", "sink", "");
+  test_link ("OK", "requestsrc", NULL, "", "requestsink", "sink_0", "");
+  test_link ("OK", "requestsrc", NULL, "", "staticsink", NULL, "");
+  test_link ("OK", "requestsrc", NULL, "", "requestsink", NULL, "");
+
+  /* Failure cases */
+
+  test_link ("NOK", "staticsrc", "missing", "", "staticsink", "sink", "");
+  test_link ("NOK", "staticsink", "sink", "", "staticsink", "sink", "");
+  test_link ("NOK", "staticsrc", "src", "linked", "staticsink", "sink", "");
+  test_link ("NOK", "staticsrc", "src", "", "staticsink", "missing", "");
+  test_link ("NOK", "staticsrc", "src", "", "staticsrc", "src", "");
+  test_link ("NOK", "staticsrc", "src", "", "staticsink", "sink", "linked");
+  test_link ("NOK", "staticsrc", "src", "", "staticsink", "sink", "unlinkable");
+  test_link ("NOK", "staticsrc", NULL, "", "staticsink", "sink", "unlinkable");
+  test_link ("NOK", "staticsrc", NULL, "", "staticsink", NULL, "unlinkable");
+  test_link ("NOK", "requestsrc", "missing", "", "staticsink", "sink", "");
+  test_link ("NOK", "requestsink", "sink_0", "", "staticsink", "sink", "");
+  test_link ("NOK", "requestsrc", "src_0", "linked", "staticsink", "sink", "");
+  test_link ("NOK", "requestsrc", "src_0", "", "staticsink", "missing", "");
+  test_link ("NOK", "requestsrc", "src_0", "", "staticsrc", "src", "");
+  test_link ("NOK", "requestsrc", "src_0", "", "staticsink", "sink", "linked");
+  test_link ("NOK", "requestsrc", "src_0", "", "staticsink", "sink",
+      "unlinkable");
+  test_link ("NOK", "requestsrc", NULL, "", "staticsink", "sink", "unlinkable");
+  test_link ("NOK", "requestsrc", NULL, "", "staticsink", NULL, "unlinkable");
+  test_link ("NOK", "staticsrc", "missing", "", "requestsink", "sink_0", "");
+  test_link ("NOK", "staticsink", "sink", "", "requestsink", "sink_0", "");
+  test_link ("NOK", "staticsrc", "src", "linked", "requestsink", "sink_0", "");
+  test_link ("NOK", "staticsrc", "src", "", "requestsink", "missing", "");
+  test_link ("NOK", "staticsrc", "src", "", "requestsrc", "src_0", "");
+  test_link ("NOK", "staticsrc", "src", "", "requestsink", "sink_0", "linked");
+  test_link ("NOK", "staticsrc", "src", "unlinkable", "requestsink",
+      "sink_0", "");
+  test_link ("NOK", "staticsrc", NULL, "unlinkable", "requestsink",
+      "sink_0", "");
+  test_link ("NOK", "staticsrc", NULL, "unlinkable", "requestsink", NULL, "");
+  test_link ("NOK", "requestsrc", "src_0", "", "staticsink", NULL,
+      "unlinkable");
+  test_link ("NOK", "requestsrc", NULL, "", "fakerequestsink", NULL, "");
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_utils_suite (void)
 {
@@ -1331,6 +1560,7 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_parse_bin_from_description);
 #endif
   tcase_add_test (tc_chain, test_element_found_tags);
+  tcase_add_test (tc_chain, test_element_link);
   tcase_add_test (tc_chain, test_element_unlink);
   tcase_add_test (tc_chain, test_set_value_from_string);
   tcase_add_test (tc_chain, test_binary_search);
