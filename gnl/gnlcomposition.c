@@ -214,7 +214,7 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
     GstEvent * event);
 static void _relink_single_node (GnlComposition * comp, GNode * node,
     GstEvent * toplevel_seek);
-static gboolean update_pipeline_func (GnlComposition * comp);
+static gboolean _update_pipeline_func (GnlComposition * comp);
 static gboolean _commit_func (GnlComposition * comp);
 static gboolean lock_child_state (GValue * item, GValue * ret,
     gpointer udata G_GNUC_UNUSED);
@@ -457,7 +457,7 @@ _add_gsource (GnlComposition * comp, GSourceFunc func,
   g_source_set_callback (source, func, data, destroy);
   g_source_set_priority (source, priority);
 
-  if (func == (GSourceFunc) update_pipeline_func)
+  if (func == (GSourceFunc) _update_pipeline_func)
     priv->update_gsources = g_list_prepend (priv->update_gsources, source);
   else
     priv->gsources = g_list_prepend (priv->gsources, source);
@@ -719,7 +719,7 @@ gnl_composition_class_init (GnlCompositionClass * klass)
   GST_DEBUG_FUNCPTR (_seek_pipeline_func);
   GST_DEBUG_FUNCPTR (_remove_object_func);
   GST_DEBUG_FUNCPTR (_add_object_func);
-  GST_DEBUG_FUNCPTR (update_pipeline_func);
+  GST_DEBUG_FUNCPTR (_update_pipeline_func);
   GST_DEBUG_FUNCPTR (_commit_func);
   GST_DEBUG_FUNCPTR (_emit_commited_signal_func);
   GST_DEBUG_FUNCPTR (_initialize_stack_func);
@@ -767,6 +767,7 @@ gnl_composition_init (GnlComposition * comp)
 static void
 gnl_composition_dispose (GObject * object)
 {
+  GList *iter;
   GnlComposition *comp = GNL_COMPOSITION (object);
   GnlCompositionPrivate *priv = comp->priv;
 
@@ -775,10 +776,16 @@ gnl_composition_dispose (GObject * object)
 
   priv->dispose_has_run = TRUE;
 
-  if (priv->current) {
-    g_node_destroy (priv->current);
-    priv->current = NULL;
+  COMP_OBJECTS_LOCK (comp);
+  iter = priv->objects_start;
+  while (iter) {
+    GList *next = iter->next;
+
+    _gnl_composition_remove_object (comp, iter->data);
+    iter = next;
   }
+
+  g_list_free (priv->objects_stop);
 
   if (priv->expandables) {
     GList *iter;
@@ -795,6 +802,8 @@ gnl_composition_dispose (GObject * object)
 
     priv->expandables = NULL;
   }
+  COMP_OBJECTS_UNLOCK (comp);
+
   gnl_composition_reset_target_pad (comp);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -803,22 +812,15 @@ gnl_composition_dispose (GObject * object)
 static void
 gnl_composition_finalize (GObject * object)
 {
-  GList *iter;
   GnlComposition *comp = GNL_COMPOSITION (object);
   GnlCompositionPrivate *priv = comp->priv;
 
   COMP_OBJECTS_LOCK (comp);
-  iter = priv->objects_start;
-  while (iter) {
-    GList *next = iter->next;
-
-    _gnl_composition_remove_object (comp, iter->data);
-    iter = next;
+  if (priv->current) {
+    g_node_destroy (priv->current);
+    priv->current = NULL;
   }
 
-  g_list_free (priv->objects_stop);
-  if (priv->current)
-    g_node_destroy (priv->current);
   g_hash_table_destroy (priv->objects_hash);
   COMP_OBJECTS_UNLOCK (comp);
 
@@ -1057,7 +1059,7 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       }
 
       if (priv->next_eos_seqnum == seqnum)
-        _add_gsource (comp, (GSourceFunc) update_pipeline_func, comp,
+        _add_gsource (comp, (GSourceFunc) _update_pipeline_func, comp,
             NULL, G_PRIORITY_DEFAULT);
       else
         GST_INFO_OBJECT (comp,
@@ -2101,7 +2103,7 @@ _commit_func (GnlComposition * comp)
 }
 
 static gboolean
-update_pipeline_func (GnlComposition * comp)
+_update_pipeline_func (GnlComposition * comp)
 {
   GnlCompositionPrivate *priv;
   gboolean reverse;
