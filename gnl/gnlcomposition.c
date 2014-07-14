@@ -189,8 +189,6 @@ static void gnl_composition_reset (GnlComposition * comp);
 
 static gboolean gnl_composition_add_object (GstBin * bin, GstElement * element);
 
-static void gnl_composition_handle_message (GstBin * bin, GstMessage * message);
-
 static gboolean
 gnl_composition_remove_object (GstBin * bin, GstElement * element);
 
@@ -547,7 +545,6 @@ _remove_object_func (ChildIOData * childio)
     return;
   }
 
-
   g_hash_table_add (priv->pending_io, object);
   COMP_OBJECTS_UNLOCK (comp);
 
@@ -653,7 +650,9 @@ gnl_composition_class_init (GnlCompositionClass * klass)
 
   gst_element_class_set_static_metadata (gstelement_class,
       "GNonLin Composition", "Filter/Editor", "Combines GNL objects",
-      "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>");
+      "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>,"
+      " Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>,"
+      " Thibault Saunier <tsaunier@gnome.org>");
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gnl_composition_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gnl_composition_finalize);
@@ -663,8 +662,6 @@ gnl_composition_class_init (GnlCompositionClass * klass)
   gstbin_class->add_element = GST_DEBUG_FUNCPTR (gnl_composition_add_object);
   gstbin_class->remove_element =
       GST_DEBUG_FUNCPTR (gnl_composition_remove_object);
-  gstbin_class->handle_message =
-      GST_DEBUG_FUNCPTR (gnl_composition_handle_message);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gnl_composition_src_template));
@@ -1075,53 +1072,6 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
   }
 
   return retval;
-}
-
-
-
-/* Warning : Don't take the objects lock in this method */
-static void
-gnl_composition_handle_message (GstBin * bin, GstMessage * message)
-{
-  GnlComposition *comp = (GnlComposition *) bin;
-  gboolean dropit = FALSE;
-
-  GST_DEBUG_OBJECT (comp, "message:%s from %s",
-      gst_message_type_get_name (GST_MESSAGE_TYPE (message)),
-      GST_MESSAGE_SRC (message) ? GST_ELEMENT_NAME (GST_MESSAGE_SRC (message)) :
-      "UNKNOWN");
-
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR:
-    case GST_MESSAGE_WARNING:
-    {
-      /* FIXME / HACK
-       * There is a massive issue with reverse negotiation and dynamic pipelines.
-       *
-       * Since we're not waiting for the pads of the previous stack to block before
-       * re-switching, we might end up switching sources in the middle of a downstrea
-       * negotiation which will do reverse negotiation... with the new source (which
-       * is no longer the one that issues the request). That negotiation will fail
-       * and the original source will emit an ERROR message.
-       *
-       * In order to avoid those issues, we just ignore error messages from elements
-       * which aren't in the currently configured stack
-       */
-      if (GST_MESSAGE_SRC (message) && GNL_IS_OBJECT (GST_MESSAGE_SRC (message))
-          && !OBJECT_IN_ACTIVE_SEGMENT (comp, GST_MESSAGE_SRC (message))) {
-        GST_DEBUG_OBJECT (comp,
-            "HACK Dropping error message from object not in currently configured stack !");
-        dropit = TRUE;
-      }
-    }
-    default:
-      break;
-  }
-
-  if (dropit)
-    gst_message_unref (message);
-  else
-    GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
 static gint
