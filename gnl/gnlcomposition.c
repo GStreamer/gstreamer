@@ -121,14 +121,6 @@ struct _GnlCompositionPrivate
   GHashTable *pending_io;
   GMutex pending_io_lock;
 
-  /*
-     thread-safe Seek handling.
-     flushing_lock : mutex to access flushing and pending_idle
-     flushing :
-   */
-  GMutex flushing_lock;
-  gboolean flushing;
-
   /* source top-level ghostpad, probe and entry */
   gulong ghosteventprobe;
   GnlCompositionEntry *toplevelentry;
@@ -294,19 +286,6 @@ static void _restart_task (GnlComposition * comp, gboolean emit_commit);
     g_mutex_lock (&comp->priv->pending_io_lock);                                  \
     GST_LOG_OBJECT (comp, "locked pending_io_lock from thread %p",                \
         g_thread_self());                                                      \
-  } G_STMT_END
-
-#define COMP_FLUSHING_LOCK(comp) G_STMT_START {                                \
-    GST_LOG_OBJECT (comp, "locking flushing_lock from thread %p",              \
-        g_thread_self());                                                      \
-    g_mutex_lock (&comp->priv->flushing_lock);                                 \
-    GST_LOG_OBJECT (comp, "locked flushing_lock from thread %p",               \
-        g_thread_self());                                                      \
-  } G_STMT_END
-#define COMP_FLUSHING_UNLOCK(comp) G_STMT_START {                              \
-    GST_LOG_OBJECT (comp, "unlocking flushing_lock from thread %p",            \
-        g_thread_self());                                                      \
-    g_mutex_unlock (&comp->priv->flushing_lock);                               \
   } G_STMT_END
 
 #define MAIN_CONTEXT_LOCK(comp) G_STMT_START {                       \
@@ -845,9 +824,6 @@ gnl_composition_init (GnlComposition * comp)
   priv->objects_start = NULL;
   priv->objects_stop = NULL;
 
-  g_mutex_init (&priv->flushing_lock);
-  priv->flushing = FALSE;
-
   priv->segment = gst_segment_new ();
   priv->outside_segment = gst_segment_new ();
 
@@ -943,7 +919,6 @@ gnl_composition_finalize (GObject * object)
   gst_segment_free (priv->outside_segment);
 
   g_mutex_clear (&priv->objects_lock);
-  g_mutex_clear (&priv->flushing_lock);
   g_mutex_clear (&priv->pending_io_lock);
   g_rec_mutex_clear (&comp->task_rec_lock);
 
@@ -1138,12 +1113,6 @@ gnl_composition_reset (GnlComposition * comp)
 
   reset_children (comp);
 
-  COMP_FLUSHING_LOCK (comp);
-
-  priv->flushing = FALSE;
-
-  COMP_FLUSHING_UNLOCK (comp);
-
   priv->reset_time = FALSE;
   priv->initialized = FALSE;
   priv->send_stream_start = TRUE;
@@ -1204,11 +1173,6 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       GstEvent *event2;
       /* next_base_time */
 
-      COMP_FLUSHING_LOCK (comp);
-
-      priv->flushing = FALSE;
-      COMP_FLUSHING_UNLOCK (comp);
-
       gst_event_parse_segment (event, &segment);
       gst_segment_copy_into (segment, &copy);
 
@@ -1237,15 +1201,6 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
     case GST_EVENT_EOS:
     {
       gint seqnum = gst_event_get_seqnum (event);
-
-      COMP_FLUSHING_LOCK (comp);
-      if (priv->flushing) {
-        GST_DEBUG_OBJECT (comp, "flushing, bailing out");
-        COMP_FLUSHING_UNLOCK (comp);
-        retval = GST_PAD_PROBE_DROP;
-        break;
-      }
-      COMP_FLUSHING_UNLOCK (comp);
 
       GST_INFO_OBJECT (comp, "Got EOS, last EOS seqnum id : %i current "
           "seq num is: %i", comp->priv->real_eos_seqnum, seqnum);
@@ -1556,11 +1511,6 @@ seek_handling (GnlComposition * comp, GnlUpdateStackReason update_stack_reason)
 {
   GST_DEBUG_OBJECT (comp, "Seek hnalding update pipeline reason: %s",
       UPDATE_PIPELINE_REASONS[update_stack_reason]);
-
-  COMP_FLUSHING_LOCK (comp);
-  GST_DEBUG_OBJECT (comp, "Setting flushing to TRUE");
-  comp->priv->flushing = TRUE;
-  COMP_FLUSHING_UNLOCK (comp);
 
   COMP_OBJECTS_LOCK (comp);
   if (have_to_update_pipeline (comp, update_stack_reason)) {
