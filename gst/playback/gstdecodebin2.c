@@ -462,7 +462,7 @@ static GstDecodeGroup *gst_decode_group_new (GstDecodeBin * dbin,
     GstDecodeChain * chain);
 static gboolean gst_decode_chain_is_complete (GstDecodeChain * chain);
 static gboolean gst_decode_chain_expose (GstDecodeChain * chain,
-    GList ** endpads, gboolean * missing_plugin);
+    GList ** endpads, gboolean * missing_plugin, gboolean * last_group);
 static gboolean gst_decode_chain_is_drained (GstDecodeChain * chain);
 static gboolean gst_decode_chain_reset_buffering (GstDecodeChain * chain);
 static gboolean gst_decode_group_is_complete (GstDecodeGroup * group);
@@ -2657,9 +2657,6 @@ pad_event_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
       gst_object_replace ((GstObject **) & chain->current_pad, NULL);
       /* we don't set the endcaps because NULL endcaps means early EOS */
 
-      /* TODO check if this makes the next_group complete, but drained/deadend,
-       * meaning that it should be skipped and not exposed */
-
       EXPOSE_LOCK (dbin);
       if (gst_decode_chain_is_complete (dbin->decode_chain))
         gst_decode_bin_expose (dbin);
@@ -3579,8 +3576,8 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
   gboolean handled = FALSE;
   GstDecodeBin *dbin = chain->dbin;
 
-  GST_DEBUG ("Checking chain %p (target pad %s:%s)",
-      chain, GST_DEBUG_PAD_NAME (drainpad));
+  GST_DEBUG ("Checking chain %p %s:%s (target pad %s:%s)",
+      chain, GST_DEBUG_PAD_NAME (chain->pad), GST_DEBUG_PAD_NAME (drainpad));
 
   CHAIN_MUTEX_LOCK (chain);
 
@@ -3591,7 +3588,7 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
 
   if (chain->endpad) {
     /* Check if we're reached the target endchain */
-    if (chain == drainpad->chain) {
+    if (drainpad != NULL && chain == drainpad->chain) {
       GST_DEBUG ("Found the target chain");
       drainpad->drained = TRUE;
       handled = TRUE;
@@ -3612,7 +3609,7 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
         last_group, &subdrained, switched);
 
     /* The group is drained, see if we can switch to another */
-    if (handled && subdrained && !*switched) {
+    if ((handled || drainpad == NULL) && subdrained && !*switched) {
       if (chain->next_groups) {
         /* Switch to next group */
         GST_DEBUG_OBJECT (dbin, "Hiding current group %p", chain->active_group);
@@ -4037,7 +4034,9 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
   GList *tmp, *endpads = NULL;
   gboolean missing_plugin = FALSE;
   gboolean already_exposed = TRUE;
+  gboolean last_group = TRUE;
 
+retry:
   GST_DEBUG_OBJECT (dbin, "Exposing currently active chains/groups");
 
   /* Don't expose if we're currently shutting down */
@@ -4050,7 +4049,8 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
   DYN_UNLOCK (dbin);
 
   /* Get the pads that we're going to expose and mark things as exposed */
-  if (!gst_decode_chain_expose (dbin->decode_chain, &endpads, &missing_plugin)) {
+  if (!gst_decode_chain_expose (dbin->decode_chain, &endpads, &missing_plugin,
+          &last_group)) {
     g_list_foreach (endpads, (GFunc) gst_object_unref, NULL);
     g_list_free (endpads);
     GST_ERROR_OBJECT (dbin, "Broken chain/group tree");
@@ -4065,9 +4065,22 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
     } else {
       /* in this case, the stream ended without buffers,
        * just post a warning */
-      GST_WARNING_OBJECT (dbin, "All streams finished without buffers");
-      GST_ELEMENT_ERROR (dbin, STREAM, FAILED, (NULL),
-          ("all streams without buffers"));
+      GST_WARNING_OBJECT (dbin, "All streams finished without buffers. "
+          "Last group: %d", last_group);
+      if (last_group) {
+        GST_ELEMENT_ERROR (dbin, STREAM, FAILED, (NULL),
+            ("all streams without buffers"));
+      } else {
+        gboolean switched = FALSE;
+        gboolean drained = FALSE;
+
+        drain_and_switch_chains (dbin->decode_chain, NULL, &last_group,
+            &drained, &switched);
+        GST_ELEMENT_WARNING (dbin, STREAM, FAILED, (NULL),
+            ("all streams without buffers"));
+        if (switched)
+          goto retry;
+      }
     }
 
     do_async_done (dbin);
@@ -4174,7 +4187,7 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
  */
 static gboolean
 gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads,
-    gboolean * missing_plugin)
+    gboolean * missing_plugin, gboolean * last_group)
 {
   GstDecodeGroup *group;
   GList *l;
@@ -4192,6 +4205,9 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads,
     *endpads = g_list_prepend (*endpads, gst_object_ref (chain->endpad));
     return TRUE;
   }
+
+  if (chain->next_groups)
+    *last_group = FALSE;
 
   group = chain->active_group;
   if (!group)
@@ -4212,7 +4228,8 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads,
   for (l = group->children; l; l = l->next) {
     GstDecodeChain *childchain = l->data;
 
-    if (!gst_decode_chain_expose (childchain, endpads, missing_plugin))
+    if (!gst_decode_chain_expose (childchain, endpads, missing_plugin,
+            last_group))
       return FALSE;
   }
 
