@@ -3023,7 +3023,6 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   GstClockTime new_stop = GST_CLOCK_TIME_NONE;
   GstClockTime new_start = GST_CLOCK_TIME_NONE;
 
-  gboolean startchanged, stopchanged;
 
   GstState nextstate = (GST_STATE_NEXT (comp) == GST_STATE_VOID_PENDING) ?
       GST_STATE (comp) : GST_STATE_NEXT (comp);
@@ -3052,14 +3051,6 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   /* invalidate the stack while modifying it */
   priv->stackvalid = FALSE;
 
-  if (priv->segment->rate >= 0.0) {
-    startchanged = priv->segment_start != currenttime;
-    stopchanged = priv->segment_stop != new_stop;
-  } else {
-    startchanged = priv->segment_start != new_start;
-    stopchanged = priv->segment_stop != currenttime;
-  }
-
   /* set new segment_start/stop (the current zone over which the new stack
    * is valid) */
   if (priv->segment->rate >= 0.0) {
@@ -3070,6 +3061,21 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     priv->segment_stop = currenttime;
   }
 
+# if 0
+  /* FIXME -- We should be ablt to use updatestoponly in that case,
+   * but it simply does not work! Not using it leads to same
+   * behaviour, but less optimized */
+
+  gboolean startchanged, stopchanged;
+
+  if (priv->segment->rate >= 0.0) {
+    startchanged = priv->segment_start != currenttime;
+    stopchanged = priv->segment_stop != new_stop;
+  } else {
+    startchanged = priv->segment_start != new_start;
+    stopchanged = priv->segment_stop != currenttime;
+  }
+
   if (samestack) {
     if (startchanged || stopchanged) {
       /* Update seek events need to be flushing if not in PLAYING,
@@ -3077,6 +3083,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
       updatestoponly = (state == GST_STATE_PLAYING) ? FALSE : TRUE;
     }
   }
+#endif
 
   toplevel_seek = get_new_seek_event (comp, TRUE, updatestoponly);
   _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
