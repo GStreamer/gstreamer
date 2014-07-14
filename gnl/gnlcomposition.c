@@ -131,11 +131,6 @@ struct _GnlCompositionPrivate
   /* List of GnlObject whose start/duration will be the same as the composition */
   GList *expandables;
 
-  /* TRUE if the stack is valid.
-   * This is meant to prevent the top-level pad to be unblocked before the stack
-   * is fully done. Protected by OBJECTS_LOCK */
-  gboolean stackvalid;
-
   /*
      current segment seek start/stop time.
      Reconstruct pipeline ONLY if seeking outside of those values
@@ -1106,8 +1101,6 @@ gnl_composition_reset (GnlComposition * comp)
   if (priv->current)
     g_node_destroy (priv->current);
   priv->current = NULL;
-
-  priv->stackvalid = FALSE;
 
   gnl_composition_reset_target_pad (comp);
 
@@ -2857,8 +2850,6 @@ _activate_new_stack (GnlComposition * comp)
     goto resync_state;
   }
 
-  priv->stackvalid = TRUE;
-
   /* The stack is entirely ready, send seek out synchronously */
   topelement = GST_ELEMENT (priv->current->data);
   /* Get toplevel object source pad */
@@ -2997,9 +2988,6 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   /* Get new stack and compare it to current one */
   stack = get_clean_toplevel_stack (comp, &currenttime, &new_start, &new_stop);
   samestack = are_same_stacks (priv->current, stack);
-
-  /* invalidate the stack while modifying it */
-  priv->stackvalid = FALSE;
 
   /* set new segment_start/stop (the current zone over which the new stack
    * is valid) */
