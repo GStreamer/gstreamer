@@ -2250,12 +2250,16 @@ _is_ready_to_restart_task (GnlComposition * comp, GstEvent * event)
 
 
     if (comp->priv->awaited_caps_seqnum == seqnum) {
+      gchar *name = g_strdup_printf ("new-stack__%" GST_TIME_FORMAT "--%"
+          GST_TIME_FORMAT "", GST_TIME_ARGS (comp->priv->segment_start),
+          GST_TIME_ARGS (comp->priv->segment_stop));
       GST_INFO_OBJECT (comp, "Got %s with proper seqnum"
           " done with stack reconfiguration %" GST_PTR_FORMAT,
           GST_EVENT_TYPE_NAME (event), event);
 
       GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (comp),
-          GST_DEBUG_GRAPH_SHOW_ALL, "new-stack");
+          GST_DEBUG_GRAPH_SHOW_ALL, name);
+      g_free (name);
 
       return TRUE;
 
