@@ -128,6 +128,7 @@ check_PROGRAMS =				\
 	gst/gstclock				\
 	gst/gststructure			\
 	gst/gsttag				\
+	gst/gsttaglist				\
 	gst/gsttagsetter			\
 	gst/gsttask				\
 	gst/gsttoc				\
