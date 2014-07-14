@@ -216,8 +216,6 @@ static void _relink_single_node (GnlComposition * comp, GNode * node,
     GstEvent * toplevel_seek);
 static gboolean _update_pipeline_func (GnlComposition * comp);
 static gboolean _commit_func (GnlComposition * comp);
-static gboolean lock_child_state (GValue * item, GValue * ret,
-    gpointer udata G_GNUC_UNUSED);
 static gboolean
 set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp);
 static GstEvent *get_new_seek_event (GnlComposition * comp, gboolean initial,
@@ -862,18 +860,6 @@ reset_child (GValue * item, GValue * ret G_GNUC_UNUSED, gpointer user_data)
     gst_pad_unlink (srcpad, peerpad);
     gst_object_unref (peerpad);
   }
-
-  return TRUE;
-}
-
-static gboolean
-lock_child_state (GValue * item, GValue * ret G_GNUC_UNUSED,
-    gpointer udata G_GNUC_UNUSED)
-{
-  GstElement *child = g_value_get_object (item);
-
-  GST_DEBUG_OBJECT (child, "locking state");
-  gst_element_set_locked_state (child, TRUE);
 
   return TRUE;
 }
@@ -2186,15 +2172,6 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
       /* state-lock all elements */
       GST_DEBUG_OBJECT (comp,
           "Setting all children to READY and locking their state");
-
-      children = gst_bin_iterate_elements (GST_BIN (comp->priv->current_bin));
-
-      while (G_UNLIKELY (gst_iterator_fold (children,
-                  (GstIteratorFoldFunction) lock_child_state, NULL,
-                  NULL) == GST_ITERATOR_RESYNC)) {
-        gst_iterator_resync (children);
-      }
-      gst_iterator_free (children);
 
       /* Set caps on all objects */
       if (G_UNLIKELY (!gst_caps_is_any (GNL_OBJECT (comp)->caps))) {
