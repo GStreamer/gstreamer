@@ -157,6 +157,7 @@ struct _GnlCompositionPrivate
   GMutex mcontext_lock;
   GList *gsources;
   GList *update_gsources;
+  GList *seek_gsources;
 
   gboolean running;
   gboolean initialized;
@@ -278,6 +279,16 @@ static void _restart_task (GnlComposition * comp, gboolean emit_commit);
 #define GET_TASK_LOCK(comp)    (&(GNL_COMPOSITION(comp)->task_rec_lock))
 
 static void
+_assert_proper_thread (GnlComposition * comp)
+{
+  if (comp->task && gst_task_get_state (comp->task) != GST_TASK_STOPPED &&
+      g_thread_self () != comp->task->thread) {
+    g_warning ("Trying to touch children in a thread different from"
+        " its dedicated thread!");
+  }
+}
+
+static void
 _remove_all_sources (GnlComposition * comp)
 {
   GSource *source;
@@ -288,6 +299,33 @@ _remove_all_sources (GnlComposition * comp)
               comp))) {
     g_source_destroy (source);
   }
+  MAIN_CONTEXT_UNLOCK (comp);
+}
+
+static void
+_destroy_gsource (GSource * source)
+{
+  g_source_destroy (source);
+  g_source_unref (source);
+}
+
+static void
+_remove_all_update_sources (GnlComposition * comp)
+{
+  MAIN_CONTEXT_LOCK (comp);
+  g_list_free_full (comp->priv->update_gsources,
+      (GDestroyNotify) _destroy_gsource);
+  comp->priv->update_gsources = NULL;
+  MAIN_CONTEXT_UNLOCK (comp);
+}
+
+static void
+_remove_all_seek_sources (GnlComposition * comp)
+{
+  MAIN_CONTEXT_LOCK (comp);
+  g_list_free_full (comp->priv->seek_gsources,
+      (GDestroyNotify) _destroy_gsource);
+  comp->priv->seek_gsources = NULL;
   MAIN_CONTEXT_UNLOCK (comp);
 }
 
@@ -455,6 +493,8 @@ _add_gsource (GnlComposition * comp, GSourceFunc func,
 
   if (func == (GSourceFunc) _update_pipeline_func)
     priv->update_gsources = g_list_prepend (priv->update_gsources, source);
+  else if (func == (GSourceFunc) _seek_pipeline_func)
+    priv->seek_gsources = g_list_prepend (priv->seek_gsources, source);
   else
     priv->gsources = g_list_prepend (priv->gsources, source);
 
@@ -811,6 +851,8 @@ gnl_composition_finalize (GObject * object)
   GnlComposition *comp = GNL_COMPOSITION (object);
   GnlCompositionPrivate *priv = comp->priv;
 
+  _assert_proper_thread (comp);
+
   COMP_OBJECTS_LOCK (comp);
   if (priv->current) {
     g_node_destroy (priv->current);
@@ -879,6 +921,8 @@ gnl_composition_reset (GnlComposition * comp)
   GnlCompositionPrivate *priv = comp->priv;
 
   GST_DEBUG_OBJECT (comp, "resetting");
+
+  _assert_proper_thread (comp);
 
   COMP_OBJECTS_LOCK (comp);
   priv->segment_start = GST_CLOCK_TIME_NONE;
@@ -2098,15 +2142,12 @@ _set_all_children_state (GnlComposition * comp, GstState state)
   GST_DEBUG_OBJECT (comp, "Setting all children state to %s",
       gst_element_state_get_name (state));
 
-  COMP_OBJECTS_LOCK (comp);
   gst_element_set_state (comp->priv->current_bin, state);
   for (tmp = comp->priv->objects_start; tmp; tmp = tmp->next)
     gst_element_set_state (tmp->data, state);
 
   for (tmp = comp->priv->expandables; tmp; tmp = tmp->next)
     gst_element_set_state (tmp->data, state);
-
-  COMP_OBJECTS_UNLOCK (comp);
 }
 
 static GstStateChangeReturn
@@ -2131,8 +2172,14 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
           NULL, G_PRIORITY_DEFAULT);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      _stop_task (comp);
+
+      _remove_all_update_sources (comp);
+      _remove_all_seek_sources (comp);
       _set_all_children_state (comp, GST_STATE_READY);
       gnl_composition_reset (comp);
+
+      _start_task (comp);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       _stop_task (comp);
@@ -2186,6 +2233,8 @@ update_start_stop_duration (GnlComposition * comp)
   GnlObject *obj;
   GnlObject *cobj = (GnlObject *) comp;
   GnlCompositionPrivate *priv = comp->priv;
+
+  _assert_proper_thread (comp);
 
   if (!priv->objects_start) {
     GST_LOG ("no objects, resetting everything to 0");
@@ -2604,23 +2653,6 @@ _flush_downstream (GnlUpdateStackReason update_reason)
   return FALSE;
 }
 
-static void
-_destroy_gsource (GSource * source)
-{
-  g_source_destroy (source);
-  g_source_unref (source);
-}
-
-static void
-_remove_all_update_sources (GnlComposition * comp)
-{
-  MAIN_CONTEXT_LOCK (comp);
-  g_list_free_full (comp->priv->update_gsources,
-      (GDestroyNotify) _destroy_gsource);
-  comp->priv->update_gsources = NULL;
-  MAIN_CONTEXT_UNLOCK (comp);
-}
-
 /*
  * update_pipeline:
  * @comp: The #GnlComposition
@@ -2649,9 +2681,10 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   GstClockTime new_stop = GST_CLOCK_TIME_NONE;
   GstClockTime new_start = GST_CLOCK_TIME_NONE;
 
-
   GstState nextstate = (GST_STATE_NEXT (comp) == GST_STATE_VOID_PENDING) ?
       GST_STATE (comp) : GST_STATE_NEXT (comp);
+
+  _assert_proper_thread (comp);
 
   GST_DEBUG_OBJECT (comp,
       "currenttime:%" GST_TIME_FORMAT
