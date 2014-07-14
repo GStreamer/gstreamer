@@ -228,6 +228,48 @@ GST_START_TEST (test_to_from_string)
 
 GST_END_TEST;
 
+/* Added to make sure taglists are properly serialized/deserialized after bug
+ * https://bugzilla.gnome.org/show_bug.cgi?id=733131 */
+GST_START_TEST (test_to_from_string_tag_event)
+{
+  GstEvent *tagevent;
+  GstTagList *taglist;
+  GstStructure *st1, *st2;
+  gchar *str;
+
+  /* empty taglist */
+  taglist = gst_tag_list_new_empty ();
+  tagevent = gst_event_new_tag (taglist);
+
+  st1 = (GstStructure *) gst_event_get_structure (tagevent);
+  str = gst_structure_to_string (st1);
+  fail_unless (str != NULL);
+
+  st2 = gst_structure_new_from_string (str);
+  fail_unless (st2 != NULL);
+  fail_unless (gst_structure_is_equal (st1, st2));
+  gst_event_unref (tagevent);
+  gst_structure_free (st2);
+  g_free (str);
+
+  /* taglist with data */
+  taglist = gst_tag_list_new ("title", "TEST TITLE", NULL);
+  tagevent = gst_event_new_tag (taglist);
+
+  st1 = (GstStructure *) gst_event_get_structure (tagevent);
+  str = gst_structure_to_string (st1);
+  fail_unless (str != NULL);
+
+  st2 = gst_structure_new_from_string (str);
+  fail_unless (st2 != NULL);
+  fail_unless (gst_structure_is_equal (st1, st2));
+  gst_event_unref (tagevent);
+  gst_structure_free (st2);
+  g_free (str);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_complete_structure)
 {
   GstStructure *structure;
@@ -624,6 +666,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_from_string);
   tcase_add_test (tc_chain, test_to_string);
   tcase_add_test (tc_chain, test_to_from_string);
+  tcase_add_test (tc_chain, test_to_from_string_tag_event);
   tcase_add_test (tc_chain, test_string_properties);
   tcase_add_test (tc_chain, test_complete_structure);
   tcase_add_test (tc_chain, test_structure_new);
