@@ -165,8 +165,6 @@ struct _GnlCompositionPrivate
   gboolean running;
   gboolean initialized;
 
-  GstState deactivated_elements_state;
-
   GstElement *current_bin;
 
   gboolean seeking_itself;
@@ -184,7 +182,6 @@ struct _GnlCompositionPrivate
 static guint _signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *gnlobject_properties[GNLOBJECT_PROP_LAST];
-static GParamSpec *_properties[PROP_LAST];
 
 #define OBJECT_IN_ACTIVE_SEGMENT(comp,element)      \
   ((GNL_OBJECT_START(element) < comp->priv->segment_stop) &&  \
@@ -192,10 +189,6 @@ static GParamSpec *_properties[PROP_LAST];
 
 static void gnl_composition_dispose (GObject * object);
 static void gnl_composition_finalize (GObject * object);
-static void gnl_composition_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspsec);
-static void gnl_composition_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspsec);
 static void gnl_composition_reset (GnlComposition * comp);
 
 static gboolean gnl_composition_add_object (GstBin * bin, GstElement * element);
@@ -687,10 +680,6 @@ gnl_composition_class_init (GnlCompositionClass * klass)
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gnl_composition_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gnl_composition_finalize);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gnl_composition_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gnl_composition_get_property);
 
   gstelement_class->change_state = gnl_composition_change_state;
 
@@ -711,25 +700,6 @@ gnl_composition_class_init (GnlCompositionClass * klass)
       g_object_class_find_property (gobject_class, "stop");
   gnlobject_properties[GNLOBJECT_PROP_DURATION] =
       g_object_class_find_property (gobject_class, "duration");
-
-  /**
-   * GnlComposition:deactivated-elements-state
-   *
-   * Get or set the #GstState in which elements that are not used
-   * in the currently configured pipeline should be set.
-   * By default the state is GST_STATE_READY to lower memory usage and avoid
-   * using all the avalaible threads from the kernel but that means that in
-   * certain case gapless will be more 'complicated' than if the state was set
-   * to GST_STATE_PAUSED.
-   */
-  _properties[PROP_DEACTIVATED_ELEMENTS_STATE] =
-      g_param_spec_enum ("deactivated-elements-state",
-      "Deactivate elements state", "The state in which elements"
-      " not used in the currently configured pipeline should"
-      " be set", GST_TYPE_STATE, GST_STATE_READY,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
-
-  g_object_class_install_properties (gobject_class, PROP_LAST, _properties);
 
   /**
    * GnlComposition::commit
@@ -824,7 +794,6 @@ gnl_composition_init (GnlComposition * comp)
       (g_direct_hash,
       g_direct_equal, NULL, (GDestroyNotify) hash_value_destroy);
 
-  priv->deactivated_elements_state = GST_STATE_READY;
   priv->mcontext = g_main_context_new ();
   g_mutex_init (&priv->mcontext_lock);
   priv->objects_hash = g_hash_table_new_full
@@ -914,38 +883,6 @@ gnl_composition_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 
   g_mutex_clear (&priv->mcontext_lock);
-}
-
-static void
-gnl_composition_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GnlComposition *comp = GNL_COMPOSITION (object);
-
-  switch (prop_id) {
-    case PROP_DEACTIVATED_ELEMENTS_STATE:
-      comp->priv->deactivated_elements_state = g_value_get_enum (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gnl_composition_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GnlComposition *comp = GNL_COMPOSITION (object);
-
-  switch (prop_id) {
-    case PROP_DEACTIVATED_ELEMENTS_STATE:
-      g_value_set_enum (value, comp->priv->deactivated_elements_state);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 /* signal_duration_change
