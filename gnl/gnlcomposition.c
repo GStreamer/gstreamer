@@ -2123,8 +2123,6 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
       _start_task (comp);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gnl_composition_reset (comp);
-
       /* state-lock all elements */
       GST_DEBUG_OBJECT (comp,
           "Setting all children to READY and locking their state");
@@ -2139,7 +2137,6 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_NULL:
       _stop_task (comp);
       _set_all_children_state (comp, GST_STATE_NULL);
-      gnl_composition_reset (comp);
       break;
     default:
       break;
