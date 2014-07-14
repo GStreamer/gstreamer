@@ -107,17 +107,17 @@ struct _GnlCompositionPrivate
      objects_start : sorted by start-time then priority
      objects_stop : sorted by stop-time then priority
      objects_hash : contains all controlled objects
-     objects_lock : mutex to acces/modify any of those lists/hashtable
+
+     Those list should be manipulated exclusively in the main context
+     or while the task is totally stopped.
    */
   GList *objects_start;
   GList *objects_stop;
   GHashTable *objects_hash;
-  GMutex objects_lock;
 
   /* List of GnlObject to be inserted or removed from the composition on the
    * next commit */
   GHashTable *pending_io;
-  GMutex pending_io_lock;
 
   gulong ghosteventprobe;
 
@@ -239,28 +239,6 @@ static void _restart_task (GnlComposition * comp, gboolean emit_commit);
   (GST_CLOCK_TIME_IS_VALID (comp->priv->segment->stop) ?                       \
    (MIN (comp->priv->segment->stop, GNL_OBJECT_STOP (comp))) :                 \
    GNL_OBJECT_STOP (comp))
-
-#define COMP_OBJECTS_LOCK(comp) G_STMT_START {                                 \
-    GST_LOG_OBJECT (comp, "locking objects_lock from thread %p",               \
-        g_thread_self());                                                      \
-    g_mutex_lock (&comp->priv->objects_lock);                                  \
-    GST_LOG_OBJECT (comp, "locked objects_lock from thread %p",                \
-        g_thread_self());                                                      \
-  } G_STMT_END
-
-#define COMP_OBJECTS_UNLOCK(comp) G_STMT_START {                               \
-    GST_LOG_OBJECT (comp, "unlocking objects_lock from thread %p",             \
-        g_thread_self());                                                      \
-    g_mutex_unlock (&comp->priv->objects_lock);                                \
-  } G_STMT_END
-
-#define COMP_PENDING_IO_LOCK(comp) G_STMT_START {                                 \
-    GST_LOG_OBJECT (comp, "locking pending_io_lock from thread %p",               \
-        g_thread_self());                                                      \
-    g_mutex_lock (&comp->priv->pending_io_lock);                                  \
-    GST_LOG_OBJECT (comp, "locked pending_io_lock from thread %p",                \
-        g_thread_self());                                                      \
-  } G_STMT_END
 
 #define MAIN_CONTEXT_LOCK(comp) G_STMT_START {                       \
   GST_LOG_OBJECT (comp, "Getting MAIN_CONTEXT_LOCK in thread %p",    \
@@ -523,15 +501,12 @@ _initialize_stack_func (GnlComposition * comp)
   GnlCompositionPrivate *priv = comp->priv;
 
   /* set ghostpad target */
-  COMP_OBJECTS_LOCK (comp);
   if (!(update_pipeline (comp, COMP_REAL_START (comp),
               COMP_UPDATE_STACK_INITIALIZE))) {
-    COMP_OBJECTS_UNLOCK (comp);
     GST_FIXME_OBJECT (comp, "PLEASE signal state change failure ASYNC");
 
     return G_SOURCE_REMOVE;
   }
-  COMP_OBJECTS_UNLOCK (comp);
 
   priv->initialized = TRUE;
 
@@ -553,7 +528,6 @@ _remove_object_func (ChildIOData * childio)
   GnlCompositionPrivate *priv = comp->priv;
   GnlObject *in_pending_io;
 
-  COMP_OBJECTS_LOCK (comp);
   in_pending_io = g_hash_table_lookup (priv->pending_io, object);
 
   if (!g_hash_table_contains (priv->objects_hash, object)) {
@@ -562,14 +536,12 @@ _remove_object_func (ChildIOData * childio)
           " for addition, removing it from the addition list", object);
 
       g_hash_table_remove (priv->pending_io, object);
-      COMP_OBJECTS_UNLOCK (comp);
       return;
     }
 
     GST_ERROR_OBJECT (comp, "Object %" GST_PTR_FORMAT " is "
         " not in the composition", object);
 
-    COMP_OBJECTS_UNLOCK (comp);
     return;
   }
 
@@ -577,12 +549,10 @@ _remove_object_func (ChildIOData * childio)
     GST_WARNING_OBJECT (comp, "Object %" GST_PTR_FORMAT " is already marked"
         " for removal", object);
 
-    COMP_OBJECTS_UNLOCK (comp);
     return;
   }
 
   g_hash_table_add (priv->pending_io, object);
-  COMP_OBJECTS_UNLOCK (comp);
 
   return;
 }
@@ -619,29 +589,22 @@ _add_object_func (ChildIOData * childio)
   GnlCompositionPrivate *priv = comp->priv;
   GnlObject *in_pending_io;
 
-  COMP_OBJECTS_LOCK (comp);
   in_pending_io = g_hash_table_lookup (priv->pending_io, object);
 
   if (g_hash_table_contains (priv->objects_hash, object)) {
     GST_ERROR_OBJECT (comp, "Object %" GST_PTR_FORMAT " is "
         " already in the composition", object);
-
-    COMP_OBJECTS_UNLOCK (comp);
     return;
   }
 
   if (in_pending_io) {
     GST_WARNING_OBJECT (comp, "Object %" GST_PTR_FORMAT " is already marked"
         " for addition", object);
-
-    COMP_OBJECTS_UNLOCK (comp);
     return;
   }
 
 
   g_hash_table_add (priv->pending_io, object);
-
-  COMP_OBJECTS_UNLOCK (comp);
   return;
 }
 
@@ -771,7 +734,6 @@ gnl_composition_init (GnlComposition * comp)
 
   priv = G_TYPE_INSTANCE_GET_PRIVATE (comp, GNL_TYPE_COMPOSITION,
       GnlCompositionPrivate);
-  g_mutex_init (&priv->objects_lock);
   priv->objects_start = NULL;
   priv->objects_stop = NULL;
 
@@ -785,7 +747,6 @@ gnl_composition_init (GnlComposition * comp)
   priv->mcontext = g_main_context_new ();
   g_mutex_init (&priv->mcontext_lock);
 
-  g_mutex_init (&priv->pending_io_lock);
   priv->pending_io = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   comp->priv = priv;
@@ -812,7 +773,6 @@ gnl_composition_dispose (GObject * object)
 
   priv->dispose_has_run = TRUE;
 
-  COMP_OBJECTS_LOCK (comp);
   iter = priv->objects_start;
   while (iter) {
     GList *next = iter->next;
@@ -838,7 +798,6 @@ gnl_composition_dispose (GObject * object)
 
     priv->expandables = NULL;
   }
-  COMP_OBJECTS_UNLOCK (comp);
 
   gnl_composition_reset_target_pad (comp);
 
@@ -853,20 +812,16 @@ gnl_composition_finalize (GObject * object)
 
   _assert_proper_thread (comp);
 
-  COMP_OBJECTS_LOCK (comp);
   if (priv->current) {
     g_node_destroy (priv->current);
     priv->current = NULL;
   }
 
   g_hash_table_destroy (priv->objects_hash);
-  COMP_OBJECTS_UNLOCK (comp);
 
   gst_segment_free (priv->segment);
   gst_segment_free (priv->outside_segment);
 
-  g_mutex_clear (&priv->objects_lock);
-  g_mutex_clear (&priv->pending_io_lock);
   g_rec_mutex_clear (&comp->task_rec_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -924,7 +879,6 @@ gnl_composition_reset (GnlComposition * comp)
 
   _assert_proper_thread (comp);
 
-  COMP_OBJECTS_LOCK (comp);
   priv->segment_start = GST_CLOCK_TIME_NONE;
   priv->segment_stop = GST_CLOCK_TIME_NONE;
   priv->next_base_time = 0;
@@ -945,7 +899,6 @@ gnl_composition_reset (GnlComposition * comp)
   priv->flush_seqnum = 0;
 
   _empty_bin (GST_BIN_CAST (priv->current_bin));
-  COMP_OBJECTS_UNLOCK (comp);
 
   GST_DEBUG_OBJECT (comp, "Composition now resetted");
 }
@@ -1291,7 +1244,6 @@ seek_handling (GnlComposition * comp, GnlUpdateStackReason update_stack_reason)
   GST_DEBUG_OBJECT (comp, "Seek hnalding update pipeline reason: %s",
       UPDATE_PIPELINE_REASONS[update_stack_reason]);
 
-  COMP_OBJECTS_LOCK (comp);
   if (have_to_update_pipeline (comp, update_stack_reason)) {
     if (comp->priv->segment->rate >= 0.0)
       update_pipeline (comp, comp->priv->segment->start, update_stack_reason);
@@ -1305,7 +1257,6 @@ seek_handling (GnlComposition * comp, GnlUpdateStackReason update_stack_reason)
     _seek_current_stack (comp, toplevel_seek);
     update_operations_base_time (comp, !(comp->priv->segment->rate >= 0.0));
   }
-  COMP_OBJECTS_UNLOCK (comp);
 
   return TRUE;
 }
@@ -2037,8 +1988,6 @@ _commit_func (GnlComposition * comp)
 
   GST_INFO_OBJECT (comp, "Commiting state");
 
-  COMP_OBJECTS_LOCK (comp);
-
   /* Get current so that it represent the duration it was
    * before commiting children */
   curpos = get_current_position (comp);
@@ -2046,7 +1995,6 @@ _commit_func (GnlComposition * comp)
   _process_pending_entries (comp);
 
   if (_commit_values (comp) == FALSE) {
-    COMP_OBJECTS_UNLOCK (comp);
     GST_INFO_OBJECT (comp, "Nothing to commit, leaving");
 
     g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, FALSE);
@@ -2064,7 +2012,6 @@ _commit_func (GnlComposition * comp)
     GST_DEBUG_OBJECT (comp, "Not initialized yet, just updating values");
 
     update_start_stop_duration (comp);
-    COMP_OBJECTS_UNLOCK (comp);
 
     g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, TRUE);
 
@@ -2075,14 +2022,10 @@ _commit_func (GnlComposition * comp)
     update_pipeline (comp, curpos, COMP_UPDATE_STACK_ON_COMMIT);
 
     if (!priv->current) {
-      COMP_OBJECTS_UNLOCK (comp);
-
       GST_INFO_OBJECT (comp, "No new stack set, we can go and keep acting on"
           " our children");
 
       g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, TRUE);
-    } else {
-      COMP_OBJECTS_UNLOCK (comp);
     }
   }
 
