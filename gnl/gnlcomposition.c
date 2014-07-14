@@ -919,20 +919,20 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       if (gst_event_get_seqnum (event) != comp->priv->flush_seqnum) {
-        GST_ERROR_OBJECT (comp, "Dropping flush stop");
+        GST_INFO_OBJECT (comp, "Dropping flush stop");
         retval = GST_PAD_PROBE_DROP;
       } else {
-        GST_ERROR_OBJECT (comp, "Forwarding our flush stop with seqnum %i",
+        GST_INFO_OBJECT (comp, "Forwarding our flush stop with seqnum %i",
             comp->priv->flush_seqnum);
         comp->priv->flush_seqnum = 0;
       }
       break;
     case GST_EVENT_FLUSH_START:
       if (gst_event_get_seqnum (event) != comp->priv->flush_seqnum) {
-        GST_ERROR_OBJECT (comp, "Dropping flush start");
+        GST_INFO_OBJECT (comp, "Dropping flush start");
         retval = GST_PAD_PROBE_DROP;
       } else {
-        GST_ERROR_OBJECT (comp, "Forwarding our flush start with seqnum %i",
+        GST_INFO_OBJECT (comp, "Forwarding our flush start with seqnum %i",
             comp->priv->flush_seqnum);
       }
       break;
@@ -1066,6 +1066,7 @@ gnl_composition_commit_func (GnlObject * object, gboolean recurse)
 {
   _add_gsource (GNL_COMPOSITION (object), (GSourceFunc) _commit_func,
       GNL_COMPOSITION (object), NULL, G_PRIORITY_DEFAULT);
+
   return TRUE;
 }
 
@@ -1140,7 +1141,7 @@ get_current_position (GnlComposition * comp)
     gst_object_unref (peer);
 
     if (res) {
-      GST_LOG_OBJECT (comp,
+      GST_DEBUG_OBJECT (comp,
           "Successfully got downstream position %" GST_TIME_FORMAT,
           GST_TIME_ARGS ((guint64) value));
       goto beach;
@@ -1182,6 +1183,7 @@ beach:
   return (guint64) value;
 }
 
+/* WITH OBJECTS LOCK TAKEN */
 static gboolean
 update_base_time (GNode * node, GstClockTime * timestamp)
 {
@@ -1206,7 +1208,7 @@ update_operations_base_time (GnlComposition * comp, gboolean reverse)
       (GNodeTraverseFunc) update_base_time, &timestamp);
 }
 
-
+/* WITH OBJECTS LOCK TAKEN */
 static gboolean
 _seek_current_stack (GnlComposition * comp, GstEvent * event)
 {
@@ -1236,8 +1238,7 @@ _seek_current_stack (GnlComposition * comp, GstEvent * event)
   Sends flush events downstream if needed.
   can be called by user_seek or segment_done
 
-  initial : FIXME : ???? Always seems to be TRUE
-  update : TRUE from EOS, FALSE from seek
+  update_stack_reason: The reason for which we need to handle 'seek'
 */
 
 static gboolean
@@ -1415,11 +1416,14 @@ gnl_composition_ghost_pad_set_target (GnlComposition * comp, GstPad * target)
 
   ptarget =
       gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT (comp)->srcpad));
-  if (ptarget && ptarget == target) {
-    GST_DEBUG_OBJECT (comp,
-        "Target of srcpad is the same as existing one, not changing");
+  if (ptarget) {
     gst_object_unref (ptarget);
-    return;
+
+    if (ptarget == target) {
+      GST_DEBUG_OBJECT (comp,
+          "Target of srcpad is the same as existing one, not changing");
+      return;
+    }
   }
 
   /* Actually set the target */
@@ -1433,8 +1437,6 @@ gnl_composition_ghost_pad_set_target (GnlComposition * comp, GstPad * target)
         (GstPadProbeCallback) ghost_event_probe_handler, comp, NULL);
     GST_DEBUG_OBJECT (comp, "added event probe %lu", priv->ghosteventprobe);
   }
-
-  GST_DEBUG_OBJECT (comp, "END");
 }
 
 static void
