@@ -2159,6 +2159,16 @@ gst_value_deserialize_caps_features (GValue * dest, const gchar * s)
 /**************
  * GstTagList *
  **************/
+static gint
+gst_value_compare_tag_list (const GValue * value1, const GValue * value2)
+{
+  GstTagList *taglist1 = GST_TAG_LIST (g_value_get_boxed (value1));
+  GstTagList *taglist2 = GST_TAG_LIST (g_value_get_boxed (value2));
+
+  if (gst_tag_list_is_equal (taglist1, taglist2))
+    return GST_VALUE_EQUAL;
+  return GST_VALUE_UNORDERED;
+}
 
 static gboolean
 gst_value_deserialize_tag_list (GValue * dest, const gchar * s)
@@ -6295,7 +6305,7 @@ _priv_gst_value_initialize (void)
   {
     static GstValueTable gst_value = {
       0,
-      NULL,
+      gst_value_compare_tag_list,
       gst_value_serialize_tag_list,
       gst_value_deserialize_tag_list,
     };
