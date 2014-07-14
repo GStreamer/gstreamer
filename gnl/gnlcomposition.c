@@ -162,8 +162,6 @@ struct _GnlCompositionPrivate
   GList *gsources;
   GList *update_gsources;
 
-  gboolean reset_time;
-
   gboolean running;
   gboolean initialized;
 
@@ -466,9 +464,7 @@ _seek_pipeline_func (SeekData * seekd)
 
   priv->next_base_time = 0;
 
-  priv->reset_time = TRUE;
   seek_handling (seekd->comp, COMP_UPDATE_STACK_ON_SEEK);
-  priv->reset_time = FALSE;
 
 beach:
   return G_SOURCE_REMOVE;
@@ -824,8 +820,6 @@ gnl_composition_init (GnlComposition * comp)
 
   g_rec_mutex_init (&comp->task_rec_lock);
 
-  priv->reset_time = FALSE;
-
   priv->objects_hash = g_hash_table_new_full
       (g_direct_hash,
       g_direct_equal, NULL, (GDestroyNotify) hash_value_destroy);
@@ -1106,7 +1100,6 @@ gnl_composition_reset (GnlComposition * comp)
 
   reset_children (comp);
 
-  priv->reset_time = FALSE;
   priv->initialized = FALSE;
   priv->send_stream_start = TRUE;
   priv->real_eos_seqnum = 0;
@@ -1629,7 +1622,6 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
     GST_DEBUG_OBJECT (comp, "About to call gnl_event_pad_func: %p",
         priv->gnl_event_pad_func);
     res = priv->gnl_event_pad_func (GNL_OBJECT (comp)->srcpad, parent, event);
-    priv->reset_time = FALSE;
     GST_DEBUG_OBJECT (comp, "Done calling gnl_event_pad_func() %d", res);
   }
 
