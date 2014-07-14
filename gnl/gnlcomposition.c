@@ -175,7 +175,7 @@ struct _GnlCompositionPrivate
   /* While we do not get a buffer on our srcpad,
    * we are not commited */
   gulong commited_probeid;
-  /* 0 means that we already received the right segment */
+  /* 0 means that we already received the right caps or segment */
   gint awaited_caps_seqnum;
 };
 
@@ -294,12 +294,6 @@ struct _GnlCompositionEntry
 {
   GnlObject *object;
   GnlComposition *comp;
-
-  /* handler id for block probe */
-  gulong probeid;
-  gulong dataprobeid;
-
-  gboolean seeked;
 };
 
 static void
@@ -754,20 +748,6 @@ gnl_composition_class_init (GnlCompositionClass * klass)
 static void
 hash_value_destroy (GnlCompositionEntry * entry)
 {
-  GstPad *srcpad;
-  GstElement *element = GST_ELEMENT (entry->object);
-
-  srcpad = GNL_OBJECT_SRC (element);
-  if (entry->probeid) {
-    gst_pad_remove_probe (srcpad, entry->probeid);
-    entry->probeid = 0;
-  }
-
-  if (entry->dataprobeid) {
-    gst_pad_remove_probe (srcpad, entry->dataprobeid);
-    entry->dataprobeid = 0;
-  }
-
   g_slice_free (GnlCompositionEntry, entry);
 }
 
@@ -895,42 +875,6 @@ signal_duration_change (GnlComposition * comp)
   gst_element_post_message (GST_ELEMENT_CAST (comp),
       gst_message_new_duration_changed (GST_OBJECT_CAST (comp)));
 }
-
-static gboolean
-unblock_child_pads (GValue * item, GValue * ret G_GNUC_UNUSED,
-    GnlComposition * comp)
-{
-  GstPad *pad;
-  GstElement *child = g_value_get_object (item);
-  GnlCompositionEntry *entry = COMP_ENTRY (comp, child);
-
-  GST_DEBUG_OBJECT (child, "unblocking pads");
-
-  pad = GNL_OBJECT_SRC (child);
-  if (entry->probeid) {
-    gst_pad_remove_probe (pad, entry->probeid);
-    entry->probeid = 0;
-  }
-  return TRUE;
-}
-
-static void
-unblock_children (GnlComposition * comp)
-{
-  GstIterator *children;
-
-  children = gst_bin_iterate_elements (GST_BIN (comp->priv->current_bin));
-
-retry:
-  if (G_UNLIKELY (gst_iterator_fold (children,
-              (GstIteratorFoldFunction) unblock_child_pads, NULL,
-              comp) == GST_ITERATOR_RESYNC)) {
-    gst_iterator_resync (children);
-    goto retry;
-  }
-  gst_iterator_free (children);
-}
-
 
 static gboolean
 reset_child (GValue * item, GValue * ret G_GNUC_UNUSED, gpointer user_data)
@@ -2316,7 +2260,6 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
 {
   GstIterator *children;
   GnlComposition *comp = (GnlComposition *) element;
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   GST_DEBUG_OBJECT (comp, "%s => %s",
       gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
@@ -2370,21 +2313,7 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      unblock_children (comp);
-      break;
-    default:
-      break;
-  }
-
-  return ret;
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 static gint
