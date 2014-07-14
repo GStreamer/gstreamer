@@ -2150,6 +2150,7 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
 
     if (ptarget) {
       GstEvent *flush_event;
+      GstPad *peer = gst_pad_get_peer (GNL_OBJECT_SRC (comp));
 
       /* Make sure that between the flush_start/flush_stop
        * and the time we set the current_bin to READY, no
@@ -2165,13 +2166,13 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
       priv->flush_seqnum = gst_event_get_seqnum (flush_event);
       GST_ERROR_OBJECT (comp, "sending flushes downstream with seqnum %d",
           priv->flush_seqnum);
-      gst_element_send_event (priv->current_bin, flush_event);
+      gst_pad_send_event (peer, flush_event);
 
       flush_event = gst_event_new_flush_stop (TRUE);
       gst_event_set_seqnum (flush_event, priv->flush_seqnum);
-      gst_element_send_event (priv->current_bin, flush_event);
+      gst_pad_send_event (peer, flush_event);
 
-      gst_object_unref (ptarget);
+      gst_object_unref (peer);
     }
   }
 
