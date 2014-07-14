@@ -880,6 +880,7 @@ gnl_composition_reset (GnlComposition * comp)
 
   GST_DEBUG_OBJECT (comp, "resetting");
 
+  COMP_OBJECTS_LOCK (comp);
   priv->segment_start = GST_CLOCK_TIME_NONE;
   priv->segment_stop = GST_CLOCK_TIME_NONE;
   priv->next_base_time = 0;
@@ -900,6 +901,7 @@ gnl_composition_reset (GnlComposition * comp)
   priv->flush_seqnum = 0;
 
   _empty_bin (GST_BIN_CAST (priv->current_bin));
+  COMP_OBJECTS_UNLOCK (comp);
 
   GST_DEBUG_OBJECT (comp, "Composition now resetted");
 }
