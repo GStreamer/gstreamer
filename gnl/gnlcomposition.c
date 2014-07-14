@@ -216,8 +216,6 @@ static void _relink_single_node (GnlComposition * comp, GNode * node,
     GstEvent * toplevel_seek);
 static gboolean _update_pipeline_func (GnlComposition * comp);
 static gboolean _commit_func (GnlComposition * comp);
-static gboolean
-set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp);
 static GstEvent *get_new_seek_event (GnlComposition * comp, gboolean initial,
     gboolean updatestoponly);
 static gboolean
@@ -1834,17 +1832,6 @@ get_clean_toplevel_stack (GnlComposition * comp, GstClockTime * timestamp,
   return stack;
 }
 
-
-static gboolean
-set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp)
-{
-  GstElement *child = g_value_get_object (item);
-
-  gnl_object_set_caps ((GnlObject *) child, comp->caps);
-
-  return TRUE;
-}
-
 static GstPadProbeReturn
 _drop_all_cb (GstPad * pad G_GNUC_UNUSED,
     GstPadProbeInfo * info, GnlComposition * comp)
@@ -2155,7 +2142,6 @@ _set_all_children_state (GnlComposition * comp, GstState state)
 static GstStateChangeReturn
 gnl_composition_change_state (GstElement * element, GstStateChange transition)
 {
-  GstIterator *children;
   GnlComposition *comp = (GnlComposition *) element;
 
   GST_DEBUG_OBJECT (comp, "%s => %s",
@@ -2172,18 +2158,6 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
       /* state-lock all elements */
       GST_DEBUG_OBJECT (comp,
           "Setting all children to READY and locking their state");
-
-      /* Set caps on all objects */
-      if (G_UNLIKELY (!gst_caps_is_any (GNL_OBJECT (comp)->caps))) {
-        children = gst_bin_iterate_elements (GST_BIN (comp->priv->current_bin));
-
-        while (G_UNLIKELY (gst_iterator_fold (children,
-                    (GstIteratorFoldFunction) set_child_caps, NULL,
-                    comp) == GST_ITERATOR_RESYNC)) {
-          gst_iterator_resync (children);
-        }
-        gst_iterator_free (children);
-      }
 
       _add_gsource (comp, (GSourceFunc) _initialize_stack_func, comp,
           NULL, G_PRIORITY_DEFAULT);
@@ -2876,7 +2850,7 @@ _gnl_composition_add_object (GnlComposition * comp, GnlObject * object)
   /* ...and add it to the hash table */
   g_hash_table_add (priv->objects_hash, object);
 
-  /* Set the caps of the composition */
+  /* Set the caps of the composition on the GnlObject it handles */
   if (G_UNLIKELY (!gst_caps_is_any (((GnlObject *) comp)->caps)))
     gnl_object_set_caps ((GnlObject *) object, ((GnlObject *) comp)->caps);
 
