@@ -86,8 +86,6 @@ static const char *UPDATE_PIPELINE_REASONS[] = {
   "Initialize", "Commit", "EOS", "Seek"
 };
 
-typedef struct _GnlCompositionEntry GnlCompositionEntry;
-
 typedef struct
 {
   GnlComposition *comp;
@@ -108,7 +106,7 @@ struct _GnlCompositionPrivate
      Sorted List of GnlObjects , ThreadSafe
      objects_start : sorted by start-time then priority
      objects_stop : sorted by stop-time then priority
-     objects_hash : contains signal handlers id for controlled objects
+     objects_hash : contains all controlled objects
      objects_lock : mutex to acces/modify any of those lists/hashtable
    */
   GList *objects_start;
@@ -121,9 +119,7 @@ struct _GnlCompositionPrivate
   GHashTable *pending_io;
   GMutex pending_io_lock;
 
-  /* source top-level ghostpad, probe and entry */
   gulong ghosteventprobe;
-  GnlCompositionEntry *toplevelentry;
 
   /* current stack, list of GnlObject* */
   GNode *current;
@@ -229,9 +225,9 @@ set_child_caps (GValue * item, GValue * ret G_GNUC_UNUSED, GnlObject * comp);
 static GstEvent *get_new_seek_event (GnlComposition * comp, gboolean initial,
     gboolean updatestoponly);
 static gboolean
-_gnl_composition_add_entry (GnlComposition * comp, GnlObject * object);
+_gnl_composition_add_object (GnlComposition * comp, GnlObject * object);
 static gboolean
-_gnl_composition_remove_entry (GnlComposition * comp, GnlObject * object);
+_gnl_composition_remove_object (GnlComposition * comp, GnlObject * object);
 static void _deactivate_stack (GnlComposition * comp,
     gboolean flush_downstream);
 static gboolean _set_real_eos_seqnum_from_seek (GnlComposition * comp,
@@ -248,9 +244,6 @@ static void _restart_task (GnlComposition * comp, gboolean emit_commit);
   (GST_CLOCK_TIME_IS_VALID (comp->priv->segment->stop) ?                       \
    (MIN (comp->priv->segment->stop, GNL_OBJECT_STOP (comp))) :                 \
    GNL_OBJECT_STOP (comp))
-
-#define COMP_ENTRY(comp, object)                                               \
-  (g_hash_table_lookup (comp->priv->objects_hash, (gconstpointer) object))
 
 #define COMP_OBJECTS_LOCK(comp) G_STMT_START {                                 \
     GST_LOG_OBJECT (comp, "locking objects_lock from thread %p",               \
@@ -289,12 +282,6 @@ static void _restart_task (GnlComposition * comp, gboolean emit_commit);
 } G_STMT_END
 
 #define GET_TASK_LOCK(comp)    (&(GNL_COMPOSITION(comp)->task_rec_lock))
-
-struct _GnlCompositionEntry
-{
-  GnlObject *object;
-  GnlComposition *comp;
-};
 
 static void
 _remove_all_sources (GnlComposition * comp)
@@ -530,14 +517,12 @@ _remove_object_func (ChildIOData * childio)
   GnlObject *object = childio->object;
 
   GnlCompositionPrivate *priv = comp->priv;
-  GnlCompositionEntry *entry;
   GnlObject *in_pending_io;
 
   COMP_OBJECTS_LOCK (comp);
-  entry = COMP_ENTRY (comp, object);
   in_pending_io = g_hash_table_lookup (priv->pending_io, object);
 
-  if (!entry) {
+  if (!g_hash_table_contains (priv->objects_hash, object)) {
     if (in_pending_io) {
       GST_INFO_OBJECT (comp, "Object %" GST_PTR_FORMAT " was marked"
           " for addition, removing it from the addition list", object);
@@ -599,14 +584,12 @@ _add_object_func (ChildIOData * childio)
   GnlComposition *comp = childio->comp;
   GnlObject *object = childio->object;
   GnlCompositionPrivate *priv = comp->priv;
-  GnlCompositionEntry *entry;
   GnlObject *in_pending_io;
 
   COMP_OBJECTS_LOCK (comp);
-  entry = COMP_ENTRY (comp, object);
   in_pending_io = g_hash_table_lookup (priv->pending_io, object);
 
-  if (entry) {
+  if (g_hash_table_contains (priv->objects_hash, object)) {
     GST_ERROR_OBJECT (comp, "Object %" GST_PTR_FORMAT " is "
         " already in the composition", object);
 
@@ -746,12 +729,6 @@ gnl_composition_class_init (GnlCompositionClass * klass)
 }
 
 static void
-hash_value_destroy (GnlCompositionEntry * entry)
-{
-  g_slice_free (GnlCompositionEntry, entry);
-}
-
-static void
 gnl_composition_init (GnlComposition * comp)
 {
   GnlCompositionPrivate *priv;
@@ -770,15 +747,10 @@ gnl_composition_init (GnlComposition * comp)
 
   g_rec_mutex_init (&comp->task_rec_lock);
 
-  priv->objects_hash = g_hash_table_new_full
-      (g_direct_hash,
-      g_direct_equal, NULL, (GDestroyNotify) hash_value_destroy);
+  priv->objects_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   priv->mcontext = g_main_context_new ();
   g_mutex_init (&priv->mcontext_lock);
-  priv->objects_hash = g_hash_table_new_full
-      (g_direct_hash,
-      g_direct_equal, NULL, (GDestroyNotify) hash_value_destroy);
 
   g_mutex_init (&priv->pending_io_lock);
   priv->pending_io = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -820,7 +792,7 @@ gnl_composition_dispose (GObject * object)
     while (iter) {
       GList *next = iter->next;
 
-      _gnl_composition_remove_entry (comp, iter->data);
+      _gnl_composition_remove_object (comp, iter->data);
       iter = next;
     }
 
@@ -843,7 +815,7 @@ gnl_composition_finalize (GObject * object)
   while (iter) {
     GList *next = iter->next;
 
-    _gnl_composition_remove_entry (comp, iter->data);
+    _gnl_composition_remove_object (comp, iter->data);
     iter = next;
   }
 
@@ -879,17 +851,12 @@ signal_duration_change (GnlComposition * comp)
 static gboolean
 reset_child (GValue * item, GValue * ret G_GNUC_UNUSED, gpointer user_data)
 {
-  GnlCompositionEntry *entry;
-  GstElement *child = g_value_get_object (item);
-  GnlComposition *comp = GNL_COMPOSITION (user_data);
-  GnlObject *object;
+  GnlObject *object = g_value_get_object (item);
   GstPad *srcpad, *peerpad;
 
-  GST_DEBUG_OBJECT (child, "unlocking state");
-  gst_element_set_locked_state (child, FALSE);
+  GST_DEBUG_OBJECT (object, "unlocking state");
+  gst_element_set_locked_state (GST_ELEMENT (object), FALSE);
 
-  entry = COMP_ENTRY (comp, child);
-  object = entry->object;
   srcpad = object->srcpad;
   peerpad = gst_pad_get_peer (srcpad);
   if (peerpad) {
@@ -1528,17 +1495,14 @@ gnl_composition_reset_target_pad (GnlComposition * comp)
 
   gnl_object_ghost_pad_set_target (GNL_OBJECT (comp),
       GNL_OBJECT_SRC (comp), NULL);
-  priv->toplevelentry = NULL;
   priv->send_stream_start = TRUE;
 }
 
 /* gnl_composition_ghost_pad_set_target:
  * target: The target #GstPad. The refcount will be decremented (given to the ghostpad).
- * entry: The GnlCompositionEntry to which the pad belongs
  */
 static void
-gnl_composition_ghost_pad_set_target (GnlComposition * comp, GstPad * target,
-    GnlCompositionEntry * entry)
+gnl_composition_ghost_pad_set_target (GnlComposition * comp, GstPad * target)
 {
   GstPad *ptarget;
   GnlCompositionPrivate *priv = comp->priv;
@@ -1561,9 +1525,6 @@ gnl_composition_ghost_pad_set_target (GnlComposition * comp, GstPad * target,
   /* Actually set the target */
   gnl_object_ghost_pad_set_target ((GnlObject *) comp,
       GNL_OBJECT (comp)->srcpad, target);
-
-  /* Set top-level entry (will be NULL if unsetting) */
-  priv->toplevelentry = entry;
 
   if (target && (priv->ghosteventprobe == 0)) {
     priv->ghosteventprobe =
@@ -2011,9 +1972,7 @@ _process_pending_entries (GnlComposition * comp)
 
   g_hash_table_iter_init (&iter, priv->pending_io);
   while (g_hash_table_iter_next (&iter, (gpointer *) & object, NULL)) {
-    GnlCompositionEntry *entry = COMP_ENTRY (comp, object);
-
-    if (entry) {
+    if (g_hash_table_contains (priv->objects_hash, object)) {
 
       if (GST_OBJECT_PARENT (object) == GST_OBJECT_CAST (priv->current_bin) &&
           deactivated_stack == FALSE) {
@@ -2022,9 +1981,9 @@ _process_pending_entries (GnlComposition * comp)
         _deactivate_stack (comp, TRUE);
       }
 
-      _gnl_composition_remove_entry (comp, object);
+      _gnl_composition_remove_object (comp, object);
     } else {
-      _gnl_composition_add_entry (comp, object);
+      _gnl_composition_add_object (comp, object);
     }
   }
 
@@ -2692,7 +2651,6 @@ _activate_new_stack (GnlComposition * comp)
 {
   GstPad *pad;
   GstElement *topelement;
-  GnlCompositionEntry *topentry;
 
   GnlCompositionPrivate *priv = comp->priv;
 
@@ -2712,12 +2670,11 @@ _activate_new_stack (GnlComposition * comp)
   topelement = GST_ELEMENT (priv->current->data);
   /* Get toplevel object source pad */
   pad = GNL_OBJECT_SRC (topelement);
-  topentry = COMP_ENTRY (comp, topelement);
 
   GST_INFO_OBJECT (comp,
       "We have a valid toplevel element pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  gnl_composition_ghost_pad_set_target (comp, pad, topentry);
+  gnl_composition_ghost_pad_set_target (comp, pad);
 
   GST_DEBUG_OBJECT (comp, "New stack activated!");
 
@@ -2944,11 +2901,9 @@ gnl_composition_add_object (GstBin * bin, GstElement * element)
 }
 
 static gboolean
-_gnl_composition_add_entry (GnlComposition * comp, GnlObject * object)
+_gnl_composition_add_object (GnlComposition * comp, GnlObject * object)
 {
   gboolean ret = TRUE;
-
-  GnlCompositionEntry *entry;
   GnlCompositionPrivate *priv = comp->priv;
 
   GST_DEBUG_OBJECT (comp, "element %s", GST_OBJECT_NAME (object));
@@ -2978,11 +2933,6 @@ _gnl_composition_add_entry (GnlComposition * comp, GnlObject * object)
   /* lock state of child ! */
   GST_LOG_OBJECT (comp, "Locking state of %s", GST_ELEMENT_NAME (object));
 
-  /* wrap new element in a GnlCompositionEntry ... */
-  entry = g_slice_new0 (GnlCompositionEntry);
-  entry->object = (GnlObject *) object;
-  entry->comp = comp;
-
   if (GNL_OBJECT_IS_EXPANDABLE (object)) {
     /* Only react on non-default objects properties */
     g_object_set (object,
@@ -2995,7 +2945,7 @@ _gnl_composition_add_entry (GnlComposition * comp, GnlObject * object)
   }
 
   /* ...and add it to the hash table */
-  g_hash_table_insert (priv->objects_hash, object, entry);
+  g_hash_table_add (priv->objects_hash, object);
 
   /* Set the caps of the composition */
   if (G_UNLIKELY (!gst_caps_is_any (((GnlObject *) comp)->caps)))
@@ -3051,18 +3001,15 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element)
 }
 
 static gboolean
-_gnl_composition_remove_entry (GnlComposition * comp, GnlObject * object)
+_gnl_composition_remove_object (GnlComposition * comp, GnlObject * object)
 {
-  gboolean ret = FALSE;
-  GnlCompositionEntry *entry;
   GnlCompositionPrivate *priv = comp->priv;
 
   GST_DEBUG_OBJECT (comp, "removing object %s", GST_OBJECT_NAME (object));
 
-  /* we only accept GnlObject */
-  entry = COMP_ENTRY (comp, object);
-  if (entry == NULL) {
-    goto out;
+  if (!g_hash_table_contains (priv->objects_hash, object)) {
+    GST_INFO_OBJECT (comp, "object was not in composition");
+    return FALSE;
   }
 
   gst_element_set_locked_state (GST_ELEMENT (object), FALSE);
@@ -3090,6 +3037,5 @@ _gnl_composition_remove_entry (GnlComposition * comp, GnlObject * object)
   gnl_object_reset (GNL_OBJECT (object));
   gst_object_unref (object);
 
-out:
-  return ret;
+  return TRUE;
 }
