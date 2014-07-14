@@ -844,42 +844,6 @@ signal_duration_change (GnlComposition * comp)
 }
 
 static gboolean
-reset_child (GValue * item, GValue * ret G_GNUC_UNUSED, gpointer user_data)
-{
-  GnlObject *object = g_value_get_object (item);
-  GstPad *srcpad, *peerpad;
-
-  GST_DEBUG_OBJECT (object, "unlocking state");
-  gst_element_set_locked_state (GST_ELEMENT (object), FALSE);
-
-  srcpad = object->srcpad;
-  peerpad = gst_pad_get_peer (srcpad);
-  if (peerpad) {
-    gst_pad_unlink (srcpad, peerpad);
-    gst_object_unref (peerpad);
-  }
-
-  return TRUE;
-}
-
-static void
-reset_children (GnlComposition * comp)
-{
-  GstIterator *children;
-
-  children = gst_bin_iterate_elements (GST_BIN (comp->priv->current_bin));
-
-retry:
-  if (G_UNLIKELY (gst_iterator_fold (children,
-              (GstIteratorFoldFunction) reset_child, NULL,
-              comp) == GST_ITERATOR_RESYNC)) {
-    gst_iterator_resync (children);
-    goto retry;
-  }
-  gst_iterator_free (children);
-}
-
-static gboolean
 _remove_child (GValue * item, GValue * ret G_GNUC_UNUSED, GstBin * bin)
 {
   GstElement *child = g_value_get_object (item);
@@ -928,8 +892,6 @@ gnl_composition_reset (GnlComposition * comp)
   priv->current = NULL;
 
   gnl_composition_reset_target_pad (comp);
-
-  reset_children (comp);
 
   priv->initialized = FALSE;
   priv->send_stream_start = TRUE;
