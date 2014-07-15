@@ -365,6 +365,9 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_LOCK (element);
       pipeline->priv->update_clock = TRUE;
       GST_OBJECT_UNLOCK (element);
+
+      /* READY to PAUSED starts running_time from 0 */
+      reset_start_time (pipeline, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
@@ -472,11 +475,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-    {
-      /* READY to PAUSED starts running_time from 0 */
-      reset_start_time (pipeline, 0);
       break;
-    }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
