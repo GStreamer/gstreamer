@@ -257,7 +257,7 @@ static void _restart_task (GnlComposition * comp, gboolean emit_commit);
 #define GET_TASK_LOCK(comp)    (&(GNL_COMPOSITION(comp)->task_rec_lock))
 
 static inline gboolean
-_flush_downstream (GnlUpdateStackReason update_reason)
+_have_to_flush_downstream (GnlUpdateStackReason update_reason)
 {
   if (update_reason == COMP_UPDATE_STACK_ON_COMMIT ||
       update_reason == COMP_UPDATE_STACK_ON_SEEK)
@@ -1259,7 +1259,7 @@ seek_handling (GnlComposition * comp, GnlUpdateStackReason update_stack_reason)
     _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
 
     _seek_current_stack (comp, toplevel_seek,
-        _flush_downstream (update_stack_reason));
+        _have_to_flush_downstream (update_stack_reason));
     update_operations_base_time (comp, !(comp->priv->segment->rate >= 0.0));
   }
 
@@ -2692,7 +2692,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
   /* If stacks are different, unlink/relink objects */
   if (!samestack) {
-    _deactivate_stack (comp, _flush_downstream (update_reason));
+    _deactivate_stack (comp, _have_to_flush_downstream (update_reason));
     _relink_new_stack (comp, stack, toplevel_seek);
   }
 
@@ -2727,7 +2727,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
     return _activate_new_stack (comp);
   else
     return _seek_current_stack (comp, toplevel_seek,
-        _flush_downstream (update_reason));
+        _have_to_flush_downstream (update_reason));
 }
 
 static gboolean
