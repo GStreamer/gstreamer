@@ -1981,9 +1981,9 @@ type_found (GstElement * typefind, guint probability,
 
   /* PLAYING in one go might fail (see bug #632782) */
   gst_element_set_state (dec_elem, GST_STATE_PAUSED);
-  gst_element_set_state (dec_elem, GST_STATE_PLAYING);
+  gst_element_sync_state_with_parent (dec_elem);
   if (queue)
-    gst_element_set_state (queue, GST_STATE_PLAYING);
+    gst_element_sync_state_with_parent (queue);
 
   do_async_done (decoder);
 
@@ -2141,7 +2141,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
 
   GST_DEBUG_OBJECT (bin, "linked decoder to new pad");
 
-  gst_element_set_state (decoder, GST_STATE_PLAYING);
+  gst_element_sync_state_with_parent (decoder);
   GST_URI_DECODE_BIN_UNLOCK (bin);
 
   return;
@@ -2717,21 +2717,30 @@ gst_uri_decode_bin_change_state (GstElement * element,
   decoder = GST_URI_DECODE_BIN (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!setup_source (decoder))
-        goto source_failed;
-      break;
     default:
       break;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto setup_failed;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG ("ready to paused");
-      if (ret == GST_STATE_CHANGE_FAILURE)
-        goto setup_failed;
+      if (!setup_source (decoder))
+        goto source_failed;
+
+      /* And now sync the states of everything we added */
+      g_slist_foreach (decoder->decodebins,
+          (GFunc) gst_element_sync_state_with_parent, NULL);
+      if (decoder->typefind)
+        gst_element_sync_state_with_parent (decoder->typefind);
+      if (decoder->queue)
+        gst_element_sync_state_with_parent (decoder->queue);
+      if (decoder->source)
+        gst_element_sync_state_with_parent (decoder->source);
+
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("paused to ready");
