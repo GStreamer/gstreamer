@@ -973,9 +973,6 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       event2 = gst_event_new_segment (&copy);
       GST_EVENT_SEQNUM (event2) = GST_EVENT_SEQNUM (event);
 
-      if (GNL_OBJECT (comp)->seqnum == 0)
-        GNL_OBJECT (comp)->seqnum = GST_EVENT_SEQNUM (event);
-
       GST_PAD_PROBE_INFO_DATA (info) = event2;
       gst_event_unref (event);
     }
@@ -2450,10 +2447,6 @@ static void
 _relink_new_stack (GnlComposition * comp, GNode * stack,
     GstEvent * toplevel_seek)
 {
-  GST_INFO_OBJECT (comp, "Reseting seqnum to %i",
-      gst_event_get_seqnum (toplevel_seek));
-  GNL_OBJECT (comp)->wanted_seqnum = gst_event_get_seqnum (toplevel_seek);
-
   _relink_single_node (comp, stack, toplevel_seek);
 
   gst_event_unref (toplevel_seek);

@@ -299,12 +299,6 @@ translate_incoming_segment (GnlObject * object, GstEvent * event)
   GST_EVENT_SEQNUM (event2) = seqnum;
   gst_event_unref (event);
 
-  if (object->seqnum) {
-    GST_INFO_OBJECT (object, "Tweaking SEGMENT seqnum from %i to %i",
-        gst_event_get_seqnum (event2), object->seqnum);
-    gst_event_set_seqnum (event2, object->seqnum);
-  }
-
   return event2;
 }
 
@@ -328,25 +322,10 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
   switch (priv->dir) {
     case GST_PAD_SRC:{
       switch (GST_EVENT_TYPE (event)) {
-        case GST_EVENT_SEEK:
-          object->wanted_seqnum = gst_event_get_seqnum (event);
-          object->seqnum = 0;
-          GST_DEBUG_OBJECT (object, "Setting wanted_seqnum to %i",
-              object->wanted_seqnum);
-          break;
         case GST_EVENT_SEGMENT:
           event = translate_outgoing_segment (object, event);
-          if (object->wanted_seqnum == gst_event_get_seqnum (event)) {
-            object->seqnum = object->wanted_seqnum;
-            object->wanted_seqnum = 0;
-          }
           break;
         case GST_EVENT_EOS:
-          if (object->seqnum) {
-            GST_INFO_OBJECT (object, "Tweaking EOS seqnum from %i to %i",
-                gst_event_get_seqnum (event), object->seqnum);
-            gst_event_set_seqnum (event, object->seqnum);
-          }
           break;
         default:
           break;
@@ -516,8 +495,6 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
           GstPad *target;
 
           event = gnl_object_translate_incoming_seek (object, event);
-          object->wanted_seqnum = gst_event_get_seqnum (event);
-          object->seqnum = 0;
           if (!(target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghostpad)))) {
             g_assert ("Seeked a pad with not target SHOULD NOT HAPPEND");
             ret = FALSE;

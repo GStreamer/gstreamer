@@ -98,20 +98,6 @@ static gboolean gnl_object_commit_func (GnlObject * object, gboolean recurse);
 
 static GstStateChangeReturn gnl_object_prepare (GnlObject * object);
 
-
-static gboolean
-gnl_object_send_event (GstElement * element, GstEvent * event)
-{
-  if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
-    GNL_OBJECT (element)->wanted_seqnum = gst_event_get_seqnum (event);
-    GST_DEBUG_OBJECT (element, "Remember seqnum! %i",
-        GNL_OBJECT (element)->wanted_seqnum);
-  }
-
-
-  return GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
-}
-
 static void
 gnl_object_class_init (GnlObjectClass * klass)
 {
@@ -131,7 +117,6 @@ gnl_object_class_init (GnlObjectClass * klass)
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gnl_object_dispose);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gnl_object_change_state);
-  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gnl_object_send_event);
 
   gnlobject_class->prepare = GST_DEBUG_FUNCPTR (gnl_object_prepare_func);
   gnlobject_class->cleanup = GST_DEBUG_FUNCPTR (gnl_object_cleanup_func);
@@ -425,8 +410,6 @@ gnl_object_cleanup (GnlObject * object)
 
   GST_DEBUG_OBJECT (object, "cleaning-up");
 
-  object->seqnum = 0;
-  object->wanted_seqnum = 0;
   if (!(GNL_OBJECT_GET_CLASS (object)->cleanup (object)))
     ret = GST_STATE_CHANGE_FAILURE;
 
@@ -663,8 +646,6 @@ gnl_object_reset (GnlObject * object)
 {
   GST_INFO_OBJECT (object, "Resetting child timing values to default");
 
-  object->seqnum = 0;
-  object->wanted_seqnum = 0;
   object->start = 0;
   object->duration = 0;
   object->stop = 0;
