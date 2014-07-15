@@ -125,6 +125,8 @@ struct _GnlObject
   gint64 segment_start;
   gint64 segment_stop;
 
+  gboolean in_composition;
+
   /* the seqnum we want, will be conciderd as real one right after
    * a new segment */
   gint wanted_seqnum; 

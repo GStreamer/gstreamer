@@ -148,7 +148,7 @@ static GstPadProbeReturn
 sinkpad_buffer_probe (GstPad * sinkpad, GstBuffer * buffer,
     CollectStructure * collect)
 {
-  GST_DEBUG_OBJECT (sinkpad, "buffer:%p (%" GST_TIME_FORMAT ") , collect:%p",
+  GST_LOG_OBJECT (sinkpad, "buffer:%p (%" GST_TIME_FORMAT ") , collect:%p",
       buffer, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)), collect);
   fail_if (!collect->gotsegment,
       "Received a buffer without a preceding segment");

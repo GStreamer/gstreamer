@@ -571,6 +571,7 @@ remove_object_handler (GnlComposition * comp, GnlObject * object)
 {
   g_return_val_if_fail (GNL_IS_OBJECT (object), FALSE);
 
+  object->in_composition = FALSE;
   _add_remove_object_gsource (comp, object);
 
   return TRUE;
@@ -622,6 +623,7 @@ add_object_handler (GnlComposition * comp, GnlObject * object)
 {
   g_return_val_if_fail (GNL_IS_OBJECT (object), FALSE);
 
+  object->in_composition = TRUE;
   _add_add_object_gsource (comp, object);
 
   return TRUE;
@@ -1206,7 +1208,8 @@ update_operations_base_time (GnlComposition * comp, gboolean reverse)
 
 /* WITH OBJECTS LOCK TAKEN */
 static gboolean
-_seek_current_stack (GnlComposition * comp, GstEvent * event, gboolean flush_downstream)
+_seek_current_stack (GnlComposition * comp, GstEvent * event,
+    gboolean flush_downstream)
 {
   gboolean res;
   GnlCompositionPrivate *priv = comp->priv;
@@ -1255,7 +1258,8 @@ seek_handling (GnlComposition * comp, GnlUpdateStackReason update_stack_reason)
 
     _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
 
-    _seek_current_stack (comp, toplevel_seek, _flush_downstream (update_stack_reason));
+    _seek_current_stack (comp, toplevel_seek,
+        _flush_downstream (update_stack_reason));
     update_operations_base_time (comp, !(comp->priv->segment->rate >= 0.0));
   }
 
@@ -2722,7 +2726,8 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   if (!samestack)
     return _activate_new_stack (comp);
   else
-    return _seek_current_stack (comp, toplevel_seek, _flush_downstream (update_reason));
+    return _seek_current_stack (comp, toplevel_seek,
+        _flush_downstream (update_reason));
 }
 
 static gboolean
