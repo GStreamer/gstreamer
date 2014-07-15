@@ -499,7 +499,6 @@ gst_kate_dec_sink_handle_event (GstPad * pad, GstObject * parent,
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
-      gst_kate_util_decoder_base_segment_event (&kd->decoder, event);
       break;
 
     case GST_EVENT_FLUSH_START:

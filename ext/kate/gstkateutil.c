@@ -153,6 +153,10 @@ gst_kate_util_decoder_base_queue_event (GstKateDecoderBase * decoder,
     case GST_EVENT_EOS:
       can_be_queued = FALSE;
       break;
+    case GST_EVENT_SEGMENT:
+      gst_kate_util_decoder_base_segment_event (decoder, event);
+      can_be_queued = TRUE;
+      break;
     default:
       can_be_queued = TRUE;
       break;
