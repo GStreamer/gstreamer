@@ -514,7 +514,7 @@ _free_child_io_data (gpointer childio)
   g_slice_free (ChildIOData, childio);
 }
 
-static void
+static gboolean
 _remove_object_func (ChildIOData * childio)
 {
   GnlComposition *comp = childio->comp;
@@ -531,25 +531,25 @@ _remove_object_func (ChildIOData * childio)
           " for addition, removing it from the addition list", object);
 
       g_hash_table_remove (priv->pending_io, object);
-      return;
+      return G_SOURCE_REMOVE;
     }
 
     GST_ERROR_OBJECT (comp, "Object %" GST_PTR_FORMAT " is "
         " not in the composition", object);
 
-    return;
+    return G_SOURCE_REMOVE;
   }
 
   if (in_pending_io) {
     GST_WARNING_OBJECT (comp, "Object %" GST_PTR_FORMAT " is already marked"
         " for removal", object);
 
-    return;
+    return G_SOURCE_REMOVE;
   }
 
   g_hash_table_add (priv->pending_io, object);
 
-  return;
+  return G_SOURCE_REMOVE;
 }
 
 static void
@@ -577,7 +577,7 @@ remove_object_handler (GnlComposition * comp, GnlObject * object)
   return TRUE;
 }
 
-static void
+static gboolean
 _add_object_func (ChildIOData * childio)
 {
   GnlComposition *comp = childio->comp;
@@ -590,18 +590,21 @@ _add_object_func (ChildIOData * childio)
   if (g_hash_table_contains (priv->objects_hash, object)) {
     GST_ERROR_OBJECT (comp, "Object %" GST_PTR_FORMAT " is "
         " already in the composition", object);
-    return;
+
+    return G_SOURCE_REMOVE;
   }
 
   if (in_pending_io) {
     GST_WARNING_OBJECT (comp, "Object %" GST_PTR_FORMAT " is already marked"
         " for addition", object);
-    return;
+
+    return G_SOURCE_REMOVE;
   }
 
 
   g_hash_table_add (priv->pending_io, object);
-  return;
+
+  return G_SOURCE_REMOVE;
 }
 
 static void
