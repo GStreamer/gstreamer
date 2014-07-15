@@ -902,7 +902,7 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
  *
  * MT safe.
  *
- * Returns: The event source id.
+ * Returns: The event source id or 0 if @bus already got an event source.
  * Rename to: gst_bus_add_watch
  */
 guint
@@ -939,7 +939,7 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * The watch can be removed using g_source_remove() or by returning %FALSE
  * from @func.
  *
- * Returns: The event source id.
+ * Returns: The event source id or 0 if @bus already got an event source.
  *
  * MT safe.
  */
