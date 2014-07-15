@@ -333,8 +333,7 @@ GST_START_TEST (test_missing_suburisource_handler)
 
   fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_READY),
       GST_STATE_CHANGE_SUCCESS);
-  fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_PAUSED),
-      GST_STATE_CHANGE_FAILURE);
+  gst_element_set_state (playbin, GST_STATE_PAUSED);
 
   /* there should be at least a missing-plugin message on the bus now and an
    * error message; the missing-plugin message should be first */
