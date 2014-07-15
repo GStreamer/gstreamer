@@ -372,7 +372,11 @@ find_pad_stats_for_thread (gconstpointer value, gconstpointer user_data)
 {
   const GstPadStats *stats = (const GstPadStats *) value;
 
-  return (stats->thread_id == GPOINTER_TO_UINT (user_data)) ? 0 : 1;
+  if ((stats->thread_id == GPOINTER_TO_UINT (user_data)) &&
+      (stats->num_buffers)) {
+    return 0;
+  }
+  return 1;
 }
 
 static void
@@ -416,7 +420,13 @@ print_pad_stats (gpointer value, gpointer user_data)
 static void
 print_thread_stats (gpointer key, gpointer value, gpointer user_data)
 {
-  GSList *list = user_data, *node;
+  GSList *list = user_data;
+  GSList *node = g_slist_find_custom (list, key, find_pad_stats_for_thread);
+
+  /* skip stats if there are no pads for that thread (e.g. a pipeline) */
+  if (!node)
+    return;
+
 #if 0
   GstThreadStats *stats = (GstThreadStats *) value;
   guint cpuload = 0;
@@ -442,11 +452,9 @@ print_thread_stats (gpointer key, gpointer value, gpointer user_data)
       (guint) time_percent);
   printf ("  Avg/Max CPU load: %u %%, %u %%\n", cpuload, stats->max_cpuload);
 #endif
-  /* skip stats if there are no pads for that thread (e.g. a pipeline) */
-  if ((node = g_slist_find_custom (list, key, find_pad_stats_for_thread))) {
-    puts ("  Pad Statistics:");
-    g_slist_foreach (node, print_pad_stats, key);
-  }
+
+  puts ("  Pad Statistics:");
+  g_slist_foreach (node, print_pad_stats, key);
 }
 
 static void
