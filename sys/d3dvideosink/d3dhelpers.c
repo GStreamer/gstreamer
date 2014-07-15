@@ -2374,6 +2374,9 @@ d3d_class_display_device_create (GstD3DVideoSinkClass * klass, UINT adapter)
    */
   create_mask = 0 | D3DCREATE_FPU_PRESERVE;
 
+  /* Make sure that device access is threadsafe */
+  create_mask |= D3DCREATE_MULTITHREADED;
+
   /* Determine vertex processing capabilities. Some cards have issues
    * using software vertex processing. Courtesy:
    * http://www.chadvernon.com/blog/resources/directx9/improved-direct3d-initialization/
