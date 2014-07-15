@@ -5442,11 +5442,6 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       GST_LOG_OBJECT (playbin, "clearing shutdown flag");
       memset (&playbin->duration, 0, sizeof (playbin->duration));
       g_atomic_int_set (&playbin->shutdown, 0);
-
-      if (!setup_next_source (playbin, GST_STATE_READY)) {
-        ret = GST_STATE_CHANGE_FAILURE;
-        goto failure;
-      }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     async_down:
@@ -5486,6 +5481,10 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (!setup_next_source (playbin, GST_STATE_PAUSED)) {
+        ret = GST_STATE_CHANGE_FAILURE;
+        goto failure;
+      }
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* FIXME Release audio device when we implement that */
