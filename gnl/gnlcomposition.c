@@ -1286,7 +1286,6 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
 
         return TRUE;
       }
-      GNL_OBJECT (comp)->wanted_seqnum = gst_event_get_seqnum (event);
       break;
     }
     case GST_EVENT_QOS:
@@ -1298,7 +1297,7 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
 
       gst_event_parse_qos (event, &qostype, &prop, &diff, &timestamp);
 
-      GST_INFO_OBJECT (comp,
+      GST_DEBUG_OBJECT (comp,
           "timestamp:%" GST_TIME_FORMAT " segment.start:%" GST_TIME_FORMAT
           " segment.stop:%" GST_TIME_FORMAT " segment_start%" GST_TIME_FORMAT
           " segment_stop:%" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
@@ -1356,7 +1355,7 @@ gnl_composition_event_handler (GstPad * ghostpad, GstObject * parent,
         /* Substract the amount of running time we've already outputted
          * until the currently configured pipeline from the QoS timestamp.*/
         timestamp -= curdiff;
-        GST_INFO_OBJECT (comp,
+        GST_DEBUG_OBJECT (comp,
             "Creating new QoS event with timestamp %" GST_TIME_FORMAT,
             GST_TIME_ARGS (timestamp));
         event = gst_event_new_qos (qostype, prop, diff, timestamp);
@@ -2578,13 +2577,14 @@ _set_real_eos_seqnum_from_seek (GnlComposition * comp, GstEvent * event)
 
       if ((!reverse && priv->segment_stop < object->stop) ||
           (reverse && priv->segment_start > object->start)) {
-
+        priv->next_eos_seqnum = stack_seqnum;
         g_atomic_int_set (&priv->real_eos_seqnum, 0);
         return FALSE;
       }
     }
   }
 
+  priv->next_eos_seqnum = stack_seqnum;
   g_atomic_int_set (&priv->real_eos_seqnum, stack_seqnum);
 
   return TRUE;
@@ -2680,9 +2680,6 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 
   toplevel_seek = get_new_seek_event (comp, TRUE, updatestoponly);
   _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
-
-  /* All EOS received from now on will be ignored */
-  priv->next_eos_seqnum = gst_event_get_seqnum (toplevel_seek);
 
   _remove_all_update_sources (comp);
 
