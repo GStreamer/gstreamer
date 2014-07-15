@@ -38,20 +38,6 @@ static GQuark latency_probe_id;
 static GQuark latency_probe_pad;
 static GQuark latency_probe_ts;
 
-/* logging */
-
-static void
-log_trace (GstStructure * s)
-{
-  gchar *data;
-
-  // TODO(ensonic): use a GVariant?
-  data = gst_structure_to_string (s);
-  GST_TRACE ("%s", data);
-  g_free (data);
-  gst_structure_free (s);
-}
-
 /* data helpers */
 
 /*
@@ -177,7 +163,7 @@ do_push_event_pre (GstLatencyTracer * self, va_list var_args)
         to = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (peer_pad));
 
         /* TODO(ensonic): report format is still unstable */
-        log_trace (gst_structure_new ("latency",
+        gst_tracer_log_trace (gst_structure_new ("latency",
                 "from", G_TYPE_STRING, from,
                 "to", G_TYPE_STRING, to,
                 "time", G_TYPE_UINT64, GST_CLOCK_DIFF (origin_ts, ts), NULL));

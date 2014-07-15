@@ -118,8 +118,17 @@ GType gst_tracer_get_type          (void);
 void _priv_gst_tracer_init (void);
 void _priv_gst_tracer_deinit (void);
 
+/* tracing modules */
+
 gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type);
+
+/* tracing helpers */
+
 void gst_tracer_dispatch (GstTracerHookId hid, GstTracerMessageId mid, ...);
+
+/* tracing module helpers */
+
+void gst_tracer_log_trace (GstStructure * s);
 
 extern gboolean _priv_tracer_enabled;
 extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];

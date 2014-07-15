@@ -48,20 +48,6 @@ typedef struct
 static void gst_rusage_tracer_invoke (GstTracer * self, GstTracerHookId id,
     GstTracerMessageId mid, va_list var_args);
 
-/* logging */
-
-static void
-log_trace (GstStructure * s)
-{
-  gchar *data;
-
-  // TODO(ensonic): use a GVariant?
-  data = gst_structure_to_string (s);
-  GST_TRACE ("%s", data);
-  g_free (data);
-  gst_structure_free (s);
-}
-
 /* data helper */
 
 static void
@@ -146,7 +132,7 @@ gst_rusage_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
    */
   cpuload =
       (guint) gst_util_uint64_scale (tusersys, G_GINT64_CONSTANT (100), treal);
-  log_trace (gst_structure_new ("rusage", "ts", G_TYPE_UINT64, treal, "thread-id", G_TYPE_UINT, GPOINTER_TO_UINT (thread_id), "cpuload", G_TYPE_UINT, cpuload, "treal", G_TYPE_UINT64, stats->treal,    /* time in thread */
+  gst_tracer_log_trace (gst_structure_new ("rusage", "ts", G_TYPE_UINT64, treal, "thread-id", G_TYPE_UINT, GPOINTER_TO_UINT (thread_id), "cpuload", G_TYPE_UINT, cpuload, "treal", G_TYPE_UINT64, stats->treal, /* time in thread */
           "tsum", G_TYPE_UINT64, tusersys,      /* time in process */
           NULL));
 }

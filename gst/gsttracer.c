@@ -299,4 +299,18 @@ gst_tracer_dispatch (GstTracerHookId hid, GstTracerMessageId mid, ...)
   }
 }
 
+/* tracing module helpers */
+
+void
+gst_tracer_log_trace (GstStructure * s)
+{
+  gchar *data;
+
+  // TODO(ensonic): use a GVariant?
+  data = gst_structure_to_string (s);
+  GST_TRACE ("%s", data);
+  g_free (data);
+  gst_structure_free (s);
+}
+
 #endif /* GST_DISABLE_GST_DEBUG */

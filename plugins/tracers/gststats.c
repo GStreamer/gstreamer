@@ -62,20 +62,6 @@ typedef struct
   guint parent_ix;
 } GstElementStats;
 
-/* logging */
-
-static void
-log_trace (GstStructure * s)
-{
-  gchar *data;
-
-  // TODO(ensonic): use a GVariant?
-  data = gst_structure_to_string (s);
-  GST_TRACE ("%s", data);
-  g_free (data);
-  gst_structure_free (s);
-}
-
 /* data helper */
 
 static GstElementStats no_elem_stats = { 0, };
@@ -93,7 +79,7 @@ fill_element_stats (GstStatsTracer * self, GstElement * element)
 static void
 log_new_element_stats (GstElementStats * stats, GstElement * element)
 {
-  log_trace (gst_structure_new ("new-element",
+  gst_tracer_log_trace (gst_structure_new ("new-element",
           "ix", G_TYPE_UINT, stats->index,
           "parent-ix", G_TYPE_UINT, stats->parent_ix,
           "name", G_TYPE_STRING, GST_OBJECT_NAME (element),
@@ -190,7 +176,7 @@ fill_pad_stats (GstStatsTracer * self, GstPad * pad)
 static void
 log_new_pad_stats (GstPadStats * stats, GstPad * pad)
 {
-  log_trace (gst_structure_new ("new-pad",
+  gst_tracer_log_trace (gst_structure_new ("new-pad",
           "ix", G_TYPE_UINT, stats->index,
           "parent-ix", G_TYPE_UINT, stats->parent_ix,
           "name", G_TYPE_STRING, GST_OBJECT_NAME (pad),
@@ -252,7 +238,7 @@ do_buffer_stats (GstStatsTracer * self, GstPad * this_pad,
   GstElementStats *that_elem_stats = get_element_stats (self, that_elem);
 
   /* TODO(ensonic): need a quark-table (shared with the tracer-front-ends?) */
-  log_trace (gst_structure_new ("buffer",
+  gst_tracer_log_trace (gst_structure_new ("buffer",
           "ts", G_TYPE_UINT64, elapsed,
           "pad-ix", G_TYPE_UINT, this_pad_stats->index,
           "elem-ix", G_TYPE_UINT, this_elem_stats->index,
@@ -480,7 +466,7 @@ do_push_event_pre (GstStatsTracer * self, va_list var_args)
   GstPadStats *pad_stats = get_pad_stats (self, pad);
 
   elem_stats->last_ts = ts;
-  log_trace (gst_structure_new ("event",
+  gst_tracer_log_trace (gst_structure_new ("event",
           "ts", G_TYPE_UINT64, ts,
           "pad-ix", G_TYPE_UINT, pad_stats->index,
           "elem-ix", G_TYPE_UINT, elem_stats->index,
@@ -505,7 +491,7 @@ do_post_message_pre (GstStatsTracer * self, va_list var_args)
   GstElementStats *stats = get_element_stats (self, elem);
 
   stats->last_ts = ts;
-  log_trace (gst_structure_new ("message",
+  gst_tracer_log_trace (gst_structure_new ("message",
           "ts", G_TYPE_UINT64, ts,
           "elem-ix", G_TYPE_UINT, stats->index,
           "name", G_TYPE_STRING, GST_MESSAGE_TYPE_NAME (msg), NULL));
@@ -529,7 +515,7 @@ do_query_pre (GstStatsTracer * self, va_list var_args)
   GstElementStats *stats = get_element_stats (self, elem);
 
   stats->last_ts = ts;
-  log_trace (gst_structure_new ("query",
+  gst_tracer_log_trace (gst_structure_new ("query",
           "ts", G_TYPE_UINT64, ts,
           "elem-ix", G_TYPE_UINT, stats->index,
           "name", G_TYPE_STRING, GST_QUERY_TYPE_NAME (qry), NULL));
