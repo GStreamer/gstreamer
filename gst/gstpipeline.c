@@ -465,6 +465,8 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      reset_start_time (pipeline, 0);
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
