@@ -256,6 +256,16 @@ static void _restart_task (GnlComposition * comp, gboolean emit_commit);
 
 #define GET_TASK_LOCK(comp)    (&(GNL_COMPOSITION(comp)->task_rec_lock))
 
+static inline gboolean
+_flush_downstream (GnlUpdateStackReason update_reason)
+{
+  if (update_reason == COMP_UPDATE_STACK_ON_COMMIT ||
+      update_reason == COMP_UPDATE_STACK_ON_SEEK)
+    return TRUE;
+
+  return FALSE;
+}
+
 static void
 _assert_proper_thread (GnlComposition * comp)
 {
@@ -921,6 +931,10 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       } else {
         GST_INFO_OBJECT (comp, "Forwarding our flush stop with seqnum %i",
             comp->priv->flush_seqnum);
+        gst_event_unref (event);
+        event = gst_event_new_flush_stop (TRUE);
+        GST_PAD_PROBE_INFO_DATA (info) = event;
+        gst_event_set_seqnum (event, comp->priv->flush_seqnum);
         comp->priv->flush_seqnum = 0;
       }
       break;
@@ -1207,7 +1221,7 @@ update_operations_base_time (GnlComposition * comp, gboolean reverse)
 
 /* WITH OBJECTS LOCK TAKEN */
 static gboolean
-_seek_current_stack (GnlComposition * comp, GstEvent * event)
+_seek_current_stack (GnlComposition * comp, GstEvent * event, gboolean flush_downstream)
 {
   gboolean res;
   GnlCompositionPrivate *priv = comp->priv;
@@ -1215,9 +1229,11 @@ _seek_current_stack (GnlComposition * comp, GstEvent * event)
 
   GST_INFO_OBJECT (comp, "Seeking itself %" GST_PTR_FORMAT, event);
 
-  priv->flush_seqnum = gst_event_get_seqnum (event);
-  GST_ERROR_OBJECT (comp, "sending flushes downstream with seqnum %d",
-      priv->flush_seqnum);
+  if (flush_downstream) {
+    priv->flush_seqnum = gst_event_get_seqnum (event);
+    GST_ERROR_OBJECT (comp, "sending flushes downstream with seqnum %d",
+        priv->flush_seqnum);
+  }
 
   priv->seeking_itself = TRUE;
   res = gst_pad_push_event (peer, event);
@@ -1254,7 +1270,7 @@ seek_handling (GnlComposition * comp, GnlUpdateStackReason update_stack_reason)
 
     _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
 
-    _seek_current_stack (comp, toplevel_seek);
+    _seek_current_stack (comp, toplevel_seek, _flush_downstream (update_stack_reason));
     update_operations_base_time (comp, !(comp->priv->segment->rate >= 0.0));
   }
 
@@ -2586,16 +2602,6 @@ _set_real_eos_seqnum_from_seek (GnlComposition * comp, GstEvent * event)
   return TRUE;
 }
 
-static inline gboolean
-_flush_downstream (GnlUpdateStackReason update_reason)
-{
-  if (update_reason == COMP_UPDATE_STACK_ON_COMMIT ||
-      update_reason == COMP_UPDATE_STACK_ON_SEEK)
-    return TRUE;
-
-  return FALSE;
-}
-
 /*
  * update_pipeline:
  * @comp: The #GnlComposition
@@ -2728,7 +2734,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
   if (!samestack)
     return _activate_new_stack (comp);
   else
-    return _seek_current_stack (comp, toplevel_seek);
+    return _seek_current_stack (comp, toplevel_seek, _flush_downstream (update_reason));
 }
 
 static gboolean
