@@ -464,8 +464,8 @@ _run_frame_analisis (GstMediaDescriptorWriter * writer,
   writer->priv->pipeline = gst_pipeline_new ("frame-analisis");
 
   monitor =
-      gst_validate_monitor_factory_create (GST_OBJECT_CAST (writer->
-          priv->pipeline), runner, NULL);
+      gst_validate_monitor_factory_create (GST_OBJECT_CAST (writer->priv->
+          pipeline), runner, NULL);
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
 
   g_object_set (uridecodebin, "uri", uri, "caps", writer->priv->raw_caps, NULL);
@@ -501,7 +501,7 @@ GstMediaDescriptorWriter *
 gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
     const gchar * uri, gboolean full, GError ** err)
 {
-  GList *tmp, *streams;
+  GList *tmp, *streams = NULL;
   GstDiscovererInfo *info;
   GstDiscoverer *discoverer;
   GstDiscovererStreamInfo *streaminfo;
@@ -535,13 +535,18 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
         gst_discoverer_info_get_tags (info));
 
   streaminfo = gst_discoverer_info_get_stream_info (info);
-  ((GstMediaDescriptor *) writer)->filenode->caps =
-      gst_discoverer_stream_info_get_caps (GST_DISCOVERER_STREAM_INFO
-      (streaminfo));
 
-  streams = gst_discoverer_info_get_stream_list (info);
-  for (tmp = streams; tmp; tmp = tmp->next) {
-    gst_media_descriptor_writer_add_stream (writer, tmp->data);
+  if (GST_IS_DISCOVERER_CONTAINER_INFO (streaminfo)) {
+    ((GstMediaDescriptor *) writer)->filenode->caps =
+        gst_discoverer_stream_info_get_caps (GST_DISCOVERER_STREAM_INFO
+        (streaminfo));
+
+    streams = gst_discoverer_info_get_stream_list (info);
+    for (tmp = streams; tmp; tmp = tmp->next) {
+      gst_media_descriptor_writer_add_stream (writer, tmp->data);
+    }
+  } else {
+    gst_media_descriptor_writer_add_stream (writer, streaminfo);
   }
 
   if (streams == NULL)
