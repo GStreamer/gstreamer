@@ -237,6 +237,114 @@ gst_kate_dec_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstFlowReturn
+gst_kate_dec_handle_kate_event (GstKateDec * kd, const kate_event * ev)
+{
+  GstFlowReturn rflow = GST_FLOW_OK;
+  GstKateFormat format = GST_KATE_FORMAT_UNDEFINED;
+  gchar *escaped;
+  GstBuffer *buffer;
+  size_t len;
+  gboolean plain = TRUE;
+
+  if (kd->remove_markup && ev->text_markup_type != kate_markup_none) {
+    size_t len0 = ev->len + 1;
+    escaped = g_strdup (ev->text);
+    if (escaped) {
+      kate_text_remove_markup (ev->text_encoding, escaped, &len0);
+    }
+    plain = TRUE;
+  } else if (ev->text_markup_type == kate_markup_none) {
+    /* no pango markup yet, escape text */
+    /* TODO: actually do the pango thing */
+    escaped = g_strdup (ev->text);
+    plain = TRUE;
+  } else {
+    escaped = g_strdup (ev->text);
+    plain = FALSE;
+  }
+
+  if (G_LIKELY (escaped)) {
+    len = strlen (escaped);
+    if (len > 0) {
+      GST_DEBUG_OBJECT (kd, "kate event: %s, escaped %s", ev->text, escaped);
+      buffer = gst_buffer_new_and_alloc (len + 1);
+      if (G_LIKELY (buffer)) {
+        GstCaps *caps;
+        if (plain)
+          format = GST_KATE_FORMAT_TEXT_UTF8;
+        else
+          format = GST_KATE_FORMAT_TEXT_PANGO_MARKUP;
+        if (format != kd->output_format) {
+          caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
+              (format == GST_KATE_FORMAT_TEXT_UTF8) ? "utf8" : "pango-markup",
+              NULL);
+          gst_pad_push_event (kd->srcpad, gst_event_new_caps (caps));
+          gst_caps_unref (caps);
+          kd->output_format = format;
+        }
+        /* allocate and copy the NULs, but don't include them in passed size */
+        gst_buffer_fill (buffer, 0, escaped, len + 1);
+        gst_buffer_resize (buffer, 0, len);
+        GST_BUFFER_TIMESTAMP (buffer) = ev->start_time * GST_SECOND;
+        GST_BUFFER_DURATION (buffer) =
+            (ev->end_time - ev->start_time) * GST_SECOND;
+        rflow = gst_pad_push (kd->srcpad, buffer);
+        if (rflow == GST_FLOW_NOT_LINKED) {
+          GST_DEBUG_OBJECT (kd, "source pad not linked, ignored");
+        } else if (rflow != GST_FLOW_OK) {
+          GST_WARNING_OBJECT (kd, "failed to push buffer: %s",
+              gst_flow_get_name (rflow));
+        }
+      } else {
+        GST_ELEMENT_ERROR (kd, STREAM, DECODE, (NULL),
+            ("Failed to create buffer"));
+        rflow = GST_FLOW_ERROR;
+      }
+    } else {
+      GST_WARNING_OBJECT (kd, "Empty string, nothing to do");
+      rflow = GST_FLOW_OK;
+    }
+    g_free (escaped);
+  } else {
+    GST_ELEMENT_ERROR (kd, STREAM, DECODE, (NULL),
+        ("Failed to allocate string"));
+    rflow = GST_FLOW_ERROR;
+  }
+
+  /* if there's a background paletted bitmap, construct a DVD SPU for it */
+  if (ev->bitmap && ev->palette) {
+    GstBuffer *buffer = gst_kate_spu_encode_spu (kd, ev);
+    if (buffer) {
+      GstCaps *caps;
+
+      GST_BUFFER_TIMESTAMP (buffer) = ev->start_time * GST_SECOND;
+      GST_BUFFER_DURATION (buffer) =
+          (ev->end_time - ev->start_time) * GST_SECOND;
+
+      if (kd->output_format != GST_KATE_FORMAT_SPU) {
+        caps = gst_caps_new_empty_simple (GST_KATE_SPU_MIME_TYPE);
+        gst_pad_push_event (kd->srcpad, gst_event_new_caps (caps));
+        gst_caps_unref (caps);
+        kd->output_format = GST_KATE_FORMAT_SPU;
+      }
+
+      rflow = gst_pad_push (kd->srcpad, buffer);
+      if (rflow == GST_FLOW_NOT_LINKED) {
+        GST_DEBUG_OBJECT (kd, "source pad not linked, ignored");
+      } else if (rflow != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (kd, "failed to push buffer: %s",
+            gst_flow_get_name (rflow));
+      }
+    } else {
+      GST_ELEMENT_ERROR (kd, STREAM, DECODE, (NULL),
+          ("failed to create SPU from paletted bitmap"));
+      rflow = GST_FLOW_ERROR;
+    }
+  }
+  return rflow;
+}
+
 /* GstElement vmethod implementations */
 
 /* chain function
@@ -246,7 +354,6 @@ gst_kate_dec_get_property (GObject * object, guint prop_id,
 static GstFlowReturn
 gst_kate_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstKateFormat format = GST_KATE_FORMAT_UNDEFINED;
   GstKateDec *kd = GST_KATE_DEC (parent);
   const kate_event *ev = NULL;
   GstFlowReturn rflow = GST_FLOW_OK;
@@ -267,106 +374,7 @@ gst_kate_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   if (ev) {
-    gchar *escaped;
-    GstBuffer *buffer;
-    size_t len;
-    gboolean plain = TRUE;
-
-    if (kd->remove_markup && ev->text_markup_type != kate_markup_none) {
-      size_t len0 = ev->len + 1;
-      escaped = g_strdup (ev->text);
-      if (escaped) {
-        kate_text_remove_markup (ev->text_encoding, escaped, &len0);
-      }
-      plain = TRUE;
-    } else if (ev->text_markup_type == kate_markup_none) {
-      /* no pango markup yet, escape text */
-      /* TODO: actually do the pango thing */
-      escaped = g_strdup (ev->text);
-      plain = TRUE;
-    } else {
-      escaped = g_strdup (ev->text);
-      plain = FALSE;
-    }
-
-    if (G_LIKELY (escaped)) {
-      len = strlen (escaped);
-      if (len > 0) {
-        GST_DEBUG_OBJECT (kd, "kate event: %s, escaped %s", ev->text, escaped);
-        buffer = gst_buffer_new_and_alloc (len + 1);
-        if (G_LIKELY (buffer)) {
-          GstCaps *caps;
-          if (plain)
-            format = GST_KATE_FORMAT_TEXT_UTF8;
-          else
-            format = GST_KATE_FORMAT_TEXT_PANGO_MARKUP;
-          if (format != kd->output_format) {
-            caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
-                (format == GST_KATE_FORMAT_TEXT_UTF8) ? "utf8" : "pango-markup",
-                NULL);
-            gst_pad_push_event (kd->srcpad, gst_event_new_caps (caps));
-            gst_caps_unref (caps);
-            kd->output_format = format;
-          }
-          /* allocate and copy the NULs, but don't include them in passed size */
-          gst_buffer_fill (buffer, 0, escaped, len + 1);
-          gst_buffer_resize (buffer, 0, len);
-          GST_BUFFER_TIMESTAMP (buffer) = ev->start_time * GST_SECOND;
-          GST_BUFFER_DURATION (buffer) =
-              (ev->end_time - ev->start_time) * GST_SECOND;
-          rflow = gst_pad_push (kd->srcpad, buffer);
-          if (rflow == GST_FLOW_NOT_LINKED) {
-            GST_DEBUG_OBJECT (kd, "source pad not linked, ignored");
-          } else if (rflow != GST_FLOW_OK) {
-            GST_WARNING_OBJECT (kd, "failed to push buffer: %s",
-                gst_flow_get_name (rflow));
-          }
-        } else {
-          GST_ELEMENT_ERROR (kd, STREAM, DECODE, (NULL),
-              ("Failed to create buffer"));
-          rflow = GST_FLOW_ERROR;
-        }
-      } else {
-        GST_WARNING_OBJECT (kd, "Empty string, nothing to do");
-        rflow = GST_FLOW_OK;
-      }
-      g_free (escaped);
-    } else {
-      GST_ELEMENT_ERROR (kd, STREAM, DECODE, (NULL),
-          ("Failed to allocate string"));
-      rflow = GST_FLOW_ERROR;
-    }
-
-    /* if there's a background paletted bitmap, construct a DVD SPU for it */
-    if (ev->bitmap && ev->palette) {
-      GstBuffer *buffer = gst_kate_spu_encode_spu (kd, ev);
-      if (buffer) {
-        GstCaps *caps;
-
-        GST_BUFFER_TIMESTAMP (buffer) = ev->start_time * GST_SECOND;
-        GST_BUFFER_DURATION (buffer) =
-            (ev->end_time - ev->start_time) * GST_SECOND;
-
-        if (kd->output_format != GST_KATE_FORMAT_SPU) {
-          caps = gst_caps_new_empty_simple (GST_KATE_SPU_MIME_TYPE);
-          gst_pad_push_event (kd->srcpad, gst_event_new_caps (caps));
-          gst_caps_unref (caps);
-          kd->output_format = GST_KATE_FORMAT_SPU;
-        }
-
-        rflow = gst_pad_push (kd->srcpad, buffer);
-        if (rflow == GST_FLOW_NOT_LINKED) {
-          GST_DEBUG_OBJECT (kd, "source pad not linked, ignored");
-        } else if (rflow != GST_FLOW_OK) {
-          GST_WARNING_OBJECT (kd, "failed to push buffer: %s",
-              gst_flow_get_name (rflow));
-        }
-      } else {
-        GST_ELEMENT_ERROR (kd, STREAM, DECODE, (NULL),
-            ("failed to create SPU from paletted bitmap"));
-        rflow = GST_FLOW_ERROR;
-      }
-    }
+    rflow = gst_kate_dec_handle_kate_event (kd, ev);
   }
 
 not_in_seg:
@@ -401,12 +409,73 @@ gst_kate_dec_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
+gst_kate_dec_set_caps (GstKateDec * kd, GstCaps * caps)
+{
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  GstFlowReturn rflow = GST_FLOW_OK;
+
+  if (gst_structure_has_field (structure, "streamheader")) {
+    const GValue *value;
+    GstBuffer *buf;
+    const kate_event *ev;
+
+    value = gst_structure_get_value (structure, "streamheader");
+
+    if (GST_VALUE_HOLDS_BUFFER (value)) {
+      buf = gst_value_get_buffer (value);
+
+      gst_kate_util_decoder_base_chain_kate_packet (&kd->decoder,
+          GST_ELEMENT_CAST (kd), kd->sinkpad, buf, kd->srcpad, kd->srcpad,
+          &kd->src_caps, &ev);
+
+      if (ev) {
+        rflow = gst_kate_dec_handle_kate_event (kd, ev);
+      }
+    } else if (GST_VALUE_HOLDS_ARRAY (value)) {
+      gint i, size = gst_value_array_get_size (value);
+
+      for (i = 0; i < size; i++) {
+        const GValue *v = gst_value_array_get_value (value, i);
+
+        buf = gst_value_get_buffer (v);
+        gst_kate_util_decoder_base_chain_kate_packet (&kd->decoder,
+            GST_ELEMENT_CAST (kd), kd->sinkpad, buf, kd->srcpad, kd->srcpad,
+            &kd->src_caps, &ev);
+
+        if (ev) {
+          rflow = gst_kate_dec_handle_kate_event (kd, ev);
+          if (rflow != GST_FLOW_OK && rflow != GST_FLOW_NOT_LINKED)
+            break;
+        }
+      }
+    } else {
+      GST_WARNING_OBJECT (kd, "Unhandled streamheader type: %s",
+          G_VALUE_TYPE_NAME (value));
+    }
+  }
+
+  return rflow == GST_FLOW_OK || rflow == GST_FLOW_NOT_LINKED;
+}
+
+static gboolean
 gst_kate_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstKateDec *kd = GST_KATE_DEC (parent);
   gboolean res = TRUE;
 
-  GST_LOG_OBJECT (pad, "Event on sink pad: %s", GST_EVENT_TYPE_NAME (event));
+  GST_LOG_OBJECT (pad, "Event on sink pad: %" GST_PTR_FORMAT, event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      gst_kate_dec_set_caps (kd, caps);
+      break;
+    }
+    default:
+      break;
+  }
 
   /* Delay events till we've set caps */
   if (gst_kate_util_decoder_base_queue_event (&kd->decoder, event,
