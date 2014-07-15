@@ -277,20 +277,6 @@ _assert_proper_thread (GnlComposition * comp)
 }
 
 static void
-_remove_all_sources (GnlComposition * comp)
-{
-  GSource *source;
-
-  MAIN_CONTEXT_LOCK (comp);
-  while ((source =
-          g_main_context_find_source_by_user_data (comp->priv->mcontext,
-              comp))) {
-    g_source_destroy (source);
-  }
-  MAIN_CONTEXT_UNLOCK (comp);
-}
-
-static void
 _destroy_gsource (GSource * source)
 {
   g_source_destroy (source);
@@ -363,7 +349,6 @@ _stop_task (GnlComposition * comp)
 
   /*  Clean the stack of GSource set on the MainContext */
   g_main_context_wakeup (comp->priv->mcontext);
-  _remove_all_sources (comp);
 
   GST_DEBUG_OBJECT (comp, "stop task");
 
@@ -2142,6 +2127,9 @@ gnl_composition_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       _stop_task (comp);
+
+      _remove_all_update_sources (comp);
+      _remove_all_seek_sources (comp);
       _set_all_children_state (comp, GST_STATE_NULL);
       break;
     default:
