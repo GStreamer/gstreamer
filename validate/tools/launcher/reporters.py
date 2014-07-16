@@ -21,7 +21,9 @@
 
 import os
 import re
+import time
 import codecs
+import datetime
 from loggable import Loggable
 from xml.sax import saxutils
 from utils import mkdir, Result, printc, Colors
@@ -55,6 +57,7 @@ class Reporter(Loggable):
         self._current_test = None
         self.out = None
         self.options = options
+        self._start_time = 0
         self.stats = {'timeout': 0,
                       'failures': 0,
                       'passed': 0,
@@ -70,6 +73,9 @@ class Reporter(Loggable):
         self.out = open(path, 'w+')
         self._current_test = test
         test.logfile = path
+
+        if self._start_time == 0:
+            self._start_time = time.time()
 
     def set_failed(self, test):
         self.stats["failure"] += 1
@@ -103,6 +109,9 @@ class Reporter(Loggable):
         print "\n"
         lenstat = (len("Statistics") + 1)
         printc("Statistics:\n%s" %(lenstat * "-"), Colors.OKBLUE)
+        printc("\n%sTotal time spent: %s seconds\n" %
+               ((lenstat * " "), datetime.timedelta(seconds=(time.time() - self._start_time))),
+               Colors.OKBLUE)
         printc("%sPassed: %d" % (lenstat * " ", self.stats["passed"]), Colors.OKGREEN)
         printc("%sFailed: %d" % (lenstat * " ", self.stats["failures"]), Colors.FAIL)
         printc("%s%s" %(lenstat * " ", (len("Failed: 0")) * "-"), Colors.OKBLUE)
