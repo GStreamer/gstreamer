@@ -726,7 +726,7 @@ gst_opensles_ringbuffer_open_device (GstAudioRingBuffer * rb)
       GST_WARNING_OBJECT (thiz, "outputMix.GetInterface failed(0x%08x)",
           (guint32) result);
     } else {
-      SLint32 numDevices = 0;
+      SLint32 numDevices = MAX_NUMBER_OUTPUT_DEVICES;
       SLuint32 deviceIDs[MAX_NUMBER_OUTPUT_DEVICES];
       gint i;
 
