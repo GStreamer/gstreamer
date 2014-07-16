@@ -242,8 +242,7 @@ user argument, you can thus overrides command line options using that.
 
     assets_group = parser.add_argument_group("Handle remote assets")
     assets_group.add_argument("-u", "--update-assets-command", dest="update_assets_command",
-                      default="git fetch %s && git checkout FETCH_HEAD && git annex get ."
-                            % (DEFAULT_GST_QA_ASSETS_REPO, ),
+                      default="git fetch origin && git checkout origin/master && git annex get .",
                       help="Command to update assets")
     assets_group.add_argument("--get-assets-command", dest="get_assets_command",
                       default="git clone",
