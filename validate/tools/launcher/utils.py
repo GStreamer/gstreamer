@@ -18,9 +18,9 @@
 # Boston, MA 02110-1301, USA.
 """ Some utilies. """
 
-import sys
 import os
 import re
+import sys
 import urllib
 import loggable
 import urlparse
@@ -223,10 +223,19 @@ def get_profile_full(muxer, venc, aenc, video_restriction=None,
     return ret.replace("::", ":")
 
 
-def get_profile(combination, video_restriction=None, audio_restriction=None):
+def get_profile(combination, media_descriptor=None, video_restriction=None, audio_restriction=None):
+    vcaps = FORMATS[combination.vcodec]
+    acaps = FORMATS[combination.acodec]
+    if media_descriptor is not None:
+        if media_descriptor.get_num_tracks("video") == 0:
+            vcaps = None
+
+        if media_descriptor.get_num_tracks("audio") == 0:
+            acaps = None
+
     return get_profile_full(FORMATS[combination.container],
-                            FORMATS[combination.vcodec],
-                            FORMATS[combination.acodec],
+                            vcaps,
+                            acaps,
                             video_restriction=video_restriction,
                             audio_restriction=audio_restriction)
 

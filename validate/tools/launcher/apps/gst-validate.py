@@ -362,7 +362,7 @@ class GstValidateTranscodingTest(GstValidateTest):
         if urlparse.urlparse(self.dest_file).scheme == "":
             self.dest_file = path2url(self.dest_file)
 
-        profile = get_profile(self.combination)
+        profile = get_profile(self.combination, self.media_descriptor)
         self.add_arguments("-o", profile)
 
     def build_arguments(self):
