@@ -51,32 +51,73 @@ def quote_uri(uri):
     return utils.path2url(raw_path)
 
 
-def find_xges_duration(path):
-    root = ET.parse(path)
-    for l in root.iter():
-        if l.tag == "timeline":
-            return long(l.attrib['metadatas'].split("duration=(guint64)")[1].split(" ")[0].split(";")[0])
+class XgesProjectDescriptor(MediaDescriptor):
+    def __init__(self, uri):
+        super(XgesProjectDescriptor, self).__init__()
 
-    return None
+        self._uri = uri
+        self._xml_path = utils.url2path(uri)
+        self._root = ET.parse(self._xml_path)
+        self._duration = None
+
+    def get_media_filepath(self):
+        return self._xml_path
+
+    def get_caps(self):
+        raise NotImplemented
+
+    def get_uri(self):
+        return self._uri
+
+    def get_duration(self):
+        if self._duration:
+            print("RETURN %s" % self._duration)
+            return self._duration
+
+        for l in self._root.iter():
+            if l.tag == "timeline":
+                self._duration=long(l.attrib['metadatas'].split("duration=(guint64)")[1].split(" ")[0].split(";")[0])
+                break
+
+        if not self._duration:
+            self.error("%s does not have duration! (setting 2mins)" % self._uri)
+            self._duration = 2 * 60
+
+        print("RETURN %s" % self._duration)
+        return self._duration
+
+    def get_protocol(self):
+        return Protocols.FILE
+
+    def is_seekable(self):
+        return True
+
+    def is_image(self):
+        return False
+
+    def get_num_tracks(self, track_type):
+        num_tracks = 0
+        for l in self._root.iter():
+            if l.tag == "track":
+                if track_type in l.attrib["caps"]:
+                    num_tracks += 1
+        return num_tracks
 
 
 class GESTest(GstValidateTest):
     def __init__(self, classname, options, reporter, project_uri, scenario=None,
                  combination=None):
+
         super(GESTest, self).__init__(GES_LAUNCH_COMMAND, classname, options, reporter,
                                       scenario=scenario)
-        self.project_uri = project_uri
-        self.duration = find_xges_duration(utils.url2path(project_uri))
-        if self.duration is not None:
-            self.duration = self.duration / utils.GST_SECOND
-        else:
-            self.duration = 2 * 60
+
+        self.project = XgesProjectDescriptor(project_uri)
 
     def set_sample_paths(self):
         if not self.options.paths:
             if self.options.disable_recurse:
                 return
-            paths = [os.path.dirname(utils.url2path(self.project_uri))]
+            paths = [os.path.dirname(self.project.get_media_filepath())]
         else:
             paths = self.options.paths
 
@@ -98,7 +139,7 @@ class GESTest(GstValidateTest):
             self.add_arguments(" --mute")
 
         self.set_sample_paths()
-        self.add_arguments("-l", self.project_uri)
+        self.add_arguments("-l", self.project.get_uri())
 
 
 class GESPlaybackTest(GESTest):
@@ -128,20 +169,20 @@ class GESRenderTest(GESTest):
         if not utils.isuri(self.dest_file):
             self.dest_file = utils.path2url(self.dest_file)
 
-        profile = utils.get_profile(self.combination,
+        profile = utils.get_profile(self.combination, self.project,
                                     video_restriction="video/x-raw,format=I420")
         self.add_arguments("-f", profile, "-o", self.dest_file)
 
     def check_results(self):
         if self.result in [Result.PASSED, Result.NOT_RUN] and self.scenario is None:
-            res, msg = utils.compare_rendered_with_original(self.duration * utils.GST_SECOND,
-                                                            self.dest_file)
+            res, msg = utils.compare_rendered_with_original(self.project.get_duration(),
+                                                            self.dest_file, self.combination)
             self.set_result(res, msg)
         else:
             if self.result == utils.Result.TIMEOUT:
                 missing_eos = False
                 try:
-                    if utils.get_duration(self.dest_file) == self.duration * utils.GST_SECOND:
+                    if utils.get_duration(self.dest_file) == self.project.get_duration():
                         missing_eos = True
                 except Exception as e:
                     pass
