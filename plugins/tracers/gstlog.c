@@ -33,13 +33,15 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_BUFFER);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_BUFFER_LIST);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_EVENT);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_MESSAGE);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_QUERY);
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_log_debug, "log", 0, "log tracer"); \
     GST_DEBUG_CATEGORY_GET (GST_CAT_BUFFER, "GST_BUFFER"); \
     GST_DEBUG_CATEGORY_GET (GST_CAT_BUFFER_LIST, "GST_BUFFER_LIST"); \
     GST_DEBUG_CATEGORY_GET (GST_CAT_EVENT, "GST_EVENT"); \
-    GST_DEBUG_CATEGORY_GET (GST_CAT_MESSAGE, "GST_MESSAGE");
+    GST_DEBUG_CATEGORY_GET (GST_CAT_MESSAGE, "GST_MESSAGE"); \
+    GST_DEBUG_CATEGORY_GET (GST_CAT_QUERY, "query");
 #define gst_log_tracer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstLogTracer, gst_log_tracer, GST_TYPE_TRACER,
     _do_init);
@@ -115,9 +117,11 @@ gst_log_tracer_invoke (GstTracer * self, GstTracerHookId hid,
       fmt = "element=%" GST_PTR_FORMAT ", res=%d";
       break;
     case GST_TRACER_MESSAGE_ID_ELEMENT_QUERY_PRE:
+      cat = GST_CAT_QUERY;
       fmt = "element=%" GST_PTR_FORMAT ", query=%" GST_PTR_FORMAT;
       break;
     case GST_TRACER_MESSAGE_ID_ELEMENT_QUERY_POST:
+      cat = GST_CAT_QUERY;
       fmt = "element=%" GST_PTR_FORMAT ", res=%d";
       break;
     default:
