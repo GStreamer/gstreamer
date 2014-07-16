@@ -87,7 +87,6 @@ gst_chromaprint_class_init (GstChromaprintClass * klass)
   gobject_class->set_property = gst_chromaprint_set_property;
   gobject_class->get_property = gst_chromaprint_get_property;
 
-  /* FIXME: do we need this in addition to the tag message ? */
   g_object_class_install_property (gobject_class, PROP_FINGERPRINT,
       g_param_spec_string ("fingerprint", "Resulting fingerprint",
           "Resulting fingerprint", NULL, G_PARAM_READABLE));
@@ -146,6 +145,8 @@ gst_chromaprint_create_fingerprint (GstChromaprint * chromaprint)
   chromaprint_finish (chromaprint->context);
   chromaprint_get_fingerprint (chromaprint->context, &chromaprint->fingerprint);
   chromaprint->record = FALSE;
+
+  g_object_notify ((GObject *) chromaprint, "fingerprint");
 
   tags = gst_tag_list_new (GST_TAG_CHROMAPRINT_FINGERPRINT,
       chromaprint->fingerprint, NULL);
