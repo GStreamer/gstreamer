@@ -518,7 +518,7 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
         parser_result = gst_mpeg4_parse_video_object_plane(vop_hdr, sprite_trajectory, vol_hdr, buf, buf_size);
         /* Need to skip this frame if VOP was not coded */
         if (GST_MPEG4_PARSER_OK == parser_result && !vop_hdr->coded)
-            return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+            return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
     }
 
     if (parser_result != GST_MPEG4_PARSER_OK) {
