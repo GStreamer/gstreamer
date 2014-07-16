@@ -18,6 +18,12 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:gstrusage
+ * @short_description: log event stats
+ *
+ * A tracing module that builds usage statistic for elements and pads. 
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

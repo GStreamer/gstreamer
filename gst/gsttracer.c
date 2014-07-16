@@ -19,6 +19,22 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gsttracer
+ * @short_description: Tracing subsystem
+ *
+ * The tracing subsystem provides hooks in the core library and API for modules
+ * to attach to them.
+ *
+ * Tracing modules will subclass #GstTracer and register through
+ * gst_tracer_register(). Modules can attach to various hook-types - see
+ * #GstTracerHook. When invoked they receive hook specific contextual data, 
+ * which they must not modify.
+ *
+ * The user can activate tracers by setting the environment variable GST_TRACE
+ * to a ';' separated list of tracers.
+ */
+
 #include "gst_private.h"
 #include "gstenumtypes.h"
 #include "gstregistry.h"

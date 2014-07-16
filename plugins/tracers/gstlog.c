@@ -18,6 +18,12 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:gstlog
+ * @short_description: log hook event
+ *
+ * A tracing module that logs all data from all hooks. 
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

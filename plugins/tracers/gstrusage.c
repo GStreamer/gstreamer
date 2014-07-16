@@ -18,6 +18,12 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:gstrusage
+ * @short_description: log resource usage stats
+ *
+ * A tracing module that take rusage() snapshots and logs them. 
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

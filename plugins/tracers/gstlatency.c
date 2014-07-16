@@ -18,6 +18,13 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:gstlatency
+ * @short_description: log processing latency stats
+ *
+ * A tracing module that determines src-to-sink latencies by injecting custom
+ * events at sources and process them at sinks. 
+ */
 /* TODO(ensonic): if there are two sources feeding into a mixer/muxer and later
  * we fan-out with tee and have two sinks, each sink would get all two events,
  * the later event would overwrite the former. Unfortunately when the buffer
