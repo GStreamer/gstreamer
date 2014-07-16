@@ -120,7 +120,12 @@ _opensles_query_capabilities (GstOpenSLESSink * sink)
   /* Get the engine interface, which is needed in order to create other objects */
   result = (*engineObject)->GetInterface (engineObject,
       SL_IID_AUDIOIODEVICECAPABILITIES, &audioIODeviceCapabilities);
-  if (result != SL_RESULT_SUCCESS) {
+  if (result == SL_RESULT_FEATURE_UNSUPPORTED) {
+    GST_LOG_OBJECT (sink,
+        "engine.GetInterface(IODeviceCapabilities) unsupported(0x%08x)",
+        (guint32) result);
+    goto beach;
+  } else if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (sink,
         "engine.GetInterface(IODeviceCapabilities) failed(0x%08x)",
         (guint32) result);
@@ -130,7 +135,12 @@ _opensles_query_capabilities (GstOpenSLESSink * sink)
   /* Query the list of available audio outputs */
   result = (*audioIODeviceCapabilities)->GetAvailableAudioOutputs
       (audioIODeviceCapabilities, &numOutputs, outputDeviceIDs);
-  if (result != SL_RESULT_SUCCESS) {
+  if (result == SL_RESULT_FEATURE_UNSUPPORTED) {
+    GST_LOG_OBJECT (sink,
+        "IODeviceCapabilities.GetAvailableAudioOutputs unsupported(0x%08x)",
+        (guint32) result);
+    goto beach;
+  } else if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (sink,
         "IODeviceCapabilities.GetAvailableAudioOutputs failed(0x%08x)",
         (guint32) result);
@@ -142,7 +152,13 @@ _opensles_query_capabilities (GstOpenSLESSink * sink)
   for (i = 0; i < numOutputs; i++) {
     result = (*audioIODeviceCapabilities)->QueryAudioOutputCapabilities
         (audioIODeviceCapabilities, outputDeviceIDs[i], &audioOutputDescriptor);
-    if (result != SL_RESULT_SUCCESS) {
+
+    if (result == SL_RESULT_FEATURE_UNSUPPORTED) {
+      GST_LOG_OBJECT (sink,
+          "IODeviceCapabilities.QueryAudioOutputCapabilities unsupported(0x%08x)",
+          (guint32) result);
+      continue;
+    } else if (result != SL_RESULT_SUCCESS) {
       GST_ERROR_OBJECT (sink,
           "IODeviceCapabilities.QueryAudioOutputCapabilities failed(0x%08x)",
           (guint32) result);
