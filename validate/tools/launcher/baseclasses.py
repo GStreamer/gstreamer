@@ -31,8 +31,10 @@ import reporters
 import ConfigParser
 from loggable import Loggable
 from optparse import OptionGroup
+import xml.etree.ElementTree as ET
 
-from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND
+from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
+    Protocols
 
 
 class Test(Loggable):
@@ -869,3 +871,75 @@ class GstValidateBaseTestManager(TestsManager):
 
     def get_encoding_formats(self):
         return self._encoding_formats
+
+
+class GstValidateMediaDescriptor(Loggable):
+    # Some extension file for discovering results
+    MEDIA_INFO_EXT = "media_info"
+    STREAM_INFO_EXT = "stream_info"
+
+    def __init__(self, xml_path):
+        Loggable.__init__(self)
+        self._xml_path = xml_path
+        self.media_xml = ET.parse(xml_path).getroot()
+
+       # Sanity checks
+        self.media_xml.attrib["duration"]
+        self.media_xml.attrib["seekable"]
+
+    def get_media_filepath(self):
+        if self.get_protocol() == Protocols.FILE:
+            return self._xml_path.replace("." + self.MEDIA_INFO_EXT, "")
+        else:
+            return self._xml_path.replace("." + self.STREAM_INFO_EXT, "")
+
+
+    def get_caps(self):
+        return self.media_xml.findall("streams")[0].attrib["caps"]
+
+    def get_uri(self):
+        return self.media_xml.attrib["uri"]
+
+    def get_duration(self):
+        return long(self.media_xml.attrib["duration"])
+
+    def set_protocol(self, protocol):
+        self.media_xml.attrib["protocol"] = protocol
+
+    def get_protocol(self):
+        return self.media_xml.attrib["protocol"]
+
+    def is_seekable(self):
+        return self.media_xml.attrib["seekable"]
+
+    def is_image(self):
+        for stream in self.media_xml.findall("streams")[0].findall("stream"):
+            if stream.attrib["type"] == "image":
+                return True
+        return False
+
+    def get_num_tracks(self, track_type):
+        n = 0
+        for stream in self.media_xml.findall("streams")[0].findall("stream"):
+            if stream.attrib["type"] == track_type:
+                n += 1
+
+        return n
+
+    def is_compatible(self, scenario):
+        if scenario.seeks() and (not self.is_seekable() or self.is_image()):
+            self.debug("Do not run %s as %s does not support seeking",
+                       scenario, self.get_uri())
+            return False
+
+        for track_type in ['audio', 'subtitle']:
+            if self.get_num_tracks(track_type) < scenario.get_min_tracks(track_type):
+                self.debug("%s -- %s | At least %s %s track needed  < %s"
+                           % (scenario, self.get_uri(), track_type,
+                              scenario.get_min_tracks(track_type),
+                              self.get_num_tracks(track_type)))
+                return False
+
+        return True
+
+
