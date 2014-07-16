@@ -69,7 +69,7 @@ typedef enum {
  * @GST_RTSP_SUSPEND_MODE_RESET: The media is set to NULL when suspended
  *
  * The suspend mode of the media pipeline. A media pipeline is suspended right
- * after creating the SDP and when the client preforms a PAUSED request.
+ * after creating the SDP and when the client performs a PAUSED request.
  */
 typedef enum {
   GST_RTSP_SUSPEND_MODE_NONE   = 0,
@@ -117,7 +117,7 @@ struct _GstRTSPMedia {
  *             The pipeline will be prerolled again if it's state was
  *             set to GST_STATE_NULL in suspend.
  * @convert_range: convert a range to the given unit
- * @query_position: query the current posision in the pipeline
+ * @query_position: query the current position in the pipeline
  * @query_stop: query when playback will stop
  *
  * The RTSP media class
