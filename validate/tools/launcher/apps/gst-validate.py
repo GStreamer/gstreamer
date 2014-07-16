@@ -27,9 +27,8 @@ from baseclasses import GstValidateTest, TestsManager, Test, \
     ScenarioManager, NamedDic, GstValidateTestsGenerator, \
     GstValidateMediaDescriptor
 
-from utils import MediaFormatCombination, get_profile,\
-    path2url, DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
-    compare_rendered_with_original, Protocols
+from utils import MediaFormatCombination, path2url, DEFAULT_TIMEOUT, which, \
+    GST_SECOND, Result, Protocols
 
 ######################################
 #       Private global variables     #
@@ -322,7 +321,7 @@ class GstValidateMediaCheckTest(Test):
                            self._media_info_path)
 
 
-class GstValidateTranscodingTest(GstValidateTest):
+class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterface):
     scenarios_manager = ScenarioManager()
     def __init__(self, classname, options, reporter,
                  combination, uri, media_descriptor,
@@ -344,15 +343,18 @@ class GstValidateTranscodingTest(GstValidateTest):
         except KeyError:
             pass
 
-        super(GstValidateTranscodingTest, self).__init__(
-            GST_VALIDATE_TRANSCODING_COMMAND, classname,
-            options, reporter, duration=duration,
-            timeout=timeout, scenario=scenario)
+        super(GstValidateTranscodingTest, self).__init__(GST_VALIDATE_TRANSCODING_COMMAND,
+                                                         classname,
+                                                         options,
+                                                         reporter,
+                                                         duration=duration,
+                                                         timeout=timeout,
+                                                         scenario=scenario)
+
+        GstValidateEncodingTestInterface.__init__(self, combination, media_descriptor)
 
         self.media_descriptor = media_descriptor
         self.uri = uri
-        self.combination = combination
-        self.dest_file = ""
 
     def set_rendering_info(self):
         self.dest_file = path = os.path.join(self.options.dest,
@@ -362,7 +364,7 @@ class GstValidateTranscodingTest(GstValidateTest):
         if urlparse.urlparse(self.dest_file).scheme == "":
             self.dest_file = path2url(self.dest_file)
 
-        profile = get_profile(self.combination, self.media_descriptor)
+        profile = self.get_profile()
         self.add_arguments("-o", profile)
 
     def build_arguments(self):
@@ -387,7 +389,11 @@ class GstValidateTranscodingTest(GstValidateTest):
 
                     return Result.FAILED
 
-        return self.get_current_size()
+        size = self.get_current_size()
+        if size is None:
+            return self.get_current_position()
+
+        return size
 
     def check_results(self):
         if self.result in [Result.FAILED, Result.TIMEOUT]:
@@ -399,7 +405,8 @@ class GstValidateTranscodingTest(GstValidateTest):
                                 long(self.media_descriptor.get_duration()))
         else:
             orig_duration = long(self.media_descriptor.get_duration())
-        res, msg = compare_rendered_with_original(orig_duration, self.dest_file)
+
+        res, msg = self.check_encoded_file()
         self.set_result(res, msg)
 
 

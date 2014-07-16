@@ -34,7 +34,6 @@ DEFAULT_TIMEOUT = 30
 DEFAULT_MAIN_DIR = os.path.expanduser("~/gst-validate/")
 DEFAULT_GST_QA_ASSETS =  os.path.join(DEFAULT_MAIN_DIR, "gst-qa-assets")
 DISCOVERER_COMMAND = "gst-discoverer-1.0"
-DURATION_TOLERANCE = GST_SECOND / 4
 # Use to set the duration from which a test is concidered as being 'long'
 LONG_TEST = 40
 
@@ -223,22 +222,6 @@ def get_profile_full(muxer, venc, aenc, video_restriction=None,
     return ret.replace("::", ":")
 
 
-def get_profile(combination, media_descriptor=None, video_restriction=None, audio_restriction=None):
-    vcaps = FORMATS[combination.vcodec]
-    acaps = FORMATS[combination.acodec]
-    if media_descriptor is not None:
-        if media_descriptor.get_num_tracks("video") == 0:
-            vcaps = None
-
-        if media_descriptor.get_num_tracks("audio") == 0:
-            acaps = None
-
-    return get_profile_full(FORMATS[combination.container],
-                            vcaps,
-                            acaps,
-                            video_restriction=video_restriction,
-                            audio_restriction=audio_restriction)
-
 ##################################################
 #  Some utilities to parse gst-validate output   #
 ##################################################
@@ -266,17 +249,6 @@ def get_duration(media_file):
             break
 
     return duration
-
-def compare_rendered_with_original(orig_duration, dest_file, tolerance=DURATION_TOLERANCE):
-        duration = get_duration(dest_file)
-
-        if orig_duration - tolerance >= duration <= orig_duration + tolerance:
-            return (Result.FAILED, "Duration of encoded file is "
-                    " wrong (%s instead of %s)" %
-                    (TIME_ARGS (duration),
-                     TIME_ARGS (orig_duration)))
-        else:
-            return (Result.PASSED, "")
 
 
 def get_scenarios():

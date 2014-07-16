@@ -430,16 +430,80 @@ class GstValidateTest(Test):
         return position
 
 
-    def get_current_size(self):
-        position = self.get_current_position()
+class GstValidateEncodingTestInterface(object):
+    DURATION_TOLERANCE = GST_SECOND / 4
 
+    def __init__(self, combination, media_descriptor, duration_tolerance=None):
+        super(GstValidateEncodingTestInterface, self).__init__()
+
+        self.media_descriptor = media_descriptor
+        self.combination = combination
+        self.dest_file = ""
+
+        self._duration_tolerance = duration_tolerance
+        if duration_tolerance is None:
+            self._duration_tolerance = self.DURATION_TOLERANCE
+
+    def get_current_size(self):
         try:
             size = os.stat(urlparse.urlparse(self.dest_file).path).st_size
         except OSError as e:
-            return position
+            return None
 
         self.debug("Size: %s" % size)
         return size
+
+    def _get_profile_full(self, muxer, venc, aenc, video_restriction=None,
+                         audio_restriction=None, audio_presence=0,
+                         video_presence=0):
+        ret = "\""
+        if muxer:
+            ret += muxer
+        ret += ":"
+        if venc:
+            if video_restriction is not None:
+                ret = ret + video_restriction + '->'
+            ret += venc
+            if video_presence:
+                ret = ret + '|' + str(video_presence)
+        if aenc:
+            ret += ":"
+            if audio_restriction is not None:
+                ret = ret + audio_restriction + '->'
+            ret += aenc
+            if audio_presence:
+                ret = ret + '|' + str(audio_presence)
+
+        ret += "\""
+        return ret.replace("::", ":")
+
+    def get_profile(self, video_restriction=None, audio_restriction=None):
+        vcaps = utils.FORMATS[self.combination.vcodec]
+        acaps = utils.FORMATS[self.combination.acodec]
+        if self.media_descriptor is not None:
+            if self.media_descriptor.get_num_tracks("video") == 0:
+                vcaps = None
+
+            if self.media_descriptor.get_num_tracks("audio") == 0:
+                acaps = None
+
+        return self._get_profile_full(utils.FORMATS[self.combination.container],
+                                      vcaps, acaps,
+                                      video_restriction=video_restriction,
+                                      audio_restriction=audio_restriction)
+
+    def check_encoded_file(self):
+        duration = utils.get_duration(self.dest_file)
+        orig_duration = self.media_descriptor.get_duration()
+        tolerance = self._duration_tolerance
+
+        if orig_duration - tolerance >= duration <= orig_duration + tolerance:
+            return (Result.FAILED, "Duration of encoded file is "
+                    " wrong (%s instead of %s)" %
+                    (TIME_ARGS (duration),
+                     TIME_ARGS (orig_duration)))
+        else:
+            return (Result.PASSED, "")
 
 
 class TestsManager(Loggable):
@@ -926,7 +990,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
     STREAM_INFO_EXT = "stream_info"
 
     def __init__(self, xml_path):
-        super(GstValidateMediaDescriptor, self).__init__(self)
+        super(GstValidateMediaDescriptor, self).__init__()
 
         self._xml_path = xml_path
         self.media_xml = ET.parse(xml_path).getroot()

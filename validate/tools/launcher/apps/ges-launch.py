@@ -151,11 +151,11 @@ class GESPlaybackTest(GESTest):
         return self.get_current_position()
 
 
-class GESRenderTest(GESTest):
+class GESRenderTest(GESTest, GstValidateEncodingTestInterface):
     def __init__(self, classname, options, reporter, project_uri, combination):
-        super(GESRenderTest, self).__init__(classname, options, reporter,
-                                      project_uri)
-        self.combination = combination
+        GESTest.__init__(self, classname, options, reporter, project_uri)
+
+        GstValidateEncodingTestInterface.__init__(self, combination, self.project)
 
     def build_arguments(self):
         GESTest.build_arguments(self)
@@ -169,14 +169,12 @@ class GESRenderTest(GESTest):
         if not utils.isuri(self.dest_file):
             self.dest_file = utils.path2url(self.dest_file)
 
-        profile = utils.get_profile(self.combination, self.project,
-                                    video_restriction="video/x-raw,format=I420")
+        profile = self.get_profile(video_restriction="video/x-raw,format=I420")
         self.add_arguments("-f", profile, "-o", self.dest_file)
 
     def check_results(self):
         if self.result in [Result.PASSED, Result.NOT_RUN] and self.scenario is None:
-            res, msg = utils.compare_rendered_with_original(self.project.get_duration(),
-                                                            self.dest_file, self.combination)
+            res, msg = self.check_encoded_file()
             self.set_result(res, msg)
         else:
             if self.result == utils.Result.TIMEOUT:
@@ -194,7 +192,11 @@ class GESRenderTest(GESTest):
                 GstValidateTest.check_results(self)
 
     def get_current_value(self):
-        return self.get_current_size()
+        size = self.get_current_size()
+        if size is None:
+            return self.get_current_position()
+
+        return size
 
 
 class GESTestsManager(TestsManager):
