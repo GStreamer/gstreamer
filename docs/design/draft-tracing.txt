@@ -5,25 +5,38 @@ This subsystem will provide a mechanism to get structured tracing info from
 GStreamer applications. This can be used for post-run analysis as well as for
 live introspection.
 
-We are going to introduce a GstTracer object. There will be only a single
-instance per process or none if tracing is off (not enabled via envvar or
-compiled out).
+The system brings the following new items:
+core hooks: probes in the core api, that will expose internal state when tracing
+  is in use
+tracers: plugin features that can process data from the hooks and emit a log
+tracing front-ends: applications that consume logs from tracers
+
+Like the logging, the tracer hooks can be compiled out and if not use a local
+condition to check if active.
 
 Certain GStreamer core function (such as gst_pad_push or gst_element_add_pad)
-will call into the tracer. The tracer will dispatch into loaded tracing plugins.
+will call into the tracer subsystem to dispatch into active tracing modules.
 Developers will be able to select a list of plugins by setting an environment
 variable, such as GST_TRACE="meminfo,dbus". One can also pass parameters to
-plugins:  GST_TRACE="log(events;buffers),stats(all)".
-When then plugins are loaded, we'll add them to certain hooks according to that
+plugins:  GST_TRACE="log(events,buffers);stats(all)".
+When then plugins are loaded, we'll add them to certain hooks according to which
 they are interested in.
 
 Another env var GST_TRACE_CHANNEL can be used to send the tracing to a file or
-a socket (Do the same for GST_DEBUG_CHANNEL). The syntax could be
-GST_XXX_CHANNEL=file:///path/to/file or GST_XXX_CHANNEL=tcp://<ip>:<port>.
+a socket (Do the same for GST_DEBUG_CHANNEL / use a common channel
+GST_{DEBBUG,LOG}_{CHANNEL,OUT}).
+The syntax could be
+  stderr
+  file:///path/to/file (or /path/to/file , file)
+  tcp://<ip>:<port> (or just <ip>:<port>)
 If no channel is set, the tracing goes to stderr like the debug logging.
 
-TODO(ensonic): we might want to have GST_{DEBUG|TRACE)_FORMAT envars as well.
-These could be raw, ansi-color, binary, suitable for babeltrace (see lttng), ...
+TODO(ensonic): we might want to have GST_{DEBUG,TRACE,LOG)_FORMAT envars as well.
+These could be:
+  raw
+  ansi-color
+  binary (see babeltrace (Common Trace Format (CTF), e.g. used by lttng)
+  ...
 
 With these we can deprecate GST_DEBUG_FILE and GST_DEBUG_NO_COLOR.
 
@@ -69,14 +82,14 @@ Hooks
 - gst_bin_add
 - gst_bin_remove
 - gst_element_add_pad
-- gst_element_post_message
-- gst_element_query
+* gst_element_post_message
+* gst_element_query
 - gst_element_remove_pad
 - gst_pad_link
-- gst_pad_pull_range
+* gst_pad_pull_range
 * gst_pad_push
 * gst_pad_push_list
-- gst_pad_push_event
+* gst_pad_push_event
 - gst_pad_unlink
 
 Plugin api
@@ -84,21 +97,56 @@ Plugin api
 
 TracerPlugins are plugin features. They have a simple api:
 
-'instance creation'
+instance creation
 Plugins can attach handlers to one or more hooks. They use a HookMask to tell
 which events they are interested in. The params are the extra detail from the
 environment var.
 
 void invoke(GstTracerHookId id, GstStructure *s);
-Hooks marshall the parameters given to a trace hook into a GstStructure and also
-add some extra into such as a timestamp. The hooks will receive this structure.
-Hooks will be called from misc threads. The trace plugins should only consume 
-(=read) the provided data. Most trace plugins will log data to a trace channel.
+Hooks marshal the parameters given to a trace hook into varargs and also
+add some extra into such as a timestamp. Hooks will be called from misc threads.
+The trace plugins should only consume (=read) the provided data.
+Most trace plugins will log data to a trace channel.
 
-'instance destruction'
+instance destruction
 Plugins can output results and release data. This would ideally be done at the
 end of the applications, but gst_deinit() is not mandatory. gst_tracelib was
 using a gcc_destructor
+
+tracer factory
+--------------
+tracers will describe the data the log here (gst_tracer_class_add_event_class).
+Most tracers will log some kind of 'events' : a data transfer, an event,
+a message, a query or a measurement.
+
+GstTraceEventClass { // meta data for events, can be printed from gst-inspect
+  gchar *name;         // something that front ends can use as a label for a graph
+  gchar *description;  // something that front ends can use as a tooltip
+  
+  GstTraceEventScope scope; // a way to associate the event
+  // enum(per process, thread, element, pad, ...)
+
+  Gst??? type; // some kind of hierarchical event type?
+  // event.eos, event.seek.flushing, measurement.cpu.load, ...
+}
+
+GstTraceEvent {
+  GstClockTime ts; // when did it happen
+  gpointer owner;  // GThread, GObject, ...
+  // payloads:
+  // - array of unions
+  // - GstStructure
+  //   - we can just serialize this for logging and easily deserialize it in
+  //     the front-ends using gst_structure_{from,to}_string()
+  //   - we would have 'ts' and 'owner' in the structure
+  //   - the structure 'name-id' can be used to lookup the GstTraceEventClass
+  // - GVariant ?
+}
+
+Frontends can:
+- do a events over time histogram
+- plot curves of values over time
+
 
 Plugins ideas
 =============
@@ -140,7 +188,7 @@ UI
 
 gst-debug-viewer
 ----------------
-gst-debug-viewer could be given the tracelog in addition to the debug log.
+gst-debug-viewer could be given the trace log in addition to the debug log.
 Alternatively it would show a dialog that shows all local apps (if the dbus
 plugin is loaded) and read the log streams from the sockets/files that are
 configured for the app.
@@ -149,25 +197,39 @@ gst-tracer
 ----------
 Counterpart of gst-tracelib-ui
 
+gst-stats
+---------
+A terminal app that shows summary/running stats like the summary gst-tracelib
+shows at the end of a run.
+
 
 Problems / Open items
 =====================
+- should tracers log into the debug.log or into a separate log?
+  - in the log we need a bit of protocol:
+    - log the GST_TRACE var, so that front-ends can understand what tracers 
+      where active and what parameters where passed.
+  - separate log
+    - use a binary format?
+    - worse performance (we're writing two logs at the same time)
+    - need to be careful when people to GST_DEBUG_CHANNEL=stderr and
+      GST_TRACE_CHANNEL=stderr (use a shared channel, but what about the
+      formats?)
+  - debug log
+    - the tracer subsystem would need to log the GST_TRACE at a level that is
+      active
+    - should the tracer call gst_debug_category_set_threshold() to ensure things
+      work, even though the levels don't make a lot of sense here
+
 - when hooking into a timer, should we just have some predefined intervals?
-- how to trigger the shutdown processing?
-  gst_deinit() (apps can call it from atexit())
-- how to chain tracers (use the rank?)
-  e.g. how can the stats tracer get data from rusage/mallinfo tracers
-  or should all tracers just log and we would use a gst-stats tool to collect
-  the data from the log and process it then (that would also solve the deinit()
-  issue)
 - when connecting to a running app, we can't easily get the 'current' state if
   logging is using a socket, as past events are not stored
 
-
 Try it
 ======
-GST_DEBUG="GST_TRACER:4,GST_BUFFER*:7,log:7" GST_TRACE=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
+GST_DEBUG="GST_TRACER:4,GST_BUFFER*:7,GST_EVENT:7,GST_MESSAGE:7,query:7,log:7" GST_TRACE=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
 - traces for buffer flow in TRACE level and default category
 
-GST_DEBUG="GST_TRACER:4" GST_TRACE=stats gst-launch-1.0 fakesrc num-buffers=10 ! queue ! fakesink
+GST_DEBUG="GST_TRACER:4,stats:7" GST_TRACE=stats gst-launch-1.0 2>trace.log fakesrc num-buffers=10 sizetype=fixed ! queue ! fakesink
+gst-stats-1.0 trace.log
 - print some pipeline stats on exit
