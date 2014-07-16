@@ -478,8 +478,8 @@ class GstValidateEncodingTestInterface(object):
         return ret.replace("::", ":")
 
     def get_profile(self, video_restriction=None, audio_restriction=None):
-        vcaps = utils.FORMATS[self.combination.vcodec]
-        acaps = utils.FORMATS[self.combination.acodec]
+        vcaps = self.combination.get_video_caps()
+        acaps = self.combination.get_audio_caps()
         if self.media_descriptor is not None:
             if self.media_descriptor.get_num_tracks("video") == 0:
                 vcaps = None
@@ -487,7 +487,7 @@ class GstValidateEncodingTestInterface(object):
             if self.media_descriptor.get_num_tracks("audio") == 0:
                 acaps = None
 
-        return self._get_profile_full(utils.FORMATS[self.combination.container],
+        return self._get_profile_full(self.combination.get_muxer_caps(),
                                       vcaps, acaps,
                                       video_restriction=video_restriction,
                                       audio_restriction=audio_restriction)
@@ -1037,3 +1037,35 @@ class GstValidateMediaDescriptor(MediaDescriptor):
                 n += 1
 
         return n
+
+
+class MediaFormatCombination(object):
+    _FORMATS = {"aac": "audio/mpeg,mpegversion=4",
+               "ac3": "audio/x-ac3",
+               "vorbis": "audio/x-vorbis",
+               "mp3": "audio/mpeg,mpegversion=1,layer=3",
+               "h264": "video/x-h264",
+               "vp8": "video/x-vp8",
+               "theora": "video/x-theora",
+               "ogg": "application/ogg",
+               "mkv": "video/x-matroska",
+               "mp4": "video/quicktime,variant=iso;",
+               "webm": "video/webm"}
+
+
+    def __str__(self):
+        return "%s and %s in %s" % (self.acodec, self.vcodec, self.container)
+
+    def __init__(self, container, acodec, vcodec):
+        self.container = container
+        self.acodec = acodec
+        self.vcodec = vcodec
+
+    def get_audio_caps(self):
+        return self._FORMATS[self.acodec]
+
+    def get_video_caps(self):
+        return self._FORMATS[self.vcodec]
+
+    def get_muxer_caps(self):
+        return self._FORMATS[self.container]

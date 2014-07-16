@@ -170,58 +170,6 @@ def TIME_ARGS(time):
                                   (time / GST_SECOND) % 60,
                                   time % GST_SECOND)
 
-##############################
-#    Encoding related utils  #
-##############################
-class MediaFormatCombination(object):
-
-    def __str__(self):
-        return "%s and %s in %s" % (self.acodec, self.vcodec, self.container)
-
-    def __init__(self, container, acodec, vcodec):
-        self.container = container
-        self.acodec = acodec
-        self.vcodec = vcodec
-
-
-FORMATS = {"aac": "audio/mpeg,mpegversion=4",
-           "ac3": "audio/x-ac3",
-           "vorbis": "audio/x-vorbis",
-           "mp3": "audio/mpeg,mpegversion=1,layer=3",
-           "h264": "video/x-h264",
-           "vp8": "video/x-vp8",
-           "theora": "video/x-theora",
-           "ogg": "application/ogg",
-           "mkv": "video/x-matroska",
-           "mp4": "video/quicktime,variant=iso;",
-           "webm": "video/webm"}
-
-
-def get_profile_full(muxer, venc, aenc, video_restriction=None,
-                     audio_restriction=None,
-                     audio_presence=0, video_presence=0):
-    ret = "\""
-    if muxer:
-        ret += muxer
-    ret += ":"
-    if venc:
-        if video_restriction is not None:
-            ret = ret + video_restriction + '->'
-        ret += venc
-        if video_presence:
-            ret = ret + '|' + str(video_presence)
-    if aenc:
-        ret += ":"
-        if audio_restriction is not None:
-            ret = ret + audio_restriction + '->'
-        ret += aenc
-        if audio_presence:
-            ret = ret + '|' + str(audio_presence)
-
-    ret += "\""
-    return ret.replace("::", ":")
-
-
 ##################################################
 #  Some utilities to parse gst-validate output   #
 ##################################################

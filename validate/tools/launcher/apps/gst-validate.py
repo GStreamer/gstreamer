@@ -27,7 +27,7 @@ from baseclasses import GstValidateTest, TestsManager, Test, \
     ScenarioManager, NamedDic, GstValidateTestsGenerator, \
     GstValidateMediaDescriptor
 
-from utils import MediaFormatCombination, path2url, DEFAULT_TIMEOUT, which, \
+from utils import path2url, DEFAULT_TIMEOUT, which, \
     GST_SECOND, Result, Protocols
 
 ######################################

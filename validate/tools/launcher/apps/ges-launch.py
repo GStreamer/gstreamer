@@ -24,7 +24,7 @@ import subprocess
 import utils
 from urllib import unquote
 import xml.etree.ElementTree as ET
-from baseclasses import GstValidateTest, TestsManager, ScenarioManager
+from baseclasses import GstValidateTest, TestsManager, ScenarioManager, MediaFormatCombination
 
 GES_DURATION_TOLERANCE = utils.GST_SECOND / 2
 
@@ -34,10 +34,10 @@ if "win32" in sys.platform:
 
 
 GES_ENCODING_TARGET_COMBINATIONS = [
-    utils.MediaFormatCombination("ogg", "vorbis", "theora"),
-    utils.MediaFormatCombination("webm", "vorbis", "vp8"),
-    utils.MediaFormatCombination("mp4", "mp3", "h264"),
-    utils.MediaFormatCombination("mkv", "vorbis", "h264")]
+    MediaFormatCombination("ogg", "vorbis", "theora"),
+    MediaFormatCombination("webm", "vorbis", "vp8"),
+    MediaFormatCombination("mp4", "mp3", "h264"),
+    MediaFormatCombination("mkv", "vorbis", "h264")]
 
 
 def quote_uri(uri):
