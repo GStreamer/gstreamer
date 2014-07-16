@@ -90,6 +90,7 @@
 #include "gstutils.h"
 #include "gstinfo.h"
 #include "gstquark.h"
+#include "gsttracer.h"
 #include "gstvalue.h"
 #include "gst-i18n-lib.h"
 #include "glib-compat-private.h"
@@ -1656,18 +1657,22 @@ gboolean
 gst_element_query (GstElement * element, GstQuery * query)
 {
   GstElementClass *klass;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (query != NULL, FALSE);
+
+  GST_TRACER_ELEMENT_QUERY_PRE (element, query);
 
   klass = GST_ELEMENT_GET_CLASS (element);
   if (klass->query) {
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "send query on element %s",
         GST_ELEMENT_NAME (element));
-    return klass->query (element, query);
+    res = klass->query (element, query);
   }
 
-  return FALSE;
+  GST_TRACER_ELEMENT_QUERY_POST (element, res);
+  return res;
 }
 
 static gboolean
@@ -1724,15 +1729,19 @@ gboolean
 gst_element_post_message (GstElement * element, GstMessage * message)
 {
   GstElementClass *klass;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (message != NULL, FALSE);
 
+  GST_TRACER_ELEMENT_POST_MESSAGE_PRE (element, message);
+
   klass = GST_ELEMENT_GET_CLASS (element);
   if (klass->post_message)
-    return klass->post_message (element, message);
+    res = klass->post_message (element, message);
 
-  return FALSE;
+  GST_TRACER_ELEMENT_POST_MESSAGE_POST (element, res);
+  return res;
 }
 
 /**

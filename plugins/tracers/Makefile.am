@@ -9,7 +9,7 @@ libgstcoretracers_la_SOURCES = \
 
 libgstcoretracers_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstcoretracers_la_LIBADD = \
-	$(top_builddir)/libs/gst/base/libgstbase-@GST_API_VERSION@.la \
+	$(top_builddir)/gst/printf/libgstprintf.la \
 	$(GST_OBJ_LIBS)
 libgstcoretracers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcoretracers_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)

@@ -435,6 +435,36 @@ do_element_stats (GstStatsTracer * self, GstPad * pad, GstClockTime elapsed1,
 #endif
 }
 
+/* FIXME: this looks a bit weired, check that we really want to do this
+ *
+ * in: a normal pad
+ * out: the element
+ *
+ * in: a proxy pad
+ * out: the element that contains the peer of the proxy
+ *
+ * in: a ghost pad
+ * out: the bin owning the ghostpad
+ */
+static GstObject *
+get_real_pad_parent (GstPad * pad)
+{
+  GstObject *parent = GST_OBJECT_PARENT (pad);
+
+  /* if parent of pad is a ghost-pad, then pad is a proxy_pad */
+  if (parent && GST_IS_GHOST_PAD (parent)) {
+    pad = GST_PAD_CAST (parent);
+    parent = GST_OBJECT_PARENT (pad);
+  }
+  /* if pad is a ghost-pad, then parent is a bin and it is the parent of a
+   * proxy_pad */
+  while (parent && GST_IS_GHOST_PAD (pad)) {
+    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
+    parent = pad ? GST_OBJECT_PARENT (pad) : NULL;
+  }
+  return parent;
+}
+
 /* tracer class */
 
 static void gst_stats_tracer_finalize (GObject * obj);
@@ -525,6 +555,101 @@ do_push_buffer_list_post (GstStatsTracer * self, va_list var_args)
 }
 
 static void
+do_pull_range_list_pre (GstStatsTracer * self, va_list var_args)
+{
+  guint64 ts = va_arg (var_args, guint64);
+  GstPad *pad = va_arg (var_args, GstPad *);
+  GstPadStats *stats = get_pad_stats (self, pad);
+  stats->last_ts = ts;
+}
+
+static void
+do_pull_range_list_post (GstStatsTracer * self, va_list var_args)
+{
+  guint64 ts = va_arg (var_args, guint64);
+  GstPad *pad = va_arg (var_args, GstPad *);
+  GstBuffer *buffer = va_arg (var_args, GstBuffer *);
+  GstPadStats *stats = get_pad_stats (self, pad);
+  guint64 last_ts = stats->last_ts;
+
+  if (buffer != NULL) {
+    do_pad_stats (self, pad, stats, buffer, ts);
+    do_transmission_stats (self, pad, buffer, ts);
+  }
+  do_element_stats (self, pad, last_ts, ts);
+}
+
+static void
+do_push_event_pre (GstStatsTracer * self, va_list var_args)
+{
+  guint64 ts = va_arg (var_args, guint64);
+  GstPad *pad = va_arg (var_args, GstPad *);
+  GstObject *parent;
+  GstElement *elem;
+
+  parent = get_real_pad_parent (pad);
+  if ((elem = GST_ELEMENT (parent))) {
+    GstElementStats *stats = get_element_stats (self, elem);
+    get_pad_stats (self, pad);
+
+    stats->last_ts = ts;
+    stats->num_events++;
+    self->num_events++;
+  }
+}
+
+static void
+do_push_event_post (GstStatsTracer * self, va_list var_args)
+{
+#if 0
+  guint64 ts = va_arg (var_args, guint64);
+  GstPad *pad = va_arg (var_args, GstPad *);
+#endif
+}
+
+static void
+do_post_message_pre (GstStatsTracer * self, va_list var_args)
+{
+  guint64 ts = va_arg (var_args, guint64);
+  GstElement *elem = va_arg (var_args, GstElement *);
+  GstElementStats *stats = get_element_stats (self, elem);
+
+  stats->last_ts = ts;
+  stats->num_messages++;
+  self->num_messages++;
+}
+
+static void
+do_post_message_post (GstStatsTracer * self, va_list var_args)
+{
+#if 0
+  guint64 ts = va_arg (var_args, guint64);
+  GstElement *elem = va_arg (var_args, GstElement *);
+#endif
+}
+
+static void
+do_query_pre (GstStatsTracer * self, va_list var_args)
+{
+  guint64 ts = va_arg (var_args, guint64);
+  GstElement *elem = va_arg (var_args, GstElement *);
+  GstElementStats *stats = get_element_stats (self, elem);
+
+  stats->last_ts = ts;
+  stats->num_queries++;
+  self->num_queries++;
+}
+
+static void
+do_query_post (GstStatsTracer * self, va_list var_args)
+{
+#if 0
+  guint64 ts = va_arg (var_args, guint64);
+  GstElement *elem = va_arg (var_args, GstElement *);
+#endif
+}
+
+static void
 gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
     GstTracerMessageId mid, va_list var_args)
 {
@@ -542,6 +667,30 @@ gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
       break;
     case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_POST:
       do_push_buffer_list_post (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_PRE:
+      do_pull_range_list_pre (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_POST:
+      do_pull_range_list_post (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_PRE:
+      do_push_event_pre (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_POST:
+      do_push_event_post (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_ELEMENT_POST_MESSAGE_PRE:
+      do_post_message_pre (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_ELEMENT_POST_MESSAGE_POST:
+      do_post_message_post (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_ELEMENT_QUERY_PRE:
+      do_query_pre (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_ELEMENT_QUERY_POST:
+      do_query_post (self, var_args);
       break;
     default:
       break;
