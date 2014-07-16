@@ -990,6 +990,7 @@ case $host in
       if test "x$NEED_EGL" != "xno"; then
         if test "x$HAVE_WINDOW_WAYLAND" = "xyes" -o "x$HAVE_WINDOW_X11" = "xyes" -o "x$HAVE_WINDOW_DISPMANX" = "xyes"; then
           GL_LIBS="$GL_LIBS -lEGL $EGL_LIBS"
+          GL_CFLAGS="$GL_CFLAGS $EGL_CFLAGS"
           USE_EGL=yes
         fi
       fi
