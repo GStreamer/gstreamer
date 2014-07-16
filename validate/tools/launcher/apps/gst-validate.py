@@ -47,6 +47,7 @@ if "win32" in sys.platform:
 G_V_MEDIA_INFO_EXT = "media_info"
 G_V_STREAM_INFO_EXT = "stream_info"
 
+AUDIO_ONLY_FILE_TRANSCODING_RATIO = 5
 
 #################################################
 #       API to be used to create testsuites     #
@@ -399,6 +400,13 @@ class GstValidateTranscodingTest(GstValidateTest):
         Loggable.__init__(self)
 
         file_dur = long(media_descriptor.get_duration()) / GST_SECOND
+        if not media_descriptor.get_num_tracks("video"):
+            self.debug("%s audio only file applying transcoding ratio."
+                       "File 'duration' : %s" % (classname , file_dur))
+            duration = file_dur / AUDIO_ONLY_FILE_TRANSCODING_RATIO
+        else:
+            duration = file_dur
+
         try:
             timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[media_descriptor.get_protocol()]
         except KeyError:
@@ -406,7 +414,7 @@ class GstValidateTranscodingTest(GstValidateTest):
 
         super(GstValidateTranscodingTest, self).__init__(
             GST_VALIDATE_TRANSCODING_COMMAND, classname,
-            options, reporter, duration=file_dur,
+            options, reporter, duration=duration,
             timeout=timeout, scenario=scenario)
 
         self.media_descriptor = media_descriptor
