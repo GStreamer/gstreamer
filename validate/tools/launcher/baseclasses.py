@@ -492,17 +492,71 @@ class GstValidateEncodingTestInterface(object):
                                       video_restriction=video_restriction,
                                       audio_restriction=audio_restriction)
 
+    def _clean_caps(self, caps):
+        """
+        Returns a list of key=value or structure name, without "(types)" or ";" or ","
+        """
+        return re.sub(r"\(.+?\)\s*| |;", '', caps).split(',')
+
+    def _has_caps_type_variant(self, c, ccaps):
+        """
+        Handle situations where we can have application/ogg or video/ogg or
+        audio/ogg
+        """
+        has_variant = False
+        media_type = re.findall("application/|video/|audio/", c)
+        if media_type:
+            media_type = media_type[0].replace('/', '')
+            possible_mtypes = ["application", "video", "audio"]
+            possible_mtypes.remove(media_type)
+            for tmptype in possible_mtypes:
+                possible_c_variant = c.replace(media_type, tmptype)
+                if possible_c_variant in ccaps:
+                    self.info("Found %s in %s, good enough!", possible_c_variant)
+                    has_variant = True
+
+        return has_variant
+
     def check_encoded_file(self):
-        duration = utils.get_duration(self.dest_file)
+        result_descriptor = GstValidateMediaDescriptor.new_from_uri(self.dest_file)
+        duration = result_descriptor.get_duration()
         orig_duration = self.media_descriptor.get_duration()
         tolerance = self._duration_tolerance
 
         if orig_duration - tolerance >= duration <= orig_duration + tolerance:
+            os.remove(result_descriptor.get_path())
             return (Result.FAILED, "Duration of encoded file is "
                     " wrong (%s instead of %s)" %
                     (TIME_ARGS (duration),
                      TIME_ARGS (orig_duration)))
         else:
+            all_tracks_caps = result_descriptor.get_tracks_caps()
+            container_caps = result_descriptor.get_caps()
+            if container_caps:
+                all_tracks_caps.insert(0, ("container", container_caps))
+
+            for track_type, caps in all_tracks_caps:
+                ccaps = self._clean_caps(caps)
+                wanted_caps = self.combination.get_caps(track_type)
+                cwanted_caps = self._clean_caps(wanted_caps)
+
+                if wanted_caps == None:
+                    os.remove(result_descriptor.get_path())
+                    return (Result.FAILED,
+                            "Found a track of type %s in the encoded files"
+                            " but none where wanted in the encoded profile: %s"
+                            % (track_type, self.combination))
+
+                for c in cwanted_caps:
+                    if c not in ccaps:
+                        if not self._has_caps_type_variant (c, ccaps):
+                            os.remove(result_descriptor.get_path())
+                            return (Result.FAILED,
+                                    "Field: %s  (from %s) not in caps of the outputed file %s"
+                                    % (wanted_caps, c, ccaps))
+
+
+            os.remove(result_descriptor.get_path())
             return (Result.PASSED, "")
 
 
@@ -1044,9 +1098,20 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         else:
             return self._xml_path.replace("." + self.STREAM_INFO_EXT, "")
 
-
     def get_caps(self):
         return self.media_xml.findall("streams")[0].attrib["caps"]
+
+    def get_tracks_caps(self):
+        res = []
+        try:
+            streams = self.media_xml.findall("streams")[0].findall("stream")
+        except IndexError:
+            return res
+
+        for stream in streams:
+            res.append((stream.attrib["type"], stream.attrib["caps"]))
+
+        return res
 
     def get_uri(self):
         return self.media_xml.attrib["uri"]
@@ -1093,18 +1158,24 @@ class MediaFormatCombination(object):
 
 
     def __str__(self):
-        return "%s and %s in %s" % (self.acodec, self.vcodec, self.container)
+        return "%s and %s in %s" % (self.audio, self.video, self.container)
 
-    def __init__(self, container, acodec, vcodec):
+    def __init__(self, container, audio, video):
         self.container = container
-        self.acodec = acodec
-        self.vcodec = vcodec
+        self.audio = audio
+        self.video = video
+
+    def get_caps(self, track_type):
+        try:
+            return self._FORMATS[self.__dict__[track_type]]
+        except KeyError:
+            return None
 
     def get_audio_caps(self):
-        return self._FORMATS[self.acodec]
+        return self.get_caps("audio")
 
     def get_video_caps(self):
-        return self._FORMATS[self.vcodec]
+        return self.get_caps("video")
 
     def get_muxer_caps(self):
-        return self._FORMATS[self.container]
+        return self.get_caps("container")
