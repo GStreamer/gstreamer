@@ -873,13 +873,61 @@ class GstValidateBaseTestManager(TestsManager):
         return self._encoding_formats
 
 
-class GstValidateMediaDescriptor(Loggable):
+class MediaDescriptor(Loggable):
+    def __init__(self):
+        Loggable.__init__(self)
+
+    def get_media_filepath(self):
+        raise NotImplemented
+
+    def get_caps(self):
+        raise NotImplemented
+
+    def get_uri(self):
+        raise NotImplemented
+
+    def get_duration(self):
+        raise NotImplemented
+
+    def get_protocol(self):
+        raise NotImplemented
+
+    def is_seekable(self):
+        raise NotImplemented
+
+    def is_image(self):
+        raise NotImplemented
+
+    def get_num_tracks(self, track_type):
+        raise NotImplemented
+
+    def is_compatible(self, scenario):
+        if scenario.seeks() and (not self.is_seekable() or self.is_image()):
+            self.debug("Do not run %s as %s does not support seeking",
+                       scenario, self.get_uri())
+            return False
+
+        for track_type in ['audio', 'subtitle']:
+            if self.get_num_tracks(track_type) < scenario.get_min_tracks(track_type):
+                self.debug("%s -- %s | At least %s %s track needed  < %s"
+                           % (scenario, self.get_uri(), track_type,
+                              scenario.get_min_tracks(track_type),
+                              self.get_num_tracks(track_type)))
+                return False
+
+        return True
+
+
+
+
+class GstValidateMediaDescriptor(MediaDescriptor):
     # Some extension file for discovering results
     MEDIA_INFO_EXT = "media_info"
     STREAM_INFO_EXT = "stream_info"
 
     def __init__(self, xml_path):
-        Loggable.__init__(self)
+        super(GstValidateMediaDescriptor, self).__init__(self)
+
         self._xml_path = xml_path
         self.media_xml = ET.parse(xml_path).getroot()
 
@@ -925,21 +973,3 @@ class GstValidateMediaDescriptor(Loggable):
                 n += 1
 
         return n
-
-    def is_compatible(self, scenario):
-        if scenario.seeks() and (not self.is_seekable() or self.is_image()):
-            self.debug("Do not run %s as %s does not support seeking",
-                       scenario, self.get_uri())
-            return False
-
-        for track_type in ['audio', 'subtitle']:
-            if self.get_num_tracks(track_type) < scenario.get_min_tracks(track_type):
-                self.debug("%s -- %s | At least %s %s track needed  < %s"
-                           % (scenario, self.get_uri(), track_type,
-                              scenario.get_min_tracks(track_type),
-                              self.get_num_tracks(track_type)))
-                return False
-
-        return True
-
-
