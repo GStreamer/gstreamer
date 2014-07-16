@@ -587,8 +587,8 @@ _sink_event (GstAggregator * self, GstAggregatorPad * aggpad, GstEvent * event)
                 TRUE, FALSE) == TRUE) {
 
           GST_DEBUG_OBJECT (self, "Flushing, pausing srcpad task");
-          priv->flow_return = GST_FLOW_OK;
           _stop_srcpad_task (self, event);
+          priv->flow_return = GST_FLOW_OK;
 
           GST_INFO_OBJECT (self, "Getting STREAM_LOCK while seeking");
           GST_PAD_STREAM_LOCK (self->srcpad);
