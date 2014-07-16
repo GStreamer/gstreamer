@@ -162,7 +162,7 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
             protocol = minfo.media_descriptor.get_protocol()
 
             if self.test_manager.options.mute:
-                fakesink = "'fakesink sync=true'"
+                fakesink = "'fakesink'"
                 pipe += " audio-sink=%s video-sink=%s" %(fakesink, fakesink)
 
             pipe += " uri=%s" % uri
@@ -235,7 +235,7 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
                 pipe_arguments = {"mixer": self.mixer}
 
             if self.test_manager.options.mute:
-                pipe_arguments["sink"] = "'fakesink sync=true'"
+                pipe_arguments["sink"] = "'fakesink'"
             else:
                 pipe_arguments["sink"] = "auto%ssink" % self.media_type
 
