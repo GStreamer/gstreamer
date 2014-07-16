@@ -463,9 +463,14 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
         return self.tests
 
-    def _check_discovering_info(self, media_info, uri=None):
+    def _add_media(self, media_info, uri=None):
         self.debug("Checking %s", media_info)
-        media_descriptor = GstValidateMediaDescriptor(media_info)
+        if isinstance(media_info, GstValidateMediaDescriptor):
+            media_descriptor = media_info
+            media_info = media_descriptor.get_path()
+        else:
+            media_descriptor = GstValidateMediaDescriptor(media_info)
+
         try:
             # Just testing that the vairous mandatory infos are present
             caps = media_descriptor.get_caps()
@@ -493,25 +498,16 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             args = G_V_DISCOVERER_COMMAND.split(" ")
             args.append(uri)
             if os.path.isfile(media_info):
-                self._check_discovering_info(media_info, uri)
+                self._add_media(media_info, uri)
                 return True
             elif fpath.endswith(GstValidateMediaDescriptor.STREAM_INFO_EXT):
-                self._check_discovering_info(fpath)
+                self._add_media(fpath)
                 return True
-            elif self.options.generate_info:
-                args.extend(["--output-file", media_info])
-            else:
+            elif not self.options.generate_info:
                 return True
 
-            if self.options.generate_info:
-                printc("Generating media info for %s\n"
-                       "    Command: '%s'"  % (fpath, ' '.join(args)),
-                       Colors.OKBLUE)
-            out = subprocess.check_output(args, stderr=open(os.devnull))
-            self._check_discovering_info(media_info, uri)
-
-            if self.options.generate_info:
-                printc("Result: Passed", Colors.OKGREEN)
+            media_descriptor = GstValidateMediaDescriptor.new_from_uri(uri, True)
+            self._add_media(media_descriptor, uri)
 
             return True
 

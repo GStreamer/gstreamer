@@ -63,6 +63,9 @@ class XgesProjectDescriptor(MediaDescriptor):
     def get_media_filepath(self):
         return self._xml_path
 
+    def get_path(self):
+        return self._xml_path
+
     def get_caps(self):
         raise NotImplemented
 

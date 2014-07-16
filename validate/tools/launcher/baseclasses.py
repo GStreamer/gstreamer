@@ -941,6 +941,9 @@ class MediaDescriptor(Loggable):
     def __init__(self):
         Loggable.__init__(self)
 
+    def get_path(self):
+        raise NotImplemented
+
     def get_media_filepath(self):
         raise NotImplemented
 
@@ -989,6 +992,10 @@ class GstValidateMediaDescriptor(MediaDescriptor):
     MEDIA_INFO_EXT = "media_info"
     STREAM_INFO_EXT = "stream_info"
 
+    DISCOVERER_COMMAND = "gst-validate-media-check-1.0"
+    if "win32" in sys.platform:
+        DISCOVERER_COMMAND += ".exe"
+
     def __init__(self, xml_path):
         super(GstValidateMediaDescriptor, self).__init__()
 
@@ -998,6 +1005,38 @@ class GstValidateMediaDescriptor(MediaDescriptor):
        # Sanity checks
         self.media_xml.attrib["duration"]
         self.media_xml.attrib["seekable"]
+
+    @staticmethod
+    def new_from_uri(uri, verbose=False):
+        media_path = utils.url2path(uri)
+        descriptor_path = "%s.%s" % (media_path, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
+        args = GstValidateMediaDescriptor.DISCOVERER_COMMAND.split(" ")
+        args.append(uri)
+
+        args.extend(["--output-file", descriptor_path])
+
+        if verbose:
+            printc("Generating media info for %s\n"
+                   "    Command: '%s'"  % (media_path, ' '.join(args)),
+                   Colors.OKBLUE)
+
+        try:
+            out = subprocess.check_output(args, stderr=open(os.devnull))
+        except subprocess.CalledProcessError as e:
+            if self.options.generate_info:
+                printc("Result: Failed", Colors.FAIL)
+            else:
+                self.error("Exception: %s", e)
+            return None
+
+        if verbose:
+            printc("Result: Passed", Colors.OKGREEN)
+
+
+        return GstValidateMediaDescriptor(descriptor_path)
+
+    def get_path(self):
+        return self._xml_path
 
     def get_media_filepath(self):
         if self.get_protocol() == Protocols.FILE:
