@@ -909,6 +909,41 @@ _execute_set_property (GstValidateScenario * scenario,
   return ret;
 }
 
+static gboolean
+_execute_set_debug_threshold (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  gchar *str = NULL;
+  gboolean reset = TRUE;
+  const gchar *threshold_str;
+
+  threshold_str =
+      gst_structure_get_string (action->structure, "debug-threshold");
+  if (threshold_str == NULL) {
+    gint threshold;
+
+    if (gst_structure_get_int (action->structure, "debug-threshold",
+            &threshold))
+      threshold_str = str = g_strdup_printf ("%i", threshold);
+    else
+      return FALSE;
+  }
+
+  gst_structure_get_boolean (action->structure, "reset", &reset);
+
+  gst_validate_printf (action,
+      "%s -- Set debug threshold to '%s', %sreseting all\n",
+      gst_structure_to_string (action->structure), threshold_str,
+      reset ? "" : "NOT ");
+
+  gst_debug_set_threshold_from_string (threshold_str, reset);
+
+  if (str)
+    g_free (str);
+
+  return TRUE;
+}
+
 
 static void
 gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
@@ -1749,6 +1784,8 @@ init_scenarios (void)
   const gchar *set_state_mandatory_fields[] = { "state", NULL };
   const gchar *set_property_mandatory_fields[] =
       { "target-element-name", "property-name", "property-value", NULL };
+  const gchar *set_debug_threshold_mandatory_fields[] =
+      { "debug-threshold", NULL };
 
   GST_DEBUG_CATEGORY_INIT (gst_validate_scenario_debug, "gstvalidatescenario",
       GST_DEBUG_FG_YELLOW, "Gst validate scenarios");
@@ -1791,4 +1828,8 @@ init_scenarios (void)
   gst_validate_add_action_type ("set-property", _execute_set_property,
       set_property_mandatory_fields,
       "Allows to set a property of any element in the pipeline", FALSE);
+  gst_validate_add_action_type ("set-debug-threshold",
+      _execute_set_debug_threshold, set_debug_threshold_mandatory_fields,
+      "Sets the debug level to be used, same format as "
+      "setting the GST_DEBUG env variable", FALSE);
 }
