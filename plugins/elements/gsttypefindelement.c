@@ -540,6 +540,7 @@ stop_typefinding (GstTypeFindElement * typefind)
   gboolean push_cached_buffers;
   gsize avail;
   GstBuffer *buffer;
+  GstClockTime pts, dts;
 
   gst_element_get_state (GST_ELEMENT (typefind), &state, NULL, 0);
 
@@ -557,7 +558,11 @@ stop_typefinding (GstTypeFindElement * typefind)
   if (avail == 0)
     goto no_data;
 
+  pts = gst_adapter_prev_pts (typefind->adapter, NULL);
+  dts = gst_adapter_prev_dts (typefind->adapter, NULL);
   buffer = gst_adapter_take_buffer (typefind->adapter, avail);
+  GST_BUFFER_PTS (buffer) = pts;
+  GST_BUFFER_DTS (buffer) = dts;
   GST_OBJECT_UNLOCK (typefind);
 
   if (!push_cached_buffers) {
