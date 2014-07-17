@@ -393,6 +393,8 @@ main (int argc, gchar ** argv)
     gst_bin_add (GST_BIN (new_pipeline), pipeline);
     pipeline = new_pipeline;
   }
+
+  gst_pipeline_set_auto_flush_bus (GST_PIPELINE (pipeline), FALSE);
 #ifdef G_OS_UNIX
   signal_watch_id =
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
@@ -439,7 +441,6 @@ main (int argc, gchar ** argv)
   bus = gst_element_get_bus (pipeline);
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", (GCallback) bus_callback, mainloop);
-  gst_object_unref (bus);
 
   g_print ("Starting pipeline\n");
   g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);
@@ -467,6 +468,12 @@ main (int argc, gchar ** argv)
   }
 
   g_main_loop_run (mainloop);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+  /* Clean the bus */
+  gst_bus_set_flushing (bus, TRUE);
+  gst_object_unref (bus);
 
   rep_err = gst_validate_runner_printf (runner);
   if (ret == 0) {
@@ -476,7 +483,6 @@ main (int argc, gchar ** argv)
   }
 
 exit:
-  gst_element_set_state (pipeline, GST_STATE_NULL);
   g_main_loop_unref (mainloop);
   g_object_unref (pipeline);
   g_object_unref (runner);
