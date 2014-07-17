@@ -574,6 +574,89 @@ GST_START_TEST (test_pipeline_in_pipeline)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pipeline_reset_start_time)
+{
+  GstElement *pipeline, *fakesrc, *fakesink;
+  GstState state;
+  GstClock *clock;
+  GstClockID id;
+  gint64 position;
+
+  pipeline = gst_element_factory_make ("pipeline", "pipeline");
+  fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
+
+  g_object_set (fakesrc, "do-timestamp", TRUE, "format", GST_FORMAT_TIME, NULL);
+
+  fail_unless (pipeline && fakesrc && fakesink);
+
+  gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
+  gst_element_link (fakesrc, fakesink);
+
+  fail_unless (gst_element_get_start_time (fakesink) == 0);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless_equals_int (gst_element_get_state (pipeline, &state, NULL, -1),
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (state, GST_STATE_PLAYING);
+
+  /* We just started and never paused, start time must be 0 */
+  fail_unless (gst_element_get_start_time (fakesink) == 0);
+
+  clock = gst_pipeline_get_clock (GST_PIPELINE (pipeline));
+  fail_unless (clock != NULL);
+  id = gst_clock_new_single_shot_id (clock,
+      gst_element_get_base_time (pipeline) + 55 * GST_MSECOND);
+  gst_clock_id_wait (id, NULL);
+  gst_clock_id_unref (id);
+  gst_object_unref (clock);
+
+  /* We waited 50ms, so the position should be now >= 50ms */
+  fail_unless (gst_element_query_position (fakesink, GST_FORMAT_TIME,
+          &position));
+  fail_unless (position >= 50 * GST_MSECOND);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless_equals_int (gst_element_get_state (pipeline, &state, NULL, -1),
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (state, GST_STATE_PAUSED);
+
+  /* And now after pausing the start time should be bigger than the last
+   * position */
+  fail_unless (gst_element_get_start_time (fakesink) >= 50 * GST_MSECOND);
+  fail_unless (gst_element_query_position (fakesink, GST_FORMAT_TIME,
+          &position));
+  fail_unless (position >= 50 * GST_MSECOND);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_READY),
+      GST_STATE_CHANGE_SUCCESS);
+
+  /* When going back to ready the start time should be reset everywhere */
+  fail_unless (gst_element_get_start_time (fakesink) == 0);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless_equals_int (gst_element_get_state (pipeline, &state, NULL, -1),
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (state, GST_STATE_PAUSED);
+
+  /* And the start time should still be set to 0 when we go to paused for the
+   * first time. Same goes for the position */
+  fail_unless (gst_element_query_position (fakesink, GST_FORMAT_TIME,
+          &position));
+  fail_unless (position < 50 * GST_MSECOND);
+
+  fail_unless (gst_element_get_start_time (fakesink) == 0);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_pipeline_suite (void)
 {
@@ -591,6 +674,7 @@ gst_pipeline_suite (void)
   tcase_add_test (tc_chain, test_base_time);
   tcase_add_test (tc_chain, test_concurrent_create);
   tcase_add_test (tc_chain, test_pipeline_in_pipeline);
+  tcase_add_test (tc_chain, test_pipeline_reset_start_time);
 
   return s;
 }
