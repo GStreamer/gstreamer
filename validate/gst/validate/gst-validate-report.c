@@ -41,8 +41,15 @@
 static GstClockTime _gst_validate_report_start_time = 0;
 static GstValidateDebugFlags _gst_validate_flags = 0;
 static GHashTable *_gst_validate_issues = NULL;
-
 static FILE *log_file;
+
+#ifndef GST_DISABLE_GST_DEBUG
+static GRegex *regex = NULL;
+#endif
+
+GST_DEBUG_CATEGORY_STATIC (gst_validate_report_debug);
+#undef GST_CAT_DEFAULT
+#define GST_CAT_DEFAULT gst_validate_report_debug
 
 G_DEFINE_BOXED_TYPE (GstValidateReport, gst_validate_report,
     (GBoxedCopyFunc) gst_validate_report_ref,
@@ -248,6 +255,9 @@ gst_validate_report_init (void)
     {"fatal_issues", GST_VALIDATE_FATAL_ISSUES}
   };
 
+  GST_DEBUG_CATEGORY_INIT (gst_validate_report_debug, "gstvalidatereport",
+      GST_DEBUG_FG_YELLOW, "Gst validate reporting");
+
   if (_gst_validate_report_start_time == 0) {
     _gst_validate_report_start_time = gst_util_get_timestamp ();
 
@@ -271,6 +281,10 @@ gst_validate_report_init (void)
   } else {
     log_file = stdout;
   }
+
+#ifndef GST_DISABLE_GST_DEBUG
+  regex = g_regex_new ("\n", G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0, NULL);
+#endif
 }
 
 GstValidateIssue *
@@ -414,6 +428,20 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
   }
 
   g_string_append_vprintf (string, format, args);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    gchar *str = g_regex_replace (regex, string->str, string->len, 0,
+        "", 0, NULL);
+
+    if (source)
+      GST_INFO ("%s", str);
+    else
+      GST_DEBUG ("%s", str);
+
+    g_free (str);
+  }
+#endif
 
   fprintf (log_file, "%s", string->str);
   fflush (log_file);
