@@ -1987,7 +1987,7 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
    * unused parts of the video area.
    */
   g_object_class_install_property (gobject_class, PROP_DRAW_BORDERS,
-      g_param_spec_boolean ("draw-borders", "Colorkey",
+      g_param_spec_boolean ("draw-borders", "Draw Borders",
           "Draw black borders to fill unused area in force-aspect-ratio mode",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
