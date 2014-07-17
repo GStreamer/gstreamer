@@ -1077,7 +1077,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         try:
             out = subprocess.check_output(args, stderr=open(os.devnull))
         except subprocess.CalledProcessError as e:
-            if self.options.generate_info:
+            if verbose:
                 printc("Result: Failed", Colors.FAIL)
             else:
                 self.error("Exception: %s", e)
