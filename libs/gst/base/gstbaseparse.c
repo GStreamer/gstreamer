@@ -2358,6 +2358,9 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   /* ERRORS */
 no_caps:
   {
+    if (GST_PAD_IS_FLUSHING (parse->srcpad))
+      return GST_FLOW_FLUSHING;
+
     GST_ELEMENT_ERROR (parse, STREAM, DECODE, ("No caps set"), (NULL));
     return GST_FLOW_ERROR;
   }
