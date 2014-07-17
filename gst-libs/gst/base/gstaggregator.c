@@ -1014,10 +1014,12 @@ _src_event (GstAggregator * self, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
+      gint old_seqnum = self->priv->seqnum;
+      self->priv->seqnum = gst_event_get_seqnum (event);
       gst_event_ref (event);
       res = _do_seek (self, event);
-      if (res)
-        self->priv->seqnum = gst_event_get_seqnum (event);
+      if (!res)
+        self->priv->seqnum = old_seqnum;
       gst_event_unref (event);
       event = NULL;
       goto done;
