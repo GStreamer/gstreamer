@@ -527,8 +527,8 @@ class GstValidateEncodingTestInterface(object):
             os.remove(result_descriptor.get_path())
             return (Result.FAILED, "Duration of encoded file is "
                     " wrong (%s instead of %s)" %
-                    (TIME_ARGS (duration),
-                     TIME_ARGS (orig_duration)))
+                    (utils.TIME_ARGS (duration),
+                     utils.TIME_ARGS (orig_duration)))
         else:
             all_tracks_caps = result_descriptor.get_tracks_caps()
             container_caps = result_descriptor.get_caps()
