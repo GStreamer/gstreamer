@@ -203,6 +203,8 @@ typedef struct
   GstEvent *event;
   gboolean result;
   gboolean flush;
+
+  gboolean one_actually_seeked;
 } EventData;
 
 /**
@@ -913,19 +915,38 @@ event_forward_func (GstPad * pad, EventData * evdata)
     gst_object_unref (peer);
   }
 
-  evdata->result &= ret;
-
   if (ret == FALSE) {
     if (GST_EVENT_TYPE (evdata->event) == GST_EVENT_SEEK)
       GST_ERROR_OBJECT (pad, "Event %" GST_PTR_FORMAT " failed", evdata->event);
-    else
-      GST_INFO_OBJECT (pad, "Event %" GST_PTR_FORMAT " failed", evdata->event);
+
+    if (GST_EVENT_TYPE (evdata->event) == GST_EVENT_SEEK) {
+      GstQuery *seeking = gst_query_new_seeking (GST_FORMAT_TIME);
+
+      if (gst_pad_query (peer, seeking)) {
+        gboolean seekable;
+
+        gst_query_parse_seeking (seeking, NULL, &seekable, NULL, NULL);
+
+        if (seekable == FALSE) {
+          GST_INFO_OBJECT (pad,
+              "Source not seekable, We failed but it does not matter!");
+
+          ret = TRUE;
+        }
+      } else {
+        GST_ERROR_OBJECT (pad, "Query seeking FAILED");
+      }
+    }
 
     if (evdata->flush) {
       padpriv->pending_flush_start = FALSE;
       padpriv->pending_flush_stop = FALSE;
     }
+  } else {
+    evdata->one_actually_seeked = TRUE;
   }
+
+  evdata->result &= ret;
 
   /* Always send to all pads */
   return FALSE;
@@ -941,7 +962,7 @@ _set_flush_pending (GstAggregator * self, GstAggregatorPad * pad,
   return TRUE;
 }
 
-static gboolean
+static EventData
 _forward_event_to_all_sinkpads (GstAggregator * self, GstEvent * event,
     gboolean flush)
 {
@@ -950,6 +971,7 @@ _forward_event_to_all_sinkpads (GstAggregator * self, GstEvent * event,
   evdata.event = event;
   evdata.result = TRUE;
   evdata.flush = flush;
+  evdata.one_actually_seeked = FALSE;
 
   /* We first need to set all pads as flushing in a first pass
    * as flush_start flush_stop is sometimes sent synchronously
@@ -962,7 +984,7 @@ _forward_event_to_all_sinkpads (GstAggregator * self, GstEvent * event,
 
   gst_event_unref (event);
 
-  return evdata.result;
+  return evdata;
 }
 
 static gboolean
@@ -974,7 +996,7 @@ _do_seek (GstAggregator * self, GstEvent * event)
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gboolean flush;
-  gboolean res;
+  EventData evdata;
   GstAggregatorPrivate *priv = self->priv;
 
   gst_event_parse_seek (event, &rate, &fmt, &flags, &start_type,
@@ -993,22 +1015,23 @@ _do_seek (GstAggregator * self, GstEvent * event)
       stop_type, stop, NULL);
 
   /* forward the seek upstream */
-  res = _forward_event_to_all_sinkpads (self, event, flush);
+  evdata = _forward_event_to_all_sinkpads (self, event, flush);
   event = NULL;
 
-  if (!res) {
+  if (!evdata.result || !evdata.one_actually_seeked) {
     g_atomic_int_set (&priv->flush_seeking, FALSE);
     g_atomic_int_set (&priv->pending_flush_start, FALSE);
   }
 
-  GST_INFO_OBJECT (self, "seek done, result: %d", res);
+  GST_INFO_OBJECT (self, "seek done, result: %d", evdata.result);
 
-  return res;
+  return evdata.result;
 }
 
 static gboolean
 _src_event (GstAggregator * self, GstEvent * event)
 {
+  EventData evdata;
   gboolean res = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -1037,7 +1060,8 @@ _src_event (GstAggregator * self, GstEvent * event)
     }
   }
 
-  return _forward_event_to_all_sinkpads (self, event, FALSE);
+  evdata = _forward_event_to_all_sinkpads (self, event, FALSE);
+  res = evdata.result;
 
 done:
   return res;
