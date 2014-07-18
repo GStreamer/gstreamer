@@ -745,6 +745,7 @@ gnl_composition_init (GnlComposition * comp)
   priv->objects_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   priv->mcontext = g_main_context_new ();
+  g_main_context_set_dispatches_per_iteration (priv->mcontext, 1);
   g_mutex_init (&priv->mcontext_lock);
 
   priv->pending_io = g_hash_table_new (g_direct_hash, g_direct_equal);
