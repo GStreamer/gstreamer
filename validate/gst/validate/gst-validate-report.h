@@ -183,8 +183,8 @@ void               gst_validate_report_init (void);
 GstValidateIssue  *gst_validate_issue_from_id (GstValidateIssueId issue_id);
 GstValidateIssueId gst_validate_issue_get_id (GstValidateIssue * issue);
 void               gst_validate_issue_register (GstValidateIssue * issue);
-GstValidateIssue  *gst_validate_issue_new (GstValidateIssueId issue_id, gchar * summary,
-					   gchar * description,
+GstValidateIssue  *gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
+					   const gchar * description,
 					   GstValidateReportLevel default_level);
 
 GstValidateReport *gst_validate_report_new (GstValidateIssue * issue,

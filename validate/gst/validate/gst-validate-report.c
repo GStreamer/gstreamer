@@ -62,14 +62,14 @@ gst_validate_issue_get_id (GstValidateIssue * issue)
 }
 
 GstValidateIssue *
-gst_validate_issue_new (GstValidateIssueId issue_id, gchar * summary,
-    gchar * description, GstValidateReportLevel default_level)
+gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
+    const gchar * description, GstValidateReportLevel default_level)
 {
   GstValidateIssue *issue = g_slice_new (GstValidateIssue);
 
   issue->issue_id = issue_id;
-  issue->summary = summary;
-  issue->description = description;
+  issue->summary = g_strdup (summary);
+  issue->description = g_strdup (description);
   issue->default_level = default_level;
   issue->repeat = FALSE;
 
