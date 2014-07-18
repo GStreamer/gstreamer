@@ -85,6 +85,51 @@
  * </para>
  * </refsect2>
  * <refsect2>
+ * <title>Example: Using an encoder preset with a profile</title>
+ * <para>
+ * |[
+ * #include <gst/pbutils/encoding-profile.h>
+ * ...
+ * GstEncodingProfile *
+ * create_ogg_theora_profile(void)
+ *{
+ *  GstEncodingVideoProfile *v;
+ *  GstEncodingAudioProfile *a;
+ *  GstEncodingContainerProfile *prof;
+ *  GstCaps *caps;
+ *  GstPreset *preset;
+ *
+ *  caps = gst_caps_from_string ("application/ogg");
+ *  prof = gst_encoding_container_profile_new ("Ogg audio/video",
+ *     "Standard OGG/THEORA/VORBIS",
+ *     caps, NULL);
+ *  gst_caps_unref (caps);
+ *
+ *  preset = GST_PRESET (gst_element_factory_make ("theoraenc", "theorapreset"));
+ *  g_object_set (preset, "bitrate", 1000, NULL);
+ *  // The preset will be saved on the filesystem,
+ *  // so try to use a descriptive name
+ *  gst_preset_save_preset (preset, "theora_bitrate_preset");
+ *  gst_object_unref (preset);
+ *
+ *  caps = gst_caps_from_string ("video/x-theora");
+ *  v = gst_encoding_video_profile_new (caps, "theorapreset", NULL, 0);
+ *  gst_encoding_container_profile_add_profile (prof, (GstEncodingProfile*) v);
+ *  gst_caps_unref (caps);
+ *
+ *  caps = gst_caps_from_string ("audio/x-vorbis");
+ *  a = gst_encoding_audio_profile_new (caps, NULL, NULL, 0);
+ *  gst_encoding_container_profile_add_profile (prof, (GstEncodingProfile*) a);
+ *  gst_caps_unref (caps);
+ *
+ *  return (GstEncodingProfile*) prof;
+ *}
+ *
+ *
+ * ]|
+ * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Example: Listing categories, targets and profiles</title>
  * <para>
  * |[
