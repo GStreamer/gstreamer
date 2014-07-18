@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2013 Stefan Sauer <ensonic@users.sf.net>
  *
- * gsttracer.h: tracing subsystem
+ * gsttracer.c: tracer base class
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,28 +21,20 @@
 
 /**
  * SECTION:gsttracer
- * @short_description: Tracing subsystem
- *
- * The tracing subsystem provides hooks in the core library and API for modules
- * to attach to them.
+ * @short_description: Tracing base class
  *
  * Tracing modules will subclass #GstTracer and register through
  * gst_tracer_register(). Modules can attach to various hook-types - see
  * #GstTracerHook. When invoked they receive hook specific contextual data, 
  * which they must not modify.
- *
- * The user can activate tracers by setting the environment variable GST_TRACE
- * to a ';' separated list of tracers.
  */
+
+#define GST_USE_UNSTABLE_API
 
 #include "gst_private.h"
 #include "gstenumtypes.h"
-#include "gstregistry.h"
 #include "gsttracer.h"
 #include "gsttracerfactory.h"
-#include "gstutils.h"
-
-#ifndef GST_DISABLE_GST_DEBUG
 
 GST_DEBUG_CATEGORY_EXTERN (tracer_debug);
 #define GST_CAT_DEFAULT tracer_debug
@@ -138,7 +130,7 @@ gst_tracer_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
+void
 gst_tracer_invoke (GstTracer * self, GstTracerHookId hid,
     GstTracerMessageId mid, va_list var_args)
 {
@@ -206,115 +198,6 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
   return TRUE;
 }
 
-/* tracing helpers */
-
-gboolean _priv_tracer_enabled = FALSE;
-/* TODO(ensonic): use GPtrArray ? */
-GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST] = { NULL, };
-
-/* Initialize the debugging system */
-void
-_priv_gst_tracer_init (void)
-{
-  const gchar *env = g_getenv ("GST_TRACE");
-
-  if (env != NULL && *env != '\0') {
-    GstRegistry *registry = gst_registry_get ();
-    GstPluginFeature *feature;
-    GstTracerFactory *factory;
-    GstTracerHook mask;
-    GstTracer *tracer;
-    gchar **t = g_strsplit_set (env, ";", 0);
-    gint i = 0, j;
-    gchar *params;
-
-    GST_INFO ("enabling tracers: '%s'", env);
-
-    while (t[i]) {
-      // check t[i] for params
-      if ((params = strchr (t[i], '('))) {
-        gchar *end = strchr (&params[1], ')');
-        *params = '\0';
-        params++;
-        if (end)
-          *end = '\0';
-      } else {
-        params = NULL;
-      }
-
-      GST_INFO ("checking tracer: '%s'", t[i]);
-
-      if ((feature = gst_registry_lookup_feature (registry, t[i]))) {
-        factory = GST_TRACER_FACTORY (gst_plugin_feature_load (feature));
-        if (factory) {
-          GST_INFO_OBJECT (factory, "creating tracer: type-id=%u",
-              (guint) factory->type);
-
-          tracer = g_object_new (factory->type, "params", params, NULL);
-          g_object_get (tracer, "mask", &mask, NULL);
-
-          if (mask) {
-            /* add to lists according to mask */
-            j = 0;
-            while (mask && (j < GST_TRACER_HOOK_ID_LAST)) {
-              if (mask & 1) {
-                _priv_tracers[j] = g_list_prepend (_priv_tracers[j],
-                    gst_object_ref (tracer));
-                GST_WARNING_OBJECT (tracer, "added tracer to hook %d", j);
-              }
-              mask >>= 1;
-              j++;
-            }
-
-            _priv_tracer_enabled = TRUE;
-          } else {
-            GST_WARNING_OBJECT (tracer,
-                "tracer with zero mask won't have any effect");
-          }
-          gst_object_unref (tracer);
-        } else {
-          GST_WARNING_OBJECT (feature,
-              "loading plugin containing feature %s failed!", t[i]);
-        }
-      } else {
-        GST_WARNING ("no tracer named '%s'", t[i]);
-      }
-      i++;
-    }
-    g_strfreev (t);
-  }
-}
-
-void
-_priv_gst_tracer_deinit (void)
-{
-  gint i;
-  GList *node;
-
-  /* shutdown tracers for final reports */
-  for (i = 0; i < GST_TRACER_HOOK_ID_LAST; i++) {
-    for (node = _priv_tracers[i]; node; node = g_list_next (node)) {
-      gst_object_unref (node->data);
-    }
-    g_list_free (_priv_tracers[i]);
-    _priv_tracers[i] = NULL;
-  }
-  _priv_tracer_enabled = FALSE;
-}
-
-void
-gst_tracer_dispatch (GstTracerHookId hid, GstTracerMessageId mid, ...)
-{
-  va_list var_args;
-  GList *node;
-
-  for (node = _priv_tracers[hid]; node; node = g_list_next (node)) {
-    va_start (var_args, mid);
-    gst_tracer_invoke (node->data, hid, mid, var_args);
-    va_end (var_args);
-  }
-}
-
 /* tracing module helpers */
 
 void
@@ -328,5 +211,3 @@ gst_tracer_log_trace (GstStructure * s)
   g_free (data);
   gst_structure_free (s);
 }
-
-#endif /* GST_DISABLE_GST_DEBUG */

@@ -25,7 +25,6 @@
 #include <gst/gstcaps.h>
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
-#include <gst/gsttracer.h>
 
 G_BEGIN_DECLS
 

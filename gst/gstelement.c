@@ -90,7 +90,7 @@
 #include "gstutils.h"
 #include "gstinfo.h"
 #include "gstquark.h"
-#include "gsttracer.h"
+#include "gsttracerutils.h"
 #include "gstvalue.h"
 #include "gst-i18n-lib.h"
 #include "glib-compat-private.h"

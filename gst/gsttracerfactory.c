@@ -29,7 +29,6 @@
 
 #include "gst_private.h"
 #include "gstinfo.h"
-#include "gsttracer.h"
 #include "gsttracerfactory.h"
 #include "gstregistry.h"
 
