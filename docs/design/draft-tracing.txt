@@ -41,14 +41,14 @@ plugins:  GST_TRACE="log(events,buffers);stats(all)".
 When then plugins are loaded, we'll add them to certain hooks according to which
 they are interested in.
 
-Right now tracing info is logged as structures to the TRACE level. Idea: Another
-env var GST_TRACE_CHANNEL could be used to send the tracing to a file or a
-socket. See https://bugzilla.gnome.org/show_bug.cgi?id=733188 for discussion on
-these environment variables.
+Right now tracing info is logged as GstStructures to the TRACE level. 
+Idea: Another env var GST_TRACE_CHANNEL could be used to send the tracing to a
+file or a socket. See https://bugzilla.gnome.org/show_bug.cgi?id=733188 for
+discussion on these environment variables.
 
 Hook api
 --------
-e.g. gst_pad_push() would become:
+We'll wrap interesting api calls with two macros, e.g. gst_pad_push():
 
 GstFlowReturn
 gst_pad_push (GstPad * pad, GstBuffer * buffer)
@@ -83,7 +83,7 @@ In addition to api hooks we should also provide timer hooks. Interval timers are
 useful to get e.g. resource usage snapshots. Also absolute timers might make
 sense. All this could be implemented with a clock thread.
 
-Hooks
+Hooks (* already implemented)
 -----
 - gst_bin_add
 - gst_bin_remove
@@ -117,10 +117,11 @@ Most trace plugins will log data to a trace channel.
 instance destruction
 Plugins can output results and release data. This would ideally be done at the
 end of the applications, but gst_deinit() is not mandatory. gst_tracelib was
-using a gcc_destructor
+using a gcc_destructor. Ideally tracer modules log data as they have it and
+leave aggregation to a tool that processed the log.
 
-tracer factory
---------------
+tracer event classes (not implemented yet)
+--------------------
 tracers will describe the data the log here (gst_tracer_class_add_event_class).
 Most tracers will log some kind of 'events' : a data transfer, an event,
 a message, a query or a measurement.
@@ -170,11 +171,10 @@ The log would have a bunch of streams. A stream has a reference to the
 GstTraceEventClass.
 
 Frontends can:
-- do a events over time histogram
+- do an events over time histogram
 - plot curves of values over time or deltas
 - show gauges
 - collect statistics (min, max, avg, ...)
-
 
 Plugins ideas
 =============
@@ -187,7 +187,7 @@ latency
 - send custom event on buffer flow at source elements
 - catch events on event transfer at sink elements
 
-meminfo
+meminfo (not yet implemented)
 -------
 - register to an interval-timer hook.
 - call mallinfo() and log memory usage
@@ -197,7 +197,7 @@ rusage
 - register to an interval-timer hook.
 - call getrusage() and log resource usage
 
-dbus
+dbus (not yet implemented)
 ----
 - provide a dbus iface to announce applications that are traced
 - tracing UIs can use the dbus iface to find the channels where logging and
@@ -207,7 +207,7 @@ dbus
   upon which the tracing UI can start reading from the log channels, this avoid
   missing some data
 
-topology
+topology (not yet implemented)
 --------
 - register to pipeline topology hooks
 - tracing UIs can show a live pipeline graph
@@ -217,24 +217,24 @@ stats
 - register to buffer, event, message and query flow
 - tracing apps can do e.g. statistics
 
-UI
-==
+User interfaces
+===============
 
 gst-debug-viewer
 ----------------
-gst-debug-viewer could be given the trace log in addition to the debug log.
-Alternatively it would show a dialog that shows all local apps (if the dbus
-plugin is loaded) and read the log streams from the sockets/files that are
-configured for the app.
+gst-debug-viewer could be given the trace log in addition to the debug log (or a
+combined log). Alternatively it would show a dialog that shows all local apps
+(if the dbus plugin is loaded) and read the log streams from the sockets/files
+that are configured for the app.
 
 gst-tracer
 ----------
-Counterpart of gst-tracelib-ui
+Counterpart of gst-tracelib-ui.
 
 gst-stats
 ---------
 A terminal app that shows summary/running stats like the summary gst-tracelib
-shows at the end of a run.
+shows at the end of a run. Currently only shows an aggregated status.
 
 live-graphers
 -------------
@@ -259,13 +259,21 @@ Problems / Open items
       active
     - should the tracer call gst_debug_category_set_threshold() to ensure things
       work, even though the levels don't make a lot of sense here
-  - make logging a tracer
+  - make logging a tracer (a hook in gst_debug_log_valist, move
+    gst_debug_log_default() to the tracer module)
     - log all debug log to the tracer log, some of the current logging
       statements can be replaced by generic logging as shown in the log-tracer
+    - add tools/gst-debug to extract a human readable debug log from the trace
+      log
 
 - when hooking into a timer, should we just have some predefined intervals?
+  - can we add a tracer module that registers the timer hook? then we could do
+      GST_TRACER="timer(10ms);rusage"
+    right now the tracer hooks are defined as an enum though.
 - when connecting to a running app, we can't easily get the 'current' state if
-  logging is using a socket, as past events are not stored
+  logging is using a socket, as past events are not explicitly stored, we could
+  determine the current topology and emit events with GST_CLOCK_TIME_NONE as ts
+  to indicate that the events are synthetic.
 
 Try it
 ======
@@ -275,6 +283,9 @@ GST_DEBUG="GST_TRACER:7,GST_BUFFER*:7,GST_EVENT:7,GST_MESSAGE:7" GST_TRACE=log g
 GST_DEBUG="GST_TRACER:7" GST_TRACE="stats;rusage" gst-launch-1.0 2>trace.log fakesrc num-buffers=10 sizetype=fixed ! queue ! fakesink
 gst-stats-1.0 trace.log
 - print some pipeline stats on exit
+
+grep "proc-rusage" trace.log | cut -c154- | sed -e 's#ts=(guint64)##' -e 's#cpuload=(uint)##' -e 's#time=(guint64)##' -e 's#;##'
+
 
 GST_DEBUG="GST_TRACER:7" GST_TRACE=latency gst-launch-1.0 audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! autoaudiosink
 - print processing latencies
