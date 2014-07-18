@@ -94,7 +94,7 @@
  * GList *categories, *tmpc;
  * GList *targets, *tmpt;
  * ...
- * categories = gst_encoding_target_list_available_categories();
+ * categories = gst_encoding_list_available_categories ();
  *
  * ... Show available categories to user ...
  *
@@ -103,7 +103,7 @@
  *
  *   ... and we can list all targets within that category ...
  *
- *   targets = gst_encoding_target_list_all (category);
+ *   targets = gst_encoding_list_all_targets (category);
  *
  *   ... and show a list to our users ...
  *
@@ -1187,7 +1187,7 @@ gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
  * @info: (transfer none): The #GstDiscovererInfo to read from
  *
  * Creates a #GstEncodingProfile matching the formats from the given
- * #GstEncodingProfile. Streams other than audio or video (eg,
+ * #GstDiscovererInfo. Streams other than audio or video (eg,
  * subtitles), are currently ignored.
  *
  * Returns: (transfer full): The new #GstEncodingProfile or %NULL.
