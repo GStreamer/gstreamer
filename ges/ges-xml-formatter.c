@@ -391,6 +391,7 @@ _parse_layer (GMarkupParseContext * context, const gchar * element_name,
       goto wrong_properties;
   }
 
+  errno = 0;
   priority = g_ascii_strtoll (strprio, NULL, 10);
   if (errno)
     goto convertion_failed;
@@ -451,6 +452,7 @@ _parse_clip (GMarkupParseContext * context,
   if (!g_type_is_a (type, GES_TYPE_CLIP))
     goto wrong_type;
 
+  errno = 0;
   track_types = g_ascii_strtoll (strtrack_types, NULL, 10);
   if (errno)
     goto convertion_failed;
