@@ -129,7 +129,7 @@ static void gst_hls_demux_decrypt_end (GstHLSDemux * demux);
 #define gst_hls_demux_parent_class parent_class
 G_DEFINE_TYPE (GstHLSDemux, gst_hls_demux, GST_TYPE_BIN);
 
-#define GST_HLS_DEMUX_STATISTIC_MSG_NAME "hlsdemux-statistics"
+#define STATISTICS_MESSAGE_NAME "adaptive-streaming-statistics"
 
 static void
 gst_hls_demux_dispose (GObject * obj)
@@ -583,14 +583,6 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return gst_pad_event_default (pad, parent, event);
 }
 
-static void
-gst_hls_demux_post_stat_msg (GstHLSDemux * demux, GstStructure * structure)
-{
-  GstMessage *message =
-      gst_message_new_element (GST_OBJECT_CAST (demux), structure);
-  gst_element_post_message (GST_ELEMENT_CAST (demux), message);
-}
-
 static gboolean
 gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -602,7 +594,6 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (event->type) {
     case GST_EVENT_EOS:{
-      GstStructure *stat;
       gchar *playlist = NULL;
 
       if (demux->playlist == NULL) {
@@ -612,12 +603,6 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       GST_DEBUG_OBJECT (demux,
           "Got EOS on the sink pad: main playlist fetched");
-
-      stat =
-          gst_structure_new (GST_HLS_DEMUX_STATISTIC_MSG_NAME,
-          "time-of-first-playlist", GST_TYPE_CLOCK_TIME,
-          gst_util_get_timestamp (), NULL);
-      gst_hls_demux_post_stat_msg (demux, stat);
 
       query = gst_query_new_uri ();
       ret = gst_pad_peer_query (demux->sinkpad, query);
@@ -638,6 +623,17 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         g_free (redirect_uri);
       }
       gst_query_unref (query);
+
+      gst_element_post_message (GST_ELEMENT_CAST (demux),
+          gst_message_new_element (GST_OBJECT_CAST (demux),
+              gst_structure_new (STATISTICS_MESSAGE_NAME,
+                  "manifest-uri", G_TYPE_STRING,
+                  gst_m3u8_client_get_uri (demux->client), "uri", G_TYPE_STRING,
+                  gst_m3u8_client_get_uri (demux->client),
+                  "manifest-download-start", GST_TYPE_CLOCK_TIME,
+                  GST_CLOCK_TIME_NONE,
+                  "manifest-download-stop", GST_TYPE_CLOCK_TIME,
+                  gst_util_get_timestamp (), NULL)));
 
       playlist = gst_hls_src_buf_to_utf8_playlist (demux->playlist);
       demux->playlist = NULL;
@@ -1521,7 +1517,6 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
   gchar *playlist;
   gboolean main_checked = FALSE, updated = FALSE;
   const gchar *uri;
-  GstStructure *stat;
 
 retry:
   uri = gst_m3u8_client_get_current_uri (demux->client);
@@ -1580,11 +1575,6 @@ retry:
     }
   }
 
-  stat = gst_structure_new (GST_HLS_DEMUX_STATISTIC_MSG_NAME,
-      "time-to-playlist", GST_TYPE_CLOCK_TIME,
-      download->download_stop_time - download->download_start_time, NULL);
-  gst_hls_demux_post_stat_msg (demux, stat);
-
   /* Set the base URI of the playlist to the redirect target if any */
   GST_M3U8_CLIENT_LOCK (demux->client);
   g_free (demux->client->current->uri);
@@ -1600,12 +1590,12 @@ retry:
 
   buf = gst_fragment_get_buffer (download);
   playlist = gst_hls_src_buf_to_utf8_playlist (buf);
-  g_object_unref (download);
 
   if (playlist == NULL) {
     GST_WARNING_OBJECT (demux, "Couldn't validate playlist encoding");
     g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_WRONG_TYPE,
         "Couldn't validate playlist encoding");
+    g_object_unref (download);
     return FALSE;
   }
 
@@ -1614,8 +1604,22 @@ retry:
     GST_WARNING_OBJECT (demux, "Couldn't update playlist");
     g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
         "Couldn't update playlist");
+    g_object_unref (download);
     return FALSE;
   }
+
+  gst_element_post_message (GST_ELEMENT_CAST (demux),
+      gst_message_new_element (GST_OBJECT_CAST (demux),
+          gst_structure_new (STATISTICS_MESSAGE_NAME,
+              "manifest-uri", G_TYPE_STRING,
+              gst_m3u8_client_get_uri (demux->client), "uri", G_TYPE_STRING,
+              gst_m3u8_client_get_current_uri (demux->client),
+              "manifest-download-start", GST_TYPE_CLOCK_TIME,
+              download->download_start_time,
+              "manifest-download-stop", GST_TYPE_CLOCK_TIME,
+              download->download_stop_time, NULL)));
+
+  g_object_unref (download);
 
   /* If it's a live source, do not let the sequence number go beyond
    * three fragments before the end of the list */
@@ -1703,13 +1707,13 @@ retry_failover_protection:
   demux->new_playlist = TRUE;
 
   if (gst_hls_demux_update_playlist (demux, FALSE, NULL)) {
-    GstStructure *s;
-
-    s = gst_structure_new ("playlist",
-        "uri", G_TYPE_STRING, gst_m3u8_client_get_current_uri (demux->client),
-        "bitrate", G_TYPE_INT, new_bandwidth, NULL);
     gst_element_post_message (GST_ELEMENT_CAST (demux),
-        gst_message_new_element (GST_OBJECT_CAST (demux), s));
+        gst_message_new_element (GST_OBJECT_CAST (demux),
+            gst_structure_new (STATISTICS_MESSAGE_NAME,
+                "manifest-uri", G_TYPE_STRING,
+                gst_m3u8_client_get_uri (demux->client), "uri", G_TYPE_STRING,
+                gst_m3u8_client_get_current_uri (demux->client), "bitrate",
+                G_TYPE_INT, new_bandwidth, NULL)));
   } else {
     GList *failover = NULL;
 
@@ -1994,6 +1998,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   gint64 range_start, range_end;
   const gchar *key = NULL;
   const guint8 *iv = NULL;
+  GstClockTime download_start_time = 0;
 
   *end_of_playlist = FALSE;
   if (!gst_m3u8_client_get_next_fragment (demux->client, &discont,
@@ -2056,6 +2061,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
       gst_pad_push_event (demux->src_srcpad, gst_event_new_flush_stop (TRUE));
 
       demux->download_start_time = g_get_monotonic_time ();
+      download_start_time = gst_util_get_timestamp ();
       gst_element_sync_state_with_parent (demux->src);
 
       /* wait for the fragment to be completely downloaded */
@@ -2081,17 +2087,22 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
       }
     }
   } else {
-    GstStructure *stat;
-
     gst_element_set_state (demux->src, GST_STATE_READY);
     if (demux->segment.rate > 0)
       demux->segment.position += demux->current_duration;
 
-    stat = gst_structure_new (GST_HLS_DEMUX_STATISTIC_MSG_NAME,
-        "time-to-download-fragment", GST_TYPE_CLOCK_TIME,
-        demux->download_total_time,
-        "fragment-size", G_TYPE_UINT64, demux->download_total_bytes, NULL);
-    gst_hls_demux_post_stat_msg (demux, stat);
+    gst_element_post_message (GST_ELEMENT_CAST (demux),
+        gst_message_new_element (GST_OBJECT_CAST (demux),
+            gst_structure_new (STATISTICS_MESSAGE_NAME,
+                "manifest-uri", G_TYPE_STRING,
+                gst_m3u8_client_get_uri (demux->client), "uri", G_TYPE_STRING,
+                next_fragment_uri, "fragment-start-time",
+                GST_TYPE_CLOCK_TIME, download_start_time,
+                "fragment-stop-time", GST_TYPE_CLOCK_TIME,
+                gst_util_get_timestamp (), "fragment-size", G_TYPE_UINT64,
+                demux->download_total_bytes, "fragment-download-time",
+                GST_TYPE_CLOCK_TIME, demux->download_total_time * GST_USECOND,
+                NULL)));
   }
 
   if (demux->last_ret != GST_FLOW_OK)
