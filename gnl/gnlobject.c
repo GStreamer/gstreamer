@@ -568,9 +568,9 @@ gnl_object_change_state (GstElement * element, GstStateChange transition)
       /* Going to READY and if we are not in a composition, we need to make
        * sure that the object positioning state is properly commited  */
       if (parent) {
-        if (!GNL_OBJECT_IS_COMPOSITION (parent) &&
+        if (g_strcmp0 (gst_element_get_name (GST_ELEMENT (parent)), "current-bin") &&
             !GNL_OBJECT_IS_COMPOSITION (GNL_OBJECT (element))) {
-          GST_DEBUG ("Adding gnlobject to something that is not a composition,"
+          GST_INFO ("Adding gnlobject to something that is not a composition,"
               " commiting ourself");
           gnl_object_commit (GNL_OBJECT (element), FALSE);
         }
