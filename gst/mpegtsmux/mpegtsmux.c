@@ -167,7 +167,7 @@ static GstFlowReturn mpegtsmux_push_packets (MpegTsMux * mux, gboolean force);
 static gboolean new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf,
     gint64 new_pcr);
 
-static void mpegtsdemux_prepare_srcpad (MpegTsMux * mux);
+static void mpegtsmux_prepare_srcpad (MpegTsMux * mux);
 GstFlowReturn mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
     GstCollectData * cdata, GstBuffer * buf, GstBuffer ** outbuf,
     gpointer user_data);
@@ -182,7 +182,7 @@ static void mpegtsmux_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn mpegtsmux_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean mpegtsmux_send_event (GstElement * element, GstEvent * event);
-static void mpegtsdemux_set_header_on_caps (MpegTsMux * mux);
+static void mpegtsmux_set_header_on_caps (MpegTsMux * mux);
 static gboolean mpegtsmux_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
@@ -1105,7 +1105,7 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       return ret;
 
-    mpegtsdemux_prepare_srcpad (mux);
+    mpegtsmux_prepare_srcpad (mux);
 
     mux->first = FALSE;
   }
@@ -1343,7 +1343,7 @@ new_packet_common_init (MpegTsMux * mux, GstBuffer * buf, guint8 * data,
       }
       mux->streamheader = g_list_append (mux->streamheader, hbuf);
     } else if (mux->streamheader) {
-      mpegtsdemux_set_header_on_caps (mux);
+      mpegtsmux_set_header_on_caps (mux);
       mux->streamheader_sent = TRUE;
     }
   }
@@ -1632,7 +1632,7 @@ alloc_packet_cb (GstBuffer ** _buf, void *user_data)
 }
 
 static void
-mpegtsdemux_set_header_on_caps (MpegTsMux * mux)
+mpegtsmux_set_header_on_caps (MpegTsMux * mux)
 {
   GstBuffer *buf;
   GstStructure *structure;
@@ -1666,7 +1666,7 @@ mpegtsdemux_set_header_on_caps (MpegTsMux * mux)
 }
 
 static void
-mpegtsdemux_prepare_srcpad (MpegTsMux * mux)
+mpegtsmux_prepare_srcpad (MpegTsMux * mux)
 {
   GstSegment seg;
   /* we are not going to seek */
