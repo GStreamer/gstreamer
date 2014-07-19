@@ -1,9 +1,26 @@
-=== release 1.3.91 ===
+=== release 1.4.0 ===
 
-2014-07-11  Sebastian Dröge <slomo@coaxion.net>
+2014-07-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.91
+	  releasing 1.4.0
+
+2014-07-16 20:39:42 +0900  Hyunjun Ko <zzoonis@gmail.com>
+
+	* gst/rtsp-server/rtsp-media.h:
+	  media: correct misspelled words in description
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733244
+
+=== release 1.3.91 ===
+
+2014-07-11 12:19:08 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.3.91
 
 2014-07-10 17:37:45 +0200  Wim Taymans <wtaymans@redhat.com>
 
