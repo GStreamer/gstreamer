@@ -1,15 +1,16 @@
 # Swedish translation for gst-plugins-ugly.
-# Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+# Copyright (C) 2007-2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-ugly package.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
+"Project-Id-Version: gst-plugins-ugly 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2014-07-11 11:09+0200\n"
-"PO-Revision-Date: 2009-03-10 16:12+0100\n"
-"Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
+"PO-Revision-Date: 2014-07-11 02:52+0200\n"
+"Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
@@ -48,16 +49,16 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Kunde ej läsa dvd. Detta kan vara för att dvd:n är krypterad och ett dvd-"
+"avkrypteringsbibliotek inte är installerat."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Kunde inte öppna dvd"
+msgstr "Kunde inte läsa dvd."
 
-#, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Misslyckades med att konfigurera LAME-kodaren. Kontrollera dina "
+"Misslyckades med att konfigurera LAME mp3 ljudkodare. Kontrollera dina "
 "kodningsparametrar."
 
 #, c-format
@@ -78,18 +79,3 @@ msgstr "Den här strömmen innehåller inget data."
 
 msgid "Internal data stream error."
 msgstr "Fel i intern dataström."
-
-#~ msgid "Invalid title information on DVD."
-#~ msgstr "Ogiltig titelinformation på dvd."
-
-#~ msgid "Could not read title information for DVD."
-#~ msgstr "Kunde inte läsa titelinformation för dvd."
-
-#~ msgid "Failed to open DVD device '%s'."
-#~ msgstr "Misslyckades med att öppna dvd-enheten \"%s\"."
-
-#~ msgid "Failed to set PGC based seeking."
-#~ msgstr "Misslyckades med att ställa in PGC-baserad spolning."
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Den här filen är krypterad och kan inte spelas upp."
