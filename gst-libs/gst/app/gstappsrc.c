@@ -544,10 +544,18 @@ gst_app_src_dispose (GObject * obj)
   GstAppSrc *appsrc = GST_APP_SRC_CAST (obj);
   GstAppSrcPrivate *priv = appsrc->priv;
 
+  GST_OBJECT_LOCK (appsrc);
   if (priv->caps) {
     gst_caps_unref (priv->caps);
     priv->caps = NULL;
   }
+  if (priv->notify) {
+    priv->notify (priv->user_data);
+  }
+  priv->user_data = NULL;
+  priv->notify = NULL;
+
+  GST_OBJECT_UNLOCK (appsrc);
   gst_app_src_flush_queued (appsrc);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
