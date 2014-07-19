@@ -3,7 +3,7 @@
   <description>Vorbis Tremor decoder</description>
   <filename>../../ext/vorbis/.libs/libgstivorbisdec.so</filename>
   <basename>libgstivorbisdec.so</basename>
-  <version>1.3.91</version>
+  <version>1.4.0</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

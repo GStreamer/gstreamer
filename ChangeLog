@@ -1,9 +1,170 @@
-=== release 1.3.91 ===
+=== release 1.4.0 ===
 
-2014-07-11  Sebastian Dröge <slomo@coaxion.net>
+2014-07-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.3.91
+	  releasing 1.4.0
+
+2014-07-18 21:19:03 -0400  Youness Alaoui <kakaroto@kakaroto.homelinux.net>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: Fix memory leak with callback notify not being called in dispose
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733386
+
+2014-07-19 12:29:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: Update translations
+
+2014-07-18 16:01:23 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst-libs/gst/pbutils/encoding-profile.c:
+	  encoding-profile: Add example for using encoder presets with profiles
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733349
+
+2014-07-18 15:46:05 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst-libs/gst/pbutils/encoding-profile.c:
+	  encoding-profile: Fix typos and old API in docs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733349
+
+2014-07-17 14:36:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* sys/xvimage/xvimagesink.c:
+	  xvimagesink: fix property description string
+	  Spotted by Josep Torra.
+
+2014-07-15 16:56:30 +0200  Piotr Drąg <piotrdrag@gmail.com>
+
+	* po/POTFILES.in:
+	  po: update POTFILES
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733207
+
+2014-07-12 10:33:30 +0530  Arun Raghavan <arun@accosted.net>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Fix filter property getter
+	  The switch-case set was incomplete.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733012
+
+=== release 1.3.91 ===
+
+2014-07-11 11:21:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.3.91
+
+2014-07-11 11:21:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2014-07-11 10:13:03 +0200  Edward Hervey <bilboed@bilboed.com>
 

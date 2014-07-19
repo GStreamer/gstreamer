@@ -1823,7 +1823,7 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Colorkey</NICK>
+<NICK>Draw Borders</NICK>
 <BLURB>Draw black borders to fill unused area in force-aspect-ratio mode.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
