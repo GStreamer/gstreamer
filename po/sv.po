@@ -1,5 +1,5 @@
 # Swedish messages for gstreamer.
-# Copyright © 2004-2014 Free Software Foundation, Inc.
+# Copyright (C) 2004-2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010, 2011.
@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.2.1\n"
+"Project-Id-Version: gstreamer 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:38+0200\n"
-"PO-Revision-Date: 2014-05-04 12:11+0100\n"
+"POT-Creation-Date: 2014-07-19 12:16+0200\n"
+"PO-Revision-Date: 2014-07-11 02:52+0200\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Print the GStreamer version"
-msgstr "Skriv ut Gstreamer-versionen"
+msgstr "Skriv ut GStreamer-versionen"
 
 msgid "Make all warnings fatal"
 msgstr "Gör alla varningar ödesdigra"
@@ -197,7 +197,7 @@ msgid "Could not perform seek on resource."
 msgstr "Kunde inte utföra spolning på resursen."
 
 msgid "Could not synchronize on resource."
-msgstr "Kunde inte synronisera på resursen."
+msgstr "Kunde inte synkronisera på resursen."
 
 msgid "Could not get/set settings from/on resource."
 msgstr "Kunde inte hämta/ställa in inställningar från/på resursen."
@@ -205,9 +205,8 @@ msgstr "Kunde inte hämta/ställa in inställningar från/på resursen."
 msgid "No space left on the resource."
 msgstr "Inget ledigt utrymme på resursen."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Inget ledigt utrymme på resursen."
+msgstr "Har ej befogenhet att använda resursen."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer stötte på ett allmänt strömfel."
@@ -480,10 +479,10 @@ msgid "codec the audio data is stored in"
 msgstr "komprimeringsmetod som dessa ljuddata lagras med"
 
 msgid "subtitle codec"
-msgstr "kodek för undertext"
+msgstr "omkodare för undertext"
 
 msgid "codec the subtitle data is stored in"
-msgstr "kodek som undertextdata lagrats med"
+msgstr "omkodare som undertextdata lagrats med"
 
 msgid "container format"
 msgstr "behållarformat"
@@ -533,35 +532,30 @@ msgstr "serienummer"
 msgid "serial number of track"
 msgstr "serienummer för spår"
 
-# Osäker.
 msgid "replaygain track gain"
 msgstr "uppspelningsförstärkning spårförstärkning"
 
 msgid "track gain in db"
 msgstr "spårförstärkning i db"
 
-# Osäker.
 msgid "replaygain track peak"
 msgstr "uppspelningsförstärkning spårtopp"
 
 msgid "peak of the track"
 msgstr "toppen för spåret"
 
-# Osäker.
 msgid "replaygain album gain"
 msgstr "uppspelningsförstärkning albumförstärkning"
 
 msgid "album gain in db"
 msgstr "albumförstärkning i db"
 
-# Osäker.
 msgid "replaygain album peak"
 msgstr "uppspelningsförstärkning albumtopp"
 
 msgid "peak of the album"
 msgstr "toppen för albumet"
 
-# Osäker.
 msgid "replaygain reference level"
 msgstr "referensnivå för uppspelningsförstärkning"
 
@@ -688,7 +682,7 @@ msgstr "förflyttningshastighet för geografisk plats"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr "förflyttningshastighet för fångstenheten när mediat skapas (i meter/s)"
+msgstr "förflyttningshastighet för fångstenheten när mediet skapas (i meter/s)"
 
 msgid "geo location movement direction"
 msgstr "förflyttningsriktning för geografisk plats"
@@ -698,7 +692,7 @@ msgid ""
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
-"indikerar riktningen som enheten förflyttas när mediat skapas. Det "
+"indikerar riktningen som enheten förflyttas när mediet skapas. Det "
 "representeras som grader i flyttalsrepresentation, 0 betyder geografiskt "
 "nordlig riktning och ökar medsols"
 
@@ -710,7 +704,7 @@ msgid ""
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
-"indikerar riktningen som enheten pekar mot när mediat skapas. Det "
+"indikerar riktningen som enheten pekar mot när mediet skapas. Det "
 "representeras som grader i flyttalsrepresentation, 0 betyder geografiskt "
 "nordlig riktning och ökar medsols"
 
@@ -719,7 +713,7 @@ msgid "show name"
 msgstr "visningsnamn"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr "Namn på tv-program/poddsändning/serie som mediat kommer från"
+msgstr "Namn på TV-program/poddsändning/serie som mediet kommer från"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
@@ -728,26 +722,26 @@ msgstr "visa sorteringsnamn"
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
-"Namn på tv-program/poddsändning/serie som mediat kommer från, för "
+"Namn på TV-program/poddsändning/serie som mediet kommer från, för "
 "sorteringsändamål"
 
 msgid "episode number"
 msgstr "avsnittsnummer"
 
 msgid "The episode number in the season the media is part of"
-msgstr "Avsnittsnumret i säsongen som mediat är en del av"
+msgstr "Avsnittsnumret i säsongen som mediet är en del av"
 
 msgid "season number"
 msgstr "säsongsnummer"
 
 msgid "The season number of the show the media is part of"
-msgstr "Säsongsnumret för programmet som mediat är en del av"
+msgstr "Säsongsnumret för programmet som mediet är en del av"
 
 msgid "lyrics"
 msgstr "låttexter"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr "Låttexter för mediat, används oftast för låtar"
+msgstr "Låttexter för mediet, används oftast för låtar"
 
 msgid "composer sortname"
 msgstr "sorteringsnamn för kompositör"
@@ -772,7 +766,7 @@ msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
-"Betyg angivit av en användare. Desto högre ranking, desto mer gillar "
+"Betyg angivit av en användare. Desto högre rankning, desto mer gillar "
 "användaren detta media"
 
 msgid "device manufacturer"
@@ -818,10 +812,10 @@ msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Information om människorna bakom en remix eller liknande tolkning"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "midi-bas-not"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Midi-not-nummer för ljudspåret."
 
 msgid ", "
 msgstr ", "
@@ -848,11 +842,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "länk har ingen källa [utgång=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "länk har ingen utgång [källa=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -872,11 +866,11 @@ msgstr "inget \"%s\"-element"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "oväntad referens \"%s\" - ignorerar"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "oväntad kontakt-referens \"%s\" - ignorerar"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -891,18 +885,18 @@ msgid "no source element for URI \"%s\""
 msgstr "inget källelement för URI:n \"%s\""
 
 msgid "syntax error"
-msgstr ""
+msgstr "syntaxfel"
 
 msgid "bin"
-msgstr ""
+msgstr "korg"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "angav tom korg \"%s\", inte tillåtet"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "ingen korg \"%s\", hoppar över"
+msgstr "ingen korg \"%s\", packar upp element"
 
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
@@ -1192,14 +1186,14 @@ msgstr "Förlopp: (%s) %s\n"
 
 #, c-format
 msgid "Missing element: %s\n"
-msgstr "Element saknas: \"%s\"\n"
+msgstr "Element saknas: %s\n"
 
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Fick kontext från elementet '%s': %s=%s\n"
+msgstr "Fick kontext från elementet \"%s\": %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
-msgstr "Utmatningstaggar (även känt som metadata)"
+msgstr "Mata ut taggar (även känt som metadata)"
 
 msgid "Output TOC (chapters and editions)"
 msgstr "Skriv ut INNEHÅLL (kapitel och utgåvor)"
@@ -1211,10 +1205,10 @@ msgid "Do not print any progress information"
 msgstr "Skriv inte ut någon förloppsinformation"
 
 msgid "Output messages"
-msgstr "Utmatningsmeddelanden"
+msgstr "Mata ut meddelanden"
 
 msgid "Do not output status information of TYPE"
-msgstr "Skriv inte ut statusinformation av TYP"
+msgstr "Mata inte ut statusinformation av TYP"
 
 msgid "TYPE1,TYPE2,..."
 msgstr "TYP1,TYP2,..."
@@ -1235,7 +1229,6 @@ msgstr "FEL: rörledningen kunde inte konstrueras: %s.\n"
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras.\n"
 
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VARNING: felaktig rörledning: %s\n"
@@ -1273,7 +1266,6 @@ msgstr "EOS vid avstängning aktiverad -- Tvingar EOS på rörledningen\n"
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
 msgstr "EOS vid avstängning aktiverad -- Väntar på EOS efter fel\n"
 
-# EOS = End Of Stream
 msgid "Waiting for EOS...\n"
 msgstr "Väntar på EOS...\n"
 
@@ -1286,7 +1278,6 @@ msgstr "Avbrott medan EOS väntades på: Stoppar rörledningen...\n"
 msgid "An error happened while waiting for EOS\n"
 msgstr "Ett fel inträffade vid väntan på EOS\n"
 
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 msgid "Execution ended after %"
 msgstr "Körning avslutades efter %"
 
@@ -1298,73 +1289,3 @@ msgstr "Ställer in rörledningen till NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Frigör rörledning ...\n"
-
-#~ msgid "link without source element"
-#~ msgstr "länk utan källelement"
-
-#~ msgid "link without sink element"
-#~ msgstr "länk utan utgångselement"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "inget element att länka URI:n \"%s\" till"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
-
-#~ msgid "maximum"
-#~ msgstr "maximum"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr ""
-#~ "Användning: gst-xmllaunch <fil.xml> [ element.egenskap=värde ... ]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "FEL: tolkning av xml-filen \"%s\" misslyckades.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "FEL: inget rörledningselement på översta nivån i filen \"%s\".\n"
-
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr "VARNING: endast ett element på översta nivån stöds just nu.\n"
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "FEL: kunde inte tolka kommandoradsargumentet %d: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "VARNING: elementet med namnet \"%s\" hittades inte.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Spara xml-representation av rörledningen i FIL och avsluta"
-
-#~ msgid "FILE"
-#~ msgstr "FIL"
-
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Installera inte signalhanterare för SIGUSR1 och SIGUSR2"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Fel vid återsökning av registret %s: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Fel vid återsökning av registret %s"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Internt GStreamer-fel: tillståndsändring misslyckades."
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Fel vid skrivning till filbeskrivaren \"%d\"."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Filbeskrivaren \"%d\" är ogiltig."
-
-#~ msgid "FREEING pipeline ...\n"
-#~ msgstr "FRIGÖR rörledning...\n"
-
-#~ msgid "original location of file as a URI"
-#~ msgstr "ursprunglig plats för filen som en URI"
-
-#~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
-#~ msgstr "Elementet \"%s\" har gått från PLAYING till PAUSED, avslutar.\n"
