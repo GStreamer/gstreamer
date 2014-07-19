@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 11:03+0200\n"
+"POT-Creation-Date: 2014-07-19 12:47+0200\n"
 "PO-Revision-Date: 2012-05-05 19:17+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -18,6 +18,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n>1;\n"
+
+msgid "Internal data stream error."
+msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
 
 msgid "Could not read title information for DVD."
 msgstr "Αδυναμία ανάγνωσης πληροφοριών τίτλου του DVD."
@@ -48,9 +54,6 @@ msgstr ""
 
 msgid "Failed to get fragment URL."
 msgstr ""
-
-msgid "Internal data stream error."
-msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
 
 msgid "Couldn't download fragments"
 msgstr ""

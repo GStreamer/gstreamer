@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 11:03+0200\n"
+"POT-Creation-Date: 2014-07-19 12:47+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,6 +15,12 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+msgid "Internal data stream error."
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
 
 #, fuzzy
 msgid "Could not read title information for DVD."
@@ -43,9 +49,6 @@ msgid "Couldn't get the Manifest's URI"
 msgstr ""
 
 msgid "Failed to get fragment URL."
-msgstr ""
-
-msgid "Internal data stream error."
 msgstr ""
 
 msgid "Couldn't download fragments"

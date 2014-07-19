@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 11:03+0200\n"
+"POT-Creation-Date: 2014-07-19 12:47+0200\n"
 "PO-Revision-Date: 2013-09-18 10:05+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -21,6 +21,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Gtranslator 2.91.6\n"
+
+msgid "Internal data stream error."
+msgstr "Chyba proudu vnitřních dat."
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
 
 msgid "Could not read title information for DVD."
 msgstr "Nezdařilo se přečtení informací o titulu DVD."
@@ -50,9 +56,6 @@ msgstr "Nelze získat adresu URI prohlášení."
 
 msgid "Failed to get fragment URL."
 msgstr "Selhalo získání adresy URL fragmentu."
-
-msgid "Internal data stream error."
-msgstr "Chyba proudu vnitřních dat."
 
 msgid "Couldn't download fragments"
 msgstr "Nelze stáhnout fragmenty"

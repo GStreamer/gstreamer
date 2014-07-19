@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 11:03+0200\n"
+"POT-Creation-Date: 2014-07-19 12:47+0200\n"
 "PO-Revision-Date: 2011-04-26 19:38+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -16,6 +16,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 0.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Internal data stream error."
+msgstr "内部データストリームエラー。"
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
 
 msgid "Could not read title information for DVD."
 msgstr "DVDのタイトル情報を読み込むことができませんでした。"
@@ -45,9 +51,6 @@ msgstr ""
 
 msgid "Failed to get fragment URL."
 msgstr ""
-
-msgid "Internal data stream error."
-msgstr "内部データストリームエラー。"
 
 msgid "Couldn't download fragments"
 msgstr ""

@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 11:03+0200\n"
+"POT-Creation-Date: 2014-07-19 12:47+0200\n"
 "PO-Revision-Date: 2009-08-12 22:13+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -21,6 +21,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: KBabel 1.11.2\n"
+
+msgid "Internal data stream error."
+msgstr "Sisäisen tietovirran virhe."
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
 
 msgid "Could not read title information for DVD."
 msgstr "DVD:n otsikkotietoja ei voitu lukea."
@@ -49,9 +55,6 @@ msgstr ""
 
 msgid "Failed to get fragment URL."
 msgstr ""
-
-msgid "Internal data stream error."
-msgstr "Sisäisen tietovirran virhe."
 
 msgid "Couldn't download fragments"
 msgstr ""

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 11:03+0200\n"
+"POT-Creation-Date: 2014-07-19 12:47+0200\n"
 "PO-Revision-Date: 2014-05-23 20:42+0200\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -18,6 +18,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 1.5\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
+
+msgid "Internal data stream error."
+msgstr "Belső adatfolyamhiba."
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
 
 msgid "Could not read title information for DVD."
 msgstr "Nem lehet címinformációkat olvasni a DVD-ről."
@@ -47,9 +53,6 @@ msgstr "Nem kérhető le a Manifest URL-e"
 
 msgid "Failed to get fragment URL."
 msgstr "Nem sikerült lekérni a töredék URL-t."
-
-msgid "Internal data stream error."
-msgstr "Belső adatfolyamhiba."
 
 msgid "Couldn't download fragments"
 msgstr "Nem sikerült letölteni a töredékeket"

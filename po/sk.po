@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 11:03+0200\n"
+"POT-Creation-Date: 2014-07-19 12:47+0200\n"
 "PO-Revision-Date: 2014-01-30 10:44+0100\n"
 "Last-Translator: Peter Tuharsky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -20,6 +20,12 @@ msgstr ""
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Poedit-Language: Slovak\n"
 "X-Poedit-Country: SLOVAKIA\n"
+
+msgid "Internal data stream error."
+msgstr "Vnútorná chyba prúdu údajov."
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
 
 msgid "Could not read title information for DVD."
 msgstr "Nepodarilo sa prečítať titulok DVD."
@@ -49,9 +55,6 @@ msgstr "Nepodarilo sa získať URI Manifestu"
 
 msgid "Failed to get fragment URL."
 msgstr "Nepodarilo sa získať URL fragmentu."
-
-msgid "Internal data stream error."
-msgstr "Vnútorná chyba prúdu údajov."
 
 msgid "Couldn't download fragments"
 msgstr "Nepodarilo sa získať fragmenty"

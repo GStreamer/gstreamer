@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 11:03+0200\n"
+"POT-Creation-Date: 2014-07-19 12:47+0200\n"
 "PO-Revision-Date: 2014-01-22 17:56+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -17,6 +17,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.5.4\n"
+
+msgid "Internal data stream error."
+msgstr "Intern feil i datastrøm."
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
 
 msgid "Could not read title information for DVD."
 msgstr "Kunne ikke lese tittelinformasjonen til DVD-en."
@@ -46,9 +52,6 @@ msgstr "Kunne ikke hente Manifest-nettadressen."
 
 msgid "Failed to get fragment URL."
 msgstr "Klarte ikke å hente fragment-nettadresse."
-
-msgid "Internal data stream error."
-msgstr "Intern feil i datastrøm."
 
 msgid "Couldn't download fragments"
 msgstr "Kunne ikke laste ned fragmenter"
