@@ -1,4 +1,4 @@
-This is GStreamer Ugly Plugins 1.3.91
+This is GStreamer Ugly Plugins 1.4.0
 
 Changes since 1.2:
 
@@ -97,7 +97,7 @@ Major changes:
      are available on OS X and iOS now.
 
  • Other changes:
-   ∘ gst-libav now uses libav 10.1, and gained support for H265/HEVC.
+   ∘ gst-libav now uses libav 10.2, and gained support for H265/HEVC.
    ∘ Support for hardware codecs and special memory types has been
      improved with bugfixes and feature additions in various plugins
      and base classes.

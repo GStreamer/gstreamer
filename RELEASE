@@ -1,28 +1,23 @@
 
-Release notes for GStreamer Ugly Plugins 1.3.91
+Release notes for GStreamer Ugly Plugins 1.4.0
 
 
-The GStreamer team is pleased to announce the second release candidate of
-the stable 1.4 release series. The 1.4 release series is adding new features
-on top of the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of
+the stable 1.4 release series. The 1.4 release series is adding new
+features on top of the 1.0 and 1.2 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
-This release candidate will hopefully shortly be followed by the stable 1.4.0
-release if no bigger regressions or bigger issues are detected, and enough
-testing of the release candidate happened. The new API that was added during
-the 1.3 release series is not expected to change anymore at this point.
+
+Binaries for Android, iOS, Mac OS X and Windows are provided together
+with this release.
 
 
-Binaries for Android, iOS, Mac OS X and Windows are provided together with this
-release.
 
-
-The stable 1.4 release series is API and ABI compatible with 1.0.x, 1.2.x and
-any other 1.x release series in the future. Compared to 1.2.x it contains some
-new features and more intrusive changes that were considered too risky as a
-bugfix.
-
+The stable 1.4 release series is API and ABI compatible with 1.0.x,
+1.2.x and any other 1.x release series in the future. Compared to 1.2.x
+it contains some new features and more intrusive changes that were
+considered too risky as a bugfix.
 
 
 
@@ -69,9 +64,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 732716 : rademux: Print invalid fourcc in error message in hex
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -109,5 +103,4 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Sebastian Dröge
-      * Sebastian Rasmussen
  
