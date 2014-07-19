@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2012-12-22 20:13+0900\n"
 "Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -318,6 +318,9 @@ msgstr "デバイス '%s' のミュート状態の変更に失敗しました"
 msgid "Failed to allocated required memory."
 msgstr ""
 
+msgid "Failed to allocate required memory."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "デバイス '%s' のドライバはIOメソッド%dをサポートしていません"
@@ -333,9 +336,6 @@ msgstr "ビデオデバイスが新しいフレームレート設定を受け付
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "ビデオデバイスが新しいフレームレート設定を受け付けません。"
-
-msgid "Failed to allocate required memory."
-msgstr ""
 
 #, fuzzy
 msgid "Failed to start decoding thread."

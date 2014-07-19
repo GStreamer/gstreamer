@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2012-05-05 19:05+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -306,6 +306,9 @@ msgstr "Αποτυχία ανάγνωσης ισχύς σήματος για τ�
 msgid "Failed to allocated required memory."
 msgstr ""
 
+msgid "Failed to allocate required memory."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "Ο οδηγός της συσκευής '%s' δεν υποστηρίζει κάποια γνωστή μέθοδο λήψης."
@@ -320,9 +323,6 @@ msgstr ""
 
 #, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr ""
-
-msgid "Failed to allocate required memory."
 msgstr ""
 
 #, fuzzy

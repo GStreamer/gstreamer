@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2011-02-12 18:30+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -324,6 +324,9 @@ msgstr "Falló al obtener la potencia de la señal para el dispositivo «%s»."
 msgid "Failed to allocated required memory."
 msgstr ""
 
+msgid "Failed to allocate required memory."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr ""
@@ -347,9 +350,6 @@ msgid "Encoder on device %s has no supported output format"
 msgstr ""
 "El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
 "fotogramas."
-
-msgid "Failed to allocate required memory."
-msgstr ""
 
 #, fuzzy
 msgid "Failed to start decoding thread."

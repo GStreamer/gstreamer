@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2010-07-16 19:34+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -306,6 +306,9 @@ msgstr "Nepavyko gauti įrenginio „%s“ signalo stiprumo."
 msgid "Failed to allocated required memory."
 msgstr ""
 
+msgid "Failed to allocate required memory."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
@@ -321,9 +324,6 @@ msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų.
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
-
-msgid "Failed to allocate required memory."
-msgstr ""
 
 #, fuzzy
 msgid "Failed to start decoding thread."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -296,6 +296,9 @@ msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ �
 msgid "Failed to allocated required memory."
 msgstr ""
 
+msgid "Failed to allocate required memory."
+msgstr ""
+
 #, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr ""
@@ -310,9 +313,6 @@ msgstr ""
 
 #, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr ""
-
-msgid "Failed to allocate required memory."
 msgstr ""
 
 msgid "Failed to start decoding thread."

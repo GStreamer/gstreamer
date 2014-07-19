@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -323,6 +323,9 @@ msgstr "No s'ha pogut obtenir la intensitat del senyal per al dispositiu «%s».
 msgid "Failed to allocated required memory."
 msgstr ""
 
+msgid "Failed to allocate required memory."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr ""
@@ -346,9 +349,6 @@ msgid "Encoder on device %s has no supported output format"
 msgstr ""
 "El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
 "fotogrames per segon."
-
-msgid "Failed to allocate required memory."
-msgstr ""
 
 #, fuzzy
 msgid "Failed to start decoding thread."

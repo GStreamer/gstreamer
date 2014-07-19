@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2011-04-26 22:35+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -306,6 +306,9 @@ msgstr "Неуспешно получаване на силата на сигн�
 msgid "Failed to allocated required memory."
 msgstr ""
 
+msgid "Failed to allocate required memory."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
@@ -324,9 +327,6 @@ msgstr ""
 msgid "Encoder on device %s has no supported output format"
 msgstr ""
 "Устройството за видео вход не приема новите настройки за честотата на кадри."
-
-msgid "Failed to allocate required memory."
-msgstr ""
 
 #, fuzzy
 msgid "Failed to start decoding thread."

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2014-06-29 12:56+0200\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -308,6 +308,9 @@ msgstr "A némítási állapot módosítása meghiúsult a(z) „%s” eszközö
 msgid "Failed to allocated required memory."
 msgstr "Nem sikerült lefoglalni a szükséges memóriát."
 
+msgid "Failed to allocate required memory."
+msgstr "Nem sikerült lefoglalni a szükséges memóriát."
+
 #, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "A(z) %s eszközön lévő átalakítónak nincs támogatott bemeneti formátuma"
@@ -323,9 +326,6 @@ msgstr "A(z) %s eszközön lévő kódolónak nincs támogatott bemeneti formát
 #, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "A(z) %s eszközön lévő kódolónak nincs támogatott kimeneti formátuma"
-
-msgid "Failed to allocate required memory."
-msgstr "Nem sikerült lefoglalni a szükséges memóriát."
 
 msgid "Failed to start decoding thread."
 msgstr "Nem sikerült elindítani a dekódolási szálat."

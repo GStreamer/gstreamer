@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2012-04-16 03:04+0200\n"
 "Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -304,6 +304,9 @@ msgstr "Nisam uspio dobiti snagu signala za uređaj „%s”."
 msgid "Failed to allocated required memory."
 msgstr ""
 
+msgid "Failed to allocate required memory."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "Upravljački program uređaja „%s” ne podržava poznate metode snimanja."
@@ -319,9 +322,6 @@ msgstr "Ulazni video uređaj nije prihvatio nove postavke broja okvira."
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "Ulazni video uređaj nije prihvatio nove postavke broja okvira."
-
-msgid "Failed to allocate required memory."
-msgstr ""
 
 #, fuzzy
 msgid "Failed to start decoding thread."

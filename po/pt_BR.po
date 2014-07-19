@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2013-12-29 17:48-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
@@ -314,6 +314,9 @@ msgstr "Falha ao alternar entre com e sem áudio para o dispositivo \"%s\"."
 msgid "Failed to allocated required memory."
 msgstr ""
 
+msgid "Failed to allocate required memory."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "O driver do dispositivo \"%s\" não tem suporte ao método %d de E/S"
@@ -329,9 +332,6 @@ msgstr "O dispositivo de vídeo não aceita definir uma nova taxa de quadros."
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "O dispositivo de vídeo não aceita definir uma nova taxa de quadros."
-
-msgid "Failed to allocate required memory."
-msgstr ""
 
 #, fuzzy
 msgid "Failed to start decoding thread."

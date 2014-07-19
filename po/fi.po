@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:49+0200\n"
+"POT-Creation-Date: 2014-07-19 12:30+0200\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -310,6 +310,9 @@ msgstr "Laitteelta ”%s” ei saatu signaalinvoimakkuutta."
 msgid "Failed to allocated required memory."
 msgstr ""
 
+msgid "Failed to allocate required memory."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "Laitteen ”%s” ajuri ei tue mitään tunnettua kaappaustapaa."
@@ -325,9 +328,6 @@ msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
-
-msgid "Failed to allocate required memory."
-msgstr ""
 
 #, fuzzy
 msgid "Failed to start decoding thread."
