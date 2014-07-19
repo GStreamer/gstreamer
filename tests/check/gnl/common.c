@@ -380,7 +380,7 @@ gnl_composition_remove (GstBin * comp, GstElement * object)
 {
   gboolean ret;
 
-  g_signal_emit_by_name (GST_BIN (comp), "remove-object", object, &ret);
+  ret = gst_bin_remove (comp, object);
   if (!ret)
     return ret;
 
@@ -392,9 +392,5 @@ gnl_composition_remove (GstBin * comp, GstElement * object)
 gboolean
 gnl_composition_add (GstBin * comp, GstElement * object)
 {
-  gboolean ret;
-
-  g_signal_emit_by_name (comp, "add-object", object, &ret);
-
-  return ret;
+  return gst_bin_add (comp, object);
 }

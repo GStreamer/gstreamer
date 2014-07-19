@@ -58,10 +58,6 @@ struct _GnlComposition
 struct _GnlCompositionClass
 {
   GnlObjectClass parent_class;
-
-  /* Signal vmethods */
-  gboolean (*remove_object_handler) (GnlComposition * comp, GnlObject *object);
-  gboolean (*add_object_handler)    (GnlComposition * comp, GnlObject *object);
 };
 
 GType gnl_composition_get_type (void);

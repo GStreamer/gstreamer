@@ -69,8 +69,6 @@ enum
 {
   COMMIT_SIGNAL,
   COMMITED_SIGNAL,
-  ADD_OBJECT_SIGNAL,
-  REMOVE_OBJECT_SIGNAL,
   LAST_SIGNAL
 };
 
@@ -567,17 +565,6 @@ _add_remove_object_gsource (GnlComposition * comp, GnlObject * object)
 }
 
 static gboolean
-remove_object_handler (GnlComposition * comp, GnlObject * object)
-{
-  g_return_val_if_fail (GNL_IS_OBJECT (object), FALSE);
-
-  object->in_composition = FALSE;
-  _add_remove_object_gsource (comp, object);
-
-  return TRUE;
-}
-
-static gboolean
 _add_object_func (ChildIOData * childio)
 {
   GnlComposition *comp = childio->comp;
@@ -619,17 +606,6 @@ _add_add_object_gsource (GnlComposition * comp, GnlObject * object)
 
   _add_gsource (comp, (GSourceFunc) _add_object_func, childio,
       _free_child_io_data, G_PRIORITY_DEFAULT);
-}
-
-static gboolean
-add_object_handler (GnlComposition * comp, GnlObject * object)
-{
-  g_return_val_if_fail (GNL_IS_OBJECT (object), FALSE);
-
-  object->in_composition = TRUE;
-  _add_add_object_gsource (comp, object);
-
-  return TRUE;
 }
 
 static void
@@ -698,22 +674,7 @@ gnl_composition_class_init (GnlCompositionClass * klass)
       0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       G_TYPE_BOOLEAN);
 
-  _signals[REMOVE_OBJECT_SIGNAL] =
-      g_signal_new ("remove-object", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GnlCompositionClass, remove_object_handler), NULL, NULL,
-      NULL, G_TYPE_BOOLEAN, 1, GNL_TYPE_OBJECT);
-
-  _signals[ADD_OBJECT_SIGNAL] =
-      g_signal_new ("add-object", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GnlCompositionClass, add_object_handler), NULL, NULL,
-      NULL, G_TYPE_BOOLEAN, 1, GNL_TYPE_OBJECT);
-
-
   gnlobject_class->commit = gnl_composition_commit_func;
-  klass->remove_object_handler = remove_object_handler;
-  klass->add_object_handler = add_object_handler;
 
   GST_DEBUG_FUNCPTR (_seek_pipeline_func);
   GST_DEBUG_FUNCPTR (_remove_object_func);
@@ -2728,6 +2689,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime,
 static gboolean
 gnl_composition_add_object (GstBin * bin, GstElement * element)
 {
+  GnlObject *object;
   GnlComposition *comp = (GnlComposition *) bin;
 
   if (element == comp->priv->current_bin) {
@@ -2735,9 +2697,14 @@ gnl_composition_add_object (GstBin * bin, GstElement * element)
     return GST_BIN_CLASS (parent_class)->add_element (bin, element);
   }
 
-  g_assert_not_reached ();
+  g_return_val_if_fail (GNL_IS_OBJECT (element), FALSE);
 
-  return FALSE;
+  object = GNL_OBJECT (element);
+
+  object->in_composition = TRUE;
+  _add_add_object_gsource (comp, object);
+
+  return TRUE;
 }
 
 static gboolean
@@ -2828,6 +2795,7 @@ chiringuito:
 static gboolean
 gnl_composition_remove_object (GstBin * bin, GstElement * element)
 {
+  GnlObject *object;
   GnlComposition *comp = (GnlComposition *) bin;
 
   if (element == comp->priv->current_bin) {
@@ -2835,9 +2803,14 @@ gnl_composition_remove_object (GstBin * bin, GstElement * element)
     return GST_BIN_CLASS (parent_class)->remove_element (bin, element);
   }
 
-  g_assert_not_reached ();
+  g_return_val_if_fail (GNL_IS_OBJECT (element), FALSE);
 
-  return FALSE;
+  object = GNL_OBJECT (element);
+
+  object->in_composition = FALSE;
+  _add_remove_object_gsource (comp, object);
+
+  return TRUE;
 }
 
 static gboolean
