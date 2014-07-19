@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:44+0200\n"
+"POT-Creation-Date: 2014-07-19 12:17+0200\n"
 "PO-Revision-Date: 2014-05-22 20:01+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -514,14 +514,19 @@ msgstr "музыкальный ключ"
 msgid "Initial key in which the sound starts"
 msgstr "Начальный ключ, с которого начинается звук"
 
+msgid "Print version information and exit"
+msgstr "Вывод информации о версии и выход из программы"
+
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr ""
+
 msgid "Buffering..."
 msgstr "Буферизация…"
 
 msgid "Clock lost, selecting a new one\n"
 msgstr "Часы потеряны, выбираем новые\n"
-
-msgid "Print version information and exit"
-msgstr "Вывод информации о версии и выход из программы"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Используемый приёмник видео (по умолчанию autovideosink)"

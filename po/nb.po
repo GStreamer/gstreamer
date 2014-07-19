@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:44+0200\n"
+"POT-Creation-Date: 2014-07-19 12:17+0200\n"
 "PO-Revision-Date: 2014-01-22 17:42+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -510,14 +510,19 @@ msgstr "musikal-tast"
 msgid "Initial key in which the sound starts"
 msgstr "Innledende tast der lyden begynner"
 
+msgid "Print version information and exit"
+msgstr "Skriv ut versjonsinformasjon og avslutt"
+
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr ""
+
 msgid "Buffering..."
 msgstr "Bufrer ..."
 
 msgid "Clock lost, selecting a new one\n"
 msgstr ""
-
-msgid "Print version information and exit"
-msgstr "Skriv ut versjonsinformasjon og avslutt"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Video-sink som skal brukes (standard er autovideosink)"

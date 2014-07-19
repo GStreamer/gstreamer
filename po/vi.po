@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:44+0200\n"
+"POT-Creation-Date: 2014-07-19 12:17+0200\n"
 "PO-Revision-Date: 2014-06-30 09:27+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -520,14 +520,19 @@ msgstr "phím-âm-nhạc"
 msgid "Initial key in which the sound starts"
 msgstr "Khóa khởi tạo trong cái mà âm thanh khởi chạy"
 
+msgid "Print version information and exit"
+msgstr "In ra thông tin phiên bản và thoát"
+
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr ""
+
 msgid "Buffering..."
 msgstr "Đang đệm..."
 
 msgid "Clock lost, selecting a new one\n"
 msgstr "Mất đồng hồ, chọn một cái mới\n"
-
-msgid "Print version information and exit"
-msgstr "In ra thông tin phiên bản và thoát"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Bộ chứa video được dùng (mặc định là autovideosink)"

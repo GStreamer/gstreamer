@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:44+0200\n"
+"POT-Creation-Date: 2014-07-19 12:17+0200\n"
 "PO-Revision-Date: 2014-04-20 16:15+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -513,14 +513,19 @@ msgstr "mūzikas-kadrs"
 msgid "Initial key in which the sound starts"
 msgstr "Sākotnējais kadrs, kurā sākas mūzika"
 
+msgid "Print version information and exit"
+msgstr "Parādīt informāciju par versiju un iziet"
+
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr ""
+
 msgid "Buffering..."
 msgstr "Buferē..."
 
 msgid "Clock lost, selecting a new one\n"
 msgstr ""
-
-msgid "Print version information and exit"
-msgstr "Parādīt informāciju par versiju un iziet"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Izmantojamais video uztvērējs (pēc noklusējuma autovideosink)"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-11 10:44+0200\n"
+"POT-Creation-Date: 2014-07-19 12:17+0200\n"
 "PO-Revision-Date: 2014-05-22 00:34+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -519,14 +519,19 @@ msgstr "musical-key"
 msgid "Initial key in which the sound starts"
 msgstr "Initiële sleutel waarin het geluid begint"
 
+msgid "Print version information and exit"
+msgstr "Versie-informatie afdrukken en sluiten"
+
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr ""
+
 msgid "Buffering..."
 msgstr "In buffer opslaan..."
 
 msgid "Clock lost, selecting a new one\n"
 msgstr "Klok verloren, een nieuwe wordt geselecteerd\n"
-
-msgid "Print version information and exit"
-msgstr "Versie-informatie afdrukken en sluiten"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Te gebruiken video-sink (standaard is autovideosink)"
