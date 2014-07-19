@@ -1780,10 +1780,17 @@ fill_rgb32 (GstVideoBoxFill fill_type, guint b_alpha,
 
   b_alpha = CLAMP (b_alpha, 0, 255);
 
-  empty_pixel = GUINT32_FROM_LE ((b_alpha << (p[0] * 8)) |
-      (rgb_colors_R[fill_type] << (p[1] * 8)) |
-      (rgb_colors_G[fill_type] << (p[2] * 8)) |
-      (rgb_colors_B[fill_type] << (p[3] * 8)));
+  if (GST_VIDEO_FRAME_N_COMPONENTS (frame) == 4) {
+    empty_pixel = GUINT32_FROM_LE ((b_alpha << (p[0] * 8)) |
+        (rgb_colors_R[fill_type] << (p[1] * 8)) |
+        (rgb_colors_G[fill_type] << (p[2] * 8)) |
+        (rgb_colors_B[fill_type] << (p[3] * 8)));
+  } else {
+    empty_pixel = GUINT32_FROM_LE (
+        (rgb_colors_R[fill_type] << (p[1] * 8)) |
+        (rgb_colors_G[fill_type] << (p[2] * 8)) |
+        (rgb_colors_B[fill_type] << (p[3] * 8)));
+  }
 
   if (stride == width * 4) {
     video_box_orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
