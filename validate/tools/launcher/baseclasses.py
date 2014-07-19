@@ -674,7 +674,7 @@ class TestsManager(Loggable):
     def run_tests(self, cur_test_num, total_num_tests):
         i = cur_test_num
         for test in self.tests:
-            sys.stdout.write("[%d / %d] " % (i, total_num_tests))
+            sys.stdout.write("[%d / %d] " % (i + 1, total_num_tests))
             self.reporter.before_test(test)
             res = test.run()
             i += 1
