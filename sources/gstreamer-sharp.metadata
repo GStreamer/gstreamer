@@ -45,14 +45,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/object[@cname='GstElement']/field[@cname='object']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstBin']/field[@cname='element']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstPipeline']/field[@cname='bin']" name="hidden">true</attr>
-	<!-- add native attribute to all structs which need special handling -->
-	<change-node-type path="/api/namespace//boxed[field/@cname='mini_object']">struct</change-node-type>
-	<attr path="/api/namespace//struct[field/@cname='mini_object']" name="native">true</attr>
+	<!-- add opaque attribute to all structs which need special handling -->
+	<change-node-type path="/api//namespace//boxed[field/@cname='mini_object']">struct</change-node-type>
+	<attr path="/api/namespace//struct[field/@cname='mini_object']" name="opaque">true</attr>
 	<change-node-type path="/api/namespace//boxed[@cname='GstStructure']">struct</change-node-type>
-	<attr path="/api/namespace/struct[@cname='GstStructure']" name="native">true</attr>
-	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']" name="native">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstStructure']" name="opaque">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']" name="opaque">true</attr>
 	<change-node-type path="/api/namespace//boxed[@cname='GstIterator']">struct</change-node-type>
-	<attr path="/api/namespace/struct[@cname='GstIterator']" name="native">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstIterator']" name="opaque">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstIterator']/method[@cname='gst_iterator_next']" name="hidden">true</attr>
 	<remove-node path="/api/namespace/boxed[@cname='GstStructure']/field[@cname='name']" />
 	<!-- Fix for GstChildProxy -->
@@ -61,14 +61,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<!-- FIXME: array handling -->
 	<attr path="/api/namespace/struct[@cname='GstRTCPPacket']/method[@cname='gst_rtcp_packet_sdes_copy_entry']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTCPPacket']/method[@cname='gst_rtcp_packet_sdes_get_entry']" name="hidden">true</attr>
-	<attr path="/api/namespace/struct[@cname='GstRTCPPacket']/method[@cname='gst_rtcp_packet_sdes_extension_data']" name="hidden">true</attr>
-	<attr path="/api/namespace/struct[@cname='GstRTPBuffer']/method[@cname='gst_rtp_buffer_get_extension_data']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTPBuffer']/method[@cname='gst_rtp_buffer_get_extension_onebyte_header']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTPBuffer']/method[@cname='gst_rtp_buffer_get_extension_twobytes_header']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']/method[@cname='gst_rtsp_message_get_body']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']/method[@cname='gst_rtsp_message_steal_body']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstFFTF32']/method[@cname='gst_fft_f32_fft']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstFFTF32']/method[@cname='gst_fft_f32_window']" name="hidden">true</attr>
+    <attr path="//virtual_method[@cname='get_g_value_array']" name="hidden">true</attr>
 	<!-- Maybe some problems with the name -->
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/class_struct/method[@vm='get_type']" name="vm" />
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/virtual_method[@cname='get_type']" name="hidden" />
@@ -82,54 +81,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='func']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='destroy_data']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstTask']/field[@cname='notify']" name="hidden">true</attr>
-
-	<!-- These classes are not abstract but should not be instantiable from managed. FIXME: bug in gir metadata? -->
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstAllocator']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstAllocator']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstClock']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstClock']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstControlBinding']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstControlBinding']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstControlSource']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstControlSource']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstElement']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstElement']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstObject']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstObject']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstPluginFeature']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstPluginFeature']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstBaseParse']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstBaseParse']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstBaseSink']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstBaseSink']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstBaseSrc']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstBaseSrc']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstBaseTransform']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstBaseTransform']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstTagDemux']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstTagDemux']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstTagMux']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstTagMux']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstVideoDecoder']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstVideoDecoder']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstVideoEncoder']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstVideoEncoder']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstVideoFilter']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstVideoFilter']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstAudioDecoder']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstAudioDecoder']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstAudioEncoder']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstAudioEncoder']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstAudioFilter']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstAudioFilter']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstAudioRingBuffer']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstAudioRingBuffer']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstTimedValueControlSource']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstTimedValueControlSource']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstRTPBaseDepayload']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstRTPBaseDepayload']">protected</attr>
-	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstRTPBasePayload']"/>
-	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstRTPBasePayload']">protected</attr>
 
 	<!-- Add miniobject methods to all miniobject types -->
 	<copy-node path="/api/namespace/struct[@cname='GstMiniObject']//method">/api/namespace//boxed[field/@cname='mini_object']</copy-node>
@@ -176,11 +127,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/boxed[@cname='GstVideoCodecState']/field[@cname='padding']" name="type">gpointer</attr>
 	<attr path="/api/namespace/object[@cname='GstVideoDecoder']/field[@cname='padding']" name="type">gpointer</attr>
 	<attr path="/api/namespace/object[@cname='GstVideoDecoder']/class_struct/field[@cname='padding']" name="type">gpointer</attr>
-	<attr path="/api/namespace/enum[@cname='GstVideoColorRange']/member[@name='0255']" name="name">EightBit</attr>
-	<attr path="/api/namespace/enum[@cname='GstVideoColorRange']/member[@name='16235']" name="name">SixteenBit</attr>
-	<attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_copy']" name="hidden">1</attr>
 	<attr path="/api/namespace/struct[@cname='GstByteReader']" name="opaque">1</attr>
 	<remove-node path="/api/namespace//struct[@cname='GstByteReader']//method" />
+    <attr path="//struct[@name='VideoGLTextureUploadMeta']//field[@cname='user_data_copy' or @cname='user_data_free']" name="hidden">true</attr>
 
 	<!-- FIXME: remove when https://bugzilla.gnome.org/show_bug.cgi?id=709938 is fixed -->
 	<attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_parse_commands_length']/parameters/parameter[@name='n_cmds']" name="pass_as">out</attr>
@@ -192,10 +141,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<!-- Name clashes -->
 	<attr path="/api/namespace/struct[@cname='GstRTCPBuffer']/field[@cname='map']" name="name">MapInfo</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTPBuffer']/field[@cname='map']" name="name">MapInfo</attr>
-	<!-- Enums starting with numbers -->
-	<attr path="/api/namespace/enum[@cname='GstRTPPayload']/member[@name='1016']" name="name">ThousandSixteen</attr>
-	<attr path="/api/namespace/enum[@cname='GstRTSPVersion']/member[@name='10']" name="name">Ten</attr>
-	<attr path="/api/namespace/enum[@cname='GstRTSPVersion']/member[@name='11']" name="name">Eleven</attr>
 	<!-- Namespace switches -->
 	<attr path="/api/namespace[@name='GstVideo']" name="name">Gst.Video</attr>
 	<attr path="/api/namespace[@name='GstAudio']" name="name">Gst.Audio</attr>
@@ -211,7 +156,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace[@name='GstRtsp']" name="name">Gst.Rtsp</attr>
 	<attr path="/api/namespace[@name='GstSdp']" name="name">Gst.Sdp</attr>
 
-	<!-- FIXME: Remove when https://bugzilla.gnome.org/show_bug.cgi?id=710001 is fixed -->
 	<attr path="/api/namespace" name="library">libgstreamer-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Base']" name="library">libgstbase-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Audio']" name="library">libgstaudio-1.0-0.dll</attr>
@@ -227,18 +171,29 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace[@name='Gst.Rtsp']" name="library">libgstrtsp-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Sdp']" name="library">libgstsdp-1.0-0.dll</attr>
 
+    <!-- DoubleRange and Fraction are in Value.cs -->
+    <attr path="//struct[@name='DoubleRange' or @name='Fraction' or @name='IntRange' or @name='FractionRange']" name="hidden">true</attr>
+
 	<!-- AppSink fixes -->
 	<attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='pull-sample']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='pull-preroll']" name="hidden">true</attr>
-	<add-node path="/api/namespace/object[@cname='GstAppSink']">
-	  <method name="PullPreroll" cname="gst_app_sink_pull_preroll">
-        <return-type type="GstSample*" owned="true" />
-        <parameters/>
-      </method>
-	  <method name="PullSample" cname="gst_app_sink_pull_sample">
-        <return-type type="GstSample*" owned="true" />
-        <parameters/>
-      </method>
-	</add-node>
+
+    <!-- MessageType should be uint -->
+    <attr path="//enum[@name='MessageType']/member[@cname='GST_MESSAGE_UNKNOWN']" name="value">0U</attr>
+    <!-- Extract is manually bound -->
+    <attr path="//method[@cname='gst_buffer_extract']" name="hidden">true</attr>
+    <attr path="//method[@cname='gst_buffer_extract_dup']" name="hidden">true</attr>
+
+    <!-- Introspection fails -->
+    <attr path="//object[@cname='GstBufferPool']/field[@cname='flushing']" name="type">gboolean</attr>
+    <remove-attr path="//boxed[@cname='GstMpegtsSection']//method//return-type[@type='GPtrArray']" name="array"/>
+    <remove-attr path="//boxed[@cname='GstMpegtsSection']//method//return-type[@type='GPtrArray']" name="null_term_array"/>
+    <remove-attr path="//object[@cname='GstMpegtsGlobal']//method//return-type[@type='GPtrArray']" name="array"/>
+    <remove-attr path="//object[@cname='GstMpegtsGlobal']//method//return-type[@type='GPtrArray']" name="null_term_array"/>
+    <remove-attr path="//boxed[@cname='GstMpegtsDescriptor']//method//parameter[@type='GPtrArray***']" name="array"/>
+    <remove-attr path="//boxed[@cname='GstMpegtsDescriptor']//method//parameter[@type='GPtrArray***']" name="null_term_array"/>
+
+    <!-- No way to correctly generate these without the element type -->
+    <attr path="//boxed[@cname='GstMpegtsDescriptor']//method[parameters/parameter[@type='GArray***']]" name="hidden">true</attr>
 </metadata>
 

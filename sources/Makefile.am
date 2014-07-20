@@ -35,11 +35,11 @@ generated-stamp: $(API)
 	$(GAPI_CODEGEN) --generate $(srcdir)/$(API) $(GLIB_SHARP_CFLAGS) \
 		--outdir=generated \
 		--glue-filename=$(GLUEDIR)/generated.c --gluelib-name=libgstreamersharpglue-1.0.0.dll \
-		--glue-includes=gst/gst.h,`cd $(GST_INCLUDEDIR);find gst -type f -name "*.h" | tr "\n" ","` \
+		--glue-includes=gst/gst.h,`cd $(GST_INCLUDEDIR);find gst -type f -name "*.h" -not -path "gst/gl/*" | tr "\n" ","` \
 	 	--assembly-name=$(ASSEMBLY_NAME) && touch generated-stamp
 
 $(DLL): $(build_sources) generated-stamp
-	$(CSC) -nowarn:169 -unsafe -target:library $(GLIB_SHARP_LIBS) \
+	$(CSC) -nowarn:169 -nowarn:108 -nowarn:114 -unsafe -target:library $(GLIB_SHARP_LIBS) \
 		$(build_sources)  generated/*/*.cs -out:$(DLL)
 
 install-data-local:

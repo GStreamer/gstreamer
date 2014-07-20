@@ -16241,18 +16241,18 @@
     </enum>
     <enum name="DVBCodeRate" cname="GstMpegtsDVBCodeRate" type="enum">
       <member cname="GST_MPEGTS_FEC_NONE" name="None" value="0"/>
-      <member cname="GST_MPEGTS_FEC_1_2" name="12" value="1"/>
-      <member cname="GST_MPEGTS_FEC_2_3" name="23" value="2"/>
-      <member cname="GST_MPEGTS_FEC_3_4" name="34" value="3"/>
-      <member cname="GST_MPEGTS_FEC_4_5" name="45" value="4"/>
-      <member cname="GST_MPEGTS_FEC_5_6" name="56" value="5"/>
-      <member cname="GST_MPEGTS_FEC_6_7" name="67" value="6"/>
-      <member cname="GST_MPEGTS_FEC_7_8" name="78" value="7"/>
-      <member cname="GST_MPEGTS_FEC_8_9" name="89" value="8"/>
+      <member cname="GST_MPEGTS_FEC_1_2" name="_112" value="1"/>
+      <member cname="GST_MPEGTS_FEC_2_3" name="_223" value="2"/>
+      <member cname="GST_MPEGTS_FEC_3_4" name="_334" value="3"/>
+      <member cname="GST_MPEGTS_FEC_4_5" name="_445" value="4"/>
+      <member cname="GST_MPEGTS_FEC_5_6" name="_556" value="5"/>
+      <member cname="GST_MPEGTS_FEC_6_7" name="_667" value="6"/>
+      <member cname="GST_MPEGTS_FEC_7_8" name="_778" value="7"/>
+      <member cname="GST_MPEGTS_FEC_8_9" name="_889" value="8"/>
       <member cname="GST_MPEGTS_FEC_AUTO" name="Auto" value="9"/>
-      <member cname="GST_MPEGTS_FEC_3_5" name="35" value="10"/>
-      <member cname="GST_MPEGTS_FEC_9_10" name="910" value="11"/>
-      <member cname="GST_MPEGTS_FEC_2_5" name="25" value="12"/>
+      <member cname="GST_MPEGTS_FEC_3_5" name="_335" value="10"/>
+      <member cname="GST_MPEGTS_FEC_9_10" name="_9910" value="11"/>
+      <member cname="GST_MPEGTS_FEC_2_5" name="_225" value="12"/>
     </enum>
     <enum name="DVBDescriptorType" cname="GstMpegtsDVBDescriptorType" type="enum">
       <member cname="GST_MTS_DESC_DVB_NETWORK_NAME" name="NetworkName" value="64"/>
@@ -16544,9 +16544,9 @@
       <member cname="GST_MPEGTS_POLARIZATION_CIRCULAR_RIGHT" name="CircularRight" value="3"/>
     </enum>
     <enum name="SatelliteRolloff" cname="GstMpegtsSatelliteRolloff" type="enum">
-      <member cname="GST_MPEGTS_ROLLOFF_35" name="35" value="0"/>
-      <member cname="GST_MPEGTS_ROLLOFF_20" name="20" value="1"/>
-      <member cname="GST_MPEGTS_ROLLOFF_25" name="25" value="2"/>
+      <member cname="GST_MPEGTS_ROLLOFF_35" name="_35" value="0"/>
+      <member cname="GST_MPEGTS_ROLLOFF_20" name="_20" value="1"/>
+      <member cname="GST_MPEGTS_ROLLOFF_25" name="_25" value="2"/>
       <member cname="GST_MPEGTS_ROLLOFF_RESERVED" name="Reserved" value="3"/>
       <member cname="GST_MPEGTS_ROLLOFF_AUTO" name="Auto" value="4"/>
     </enum>
@@ -16632,8 +16632,8 @@
       <member cname="GST_MTS_TABLE_ID_CONDITIONAL_ACCESS" name="ConditionalAccess" value="1"/>
       <member cname="GST_MTS_TABLE_ID_TS_PROGRAM_MAP" name="TsProgramMap" value="2"/>
       <member cname="GST_MTS_TABLE_ID_TS_DESCRIPTION" name="TsDescription" value="3"/>
-      <member cname="GST_MTS_TABLE_ID_14496_SCENE_DESCRIPTION" name="14496SceneDescription" value="4"/>
-      <member cname="GST_MTS_TABLE_ID_14496_OBJET_DESCRIPTOR" name="14496ObjetDescriptor" value="5"/>
+      <member cname="GST_MTS_TABLE_ID_14496_SCENE_DESCRIPTION" name="_1449614496SceneDescription" value="4"/>
+      <member cname="GST_MTS_TABLE_ID_14496_OBJET_DESCRIPTOR" name="_1449614496ObjetDescriptor" value="5"/>
       <member cname="GST_MTS_TABLE_ID_METADATA" name="Metadata" value="6"/>
       <member cname="GST_MTS_TABLE_ID_IPMP_CONTROL_INFORMATION" name="IpmpControlInformation" value="7"/>
       <member cname="GST_MTS_TABLE_ID_DSM_CC_MULTIPROTO_ENCAPSULATED_DATA" name="DsmCcMultiprotoEncapsulatedData" value="58"/>
@@ -16704,14 +16704,14 @@
       <member cname="GST_MPEGTS_STREAM_TYPE_IPMP_STREAM" name="IpmpStream" value="127"/>
     </enum>
     <enum name="TerrestrialGuardInterval" cname="GstMpegtsTerrestrialGuardInterval" type="enum">
-      <member cname="GST_MPEGTS_GUARD_INTERVAL_1_32" name="132" value="0"/>
-      <member cname="GST_MPEGTS_GUARD_INTERVAL_1_16" name="116" value="1"/>
-      <member cname="GST_MPEGTS_GUARD_INTERVAL_1_8" name="18" value="2"/>
-      <member cname="GST_MPEGTS_GUARD_INTERVAL_1_4" name="14" value="3"/>
+      <member cname="GST_MPEGTS_GUARD_INTERVAL_1_32" name="_1132" value="0"/>
+      <member cname="GST_MPEGTS_GUARD_INTERVAL_1_16" name="_1116" value="1"/>
+      <member cname="GST_MPEGTS_GUARD_INTERVAL_1_8" name="_118" value="2"/>
+      <member cname="GST_MPEGTS_GUARD_INTERVAL_1_4" name="_114" value="3"/>
       <member cname="GST_MPEGTS_GUARD_INTERVAL_AUTO" name="Auto" value="4"/>
-      <member cname="GST_MPEGTS_GUARD_INTERVAL_1_128" name="1128" value="5"/>
-      <member cname="GST_MPEGTS_GUARD_INTERVAL_19_128" name="19128" value="6"/>
-      <member cname="GST_MPEGTS_GUARD_INTERVAL_19_256" name="19256" value="7"/>
+      <member cname="GST_MPEGTS_GUARD_INTERVAL_1_128" name="_11128" value="5"/>
+      <member cname="GST_MPEGTS_GUARD_INTERVAL_19_128" name="_1919128" value="6"/>
+      <member cname="GST_MPEGTS_GUARD_INTERVAL_19_256" name="_1919256" value="7"/>
       <member cname="GST_MPEGTS_GUARD_INTERVAL_PN420" name="Pn420" value="8"/>
       <member cname="GST_MPEGTS_GUARD_INTERVAL_PN595" name="Pn595" value="9"/>
       <member cname="GST_MPEGTS_GUARD_INTERVAL_PN945" name="Pn945" value="10"/>
@@ -16720,17 +16720,17 @@
       <member cname="GST_MPEGTS_HIERARCHY_NONE" name="None" value="0"/>
       <member cname="GST_MPEGTS_HIERARCHY_1" name="GSTMPEGTSHIERARCHY1" value="1"/>
       <member cname="GST_MPEGTS_HIERARCHY_2" name="GSTMPEGTSHIERARCHY2" value="2"/>
-      <member cname="GST_MPEGTS_HIERARCHY_4" name="4" value="3"/>
+      <member cname="GST_MPEGTS_HIERARCHY_4" name="_4" value="3"/>
       <member cname="GST_MPEGTS_HIERARCHY_AUTO" name="Auto" value="4"/>
     </enum>
     <enum name="TerrestrialTransmissionMode" cname="GstMpegtsTerrestrialTransmissionMode" type="enum">
-      <member cname="GST_MPEGTS_TRANSMISSION_MODE_2K" name="2k" value="0"/>
-      <member cname="GST_MPEGTS_TRANSMISSION_MODE_8K" name="8k" value="1"/>
+      <member cname="GST_MPEGTS_TRANSMISSION_MODE_2K" name="_2k" value="0"/>
+      <member cname="GST_MPEGTS_TRANSMISSION_MODE_8K" name="_8k" value="1"/>
       <member cname="GST_MPEGTS_TRANSMISSION_MODE_AUTO" name="Auto" value="2"/>
-      <member cname="GST_MPEGTS_TRANSMISSION_MODE_4K" name="4k" value="3"/>
-      <member cname="GST_MPEGTS_TRANSMISSION_MODE_1K" name="1k" value="4"/>
-      <member cname="GST_MPEGTS_TRANSMISSION_MODE_16K" name="16k" value="5"/>
-      <member cname="GST_MPEGTS_TRANSMISSION_MODE_32K" name="32k" value="6"/>
+      <member cname="GST_MPEGTS_TRANSMISSION_MODE_4K" name="_4k" value="3"/>
+      <member cname="GST_MPEGTS_TRANSMISSION_MODE_1K" name="_1k" value="4"/>
+      <member cname="GST_MPEGTS_TRANSMISSION_MODE_16K" name="_16k" value="5"/>
+      <member cname="GST_MPEGTS_TRANSMISSION_MODE_32K" name="_32k" value="6"/>
       <member cname="GST_MPEGTS_TRANSMISSION_MODE_C1" name="C1" value="7"/>
       <member cname="GST_MPEGTS_TRANSMISSION_MODE_C3780" name="C3780" value="8"/>
     </enum>
@@ -17447,7 +17447,7 @@
       <field cname="symbol_rate" access="public" writeable="true" readable="true" name="SymbolRate" type="guint32"/>
       <field cname="fec_inner" access="public" writeable="true" readable="true" name="FecInner" type="GstMpegtsDVBCodeRate"/>
     </struct>
-    <boxed name="Section" cname="GstMpegtsSection" opaque="false" hidden="false">
+    <boxed name="Section" cname="GstMpegtsSection" opaque="true" hidden="false">
       <method name="GetType" cname="gst_mpegts_section_get_type" shared="true">
         <return-type type="GType"/>
       </method>
@@ -19224,7 +19224,7 @@
     </enum>
     <enum name="RTPPayload" cname="GstRTPPayload" type="enum">
       <member cname="GST_RTP_PAYLOAD_PCMU" name="Pcmu" value="0"/>
-      <member cname="GST_RTP_PAYLOAD_1016" name="1016" value="1"/>
+      <member cname="GST_RTP_PAYLOAD_1016" name="_1016" value="1"/>
       <member cname="GST_RTP_PAYLOAD_G721" name="G721" value="2"/>
       <member cname="GST_RTP_PAYLOAD_GSM" name="Gsm" value="3"/>
       <member cname="GST_RTP_PAYLOAD_G723" name="G723" value="4"/>
@@ -20683,8 +20683,8 @@
     </enum>
     <enum name="RTSPVersion" cname="GstRTSPVersion" type="enum" gtype="gst_rtsp_version_get_type">
       <member cname="GST_RTSP_VERSION_INVALID" name="Invalid" value="0"/>
-      <member cname="GST_RTSP_VERSION_1_0" name="10" value="16"/>
-      <member cname="GST_RTSP_VERSION_1_1" name="11" value="17"/>
+      <member cname="GST_RTSP_VERSION_1_0" name="_110" value="16"/>
+      <member cname="GST_RTSP_VERSION_1_1" name="_111" value="17"/>
     </enum>
     <enum name="RTSPEvent" cname="GstRTSPEvent" type="flags" gtype="gst_rtsp_event_get_type">
       <member cname="GST_RTSP_EV_READ" name="Read" value="1"/>
@@ -23804,8 +23804,8 @@
     </enum>
     <enum name="VideoColorRange" cname="GstVideoColorRange" type="enum" gtype="gst_video_color_range_get_type">
       <member cname="GST_VIDEO_COLOR_RANGE_UNKNOWN" name="Unknown" value="0"/>
-      <member cname="GST_VIDEO_COLOR_RANGE_0_255" name="0255" value="1"/>
-      <member cname="GST_VIDEO_COLOR_RANGE_16_235" name="16235" value="2"/>
+      <member cname="GST_VIDEO_COLOR_RANGE_0_255" name="_00255" value="1"/>
+      <member cname="GST_VIDEO_COLOR_RANGE_16_235" name="_1616235" value="2"/>
     </enum>
     <enum name="VideoFormat" cname="GstVideoFormat" type="enum" gtype="gst_video_format_get_type">
       <member cname="GST_VIDEO_FORMAT_UNKNOWN" name="Unknown" value="0"/>
@@ -25487,7 +25487,7 @@
         <parameters/>
       </method>
     </struct>
-    <struct name="VideoGLTextureUploadMeta" cname="GstVideoGLTextureUploadMeta" opaque="false" hidden="false">
+    <struct name="VideoGLTextureUploadMeta" cname="GstVideoGLTextureUploadMeta" opaque="true" hidden="false">
       <field cname="meta" access="public" writeable="true" readable="true" name="Meta" type="GstMeta">
         <warning>missing glib:type-name</warning>
       </field>

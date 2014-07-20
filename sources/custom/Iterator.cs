@@ -114,7 +114,7 @@ namespace Gst {
 
 		~Iterator () {
 			if (Raw != IntPtr.Zero)
-				Free ();
+				Free (Handle);
 		}
 
 	}

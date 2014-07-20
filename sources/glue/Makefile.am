@@ -8,6 +8,8 @@ libgstreamersharpglue_1_0_0_la_LDFLAGS = -module -avoid-version -no-undefined
 
 libgstreamersharpglue_1_0_0_la_LIBADD = $(GST_LIBS)
 
+libgstreamersharpglue_1_0_0_la_CPPFLAGS = -DGST_USE_UNSTABLE_API
+
 INCLUDES = $(GST_CFLAGS) -I$(top_srcdir)
 
 libgstreamersharpglue.dll: $(libgstreamersharpglue_1_0_0_la_OBJECTS) libgstreamersharpglue.rc libgstreamersharpglue.def
