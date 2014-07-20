@@ -73,7 +73,7 @@ AC_SUBST(GACUTIL_FLAGS)
 AC_SUBST(LIB_PREFIX)
 AC_SUBST(LIB_SUFFIX)
 
-dnl Check for gtk-sharp
+dnl Check for glib-sharp
 PKG_CHECK_MODULES(GLIB_SHARP, glib-sharp-3.0 >= 2.99.3)
 AC_SUBST(GLIB_SHARP_CFLAGS)
 AC_SUBST(GLIB_SHARP_LIBS)
@@ -81,6 +81,11 @@ gtksharp_prefix=`pkg-config --variable=prefix gtk-sharp-3.0`
 gapidir=`pkg-config --variable=gapidir gtk-sharp-3.0`
 AC_SUBST(gtksharp_prefix)
 AC_SUBST(gapidir)
+
+dnl Check for gio-sharp
+PKG_CHECK_MODULES(GIO_SHARP, gio-sharp-3.0 >= 2.99.3)
+AC_SUBST(GIO_SHARP_CFLAGS)
+AC_SUBST(GIO_SHARP_LIBS)
 
 dnl Find GAPI
 PKG_CHECK_MODULES(GAPI, gapi-3.0 >= 2.99.3)
