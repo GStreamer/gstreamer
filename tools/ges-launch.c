@@ -744,22 +744,16 @@ main (int argc, gchar ** argv)
 
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
-        "Take thumbnails every n seconds (saved in current directory)", "N"},
+        "Save thumbnail every <n> seconds to current directory", "<n>"},
     {"smartrender", 's', 0, G_OPTION_ARG_NONE, &smartrender,
-        "Render to outputuri, and avoid decoding/reencoding", NULL},
+        "Render to outputuri and avoid decoding/reencoding", NULL},
     {"outputuri", 'o', 0, G_OPTION_ARG_STRING, &outputuri,
-        "URI to encode to", "URI (<protocol>://<location>)"},
+        "URI to encode to", "<protocol>://<location>"},
     {"format", 'f', 0, G_OPTION_ARG_STRING, &format,
-          "Set the properties to use for the encoding profile "
-          "(in case of transcoding.) For example:\n"
-          "video/mpegts:video/x-raw,width=1920,height=1080->video/x-h264:audio/x-ac3\n"
-          "A preset name can be used by adding +presetname, eg:\n"
-          "video/webm:video/x-vp8+mypreset:audio/x-vorbis\n"
-          "The presence property of the profile can be specified with |<presence>, eg:\n"
-          "video/webm:video/x-vp8|<presence>:audio/x-vorbis\n",
-        "properties-values"},
+          "Specify an encoding profile on the command line",
+        "<profile>"},
     {"repeat", 'r', 0, G_OPTION_ARG_INT, &repeat,
-        "Number of time to repeat timeline", NULL},
+        "Number of times to repeat timeline", "<times>"},
     {"list-transitions", 't', 0, G_OPTION_ARG_NONE, &list_transitions,
         "List valid transition types and exit", NULL},
     {"list-patterns", 'p', 0, G_OPTION_ARG_NONE, &list_patterns,
@@ -771,16 +765,16 @@ main (int argc, gchar ** argv)
     {"verbose", 0, 0, G_OPTION_ARG_NONE, &verbose,
         "Output status information and property notifications", NULL},
     {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
-        "Do not output status information of TYPE", "TYPE1,TYPE2,..."},
+        "Do not output status information of <type>", "<type1>,<type2>,..."},
     {"sample-paths", 'P', 0, G_OPTION_ARG_CALLBACK, &_add_media_path,
         "List of pathes to look assets in if they were moved"},
     {"sample-path-recurse", 'R', 0, G_OPTION_ARG_CALLBACK,
           &_add_media_path,
-        "Same as --sample-paths but recursing into the folder"},
+        "Same as above, but recursing into the folder"},
     {"track-types", 'p', 0, G_OPTION_ARG_CALLBACK, &parse_track_type,
         "Defines the track types to be created"},
     {"mute", 0, 0, G_OPTION_ARG_NONE, &mute,
-        "Mute playback output, which means that we use faksinks"},
+        "Mute playback output by using fakesinks"},
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &disable_mixing,
         "Do not use mixing element in the tracks"},
     {"videosink", 'v', 0, G_OPTION_ARG_STRING, &videosink,
@@ -806,7 +800,7 @@ main (int argc, gchar ** argv)
   ctx = g_option_context_new ("- plays or renders a timeline.");
   g_option_context_set_summary (ctx,
       "ges-launch renders a timeline, which can be specified on the commandline,\n"
-      "or loaded from a file using the -q option.\n\n"
+      "or loaded from a xges file using the -l option.\n\n"
       "A timeline is a list of files, patterns, and transitions to be rendered\n"
       "one after the other. Files and Patterns provide video and audio as the\n"
       "primary input, and transitions animate between the end of one file/pattern\n"
@@ -818,8 +812,27 @@ main (int argc, gchar ** argv)
       "or \"+transition\", followed by a <type> and duration (in seconds, must be\n"
       "greater than 0)\n\n"
       "Durations in all cases can be fractions of a second.\n\n"
-      "Example:\n"
-      "ges-launch file1.avi 0 45 +transition crossfade 3.5 file2.avi 0 0");
+      "========\nExamples\n========\n\n"
+      "Play video1.ogv from inpoint 5 with duration 10 in seconds:\n"
+      "$ ges-launch video1.ogv 5 10\n\n"
+      "Crossfade:\n"
+      "$ ges-launch video1.ogv 0 10 +transition crossfade 3.5 video2.ogv 0 10\n\n"
+      "Render xges to ogv:\n"
+      "$ ges-launch -l project.xges -o rendering.ogv\n\n"
+      "Render xges to an XML encoding-profile called mymkv:\n"
+      "$ ges-launch -l project.xges -o rendering.mkv -e mymkv\n\n"
+      "Render to mp4:\n"
+      "$ ges-launch -l project.xges -o out.mp4 \\\n"
+      "             -f \"video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=1,layer=3\"\n\n"
+      "Render xges to WebM with 1920x1080 resolution:\n"
+      "$ ges-launch -l project.xges -o out.webm \\\n"
+      "             -f \"video/webm:video/x-raw,width=1920,height=1080->video/x-vp8:audio/x-vorbis\"\n\n"
+      "A preset name can be used by adding +presetname:\n"
+      "$ ges-launch -l project.xges -o out.webm \\\n"
+      "             -f \"video/webm:video/x-vp8+presetname:x-vorbis\"\n\n"
+      "The presence property of the profile can be specified with |<presence>:\n"
+      "$ ges-launch -l project.xges -o out.ogv \\\n"
+      "             -f \"application/ogg:video/x-theora|<presence>:audio/x-vorbis\"");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
