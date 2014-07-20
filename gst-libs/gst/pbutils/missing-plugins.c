@@ -528,7 +528,7 @@ gst_missing_plugin_message_get_description (GstMessage * msg)
         else if (missing_type == GST_MISSING_TYPE_URISINK)
           ret = gst_pb_utils_get_sink_description (detail);
         else
-          ret = gst_pb_utils_get_sink_description (detail);
+          ret = gst_pb_utils_get_element_description (detail);
         g_free (detail);
       }
       break;
