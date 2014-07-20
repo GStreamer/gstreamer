@@ -318,14 +318,14 @@ gst_omx_audio_sink_open (GstAudioSink * audiosink)
 
   err = gst_omx_port_set_enabled (self->in_port, FALSE);
   if (err != OMX_ErrorNone) {
-    GST_ERROR_OBJECT (self, "Failed to enable port: %s (0x%08x)",
+    GST_ERROR_OBJECT (self, "Failed to disable port: %s (0x%08x)",
         gst_omx_error_to_string (err), err);
     return FALSE;
   }
 
   err = gst_omx_port_set_enabled (self->out_port, FALSE);
   if (err != OMX_ErrorNone) {
-    GST_ERROR_OBJECT (self, "Failed to enable port: %s (0x%08x)",
+    GST_ERROR_OBJECT (self, "Failed to disable port: %s (0x%08x)",
         gst_omx_error_to_string (err), err);
     return FALSE;
   }
@@ -589,6 +589,13 @@ gst_omx_audio_sink_prepare (GstAudioSink * audiosink,
     goto activation;
   }
 
+  err = gst_omx_port_set_flushing (self->in_port, 5 * GST_SECOND, FALSE);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self, "Failed to set port not flushing: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    goto activation;
+  }
+
   err = gst_omx_port_set_enabled (self->in_port, TRUE);
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self, "Failed to enable port: %s (0x%08x)",
@@ -726,13 +733,6 @@ gst_omx_audio_sink_unprepare (GstAudioSink * audiosink)
 
   err = gst_omx_port_wait_enabled (self->in_port, 1 * GST_SECOND);
   if (err != OMX_ErrorNone) {
-    goto failed;
-  }
-
-  err = gst_omx_port_set_flushing (self->in_port, 5 * GST_SECOND, FALSE);
-  if (err != OMX_ErrorNone) {
-    GST_ERROR_OBJECT (self, "Failed to set port not flushing: %s (0x%08x)",
-        gst_omx_error_to_string (err), err);
     goto failed;
   }
 
