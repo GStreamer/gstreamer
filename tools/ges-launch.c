@@ -741,6 +741,7 @@ main (int argc, gchar ** argv)
   gchar *videosink = NULL, *audiosink = NULL;
   const gchar *scenario = NULL;
   gboolean list_action_types = FALSE;
+  gchar *encoding_profile = NULL;
 
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
@@ -752,6 +753,8 @@ main (int argc, gchar ** argv)
     {"format", 'f', 0, G_OPTION_ARG_STRING, &format,
           "Specify an encoding profile on the command line",
         "<profile>"},
+    {"encoding-profile", 'e', 0, G_OPTION_ARG_STRING, &encoding_profile,
+        "Use a specific encoding profile from XML", "<profile-name>"},
     {"repeat", 'r', 0, G_OPTION_ARG_INT, &repeat,
         "Number of times to repeat timeline", "<times>"},
     {"list-transitions", 't', 0, G_OPTION_ARG_NONE, &list_transitions,
@@ -908,7 +911,14 @@ main (int argc, gchar ** argv)
           GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (timeline)));
       const GList *profiles = ges_project_list_encoding_profiles (proj);
 
-      prof = profiles ? profiles->data : NULL;
+      if (profiles) {
+        prof = profiles->data;
+        if (encoding_profile)
+          for (; profiles; profiles = profiles->next)
+            if (strcmp (encoding_profile,
+                    gst_encoding_profile_get_name (profiles->data)) == 0)
+              prof = profiles->data;
+      }
     }
 
     if (!prof) {
