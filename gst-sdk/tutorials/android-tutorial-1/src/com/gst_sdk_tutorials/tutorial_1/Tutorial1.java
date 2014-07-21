@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.gstreamer.GStreamer;
+import org.freedesktop.gstreamer.GStreamer;
 
 public class Tutorial1 extends Activity {
     private native String nativeGetGStreamerInfo();

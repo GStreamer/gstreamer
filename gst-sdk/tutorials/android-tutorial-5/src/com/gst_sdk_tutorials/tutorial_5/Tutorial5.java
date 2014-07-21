@@ -22,7 +22,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.gstreamer.GStreamer;
+import org.freedesktop.gstreamer.GStreamer;
 import com.lamerman.FileDialog;
 
 public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {

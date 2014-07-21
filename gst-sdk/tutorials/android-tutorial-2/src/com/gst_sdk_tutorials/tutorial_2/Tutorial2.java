@@ -9,7 +9,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.gstreamer.GStreamer;
+import org.freedesktop.gstreamer.GStreamer;
 
 public class Tutorial2 extends Activity {
     private native void nativeInit();     // Initialize native code, build pipeline, etc
