@@ -260,7 +260,8 @@ static inline gboolean
 _have_to_flush_downstream (GnlUpdateStackReason update_reason)
 {
   if (update_reason == COMP_UPDATE_STACK_ON_COMMIT ||
-      update_reason == COMP_UPDATE_STACK_ON_SEEK)
+      update_reason == COMP_UPDATE_STACK_ON_SEEK ||
+      update_reason == COMP_UPDATE_STACK_INITIALIZE)
     return TRUE;
 
   return FALSE;
