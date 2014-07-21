@@ -7321,8 +7321,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     lang_code = QT_UINT16 ((guint8 *) mdhd->data + 28);
   }
 
-  if (lang_code < 0x800) {
+  if (lang_code < 0x400) {
     qtdemux_lang_map_qt_code_to_iso (stream->lang_id, lang_code);
+  } else if (lang_code == 0x7fff) {
+    stream->lang_id[0] = 0;     /* unspecified */
   } else {
     stream->lang_id[0] = 0x60 + ((lang_code >> 10) & 0x1F);
     stream->lang_id[1] = 0x60 + ((lang_code >> 5) & 0x1F);

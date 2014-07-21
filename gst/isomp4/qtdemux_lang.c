@@ -189,7 +189,7 @@ qtdemux_lang_map_qt_code_to_iso (gchar id[4], guint16 qt_lang_code)
 {
   const gchar *iso_code;
 
-  g_assert (qt_lang_code < 0x800);
+  g_assert (qt_lang_code < 0x400);
 
   if (qt_lang_code < G_N_ELEMENTS (qt_lang_map))
     iso_code = qt_lang_map[qt_lang_code];
