@@ -94,7 +94,9 @@ class Reporter(Loggable):
             raise UnknownResult("%s" % test.result)
 
     def after_test(self):
-        self.results.append(self._current_test)
+        if self._current_test not in self.results:
+            self.results.append(self._current_test)
+
         self.add_results(self._current_test)
         self.out.close()
         self.out = None
