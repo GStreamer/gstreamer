@@ -496,6 +496,7 @@ _initialize_stack_func (GnlComposition * comp)
 {
   GnlCompositionPrivate *priv = comp->priv;
 
+  comp->priv->next_base_time = 0;
   /* set ghostpad target */
   if (!(update_pipeline (comp, COMP_REAL_START (comp),
               COMP_UPDATE_STACK_INITIALIZE))) {
@@ -1992,6 +1993,7 @@ _commit_func (GnlComposition * comp)
   GstClockTime curpos;
   GnlCompositionPrivate *priv = comp->priv;
 
+  priv->next_base_time = 0;
   GST_INFO_OBJECT (comp, "Commiting state");
 
   /* Get current so that it represent the duration it was
