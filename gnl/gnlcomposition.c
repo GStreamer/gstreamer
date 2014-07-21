@@ -501,8 +501,6 @@ _initialize_stack_func (GnlComposition * comp)
   if (!(update_pipeline (comp, COMP_REAL_START (comp),
               COMP_UPDATE_STACK_INITIALIZE))) {
     GST_FIXME_OBJECT (comp, "PLEASE signal state change failure ASYNC");
-
-    return G_SOURCE_REMOVE;
   }
 
   priv->initialized = TRUE;
