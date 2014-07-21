@@ -75,6 +75,9 @@ GST_PLUGIN_STATIC_DECLARE(mpegtsdemux);
 #if defined(GST_IOS_PLUGIN_MPEGTSMUX) || defined(GST_IOS_PLUGINS_CODECS_RESTRICTED)
 GST_PLUGIN_STATIC_DECLARE(mpegtsmux);
 #endif
+#if defined(GST_IOS_PLUGIN_VOAACENC) || defined(GST_IOS_PLUGINS_CODECS_RESTRICTED)
+GST_PLUGIN_STATIC_DECLARE(voaacenc);
+#endif
 #if defined(GST_IOS_PLUGIN_A52DEC) || defined(GST_IOS_PLUGINS_CODECS_RESTRICTED)
 GST_PLUGIN_STATIC_DECLARE(a52dec);
 #endif
@@ -120,14 +123,20 @@ GST_PLUGIN_STATIC_DECLARE(assrender);
 #if defined(GST_IOS_PLUGIN_MMS) || defined(GST_IOS_PLUGINS_NET_RESTRICTED)
 GST_PLUGIN_STATIC_DECLARE(mms);
 #endif
+#if defined(GST_IOS_PLUGIN_RTMP) || defined(GST_IOS_PLUGINS_NET_RESTRICTED)
+GST_PLUGIN_STATIC_DECLARE(rtmp);
+#endif
 #if defined(GST_IOS_PLUGIN_OSXAUDIO) || defined(GST_IOS_PLUGINS_SYS)
 GST_PLUGIN_STATIC_DECLARE(osxaudio);
 #endif
 #if defined(GST_IOS_PLUGIN_APPLEMEDIA) || defined(GST_IOS_PLUGINS_SYS)
 GST_PLUGIN_STATIC_DECLARE(applemedia);
 #endif
-#if defined(GST_IOS_PLUGIN_EGLGLESSINK) || defined(GST_IOS_PLUGINS_SYS)
-GST_PLUGIN_STATIC_DECLARE(eglglessink);
+#if defined(GST_IOS_PLUGIN_SHM) || defined(GST_IOS_PLUGINS_SYS)
+GST_PLUGIN_STATIC_DECLARE(shm);
+#endif
+#if defined(GST_IOS_PLUGIN_OPENGL) || defined(GST_IOS_PLUGINS_SYS)
+GST_PLUGIN_STATIC_DECLARE(opengl);
 #endif
 #if defined(GST_IOS_PLUGIN_LIBVISUAL) || defined(GST_IOS_PLUGINS_VIS)
 GST_PLUGIN_STATIC_DECLARE(libvisual);
@@ -423,6 +432,12 @@ GST_PLUGIN_STATIC_DECLARE(y4mdec);
 #if defined(GST_IOS_PLUGIN_JPEGFORMAT) || defined(GST_IOS_PLUGINS_CODECS)
 GST_PLUGIN_STATIC_DECLARE(jpegformat);
 #endif
+#if defined(GST_IOS_PLUGIN_GDP) || defined(GST_IOS_PLUGINS_CODECS)
+GST_PLUGIN_STATIC_DECLARE(gdp);
+#endif
+#if defined(GST_IOS_PLUGIN_RSVG) || defined(GST_IOS_PLUGINS_CODECS)
+GST_PLUGIN_STATIC_DECLARE(rsvg);
+#endif
 #if defined(GST_IOS_PLUGIN_TCP) || defined(GST_IOS_PLUGINS_NET)
 GST_PLUGIN_STATIC_DECLARE(tcp);
 #endif
@@ -447,10 +462,13 @@ GST_PLUGIN_STATIC_DECLARE(dataurisrc);
 #if defined(GST_IOS_PLUGIN_SDP) || defined(GST_IOS_PLUGINS_NET)
 GST_PLUGIN_STATIC_DECLARE(sdp);
 #endif
+#if defined(GST_IOS_PLUGIN_GNONLIN) || defined(GST_IOS_PLUGINS_EDITING)
+GST_PLUGIN_STATIC_DECLARE(gnonlin);
+#endif
 
 #if defined(GST_IOS_GIO_MODULE_GNUTLS)
   #include <gio/gio.h>
-  G_IO_MODULE_DECLARE(gnutls);
+  GST_G_IO_MODULE_DECLARE(gnutls);
 #endif
 
 void
@@ -467,6 +485,7 @@ gst_ios_init (void)
   const gchar *tmp_dir = [tmp UTF8String];
   const gchar *cache_dir = [cache UTF8String];
   const gchar *docs_dir = [docs UTF8String];
+  gchar *ca_certificates;
     
   g_setenv ("TMP", tmp_dir, TRUE);
   g_setenv ("TEMP", tmp_dir, TRUE);
@@ -480,6 +499,10 @@ gst_ios_init (void)
   g_setenv ("XDG_CONFIG_HOME", cache_dir, TRUE);
   g_setenv ("XDG_DATA_HOME", resources_dir, TRUE);
   g_setenv ("FONTCONFIG_PATH", resources_dir, TRUE);
+
+  ca_certificates = g_build_filename (resources_dir, "ssl", "certs", "ca-certifcates.crt", NULL);
+  g_setenv ("CA_CERTIFICATES", ca_certificates, TRUE);
+  g_free (ca_certificates);
     
   gst_init (NULL, NULL);
 
@@ -558,6 +581,9 @@ gst_ios_init (void)
 #if defined(GST_IOS_PLUGIN_MPEGTSMUX) || defined(GST_IOS_PLUGINS_CODECS_RESTRICTED)
     GST_PLUGIN_STATIC_REGISTER(mpegtsmux);
 #endif
+#if defined(GST_IOS_PLUGIN_VOAACENC) || defined(GST_IOS_PLUGINS_CODECS_RESTRICTED)
+    GST_PLUGIN_STATIC_REGISTER(voaacenc);
+#endif
 #if defined(GST_IOS_PLUGIN_A52DEC) || defined(GST_IOS_PLUGINS_CODECS_RESTRICTED)
     GST_PLUGIN_STATIC_REGISTER(a52dec);
 #endif
@@ -603,14 +629,20 @@ gst_ios_init (void)
 #if defined(GST_IOS_PLUGIN_MMS) || defined(GST_IOS_PLUGINS_NET_RESTRICTED)
     GST_PLUGIN_STATIC_REGISTER(mms);
 #endif
+#if defined(GST_IOS_PLUGIN_RTMP) || defined(GST_IOS_PLUGINS_NET_RESTRICTED)
+    GST_PLUGIN_STATIC_REGISTER(rtmp);
+#endif
 #if defined(GST_IOS_PLUGIN_OSXAUDIO) || defined(GST_IOS_PLUGINS_SYS)
     GST_PLUGIN_STATIC_REGISTER(osxaudio);
 #endif
 #if defined(GST_IOS_PLUGIN_APPLEMEDIA) || defined(GST_IOS_PLUGINS_SYS)
     GST_PLUGIN_STATIC_REGISTER(applemedia);
 #endif
-#if defined(GST_IOS_PLUGIN_EGLGLESSINK) || defined(GST_IOS_PLUGINS_SYS)
-    GST_PLUGIN_STATIC_REGISTER(eglglessink);
+#if defined(GST_IOS_PLUGIN_SHM) || defined(GST_IOS_PLUGINS_SYS)
+    GST_PLUGIN_STATIC_REGISTER(shm);
+#endif
+#if defined(GST_IOS_PLUGIN_OPENGL) || defined(GST_IOS_PLUGINS_SYS)
+    GST_PLUGIN_STATIC_REGISTER(opengl);
 #endif
 #if defined(GST_IOS_PLUGIN_LIBVISUAL) || defined(GST_IOS_PLUGINS_VIS)
     GST_PLUGIN_STATIC_REGISTER(libvisual);
@@ -906,6 +938,12 @@ gst_ios_init (void)
 #if defined(GST_IOS_PLUGIN_JPEGFORMAT) || defined(GST_IOS_PLUGINS_CODECS)
     GST_PLUGIN_STATIC_REGISTER(jpegformat);
 #endif
+#if defined(GST_IOS_PLUGIN_GDP) || defined(GST_IOS_PLUGINS_CODECS)
+    GST_PLUGIN_STATIC_REGISTER(gdp);
+#endif
+#if defined(GST_IOS_PLUGIN_RSVG) || defined(GST_IOS_PLUGINS_CODECS)
+    GST_PLUGIN_STATIC_REGISTER(rsvg);
+#endif
 #if defined(GST_IOS_PLUGIN_TCP) || defined(GST_IOS_PLUGINS_NET)
     GST_PLUGIN_STATIC_REGISTER(tcp);
 #endif
@@ -930,9 +968,12 @@ gst_ios_init (void)
 #if defined(GST_IOS_PLUGIN_SDP) || defined(GST_IOS_PLUGINS_NET)
     GST_PLUGIN_STATIC_REGISTER(sdp);
 #endif
+#if defined(GST_IOS_PLUGIN_GNONLIN) || defined(GST_IOS_PLUGINS_EDITING)
+    GST_PLUGIN_STATIC_REGISTER(gnonlin);
+#endif
 
 #if defined(GST_IOS_GIO_MODULE_GNUTLS)
-  G_IO_MODULE_LOAD(gnutls);
+  GST_G_IO_MODULE_LOAD(gnutls);
 #endif
 
   /* Lower the ranks of filesrc and giosrc so iosavassetsrc is
