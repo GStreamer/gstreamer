@@ -71,6 +71,7 @@ struct _GstAudioMixer {
 
   /* Last time we noticed a discont */
   GstClockTime discont_time;
+  gint64          base_time;
 
   /* Size in samples that is output per buffer */
   guint blocksize;
