@@ -1387,7 +1387,8 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
         gst_flow_combiner_add_pad (demux->flowcombiner, stream->pad);
     }
 
-    if (bstream->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_H264) {
+    if (base->mode != BASE_MODE_PUSHING
+        && bstream->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_H264) {
       stream->scan_function =
           (GstTsDemuxKeyFrameScanFunction) scan_keyframe_h264;
     } else {
