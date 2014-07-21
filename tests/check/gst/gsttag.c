@@ -608,6 +608,25 @@ GST_START_TEST (test_serialization)
 
 GST_END_TEST;
 
+GST_START_TEST (test_empty_taglist_serialization)
+{
+  GstTagList *taglist, *taglist2;
+  gchar *str;
+
+  taglist = gst_tag_list_new_empty ();
+  str = gst_tag_list_to_string (taglist);
+  taglist2 = gst_tag_list_new_from_string (str);
+  fail_if (taglist2 == NULL);
+  fail_unless (gst_tag_list_is_equal (taglist, taglist2));
+
+  gst_tag_list_unref (taglist);
+  gst_tag_list_unref (taglist2);
+  g_free (str);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_tag_suite (void)
 {
@@ -628,6 +647,7 @@ gst_tag_suite (void)
   tcase_add_test (tc_chain, test_equal);
   tcase_add_test (tc_chain, test_writability);
   tcase_add_test (tc_chain, test_serialization);
+  tcase_add_test (tc_chain, test_empty_taglist_serialization);
 
   return s;
 }
