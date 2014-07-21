@@ -744,6 +744,9 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
         src->colorFrame->getWidth (),
         src->colorFrame->getHeight (),
         src->colorFrame->getDataSize ());
+  } else {
+    g_return_val_if_reached (GST_FLOW_ERROR);
+    return GST_FLOW_ERROR;
   }
 
   if (G_UNLIKELY (src->oni_start_ts == GST_CLOCK_TIME_NONE))
