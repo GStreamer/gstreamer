@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<!-- Error with array -->
 	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_formats_contains']" name="hidden">true</attr>
 	<!-- MiniObject issues -->
+	<attr path="/api/namespace/struct[@cname='GstMiniObject']" name="opaque">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='copy']" name="type">gpointer</attr>
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='free']" name="type">gpointer</attr>
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='dispose']" name="type">gpointer</attr>
@@ -46,14 +47,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/object[@cname='GstBin']/field[@cname='element']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstPipeline']/field[@cname='bin']" name="hidden">true</attr>
 	<!-- add opaque attribute to all structs which need special handling -->
-	<change-node-type path="/api//namespace//boxed[field/@cname='mini_object']">struct</change-node-type>
-	<attr path="/api/namespace//struct[field/@cname='mini_object']" name="opaque">true</attr>
-	<change-node-type path="/api/namespace//boxed[@cname='GstStructure']">struct</change-node-type>
-	<attr path="/api/namespace/struct[@cname='GstStructure']" name="opaque">true</attr>
+	<attr path="/api/namespace//boxed[field[@type='GstMiniObject']]" name="opaque">true</attr>
+	<attr path="/api/namespace//boxed[field[@type='GstMiniObject']]" name="parent">GstMiniObject</attr>
+	<attr path="/api/namespace//boxed/field[@type='GstMiniObject']" name="hidden">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstStructure']" name="opaque">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']" name="opaque">true</attr>
-	<change-node-type path="/api/namespace//boxed[@cname='GstIterator']">struct</change-node-type>
-	<attr path="/api/namespace/struct[@cname='GstIterator']" name="opaque">true</attr>
-	<attr path="/api/namespace/struct[@cname='GstIterator']/method[@cname='gst_iterator_next']" name="hidden">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstIterator']" name="opaque">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstIterator']/method[@cname='gst_iterator_next']" name="hidden">true</attr>
 	<remove-node path="/api/namespace/boxed[@cname='GstStructure']/field[@cname='name']" />
 	<!-- Fix for GstChildProxy -->
 	<attr path="/api/namespace/interface[@cname='GstChildProxy']/method[@cname='gst_child_proxy_get_property']" name="hidden">1</attr>
@@ -81,10 +81,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='func']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='destroy_data']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstTask']/field[@cname='notify']" name="hidden">true</attr>
-
-	<!-- Add miniobject methods to all miniobject types -->
-	<copy-node path="/api/namespace/struct[@cname='GstMiniObject']//method">/api/namespace//boxed[field/@cname='mini_object']</copy-node>
-	<attr path="/api/namespace/struct[@cname='GstMiniObject']//method" name="hidden">true</attr>
 
 	<!-- hide user data; FIXME: already removed in 1.2 GIR file, remove when we update to this version -->
 	<attr path="/api/namespace/object[@cname='GstBus']/method[@cname='gst_bus_sync_signal_handler']/parameters/parameter[@name='data']" name="hidden">1</attr>
@@ -119,9 +115,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_pad')]">/api/namespace/object[@cname='GstPad']</move-node>
 
 	<!-- Things implemented on our own -->
-	<attr path="/api/namespace/struct[@cname='GstMessage']/method[@cname='gst_message_parse_error']" name="hidden">true</attr>
-	<attr path="/api/namespace/struct[@cname='GstMessage']/method[@cname='gst_message_get_stream_status_object']" name="hidden">true</attr>
-	<attr path="/api/namespace/struct[@cname='GstMessage']/method[@cname='gst_message_set_stream_status_object']" name="hidden">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstMessage']/method[@cname='gst_message_parse_error']" name="hidden">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstMessage']/method[@cname='gst_message_get_stream_status_object']" name="hidden">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstMessage']/method[@cname='gst_message_set_stream_status_object']" name="hidden">true</attr>
 
 	<!-- GstVideo -->
 	<attr path="/api/namespace/boxed[@cname='GstVideoCodecState']/field[@cname='padding']" name="type">gpointer</attr>
@@ -192,6 +188,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
     <remove-attr path="//object[@cname='GstMpegtsGlobal']//method//return-type[@type='GPtrArray']" name="null_term_array"/>
     <remove-attr path="//boxed[@cname='GstMpegtsDescriptor']//method//parameter[@type='GPtrArray***']" name="array"/>
     <remove-attr path="//boxed[@cname='GstMpegtsDescriptor']//method//parameter[@type='GPtrArray***']" name="null_term_array"/>
+    <attr path="//method[@cname='gst_mini_object_replace']" name="hidden">true</attr>
+    <attr path="//method[@cname='gst_mini_object_take']" name="hidden">true</attr>
+    <attr path="//struct[@cname='GstVideoGLTextureUploadMeta']" name="nohash">true</attr>
+    <attr path="//struct[@cname='GstVideoGLTextureUploadMeta']" name="noequals">true</attr>
 
     <!-- No way to correctly generate these without the element type -->
     <attr path="//boxed[@cname='GstMpegtsDescriptor']//method[parameters/parameter[@type='GArray***']]" name="hidden">true</attr>

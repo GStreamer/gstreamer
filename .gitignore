@@ -15,6 +15,9 @@ ltmain.sh
 missing
 stamp-h
 
+# gedit temporary files
+*.*~
+
 # glue binaries/objects (FIXME: kill the glue, kthxbye)
 sources/glue/.deps/
 sources/glue/*.o

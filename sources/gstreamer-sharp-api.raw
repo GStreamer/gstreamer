@@ -7602,6 +7602,12 @@
           <parameter name="flags" type="GstLockFlags"/>
         </parameters>
       </method>
+      <method name="Ref" cname="gst_mini_object_ref">
+        <return-type type="GstMiniObject*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="SetQdata" cname="gst_mini_object_set_qdata">
         <return-type type="void"/>
         <parameters>
@@ -10931,8 +10937,8 @@
       <constant value="-1" ctype="gint" gtype="gint" name="VALUE_LESS_THAN"/>
       <constant value="2" ctype="gint" gtype="gint" name="VALUE_UNORDERED"/>
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR"/>
-      <constant value="91" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
-      <constant value="3" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
+      <constant value="0" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
+      <constant value="4" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
       <constant value="0" ctype="gint" gtype="gint" name="VERSION_NANO"/>
     </object>
   </namespace>
@@ -16056,131 +16062,6 @@
     </object>
     <object name="Constants" cname="GstFftConstants" opaque="true"/>
   </namespace>
-  <namespace name="GstInsertBin" library="gstinsertbin-1.0">
-    <callback name="InsertBinCallback" cname="GstInsertBinCallback">
-      <return-type type="void"/>
-      <parameters>
-        <parameter name="insertbin" type="GstInsertBin*"/>
-        <parameter name="element" type="GstElement*"/>
-        <parameter name="success" type="gboolean"/>
-        <parameter closure="3" name="user_data" type="gpointer"/>
-      </parameters>
-    </callback>
-    <object name="InsertBin" cname="GstInsertBin" opaque="false" hidden="false" parent="GstBin">
-      <implements>
-        <interface cname="GstChildProxy"/>
-      </implements>
-      <class_struct cname="GstInsertBinClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" name="ParentClass" type="GstBinClass">
-          <warning>missing glib:type-name</warning>
-        </field>
-      </class_struct>
-      <method name="GetType" cname="gst_insert_bin_get_type" shared="true">
-        <return-type type="GType"/>
-      </method>
-      <constructor cname="gst_insert_bin_new">
-        <parameters>
-          <parameter name="name" type="const-gchar*"/>
-        </parameters>
-      </constructor>
-      <method name="Append" cname="gst_insert_bin_append">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="element" type="GstElement*"/>
-          <parameter closure="2" scope="async" name="callback" type="GstInsertBinCallback"/>
-          <parameter name="user_data" type="gpointer"/>
-        </parameters>
-      </method>
-      <method name="InsertAfter" cname="gst_insert_bin_insert_after">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="element" type="GstElement*"/>
-          <parameter name="sibling" type="GstElement*"/>
-          <parameter closure="3" scope="async" name="callback" type="GstInsertBinCallback"/>
-          <parameter name="user_data" type="gpointer"/>
-        </parameters>
-      </method>
-      <method name="InsertBefore" cname="gst_insert_bin_insert_before">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="element" type="GstElement*"/>
-          <parameter name="sibling" type="GstElement*"/>
-          <parameter closure="3" scope="async" name="callback" type="GstInsertBinCallback"/>
-          <parameter name="user_data" type="gpointer"/>
-        </parameters>
-      </method>
-      <method name="Prepend" cname="gst_insert_bin_prepend">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="element" type="GstElement*"/>
-          <parameter closure="2" scope="async" name="callback" type="GstInsertBinCallback"/>
-          <parameter name="user_data" type="gpointer"/>
-        </parameters>
-      </method>
-      <method name="Remove" cname="gst_insert_bin_remove">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="element" type="GstElement*"/>
-          <parameter closure="2" scope="async" name="callback" type="GstInsertBinCallback"/>
-          <parameter name="user_data" type="gpointer"/>
-        </parameters>
-      </method>
-      <field cname="parent" access="public" writeable="false" readable="true" name="Parent" type="GstBin*"/>
-      <field cname="priv" access="private" writeable="false" readable="false" name="Priv" type="GstInsertBinPrivate*">
-        <warning>missing glib:type-name</warning>
-      </field>
-      <signal name="AppendEvent" cname="append" when="last">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="_object" type="GstElement*"/>
-          <parameter name="p0" type="gpointer"/>
-          <parameter name="p1" type="gpointer"/>
-        </parameters>
-        <warning>Signal renamed because of existing method with same name</warning>
-      </signal>
-      <signal name="InsertAfterEvent" cname="insert-after" when="last">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="_object" type="GstElement*"/>
-          <parameter name="p0" type="GstElement*"/>
-          <parameter name="p1" type="gpointer"/>
-          <parameter name="p2" type="gpointer"/>
-        </parameters>
-        <warning>Signal renamed because of existing method with same name</warning>
-      </signal>
-      <signal name="InsertBeforeEvent" cname="insert-before" when="last">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="_object" type="GstElement*"/>
-          <parameter name="p0" type="GstElement*"/>
-          <parameter name="p1" type="gpointer"/>
-          <parameter name="p2" type="gpointer"/>
-        </parameters>
-        <warning>Signal renamed because of existing method with same name</warning>
-      </signal>
-      <signal name="PrependEvent" cname="prepend" when="last">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="_object" type="GstElement*"/>
-          <parameter name="p0" type="gpointer"/>
-          <parameter name="p1" type="gpointer"/>
-        </parameters>
-        <warning>Signal renamed because of existing method with same name</warning>
-      </signal>
-      <signal name="RemoveEvent" cname="remove" when="last">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="_object" type="GstElement*"/>
-          <parameter name="p0" type="gpointer"/>
-          <parameter name="p1" type="gpointer"/>
-        </parameters>
-        <warning>Signal renamed because of existing method with same name</warning>
-      </signal>
-    </object>
-    <struct name="InsertBinPrivate" cname="GstInsertBinPrivate" opaque="true" hidden="true"/>
-    <object name="Global" cname="GstInsertBinGlobal" opaque="true"/>
-    <object name="Constants" cname="GstInsertBinConstants" opaque="true"/>
-  </namespace>
   <namespace name="GstMpegts" library="gstmpegts-1.0">
     <enum name="ATSCDescriptorType" cname="GstMpegtsATSCDescriptorType" type="enum">
       <member cname="GST_MTS_DESC_ATSC_STUFFING" name="Stuffing" value="128"/>
@@ -17447,7 +17328,7 @@
       <field cname="symbol_rate" access="public" writeable="true" readable="true" name="SymbolRate" type="guint32"/>
       <field cname="fec_inner" access="public" writeable="true" readable="true" name="FecInner" type="GstMpegtsDVBCodeRate"/>
     </struct>
-    <boxed name="Section" cname="GstMpegtsSection" opaque="true" hidden="false">
+    <boxed name="Section" cname="GstMpegtsSection" opaque="false" hidden="false">
       <method name="GetType" cname="gst_mpegts_section_get_type" shared="true">
         <return-type type="GType"/>
       </method>
@@ -18946,8 +18827,8 @@
       <constant value="online-service" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_ONLINE_SERVICE"/>
       <constant value="storage-editing" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_STORAGE_EDITING"/>
       <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MAJOR"/>
-      <constant value="91" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
-      <constant value="3" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MINOR"/>
+      <constant value="0" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
+      <constant value="4" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MINOR"/>
       <constant value="0" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO"/>
     </object>
   </namespace>
@@ -25487,7 +25368,7 @@
         <parameters/>
       </method>
     </struct>
-    <struct name="VideoGLTextureUploadMeta" cname="GstVideoGLTextureUploadMeta" opaque="true" hidden="false">
+    <struct name="VideoGLTextureUploadMeta" cname="GstVideoGLTextureUploadMeta" opaque="false" hidden="false">
       <field cname="meta" access="public" writeable="true" readable="true" name="Meta" type="GstMeta">
         <warning>missing glib:type-name</warning>
       </field>

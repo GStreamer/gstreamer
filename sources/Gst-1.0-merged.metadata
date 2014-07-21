@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<metadata>
+	<remove-attr path="//*[local-name()='method' and @name='ref']" name="introspectable"/>
+</metadata>
