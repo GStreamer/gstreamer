@@ -309,7 +309,27 @@ print_tag_foreach (const GstTagList * tags, const gchar * tag,
 
   if (G_VALUE_HOLDS_STRING (&val))
     str = g_value_dup_string (&val);
-  else
+  else if (G_VALUE_TYPE (&val) == GST_TYPE_SAMPLE) {
+    GstSample *sample = gst_value_get_sample (&val);
+    GstBuffer *img = gst_sample_get_buffer (sample);
+    GstCaps *caps = gst_sample_get_caps (sample);
+
+    if (img) {
+      if (caps) {
+        gchar *caps_str;
+
+        caps_str = gst_caps_to_string (caps);
+        str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes, "
+            "type: %s", gst_buffer_get_size (img), caps_str);
+        g_free (caps_str);
+      } else {
+        str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes",
+            gst_buffer_get_size (img));
+      }
+    } else {
+      str = g_strdup ("NULL buffer");
+    }
+  } else
     str = gst_value_serialize (&val);
 
   g_print ("%*s%s: %s\n", 2 * depth, " ", gst_tag_get_nick (tag), str);
