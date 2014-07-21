@@ -307,9 +307,9 @@ print_tag_foreach (const GstTagList * tags, const gchar * tag,
 
   gst_tag_list_copy_value (&val, tags, tag);
 
-  if (G_VALUE_HOLDS_STRING (&val))
+  if (G_VALUE_HOLDS_STRING (&val)) {
     str = g_value_dup_string (&val);
-  else if (G_VALUE_TYPE (&val) == GST_TYPE_SAMPLE) {
+  } else if (G_VALUE_TYPE (&val) == GST_TYPE_SAMPLE) {
     GstSample *sample = gst_value_get_sample (&val);
     GstBuffer *img = gst_sample_get_buffer (sample);
     GstCaps *caps = gst_sample_get_caps (sample);
@@ -329,8 +329,9 @@ print_tag_foreach (const GstTagList * tags, const gchar * tag,
     } else {
       str = g_strdup ("NULL buffer");
     }
-  } else
+  } else {
     str = gst_value_serialize (&val);
+  }
 
   g_print ("%*s%s: %s\n", 2 * depth, " ", gst_tag_get_nick (tag), str);
   g_free (str);
