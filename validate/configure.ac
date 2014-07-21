@@ -116,6 +116,10 @@ dnl *** checks for library functions ***
 
 dnl *** checks for dependancy libraries ***
 
+dnl check for libm
+LT_LIB_M
+AC_SUBST(LIBM)
+
 dnl GLib is required
 GLIB_REQ=2.36.0
 AC_SUBST([GLIB_REQ])
