@@ -836,7 +836,9 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
     TSDemuxStream *stream = tmp->data;
 
-    stream->needs_keyframe = TRUE;
+
+    if (flags & GST_SEEK_FLAG_ACCURATE)
+      stream->needs_keyframe = TRUE;
 
     stream->seeked_pts = GST_CLOCK_TIME_NONE;
     stream->seeked_dts = GST_CLOCK_TIME_NONE;
@@ -1395,6 +1397,7 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     stream->active = FALSE;
 
     stream->need_newsegment = TRUE;
+    stream->needs_keyframe = FALSE;
     stream->discont = TRUE;
     stream->pts = GST_CLOCK_TIME_NONE;
     stream->dts = GST_CLOCK_TIME_NONE;
