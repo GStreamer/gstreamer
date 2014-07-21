@@ -28,6 +28,8 @@
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
 
+#define MAX_INDENT 40
+
 /* *INDENT-OFF* */
 static void my_g_string_append_printf (GString * str, int depth, const gchar * format, ...) G_GNUC_PRINTF (3, 4);
 /* *INDENT-ON* */
@@ -59,7 +61,7 @@ my_g_string_append_printf (GString * str, int depth, const gchar * format, ...)
 
 static void
 gst_stream_information_to_string (GstDiscovererStreamInfo * info, GString * s,
-    gint depth)
+    guint depth)
 {
   gchar *tmp;
   GstCaps *caps;
@@ -85,13 +87,68 @@ gst_stream_information_to_string (GstDiscovererStreamInfo * info, GString * s,
       gst_discoverer_stream_info_get_stream_id (info));
 }
 
+static void
+print_tag_foreach (const GstTagList * tags, const gchar * tag,
+    gpointer user_data)
+{
+  GValue val = { 0, };
+  gchar *str;
+  guint depth = GPOINTER_TO_UINT (user_data);
+
+  gst_tag_list_copy_value (&val, tags, tag);
+
+  if (G_VALUE_HOLDS_STRING (&val)) {
+    str = g_value_dup_string (&val);
+  } else if (G_VALUE_TYPE (&val) == GST_TYPE_SAMPLE) {
+    GstSample *sample = gst_value_get_sample (&val);
+    GstBuffer *img = gst_sample_get_buffer (sample);
+    GstCaps *caps = gst_sample_get_caps (sample);
+
+    if (img) {
+      if (caps) {
+        gchar *caps_str;
+
+        caps_str = gst_caps_to_string (caps);
+        str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes, "
+            "type: %s", gst_buffer_get_size (img), caps_str);
+        g_free (caps_str);
+      } else {
+        str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes",
+            gst_buffer_get_size (img));
+      }
+    } else {
+      str = g_strdup ("NULL buffer");
+    }
+  } else {
+    str = gst_value_serialize (&val);
+  }
+
+  g_print ("%*s%s: %s\n", 2 * depth, " ", gst_tag_get_nick (tag), str);
+  g_free (str);
+
+  g_value_unset (&val);
+}
+
+static void
+print_tags_topology (guint depth, const GstTagList * tags)
+{
+  g_print ("%*sTags:\n", 2 * depth, " ");
+  if (tags) {
+    gst_tag_list_foreach (tags, print_tag_foreach,
+        GUINT_TO_POINTER (depth + 1));
+  } else {
+    g_print ("%*sNone\n", 2 * (depth + 1), " ");
+  }
+  if (verbose)
+    g_print ("%*s\n", 2 * depth, " ");
+}
+
 static gchar *
 gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
-    gint depth)
+    guint depth)
 {
   GstDiscovererAudioInfo *audio_info;
   GString *s;
-  gchar *tmp;
   const gchar *ctmp;
   int len = 400;
   const GstTagList *tags;
@@ -118,28 +175,18 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
   my_g_string_append_printf (s, depth, "Max bitrate: %u\n",
       gst_discoverer_audio_info_get_max_bitrate (audio_info));
 
-  my_g_string_append_printf (s, depth, "Tags:\n");
   tags = gst_discoverer_stream_info_get_tags (info);
-  if (tags) {
-    tmp = gst_tag_list_to_string (tags);
-    my_g_string_append_printf (s, depth, "  %s\n", tmp);
-    g_free (tmp);
-  } else {
-    my_g_string_append_printf (s, depth, "  None\n");
-  }
-  if (verbose)
-    my_g_string_append_printf (s, depth, "\n");
+  print_tags_topology (depth, tags);
 
   return g_string_free (s, FALSE);
 }
 
 static gchar *
 gst_stream_video_information_to_string (GstDiscovererStreamInfo * info,
-    gint depth)
+    guint depth)
 {
   GstDiscovererVideoInfo *video_info;
   GString *s;
-  gchar *tmp;
   int len = 500;
   const GstTagList *tags;
 
@@ -173,28 +220,18 @@ gst_stream_video_information_to_string (GstDiscovererStreamInfo * info,
   my_g_string_append_printf (s, depth, "Max bitrate: %u\n",
       gst_discoverer_video_info_get_max_bitrate (video_info));
 
-  my_g_string_append_printf (s, depth, "Tags:\n");
   tags = gst_discoverer_stream_info_get_tags (info);
-  if (tags) {
-    tmp = gst_tag_list_to_string (tags);
-    my_g_string_append_printf (s, depth, "  %s\n", tmp);
-    g_free (tmp);
-  } else {
-    my_g_string_append_printf (s, depth, "  None\n");
-  }
-  if (verbose)
-    my_g_string_append_printf (s, depth, "\n");
+  print_tags_topology (depth, tags);
 
   return g_string_free (s, FALSE);
 }
 
 static gchar *
 gst_stream_subtitle_information_to_string (GstDiscovererStreamInfo * info,
-    gint depth)
+    guint depth)
 {
   GstDiscovererSubtitleInfo *subtitle_info;
   GString *s;
-  gchar *tmp;
   const gchar *ctmp;
   int len = 400;
   const GstTagList *tags;
@@ -210,17 +247,8 @@ gst_stream_subtitle_information_to_string (GstDiscovererStreamInfo * info,
   my_g_string_append_printf (s, depth, "Language: %s\n",
       ctmp ? ctmp : "<unknown>");
 
-  my_g_string_append_printf (s, depth, "Tags:\n");
   tags = gst_discoverer_stream_info_get_tags (info);
-  if (tags) {
-    tmp = gst_tag_list_to_string (tags);
-    my_g_string_append_printf (s, depth, "  %s\n", tmp);
-    g_free (tmp);
-  } else {
-    my_g_string_append_printf (s, depth, "  None\n");
-  }
-  if (verbose)
-    my_g_string_append_printf (s, depth, "\n");
+  print_tags_topology (depth, tags);
 
   return g_string_free (s, FALSE);
 }
@@ -270,7 +298,7 @@ print_stream_info (GstDiscovererStreamInfo * info, void *depth)
 }
 
 static void
-print_topology (GstDiscovererStreamInfo * info, gint depth)
+print_topology (GstDiscovererStreamInfo * info, guint depth)
 {
   GstDiscovererStreamInfo *next;
 
@@ -298,54 +326,10 @@ print_topology (GstDiscovererStreamInfo * info, gint depth)
 }
 
 static void
-print_tag_foreach (const GstTagList * tags, const gchar * tag,
-    gpointer user_data)
-{
-  GValue val = { 0, };
-  gchar *str;
-  gint depth = GPOINTER_TO_INT (user_data);
-
-  gst_tag_list_copy_value (&val, tags, tag);
-
-  if (G_VALUE_HOLDS_STRING (&val)) {
-    str = g_value_dup_string (&val);
-  } else if (G_VALUE_TYPE (&val) == GST_TYPE_SAMPLE) {
-    GstSample *sample = gst_value_get_sample (&val);
-    GstBuffer *img = gst_sample_get_buffer (sample);
-    GstCaps *caps = gst_sample_get_caps (sample);
-
-    if (img) {
-      if (caps) {
-        gchar *caps_str;
-
-        caps_str = gst_caps_to_string (caps);
-        str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes, "
-            "type: %s", gst_buffer_get_size (img), caps_str);
-        g_free (caps_str);
-      } else {
-        str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes",
-            gst_buffer_get_size (img));
-      }
-    } else {
-      str = g_strdup ("NULL buffer");
-    }
-  } else {
-    str = gst_value_serialize (&val);
-  }
-
-  g_print ("%*s%s: %s\n", 2 * depth, " ", gst_tag_get_nick (tag), str);
-  g_free (str);
-
-  g_value_unset (&val);
-}
-
-#define MAX_INDENT 40
-
-static void
 print_toc_entry (gpointer data, gpointer user_data)
 {
   GstTocEntry *entry = (GstTocEntry *) data;
-  gint depth = GPOINTER_TO_INT (user_data);
+  guint depth = GPOINTER_TO_UINT (user_data);
   guint indent = MIN (GPOINTER_TO_UINT (user_data), MAX_INDENT);
   GstTagList *tags;
   GList *subentries;
