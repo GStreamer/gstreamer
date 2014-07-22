@@ -855,9 +855,8 @@ _execute_dot_pipeline (GstValidateScenario * scenario,
 
 static gboolean
 _object_set_property (GObject * object, const gchar * property,
-    const gchar * value_str)
+    const GValue * value)
 {
-  GValue value = { 0 };
   GObjectClass *klass = G_OBJECT_GET_CLASS (object);
   GParamSpec *paramspec;
 
@@ -867,17 +866,7 @@ _object_set_property (GObject * object, const gchar * property,
     return FALSE;
   }
 
-  g_value_init (&value, paramspec->value_type);
-  if (!gst_value_deserialize (&value, value_str)) {
-    GST_ERROR ("Failed to deserialize string '%s' for property: '%s'",
-        value_str, property);
-    g_value_reset (&value);
-    return FALSE;
-  }
-
-  g_object_set_property (object, property, &value);
-
-  g_value_reset (&value);
+  g_object_set_property (object, property, value);
 
   return TRUE;
 }
@@ -889,7 +878,7 @@ _execute_set_property (GstValidateScenario * scenario,
   GstElement *target;
   const gchar *name;
   const gchar *property;
-  const gchar *property_value;
+  const GValue *property_value;
   gboolean ret;
 
   name = gst_structure_get_string (action->structure, "target-element-name");
@@ -900,8 +889,8 @@ _execute_set_property (GstValidateScenario * scenario,
   }
 
   property = gst_structure_get_string (action->structure, "property-name");
-  property_value =
-      gst_structure_get_string (action->structure, "property-value");
+  property_value = gst_structure_get_value (action->structure,
+      "property-value");
 
   ret = _object_set_property (G_OBJECT (target), property, property_value);
 
