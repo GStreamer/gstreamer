@@ -1778,7 +1778,6 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
     ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT_SRC (comp)));
     if (ptarget) {
       GstEvent *flush_event;
-      GstPad *peer = gst_pad_get_peer (GNL_OBJECT_SRC (comp));
 
       /* Make sure that between the flush_start/flush_stop
        * and the time we set the current_bin to READY, no
@@ -1790,19 +1789,15 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
 
       GST_DEBUG_OBJECT (comp, "added event probe %lu", priv->ghosteventprobe);
 
-      if (peer) {
-        flush_event = gst_event_new_flush_start ();
-        priv->flush_seqnum = gst_event_get_seqnum (flush_event);
-        GST_INFO_OBJECT (comp, "sending flushes downstream with seqnum %d",
-            priv->flush_seqnum);
-        gst_pad_send_event (peer, flush_event);
+      flush_event = gst_event_new_flush_start ();
+      priv->flush_seqnum = gst_event_get_seqnum (flush_event);
+      GST_INFO_OBJECT (comp, "sending flushes downstream with seqnum %d",
+        priv->flush_seqnum);
+      gst_pad_push_event (ptarget, flush_event);
 
-        flush_event = gst_event_new_flush_stop (TRUE);
-        gst_event_set_seqnum (flush_event, priv->flush_seqnum);
-        gst_pad_send_event (peer, flush_event);
-
-        gst_object_unref (peer);
-      }
+      flush_event = gst_event_new_flush_stop (TRUE);
+      gst_event_set_seqnum (flush_event, priv->flush_seqnum);
+      gst_pad_push_event (ptarget, flush_event);
     }
 
   }
