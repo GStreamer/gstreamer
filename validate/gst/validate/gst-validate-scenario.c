@@ -853,6 +853,25 @@ _execute_dot_pipeline (GstValidateScenario * scenario,
   return TRUE;
 }
 
+static GstElement *
+_get_target_element (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  const gchar *name;
+  GstElement *target;
+
+  name = gst_structure_get_string (action->structure, "target-element-name");
+  if (strcmp (GST_OBJECT_NAME (scenario->pipeline), name) == 0) {
+    target = gst_object_ref (scenario->pipeline);
+  } else {
+    target = gst_bin_get_by_name (GST_BIN (scenario->pipeline), name);
+  }
+
+  if (target == NULL) {
+    GST_ERROR ("Target element with given name (%s) not found", name);
+  }
+  return target;
+}
+
 static gboolean
 _object_set_property (GObject * object, const gchar * property,
     const GValue * value)
@@ -876,15 +895,12 @@ _execute_set_property (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
   GstElement *target;
-  const gchar *name;
   const gchar *property;
   const GValue *property_value;
   gboolean ret;
 
-  name = gst_structure_get_string (action->structure, "target-element-name");
-  target = gst_bin_get_by_name (GST_BIN (scenario->pipeline), name);
+  target = _get_target_element (scenario, action);
   if (target == NULL) {
-    GST_ERROR ("Target element with given name (%s) not found", name);
     return FALSE;
   }
 
@@ -933,6 +949,27 @@ _execute_set_debug_threshold (GstValidateScenario * scenario,
   return TRUE;
 }
 
+static gboolean
+_execute_emit_signal (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstElement *target;
+  const gchar *signal_name;
+
+  target = _get_target_element (scenario, action);
+  if (target == NULL) {
+    return FALSE;
+  }
+
+  signal_name = gst_structure_get_string (action->structure, "signal-name");
+
+  /* Right now we don't support arguments to signals as there weren't any use
+   * cases to cover yet but it should be possible to do so */
+  g_signal_emit_by_name (target, signal_name, NULL);
+
+  gst_object_unref (target);
+  return TRUE;
+}
 
 static void
 gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
@@ -1775,6 +1812,8 @@ init_scenarios (void)
       { "target-element-name", "property-name", "property-value", NULL };
   const gchar *set_debug_threshold_mandatory_fields[] =
       { "debug-threshold", NULL };
+  const gchar *emit_signal_mandatory_fields[] =
+      { "target-element-name", "signal-name", NULL };
 
   GST_DEBUG_CATEGORY_INIT (gst_validate_scenario_debug, "gstvalidatescenario",
       GST_DEBUG_FG_YELLOW, "Gst validate scenarios");
@@ -1821,4 +1860,7 @@ init_scenarios (void)
       _execute_set_debug_threshold, set_debug_threshold_mandatory_fields,
       "Sets the debug level to be used, same format as "
       "setting the GST_DEBUG env variable", FALSE);
+  gst_validate_add_action_type ("emit-signal", _execute_emit_signal,
+      emit_signal_mandatory_fields,
+      "Allows to emit a signal to an element in the pipeline", FALSE);
 }
