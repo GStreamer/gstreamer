@@ -155,6 +155,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
     GstVideoCodecState *state;
     GstVideoInfo *vi, vis;
+    GstVideoFormat format, out_format;
 #if GST_CHECK_VERSION(1,1,0)
     GstCapsFeatures *features = NULL;
     GstVaapiCapsFeature feature;
@@ -164,17 +165,28 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
         GST_VIDEO_INFO_FORMAT(&ref_state->info));
 #endif
 
-    state = gst_video_decoder_set_output_state(vdec,
-        GST_VIDEO_INFO_FORMAT(&ref_state->info),
+    format = GST_VIDEO_INFO_FORMAT(&ref_state->info);
+
+    state = gst_video_decoder_set_output_state(vdec, format,
         ref_state->info.width, ref_state->info.height,
         (GstVideoCodecState *)ref_state);
     if (!state)
         return FALSE;
 
     vi = &state->info;
-    if (GST_VIDEO_INFO_FORMAT(vi) == GST_VIDEO_FORMAT_ENCODED) {
+    out_format = format;
+    if (format == GST_VIDEO_FORMAT_ENCODED) {
+#if GST_CHECK_VERSION(1,1,0)
+        out_format = GST_VIDEO_FORMAT_NV12;
+        if (feature == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY) {
+            /* XXX: intercept with the preferred output format.
+               Anyway, I420 is the minimum format that drivers
+               should support to be useful */
+            out_format = GST_VIDEO_FORMAT_I420;
+        }
+#endif
         gst_video_info_init(&vis);
-        gst_video_info_set_format(&vis, GST_VIDEO_FORMAT_NV12,
+        gst_video_info_set_format(&vis, out_format,
             GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
         vi->size = vis.size;
     }
@@ -190,12 +202,12 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
             GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
         break;
     default:
-        if (GST_VIDEO_INFO_FORMAT(vi) == GST_VIDEO_FORMAT_ENCODED) {
+        if (format == GST_VIDEO_FORMAT_ENCODED) {
             /* XXX: this is a workaround until auto-plugging is fixed when
             format=ENCODED + memory:VASurface caps feature are provided.
             Meanwhile, providing a random format here works but this is
             a terribly wrong thing per se. */
-            gst_vaapidecode_video_info_change_format(&vis, GST_VIDEO_FORMAT_NV12,
+            gst_vaapidecode_video_info_change_format(&vis, out_format,
                 GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
 #if GST_CHECK_VERSION(1,3,0)
             if (feature == GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE)

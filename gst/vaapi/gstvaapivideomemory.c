@@ -51,6 +51,11 @@ ensure_image(GstVaapiVideoMemory *mem)
             GST_WARNING("failed to derive image, fallbacking to copy");
             mem->use_direct_rendering = FALSE;
         }
+        else if (gst_vaapi_surface_get_format(mem->surface) !=
+                 GST_VIDEO_INFO_FORMAT(mem->image_info)) {
+            gst_vaapi_object_replace(&mem->image, NULL);
+            mem->use_direct_rendering = FALSE;
+        }
     }
 
     if (!mem->image) {
@@ -142,9 +147,13 @@ gst_video_meta_map_vaapi_memory(GstVideoMeta *meta, guint plane,
             goto error_ensure_image;
 
         // Check that we can actually map the surface, or image
-        if ((flags & GST_MAP_READWRITE) != GST_MAP_WRITE &&
+        if ((flags & GST_MAP_READWRITE) == GST_MAP_WRITE &&
             !mem->use_direct_rendering)
             goto error_unsupported_map;
+
+        // Load VA image from surface
+        if ((flags & GST_MAP_READ) && !mem->use_direct_rendering)
+            gst_vaapi_surface_get_image(mem->surface, mem->image);
 
         if (!gst_vaapi_image_map(mem->image))
             goto error_map_image;
