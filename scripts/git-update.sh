@@ -35,12 +35,12 @@ for m in $CORE $MODULES $EXTRA_MODULES; do
     echo "+ updating $m"
     cd $m
 
-    git pull
+    git pull --rebase
     if test $? -ne 0
     then
       echo "$m: update (trying stash, pull, stash apply)" >> $ERROR_LOG
       git stash
-      git pull
+      git pull --rebase
       if test $? -ne 0
       then 
         echo "$m: update" >> $ERROR_LOG
