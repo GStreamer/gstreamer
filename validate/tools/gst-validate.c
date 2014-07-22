@@ -453,6 +453,7 @@ main (int argc, gchar ** argv)
       case GST_STATE_CHANGE_FAILURE:
         /* ignore, we should get an error message posted on the bus */
         g_print ("Pipeline failed to go to PLAYING state\n");
+        gst_element_set_state (pipeline, GST_STATE_NULL);
         ret = -1;
         goto exit;
       case GST_STATE_CHANGE_NO_PREROLL:
