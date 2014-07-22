@@ -29,6 +29,7 @@ import urlparse
 import subprocess
 import reporters
 import ConfigParser
+import loggable
 from loggable import Loggable
 from optparse import OptionGroup
 import xml.etree.ElementTree as ET
@@ -1080,7 +1081,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             if verbose:
                 printc("Result: Failed", Colors.FAIL)
             else:
-                self.error("Exception: %s", e)
+                loggable.error("Exception: %s", e)
             return None
 
         if verbose:
