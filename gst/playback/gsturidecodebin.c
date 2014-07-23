@@ -991,6 +991,7 @@ done:
     } else {
       gst_element_no_more_pads (GST_ELEMENT_CAST (decoder));
     }
+    do_async_done (decoder);
   }
 
   return;
@@ -1478,6 +1479,7 @@ post_missing_plugin_error (GstElement * dec, const gchar * element_name)
   GST_ELEMENT_ERROR (dec, CORE, MISSING_PLUGIN,
       (_("Missing element '%s' - check your GStreamer installation."),
           element_name), (NULL));
+  do_async_done (GST_URI_DECODE_BIN (dec));
 }
 
 /**
@@ -1870,6 +1872,7 @@ no_decodebin:
     post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "decodebin");
     GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
         ("No decodebin element, check your installation"));
+    do_async_done (decoder);
     return NULL;
   }
 no_typefind:
@@ -1877,6 +1880,7 @@ no_typefind:
     gst_object_unref (decodebin);
     GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
         ("No typefind element, decodebin is unusable, check your installation"));
+    do_async_done (decoder);
     return NULL;
   }
 }
@@ -1985,8 +1989,6 @@ type_found (GstElement * typefind, guint probability,
   if (queue)
     gst_element_sync_state_with_parent (queue);
 
-  do_async_done (decoder);
-
   return;
 
   /* ERRORS */
@@ -1999,6 +2001,7 @@ could_not_link:
   {
     GST_ELEMENT_ERROR (decoder, CORE, NEGOTIATION,
         (NULL), ("Can't link typefind to decodebin element"));
+    do_async_done (decoder);
     return;
   }
 no_buffer_element:
@@ -2034,8 +2037,6 @@ setup_streaming (GstURIDecodeBin * decoder)
       g_signal_connect (decoder->typefind, "have-type",
       G_CALLBACK (type_found), decoder);
 
-  do_async_start (decoder);
-
   return TRUE;
 
   /* ERRORS */
@@ -2044,6 +2045,7 @@ no_typefind:
     post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "typefind");
     GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
         ("No typefind element, check your installation"));
+    do_async_done (decoder);
     return FALSE;
   }
 could_not_link:
@@ -2053,6 +2055,7 @@ could_not_link:
     gst_bin_remove (GST_BIN_CAST (decoder), typefind);
     /* Don't loose the SOURCE flag */
     GST_OBJECT_FLAG_SET (decoder, GST_ELEMENT_FLAG_SOURCE);
+    do_async_done (decoder);
     return FALSE;
   }
 }
@@ -2158,6 +2161,7 @@ could_not_link:
     GST_ELEMENT_ERROR (bin, CORE, NEGOTIATION,
         (NULL), ("Can't link source to decoder element"));
     GST_URI_DECODE_BIN_UNLOCK (bin);
+    do_async_done (bin);
     return;
   }
 }
@@ -2230,6 +2234,7 @@ setup_source (GstURIDecodeBin * decoder)
     /* source provides raw data, we added the pads and we can now signal a
      * no_more pads because we are done. */
     gst_element_no_more_pads (GST_ELEMENT_CAST (decoder));
+    do_async_done (decoder);
     return TRUE;
   }
   if (!have_out && !is_dynamic) {
@@ -2717,6 +2722,9 @@ gst_uri_decode_bin_change_state (GstElement * element,
   decoder = GST_URI_DECODE_BIN (element);
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      do_async_start (decoder);
+      break;
     default:
       break;
   }
@@ -2724,12 +2732,16 @@ gst_uri_decode_bin_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto setup_failed;
+  else if (ret == GST_STATE_CHANGE_NO_PREROLL)
+    do_async_done (decoder);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG ("ready to paused");
       if (!setup_source (decoder))
         goto source_failed;
+
+      ret = GST_STATE_CHANGE_ASYNC;
 
       /* And now sync the states of everything we added */
       g_slist_foreach (decoder->decodebins,
@@ -2761,11 +2773,13 @@ gst_uri_decode_bin_change_state (GstElement * element,
   /* ERRORS */
 source_failed:
   {
+    do_async_done (decoder);
     return GST_STATE_CHANGE_FAILURE;
   }
 setup_failed:
   {
     /* clean up leftover groups */
+    do_async_done (decoder);
     return GST_STATE_CHANGE_FAILURE;
   }
 }
