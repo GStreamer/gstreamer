@@ -540,7 +540,7 @@ gst_vaapi_video_allocator_new(GstVaapiDisplay *display, const GstVideoInfo *vip)
 
     allocator->image_info = *vip;
     if (GST_VIDEO_INFO_FORMAT(vip) == GST_VIDEO_FORMAT_ENCODED)
-        gst_video_info_set_format(&allocator->image_info, GST_VIDEO_FORMAT_NV12,
+        gst_video_info_set_format(&allocator->image_info, GST_VIDEO_FORMAT_I420,
             GST_VIDEO_INFO_WIDTH(vip), GST_VIDEO_INFO_HEIGHT(vip));
 
     if (allocator->has_direct_rendering)

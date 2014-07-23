@@ -77,10 +77,10 @@ static const char gst_vaapidecode_sink_caps_str[] =
 static const char gst_vaapidecode_src_caps_str[] =
 #if GST_CHECK_VERSION(1,1,0)
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
-        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, NV12, I420, YV12 }") ";"
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, I420, YV12, NV12 }") ";"
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
         GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA") ";"
-    GST_VIDEO_CAPS_MAKE("{ NV12, I420, YV12 }");
+    GST_VIDEO_CAPS_MAKE("{ I420, YV12, NV12 }");
 #else
     GST_VAAPI_SURFACE_CAPS;
 #endif
@@ -176,15 +176,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     vi = &state->info;
     out_format = format;
     if (format == GST_VIDEO_FORMAT_ENCODED) {
-#if GST_CHECK_VERSION(1,1,0)
-        out_format = GST_VIDEO_FORMAT_NV12;
-        if (feature == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY) {
-            /* XXX: intercept with the preferred output format.
-               Anyway, I420 is the minimum format that drivers
-               should support to be useful */
-            out_format = GST_VIDEO_FORMAT_I420;
-        }
-#endif
+        out_format = GST_VIDEO_FORMAT_I420;
         gst_video_info_init(&vis);
         gst_video_info_set_format(&vis, out_format,
             GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
@@ -571,7 +563,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     gst_video_info_init(&vi);
     gst_video_info_from_caps(&vi, caps);
     if (GST_VIDEO_INFO_FORMAT(&vi) == GST_VIDEO_FORMAT_ENCODED)
-        gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_NV12,
+        gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_I420,
             GST_VIDEO_INFO_WIDTH(&vi), GST_VIDEO_INFO_HEIGHT(&vi));
 
     g_return_val_if_fail(GST_VAAPI_PLUGIN_BASE_DISPLAY(decode) != NULL, FALSE);

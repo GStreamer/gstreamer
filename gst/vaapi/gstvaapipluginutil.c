@@ -521,7 +521,7 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format)
     goto cleanup;
 
   if (format == GST_VIDEO_FORMAT_ENCODED)
-    format = GST_VIDEO_FORMAT_NV12;
+    format = GST_VIDEO_FORMAT_I420;
 
   vaapi_caps =
       gst_vaapi_video_format_new_template_caps_with_features (format,
