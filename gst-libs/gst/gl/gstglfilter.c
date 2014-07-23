@@ -268,6 +268,17 @@ gst_gl_filter_reset (GstGLFilter * filter)
       gst_gl_context_del_fbo (filter->context, filter->fbo,
           filter->depthbuffer);
     }
+
+    if (filter->in_tex_id) {
+      gst_gl_context_del_texture (filter->context, &filter->in_tex_id);
+      filter->in_tex_id = 0;
+    }
+
+    if (filter->out_tex_id) {
+      gst_gl_context_del_texture (filter->context, &filter->out_tex_id);
+      filter->out_tex_id = 0;
+    }
+
     gst_object_unref (filter->context);
     filter->context = NULL;
   }
@@ -1070,6 +1081,21 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
 
+  if (filter->fbo) {
+    gst_gl_context_del_fbo (filter->context, filter->fbo, filter->depthbuffer);
+    filter->fbo = 0;
+    filter->depthbuffer = 0;
+  }
+
+  if (filter->in_tex_id) {
+    gst_gl_context_del_texture (filter->context, &filter->in_tex_id);
+    filter->in_tex_id = 0;
+  }
+
+  if (filter->out_tex_id) {
+    gst_gl_context_del_texture (filter->context, &filter->out_tex_id);
+    filter->out_tex_id = 0;
+  }
   //blocking call, generate a FBO
   if (!gst_gl_context_gen_fbo (filter->context, out_width, out_height,
           &filter->fbo, &filter->depthbuffer))
