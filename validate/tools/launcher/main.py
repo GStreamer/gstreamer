@@ -358,7 +358,6 @@ user argument, you can thus overrides command line options using that.
 
     if options.list_tests:
         l = tests_launcher.tests
-        l.sort()
         for test in l:
             printc(test)
 

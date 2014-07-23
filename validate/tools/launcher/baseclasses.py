@@ -571,8 +571,8 @@ class TestsManager(Loggable):
 
         Loggable.__init__(self)
 
-        self.tests = set([])
-        self.unwanted_tests = set([])
+        self.tests = []
+        self.unwanted_tests = []
         self.options = None
         self.args = None
         self.reporter = None
@@ -584,13 +584,17 @@ class TestsManager(Loggable):
         return False
 
     def list_tests(self):
-        return self.tests
+        return sorted(list(self.tests))
 
     def add_test(self, test):
         if self._is_test_wanted(test):
-            self.tests.add(test)
+            if not test in self.tests:
+                self.tests.append(test)
+                self.tests.sort(key=lambda test: test.classname)
         else:
-            self.unwanted_tests.add(test)
+            if not test in self.tests:
+                self.unwanted_tests.append(test)
+                self.unwanted_tests.sort(key=lambda test: test.classname)
 
     def get_tests(self):
         return self.tests
@@ -778,9 +782,8 @@ class _TestsLauncher(Loggable):
 
     def list_tests(self):
         for tester in self.testers:
-            tester.list_tests()
-            self.tests.extend(tester.tests)
-        return self.tests
+            self.tests.extend(tester.list_tests())
+        return sorted(list(self.tests))
 
     def _run_tests(self):
         cur_test_num = 0
