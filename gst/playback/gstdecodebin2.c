@@ -1536,6 +1536,12 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       group->no_more_pads = TRUE;
   }
 
+  /* From here on we own a reference to the caps as
+   * we might create new caps below and would need
+   * to unref them later */
+  if (caps)
+    gst_caps_ref (caps);
+
   if ((caps == NULL) || gst_caps_is_empty (caps))
     goto unknown_type;
 
@@ -1765,6 +1771,8 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if (!res)
     goto unknown_type;
 
+  gst_caps_unref (caps);
+
   return;
 
 expose_pad:
@@ -1772,6 +1780,7 @@ expose_pad:
     GST_LOG_OBJECT (dbin, "Pad is final. autoplug-continue:%d", apcontinue);
     expose_pad (dbin, src, dpad, pad, caps, chain);
     gst_object_unref (dpad);
+    gst_caps_unref (caps);
     return;
   }
 
@@ -1779,7 +1788,7 @@ discarded_type:
   {
     GST_LOG_OBJECT (pad, "Known type, but discarded because not final caps");
     chain->deadend = TRUE;
-    chain->endcaps = gst_caps_ref (caps);
+    chain->endcaps = caps;
     gst_object_replace ((GstObject **) & chain->current_pad, NULL);
 
     /* Try to expose anything */
@@ -1798,7 +1807,7 @@ unknown_type:
     GST_LOG_OBJECT (pad, "Unknown type, posting message and firing signal");
 
     chain->deadend = TRUE;
-    chain->endcaps = gst_caps_ref (caps);
+    chain->endcaps = caps;
     gst_object_replace ((GstObject **) & chain->current_pad, NULL);
 
     gst_element_post_message (GST_ELEMENT_CAST (dbin),
@@ -1868,6 +1877,8 @@ setup_caps_delay:
      * we have to unref the pad */
     if (is_parser_converter)
       gst_object_unref (pad);
+    if (caps)
+      gst_caps_unref (caps);
 
     return;
   }
