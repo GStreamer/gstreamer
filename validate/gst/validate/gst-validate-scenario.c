@@ -1073,15 +1073,20 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
         for (tmp = scenario->priv->actions; tmp; tmp = tmp->next) {
           GstValidateAction *action = ((GstValidateAction *) tmp->data);
+          gchar *action_string;
           tmpconcat = actions;
 
-          if (g_strcmp0 (action->name, "eos"))
+          action_string = gst_structure_to_string (action->structure);
+          if (g_regex_match_simple ("eos|stop", action_string, 0, 0)) {
+            g_free (action_string);
             continue;
+          }
 
           nb_actions++;
-          actions = g_strdup_printf ("%s\n%*s%s",
-              actions, 20, "", gst_structure_to_string (action->structure));
+          actions =
+              g_strdup_printf ("%s\n%*s%s", actions, 20, "", action_string);
           g_free (tmpconcat);
+          g_free (action_string);
 
         }
 
