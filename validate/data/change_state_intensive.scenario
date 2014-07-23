@@ -1,4 +1,4 @@
-description, duration=0, summary="Set state to NULL->PLAYING->NULL 20 times"
+description, duration=0, summary="Set state to NULL->PLAYING->NULL 20 times", need-clock-sync=true
 set-state, state="null"
 set-state, state="playing"
 set-state, state="null"

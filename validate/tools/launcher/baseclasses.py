@@ -849,6 +849,12 @@ class Scenario(object):
 
         return False
 
+    def needs_clock_sync(self):
+        if hasattr(self, "need_clock_sync"):
+            return bool(self.need_clock_sync)
+
+        return False
+
     def does_reverse_playback(self):
         if hasattr(self, "reverse_playback"):
             return bool(self.seek)
@@ -1029,6 +1035,11 @@ class MediaDescriptor(Loggable):
     def is_compatible(self, scenario):
         if scenario.seeks() and (not self.is_seekable() or self.is_image()):
             self.debug("Do not run %s as %s does not support seeking",
+                       scenario, self.get_uri())
+            return False
+
+        if self.is_image() and scenario.needs_clock_sync():
+            self.debug("Do not run %s as %s is an image",
                        scenario, self.get_uri())
             return False
 

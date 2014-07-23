@@ -161,14 +161,19 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
             pipe = self._pipeline_template
             protocol = minfo.media_descriptor.get_protocol()
 
-            if self.test_manager.options.mute:
-                fakesink = "'fakesink'"
-                pipe += " audio-sink=%s video-sink=%s" %(fakesink, fakesink)
-
             pipe += " uri=%s" % uri
             for scenario in special_scenarios + scenarios:
+                cpipe = pipe
                 if not minfo.media_descriptor.is_compatible(scenario):
                     continue
+
+                if self.test_manager.options.mute:
+                    if scenario.needs_clock_sync():
+                        fakesink = "'fakesink sync=true'"
+                    else:
+                        fakesink = "'fakesink'"
+
+                    cpipe += " audio-sink=%s video-sink=%s" %(fakesink, fakesink)
 
                 fname = "%s.%s" % (self.get_fname(scenario,
                                    protocol),
@@ -177,12 +182,12 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 
                 if scenario.does_reverse_playback() and protocol == Protocols.HTTP:
                     # 10MB so we can reverse playback
-                    pipe += " ring-buffer-max-size=10485760"
+                    cpipe += " ring-buffer-max-size=10485760"
 
                 self.add_test(GstValidateLaunchTest(fname,
                                                     self.test_manager.options,
                                                     self.test_manager.reporter,
-                                                    pipe,
+                                                    cpipe,
                                                     scenario=scenario,
                                                     media_descriptor=minfo.media_descriptor)
                               )
