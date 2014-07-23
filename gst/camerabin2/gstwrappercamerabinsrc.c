@@ -830,14 +830,15 @@ start_image_capture (GstWrapperCameraBinSrc * self)
    * setting it back to PLAYING will work. This is more a workaround then a
    * solution to buffer reclaiming. */
   pad = gst_element_get_static_pad (self->src_vid_src, "src");
-  peer = gst_pad_get_peer (pad);
-  gst_object_unref (pad);
-  gst_pad_send_event (peer, gst_event_new_flush_start ());
-  gst_element_set_state (self->src_vid_src, GST_STATE_READY);
-  gst_pad_send_event (peer, gst_event_new_flush_stop (TRUE));
-  gst_object_unref (peer);
-
   if (self->image_renegotiate) {
+
+    peer = gst_pad_get_peer (pad);
+    gst_object_unref (pad);
+    gst_pad_send_event (peer, gst_event_new_flush_start ());
+    gst_element_set_state (self->src_vid_src, GST_STATE_READY);
+    gst_pad_send_event (peer, gst_event_new_flush_stop (TRUE));
+    gst_object_unref (peer);
+
     /* clean capsfilter caps so they don't interfere here */
     g_object_set (self->src_filter, "caps", NULL, NULL);
     if (self->src_zoom_filter)
