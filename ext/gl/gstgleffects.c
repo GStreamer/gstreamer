@@ -197,6 +197,12 @@ gst_gl_effects_init_gl_resources (GstGLFilter * filter)
   gint i = 0;
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
+
+    if (effects->midtexture[i]) {
+      gl->DeleteTextures (1, &effects->midtexture[i]);
+      effects->midtexture[i] = 0;
+    }
+
     gl->GenTextures (1, &effects->midtexture[i]);
     gl->BindTexture (GL_TEXTURE_2D, effects->midtexture[i]);
     gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,

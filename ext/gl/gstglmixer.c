@@ -641,6 +641,12 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   out_width = GST_VIDEO_INFO_WIDTH (&vagg->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&vagg->info);
 
+  if (mix->fbo) {
+    gst_gl_context_del_fbo (mix->context, mix->fbo, mix->depthbuffer);
+    mix->fbo = 0;
+    mix->depthbuffer = 0;
+  }
+
   if (!gst_gl_context_gen_fbo (mix->context, out_width, out_height,
           &mix->fbo, &mix->depthbuffer))
     goto context_error;

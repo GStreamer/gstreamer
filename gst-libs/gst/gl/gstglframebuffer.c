@@ -149,6 +149,9 @@ gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
   if (gl->CheckFramebufferStatus (GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
     gst_gl_context_set_error (frame->context,
         "GL framebuffer status incomplete");
+
+    gl->DeleteTextures (1, &fake_texture);
+
     return FALSE;
   }
 

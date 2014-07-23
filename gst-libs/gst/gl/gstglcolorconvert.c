@@ -1137,6 +1137,9 @@ _init_convert_fbo (GstGLColorConvert * convert)
   if (!gst_gl_context_check_framebuffer_status (convert->context)) {
     gst_gl_context_set_error (convert->context,
         "GL framebuffer status incomplete");
+
+    gl->DeleteTextures (1, &fake_texture);
+
     return FALSE;
   }
 
