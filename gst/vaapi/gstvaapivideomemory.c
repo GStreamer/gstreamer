@@ -35,6 +35,20 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapivideomemory);
 /* --- GstVaapiVideoMemory                                              --- */
 /* ------------------------------------------------------------------------ */
 
+static guchar *
+get_image_data(GstVaapiImage *image)
+{
+    guchar *data;
+    VAImage va_image;
+
+    data = gst_vaapi_image_get_plane(image, 0);
+    if (!data || !gst_vaapi_image_get_image(image, &va_image))
+        return NULL;
+
+    data -= va_image.offsets[0];
+    return data;
+}
+
 static GstVaapiImage *
 new_image(GstVaapiDisplay *display, const GstVideoInfo *vip)
 {
@@ -289,40 +303,98 @@ gst_vaapi_video_memory_reset_surface(GstVaapiVideoMemory *mem)
 static gpointer
 gst_vaapi_video_memory_map(GstVaapiVideoMemory *mem, gsize maxsize, guint flags)
 {
-    if (mem->map_type &&
-        mem->map_type != GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE)
-        goto error_incompatible_map;
+    gpointer data;
 
     if (mem->map_count == 0) {
-        gst_vaapi_surface_proxy_replace(&mem->proxy,
-            gst_vaapi_video_meta_get_surface_proxy(mem->meta));
+        switch (flags & GST_MAP_READWRITE) {
+        case 0:
+            // No flags set: return a GstVaapiSurfaceProxy
+            gst_vaapi_surface_proxy_replace(&mem->proxy,
+                gst_vaapi_video_meta_get_surface_proxy(mem->meta));
+            if (!mem->proxy)
+                goto error_no_surface_proxy;
+            mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE;
+            break;
+        case GST_MAP_READ:
+            // Only read flag set: return raw pixels
+            if (!ensure_surface(mem))
+                return NULL;
+            if (!ensure_image(mem))
+                goto error_ensure_image;
+            if (!mem->use_direct_rendering)
+                gst_vaapi_surface_get_image(mem->surface, mem->image);
+            if (!gst_vaapi_image_map(mem->image))
+                goto error_map_image;
+            mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR;
+            break;
+        default:
+            goto error_unsupported_map;
+        }
+    }
+
+    switch (mem->map_type) {
+    case GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE:
         if (!mem->proxy)
             goto error_no_surface_proxy;
-        mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE;
+        data = mem->proxy;
+        break;
+    case GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR:
+        if (!mem->image)
+            goto error_no_image;
+        data = get_image_data(mem->image);
+        break;
+    default:
+        goto error_unsupported_map_type;
     }
     mem->map_count++;
-    return mem->proxy;
+    return data;
 
     /* ERRORS */
-error_incompatible_map:
-    GST_ERROR("failed to map memory to a GstVaapiSurfaceProxy");
+error_unsupported_map:
+    GST_ERROR("unsupported map flags (0x%x)", flags);
+    return NULL;
+error_unsupported_map_type:
+    GST_ERROR("unsupported map type (%d)", mem->map_type);
     return NULL;
 error_no_surface_proxy:
     GST_ERROR("failed to extract GstVaapiSurfaceProxy from video meta");
     return NULL;
+error_no_image:
+    GST_ERROR("failed to extract raw pixels from mapped VA image");
+    return NULL;
+error_ensure_image:
+    {
+        const GstVideoInfo * const vip = mem->image_info;
+        GST_ERROR("failed to create %s image of size %ux%u",
+                  GST_VIDEO_INFO_FORMAT_STRING(vip),
+                  GST_VIDEO_INFO_WIDTH(vip), GST_VIDEO_INFO_HEIGHT(vip));
+        return FALSE;
+    }
+error_map_image:
+    {
+        GST_ERROR("failed to map image %" GST_VAAPI_ID_FORMAT,
+                  GST_VAAPI_ID_ARGS(gst_vaapi_image_get_id(mem->image)));
+        return FALSE;
+    }
 }
 
 static void
 gst_vaapi_video_memory_unmap(GstVaapiVideoMemory *mem)
 {
-    if (mem->map_type &&
-        mem->map_type != GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE)
-        goto error_incompatible_map;
-
-    if (--mem->map_count == 0) {
-        gst_vaapi_surface_proxy_replace(&mem->proxy, NULL);
+    if (mem->map_count == 1) {
+        switch (mem->map_type) {
+        case GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE:
+            gst_vaapi_surface_proxy_replace(&mem->proxy, NULL);
+            break;
+        case GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR:
+            gst_vaapi_image_unmap(mem->image);
+            break;
+        default:
+            goto error_incompatible_map;
+        }
         mem->map_type = 0;
     }
+    mem->map_count--;
     return;
 
     /* ERRORS */
