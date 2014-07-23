@@ -1,15 +1,9 @@
 
-Release notes for GStreamer OpenMAX IL wrapper plugin 1.0.0
-
-The GStreamer team is proud to announce a new feature release
-in the 1.x stable series of the GStreamer OpenMAX IL
-wrapper plugin.
-
-
-The 1.x series is a stable series targeted at end users.
-It is not API or ABI compatible with the stable 0.10.x series.
-It is, however, parallel installable with the 0.10.x series and
-will not affect an existing 0.10.x installation.
+Release notes for GStreamer OpenMAX IL wrapper plugin 1.2.0
+    
+The GStreamer project is proud to announce a new release of the
+GStreamer OpenMAX IL wrapper plugin for the API and ABI-stable
+1.x series of the GStreamer multimedia framework.
 
 
 
@@ -40,13 +34,53 @@ contains a set of less supported plugins that haven't passed the
 
 Features of this release
     
-      * Parallel installability with 0.10.x series
       * Generic support for OpenMAX IL implementations
-      * Special support for features of: Raspberry Pi
+      * Support for audio decoders
+      * Support for raw and encoded audio sink
+      * Improved support for the Raspberry Pi
+      * Many bugfixes to work properly with AMD's, NVIDIA's, Qualcomm's and other OpenMAX IL implementations
 
 Bugs fixed in this release
      
-      * 692446 : Add mpeg2 support
+      * 697574 : Only use EGL code paths conditionally if gstreamer-egl is available
+      * 698049 : omxh264enc: openmax API ignores output bitrate
+      * 698109 : Disable output port before transition to idle state
+      * 699008 : Fix printf format compiler warning
+      * 699754 : Don't force elements of type source/sink  to add two pads
+      * 701706 : gst-omx testegl.c example not compatible with gstreamer 1.x
+      * 710564 : Need to convert OMX alignments to GStreamer alignments
+      * 710948 : omxvideodec: Doesn't recover after aspect ratio changes
+      * 720031 : omxh264enc:  key frame interval missing
+      * 723176 : omx: Examples need to be ported to 1.0
+      * 723386 : Bad port index playing VC-1 WMV in Raspberry Pi
+      * 723851 : omxvideoenc/dec: Fix for a startup race condition
+      * 724236 : omx: Enhancements/cleanup for decoder/encoder frame handling
+      * 725468 : Fix two serious message handling bugs
+      * 725493 : Consolidate message waiting code
+      * 725826 : omxvideoenc: Fix a minor memory leak in gst_omx_video_enc_getcaps
+      * 725907 : omxvideodec: Two more minor fixes for memory leaks
+      * 726021 : Simplify tunnel functions
+      * 726024 : Share more code between video decoder and  encoder
+      * 726025 : omxvideodec: separate the buffer pool from the decoder
+      * 726038 : omxvideodec: Multiple issues during seeks
+      * 726107 : omxvideodec: Drain pipeline to support adaptive streaming scenarios and partially fix gpu resource leaks
+      * 726337 : omxbufferpool: leak buffers when stopped
+      * 726669 : omxh264enc: Properly accumulate headers and provide them to the base class
+      * 726957 : Add configure option for external omxil headers
+      * 726958 : omxvideodec: add missing unlock in the error path
+      * 727825 : omxvideodec: Enhance colorformat support
+      * 728322 : omvideodec: don't unref caps before logging field from it
+      * 728774 : omxvp8dec: fix typo in GST_TYPE_OMX_VP8_DEC define
+      * 728940 : gst-omx: port testegl example to new libgstgl
+      * 728962 : Add audiosink elements to support raw and ac3/dts passthrough on the RPI
+      * 729196 : omxvideodec: no memory:EGLImage feature in the caps when using eglimage allocator
+      * 730989 : omxdec: Get stuck while doing ctrl+c during preroll
+      * 730995 : omxvideodec: Memory leak with interlaced h264 streams
+      * 731141 : Fix a missing g_free() in error path
+      * 731672 : omxvideodec: uses non-standard stride without videometa
+      * 731898 : omxvideodec: fix a query leak
+      * 732518 : Link with gmodule-2.0-no-export for g_module_*() API
+      * 733168 : omxaudiosink: Does not set ports to non-flushing after prepare
 
 ==== Download ====
 
@@ -83,20 +117,19 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Arun Raghavan
-      * Dake Gu
+      * Aurélien Zanelli
+      * Carlos Rafael Giani
+      * Christian König
       * Edward Hervey
-      * George Kiagiadakis
-      * Jonas Larsson
+      * Ilya Smelykh
       * Josep Torra
-      * Julian Scheel
-      * Matej Knopp
-      * Nicolas Dufresne
-      * Olivier Crête
-      * Reynaldo H. Verdejo Pinochet
+      * Julien Isorce
+      * Kazunori Kobayashi
+      * Michal Lazo
+      * Roman Arutyunyan
       * Sebastian Dröge
       * Stefan Sauer
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
+      * Zhao, Halley
+      * jitendra
  

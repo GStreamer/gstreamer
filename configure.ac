@@ -5,7 +5,7 @@ dnl please read gstreamer/docs/random/autotools before changing this file
 dnl initialize autoconf
 dnl releases only do -Wall, git and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for git/prerelease
-AC_INIT(GStreamer OpenMAX Plug-ins, 1.0.0.1,
+AC_INIT(GStreamer OpenMAX Plug-ins, 1.2.0,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-omx)
 
@@ -150,7 +150,7 @@ AG_GST_CHECK_GST_CONTROLLER($GST_API_VERSION, [$GST_REQ], yes)
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GST_REQ], yes)
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
-PKG_CHECK_MODULES([GST_GL], [gstreamer-gl-1.0 >= 1.3.3], [
+PKG_CHECK_MODULES([GST_GL], [gstreamer-gl-1.0 >= 1.4.0], [
   AC_DEFINE(HAVE_GST_GL, 1, [Have gstreamer-gl])
   GST_GL=yes
 ], [GST_GL=no])

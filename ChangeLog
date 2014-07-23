@@ -1,9 +1,1104 @@
-=== release 1.0.0 ===
+=== release 1.2.0 ===
 
-2013-03-22  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2014-07-23  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.0.0
+	  releasing 1.2.0
+
+2014-07-22 09:23:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* config/bellagio/gstomx.conf:
+	* config/rpi/gstomx.conf:
+	  config: Update ranks to PRIMARY+1 to have higher preference than avdec_*
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=732161
+
+2014-07-20 17:46:30 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudiosink.c:
+	  omxaudiosink: Set port to not flushing in prepare() and keep it at flushing in unprepare()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733168
+
+2014-07-13 22:15:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaacdec.c:
+	* omx/gstomxaudiodec.c:
+	* omx/gstomxaudiodec.h:
+	* omx/gstomxmp3dec.c:
+	  omxaudiodec: Implement setting of fallback channel positions
+
+2014-07-13 18:22:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxaacdec.c:
+	* omx/gstomxaacdec.h:
+	* omx/gstomxmp3dec.c:
+	  omx: Add AAC audio decoder
+
+2014-07-02 09:22:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudiodec.c:
+	  omxaudiodec: Get PCM parameters from the out port, not the in port
+
+2014-05-15 13:24:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudiodec.c:
+	  omxaudiodec: Implement hack for not disabling the output port after set_format until the output format is known
+	  Needed on some OMX implementations, e.g. the one from Atmel. It does
+	  not send the settings-changed event on the output port if it is
+	  disabled.
+
+2014-05-10 23:12:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxaudiodec.c:
+	* omx/gstomxaudiodec.h:
+	* omx/gstomxmp3dec.c:
+	* omx/gstomxmp3dec.h:
+	  omx: Add audio decoder base class and a subclass for MP3
+
+2014-07-01 09:38:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* omx/Makefile.am:
+	  omx: Link to gmodule-2.0-no-export for being able to use the g_module_*() API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732518
+
+2014-06-30 15:00:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/egl/testegl.c:
+	  examples: #define GST_USE_UNSTABLE_API for libgstgl
+
+2014-06-29 19:10:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxh264enc.c:
+	* omx/gstomxh264enc.h:
+	  omxh264enc: Properly accumulate headers and push before the next frame
+	  Fixes output of encoding on RPi, where each header buffer (SPS and PPS)
+	  is in a separate OMX buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726669
+
+2014-06-29 19:04:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Implement flush() instead of the deprecated reset()
+
+2014-06-25 17:14:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* config/rpi/gstomx.conf:
+	  rpi: It's 44100Hz, not 41400Hz
+
+2014-06-25 11:12:51 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: require gstgl >= 1.3.3
+
+2014-04-25 13:25:05 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* Makefile.am:
+	* configure.ac:
+	  example: enable testegl
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=728940
+
+2014-06-25 10:19:54 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* examples/egl/testegl.c:
+	  testegl: do matrix mutlplication in the shader
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=728940
+
+2014-06-25 09:36:38 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* examples/egl/testegl.c:
+	  testegl: add a comment for the parse command
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=728940
+
+2014-04-25 17:32:16 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* examples/egl/Makefile.am:
+	* examples/egl/cube_texture_and_coords.h:
+	* examples/egl/testegl.c:
+	  testegl: convert code from GLESv1 to GLESv2
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=728940
+
+2014-04-25 13:21:59 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* examples/egl/Makefile.am:
+	* examples/egl/testegl.c:
+	  testegl: port to gstgl API
+	  - append a glfilter just before fakesink
+	  So that we get gltexture or eglimages
+	  - propagate our EGLDisplay to the pipeline
+	  see GST_QUERY_CONTEXT
+	  - share our EGLContext with the iternal gl context
+	  of the pipeline, see GST_QUERY_ALLOCATION
+	  - use GstVideoGLTextureUploadMeta to upload
+	  the incoming gltexture or eglimage to our gl texture
+	  TODO: convert from GLESv1 to GLESv2
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=728940
+
+2014-06-24 14:52:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxbufferpool.c:
+	* omx/gstomxbufferpool.h:
+	* omx/gstomxvideodec.c:
+	  omxbufferpool: Copy buffers if the stride does not match and we can't use video meta
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731672
+
+2014-06-24 14:52:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* omx/gstomx.h:
+	* omx/gstomxvp8dec.h:
+	  omx: Only include OMX_VideoExt.h conditionally
+	  It does not exist on the RPi for example.
+
+2014-06-24 13:59:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure.ac: Require GStreamer core/base >= 1.2.2
+	  Needed at least for gst_video_decoder_release_frame().
+
+2014-06-24 13:02:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: Fix format string compiler warning
+
+2014-06-22 21:11:45 +0000  Michal Lazo <xlazom00@gmail.com>
+
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: Initialize debug category
+
+2014-06-24 12:42:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: Properly convert OMX alignment to GStreamer alignment
+	  GStreamer uses a bitmask for the alignment while OMX uses the
+	  alignment itself. Let's convert.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710564
+
+2014-06-24 11:11:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxh264enc.c:
+	  omxh264enc: Don't let baseclass finish frames for SPS/PPS buffers
+	  Otherwise we a) send them twice, and b) finish a frame for something
+	  that does not even include a frame.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726669
+
+2014-06-24 10:22:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideo.h:
+	  omxvideo: Include the separate headers too for compatibility with 1.0.x
+
+2014-03-24 16:09:40 +0800  Zhao, Halley <halley.zhao@intel.com>
+
+	* configure.ac:
+	* omx/gstomxvp8dec.h:
+	  omxvp8dec: use VP8 definition from OMX_VideoExt.h
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726957
+
+2014-03-24 15:33:26 +0800  Zhao, Halley <halley.zhao@intel.com>
+
+	* configure.ac:
+	  configure: add --with-omx-header-path option for external omx headers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726957
+
+2014-06-18 23:04:33 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix a query leak
+	  Also add a debug message if query fails.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731898
+
+2014-05-30 15:29:15 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: release frames with old PTS to avoid memory issue
+	  Interlaced stream could make the decoder use two input frames to produce
+	  one output frame causing the gstvideodecoder frame list to grow.
+	  Assuming the video decoder output frame in display order rather than in
+	  decoding order, this commit add a way to release frames with PTS less
+	  than current output frame.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730995
+
+2013-06-27 21:59:29 +0900  Kazunori Kobayashi <kkobayas@igel.co.jp>
+
+	* omx/gstomx.c:
+	  omx: Fix a missing g_free() in error path
+	  This fixes a memory leak with g_strdup() when an error occurs.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731141
+
+2014-06-02 15:34:09 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: add missing stream unlock in error path
+
+2014-05-31 15:12:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomx.c:
+	  omx: Don't handle disabling/enabling ports exactly like flushing
+	  Otherwise we might abort a flush operation in another thread when
+	  enabling/disabling ports, leading to deadlocks sometimes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730989
+
+2014-05-26 11:02:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Don't leak buffer pool config in error cases
+	  CID 1216158
+
+2014-05-21 10:53:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 211fa5f to 1f5d3c3
+
+2014-05-19 09:10:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Don't forget to unref codec state
+	  CID 1214603
+
+2014-05-19 09:08:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Make output buffer pointer always initialized
+	  CID 1214605
+
+2014-05-19 09:06:42 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Check return value of gst_buffer_map()
+	  CID 1214599
+
+2014-05-19 09:04:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Check return value of gst_omx_port_set_enabled() for errors
+	  CID 1214589
+
+2014-05-19 09:01:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Check return values of buffer pool config parsing functions
+	  CID 1214588
+
+2014-05-19 08:48:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomx.c:
+	  omx: Remove dead code, buf can never be NULL here as we just check for that the line above
+	  CID 1214596
+
+2014-05-19 08:47:36 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomx.c:
+	  omx: Fix comparisons in gst_omx_state_to_string() case to actually make sense
+	  CID 1214593
+
+2014-05-19 08:45:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomx.c:
+	  omx: Make sure to compare the error codes as unsigned integers so that comparisons >2**31 actually work
+	  CID 1214592
+
+2014-05-19 08:40:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomx.c:
+	  omx: Fix comparisons in gst_omx_command_to_string() default cause to actually work
+	  CID 1214591
+
+2014-05-15 13:22:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Implement hack for not disabling the output port after set_format until the output format is known
+	  Needed on some OMX implementations, e.g. the one from Atmel. It does
+	  not send the settings-changed event on the output port if it is
+	  disabled.
+
+2014-05-15 13:21:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Implement hack for not disabling the output port after set_format until the output format is known
+	  Needed on some OMX implementations, e.g. the one from Atmel. It does
+	  not send the settings-changed event on the output port if it is
+	  disabled.
+
+2014-05-15 10:58:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	  omx: Add a hack for not disabling the output port after set_format until the output format is known
+	  Needed on some OMX implementations, e.g. the one from Atmel. It does
+	  not send the settings-changed event on the output port if it is
+	  disabled.
+
+2014-05-12 12:33:32 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxaudiosink.c:
+	  omxaudiosink: implement _delay only in the RaspberryPI
+	  Make code implementation conditionally built for RaspberryPI because
+	  OMX_IndexConfigAudioRenderingLatency seems to be a Broadcom extension.
+	  On other targets the query position might not be accurate without
+	  implementing _delay appropriatelly.
+
+2014-05-12 08:56:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Correctly scale nTickCount by OMX_TICKS_PER_SECOND
+
+2014-05-10 22:48:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Drain encoder on NULL buffer and don't drain on flushing
+
+2014-05-10 22:47:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Set nTickCount based on the buffer's duration instead of something wrong
+
+2014-05-10 22:47:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Set nTickCount to the whole duration of the buffer instead of a wrong calculation
+
+2014-05-10 22:46:51 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudiosink.c:
+	  omxaudiosink: Fix format string compiler warnings
+
+2014-04-04 14:11:58 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* config/rpi/gstomx.conf:
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxanalogaudiosink.c:
+	* omx/gstomxanalogaudiosink.h:
+	* omx/gstomxaudiosink.c:
+	* omx/gstomxaudiosink.h:
+	* omx/gstomxhdmiaudiosink.c:
+	* omx/gstomxhdmiaudiosink.h:
+	  omxaudiosink: Implements OpenMAX based audio sinks
+	  Provides omxanalogaudiosink and omxhdmiaudiosink elements on
+	  the Raspberry PI.
+	  - omxanalogaudiosink is capable to render raw mono or stereo audio
+	  through the jack output.
+	  - omxhdmiaudiosink is capable to render raw audio up to 8 channels
+	  and transmit ac3/dts(IEC 61937) through the HDMI output.
+	  - sinks provide a clock derived from rendered samples
+	  - sinks support the GstStreamVolume interface by implementing
+	  the volume and mute properties.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728962
+
+2014-05-03 10:17:35 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From bcb1518 to 211fa5f
+
+2014-04-29 15:16:16 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: can negotiate caps with memory:EGLImage feature when using EGLImage allocator
+	  Previously when using gst EGLImage allocator the caps was
+	  video/x-raw, format=RGBA instead of
+	  video/x-raw(memory:EGLImage), format=RGBA
+	  Kepp previous behavior in case negotiation fails with caps feature.
+	  It means it will still have a chance to use EGLImage even if the
+	  feature is not in the caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729196
+
+2014-04-23 09:57:48 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* omx/gstomxvp8dec.h:
+	  omxvp8dec: fix typo in GST_TYPE_OMX_VP8_DEC define
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728774
+
+2014-04-16 11:00:55 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: don't unref caps before logging field from it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728322
+
+2014-04-15 17:30:13 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* Makefile.am:
+	* configure.ac:
+	  example: disable testegl since libgstegl has been removed
+	  As decided in bug #703343
+	  Not compatible with the new libgstgl API.
+	  A portage has been started, attachment 272800.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703343
+
+2014-04-15 17:11:08 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: use new libgstgl API since libgstegl has been removed
+	  There is no point to retrieve a ref/unref type
+	  instead of an EGLDisplay directly. It's like for EGLImage.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703343
+
+2014-04-15 17:06:38 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* configure.ac:
+	* examples/Makefile.am:
+	* omx/Makefile.am:
+	* omx/gstomxvideodec.c:
+	  configure.ac: check for libgstgl since libgstegl has been removed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703343
+
+2014-04-09 18:52:16 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* omx/gstomxbufferpool.c:
+	* omx/gstomxvideodec.c:
+	  omxvideodec: add support of more color format
+	  Add support for ABGR, ARGB, RGB16, BGR16, YUY2, UYVY, YVYU, GRAY8 and
+	  NV16 color format.
+
+2014-04-09 18:51:57 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: simplify color format conversion in fill_buffer function
+
+2014-04-09 18:51:41 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: make video stride and offset calculation easier
+	  It will be easier to support more color format.
+
+2014-04-09 18:51:12 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* omx/gstomxvideo.c:
+	* omx/gstomxvideo.h:
+	* omx/gstomxvideodec.c:
+	  omx: add an helper to convert OMX color format to GStreamer color format
+
+2014-03-10 17:43:50 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* examples/egl/testegl.c:
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Implement pipeline draining to support adaptive scenarios
+	  When draining due a format change also drain
+	  the pipeline to reclaim back all buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726107
+
+2014-03-27 13:57:32 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* examples/egl/testegl.c:
+	  examples: fix several memory leaks in the testegl example
+	  Ensure to call to image_data_free in order to release GPU resources.
+	  Also ensure to destroy EGLImage and GLTexture from proper
+	  thread/context.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726107
+
+2014-03-25 17:16:31 +0000  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* examples/egl/testegl.c:
+	  examples: keep a ref on the buffer instead of the memory
+	  Like in eglglessink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726107
+
+2014-03-07 20:08:05 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fixes race condition during seeks
+	  Acording 6.1.3 Seek Event Sequence in the OpenMAX IL 1.1.2 spec
+	  document in order to flush the component it needs to be in
+	  paused state.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726038
+
+2014-01-29 18:31:26 +0000  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: use flush because reset is deprecated
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726038
+
+2014-01-27 17:03:50 +0000  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: populate the most downstream output port on reset
+	  Make seeking work when using egl_render component
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726038
+
+2014-03-24 17:49:59 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: return buffers to the pool instead of freeing them
+	  We have to return the buffers back to the pool in when stopping to
+	  not mess with the GstBufferPool accounting.
+	  The OMX buffers will be freed when those won't be in charge of the
+	  pool in the chained up call to 'stop'.
+	  Fixes segfaults on finalize and pool not being properly deactivated.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726337
+
+2014-03-19 12:12:49 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: add missing unlock in the error path
+	  Signed-off-by: Christian König <christian.koenig@amd.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726958
+
+2014-03-18 23:36:59 +0100  Michal Lazo <xlazom00@gmail.com>
+
+	* omx/gstomxh264enc.c:
+	* omx/gstomxh264enc.h:
+	  fix filemode
+
+2014-03-17 09:57:11 +0000  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: fix memory leak if used on output port
+	  When using GstOMXBufferPool on an output port, it internally uses
+	  a GPtrArray to manage the GstBuffers instead of the default queue
+	  from the GstBufferPool base class.
+	  In this case GstBufferPool::default_free_buffer is not called when
+	  the pool is stopped. Because the queue is empty. So explicitely
+	  call gst_omx_buffer_pool_free_buffer on each buffer contained in
+	  the GPtrArray.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726337
+
+2014-03-16 17:32:05 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxh264enc.c:
+	  omxh264enc: Fix compiler warnings
+
+2014-03-16 17:19:08 +0100  Michal Lazo <xlazom00@gmail.com>
+
+	* omx/gstomxh264enc.c:
+	* omx/gstomxh264enc.h:
+	  omxh264enc: IDR interval, SPS and PPS headers for rpi
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720031
+
+2014-03-13 14:26:58 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideo.c:
+	  omxvideo: fix debug category initialisation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726024
+
+2014-03-13 19:04:47 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomxbufferpool.h:
+	  omxbufferpool: add proper type definitions
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726325
+
+2014-03-02 10:30:04 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomx.c:
+	  omx: consolidate message waiting code
+	  Add a wait_message helper function and remove all those duplicated code.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725493
+
+2014-03-12 12:48:12 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideo.c:
+	  omx: Copy old copyright notice into the new file
+
+2014-03-12 12:47:34 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideo.c:
+	* omx/gstomxvideo.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Rename function from _4_ to _for_ for clarity
+
+2014-03-03 16:15:24 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/Makefile.am:
+	* omx/gstomxvideo.c:
+	* omx/gstomxvideo.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideo: start sharing more code between video decoder and encoder
+	  Identical functionality spread of two different components.
+	  We can't use a common base class because of different inheritance,
+	  but let's try to share the code anyway.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726024
+
+2014-03-12 12:43:49 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/egl/Makefile.am:
+	  examples: Only build RPi EGL example if RPi was chosen as target
+
+2014-03-12 12:42:23 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxbufferpool.h:
+	  omxbufferpool: Fix header include guard
+
+2014-03-05 11:41:02 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/Makefile.am:
+	* omx/gstomxbufferpool.c:
+	* omx/gstomxbufferpool.h:
+	* omx/gstomxvideodec.c:
+	  omxvideodec: separate the buffer pool from the decoder
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726025
+
+2014-03-04 17:41:20 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	  omx: simplify tunnel functions
+	  Specifying the component is error prone and unnecessary.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726021
+
+2014-03-07 17:12:24 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix memory leak in gst_omx_video_dec_allocate_output_buffers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725907
+
+2014-03-07 13:18:49 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix memory leak gst_omx_video_dec_negotiate
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725907
+
+2014-03-05 18:54:05 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: fix a memory leak in gst_omx_video_enc_getcaps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725826
+
+2014-03-05 17:43:33 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* Makefile.am:
+	  Makefile.am: build examples
+	  There's no reason to not build the examples now that are ported to 1.x.
+
+2014-03-05 17:25:09 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* examples/egl/testegl.c:
+	  examples: avoid a clashing name with the recently added GstEGLImagePool
+	  Fixes build with current master.
+
+2013-09-05 03:41:10 -0600  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: simplify _find_nearest_frame
+	  Just the same as we did with the decoder. Also give the
+	  function a gst_omx_video_enc prefix to distinct it from
+	  the decoder function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724236
+
+2013-09-05 02:23:39 -0600  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: simplify _find_nearest_frame
+	  No need to make it more complicated and error prone than
+	  necessary. Also give the function a gst_omx_video_dec prefix
+	  to distinct it from the encoder function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724236
+
+2013-09-05 02:05:52 -0600  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: remove dead code
+	  This code doesn't seems to be used for quite a while,
+	  remove it before it starts to rot.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=724236
+
+2014-03-01 22:28:24 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomx.c:
+	  omx: fix two serious message handling bugs
+	  Waiting for the next message if we already got one
+	  is nonsense and can lead to lockups.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725468
+
+2014-03-01 18:49:41 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: fix startup race condition
+	  The reset function shouldn't start the src pad
+	  loop if it wasn't started before.
+	  Signed-off-by: Christian König <christian.koenig@amd.com>
+
+2014-03-01 18:48:17 +0100  Christian König <christian.koenig@amd.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix startup race condition
+	  The reset function shouldn't start the src pad
+	  loop if it wasn't started before.
+	  Signed-off-by: Christian König <christian.koenig@amd.com>
+
+2014-02-28 09:36:13 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From fe1672e to bcb1518
+
+2014-02-26 22:15:00 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1a07da9 to fe1672e
+
+2014-01-30 10:45:18 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d48bed3 to 1a07da9
+
+2014-01-25 17:44:14 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Don't handle FLUSHING and NOT_LINKED as errors
+	  Also don't stop the task on NOT_LINKED. We're not a demuxer.
+
+2013-12-22 22:35:31 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From dbedaa0 to d48bed3
+
+2013-11-05 11:22:02 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 865aa20 to dbedaa0
+
+2013-09-28 13:32:37 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* examples/egl/testegl.c:
+	  examples: simplify the thread synchronization code
+	  Make everithing more simple and fix the races conditions remaining in
+	  the previous approaches.
+
+2013-09-25 19:17:17 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* config/rpi/gstomx.conf:
+	  rpi: The WMV/VC1 decoder can only do WMV9 and VC1, no older versions
+
+2013-09-24 18:34:42 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6b03ba7 to 865aa20
+
+2013-09-24 18:48:24 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* examples/egl/testegl.c:
+	  examples: fix another race condition
+	  Fix a race condition that caused randome deadlocks on EOS.
+
+2013-09-20 17:19:53 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* config/rpi/gstomx.conf:
+	  rpi: fix a copy paste error in the config file
+
+2013-09-20 17:09:52 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* examples/egl/testegl.c:
+	  examples: fix a race condition when seeking
+	  Fixes a race condition that caused pipeline deadlock during seeks.
+
+2013-09-20 10:38:12 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* examples/egl/testegl.c:
+	  examples: display QoS statistics
+
+2013-09-20 09:34:37 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* examples/egl/testegl.c:
+	  examples: use dedicated thread for rendering the scene
+	  Produces smother animation and prevents dropping frames due busy
+	  mainloop.
+
+2013-09-20 08:25:21 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* examples/egl/testegl.c:
+	  examples: don't force an specific audio sink
+	  Let playbin2 choose the audiosink available in the system.
+
+2013-09-20 08:19:48 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* examples/egl/Makefile.am:
+	  examples: drop remnants of initial appsink attempt
+
+2013-09-20 16:18:18 +0200  Edward Hervey <edward@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b613661 to 6b03ba7
+
+2013-09-19 18:45:36 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 74a6857 to b613661
+
+2013-09-19 17:38:30 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 01a7a46 to 74a6857
+
+2013-08-20 16:00:07 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* omx/gstomx.c:
+	* omx/gstomxvideodec.c:
+	  omx: don't use the 'z' modifier to print size_t
+	  gcc will warn in some cases even if the size of the type
+	  is exactly that of size_t on the platform.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699008
+
+2013-07-01 15:48:47 +0200  Roman Arutyunyan <arutyunyan.roman@gmail.com>
+
+	* omx/gstomxvideoenc.c:
+	  gstomxvideoenc: Set bitrate in setcaps
+	  Otherwise it gets lost whenever we configure new caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=698049
+
+2013-06-30 18:17:05 +0700  Ilya Smelykh <ilya@videoexpertsgroup.com>
+
+	* examples/egl/testegl.c:
+	  examples: enable audio in testegl example
+
+2013-06-12 09:38:22 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Allow build without gstreamer-egl
+
+2013-06-07 12:39:18 +0700  Ilya Smelykh <ilya@videoexpertsgroup.com>
+
+	* examples/egl/Makefile.am:
+	* examples/egl/testegl.c:
+	  examples: testegl example port to 1.x
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701706
+
+2013-06-05 15:17:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 098c0d7 to 01a7a46
+
+2013-05-20 12:06:34 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Take lock on EOS to update the flow return value
+	  Fixes "GThread-ERROR **: file gthread-posix.c: line 171
+	  (g_mutex_free_posix_impl): error 'Device or resource busy' during
+	  'pthread_mutex_destroy ((pthread_mutex_t *) mutex)'" in _finalize.
+
+2013-05-15 10:54:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5edcd85 to 098c0d7
+
+2013-04-11 17:35:19 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* examples/Makefile.am:
+	* examples/egl/Makefile.am:
+	* examples/egl/cube_texture_and_coords.h:
+	* examples/egl/testegl.c:
+	  examples: add an example aplication based OpenGL ES + EGL
+	  Application that shows how to integrate playbin with an OpenGL ES
+	  scene through EGL. Renders a video on the surfaces of an animated cube.
+	  The code is not ported to 1.x so it's not built by default.
+
+2013-05-10 12:25:07 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Redesign video size change reconfiguration code
+	  Ensure stop the decoder before clossing the tunnel.
+
+2013-05-06 16:25:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	  Makefile.am: Add -I common/m4
+	  This allows autoreconf to work correctly and automatic regeneration
+	  of autotools files if something changed.
+
+2013-05-06 19:03:59 +0530  jitendra <jvarshney20@gmail.com>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Add pads based on element type
+	  This allows to later add sources and sink that only have a srcpad
+	  or sinkpad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699754
+
+2013-04-27 02:50:25 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* omx/gstomx.c:
+	  omx: fixed type error in printf call
+	  %zu expects size_t
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699008
+
+2013-04-08 17:26:16 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* omx/Makefile.am:
+	* omx/gstomxvideodec.c:
+	  Check for gstreamer-egl
+	  And don't use if not available.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697574
+
+2013-04-23 09:53:18 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: error out if no OMX target has been set explicitly with --with-omx-target=x
+	  Avoids people building for e.g. the Raspberry Pi and then wondering
+	  why things don't work as expected (since structs are packed differently
+	  there).
+
+2013-04-22 23:55:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3cb3d3c to 5edcd85
+
+2013-04-18 22:07:28 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videoenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: more printf format fixes
+	  Fix printf formats again, so that gst-omx compiles warning-
+	  free on the Raspberry Pi as well. Unfortunately OMX_UINT32
+	  maybe be typedefed to uint32_t or unsigned long, which
+	  doesn't work well with our debugging printf format strings,
+	  so just use %u for those and cast to guint.
+
+2013-04-18 16:40:06 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomx.c:
+	  omx: fixes unused variable 'comp' when GStreamer is built without debug
+
+2013-04-18 16:03:56 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: don't use 'self->dec_out_port' anymore and use just 'port'
+	  Fixes some criticals.
+
+2013-04-18 15:21:32 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fixes 'port' may be used uninitialized in this function
+
+2013-04-18 12:03:31 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: silence warnings building for RPI related to 'vcos_*'
+
+2013-04-18 11:19:52 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Use new type from libgstvideo
+
+2013-04-16 14:50:49 +0530  jitendra <jvarshney20@gmail.com>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Disable output port before transition to idle state
+	  https://bugzilla.gnome.org/show_bug.cgi?id=698109
+
+2012-10-24 12:19:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  gst: Add better support for static plugins
+
+2013-04-14 17:57:34 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From aed87ae to 3cb3d3c
+
+2013-04-12 17:58:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: add --disable-fatal-warnings for disabling -Werror
+
+2013-04-09 21:02:09 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 04c7a1e to aed87ae
+
+2013-04-08 17:02:32 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videoenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: fix printf formats in debug messages
+	  OMX_U32 is typedefed to an unsigned long,
+	  OMX_TICKS to a 64-bit integer.
+
+2013-04-08 16:52:19 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: use the correct printf format in a debug message
+
+2013-04-08 16:31:33 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: use the correct OMX_IndexParam value
+	  Fixes playback is not smooth in the EGL path.
+
+2013-04-05 13:45:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Don't use API that is not in master yet
+	  It's not really needed here yet, will be needed in future versions
+
+2013-02-25 11:55:04 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Add support for egl_render on RPi
+
+2013-03-22 19:26:54 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+2013-03-22 19:23:14 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videoenc.c:
+	  omx: fix compiler warnings when compiling with -DG_DISABLE_ASSERT
+	  As we do for releases. Fixes 'variable may be used uninitialized'
+	  warnings.
+
+=== release 1.0.0 ===
+
+2013-03-22 17:16:33 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* AUTHORS:
+	* ChangeLog:
+	* Makefile.am:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	  Release 1.0.0
 
 2013-03-19 16:40:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
