@@ -63,8 +63,6 @@ const gchar spaces[] = {
       "                                "        /* 128 */
 };
 
-extern GstClockTime _priv_gst_info_start_time;
-
 static gchar *
 debug_dump_make_object_name (GstObject * obj)
 {
