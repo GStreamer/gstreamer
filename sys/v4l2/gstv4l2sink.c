@@ -504,7 +504,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_v4l2sink_sync_overlay_fields (v4l2sink);
   gst_v4l2sink_sync_crop_fields (v4l2sink);
 
-  GST_INFO_OBJECT (v4l2sink, "outputting buffers via mmap()");
+  GST_INFO_OBJECT (v4l2sink, "outputting buffers via mode %u", obj->mode);
 
   v4l2sink->video_width = GST_V4L2_WIDTH (v4l2sink->v4l2object);
   v4l2sink->video_height = GST_V4L2_HEIGHT (v4l2sink->v4l2object);

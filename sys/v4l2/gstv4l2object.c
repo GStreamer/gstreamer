@@ -2248,7 +2248,8 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
 {
   GstV4l2IOMode mode;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "initializing the capture system");
+  GST_DEBUG_OBJECT (v4l2object->element, "initializing the %s system",
+      V4L2_TYPE_IS_OUTPUT (v4l2object->type) ? "output" : "capture");
 
   GST_V4L2_CHECK_OPEN (v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
