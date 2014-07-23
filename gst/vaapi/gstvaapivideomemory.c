@@ -117,10 +117,9 @@ ensure_surface(GstVaapiVideoMemory *mem)
                 return FALSE;
             gst_vaapi_video_meta_set_surface_proxy(mem->meta, mem->proxy);
         }
-        mem->surface = GST_VAAPI_SURFACE_PROXY_SURFACE(mem->proxy);
     }
-    g_return_val_if_fail(mem->surface != NULL, FALSE);
-    return TRUE;
+    mem->surface = GST_VAAPI_SURFACE_PROXY_SURFACE(mem->proxy);
+    return mem->surface != NULL;
 }
 
 gboolean
