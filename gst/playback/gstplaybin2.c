@@ -431,6 +431,7 @@ struct _GstPlayBin
   GMutex dyn_lock;
   /* if we are shutting down or not */
   gint shutdown;
+  gboolean async_pending;       /* async-start has been emitted */
 
   GMutex elements_lock;
   guint32 elements_cookie;
@@ -1267,6 +1268,35 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
 
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_play_bin_handle_message);
+}
+
+static void
+do_async_start (GstPlayBin * playbin)
+{
+  GstMessage *message;
+
+  playbin->async_pending = TRUE;
+
+  message = gst_message_new_async_start (GST_OBJECT_CAST (playbin));
+  GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (playbin),
+      message);
+}
+
+static void
+do_async_done (GstPlayBin * playbin)
+{
+  GstMessage *message;
+
+  if (playbin->async_pending) {
+    GST_DEBUG_OBJECT (playbin, "posting ASYNC_DONE");
+    message =
+        gst_message_new_async_done (GST_OBJECT_CAST (playbin),
+        GST_CLOCK_TIME_NONE);
+    GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (playbin),
+        message);
+
+    playbin->async_pending = FALSE;
+  }
 }
 
 static void
@@ -3510,6 +3540,10 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 
   GST_PLAY_BIN_SHUTDOWN_UNLOCK (playbin);
 
+  if (configure) {
+    do_async_done (playbin);
+  }
+
   return;
 
 shutdown:
@@ -5442,6 +5476,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       GST_LOG_OBJECT (playbin, "clearing shutdown flag");
       memset (&playbin->duration, 0, sizeof (playbin->duration));
       g_atomic_int_set (&playbin->shutdown, 0);
+      do_async_start (playbin);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     async_down:
@@ -5485,8 +5520,10 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
         ret = GST_STATE_CHANGE_FAILURE;
         goto failure;
       }
+      ret = GST_STATE_CHANGE_ASYNC;
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      do_async_done (playbin);
       /* FIXME Release audio device when we implement that */
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
