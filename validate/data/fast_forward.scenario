@@ -1,4 +1,4 @@
-description, duration=35.0, seek=true, need-clock-sync=true
+description, duration=35.0, seek=true, need-clock-sync=true, min-media-duration=5.0
 seek, name=Fast-forward-seek, playback_time=0.0, rate=2.0,  start=0.0, flags=accurate+flush
 seek, name=Fast-forward-seek, playback_time="min(10.0, duration*0.25)", rate=4.0,  start=0.0, flags=accurate+flush
 seek, name=Fast-forward-seek, playback_time="min(20.0, duration*0.50)", rate=8.0,  start=0.0, flags=accurate+flush

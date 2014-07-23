@@ -855,6 +855,12 @@ class Scenario(object):
 
         return False
 
+    def get_min_media_duration(self):
+        if hasattr(self, "min_media_duration"):
+            return long(self.min_media_duration)
+
+        return 0
+
     def does_reverse_playback(self):
         if hasattr(self, "reverse_playback"):
             return bool(self.seek)
@@ -1041,6 +1047,12 @@ class MediaDescriptor(Loggable):
         if self.is_image() and scenario.needs_clock_sync():
             self.debug("Do not run %s as %s is an image",
                        scenario, self.get_uri())
+            return False
+
+        if self.get_duration() / GST_SECOND < scenario.get_min_media_duration():
+            self.debug("Do not run %s as %s is too short (%i < min media duation : %i",
+                       scenario, self.get_uri(), self.get_duration() / GST_SECOND,
+                       scenario.get_min_media_duration())
             return False
 
         for track_type in ['audio', 'subtitle']:
