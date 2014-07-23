@@ -312,10 +312,6 @@ gst_wrapper_camera_src_src_event_probe (GstPad * pad, GstPadProbeInfo * info,
   GstEvent *evt = GST_EVENT (info->data);
 
   switch (GST_EVENT_TYPE (evt)) {
-    case GST_EVENT_EOS:
-      /* drop */
-      ret = GST_PAD_PROBE_DROP;
-      break;
     case GST_EVENT_SEGMENT:
       if (self->drop_newseg) {
         ret = GST_PAD_PROBE_DROP;

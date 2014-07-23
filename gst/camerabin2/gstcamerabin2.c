@@ -1101,17 +1101,24 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
 
         g_mutex_lock (&camerabin->video_capture_mutex);
         GST_DEBUG_OBJECT (bin, "EOS from video branch");
-        g_assert (camerabin->video_state == GST_CAMERA_BIN_VIDEO_FINISHING);
-
-        if (!g_thread_try_new ("reset-element-thread",
-                gst_camera_bin_video_reset_elements, gst_object_ref (camerabin),
-                NULL)) {
-          GST_WARNING_OBJECT (camerabin,
-              "Failed to create thread to "
-              "reset video elements' state, video recordings may not work "
-              "anymore");
-          gst_object_unref (camerabin);
-          camerabin->video_state = GST_CAMERA_BIN_VIDEO_IDLE;
+        if (camerabin->video_state == GST_CAMERA_BIN_VIDEO_FINISHING) {
+          if (!g_thread_try_new ("reset-element-thread",
+                  gst_camera_bin_video_reset_elements,
+                  gst_object_ref (camerabin), NULL)) {
+            GST_WARNING_OBJECT (camerabin,
+                "Failed to create thread to "
+                "reset video elements' state, video recordings may not work "
+                "anymore");
+            gst_object_unref (camerabin);
+            camerabin->video_state = GST_CAMERA_BIN_VIDEO_IDLE;
+          }
+        } else if (camerabin->video_state == GST_CAMERA_BIN_VIDEO_IDLE) {
+          GST_DEBUG_OBJECT (camerabin, "Received EOS from video branch but "
+              "video recording is idle, ignoring");
+        } else {
+          GST_WARNING_OBJECT (camerabin, "Received EOS from video branch but "
+              "video is recording and stop-capture wasn't requested");
+          g_assert_not_reached ();
         }
 
         g_mutex_unlock (&camerabin->video_capture_mutex);
@@ -1760,7 +1767,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
         G_CALLBACK (gst_camera_bin_src_notify_readyforcapture), camera);
 
     if (!gst_element_link_pads (camera->src, "vfsrc",
-	    camera->viewfinderbin_queue, "sink")) {
+            camera->viewfinderbin_queue, "sink")) {
       GST_ERROR_OBJECT (camera,
           "Failed to link camera source's vfsrc pad to viewfinder queue");
       goto fail;
