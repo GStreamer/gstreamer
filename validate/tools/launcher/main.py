@@ -375,10 +375,10 @@ user argument, you can thus overrides command line options using that.
     e = None
     try:
         tests_launcher.run_tests()
-        tests_launcher.final_report()
     except Exception as e:
         pass
     finally:
+        tests_launcher.final_report()
         httpsrv.stop()
         if e is not None:
             raise

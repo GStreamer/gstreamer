@@ -105,6 +105,8 @@ class Reporter(Loggable):
         printc("Final Report:", title=True)
         for test in sorted(self.results, key=lambda test: test.result):
             printc(test)
+            if test.result != Result.PASSED:
+                print "\n"
 
         print "\n"
         lenstat = (len("Statistics") + 1)
