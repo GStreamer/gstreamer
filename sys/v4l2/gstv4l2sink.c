@@ -486,7 +486,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   LOG_CAPS (v4l2sink, caps);
 
-  if (!GST_V4L2_IS_OPEN (v4l2sink->v4l2object)) {
+  if (!GST_V4L2_IS_OPEN (obj)) {
     GST_DEBUG_OBJECT (v4l2sink, "device is not open");
     return FALSE;
   }
@@ -498,7 +498,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_v4l2_object_stop (obj))
     goto stop_failed;
 
-  if (!gst_v4l2_object_set_format (v4l2sink->v4l2object, caps))
+  if (!gst_v4l2_object_set_format (obj, caps))
     goto invalid_format;
 
   gst_v4l2sink_sync_overlay_fields (v4l2sink);
@@ -506,8 +506,8 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   GST_INFO_OBJECT (v4l2sink, "outputting buffers via mode %u", obj->mode);
 
-  v4l2sink->video_width = GST_V4L2_WIDTH (v4l2sink->v4l2object);
-  v4l2sink->video_height = GST_V4L2_HEIGHT (v4l2sink->v4l2object);
+  v4l2sink->video_width = GST_V4L2_WIDTH (obj);
+  v4l2sink->video_height = GST_V4L2_HEIGHT (obj);
 
   /* TODO: videosink width/height should be scaled according to
    * pixel-aspect-ratio
