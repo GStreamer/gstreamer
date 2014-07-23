@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 /* tags */
 #define GST_RIFF_TAG_RIFF GST_MAKE_FOURCC ('R','I','F','F')
 #define GST_RIFF_TAG_AVF0 GST_MAKE_FOURCC ('A','V','F','0')
+#define GST_RIFF_TAG_RF64 GST_MAKE_FOURCC ('R','F','6','4')
 #define GST_RIFF_TAG_RIFX GST_MAKE_FOURCC ('R','I','F','X')
 #define GST_RIFF_TAG_LIST GST_MAKE_FOURCC ('L','I','S','T')
 #define GST_RIFF_TAG_avih GST_MAKE_FOURCC ('a','v','i','h')

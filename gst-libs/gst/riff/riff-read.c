@@ -235,7 +235,8 @@ gst_riff_parse_file_header (GstElement * element,
     goto too_small;
 
   tag = GST_READ_UINT32_LE (info.data);
-  if (tag != GST_RIFF_TAG_RIFF && tag != GST_RIFF_TAG_AVF0)
+  if (tag != GST_RIFF_TAG_RIFF && tag != GST_RIFF_TAG_AVF0
+      && tag != GST_RIFF_TAG_RF64)
     goto not_riff;
 
   *doctype = GST_READ_UINT32_LE (info.data + 8);
