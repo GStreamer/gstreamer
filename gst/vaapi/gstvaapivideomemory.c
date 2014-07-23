@@ -318,9 +318,9 @@ gst_vaapi_video_memory_map(GstVaapiVideoMemory *mem, gsize maxsize, guint flags)
         case GST_MAP_READ:
             // Only read flag set: return raw pixels
             if (!ensure_surface(mem))
-                return NULL;
+                goto error_no_surface;
             if (!ensure_image(mem))
-                goto error_ensure_image;
+                goto error_no_image;
             if (!mem->use_direct_rendering)
                 gst_vaapi_surface_get_image(mem->surface, mem->image);
             if (!gst_vaapi_image_map(mem->image))
@@ -359,23 +359,15 @@ error_unsupported_map_type:
 error_no_surface_proxy:
     GST_ERROR("failed to extract GstVaapiSurfaceProxy from video meta");
     return NULL;
-error_no_image:
-    GST_ERROR("failed to extract raw pixels from mapped VA image");
+error_no_surface:
+    GST_ERROR("failed to extract VA surface from video buffer");
     return NULL;
-error_ensure_image:
-    {
-        const GstVideoInfo * const vip = mem->image_info;
-        GST_ERROR("failed to create %s image of size %ux%u",
-                  GST_VIDEO_INFO_FORMAT_STRING(vip),
-                  GST_VIDEO_INFO_WIDTH(vip), GST_VIDEO_INFO_HEIGHT(vip));
-        return FALSE;
-    }
+error_no_image:
+    GST_ERROR("failed to extract VA image from video buffer");
+    return NULL;
 error_map_image:
-    {
-        GST_ERROR("failed to map image %" GST_VAAPI_ID_FORMAT,
-                  GST_VAAPI_ID_ARGS(gst_vaapi_image_get_id(mem->image)));
-        return FALSE;
-    }
+    GST_ERROR("failed to map VA image");
+    return NULL;
 }
 
 static void
@@ -534,12 +526,8 @@ gst_video_info_update_from_image(GstVideoInfo *vip, GstVaapiImage *image)
     g_return_val_if_fail(num_planes == GST_VIDEO_INFO_N_PLANES(vip), FALSE);
 
     /* Determine the base data pointer */
-    data = gst_vaapi_image_get_plane(image, 0);
-    for (i = 1; i < num_planes; i++) {
-        const guchar * const plane = gst_vaapi_image_get_plane(image, i);
-        if (data > plane)
-            data = plane;
-    }
+    data = get_image_data(image);
+    g_return_val_if_fail(data != NULL, FALSE);
     data_size = gst_vaapi_image_get_data_size(image);
 
     /* Check that we don't have disjoint planes */
