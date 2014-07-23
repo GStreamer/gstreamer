@@ -160,7 +160,7 @@ gst_video_meta_map_vaapi_memory(GstVideoMeta *meta, guint plane,
             goto error_ensure_image;
 
         // Check that we can actually map the surface, or image
-        if ((flags & GST_MAP_READWRITE) == GST_MAP_WRITE &&
+        if ((flags & GST_MAP_READWRITE) == GST_MAP_READWRITE &&
             !mem->use_direct_rendering)
             goto error_unsupported_map;
 
