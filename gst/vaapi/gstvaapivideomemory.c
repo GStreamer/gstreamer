@@ -269,8 +269,9 @@ gst_vaapi_video_memory_new(GstAllocator *base_allocator,
         return NULL;
 
     vip = &allocator->image_info;
-    gst_memory_init(&mem->parent_instance, 0, gst_object_ref(allocator), NULL,
-        GST_VIDEO_INFO_SIZE(vip), 0, 0, GST_VIDEO_INFO_SIZE(vip));
+    gst_memory_init(&mem->parent_instance, GST_MEMORY_FLAG_NO_SHARE,
+        gst_object_ref(allocator), NULL, GST_VIDEO_INFO_SIZE(vip), 0,
+        0, GST_VIDEO_INFO_SIZE(vip));
 
     mem->proxy = NULL;
     mem->surface_info = &allocator->surface_info;
@@ -417,13 +418,22 @@ static GstVaapiVideoMemory *
 gst_vaapi_video_memory_copy(GstVaapiVideoMemory *mem,
     gssize offset, gssize size)
 {
+    GstVaapiVideoMeta *meta;
     GstMemory *out_mem;
+    gsize maxsize;
 
-    if (offset != 0 || size != -1)
+    /* XXX: this implements a soft-copy, i.e. underlying VA surfaces
+       are not copied */
+    (void)gst_memory_get_sizes(GST_MEMORY_CAST(mem), NULL, &maxsize);
+    if (offset != 0 || (size != -1 && (gsize)size != maxsize))
         goto error_unsupported;
 
-    out_mem = gst_vaapi_video_memory_new(mem->parent_instance.allocator,
-        mem->meta);
+    meta = gst_vaapi_video_meta_copy(mem->meta);
+    if (!meta)
+        goto error_allocate_memory;
+
+    out_mem = gst_vaapi_video_memory_new(GST_MEMORY_CAST(mem)->allocator, meta);
+    gst_vaapi_video_meta_unref(meta);
     if (!out_mem)
         goto error_allocate_memory;
     return GST_VAAPI_VIDEO_MEMORY_CAST(out_mem);
