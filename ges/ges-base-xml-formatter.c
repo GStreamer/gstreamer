@@ -942,7 +942,7 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
 
     gst_structure_get (properties, "restriction-caps", G_TYPE_STRING,
         &restriction, NULL);
-    gst_structure_remove_fields (properties, "restriction-caps", "caps", NULL);
+    gst_structure_remove_fields (properties, "restriction-caps", "caps", "message-forward", NULL);
     if (g_strcmp0 (restriction, "NULL")) {
       caps = gst_caps_from_string (restriction);
       ges_track_set_restriction_caps (track, caps);
