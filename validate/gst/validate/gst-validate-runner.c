@@ -122,18 +122,31 @@ gst_validate_runner_printf (GstValidateRunner * runner)
   GSList *tmp;
   guint count = 0;
   int ret = 0;
+  GList *criticals = NULL;
 
   for (tmp = gst_validate_runner_get_reports (runner); tmp; tmp = tmp->next) {
     GstValidateReport *report = tmp->data;
 
     gst_validate_report_printf (report);
     if (ret == 0 && report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
-      g_printerr ("Got critical error %s, setting return value to 18\n",
-          ((GstValidateReport *) (tmp->data))->message);
+      criticals = g_list_append (criticals, tmp->data);
       ret = 18;
     }
     count++;
   }
+
+  if (criticals) {
+    GList *iter;
+
+    g_printerr ("\n\n==== Got criticals, Return value set to 18 ====\n");
+
+    for (iter = criticals; iter; iter = iter->next) {
+      g_printerr ("     Critical error %s\n",
+          ((GstValidateReport *) (iter->data))->message);
+    }
+    g_printerr ("\n");
+  }
+
   gst_validate_printf (NULL, "Pipeline finished, issues found: %u\n", count);
   return ret;
 }

@@ -236,7 +236,7 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
     gchar *error = NULL;
 
     if (!(strval = gst_structure_get_string (action->structure, name))) {
-      GST_WARNING_OBJECT (scenario, "Could not find %s", name);
+      GST_INFO_OBJECT (scenario, "Could not find %s", name);
       return FALSE;
     }
     val =
