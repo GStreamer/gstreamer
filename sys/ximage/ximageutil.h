@@ -134,7 +134,7 @@ void ximageutil_calculate_pixel_aspect_ratio (GstXContext * xcontext);
 /* custom ximagesrc buffer, copied from ximagesink */
 
 /* BufferReturnFunc is called when a buffer is finalised */
-typedef void (*BufferReturnFunc) (GstElement *parent, GstBuffer *buf);
+typedef gboolean (*BufferReturnFunc) (GstElement *parent, GstBuffer *buf);
 
 /**
  * GstMetaXImage:

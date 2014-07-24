@@ -85,10 +85,12 @@ static GstCaps *gst_ximage_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 static void gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc);
 
 /* Called when a buffer is returned from the pipeline */
-static void
+static gboolean
 gst_ximage_src_return_buf (GstXImageSrc * ximagesrc, GstBuffer * ximage)
 {
   GstMetaXImage *meta = GST_META_XIMAGE_GET (ximage);
+  /* True will make dispose free the buffer, while false will keep it */
+  gboolean ret = TRUE;
 
   /* If our geometry changed we can't reuse that image. */
   if ((meta->width != ximagesrc->width) || (meta->height != ximagesrc->height)) {
@@ -107,7 +109,10 @@ gst_ximage_src_return_buf (GstXImageSrc * ximagesrc, GstBuffer * ximage)
     GST_BUFFER_FLAGS (GST_BUFFER (ximage)) = 0; /* clear out any flags from the previous use */
     ximagesrc->buffer_pool = g_slist_prepend (ximagesrc->buffer_pool, ximage);
     g_mutex_unlock (&ximagesrc->pool_lock);
+    ret = FALSE;
   }
+
+  return ret;
 }
 
 static Window
