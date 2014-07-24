@@ -31,6 +31,8 @@
 #include "x11_event_source.h"
 #include "gstglwindow_x11.h"
 #include "gstgldisplay_x11.h"
+/* for XkbKeycodeToKeysym */
+#include <X11/XKBlib.h>
 
 #define GST_GL_WINDOW_X11_GET_PRIVATE(o)  \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW_X11, GstGLWindowX11Private))
@@ -205,7 +207,8 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
       window_x11->visual_info->bits_per_rgb);
 
   win_attr.event_mask =
-      StructureNotifyMask | ExposureMask | VisibilityChangeMask;
+      StructureNotifyMask | ExposureMask | VisibilityChangeMask | KeyPressMask |
+      KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
   win_attr.do_not_propagate_mask = NoEventMask;
 
   win_attr.background_pixmap = None;
@@ -476,6 +479,16 @@ event_type_to_string (guint type)
       return "SelectionRequest";
     case ClientMessage:
       return "ClientMessage";
+    case KeyPress:
+      return "KeyPress";
+    case KeyRelease:
+      return "KeyRelease";
+    case ButtonPress:
+      return "ButtonPress";
+    case ButtonRelease:
+      return "ButtonRelease";
+    case MotionNotify:
+      return "MotionNotify";
     default:
       return "unknown";
   }
@@ -488,6 +501,8 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
   GstGLContextClass *context_class;
   GstGLWindow *window;
   gboolean ret = TRUE;
+  const char *key_str = NULL;
+  KeySym keysym;
 
   window = GST_GL_WINDOW (window_x11);
 
@@ -559,7 +574,32 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
       case VisibilityNotify:
         /* actually nothing to do here */
         break;
-
+      case KeyPress:
+      case KeyRelease:
+        keysym = XkbKeycodeToKeysym (window_x11->device,
+            event.xkey.keycode, 0, 0);
+        key_str = XKeysymToString (keysym);
+        GST_DEBUG ("input event key %d pressed over window at %d,%d (%s)",
+            event.xkey.keycode, event.xkey.x, event.xkey.y, key_str);
+        gst_gl_window_send_key_event (window,
+            event.type == KeyPress ? "key-press" : "key-release", key_str);
+        break;
+      case ButtonPress:
+      case ButtonRelease:
+        GST_DEBUG ("input event mouse button %d pressed over window at %d,%d",
+            event.xbutton.button, event.xbutton.x, event.xbutton.y);
+        gst_gl_window_send_mouse_event (window,
+            event.type ==
+            ButtonPress ? "mouse-button-press" : "mouse-button-release",
+            event.xbutton.button, (double) event.xbutton.x,
+            (double) event.xbutton.y);
+        break;
+      case MotionNotify:
+        GST_DEBUG ("input event pointer moved over window at %d,%d",
+            event.xmotion.x, event.xmotion.y);
+        gst_gl_window_send_mouse_event (window, "mouse-move", 0,
+            (double) event.xmotion.x, (double) event.xmotion.y);
+        break;
       default:
         GST_DEBUG ("unknown XEvent type: %u", event.type);
         break;
