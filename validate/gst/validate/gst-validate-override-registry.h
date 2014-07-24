@@ -41,6 +41,9 @@ typedef struct {
 
 GstValidateOverrideRegistry * gst_validate_override_registry_get (void);
 
+GList *
+gst_validate_override_registry_get_override_for_names (GstValidateOverrideRegistry *reg,
+        const gchar *name, ...);
 void gst_validate_override_register_by_name (const gchar * name, GstValidateOverride * override);
 void gst_validate_override_register_by_type (GType gtype, GstValidateOverride * override);
 void gst_validate_override_register_by_klass (const gchar * klass, GstValidateOverride * override);

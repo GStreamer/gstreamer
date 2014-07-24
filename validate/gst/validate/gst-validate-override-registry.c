@@ -247,3 +247,33 @@ gst_validate_override_registry_preload (void)
   GST_INFO ("%d overrides loaded", nloaded);
   return nloaded;
 }
+
+GList *gst_validate_override_registry_get_override_for_names
+    (GstValidateOverrideRegistry * reg, const gchar * name, ...)
+{
+  GList *iter;
+  GList *ret = NULL;
+
+  if (name) {
+    va_list varargs;
+    GstValidateOverrideRegistryNameEntry *entry;
+
+    va_start (varargs, name);
+
+    GST_VALIDATE_OVERRIDE_REGISTRY_LOCK (reg);
+    while (name) {
+      for (iter = reg->name_overrides.head; iter; iter = g_list_next (iter)) {
+        entry = iter->data;
+        if ((g_strcmp0 (name, entry->name)) == 0) {
+          ret = g_list_prepend (ret, entry->override);
+        }
+      }
+      name = va_arg (varargs, gchar *);
+    }
+    GST_VALIDATE_OVERRIDE_REGISTRY_UNLOCK (reg);
+
+    va_end (varargs);
+  }
+
+  return ret;
+}

@@ -64,10 +64,12 @@ GstValidateReportLevel
 gst_validate_override_get_severity (GstValidateOverride * override,
     GstValidateIssueId issue_id, GstValidateReportLevel default_level)
 {
-  GstValidateReportLevel level;
+  GstValidateReportLevel *level = NULL;
+
   if (g_hash_table_lookup_extended (override->level_override,
-          (gpointer) issue_id, NULL, (gpointer *) & level)) {
-    return level;
+          (gpointer) issue_id, NULL, (gpointer) & level)) {
+
+    return GPOINTER_TO_INT (level);
   }
   return default_level;
 }

@@ -34,6 +34,8 @@
 #include "gst-validate-reporter.h"
 #include "gst-validate-report.h"
 #include "gst-validate-utils.h"
+#include <gst/validate/gst-validate-override.h>
+#include <gst/validate/gst-validate-override-registry.h>
 
 #define GST_VALIDATE_SCENARIO_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioPrivate))
@@ -60,9 +62,6 @@ static GHashTable *action_types_table;
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
 static GRegex *clean_action_str;
-
-G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
-    G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL));
 
 typedef struct _GstValidateActionType
 {
@@ -102,6 +101,8 @@ struct _GstValidateScenarioPrivate
 
   gboolean changing_state;
   GstState target_state;
+
+  GList *overrides;
 };
 
 typedef struct KeyFileGroupName
@@ -109,6 +110,30 @@ typedef struct KeyFileGroupName
   GKeyFile *kf;
   gchar *group_name;
 } KeyFileGroupName;
+
+static void
+gst_validate_scenario_intercept_report (GstValidateReporter * reporter,
+    GstValidateReport * report)
+{
+  GList *tmp;
+
+  for (tmp = GST_VALIDATE_SCENARIO (reporter)->priv->overrides; tmp;
+      tmp = tmp->next) {
+    report->level =
+        gst_validate_override_get_severity (tmp->data,
+        gst_validate_issue_get_id (report->issue), report->level);
+  }
+}
+
+static void
+_reporter_iface_init (GstValidateReporterInterface * iface)
+{
+  iface->intercept_report = gst_validate_scenario_intercept_report;
+}
+
+G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
+    G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER,
+        _reporter_iface_init));
 
 GType _gst_validate_action_type;
 
@@ -1608,6 +1633,10 @@ gst_validate_scenario_factory_create (GstValidateRunner *
       "Running scenario %s on pipeline %s"
       "\n=========================================\n", scenario_name,
       GST_OBJECT_NAME (pipeline));
+
+  scenario->priv->overrides =
+      gst_validate_override_registry_get_override_for_names
+      (gst_validate_override_registry_get (), "scenarios", NULL);
 
   return scenario;
 }
