@@ -252,6 +252,15 @@ gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
     wl_surface_commit (window->video_surface);
   }
 
+  if (gst_wl_window_is_toplevel (window)) {
+    struct wl_region *region;
+
+    region = wl_compositor_create_region (window->display->compositor);
+    wl_region_add(region, 0, 0, window->render_rectangle.w, window->render_rectangle.h);
+    wl_surface_set_input_region (window->area_surface, region);
+    wl_region_destroy (region);
+  }
+
   /* this is saved for use in wl_surface_damage */
   window->surface_width = res.w;
   window->surface_height = res.h;
