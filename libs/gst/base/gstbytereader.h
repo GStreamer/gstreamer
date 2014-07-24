@@ -141,6 +141,12 @@ guint           gst_byte_reader_masked_scan_uint32 (const GstByteReader * reader
                                                     guint32               pattern,
                                                     guint                 offset,
                                                     guint                 size);
+guint           gst_byte_reader_masked_scan_uint32_peek (const GstByteReader * reader,
+                                                         guint32 mask,
+                                                         guint32 pattern,
+                                                         guint offset,
+                                                         guint size,
+                                                         guint32 * value);
 
 /**
  * GST_BYTE_READER_INIT:

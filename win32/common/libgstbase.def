@@ -153,6 +153,7 @@ EXPORTS
 	gst_byte_reader_get_uint8
 	gst_byte_reader_init
 	gst_byte_reader_masked_scan_uint32
+	gst_byte_reader_masked_scan_uint32_peek
 	gst_byte_reader_new
 	gst_byte_reader_peek_data
 	gst_byte_reader_peek_float32_be

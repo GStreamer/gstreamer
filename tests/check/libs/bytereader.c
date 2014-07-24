@@ -467,7 +467,17 @@ GST_START_TEST (test_position_tracking)
 GST_END_TEST;
 
 #define do_scan(r,m,p,o,s,x) \
-    fail_unless_equals_int (gst_byte_reader_masked_scan_uint32 (r,m,p,o,s), x);
+G_STMT_START {								\
+    fail_unless_equals_int (gst_byte_reader_masked_scan_uint32 (r,m,p,o,s), x); \
+    if (x != -1) { \
+      guint32 v, res_v; \
+      const guint8 *rdata = NULL; \
+      fail_unless (gst_byte_reader_peek_data (r, x + 4, &rdata)); \
+      res_v = GST_READ_UINT32_BE (rdata + x); \
+      fail_unless_equals_int (gst_byte_reader_masked_scan_uint32_peek (r,m,p,o,s,&v), x); \
+      fail_unless_equals_int (v, res_v); \
+    } \
+} G_STMT_END;
 
 GST_START_TEST (test_scan)
 {

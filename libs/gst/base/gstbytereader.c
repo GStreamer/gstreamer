@@ -794,6 +794,55 @@ _scan_for_start_code (const guint8 * data, guint offset, guint size)
   return -1;
 }
 
+static inline guint
+_masked_scan_uint32_peek (const GstByteReader * reader,
+    guint32 mask, guint32 pattern, guint offset, guint size, guint32 * value)
+{
+  const guint8 *data;
+  guint32 state;
+  guint i;
+
+  g_return_val_if_fail (size > 0, -1);
+  g_return_val_if_fail ((guint64) offset + size <= reader->size - reader->byte,
+      -1);
+
+  /* we can't find the pattern with less than 4 bytes */
+  if (G_UNLIKELY (size < 4))
+    return -1;
+
+  data = reader->data + reader->byte + offset;
+
+  /* Handle special case found in MPEG and H264 */
+  if ((pattern == 0x00000100) && (mask == 0xffffff00)) {
+    guint ret = _scan_for_start_code (data, offset, size);
+    if (G_UNLIKELY (value))
+      *value = (1 << 8) | data[ret + 3];
+    return ret;
+  }
+
+  /* set the state to something that does not match */
+  state = ~pattern;
+
+  /* now find data */
+  for (i = 0; i < size; i++) {
+    /* throw away one byte and move in the next byte */
+    state = ((state << 8) | data[i]);
+    if (G_UNLIKELY ((state & mask) == pattern)) {
+      /* we have a match but we need to have skipped at
+       * least 4 bytes to fill the state. */
+      if (G_LIKELY (i >= 3)) {
+        if (value)
+          *value = state;
+        return offset + i - 3;
+      }
+    }
+  }
+
+  /* nothing found */
+  return -1;
+}
+
+
 /**
  * gst_byte_reader_masked_scan_uint32:
  * @reader: a #GstByteReader
@@ -840,41 +889,39 @@ guint
 gst_byte_reader_masked_scan_uint32 (const GstByteReader * reader, guint32 mask,
     guint32 pattern, guint offset, guint size)
 {
-  const guint8 *data;
-  guint32 state;
-  guint i;
+  return _masked_scan_uint32_peek (reader, mask, pattern, offset, size, NULL);
+}
 
-  g_return_val_if_fail (size > 0, -1);
-  g_return_val_if_fail ((guint64) offset + size <= reader->size - reader->byte,
-      -1);
-
-  /* we can't find the pattern with less than 4 bytes */
-  if (G_UNLIKELY (size < 4))
-    return -1;
-
-  data = reader->data + reader->byte + offset;
-
-  /* Handle special case found in MPEG and H264 */
-  if ((pattern == 0x00000100) && (mask == 0xffffff00))
-    return _scan_for_start_code (data, offset, size);
-
-  /* set the state to something that does not match */
-  state = ~pattern;
-
-  /* now find data */
-  for (i = 0; i < size; i++) {
-    /* throw away one byte and move in the next byte */
-    state = ((state << 8) | data[i]);
-    if (G_UNLIKELY ((state & mask) == pattern)) {
-      /* we have a match but we need to have skipped at
-       * least 4 bytes to fill the state. */
-      if (G_LIKELY (i >= 3))
-        return offset + i - 3;
-    }
-  }
-
-  /* nothing found */
-  return -1;
+/**
+ * gst_byte_reader_masked_scan_uint32_peek:
+ * @reader: a #GstByteReader
+ * @mask: mask to apply to data before matching against @pattern
+ * @pattern: pattern to match (after mask is applied)
+ * @offset: offset from which to start scanning, relative to the current
+ *     position
+ * @size: number of bytes to scan from offset
+ * @value: pointer to uint32 to return matching data
+ *
+ * Scan for pattern @pattern with applied mask @mask in the byte reader data,
+ * starting from offset @offset relative to the current position.
+ *
+ * The bytes in @pattern and @mask are interpreted left-to-right, regardless
+ * of endianness.  All four bytes of the pattern must be present in the
+ * byte reader data for it to match, even if the first or last bytes are masked
+ * out.
+ *
+ * It is an error to call this function without making sure that there is
+ * enough data (offset+size bytes) in the byte reader.
+ *
+ * Returns: offset of the first match, or -1 if no match was found.
+ *
+ * Since: 1.6
+ */
+guint
+gst_byte_reader_masked_scan_uint32_peek (const GstByteReader * reader,
+    guint32 mask, guint32 pattern, guint offset, guint size, guint32 * value)
+{
+  return _masked_scan_uint32_peek (reader, mask, pattern, offset, size, value);
 }
 
 #define GST_BYTE_READER_SCAN_STRING(bits) \
