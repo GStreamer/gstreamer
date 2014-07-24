@@ -447,6 +447,7 @@ gboolean
 ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
     gboolean * needs_setting_state)
 {
+  GstValidateOverride *o;
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
 
@@ -522,6 +523,12 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
   gst_validate_add_action_type ("set-child-property", _set_child_property,
       set_child_property_mandatory_fields,
       "Allows to change child property of an object", FALSE);
+
+  o = gst_validate_override_new ();
+  gst_validate_override_change_severity (o,
+      GST_VALIDATE_ISSUE_ID_EVENT_SEEK_RESULT_POSITION_WRONG,
+      GST_VALIDATE_REPORT_LEVEL_WARNING);
+  gst_validate_override_register_by_name ("scenarios", o);
 
   runner = gst_validate_runner_new ();
   g_signal_connect (runner, "report-added",
