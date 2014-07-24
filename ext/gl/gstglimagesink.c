@@ -432,7 +432,7 @@ gst_glimage_sink_mouse_event_cb (GstGLWindow * window, char *event_name,
     int button, double posx, double posy, GstGLImageSink * gl_sink)
 {
   GST_DEBUG_OBJECT (gl_sink, "glimagesink event %s at %g, %g", event_name, posx,
-      posy, gl_sink);
+      posy);
   gst_navigation_send_mouse_event (GST_NAVIGATION (gl_sink),
       event_name, button, posx, posy);
 }
