@@ -297,9 +297,12 @@ static void gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *
         gst_parse_add_delayed_set(parent, sub_name, value_str);
         g_free (sub_name);
       }
+      gst_object_unref (parent);
       parent = child;
       current++;
     }
+    if (parent)
+      gst_object_unref (parent);
     g_strfreev (names);
   }
 }
