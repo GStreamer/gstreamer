@@ -21,6 +21,8 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
+#include <gst/vaapi/gstvaapisurfacepool.h>
+#include <gst/vaapi/gstvaapiimagepool.h>
 #include "gstvaapivideomemory.h"
 
 GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapivideomemory);
@@ -34,6 +36,9 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapivideomemory);
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoMemory                                              --- */
 /* ------------------------------------------------------------------------ */
+
+static void
+gst_vaapi_video_memory_reset_image(GstVaapiVideoMemory *mem);
 
 static guchar *
 get_image_data(GstVaapiImage *image)
@@ -73,10 +78,10 @@ ensure_image(GstVaapiVideoMemory *mem)
     }
 
     if (!mem->image) {
-        GstVaapiDisplay * const display =
-            gst_vaapi_video_meta_get_display(mem->meta);
+        GstVaapiVideoAllocator * const allocator =
+            GST_VAAPI_VIDEO_ALLOCATOR_CAST(GST_MEMORY_CAST(mem)->allocator);
 
-        mem->image = new_image(display, mem->image_info);
+        mem->image = gst_vaapi_video_pool_get_object(allocator->image_pool);
         if (!mem->image)
             return FALSE;
     }
@@ -283,20 +288,33 @@ static void
 gst_vaapi_video_memory_free(GstVaapiVideoMemory *mem)
 {
     mem->surface = NULL;
+    gst_vaapi_video_memory_reset_image(mem);
     gst_vaapi_surface_proxy_replace(&mem->proxy, NULL);
-    gst_vaapi_object_replace(&mem->image, NULL);
     gst_vaapi_video_meta_unref(mem->meta);
     gst_object_unref(GST_MEMORY_CAST(mem)->allocator);
     g_slice_free(GstVaapiVideoMemory, mem);
 }
 
 void
+gst_vaapi_video_memory_reset_image(GstVaapiVideoMemory *mem)
+{
+    GstVaapiVideoAllocator * const allocator =
+        GST_VAAPI_VIDEO_ALLOCATOR_CAST(GST_MEMORY_CAST(mem)->allocator);
+
+    if (mem->use_direct_rendering)
+        gst_vaapi_object_replace(&mem->image, NULL);
+    else if (mem->image) {
+        gst_vaapi_video_pool_put_object(allocator->image_pool, mem->image);
+        mem->image = NULL;
+    }
+}
+
+void
 gst_vaapi_video_memory_reset_surface(GstVaapiVideoMemory *mem)
 {
     mem->surface = NULL;
+    gst_vaapi_video_memory_reset_image(mem);
     gst_vaapi_surface_proxy_replace(&mem->proxy, NULL);
-    if (mem->use_direct_rendering)
-        gst_vaapi_object_replace(&mem->image, NULL);
     gst_vaapi_video_meta_set_surface_proxy(mem->meta, NULL);
 }
 
@@ -474,6 +492,7 @@ gst_vaapi_video_allocator_finalize(GObject *object)
         GST_VAAPI_VIDEO_ALLOCATOR_CAST(object);
 
     gst_vaapi_video_pool_replace(&allocator->surface_pool, NULL);
+    gst_vaapi_video_pool_replace(&allocator->image_pool, NULL);
 
     G_OBJECT_CLASS(gst_vaapi_video_allocator_parent_class)->finalize(object);
 }
@@ -595,7 +614,7 @@ gst_vaapi_video_allocator_new(GstVaapiDisplay *display, const GstVideoInfo *vip)
     allocator->surface_pool = gst_vaapi_surface_pool_new(display,
         &allocator->surface_info);
     if (!allocator->surface_pool)
-        goto error_create_pool;
+        goto error_create_surface_pool;
 
     allocator->image_info = *vip;
     if (GST_VIDEO_INFO_FORMAT(vip) == GST_VIDEO_FORMAT_ENCODED)
@@ -616,12 +635,23 @@ gst_vaapi_video_allocator_new(GstVaapiDisplay *display, const GstVideoInfo *vip)
         } while (0);
         gst_vaapi_object_unref(image);
     }
+
+    allocator->image_pool = gst_vaapi_image_pool_new(display,
+        &allocator->image_info);
+    if (!allocator->image_pool)
+        goto error_create_image_pool;
     return GST_ALLOCATOR_CAST(allocator);
 
     /* ERRORS */
-error_create_pool:
+error_create_surface_pool:
     {
         GST_ERROR("failed to allocate VA surface pool");
+        gst_object_unref(allocator);
+        return NULL;
+    }
+error_create_image_pool:
+    {
+        GST_ERROR("failed to allocate VA image pool");
         gst_object_unref(allocator);
         return NULL;
     }

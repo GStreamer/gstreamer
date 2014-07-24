@@ -26,7 +26,7 @@
 #include <gst/gstallocator.h>
 #include <gst/video/video-info.h>
 #include <gst/vaapi/gstvaapidisplay.h>
-#include <gst/vaapi/gstvaapisurfacepool.h>
+#include <gst/vaapi/gstvaapivideopool.h>
 #include "gstvaapivideometa.h"
 
 G_BEGIN_DECLS
@@ -137,6 +137,7 @@ struct _GstVaapiVideoAllocator {
     GstVideoInfo        surface_info;
     GstVaapiVideoPool  *surface_pool;
     GstVideoInfo        image_info;
+    GstVaapiVideoPool  *image_pool;
     gboolean            has_direct_rendering;
 };
 
