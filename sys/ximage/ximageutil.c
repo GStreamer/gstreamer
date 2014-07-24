@@ -314,11 +314,12 @@ ximageutil_calculate_pixel_aspect_ratio (GstXContext * xcontext)
   GST_DEBUG ("set xcontext PAR to %d/%d\n", xcontext->par_n, xcontext->par_d);
 }
 
-static void
+static gboolean
 gst_ximagesrc_buffer_dispose (GstBuffer * ximage)
 {
   GstElement *parent;
   GstMetaXImage *meta;
+  gboolean ret = TRUE;
 
   g_return_if_fail (ximage != NULL);
 
@@ -331,10 +332,10 @@ gst_ximagesrc_buffer_dispose (GstBuffer * ximage)
   }
 
   if (meta->return_func)
-    meta->return_func (parent, ximage);
+    ret = meta->return_func (parent, ximage);
 
 beach:
-  return;
+  return ret;
 }
 
 void
