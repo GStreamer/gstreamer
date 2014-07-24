@@ -771,15 +771,15 @@ gst_gl_dummy_window_new (void)
 }
 
 void
-gst_gl_window_send_key_event (GstGLWindow * window, char *event_type,
-    char *key_str)
+gst_gl_window_send_key_event (GstGLWindow * window, const char *event_type,
+    const char *key_str)
 {
   g_signal_emit (window, gst_gl_window_signals[EVENT_KEY_SIGNAL], 0,
       event_type, key_str);
 }
 
 void
-gst_gl_window_send_mouse_event (GstGLWindow * window, char *event_type,
+gst_gl_window_send_mouse_event (GstGLWindow * window, const char *event_type,
     int button, double posx, double posy)
 {
   g_signal_emit (window, gst_gl_window_signals[EVENT_MOUSE_SIGNAL], 0,
