@@ -145,6 +145,10 @@ ges_text_overlay_create_element (GESTrackElement * track_element)
   GstPad *src_target, *sink_target;
   GstPad *src, *sink;
   GESTextOverlay *self = GES_TEXT_OVERLAY (track_element);
+  const gchar *child_props[] =
+      { "xpos", "ypos", "deltax", "deltay", "auto-resize", "outline-color",
+    NULL
+  };
 
   text = gst_element_factory_make ("textoverlay", NULL);
   iconv = gst_element_factory_make ("videoconvert", NULL);
@@ -162,6 +166,9 @@ ges_text_overlay_create_element (GESTrackElement * track_element)
   g_object_set (text, "color", (guint) self->priv->color, NULL);
   g_object_set (text, "xpos", (gdouble) self->priv->xpos, NULL);
   g_object_set (text, "ypos", (gdouble) self->priv->ypos, NULL);
+
+  ges_track_element_add_children_props (track_element, text, NULL, NULL,
+      child_props);
 
   ret = gst_bin_new ("overlay-bin");
   gst_bin_add_many (GST_BIN (ret), text, iconv, oconv, NULL);
