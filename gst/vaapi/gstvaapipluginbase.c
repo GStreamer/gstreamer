@@ -54,6 +54,25 @@ implements_interface_init (GstImplementsInterfaceClass * iface)
 #endif
 
 /* GstVideoContext interface */
+static void
+plugin_set_display (GstVaapiPluginBase * plugin, GstVaapiDisplay * display)
+{
+  const gchar *const display_name =
+      gst_vaapi_display_get_display_name (display);
+
+  if (plugin->display_name && g_strcmp0 (plugin->display_name, display_name)) {
+    GST_DEBUG_OBJECT (plugin, "incompatible display name '%s', requested '%s'",
+        display_name, plugin->display_name);
+    gst_vaapi_display_replace (&plugin->display, NULL);
+  } else {
+    GST_INFO_OBJECT (plugin, "set display %p", display);
+    gst_vaapi_display_replace (&plugin->display, display);
+    plugin->display_type = gst_vaapi_display_get_display_type (display);
+    gst_vaapi_plugin_base_set_display_name (plugin, display_name);
+  }
+  gst_vaapi_display_unref (display);
+}
+
 #if GST_CHECK_VERSION(1,1,0)
 static void
 plugin_set_context (GstElement * element, GstContext * context)
@@ -61,12 +80,8 @@ plugin_set_context (GstElement * element, GstContext * context)
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
   GstVaapiDisplay *display = NULL;
 
-  if (gst_vaapi_video_context_get_display (context, &display)) {
-    GST_INFO_OBJECT (element, "set display %p", display);
-    gst_vaapi_display_replace (&plugin->display, display);
-    gst_vaapi_display_unref (display);
-    plugin->display_type = gst_vaapi_display_get_display_type (display);
-  }
+  if (gst_vaapi_video_context_get_display (context, &display))
+    plugin_set_display (plugin, display);
 }
 #else
 static void
@@ -74,9 +89,10 @@ plugin_set_context (GstVideoContext * context, const gchar * type,
     const GValue * value)
 {
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (context);
+  GstVaapiDisplay *display = NULL;
 
-  gst_vaapi_set_display (type, value, &plugin->display);
-  plugin->display_type = gst_vaapi_display_get_display_type (plugin->display);
+  gst_vaapi_set_display (type, value, &display);
+  plugin_set_display (plugin, display);
 }
 
 static void
@@ -210,6 +226,22 @@ gst_vaapi_plugin_base_set_display_type (GstVaapiPluginBase * plugin,
     GstVaapiDisplayType display_type)
 {
   plugin->display_type_req = display_type;
+}
+
+/**
+ * gst_vaapi_plugin_base_set_display_name:
+ * @plugin: a #GstVaapiPluginBase
+ * @display_name: the new display name to match
+ *
+ * Sets the name of the display to look for. The change is effective
+ * at the next call to gst_vaapi_plugin_base_ensure_display().
+ */
+void
+gst_vaapi_plugin_base_set_display_name (GstVaapiPluginBase * plugin,
+    const gchar * display_name)
+{
+  g_free (plugin->display_name);
+  plugin->display_name = g_strdup (display_name);
 }
 
 /**

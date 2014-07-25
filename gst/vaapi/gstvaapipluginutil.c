@@ -90,7 +90,8 @@ static const DisplayMap g_display_map[] = {
 };
 
 static GstVaapiDisplay *
-gst_vaapi_create_display (GstVaapiDisplayType display_type)
+gst_vaapi_create_display (GstVaapiDisplayType display_type,
+    const gchar * display_name)
 {
   GstVaapiDisplay *display = NULL;
   const DisplayMap *m;
@@ -99,7 +100,7 @@ gst_vaapi_create_display (GstVaapiDisplayType display_type)
     if (display_type != GST_VAAPI_DISPLAY_TYPE_ANY && display_type != m->type)
       continue;
 
-    display = m->create_display (NULL);
+    display = m->create_display (display_name);
     if (display || display_type != GST_VAAPI_DISPLAY_TYPE_ANY)
       break;
   }
@@ -126,7 +127,7 @@ gst_vaapi_ensure_display (gpointer element, GstVaapiDisplayType type)
     return TRUE;
 
   /* If no neighboor, or application not interested, use system default */
-  display = gst_vaapi_create_display (type);
+  display = gst_vaapi_create_display (type, plugin->display_name);
   if (!display)
     return FALSE;
 

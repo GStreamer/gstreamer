@@ -93,6 +93,8 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
   (GST_VAAPI_PLUGIN_BASE(plugin)->display)
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->display_type)
+#define GST_VAAPI_PLUGIN_BASE_DISPLAY_NAME(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->display_name)
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE(plugin, new_display) \
   (gst_vaapi_display_replace(&GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin), \
        (new_display)))
@@ -137,6 +139,7 @@ struct _GstVaapiPluginBase
   GstVaapiDisplay *display;
   GstVaapiDisplayType display_type;
   GstVaapiDisplayType display_type_req;
+  gchar *display_name;
 
   GstVaapiUploader *uploader;
   gboolean uploader_used;
@@ -187,6 +190,11 @@ G_GNUC_INTERNAL
 void
 gst_vaapi_plugin_base_set_display_type (GstVaapiPluginBase * plugin,
     GstVaapiDisplayType display_type);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_plugin_base_set_display_name (GstVaapiPluginBase * plugin,
+    const gchar * display_name);
 
 G_GNUC_INTERNAL
 gboolean

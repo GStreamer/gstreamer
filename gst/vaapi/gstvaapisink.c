@@ -128,6 +128,7 @@ enum {
     PROP_0,
 
     PROP_DISPLAY_TYPE,
+    PROP_DISPLAY_NAME,
     PROP_FULLSCREEN,
     PROP_SYNCHRONOUS,
     PROP_USE_GLX,
@@ -1148,6 +1149,10 @@ gst_vaapisink_set_property(
         gst_vaapi_plugin_base_set_display_type(GST_VAAPI_PLUGIN_BASE(sink),
             g_value_get_enum(value));
         break;
+    case PROP_DISPLAY_NAME:
+        gst_vaapi_plugin_base_set_display_name(GST_VAAPI_PLUGIN_BASE(sink),
+            g_value_get_string(value));
+        break;
     case PROP_FULLSCREEN:
         sink->fullscreen = g_value_get_boolean(value);
         break;
@@ -1185,6 +1190,9 @@ gst_vaapisink_get_property(
     switch (prop_id) {
     case PROP_DISPLAY_TYPE:
         g_value_set_enum(value, GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink));
+        break;
+    case PROP_DISPLAY_NAME:
+        g_value_set_string(value, GST_VAAPI_PLUGIN_BASE_DISPLAY_NAME(sink));
         break;
     case PROP_FULLSCREEN:
         g_value_set_boolean(value, sink->fullscreen);
@@ -1276,6 +1284,15 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                            GST_VAAPI_TYPE_DISPLAY_TYPE,
                            GST_VAAPI_DISPLAY_TYPE_ANY,
                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_DISPLAY_NAME,
+         g_param_spec_string("display-name",
+                             "display name",
+                             "display name to use",
+                             NULL,
+                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #if USE_GLX
     g_object_class_install_property
