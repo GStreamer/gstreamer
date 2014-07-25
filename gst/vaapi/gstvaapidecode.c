@@ -516,6 +516,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     guint size, min, max;
     gboolean need_pool, update_pool;
     gboolean has_video_meta = FALSE;
+    gboolean has_video_alignment = FALSE;
     GstVideoCodecState *state;
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
     gboolean has_texture_upload_meta = FALSE;
@@ -572,6 +573,11 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
         gst_query_parse_nth_allocation_pool(query, 0, &pool, &size, &min, &max);
         size = MAX(size, vi.size);
         update_pool = TRUE;
+
+        /* Check whether downstream element proposed a bufferpool but did
+           not provide a correct propose_allocation() implementation */
+        has_video_alignment = gst_buffer_pool_has_option(pool,
+            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
     }
     else {
         pool = NULL;
@@ -607,6 +613,12 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
             gst_buffer_pool_config_add_option(config,
                 GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 #endif
+        gst_buffer_pool_set_config(pool, config);
+    }
+    else if (has_video_alignment) {
+        config = gst_buffer_pool_get_config(pool);
+        gst_buffer_pool_config_add_option(config,
+            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
         gst_buffer_pool_set_config(pool, config);
     }
 

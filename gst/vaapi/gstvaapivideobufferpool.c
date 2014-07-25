@@ -47,6 +47,7 @@ struct _GstVaapiVideoBufferPoolPrivate {
     GstAllocator       *allocator;
     GstVaapiDisplay    *display;
     guint               has_video_meta          : 1;
+    guint               has_video_alignment     : 1;
     guint               has_texture_upload_meta : 1;
 };
 
@@ -101,6 +102,19 @@ gst_vaapi_video_buffer_pool_get_property(GObject *object, guint prop_id,
     }
 }
 
+static void
+fill_video_alignment(GstVaapiVideoBufferPool *pool, GstVideoAlignment *align)
+{
+    GstVideoInfo * const vip =
+        &GST_VAAPI_VIDEO_ALLOCATOR_CAST(pool->priv->allocator)->image_info;
+    guint i;
+
+    gst_video_alignment_reset(align);
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES(vip); i++)
+        align->stride_align[i] =
+            (1U << g_bit_nth_lsf(GST_VIDEO_INFO_PLANE_STRIDE(vip, i), 0)) - 1;
+}
+
 static const gchar **
 gst_vaapi_video_buffer_pool_get_options(GstBufferPool *pool)
 {
@@ -108,6 +122,7 @@ gst_vaapi_video_buffer_pool_get_options(GstBufferPool *pool)
         GST_BUFFER_POOL_OPTION_VIDEO_META,
         GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META,
         GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT,
         NULL,
     };
     return g_options;
@@ -122,6 +137,7 @@ gst_vaapi_video_buffer_pool_set_config(GstBufferPool *pool,
     GstCaps *caps = NULL;
     GstVideoInfo * const cur_vip = &priv->video_info[priv->video_info_index];
     GstVideoInfo * const new_vip = &priv->video_info[!priv->video_info_index];
+    GstVideoAlignment align;
     GstAllocator *allocator;
     gboolean changed_caps;
 
@@ -151,6 +167,13 @@ gst_vaapi_video_buffer_pool_set_config(GstBufferPool *pool,
 
     priv->has_video_meta = gst_buffer_pool_config_has_option(config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+    priv->has_video_alignment = gst_buffer_pool_config_has_option(config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    if (priv->has_video_alignment) {
+        fill_video_alignment(GST_VAAPI_VIDEO_BUFFER_POOL(pool), &align);
+        gst_buffer_pool_config_set_video_alignment(config, &align);
+    }
 
     priv->has_texture_upload_meta = gst_buffer_pool_config_has_option(config,
         GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
