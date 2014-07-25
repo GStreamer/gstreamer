@@ -31,10 +31,10 @@ G_BEGIN_DECLS
 #define GST_VAAPI_WINDOW_DRM(obj) \
     ((GstVaapiWindowDRM *)(obj))
 
-typedef struct _GstVaapiWindowDRM               GstVaapiWindowDRM;
+typedef struct _GstVaapiWindowDRM GstVaapiWindowDRM;
 
 GstVaapiWindow *
-gst_vaapi_window_drm_new(GstVaapiDisplay *display, guint width, guint height);
+gst_vaapi_window_drm_new (GstVaapiDisplay * display, guint width, guint height);
 
 G_END_DECLS
 

@@ -35,33 +35,30 @@ G_BEGIN_DECLS
 #define GST_VAAPI_WINDOW_GLX(obj) \
     ((GstVaapiWindowGLX *)(obj))
 
-typedef struct _GstVaapiWindowGLX               GstVaapiWindowGLX;
+typedef struct _GstVaapiWindowGLX GstVaapiWindowGLX;
 
 GstVaapiWindow *
-gst_vaapi_window_glx_new(GstVaapiDisplay *display, guint width, guint height);
+gst_vaapi_window_glx_new (GstVaapiDisplay * display, guint width, guint height);
 
 GstVaapiWindow *
-gst_vaapi_window_glx_new_with_xid(GstVaapiDisplay *display, Window xid);
+gst_vaapi_window_glx_new_with_xid (GstVaapiDisplay * display, Window xid);
 
 GLXContext
-gst_vaapi_window_glx_get_context(GstVaapiWindowGLX *window);
+gst_vaapi_window_glx_get_context (GstVaapiWindowGLX * window);
 
 gboolean
-gst_vaapi_window_glx_set_context(GstVaapiWindowGLX *window, GLXContext ctx);
+gst_vaapi_window_glx_set_context (GstVaapiWindowGLX * window, GLXContext ctx);
 
 gboolean
-gst_vaapi_window_glx_make_current(GstVaapiWindowGLX *window);
+gst_vaapi_window_glx_make_current (GstVaapiWindowGLX * window);
 
 void
-gst_vaapi_window_glx_swap_buffers(GstVaapiWindowGLX *window);
+gst_vaapi_window_glx_swap_buffers (GstVaapiWindowGLX * window);
 
 gboolean
-gst_vaapi_window_glx_put_texture(
-    GstVaapiWindowGLX       *window,
-    GstVaapiTexture         *texture,
-    const GstVaapiRectangle *src_rect,
-    const GstVaapiRectangle *dst_rect
-);
+gst_vaapi_window_glx_put_texture (GstVaapiWindowGLX * window,
+    GstVaapiTexture * texture, const GstVaapiRectangle * src_rect,
+    const GstVaapiRectangle * dst_rect);
 
 G_END_DECLS
 

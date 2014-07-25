@@ -41,87 +41,82 @@
 #undef gst_vaapi_window_replace
 
 static void
-gst_vaapi_window_ensure_size(GstVaapiWindow *window)
+gst_vaapi_window_ensure_size (GstVaapiWindow * window)
 {
-    const GstVaapiWindowClass * const klass =
-        GST_VAAPI_WINDOW_GET_CLASS(window);
+  const GstVaapiWindowClass *const klass = GST_VAAPI_WINDOW_GET_CLASS (window);
 
-    if (!window->check_geometry)
-        return;
+  if (!window->check_geometry)
+    return;
 
-    if (klass->get_geometry)
-        klass->get_geometry(window, NULL, NULL,
-            &window->width, &window->height);
+  if (klass->get_geometry)
+    klass->get_geometry (window, NULL, NULL, &window->width, &window->height);
 
-    window->check_geometry = FALSE;
-    window->is_fullscreen  = (window->width  == window->display_width &&
-                              window->height == window->display_height);
+  window->check_geometry = FALSE;
+  window->is_fullscreen = (window->width == window->display_width &&
+      window->height == window->display_height);
 }
 
 static gboolean
-gst_vaapi_window_create(GstVaapiWindow *window, guint width, guint height)
+gst_vaapi_window_create (GstVaapiWindow * window, guint width, guint height)
 {
-    gst_vaapi_display_get_size(
-        GST_VAAPI_OBJECT_DISPLAY(window),
-        &window->display_width,
-        &window->display_height
-    );
+  gst_vaapi_display_get_size (GST_VAAPI_OBJECT_DISPLAY (window),
+      &window->display_width, &window->display_height);
 
-    if (!GST_VAAPI_WINDOW_GET_CLASS(window)->create(window, &width, &height))
-        return FALSE;
+  if (!GST_VAAPI_WINDOW_GET_CLASS (window)->create (window, &width, &height))
+    return FALSE;
 
-    if (width != window->width || height != window->height) {
-        GST_DEBUG("backend resized window to %ux%u", width, height);
-        window->width  = width;
-        window->height = height;
-    }
-    return TRUE;
+  if (width != window->width || height != window->height) {
+    GST_DEBUG ("backend resized window to %ux%u", width, height);
+    window->width = width;
+    window->height = height;
+  }
+  return TRUE;
 }
 
 GstVaapiWindow *
-gst_vaapi_window_new(const GstVaapiWindowClass *window_class,
-    GstVaapiDisplay *display, guint width, guint height)
+gst_vaapi_window_new (const GstVaapiWindowClass * window_class,
+    GstVaapiDisplay * display, guint width, guint height)
 {
-    GstVaapiWindow *window;
+  GstVaapiWindow *window;
 
-    g_return_val_if_fail(width  > 0, NULL);
-    g_return_val_if_fail(height > 0, NULL);
+  g_return_val_if_fail (width > 0, NULL);
+  g_return_val_if_fail (height > 0, NULL);
 
-    window = gst_vaapi_object_new(GST_VAAPI_OBJECT_CLASS(window_class),
-        display);
-    if (!window)
-        return NULL;
+  window = gst_vaapi_object_new (GST_VAAPI_OBJECT_CLASS (window_class),
+      display);
+  if (!window)
+    return NULL;
 
-    GST_VAAPI_OBJECT_ID(window) = 0;
-    if (!gst_vaapi_window_create(window, width, height))
-        goto error;
-    return window;
+  GST_VAAPI_OBJECT_ID (window) = 0;
+  if (!gst_vaapi_window_create (window, width, height))
+    goto error;
+  return window;
 
 error:
-    gst_vaapi_window_unref_internal(window);
-    return NULL;
+  gst_vaapi_window_unref_internal (window);
+  return NULL;
 }
 
 GstVaapiWindow *
-gst_vaapi_window_new_from_native(const GstVaapiWindowClass *window_class,
-    GstVaapiDisplay *display, gpointer native_window)
+gst_vaapi_window_new_from_native (const GstVaapiWindowClass * window_class,
+    GstVaapiDisplay * display, gpointer native_window)
 {
-    GstVaapiWindow *window;
+  GstVaapiWindow *window;
 
-    window = gst_vaapi_object_new(GST_VAAPI_OBJECT_CLASS(window_class),
-        display);
-    if (!window)
-        return NULL;
+  window = gst_vaapi_object_new (GST_VAAPI_OBJECT_CLASS (window_class),
+      display);
+  if (!window)
+    return NULL;
 
-    GST_VAAPI_OBJECT_ID(window) = GPOINTER_TO_SIZE(native_window);
-    window->use_foreign_window = TRUE;
-    if (!gst_vaapi_window_create(window, 0, 0))
-        goto error;
-    return window;
+  GST_VAAPI_OBJECT_ID (window) = GPOINTER_TO_SIZE (native_window);
+  window->use_foreign_window = TRUE;
+  if (!gst_vaapi_window_create (window, 0, 0))
+    goto error;
+  return window;
 
 error:
-    gst_vaapi_window_unref_internal(window);
-    return NULL;
+  gst_vaapi_window_unref_internal (window);
+  return NULL;
 }
 
 /**
@@ -133,9 +128,9 @@ error:
  * Returns: The same @window argument
  */
 GstVaapiWindow *
-gst_vaapi_window_ref(GstVaapiWindow *window)
+gst_vaapi_window_ref (GstVaapiWindow * window)
 {
-    return gst_vaapi_window_ref_internal(window);
+  return gst_vaapi_window_ref_internal (window);
 }
 
 /**
@@ -146,9 +141,9 @@ gst_vaapi_window_ref(GstVaapiWindow *window)
  * the reference count reaches zero, the window will be free'd.
  */
 void
-gst_vaapi_window_unref(GstVaapiWindow *window)
+gst_vaapi_window_unref (GstVaapiWindow * window)
 {
-    gst_vaapi_window_unref_internal(window);
+  gst_vaapi_window_unref_internal (window);
 }
 
 /**
@@ -161,10 +156,10 @@ gst_vaapi_window_unref(GstVaapiWindow *window)
  * valid window. However, @new_window can be NULL.
  */
 void
-gst_vaapi_window_replace(GstVaapiWindow **old_window_ptr,
-    GstVaapiWindow *new_window)
+gst_vaapi_window_replace (GstVaapiWindow ** old_window_ptr,
+    GstVaapiWindow * new_window)
 {
-    gst_vaapi_window_replace_internal(old_window_ptr, new_window);
+  gst_vaapi_window_replace_internal (old_window_ptr, new_window);
 }
 
 /**
@@ -176,11 +171,11 @@ gst_vaapi_window_replace(GstVaapiWindow **old_window_ptr,
  * Return value: the parent #GstVaapiDisplay object
  */
 GstVaapiDisplay *
-gst_vaapi_window_get_display(GstVaapiWindow *window)
+gst_vaapi_window_get_display (GstVaapiWindow * window)
 {
-    g_return_val_if_fail(window != NULL, NULL);
+  g_return_val_if_fail (window != NULL, NULL);
 
-    return GST_VAAPI_OBJECT_DISPLAY(window);
+  return GST_VAAPI_OBJECT_DISPLAY (window);
 }
 
 /**
@@ -191,12 +186,12 @@ gst_vaapi_window_get_display(GstVaapiWindow *window)
  * not appear on the screen.
  */
 void
-gst_vaapi_window_show(GstVaapiWindow *window)
+gst_vaapi_window_show (GstVaapiWindow * window)
 {
-    g_return_if_fail(window != NULL);
+  g_return_if_fail (window != NULL);
 
-    GST_VAAPI_WINDOW_GET_CLASS(window)->show(window);
-    window->check_geometry = TRUE;
+  GST_VAAPI_WINDOW_GET_CLASS (window)->show (window);
+  window->check_geometry = TRUE;
 }
 
 /**
@@ -207,11 +202,11 @@ gst_vaapi_window_show(GstVaapiWindow *window)
  * to be hidden (invisible to the user).
  */
 void
-gst_vaapi_window_hide(GstVaapiWindow *window)
+gst_vaapi_window_hide (GstVaapiWindow * window)
 {
-    g_return_if_fail(window != NULL);
+  g_return_if_fail (window != NULL);
 
-    GST_VAAPI_WINDOW_GET_CLASS(window)->hide(window);
+  GST_VAAPI_WINDOW_GET_CLASS (window)->hide (window);
 }
 
 /**
@@ -223,13 +218,13 @@ gst_vaapi_window_hide(GstVaapiWindow *window)
  * Return value: %TRUE if the window is fullscreen
  */
 gboolean
-gst_vaapi_window_get_fullscreen(GstVaapiWindow *window)
+gst_vaapi_window_get_fullscreen (GstVaapiWindow * window)
 {
-    g_return_val_if_fail(window != NULL, FALSE);
+  g_return_val_if_fail (window != NULL, FALSE);
 
-    gst_vaapi_window_ensure_size(window);
+  gst_vaapi_window_ensure_size (window);
 
-    return window->is_fullscreen;
+  return window->is_fullscreen;
 }
 
 /**
@@ -240,19 +235,19 @@ gst_vaapi_window_get_fullscreen(GstVaapiWindow *window)
  * Requests to place the @window in fullscreen or unfullscreen states.
  */
 void
-gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
+gst_vaapi_window_set_fullscreen (GstVaapiWindow * window, gboolean fullscreen)
 {
-    const GstVaapiWindowClass *klass;
+  const GstVaapiWindowClass *klass;
 
-    g_return_if_fail(window != NULL);
+  g_return_if_fail (window != NULL);
 
-    klass = GST_VAAPI_WINDOW_GET_CLASS(window);
+  klass = GST_VAAPI_WINDOW_GET_CLASS (window);
 
-    if (window->is_fullscreen != fullscreen &&
-        klass->set_fullscreen && klass->set_fullscreen(window, fullscreen)) {
-        window->is_fullscreen  = fullscreen;
-        window->check_geometry = TRUE;
-    }
+  if (window->is_fullscreen != fullscreen &&
+      klass->set_fullscreen && klass->set_fullscreen (window, fullscreen)) {
+    window->is_fullscreen = fullscreen;
+    window->check_geometry = TRUE;
+  }
 }
 
 /**
@@ -264,13 +259,13 @@ gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
  * Return value: the width of the @window, in pixels
  */
 guint
-gst_vaapi_window_get_width(GstVaapiWindow *window)
+gst_vaapi_window_get_width (GstVaapiWindow * window)
 {
-    g_return_val_if_fail(window != NULL, 0);
+  g_return_val_if_fail (window != NULL, 0);
 
-    gst_vaapi_window_ensure_size(window);
+  gst_vaapi_window_ensure_size (window);
 
-    return window->width;
+  return window->width;
 }
 
 /**
@@ -282,35 +277,36 @@ gst_vaapi_window_get_width(GstVaapiWindow *window)
  * Return value: the height of the @window, in pixels
  */
 guint
-gst_vaapi_window_get_height(GstVaapiWindow *window)
+gst_vaapi_window_get_height (GstVaapiWindow * window)
 {
-    g_return_val_if_fail(window != NULL, 0);
+  g_return_val_if_fail (window != NULL, 0);
 
-    gst_vaapi_window_ensure_size(window);
+  gst_vaapi_window_ensure_size (window);
 
-    return window->height;
+  return window->height;
 }
 
 /**
  * gst_vaapi_window_get_size:
  * @window: a #GstVaapiWindow
- * @pwidth: return location for the width, or %NULL
- * @pheight: return location for the height, or %NULL
+ * @width_ptr: return location for the width, or %NULL
+ * @height_ptr: return location for the height, or %NULL
  *
  * Retrieves the dimensions of a #GstVaapiWindow.
  */
 void
-gst_vaapi_window_get_size(GstVaapiWindow *window, guint *pwidth, guint *pheight)
+gst_vaapi_window_get_size (GstVaapiWindow * window, guint * width_ptr,
+    guint * height_ptr)
 {
-    g_return_if_fail(window != NULL);
+  g_return_if_fail (window != NULL);
 
-    gst_vaapi_window_ensure_size(window);
+  gst_vaapi_window_ensure_size (window);
 
-    if (pwidth)
-        *pwidth = window->width;
+  if (width_ptr)
+    *width_ptr = window->width;
 
-    if (pheight)
-        *pheight = window->height;
+  if (height_ptr)
+    *height_ptr = window->height;
 }
 
 /**
@@ -321,11 +317,11 @@ gst_vaapi_window_get_size(GstVaapiWindow *window, guint *pwidth, guint *pheight)
  * Resizes the @window to match the specified @width.
  */
 void
-gst_vaapi_window_set_width(GstVaapiWindow *window, guint width)
+gst_vaapi_window_set_width (GstVaapiWindow * window, guint width)
 {
-    g_return_if_fail(window != NULL);
+  g_return_if_fail (window != NULL);
 
-    gst_vaapi_window_set_size(window, width, window->height);
+  gst_vaapi_window_set_size (window, width, window->height);
 }
 
 /**
@@ -336,11 +332,11 @@ gst_vaapi_window_set_width(GstVaapiWindow *window, guint width)
  * Resizes the @window to match the specified @height.
  */
 void
-gst_vaapi_window_set_height(GstVaapiWindow *window, guint height)
+gst_vaapi_window_set_height (GstVaapiWindow * window, guint height)
 {
-    g_return_if_fail(window != NULL);
+  g_return_if_fail (window != NULL);
 
-    gst_vaapi_window_set_size(window, window->width, height);
+  gst_vaapi_window_set_size (window, window->width, height);
 }
 
 /**
@@ -352,39 +348,39 @@ gst_vaapi_window_set_height(GstVaapiWindow *window, guint height)
  * Resizes the @window to match the specified @width and @height.
  */
 void
-gst_vaapi_window_set_size(GstVaapiWindow *window, guint width, guint height)
+gst_vaapi_window_set_size (GstVaapiWindow * window, guint width, guint height)
 {
-    g_return_if_fail(window != NULL);
+  g_return_if_fail (window != NULL);
 
-    if (width == window->width && height == window->height)
-        return;
+  if (width == window->width && height == window->height)
+    return;
 
-    if (!GST_VAAPI_WINDOW_GET_CLASS(window)->resize(window, width, height))
-        return;
+  if (!GST_VAAPI_WINDOW_GET_CLASS (window)->resize (window, width, height))
+    return;
 
-    window->width  = width;
-    window->height = height;
+  window->width = width;
+  window->height = height;
 }
 
 static inline void
-get_surface_rect(GstVaapiSurface *surface, GstVaapiRectangle *rect)
+get_surface_rect (GstVaapiSurface * surface, GstVaapiRectangle * rect)
 {
-    rect->x      = 0;
-    rect->y      = 0;
-    rect->width  = GST_VAAPI_SURFACE_WIDTH(surface);
-    rect->height = GST_VAAPI_SURFACE_HEIGHT(surface);
+  rect->x = 0;
+  rect->y = 0;
+  rect->width = GST_VAAPI_SURFACE_WIDTH (surface);
+  rect->height = GST_VAAPI_SURFACE_HEIGHT (surface);
 }
 
 static inline void
-get_window_rect(GstVaapiWindow *window, GstVaapiRectangle *rect)
+get_window_rect (GstVaapiWindow * window, GstVaapiRectangle * rect)
 {
-    guint width, height;
+  guint width, height;
 
-    gst_vaapi_window_get_size(window, &width, &height);
-    rect->x      = 0;
-    rect->y      = 0;
-    rect->width  = width;
-    rect->height = height;
+  gst_vaapi_window_get_size (window, &width, &height);
+  rect->x = 0;
+  rect->y = 0;
+  rect->width = width;
+  rect->height = height;
 }
 
 /**
@@ -406,47 +402,44 @@ get_window_rect(GstVaapiWindow *window, GstVaapiRectangle *rect)
  * Return value: %TRUE on success
  */
 gboolean
-gst_vaapi_window_put_surface(
-    GstVaapiWindow          *window,
-    GstVaapiSurface         *surface,
-    const GstVaapiRectangle *src_rect,
-    const GstVaapiRectangle *dst_rect,
-    guint                    flags
-)
+gst_vaapi_window_put_surface (GstVaapiWindow * window,
+    GstVaapiSurface * surface,
+    const GstVaapiRectangle * src_rect,
+    const GstVaapiRectangle * dst_rect, guint flags)
 {
-    const GstVaapiWindowClass *klass;
-    GstVaapiRectangle src_rect_default, dst_rect_default;
+  const GstVaapiWindowClass *klass;
+  GstVaapiRectangle src_rect_default, dst_rect_default;
 
-    g_return_val_if_fail(window != NULL, FALSE);
-    g_return_val_if_fail(surface != NULL, FALSE);
+  g_return_val_if_fail (window != NULL, FALSE);
+  g_return_val_if_fail (surface != NULL, FALSE);
 
-    klass = GST_VAAPI_WINDOW_GET_CLASS(window);
-    if (!klass->render)
-        return FALSE;
+  klass = GST_VAAPI_WINDOW_GET_CLASS (window);
+  if (!klass->render)
+    return FALSE;
 
-    if (!src_rect) {
-        src_rect = &src_rect_default;
-        get_surface_rect(surface, &src_rect_default);
-    }
+  if (!src_rect) {
+    src_rect = &src_rect_default;
+    get_surface_rect (surface, &src_rect_default);
+  }
 
-    if (!dst_rect) {
-        dst_rect = &dst_rect_default;
-        get_window_rect(window, &dst_rect_default);
-    }
+  if (!dst_rect) {
+    dst_rect = &dst_rect_default;
+    get_window_rect (window, &dst_rect_default);
+  }
 
-    return klass->render(window, surface, src_rect, dst_rect, flags);
+  return klass->render (window, surface, src_rect, dst_rect, flags);
 }
 
 static inline void
-get_pixmap_rect(GstVaapiPixmap *pixmap, GstVaapiRectangle *rect)
+get_pixmap_rect (GstVaapiPixmap * pixmap, GstVaapiRectangle * rect)
 {
-    guint width, height;
+  guint width, height;
 
-    gst_vaapi_pixmap_get_size(pixmap, &width, &height);
-    rect->x      = 0;
-    rect->y      = 0;
-    rect->width  = width;
-    rect->height = height;
+  gst_vaapi_pixmap_get_size (pixmap, &width, &height);
+  rect->x = 0;
+  rect->y = 0;
+  rect->width = width;
+  rect->height = height;
 }
 
 /**
@@ -465,31 +458,28 @@ get_pixmap_rect(GstVaapiPixmap *pixmap, GstVaapiRectangle *rect)
  * Return value: %TRUE on success
  */
 gboolean
-gst_vaapi_window_put_pixmap(
-    GstVaapiWindow          *window,
-    GstVaapiPixmap          *pixmap,
-    const GstVaapiRectangle *src_rect,
-    const GstVaapiRectangle *dst_rect
-)
+gst_vaapi_window_put_pixmap (GstVaapiWindow * window,
+    GstVaapiPixmap * pixmap,
+    const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect)
 {
-    const GstVaapiWindowClass *klass;
-    GstVaapiRectangle src_rect_default, dst_rect_default;
+  const GstVaapiWindowClass *klass;
+  GstVaapiRectangle src_rect_default, dst_rect_default;
 
-    g_return_val_if_fail(window != NULL, FALSE);
-    g_return_val_if_fail(pixmap != NULL, FALSE);
+  g_return_val_if_fail (window != NULL, FALSE);
+  g_return_val_if_fail (pixmap != NULL, FALSE);
 
-    klass = GST_VAAPI_WINDOW_GET_CLASS(window);
-    if (!klass->render_pixmap)
-        return FALSE;
+  klass = GST_VAAPI_WINDOW_GET_CLASS (window);
+  if (!klass->render_pixmap)
+    return FALSE;
 
-    if (!src_rect) {
-        src_rect = &src_rect_default;
-        get_pixmap_rect(pixmap, &src_rect_default);
-    }
+  if (!src_rect) {
+    src_rect = &src_rect_default;
+    get_pixmap_rect (pixmap, &src_rect_default);
+  }
 
-    if (!dst_rect) {
-        dst_rect = &dst_rect_default;
-        get_window_rect(window, &dst_rect_default);
-    }
-    return klass->render_pixmap(window, pixmap, src_rect, dst_rect);
+  if (!dst_rect) {
+    dst_rect = &dst_rect_default;
+    get_window_rect (window, &dst_rect_default);
+  }
+  return klass->render_pixmap (window, pixmap, src_rect, dst_rect);
 }

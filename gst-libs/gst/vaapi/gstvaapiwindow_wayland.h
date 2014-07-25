@@ -30,10 +30,11 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstVaapiWindowWayland           GstVaapiWindowWayland;
+typedef struct _GstVaapiWindowWayland GstVaapiWindowWayland;
 
 GstVaapiWindow *
-gst_vaapi_window_wayland_new(GstVaapiDisplay *display, guint width, guint height);
+gst_vaapi_window_wayland_new (GstVaapiDisplay * display, guint width,
+    guint height);
 
 G_END_DECLS
 

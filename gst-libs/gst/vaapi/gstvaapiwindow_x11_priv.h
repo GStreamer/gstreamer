@@ -42,18 +42,19 @@ G_BEGIN_DECLS
 #define GST_VAAPI_WINDOW_X11_GET_CLASS(obj) \
     GST_VAAPI_WINDOW_X11_CLASS(GST_VAAPI_WINDOW_GET_CLASS(obj))
 
-typedef struct _GstVaapiWindowX11Private        GstVaapiWindowX11Private;
-typedef struct _GstVaapiWindowX11Class          GstVaapiWindowX11Class;
+typedef struct _GstVaapiWindowX11Private GstVaapiWindowX11Private;
+typedef struct _GstVaapiWindowX11Class GstVaapiWindowX11Class;
 
-struct _GstVaapiWindowX11Private {
-    Atom                atom_NET_WM_STATE;
-    Atom                atom_NET_WM_STATE_FULLSCREEN;
+struct _GstVaapiWindowX11Private
+{
+  Atom atom_NET_WM_STATE;
+  Atom atom_NET_WM_STATE_FULLSCREEN;
 #ifdef HAVE_XRENDER
-    Picture             picture;
+  Picture picture;
 #endif
-    guint               is_mapped               : 1;
-    guint               fullscreen_on_map       : 1;
-    guint               has_xrender             : 1;
+  guint is_mapped:1;
+  guint fullscreen_on_map:1;
+  guint has_xrender:1;
 };
 
 /**
@@ -61,11 +62,12 @@ struct _GstVaapiWindowX11Private {
  *
  * An X11 #Window wrapper.
  */
-struct _GstVaapiWindowX11 {
-    /*< private >*/
-    GstVaapiWindow parent_instance;
+struct _GstVaapiWindowX11
+{
+  /*< private >*/
+  GstVaapiWindow parent_instance;
 
-    GstVaapiWindowX11Private priv;
+  GstVaapiWindowX11Private priv;
 };
 
 /**
@@ -77,16 +79,17 @@ struct _GstVaapiWindowX11 {
  *
  * An X11 #Window wrapper class.
  */
-struct _GstVaapiWindowX11Class {
-    /*< private >*/
-    GstVaapiWindowClass parent_class;
+struct _GstVaapiWindowX11Class
+{
+  /*< private >*/
+  GstVaapiWindowClass parent_class;
 
-    Visual *  (*get_visual)     (GstVaapiWindow *window);
-    Colormap  (*get_colormap)   (GstVaapiWindow *window);
+  Visual *(*get_visual) (GstVaapiWindow * window);
+  Colormap (*get_colormap) (GstVaapiWindow * window);
 };
 
 void
-gst_vaapi_window_x11_class_init(GstVaapiWindowX11Class *klass);
+gst_vaapi_window_x11_class_init (GstVaapiWindowX11Class * klass);
 
 G_END_DECLS
 

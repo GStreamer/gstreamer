@@ -43,19 +43,19 @@ G_BEGIN_DECLS
 #define GST_VAAPI_WINDOW_XWINDOW(window) \
     gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(window))
 
-typedef struct _GstVaapiWindowX11               GstVaapiWindowX11;
+typedef struct _GstVaapiWindowX11 GstVaapiWindowX11;
 
 GstVaapiWindow *
-gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height);
+gst_vaapi_window_x11_new (GstVaapiDisplay * display, guint width, guint height);
 
 GstVaapiWindow *
-gst_vaapi_window_x11_new_with_xid(GstVaapiDisplay *display, Window xid);
+gst_vaapi_window_x11_new_with_xid (GstVaapiDisplay * display, Window xid);
 
 Window
-gst_vaapi_window_x11_get_xid(GstVaapiWindowX11 *window);
+gst_vaapi_window_x11_get_xid (GstVaapiWindowX11 * window);
 
 gboolean
-gst_vaapi_window_x11_is_foreign_xid(GstVaapiWindowX11 *window);
+gst_vaapi_window_x11_is_foreign_xid (GstVaapiWindowX11 * window);
 
 G_END_DECLS
 

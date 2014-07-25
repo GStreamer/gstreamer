@@ -37,68 +37,61 @@ G_BEGIN_DECLS
 #define GST_VAAPI_WINDOW(obj) \
     ((GstVaapiWindow *)(obj))
 
-typedef struct _GstVaapiWindow                  GstVaapiWindow;
-typedef struct _GstVaapiWindowClass             GstVaapiWindowClass;
+typedef struct _GstVaapiWindow GstVaapiWindow;
+typedef struct _GstVaapiWindowClass GstVaapiWindowClass;
 
 GstVaapiWindow *
-gst_vaapi_window_ref(GstVaapiWindow *window);
+gst_vaapi_window_ref (GstVaapiWindow * window);
 
 void
-gst_vaapi_window_unref(GstVaapiWindow *window);
+gst_vaapi_window_unref (GstVaapiWindow * window);
 
 void
-gst_vaapi_window_replace(GstVaapiWindow **old_window_ptr,
-    GstVaapiWindow *new_window);
+gst_vaapi_window_replace (GstVaapiWindow ** old_window_ptr,
+    GstVaapiWindow * new_window);
 
 GstVaapiDisplay *
-gst_vaapi_window_get_display(GstVaapiWindow *window);
+gst_vaapi_window_get_display (GstVaapiWindow * window);
 
 void
-gst_vaapi_window_show(GstVaapiWindow *window);
+gst_vaapi_window_show (GstVaapiWindow * window);
 
 void
-gst_vaapi_window_hide(GstVaapiWindow *window);
+gst_vaapi_window_hide (GstVaapiWindow * window);
 
 gboolean
-gst_vaapi_window_get_fullscreen(GstVaapiWindow *window);
+gst_vaapi_window_get_fullscreen (GstVaapiWindow * window);
 
 void
-gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen);
+gst_vaapi_window_set_fullscreen (GstVaapiWindow * window, gboolean fullscreen);
 
 guint
-gst_vaapi_window_get_width(GstVaapiWindow *window);
+gst_vaapi_window_get_width (GstVaapiWindow * window);
 
 guint
-gst_vaapi_window_get_height(GstVaapiWindow *window);
+gst_vaapi_window_get_height (GstVaapiWindow * window);
 
 void
-gst_vaapi_window_get_size(GstVaapiWindow *window, guint *pwidth, guint *pheight);
+gst_vaapi_window_get_size (GstVaapiWindow * window, guint * width_ptr,
+    guint * height_ptr);
 
 void
-gst_vaapi_window_set_width(GstVaapiWindow *window, guint width);
+gst_vaapi_window_set_width (GstVaapiWindow * window, guint width);
 
 void
-gst_vaapi_window_set_height(GstVaapiWindow *window, guint height);
+gst_vaapi_window_set_height (GstVaapiWindow * window, guint height);
 
 void
-gst_vaapi_window_set_size(GstVaapiWindow *window, guint width, guint height);
+gst_vaapi_window_set_size (GstVaapiWindow * window, guint width, guint height);
 
 gboolean
-gst_vaapi_window_put_surface(
-    GstVaapiWindow          *window,
-    GstVaapiSurface         *surface,
-    const GstVaapiRectangle *src_rect,
-    const GstVaapiRectangle *dst_rect,
-    guint                    flags
-);
+gst_vaapi_window_put_surface (GstVaapiWindow * window,
+    GstVaapiSurface * surface, const GstVaapiRectangle * src_rect,
+    const GstVaapiRectangle * dst_rect, guint flags);
 
 gboolean
-gst_vaapi_window_put_pixmap(
-    GstVaapiWindow          *window,
-    GstVaapiPixmap          *pixmap,
-    const GstVaapiRectangle *src_rect,
-    const GstVaapiRectangle *dst_rect
-);
+gst_vaapi_window_put_pixmap (GstVaapiWindow * window, GstVaapiPixmap * pixmap,
+    const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect);
 
 G_END_DECLS
 

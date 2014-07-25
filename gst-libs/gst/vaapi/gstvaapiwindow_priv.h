@@ -36,40 +36,41 @@ G_BEGIN_DECLS
     GST_VAAPI_WINDOW_CLASS(GST_VAAPI_OBJECT_GET_CLASS(obj))
 
 /* GstVaapiWindowClass hooks */
-typedef gboolean  (*GstVaapiWindowCreateFunc)  (GstVaapiWindow *window,
-    guint *width, guint *height);
-typedef gboolean  (*GstVaapiWindowShowFunc)    (GstVaapiWindow *window);
-typedef gboolean  (*GstVaapiWindowHideFunc)    (GstVaapiWindow *window);
-typedef gboolean  (*GstVaapiWindowGetGeometryFunc)(GstVaapiWindow *window,
-    gint *px, gint *py, guint *pwidth, guint *pheight);
-typedef gboolean  (*GstVaapiWindowSetFullscreenFunc)(GstVaapiWindow *window,
+typedef gboolean (*GstVaapiWindowCreateFunc) (GstVaapiWindow * window,
+    guint * width, guint * height);
+typedef gboolean (*GstVaapiWindowShowFunc) (GstVaapiWindow * window);
+typedef gboolean (*GstVaapiWindowHideFunc) (GstVaapiWindow * window);
+typedef gboolean (*GstVaapiWindowGetGeometryFunc) (GstVaapiWindow * window,
+    gint * px, gint * py, guint * pwidth, guint * pheight);
+typedef gboolean (*GstVaapiWindowSetFullscreenFunc) (GstVaapiWindow * window,
     gboolean fullscreen);
-typedef gboolean  (*GstVaapiWindowResizeFunc)  (GstVaapiWindow *window,
+typedef gboolean (*GstVaapiWindowResizeFunc) (GstVaapiWindow * window,
     guint width, guint height);
-typedef gboolean  (*GstVaapiWindowRenderFunc)  (GstVaapiWindow *window,
-    GstVaapiSurface *surface, const GstVaapiRectangle *src_rect,
-    const GstVaapiRectangle *dst_rect, guint flags);
-typedef gboolean  (*GstVaapiWindowRenderPixmapFunc)(GstVaapiWindow *window,
-    GstVaapiPixmap *pixmap, const GstVaapiRectangle *src_rect,
-    const GstVaapiRectangle *dst_rect);
+typedef gboolean (*GstVaapiWindowRenderFunc) (GstVaapiWindow * window,
+    GstVaapiSurface * surface, const GstVaapiRectangle * src_rect,
+    const GstVaapiRectangle * dst_rect, guint flags);
+typedef gboolean (*GstVaapiWindowRenderPixmapFunc) (GstVaapiWindow * window,
+    GstVaapiPixmap * pixmap, const GstVaapiRectangle * src_rect,
+    const GstVaapiRectangle * dst_rect);
 
 /**
  * GstVaapiWindow:
  *
  * Base class for system-dependent windows.
  */
-struct _GstVaapiWindow {
-    /*< private >*/
-    GstVaapiObject parent_instance;
+struct _GstVaapiWindow
+{
+  /*< private >*/
+  GstVaapiObject parent_instance;
 
-    /*< protected >*/
-    guint               width;
-    guint               height;
-    guint               display_width;
-    guint               display_height;
-    guint               use_foreign_window      : 1;
-    guint               is_fullscreen           : 1;
-    guint               check_geometry          : 1;
+  /*< protected >*/
+  guint width;
+  guint height;
+  guint display_width;
+  guint display_height;
+  guint use_foreign_window:1;
+  guint is_fullscreen:1;
+  guint check_geometry:1;
 };
 
 /**
@@ -84,28 +85,29 @@ struct _GstVaapiWindow {
  *
  * Base class for system-dependent windows.
  */
-struct _GstVaapiWindowClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
+struct _GstVaapiWindowClass
+{
+  /*< private >*/
+  GstVaapiObjectClass parent_class;
 
-    /*< protected >*/
-    GstVaapiWindowCreateFunc            create;
-    GstVaapiWindowShowFunc              show;
-    GstVaapiWindowHideFunc              hide;
-    GstVaapiWindowGetGeometryFunc       get_geometry;
-    GstVaapiWindowSetFullscreenFunc     set_fullscreen;
-    GstVaapiWindowResizeFunc            resize;
-    GstVaapiWindowRenderFunc            render;
-    GstVaapiWindowRenderPixmapFunc      render_pixmap;
+  /*< protected >*/
+  GstVaapiWindowCreateFunc create;
+  GstVaapiWindowShowFunc show;
+  GstVaapiWindowHideFunc hide;
+  GstVaapiWindowGetGeometryFunc get_geometry;
+  GstVaapiWindowSetFullscreenFunc set_fullscreen;
+  GstVaapiWindowResizeFunc resize;
+  GstVaapiWindowRenderFunc render;
+  GstVaapiWindowRenderPixmapFunc render_pixmap;
 };
 
 GstVaapiWindow *
-gst_vaapi_window_new(const GstVaapiWindowClass *window_class,
-    GstVaapiDisplay *display, guint width, guint height);
+gst_vaapi_window_new (const GstVaapiWindowClass * window_class,
+    GstVaapiDisplay * display, guint width, guint height);
 
 GstVaapiWindow *
-gst_vaapi_window_new_from_native(const GstVaapiWindowClass *window_class,
-    GstVaapiDisplay *display, gpointer native_window);
+gst_vaapi_window_new_from_native (const GstVaapiWindowClass *
+    window_class, GstVaapiDisplay * display, gpointer native_window);
 
 /* Inline reference counting for core libgstvaapi library */
 #ifdef IN_LIBGSTVAAPI_CORE
