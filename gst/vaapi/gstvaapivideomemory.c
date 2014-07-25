@@ -33,6 +33,9 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapivideomemory);
     gst_video_format_to_string(GST_VIDEO_INFO_FORMAT(vip))
 #endif
 
+/* Defined if native VA surface formats are preferred over direct rendering */
+#define USE_NATIVE_FORMATS 1
+
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoMemory                                              --- */
 /* ------------------------------------------------------------------------ */
@@ -96,7 +99,8 @@ new_surface(GstVaapiDisplay *display, const GstVideoInfo *vip)
     GstVaapiChromaType chroma_type;
 
     /* Try with explicit format first */
-    if (GST_VIDEO_INFO_FORMAT(vip) != GST_VIDEO_FORMAT_ENCODED) {
+    if (!USE_NATIVE_FORMATS &&
+        GST_VIDEO_INFO_FORMAT(vip) != GST_VIDEO_FORMAT_ENCODED) {
         surface = gst_vaapi_surface_new_with_format(display,
             GST_VIDEO_INFO_FORMAT(vip), GST_VIDEO_INFO_WIDTH(vip),
             GST_VIDEO_INFO_HEIGHT(vip));
@@ -610,6 +614,8 @@ gst_vaapi_video_allocator_new(GstVaapiDisplay *display, const GstVideoInfo *vip)
                 &allocator->surface_info, image);
             if (GST_VAAPI_IMAGE_FORMAT(image) != GST_VIDEO_INFO_FORMAT(vip))
                allocator->has_direct_rendering = FALSE;
+            if (USE_NATIVE_FORMATS)
+                allocator->has_direct_rendering = FALSE;
             gst_vaapi_image_unmap(image);
             GST_INFO("has direct-rendering for %s surfaces: %s",
                      GST_VIDEO_INFO_FORMAT_STRING(&allocator->surface_info),
