@@ -295,8 +295,12 @@ gst_vaapi_window_x11_get_geometry (GstVaapiWindow * window,
 {
   Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
   const Window xid = GST_VAAPI_OBJECT_ID (window);
+  gboolean success;
 
-  return x11_get_geometry (dpy, xid, px, py, pwidth, pheight, NULL);
+  GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
+  success = x11_get_geometry (dpy, xid, px, py, pwidth, pheight, NULL);
+  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);
+  return success;
 }
 
 static gboolean
