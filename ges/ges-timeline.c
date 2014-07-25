@@ -189,6 +189,8 @@ struct _GESTimelinePrivate
   guint group_id;
 
   GHashTable *all_elements;
+
+  guint expected_async_done;
 };
 
 /* private structure to contain our track-related information */
@@ -366,6 +368,68 @@ ges_timeline_finalize (GObject * object)
   G_OBJECT_CLASS (ges_timeline_parent_class)->finalize (object);
 }
 
+
+
+static void
+ges_timeline_handle_message (GstBin * bin, GstMessage * message)
+{
+  GstMessageType type;
+  GESTimeline *timeline = GES_TIMELINE (bin);
+  GstMessage *forwarded_message;
+  GstObject *element;
+
+  type = GST_MESSAGE_TYPE (message);
+
+  if (type == GST_MESSAGE_ELEMENT) {
+    const GstStructure *mstructure = gst_message_get_structure (message);
+
+    if (!gst_structure_get (mstructure, "message", GST_TYPE_MESSAGE, &forwarded_message, NULL))
+      goto forward;
+  } else {
+    goto forward;
+  }
+
+  element = GST_MESSAGE_SRC (forwarded_message);
+  if (!GES_IS_TRACK (GST_ELEMENT_PARENT (GST_ELEMENT (element))))
+    goto forward;
+
+  if (!gst_mini_object_get_qdata ((GstMiniObject *) forwarded_message,
+        g_quark_from_static_string ("gnl-async-seek")))
+    goto forward;
+
+  type = GST_MESSAGE_TYPE (forwarded_message);
+  switch (type) {
+    case GST_MESSAGE_ASYNC_START:
+      GST_OBJECT_LOCK (timeline);
+      if (timeline->priv->expected_async_done == 0) {
+        GstMessage *amessage = gst_message_new_async_start (GST_OBJECT_CAST (bin));
+        timeline->priv->expected_async_done = g_list_length (timeline->tracks);
+        GST_OBJECT_UNLOCK (timeline);
+        gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
+      } else {
+        GST_OBJECT_UNLOCK (timeline);
+      }
+      return;
+    case GST_MESSAGE_ASYNC_DONE:
+      GST_OBJECT_LOCK (timeline);
+      timeline->priv->expected_async_done -= 1;
+      if (timeline->priv->expected_async_done == 0) {
+        GstMessage *amessage = gst_message_new_async_done (GST_OBJECT_CAST (bin),
+            GST_CLOCK_TIME_NONE);
+        GST_OBJECT_UNLOCK (timeline);
+        gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
+      } else {
+        GST_OBJECT_UNLOCK (timeline);
+      }
+      return;
+    default:
+      goto forward;
+      break;
+  }
+  forward:
+    gst_element_post_message (GST_ELEMENT_CAST (bin), message);
+}
+
 /* we collect the first result */
 static gboolean
 _gst_array_accumulator (GSignalInvocationHint * ihint,
@@ -384,6 +448,7 @@ static void
 ges_timeline_class_init (GESTimelineClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstBinClass *bin_class = GST_BIN_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTimelinePrivate));
 
@@ -396,6 +461,8 @@ ges_timeline_class_init (GESTimelineClass * klass)
   object_class->set_property = ges_timeline_set_property;
   object_class->dispose = ges_timeline_dispose;
   object_class->finalize = ges_timeline_finalize;
+
+  bin_class->handle_message = GST_DEBUG_FUNCPTR (ges_timeline_handle_message);
 
   /**
    * GESTimeline:duration:
@@ -545,6 +612,7 @@ ges_timeline_init (GESTimeline * self)
   self->priv->duration = 0;
   self->priv->auto_transition = FALSE;
   priv->snapping_distance = 0;
+  priv->expected_async_done = 0;
 
   /* Move context initialization */
   init_movecontext (&self->priv->movecontext, TRUE);
@@ -2780,6 +2848,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 
   /* FIXME Check if we should rollback if we can't sync state */
   gst_element_sync_state_with_parent (GST_ELEMENT (track));
+  g_object_set (track, "message-forward", TRUE, NULL);
 
   return TRUE;
 }
