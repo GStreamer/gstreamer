@@ -854,6 +854,9 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
       klass->close_display (display);
   }
 
+  g_free (priv->display_name);
+  priv->display_name = NULL;
+
   g_free (priv->vendor_string);
   priv->vendor_string = NULL;
 
@@ -930,6 +933,9 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
     if (!gst_vaapi_display_cache_add (priv->cache, &info))
       return FALSE;
   }
+
+  g_free (priv->display_name);
+  priv->display_name = g_strdup (info.display_name);
   return TRUE;
 }
 
@@ -1286,6 +1292,22 @@ gst_vaapi_display_get_display_type (GstVaapiDisplay * display)
   g_return_val_if_fail (display != NULL, GST_VAAPI_DISPLAY_TYPE_ANY);
 
   return GST_VAAPI_DISPLAY_GET_PRIVATE (display)->display_type;
+}
+
+/**
+ * gst_vaapi_display_get_display_type:
+ * @display: a #GstVaapiDisplay
+ *
+ * Returns the @display name.
+ *
+ * Return value: the display name
+ */
+const gchar *
+gst_vaapi_display_get_display_name (GstVaapiDisplay * display)
+{
+  g_return_val_if_fail (display != NULL, NULL);
+
+  return GST_VAAPI_DISPLAY_GET_PRIVATE (display)->display_name;
 }
 
 /**

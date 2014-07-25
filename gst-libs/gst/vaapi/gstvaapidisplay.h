@@ -124,6 +124,9 @@ gst_vaapi_display_flush (GstVaapiDisplay * display);
 GstVaapiDisplayType
 gst_vaapi_display_get_display_type (GstVaapiDisplay * display);
 
+const gchar *
+gst_vaapi_display_get_display_name (GstVaapiDisplay * display);
+
 VADisplay
 gst_vaapi_display_get_display (GstVaapiDisplay * display);
 

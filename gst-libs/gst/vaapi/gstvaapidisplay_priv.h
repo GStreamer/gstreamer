@@ -144,6 +144,7 @@ struct _GstVaapiDisplayPrivate
   GstVaapiDisplayCache *cache;
   GRecMutex mutex;
   GstVaapiDisplayType display_type;
+  gchar *display_name;
   VADisplay display;
   guint width;
   guint height;
