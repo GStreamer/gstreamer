@@ -719,12 +719,6 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   else
     max_latency = min_buffers;
 
-  /* FIXME Encoder don't negotiate amount of buffers. If we can't grow the
-   * pool, or the minimum is at V4L2 maximum, enabled copy on threshold
-   * https://bugzilla.gnome.org/show_bug.cgi?id=732288 */
-  if (!can_allocate || min_buffers == VIDEO_MAX_FRAME)
-    copy_threshold = min_latency;
-
   pool->size = size;
   pool->copy_threshold = copy_threshold;
   pool->max_latency = max_latency;
