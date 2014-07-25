@@ -373,61 +373,58 @@ ges_timeline_finalize (GObject * object)
 static void
 ges_timeline_handle_message (GstBin * bin, GstMessage * message)
 {
-  GstMessageType type;
   GESTimeline *timeline = GES_TIMELINE (bin);
-  GstMessage *forwarded_message;
-  GstObject *element;
 
-  type = GST_MESSAGE_TYPE (message);
-
-  if (type == GST_MESSAGE_ELEMENT) {
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) {
+    GstMessage *amessage = NULL;
     const GstStructure *mstructure = gst_message_get_structure (message);
 
-    if (!gst_structure_get (mstructure, "message", GST_TYPE_MESSAGE, &forwarded_message, NULL))
-      goto forward;
-  } else {
-    goto forward;
-  }
+    if (gst_structure_has_name (mstructure, "GnlCompositionStartUpdate")) {
+      if (g_strcmp0 (gst_structure_get_string (mstructure, "reason"), "Seek")) {
+        GST_INFO_OBJECT (timeline,
+            "A composition is starting an update because of %s"
+            " not concidering async", gst_structure_get_string (mstructure,
+                "reason"));
 
-  element = GST_MESSAGE_SRC (forwarded_message);
-  if (!GES_IS_TRACK (GST_ELEMENT_PARENT (GST_ELEMENT (element))))
-    goto forward;
+        goto forward;
+      }
 
-  if (!gst_mini_object_get_qdata ((GstMiniObject *) forwarded_message,
-        g_quark_from_static_string ("gnl-async-seek")))
-    goto forward;
-
-  type = GST_MESSAGE_TYPE (forwarded_message);
-  switch (type) {
-    case GST_MESSAGE_ASYNC_START:
       GST_OBJECT_LOCK (timeline);
       if (timeline->priv->expected_async_done == 0) {
-        GstMessage *amessage = gst_message_new_async_start (GST_OBJECT_CAST (bin));
+        amessage = gst_message_new_async_start (GST_OBJECT_CAST (bin));
         timeline->priv->expected_async_done = g_list_length (timeline->tracks);
-        GST_OBJECT_UNLOCK (timeline);
-        gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
-      } else {
-        GST_OBJECT_UNLOCK (timeline);
+        GST_INFO_OBJECT (timeline, "Posting ASYNC_START %s",
+            gst_structure_get_string (mstructure, "reason"));
       }
-      return;
-    case GST_MESSAGE_ASYNC_DONE:
+      GST_OBJECT_UNLOCK (timeline);
+
+    } else if (gst_structure_has_name (mstructure, "GnlCompositionUpdateDone")) {
+      if (g_strcmp0 (gst_structure_get_string (mstructure, "reason"), "Seek")) {
+        GST_INFO_OBJECT (timeline,
+            "A composition is done updating because of %s"
+            " not concidering async", gst_structure_get_string (mstructure,
+                "reason"));
+
+        goto forward;
+      }
+
       GST_OBJECT_LOCK (timeline);
       timeline->priv->expected_async_done -= 1;
       if (timeline->priv->expected_async_done == 0) {
-        GstMessage *amessage = gst_message_new_async_done (GST_OBJECT_CAST (bin),
+        amessage = gst_message_new_async_done (GST_OBJECT_CAST (bin),
             GST_CLOCK_TIME_NONE);
-        GST_OBJECT_UNLOCK (timeline);
-        gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
-      } else {
-        GST_OBJECT_UNLOCK (timeline);
+        GST_INFO_OBJECT (timeline, "Posting ASYNC_DONE %s",
+            gst_structure_get_string (mstructure, "reason"));
       }
-      return;
-    default:
-      goto forward;
-      break;
+      GST_OBJECT_UNLOCK (timeline);
+    }
+
+    if (amessage)
+      gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
   }
-  forward:
-    gst_element_post_message (GST_ELEMENT_CAST (bin), message);
+
+forward:
+  gst_element_post_message (GST_ELEMENT_CAST (bin), message);
 }
 
 /* we collect the first result */
