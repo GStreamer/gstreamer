@@ -135,10 +135,6 @@ static void gst_type_find_element_set_property (GObject * object,
 static void gst_type_find_element_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-#if 0
-static const GstEventMask *gst_type_find_element_src_event_mask (GstPad * pad);
-#endif
-
 static gboolean gst_type_find_element_src_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 static gboolean gst_type_find_handle_src_query (GstPad * pad,
