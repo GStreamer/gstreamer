@@ -218,9 +218,9 @@ GST_START_TEST (test_dispose_on_commit)
   fail_unless (gst_element_link (composition, fakesink) == TRUE);
 
 
+  ASSERT_OBJECT_REFCOUNT (composition, "composition", 1);
   g_signal_emit_by_name (composition, "commit", TRUE, &ret);
 
-  ASSERT_OBJECT_REFCOUNT (composition, "composition", 1);
   gst_object_unref (pipeline);
 }
 
