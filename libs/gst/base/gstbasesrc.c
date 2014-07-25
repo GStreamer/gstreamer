@@ -895,7 +895,7 @@ gst_base_src_send_stream_start (GstBaseSrc * src)
 /**
  * gst_base_src_set_caps:
  * @src: a #GstBaseSrc
- * @caps: a #GstCaps
+ * @caps: (transfer none): a #GstCaps
  *
  * Set new caps on the basesrc source pad.
  *
