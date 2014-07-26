@@ -81,6 +81,7 @@ static void
 gst_validate_runner_init (GstValidateRunner * runner)
 {
   runner->setup = FALSE;
+  runner->max_printed_level = GST_VALIDATE_REPORT_LEVEL_NUM_ENTRIES;
 }
 
 /**
@@ -127,7 +128,9 @@ gst_validate_runner_printf (GstValidateRunner * runner)
   for (tmp = gst_validate_runner_get_reports (runner); tmp; tmp = tmp->next) {
     GstValidateReport *report = tmp->data;
 
-    gst_validate_report_printf (report);
+    if (gst_validate_report_should_print (report))
+      gst_validate_report_printf (report);
+
     if (ret == 0 && report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
       criticals = g_list_append (criticals, tmp->data);
       ret = 18;

@@ -53,6 +53,7 @@ struct _GstValidateRunner {
   GObject 	 object;
 
   gboolean       setup;
+  guint max_printed_level;
 
   /*< private >*/
   GSList *reports;

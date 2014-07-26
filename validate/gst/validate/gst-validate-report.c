@@ -252,7 +252,10 @@ gst_validate_report_init (void)
   const GDebugKey keys[] = {
     {"fatal_criticals", GST_VALIDATE_FATAL_CRITICALS},
     {"fatal_warnings", GST_VALIDATE_FATAL_WARNINGS},
-    {"fatal_issues", GST_VALIDATE_FATAL_ISSUES}
+    {"fatal_issues", GST_VALIDATE_FATAL_ISSUES},
+    {"print_issues", GST_VALIDATE_PRINT_ISSUES},
+    {"print_warnings", GST_VALIDATE_PRINT_WARNINGS},
+    {"print_criticals", GST_VALIDATE_PRINT_CRITICALS}
   };
 
   GST_DEBUG_CATEGORY_INIT (gst_validate_report_debug, "gstvalidatereport",
@@ -264,7 +267,8 @@ gst_validate_report_init (void)
     /* init the debug flags */
     var = g_getenv ("GST_VALIDATE");
     if (var && strlen (var) > 0) {
-      _gst_validate_flags = g_parse_debug_string (var, keys, 3);
+      _gst_validate_flags =
+          g_parse_debug_string (var, keys, G_N_ELEMENTS (keys));
     }
 
     gst_validate_report_load_issues ();
@@ -339,6 +343,28 @@ gst_validate_report_area_get_name (GstValidateReportArea area)
       g_assert_not_reached ();
       return "unknown";
   }
+}
+
+gboolean
+gst_validate_report_should_print (GstValidateReport * report)
+{
+  if ((!(_gst_validate_flags & GST_VALIDATE_PRINT_ISSUES) &&
+          !(_gst_validate_flags & GST_VALIDATE_PRINT_WARNINGS) &&
+          !(_gst_validate_flags & GST_VALIDATE_PRINT_CRITICALS))) {
+    return TRUE;
+  }
+
+  if ((report->level <= GST_VALIDATE_REPORT_LEVEL_ISSUE &&
+          _gst_validate_flags & GST_VALIDATE_PRINT_ISSUES) ||
+      (report->level <= GST_VALIDATE_REPORT_LEVEL_WARNING &&
+          _gst_validate_flags & GST_VALIDATE_PRINT_WARNINGS) ||
+      (report->level <= GST_VALIDATE_REPORT_LEVEL_CRITICAL &&
+          _gst_validate_flags & GST_VALIDATE_PRINT_CRITICALS)) {
+
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 gboolean

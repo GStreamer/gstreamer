@@ -39,7 +39,10 @@ typedef enum {
   GST_VALIDATE_FATAL_DEFAULT = 0,
   GST_VALIDATE_FATAL_ISSUES = 1 << 0,
   GST_VALIDATE_FATAL_WARNINGS = 1 << 1,
-  GST_VALIDATE_FATAL_CRITICALS = 1 << 2
+  GST_VALIDATE_FATAL_CRITICALS = 1 << 2,
+  GST_VALIDATE_PRINT_ISSUES = 1 << 3,
+  GST_VALIDATE_PRINT_WARNINGS = 1 << 4,
+  GST_VALIDATE_PRINT_CRITICALS = 1 << 5
 } GstValidateDebugFlags;
 
 typedef enum {
@@ -208,6 +211,7 @@ void               gst_validate_printf        (gpointer source,
 void               gst_validate_printf_valist (gpointer source,
                                                const gchar      * format,
                                                va_list            args) G_GNUC_NO_INSTRUMENT;
+gboolean gst_validate_report_should_print (GstValidateReport * report);
 
 G_END_DECLS
 
