@@ -1346,6 +1346,8 @@ gst_v4l2_buffer_pool_finalize (GObject * object)
   /* FIXME Is this required to keep around ? */
   gst_object_unref (pool->obj->element);
 
+  g_cond_clear (&pool->empty_cond);
+
   /* FIXME have we done enough here ? */
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
