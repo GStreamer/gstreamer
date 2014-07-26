@@ -508,8 +508,7 @@ check_and_replace_src (GstWrapperCameraBinSrc * self)
 
     self->src_event_probe_id =
         gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-        gst_wrapper_camera_src_src_event_probe, gst_object_ref (self),
-        gst_object_unref);
+        gst_wrapper_camera_src_src_event_probe, self, NULL);
     gst_object_unref (pad);
   }
   return TRUE;
@@ -628,11 +627,9 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     g_assert (self->outsel_imgpad != NULL);
 
     gst_pad_add_probe (self->outsel_imgpad, GST_PAD_PROBE_TYPE_BUFFER,
-        gst_wrapper_camera_bin_src_imgsrc_probe, gst_object_ref (self),
-        gst_object_unref);
+        gst_wrapper_camera_bin_src_imgsrc_probe, self, NULL);
     gst_pad_add_probe (self->outsel_vidpad, GST_PAD_PROBE_TYPE_BUFFER,
-        gst_wrapper_camera_bin_src_vidsrc_probe, gst_object_ref (self),
-        gst_object_unref);
+        gst_wrapper_camera_bin_src_vidsrc_probe, self, NULL);
     gst_ghost_pad_set_target (GST_GHOST_PAD (self->imgsrc),
         self->outsel_imgpad);
     gst_ghost_pad_set_target (GST_GHOST_PAD (self->vidsrc),
