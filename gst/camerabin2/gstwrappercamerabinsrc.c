@@ -80,6 +80,14 @@ gst_wrapper_camera_bin_src_dispose (GObject * object)
 {
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (object);
 
+  if (self->outsel_imgpad) {
+    gst_object_unref (self->outsel_imgpad);
+    self->outsel_imgpad = NULL;
+  }
+  if (self->outsel_vidpad) {
+    gst_object_unref (self->outsel_vidpad);
+    self->outsel_vidpad = NULL;
+  }
   if (self->app_vid_src) {
     gst_object_unref (self->app_vid_src);
     self->app_vid_src = NULL;
