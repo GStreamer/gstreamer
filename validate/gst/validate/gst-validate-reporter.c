@@ -150,12 +150,18 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   g_free (combo);
 #endif
 
-  gst_validate_report_check_abort (report);
-
   if (priv->runner) {
     gst_validate_runner_add_report (priv->runner, report);
   } else {
     gst_validate_report_unref (report);
+  }
+
+  if (gst_validate_report_check_abort (report)) {
+    if (priv->runner)
+      gst_validate_runner_printf (priv->runner);
+
+    g_error ("Fatal report received: %" GST_VALIDATE_ERROR_REPORT_PRINT_FORMAT,
+        GST_VALIDATE_REPORT_PRINT_ARGS (report));
   }
 
   g_free (message);

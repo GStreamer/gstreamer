@@ -195,7 +195,7 @@ GstValidateReport *gst_validate_report_ref   (GstValidateReport * report);
 
 GstValidateIssueId gst_validate_report_get_issue_id (GstValidateReport * report);
 
-void               gst_validate_report_check_abort (GstValidateReport * report);
+gboolean           gst_validate_report_check_abort (GstValidateReport * report);
 void               gst_validate_report_printf (GstValidateReport * report);
 
 const gchar *      gst_validate_report_level_get_name (GstValidateReportLevel level);
