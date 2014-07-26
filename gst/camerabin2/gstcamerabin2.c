@@ -2031,7 +2031,7 @@ gst_camera_bin_set_audio_src (GstCameraBin2 * camera, GstElement * src)
     g_object_unref (camera->user_audio_src);
 
   if (src)
-    g_object_ref (src);
+    gst_object_ref (src);
   camera->user_audio_src = src;
 }
 
@@ -2045,7 +2045,7 @@ gst_camera_bin_set_camera_src (GstCameraBin2 * camera, GstElement * src)
     g_object_unref (camera->user_src);
 
   if (src)
-    g_object_ref (src);
+    gst_object_ref (src);
   camera->user_src = src;
 }
 
