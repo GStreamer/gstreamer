@@ -202,6 +202,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<move-node path="//boxed[@cname='GstVideoCodecFrame']/union/field">//boxed[@cname='GstVideoCodecFrame']</move-node>
 	<attr path="//boxed[@cname='GstVideoCodecFrame']/union" name="hidden">true</attr>
 	<attr path="//boxed[@cname='GstVideoCodecFrame']/union/field[@cname='padding']" name="type">gpointer</attr>
+	<attr path="//*[@type='const GList*']" name="type">GList*</attr>
+	<attr path="//*[@type='const GSList*']" name="type">GSList*</attr>
+	<attr path="//object/field[@cname='object' and @type='GstObject*']" name="hidden">true</attr>
 	<!-- No way to correctly generate these without the element type -->
 	<attr path="//boxed[@cname='GstMpegtsDescriptor']//method[parameters/parameter[@type='GArray***']]" name="hidden">true</attr>
 </metadata>
