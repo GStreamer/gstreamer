@@ -5201,6 +5201,7 @@ no_decodebin:
 uridecodebin_failure:
   {
     GST_DEBUG_OBJECT (playbin, "failed state change of uridecodebin");
+    GST_SOURCE_GROUP_LOCK (group);
     goto error_cleanup;
   }
 sink_failure:
