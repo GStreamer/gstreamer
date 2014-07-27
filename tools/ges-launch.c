@@ -44,6 +44,7 @@ static GMainLoop *mainloop;
 static GHashTable *tried_uris;
 static GESTrackType track_types = GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO;
 static GESTimeline *timeline;
+static gboolean needs_set_state;
 
 static gchar *
 ensure_uri (gchar * location)
@@ -217,7 +218,7 @@ project_loaded_cb (GESProject * project, GESTimeline * timeline)
     }
   }
 
-  if (gst_element_set_state (GST_ELEMENT (pipeline),
+  if (needs_set_state && gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
     g_error ("Failed to start the pipeline\n");
   }
@@ -265,7 +266,6 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
   GESLayer *layer = NULL;
   GESTrack *tracka = NULL, *trackv = NULL;
   GESTimeline *timeline;
-  gboolean activate_before_paused = TRUE;
   guint i, clip_added_sigid = 0;
   GstClockTime next_trans_dur = 0;
   GESProject *project = ges_project_new (proj_uri);
@@ -284,8 +284,7 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
   timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
 
   if (proj_uri) {
-    activate_before_paused = FALSE;
-    goto activate_validate;
+    goto done;
   }
 
   g_object_set (timeline, "auto-transition", TRUE, NULL);
@@ -321,7 +320,6 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
     if (i == 0) {
       /* We are only going to be doing one layer of clips */
       layer = (GESLayer *) ges_layer_new ();
-      activate_before_paused = FALSE;
 
       /* Add the tracks and the layer to the timeline */
       if (!ges_timeline_add_layer (timeline, layer))
@@ -421,12 +419,7 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
 
   }
 
-activate_validate:
-  if (ges_validate_activate (GST_PIPELINE (pipeline), scenario,
-          activate_before_paused) == FALSE) {
-    g_error ("Could not activate scenario %s", scenario);
-    return NULL;
-  }
+done:
   return timeline;
 
 build_failure:
@@ -937,11 +930,17 @@ main (int argc, gchar ** argv)
     g_timeout_add (1000 * thumbinterval, thumbnail_cb, pipeline);
   }
 
+  if (ges_validate_activate (GST_PIPELINE (pipeline), scenario,
+          &needs_set_state) == FALSE) {
+    g_error ("Could not activate scenario %s", scenario);
+    return 29;
+  }
+
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), mainloop);
 
-  if (load_path == NULL && gst_element_set_state (GST_ELEMENT (pipeline),
+  if (needs_set_state && gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
     g_error ("Failed to start the pipeline\n");
     return 1;

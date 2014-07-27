@@ -445,7 +445,7 @@ beach:
 
 gboolean
 ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
-    gboolean activate_before_paused)
+    gboolean * needs_setting_state)
 {
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
@@ -530,7 +530,8 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
       NULL);
 
-  g_object_set (monitor, "stateless", activate_before_paused, NULL);
+  g_object_get (monitor, "handles-states", needs_setting_state, NULL);
+  *needs_setting_state = !*needs_setting_state;
   g_object_set_data (G_OBJECT (pipeline), MONITOR_ON_PIPELINE, monitor);
   g_object_set_data (G_OBJECT (pipeline), RUNNER_ON_PIPELINE, runner);
 
@@ -596,7 +597,7 @@ _print_position (GstElement * pipeline)
 
 gboolean
 ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
-    gboolean activate_before_paused)
+    gboolean * needs_setting_state)
 {
   if (scenario) {
     GST_WARNING ("Trying to run scenario %s, but gst-validate not supported",
@@ -608,6 +609,8 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
   g_object_set_data (G_OBJECT (pipeline), "pposition-id",
       GUINT_TO_POINTER (g_timeout_add (200,
               (GSourceFunc) _print_position, pipeline)));
+
+  *needs_setting_state = TRUE;
 
   return TRUE;
 }
