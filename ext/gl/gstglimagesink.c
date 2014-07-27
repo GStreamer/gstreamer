@@ -1230,11 +1230,18 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 static void
 gst_glimage_sink_on_close (GstGLImageSink * gl_sink)
 {
+  GstGLWindow *window;
+
   gst_gl_context_set_error (gl_sink->context, "Output window was closed");
 
+  window = gst_gl_context_get_window (gl_sink->context);
+
+  g_signal_handler_disconnect (window, gl_sink->key_sig_id);
+  g_signal_handler_disconnect (window, gl_sink->mouse_sig_id);
+
   g_atomic_int_set (&gl_sink->to_quit, 1);
-  g_signal_handler_disconnect (gl_sink, gl_sink->key_sig_id);
-  g_signal_handler_disconnect (gl_sink, gl_sink->mouse_sig_id);
+
+  gst_object_unref (window);
 }
 
 static gboolean
