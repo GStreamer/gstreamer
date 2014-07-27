@@ -35,6 +35,9 @@
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
 #include <sys/wait.h>
+#elif defined (G_OS_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #endif
 #include <locale.h>             /* for LC_ALL */
 #include "tools.h"
@@ -461,11 +464,14 @@ print_toc_entry (gpointer data, gpointer user_data)
   g_list_foreach (subentries, print_toc_entry, GUINT_TO_POINTER (indent));
 }
 
-#ifdef G_OS_UNIX
+#if defined(G_OS_UNIX) || defined(G_OS_WIN32)
 static guint signal_watch_id;
+#if defined(G_OS_WIN32)
+static GstElement *intr_pipeline;
+#endif
 #endif
 
-#ifdef G_OS_UNIX
+#if defined(G_OS_UNIX) || defined(G_OS_WIN32)
 /* As the interrupt handler is dispatched from GMainContext as a GSourceFunc
  * handler, we can react to this by posting a message. */
 static gboolean
@@ -486,6 +492,15 @@ intr_handler (gpointer user_data)
   return FALSE;
 }
 
+#if defined(G_OS_WIN32) /* G_OS_UNIX */
+static BOOL WINAPI
+w32_intr_handler (DWORD dwCtrlType)
+{
+  intr_handler ((gpointer) intr_pipeline);
+  intr_pipeline = NULL;
+  return TRUE;
+}
+#endif /* G_OS_WIN32 */
 #endif /* G_OS_UNIX */
 
 /* returns ELR_ERROR if there was an error
@@ -506,6 +521,10 @@ event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
 #ifdef G_OS_UNIX
   signal_watch_id =
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
+#elif defined(G_OS_WIN32)
+  intr_pipeline = NULL;
+  if (SetConsoleCtrlHandler (w32_intr_handler, TRUE))
+    intr_pipeline = pipeline;
 #endif
 
   while (TRUE) {
@@ -831,6 +850,9 @@ exit:
 #ifdef G_OS_UNIX
     if (signal_watch_id > 0)
       g_source_remove (signal_watch_id);
+#elif defined(G_OS_WIN32)
+    intr_pipeline = NULL;
+    SetConsoleCtrlHandler (w32_intr_handler, FALSE);
 #endif
     return res;
   }
