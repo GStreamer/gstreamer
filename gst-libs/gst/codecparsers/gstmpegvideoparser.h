@@ -211,7 +211,9 @@ typedef struct _GstMpegVideoPacket          GstMpegVideoPacket;
  * @bitrate_value: Value of the bitrate as is in the stream (400bps unit)
  * @bitrate: the real bitrate of the Mpeg video stream in bits per second, 0 if VBR stream
  * @constrained_parameters_flag: %TRUE if this stream uses contrained parameters.
+ * @load_intra_quantiser_matrix: %TRUE indicates the presence of intra_quantiser_matrix
  * @intra_quantizer_matrix: intra-quantization table, in zigzag scan order
+ * @load_non_intra_quantiser_matrix: %TRUE indicates the presence of non_intra_quantiser_matrix
  * @non_intra_quantizer_matrix: non-intra quantization table, in zigzag scan order
  *
  * The Mpeg2 Video Sequence Header structure.
@@ -226,7 +228,9 @@ struct _GstMpegVideoSequenceHdr
 
   guint8  constrained_parameters_flag;
 
+  guint8  load_intra_quantiser_matrix;
   guint8  intra_quantizer_matrix[64];
+  guint8  load_non_intra_quantiser_matrix;
   guint8  non_intra_quantizer_matrix[64];
 
   /* Calculated values */

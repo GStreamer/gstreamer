@@ -296,7 +296,6 @@ gst_mpeg_video_packet_parse_sequence_header (const GstMpegVideoPacket * packet,
 {
   GstBitReader br;
   guint8 bits;
-  guint8 load_intra_flag, load_non_intra_flag;
 
   g_return_val_if_fail (seqhdr != NULL, FALSE);
 
@@ -339,8 +338,8 @@ gst_mpeg_video_packet_parse_sequence_header (const GstMpegVideoPacket * packet,
   READ_UINT8 (&br, seqhdr->constrained_parameters_flag, 1);
 
   /* load_intra_quantiser_matrix */
-  READ_UINT8 (&br, load_intra_flag, 1);
-  if (load_intra_flag) {
+  READ_UINT8 (&br, seqhdr->load_intra_quantiser_matrix, 1);
+  if (seqhdr->load_intra_quantiser_matrix) {
     gint i;
     for (i = 0; i < 64; i++)
       READ_UINT8 (&br, seqhdr->intra_quantizer_matrix[i], 8);
@@ -348,8 +347,8 @@ gst_mpeg_video_packet_parse_sequence_header (const GstMpegVideoPacket * packet,
     memcpy (seqhdr->intra_quantizer_matrix, default_intra_quantizer_matrix, 64);
 
   /* non intra quantizer matrix */
-  READ_UINT8 (&br, load_non_intra_flag, 1);
-  if (load_non_intra_flag) {
+  READ_UINT8 (&br, seqhdr->load_non_intra_quantiser_matrix, 1);
+  if (seqhdr->load_non_intra_quantiser_matrix) {
     gint i;
     for (i = 0; i < 64; i++)
       READ_UINT8 (&br, seqhdr->non_intra_quantizer_matrix[i], 8);
