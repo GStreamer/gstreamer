@@ -782,7 +782,8 @@ gst_interleave_sink_setcaps (GstInterleave * self, GstPad * pad,
 
     gst_structure_remove_field (s, "channel-mask");
 
-    gst_structure_set (s, "channels", G_TYPE_INT, self->channels, NULL);
+    gst_structure_set (s, "channels", G_TYPE_INT, self->channels, "layout",
+        G_TYPE_STRING, "interleaved", NULL);
     gst_interleave_set_channel_positions (self, s);
 
     gst_interleave_send_stream_start (self);
