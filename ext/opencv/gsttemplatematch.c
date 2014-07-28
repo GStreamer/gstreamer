@@ -171,8 +171,10 @@ gst_template_match_init (GstTemplateMatch * filter)
       GST_DEBUG_FUNCPTR (gst_template_match_handle_sink_event));
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_template_match_chain));
+  GST_PAD_SET_PROXY_CAPS (filter->sinkpad);
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
+  GST_PAD_SET_PROXY_CAPS (filter->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
