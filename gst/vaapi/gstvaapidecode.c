@@ -517,11 +517,10 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     gboolean need_pool, update_pool;
     gboolean has_video_meta = FALSE;
     gboolean has_video_alignment = FALSE;
-    GstVideoCodecState *state;
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
     gboolean has_texture_upload_meta = FALSE;
-    GstCapsFeatures *features, *features2;
 #endif
+    GstVideoCodecState *state;
 
     gst_query_parse_allocation(query, &caps, &need_pool);
 
@@ -531,34 +530,27 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     state = gst_video_decoder_get_output_state(vdec);
 
     decode->has_texture_upload_meta = FALSE;
-    has_video_meta = gst_query_find_allocation_meta(query, GST_VIDEO_META_API_TYPE, NULL);
+    has_video_meta = gst_query_find_allocation_meta(query,
+        GST_VIDEO_META_API_TYPE, NULL);
+
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
-    if (has_video_meta)
-        decode->has_texture_upload_meta = gst_query_find_allocation_meta(query,
-            GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
+    has_texture_upload_meta = gst_query_find_allocation_meta(query,
+        GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
 
-    features = gst_caps_get_features(state->caps, 0);
-    features2 = gst_caps_features_new(GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
-
-    has_texture_upload_meta =
+    decode->has_texture_upload_meta =
         gst_vaapi_find_preferred_caps_feature(GST_VIDEO_DECODER_SRC_PAD(vdec),
             GST_VIDEO_FORMAT_ENCODED) ==
         GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META;
-
-    /* Update src caps if feature is not handled downstream */
-    if (!decode->has_texture_upload_meta &&
-        gst_caps_features_is_equal(features, features2))
-        gst_vaapidecode_update_src_caps (decode, state);
-    else if (has_texture_upload_meta &&
-             !gst_caps_features_is_equal(features, features2)) {
-        gst_video_info_set_format(&state->info, GST_VIDEO_FORMAT_RGBA,
-                                  state->info.width,
-                                  state->info.height);
-        gst_vaapidecode_update_src_caps(decode, state);
-    }
-    gst_caps_features_free(features2);
 #endif
 
+    /* Update src caps if feature is not handled downstream */
+    if (!gst_caps_is_always_compatible(caps, state->caps)) {
+        if (decode->has_texture_upload_meta)
+            gst_video_info_set_format(&state->info, GST_VIDEO_FORMAT_RGBA,
+                GST_VIDEO_INFO_WIDTH(&state->info),
+                GST_VIDEO_INFO_HEIGHT(&state->info));
+        gst_vaapidecode_update_src_caps(decode, state);
+    }
     gst_video_codec_state_unref(state);
 
     gst_video_info_init(&vi);
@@ -609,7 +601,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
         gst_buffer_pool_config_add_option(config,
             GST_BUFFER_POOL_OPTION_VIDEO_META);
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
-        if (decode->has_texture_upload_meta)
+        if (has_texture_upload_meta)
             gst_buffer_pool_config_add_option(config,
                 GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 #endif
@@ -621,6 +613,15 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
             GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
         gst_buffer_pool_set_config(pool, config);
     }
+
+#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+    if (decode->has_texture_upload_meta && !has_texture_upload_meta) {
+        config = gst_buffer_pool_get_config(pool);
+        gst_buffer_pool_config_add_option(config,
+            GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
+        gst_buffer_pool_set_config(pool, config);
+    }
+#endif
 
     if (update_pool)
         gst_query_set_nth_allocation_pool(query, 0, pool, size, min, max);

@@ -541,6 +541,12 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format)
     GstCapsFeatures *const features = gst_caps_get_features (out_caps, i);
     GstStructure *const structure = gst_caps_get_structure (out_caps, i);
 
+#if GST_CHECK_VERSION(1,3,0)
+    /* Skip ANY features, we need an exact match for correct evaluation */
+    if (gst_caps_features_is_any (features))
+      continue;
+#endif
+
     caps = gst_caps_new_full (gst_structure_copy (structure), NULL);
     if (!caps)
       continue;
@@ -556,6 +562,13 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format)
         feature < GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
       feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;
     gst_caps_replace (&caps, NULL);
+
+#if GST_CHECK_VERSION(1,3,0)
+    /* Stop at the first match, the caps should already be sorted out
+       by preference order from downstream elements */
+    if (feature != GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
+      break;
+#endif
   }
 
 cleanup:
