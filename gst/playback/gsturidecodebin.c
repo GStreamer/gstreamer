@@ -2747,11 +2747,19 @@ gst_uri_decode_bin_change_state (GstElement * element,
       g_slist_foreach (decoder->decodebins,
           (GFunc) gst_element_sync_state_with_parent, NULL);
       if (decoder->typefind)
-        gst_element_sync_state_with_parent (decoder->typefind);
+        ret = gst_element_set_state (decoder->typefind, GST_STATE_PAUSED);
+      if (ret == GST_STATE_CHANGE_FAILURE)
+        goto setup_failed;
       if (decoder->queue)
-        gst_element_sync_state_with_parent (decoder->queue);
+        ret = gst_element_set_state (decoder->queue, GST_STATE_PAUSED);
+      if (ret == GST_STATE_CHANGE_FAILURE)
+        goto setup_failed;
       if (decoder->source)
-        gst_element_sync_state_with_parent (decoder->source);
+        ret = gst_element_set_state (decoder->source, GST_STATE_PAUSED);
+      if (ret == GST_STATE_CHANGE_FAILURE)
+        goto setup_failed;
+      if (ret == GST_STATE_CHANGE_SUCCESS)
+        ret = GST_STATE_CHANGE_ASYNC;
 
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
