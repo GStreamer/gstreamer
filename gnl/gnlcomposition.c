@@ -2748,7 +2748,16 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime, gint32 seqnum,
         (GstPadProbeCallback) _is_update_done_cb, ucompo,
         _free_update_compo_data);
 
+    GST_OBJECT_LOCK (comp);
+    if (comp->task == NULL) {
+      GST_INFO_OBJECT (comp,
+          "No task set, it must have been stopped, returning");
+      GST_OBJECT_UNLOCK (comp);
+      return FALSE;
+    }
+
     gst_task_pause (comp->task);
+    GST_OBJECT_UNLOCK (comp);
   }
 
   /* Activate stack */
