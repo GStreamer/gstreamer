@@ -136,6 +136,12 @@ else
 check_zbar =
 endif
 
+if USE_OPENCV
+check_opencv = elements/templatematch
+else
+check_opencv =
+endif
+
 if USE_OPUS
 check_opus = elements/opus
 else
@@ -214,6 +220,7 @@ check_PROGRAMS = \
 	$(check_ofa)        \
 	$(check_timidity)  \
 	$(check_kate)  \
+	$(check_opencv) \
 	$(check_opus)  \
 	$(check_curl) \
 	$(check_shm) \
