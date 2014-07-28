@@ -8,6 +8,7 @@ autovideoconvert
 baseaudiovisualizer
 camerabin
 camerabin2
+compositor
 curlfilesink
 curlftpsink
 curlsftpsink
@@ -46,6 +47,7 @@ rgvolume
 schroenc
 shm
 spectrum
+templatematch
 timidity
 y4menc
 uvch264demux

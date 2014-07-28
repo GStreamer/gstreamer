@@ -1,8 +1,10 @@
 .dirstamp
+aggregator
 h264parser
 mpegvideoparser
 mpegts
 vc1parser
+vp8parser
 insertbin
 gstglcontext
 gstglmemory
