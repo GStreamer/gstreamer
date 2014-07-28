@@ -261,6 +261,8 @@ if test "$USE_GST_API_0_10" = "yes"; then
         AC_MSG_WARN([disabled built-in videoparsers (unsupported)])
         enable_builtin_videoparsers="no"
     fi
+elif test "$USE_GST_API_1_2p" != "yes"; then
+    AC_MSG_WARN([support for GStreamer < 1.2 is deprecated, please upgrade])
 fi
 
 dnl GStreamer Core
