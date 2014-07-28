@@ -214,8 +214,7 @@ gst_vaapisink_video_overlay_expose(GstVideoOverlay *overlay)
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
 
     if (sink->video_buffer)
-        gst_vaapisink_show_frame(GST_BASE_SINK_CAST(sink),
-            gst_buffer_ref(sink->video_buffer));
+        gst_vaapisink_show_frame(GST_BASE_SINK_CAST(sink), sink->video_buffer);
 }
 
 static void
