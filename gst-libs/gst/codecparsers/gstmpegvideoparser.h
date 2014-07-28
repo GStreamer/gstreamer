@@ -380,6 +380,7 @@ struct _GstMpegVideoPictureHdr
 {
   guint16 tsn;
   guint8 pic_type;
+  guint16 vbv_delay;
 
   guint8 full_pel_forward_vector, full_pel_backward_vector;
 

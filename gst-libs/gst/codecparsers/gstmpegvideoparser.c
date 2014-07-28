@@ -830,8 +830,8 @@ gst_mpeg_video_packet_parse_picture_header (const GstMpegVideoPacket * packet,
   if (hdr->pic_type == 0 || hdr->pic_type > 4)
     goto bad_pic_type;          /* Corrupted picture packet */
 
-  /* skip VBV delay */
-  if (!gst_bit_reader_skip (&br, 16))
+  /* VBV delay */
+  if (!gst_bit_reader_get_bits_uint16 (&br, &hdr->vbv_delay, 16))
     goto failed;
 
   if (hdr->pic_type == GST_MPEG_VIDEO_PICTURE_TYPE_P
