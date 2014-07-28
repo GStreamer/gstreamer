@@ -135,7 +135,7 @@ play_free (GstPlay * play)
 {
   play_reset (play);
 
-  g_object_unref (play->player);
+  gst_object_unref (play->player);
 
   g_main_loop_unref (play->loop);
 
@@ -422,6 +422,8 @@ main (int argc, char **argv)
     return 1;
   }
   g_option_context_free (ctx);
+
+  GST_DEBUG_CATEGORY_INIT (play_debug, "play", 0, "gst-play");
 
   if (print_version) {
     gchar *version_str;
