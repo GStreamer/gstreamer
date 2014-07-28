@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2014-07-DD
+gst-vaapi NEWS -- summary of changes.  2014-07-29
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.5.9 - DD.Jul.2014
+Version 0.5.9 - 29.Jul.2014
 * Add VP8 decoder (+Halley Zhao)
 * Add H.264 MVC decoder and encoder (+Sreerenj Balachandran, Xiaowei Li)
 * Fix support for Firefox >= 30 when built with GStreamer 1.0 APIs
