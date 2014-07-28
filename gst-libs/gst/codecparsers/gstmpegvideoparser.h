@@ -450,10 +450,13 @@ struct _GstMpegVideoGop
 
 /**
  * GstMpegVideoSliceHdr:
- * @slice_vertical_position_extension: Extension to slice_vertical_position
+ * @vertical_position: slice vertical position
+ * @vertical_position_extension: Extension to slice_vertical_position
  * @priority_breakpoint: Point where the bitstream shall be partitioned
  * @quantiser_scale_code: Quantiser value (range: 1-31)
+ * @slice_ext_flag: Slice Extension flag
  * @intra_slice: Equal to one if all the macroblocks are intra macro blocks.
+ * @slice_picture_id_enable: controls the semantics of slice_picture_id
  * @slice_picture_id: Intended to aid recovery on severe bursts of
  *   errors for certain types of applications
  *
@@ -463,9 +466,14 @@ struct _GstMpegVideoGop
  */
 struct _GstMpegVideoSliceHdr
 {
+  guint8 vertical_position;
+  guint8 vertical_position_ext;
+
   guint8 priority_breakpoint;
   guint8 quantiser_scale_code;
+  guint8 slice_ext_flag;
   guint8 intra_slice;
+  guint8 slice_picture_id_enable;
   guint8 slice_picture_id;
 
   /* Calculated values */

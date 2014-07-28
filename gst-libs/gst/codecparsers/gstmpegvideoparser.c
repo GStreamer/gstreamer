@@ -963,6 +963,9 @@ gst_mpeg_video_packet_parse_slice_header (const GstMpegVideoPacket * packet,
   if (height > 2800)
     READ_UINT8 (&br, vertical_position_extension, 3);
 
+  slice_hdr->vertical_position = packet->type;
+  slice_hdr->vertical_position_ext = vertical_position_extension;
+
   if (seqscaleext)
     if (seqscaleext->scalable_mode ==
         GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_DATA_PARTITIONING)
@@ -970,12 +973,12 @@ gst_mpeg_video_packet_parse_slice_header (const GstMpegVideoPacket * packet,
 
   READ_UINT8 (&br, slice_hdr->quantiser_scale_code, 5);
 
-  READ_UINT8 (&br, extra_bits, 1);
-  if (!extra_bits)
+  READ_UINT8 (&br, slice_hdr->slice_ext_flag, 1);
+  if (!slice_hdr->slice_ext_flag)
     slice_hdr->intra_slice = 0;
   else {
     READ_UINT8 (&br, slice_hdr->intra_slice, 1);
-    SKIP (&br, 1);
+    READ_UINT8 (&br, slice_hdr->slice_picture_id_enable, 1);
     READ_UINT8 (&br, slice_hdr->slice_picture_id, 6);
 
     READ_UINT8 (&br, bits, 1);
