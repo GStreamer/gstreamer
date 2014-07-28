@@ -626,7 +626,8 @@ static GstPad *gst_play_bin_get_video_pad (GstPlayBin * playbin, gint stream);
 static GstPad *gst_play_bin_get_audio_pad (GstPlayBin * playbin, gint stream);
 static GstPad *gst_play_bin_get_text_pad (GstPlayBin * playbin, gint stream);
 
-static gboolean setup_next_source (GstPlayBin * playbin, GstState target);
+static GstStateChangeReturn setup_next_source (GstPlayBin * playbin,
+    GstState target);
 
 static void no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group);
 static void pad_removed_cb (GstElement * decodebin, GstPad * pad,
@@ -4951,7 +4952,7 @@ group_set_locked_state_unlocked (GstPlayBin * playbin, GstSourceGroup * group,
 }
 
 /* must be called with PLAY_BIN_LOCK */
-static gboolean
+static GstStateChangeReturn
 activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
 {
   GstElement *uridecodebin = NULL;
@@ -4960,9 +4961,10 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   gboolean audio_sink_activated = FALSE;
   gboolean video_sink_activated = FALSE;
   gboolean text_sink_activated = FALSE;
+  GstStateChangeReturn state_ret;
 
-  g_return_val_if_fail (group->valid, FALSE);
-  g_return_val_if_fail (!group->active, FALSE);
+  g_return_val_if_fail (group->valid, GST_STATE_CHANGE_FAILURE);
+  g_return_val_if_fail (!group->active, GST_STATE_CHANGE_FAILURE);
 
   GST_DEBUG_OBJECT (playbin, "activating group %p", group);
 
@@ -5169,7 +5171,9 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
       GST_SOURCE_GROUP_UNLOCK (group);
     }
   }
-  if (gst_element_set_state (uridecodebin, target) == GST_STATE_CHANGE_FAILURE)
+  if ((state_ret =
+          gst_element_set_state (uridecodebin,
+              target)) == GST_STATE_CHANGE_FAILURE)
     goto uridecodebin_failure;
 
   GST_SOURCE_GROUP_LOCK (group);
@@ -5178,7 +5182,7 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   group->active = TRUE;
   GST_SOURCE_GROUP_UNLOCK (group);
 
-  return TRUE;
+  return state_ret;
 
   /* ERRORS */
 no_decodebin:
@@ -5244,7 +5248,7 @@ error_cleanup:
 
     GST_SOURCE_GROUP_UNLOCK (group);
 
-    return FALSE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }
 
@@ -5361,10 +5365,11 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
 /* setup the next group to play, this assumes the next_group is valid and
  * configured. It swaps out the current_group and activates the valid
  * next_group. */
-static gboolean
+static GstStateChangeReturn
 setup_next_source (GstPlayBin * playbin, GstState target)
 {
   GstSourceGroup *new_group, *old_group;
+  GstStateChangeReturn state_ret;
 
   GST_DEBUG_OBJECT (playbin, "setup sources");
 
@@ -5390,12 +5395,14 @@ setup_next_source (GstPlayBin * playbin, GstState target)
   playbin->next_group = old_group;
 
   /* activate the new group */
-  if (!activate_group (playbin, new_group, target))
+  if ((state_ret =
+          activate_group (playbin, new_group,
+              target)) == GST_STATE_CHANGE_FAILURE)
     goto activate_failed;
 
   GST_PLAY_BIN_UNLOCK (playbin);
 
-  return TRUE;
+  return state_ret;
 
   /* ERRORS */
 no_next_group:
@@ -5404,14 +5411,14 @@ no_next_group:
     if (target == GST_STATE_READY && new_group && new_group->uri == NULL)
       GST_ELEMENT_ERROR (playbin, RESOURCE, NOT_FOUND, ("No URI set"), (NULL));
     GST_PLAY_BIN_UNLOCK (playbin);
-    return FALSE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 activate_failed:
   {
     new_group->stream_changed_pending = FALSE;
     GST_DEBUG_OBJECT (playbin, "activate failed");
     GST_PLAY_BIN_UNLOCK (playbin);
-    return FALSE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }
 
@@ -5517,11 +5524,13 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!setup_next_source (playbin, GST_STATE_PAUSED)) {
-        ret = GST_STATE_CHANGE_FAILURE;
+      if ((ret =
+              setup_next_source (playbin,
+                  GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE)
         goto failure;
-      }
-      ret = GST_STATE_CHANGE_ASYNC;
+      if (ret == GST_STATE_CHANGE_SUCCESS)
+        ret = GST_STATE_CHANGE_ASYNC;
+
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       do_async_done (playbin);
