@@ -451,7 +451,8 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
   if (!(timeline = create_timeline (argc, argv, uri, scenario)))
     goto failure;
 
-  ges_timeline_commit (timeline);
+  if (!load_path)
+    ges_timeline_commit (timeline);
 
   /* save project if path is given. we do this now in case GES crashes or
    * hangs during playback. */
