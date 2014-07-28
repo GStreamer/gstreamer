@@ -196,12 +196,12 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     default:
         if (format == GST_VIDEO_FORMAT_ENCODED) {
             /* XXX: this is a workaround until auto-plugging is fixed when
-            format=ENCODED + memory:VASurface caps feature are provided.
-            Meanwhile, providing a random format here works but this is
-            a terribly wrong thing per se. */
+               format=ENCODED + memory:VASurface caps feature are provided.
+               Meanwhile, providing a random format here works but this is
+               a terribly wrong thing per se. */
             gst_vaapidecode_video_info_change_format(&vis, out_format,
                 GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
-#if GST_CHECK_VERSION(1,3,0)
+#if GST_CHECK_VERSION(1,5,0)
             if (feature == GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE)
                 features = gst_caps_features_new(
                     GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, NULL);
