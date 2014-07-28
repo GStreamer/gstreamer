@@ -135,6 +135,7 @@ enum {
     PROP_USE_REFLECTION,
     PROP_ROTATION,
     PROP_FORCE_ASPECT_RATIO,
+    PROP_VIEW_ID,
 };
 
 #define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_ANY
@@ -965,6 +966,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstVaapiVideoMeta *meta;
+    GstVaapiSurfaceProxy *proxy;
     GstVaapiSurface *surface;
     GstBuffer *buffer;
     guint flags;
@@ -974,6 +976,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
     GstVaapiRectangle tmp_rect;
 #endif
     GstFlowReturn ret;
+    gint32 view_id;
 
 #if GST_CHECK_VERSION(1,0,0)
     GstVideoCropMeta * const crop_meta =
@@ -997,6 +1000,19 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
         gst_vaapi_video_meta_get_display(meta));
 
     gst_vaapisink_ensure_rotation(sink, TRUE);
+
+    proxy = gst_vaapi_video_meta_get_surface_proxy(meta);
+    if (!proxy)
+        goto error;
+
+    /* Valide view component to display */
+    view_id = GST_VAAPI_SURFACE_PROXY_VIEW_ID(proxy);
+    if (G_UNLIKELY(sink->view_id == -1))
+        sink->view_id = view_id;
+    else if (sink->view_id != view_id) {
+        gst_buffer_unref(buffer);
+        return GST_FLOW_OK;
+    }
 
     surface = gst_vaapi_video_meta_get_surface(meta);
     if (!surface)
@@ -1142,6 +1158,9 @@ gst_vaapisink_set_property(
     case PROP_SYNCHRONOUS:
         sink->synchronous = g_value_get_boolean(value);
         break;
+    case PROP_VIEW_ID:
+        sink->view_id = g_value_get_int(value);
+        break;
     case PROP_USE_GLX:
         sink->use_glx = g_value_get_boolean(value);
         break;
@@ -1182,6 +1201,9 @@ gst_vaapisink_get_property(
         break;
     case PROP_SYNCHRONOUS:
         g_value_set_boolean(value, sink->synchronous);
+        break;
+    case PROP_VIEW_ID:
+        g_value_set_int(value, sink->view_id);
         break;
     case PROP_USE_GLX:
         g_value_set_boolean(value, sink->use_glx);
@@ -1350,6 +1372,23 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               "When enabled, scaling will respect original aspect ratio",
                               TRUE,
                               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+    /**
+     * GstVaapiSink:view-id:
+     *
+     * When not set to -1, the displayed frame will always be the one
+     * that matches the view-id of the very first displayed frame. Any
+     * other number will indicate the desire to display the supplied
+     * view-id only.
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_VIEW_ID,
+         g_param_spec_int("view-id",
+                          "View ID",
+                          "ID of the view component of interest to display",
+                          -1, G_MAXINT32, -1,
+                          G_PARAM_READWRITE));
 }
 
 static void
@@ -1370,6 +1409,7 @@ gst_vaapisink_init(GstVaapiSink *sink)
     sink->video_height   = 0;
     sink->video_par_n    = 1;
     sink->video_par_d    = 1;
+    sink->view_id        = -1;
     sink->foreign_window = FALSE;
     sink->fullscreen     = FALSE;
     sink->synchronous    = FALSE;

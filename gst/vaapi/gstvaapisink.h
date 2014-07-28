@@ -87,6 +87,7 @@ struct _GstVaapiSink {
     GstVaapiRotation    rotation;
     GstVaapiRotation    rotation_req;
     guint               color_standard;
+    gint32              view_id;
     guint               foreign_window  : 1;
     guint               fullscreen      : 1;
     guint               synchronous     : 1;
