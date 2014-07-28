@@ -220,7 +220,7 @@ case $GST_API_VERSION in
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst12_plugins_base_version
     GST_PLUGINS_BAD_VERSION_REQUIRED=gst12_plugins_bad_version
     ;;
-1.3)
+1.[[3-4]])
     GST_VERSION_REQUIRED=gst14_version
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst14_plugins_base_version
     GST_PLUGINS_BAD_VERSION_REQUIRED=gst14_plugins_bad_version
@@ -473,7 +473,7 @@ case $GST_API_VERSION in
 0.10)   lt_bias=gst0_vaapi_lt_current_bias;;
 1.0)    lt_bias=gst1_vaapi_lt_current_bias;;
 1.2)    lt_bias=gst2_vaapi_lt_current_bias;;
-1.3)    lt_bias=gst4_vaapi_lt_current_bias;;
+1.[[3-4]]) lt_bias=gst4_vaapi_lt_current_bias;;
 esac
 GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - "$lt_bias"`
 AC_SUBST(GST_VAAPI_MAJOR_VERSION)
