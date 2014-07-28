@@ -6,6 +6,7 @@ Copyright (C) 2011 Collabora
 Version 0.5.9 - DD.Jul.2014
 * Add VP8 decoder (+Halley Zhao)
 * Add H.264 MVC decoder and encoder (+Sreerenj Balachandran, Xiaowei Li)
+* Fix support for Firefox >= 30 when built with GStreamer 1.0 APIs
 * Improvements to H.264 decoder
   + Add support for grayscale encoded clips
   + Add minor optimizations to the parsing process
@@ -13,7 +14,9 @@ Version 0.5.9 - DD.Jul.2014
   + Fix multiple slices decoding with varying slice types [#724518]
   + Fix parsing of multiple SEI messages in single NAL units (Aurelien Zanelli)
 * Improvements to plugin elements
+  + Add download capability to vaapidecode [#733243]
   + Add support for crop regions in VPP mode [#720730]
+  + Allow selection of a particular "display-name" for vaapisink [#722247]
   + Fix support for headless pipelines, e.g. vaapisink display="drm" mode
   + Fix creation of output surface pool for vaapipostproc (Simon Farnsworth)
   + Fix vaapipostproc "deinterlace-mode" semantics (Simon Farnsworth) [#726361]
