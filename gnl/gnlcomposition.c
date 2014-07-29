@@ -179,6 +179,8 @@ struct _GnlCompositionPrivate
   gulong commited_probeid;
   /* 0 means that we already received the right caps or segment */
   gint awaited_caps_seqnum;
+
+  gboolean tearing_down_stack;
 };
 
 static guint _signals[LAST_SIGNAL] = { 0 };
@@ -678,6 +680,28 @@ _add_update_compo_gsource (GnlComposition * comp,
 }
 
 static void
+gnl_composition_handle_message (GstBin * bin, GstMessage * message)
+{
+  GnlComposition *comp = (GnlComposition *) bin;
+
+  if (comp->priv->tearing_down_stack) {
+    if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
+      GST_FIXME_OBJECT (comp, "Dropping %" GST_PTR_FORMAT " message from "
+          " %" GST_PTR_FORMAT " being teared down to READY",
+          message, GST_MESSAGE_SRC (message));
+    }
+
+    GST_DEBUG_OBJECT (comp, "Dropping message %" GST_PTR_FORMAT " from "
+        "object being teared down to READY!", message);
+    gst_message_unref (message);
+
+    return;
+  }
+
+  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+}
+
+static void
 gnl_composition_class_init (GnlCompositionClass * klass)
 {
   GObjectClass *gobject_class;
@@ -706,6 +730,8 @@ gnl_composition_class_init (GnlCompositionClass * klass)
   gstbin_class->add_element = GST_DEBUG_FUNCPTR (gnl_composition_add_object);
   gstbin_class->remove_element =
       GST_DEBUG_FUNCPTR (gnl_composition_remove_object);
+  gstbin_class->handle_message =
+      GST_DEBUG_FUNCPTR (gnl_composition_handle_message);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gnl_composition_src_template));
@@ -1850,6 +1876,7 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
   GstPad *ptarget = NULL;
   GnlCompositionPrivate *priv = comp->priv;
 
+  comp->priv->tearing_down_stack = TRUE;
   if (flush_downstream) {
     ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT_SRC (comp)));
     if (ptarget) {
@@ -1880,6 +1907,7 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
 
   gst_element_set_locked_state (priv->current_bin, TRUE);
   gst_element_set_state (priv->current_bin, GST_STATE_READY);
+  comp->priv->tearing_down_stack = FALSE;
 
   if (ptarget) {
     gst_pad_remove_probe (ptarget, probe_id);
@@ -2125,12 +2153,14 @@ _set_all_children_state (GnlComposition * comp, GstState state)
   GST_DEBUG_OBJECT (comp, "Setting all children state to %s",
       gst_element_state_get_name (state));
 
+  comp->priv->tearing_down_stack = TRUE;
   gst_element_set_state (comp->priv->current_bin, state);
   for (tmp = comp->priv->objects_start; tmp; tmp = tmp->next)
     gst_element_set_state (tmp->data, state);
 
   for (tmp = comp->priv->expandables; tmp; tmp = tmp->next)
     gst_element_set_state (tmp->data, state);
+  comp->priv->tearing_down_stack = FALSE;
 }
 
 static GstStateChangeReturn
