@@ -193,7 +193,7 @@ GstVideoGLTextureType
 gst_gl_texture_type_from_format (GstGLContext * context,
     GstVideoFormat v_format, guint plane)
 {
-#ifdef GST_GL_HAVE_PLATFORM_EAGL
+#if GST_GL_HAVE_PLATFORM_EAGL
   gboolean texture_rg = FALSE;
 #else
   gboolean texture_rg =
