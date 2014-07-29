@@ -279,6 +279,15 @@ void            gst_rtcp_packet_set_rb                (GstRTCPPacket *packet, gu
                                                        guint32 exthighestseq, guint32 jitter,
                                                        guint32 lsr, guint32 dlsr);
 
+/* profile-specific extensions for SR and RR */
+gboolean        gst_rtcp_packet_add_profile_specific_ext        (GstRTCPPacket * packet,
+                                                                 const guint8 * data, guint len);
+guint16         gst_rtcp_packet_get_profile_specific_ext_length (GstRTCPPacket * packet);
+gboolean        gst_rtcp_packet_get_profile_specific_ext        (GstRTCPPacket * packet,
+                                                                 guint8 ** data, guint * len);
+gboolean        gst_rtcp_packet_copy_profile_specific_ext       (GstRTCPPacket * packet,
+                                                                 guint8 ** data, guint * len);
+
 /* source description packet */
 guint           gst_rtcp_packet_sdes_get_item_count   (GstRTCPPacket *packet);
 gboolean        gst_rtcp_packet_sdes_first_item       (GstRTCPPacket *packet);

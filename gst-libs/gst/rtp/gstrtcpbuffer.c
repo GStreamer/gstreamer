@@ -956,6 +956,9 @@ gst_rtcp_packet_add_rb (GstRTCPPacket * packet, guint32 ssrc,
       packet->type == GST_RTCP_TYPE_SR, FALSE);
   g_return_val_if_fail (packet->rtcp != NULL, FALSE);
   g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_WRITE, FALSE);
+  /* if profile-specific extension is added, fail for now!? */
+  g_return_val_if_fail (
+      gst_rtcp_packet_get_profile_specific_ext_length (packet) == 0, FALSE);
 
   if (packet->count >= GST_RTCP_MAX_RB_COUNT)
     goto no_space;
@@ -1036,6 +1039,156 @@ gst_rtcp_packet_set_rb (GstRTCPPacket * packet, guint nth, guint32 ssrc,
   g_return_if_fail (packet->rtcp->map.flags & GST_MAP_WRITE);
 
   g_warning ("not implemented");
+}
+
+
+/**
+ * gst_rtcp_packet_set_profile_specific_ext:
+ * @packet: a valid SR or RR #GstRTCPPacket
+ * @data: (array length=len) (transfer none): profile-specific data
+ * @len: length of the profile-specific data in bytes
+ *
+ * Add profile-specific extension @data to @packet. If @packet already
+ * contains profile-specific extension @data will be appended to the existing
+ * extension.
+ *
+ * Returns: %TRUE if the profile specific extension data was added.
+ */
+gboolean
+gst_rtcp_packet_add_profile_specific_ext (GstRTCPPacket * packet,
+    const guint8 * data, guint len)
+{
+  guint8 *bdata;
+  guint maxsize, offset;
+
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RR ||
+      packet->type == GST_RTCP_TYPE_SR, FALSE);
+  g_return_val_if_fail (packet->rtcp != NULL, FALSE);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_WRITE, FALSE);
+  g_return_val_if_fail ((len & 0x03) == 0, FALSE);
+
+  bdata = packet->rtcp->map.data;
+  maxsize = packet->rtcp->map.maxsize;
+
+  /* skip to the end of the packet */
+  offset = packet->offset + (packet->length << 2) + 4;
+
+  /* we need 'len' free bytes now */
+  if (G_UNLIKELY (offset + len > maxsize))
+    return FALSE;
+
+  memcpy (&bdata[offset], data, len);
+  packet->length += len >> 2;
+  bdata[packet->offset + 2] = (packet->length) >> 8;
+  bdata[packet->offset + 3] = (packet->length) & 0xff;
+  packet->rtcp->map.size += len;
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_get_profile_specific_ext_length:
+ * @packet: a valid SR or RR #GstRTCPPacket
+ *
+ * Returns: The number of 32-bit words containing profile-specific extension
+ *          data from @packet.
+ */
+guint16
+gst_rtcp_packet_get_profile_specific_ext_length (GstRTCPPacket * packet)
+{
+  guint pse_offset = 2;
+
+  g_return_val_if_fail (packet != NULL, 0);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RR ||
+      packet->type == GST_RTCP_TYPE_SR, 0);
+  g_return_val_if_fail (packet->rtcp != NULL, 0);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, 0);
+
+  if (packet->type == GST_RTCP_TYPE_SR)
+    pse_offset += 5;
+  pse_offset += (packet->count * 6);
+
+  if (pse_offset <= (packet->length + 1))
+    return packet->length + 1 - pse_offset;
+
+  /* This means that the packet is invalid! */
+  return 0;
+}
+
+/**
+ * gst_rtcp_packet_get_profile_specific_ext:
+ * @packet: a valid SR or RR #GstRTCPPacket
+ * @data: (out) (array length=len) (transfer none): result profile-specific data
+ * @len: (out): result length of the profile-specific data
+ *
+ * Returns: %TRUE if there was valid data.
+ */
+gboolean
+gst_rtcp_packet_get_profile_specific_ext (GstRTCPPacket * packet,
+    guint8 ** data, guint * len)
+{
+  guint16 pse_len;
+
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RR ||
+      packet->type == GST_RTCP_TYPE_SR, FALSE);
+  g_return_val_if_fail (packet->rtcp != NULL, FALSE);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, FALSE);
+
+  pse_len = gst_rtcp_packet_get_profile_specific_ext_length (packet);
+  if (pse_len > 0) {
+    if (len != NULL)
+      *len = pse_len * sizeof (guint32);
+    if (data != NULL) {
+      *data = packet->rtcp->map.data;
+      *data += packet->offset;
+      *data += ((packet->length + 1 - pse_len) * sizeof (guint32));
+    }
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_rtcp_packet_copy_profile_specific_ext:
+ * @packet: a valid SR or RR #GstRTCPPacket
+ * @data: (out) (array length=len): result profile-specific data
+ * @len: (out): length of the profile-specific extension data
+ *
+ * The profile-specific extension data is copied into a new allocated
+ * memory area @data. This must be freed with g_free() after usage.
+ *
+ * Returns: %TRUE if there was valid data.
+ */
+gboolean
+gst_rtcp_packet_copy_profile_specific_ext (GstRTCPPacket * packet,
+    guint8 ** data, guint * len)
+{
+  guint16 pse_len;
+
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RR ||
+      packet->type == GST_RTCP_TYPE_SR, FALSE);
+  g_return_val_if_fail (packet->rtcp != NULL, FALSE);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, FALSE);
+
+  pse_len = gst_rtcp_packet_get_profile_specific_ext_length (packet);
+  if (pse_len > 0) {
+    if (len != NULL)
+      *len = pse_len * sizeof (guint32);
+    if (data != NULL) {
+      guint8 * ptr = packet->rtcp->map.data + packet->offset;
+      ptr += ((packet->length + 1 - pse_len) * sizeof (guint32));
+      *data = g_memdup (ptr, pse_len * sizeof (guint32));
+    }
+
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 

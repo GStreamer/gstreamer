@@ -20,6 +20,7 @@ EXPORTS
 	gst_rtcp_packet_bye_get_reason_len
 	gst_rtcp_packet_bye_get_ssrc_count
 	gst_rtcp_packet_bye_set_reason
+	gst_rtcp_packet_copy_profile_specific_ext
 	gst_rtcp_packet_fb_get_fci
 	gst_rtcp_packet_fb_get_fci_length
 	gst_rtcp_packet_fb_get_media_ssrc
@@ -32,6 +33,8 @@ EXPORTS
 	gst_rtcp_packet_get_count
 	gst_rtcp_packet_get_length
 	gst_rtcp_packet_get_padding
+	gst_rtcp_packet_get_profile_specific_ext
+	gst_rtcp_packet_get_profile_specific_ext_len
 	gst_rtcp_packet_get_rb
 	gst_rtcp_packet_get_rb_count
 	gst_rtcp_packet_get_type
@@ -49,6 +52,7 @@ EXPORTS
 	gst_rtcp_packet_sdes_get_ssrc
 	gst_rtcp_packet_sdes_next_entry
 	gst_rtcp_packet_sdes_next_item
+	gst_rtcp_packet_set_profile_specific_ext
 	gst_rtcp_packet_set_rb
 	gst_rtcp_packet_sr_get_sender_info
 	gst_rtcp_packet_sr_set_sender_info
