@@ -2178,8 +2178,13 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
      */
     if (G_UNLIKELY (ABSDIFF (res, pcrtable->last_pcrtime) > 15 * GST_SECOND))
       res = GST_CLOCK_TIME_NONE;
-    else
-      res += pcrtable->base_time + pcrtable->skew - pcrtable->base_pcrtime;
+    else {
+      GstClockTime tmp = pcrtable->base_time + pcrtable->skew;
+      if (tmp + res > pcrtable->base_pcrtime)
+        res += tmp - pcrtable->base_pcrtime;
+      else
+        res = GST_CLOCK_TIME_NONE;
+    }
   } else if (packetizer->calculate_offset && pcrtable->groups) {
     gint64 refpcr = G_MAXINT64, refpcroffset;
     PCROffsetGroup *group = pcrtable->current->group;
