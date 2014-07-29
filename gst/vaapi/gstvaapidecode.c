@@ -439,18 +439,19 @@ gst_vaapidecode_decode_loop(GstVaapiDecode *decode)
     decode->decoder_loop_status = ret;
     GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
 
-    if (ret == GST_FLOW_OK)
-        return;
-
     /* If invoked from gst_vaapidecode_finish(), then return right
        away no matter the errors, or the GstVaapiDecoder needs further
        data to complete decoding (there no more data to feed in) */
     if (decode->decoder_finish) {
         g_mutex_lock(&decode->decoder_mutex);
+        decode->decoder_loop_status = GST_FLOW_EOS;
         g_cond_signal(&decode->decoder_finish_done);
         g_mutex_unlock(&decode->decoder_mutex);
         return;
     }
+
+    if (ret == GST_FLOW_OK)
+        return;
 
     /* Suspend the task if an error occurred */
     if (ret != GST_VIDEO_DECODER_FLOW_NEED_DATA)
@@ -494,13 +495,16 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
 
     /* Make sure the decode loop function has a chance to return, thus
        possibly unlocking gst_video_decoder_finish_frame() */
-    GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
-    g_mutex_lock(&decode->decoder_mutex);
     decode->decoder_finish = TRUE;
-    g_cond_wait(&decode->decoder_finish_done, &decode->decoder_mutex);
-    g_mutex_unlock(&decode->decoder_mutex);
-    gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
-    GST_VIDEO_DECODER_STREAM_LOCK(vdec);
+    if (decode->decoder_loop_status == GST_FLOW_OK) {
+        GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
+        g_mutex_lock(&decode->decoder_mutex);
+        while (decode->decoder_loop_status != GST_FLOW_OK)
+            g_cond_wait(&decode->decoder_finish_done, &decode->decoder_mutex);
+        g_mutex_unlock(&decode->decoder_mutex);
+        gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
+        GST_VIDEO_DECODER_STREAM_LOCK(vdec);
+    }
     return ret;
 }
 
