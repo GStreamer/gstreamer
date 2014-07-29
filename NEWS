@@ -7,6 +7,8 @@ Version 0.5.9 - 29.Jul.2014
 * Add VP8 decoder (+Halley Zhao)
 * Add H.264 MVC decoder and encoder (+Sreerenj Balachandran, Xiaowei Li)
 * Fix support for Firefox >= 30 when built with GStreamer 1.0 APIs
+* Fix MPEG-4:2 decoder hang on skipped frames (Fabrice Bellet) [#733324]
+* Fix MPEG-2 decoder to propagate PTS from demuxer (Jan Schmidt) [#732719]
 * Improvements to H.264 decoder
   + Add support for grayscale encoded clips
   + Add minor optimizations to the parsing process
@@ -21,6 +23,7 @@ Version 0.5.9 - 29.Jul.2014
   + Fix creation of output surface pool for vaapipostproc (Simon Farnsworth)
   + Fix vaapipostproc "deinterlace-mode" semantics (Simon Farnsworth) [#726361]
   + Fix memory leak in vaapidecode ! {glimagesink,cluttersink} (Matthew Waters)
+  + Fix vaapidecode hang when downstream errors out (Matthew Waters) [#733897]
 
 Version 0.5.8 - 23.Jan.2014
 * Add H.264 video encoding (+Feng Yuan)
