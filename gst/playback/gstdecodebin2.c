@@ -3328,7 +3328,7 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
   }
 
   GST_DEBUG_OBJECT (multiqueue, "setting limits %u bytes, %u buffers, "
-      "%" G_GUINT64_FORMAT, max_bytes, max_buffers, max_time);
+      "%" G_GUINT64_FORMAT " time", max_bytes, max_buffers, max_time);
   g_object_set (multiqueue,
       "max-size-bytes", max_bytes, "max-size-time", max_time,
       "max-size-buffers", max_buffers, NULL);
