@@ -808,7 +808,6 @@ gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     return GST_FLOW_ERROR;
   }
 
-  gst_gl_upload_release_buffer (glimage_sink->upload);
   return GST_FLOW_OK;
 
 /* ERRORS */
