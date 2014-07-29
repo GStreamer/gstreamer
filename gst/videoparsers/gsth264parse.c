@@ -1680,6 +1680,15 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
     /* codec tag */
     caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    if (caps == NULL) {
+      if (GST_PAD_IS_FLUSHING (GST_BASE_PARSE_SRC_PAD (h264parse))) {
+        GST_INFO_OBJECT (h264parse, "Src pad is flushing");
+        return GST_FLOW_FLUSHING;
+      } else {
+        GST_INFO_OBJECT (h264parse, "Src pad is not negotiated!");
+        return GST_FLOW_NOT_NEGOTIATED;
+      }
+    }
     gst_pb_utils_add_codec_description_to_tag_list (taglist,
         GST_TAG_VIDEO_CODEC, caps);
     gst_caps_unref (caps);
