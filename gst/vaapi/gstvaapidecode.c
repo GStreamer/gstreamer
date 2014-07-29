@@ -444,7 +444,6 @@ gst_vaapidecode_decode_loop(GstVaapiDecode *decode)
        data to complete decoding (there no more data to feed in) */
     if (decode->decoder_finish) {
         g_mutex_lock(&decode->decoder_mutex);
-        decode->decoder_loop_status = GST_FLOW_EOS;
         g_cond_signal(&decode->decoder_finish_done);
         g_mutex_unlock(&decode->decoder_mutex);
         return;
@@ -499,7 +498,7 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
     if (decode->decoder_loop_status == GST_FLOW_OK) {
         GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
         g_mutex_lock(&decode->decoder_mutex);
-        while (decode->decoder_loop_status != GST_FLOW_OK)
+        while (decode->decoder_loop_status == GST_FLOW_OK)
             g_cond_wait(&decode->decoder_finish_done, &decode->decoder_mutex);
         g_mutex_unlock(&decode->decoder_mutex);
         gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
