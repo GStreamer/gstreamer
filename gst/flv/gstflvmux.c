@@ -529,6 +529,7 @@ gst_flv_mux_reset_pad (GstFlvMux * mux, GstFlvPad * cpad, gboolean video)
     gst_buffer_unref (cpad->video_codec_data);
   cpad->video_codec_data = NULL;
   cpad->video_codec = G_MAXUINT;
+  cpad->first_timestamp = GST_CLOCK_TIME_NONE;
   cpad->last_timestamp = 0;
 }
 
@@ -1019,6 +1020,12 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     cts = pts - dts;
   else
     cts = 0;
+
+  if (!GST_CLOCK_TIME_IS_VALID (cpad->first_timestamp))
+    cpad->first_timestamp = dts;
+
+  /* Timestamp must start at zero */
+  dts -= cpad->first_timestamp;
 
   GST_LOG_OBJECT (mux, "got pts %i dts %i cts %i\n", pts, dts, cts);
 
