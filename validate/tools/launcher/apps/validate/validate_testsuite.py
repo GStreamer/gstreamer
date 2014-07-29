@@ -110,6 +110,8 @@ def register_default_blacklist(self):
         # Matroska/WEBM known issues:
         ("validate.*.reverse_playback.*webm$",
          "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
+        ("validate.*.reverse_playback.*mkv$",
+         "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
         ("validate.*reverse.*Sintel_2010_720p_mkv",
          "TODO in matroskademux: FIXME: We should build an index during playback or "
          "when scanning that can be used here. The reverse playback code requires "
@@ -127,7 +129,7 @@ def register_default_blacklist(self):
         ("validate.http.*scrub_forward_seeking.*", "This is not stable enough for now."),
 
         # MXF known issues"
-        (".*reverse_playback.*", "Reverse playback is not handled in MXF"),
+        (".*reverse_playback.*mxf", "Reverse playback is not handled in MXF"),
         ("validate\.file\.transcode.*mxf", "FIXME: Transcoding and mixing tests need to be tested"),
 
         # Subtitles known issues
@@ -135,6 +137,13 @@ def register_default_blacklist(self):
 
         # Videomixing known issues
         ("validate.file.*.simple.scrub_forward_seeking.synchronized", "https://bugzilla.gnome.org/show_bug.cgi?id=734060"),
+
+        # FLAC known issues"
+        (".*reverse_playback.*flac", "Reverse playback is not handled in flac"),
+
+        # WMV known issues"
+        (".*reverse_playback.*wmv", "Reverse playback is not handled in wmv"),
+        (".*reverse_playback.*asf", "Reverse playback is not handled in asf"),
     ])
 
 def register_defaults(self):
