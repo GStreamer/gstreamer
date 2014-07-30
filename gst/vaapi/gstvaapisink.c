@@ -754,9 +754,6 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
 
     gst_buffer_replace(&sink->video_buffer, NULL);
-#if GST_CHECK_VERSION(1,0,0)
-    g_clear_object(&sink->video_buffer_pool);
-#endif
     gst_vaapi_window_replace(&sink->window, NULL);
 
     gst_vaapi_plugin_base_close(GST_VAAPI_PLUGIN_BASE(sink));

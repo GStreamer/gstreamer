@@ -66,10 +66,6 @@ struct _GstVaapiSink {
     GstVaapiWindow     *window;
     guint               window_width;
     guint               window_height;
-#if GST_CHECK_VERSION(1,0,0)
-    GstBufferPool      *video_buffer_pool;
-#endif
-    guint               video_buffer_size;
     GstBuffer          *video_buffer;
     guint               video_width;
     guint               video_height;
