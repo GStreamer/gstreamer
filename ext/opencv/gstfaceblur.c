@@ -174,6 +174,7 @@ gst_face_blur_init (GstFaceBlur * filter)
 {
   filter->profile = g_strdup (DEFAULT_PROFILE);
   gst_face_blur_load_profile (filter);
+  filter->sent_profile_load_failed_msg = FALSE;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       TRUE);
@@ -190,6 +191,7 @@ gst_face_blur_set_property (GObject * object, guint prop_id,
       g_free (filter->profile);
       filter->profile = g_value_dup_string (value);
       gst_face_blur_load_profile (filter);
+      filter->sent_profile_load_failed_msg = FALSE;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -241,8 +243,17 @@ gst_face_blur_transform_ip (GstOpencvVideoFilter * transform,
   CvSeq *faces;
   int i;
 
-  if (!filter->cvCascade)
+  if (!filter->cvCascade) {
+    if (filter->profile != NULL
+        && filter->sent_profile_load_failed_msg == FALSE) {
+      GST_ELEMENT_WARNING (filter, RESOURCE, NOT_FOUND,
+          ("Profile %s is missing.", filter->profile),
+          ("missing faceblur profile file %s", filter->profile));
+      filter->sent_profile_load_failed_msg = TRUE;
+    }
+
     return GST_FLOW_OK;
+  }
 
   cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
   cvClearMemStorage (filter->cvStorage);

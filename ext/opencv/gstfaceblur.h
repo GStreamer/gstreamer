@@ -74,9 +74,10 @@ struct _GstFaceBlur
 {
   GstOpencvVideoFilter element;
 
-  gboolean display;
+  gboolean sent_profile_load_failed_msg;
 
   gchar *profile;
+  gboolean display;
 
   IplImage *cvGray;
   CvHaarClassifierCascade *cvCascade;
