@@ -227,6 +227,9 @@ default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   *buffer =
       gst_buffer_new_allocate (priv->allocator, priv->size, &priv->params);
 
+  if (!*buffer)
+    return GST_FLOW_ERROR;
+
   return GST_FLOW_OK;
 }
 
