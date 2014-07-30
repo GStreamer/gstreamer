@@ -48,6 +48,7 @@
  * SECTION:element-facedetect
  *
  * Performs face detection on videos and images.
+ * If you have high cpu load you need to use videoscale with capsfilter and reduce the video resolution.
  *
  * The image is scaled down multiple times using the GstFaceDetect::scale-factor
  * until the size is &lt;= GstFaceDetect::min-size-width or 
@@ -56,10 +57,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-0.10 autovideosrc ! decodebin2 ! colorspace ! facedetect ! videoconvert ! xvimagesink
+ * gst-launch-1.0 autovideosrc ! decodebin2 ! colorspace ! facedetect ! videoconvert ! xvimagesink
  * ]| Detect and show faces
  * |[
- * gst-launch-0.10 autovideosrc ! video/x-raw,width=320,height=240 ! videoconvert ! facedetect min-size-width=60 min-size-height=60 ! colorspace ! xvimagesink
+ * gst-launch-1.0 autovideosrc ! video/x-raw,width=320,height=240 ! videoconvert ! facedetect min-size-width=60 min-size-height=60 ! colorspace ! xvimagesink
  * ]| Detect large faces on a smaller image 
  *
  * </refsect2>

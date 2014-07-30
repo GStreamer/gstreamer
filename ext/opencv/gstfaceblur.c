@@ -51,7 +51,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-0.10 videotestsrc ! decodebin ! videoconvert ! faceblur ! videoconvert ! xvimagesink
+ * gst-launch-1.0 autovideosrc ! videoconvert ! faceblur ! videoconvert ! autovideosink
  * ]|
  * </refsect2>
  */
