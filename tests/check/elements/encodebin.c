@@ -104,13 +104,19 @@ create_vorbis_only_profile (void)
   return prof;
 }
 
+static GstCaps *
+create_unsupported_caps (void)
+{
+  return gst_caps_new_empty_simple ("audio/x-bogus");
+}
+
 static GstEncodingProfile *
 create_unsupported_profile (void)
 {
   GstEncodingProfile *prof;
   GstCaps *caps;
 
-  caps = gst_caps_new_empty_simple ("audio/x-bogus");
+  caps = create_unsupported_caps ();
   prof =
       (GstEncodingProfile *) gst_encoding_audio_profile_new (caps, NULL, NULL,
       0);
@@ -1042,14 +1048,28 @@ GST_START_TEST (test_encodebin_missing_plugin_messages)
   GstBus *bus = gst_pipeline_get_bus ((GstPipeline *) pipeline);
   GstElement *ebin = gst_element_factory_make ("encodebin", NULL);
   GstMessage *message;
+  GstElement *audiotestsrc;
+  GstPad *sinkpad, *srcpad;
+
+  audiotestsrc = gst_element_factory_make ("audiotestsrc", NULL);
+  g_object_set (audiotestsrc, "num-buffers", 1, NULL);
+  gst_bin_add ((GstBin *) pipeline, audiotestsrc);
 
   /* first add to bin, then set profile */
   gst_bin_add ((GstBin *) pipeline, ebin);
   set_profile (ebin, create_unsupported_profile ());
 
-  gst_element_set_state (pipeline, GST_STATE_READY);
+  srcpad = gst_element_get_static_pad (audiotestsrc, "src");
+  sinkpad = gst_element_get_static_pad (ebin, "audio_0");
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
 
-  message = gst_bus_pop_filtered (bus, GST_MESSAGE_ELEMENT);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  message =
+      gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_ELEMENT);
   fail_if (message == NULL);
   fail_if (!gst_is_missing_plugin_message (message));
   gst_message_unref (message);
