@@ -36,17 +36,6 @@
 #include <gst/video/video.h>
 
 #include <gst/vaapi/gstvaapivalue.h>
-#if USE_DRM
-# include <gst/vaapi/gstvaapidisplay_drm.h>
-#endif
-#if USE_X11
-# include <gst/vaapi/gstvaapidisplay_x11.h>
-# include <gst/vaapi/gstvaapiwindow_x11.h>
-#endif
-#if USE_WAYLAND
-# include <gst/vaapi/gstvaapidisplay_wayland.h>
-# include <gst/vaapi/gstvaapiwindow_wayland.h>
-#endif
 
 /* Supported interfaces */
 #if GST_CHECK_VERSION(1,0,0)
@@ -142,10 +131,8 @@ gst_vaapisink_ensure_display(GstVaapiSink *sink);
 static void
 gst_vaapisink_video_overlay_expose(GstVideoOverlay *overlay);
 
-#if USE_X11
 static gboolean
-gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id);
-#endif
+gst_vaapisink_reconfigure_window(GstVaapiSink * sink);
 
 static void
 gst_vaapisink_set_event_handling(GstVideoOverlay *overlay, gboolean handle_events);
@@ -154,17 +141,297 @@ static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer);
 
 static gboolean
+gst_vaapisink_put_surface(GstVaapiSink *sink, GstVaapiSurface *surface,
+    const GstVaapiRectangle *surface_rect, guint flags);
+
+static gboolean
 gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height);
+
+/* ------------------------------------------------------------------------ */
+/* --- DRM Backend                                                      --- */
+/* ------------------------------------------------------------------------ */
+
+#if USE_DRM
+#include <gst/vaapi/gstvaapidisplay_drm.h>
+
+static gboolean
+gst_vaapisink_drm_create_window(GstVaapiSink *sink, guint width, guint height)
+{
+    g_return_val_if_fail(sink->window == NULL, FALSE);
+
+    GST_ERROR("failed to create a window for VA/DRM display");
+    return FALSE;
+}
+
+static gboolean
+gst_vaapisink_drm_render_surface(GstVaapiSink *sink, GstVaapiSurface *surface,
+    const GstVaapiRectangle *surface_rect, guint flags)
+{
+    return TRUE;
+}
+
+static const inline GstVaapiSinkBackend *
+gst_vaapisink_backend_drm(void)
+{
+    static const GstVaapiSinkBackend GstVaapiSinkBackendDRM = {
+        .create_window = gst_vaapisink_drm_create_window,
+        .render_surface = gst_vaapisink_drm_render_surface,
+    };
+    return &GstVaapiSinkBackendDRM;
+}
+#endif
+
+/* ------------------------------------------------------------------------ */
+/* --- X11 Backend                                                      --- */
+/* ------------------------------------------------------------------------ */
+
+#if USE_X11
+#include <gst/vaapi/gstvaapidisplay_x11.h>
+#include <gst/vaapi/gstvaapiwindow_x11.h>
+
+/* Checks whether a ConfigureNotify event is in the queue */
+typedef struct _ConfigureNotifyEventPendingArgs ConfigureNotifyEventPendingArgs;
+struct _ConfigureNotifyEventPendingArgs {
+    Window      window;
+    guint       width;
+    guint       height;
+    gboolean    match;
+};
+
+static Bool
+configure_notify_event_pending_cb(Display *dpy, XEvent *xev, XPointer arg)
+{
+    ConfigureNotifyEventPendingArgs * const args =
+        (ConfigureNotifyEventPendingArgs *)arg;
+
+    if (xev->type == ConfigureNotify &&
+        xev->xconfigure.window == args->window &&
+        xev->xconfigure.width  == args->width  &&
+        xev->xconfigure.height == args->height)
+        args->match = TRUE;
+
+    /* XXX: this is a hack to traverse the whole queue because we
+       can't use XPeekIfEvent() since it could block */
+    return False;
+}
+
+static gboolean
+configure_notify_event_pending(GstVaapiSink *sink, Window window,
+    guint width, guint height)
+{
+    GstVaapiDisplayX11 * const display =
+        GST_VAAPI_DISPLAY_X11(GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
+    ConfigureNotifyEventPendingArgs args;
+    XEvent xev;
+
+    args.window = window;
+    args.width  = width;
+    args.height = height;
+    args.match  = FALSE;
+
+    /* XXX: don't use XPeekIfEvent() because it might block */
+    XCheckIfEvent(
+        gst_vaapi_display_x11_get_display(display),
+        &xev,
+        configure_notify_event_pending_cb, (XPointer)&args
+    );
+    return args.match;
+}
+
+static gboolean
+gst_vaapisink_x11_create_window(GstVaapiSink *sink, guint width, guint height)
+{
+    GstVaapiDisplay * const display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
+
+    g_return_val_if_fail(sink->window == NULL, FALSE);
+
+    sink->window = gst_vaapi_window_x11_new(display, width, height);
+    if (!sink->window)
+        return FALSE;
+
+    gst_video_overlay_got_window_handle(GST_VIDEO_OVERLAY(sink),
+        gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)));
+    return TRUE;
+}
+
+static gboolean
+gst_vaapisink_x11_create_window_from_handle(GstVaapiSink *sink, guintptr window)
+{
+    GstVaapiDisplay *display;
+    Window rootwin;
+    unsigned int width, height, border_width, depth;
+    int x, y;
+    XID xid = window;
+
+    if (!gst_vaapisink_ensure_display(sink))
+        return FALSE;
+    display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
+
+    gst_vaapi_display_lock(display);
+    XGetGeometry(
+        gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(display)),
+        xid,
+        &rootwin,
+        &x, &y, &width, &height, &border_width, &depth
+    );
+    gst_vaapi_display_unlock(display);
+
+    if ((width != sink->window_width || height != sink->window_height) &&
+        !configure_notify_event_pending(sink, xid, width, height)) {
+        if (!gst_vaapisink_ensure_render_rect(sink, width, height))
+            return FALSE;
+        sink->window_width  = width;
+        sink->window_height = height;
+    }
+
+    if (!sink->window || gst_vaapi_window_x11_get_xid(
+            GST_VAAPI_WINDOW_X11(sink->window)) != xid) {
+        gst_vaapi_window_replace(&sink->window, NULL);
+        sink->window = gst_vaapi_window_x11_new_with_xid(display, xid);
+        if (!sink->window)
+            return FALSE;
+    }
+
+    gst_vaapisink_set_event_handling(GST_VIDEO_OVERLAY(sink),
+        sink->handle_events);
+    return TRUE;
+}
+
+static gboolean
+gst_vaapisink_x11_handle_events(GstVaapiSink *sink)
+{
+    GstVaapiDisplay * const display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
+    gboolean has_events, do_expose = FALSE;
+    XEvent e;
+
+    if (sink->window) {
+        Display * const x11_dpy =
+            gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(display));
+        Window x11_win =
+            gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window));
+
+        /* Handle Expose + ConfigureNotify */
+        /* Need to lock whole loop or we corrupt the XEvent queue: */
+        for (;;) {
+            gst_vaapi_display_lock(display);
+            has_events = XCheckWindowEvent(x11_dpy, x11_win,
+                StructureNotifyMask | ExposureMask, &e);
+            gst_vaapi_display_unlock(display);
+            if (!has_events)
+                break;
+
+            switch (e.type) {
+            case Expose:
+                do_expose = TRUE;
+                break;
+            case ConfigureNotify:
+                if (gst_vaapisink_reconfigure_window(sink))
+                    do_expose = TRUE;
+                break;
+            default:
+                break;
+            }
+        }
+        if (do_expose)
+            gst_vaapisink_video_overlay_expose(GST_VIDEO_OVERLAY(sink));
+        /* FIXME: handle mouse and key events */
+    }
+    return TRUE;
+}
+
+static gboolean
+gst_vaapisink_x11_pre_start_event_thread(GstVaapiSink *sink)
+{
+    GstVaapiDisplayX11 * const display =
+        GST_VAAPI_DISPLAY_X11(GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
+
+    if (sink->window) {
+        XSelectInput(gst_vaapi_display_x11_get_display(display),
+            gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)),
+            StructureNotifyMask | ExposureMask);
+    }
+    return TRUE;
+}
+
+static gboolean
+gst_vaapisink_x11_pre_stop_event_thread(GstVaapiSink *sink)
+{
+    GstVaapiDisplayX11 * const display =
+        GST_VAAPI_DISPLAY_X11(GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
+
+    if (sink->window) {
+        XSelectInput(gst_vaapi_display_x11_get_display(display),
+            gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)),
+            0);
+    }
+    return TRUE;
+}
+
+static const inline GstVaapiSinkBackend *
+gst_vaapisink_backend_x11(void)
+{
+    static const GstVaapiSinkBackend GstVaapiSinkBackendX11 = {
+        .create_window = gst_vaapisink_x11_create_window,
+        .create_window_from_handle = gst_vaapisink_x11_create_window_from_handle,
+        .render_surface = gst_vaapisink_put_surface,
+
+        .event_thread_needed = TRUE,
+        .handle_events = gst_vaapisink_x11_handle_events,
+        .pre_start_event_thread = gst_vaapisink_x11_pre_start_event_thread,
+        .pre_stop_event_thread = gst_vaapisink_x11_pre_stop_event_thread,
+    };
+    return &GstVaapiSinkBackendX11;
+}
+#endif
+
+/* ------------------------------------------------------------------------ */
+/* --- Wayland Backend                                                  --- */
+/* ------------------------------------------------------------------------ */
+
+#if USE_WAYLAND
+#include <gst/vaapi/gstvaapidisplay_wayland.h>
+#include <gst/vaapi/gstvaapiwindow_wayland.h>
+
+static gboolean
+gst_vaapisink_wayland_create_window(GstVaapiSink *sink, guint width,
+    guint height)
+{
+    GstVaapiDisplay * const display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
+
+    g_return_val_if_fail(sink->window == NULL, FALSE);
+
+    sink->window = gst_vaapi_window_wayland_new(display, width, height);
+    if (!sink->window)
+        return FALSE;
+    return TRUE;
+}
+
+static const inline GstVaapiSinkBackend *
+gst_vaapisink_backend_wayland(void)
+{
+    static const GstVaapiSinkBackend GstVaapiSinkBackendWayland = {
+        .create_window = gst_vaapisink_wayland_create_window,
+        .render_surface = gst_vaapisink_put_surface,
+    };
+    return &GstVaapiSinkBackendWayland;
+}
+#endif
+
+/* ------------------------------------------------------------------------ */
+/* --- Common implementation                                            --- */
+/* ------------------------------------------------------------------------ */
 
 static void
 gst_vaapisink_video_overlay_set_window_handle(GstVideoOverlay *overlay,
     guintptr window)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
+    const GstVaapiSinkBackend * const backend = sink->backend;
     GstVaapiDisplayType display_type;
 
     if (!gst_vaapisink_ensure_display(sink))
         return;
+
     display_type = GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink);
 
     /* Disable GLX rendering when vaapisink is using a foreign X
@@ -176,17 +443,8 @@ gst_vaapisink_video_overlay_set_window_handle(GstVideoOverlay *overlay,
     }
 
     sink->foreign_window = TRUE;
-
-    switch (display_type) {
-#if USE_X11
-    case GST_VAAPI_DISPLAY_TYPE_X11:
-        gst_vaapisink_ensure_window_xid(sink, window);
-        gst_vaapisink_set_event_handling(GST_VIDEO_OVERLAY(sink), sink->handle_events);
-        break;
-#endif
-    default:
-        break;
-    }
+    if (backend->create_window_from_handle)
+        backend->create_window_from_handle(sink, window);
 }
 
 static void
@@ -230,75 +488,13 @@ gst_vaapisink_reconfigure_window(GstVaapiSink * sink)
     return FALSE;
 }
 
-#if USE_X11
-static void
-gst_vaapisink_event_thread_loop_x11(GstVaapiSink *sink)
-{
-    GstVaapiDisplay * const display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
-    gboolean has_events, do_expose = FALSE;
-    XEvent e;
-
-    if (sink->window) {
-        Display * const x11_dpy =
-            gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(display));
-        Window x11_win =
-            gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window));
-
-        /* Handle Expose + ConfigureNotify */
-        /* Need to lock whole loop or we corrupt the XEvent queue: */
-        for (;;) {
-            gst_vaapi_display_lock(display);
-            has_events = XCheckWindowEvent(x11_dpy, x11_win,
-                StructureNotifyMask | ExposureMask, &e);
-            gst_vaapi_display_unlock(display);
-            if (!has_events)
-                break;
-
-            switch (e.type) {
-            case Expose:
-                do_expose = TRUE;
-                break;
-            case ConfigureNotify:
-                if (gst_vaapisink_reconfigure_window(sink))
-                    do_expose = TRUE;
-                break;
-            default:
-                break;
-            }
-        }
-        if (do_expose)
-            gst_vaapisink_video_overlay_expose(GST_VIDEO_OVERLAY(sink));
-        /* FIXME: handle mouse and key events */
-    }
-}
-#endif
-
-static void
-gst_vaapisink_event_thread_loop_default(GstVaapiSink *sink)
-{
-}
-
 static gpointer
 gst_vaapisink_event_thread (GstVaapiSink *sink)
 {
-    void (*thread_loop)(GstVaapiSink *sink);
-
-    switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
-#if USE_X11
-    case GST_VAAPI_DISPLAY_TYPE_X11:
-    case GST_VAAPI_DISPLAY_TYPE_GLX:
-        thread_loop = gst_vaapisink_event_thread_loop_x11;
-        break;
-#endif
-    default:
-        thread_loop = gst_vaapisink_event_thread_loop_default;
-        break;
-    }
-
     GST_OBJECT_LOCK(sink);
     while (!sink->event_thread_cancel) {
         GST_OBJECT_UNLOCK(sink);
-        thread_loop(sink);
+        sink->backend->handle_events(sink);
         g_usleep(G_USEC_PER_SEC / 20);
         GST_OBJECT_LOCK(sink);
     }
@@ -324,28 +520,17 @@ gst_vaapisink_set_event_handling(GstVideoOverlay *overlay,
 {
     GThread *thread = NULL;
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
-#if USE_X11
-    GstVaapiDisplayX11 * const display =
-        GST_VAAPI_DISPLAY_X11(GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
-#endif
+
+    if (!sink->backend->event_thread_needed)
+        return;
 
     GST_OBJECT_LOCK(sink);
     sink->handle_events = handle_events;
     if (handle_events && !sink->event_thread) {
         /* Setup our event listening thread */
         GST_DEBUG("starting xevent thread");
-        switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
-#if USE_X11
-        case GST_VAAPI_DISPLAY_TYPE_X11:
-        case GST_VAAPI_DISPLAY_TYPE_GLX:
-            XSelectInput(gst_vaapi_display_x11_get_display(display),
-                gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)),
-                StructureNotifyMask | ExposureMask);
-            break;
-#endif
-        default:
-            break;
-        }
+        if (sink->backend->pre_start_event_thread)
+            sink->backend->pre_start_event_thread(sink);
 
         sink->event_thread_cancel = FALSE;
         sink->event_thread = g_thread_try_new("vaapisink-events",
@@ -353,20 +538,8 @@ gst_vaapisink_set_event_handling(GstVideoOverlay *overlay,
     }
     else if (!handle_events && sink->event_thread) {
         GST_DEBUG("stopping xevent thread");
-        if (sink->window) {
-            switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
-#if USE_X11
-            case GST_VAAPI_DISPLAY_TYPE_X11:
-            case GST_VAAPI_DISPLAY_TYPE_GLX:
-                XSelectInput(gst_vaapi_display_x11_get_display(display),
-                    gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)),
-                    0);
-                break;
-#endif
-            default:
-                break;
-            }
-        }
+        if (sink->backend->pre_stop_event_thread)
+            sink->backend->pre_stop_event_thread(sink);
 
         /* grab thread and mark it as NULL */
         thread = sink->event_thread;
@@ -400,61 +573,6 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
     gst_caps_replace(&sink->caps, NULL);
 }
 
-#if USE_X11
-/* Checks whether a ConfigureNotify event is in the queue */
-typedef struct _ConfigureNotifyEventPendingArgs ConfigureNotifyEventPendingArgs;
-struct _ConfigureNotifyEventPendingArgs {
-    Window      window;
-    guint       width;
-    guint       height;
-    gboolean    match;
-};
-
-static Bool
-configure_notify_event_pending_cb(Display *dpy, XEvent *xev, XPointer arg)
-{
-    ConfigureNotifyEventPendingArgs * const args =
-        (ConfigureNotifyEventPendingArgs *)arg;
-
-    if (xev->type == ConfigureNotify &&
-        xev->xconfigure.window == args->window &&
-        xev->xconfigure.width  == args->width  &&
-        xev->xconfigure.height == args->height)
-        args->match = TRUE;
-
-    /* XXX: this is a hack to traverse the whole queue because we
-       can't use XPeekIfEvent() since it could block */
-    return False;
-}
-
-static gboolean
-configure_notify_event_pending(
-    GstVaapiSink *sink,
-    Window        window,
-    guint         width,
-    guint         height
-)
-{
-    GstVaapiDisplayX11 * const display =
-        GST_VAAPI_DISPLAY_X11(GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
-    ConfigureNotifyEventPendingArgs args;
-    XEvent xev;
-
-    args.window = window;
-    args.width  = width;
-    args.height = height;
-    args.match  = FALSE;
-
-    /* XXX: don't use XPeekIfEvent() because it might block */
-    XCheckIfEvent(
-        gst_vaapi_display_x11_get_display(display),
-        &xev,
-        configure_notify_event_pending_cb, (XPointer)&args
-    );
-    return args.match;
-}
-#endif
-
 static const gchar *
 get_display_type_name(GstVaapiDisplayType display_type)
 {
@@ -480,6 +598,33 @@ gst_vaapisink_display_changed(GstVaapiPluginBase *plugin)
 
     GST_INFO("created %s %p", get_display_type_name(plugin->display_type),
              plugin->display);
+
+    switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
+#if USE_DRM
+    case GST_VAAPI_DISPLAY_TYPE_DRM:
+        sink->backend = gst_vaapisink_backend_drm();
+        break;
+#endif
+#if USE_X11
+    case GST_VAAPI_DISPLAY_TYPE_X11:
+        sink->backend = gst_vaapisink_backend_x11();
+        break;
+#endif
+#if USE_GLX
+    case GST_VAAPI_DISPLAY_TYPE_GLX:
+        sink->backend = gst_vaapisink_backend_x11();
+        break;
+#endif
+#if USE_WAYLAND
+    case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
+        sink->backend = gst_vaapisink_backend_wayland();
+        break;
+#endif
+    default:
+        GST_ERROR("failed to initialize GstVaapiSink backend");
+        g_assert_not_reached();
+        break;
+    }
 
     sink->use_overlay =
         gst_vaapi_display_get_render_mode(plugin->display, &render_mode) &&
@@ -624,78 +769,8 @@ gst_vaapisink_ensure_window_size(GstVaapiSink *sink, guint *pwidth, guint *pheig
 static inline gboolean
 gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
 {
-    GstVaapiDisplay * const display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
-
-    if (!sink->window) {
-        const GstVaapiDisplayType display_type =
-            GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink);
-        switch (display_type) {
-#if USE_X11
-        case GST_VAAPI_DISPLAY_TYPE_GLX:
-        case GST_VAAPI_DISPLAY_TYPE_X11:
-            sink->window = gst_vaapi_window_x11_new(display, width, height);
-            if (!sink->window)
-                break;
-            gst_video_overlay_got_window_handle(
-                GST_VIDEO_OVERLAY(sink),
-                gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window))
-            );
-            break;
-#endif
-#if USE_WAYLAND
-        case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
-            sink->window = gst_vaapi_window_wayland_new(display, width, height);
-            break;
-#endif
-        default:
-            GST_ERROR("unsupported display type %d", display_type);
-            return FALSE;
-        }
-    }
-    return sink->window != NULL;
+    return sink->window || sink->backend->create_window(sink, width, height);
 }
-
-#if USE_X11
-static gboolean
-gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
-{
-    GstVaapiDisplay *display;
-    Window rootwin;
-    unsigned int width, height, border_width, depth;
-    int x, y;
-    XID xid = window_id;
-
-    if (!gst_vaapisink_ensure_display(sink))
-        return FALSE;
-    display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
-
-    gst_vaapi_display_lock(display);
-    XGetGeometry(
-        gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(display)),
-        xid,
-        &rootwin,
-        &x, &y, &width, &height, &border_width, &depth
-    );
-    gst_vaapi_display_unlock(display);
-
-    if ((width != sink->window_width || height != sink->window_height) &&
-        !configure_notify_event_pending(sink, xid, width, height)) {
-        if (!gst_vaapisink_ensure_render_rect(sink, width, height))
-            return FALSE;
-        sink->window_width  = width;
-        sink->window_height = height;
-    }
-
-    if (sink->window &&
-        gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)) == xid)
-        return TRUE;
-
-    gst_vaapi_window_replace(&sink->window, NULL);
-
-    sink->window = gst_vaapi_window_x11_new_with_xid(display, xid);
-    return sink->window != NULL;
-}
-#endif
 
 static gboolean
 gst_vaapisink_ensure_rotation(GstVaapiSink *sink, gboolean recalc_display_rect)
@@ -836,10 +911,8 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
         return FALSE;
     display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
 
-#if USE_DRM
     if (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink) == GST_VAAPI_DISPLAY_TYPE_DRM)
         return TRUE;
-#endif
 
     if (!gst_vaapi_plugin_base_set_caps(plugin, caps, NULL))
         return FALSE;
@@ -908,7 +981,6 @@ gst_vaapisink_show_frame_unlocked(GstVaapiSink *sink, GstBuffer *src_buffer)
     GstVaapiSurface *surface;
     GstBuffer *buffer;
     guint flags;
-    gboolean success;
     GstVaapiRectangle *surface_rect = NULL;
 #if GST_CHECK_VERSION(1,0,0)
     GstVaapiRectangle tmp_rect;
@@ -978,30 +1050,7 @@ gst_vaapisink_show_frame_unlocked(GstVaapiSink *sink, GstBuffer *src_buffer)
     if (!gst_vaapi_apply_composition(surface, src_buffer))
         GST_WARNING("could not update subtitles");
 
-    switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
-#if USE_DRM
-    case GST_VAAPI_DISPLAY_TYPE_DRM:
-        success = TRUE;
-        break;
-#endif
-#if USE_X11
-    case GST_VAAPI_DISPLAY_TYPE_GLX:
-    case GST_VAAPI_DISPLAY_TYPE_X11:
-        success = gst_vaapisink_put_surface(sink, surface, surface_rect, flags);
-        break;
-#endif
-#if USE_WAYLAND
-    case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
-        success = gst_vaapisink_put_surface(sink, surface, surface_rect, flags);
-        break;
-#endif
-    default:
-        GST_ERROR("unsupported display type %d",
-                  GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink));
-        success = FALSE;
-        break;
-    }
-    if (!success)
+    if (!sink->backend->render_surface(sink, surface, surface_rect, flags))
         goto error;
 
     /* Retain VA surface until the next one is displayed */

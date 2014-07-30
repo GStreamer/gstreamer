@@ -57,10 +57,35 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiSink                    GstVaapiSink;
 typedef struct _GstVaapiSinkClass               GstVaapiSinkClass;
+typedef struct _GstVaapiSinkBackend             GstVaapiSinkBackend;
+
+typedef gboolean (*GstVaapiSinkCreateWindowFunc)(GstVaapiSink *sink,
+    guint width, guint height);
+typedef gboolean (*GstVaapiSinkCreateWindowFromHandleFunc)(GstVaapiSink *sink,
+    guintptr window);
+typedef gboolean (*GstVaapiSinkRenderSurfaceFunc)(GstVaapiSink *sink,
+    GstVaapiSurface *surface, const GstVaapiRectangle *surface_rect, guint flags);
+typedef gboolean (*GstVaapiSinkHandleEventsFunc)(GstVaapiSink *sink);
+typedef gboolean (*GstVaapiSinkPreStartEventThreadFunc)(GstVaapiSink *sink);
+typedef gboolean (*GstVaapiSinkPreStopEventThreadFunc)(GstVaapiSink *sink);
+
+struct _GstVaapiSinkBackend {
+    GstVaapiSinkCreateWindowFunc create_window;
+    GstVaapiSinkCreateWindowFromHandleFunc create_window_from_handle;
+    GstVaapiSinkRenderSurfaceFunc render_surface;
+
+    /* Event threads handling */
+    gboolean event_thread_needed;
+    GstVaapiSinkHandleEventsFunc handle_events;
+    GstVaapiSinkPreStartEventThreadFunc pre_start_event_thread;
+    GstVaapiSinkPreStopEventThreadFunc pre_stop_event_thread;
+};
 
 struct _GstVaapiSink {
     /*< private >*/
     GstVaapiPluginBase  parent_instance;
+
+    const GstVaapiSinkBackend *backend;
 
     GstCaps            *caps;
     GstVaapiWindow     *window;
