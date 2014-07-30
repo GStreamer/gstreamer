@@ -66,7 +66,6 @@ typedef struct
 
   gboolean wait;                /* TRUE if waiting/blocking */
   gboolean new_stream;
-  gboolean drop_discont;
   gboolean is_eos;              /* TRUE if EOS was received */
   gboolean seen_data;
 
@@ -244,7 +243,6 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         stream->is_eos = FALSE;
         stream->stream_start_seqnum = seqnum;
         stream->group_id = group_id;
-        stream->drop_discont = TRUE;
 
         if (!have_group_id) {
           /* Check if this belongs to a stream that is already there,
@@ -417,7 +415,6 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         stream->is_eos = FALSE;
         stream->wait = FALSE;
         stream->new_stream = FALSE;
-        stream->drop_discont = FALSE;
         stream->seen_data = FALSE;
         g_cond_broadcast (&stream->stream_finish_cond);
       }
@@ -550,15 +547,6 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
 
   if (stream) {
     stream->seen_data = TRUE;
-    if (stream->drop_discont) {
-      if (GST_BUFFER_IS_DISCONT (buffer)) {
-        GST_DEBUG_OBJECT (pad, "removing DISCONT from buffer %p", buffer);
-        buffer = gst_buffer_make_writable (buffer);
-        GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
-      }
-      stream->drop_discont = FALSE;
-    }
-
     if (stream->segment.format == GST_FORMAT_TIME
         && GST_CLOCK_TIME_IS_VALID (timestamp)) {
       GST_LOG_OBJECT (pad,
@@ -851,7 +839,6 @@ gst_stream_synchronizer_change_state (GstElement * element,
         gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
         stream->wait = FALSE;
         stream->new_stream = FALSE;
-        stream->drop_discont = FALSE;
         stream->is_eos = FALSE;
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
