@@ -126,7 +126,6 @@ enum {
     PROP_DISPLAY_TYPE,
     PROP_DISPLAY_NAME,
     PROP_FULLSCREEN,
-    PROP_SYNCHRONOUS,
     PROP_ROTATION,
     PROP_FORCE_ASPECT_RATIO,
     PROP_VIEW_ID,
@@ -1101,9 +1100,6 @@ gst_vaapisink_set_property(
     case PROP_FULLSCREEN:
         sink->fullscreen = g_value_get_boolean(value);
         break;
-    case PROP_SYNCHRONOUS:
-        sink->synchronous = g_value_get_boolean(value);
-        break;
     case PROP_VIEW_ID:
         sink->view_id = g_value_get_int(value);
         break;
@@ -1138,9 +1134,6 @@ gst_vaapisink_get_property(
         break;
     case PROP_FULLSCREEN:
         g_value_set_boolean(value, sink->fullscreen);
-        break;
-    case PROP_SYNCHRONOUS:
-        g_value_set_boolean(value, sink->synchronous);
         break;
     case PROP_VIEW_ID:
         g_value_set_int(value, sink->view_id);
@@ -1243,21 +1236,6 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     /**
-     * GstVaapiSink:synchronous:
-     *
-     * When enabled, runs the X display in synchronous mode. Note that
-     * this is used only for debugging.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_SYNCHRONOUS,
-         g_param_spec_boolean("synchronous",
-                              "Synchronous mode",
-                              "Toggles X display synchronous mode",
-                              FALSE,
-                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-    /**
      * GstVaapiSink:rotation:
      *
      * The VA display rotation mode, expressed as a #GstVaapiRotation.
@@ -1326,7 +1304,6 @@ gst_vaapisink_init(GstVaapiSink *sink)
     sink->handle_events  = TRUE;
     sink->foreign_window = FALSE;
     sink->fullscreen     = FALSE;
-    sink->synchronous    = FALSE;
     sink->rotation       = DEFAULT_ROTATION;
     sink->rotation_req   = DEFAULT_ROTATION;
     sink->use_overlay    = FALSE;
