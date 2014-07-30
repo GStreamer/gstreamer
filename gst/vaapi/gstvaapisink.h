@@ -27,9 +27,6 @@
 
 #include "gstvaapipluginbase.h"
 #include <gst/vaapi/gstvaapiwindow.h>
-#if USE_GLX
-#include <gst/vaapi/gstvaapitexture.h>
-#endif
 #include "gstvaapipluginutil.h"
 
 G_BEGIN_DECLS
@@ -60,9 +57,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiSink                    GstVaapiSink;
 typedef struct _GstVaapiSinkClass               GstVaapiSinkClass;
-#if !USE_GLX
-typedef struct _GstVaapiTexture                 GstVaapiTexture;
-#endif
 
 struct _GstVaapiSink {
     /*< private >*/
@@ -72,7 +66,6 @@ struct _GstVaapiSink {
     GstVaapiWindow     *window;
     guint               window_width;
     guint               window_height;
-    GstVaapiTexture    *texture;
 #if GST_CHECK_VERSION(1,0,0)
     GstBufferPool      *video_buffer_pool;
 #endif
@@ -94,8 +87,6 @@ struct _GstVaapiSink {
     guint               foreign_window  : 1;
     guint               fullscreen      : 1;
     guint               synchronous     : 1;
-    guint               use_glx         : 1;
-    guint               use_reflection  : 1;
     guint               use_overlay     : 1;
     guint               use_rotation    : 1;
     guint               keep_aspect     : 1;

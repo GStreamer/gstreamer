@@ -43,10 +43,6 @@
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 # include <gst/vaapi/gstvaapiwindow_x11.h>
 #endif
-#if USE_GLX
-# include <gst/vaapi/gstvaapidisplay_glx.h>
-# include <gst/vaapi/gstvaapiwindow_glx.h>
-#endif
 #if USE_WAYLAND
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 # include <gst/vaapi/gstvaapiwindow_wayland.h>
@@ -131,8 +127,6 @@ enum {
     PROP_DISPLAY_NAME,
     PROP_FULLSCREEN,
     PROP_SYNCHRONOUS,
-    PROP_USE_GLX,
-    PROP_USE_REFLECTION,
     PROP_ROTATION,
     PROP_FORCE_ASPECT_RATIO,
     PROP_VIEW_ID,
@@ -404,9 +398,6 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
     gst_vaapisink_set_event_handling(GST_VIDEO_OVERLAY(sink), FALSE);
 
     gst_buffer_replace(&sink->video_buffer, NULL);
-#if USE_GLX
-    gst_vaapi_texture_replace(&sink->texture, NULL);
-#endif
     gst_caps_replace(&sink->caps, NULL);
 }
 
@@ -640,15 +631,10 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
         const GstVaapiDisplayType display_type =
             GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink);
         switch (display_type) {
-#if USE_GLX
-        case GST_VAAPI_DISPLAY_TYPE_GLX:
-            sink->window = gst_vaapi_window_glx_new(display, width, height);
-            goto notify_video_overlay_interface;
-#endif
 #if USE_X11
+        case GST_VAAPI_DISPLAY_TYPE_GLX:
         case GST_VAAPI_DISPLAY_TYPE_X11:
             sink->window = gst_vaapi_window_x11_new(display, width, height);
-        notify_video_overlay_interface:
             if (!sink->window)
                 break;
             gst_video_overlay_got_window_handle(
@@ -707,20 +693,7 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
 
     gst_vaapi_window_replace(&sink->window, NULL);
 
-    switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
-#if USE_GLX
-    case GST_VAAPI_DISPLAY_TYPE_GLX:
-        sink->window = gst_vaapi_window_glx_new_with_xid(display, xid);
-        break;
-#endif
-    case GST_VAAPI_DISPLAY_TYPE_X11:
-        sink->window = gst_vaapi_window_x11_new_with_xid(display, xid);
-        break;
-    default:
-        GST_ERROR("unsupported display type %d",
-                  GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink));
-        return FALSE;
-    }
+    sink->window = gst_vaapi_window_x11_new_with_xid(display, xid);
     return sink->window != NULL;
 }
 #endif
@@ -912,211 +885,6 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     return gst_vaapisink_ensure_render_rect(sink, win_width, win_height);
 }
 
-#if USE_GLX
-static void
-render_background(GstVaapiSink *sink)
-{
-    /* Original code from Mirco Muller (MacSlow):
-       <http://cgit.freedesktop.org/~macslow/gl-gst-player/> */
-    GLfloat fStartX = 0.0f;
-    GLfloat fStartY = 0.0f;
-    GLfloat fWidth  = (GLfloat)sink->window_width;
-    GLfloat fHeight = (GLfloat)sink->window_height;
-
-    glClear(GL_COLOR_BUFFER_BIT);
-    glBegin(GL_QUADS);
-    {
-        /* top third, darker grey to white */
-        glColor3f(0.85f, 0.85f, 0.85f);
-        glVertex3f(fStartX, fStartY, 0.0f);
-        glColor3f(0.85f, 0.85f, 0.85f);
-        glVertex3f(fStartX + fWidth, fStartY, 0.0f);
-        glColor3f(1.0f, 1.0f, 1.0f);
-        glVertex3f(fStartX + fWidth, fStartY + fHeight / 3.0f, 0.0f);
-        glColor3f(1.0f, 1.0f, 1.0f);
-        glVertex3f(fStartX, fStartY + fHeight / 3.0f, 0.0f);
-
-        /* middle third, just plain white */
-        glColor3f(1.0f, 1.0f, 1.0f);
-        glVertex3f(fStartX, fStartY + fHeight / 3.0f, 0.0f);
-        glVertex3f(fStartX + fWidth, fStartY + fHeight / 3.0f, 0.0f);
-        glVertex3f(fStartX + fWidth, fStartY + 2.0f * fHeight / 3.0f, 0.0f);
-        glVertex3f(fStartX, fStartY + 2.0f * fHeight / 3.0f, 0.0f);
-
-        /* bottom third, white to lighter grey */
-        glColor3f(1.0f, 1.0f, 1.0f);
-        glVertex3f(fStartX, fStartY + 2.0f * fHeight / 3.0f, 0.0f);
-        glColor3f(1.0f, 1.0f, 1.0f);
-        glVertex3f(fStartX + fWidth, fStartY + 2.0f * fHeight / 3.0f, 0.0f);
-        glColor3f(0.62f, 0.66f, 0.69f);
-        glVertex3f(fStartX + fWidth, fStartY + fHeight, 0.0f);
-        glColor3f(0.62f, 0.66f, 0.69f);
-        glVertex3f(fStartX, fStartY + fHeight, 0.0f);
-    }
-    glEnd();
-}
-
-static void
-render_frame(GstVaapiSink *sink, GstVaapiSurface *surface,
-    const GstVaapiRectangle *surface_rect)
-{
-    const guint x1 = sink->display_rect.x;
-    const guint x2 = sink->display_rect.x + sink->display_rect.width;
-    const guint y1 = sink->display_rect.y;
-    const guint y2 = sink->display_rect.y + sink->display_rect.height;
-    gfloat tx1, tx2, ty1, ty2;
-    guint width, height;
-
-    if (surface_rect) {
-        gst_vaapi_surface_get_size(surface, &width, &height);
-        tx1 = (gfloat)surface_rect->x / width;
-        ty1 = (gfloat)surface_rect->y / height;
-        tx2 = (gfloat)(surface_rect->x + surface_rect->width) / width;
-        ty2 = (gfloat)(surface_rect->y + surface_rect->height) / height;
-    }
-    else {
-        tx1 = 0.0f;
-        ty1 = 0.0f;
-        tx2 = 1.0f;
-        ty2 = 1.0f;
-    }
-
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    {
-        glTexCoord2f(tx1, ty1); glVertex2i(x1, y1);
-        glTexCoord2f(tx1, ty2); glVertex2i(x1, y2);
-        glTexCoord2f(tx2, ty2); glVertex2i(x2, y2);
-        glTexCoord2f(tx2, ty1); glVertex2i(x2, y1);
-    }
-    glEnd();
-}
-
-static void
-render_reflection(GstVaapiSink *sink)
-{
-    const guint x1 = sink->display_rect.x;
-    const guint x2 = sink->display_rect.x + sink->display_rect.width;
-    const guint y1 = sink->display_rect.y;
-    const guint rh = sink->display_rect.height / 5;
-    GLfloat     ry = 1.0f - (GLfloat)rh / (GLfloat)sink->display_rect.height;
-
-    glBegin(GL_QUADS);
-    {
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glTexCoord2f(0.0f, 1.0f); glVertex2i(x1, y1);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(x2, y1);
-
-        glColor4f(1.0f, 1.0f, 1.0f, 0.0f);
-        glTexCoord2f(1.0f, ry); glVertex2i(x2, y1 + rh);
-        glTexCoord2f(0.0f, ry); glVertex2i(x1, y1 + rh);
-    }
-    glEnd();
-}
-
-static gboolean
-gst_vaapisink_ensure_texture(GstVaapiSink *sink, GstVaapiSurface *surface)
-{
-    GstVaapiDisplay * display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
-    GstVideoRectangle tex_rect, dis_rect, out_rect;
-    guint width, height;
-
-    if (sink->texture)
-        return TRUE;
-
-    gst_vaapi_surface_get_size(surface, &width, &height);
-    tex_rect.x = 0;
-    tex_rect.y = 0;
-    tex_rect.w = width;
-    tex_rect.h = height;
-
-    gst_vaapi_display_get_size(display, &width, &height);
-    dis_rect.x = 0;
-    dis_rect.y = 0;
-    dis_rect.w = width;
-    dis_rect.h = height;
-
-    gst_video_sink_center_rect(tex_rect, dis_rect, &out_rect, TRUE);
-
-    /* XXX: use surface size for now since some VA drivers have issues
-       with downscaling to the provided texture size. i.e. we should be
-       using the resulting out_rect size, which preserves the aspect
-       ratio of the surface */
-    width = tex_rect.w;
-    height = tex_rect.h;
-    GST_INFO("texture size %ux%u", width, height);
-
-    sink->texture = gst_vaapi_texture_new(display,
-        GL_TEXTURE_2D, GL_BGRA, width, height);
-    return sink->texture != NULL;
-}
-
-static gboolean
-gst_vaapisink_show_frame_glx(
-    GstVaapiSink               *sink,
-    GstVaapiSurface            *surface,
-    const GstVaapiRectangle    *surface_rect,
-    guint                       flags
-)
-{
-    GstVaapiWindowGLX *window;
-    GLenum target;
-    GLuint texture;
-
-    if (!sink->window)
-        return FALSE;
-    window = GST_VAAPI_WINDOW_GLX(sink->window);
-
-    gst_vaapi_window_glx_make_current(window);
-    if (!gst_vaapisink_ensure_texture(sink, surface))
-        goto error_create_texture;
-    if (!gst_vaapi_texture_put_surface(sink->texture, surface, flags))
-        goto error_transfer_surface;
-
-    target  = gst_vaapi_texture_get_target(sink->texture);
-    texture = gst_vaapi_texture_get_id(sink->texture);
-    if (target != GL_TEXTURE_2D || !texture)
-        return FALSE;
-
-    if (sink->use_reflection)
-        render_background(sink);
-
-    glEnable(target);
-    glBindTexture(target, texture);
-    {
-        if (sink->use_reflection) {
-            glPushMatrix();
-            glRotatef(20.0f, 0.0f, 1.0f, 0.0f);
-            glTranslatef(50.0f, 0.0f, 0.0f);
-        }
-        render_frame(sink, surface, surface_rect);
-        if (sink->use_reflection) {
-            glPushMatrix();
-            glTranslatef(0.0, (GLfloat)sink->display_rect.height + 5.0f, 0.0f);
-            render_reflection(sink);
-            glPopMatrix();
-            glPopMatrix();
-        }
-    }
-    glBindTexture(target, 0);
-    glDisable(target);
-    gst_vaapi_window_glx_swap_buffers(window);
-    return TRUE;
-
-    /* ERRORS */
-error_create_texture:
-    {
-        GST_DEBUG("could not create VA/GLX texture");
-        return FALSE;
-    }
-error_transfer_surface:
-    {
-        GST_DEBUG("could not transfer VA surface to texture");
-        return FALSE;
-    }
-}
-#endif
-
 static inline gboolean
 gst_vaapisink_put_surface(
     GstVaapiSink               *sink,
@@ -1220,17 +988,9 @@ gst_vaapisink_show_frame_unlocked(GstVaapiSink *sink, GstBuffer *src_buffer)
         success = TRUE;
         break;
 #endif
-#if USE_GLX
-    case GST_VAAPI_DISPLAY_TYPE_GLX:
-        if (!sink->use_glx)
-            goto put_surface_x11;
-        success = gst_vaapisink_show_frame_glx(sink, surface, surface_rect,
-            flags);
-        break;
-#endif
 #if USE_X11
+    case GST_VAAPI_DISPLAY_TYPE_GLX:
     case GST_VAAPI_DISPLAY_TYPE_X11:
-    put_surface_x11:
         success = gst_vaapisink_put_surface(sink, surface, surface_rect, flags);
         break;
 #endif
@@ -1350,12 +1110,6 @@ gst_vaapisink_set_property(
     case PROP_VIEW_ID:
         sink->view_id = g_value_get_int(value);
         break;
-    case PROP_USE_GLX:
-        sink->use_glx = g_value_get_boolean(value);
-        break;
-    case PROP_USE_REFLECTION:
-        sink->use_reflection = g_value_get_boolean(value);
-        break;
     case PROP_ROTATION:
         sink->rotation_req = g_value_get_enum(value);
         break;
@@ -1393,12 +1147,6 @@ gst_vaapisink_get_property(
         break;
     case PROP_VIEW_ID:
         g_value_set_int(value, sink->view_id);
-        break;
-    case PROP_USE_GLX:
-        g_value_set_boolean(value, sink->use_glx);
-        break;
-    case PROP_USE_REFLECTION:
-        g_value_set_boolean(value, sink->use_reflection);
         break;
     case PROP_ROTATION:
         g_value_set_enum(value, sink->rotation);
@@ -1488,26 +1236,6 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                              NULL,
                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-#if USE_GLX
-    g_object_class_install_property
-        (object_class,
-         PROP_USE_GLX,
-         g_param_spec_boolean("use-glx",
-                              "OpenGL rendering",
-                              "Enables OpenGL rendering",
-                              FALSE,
-                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_USE_REFLECTION,
-         g_param_spec_boolean("use-reflection",
-                              "Reflection effect",
-                              "Enables OpenGL reflection effect",
-                              FALSE,
-                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#endif
-
     g_object_class_install_property
         (object_class,
          PROP_FULLSCREEN,
@@ -1592,7 +1320,6 @@ gst_vaapisink_init(GstVaapiSink *sink)
     sink->window         = NULL;
     sink->window_width   = 0;
     sink->window_height  = 0;
-    sink->texture        = NULL;
     sink->video_buffer   = NULL;
     sink->video_width    = 0;
     sink->video_height   = 0;
@@ -1605,7 +1332,6 @@ gst_vaapisink_init(GstVaapiSink *sink)
     sink->synchronous    = FALSE;
     sink->rotation       = DEFAULT_ROTATION;
     sink->rotation_req   = DEFAULT_ROTATION;
-    sink->use_reflection = FALSE;
     sink->use_overlay    = FALSE;
     sink->use_rotation   = FALSE;
     sink->keep_aspect    = TRUE;
