@@ -3,6 +3,7 @@
  * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Michael Sheldon <mike@mikeasoft.com>
+ * Copyright (C) 2011 Robert Jobbagy <jobbagy.robert@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -71,12 +72,57 @@ GST_DEBUG_CATEGORY_STATIC (gst_face_blur_debug);
 #define DEFAULT_PROFILE OPENCV_PREFIX G_DIR_SEPARATOR_S "share" \
     G_DIR_SEPARATOR_S "opencv" G_DIR_SEPARATOR_S "haarcascades" \
     G_DIR_SEPARATOR_S "haarcascade_frontalface_default.xml"
+#define DEFAULT_SCALE_FACTOR 1.25
+#define DEFAULT_FLAGS CV_HAAR_DO_CANNY_PRUNING
+#define DEFAULT_MIN_NEIGHBORS 3
+#define DEFAULT_MIN_SIZE_WIDTH 30
+#define DEFAULT_MIN_SIZE_HEIGHT 30
 
 enum
 {
   PROP_0,
-  PROP_PROFILE
+  PROP_PROFILE,
+  PROP_SCALE_FACTOR,
+  PROP_MIN_NEIGHBORS,
+  PROP_FLAGS,
+  PROP_MIN_SIZE_WIDTH,
+  PROP_MIN_SIZE_HEIGHT
 };
+
+/**
+ * GstOpencvFaceDetectFlags:
+ * @GST_CAMERABIN_FLAG_SOURCE_RESIZE: enable video crop and scale
+ *   after capture
+ *
+ * Flags parameter to OpenCV's cvHaarDetectObjects function.
+ */
+typedef enum
+{
+  GST_OPENCV_FACE_BLUR_HAAR_DO_CANNY_PRUNING = (1 << 0)
+} GstOpencvFaceBlurFlags;
+
+#define GST_TYPE_OPENCV_FACE_BLUR_FLAGS (gst_opencv_face_blur_flags_get_type())
+
+static void
+register_gst_opencv_face_blur_flags (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {(guint) GST_OPENCV_FACE_BLUR_HAAR_DO_CANNY_PRUNING,
+        "Do Canny edge detection to discard some regions", "do-canny-pruning"},
+    {0, NULL, NULL}
+  };
+  *id = g_flags_register_static ("GstOpencvFaceBlurFlags", values);
+}
+
+static GType
+gst_opencv_face_blur_flags_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_opencv_face_blur_flags, &id);
+  return id;
+}
 
 /* the capabilities of the inputs and outputs.
  */
@@ -151,12 +197,34 @@ gst_face_blur_class_init (GstFaceBlurClass * klass)
       g_param_spec_string ("profile", "Profile",
           "Location of Haar cascade file to use for face blurion",
           DEFAULT_PROFILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FLAGS,
+      g_param_spec_flags ("flags", "Flags", "Flags to cvHaarDetectObjects",
+          GST_TYPE_OPENCV_FACE_BLUR_FLAGS, DEFAULT_FLAGS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SCALE_FACTOR,
+      g_param_spec_double ("scale-factor", "Scale factor",
+          "Factor by which the windows is scaled after each scan",
+          1.1, 10.0, DEFAULT_SCALE_FACTOR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MIN_NEIGHBORS,
+      g_param_spec_int ("min-neighbors", "Mininum neighbors",
+          "Minimum number (minus 1) of neighbor rectangles that makes up "
+          "an object", 0, G_MAXINT, DEFAULT_MIN_NEIGHBORS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MIN_SIZE_WIDTH,
+      g_param_spec_int ("min-size-width", "Minimum size width",
+          "Minimum window width size", 0, G_MAXINT, DEFAULT_MIN_SIZE_WIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MIN_SIZE_HEIGHT,
+      g_param_spec_int ("min-size-height", "Minimum size height",
+          "Minimum window height size", 0, G_MAXINT, DEFAULT_MIN_SIZE_HEIGHT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
       "faceblur",
       "Filter/Effect/Video",
       "Blurs faces in images and videos",
-      "Michael Sheldon <mike@mikeasoft.com>");
+      "Michael Sheldon <mike@mikeasoft.com>,Robert Jobbagy <jobbagy.robert@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -175,6 +243,11 @@ gst_face_blur_init (GstFaceBlur * filter)
   filter->profile = g_strdup (DEFAULT_PROFILE);
   gst_face_blur_load_profile (filter);
   filter->sent_profile_load_failed_msg = FALSE;
+  filter->scale_factor = DEFAULT_SCALE_FACTOR;
+  filter->min_neighbors = DEFAULT_MIN_NEIGHBORS;
+  filter->flags = DEFAULT_FLAGS;
+  filter->min_size_width = DEFAULT_MIN_SIZE_WIDTH;
+  filter->min_size_height = DEFAULT_MIN_SIZE_HEIGHT;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       TRUE);
@@ -193,6 +266,21 @@ gst_face_blur_set_property (GObject * object, guint prop_id,
       gst_face_blur_load_profile (filter);
       filter->sent_profile_load_failed_msg = FALSE;
       break;
+    case PROP_SCALE_FACTOR:
+      filter->scale_factor = g_value_get_double (value);
+      break;
+    case PROP_MIN_NEIGHBORS:
+      filter->min_neighbors = g_value_get_int (value);
+      break;
+    case PROP_MIN_SIZE_WIDTH:
+      filter->min_size_width = g_value_get_int (value);
+      break;
+    case PROP_MIN_SIZE_HEIGHT:
+      filter->min_size_height = g_value_get_int (value);
+      break;
+    case PROP_FLAGS:
+      filter->flags = g_value_get_flags (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -208,6 +296,21 @@ gst_face_blur_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PROFILE:
       g_value_set_string (value, filter->profile);
+      break;
+    case PROP_SCALE_FACTOR:
+      g_value_set_double (value, filter->scale_factor);
+      break;
+    case PROP_MIN_NEIGHBORS:
+      g_value_set_int (value, filter->min_neighbors);
+      break;
+    case PROP_MIN_SIZE_WIDTH:
+      g_value_set_int (value, filter->min_size_width);
+      break;
+    case PROP_MIN_SIZE_HEIGHT:
+      g_value_set_int (value, filter->min_size_height);
+      break;
+    case PROP_FLAGS:
+      g_value_set_flags (value, filter->flags);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -260,9 +363,10 @@ gst_face_blur_transform_ip (GstOpencvVideoFilter * transform,
 
   faces =
       cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
-      filter->cvStorage, 1.1, 2, 0, cvSize (30, 30)
+      filter->cvStorage, filter->scale_factor, filter->min_neighbors,
+      filter->flags, cvSize (filter->min_size_width, filter->min_size_height)
 #if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
-      , cvSize (0, 0)
+      , cvSize (filter->min_size_width + 2, filter->min_size_height + 2)
 #endif
       );
 

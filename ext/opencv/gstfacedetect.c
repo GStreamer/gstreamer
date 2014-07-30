@@ -4,6 +4,7 @@
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Michael Sheldon <mike@mikeasoft.com>
  * Copyright (C) 2011 Stefan Sauer <ensonic@users.sf.net>
+ * Copyright (C) 2014 Robert Jobbagy <jobbagy.robert@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -91,11 +92,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_face_detect_debug);
 #define DEFAULT_NOSE_PROFILE HAAR_CASCADES_DIR "haarcascade_mcs_nose.xml"
 #define DEFAULT_MOUTH_PROFILE HAAR_CASCADES_DIR "haarcascade_mcs_mouth.xml"
 #define DEFAULT_EYES_PROFILE HAAR_CASCADES_DIR "haarcascade_mcs_eyepair_small.xml"
-#define DEFAULT_SCALE_FACTOR 1.1
-#define DEFAULT_FLAGS 0
+#define DEFAULT_SCALE_FACTOR 1.25
+#define DEFAULT_FLAGS CV_HAAR_DO_CANNY_PRUNING
 #define DEFAULT_MIN_NEIGHBORS 3
-#define DEFAULT_MIN_SIZE_WIDTH 0
-#define DEFAULT_MIN_SIZE_HEIGHT 0
+#define DEFAULT_MIN_SIZE_WIDTH 30
+#define DEFAULT_MIN_SIZE_HEIGHT 30
 
 /* Filter signals and args */
 enum

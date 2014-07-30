@@ -3,6 +3,7 @@
  * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Michael Sheldon <mike@mikeasoft.com>
+ * Copyright (C) 2011 Robert Jobbagy <jobbagy.robert@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -78,6 +79,11 @@ struct _GstFaceBlur
 
   gchar *profile;
   gboolean display;
+  gdouble scale_factor;
+  gint min_neighbors;
+  gint flags;
+  gint min_size_width;
+  gint min_size_height;
 
   IplImage *cvGray;
   CvHaarClassifierCascade *cvCascade;
