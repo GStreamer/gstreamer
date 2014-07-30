@@ -940,7 +940,8 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         } else {
           gst_buffer_unref (buf);
           buf = gst_aggregator_pad_steal_buffer (bpad);
-          gst_buffer_unref (buf);
+          if (buf)
+            gst_buffer_unref (buf);
         }
         eos = FALSE;
       } else if (start_time >= output_end_time) {
@@ -956,7 +957,8 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         } else {
           gst_buffer_unref (buf);
           buf = gst_aggregator_pad_steal_buffer (bpad);
-          gst_buffer_unref (buf);
+          if (buf)
+            gst_buffer_unref (buf);
         }
 
         need_more_data = TRUE;
