@@ -321,7 +321,7 @@ gst_ximagesrc_buffer_dispose (GstBuffer * ximage)
   GstMetaXImage *meta;
   gboolean ret = TRUE;
 
-  g_return_if_fail (ximage != NULL);
+  g_return_val_if_fail (ximage != NULL, FALSE);
 
   meta = GST_META_XIMAGE_GET (ximage);
 
