@@ -345,6 +345,15 @@ _get_plane_height (GstVideoInfo * info, guint plane)
     return GST_VIDEO_INFO_HEIGHT (info);
 }
 
+static inline gsize
+_get_plane_data_size (GstVideoInfo * info, guint plane)
+{
+  if (GST_VIDEO_INFO_N_PLANES (info) == plane + 1)
+    return info->offset[0] + info->size - info->offset[plane];
+
+  return info->offset[plane + 1] - info->offset[plane];
+}
+
 typedef struct _GenTexture
 {
   guint width, height;
@@ -566,9 +575,9 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
 {
   gsize maxsize;
 
-  maxsize =
-      GST_VIDEO_INFO_PLANE_STRIDE (info, plane) * _get_plane_height (info,
-      plane);
+  g_return_if_fail (plane < GST_VIDEO_INFO_N_PLANES (info));
+
+  maxsize = _get_plane_data_size (info, plane);
 
   gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
       allocator, parent, maxsize, 0, 0, maxsize);
@@ -587,8 +596,8 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   _calculate_unpack_length (mem);
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "new GL texture memory:%p format:%u "
-      "dimensions:%ux%u", mem, mem->tex_type, mem->tex_width,
-      GL_MEM_HEIGHT (mem));
+      "dimensions:%ux%u size:%" G_GSIZE_FORMAT, mem, mem->tex_type,
+      mem->tex_width, GL_MEM_HEIGHT (mem), maxsize);
 }
 
 static GstGLMemory *
