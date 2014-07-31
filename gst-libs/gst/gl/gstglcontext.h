@@ -128,6 +128,7 @@ GstGLAPI      gst_gl_context_get_gl_api       (GstGLContext *context);
 guintptr      gst_gl_context_get_gl_context   (GstGLContext *context);
 
 gboolean      gst_gl_context_create           (GstGLContext *context, GstGLContext *other_context, GError ** error);
+void          gst_gl_context_destroy          (GstGLContext *context);
 
 gpointer      gst_gl_context_default_get_proc_address (GstGLContext *context, const gchar *name);
 
