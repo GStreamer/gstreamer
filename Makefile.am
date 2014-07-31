@@ -89,11 +89,17 @@ check-valgrind:
 
 check-torture:
 	cd tests/check && make torture
+
+build-checks:
+	cd tests/check && make build-checks
 else
 check-valgrind:
 	echo "'check' library not installed, skipping"
 
 check-torture:
+	echo "'check' library not installed, skipping"
+
+build-checks:
 	echo "'check' library not installed, skipping"
 endif
 
