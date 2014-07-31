@@ -20,7 +20,7 @@
  *  License along with this library; if not, write to the Free
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
-*/
+ */
 
 #ifndef GST_VAAPISINK_H
 #define GST_VAAPISINK_H
@@ -32,93 +32,86 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_VAAPISINK \
-    (gst_vaapisink_get_type())
-
-#define GST_VAAPISINK(obj)                              \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_TYPE_VAAPISINK,     \
-                                GstVaapiSink))
-
-#define GST_VAAPISINK_CLASS(klass)                      \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_TYPE_VAAPISINK,        \
-                             GstVaapiSinkClass))
-
+  (gst_vaapisink_get_type ())
+#define GST_VAAPISINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPISINK, GstVaapiSink))
+#define GST_VAAPISINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VAAPISINK, GstVaapiSinkClass))
 #define GST_IS_VAAPISINK(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VAAPISINK))
-
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPISINK))
 #define GST_IS_VAAPISINK_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VAAPISINK))
-
-#define GST_VAAPISINK_GET_CLASS(obj)                    \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_TYPE_VAAPISINK,      \
-                               GstVaapiSinkClass))
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPISINK))
+#define GST_VAAPISINK_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPISINK, GstVaapiSinkClass))
 
 typedef struct _GstVaapiSink                    GstVaapiSink;
 typedef struct _GstVaapiSinkClass               GstVaapiSinkClass;
 typedef struct _GstVaapiSinkBackend             GstVaapiSinkBackend;
 
-typedef gboolean (*GstVaapiSinkCreateWindowFunc)(GstVaapiSink *sink,
+typedef gboolean (*GstVaapiSinkCreateWindowFunc) (GstVaapiSink * sink,
     guint width, guint height);
-typedef gboolean (*GstVaapiSinkCreateWindowFromHandleFunc)(GstVaapiSink *sink,
+typedef gboolean (*GstVaapiSinkCreateWindowFromHandleFunc) (GstVaapiSink * sink,
     guintptr window);
-typedef gboolean (*GstVaapiSinkRenderSurfaceFunc)(GstVaapiSink *sink,
-    GstVaapiSurface *surface, const GstVaapiRectangle *surface_rect, guint flags);
-typedef gboolean (*GstVaapiSinkHandleEventsFunc)(GstVaapiSink *sink);
-typedef gboolean (*GstVaapiSinkPreStartEventThreadFunc)(GstVaapiSink *sink);
-typedef gboolean (*GstVaapiSinkPreStopEventThreadFunc)(GstVaapiSink *sink);
+typedef gboolean (*GstVaapiSinkRenderSurfaceFunc) (GstVaapiSink * sink,
+    GstVaapiSurface * surface, const GstVaapiRectangle * surface_rect,
+    guint flags);
+typedef gboolean (*GstVaapiSinkHandleEventsFunc) (GstVaapiSink * sink);
+typedef gboolean (*GstVaapiSinkPreStartEventThreadFunc) (GstVaapiSink * sink);
+typedef gboolean (*GstVaapiSinkPreStopEventThreadFunc) (GstVaapiSink * sink);
 
-struct _GstVaapiSinkBackend {
-    GstVaapiSinkCreateWindowFunc create_window;
-    GstVaapiSinkCreateWindowFromHandleFunc create_window_from_handle;
-    GstVaapiSinkRenderSurfaceFunc render_surface;
+struct _GstVaapiSinkBackend
+{
+  GstVaapiSinkCreateWindowFunc create_window;
+  GstVaapiSinkCreateWindowFromHandleFunc create_window_from_handle;
+  GstVaapiSinkRenderSurfaceFunc render_surface;
 
-    /* Event threads handling */
-    gboolean event_thread_needed;
-    GstVaapiSinkHandleEventsFunc handle_events;
-    GstVaapiSinkPreStartEventThreadFunc pre_start_event_thread;
-    GstVaapiSinkPreStopEventThreadFunc pre_stop_event_thread;
+  /* Event threads handling */
+  gboolean event_thread_needed;
+  GstVaapiSinkHandleEventsFunc handle_events;
+  GstVaapiSinkPreStartEventThreadFunc pre_start_event_thread;
+  GstVaapiSinkPreStopEventThreadFunc pre_stop_event_thread;
 };
 
-struct _GstVaapiSink {
-    /*< private >*/
-    GstVaapiPluginBase  parent_instance;
+struct _GstVaapiSink
+{
+  /*< private >*/
+  GstVaapiPluginBase parent_instance;
 
-    const GstVaapiSinkBackend *backend;
+  const GstVaapiSinkBackend *backend;
 
-    GstCaps            *caps;
-    GstVaapiWindow     *window;
-    guint               window_width;
-    guint               window_height;
-    GstBuffer          *video_buffer;
-    guint               video_width;
-    guint               video_height;
-    gint                video_par_n;
-    gint                video_par_d;
-    GstVideoInfo        video_info;
-    GstVaapiRectangle   display_rect;
-    GstVaapiRotation    rotation;
-    GstVaapiRotation    rotation_req;
-    guint               color_standard;
-    gint32              view_id;
-    GThread            *event_thread;
-    volatile gboolean   event_thread_cancel;
-    guint               handle_events   : 1;
-    guint               foreign_window  : 1;
-    guint               fullscreen      : 1;
-    guint               use_overlay     : 1;
-    guint               use_rotation    : 1;
-    guint               keep_aspect     : 1;
+  GstCaps *caps;
+  GstVaapiWindow *window;
+  guint window_width;
+  guint window_height;
+  GstBuffer *video_buffer;
+  guint video_width;
+  guint video_height;
+  gint video_par_n;
+  gint video_par_d;
+  GstVideoInfo video_info;
+  GstVaapiRectangle display_rect;
+  GstVaapiRotation rotation;
+  GstVaapiRotation rotation_req;
+  guint color_standard;
+  gint32 view_id;
+  GThread *event_thread;
+  volatile gboolean event_thread_cancel;
+  guint handle_events : 1;
+  guint foreign_window : 1;
+  guint fullscreen : 1;
+  guint use_overlay : 1;
+  guint use_rotation : 1;
+  guint keep_aspect : 1;
 };
 
-struct _GstVaapiSinkClass {
-    /*< private >*/
-    GstVaapiPluginBaseClass parent_class;
+struct _GstVaapiSinkClass
+{
+  /*< private >*/
+  GstVaapiPluginBaseClass parent_class;
 };
 
 GType
-gst_vaapisink_get_type(void) G_GNUC_CONST;
+gst_vaapisink_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 
