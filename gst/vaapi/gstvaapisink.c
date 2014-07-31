@@ -122,11 +122,6 @@ enum
 #define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_ANY
 #define DEFAULT_ROTATION                GST_VAAPI_ROTATION_0
 
-static gboolean
-gst_vaapisink_ensure_display (GstVaapiSink * sink);
-
-/* GstVideoOverlay interface */
-
 static void
 gst_vaapisink_video_overlay_expose (GstVideoOverlay * overlay);
 
@@ -134,19 +129,28 @@ static gboolean
 gst_vaapisink_reconfigure_window (GstVaapiSink * sink);
 
 static void
-gst_vaapisink_set_event_handling (GstVideoOverlay * overlay,
-    gboolean handle_events);
+gst_vaapisink_set_event_handling (GstVaapiSink * sink, gboolean handle_events);
 
 static GstFlowReturn
 gst_vaapisink_show_frame (GstBaseSink * base_sink, GstBuffer * buffer);
 
 static gboolean
-gst_vaapisink_put_surface (GstVaapiSink * sink, GstVaapiSurface * surface,
-    const GstVaapiRectangle * surface_rect, guint flags);
-
-static gboolean
 gst_vaapisink_ensure_render_rect (GstVaapiSink * sink, guint width,
     guint height);
+
+static inline gboolean
+gst_vaapisink_ensure_display (GstVaapiSink * sink)
+{
+  return gst_vaapi_plugin_base_ensure_display (GST_VAAPI_PLUGIN_BASE (sink));
+}
+
+static inline gboolean
+gst_vaapisink_render_surface (GstVaapiSink * sink, GstVaapiSurface * surface,
+    const GstVaapiRectangle * surface_rect, guint flags)
+{
+  return sink->window && gst_vaapi_window_put_surface (sink->window, surface,
+      surface_rect, &sink->display_rect, flags);
+}
 
 /* ------------------------------------------------------------------------ */
 /* --- DRM Backend                                                      --- */
@@ -291,8 +295,7 @@ gst_vaapisink_x11_create_window_from_handle (GstVaapiSink * sink,
       return FALSE;
   }
 
-  gst_vaapisink_set_event_handling (GST_VIDEO_OVERLAY (sink),
-      sink->handle_events);
+  gst_vaapisink_set_event_handling (sink, sink->handle_events);
   return TRUE;
 }
 
@@ -371,7 +374,7 @@ gst_vaapisink_backend_x11 (void)
   static const GstVaapiSinkBackend GstVaapiSinkBackendX11 = {
     .create_window = gst_vaapisink_x11_create_window,
     .create_window_from_handle = gst_vaapisink_x11_create_window_from_handle,
-    .render_surface = gst_vaapisink_put_surface,
+    .render_surface = gst_vaapisink_render_surface,
 
     .event_thread_needed = TRUE,
     .handle_events = gst_vaapisink_x11_handle_events,
@@ -409,14 +412,14 @@ gst_vaapisink_backend_wayland (void)
 {
   static const GstVaapiSinkBackend GstVaapiSinkBackendWayland = {
     .create_window = gst_vaapisink_wayland_create_window,
-    .render_surface = gst_vaapisink_put_surface,
+    .render_surface = gst_vaapisink_render_surface,
   };
   return &GstVaapiSinkBackendWayland;
 }
 #endif
 
 /* ------------------------------------------------------------------------ */
-/* --- Common implementation                                            --- */
+/* --- GstVideoOverlay interface                                        --- */
 /* ------------------------------------------------------------------------ */
 
 static void
@@ -424,7 +427,6 @@ gst_vaapisink_video_overlay_set_window_handle (GstVideoOverlay * overlay,
     guintptr window)
 {
   GstVaapiSink *const sink = GST_VAAPISINK (overlay);
-  const GstVaapiSinkBackend *const backend = sink->backend;
   GstVaapiDisplayType display_type;
 
   if (!gst_vaapisink_ensure_display (sink))
@@ -441,8 +443,8 @@ gst_vaapisink_video_overlay_set_window_handle (GstVideoOverlay * overlay,
   }
 
   sink->foreign_window = TRUE;
-  if (backend->create_window_from_handle)
-    backend->create_window_from_handle (sink, window);
+  if (sink->backend->create_window_from_handle)
+    sink->backend->create_window_from_handle (sink, window);
 }
 
 static void
@@ -461,6 +463,40 @@ gst_vaapisink_video_overlay_set_render_rectangle (GstVideoOverlay * overlay,
       display_rect->x, display_rect->y,
       display_rect->width, display_rect->height);
 }
+
+static void
+gst_vaapisink_video_overlay_expose (GstVideoOverlay * overlay)
+{
+  GstVaapiSink *const sink = GST_VAAPISINK (overlay);
+
+  if (sink->video_buffer) {
+    gst_vaapisink_reconfigure_window (sink);
+    gst_vaapisink_show_frame (GST_BASE_SINK_CAST (sink), sink->video_buffer);
+  }
+}
+
+static void
+gst_vaapisink_video_overlay_set_event_handling (GstVideoOverlay * overlay,
+    gboolean handle_events)
+{
+  GstVaapiSink *const sink = GST_VAAPISINK (overlay);
+
+  gst_vaapisink_set_event_handling (sink, handle_events);
+}
+
+static void
+gst_vaapisink_video_overlay_iface_init (GstVideoOverlayInterface * iface)
+{
+  iface->set_window_handle = gst_vaapisink_video_overlay_set_window_handle;
+  iface->set_render_rectangle =
+      gst_vaapisink_video_overlay_set_render_rectangle;
+  iface->expose = gst_vaapisink_video_overlay_expose;
+  iface->handle_events = gst_vaapisink_video_overlay_set_event_handling;
+}
+
+/* ------------------------------------------------------------------------ */
+/* --- Common implementation                                            --- */
+/* ------------------------------------------------------------------------ */
 
 static gboolean
 gst_vaapisink_reconfigure_window (GstVaapiSink * sink)
@@ -492,29 +528,15 @@ gst_vaapisink_event_thread (GstVaapiSink * sink)
     GST_OBJECT_LOCK (sink);
   }
   GST_OBJECT_UNLOCK (sink);
-
   return NULL;
 }
 
 static void
-gst_vaapisink_video_overlay_expose (GstVideoOverlay * overlay)
-{
-  GstVaapiSink *const sink = GST_VAAPISINK (overlay);
-
-  if (sink->video_buffer) {
-    gst_vaapisink_reconfigure_window (sink);
-    gst_vaapisink_show_frame (GST_BASE_SINK_CAST (sink), sink->video_buffer);
-  }
-}
-
-static void
-gst_vaapisink_set_event_handling (GstVideoOverlay * overlay,
-    gboolean handle_events)
+gst_vaapisink_set_event_handling (GstVaapiSink * sink, gboolean handle_events)
 {
   GThread *thread = NULL;
-  GstVaapiSink *const sink = GST_VAAPISINK (overlay);
 
-  if (!sink->backend->event_thread_needed)
+  if (!sink->backend || !sink->backend->event_thread_needed)
     return;
 
   GST_OBJECT_LOCK (sink);
@@ -533,7 +555,7 @@ gst_vaapisink_set_event_handling (GstVideoOverlay * overlay,
     if (sink->backend->pre_stop_event_thread)
       sink->backend->pre_stop_event_thread (sink);
 
-    /* grab thread and mark it as NULL */
+    /* Grab thread and mark it as NULL */
     thread = sink->event_thread;
     sink->event_thread = NULL;
     sink->event_thread_cancel = TRUE;
@@ -548,50 +570,8 @@ gst_vaapisink_set_event_handling (GstVideoOverlay * overlay,
 }
 
 static void
-gst_vaapisink_video_overlay_iface_init (GstVideoOverlayInterface * iface)
+gst_vaapisink_ensure_backend (GstVaapiSink * sink)
 {
-  iface->set_window_handle = gst_vaapisink_video_overlay_set_window_handle;
-  iface->set_render_rectangle =
-      gst_vaapisink_video_overlay_set_render_rectangle;
-  iface->expose = gst_vaapisink_video_overlay_expose;
-  iface->handle_events = gst_vaapisink_set_event_handling;
-}
-
-static void
-gst_vaapisink_destroy (GstVaapiSink * sink)
-{
-  gst_vaapisink_set_event_handling (GST_VIDEO_OVERLAY (sink), FALSE);
-
-  gst_buffer_replace (&sink->video_buffer, NULL);
-  gst_caps_replace (&sink->caps, NULL);
-}
-
-static const gchar *
-get_display_type_name (GstVaapiDisplayType display_type)
-{
-  gpointer const klass = g_type_class_peek (GST_VAAPI_TYPE_DISPLAY_TYPE);
-  GEnumValue *const e = g_enum_get_value (klass, display_type);
-
-  if (e)
-    return e->value_name;
-  return "<unknown-type>";
-}
-
-static gboolean
-gst_vaapisink_ensure_display (GstVaapiSink * sink)
-{
-  return gst_vaapi_plugin_base_ensure_display (GST_VAAPI_PLUGIN_BASE (sink));
-}
-
-static void
-gst_vaapisink_display_changed (GstVaapiPluginBase * plugin)
-{
-  GstVaapiSink *const sink = GST_VAAPISINK (plugin);
-  GstVaapiRenderMode render_mode;
-
-  GST_INFO ("created %s %p", get_display_type_name (plugin->display_type),
-      plugin->display);
-
   switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE (sink)) {
 #if USE_DRM
     case GST_VAAPI_DISPLAY_TYPE_DRM:
@@ -618,15 +598,6 @@ gst_vaapisink_display_changed (GstVaapiPluginBase * plugin)
       g_assert_not_reached ();
       break;
   }
-
-  sink->use_overlay =
-      gst_vaapi_display_get_render_mode (plugin->display, &render_mode) &&
-      render_mode == GST_VAAPI_RENDER_MODE_OVERLAY;
-  GST_DEBUG ("use %s rendering mode",
-      sink->use_overlay ? "overlay" : "texture");
-
-  sink->use_rotation = gst_vaapi_display_has_property (plugin->display,
-      GST_VAAPI_DISPLAY_PROP_ROTATION);
 }
 
 static gboolean
@@ -702,9 +673,15 @@ gst_vaapisink_ensure_render_rect (GstVaapiSink * sink, guint width,
   return TRUE;
 }
 
+static inline gboolean
+gst_vaapisink_ensure_window (GstVaapiSink * sink, guint width, guint height)
+{
+  return sink->window || sink->backend->create_window (sink, width, height);
+}
+
 static void
-gst_vaapisink_ensure_window_size (GstVaapiSink * sink, guint * pwidth,
-    guint * pheight)
+gst_vaapisink_ensure_window_size (GstVaapiSink * sink, guint * width_ptr,
+    guint * height_ptr)
 {
   GstVaapiDisplay *const display = GST_VAAPI_PLUGIN_BASE_DISPLAY (sink);
   GstVideoRectangle src_rect, dst_rect, out_rect;
@@ -712,15 +689,15 @@ gst_vaapisink_ensure_window_size (GstVaapiSink * sink, guint * pwidth,
   gboolean success, scale;
 
   if (sink->foreign_window) {
-    *pwidth = sink->window_width;
-    *pheight = sink->window_height;
+    *width_ptr = sink->window_width;
+    *height_ptr = sink->window_height;
     return;
   }
 
   gst_vaapi_display_get_size (display, &display_width, &display_height);
   if (sink->fullscreen) {
-    *pwidth = display_width;
-    *pheight = display_height;
+    *width_ptr = display_width;
+    *height_ptr = display_height;
     return;
   }
 
@@ -745,14 +722,8 @@ gst_vaapisink_ensure_window_size (GstVaapiSink * sink, guint * pwidth,
   dst_rect.h = display_height;
   scale = (src_rect.w > dst_rect.w || src_rect.h > dst_rect.h);
   gst_video_sink_center_rect (src_rect, dst_rect, &out_rect, scale);
-  *pwidth = out_rect.w;
-  *pheight = out_rect.h;
-}
-
-static inline gboolean
-gst_vaapisink_ensure_window (GstVaapiSink * sink, guint width, guint height)
-{
-  return sink->window || sink->backend->create_window (sink, width, height);
+  *width_ptr = out_rect.w;
+  *height_ptr = out_rect.h;
 }
 
 static gboolean
@@ -796,10 +767,42 @@ end:
   return success;
 }
 
+static const gchar *
+get_display_type_name (GstVaapiDisplayType display_type)
+{
+  gpointer const klass = g_type_class_peek (GST_VAAPI_TYPE_DISPLAY_TYPE);
+  GEnumValue *const e = g_enum_get_value (klass, display_type);
+
+  if (e)
+    return e->value_name;
+  return "<unknown-type>";
+}
+
+static void
+gst_vaapisink_display_changed (GstVaapiPluginBase * plugin)
+{
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (plugin);
+  GstVaapiRenderMode render_mode;
+
+  GST_INFO ("created %s %p", get_display_type_name (plugin->display_type),
+      plugin->display);
+
+  gst_vaapisink_ensure_backend (sink);
+
+  sink->use_overlay =
+      gst_vaapi_display_get_render_mode (plugin->display, &render_mode) &&
+      render_mode == GST_VAAPI_RENDER_MODE_OVERLAY;
+  GST_DEBUG ("use %s rendering mode",
+      sink->use_overlay ? "overlay" : "texture");
+
+  sink->use_rotation = gst_vaapi_display_has_property (plugin->display,
+      GST_VAAPI_DISPLAY_PROP_ROTATION);
+}
+
 static gboolean
 gst_vaapisink_start (GstBaseSink * base_sink)
 {
-  GstVaapiSink *const sink = GST_VAAPISINK (base_sink);
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
 
   if (!gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (sink)))
     return FALSE;
@@ -809,7 +812,7 @@ gst_vaapisink_start (GstBaseSink * base_sink)
 static gboolean
 gst_vaapisink_stop (GstBaseSink * base_sink)
 {
-  GstVaapiSink *const sink = GST_VAAPISINK (base_sink);
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
 
   gst_buffer_replace (&sink->video_buffer, NULL);
   gst_vaapi_window_replace (&sink->window, NULL);
@@ -821,7 +824,7 @@ gst_vaapisink_stop (GstBaseSink * base_sink)
 static GstCaps *
 gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
 {
-  GstVaapiSink *const sink = GST_VAAPISINK (base_sink);
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
   GstCaps *out_caps, *yuv_caps;
 
 #if GST_CHECK_VERSION(1,1,0)
@@ -882,7 +885,7 @@ static gboolean
 gst_vaapisink_set_caps (GstBaseSink * base_sink, GstCaps * caps)
 {
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (base_sink);
-  GstVaapiSink *const sink = GST_VAAPISINK (base_sink);
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
   GstVideoInfo *const vip = GST_VAAPI_PLUGIN_BASE_SINK_PAD_INFO (sink);
   GstVaapiDisplay *display;
   guint win_width, win_height;
@@ -924,30 +927,13 @@ gst_vaapisink_set_caps (GstBaseSink * base_sink, GstCaps * caps)
     gst_vaapi_window_set_fullscreen (sink->window, sink->fullscreen);
     gst_vaapi_window_show (sink->window);
     gst_vaapi_window_get_size (sink->window, &win_width, &win_height);
-    gst_vaapisink_set_event_handling (GST_VIDEO_OVERLAY (sink),
-        sink->handle_events);
+    gst_vaapisink_set_event_handling (sink, sink->handle_events);
   }
   sink->window_width = win_width;
   sink->window_height = win_height;
   GST_DEBUG ("window size %ux%u", win_width, win_height);
 
   return gst_vaapisink_ensure_render_rect (sink, win_width, win_height);
-}
-
-static inline gboolean
-gst_vaapisink_put_surface (GstVaapiSink * sink,
-    GstVaapiSurface * surface,
-    const GstVaapiRectangle * surface_rect, guint flags)
-{
-  if (!sink->window)
-    return FALSE;
-
-  if (!gst_vaapi_window_put_surface (sink->window, surface,
-          surface_rect, &sink->display_rect, flags)) {
-    GST_DEBUG ("could not render VA surface");
-    return FALSE;
-  }
-  return TRUE;
 }
 
 static GstFlowReturn
@@ -986,13 +972,15 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
   GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE (sink,
       gst_vaapi_video_meta_get_display (meta));
 
-  gst_vaapisink_ensure_rotation (sink, TRUE);
-
   proxy = gst_vaapi_video_meta_get_surface_proxy (meta);
   if (!proxy)
     goto error;
 
-  /* Valide view component to display */
+  surface = gst_vaapi_video_meta_get_surface (meta);
+  if (!surface)
+    goto error;
+
+  /* Validate view component to display */
   view_id = GST_VAAPI_SURFACE_PROXY_VIEW_ID (proxy);
   if (G_UNLIKELY (sink->view_id == -1))
     sink->view_id = view_id;
@@ -1001,9 +989,7 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
     return GST_FLOW_OK;
   }
 
-  surface = gst_vaapi_video_meta_get_surface (meta);
-  if (!surface)
-    goto error;
+  gst_vaapisink_ensure_rotation (sink, TRUE);
 
   GST_DEBUG ("render surface %" GST_VAAPI_ID_FORMAT,
       GST_VAAPI_ID_ARGS (gst_vaapi_surface_get_id (surface)));
@@ -1043,12 +1029,12 @@ error:
 static GstFlowReturn
 gst_vaapisink_show_frame (GstBaseSink * base_sink, GstBuffer * src_buffer)
 {
-  GstVaapiSink *const sink = GST_VAAPISINK (base_sink);
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
   GstFlowReturn ret;
 
-  /* At least we need at least to protect the _set_subpictures_()
-   * call to prevent a race during subpicture desctruction.
-   * FIXME: Could use a less coarse grained lock, though: */
+  /* We need at least to protect the gst_vaapi_aplpy_composition()
+   * call to prevent a race during subpicture destruction.
+   * FIXME: a less coarse grained lock could be used, though */
   gst_vaapi_display_lock (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
   ret = gst_vaapisink_show_frame_unlocked (sink, src_buffer);
   gst_vaapi_display_unlock (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
@@ -1083,7 +1069,7 @@ gst_vaapisink_buffer_alloc (GstBaseSink * base_sink, guint64 offset, guint size,
 static gboolean
 gst_vaapisink_query (GstBaseSink * base_sink, GstQuery * query)
 {
-  GstVaapiSink *const sink = GST_VAAPISINK (base_sink);
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
 
   GST_INFO_OBJECT (sink, "query type %s", GST_QUERY_TYPE_NAME (query));
 
@@ -1091,15 +1077,23 @@ gst_vaapisink_query (GstBaseSink * base_sink, GstQuery * query)
     GST_DEBUG ("sharing display %p", GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
     return TRUE;
   }
-
   return GST_BASE_SINK_CLASS (gst_vaapisink_parent_class)->query (base_sink,
       query);
 }
 
 static void
+gst_vaapisink_destroy (GstVaapiSink * sink)
+{
+  gst_vaapisink_set_event_handling (sink, FALSE);
+
+  gst_buffer_replace (&sink->video_buffer, NULL);
+  gst_caps_replace (&sink->caps, NULL);
+}
+
+static void
 gst_vaapisink_finalize (GObject * object)
 {
-  gst_vaapisink_destroy (GST_VAAPISINK (object));
+  gst_vaapisink_destroy (GST_VAAPISINK_CAST (object));
 
   gst_vaapi_plugin_base_finalize (GST_VAAPI_PLUGIN_BASE (object));
   G_OBJECT_CLASS (gst_vaapisink_parent_class)->finalize (object);
@@ -1109,7 +1103,7 @@ static void
 gst_vaapisink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstVaapiSink *const sink = GST_VAAPISINK (object);
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (object);
 
   switch (prop_id) {
     case PROP_DISPLAY_TYPE:
@@ -1142,7 +1136,7 @@ static void
 gst_vaapisink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstVaapiSink *const sink = GST_VAAPISINK (object);
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (object);
 
   switch (prop_id) {
     case PROP_DISPLAY_TYPE:
@@ -1177,7 +1171,7 @@ gst_vaapisink_set_bus (GstElement * element, GstBus * bus)
      allocated here, and that exactly matches what the user
      requested through the "display" property */
   if (!GST_ELEMENT_BUS (element) && bus)
-    gst_vaapisink_ensure_display (GST_VAAPISINK (element));
+    gst_vaapisink_ensure_display (GST_VAAPISINK_CAST (element));
 
   GST_ELEMENT_CLASS (gst_vaapisink_parent_class)->set_bus (element, bus);
 }
@@ -1297,23 +1291,12 @@ gst_vaapisink_init (GstVaapiSink * sink)
   gst_vaapi_plugin_base_init (plugin, GST_CAT_DEFAULT);
   gst_vaapi_plugin_base_set_display_type (plugin, DEFAULT_DISPLAY_TYPE);
 
-  sink->caps = NULL;
-  sink->window = NULL;
-  sink->window_width = 0;
-  sink->window_height = 0;
-  sink->video_buffer = NULL;
-  sink->video_width = 0;
-  sink->video_height = 0;
   sink->video_par_n = 1;
   sink->video_par_d = 1;
   sink->view_id = -1;
   sink->handle_events = TRUE;
-  sink->foreign_window = FALSE;
-  sink->fullscreen = FALSE;
   sink->rotation = DEFAULT_ROTATION;
   sink->rotation_req = DEFAULT_ROTATION;
-  sink->use_overlay = FALSE;
-  sink->use_rotation = FALSE;
   sink->keep_aspect = TRUE;
   gst_video_info_init (&sink->video_info);
 }

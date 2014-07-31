@@ -33,6 +33,8 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_VAAPISINK \
   (gst_vaapisink_get_type ())
+#define GST_VAAPISINK_CAST(obj) \
+  ((GstVaapiSink *)(obj))
 #define GST_VAAPISINK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPISINK, GstVaapiSink))
 #define GST_VAAPISINK_CLASS(klass) \
