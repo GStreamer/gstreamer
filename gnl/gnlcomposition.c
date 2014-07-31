@@ -1875,12 +1875,12 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
   gint probe_id = -1;
   GstPad *ptarget = NULL;
   GnlCompositionPrivate *priv = comp->priv;
+  GstEvent *flush_event;
 
   comp->priv->tearing_down_stack = TRUE;
   if (flush_downstream) {
     ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (GNL_OBJECT_SRC (comp)));
     if (ptarget) {
-      GstEvent *flush_event;
 
       /* Make sure that between the flush_start/flush_stop
        * and the time we set the current_bin to READY, no
@@ -1898,21 +1898,26 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
           priv->flush_seqnum);
       gst_pad_push_event (ptarget, flush_event);
 
-      flush_event = gst_event_new_flush_stop (TRUE);
-      gst_event_set_seqnum (flush_event, priv->flush_seqnum);
-      gst_pad_push_event (ptarget, flush_event);
     }
 
   }
 
   gst_element_set_locked_state (priv->current_bin, TRUE);
   gst_element_set_state (priv->current_bin, GST_STATE_READY);
-  comp->priv->tearing_down_stack = FALSE;
 
   if (ptarget) {
+    if (flush_downstream)
+    {
+      flush_event = gst_event_new_flush_stop (TRUE);
+      gst_event_set_seqnum (flush_event, priv->flush_seqnum);
+      gst_pad_push_event (ptarget, flush_event);
+    }
+
     gst_pad_remove_probe (ptarget, probe_id);
     gst_object_unref (ptarget);
   }
+
+  comp->priv->tearing_down_stack = FALSE;
 }
 
 /*  Must be called with OBJECTS_LOCK taken */
