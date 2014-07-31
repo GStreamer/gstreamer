@@ -132,6 +132,9 @@ def register_default_blacklist(self):
 
         # Subtitles known issues
         ("validate.file.playback.switch_subtitle_track.Sintel_2010_720p_mkv", "https://bugzilla.gnome.org/show_bug.cgi?id=734051"),
+
+        # Videomixing known issues
+        ("validate.file.*.simple.scrub_forward_seeking.synchronized", "https://bugzilla.gnome.org/show_bug.cgi?id=734060"),
     ])
 
 def register_defaults(self):
