@@ -219,12 +219,11 @@ _perform_with_gl_memory (GstGLUploadMeta * upload, GstVideoGLTextureUploadMeta *
       GST_GL_MEMORY_FLAG_SET (in_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
     } else {
       GstGLMemory *out_mem;
+      gint mem_width, mem_height;
 
       if (!upload->priv->out_tex[i])
         upload->priv->out_tex[i] = gst_gl_memory_wrapped_texture (upload->context,
-            texture_id[i], meta->texture_type[i],
-            GST_VIDEO_INFO_WIDTH (&upload->info),
-            GST_VIDEO_INFO_HEIGHT (&upload->info), NULL, NULL);
+            texture_id[i], &upload->info, i, NULL, NULL);
 
       out_mem = upload->priv->out_tex[i];
 
@@ -233,8 +232,12 @@ _perform_with_gl_memory (GstGLUploadMeta * upload, GstVideoGLTextureUploadMeta *
         GST_GL_MEMORY_FLAG_SET (out_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
       }
 
+      mem_width = gst_gl_memory_get_texture_width (out_mem);
+      mem_height = gst_gl_memory_get_texture_height (out_mem);
+
       if (!(res = gst_gl_memory_copy_into_texture (in_mem, out_mem->tex_id,
-            out_mem->tex_type, out_mem->width, out_mem->height, out_mem->stride,
+            out_mem->tex_type, mem_width, mem_height,
+            GST_VIDEO_INFO_PLANE_STRIDE (&out_mem->info, out_mem->plane),
             FALSE)))
         break;
     }
@@ -253,9 +256,7 @@ _perform_with_data_unlocked (GstGLUploadMeta * upload,
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->info); i++) {
     if (!upload->priv->in_tex[i])
       upload->priv->in_tex[i] = gst_gl_memory_wrapped (upload->context,
-          meta->texture_type[i], GST_VIDEO_INFO_WIDTH (&upload->info),
-          GST_VIDEO_INFO_HEIGHT (&upload->info),
-          GST_VIDEO_INFO_PLANE_STRIDE (&upload->info, i), data[i], NULL, NULL);
+          &upload->info, i, data[i], NULL, NULL);
 
     upload->priv->in_tex[i]->data = data[i];
   }

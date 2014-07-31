@@ -1204,21 +1204,30 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   for (j = 0; j < c_info->out_n_textures; j++) {
     GstGLMemory *out_tex =
         (GstGLMemory *) gst_buffer_peek_memory (convert->outbuf, j);
+    gint mem_width, mem_height;
+
     if (!gst_is_gl_memory ((GstMemory *) out_tex)) {
       res = FALSE;
       goto out;
     }
 
+    mem_width = gst_gl_memory_get_texture_width (out_tex);
+    mem_height = gst_gl_memory_get_texture_height (out_tex);
+
     if (out_tex->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
         || out_tex->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
-        || out_width != out_tex->width || out_height != out_tex->height) {
+        || out_width != mem_width || out_height != mem_height) {
       /* Luminance formats are not color renderable */
       /* renderering to a framebuffer only renders the intersection of all
        * the attachments i.e. the smallest attachment size */
+      GstVideoInfo temp_info;
+
+      gst_video_info_set_format (&temp_info, GST_VIDEO_FORMAT_RGBA, out_width,
+          out_height);
+
       if (!convert->priv->out_tex[j])
         convert->priv->out_tex[j] =
-            (GstGLMemory *) gst_gl_memory_alloc (context,
-            GST_VIDEO_GL_TEXTURE_TYPE_RGBA, out_width, out_height, out_width);
+            (GstGLMemory *) gst_gl_memory_alloc (context, &temp_info, 0);
     } else {
       convert->priv->out_tex[j] = out_tex;
     }
@@ -1244,11 +1253,16 @@ out:
   for (j--; j >= 0; j--) {
     GstGLMemory *out_tex =
         (GstGLMemory *) gst_buffer_peek_memory (convert->outbuf, j);
+    gint mem_width, mem_height;
+
     gst_memory_unmap ((GstMemory *) convert->priv->out_tex[j], &out_info[j]);
+
+    mem_width = gst_gl_memory_get_texture_width (out_tex);
+    mem_height = gst_gl_memory_get_texture_height (out_tex);
 
     if (out_tex->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
         || out_tex->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
-        || out_width != out_tex->width || out_height != out_tex->height) {
+        || out_width != mem_width || out_height != mem_height) {
       GstMapInfo to_info, from_info;
 
       if (!gst_memory_map ((GstMemory *) convert->priv->out_tex[j], &from_info,
@@ -1266,8 +1280,8 @@ out:
         continue;
       }
       gst_gl_memory_copy_into_texture (convert->priv->out_tex[j],
-          out_tex->tex_id, out_tex->tex_type, out_tex->width, out_tex->height,
-          out_tex->stride, FALSE);
+          out_tex->tex_id, out_tex->tex_type, mem_width, mem_height,
+          GST_VIDEO_INFO_PLANE_STRIDE (&out_tex->info, out_tex->plane), FALSE);
       gst_memory_unmap ((GstMemory *) convert->priv->out_tex[j], &from_info);
       gst_memory_unmap ((GstMemory *) out_tex, &to_info);
     } else {

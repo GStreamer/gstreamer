@@ -491,8 +491,7 @@ _init_upload (GstGLUpload * upload)
       &out_info);
 
   upload->out_tex = gst_gl_memory_wrapped_texture (upload->context, 0,
-      GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
-      GST_VIDEO_INFO_HEIGHT (&upload->in_info), NULL, NULL);
+      &out_info, 0, NULL, NULL);
 
   upload->initted = TRUE;
 
