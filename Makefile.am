@@ -40,8 +40,12 @@ check-valgrind:
 if HAVE_GST_CHECK
 check-torture:
 	cd tests/check && make torture
+build-checks:
+	cd tests/check && make build-checks
 else
 check-torture:
+	true
+build-checks:
 	true
 endif
 
