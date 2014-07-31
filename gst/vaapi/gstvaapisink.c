@@ -117,10 +117,14 @@ enum
   PROP_ROTATION,
   PROP_FORCE_ASPECT_RATIO,
   PROP_VIEW_ID,
+
+  N_PROPERTIES
 };
 
 #define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_ANY
 #define DEFAULT_ROTATION                GST_VAAPI_ROTATION_0
+
+static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
 
 static void
 gst_vaapisink_video_overlay_expose (GstVideoOverlay * overlay);
@@ -1218,41 +1222,50 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
   pad_template = gst_static_pad_template_get (&gst_vaapisink_sink_factory);
   gst_element_class_add_pad_template (element_class, pad_template);
 
-  g_object_class_install_property (object_class,
-      PROP_DISPLAY_TYPE,
+  /**
+   * GstVaapiSink:display:
+   *
+   * The type of display to use.
+   */
+  g_properties[PROP_DISPLAY_TYPE] =
       g_param_spec_enum ("display",
-          "display type",
-          "display type to use",
-          GST_VAAPI_TYPE_DISPLAY_TYPE,
-          GST_VAAPI_DISPLAY_TYPE_ANY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "display type",
+      "display type to use",
+      GST_VAAPI_TYPE_DISPLAY_TYPE,
+      GST_VAAPI_DISPLAY_TYPE_ANY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (object_class,
-      PROP_DISPLAY_NAME,
+  /**
+   * GstVaapiSink:display-name:
+   *
+   * The native display name.
+   */
+  g_properties[PROP_DISPLAY_NAME] =
       g_param_spec_string ("display-name",
-          "display name",
-          "display name to use",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "display name",
+      "display name to use", NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (object_class,
-      PROP_FULLSCREEN,
+  /**
+   * GstVaapiSink:fullscreen:
+   *
+   * Selects whether fullscreen mode is enabled or not.
+   */
+  g_properties[PROP_FULLSCREEN] =
       g_param_spec_boolean ("fullscreen",
-          "Fullscreen",
-          "Requests window in fullscreen state",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Fullscreen",
+      "Requests window in fullscreen state",
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstVaapiSink:rotation:
    *
    * The VA display rotation mode, expressed as a #GstVaapiRotation.
    */
-  g_object_class_install_property (object_class,
-      PROP_ROTATION,
+  g_properties[PROP_ROTATION] =
       g_param_spec_enum (GST_VAAPI_DISPLAY_PROP_ROTATION,
-          "rotation",
-          "The display rotation mode",
-          GST_VAAPI_TYPE_ROTATION,
-          DEFAULT_ROTATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "rotation",
+      "The display rotation mode",
+      GST_VAAPI_TYPE_ROTATION,
+      DEFAULT_ROTATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstVaapiSink:force-aspect-ratio:
@@ -1260,12 +1273,11 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
    * When enabled, scaling respects video aspect ratio; when disabled,
    * the video is distorted to fit the window.
    */
-  g_object_class_install_property (object_class,
-      PROP_FORCE_ASPECT_RATIO,
+  g_properties[PROP_FORCE_ASPECT_RATIO] =
       g_param_spec_boolean ("force-aspect-ratio",
-          "Force aspect ratio",
-          "When enabled, scaling will respect original aspect ratio",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Force aspect ratio",
+      "When enabled, scaling will respect original aspect ratio",
+      TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstVaapiSink:view-id:
@@ -1275,12 +1287,13 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
    * other number will indicate the desire to display the supplied
    * view-id only.
    */
-  g_object_class_install_property (object_class,
-      PROP_VIEW_ID,
+  g_properties[PROP_VIEW_ID] =
       g_param_spec_int ("view-id",
-          "View ID",
-          "ID of the view component of interest to display",
-          -1, G_MAXINT32, -1, G_PARAM_READWRITE));
+      "View ID",
+      "ID of the view component of interest to display",
+      -1, G_MAXINT32, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, N_PROPERTIES, g_properties);
 }
 
 static void
