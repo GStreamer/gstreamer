@@ -60,7 +60,6 @@ typedef struct _GstDvbSrcParam GstDvbSrcParam;
 struct _GstDvbSrc
 {
   GstPushSrc element;
-  GstPad *srcpad;
 
   GMutex tune_mutex;
   gboolean need_tune;
