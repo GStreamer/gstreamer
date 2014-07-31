@@ -20,8 +20,8 @@
 
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
-#include <gst-libs/gst/rtp/gstrtpbuffer.h>
-#include <gst-libs/gst/rtp/gstrtpbasepayload.h>
+#include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/gstrtpbasepayload.h>
 
 #define DEFAULT_CLOCK_RATE (42)
 #define BUFFER_BEFORE_LIST (10)
