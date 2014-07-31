@@ -1783,14 +1783,9 @@ gst_dash_demux_download_header_fragment (GstDashDemux * demux,
   gchar *next_header_uri;
   GstFlowReturn ret;
 
-  if (strncmp (path, "http://", 7) != 0) {
-    next_header_uri =
-        g_strconcat (gst_mpdparser_get_baseURL (demux->client, stream->index),
-        path, NULL);
-    g_free (path);
-  } else {
-    next_header_uri = path;
-  }
+  next_header_uri =
+      gst_uri_join_strings (gst_mpdparser_get_baseURL (demux->client,
+          stream->index), path);
 
   ret = gst_dash_demux_stream_download_uri (demux, stream, next_header_uri,
       range_start, range_end);

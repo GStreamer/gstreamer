@@ -2646,101 +2646,84 @@ gst_mpdparser_clone_URL (GstURLType * url)
   return clone;
 }
 
+/*
+ * Combine a base url with the current stream base url from the list of
+ * baseURLs. Takes ownership of base and returns a new base.
+ */
+static GstUri *
+combine_urls (GstUri * base, GList * list, gchar ** query,
+    GstActiveStream * stream)
+{
+  GstBaseURL *baseURL;
+  GstUri *ret = base;
+
+  if (list != NULL) {
+    baseURL = g_list_nth_data (list, stream->baseURL_idx);
+    if (!baseURL) {
+      baseURL = list->data;
+    }
+
+    ret = gst_uri_from_string_with_base (base, baseURL->baseURL);
+    gst_uri_unref (base);
+
+    if (ret && query) {
+      if (*query)
+        g_free (*query);
+      *query = gst_uri_get_query_string (ret);
+      if (*query) {
+        ret = gst_uri_make_writable (ret);
+        gst_uri_set_query_table (ret, NULL);
+      }
+    }
+  }
+
+  return ret;
+}
+
 /* select a stream and extract the baseURL (if present) */
 static gchar *
 gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
     gchar ** query)
 {
   GstStreamPeriod *stream_period;
-  GstBaseURL *baseURL;
-  gchar *mpd_uri;
-  GList *list;
-  static gchar *baseURL_array[5];
   static gchar empty[] = "";
   gchar *ret = NULL;
+  GstUri *abs_url;
 
   g_return_val_if_fail (stream != NULL, empty);
   stream_period = gst_mpdparser_get_stream_period (client);
   g_return_val_if_fail (stream_period != NULL, empty);
   g_return_val_if_fail (stream_period->period != NULL, empty);
 
-  baseURL_array[0] = baseURL_array[1] = baseURL_array[2] = baseURL_array[3] =
-      empty;
-  baseURL_array[4] = NULL;
+  /* NULLify query return before we start */
+  if (query)
+    *query = NULL;
 
-  /* FIXME: this simple implementation is not fully compliant with RFC 3986 */
-  if ((list = client->mpd_node->BaseURLs) != NULL) {
-    baseURL = g_list_nth_data (list, stream->baseURL_idx);
-    if (!baseURL) {
-      baseURL = list->data;
-    }
-    baseURL_array[0] = baseURL->baseURL;
-  }
-  if ((list = stream_period->period->BaseURLs) != NULL) {
-    baseURL = g_list_nth_data (list, stream->baseURL_idx);
-    if (!baseURL) {
-      baseURL = list->data;
-    }
-    baseURL_array[1] = baseURL->baseURL;
-  }
+  /* initialise base url */
+  abs_url =
+      gst_uri_from_string (client->
+      mpd_base_uri ? client->mpd_base_uri : client->mpd_uri);
+
+  /* combine a BaseURL at the MPD level with the current base url */
+  abs_url = combine_urls (abs_url, client->mpd_node->BaseURLs, query, stream);
+
+  /* combine a BaseURL at the Period level with the current base url */
+  abs_url =
+      combine_urls (abs_url, stream_period->period->BaseURLs, query, stream);
+
   GST_DEBUG ("Current adaptation set id %i (%s)", stream->cur_adapt_set->id,
       stream->cur_adapt_set->contentType);
+  /* combine a BaseURL at the AdaptationSet level with the current base url */
+  abs_url =
+      combine_urls (abs_url, stream->cur_adapt_set->BaseURLs, query, stream);
 
-  if ((list = stream->cur_adapt_set->BaseURLs) != NULL) {
-    baseURL = g_list_nth_data (list, stream->baseURL_idx);
-    if (!baseURL) {
-      baseURL = list->data;
-    }
-    baseURL_array[2] = baseURL->baseURL;
-  }
+  /* combine a BaseURL at the Representation level with the current base url */
+  abs_url =
+      combine_urls (abs_url, stream->cur_representation->BaseURLs, query,
+      stream);
 
-  if ((list = stream->cur_representation->BaseURLs) != NULL) {
-    baseURL = g_list_nth_data (list, stream->baseURL_idx);
-    if (!baseURL) {
-      baseURL = list->data;
-    }
-    baseURL_array[3] = baseURL->baseURL;
-  }
-
-  ret = g_strjoinv (NULL, baseURL_array);
-
-  /* get base URI from MPD file URI, if the "http" scheme is missing */
-  mpd_uri = client->mpd_base_uri ? client->mpd_base_uri : client->mpd_uri;
-  if (mpd_uri != NULL && strncmp (ret, "http://", 7) != 0) {
-    gchar *last_sep, *tmp1, *tmp2;
-
-    if (ret[0] == '?') {
-      if (query)
-        *query = g_strdup (ret);
-      g_free (ret);
-      ret = NULL;
-    } else {
-      if (query)
-        *query = NULL;
-    }
-
-    last_sep = strrchr (mpd_uri, '/');
-    if (last_sep) {
-      tmp1 = g_strndup (mpd_uri, last_sep - mpd_uri + 1);
-      if (ret) {
-        tmp2 = ret;
-        ret = g_strconcat (tmp1, tmp2, NULL);
-        g_free (tmp1);
-        g_free (tmp2);
-      } else {
-        ret = tmp1;
-      }
-      GST_INFO ("Got base URI from MPD file URI %s", ret);
-    }
-  }
-
-  if (ret && *query == NULL) {
-    gchar *params = strchr (ret, '?');
-    if (params) {
-      *query = g_strdup (params);
-      params[0] = '\0';         /* can ignore the rest of the string */
-    }
-  }
+  ret = gst_uri_to_string (abs_url);
+  gst_uri_unref (abs_url);
 
   return ret;
 }
@@ -3580,6 +3563,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   GstMediaSegment currentChunk;
   gchar *mediaURL = NULL;
   gchar *indexURL = NULL;
+  GstUri *base_url, *frag_url;
   guint segment_idx;
 
   /* select stream */
@@ -3641,32 +3625,27 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
     }
   }
 
-  if (mediaURL == NULL) {
-    /* single segment with URL encoded in the baseURL syntax element */
-    fragment->uri = g_strdup (stream->baseURL);
-  } else if (strncmp (mediaURL, "http://", 7) != 0) {
-    fragment->uri =
-        g_strconcat (stream->baseURL, mediaURL, stream->queryURL, NULL);
-    g_free (mediaURL);
-  } else if (stream->queryURL) {
-    fragment->uri = g_strconcat (mediaURL, stream->queryURL, NULL);
-    g_free (mediaURL);
-  } else {
-    fragment->uri = mediaURL;
+  base_url = gst_uri_from_string (stream->baseURL);
+  frag_url = gst_uri_from_string_with_base (base_url, mediaURL);
+  if (stream->queryURL) {
+    frag_url = gst_uri_make_writable (frag_url);
+    gst_uri_set_query_string (frag_url, stream->queryURL);
   }
+  fragment->uri = gst_uri_to_string (frag_url);
+  gst_uri_unref (frag_url);
 
   if (indexURL != NULL) {
-    if (strncmp (indexURL, "http://", 7) != 0) {
-      fragment->index_uri =
-          g_strconcat (stream->baseURL, indexURL, stream->queryURL, NULL);
-      g_free (indexURL);
-    } else if (stream->queryURL) {
-      fragment->index_uri = g_strconcat (indexURL, stream->queryURL, NULL);
-      g_free (indexURL);
-    } else {
-      fragment->index_uri = indexURL;
-    }
-  } else if (fragment->index_range_start || fragment->index_range_end != -1) {
+    frag_url = gst_uri_make_writable (gst_uri_from_string_with_base (base_url,
+            indexURL));
+    gst_uri_set_query_string (frag_url, stream->queryURL);
+    fragment->index_uri = gst_uri_to_string (frag_url);
+    gst_uri_unref (frag_url);
+  }
+
+  gst_uri_unref (base_url);
+
+  if (indexURL == NULL && (fragment->index_range_start
+          || fragment->index_range_end != -1)) {
     /* index has no specific URL but has a range, we should only use this if
      * the media also has a range, otherwise we are serving some data twice
      * (in the media fragment and again in the index) */
