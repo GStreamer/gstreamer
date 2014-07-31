@@ -31,6 +31,8 @@
 #include "gstmultifilesink.h"
 #include "gstmultifilesrc.h"
 #include "gstsplitfilesrc.h"
+#include "gstsplitmuxsink.h"
+#include "gstsplitmuxsrc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -41,6 +43,12 @@ plugin_init (GstPlugin * plugin)
       gst_multi_file_sink_get_type ());
   gst_element_register (plugin, "splitfilesrc", GST_RANK_NONE,
       gst_split_file_src_get_type ());
+
+  if (!register_splitmuxsink (plugin))
+    return FALSE;
+
+  if (!register_splitmuxsrc (plugin))
+    return FALSE;
 
   return TRUE;
 }

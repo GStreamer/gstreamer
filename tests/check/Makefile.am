@@ -198,7 +198,7 @@ check_matroska =
 endif
 
 if USE_PLUGIN_MULTIFILE
-check_multifile = elements/multifile
+check_multifile = elements/multifile elements/splitmux
 else
 check_multifile =
 endif

@@ -58,6 +58,7 @@ rtprtx
 shapewipe
 souphttpsrc
 spectrum
+splitmux
 sunaudio
 udpsink
 udpsrc

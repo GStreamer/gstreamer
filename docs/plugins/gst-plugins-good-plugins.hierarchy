@@ -152,6 +152,8 @@ GObject
           GstRTSPSrc
           GstRgVolume
           GstRtpBin
+          GstSplitMuxSink
+          GstSplitMuxSrc
         GstCutter
         GstDVDec
         GstDVDemux

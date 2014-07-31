@@ -162,6 +162,8 @@
     <xi:include href="xml/element-speexenc.xml" />
     <xi:include href="xml/element-speexdec.xml" />
     <xi:include href="xml/element-splitfilesrc.xml" />
+    <xi:include href="xml/element-splitmuxsrc.xml" />
+    <xi:include href="xml/element-splitmuxsink.xml" />
     <xi:include href="xml/element-streaktv.xml" />
     <xi:include href="xml/element-taginject.xml" />
     <xi:include href="xml/element-udpsrc.xml" />

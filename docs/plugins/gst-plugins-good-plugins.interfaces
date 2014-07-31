@@ -71,6 +71,8 @@ GstSoupHTTPSrc GstURIHandler
 GstSpeexEnc GstPreset GstTagSetter
 GstSpeexEnc GstTagSetter GstPreset
 GstSplitFileSrc GstURIHandler
+GstSplitMuxSink GstChildProxy
+GstSplitMuxSrc GstChildProxy GstURIHandler
 GstSwitchSink GstChildProxy
 GstSwitchSrc GstChildProxy
 GstTagLibMux GstTagSetter
