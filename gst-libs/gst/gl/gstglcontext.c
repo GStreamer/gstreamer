@@ -878,6 +878,27 @@ failure:
 }
 
 /**
+ * gst_gl_context_destroy:
+ * @context: a #GstGLContext:
+ *
+ * Destroys an OpenGL context.
+ *
+ * Should only be called after gst_gl_context_create() has been successfully
+ * called for this context.
+ */
+void
+gst_gl_context_destroy (GstGLContext * context)
+{
+  GstGLContextClass *context_class;
+
+  g_return_if_fail (GST_GL_IS_CONTEXT (context));
+  context_class = GST_GL_CONTEXT_GET_CLASS (context);
+  g_return_if_fail (context_class->destroy_context != NULL);
+
+  context_class->destroy_context (context);
+}
+
+/**
  * gst_gl_context_get_gl_context:
  * @context: a #GstGLContext:
  *
