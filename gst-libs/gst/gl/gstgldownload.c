@@ -223,11 +223,17 @@ _gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
     g_return_val_if_fail (data[i] != NULL, FALSE);
   }
 
-  if (!download->priv->in_tex[0])
+  if (!download->priv->in_tex[0]) {
+    GstVideoInfo temp_info;
+
+    gst_video_info_set_format (&temp_info, GST_VIDEO_FORMAT_RGBA,
+        GST_VIDEO_INFO_WIDTH (&download->info),
+        GST_VIDEO_INFO_HEIGHT (&download->info));
+
     download->priv->in_tex[0] =
         gst_gl_memory_wrapped_texture (download->context, texture_id,
-        GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&download->info),
-        GST_VIDEO_INFO_HEIGHT (&download->info), NULL, NULL);
+        &temp_info, 0, NULL, NULL);
+  }
 
   download->priv->in_tex[0]->tex_id = texture_id;
 
