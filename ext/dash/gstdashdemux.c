@@ -1974,11 +1974,10 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     /* TODO properly stop tasks */
     /* gst_hls_demux_pause_tasks (demux); */
+    g_cond_signal (&stream->fragment_download_cond);
   }
 
-  /* avoid having the source handle the same error again */
   stream->last_ret = ret;
-  ret = GST_FLOW_OK;
 
   return ret;
 }
@@ -2317,7 +2316,6 @@ static GstFlowReturn
 gst_dash_demux_stream_get_next_fragment (GstDashDemuxStream * stream,
     GstClockTime * ts)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
   GstDashDemux *demux = stream->demux;
 
   if (stream->stream_eos)
@@ -2358,11 +2356,11 @@ gst_dash_demux_stream_get_next_fragment (GstDashDemuxStream * stream,
 
   demux->end_of_period = FALSE;
 
-  if (stream->last_ret < GST_FLOW_EOS) {
-    GST_WARNING_OBJECT (stream->pad, "Failed to download fragment");
-    return GST_FLOW_ERROR;
+  if (stream->last_ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (stream->pad, "Failed to download fragment: %s",
+        gst_flow_get_name (stream->last_ret));
   }
-  return ret;
+  return stream->last_ret;
 }
 
 static void
