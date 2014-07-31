@@ -129,6 +129,9 @@ def register_default_blacklist(self):
         # MXF known issues"
         (".*reverse_playback.*", "Reverse playback is not handled in MXF"),
         ("validate\.file\.transcode.*mxf", "FIXME: Transcoding and mixing tests need to be tested"),
+
+        # Subtitles known issues
+        ("validate.file.playback.switch_subtitle_track.Sintel_2010_720p_mkv", "https://bugzilla.gnome.org/show_bug.cgi?id=734051"),
     ])
 
 def register_defaults(self):
