@@ -619,7 +619,8 @@ gst_gl_window_x11_quit (GstGLWindow * window)
 
   GST_LOG ("sending quit");
 
-  g_main_loop_quit (window_x11->loop);
+  if (window_x11->loop)
+    g_main_loop_quit (window_x11->loop);
 
   GST_LOG ("quit sent");
 }
