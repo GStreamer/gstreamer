@@ -20,8 +20,8 @@
 
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
-#include <gst-libs/gst/rtp/gstrtpbuffer.h>
-#include <gst-libs/gst/rtp/gstrtpbasedepayload.h>
+#include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/gstrtpbasedepayload.h>
 
 #define DEFAULT_CLOCK_RATE (42)
 
