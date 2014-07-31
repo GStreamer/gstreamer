@@ -108,6 +108,7 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gsttocsetter.xml" />
     <xi:include href="xml/gsttypefind.xml" />
     <xi:include href="xml/gsttypefindfactory.xml" />
+    <xi:include href="xml/gsturi.xml" />
     <xi:include href="xml/gsturihandler.xml" />
     <xi:include href="xml/gstutils.xml" />
     <xi:include href="xml/gstvalue.xml" />
