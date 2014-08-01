@@ -205,6 +205,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//*[@type='const GList*']" name="type">GList*</attr>
 	<attr path="//*[@type='const GSList*']" name="type">GSList*</attr>
 	<attr path="//object/field[@cname='object' and @type='GstObject*']" name="hidden">true</attr>
+	<attr path="//constant[@name='CLOCK_TIME_NONE']" name="ctype">guint64</attr>
+
 	<!-- No way to correctly generate these without the element type -->
 	<attr path="//boxed[@cname='GstMpegtsDescriptor']//method[parameters/parameter[@type='GArray***']]" name="hidden">true</attr>
 </metadata>
