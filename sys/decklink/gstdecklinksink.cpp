@@ -128,7 +128,7 @@ gst_decklink_sink_class_init (GstDecklinkSinkClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("videosink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      gst_decklink_mode_get_template_caps ()));
+          gst_decklink_mode_get_template_caps ()));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_decklink_sink_audiosink_template));
@@ -157,8 +157,6 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink)
   gst_pad_set_query_function (decklinksink->videosinkpad,
       GST_DEBUG_FUNCPTR (gst_decklink_sink_videosink_query));
   gst_element_add_pad (GST_ELEMENT (decklinksink), decklinksink->videosinkpad);
-
-
 
   decklinksink->audiosinkpad =
       gst_pad_new_from_static_template (&gst_decklink_sink_audiosink_template,
@@ -329,13 +327,15 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   const GstDecklinkMode *mode;
   BMDAudioSampleType sample_depth;
 
-  decklinksink->decklink = gst_decklink_get_nth_device (decklinksink->device_number);
+  decklinksink->decklink =
+      gst_decklink_get_nth_device (decklinksink->device_number);
   if (!decklinksink->decklink) {
     GST_WARNING ("failed to get device %d", decklinksink->device_number);
     return FALSE;
   }
 
-  decklinksink->output = gst_decklink_get_nth_output (decklinksink->device_number);
+  decklinksink->output =
+      gst_decklink_get_nth_output (decklinksink->device_number);
   if (!decklinksink->decklink) {
     GST_WARNING ("no output for device %d", decklinksink->device_number);
     return FALSE;
@@ -444,8 +444,9 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
   GstDecklinkSink *decklinksink;
   IDeckLinkMutableVideoFrame *frame;
   void *data;
-  GstFlowReturn ret;
+  GstFlowReturn flow_ret;
   const GstDecklinkMode *mode;
+  HRESULT ret;
 
   decklinksink = GST_DECKLINK_SINK (parent);
 
@@ -464,9 +465,14 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
 
   mode = gst_decklink_get_mode (decklinksink->mode);
 
-  decklinksink->output->CreateVideoFrame (mode->width,
+  ret = decklinksink->output->CreateVideoFrame (mode->width,
       mode->height, mode->width * 2, decklinksink->pixel_format,
       bmdFrameFlagDefault, &frame);
+  if (ret != S_OK) {
+    GST_ELEMENT_ERROR (decklinksink, STREAM, FAILED,
+        (NULL), ("Failed to create video frame: 0x%08x", ret));
+    return GST_FLOW_ERROR;
+  }
 
   frame->GetBytes (&data);
   gst_buffer_extract (buffer, 0, data, gst_buffer_get_size (buffer));
@@ -482,23 +488,37 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
   g_mutex_unlock (&decklinksink->mutex);
 
   if (!decklinksink->stop) {
-    decklinksink->output->ScheduleVideoFrame (frame,
+    ret = decklinksink->output->ScheduleVideoFrame (frame,
         decklinksink->num_frames * mode->fps_d, mode->fps_d, mode->fps_n);
+    if (ret != S_OK) {
+      GST_ELEMENT_ERROR (decklinksink, STREAM, FAILED,
+          (NULL), ("Failed to schedule frame: 0x%08x", ret));
+      flow_ret = GST_FLOW_ERROR;
+      goto out;
+    }
+
     decklinksink->num_frames++;
 
     if (!decklinksink->sched_started) {
-      decklinksink->output->StartScheduledPlayback (0, mode->fps_d, 1.0);
+      ret = decklinksink->output->StartScheduledPlayback (0, mode->fps_d, 1.0);
+      if (ret != S_OK) {
+        GST_ELEMENT_ERROR (decklinksink, STREAM, FAILED,
+            (NULL), ("Failed to start scheduled playback: 0x%08x", ret));
+        flow_ret = GST_FLOW_ERROR;
+        goto out;
+      }
       decklinksink->sched_started = TRUE;
     }
 
-    ret = GST_FLOW_OK;
+    flow_ret = GST_FLOW_OK;
   } else {
-    ret = GST_FLOW_FLUSHING;
+    flow_ret = GST_FLOW_FLUSHING;
   }
 
+out:
   frame->Release ();
 
-  return ret;
+  return flow_ret;
 }
 
 static gboolean
@@ -513,7 +533,7 @@ gst_decklink_sink_videosink_event (GstPad * pad, GstObject * parent,
   GST_DEBUG_OBJECT (pad, "event: %" GST_PTR_FORMAT, event);
 
   switch (GST_EVENT_TYPE (event)) {
-    /* FIXME: this makes no sense, template caps don't contain v210 */
+      /* FIXME: this makes no sense, template caps don't contain v210 */
 #if 0
     case GST_EVENT_CAPS:{
       GstCaps *caps;
@@ -571,7 +591,9 @@ gst_decklink_sink_videosink_query (GstPad * pad, GstObject * parent,
       mode_caps = gst_decklink_mode_get_caps (decklinksink->mode);
       gst_query_parse_caps (query, &filter);
       if (filter) {
-        caps = gst_caps_intersect_full (filter, mode_caps, GST_CAPS_INTERSECT_FIRST);
+        caps =
+            gst_caps_intersect_full (filter, mode_caps,
+            GST_CAPS_INTERSECT_FIRST);
         gst_caps_unref (mode_caps);
       } else {
         caps = mode_caps;
@@ -681,6 +703,7 @@ HRESULT
 Output::RenderAudioSamples (bool preroll)
 {
   uint32_t samplesWritten;
+  HRESULT ret;
 
   // guint64 samplesToWrite;
 
@@ -698,12 +721,17 @@ Output::RenderAudioSamples (bool preroll)
     if (n > 0) {
       data = gst_adapter_map (decklinksink->audio_adapter, n);
 
-      decklinksink->output->ScheduleAudioSamples ((void *) data, n / 4,
+      ret = decklinksink->output->ScheduleAudioSamples ((void *) data, n / 4,
           0, 0, &samplesWritten);
 
       gst_adapter_unmap (decklinksink->audio_adapter);
       gst_adapter_flush (decklinksink->audio_adapter, samplesWritten * 4);
-      GST_DEBUG ("wrote %d samples, %d available", samplesWritten, n / 4);
+      if (ret != S_OK) {
+        GST_ELEMENT_ERROR (decklinksink, STREAM, FAILED,
+            (NULL), ("Failed to schedule audio samples: 0x%08x", ret));
+      } else {
+        GST_DEBUG ("wrote %d samples, %d available", samplesWritten, n / 4);
+      }
 
       g_cond_signal (&decklinksink->audio_cond);
     } else {
